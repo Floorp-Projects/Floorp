@@ -75,11 +75,9 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 																	PRBool aQuiet)
 {
 	NS_ENSURE_ARG_POINTER(aWidget);
+	PpPrintContext_t *pc = NULL;
 
 	nsresult  rv = NS_ERROR_FAILURE;
-	nsCOMPtr<nsIPrintOptions> printService = 
-	         do_GetService(kPrintOptionsCID, &rv);
-
 	nsIDeviceContextSpec  *devSpec = nsnull;
 
 	nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
@@ -88,13 +86,30 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget 
 	{
 		PtWidget_t *widget = (PtWidget_t*) aWidget->GetNativeData( NS_NATIVE_WIDGET );
 		PtWidget_t *disjoint = PtFindDisjoint( widget );
-		if( !PtWidgetIsClass( disjoint, PtWindow ) ) aQuiet = 1; /* for the embedding stuff, the PrintSelection dialog is displayed by the client */
-
-		if (NS_OK == ((nsDeviceContextSpecPh *)devSpec)->Init(aQuiet))
+		if( !PtWidgetIsClass( disjoint, PtWindow ) ) 
 		{
-			aNewSpec = devSpec;
-			rv = NS_OK;
+			PRInt32	range = 0;
+
+			aQuiet = 1; /* for the embedding stuff, the PrintSelection dialog is displayed by the client */
+			/* check for the page range if we are called by an embedded app, the pc is there */
+			aPrintSettings->GetEndPageRange(&range);
+			if (range)
+				pc = (PpPrintContext_t *) range;
+		}
+
+		nsDeviceContextSpecPh* specPh = NS_STATIC_CAST(nsDeviceContextSpecPh*, devSpec);
+		if (pc)
+		{
+			specPh->SetPrintContext(pc);
+			printf("Set print context: %X\n", pc);
+		}
+		rv = specPh->Init(aWidget, aPrintSettings, aQuiet);
+		if (NS_SUCCEEDED(rv)) {
+  			aNewSpec = devSpec;
+  		} else {
+    		NS_RELEASE(devSpec);
 		}
 	}
+
 	return rv;
 }

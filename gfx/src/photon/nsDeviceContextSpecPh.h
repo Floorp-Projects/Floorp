@@ -40,6 +40,8 @@
 #define nsDeviceContextSpecPh_h___
 
 #include "nsIDeviceContextSpec.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintOptions.h" // For nsIPrinterEnumerator
 #include <Pt.h>
 
 class nsDeviceContextSpecPh : public nsIDeviceContextSpec
@@ -49,8 +51,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init(PRBool aQuiet);
-  //NS_IMETHOD GetPrintContext(PpPrintContext_t *&aPrintContext) const;
+  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings, PRBool aQuiet);
   PpPrintContext_t *GetPrintContext();
 
   void SetPrintContext(PpPrintContext_t *pc);
@@ -58,6 +59,24 @@ public:
 protected:
   virtual ~nsDeviceContextSpecPh();
   PpPrintContext_t *mPC;
+  nsIPrintSettings* mPrintSettings;
 };
+
+//-------------------------------------------------------------------------
+// Printer Enumerator
+//-------------------------------------------------------------------------
+class nsPrinterEnumeratorPh : public nsIPrinterEnumerator
+{
+public:
+  	nsPrinterEnumeratorPh();
+  	~nsPrinterEnumeratorPh();
+	NS_DECL_ISUPPORTS
+	NS_DECL_NSIPRINTERENUMERATOR
+
+	private:
+		// helper
+		nsresult DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount, PRUnichar*** aResult);
+};
+
 
 #endif

@@ -60,7 +60,7 @@ PhImage_t *MyPiResizeImage(PhImage_t *image,PhRect_t const *bounds,short w,short
 	char const *old_mask_ptr;
 	struct
 	{
-		unsigned short x,y;
+		unsigned long x,y;
 	} next;
 
 	if(bounds)
@@ -76,17 +76,10 @@ PhImage_t *MyPiResizeImage(PhImage_t *image,PhRect_t const *bounds,short w,short
 	oldRect.lr.x = w - 1;
 	oldRect.lr.y = h - 1;
 			
-	if(!(newImage = PiInitImage(image,(PhRect_t const*)(&oldRect),&newRect,0,flags | Pi_USE_COLORS,image->colors)))
+	if(!(newImage = PiInitImage(image,(PhRect_t const*)(&oldRect),&newRect,image->type,flags | Pi_USE_COLORS,image->colors)))
 		return(NULL);
 
-	if(image->mask_bm)
-	{
-		newImage->mask_bpl = (((newImage->size.w + 7) >> 3) + 3) & ~3;
-		if((newImage->mask_bm = (char *)malloc(newImage->size.h * newImage->mask_bpl)) != NULL)
-			memset(newImage->mask_bm,0xff,newImage->size.h * newImage->mask_bpl);
-		else
-			newImage->mask_bpl = 0;
-	}
+	memset(newImage->image, 0x22, newImage->bpl*newImage->size.h);
 	
 	if((xScale = GR_FPDIV(newImage->size.w << 16,(srcRect.lr.x - srcRect.ul.x + 1) << 16)) <= 0x10000)
 		xScaleInv = GR_FPDIV((srcRect.lr.x - srcRect.ul.x + 1) << 16,newImage->size.w << 16);
@@ -125,13 +118,13 @@ PhImage_t *MyPiResizeImage(PhImage_t *image,PhRect_t const *bounds,short w,short
 			  dst.x < newImage->size.w;dst.x++,next.x += xScaleInv)
 			{
 				src.x = next.x >> 16;
-				PiGetPixel(image,src.x,src.y,&value);
+				PiGetPixel((const PhImage_t *)image,src.x,src.y,&value);
 				PiSetPixel(newImage,dst.x,dst.y,value);
 				
-				if(newImage->mask_bm && !PiGetPixelFromData((uint8_t*)old_mask_ptr,Pg_BITMAP_TRANSPARENT,src.x,&value))
+				if(newImage->mask_bm && !PiGetPixelFromData((const uint8_t *)old_mask_ptr,Pg_BITMAP_TRANSPARENT,src.x,&value))
 				{
 					if(!value)
-						PiSetPixelInData((uint8_t*)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
+						PiSetPixelInData((uint8_t *)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
 				}
 			}
 		}
@@ -155,7 +148,7 @@ PhImage_t *MyPiResizeImage(PhImage_t *image,PhRect_t const *bounds,short w,short
 				PiSetPixel(newImage,dst.x,dst.y,color);
 				
 				if(!value)
-					PiSetPixelInData((uint8_t*)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
+					PiSetPixelInData((uint8_t *)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
 			}
 		}
 		
@@ -488,7 +481,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 				 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 				 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-	PhRect_t clip = { {aDX, aDY}, {aDX + aDWidth, aDY + aDHeight} };
+	PhRect_t clip = { {aDX, aDY}, {aDX + aDWidth-1, aDY + aDHeight-1} };
 	PhPoint_t pos = { aDX - aSX, aDY - aSY};
 
 	if( !aSWidth || !aSHeight || !aDWidth || !aDHeight ) return NS_OK;
@@ -515,15 +508,17 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	else
 #endif
 	{
+	#if 0
 		if( (aSWidth != aDWidth || aSHeight != aDHeight) && 
-		   (mPhImageZoom == NULL || mPhImageZoom->size.w != aDHeight || mPhImageZoom->size.h != aDHeight)) 
+		   (mPhImageZoom == NULL || mPhImageZoom->size.w != aDWidth || mPhImageZoom->size.h != aDHeight)) 
 		{
 			if ( mPhImageZoom ) {
 				if ( PgShmemDestroy( mPhImageZoom->image ) == -1 )
 					free(mPhImageZoom->image);
 				free( mPhImageZoom );
 			}
-			PhRect_t bounds = {{aSX, aSY}, {aSX + aSWidth, aSY + aSHeight}};
+			PhRect_t bounds = {{aSX, aSY}, {aSX + aSWidth - 1, aSY + aSHeight - 1}};
+
 			if ((aDHeight * mPhImage.bpl) < IMAGE_SHMEM_THRESHOLD)
 				mPhImageZoom = MyPiResizeImage(&mPhImage, &bounds, aDWidth, aDHeight, Pi_USE_COLORS);
 			else
@@ -533,12 +528,26 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 			pos.x = aDX;
 			pos.y = aDY;
 		}
+	#endif
 
 		PgSetMultiClip( 1, &clip );
 		if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
 			PgDrawPhImagemx( &pos, mPhImageZoom ? mPhImageZoom : &mPhImage, 0 );
 		else
-			printf("DRAW IMAGE: with 8 bit alpha!!\n");
+		{
+			PgMap_t map;
+
+			map.dim.w = mAlphaWidth;
+			map.dim.h = mAlphaHeight;
+			map.bpl = mAlphaRowBytes;
+			map.bpp = mAlphaDepth;
+			map.map = (char *)mAlphaBits;
+			PgSetAlphaBlend(&map, 0);
+			PgAlphaOn();
+			PgDrawPhImagemx( &pos, mPhImageZoom ? mPhImageZoom : &mPhImage, 0 );
+			PgAlphaOff();
+			
+		}
 		PgSetMultiClip( 0, NULL );
 	}
 
@@ -580,12 +589,17 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 		}
 		else if (mAlphaDepth == 8)
 		{
-		//	memset(&pg_alpha, 0, sizeof(PgAlpha_t));
-		//	pg_alpha.dest_alpha_map = mAlphaBits;
-		//	mPhImage.alpha = &pg_alpha;
-		//	PgDrawPhImagemx(&pos, &mPhImage, 0);
-		//	mPhImage.alpha = nsnull;
-			printf("DRAW IMAGE: with 8 bit alpha!!\n");
+			PgMap_t map;
+
+			map.dim.w = mAlphaWidth;
+			map.dim.h = mAlphaHeight;
+			map.bpl = mAlphaRowBytes;
+			map.bpp = mAlphaDepth;
+			map.map = (char *)mAlphaBits;
+			PgSetAlphaBlend(&map, 0);
+			PgAlphaOn();
+			PgDrawPhImagemx( &pos, &mPhImage, 0 );
+			PgAlphaOff();
 		}
 	}
 
@@ -661,7 +675,7 @@ NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurfa
 	rep.y = ( aTileRect.height + aSYOffset + space.y - 1 ) / space.y;
 
 	/* not sure if cliping is necessary */
-	PhRect_t clip = { {aTileRect.x, aTileRect.y}, {aTileRect.x + aTileRect.width, aTileRect.y + aTileRect.height} };
+	PhRect_t clip = { {aTileRect.x, aTileRect.y}, {aTileRect.x + aTileRect.width-1, aTileRect.y + aTileRect.height-1} };
 	PgSetMultiClip( 1, &clip );
 
 #ifdef ALLOW_PHIMAGE_CACHEING
@@ -735,95 +749,6 @@ nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
 				return NS_OK;
 			}
 		}
-	}
-	else
-	{
-/* it's late and this should be working but it doesn't so...I'm obviously not thinking straight...going home... */
-#if 0	/* might want to change this to a real define to give the option of removing the dependancy on the render lib */
-
-		/* Creates a new shared memory object and uses a memory context to convert the image down
-			to the native screen format */
-
-		nsDeviceContextPh * dev = (nsDeviceContextPh *) aContext;
-		PRUint32 scr_depth;
-		PRUint32 scr_type;
-		PRUint32 cimgsize;
-
-		dev->GetDepth(scr_depth);
-
-		switch (scr_depth)
-		{
-			case 8 : scr_type = Pg_IMAGE_PALETTE_BYTE; break;
-			case 15 : scr_type = Pg_IMAGE_DIRECT_555; break;
-			case 16 : scr_type = Pg_IMAGE_DIRECT_565; break;
-			case 24 : scr_type = Pg_IMAGE_DIRECT_888; break;
-			case 32 : scr_type = Pg_IMAGE_DIRECT_8888; break;
-			default :
-				return NS_OK; /* some wierd pixel depth...not optimizing it... */
-		}
-		cimgsize = (((scr_depth + 1) & 0xFC) >> 3) * mPhImage.size.w * mPhImage.size.h;
-		if (cimgsize > IMAGE_SHMEM_THRESHOLD)
-		{
-			PmMemoryContext_t *memctx;
-			PhImage_t timage;
-			PhPoint_t pos={0,0};
-			
-			if (mConvertedBits == NULL)
-			{
-				if ((mConvertedBits = CreateSRamImage (cimgsize)) == NULL)
-				{
-					fprintf(stderr,"memc failed\n");
-					mIsOptimized = PR_FALSE;
-					return NS_OK;
-				}
-			}
-			memset (&timage, 0 , sizeof (PhImage_t));
-
-			timage.size = mPhImage.size;
-			timage.image = mConvertedBits;
-			timage.bpl = cimgsize / timage.size.h;
-			timage.type = scr_type;
-
-			fprintf (stderr,"Creating memctx cache\n");
-			if (memctx = PmMemCreateMC (&timage, &timage.size, &pos) == NULL)
-			{
-				DestroySRamImage (mConvertedBits);
-				mIsOptimized = PR_FALSE;
-				fprintf(stderr,"Error Creating Memctx\n");
-				return NS_OK;
-			}
-			
-			fprintf(stderr,"mPhImage.size = (%d,%d) timage.size = (%d,%d)\n",mPhImage.size.w, mPhImage.size.h, timage.size.w, timage.size.h);
-			fprintf(stderr,"mPhImage.bpl = %d timage.bpl = %d\n",mPhImage.bpl, timage.bpl);
-			fprintf(stderr,"mPhImage.type = %d timage.type = %d\n",mPhImage.type, timage.type);
-			fprintf(stderr,"mPhImage.image = 0x%08X timage.image = 0x%08X\n", mPhImage.image, timage.image);
-
-
-			fprintf(stderr,"staring to draw\n");
-
-			PmMemStart(memctx);
-			
-			fprintf(stderr,"drawing\n");
-			if (mPhImage.colors)
-			{
-				fprintf(stderr,"1\n");
-				PgSetPalette (mPhImage.palette, 0, 0, mPhImage.colors, Pg_PALSET_SOFT, 0);
-			}
-
-			fprintf(stderr,"2\n");
-			PgDrawImage(mPhImage.image, mPhImage.type, &pos, &mPhImage.size, mPhImage.bpl, 0);
-			fprintf(stderr,"3\n");
-			PmMemFlush(memctx, &timage);
-			fprintf(stderr,"4\n");
-			PmMemStop(memctx);
-			fprintf(stderr,"we got our image drawn\n");
-			mPhImage = timage;
-			mPhImage.image_tag = PtCRC((char *)mPhImage.image, cimgsize);
-			mPhImage.type = 0; /* now in native display format */
-			mIsOptimized = PR_TRUE;
-			fprintf(stderr,"done!\n");
-		}
-#endif
 	}
 #endif // ALLOW_PHIMAGE_CACHEING
 

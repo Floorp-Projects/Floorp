@@ -43,8 +43,19 @@
 #include "nsPhGfxLog.h"
 
 #include "nsGfxCIID.h"
-#include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
+#include "nsIDOMWindow.h"
+#include "nsIDialogParamBlock.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsVoidArray.h"
+#include "nsSupportsArray.h"
+
+#include "nsString.h"
+#include "nsIServiceManager.h"
+#include "nsReadableUtils.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID( kPrintOptionsCID, NS_PRINTOPTIONS_CID );
 
@@ -58,54 +69,151 @@ nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
 	if (mPC)
 		PpPrintReleasePC(mPC);
-
 }
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecPh, nsIDeviceContextSpec)
 
-NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet)
+
+NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
+                                             nsIPrintSettings* aPrintSettings,
+                                             PRBool aQuiet)
 {
-	int action;
 	nsresult rv = NS_OK;
-	
-	if( aQuiet ) {
-	    // no dialogs
-	    nsCOMPtr<nsIPrintOptions> printService = 
-	             do_GetService(kPrintOptionsCID, &rv);
-	    PRInt32 value;
-	    printService->GetEndPageRange( &value ); /* use SetEndPageRange/GetEndPageRange to convey the print context */
-	    mPC = ( PpPrintContext_t * ) value;
+	int 		action;
+	PtWidget_t 	*parent;
+
+  	mPrintSettings = aPrintSettings;
+  	parent = (PtWidget_t *) aWidget->GetNativeData(NS_NATIVE_WINDOW);
+
+	if( !mPC ) 
+		mPC = PpCreatePC();
+
+	if (aQuiet) 
+	{
+		PpLoadDefaultPrinter(mPC);
 	}
-	else {
-		if( !mPC ) mPC = PpCreatePC();
-		PtSetParentWidget(NULL);
-		action = PtPrintSelection(NULL, NULL, NULL, mPC, (Pt_PRINTSEL_DFLT_LOOK));
-		switch( action ) {
+	else
+	{
+		PtSetParentWidget(parent);
+		action = PtPrintSelection(parent, NULL, NULL, mPC, Pt_PRINTSEL_DFLT_LOOK);
+		switch( action ) 
+		{
 			case Pt_PRINTSEL_PRINT:
 			case Pt_PRINTSEL_PREVIEW:
-			rv = NS_OK;
-			break;
+				rv = NS_OK;
+				break;
 			case Pt_PRINTSEL_CANCEL:
-			rv = NS_ERROR_FAILURE;
-			break;
+				rv = NS_ERROR_ABORT;
+				break;
 		}
-	}
-	return rv;
+  	}
+
+  	return rv;
 }
 
 //NS_IMETHODIMP nsDeviceContextSpecPh :: GetPrintContext(PpPrintContext_t *&aPrintContext) const
 PpPrintContext_t *nsDeviceContextSpecPh :: GetPrintContext()
 {
-  return (mPC);
+	return (mPC);
 }
 
 void nsDeviceContextSpecPh :: SetPrintContext(PpPrintContext_t* pc)
 {
-	if(mPC)
-	{
+	if (mPC)
 		PpPrintReleasePC(mPC);
-	}
 
 	mPC = pc; 
+}
+
+//***********************************************************
+//  Printer Enumerator
+//***********************************************************
+nsPrinterEnumeratorPh::nsPrinterEnumeratorPh()
+{
+  	NS_INIT_REFCNT();
+}
+
+nsPrinterEnumeratorPh::~nsPrinterEnumeratorPh()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorPh, nsIPrinterEnumerator)
+
+NS_IMETHODIMP nsPrinterEnumeratorPh::EnumeratePrintersExtended(PRUint32* aCount, PRUnichar*** aResult)
+{
+  	return DoEnumeratePrinters(PR_TRUE, aCount, aResult);
+}
+
+//----------------------------------------------------------------------------------
+// Enumerate all the Printers from the global array and pass their
+// names back (usually to script)
+NS_IMETHODIMP
+nsPrinterEnumeratorPh::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
+{
+  	return DoEnumeratePrinters(PR_FALSE, aCount, aResult);
+}
+
+//----------------------------------------------------------------------------------
+// Display the AdvancedDocumentProperties for the selected Printer
+NS_IMETHODIMP nsPrinterEnumeratorPh::DisplayPropertiesDlg(const PRUnichar *aPrinterName, nsIPrintSettings* aPrintSettings)
+{
+	printf("nsPrinterEnumeratorPh::DisplayPropertiesDlg\n");
+	nsresult rv = NS_ERROR_FAILURE;
+	return rv;
+}
+
+static void CleanupArray(PRUnichar**& aArray, PRInt32& aCount)
+{
+	for (PRInt32 i = aCount - 1; i >= 0; i--) 
+	{
+		nsMemory::Free(aArray[i]);
+	}
+	nsMemory::Free(aArray);
+	aArray = NULL;
+	aCount = 0;
+}
+
+
+nsresult
+nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended,
+                                            PRUint32* aCount,
+                                            PRUnichar*** aResult)
+{
+  	NS_ENSURE_ARG(aCount);
+  	NS_ENSURE_ARG_POINTER(aResult);
+
+	char 	**plist = NULL;
+	int		pcount = 0, count = 0;
+
+	if (!(plist = PpLoadPrinterList()))
+		return NS_ERROR_FAILURE;
+
+	for (pcount = 0; plist[pcount] != NULL; pcount++);
+
+	PRUnichar** array = (PRUnichar**) nsMemory::Alloc(pcount * sizeof(PRUnichar*));
+	if (!array)
+	{
+		PpFreePrinterList(plist);
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+
+	while (count < pcount) 
+	{
+		nsString newName;
+		newName.AssignWithConversion(plist[count]);
+		PRUnichar *str = ToNewUnicode(newName);
+		if (!str) 
+		{
+			CleanupArray(array, count);
+			PpFreePrinterList(plist);
+			return NS_ERROR_OUT_OF_MEMORY;
+		}
+	  	array[count++] = str;
+	}
+
+	*aCount  = count;
+	*aResult = array;
+
+	return NS_OK;
 }
 

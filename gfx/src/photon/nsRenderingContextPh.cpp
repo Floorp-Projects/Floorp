@@ -1032,6 +1032,7 @@ NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLe
 	
 	PgSetFont( mPhotonFontName );
 
+
 	if( !aSpacing ) {
 		mTranMatrix->TransformCoord( &aX, &aY );
 		PhPoint_t pos = { aX, aY };
@@ -1216,13 +1217,6 @@ void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 		if( tiles != nsnull ) {
 			rects = PhTilesToRects( tiles, &rect_count );
 			PgSetMultiClip( rect_count, rects );
-//			int i;
-//			for(i = 0;i < rect_count;i++) {			
-//				PgSetStrokeColor(Pg_RED);
-//				PgDrawRect(&rects[i],Pg_DRAW_STROKE);
-//			}
-			
-			
 			free( rects );
 		}
 		else PgSetMultiClip( 0, NULL );

@@ -333,10 +333,10 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence( const nsString& aFontName
 		if( ( id = PfFindFont( (uchar_t *)fontName, 0, 0 ) ) ) {
 			if( !mFontLoadCache ) mFontLoadCache = new nsHashtable();
 
-			nsCStringKey key((char *)(id->pucStem));
+			nsCStringKey key((char *)(PfConvertFontID(id)));
 			if( !mFontLoadCache->Exists( &key ) ) {
 				char FullFontName[MAX_FONT_TAG];
-				PfGenerateFontName((uchar_t *)fontName, nsnull, 8, (uchar_t *)FullFontName);
+				PfGenerateFontName((uchar_t  *)fontName, nsnull, 8, (uchar_t *)FullFontName);
 				PfLoadFont(FullFontName, PHFONT_LOAD_METRICS, nsnull);
 				PfLoadMetrics(FullFontName);
 				// add this font to the table
@@ -402,18 +402,18 @@ NS_IMETHODIMP nsDeviceContextPh::GetRect( nsRect &aRect ) {
 	}
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor( nsIDeviceContextSpec *aDevice, nsIDeviceContext *&aContext ) {
-	//XXX this API should take an CID, use the repository and
-	//then QI for the real object rather than casting... MMP
-
-	aContext = new nsDeviceContextPh();
-	if(nsnull != aContext){
-		NS_ADDREF(aContext);
+	nsDeviceContextPh* devConPh = new nsDeviceContextPh(); //ref count 0
+	if (devConPh != nsnull) {
+  		// this will ref count it
+    	nsresult rv = devConPh->QueryInterface(NS_GET_IID(nsIDeviceContext), (void**)&aContext);
+	  	NS_ASSERTION(NS_SUCCEEDED(rv), "This has to support nsIDeviceContext");
 	} else {
-		return NS_ERROR_OUT_OF_MEMORY;
+	    return NS_ERROR_OUT_OF_MEMORY;
 	}
-	((nsDeviceContextPh *)aContext)->mSpec = aDevice;
+
+	devConPh->mSpec = aDevice;
 	NS_ADDREF(aDevice);
-	return ((nsDeviceContextPh *)aContext)->Init(NULL, this);
+	return devConPh->Init(NULL, this);
 	}
 
 nsresult nsDeviceContextPh::SetDPI( PRInt32 aDpi ) {
