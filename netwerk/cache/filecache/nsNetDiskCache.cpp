@@ -472,7 +472,7 @@ nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_
     return rv;
   }
 
-  NS_ERROR("Error: RecordID not in DB\n");
+  NS_WARNING("Error: RecordID not in DB\n");
   DBRecovery();
   return rv;
 }
@@ -751,18 +751,9 @@ nsNetDiskCache::DBRecovery(void)
   
 
   // False since we want to delete a file rather than recursively delete a directory 
-  mDBFile->Delete(PR_FALSE) ;
-
-  // make sure it's not there any more
-  // DJM shouldn't we just check the return value?
+  rv = mDBFile->Delete(PR_FALSE) ;
+	if (NS_FAILED ( rv ) ) return rv;
   
-  PRBool exists =PR_FALSE;
-  mDBFile->Exists( &exists );
-  
-  if(exists) {
-    NS_ERROR("can't remove old db.") ;
-    return NS_ERROR_FAILURE ;
-  }
 
   // reinitilize DB 
   return InitDB() ;
