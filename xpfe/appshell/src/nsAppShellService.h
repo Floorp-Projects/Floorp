@@ -66,6 +66,7 @@ protected:
   nsCOMPtr<nsIXULWindow>      mHiddenWindow;
   PRBool mDeleteCalled;
   nsCOMPtr<nsISplashScreen> mSplashScreen;
+  nsCOMPtr<nsINativeAppSupport> mNativeAppSupport;
 
   // Set when the appshell service is going away.
   PRBool mShuttingDown;
@@ -76,8 +77,8 @@ protected:
     nsAppShellService* mService;
   };
 
-  static void* HandleExitEvent(PLEvent* aEvent);
-  static void DestroyExitEvent(PLEvent* aEvent);
+  static void* PR_CALLBACK HandleExitEvent(PLEvent* aEvent);
+  static void PR_CALLBACK DestroyExitEvent(PLEvent* aEvent);
 };
 
 #endif

@@ -26,13 +26,13 @@
 %{C++
 #include "nscore.h"
 #include "nsCom.h"
-#include "nsISplashScreen.h"
+#include "nsINativeAppSupport.h"
 %}
 
 interface nsIXULWindow;
 interface nsIURI;
 interface nsICmdLineService;
-interface nsISplashScreen;
+interface nsINativeAppSupport;
 
 [ptr] native JSContext(JSContext);
 
@@ -58,8 +58,16 @@ interface nsIAppShellService : nsISupports
    * Required initialization routine.
    * @param aCmdLineService is stored and passed to appshell components as
    *                        they are initialized.
+   * @param aNativeAppSupportOrSplashScreen is an object that can be QI'd to
+   *                        either an nsINativeAppSupport or nsISplashScreen;
+   *                        this object will be used to implement HideSplashScreen.
    */
-  void Initialize(in nsICmdLineService aCmdLineService, in nsISplashScreen splashScreen );
+  void Initialize(in nsICmdLineService aCmdLineService, in nsISupports nativeAppSupportOrSplashScreen );
+
+  /**
+   * Getter for "native app support."
+   */
+  readonly attribute nsINativeAppSupport nativeAppSupport;
 
   /**
    * Runs an application event loop: normally the main event pump which

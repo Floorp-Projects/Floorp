@@ -20,10 +20,11 @@
  * Contributor(s): 
  */
  
-#include "prtypes.h"
-#include "nsISplashScreen.h"
+#include "nsINativeAppSupport.h"
  
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult );
 
 PRBool NS_CanRun();
+
+nsresult NS_CreateNativeAppSupport( nsINativeAppSupport **aResult );
 
