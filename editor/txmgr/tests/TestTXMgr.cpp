@@ -441,7 +441,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Close(void) {return NS_OK;}
-  NS_IMETHOD Write(const char *str, PRUint32 offset, PRUint32 len, PRUint32 *wcnt)
+  NS_IMETHOD Write(const char *str, PRUint32 len, PRUint32 *wcnt)
   {
     *wcnt = fwrite(&str[offset], 1, len, stdout);
     fflush(stdout);
@@ -641,7 +641,7 @@ public:
     PRUint32 amt;
 
     sprintf(buf, "Transaction: %d - 0x%.8x\n", mVal, (PRInt32)this);
-    return aOutputStream->Write(buf, 0, strlen(buf), &amt);
+    return aOutputStream->Write(buf, strlen(buf), &amt);
   }
 
   NS_IMETHOD GetUndoString(nsString **aString)
