@@ -32,6 +32,7 @@ EXPORTS	= \
 	nsIRDFDataBase.h	\
 	nsIRDFCursor.h		\
 	nsIRDFObserver.h	\
+	nsRDFCIDs.h		\
 	$(NULL)
 
 include $(DEPTH)/config/rules.mk
