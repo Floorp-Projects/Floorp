@@ -51,12 +51,13 @@
   <description class="wrap" flex="1">&instructions2.label;</description>
   <radiogroup id="SepRadioGroup" persist="index character" index="0" character="">
     <radio id="comma" label="&commaRadio.label;" oncommand="SelectCharacter('0');"/>
-    <vbox>
-      <radio id="space" label="&spaceRadio.label;" oncommand="SelectCharacter('1');"/>
+    <radio id="space" label="&spaceRadio.label;" oncommand="SelectCharacter('1');"/>
+    <hbox>
+      <spacer class="radio-spacer"/>
       <checkbox id="CollapseSpaces" label="&collapseSpaces.label;"
-                style="margin-left:2em" checked="true" persist="checked"
+                checked="true" persist="checked"
                 tooltiptext="&collapseSpaces.tooltip;"/>
-    </vbox>
+    </hbox>
     <hbox align="center">
       <radio id="other" label="&otherRadio.label;" oncommand="SelectCharacter('2');"/>
       <textbox class="narrow" id="SepCharacterInput" oninput="InputSepCharacter()"/>

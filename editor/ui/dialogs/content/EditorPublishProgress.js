@@ -28,7 +28,8 @@ var gTotalFileCount = 0;
 var gSucceededCount = 0;
 var gFinishedCount = 0;
 var gFinished = false;
-var gFinalMessage = GetString("PublishCompleted");
+var gFinalMessage = GetString("PublishFailed");
+var gTimerID;
 
 function Startup()
 {
@@ -65,7 +66,7 @@ function Startup()
     else
       document.getElementById("DocSubdir").setAttribute("hidden", "true");
       
-    if (gPublishData.otherDir)
+    if (gPublishData.publishOtherFiles && gPublishData.otherDir)
       document.getElementById("otherDir").value = gPublishData.otherDir;
     else
       document.getElementById("OtherSubdir").setAttribute("hidden", "true");
@@ -75,6 +76,13 @@ function Startup()
 
   // Add the document to the "publish to" list as quick as possible!
   SetProgressStatus(gPublishData.filename, "busy");
+
+  if (gPublishData.publishOtherFiles)
+  {
+    // When publishing images as well, expand list to show more items
+    gDialog.FileList.setAttribute("rows", 5);
+    window.sizeToContent();
+  }
 
   // Now that dialog is initialized, we can start publishing
   window.opener.StartPublishing();
@@ -149,9 +157,10 @@ function SetProgressFinished(filename, networkStatus)
   if (gFinishedCount == gTotalFileCount || !filename)
   {
     gFinished = true;
-    SetStatusMessage(gFinalMessage);
     gDialog.Close.setAttribute("label", GetString("Close"));
+    gFinalMessage = GetString("PublishCompleted");
   }
+  SetStatusMessage(gFinalMessage);
 }
 
 function SetStatusMessage(message)
@@ -160,8 +169,23 @@ function SetStatusMessage(message)
   window.sizeToContent();
 }
 
+function CheckKeepOpen()
+{
+  if (gTimerID)
+  {
+    clearTimeout(gTimerID);
+    gTimerID = null;
+  }
+}
+
 function onClose()
 {
+  if (gTimerID)
+  {
+    clearTimeout(gTimerID);
+    gTimerID = null;
+  }
+
   if (!gFinished && gPersistObj)
   {
     try {
@@ -175,16 +199,22 @@ function onClose()
   return true;
 }
 
-function CloseDialog(forceClose)
+function RequestCloseDialog()
 {
-  if (forceClose || (gFinished && !gDialog.KeepOpen.checked))
+  if (gFinished && !gDialog.KeepOpen.checked)
   {
-    SaveWindowLocation();
-    window.opener.FinishPublishing();
-    try {
-      window.close();
-    } catch (e) {}
+    // Leave window open a minimum amount of time 
+    gTimerID = setTimeout("CloseDialog();", 3000);
   }
-  // If window remains open, but sure final message is set
+  // If window remains open, be sure final message is set
   SetStatusMessage(gFinalMessage);
+}
+
+function CloseDialog()
+{
+  SaveWindowLocation();
+  window.opener.FinishPublishing();
+  try {
+    window.close();
+  } catch (e) {}
 }

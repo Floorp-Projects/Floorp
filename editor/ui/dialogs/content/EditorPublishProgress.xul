@@ -49,8 +49,7 @@
     <caption><label id="PublishToSite"/></caption>
     <label value="&siteUrl.label;"/>
     <hbox>
-      <spacer class="spacer"/>
-      <label id="PublishUrl" class="bold"/>
+      <label class="indent bold" id="PublishUrl"/>
     </hbox>
     <spacer class="spacer"/>
     <grid id="Subdirectories">
@@ -71,10 +70,10 @@
   <groupbox>
     <caption><label value="&fileList.label;"/></caption>
     <vbox align="center" style="max-width:60em">
-      <label id="StatusMessage" class="bold"/>
+      <label id="StatusMessage" class="bold" value="&status.label;"/>
     </vbox>
     <vbox flex="1">
-      <listbox id="FileList" rows="4"/>
+      <listbox id="FileList" rows="1"/>
     </vbox>
     <hbox align="center">
       <spacer class="bigspacer"/>
@@ -86,6 +85,6 @@
       <label value="&failed.label;"/>
     </hbox>
   </groupbox>
-  <checkbox id="KeepOpen" label="&keepOpen;" persist="checked"/>
+  <checkbox id="KeepOpen" label="&keepOpen;" oncommand="CheckKeepOpen();" persist="checked"/>
   <separator class="groove"/>
 </dialog>
