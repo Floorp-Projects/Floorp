@@ -1,0 +1,42 @@
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+%{ C++
+#include "nsIWidget.h"
+
+class nsIDeviceContext;
+struct nsRect;
+%}
+
+[ptr] native nsIWidgetPtr(nsIWidget);
+[ptr] native nsIDeviceContextPtr(nsIDeviceContext);
+[ref] native nsRectRef(nsRect);
+
+[scriptable, uuid(a6cf9056-15b3-11d2-932e-00805f8add32)]
+interface nsIContentViewer : nsISupports
+{
+
+  [noscript] void init(in nsIWidgetPtr aParentWidget,
+                       in nsIDeviceContextPtr aDeviceContext,
+                       [const] in nsRectRef aBounds);
+
+  void bindToDocument(in nsISupports aDoc, in string aCommand);
+
+  attribute nsISupports container;
+
+  void loadComplete(in unsigned long aStatus);
+  void destroy();
+  void stop();
+
+  attribute nsIDOMDocument DOMDocument;
+
+  [noscript] void getBounds(in nsRectRef aBounds);
+  [noscript] void setBounds([const] in nsRectRef aBounds);
+
+  void move(in long aX, in long aY);
+
+  void show();
+  void hide();
+
+  attribute boolean enableRendering;
+};

@@ -46,6 +46,7 @@
 #include "nsIHTTPEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsScriptSecurityManager.h"
+#include "nsDocumentCharsetInfoCID.h"
 
 // Local Includes
 #include "nsDocShell.h"
@@ -124,10 +125,10 @@ nsDocShell::nsDocShell() :
   mLastViewMode(viewNormal),
   mRestoreViewMode(PR_FALSE),
   mEODForCurrentDocument (PR_FALSE),
+  mURIResultedInDocument(PR_FALSE),
   mUseExternalProtocolHandler (PR_FALSE),
   mParent(nsnull),
   mTreeOwner(nsnull),
-  mURIResultedInDocument(PR_FALSE),
   mChromeEventHandler(nsnull)
 {
   NS_INIT_REFCNT();
@@ -1110,7 +1111,8 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
   if (NS_FAILED(res)) return NS_OK;
 
   // set the child's parentCharset
-  res = dcInfo->SetParentCharset(&parentCS);
+  nsCOMPtr<nsIAtom> parentCSAtom(dont_AddRef(NS_NewAtom(parentCS)));
+  res = dcInfo->SetParentCharset(parentCSAtom);
   if (NS_FAILED(res)) return NS_OK;
 
   // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", parentCS.ToNewCString(), mItemType);

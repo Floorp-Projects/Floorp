@@ -33,6 +33,7 @@ XPIDLSRCS=						\
 		.\nsIDocShellTreeItem.idl			\
 		.\nsIDocShellTreeNode.idl			\
 		.\nsIDocShellTreeOwner.idl			\
+		.\nsIContentViewer.idl		\
 		.\nsIContentViewerEdit.idl	\
 #		.\nsIContentViewerFile.idl	\
 		.\nsIMarkupDocumentViewer.idl	\

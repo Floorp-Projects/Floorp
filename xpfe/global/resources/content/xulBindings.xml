@@ -679,9 +679,21 @@
   
   <binding id="browser">
     <implementation>
-      <property name="webBrowser"
+      <property name="docShell"
                 readonly="true"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).webBrowser"/>
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIBrowserBoxObject).docShell;"/>
+      <property name="webNavigation"
+                readonly="true"
+                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"/>
+      <property name="markupDocumentViewer"
+                readonly="true"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);"/>
+      <property name="contentViewerEdit"
+                readonly="true"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerEdit);"/>
+      <property name="contentViewerFile"
+                readonly="true"
+                onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerFile);"/>
     </implementation>
   </binding>
 
