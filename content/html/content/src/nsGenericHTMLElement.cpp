@@ -2815,13 +2815,7 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAReadableString&
 {
   nsAutoString tmp(aString);
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-  PRInt32 ec, val = tmp.ToInteger(&ec);
-  if ((NS_ERROR_ILLEGAL_VALUE == ec) && (tmp.Length() > 0)) {
-    // NOTE: we need to allow non-integer values for the '*' case,
-    //       so we allow for the ILLEGAL_VALUE error and set val to 0
-    val = 0;
-    ec = NS_OK;
-  }
+  PRInt32  ec, val = tmp.ToInteger(&ec);
   if (NS_OK == ec) {
     if (val < 0) val = 0;
     if (tmp.Length() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
@@ -2835,16 +2829,18 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAReadableString&
         val = 1;
       }
       aResult.SetIntValue(val, eHTMLUnit_Proportional); // proportional values are integers
-    } else {
-      if (eHTMLUnit_Pixel == aValueUnit) {
+    } else if (eHTMLUnit_Pixel == aValueUnit) {
         aResult.SetPixelValue(val);
-      }
-      else {
-        aResult.SetIntValue(val, aValueUnit);
-      }
     }
+    else {
+      aResult.SetIntValue(val, aValueUnit);
+    } 
     return PR_TRUE;
-  }
+  } else if (tmp.Length()==1 && tmp.Last()== '*') {
+    aResult.SetIntValue(1, eHTMLUnit_Proportional);
+    return PR_TRUE;
+  }  
+  
   return PR_FALSE;
 }
 
