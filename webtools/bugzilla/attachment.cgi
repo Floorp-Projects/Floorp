@@ -1152,9 +1152,10 @@ sub update
   SendSQL("SELECT NOW()");
   my $timestamp = FetchOneColumn();
     
-  # Update flags. These calls must be done before updating the
-  # 'attachments' table due to the deletion of request flags
-  # on attachments being obsoleted.
+  # Update flags.  We have to do this before committing changes
+  # to attachments so that we can delete pending requests if the user
+  # is obsoleting this attachment without deleting any requests
+  # the user submits at the same time.
   my $target = Bugzilla::Flag::GetTarget(undef, $::FORM{'id'});
   Bugzilla::Flag::process($target, $timestamp, \%::FORM);
 

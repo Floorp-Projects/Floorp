@@ -273,7 +273,7 @@ sub process {
     # Take a snapshot of flags before any changes.
     my @old_summaries = snapshot($bug_id, $attach_id);
     
-    # Cancel old request flags if we are obsoleting an attachment.
+    # Cancel pending requests if we are obsoleting an attachment.
     if ($attach_id && $data->{'isobsolete'}) {
         CancelRequests($bug_id, $attach_id);
     }
@@ -297,9 +297,7 @@ sub process {
         AND i.type_id IS NULL",
         undef, $bug_id);
 
-    foreach my $flag_id (@$flag_ids) {
-        clear($flag_id);
-    }
+    foreach my $flag_id (@$flag_ids) { clear($flag_id) }
 
     $flag_ids = $dbh->selectcol_arrayref(
         "SELECT flags.id 
@@ -312,9 +310,7 @@ sub process {
         AND (bugs.component_id = e.component_id OR e.component_id IS NULL)",
         undef, $bug_id);
 
-    foreach my $flag_id (@$flag_ids) {
-        clear($flag_id);
-    }
+    foreach my $flag_id (@$flag_ids) { clear($flag_id) }
 
     # Take a snapshot of flags after changes.
     my @new_summaries = snapshot($bug_id, $attach_id);
@@ -681,9 +677,7 @@ sub CancelRequests {
 
     # Take a snapshot of flags before any changes.
     my @old_summaries = snapshot($bug_id, $attach_id) if ($timestamp);
-    foreach my $flag (@$request_ids) {
-        clear($flag);
-    }
+    foreach my $flag (@$request_ids) { clear($flag) }
 
     # If $timestamp is undefined, do not update the activity table
     return unless ($timestamp);
