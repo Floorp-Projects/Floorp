@@ -177,8 +177,6 @@ nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 {
-	nsAutoString strPercentage;
-
   // if the percentage hasn't changed...OR if we are going from 0 to 100% in one step
   // then don't bother....just fall out....
 	if (percentage == m_lastPercent || (m_lastPercent == 0 && percentage >= 100))
