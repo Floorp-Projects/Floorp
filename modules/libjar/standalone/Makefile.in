@@ -39,8 +39,7 @@ CPPSRCS		= $(MODULES_LIBJAR_LCPPSRCS)
 
 OBJS		= $(addprefix S_,$(CPPSRCS:.cpp=.$(OBJ_SUFFIX)))
 
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 
 #ifndef MOZ_NATIVE_ZLIB
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozz_s.$(LIB_SUFFIX)

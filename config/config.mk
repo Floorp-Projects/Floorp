@@ -238,12 +238,28 @@ endif
 OS_CFLAGS += $(DEBUG_FLAGS)
 OS_CXXFLAGS += $(DEBUG_FLAGS)
 
+# Build using PIC by default
+# Do not use PIC if not building a shared lib (see exceptions below)
+#
+ifneq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
+_ENABLE_PIC=1
+endif
+
 ifneq (,$(IS_COMPONENT))
 ifneq (, $(findstring $(LIBRARY_NAME), $(MOZ_STATIC_COMPONENTS)))
 DEFINES	+= -DNSGetModule=$(LIBRARY_NAME)_NSGetModule -DNSGetModule_components=$(LIBRARY_NAME)_NSGM_comps -DNSGetModule_components_count=$(LIBRARY_NAME)_NSGM_comp_count
-NO_STATIC_LIB=
-NO_SHARED_LIB=1
+FORCE_STATIC_LIB=1
 endif
+endif
+
+#
+# Disable PIC if necessary
+#
+
+ifndef _ENABLE_PIC
+DSO_CFLAGS=
+DSO_PIC_CFLAGS=
+MKSHLIB=
 endif
 
 #
@@ -398,6 +414,11 @@ MOZ_COMPONENT_LIBS=$(MOZ_COMPONENT_XPCOM_LIBS) $(MOZ_COMPONENT_NSPR_LIBS)
 ifdef GC_LEAK_DETECTOR
 MOZ_COMPONENT_XPCOM_LIBS += -lboehm
 XPCOM_LIBS += -lboehm
+endif
+
+ifdef MOZ_DEMANGLE_SYMBOLS
+MOZ_COMPONENT_XPCOM_LIBS += -liberty
+XPCOM_LIBS += -liberty
 endif
 
 ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))

@@ -38,8 +38,7 @@ CPPSRCS		+= nsTimerMotifFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_MOTIF_LDFLAGS)
 else
 TIMER_SUFFIX	= s
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 endif
 
 include $(topsrcdir)/config/rules.mk

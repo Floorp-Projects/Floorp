@@ -111,7 +111,7 @@ XPIDLSRCS = \
 endif
 
 # Also create static library libxmlterm.a
-override NO_STATIC_LIB=
+FORCE_STATIC_LIB = 1
 
 
 include $(topsrcdir)/config/config.mk

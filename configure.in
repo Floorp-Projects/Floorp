@@ -3654,10 +3654,6 @@ if test "$_IGNORE_LONG_LONG_WARNINGS"; then
      CFLAGS="$_SAVE_CFLAGS"
 fi
 
-MOZ_ARG_DISABLE_BOOL(shared,
-[  --disable-shared        Disable building of internal shared libs (BROKEN)],
-  NO_SHARED_LIB=1)
-
 dnl C++ rtti (g++/egcs only - for now)
 dnl Should be smarter and check that the compiler does indeed have rtti
 MOZ_ARG_ENABLE_BOOL(cpp-rtti,
@@ -4013,11 +4009,23 @@ dnl = End OS/2 Build Options
 dnl =
 dnl ========================================================
 
-NO_STATIC_LIB=1
+BUILD_SHARED_LIBS=1
+BUILD_STATIC_LIBS=
+MOZ_STATIC_COMPONENT_LIBS=
+
+MOZ_ARG_DISABLE_BOOL(shared,
+[  --disable-shared        Disable building of internal shared libs],
+    BUILD_SHARED_LIBS=)
 
 MOZ_ARG_ENABLE_BOOL(static,
-[  --enable-static         Enable building of internal static libs (BROKEN)],
-  NO_STATIC_LIB=)
+[  --enable-static         Enable building of internal static libs],
+    BUILD_STATIC_LIBS=1
+    MOZ_STATIC_COMPONENT_LIBS=1)
+
+if (test -z "$BUILD_SHARED_LIBS" && test -z "$BUILD_STATIC_LIBS") ||
+    (test -n "$BUILD_SHARED_LIBS" && test -n "$BUILD_STATIC_LIBS") ; then
+    AC_MSG_ERROR([Only one of --enable-shared or --enable-static must be specified.])
+fi
 
 dnl ========================================================
 
@@ -4030,7 +4038,7 @@ dnl ========================================================
 
 case "$target" in
     *-*-aix*)
-	if test "${NO_STATIC_LIB}" = "1" -o -z "${NO_SHARED_LIB}"; then
+	if test -z "${BUILD_STATIC_LIBS}" -o -n "${BUILD_SHARED_LIBS}"; then
 	    if test -f /usr/lpp/xlC/bin/makeC++SharedLib_r; then
 		AIX_SHLIB_BIN='/usr/lpp/xlC/bin/makeC++SharedLib_r'
 	    elif test -f /usr/ibmcxx/bin/makeC++SharedLib_r; then
@@ -4042,8 +4050,8 @@ case "$target" in
 		echo "*** Unable to locate makeC++SharedLib_r, needed for creation of shared"
 		echo "*** libraries on AIX.  You will only be able to build static libraries."
 		echo
-		NO_STATIC_LIB=''
-		NO_SHARED_LIB=1
+		BUILD_STATIC_LIBS=1
+		BUILD_SHARED_LIBS=
 	    fi
 	fi
 	AC_SUBST(AIX_SHLIB_BIN)
@@ -4116,13 +4124,13 @@ AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
 AC_SUBST(XPCOM_USE_LEA)
 AC_SUBST(UNIX_CRASH_ON_ASSERT)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
-AC_SUBST(NO_SHARED_LIB)
-AC_SUBST(NO_STATIC_LIB)
+AC_SUBST(BUILD_SHARED_LIBS)
+AC_SUBST(BUILD_STATIC_LIBS)
+AC_SUBST(MOZ_STATIC_COMPONENT_LIBS)
 AC_SUBST(MOZ_STATIC_COMPONENTS)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_USER_DIR)
-AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(BUILD_IDLC)
 
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
