@@ -295,6 +295,12 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
+    if ($sortkey!~/^[0-9]+$/) {
+        print "The sortkey for a milestone must be a number. Please press\n";
+        print "<b>Back</b> and try again.\n";
+        PutTrailer($localtrailer);
+        exit;
+    }
     if (TestMilestone($product,$milestone)) {
         print "The milestone '$milestone' already exists. Please press\n";
         print "<b>Back</b> and try again.\n";
