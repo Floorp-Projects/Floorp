@@ -109,6 +109,7 @@ nsNNTPNewsgroupList::nsNNTPNewsgroupList()
     m_lastMsgToDownload(0),
     m_set(nsnull)
 {
+    memset(&m_knownArts, 0, sizeof(m_knownArts));
     m_lastStatusUpdate = LL_Zero();
 }
 
