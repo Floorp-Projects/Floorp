@@ -44,6 +44,7 @@
 #include "nsIPref.h"
 #include "nsICategoryManager.h"
 #include "nsIJSRuntimeService.h"
+#include "nsIEventQueueService.h"
 #include "nsMemory.h"
 #include "jsdebug.h"
 
@@ -102,9 +103,10 @@ jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
  *******************************************************************************/
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-const char jsdServiceContractID[] = "@mozilla.org/js/jsd/debugger-service;1";
-const char jsdASObserverContractID[] = "@mozilla.org/js/jsd/app-start-observer;1";
+const char jsdServiceCtrID[] = "@mozilla.org/js/jsd/debugger-service;1";
+const char jsdASObserverCtrID[] = "@mozilla.org/js/jsd/app-start-observer;1";
 
 #ifdef DEBUG_verbose
 PRUint32 gScriptCount   = 0;
@@ -1332,17 +1334,21 @@ jsdService::EnterNestedEventLoop (PRUint32 *_rval)
 {
     nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
     NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
-
+    nsCOMPtr<nsIEventQueueService> 
+        eventService(do_GetService(kEventQueueServiceCID));
+    NS_ENSURE_TRUE(eventService, NS_ERROR_FAILURE);
+    
     appShell->Create(0, nsnull);
     appShell->Spinup();
-    // Store locally so it doesn't die on us
 
     nsCOMPtr<nsIJSContextStack> 
         stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
     nsresult rv = NS_OK;
     PRUint32 nestLevel = ++mNestedLoopLevel;
     
-    if(stack && NS_SUCCEEDED(stack->Push(nsnull)))
+    nsCOMPtr<nsIEventQueue> eventQ;
+    if (stack && NS_SUCCEEDED(stack->Push(nsnull)) &&
+        NS_SUCCEEDED(eventService->PushThreadEventQueue(getter_AddRefs(eventQ))))
     {
         while(NS_SUCCEEDED(rv) && mNestedLoopLevel >= nestLevel)
         {
@@ -1363,6 +1369,7 @@ jsdService::EnterNestedEventLoop (PRUint32 *_rval)
     else
         rv = NS_ERROR_FAILURE;
     
+    eventService->PopThreadEventQueue(eventQ);
     appShell->Spindown();
 
     NS_ASSERTION (mNestedLoopLevel <= nestLevel,
@@ -1687,7 +1694,7 @@ RegisterASObserver (nsIComponentManager *aCompMgr, nsIFile *aPath,
     if (NS_SUCCEEDED(rv)) {
         rv = categoryManager->AddCategoryEntry(APPSTART_CATEGORY,
                                                "JSDebugger app-start observer",
-                                               jsdASObserverContractID,
+                                               jsdASObserverCtrID,
                                                PR_TRUE, PR_TRUE,nsnull);
     }
     return rv;
@@ -1711,8 +1718,8 @@ UnRegisterASObserver(nsIComponentManager *aCompMgr, nsIFile *aPath,
 }
 
 static nsModuleComponentInfo components[] = {
-    {"JSDService", JSDSERVICE_CID, jsdServiceContractID, jsdServiceConstructor},
-    {"JSDASObserver", JSDASO_CID, jsdASObserverContractID,
+    {"JSDService", JSDSERVICE_CID, jsdServiceCtrID, jsdServiceConstructor},
+    {"JSDASObserver", JSDASO_CID, jsdASObserverCtrID,
      jsdASObserverConstructor, RegisterASObserver, UnRegisterASObserver }
 };
 
