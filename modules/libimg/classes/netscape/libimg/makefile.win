@@ -25,6 +25,6 @@ PACKAGE=netscape\libimg
 JSRCS=ILPixCtl.java ILPix_t.java IMGCBIF.java IMGCB.java PSIMGCB.java \
     char_t.java int_t.java 
 JMC_EXPORT=IMGCBIF IMGCB PSIMGCB 
-CLASSROOT=D:\builds\clientsrc\ns\modules\libimg\classes 
+CLASSROOT=$(DEPTH)\modules\libimg\classes 
 
 !include $(DEPTH)\config\rules.mak

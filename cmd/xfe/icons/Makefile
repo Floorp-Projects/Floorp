@@ -25,7 +25,7 @@ LIBRARY_NAME	= xfeicons
 CSRCS		= $(ICONS_GEN_SRC)
 EXPORTS		= $(ICONS_GEN_HDR) icondata.h
 
-REQUIRES	= img java jtools layer nspr util xp
+REQUIRES	= img java jtools layer nspr util xp xpcom
 
 LOCAL_INCLUDES	= -I. -I$(OBJDIR)
 
@@ -151,7 +151,9 @@ MKICONS_LIB	=  \
 		  $(DIST)/lib/libnspr21.a \
 		  $(DIST)/lib/libjpeg.a \
 		  $(DIST)/lib/libutil.a \
-		  $(DIST)/lib/libxp.a
+		  $(DIST)/lib/libxp.a \
+		  $(DIST)/lib/libplc21.a \
+		  $(DIST)/lib/libxpcom.a
 endif
 
 GARBAGE		+= $(MKICONS_EXE) \
@@ -169,7 +171,7 @@ MKICONS_EXTRA	= $(OS_LIBS) -lm
 # XXX We need to reach into the Image Library modules's source directory to 
 # get the file if.h
 $(MKICONS_EXE): mkicons.c $(MKICONS_LIB)
-	$(CCF) -o $@ -I$(DEPTH)/modules/libimg/src $< $(MKICONS_LIB) $(MKICONS_EXTRA)
+	$(CCC) $(CFLAGS) -o $@ -I$(DEPTH)/modules/libimg/src $< $(MKICONS_LIB) $(MKICONS_EXTRA)
 
 $(ICONLIST): $(ICONS)
 	@echo Adding icons to $@

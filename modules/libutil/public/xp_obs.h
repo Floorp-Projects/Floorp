@@ -28,6 +28,7 @@ typedef int NS_Error;
 #endif
 
 #include "prtypes.h"
+#include "prlog.h"
 
 typedef struct  OpaqueObserverList  *XP_ObserverList;
 typedef void* 	XP_Observable;
@@ -42,7 +43,7 @@ typedef void    (*XP_ObserverProc) (
 
 
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 /* 
         Creates a new XP_ObserverList, with an assoicated XP_Observabe, 
@@ -152,7 +153,7 @@ XP_IsObserverNotificationEnabled(
         XP_ObserverList   inObserverList    );              
         
         
-XP_END_PROTOS
+PR_END_EXTERN_C
 
         
 #endif /* #ifdef _xp_observer_h_ */

@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.1 1998/03/28 03:35:01 ltabb Exp $
+ * $Id: if.h,v 3.2 1998/07/27 16:09:30 hardts%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -28,10 +28,25 @@
 
 #define IL_INTERNAL
 
+#include "prtypes.h"
+#include "prlog.h"
+#include "prmem.h"
+#include "plstr.h"
+#include "prtime.h"
+#include "prlong.h"
+
+#ifdef STANDALONE_IMAGE_LIB
+#include "xpcompat.h"
+#else
 #include "xp_mcom.h"            /* XP definitions and types. */
+#endif /* STANDALONE_IMAGE_LIB */
+
 #include "ntypes.h"             /* typedefs for commonly used Netscape data
                                    structures */
+
+#ifndef STANDALONE_IMAGE_LIB
 #include "net.h"
+#endif /* STANDALONE_IMAGE_LIB */
 
 typedef struct _IL_GroupContext IL_GroupContext;
 typedef struct _IL_ImageReq IL_ImageReq;
@@ -43,9 +58,16 @@ typedef struct il_container_struct il_container;
 #include "libimg.h"             /* Public API to Image Library. */
 #include "il_utilp.h"           /* Private header for colormap/colorspaces. */
 #include "il_util.h"            /* Public API for colormaps/colorspaces. */
+#include "ilINetContext.h"
+#include "ilIURL.h"
+#include "ilINetReader.h"
+#ifdef STANDALONE_IMAGE_LIB
+#include "ilIImageRenderer.h"
+#endif /* STANDALONE_IMAGE_LIB */
 
 /*****************************XXXM12N Get rid of this. ***********************/
 
+PR_BEGIN_EXTERN_C
 typedef void
 (*TimeoutCallbackFunction) (void * closure);
 
@@ -53,6 +75,7 @@ extern void *
 FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
 extern void
 FE_ClearTimeout(void *timer_id);
+PR_END_EXTERN_C
 
 /*********************************XXXM12N*************************************/
 
@@ -63,24 +86,22 @@ FE_ClearTimeout(void *timer_id);
 /* #define DEBUG_GROUP_OBSERVER */
 
 #ifdef DEBUG
-#ifndef XP_MAC
 #define Debug 1
-#else
-extern int Debug;
-#endif
 #endif
 
 #ifdef XP_WIN
 #define _USD 1              /* scanlines upside-down */ 
 #endif
 
+extern PRLogModuleInfo *il_log_module;
+
 #ifdef DEBUG
-#define ILTRACE(l,t) { if(il_debug>l) {XP_TRACE(t);} }
+#define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} }
 #else
 #define ILTRACE(l,t) {}
 #endif
 
-#define FREE_IF_NOT_NULL(x)    do {if (x) {XP_FREE(x); (x) = NULL;}} while (0)
+#define FREE_IF_NOT_NULL(x)    do {if (x) {PR_FREEIF(x); (x) = NULL;}} while (0)
 
 #ifndef NSPR20
 #include "prosdep.h"  /* for IS_LITTLE_ENDIAN / IS_BIG_ENDIAN */
@@ -178,7 +199,7 @@ struct il_container_struct {
     il_container *next;         /* Cache bidirectional linked list */
     il_container *prev;
 
-    IL_URL *url;
+    ilIURL *url;
     char *url_address;          /* Same as url->address if there is no redirection*/
 
     uint32 hash;
@@ -225,8 +246,6 @@ struct il_container_struct {
     int pass;                   /* pass (scan #) of a multi-pass image.
                                    Used for interlaced GIFs & p-JPEGs */
 
-    NET_StreamClass *stream;    /* back pointer to the stream */
-
     int forced;
     uint32 content_length;
 
@@ -255,8 +274,12 @@ struct il_container_struct {
                                    Used during image decoding only. */
     IL_DisplayType display_type; /* Type of display for which the container
                                     is created. */
+#ifdef STANDALONE_IMAGE_LIB
+    ilIImageRenderer *img_cb;
+#else
     IMGCBIF *img_cb;            /* JMC callback interface. */
-    IL_NetContext *net_cx;      /* Context which initiated this transfer. */
+#endif /* STANDALONE_IMAGE_LIB */
+    ilINetContext *net_cx;      /* Context which initiated this transfer. */
 
     IL_ImageReq *clients;       /* List of clients of this container. */
     IL_ImageReq *lclient;       /* Last client in the client list. */
@@ -274,7 +297,7 @@ struct il_container_struct {
 	time_t expires;             /* Expiration date for the corresponding URL */
 
 #ifdef DEBUG
-    time_t start_time;
+    PRTime start_time;
 #endif
     char *fetch_url;            /* actual url address used */
 };
@@ -291,7 +314,11 @@ typedef enum il_draw_mode
 
 /* A context for a group of images. */
 struct _IL_GroupContext {
+#ifdef STANDALONE_IMAGE_LIB
+    ilIImageRenderer *img_cb;
+#else
     IMGCBIF *img_cb;            /* JMC callback interface to front ends. */
+#endif /* STANDALONE_IMAGE_LIB */
     void *dpy_cx;               /* An opaque pointer passed back to all
                                    callbacks in the interface vtable. */
 
@@ -340,7 +367,7 @@ struct _IL_ImageReq {
 
     IL_GroupContext *img_cx;    /* The group context to which this request
                                    belongs. */
-    IL_NetContext *net_cx;      /* A clone of the net context which the image
+    ilINetContext *net_cx;      /* A clone of the net context which the image
                                    library was given when this image handle was
                                    created.  This serves as a backup in case
                                    the image container's net_cx becomes invalid,
@@ -357,6 +384,7 @@ struct _IL_ImageReq {
 
 
 extern int il_debug;
+extern uint8 il_identity_index_map[];
 
 extern void il_delete_container(il_container *ic);
 extern il_container *il_removefromcache(il_container *ic);
@@ -364,10 +392,30 @@ extern void il_image_abort(il_container *ic);
 extern void il_image_complete(il_container *ic);
 extern PRBool il_image_stopped(il_container *ic);
 
-extern unsigned int il_write_ready(NET_StreamClass *stream);
-extern int il_first_write(NET_StreamClass *stream, const unsigned char *str, int32 len);
-extern void il_abort(NET_StreamClass *stream, int status);
-extern void il_stream_complete(NET_StreamClass *stream);
+extern ilINetReader *IL_NewNetReader(il_container *ic);
+extern il_container *IL_GetNetReaderContainer(ilINetReader *reader);
+
+#ifndef M12N_NEW_DEPENDENCIES   /* XXXM12N */
+extern unsigned int IL_StreamWriteReady(il_container *ic);
+extern int IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len);
+extern int IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len);
+extern void IL_StreamAbort(il_container *ic, int status);
+extern void IL_StreamComplete(il_container *ic, PRBool is_multipart);
+extern void IL_NetRequestDone(il_container *ic, ilIURL *urls, int status);
+extern PRBool IL_StreamCreated(il_container *ic, ilIURL *urls, int type);
+#else
+extern jint
+il_write_ready(NET_StreamClass *stream, jint op, struct JMCException* *exceptionThrown);
+extern jint
+il_first_write(NET_StreamClass *stream, jint op, jbyte* str, jsize len,
+               struct JMCException* *exceptionThrown);
+extern void
+il_abort(NET_StreamClass *stream, jint op, jint status,
+         struct JMCException* *exceptionThrown);
+extern void
+il_stream_complete(NET_StreamClass *stream, jint op,
+                   struct JMCException* *exceptionThrown);
+#endif /* M12N_NEW_DEPENDENCIES */
 
 extern int  il_gif_init(il_container *ic);
 extern int  il_gif_write(il_container *, const uint8 *, int32);
@@ -451,7 +499,11 @@ extern il_container
 
 /* Destroy an IL_Pixmap. */
 extern void
+#ifdef STANDALONE_IMAGE_LIB
+il_destroy_pixmap(ilIImageRenderer *img_cb, IL_Pixmap *pixmap);
+#else
 il_destroy_pixmap(IMGCBIF *img_cb, IL_Pixmap *pixmap);
+#endif /* STANDALONE_IMAGE_LIB */
 
 extern uint32 il_hash(const char *ubuf);
 

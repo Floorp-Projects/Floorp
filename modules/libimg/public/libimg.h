@@ -18,20 +18,29 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.1 1998/03/28 03:34:57 ltabb Exp $
+ *  $Id: libimg.h,v 3.2 1998/07/27 16:09:09 hardts%netscape.com Exp $
  */
 
 
 #ifndef _LIBIMG_H
 #define _LIBIMG_H
-#include "xp_core.h"            /* For XP_BEGIN_PROTOS/XP_END_PROTOS. */
-#include "dummy_nc.h"           /* Dummy Net Context */
+
+#include "prtypes.h"
 #include "il_types.h"
+
+#include "dummy_nc.h"
+
+#ifdef STANDALONE_IMAGE_LIB
+#include "ilISystemServices.h"
+#include "ilIImageRenderer.h"
+#else
 #include "MIMGCBIF.h"           /* JMC generated callback interface. */
 #include "MIMGCB.h"				/* JMC generated callback interface
                                    implementation. */
 #include "MPSIMGCB.h"           /* JMC generated callback interface
                                    implementation for PostScript Front End. */
+#endif /* STANDALONE_IMAGE_LIB */
+
 
 /*********************** Observers and Observables ***************************/
 
@@ -48,21 +57,26 @@
 
 
 /**************************** Initialization *********************************/
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 /* One-time image library initialization.
    - Initialize internal state.
    - Scan image plug-in directory.
    - Register individual image decoders with the netlib. */
-extern int
+#ifdef STANDALONE_IMAGE_LIB
+IL_EXTERN(int)
+IL_Init(ilISystemServices *ss);
+#else
+IL_EXTERN(int)
 IL_Init(void);
+#endif /* STANDALONE_IMAGE_LIB */
 
 /* Used when exiting the client, this code frees all imagelib data structures.
    This is done for two reasons:
    - It makes leakage analysis of the heap easier.
    - It causes resources to be freed on 16-bit Windows that would otherwise
      persist beyond the program's lifetime. */
-extern void
+IL_EXTERN(void)
 IL_Shutdown(void);
 
 
@@ -76,8 +90,15 @@ IL_Shutdown(void);
 
    The display_context argument is opaque to the image library and is
    passed back to all of the callbacks in IMGCBIF interface. */
-extern IL_GroupContext *
-IL_NewGroupContext(void *display_context, IMGCBIF *image_callbacks);
+#ifdef STANDALONE_IMAGE_LIB
+IL_EXTERN(IL_GroupContext *)
+IL_NewGroupContext(void *display_context, 
+                   ilIImageRenderer *image_render);
+#else
+IL_EXTERN(IL_GroupContext *)
+IL_NewGroupContext(void *display_context, 
+                   IMGCBIF *image_callbacks);
+#endif /* STANDALONE_IMAGE_LIB */
 
 /* Free an image context.  IL_DestroyGroupContext will make a call
    to the IMGCBIF_Release callback function of the JMC interface prior to
@@ -85,18 +106,18 @@ IL_NewGroupContext(void *display_context, IMGCBIF *image_callbacks);
    is expected to decrement the reference count for the IMGCBIF interface,
    and to free the callback vtable and the interface structure if the
    reference count is zero. */
-extern void
+IL_EXTERN(void)
 IL_DestroyGroupContext(IL_GroupContext *image_context);
 
 /* Add an observer/closure pair to an image group context's observer list.
    Returns PR_TRUE if the observer is successfully registered. */
-extern PRBool
+IL_EXTERN(PRBool)
 IL_AddGroupObserver(IL_GroupContext *img_cx, XP_ObserverProc observer,
                     void *closure);
 
 /* Remove an observer/closure pair from an image group context's observer
    list.  Returns PR_TRUE if successful. */
-extern PRBool
+IL_EXTERN(PRBool)
 IL_RemoveGroupObserver(IL_GroupContext *img_cx, XP_ObserverProc observer,
                        void *closure);
 
@@ -135,19 +156,19 @@ IL_RemoveGroupObserver(IL_GroupContext *img_cx, XP_ObserverProc observer,
    There is also an assumption being made here that there is some way to
    create a Net Context from this Net Group Context in which Navigator UI
    (animation, status, progress, etc.) can be suppressed.*/
-extern IL_ImageReq *
+IL_EXTERN(IL_ImageReq *)
 IL_GetImage(const char* url,
             IL_GroupContext *image_context,
             XP_ObserverList observer_list,
             IL_IRGB *background_color,
             uint32 width, uint32 height,
             uint32 flags,
-            IL_NetContext *net_context);
+            void *net_context);
 
 /* Release a reference to an image lib request.  If there are no other
    clients of the request's associated pixmap, any related netlib
    activity is terminated and pixmap storage may be reclaimed. */
-extern void
+IL_EXTERN(void)
 IL_DestroyImage (IL_ImageReq *image_req);
 
 /* XXX - This is a new API call to reload all images associated with a
@@ -156,14 +177,20 @@ IL_DestroyImage (IL_ImageReq *image_req);
    on memory considerations.  This process involves the destruction of the
    old IL_Pixmap structures and the allocation of new structures corresponding
    to the new bit depth. */
-extern void
-IL_ReloadImages(IL_GroupContext *image_context, IL_NetContext *net_context);
+IL_EXTERN(void)
+IL_ReloadImages(IL_GroupContext *image_context, void *net_context);
 
 /* Halt decoding of images or animation without destroying associated
    pixmap data.  This may abort any associated netlib streams.  All
    IL_ImageReq's created with the given IL_GroupContext are interrupted. */
-extern void
+IL_EXTERN(void)
 IL_InterruptContext(IL_GroupContext *image_context);
+
+/* Halt decoding or animation of a specific image request without 
+   destroying associated pixmap data. */
+
+IL_EXTERN(void)
+IL_InterruptRequest(IL_ImageReq *image_req);
 
 /* Display a rectangular portion of an image.  x and y refer to the top left
    corner of the image, measured in pixels, with respect to the document
@@ -181,17 +208,17 @@ IL_InterruptContext(IL_GroupContext *image_context);
    be fulfilled or that the image has been delayed, it will notify the client
    synchronously through the observer mechanism.  The client may then choose to
    request that an icon be drawn instead by making a call to IL_DisplayIcon. */
-extern void
+IL_EXTERN(void)
 IL_DisplaySubImage(IL_ImageReq *image_req, int x, int y, int x_offset,
                    int y_offset, int width, int height);
 
 /* Display an icon.  x and y refer to the top left corner of the icon, measured
    in pixels, with respect to the document origin. */
-extern void
+IL_EXTERN(void)
 IL_DisplayIcon(IL_GroupContext *img_cx, int icon_number, int x, int y);
 
 /* Return the dimensions of an icon. */
-extern void
+IL_EXTERN(void)
 IL_GetIconDimensions(IL_GroupContext *img_cx, int icon_number, int *width,
                      int *height);
 
@@ -199,11 +226,11 @@ IL_GetIconDimensions(IL_GroupContext *img_cx, int icon_number, int *width,
 /********************* Pixmap access functions *******************************/
 
 /* Return the image IL_Pixmap associated with an image request. */
-extern IL_Pixmap *
+IL_EXTERN(IL_Pixmap *)
 IL_GetImagePixmap(IL_ImageReq *image_req);
 
 /* Return the mask IL_Pixmap associated with an image request. */
-extern IL_Pixmap *
+IL_EXTERN(IL_Pixmap *)
 IL_GetMaskPixmap(IL_ImageReq *image_req);
 
 
@@ -211,7 +238,7 @@ IL_GetMaskPixmap(IL_ImageReq *image_req);
 
 /* Return the natural dimensions of the image.  Returns 0,0 if the dimensions
    are unknown. */
-extern void
+IL_EXTERN(void)
 IL_GetNaturalDimensions(IL_ImageReq *image_req, int *width, int *height);
 
 
@@ -234,7 +261,7 @@ IL_GetNaturalDimensions(IL_ImageReq *image_req, int *width, int *height);
    - color_space         - A pointer to the Display FE's colorspace.
    - progressive_display - Toggle for progressive image display.
    - dither_mode         - IL_ClosestColor, IL_Dither or IL_Auto. */
-extern void
+IL_EXTERN(void)
 IL_SetDisplayMode(IL_GroupContext *image_context, uint32 display_flags,
                   IL_DisplayData *display_data);
 
@@ -242,7 +269,7 @@ IL_SetDisplayMode(IL_GroupContext *image_context, uint32 display_flags,
 /************************ Image format identification ************************/
 
 /* Determine the type of the image, based on the first few bytes of data. */
-extern int
+IL_EXTERN(int)
 IL_Type(const char *buf, int32 len);
 
 
@@ -250,7 +277,7 @@ IL_Type(const char *buf, int32 len);
 
 /* Set limit on approximate size, in bytes, of all pixmap storage used by the
    Image Library. */
-extern void
+IL_EXTERN(void)
 IL_SetCacheSize(uint32 new_size);
 
 
@@ -258,7 +285,7 @@ IL_SetCacheSize(uint32 new_size);
 
 /* Free num_bytes of memory by flushing the Least Recently Used (LRU) images
    from the image cache. */
-extern void
+IL_EXTERN(void)
 IL_FreeMemory(IL_GroupContext *image_context, uint32 num_bytes);
 
 
@@ -268,18 +295,18 @@ IL_FreeMemory(IL_GroupContext *image_context, uint32 num_bytes);
    cache.  The memory won't be released if the image is still in use
    by one or more clients.  XXX - Can we get rid of this call ?  Why
    the hell do we need this ? */
-extern void
+IL_EXTERN(void)
 IL_UnCache(IL_Pixmap *pixmap);
 
 /* Attempts to release some memory by freeing an image from the image
    cache.  This may not always be possible either because all images
    in the cache are in use or because the cache is empty.  Returns the
    new approximate size of the imagelib cache. */
-extern uint32
+IL_EXTERN(uint32)
 IL_ShrinkCache(void);
 
 /* Return the approximate storage consumed by the imagelib cache, in bytes */
-extern uint32
+IL_EXTERN(uint32)
 IL_GetCacheSize(void);
 
 
@@ -287,23 +314,25 @@ IL_GetCacheSize(void);
 
 /* Returns a pointer to a string containing HTML appropriate for displaying
    in a DocInfo window.  The caller may dispose of the string using XP_FREE. */
-extern char *
+IL_EXTERN(char *)
 IL_HTMLImageInfo(char *url_address);
 
+#ifndef STANDALONE_IMAGE_LIB 
 /* Wacky netlib callback designed to give precedence to streams that block
    layout. */
-extern PRBool
-IL_PreferredStream(IL_URL *urls);
+IL_EXTERN(PRBool)
+IL_PreferredStream(URL_Struct *urls);
+#endif
 
 /* This is a legacy "safety-valve" routine, called each time a new HTML page
    is loaded.  It causes remaining references to images in the given group
    context to be freed, i.e. like calling IL_DestroyImage on each of them.
    This is primarily required because layout sometimes leaks images, and it
    should go away when we can fix layout. */
-extern void
+IL_EXTERN(void)
 IL_DestroyImageGroup(IL_GroupContext *image_context);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 #endif /* _LIBIMG_H */
 
 

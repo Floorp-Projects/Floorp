@@ -20,15 +20,18 @@
 #include "platform.h"
 #include "coremem.h"
 #else
-#include "xp_mem.h"
+#include "prmem.h"
 #endif
 
 #include "xp_obs.h"
 #include "prclist.h"
-#include "xpassert.h"
 #include "prtypes.h"
 
+#ifdef STANDALONE_IMAGE_LIB
+#define MK_OUT_OF_MEMORY -1
+#else
 extern int MK_OUT_OF_MEMORY;
+#endif /* STANDALONE_IMAGE_LIB */
 
 typedef struct Observer
 {
@@ -63,8 +66,8 @@ XP_NewObserverList(
 {
 	NS_Error result = 0;
 	
-	XP_ASSERT(outObserverList != NULL);
-	*outObserverList = XP_ALLOC(sizeof(struct OpaqueObserverList));
+	PR_ASSERT(outObserverList != NULL);
+	*outObserverList = PR_MALLOC(sizeof(struct OpaqueObserverList));
 	
 	if (*outObserverList != NULL)  
 	{
@@ -90,7 +93,7 @@ XP_DisposeObserverList(
 {
 	Observer	*obs, *next = NULL;
 	
-	XP_ASSERT(inObserverList != NULL);
+	PR_ASSERT(inObserverList != NULL);
 	for (obs = inObserverList->mObserverList; obs != NULL; )
 	{
 		
@@ -101,12 +104,12 @@ XP_DisposeObserverList(
 		
 		PR_REMOVE_LINK(ObserverLinks(obs));
 		inObserverList->mObserverList = next;
-		XP_FREE(obs);
+		PR_FREEIF(obs);
 		obs = inObserverList->mObserverList;
 	}
 	
 	
-	XP_FREE(inObserverList);
+	PR_FREEIF(inObserverList);
 }        
 
 /*
@@ -116,7 +119,7 @@ XP_Observable
 XP_GetObserverListObservable(
 	XP_ObserverList inObserverList)
 {	
-	XP_ASSERT(inObserverList != NULL);
+	PR_ASSERT(inObserverList != NULL);
 	
 	return inObserverList->mObservable;
 }	
@@ -127,7 +130,7 @@ XP_SetObserverListObservable(
 	XP_ObserverList inObserverList,
 	XP_Observable	inObservable	)
 {
-	XP_ASSERT(inObserverList != NULL);
+	PR_ASSERT(inObserverList != NULL);
 	
 	inObserverList->mObservable = inObservable;
 }	
@@ -148,12 +151,12 @@ XP_AddObserver(
 	Observer*	obs;
 	NS_Error	result = 0;
 	
-	XP_ASSERT(inObserverList != NULL);
+	PR_ASSERT(inObserverList != NULL);
 	if (inObserverList == NULL) {
 		return -1;
 	}
 	
-	obs = XP_ALLOC(sizeof (Observer));
+	obs = PR_MALLOC(sizeof (Observer));
 	if (obs != NULL)
 	{
 		obs->mCallback = inObserver;
@@ -208,7 +211,7 @@ XP_RemoveObserver(
 					inObserverList->mObserverList = (next != obs) ? next : NULL;
 				}
 				
-				XP_FREE(obs);
+				PR_FREEIF(obs);
 				result = PR_TRUE;
 				break;
 			}

@@ -122,7 +122,7 @@ void info_callback(png_structp png_ptr, png_infop info)
     png_read_update_info(png_ptr, info);
 
     /* Set the ic values */
-    png_set_dims(png_ptr->io_ptr, png_ptr);
+    png_set_dims((il_container *)png_ptr->io_ptr, png_ptr);
 
    /* if(png_ptr->num_trans)
        il_png_init_transparency( png_ptr, png_ptr->io_ptr, png_ptr->trans_values.index);
@@ -138,7 +138,7 @@ il_create_alpha_mask( il_container *ic ,/* png_bytep mask, int srcwidth, */int x
            if (!ic->mask) {
             NI_PixmapHeader *mask_header;
     
-            if (!(ic->mask = XP_NEW_ZAP(IL_Pixmap))) {
+            if (!(ic->mask = PR_NEWZAP(IL_Pixmap))) {
                 return;
             }
 
@@ -180,8 +180,8 @@ void row_callback( png_structp png_ptr,  png_bytep new_row,
     il_container *ic = (il_container *)png_ptr->io_ptr;  
 
 	if(new_row){
-			il_emit_row( png_ptr->io_ptr , 0, new_row,
-			     0, png_ptr->width, row_num,
+			il_emit_row( (il_container *)png_ptr->io_ptr , 0, 
+			     new_row, 0, png_ptr->width, row_num,
 			     1, ilErase /* ilOverlay */, png_ptr->pass ); 
 		/*	il_flush_image_data(png_ptr->io_ptr); */
 	}
@@ -207,7 +207,7 @@ void end_callback(png_structp png_ptr, png_infop info)
  * Most people won't do much here, perhaps setting a flag that
  * marks the image as finished.
  */
-        il_flush_image_data(png_ptr->io_ptr);
+        il_flush_image_data((il_container *)png_ptr->io_ptr);
 }
 
 

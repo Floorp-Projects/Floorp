@@ -17,7 +17,7 @@
  */
 /* 
  *  ni_pixmp.h --- Cross platform pixmap data structure.
- *  $Id: ni_pixmp.h,v 3.1 1998/03/28 03:34:58 ltabb Exp $
+ *  $Id: ni_pixmp.h,v 3.2 1998/07/27 16:09:11 hardts%netscape.com Exp $
  */
 
 

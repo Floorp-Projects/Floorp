@@ -21,15 +21,16 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.c,v 3.1 1998/03/28 03:34:59 ltabb Exp $
+   $Id: color.cpp,v 3.1 1998/07/27 16:09:19 hardts%netscape.com Exp $
 */
 
 
-/*
-#include "xp.h"
-*/
 #include "if.h"
+#ifdef STANDALONE_IMAGE_LIB
+#include "xpcompat.h"
+#else
 #include "xp_qsort.h"
+#endif
 
 #ifndef NSPR20
 #if defined(__sun)
@@ -41,6 +42,24 @@
 #pragma profile on
 #endif
 
+uint8 il_identity_index_map[] = { 0, 1, 2, 3, 4, 5, 6, 7, 
+8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,
+72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 
+104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 
+119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 
+134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 
+149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 
+164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 
+179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 
+194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 
+209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 
+224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 
+239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 
+254, 255 };
 
 static void
 ConvertRGBToCI(il_container *ic,
@@ -54,12 +73,13 @@ ConvertRGBToCI(il_container *ic,
     uint8 XP_HUGE *out = (uint8 XP_HUGE *) vout + x_offset;
     const uint8 *end = sp + 3*num;
     IL_ColorMap *cmap = &ic->image->header.color_space->cmap;
-    uint8 *lookup_table = cmap->table;
+    uint8 *lookup_table = (uint8 *)cmap->table;
     uint8 *index_map = cmap->index;
 
-    XP_ASSERT(index_map);
-    if (!index_map)
-        return;
+	if (index_map == NULL) 
+	{
+	    index_map = il_identity_index_map;
+	}
 
     if (!mask)
     {
@@ -103,9 +123,10 @@ DitherConvertRGBToCI(il_container *ic,
     const uint8 XP_HUGE *end = out + num;
     uint8 *index_map = ic->image->header.color_space->cmap.index;
 
-    XP_ASSERT(index_map);
-    if (!index_map)
-        return;
+	if (index_map == NULL) 
+	{
+	    index_map = il_identity_index_map;
+	}
 
     il_quantize_fs_dither(ic, mask, sp, x_offset, (uint8 XP_HUGE *) vout, num);
     if (mask) {
@@ -138,16 +159,16 @@ static struct fs_data *
 init_fs_dither(il_container *ic)
 {
 	struct fs_data *fs;
-	fs = XP_NEW_ZAP(struct fs_data);
+	fs = PR_NEWZAP(struct fs_data);
     if (! fs)
         return NULL;
 
 	fs->width = ic->image->header.width;
 	fs->direction = 1;
-	fs->err1 = (long*) XP_CALLOC(fs->width+2, sizeof(long));
-	fs->err2 = (long*) XP_CALLOC(fs->width+2, sizeof(long));
-	fs->greypixels = (uint8 *)XP_CALLOC(fs->width+7, 1);
-	fs->bwpixels = (uint8 *)XP_CALLOC(fs->width+7, 1);
+	fs->err1 = (long*) PR_Calloc(fs->width+2, sizeof(long));
+	fs->err2 = (long*) PR_Calloc(fs->width+2, sizeof(long));
+	fs->greypixels = (uint8 *)PR_Calloc(fs->width+7, 1);
+	fs->bwpixels = (uint8 *)PR_Calloc(fs->width+7, 1);
 #ifdef XP_UNIX
     {
         int i;
@@ -379,7 +400,7 @@ ConvertRGBToRGB8(il_container *ic,
     uint8 XP_HUGE *out = (uint8 XP_HUGE *) vout + x_offset;
     const uint8 *end = sp + num*3;
     il_ColorSpaceData *private_data =
-        ic->image->header.color_space->private_data;
+        (il_ColorSpaceData *)ic->image->header.color_space->private_data;
     uint8 *rm = (uint8*)private_data->r8torgbn;
     uint8 *gm = (uint8*)private_data->g8torgbn;
     uint8 *bm = (uint8*)private_data->b8torgbn;
@@ -425,7 +446,7 @@ ConvertRGBToRGB16(il_container *ic,
     uint16 XP_HUGE *out = (uint16 XP_HUGE *) vout + x_offset;
     const uint8 *end = sp + num*3;
     il_ColorSpaceData *private_data =
-        ic->image->header.color_space->private_data;
+        (il_ColorSpaceData *)ic->image->header.color_space->private_data;
     uint16 *rm = (uint16*)private_data->r8torgbn;
     uint16 *gm = (uint16*)private_data->g8torgbn;
     uint16 *bm = (uint16*)private_data->b8torgbn;
@@ -507,7 +528,7 @@ ConvertRGBToRGB32(il_container *ic,
     uint32 XP_HUGE *out = (uint32 XP_HUGE *) vout + x_offset;
     const uint8 *end = sp + num*3;
     il_ColorSpaceData *private_data =
-        ic->image->header.color_space->private_data;
+        (il_ColorSpaceData *)ic->image->header.color_space->private_data;
     uint32 *rm = (uint32*)private_data->r8torgbn;
     uint32 *gm = (uint32*)private_data->g8torgbn;
     uint32 *bm = (uint32*)private_data->b8torgbn;
@@ -570,8 +591,8 @@ unique_map_colors(NI_ColorMap *cmap)
 
     max_colors = -num_colors;
 
-    XP_ASSERT(max_colors <= 256);
-    XP_ASSERT(map);
+    PR_ASSERT(max_colors <= 256);
+    PR_ASSERT(map);
 
     /* Convert RGB values into indices. */
     for (i = 0; i < max_colors; i++) {
@@ -624,9 +645,9 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
     {
         uint8 *tmp_map;         /* Array type corresponds to pixmap depth. */
 
-        private_data->r8torgbn = XP_ALLOC(256);
-        private_data->g8torgbn = XP_ALLOC(256);
-        private_data->b8torgbn = XP_ALLOC(256);
+        private_data->r8torgbn = PR_MALLOC(256);
+        private_data->g8torgbn = PR_MALLOC(256);
+        private_data->b8torgbn = PR_MALLOC(256);
         
         if (!(private_data->r8torgbn &&
               private_data->g8torgbn &&
@@ -660,9 +681,9 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
                                    present. */
         uint16 *tmp_map;        /* Array type corresponds to pixmap depth. */
         
-        private_data->r8torgbn = XP_ALLOC(sizeof(uint16) * 256);
-        private_data->g8torgbn = XP_ALLOC(sizeof(uint16) * 256);
-        private_data->b8torgbn = XP_ALLOC(sizeof(uint16) * 256);
+        private_data->r8torgbn = PR_MALLOC(sizeof(uint16) * 256);
+        private_data->g8torgbn = PR_MALLOC(sizeof(uint16) * 256);
+        private_data->b8torgbn = PR_MALLOC(sizeof(uint16) * 256);
         
         if (!(private_data->r8torgbn &&
               private_data->g8torgbn &&
@@ -672,7 +693,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
         }
 
 /* Compensate for Win95's sometimes-weird color quantization. */
-        win95_rounding = (color_space->os_flags & WIN95_ROUNDING) != 0;
+        win95_rounding = (PRBool)((color_space->os_flags & WIN95_ROUNDING) != 0);
 
 #define _W1(v, b)         ((v) - (1 << (7 - (b))))
 #define WACKY(v, b)       ((_W1(v, b) < 0) ? 0 : _W1(v, b))
@@ -706,9 +727,9 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
     {
         uint32 *tmp_map;        /* Array type corresponds to pixmap depth. */
 
-        private_data->r8torgbn = XP_ALLOC(sizeof(uint32) * 256);
-        private_data->g8torgbn = XP_ALLOC(sizeof(uint32) * 256);
-        private_data->b8torgbn = XP_ALLOC(sizeof(uint32) * 256);
+        private_data->r8torgbn = PR_MALLOC(sizeof(uint32) * 256);
+        private_data->g8torgbn = PR_MALLOC(sizeof(uint32) * 256);
+        private_data->b8torgbn = PR_MALLOC(sizeof(uint32) * 256);
         
         if (!(private_data->r8torgbn &&
               private_data->g8torgbn &&
@@ -736,7 +757,7 @@ il_init_rgb_depth_tables(IL_ColorSpace *color_space)
     default:
         ILTRACE(0,("il: unsupported truecolor pixmap_depth: %d bpp",
                    pixmap_depth));
-        XP_ASSERT(0);
+        PR_ASSERT(0);
     }
 
     return TRUE;
@@ -766,6 +787,7 @@ il_setup_color_space_converter(il_container *ic)
        example, colormap sizes are actually rounded up to a power of two. */
     if (src_color_space->type == NI_PseudoColor)
         unique_map_colors(&src_color_space->cmap);
+
 
 #ifndef M12N                    /* XXXM12N Fix me. */
 #ifdef XP_MAC
@@ -797,6 +819,12 @@ il_setup_color_space_converter(il_container *ic)
     case IL_GreyToPseudo:
     case IL_PseudoToPseudo:
 
+#ifdef STANDALONE_IMAGE_LIB
+        if (src_color_space == img_color_space) {
+            ic->converter = NULL;
+            return PR_TRUE;
+        } else
+#endif
         /* Resolve dither_mode if necessary. */
         if (dither_mode == IL_Auto) {
             int num_colors = src_color_space->cmap.num_colors;
@@ -807,7 +835,7 @@ il_setup_color_space_converter(il_container *ic)
                 dither_mode = IL_ClosestColor;
 
                 ILTRACE(1,("Dithering turned off; Image has %d colors: %s",
-                           num_colors, ic->url ? ic->url->address : ""));
+                           num_colors, ic->url ? ic->url_address : ""));
             }
             else {
                 dither_mode = IL_Dither;
@@ -861,7 +889,7 @@ il_setup_color_space_converter(il_container *ic)
             break;
 
         default:
-            XP_ASSERT(0);
+            PR_ASSERT(0);
             break;
         }
         break;
@@ -885,7 +913,7 @@ il_setup_color_space_converter(il_container *ic)
 
     default:
         converter = NULL;
-        XP_ASSERT(0);
+        PR_ASSERT(0);
         break;
     }
     

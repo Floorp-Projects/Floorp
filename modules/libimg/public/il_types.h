@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_types.h --- Image library data types and structures.
- *  $Id: il_types.h,v 3.1 1998/03/28 03:34:57 ltabb Exp $
+ *  $Id: il_types.h,v 3.2 1998/07/27 16:09:07 hardts%netscape.com Exp $
  */
 
 
@@ -26,6 +26,14 @@
 #define _IL_TYPES_H_
 
 #include "prtypes.h"
+
+#ifdef STANDALONE_IMAGE_LIB
+#define IL_EXTERN(__type) PR_EXTERN(__type)
+#define IL_IMPLEMENT(__type) PR_IMPLEMENT(__type)
+#else
+#define IL_EXTERN(__type) __type
+#define IL_IMPLEMENT(__type) __type
+#endif /* STANDALONE_IMAGE_LIB */
 
 /************************** Notes ********************************************
 * 1. Required #defines:

@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "xp_mem.h"
+#include "prmem.h"
 
 /* Include the implementation-specific header: */
 #include "PIMGCB.h"
@@ -90,7 +90,7 @@ JMC_PUBLIC_API(void)
 _IMGCB_finalize(struct IMGCB* self, jint op, JMCException* *exc)
 {
 	/* Override this method and add your own finalization here. */
-	XP_FREEIF(self);
+	PR_FREEIF(self);
 }
 #endif
 
@@ -123,7 +123,7 @@ const struct IMGCBInterface IMGCBVtable = {
 JMC_PUBLIC_API(IMGCB*)
 IMGCBFactory_Create(JMCException* *exception)
 {
-	IMGCBImplHeader* impl = (IMGCBImplHeader*)XP_NEW_ZAP(IMGCBImpl);
+	IMGCBImplHeader* impl = (IMGCBImplHeader*)PR_NEWZAP(IMGCBImpl);
 	IMGCB* self;
 	if (impl == NULL) {
 		JMC_EXCEPTION(exception, JMCEXCEPTION_OUT_OF_MEMORY);
@@ -134,7 +134,7 @@ IMGCBFactory_Create(JMCException* *exception)
 	impl->refcount = 1;
 	_IMGCB_init(self, exception);
 	if (JMC_EXCEPTION_RETURNED(exception)) {
-		XP_FREE(impl);
+		PR_FREEIF(impl);
 		return NULL;
 	}
 	return self;

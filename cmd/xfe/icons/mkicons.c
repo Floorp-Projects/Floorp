@@ -48,12 +48,15 @@ static char* header_comment =
 " * Questions to malmer@netscape.com.\n"
 " */\n\n";
 
-#include "if.h"                 /* Image Library private header. */
+
+#include "if.h"                  /* Image Library private header. */
 #include "libimg.h"             /* Image Library public API. */
 #include "il_util.h"            /* Colormap/colorspace API. */
 #include "il_strm.h"            /* Image Library stream converters. */
 
 #include "structs.h"            /* For MWContext. */
+#include "ilINetReader.h"
+#include "ilIURL.h"
 
 #define MAX_ANIMS 10
 #define MAX_IMAGES 1000
@@ -66,7 +69,9 @@ void * FE_SetTimeout(TimeoutCallbackFunction func, void * closure,
                      uint32 msecs) { return 0; }
 void FE_ClearTimeout(void *timer_id) {}
 
+PR_BEGIN_EXTERN_C
 void lo_view_title(MWContext *context, char *title_str) {}
+PR_END_EXTERN_C
 
 #ifdef MOCHA
 void LM_SendImageEvent(MWContext *context, LO_ImageStruct *image_data,
@@ -82,7 +87,9 @@ int32 NET_GetMaxMemoryCacheSize(void) { return 1000000; }
 void NET_FreeURLStruct(URL_Struct * URL_s) {}
 int NET_InterruptWindow(MWContext * window_id) {return 0;}
 URL_Struct *NET_CreateURLStruct(const char *url, NET_ReloadMethod reload) { return 0; }
+PR_BEGIN_EXTERN_C
 History_entry *  SHIST_GetCurrent(History * hist) { return 0; }
+PR_END_EXTERN_C
 int NET_GetURL (URL_Struct * URL_s, FO_Present_Types output_format,
 		MWContext * context, Net_GetUrlExitFunc* exit_routine) 
 { return -1; }
@@ -103,8 +110,13 @@ char * NET_EscapeHTML(const char * string) { return (char *)string; }
 
 extern int il_first_write(NET_StreamClass *stream, const unsigned char *str, int32 len);
 
+extern ilIURL *IL_CreateIURL(URL_Struct *urls);
+
+PR_BEGIN_EXTERN_C
 char *XP_GetBuiltinString(int16 i);
 
+char *XP_GetString(int16 i);
+PR_END_EXTERN_C
 char *
 XP_GetString(int16 i)
 {
@@ -310,11 +322,11 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   images[total_images].width = img_header->width;
   images[total_images].height = img_header->height;
   if (pixmap_depth == 1)
-      images[total_images].mono_bits = image->bits;
+      images[total_images].mono_bits = (char*)image->bits;
   else
-      images[total_images].color_bits = image->bits;
+      images[total_images].color_bits = (char*)image->bits;
   if (mask)
-      images[total_images].mask_bits = mask->bits;
+      images[total_images].mask_bits = (char*)mask->bits;
 
   for (i = 0; i < src_cmap_num_colors; i++) 
 	{
@@ -407,9 +419,9 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   }
 
   /* Generate monochrome icon from color data. */
-  scanline = image->bits;
+  scanline = (unsigned char*)image->bits;
   if (mask)
-      mask_scanline = mask->bits;
+      mask_scanline = (unsigned char*)mask->bits;
   end = scanline + (img_header->widthBytes * img_header->height);
   row_parity = 0;
       
@@ -468,7 +480,7 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   /* Mask data */
   if (mask)
     {
-      scanline = mask->bits;
+      scanline = (unsigned char*)mask->bits;
       end = scanline + (mask_header->widthBytes * mask_header->height);
       fprintf (stdout, "\n /* Mask Data */\n (unsigned char*)\n \"");
       column = 2;
@@ -503,7 +515,7 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
   fprintf (stdout, "\n /* Color icon */\n (unsigned char*)\n \"");
   column = 2;
 
-  scanline = image->bits;
+  scanline = (unsigned char*)image->bits;
   end = scanline + (img_header->widthBytes * img_header->height);
   for (;scanline < end; scanline += img_header->widthBytes)
     {
@@ -655,6 +667,8 @@ MKICON_GetImage(char *file)
 #ifdef __hpux
   void *imptr;
 #endif
+  ilINetReader *reader;
+  ilIURL *ilurl;
 
   memset (&cx, 0, sizeof(cx));
   
@@ -687,7 +701,7 @@ MKICON_GetImage(char *file)
                                    transparent. */
 
   /* The container needs to have a NetContext. */
-  ic->net_cx = IL_NewDummyNetContext(&cx, 0);
+  ic->net_cx = (ilINetContext*)IL_NewDummyNetContext(&cx, (NET_ReloadMethod)0);
 
   /* Allocate the source image header. */
   ic->src_header = XP_NEW_ZAP(NI_PixmapHeader);
@@ -743,7 +757,11 @@ MKICON_GetImage(char *file)
   /* Create a URL structure. */
   url = XP_NEW_ZAP (URL_Struct);
   url->address = strdup("\000\000");
-  url->fe_data = ic;
+
+  /* Create a new net reader */
+  reader = IL_NewNetReader(ic);
+  ilurl = IL_CreateIURL(url);
+  ilurl->SetReader(reader);
 
   /* Read in the file data. */
   if (stat (file, &st))
