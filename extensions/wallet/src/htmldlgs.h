@@ -181,49 +181,49 @@ XP_MakeHTMLDialog2(XPDialogInfo *dialogInfo) {
     const nsAutoString html_dlgs = nsAutoString(HTML_DLGS_URL);
     if (!NS_FAILED(NS_NewURL(&url, html_dlgs))) {
       res = netservice->GetCookieString(url, *nsCookie);
+
+      /* convert cookie to a C string */
+
+      char *cookies = nsCookie->ToNewCString();
+      char *cookie = PL_strstr(cookies, "htmldlgs=|"); /* get to htmldlgs=| */
+      if (cookie) {
+        cookie = cookie + PL_strlen("htmldlgs=|"); /* get passed htmldlgs=| */
+
+        /* button name is first item in cookie (up to next verical bar) */
+
+        separator = strchr(cookie, '|');
+        *separator = '\0';
+        LocalStrAllocCopy(button, cookie);
+        cookie = separator+1;
+        *separator = '|';
+
+        /* remainder of cookie string are the args, separated by vertical bars */
+        for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
+          separator = strchr(cookie, '|');
+          *separator = '\0';
+          LocalStrAllocCopy(argv[i], cookie);
+          cookie = separator+1;
+          *separator = '|';
+          argc++;
+        }
+
+        /* call the callback routine */
+        if (!PORT_Strcmp(button,"OK")) {
+          (dialogInfo->handler)(NULL, argv, argc, XP_DIALOG_OK_BUTTON);
+        } else {
+          (dialogInfo->handler)(NULL, argv, argc, XP_DIALOG_CANCEL_BUTTON);
+        }
+
+        /* free up the allocated strings */
+        XP_FREE(button);
+        for (int j=0; j<argc; j++) {
+          XP_FREE(argv[j]);
+        }
+      }
+      delete[] cookies;
     }
-
-    /* convert cookie to a C string */
-
-    char *cookies = nsCookie->ToNewCString();
-    char *cookie = PL_strstr(cookies, "htmldlgs=|"); /* get to htmldlgs=| */
-    cookie = cookie + PL_strlen("htmldlgs=|"); /* get passed htmldlgs=| */
-
-    /* button name is first item in cookie (up to next verical bar) */
-
-    separator = strchr(cookie, '|');
-    *separator = '\0';
-    LocalStrAllocCopy(button, cookie);
-    cookie = separator+1;
-    *separator = '|';
-
-    /* remainder of cookie string are the args, separated by vertical bars */
-    for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
-      separator = strchr(cookie, '|');
-      *separator = '\0';
-      LocalStrAllocCopy(argv[i], cookie);
-      cookie = separator+1;
-      *separator = '|';
-      argc++;
-    }
-
-    /* call the callback routine */
-    if (!PORT_Strcmp(button,"OK")) {
-      (dialogInfo->handler)(NULL, argv, argc, XP_DIALOG_OK_BUTTON);
-    } else {
-      (dialogInfo->handler)(NULL, argv, argc, XP_DIALOG_CANCEL_BUTTON);
-    }
-
-    /* free up the allocated strings */
-    XP_FREE(button);
-    for (int j=0; j<argc; j++) {
-      XP_FREE(argv[j]);
-    }
-
-    delete[] cookies;
     NS_RELEASE(netservice);
   }
-
 }
 
 XPDialogStrings *
