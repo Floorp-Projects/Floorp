@@ -19,9 +19,39 @@
 #
 # Contributor(s): Myk Melez <myk@mozilla.org>
 
-################################################################################
+=head1 NAME
+
+Bugzilla::FlagType - A module to deal with Bugzilla flag types.
+
+=head1 SYNOPSIS
+
+FlagType.pm provides an interface to flag types as stored in Bugzilla.
+See below for more information.
+
+=head1 NOTES
+
+=over
+
+=item *
+
+Prior to calling routines in this module, it's assumed that you have
+already done a C<require CGI.pl>.  This will eventually change in a
+future version when CGI.pl is removed.
+
+=item *
+
+Use of private functions/variables outside this module may lead to
+unexpected results after an upgrade.  Please avoid using private
+functions in other files/modules.  Private functions are functions
+whose names start with _ or are specifically noted as being private.
+
+=back
+
+=cut
+
+######################################################################
 # Module Initialization
-################################################################################
+######################################################################
 
 # Make it harder for us to do dangerous things in Perl.
 use strict;
@@ -36,14 +66,24 @@ use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Config;
 
-# Note!  This module requires that its caller have said "require CGI.pl" 
-# to import relevant functions from that script and its companion globals.pl.
-
-################################################################################
+######################################################################
 # Global Variables
-################################################################################
+######################################################################
 
-# basic sets of columns and tables for getting flag types from the database
+=begin private
+
+=head1 PRIVATE VARIABLES/CONSTANTS
+
+=over
+
+=item C<@base_columns>
+
+basic sets of columns and tables for getting flag types from the
+database.  B<Used by get, match, sqlify_criteria and perlify_record>
+
+=back
+
+=cut
 
 my @base_columns = 
   ("1", "flagtypes.id", "flagtypes.name", "flagtypes.description", 
@@ -52,20 +92,44 @@ my @base_columns =
    "flagtypes.is_requesteeble", "flagtypes.is_multiplicable", 
    "flagtypes.grant_group_id", "flagtypes.request_group_id");
 
-# Note: when adding tables to @base_tables, make sure to include the separator 
-# (i.e. a comma or words like "LEFT OUTER JOIN") before the table name, 
-# since tables take multiple separators based on the join type, and therefore 
-# it is not possible to join them later using a single known separator.
+=pod
+
+=over
+
+=item C<@base_tables>
+
+Which database(s) is the data coming from?
+
+Note: when adding tables to @base_tables, make sure to include the separator 
+(i.e. a comma or words like C<LEFT OUTER JOIN>) before the table name, 
+since tables take multiple separators based on the join type, and therefore 
+it is not possible to join them later using a single known separator.
+B<Used by get, match, sqlify_criteria and perlify_record>
+
+=back
+
+=end private
+
+=cut
 
 my @base_tables = ("flagtypes");
 
-################################################################################
+######################################################################
 # Public Functions
-################################################################################
+######################################################################
+=head1 PUBLIC FUNCTIONS/METHODS
+
+=over
+
+=item C<get($id)>
+
+Returns a hash of information about a flag type.
+
+=back
+
+=cut
 
 sub get {
-    # Returns a hash of information about a flag type.
-
     my ($id) = @_;
 
     my $select_clause = "SELECT " . join(", ", @base_columns);
@@ -80,15 +144,51 @@ sub get {
     return $type;
 }
 
+=pod
+
+=over
+
+=item C<get_inclusions($id)>
+
+Someone please document this
+
+=back
+
+=cut
+
 sub get_inclusions {
     my ($id) = @_;
     return get_clusions($id, "in");
 }
 
+=pod
+
+=over
+
+=item C<get_exclusions($id)>
+
+Someone please document this
+
+=back
+
+=cut
+
 sub get_exclusions {
     my ($id) = @_;
     return get_clusions($id, "ex");
 }
+
+=pod
+
+=over
+
+=item C<get_clusions($id, $type)>
+
+Someone please document this
+
+=back
+
+=cut
 
 sub get_clusions {
     my ($id, $type) = @_;
@@ -111,10 +211,20 @@ sub get_clusions {
     return \@clusions;
 }
 
-sub match {
-    # Queries the database for flag types matching the given criteria
-    # and returns the set of matching types.
+=pod
 
+=over
+
+=item C<match($criteria, $include_count)>
+
+Queries the database for flag types matching the given criteria
+and returns the set of matching types.
+
+=back
+
+=cut
+
+sub match {
     my ($criteria, $include_count) = @_;
 
     my @tables = @base_tables;
@@ -157,9 +267,19 @@ sub match {
     return \@types;
 }
 
+=pod
+
+=over
+
+=item C<count($criteria)>
+
+Returns the total number of flag types matching the given criteria.
+
+=back
+
+=cut
+
 sub count {
-    # Returns the total number of flag types matching the given criteria.
-    
     my ($criteria) = @_;
 
     # Generate query components.
@@ -184,14 +304,25 @@ sub count {
     return $count;
 }
 
+=pod
+
+=over
+
+=item C<validate($data, $bug_id, $attach_id)>
+
+Get a list of flag types to validate.  Uses the "map" function
+to extract flag type IDs from form field names by matching columns
+whose name looks like "flag_type-nnn", where "nnn" is the ID,
+and returning just the ID portion of matching field names.
+
+=back
+
+=cut
+
 sub validate {
     my $user = Bugzilla->user;
     my ($data, $bug_id, $attach_id) = @_;
   
-    # Get a list of flag types to validate.  Uses the "map" function
-    # to extract flag type IDs from form field names by matching columns
-    # whose name looks like "flag_type-nnn", where "nnn" is the ID,
-    # and returning just the ID portion of matching field names.
     my @ids = map(/^flag_type-(\d+)$/ ? $1 : (), keys %$data);
   
     foreach my $id (@ids)
@@ -273,10 +404,20 @@ sub validate {
     }
 }
 
+=pod
+
+=over
+
+=item C<normalize(@ids)>
+
+Given a list of flag types, checks its flags to make sure they should
+still exist after a change to the inclusions/exclusions lists.
+
+=back
+
+=cut
+
 sub normalize {
-    # Given a list of flag types, checks its flags to make sure they should
-    # still exist after a change to the inclusions/exclusions lists.
-    
     # A list of IDs of flag types to normalize.
     my (@ids) = @_;
     
@@ -309,17 +450,30 @@ sub normalize {
     Bugzilla::Flag::clear(&::FetchOneColumn()) while &::MoreSQLData();
 }
 
-################################################################################
+######################################################################
 # Private Functions
-################################################################################
+######################################################################
+
+=begin private
+
+=head1 PRIVATE FUNCTIONS
+
+=over
+
+=item C<sqlify_criteria($criteria, Rtables, $columns, $having)>
+
+Converts a hash of criteria into a list of SQL criteria.
+$criteria is a reference to the criteria (field => value), 
+$tables is a reference to an array of tables being accessed 
+by the query, $columns is a reference to an array of columns
+being returned by the query, and $having is a reference to
+a criterion to put into the HAVING clause.
+
+=back
+
+=cut
 
 sub sqlify_criteria {
-    # Converts a hash of criteria into a list of SQL criteria.
-    # $criteria is a reference to the criteria (field => value), 
-    # $tables is a reference to an array of tables being accessed 
-    # by the query, $columns is a reference to an array of columns
-    # being returned by the query, and $having is a reference to
-    # a criterion to put into the HAVING clause.
     my ($criteria, $tables, $columns, $having) = @_;
 
     # the generated list of SQL criteria; "1=1" is a clever way of making sure
@@ -379,9 +533,20 @@ sub sqlify_criteria {
     return @criteria;
 }
 
+=pod
+
+=over
+
+=item C<perlify_record()>
+
+Converts data retrieved from the database into a Perl record.  Depends on the
+formatting as described in @base_columns.
+
+=back
+
+=cut
+
 sub perlify_record {
-    # Converts data retrieved from the database into a Perl record.
-    
     my $type = {};
     
     $type->{'exists'} = $_[0];
@@ -401,5 +566,27 @@ sub perlify_record {
         
     return $type;
 }
+
+=end private
+
+=head1 SEE ALSO
+
+=over
+
+=item B<Bugzilla::Flags>
+
+=back
+
+=head1 CONTRIBUTORS
+
+=over
+
+=item Myk Melez <myk@mozilla.org>
+
+=item Kevin Benton <kevin.benton@amd.com>
+
+=back
+
+=cut
 
 1;
