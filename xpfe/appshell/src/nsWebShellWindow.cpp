@@ -947,6 +947,13 @@ nsWebShellWindow::ContentChanged(nsIDocument *aDocument,
 }
 
 NS_IMETHODIMP
+nsWebShellWindow::ContentStateChanged(nsIDocument *aDocument,
+                                      nsIContent* aContent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
                                    nsIContent*  aContent,
                                    nsIAtom*     aAttribute,
