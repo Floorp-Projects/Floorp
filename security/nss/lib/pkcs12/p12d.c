@@ -135,6 +135,12 @@ struct SEC_PKCS12DecoderContextStr {
 
     /* import information */
     PRBool bagsVerified;
+
+    /* buffer management for the default callbacks implementation */
+    void        *buffer;      /* storage area */
+    PRInt32     filesize;     /* actual data size */
+    PRInt32     allocated;    /* total buffer size allocated */
+    PRInt32     currentpos;   /* position counter */
 };
 
 
@@ -1019,6 +1025,114 @@ loser:
     p12dcx->error = PR_TRUE;
 }
 
+/*  default implementations of the open/close/read/write functions for
+    SEC_PKCS12DecoderStart 
+*/
+
+#define DEFAULT_TEMP_SIZE 4096
+
+static SECStatus
+p12u_DigestOpen(void *arg, PRBool readData)
+{
+    SEC_PKCS12DecoderContext* p12cxt = arg;
+
+    p12cxt->currentpos = 0;
+
+    if (PR_FALSE == readData) {
+        /* allocate an initial buffer */
+        p12cxt->filesize = 0;
+        p12cxt->allocated = DEFAULT_TEMP_SIZE;
+        p12cxt->buffer = PORT_Alloc(DEFAULT_TEMP_SIZE);
+        PR_ASSERT(p12cxt->buffer);
+    }
+    else
+    {
+        PR_ASSERT(p12cxt->buffer);
+        if (!p12cxt->buffer) {
+            return SECFailure; /* no data to read */
+        }
+    }
+
+    return SECSuccess;
+}
+
+static SECStatus
+p12u_DigestClose(void *arg, PRBool removeFile)
+{
+    SEC_PKCS12DecoderContext* p12cxt = arg;
+
+    PR_ASSERT(p12cxt);
+    if (!p12cxt) {
+        return SECFailure;
+    }
+    p12cxt->currentpos = 0;
+
+    if (PR_TRUE == removeFile) {
+        PR_ASSERT(p12cxt->buffer);
+        if (!p12cxt->buffer) {
+            return SECFailure;
+        }
+        if (p12cxt->buffer) {
+            PORT_Free(p12cxt->buffer);
+            p12cxt->buffer = NULL;
+            p12cxt->allocated = 0;
+            p12cxt->filesize = 0;
+        }
+    }
+
+    return SECSuccess;
+}
+
+static int
+p12u_DigestRead(void *arg, unsigned char *buf, unsigned long len)
+{
+    int toread = len;
+    SEC_PKCS12DecoderContext* p12cxt = arg;
+
+    if(!buf || len == 0) {
+	return -1;
+    }
+
+    if (!p12cxt->buffer || ((p12cxt->filesize-p12cxt->currentpos)<len) ) {
+        /* trying to read past the end of the buffer */
+        toread = p12cxt->filesize-p12cxt->currentpos;
+    }
+    memcpy(buf, (void*)((char*)p12cxt->buffer+p12cxt->currentpos), toread);
+    p12cxt->currentpos += toread;
+    return toread;
+}
+
+static int
+p12u_DigestWrite(void *arg, unsigned char *buf, unsigned long len)
+{
+    SEC_PKCS12DecoderContext* p12cxt = arg;
+
+    if(!buf || len == 0) {
+        return -1;
+    }
+
+    if (p12cxt->currentpos+len > p12cxt->filesize) {
+        p12cxt->filesize = p12cxt->currentpos + len;
+    }
+    else {
+        p12cxt->filesize += len;
+    }
+    if (p12cxt->filesize > p12cxt->allocated) {
+        void* newbuffer;
+        size_t newsize = p12cxt->filesize + DEFAULT_TEMP_SIZE;
+        newbuffer  = PORT_Realloc(p12cxt->buffer, newsize);
+        if (NULL == newbuffer) {
+            return -1; /* can't extend the buffer */
+        }
+        p12cxt->buffer = newbuffer;
+        p12cxt->allocated = newsize;
+    }
+    PR_ASSERT(p12cxt->buffer);
+    memcpy((void*)((char*)p12cxt->buffer+p12cxt->currentpos), buf, len);
+    p12cxt->currentpos += len;
+    return len;
+}
+
 /* SEC_PKCS12DecoderStart
  *	Creates a decoder context for decoding a PKCS 12 PDU objct.
  *	This function sets up the initial decoding context for the
@@ -1038,6 +1152,9 @@ loser:
  *		 and decoding to be single pass, thus the need for these
  *		 routines.
  *	dArg - the argument for dOpen, etc.
+ *
+ *      if NULL == dOpen == dClose == dRead == dWrite == dArg, then default
+ *      implementations using a memory buffer are used
  *
  *	This function returns the decoder context, if it was successful.
  *	Otherwise, null is returned.
@@ -1062,6 +1179,16 @@ SEC_PKCS12DecoderStart(SECItem *pwitem, PK11SlotInfo *slot, void *wincx,
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	goto loser;
     }
+
+    if (!dOpen && !dClose && !dRead && !dWrite && !dArg) {
+        /* use default implementations */
+        dOpen = p12u_DigestOpen;
+        dClose = p12u_DigestClose;
+        dRead = p12u_DigestRead;
+        dWrite = p12u_DigestWrite;
+        dArg = (void*)p12dcx;
+    }
+
     p12dcx->arena = arena;
     p12dcx->pwitem = pwitem;
     p12dcx->slot = (slot ? slot : PK11_GetInternalKeySlot());
