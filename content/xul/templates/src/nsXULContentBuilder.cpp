@@ -1360,7 +1360,7 @@ nsXULContentBuilder::CreateTemplateContents(nsIContent* aElement,
     nsCOMPtr<nsIRDFResource> resource;
 
     nsCOMPtr<nsIContent> element = aElement;
-    while (element) {
+    while (1) {
         nsXULContentUtils::GetElementRefResource(element, getter_AddRefs(resource));
         if (resource)
             break;
@@ -1369,10 +1369,15 @@ nsXULContentBuilder::CreateTemplateContents(nsIContent* aElement,
         element->GetParent(*getter_AddRefs(parent));
 
         element = parent;
+
+        NS_ASSERTION(element != nsnull,
+                     "walked to the root of the content model without finding template root");
     }
 
-    nsTemplateMatch* match;
+    nsTemplateMatch* match = nsnull;
     mContentSupportMap.Get(element, &match);
+
+    NS_ASSERTION(match != nsnull, "no match in the content support map");
 
     rv = BuildContentFromTemplate(aTemplateElement, aElement, aElement, PR_FALSE, resource, PR_FALSE,
                                   match, aContainer, aNewIndexInContainer);
