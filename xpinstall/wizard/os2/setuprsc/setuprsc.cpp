@@ -18,13 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *     Sean Su <ssu@netscape.com>
- *     IBM Corp.
  */
 
-#include <os2.h>
-
-int APIENTRY LibMain(HOBJECT hInstance, LONG wDataSeg, LONG cbHeapSize, PSZ lpCmdLine)
-{
-   return(1);
-}
+static const char *id = "Mozilla for OS/2 XPInstall Reource DLL";

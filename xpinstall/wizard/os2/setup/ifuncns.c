@@ -20,9 +20,8 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.  
+ *     Curt Patrick <curt@netscape.com>
  */
-#define INCL_DOSERRORS
 
 #include "extern.h"
 #include "extra.h"
@@ -33,14 +32,11 @@
 #include "logging.h"
 #include <logkeys.h>
 
-APIRET TimingCheck(ULONG dwTiming, PSZ szSection, PSZ szFile)
+HRESULT TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile)
 {
   char szBuf[MAX_BUF_TINY];
-  HINI hiniFile;
 
-  hiniFile = PrfOpenProfile((HBA)0, szFile);
-  PrfQueryProfileString(hiniFile, szSection, "Timing", "", szBuf, sizeof(szBuf));
-  PrfCloseProfile(hiniFile);
+  GetPrivateProfileString(szSection, "Timing", "", szBuf, sizeof(szBuf), szFile);
   if(*szBuf != '\0')
   {
     switch(dwTiming)
@@ -104,7 +100,7 @@ APIRET TimingCheck(ULONG dwTiming, PSZ szSection, PSZ szFile)
   return(FALSE);
 }
 
-char *BuildNumberedString(ULONG dwIndex, char *szInputStringPrefix, char *szInputString, char *szOutBuf, ULONG dwOutBufSize)
+char *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char *szInputString, char *szOutBuf, DWORD dwOutBufSize)
 {
   if((szInputStringPrefix) && (*szInputStringPrefix != '\0'))
     sprintf(szOutBuf, "%s-%s%d", szInputStringPrefix, szInputString, dwIndex);
@@ -114,11 +110,12 @@ char *BuildNumberedString(ULONG dwIndex, char *szInputStringPrefix, char *szInpu
   return(szOutBuf);
 }
 
-void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, ULONG dwOutUAShortSize)
+#ifdef OLDCODE
+void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize)
 {
   char *ptrFirstSpace = NULL;
 
-  memset(szOutUAShort, 0, dwOutUAShortSize);
+  ZeroMemory(szOutUAShort, dwOutUAShortSize);
   if((szUserAgent == NULL) || (*szUserAgent == '\0'))
     return;
 
@@ -131,24 +128,26 @@ void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, ULONG dwOutUAShort
   }
 }
 
-char *GetWinRegSubKeyProductPath(HINI hkRootKey, char *szInKey, char *szReturnSubKey, ULONG dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare)
+DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare, char *szInCurrentVersion)
 {
   char      *szRv = NULL;
   char      szKey[MAX_BUF];
   char      szBuf[MAX_BUF];
-  char      szCurrentVersion[MAX_BUF_TINY];
-  HINI      hkHandle;
-  ULONG     dwIndex;
-  ULONG     dwBufSize;
-  ULONG     dwTotalSubKeys;
-  ULONG     dwTotalValues;
+  HKEY      hkHandle;
+  DWORD     dwIndex;
+  DWORD     dwBufSize;
+  DWORD     dwTotalSubKeys;
+  DWORD     dwTotalValues;
   FILETIME  ftLastWriteFileTime;
+  BOOL      bFoundSubKey;
 
-  /* get the current version value for this product */
-  GetWinReg(hkRootKey, szInKey, "CurrentVersion", szCurrentVersion, sizeof(szCurrentVersion));
+  bFoundSubKey = FALSE;
 
   if(RegOpenKeyEx(hkRootKey, szInKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
-    return(szRv);
+  {
+    *szReturnSubKey = '\0';
+    return(0);
+  }
 
   dwTotalSubKeys = 0;
   dwTotalValues  = 0;
@@ -158,7 +157,7 @@ char *GetWinRegSubKeyProductPath(HINI hkRootKey, char *szInKey, char *szReturnSu
     dwBufSize = dwReturnSubKeySize;
     if(RegEnumKeyEx(hkHandle, dwIndex, szReturnSubKey, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
     {
-      if((*szCurrentVersion != '\0') && (strcmpi(szCurrentVersion, szReturnSubKey) != 0))
+      if(  (*szInCurrentVersion != '\0') && (strcmpi(szInCurrentVersion, szReturnSubKey) != 0)  )
       {
         /* The key found is not the CurrentVersion (current UserAgent), so we can return it to be deleted.
          * We don't want to return the SubKey that is the same as the CurrentVersion because it might
@@ -178,7 +177,7 @@ char *GetWinRegSubKeyProductPath(HINI hkRootKey, char *szInKey, char *szReturnSu
         AppendBackSlash(szBuf, sizeof(szBuf));
         if(strcmpi(szBuf, szCompare) == 0)
         {
-          szRv = szReturnSubKey;
+          bFoundSubKey = TRUE;
           /* found one subkey. break out of the for() loop */
           break;
         }
@@ -187,19 +186,28 @@ char *GetWinRegSubKeyProductPath(HINI hkRootKey, char *szInKey, char *szReturnSu
   }
 
   RegCloseKey(hkHandle);
-  return(szRv);
+  if(!bFoundSubKey)
+    *szReturnSubKey = '\0';
+  return(dwTotalSubKeys);
 }
 
 void CleanupPreviousVersionRegKeys(void)
 {
-  char  *szRvSubKey;
-  char  szSubKeyFound[CCHMAXPATH + 1];
+  DWORD dwIndex = 0;
+  DWORD dwSubKeyCount;
+  char  szBufTiny[MAX_BUF_TINY];
+  char  szKeyRoot[MAX_BUF_TINY];
+  char  szCurrentVersion[MAX_BUF_TINY];
+  char  szUAShort[MAX_BUF_TINY];
+  char  szRvSubKey[MAX_PATH + 1];
+  char  szPath[MAX_BUF];
+  char  szKey[MAX_BUF];
+  char  szCleanupProduct[MAX_BUF];
+  HKEY  hkeyRoot;
   char  szSubSubKey[] = "Main";
   char  szName[] = "Install Directory";
   char  szWRMSUninstall[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
-  char  szPath[MAX_BUF];
-  char  szUAShort[MAX_BUF_TINY];
-  char  szKey[MAX_BUF];
+  char  szSection[] = "Cleanup Previous Product RegKeys";
 
   strcpy(szPath, sgProduct.szPath);
   if(*sgProduct.szSubPath != '\0')
@@ -209,56 +217,83 @@ void CleanupPreviousVersionRegKeys(void)
   }
   AppendBackSlash(szPath, sizeof(szPath));
 
-  do
+  sprintf(szBufTiny, "Product Reg Key%d", dwIndex);        
+  GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
+
+  while(*szKey != '\0')
   {
-    /* build prodyct key path here */
-    sprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductName);
-    szRvSubKey = GetWinRegSubKeyProductPath(HKEY_LOCAL_MACHINE, szKey, szSubKeyFound, sizeof(szSubKeyFound), szSubSubKey, szName, szPath);
-    if(szRvSubKey)
+    sprintf(szBufTiny, "Reg Key Root%d",dwIndex);
+    GetPrivateProfileString(szSection, szBufTiny, "", szKeyRoot, sizeof(szKeyRoot), szFileIniConfig);
+    hkeyRoot = ParseRootKey(szKeyRoot);
+
+    sprintf(szBufTiny, "Product Name%d", dwIndex);        
+    GetPrivateProfileString(szSection, szBufTiny, "", szCleanupProduct, sizeof(szCleanupProduct), szFileIniConfig);
+    // something is wrong, they didn't give a product name.
+    if(*szCleanupProduct == '\0')
+      return;
+
+    sprintf(szBufTiny, "Current Version%d", dwIndex);        
+    GetPrivateProfileString(szSection, szBufTiny, "", szCurrentVersion, sizeof(szCurrentVersion), szFileIniConfig);
+
+    do
     {
-      AppendBackSlash(szKey, sizeof(szKey));
-      strcat(szKey, szSubKeyFound);
-      DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
-
-      GetUserAgentShort(szSubKeyFound, szUAShort, sizeof(szUAShort));
-      if(*szUAShort != '\0')
+      // if the current version is not found, we'll get null in szCurrentVersion and GetWinRegSubKeyProductPath() will do the right thing
+      dwSubKeyCount = GetWinRegSubKeyProductPath(hkeyRoot, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, szCurrentVersion);
+  	  
+      if(*szRvSubKey != '\0')
       {
-        /* delete uninstall key that contains product name and its user agent in parenthesis, for
-         * example:
-         *     Mozilla (0.8)
-         */
-        sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", sgProduct.szProductName, szUAShort);
-        DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
+        if(dwSubKeyCount > 1)
+        {
+          AppendBackSlash(szKey, sizeof(szKey));
+          strcat(szKey, szRvSubKey);
+        }
+        DeleteWinRegKey(hkeyRoot, szKey, TRUE);
 
-        /* delete uninstall key that contains product name and its user agent not in parenthesis,
-         * for example:
-         *     Mozilla 0.8
-         */
-        sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", sgProduct.szProductName, szUAShort);
-        DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
+        GetUserAgentShort(szRvSubKey, szUAShort, sizeof(szUAShort));
+        if(*szUAShort != '\0')
+        {
+          /* delete uninstall key that contains product name and its user agent in parenthesis, for
+           * example:
+           *     Mozilla (0.8)
+           */
+          sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", szCleanupProduct, szUAShort);
+          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
 
-        /* We are not looking to delete just the product name key, for example:
-         *     Mozilla
-         *
-         * because it might have just been created by the current installation process, so
-         * deleting this would be a "Bad Thing" (TM).  Besides, we shouldn't be deleting the
-         * CurrentVersion key that might have just gotten created because GetWinRegSubKeyProductPath()
-         * will not return the CurrentVersion key.
-         */
+          /* delete uninstall key that contains product name and its user agent not in parenthesis,
+           * for example:
+           *     Mozilla 0.8
+           */
+          sprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", szCleanupProduct, szUAShort);
+          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+
+          /* We are not looking to delete just the product name key, for example:
+           *     Mozilla
+           *
+           * because it might have just been created by the current installation process, so
+           * deleting this would be a "Bad Thing" (TM).  Besides, we shouldn't be deleting the
+           * CurrentVersion key that might have just gotten created because GetWinRegSubKeyProductPath()
+           * will not return the CurrentVersion key.
+           */
+        }
+        // the szKey was stepped on.  Reget it.
+        sprintf(szBufTiny, "Product Reg Key%d", dwIndex);        
+        GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
       }
-    }
+    }  while (*szRvSubKey != '\0');
+    sprintf(szBufTiny, "Product Reg Key%d", ++dwIndex);        
+    GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
+  } 
 
-  } while(szRvSubKey);
 }
+#endif
 
-void ProcessFileOps(ULONG dwTiming, char *szSectionPrefix)
+void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)
 {
   ProcessUncompressFile(dwTiming, szSectionPrefix);
   ProcessCreateDirectory(dwTiming, szSectionPrefix);
   ProcessMoveFile(dwTiming, szSectionPrefix);
   ProcessCopyFile(dwTiming, szSectionPrefix);
   ProcessCopyFileSequential(dwTiming, szSectionPrefix);
-  ProcessSelfRegisterFile(dwTiming, szSectionPrefix);
   ProcessDeleteFile(dwTiming, szSectionPrefix);
   ProcessRemoveDirectory(dwTiming, szSectionPrefix);
   if(!gbIgnoreRunAppX)
@@ -268,7 +303,32 @@ void ProcessFileOps(ULONG dwTiming, char *szSectionPrefix)
   ProcessSetVersionRegistry(dwTiming, szSectionPrefix);
 }
 
-int VerifyArchive(PSZ szArchive)
+void ProcessFileOpsForSelectedComponents(DWORD dwTiming)
+{
+  DWORD dwIndex0;
+  siC   *siCObject = NULL;
+
+  dwIndex0  = 0;
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(siCObject->dwAttributes & SIC_SELECTED)
+      /* Since the archive is selected, we need to process the file ops here */
+      ProcessFileOps(dwTiming, siCObject->szReferenceName);
+
+    ++dwIndex0;
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  } /* while(siCObject) */
+}
+
+void ProcessFileOpsForAll(DWORD dwTiming)
+{
+  ProcessFileOps(dwTiming, NULL);
+  ProcessFileOpsForSelectedComponents(dwTiming);
+  ProcessCreateCustomFiles(dwTiming);
+}
+
+int VerifyArchive(LPSTR szArchive)
 {
   void *vZip;
   int  iTestRv;
@@ -287,27 +347,25 @@ int VerifyArchive(PSZ szArchive)
   return(iTestRv);
 }
 
-APIRET ProcessSetVersionRegistry(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessSetVersionRegistry(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG   dwIndex;
+  DWORD   dwIndex;
   BOOL    bIsDirectory;
   char    szBuf[MAX_BUF];
   char    szSection[MAX_BUF_TINY];
   char    szRegistryKey[MAX_BUF];
   char    szPath[MAX_BUF];
   char    szVersion[MAX_BUF_TINY];
-  HINI      hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Version Registry", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Registry Key", "", szRegistryKey, sizeof(szRegistryKey));
+  GetPrivateProfileString(szSection, "Registry Key", "", szRegistryKey, sizeof(szRegistryKey), szFileIniConfig);
   while(*szRegistryKey != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      PrfQueryProfileString(hiniConfig, szSection, "Version", "", szVersion, sizeof(szVersion));
-      PrfQueryProfileString(hiniConfig, szSection, "Path",    "", szBuf,     sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Version", "", szVersion, sizeof(szVersion), szFileIniConfig);
+      GetPrivateProfileString(szSection, "Path",    "", szBuf,     sizeof(szBuf),     szFileIniConfig);
       DecryptString(szPath, szBuf);
       if(FileExists(szPath) & FILE_DIRECTORY)
         bIsDirectory = TRUE;
@@ -328,18 +386,18 @@ APIRET ProcessSetVersionRegistry(ULONG dwTiming, char *szSectionPrefix)
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Version Registry", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Registry Key", "", szRegistryKey, sizeof(szRegistryKey));
+    GetPrivateProfileString(szSection, "Registry Key", "", szRegistryKey, sizeof(szRegistryKey), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
-APIRET FileUncompress(PSZ szFrom, PSZ szTo)
+HRESULT FileUncompress(LPSTR szFrom, LPSTR szTo)
 {
   char  szBuf[MAX_BUF];
-  ULONG dwReturn;
-  ULONG cbPathLen = 0;
+  ULONG ulBuf, ulDiskNum, ulDriveMap;
+  DWORD dwReturn;
   void  *vZip;
+  APIRET rc;
 
   dwReturn = FO_SUCCESS;
   /* Check for the existance of the from (source) file */
@@ -359,8 +417,22 @@ APIRET FileUncompress(PSZ szFrom, PSZ szTo)
     AppendBackSlash(szBuf, sizeof(szBuf));
     CreateDirectoriesAll(szBuf, FALSE);
   }
-  cbPathLen = sizeof(szBuf);
-  DosQueryCurrentDir(0, szBuf, &cbPathLen);
+
+  ulBuf = MAX_BUF-3;
+  rc = DosQueryCurrentDir(0, &szBuf[3], &ulBuf);
+  // Directory does not start with 'x:\', so add it.
+  rc = DosQueryCurrentDisk(&ulDiskNum, &ulDriveMap);
+
+  // Follow the case of the first letter in the path.
+  if (isupper(szBuf[3]))
+     szBuf[0] = (char)('A' - 1 + ulDiskNum);
+  else
+     szBuf[0] = (char)('a' - 1 + ulDiskNum);
+  szBuf[1] = ':';
+  szBuf[2] = '\\';
+
+  if (toupper(szBuf[0]) != toupper(szTo[0]))
+     rc = DosSetDefaultDisk(toupper(szTo[0]) - 'A' + 1);
   if(DosSetCurrentDir(szTo) != NO_ERROR)
     return(FO_ERROR_CHANGE_DIR);
 
@@ -372,17 +444,19 @@ APIRET FileUncompress(PSZ szFrom, PSZ szTo)
   dwReturn = ExtractDirEntries(NULL, vZip);
   ZIP_CloseArchive(&vZip);
 
+  if (toupper(szBuf[0]) != toupper(szTo[0]))
+     DosSetDefaultDisk(toupper(szBuf[0]) -1 + 'A');
   if(DosSetCurrentDir(szBuf) != NO_ERROR)
     return(FO_ERROR_CHANGE_DIR);
 
   return(dwReturn);
 }
 
-APIRET ProcessXpcomFile()
+HRESULT ProcessXpcomFile()
 {
   char szSource[MAX_BUF];
   char szDestination[MAX_BUF];
-  ULONG dwErr;
+  DWORD dwErr;
 
   if(*siCFXpcomFile.szMessage != '\0')
     ShowMessage(siCFXpcomFile.szMessage, TRUE);
@@ -391,15 +465,12 @@ APIRET ProcessXpcomFile()
   {
     char szMsg[MAX_BUF];
     char szErrorString[MAX_BUF];
-    HINI   hiniConfig;
 
     if(*siCFXpcomFile.szMessage != '\0')
       ShowMessage(siCFXpcomFile.szMessage, FALSE);
 
     LogISProcessXpcomFile(LIS_FAILURE, dwErr);
-    hiniConfig = PrfOPneProfile((HAB)0, szFileIniConfig);
-    PrfQueryProfileString(hiniConfig, "Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString));
-    PrfCloseProfile(hiniConfig);
+    GetPrivateProfileString("Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString), szFileIniConfig);
     sprintf(szMsg, szErrorString, siCFXpcomFile.szSource, dwErr);
     PrintError(szMsg, ERROR_CODE_HIDE);
     return(dwErr);
@@ -425,7 +496,7 @@ APIRET ProcessXpcomFile()
   return(FO_SUCCESS);
 }
 
-APIRET CleanupXpcomFile()
+HRESULT CleanupXpcomFile()
 {
   if(siCFXpcomFile.bCleanup == TRUE)
     DirectoryRemove(siCFXpcomFile.szDestination, TRUE);
@@ -433,28 +504,40 @@ APIRET CleanupXpcomFile()
   return(FO_SUCCESS);
 }
 
-APIRET ProcessUncompressFile(ULONG dwTiming, char *szSectionPrefix)
+#ifdef OLDCODE
+#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
+
+HRESULT CleanupArgsRegistry()
 {
-  ULONG   dwIndex;
+  char  szKey[MAX_BUF];
+
+  sprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductNameInternal,
+    sgProduct.szUserAgent);
+  DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "browserargs");
+  return(FO_SUCCESS);
+}
+#endif
+
+HRESULT ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix)
+{
+  DWORD   dwIndex;
   BOOL    bOnlyIfExists;
   char    szBuf[MAX_BUF];
   char    szSection[MAX_BUF];
   char    szSource[MAX_BUF];
   char    szDestination[MAX_BUF];
-  HINI      hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Uncompress File", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Source", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection, "Source", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
       DecryptString(szSource, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szDestination, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Only If Exists", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Only If Exists", "", szBuf, sizeof(szBuf), szFileIniConfig);
       if(strcmpi(szBuf, "TRUE") == 0)
         bOnlyIfExists = TRUE;
       else
@@ -462,9 +545,9 @@ APIRET ProcessUncompressFile(ULONG dwTiming, char *szSectionPrefix)
 
       if((!bOnlyIfExists) || (bOnlyIfExists && FileExists(szDestination)))
       {
-        ULONG dwErr;
+        DWORD dwErr;
 
-        PrfQueryProfileString(hiniConfig, szSection, "Message",     "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection, "Message",     "", szBuf, sizeof(szBuf), szFileIniConfig);
         ShowMessage(szBuf, TRUE);
         if((dwErr = FileUncompress(szSource, szDestination)) != FO_SUCCESS)
         {
@@ -472,10 +555,9 @@ APIRET ProcessUncompressFile(ULONG dwTiming, char *szSectionPrefix)
           char szErrorString[MAX_BUF];
 
           ShowMessage(szBuf, FALSE);
-          PrfQueryProfileString(hiniConfig, "Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString));
+          GetPrivateProfileString("Strings", "Error File Uncompress", "", szErrorString, sizeof(szErrorString), szFileIniConfig);
           sprintf(szMsg, szErrorString, szSource, dwErr);
           PrintError(szMsg, ERROR_CODE_HIDE);
-          PrfCloseProfile(hiniConfig);
           return(dwErr);
         }
 
@@ -485,30 +567,28 @@ APIRET ProcessUncompressFile(ULONG dwTiming, char *szSectionPrefix)
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Uncompress File", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Source", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "Source", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
-APIRET FileMove(PSZ szFrom, PSZ szTo)
+HRESULT FileMove(LPSTR szFrom, LPSTR szTo)
 {
-  LHANDLE          hFile;
+  HDIR            hFile;
   FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
   char            szFromDir[MAX_BUF];
   char            szFromTemp[MAX_BUF];
   char            szToTemp[MAX_BUF];
   char            szBuf[MAX_BUF];
   BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
 
   /* From file path exists and To file path does not exist */
   if((FileExists(szFrom)) && (!FileExists(szTo)))
   {
-    MoveFile(szFrom, szTo);
+    
+    /* @MAK - need to handle OS/2 case where they are not the same drive*/
+    DosMove(szFrom, szTo);
 
     /* log the file move command */
     sprintf(szBuf, "%s to %s", szFrom, szTo);
@@ -526,7 +606,7 @@ APIRET FileMove(PSZ szFrom, PSZ szTo)
     AppendBackSlash(szToTemp, sizeof(szToTemp));
     ParsePath(szFrom, szBuf, sizeof(szBuf), FALSE, PP_FILENAME_ONLY);
     strcat(szToTemp, szBuf);
-    MoveFile(szFrom, szToTemp);
+    DosMove(szFrom, szToTemp);
 
     /* log the file move command */
     sprintf(szBuf, "%s to %s", szFrom, szToTemp);
@@ -537,108 +617,9 @@ APIRET FileMove(PSZ szFrom, PSZ szTo)
 
   ParsePath(szFrom, szFromDir, sizeof(szFromDir), FALSE, PP_PATH_ONLY);
 
-  rc = DosFindFirst(szFrom, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-  if(rc == ERROR_INVALID_HANDLE)
-    bFound = FALSE;
-  else
-    bFound = TRUE;
-
-  while(bFound)
-  {
-    if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
-    {
-      /* create full path string including filename for source */
-      strcpy(szFromTemp, szFromDir);
-      AppendBackSlash(szFromTemp, sizeof(szFromTemp));
-      strcat(szFromTemp, fdFile.achName);
-
-      /* create full path string including filename for destination */
-      strcpy(szToTemp, szTo);
-      AppendBackSlash(szToTemp, sizeof(szToTemp));
-     strcat(szToTemp, fdFile.achName);
-
-      MoveFile(szFromTemp, szToTemp);
-
-      /* log the file move command */
-      sprintf(szBuf, "%s to %s", szFromTemp, szToTemp);
-      UpdateInstallLog(KEY_MOVE_FILE, szBuf, FALSE);
-    }
-    rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
-  }
-
-  DosFindClose(hdirFindHandle);
-  return(FO_SUCCESS);
-}
-
-APIRET ProcessMoveFile(ULONG dwTiming, char *szSectionPrefix)
-{
-  ULONG dwIndex;
-  char  szBuf[MAX_BUF];
-  char  szSection[MAX_BUF];
-  char  szSource[MAX_BUF];
-  char  szDestination[MAX_BUF];
-  HINI   hiniConfig;
-
-  dwIndex = 0;
-  BuildNumberedString(dwIndex, szSectionPrefix, "Move File", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Source", "", szBuf, sizeof(szBuf));
-  while(*szBuf != '\0')
-  {
-    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
-    {
-      DecryptString(szSource, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
-      DecryptString(szDestination, szBuf);
-      FileMove(szSource, szDestination);
-    }
-
-    ++dwIndex;
-    BuildNumberedString(dwIndex, szSectionPrefix, "Move File", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Source", "", szBuf, sizeof(szBuf));
-  }
-  PrfCloseProfile(hiniConfig);
-  return(FO_SUCCESS);
-}
-
-APIRET FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists, BOOL bDnu)
-{
-  LHANDLE          hFile;
-  FILEFINDBUF3 fdFile;
-  char            szFromDir[MAX_BUF];
-  char            szFromTemp[MAX_BUF];
-  char            szToTemp[MAX_BUF];
-  char            szBuf[MAX_BUF];
-  BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
-
-  if(FileExists(szFrom))
-  {
-    /* The file in the From file path exists */
-    ParsePath(szFrom, szBuf, sizeof(szBuf), FALSE, PP_FILENAME_ONLY);
-    strcpy(szToTemp, szTo);
-    AppendBackSlash(szToTemp, sizeof(szToTemp));
-    strcat(szToTemp, szBuf);
-    CopyFile(szFrom, szToTemp, bFailIfExists);
-    sprintf(szBuf, "%s to %s", szFrom, szToTemp);
-    UpdateInstallLog(KEY_COPY_FILE, szBuf, bDnu);
-
-    return(FO_SUCCESS);
-  }
-
-  /* The file in the From file path does not exist.  Assume to contain wild args and */
-  /* proceed acordingly.                                                             */
-  ParsePath(szFrom, szFromDir, sizeof(szFromDir), FALSE, PP_PATH_ONLY);
-
-  rc = DosFindFirst(szFrom, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-  if(rc == ERROR_INVALID_HANDLE)
+  strcat(szFrom, "*.*");
+  ulFindCount = 1;
+  if((DosFindFirst(szFrom, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -657,25 +638,122 @@ APIRET FileCopy(PSZ szFrom, PSZ szTo, BOOL bFailIfExists, BOOL bDnu)
       AppendBackSlash(szToTemp, sizeof(szToTemp));
       strcat(szToTemp, fdFile.achName);
 
-      CopyFile(szFromTemp, szToTemp, bFailIfExists);
+      DosMove(szFromTemp, szToTemp);
+
+      /* log the file move command */
+      sprintf(szBuf, "%s to %s", szFromTemp, szToTemp);
+      UpdateInstallLog(KEY_MOVE_FILE, szBuf, FALSE);
+    }
+
+    ulFindCount = 1;
+    bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
+  }
+
+  DosFindClose(hFile);
+  return(FO_SUCCESS);
+}
+
+HRESULT ProcessMoveFile(DWORD dwTiming, char *szSectionPrefix)
+{
+  DWORD dwIndex;
+  char  szBuf[MAX_BUF];
+  char  szSection[MAX_BUF];
+  char  szSource[MAX_BUF];
+  char  szDestination[MAX_BUF];
+
+  dwIndex = 0;
+  BuildNumberedString(dwIndex, szSectionPrefix, "Move File", szSection, sizeof(szSection));
+  GetPrivateProfileString(szSection, "Source", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  while(*szBuf != '\0')
+  {
+    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
+    {
+      DecryptString(szSource, szBuf);
+      GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      DecryptString(szDestination, szBuf);
+      FileMove(szSource, szDestination);
+    }
+
+    ++dwIndex;
+    BuildNumberedString(dwIndex, szSectionPrefix, "Move File", szSection, sizeof(szSection));
+    GetPrivateProfileString(szSection, "Source", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  }
+  return(FO_SUCCESS);
+}
+
+HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu)
+{
+  HDIR            hFile;
+  FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
+  char            szFromDir[MAX_BUF];
+  char            szFromTemp[MAX_BUF];
+  char            szToTemp[MAX_BUF];
+  char            szBuf[MAX_BUF];
+  BOOL            bFound;
+
+  if(FileExists(szFrom))
+  {
+    /* The file in the From file path exists */
+    ParsePath(szFrom, szBuf, sizeof(szBuf), FALSE, PP_FILENAME_ONLY);
+    strcpy(szToTemp, szTo);
+    AppendBackSlash(szToTemp, sizeof(szToTemp));
+    strcat(szToTemp, szBuf);
+    if (bFailIfExists) {
+      DosCopy(szFrom, szToTemp, 0);
+    } else {
+      DosCopy(szFrom, szToTemp, DCPY_EXISTING);
+    }
+    sprintf(szBuf, "%s to %s", szFrom, szToTemp);
+    UpdateInstallLog(KEY_COPY_FILE, szBuf, bDnu);
+
+    return(FO_SUCCESS);
+  }
+
+  /* The file in the From file path does not exist.  Assume to contain wild args and */
+  /* proceed acordingly.                                                             */
+  ParsePath(szFrom, szFromDir, sizeof(szFromDir), FALSE, PP_PATH_ONLY);
+
+  ulFindCount = 1;
+  if((DosFindFirst(szFrom, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
+    bFound = FALSE;
+  else
+    bFound = TRUE;
+
+  while(bFound)
+  {
+    if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+    {
+      /* create full path string including filename for source */
+      strcpy(szFromTemp, szFromDir);
+      AppendBackSlash(szFromTemp, sizeof(szFromTemp));
+      strcat(szFromTemp, fdFile.achName);
+
+      /* create full path string including filename for destination */
+      strcpy(szToTemp, szTo);
+      AppendBackSlash(szToTemp, sizeof(szToTemp));
+      strcat(szToTemp, fdFile.achName);
+
+      if (bFailIfExists) {
+        DosCopy(szFromTemp, szToTemp, 0);
+      } else {
+        DosCopy(szFromTemp, szToTemp, DCPY_EXISTING);
+      }
 
       /* log the file copy command */
       sprintf(szBuf, "%s to %s", szFromTemp, szToTemp);
       UpdateInstallLog(KEY_COPY_FILE, szBuf, bDnu);
     }
 
-    rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
+    ulFindCount = 1;
+    bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
   }
 
-  DosFindClose(hdirFindHandle);
+  DosFindClose(hFile);
   return(FO_SUCCESS);
 }
 
-APIRET FileCopySequential(PSZ szSourcePath, PSZ szDestPath, PSZ szFilename)
+HRESULT FileCopySequential(LPSTR szSourcePath, LPSTR szDestPath, LPSTR szFilename)
 {
   int             iFilenameOnlyLen;
   char            szDestFullFilename[MAX_BUF];
@@ -687,14 +765,11 @@ APIRET FileCopySequential(PSZ szSourcePath, PSZ szDestPath, PSZ szFilename)
   char            szNumber[MAX_BUF];
   long            dwNumber;
   long            dwMaxNumber;
-  PSZ           szDotPtr;
-  LHANDLE          hFile;
-  FILEFINDBUF3 fdFile;
+  LPSTR           szDotPtr;
+  HDIR            hFile;
+  FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
   BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
 
   strcpy(szSourceFullFilename, szSourcePath);
   AppendBackSlash(szSourceFullFilename, sizeof(szSourceFullFilename));
@@ -703,8 +778,8 @@ APIRET FileCopySequential(PSZ szSourcePath, PSZ szDestPath, PSZ szFilename)
   if(FileExists(szSourceFullFilename))
   {
     /* zero out the memory */
-    memset(szSearchFilename, 0, sizeof(szSearchFilename));
-    memset(szFilenameOnly, 0, sizeof(szFilenameOnly));
+    memset(szSearchFilename, 0,        sizeof(szSearchFilename));
+    memset(szFilenameOnly, 0,          sizeof(szFilenameOnly));
     memset(szFilenameExtensionOnly, 0, sizeof(szFilenameExtensionOnly));
 
     /* parse for the filename w/o extention and also only the extension */
@@ -733,15 +808,15 @@ APIRET FileCopySequential(PSZ szSourcePath, PSZ szDestPath, PSZ szFilename)
     dwMaxNumber      = 0;
 
     /* find the largest numbered filename in the szDestPath */
-    rc = DosFindFirst(szSearchDestFullFilename, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-    if(rc == ERROR_INVALID_HANDLE)
+    ulFindCount = 1;
+    if((DosFindFirst(szSearchDestFullFilename, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
       bFound = FALSE;
     else
       bFound = TRUE;
 
     while(bFound)
     {
-       memset(szNumber, 0, sizeof(szNumber));
+      memset(szNumber, 0, sizeof(szNumber));
       if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
       {
         strcpy(szNumber, &fdFile.achName[iFilenameOnlyLen]);
@@ -750,14 +825,11 @@ APIRET FileCopySequential(PSZ szSourcePath, PSZ szDestPath, PSZ szFilename)
           dwMaxNumber = dwNumber;
       }
 
-      rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
+      ulFindCount = 1;
+      bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
     }
 
-    DosFindClose(hdirFindHandle);
+    DosFindClose(hFile);
 
     strcpy(szDestFullFilename, szDestPath);
     AppendBackSlash(szDestFullFilename, sizeof(szDestFullFilename));
@@ -771,42 +843,40 @@ APIRET FileCopySequential(PSZ szSourcePath, PSZ szDestPath, PSZ szFilename)
       strcat(szDestFullFilename, szFilenameExtensionOnly);
     }
 
-    CopyFile(szSourceFullFilename, szDestFullFilename, TRUE);
+    DosCopy(szSourceFullFilename, szDestFullFilename, 0);
   }
 
   return(FO_SUCCESS);
 }
 
-APIRET ProcessCopyFile(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessCopyFile(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG dwIndex;
+  DWORD dwIndex;
   char  szBuf[MAX_BUF];
   char  szSection[MAX_BUF];
   char  szSource[MAX_BUF];
   char  szDestination[MAX_BUF];
   BOOL  bFailIfExists;
   BOOL  bDnu;
-  HINI    hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Copy File", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Source", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection, "Source", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
       DecryptString(szSource, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szDestination, szBuf);
 
-      PrfQueryProfileString(hiniConfig, szSection, "Do Not Uninstall", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Do Not Uninstall", "", szBuf, sizeof(szBuf), szFileIniConfig);
       if(strcmpi(szBuf, "TRUE") == 0)
         bDnu = TRUE;
       else
         bDnu = FALSE;
 
-      PrfQueryProfileString(hiniConfig, szSection, "Fail If Exists", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Fail If Exists", "", szBuf, sizeof(szBuf), szFileIniConfig);
       if(strcmpi(szBuf, "TRUE") == 0)
         bFailIfExists = TRUE;
       else
@@ -817,34 +887,31 @@ APIRET ProcessCopyFile(ULONG dwTiming, char *szSectionPrefix)
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Copy File", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Source", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "Source", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
-APIRET ProcessCopyFileSequential(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessCopyFileSequential(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG dwIndex;
+  DWORD dwIndex;
   char  szBuf[MAX_BUF];
   char  szSection[MAX_BUF];
   char  szSource[MAX_BUF];
   char  szDestination[MAX_BUF];
   char  szFilename[MAX_BUF];
-  HINI   hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Copy File Sequential", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig); 
-  PrfQueryProfileString(hiniConfig, szSection, "Filename", "", szFilename, sizeof(szFilename));
+  GetPrivateProfileString(szSection, "Filename", "", szFilename, sizeof(szFilename), szFileIniConfig);
   while(*szFilename != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      PrfQueryProfileString(hiniConfig, szSection, "Source", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Source", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szSource, szBuf);
 
-      PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szDestination, szBuf);
 
       FileCopySequential(szSource, szDestination, szFilename);
@@ -852,115 +919,8 @@ APIRET ProcessCopyFileSequential(ULONG dwTiming, char *szSectionPrefix)
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Copy File Sequential", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Filename", "", szFilename, sizeof(szFilename));
+    GetPrivateProfileString(szSection, "Filename", "", szFilename, sizeof(szFilename), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
-  return(FO_SUCCESS);
-}
-
-int RegisterDll32(char *File)
-{
-  PFN   DllReg;
-  HMODULE hLib;
-
-  
-  if(DosLoadModule(NULL, 0, File, &hLib) == NO_ERROR)
-  {
-    if((DosQueryProcAddr(hLib, 0, "DllRegisterServer", DllReg)) == NO_ERROR)
-      DllReg();
-
-    DosFreeModule(hLib);
-    return(0);
-  }
-
-  return(1);
-}
-
-
-APIRET FileSelfRegister(PSZ szFilename, PSZ szDestination)
-{
-  char            szFullFilenamePath[MAX_BUF];
-  ULONG           dwRv;
-  LHANDLE          hFile;
-  FILEFINDBUF3 fdFile;
-  BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
-
-  strcpy(szFullFilenamePath, szDestination);
-  AppendBackSlash(szFullFilenamePath, sizeof(szFullFilenamePath));
-  strcat(szFullFilenamePath, szFilename);
-
-  /* From file path exists and To file path does not exist */
-  if(FileExists(szFullFilenamePath))
-  {
-    RegisterDll32(szFullFilenamePath);
-    return(FO_SUCCESS);
-  }
-
-  strcpy(szFullFilenamePath, szDestination);
-  AppendBackSlash(szFullFilenamePath, sizeof(szFullFilenamePath));
-  strcat(szFullFilenamePath, szFilename);
-
-  rc = DosFindFirst(szFullFilenamePath, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-  if(rc == ERROR_INVALID_HANDLE)
-    bFound = FALSE;
-  else
-    bFound = TRUE;
-
-  while(bFound)
-  {
-    if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
-    {
-      /* create full path string including filename for destination */
-      strcpy(szFullFilenamePath, szDestination);
-      AppendBackSlash(szFullFilenamePath, sizeof(szFullFilenamePath));
-      strcat(szFullFilenamePath, fdFile.achName);
-
-      if((dwRv = FileExists(szFullFilenamePath)) && (dwRv != FILE_DIRECTORY))
-        RegisterDll32(szFullFilenamePath);
-    }
-
-    rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
-  }
-
-  DosFindClose(hdirFindHandle);
-  return(FO_SUCCESS);
-}
-
-APIRET ProcessSelfRegisterFile(ULONG dwTiming, char *szSectionPrefix)
-{
-  ULONG dwIndex;
-  char  szBuf[MAX_BUF];
-  char  szSection[MAX_BUF];
-  char  szFilename[MAX_BUF];
-  char  szDestination[MAX_BUF];
-  HINI   hiniConfig;
-
-  dwIndex = 0;
-  BuildNumberedString(dwIndex, szSectionPrefix, "Self Register File", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
-  while(*szBuf != '\0')
-  {
-    if(TimingCheck(dwTiming, szSection, szFileIniConfig))
-    {
-      DecryptString(szDestination, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Filename", "", szFilename, sizeof(szFilename));
-      FileSelfRegister(szFilename, szDestination);
-    }
-
-    ++dwIndex;
-    BuildNumberedString(dwIndex, szSectionPrefix, "Self Register File", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
-  }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
@@ -986,7 +946,7 @@ void UpdateInstallLog(PSZ szKey, PSZ szString, BOOL bDnu)
   CreateDirectoriesAll(szFileInstallLog, FALSE);
   strcat(szFileInstallLog, FILE_INSTALL_LOG);
 
-  if((fInstallLog = fopen(szFileInstallLog, "a+t")) != NULL)
+  if((fInstallLog = fopen(szFileInstallLog, "a+")) != NULL)
   {
     if(bDnu)
       sprintf(szBuf, "     ** (*dnu*) %s%s\n", szKey, szString);
@@ -1019,7 +979,7 @@ void UpdateInstallStatusLog(PSZ szString)
   CreateDirectoriesAll(szFileInstallStatusLog, FALSE);
   strcat(szFileInstallStatusLog, FILE_INSTALL_STATUS_LOG);
 
-  if((fInstallLog = fopen(szFileInstallStatusLog, "a+t")) != NULL)
+  if((fInstallLog = fopen(szFileInstallStatusLog, "a+")) != NULL)
   {
     fwrite(szString, sizeof(char), strlen(szString), fInstallLog);
     fclose(fInstallLog);
@@ -1045,12 +1005,12 @@ void UpdateJSProxyInfo()
     CreateDirectoriesAll(szJSFile, TRUE);
     strcat(szJSFile, FILE_ALL_JS);
 
-    if((fJSFile = fopen(szJSFile, "a+t")) != NULL)
+    if((fJSFile = fopen(szJSFile, "a+")) != NULL)
     {
       memset(szBuf, 0, sizeof(szBuf));
       if(*diAdvancedSettings.szProxyServer != '\0')
       {
-        if(diDownloadOptions.dwUseProtocol == UP_FTP)
+        if(diAdditionalOptions.dwUseProtocol == UP_FTP)
           sprintf(szBuf,
                    "pref(\"network.proxy.ftp\", \"%s\");\n",
                    diAdvancedSettings.szProxyServer);
@@ -1062,7 +1022,7 @@ void UpdateJSProxyInfo()
 
       if(*diAdvancedSettings.szProxyPort != '\0')
       {
-        if(diDownloadOptions.dwUseProtocol == UP_FTP)
+        if(diAdditionalOptions.dwUseProtocol == UP_FTP)
           sprintf(szBuf,
                    "pref(\"network.proxy.ftp_port\", %s);\n",
                    diAdvancedSettings.szProxyPort);
@@ -1080,12 +1040,12 @@ void UpdateJSProxyInfo()
   }
 }
 
-APIRET CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
+HRESULT CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
 {
   int     i;
   int     iLen = strlen(szPath);
   char    szCreatePath[MAX_BUF];
-  APIRET hrResult = 0;
+  HRESULT hrResult = 0;
 
   memset(szCreatePath, 0, MAX_BUF);
   memcpy(szCreatePath, szPath, iLen);
@@ -1098,7 +1058,10 @@ APIRET CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
       szCreatePath[i] = '\0';
       if(FileExists(szCreatePath) == FALSE)
       {
-        hrResult = CreateDirectory(szCreatePath, NULL);
+        APIRET rc = DosCreateDir(szCreatePath, NULL);  
+        if (rc == NO_ERROR) {
+          hrResult = 1;
+        }
 
         if(bLogForUninstall)
           UpdateInstallLog(KEY_CREATE_FOLDER, szCreatePath, FALSE);
@@ -1109,18 +1072,16 @@ APIRET CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
   return(hrResult);
 }
 
-APIRET ProcessCreateDirectory(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessCreateDirectory(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG dwIndex;
+  DWORD dwIndex;
   char  szBuf[MAX_BUF];
   char  szSection[MAX_BUF];
   char  szDestination[MAX_BUF];
-  HINI   hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Create Directory", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
@@ -1132,22 +1093,19 @@ APIRET ProcessCreateDirectory(ULONG dwTiming, char *szSectionPrefix)
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Create Directory", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
-APIRET FileDelete(PSZ szDestination)
+HRESULT FileDelete(LPSTR szDestination)
 {
+  HDIR            hFile;
   FILEFINDBUF3    fdFile;
+  ULONG           ulFindCount;
   char            szBuf[MAX_BUF];
   char            szPathOnly[MAX_BUF];
-  BOOL           bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
+  BOOL            bFound;
 
   if(FileExists(szDestination))
   {
@@ -1160,8 +1118,8 @@ APIRET FileDelete(PSZ szDestination)
   /* proceed acordingly.                                                             */
   ParsePath(szDestination, szPathOnly, sizeof(szPathOnly), FALSE, PP_PATH_ONLY);
 
-  rc = DosFindFirst(szDestination, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-  if(rc == ERROR_INVALID_HANDLE)
+  ulFindCount = 1;
+  if((DosFindFirst(szDestination, &hFile, 0, &fdFile, sizeof(fdFile), &ulFindCount, FIL_STANDARD)) != NO_ERROR)
     bFound = FALSE;
   else
     bFound = TRUE;
@@ -1177,29 +1135,24 @@ APIRET FileDelete(PSZ szDestination)
       DosDelete(szBuf);
     }
 
-    rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
+    ulFindCount = 1;
+    bFound = DosFindNext(hFile, &fdFile, sizeof(fdFile), &ulFindCount);
   }
 
-  DosFindClose(hdirFindHandle);
+  DosFindClose(hFile);
   return(FO_SUCCESS);
 }
 
-APIRET ProcessDeleteFile(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessDeleteFile(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG dwIndex;
+  DWORD dwIndex;
   char  szBuf[MAX_BUF];
   char  szSection[MAX_BUF];
   char  szDestination[MAX_BUF];
-  HINI   hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Delete File", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
@@ -1210,21 +1163,18 @@ APIRET ProcessDeleteFile(ULONG dwTiming, char *szSectionPrefix)
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Delete File", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
-APIRET DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
+HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
 {
-  FILEFINDBUF3    fdFile;
+#ifdef OLDCODE /* @MAK - need to write this */
+  HANDLE          hFile;
+  WIN32_FIND_DATA fdFile;
   char            szDestTemp[MAX_BUF];
   BOOL            bFound;
-  HDIR            hdirFindHandle = HDIR_CREATE;
-  ULONG         ulBufLen = sizeof(FILEFINDBUF3);
-  ULONG         ulFindCount = 1;
-  APIRET        rc = NO_ERROR;
 
   if(!FileExists(szDestination))
     return(FO_SUCCESS);
@@ -1236,17 +1186,17 @@ APIRET DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
     strcat(szDestTemp, "*");
 
     bFound = TRUE;
-    rc = DosFindFirst(szDestTemp, &hdirFindHandle, FILE_NORMAL, &fdFile, ulBufLen, &ulFindCount, FIL_STANDARD);
-    while((rc != ERROR_INVALID_HANDLE) && (bFound == TRUE))
+    hFile = FindFirstFile(szDestTemp, &fdFile);
+    while((hFile != INVALID_HANDLE_VALUE) && (bFound == TRUE))
     {
       if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
       {
         /* create full path */
         strcpy(szDestTemp, szDestination);
         AppendBackSlash(szDestTemp, sizeof(szDestTemp));
-        strcat(szDestTemp, fdFile.achFileName);
+        strcat(szDestTemp, fdFile.achName);
 
-        if(fdFile.attrFile & FILE_DIRECTORY)
+        if(fdFile.dwFileAttributes & FILE_DIRECTORY)
         {
           DirectoryRemove(szDestTemp, bRemoveSubdirs);
         }
@@ -1256,39 +1206,34 @@ APIRET DirectoryRemove(PSZ szDestination, BOOL bRemoveSubdirs)
         }
       }
 
-      rc = DosFindNext(hdirFindHandle, &fdFile, ulBufLen, &ulFindCount);
-    if(rc == NO_ERROR)
-        bFound = TRUE;
-    else
-        bFound = FALSE;
+      bFound = FindNextFile(hFile, &fdFile);
     }
 
-    DosFindClose(hdirFindHandle);
+    FindClose(hFile);
   }
   
   RemoveDirectory(szDestination);
+#endif
   return(FO_SUCCESS);
 }
 
-APIRET ProcessRemoveDirectory(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessRemoveDirectory(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG dwIndex;
+  DWORD dwIndex;
   char  szBuf[MAX_BUF];
   char  szSection[MAX_BUF];
   char  szDestination[MAX_BUF];
   BOOL  bRemoveSubdirs;
-  HINI    hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Remove Directory", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
       DecryptString(szDestination, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Remove subdirs", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Remove subdirs", "", szBuf, sizeof(szBuf), szFileIniConfig);
       bRemoveSubdirs = FALSE;
       if(strcmpi(szBuf, "TRUE") == 0)
         bRemoveSubdirs = TRUE;
@@ -1298,73 +1243,106 @@ APIRET ProcessRemoveDirectory(ULONG dwTiming, char *szSectionPrefix)
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Remove Directory", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Destination", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "Destination", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
-APIRET ProcessRunApp(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG dwIndex;
+  DWORD dwIndex;
   char  szBuf[MAX_BUF];
   char  szSection[MAX_BUF];
   char  szTarget[MAX_BUF];
   char  szParameters[MAX_BUF];
   char  szWorkingDir[MAX_BUF];
+  BOOL  bRunApp;
   BOOL  bWait;
-  HINI   hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "RunApp", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Target", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection, "Target", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
       DecryptString(szTarget, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Parameters", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Parameters", "", szBuf, sizeof(szBuf), szFileIniConfig);
       DecryptString(szParameters, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "WorkingDir", "", szBuf, sizeof(szBuf));
-      DecryptString(szWorkingDir, szBuf);
-      PrfQueryProfileString(hiniConfig, szSection, "Wait", "", szBuf, sizeof(szBuf));
 
+      // If we are given a criterion to test against, we expect also to be told whether we should run
+      //    the app when that criterion is true or when it is false.  If we are not told, we assume that
+      //    we are to run the app when the criterion is true.
+      bRunApp = TRUE;
+      GetPrivateProfileString(szSection, "Criterion ID", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      if(strcmpi(szBuf, "RecaptureHP") == 0)
+      {
+        GetPrivateProfileString(szSection, "Run App If Criterion", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        if(strcmpi(szBuf, "FALSE") == 0)
+        {
+          if(diAdditionalOptions.bRecaptureHomepage == TRUE)
+             bRunApp = FALSE;
+        }
+        else
+        {
+          if(diAdditionalOptions.bRecaptureHomepage == FALSE)
+             bRunApp = FALSE;
+        }
+      }
+
+      GetPrivateProfileString(szSection, "WorkingDir", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      DecryptString(szWorkingDir, szBuf);
+
+      GetPrivateProfileString(szSection, "Wait", "", szBuf, sizeof(szBuf), szFileIniConfig);
       if(strcmpi(szBuf, "FALSE") == 0)
         bWait = FALSE;
       else
         bWait = TRUE;
 
-      if((dwTiming == T_DEPEND_REBOOT) && (NeedReboot() == TRUE))
+      if ((bRunApp == TRUE) && FileExists(szTarget))
       {
-        strcat(szTarget, " ");
-        strcat(szTarget, szParameters);
-        SetWinReg(HKEY_CURRENT_USER,
-                  "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
-                  TRUE,
-                  "Netscape",
-                  TRUE,
-                  REG_SZ,
-                  szTarget,
-                  strlen(szTarget),
-                  FALSE,
-                  FALSE);
+        if((dwTiming == T_DEPEND_REBOOT) && (NeedReboot() == TRUE))
+        {
+          strcat(szTarget, " ");
+          strcat(szTarget, szParameters);
+#ifdef OLDCODE /* @MAK */
+          SetWinReg(HKEY_CURRENT_USER,
+                    "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+                    TRUE,
+                    "Netscape",
+                    TRUE,
+                    REG_SZ,
+                    szTarget,
+                    strlen(szTarget),
+                    FALSE,
+                    FALSE);
+#endif
+        }
+        else
+        {
+          GetPrivateProfileString(szSection, "Message", "", szBuf, sizeof(szBuf), szFileIniConfig);
+          if ( szBuf[0] != '\0' )
+            ShowMessage(szBuf, TRUE);  
+#ifdef OLDCODE /* @MAK */
+          WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
+#endif
+          if ( szBuf[0] != '\0' )
+            ShowMessage(szBuf, FALSE);  
+        }
       }
-      else
-        WinSpawn(szTarget, szParameters, szWorkingDir, SW_SHOWNORMAL, bWait);
     }
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "RunApp", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Target", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "Target", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
 }
 
-ULONG ParseRestrictedAccessKey(PSZ szKey)
+#ifdef OLDCODE
+DWORD ParseRestrictedAccessKey(LPSTR szKey)
 {
-  ULONG dwKey;
+  DWORD dwKey;
 
   if(strcmpi(szKey, "ONLY_RESTRICTED") == 0)
     dwKey = RA_ONLY_RESTRICTED;
@@ -1376,9 +1354,9 @@ ULONG ParseRestrictedAccessKey(PSZ szKey)
   return(dwKey);
 }
 
-HINI ParseRootKey(PSZ szRootKey)
+HKEY ParseRootKey(LPSTR szRootKey)
 {
-  HINI hkRootKey;
+  HKEY hkRootKey;
 
   if(strcmpi(szRootKey, "HKEY_CURRENT_CONFIG") == 0)
     hkRootKey = HKEY_CURRENT_CONFIG;
@@ -1398,12 +1376,12 @@ HINI ParseRootKey(PSZ szRootKey)
   return(hkRootKey);
 }
 
-char *ParseRootKeyString(HINI hkKey, PSZ szRootKey, ULONG dwRootKeyBufSize)
+char *ParseRootKeyString(HKEY hkKey, LPSTR szRootKey, DWORD dwRootKeyBufSize)
 {
   if(!szRootKey)
     return(NULL);
 
-  memset(szRootKey, 0, dwRootKeyBufSize);
+  ZeroMemory(szRootKey, dwRootKeyBufSize);
   if((hkKey == HKEY_CURRENT_CONFIG) &&
     ((long)dwRootKeyBufSize > strlen("HKEY_CURRENT_CONFIG")))
     strcpy(szRootKey, "HKEY_CURRENT_CONFIG");
@@ -1428,7 +1406,7 @@ char *ParseRootKeyString(HINI hkKey, PSZ szRootKey, ULONG dwRootKeyBufSize)
   return(szRootKey);
 }
 
-BOOL ParseRegType(PSZ szType, ULONG *dwType)
+BOOL ParseRegType(LPSTR szType, DWORD *dwType)
 {
   BOOL bSZ;
 
@@ -1451,23 +1429,23 @@ BOOL ParseRegType(PSZ szType, ULONG *dwType)
     *dwType = REG_BINARY;
     bSZ     = FALSE;
   }
-  else if(strcmpi(szType, "REG_ULONG") == 0)
+  else if(strcmpi(szType, "REG_DWORD") == 0)
   {
     /* 32bit number */
-    *dwType = REG_ULONG;
+    *dwType = REG_DWORD;
     bSZ     = FALSE;
   }
-  else if(strcmpi(szType, "REG_ULONG_LITTLE_ENDIAN") == 0)
+  else if(strcmpi(szType, "REG_DWORD_LITTLE_ENDIAN") == 0)
   {
     /* 32bit number
-     * (same as REG_ULONG) */
-    *dwType = REG_ULONG_LITTLE_ENDIAN;
+     * (same as REG_DWORD) */
+    *dwType = REG_DWORD_LITTLE_ENDIAN;
     bSZ     = FALSE;
   }
-  else if(strcmpi(szType, "REG_ULONG_BIG_ENDIAN") == 0)
+  else if(strcmpi(szType, "REG_DWORD_BIG_ENDIAN") == 0)
   {
     /* 32bit number */
-    *dwType = REG_ULONG_BIG_ENDIAN;
+    *dwType = REG_DWORD_BIG_ENDIAN;
     bSZ     = FALSE;
   }
   else if(strcmpi(szType, "REG_LINK") == 0)
@@ -1492,10 +1470,10 @@ BOOL ParseRegType(PSZ szType, ULONG *dwType)
   return(bSZ);
 }
 
-BOOL WinRegKeyExists(HINI hkRootKey, PSZ szKey)
+BOOL WinRegKeyExists(HKEY hkRootKey, LPSTR szKey)
 {
-  HINI  hkResult;
-  ULONG dwErr;
+  HKEY  hkResult;
+  DWORD dwErr;
   BOOL  bKeyExists = FALSE;
 
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
@@ -1507,15 +1485,15 @@ BOOL WinRegKeyExists(HINI hkRootKey, PSZ szKey)
   return(bKeyExists);
 }
 
-BOOL WinRegNameExists(HINI hkRootKey, PSZ szKey, PSZ szName)
+BOOL WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
 {
-  HINI  hkResult;
-  ULONG dwErr;
-  ULONG dwSize;
+  HKEY  hkResult;
+  DWORD dwErr;
+  DWORD dwSize;
   char  szBuf[MAX_BUF];
   BOOL  bNameExists = FALSE;
 
-  memset(szBuf, 0, sizeof(szBuf));
+  ZeroMemory(szBuf, sizeof(szBuf));
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
     dwSize = sizeof(szBuf);
@@ -1530,13 +1508,13 @@ BOOL WinRegNameExists(HINI hkRootKey, PSZ szKey, PSZ szName)
   return(bNameExists);
 }
 
-void DeleteWinRegKey(HINI hkRootKey, PSZ szKey, BOOL bAbsoluteDelete)
+void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete)
 {
-  HINI      hkResult;
-  ULONG     dwErr;
-  ULONG     dwTotalSubKeys;
-  ULONG     dwTotalValues;
-  ULONG     dwSubKeySize;
+  HKEY      hkResult;
+  DWORD     dwErr;
+  DWORD     dwTotalSubKeys;
+  DWORD     dwTotalValues;
+  DWORD     dwSubKeySize;
   FILETIME  ftLastWriteFileTime;
   char      szSubKey[MAX_BUF_TINY];
   char      szNewKey[MAX_BUF];
@@ -1579,10 +1557,10 @@ void DeleteWinRegKey(HINI hkRootKey, PSZ szKey, BOOL bAbsoluteDelete)
   }
 }
 
-void DeleteWinRegValue(HINI hkRootKey, PSZ szKey, PSZ szName)
+void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
 {
-  HINI    hkResult;
-  ULONG   dwErr;
+  HKEY    hkResult;
+  DWORD   dwErr;
 
   dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
   if(dwErr == ERROR_SUCCESS)
@@ -1596,16 +1574,16 @@ void DeleteWinRegValue(HINI hkRootKey, PSZ szKey, PSZ szName)
   }
 }
 
-ULONG GetWinReg(HINI hkRootKey, PSZ szKey, PSZ szName, PSZ szReturnValue, ULONG dwReturnValueSize)
+DWORD GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwReturnValueSize)
 {
-  HINI  hkResult;
-  ULONG dwErr;
-  ULONG dwSize;
-  ULONG dwType;
+  HKEY  hkResult;
+  DWORD dwErr;
+  DWORD dwSize;
+  DWORD dwType;
   char  szBuf[MAX_BUF];
 
-  memset(szBuf, 0, sizeof(szBuf));
-  memset(szReturnValue, 0, dwReturnValueSize);
+  ZeroMemory(szBuf, sizeof(szBuf));
+  ZeroMemory(szReturnValue, dwReturnValueSize);
 
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
@@ -1614,7 +1592,7 @@ ULONG GetWinReg(HINI hkRootKey, PSZ szKey, PSZ szName, PSZ szReturnValue, ULONG 
 
     if((dwType == REG_MULTI_SZ) && (*szBuf != '\0'))
     {
-      ULONG dwCpSize;
+      DWORD dwCpSize;
 
       dwCpSize = dwReturnValueSize < dwSize ? (dwReturnValueSize - 1) : dwSize;
       memcpy(szReturnValue, szBuf, dwCpSize);
@@ -1630,20 +1608,20 @@ ULONG GetWinReg(HINI hkRootKey, PSZ szKey, PSZ szName, PSZ szReturnValue, ULONG 
   return(dwType);
 }
 
-void SetWinReg(HINI hkRootKey,
-               PSZ szKey,
+void SetWinReg(HKEY hkRootKey,
+               LPSTR szKey,
                BOOL bOverwriteKey,
-               PSZ szName,
+               LPSTR szName,
                BOOL bOverwriteName,
-               ULONG dwType,
+               DWORD dwType,
                LPBYTE lpbData,
-               ULONG dwSize,
+               DWORD dwSize,
                BOOL bLogForUninstall,
                BOOL bDnu)
 {
-  HINI    hkResult;
-  ULONG   dwErr;
-  ULONG   dwDisp;
+  HKEY    hkResult;
+  DWORD   dwErr;
+  DWORD   dwDisp;
   BOOL    bKeyExists;
   BOOL    bNameExists;
   char    szBuf[MAX_BUF];
@@ -1693,8 +1671,118 @@ void SetWinReg(HINI hkRootKey,
   }
 }
 
-APIRET ProcessWinReg(ULONG dwTiming, char *szSectionPrefix)
+/* Name: AppendWinRegString
+ *
+ * Arguments:
+ *
+ * HKEY hkRootKey -- root key, e.g., HKEY_LOCAL_MACHINE
+ * LPSTR szKey -- subkey
+ * LPSTR szName -- value name
+ * DWORD dwType -- value type, should be REG_SZ
+ * LPBYTE lpbData -- value data
+ * BYTE delimiter -- e.g., ':'. If 0, then don't apply delimiter
+ * DWORD dwSize -- size of the value data
+ * BOOL bLogForUninstall -- if true, update install log
+ * BOOL bDnu -- what to update the install log with
+ *
+ * Description:
+ *
+ * This function should be called to append a string (REG_SZ) to the
+ * string already stored in the specified key. If the key does not
+ * exist, then simply store the key (ignoring the delimiter). If the
+ * key does exist, read the current value, append the delimiter (if
+ * not zero), and append the data passed in.
+ *
+ * Return Value: void
+ *
+ * Original Code: Clone of SetWinReg(), syd@netscape.com 6/11/2001
+ *
+ */
+
+void AppendWinReg(HKEY hkRootKey,
+               LPSTR szKey,
+               LPSTR szName,
+               DWORD dwType,
+               LPBYTE lpbData,
+               BYTE delimiter,
+               DWORD dwSize,
+               BOOL bLogForUninstall,
+               BOOL bDnu)
 {
+  HKEY    hkResult;
+  DWORD   dwErr;
+  DWORD   dwDisp;
+  BOOL    bKeyExists;
+  BOOL    bNameExists;
+  char    szBuf[MAX_BUF];
+  char    szRootKey[MAX_BUF_TINY]; 
+
+  bKeyExists  = WinRegKeyExists(hkRootKey, szKey);
+  bNameExists = WinRegNameExists(hkRootKey, szKey, szName);
+  dwErr       = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
+
+  if (dwType != REG_SZ) // this function is void. How do we pass errors to caller?
+      return;
+
+  if(dwErr != ERROR_SUCCESS)
+  {
+    dwErr = RegCreateKeyEx(hkRootKey, szKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkResult, &dwDisp);
+    /* log the win reg command */
+    if(bLogForUninstall &&
+       ParseRootKeyString(hkRootKey, szRootKey, sizeof(szRootKey)))
+    {
+      sprintf(szBuf, "%s\\%s []", szRootKey, szKey);
+      UpdateInstallLog(KEY_CREATE_REG_KEY, szBuf, bDnu);
+    }
+  }
+
+  if(dwErr == ERROR_SUCCESS)
+  {
+    if((bNameExists == FALSE))
+    {
+      /* first time, so just write it, ignoring the delimiter */
+
+      dwErr = RegSetValueEx(hkResult, szName, 0, dwType, lpbData, dwSize);
+      /* log the win reg command */
+      if(bLogForUninstall &&
+         ParseRootKeyString(hkRootKey, szRootKey, sizeof(szRootKey)))
+      {
+        if(ParseRegType(szBuf, &dwType))
+        {
+          sprintf(szBuf, "%s\\%s [%s]", szRootKey, szKey, szName);
+          UpdateInstallLog(KEY_STORE_REG_STRING, szBuf, bDnu);
+        }
+        else
+        {
+          sprintf(szBuf, "%s\\%s [%s]", szRootKey, szKey, szName);
+          UpdateInstallLog(KEY_STORE_REG_NUMBER, szBuf, bDnu);
+        }
+      }
+    } else {
+      /* already exists, so read the prrevious value, append the delimiter if 
+         specified, append the new value, and rewrite the key */
+      
+      GetWinReg(hkRootKey, szKey, szName, szBuf, sizeof(szBuf));  // func is void, assume success
+      if ( delimiter != 0 ) {
+          char delim[ 2 ];
+          delim[0] = delimiter;
+          delim[1] = '\0';
+          strcat( szBuf, delim );
+      }
+      strcat( szBuf, lpbData );
+      RegCloseKey(hkResult);
+      SetWinReg(hkRootKey, szKey, TRUE, szName, TRUE, dwType, szBuf, strlen( szBuf ) + 1, bLogForUninstall, bDnu);
+      return;
+    }
+
+    RegCloseKey(hkResult);
+  }
+}
+#endif
+
+HRESULT ProcessWinReg(DWORD dwTiming, char *szSectionPrefix)
+{
+#ifdef OLDCODE /* @MAK need to write for OS/2 - Os/2 INI stuff */
   char    szBuf[MAX_BUF];
   char    szKey[MAX_BUF];
   char    szName[MAX_BUF];
@@ -1703,30 +1791,29 @@ APIRET ProcessWinReg(ULONG dwTiming, char *szSectionPrefix)
   char    szOverwriteKey[MAX_BUF];
   char    szOverwriteName[MAX_BUF];
   char    szSection[MAX_BUF];
-  HINI    hRootKey;
+  HKEY    hRootKey;
   BOOL    bDnu;
   BOOL    bOverwriteKey;
   BOOL    bOverwriteName;
-  ULONG   dwIndex;
-  ULONG   dwType;
-  ULONG   dwSize;
+  BOOL    bOSDetected;
+  DWORD   dwIndex;
+  DWORD   dwType;
+  DWORD   dwSize;
   __int64 iiNum;
-  HINI       hiniConfig;
 
   dwIndex = 0;
   BuildNumberedString(dwIndex, szSectionPrefix, "Windows Registry", szSection, sizeof(szSection));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection, "Root Key", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection, "Root Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
       hRootKey = ParseRootKey(szBuf);
 
-      PrfQueryProfileString(hiniConfig, szSection, "Key",                 "", szBuf,           sizeof(szBuf));
-      PrfQueryProfileString(hiniConfig, szSection, "Decrypt Key",         "", szDecrypt,       sizeof(szDecrypt));
-      PrfQueryProfileString(hiniConfig, szSection, "Overwrite Key",       "", szOverwriteKey,  sizeof(szOverwriteKey));
-
+      GetPrivateProfileString(szSection, "Key",                 "", szBuf,           sizeof(szBuf),          szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Key",         "", szDecrypt,       sizeof(szDecrypt),      szFileIniConfig);
+      GetPrivateProfileString(szSection, "Overwrite Key",       "", szOverwriteKey,  sizeof(szOverwriteKey), szFileIniConfig);
+      ZeroMemory(szKey, sizeof(szKey));
       if(strcmpi(szDecrypt, "TRUE") == 0)
         DecryptString(szKey, szBuf);
       else
@@ -1737,10 +1824,10 @@ APIRET ProcessWinReg(ULONG dwTiming, char *szSectionPrefix)
       else
         bOverwriteKey = TRUE;
 
-      PrfQueryProfileString(hiniConfig, szSection, "Name",                "", szBuf,           sizeof(szBuf));
-      PrfQueryProfileString(hiniConfig, szSection, "Decrypt Name",        "", szDecrypt,       sizeof(szDecrypt));
-      PrfQueryProfileString(hiniConfig, szSection, "Overwrite Name",      "", szOverwriteName, sizeof(szOverwriteName));
-
+      GetPrivateProfileString(szSection, "Name",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Name",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
+      GetPrivateProfileString(szSection, "Overwrite Name",      "", szOverwriteName, sizeof(szOverwriteName), szFileIniConfig);
+      ZeroMemory(szName, sizeof(szName));
       if(strcmpi(szDecrypt, "TRUE") == 0)
         DecryptString(szName, szBuf);
       else
@@ -1751,30 +1838,56 @@ APIRET ProcessWinReg(ULONG dwTiming, char *szSectionPrefix)
       else
         bOverwriteName = TRUE;
 
-      PrfQueryProfileString(hiniConfig, szSection, "Name Value",          "", szBuf,           sizeof(szBuf));
-      PrfQueryProfileString(hiniConfig, szSection, "Decrypt Name Value",  "", szDecrypt,       sizeof(szDecrypt));
+      GetPrivateProfileString(szSection, "Name Value",          "", szBuf,           sizeof(szBuf), szFileIniConfig);
+      GetPrivateProfileString(szSection, "Decrypt Name Value",  "", szDecrypt,       sizeof(szDecrypt), szFileIniConfig);
+      ZeroMemory(szValue, sizeof(szValue));
       if(strcmpi(szDecrypt, "TRUE") == 0)
         DecryptString(szValue, szBuf);
       else
         strcpy(szValue, szBuf);
 
-      PrfQueryProfileString(hiniConfig, szSection, "Size",                "", szBuf,           sizeof(szBuf));
+      GetPrivateProfileString(szSection, "Size",                "", szBuf,           sizeof(szBuf), szFileIniConfig);
       if(*szBuf != '\0')
         dwSize = atoi(szBuf);
       else
         dwSize = 0;
 
-      PrfQueryProfileString(hiniConfig, szSection,
+      GetPrivateProfileString(szSection,
                               "Do Not Uninstall",
                               "",
                               szBuf,
-                              sizeof(szBuf));
+                              sizeof(szBuf),
+                              szFileIniConfig);
       if(strcmpi(szBuf, "TRUE") == 0)
         bDnu = TRUE;
       else
         bDnu = FALSE;
 
-      PrfQueryProfileString(hiniConfig, szSection, "Type",                "", szBuf,           sizeof(szBuf));
+      /* Read the OS key to see if there are restrictions on which OS to
+       * the Windows registry key for */
+      GetPrivateProfileString(szSection,
+                              "OS",
+                              "",
+                              szBuf,
+                              sizeof(szBuf),
+                              szFileIniConfig);
+      /* If there is no OS key value set, then assume all OS is valid.
+       * If there are any, then compare against the global OS value to
+       * make sure there's a match. */
+      bOSDetected = TRUE;
+      if((*szBuf != '\0') &&
+        ((gSystemInfo.dwOSType & ParseOSType(szBuf)) == 0))
+        bOSDetected = FALSE;
+
+      if(bOSDetected)
+      {
+        ZeroMemory(szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection,
+                                "Type",
+                                "",
+                                szBuf,
+                                sizeof(szBuf),
+                                szFileIniConfig);
       if(ParseRegType(szBuf, &dwType))
       {
         /* create/set windows registry key here (string value)! */
@@ -1787,23 +1900,25 @@ APIRET ProcessWinReg(ULONG dwTiming, char *szSectionPrefix)
         /* create/set windows registry key here (binary/dword value)! */
         SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName,
                   dwType, (CONST LPBYTE)&iiNum, dwSize, TRUE, bDnu);
+        }
       }
     }
 
     ++dwIndex;
     BuildNumberedString(dwIndex, szSectionPrefix, "Windows Registry", szSection, sizeof(szSection));
-    PrfQueryProfileString(hiniConfig, szSection, "Root Key", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection, "Root Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
+#endif
   return(FO_SUCCESS);
 }
 
-APIRET ProcessProgramFolder(ULONG dwTiming, char *szSectionPrefix)
+HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
 {
-  ULONG dwIndex0;
-  ULONG dwIndex1;
-  ULONG dwIconId;
-  ULONG dwRestrictedAccess;
+#ifdef OLDCODE /* @MAK - need to implement - desktop folder stuff */
+  DWORD dwIndex0;
+  DWORD dwIndex1;
+  DWORD dwIconId;
+  DWORD dwRestrictedAccess;
   char  szIndex1[MAX_BUF];
   char  szBuf[MAX_BUF];
   char  szSection0[MAX_BUF];
@@ -1814,12 +1929,10 @@ APIRET ProcessProgramFolder(ULONG dwTiming, char *szSectionPrefix)
   char  szWorkingDir[MAX_BUF];
   char  szDescription[MAX_BUF];
   char  szIconPath[MAX_BUF];
-  HINI   hiniConfig;
 
   dwIndex0 = 0;
   BuildNumberedString(dwIndex0, szSectionPrefix, "Program Folder", szSection0, sizeof(szSection0));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection0, "Program Folder", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection0, "Program Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     if(TimingCheck(dwTiming, szSection0, szFileIniConfig))
@@ -1831,25 +1944,25 @@ APIRET ProcessProgramFolder(ULONG dwTiming, char *szSectionPrefix)
       strcpy(szSection1, szSection0);
       strcat(szSection1, "-Shortcut");
       strcat(szSection1, szIndex1);
-      PrfQueryProfileString(hiniConfig, szSection1, "File", "", szBuf, sizeof(szBuf));
+      GetPrivateProfileString(szSection1, "File", "", szBuf, sizeof(szBuf), szFileIniConfig);
       while(*szBuf != '\0')
       {
         DecryptString(szFile, szBuf);
-        PrfQueryProfileString(hiniConfig, szSection1, "Arguments",    "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection1, "Arguments",    "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szArguments, szBuf);
-        PrfQueryProfileString(hiniConfig, szSection1, "Working Dir",  "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection1, "Working Dir",  "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szWorkingDir, szBuf);
-        PrfQueryProfileString(hiniConfig, szSection1, "Description",  "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection1, "Description",  "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szDescription, szBuf);
-        PrfQueryProfileString(hiniConfig, szSection1, "Icon Path",    "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection1, "Icon Path",    "", szBuf, sizeof(szBuf), szFileIniConfig);
         DecryptString(szIconPath, szBuf);
-        PrfQueryProfileString(hiniConfig, szSection1, "Icon Id",      "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection1, "Icon Id",      "", szBuf, sizeof(szBuf), szFileIniConfig);
         if(*szBuf != '\0')
           dwIconId = atol(szBuf);
         else
           dwIconId = 0;
 
-        PrfQueryProfileString(hiniConfig, szSection1, "Restricted Access",    "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection1, "Restricted Access",    "", szBuf, sizeof(szBuf), szFileIniConfig);
         dwRestrictedAccess = ParseRestrictedAccessKey(szBuf);
         if((dwRestrictedAccess == RA_IGNORE) ||
           ((dwRestrictedAccess == RA_ONLY_RESTRICTED) && gbRestrictedAccess) ||
@@ -1867,36 +1980,35 @@ APIRET ProcessProgramFolder(ULONG dwTiming, char *szSectionPrefix)
         strcpy(szSection1, szSection0);
         strcat(szSection1, "-Shortcut");
         strcat(szSection1, szIndex1);
-        PrfQueryProfileString(hiniConfig, szSection1, "File", "", szBuf, sizeof(szBuf));
+        GetPrivateProfileString(szSection1, "File", "", szBuf, sizeof(szBuf), szFileIniConfig);
       }
     }
 
     ++dwIndex0;
     BuildNumberedString(dwIndex0, szSectionPrefix, "Program Folder", szSection0, sizeof(szSection0));
-    PrfQueryProfileString(hiniConfig, szSection0, "Program Folder", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection0, "Program Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
+#endif
   return(FO_SUCCESS);
 }
 
-APIRET ProcessProgramFolderShowCmd()
+HRESULT ProcessProgramFolderShowCmd()
 {
-  ULONG dwIndex0;
+  DWORD dwIndex0;
   int   iShowFolder;
   char  szBuf[MAX_BUF];
   char  szSection0[MAX_BUF];
   char  szProgramFolder[MAX_BUF];
-  HINI   hiniConfig;
 
   dwIndex0 = 0;
   BuildNumberedString(dwIndex0, NULL, "Program Folder", szSection0, sizeof(szSection0));
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, szSection0, "Program Folder", "", szBuf, sizeof(szBuf));
+  GetPrivateProfileString(szSection0, "Program Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
   while(*szBuf != '\0')
   {
     DecryptString(szProgramFolder, szBuf);
-    PrfQueryProfileString(hiniConfig, szSection0, "Show Folder", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection0, "Show Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
 
+#ifdef OLDCODE
     if(strcmpi(szBuf, "HIDE") == 0)
       iShowFolder = SW_HIDE;
     else if(strcmpi(szBuf, "MAXIMIZE") == 0)
@@ -1922,13 +2034,96 @@ APIRET ProcessProgramFolderShowCmd()
 
     if(iShowFolder != SW_HIDE)
       if(sgProduct.dwMode != SILENT)
+#ifdef OLDCODE
         WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, TRUE);
+#endif
 
+#endif
     ++dwIndex0;
     BuildNumberedString(dwIndex0, NULL, "Program Folder", szSection0, sizeof(szSection0));
-    PrfQueryProfileString(hiniConfig, szSection0, "Program Folder", "", szBuf, sizeof(szBuf));
+    GetPrivateProfileString(szSection0, "Program Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
-  PrfCloseProfile(hiniConfig);
   return(FO_SUCCESS);
+}
+
+HRESULT ProcessCreateCustomFiles(DWORD dwTiming)
+{
+  DWORD dwCompIndex;
+  DWORD dwFileIndex;
+  DWORD dwSectIndex;
+  DWORD dwKVIndex;
+  siC   *siCObject = NULL;
+  char  szBufTiny[MAX_BUF_TINY];
+  char  szSection[MAX_BUF_TINY];
+  char  szBuf[MAX_BUF];
+  char  szFileName[MAX_BUF];
+  char  szDefinedSection[MAX_BUF]; 
+  char  szDefinedKey[MAX_BUF]; 
+  char  szDefinedValue[MAX_BUF];
+
+  dwCompIndex   = 0;
+  siCObject = SiCNodeGetObject(dwCompIndex, TRUE, AC_ALL);
+
+  while(siCObject)
+  {
+    dwFileIndex   = 0;
+    sprintf(szSection,"%s-Configuration File%d",siCObject->szReferenceName,dwFileIndex);
+    siCObject = SiCNodeGetObject(++dwCompIndex, TRUE, AC_ALL);
+    if(TimingCheck(dwTiming, szSection, szFileIniConfig) == FALSE)
+    {
+      continue;
+    }
+
+    GetPrivateProfileString(szSection, "FileName", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    while (*szBuf != '\0')
+    {
+      DecryptString(szFileName, szBuf);
+      if(FileExists(szFileName))
+      {
+        DosDelete(szFileName);
+      }
+
+      /* TO DO - Support a File Type for something other than .ini */
+      dwSectIndex = 0;
+      sprintf(szBufTiny, "Section%d",dwSectIndex);
+      GetPrivateProfileString(szSection, szBufTiny, "", szDefinedSection, sizeof(szDefinedSection), szFileIniConfig);
+      while(*szDefinedSection != '\0')
+      {  
+        dwKVIndex =0;
+        sprintf(szBufTiny,"Section%d-Key%d",dwSectIndex,dwKVIndex);
+        GetPrivateProfileString(szSection, szBufTiny, "", szDefinedKey, sizeof(szDefinedKey), szFileIniConfig);
+        while(*szDefinedKey != '\0')
+        {
+          sprintf(szBufTiny,"Section%d-Value%d",dwSectIndex,dwKVIndex);
+          GetPrivateProfileString(szSection, szBufTiny, "", szBuf, sizeof(szBuf), szFileIniConfig);
+          DecryptString(szDefinedValue, szBuf);
+#ifdef OLDCODE /* @MAK we need this */
+          if(WritePrivateProfileString(szDefinedSection, szDefinedKey, szDefinedValue, szFileName) == 0)
+          {
+            char szEWPPS[MAX_BUF];
+            char szBuf[MAX_BUF];
+            char szBuf2[MAX_BUF];
+            if(GetPrivateProfileString("Messages", "ERROR_WRITEPRIVATEPROFILESTRING", "", szEWPPS, sizeof(szEWPPS), szFileIniInstall))
+            {
+              sprintf(szBuf, "%s\n    [%s]\n    %s=%s", szFileName, szDefinedSection, szDefinedKey, szDefinedValue);
+              sprintf(szBuf2, szEWPPS, szBuf);
+              PrintError(szBuf2, ERROR_CODE_SHOW);
+            }
+            return(FO_ERROR_WRITE);
+          }
+#endif
+          sprintf(szBufTiny,"Section%d-Key%d",dwSectIndex,++dwKVIndex);
+          GetPrivateProfileString(szSection, szBufTiny, "", szDefinedKey, sizeof(szDefinedKey), szFileIniConfig);
+        } /* while(*szDefinedKey != '\0')  */
+
+        sprintf(szBufTiny, "Section%d",++dwSectIndex);
+        GetPrivateProfileString(szSection, szBufTiny, "", szDefinedSection, sizeof(szDefinedSection), szFileIniConfig);
+      } /*       while(*szDefinedSection != '\0') */
+
+      sprintf(szSection,"%s-Configuration File%d",siCObject->szReferenceName,++dwFileIndex);
+      GetPrivateProfileString(szSection, "FileName", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    } /* while(*szBuf != '\0') */
+  } /* while(siCObject) */
+  return (FO_SUCCESS);
 }
 

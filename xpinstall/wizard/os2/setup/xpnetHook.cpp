@@ -18,10 +18,8 @@
  * 
  * Contributor(s): 
  *   Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
-#include <os2.h>
 #include <string.h>
 #include <time.h>
 #include <sys\stat.h>
@@ -57,7 +55,10 @@ const int  kProxySrvrLen = 1024;
 const char kHTTP[8]      = "http://";
 const char kFTP[7]       = "ftp://";
 const char kLoclFile[7]  = "zzzFTP";
+const int  kModTimeOutValue = 3;
 
+static nsHTTPConn       *connHTTP = NULL;
+static nsFTPConn        *connFTP = NULL;
 static long             glLastBytesSoFar;
 static long             glAbsoluteBytesSoFar;
 static long             glBytesResumedFrom;
@@ -74,9 +75,11 @@ BOOL                    gbDlgDownloadMinimized;
 BOOL                    gbDlgDownloadJustMinimized;
 BOOL                    gbUrlChanged;
 BOOL                    gbShowDownloadRetryMsg;
-ULONG                   gdwDownloadDialogStatus;
+DWORD                   gdwDownloadDialogStatus;
 int                     giIndex;
 int                     giTotalArchivesToDownload;
+DWORD                   gdwTickStart;
+BOOL                    gbStartTickCounter;
 
 double GetPercentSoFar(void);
 
@@ -84,6 +87,9 @@ static void UpdateGaugeFileProgressBar(double value);
        int  ProgressCB(int aBytesSoFar, int aTotalFinalSize);
        void InitDownloadDlg(void);
        void DeInitDownloadDlg();
+
+/* local prototypes */
+siC *GetObjectFromArchiveName(char *szArchiveName);
 
 struct DownloadFileInfo
 {
@@ -102,14 +108,12 @@ struct ExtractFilesDlgInfo
 
 struct TickInfo
 {
-  ULONG dwTickBegin;
-  ULONG dwTickEnd;
-  ULONG dwTickDif;
+  DWORD dwTickBegin;
+  DWORD dwTickEnd;
+  DWORD dwTickDif;
   BOOL  bTickStarted;
   BOOL  bTickDownloadResumed;
-};
-
-struct TickInfo gtiPaused;
+} gtiPaused;
 
 BOOL CheckInterval(long *lModLastValue, int iInterval)
 {
@@ -133,11 +137,11 @@ BOOL CheckInterval(long *lModLastValue, int iInterval)
   return(bRv);
 }
 
-char *GetTimeLeft(ULONG dwTimeLeft,
+char *GetTimeLeft(DWORD dwTimeLeft,
                   char *szTimeString,
-                  ULONG dwTimeStringBufSize)
+                  DWORD dwTimeStringBufSize)
 {
-  ULONG      dwTimeLeftPP;
+  DWORD      dwTimeLeftPP;
   SYSTEMTIME stTime;
 
   memset(&stTime, 0, sizeof(stTime));
@@ -158,12 +162,12 @@ char *GetTimeLeft(ULONG dwTimeLeft,
   return(szTimeString);
 }
 
-ULONG AddToTick(ULONG dwTick, ULONG dwTickMoreToAdd)
+DWORD AddToTick(DWORD dwTick, DWORD dwTickMoreToAdd)
 {
-  ULONG dwTickLeftTillWrap = 0;
+  DWORD dwTickLeftTillWrap = 0;
 
   /* Since GetTickCount() is the number of milliseconds since the system
-   * has been on and the return value is a ULONG, this value will wrap
+   * has been on and the return value is a DWORD, this value will wrap
    * every 49.71 days or 0xFFFFFFFF milliseconds. */
   dwTickLeftTillWrap = 0xFFFFFFFF - dwTick;
   if(dwTickMoreToAdd > dwTickLeftTillWrap)
@@ -174,12 +178,12 @@ ULONG AddToTick(ULONG dwTick, ULONG dwTickMoreToAdd)
   return(dwTick);
 }
 
-ULONG GetTickDif(ULONG dwTickEnd, ULONG dwTickStart)
+DWORD GetTickDif(DWORD dwTickEnd, DWORD dwTickStart)
 {
-  ULONG dwTickDif;
+  DWORD dwTickDif;
 
   /* Since GetTickCount() is the number of milliseconds since the system
-   * has been on and the return value is a ULONG, this value will wrap
+   * has been on and the return value is a DWORD, this value will wrap
    * every 49.71 days or 0xFFFFFFFF milliseconds. 
    *
    * Assumption: dwTickEnd has not wrapped _and_ passed dwTickStart */
@@ -200,12 +204,12 @@ void InitTickInfo(void)
   gtiPaused.bTickDownloadResumed = FALSE;
 }
 
-ULONG RoundDouble(double dValue)
+DWORD RoundDouble(double dValue)
 {
-  if(0.5 <= (dValue - (ULONG)dValue))
-    return((ULONG)dValue + 1);
+  if(0.5 <= (dValue - (DWORD)dValue))
+    return((DWORD)dValue + 1);
   else
-    return((ULONG)dValue);
+    return((DWORD)dValue);
 }
 
 void SetStatusStatus(void)
@@ -217,21 +221,19 @@ void SetStatusStatus(void)
   static long lModLastValue = 0;
   double        dRate;
   static double dRateCounter;
-  static ULONG  dwTickStart = 0;
-  ULONG         dwTickNow;
-  ULONG         dwTickDif;
-  ULONG         dwKBytesSoFar;
-  ULONG         dwRoundedRate;
+  DWORD         dwTickNow;
+  DWORD         dwTickDif;
+  DWORD         dwKBytesSoFar;
+  DWORD         dwRoundedRate;
   char          szTimeLeft[MAX_BUF_TINY];
-  HINI          hiniConfig;
 
   /* If the user just clicked on the Resume button, then the time lapsed
-   * between dwTickStart and when the Resume button was clicked needs to
+   * between gdwTickStart and when the Resume button was clicked needs to
    * be subtracted taken into account when calculating dwTickDif.  So
-   * "this" lapsed time needs to be added to dwTickStart. */
+   * "this" lapsed time needs to be added to gdwTickStart. */
   if(gtiPaused.bTickDownloadResumed)
   {
-    dwTickStart = AddToTick(dwTickStart, gtiPaused.dwTickDif);
+    gdwTickStart = AddToTick(gdwTickStart, gtiPaused.dwTickDif);
     InitTickInfo();
   }
 
@@ -239,10 +241,10 @@ void SetStatusStatus(void)
    * which will allow us to get at a 2 decimal precision value for the
    * download rate. */
   dwTickNow = GetTickCount();
-  if(dwTickStart == 0)
-    dwTickNow = dwTickStart = GetTickCount();
+  if((gdwTickStart == 0) && gbStartTickCounter)
+    dwTickNow = gdwTickStart = GetTickCount();
 
-  dwTickDif = GetTickDif(dwTickNow, dwTickStart);
+  dwTickDif = GetTickDif(dwTickNow, gdwTickStart);
 
   /* Only update the UI every UPDATE_INTERVAL_STATUS interval,
    * which is currently set to 1 sec. */
@@ -273,14 +275,14 @@ void SetStatusStatus(void)
   else
     strcpy(szTimeLeft, "00:00:00");
 
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
   if(!gbShowDownloadRetryMsg)
   {
-    PrfQueryProfileString(hiniConfig, "Strings",
+    GetPrivateProfileString("Strings",
                             "Status Download",
                             "",
                             szStatusStatusLine,
-                            sizeof(szStatusStatusLine));
+                            sizeof(szStatusStatusLine),
+                            szFileIniConfig);
     if(*szStatusStatusLine != '\0')
       sprintf(szCurrentStatusInfo,
               szStatusStatusLine,
@@ -298,11 +300,12 @@ void SetStatusStatus(void)
   }
   else
   {
-    PrfQueryProfileString(hiniConfig, "Strings",
+    GetPrivateProfileString("Strings",
                             "Status Retry",
                             "",
                             szStatusStatusLine,
-                            sizeof(szStatusStatusLine));
+                            sizeof(szStatusStatusLine),
+                            szFileIniConfig);
     if(*szStatusStatusLine != '\0')
       sprintf(szCurrentStatusInfo,
               szStatusStatusLine,
@@ -319,17 +322,17 @@ void SetStatusStatus(void)
               glTotalKb);
   }
 
-  PrfQueryProfileString("Strings",
+  GetPrivateProfileString("Strings",
                           "Status Percentage Completed",
                           "",
                           szPercentageCompleted,
-                          sizeof(szPercentageCompleted));
+                          sizeof(szPercentageCompleted),
+                          szFileIniConfig);
   sprintf(szPercentString, szPercentageCompleted, (int)GetPercentSoFar());
 
   /* Set the download dialog title */
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_STATUS, szCurrentStatusInfo);
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_PERCENTAGE, szPercentString);
-  PrfCloseProfile(hiniConfig);
 }
 
 void SetStatusFile(void)
@@ -376,16 +379,13 @@ double GetPercentSoFar(void)
   return((double)(((double)(glAbsoluteBytesSoFar / 1024) / (double)glTotalKb) * (double)100));
 }
 
-void SetMinimizedDownloadTitle(ULONG dwPercentSoFar)
+void SetMinimizedDownloadTitle(DWORD dwPercentSoFar)
 {
-  static ULONG dwLastPercentSoFar = 0;
+  static DWORD dwLastPercentSoFar = 0;
   char szDownloadTitle[MAX_BUF_MEDIUM];
   char gszCurrentDownloadInfo[MAX_BUF_MEDIUM];
-  HINI   hiniConfig;
 
-  hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-  PrfQueryProfileString(hiniConfig, "Strings", "Dialog Download Title Minimized", "", szDownloadTitle, sizeof(szDownloadTitle));
-  PrfCloseProfile(hiniConfig);
+  GetPrivateProfileString("Strings", "Dialog Download Title Minimized", "", szDownloadTitle, sizeof(szDownloadTitle), szFileIniConfig);
 
   if(*szDownloadTitle != '\0')
     sprintf(gszCurrentDownloadInfo, szDownloadTitle, dwPercentSoFar, gszCurrentDownloadFilename);
@@ -414,40 +414,39 @@ void SetRestoredDownloadTitle(void)
   WinSetWindowText(dlgInfo.hWndDlg, diDownload.szTitle);
 }
 
-void GetTotalArchivesToDownload(int *iTotalArchivesToDownload, ULONG *dwTotalEstDownloadSize)
+void GetTotalArchivesToDownload(int *iTotalArchivesToDownload, DWORD *dwTotalEstDownloadSize)
 {
   int  iIndex = 0;
   char szUrl[MAX_BUF];
   char szSection[MAX_INI_SK];
   char szDownloadSize[MAX_ITOA];
-  HINI  hiniConfigIniFile;
 
   *dwTotalEstDownloadSize = 0;
   iIndex = 0;
   sprintf(szSection, "File%d", iIndex);
-  hiniConfigIniFile = PrfOpenProfile((HAB)0, gszConfigIniFile);
-  PrfQueryProfileString(hiniConfigIniFile, szSection,
+  GetPrivateProfileString(szSection,
                           "url0",
                           "",
                           szUrl,
-                          sizeof(szUrl));
+                          sizeof(szUrl),
+                          gszConfigIniFile);
   while(*szUrl != '\0')
   {
-    PrfQueryProfileString(hiniConfigIniFile, szSection, "size", "", szDownloadSize, sizeof(szDownloadSize));
+    GetPrivateProfileString(szSection, "size", "", szDownloadSize, sizeof(szDownloadSize), gszConfigIniFile);
     if((strlen(szDownloadSize) < 32) && (*szDownloadSize != '\0'))
       /* size will be in kb.  31 bits (int minus the signed bit) of precision should sufice */
       *dwTotalEstDownloadSize += atoi(szDownloadSize);
 
     ++iIndex;
     sprintf(szSection, "File%d", iIndex);
-    PrfQueryProfileString(hiniConfigIniFile, szSection,
+    GetPrivateProfileString(szSection,
                             "url0",
                             "",
                             szUrl,
-                            sizeof(szUrl));
+                            sizeof(szUrl),
+                            gszConfigIniFile);
   }
   *iTotalArchivesToDownload = iIndex;
-  PrfCloseProfile(hiniConfigIni);
 }
 
 /* 
@@ -466,8 +465,14 @@ void GetTotalArchivesToDownload(int *iTotalArchivesToDownload, ULONG *dwTotalEst
 int
 ProcessWndMsgCB()
 {
+  int iRv = nsFTPConn::OK;
+
 	ProcessWindowsMessages();
-	return 0;
+  if((gdwDownloadDialogStatus == CS_CANCEL) ||
+     (gdwDownloadDialogStatus == CS_PAUSE))
+    iRv = nsFTPConn::E_USER_CANCEL;
+
+	return(iRv);
 }
 
 /* Function used only to send the message stream error */
@@ -521,12 +526,10 @@ int WGet(char *szUrl,
   return(rv);
 }
 
-int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd)
+int DownloadViaProxyOpen(char *szUrl, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd)
 {
   int  rv;
   char proxyURL[kProxySrvrLen];
-  char *file = NULL;
-  HINI  hiniConfig;
 
   if((!szUrl) || (*szUrl == '\0'))
     return nsHTTPConn::E_PARAM;
@@ -535,13 +538,12 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   memset(proxyURL, 0, kProxySrvrLen);
   sprintf(proxyURL, "http://%s:%s", szProxyServer, szProxyPort);
 
-  nsHTTPConn *conn = new nsHTTPConn(proxyURL, ProcessWndMsgCB);
-  if(conn == NULL)
+  connHTTP = new nsHTTPConn(proxyURL, ProcessWndMsgCB);
+  if(connHTTP == NULL)
   {
     char szBuf[MAX_BUF_TINY];
-    hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-    PrfQueryProfileString(hiniConfig, "Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf));
-    PrfCloseProfile(hiniConfig);
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
@@ -549,60 +551,180 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
 
   if((szProxyUser != NULL) && (*szProxyUser != '\0') &&
      (szProxyPasswd != NULL) && (*szProxyPasswd != '\0'))
-    conn->SetProxyInfo(szUrl, szProxyUser, szProxyPasswd);
+    connHTTP->SetProxyInfo(szUrl, szProxyUser, szProxyPasswd);
   else
-    conn->SetProxyInfo(szUrl, NULL, NULL);
+    connHTTP->SetProxyInfo(szUrl, NULL, NULL);
 
-  if((rv = conn->Open()) != WIZ_OK)
-    return(rv);
+  rv = connHTTP->Open();
+  return(rv);
+}
+
+void DownloadViaProxyClose(void)
+{
+  gbStartTickCounter = FALSE;
+  if(connHTTP)
+  {
+    connHTTP->Close();
+    delete(connHTTP);
+    connHTTP = NULL;
+  }
+}
+
+int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *szProxyUser, char *szProxyPasswd)
+{
+  int  rv;
+  char *file = NULL;
+
+  rv = nsHTTPConn::OK;
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsHTTPConn::E_PARAM;
+
+  if(connHTTP == NULL)
+  {
+    rv = DownloadViaProxyOpen(szUrl,
+                              szProxyServer,
+                              szProxyPort,
+                              szProxyUser,
+                              szProxyPasswd);
+
+    if(rv != nsHTTPConn::OK)
+    {
+      DownloadViaProxyClose();
+      return(rv);
+    }
+  }
+
+  if(connHTTP == NULL)
+  {
+    char szBuf[MAX_BUF_TINY];
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    PrintError(szBuf, ERROR_CODE_HIDE);
+
+    return(WIZ_OUT_OF_MEMORY);
+  }
 
   if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
     file = strrchr(szUrl, '/') + 1; // set to leaf name
 
-  rv = conn->Get(ProgressCB, file); // use leaf from URL
-  conn->Close();
-
-  if(conn)
-    delete(conn);
-
+  gbStartTickCounter = TRUE;
+  rv = connHTTP->Get(ProgressCB, file); // use leaf from URL
+  DownloadViaProxyClose();
   return(rv);
+}
+
+int DownloadViaHTTPOpen(char *szUrl)
+{
+  int  rv;
+
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsHTTPConn::E_PARAM;
+
+  rv = nsHTTPConn::OK;
+  connHTTP = new nsHTTPConn(szUrl, ProcessWndMsgCB);
+  if(connHTTP == NULL)
+  {
+    char szBuf[MAX_BUF_TINY];
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), gszConfigIniFile);
+    PrintError(szBuf, ERROR_CODE_HIDE);
+
+    return(WIZ_OUT_OF_MEMORY);
+  }
+  
+  rv = connHTTP->Open();
+  return(rv);
+}
+
+void DownloadViaHTTPClose(void)
+{
+  gbStartTickCounter = FALSE;
+  if(connHTTP)
+  {
+    connHTTP->Close();
+    delete(connHTTP);
+    connHTTP = NULL;
+  }
 }
 
 int DownloadViaHTTP(char *szUrl)
 {
   int  rv;
   char *file = NULL;
-  HINI  hiniConfigIni;
 
   if((!szUrl) || (*szUrl == '\0'))
     return nsHTTPConn::E_PARAM;
 
-  rv = nsHTTPConn::OK;
-  nsHTTPConn *conn = new nsHTTPConn(szUrl, ProcessWndMsgCB);
-  if(conn == NULL)
+  if(connHTTP == NULL)
+  {
+    rv = DownloadViaHTTPOpen(szUrl);
+    if(rv != nsHTTPConn::OK)
+    {
+      DownloadViaHTTPClose();
+      return(rv);
+    }
+  }
+
+  if(connHTTP == NULL)
   {
     char szBuf[MAX_BUF_TINY];
-    PrfOpenProfile((HAB)0, gszConfigIniFile);
-    PrfQueryProfileString(hiniConfigIni, "Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf));
-    PrfCloseProfile(hiniConfigIni);
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), gszConfigIniFile);
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
   }
   
-  if((rv = conn->Open()) != WIZ_OK)
-    return(rv);
-
+  rv = nsHTTPConn::OK;
   if(strrchr(szUrl, '/') != (szUrl + strlen(szUrl)))
     file = strrchr(szUrl, '/') + 1; // set to leaf name
 
-  rv = conn->Get(ProgressCB, file);
-  conn->Close();
+  gbStartTickCounter = TRUE;
+  rv = connHTTP->Get(ProgressCB, file);
+  DownloadViaHTTPClose();
+  return(rv);
+}
 
-  if(conn)
-    delete(conn);
+int DownloadViaFTPOpen(char *szUrl)
+{
+  char *host = 0, *path = 0, *file = (char*) kLoclFile;
+  int port = 21;
+  int rv;
+
+  if((!szUrl) || (*szUrl == '\0'))
+    return nsFTPConn::E_PARAM;
+
+  rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
+
+  connFTP = new nsFTPConn(host, ProcessWndMsgCB);
+  if(connFTP == NULL)
+  {
+    char szBuf[MAX_BUF_TINY];
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    PrintError(szBuf, ERROR_CODE_HIDE);
+
+    return(WIZ_OUT_OF_MEMORY);
+  }
+
+  rv = connFTP->Open();
+  if(host)
+    free(host);
+  if(path)
+    free(path);
 
   return(rv);
+}
+
+void DownloadViaFTPClose(void)
+{
+  gbStartTickCounter = FALSE;
+  if(connFTP)
+  {
+    connFTP->Close();
+    delete(connFTP);
+    connFTP = NULL;
+  }
 }
 
 int DownloadViaFTP(char *szUrl)
@@ -610,40 +732,42 @@ int DownloadViaFTP(char *szUrl)
   char *host = 0, *path = 0, *file = (char*) kLoclFile;
   int port = 21;
   int rv;
-  HINI    hiniConfig;
 
   if((!szUrl) || (*szUrl == '\0'))
     return nsFTPConn::E_PARAM;
 
-  rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
+  if(connFTP == NULL)
+  {
+    rv = DownloadViaFTPOpen(szUrl);
+    if(rv != nsFTPConn::OK)
+    {
+      DownloadViaFTPClose();
+      return(rv);
+    }
+  }
 
-  nsFTPConn *conn = new nsFTPConn(host, ProcessWndMsgCB);
-  if(conn == NULL)
+  if(connFTP == NULL)
   {
     char szBuf[MAX_BUF_TINY];
-    hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-    PrfQueryProfileString(hiniConfig, "Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf));
-    PrfCloseProfile(hiniConfig);
+
+    GetPrivateProfileString("Strings", "Error Out Of Memory", "", szBuf, sizeof(szBuf), szFileIniConfig);
     PrintError(szBuf, ERROR_CODE_HIDE);
 
     return(WIZ_OUT_OF_MEMORY);
   }
 
-  if((rv = conn->Open()) != WIZ_OK)
-    return(rv);
+  rv = nsHTTPConn::ParseURL(kFTP, szUrl, &host, &port, &path);
 
   if(strrchr(path, '/') != (path + strlen(path)))
     file = strrchr(path, '/') + 1; // set to leaf name
 
-  rv = conn->Get(path, file, nsFTPConn::BINARY, TRUE, ProgressCB);
-  conn->Close();
+  gbStartTickCounter = TRUE;
+  rv = connFTP->Get(path, file, nsFTPConn::BINARY, TRUE, ProgressCB);
 
   if(host)
     free(host);
   if(path)
     free(path);
-  if(conn)
-    delete(conn);
 
   return(rv);
 }
@@ -663,6 +787,46 @@ void PauseTheDownload(int rv, int *iFileDownloadRetries)
   }
 }
 
+void CloseSocket(char *szProxyServer, char *szProxyPort)
+{
+  /* Close the socket connection from the first attempt. */
+  if((szProxyServer != NULL) && (szProxyPort != NULL) &&
+     (*szProxyServer != '\0') && (*szProxyPort != '\0'))
+      DownloadViaProxyClose();
+  else
+  {
+    /* is this an HTTP URL? */
+    if(strncmp(gszUrl, kHTTP, strlen(kHTTP)) == 0)
+      DownloadViaHTTPClose();
+    /* or is this an FTP URL? */
+    else if(strncmp(gszUrl, kFTP, strlen(kFTP)) == 0)
+      DownloadViaFTPClose();
+  }
+}
+
+siC *GetObjectFromArchiveName(char *szArchiveName)
+{
+  DWORD dwIndex;
+  siC   *siCObject = NULL;
+  siC   *siCNode   = NULL;
+
+  dwIndex = 0;
+  siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  while(siCObject)
+  {
+    if(strcmpi(szArchiveName, siCObject->szArchiveName) == 0)
+    {
+      siCNode = siCObject;
+      break;
+    }
+
+    ++dwIndex;
+    siCObject = SiCNodeGetObject(dwIndex, TRUE, AC_ALL);
+  }
+
+  return(siCNode);
+}
+
 int DownloadFiles(char *szInputIniFile,
                   char *szDownloadDir,
                   char *szProxyServer,
@@ -670,10 +834,9 @@ int DownloadFiles(char *szInputIniFile,
                   char *szProxyUser,
                   char *szProxyPasswd,
                   BOOL bShowRetryMsg,
-                  int *iNetRetries,
                   BOOL bIgnoreAllNetworkErrors,
                   char *szFailedFile,
-                  ULONG dwFailedFileSize)
+                  DWORD dwFailedFileSize)
 {
   char      szBuf[MAX_BUF];
   char      szCurrentFile[MAX_BUF];
@@ -684,13 +847,16 @@ int DownloadFiles(char *szInputIniFile,
   int       rv;
   int       iFileDownloadRetries;
   int       iIgnoreFileNetworkError;
-  ULONG     dwTotalEstDownloadSize;
+  int       iLocalTimeOutCounter;
+  DWORD     dwTotalEstDownloadSize;
   char      szPartiallyDownloadedFilename[MAX_BUF];
-  ULONG ulCwdLength = sizeof(szSavedCwd);
-  HINI      hiniInstall;
-  HINI      hiniConfig;
-  HINI      hiniConfigIniFile;
+  BOOL      bDownloadInitiated;
+  char      szTempURL[MAX_BUF];
+  char      szWorkingURLPathOnly[MAX_BUF];
+  siC       *siCCurrentFileObj = NULL;
 
+  memset(szTempURL, 0, sizeof(szTempURL));
+  memset(szWorkingURLPathOnly, 0, sizeof(szWorkingURLPathOnly));
   if(szInputIniFile == NULL)
     return(WIZ_ERROR_UNDEFINED);
 
@@ -698,7 +864,7 @@ int DownloadFiles(char *szInputIniFile,
     memset(szFailedFile, 0, dwFailedFileSize);
 
   InitTickInfo();
-  DosQueryCurrentDir(0, szSavedCwd, &ulCwdLength);
+  GetCurrentDirectory(sizeof(szSavedCwd), szSavedCwd);
   DosSetCurrentDir(szDownloadDir);
 
   rv                        = WIZ_OK;
@@ -707,12 +873,18 @@ int DownloadFiles(char *szInputIniFile,
   glLastBytesSoFar          = 0;
   glAbsoluteBytesSoFar      = 0;
   glBytesResumedFrom        = 0;
+  gdwTickStart              = 0; /* Initialize the counter used to
+                                  * calculate download rate */
+  gbStartTickCounter        = FALSE; /* used to determine when to start
+                                      * the tick counter used to calculate
+                                      * the download rate */
   gbUrlChanged              = TRUE;
   gbDlgDownloadMinimized    = FALSE;
   gbDlgDownloadJustMinimized = FALSE;
   gdwDownloadDialogStatus   = CS_NONE;
   gbShowDownloadRetryMsg    = bShowRetryMsg;
   gszConfigIniFile          = szInputIniFile;
+  bDownloadInitiated        = FALSE;
 
   GetTotalArchivesToDownload(&giTotalArchivesToDownload,
                              &dwTotalEstDownloadSize);
@@ -722,10 +894,6 @@ int DownloadFiles(char *szInputIniFile,
 
   InitDownloadDlg();
 
-  hiniConfigIniFile = PrfOpenProfile((HAB)0, gszConfigIniFile);
-  hiniConfig    = PrfOpenProfile((HAB)0, szFileIniConfig);
-  hiniInstall   = PrfOpenProfile((HAB)0, szFileIniInstall);
-
   for(giIndex = 0; giIndex < giTotalArchivesToDownload; giIndex++)
   {
     /* set (or reset) the counter to 0 in order to read the
@@ -734,29 +902,48 @@ int DownloadFiles(char *szInputIniFile,
     gbUrlChanged = TRUE; /* Update the download dialog with new URL */
     sprintf(szSection, "File%d", giIndex);
     sprintf(szKey,     "url%d",  iCounter);
-    PrfQueryProfileString(hiniConfigIniFile, szSection,
+    GetPrivateProfileString(szSection,
                             szKey,
                             "",
-                            gszUrl,
-                            sizeof(gszUrl));
-    if(*gszUrl == '\0')
+                            szTempURL,
+                            sizeof(szTempURL),
+                            gszConfigIniFile);
+
+    if(*szTempURL == '\0')
       continue;
 
-    PrfQueryProfileString(hiniConfigIniFile, szSection,
+    if(!bDownloadInitiated)
+    {
+      ParsePath(szTempURL,
+                szWorkingURLPathOnly,
+                sizeof(szWorkingURLPathOnly),
+                TRUE, //use '/' as the path delimiter
+                PP_PATH_ONLY);
+    }
+
+    GetPrivateProfileString(szSection,
                             "desc",
                             "",
                             gszCurrentDownloadFileDescription,
-                            sizeof(gszCurrentDownloadFileDescription));
-    iIgnoreFileNetworkError = PrfQueryProfileInt(hiniConfigIni, szSection,
+                            sizeof(gszCurrentDownloadFileDescription),
+                            gszConfigIniFile);
+    iIgnoreFileNetworkError = GetPrivateProfileInt(szSection,
                             "Ignore File Network Error",
-                            0);
+                            0,
+                            gszConfigIniFile);
 
     /* save the file name to be downloaded */
-    ParsePath(gszUrl,
+    ParsePath(szTempURL,
               szCurrentFile,
               sizeof(szCurrentFile),
-              TRUE,
+              TRUE, //use '/' as the path delimiter
               PP_FILENAME_ONLY);
+
+    RemoveSlash(szWorkingURLPathOnly);
+    sprintf(gszUrl, "%s/%s", szWorkingURLPathOnly, szCurrentFile);
+
+    /* retrieve the file's data structure */
+    siCCurrentFileObj = GetObjectFromArchiveName(szCurrentFile);
 
     if((*szPartiallyDownloadedFilename != 0) &&
        (strcmpi(szPartiallyDownloadedFilename, szCurrentFile) == 0))
@@ -784,6 +971,7 @@ int DownloadFiles(char *szInputIniFile,
 
     SetSetupCurrentDownloadFile(szCurrentFile);
     iFileDownloadRetries = 0;
+    iLocalTimeOutCounter = 0;
     do
     {
       ProcessWindowsMessages();
@@ -806,61 +994,99 @@ int DownloadFiles(char *szInputIniFile,
           rv = DownloadViaFTP(gszUrl);
       }
 
+      bDownloadInitiated = TRUE;
       if((rv == nsFTPConn::E_USER_CANCEL) ||
          (gdwDownloadDialogStatus == CS_PAUSE))
       {
         if(gdwDownloadDialogStatus == CS_PAUSE)
         {
-          PauseTheDownload(rv, &iFileDownloadRetries);
+          CloseSocket(szProxyServer, szProxyPort);
 
           /* rv needs to be set to something
            * other than E_USER_CANCEL or E_OK */
           rv = nsFTPConn::E_CMD_UNEXPECTED;
+
+          PauseTheDownload(rv, &iFileDownloadRetries);
+          bDownloadInitiated = FALSE; /* restart the download using
+                                       * new socket connection */
         }
         else
         {
-          /* break out of the do loop */
+          /* user canceled; break out of the do loop */
           break;
         }
       }
       else if((rv != nsFTPConn::OK) &&
               (rv != nsFTPConn::E_CMD_FAIL) &&
+              (rv != nsSocket::E_BIND) &&
+              (rv != nsHTTPConn::E_HTTP_RESPONSE) &&
               (gdwDownloadDialogStatus != CS_CANCEL))
       {
+        /* We timed out.  No response from the server, or 
+         * we somehow lost connection. */
+
         char szTitle[MAX_BUF_SMALL];
         char szMsgDownloadPaused[MAX_BUF];
 
-        /* Start the pause tick counter here because we don't know how
-         * long before the user will dismiss the MessageBox() */
-        if(!gtiPaused.bTickStarted)
+        /* Incrememt the time out counter on E_TIMEOUT */
+        if(rv == nsSocket::E_TIMEOUT)
         {
-          gtiPaused.dwTickBegin          = GetTickCount();
-          gtiPaused.bTickStarted         = TRUE;
-          gtiPaused.bTickDownloadResumed = FALSE;
+          ++siCCurrentFileObj->iNetTimeOuts;
+          ++iLocalTimeOutCounter;
         }
 
-        /* The connection exepectedly dropped for some reason, so inform
-         * the user that the download will be Paused, and then update the
-         * Download dialog to show the Paused state. */
-        PrfQueryProfileString(hiniInstall, "Messages",
-                                "MB_WARNING_STR",
-                                "",
-                                szTitle,
-                                sizeof(szTitle));
-        PrfQueryProfileString(hiniConfig, "Strings",
-                                "Message Download Paused",
-                                "",
-                                szMsgDownloadPaused,
-                                sizeof(szMsgDownloadPaused));
-        WinMessageBox(HWND_DESKTOP, dlgInfo.hWndDlg,
-                   szMsgDownloadPaused,
-                   szTitle,
-                   0,
-                   MB_ICONEXCLAMATION);
-        PauseTheDownload(rv, &iFileDownloadRetries);
+        CloseSocket(szProxyServer, szProxyPort);
+
+        /* If the number of timeouts is %3 == 0, then let's pause
+         * the download process.  Otherwise, just close the
+         * connection and open a new one to see if the download
+         * can be restarted automatically. */
+        if((rv != nsSocket::E_TIMEOUT) ||
+           (rv == nsSocket::E_TIMEOUT) && ((iLocalTimeOutCounter % kModTimeOutValue) == 0))
+        {
+          /* Start the pause tick counter here because we don't know how
+           * long before the user will dismiss the MessageBox() */
+          if(!gtiPaused.bTickStarted)
+          {
+            gtiPaused.dwTickBegin          = GetTickCount();
+            gtiPaused.bTickStarted         = TRUE;
+            gtiPaused.bTickDownloadResumed = FALSE;
+          }
+
+          /* The connection unexepectedly dropped for some reason, so inform
+           * the user that the download will be Paused, and then update the
+           * Download dialog to show the Paused state. */
+          GetPrivateProfileString("Messages",
+                                  "MB_WARNING_STR",
+                                  "",
+                                  szTitle,
+                                  sizeof(szTitle),
+                                  szFileIniInstall);
+          GetPrivateProfileString("Strings",
+                                  "Message Download Paused",
+                                  "",
+                                  szMsgDownloadPaused,
+                                  sizeof(szMsgDownloadPaused),
+                                  szFileIniConfig);
+          WinMessageBox(HWND_DESKTOP, dlgInfo.hWndDlg,
+                        szMsgDownloadPaused,
+                        szTitle, 0,
+                        MB_ICONEXCLAMATION);
+
+          /* Let's make sure we're in a paused state */
+          gdwDownloadDialogStatus = CS_PAUSE;
+          PauseTheDownload(rv, &iFileDownloadRetries);
+        }
+        else
+          /* Let's make sure we're _not_ in a paused state */
+          gdwDownloadDialogStatus = CS_NONE;
       }
 
-      ++iFileDownloadRetries;
+      /* We don't count time outs as normal failures.  We're
+       * keeping track of time outs differently. */
+      if(rv != nsSocket::E_TIMEOUT)
+        ++iFileDownloadRetries;
+
       if((iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) &&
          (rv != nsFTPConn::E_USER_CANCEL) &&
          (gdwDownloadDialogStatus != CS_CANCEL))
@@ -869,18 +1095,28 @@ int DownloadFiles(char *szInputIniFile,
          * to read the next url for the current file */
         ++iCounter;
         sprintf(szKey, "url%d",  iCounter);
-        PrfQueryProfileString(hiniConfigIniFile, szSection,
+        GetPrivateProfileString(szSection,
                                 szKey,
                                 "",
-                                gszUrl,
-                                sizeof(gszUrl));
-        if(*gszUrl != '\0')
+                                szTempURL,
+                                sizeof(szTempURL),
+                                gszConfigIniFile);
+        if(*szTempURL != '\0')
         {
           /* Found more urls to download from for the current file.
            * Update the dialog to show the new url and reset the
            * file download retries to 0 since it's a new url. */
           gbUrlChanged = TRUE;
           iFileDownloadRetries = 0;
+          bDownloadInitiated = FALSE; // restart the download using new socket connection
+          CloseSocket(szProxyServer, szProxyPort);
+          ParsePath(szTempURL,
+                    szWorkingURLPathOnly,
+                    sizeof(szWorkingURLPathOnly),
+                    TRUE, //use '/' as the path delimiter
+                    PP_PATH_ONLY);
+          RemoveSlash(szWorkingURLPathOnly);
+          sprintf(gszUrl, "%s/%s", szWorkingURLPathOnly, szCurrentFile);
           SetStatusUrl();
         }
       }
@@ -889,12 +1125,8 @@ int DownloadFiles(char *szInputIniFile,
             (gdwDownloadDialogStatus != CS_CANCEL) &&
             (iFileDownloadRetries <= MAX_FILE_DOWNLOAD_RETRIES));
 
-    if((iFileDownloadRetries > MAX_FILE_DOWNLOAD_RETRIES) && iNetRetries)
-      /* Keep track of how many retries for only the file that had
-       * too many retries.
-       * We don't care about retries unless it's reached the limit
-       * because each retry should not count as a new download. */
-      *iNetRetries = iFileDownloadRetries - 1;
+    /* Save the number of retries for each file */
+    siCCurrentFileObj->iNetRetries = iFileDownloadRetries < 1 ? 0:iFileDownloadRetries - 1;
 
     if((rv == nsFTPConn::E_USER_CANCEL) ||
        (gdwDownloadDialogStatus == CS_CANCEL))
@@ -903,7 +1135,7 @@ int DownloadFiles(char *szInputIniFile,
        * is CS_CANCEL */
       rv = nsFTPConn::E_USER_CANCEL;
 
-      if(szFailedFile && ((ULONG)strlen(szCurrentFile) <= dwFailedFileSize))
+      if(szFailedFile && ((DWORD)strlen(szCurrentFile) <= dwFailedFileSize))
         strcpy(szFailedFile, gszCurrentDownloadFileDescription);
 
       /* break out of for() loop */
@@ -918,14 +1150,15 @@ int DownloadFiles(char *szInputIniFile,
       /* too many retries from failed downloads */
       char szMsg[MAX_BUF];
 
-      if(szFailedFile && ((ULONG)strlen(szCurrentFile) <= dwFailedFileSize))
+      if(szFailedFile && ((DWORD)strlen(szCurrentFile) <= dwFailedFileSize))
         strcpy(szFailedFile, gszCurrentDownloadFileDescription);
 
-      PrfQueryProfileString(hiniConfig, "Strings",
+      GetPrivateProfileString("Strings",
                               "Error Too Many Network Errors",
                               "",
                               szMsg,
-                              sizeof(szMsg));
+                              sizeof(szMsg),
+                              szFileIniConfig);
       if(*szMsg != '\0')
       {
         sprintf(szBuf, szMsg, szCurrentFile);
@@ -944,14 +1177,13 @@ int DownloadFiles(char *szInputIniFile,
     UnsetSetupCurrentDownloadFile();
   }
 
+  CloseSocket(szProxyServer, szProxyPort);
   DeInitDownloadDlg();
-  DosSetCurrentDir(szSavedCwd);
-  PrfCloseProfile(hiniInstall);
-  PrfCloseProfile(hiniConfig);
-  PrfCloseProfile(hiniConfigIni);
+  SetCurrentDirectory(szSavedCwd);
   return(rv);
 }
 
+#ifdef OLDCODE
 int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 {
   long   lBytesDiffSoFar;
@@ -997,34 +1229,29 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 static void
 CenterWindow(HWND hWndDlg)
 {
-	RECTL	rect;
+	RECT	rect;
 	int		iLeft, iTop;
 
-	WinQueryWindowRect(hWndDlg, &rect);
-	iLeft = (WinQuerySysValue(HWND_DESKTOP, SV_CXSCREEN) - (rect.xRight - rect.xLeft)) / 2;
-	iTop  = (WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN) - (rect.yBottom - rect.yTop)) / 2;
+	GetWindowRect(hWndDlg, &rect);
+	iLeft = (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2;
+	iTop  = (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2;
 
-	WinSetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 // Window proc for dialog
 LRESULT CALLBACK
-DownloadDlgProc(HWND hWndDlg, UINT msg, MPARAM wParam, MPARAM lParam)
+DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  HINI  hiniConfig;
-  PSZ pszFontNameSize;
-  ULONG ulFontNameSizeLength;
-
   switch (msg)
   {
     case WM_INITDIALOG:
-      hiniConfig = PrfOpenProfile((HAB)0, szFileIniConfig);
-      PrfQueryProfileString(hiniConfig, "Strings",
+      GetPrivateProfileString("Strings",
                               "Status File Info",
                               "",
                               gszFileInfo,
-                              sizeof(gszFileInfo));
-      PrfCloseProfile(hiniConfig);
+                              sizeof(gszFileInfo),
+                              szFileIniConfig);
       DisableSystemMenuItems(hWndDlg, FALSE);
       CenterWindow(hWndDlg);
       if(gbShowDownloadRetryMsg)
@@ -1032,28 +1259,25 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, MPARAM wParam, MPARAM lParam)
       else
         WinSetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
 
-      pszFontNameSize = myGetSysFont();
-      ulFontNameSizeLength = sizeof(pszFontNameSize) + 1;
-
-      WinEnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
+      EnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
       WinSetDlgItemText(hWndDlg, IDC_STATIC1, sgInstallGui.szStatus);
       WinSetDlgItemText(hWndDlg, IDC_STATIC2, sgInstallGui.szFile);
       WinSetDlgItemText(hWndDlg, IDC_STATIC4, sgInstallGui.szTo);
       WinSetDlgItemText(hWndDlg, IDC_STATIC3, sgInstallGui.szUrl);
-      WinSetDlgItemText(hWndDlg, MBID_CANCEL, sgInstallGui.szCancel_);
-      WinSetDlgItemText(hWndDlg, MBID_PAUSE, sgInstallGui.szPause_);
-      WinSetDlgItemText(hWndDlg, MBID_RESUME, sgInstallGui.szResume_);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC1), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC2), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATIC13), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, MBID_CANCEL), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, MBID_PAUSE), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, MBID_RESUME), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_MESSAGE0), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATUS_STATUS), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATUS_FILE), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATUS_URL), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
-      WinSetPresParam(WinWindowFromID(hDlg, IDC_STATUS_TO), PP_FONTNAMESIZE, ulFontNameSizeLength, pszFontNameSize);
+      WinSetDlgItemText(hWndDlg, IDCANCEL, sgInstallGui.szCancel_);
+      WinSetDlgItemText(hWndDlg, IDPAUSE, sgInstallGui.szPause_);
+      WinSetDlgItemText(hWndDlg, IDRESUME, sgInstallGui.szResume_);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDPAUSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDRESUME, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_STATUS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
       return FALSE;
 
@@ -1090,8 +1314,8 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, MPARAM wParam, MPARAM lParam)
             gtiPaused.bTickDownloadResumed = FALSE;
           }
 
-          WinEnableWindow(GetDlgItem(hWndDlg, IDPAUSE),  FALSE);
-          WinEnableWindow(GetDlgItem(hWndDlg, IDRESUME), TRUE);
+          EnableWindow(WinWindowFromID(hWndDlg, IDPAUSE),  FALSE);
+          EnableWindow(WinWindowFromID(hWndDlg, IDRESUME), TRUE);
           gdwDownloadDialogStatus = CS_PAUSE;
           break;
 
@@ -1101,8 +1325,8 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, MPARAM wParam, MPARAM lParam)
                                            gtiPaused.dwTickBegin);
           gtiPaused.bTickDownloadResumed = TRUE;
 
-          WinEnableWindow(GetDlgItem(hWndDlg, IDRESUME), FALSE);
-          WinEnableWindow(GetDlgItem(hWndDlg, IDPAUSE),  TRUE);
+          EnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
+          EnableWindow(WinWindowFromID(hWndDlg, IDPAUSE),  TRUE);
           gdwDownloadDialogStatus = CS_NONE;
           break;
 
@@ -1134,20 +1358,20 @@ UpdateGaugeFileProgressBar(double value)
     // Only paint if we need to display more bars
     if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
     {
-      HWND	hWndGauge = WinWindowFormID(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
-      RECTL	rect;
+      HWND	hWndGauge = WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+      RECT	rect;
 
       // Update the gauge state before painting
       dlgInfo.nFileBars = nBars;
 
       // Only invalidate the part that needs updating
-      WinQueryWindowRect(hWndGauge, &rect);
-      WinInvalidateRect(hWndGauge, &rect, FALSE);
+      GetClientRect(hWndGauge, &rect);
+      InvalidateRect(hWndGauge, &rect, FALSE);
     
       // Update the whole extracting dialog. We do this because we don't
       // have a message loop to process WM_PAINT messages in case the
       // extracting dialog was exposed
-      WinUpdateWindow(dlgInfo.hWndDlg);
+      UpdateWindow(dlgInfo.hWndDlg);
     }
   }
 }
@@ -1157,14 +1381,14 @@ static void
 DrawGaugeBorder(HWND hWnd)
 {
 	HDC		hDC = GetWindowDC(hWnd);
-	RECTL	rect;
+	RECT	rect;
 	int		cx, cy;
 	HPEN	hShadowPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
 	HGDIOBJ	hOldPen;
 
-	WinQueryWindowRect(hWnd, &rect);
-	cx = rect.xRight - rect.xLeft;
-	cy = rect.yBottom - rect.yTop;
+	GetWindowRect(hWnd, &rect);
+	cx = rect.right - rect.left;
+	cy = rect.bottom - rect.top;
 
 	// Draw a dark gray line segment
 	hOldPen = SelectObject(hDC, (HGDIOBJ)hShadowPen);
@@ -1188,74 +1412,79 @@ static void
 DrawProgressBar(HWND hWnd, int nBars)
 {
   int         i;
-	HPS         hPS;
-	RECTL        rect;
+	PAINTSTRUCT	ps;
+	HDC         hDC;
+	RECT        rect;
+	HBRUSH      hBrush;
 
-  WinQueryWindowRect(hWnd, &rect);
-  hPS = WinBeginPaint(hWnd, NULLHANDLE, &rect);
+  hDC = BeginPaint(hWnd, &ps);
+	GetClientRect(hWnd, &rect);
   if(nBars <= 0)
   {
     /* clear the bars */
-    WinFillRect(hPS, &rect, WinQuerySysColor(HWND_DESKTOP, SYSCLR_MENU, 0L));
+    hBrush = CreateSolidBrush(GetSysColor(COLOR_MENU));
+    FillRect(hDC, &rect, hBrush);
   }
   else
   {
   	// Draw the bars
-	  rect.xLeft     = rect.yTop = BAR_LIBXPNET_MARGIN;
-	  rect.yBottom  -= BAR_LIBXPNET_MARGIN;
-	  rect.xRight    = rect.xLeft + BAR_LIBXPNET_WIDTH;
+    hBrush = CreateSolidBrush(RGB(0, 0, 128));
+	  rect.left     = rect.top = BAR_LIBXPNET_MARGIN;
+	  rect.bottom  -= BAR_LIBXPNET_MARGIN;
+	  rect.right    = rect.left + BAR_LIBXPNET_WIDTH;
 
 	  for(i = 0; i < nBars; i++)
     {
-		  RECTL	dest;
+		  RECT	dest;
 
-		  if(WinIntersectRect(hab, &dest, &ps.rcPaint, &rect))
-			  WinFillRect(hPS, &rect, CLR_BLUE);
+		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
+			  FillRect(hDC, &rect, hBrush);
 
-      WinOffsetRect(hab, &rect, BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING, 0);
+      OffsetRect(&rect, BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING, 0);
 	  }
   }
 
-	EndPaint(hPS);
+	DeleteObject(hBrush);
+	EndPaint(hWnd, &ps);
 }
 
 // Adjusts the width of the gauge based on the maximum number of bars
 static void
 SizeToFitGauge(HWND hWnd, int nMaxBars)
 {
-	RECTL	rect;
+	RECT	rect;
 	int		cx;
 
 	// Get the window size in pixels
-	WinQueryWindowRect(hWnd, &rect);
+	GetWindowRect(hWnd, &rect);
 
 	// Size the width to fit
-	cx = 2 * WinQuerySysValue(SV_CXBORDER) + 2 * BAR_LIBXPNET_MARGIN +
+	cx = 2 * GetSystemMetrics(SM_CXBORDER) + 2 * BAR_LIBXPNET_MARGIN +
 		nMaxBars * BAR_LIBXPNET_WIDTH + (nMaxBars - 1) * BAR_LIBXPNET_SPACING;
 
-	WinSetWindowPos(hWnd, NULL, -1, -1, cx, rect.yBottom - rect.yTop,
+	SetWindowPos(hWnd, NULL, -1, -1, cx, rect.bottom - rect.top,
 		SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 // Window proc for Download gauge
 BOOL CALLBACK
-GaugeDownloadWndProc(HWND hWnd, UINT msg, MPARAM wParam, MPARAM lParam)
+GaugeDownloadWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	ULONG	dwStyle;
-	RECTL	rect;
+	DWORD	dwStyle;
+	RECT	rect;
 
 	switch(msg)
   {
 		case WM_NCCREATE:
-			dwStyle = WinQueryWindowULong(hWnd, GWL_STYLE);
-			WinSetWindowULong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
+			dwStyle = GetWindowLong(hWnd, GWL_STYLE);
+			SetWindowLong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
 			return(TRUE);
 
 		case WM_CREATE:
 			// Figure out the maximum number of bars that can be displayed
-			WinQueryWindowRect(hWnd, &rect);
+			GetClientRect(hWnd, &rect);
 			dlgInfo.nFileBars = 0;
-			dlgInfo.nMaxFileBars = (rect.xRight - rect.xLeft - 2 * BAR_LIBXPNET_MARGIN + BAR_LIBXPNET_SPACING) / (BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING);
+			dlgInfo.nMaxFileBars = (rect.right - rect.left - 2 * BAR_LIBXPNET_MARGIN + BAR_LIBXPNET_SPACING) / (BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING);
 
 			// Size the gauge to exactly fit the maximum number of bars
 			SizeToFitGauge(hWnd, dlgInfo.nMaxFileBars);
@@ -1279,7 +1508,7 @@ void InitDownloadDlg(void)
 
   if(sgProduct.dwMode != SILENT)
   {
-    memset(wc, 0, sizeof(wc));
+    memset(&wc, 0, sizeof(wc));
     wc.style          = CS_GLOBALCLASS;
     wc.hInstance      = hInst;
     wc.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
@@ -1288,9 +1517,8 @@ void InitDownloadDlg(void)
     RegisterClass(&wc);
 
     // Display the dialog box
-    //dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_DOWNLOADING), hWndMain, (DLGPROC)DownloadDlgProc);
-    dlgInfo.hWndDlg = WinCreateDlg(HWND_DESKTOP, hWndMain, (PFNWP)DownloadDlgProc, DLG_DOWNLOADING, NULL);
-    WinUpdateWindow(dlgInfo.hWndDlg);
+    dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_DOWNLOADING), hWndMain, (DLGPROC)DownloadDlgProc);
+    UpdateWindow(dlgInfo.hWndDlg);
     UpdateGaugeFileProgressBar(0);
   }
 }
@@ -1303,3 +1531,4 @@ void DeInitDownloadDlg()
     UnregisterClass("GaugeFile", hInst);
   }
 }
+#endif

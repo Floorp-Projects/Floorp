@@ -18,7 +18,6 @@
  * 
  * Contributor(s): 
  *   Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #ifndef _WIZVERREG_H_

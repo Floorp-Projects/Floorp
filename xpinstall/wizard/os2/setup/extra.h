@@ -20,41 +20,39 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.  
  */
 
 #ifndef _EXTRA_H_
 #define _EXTRA_H_
 
-typedef __int64 ULARGE_INTEGER;
-
-BOOL              InitDialogClass(HOBJECT hInstance, HOBJECT hSetupRscInst);
-BOOL              InitApplication(HOBJECT hInstance, HOBJECT hSetupRscInst);
-BOOL              InitInstance(HOBJECT hInstance, ULONG dwCmdShow);
-void              PrintError(PSZ szMsg, ULONG dwErrorCodeSH);
+BOOL              InitDialogClass(HMODULE hInstance, HMODULE hSetupRscInst);
+BOOL              InitApplication(HMODULE hInstance, HMODULE hSetupRscInst);
+BOOL              InitInstance(HMODULE hInstance);
+void              PrintError(PSZ szMsg, ULONG ulErrorCodeSH);
 void              FreeMemory(void **vPointer);
-void              *NS_GlobalReAlloc(HPOINTER hgMemory,
-                                    ULONG dwMemoryBufSize,
-                                    ULONG dwNewSize);
-void              *NS_GlobalAlloc(ULONG dwMaxBuf);
-APIRET           Initialize(HOBJECT hInstance);
-APIRET           NS_LoadStringAlloc(LHANDLE hInstance, ULONG dwID, PSZ *szStringBuf, ULONG dwStringBuf);
-APIRET           NS_LoadString(LHANDLE hInstance, ULONG dwID, PSZ szStringBuf, ULONG dwStringBuf);
-APIRET           WinSpawn(PSZ szClientName, PSZ szParameters, PSZ szCurrentDir, int iShowCmd, BOOL bWait);
-APIRET           ParseConfigIni(PSZ lpszCmdLine);
-APIRET           ParseInstallIni();
-APIRET           DecryptString(PSZ szOutputStr, PSZ szInputStr);
-APIRET           DecryptVariable(PSZ szVariable, ULONG dwVariableSize);
-APIRET           InitSetupGeneral(void);
-APIRET           InitDlgWelcome(diW *diDialog);
-APIRET           InitDlgLicense(diL *diDialog);
-APIRET           InitDlgSetupType(diST *diDialog);
-APIRET           InitDlgSelectComponents(diSC *diDialog, ULONG dwSM);
-APIRET           InitDlgWindowsIntegration(diWI *diDialog);
-APIRET           InitDlgProgramFolder(diPF *diDialog);
-APIRET           InitDlgStartInstall(diSI *diDialog);
-APIRET           InitDlgSiteSelector(diAS *diDialog);
-APIRET           InitSDObject(void);
+void              *NS_GlobalReAlloc(void **hgMemory,
+                                    DWORD dwMemoryBufSize,
+                                    DWORD dwNewSize);
+void              *NS_GlobalAlloc(DWORD dwMaxBuf);
+HRESULT           Initialize(HMODULE hInstance, PSZ szAppName);
+HRESULT           NS_LoadStringAlloc(HMODULE hInstance, ULONG ulID, PSZ *szStringBuf, ULONG ulStringBuf);
+HRESULT           NS_LoadString(HMODULE hInstance, ULONG ulID, PSZ szStringBuf, ULONG ulStringBuf);
+HRESULT           WinSpawn(LPSTR szClientName, LPSTR szParameters, LPSTR szCurrentDir, int iShowCmd, BOOL bWait);
+HRESULT           ParseConfigIni(int argc, char *argv[]);
+HRESULT           ParseInstallIni();
+HRESULT           DecryptString(LPSTR szOutputStr, LPSTR szInputStr);
+HRESULT           DecryptVariable(LPSTR szVariable, DWORD dwVariableSize);
+HRESULT           InitSetupGeneral(void);
+HRESULT           InitDlgWelcome(diW *diDialog);
+HRESULT           InitDlgLicense(diL *diDialog);
+HRESULT           InitDlgQuickLaunch(diQL *diDialog);
+HRESULT           InitDlgSetupType(diST *diDialog);
+HRESULT           InitDlgSelectComponents(diSC *diDialog, DWORD dwSM);
+HRESULT           InitDlgWindowsIntegration(diWI *diDialog);
+HRESULT           InitDlgProgramFolder(diPF *diDialog);
+HRESULT           InitDlgStartInstall(diSI *diDialog);
+HRESULT           InitDlgSiteSelector(diAS *diDialog);
+HRESULT           InitSDObject(void);
 void              DeInitSDObject(void);
 siC               *CreateSiCNode(void);
 void              SiCNodeInsert(siC **siCHead, siC *siCTemp);
@@ -62,32 +60,33 @@ void              SiCNodeDelete(siC *siCTemp);
 siCD              *CreateSiCDepNode(void);
 void              SiCDepNodeDelete(siCD *siCDepTemp);
 void              SiCDepNodeInsert(siCD **siCDepHead, siCD *siCDepTemp);
-APIRET          SiCNodeGetAttributes(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
-void              SiCNodeSetAttributes(ULONG dwIndex, ULONG dwAttributes, BOOL bSet, BOOL bIncludeInvisible, ULONG dwACFlag);
-void              SiCNodeSetItemsSelected(ULONG dwSetupType);
-char              *SiCNodeGetReferenceName(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
-char              *SiCNodeGetDescriptionShort(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
-char              *SiCNodeGetDescriptionLong(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
-char              *SiCNodeGetReferenceName(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
-siC               *SiCNodeGetObject(ULONG dwIndex, BOOL bIncludeInvisibleObjs, ULONG dwACFlag);
-ULONGLONG         SiCNodeGetInstallSize(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
-ULONGLONG         SiCNodeGetInstallSizeSystem(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
-ULONGLONG         SiCNodeGetInstallSizeArchive(ULONG dwIndex, BOOL bIncludeInvisible, ULONG dwACFlag);
+HRESULT           SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
+void              SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIncludeInvisible, DWORD dwACFlag, HWND hwndListBox);
+void              SiCNodeSetItemsSelected(DWORD dwSetupType);
+char              *SiCNodeGetReferenceName(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
+char              *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
+char              *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
+char              *SiCNodeGetReferenceName(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
+siC               *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs, DWORD dwACFlag);
+ULONGLONG         SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
+ULONGLONG         SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
+ULONGLONG         SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
 siC               *SiCNodeFind(siC *siComponents, char *szInReferenceName);
 void              InitSiComponents(char *szFileIni);
-APIRET           ParseComponentAttributes(char *szBuf);
+HRESULT           ParseComponentAttributes(char *szBuf, DWORD dwAttributes, BOOL bOverride);
 void              InitSiteSelector(char *szFileIni);
 void              DeInitSiCDependencies(siCD *siCDDependencies);
-BOOL              ResolveDependencies(ULONG dwIndex);
-BOOL              ResolveComponentDependency(siCD *siCDInDependency);
-void              ResolveDependees(PSZ szToggledDescriptionShort);
+BOOL              ResolveDependencies(DWORD dwIndex, HWND hwndListBox);
+BOOL              ResolveComponentDependency(siCD *siCDInDependency, HWND hwndListBox);
+void              ResolveDependees(LPSTR szToggledDescriptionShort, HWND hwndListBox);
 BOOL              ResolveComponentDependee(siCD *siCDInDependee);
 void              STSetVisibility(st *stSetupType);
-APIRET           InitSXpcomFile(void);
+HRESULT           InitSXpcomFile(void);
 void              DeInitSXpcomFile(void);
 void              DeInitialize(void);
 void              DeInitDlgWelcome(diW *diDialog);
 void              DeInitDlgLicense(diL *diDialog);
+void              DeInitDlgQuickLaunch(diQL *diDialog);
 void              DeInitDlgSetupType(diST *diDialog);
 void              DeInitDlgSelectComponents(diSC *diDialog);
 void              DeInitDlgWindowsIntegration(diWI *diDialog);
@@ -97,30 +96,30 @@ void              DeInitDlgSiteSelector(diAS *diDialog);
 void              DetermineOSVersionEx(void);
 void              DeInitSiComponents(siC **siComponents);
 void              DeInitSetupGeneral(void);
-APIRET           ParseSetupIni(void);
-APIRET           GetConfigIni(void);
-APIRET           GetInstallIni(void);
+HRESULT           ParseSetupIni(void);
+HRESULT           GetConfigIni(void);
+HRESULT           GetInstallIni(void);
 void              CleanTempFiles(void);
 void              OutputSetupTitle(HDC hDC);
 long              RetrieveArchives(void);
 long              RetrieveRedirectFile(void);
-void              ParsePath(PSZ szInput, PSZ szOutput, ULONG dwOutputSize, BOOL bUseSlash, ULONG dwType);
+void              ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, BOOL bUseSlash, DWORD dwType);
 void              RemoveBackSlash(PSZ szInput);
-void              AppendBackSlash(PSZ szInput, ULONG dwInputSize);
-void              RemoveSlash(PSZ szInput);
-void              AppendSlash(PSZ szInput, ULONG dwInputSize);
+void              AppendBackSlash(PSZ szInput, ULONG ulInputSize);
+void              RemoveSlash(LPSTR szInput);
+void              AppendSlash(LPSTR szInput, DWORD dwInputSize);
 BOOL              DeleteIdiGetConfigIni(void);
 BOOL              DeleteIdiGetArchives(void);
 BOOL              DeleteIdiGetRedirect(void);
 BOOL              DeleteIdiFileIniConfig(void);
 BOOL              DeleteIdiFileIniInstall(void);
-void              DeleteArchives(ULONG dwDeleteCheck);
+void              DeleteArchives(DWORD dwDeleteCheck);
 BOOL              DeleteIniRedirect(void);
-APIRET           LaunchApps(void);
-APIRET           FileExists(PSZ szFile);
+HRESULT           LaunchApps(void);
+HRESULT           FileExists(PSZ szFile);
 int               ExtractDirEntries(char* directory,void* vZip);
-int               LocateJar(siC *siCObject, PSZ szPath, int dwPathSize, BOOL bIncludeTempDir);
-APIRET           AddArchiveToIdiFile(siC *siCObject,
+int               LocateJar(siC *siCObject, LPSTR szPath, int dwPathSize, BOOL bIncludeTempDir);
+HRESULT           AddArchiveToIdiFile(siC *siCObject,
                                       char *szSFile,
                                       char *szFileIdiGetArchives);
 int               SiCNodeGetIndexDS(char *szInDescriptionShort);
@@ -128,74 +127,74 @@ int               SiCNodeGetIndexRN(char *szInReferenceName);
 void              ViewSiComponentsDependency(char *szBuffer, char *szIndentation, siC *siCNode);
 void              ViewSiComponentsDependee(char *szBuffer, char *szIndentation, siC *siCNode);
 void              ViewSiComponents(void);
-BOOL              IsWin95Debute(void);
-ULONGLONG         GetDiskSpaceRequired(ULONG dwType);
-ULONGLONG         GetDiskSpaceAvailable(PSZ szPath);
-APIRET           VerifyDiskSpace(void);
-APIRET           ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, PSZ szPath, BOOL bCrutialMsg);
+ULONGLONG         GetDiskSpaceRequired(DWORD dwType);
+ULONGLONG         GetDiskSpaceAvailable(LPSTR szPath);
+HRESULT           VerifyDiskSpace(void);
+HRESULT           ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPSTR szPath, BOOL bCrutialMsg);
 void              SetCustomType(void);
-void              GetAlternateArchiveSearchPath(PSZ lpszCmdLine);
+void              GetAlternateArchiveSearchPath(LPSTR lpszCmdLine);
 BOOL              NeedReboot(void);
-BOOL              LocatePreviousPath(PSZ szMainSectionName, PSZ szPath, ULONG dwPathSize);
-BOOL              LocatePathNscpReg(PSZ szSection, PSZ szPath, ULONG dwPathSize);
-BOOL              LocatePathWinReg(PSZ szSection, PSZ szPath, ULONG dwPathSize);
-BOOL              LocatePath(PSZ szSection, PSZ szPath, ULONG dwPathSize);
+BOOL              LocatePreviousPath(LPSTR szMainSectionName, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePathNscpReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePathWinReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
+BOOL              LocatePath(LPSTR szSection, LPSTR szPath, DWORD dwPathSize);
 int               VR_GetPath(char *component_path, unsigned long sizebuf, char *buf);
 dsN               *CreateDSNode();
 void              DsNodeInsert(dsN **dsNHead, dsN *dsNTemp);
 void              DsNodeDelete(dsN **dsNTemp);
 void              DeInitDSNode(dsN **dsnComponentDSRequirement);
-void              UpdatePathDiskSpaceRequired(PSZ szPath, ULONGLONG ullInstallSize, dsN **dsnComponentDSRequirement);
-APIRET           InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement);
-APIRET           CheckInstances();
+void              UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullInstallSize, dsN **dsnComponentDSRequirement);
+HRESULT           InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement);
+HRESULT           CheckInstances();
 long              RandomSelect(void);
 BOOL              CheckLegacy(HWND hDlg);
-COLOR          DecryptFontColor(PSZ szColor);
+COLORREF          DecryptFontColor(LPSTR szColor);
 ssi               *CreateSsiSiteSelectorNode();
 void              SsiSiteSelectorNodeInsert(ssi **ssiHead, ssi *ssiTemp);
 void              SsiSiteSelectorNodeDelete(ssi *ssiTemp);
-ssi*              SsiGetNode(PSZ szDescription);
+ssi*              SsiGetNode(LPSTR szDescription);
 void              UpdateSiteSelector(void);
-ULONG             GetAdditionalComponentsCount(void);
-ULONG             GetTotalArchivesToDownload();
-void              RemoveQuotes(PSZ lpszSrc, PSZ lpszDest, int iDestSize);
-PSZ             GetFirstNonSpace(PSZ lpszString);
-int               GetArgC(PSZ lpszCommandLine);
-PSZ             GetArgV(PSZ lpszCommandLine,
+DWORD             GetAdditionalComponentsCount(void);
+DWORD             GetTotalArchivesToDownload();
+void              RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize);
+LPSTR             GetFirstNonSpace(LPSTR lpszString);
+int               GetArgC(LPSTR lpszCommandLine);
+LPSTR             GetArgV(LPSTR lpszCommandLine,
                           int iIndex,
-                          PSZ lpszDest,
+                          LPSTR lpszDest,
                           int iDestSize);
-ULONG             ParseCommandLine(PSZ lpszCmdLine);
-void              SetSetupRunMode(PSZ szMode);
-void              Delay(ULONG dwSeconds);
+ULONG             ParseCommandLine(int argc, char *argv[]);
+void              SetSetupRunMode(LPSTR szMode);
+void              Delay(ULONG ulSeconds);
+void              UnsetSetupState(void);
+void              SetSetupState(char *szState);
 siCD              *InitWinInitNodes(char *szInFile);
-void              UpdateWininit(PSZ szUninstallFilename);
-char              *GetSaveInstallerPath(char *szBuf, ULONG dwBufSize);
+void              UpdateWininit(LPSTR szUninstallFilename);
+char              *GetSaveInstallerPath(char *szBuf, DWORD dwBufSize);
 void              SaveInstallerFiles(void);
 void              ResetComponentAttributes(char *szFileIni);
-BOOL              IsInList(ULONG dwCurrentItem,
-                           ULONG dwItems,
-                           ULONG *dwItemsSelected);
+BOOL              IsInList(DWORD dwCurrentItem,
+                           DWORD dwItems,
+                           DWORD *dwItemsSelected);
 int               LocateExistingPath(char *szPath,
                                      char *szExistingPath,
-                                     ULONG dwExistingPathSize);
-BOOL              ContainsReparseTag(char *szPath,
-                                     char *szReparsePath,
-                                     ULONG dwReparsePathSize);
+                                     DWORD dwExistingPathSize);
 BOOL              DeleteInstallLogFile(char *szFile);
 int               CRCCheckDownloadedArchives(char *szCorruptedArchiveList,
-                                             ULONG dwCorruptedArchivelistSize,
+                                             DWORD dwCorruptedArchivelistSize,
                                              char *szFileIdiGetArchives);
 int               CRCCheckArchivesStartup(char *szCorruptedArchiveList,
-                                          ULONG dwCorruptedArchiveListSize,
+                                          DWORD dwCorruptedArchiveListSize,
                                           BOOL bIncludeTempPath);
 BOOL              ResolveForceUpgrade(siC *siCObject);
-void              SwapFTPAndHTTP(char *szInUrl, ULONG dwInUrlSize);
-void              ClearWinRegUninstallFileDeletion(void);
+BOOL              ResolveSupersede(siC *siCObject);
+void              RestoreInvisibleFlag(siC *siCNode);
+void              RestoreAdditionalFlag(siC *siCNode);
+void              SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize);
 int               AppendToGlobalMessageStream(char *szInfo);
-char              *GetOSTypeString(char *szOSType, ULONG dwOSTypeBufSize);
+char              *GetOSTypeString(char *szOSType, ULONG ulOSTypeBufSize);
 int               UpdateIdiFile(char  *szPartialUrl,
-                                ULONG dwPartialUrlBufSize,
+                                DWORD dwPartialUrlBufSize,
                                 siC   *siCObject,
                                 char  *szSection,
                                 char  *szKey,
@@ -204,8 +203,12 @@ void              SetDownloadFile(void);
 void              UnsetSetupCurrentDownloadFile(void);
 void              SetSetupCurrentDownloadFile(char *szCurrentFilename);
 char              *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
-                                       ULONG dwCurrentDownloadFileBufSize);
+                                       DWORD dwCurrentDownloadFileBufSize);
 BOOL              DeleteWGetLog(void);
+DWORD             ParseOSType(char *szOSType);
+BOOL              ShowAdditionalOptionsDialog(void);
+DWORD             GetPreviousUnfinishedState(void);
+void              RefreshIcons();
 
 #endif /* _EXTRA_H_ */
 

@@ -1,50 +1,60 @@
-#!gmake
 #
-# The contents of this file are subject to the Netscape Public
+# The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
-#
+# the License at http://www.mozilla.org/MPL/
+# 
 # Software distributed under the License is distributed on an "AS
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-#
-# The Original Code is Mozilla Communicator client code, 
-# released March 31, 1998. 
-#
-# The Initial Developer of the Original Code is Netscape Communications 
-# Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# 
+# The Original Code is mozilla.org code
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 2001 Netscape Communications Corporation.  All
 # Rights Reserved.
+# 
+# Contributor(s):
 #
-# Contributor(s): 
-#     Sean Su <ssu@netscape.com>
-#     Daniel Veditz <dveditz@netscape.com>
 
-DEPTH=../../../..
-
-topsrcdir	        = @top_srcdir@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE             = setuprsc
-RESFILE             = $(MODULE).res
-LIBRARY_NAME   = setuprsc
-EXPORTS           = setuprsc.h
-FORCE_SHARED_LIB = 1
-
-CPPSRCS=            \
-    setuprsc.cpp      \
-    $(NULL)
-
 include $(DEPTH)/config/autoconf.mk
+
+MODULE		= setuprsc
+LIBRARY_NAME	= setuprsc
+RESFILE		= setuprsc.res
+
+USE_NON_MT_LIBS = 1
+
+NO_DIST_INSTALL = 1
+
+EXPORTS		= setuprsc.h
+
+CPPSRCS		= setuprsc.cpp
+
+GARBAGE		+= $(DIST)/install/$(SHARED_LIBRARY)
+GARBAGE_DIRS	+= $(DIST)/include/$(MODULE)
+
+FORCE_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: 
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/install
+# Hack to get around the default rules insisting that .lib should exist
+$(IMPORT_LIBRARY):
+	touch $@
 
-install:: 
-	$(SYSINSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/install
+export:: $(EXPORTS)
+	$(INSTALL) $< $(DIST)/include/$(MODULE)
+
+libs:: $(SHARED_LIBRARY)
+	$(INSTALL) $< $(DIST)/install
+
+install:: $(SHARED_LIBRARY)
+	$(INSTALL) $< $(DESTDIR)$(mozappdir)/install
 

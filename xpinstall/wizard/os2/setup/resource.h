@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.  
  */
 
 #define IDS_ERROR_DLL_LOAD              1

@@ -7,6 +7,7 @@
 #define IDB_BITMAP_WELCOME              108
 #define DLG_MESSAGE                     110
 #define IDB_BITMAP_DOWNLOAD_LOGO        114
+#define IDB_QUICK_LAUNCH                115
 #define DLG_BROWSE_DIR                  503
 #define IDC_STATUS                      1001
 #define IDC_STATUS1                     1001
@@ -84,6 +85,8 @@
 #define IDC_USE_HTTP                    1073
 #define IDC_USE_FTP                     1074
 #define IDC_DESTINATION                 1074
+#define IDC_CHECK_TURBO_MODE            1075
+#define IDC_CHECK_RECAPTURE_HOMEPAGE    1076
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -94,13 +97,15 @@
 #define DLG_PROGRAM_FOLDER              2007
 #define DLG_START_INSTALL               2008
 #define DLG_EXTRACTING                  2009
+#define DLG_QUICK_LAUNCH                2010
 #define DLG_RESTART                     10206
 #define DLG_SITE_SELECTOR               10207
 #define DLG_ADVANCED_SETTINGS           10207
 #define DLG_SELECT_ADDITIONAL_COMPONENTS 10208
 #define DLG_UPGRADE                     10209
-#define DLG_DOWNLOAD_OPTIONS            10210
+#define DLG_ADDITIONAL_OPTIONS          10210
 #define DLG_DOWNLOADING                 10211
+#define DLG_START_INSTALL1              10212
 #define IDB_BOX_CHECKED                 10304
 #define IDB_BOX_UNCHECKED               10306
 #define IDB_BOX_CHECKED_DISABLED        10307

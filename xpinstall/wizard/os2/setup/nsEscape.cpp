@@ -91,7 +91,7 @@ NS_COM char* nsEscape(const char * str, nsEscapeMask mask)
 {
     if(!str)
         return NULL;
-    return nsEscapeCount(str, lstrlen(str), mask, NULL);
+    return nsEscapeCount(str, strlen(str), mask, NULL);
 }
 
 //----------------------------------------------------------------------------------------

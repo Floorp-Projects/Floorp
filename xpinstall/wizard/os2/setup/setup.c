@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp.  
  */
 
 #include "setup.h"
@@ -29,43 +28,41 @@
 #include "ifuncns.h"
 
 /* global variables */
-HOBJECT       hInst;
-HOBJECT       hSetupRscInst;
-HOBJECT       hSDInst;
-HOBJECT       hXPIStubInst;
+HINSTANCE       hInst;
+HINSTANCE       hSetupRscInst;
+HINSTANCE       hSDInst;
+HINSTANCE       hXPIStubInst;
 
 HBITMAP         hbmpBoxChecked;
 HBITMAP         hbmpBoxCheckedDisabled;
 HBITMAP         hbmpBoxUnChecked;
 
-LHANDLE          hAccelTable;
-
 HWND            hDlgCurrent;
 HWND            hDlgMessage;
 HWND            hWndMain;
 
-PSZ           szEGlobalAlloc;
-PSZ           szEStringLoad;
-PSZ           szEDllLoad;
-PSZ           szEStringNull;
-PSZ           szTempSetupPath;
+LPSTR           szEGlobalAlloc;
+LPSTR           szEStringLoad;
+LPSTR           szEDllLoad;
+LPSTR           szEStringNull;
+LPSTR           szTempSetupPath;
 
-PSZ           szSetupDir;
-PSZ           szTempDir;
-PSZ           szOSTempDir;
-PSZ           szFileIniConfig;
-PSZ           szFileIniInstall;
+LPSTR           szSetupDir;
+LPSTR           szTempDir;
+LPSTR           szOSTempDir;
+LPSTR           szFileIniConfig;
+LPSTR           szFileIniInstall;
 
-PSZ           szSiteSelectorDescription;
+LPSTR           szSiteSelectorDescription;
 
-ULONG           dwWizardState;
-ULONG           dwSetupType;
-ULONG           dwScreenX;
-ULONG           dwScreenY;
+DWORD           ulWizardState;
+ULONG           ulSetupType;
+LONG            lScreenX;
+LONG            lScreenY;
 
-ULONG           dwTempSetupType;
-ULONG           gdwUpgradeValue;
-ULONG           gdwSiteSelectorStatus;
+DWORD           ulTempSetupType;
+DWORD           gulUpgradeValue;
+DWORD           gulSiteSelectorStatus;
 
 BOOL            bSDUserCanceled;
 BOOL            bIdiArchivesExists;
@@ -73,20 +70,23 @@ BOOL            bCreateDestinationDir;
 BOOL            bReboot;
 BOOL            gbILUseTemp;
 BOOL            gbPreviousUnfinishedDownload;
+BOOL            gbPreviousUnfinishedInstallXpi;
 BOOL            gbIgnoreRunAppX;
 BOOL            gbIgnoreProgramFolderX;
 BOOL            gbRestrictedAccess;
+BOOL            gbDownloadTriggered;
 
 setupGen        sgProduct;
 diS             diSetup;
 diW             diWelcome;
 diL             diLicense;
+diQL            diQuickLaunch;
 diST            diSetupType;
 diSC            diSelectComponents;
 diSC            diSelectAdditionalComponents;
 diWI            diWindowsIntegration;
 diPF            diProgramFolder;
-diDO            diDownloadOptions;
+diDO            diAdditionalOptions;
 diAS            diAdvancedSettings;
 diSI            diStartInstall;
 diD             diDownload;
@@ -105,96 +105,116 @@ dsN             *gdsnComponentDSRequirement = NULL;
 char *SetupFileList[] = {"setuprsc.dll",
                          "config.ini",
                          "setup.ini",
-                         "installer.ini",
+                         "install.ini",
+                         "license.txt",
                          ""};
 
-int APIENTRY WinMain(HOBJECT hInstance, HOBJECT hPrevInstance, PSZ lpszCmdLine, int nCmdShow)
+int main(int argc, char *argv[], char *envp[])
 {
-  /***********************************************************************/
-  /* LHANDLE hInstance;       handle for this instance                    */
-  /* LHANDLE hPrevInstance;   handle for possible previous instances      */
-  /* PSZ  lpszCmdLine;     long pointer to exec command line           */
-  /* int    nCmdShow;        Show code for main window display           */
-  /***********************************************************************/
-
-  QMSG   msg;
+  HAB hab;
+  HMQ hmq;
+  QMSG qmsg;
   char  szBuf[MAX_BUF];
   int   iRv = WIZ_OK;
   HWND  hwndFW;
-  HINI  hiniInstall;
+  int rc = 0;
+  HENUM henum;
 
-  if(!hPrevInstance)
-  {
-    /* Allow only one instance of setup to run.
-     * Detect a previous instance of setup, bring it to the 
-     * foreground, and quit current instance */
-    if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
-    {
-      ShowWindow(hwndFW, SW_RESTORE);
-      SetForegroundWindow(hwndFW);
-      iRv = WIZ_SETUP_ALREADY_RUNNING;
-      PostQuitMessage(1);
-    }
-    else if(Initialize(hInstance))
-      PostQuitMessage(1);
-    else if(!InitApplication(hInstance, hSetupRscInst))
-    {
-      char szEFailed[MAX_BUF];
-      hiniInstall = PrfOpenProfile((HAB)0, szFileIniInstall);
-      if(PrfQueryProfileString(hiniInstall, "Messages", "ERROR_FAILED", "", szEFailed, sizeof(szEFailed)))
-      {
-        sprintf(szBuf, szEFailed, "InitApplication().");
-        PrintError(szBuf, ERROR_CODE_SHOW);
-      }
-      PrfCloseProfile(hiniInstall);
-      PostQuitMessage(1);
-    }
-    else if(!InitInstance(hInstance, nCmdShow))
-    {
-      char szEFailed[MAX_BUF];
-      hiniInstall = PrfOpenProfile((HAB)0, szFileIniInstall);
-      if(PrfQueryProfileString(hiniInstall, "Messages", "ERROR_FAILED", "", szEFailed, sizeof(szEFailed)))
-      {
-        sprintf(szBuf, szEFailed, "InitInstance().");
-        PrintError(szBuf, ERROR_CODE_SHOW);
-      }
-      PrfCloseProfile(hiniInstall);
-      PostQuitMessage(1);
-    }
-    else if(GetInstallIni())
-    {
-      PostQuitMessage(1);
-    }
-    else if(ParseInstallIni())
-    {
-      PostQuitMessage(1);
-    }
-    else if(GetConfigIni())
-    {
-      PostQuitMessage(1);
-    }
-    else if(ParseConfigIni(lpszCmdLine))
-    {
-      PostQuitMessage(1);
-    }
-    else
-    {
-      DlgSequenceNext();
-    }
-  }
+  hab = WinInitialize( 0 );
+  hmq = WinCreateMsgQueue( hab, 0 );
 
-  while(WinGetMsg((HAB)0, &msg, NULL, 0, 0))
+  /* Allow only one instance of setup to run.
+   * Detect a previous instance of setup, bring it to the 
+   * foreground, and quit current instance */
+
+  /* Iterate over top level windows searching for one of the required class
+   * and a matching title.
+   */
+#ifdef OLDCODE /* @MAK - for ease of debugging */
+  henum = WinBeginEnumWindows(HWND_DESKTOP);
+  while ((hwndFW = WinGetNextWindow(henum)) != NULLHANDLE)
   {
-    if((!IsDialogMessage(hDlgCurrent, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
-    {
-       WinDispatchMsg((HAB)0, &msg);
-    }
+      char pszT[256];
+      HWND hwndClient = NULLHANDLE;
+
+      /* If the window is a frame window, use the client for the class
+       * comparison.
+       */
+      if (((ULONG)WinSendMsg(hwndFW, WM_QUERYFRAMEINFO, NULL, NULL)) & FI_FRAME)
+          hwndClient = WinWindowFromID(hwndFW, FID_CLIENT);
+
+      /* See if the class matches.
+       */
+      WinQueryClassName(hwndClient ? hwndClient : hwndFW, sizeof(pszT), pszT);
+      if (strcmp(pszT, CLASS_NAME_SETUP_DLG) == 0)
+        break;
   }
+  WinEndEnumWindows(henum);
+#endif
+
+  if(hwndFW)
+  {
+    WinSetWindowPos(hwndFW, 0, 0, 0, 0, 0, SWP_RESTORE);
+    WinSetActiveWindow(HWND_DESKTOP, hwndFW);
+    iRv = WIZ_SETUP_ALREADY_RUNNING;
+    rc = 1;
+  }
+  else if(Initialize(0, argv[0]))
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  else if(!InitApplication(0, hSetupRscInst))
+  {
+    char szEFailed[MAX_BUF];
+
+    if(GetPrivateProfileString("Messages", "ERROR_FAILED", "", szEFailed, sizeof(szEFailed), szFileIniInstall))
+    {
+      sprintf(szBuf, szEFailed, "InitApplication().");
+      PrintError(szBuf, ERROR_CODE_SHOW);
+    }
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else if(!InitInstance(0))
+  {
+    char szEFailed[MAX_BUF];
+
+    if(GetPrivateProfileString("Messages", "ERROR_FAILED", "", szEFailed, sizeof(szEFailed), szFileIniInstall))
+    {
+      sprintf(szBuf, szEFailed, "InitInstance().");
+      PrintError(szBuf, ERROR_CODE_SHOW);
+    }
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else if(GetInstallIni())
+  {
+    rc = 1;
+  }
+  else if(ParseInstallIni())
+  {
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else if(GetConfigIni())
+  {
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else if(ParseConfigIni(argc, argv))
+  {
+    WinPostQueueMsg(0, WM_QUIT, 1, 0);
+  }
+  else
+  {
+    DlgSequence(NEXT_DLG);
+  }
+//#ifdef OLDCODE
+
+   while ( WinGetMsg( hab, &qmsg, NULLHANDLE, 0, 0 ) )
+       WinDispatchMsg( hab, &qmsg );
+#ifdef OLDCODE
 
   if(iRv != WIZ_SETUP_ALREADY_RUNNING)
     /* Do clean up before exiting from the application */
     DeInitialize();
+#endif
 
-  return(msg.wParam);
-} /*  End of WinMain */
+  WinDestroyMsgQueue( hmq );
+  WinTerminate( hab ); 
+}
 

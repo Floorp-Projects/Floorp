@@ -20,13 +20,7 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
-
-#define INCL_WIN
-#define INCL_PM
-
-typedef __int64 ULONGLONG;
 
 #ifndef _SETUP_H_
 #define _SETUP_H_
@@ -44,7 +38,7 @@ typedef __int64 ULONGLONG;
 typedef unsigned int PRUint32;
 typedef int PRInt32;
 
-#include <os2.h>
+#include "winforos2.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -71,6 +65,10 @@ typedef int PRInt32;
 #define FILE_INSTALL_STATUS_LOG         "install_status.log"
 #define FILE_ALL_JS                     "all-proxy.js"
 #define VR_DEFAULT_PRODUCT_NAME         "Mozilla"
+
+#define NEXT_DLG                        1
+#define PREV_DLG                        2
+#define OTHER_DLG_1                     3
 
 #define MAX_CRC_FAILED_DOWNLOAD_RETRIES 3
 #define MAX_FILE_DOWNLOAD_RETRIES       3
@@ -151,6 +149,7 @@ typedef int PRInt32;
 #define ERROR_CODE_HIDE                 0
 #define ERROR_CODE_SHOW                 1
 #define DLG_NONE                        0
+#define DLG_COMMIT_INSTALL              1
 #define CX_CHECKBOX                     13
 #define CY_CHECKBOX                     13
 
@@ -174,6 +173,7 @@ typedef int PRInt32;
 #define FO_ERROR_FILE_NOT_FOUND         1
 #define FO_ERROR_DESTINATION_CONFLICT   2
 #define FO_ERROR_CHANGE_DIR             3
+#define FO_ERROR_WRITE                  4
 
 /* Mode of Setup to run in */
 #define NORMAL                          0
@@ -201,6 +201,8 @@ typedef int PRInt32;
 #define SIC_FORCE_UPGRADE               0x00000080
 #define SIC_IGNORE_DOWNLOAD_ERROR       0x00000100
 #define SIC_IGNORE_XPINSTALL_ERROR      0x00000200
+#define SIC_UNCOMPRESS                  0x00000400
+#define SIC_SUPERSEDE                   0x00000800
 
 /* AC: Additional Components */
 #define AC_NONE                         0
@@ -209,14 +211,10 @@ typedef int PRInt32;
 #define AC_ALL                          3
 
 /* OS: Operating System */
-#define OS_WIN9x                        0x00000001
-#define OS_WIN95_DEBUTE                 0x00000002
-#define OS_WIN95                        0x00000004
-#define OS_WIN98                        0x00000008
-#define OS_NT                           0x00000010
-#define OS_NT3                          0x00000020
-#define OS_NT4                          0x00000040
-#define OS_NT5                          0x00000080
+#define OS_WARP3                        0x00000001
+#define OS_WARP4                        0x00000002
+#define OS_CP1                          0x00000004
+#define OS_CP2                          0x00000008
 
 /* DSR: Disk Space Required */
 #define DSR_DESTINATION                 0
@@ -228,47 +226,69 @@ typedef int PRInt32;
 #define SS_HIDE                         0
 #define SS_SHOW                         1
 
+/* PUS: Previous Unfinished State */
+#define PUS_NONE                         0
+#define PUS_DOWNLOAD                     1
+#define PUS_UNPACK_XPCOM                 2
+#define PUS_INSTALL_XPI                  3
+#define SETUP_STATE_DOWNLOAD             "downloading"
+#define SETUP_STATE_UNPACK_XPCOM         "unpacking xpcom"
+#define SETUP_STATE_INSTALL_XPI          "installing xpi"
+
+
 typedef struct dlgSetup
 {
-  ULONG   dwDlgID;
-  HWND fDlgProc;
-  PSZ   szTitle;
+  DWORD   dwDlgID;
+  WNDPROC fDlgProc;
+  LPSTR   szTitle;
 } diS;
 
 typedef struct dlgWelcome
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessage0;
-  PSZ szMessage1;
-  PSZ szMessage2;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+  LPSTR szMessage1;
+  LPSTR szMessage2;
 } diW;
 
 typedef struct dlgLicense
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szLicenseFilename;
-  PSZ szMessage0;
-  PSZ szMessage1;
+  LPSTR szTitle;
+  LPSTR szLicenseFilename;
+  LPSTR szMessage0;
+  LPSTR szMessage1;
 } diL;
+
+typedef struct dlgQuickLaunch
+{
+  BOOL  bShowDialog;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+  LPSTR szMessage1;
+  LPSTR szMessage2;
+  BOOL  bTurboMode;
+  BOOL  bTurboModeEnabled;
+} diQL;
+
 
 typedef struct stStruct
 {
   BOOL  bVisible;
-  ULONG dwCItems;
-  ULONG dwCItemsSelected[MAX_BUF]; /* components */
-  PSZ szDescriptionShort;
-  PSZ szDescriptionLong;
+  DWORD dwCItems;
+  DWORD dwCItemsSelected[MAX_BUF]; /* components */
+  LPSTR szDescriptionShort;
+  LPSTR szDescriptionLong;
 } st;
 
 typedef struct dlgSetupType
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessage0;
-  PSZ szReadmeFilename;
-  PSZ szReadmeApp;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+  LPSTR szReadmeFilename;
+  LPSTR szReadmeApp;
   st    stSetupType0;
   st    stSetupType1;
   st    stSetupType2;
@@ -278,25 +298,25 @@ typedef struct dlgSetupType
 typedef struct dlgSelectComponents
 {
   BOOL  bShowDialog;
-  ULONG bShowDialogSM;
-  PSZ szTitle;
-  PSZ szMessage0;
+  DWORD bShowDialogSM;
+  LPSTR szTitle;
+  LPSTR szMessage0;
 } diSC;
 
 typedef struct wiCBstruct
 {
   BOOL  bEnabled;
   BOOL  bCheckBoxState;
-  PSZ szDescription;
-  PSZ szArchive;
+  LPSTR szDescription;
+  LPSTR szArchive;
 } wiCBs;
 
 typedef struct dlgWindowsIntegration
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessage0;
-  PSZ szMessage1;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+  LPSTR szMessage1;
   wiCBs wiCB0;
   wiCBs wiCB1;
   wiCBs wiCB2;
@@ -306,18 +326,20 @@ typedef struct dlgWindowsIntegration
 typedef struct dlgProgramFolder
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessage0;
+  LPSTR szTitle;
+  LPSTR szMessage0;
 } diPF;
 
-typedef struct dlgDownloadOptions
+typedef struct dlgAdditionalOptions
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessage0;
-  PSZ szMessage1;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+  LPSTR szMessage1;
   BOOL  bSaveInstaller;
-  ULONG dwUseProtocol;
+  BOOL  bRecaptureHomepage;
+  BOOL  bShowHomepageOption;
+  DWORD dwUseProtocol;
   BOOL  bUseProtocolSettings;
   BOOL  bShowProtocols;
 } diDO;
@@ -325,83 +347,85 @@ typedef struct dlgDownloadOptions
 typedef struct dlgAdvancedSettings
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessage0;
-  PSZ szProxyServer;
-  PSZ szProxyPort;
-  PSZ szProxyUser;
-  PSZ szProxyPasswd;
+  LPSTR szTitle;
+  LPSTR szMessage0;
+  LPSTR szProxyServer;
+  LPSTR szProxyPort;
+  LPSTR szProxyUser;
+  LPSTR szProxyPasswd;
 } diAS;
 
 typedef struct dlgStartInstall
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessageInstall;
-  PSZ szMessageDownload;
+  LPSTR szTitle;
+  LPSTR szMessageInstall;
+  LPSTR szMessageDownload;
 } diSI;
 
 typedef struct dlgDownload
 {
   BOOL  bShowDialog;
-  PSZ szTitle;
-  PSZ szMessageDownload0;
-  PSZ szMessageRetry0;
+  LPSTR szTitle;
+  LPSTR szMessageDownload0;
+  LPSTR szMessageRetry0;
 } diD;
 
 typedef struct dlgReboot
 {
-  ULONG dwShowDialog;
-  PSZ szTitle;
+  DWORD dwShowDialog;
+  LPSTR szTitle;
 } diR;
 
 typedef struct setupStruct
 {
-  ULONG     dwMode;
-  ULONG     dwCustomType;
-  ULONG     dwNumberOfComponents;
-  PSZ     szPath;
-  PSZ     szSubPath;
-  PSZ     szProgramName;
-  PSZ     szCompanyName;
-  PSZ     szProductName;
-  PSZ     szUninstallFilename;
-  PSZ     szUserAgent;
-  PSZ     szProgramFolderName;
-  PSZ     szProgramFolderPath;
-  PSZ     szAlternateArchiveSearchPath;
-  PSZ     szParentProcessFilename;
+  ULONG     ulMode;
+  ULONG     ulCustomType;
+  ULONG     ulNumberOfComponents;
+  LPSTR     szPath;
+  LPSTR     szSubPath;
+  LPSTR     szProgramName;
+  LPSTR     szCompanyName;
+  LPSTR     szProductName;
+  LPSTR     szProductNameInternal;
+  LPSTR     szProductNamePrevious;
+  LPSTR     szUninstallFilename;
+  LPSTR     szUserAgent;
+  LPSTR     szProgramFolderName;
+  LPSTR     szProgramFolderPath;
+  LPSTR     szAlternateArchiveSearchPath;
+  LPSTR     szParentProcessFilename;
   BOOL      bLockPath;
 } setupGen;
 
 typedef struct sinfoSmartDownload
 {
-  PSZ szXpcomFile;
-  PSZ szXpcomDir;
-  PSZ szNoAds;
-  PSZ szSilent;
-  PSZ szExecution;
-  PSZ szConfirmInstall;
-  PSZ szExtractMsg;
-  PSZ szExe;
-  PSZ szExeParam;
-  PSZ szXpcomFilePath;
+  LPSTR szXpcomFile;
+  LPSTR szXpcomDir;
+  LPSTR szNoAds;
+  LPSTR szSilent;
+  LPSTR szExecution;
+  LPSTR szConfirmInstall;
+  LPSTR szExtractMsg;
+  LPSTR szExe;
+  LPSTR szExeParam;
+  LPSTR szXpcomFilePath;
 } siSD;
 
 typedef struct sinfoXpcomFile
 {
-  PSZ       szSource;
-  PSZ       szDestination;
-  PSZ       szMessage;
+  LPSTR       szSource;
+  LPSTR       szDestination;
+  LPSTR       szMessage;
   BOOL        bCleanup;
-  ULONGLONG   ullInstallSize;
+  ULONG       ulInstallSize;
 } siCF;
 
 typedef struct sinfoComponentDep siCD;
 struct sinfoComponentDep
 {
-  PSZ szDescriptionShort;
-  PSZ szReferenceName;
+  LPSTR szDescriptionShort;
+  LPSTR szReferenceName;
   siCD  *Next;
   siCD  *Prev;
 };
@@ -409,22 +433,25 @@ struct sinfoComponentDep
 typedef struct sinfoComponent siC;
 struct sinfoComponent
 {
-  ULONGLONG       ullInstallSize;
-  ULONGLONG       ullInstallSizeSystem;
-  ULONGLONG       ullInstallSizeArchive;
+  ULONG           ulInstallSize;
+  ULONG           ulInstallSizeSystem;
+  ULONG           ulInstallSizeArchive;
   long            lRandomInstallPercentage;
   long            lRandomInstallValue;
-  ULONG           dwAttributes;
-  PSZ           szArchiveName;
-  PSZ           szArchivePath;
-  PSZ           szDestinationPath;
-  PSZ           szDescriptionShort;
-  PSZ           szDescriptionLong;
-  PSZ           szParameter;
-  PSZ           szReferenceName;
+  DWORD           dwAttributes;
+  LPSTR           szArchiveName;
+  LPSTR           szArchiveNameUncompressed;
+  LPSTR           szArchivePath;
+  LPSTR           szDestinationPath;
+  LPSTR           szDescriptionShort;
+  LPSTR           szDescriptionLong;
+  LPSTR           szParameter;
+  LPSTR           szReferenceName;
   BOOL            bForceUpgrade;
+  BOOL            bSupersede;
   int             iNetRetries;
   int             iCRCRetries;
+  int             iNetTimeOuts;
   siCD            *siCDDependencies;
   siCD            *siCDDependees;
   siC             *Next;
@@ -434,15 +461,20 @@ struct sinfoComponent
 typedef struct ssInfo ssi;
 struct ssInfo
 {
-  PSZ szDescription;
-  PSZ szDomain;
-  PSZ szIdentifier;
+  LPSTR szDescription;
+  LPSTR szDomain;
+  LPSTR szIdentifier;
   ssi   *Next;
   ssi   *Prev;
 };
 
 typedef struct dlgInstall
 {
+    char szSystemFont[MAX_BUF];
+    char szDefinedFont[MAX_BUF];
+    char szFontName[MAX_BUF];
+    char szFontSize[MAX_BUF];
+    char szCharSet[MAX_BUF];
     char szOk_[MAX_BUF];
     char szOk[MAX_BUF];
     char szCancel_[MAX_BUF];
@@ -463,7 +495,7 @@ typedef struct dlgInstall
     char szUrl[MAX_BUF];
     char szTo[MAX_BUF];
     char szAccept_[MAX_BUF];
-    char szNo_[MAX_BUF];
+    char szDecline_[MAX_BUF];
     char szProgramFolder_[MAX_BUF];
     char szExistingFolder_[MAX_BUF];
     char szSetupMessage[MAX_BUF];
@@ -483,6 +515,8 @@ typedef struct dlgInstall
     char szReadme_[MAX_BUF];
     char szPause_[MAX_BUF];
     char szResume_[MAX_BUF];
+    char szChecked[MAX_BUF];
+    char szUnchecked[MAX_BUF];
 } installGui;
 
 /* structure message stream */
@@ -492,7 +526,7 @@ struct sEMsgStream
   char   szURL[MAX_BUF];
   char   szConfirmationMessage[MAX_BUF];
   char   *szMessage;
-  ULONG  dwMessageBufSize;
+  DWORD  dwMessageBufSize;
   BOOL   bEnabled;
   BOOL   bSendMessage;
   BOOL   bShowConfirmation;
@@ -502,23 +536,25 @@ struct sEMsgStream
 typedef struct sSysInfo sysinfo;
 struct sSysInfo
 {
-  ULONG dwOSType;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
+  ULONG ulOSType;
+  ULONG ulMajorVersion;
+  ULONG ulMinorVersion;
+  ULONG ulBuildNumber;
   char  szExtraString[MAX_BUF];
-  ULONG dwMemoryTotalPhysical;
-  ULONG dwMemoryAvailablePhysical;
-  ULONG dwScreenX;
-  ULONG dwScreenY;
+  ULONG ulMemoryTotalPhysical;
+  ULONG ulMemoryAvailablePhysical;
+  LONG  lScreenX;
+  LONG  lScreenY;
+  BOOL  bScreenReader;
+  BOOL  bRefreshIcons;
 };
 
 typedef struct diskSpaceNode dsN;
 struct diskSpaceNode
 {
-  ULONGLONG       ullSpaceRequired;
-  PSZ           szPath;
-  PSZ           szVDSPath;
+  ULONG           ulSpaceRequired;
+  LPSTR           szPath;
+  LPSTR           szVDSPath;
   dsN             *Next;
   dsN             *Prev;
 };

@@ -20,7 +20,6 @@
  *
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
- *     IBM Corp. 
  */
 
 #include "resource.h"
@@ -32,7 +31,7 @@
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-ICON                       1    DISCARDABLE     "setup.ico"
+ICON 1 "setup.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
