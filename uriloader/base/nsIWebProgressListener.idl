@@ -80,7 +80,10 @@ interface nsIWebProgressListener : nsISupports
   *
   * @param aStateFlags     Flags indicating the state change.
   *
-  * @param aStatus         Status code for the state change.
+  * @param aStatus         Error status code associated with the state change.
+  * This parameter should be ignored unless the status flag includes the
+  * STATE_STOP bit. The status code will indicate success / failure of the
+  * request associated with the state change.
   *
   * @return                NS_OK should always be returned.
   */
