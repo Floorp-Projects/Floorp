@@ -40,6 +40,13 @@ enum nsMode {
       eMode_getfolder
       };
 
+
+enum nsFileDlgResults {
+  nsFileDlgResults_Cancel,    // User hit cancel, ignore selection
+  nsFileDlgResults_OK,        // User hit Ok, process selection 
+  nsFileDlgResults_Replace    // User acknowledged file already exists so ok to replace, process selection
+};
+
 /**
  * File selector widget.
  * Modally selects files for loading or saving from a list.
@@ -136,6 +143,20 @@ public:
   NS_IMETHOD GetDisplayDirectory(nsString& aDirectory) = 0;
 
 
+  virtual nsFileDlgResults GetFile(
+    nsIWidget        * aParent,
+    nsString         & promptString,    // Window title for the dialog
+    nsFileSpec       & theFileSpec) = 0;     // Populate with initial path for file dialog
+    
+  virtual nsFileDlgResults GetFolder(
+    nsIWidget        * aParent,
+    nsString         & promptString,    // Window title for the dialog
+    nsFileSpec       & theFileSpec) = 0;     // Populate with initial path for file dialog 
+    
+  virtual nsFileDlgResults PutFile(
+    nsIWidget        * aParent,
+    nsString         & promptString,    // Window title for the dialog
+    nsFileSpec       & theFileSpec) = 0;     // Populate with initial path for file dialog 
 };
 
 #endif // nsIFileWidget_h__

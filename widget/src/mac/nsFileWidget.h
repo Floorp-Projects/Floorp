@@ -77,6 +77,23 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
    
     NS_IMETHOD            GetDisplayDirectory(nsString& aDirectory);
     NS_IMETHOD            SetDisplayDirectory(nsString& aDirectory);
+
+	  virtual nsFileDlgResults GetFile(
+	    nsIWidget        * aParent,
+	    nsString         & promptString,    // Window title for the dialog
+	    nsFileSpec       & theFileSpec);     // Populate with initial path for file dialog
+	    
+	  virtual nsFileDlgResults GetFolder(
+	    nsIWidget        * aParent,
+	    nsString         & promptString,    // Window title for the dialog
+	    nsFileSpec       & theFileSpec);     // Populate with initial path for file dialog 
+	    
+	  virtual nsFileDlgResults PutFile(
+	    nsIWidget        * aParent,
+	    nsString         & promptString,    // Window title for the dialog
+	    nsFileSpec       & theFileSpec);     // Populate with initial path for file dialog 
+
+
   protected:
     NS_IMETHOD            OnOk();
     NS_IMETHOD            OnCancel();
@@ -98,6 +115,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
      nsString               mDefault;
      nsString               mDisplayDirectory;
      nsFileSpec				mFileSpec;
+     nsFileDlgResults		mSelectResult;
 
      void GetFilterListArray(nsString& aFilterList);
           
