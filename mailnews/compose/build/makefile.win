@@ -86,6 +86,7 @@ LLIBS=										\
 			$(DIST)\lib\msgcompose.lib		\
 			$(DIST)\lib\appcores.lib		\
 			$(DIST)\lib\netlib.lib			\
+			$(DIST)\lib\msgcoreutil.lib		\
 			$(LIBNSPR)						\
 			$(NULL)
 
