@@ -11,6 +11,16 @@ my $TBOX      = lc($req->param('tbox'));
 my $AUTOSCALE = lc($req->param('autoscale'));
 my $DAYS      = lc($req->param('days'));
 
+#
+# Testing only:
+#
+#$TESTNAME  = "testname";
+#$UNITS     = "units";
+#$TBOX      = "tbox";
+#$AUTOSCALE = 1;
+#$DAYS      = 1;
+
+
 sub make_filenames_list {
   my ($dir) = @_;
 
@@ -81,21 +91,54 @@ sub show_graph {
   
   print "<title>$TBOX $TESTNAME</title><br>\n";
 
+  print "<body>\n";
+
+  print "<table>\n";
+  print "<tr>\n";
+
+  print "<td>\n";
+  # Scale Y-axis
   my $neg_autoscale = !$AUTOSCALE;
   if($AUTOSCALE) {
 	print "Y-axis: (<b>zoom</b>|";
 	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS&units=$UNITS\">100%</a>";
-	print ")";
+	print ") \n";
   } else {
 	print "Y-axis: (";
 	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS&units=$UNITS\">zoom</a>";
-	print "|<b>100%</b>)";
+	print "|<b>100%</b>) \n";
   }
+  print "</td>\n";
+
+  print "<td>\n";
+  # Days, Time-axis
+  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&units=$UNITS\">\n";
+  print "<input type=hidden name=\"tbox\" value=\"$TBOX\">";
+  print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
+  print "<input type=hidden name=\"autoscale\" value=\"$AUTOSCALE\">";
+
+  print "Days:";
+  if($DAYS) {
+	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=0&units=$UNITS\">all data</a>|";
+    print "<input type=text value=$DAYS NAME=\"days\" SIZE=3 MAXLENGTH=80>\n";
+	print ")";
+  } else {
+	print "(<b>all data</b>|";
+    print "<input type=text value=\"\" NAME=\"days\" SIZE=3 MAXLENGTH=80>\n";
+	print ")";
+  }
+  print "</form>\n";
+  print "</td>\n";
+
+  print "</tr>\n";
+  print "</table>\n";
 
   print "<br>\n";
   
   # graph
   print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\" alt=\"$TBOX $TESTNAME graph\">";
+
+  print "</body>\n";
 }
 
 if(!$TESTNAME) {
