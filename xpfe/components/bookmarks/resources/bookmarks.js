@@ -69,6 +69,8 @@ function Shutdown ()
   win.setAttribute("y", screenY);
   win.setAttribute("height", outerHeight);
   win.setAttribute("width", outerWidth);
+
+  gBookmarksShell.flushDataSource();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
