@@ -65,6 +65,7 @@
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 
+#define CHROME_STYLE nsIWebBrowserChrome::allChrome | nsIWebBrowserChrome::centerScreen
 
 /* Network */
 
@@ -328,7 +329,7 @@ nsPrefMigration::ProcessPrefs(PRBool showProgressAsModalWindow)
   if (NS_FAILED(rv)) return rv;
 
   rv = PMProgressAppShell->CreateTopLevelWindow(nsnull, pmprogressURL,
-                                          PR_TRUE, PR_TRUE, nsIWebBrowserChrome::allChrome,
+                                          PR_TRUE, PR_TRUE, CHROME_STYLE,
                                           NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                           getter_AddRefs(mPMProgressWindow));
   if (NS_FAILED(rv)) return rv;
