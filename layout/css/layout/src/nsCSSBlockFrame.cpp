@@ -1455,8 +1455,15 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
 
 // XXX move this somewhere else!!!
 static PRBool
-TreatFrameAsBlock(const nsStyleDisplay* aDisplay)
+TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
+                  const nsStylePosition* aPosition)
 {
+  if (NS_STYLE_POSITION_ABSOLUTE == aPosition->mPosition) {
+    return PR_FALSE;
+  }
+  if (NS_STYLE_FLOAT_NONE != aDisplay->mFloats) {
+    return PR_FALSE;
+  }
   switch (aDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
@@ -1646,7 +1653,13 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
     if (NS_OK != rv) {
       return rv;
     }
-    PRBool isBlock = TreatFrameAsBlock(kidDisplay);
+    const nsStylePosition* kidPosition;
+    rv = frame->GetStyleData(eStyleStruct_Position,
+                             (const nsStyleStruct*&) kidPosition);
+    if (NS_OK != rv) {
+      return rv;
+    }
+    PRBool isBlock = TreatFrameAsBlock(kidDisplay, kidPosition);
 
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a
@@ -1964,7 +1977,10 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&) display);
-    PRBool isBlock = TreatFrameAsBlock(display);
+    const nsStylePosition* position;
+    frame->GetStyleData(eStyleStruct_Position,
+                        (const nsStyleStruct*&) position);
+    PRBool isBlock = TreatFrameAsBlock(display, position);
     NS_ASSERTION(isBlock == aLine->IsBlock(), "bad line isBlock");
 #endif 
    if (aLine->IsBlock()) {
@@ -2546,7 +2562,10 @@ nsCSSBlockFrame::PullFrame(nsCSSBlockReflowState& aState,
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&) display);
-    PRBool isBlock = TreatFrameAsBlock(display);
+    const nsStylePosition* position;
+    frame->GetStyleData(eStyleStruct_Position,
+                        (const nsStyleStruct*&) position);
+    PRBool isBlock = TreatFrameAsBlock(display, position);
     NS_ASSERTION(isBlock == aLine->IsBlock(), "bad line isBlock");
 #endif
   }
@@ -2638,26 +2657,6 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
   }
   aState.mY = newY;
 
-  // Based on the last child we reflowed reflow status, we may need to
-  // clear past any floaters.
-  if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {
-    // Apply break to the line
-    PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(aReflowStatus);
-    switch (breakType) {
-    default:
-      break;
-    case NS_STYLE_CLEAR_LEFT:
-    case NS_STYLE_CLEAR_RIGHT:
-    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-         ("nsCSSBlockFrame::PlaceLine: clearing floaters=%d",
-          breakType));
-      aState.ClearFloaters(breakType);
-      break;
-    }
-    // XXX page breaks, etc, need to be passed upwards too!
-  }
-
   // Any below current line floaters to place?
   // XXX We really want to know whether this is the initial reflow (reflow
   // unmapped) or a subsequent reflow in which case we only need to offset
@@ -2676,6 +2675,26 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
     // whether the line fits.
     // The default policy is that if there isn't room for the floaters then
     // both the line and the floaters are pushed to the next-in-flow...
+  }
+
+  // Based on the last child we reflowed reflow status, we may need to
+  // clear past any floaters.
+  if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {
+    // Apply break to the line
+    PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(aReflowStatus);
+    switch (breakType) {
+    default:
+      break;
+    case NS_STYLE_CLEAR_LEFT:
+    case NS_STYLE_CLEAR_RIGHT:
+    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+         ("nsCSSBlockFrame::PlaceLine: clearing floaters=%d",
+          breakType));
+      aState.ClearFloaters(breakType);
+      break;
+    }
+    // XXX page breaks, etc, need to be passed upwards too!
   }
 
   if (aState.mY >= aState.mCurrentBand.availSpace.YMost()) {
@@ -2866,7 +2885,10 @@ nsCSSBlockFrame::ContentInserted(nsIPresShell*   aShell,
   const nsStyleDisplay* display;
   newFrame->GetStyleData(eStyleStruct_Display,
                          (const nsStyleStruct*&) display);
-  PRUint16 newFrameIsBlock = TreatFrameAsBlock(display)
+  const nsStylePosition* position;
+  newFrame->GetStyleData(eStyleStruct_Position,
+                         (const nsStyleStruct*&) position);
+  PRUint16 newFrameIsBlock = TreatFrameAsBlock(display, position)
     ? LINE_IS_BLOCK
     : 0;
 
