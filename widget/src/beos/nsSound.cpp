@@ -24,17 +24,23 @@
 
 #include "nsSound.h"
 
+#include <OS.h>
+#include <SimpleGameSound.h>
+#include <Entry.h>
+#include <Beep.h>
+
 NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
+ : mSound(0)
 {
   NS_INIT_REFCNT();
 }
 
 nsSound::~nsSound()
 {
-
+	delete mSound;
 }
 
 nsresult NS_NewSound(nsISound** aSound)
@@ -67,6 +73,15 @@ NS_METHOD nsSound::Beep()
 
 NS_METHOD nsSound::Play(nsIFileSpec *filespec)
 {
-  NS_NOTYETIMPLEMENTED("nsSound::Play");
-  return NS_OK;
+	char *filename;
+	filespec->GetNativePath(&filename);
+
+	delete mSound;
+	mSound = new BSimpleGameSound(filename);
+	if(mSound->InitCheck() == B_OK)
+		mSound->StartPlaying();
+
+	nsCRT::free(filename);
+
+	return NS_OK;
 }
