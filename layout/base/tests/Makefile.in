@@ -60,6 +60,12 @@ LIBS = \
 	-lxpcom \
 	-lreg \
 	-lxp \
+	-lraptorhtmlpars \
+	-lexpat \
+	-lxmltok \
+	-ljsurl \
+	-ljsdom \
+	-lraptorgfx \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
