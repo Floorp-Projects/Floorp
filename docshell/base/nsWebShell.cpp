@@ -1267,6 +1267,7 @@ nsWebShell::Destroy()
 
   // Stop any URLs that are currently being loaded...
   Stop();
+  mDocLoader->Destroy();
 
   SetContainer(nsnull);
   SetObserver(nsnull);
