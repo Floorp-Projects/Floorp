@@ -209,8 +209,8 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const n
   res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
   if (NS_SUCCEEDED(res) && bodyElement)
   {
-    nsAutoEditBatch beginBatching(this);
-    bodyElement->SetAttribute(aAttribute, aValue);
+    // Use the editor's method which goes through the transaction system
+    SetAttribute(bodyElement, aAttribute, aValue);
   }
   return res;
 }
