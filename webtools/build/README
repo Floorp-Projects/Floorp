@@ -1,17 +1,5 @@
-This is the web-based build configurator.
-
-The idea is to simplify the build steps to...
-        1. cvs co mozilla/client.mk
-        2. cd mozilla
-        3. gmake -f client.mk webconfig
-        4. gmake -f client.mk
-
-Where the 'webconfig' target loads config.cgi in a web browser via
-"netscape -remote". The cgi presents a form of build options. The user
-submits it and gets a shell script, mozconfig, as a result. That shell
-script defines all the options that the user selected. The user then
-saves the script as $HOME/.mozconfig. client.mk and configure, both
-use that file to configure the build.
+This is the web-based build configurator. It is a way to store build
+options in a script rather than having to type them on the command-line.
 
 While this tool could be adapted to any configure'd project, it is
 currently designed to only handle the mozilla build system.
