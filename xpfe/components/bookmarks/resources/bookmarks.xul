@@ -24,12 +24,12 @@
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bookmarks.dtd">
-<xul:window title="&bookmarksWindowTitle.label;"
+<window title="&bookmarksWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  width="500" height="400">
+  width="500" height="400" align="vertical">
 
   <html:script src="chrome://bookmarks/content/bookmarks.js"/>
 
@@ -73,7 +73,7 @@
 <tree  id="bookmarksTree" ref="NC:BookmarksRoot" context="contextual"
        datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find rdf:internetsearch"
        ondblclick="return OpenURL(event,event.target.parentNode.parentNode);"
-       style="height:100%;">
+       flex="1">
 
   <template>
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -132,36 +132,36 @@
   <treehead>
     <treerow>
       <treecell onclick="return doSort('NameColumn');">
-	<xul:observes element="NameColumn" attribute="sortActive"/>
-	<xul:observes element="NameColumn" attribute="sortDirection"/>
+	<observes element="NameColumn" attribute="sortActive"/>
+	<observes element="NameColumn" attribute="sortDirection"/>
       &tree.header.name.label;</treecell>
       <treecell onclick="return doSort('URLColumn');">
-	<xul:observes element="URLColumn" attribute="sortActive"/>
-	<xul:observes element="URLColumn" attribute="sortDirection"/>
+	<observes element="URLColumn" attribute="sortActive"/>
+	<observes element="URLColumn" attribute="sortDirection"/>
       &tree.header.url.label;</treecell>
       <treecell onclick="return doSort('ShortcutURLColumn');">
-	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
-	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
+	<observes element="ShortcutURLColumn" attribute="sortActive"/>
+	<observes element="ShortcutURLColumn" attribute="sortDirection"/>
       &tree.header.shortcut.label;</treecell>
       <treecell onclick="return doSort('DescriptionColumn');">
-	<xul:observes element="DescriptionColumn" attribute="sortActive"/>
-	<xul:observes element="DescriptionColumn" attribute="sortDirection"/>
+	<observes element="DescriptionColumn" attribute="sortActive"/>
+	<observes element="DescriptionColumn" attribute="sortDirection"/>
       &tree.header.description.label;</treecell>
       <treecell onclick="return doSort('LastVisitColumn');">
-	<xul:observes element="LastVisitColumn" attribute="sortActive"/>
-	<xul:observes element="LastVisitColumn" attribute="sortDirection"/>
+	<observes element="LastVisitColumn" attribute="sortActive"/>
+	<observes element="LastVisitColumn" attribute="sortDirection"/>
       &tree.header.lastvisit.label;</treecell>
       <treecell onclick="return doSort('AddedOnColumn');">
-	<xul:observes element="AddedOnColumn" attribute="sortActive"/>
-	<xul:observes element="AddedOnColumn" attribute="sortDirection"/>
+	<observes element="AddedOnColumn" attribute="sortActive"/>
+	<observes element="AddedOnColumn" attribute="sortDirection"/>
       &tree.header.addedon.label;</treecell>
       <treecell onclick="return doSort('LastModColumn');">
-	<xul:observes element="LastModColumn" attribute="sortActive"/>
-	<xul:observes element="LastModColumn" attribute="sortDirection"/>
+	<observes element="LastModColumn" attribute="sortActive"/>
+	<observes element="LastModColumn" attribute="sortDirection"/>
       &tree.header.lastmod.label;</treecell>
 
     </treerow>
   </treehead>
 </tree>
 
-</xul:window>
+</window>
