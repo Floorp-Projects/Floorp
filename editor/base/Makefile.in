@@ -41,7 +41,6 @@ CPPSRCS =                       \
     EditAggregateTxn.cpp        \
     EditTable.cpp               \
     InsertTextTxn.cpp           \
-    nsInsertHTMLTxn.cpp         \
     PlaceholderTxn.cpp          \
     DeleteTextTxn.cpp           \
     CreateElementTxn.cpp        \
