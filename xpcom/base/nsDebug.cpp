@@ -53,6 +53,12 @@
 /* for nsTraceRefcnt::WalkTheStack() */
 #include "nsISupportsUtils.h"
 #include "nsTraceRefcnt.h"
+
+#if defined(linux) && defined(__i386)
+#  define DebugBreak() { asm("int $3"); }
+#else
+#  define DebugBreak()
+#endif
 #endif
 
 #if defined(XP_OS2)
@@ -302,6 +308,10 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
       // same as UNIX_CRASH_ON_ASSERT
       //
       Abort(aFile, aLine);
+
+    } else if ( strcmp(assertBehavior,"trap")==0 ) {
+
+      DebugBreak();
 
     } else {
 
