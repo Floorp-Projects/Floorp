@@ -340,9 +340,9 @@ static PRBool findWindow(nsHashKey* aKey, void *aData, void* aClosure)
         closure->resultWindow =
             NS_STATIC_CAST(nsIXULWindow*,
                            NS_INT32_TO_PTR(thisKey->GetValue()));
-        return PR_TRUE;         // stop enumerating
+        return PR_FALSE;         // stop enumerating
     }
-    return PR_FALSE;
+    return PR_TRUE;
 }
 
 // nsIWindowDataSource implementation
