@@ -288,6 +288,13 @@ NOBR {
   display: inline;
   white-space: nowrap;
 }
+LEGEND {
+  display: none;
+}
+FIELDSET {
+  display: inline;
+  border: inset 2px white;
+}
 
 // Lists
 
