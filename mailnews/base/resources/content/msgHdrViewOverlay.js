@@ -32,8 +32,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////
 
+var msgHeaderParserProgID		   = "component://netscape/messenger/headerparser";
+
 var msgPaneData;
 var currentHeaderData;
+var gNumAddressesToShow = 3;
+var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
+
 
 function OnLoadMsgHeaderPane()
 {
@@ -60,17 +65,31 @@ function OnLoadMsgHeaderPane()
 
     // Second toolbar 
     msgPaneData.ToBox = document.getElementById("ToBox");
-    msgPaneData.ToValue = document.getElementById("ToValue");
+    
+    // ToValueShort is the div which shows a shortened number of addresses
+    // on the to line...ToValueLong is a div which shows all of the
+    // addresses on the to line. The same rule applies for ccValueShort/Long
+    msgPaneData.ToValueShort = document.getElementById("ToValueShort");
+    msgPaneData.ToValueLong = document.getElementById("ToValueLong");
+    msgPaneData.ToValueToggleIcon = document.getElementById("ToValueToggleIcon");
+
     msgPaneData.CcBox = document.getElementById("CcBox");
-    msgPaneData.CcValue = document.getElementById("CcValue");
+    msgPaneData.CcValueShort = document.getElementById("CcValueShort");
+    msgPaneData.CcValueLong = document.getElementById("CcValueLong");
+    msgPaneData.CcValueToggleIcon = document.getElementById("CcValueToggleIcon");
+
     msgPaneData.NewsgroupBox = document.getElementById("NewsgroupBox");
     msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
 
     // Third toolbar
     msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
-    msgPaneData.UserAgentValue = document.getElementById("UserAgent");
+    msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
   }
+  
+  // load any preferences that at are global with regards to 
+  // displaying a message...
 
+  gNumAddressesToShow = pref.GetIntPref("mailnews.max_header_display_length");
 }
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
@@ -87,6 +106,20 @@ var messageHeaderSink = {
     {
       // WARNING: This is the ONLY routine inside of the message Header Sink that should 
       // trigger a reflow!
+
+      // (1) clear out the email fields for to, from, cc....
+      ClearEmailField(msgPaneData.FromValue);
+      ClearEmailFieldWithButton(msgPaneData.ToValueShort);
+      ClearEmailFieldWithButton(msgPaneData.CcValueShort);
+      ClearEmailFieldWithButton(msgPaneData.ToValueLong);
+      ClearEmailFieldWithButton(msgPaneData.CcValueLong);
+
+      // be sure to re-hide the toggle button, we'll re-enable it later if we need it...
+      msgPaneData.ToValueToggleIcon.setAttribute('hideNonBox', 'true');
+      msgPaneData.CcValueToggleIcon.setAttribute('hideNonBox', 'true');
+      //hdrViewSetVisible(msgPaneData.ToValueToggleIcon, false);
+      //hdrViewSetVisible(msgPaneData.CcValueToggleIcon, false);
+      
       ShowMessageHeaderPane();
       UpdateMessageHeaders();
     },
@@ -118,7 +151,7 @@ var messageHeaderSink = {
       }
       if (headerName == "to")
       {
-         currentHeaderData.ToValue = headerValue; 
+        currentHeaderData.ToValue = headerValue; 
       }
       if (headerName == "cc")
       {
@@ -166,9 +199,13 @@ function AddAttachmentToMenu(name, oncommand)
     var item = document.createElement('menuitem'); 
     if ( item ) 
     { 
+      // popup.removeAttribute('menugenerated');
       item.setAttribute('value', name); 
       item.setAttribute('oncommand', oncommand); 
       var child = popup.childNodes[popup.childNodes.length - 2]; 
+      
+      var bigMenu = document.getElementById('attachmentMenu');
+
       popup.insertBefore(item, child); 
     } 
 
@@ -181,6 +218,7 @@ function AddAttachmentToMenu(name, oncommand)
   if (attachBox)
     attachBox.removeAttribute("hide");
 } 
+
 
 function ClearAttachmentMenu() 
 { 
@@ -196,13 +234,129 @@ function ClearAttachmentMenu()
     attachBox.setAttribute("hide", "true");
 }
 
+// Assumes that all the child nodes of the parent div need removed..leaving
+// an empty parent div...This is used to clear the To/From/cc lines where
+// we had to insert email addresses one at a time into their parent divs...
+function ClearEmailFieldWithButton(parentDiv)
+{
+  if (parentDiv)
+  {
+    // the toggle button is the last child in the child nodes..
+    // we should never remove it...
+    while (parentDiv.childNodes.length > 1)
+      parentDiv.removeChild(parentDiv.childNodes[0]);
+  }
+}
+
+// Clear Email Field takes the passed in div and removes all the child nodes!
+// if your div has a button in it (like To/cc use ClearEmailfieldWithButton
+function ClearEmailField(parentDiv)
+{
+  if (parentDiv)
+  {
+    while (parentDiv.childNodes.length > 0)
+      parentDiv.removeChild(parentDiv.childNodes[0]);
+  }
+}
+
+// OutputEmailAddresses --> knows how to take a comma separated list of email addresses,
+// extracts them one by one, linkifying each email address into a mailto url. 
+// Then we add the link'ified email address to the parentDiv passed in.
+// 
+// defaultParentDiv --> the div to add the link-ified email addresses into. 
+// emailAddresses --> comma separated list of the addresses for this header field
+// includeShortLongToggle --> true if you want to include the ability to toggle between short/long
+// address views for this header field. If true, then pass in a another div which is the div the long
+// view will be added too...
+
+function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, includeShortLongToggle, optionalLongDiv, optionalToggleButton)
+{
+  // if we don't have any addresses for this field, hide the parent box!
+	if ( !emailAddresses )
+	{
+		hdrViewSetVisible(parentBox, false);
+		return;
+	}
+  if (msgHeaderParser)
+  {
+    var enumerator = msgHeaderParser.ParseHeadersWithEnumerator("UTF-8", emailAddresses);
+    enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
+    var numAddressesParsed = 0;
+    if (enumerator)
+    {
+      var emailAddress = {};
+      var name = {};
+
+      while (enumerator.HasMoreElements())
+      {
+        var headerResult = enumerator.GetNext();
+        headerResult = enumerator.QueryInterface(Components.interfaces.nsIMsgHeaderParserResult);
+        
+        // get the email and name fields
+        var outValue = {};
+        name = headerResult.getAddressAndName(outValue);
+        emailAddress = outValue.value;
+
+        // turn the strings back into a full address
+        var fullAddress = msgHeaderParser.MakeFullAddress("UTF-8", name, emailAddress);
+
+        // if we want to include short/long toggle views and we have a long view, always add it.
+        // if we aren't including a short/long view OR if we are and we haven't parsed enough
+        // addresses to reach the cutoff valve yet then add it to the default (short) div.
+        if (includeShortLongToggle && optionalLongDiv)
+        {
+          InsertEmailAddressUnderEnclosingBox(parentBox, optionalLongDiv, emailAddress, fullAddress);
+        }
+        if (!includeShortLongToggle || (numAddressesParsed < gNumAddressesToShow))
+        {
+          InsertEmailAddressUnderEnclosingBox(parentBox, defaultParentDiv, emailAddress, fullAddress);
+        }
+        
+        numAddressesParsed++;
+      } 
+    } // if enumerator
+
+    if (includeShortLongToggle && (numAddressesParsed > gNumAddressesToShow) && optionalToggleButton)
+    {
+      optionalToggleButton.removeAttribute('hideNonBox');
+    }
+
+  } // if msgheader parser
+}
+
+function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress, fullAddress) 
+{
+  if ( parentBox ) 
+  { 
+    var item = document.createElement("html:a");
+    if ( item && parentDiv) 
+    { 
+      item.setAttribute('href', "mailto:" + emailAddress); 
+      item.appendChild(document.createTextNode(fullAddress));
+      
+      if (parentDiv.childNodes.length)
+      {
+        var child = parentDiv.childNodes[parentDiv.childNodes.length - 1]; 
+        if (parentDiv.childNodes.length > 1)
+          parentDiv.insertBefore(document.createTextNode(", "), child);       
+        parentDiv.insertBefore(item, child);
+      }
+      else
+        parentDiv.appendChild(item);
+
+      hdrViewSetVisible(parentBox, true);
+    } 
+  } 
+}
+
+
 function UpdateMessageHeaders()
 {
   hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData.SubjectValue);
-  hdrViewSetNodeWithBox(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData.FromValue); 
+  OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData.FromValue, false, "", ""); 
   hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData.DateValue); 
-  hdrViewSetNodeWithBox(msgPaneData.ToBox, msgPaneData.ToValue, currentHeaderData.ToValue); 
-  hdrViewSetNodeWithBox(msgPaneData.CcBox, msgPaneData.CcValue, currentHeaderData.CcValue);
+  OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData.ToValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
+  OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData.CcValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
   hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData.NewsgroupsValue); 
   hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData.UserAgentValue);
 }
@@ -244,7 +398,32 @@ function HideMessageHeaderPane()
     node.setAttribute("hide", "true");
 }
 
+// ToggleLongShortAddresses is used to toggle between showing
+// all of the addresses on a given header line vs. only the first 'n'
+// where 'n' is a user controlled preference. By toggling on the more/less
+// images in the header window, we'll hide / show the appropriate div for that header.
+
+function ToggleLongShortAddresses(shortDivID, longDivID)
+{
+  var shortNode = document.getElementById(shortDivID);
+  var longNode = document.getElementById(longDivID);
+
+  // test to see which if short is already hidden...
+  if (shortNode.getAttribute("hide") == "true")
+  {
+     hdrViewSetVisible(longNode, false);
+     hdrViewSetVisible(shortNode, true);
+  }
+  else
+  {
+     hdrViewSetVisible(shortNode, false);
+     hdrViewSetVisible(longNode, true);
+  }
+}
+
+///////////////////////////////////////////////////////////////
 // The following are just small helper functions..
+///////////////////////////////////////////////////////////////
 function hdrViewSetNodeWithBox(boxNode, textNode, text)
 {
 	if ( text )
