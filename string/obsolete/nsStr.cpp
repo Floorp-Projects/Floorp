@@ -446,7 +446,7 @@ PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnor
     nsStr::Initialize(theCopy,eOneByte);
     nsStr::Assign(theCopy,aTarget,0,aTarget.mLength,0);
     if(aIgnoreCase){
-      nsStr::ChangeCase(theCopy,false); //force to lowercase
+      nsStr::ChangeCase(theCopy,PR_FALSE); //force to lowercase
     }
 
       //This little block of code builds up the boyer-moore skip table.
@@ -536,7 +536,7 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
     nsStr::Initialize(theCopy,eOneByte);
     nsStr::Assign(theCopy,aTarget,0,aTarget.mLength,0);
     if(aIgnoreCase){
-      nsStr::ChangeCase(theCopy,false); //force to lowercase
+      nsStr::ChangeCase(theCopy,PR_FALSE); //force to lowercase
     }
     
     int32   theTargetMax=theCopy.mLength;
