@@ -597,13 +597,13 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 NS_IMETHODIMP
 nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 {
-  mTarget->RemoveEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE); 
+  mTarget->RemoveEventListener("blur", (nsIDOMFocusListener*)mMenuBarListener, PR_FALSE); 
   
-  mTarget->RemoveEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_TRUE); 
+  mTarget->RemoveEventListener("mousedown", (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE); 
 
-  mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE); 
-  mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);  
-  mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_TRUE);
+  mTarget->RemoveEventListener("keypress", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
+  mTarget->RemoveEventListener("keydown", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
+  mTarget->RemoveEventListener("keyup", (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);
 
   NS_IF_RELEASE(mMenuBarListener);
 
