@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.3 $ $Date: 2001/01/31 21:29:31 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.4 $ $Date: 2002/02/10 06:18:17 $ $Name:  $"
 
 #
 #  Override TARGETS variable so that only shared libraries
@@ -48,4 +48,11 @@ endif
 
 ifdef BUILD_IDG
 DEFINES += -DNSSDEBUG
+endif
+
+#
+# To create a loadable module on Darwin, we must use -bundle.
+#
+ifeq ($(OS_ARCH),Darwin)
+DSO_LDOPTS := $(subst -dynamiclib,-bundle,$(DSO_LDOPTS))
 endif
