@@ -56,6 +56,9 @@ class MaiTopLevel: public MaiWidget, public nsIAccessibleEventListener
 public:
     MaiTopLevel(nsIAccessible *aAcc);
     virtual ~MaiTopLevel();
+
+    virtual void Finalize(void);
+
     static MaiTopLevel * Create(nsIAccessible *aAcc);
 
     NS_DECL_ISUPPORTS

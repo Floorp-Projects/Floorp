@@ -67,12 +67,22 @@ static char * pAtkPropertyNameArray[PROP_LAST] = {
     "accessible_table_summary"
 };
 
+#ifdef MAI_LOGGING
+    static PRUint32 sMaiTopCount = 0;
+#endif
+
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(MaiTopLevel, nsIAccessibleEventListener)
 
 MaiTopLevel::MaiTopLevel(nsIAccessible *aAcc):MaiWidget(aAcc)
 {
     NS_INIT_ISUPPORTS();
+
+#ifdef MAI_LOGGING
+    ++sMaiTopCount;
+#endif
+    MAI_LOG_DEBUG(("MaiTopLevel+++>%d, mycount=%d, acc=0x%x\n",
+                   sMaiTopCount, mRefCnt, aAcc));
 
     nsCOMPtr<nsIAccessibleEventReceiver>
         receiver(do_QueryInterface(mAccessible));
@@ -84,8 +94,28 @@ MaiTopLevel::~MaiTopLevel()
 {
     nsCOMPtr<nsIAccessibleEventReceiver>
         receiver(do_QueryInterface(mAccessible));
+
+#ifdef MAI_LOGGING
+    --sMaiTopCount;
+#endif
+
+    MAI_LOG_DEBUG(("MaiTopLevel--->%d, mycount=%d, acc=0x%x\n",
+                   sMaiTopCount, mRefCnt, GetNSAccessible()));
+
     if (receiver)
         receiver->RemoveAccessibleEventListener();
+}
+
+void
+MaiTopLevel::Finalize(void)
+{
+    //here we know that the action is originated from the MaiAtkObject,
+    //and the MaiAtkObject itself will be destroyed.
+    //Mark MaiAtkObject to nil
+    mMaiAtkObject = NULL;
+
+    //release the refnt increased by MaiTopLevel::Create
+    NS_RELEASE_THIS();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -103,6 +133,9 @@ MaiTopLevel::Create(nsIAccessible *aAcc)
     if (!maiTopLevel) {
         maiTopLevel = new MaiTopLevel(aAcc);
         NS_ASSERTION(maiTopLevel, "Fail to create Object\n");
+
+        // the refcnt will be released in MaiTopLevel::Finalize when the
+        // related maiAtkObject ready to destroy.
         NS_IF_ADDREF(maiTopLevel);
         MaiHashTable::Add(maiTopLevel);
     }
