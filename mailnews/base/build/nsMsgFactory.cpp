@@ -49,6 +49,8 @@
 #include "nsMsgServerDataSource.h"
 #include "nsMsgIdentityDataSource.h"
 
+#include "nsMsgBiffManager.h"
+
 #ifdef DEBUG_bienvenu
 #include "nsMsgFilterService.h"
 #endif
@@ -83,6 +85,9 @@ static NS_DEFINE_CID(kMsgServerDataSourceCID, NS_MSGSERVERDATASOURCE_CID);
 // search and filter stuff
 static NS_DEFINE_CID(kMsgSearchSessionCID, NS_MSGSEARCHSESSION_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
+
+// Biff
+static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -282,6 +287,10 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
     rv = NS_NewMsgFilterService(aIID, aResult);
   }
 #endif
+  else if (mClassID.Equals(kMsgBiffManagerCID)){
+    rv = NS_NewMsgBiffManager(aIID, aResult);
+  }
+
   return rv;
 }  
 
@@ -450,6 +459,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
 #endif   
   
+  rv = compMgr->RegisterComponent(kMsgBiffManagerCID,
+                                  "Messenger Biff Manager",
+                                  "component://netscape/messenger/biffManager",
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) goto done;
+
 #ifdef NS_DEBUG
   printf("mailnews registering from %s\n",path);
 #endif
@@ -505,6 +521,10 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->UnregisterComponent(kMsgFilterServiceCID, path);
   if(NS_FAILED(rv)) goto done;
 #endif
+
+  //Biff
+  rv = compMgr->UnregisterComponent(kMsgBiffManagerCID, path);
+  if(NS_FAILED(rv)) goto done;
 
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);

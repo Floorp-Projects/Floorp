@@ -87,6 +87,7 @@ LLIBS=												\
 			$(DIST)\lib\msgcore.lib			\
 			$(DIST)\lib\appcores.lib		\
 			$(DIST)\lib\netlib.lib			\
+			$(DIST)\lib\raptorgfxwin.lib    \
 			$(LIBNSPR)						\
 			$(NULL)
 
