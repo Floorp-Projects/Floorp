@@ -19,10 +19,14 @@
 #include "nsString.h"
 #include "editor.h"
 #include "ChangeAttributeTxn.h"
+#include "InsertTextTxn.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMCharacterData.h"
 
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
+
  
 /*
  * nsEditorKeyListener implementation
@@ -129,15 +133,30 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
         mEditor->Commit(ctrlKey);
         break;
       default:
-        // XXX Replace with x-platform NS-virtkeycode transform.
-        if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
-          nsString* key = new nsString();
-          *key += character;
-          if (!isShift) {
-            key->ToLowerCase();
+        {
+          // XXX Replace with x-platform NS-virtkeycode transform.
+          if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
+            nsString key;
+            key += character;
+            if (!isShift) {
+              key.ToLowerCase();
+            }
+
+            nsCOMPtr<nsIDOMNode> currentNode;
+            nsCOMPtr<nsIDOMNode> textNode;
+            nsCOMPtr<nsIDOMCharacterData> text;
+            if (NS_SUCCEEDED(mEditor->GetCurrentNode(getter_AddRefs(currentNode))) && 
+                NS_SUCCEEDED(mEditor->GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
+                NS_SUCCEEDED(textNode->QueryInterface(kIDOMCharacterDataIID, getter_AddRefs(text)))) 
+            {
+              // XXX: for now, just append the text
+              PRUint32 offset;
+              text->GetLength(&offset);
+              InsertTextTxn *txn;
+              txn = new InsertTextTxn(mEditor, text, offset, key);
+              mEditor->ExecuteTransaction(txn);
+            }
           }
-          mEditor->InsertString(key);
-          delete key;
         }
         break;
       }
@@ -213,7 +232,11 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
           {
             if (NS_SUCCEEDED(currentNode->QueryInterface(kIDOMElementIID, getter_AddRefs(element)))) 
             {
-              ChangeAttributeTxn *txn = new ChangeAttributeTxn(mEditor, element, attribute, value);
+              ChangeAttributeTxn *txn;
+              if (PR_TRUE==ctrlKey)   // remove the attribute
+                txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_TRUE);
+              else                    // change the attribute
+               txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_FALSE);
               mEditor->ExecuteTransaction(txn);        
             }
           }
@@ -221,27 +244,6 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
         aProcessed=PR_TRUE;
         break;
 
-      case nsIDOMEvent::VK_SPACE:
-        {
-          //XXX: should be from a factory
-          //XXX: should manage the refcount of txn
-          nsString attribute("height");
-          nsString value("200");
-
-          nsString tableTag("TABLE");
-          nsCOMPtr<nsIDOMNode> currentNode;
-          nsCOMPtr<nsIDOMElement> element;
-          if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, tableTag, getter_AddRefs(currentNode))))
-          {
-            if (NS_SUCCEEDED(currentNode->QueryInterface(kIDOMElementIID, getter_AddRefs(element)))) 
-            {
-              ChangeAttributeTxn *txn = new ChangeAttributeTxn(mEditor, element, attribute, value);
-              mEditor->ExecuteTransaction(txn);        
-            }
-          }
-        }
-        aProcessed=PR_TRUE;
-        break;
     }
   }
   return NS_OK;
