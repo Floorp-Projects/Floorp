@@ -156,6 +156,7 @@
 #include "nsMimeTypes.h"
 #include "nsISelectionController.h"
 #include "nsContentUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIFastLoadFileControl.h"
 #include "nsIFastLoadService.h"
 #include "nsIObjectInputStream.h"
@@ -4447,7 +4448,7 @@ const char XUL_FASTLOAD_FILE_BASENAME[] = "XUL";
 // number as we flesh out the FastLoad file to include more and more data
 // induced by the master prototype document.
 
-#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 2)
+#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 3)
 
 #define XUL_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
 #define XUL_DESERIALIZATION_BUFFER_SIZE (8 * 1024)
@@ -4550,6 +4551,8 @@ FastLoadPrefChangedCallback(const char* aPref, void* aClosure)
 nsresult
 nsXULDocument::StartFastLoad()
 {
+    nsresult rv;
+
     // Test gFastLoadList to decide whether this is the first nsXULDocument
     // participating in FastLoad.  If gFastLoadList is non-null, this document
     // must not be first, but it can join the FastLoad process.  Examples of
@@ -4584,6 +4587,17 @@ nsXULDocument::StartFastLoad()
             return NS_ERROR_NOT_AVAILABLE;
     }
 
+    // Get the chrome directory to validate against the one stored in the
+    // FastLoad file, or to store there if we're generating a new file.
+    nsCOMPtr<nsIFile> chromeDir;
+    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(chromeDir));
+    if (NS_FAILED(rv))
+        return rv;
+    nsXPIDLCString chromePath;
+    rv = chromeDir->GetPath(getter_Copies(chromePath));
+    if (NS_FAILED(rv))
+        return rv;
+
     // Use a local to refer to the service till we're sure we succeeded, then
     // commit to gFastLoadService.  Same for gFastLoadFile, which is used to
     // delete the FastLoad file on abort.
@@ -4591,7 +4605,6 @@ nsXULDocument::StartFastLoad()
     if (! fastLoadService)
         return NS_ERROR_FAILURE;
 
-    nsresult rv;
     nsCOMPtr<nsIFile> file;
     rv = fastLoadService->NewFastLoadFile(XUL_FASTLOAD_FILE_BASENAME,
                                           getter_AddRefs(file));
@@ -4657,9 +4670,19 @@ nsXULDocument::StartFastLoad()
                 // serialized
                 PRUint32 version;
                 rv = objectInput->Read32(&version);
-                if (version != XUL_FASTLOAD_FILE_VERSION) {
-                    NS_WARNING("bad FastLoad file version");
-                    rv = NS_ERROR_UNEXPECTED;
+                if (NS_SUCCEEDED(rv)) {
+                    if (version != XUL_FASTLOAD_FILE_VERSION) {
+                        NS_WARNING("bad FastLoad file version");
+                        rv = NS_ERROR_UNEXPECTED;
+                    } else {
+                        nsXPIDLCString fileChromePath;
+                        rv = objectInput->ReadStringZ(
+                                                 getter_Copies(fileChromePath));
+                        if (NS_SUCCEEDED(rv) &&
+                            nsCRT::strcmp(fileChromePath, chromePath) != 0) {
+                            rv = NS_ERROR_UNEXPECTED;
+                        }
+                    }
                 }
             }
         }
@@ -4696,6 +4719,9 @@ nsXULDocument::StartFastLoad()
         if (NS_FAILED(rv)) return rv;
 
         rv = objectOutput->Write32(XUL_FASTLOAD_FILE_VERSION);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = objectOutput->WriteStringZ(chromePath);
         if (NS_FAILED(rv)) return rv;
 
         fastLoadService->SetOutputStream(objectOutput);
