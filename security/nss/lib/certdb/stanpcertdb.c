@@ -148,12 +148,11 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
     stanNick = NSSCertificate_GetNickname(c, NULL);
     if (stanNick && nickname && strcmp(nickname, stanNick) != 0) {
 	/* take the new nickname */
-	PORT_Free(cert->nickname);
+	cert->nickname = NULL;
 	stanNick = NULL;
     }
     if (!stanNick && nickname) {
 	stanNick = nssUTF8_Duplicate((NSSUTF8 *)nickname, c->object.arena);
-	cert->nickname = PORT_Strdup(nickname);
     }
     /* Delete the temp instance */
     nssCertificateStore_Remove(context->certStore, c);
