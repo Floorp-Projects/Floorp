@@ -278,7 +278,22 @@ function OpenURL(aInNewWindow)
     var currentIndex = gHistoryTree.currentIndex;     
     var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
     var url = builder.getResourceAtIndex(currentIndex).Value;
-    
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"].
+                createInstance(Components.interfaces.nsIURI);
+    uri.spec = url;
+    if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
+      var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                                       .getService(Components.interfaces.nsIStringBundleService);
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                    .getService(Components.interfaces.nsIPromptService);
+      var historyBundle = strBundleService.createBundle("chrome://communicator/locale/history/history.properties");
+      var brandBundle = strBundleService.createBundle("chrome://global/locale/brand.properties");      
+      var brandStr = brandBundle.GetStringFromName("brandShortName");
+      var errorStr = historyBundle.GetStringFromName("load-js-data-url-error");
+      promptService.alert(window, brandStr, errorStr);
+      return false;
+    }
+
     if (aInNewWindow) {
       var count = gHistoryTree.treeBoxObject.view.selection.count;
       if (count == 1) {
