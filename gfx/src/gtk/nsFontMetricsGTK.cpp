@@ -285,12 +285,15 @@ static nsFontCharSetInfo ISO106461 =
 static nsFontCharSetInfo AdobeSymbol =
    { "Adobe-Symbol-Encoding", SingleByteConvert, 0 };
 
+#ifdef MOZ_MATHML
 static nsFontCharSetInfo CMCMEX =
    { "x-t1-cmex", SingleByteConvert, 0 };
 static nsFontCharSetInfo CMCMSY =
    { "x-t1-cmsy", SingleByteConvert, 0 };
-
-#ifdef MOZ_MATHML
+static nsFontCharSetInfo CMCMR =
+   { "x-t1-cmr", SingleByteConvert, 0 };
+static nsFontCharSetInfo CMCMMI =
+   { "x-t1-cmmi", SingleByteConvert, 0 };
 static nsFontCharSetInfo Mathematica1 =
    { "x-mathematica1", SingleByteConvert, 0 };
 static nsFontCharSetInfo Mathematica2 =
@@ -481,10 +484,13 @@ static nsFontFamilyName gFamilyNameTable[] =
 static nsFontCharSetMap gSpecialCharSetMap[] =
 {
   { "symbol-adobe-fontspecific", &FLG_NONE, &AdobeSymbol  },
-  { "cmex10-adobe-fontspecific", &FLG_NONE, &CMCMEX  },
-  { "cmsy10-adobe-fontspecific", &FLG_NONE, &CMCMSY  },
 
 #ifdef MOZ_MATHML
+  { "cmex10-adobe-fontspecific", &FLG_NONE, &CMCMEX  },
+  { "cmsy10-adobe-fontspecific", &FLG_NONE, &CMCMSY  },
+  { "cmr10-adobe-fontspecific",  &FLG_NONE, &CMCMR  },
+  { "cmmi10-adobe-fontspecific", &FLG_NONE, &CMCMMI  },
+
   { "math1-adobe-fontspecific", &FLG_NONE, &Mathematica1 },
   { "math2-adobe-fontspecific", &FLG_NONE, &Mathematica2 },
   { "math3-adobe-fontspecific", &FLG_NONE, &Mathematica3 },
@@ -1530,8 +1536,10 @@ CheckSelf(void)
 {
   CheckMap(gCharSetMap);
 
-  // XXX MathML people: please figure out why this is failing
-  // CheckMap(gSpecialCharSetMap);
+#ifdef MOZ_MATHML
+  // For this to pass, the ucvmath module must be built as well
+  CheckMap(gSpecialCharSetMap);
+#endif
 }
 
 #endif /* DEBUG */
