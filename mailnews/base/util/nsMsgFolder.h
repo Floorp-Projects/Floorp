@@ -202,13 +202,6 @@ public:
   NS_IMETHOD ShouldPerformOperationOffline(PRBool *performOffline);
 #endif
 
-#ifdef HAVE_CACHE
-	virtual nsresult WriteToCache(XP_File);
-	virtual nsresult ReadFromCache(char *);
-	virtual PRBool IsCachable();
-	void SkipCacheTokens(char **ppBuf, int numTokens);
-#endif
-
 #ifdef DOES_FOLDEROPERATIONS
 	int DownloadToTempFileAndUpload(MessageCopyInfo *copyInfo, nsMsgKeyArray &keysToSave, MSG_FolderInfo *dstFolder, nsMsgDatabase *sourceDB);
 	void UpdateMoveCopyStatus(MWContext *context, PRBool isMove, int32 curMsgCount, int32 totMessages);

@@ -1488,28 +1488,6 @@ NS_IMETHODIMP nsMsgFolder::GetLocked(PRBool *isLocked)
     MSG_Master  *GetMaster() {return m_master;}
 #endif
 
-#ifdef HAVE_CACHE
-NS_IMETHODIMP nsMsgFolder::WriteToCache(XP_File)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::ReadFromCache(char *)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::IsCachable(PRBool *isCachable)
-{
-
-}
-
-NS_IMETHODIMP nsMsgFolder::SkipCacheTokens(char **ppBuf, int numTokens)
-{
-
-}
-#endif
-
 NS_IMETHODIMP nsMsgFolder::GetRelativePathName(char **pathName)
 {
 	if(!pathName)

@@ -63,6 +63,7 @@ public:
 
 	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
 	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
+	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
 	NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
 
 	NS_IMETHOD MarkAllMessagesRead(void);
@@ -73,7 +74,6 @@ protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
 	virtual nsresult GetDatabase() = 0;
 	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
-	nsresult ReadFromFolderCache(nsIMsgFolderCacheElement *element);
 	nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
 	nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);

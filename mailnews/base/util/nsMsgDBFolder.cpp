@@ -32,7 +32,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
 
-#if defined(XP_WIN16) || defined(XP_OS2)
+#if defined(XP_OS2)
 #define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
 #elif defined(XP_MAC)
 #define MAX_FILE_LENGTH_WITHOUT_EXTENSION 26
@@ -261,7 +261,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				result = folderCache->GetCacheElement(uri, PR_FALSE, getter_AddRefs(cacheElement));
 				if (NS_SUCCEEDED(result) && cacheElement)
 				{
-					result = ReadFromFolderCache(cacheElement);
+					result = ReadFromFolderCacheElem(cacheElement);
 				}
 				PR_Free(uri);
 			}
@@ -339,7 +339,7 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	const int charLimit = MAX_FILE_LENGTH_WITHOUT_EXTENSION;	// set on platform specific basis
 #if XP_MAC
 	nsCAutoString illegalChars = ":";
-#elif defined(XP_WIN16) || defined(XP_OS2) 
+#elif defined(XP_OS2) 
 	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$. ";
 #elif defined(XP_WIN32)
 	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$";
@@ -592,7 +592,7 @@ NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 }
 
 
-nsresult nsMsgDBFolder::ReadFromFolderCache(nsIMsgFolderCacheElement *element)
+NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element)
 {
 	nsresult rv = NS_OK;
 	char *charset;

@@ -302,6 +302,8 @@ interface nsIMsgImapMailFolder : nsISupports {
   void CreateClientSubfolderInfo(in string folderName);
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
+  attribute wchar hierarchyDelimiter;
+  attribute long boxFlags;
 };
 
 

@@ -73,7 +73,7 @@ NS_IMETHODIMP nsMsgFolderCacheElement::GetInt32Property(const char *propertyName
 	if (!propertyName || !aResult || !m_mdbRow)
 		return NS_ERROR_NULL_POINTER;
 
-	char *resultStr;
+	char *resultStr = nsnull;
 	GetStringProperty(propertyName, &resultStr);
 	if (!resultStr)
 		return NS_ERROR_NULL_POINTER;
