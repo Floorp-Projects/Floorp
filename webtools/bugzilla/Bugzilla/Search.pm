@@ -881,20 +881,24 @@ sub init {
 
          "^dependson,(?!changed)" => sub {
                 my $table = "dependson_" . $chartid;
-                push(@supptables, "dependencies $table");
                 $ff = "$table.$f";
                 my $ref = $funcsbykey{",$t"};
                 &$ref;
-                push(@wherepart, "$table.blocked = bugs.bug_id");
+                push(@supptables, "LEFT JOIN dependencies $table " .
+                                  "ON $table.blocked = bugs.bug_id " .
+                                  "AND ($term)");
+                $term = "$ff IS NOT NULL";
          },
 
          "^blocked,(?!changed)" => sub {
                 my $table = "blocked_" . $chartid;
-                push(@supptables, "dependencies $table");
                 $ff = "$table.$f";
                 my $ref = $funcsbykey{",$t"};
                 &$ref;
-                push(@wherepart, "$table.dependson = bugs.bug_id");
+                push(@supptables, "LEFT JOIN dependencies $table " .
+                                  "ON $table.dependson = bugs.bug_id " .
+                                  "AND ($term)");
+                $term = "$ff IS NOT NULL";
          },
 
          "^alias,(?!changed)" => sub {
