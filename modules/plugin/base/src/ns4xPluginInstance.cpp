@@ -43,6 +43,7 @@
 #include "prenv.h"
 
 #include "ns4xPluginInstance.h"
+#include "ns4xPlugin.h"
 #include "ns4xPluginStreamListener.h"
 #include "nsPluginHostImpl.h"
 #include "nsPluginSafety.h"
@@ -1516,10 +1517,6 @@ NS_IMETHODIMP ns4xPluginInstance::GetScriptablePeer(void * *aScriptablePeer)
   *aScriptablePeer = nsnull;
   return GetValueInternal(NPPVpluginScriptableInstance, aScriptablePeer);
 }
-
-PR_BEGIN_EXTERN_C
-void _releaseobject(NPObject *obj);
-PR_END_EXTERN_C
 
 ////////////////////////////////////////////////////////////////////////
 /* readonly attribute nsIIDPtr scriptableInterface; */
