@@ -563,7 +563,7 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	# International projects
 	BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",					"uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES, 1);
