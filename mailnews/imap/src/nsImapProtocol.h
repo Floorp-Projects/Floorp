@@ -151,7 +151,8 @@ public:
     
 	const char* GetImapHostName(); // return the host name from the url for the
                                    // current connection
-    const char* GetImapUserName(); // return the user name from the identity
+    char* GetImapUserName(); // return the user name from the identity; caller
+                             // must free the returned username string
 	
 	// state set by the imap parser...
 	void NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key);

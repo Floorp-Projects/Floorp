@@ -298,7 +298,7 @@ nsImapProtocol::GetImapHostName()
     return hostName;
 }
 
-const char*
+char*
 nsImapProtocol::GetImapUserName()
 {
     char* userName = nsnull;
@@ -2411,9 +2411,11 @@ PRUint32 nsImapProtocol::GetMessageSize(nsString2 &messageId,
 			sizeInfo->idIsUid = idsAreUids;
 
 			nsIMAPNamespace *nsForMailbox = nsnull;
+            char *userName = GetImapUserName();
             m_hostSessionList->GetNamespaceForMailboxForHost(
-                GetImapHostName(), GetImapUserName(), folderFromParser,
+                GetImapHostName(), userName, folderFromParser,
                 nsForMailbox);
+            PR_FREEIF(userName);
 
 			char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, FALSE);
 			if (nonUTF7ConvertedName)
@@ -2554,12 +2556,14 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
 	if (aclRightsInfo)
 	{
 		nsIMAPNamespace *namespaceForFolder = nsnull;
+        char *userName = GetImapUserName();
         NS_ASSERTION (m_hostSessionList, "fatal ... null host session list");
         if (m_hostSessionList)
             m_hostSessionList->GetNamespaceForMailboxForHost(
-                GetImapHostName(), GetImapUserName(), mailboxName,
+                GetImapHostName(), userName, mailboxName,
                 namespaceForFolder);
-		
+		PR_FREEIF(userName);
+
 		aclRightsInfo->hostName = PL_strdup(GetImapHostName());
 
 		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(mailboxName, FALSE);
@@ -2768,13 +2772,15 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 {
 	// IMAP_LoadTrashFolderName(); **** needs to work on localization issues
 
-	nsIMAPNamespace *ns;
+	nsIMAPNamespace *ns = nsnull;
+    const char* hostName = GetImapHostName();
+    char *userName = GetImapUserName();
 
     NS_ASSERTION (m_hostSessionList, "fatal null host session list");
     if (!m_hostSessionList) return;
 
     m_hostSessionList->GetDefaultNamespaceOfTypeForHost(
-        GetImapHostName(), GetImapUserName(), kPersonalNamespace, ns);
+        hostName, userName, kPersonalNamespace, ns);
 	const char *nsPrefix = ns ? ns->GetPrefix() : 0;
 
 	nsString2 canonicalSubDir(eOneByte, 0);
@@ -2802,8 +2808,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                 PRBool onlineTrashFolderExists = PR_FALSE;
                 if (m_hostSessionList)
                     m_hostSessionList->GetOnlineTrashFolderExistsForHost(
-                        GetImapHostName(), GetImapUserName(),
-                        onlineTrashFolderExists);
+                        hostName, userName, onlineTrashFolderExists);
 
 				if (GetDeleteIsMoveToTrash() &&	// don't set the Trash flag if not using the Trash model
 					!onlineTrashFolderExists && 
@@ -2839,8 +2844,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                             if (m_hostSessionList)
 							m_hostSessionList->
                                 SetOnlineTrashFolderExistsForHost(
-                                    GetImapHostName(), GetImapUserName(),
-                                    trashExists);
+                                    hostName, userName, trashExists);
 							PR_Free(serverTrashName);
 						}
 					}
@@ -2852,7 +2856,8 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 
 			// Discover the folder (shuttle over to libmsg, yay)
 			// Do this only if the folder name is not empty (i.e. the root)
-			if (*adoptedBoxSpec->allocatedPathName)
+			if (adoptedBoxSpec->allocatedPathName&&
+                *adoptedBoxSpec->allocatedPathName)
 			{
                 nsString2 boxNameCopy (eOneByte, 0);
                 
@@ -2868,7 +2873,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
 
                     if (m_hostSessionList)
                         m_hostSessionList->GetHostIsUsingSubscription(
-                            GetImapHostName(), GetImapUserName(),
+                            hostName, userName,
                             useSubscription);
 
 					if ((GetMailboxDiscoveryStatus() != eContinue) && 
@@ -2945,6 +2950,7 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
         NS_ASSERTION (FALSE, "we aren't supposed to be here");
         break;
 	}
+    PR_FREEIF(userName);
 }
 
 void
@@ -3326,11 +3332,12 @@ PRBool
 nsImapProtocol::GetDeleteIsMoveToTrash()
 {
     PRBool rv = PR_FALSE;
+    char *userName = GetImapUserName();
     NS_ASSERTION (m_hostSessionList, "fatal... null host session list");
     if (m_hostSessionList)
         m_hostSessionList->GetDeleteIsMoveToTrashForHost(GetImapHostName(),
-                                                         GetImapUserName(),
-                                                         rv);
+                                                         userName, rv);
+    PR_FREEIF(userName);
     return rv;
 }
 
