@@ -98,6 +98,20 @@ extern "C" void FE_Alert(MWContext *context, const char *msg)
     stub_Alert(context, msg);
 }
 
+#if defined (WIN32)
+extern "C" char * FE_GetProgramDirectory(char *buffer, int length) {
+    printf("XXX: returning c:\\temp\\ for the FE_GetProgramDirectory!\n");
+    strcpy(buffer, "c:\\temp\\");
+    return buffer;
+}
+#elif defined (XP_UNIX)
+extern "C" void fe_GetProgramDirectory(char *buffer, int length) {
+    printf("XXX: returning /tmp for the fe_GetProgramDirectory!\n");
+    strcpy(buffer, "/tmp/");
+    return buffer;
+}
+#endif
+
 XP_Bool stub_Confirm(MWContext *context,
                      const char *msg)
 {
