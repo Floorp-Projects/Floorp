@@ -194,7 +194,7 @@ oeICalContainerImpl::AddCalendars( PRUint32 serverCount, const char **servers ) 
     printf( "oeICalContainerImpl::AddCalendars( %d, [Array] )\n", serverCount );
 #endif
     nsresult rv;
-    for( int i=0; i<serverCount; i++ ) {
+    for( unsigned int i=0; i<serverCount; i++ ) {
         rv = AddCalendar( servers[i] );
         if( NS_FAILED( rv ) )
             break;
