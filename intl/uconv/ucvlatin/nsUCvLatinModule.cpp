@@ -140,6 +140,19 @@
 #include "nsUnicodeToUserDefined.h"
 #include "nsUnicodeToSymbol.h"
 #include "nsUnicodeToZapfDingbat.h"
+#include "nsMacArabicToUnicode.h"
+#include "nsMacDevanagariToUnicode.h"
+#include "nsMacFarsiToUnicode.h"
+#include "nsMacGujaratiToUnicode.h"
+#include "nsMacGurmukhiToUnicode.h"
+#include "nsMacHebrewToUnicode.h"
+#include "nsUnicodeToMacArabic.h"
+#include "nsUnicodeToMacDevanagari.h"
+#include "nsUnicodeToMacFarsi.h"
+#include "nsUnicodeToMacGujarati.h"
+#include "nsUnicodeToMacGurmukhi.h"
+#include "nsUnicodeToMacHebrew.h"
+
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -259,6 +272,18 @@ NS_UCONV_REG_UNREG(nsUnicodeToT61, "Unicode", "T.61-8bit" , NS_UNICODETOT61_CID)
 NS_UCONV_REG_UNREG(nsUnicodeToUserDefined, "Unicode", "x-user-defined" , NS_UNICODETOUSERDEFINED_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToSymbol, "Unicode", "Adobe-Symbol-Encoding" , NS_UNICODETOSYMBOL_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToZapfDingbat, "Unicode", "x-zapf-dingbats" , NS_UNICODETOZAPFDINGBATS_CID);
+NS_UCONV_REG_UNREG(nsMacArabicToUnicode,  "x-mac-arabic" , "Unicode" , NS_MACARABICTOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsMacDevanagariToUnicode,  "x-mac-devanagari" , "Unicode" , NS_MACDEVANAGARITOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsMacFarsiToUnicode,  "x-mac-farsi" , "Unicode" , NS_MACFARSITOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsMacGurmukhiToUnicode,  "x-mac-gurmukhi" , "Unicode" , NS_MACGURMUKHITOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsMacGujaratiToUnicode,  "x-mac-gujarati" , "Unicode" , NS_MACGUJARATITOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsMacHebrewToUnicode,  "x-mac-hebrew" , "Unicode" , NS_MACHEBREWTOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToMacArabic,  "Unicode" , "x-mac-arabic" , NS_UNICODETOMACARABIC_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToMacDevanagari,  "Unicode" , "x-mac-devanagari" , NS_UNICODETOMACDEVANAGARI_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToMacFarsi,  "Unicode" , "x-mac-farsi" , NS_UNICODETOMACFARSI_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToMacGurmukhi,  "Unicode" , "x-mac-gurmukhi" , NS_UNICODETOMACGURMUKHI_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToMacGujarati,  "Unicode" , "x-mac-gujarati" , NS_UNICODETOMACGUJARATI_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToMacHebrew,  "Unicode" , "x-mac-hebrew" , NS_UNICODETOMACHEBREW_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAsciiToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUEscapeToUnicode);
@@ -365,6 +390,18 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToT61);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUserDefined);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToSymbol);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToZapfDingbat);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacArabicToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacDevanagariToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacFarsiToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacGurmukhiToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacGujaratiToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacHebrewToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacArabic);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacDevanagari);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacFarsi);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacGurmukhi);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacGujarati);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacHebrew);
 
 static nsModuleComponentInfo components[] = 
 {
@@ -673,6 +710,42 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "x-user-defined",
     nsUserDefinedToUnicodeConstructor ,
     nsUserDefinedToUnicodeRegSelf , nsUserDefinedToUnicodeUnRegSelf 
+  },
+  { 
+    DECODER_NAME_BASE "x-mac-arabic" , NS_MACARABICTOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-arabic",
+    nsMacArabicToUnicodeConstructor ,
+    nsMacArabicToUnicodeRegSelf , nsMacArabicToUnicodeUnRegSelf 
+  },
+  { 
+    DECODER_NAME_BASE "x-mac-devanagari" , NS_MACDEVANAGARITOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-devanagari",
+    nsMacDevanagariToUnicodeConstructor ,
+    nsMacDevanagariToUnicodeRegSelf , nsMacDevanagariToUnicodeUnRegSelf 
+  },
+  { 
+    DECODER_NAME_BASE "x-mac-farsi" , NS_MACFARSITOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-farsi",
+    nsMacFarsiToUnicodeConstructor ,
+    nsMacFarsiToUnicodeRegSelf , nsMacFarsiToUnicodeUnRegSelf 
+  },
+  { 
+    DECODER_NAME_BASE "x-mac-gurmukhi" , NS_MACGURMUKHITOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-gurmukhi",
+    nsMacGurmukhiToUnicodeConstructor ,
+    nsMacGurmukhiToUnicodeRegSelf , nsMacGurmukhiToUnicodeUnRegSelf 
+  },
+  { 
+    DECODER_NAME_BASE "x-mac-gujarati" , NS_MACGUJARATITOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-gujarati",
+    nsMacGujaratiToUnicodeConstructor ,
+    nsMacGujaratiToUnicodeRegSelf , nsMacGujaratiToUnicodeUnRegSelf 
+  },
+  { 
+    DECODER_NAME_BASE "x-mac-hebrew" , NS_MACHEBREWTOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-hebrew",
+    nsMacHebrewToUnicodeConstructor ,
+    nsMacHebrewToUnicodeRegSelf , nsMacHebrewToUnicodeUnRegSelf 
   },
   { 
     ENCODER_NAME_BASE "us-ascii" , NS_UNICODETOASCII_CID, 
@@ -991,6 +1064,42 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-zapf-dingbats",
     nsUnicodeToZapfDingbatConstructor, 
     nsUnicodeToZapfDingbatRegSelf, nsUnicodeToZapfDingbatUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-mac-arabic" , NS_UNICODETOMACARABIC_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-arabic",
+    nsUnicodeToMacArabicConstructor, 
+    nsUnicodeToMacArabicRegSelf, nsUnicodeToMacArabicUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-mac-devanagari" , NS_UNICODETOMACDEVANAGARI_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-devanagari",
+    nsUnicodeToMacDevanagariConstructor, 
+    nsUnicodeToMacDevanagariRegSelf, nsUnicodeToMacDevanagariUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-mac-farsi" , NS_UNICODETOMACFARSI_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-farsi",
+    nsUnicodeToMacFarsiConstructor, 
+    nsUnicodeToMacFarsiRegSelf, nsUnicodeToMacFarsiUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-mac-gurmukhi" , NS_UNICODETOMACGURMUKHI_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-gurmukhi",
+    nsUnicodeToMacGurmukhiConstructor, 
+    nsUnicodeToMacGurmukhiRegSelf, nsUnicodeToMacGurmukhiUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-mac-gujarati" , NS_UNICODETOMACGUJARATI_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-gujarati",
+    nsUnicodeToMacGujaratiConstructor, 
+    nsUnicodeToMacGujaratiRegSelf, nsUnicodeToMacGujaratiUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "x-mac-hebrew" , NS_UNICODETOMACHEBREW_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-hebrew",
+    nsUnicodeToMacHebrewConstructor, 
+    nsUnicodeToMacHebrewRegSelf, nsUnicodeToMacHebrewUnRegSelf
   }
 };
 
