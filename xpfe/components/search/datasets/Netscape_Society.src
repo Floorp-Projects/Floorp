@@ -4,10 +4,10 @@
 # 
 
 <search 
-     name        = "Netscape Search - Society"
+     name        = "Society"
      description = "Netscape Search - Society"
      method      = "GET"
-     action      = "http://search.netscape.com/cgi-bin/search"
+     action      = "http://info.netscape.com/fwd/sidb1/http://search.netscape.com/cgi-bin/search"
 >
 
 

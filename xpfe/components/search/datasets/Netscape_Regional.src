@@ -4,10 +4,10 @@
 # 
 
 <search 
-     name        = "Netscape Search - Regional"
+     name        = "Regional"
      description = "Netscape Search - Regional"
      method      = "GET"
-     action      = "http://search.netscape.com/cgi-bin/search"
+     action      = "http://info.netscape.com/fwd/sidb1/http://search.netscape.com/cgi-bin/search"
 >
 
 

@@ -2,8 +2,8 @@
 # Copyright ©1999 Netscape Communications Corp.
 
 <search
-	name="Netscape Open Directory"
-	description = "Netscape Open Directory"
+	name="Netscape Search"
+	description = "Netscape Search"
 	method="GET"
 	action="http://search.netscape.com/cgi-bin/search"
 >
