@@ -13832,8 +13832,14 @@ NORMAL_PASTE:
 
 #if defined(ENDER) && defined(MOZ_ENDER_MIME)
 
-            if( m_bEmbedded )
-                AddImagesToSafeList(pElement);
+            // Commented out because of possible security hole. We don't want
+            // to allow users to accidentally copy and paste something like
+            // this:
+            //
+            //    <IMG SRC="file:/etc/passwd">
+            //
+            // if( m_bEmbedded )
+            //     AddImagesToSafeList(pElement);
 
 #endif /* ENDER && MOZ_ENDER_MIME */
 
