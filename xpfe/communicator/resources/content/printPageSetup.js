@@ -422,7 +422,7 @@ function onLoad()
 function convertUnitsMarginToInches(aVal, aIsMetric)
 {
   if (aIsMetric) {
-    return aVal / 254;
+    return aVal / 25.4;
   } else {
     return aVal;
   }
@@ -431,7 +431,7 @@ function convertUnitsMarginToInches(aVal, aIsMetric)
 function convertMarginInchesToUnits(aVal, aIsMetric)
 {
   if (aIsMetric) {
-    return aVal * 254;
+    return aVal * 25.4;
   } else {
     return aVal;
   }
