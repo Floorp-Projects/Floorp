@@ -127,12 +127,13 @@ struct nsCharsetInfo
 static PRUint16* GenerateDefault(nsCharsetInfo* aSelf);
 static PRUint16* GenerateSingleByte(nsCharsetInfo* aSelf);
 static PRUint16* GenerateMultiByte(nsCharsetInfo* aSelf);
+static PRBool    LookupWinFontName(const nsAFlatString& aName,
+                                   nsAString& aWinName);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsVoidArray* nsFontMetricsWin::gGlobalFonts = nsnull;
-PLHashTable* nsFontMetricsWin::gFamilyNames = nsnull;
 PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
 PLHashTable* nsFontMetricsWin::gFontMaps = nsnull;
 PRUint16* nsFontMetricsWin::gEmptyCCMap = nsnull;
@@ -142,6 +143,7 @@ PRUint16* nsFontMetricsWin::gEmptyCCMap = nsnull;
 
 
 static nsIPersistentProperties* gFontEncodingProperties = nsnull;
+static nsIPersistentProperties* gFontNameMapProperties = nsnull;
 static nsICharsetConverterManager* gCharsetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 static nsISaveAsCharset* gFontSubstituteConverter = nsnull;
@@ -156,6 +158,8 @@ static nsIAtom* gKO = nsnull;
 static nsIAtom* gZHTW = nsnull;
 static nsIAtom* gZHCN = nsnull;
 static nsIAtom* gZHHK = nsnull;
+
+static nsString* gCodepageStr = nsnull;
 
 static int gInitialized = 0;
 static PRBool gDoingLineheightFixup = PR_FALSE;
@@ -195,6 +199,7 @@ FreeGlobals(void)
   gInitialized = 0;
 
   NS_IF_RELEASE(gFontEncodingProperties);
+  NS_IF_RELEASE(gFontNameMapProperties);
   NS_IF_RELEASE(gCharsetManager);
   NS_IF_RELEASE(gPref);
   NS_IF_RELEASE(gUsersLocale);
@@ -234,10 +239,9 @@ FreeGlobals(void)
     gFontForIgnorable = nsnull;
   }
 
-  // free FamilyNames
-  if (nsFontMetricsWin::gFamilyNames) {
-    PL_HashTableDestroy(nsFontMetricsWin::gFamilyNames);
-    nsFontMetricsWin::gFamilyNames = nsnull;
+  if (gCodepageStr) {
+    delete gCodepageStr;
+    gCodepageStr = nsnull; 
   }
 
   // free Font weight
@@ -311,9 +315,20 @@ InitGlobals(void)
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  // used in LookupWinFontName()
+  if (!gCodepageStr) {
+    gCodepageStr = new nsString(NS_LITERAL_STRING(".cp"));
+  }
+  if (!gCodepageStr) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  UINT cp = ::GetACP();
+  gCodepageStr->AppendInt(cp); 
   
   if (!gSystemLocale) {
-    UINT cp= ::GetACP();
     for (int i = 1; i < eCharset_COUNT; ++i) {
       if (gCharsetInfo[i].mCodePage == cp) {
         gSystemLocale = NS_NewAtom(gCharsetInfo[i].mLangGroup);
@@ -2321,13 +2336,13 @@ nsFontMetricsWin::CreateFontHandle(HDC aDC, const nsString& aName, LOGFONT* aLog
   PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
 
   FillLogFont(aLogFont, weight);
-  /*
-   * XXX we are losing info by converting from Unicode to system code page
-   * but we don't really have a choice since CreateFontIndirectW is
-   * not supported on Windows 9X (see below) -- erik
-   */
+ 
+  // The risk of losing characters not covered by the current codepage 
+  // is reduced because LookupWinFontName invoked earlier has taken care 
+  // of most cases. 
   WideCharToMultiByte(CP_ACP, 0, aName.get(), aName.Length() + 1,
-    aLogFont->lfFaceName, sizeof(aLogFont->lfFaceName), nsnull, nsnull);
+                      aLogFont->lfFaceName, sizeof(aLogFont->lfFaceName),
+                      nsnull, nsnull);
 
   if (mFont.sizeAdjust <= 0) {
     // Quick return for the common case where no adjustement is needed
@@ -2925,8 +2940,14 @@ nsFontMetricsWin::GetFontWeightTable(HDC aDC, const nsString& aFontName)
   // Look for all of the weights for a given font.
   LOGFONT logFont;
   logFont.lfCharSet = DEFAULT_CHARSET;
+
+  // The risk of losing characters not covered by the current codepage 
+  // is reduced because LookupWinFontName invoked earlier has taken care 
+  // of most cases. 
   WideCharToMultiByte(CP_ACP, 0, aFontName.get(), aFontName.Length() + 1,
-    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
+                      logFont.lfFaceName, sizeof(logFont.lfFaceName),
+                      nsnull, nsnull);
+
   logFont.lfPitchAndFamily = 0;
 
   nsFontWeightInfo weightInfo;
@@ -3142,116 +3163,20 @@ nsFontMetricsWin::FindUserDefinedFont(HDC aDC, PRUint32 aChar)
   return nsnull;
 }
 
-typedef struct nsFontFamilyName
-{
-  char* mName;
-  char* mWinName;
-} nsFontFamilyName;
-
-static nsFontFamilyName gFamilyNameTable[] =
-{
-#ifdef MOZ_MATHML
-  { "-moz-math-text",   "Times New Roman" },
-  { "-moz-math-symbol", "Symbol" },
-#endif
-  { "times",           "Times New Roman" },
-  { "times roman",     "Times New Roman" },
-  { "times new roman", "Times New Roman" },
-  { "arial",           "Arial" },
-  { "helvetica",       "Arial" },
-  { "courier",         "Courier New" },
-  { "courier new",     "Courier New" },
-
-  { nsnull, nsnull }
-};
-
-/*-----------------------
-** Hash table allocation
-**----------------------*/
-//-- Font FamilyNames
-PR_STATIC_CALLBACK(void*) familyname_AllocTable(void *pool, size_t size)
-{
-  return nsMemory::Alloc(size);
-}
-
-PR_STATIC_CALLBACK(void) familyname_FreeTable(void *pool, void *item)
-{
-  nsMemory::Free(item);
-}
-
-PR_STATIC_CALLBACK(PLHashEntry*) familyname_AllocEntry(void *pool, const void *key)
-{
-  return PR_NEW(PLHashEntry);
-}
-
-PR_STATIC_CALLBACK(void) familyname_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
-{
-  delete (nsString *) (he->value);
-
-  if (flag == HT_FREE_ENTRY)  {
-    delete (nsString *) (he->key);
-    nsMemory::Free(he);
-  }
-}
-
-PLHashAllocOps familyname_HashAllocOps = {
-  familyname_AllocTable, familyname_FreeTable,
-  familyname_AllocEntry, familyname_FreeEntry
-};
-
-PLHashTable*
-nsFontMetricsWin::InitializeFamilyNames(void)
-{
-  if (!gFamilyNames) {
-    gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, &familyname_HashAllocOps,
-      nsnull);
-    if (!gFamilyNames) {
-      return nsnull;
-    }
-    nsFontFamilyName* f = gFamilyNameTable;
-    while (f->mName) {
-      nsString* name = new nsString;
-      nsString* winName = new nsString;
-      if (name && winName) {
-        name->AssignWithConversion(f->mName);
-        winName->AssignWithConversion(f->mWinName);
-        if (PL_HashTableAdd(gFamilyNames, name, (void*) winName)) { 
-          ++f;
-          continue;
-        }
-      }
-      // if we reach here, no FamilyName was added to the hashtable
-      if (name) delete name;
-      if (winName) delete winName;
-      return nsnull;
-    }
-  }
-
-  return gFamilyNames;
-}
-
 nsFontWin*
 nsFontMetricsWin::FindLocalFont(HDC aDC, PRUint32 aChar)
 {
-  if (!gFamilyNames) {
-    if (!InitializeFamilyNames()) {
-      return nsnull;
-    }
-  }
   while (mFontsIndex < mFonts.Count()) {
     if (mFontsIndex == mGenericIndex) {
       return nsnull;
     }
 
     nsString* name = mFonts.StringAt(mFontsIndex++);
-    nsAutoString low(*name);
-    ToLowerCase(low);
-    nsString* winName = (nsString*) PL_HashTableLookup(gFamilyNames, &low);
-    if (!winName) {
-      winName = name;
-    }
+    nsAutoString winName; 
+    PRBool found = LookupWinFontName(*name, winName); 
     // the familyNameQuirks should not affect generic & global fonts
-    nsFontWin* font = LoadFont(aDC, *winName, mFont.familyNameQuirks);
+    nsFontWin* font = LoadFont(aDC, found ? winName : *name,
+                               mFont.familyNameQuirks);
     if (font && font->HasGlyph(aChar)) {
       return font;
     }
@@ -5011,23 +4936,14 @@ nsFontMetricsWinA::GetFontFor(HFONT aHFONT)
 nsFontWin*
 nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUint32 aChar)
 {
-  if (!gFamilyNames) {
-    if (!InitializeFamilyNames()) {
-      return nsnull;
-    }
-  }
   while (mFontsIndex < mFonts.Count()) {
     if (mFontsIndex == mGenericIndex) {
       return nsnull;
     }
     nsString* name = mFonts.StringAt(mFontsIndex++);
-    nsAutoString low(*name);
-    ToLowerCase(low);
-    nsString* winName = (nsString*)PL_HashTableLookup(gFamilyNames, &low);
-    if (!winName) {
-      winName = name;
-    }
-    nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, *winName);
+    nsAutoString winName; 
+    PRBool found = LookupWinFontName(*name, winName); 
+    nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, found ? winName : *name);
     if (font && font->HasGlyph(aChar)) {
       nsFontSubset* subset = font->FindSubset(aDC, (PRUnichar)aChar, this);
       if (subset) 
@@ -5677,4 +5593,54 @@ nsFontEnumeratorWin::UpdateFontList(PRBool *updateFontList)
   // check for change
   *updateFontList = (maskBitBefore != maskBitAfter);
   return NS_OK;
+}
+
+// See bug 231426 and references therein for the motivation and need to
+// do this. Especially, see http://www.trigeminal.com/samples/font_choices.html
+
+/* static */ 
+PRBool LookupWinFontName(const nsAFlatString& aName, nsAString& aWinName)
+{
+  // to speed up start-up, bypass the property look-up for these fonts
+  if (aName.LowerCaseEqualsLiteral("tahoma") ||
+      aName.LowerCaseEqualsLiteral("arial") ||
+      aName.LowerCaseEqualsLiteral("times new roman") ||
+      aName.LowerCaseEqualsLiteral("courier new"))
+    return PR_FALSE;
+
+  if (!gFontNameMapProperties)
+    NS_LoadPersistentPropertiesFromURISpec(&gFontNameMapProperties,
+      NS_LITERAL_CSTRING("resource://gre/res/fonts/fontNameMap.properties"));
+
+  if (!gFontNameMapProperties) {
+    NS_WARNING("fontNameMap.properties is not available"); 
+    return PR_FALSE;
+  }
+
+  nsAutoString name(aName); 
+  ToLowerCase(name); 
+
+  NS_ConvertUTF16toUTF8 propKey(name);
+  propKey.StripWhitespace(); 
+
+  if (IsASCII(propKey)) {
+    // see if there's the native name in the current codepage
+    // <ascii name>.cp<codepage>=<native name>
+    LossyAppendUTF16toASCII(*gCodepageStr, propKey); 
+    return NS_SUCCEEDED(gFontNameMapProperties->
+                        GetStringProperty(propKey, aWinName));
+  }
+
+  // <native name>=<ascii name>.cp<codepage>
+  if (NS_SUCCEEDED(gFontNameMapProperties->
+                   GetStringProperty(propKey, aWinName))) {
+    if (StringEndsWith(aWinName, *gCodepageStr)) {
+      // if font codepage == current codepage, use the native name
+      return PR_FALSE;
+    }
+    // if font codepage != current codepage, map to the ASCII name
+    aWinName.Truncate(aWinName.Length() - gCodepageStr->Length());
+    return PR_TRUE;
+  }
+  return PR_FALSE;  // native name not listed in the properties file.
 }

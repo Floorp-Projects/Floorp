@@ -117,10 +117,10 @@ EXTRA_DSO_LDOPTS += \
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: fontEncoding.properties
+libs:: fontEncoding.properties fontNameMap.properties
 	$(INSTALL) $^ $(DIST)/bin/res/fonts
 
-install:: fontEncoding.properties
+install:: fontEncoding.properties fontNameMap.properties
 	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/res/fonts
 
 DEFINES	+= -DSTRICT 
