@@ -76,6 +76,7 @@ CPPSRCS		= \
 		nsNodeInfo.cpp \
 		nsNodeInfoManager.cpp \
 		nsRange.cpp \
+		nsRuleNode.cpp \
 		nsSelection.cpp \
 		nsStyleContext.cpp \
 		nsStyleSet.cpp \

@@ -36,7 +36,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  dom \
 		  webshell \
-      docshell \
+		  docshell \
 		  pref \
 		  necko \
 		  htmlparser \
@@ -49,16 +49,15 @@ CPPSRCS		= \
 		nsCSSKeywords.cpp \
 		nsCSSProps.cpp \
 		nsHTMLAtoms.cpp \
-    nsHTMLUtils.cpp   \
+		nsHTMLUtils.cpp   \
 		nsHTMLValue.cpp \
 		nsImageMapUtils.cpp \
 		nsLayoutAtoms.cpp \
-    nsRuleNode.cpp \
 		nsStyleUtil.cpp \
 		nsTextFragment.cpp \
 		nsXULAtoms.cpp \
 		nsStyleCoord.cpp \
-    nsStyleStruct.cpp \
+		nsStyleStruct.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

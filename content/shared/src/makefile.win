@@ -28,7 +28,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  dom \
 		  webshell \
-      docshell \
+		  docshell \
 		  pref \
 		  necko \
 		  htmlparser \
@@ -44,7 +44,7 @@ DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
-CPPSRCS =				\
+CPPSRCS = \
   nsCSSAtoms.cpp \
   nsCSSKeywords.cpp \
   nsCSSProps.cpp \
@@ -53,16 +53,15 @@ CPPSRCS =				\
   nsHTMLValue.cpp \
   nsImageMapUtils.cpp \
   nsLayoutAtoms.cpp \
-  nsRuleNode.cpp \
   nsStyleUtil.cpp \
   nsStyleStruct.cpp \
   nsTextFragment.cpp \
   nsXULAtoms.cpp \
   nsStyleCoord.cpp \
-	$(NULL)
+  $(NULL)
 
 
-CPP_OBJS=					\
+CPP_OBJS= \
   .\$(OBJDIR)\nsCSSAtoms.obj \
   .\$(OBJDIR)\nsCSSKeywords.obj \
   .\$(OBJDIR)\nsCSSProps.obj \
@@ -71,13 +70,12 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsHTMLValue.obj \
   .\$(OBJDIR)\nsImageMapUtils.obj \
   .\$(OBJDIR)\nsLayoutAtoms.obj \
-  .\$(OBJDIR)\nsRuleNode.obj \
   .\$(OBJDIR)\nsStyleUtil.obj \
   .\$(OBJDIR)\nsStyleStruct.obj \
   .\$(OBJDIR)\nsTextFragment.obj \
   .\$(OBJDIR)\nsXULAtoms.obj \
   .\$(OBJDIR)\nsStyleCoord.obj \
-	$(NULL)
+  $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
