@@ -547,6 +547,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 				mView->MoveTo(0, 0);
 				mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
 				mView->SetResizingMode(B_FOLLOW_ALL);
+				w->Hide();
+				w->Show();
 			}
 		} // if eWindowType_Child
 
