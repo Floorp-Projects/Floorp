@@ -141,8 +141,12 @@
 #endif
 //=========================== End Compiler-specific macros ===============================
 
+#include "nsILocalFile.h"
+#include "nsCOMPtr.h"
+
 #if defined(XP_MAC) || defined(RHAPSODY)
 #include <Files.h>
+#include "nsILocalFileMac.h"
 #endif
 // this can't be elif because rhapsody needs both headers
 #if defined(XP_UNIX) || defined (XP_OS2) || defined(XP_BEOS) || defined(RHAPSODY)
@@ -834,5 +838,8 @@ private:
     nsFilePath                   mFilePath;
     char*                        modifiedNSPRPath; // Currently used only on XP_PC                           
 }; // class nsNSPRPath
+
+
+NS_COM nsresult NS_FileSpecToIFile(nsFileSpec* fileSpec, nsILocalFile* *result);
 
 #endif //  _FILESPEC_H_
