@@ -228,12 +228,12 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
-# An AIX Optimization bug causes PR_dtoa() to produce wrong result.
+# An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
 ifeq ($(OS_ARCH), AIX)
-jsdtoa.o:
+$(OBJDIR)/jsdtoa.o: jsdtoa.c
 	@$(MAKE_OBJDIR)
-	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) jsdtoa.c
+	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) $<
 endif
 
 # ripped from $(topsrcdir)/config/rules.mk
