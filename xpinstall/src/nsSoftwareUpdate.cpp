@@ -312,31 +312,33 @@ nsSoftwareUpdate::InstallJarCallBack()
 nsresult
 nsSoftwareUpdate::RunNextInstall()
 {
-    nsresult rv = NS_OK;
+    nsresult        rv = NS_OK;
+    nsInstallInfo*  info = nsnull;
 
     PR_Lock(mLock);
-    if (!mInstalling)
+    if (!mInstalling) 
     {
         if ( mJarInstallQueue->GetSize() > 0 )
         {
-            nsInstallInfo *info = (nsInstallInfo*)mJarInstallQueue->Get(0);
+            info = (nsInstallInfo*)mJarInstallQueue->Get(0);
 
             if ( info )
-            {
                 mInstalling = PR_TRUE;
-                RunInstall( info );
-            }
             else
                 // XXX leaks any nsInstallInfos left in queue
                 rv = NS_ERROR_NULL_POINTER;
         }
-        else
-        {
-            // nothing more to do
-            VR_Close();
-        }
+    }
+    else
+    {
+        // nothing more to do
+        VR_Close();
     }
     PR_Unlock(mLock);
+
+    // make sure to RunInstall() outside of locked section due to callbacks
+    if (info)
+        RunInstall( info );
 
     return rv;
 }
