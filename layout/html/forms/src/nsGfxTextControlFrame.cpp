@@ -2365,13 +2365,7 @@ nsEnderFocusListener::Focus(nsIDOMEvent* aEvent)
         result = mContent->HandleDOMEvent(*mContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
       }
     
-      //3. Do the processing for the frame
-      /*
-      nsCOMPtr<nsIContent> content=nsnull;
-      mFrame->GetContent(getter_AddRefs(content));
-      if (content)
-        manager->SetContentState(content, NS_EVENT_STATE_FOCUS);
-      */
+      //3. In this case, the frame does no processing of the event
 
       //4. Give event to event manager for post event state changes and generation of synthetic events.
       if (NS_SUCCEEDED(result)) {
