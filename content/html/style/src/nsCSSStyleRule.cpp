@@ -1067,6 +1067,12 @@ public:
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
   virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult GetCSSParsingEnvironment(nsICSSStyleRule* aRule,
+                                            nsICSSStyleSheet** aSheet,
+                                            nsIDocument** aDocument,
+                                            nsIURI** aURI,
+                                            nsICSSLoader** aCSSLoader,
+                                            nsICSSParser** aCSSParser);
   virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
                                       const nsAReadableString& aPropValue);
   virtual nsresult ParseDeclaration(const nsAReadableString& aDecl,
@@ -1153,6 +1159,49 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(nsICSSDeclaration *aDecl)
   return NS_OK;
 }
 
+/*
+ * This is a utility function.  It will only fail if it can't get a
+ * parser.  This means it can return NS_OK without all of aSheet,
+ *  aDocument, aURI, aCSSLoader being initialized
+ */
+nsresult
+DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsICSSStyleRule* aRule,
+                                                nsICSSStyleSheet** aSheet,
+                                                nsIDocument** aDocument,
+                                                nsIURI** aURI,
+                                                nsICSSLoader** aCSSLoader,
+                                                nsICSSParser** aCSSParser)
+{
+  // null out the out params since some of them may not get initialized below
+  *aSheet = nsnull;
+  *aDocument = nsnull;
+  *aURI = nsnull;
+  *aCSSLoader = nsnull;
+  *aCSSParser = nsnull;
+  nsresult result;
+  nsCOMPtr<nsIStyleSheet> sheet;
+  if (aRule) {
+    aRule->GetStyleSheet(*getter_AddRefs(sheet));
+    if (sheet) {
+      CallQueryInterface(sheet, aSheet);
+      sheet->GetOwningDocument(*aDocument);
+      sheet->GetURL(*aURI);
+    }
+  }
+  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(*aDocument));
+  if (htmlContainer) {
+    htmlContainer->GetCSSLoader(*aCSSLoader);
+  }
+  NS_ASSERTION(*aCSSLoader || !*aDocument, "Document with no CSS loader!");
+  if (*aCSSLoader) {
+    result = (*aCSSLoader)->GetParserFor(nsnull, aCSSParser);
+  } else {
+    result = NS_NewCSSParser(aCSSParser);
+  }
+
+  return result;
+}
+
 nsresult
 DOMCSSDeclarationImpl::ParsePropertyValue(const nsAReadableString& aPropName,
                                           const nsAReadableString& aPropValue)
@@ -1167,30 +1216,17 @@ DOMCSSDeclarationImpl::ParsePropertyValue(const nsAReadableString& aPropName,
   nsCOMPtr<nsIURI> baseURI;
   nsCOMPtr<nsICSSStyleSheet> cssSheet;
   nsCOMPtr<nsIDocument> owningDoc;
-  nsCOMPtr<nsIStyleSheet> sheet;
-  if (mRule) {
-    mRule->GetStyleSheet(*getter_AddRefs(sheet));
-    if (sheet) {
-      sheet->GetURL(*getter_AddRefs(baseURI));
-      sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
-      cssSheet = do_QueryInterface(sheet);
-      if (owningDoc) {
-        nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(owningDoc));
-        if (htmlContainer) {
-          htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
-        }
-      }
-    }
-  }
-  if (cssLoader) {
-    result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
-  }
-  else {
-    result = NS_NewCSSParser(getter_AddRefs(cssParser));
-  }
+  result = GetCSSParsingEnvironment(mRule,
+                                    getter_AddRefs(cssSheet),
+                                    getter_AddRefs(owningDoc),
+                                    getter_AddRefs(baseURI),
+                                    getter_AddRefs(cssLoader),
+                                    getter_AddRefs(cssParser));
+
   if (NS_FAILED(result)) {
     return result;
   }
+  
   PRInt32 hint;
   if (owningDoc) {
     owningDoc->BeginUpdate();
@@ -1227,27 +1263,12 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
     nsCOMPtr<nsICSSStyleSheet> cssSheet;
     nsCOMPtr<nsIDocument> owningDoc;
 
-    nsCOMPtr<nsIStyleSheet> sheet;
-    if (mRule) {
-      mRule->GetStyleSheet(*getter_AddRefs(sheet));
-      if (sheet) {
-        sheet->GetURL(*getter_AddRefs(baseURI));
-        sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
-        cssSheet = do_QueryInterface(sheet);
-        if (owningDoc) {
-          nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(owningDoc));
-          if (htmlContainer) {
-            htmlContainer->GetCSSLoader(*getter_AddRefs(cssLoader));
-          }
-        }
-      }
-    }
-    if (cssLoader) {
-      result = cssLoader->GetParserFor(nsnull, getter_AddRefs(cssParser));
-    }
-    else {
-      result = NS_NewCSSParser(getter_AddRefs(cssParser));
-    }
+    result = GetCSSParsingEnvironment(mRule,
+                                      getter_AddRefs(cssSheet),
+                                      getter_AddRefs(owningDoc),
+                                      getter_AddRefs(baseURI),
+                                      getter_AddRefs(cssLoader),
+                                      getter_AddRefs(cssParser));
 
     if (NS_SUCCEEDED(result)) {
       nsCOMPtr<nsICSSDeclaration> declClone;

@@ -2794,16 +2794,19 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
   if (htmlContainer) {
     htmlContainer->GetCSSLoader(*getter_AddRefs(loader));
   }
+  NS_ASSERTION(loader || !mDocument, "Document with no CSS loader!");
   if (loader) {
     result = loader->GetParserFor(this, getter_AddRefs(css));
   }
   else {
     result = NS_NewCSSParser(getter_AddRefs(css));
-    css->SetStyleSheet(this);
+    if (css) {
+      css->SetStyleSheet(this);
+    }
   }
   if (NS_FAILED(result))
     return result;
-  
+
   if (mDocument) {
     result = mDocument->BeginUpdate();
     if (NS_FAILED(result))
@@ -2881,6 +2884,8 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
   
   result = mInner->mOrderedRules->InsertElementsAt(rules, aIndex);
   NS_ENSURE_SUCCESS(result, result);
+  DidDirty();
+
   nsCOMPtr<nsICSSRule> cssRule;
   PRUint32 counter;
   for (counter = 0; counter < rulecount; counter++) {
@@ -2923,8 +2928,6 @@ CSSStyleSheetImpl::InsertRule(const nsAReadableString& aRule,
     }
   }
   
-  DidDirty();
-    
   if (mDocument) {
     result = mDocument->EndUpdate();
     NS_ENSURE_SUCCESS(result, result);
@@ -3046,12 +3049,16 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(nsAReadableString & aRule, nsICSSGroupRul
   if (htmlContainer) {
     htmlContainer->GetCSSLoader(*getter_AddRefs(loader));
   }
+  NS_ASSERTION(loader || !mDocument, "Document with no CSS loader!");
+
   if (loader) {
     result = loader->GetParserFor(this, getter_AddRefs(css));
   }
   else {
     result = NS_NewCSSParser(getter_AddRefs(css));
-    css->SetStyleSheet(this);
+    if (css) {
+      css->SetStyleSheet(this);
+    }
   }
   NS_ENSURE_SUCCESS(result, result);
 
