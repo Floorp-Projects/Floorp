@@ -2168,7 +2168,7 @@ permission_Load() {
       PRInt32 type = 0;
       PRInt32 index = 0;
 
-      if (permissionString.Length() == 0) {
+      if (permissionString.IsEmpty()) {
         continue; /* empty permission entry -- should never happen */
       }
       char c = (char)permissionString.CharAt(index);
@@ -2185,12 +2185,12 @@ permission_Load() {
        * a host value of "@@@@" is a special code designating the
        * state of the cookie nag-box's checkmark
        */
-      if (host == "@@@@") {
-        if (permissionString != "") {
+      if (host.Equals("@@@@")) {
+        if (!permissionString.IsEmpty()) {
           permission_SetRememberChecked(type, permission);
         }
       } else {
-        if (permissionString != "") {
+        if (!permissionString.IsEmpty()) {
           nsresult rv =
             permission_Add(host.ToNewCString(), permission, type, PR_FALSE);
           if (NS_FAILED(rv)) {
@@ -2357,12 +2357,12 @@ cookie_Load() {
     new_cookie->cookie = cookie.ToNewCString();
     new_cookie->host = host.ToNewCString();
     new_cookie->path = path.ToNewCString();
-    if (isDomain == "TRUE") {
+    if (isDomain.Equals("TRUE")) {
       new_cookie->isDomain = PR_TRUE;
     } else {
       new_cookie->isDomain = PR_FALSE;
     }
-    if (xxx == "TRUE") {
+    if (xxx.Equals("TRUE")) {
       new_cookie->xxx = PR_TRUE;
     } else {
       new_cookie->xxx = PR_FALSE;
