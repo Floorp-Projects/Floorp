@@ -876,7 +876,6 @@ Need code to check freshness of necko cache.
      }          
 #endif
      if((nsIChannel::FORCE_VALIDATION & defchan_attribs)||   
-        (nsIChannel::VALIDATE_ALWAYS & defchan_attribs) ||
         (nsIChannel::INHIBIT_PERSISTENT_CACHING & defchan_attribs)||
         (nsIChannel::FORCE_RELOAD & defchan_attribs)) {
      		imglib_attribs = DONT_USE_IMG_CACHE;
