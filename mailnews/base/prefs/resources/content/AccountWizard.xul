@@ -23,7 +23,7 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountWizard.dtd">
 
-<wizard id="AccountWizard" title="Account Wizard"
+<wizard id="AccountWizard" title="&windowTitle.label;"
         onwizardcancel="return onCancel();"
         onwizardfinish="return FinishAccount();"
         onload="onAccountWizardLoad();"
