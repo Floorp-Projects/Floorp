@@ -79,7 +79,6 @@ struct LO_FormSubmitData_struct {
 #define FORM_TYPE_TEXT          1
 #define FORM_TYPE_PASSWORD      7
 
-extern PRBool Wallet_GetUsingDialogsPref(void);
 extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
 extern PRBool Wallet_Confirm(char * szMessage);
 extern void Wallet_Alert(char * szMessage);
@@ -172,8 +171,6 @@ SI_GetBoolPref(const char * prefname, PRBool defaultvalue) {
   return prefvalue;
 }
 
-/* temporary */
-
 PRBool
 si_PromptUsernameAndPassword
         (char *szMessage, char **szUsername, char **szPassword) {
@@ -257,37 +254,32 @@ PRBool
 si_SelectDialog
     (const char* szMessage, char** pList, int16* pCount)
 {
-    char c;
-    int i;
-    PRBool result;
-
-    if (!Wallet_GetUsingDialogsPref()) {
-      *pCount = 0;
-      return PR_TRUE;
-    }
-
-    fprintf(stdout, "%s\n", szMessage);
-    for (i=0; i<*pCount; i++) {
-        fprintf(stdout, "%d: %s\n", i, pList[i]);
-    }
-    fprintf(stdout, "%cType user number (max=9) or type n to cancel.  ", '\007'); /* \007 is BELL */
-    for (;;) {
-        c = getchar();
-        if (c >= '0' && c <= '9') {
-            *pCount = c - '0';
-            result = PR_TRUE;
-            break;
-        }
-        if (tolower(c) == 'n') {
-            result = PR_FALSE;
-            break;
+  PRBool retval = PR_TRUE; /* default value */
+  nsINetSupportDialogService* dialog = NULL;
+  nsresult res = nsServiceManager::GetService(kNetSupportDialogCID,
+  nsINetSupportDialogService::GetIID(), (nsISupports**)&dialog);
+  if (NS_FAILED(res)) {
+    return retval;
+  }
+  if (dialog) {
+    const nsString message = szMessage;
+#ifdef xxx
+    dialog->Select(message, pList, pCount, &retval);
+#else
+    for (int i=0; i<*pCount; i++) {
+        nsString msg = "user = ";
+        msg += pList[i];
+        msg += "?";
+        dialog->Confirm(msg, &retval);
+        if (retval) {
+          *pCount = i;
+          break;
         }
     }
-
-    while (c != '\n') {
-        c = getchar();
-    }
-    return result;
+#endif
+  }
+  nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
+  return retval;
 }
 
 /*
@@ -1768,7 +1760,7 @@ SI_LoadSignonData(PRBool fullLoad) {
         URLName = NULL;
         StrAllocCopy(URLName, buffer);
 
-        /* preparre to read the name/value pairs */
+        /* prepare to read the name/value pairs */
         submit.value_cnt = 0;
         badInput = PR_FALSE;
 
@@ -2348,7 +2340,7 @@ SINGSIGN_RestoreSignonData
     if (user) {
         SI_LoadSignonData(TRUE); /* this destroys user so need to recaculate it */
         user = si_GetUser(URLName, PR_TRUE, name);
-        if (user) { /* this should alwlays be true but just in case */
+        if (user) { /* this should always be true but just in case */
             data_ptr = user->signonData_list;
             while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
                 if(name && XP_STRCMP(data->name, name)==0) {

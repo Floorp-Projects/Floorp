@@ -319,53 +319,6 @@ wallet_GetFormsCapturingPref(void)
     return wallet_captureForms;
 }
 
-static const char *pref_useDialogs =
-    "wallet.useDialogs";
-PRIVATE Bool wallet_useDialogs = PR_FALSE;
-
-PRIVATE void
-wallet_SetUsingDialogsPref(Bool x)
-{
-    /* do nothing if new value of pref is same as current value */
-    if (x == wallet_useDialogs) {
-        return;
-    }
-
-    /* change the pref */
-    wallet_useDialogs = x;
-}
-
-MODULE_PRIVATE int PR_CALLBACK
-wallet_UsingDialogsPrefChanged(const char * newpref, void * data)
-{
-    PRBool x;
-    x = SI_GetBoolPref(pref_useDialogs, PR_TRUE);
-    wallet_SetUsingDialogsPref(x);
-    return 0; /* this is PREF_NOERROR but we no longer include prefapi.h */
-}
-
-void
-wallet_RegisterUsingDialogsPrefCallbacks(void)
-{
-    PRBool x;
-    static Bool first_time = PR_TRUE;
-
-    if(first_time)
-    {
-        first_time = PR_FALSE;
-        x = SI_GetBoolPref(pref_useDialogs, PR_FALSE);
-        wallet_SetUsingDialogsPref(x);
-        SI_RegisterCallback(pref_useDialogs, wallet_UsingDialogsPrefChanged, NULL);
-    }
-}
-
-PUBLIC PRBool
-Wallet_GetUsingDialogsPref(void)
-{
-    wallet_RegisterUsingDialogsPrefCallbacks();
-    return wallet_useDialogs;
-}
-
 /*************************************************************************/
 /* The following routines are used for accessing strings to be localized */
 /*************************************************************************/
