@@ -850,7 +850,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     CreateRenderingContext(mRootFrame, &rcx);
 
     nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
-                                  eReflowReason_Initial, maxSize, rcx);
+                                  eReflowReason_Initial, rcx, maxSize);
 
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
@@ -904,7 +904,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     CreateRenderingContext(mRootFrame, &rcx);
 
     nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
-                                  eReflowReason_Resize, maxSize, rcx);
+                                  eReflowReason_Resize, rcx, maxSize);
 
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
@@ -1034,7 +1034,7 @@ PresShell::StyleChangeReflow()
 
     // XXX We should be using eReflowReason_StyleChange
     nsHTMLReflowState reflowState(*mPresContext, mRootFrame,
-                                  eReflowReason_Resize, maxSize, rcx);
+                                  eReflowReason_Resize, rcx, maxSize);
 
     if (NS_OK == mRootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);

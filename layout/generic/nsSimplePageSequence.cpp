@@ -98,7 +98,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
     }
 
     // Reflow the page
-    nsHTMLReflowState   kidReflowState(aPresContext, nextFrame, aReflowState, pageSize);
+    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
+                                       nextFrame, pageSize);
     nsHTMLReflowMetrics kidSize(nsnull);
   
     // Dispatch the reflow command to our child frame. Allow it to be as high
@@ -129,9 +130,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowMetrics kidSize(nsnull);
     for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
       // Reflow the page
-      nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
-                                       aReflowState, pageSize,
-                                       reflowReason);
+      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
+                                       pageSize, reflowReason);
       nsReflowStatus  status;
 
       // Place and size the page. If the page is narrower than our

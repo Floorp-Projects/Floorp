@@ -216,7 +216,8 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
     
     nsHTMLReflowMetrics kidDesiredSize(nsnull);
     nsSize              availSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState   kidReflowState(aPresContext, aKidFrame, aReflowState, availSize);
+    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
+                                       availSize);
     
     // If it's the initial reflow, then override the reflow reason. This is
     // used when frames are inserted incrementally
@@ -425,8 +426,8 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
         nsHTMLReflowMetrics kidDesiredSize(nsnull);
         nsSize              availableSpace(aReflowState.availableWidth,
                                            aReflowState.availableHeight);
-        nsHTMLReflowState   kidReflowState(aPresContext, kidFrame,
-                                           aReflowState, availableSpace);
+        nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
+                                           kidFrame, availableSpace);
 
         // Reflow the frame
         nsIHTMLReflow* htmlReflow;

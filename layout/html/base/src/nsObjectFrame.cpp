@@ -727,7 +727,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     else
       reflowReason = eReflowReason_Resize;
 
-    nsHTMLReflowState kidReflowState(aPresContext, child, aReflowState, availSize, reflowReason);
+    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
+                                     availSize, reflowReason);
 
     nsReflowStatus status;
 
