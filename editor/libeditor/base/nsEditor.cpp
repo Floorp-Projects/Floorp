@@ -5039,9 +5039,7 @@ nsresult nsEditor::BeginUpdateViewBatch()
       nsCOMPtr<nsIPresShell> presShell;
       rv = GetPresShell(getter_AddRefs(presShell));
       if (NS_SUCCEEDED(rv) && presShell)
-      {
         presShell->BeginReflowBatching();
-      }
     }
     mUpdateCount++;
   }
@@ -5078,16 +5076,40 @@ nsresult nsEditor::EndUpdateViewBatch()
     mUpdateCount--;
     if (0==mUpdateCount)
     {
-#ifdef HACK_FORCE_REDRAW
-      mViewManager->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
-      HACKForceRedraw();
-#else
-      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
-#endif
+      PRUint32 flags = 0;
+
+      rv = GetFlags(&flags);
+
+      if (NS_FAILED(rv))
+        return rv;
+
+      // Make sure we enable reflowing before we call
+      // mViewManager->EndUpdateViewBatch().  This will make sure that any
+      // new updates caused by a reflow, that may happen during the
+      // EndReflowBatching(), get included if we force a refresh during
+      // the mViewManager->EndUpdateViewBatch() call.
+
+      PRBool forceReflow = PR_TRUE;
+
+      if (flags & nsIHTMLEditor::eEditorDisableForcedReflowsMask)
+        forceReflow = PR_FALSE;
+
       nsCOMPtr<nsIPresShell>    presShell;
       rv = GetPresShell(getter_AddRefs(presShell));
       if (NS_SUCCEEDED(rv) && presShell)
-        presShell->EndReflowBatching(PR_TRUE);
+        presShell->EndReflowBatching(forceReflow);
+
+      PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
+
+      if (flags & nsIHTMLEditor::eEditorDisableForcedUpdatesMask)
+        updateFlag = NS_VMREFRESH_NO_SYNC;
+
+#ifdef HACK_FORCE_REDRAW
+      mViewManager->EnableRefresh(updateFlag);
+      HACKForceRedraw();
+#else
+      mViewManager->EndUpdateViewBatch(updateFlag);
+#endif
     }
   }  
 

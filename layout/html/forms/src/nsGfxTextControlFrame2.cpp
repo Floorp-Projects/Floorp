@@ -1457,48 +1457,6 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  // Get the default value for the textfield.
-
-  nsAutoString defaultValue;
-
-  if (mCachedState)
-    defaultValue = mCachedState->GetUnicode();
-  else
-    rv = GetText(&defaultValue, PR_TRUE);
-
-  if (NS_FAILED(rv))
-    return rv;
-
-  // If we have a default value, create a textnode for it
-  // and insert it under the DIV we created.
-
-  if (defaultValue.Length() > 0)
-  {
-    nsCOMPtr<nsIContent> textContent;
-    rv = NS_NewTextNode(getter_AddRefs(textContent));
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (! textContent)
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(textContent);
-
-    if (!charData)
-      return NS_ERROR_NO_INTERFACE;
-
-    rv = charData->SetData(defaultValue);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = divContent->AppendChildTo(textContent, PR_FALSE);
-
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
   // Create an editor
 
   rv = nsComponentManager::CreateInstance(kHTMLEditorCID,
@@ -1664,6 +1622,55 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     if (listener)
       domSelection->AddSelectionListener(listener);
   }
+
+  // Get the default value for the textfield.
+
+  nsAutoString defaultValue;
+
+  if (mCachedState)
+    defaultValue = mCachedState->GetUnicode();
+  else
+    rv = GetText(&defaultValue, PR_TRUE);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // If we have a default value, insert it under the div we created
+  // above, but be sure to use the editor so that '*' characters get
+  // displayed for password fields, etc. SetTextControlFrameState()
+  // will call the editor for us.
+
+  if (defaultValue.Length() > 0)
+  {
+    rv = mEditor->GetFlags(&editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Avoid causing reentrant painting and reflowing by telling the editor
+    // that we don't want it to force immediate view refreshes or force
+    // immediate reflows during any editor calls.
+
+    rv = mEditor->SetFlags(editorFlags |
+                           nsIHTMLEditor::eEditorDisableForcedUpdatesMask |
+                           nsIHTMLEditor::eEditorDisableForcedReflowsMask);
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    // Now call SetTextControlFrameState() which will make the
+    // neccessary editor calls to set the default value.
+
+    SetTextControlFrameState(defaultValue);
+
+    // Now restore the original editor flags.
+
+    rv = mEditor->SetFlags(editorFlags);
+
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
 
   if (mContent)
   {
@@ -2686,9 +2693,12 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsString& aValue)
   }
   else
   {
-    mCachedState = new nsString;
     if (!mCachedState)
-      return;
+    {
+      mCachedState = new nsString;
+      if (!mCachedState)
+        return;
+    }
     *mCachedState = aValue; //store value for later initialization;
   }
 }
