@@ -86,9 +86,12 @@ public:
     nsresult            Open();
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult);
+
     nsresult            ResponseCompleted(nsIChannel* aTransport, 
+                                          nsIStreamListener* aListener,
                                           nsresult aStatus,
                                           const PRUnichar* aMsg);
+
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
     nsresult            CacheReceivedResponse(nsIStreamListener *aListener,
@@ -100,6 +103,8 @@ public:
     nsresult            SetUsingProxy(PRBool i_UsingProxy);
 
     nsresult            FinishedResponseHeaders();
+
+    nsresult            GetDataConsumer(nsIStreamListener* *aListener);
 
 protected:
     nsresult            CheckCache();
