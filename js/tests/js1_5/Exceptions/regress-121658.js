@@ -38,7 +38,7 @@
 * SUMMARY: "Too much recursion" errors should be safely caught by try...catch
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=121658
 *
-* In Section 1 below, we expect i>0. The bug was filed because we were getting
+* In the cases below, we expect i>0. The bug was filed because we were getting
 * i===0; i.e. |i| did not retain the value it had at the location of the error.
 *
 */
@@ -46,8 +46,6 @@
 var UBound = 0;
 var bug = 121658;
 var msg = '"Too much recursion" errors should be safely caught by try...catch';
-var TEST_PASSED = 'i retained the value it had at location of error';
-var TEST_FAILED = 'i did NOT retain the value it had at location of error';
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -61,7 +59,7 @@ function f()
 {
   ++i;
 
-  // this try...catch should catch the "too much recursion" error to follow
+  // try...catch should catch the "too much recursion" error to ensue
   try
   {
     f();
@@ -74,8 +72,8 @@ function f()
 i=0; 
 f();
 status = inSection(1);
-actual = checkThis(i>0);
-expect = checkThis(true);
+actual = formatThis(i>0);
+expect = formatThis(true);
 addThis();
 
 
@@ -88,8 +86,8 @@ function g()
 i=0; 
 g();
 status = inSection(2);
-actual = checkThis(i>0);
-expect = checkThis(true);
+actual = formatThis(i>0);
+expect = formatThis(true);
 addThis();
 
 
@@ -97,8 +95,8 @@ addThis();
 var sEval = 'function h(){++i; try{h();} catch(e){}}; i=0; h();';
 eval(sEval);
 status = inSection(3);
-actual = checkThis(i>0);
-expect = checkThis(true);
+actual = formatThis(i>0);
+expect = formatThis(true);
 addThis();
 
 
@@ -106,8 +104,8 @@ addThis();
 var sEval = 'function a(){++i; try{h();} catch(e){}}; i=0; a();';
 eval(sEval);
 status = inSection(4);
-actual = checkThis(i>0);
-expect = checkThis(true);
+actual = formatThis(i>0);
+expect = formatThis(true);
 addThis();
 
 
@@ -119,9 +117,12 @@ test();
 
 
 
-function checkThis(outcome)
+function formatThis(bool)
 {
-  return outcome? TEST_PASSED : TEST_FAILED;
+  var TEST_PASSED = 'i retained the value it had at location of error';
+  var TEST_FAILED = 'i did NOT retain this value';
+
+  return bool? TEST_PASSED : TEST_FAILED;
 }
 
 
