@@ -55,7 +55,7 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
  * It only supports having a single child frame which must be an area
  * frame
  */
-class RootFrame : public nsHTMLContainerFrame {
+class CanvasFrame : public nsHTMLContainerFrame {
 public:
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -90,7 +90,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsLayoutAtoms::rootFrame
+   * @see nsLayoutAtoms::canvasFrame
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
@@ -99,26 +99,20 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
-  // XXX Temporary hack...
-  NS_IMETHOD SetRect(nsIPresContext* aPresContext, const nsRect& aRect);
-
 protected:
   virtual PRIntn GetSkipSides() const;
-
-private:
-  nscoord mNaturalHeight;
 };
 
 //----------------------------------------------------------------------
 
 nsresult
-NS_NewRootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewCanvasFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  RootFrame* it = new (aPresShell) RootFrame;
+  CanvasFrame* it = new (aPresShell)CanvasFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -126,41 +120,11 @@ NS_NewRootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-// XXX Temporary hack until we support the CSS2 'min-width', 'max-width',
-// 'min-height', and 'max-height' properties. Then we can do this in a top-down
-// fashion
 NS_IMETHODIMP
-RootFrame::SetRect(nsIPresContext* aPresContext, const nsRect& aRect)
-{
-  nsresult  rv = nsHTMLContainerFrame::SetRect(aPresContext, aRect);
-
-  // If our height is larger than our natural height (the height we returned
-  // as our desired height), then make sure the document element's frame is
-  // increased as well. This happens because the scroll frame will make sure
-  // that our height fills the entire scroll area.
-  // Note: only do this if the document element's 'height' is 'auto'
-  nsIFrame* kidFrame = mFrames.FirstChild();
-  if (nsnull != kidFrame) {
-    nsStylePosition*  kidPosition;
-    kidFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)kidPosition);
-
-    if (eStyleUnit_Auto == kidPosition->mHeight.GetUnit()) {
-      nscoord   yDelta = aRect.height - mNaturalHeight;
-      nsSize    kidSize;
-
-      kidFrame->GetSize(kidSize);
-      kidFrame->SizeTo(aPresContext, kidSize.width, kidSize.height + yDelta);
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-RootFrame::AppendFrames(nsIPresContext* aPresContext,
-                        nsIPresShell&   aPresShell,
-                        nsIAtom*        aListName,
-                        nsIFrame*       aFrameList)
+CanvasFrame::AppendFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList)
 {
   nsresult  rv;
 
@@ -194,11 +158,11 @@ RootFrame::AppendFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-RootFrame::InsertFrames(nsIPresContext* aPresContext,
-                        nsIPresShell&   aPresShell,
-                        nsIAtom*        aListName,
-                        nsIFrame*       aPrevFrame,
-                        nsIFrame*       aFrameList)
+CanvasFrame::InsertFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList)
 {
   nsresult  rv;
 
@@ -215,10 +179,10 @@ RootFrame::InsertFrames(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-RootFrame::RemoveFrame(nsIPresContext* aPresContext,
-                       nsIPresShell&   aPresShell,
-                       nsIAtom*        aListName,
-                       nsIFrame*       aOldFrame)
+CanvasFrame::RemoveFrame(nsIPresContext* aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame)
 {
   nsresult  rv;
 
@@ -253,12 +217,12 @@ RootFrame::RemoveFrame(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-RootFrame::Reflow(nsIPresContext*          aPresContext,
-                  nsHTMLReflowMetrics&     aDesiredSize,
-                  const nsHTMLReflowState& aReflowState,
-                  nsReflowStatus&          aStatus)
+CanvasFrame::Reflow(nsIPresContext*          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus)
 {
-  NS_FRAME_TRACE_REFLOW_IN("RootFrame::Reflow");
+  NS_FRAME_TRACE_REFLOW_IN("CanvasFrame::Reflow");
   NS_PRECONDITION(nsnull == aDesiredSize.maxElementSize, "unexpected request");
 
   // Initialize OUT parameter
@@ -389,26 +353,22 @@ RootFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.descent = 0;
     // XXX Don't completely ignore NS_FRAME_OUTSIDE_CHILDREN for child frames
     // that stick out on the left or top edges...
-  
-    // XXX Temporary hack. Remember this for later when our parent resizes us.
-    // See SetRect()
-    mNaturalHeight = aDesiredSize.height;
   }
 
-  NS_FRAME_TRACE_REFLOW_OUT("RootFrame::Reflow", aStatus);
+  NS_FRAME_TRACE_REFLOW_OUT("CanvasFrame::Reflow", aStatus);
   return NS_OK;
 }
 
 PRIntn
-RootFrame::GetSkipSides() const
+CanvasFrame::GetSkipSides() const
 {
   return 0;
 }
 
 NS_IMETHODIMP
-RootFrame::HandleEvent(nsIPresContext* aPresContext, 
-                       nsGUIEvent* aEvent,
-                       nsEventStatus* aEventStatus)
+CanvasFrame::HandleEvent(nsIPresContext* aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
@@ -421,7 +381,7 @@ RootFrame::HandleEvent(nsIPresContext* aPresContext,
       aEvent->message == NS_MOUSE_MOVE ) {
     nsIFrame *firstChild;
     nsresult rv = FirstChild(aPresContext,nsnull,&firstChild);
-    //root frame needs to pass mouse events to its area frame so that mouse movement
+    //canvas frame needs to pass mouse events to its area frame so that mouse movement
     //and selection code will work properly. this will still have the necessary effects
     //that would have happened if nsFrame::HandleEvent was called.
     if (NS_SUCCEEDED(rv) && firstChild)
@@ -434,33 +394,33 @@ RootFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-RootFrame::GetFrameForPoint(nsIPresContext* aPresContext,
-                                   const nsPoint& aPoint, 
-                                   nsFramePaintLayer aWhichLayer,
-                                   nsIFrame**     aFrame)
+CanvasFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame**     aFrame)
 {
   // this should act like a block, so we need to override
   return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
 
 NS_IMETHODIMP
-RootFrame::GetFrameType(nsIAtom** aType) const
+CanvasFrame::GetFrameType(nsIAtom** aType) const
 {
   NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::rootFrame; 
+  *aType = nsLayoutAtoms::canvasFrame; 
   NS_ADDREF(*aType);
   return NS_OK;
 }
 
 #ifdef DEBUG
 NS_IMETHODIMP
-RootFrame::GetFrameName(nsString& aResult) const
+CanvasFrame::GetFrameName(nsString& aResult) const
 {
-  return MakeFrameName("Root", aResult);
+  return MakeFrameName("Canvas", aResult);
 }
 
 NS_IMETHODIMP
-RootFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+CanvasFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;

@@ -327,7 +327,7 @@ extern nsresult NS_NewHTMLFrameOuterFrame(nsIPresShell* aPresShell, nsIFrame** a
 extern nsresult NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 extern nsresult NS_NewViewportFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-extern nsresult NS_NewRootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+extern nsresult NS_NewCanvasFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 extern nsresult NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aFrameResult);
 extern nsresult NS_NewInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 extern nsresult NS_NewPositionedInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);

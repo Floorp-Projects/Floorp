@@ -3062,6 +3062,40 @@ nsCSSFrameConstructor::ConstructDocElementTableFrame(nsIPresShell*        aPresS
   return NS_OK;
 }
 
+static PRBool
+IsCanvasFrame(nsIFrame* aFrame)
+{
+  nsCOMPtr<nsIAtom>  parentType;
+
+  aFrame->GetFrameType(getter_AddRefs(parentType));
+  return parentType.get() == nsLayoutAtoms::canvasFrame;
+}
+
+static void
+PropagateBackgroundToParent(nsIStyleContext*    aStyleContext,
+                            const nsStyleColor* aColor,
+                            nsIStyleContext*    aParentStyleContext)
+{
+  nsStyleColor* mutableColor;
+  mutableColor = (nsStyleColor*)aParentStyleContext->GetMutableStyleData(eStyleStruct_Color);
+
+  mutableColor->mBackgroundAttachment = aColor->mBackgroundAttachment;
+  mutableColor->mBackgroundFlags = aColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
+  mutableColor->mBackgroundRepeat = aColor->mBackgroundRepeat;
+  mutableColor->mBackgroundColor = aColor->mBackgroundColor;
+  mutableColor->mBackgroundXPosition = aColor->mBackgroundXPosition;
+  mutableColor->mBackgroundYPosition = aColor->mBackgroundYPosition;
+  mutableColor->mBackgroundImage = aColor->mBackgroundImage;
+
+  // Reset the BODY's background to transparent
+  mutableColor = (nsStyleColor*)aStyleContext->GetMutableStyleData(eStyleStruct_Color);
+  mutableColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+                                   NS_STYLE_BG_IMAGE_NONE |
+                                   NS_STYLE_BG_PROPAGATED_TO_PARENT;
+  mutableColor->mBackgroundImage.SetLength(0);
+  mutableColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+}
+
 /**
  * New one
  */
@@ -3141,6 +3175,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
   const nsStyleDisplay* display = 
     (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleColor* color = 
+    (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
 
   PRBool docElemIsTable = IsTableRelated(display->mDisplay);
  
@@ -3249,8 +3285,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     // Note: the reason we wait until after processing the document element's
     // children is because of special treatment of the background for the HTML
     // element. See BodyFixupRule::MapStyleInto() for details
-    const nsStyleColor* color;
-    color = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
     if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
       // Fixed background attachments are handled by setting the
       // NS_VIEW_PUBLIC_FLAG_DONT_BITBLT flag bit on the view.
@@ -3298,6 +3332,19 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                                          nsLayoutAtoms::floaterList,
                                          aState.mFloatedItems.childList);
         }
+    }
+
+    // Section 14.2 of the CSS2 spec says that the background of the root element
+    // covers the entire canvas. See if a background was specified for the root
+    // element
+    if (!color->BackgroundIsTransparent() && IsCanvasFrame(aParentFrame)) {
+      nsIStyleContext*  parentContext;
+      
+      // Propagate the document element's background to the canvas so that it
+      // renders the background over the entire canvas
+      aParentFrame->GetStyleContext(&parentContext);
+      PropagateBackgroundToParent(styleContext, color, parentContext);
+      NS_RELEASE(parentContext);
     }
   }
 
@@ -3402,7 +3449,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     //
     // The root frame serves two purposes:
     // - reserves space for any margins needed for the document element's frame
-    // - makes sure that the document element's frame covers the entire canvas
+    // - renders the document element's background. This ensures the background covers
+    //   the entire canvas as specified by the CSS2 spec
 
     PRBool isPaginated = PR_FALSE;
     aPresContext->IsPaginated(&isPaginated);
@@ -3416,7 +3464,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
         {
           NS_NewRootBoxFrame(aPresShell, &rootFrame);
         } else {
-          NS_NewRootFrame(aPresShell, &rootFrame);
+          NS_NewCanvasFrame(aPresShell, &rootFrame);
         }
 
         rootPseudo = nsLayoutAtoms::canvasPseudo;
