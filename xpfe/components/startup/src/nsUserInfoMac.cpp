@@ -36,9 +36,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsUserInfo.h"
-#include "nsInternetConfig.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+
+#include "nsIServiceManager.h"
+#include "nsIInternetConfigService.h"
 
 nsUserInfo::nsUserInfo()
 {
@@ -54,34 +56,47 @@ NS_IMPL_ISUPPORTS1(nsUserInfo,nsIUserInfo);
 NS_IMETHODIMP
 nsUserInfo::GetFullname(PRUnichar **aFullname)
 {
-	 nsInternetConfig ic;
-	 char* cName;
-	 nsresult result = ic.GetString( kICRealName, &cName );
-	 if ( NS_SUCCEEDED ( result ) )
-	 {
-		 nsString fullName;
-		 fullName.AssignWithConversion( cName );
-		 nsMemory::Free( cName );
-     *aFullname = ToNewUnicode(fullName);
-   }
-   return result;
+  nsresult result = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  if (icService)
+  {
+	  char* cName;
+    result = icService->GetString(nsIInternetConfigService::eICString_RealName, &cName);
+    if ( NS_SUCCEEDED ( result ) )
+    {
+  	  nsString fullName;
+  	  fullName.AssignWithConversion( cName );
+  	  nsMemory::Free( cName );
+      *aFullname = ToNewUnicode(fullName);
+    }
+  }
+  return result;
+
 }
 
 NS_IMETHODIMP 
 nsUserInfo::GetEmailAddress(char * *aEmailAddress)
 {
-    nsInternetConfig ic;
-		return ic.GetString( kICEmail, aEmailAddress );
+  nsresult result = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  if (icService)
+  {
+    result = icService->GetString(nsIInternetConfigService::eICString_Email, aEmailAddress);
+  }
+  return result;
 }
 
 NS_IMETHODIMP 
 nsUserInfo::GetUsername(char * *aUsername)
 {
   *aUsername = nsnull;
-  nsInternetConfig ic;
   
   char* cString;
-	nsresult rv = ic.GetString( kICEmail, &cString );
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  if (icService)
+    rv = icService->GetString(nsIInternetConfigService::eICString_Email, &cString);
+
 	if ( NS_FAILED( rv ) ) return rv;
 	
   nsCAutoString   tempString(cString);
@@ -100,8 +115,10 @@ nsUserInfo::GetDomain(char * *aDomain)
 {
   *aDomain = nsnull;
   char* cString;
-  nsInternetConfig ic;
-	nsresult rv = ic.GetString( kICEmail, &cString );
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
+  if (icService)
+    rv = icService->GetString(nsIInternetConfigService::eICString_Email, &cString);
 	if ( NS_FAILED( rv ) ) return rv;
   nsCAutoString   tempString( cString);
   nsMemory::Free( cString );
