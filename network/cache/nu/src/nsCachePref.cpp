@@ -141,7 +141,7 @@ nsCachePref::BkgSleepTime(void)
 
 const char* nsCachePref::DiskCacheDBFilename(void)
 {
-    return "fat.db";
+    return "nufat.db";
 }
 
 nsCachePref* nsCachePref::GetInstance()

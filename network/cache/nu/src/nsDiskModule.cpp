@@ -63,6 +63,7 @@ static PRCList g_RecentlyUsedList;
 
 static char* g_FullFilename=0;
 const static int MAX_FILENAME_LEN = 512;
+const static int MAX_OBJECTS_IN_RECENTLY_USED_LIST = 20; // change later TODO.
 
 // Every time we cleanup we cleanup to 75% of the max available size. 
 // This should ideally change to a more const number than a percentage. 
@@ -162,7 +163,7 @@ PRBool nsDiskModule::Contains(nsCacheObject* io_pObject) const
     nsCacheObject* pTemp = GetObject(io_pObject->Address());
     if (pTemp)
     {
-        PR_ASSERT(io_pObject == pTemp); 
+        //PR_ASSERT(io_pObject == pTemp); 
         // until I do a copyFrom function
         return PR_TRUE;
     }
@@ -193,7 +194,11 @@ void nsDiskModule::GarbageCollect(void)
     MonitorLocker ml(this);
     ReduceSizeTo((PRUint32)(CLEANUP_FACTOR*m_Size));
     // TODO
+
     // if the recentlyusedlist has grown too big, trim some objects from there as well
+    //if (MAX_OBJECTS_IN_RECENTLY_USED_LIST <= PR_CLIST(g_RecentlyUsedList)
+	{
+	}
 }
 
 nsCacheObject* nsDiskModule::GetObject(const PRUint32 i_index) const
@@ -296,7 +301,7 @@ PRBool nsDiskModule::InitDB(void)
         0};       /* byte order */
 
     m_pDB = dbopen(
-        nsCachePref::GetInstance()->DiskCacheDBFilename(), 
+        FullFilename(nsCachePref::GetInstance()->DiskCacheDBFilename()), 
         O_RDWR | O_CREAT, 
         0600, 
         DB_HASH, 

@@ -2337,7 +2337,7 @@ NET_ChangeCacheFileLock(URL_Struct *URL_s, XP_Bool set)
 #ifdef NU_CACHE
 {
     PR_ASSERT(0); /* Shouldn't be getting called */
-    return FALSE;
+    return TRUE;
 }
 #else
 {
@@ -3283,7 +3283,8 @@ NET_CleanupCacheDirectory(char * dir_name, const char * prefix)
 	int i;
 	int number_in_remove_list=0;
 #ifdef NU_CACHE 
-    PR_ASSERT(0); /* Shouldn't be getting called */
+    /* PR_ASSERT(0);  Shouldn't be getting called */
+    return 0;
 #endif 
 #ifdef XP_MAC
 
