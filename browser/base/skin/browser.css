@@ -357,7 +357,7 @@ toolbar[mode="text"] .toolbarbutton-text {
 }
 
 #new-tab-button {
-  list-style-image: url("chrome://browser/skin/large-base.png");
+  list-style-image: url("chrome://browser/skin/newtab-large.png");
   -moz-image-region: rect(0px 42px 42px 0px);
 }
 #new-tab-button:hover {
@@ -372,7 +372,7 @@ toolbar[mode="text"] .toolbarbutton-text {
 }
 
 #new-window-button {
-  list-style-image: url("chrome://browser/skin/large-base.png");
+  list-style-image: url("chrome://browser/skin/newwindow-large.png");
   -moz-image-region: rect(0px 42px 42px 0px);
 }
 #new-window-button:hover {
@@ -516,7 +516,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #downloads-button {
-  list-style-image: url("chrome://browser/skin/small-base.png") !important;
+  list-style-image: url("chrome://browser/skin/downloads-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #downloads-button:hover {
@@ -531,7 +531,7 @@ toolbar[iconsize="small"] #downloads-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #new-tab-button {
-  list-style-image: url("chrome://browser/skin/small-base.png") !important;
+  list-style-image: url("chrome://browser/skin/newtab-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #new-tab-button:hover {
@@ -546,7 +546,7 @@ toolbar[iconsize="small"] #new-tab-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #new-window-button {
-  list-style-image: url("chrome://browser/skin/small-base.png") !important;
+  list-style-image: url("chrome://browser/skin/newwindow-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #new-window-button:hover {
@@ -561,7 +561,7 @@ toolbar[iconsize="small"] #new-window-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #bookmarks-button {
-  list-style-image: url("chrome://browser/skin/small-base.png") !important;
+  list-style-image: url("chrome://browser/skin/bookmarks-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #bookmarks-button:hover {
@@ -576,7 +576,7 @@ toolbar[iconsize="small"] #bookmarks-button[disabled="true"] {
 }
 
 toolbar[iconsize="small"] #history-button {
-  list-style-image: url("chrome://browser/skin/small-base.png") !important;
+  list-style-image: url("chrome://browser/skin/history-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
 toolbar[iconsize="small"] #history-button:hover {
