@@ -85,6 +85,8 @@ var gCharsetConvertManager;
 var gLastElementToHaveFocus;  
 var gSuppressCommandUpdating;
 
+const kComposeAttachDirPrefName = "mail.compose.attach.dir";
+
 function InitializeGlobalVariables()
 {
   gAccountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
@@ -2022,23 +2024,60 @@ function MsgComposeCloseWindow(recycleIt)
     gMsgCompose.CloseWindow(recycleIt);
 }
 
+function GetLastAttachDirectory()
+{
+  var lastDirectory;
+
+  try {
+    lastDirectory = sPrefs.getComplexValue(kComposeAttachDirPrefName, Components.interfaces.nsILocalFile);
+  }
+  catch (ex) {
+    // this will fail the first time we attach a file
+    // as we won't have a pref value.
+    lastDirectory = null;
+  }
+
+  return lastDirectory;
+}
+
+// attachedLocalFile must be a nsILocalFile
+function SetLastAttachDirectory(attachedLocalFile)
+{
+  try {
+    var file = attachedLocalFile.QueryInterface(Components.interfaces.nsIFile);
+    var parent = file.parent.QueryInterface(Components.interfaces.nsILocalFile);
+    
+    sPrefs.setComplexValue(kComposeAttachDirPrefName, Components.interfaces.nsILocalFile, parent);
+  }
+  catch (ex) {
+    dump("error: SetLastAttachDirectory failed: " + ex + "\n");
+  }
+}
+
 function AttachFile()
 {
-//  dump("AttachFile()\n");
   var currentAttachment = "";
+  
   //Get file using nsIFilePicker and convert to URL
-    try {
+  try {
       var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
       fp.init(window, sComposeMsgsBundle.getString("chooseFileToAttach"), nsIFilePicker.modeOpen);
+      
+      var lastDirectory = GetLastAttachDirectory();
+      if (lastDirectory) 
+        fp.displayDirectory = lastDirectory;
+
       fp.appendFilters(nsIFilePicker.filterAll);
       if (fp.show() == nsIFilePicker.returnOK) {
-      currentAttachment = fp.fileURL.spec;
-      dump("nsIFilePicker - "+currentAttachment+"\n");
+        currentAttachment = fp.fileURL.spec;
+        //dump("nsIFilePicker - "+currentAttachment+"\n");
+        SetLastAttachDirectory(fp.file)
       }
-    }
+  }
   catch (ex) {
     dump("failed to get the local file to attach\n");
   }
+  
   if (currentAttachment == "")
     return;
 
