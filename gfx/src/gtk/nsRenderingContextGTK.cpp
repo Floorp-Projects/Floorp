@@ -23,6 +23,7 @@
 #include "nsFontMetricsGTK.h"
 #include "nsRenderingContextGTK.h"
 #include "nsRegionGTK.h"
+#include "nsImageGTK.h"
 #include "nsGraphicsStateGTK.h"
 #include "nsICharRepresentable.h"
 #include <math.h>
@@ -1484,9 +1485,20 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
  *	@update 3/16/00 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextGTK::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                                                    nscoord aWidth,nscoord aHeight)
+nsRenderingContextGTK::DrawTile(nsIImage *aImage, 
+                                nscoord aX0, nscoord aY0,
+                                nscoord aX1, nscoord aY1,
+                                nscoord aWidth, nscoord aHeight)
 {
+
+  printf("nsRenderingContextGTK::DrawTile()\n");
+
+  // convert to pixels
+  mTMatrix->TransformCoord(&aX0,&aY0);
+  mTMatrix->TransformCoord(&aX1,&aY1);
+  mTMatrix->TransformCoord(&aWidth,&aHeight);
+
+  ((nsImageGTK*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
 
   return NS_OK;
 }

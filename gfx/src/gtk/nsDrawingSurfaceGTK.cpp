@@ -40,6 +40,11 @@ static PRTime mLockTime, mUnlockTime;
 #endif
 
 
+// XXX need to rewrite x11 shared image code in here, so turn it off
+#ifdef USE_SHM
+#undef USE_SHM
+#endif
+
 nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 {
   NS_INIT_REFCNT();
@@ -90,7 +95,8 @@ nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
   if (mImage)
     ::gdk_image_destroy(mImage);
 
-  gdk_gc_unref(mGC);
+  if (mGC)
+    gdk_gc_unref(mGC);
 }
 
 /**
@@ -323,6 +329,9 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: GetPixelFormat(nsPixelFormat *aFormat)
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 {
+  if (mGC)
+    gdk_gc_unref(mGC);
+
   mGC = gdk_gc_ref(aGC);
   mPixmap = aDrawable;
 
@@ -345,6 +354,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
 {
   //  ::g_return_val_if_fail (aGC != nsnull, NS_ERROR_FAILURE);
   //  ::g_return_val_if_fail ((aWidth > 0) && (aHeight > 0), NS_ERROR_FAILURE);
+  if (mGC)
+    gdk_gc_unref(mGC);
 
   mGC = gdk_gc_ref(aGC);
   mWidth = aWidth;
