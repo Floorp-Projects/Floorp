@@ -47,10 +47,11 @@
 
 interface nsIURI;
 interface nsIFile;
+interface nsIUTF8StringEnumerator;
 
 typedef long nsMIMEInfoHandleAction;
 
-[scriptable, uuid(6A57EAE0-2FE8-11d3-A164-0050041CAF44)]
+[scriptable, uuid(ca87c4cb-5d1c-49a9-8776-0099df1a7aa8)]
 interface nsIMIMEInfo : nsISupports {
     /**
      * Gives you an array of file types associated with this type.
@@ -58,8 +59,7 @@ interface nsIMIMEInfo : nsISupports {
      * @return Number of elements in the array.
      * @return Array of extensions.
      */
-    void GetFileExtensions(out PRUint32 elementCount,
-                           [array, size_is(elementCount)] out string extensions);
+    nsIUTF8StringEnumerator getFileExtensions();
 
     /**
      * Set File Extensions. Input is a comma delimited list of extensions.

@@ -46,6 +46,7 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIURL.h"
+#include "nsIStringEnumerator.h"
 #include "nsIPrefService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
@@ -284,12 +285,16 @@ nsresult CHeaderSniffer::PerformSave(nsIURI* inOriginalURI, const ESaveFormat in
         if (!mimeInfo)
           return rv;
 
-        PRUint32 extCount = 0;
-        char** extList = nsnull;
-        mimeInfo->GetFileExtensions(&extCount, &extList);        
-        if (extCount > 0 && extList) {
-            defaultFileName.AppendWithConversion(".");
-            defaultFileName.AppendWithConversion(extList[0]);
+        nsCOMPtr<nsIUTF8StringEnumerator> extensions;
+        mimeInfo->GetFileExtensions(getter_AddRefs(extensions));
+        
+        PRBool hasMore;
+        extensions->HasMore(&hasMore);
+        if (hasMore) {
+            nsCAutoString ext;
+            extensions->GetNext(ext);
+            defaultFileName.Append(PRUnichar('.'));
+            defaultFileName.Append(NS_ConvertUTF8toUCS2(ext));
         }
     }
 

@@ -48,6 +48,7 @@
 #include "nsIMIMEInfo.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDownload.h"
+#include "nsIStringEnumerator.h"
 
 const char* const persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 
@@ -256,12 +257,16 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
         if (!mimeInfo)
           return rv;
 
-        PRUint32 extCount = 0;
-        char** extList = nsnull;
-        mimeInfo->GetFileExtensions(&extCount, &extList);        
-        if (extCount > 0 && extList) {
-            defaultFileName += ".";
-            defaultFileName += extList[0];
+        nsCOMPtr<nsIUTF8StringEnumerator> extensions;
+        mimeInfo->GetFileExtensions(getter_AddRefs(extensions));
+        
+        PRBool hasMore;
+        extensions->HasMore(&hasMore);
+        if (hasMore) {
+            nsCAutoString ext;
+            extensions->GetNext(ext);
+            defaultFileName.Append(PRUnichar('.'));
+            defaultFileName.Append(NS_ConvertUTF8toUCS2(ext));
         }
     }
     

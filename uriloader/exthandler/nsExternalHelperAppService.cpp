@@ -32,6 +32,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsIStringEnumerator.h"
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
 #include "nsIMIMEService.h"
@@ -2427,22 +2428,27 @@ nsresult nsExternalHelperAppService::AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo)
     NS_ADDREF(aMIMEInfo); 
   }
 
-  // now we need to add entries for each file extension 
-  char** extensions = nsnull;
-  PRUint32 count = 0;
-  rv = aMIMEInfo->GetFileExtensions(&count, &extensions );
+  // now we need to add entries for each file extension
+  nsCOMPtr<nsIUTF8StringEnumerator> extensions;
+
+  rv = aMIMEInfo->GetFileExtensions(getter_AddRefs(extensions));
   if (NS_FAILED(rv) || !extensions)
     return NS_OK; 
 
-  for ( PRUint32 i = 0; i < count; i++ )
-  {
-     nsCStringKey key(extensions[i]);
-     oldInfo = (nsIMIMEInfo*) mMimeInfoCache->Put(&key, aMIMEInfo);
-     NS_IF_RELEASE(oldInfo); // release the old info to prevent a leak
-     NS_ADDREF(aMIMEInfo); // addref this new entry in the table
-     nsMemory::Free( extensions[i] );
+  PRBool hasMore;
+  extensions->HasMore(&hasMore);
+  nsCAutoString ext;
+  while (hasMore) {
+    extensions->GetNext(ext);
+
+    nsCStringKey key(ext);
+
+    oldInfo = (nsIMIMEInfo*) mMimeInfoCache->Put(&key, aMIMEInfo);
+    NS_IF_RELEASE(oldInfo); // release the old info to prevent a leak
+    NS_ADDREF(aMIMEInfo); // addref this new entry in the table
+
+    extensions->HasMore(&hasMore);
   }
-  nsMemory::Free( extensions ); 
 
   return NS_OK;
 }
