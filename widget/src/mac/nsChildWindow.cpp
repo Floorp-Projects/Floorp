@@ -111,7 +111,7 @@ void nsChildWindow::CalcWindowRegions()
 	}
 #endif
 
-	// clip the siblings out of the visRgn
+	// clip the siblings out of the window region and visRegion 
 	if (mClipSiblings && mParent)
 	{
 		RgnHandle siblingRgn = ::NewRgn();
@@ -137,6 +137,7 @@ void nsChildWindow::CalcWindowRegions()
 						Rect macRect;
 						::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
 						::RectRgn(siblingRgn, &macRect);
+						::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
 						::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
 					}
 				}
