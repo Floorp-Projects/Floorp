@@ -167,7 +167,7 @@ int main(int argc, char **argv)
     }
 	PL_DestroyOptState(opt);
 
-    fprintf(stderr, "t is %ld, i is %ld\n", threads, iterations);
+    fprintf(stderr, "t is %ld, i is %ld\n", (long) threads, (long) iterations);
 	/* main test */
 
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 5);
