@@ -25,10 +25,8 @@
   h1 = "View All Attachments for <a href=\"show_bug.cgi?id=$bugid\">Bug #$bugid</a>"
   h2 = filtered_summary
   style = "
-    th { text-align: right; vertical-align: top; }
-    td { text-align: left; vertical-align: top; }
-    td#info { text-align: right; vertical-align: top; }
-    td#actions { text-align: right; vertical-align: bottom; }
+    table.attachment_info th { text-align: right; vertical-align: top; }
+    table.attachment_info td { text-align: left; vertical-align: top; }
   "
 %]
 
@@ -37,7 +35,7 @@
 [% FOREACH a = attachments %]
 
   <div align="center">
-  <table cellspacing="0" cellpadding="4" border="1" width="75%">
+  <table class="attachment_info" cellspacing="0" cellpadding="4" border="1" width="75%">
     <tr>
       <td valign="top" bgcolor="#cccccc" colspan="5">
         <big><b>Attachment #[% a.attachid %]</b></big>

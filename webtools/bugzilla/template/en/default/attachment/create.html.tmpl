@@ -29,8 +29,17 @@
   h1 = h1
   h2 = h2
   style = "
-    th { text-align: right; vertical-align: baseline; white-space: nowrap; }
-    td { text-align: left; vertical-align: baseline; padding-bottom: 5px; }
+    table.attachment_entry th {
+      text-align: right;
+      vertical-align: baseline;
+      white-space: nowrap;
+    }
+
+    table.attachment_entry td {
+      text-align: left;
+      vertical-align: baseline;
+      padding-bottom: 5px;
+    }
   "
   onload="setContentTypeDisabledState();"
 %]
@@ -39,7 +48,7 @@
   <input type="hidden" name="bugid" value="[% bugid %]">
   <input type="hidden" name="action" value="insert">
    
-  <table>
+  <table class="attachment_entry">
     <tr>
       <th>File:</th>
       <td>
