@@ -137,16 +137,16 @@
 <!ENTITY newtodo.startdate.label "Fecha de inicio">
 <!ENTITY newtodo.priority.label "Prioridad">
 <!ENTITY newtodo.percentcomplete.label "&#037; completo">
-<!ENTITY newtodo.categories.label "Categor&#237;a">
-<!ENTITY newtodo.starttime.warning "La fecha de inicio ocurre después del día de pago.">
+<!ENTITY newtodo.categories.label "Categoría">
+<!ENTITY newtodo.starttime.warning "La fecha de inicio ocurre después de la de vencimiento.">
 <!ENTITY newtodo.cancelled.label "Cancelado">
 <!ENTITY newtodo.status.label "Estado">
 <!ENTITY newtodo.beforealarm.label  "antes de que empiece la tarea" >
-<!ENTITY newtodo.beforealarmends.label  "antes de que la tarea acabe" >
+<!ENTITY newtodo.beforealarmends.label  "antes de que la tarea venza" >
 <!ENTITY newtodo.newtodo.tab.label "Tarea" >
 <!ENTITY newtodo.status.longlabel "Estado de la tarea">
-<!ENTITY newtodo.duetime.warning    "Lahora de inicio es posterior a la de final">
-<!ENTITY newtodo.duedate.warning    "La fecha de inicio es posterior a la de final">
+<!ENTITY newtodo.duetime.warning    "La hora de inicio es posterior a la de vencimiento.">
+<!ENTITY newtodo.duedate.warning    "La fecha de inicio es posterior a la de vencimiento.">
 <!ENTITY newtodo.repeatstart.warning "Fecha de inicio necesaria para recurrencia.">
 
 <!ENTITY calendar.confirm.deleteevent "¿Está seguro de que quiere borrar este evento titulado: " >
@@ -156,12 +156,12 @@
 
 <!ENTITY event.title.alarm         "Alarma" >
 <!ENTITY event.title.new         "Nuevo evento" >
-<!ENTITY event.title.edit        "Editar Evento" >
+<!ENTITY event.title.edit        "Editar evento" >
 <!ENTITY event.title.heading        "Alarma del calendario" >
 
 <!ENTITY onthe-text            "En el ">
 <!ENTITY last-text             "último ">
-<!ENTITY ofthemonth-text       " del mes.">
+<!ENTITY ofthemonth-text       " del mes">
 
 
 <!ENTITY todo.title.new         "Nueva tarea">
@@ -176,7 +176,7 @@
 
 <!ENTITY calendar.flat.topbar.new              "Nuevo evento" >
 <!ENTITY calendar.flat.topbar.gototoday        "Ir a hoy" >
-<!ENTITY calendar.flat.topbar.choosedate       "Ir a fecha" >
+<!ENTITY calendar.flat.topbar.choosedate       "Ir a la fecha" >
 <!ENTITY calendar.flat.topbar.dayview          "Ver día" >
 <!ENTITY calendar.dayview.accesskey            "D" >
 <!ENTITY calendar.flat.topbar.weekview         "Ver semana" >
@@ -212,10 +212,10 @@
 <!ENTITY calendar.events.filter.month.label "Eventos del próximo mes">
 <!ENTITY calendar.events.filter.future.label "Todos los eventos del futuro">
 <!ENTITY calendar.events.filter.current.label "Día seleccionado">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Eventos en los próximos 7 días">
+<!ENTITY calendar.events.filter.next14Days.label "Eventos en los próximos 14 días">
+<!ENTITY calendar.events.filter.next31Days.label "Eventos en los próximos 31 días">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Eventos en este mes del calendario">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Hecho">
 <!ENTITY calendar.unifinder.tree.priority.label      "Prioridad">
@@ -223,9 +223,9 @@
 <!ENTITY calendar.unifinder.tree.percentcomplete.label "&#037; Completo">
 <!ENTITY calendar.unifinder.tree.startdate.label     "Inicio">
 <!ENTITY calendar.unifinder.tree.enddate.label       "Fin">
-<!ENTITY calendar.unifinder.tree.duedate.label       "Pago">
+<!ENTITY calendar.unifinder.tree.duedate.label       "Vencimiento">
 <!ENTITY calendar.unifinder.tree.completeddate.label "Completado">
-<!ENTITY calendar.unifinder.tree.categories.label    "Categorías">
+<!ENTITY calendar.unifinder.tree.categories.label    "Categoría">
 <!ENTITY calendar.unifinder.tree.location.label    "Lugar">
 <!ENTITY calendar.unifinder.tree.status.label    "Estado">
 <!ENTITY calendar.unifinder.tree.filename.label    "Nombre del calendario">
@@ -410,8 +410,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Nuevo archivo del calendario">
-<!ENTITY calendar.server.dialog.title.open          "Abrir archivo del calendario">
+<!ENTITY calendar.server.dialog.title.new           "Nuevo archivo de calendario">
+<!ENTITY calendar.server.dialog.title.open          "Abrir archivo de calendario">
 <!ENTITY calendar.server.dialog.title.edit          "Editar calendario">
 <!ENTITY calendar.server.dialog.name.label          "Nombre">
 <!ENTITY calendar.server.dialog.publish.label       "¿Publicar cambios automáticamente? Para calendarios remotos, esto descargará una nueva versión antes de que añada, edite o borre un evento. Se realizará la acción, y se descargará al servidor el nuevo archivo.">

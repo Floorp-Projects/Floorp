@@ -46,7 +46,9 @@
 
   <!-- locale information -->
   <RDF:Description about="urn:mozilla:es-ES"
-                   chrome:displayName="Spanish"
+                   chrome:displayName="España (Español)"
+                   chrome:author="NAVE Project"
+		   chrome:previewURL="http://nave.escomposlinux.org/"
                    chrome:name="es-ES">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:es-ES:packages">

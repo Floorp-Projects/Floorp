@@ -46,13 +46,13 @@
 <!ENTITY event.new.todo.key                     "T">
 <!ENTITY event.new.todo.accesskey               "T">
 
-<!ENTITY calendar.new.server.label              "Nuevo archivo del calendario…">
+<!ENTITY calendar.new.server.label              "Nuevo archivo de calendario…">
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label               "Abrir archivo del calendario…">
+<!ENTITY calendar.open.file.label               "Abrir archivo de calendario…">
 <!ENTITY calendar.open.file.key                 "O">
-<!ENTITY calendar.open.file.accesskey           "N">
+<!ENTITY calendar.open.file.accesskey           "O">
 
 <!ENTITY event.edit.event                       "Editar…">
 <!ENTITY event.edit.event.key                   "E">
@@ -64,8 +64,8 @@
 <!ENTITY event.delete.tasks                     "Borrar tareas seleccionadas">
 <!ENTITY event.delete.tasks.accesskey           "T">
 
-<!ENTITY event.mail.event                       "Enviar eventos seleccionados…">
-<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event                       "Enviar evento(s) seleccionado(s)…">
+<!ENTITY event.mail.event.key                   "t">
 <!ENTITY event.mail.event.accesskey             "v">
 
 <!ENTITY calendar.print.label                   "Imprimir calendarios activos...">
@@ -92,7 +92,7 @@
 <!ENTITY calendar.subscribe.accesskey           "R">
 
 <!ENTITY calendar.publish.label                 "Publicar eventos seleccionados...">
-<!ENTITY calendar.publish.accesskey             "S">
+<!ENTITY calendar.publish.accesskey             "b">
 
 <!ENTITY calendar.about.label                   "Acerca del calendario">
 <!ENTITY calendar.about.accesskey               "C">
@@ -132,7 +132,7 @@
 <!ENTITY goNextCmd.accesskey                    "N">
 
 <!ENTITY taskMenu.label                         "Tareas">
-<!ENTITY taskMenu.accesskey                     "T">
+<!ENTITY taskMenu.accesskey                     "r">
 
 <!ENTITY toolsMenu.label                        "Herramientas">
 <!ENTITY toolsMenu.accesskey                    "H">
@@ -173,8 +173,8 @@
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY windowMenu.label                       "Ventana">
+<!ENTITY minimizeWindow.label                   "Minimizar">
 <!ENTITY zoomWindow.label                       "Zoom">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "Traer todo a primer plano">
