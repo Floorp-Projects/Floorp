@@ -37,6 +37,7 @@ public:
   static void ProcessTimeouts(nsVoidArray *array);
   nsTimerXlib();
   virtual ~nsTimerXlib();
+  static void Shutdown();
 
   virtual nsresult Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,

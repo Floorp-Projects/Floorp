@@ -60,7 +60,7 @@
 
 
 // The class statics:
-nsCOMPtr<nsITransferable>   nsClipboard::mTransferable = nsnull;
+nsITransferable            *nsClipboard::mTransferable = nsnull;
 Window                      nsClipboard::sWindow;
 Display                    *nsClipboard::sDisplay;
 
@@ -79,12 +79,22 @@ nsClipboard::nsClipboard() {
 }
 
 nsClipboard::~nsClipboard() {
+  NS_IF_RELEASE(sWidget);
+}
+
+/*static*/ void nsClipboard::Shutdown() {
+  NS_IF_RELEASE(mTransferable);
 }
 
 // Initialize the clipboard and create a nsWidget for communications
 
 void nsClipboard::Init() {
+  NS_ASSERTION(!sWidget, "already initialized");
+
   sWidget = new nsWidget();
+  if (!sWidget) return;
+  NS_ADDREF(sWidget);
+
   const nsRect rect(0,0,100,100);
 
   sWidget->Create((nsIWidget *)nsnull, rect, Callback,
@@ -196,8 +206,11 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   // FIXME Need to make sure mTransferable has reference to selectionclipboard.
   // This solves the problem with copying to an external app.
   // but cannot be sure if its fully correct until menu copy/paste is working.
- if (aWhichClipboard == kSelectionClipboard)
+  if (aWhichClipboard == kSelectionClipboard) {
+    NS_IF_RELEASE(mTransferable);
     mTransferable = transferable; 
+    NS_IF_ADDREF(mTransferable);
+  }
   
   // make sure we have a good transferable
   if (nsnull == transferable) {
@@ -286,7 +299,9 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
 
 
   // Get which transferable we should use.
+  NS_IF_RELEASE(mTransferable);
   mTransferable = GetTransferable(aWhichClipboard);
+  NS_IF_ADDREF(mTransferable);
   
   // If we currently own the selection, we will handle the paste 
   // internally, otherwise get the data from the X server

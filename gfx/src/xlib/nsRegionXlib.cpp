@@ -38,18 +38,16 @@ nsRegionXlib::~nsRegionXlib()
 {
   if (mRegion)
     ::XDestroyRegion(mRegion);
-
-  mRegion = NULL;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsRegionXlib, kRegionIID)
-NS_IMPL_ADDREF(nsRegionXlib)
-NS_IMPL_RELEASE(nsRegionXlib)
+NS_IMPL_ISUPPORTS1(nsRegionXlib, nsIRegion)
 
 nsresult
 nsRegionXlib::Init()
 {
-  NS_ADDREF_THIS();
+  //NS_ASSERTION(!mRegion, "already initialized");
+  if (mRegion)
+    ::XDestroyRegion(mRegion);
 
   mRegion = ::XCreateRegion();
   mRegionType = eRegionComplexity_empty;

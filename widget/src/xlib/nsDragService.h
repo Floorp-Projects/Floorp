@@ -117,7 +117,7 @@ private:
   PRBool mCanDrop;
 
   nsWidget *mDropWidget;
-  nsISupportsArray *mDataItems;
+  nsCOMPtr<nsISupportsArray> mDataItems;
 };
 
 #endif // nsDragService_h__

@@ -169,7 +169,8 @@ protected:
   virtual void CreateNativeWindow(Window aParent, nsRect aRect,
                                   XSetWindowAttributes aAttr, unsigned long aMask);
   virtual void CreateNative(Window aParent, nsRect aRect);
-  virtual void DestroyNative(void);
+  virtual void DestroyNative();
+  virtual void DestroyNativeChildren();
   void         CreateGC(void);
   void         Map(void);
   void         Unmap(void);

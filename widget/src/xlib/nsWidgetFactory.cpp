@@ -206,4 +206,12 @@ static nsModuleComponentInfo components[] =
     nsFileSpecWithUIImplConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsWidgetXLIBModule", components)
+PR_STATIC_CALLBACK(void)
+nsWidgetXLIBModuleDtor(nsIModule *self)
+{
+  nsClipboard::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsWidgetXLIBModule",
+                              components,
+                              nsWidgetXLIBModuleDtor)

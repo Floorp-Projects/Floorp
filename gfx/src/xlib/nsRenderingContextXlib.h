@@ -201,7 +201,7 @@ private:
   nsDrawingSurfaceXlib    *mRenderingSurface;
   nsIDeviceContext        *mContext;
   nsIFontMetrics          *mFontMetrics;
-  nsRegionXlib            *mClipRegion;
+  nsCOMPtr<nsIRegion>      mClipRegion;
   nsTransform2D           *mTMatrix;
   float                    mP2T;
   nscolor                  mCurrentColor;

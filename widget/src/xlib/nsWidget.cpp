@@ -23,6 +23,7 @@
  *   Quy Tonthat <quy@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
+ *   L. David Baron <dbaron@fas.harvard.edu>
  */
 
 #include "nsWidget.h"
@@ -47,7 +48,7 @@ PRLogModuleInfo *XlibWidgetsLM = PR_NewLogModule("XlibWidgets");
 PRLogModuleInfo *XlibScrollingLM = PR_NewLogModule("XlibScrolling");
 
 // set up our static members here.
-nsHashtable *nsWidget::gsWindowList = nsnull;
+nsHashtable *nsWidget::gsWindowList = nsnull; // WEAK references to nsWidget*
 
 // this is a class for generating keys for
 // the list of windows managed by mozilla.
@@ -151,9 +152,41 @@ nsWidget::~nsWidget()
 
 }
 
+// Borrowed heavily from GTK. This should go through heirarchy of XWindow
+// windows, and destroy the appropriate children. 
+// KenF
 void
-nsWidget::DestroyNative(void)
+nsWidget::DestroyNativeChildren()
 {
+  Window       root_return;
+  Window       parent_return;
+  Window      *children_return = nsnull;
+  unsigned int nchildren_return = 0;
+  unsigned int i = 0;
+  
+  XQueryTree(mDisplay, mBaseWindow, &root_return, &parent_return,
+             &children_return, &nchildren_return);
+  // walk the list of children
+  for (i=0; i < nchildren_return; i++) {
+    nsWidget *thisWidget = GetWidgetForWindow(children_return[i]);
+    if (thisWidget) {
+      thisWidget->Destroy();
+    }
+  }      
+
+  // free up this struct
+  if (children_return)
+    XFree(children_return);
+}
+
+void
+nsWidget::DestroyNative()
+{
+  // We have to destroy the children ourselves before we call XDestroyWindow
+  // because otherwise XDestroyWindow will destroy the windows and leave us
+  // with dangling references.
+  DestroyNativeChildren();
+
   // This is handled in nsDrawingSurfaceXlib for now
 #if 0
   if (mGC)
@@ -215,11 +248,12 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                nsWidgetInitData *aInitData,
                                nsNativeWidget aNativeParent)
 {
-  unsigned long ValueMask;  
-  XSetWindowAttributes SetWinAttr;  
   unsigned long attr_mask;
   XSetWindowAttributes attr;
   Window parent=nsnull;
+
+  NS_ASSERTION(!mBaseWindow, "already initialized");
+  if (mBaseWindow) return NS_ERROR_ALREADY_INITIALIZED;
 
   mDisplay = xlib_rgb_get_display();
   mScreen = xlib_rgb_get_screen();
@@ -326,7 +360,7 @@ NS_IMETHODIMP nsWidget::Destroy()
   if (mIsDestroying)
     return NS_OK;
 
-  mIsDestroying = TRUE;
+  mIsDestroying = PR_TRUE;
 
   nsBaseWidget::Destroy();
   NS_IF_RELEASE(mParentWidget);	//????
@@ -334,10 +368,10 @@ NS_IMETHODIMP nsWidget::Destroy()
 
   if (mBaseWindow) {
     DestroyNative();
-    //mBaseWindow = NULL;
+    //mBaseWindow = nsnull;
     if (PR_FALSE == mOnDestroyCalled)
       OnDestroy();
-    mBaseWindow = NULL;
+    mBaseWindow = nsnull;
     mEventCallback = nsnull;
   }
 
@@ -820,6 +854,9 @@ nsWidget::GetEventMask()
 void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                                   XSetWindowAttributes aAttr, unsigned long aMask)
 {
+  NS_ASSERTION(!mBaseWindow, "already initialized");
+  if (mBaseWindow) return;
+
   mBaseWindow = XCreateWindow(mDisplay,
                               aParent,
                               aRect.x, aRect.y,
@@ -842,9 +879,8 @@ nsWidget::GetWidgetForWindow(Window aWindow)
   if (gsWindowList == nsnull) {
     return nsnull;
   }
-  nsWindowKey *window_key = new nsWindowKey(aWindow);
-  nsWidget *retval = (nsWidget *)gsWindowList->Get(window_key);
-  delete window_key;
+  nsWindowKey window_key(aWindow);
+  nsWidget *retval = (nsWidget *)gsWindowList->Get(&window_key);
   return retval;
 }
 
@@ -855,10 +891,8 @@ nsWidget::AddWindowCallback(Window aWindow, nsWidget *aWidget)
   if (gsWindowList == nsnull) {
     gsWindowList = new nsHashtable();
   }
-  nsWindowKey *window_key = new nsWindowKey(aWindow);
-  gsWindowList->Put(window_key, aWidget);
-  // add a new ref to this widget
-  NS_ADDREF(aWidget);
+  nsWindowKey window_key(aWindow);
+  gsWindowList->Put(&window_key, aWidget);
 
   // make sure that if someone is listening that we inform
   // them of the new window
@@ -866,24 +900,24 @@ nsWidget::AddWindowCallback(Window aWindow, nsWidget *aWidget)
   {
     (*gsWindowCreateCallback)(aWindow);
   }
-
-  delete window_key;
 }
 
 void
 nsWidget::DeleteWindowCallback(Window aWindow)
 {
-  nsWindowKey *window_key = new nsWindowKey(aWindow);
-  nsWidget *widget = (nsWidget *)gsWindowList->Get(window_key);
-  NS_RELEASE(widget);
-  gsWindowList->Remove(window_key);
+  nsWindowKey window_key(aWindow);
+  gsWindowList->Remove(&window_key);
+
+  if (gsWindowList->Count() == 0) {
+    delete gsWindowList;
+    gsWindowList = nsnull;
+  }
 
   if (gsWindowDestroyCallback) 
   {
     (*gsWindowDestroyCallback)(aWindow);
   }
 
-  delete window_key;
 }
 
 #undef TRACE_PAINT
@@ -899,7 +933,10 @@ nsWidget::OnPaint(nsPaintEvent &event)
   nsresult result = PR_FALSE;
   if (mEventCallback) {
     event.renderingContext = GetRenderingContext();
-    result = DispatchWindowEvent(event);
+    if (event.renderingContext) {
+      result = DispatchWindowEvent(event);
+      NS_RELEASE(event.renderingContext);
+    }
   }
   
 #ifdef TRACE_PAINT
@@ -1209,7 +1246,7 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
   printf("%4d %-26s(this=%-8p , window=%-8p",
          sPrintCount++,
          (const char *) eventString,
-         this,
+         (void *) this,
          (void *) aWindow);
          
   printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);

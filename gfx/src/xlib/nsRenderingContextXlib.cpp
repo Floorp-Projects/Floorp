@@ -43,16 +43,18 @@ public:
   ~GraphicsState();
 
   nsTransform2D  *mMatrix;
-  nsRegionXlib   *mClipRegion;
+  nsCOMPtr<nsIRegion> mClipRegion;
   nscolor         mColor;
   nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;
 };
 
+MOZ_DECL_CTOR_COUNTER(GraphicsState)
+
 GraphicsState::GraphicsState()
 {
+  MOZ_COUNT_CTOR(GraphicsState);
   mMatrix = nsnull;
-  mClipRegion = nsnull;
   mColor = NS_RGB(0, 0, 0);
   mLineStyle = nsLineStyle_kSolid;
   mFontMetrics = nsnull;
@@ -60,7 +62,7 @@ GraphicsState::GraphicsState()
 
 GraphicsState::~GraphicsState()
 {
-  NS_IF_RELEASE(mClipRegion);
+  MOZ_COUNT_DTOR(GraphicsState);
   NS_IF_RELEASE(mFontMetrics);
 }
 
@@ -104,7 +106,6 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
   }
   if (mTMatrix)
     delete mTMatrix;
-  NS_IF_RELEASE(mClipRegion);
   NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
@@ -223,7 +224,8 @@ nsresult nsRenderingContextXlib::CommonInit(void)
                &border, 
                &depth);
 
-  mClipRegion = new nsRegionXlib();
+  mClipRegion = do_QueryInterface(new nsRegionXlib());
+  if (!mClipRegion) return NS_ERROR_OUT_OF_MEMORY;
   mClipRegion->Init();
   mClipRegion->SetTo(0, 0, width, height);
 
@@ -326,11 +328,11 @@ nsRenderingContextXlib::PushState(void)
     mTMatrix = new nsTransform2D(mTMatrix);
   
   if (mClipRegion) {
-    NS_IF_ADDREF(mClipRegion);
     state->mClipRegion = mClipRegion;
-    mClipRegion = new nsRegionXlib();
+    mClipRegion = do_QueryInterface(new nsRegionXlib());
+    if (!mClipRegion) return NS_ERROR_OUT_OF_MEMORY;
     mClipRegion->Init();
-    mClipRegion->SetTo((const nsIRegion &)*(state->mClipRegion));
+    mClipRegion->SetTo(*state->mClipRegion);
   }
   
   NS_IF_ADDREF(mFontMetrics);
@@ -356,8 +358,6 @@ nsRenderingContextXlib::PopState(PRBool &aClipState)
     if (mTMatrix)
       delete mTMatrix;
     mTMatrix = state->mMatrix;
-    
-    NS_IF_RELEASE(mClipRegion);
     
     mClipRegion = state->mClipRegion;
     if (mFontMetrics != state->mFontMetrics)
@@ -471,7 +471,7 @@ NS_IMETHODIMP
 nsRenderingContextXlib::CopyClipRegion(nsIRegion &aRegion)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CopyClipRegion()\n"));
-  aRegion.SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+  aRegion.SetTo(*mClipRegion);
   return NS_OK;
 }
 
@@ -484,8 +484,7 @@ nsRenderingContextXlib::GetClipRegion(nsIRegion **aRegion)
   NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
   
   if (*aRegion) {
-    nsIRegion *nRegion = (nsIRegion *)mClipRegion;
-    (*aRegion)->SetTo(*nRegion);
+    (*aRegion)->SetTo(*mClipRegion);
   }
   return rv;
 }
