@@ -18,7 +18,6 @@
 
 nsIEditor.h
 nsEditorCID.h
-# nsIEditRules.h
 nsIEditActionListener.h
 nsICiter.h
 nsIEditorIMESupport.h
