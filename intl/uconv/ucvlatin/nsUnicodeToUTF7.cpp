@@ -41,6 +41,7 @@ NS_IMETHODIMP nsBasicUTF7Encoder::FillInfo(PRUint32 *aInfo)
   memset(aInfo, 0xFF, (0x10000L >> 3));
   return NS_OK;
 }
+
 nsresult nsBasicUTF7Encoder::ShiftEncoding(PRInt32 aEncoding,
                                           char * aDest, 
                                           PRInt32 * aDestLength)
@@ -98,7 +99,7 @@ nsresult nsBasicUTF7Encoder::EncodeDirect(
     ch = *src;
 
     // stop when we reach Unicode chars
-    if ((ch < 0x20) || (ch > 0x7e)) break;
+    if (!DirectEncodable(ch)) break;
 
     if (ch == mEscChar) {
       // special case for the escape char
@@ -145,7 +146,7 @@ nsresult nsBasicUTF7Encoder::EncodeBase64(
     ch = *src;
 
     // stop when we reach printable US-ASCII chars
-    if ((ch >= 0x20) && (ch <= 0x7e)) break;
+    if (DirectEncodable(ch)) break;
 
     switch (mEncStep) {
       case 0:
@@ -213,6 +214,12 @@ char nsBasicUTF7Encoder::ValueToChar(PRUint32 aValue) {
     return -1;
 }
 
+PRBool nsBasicUTF7Encoder::DirectEncodable(PRUnichar aChar) {
+  // spec says: printable US-ASCII chars
+  if ((aChar >= 0x20) && (aChar <= 0x7e)) return PR_TRUE;
+  else return PR_FALSE;
+}
+
 //----------------------------------------------------------------------
 // Subclassing of nsEncoderSupport class [implementation]
 
@@ -234,7 +241,7 @@ NS_IMETHODIMP nsBasicUTF7Encoder::ConvertNoBuffNoErr(
   while (src < srcEnd) {
     // find the encoding for the next char
     ch = *src;
-    if ((ch >= 0x20) && (ch <= 0x7e)) 
+    if (DirectEncodable(ch)) 
       enc = ENC_DIRECT;
     else
       enc = ENC_BASE64;
@@ -289,9 +296,6 @@ NS_IMETHODIMP nsBasicUTF7Encoder::Reset()
 //----------------------------------------------------------------------
 // Class nsUnicodeToUTF7 [implementation]
 
-// XXX Ok, you know that this is too close to the M-UTF-8. 
-// You need to change it according to the spec.
-
 nsUnicodeToUTF7::nsUnicodeToUTF7() 
 : nsBasicUTF7Encoder('/', '+')
 {
@@ -301,4 +305,15 @@ nsresult nsUnicodeToUTF7::CreateInstance(nsISupports ** aResult)
 {
   *aResult = (nsIUnicodeEncoder*) new nsUnicodeToUTF7();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
+
+PRBool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
+  if ((aChar >= 'A') && (aChar <= 'Z')) return PR_TRUE;
+  else if ((aChar >= 'a') && (aChar <= 'z')) return PR_TRUE;
+  else if ((aChar >= '0') && (aChar <= '9')) return PR_TRUE;
+  else if ((aChar >= 39) && (aChar <= 41)) return PR_TRUE;
+  else if ((aChar >= 44) && (aChar <= 47)) return PR_TRUE;
+  else if (aChar == 58) return PR_TRUE;
+  else if (aChar == 63) return PR_TRUE;
+  else return PR_FALSE;
 }

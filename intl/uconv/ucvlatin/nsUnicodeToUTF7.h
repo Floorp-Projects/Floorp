@@ -41,6 +41,7 @@ public:
   nsBasicUTF7Encoder(char aLastChar, char aEscChar);
 
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
+
 protected:
 
   PRInt32                   mEncoding;      // current encoding
@@ -56,6 +57,7 @@ protected:
   nsresult EncodeBase64(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength);
   char ValueToChar(PRUint32 aValue);
+  virtual PRBool DirectEncodable(PRUnichar aChar);
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
@@ -90,6 +92,10 @@ public:
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
+
+protected:
+
+  virtual PRBool DirectEncodable(PRUnichar aChar);
 };
 
 #endif /* nsUnicodeToUTF7_h___ */

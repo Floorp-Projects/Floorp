@@ -50,7 +50,7 @@ nsresult nsBasicUTF7Decoder::DecodeDirect(
     ch = *src;
 
     // stop when we meet other chars or end of direct encoded seq.
-    // if ((ch < 0x20) || (ch > 0x7e) || (ch == mEscChar)) {
+    // if (!(DirectEncodable(ch)) || (ch == mEscChar)) {
     // but we are decoding; so we should be lax; pass everything until escchar
     if (ch == mEscChar) {
       res = NS_ERROR_UDEC_ILLEGALINPUT;
@@ -90,7 +90,7 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
 
     // stop when we meet other chars or end of direct encoded seq.
     value = CharToValue(ch);
-    if (value == -1) {
+    if (value > 0xff) {
       res = NS_ERROR_UDEC_ILLEGALINPUT;
       break;
     }
@@ -163,7 +163,7 @@ PRUint32 nsBasicUTF7Decoder::CharToValue(char aChar) {
   else if (aChar==mLastChar)
     return (PRUint8)(26+26+10+1);
   else
-    return -1;
+    return 0xffff;
 }
 
 //----------------------------------------------------------------------
@@ -214,11 +214,10 @@ NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc,
           res = NS_OK;
         } else break;
       } else {
-        if (*src == '-') {
-          mEncoding = ENC_DIRECT;
-          src++;
-          res = NS_OK;
-        } else break;
+        mEncoding = ENC_DIRECT;
+        res = NS_OK;
+        // absorbe end of escape sequence
+        if (*src == '-') src++;
       }
     } else if (res != NS_OK) break;
   }
@@ -247,9 +246,6 @@ NS_IMETHODIMP nsBasicUTF7Decoder::Reset()
 
 //----------------------------------------------------------------------
 // Class nsUTF7ToUnicode [implementation]
-
-// XXX Ok, you know that this is too close to the M-UTF-8. 
-// You need to change it according to the spec.
 
 nsUTF7ToUnicode::nsUTF7ToUnicode() 
 : nsBasicUTF7Decoder('/', '+')
