@@ -39,6 +39,8 @@
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIObservableInputStream.h"
+#include "nsIObservableOutputStream.h"
 #include "nsSegmentedBuffer.h"
 #include "nsAutoLock.h"
 #include "nsIServiceManager.h"
@@ -70,29 +72,20 @@ public:
     // implementations to avoid the extra object allocation, and speed up method
     // invocation between them and the nsPipe's buffer  manipulation methods.
 
-    class nsPipeInputStream : public nsIInputStream, public nsISearchableInputStream {
+    class nsPipeInputStream : public nsIInputStream
+                            , public nsIObservableInputStream
+                            , public nsISearchableInputStream {
     public:
-        NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr); 
-        NS_IMETHOD_(nsrefcnt) AddRef(void); 
-        NS_IMETHOD_(nsrefcnt) Release(void); 
-        // nsIBaseStream methods:
-        NS_IMETHOD Close(void);
-        // nsIInputStream methods:
-        NS_IMETHOD Available(PRUint32 *result);
-        NS_IMETHOD Read(char* toBuf, PRUint32 bufLen, PRUint32 *readCount);
-        // nsIInputStream methods:
-        NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void* closure, PRUint32 count,
-                                PRUint32 *readCount);
-        NS_IMETHOD Search(const char *forString, PRBool ignoreCase, PRBool *found,
-                          PRUint32 *offsetSearchedTo);
-        NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
-        NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIINPUTSTREAM
+        NS_DECL_NSISEARCHABLEINPUTSTREAM
+
+        // nsIObservableInputStream methods:
         NS_IMETHOD GetObserver(nsIInputStreamObserver* *result) {
             *result = mObserver;
             NS_IF_ADDREF(*result);
             return NS_OK;
         }
-
         NS_IMETHOD SetObserver(nsIInputStreamObserver* obs) {
             mObserver = obs;
             return NS_OK;
@@ -101,6 +94,7 @@ public:
         nsPipeInputStream() : mReaderRefCnt(0), mBlocking(PR_TRUE) {}
         virtual ~nsPipeInputStream() { }
         nsresult Fill();
+        void SetNonBlocking(PRBool aNonBlocking) { mBlocking = !aNonBlocking; }
 
     protected:
         nsrefcnt        mReaderRefCnt; // separate refcnt so that we know when to close the consumer
@@ -108,21 +102,13 @@ public:
         nsCOMPtr<nsIInputStreamObserver> mObserver;
     };
 
-    class nsPipeOutputStream : public nsIOutputStream {
+    class nsPipeOutputStream : public nsIOutputStream
+                             , public nsIObservableOutputStream {
     public:
-        NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr); 
-        NS_IMETHOD_(nsrefcnt) AddRef(void); 
-        NS_IMETHOD_(nsrefcnt) Release(void); 
-        // nsIBaseStream methods:
-        NS_IMETHOD Close(void);
-        NS_IMETHOD Write(const char* fromBuf, PRUint32 bufLen, PRUint32 *writeCount);
-        NS_IMETHOD Flush(void);
-        // nsIOutputStream methods:
-        NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
-                                 PRUint32 *writeCount);
-        NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count, PRUint32 *writeCount);
-        NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking);
-        NS_IMETHOD SetNonBlocking(PRBool aNonBlocking);
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIOUTPUTSTREAM
+
+        // nsIObservableOutputStream methods:
         NS_IMETHOD GetObserver(nsIOutputStreamObserver* *result) {
             *result = mObserver;
             NS_IF_ADDREF(*result);
@@ -136,6 +122,7 @@ public:
 
         nsPipeOutputStream() : mWriterRefCnt(0), mBlocking(PR_TRUE) {}
         virtual ~nsPipeOutputStream() { }
+        void SetNonBlocking(PRBool aNonBlocking) { mBlocking = !aNonBlocking; }
 
     protected:
         nsrefcnt        mWriterRefCnt; // separate refcnt so that we know when to close the producer
@@ -321,14 +308,18 @@ nsPipe::GetWriteSegment(char* *resultSegment,
 NS_IMETHODIMP
 nsPipe::nsPipeInputStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  if (aIID.Equals(NS_GET_IID(nsISearchableInputStream))) 
-  {
-    nsISearchableInputStream* in = NS_STATIC_CAST(nsISearchableInputStream *, this);
-    NS_ADDREF(in);
-    *aInstancePtr = in;
-    return NS_OK;
-  }
-  else
+    if (aIID.Equals(NS_GET_IID(nsISearchableInputStream))) {
+        nsISearchableInputStream* in = NS_STATIC_CAST(nsISearchableInputStream *, this);
+        NS_ADDREF(in);
+        *aInstancePtr = in;
+        return NS_OK;
+    }
+    if (aIID.Equals(NS_GET_IID(nsIObservableInputStream))) {
+        nsIObservableInputStream* in = NS_STATIC_CAST(nsIObservableInputStream *, this);
+        NS_ADDREF(in);
+        *aInstancePtr = in;
+        return NS_OK;
+    }
     return GET_INPUTSTREAM_PIPE(this)->QueryInterface(aIID, aInstancePtr);
 }
 
@@ -620,16 +611,9 @@ nsPipe::nsPipeInputStream::Search(const char *forString,
 }
 
 NS_IMETHODIMP
-nsPipe::nsPipeInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsPipe::nsPipeInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     *aNonBlocking = !mBlocking;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPipe::nsPipeInputStream::SetNonBlocking(PRBool aNonBlocking)
-{
-    mBlocking = !aNonBlocking;
     return NS_OK;
 }
 
@@ -639,6 +623,12 @@ nsPipe::nsPipeInputStream::SetNonBlocking(PRBool aNonBlocking)
 NS_IMETHODIMP
 nsPipe::nsPipeOutputStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
+    if (aIID.Equals(NS_GET_IID(nsIObservableOutputStream))) {
+        nsIObservableOutputStream* out = NS_STATIC_CAST(nsIObservableOutputStream *, this);
+        NS_ADDREF(out);
+        *aInstancePtr = out;
+        return NS_OK;
+    }
     return GET_OUTPUTSTREAM_PIPE(this)->QueryInterface(aIID, aInstancePtr);
 }
 
@@ -856,16 +846,9 @@ nsPipe::nsPipeOutputStream::WriteFrom(nsIInputStream* fromStream,
 }
 
 NS_IMETHODIMP
-nsPipe::nsPipeOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsPipe::nsPipeOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     *aNonBlocking = !mBlocking;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPipe::nsPipeOutputStream::SetNonBlocking(PRBool aNonBlocking)
-{
-    mBlocking = !aNonBlocking;
     return NS_OK;
 }
 

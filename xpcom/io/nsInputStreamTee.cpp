@@ -153,24 +153,10 @@ nsInputStreamTee::ReadSegments(nsWriteSegmentFun writer,
 }
 
 NS_IMETHODIMP
-nsInputStreamTee::GetNonBlocking(PRBool *result)
+nsInputStreamTee::IsNonBlocking(PRBool *result)
 {
     NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-    return mSource->GetNonBlocking(result);
-}
-
-NS_IMETHODIMP
-nsInputStreamTee::GetObserver(nsIInputStreamObserver **obs)
-{
-    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-    return mSource->GetObserver(obs);
-}
-
-NS_IMETHODIMP
-nsInputStreamTee::SetObserver(nsIInputStreamObserver *obs)
-{
-    NS_ENSURE_TRUE(mSource, NS_ERROR_NOT_INITIALIZED);
-    return mSource->SetObserver(obs);
+    return mSource->IsNonBlocking(result);
 }
 
 nsresult
@@ -180,7 +166,7 @@ nsInputStreamTee::Init(nsIInputStream *source, nsIOutputStream *sink)
     NS_ENSURE_TRUE(sink, NS_ERROR_NOT_INITIALIZED);
 
     PRBool nonBlocking = PR_FALSE;
-    nsresult rv = sink->GetNonBlocking(&nonBlocking);
+    nsresult rv = sink->IsNonBlocking(&nonBlocking);
     if (NS_FAILED(rv))
         return rv;
     if (nonBlocking) {

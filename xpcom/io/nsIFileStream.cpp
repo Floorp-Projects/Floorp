@@ -80,18 +80,13 @@ class FileImpl
         NS_IMETHOD                      Available(PRUint32 *aLength);
         NS_IMETHOD                      Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount);
         NS_IMETHOD                      ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval);
-        NS_IMETHOD                      GetObserver(nsIInputStreamObserver * *aObserver);
-        NS_IMETHOD                      SetObserver(nsIInputStreamObserver * aObserver); 
+        NS_IMETHOD                      IsNonBlocking(PRBool *aNonBlocking);
 
         // nsIOutputStream interface
         NS_IMETHOD                      Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
         NS_IMETHOD                      Flush();
         NS_IMETHOD                      WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
         NS_IMETHOD                      WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval);
-        NS_IMETHOD                      GetNonBlocking(PRBool *aNonBlocking);
-        NS_IMETHOD                      SetNonBlocking(PRBool aNonBlocking);
-        NS_IMETHOD                      GetObserver(nsIOutputStreamObserver * *aObserver);
-        NS_IMETHOD                      SetObserver(nsIOutputStreamObserver * aObserver);
 
         // nsIRandomAccessStore interface
         NS_DECL_NSISEEKABLESTREAM
@@ -396,20 +391,6 @@ FileImpl::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-FileImpl::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileImpl::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP FileImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 //----------------------------------------------------------------------------------------
@@ -504,31 +485,10 @@ FileImpl::WriteSegments(nsReadSegmentFun reader, void * closure,
 }
 
 NS_IMETHODIMP
-FileImpl::GetNonBlocking(PRBool *aNonBlocking)
+FileImpl::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileImpl::SetNonBlocking(PRBool aNonBlocking)
-{
-    NS_NOTREACHED("SetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileImpl::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileImpl::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_FALSE;
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------

@@ -38,7 +38,6 @@
 
 #include "nsStreamListenerProxy.h"
 #include "nsIGenericFactory.h"
-#include "nsIInputStream.h"
 #include "nsIPipe.h"
 #include "nsAutoLock.h"
 #include "prlog.h"
@@ -235,9 +234,13 @@ nsStreamListenerProxy::OnStartRequest(nsIRequest *request,
 {
     NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
 
+    nsresult rv;
+    nsCOMPtr<nsIObservableInputStream> obs(do_QueryInterface(mPipeIn, &rv));
+    if (NS_FAILED(rv)) return rv;
+
     // This will create a cyclic reference between the pipe and |this|, which
     // will be broken when onStopRequest is called.
-    nsresult rv = mPipeIn->SetObserver(this);
+    rv = obs->SetObserver(this);
     if (NS_FAILED(rv)) return rv;
 
     return mObserverProxy->OnStartRequest(request, context);

@@ -126,26 +126,8 @@ public:
     }
 
     NS_IMETHOD
-    GetNonBlocking(PRBool *aNonBlocking) {
-        NS_NOTREACHED("GetNonBlocking");
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    SetNonBlocking(PRBool aNonBlocking) {
-        NS_NOTREACHED("SetNonBlocking");
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    GetObserver(nsIOutputStreamObserver * *aObserver) {
-        NS_NOTREACHED("GetObserver");
-        return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD
-    SetObserver(nsIOutputStreamObserver * aObserver) {
-        NS_NOTREACHED("SetObserver");
+    IsNonBlocking(PRBool *aNonBlocking) {
+        NS_NOTREACHED("IsNonBlocking");
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 

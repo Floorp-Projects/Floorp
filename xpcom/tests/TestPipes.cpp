@@ -40,6 +40,8 @@
 #include "nsIRunnable.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIObservableInputStream.h"
+#include "nsIObservableOutputStream.h"
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "prinrval.h"
@@ -314,9 +316,14 @@ TestPipeObserver()
     rv = NS_NewPipe(&in, &out, 18, 36, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = in->SetObserver(obs);
+    nsCOMPtr<nsIObservableInputStream> observableIn(do_QueryInterface(in, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = out->SetObserver(obs);
+    nsCOMPtr<nsIObservableInputStream> observableOut(do_QueryInterface(out, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = observableIn->SetObserver(obs);
+    if (NS_FAILED(rv)) return rv;
+    rv = observableOut->SetObserver(obs);
     if (NS_FAILED(rv)) return rv;
 
     char buf[] = "puirt a beul: a style of Gaelic vocal music intended for dancing.";

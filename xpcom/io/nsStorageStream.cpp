@@ -224,31 +224,10 @@ nsStorageStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32
 }
 
 NS_IMETHODIMP 
-nsStorageStream::GetNonBlocking(PRBool *aNonBlocking)
+nsStorageStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsStorageStream::SetNonBlocking(PRBool aNonBlocking)
-{
-    NS_NOTREACHED("SetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsStorageStream::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsStorageStream::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -489,24 +468,10 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
 }
 
 NS_IMETHODIMP 
-nsStorageInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsStorageInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsStorageInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsStorageInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -2248,21 +2248,10 @@ nsSocketBIS::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
 }
 
 NS_IMETHODIMP
-nsSocketBIS::GetNonBlocking(PRBool *aValue)
+nsSocketBIS::IsNonBlocking(PRBool *aValue)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketBIS::GetObserver(nsIInputStreamObserver **aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketBIS::SetObserver(nsIInputStreamObserver *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aValue = PR_FALSE;
+    return NS_OK;
 }
 
 //
@@ -2358,27 +2347,10 @@ nsSocketBOS::WriteSegments(nsReadSegmentFun aReader, void *aClosure,
 }
 
 NS_IMETHODIMP
-nsSocketBOS::GetNonBlocking(PRBool *aValue)
+nsSocketBOS::IsNonBlocking(PRBool *aValue)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketBOS::SetNonBlocking(PRBool aValue)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketBOS::GetObserver(nsIOutputStreamObserver **aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketBOS::SetObserver(nsIOutputStreamObserver *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aValue = PR_FALSE;
+    return NS_OK;
 }
 
 //
@@ -2456,25 +2428,11 @@ nsSocketIS::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure,
 }
 
 NS_IMETHODIMP
-nsSocketIS::GetNonBlocking(PRBool *aValue)
+nsSocketIS::IsNonBlocking(PRBool *aValue)
 {
     NS_ENSURE_ARG_POINTER(aValue);
     *aValue = PR_TRUE;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketIS::GetObserver(nsIInputStreamObserver **aObserver)
-{
-    NS_NOTREACHED("nsSocketIS::GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketIS::SetObserver(nsIInputStreamObserver *aObserver)
-{
-    NS_NOTREACHED("nsSocketIS::SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -2582,32 +2540,11 @@ nsSocketOS::WriteSegments(nsReadSegmentFun aReader, void *aClosure,
 }
 
 NS_IMETHODIMP
-nsSocketOS::GetNonBlocking(PRBool *aValue)
+nsSocketOS::IsNonBlocking(PRBool *aValue)
 {
     NS_ENSURE_ARG_POINTER(aValue);
     *aValue = PR_TRUE;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketOS::SetNonBlocking(PRBool aValue)
-{
-    NS_NOTREACHED("nsSocketOS::SetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketOS::GetObserver(nsIOutputStreamObserver **aObserver)
-{
-    NS_NOTREACHED("nsSocketOS::GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSocketOS::SetObserver(nsIOutputStreamObserver *aObserver)
-{
-    NS_NOTREACHED("nsSocketOS::SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

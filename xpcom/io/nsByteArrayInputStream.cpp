@@ -109,24 +109,10 @@ nsByteArrayInputStream::ReadSegments(nsWriteSegmentFun writer, void * aClosure, 
 }
 
 NS_IMETHODIMP 
-nsByteArrayInputStream::GetNonBlocking(PRBool *aNonBlocking)
+nsByteArrayInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsByteArrayInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsByteArrayInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

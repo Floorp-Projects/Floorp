@@ -298,31 +298,10 @@ nsPluginStreamToFile::WriteSegments(nsReadSegmentFun reader, void * closure, PRU
 }
 
 NS_IMETHODIMP
-nsPluginStreamToFile::GetNonBlocking(PRBool *aNonBlocking)
+nsPluginStreamToFile::IsNonBlocking(PRBool *aNonBlocking)
 {
-  NS_NOTREACHED("GetNonBlocking");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsPluginStreamToFile::SetNonBlocking(PRBool aNonBlocking)
-{
-  NS_NOTREACHED("SetNonBlocking");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsPluginStreamToFile::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-  NS_NOTREACHED("GetObserver");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsPluginStreamToFile::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-  NS_NOTREACHED("SetObserver");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aNonBlocking = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -43,6 +43,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIObservableInputStream.h"
 #include "nsIRequest.h"
 #include "nsCOMPtr.h"
 

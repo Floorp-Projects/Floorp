@@ -77,8 +77,6 @@ class BasicStringImpl
                                             PRUint32 aCount,
                                             PRUint32 *aReadCount);
         NS_IMETHOD                      ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) = 0;
-        NS_IMETHOD                      GetObserver(nsIInputStreamObserver * *aObserver);
-        NS_IMETHOD                      SetObserver(nsIInputStreamObserver * aObserver); 
 
         // nsIOutputStream interface
         NS_IMETHOD                      Write(const char* aBuf,
@@ -86,10 +84,7 @@ class BasicStringImpl
                                             PRUint32 *aWriteCount);
         NS_IMETHOD                      WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
         NS_IMETHOD                      WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval);
-        NS_IMETHOD                      GetNonBlocking(PRBool *aNonBlocking);
-        NS_IMETHOD                      SetNonBlocking(PRBool aNonBlocking);
-        NS_IMETHOD                      GetObserver(nsIOutputStreamObserver * *aObserver);
-        NS_IMETHOD                      SetObserver(nsIOutputStreamObserver * aObserver);
+        NS_IMETHOD                      IsNonBlocking(PRBool *aNonBlocking);
 
     public:
         
@@ -231,20 +226,6 @@ NS_IMETHODIMP BasicStringImpl::Read(char* aBuf, PRUint32 aCount, PRUint32 *aRead
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BasicStringImpl::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-BasicStringImpl::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP BasicStringImpl::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 //----------------------------------------------------------------------------------------
@@ -280,31 +261,10 @@ BasicStringImpl::WriteSegments(nsReadSegmentFun reader, void * closure,
 }
 
 NS_IMETHODIMP
-BasicStringImpl::GetNonBlocking(PRBool *aNonBlocking)
+BasicStringImpl::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-BasicStringImpl::SetNonBlocking(PRBool aNonBlocking)
-{
-    NS_NOTREACHED("SetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-BasicStringImpl::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-BasicStringImpl::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_TRUE;
+    return NS_OK;
 }
 
 //----------------------------------------------------------------------------------------

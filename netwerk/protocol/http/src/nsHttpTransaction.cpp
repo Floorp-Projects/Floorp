@@ -890,18 +890,7 @@ nsHttpTransaction::ReadSegments(nsWriteSegmentFun writer, void *closure,
 }
 
 NS_IMETHODIMP
-nsHttpTransaction::GetNonBlocking(PRBool *result)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHttpTransaction::GetObserver(nsIInputStreamObserver **obs)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP
-nsHttpTransaction::SetObserver(nsIInputStreamObserver *obs)
+nsHttpTransaction::IsNonBlocking(PRBool *result)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -455,22 +455,8 @@ nsDirectoryIndexStream::ReadSegments(nsWriteSegmentFun writer, void * closure, P
 }
 
 NS_IMETHODIMP
-nsDirectoryIndexStream::GetNonBlocking(PRBool *aNonBlocking)
+nsDirectoryIndexStream::IsNonBlocking(PRBool *aNonBlocking)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDirectoryIndexStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDirectoryIndexStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aNonBlocking = PR_FALSE;
+    return NS_OK;
 }

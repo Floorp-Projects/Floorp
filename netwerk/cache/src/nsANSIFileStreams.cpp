@@ -83,20 +83,10 @@ NS_IMETHODIMP nsANSIInputStream::ReadSegments(nsWriteSegmentFun writer, void * c
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsANSIInputStream::GetNonBlocking(PRBool *aNonBlocking)
+NS_IMETHODIMP nsANSIInputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;
-}
-
-NS_IMETHODIMP nsANSIInputStream::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsANSIInputStream::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsANSIInputStream::Seek(PRInt32 whence, PRInt32 offset)
@@ -190,23 +180,10 @@ NS_IMETHODIMP nsANSIOutputStream::WriteSegments(nsReadSegmentFun reader, void * 
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsANSIOutputStream::GetNonBlocking(PRBool *aNonBlocking)
+NS_IMETHODIMP nsANSIOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 {
     *aNonBlocking = PR_FALSE;
     return NS_OK;
-}
-NS_IMETHODIMP nsANSIOutputStream::SetNonBlocking(PRBool aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsANSIOutputStream::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsANSIOutputStream::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsANSIOutputStream::Seek(PRInt32 whence, PRInt32 offset)
