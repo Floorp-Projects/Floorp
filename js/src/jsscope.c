@@ -90,7 +90,6 @@ static void
 InitMinimalScope(JSScope *scope)
 {
     scope->hashShift = JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2;
-    scope->sizeLog2 = MIN_SCOPE_SIZE_LOG2;
     scope->entryCount = scope->removedCount = 0;
     scope->table = NULL;
     scope->lastProp = NULL;
@@ -111,7 +110,9 @@ CreateScopeTable(JSScope *scope)
          * overallocating to hold at least twice the current population.
          */
         sizeLog2 = JS_CeilingLog2(2 * scope->entryCount);
+        scope->hashShift = JS_DHASH_BITS - sizeLog2;
     } else {
+        JS_ASSERT(scope->hashShift == JS_DHASH_BITS - MIN_SCOPE_SIZE_LOG2);
         sizeLog2 = MIN_SCOPE_SIZE_LOG2;
     }
 
@@ -120,7 +121,6 @@ CreateScopeTable(JSScope *scope)
     if (!scope->table)
         return JS_FALSE;
 
-    scope->sizeLog2 = sizeLog2;
     scope->hashShift = JS_DHASH_BITS - sizeLog2;
     for (sprop = scope->lastProp; sprop; sprop = sprop->parent) {
         spp = js_SearchScope(scope, sprop->id, JS_TRUE);
@@ -141,6 +141,7 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 
     js_InitObjectMap(&scope->map, nrefs, ops, clasp);
     scope->object = obj;
+    scope->flags = 0;
     InitMinimalScope(scope);
 
 #ifdef JS_THREADSAFE
@@ -279,7 +280,7 @@ js_SearchScope(JSScope *scope, jsid id, JSBool adding)
     }
 
     /* Collision: double hash. */
-    sizeLog2 = scope->sizeLog2;
+    sizeLog2 = JS_DHASH_BITS - hashShift;
     hash2 = SCOPE_HASH2(hash0, sizeLog2, hashShift);
     sizeMask = JS_BITMASK(sizeLog2);
 
@@ -331,7 +332,7 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
     JSScopeProperty **table, **oldtable, **spp, **oldspp, *sprop;
 
     /* Grow, shrink, or compress by changing scope->table. */
-    oldlog2 = scope->sizeLog2;
+    oldlog2 = JS_DHASH_BITS - scope->hashShift;
     newlog2 = oldlog2 + change;
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
@@ -344,7 +345,6 @@ ChangeScope(JSContext *cx, JSScope *scope, int change)
 
     /* Now that we have a new table allocated, update scope members. */
     scope->hashShift = JS_DHASH_BITS - newlog2;
-    scope->sizeLog2 = newlog2;
     scope->removedCount = 0;
     oldtable = scope->table;
     scope->table = table;
@@ -810,7 +810,7 @@ CheckAncestorLine(JSScope *scope, JSBool sparse)
         JS_ASSERT(SCOPE_HAS_PROPERTY(scope, ancestorLine));
 
     entryCount = 0;
-    size = JS_BIT(scope->sizeLog2);
+    size = SCOPE_CAPACITY(scope);
     start = scope->table;
     for (spp = start, end = start + size; spp < end; spp++) {
         sprop = SPROP_FETCH(spp);
@@ -869,7 +869,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
     if (!sprop) {
         /* Check whether we need to grow, if the load factor is >= .75. */
         JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
-        size = JS_BIT(scope->sizeLog2);
+        size = SCOPE_CAPACITY(scope);
         if (scope->entryCount + scope->removedCount >= size - (size >> 2)) {
             if (scope->removedCount >= size >> 2) {
                 METER(compresses);
@@ -986,7 +986,7 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
 
             splen = scope->entryCount;
             if (splen == 0) {
-                scope->lastProp = NULL;
+                JS_ASSERT(scope->lastProp == NULL);
             } else {
                 /*
                  * Enumerate live entries in scope->table using a temporary
@@ -1075,6 +1075,8 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                 CHECK_ANCESTOR_LINE(scope, JS_FALSE);
                 JS_RUNTIME_METER(cx->runtime, middleDeleteFixups);
             }
+
+            SCOPE_CLR_MIDDLE_DELETE(scope);
         }
 
         /*
@@ -1165,12 +1167,12 @@ fail_overwrite:
             if (!sprop) {
                 sprop = SCOPE_LAST_PROP(scope);
                 if (overwriting->parent == sprop) {
-                    SCOPE_SET_LAST_PROP(scope, overwriting);
+                    scope->lastProp = overwriting;
                 } else {
                     sprop = GetPropertyTreeChild(cx, sprop, overwriting);
                     if (sprop) {
                         JS_ASSERT(sprop != overwriting);
-                        SCOPE_SET_LAST_PROP(scope, sprop);
+                        scope->lastProp = sprop;
                     }
                     overwriting = sprop;
                 }
@@ -1241,7 +1243,7 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
 
             if (scope->table)
                 SPROP_STORE_PRESERVING_COLLISION(spp, newsprop);
-            SCOPE_SET_LAST_PROP(scope, newsprop);
+            scope->lastProp = newsprop;
             CHECK_ANCESTOR_LINE(scope, JS_TRUE);
         }
     } else {
@@ -1309,7 +1311,7 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
     scope->entryCount--;
     JS_RUNTIME_UNMETER(cx->runtime, liveScopeProps);
 
-    /* Update scope->lastProp directly, or set its deferred update tag. */
+    /* Update scope->lastProp directly, or set its deferred update flag. */
     if (sprop == SCOPE_LAST_PROP(scope)) {
         do {
             SCOPE_REMOVE_LAST_PROP(scope);
@@ -1323,7 +1325,7 @@ js_RemoveScopeProperty(JSContext *cx, JSScope *scope, jsid id)
     CHECK_ANCESTOR_LINE(scope, JS_TRUE);
 
     /* Last, consider shrinking scope's table if its load factor is <= .25. */
-    size = JS_BIT(scope->sizeLog2);
+    size = SCOPE_CAPACITY(scope);
     if (size > MIN_SCOPE_SIZE && scope->entryCount <= size >> 2) {
         METER(shrinks);
         (void) ChangeScope(cx, scope, -1);
@@ -1343,6 +1345,7 @@ js_ClearScope(JSContext *cx, JSScope *scope)
 
     if (scope->table)
         free(scope->table);
+    SCOPE_CLR_MIDDLE_DELETE(scope);
     InitMinimalScope(scope);
 }
 

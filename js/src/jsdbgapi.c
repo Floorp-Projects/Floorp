@@ -1109,7 +1109,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
         scope = OBJ_SCOPE(obj);
         if (scope->object == obj) {
             nbytes += sizeof *scope;
-            nbytes += JS_BIT(scope->sizeLog2) * sizeof(JSScopeProperty *);
+            nbytes += SCOPE_CAPACITY(scope) * sizeof(JSScopeProperty *);
         }
     }
     return nbytes;
