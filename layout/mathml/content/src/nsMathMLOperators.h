@@ -26,6 +26,12 @@
 #include "nsCoord.h"
 
 typedef PRUint32 nsOperatorFlags;
+typedef PRInt32 nsStretchDirection;
+
+#define NS_STRETCH_DIRECTION_UNSUPPORTED  -1
+#define NS_STRETCH_DIRECTION_DEFAULT       0
+#define NS_STRETCH_DIRECTION_HORIZONTAL    1
+#define NS_STRETCH_DIRECTION_VERTICAL      2
 
 // define the bits used to handle the operator
 
@@ -36,22 +42,24 @@ typedef PRUint32 nsOperatorFlags;
 // XXX replace with the PR_BIT(n) macro
 
 #define NS_MATHML_OPERATOR_FORM  0x3 // the very last two bits tell us the form
-#define     NS_MATHML_OPERATOR_FORM_INFIX   1
-#define     NS_MATHML_OPERATOR_FORM_PREFIX  2
-#define     NS_MATHML_OPERATOR_FORM_POSTFIX 3
-#define NS_MATHML_OPERATOR_STRETCHY      (1<<2)
-#define NS_MATHML_OPERATOR_FENCE         (1<<3)
-#define NS_MATHML_OPERATOR_ACCENT        (1<<4)
-#define NS_MATHML_OPERATOR_LARGEOP       (1<<5)
-#define NS_MATHML_OPERATOR_SEPARATOR     (1<<6)
-#define NS_MATHML_OPERATOR_MOVABLELIMITS (1<<7)
+#define     NS_MATHML_OPERATOR_FORM_INFIX      1
+#define     NS_MATHML_OPERATOR_FORM_PREFIX     2
+#define     NS_MATHML_OPERATOR_FORM_POSTFIX    3
+#define NS_MATHML_OPERATOR_STRETCHY 0xC // the 2 penultimate last bits are used
+#define     NS_MATHML_OPERATOR_STRETCHY_VERT  (1<<2)
+#define     NS_MATHML_OPERATOR_STRETCHY_HORIZ (1<<3)
+#define NS_MATHML_OPERATOR_FENCE              (1<<4)
+#define NS_MATHML_OPERATOR_ACCENT             (1<<5)
+#define NS_MATHML_OPERATOR_LARGEOP            (1<<6)
+#define NS_MATHML_OPERATOR_SEPARATOR          (1<<7)
+#define NS_MATHML_OPERATOR_MOVABLELIMITS      (1<<8)
 
 // Additional bits not stored in the dictionary
 
-#define NS_MATHML_OPERATOR_SYMMETRIC     (1<<8)
+#define NS_MATHML_OPERATOR_SYMMETRIC          (1<<9)
 
-#define NS_MATHML_OPERATOR_MINSIZE_EXPLICIT  (1<<9)
-#define NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT  (1<<10)
+#define NS_MATHML_OPERATOR_MINSIZE_EXPLICIT   (1<<10)
+#define NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT   (1<<11)
 
 
 class nsMathMLOperators {
@@ -78,6 +86,13 @@ public:
   // Return true if the operator exists and is stretchy or largeop
   static PRBool
   IsMutableOperator(const nsString& aOperator);
+
+  // Helper functions for stretchy operators. These are used by the
+  // nsMathMLChar class.
+  static PRInt32 CountStretchyOperator();
+  static PRInt32 FindStretchyOperator(PRUnichar aOperator);
+  static nsStretchDirection GetStretchyDirectionAt(PRInt32 aIndex);
+  static void DisableStretchyOperatorAt(PRInt32 aIndex);
 };
 
 
@@ -93,6 +108,9 @@ public:
 #define NS_MATHML_OPERATOR_GET_FORM(_flags) \
   ((_flags) & NS_MATHML_OPERATOR_FORM)
 
+#define NS_MATHML_OPERATOR_GET_STRETCHY_DIR(_flags) \
+  ((_flags) & NS_MATHML_OPERATOR_STRETCHY)
+
 #define NS_MATHML_OPERATOR_FORM_IS_INFIX(_flags) \
   (NS_MATHML_OPERATOR_FORM_INFIX == ((_flags) & NS_MATHML_OPERATOR_FORM_INFIX))
 
@@ -103,7 +121,13 @@ public:
   (NS_MATHML_OPERATOR_FORM_POSTFIX == ((_flags) & NS_MATHML_OPERATOR_FORM_POSTFIX ))
 
 #define NS_MATHML_OPERATOR_IS_STRETCHY(_flags) \
-  (NS_MATHML_OPERATOR_STRETCHY == ((_flags) & NS_MATHML_OPERATOR_STRETCHY))
+  (0 != ((_flags) & NS_MATHML_OPERATOR_STRETCHY))
+
+#define NS_MATHML_OPERATOR_IS_STRETCHY_VERT(_flags) \
+  (NS_MATHML_OPERATOR_STRETCHY_VERT == ((_flags) & NS_MATHML_OPERATOR_STRETCHY_VERT))
+
+#define NS_MATHML_OPERATOR_IS_STRETCHY_HORIZ(_flags) \
+  (NS_MATHML_OPERATOR_STRETCHY_HORIZ == ((_flags) & NS_MATHML_OPERATOR_STRETCHY_HORIZ))
 
 #define NS_MATHML_OPERATOR_IS_FENCE(_flags) \
   (NS_MATHML_OPERATOR_FENCE == ((_flags) & NS_MATHML_OPERATOR_FENCE))
