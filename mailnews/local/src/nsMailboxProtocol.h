@@ -83,6 +83,9 @@ public:
 	nsMailboxProtocol(nsIURI * aURL);
 	virtual ~nsMailboxProtocol();
 
+  // initialization function given a new url and transport layer
+	nsresult Initialize(nsIURI * aURL);
+
 	// the consumer of the url might be something like an nsIDocShell....
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
@@ -123,8 +126,6 @@ private:
 									      PRUint32 sourceOffset, PRUint32 length);
 	virtual nsresult CloseSocket();
 
-	// initialization function given a new url and transport layer
-	void Initialize(nsIURI * aURL);
 	PRInt32 SetupMessageExtraction();
   nsresult OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount);
   PRBool RunningMultipleMsgUrl();

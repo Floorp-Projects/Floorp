@@ -89,7 +89,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 nsMailboxProtocol::nsMailboxProtocol(nsIURI * aURI)
     : nsMsgProtocol(aURI)
 {
-	Initialize(aURI);
+  m_lineStreamBuffer =nsnull;
 
     // initialize the pr log if it hasn't been initialiezed already
 	if (!MAILBOX)
@@ -166,7 +166,7 @@ nsresult nsMailboxProtocol::OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStar
 }
 
 
-void nsMailboxProtocol::Initialize(nsIURI * aURL)
+nsresult nsMailboxProtocol::Initialize(nsIURI * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into MAILBOX Protocol");
 	nsresult rv = NS_OK;
@@ -190,14 +190,14 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 			else
 			{
 				// we need to specify a byte range to read in so we read in JUST the message we want.
-				SetupMessageExtraction();
-				nsMsgKey aMsgKey;
-				PRUint32 aMsgSize = 0;
-				rv = m_runningUrl->GetMessageKey(&aMsgKey);
-				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
-				rv = m_runningUrl->GetMessageSize(&aMsgSize);
-				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
-
+				rv=SetupMessageExtraction();
+        if (NS_FAILED(rv)) return rv;
+        nsMsgKey aMsgKey;
+        PRUint32 aMsgSize = 0;
+        rv = m_runningUrl->GetMessageKey(&aMsgKey);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
+        rv = m_runningUrl->GetMessageSize(&aMsgSize);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
         if (RunningMultipleMsgUrl())
         {
           rv = OpenFileSocketForReuse(aURL, (PRUint32) aMsgKey, aMsgSize);
@@ -206,9 +206,9 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
           mProgressEventSink = nsnull;
         }
         else
-				  rv = OpenFileSocket(aURL, (PRUint32) aMsgKey, aMsgSize);
-				NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
-			}
+          rv = OpenFileSocket(aURL, (PRUint32) aMsgKey, aMsgSize);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "oops....i messed something up");
+      }
 		}
 	}
 
@@ -219,6 +219,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
   mCurrentProgress = 0;
 
 	NS_NewFileSpecWithSpec(m_tempMsgFileSpec, getter_AddRefs(m_tempMessageFile));
+  return rv;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -369,16 +370,14 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 	{
 		// now mark the message as read
 		nsCOMPtr<nsIMsgDBHdr> msgHdr;
-
-		rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+    if (m_runningUrl)
+		  rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+    NS_ASSERTION(msgHdr, "no msg hdr!");
+    if (!msgHdr) return NS_ERROR_UNEXPECTED;
     PRBool isRead;
     msgHdr->GetIsRead(&isRead);
-    if (NS_SUCCEEDED(rv) && !isRead) 
-    {
-      NS_ASSERTION(msgHdr, "no msg hdr!");
-      if (!msgHdr) return NS_ERROR_UNEXPECTED;
+    if (NS_SUCCEEDED(rv) && !isRead)
 			msgHdr->MarkRead(PR_TRUE);
-    }
 	}
 
 	return rv;

@@ -328,6 +328,12 @@ nsresult nsMailboxService::RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDi
 
 	if (protocol)
 	{
+    rv = protocol->Initialize(aMailboxUrl);
+    if (NS_FAILED(rv)) 
+    {
+      delete protocol;
+      return rv;
+    }
 		NS_ADDREF(protocol);
 		rv = protocol->LoadUrl(aMailboxUrl, aDisplayConsumer);
 		NS_RELEASE(protocol); // after loading, someone else will have a ref cnt on the mailbox
@@ -525,6 +531,12 @@ NS_IMETHODIMP nsMailboxService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 	nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI);
 	if (protocol)
 	{
+    rv = protocol->Initialize(aURI);
+    if (NS_FAILED(rv)) 
+    {
+      delete protocol;
+      return rv;
+    }
 		rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
 	}
 	else
