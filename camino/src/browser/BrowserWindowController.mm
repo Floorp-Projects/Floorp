@@ -1424,6 +1424,8 @@ static NSArray* sToolbarDefaults = nil;
     BrowserTabViewItem* newTab  = [self createNewTabItem];
     BrowserWrapper*     newView = [newTab view];
     
+    [self ensureBrowserVisible:self];
+    
     BOOL loadHomepage = NO;
     if (contents == eNewTabHomepage)
     {
