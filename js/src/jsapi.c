@@ -3643,7 +3643,8 @@ JS_SaveExceptionState(JSContext *cx)
     if (state) {
         state->throwing = JS_GetPendingException(cx, &state->exception);
         if (state->throwing && JSVAL_IS_GCTHING(state->exception))
-            JS_AddRoot(cx, &state->exception);
+            js_AddRoot(cx, &state->exception,
+                       "JSExceptionState.exception");
     }
     return state;
 #else
