@@ -35,6 +35,7 @@
 #include "npupp.h"
 #include "jri.h"
 #include "prlink.h"  // for PRLibrary
+#include "nsIScriptablePlugin.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
@@ -42,7 +43,8 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-class ns4xPluginInstance : public nsIPluginInstance
+class ns4xPluginInstance : public nsIPluginInstance,
+                           public nsIScriptablePlugin
 {
 public:
 
@@ -77,6 +79,13 @@ public:
 
     NS_IMETHOD HandleEvent(nsPluginEvent* event, PRBool* handled);
     
+    ////////////////////////////////////////////////////////////////////////
+    // nsIScriptablePlugin methods
+
+    NS_IMETHOD GetScriptablePeer(void * *aScriptablePeer);
+
+    NS_IMETHOD GetScriptableInterface(nsIID * *aScriptableInterface);
+
     ////////////////////////////////////////////////////////////////////////
     // ns4xPluginInstance-specific methods
 
