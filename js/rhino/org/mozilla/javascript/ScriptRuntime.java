@@ -1314,8 +1314,6 @@ public class ScriptRuntime {
             if (name.equals("eval") && cl == NativeGlobal.class)
                 return NativeGlobal.evalSpecial(cx, scope, thisArg, args, 
                                                 filename, lineNumber);
-            if (name.equals("js_Closure") && cl == NativeClosure.class)
-                return NativeClosure.newClosureSpecial(cx, scope, args, fo);
             if (name.equals("With") && cl == NativeWith.class)
                 return NativeWith.newWithSpecial(cx, args, fo, !isCall);
             if (name.equals("jsFunction_exec") && cl == NativeScript.class)
