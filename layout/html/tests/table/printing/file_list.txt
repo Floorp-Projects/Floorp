@@ -3,10 +3,12 @@ file:///s|/mozilla/layout/html/tests/table/printing/bug53690.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug54829.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug57378.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug57467.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug58665.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug59280-1.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug59280-2.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug61663.html
 file:///s|/mozilla/layout/html/tests/table/printing/bug66804.html
+file:///s|/mozilla/layout/html/tests/table/printing/bug85738.html
 file:///s|/mozilla/layout/html/tests/table/printing/split2Rows.html
 file:///s|/mozilla/layout/html/tests/table/printing/split3Rows.html
 file:///s|/mozilla/layout/html/tests/table/printing/splitCell-1.html
