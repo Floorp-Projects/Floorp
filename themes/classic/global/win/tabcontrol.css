@@ -87,7 +87,7 @@ tab {
   border: none;
   font: small-caption;
   color: buttontext;
-  user-focus: normal !important;
+  -moz-user-focus: normal !important;
 }
 
 tab > .tab-box > .tab-text {
