@@ -1503,7 +1503,8 @@ PRUint32                  i;
 		PR_FREEIF(m_attachments[i].m_encoding);
 		m_attachments[i].m_encoding = PL_strdup ("7bit");
 
-		msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
+        if (m_attachments[i].mURL)
+          msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
 
     //
     // Next, generate a content id for use with this part
@@ -1684,9 +1685,10 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
 
         if (m_attachments[newLoc].mFileSpec)
           delete (m_attachments[newLoc].mFileSpec);
-			  m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL((const char *) str) );
+        m_attachments[newLoc].mFileSpec = new nsFileSpec( nsFileURL((const char *) str) );
 
-			  msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
+        if (m_attachments[newLoc].mURL)
+          msg_pick_real_name(&m_attachments[newLoc], mCompFields->GetCharacterSet());
 
         // Now, most importantly, we need to figure out what the content type is for
         // this attachment...If we can't, then just make it application/octet-stream
@@ -1961,7 +1963,8 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 					PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_BINARY))
 				m_attachments[i].m_already_encoded_p = PR_TRUE;
 
-			msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
+            if (m_attachments[i].mURL)
+              msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
 		}
 	}
 
@@ -2042,7 +2045,8 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 							PL_strncasecmp(turl, "snews:",6))
 						news_count++;
 
-				msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
+                if (m_attachments[i].mURL)
+                  msg_pick_real_name(&m_attachments[i], mCompFields->GetCharacterSet());
 			}
 		}
   }
