@@ -1,13 +1,8 @@
 #!dest messenger:skin
-AccountManager.css
-mailheader.css
 subscribe.css
 threadPane.css
-fieldMapImport.css
-wizard.css
 folderPane.css
 msgHdrViewOverlay.css
-importDialog.css
 pref-mailnews.css
 messenger.css
 

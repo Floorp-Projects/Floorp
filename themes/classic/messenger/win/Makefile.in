@@ -31,15 +31,10 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-	AccountManager.css \
-	mailheader.css \
 	subscribe.css \
 	threadPane.css \
-	fieldMapImport.css \
-	wizard.css \
 	folderPane.css \
 	msgHdrViewOverlay.css \
-	importDialog.css \
 	pref-mailnews.css \
 	messenger.css \
 	$(NULL)
