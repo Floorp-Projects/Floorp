@@ -85,7 +85,6 @@ enum ePathTypes{
 };
 
 static void GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
-static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
 static nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
 
 // FillRect or InvertRect depending on the renderingaInvert parameter
@@ -3190,38 +3189,6 @@ nsCSSRendering::PaintBackgroundColor(nsIPresContext* aPresContext,
 
   aRenderingContext.SetColor(aColor.mBackgroundColor);
   aRenderingContext.FillRect(bgClipArea);
-}
-
-/** ---------------------------------------------------
- *  A bit blitter to tile images to the background recursively
- *	@update 4/13/99 dwc
- *  @param aRC -- Rendering Context to render to
- *  @param aDS -- Target drawing surface for the rendering context
- *  @param aSrcRect -- Rectangle we are build with the image
- *  @param aHeight -- height of the tile
- *  @param aWidth -- width of the tile
- */
-static void
-TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight)
-{
-nsRect  destRect;
-PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
-  
-  if( aSrcRect.width < aWidth) {
-    // width is less than double so double our source bitmap width
-    destRect = aSrcRect;
-    destRect.x += aSrcRect.width;
-    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag);
-    aSrcRect.width*=2; 
-    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight);
-  } else if (aSrcRect.height < aHeight) {
-    // height is less than double so double our source bitmap height
-    destRect = aSrcRect;
-    destRect.y += aSrcRect.height;
-    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag);
-    aSrcRect.height*=2;
-    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight);
-  } 
 }
 
 /** ---------------------------------------------------
