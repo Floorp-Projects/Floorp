@@ -192,12 +192,14 @@ int main(int argc, char* argv[])
     goto done;
   }
   
+#if 0
   // Get the URL to load
   rv = cmdLineArgs->GetURLToLoad(&urlstr);
   if (rv  == NS_ERROR_INVALID_ARG) {
     PrintUsage();
     goto done;
   }
+#endif  /* 0 */
   // Default URL if one was not provided in the cmdline
   // Changed by kostello on 2/10/99 to look for -editor
   // or -mail command line and load the appropriate URL.
