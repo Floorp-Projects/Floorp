@@ -373,18 +373,32 @@
       </xul:box>
     </content>
     <interface>
-      <property name="value"      onset="return this.anonymousContent[0].firstChild.value = val;"
+      <property name="value"      onset="this.anonymousContent[0].firstChild.value = val; return val;"
                                   onget="return this.anonymousContent[0].firstChild.value;"/>
-      <property name="type"       onset="return this.anonymousContent[0].firstChild.type = val;"
+      <property name="type"       onset="this.anonymousContent[0].firstChild.type = val; return val;"
                                   onget="return this.anonymousContent[0].firstChild.type;"/>
-      <property name="maxlength"  onset="return this.anonymousContent[0].firstChild.maxlength = val;"
+      <property name="maxlength"  onset="this.anonymousContent[0].firstChild.maxlength = val; return val;"
                                   onget="return this.anonymousContent[0].firstChild.maxlength;"/>
-      <property name="disabled"   onset="return this.anonymousContent[0].firstChild.disabled = val;"
+      <property name="disabled"   onset="this.anonymousContent[0].firstChild.disabled = val; return val;"
                                   onget="return this.anonymousContent[0].firstChild.disabled;"/>
-      <property name="size"       onset="return this.anonymousContent[0].firstChild.size = val;"
+      <property name="size"       onset="this.anonymousContent[0].firstChild.size = val; return val;"
                                   onget="return this.anonymousContent[0].firstChild.size;"/>
-      <property name="readonly"   onset="return this.anonymousContent[0].firstChild.readonly = val;"
+      <property name="readonly"   onset="this.anonymousContent[0].firstChild.readonly = val; return val;"
                                   onget="return this.anonymousContent[0].firstChild.readonly;"/>
+
+      <method name="select">
+        <body>
+          this.anonymousContent[0].firstChild.select();
+        </body>
+      </method>
+
+      <property name="controllers"    onget="return this.anonymousContent[0].firstChild.controllers;"/>
+      <property name="textLength"     onget="return this.anonymousContent[0].firstChild.textLength;"/>
+      <property name="selectionStart" onset="this.anonymousContent[0].firstChild.selectionStart = val; return val;"
+                                      onget="return this.anonymousContent[0].firstChild.selectionStart;"/>
+      <property name="selectionEnd"   onset="this.anonymousContent[0].firstChild.selectionEnd = val; return val;"
+                                      onget="return this.anonymousContent[0].firstChild.selectionEnd;"/>
+
       <method name="setSelectionRange">
         <argument name="aSelectionStart"/>
         <argument name="aSelectionEnd"/>
