@@ -429,7 +429,11 @@ searchterm
     border-right        : 1px solid #FFFFFF;
   }
   
-  
+.awIdentityLabel
+{
+  width: 8em; 
+  margin-left: 5px;
+}
 
 /** 
  *Focus rings on 3 pane view

@@ -227,6 +227,7 @@ blue.jar:
     skin/blue/messenger/message-news.gif                            (messenger/message-news.gif)
     skin/blue/messenger/messenger.css                               (messenger/messenger.css)
     skin/blue/messenger/more.gif                                    (messenger/more.gif)
+    skin/blue/messenger/msgAccountCentral.css                       (messenger/msgAccountCentral.css)
     skin/blue/messenger/msgHdrViewOverlay.css                       (messenger/msgHdrViewOverlay.css)
     skin/blue/messenger/newmsg.gif                                  (messenger/newmsg.gif)
     skin/blue/messenger/newshost.gif                                (messenger/newshost.gif)

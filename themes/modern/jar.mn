@@ -437,6 +437,7 @@ modern.jar:
     skin/modern/messenger/message-news.gif                            (messenger/message-news.gif)
     skin/modern/messenger/messenger.css                               (messenger/messenger.css)
     skin/modern/messenger/more.gif                                    (messenger/more.gif)
+    skin/modern/messenger/msgAccountCentral.css                       (messenger/msgAccountCentral.css)
     skin/modern/messenger/msgHdrViewOverlay.css                       (messenger/msgHdrViewOverlay.css)
     skin/modern/messenger/newmsg-clicked.gif                          (messenger/newmsg-clicked.gif)
     skin/modern/messenger/newmsg-disabled.gif                         (messenger/newmsg-disabled.gif)

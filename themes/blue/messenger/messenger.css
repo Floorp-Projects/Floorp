@@ -259,6 +259,11 @@ box#messagepanebox
    height: 0px;
 }
 
+.awIdentityLabel
+{
+  width: 8em; 
+  margin-left: 5px;
+}
 
 /**
  * this belongs in the mail filter window

@@ -509,3 +509,9 @@ searchterm
 {
   border: 1px solid black;
 }
+
+.awIdentityLabel
+{
+  width: 8em; 
+  margin-left: 5px;
+}

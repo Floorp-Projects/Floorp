@@ -700,3 +700,8 @@ searchterm {
   border-bottom: 1px solid #000000;
 }
 
+.awIdentityLabel
+{
+  width: 8em; 
+  margin-left: 5px;
+}

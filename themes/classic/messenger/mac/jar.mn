@@ -5,3 +5,4 @@ classic.jar:
 	skin/classic/messenger/folderPane.css
 	skin/classic/messenger/messenger.css
 	skin/classic/messenger/subscribe.css
+	skin/classic/messenger/msgAccountCentral.css
