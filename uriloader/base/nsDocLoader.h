@@ -42,7 +42,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsCOMPtr.h"
 
-struct nsChannelInfo;
+struct nsRequestInfo;
 
 /****************************************************************************
  * nsDocLoaderImpl implementation...
@@ -163,7 +163,7 @@ protected:
     PRInt32 mCurrentTotalProgress;
     PRInt32 mMaxTotalProgress;
 
-    nsVoidArray mChannelInfoList;
+    nsVoidArray mRequestInfoList;
 
 private:
     nsresult GetProgressStatusFlags(PRInt32* aProgressStatusFlags);
@@ -172,9 +172,9 @@ private:
     nsresult GetCurTotalProgress(PRInt32* aCurTotalProgress);
     nsresult GetMaxTotalProgress(PRInt32* aMaxTotalProgress);
 
-    nsresult AddChannelInfo(nsIChannel* channel);
-    nsChannelInfo *GetChannelInfo(nsIChannel* channel);
-    nsresult ClearChannelInfoList(void);
+    nsresult AddRequestInfo(nsIRequest* aRequest);
+    nsRequestInfo *GetRequestInfo(nsIRequest* aRequest);
+    nsresult ClearRequestInfoList(void);
     void CalculateMaxProgress(PRInt32 *aMax);
 ///    void DumpChannelInfo(void);
 

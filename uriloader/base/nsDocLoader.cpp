@@ -88,16 +88,14 @@ static NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENTVIEWERCONTAINER_IID);
 
 
-struct nsChannelInfo {
-  nsChannelInfo(nsIChannel *key) : mKey(key),
+struct nsRequestInfo {
+  nsRequestInfo(nsIRequest *key) : mKey(key),
                                    mCurrentProgress(0),
                                    mMaxProgress(0)
   {
-    key->GetURI(getter_AddRefs(mURI));
   }
 
   void* mKey;
-  nsCOMPtr<nsIURI> mURI;
   PRInt32 mCurrentProgress;
   PRInt32 mMaxProgress;
 };
@@ -439,7 +437,7 @@ nsDocLoaderImpl::Destroy()
     mParent = nsnull;
   }
 
-  ClearChannelInfoList();
+  ClearRequestInfoList();
 
   mDocumentRequest = 0;
 
@@ -451,7 +449,7 @@ nsDocLoaderImpl::Destroy()
 NS_IMETHODIMP
 nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 {
-    // called each time a channel is added to the group.
+    // called each time a request is added to the group.
     nsresult rv;
     
     nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
@@ -468,7 +466,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
     //
     // Only fire an OnStartDocumentLoad(...) if the document loader
     // has initiated a load...  Otherwise, this notification has
-    // resulted from a channel being added to the load group.
+    // resulted from a request being added to the load group.
     //
     if (mIsLoadingDocument) {
         PRUint32 count;
@@ -476,13 +474,13 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
         rv = mLoadGroup->GetActiveCount(&count);
         if (NS_FAILED(rv)) return rv;
         //
-        // Create a new ChannelInfo for the channel that is starting to
+        // Create a new nsRequestInfo for the request that is starting to
         // load...
         //
-        AddChannelInfo(aChannel);
+        AddRequestInfo(request);
 
         if (1 == count) {
-            // This channel is associated with the entire document...
+            // This request is associated with the entire document...
             mDocumentRequest = do_QueryInterface(request);
             mLoadGroup->SetDefaultLoadRequest(mDocumentRequest); 
         
@@ -498,7 +496,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
         }
     }
     else {
-      ClearChannelInfoList();
+      ClearRequestInfoList();
       doStartURLLoad(request);
       FireOnStartURLLoad(this, request);
     }
@@ -507,14 +505,12 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OnStopRequest(nsIRequest *request, 
+nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest, 
                                nsISupports *aCtxt, 
                                nsresult aStatus, 
                                const PRUnichar *aMsg)
 {
   nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
 
   //
   // Only fire the OnEndDocumentLoad(...) if the document loader 
@@ -529,14 +525,14 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *request,
     // this will allow a more accurate estimation of the max progress (in case
     // the old value was unknown ie. -1)
     //
-    nsChannelInfo *info;
-    info = GetChannelInfo(aChannel);
+    nsRequestInfo *info;
+    info = GetRequestInfo(aRequest);
     if (info) {
       PRInt32 oldMax = info->mMaxProgress;
 
       info->mMaxProgress = info->mCurrentProgress;
       //
-      // If a channel whose content-length was previously unknown has just
+      // If a request whose content-length was previously unknown has just
       // finished loading, then use this new data to try to calculate a
       // mMaxSelfProgress...
       //
@@ -548,8 +544,8 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *request,
     //
     // Fire the OnStateChange(...) notification for stop request
     //
-    doStopURLLoad(request, aStatus);
-    FireOnEndURLLoad(this, request, aStatus);
+    doStopURLLoad(aRequest, aStatus);
+    FireOnEndURLLoad(this, aRequest, aStatus);
     
     rv = mLoadGroup->GetActiveCount(&count);
     if (NS_FAILED(rv)) return rv;
@@ -562,8 +558,8 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *request,
     }
   }
   else {
-    doStopURLLoad(request, aStatus); 
-    FireOnEndURLLoad(this, request, aStatus);
+    doStopURLLoad(aRequest, aStatus); 
+    FireOnEndURLLoad(this, aRequest, aStatus);
   }
   
   return NS_OK;
@@ -1076,23 +1072,20 @@ nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // The following section contains support for nsIEventProgressSink which is used to 
-// pass progress and status between the actual channel and the doc loader. The doc loader
+// pass progress and status between the actual request and the doc loader. The doc loader
 // then turns around and makes the right web progress calls based on this information.
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *request, nsISupports* ctxt, 
+NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *aRequest, nsISupports* ctxt, 
                                           PRUint32 aProgress, PRUint32 aProgressMax)
 {
-  nsChannelInfo *info;
+  nsRequestInfo *info;
   PRInt32 progressDelta = 0;
 
   //
-  // Update the ChannelInfo entry with the new progress data
+  // Update the RequsetInfo entry with the new progress data
   //
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-
-
-  info = GetChannelInfo(aChannel);
+  info = GetRequestInfo(aRequest);
   if (info) {
     if ((0 == info->mCurrentProgress) && (0 == info->mMaxProgress)) {
       //
@@ -1124,7 +1117,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *request, nsISupports* ctxt
         flags |= nsIWebProgressListener::STATE_IS_DOCUMENT;
       }
 
-      FireOnStateChange(this, request, flags, NS_OK);
+      FireOnStateChange(this, aRequest, flags, NS_OK);
     }
 
     // Update the current progress count...
@@ -1134,16 +1127,16 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *request, nsISupports* ctxt
     info->mCurrentProgress = aProgress;
   } 
   //
-  // The channel is not part of the load group, so ignore its progress
+  // The request is not part of the load group, so ignore its progress
   // information...
   //
   else {
 #if defined(DEBUG)
     nsXPIDLCString buffer;
 
-    GetURIStringFromRequest(request, buffer);
+    GetURIStringFromRequest(aRequest, buffer);
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader:%p OOPS - No Channel Info for: %s\n",
+           ("DocLoader:%p OOPS - No Request Info for: %s\n",
             this, (const char *)buffer));
 #endif /* DEBUG */
 
@@ -1153,7 +1146,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *request, nsISupports* ctxt
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners
   //
-  FireOnProgressChange(this, request, aProgress, aProgressMax, progressDelta,
+  FireOnProgressChange(this, aRequest, aProgress, aProgressMax, progressDelta,
                        mCurrentTotalProgress, mMaxTotalProgress);
 
   return NS_OK;
@@ -1179,7 +1172,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
 
 void nsDocLoaderImpl::ClearInternalProgress()
 {
-  ClearChannelInfoList();
+  ClearRequestInfoList();
 
   mCurrentSelfProgress  = mMaxSelfProgress  = 0;
   mCurrentTotalProgress = mMaxTotalProgress = 0;
@@ -1378,42 +1371,32 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
   return NS_OK;
 }
 
-nsresult nsDocLoaderImpl::AddChannelInfo(nsIChannel *aChannel)
+nsresult nsDocLoaderImpl::AddRequestInfo(nsIRequest *aRequest)
 {
   nsresult rv;
   PRUint32 loadAttribs=nsIChannel::LOAD_NORMAL;
 
-  //
-  // Only create a ChannelInfo entry if the channel is *not* being loaded
-  // in the background...
-  //
-  rv = aChannel->GetLoadAttributes(&loadAttribs);
-  if (!(nsIChannel::LOAD_BACKGROUND & loadAttribs)) {
-    nsChannelInfo *info;
+  nsRequestInfo *info;
 
-    info = new nsChannelInfo(aChannel);
-    if (info) {
-      // XXX this method incorrectly returns a bool    
-      rv = mChannelInfoList.AppendElement(info) ? NS_OK : NS_ERROR_FAILURE;
-    } else {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  else {
-    rv = NS_OK;
+  info = new nsRequestInfo(aRequest);
+  if (info) {
+    // XXX this method incorrectly returns a bool    
+    rv = mRequestInfoList.AppendElement(info) ? NS_OK : NS_ERROR_FAILURE;
+  } else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
   }
   return rv;
 }
 
-nsChannelInfo * nsDocLoaderImpl::GetChannelInfo(nsIChannel *aChannel)
+nsRequestInfo * nsDocLoaderImpl::GetRequestInfo(nsIRequest *aRequest)
 {
-  nsChannelInfo *info;
+  nsRequestInfo *info;
   PRInt32 i, count;
 
-  count = mChannelInfoList.Count();
+  count = mRequestInfoList.Count();
   for(i=0; i<count; i++) {
-    info = (nsChannelInfo *)mChannelInfoList.ElementAt(i);
-    if (aChannel == info->mKey) {
+    info = (nsRequestInfo *)mRequestInfoList.ElementAt(i);
+    if (aRequest == info->mKey) {
       return info;
     }
   }
@@ -1421,19 +1404,19 @@ nsChannelInfo * nsDocLoaderImpl::GetChannelInfo(nsIChannel *aChannel)
   return nsnull;
 }
 
-nsresult nsDocLoaderImpl::ClearChannelInfoList(void)
+nsresult nsDocLoaderImpl::ClearRequestInfoList(void)
 {
-  nsChannelInfo *info;
+  nsRequestInfo *info;
   PRInt32 i, count;
 
-  count = mChannelInfoList.Count();
+  count = mRequestInfoList.Count();
   for(i=0; i<count; i++) {
-    info = (nsChannelInfo *)mChannelInfoList.ElementAt(i);
+    info = (nsRequestInfo *)mRequestInfoList.ElementAt(i);
     delete info;
   }
 
-  mChannelInfoList.Clear();
-  mChannelInfoList.Compact();
+  mRequestInfoList.Clear();
+  mRequestInfoList.Compact();
 
   return NS_OK;
 }
@@ -1443,11 +1426,11 @@ void nsDocLoaderImpl::CalculateMaxProgress(PRInt32 *aMax)
   PRInt32 i, count;
   PRInt32 current=0, max=0;
 
-  count = mChannelInfoList.Count();
+  count = mRequestInfoList.Count();
   for(i=0; i<count; i++) {
-    nsChannelInfo *info;
+    nsRequestInfo *info;
   
-    info = (nsChannelInfo *)mChannelInfoList.ElementAt(i);
+    info = (nsRequestInfo *)mRequestInfoList.ElementAt(i);
 
     current += info->mCurrentProgress;
     if (max >= 0) {
