@@ -1,15 +1,15 @@
 @import url(chrome://global/skin/);
 
 treecell.directory > .tree-button {
-  list-style-image: url("chrome://nav/skin/dir-closed.gif");
+  list-style-image: url("chrome://global/skin/dir-closed.gif");
 }
 
 treecell.directory[open="true"] > .tree-button {
-  list-style-image: url("chrome://nav/skin/dir-open.gif");
+  list-style-image: url("chrome://global/skin/dir-open.gif");
 }
 
 treecell.file > .tree-button {
-  list-style-image: url("chrome://nav/skin/blank.gif");
+  list-style-image: url("chrome://global/skin/blank.gif");
 }
 
 treeitem.hidden > treerow > treecell > .tree-button {
@@ -17,6 +17,6 @@ treeitem.hidden > treerow > treecell > .tree-button {
 }
 
 treeitem.hidden > treerow > treecell > .tree-icon {
-  list-style-image: url"chrome://nav/skin/blank.gif");
+  list-style-image: url("chrome://global/skin/blank.gif");
 }
 
