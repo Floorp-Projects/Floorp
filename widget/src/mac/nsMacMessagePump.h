@@ -72,6 +72,7 @@ private:
 	void			DoUpdate(EventRecord &anEvent);
 	void 			DoKey(EventRecord &anEvent);
 	void 			DoMenu(EventRecord &anEvent, long menuResult);
+	void 			DoDisk(const EventRecord &anEvent);
 	void			DoActivate(EventRecord &anEvent);
 	void			DoIdle(EventRecord &anEvent);
 

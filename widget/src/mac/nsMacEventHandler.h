@@ -42,6 +42,7 @@ protected:
 		virtual PRBool	HandleMouseDownEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseMoveEvent(EventRecord& aOSEvent);
+		virtual PRBool	HandleDiskEvent(const EventRecord& anEvent);
 
 		virtual void	ConvertOSEventToMouseEvent(
 									EventRecord&	aOSEvent,

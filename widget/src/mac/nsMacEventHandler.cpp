@@ -16,11 +16,15 @@
  * Reserved.
  */
 
-#include <LowMem.h>
 #include "nsMacEventHandler.h"
+
 #include "nsWindow.h"
 #include "nsToolkit.h"
 #include "prinrval.h"
+
+#include <ToolUtils.h>
+#include <DiskInit.h>
+#include <LowMem.h>
 
 // from MacHeaders.c
 #ifndef topLeft
@@ -98,6 +102,10 @@ PRBool nsMacEventHandler::HandleOSEvent(
 
 		case mouseUp:
 			retVal = HandleMouseUpEvent(aOSEvent);
+			break;
+
+		case diskEvt:
+			retVal = HandleDiskEvent(aOSEvent);
 			break;
 
 		case osEvt:
@@ -630,6 +638,21 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 	}
 
 	return retVal;
+}
+
+//-------------------------------------------------------------------------
+PRBool nsMacEventHandler::HandleDiskEvent(const EventRecord& anEvent)
+//-------------------------------------------------------------------------
+{
+	if (HiWord(anEvent.message) != noErr)
+	{
+		// Error mounting disk. Ask if user wishes to format it.	
+		Point pt = {120, 120};	// System 7 will auto-center dialog
+		::DILoad();
+		::DIBadMount(pt, (SInt32) anEvent.message);
+		::DIUnload();
+	}
+	return PR_TRUE;
 }
 
 
