@@ -133,6 +133,7 @@ sub GenerateEmailInput {
 <input name="email$id" size="30" value="">&nbsp;matching as
 <SELECT NAME=emailtype$id>
 <OPTION VALUE="regexp">regexp
+<OPTION VALUE="notregexp">not regexp
 <OPTION SELECTED VALUE="substring">substring
 <OPTION VALUE="exact">exact
 </SELECT>

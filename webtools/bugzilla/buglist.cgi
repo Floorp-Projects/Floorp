@@ -291,6 +291,8 @@ foreach my $id ("1", "2") {
             }
         } elsif ($type eq "regexp") {
             $query .= "\t$lead $table.login_name regexp $qemail\n";
+        } elsif ($type eq "notregexp") {
+            $query .= "\t$lead $table.login_name not regexp $qemail\n";
         } else {
             $query .= "\t$lead instr($table.login_name, $qemail)\n";
         }
