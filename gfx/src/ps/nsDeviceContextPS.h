@@ -88,7 +88,6 @@ protected:
   nsDrawingSurface 			mSurface;
   PRUint32 							mDepth;
   nsIDeviceContextSpec  *mSpec;
-  float                 mPixelScale;
   nsVoidArray           mFontMetrics;  // we are not using the normal font cache, this is special for PostScript.
   nsPostScriptObj       *mPSObj;
 

@@ -91,7 +91,7 @@ float t2d, a2d;
 
   GetTwipsToDevUnits(newscale);
   aPrinterContext->GetTwipsToDevUnits(origscale);
-  mPixelScale = newscale / origscale;
+  mCPixelScale = newscale / origscale;
 
   aPrinterContext->GetTwipsToDevUnits(t2d);
   aPrinterContext->GetAppUnitsToDevUnits(a2d);
