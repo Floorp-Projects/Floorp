@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Alec Flett <alecf@netscape.com>
+ *   Alec Flett <alecf@netscape.com>
+ *   Henrik Gemal <gemal@gemal.dk>
  */
 
 // be real hacky with document.getElementById until document.controls works
@@ -28,7 +29,7 @@ var gSmtpUsername;
 var gSmtpUsernameLabel;
 var gSmtpHostname;
 var gSmtpUseUsername;
-var gSmtpSavePassword;
+var gSmtpAuthMethod;
 
 var gSavedUsername="";
 
@@ -52,8 +53,8 @@ function initSmtpSettings(server) {
     if (gSmtpAuthMethod.getAttribute("value") == "1")
         gSmtpUseUsername.checked = true;
     
-    dump("gSmtpAuthMethod = <" + gSmtpAuthMethod.localName + ">\n");
-    dump("gSmtpAuthMethod.value = " + gSmtpAuthMethod.getAttribute("value") + "\n");
+    //dump("gSmtpAuthMethod = <" + gSmtpAuthMethod.localName + ">\n");
+    //dump("gSmtpAuthMethod.value = " + gSmtpAuthMethod.getAttribute("value") + "\n");
     
     onUseUsername(gSmtpUseUsername, false);
     updateControls();
@@ -67,12 +68,12 @@ function saveSmtpSettings(server)
     else
         gSmtpAuthMethod.setAttribute("value", "0");
 
-    dump("Saving to " + server + "\n");
+    //dump("Saving to " + server + "\n");
     if (server) {
         server.hostname = gSmtpHostname.value;
         server.authMethod = (gSmtpUseUsername.checked ? 1 : 0);
-        dump("Saved authmethod = " + server.authMethod +
-             " but checked = " + gSmtpUseUsername.checked + "\n");
+        //dump("Saved authmethod = " + server.authMethod +
+        //     " but checked = " + gSmtpUseUsername.checked + "\n");
         server.username = gSmtpUsername.value;
     }
 }
