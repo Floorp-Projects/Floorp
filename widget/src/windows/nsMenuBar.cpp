@@ -18,6 +18,7 @@
 
 #include "nsMenuBar.h"
 #include "nsIMenu.h"
+#include "nsIMenuItem.h"
 
 #include "nsToolkit.h"
 #include "nsColor.h"
@@ -34,7 +35,14 @@
 
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-//NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
+static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
+static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+//static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
+
+#include "nsWidgetsCID.h"
+static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
+static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
+static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
 nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
@@ -69,9 +77,36 @@ NS_IMPL_RELEASE(nsMenuBar)
 // nsMenuListener interface
 //
 //-------------------------------------------------------------------------
-nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
+nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
 	return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  printf("nsMenuBar::MenuSelected \n");
+  // Find which menu was selected and call MenuConstruct on it
+  HMENU aNativeMenu = (HMENU) aMenuEvent.nativeMsg;
+
+  NS_ASSERTION(false, "get debugger");
+  for(int i = 0; i < mItems->Count(); i++) {
+	if((nsIMenu*)mItems->ElementAt(i)) {
+	  void * tmp;
+      ((nsIMenu*)mItems->ElementAt(i))->GetNativeData(&tmp);
+	  HMENU nativeMenu = (HMENU) tmp;
+	  if(nativeMenu == aNativeMenu) {
+		nsIMenuListener * menulistener = 0;
+		((nsIMenu*)mItems->ElementAt(i))->QueryInterface( kIMenuListenerIID, (void**) &menulistener);
+		if(menulistener) {
+		  menulistener->MenuConstruct(aMenuEvent, mParent, mDOMNode, mWebShell);
+		  NS_RELEASE(menulistener);
+		}
+	  }
+	}
+  }
+
+  return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
@@ -79,9 +114,83 @@ nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 	return nsEventStatus_eIgnore;
 }
 
-nsEventStatus nsMenuBar::MenuConstruct(const nsMenuEvent & aMenuEvent)
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuBar::MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menubarNode,
+	void              * aWebShell)
 {
-	return nsEventStatus_eIgnore;
+    mWebShell = (nsIWebShell*) aWebShell;
+
+    nsIMenuBar * pnsMenuBar = nsnull;
+    nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
+    if (NS_OK == rv) {
+      if (nsnull != pnsMenuBar) {
+        pnsMenuBar->Create(aParentWindow);
+      
+        // set pnsMenuBar as a nsMenuListener on aParentWindow
+        nsCOMPtr<nsIMenuListener> menuListener;
+        pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+        aParentWindow->AddMenuListener(menuListener);
+
+        nsCOMPtr<nsIDOMNode> menuNode;
+        ((nsIDOMNode*)menubarNode)->GetFirstChild(getter_AddRefs(menuNode));
+        while (menuNode) {
+          nsCOMPtr<nsIDOMElement> menuElement(do_QueryInterface(menuNode));
+          if (menuElement) {
+            nsString menuNodeType;
+            nsString menuName;
+            menuElement->GetNodeName(menuNodeType);
+            if (menuNodeType.Equals("menu")) {
+              menuElement->GetAttribute(nsAutoString("name"), menuName);
+              // Don't create the menu yet, just add in the top level names
+              
+                // Create nsMenu
+                nsIMenu * pnsMenu = nsnull;
+                rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+                if (NS_OK == rv) {
+                  // Call Create
+                  nsISupports * supports = nsnull;
+                  pnsMenuBar->QueryInterface(kISupportsIID, (void**) &supports);
+                  pnsMenu->Create(supports, menuName);
+                  NS_RELEASE(supports);
+
+				  pnsMenu->SetDOMNode(menuNode);
+				  pnsMenu->SetDOMElement(menuElement);
+
+                  // Set nsMenu Name
+                  pnsMenu->SetLabel(menuName); 
+                  // Make nsMenu a child of nsMenuBar
+                  pnsMenuBar->AddMenu(pnsMenu); 
+				  // Set the WebShell
+				  pnsMenu->SetWebShell((nsIWebShell*)aWebShell);
+                  
+                  // Release the menu now that the menubar owns it
+                  //NS_RELEASE(pnsMenu);
+                }
+             } 
+
+          }
+          nsCOMPtr<nsIDOMNode> oldmenuNode(menuNode);  
+          oldmenuNode->GetNextSibling(getter_AddRefs(menuNode));
+        } // end while (nsnull != menuNode)
+          
+        // Give the aParentWindow this nsMenuBar to hold onto.
+        aParentWindow->SetMenuBar(pnsMenuBar);
+      
+        // HACK: force a paint for now
+        pnsMenuBar->Paint();
+        
+        // HACK for M4, should be removed by M5
+        #ifdef XP_MAC
+        Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
+		pnsMenuBar->SetNativeData((void*)tempMenuBar);
+		#endif
+    } // end if ( nsnull != pnsMenuBar )
+  }
+  
+  return nsEventStatus_eIgnore;
 }
 
 nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
@@ -100,7 +209,8 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
   mMenu     = nsnull;
   mParent   = nsnull;
   mIsMenuBarAdded = PR_FALSE;
-  mItems = new nsVoidArray();
+  mItems    = new nsVoidArray();
+  mWebShell = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -248,12 +358,5 @@ NS_METHOD nsMenuBar::SetNativeData(void * aData)
 NS_METHOD nsMenuBar::Paint()
 {
   mParent->Invalidate(PR_TRUE);
-  return NS_OK;
-}
-
-NS_METHOD nsMenuBar::ConstructMenuBar(nsIDOMElement * menubarElement)
-{
-  // Build the menubar
-  //mDOMElement = menubarElement; 
   return NS_OK;
 }

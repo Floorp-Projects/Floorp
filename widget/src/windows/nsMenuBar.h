@@ -45,17 +45,20 @@ public:
   virtual ~nsMenuBar();
 
   // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menubarNode,
+	void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
   NS_DECL_ISUPPORTS
 
-  
-  NS_IMETHOD Create(nsIWidget * aParent);
-
   // nsIMenuBar Methods
+  NS_IMETHOD Create(nsIWidget * aParent);
   NS_IMETHOD GetParent(nsIWidget *&aParent);
   NS_IMETHOD SetParent(nsIWidget * aParent);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
@@ -68,7 +71,7 @@ public:
   NS_IMETHOD Paint();
   NS_IMETHOD SetNativeData(void* aData);
 
-  NS_IMETHOD ConstructMenuBar(nsIDOMElement * menubarElement);
+  //NS_IMETHOD ConstructMenuBar(nsIDOMElement * menubarElement);
 
 protected:
   PRUint32    mNumMenus;
@@ -78,9 +81,12 @@ protected:
   PRBool      mIsMenuBarAdded;
 
   nsVoidArray * mItems;
-
-  nsCOMPtr<nsIWebShell>   mWebShell;
+  
+  // Hold onto our content node representation
   nsCOMPtr<nsIDOMElement> mDOMElement;
+  nsCOMPtr<nsIDOMNode>    mDOMNode;
+
+  nsIWebShell * mWebShell;
 };
 
 #endif // nsMenuBar_h__

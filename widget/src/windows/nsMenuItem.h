@@ -24,6 +24,8 @@
 #include "nsIWidget.h"
 #include "nsSwitchToUIThread.h"
 
+#include "nsCOMPtr.h"
+
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
@@ -51,6 +53,12 @@ public:
   NS_IMETHOD Create(nsIPopUpMenu * aParent);
 
   // nsIMenuBar Methods
+  NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
+  NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
+  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+  NS_IMETHOD SetCommand(const nsString & aStrCmd);
+  NS_IMETHOD DoCommand();
+
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
@@ -65,9 +73,14 @@ public:
   NS_IMETHOD IsSeparator(PRBool & aIsSep);
 
   // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent);
+  nsEventStatus MenuConstruct(
+    const nsMenuEvent & aMenuEvent,
+    nsIWidget         * aParentWindow, 
+    void              * menubarNode,
+	void              * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
   // Need for Native Impl
@@ -84,6 +97,10 @@ protected:
   nsIMenuListener * mListener;
   PRInt32     mCmdId;
   PRBool      mIsSeparator;
+
+  nsString                 mCommandStr;
+  nsCOMPtr<nsIWebShell>    mWebShell;
+  nsCOMPtr<nsIDOMElement>  mDOMElement;
 };
 
 #endif // nsMenuItem_h__
