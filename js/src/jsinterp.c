@@ -1106,8 +1106,9 @@ js_Interpret(JSContext *cx, jsval *result)
 	    intN nuses, n;
 
 	    fprintf(tracefp, "%4u: ", js_PCToLineNumber(script, pc));
-	    js_Disassemble1(cx, script, pc, pc - script->code, JS_FALSE,
-			    tracefp);
+	    js_Disassemble1(cx, script, pc,
+                            PTRDIFF(pc, script->code, jsbytecode), JS_FALSE,
+                            tracefp);
 	    nuses = cs->nuses;
 	    if (nuses) {
 		fp->sp = sp - nuses;
@@ -2853,7 +2854,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	  case JSOP_GOSUB:
 	    len = GET_JUMP_OFFSET(pc);
 	    JS_ASSERT(js_CodeSpec[JSOP_GOSUB].length == 3);
-	    i = pc - script->code + 3;
+	    i = PTRDIFF(pc, script->main, jsbytecode) + 3;
 	    PUSH(INT_TO_JSVAL(i));
 	    break;
 
@@ -2861,7 +2862,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    rval = POP();
 	    JS_ASSERT(JSVAL_IS_INT(rval));
 	    i = JSVAL_TO_INT(rval);
-	    pc = script->code + i;
+	    pc = script->main + i;
 	    len = 0;
 	    break;
 
@@ -3008,11 +3009,11 @@ out:
          */
         tn = script->trynotes;
         if (tn) {
-            offset = PTRDIFF(pc, script->code, jsbytecode);
+            offset = PTRDIFF(pc, script->main, jsbytecode);
             while (JS_UPTRDIFF(offset, tn->start) >= (jsuword)tn->length)
                 tn++;
             if (tn->catchStart) {
-                pc = script->code + tn->catchStart;
+                pc = script->main + tn->catchStart;
                 len = 0;
                 cx->throwing = JS_FALSE; /* caught */
                 ok = JS_TRUE;
