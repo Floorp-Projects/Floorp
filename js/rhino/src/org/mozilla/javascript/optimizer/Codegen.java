@@ -3473,12 +3473,14 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
             child = child.getNext();
         }
         cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
         cfw.addPush(name);
         addScriptRuntimeInvoke(
             "setName",
             "(Lorg/mozilla/javascript/Scriptable;"
             +"Ljava/lang/Object;"
             +"Lorg/mozilla/javascript/Context;"
+            +"Lorg/mozilla/javascript/Scriptable;"
             +"Ljava/lang/String;"
             +")Ljava/lang/Object;");
     }

@@ -2459,7 +2459,7 @@ switch (op) {
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Scriptable lhs = (Scriptable)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, cx, stringReg);
+        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, cx, scope, stringReg);
         continue Loop;
     }
     case Token.DELPROP : {
