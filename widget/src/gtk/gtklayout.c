@@ -162,17 +162,10 @@ gtk_layout_put (GtkLayout     *layout,
 
   gtk_widget_size_request (child->widget, &child->requisition);
   
-  if (GTK_WIDGET_VISIBLE (layout))
-    {
-      if (GTK_WIDGET_REALIZED (layout) &&
-	  !GTK_WIDGET_REALIZED (child_widget))
-	gtk_widget_realize (child_widget);
-      
-      if (GTK_WIDGET_MAPPED (layout) &&
-	  !GTK_WIDGET_MAPPED (child_widget))
-	gtk_widget_map (child_widget);
-    }
-  
+  if (GTK_WIDGET_REALIZED (layout) &&
+      !GTK_WIDGET_REALIZED (child_widget))
+    gtk_layout_realize_child (layout, child);
+
   gtk_layout_position_child (layout, child, TRUE);
 }
 
