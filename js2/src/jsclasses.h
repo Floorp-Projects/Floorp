@@ -192,10 +192,11 @@ namespace JSClasses {
         
         uint32 getSlotCount(JSClass* thisClass)
         {
-            uint32 slotCount = thisClass->getSlotCount();
-            JSClass* superClass = thisClass->getSuperClass();
-            if (superClass)
-                slotCount += getSlotCount(superClass);
+            uint32 slotCount = 0;
+            do {
+                slotCount += thisClass->getSlotCount();
+                thisClass = thisClass->getSuperClass();
+            } while(thisClass);
             return slotCount;
         }
     };
