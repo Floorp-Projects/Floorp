@@ -358,12 +358,28 @@ function setEnabled(control, enabled)
     control.setAttribute("disabled", true);
 }
 
+// this is a workaround for bug #51546
+// the on click handler is getting called twice
+var bug51546CurrentPage = null;
+var bug51546CurrentServerId = null;
+
 //
 // called when someone clicks on an account
 // figure out context by what they clicked on
 //
 function onAccountClick(tree) {
+  //dump("onAccountClick()\n");
+
   var result = getServerIdAndPageIdFromTree(tree);
+
+  //dump("sputter:"+bug51546CurrentPage+","+bug51546CurrentServerId+":"+result.pageId+","+result.serverId+"\n");
+  if ((bug51546CurrentPage == result.pageId) && (bug51546CurrentServerId == result.serverId)) {
+	//dump("workaround for #51546\n");
+	return;
+  }
+  
+  bug51546CurrentPage = result.pageId;
+  bug51546CurrentServerId = result.serverId;
   
   if (result) {
 	  showPage(result.serverId, result.pageId);
