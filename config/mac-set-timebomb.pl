@@ -105,8 +105,9 @@ sub time_diff {
 sub set_bomb {
     my ($warning_days, $bomb_days) = @_;
 
-    die("warning_days ($warning_days) must be greater than 0.")
-	unless ($warning_days > 0);
+#    die("warning_days ($warning_days) must be greater than 0.")
+#	unless ($warning_days > 0);
+
     die("bomb_days ($bomb_days) must be greater than 0.")
 	unless ($bomb_days > 0);
     die("warning_days ($warning_days) must be less than " .
@@ -115,20 +116,13 @@ sub set_bomb {
 
     my $mactime = time;
 
-    print $mactime . "\n";
-
 #   MacPerl stores date and times from 1904 instead of 1970
 #   Conversion routine thanks to Chris Nandor (pudge@pobox.com)
 
     $now = time_diff($mactime, 'unix');
 
-				print $now . "\n";
-
     my $bomb = $now + ($bomb_days * 24 * 60 * 60);
     my $warn = $now + ($warning_days * 24 * 60 * 60);
-
-    print $bomb . "\n";
-    print $warn . "\n";
 
     set_pref("timebomb.expiration_time", $bomb);
     set_pref("timebomb.warning_time", $warn);
@@ -150,12 +144,12 @@ sub main {
 
     if ($#_ == 0) {
 	$bomb_days = $warning_days;
-	$warning_days = undef;
+	$warning_days = -1;
     }
     if (!$bomb_days || $bomb_days <= 0) {
 	$bomb_days = 30;
     }
-    if (!$warning_days || $warning_days <= 0) {
+    if ($warning_days < 0) {
 	$warning_days = $bomb_days - int($bomb_days / 3);
 	if ($warning_days < $bomb_days - 10) {
 	    $warning_days = $bomb_days - 10;
