@@ -33,7 +33,7 @@
 // Assembly guff to return the EBP
 #ifdef _WIN32
 #define INLINE_GET_EBP(inEBPVariableName)			__asm mov inEBPVariableName, ebp
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(FREEBSD)
 #define INLINE_GET_EBP(inEBPVariableName)			__asm__ ("movl %%ebp,%0" : "=g" (inEBPVariableName) : /* no inputs */)
 #else
 #define INLINE_GET_EBP(inEBPVariableName)			inEBPVariableName = 0
@@ -118,7 +118,7 @@ getMethod()
 // Return the address of the function that called the getCallerPC
 extern Uint8* getCallerPC()
 {
-#if defined(WIN32) || defined(LINUX)
+#if defined(WIN32) || defined(LINUX) || defined(FREEBSD)
 	Uint8** myEBP;
 	
 	INLINE_GET_EBP(myEBP);
@@ -126,7 +126,7 @@ extern Uint8* getCallerPC()
 	Uint8** calleeEBP = (Uint8**) *myEBP;			// get the callee's EBP
 	Uint8* retAddress = (Uint8*) *(calleeEBP + 1);
 	return retAddress;
-#else	// WIN32 || LINUX
+#else	// WIN32 || LINUX || FREEBSD
 	return 0;
 #endif
 }

@@ -1083,7 +1083,7 @@ void Method::getDoubleWordArg(const Type &, JavaObject &arg, Uint32 &hi, Uint32 
 
 JavaObject *Method::invoke(JavaObject * PC_ONLY(obj), JavaObject * PC_ONLY(args)[], Int32 PC_ONLY(nArgs))
 {
-#if defined (XP_PC) || defined(LINUX)
+#if defined (XP_PC) || defined(LINUX) || defined(FREEBSD)
 #if 0
     void *code = addressFunction(getCode());
 #endif
