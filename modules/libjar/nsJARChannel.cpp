@@ -31,6 +31,7 @@
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,15 +53,22 @@ public:
         if (NS_SUCCEEDED(status)) {
             // after successfully downloading the jar file to the cache,
             // start the extraction process:
-            nsCOMPtr<nsIFileChannel> jarCacheFile = do_QueryInterface(jarCacheTransport, &rv);
+            NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
             if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIFileChannel> jarCacheFile;
+            rv = serv->NewChannelFromNativePath(mJarCacheFile.GetNativePathCString(), 
+                                                getter_AddRefs(jarCacheFile));
+            if (NS_FAILED(rv)) return rv;
+
             rv = mJARChannel->ExtractJARElement(jarCacheFile);
         }
         return rv;
     }
 
-    nsJARDownloadObserver(nsJARChannel* jarChannel) {
+    nsJARDownloadObserver(nsFileSpec& jarCacheFile, nsJARChannel* jarChannel) {
         NS_INIT_REFCNT();
+        mJarCacheFile = jarCacheFile;
         mJARChannel = jarChannel;
         NS_ADDREF(mJARChannel);
     }
@@ -70,6 +78,7 @@ public:
     }
 
 protected:
+    nsFileSpec          mJarCacheFile;
     nsJARChannel*       mJARChannel;
 };
 
@@ -233,7 +242,6 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIFileChannel> jarBaseFile = do_QueryInterface(jarBaseChannel, &rv);
-    if (NS_FAILED(rv)) return rv;
 
     // XXX need to set a state variable here to say we're reading
     mStartPosition = startPosition;
@@ -265,7 +273,7 @@ nsJARChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         rv = jarCacheTransport->SetNotificationCallbacks(mCallbacks);
         if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIStreamObserver> downloadObserver = new nsJARDownloadObserver(this);
+        nsCOMPtr<nsIStreamObserver> downloadObserver = new nsJARDownloadObserver(jarCacheFile, this);
         if (downloadObserver == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -286,6 +294,9 @@ nsJARChannel::GetCacheFile(nsFileSpec& cacheFile)
 
     nsSpecialSystemDirectory jarCacheFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     jarCacheFile += "jarCache";
+
+    if (!jarCacheFile.Exists())
+        jarCacheFile.CreateDirectory();
 
     nsCOMPtr<nsIURL> jarBaseURL = do_QueryInterface(mJARBaseURI, &rv);
     if (NS_FAILED(rv)) return rv;
