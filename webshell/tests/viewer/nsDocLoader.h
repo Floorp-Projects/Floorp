@@ -19,7 +19,7 @@
 #define nsDocLoader_h___
 
 #include "nscore.h"
-#include "nsISupports.h"
+#include "nsIStreamListener.h"
 
 
 class nsIViewerContainer;
@@ -35,66 +35,74 @@ class nsViewer;
   posts an exit application message
 */
 
-class nsDocLoader
-{
-  public:
-    nsDocLoader(nsIViewerContainer* aContainer, nsViewer* aViewer, PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
-    virtual ~nsDocLoader();
+class nsDocLoader : public nsIStreamObserver {
+public:
+  nsDocLoader(nsIViewerContainer* aContainer, nsViewer* aViewer,
+              PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
+
+  // nsISupports
+  NS_DECL_ISUPPORTS;
+
+  // nsIStreamObserver
+  NS_IMETHOD OnStartBinding(const char *aContentType);
+  NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+                        const nsString& aMsg);
+  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
     
-    // Add a URL to the doc loader
-    void AddURL(char* aURL);
-    void AddURL(nsString* aURL);
+  // Add a URL to the doc loader
+  void AddURL(char* aURL);
+  void AddURL(nsString* aURL);
 
-    // Get the timer and the url list
-    // needed to be available for the call back methods
-    nsVoidArray*  GetTimers() 
-    { return mTimers; }
-    nsVoidArray*  GetURLList()
-    { return mURLList; }
+  // Get the timer and the url list
+  // needed to be available for the call back methods
+  nsVoidArray*  GetTimers() 
+  { return mTimers; }
+  nsVoidArray*  GetURLList()
+  { return mURLList; }
 
 
-    void CreateOneShot(PRUint32 aDelay);
-    void CreateRepeat(PRUint32 aDelay);
-    void CallTest();
+  void CreateOneShot(PRUint32 aDelay);
+  void CreateRepeat(PRUint32 aDelay);
+  void CallTest();
 
-    // Set the delay (by default, the timer is set to one second)
-    void SetDelay(PRInt32 aSeconds);
+  // Set the delay (by default, the timer is set to one second)
+  void SetDelay(PRInt32 aSeconds);
     
-    // If set to TRUE the loader will post an exit message on
-    // exit
-    void SetExitOnDone(PRBool aPostExit);
+  // If set to TRUE the loader will post an exit message on
+  // exit
+  void SetExitOnDone(PRBool aPostExit);
 
-    // Start Loading the list of documents and executing the 
-    // Do Action Method on the documents
-    void StartTimedLoading();
+  // Start Loading the list of documents and executing the 
+  // Do Action Method on the documents
+  void StartTimedLoading();
 
-
-    // By default this method loads a document from
-    // the list of documents added to the loader
-    // Override in subclasses to get different behavior
-    virtual void DoAction(PRInt32 aDocNum);
+  // Start Loading the list of documents and executing the 
+  // Do Action Method on the documents
+  void StartLoading();
 
 
-  private:
+  // By default this method loads a document from
+  // the list of documents added to the loader
+  // Override in subclasses to get different behavior
+  virtual void DoAction(PRInt32 aDocNum);
 
-    void CancelAll();
+protected:
+  virtual ~nsDocLoader();
 
+  void CancelAll();
 
+  void LoadDoc(PRInt32 aDocNum, PRBool aObserveIt);
 
-    PRInt32       mDocNum;
-    PRBool        mStart;
-    PRInt32       mDelay;
-    PRBool        mPostExit;
-    nsIViewerContainer* mContainer;
-    nsIDocumentLoader*  mDocLoader;
-    nsViewer*     mViewer;
+  PRInt32       mDocNum;
+  PRBool        mStart;
+  PRInt32       mDelay;
+  PRBool        mPostExit;
+  nsIViewerContainer* mContainer;
+  nsIDocumentLoader*  mDocLoader;
+  nsViewer*     mViewer;
 
-    nsVoidArray*  mURLList;
-    nsVoidArray*  mTimers;
+  nsVoidArray*  mURLList;
+  nsVoidArray*  mTimers;
 };
 
-
-
 #endif
-
-
