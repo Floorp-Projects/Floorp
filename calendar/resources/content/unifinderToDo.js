@@ -142,7 +142,7 @@ function getToDoFromEvent( event )
    var row = new Object();
 
    tree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
-
+   
    if( row.value != -1 && row.value < tree.view.rowCount )
    { 
       var treeitem = tree.treeBoxObject.view.getItemAtIndex( row.value );
@@ -560,4 +560,25 @@ function changeToolTipTextForToDo( event )
    }
 }
 
+function changeContextMenuForToDo( event )
+{
+   var toDoItem = getToDoFromEvent( event );
+   
+   if( toDoItem )
+   {
+      var ArrayOfElements = document.getElementById( "taskitem-context-menu" ).getElementsByAttribute( "checked", "true" );
 
+      for( var i = 0; i < ArrayOfElements.length; i++ )
+         ArrayOfElements[i].removeAttribute( "checked" );
+
+      if( document.getElementById( "percent-"+toDoItem.percent+"-menuitem" ) )
+      {
+         document.getElementById( "percent-"+toDoItem.percent+"-menuitem" ).setAttribute( "checked", "true" );
+      }
+   
+      if( document.getElementById( "priority-"+toDoItem.priority+"-menuitem" ) )
+      {
+         document.getElementById( "priority-"+toDoItem.priority+"-menuitem" ).setAttribute( "checked", "true" );
+      }
+   }
+}

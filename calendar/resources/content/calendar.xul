@@ -91,6 +91,7 @@
    <command id="select_all_command" oncommand="selectAllEvents()"/>
    
    <command id="new_todo_command" oncommand="newToDoCommand()"/>
+   <command id="modify_todo_command" oncommand="unifinderDoubleClickToDo( event )"/>
    <command id="delete_todo_command" oncommand="unifinderDeleteToDoCommand()"/>
 
    <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
@@ -215,28 +216,27 @@
 </popup>
 
 <!-- TASK ITEM CONTEXT MENU -->
-<popup id="taskitem-context-menu">
+<popup id="taskitem-context-menu" onpopupshowing="changeContextMenuForToDo( event );">
+   <menuitem label="&calendar.context.newtodo.label;" accesskey="&calendar.context.newtodo.accesskey;" observes="new_todo_command"/>
    <!--
-   <menuitem label="&calendar.context.modifytask.label;" accesskey="&calendar.context.modifytask.accesskey;" observes="modify_command"/>
-   <menuitem label="&calendar.context.emailtask.label;" accesskey="&calendar.context.emailtask.accesskey;" observes="send_event_command"/>
-   <menuseparator/>
-   -->
+   Currently no way to get the item that we clicked on originally 
+   <menuitem label="&calendar.context.modifytask.label;" accesskey="&calendar.context.modifytask.accesskey;" observes="modify_todo_command"/>-->
    <menuitem label="&calendar.context.deletetask.label;" accesskey="&calendar.context.deletetask.accesskey;" observes="delete_todo_command"/>
    <menu label="&calendar.context.progress.label;" accesskey="&calendar.context.progress.accesskey;">
       <menupopup>
-         <menuitem label="0%"   oncommand="contextChangeProgress( event, 0 );"/>
-         <menuitem label="25%"  oncommand="contextChangeProgress( event, 25 );"/>
-         <menuitem label="50%"  oncommand="contextChangeProgress( event, 50 );"/>
-         <menuitem label="75%"  oncommand="contextChangeProgress( event, 75 );"/>
-         <menuitem label="100%" oncommand="contextChangeProgress( event, 100 );"/>
+         <menuitem type="checkbox" id="percent-0-menuitem" label="0%"   oncommand="contextChangeProgress( event, 0 );"/>
+         <menuitem type="checkbox" id="percent-25-menuitem" label="25%"  oncommand="contextChangeProgress( event, 25 );"/>
+         <menuitem type="checkbox" id="percent-50-menuitem" label="50%"  oncommand="contextChangeProgress( event, 50 );"/>
+         <menuitem type="checkbox" id="percent-75-menuitem" label="75%"  oncommand="contextChangeProgress( event, 75 );"/>
+         <menuitem type="checkbox" id="percent-100-menuitem" label="100%" oncommand="contextChangeProgress( event, 100 );"/>
       </menupopup>
    </menu>
    <menu label="&calendar.context.priority.label;" accesskey="&calendar.context.priority.accesskey;">
       <menupopup>
-         <menuitem label="&priority.level.none;"   oncommand="contextChangePriority( event, 0 );"/>
-         <menuitem label="&priority.level.low;"    oncommand="contextChangePriority( event, 9 );"/>
-         <menuitem label="&priority.level.medium;" oncommand="contextChangePriority( event, 5 );"/>
-         <menuitem label="&priority.level.high;"   oncommand="contextChangePriority( event, 1 );"/>
+         <menuitem type="checkbox" id="priority-0-menuitem" label="&priority.level.none;"   oncommand="contextChangePriority( event, 0 );"/>
+         <menuitem type="checkbox" id="priority-9-menuitem" label="&priority.level.low;"    oncommand="contextChangePriority( event, 9 );"/>
+         <menuitem type="checkbox" id="priority-5-menuitem" label="&priority.level.medium;" oncommand="contextChangePriority( event, 5 );"/>
+         <menuitem type="checkbox" id="priority-1-menuitem" label="&priority.level.high;"   oncommand="contextChangePriority( event, 1 );"/>
       </menupopup>
    </menu>
 </popup>
@@ -277,7 +277,7 @@
    </toolbar>
 </toolbox>
 
-<tooltip id="savetip" onpopupshowing="return( checkTooltip() );"/>
+<tooltip id="savetip" onpopupshowing="changeToolTipTextForToDo( event );return( checkTooltip() );"/>
 
 <!-- V I S I B L E  C O N T E N T  -->
 
@@ -379,7 +379,7 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
-                  <treechildren tooltip="savetip" onmousemove="changeToolTipTextForToDo( event )" 
+                  <treechildren tooltip="savetip"
                     onclick="unifinderClickToDo( event )" 
                     ondblclick="unifinderDoubleClickToDo( event )"
                     onmousedown="unifinderMouseDownToDo( event )"

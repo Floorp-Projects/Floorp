@@ -46,6 +46,9 @@
 <?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
+<?xml-stylesheet href="chrome://calendar/context/datepicker/datepicker.css" ?>
+<?xml-stylesheet href="chrome://calendar/context/datepicker/calendar.css" ?>
+
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE dialog 
 [
