@@ -47,12 +47,10 @@ ifndef MOZ_NATIVE_JPEG
 DIRS += jpeg
 endif
 
-ifndef NECKO
-DIRS += network
-endif
-
 ifdef NECKO
 DIRS += netwerk
+else
+DIRS += network
 endif
 
 DIRS +=				\
