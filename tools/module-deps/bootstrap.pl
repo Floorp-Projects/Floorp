@@ -235,14 +235,12 @@ sub FindMakefiles
   }
 
   # Stomp on generated file, or open a new one.
-  open ALLMAKEFILES, ">mozilla/allmakefiles.sh";
-  
-  # Add in stub allmakefiles.sh file.
-  open STUB, "mozilla/tools/module-deps/allmakefiles.stub";
-  while(<STUB>) {
-    print ALLMAKEFILES $_;
-  }
-  close STUB;
+  my $cmd = "cp mozilla/tools/module-deps/allmakefiles.stub mozilla/allmakefiles.sh";
+  print "$cmd\n";
+  system("$cmd");
+
+  # Open copy of stub file.
+  open ALLMAKEFILES, ">>mozilla/allmakefiles.sh";
 
   # Add in our hack
   print ALLMAKEFILES "MAKEFILES_bootstrap=\"\n";
@@ -280,10 +278,24 @@ sub FindMakefiles
   chdir($basedir);
   my $dir;
 
-  foreach (@dirs) {
-    print "dir = $_\n";
-  }
+  #
+  # Inherent build dependencies, we need to build some inital
+  # tools & directories first before attacking the modules.
+  #
+
+  # Build nspr
+  print "gmake -C mozilla/nsprpub\n";
+  system("gmake -C mozilla/nsprpub");
+
+  # Build config
+  print "gmake -C mozilla/config\n";
+  system("gmake -C mozilla/config");
+
+  # Build xpidl
+  print "gmake -C mozilla/xpcom/typelib\n";
+  system("gmake -C mozilla/xpcom/typelib");
   
+  # Now try the modules.
   foreach (@dirs) {
     print "dir = $_ (export)\n";
     #run_shell_command("gmake -C $_ export");
