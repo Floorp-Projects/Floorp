@@ -11,7 +11,7 @@
     margin                : 0px 5px 6px 5px;
   }
 
-.toolbar-primary
+.box-smallheader > .toolbar-primary
   {
     padding               : 0px 0px 3px 0px;
     min-height            : 0px;
@@ -89,13 +89,4 @@
     border-bottom         : 2px groove threedface;
     padding               : 7px;
   }
-
-/* top border on status area */
-#wizardButtons 
-  {
-    border-bottom         : 1px solid threedshadow;
-    padding-top           : 1px;
-    padding-bottom        : 1px;
-  }
-
 
