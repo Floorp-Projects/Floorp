@@ -77,20 +77,6 @@ EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)
   return PR_TRUE;
 }
 
-// 
-// This will search a string bundle (eventually) to find a descriptive header 
-// name to match what was found in the mail message. aHeaderName is passed in
-// in all caps and a dropback default name is provided. The caller needs to free
-// the memory returned by this function.
-//
-extern "C" char *
-LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName)
-{
-
-
-  return nsCRT::strdup(aDefaultName);
-}
-
 /* This is the next generation string retrieval call */
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -98,22 +84,22 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-#define MIME_URL "chrome://messenger/locale/mimeheader.properties"
+char  *MIME_URL = "chrome://messenger/locale/mimeheader.properties";
 
 extern "C" 
 char *
-MimeGetStringByNameREAL(const char *aHeaderName)
+MimeGetStringByName(const char *aHeaderName)
 {
   nsresult    res = NS_OK;
   char*       propertyURL;
-
+  
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (NS_SUCCEEDED(res) && prefs)
     res = prefs->CopyCharPref("mail.headerstrings.mime", &propertyURL);
-
+  
   if (!NS_SUCCEEDED(res) || !prefs)
     propertyURL = MIME_URL;
-
+  
   nsCOMPtr<nsIURI> pURI;
   NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
   if (NS_FAILED(res)) 
@@ -122,7 +108,7 @@ MimeGetStringByNameREAL(const char *aHeaderName)
       PR_FREEIF(propertyURL);
     return nsnull;
   }
-
+  
   res = pService->NewURI(propertyURL, nsnull, getter_AddRefs(pURI));
   if (NS_FAILED(res))
   {
@@ -130,13 +116,13 @@ MimeGetStringByNameREAL(const char *aHeaderName)
       PR_FREEIF(propertyURL);
     return nsnull;
   }
-
+  
   if (propertyURL != MIME_URL)
   {
     PR_FREEIF(propertyURL);
     propertyURL = nsnull;
   }
-
+  
   NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
   if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
   {
@@ -147,38 +133,41 @@ MimeGetStringByNameREAL(const char *aHeaderName)
     {
       return nsnull;
     }
-
+    
     nsAutoString v("");
-	PRUnichar * ptrv;
-	nsString uniStr(aHeaderName);
-	res = sBundle->GetStringFromName(uniStr.GetUnicode(), &ptrv);
-	v = ptrv;
-	NS_RELEASE(sBundle);
+    PRUnichar * ptrv;
+    nsString uniStr(aHeaderName);
+    res = sBundle->GetStringFromName(uniStr.GetUnicode(), &ptrv);
+    v = ptrv;
+    NS_RELEASE(sBundle);
     if (NS_FAILED(res)) 
       return nsnull;
-
+    
     // Here we need to return a new copy of the string
-    char      *returnBuffer = NULL;
-    PRInt32   bufferLen = v.Length() + 1;
-
-    returnBuffer = (char *)PR_MALLOC(bufferLen);
-    if (returnBuffer)
-    {
-      v.ToCString(returnBuffer, bufferLen);
-      return returnBuffer;
-    }
+    // This returns a UTF-8 string so the caller needs to perform a conversion 
+    // if this is used as UCS-2 (e.g. cannot do nsString(utfStr);
+    //
+    return v.ToNewUTF8String();
   }
 
   return nsnull;
 }
 
-extern "C" 
-char *
-MimeGetStringByName(const char *aHeaderName)
+// 
+// This will search a string bundle (eventually) to find a descriptive header 
+// name to match what was found in the mail message. aHeaderName is passed in
+// in all caps and a dropback default name is provided. The caller needs to free
+// the memory returned by this function.
+//
+extern "C" char *
+LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName)
 {
-  if (!nsCRT::strcasecmp(aHeaderName, "From")) return nsCRT::strdup("From");
+  char *retVal = MimeGetStringByName(aHeaderName);
 
-  return nsnull;
+  if (!retVal)
+    return retVal;
+  else
+    return nsCRT::strdup(aDefaultName);
 }
 
 //

@@ -1212,11 +1212,11 @@ mime_bridge_create_display_stream(
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-#define MIME_URL "resource:/res/mailnews/messenger/mime.properties"
+char *MIME_URL = "resource:/res/mailnews/messenger/mime.properties";
 
 extern "C" 
 char *
-MimeGetStringByIDREAL(PRInt32 stringID)
+MimeGetStringByID(PRInt32 stringID)
 {
   nsresult    res = NS_OK;
   char*       propertyURL;
@@ -1252,15 +1252,11 @@ MimeGetStringByIDREAL(PRInt32 stringID)
     }
 
     nsAutoString v("");
-#if 1
     PRUnichar *ptrv = nsnull;
     res = sBundle->GetStringFromID(stringID, &ptrv);
     v = ptrv;
-#else
-    res = sBundle->GetStringFromID(stringID, v);
-#endif
 
-	NS_RELEASE(sBundle);
+	  NS_RELEASE(sBundle);
     if (NS_FAILED(res)) 
     {
       char    buf[128];
@@ -1270,71 +1266,22 @@ MimeGetStringByIDREAL(PRInt32 stringID)
     }
 
     // Here we need to return a new copy of the string
-    char      *returnBuffer = NULL;
-    PRInt32   bufferLen = v.Length() + 1;
-
-    returnBuffer = (char *)PR_MALLOC(bufferLen);
+    // This returns a UTF-8 string so the caller needs to perform a conversion 
+    // if this is used as UCS-2 (e.g. cannot do nsString(utfStr);
+    //
+    char      *returnBuffer = v.ToNewUTF8String();
     if (returnBuffer)
     {
-      v.ToCString(returnBuffer, bufferLen);
-	  nsAllocator::Free(ptrv);
       return returnBuffer;
+    }
+    else
+    {
+      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
     }
   }
 
   return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
 }
-
-extern "C" 
-char *
-MimeGetStringByID(PRInt32 stringID)
-{
-  if (-1000 == stringID) return nsCRT::strdup("Application is out of memory.");
-  if (-1001 == stringID) return nsCRT::strdup("Unable to open the temporary file\n.\n%s\nCheck your `Temporary Directory' setting and try again.");
-  if (-1002 == stringID) return nsCRT::strdup("Error writing temporary file.");
-  if (1000 == stringID) return nsCRT::strdup("Subject");
-  if (1001 == stringID) return nsCRT::strdup("Resent-Comments");
-  if (1002 == stringID) return nsCRT::strdup("Resent-Date");
-  if (1003 == stringID) return nsCRT::strdup("Resent-Sender");
-  if (1004 == stringID) return nsCRT::strdup("Resent-From");
-  if (1005 == stringID) return nsCRT::strdup("Resent-To");
-  if (1006 == stringID) return nsCRT::strdup("Resent-CC");
-  if (1007 == stringID) return nsCRT::strdup("Date");
-  if (1008 == stringID) return nsCRT::strdup("Sender");
-  if (1009 == stringID) return nsCRT::strdup("From");
-  if (1010 == stringID) return nsCRT::strdup("Reply-To");
-  if (1011 == stringID) return nsCRT::strdup("Organization");
-  if (1012 == stringID) return nsCRT::strdup("To");
-  if (1013 == stringID) return nsCRT::strdup("CC");
-  if (1014 == stringID) return nsCRT::strdup("Newsgroups");
-  if (1015 == stringID) return nsCRT::strdup("Followup-To");
-  if (1016 == stringID) return nsCRT::strdup("References");
-  if (1017 == stringID) return nsCRT::strdup("Name");
-  if (1018 == stringID) return nsCRT::strdup("Type");
-  if (1019 == stringID) return nsCRT::strdup("Encoding");
-  if (1020 == stringID) return nsCRT::strdup("Description");
-  if (1021 == stringID) return nsCRT::strdup("Message-ID");
-  if (1022 == stringID) return nsCRT::strdup("Resent-Message-ID");
-  if (1023 == stringID) return nsCRT::strdup("BCC");
-  if (1024 == stringID) return nsCRT::strdup("Download Status");
-  if (1025 == stringID) return nsCRT::strdup("Not Downloaded Inline");
-  if (1026 == stringID) return nsCRT::strdup("Link to Document");
-  if (1027 == stringID) return nsCRT::strdup("<B>Document Info:</B>");
-  if (1028 == stringID) return nsCRT::strdup("Attachment");
-  if (1029 == stringID) return nsCRT::strdup("forward.msg");
-  if (1030 == stringID) return nsCRT::strdup("Add %s to your Address Book");
-  if (1031 == stringID) return nsCRT::strdup("<B><FONT COLOR=\042#808080\042>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Internal</FONT></B>");
-  if (1032 == stringID) return nsCRT::strdup("In message   wrote:<P>");
-  if (1033 == stringID) return nsCRT::strdup(" wrote:<P>");
-  if (1034 == stringID) return nsCRT::strdup("(no headers)");
-  if (1035 == stringID) return nsCRT::strdup("Toggle Attachment Pane");
-
-  char    buf[128];
-  
-  PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-  return nsCRT::strdup(buf);
-}
-
 
 // To support 2 types of emitters...we need these routines :-(
 nsIMimeEmitter *

@@ -647,170 +647,15 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
   return s;
 }
 
-
 #define MimeHeaders_write(OPT,DATA,LENGTH) \
   	MimeOptions_write((OPT), (DATA), (LENGTH), PR_TRUE);
 
-#if 0
-static char *
-MimeHeaders_default_news_link_generator (const char *dest, void *closure,
-	                    									 MimeHeaders *headers)
-{
-  /* This works as both the generate_news_url_fn and as the
-	 generate_reference_url_fn. */
-  char *prefix = "news:";
-  char *new_dest = nsEscape(dest, url_XAlphas);
-  char *result = (char *) PR_MALLOC (nsCRT::strlen (new_dest) +
-									nsCRT::strlen (prefix) + 1);
-  if (result)
-	{
-	  PL_strcpy (result, prefix);
-	  PL_strcat (result, new_dest);
-	}
-  nsCRT::free (new_dest);
-  return result;
-}
-
-static char *mime_escape_quotes (char *src)
-{
-	/* Make sure quotes are escaped with a backslash */
-	char *dst = (char *)PR_MALLOC((2 * nsCRT::strlen(src)) + 1);
-	if (dst)
-	{
-		char *walkDst = dst;
-		while (*src)
-		{
-			/* here's a big hack. double quotes, even if escaped, produce JS errors, 
-			 * so we'll just whack a double quote into a single quote. This string
-			 * is just eye candy anyway.
-			 */
-			if (*src == '\"') 
-				*src = '\'';
-
-			if (*src == '\'') /* is it a quote? */
-				if (walkDst == dst || *(src-1) != '\\')  /* is it escaped? */
-					*walkDst++ = '\\';
-
-			*walkDst++ = *src++;
-		}
-		*walkDst = '\0';
-	}
-	return dst;
-}
-
-static char *
-MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
-										   MimeHeaders *headers)
-{
-  char* names;
-  char* addresses;
-  char* name = NULL;
-  char* addr = NULL;
-  char* unquotedName;
-  char* unquotedAddr;
-  char* converted;
-  char* charset;
-  PRInt16 winCharSetID;
-  char* result = NULL;
-  char* tmp;
-  char* tmp2;
-  char* mouseOverText = NULL;
-  int j;
-  int num = ParseRFC822Addresses(dest, &names, &addresses);
-  char charsetName[128];
-  charsetName[0] = 0;
-  PR_ASSERT(num >= 1);
-  for (j=0 ; j<num ; j++) {
-	if (addr) {
-	  addr = addr + nsCRT::strlen(addr) + 1;
-	  name = name + nsCRT::strlen(name) + 1;
-	} else {
-	  addr = addresses;
-	  name = names;
-	}
-	if (!addr || !*addr) continue;
-
-	unquotedName = NULL;
-	unquotedAddr = NULL;
-	UnquotePhraseOrAddr (addr, &unquotedAddr);
-	if (!unquotedAddr) 
-		continue;
-	if (name)
-		UnquotePhraseOrAddr (name, &unquotedName);
-
-	winCharSetID = INTL_DefaultWinCharSetID(0);
-	converted = MIME_DecodeMimePartIIStr((const char *) unquotedName, charsetName);
-	if (converted && (converted != unquotedName)) {
-		PR_FREEIF(unquotedName);
-		unquotedName = converted;
-//TODO: naoki - After the decode, we may need to do a charset conversion.
-// If this is to handed to a widget then probably convert to unicode.
-// If this is put inside an HTML then convet to the content type charset of the HTML.
-    //		INTL_CharSetIDToName(winCharSetID, charsetName);
-		if (charsetName[0]) {
-			charset = PR_smprintf(";cs=%s", charsetName);
-		} else {
-			charset = PR_smprintf("");
-		}
-	} else {
-		charset = PR_smprintf("");
-	}
-	if (unquotedName && *unquotedName)
-		tmp = PR_smprintf("begin:vcard\nfn%s:%s\nemail;internet:%s\nend:vcard\n",
-		                  charset, unquotedName, unquotedAddr);
-	else
-		tmp = PR_smprintf("begin:vcard\nemail;internet:%s\nend:vcard\n", unquotedAddr);
-
-	/* Since the addbook: URL is a little gross to look at, try to use Javascript's 
-	 * mouseOver event to plug some more human readable text into the status bar.
-	 * If the user doesn't have JS enabled, they just get the gross URL.
-	 */
-	if (closure && !mouseOverText)
-	{
-		/* Make sure we don't feed any unescaped single or double quotes to the
-		 * Javascript interpreter, since that will cause the string termination
-		 * to be wrong, and things go downhill fast from there
-		 */
-		char *jsSafeName = mime_escape_quotes ((unquotedName && *unquotedName) ? unquotedName : unquotedAddr);
-		if (jsSafeName)
-		{
-      char  *mouseText = MimeGetStringByID(MIME_MSG_ADDBOOK_MOUSEOVER_TEXT);
-			char *localizedPart = PR_smprintf (mouseText, jsSafeName);
-      PR_FREEIF(mouseText);
-			if (localizedPart)
-			{
-				mouseOverText = PR_smprintf ("onMouseOver=\"window.status='%s'; return true\" onMouseOut=\"window.status=''\"", localizedPart);
-				PR_Free(localizedPart);
-				*((char**)closure) = mouseOverText;
-			}
-			PR_Free(jsSafeName);
-		}
-	}
-
-	PR_FREEIF(unquotedAddr);
-	PR_FREEIF(unquotedName);
-	PR_FREEIF(charset);
-
-	if (!tmp) break;
-	tmp2 = nsEscape(tmp, url_XAlphas);
-	PR_Free(tmp);
-	if (!tmp2) break;
-	result = PR_smprintf("addbook:add?vcard=%s", tmp2);
-	nsCRT::free(tmp2);
-	break;
-  }
-  PR_FREEIF(names);
-  PR_FREEIF(addresses);
-  return result;
-}
-#endif
 
 #define MimeHeaders_grow_obuffer(hdrs, desired_size) \
   ((((long) (desired_size)) >= ((long) (hdrs)->obuffer_size)) ? \
    mime_GrowBuffer ((desired_size), sizeof(char), 255, \
 				   &(hdrs)->obuffer, &(hdrs)->obuffer_size) \
    : 0)
-
 
 static int
 MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
@@ -843,57 +688,6 @@ MimeHeaders_convert_rfc1522(MimeDisplayOptions *opt,
 	}
   return 0;
 }
-
-#if 0
-static char *
-MimeHeaders_localize_header_name(char *name, MimeDisplayOptions *opt)
-{
-  if (!nsCRT::strcasecmp(name,HEADER_BCC))
-    return MimeGetStringByID(MIME_MHTML_BCC);
-  if (!nsCRT::strcasecmp(name,HEADER_CC))
-    return MimeGetStringByID(MIME_MHTML_CC);
-  if (!nsCRT::strcasecmp(name,HEADER_DATE))
-    return MimeGetStringByID(MIME_MHTML_DATE);
-  if (!nsCRT::strcasecmp(name,HEADER_FOLLOWUP_TO))
-    return MimeGetStringByID(MIME_MHTML_FOLLOWUP_TO);
-  if (!nsCRT::strcasecmp(name,HEADER_FROM))
-    return MimeGetStringByID(MIME_MHTML_FROM);
-  if (!nsCRT::strcasecmp(name,HEADER_MESSAGE_ID))
-    return MimeGetStringByID(MIME_MHTML_MESSAGE_ID);
-  if (!nsCRT::strcasecmp(name,HEADER_NEWSGROUPS))
-    return MimeGetStringByID(MIME_MHTML_NEWSGROUPS);
-  if (!nsCRT::strcasecmp(name,HEADER_ORGANIZATION))
-    return MimeGetStringByID(MIME_MHTML_ORGANIZATION);
-  if (!nsCRT::strcasecmp(name,HEADER_REFERENCES))
-    return MimeGetStringByID(MIME_MHTML_REFERENCES);
-  if (!nsCRT::strcasecmp(name,HEADER_REPLY_TO))
-    return MimeGetStringByID(MIME_MHTML_REPLY_TO);
-  if (!nsCRT::strcasecmp(name,HEADER_RESENT_CC))
-    return MimeGetStringByID(MIME_MHTML_RESENT_CC);
-  if (!nsCRT::strcasecmp(name,HEADER_RESENT_COMMENTS))
-    return MimeGetStringByID(MIME_MHTML_RESENT_COMMENTS);
-  if (!nsCRT::strcasecmp(name,HEADER_RESENT_DATE))
-    return MimeGetStringByID(MIME_MHTML_RESENT_DATE);
-  if (!nsCRT::strcasecmp(name,HEADER_RESENT_FROM))
-    return MimeGetStringByID(MIME_MHTML_RESENT_FROM);
-  if (!nsCRT::strcasecmp(name,HEADER_RESENT_MESSAGE_ID))
-    return MimeGetStringByID(MIME_MHTML_RESENT_MESSAGE_ID);
-  if (!nsCRT::strcasecmp(name,HEADER_RESENT_SENDER))
-    return MimeGetStringByID(MIME_MHTML_RESENT_SENDER);
-  if (!nsCRT::strcasecmp(name,HEADER_RESENT_TO))
-    return MimeGetStringByID(MIME_MHTML_RESENT_TO);
-  if (!nsCRT::strcasecmp(name,HEADER_SENDER))
-    return MimeGetStringByID(MIME_MHTML_SENDER);
-  if (!nsCRT::strcasecmp(name,HEADER_SUBJECT))
-    return MimeGetStringByID(MIME_MHTML_SUBJECT);
-  if (!nsCRT::strcasecmp(name,HEADER_TO))
-    return MimeGetStringByID(MIME_MHTML_TO);
-  if (!nsCRT::strcasecmp(name,HEADER_SUBJECT))
-    return MimeGetStringByID(MIME_MHTML_SUBJECT);
-
-  return NULL;  
-}
-#endif
 
 int
 MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBool attachment)
