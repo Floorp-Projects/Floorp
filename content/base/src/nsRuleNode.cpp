@@ -2712,6 +2712,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     display->mOverflow = NS_STYLE_OVERFLOW_AUTO;
   }
   else if (eCSSUnit_Inherit == displayData.mOverflow.GetUnit()) {
+    inherited = PR_TRUE;
     display->mOverflow = parentDisplay->mOverflow;
   }
 
@@ -3066,6 +3067,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
     bg->mBackgroundRepeat = colorData.mBackRepeat.GetIntValue();
   }
   else if (eCSSUnit_Inherit == colorData.mBackRepeat.GetUnit()) {
+    inherited = PR_TRUE;
     bg->mBackgroundRepeat = parentBG->mBackgroundRepeat;
   }
 
@@ -3238,23 +3240,31 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
     nsStyleCoord  parentCoord;
     if (SetCoord(marginData.mBorderWidth->mLeft, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
       border->mBorder.SetLeft(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mLeft.GetUnit())
+    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mLeft.GetUnit()) {
+      inherited = PR_TRUE;
       border->mBorder.SetLeft(parentBorder->mBorder.GetLeft(coord));
+    }
 
     if (SetCoord(marginData.mBorderWidth->mTop, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
       border->mBorder.SetTop(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mTop.GetUnit())
+    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mTop.GetUnit()) {
+      inherited = PR_TRUE;
       border->mBorder.SetTop(parentBorder->mBorder.GetTop(coord));
+    }
 
     if (SetCoord(marginData.mBorderWidth->mRight, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
       border->mBorder.SetRight(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mRight.GetUnit())
+    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mRight.GetUnit()) {
+      inherited = PR_TRUE;
       border->mBorder.SetRight(parentBorder->mBorder.GetRight(coord));
+    }
 
     if (SetCoord(marginData.mBorderWidth->mBottom, coord, parentCoord, SETCOORD_LE, aContext, mPresContext, inherited))
       border->mBorder.SetBottom(coord);
-    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mBottom.GetUnit())
+    else if (eCSSUnit_Inherit == marginData.mBorderWidth->mBottom.GetUnit()) {
+      inherited = PR_TRUE;
       border->mBorder.SetBottom(parentBorder->mBorder.GetBottom(coord));
+    }
   }
 
   // border-style: enum, none, inhert
