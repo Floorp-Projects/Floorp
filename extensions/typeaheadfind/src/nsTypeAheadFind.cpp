@@ -916,7 +916,8 @@ nsTypeAheadFind::FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly,
   // ------------ Get ranges ready ----------------
   nsCOMPtr<nsIDOMRange> returnRange;
   if (NS_FAILED(GetSearchContainers(currentContainer, aIsRepeatingSameChar,
-                                    aIsFirstVisiblePreferred, !aIsFirstVisiblePreferred,
+                                    aIsFirstVisiblePreferred, 
+                                    !aIsFirstVisiblePreferred || mStartFindRange,
                                     getter_AddRefs(presShell),
                                     getter_AddRefs(presContext)))) {
     return NS_ERROR_FAILURE;
@@ -1160,7 +1161,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
     mFocusedDocSelection->GetRangeAt(0, getter_AddRefs(currentSelectionRange));
   }
 
-  if (!currentSelectionRange || aIsFirstVisiblePreferred) {
+  if (!currentSelectionRange) {
     // Ensure visible range, move forward if necessary
     // This uses ignores the return value, but usese the side effect of
     // IsRangeVisible. It returns the first visible range after searchRange
@@ -1932,6 +1933,24 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     return PR_TRUE;
   }
 
+  // Get the next in flow frame that contains the range start
+  PRInt32 startRangeOffset, startFrameOffset, endFrameOffset;
+  aRange->GetStartOffset(&startRangeOffset);
+  while (PR_TRUE) {
+    frame->GetOffsets(startFrameOffset, endFrameOffset);
+    if (startRangeOffset < endFrameOffset) {
+      break;
+    }
+    nsIFrame *nextInFlowFrame = nsnull;
+    frame->GetNextInFlow(&nextInFlowFrame);
+    if (nextInFlowFrame) {
+      frame = nextInFlowFrame;
+    }
+    else {
+      break;
+    }
+  }
+
   // Set up the variables we need, return true if we can't get at them all
   const PRUint16 kMinPixels  = 12;
 
@@ -2018,6 +2037,8 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 
     if (firstVisibleNode) {
       (*aFirstVisibleRange)->SelectNode(firstVisibleNode);
+      frame->GetOffsets(startFrameOffset, endFrameOffset);
+      (*aFirstVisibleRange)->SetStart(firstVisibleNode, startFrameOffset);
       (*aFirstVisibleRange)->Collapse(PR_TRUE);  // Collapse to start
     }
   }
