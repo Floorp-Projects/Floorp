@@ -28,7 +28,7 @@ CHROME_L10N_DIR=global\locale
 
 CHROME_L10N = \
 	.\intl.css \
-	.\about.html \
+	.\about.xhtml \
 	.\globalOverlay.dtd \
 	.\dialogOverlay.dtd \
 	.\builtinURLs.rdf \
