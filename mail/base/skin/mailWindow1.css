@@ -988,7 +988,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 /* ..... folder pane adjustments ..... */
 
 #folderPaneHeaderContainer {
-  border-top: 1px solid ThreeDHighlight;
+
 }
 
 #folderPaneHeader {
@@ -1002,7 +1002,6 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 /* ..... splitter adjustments ..... */
 
 #folderpane_splitter {
-  border-top: 1px solid ThreeDHighlight;
   border-left: none;
   border-right: none;
   border-bottom: none;
