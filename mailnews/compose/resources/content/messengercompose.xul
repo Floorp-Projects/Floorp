@@ -44,6 +44,9 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://messengercompose/content/MsgComposeCommands.js"/>
 <html:script language="JavaScript" src="chrome://messengercompose/content/addressAutoComplete.js"/>
 
+<!--- REMOVE KEYSET UNTIL IT WORKS CORRECTLY ON MAC!
+ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF THE MODIFIERS PRESSED, THE COMMAND IS EXECUTED.
+
 <keyset id="defaultKeySet">
 	<key id="acmdkey" disabled="false" shift="false" command="true" alt="false" key="a" onkeypress="EditorSelectAll()" />
 	<key id="bcmdkey" disabled="false" shift="false" command="true" alt="false" key="b" onkeypress="EditorApplyStyle('b')"/>
@@ -59,6 +62,7 @@ Rights Reserved.
 	<key id="zcmdkey" disabled="false" shift="false" command="true" alt="false" key="z" onkeypress="EditorUndo()" />
 </keyset>
 
+-->
 	<!-- how to handle return, enter, tab, function keys, arrow keys, others? -->
 
 <broadcaster id="args" value="editorType=default"/>
