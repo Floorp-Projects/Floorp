@@ -21,17 +21,27 @@
 [%# INTERFACE:
   # realname: string. The user's real name, if any.
   # login:    string. The user's Bugzilla login email address.
+  # login_change_date: string. The date the email change will be complete. (optional)
+  # new_login_name:    string. The user's new Bugzilla login whilst not confirmed. (optional)
   #%]
 
 <table>
   <tr>
-    <th align="right">Old password:</th>
+    <td colspan="3">
+      Please enter your existing password to confirm account changes.
+    </td>
+  </tr>
+  <tr>
+    <th align="right">Password:</th>
     <td>
       <input type="hidden" name="Bugzilla_login" 
              value="[% login FILTER html %]" />
-      <input type="password" name="Bugzilla_password" />  
+      <input type="password" name="Bugzilla_password" />
     </td>
   </tr>              
+  <tr>
+    <td colspan="2"><hr></td>
+  </tr>
 
   <tr>
     <th align="right">New password:</th>
@@ -53,4 +63,36 @@
       <input size="35" name="realname" value="[% realname FILTER html %]" />
     </td>
   </tr>  
+
+  [% IF Param('allowemailchange') %]
+    [% IF login_change_date %]
+      [% IF new_login_name %]
+        <tr>
+          <th align="right">Pending email address:</th>
+          <td>[% new_login_name %]</td>
+        </tr>
+        <tr>
+          <th align="right">Change request expires:</th>
+          <td>[% login_change_date %]</td>
+        </tr>
+      [% ELSE %]
+        <tr>
+          <th align="right">Confirmed email address:</th>
+          <td>[% login FILTER html %]
+        </tr>
+        <tr>
+          <th align="right">Completion date:</th>
+          <td>[% login_change_date %]</td>
+        </tr>
+      [% END %]
+    [% ELSE %]
+      <tr>
+        <th align="right">New email address:</th>
+        <td>
+          <input size="35" name="new_login_name">
+        </td>
+      </tr>
+    [% END %]
+  [% END %]
+  
 </table>

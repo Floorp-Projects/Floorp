@@ -29,8 +29,9 @@
   # and its interface must be fulfilled.
   # current_tab: A direct reference to one of the hashes in the tabs list.
   #              This tab will be displayed.
-  # changes_saved: boolean. True if the CGI processed form data before 
-  #                displaying anything.
+  # changes_saved: boolean/string. True if the CGI processed form data before 
+  #                displaying anything, and can contain an optional custom
+  #                message if required (which Perl still evaluates as True).
   #%]
  
 [% INCLUDE global/header
@@ -75,6 +76,11 @@
       [% current_tab.description FILTER lower %] have been saved.
     </font>
   </p>
+  [% IF changes_saved != 1 %]
+    <p>
+      [% changes_saved %]
+    </p>
+  [% END %]
 [% END %]
 
 <h3>[% current_tab.description %]</h3>
