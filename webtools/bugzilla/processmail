@@ -471,6 +471,11 @@ sub NewProcessOneBug {
     for my $person (@personlist) {
         $count++;
 
+        my $match = "^[^@, ]*@[^@, ]*\.[^@, ]*\$";
+        if ($person !~ /$match/) {
+          $person = $person . Param('emailsuffix');
+        }
+
         &NewProcessOnePerson($person, $count, \@headerlist, \%values,
                              \%defmailhead, \%fielddescription, $difftext, 
                              $newcomments, $start, $id, 1);
@@ -510,7 +515,7 @@ sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
 
       foreach my $watcher ( $watcherSet->toArray() ) {
         
-        &NewProcessOnePerson(DBID_to_name($watcher), 
+        &NewProcessOnePerson(DBID_to_name($watcher) . Param('emailsuffix'), 
                             $count, \@headerlist, \%values,
                             \%defmailhead, \%fielddescription, $difftext, 
                             $newcomments, $start, $id, 0);
