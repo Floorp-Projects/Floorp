@@ -743,6 +743,10 @@ pref("plugin.expose_full_path", false); // if true navigator.plugins reveals ful
 // a popup blocker if they choose.
 pref("browser.popups.showPopupBlocker", true);
 
+// Help Windows NT, 2000, and XP dialup a RAS connection
+// when a network address is unreachable.
+pref("network.autodial-helper.enabled", true);
+
 // Pref to control whether we set ddeexec subkeys for the http
 // Internet shortcut protocol if we are handling it.  These
 // subkeys will be set only while we are running (to avoid the
