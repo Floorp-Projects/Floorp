@@ -122,7 +122,7 @@ NS_IMPL_RELEASE(CWellFormedDTD)
  *  @param   
  *  @return  
  */
-CWellFormedDTD::CWellFormedDTD() : nsIDTD(), mFilename("") {
+CWellFormedDTD::CWellFormedDTD() : nsIDTD() {
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;
@@ -177,15 +177,15 @@ eAutoDetectResult CWellFormedDTD::CanParse(CParserContext& aParserContext,nsStri
   eAutoDetectResult result=eUnknownDetect;
 
   if(eViewSource!=aParserContext.mParserCommand) {
-    if(aParserContext.mMimeType.Equals(kXMLTextContentType) ||
-       aParserContext.mMimeType.Equals(kRDFTextContentType) ||
-       aParserContext.mMimeType.Equals(kXULTextContentType)) {
+    if(aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
       result=ePrimaryDetect;
     }
     else {
       if(-1<aBuffer.Find("<?xml ")) {
         if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType(kXMLTextContentType);
+          aParserContext.SetMimeType( NS_ConvertToString(kXMLTextContentType) );
         }
         result=eValidDetect;
       }

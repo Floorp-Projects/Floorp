@@ -53,7 +53,7 @@ MOZ_DECL_CTOR_COUNTER(nsScanner);
  *  @return  
  */
 nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharsetSource aSource) : 
-  mBuffer(anHTMLString), mFilename(""), mUnicodeXferBuf("")
+  mBuffer(anHTMLString)
 {
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -64,7 +64,6 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
   mMarkPos=0;
   mInputStream=0;
   mUnicodeDecoder = 0;
-  mCharset = "";
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
   mNewlinesSkipped=0;
@@ -80,7 +79,7 @@ nsScanner::nsScanner(nsString& anHTMLString, const nsString& aCharset, nsCharset
  *  @return  
  */
 nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& aCharset, nsCharsetSource aSource) : 
-    mBuffer(""), mFilename(aFilename), mUnicodeXferBuf("")
+    mFilename(aFilename)
 {
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -94,7 +93,6 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
 		mInputStream = new nsInputFileStream(nsFileSpec(aFilename));
   } //if
   mUnicodeDecoder = 0;
-  mCharset = "";
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
   mNewlinesSkipped=0;
@@ -110,7 +108,7 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
  *  @return  
  */
 nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& aCharset, nsCharsetSource aSource) :
-    mBuffer(""), mFilename(aFilename) , mUnicodeXferBuf("")
+    mFilename(aFilename)
 {  
   MOZ_COUNT_CTOR(nsScanner);
 
@@ -121,7 +119,6 @@ nsScanner::nsScanner(nsString& aFilename,nsInputStream& aStream,const nsString& 
   mOwnsStream=PR_FALSE;
   mInputStream=&aStream;
   mUnicodeDecoder = 0;
-  mCharset = "";
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
   mNewlinesSkipped=0;
@@ -152,7 +149,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
     if(NS_FAILED(res) && (kCharsetUninitialized == mCharsetSource) )
     {
        // failed - unknown alias , fallback to ISO-8859-1
-      charsetName = "ISO-8859-1";
+      charsetName.AssignWithConversion("ISO-8859-1");
     }
     mCharset = charsetName;
     mCharsetSource = aSource;
@@ -241,10 +238,8 @@ PRUint32 nsScanner::Mark(PRInt32 anIndex){
  */
 PRBool nsScanner::Insert(const nsString& aBuffer) {
 
-  PRInt32 theLen=aBuffer.Length();
-
-  mBuffer.Insert(aBuffer,mOffset,theLen);
-  mTotalRead+=theLen;
+  mBuffer.Insert(aBuffer,mOffset);
+  mTotalRead+=aBuffer.Length();
   return PR_TRUE;
 }
 
@@ -317,7 +312,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
 	  // delete[] unichars;
   }
   else {
-    mBuffer.Append(aBuffer,aLen);
+    mBuffer.AppendWithConversion(aBuffer,aLen);
     mTotalRead+=aLen;
 
   }
@@ -394,7 +389,7 @@ nsresult nsScanner::FillBuffer(void) {
     }
     mOffset=mBuffer.Length();
     if((0<numread) && (0==result)) {
-      mBuffer.Append((const char*)buf,numread);
+      mBuffer.AppendWithConversion((const char*)buf,numread);
       mBuffer.StripChar(0);  //yank the nulls that come in from the net.
     }
     mTotalRead+=mBuffer.Length();

@@ -174,7 +174,7 @@ eXIFTags DetermineXIFTagType(const nsString& aString)
   
   while(low<=high){
     middle=(PRInt32)(low+high)/2;
-    result=aString.Compare(gXIFTagTable[middle].mName, PR_TRUE); 
+    result=aString.CompareWithConversion(gXIFTagTable[middle].mName, PR_TRUE); 
     if (result==0)
       return gXIFTagTable[middle].fTagID; 
     if (result<0)
@@ -251,7 +251,7 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
   mInContent=PR_FALSE;
   mLowerCaseAttributes=PR_TRUE;
   mLowerCaseTags=PR_TRUE;
-  mCharset = "";
+  mCharset.SetLength(0);
   mSink=0;
 }
 
@@ -303,18 +303,18 @@ nsresult nsXIFDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
 eAutoDetectResult nsXIFDTD::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(aParserContext.mMimeType.Equals(kXIFTextContentType)){
+  if(aParserContext.mMimeType.EqualsWithConversion(kXIFTextContentType)){
     result=ePrimaryDetect;
   }
   else 
   {
     if(kNotFound!=aBuffer.Find(kXIFDocHeader)) {
-      aParserContext.SetMimeType(kXIFTextContentType);
+      aParserContext.SetMimeType( NS_ConvertToString(kXIFTextContentType) );
       result=ePrimaryDetect;
     }
   }
   
-  nsString charset("ISO-8859-1");
+  nsString charset; charset.AssignWithConversion("ISO-8859-1");
   PRInt32 offset;
   offset = aBuffer.Find(kXIFDocInfo);
 
@@ -534,7 +534,7 @@ nsresult nsXIFDTD::HandleTextToken(CToken* aToken) {
   {
     nsString& temp = aToken->GetStringValueXXX();
 
-    if (!temp.Equals("<xml version=\"1.0\"?>"))
+    if (!temp.EqualsWithConversion("<xml version=\"1.0\"?>"))
     {
       result= AddLeaf(node);
     }
@@ -872,9 +872,9 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
     key.StripChars(quote);
     value.StripChars(quote);
 
-    if (key.Equals("name"))
+    if (key.EqualsWithConversion("name"))
       aKey = value;
-    if (key.Equals("value"))
+    if (key.EqualsWithConversion("value"))
     {
       aValue = value;
       hasValue = PR_TRUE;
@@ -901,12 +901,12 @@ eHTMLTags nsXIFDTD::GetStartTag(const nsIParserNode& aNode, nsString& aName)
   {
     case eXIFTag_container:
     case eXIFTag_leaf:
-      if (GetAttribute(aNode,nsString("isa"),aName))
+      if (GetAttribute(aNode,NS_ConvertToString("isa"),aName))
         tag = tag = nsHTMLTags::LookupTag(aName);
     break;
 
     case eXIFTag_css_stylesheet:
-      aName = "style";
+      aName.AssignWithConversion("style");
       tag = nsHTMLTags::LookupTag(aName);
     break;  
 
@@ -1299,7 +1299,7 @@ nsresult nsXIFDTD::CollectContentComment(CToken* aToken, nsCParserNode& aNode) {
       PRBool       done=PR_FALSE;
       PRBool       inContent=PR_FALSE;
       nsString&    comment=aToken->GetStringValueXXX(); 
-      comment="<!--"; // overwrite comment with "<!--"
+      comment.AssignWithConversion("<!--"); // overwrite comment with "<!--"
       while (!done && NS_SUCCEEDED(result))
       {
         token=mTokenizer->PopToken();
@@ -1307,14 +1307,14 @@ nsresult nsXIFDTD::CollectContentComment(CToken* aToken, nsCParserNode& aNode) {
         if(!token) return result;
 
         type=(eHTMLTokenTypes)token->GetTokenType();
-        fragment=token->GetStringValueXXX();
-        if(fragment.Equals("content")) {
+        fragment.Assign(token->GetStringValueXXX());
+        if(fragment.EqualsWithConversion("content")) {
           if(type==eToken_start) 
             inContent=PR_TRUE;
           else inContent=PR_FALSE;
         }
-        else if(fragment.Equals("comment")) {
-          comment.Append("-->");
+        else if(fragment.EqualsWithConversion("comment")) {
+          comment.AppendWithConversion("-->");
           result=(mSink)? mSink->AddComment(aNode):NS_OK;
           done=PR_TRUE;
         }
@@ -1414,7 +1414,7 @@ void nsXIFDTD::ProcessEncodeTag(const nsIParserNode& aNode)
   nsString value;
   PRInt32  error;
 
-  if (GetAttribute(aNode,nsString("selection"),value))
+  if (GetAttribute(aNode,NS_ConvertToString("selection"),value))
   {
     PRInt32 temp = value.ToInteger(&error);
     if (temp == 1)
@@ -1431,7 +1431,7 @@ void nsXIFDTD::ProcessEntityTag(const nsIParserNode& aNode)
 {
   nsAutoString value;
 
-  if (GetAttribute(aNode,nsString("value"),value)) {
+  if (GetAttribute(aNode,NS_ConvertToString("value"),value)) {
     value+=';';
     CEntityToken* entity = new CEntityToken(value);
     nsCParserNode node((CToken*)entity);
@@ -1448,7 +1448,7 @@ void nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
 
   mBuffer.Truncate(0);
   mMaxCSSSelectorWidth = 10;
-  if (GetAttribute(aNode,nsString("max_css_selector_width"),value))
+  if (GetAttribute(aNode,NS_ConvertToString("max_css_selector_width"),value))
   {
     PRInt32 temp = value.ToInteger(&error);
     if (error == NS_OK)
@@ -1470,9 +1470,9 @@ void nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
   CStartToken   startToken(tagName);
   nsCParserNode startNode((CToken*)&startToken);
 
-  mBuffer.Append("</");
+  mBuffer.AppendWithConversion("</");
   mBuffer.Append(tagName);
-  mBuffer.Append(">");
+  mBuffer.AppendWithConversion(">");
   startNode.SetSkippedContent(mBuffer);
   mSink->AddLeaf(startNode);
 
@@ -1494,7 +1494,7 @@ void nsXIFDTD::AddCSSSelector(const nsIParserNode& aNode)
 {
   nsString value;
 
-  if (GetAttribute(aNode, nsString("selectors"), value))
+  if (GetAttribute(aNode, NS_ConvertToString("selectors"), value))
   {
     if (mLowerCaseAttributes == PR_TRUE)
       value.ToLowerCase();
@@ -1517,16 +1517,16 @@ void nsXIFDTD::BeginCSSDeclarationList(const nsIParserNode& aNode)
     count = 0;
 
   for (PRInt32 i = 0; i < count; i++)
-    mBuffer.Append(" ");
+    mBuffer.AppendWithConversion(" ");
 
-  mBuffer.Append("   {");
+  mBuffer.AppendWithConversion("   {");
   mCSSDeclarationCount = 0;
 
 }
 
 void nsXIFDTD::EndCSSDeclarationList(const nsIParserNode& aNode)
 {
-  mBuffer.Append("}\n");
+  mBuffer.AppendWithConversion("}\n");
 }
 
 
@@ -1536,14 +1536,14 @@ void nsXIFDTD::AddCSSDeclaration(const nsIParserNode& aNode)
   nsString value;
 
 
-  if (PR_TRUE == GetAttribute(aNode, nsString("property"), property))
-    if (PR_TRUE == GetAttribute(aNode, nsString("value"), value))
+  if (PR_TRUE == GetAttribute(aNode, NS_ConvertToString("property"), property))
+    if (PR_TRUE == GetAttribute(aNode, NS_ConvertToString("value"), value))
     {
       if (mCSSDeclarationCount != 0)
-        mBuffer.Append(";");
-      mBuffer.Append(" ");
+        mBuffer.AppendWithConversion(";");
+      mBuffer.AppendWithConversion(" ");
       mBuffer.Append(property);
-      mBuffer.Append(": ");
+      mBuffer.AppendWithConversion(": ");
       mBuffer.Append(value);
       mCSSDeclarationCount++;
     }

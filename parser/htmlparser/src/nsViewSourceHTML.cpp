@@ -202,12 +202,21 @@ public:
  *  @param   
  *  @return  
  */
-CViewSourceHTML::CViewSourceHTML() : nsIDTD(), 
-  mStartTag("start"), mEndTag("end"), mCommentTag("comment"), 
-  mCDATATag("cdata"), mDocTypeTag("doctype"), mPITag("pi"), 
-  mEntityTag("entity"), mText("txt"), mKey("key"), mValue("val")
+CViewSourceHTML::CViewSourceHTML()
 {
   NS_INIT_REFCNT();
+
+  mStartTag.AssignWithConversion("start");
+  mEndTag.AssignWithConversion("end");
+  mCommentTag.AssignWithConversion("comment");
+  mCDATATag.AssignWithConversion("cdata");
+  mDocTypeTag.AssignWithConversion("doctype");
+  mPITag.AssignWithConversion("pi");
+  mEntityTag.AssignWithConversion("entity");
+  mText.AssignWithConversion("txt");
+  mKey.AssignWithConversion("key");
+  mValue.AssignWithConversion("val");
+
   mParser=0;
   mSink=0;
   mLineNumber=0;
@@ -269,15 +278,15 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
 eAutoDetectResult CViewSourceHTML::CanParse(CParserContext& aParserContext,nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(aParserContext.mMimeType.Equals(kPlainTextContentType) ||
-     aParserContext.mMimeType.Equals(kTextCSSContentType)) {
+  if(aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType) ||
+     aParserContext.mMimeType.EqualsWithConversion(kTextCSSContentType)) {
     result=eValidDetect;
   }
   else if(eViewSource==aParserContext.mParserCommand) {
-    if(aParserContext.mMimeType.Equals(kXMLTextContentType) ||
-       aParserContext.mMimeType.Equals(kRDFTextContentType) ||
-       aParserContext.mMimeType.Equals(kHTMLTextContentType) ||
-       aParserContext.mMimeType.Equals(kXULTextContentType)) {
+    if(aParserContext.mMimeType.EqualsWithConversion(kXMLTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType) ||
+       aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
       result=ePrimaryDetect;
     }
   }
@@ -327,7 +336,7 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
     CToken theToken("viewsource");
     nsCParserNode theNode(&theToken,0);
 
-    CAttributeToken *theAttr=new CAttributeToken("xmlns","http://www.mozilla.org/viewsource");
+    CAttributeToken *theAttr=new CAttributeToken(NS_ConvertToString("xmlns"), NS_ConvertToString("http://www.mozilla.org/viewsource"));
     if(theAttr)
       theNode.AddAttribute(theAttr);
     mSink->OpenContainer(theNode);
@@ -664,7 +673,7 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
     }
     if(0<theSpaces){
 
-      CEntityToken theToken("nbsp");
+      CEntityToken theToken( NS_ConvertToString("nbsp") );
       aContext.mStartNode.Init(&theToken);
       int theIndex;
       for(theIndex=0;theIndex<theSpaces;theIndex++)
@@ -748,7 +757,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
  *  @return  result status
  */
 nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
-  static nsString       theString("");
+  static nsString       theString;
 
   nsresult result=NS_OK;
 
@@ -811,7 +820,7 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt3
  *  @return  result status
  */
 nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
-  static nsString       theString("");
+  static nsString       theString;
 
   nsresult result=NS_OK;
 
@@ -893,7 +902,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           void*             theDocID=(pc)? pc->mKey:0; 
           eHTMLTags         theTag=(eHTMLTags)theToken->GetTypeID();  
 
-          result=theService->Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID,kViewSourceCommand,mParser);
+          result=theService->Notify(theTag,theContext.mTokenNode,(PRUint32)theDocID, NS_ConvertToString(kViewSourceCommand), mParser);
         }
       }
       theContext.mTokenNode.Init(0,0,gTokenRecycler);  //now recycle.
@@ -906,8 +915,8 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_cdatasection:
       {
         nsString& theStr=aToken->GetStringValueXXX();
-        theStr.Insert("<!",0);
-        theStr.Append("]]>");
+        theStr.InsertWithConversion("<!",0);
+        theStr.AppendWithConversion("]]>");
         result=WriteTag(mCDATATag,aToken,0,PR_TRUE);
       }
       break;
@@ -933,10 +942,10 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         nsAutoString theStr;
         nsString& theEntity=aToken->GetStringValueXXX();
-        if(!theEntity.Equals("XI",IGNORE_CASE)) {
+        if(!theEntity.EqualsWithConversion("XI",IGNORE_CASE)) {
           PRUnichar theChar=theEntity.CharAt(0);
           if((nsCRT::IsAsciiDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
-            theStr.Append("#");
+            theStr.AppendWithConversion("#");
           }
           theStr.Append(theEntity);
         }

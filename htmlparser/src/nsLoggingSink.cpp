@@ -510,15 +510,15 @@ nsLoggingSink::QuoteText(const nsString& aValue, nsString& aResult)
   while (cp < end) {
     PRUnichar ch = *cp++;
     if (ch == '"') {
-      aResult.Append("&quot;");
+      aResult.AppendWithConversion("&quot;");
     }
     else if (ch == '&') {
-      aResult.Append("&amp;");
+      aResult.AppendWithConversion("&amp;");
     }
     else if ((ch < 32) || (ch >= 127)) {
-      aResult.Append("&#");
-      aResult.Append(PRInt32(ch), 10);
-      aResult.Append(';');
+      aResult.AppendWithConversion("&#");
+      aResult.AppendWithConversion(PRInt32(ch), 10);
+      aResult.AppendWithConversion(';');
     }
     else {
       aResult.Append(ch);
