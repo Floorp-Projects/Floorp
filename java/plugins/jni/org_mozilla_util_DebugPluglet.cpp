@@ -18,13 +18,13 @@
  *
  * Contributor(s): 
  */
-#include "org_mozilla_util_Debug.h"
+#include "org_mozilla_util_DebugPluglet.h"
 /*
- * Class:     org_mozilla_util_Debug
+ * Class:     org_mozilla_util_DebugPluglet
  * Method:    print
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_util_Debug_print
+JNIEXPORT void JNICALL Java_org_mozilla_util_DebugPluglet_print
     (JNIEnv *env, jclass, jstring jval) {
     jboolean iscopy = JNI_FALSE;
     const char* cvalue = env->GetStringUTFChars(jval, &iscopy);
