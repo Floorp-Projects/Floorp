@@ -139,7 +139,7 @@ nsXMLCDATASection::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   nsCOMPtr<nsITextContent> textContent;
   nsresult rv = CloneContent(PR_TRUE, getter_AddRefs(textContent));
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(textContent, aReturn);
 }
