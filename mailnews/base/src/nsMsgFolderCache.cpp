@@ -69,6 +69,8 @@ static nsIMdbFactory *gMDBFactory = nsnull;
 nsMsgFolderCache::~nsMsgFolderCache()
 {
 	delete m_cacheElements;
+        if (m_mdbAllFoldersTable)
+          m_mdbAllFoldersTable->Release();
 	if (m_mdbStore)
 		m_mdbStore->Release();
 	if (gMDBFactory)
