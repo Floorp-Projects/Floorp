@@ -1560,7 +1560,8 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
         fflush(stdout);
     }
       else {
-        fprintf(stdout, "Error loading URL %s \n", (const char*)url);
+        fprintf(stdout, "Error loading URL %s: %0x \n", 
+                (const char*)url, aStatus);
         fflush(stdout);
     }
   } //if (!isFrame)
