@@ -40,6 +40,14 @@
 #include "jsdebug.h"
 #include "nsCOMPtr.h"
 
+#if defined(DEBUG_rginda_l)
+#define DEBUG_verbose
+#endif
+
+#ifdef DEBUG_verbose
+extern PRUint32 gScriptCount;
+#endif
+
 /*******************************************************************************
  * reflected jsd data structures
  *******************************************************************************/
@@ -186,9 +194,21 @@ class jsdScript : public jsdIScript
     NS_DECL_JSDISCRIPT
 
     /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdScript (JSDContext *aCx, JSDScript *aScript) : mCx(aCx), mScript(aScript)
+    jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE), mCx(aCx),
+                                                      mScript(aScript)
     {
+        if (mScript)
+            mValid = true;
         NS_INIT_ISUPPORTS();
+#ifdef DEBUG_verbose
+        printf ("++++++ jsdScript %i\n", ++gScriptCount);
+#endif
+    }
+    virtual ~jsdScript () 
+    {
+#ifdef DEBUG_verbose
+        printf ("------ jsdScript %i\n", --gScriptCount);
+#endif
     }
 
     static jsdIScript *FromPtr (JSDContext *aCx, JSDScript *aScript)
@@ -203,11 +223,12 @@ class jsdScript : public jsdIScript
             rv = NS_STATIC_CAST(jsdIScript *, data);
         } else {
             rv = new jsdScript (aCx, aScript);
-            NS_IF_ADDREF(rv);  // addref for the SetScriptPrivate
+            NS_IF_ADDREF(rv);  /* addref for the SetScriptPrivate, released in
+                                * Invalidate() */
             JSD_SetScriptPrivate (aScript, NS_STATIC_CAST(void *, rv));
         }
         
-        NS_IF_ADDREF(rv); // addref for the return value
+        NS_IF_ADDREF(rv); /* addref for return value */
         return rv;
     }
 
@@ -215,6 +236,7 @@ class jsdScript : public jsdIScript
     jsdScript(); /* no implementation */
     jsdScript (const jsdScript&); /* no implementation */
     
+    PRBool      mValid;
     JSDContext *mCx;
     JSDScript  *mScript;
 };
