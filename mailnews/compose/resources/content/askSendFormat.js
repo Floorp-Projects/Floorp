@@ -89,9 +89,10 @@ function Startup()
       var recommlabels = document.getElementById("hiddenLabels");
       var label;
       var haveRecommendation = false;
-
+      var radioSelect;
+       
       if (useDefault)
-        var radioSelect=defaultAction;
+        radioSelect=defaultAction;
       else
         radioSelect=param.action;
 
