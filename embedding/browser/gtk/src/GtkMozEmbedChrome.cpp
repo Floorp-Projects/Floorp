@@ -66,6 +66,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
 NS_INTERFACE_MAP_END
 
@@ -267,6 +268,41 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetParentContentListener(nsIURIContentListener 
 NS_IMETHODIMP GtkMozEmbedChrome::SetParentContentListener(nsIURIContentListener * aParentContentListener)
 {
   g_print("GtkMozEmbedChrome::SetParentContentListener\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsIWebProgressListener
+
+NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress,
+						  PRInt32 maxSelfProgress, PRInt32 curTotalProgress,
+						  PRInt32 maxTotalProgress)
+{
+  g_print("GtkMozEmbedChrome::OnProgressChange\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::OnChildProgressChange(nsIChannel *channel, PRInt32 curChildProgress,
+						       PRInt32 maxChildProgress)
+{
+  g_print("GtkMozEmbedChrome::OnChildProgressChange\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::OnStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
+{
+  g_print("GtkMozEmbedChrome::OnStatusChange\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
+{
+  g_print("GtkMozEmbedChrome::OnChildStatusChange\n");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIURI *location)
+{
+  g_print("GtkMozEmbedChrome::OnLocationChange\n");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
