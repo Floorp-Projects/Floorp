@@ -310,6 +310,8 @@ sub main {
     return (("testfailed")) ;
   }
 
+  system("rm -f $objdir/dist/bin/codesighs");
+
   # set up variables with default values
   my $last_build_day = 0;
   # need to modify the settings from tinder-config.pl
@@ -353,7 +355,7 @@ sub main {
     $cachebuild = 1;
   } else {
     $ftp_path   = $Settings::tbox_ftp_path;
-    $upload_directory = shorthost();
+    $upload_directory = shorthost() . "-" . "$Settings::milestone";
     $url_path   = $Settings::tbox_url_path . "/" . $upload_directory;
     $cachebuild = 0;
   }
