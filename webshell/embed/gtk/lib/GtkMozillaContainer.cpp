@@ -435,6 +435,8 @@ GtkMozillaContainer::StartStream(const char *base_url,
   nsresult rv = NS_OK;
   nsIURI* url = nsnull;
   nsIContentViewer* viewer = nsnull;
+  nsString url_str(base_url);
+  nsIInputStream *istream = NULL;
 
   NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) 
@@ -445,12 +447,10 @@ GtkMozillaContainer::StartStream(const char *base_url,
     goto error;
   NS_ADDREF(mStream); /* Own this */
   
-  nsIInputStream *istream = NULL;
   rv = CallQueryInterface(mStream, &istream);
   if (NS_FAILED(rv))
     goto error;
 
-  nsString url_str(base_url);
   rv = NS_NewURI(&url, url_str, NULL);
   if (NS_FAILED(rv)) 
     goto error;
