@@ -220,7 +220,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetExtState(PRUint32 *aState)
     PRUint32 state;
     nsAccessible::GetState(&state);
     if (!(state & STATE_INVISIBLE))
-      *aState |= STATE_SHOWING;
+      *aState |= EXT_STATE_SHOWING;
     return NS_OK;
 }
 
@@ -485,7 +485,7 @@ Returned AtkStatusSet never contain the following AtkStates.
 ******************************************************************************/
 
 void
-nsAccessibleWrap::TranslateStates(PRUint32 aState, void *aAtkStateSet)
+nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAtkStateSet)
 {
     if (!aAtkStateSet)
         return;
@@ -535,37 +535,34 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, void *aAtkStateSet)
 
     // The following state is
     // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
-    // This is only the states that there isn't already a mapping for in MSAA
-    // See www.accessmozilla.org/article.php?sid=11 for information on the
-    // mappings between accessibility API state
-    if (aState & nsIAccessible::STATE_INVALID)
+    if (aExtState & nsIAccessible::EXT_STATE_INVALID)
         atk_state_set_add_state (state_set, ATK_STATE_INVALID);
 
-    if (aState & nsIAccessible::STATE_ACTIVE)
+    if (aExtState & nsIAccessible::EXT_STATE_ACTIVE)
         atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
 
-    if (aState & nsIAccessible::STATE_EXPANDABLE)
+    if (aExtState & nsIAccessible::EXT_STATE_EXPANDABLE)
         atk_state_set_add_state (state_set, ATK_STATE_EXPANDABLE);
 
-    if (aState & nsIAccessible::STATE_MODAL)
+    if (aExtState & nsIAccessible::EXT_STATE_MODAL)
         atk_state_set_add_state (state_set, ATK_STATE_MODAL);
 
-    if (aState & nsIAccessible::STATE_MULTI_LINE)
+    if (aExtState & nsIAccessible::EXT_STATE_MULTI_LINE)
         atk_state_set_add_state (state_set, ATK_STATE_MULTI_LINE);
 
-    if (aState & nsIAccessible::STATE_SENSITIVE)
+    if (aExtState & nsIAccessible::EXT_STATE_SENSITIVE)
         atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
 
-    if (aState & nsIAccessible::STATE_SHOWING)
+    if (aExtState & nsIAccessible::EXT_STATE_SHOWING)
         atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
 
-    if (aState & nsIAccessible::STATE_SINGLE_LINE)
+    if (aExtState & nsIAccessible::EXT_STATE_SINGLE_LINE)
         atk_state_set_add_state (state_set, ATK_STATE_SINGLE_LINE);
 
-    if (aState & nsIAccessible::STATE_TRANSIENT)
+    if (aExtState & nsIAccessible::EXT_STATE_TRANSIENT)
         atk_state_set_add_state (state_set, ATK_STATE_TRANSIENT);
 
-    if (aState & nsIAccessible::STATE_VERTICAL)
+    if (aExtState & nsIAccessible::EXT_STATE_VERTICAL)
         atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
 }
 
@@ -883,13 +880,14 @@ refStateSetCB(AtkObject *aAtkObj)
     nsresult rv = accWrap->GetFinalState(&accState);
     NS_ENSURE_SUCCESS(rv, state_set);
 
-    rv = accWrap->GetExtState(&accState);
+    PRUint32 accExtState = 0;
+    rv = accWrap->GetExtState(&accExtState);
     NS_ENSURE_SUCCESS(rv, state_set);
 
-    if (accState == 0)
+    if ((accState == 0) && (accExtState == 0))
       return state_set;
 
-    nsAccessibleWrap::TranslateStates(accState, state_set);
+    nsAccessibleWrap::TranslateStates(accState, accExtState, state_set);
     return state_set;
 }
 
