@@ -39,8 +39,8 @@
  *
  * Execution of parse trees.
  *
- * XXX Standard classes are bootlegged from the host JS environment.  Until
- *     Array and String are metacircular,
+ * XXX Standard classes except for eval and Function are bootlegged from the
+ *     host JS environment.  Until Array and String are metacircular,
  *       load('js.js');
  *       evaluate(snarf('js.js'));
  *     will fail due to pigeon-hole problems in standard class prototypes.
@@ -617,7 +617,12 @@ function execute(n, x) {
       case NEW_WITH_ARGS:
         r = execute(n[0], x);
         f = getValue(r);
-        a = (n.type == NEW) ? {length: 0} : execute(n[1], x);
+        if (n.type == NEW) {
+            a = {};
+            a.__defineProperty__('length', 0, false, false, true);
+        } else {
+            a = execute(n[1], x);
+        }
         if (isPrimitive(f) || typeof f.__construct__ != "function")
             throw new TypeError(r + " is not a constructor");
         v = f.__construct__(a, x);
@@ -698,7 +703,9 @@ function FunctionObject(node, scope) {
     this.node = node;
     this.scope = scope;
     this.__defineProperty__('length', node.params.length, true, true, true);
-    this.__defineProperty__('prototype', {constructor: this}, true);
+    var proto = {};
+    proto.__defineProperty__('constructor', this, false, false, true);
+    this.__defineProperty__('prototype', proto, true);
 }
 
 var FOp = FunctionObject.prototype = {

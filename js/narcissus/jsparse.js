@@ -207,14 +207,14 @@ Tokenizer.prototype = {
 
 function CompilerContext(inFunction) {
     this.inFunction = inFunction;
-    this.inForLoopInit = false;
     this.stmtStack = [];
     this.funDecls = [];
     this.varDecls = [];
 }
 
 var CCp = CompilerContext.prototype;
-CCp.hookLevel = CCp.bracketLevel = CCp.curlyLevel = CCp.parenLevel = 0;
+CCp.bracketLevel = CCp.curlyLevel = CCp.parenLevel = CCp.hookLevel = 0;
+CCp.inForLoopInit = false;
 
 function compile(s) {
     var t = new Tokenizer(s);
@@ -904,6 +904,8 @@ loop:
                     reduce();
 
                 // Handle () now, to regularize the n-ary case for n > 0.
+                // We must set scanOperand in case there are arguments and
+                // the first one is a regexp or unary+/-.
                 n = operators.top();
                 t.scanOperand = true;
                 if (t.match(RIGHT_PAREN)) {
