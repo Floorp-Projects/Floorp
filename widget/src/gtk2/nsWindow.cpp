@@ -495,7 +495,7 @@ nsWindow::InvalidateRegion(const nsIRegion* aRegion,
 			   PRBool           aIsSynchronous)
 {
   GdkRegion *region = nsnull;
-  aRegion->GetNativeRegion((void *)region);
+  aRegion->GetNativeRegion((void *&)region);
 
   if (region) {
     GdkRectangle rect;
