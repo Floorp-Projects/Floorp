@@ -32,12 +32,8 @@ public:
 
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
-  NS_DECL_NSIMSGCOMPOSESERVICE
+	NS_DECL_NSIMSGCOMPOSESERVICE
   
 private:
 	nsCOMPtr<nsISupportsArray> m_msgQueue;
-	
-	//tempory hack
-	nsString		hack_uri[16];
-	nsISupports*	hack_object[16];
 };

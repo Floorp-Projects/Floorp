@@ -211,7 +211,6 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
                                   MSG_ComposeType type,
                                   MSG_ComposeFormat format,
                                   nsIMsgCompFields *compFields,
-                                  nsISupports *object,
                                   nsIMsgIdentity *identity)
 {
 	nsresult rv = NS_OK;
@@ -251,7 +250,7 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 
 	}
 
-	 CreateMessage(originalMsgURI, type, format, compFields, object); //object is temporary
+	 CreateMessage(originalMsgURI, type, format, compFields);
 
 	return rv;
 }
@@ -632,8 +631,7 @@ nsresult nsMsgCompose::GetWrapLength(PRInt32 *aWrapLength)
 nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
                                      MSG_ComposeType type,
                                      MSG_ComposeFormat format,
-                                     nsIMsgCompFields * compFields,
-                                     nsISupports * object)
+                                     nsIMsgCompFields * compFields)
 {
   nsresult rv = NS_OK;
 
@@ -644,12 +642,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       return rv;
   }
 
-  /* At this point, we have a list of URI of original message to reply to or forward but as the BE isn't ready yet,
-  we still need to use the old patch... gather the information from the object and the temp file use to display the selected message*/
-  if (object)
-  {
-    nsCOMPtr<nsIMessage> message;
-    rv = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
+    /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
+    /* TODO: Need to extract only first URI, just in case...*/
+    nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
     if ((NS_SUCCEEDED(rv)) && message)
     {
       nsString aString = "";
@@ -747,7 +742,6 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
         }
       }      
     }
-  }	
 
   return rv;
 }

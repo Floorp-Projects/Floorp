@@ -34,6 +34,7 @@
 #include "nsIPrompt.h"
 #include "nsString.h"
 #include "nsTextFormater.h"
+#include "nsIMsgIdentity.h"
 
 #include "prtime.h"
 #include "prlog.h"
@@ -297,17 +298,25 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 
 const char * nsSmtpProtocol::GetUserDomainName()
 {
+	nsresult rv;
 	NS_PRECONDITION(m_runningURL, "we must be running a url in order to get the user's domain...");
 
 	if (m_runningURL)
 	{
-		const char *atSignMarker = nsnull;
-		m_runningURL->GetUserEmailAddress(getter_Copies(m_mailAddr));
-		if (m_mailAddr)
-		{
-			atSignMarker = PL_strchr(m_mailAddr, '@');
-			return atSignMarker ? atSignMarker+1 :  (const char *) m_mailAddr;  // return const ptr into buffer in running url...
+		nsCOMPtr <nsIMsgIdentity> senderIdentity;
+		rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
+		if (NS_FAILED(rv) || !senderIdentity) {
+			return nsnull;
 		}
+		
+		rv =  senderIdentity->GetEmail(getter_Copies(m_mailAddr));
+		if (NS_FAILED(rv) || !((const char *)m_mailAddr)) {	
+			return nsnull;
+		}
+
+		const char *atSignMarker = nsnull;
+		atSignMarker = PL_strchr(m_mailAddr, '@');
+		return atSignMarker ? atSignMarker+1 :  (const char *) m_mailAddr;  // return const ptr into buffer in running url...
 	}
 
 	return nsnull;
@@ -524,18 +533,30 @@ PRInt32 nsSmtpProtocol::ExtensionLoginResponse(nsIInputStream * inputStream, PRU
 
 PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 length)
 {
-    PRInt32 status = 0;
+	PRInt32 status = 0;
 	nsCAutoString buffer;
+	nsresult rv;
 
-	// extract the email addresss
-	nsXPIDLCString userAddress;
-	m_runningURL->GetUserEmailAddress(getter_Copies(userAddress));
+	// extract the email address and fullname
+	nsXPIDLCString fullName;
+	nsXPIDLCString emailAddress;
+
+	nsCOMPtr <nsIMsgIdentity> senderIdentity;
+	rv = m_runningURL->GetSenderIdentity(getter_AddRefs(senderIdentity));
+	if (NS_FAILED(rv) || !senderIdentity) {
+		m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
+		return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
+	}
+	else {
+		senderIdentity->GetEmail(getter_Copies(emailAddress));
+		senderIdentity->GetFullName(getter_Copies(fullName)); 
+        }
 
 	/* don't check for a HELO response because it can be bogus and
 	 * we don't care
 	 */
 
-	if(!userAddress)
+	if(!((const char *)emailAddress))
 	{
 		m_urlErrorState = NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS;
 		return(NS_ERROR_COULD_NOT_GET_USERS_MAIL_ADDRESS);
@@ -556,9 +577,9 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
                                             nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
                                             getter_AddRefs(parser));
 
-		 char * s = nsnull;
+		 char *fullAddress = nsnull;
 		 if (parser)
-			 parser->MakeFullAddress(nsnull, nsnull, userAddress, &s);
+			 parser->MakeFullAddress(nsnull, fullName, emailAddress, &fullAddress);
 
 #ifdef UNREADY_CODE		
 		 if (CE_URL_S->msg_pane) 
@@ -568,14 +589,14 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 				if (TestFlag(SMTP_EHLO_DSN_ENABLED)) 
 				{
 					PR_snprintf(buffer, sizeof(buffer), 
-								"MAIL FROM:<%.256s> RET=FULL ENVID=NS40112696JT" CRLF, s);
+								"MAIL FROM:<%.256s> RET=FULL ENVID=NS40112696JT" CRLF, fullAddress);
 				}
 				else 
 				{
 #ifdef UNREADY_CODE
 					FE_Alert (CE_WINDOW_ID, XP_GetString(XP_RETURN_RECEIPT_NOT_SUPPORT));
 #endif
-					PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, s);
+					PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, fullAddress);
 				}
 			}
 #ifdef UNREADY_CODE
@@ -586,17 +607,17 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 #endif
 			else 
 			{
-				PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, s);
+				PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, fullAddress);
 			}
 		}
 		else 
 #endif
 		{
 			buffer = "MAIL FROM:<";
-			buffer += s;
+			buffer += fullAddress;
 			buffer += ">" CRLF;
 		}
-		PR_FREEIF (s);
+		PR_FREEIF (fullAddress);
 	  }
 
 	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
@@ -748,6 +769,9 @@ PRInt32 nsSmtpProtocol::AuthLoginResponse(nsIInputStream * stream, PRUint32 leng
 
 PRInt32 nsSmtpProtocol::AuthLoginUsername()
 {
+ // NOTE from sspitzer:
+ // when it comes time to implement this, get the smtp user name from
+ // the m_runningURL.  don't get it from prefs.
 
 #ifdef UNREADY_CODE
   char buffer[512];

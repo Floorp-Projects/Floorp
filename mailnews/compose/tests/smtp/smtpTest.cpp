@@ -53,6 +53,7 @@
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsMsgCompCID.h"
+#include "nsIMsgIdentity.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -411,7 +412,12 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 
 
 	nsIURI * url = nsnull;
-	m_smtpService->SendMailMessage(aIFileSpec, recipients, this, nsnull, &url);
+	nsCOMPtr <nsIMsgIdentity> senderIdentity;
+	senderIdentity = null_nsCOMPtr();
+	
+	printf("passing in null for the sender identity will cause the send to fail, but at least it builds.  I need to talk to rhp / mscott about this.\n");
+
+	m_smtpService->SendMailMessage(aIFileSpec, recipients, senderIdentity, this, nsnull, &url);
 	if (url)
 		m_smtpUrl = do_QueryInterface(url);
 

@@ -25,6 +25,7 @@
 #include "nsIURI.h"
 #include "nsSmtpUrl.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 
 extern "C" {
 	char * NET_SACopy (char **destination, const char *source);
@@ -281,10 +282,15 @@ nsresult nsSmtpUrl::ParseUrl()
     NS_LOCK_INSTANCE();
 
 	nsresult rv = NS_OK;
+	
+	// set the username
+	nsXPIDLCString userName;
+	rv = GetPreHost(getter_Copies(userName));
+	if (NS_FAILED(rv)) return rv; 
+	m_userName = (const char *)userName;
 
 	// the recipients should consist of just the path part up to to the query
     // part
-
 	rv = GetFileName(&m_toPart);
 
 	// now parse out the search field...
@@ -304,31 +310,7 @@ nsresult nsSmtpUrl::ParseUrl()
     return rv;
 }
 
-nsresult nsSmtpUrl::GetUserEmailAddress(char ** aUserName)
-{
-	nsresult rv = NS_OK;
-	if (aUserName)
-		*aUserName = m_userName.ToNewCString();
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
-}
-
-nsresult nsSmtpUrl::SetUserEmailAddress(const char * aUserName)
-{
-	nsresult rv = NS_OK;
-	if (aUserName)
-	{	
-		m_userName = aUserName;
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
-}
-	
-
-nsresult nsSmtpUrl::GetMessageContents(char ** aToPart, char ** aCcPart, char ** aBccPart, 
+NS_IMETHODIMP nsSmtpUrl::GetMessageContents(char ** aToPart, char ** aCcPart, char ** aBccPart, 
 		char ** aFromPart, char ** aFollowUpToPart, char ** aOrganizationPart, 
 		char ** aReplyToPart, char ** aSubjectPart, char ** aBodyPart, char ** aHtmlPart, 
 		char ** aReferencePart, char ** aAttachmentPart, char ** aPriorityPart, 
@@ -371,7 +353,8 @@ nsresult nsSmtpUrl::GetMessageContents(char ** aToPart, char ** aCcPart, char **
 
 // Caller must call PR_FREE on list when it is done with it. This list is a list of all
 // recipients to send the email to. each name is NULL terminated...
-nsresult nsSmtpUrl::GetAllRecipients(char ** aRecipientsList)
+NS_IMETHODIMP
+nsSmtpUrl::GetAllRecipients(char ** aRecipientsList)
 {
 	if (aRecipientsList)
 		*aRecipientsList = m_toPart ? nsCRT::strdup(m_toPart) : nsnull;
@@ -382,7 +365,7 @@ NS_IMPL_GETSET(nsSmtpUrl, PostMessage, PRBool, m_isPostMessage)
 
 // the message can be stored in a file....allow accessors for getting and setting
 // the file name to post...
-nsresult nsSmtpUrl::SetPostMessageFile(nsIFileSpec * aFileSpec)
+NS_IMETHODIMP nsSmtpUrl::SetPostMessageFile(nsIFileSpec * aFileSpec)
 {
 	nsresult rv = NS_OK;
 	if (aFileSpec)
@@ -393,7 +376,7 @@ nsresult nsSmtpUrl::SetPostMessageFile(nsIFileSpec * aFileSpec)
 	return rv;
 }
 
-nsresult nsSmtpUrl::GetPostMessageFile(nsIFileSpec ** aFileSpec)
+NS_IMETHODIMP nsSmtpUrl::GetPostMessageFile(nsIFileSpec ** aFileSpec)
 {
 	nsresult rv = NS_OK;
 	if (aFileSpec)
@@ -406,3 +389,23 @@ nsresult nsSmtpUrl::GetPostMessageFile(nsIFileSpec ** aFileSpec)
 	
 	return rv;
 }
+
+NS_IMETHODIMP 
+nsSmtpUrl::GetSenderIdentity(nsIMsgIdentity * *aSenderIdentity)
+{
+	NS_ENSURE_ARG_POINTER(aSenderIdentity); 
+
+	*aSenderIdentity = m_senderIdentity;
+	NS_ADDREF(*aSenderIdentity);
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsSmtpUrl::SetSenderIdentity(nsIMsgIdentity * aSenderIdentity) 
+{
+	NS_ENSURE_ARG_POINTER(aSenderIdentity);
+
+	m_senderIdentity = dont_QueryInterface(aSenderIdentity);
+	return NS_OK;
+}
+

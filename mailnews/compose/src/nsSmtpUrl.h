@@ -26,6 +26,7 @@
 #include "nsISmtpUrl.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsIFileSpec.h"
+#include "nsIMsgIdentity.h"
 #include "nsCOMPtr.h"
 
 class nsSmtpUrl : public nsISmtpUrl, public nsMsgMailNewsUrl
@@ -72,6 +73,7 @@ protected:
 	/* Smtp specific event sinks */
 	nsCString	m_userName;
 	nsCOMPtr<nsIFileSpec> m_fileName;
+	nsCOMPtr<nsIMsgIdentity> m_senderIdentity;
 
 	// it is possible to encode the message to parse in the form of a url.
 	// This function is used to decompose the search and path part into the bare

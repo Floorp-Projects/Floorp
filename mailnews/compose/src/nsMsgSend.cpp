@@ -2577,7 +2577,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   	NS_ADDREF_THIS(); 
 	nsCOMPtr<nsIFileSpec> aFileSpec;
 	NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
-    rv = smtpService->SendMailMessage(aFileSpec, buf, mMailSendListener, nsnull, nsnull);
+    rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity, mMailSendListener, nsnull, nsnull);
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....

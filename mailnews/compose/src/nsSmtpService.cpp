@@ -33,6 +33,7 @@
 #include "nsSmtpProtocol.h"
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
+#include "nsIMsgIdentity.h"
 
 typedef struct _findServerByKeyEntry {
     const char *key;
@@ -50,9 +51,13 @@ static NS_DEFINE_CID(kCSmtpUrlCID, NS_SMTPURL_CID);
 
 nsresult
 NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
-                     const char* aHostName, const char* aSender, 
-                     const char * aRecipients, nsIUrlListener *,
+                     const char* aSmtpHostName, 
+		     const char* aSmtpUserName, 
+                     const char* aRecipients, 
+		     nsIMsgIdentity * aSenderIdentity,
+		     nsIUrlListener * aUrlListener,
                      nsIURI ** aUrl);
+
 nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer);
 
 nsSmtpService::nsSmtpService()
@@ -94,8 +99,9 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 
 nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
                                         const char * aRecipients, 
-										nsIUrlListener * aUrlListener,
-                                        nsISmtpServer * aServer,
+					nsIMsgIdentity * aSenderIdentity,
+					nsIUrlListener * aUrlListener, 
+					nsISmtpServer * aServer,
                                         nsIURI ** aURL)
 {
 	nsIURI * urlToRun = nsnull;
@@ -109,15 +115,15 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 
 		if (NS_SUCCEEDED(rv) && smtpServer)
 		{
-            nsXPIDLCString hostName;
-            nsXPIDLCString senderName;
+            nsXPIDLCString smtpHostName;
+            nsXPIDLCString smtpUserName;
 
-			smtpServer->GetHostname(getter_Copies(hostName));
-			smtpServer->GetUsername(getter_Copies(senderName));
+			smtpServer->GetHostname(getter_Copies(smtpHostName));
+			smtpServer->GetUsername(getter_Copies(smtpUserName));
 
-            if ((const char*)hostName) 
+            if ((const char*)smtpHostName) 
 			{
-                rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
+                rv = NS_MsgBuildMailtoUrl(aFilePath, smtpHostName, smtpUserName,  aRecipients, aSenderIdentity, aUrlListener, &urlToRun); // this ref counts urlToRun
                 if (NS_SUCCEEDED(rv) && urlToRun)	
 					rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
 
@@ -137,8 +143,12 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 
 // short cut function for creating a mailto url...
 nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
-                              const char* aHostName, const char* aSender, 
-							  const char * aRecipients, nsIUrlListener * aUrlListener, nsIURI ** aUrl)
+				const char* aSmtpHostName, 
+				const char* aSmtpUserName, 
+				const char * aRecipients, 
+				nsIMsgIdentity * aSenderIdentity,
+				nsIUrlListener * aUrlListener, 
+				nsIURI ** aUrl)
 {
 	// mscott: this function is a convience hack until netlib actually dispatches smtp urls.
 	// in addition until we have a session to get a password, host and other stuff from, we need to use default values....
@@ -151,15 +161,19 @@ nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
 
 	if (NS_SUCCEEDED(rv) && smtpUrl)
 	{
-		char * urlSpec= PR_smprintf("mailto://%s:%d/%s",
-                                    (const char*)aHostName, 25, aRecipients ? aRecipients : "");
+		// this is complicated because the smtp username can be null
+		char * urlSpec= PR_smprintf("mailto://%s%s%s:%d/%s",
+					((const char*)aSmtpUserName)?(const char*)aSmtpUserName:"",
+					((const char*)aSmtpUserName)?"@":"",
+                                    	(const char*)aSmtpHostName, 
+					SMTP_PORT, aRecipients ? aRecipients : "");
 		if (urlSpec)
 		{
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
 			url->SetSpec(urlSpec);
 			smtpUrl->SetPostMessageFile(aFilePath);
-			// this cast is safe....it is necessary because of a bug to the xpidl compiler
-			smtpUrl->SetUserEmailAddress(aSender);
+			smtpUrl->SetSenderIdentity(aSenderIdentity);
+
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}

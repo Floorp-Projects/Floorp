@@ -28,6 +28,8 @@
 #define SMTP_PORT	25
 %}
 
+interface nsIMsgIdentity;
+
 [scriptable, uuid(16ADF2F1-BBAD-11d2-804E-006008128C4E)]
 interface nsISmtpUrl : nsISupports {
 	/////////////////////////////////////////////////////////////////////////////// 
@@ -64,12 +66,10 @@ interface nsISmtpUrl : nsISupports {
 	// you need to call this function if you want to force the message to be posted
 	// to the mailserver...
 
-	// mscott -- when we have identities it would be nice to just have an identity 
-	// interface here that would encapsulte things like username, domain, password,
-	// etc...
-
-	// mscott - I found getting the user email address very cumbersome to use with an nsString -->
-	// particularly when it came to parsing the user name and extracting the domain.....so I'm going to
-	// change the get value to a const char **...
-	attribute string UserEmailAddress;
+	// the user's full name and user's email address are encapsulated in the senderIdentity.
+	// (the user's domain name can be glopped from the user's email address)
+        //
+	// NOTE:  the SMTP username and SMTP server are in the mailto url
+	// mailto://sspitzer@tintin/...
+	attribute nsIMsgIdentity senderIdentity;
 };

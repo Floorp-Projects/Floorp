@@ -68,8 +68,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
 
 static nsModuleComponentInfo components[] =
 {

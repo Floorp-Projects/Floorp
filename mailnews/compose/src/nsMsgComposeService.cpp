@@ -40,15 +40,6 @@ nsMsgComposeService::nsMsgComposeService()
 
 	NS_INIT_REFCNT();
     rv = NS_NewISupportsArray(getter_AddRefs(m_msgQueue));
-    
-    /*--- temporary hack ---*/
-    int i;
-    for (i = 0; i < 16; i ++)
-    {
-    	hack_uri[i] = "";
-		hack_object[i] = nsnull;
-	}
-	/*--- temporary hack ---*/
 }
 
 
@@ -92,27 +83,10 @@ static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
 NS_IMPL_ISUPPORTS(nsMsgComposeService, nsCOMTypeInfo<nsMsgComposeService>::GetIID());
 
 nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
-	MSG_ComposeType type, MSG_ComposeFormat format, nsISupports *object,
-	nsIMsgIdentity * identity)
+	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity)
 {
 	nsAutoString args = "";
 	nsresult rv;
-
-    /*--- temporary hack ---*/
-    if (originalMsgURI)
-    {
-	    int i;
-	    for (i = 0; i < 16; i ++)
-	    	if (hack_uri[i].IsEmpty())
-	    	{
-	    		hack_uri[i] = originalMsgURI;
-				hack_object[i] = object;
-				if (hack_object[i])
-					NS_ADDREF(hack_object[i]);
-				break;
-			}
-	}
-    /*--- temporary hack ---*/
 
 	args.Append("type=");
 	args.Append(type);
@@ -224,32 +198,14 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindow *aWindow,
 	                                        (void **) &msgCompose);
 	if (NS_SUCCEEDED(rv) && msgCompose)
 	{
-    	/*--- temporary hack ---*/
-	    int i;
-		nsISupports * object = nsnull;
-	    if (originalMsgURI)
-		    for (i = 0; i < 16; i ++)
-		    	if (hack_uri[i] == originalMsgURI)
-		    	{
-		    		hack_uri[i] = "";
-					object = hack_object[i];
-					hack_object[i] = nsnull;
-					break;
-				}
-    	/*--- temporary hack ---*/
-		
-// ducarroz: I am not quiet sure than dynamic_cast is supported on all platforms/compilers!
+// ducarroz: I am not quite sure than dynamic_cast is supported on all platforms/compilers!
 //		nsIMsgCompFields* compFields = dynamic_cast<nsIMsgCompFields *>((nsIMsgCompFields *)compFieldsAddr);
 		nsIMsgCompFields* compFields = (nsIMsgCompFields *)compFieldsAddr;
 		msgCompose->Initialize(aWindow, originalMsgURI, type, format,
-                           compFields, object, identity);
+                           compFields, identity);
 		NS_IF_RELEASE(compFields);
 		m_msgQueue->AppendElement(msgCompose);
 		*_retval = msgCompose;
-
-    	/*--- temporary hack ---*/
-    	NS_IF_RELEASE(object);
-    	/*--- temporary hack ---*/
 	}
 	
 	return rv;
