@@ -26,9 +26,11 @@ EXTRA_DSO_LDOPTS = \
 		$(NULL)
 
 LIBS            = \
-		tstysupt.lib \
+		-ltstysupt \
 		$(NSPR_LIBS) \
 		$(NULL)
+
+DIRS = sample
 
 include $(topsrcdir)/config/config.mk
 
