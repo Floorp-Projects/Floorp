@@ -668,12 +668,17 @@ nsFontEnumeratorBeOS::EnumerateFonts(const char* aLangGroup,
   *aResult = nsnull; 
   NS_ENSURE_ARG_POINTER(aCount); 
   *aCount = 0; 
-  NS_ENSURE_ARG_POINTER(aGeneric); 
-  NS_ENSURE_ARG_POINTER(aLangGroup); 
-  // Dunno why this assignment is needed - sergei_d@fi.tartu.ee 
-  nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(aLangGroup)); 
 
-  return EnumFonts(aLangGroup, aGeneric, aCount, aResult); 
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+  const char* langGroup = nsnull;
+  if (aLangGroup && *aLangGroup)
+    langGroup = aLangGroup;
+  const char* generic = nsnull;
+  if (aGeneric && *aGeneric)
+    generic = aGeneric;
+
+  return EnumFonts(langGroup, generic, aCount, aResult); 
 }
 
 NS_IMETHODIMP
@@ -683,6 +688,19 @@ nsFontEnumeratorBeOS::HaveFontFor(const char* aLangGroup, PRBool* aResult)
   NS_ENSURE_ARG_POINTER(aResult); 
   *aResult = PR_TRUE; 
   // XXX stub
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorBeOS::GetDefaultFont(const char *aLangGroup, 
+  const char *aGeneric, PRUnichar **aResult)
+{
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
   return NS_OK;
 }
 

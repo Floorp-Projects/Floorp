@@ -1466,12 +1466,17 @@ nsFontEnumeratorXft::EnumerateFonts(const char *aLangGroup,
     *aResult = nsnull;
     NS_ENSURE_ARG_POINTER(aCount);
     *aCount = 0;
-    NS_ENSURE_ARG_POINTER(aGeneric);
-    NS_ENSURE_ARG_POINTER(aLangGroup);
 
-    nsCOMPtr<nsIAtom> langGroup = do_GetAtom(aLangGroup);
+    // aLangGroup=null or ""  means any (i.e., don't care)
+    // aGeneric=null or ""  means any (i.e, don't care)
+    nsCOMPtr<nsIAtom> langGroup;
+    if (aLangGroup && *aLangGroup)
+      langGroup = do_GetAtom(aLangGroup);
+    const char* generic = nsnull;
+    if (aGeneric && *aGeneric)
+      generic = aGeneric;
 
-    return EnumFontsXft(langGroup, aGeneric, aCount, aResult);
+    return EnumFontsXft(langGroup, generic, aCount, aResult);
 }
 
 NS_IMETHODIMP
@@ -1484,6 +1489,62 @@ nsFontEnumeratorXft::HaveFontFor(const char *aLangGroup, PRBool *aResult)
     *aResult = PR_TRUE; // always return true for now.
     // Finish me - ftang
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorXft::GetDefaultFont(const char *aLangGroup, 
+  const char *aGeneric, PRUnichar **aResult)
+{
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+#if 0
+  //XXX Some voodoo inspired from the thread:
+  //XXX http://www.mail-archive.com/fonts@xfree86.org/msg01344.html
+  //XXX please iterate to turn this on when you are happy/ready
+
+  FcResult res;
+  FcPattern* match_pattern = NULL;
+  if (aGeneric && *aGeneric)
+    match_pattern = FcNameParse(aGeneric);
+  else
+    match_pattern = FcPatternCreate();
+
+  if (!match_pattern)
+    return NS_OK; // not fatal, just return an empty default name
+
+  if (aLangGroup && *aLangGroup) {
+    nsCOMPtr<nsIAtom> langGroup = do_GetAtom(aLangGroup);
+    AddLangGroup(match_pattern, langGroup);
+  }
+
+  FcConfigSubstitute(0, match_pattern, FcMatchPattern); 
+  FcDefaultSubstitute(match_pattern);
+  FcPattern* result_pattern = FcFontMatch(0, match_pattern, &res);
+  if (result_pattern) {
+    char *family;
+    FcPatternGetString(result_pattern, FC_FAMILY, 0, (FcChar8 **)&family);
+    PRUnichar* name = NS_STATIC_CAST(PRUnichar *,
+                              nsMemory::Alloc ((strlen (family) + 1)
+                                               * sizeof (PRUnichar)));
+    if (name) {
+      PRUnichar *r = name;
+      for (char *f = family; *f; ++f)
+        *r++ = *f;
+      *r = '\0';
+
+      *aResult = name;
+    }
+
+    FcPatternDestroy(result_pattern);
+  }
+  FcPatternDestroy(match_pattern);
+#endif
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
