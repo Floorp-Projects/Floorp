@@ -2499,12 +2499,9 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
        defaultUserChromeFile->Append("userChrome.css");
 
        // copy along
-       rv = defaultUserContentFile->CopyTo(userChromeDir, nsnull);
-       if (NS_FAILED(rv))
-         return rv;
-       rv = defaultUserChromeFile->CopyTo(userChromeDir, nsnull);
-       if (NS_FAILED(rv))
-         return rv;
+       // It aint an error if these files dont exist
+       (void) defaultUserContentFile->CopyTo(userChromeDir, nsnull);
+       (void) defaultUserChromeFile->CopyTo(userChromeDir, nsnull);
      }
    }
    if (NS_FAILED(rv))
