@@ -2771,17 +2771,23 @@ GetFontXftInfo(FcPattern* aPattern)
     // with GetEncoding(). It also sets fonttype (wide or narrow). 
     // Then get the converter and see if has a valid coverage map. 
     
+    // XXX these two if-statements used to be logically AND'ed, but
+    // string changes (bug 231995) made it impossible to use getter_Copies(encoding)
+    // and encoding.get() in a single statement. Until Darin comes up with 
+    // a solution, we need to split it into two if-statements. (bug 234908)
     if (NS_SUCCEEDED(GetEncoding(family, getter_Copies(encoding), 
-                     fontType, ftEncoding)) &&
-        NS_SUCCEEDED(GetConverter(encoding.get(), getter_AddRefs(converter)))) {
-        nsCOMPtr<nsICharRepresentable> mapper(do_QueryInterface(converter));
-        if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
-           printf("\t\tc> got the converter and CMap :%s !!\n",
-                  encoding.get());
-        }
+                     fontType, ftEncoding))) {
+        if (NS_SUCCEEDED(GetConverter(encoding.get(), 
+                         getter_AddRefs(converter)))) {
+            nsCOMPtr<nsICharRepresentable> mapper(do_QueryInterface(converter));
+            if (PR_LOG_TEST(gXftFontLoad, PR_LOG_DEBUG)) {
+               printf("\t\tc> got the converter and CMap :%s !!\n",
+                      encoding.get());
+            }
 
-        if (mapper) {
-            ccmap = MapperToCCMap(mapper);
+            if (mapper) {
+                ccmap = MapperToCCMap(mapper);
+            }
         }
     }
 
