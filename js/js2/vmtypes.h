@@ -98,7 +98,7 @@ namespace VM {
         USHIFTRIGHT, /* dest, source1, source2 */
         WITHIN, /* within this object */
         WITHOUT, /* without this object */
-        XOR, /* dest, source1, source2 */
+        XOR /* dest, source1, source2 */
     };
 
     

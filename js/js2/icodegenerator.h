@@ -178,7 +178,7 @@ namespace ICG {
 
         Register findVariable(const StringAtom& name)
         { VariableList::iterator i = variableList->find(name);
-        ASSERT(i != map.end()); 
+        // What's map? // ASSERT(i != map.end()); 
         return (*i).second; }
         
         Register allocateParameter(const StringAtom& name) 
