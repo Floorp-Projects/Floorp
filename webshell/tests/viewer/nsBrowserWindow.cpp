@@ -25,7 +25,6 @@
 #include "nsIImageGroup.h"
 #include "nsITimer.h"
 #include "nsIThrobber.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
 #include "nsRepository.h"
@@ -65,7 +64,6 @@ static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
@@ -306,11 +304,6 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptContextOwnerIID)) {
-    *aInstancePtrResult = (void*) ((nsIScriptContextOwner*)this);
     AddRef();
     return NS_OK;
   }
@@ -682,63 +675,6 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
     url.Append(": stop");
     mStatus->SetText(url);
   }
-  return NS_OK;
-}
-
-//----------------------------------------
-
-// nsIScriptContextOwner
-
-// XXX this code is moving into nsWebShell.cpp so beware!
-
-#include "nsIPresShell.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-
-nsresult 
-nsBrowserWindow::GetScriptContext(nsIScriptContext** aContext)
-{
-  NS_PRECONDITION(nsnull != aContext, "null arg");
-  nsresult res = NS_OK;
-
-  if (nsnull == mScriptGlobal) {
-    res = NS_NewScriptGlobalObject(&mScriptGlobal);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    res = NS_CreateContext(mScriptGlobal, &mScriptContext);
-    if (NS_OK != res) {
-      return res;
-    }
-
-    nsIPresShell* shell = GetPresShell();
-    if (nsnull != shell) {
-      nsIDocument* doc = shell->GetDocument();
-      if (nsnull != doc) {
-        nsIDOMDocument *domdoc = nsnull;
-        doc->QueryInterface(kIDOMDocumentIID, (void**) &domdoc);
-        if (nsnull != domdoc) {
-          mScriptGlobal->SetNewDocument(domdoc);
-          NS_RELEASE(domdoc);
-        }
-        NS_RELEASE(doc);
-      }
-      NS_RELEASE(shell);
-    }
-  }
-
-  *aContext = mScriptContext;
-  NS_ADDREF(mScriptContext);
-
-  return res;
-}
-
-nsresult 
-nsBrowserWindow::ReleaseScriptContext(nsIScriptContext *aContext)
-{
-  NS_IF_RELEASE(aContext);
-
   return NS_OK;
 }
 
