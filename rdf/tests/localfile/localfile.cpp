@@ -28,6 +28,7 @@
 
 #include <io.h>
 #include "nsIContent.h"
+#include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
 #include "nsINetService.h"
@@ -47,6 +48,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFCID.h"
 #include "nsRepository.h"
+#include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
 
@@ -55,6 +57,7 @@
 #define PARSER_DLL "raptorhtmlpars.dll"
 #define RDF_DLL    "rdf.dll"
 #define LAYOUT_DLL "raptorhtml.dll"
+#define XPCOM_DLL  "xpcom32.dll"
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -80,11 +83,14 @@ static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 // layout
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 
+// xpcom
+static NS_DEFINE_CID(kEventQueueServiceCID,     NS_EVENTQUEUESERVICE_CID);
+
 
 ////////////////////////////////////////////////////////////////////////
 // IIDs
 
-//NS_DEFINE_IID(kIPostToServerIID,       NS_IPOSTTOSERVER_IID);
+NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 NS_DEFINE_IID(kIOutputStreamIID,       NS_IOUTPUTSTREAM_IID);
 NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
 NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
@@ -93,8 +99,10 @@ NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
 static nsresult
 SetupRegistry(void)
 {
+    // netlib
     nsRepository::RegisterFactory(kNetServiceCID,            NETLIB_DLL, PR_FALSE, PR_FALSE);
 
+    // rdf
     nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFHTMLDocumentCID,       RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFInMemoryDataSourceCID, RDF_DLL,    PR_FALSE, PR_FALSE);
@@ -104,10 +112,15 @@ SetupRegistry(void)
     nsRepository::RegisterFactory(kRDFStreamDataSourceCID,   RDF_DLL,    PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kRDFTreeDocumentCID,       RDF_DLL,    PR_FALSE, PR_FALSE);
 
+    // parser
     nsRepository::RegisterFactory(kParserCID,                PARSER_DLL, PR_FALSE, PR_FALSE);
     nsRepository::RegisterFactory(kWellFormedDTDCID,         PARSER_DLL, PR_FALSE, PR_FALSE);
 
+    // layout
     nsRepository::RegisterFactory(kNameSpaceManagerCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
+    // xpcom
+    nsRepository::RegisterFactory(kEventQueueServiceCID,     XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }
@@ -152,17 +165,28 @@ main(int argc, char** argv)
         return 1;
     }
 
-    PL_InitializeEventsLib("");
-    PLEventQueue* mainQueue = PL_GetMainEventQueue();
-
     SetupRegistry();
 
-    nsIRDFDataSource* ds        = nsnull;
-    nsIRDFService* service      = nsnull;
-    nsIRDFResource* theHomePage = nsnull;
-    nsIRDFResource* NC_title    = nsnull;
-    nsIRDFLiteral* theTitle     = nsnull;
+    nsIEventQueueService* theEventQueueService = nsnull;
+    PLEventQueue* mainQueue      = nsnull;
+    nsIRDFService* theRDFService = nsnull;
+    nsIRDFDataSource* ds         = nsnull;
+    nsIRDFResource* theHomePage  = nsnull;
+    nsIRDFResource* NC_title     = nsnull;
+    nsIRDFLiteral* theTitle      = nsnull;
     PRInt32 i;
+
+    if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                                    kIEventQueueServiceIID,
+                                                    (nsISupports**) &theEventQueueService)))
+        goto done;
+
+    if (NS_FAILED(rv = theEventQueueService->CreateThreadEventQueue()))
+        goto done;
+
+    if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
+                                                                 &mainQueue)))
+        goto done;
 
     if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFStreamDataSourceCID,
                                                     nsnull,
@@ -181,16 +205,16 @@ main(int argc, char** argv)
 
     if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                     kIRDFServiceIID,
-                                                    (nsISupports**) &service)))
+                                                    (nsISupports**) &theRDFService)))
         goto done;
 
-    if (NS_FAILED(rv = service->GetResource("http://home.netscape.com", &theHomePage)))
+    if (NS_FAILED(rv = theRDFService->GetResource("http://home.netscape.com", &theHomePage)))
         goto done;
 
-    if (NS_FAILED(rv = service->GetResource("http://rdf.nescape.com/NC#title", &NC_title)))
+    if (NS_FAILED(rv = theRDFService->GetResource("http://rdf.nescape.com/NC#title", &NC_title)))
         goto done;
 
-    if (NS_FAILED(rv = service->GetLiteral(nsAutoString("Netscape's Home Page"), &theTitle)))
+    if (NS_FAILED(rv = theRDFService->GetLiteral(nsAutoString("Netscape's Home Page"), &theTitle)))
         goto done;
 
     if (NS_FAILED(rv = ds->Assert(theHomePage, NC_title, theTitle, PR_TRUE)))
@@ -204,9 +228,13 @@ done:
     NS_IF_RELEASE(NC_title);
     NS_IF_RELEASE(theHomePage);
     NS_IF_RELEASE(ds);
-    if (service) {
-        nsServiceManager::ReleaseService(kRDFServiceCID, service);
-        service = nsnull;
+    if (theRDFService) {
+        nsServiceManager::ReleaseService(kRDFServiceCID, theRDFService);
+        theRDFService = nsnull;
+    }
+    if (theEventQueueService) {
+        nsServiceManager::ReleaseService(kEventQueueServiceCID, theEventQueueService);
+        theEventQueueService = nsnull;
     }
     return (NS_FAILED(rv) ? 1 : 0);
 }
