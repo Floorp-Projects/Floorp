@@ -25,6 +25,8 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
 
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
+
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -85,6 +87,13 @@
       </template>
 
       <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+
+  <treehead>
+    <treerow id="headRow">
+      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.name.label;"
+      	onclick="return doSort('NameColumn');" observes="NameColumn" />
+    </treerow>
+  </treehead>
+
     </tree>
 </window>
-
