@@ -126,7 +126,7 @@ nsFileChannel::GetName(PRUnichar* *result)
     nsXPIDLCString urlStr;
     rv = mURI->GetSpec(getter_Copies(urlStr));
     if (NS_FAILED(rv)) return rv;
-    nsString name;
+    nsAutoString name;
     name.AppendWithConversion(urlStr);
     *result = name.ToNewUnicode();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
