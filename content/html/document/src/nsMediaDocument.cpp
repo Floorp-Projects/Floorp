@@ -322,10 +322,11 @@ nsMediaDocument::UpdateTitleAndCharset(const nsACString& aTypeStr,
       nsCOMPtr<nsITextToSubURI> textToSubURI = 
         do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
-        rv = textToSubURI->UnEscapeURIForUI(docCharset, fileName, fileStr);
+        // UnEscapeURIForUI always succeeds
+        textToSubURI->UnEscapeURIForUI(docCharset, fileName, fileStr);
+      else 
+        CopyUTF8toUTF16(fileName, fileStr);
     }
-    if (fileStr.IsEmpty())
-      CopyUTF8toUTF16(fileName, fileStr);
   }
 
 
