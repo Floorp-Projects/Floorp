@@ -958,7 +958,7 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(ftime getcwd gethostname getwd mkdir mktime putenv rmdir select)
 AC_CHECK_FUNCS(socket strcspn strdup strerror strspn strstr strtol strtoul)
 AC_CHECK_FUNCS(uname qsort snprintf waitid fork1 remainder lchown statvfs)
-AC_CHECK_FUNCS(localtime_r)
+AC_CHECK_FUNCS(localtime_r setvbuf)
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
