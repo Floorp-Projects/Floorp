@@ -119,7 +119,7 @@ extern nsresult
 nsGetMailFolderSeparator(nsString& result);
 
 extern nsresult
-nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult);
+nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
 
 extern nsresult
 nsPath2URI(const char* rootURI, nsFileSpec& path, char* *uri);

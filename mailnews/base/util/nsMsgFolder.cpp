@@ -1434,7 +1434,7 @@ nsGetMailFolderSeparator(nsString& result)
 }
 
 nsresult
-nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult)
+nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
   nsresult rv;
 
