@@ -41,7 +41,6 @@ CPPSRCS =				\
 	nsRDFService.cpp                \
 	nsRDFXMLDataSource.cpp		\
 	rdfutil.cpp			\
-        nsRDFResource.cpp               \
 	$(NULL)
 
 EXPORTS = \
@@ -51,7 +50,7 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = rdfbase
 
-REQUIRES = netlib rdf raptor xpcom
+REQUIRES = netlib rdf rdfutil raptor xpcom
 
 MKSHLIB :=
 

@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base content datasource build
+DIRS = base util content datasource build
 
 ifdef ENABLE_TESTS
 DIRS += tests
