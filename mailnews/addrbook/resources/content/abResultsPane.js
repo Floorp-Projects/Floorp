@@ -45,17 +45,12 @@ function AbResultsPaneOnClick(event)
        outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).getCellAt(event.clientX, event.clientY, row, colID, childElt);
 
        if (event.detail == 2) {
-         AbResultsPaneDoubleClick(row.value);
+         AbResultsPaneDoubleClick(gAbView.getCardFromRow(row.value));
        }
        else {
-         DisplayCardViewPane(gAbView.getCardFromRow(row.value));
+         OnClickedCard(gAbView.getCardFromRow(row.value));
        }
     }
-}
-
-function AbResultsPaneDoubleClick(row)
-{
-  AbEditCard(gAbView.getCardFromRow(row));
 }
 
 function AbResultsPaneKeyPress(event)
