@@ -49,6 +49,8 @@
 #include "nsJSUtils.h"
 #include "nsIDocShell.h"
 #include "nsIPresContext.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIPrompt.h"
 #include "nsIObserverService.h"
 
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
@@ -188,6 +190,61 @@ NS_ScriptErrorReporter(JSContext *cx,
   ::JS_ClearPendingException(cx);
 }
 
+#define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
+#define MAYBE_STOP_BRANCH_COUNT_MASK 0x003fffff
+
+JSBool PR_CALLBACK
+nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
+{
+  // Get the native context
+  nsJSContext *ctx = (nsJSContext *)::JS_GetContextPrivate(cx);
+  NS_ENSURE_TRUE(ctx, JS_TRUE);
+
+  // Filter out most of the calls to this callback
+  if (++ctx->mBranchCallbackCount & MAYBE_GC_BRANCH_COUNT_MASK)
+    return JS_TRUE;
+
+  // Run the GC if we get this far.
+  JS_MaybeGC(cx);
+
+  // Filter out most of the calls to this callback that make it this far
+  if (ctx->mBranchCallbackCount & MAYBE_STOP_BRANCH_COUNT_MASK)
+    return JS_TRUE;
+
+  // If we get here we're most likely executing an infinite loop in JS,
+  // we'll tell the user about this and we'll give the user the option
+  // of stopping the execution of the script.
+  nsCOMPtr<nsIScriptGlobalObject> global(dont_AddRef(ctx->GetGlobalObject()));
+  NS_ENSURE_TRUE(global, JS_TRUE);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  global->GetDocShell(getter_AddRefs(docShell));
+  NS_ENSURE_TRUE(docShell, JS_TRUE);
+
+  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(ireq, JS_TRUE);
+
+  // Get the nsIPrompt interface from the docshell
+  nsCOMPtr<nsIPrompt> prompt;
+  ireq->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+  NS_ENSURE_TRUE(prompt, JS_TRUE);
+
+  nsAutoString title, msg;
+  title.AssignWithConversion("Script warning");
+  msg.AssignWithConversion("A script on this page is causing mozilla to "
+                           "run slowly. If it continues to run, your "
+                           "computer may become unresponsive.\n\nDo you "
+                           "want to abort the script?");
+
+  JSBool ret = JS_TRUE;
+
+  // Open the dialog.
+  if (NS_FAILED(prompt->Confirm(title.GetUnicode(), msg.GetUnicode(), &ret)))
+    return JS_TRUE;
+
+  return !ret;
+}
+
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   NS_INIT_REFCNT();
@@ -219,6 +276,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
       if (options)
         ::JS_SetOptions(mContext, options);
     }
+
+    ::JS_SetBranchCallback(mContext, DOMBranchCallback);
   }
   mIsInitialized = PR_FALSE;
   mNumEvaluations = 0;
@@ -226,6 +285,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mOwner = nsnull;
   mTerminationFunc = nsnull;
   mScriptsEnabled = PR_TRUE;
+  mBranchCallbackCount = 0;
 }
 
 const char kScriptSecurityManagerProgID[] = NS_SCRIPTSECURITYMANAGER_PROGID;
@@ -1082,6 +1142,8 @@ nsJSContext::ScriptEvaluated(void)
     mNumEvaluations = 0;
     ::JS_MaybeGC(mContext);
   }
+
+  mBranchCallbackCount = 0;
 
   return NS_OK;
 }

@@ -48,6 +48,9 @@ private:
   nsScriptTerminationFunc mTerminationFunc;
   nsCOMPtr<nsISupports> mRef;
   PRBool mScriptsEnabled;
+  PRUint32 mBranchCallbackCount;
+
+  static JSBool PR_CALLBACK DOMBranchCallback(JSContext *cx, JSScript *script);
   
 public:
   nsJSContext(JSRuntime *aRuntime);
