@@ -96,8 +96,10 @@ public:
     //
     // calls
     //
-    // SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-    //              const nsAReadableString& aValue, PRBool aNotify)
+    // nsHTMLLinkElement::SetAttribute(PRInt32 aNameSpaceID,
+    //                                 nsIAtom* aName,
+    //                                 const nsAReadableString& aValue,
+    //                                 PRBool aNotify)
     //
     // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
     // here ourselves.
@@ -272,9 +274,12 @@ nsHTMLLinkElement::SetHref(const nsAReadableString& aValue)
   // somebody asks for it.
   mLinkState = eLinkState_Unknown;
 
-  return nsGenericHTMLLeafElement::SetAttribute(kNameSpaceID_HTML,
-                                                nsHTMLAtoms::href, aValue,
-                                                PR_TRUE);
+  nsresult rv = nsGenericHTMLLeafElement::SetAttribute(kNameSpaceID_HTML,
+                                                       nsHTMLAtoms::href,
+                                                       aValue,
+                                                       PR_TRUE);
+  UpdateStyleSheet(PR_TRUE);
+  return rv;
 }
 
 NS_IMETHODIMP
