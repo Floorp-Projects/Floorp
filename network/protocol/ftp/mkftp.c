@@ -908,8 +908,8 @@ net_send_syst_response(FTPConData * cd)
 PRIVATE int
 net_send_mac_bin(FTPConData * cd)
 {
-
-    PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "MACB%c%c", CR, LF);
+    /* Check bug # 323918 for MACB details */
+    PR_snprintf(cd->output_buffer, OUTPUT_BUFFER_SIZE, "MACB ENABLE%c%c", CR, LF);
 
     cd->next_state = FTP_WAIT_FOR_RESPONSE;
     cd->next_state_after_response = FTP_SEND_MAC_BIN_RESPONSE;
