@@ -1056,44 +1056,6 @@ PRInt32 CNavDTD::LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const {
   return kNotFound;
 }
 
-/**
- *  Call this to find the index of a given child, or (if not found)
- *  the index of its nearest synonym.
- *   
- *  @update  gess 3/25/98
- *  @param   aTagStack -- list of open tags
- *  @param   aTag -- tag to test for containership
- *  @return  index of kNotFound
- */
-static
-PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag) {
-
-#if 1
-  PRInt32 theChildIndex=nsHTMLElement::GetIndexOfChildOrSynonym(aContext,aChildTag);
-#else 
-  PRInt32 theChildIndex=aContext.LastOf(aChildTag);
-  if(kNotFound==theChildIndex) {
-    TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
-    if(theSynTags) {
-      theChildIndex=LastOf(aContext,*theSynTags);
-    } 
-    else{
-      PRInt32 theGroup=nsHTMLElement::GetSynonymousGroups(aChildTag);
-      if(theGroup) {
-        theChildIndex=aContext.GetCount();
-        while(-1<--theChildIndex) {
-          eHTMLTags theTag=aContext[theChildIndex];
-          if(gHTMLElements[theTag].IsMemberOf(theGroup)) {
-            break;   
-          }
-        }
-      }
-    }
-  }
-#endif
-  return theChildIndex;
-}
-
 /** 
  *  This method is called to determine whether or not the child
  *  tag is happy being OPENED in the context of the current
@@ -1128,7 +1090,7 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsDTDContext& aContext) {
     if(theRootTags) {
       PRInt32 theRootIndex=LastOf(aContext,*theRootTags);
       PRInt32 theSPIndex=(theSpecialParents) ? LastOf(aContext,*theSpecialParents) : kNotFound;  
-      PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aContext,aChildTag);
+      PRInt32 theChildIndex=nsHTMLElement::GetIndexOfChildOrSynonym(aContext,aChildTag);
       PRInt32 theTargetIndex=(theRootIndex>theSPIndex) ? theRootIndex : theSPIndex;
 
       if((theTargetIndex==theCount-1) ||
@@ -1237,7 +1199,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsC
                 // Double check the power structure a
                 // Note: The bit is currently set on <A> and <LI>.
                 if(gHTMLElements[aChildTag].ShouldVerifyHierarchy()){
-                  PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
+                  PRInt32 theChildIndex=nsHTMLElement::GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
               
                   if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
                    
@@ -1723,7 +1685,7 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsDTDContext& aCont
   eHTMLTags thePrevTag=aContext.Last();
  
   if(nsHTMLElement::IsContainer(aCurrentTag)){
-    PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aContext,aCurrentTag);
+    PRInt32 theChildIndex=nsHTMLElement::GetIndexOfChildOrSynonym(aContext,aCurrentTag);
     
     if(kNotFound<theChildIndex) {
       if(thePrevTag==aContext[theChildIndex]){
@@ -1882,7 +1844,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
         else {
           eHTMLTags theParentTag=mBodyContext->Last();
 
-          if(kNotFound==GetIndexOfChildOrSynonym(*mBodyContext,theChildTag)) {
+          if(kNotFound==nsHTMLElement::GetIndexOfChildOrSynonym(*mBodyContext,theChildTag)) {
 
             // Ref: bug 30487
             // Make sure that we don't cross boundaries, of certain elements,
