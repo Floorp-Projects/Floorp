@@ -506,8 +506,14 @@ write_codefrag_line(gpointer data, gpointer user_data)
 static gboolean
 codefrag(TreeState *state)
 {
-    if (strcmp(IDL_CODEFRAG(state->tree).desc, "C++"))
+    char *desc = IDL_CODEFRAG(state->tree).desc;
+    if (strcmp(desc, "C++")) {
+        IDL_tree_warning(state->tree, IDL_WARNING1,
+                         "ignoring '%%{%s' escape. "
+                         "(Use '%%{C++' to escape verbatim code.)", desc);
+
         return TRUE;
+    }
     g_slist_foreach(IDL_CODEFRAG(state->tree).lines, write_codefrag_line,
                     (gpointer)state);
     fputc('\n', state->file);
