@@ -159,7 +159,7 @@ void CnsICommandMgr::IsCommandSupportedTest(const char *aCommandName, int displa
 		return;
 	}
 	cmdMgrObj = GetCommandMgrObject(qaWebBrowser);
-	rv = cmdMgrObj->IsCommandSupported(aCommandName, &isSupported);
+	rv = cmdMgrObj->IsCommandSupported(aCommandName, nsnull, &isSupported);
 	RvTestResult(rv, "IsCommandSupported() test", displayMethod);
 	FormatAndPrintOutput("isSupported boolean = ", isSupported, displayMethod);
 }
@@ -174,7 +174,7 @@ void CnsICommandMgr::IsCommandEnabledTest(const char *aCommandName, int displayM
         QAOutput("Didn't get nsICommandManager object.");
 		return;
 	}
-	rv = cmdMgrObj->IsCommandEnabled(aCommandName, &isEnabled);
+	rv = cmdMgrObj->IsCommandEnabled(aCommandName, nsnull, &isEnabled);
 	RvTestResult(rv, "IsCommandEnabled() test", displayMethod);
 	FormatAndPrintOutput("isEnabled boolean = ", isEnabled, displayMethod);
 }
@@ -195,7 +195,7 @@ void CnsICommandMgr::GetCommandStateTest(const char *aCommandName, int displayMe
 		return;
 	}
 	else {
-		rv = cmdMgrObj->GetCommandState(aCommandName, cmdParamObj);
+		rv = cmdMgrObj->GetCommandState(aCommandName, nsnull, cmdParamObj);
 		RvTestResult(rv, "GetCommandState() test", displayMethod);
 	}
 }
@@ -229,7 +229,7 @@ void CnsICommandMgr::DoCommandTest(const char *aCommandName,
 			value = "left";
 		cmdParamObj->SetCStringValue("state_attribute", value.get());
 	}
-	rv = cmdMgrObj->DoCommand(aCommandName, cmdParamObj);
+	rv = cmdMgrObj->DoCommand(aCommandName, cmdParamObj, nsnull);
 	RvTestResult(rv, "DoCommand() test", displayMethod);
 }
 
