@@ -405,5 +405,18 @@ nsScrollbar::IsEnabled(PRBool *aState)
   [super mouseDown:theEvent];
 }
 
+//
+// -mouseMoved
+//
+// our parent view will try to forward this message down to us. The
+// default behavior for NSResponder is to forward it up the chain. Can you
+// say "infinite recursion"? I thought so. Just stub out the action to
+// break the cycle of madness.
+//
+- (void)mouseMoved:(NSEvent*)theEvent
+{
+  // do nothing
+}
 
 @end
+
