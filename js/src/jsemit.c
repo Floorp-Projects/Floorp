@@ -1580,11 +1580,19 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
         break;
 
       case PN_LIST:
-        if (pn->pn_type == TOK_NEW || pn->pn_type == TOK_LP) {
+        if (pn->pn_type == TOK_NEW ||
+            pn->pn_type == TOK_LP ||
+            pn->pn_type == TOK_LB) {
             /*
-             * All invocation operations (construct, call) are presumed to be
-             * useful, because they may have side effects even if their main
-             * effect (their return value) is discarded.
+             * All invocation operations (construct: TOK_NEW, call: TOK_LP)
+             * are presumed to be useful, because they may have side effects
+             * even if their main effect (their return value) is discarded.
+             *
+             * TOK_LB binary trees of 3 or more nodes are flattened into lists
+             * to avoid too much recursion.  All such lists must be presumed
+             * to be useful because each index operation could invoke a getter
+             * (the JSOP_ARGUMENTS special case below, in the PN_BINARY case,
+             * does not apply here: arguments[i][j] might invoke a getter).
              */
             *answer = JS_TRUE;
         } else {
@@ -1678,7 +1686,8 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
 static JSBool
 EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
-    JSParseNode *pn2;
+    JSParseNode *pn2, *pndot, *pnup, *pndown;
+    ptrdiff_t top;
     JSAtomListElement *ale;
 
     pn2 = pn->pn_expr;
@@ -1693,8 +1702,52 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             return js_Emit1(cx, cg, JSOP_ARGCNT) >= 0;
         }
     }
-    if (!js_EmitTree(cx, cg, pn2))
-        return JS_FALSE;
+
+    /*
+     * If the object operand is also a dotted property reference, reverse the
+     * list linked via pn_expr temporarily so we can iterate over it from the
+     * bottom up (reversing again as we go), to avoid excessive recursion.
+     */
+    if (pn2->pn_type == TOK_DOT) {
+        pndot = pn2;
+        pnup = NULL;
+        top = CG_OFFSET(cg);
+        for (;;) {
+            /* Reverse pndot->pn_expr to point up, not down. */
+            pndot->pn_offset = top;
+            pndown = pndot->pn_expr;
+            pndot->pn_expr = pnup;
+            if (pndown->pn_type != TOK_DOT)
+                break;
+            pnup = pndot;
+            pndot = pndown;
+        }
+
+        /* pndown is a primary expression, not a dotted property reference. */
+        if (!js_EmitTree(cx, cg, pndown))
+            return JS_FALSE;
+
+        do {
+            /* Walk back up the list, emitting annotated name ops. */
+            if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
+                               CG_OFFSET(cg) - pndown->pn_offset) < 0) {
+                return JS_FALSE;
+            }
+            ale = js_IndexAtom(cx, pndot->pn_atom, &cg->atomList);
+            if (!ale)
+                return JS_FALSE;
+            EMIT_ATOM_INDEX_OP(pndot->pn_op, ALE_INDEX(ale));
+
+            /* Reverse the pn_expr link again. */
+            pnup = pndot->pn_expr;
+            pndot->pn_expr = pndown;
+            pndown = pndot;
+        } while ((pndot = pnup) != NULL);
+    } else {
+        if (!js_EmitTree(cx, cg, pn2))
+            return JS_FALSE;
+    }
+
     if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - pn2->pn_offset) < 0)
         return JS_FALSE;
     if (!pn->pn_atom) {
@@ -1713,27 +1766,84 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 static JSBool
 EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
-    JSParseNode *left, *right;
+    ptrdiff_t top;
+    JSParseNode *left, *right, *next;
     jsint slot;
 
-    left = pn->pn_left;
-    right = pn->pn_right;
-    if (op == JSOP_GETELEM &&
-        left->pn_type == TOK_NAME &&
-        right->pn_type == TOK_NUMBER) {
-        /* Try to optimize arguments[0] into JSOP_ARGSUB. */
-        if (!LookupArgOrVar(cx, &cg->treeContext, left))
-            return JS_FALSE;
-        if (left->pn_op == JSOP_ARGUMENTS &&
-            JSDOUBLE_IS_INT(right->pn_dval, slot) &&
-            slot >= 0) {
-            EMIT_ATOM_INDEX_OP(JSOP_ARGSUB, (jsatomid)slot);
-            return JS_TRUE;
+    top = CG_OFFSET(cg);
+    if (pn->pn_arity == PN_LIST) {
+        /* Left-associative operator chain to avoid too much recursion. */
+        JS_ASSERT(op == JSOP_GETELEM);
+        JS_ASSERT(pn->pn_count >= 3);
+        left = pn->pn_head;
+        right = PN_LAST(pn);
+        next = left->pn_next;
+        JS_ASSERT(next != right);
+
+        /*
+         * Try to optimize arguments[0][j]... into JSOP_ARGSUB<0> followed by
+         * one or more index expression and JSOP_GETELEM op pairs.
+         */
+        if (left->pn_type == TOK_NAME && next->pn_type == TOK_NUMBER) {
+            if (!LookupArgOrVar(cx, &cg->treeContext, left))
+                return JS_FALSE;
+            if (left->pn_op == JSOP_ARGUMENTS &&
+                JSDOUBLE_IS_INT(next->pn_dval, slot) &&
+                (jsuint)slot < ATOM_INDEX_LIMIT) {
+                left->pn_offset = next->pn_offset = top;
+                EMIT_ATOM_INDEX_OP(JSOP_ARGSUB, (jsatomid)slot);
+                left = next;
+                next = left->pn_next;
+            }
         }
+
+        /*
+         * Check whether we generated JSOP_ARGSUB, just above, and have only
+         * one more index expression to emit.  Given arguments[0][j], we must
+         * skip the while loop altogether, falling through to emit code for j
+         * (in the subtree referenced by right), followed by the annotated op,
+         * at the bottom of this function.
+         */
+        JS_ASSERT(next != right || pn->pn_count == 3);
+        if (left == pn->pn_head) {
+            if (!js_EmitTree(cx, cg, left))
+                return JS_FALSE;
+        }
+        while (next != right) {
+            if (!js_EmitTree(cx, cg, next))
+                return JS_FALSE;
+            if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
+                return JS_FALSE;
+            if (js_Emit1(cx, cg, op) < 0)
+                return JS_FALSE;
+            next = next->pn_next;
+        }
+    } else {
+        JS_ASSERT(pn->pn_arity == PN_BINARY);
+        left = pn->pn_left;
+        right = pn->pn_right;
+
+        /* Try to optimize arguments[0] (e.g.) into JSOP_ARGSUB<0>. */
+        if (op == JSOP_GETELEM &&
+            left->pn_type == TOK_NAME &&
+            right->pn_type == TOK_NUMBER) {
+            if (!LookupArgOrVar(cx, &cg->treeContext, left))
+                return JS_FALSE;
+            if (left->pn_op == JSOP_ARGUMENTS &&
+                JSDOUBLE_IS_INT(right->pn_dval, slot) &&
+                (jsuint)slot < ATOM_INDEX_LIMIT) {
+                left->pn_offset = right->pn_offset = top;
+                EMIT_ATOM_INDEX_OP(JSOP_ARGSUB, (jsatomid)slot);
+                return JS_TRUE;
+            }
+        }
+
+        if (!js_EmitTree(cx, cg, left))
+            return JS_FALSE;
     }
-    if (!js_EmitTree(cx, cg, left) || !js_EmitTree(cx, cg, right))
+    if (!js_EmitTree(cx, cg, right))
         return JS_FALSE;
-    if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - left->pn_offset) < 0)
+    if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
         return JS_FALSE;
     return js_Emit1(cx, cg, op) >= 0;
 }
@@ -1866,31 +1976,38 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     switch (pn->pn_type) {
       case TOK_FUNCTION:
       {
-        JSCodeGenerator cg2;
+        void *cg2mark;
+        JSCodeGenerator *cg2;
         JSFunction *fun;
 
         /* Generate code for the function's body. */
-        pn2 = pn->pn_body;
-        if (!js_InitCodeGenerator(cx, &cg2, cg->filename,
+        cg2mark = JS_ARENA_MARK(&cx->tempPool);
+        JS_ARENA_ALLOCATE_TYPE(cg2, JSCodeGenerator, &cx->tempPool);
+        if (!cg2) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+        if (!js_InitCodeGenerator(cx, cg2, cg->filename,
                                   pn->pn_pos.begin.lineno,
                                   cg->principals)) {
             return JS_FALSE;
         }
-        cg2.treeContext.flags = pn->pn_flags | TCF_IN_FUNCTION;
-        cg2.treeContext.tryCount = pn->pn_tryCount;
+        cg2->treeContext.flags = pn->pn_flags | TCF_IN_FUNCTION;
+        cg2->treeContext.tryCount = pn->pn_tryCount;
         fun = pn->pn_fun;
-        if (!js_EmitFunctionBody(cx, &cg2, pn2, fun))
+        if (!js_EmitFunctionBody(cx, cg2, pn->pn_body, fun))
             return JS_FALSE;
 
         /*
          * We need an activation object if an inner peeks out, or if such
          * inner-peeking caused one of our inners to become heavyweight.
          */
-        if (cg2.treeContext.flags &
+        if (cg2->treeContext.flags &
             (TCF_FUN_USES_NONLOCALS | TCF_FUN_HEAVYWEIGHT)) {
             cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
         }
-        js_FinishCodeGenerator(cx, &cg2);
+        js_FinishCodeGenerator(cx, cg2);
+        JS_ARENA_RELEASE(&cx->tempPool, cg2mark);
 
         /* Make the function object a literal in the outer script's pool. */
         atom = js_AtomizeObject(cx, fun->object, 0);
@@ -1991,10 +2108,30 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif /* JS_HAS_EXPORT_IMPORT */
 
       case TOK_IF:
+        /* Initialize so we can detect else-if chains and avoid recursion. */
+        stmtInfo.type = STMT_IF;
+        beq = jmp = -1;
+        noteIndex = -1;
+
+      if_again:
         /* Emit code for the condition before pushing stmtInfo. */
         if (!js_EmitTree(cx, cg, pn->pn_kid1))
             return JS_FALSE;
-        js_PushStatement(&cg->treeContext, &stmtInfo, STMT_IF, CG_OFFSET(cg));
+        if (stmtInfo.type == STMT_IF) {
+            js_PushStatement(&cg->treeContext, &stmtInfo, STMT_IF,
+                             CG_OFFSET(cg));
+        } else {
+            /*
+             * We came here from the goto further below that detects else-if
+             * chains, so we must mutate stmtInfo back into a STMT_IF record.
+             * Also (see below for why) we need a note offset for SRC_IF_ELSE
+             * to help the decompiler.
+             */
+            JS_ASSERT(stmtInfo.type == STMT_ELSE);
+            stmtInfo.type = STMT_IF;
+            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
+                return JS_FALSE;
+        }
 
         /* Emit an annotated branch-if-false around the then part. */
         pn3 = pn->pn_kid3;
@@ -2012,18 +2149,25 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             /* Modify stmtInfo so we know we're in the else part. */
             stmtInfo.type = STMT_ELSE;
 
-            /* Jump at end of then part around the else part. */
-            jmp = EmitJump(cx, cg, JSOP_GOTO, 0);
+            /*
+             * Emit a JSOP_BACKPATCH op to jump from the end of our then part
+             * around the else part.  The js_PopStatementCG call at the bottom
+             * of this switch case will fix up the backpatch chain linked from
+             * stmtInfo.breaks.
+             */
+            jmp = EmitGoto(cx, cg, &stmtInfo, &stmtInfo.breaks, NULL, SRC_NULL);
             if (jmp < 0)
                 return JS_FALSE;
 
             /* Ensure the branch-if-false comes here, then emit the else. */
             CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, beq);
+            if (pn3->pn_type == TOK_IF) {
+                pn = pn3;
+                goto if_again;
+            }
+
             if (!js_EmitTree(cx, cg, pn3))
                 return JS_FALSE;
-
-            /* Fixup the jump around the else part. */
-            CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
 
             /*
              * Annotate SRC_IF_ELSE with the offset from branch to jump, for
@@ -2504,10 +2648,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                         return JS_FALSE;
                 }
                 break;
+
               case TOK_DOT:
                 if (!EmitPropOp(cx, pn3, JSOP_FORPROP, cg))
                     return JS_FALSE;
                 break;
+
               case TOK_LB:
                 /*
                  * We separate the first/next bytecode from the enumerator
@@ -2517,6 +2663,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  */
                 if (!js_Emit1(cx, cg, JSOP_FORELEM))
                     return JS_FALSE;
+
                 /*
                  * Emit a SRC_WHILE note with offset telling the distance to
                  * the loop-closing jump (we can't reckon from the branch at
@@ -2535,6 +2682,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 if (!EmitElemOp(cx, pn3, JSOP_ENUMELEM, cg))
                     return JS_FALSE;
                 break;
+
               default:
                 JS_ASSERT(0);
             }
@@ -3274,6 +3422,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             atomIndex = ALE_INDEX(ale);
             break;
           case TOK_LB:
+            JS_ASSERT(pn->pn_arity == PN_BINARY);
             if (!js_EmitTree(cx, cg, pn2->pn_left))
                 return JS_FALSE;
             if (!js_EmitTree(cx, cg, pn2->pn_right))
