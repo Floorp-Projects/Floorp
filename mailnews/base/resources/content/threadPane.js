@@ -168,6 +168,12 @@ function MsgSortBySubject()
     MsgSortThreadPane(nsMsgViewSortType.bySubject);
 }
 
+function MsgSortByLocation()
+{
+    MsgSortThreadPane(nsMsgViewSortType.byLocation);
+}
+
+
 function MsgSortByFlagged() 
 {
     MsgSortThreadPane(nsMsgViewSortType.byFlagged);

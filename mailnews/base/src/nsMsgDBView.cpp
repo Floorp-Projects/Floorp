@@ -1907,6 +1907,7 @@ FnSortIdPRTime(const void *pItem1, const void *pItem2, void *privateData)
 
 // XXX are these still correct? 
 const int kMaxSubjectKey = 160;
+const int kMaxLocationKey = 160;
 const int kMaxAuthorKey = 160;
 const int kMaxRecipientKey = 80;
 
@@ -1919,6 +1920,10 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
         case nsMsgViewSortType::bySubject:
             *pFieldType = kCollationKey;
             *pMaxLen = kMaxSubjectKey;
+            break;
+        case nsMsgViewSortType::byLocation:
+            *pFieldType = kCollationKey;
+            *pMaxLen = kMaxLocationKey;
             break;
         case nsMsgViewSortType::byRecipient:
             *pFieldType = kCollationKey;
@@ -2070,6 +2075,9 @@ nsMsgDBView::GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType,
     case nsMsgViewSortType::bySubject:
         rv = msgHdr->GetSubjectCollationKey(result, len);
         break;
+    case nsMsgViewSortType::byLocation:
+        rv = GetLocationCollationKey(msgHdr, result, len);
+        break;
     case nsMsgViewSortType::byRecipient:
         rv = msgHdr->GetRecipientsCollationKey(result, len);
         break;
@@ -2088,6 +2096,31 @@ nsMsgDBView::GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType,
         *result = nsnull;
         *len = 0;
     }
+    return NS_OK;
+}
+
+// As the location collation key is created getting folder from the msgHdr,
+// it is defined in this file and not from the db.
+nsresult 
+nsMsgDBView::GetLocationCollationKey(nsIMsgHdr *msgHdr, PRUint8 **result, PRUint32 *len)
+{
+    nsresult rv;
+    nsCOMPtr <nsIMsgFolder> folder;
+
+    rv = msgHdr->GetFolder(getter_AddRefs(folder));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsIMsgDatabase> dbToUse;
+    rv = folder->GetMsgDatabase(nsnull, getter_AddRefs(dbToUse));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsXPIDLString locationString; 
+    rv = folder->GetPrettiestName(getter_Copies(locationString));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = dbToUse->CreateCollationKey(locationString, result, len);
+    NS_ENSURE_SUCCESS(rv,rv);
+
     return NS_OK;
 }
 
