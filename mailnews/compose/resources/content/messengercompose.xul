@@ -412,7 +412,6 @@ Rights Reserved.
         </template>
 		</menu>	    
 
-		<menuitem value="&UuencodeAttachmentCmd.label;" type="checkbox" oncommand="UUEncodeMenuSelect(event.target)"/>    	
     <menuseparator/>
 		<menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
 		<menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/>    	
@@ -481,6 +480,8 @@ Rights Reserved.
 			</box>
 			
 			<spring style="width:0.5em"/>
+			<!--splitter id="gray_horizontal_splitter" persist="state"/-->
+			
 			<box align="vertical" flex="25%">
 				<spring style="height:0.5em"/>
 				<box align="vertical" style="height:1em">

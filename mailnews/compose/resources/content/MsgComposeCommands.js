@@ -1071,19 +1071,6 @@ function ReturnReceiptMenuSelect()
 	}
 }
 
-function UUEncodeMenuSelect(target)
-{
-	if (msgCompose)
-	{
-		var msgCompFields = msgCompose.compFields;
-		if (msgCompFields)
-			if (target.getAttribute("checked") == "true")
-				msgCompFields.SetUUEncodeAttachments(true);
-			else
-				msgCompFields.SetUUEncodeAttachments(false);
-	}
-}
-
 function OutputFormatMenuSelect(target)
 {
 	dump("Set Message Format to " + target.getAttribute('id') + "\n");
