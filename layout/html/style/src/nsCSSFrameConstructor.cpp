@@ -5264,11 +5264,10 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
       for (PRUint32 i=0; i < count; i++)
       {
         // get our child's content and set its parent to our content
-        nsCOMPtr<nsISupports> node;
-        anonymousItems->GetElementAt(i,getter_AddRefs(node));
+        nsCOMPtr<nsIContent> content;
+        if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
+            continue;
 
-        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-      
         // create the frame and attach it to our frame
         ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
       }
@@ -5422,10 +5421,10 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   for (PRUint32 i=0; i < count; i++)
   {
     // get our child's content and set its parent to our content
-    nsCOMPtr<nsISupports> node;
-    anonymousItems->GetElementAt(i,getter_AddRefs(node));
+    nsCOMPtr<nsIContent> content;
+    if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
+        continue;
 
-    nsCOMPtr<nsIContent> content(do_QueryInterface(node));
     content->SetParent(aParent);
     content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 
@@ -5489,11 +5488,10 @@ nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPres
     for (PRUint32 i=0; i < count; i++)
     {
       // get our child's content and set its parent to our content
-      nsCOMPtr<nsISupports> node;
-      anonymousItems->GetElementAt(i,getter_AddRefs(node));
+      nsCOMPtr<nsIContent> content;
+      if (NS_FAILED(anonymousItems->QueryElementAt(i, NS_GET_IID(nsIContent), getter_AddRefs(content))))
+        continue;
 
-      nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-      
       // create the frame and attach it to our frame
       ConstructFrame(aPresShell, aPresContext, aState, content, aNewFrame, aChildItems);
     }

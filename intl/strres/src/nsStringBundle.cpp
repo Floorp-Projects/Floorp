@@ -545,23 +545,13 @@ nsresult nsExtensibleStringBundle::GetStringFromID(PRInt32 aID, PRUnichar ** aRe
   if (NS_FAILED(res)) return res;
 
   for (i = 0; i < size; i++) {
-    nsISupports * sBundle = NULL;
-    nsIStringBundle * bundle = NULL;
-
-    res = mBundle->GetElementAt(i, &sBundle);
-    if (NS_FAILED(res)) goto done;
-
-    res = sBundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void **)(&bundle));
-    if (NS_FAILED(res)) goto done;
-
-    res = bundle->GetStringFromID(aID, aResult);
-    if (NS_FAILED(res)) goto done;
-
-done:
-    NS_IF_RELEASE(bundle);
-    NS_IF_RELEASE(sBundle);
-
-    if (NS_SUCCEEDED(res)) return res;
+    nsCOMPtr<nsIStringBundle> bundle;
+    res = mBundle->QueryElementAt(i, NS_GET_IID(nsIStringBundle), getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(res)) {
+        res = bundle->GetStringFromID(aID, aResult);
+        if (NS_SUCCEEDED(res))
+            return NS_OK;
+    }
   }
 
   return NS_ERROR_FAILURE;
@@ -577,23 +567,13 @@ nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName,
   if (NS_FAILED(res)) return res;
 
   for (i = 0; i < size; i++) {
-    nsISupports * sBundle = NULL;
-    nsIStringBundle * bundle = NULL;
-
-    res = mBundle->GetElementAt(i, &sBundle);
-    if (NS_FAILED(res)) goto done;
-
-    res = sBundle->QueryInterface(NS_GET_IID(nsIStringBundle), (void **)(&bundle));
-    if (NS_FAILED(res)) goto done;
-
-    res = bundle->GetStringFromName(aName, aResult);
-    if (NS_FAILED(res)) goto done;
-
-done:
-    NS_IF_RELEASE(bundle);
-    NS_IF_RELEASE(sBundle);
-
-    if (NS_SUCCEEDED(res)) return res;
+    nsCOMPtr<nsIStringBundle> bundle;
+    res = mBundle->QueryElementAt(i, NS_GET_IID(nsIStringBundle), getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(res)) {
+        res = bundle->GetStringFromName(aName, aResult);
+        if (NS_SUCCEEDED(res))
+            return NS_OK;
+    }
   }
 
   return NS_ERROR_FAILURE;
