@@ -2498,10 +2498,10 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
 PRBool    
 nsHTMLDocument::Resolve(JSContext *aContext, jsval aID)
 {
+  nsresult result;
   nsCOMPtr<nsIDOMElement> element;
-  char* str = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+  char* str = JS_GetStringBytes(JSVAL_TO_STRING(aID));
   nsAutoString name(str); 
-  nsresult result = NS_OK;
   PRBool ret = PR_TRUE;
 
   result = NamedItem(name, getter_AddRefs(element));
@@ -2518,18 +2518,20 @@ nsHTMLDocument::Resolve(JSContext *aContext, jsval aID)
       }
 
       if (!scriptContext) {
-        scriptContext = dont_AddRef((nsIScriptContext*)JS_GetContextPrivate(aContext));
+        scriptContext = NS_STATIC_CAST(nsIScriptContext*, JS_GetContextPrivate(aContext));
       }
 
-      JSObject* obj;
       if (scriptContext) {
+        JSObject* obj;
         result = owner->GetScriptObject(scriptContext, (void**)&obj);
-        if (NS_SUCCEEDED(result) && (nsnull != obj)) {
+        if (NS_SUCCEEDED(result) && obj) {
           JSObject* myObj;
           result = GetScriptObject(scriptContext, (void**)&myObj);
-          ret = ::JS_DefineProperty(aContext, myObj,
-                                    str, OBJECT_TO_JSVAL(obj),
-                                    nsnull, nsnull, 0);
+          if (NS_SUCCEEDED(result) && myObj) {
+            ret = ::JS_DefineProperty(aContext, myObj,
+                                      str, OBJECT_TO_JSVAL(obj),
+                                      nsnull, nsnull, 0);
+          }
         }
       }
     }
