@@ -23,8 +23,8 @@
 
 #include "nsAFlatString.h"
 
-const PRUnichar*
-nsAFlatString::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+const nsAFlatString::char_type*
+nsAFlatString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     switch ( aRequest )
       {
@@ -32,7 +32,7 @@ nsAFlatString::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, ns
         case kLastFragment:
         case kFragmentAt:
           {
-            const nsBufferHandle<PRUnichar>* buffer = GetBufferHandle();
+            const buffer_handle_type* buffer = GetBufferHandle();
             NS_ASSERTION(buffer, "trouble: no buffer!");
 
             aFragment.mEnd = buffer->DataEnd();
@@ -46,8 +46,8 @@ nsAFlatString::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, ns
       }
   }
 
-PRUnichar*
-nsAFlatString::GetWritableFragment( nsWritableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
+nsAFlatString::char_type*
+nsAFlatString::GetWritableFragment( fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
   {
     switch ( aRequest )
       {
@@ -55,7 +55,7 @@ nsAFlatString::GetWritableFragment( nsWritableFragment<PRUnichar>& aFragment, ns
         case kLastFragment:
         case kFragmentAt:
           {
-            nsBufferHandle<PRUnichar>* buffer = NS_CONST_CAST(nsBufferHandle<PRUnichar>*, GetBufferHandle());
+            buffer_handle_type* buffer = NS_CONST_CAST(buffer_handle_type*, GetBufferHandle());
             NS_ASSERTION(buffer, "trouble: no buffer!");
 
             aFragment.mEnd = buffer->DataEnd();
@@ -69,8 +69,8 @@ nsAFlatString::GetWritableFragment( nsWritableFragment<PRUnichar>& aFragment, ns
       }
   }
 
-const char*
-nsAFlatCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+const nsAFlatCString::char_type*
+nsAFlatCString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     switch ( aRequest )
       {
@@ -78,7 +78,7 @@ nsAFlatCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFrag
         case kLastFragment:
         case kFragmentAt:
           {
-            const nsBufferHandle<char>* buffer = GetBufferHandle();
+            const buffer_handle_type* buffer = GetBufferHandle();
             NS_ASSERTION(buffer, "trouble: no buffer!");
 
             aFragment.mEnd = buffer->DataEnd();
@@ -92,8 +92,8 @@ nsAFlatCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFrag
       }
   }
 
-char*
-nsAFlatCString::GetWritableFragment( nsWritableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
+nsAFlatCString::char_type*
+nsAFlatCString::GetWritableFragment( fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
   {
     switch ( aRequest )
       {
@@ -101,7 +101,7 @@ nsAFlatCString::GetWritableFragment( nsWritableFragment<char>& aFragment, nsFrag
         case kLastFragment:
         case kFragmentAt:
           {
-            nsBufferHandle<char>* buffer = NS_CONST_CAST(nsBufferHandle<char>*, GetBufferHandle());
+            buffer_handle_type* buffer = NS_CONST_CAST(buffer_handle_type*, GetBufferHandle());
             NS_ASSERTION(buffer, "trouble: no buffer!");
 
             aFragment.mEnd = buffer->DataEnd();
@@ -118,29 +118,29 @@ nsAFlatCString::GetWritableFragment( nsWritableFragment<char>& aFragment, nsFrag
 PRUint32
 nsAFlatString::Length() const
   {
-    const nsBufferHandle<PRUnichar>* handle = GetBufferHandle();
+    const buffer_handle_type* handle = GetBufferHandle();
     return PRUint32(handle ? handle->DataLength() : 0); 
   }
 
 PRUint32
 nsAFlatCString::Length() const
   {
-    const nsBufferHandle<char>* handle = GetBufferHandle();
+    const buffer_handle_type* handle = GetBufferHandle();
     return PRUint32(handle ? handle->DataLength() : 0); 
   }
 
-const PRUnichar* 
+const nsAFlatString::char_type* 
 nsAFlatString::get() const
   { 
-    const nsBufferHandle<PRUnichar>* handle = GetBufferHandle();
+    const buffer_handle_type* handle = GetBufferHandle();
     // NS_ASSERTION(handle, "handle is null!");
     return handle ? handle->DataStart() : 0; 
   }
 
-const char* 
+const nsAFlatCString::char_type* 
 nsAFlatCString::get() const
   { 
-    const nsBufferHandle<char>* handle = GetBufferHandle();
+    const buffer_handle_type* handle = GetBufferHandle();
     // NS_ASSERTION(handle, "handle is null!");
     return handle ? handle->DataStart() : 0; 
   }

@@ -71,6 +71,9 @@ class NS_COM nsXPIDLString
     : public nsSharableString
   {
     public:
+      typedef nsXPIDLString self_type;
+
+    public:
       nsXPIDLString()
         {
 #if DEBUG_STRING_STATS
@@ -80,7 +83,7 @@ class NS_COM nsXPIDLString
 #endif
         }
 
-      nsXPIDLString( const nsXPIDLString& aString )
+      nsXPIDLString( const self_type& aString )
           : nsSharableString(aString.GetSharedBufferHandle())
           // copy-constructor required (or else C++ generates one for us)
         {
@@ -98,8 +101,8 @@ class NS_COM nsXPIDLString
         }
 #endif
 
-      nsXPIDLString&
-      operator=( const nsXPIDLString& rhs )
+      self_type&
+      operator=( const self_type& rhs )
           // copy-assignment operator required (or else C++ generates one for us)
         {
           // self-assignment is handled by the underlying |nsAutoBufferHandle|
@@ -107,11 +110,11 @@ class NS_COM nsXPIDLString
           return *this;
         }
 
-      void Adopt( PRUnichar* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
+      void Adopt( char_type* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
 
         // deprecated, to be eliminated
-      operator const PRUnichar*() const { return get(); }
-      PRUnichar  operator[]( int i ) const { return get()[ i ]; }
+      operator const char_type*() const { return get(); }
+      char_type operator[]( int i ) const { return get()[ i ]; }
 
 
       class getter_Copies_t
@@ -121,7 +124,7 @@ class NS_COM nsXPIDLString
             // getter_Copies_t( const getter_Copies_t& );             // auto-generated copy-constructor OK
             // getter_Copies_t& operator=( const getter_Copies_t& );  // auto-generated assignment operator OK
 
-            operator PRUnichar**() const  { return mString->PrepareForUseAsOutParam(); }
+            operator char_type**() const  { return mString->PrepareForUseAsOutParam(); }
 
           private:
             nsXPIDLString* mString;
@@ -131,13 +134,13 @@ class NS_COM nsXPIDLString
 
     protected:
 #if DEBUG_STRING_STATS
-      virtual const nsBufferHandle<PRUnichar>*  GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<PRUnichar>*  GetBufferHandle() const;
+      virtual const buffer_handle_type*  GetFlatBufferHandle() const;
+      virtual const buffer_handle_type*  GetBufferHandle() const;
 #endif
-      virtual const nsSharedBufferHandle<PRUnichar>*  GetSharedBufferHandle() const;
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
         // overridden to fix the length after `out' parameter assignment, if necessary
 
-      PRUnichar** PrepareForUseAsOutParam();
+      char_type** PrepareForUseAsOutParam();
 
 #if DEBUG_STRING_STATS
       static size_t sCreatedCount;    // total number of |nsXPIDLString|s ever created
@@ -165,6 +168,9 @@ class NS_COM nsXPIDLCString
     : public nsSharableCString
   {
     public:
+      typedef nsXPIDLCString self_type;
+
+    public:
       nsXPIDLCString()
         {
 #if DEBUG_STRING_STATS
@@ -174,7 +180,7 @@ class NS_COM nsXPIDLCString
 #endif
         }
 
-      nsXPIDLCString( const nsXPIDLCString& aString )
+      nsXPIDLCString( const self_type& aString )
           : nsSharableCString(aString.GetSharedBufferHandle())
           // copy-constructor required (or else C++ generates one for us)
         {
@@ -192,8 +198,8 @@ class NS_COM nsXPIDLCString
         }
 #endif
 
-      nsXPIDLCString&
-      operator=( const nsXPIDLCString& rhs )
+      self_type&
+      operator=( const self_type& rhs )
           // copy-assignment operator required (or else C++ generates one for us)
         {
           // self-assignment is handled by the underlying |nsAutoBufferHandle|
@@ -201,11 +207,11 @@ class NS_COM nsXPIDLCString
           return *this;
         }
 
-      void Adopt( char* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
+      void Adopt( char_type* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
 
         // deprecated, to be eliminated
-      operator const char*() const { return get(); }
-      char  operator[]( int i ) const      { return get()[ i ]; }
+      operator const char_type*() const { return get(); }
+      char_type operator[]( int i ) const      { return get()[ i ]; }
 
 
       class getter_Copies_t
@@ -215,7 +221,7 @@ class NS_COM nsXPIDLCString
             // getter_Copies_t( const getter_Copies_t& );             // auto-generated copy-constructor OK
             // getter_Copies_t& operator=( const getter_Copies_t& );  // auto-generated assignment operator OK
 
-            operator char**() const  { return mString->PrepareForUseAsOutParam(); }
+            operator char_type**() const  { return mString->PrepareForUseAsOutParam(); }
 
           private:
             nsXPIDLCString* mString;
@@ -225,13 +231,13 @@ class NS_COM nsXPIDLCString
 
     protected:
 #if DEBUG_STRING_STATS
-      virtual const nsBufferHandle<char>*  GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<char>*  GetBufferHandle() const;
+      virtual const buffer_handle_type*  GetFlatBufferHandle() const;
+      virtual const buffer_handle_type*  GetBufferHandle() const;
 #endif
-      virtual const nsSharedBufferHandle<char>*  GetSharedBufferHandle() const;
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
         // overridden to fix the length after `out' parameter assignment, if necessary
 
-      char** PrepareForUseAsOutParam();
+      char_type** PrepareForUseAsOutParam();
 
 #if DEBUG_STRING_STATS
       static size_t sCreatedCount;    // total number of |nsXPIDLCString|s ever created

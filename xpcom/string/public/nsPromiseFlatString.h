@@ -83,28 +83,31 @@
 class NS_COM nsPromiseFlatString
     : public nsAFlatString /* , public nsAPromiseString */
   {
-    friend const nsPromiseFlatString PromiseFlatString( const nsAString& );
+    friend const nsPromiseFlatString PromiseFlatString( const abstract_string_type& );
 
     public:
-      nsPromiseFlatString( const nsPromiseFlatString& );
+      typedef nsPromiseFlatString self_type;
+
+    public:
+      nsPromiseFlatString( const self_type& );
 
     protected:
       nsPromiseFlatString() : mPromisedString(&mFlattenedString) { }
-      explicit nsPromiseFlatString( const nsAString& aString );
+      explicit nsPromiseFlatString( const abstract_string_type& aString );
 
         // things we want to forward to the string we are promising
-      virtual const nsBufferHandle<PRUnichar>*        GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<PRUnichar>*        GetBufferHandle() const;
-      virtual const nsSharedBufferHandle<PRUnichar>*  GetSharedBufferHandle() const;
-      virtual PRBool IsDependentOn( const nsAString& ) const;
+      virtual const buffer_handle_type*         GetFlatBufferHandle() const;
+      virtual const buffer_handle_type*         GetBufferHandle() const;
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
+      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
 
 
         // things we are forwarding now, but won't when we finally fix obsolete/nsString et al
     public:
-      virtual const PRUnichar* get() const;
+      virtual const char_type* get() const;
       virtual PRUint32 Length() const;
     protected:
-      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
 
 
     private:
@@ -119,33 +122,36 @@ class NS_COM nsPromiseFlatString
 class NS_COM nsPromiseFlatCString
     : public nsAFlatCString /* , public nsAPromiseCString */
   {
-    friend const nsPromiseFlatCString PromiseFlatCString( const nsACString& );
+    friend const nsPromiseFlatCString PromiseFlatCString( const abstract_string_type& );
 
     public:
-      nsPromiseFlatCString( const nsPromiseFlatCString& );
+      typedef nsPromiseFlatCString self_type;
+
+    public:
+      nsPromiseFlatCString( const self_type& );
 
     protected:
       nsPromiseFlatCString() : mPromisedString(&mFlattenedString) { }
-      explicit nsPromiseFlatCString( const nsACString& aString );
+      explicit nsPromiseFlatCString( const abstract_string_type& aString );
 
         // things we want to forward to the string we are promising
-      virtual const nsBufferHandle<char>*       GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<char>*       GetBufferHandle() const;
-      virtual const nsSharedBufferHandle<char>* GetSharedBufferHandle() const;
-      virtual PRBool IsDependentOn( const nsACString& ) const;
+      virtual const buffer_handle_type*         GetFlatBufferHandle() const;
+      virtual const buffer_handle_type*         GetBufferHandle() const;
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
+      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
 
 
         // things we are forwarding now, but won't when we finally fix obsolete/nsString et al
     public:
-      virtual const char* get() const;
+      virtual const char_type* get() const;
       virtual PRUint32 Length() const;
     protected:
-      virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
 
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsPromiseFlatCString& );
+      void operator=( const self_type& );
 
     private:
       nsSharableCString     mFlattenedString;

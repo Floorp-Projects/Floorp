@@ -46,22 +46,24 @@ class NS_COM nsDependentString
       : public nsAFlatString
   {
     public:
+      typedef nsDependentString self_type;
+
       void
-      Rebind( const PRUnichar* aPtr )
+      Rebind( const char_type* aPtr )
         {
           mHandle.DataStart(aPtr);
-          mHandle.DataEnd(aPtr ? (aPtr+nsCharTraits<PRUnichar>::length(aPtr)) : 0);
+          mHandle.DataEnd(aPtr ? (aPtr+nsCharTraits<char_type>::length(aPtr)) : 0);
         }
 
       void
-      Rebind( const PRUnichar* aStartPtr, const PRUnichar* aEndPtr )
+      Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
         {
           mHandle.DataStart(aStartPtr);
           mHandle.DataEnd(aEndPtr);
         }
 
       void
-      Rebind( const PRUnichar* aPtr, PRUint32 aLength )
+      Rebind( const char_type* aPtr, PRUint32 aLength )
         {
           if ( aLength == PRUint32(-1) )
             {
@@ -72,23 +74,23 @@ class NS_COM nsDependentString
             Rebind(aPtr, aPtr+aLength);
         }
 
-      nsDependentString( const PRUnichar* aStartPtr, const PRUnichar* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
-      nsDependentString( const PRUnichar* aPtr, PRUint32 aLength )              { Rebind(aPtr, aLength); }
-      explicit nsDependentString( const PRUnichar* aPtr )                       { Rebind(aPtr); }
+      nsDependentString( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
+      nsDependentString( const char_type* aPtr, PRUint32 aLength )              { Rebind(aPtr, aLength); }
+      explicit nsDependentString( const char_type* aPtr )                       { Rebind(aPtr); }
 
-      // nsDependentString( const nsDependentString& );                         // auto-generated copy-constructor OK
+      // nsDependentString( const self_type& );                                 // auto-generated copy-constructor OK
       // ~nsDependentString();                                                  // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsDependentString& );                               // we're immutable, so no copy-assignment operator
+      void operator=( const self_type& );                                       // we're immutable, so no copy-assignment operator
 
     public:
-      virtual const nsBufferHandle<PRUnichar>* GetFlatBufferHandle() const      { return NS_REINTERPRET_CAST(const nsBufferHandle<PRUnichar>*, &mHandle); }
-      virtual const nsBufferHandle<PRUnichar>* GetBufferHandle() const          { return NS_REINTERPRET_CAST(const nsBufferHandle<PRUnichar>*, &mHandle); }
+      virtual const buffer_handle_type* GetFlatBufferHandle() const             { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
+      virtual const buffer_handle_type* GetBufferHandle() const                 { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
 
     private:
-      nsConstBufferHandle<PRUnichar> mHandle;
+      const_buffer_handle_type mHandle;
   };
 
 
@@ -97,22 +99,24 @@ class NS_COM nsDependentCString
       : public nsAFlatCString
   {
     public:
+      typedef nsDependentCString self_type;
+
       void
-      Rebind( const char* aPtr )
+      Rebind( const char_type* aPtr )
         {
           mHandle.DataStart(aPtr);
-          mHandle.DataEnd(aPtr ? (aPtr+nsCharTraits<char>::length(aPtr)) : 0);
+          mHandle.DataEnd(aPtr ? (aPtr+nsCharTraits<char_type>::length(aPtr)) : 0);
         }
 
       void
-      Rebind( const char* aStartPtr, const char* aEndPtr )
+      Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
         {
           mHandle.DataStart(aStartPtr);
           mHandle.DataEnd(aEndPtr);
         }
 
       void
-      Rebind( const char* aPtr, PRUint32 aLength )
+      Rebind( const char_type* aPtr, PRUint32 aLength )
         {
           if ( aLength == PRUint32(-1) )
             {
@@ -123,23 +127,23 @@ class NS_COM nsDependentCString
             Rebind(aPtr, aPtr+aLength);
         }
 
-      nsDependentCString( const char* aStartPtr, const char* aEndPtr )          { Rebind(aStartPtr, aEndPtr); }
-      nsDependentCString( const char* aPtr, PRUint32 aLength )                  { Rebind(aPtr, aLength); }
-      explicit nsDependentCString( const char* aPtr )                           { Rebind(aPtr); }
+      nsDependentCString( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
+      nsDependentCString( const char_type* aPtr, PRUint32 aLength )              { Rebind(aPtr, aLength); }
+      explicit nsDependentCString( const char_type* aPtr )                       { Rebind(aPtr); }
 
-      // nsDependentCString( const nsDependentCString& );                       // auto-generated copy-constructor OK
-      // ~nsDependentCString();                                                 // auto-generated destructor OK
+      // nsDependentCString( const self_type& );                                 // auto-generated copy-constructor OK
+      // ~nsDependentCString();                                                  // auto-generated destructor OK
 
     private:
         // NOT TO BE IMPLEMENTED
-      void operator=( const nsDependentCString& );                              // we're immutable, so no copy-assignment operator
+      void operator=( const self_type& );                                        // we're immutable, so no copy-assignment operator
 
     public:
-      virtual const nsBufferHandle<char>* GetFlatBufferHandle() const           { return NS_REINTERPRET_CAST(const nsBufferHandle<char>*, &mHandle); }
-      virtual const nsBufferHandle<char>* GetBufferHandle() const               { return NS_REINTERPRET_CAST(const nsBufferHandle<char>*, &mHandle); }
+      virtual const buffer_handle_type* GetFlatBufferHandle() const             { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
+      virtual const buffer_handle_type* GetBufferHandle() const                 { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
 
     private:
-      nsConstBufferHandle<char> mHandle;
+      const_buffer_handle_type mHandle;
   };
 
 #endif /* !defined(nsDependentString_h___) */

@@ -28,13 +28,13 @@
 
 
 int
-nsDefaultStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
+nsDefaultStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
   {
-    return nsCharTraits<PRUnichar>::compare(lhs, rhs, aLength);
+    return nsCharTraits<char_type>::compare(lhs, rhs, aLength);
   }
 
 int
-nsCaseInsensitiveStringComparator::operator()( const PRUnichar* lhs, const PRUnichar* rhs, PRUint32 aLength ) const
+nsCaseInsensitiveStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
   {
     return nsCRT::strncasecmp(lhs, rhs, aLength);
   }
@@ -85,20 +85,19 @@ Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& a
       return 0;
   }
 
-
-const nsSharedBufferHandle<PRUnichar>*
+const nsAString::shared_buffer_handle_type*
 nsAString::GetSharedBufferHandle() const
   {
     return 0;
   }
 
-const nsBufferHandle<PRUnichar>*
+const nsAString::buffer_handle_type*
 nsAString::GetFlatBufferHandle() const
   {
     return GetSharedBufferHandle();
   }
 
-const nsBufferHandle<PRUnichar>*
+const nsAString::buffer_handle_type*
 nsAString::GetBufferHandle() const
   {
     return GetSharedBufferHandle();
@@ -108,11 +107,12 @@ PRUint32
 nsAString::GetImplementationFlags() const
   {
     PRUint32 flags = 0;
-    const nsSharedBufferHandle<char_type>* handle = GetSharedBufferHandle();
+    const shared_buffer_handle_type* handle = GetSharedBufferHandle();
     if ( handle )
       flags = handle->GetImplementationFlags();
     return flags;
   }
+
 
 PRBool
 nsAString::IsVoid() const
@@ -131,6 +131,8 @@ nsAString::Equals( const char_type* rhs ) const
   {
     return Equals(nsDependentString(rhs));
   }
+
+
 
 nsAString::char_type
 nsAString::First() const
@@ -529,16 +531,14 @@ nsAString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, con
   }
 
 
-
-
 int
-nsDefaultCStringComparator::operator()( const char* lhs, const char* rhs, PRUint32 aLength ) const
+nsDefaultCStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
   {
-    return nsCharTraits<char>::compare(lhs, rhs, aLength);
+    return nsCharTraits<char_type>::compare(lhs, rhs, aLength);
   }
 
 int
-nsCaseInsensitiveCStringComparator::operator()( const char* lhs, const char* rhs, PRUint32 aLength ) const
+nsCaseInsensitiveCStringComparator::operator()( const char_type* lhs, const char_type* rhs, PRUint32 aLength ) const
   {
     return nsCRT::strncasecmp(lhs, rhs, aLength);
   }
@@ -589,20 +589,19 @@ Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator
       return 0;
   }
 
-
-const nsSharedBufferHandle<char>*
+const nsACString::shared_buffer_handle_type*
 nsACString::GetSharedBufferHandle() const
   {
     return 0;
   }
 
-const nsBufferHandle<char>*
+const nsACString::buffer_handle_type*
 nsACString::GetFlatBufferHandle() const
   {
     return GetSharedBufferHandle();
   }
 
-const nsBufferHandle<char>*
+const nsACString::buffer_handle_type*
 nsACString::GetBufferHandle() const
   {
     return GetSharedBufferHandle();
@@ -612,11 +611,12 @@ PRUint32
 nsACString::GetImplementationFlags() const
   {
     PRUint32 flags = 0;
-    const nsSharedBufferHandle<char_type>* handle = GetSharedBufferHandle();
+    const shared_buffer_handle_type* handle = GetSharedBufferHandle();
     if ( handle )
       flags = handle->GetImplementationFlags();
     return flags;
   }
+
 
 PRBool
 nsACString::IsVoid() const

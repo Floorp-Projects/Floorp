@@ -46,25 +46,23 @@ class NS_COM nsSharableString
   {
     public:
       typedef nsSharableString  self_type;
-      typedef PRUnichar         char_type;
-      typedef nsAString         string_type;
 
     public:
       nsSharableString() { }
       nsSharableString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
-      explicit nsSharableString( const string_type& aReadable ) { assign(aReadable); }
-      explicit nsSharableString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
+      explicit nsSharableString( const abstract_string_type& aReadable ) { assign(aReadable); }
+      explicit nsSharableString( const shared_buffer_handle_type* aHandle ) : mBuffer(aHandle) { }
 
       self_type&
-      operator=( const string_type& aReadable )
+      operator=( const abstract_string_type& aReadable )
         {
           assign(aReadable);
           return *this;
         }
 
     protected:
-      void assign( const string_type& );
-      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+      void assign( const abstract_string_type& );
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
 
     protected:
       nsAutoBufferHandle<char_type> mBuffer;
@@ -76,25 +74,23 @@ class NS_COM nsSharableCString
   {
     public:
       typedef nsSharableCString self_type;
-      typedef char              char_type;
-      typedef nsACString        string_type;
 
     public:
       nsSharableCString() { }
       nsSharableCString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
-      explicit nsSharableCString( const string_type& aReadable ) { assign(aReadable); }
-      explicit nsSharableCString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
+      explicit nsSharableCString( const abstract_string_type& aReadable ) { assign(aReadable); }
+      explicit nsSharableCString( const shared_buffer_handle_type* aHandle ) : mBuffer(aHandle) { }
 
       self_type&
-      operator=( const string_type& aReadable )
+      operator=( const abstract_string_type& aReadable )
         {
           assign(aReadable);
           return *this;
         }
 
     protected:
-      void assign( const string_type& );
-      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+      void assign( const abstract_string_type& );
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle() const;
 
     protected:
       nsAutoBufferHandle<char_type> mBuffer;

@@ -27,30 +27,30 @@
 // #include "nsBufferHandleUtils.h"
 
 void
-nsSharableString::assign( const string_type& aReadable )
+nsSharableString::assign( const abstract_string_type& aReadable )
   {
-    const nsSharedBufferHandle<char_type>* handle = aReadable.GetSharedBufferHandle();
+    const shared_buffer_handle_type* handle = aReadable.GetSharedBufferHandle();
     if ( !handle )
       handle = NS_AllocateContiguousHandleWithData(handle, aReadable, PRUint32(1));
     mBuffer = handle;
   }
 
-const nsSharedBufferHandle<PRUnichar>*
+const nsSharableString::shared_buffer_handle_type*
 nsSharableString::GetSharedBufferHandle() const
   {
     return mBuffer.get();
   }
 
 void
-nsSharableCString::assign( const string_type& aReadable )
+nsSharableCString::assign( const abstract_string_type& aReadable )
   {
-    const nsSharedBufferHandle<char_type>* handle = aReadable.GetSharedBufferHandle();
+    const shared_buffer_handle_type* handle = aReadable.GetSharedBufferHandle();
     if ( !handle )
       handle = NS_AllocateContiguousHandleWithData(handle, aReadable, PRUint32(1));
     mBuffer = handle;
   }
 
-const nsSharedBufferHandle<char>*
+const nsSharableCString::shared_buffer_handle_type*
 nsSharableCString::GetSharedBufferHandle() const
   {
     return mBuffer.get();

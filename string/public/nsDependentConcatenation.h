@@ -52,49 +52,46 @@ class NS_COM nsDependentConcatenation
   {
     public:
       typedef nsDependentConcatenation      self_type;
-      typedef PRUnichar                     char_type;
-      typedef nsAString                     string_type;
-      typedef string_type::const_iterator   const_iterator;
 
     protected:
-      virtual const char_type* GetReadableFragment( nsReadableFragment<char_type>&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char_type* GetWritableFragment( nsWritableFragment<char_type>&, nsFragmentRequest, PRUint32 ) { return 0; }
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
 
-      enum { kLeftString, kRightString };
+      enum { kFirstString, kLastString };
 
       int
-      GetCurrentStringFromFragment( const nsReadableFragment<char_type>& aFragment ) const
+      GetCurrentStringFromFragment( const const_fragment_type& aFragment ) const
         {
-          return (aFragment.GetIDAsInt() & mFragmentIdentifierMask) ? kRightString : kLeftString;
+          return (aFragment.GetIDAsInt() & mFragmentIdentifierMask) ? kLastString : kFirstString;
         }
 
       int
-      SetLeftStringInFragment( nsReadableFragment<char_type>& aFragment ) const
+      SetFirstStringInFragment( const_fragment_type& aFragment ) const
         {
           aFragment.SetID(aFragment.GetIDAsInt() & ~mFragmentIdentifierMask);
-          return kLeftString;
+          return kFirstString;
         }
 
       int
-      SetRightStringInFragment( nsReadableFragment<char_type>& aFragment ) const
+      SetLastStringInFragment( const_fragment_type& aFragment ) const
         {
           aFragment.SetID(aFragment.GetIDAsInt() | mFragmentIdentifierMask);
-          return kRightString;
+          return kLastString;
         }
 
     public:
-      nsDependentConcatenation( const string_type& aLeftString, const string_type& aRightString, PRUint32 aMask = 1 )
+      nsDependentConcatenation( const abstract_string_type& aFirstString, const abstract_string_type& aLastString, PRUint32 aMask = 1 )
           : mFragmentIdentifierMask(aMask)
         {
-          mStrings[kLeftString] = &aLeftString;
-          mStrings[kRightString] = &aRightString;
+          mStrings[kFirstString] = &aFirstString;
+          mStrings[kLastString] = &aLastString;
         }
 
-      nsDependentConcatenation( const self_type& aLeftString, const string_type& aRightString )
-          : mFragmentIdentifierMask(aLeftString.mFragmentIdentifierMask<<1)
+      nsDependentConcatenation( const self_type& aFirstString, const abstract_string_type& aLastString )
+          : mFragmentIdentifierMask(aFirstString.mFragmentIdentifierMask<<1)
         {
-          mStrings[kLeftString] = &aLeftString;
-          mStrings[kRightString] = &aRightString;
+          mStrings[kFirstString] = &aFirstString;
+          mStrings[kLastString] = &aLastString;
         }
 
       // nsDependentConcatenation( const self_type& ); // auto-generated copy-constructor should be OK
@@ -107,10 +104,10 @@ class NS_COM nsDependentConcatenation
     public:
 
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const string_type& ) const;
-//    virtual PRBool PromisesExactly( const string_type& ) const;
+      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
+//    virtual PRBool PromisesExactly( const abstract_string_type& ) const;
 
-//    const self_type operator+( const string_type& rhs ) const;
+//    const self_type operator+( const abstract_string_type& rhs ) const;
 
       PRUint32 GetFragmentIdentifierMask() const { return mFragmentIdentifierMask; }
 
@@ -120,8 +117,8 @@ class NS_COM nsDependentConcatenation
         //  which would break the algorithm for distributing bits in the fragment identifier
 
     private:
-      const string_type*  mStrings[2];
-      PRUint32            mFragmentIdentifierMask;
+      const abstract_string_type*  mStrings[2];
+      PRUint32                     mFragmentIdentifierMask;
   };
 
 class NS_COM nsDependentCConcatenation
@@ -129,49 +126,46 @@ class NS_COM nsDependentCConcatenation
   {
     public:
       typedef nsDependentCConcatenation     self_type;
-      typedef char                          char_type;
-      typedef nsACString                    string_type;
-      typedef string_type::const_iterator   const_iterator;
 
     protected:
-      virtual const char_type* GetReadableFragment( nsReadableFragment<char_type>&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char_type* GetWritableFragment( nsWritableFragment<char_type>&, nsFragmentRequest, PRUint32 ) { return 0; }
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 ) { return 0; }
 
-      enum { kLeftString, kRightString };
+      enum { kFirstString, kLastString };
 
       int
-      GetCurrentStringFromFragment( const nsReadableFragment<char_type>& aFragment ) const
+      GetCurrentStringFromFragment( const const_fragment_type& aFragment ) const
         {
-          return (aFragment.GetIDAsInt() & mFragmentIdentifierMask) ? kRightString : kLeftString;
+          return (aFragment.GetIDAsInt() & mFragmentIdentifierMask) ? kLastString : kFirstString;
         }
 
       int
-      SetLeftStringInFragment( nsReadableFragment<char_type>& aFragment ) const
+      SetFirstStringInFragment( const_fragment_type& aFragment ) const
         {
           aFragment.SetID(aFragment.GetIDAsInt() & ~mFragmentIdentifierMask);
-          return kLeftString;
+          return kFirstString;
         }
 
       int
-      SetRightStringInFragment( nsReadableFragment<char_type>& aFragment ) const
+      SetLastStringInFragment( const_fragment_type& aFragment ) const
         {
           aFragment.SetID(aFragment.GetIDAsInt() | mFragmentIdentifierMask);
-          return kRightString;
+          return kLastString;
         }
 
     public:
-      nsDependentCConcatenation( const string_type& aLeftString, const string_type& aRightString, PRUint32 aMask = 1 )
+      nsDependentCConcatenation( const abstract_string_type& aFirstString, const abstract_string_type& aLastString, PRUint32 aMask = 1 )
           : mFragmentIdentifierMask(aMask)
         {
-          mStrings[kLeftString] = &aLeftString;
-          mStrings[kRightString] = &aRightString;
+          mStrings[kFirstString] = &aFirstString;
+          mStrings[kLastString] = &aLastString;
         }
 
-      nsDependentCConcatenation( const self_type& aLeftString, const string_type& aRightString )
-          : mFragmentIdentifierMask(aLeftString.mFragmentIdentifierMask<<1)
+      nsDependentCConcatenation( const self_type& aFirstString, const abstract_string_type& aLastString )
+          : mFragmentIdentifierMask(aFirstString.mFragmentIdentifierMask<<1)
         {
-          mStrings[kLeftString] = &aLeftString;
-          mStrings[kRightString] = &aRightString;
+          mStrings[kFirstString] = &aFirstString;
+          mStrings[kLastString] = &aLastString;
         }
 
       // nsDependentCConcatenation( const self_type& ); // auto-generated copy-constructor should be OK
@@ -184,10 +178,10 @@ class NS_COM nsDependentCConcatenation
     public:
 
       virtual PRUint32 Length() const;
-      virtual PRBool IsDependentOn( const string_type& ) const;
-//    virtual PRBool PromisesExactly( const string_type& ) const;
+      virtual PRBool IsDependentOn( const abstract_string_type& ) const;
+//    virtual PRBool PromisesExactly( const abstract_string_type& ) const;
 
-//    const self_type operator+( const string_type& rhs ) const;
+//    const self_type operator+( const abstract_string_type& rhs ) const;
 
       PRUint32 GetFragmentIdentifierMask() const { return mFragmentIdentifierMask; }
 
@@ -197,8 +191,8 @@ class NS_COM nsDependentCConcatenation
         //  which would break the algorithm for distributing bits in the fragment identifier
 
     private:
-      const string_type*  mStrings[2];
-      PRUint32            mFragmentIdentifierMask;
+      const abstract_string_type*  mStrings[2];
+      PRUint32                     mFragmentIdentifierMask;
   };
 
   /*
@@ -252,14 +246,14 @@ operator+( const nsACString& lhs, const nsACString& rhs )
 #if 0
 inline
 const nsDependentConcatenation
-nsDependentConcatenation::operator+( const string_type& rhs ) const
+nsDependentConcatenation::operator+( const abstract_string_type& rhs ) const
   {
     return nsDependentConcatenation(*this, rhs, mFragmentIdentifierMask<<1);
   }
 
 inline
 const nsDependentCConcatenation
-nsDependentCConcatenation::operator+( const string_type& rhs ) const
+nsDependentCConcatenation::operator+( const abstract_string_type& rhs ) const
   {
     return nsDependentCConcatenation(*this, rhs, mFragmentIdentifierMask<<1);
   }

@@ -35,16 +35,16 @@ class NS_COM nsAFlatString
   {
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsString| is really dead
-      virtual const PRUnichar* get() const;
-      PRUnichar  operator[]( PRUint32 i ) const { return get()[ i ]; }
-      PRUnichar  CharAt( PRUint32 ) const;
+      virtual const char_type* get() const;
+      char_type operator[]( PRUint32 i ) const { return get()[ i ]; }
+      char_type CharAt( PRUint32 ) const;
 
       virtual PRUint32 Length() const;
 
 //  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatString|
     public:
-      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
-      virtual       PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 );
   };
 
 class NS_COM nsAFlatCString
@@ -52,20 +52,20 @@ class NS_COM nsAFlatCString
   {
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsCString| is really dead
-      virtual const char* get() const;
-      char  operator[]( PRUint32 i ) const      { return get()[ i ]; }
-      char  CharAt( PRUint32 ) const;
+      virtual const char_type* get() const;
+      char_type operator[]( PRUint32 i ) const      { return get()[ i ]; }
+      char_type CharAt( PRUint32 ) const;
 
       virtual PRUint32 Length() const;
 
 //  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatCString|
     public:
-      virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 );
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 );
   };
 
 inline
-PRUnichar
+nsAFlatString::char_type
 nsAFlatString::CharAt( PRUint32 i ) const
   {
     NS_ASSERTION(i<Length(), "|CharAt| out-of-range");
@@ -73,7 +73,7 @@ nsAFlatString::CharAt( PRUint32 i ) const
   }
 
 inline
-char
+nsAFlatCString::char_type
 nsAFlatCString::CharAt( PRUint32 i ) const
   {
     NS_ASSERTION(i<Length(), "|CharAt| out-of-range");

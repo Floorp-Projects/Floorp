@@ -24,7 +24,7 @@
 #include "nsPromiseFlatString.h"
 
 
-nsPromiseFlatString::nsPromiseFlatString( const nsPromiseFlatString& aOther )
+nsPromiseFlatString::nsPromiseFlatString( const self_type& aOther )
     : mFlattenedString(aOther.mFlattenedString)
   {
     if ( aOther.mPromisedString == &aOther.mFlattenedString )
@@ -33,7 +33,7 @@ nsPromiseFlatString::nsPromiseFlatString( const nsPromiseFlatString& aOther )
       mPromisedString = aOther.mPromisedString;
   }
 
-nsPromiseFlatString::nsPromiseFlatString( const nsAString& aString )
+nsPromiseFlatString::nsPromiseFlatString( const abstract_string_type& aString )
   {
     if ( aString.GetFlatBufferHandle() )
       mPromisedString = NS_STATIC_CAST(const nsAFlatString*, &aString);
@@ -44,31 +44,31 @@ nsPromiseFlatString::nsPromiseFlatString( const nsAString& aString )
       }
   }
 
-const nsBufferHandle<PRUnichar>*
+const nsPromiseFlatString::buffer_handle_type*
 nsPromiseFlatString::GetFlatBufferHandle() const
   {
     return mPromisedString->GetFlatBufferHandle();
   }
 
-const nsBufferHandle<PRUnichar>*
+const nsPromiseFlatString::buffer_handle_type*
 nsPromiseFlatString::GetBufferHandle() const
   {
     return mPromisedString->GetBufferHandle();
   }
 
-const nsSharedBufferHandle<PRUnichar>*
+const nsPromiseFlatString::shared_buffer_handle_type*
 nsPromiseFlatString::GetSharedBufferHandle() const
   {
     return mPromisedString->GetSharedBufferHandle();
   }
 
 PRBool
-nsPromiseFlatString::IsDependentOn( const nsAString& aString ) const
+nsPromiseFlatString::IsDependentOn( const abstract_string_type& aString ) const
   {
     return mPromisedString->IsDependentOn(aString);
   }
 
-const PRUnichar*
+const nsPromiseFlatString::char_type*
 nsPromiseFlatString::get() const
   {
     return mPromisedString->get();
@@ -80,15 +80,15 @@ nsPromiseFlatString::Length() const
     return mPromisedString->Length();
   }
 
-const PRUnichar*
-nsPromiseFlatString::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+const nsPromiseFlatString::char_type*
+nsPromiseFlatString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     return mPromisedString->GetReadableFragment(aFragment, aRequest, aOffset);
   }
 
 
 
-nsPromiseFlatCString::nsPromiseFlatCString( const nsPromiseFlatCString& aOther )
+nsPromiseFlatCString::nsPromiseFlatCString( const self_type& aOther )
     : mFlattenedString(aOther.mFlattenedString)
   {
     if ( aOther.mPromisedString == &aOther.mFlattenedString )
@@ -97,7 +97,7 @@ nsPromiseFlatCString::nsPromiseFlatCString( const nsPromiseFlatCString& aOther )
       mPromisedString = aOther.mPromisedString;
   }
 
-nsPromiseFlatCString::nsPromiseFlatCString( const nsACString& aString )
+nsPromiseFlatCString::nsPromiseFlatCString( const abstract_string_type& aString )
   {
     if ( aString.GetFlatBufferHandle() )
       mPromisedString = NS_STATIC_CAST(const nsAFlatCString*, &aString);
@@ -108,31 +108,31 @@ nsPromiseFlatCString::nsPromiseFlatCString( const nsACString& aString )
       }
   }
 
-const nsBufferHandle<char>*
+const nsPromiseFlatCString::buffer_handle_type*
 nsPromiseFlatCString::GetFlatBufferHandle() const
   {
     return mPromisedString->GetFlatBufferHandle();
   }
 
-const nsBufferHandle<char>*
+const nsPromiseFlatCString::buffer_handle_type*
 nsPromiseFlatCString::GetBufferHandle() const
   {
     return mPromisedString->GetBufferHandle();
   }
 
-const nsSharedBufferHandle<char>*
+const nsPromiseFlatCString::shared_buffer_handle_type*
 nsPromiseFlatCString::GetSharedBufferHandle() const
   {
     return mPromisedString->GetSharedBufferHandle();
   }
 
 PRBool
-nsPromiseFlatCString::IsDependentOn( const nsACString& aString ) const
+nsPromiseFlatCString::IsDependentOn( const abstract_string_type& aString ) const
   {
     return mPromisedString->IsDependentOn(aString);
   }
 
-const char*
+const nsPromiseFlatCString::char_type*
 nsPromiseFlatCString::get() const
   {
     return mPromisedString->get();
@@ -144,8 +144,8 @@ nsPromiseFlatCString::Length() const
     return mPromisedString->Length();
   }
 
-const char*
-nsPromiseFlatCString::GetReadableFragment( nsReadableFragment<char>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
+const nsPromiseFlatCString::char_type*
+nsPromiseFlatCString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
     return mPromisedString->GetReadableFragment(aFragment, aRequest, aOffset);
   }

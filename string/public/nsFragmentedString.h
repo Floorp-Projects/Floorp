@@ -43,8 +43,8 @@ class nsFragmentedString
     */
   {
     protected:
-      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
-      virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 );
 
     public:
       nsFragmentedString() { }
@@ -57,10 +57,10 @@ class nsFragmentedString
       // virtual void Cut( PRUint32 cutStart, PRUint32 cutLength );
 
     protected:
-      // virtual void do_AssignFromReadable( const nsAString& );
-      // virtual void do_AppendFromReadable( const nsAString& );
-      // virtual void do_InsertFromReadable( const nsAString&, PRUint32 );
-      // virtual void do_ReplaceFromReadable( PRUint32, PRUint32, const nsAString& );
+      // virtual void do_AssignFromReadable( const abstract_string_type& );
+      // virtual void do_AppendFromReadable( const abstract_string_type& );
+      // virtual void do_InsertFromReadable( const abstract_string_type&, PRUint32 );
+      // virtual void do_ReplaceFromReadable( PRUint32, PRUint32, const abstract_string_type& );
 
     private:
       nsSharedBufferList  mBufferList;

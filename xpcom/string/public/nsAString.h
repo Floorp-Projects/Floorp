@@ -48,30 +48,38 @@
 class NS_COM nsAString
   {
     public:
-      typedef nsAString                     self_type;
-      typedef nsAPromiseString              promise_type;
-      typedef PRUnichar                     char_type;
-      typedef char                          incompatible_char_type;
+      typedef PRUnichar                         char_type;
+      typedef char                              incompatible_char_type;
+
+      typedef nsBufferHandle<char_type>         buffer_handle_type;
+      typedef nsConstBufferHandle<char_type>    const_buffer_handle_type;
+      typedef nsSharedBufferHandle<char_type>   shared_buffer_handle_type;
+
+      typedef nsReadableFragment<char_type>     const_fragment_type;
+      typedef nsWritableFragment<char_type>     fragment_type;
+
+      typedef nsAString                         self_type;
+      typedef nsAString                         abstract_string_type;
+
+      typedef nsReadingIterator<char_type>      const_iterator;
+      typedef nsWritingIterator<char_type>      iterator;
+
+      typedef nsAPromiseString                  promise_type;
+
+      typedef PRUint32                          size_type;
+      typedef PRUint32                          index_type;
 
 
-      typedef nsReadingIterator<char_type>  const_iterator;
-      typedef nsWritingIterator<char_type>  iterator;
-
-      typedef PRUint32                      size_type;
-      typedef PRUint32                      index_type;
-
-
-
-
+    public:
       // nsAString();                           // auto-generated default constructor OK (we're abstract anyway)
       // nsAString( const self_type& );         // auto-generated copy-constructor OK (again, only because we're abstract)
       virtual ~nsAString() { }                  // ...yes, I expect to be sub-classed
 
 
-      virtual PRUint32                                GetImplementationFlags() const;
-      virtual const nsBufferHandle<char_type>*        GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<char_type>*        GetBufferHandle() const;
-      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+      virtual PRUint32                          GetImplementationFlags() const;
+      virtual const        buffer_handle_type*  GetFlatBufferHandle()    const;
+      virtual const        buffer_handle_type*  GetBufferHandle()        const;
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle()  const;
 
         /**
          * |GetBufferHandle()| will return either |0|, or a reasonable pointer.
@@ -95,7 +103,7 @@ class NS_COM nsAString
 
       virtual PRBool IsVoid() const;
       virtual void SetIsVoid( PRBool );
-      
+
         /**
          * |CharAt|, |operator[]|, |First()|, and |Last()| are not guaranteed to be constant-time operations.
          * These signatures should be pushed down into interfaces that guarantee flat allocation.
@@ -285,25 +293,34 @@ class NS_COM nsAString
 
 //  protected:
     public:
-      virtual const char_type* GetReadableFragment( nsReadableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
-      virtual       char_type* GetWritableFragment( nsWritableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) = 0;
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 = 0 ) = 0;
       virtual PRBool IsDependentOn( const self_type& aString ) const { return &aString == this; }
   };
 
 class NS_COM nsACString
   {
     public:
-      typedef nsACString                    self_type;
-      typedef nsAPromiseCString             promise_type;
-      typedef char                          char_type;
-      typedef PRUnichar                     incompatible_char_type;
+      typedef char                              char_type;
+      typedef PRUnichar                         incompatible_char_type;
 
+      typedef nsBufferHandle<char_type>         buffer_handle_type;
+      typedef nsConstBufferHandle<char_type>    const_buffer_handle_type;
+      typedef nsSharedBufferHandle<char_type>   shared_buffer_handle_type;
 
-      typedef nsReadingIterator<char_type>  const_iterator;
-      typedef nsWritingIterator<char_type>  iterator;
+      typedef nsReadableFragment<char_type>     const_fragment_type;
+      typedef nsWritableFragment<char_type>     fragment_type;
 
-      typedef PRUint32                      size_type;
-      typedef PRUint32                      index_type;
+      typedef nsACString                        self_type;
+      typedef nsACString                        abstract_string_type;
+
+      typedef nsReadingIterator<char_type>      const_iterator;
+      typedef nsWritingIterator<char_type>      iterator;
+
+      typedef nsAPromiseCString                 promise_type;
+
+      typedef PRUint32                          size_type;
+      typedef PRUint32                          index_type;
 
 
 
@@ -313,10 +330,10 @@ class NS_COM nsACString
       virtual ~nsACString() { }                 // ...yes, I expect to be sub-classed
 
 
-      virtual PRUint32                                GetImplementationFlags() const;
-      virtual const nsBufferHandle<char_type>*        GetFlatBufferHandle() const;
-      virtual const nsBufferHandle<char_type>*        GetBufferHandle() const;
-      virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
+      virtual PRUint32                          GetImplementationFlags() const;
+      virtual const        buffer_handle_type*  GetFlatBufferHandle()    const;
+      virtual const        buffer_handle_type*  GetBufferHandle()        const;
+      virtual const shared_buffer_handle_type*  GetSharedBufferHandle()  const;
 
         /**
          * |GetBufferHandle()| will return either |0|, or a reasonable pointer.
@@ -340,7 +357,7 @@ class NS_COM nsACString
 
       virtual PRBool IsVoid() const;
       virtual void SetIsVoid( PRBool );
-      
+
         /**
          * |CharAt|, |operator[]|, |First()|, and |Last()| are not guaranteed to be constant-time operations.
          * These signatures should be pushed down into interfaces that guarantee flat allocation.
@@ -530,8 +547,8 @@ class NS_COM nsACString
 
 //  protected:
     public:
-      virtual const char_type* GetReadableFragment( nsReadableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
-      virtual       char_type* GetWritableFragment( nsWritableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) = 0;
+      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
+      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 = 0 ) = 0;
       virtual PRBool IsDependentOn( const self_type& aString ) const { return &aString == this; }
   };
 
@@ -631,21 +648,23 @@ nsAString::EndWriting( iterator& aResult )
 class NS_COM nsStringComparator
   {
     public:
-      virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const = 0;
+      typedef nsAString::char_type char_type;
+
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
   };
 
 class NS_COM nsDefaultStringComparator
     : public nsStringComparator
   {
     public:
-      virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const;
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
   };
 
 class NS_COM nsCaseInsensitiveStringComparator
     : public nsStringComparator
   {
     public:
-      virtual int operator()( const PRUnichar*, const PRUnichar*, PRUint32 aLength ) const;
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
   };
 
 NS_COM int Compare( const nsAString& lhs, const nsAString& rhs, const nsStringComparator& = nsDefaultStringComparator() );
@@ -760,21 +779,23 @@ nsACString::EndWriting( iterator& aResult )
 class NS_COM nsCStringComparator
   {
     public:
-      virtual int operator()( const char*, const char*, PRUint32 aLength ) const = 0;
+      typedef nsACString::char_type char_type;
+
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const = 0;
   };
 
 class NS_COM nsDefaultCStringComparator
     : public nsCStringComparator
   {
     public:
-      virtual int operator()( const char*, const char*, PRUint32 aLength ) const;
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
   };
 
 class NS_COM nsCaseInsensitiveCStringComparator
     : public nsCStringComparator
   {
     public:
-      virtual int operator()( const char*, const char*, PRUint32 aLength ) const;
+      virtual int operator()( const char_type*, const char_type*, PRUint32 aLength ) const;
   };
 
 NS_COM int Compare( const nsACString& lhs, const nsACString& rhs, const nsCStringComparator& = nsDefaultCStringComparator() );

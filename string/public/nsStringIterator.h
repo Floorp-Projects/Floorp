@@ -63,14 +63,17 @@ class nsReadingIterator
       typedef const CharT&                reference;
 //    typedef bidirectional_iterator_tag  iterator_category;
 
+      typedef nsReadableFragment<CharT>   const_fragment_type;
+      typedef nsWritableFragment<CharT>   fragment_type;
+
     private:
       friend class nsAString;
       friend class nsACString;
-      typedef typename nsStringTraits<CharT>::abstract_string_type string_type;
+      typedef typename nsStringTraits<CharT>::abstract_string_type abstract_string_type;
 
-      nsReadableFragment<CharT>   mFragment;
+      const_fragment_type         mFragment;
       const CharT*                mPosition;
-      const string_type*          mOwningString;
+      const abstract_string_type* mOwningString;
 
     public:
       nsReadingIterator() { }
@@ -136,13 +139,13 @@ class nsReadingIterator
           return result;
         }
 
-      const nsReadableFragment<CharT>&
+      const const_fragment_type&
       fragment() const
         {
           return mFragment;
         }
 
-      const string_type&
+      const abstract_string_type&
       string() const
         {
           NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
@@ -203,14 +206,17 @@ class nsWritingIterator
       typedef CharT&                      reference;
 //    typedef bidirectional_iterator_tag  iterator_category;
 
+      typedef nsReadableFragment<CharT>   const_fragment_type;
+      typedef nsWritableFragment<CharT>   fragment_type;
+
     private:
       friend class nsAString;
       friend class nsACString;
-      typedef typename nsStringTraits<CharT>::abstract_string_type string_type;
+      typedef typename nsStringTraits<CharT>::abstract_string_type abstract_string_type;
 
-      nsWritableFragment<CharT>   mFragment;
+      fragment_type               mFragment;
       CharT*                      mPosition;
-      string_type*                mOwningString;
+      abstract_string_type*       mOwningString;
 
     public:
       nsWritingIterator() { }
@@ -276,26 +282,26 @@ class nsWritingIterator
           return result;
         }
 
-      const nsWritableFragment<CharT>&
+      const fragment_type&
       fragment() const
         {
           return mFragment;
         }
 
-      nsWritableFragment<CharT>&
+      fragment_type&
       fragment()
         {
           return mFragment;
         }
 
-      const string_type&
+      const abstract_string_type&
       string() const
         {
           NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
           return *mOwningString;
         }
 
-      string_type&
+      abstract_string_type&
       string()
         {
           NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
