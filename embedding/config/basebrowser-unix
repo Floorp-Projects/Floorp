@@ -35,7 +35,7 @@ libgtkembedmoz.so
 ; 
 ; DOM:
 ; 
-libjsdom.so 
+components/libjsdom.so 
 
 
 ; 
@@ -72,6 +72,16 @@ components/docshell.xpt
 
 ; dom
 components/dom.xpt                      
+components/dom_base.xpt
+components/dom_core.xpt
+components/dom_css.xpt
+components/dom_events.xpt
+components/dom_html.xpt
+components/dom_range.xpt
+components/dom_stylesheets.xpt
+components/dom_views.xpt
+components/dom_xbl.xpt
+components/dom_xul.xpt
 
 ; editor
 components/libeditor.so                   
