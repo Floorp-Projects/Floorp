@@ -1087,6 +1087,7 @@ nsresult nsMsgCompose::SetBodyModified(PRBool modified)
 nsresult nsMsgCompose::GetDomWindow(nsIDOMWindowInternal * *aDomWindow)
 {
 	*aDomWindow = m_window;
+	NS_IF_ADDREF(*aDomWindow);
 	return NS_OK;
 }
 
@@ -1524,7 +1525,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
   nsresult rv = NS_OK;
   nsAutoString aCharset;
   
-  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+  nsCOMPtr<nsIMsgCompose> compose = do_QueryReferent(mWeakComposeObj);
   if (compose) 
   {
     MSG_ComposeType type;
@@ -1624,8 +1625,18 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         
         if (! followUpTo.IsEmpty())
         {
+          // Handle "followup-to: poster" magic keyword here
           if (followUpTo == NS_LITERAL_STRING("poster"))
           {
+            nsCOMPtr<nsIDOMWindowInternal> composeWindow;
+            nsCOMPtr<nsIPrompt> prompt;
+            compose->GetDomWindow(getter_AddRefs(composeWindow));
+            if (composeWindow)
+              composeWindow->GetPrompter(getter_AddRefs(prompt));
+            nsMsgDisplayMessageByID(prompt, NS_MSG_FOLLOWUPTO_ALERT);
+            
+            // If reply-to is empty, use the from header to fetch
+            // the original sender's email
             if (!replyTo.IsEmpty())
               compFields->SetTo(replyTo.get());
             else
@@ -1639,10 +1650,12 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
               }
             }
 
+            // Clear the newsgroup: header field, because followup-to: poster
+            // only follows up to the original sender
             if (! newgroups.IsEmpty())
               compFields->SetNewsgroups(nsnull);
           }
-          else
+          else // Process "followup-to: newsgroup-content" here
           {
 		        if (type != nsIMsgCompType::ReplyToSender)
 			        compFields->SetNewsgroups(nsAutoCString(followUpTo));
