@@ -514,8 +514,15 @@ var BookmarksCommand = {
         var item = aSelection.item[i];
         saveURL(item.Value, BookmarksUtils.getProperty(item, "Name"), null, true);
       }      
-      else if (type == "Bookmark" || type == "")
-        this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
+      else if (type == "Bookmark" || type == "") {
+        var webPanel = BMDS.GetTarget(aSelection.item[i],
+                                      RDF.GetResource(NC_NS + "WebPanel"),
+                                      true);
+        if (webPanel && aTargetBrowser == "current")
+          this.openWebPanel(aSelection.item[i].Value, aDS);
+        else
+          this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
+      }
       else if (type == "Folder" || type == "PersonalToolbarFolder")
         this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser);
     }
@@ -529,6 +536,21 @@ var BookmarksCommand = {
     return openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul", "", "centerscreen,chrome,dependent,resizable=no", bookmark);      
   },
 
+  // requires utilityOverlay.js if opening in new window for getTopWin()
+  openWebPanel: function(aURI, aDS)
+  {
+    var url = BookmarksUtils.getProperty(aURI, NC_NS+"URL", aDS);
+    // Ignore "NC:" and empty urls.
+    if (url == "")
+      return;
+    var w = getTopWin();
+    if (!w) {
+      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+      return;
+    }
+    w.openWebPanel(url);
+  },
+  
   // requires utilityOverlay.js if opening in new window for getTopWin()
   openOneBookmark: function (aURI, aTargetBrowser, aDS)
   {

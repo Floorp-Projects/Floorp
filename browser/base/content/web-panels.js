@@ -9,7 +9,7 @@ var panelAreaDNDObserver = {
 
       var uri = getShortcutOrURI(url);
       try {
-        document.getElementById('browser').webNavigation.loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+        document.getElementById('webpanels-browser').webNavigation.loadURI(uri, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
       } catch (e) {}
 
       // keep the event from being handled by the dragDrop listeners
@@ -27,3 +27,15 @@ var panelAreaDNDObserver = {
     }
   
 };
+
+function loadWebPanel(aURI) {
+    try {
+      document.getElementById('webpanels-browser').webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    } catch (e) {}
+}
+
+// We do this in the onload in order to make sure that the load of this page doesn't delay the onload of
+// the sidebar itself.
+function loadPlaceholderPage() {
+    document.getElementById('webpanels-browser').setAttribute("src", "chrome://browser/content/web-panels.xml");
+}
