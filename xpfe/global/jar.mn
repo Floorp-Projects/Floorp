@@ -40,6 +40,7 @@ toolkit.jar:
         content/global/plugins.html                 (resources/content/plugins.html)
         content/global/fullScreen.js                (resources/content/fullScreen.js)
         content/global/build.dtd                    (build.dtd)
+*       content/global/version.dtd                  (resources/content/version.dtd)
         content/global/MPL-1.1.html                 (resources/content/MPL-1.1.html)
         content/global/NPL-1.1.html                 (resources/content/NPL-1.1.html)
         content/global/bindings/browser.xml         (resources/content/bindings/browser.xml)

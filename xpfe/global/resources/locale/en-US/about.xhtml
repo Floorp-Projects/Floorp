@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % versionDTD SYSTEM "chrome://global/content/version.dtd" >
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 <!ENTITY % regionDTD SYSTEM "chrome://global-region/locale/region.dtd" >
+%versionDTD;
 %brandDTD;
 %regionDTD;
 ]>
@@ -87,15 +89,10 @@ h1 {
 
 <td id="mozver">
 <h1>
-<a id="mozlink" href="&releaseURL;">&brandShortName; </a>
+<a id="mozlink" href="&releaseURL;">&brandShortName; &version;</a>
 </h1>
 <script type="application/x-javascript">
-  // using try..catch to handle empty useragents and other cases where the regex fails to apply
-  try {
-    document.getElementById("mozver").appendChild(document.createTextNode(navigator.userAgent));
-    document.getElementById("mozlink").firstChild.appendData(navigator.userAgent.match(/rv:([^;)]+)/)[1]);
-  }
-  catch (e) {}
+  document.getElementById("mozver").appendChild(document.createTextNode(navigator.userAgent));
 </script>
 </td>
 
