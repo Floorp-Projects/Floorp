@@ -269,3 +269,5 @@
 <!ENTITY historyCmd.label "History">
 <!ENTITY historyCmd.accesskey "H">
 <!ENTITY historyCmd.commandkey "H">
+
+<!ENTITY location.label "Location:">
