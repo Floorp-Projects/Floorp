@@ -51,6 +51,12 @@ public:
                  nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
 
+    nsCacheEntry *
+    Create(nsCString *           key,
+           PRBool                streamBased,
+           nsCacheStoragePolicy  storagePolicy,
+           nsCacheDevice *       cacheDevice);
+
     nsCString *  Key(void)  { return mKey; }
 
     PRInt32  FetchCount(void)                     { return mFetchCount;}
@@ -103,7 +109,6 @@ public:
         
     };
 
-    void MarkDoomed()          { mFlags |=  eDoomedMask; }
     void MarkEntryDirty()      { mFlags |=  eEntryDirtyMask; }
     void MarkEntryClean()      { mFlags &= ~eEntryDirtyMask; }
     void MarkDataDirty()       { mFlags |=  eDataDirtyMask; }
@@ -111,8 +116,6 @@ public:
     void MarkMetaDataDirty()   { mFlags |=  eMetaDataDirtyMask; }
     void MarkMetaDataClean()   { mFlags &= ~eMetaDataDirtyMask; }
     void MarkStreamData()      { mFlags |=  eStreamDataMask; }
-    void MarkActive()          { mFlags |=  eActiveMask; }
-    void MarkInactive()        { mFlags &= ~eActiveMask; }
     void MarkValid()           { mFlags |=  eValidMask; }
     void MarkInvalid()         { mFlags &= ~eValidMask; }
     void MarkAllowedInMemory() { mFlags |=  eAllowedInMemoryMask; }
@@ -151,8 +154,11 @@ private:
 
     // internal methods
     nsresult CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGranted);
-    void MarkStreamBased() { mFlags |= eStreamDataMask; }
-    void MarkInitialized() { mFlags |= eInitializedMask; }
+    void MarkDoomed()          { mFlags |=  eDoomedMask; }
+    void MarkStreamBased()     { mFlags |= eStreamDataMask; }
+    void MarkInitialized()     { mFlags |= eInitializedMask; }
+    void MarkActive()          { mFlags |=  eActiveMask; }
+    void MarkInactive()        { mFlags &= ~eActiveMask; }
 
     PRCList                mListLink;       // 8  for holding entry on various lists
     nsCString *            mKey;            // 4  //** ask scc about const'ness

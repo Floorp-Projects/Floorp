@@ -277,7 +277,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
     if (!entry) {
         // search cache devices for entry
         entry = SearchCacheDevices(request->mKey, request->mStoragePolicy);
-        entry->MarkInitialized();
+        if (entry)  entry->MarkInitialized();
     }
 
     if (!entry && !(request->mAccessRequested & nsICache::ACCESS_WRITE)) {

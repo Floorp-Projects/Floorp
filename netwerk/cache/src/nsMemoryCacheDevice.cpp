@@ -91,7 +91,6 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
     if (ourEntry != entry)
         return NS_ERROR_INVALID_POINTER;
 
-    entry->MarkInactive(); // to make it evictable again
     return NS_OK;
 }
 
