@@ -129,15 +129,15 @@ nsImgManager::PrefChanged(nsIPrefBranch *aPrefBranch,
 }
 
 /**
- * Helper function to get the root DocShell given a DOMNode
+ * Helper function to get the root DocShell given a context
  *
- * @param aNode a DOMNode (cannot be null)
- * @return the root DocShell containing the DOMNode, if found
+ * @param aContext The context (can be null)
+ * @return the root DocShell containing aContext, if found
  */
 static inline already_AddRefed<nsIDocShell>
-GetRootDocShell(nsIDOMNode *node)
+GetRootDocShell(nsISupports *context)
 {
-  nsIDocShell *docshell = NS_CP_GetDocShellFromDOMNode(node);
+  nsIDocShell *docshell = NS_CP_GetDocShellFromContext(context);
   if (!docshell)
     return nsnull;
 
@@ -161,7 +161,7 @@ GetRootDocShell(nsIDOMNode *node)
 NS_IMETHODIMP nsImgManager::ShouldLoad(PRUint32          aContentType,
                                        nsIURI           *aContentLocation,
                                        nsIURI           *aRequestingLocation,
-                                       nsIDOMNode       *aRequestingNode,
+                                       nsISupports      *aRequestingContext,
                                        const nsACString &aMimeGuess,
                                        nsISupports      *aExtra,
                                        PRInt16          *aDecision)
@@ -195,7 +195,7 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRUint32          aContentType,
     if (!needToCheck)
       return NS_OK;
 
-    nsCOMPtr<nsIDocShell> docshell(GetRootDocShell(aRequestingNode));
+    nsCOMPtr<nsIDocShell> docshell(GetRootDocShell(aRequestingContext));
     if (docshell) {
       PRUint32 appType;
       rv = docshell->GetAppType(&appType);
@@ -222,16 +222,16 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRUint32          aContentType,
 NS_IMETHODIMP nsImgManager::ShouldProcess(PRUint32          aContentType,
                                           nsIURI           *aContentLocation,
                                           nsIURI           *aRequestingLocation,
-                                          nsIDOMNode       *aRequestingNode,
+                                          nsISupports      *aRequestingContext,
                                           const nsACString &aMimeGuess,
                                           nsISupports      *aExtra,
                                           PRInt16          *aDecision)
 {
-  // For loads where aRequestingNode is chrome, we should just accept.  Those
-  // are most likely toplevel loads in windows, and chrome generally knows
-  // what it's doing anyway.
+  // For loads where aRequestingContext is chrome, we should just
+  // accept.  Those are most likely toplevel loads in windows, and
+  // chrome generally knows what it's doing anyway.
   nsCOMPtr<nsIDocShellTreeItem> item =
-    do_QueryInterface(NS_CP_GetDocShellFromDOMNode(aRequestingNode));
+    do_QueryInterface(NS_CP_GetDocShellFromContext(aRequestingContext));
   
   if (item) {
     PRInt32 type;
@@ -245,7 +245,7 @@ NS_IMETHODIMP nsImgManager::ShouldProcess(PRUint32          aContentType,
   // This isn't a load from chrome.  Just do a ShouldLoad() check --
   // we want the same answer here
   return ShouldLoad(aContentType, aContentLocation, aRequestingLocation,
-                    aRequestingNode, aMimeGuess, aExtra, aDecision);
+                    aRequestingContext, aMimeGuess, aExtra, aDecision);
 }
 
 NS_IMETHODIMP

@@ -41,7 +41,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
 #include "nsContentPolicyUtils.h"
 
 nsWebBrowserContentPolicy::nsWebBrowserContentPolicy()
@@ -57,15 +56,15 @@ nsWebBrowserContentPolicy::~nsWebBrowserContentPolicy()
 NS_IMPL_ISUPPORTS1(nsWebBrowserContentPolicy, nsIContentPolicy)
 
 static nsresult
-PerformPolicyCheck(PRUint32    contentType,
-                   nsIDOMNode *requestingNode,
-                   PRInt16    *decision)
+PerformPolicyCheck(PRUint32     contentType,
+                   nsISupports *requestingContext,
+                   PRInt16     *decision)
 {
     NS_PRECONDITION(decision, "Null out param");
 
     *decision = nsIContentPolicy::ACCEPT;
 
-    nsIDocShell *shell = NS_CP_GetDocShellFromDOMNode(requestingNode);
+    nsIDocShell *shell = NS_CP_GetDocShellFromContext(requestingContext);
     /* We're going to dereference shell, so make sure it isn't null */
     if (!shell)
         return NS_OK;
@@ -106,19 +105,19 @@ NS_IMETHODIMP
 nsWebBrowserContentPolicy::ShouldLoad(PRUint32          contentType,
                                       nsIURI           *contentLocation,
                                       nsIURI           *requestingLocation,
-                                      nsIDOMNode       *requestingNode,
+                                      nsISupports      *requestingContext,
                                       const nsACString &mimeGuess,
                                       nsISupports      *extra,
                                       PRInt16          *shouldLoad)
 {
-    return PerformPolicyCheck(contentType, requestingNode, shouldLoad);
+    return PerformPolicyCheck(contentType, requestingContext, shouldLoad);
 }
 
 NS_IMETHODIMP
 nsWebBrowserContentPolicy::ShouldProcess(PRUint32          contentType,
                                          nsIURI           *contentLocation,
                                          nsIURI           *requestingLocation,
-                                         nsIDOMNode       *requestingNode,
+                                         nsISupports      *requestingContext,
                                          const nsACString &mimeGuess,
                                          nsISupports      *extra,
                                          PRInt16          *shouldProcess)
@@ -126,5 +125,5 @@ nsWebBrowserContentPolicy::ShouldProcess(PRUint32          contentType,
     *shouldProcess = nsIContentPolicy::ACCEPT;
     return NS_OK;
     //LATER:
-    //  return PerformPolicyCheck(contentType, requestingNode, shouldProcess);
+    //  return PerformPolicyCheck(contentType, requestingContext, shouldProcess);
 }

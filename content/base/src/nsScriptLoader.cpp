@@ -463,11 +463,10 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
     if (globalObject) {
       PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
       nsIURI *docURI = mDocument->GetDocumentURI();
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
       rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
                                      scriptURI,
                                      docURI,
-                                     node,
+                                     aElement,
                                      NS_LossyConvertUCS2toASCII(type),
                                      nsnull,    //extra
                                      &shouldLoad);

@@ -5124,10 +5124,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         contentType = nsIContentPolicy::TYPE_DOCUMENT;
     }
 
+    nsISupports* context = requestingElement;
+    if (!context) {
+        context =  mScriptGlobal;
+    }
     rv = NS_CheckContentLoadPolicy(contentType,
                                    aURI,
                                    aReferrer,
-                                   requestingElement,
+                                   context,
                                    EmptyCString(), //mime guess
                                    nsnull,         //extra
                                    &shouldLoad);
