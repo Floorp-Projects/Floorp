@@ -82,6 +82,7 @@ REQUIRES	= xpcom \
 		  commandhandler \
 		  editor \
 		  windowwatcher \
+		  imglib2 \
 		  $(NULL)
 
 SDK_XPIDLSRCS = \
@@ -106,6 +107,7 @@ XPIDLSRCS	= \
 		nsIScrollable.idl		\
 		nsITextScroll.idl		\
 		nsIWebNavigation.idl		\
+		nsIWebNavigationInfo.idl        \
 		nsIContentViewer.idl		\
 		nsIContentViewerEdit.idl	\
 		nsIContentViewerFile.idl	\
@@ -125,6 +127,7 @@ CPPSRCS		= \
 		nsDefaultURIFixup.cpp		\
 		nsGlobalHistoryAdapter.cpp \
 		nsGlobalHistory2Adapter.cpp \
+		nsWebNavigationInfo.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

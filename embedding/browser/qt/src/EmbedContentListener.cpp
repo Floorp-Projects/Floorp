@@ -44,8 +44,9 @@
 #include "EmbedContentListener.h"
 #include "qgeckoembed.h"
 
-#include "nsICategoryManager.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIWebNavigationInfo.h"
+#include "nsDocShellCID.h"
 
 EmbedContentListener::EmbedContentListener(QGeckoEmbed *aOwner)
 {
@@ -107,27 +108,21 @@ EmbedContentListener::CanHandleContent(const char        *aContentType,
                                        PRBool            *_retval)
 {
     *_retval = PR_FALSE;
+    *aDesiredContentType = nsnull;
     qDebug("HANDLING:");
 
     if (aContentType) {
-        nsCOMPtr<nsICategoryManager> catMgr;
-        nsresult rv;
-        catMgr = do_GetService("@mozilla.org/categorymanager;1", &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsXPIDLCString value;
-        rv = catMgr->GetCategoryEntry("Gecko-Content-Viewers",
-                                      aContentType,
-                                      getter_Copies(value));
-
-        // If the category manager can't find what we're looking for
-        // it returns NS_ERROR_NOT_AVAILABLE, we don't want to propagate
-        // that to the caller since it's really not a failure
-
-        if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
-            return rv;
-
-        if (value && *value)
-            *_retval = PR_TRUE;
+        nsCOMPtr<nsIWebNavigationInfo> webNavInfo(
+           do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID));
+        if (webNavInfo) {
+            PRUint32 canHandle;
+            nsresult rv =
+                webNavInfo->IsTypeSupported(nsDependentCString(aContentType),
+                                            mOwner ? mOwner->d->navigation : nsnull,
+                                            &canHandle);
+            NS_ENSURE_SUCCESS(rv, rv);
+            *_retval = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
+        }
     }
 
     qDebug("\tCan handle content %s: %d", aContentType, *_retval);

@@ -45,7 +45,8 @@
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
-#include "nsICategoryManager.h"
+#include "nsIWebNavigationInfo.h"
+#include "nsDocShellCID.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIHttpProtocolHandler.h"
@@ -791,21 +792,21 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                                                      nsIInterfaceRequestor * aWindowContext,
                                                      nsIRequest * aRequest)
 {
+  NS_PRECONDITION(aContentType, "Must have a content type");
+
   // Verify that we can handle this content, to avoid infinite window opening
   // loops
   nsresult rv;
-  nsCOMPtr<nsICategoryManager> catMan =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsIWebNavigationInfo> webNavInfo =
+    do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsXPIDLCString value;
-  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers",
-                                aContentType, 
-                                getter_Copies(value));
+  PRUint32 typeSupported;
+  rv = webNavInfo->IsTypeSupported(nsDependentCString(aContentType), nsnull,
+                                   &typeSupported);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // If there is no value (i.e. rv is NS_ERROR_NOT_AVAILABLE), we can't handle
-  // the content.
-  if (rv == NS_ERROR_NOT_AVAILABLE)
+  if (!typeSupported)
       return NS_ERROR_WONT_HANDLE_CONTENT;
 
   // create a new browser window to handle the content

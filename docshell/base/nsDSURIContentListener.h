@@ -43,10 +43,10 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIURIContentListener.h"
-#include "nsICategoryManager.h"
 #include "nsWeakReference.h"
 
 class nsDocShell;
+class nsIWebNavigationInfo;
 
 class nsDSURIContentListener :
     public nsIURIContentListener,
@@ -68,12 +68,6 @@ protected:
         mDocShell = nsnull;
     }
 
-    // Check whether aContentType is supported.  If this method throws, the
-    // value of aIsSupported is undefined and should not be looked at.
-    // aContentType must not be null before this is called, and we must have an
-    // mCatMgr.
-    nsresult IsTypeSupported(const char* aContentType, PRBool* aIsSupported);
-
 protected:
     nsDocShell*                      mDocShell;
 
@@ -83,7 +77,7 @@ protected:
     nsWeakPtr                        mWeakParentContentListener;
     nsIURIContentListener*           mParentContentListener;
 
-    nsCOMPtr<nsICategoryManager>     mCatMgr;
+    nsCOMPtr<nsIWebNavigationInfo>   mNavInfo;
 };
 
 #endif /* nsDSURIContentListener_h__ */

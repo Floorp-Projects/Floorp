@@ -315,9 +315,10 @@
       // Check if Mozilla can handle this type internally, in which case
       // an entry would have no effect
       try {
-        var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
-                                        .getService(Components.interfaces.nsICategoryManager);
-        if (categoryManager.getCategoryEntry("Gecko-Content-Viewers", gMIMEField.value)) {
+        var webNavigationInfo =
+	    Components.classes["@mozilla.org/webnavigation-info;1"]
+              .getService(Components.interfaces.nsIWebNavigationInfo);
+        if (webNavigationInfo.isTypeSupported(gMIMEField.value, null)) {
           var brandBundle = document.getElementById("bundle_Brand");
           var text = gPrefApplicationsBundle.getString("canHandleInternally");
           text = text.replace(/%brand%/g, brandBundle.getString("brandShortName"));

@@ -40,9 +40,10 @@
 #include "nsDocShell.h"
 #include "nsDSURIContentListener.h"
 #include "nsIChannel.h"
+#include "nsServiceManagerUtils.h"
 #include "nsXPIDLString.h"
-#include "nsIServiceManager.h"
-#include "nsIPluginManager.h"
+#include "nsDocShellCID.h"
+#include "nsIWebNavigationInfo.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsAutoPtr.h"
 
@@ -63,9 +64,9 @@ nsDSURIContentListener::~nsDSURIContentListener()
 nsresult
 nsDSURIContentListener::Init() 
 {
-    nsresult rv = NS_OK;
-    mCatMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv;
+    mNavInfo = do_GetService(NS_WEBNAVIGATION_INFO_CONTRACTID, &rv);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get webnav info");
     return rv;
 }
 
@@ -182,38 +183,22 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
                                          char ** aDesiredContentType,
                                          PRBool* aCanHandleContent)
 {
-    nsresult rv;
-    NS_ENSURE_ARG_POINTER(aCanHandleContent);
+    NS_PRECONDITION(aCanHandleContent, "Null out param?");
     NS_ENSURE_ARG_POINTER(aDesiredContentType);
 
     *aCanHandleContent = PR_FALSE;
+    *aDesiredContentType = nsnull;
 
-    if (aContentType && mCatMgr)
-    {
-        rv = IsTypeSupported(aContentType, aCanHandleContent);
-        if (NS_FAILED(rv))
-            return rv;
-
-        if (!*aCanHandleContent) {
-            // Try loading plugins to see whether someone neglected to do so
-            nsCOMPtr<nsIPluginManager> pluginManager =
-                do_GetService("@mozilla.org/plugin/manager;1");
-            if (pluginManager) {
-                // PR_FALSE will ensure that currently running plugins will not
-                // be shut down
-                rv = pluginManager->ReloadPlugins(PR_FALSE);
-                if (NS_SUCCEEDED(rv)) {
-                    // OK, we reloaded plugins and there were new ones
-                    // (otherwise NS_ERROR_PLUGINS_PLUGINSNOTCHANGED would have
-                    // been returned).  Try checking whether we can handle the
-                    // content now.
-                    return IsTypeSupported(aContentType, aCanHandleContent);
-                }
-            }
-        }
+    nsresult rv = NS_OK;
+    if (aContentType) {
+        PRUint32 canHandle = nsIWebNavigationInfo::UNSUPPORTED;
+        rv = mNavInfo->IsTypeSupported(nsDependentCString(aContentType),
+                                       mDocShell,
+                                       &canHandle);
+        *aCanHandleContent = (canHandle != nsIWebNavigationInfo::UNSUPPORTED);
     }
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -273,32 +258,5 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
         mWeakParentContentListener = nsnull;
         mParentContentListener = nsnull;
     }
-    return NS_OK;
-}
-
-nsresult
-nsDSURIContentListener::IsTypeSupported(const char* aContentType,
-                                        PRBool* aIsSupported)
-{
-    NS_PRECONDITION(aContentType, "Must have content type");
-    NS_PRECONDITION(mCatMgr, "Must have category manager");
-    NS_PRECONDITION(aIsSupported, "Null out param?");
-
-    nsXPIDLCString value;
-    nsresult rv = mCatMgr->GetCategoryEntry("Gecko-Content-Viewers",
-                                            aContentType, 
-                                            getter_Copies(value));
-
-    // If the category manager can't find what we're looking for
-    // it returns NS_ERROR_NOT_AVAILABLE, we don't want to propagate
-    // that to the caller since it's really not a failure
-
-    if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
-        return rv;
-
-    // XXXbz should we check that this service actually exists?  May be a
-    // good idea...
-
-    *aIsSupported = !value.IsEmpty();
     return NS_OK;
 }
