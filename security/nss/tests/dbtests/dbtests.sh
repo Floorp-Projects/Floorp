@@ -100,9 +100,19 @@ dbtest_cleanup()
   . common/cleanup.sh
 }
 
+Echo()
+{
+    echo
+    echo "---------------------------------------------------------------"
+    echo "| $*"
+    echo "---------------------------------------------------------------"
+}
 dbtest_main()
 {
     cd ${HOSTDIR}
+
+    
+    Echo "test opening the database readonly in a nonexisting directory"
     certutil -L -d ./non_existant_dir
     ret=$?
     if [ $ret -ne 255 ]; then
@@ -110,7 +120,15 @@ dbtest_main()
     else
       html_passed "<TR><TD> Certutil failed in a nonexisting dir $ret" 
     fi
+    dbtest -r -d ./non_existant_dir
+    ret=$?
+    if [ $ret -ne 45 ]; then
+      html_failed "<TR><TD> dbtest readonly succeeded in a nonexisting directory $ret"
+    else
+      html_passed "<TR><TD> dbtest readonly failed in a nonexisting dir $ret" 
+    fi
 
+    Echo "test opening the database readonly in an empty directory"
     mkdir $EMPTY_DIR
     tstclnt -h  ${HOST}  -d $EMPTY_DIR 
     ret=$?
@@ -119,6 +137,13 @@ dbtest_main()
     else
       html_passed "<TR><TD> tstclnt failed in an empty dir $ret"
     fi
+    dbtest -r -d $EMPTY_DIR
+    ret=$?
+    if [ $ret -ne 45 ]; then
+      html_failed "<TR><TD> dbtest readonly succeeded in an empty directory $ret"
+    else
+      html_passed "<TR><TD> dbtest readonly failed in an empty dir $ret" 
+    fi
     certutil -D -n xxxx -d $EMPTY_DIR #created DB
     ret=$?
     if [ $ret -ne 255 ]; then 
@@ -126,10 +151,19 @@ dbtest_main()
     else
         html_passed "<TR><TD> Certutil failed in an empty dir $ret"
     fi
+
+    Echo "test opening the database r/w in a readonly directory"
     mkdir $RONLY_DIR
-    cd $RONLY_DIR
-    cp -r ${CLIENTDIR}/* .
-    chmod -w * .
+    cp -r ${CLIENTDIR}/* $RONLY_DIR
+    chmod -w $RONLY_DIR $RONLY_DIR/*
+
+    dbtest -d $RONLY_DIR
+    ret=$?
+    if [ $ret -ne 45 ]; then
+      html_failed "<TR><TD> dbtest r/w succeeded in an readonly directory $ret"
+    else
+      html_passed "<TR><TD> dbtest r/w failed in an readonly dir $ret" 
+    fi
     certutil -D -n "TestUser" -d .
     ret=$?
     if [ $ret -ne 255 ]; then
@@ -137,6 +171,29 @@ dbtest_main()
     else
         html_passed "<TR><TD> Certutil failed in an readonly dir $ret"
     fi
+    
+    Echo "test opening the database ronly in a readonly directory"
+
+    dbtest -d $RONLY_DIR -r
+    ret=$?
+    if [ $ret -ne 0 ]; then
+      html_failed "<TR><TD> dbtest ronly failed in a readonly directory $ret"
+    else
+      html_passed "<TR><TD> dbtest ronly succeeded in a readonly dir $ret" 
+    fi
+
+    Echo "test force opening the database  r/w in a readonly directory"
+    dbtest -d $RONLY_DIR -f
+    ret=$?
+    if [ $ret -ne 0 ]; then
+      html_failed "<TR><TD> dbtest force failed in a readonly directory $ret"
+    else
+      html_passed "<TR><TD> dbtest force succeeded in a readonly dir $ret"
+    fi
+
+    Echo "ls -l $RONLY_DIR"
+    ls -ld $RONLY_DIR $RONLY_DIR/*
+
 }
 
 ################## main #################################################
