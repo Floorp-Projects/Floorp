@@ -200,9 +200,18 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
     return RemoveProperty(aPropertyName, tmp);
   }
 
-  return ParseDeclaration(aPropertyName + NS_LITERAL_STRING(":") +
-                          aValue + NS_LITERAL_STRING("!") + aPriority,
-                          PR_TRUE, PR_FALSE);
+  nsresult res;
+  if (aPriority.IsEmpty()) {
+    res = ParseDeclaration(aPropertyName + NS_LITERAL_STRING(":") +
+                           aValue,
+                           PR_TRUE, PR_FALSE);
+  }
+  else {
+    res = ParseDeclaration(aPropertyName + NS_LITERAL_STRING(":") +
+                           aValue + NS_LITERAL_STRING("!") + aPriority,
+                           PR_TRUE, PR_FALSE);
+  }
+  return res;
 }
 
 /**
