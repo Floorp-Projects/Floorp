@@ -1084,6 +1084,9 @@ nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
   PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL );
   PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
 
+  /* To Fix a PHOTON BUG draw anything after changing back to OPAQUE */
+  mSurface->Flush(); //PgDrawIRect( x, y, x, y, Pg_DRAW_FILL );
+  
   PgFLUSH();	//kedl
   return NS_OK;
 }
