@@ -58,7 +58,7 @@ interface imgILoader : nsISupports
    * @param aRequest A newly created, unused imgIRequest object or NULL for one to
                      be created for you.
    */
-  imgIRequest loadImage(in nsIURI aURI, in nsILoadGroup aLoadGroup,
+  imgIRequest loadImage(in nsIURI aURI, in nsIURI parentURL, in nsILoadGroup aLoadGroup,
                         in imgIDecoderObserver aObserver, in nsISupports aCX,
                         in nsLoadFlags aLoadFlags, in nsISupports cacheKey,
                         in imgIRequest aRequest);

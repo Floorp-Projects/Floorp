@@ -484,7 +484,8 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
 NS_IMETHODIMP
 nsDocShell::LoadURI(nsIURI * aURI,
                     nsIDocShellLoadInfo * aLoadInfo,
-                    PRUint32 aLoadFlags)
+                    PRUint32 aLoadFlags,
+                    PRBool firstParty)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> referrer;
@@ -646,7 +647,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
                           postStream,
                           nsnull,         // No headers stream
                           loadType,
-                          nsnull);        // No SHEntry
+                          nsnull,         // No SHEntry
+                          firstParty);
     }
 
     return rv;
@@ -2366,7 +2368,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 
     // XXX: Need to pass in the extra headers stream too...
 
-    rv = LoadURI(uri, loadInfo, 0);
+    rv = LoadURI(uri, loadInfo, 0, PR_TRUE);
     return rv;
 }
 
@@ -2415,7 +2417,8 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
                           nsnull,         // No post data
                           nsnull,         // No headers data
                           type,           // Load type
-                          nsnull);        // No SHEntry
+                          nsnull,        // No SHEntry
+                          PR_TRUE);
     return rv;
 }
 
@@ -4281,7 +4284,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIInputStream * aPostData,
                          nsIInputStream * aHeadersData,
                          PRUint32 aLoadType,
-                         nsISHEntry * aSHEntry)
+                         nsISHEntry * aSHEntry,
+                         PRBool firstParty)
 {
     nsresult rv;
 
@@ -4392,7 +4396,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                                               aPostData,
                                               aHeadersData,
                                               aLoadType,
-                                              aSHEntry);
+                                              aSHEntry,
+                                              firstParty);
             if (rv == NS_ERROR_NO_CONTENT) {
                 if (bIsNewWindow) {
                     //
@@ -4507,7 +4512,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     // been called. 
     mLSHE = aSHEntry;
 
-    rv = DoURILoad(aURI, aReferrer, owner, aPostData, aHeadersData);
+    rv = DoURILoad(aURI, aReferrer, owner, aPostData, aHeadersData, firstParty);
 
     return rv;
 }
@@ -4582,7 +4587,8 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrerURI,
                                nsISupports * aOwner,
                                nsIInputStream * aPostData,
-                               nsIInputStream * aHeadersData)
+                               nsIInputStream * aHeadersData,
+                               PRBool firstParty)
 {
     nsresult rv;
     nsCOMPtr<nsIURILoader> uriLoader;
@@ -4611,6 +4617,15 @@ nsresult nsDocShell::DoURILoad(nsIURI * aURI,
     channel->SetOriginalURI(aURI);
 
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+
+    if (httpChannel) {
+      if (firstParty) {
+        httpChannel->SetDocumentURI(aURI);
+      } else {
+        httpChannel->SetDocumentURI(aReferrerURI);
+      }
+    }
+
     //
     // If this is a HTTP channel, then set up the HTTP specific information
     // (ie. POST data, referrer, ...)
@@ -5484,7 +5499,8 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
                       postData,     // Post data stream
                       nsnull,       // No headers stream
                       aLoadType,    // Load type
-                      aEntry);      // SHEntry
+                      aEntry,       // SHEntry
+                      PR_TRUE);
     return rv;
 }
 
@@ -6193,13 +6209,13 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
              * its refreshData instance to be released...
              */
             mDocShell->LoadURI(mURI, loadInfo,
-                               nsIWebNavigation::LOAD_FLAGS_NONE);
+                               nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
             return;
 
         }
         else
             loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
-        mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+        mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
     }
 }
 

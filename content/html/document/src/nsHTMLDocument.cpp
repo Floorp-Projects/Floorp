@@ -840,6 +840,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       SetReferrer(referrer);
     }
 
+    mHttpChannel = httpChannel;
+
     nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(httpChannel);
     if (cachingChan) {
       nsCOMPtr<nsISupports> cacheToken;
@@ -2187,7 +2189,7 @@ nsHTMLDocument::SetCookie(const nsAReadableString& aCookie)
     result = NS_ERROR_OUT_OF_MEMORY;
     char* cookie = ToNewCString(aCookie);
     if (cookie) {
-      result = service->SetCookieString(mDocumentURL, prompt, cookie, 0);
+      result = service->SetCookieString(mDocumentURL, prompt, cookie, mHttpChannel);
       nsCRT::free(cookie);
     }
   }

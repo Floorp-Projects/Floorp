@@ -50,6 +50,7 @@
 #include "nsRDFCID.h"
 #include "nsIRDFService.h"
 #include "pldhash.h"
+#include "nsIHttpChannel.h"
 
 // Document.Write() related
 #include "nsIWyciwygChannel.h"
@@ -227,6 +228,7 @@ protected:
   nsString*   mBaseTarget;
   nsString*   mLastModified;
   nsString*   mReferrer;
+  nsCOMPtr<nsIHttpChannel> mHttpChannel;
   nsDTDMode mDTDMode;
   nsCOMPtr<nsISupportsArray> mImageMaps;
 

@@ -67,7 +67,8 @@ interface nsIDocShell : nsISupports
    */
   [noscript]void loadURI(in nsIURI uri,
                          in nsIDocShellLoadInfo loadInfo,
-                         in unsigned long aLoadFlags);
+                         in unsigned long aLoadFlags,
+                         in boolean firstParty);
 
   /**
    * Loads a given stream. This will give priority to loading the requested
@@ -121,7 +122,8 @@ interface nsIDocShell : nsISupports
                               in nsIInputStream aPostDataStream,
                               in nsIInputStream aHeadersStream,
                               in unsigned long aLoadFlags,
-                              in nsISHEntry aSHEntry);
+                              in nsISHEntry aSHEntry,
+                              in boolean firstParty);
 
   /**
    * Creates a DocShellLoadInfo object that you can manipulate and then pass
