@@ -198,17 +198,15 @@ nsIView* nsView::GetViewFor(nsIWidget* aWidget)
   // The widget's client data points back to the owning view
   if (aWidget && NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
     view = (nsIView*)clientData;
-
-    if (nsnull != view) {
-#ifdef NS_DEBUG
-      // Verify the pointer is really a view
-      nsView* widgetView;
-      NS_ASSERTION((NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIView), (void **)&widgetView))) &&
-                   (widgetView == view), "bad client data");
-#endif
-    }  
+ 
+    nsISupports* data = (nsISupports*)clientData;
+    
+    if (nsnull != data) {
+      if (NS_FAILED(data->QueryInterface(NS_GET_IID(nsIView), (void **)&view))) {
+        return nsnull;  // return null if client data isn't a view
+      }
+    }
   }
-
   return view;
 }
 
