@@ -314,7 +314,7 @@ void				htCopyReference(RDF_Resource original, RDF_Resource newParent, PRBool em
 PRBool				htVerifyUniqueToken(HT_Resource node, void *token, uint32 tokenType, char *data);
 PRBool				ht_isURLReal(HT_Resource node);
 char *				buildInternalIconURL(HT_Resource node, PRBool *volatileURLFlag,	PRBool largeIconFlag, PRBool workspaceFlag);
-char *				getIconURL( HT_Resource node, PRBool toolbarFlag, PRBool workspaceFlag, int state);
+char *				getIconURL( HT_Resource node, PRBool toolbarFlag, HT_IconType state);
 PRBool				htIsPropertyInMoreOptions(RDF_Resource r);
 void				addHtmlElement(HT_Resource node, RDF_Resource token, uint32 tokenType);
 void				freeHtmlElementList();

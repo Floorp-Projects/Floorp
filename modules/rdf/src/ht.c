@@ -6108,89 +6108,104 @@ buildInternalIconURL(HT_Resource node, PRBool *volatileURLFlag,
 
 
 char *
-getIconURL( HT_Resource node, PRBool toolbarIconFlag, PRBool workspaceFlag, int state)
+getIconURL( HT_Resource node, PRBool toolbarIconFlag, HT_IconType state)
 {
 
 	RDF_Resource	res = NULL;
 	PRBool		volatileURLFlag;
-	int		iconIndex;
+	HT_IconType		iconType;
+	int iconIndex;
 	char		*iconURL = NULL;
 
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(node->node != NULL);
 
+	iconType = HT_SMALLICON;
 	iconIndex = 0;
 	if (toolbarIconFlag)
-		iconIndex = state;
+		iconType = state;
 
-	switch (iconIndex)
+	switch (iconType)
 	{
-		case	0:
+		case	HT_SMALLICON:
 			res = gNavCenter->RDF_smallIcon;
 			break;
-		case	1:
+		case	HT_TOOLBAR_ENABLED:
 			res = gNavCenter->toolbarEnabledIcon;
 			break;
-		case	2:
+		case	HT_TOOLBAR_DISABLED:
 			res = gNavCenter->toolbarDisabledIcon;
 			break;
-		case	3:
+		case	HT_TOOLBAR_ROLLOVER:
 			res = gNavCenter->toolbarRolloverIcon;
 			break;
-		case	4:
+		case	HT_TOOLBAR_PRESSED:
 			res = gNavCenter->toolbarPressedIcon;
 			break;
 	}
 
-	if ((res == gNavCenter->RDF_smallIcon) && (node->flags & HT_CONTENTS_LOADING_FLAG))
+	if ((res == gNavCenter->RDF_smallIcon || res == gNavCenter->toolbarEnabledIcon) 
+		&& (node->flags & HT_CONTENTS_LOADING_FLAG))
 	{
 		iconURL = "http://hackmeister.mcom.com/busy.gif";
 	}
-	else if ((res == gNavCenter->RDF_smallIcon) || (res == gNavCenter->RDF_largeIcon))
+	else 
 	{
 		HT_GetNodeData(node, res, HT_COLUMN_STRING, &iconURL);
 		if (iconURL == NULL)
 		{
-			if (res == gNavCenter->RDF_smallIcon)	iconIndex = 0;
-			else					iconIndex = 1;
-
-			/* if volatile URL, flush if needed and re-create */
-
-			if (node->flags & HT_VOLATILE_URL_FLAG)
+			/* Try to fetch the toolbar enabled icon immediately. */
+			if (toolbarIconFlag)
 			{
-				node->url[0] = NULL;
-				node->url[1] = NULL;
+				HT_GetNodeData(node, gNavCenter->toolbarEnabledIcon, HT_COLUMN_STRING, &iconURL);
+				if (iconURL != NULL)
+					return iconURL;
+				else res = gNavCenter->toolbarEnabledIcon;
 			}
 
-			if ((iconURL = node->url[iconIndex]) == NULL)
+			if ((res == gNavCenter->RDF_smallIcon) || (res == gNavCenter->toolbarEnabledIcon)
+				|| toolbarIconFlag)
 			{
-				node->url[iconIndex] = buildInternalIconURL(node,
-					&volatileURLFlag, false, workspaceFlag);
-				iconURL = node->url[iconIndex];
-				if (volatileURLFlag)
+				if (res == gNavCenter->RDF_smallIcon)
+					iconIndex = 0;
+				else iconIndex = 1;
+
+				/* if volatile URL, flush if needed and re-create */
+
+				if (node->flags & HT_VOLATILE_URL_FLAG)
 				{
-					node->flags |= HT_VOLATILE_URL_FLAG;
+					node->url[0] = NULL;
+					node->url[1] = NULL;
 				}
-				else
+
+				if ((iconURL = node->url[iconIndex]) == NULL)
 				{
-					node->flags &= (~HT_VOLATILE_URL_FLAG);
+					node->url[iconIndex] = buildInternalIconURL(node,
+						&volatileURLFlag, false, PR_FALSE);
+					iconURL = node->url[iconIndex];
+					
+					if (volatileURLFlag)
+					{
+						node->flags |= HT_VOLATILE_URL_FLAG;
+					}
+					else
+					{
+						node->flags &= (~HT_VOLATILE_URL_FLAG);
+					}
 				}
 			}
-		}
+		}		
 	}
-	else
-	{
-		HT_GetNodeData(node, res, HT_COLUMN_STRING, &iconURL);
-	}
+
 	return(iconURL);
 }
 
 
 
 PR_PUBLIC_API(char *)
-HT_GetIconURL(HT_Resource r, PRBool isToolbarIcon, PRBool isWorkspace, int toolbarState)
+HT_GetIconURL(HT_Resource r, PRBool isToolbarIcon, HT_IconType toolbarState)
 {
-	return getIconURL(r, isToolbarIcon, isWorkspace, toolbarState);
+	return getIconURL(r, isToolbarIcon, toolbarState);
 }
 
 
@@ -6198,7 +6213,7 @@ HT_GetIconURL(HT_Resource r, PRBool isToolbarIcon, PRBool isWorkspace, int toolb
 PR_PUBLIC_API(char *)
 HT_GetNodeLargeIconURL (HT_Resource r)
 {
-	return (getIconURL( r, false, false, 0));
+	return (getIconURL( r, false, HT_SMALLICON));
 }
 
 
@@ -6206,7 +6221,7 @@ HT_GetNodeLargeIconURL (HT_Resource r)
 PR_PUBLIC_API(char *)
 HT_GetNodeSmallIconURL (HT_Resource r)
 {
-	return (getIconURL( r, false, false, 0));
+	return (getIconURL( r, false, HT_SMALLICON));
 }
 
 
@@ -6216,7 +6231,7 @@ HT_GetWorkspaceLargeIconURL (HT_View view)
 {
 	XP_ASSERT(view != NULL);
 
-	return (getIconURL( view->top, false, true, 0));
+	return (getIconURL( view->top, false, HT_SMALLICON));
 }
 
 
@@ -6226,7 +6241,7 @@ HT_GetWorkspaceSmallIconURL (HT_View view)
 {
 	XP_ASSERT(view != NULL);
 
-	return (getIconURL( view->top, false, true, 0));
+	return (getIconURL( view->top, false, HT_SMALLICON));
 }
 
 

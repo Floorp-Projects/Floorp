@@ -308,11 +308,15 @@ PR_PUBLIC_API(int) HT_GetWindowType(HT_Pane pane);
  * obtain the large/small icon URLs for a node if available, otherwise return NULL
  */
 
+enum _HTIconType { HT_SMALLICON, HT_TOOLBAR_ENABLED, HT_TOOLBAR_DISABLED, 
+				  HT_TOOLBAR_ROLLOVER, HT_TOOLBAR_PRESSED };
+typedef enum _HTIconType HT_IconType;
+
 PR_PUBLIC_API(char *)	HT_GetWorkspaceLargeIconURL (HT_View view);
 PR_PUBLIC_API(char *)	HT_GetWorkspaceSmallIconURL (HT_View view);
 PR_PUBLIC_API(char *)	HT_GetNodeLargeIconURL (HT_Resource r);
 PR_PUBLIC_API(char *)	HT_GetNodeSmallIconURL (HT_Resource r);
-PR_PUBLIC_API(char *)	HT_GetIconURL(HT_Resource r, PRBool isToolbarIcon, PRBool isWorkspace, int buttonState);
+PR_PUBLIC_API(char *)	HT_GetIconURL(HT_Resource r, PRBool isToolbarIcon, HT_IconType buttonState);
 
 PR_PUBLIC_API(char *)	HT_GetLargeIconURL (HT_Resource r);	/* obsolete! */
 PR_PUBLIC_API(char *)	HT_GetSmallIconURL (HT_Resource r);	/* obsolete! */
