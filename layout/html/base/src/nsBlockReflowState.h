@@ -543,6 +543,18 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
         rv = ReResolveLineList(aPresContext, lines, mStyleContext);
       }
     }
+
+    // XXX Need to check if the bullet is inside and hence
+    // in the line list. If so, we don't need to do this.
+    if (NS_SUCCEEDED(rv) && (nsnull != mBullet)) {
+      nsIStyleContext* bulletSC;
+      aPresContext->ResolvePseudoStyleContextFor(mContent, 
+                                                 nsHTMLAtoms::mozListBulletPseudo,
+                                                 mStyleContext, 
+                                                 PR_FALSE, &bulletSC);
+      rv = mBullet->SetStyleContext(aPresContext, bulletSC);
+      NS_RELEASE(bulletSC);
+    }
   }
   return rv;
 }
