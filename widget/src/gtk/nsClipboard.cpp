@@ -89,22 +89,26 @@ struct _GtkSelectionTargetList {
 
 static const char *gtk_selection_handler_key = "gtk-selection-handlers";
 
-void __gtk_selection_target_list_remove (GtkWidget *widget)
+void __gtk_selection_target_list_remove (GtkWidget *widget, GdkAtom selection)
 {
   GtkSelectionTargetList *sellist;
-  GList *tmp_list;
+  GList *tmp_list, *tmp_list2;
   GList *lists;
   lists = (GList*)gtk_object_get_data (GTK_OBJECT (widget), gtk_selection_handler_key);
   tmp_list = lists;
-  while (tmp_list)
-    {
-      sellist = (GtkSelectionTargetList*)tmp_list->data;
+  while (tmp_list) {
+    sellist = (GtkSelectionTargetList*)tmp_list->data;
+    if (sellist->selection == selection) {
       gtk_target_list_unref (sellist->list);
       g_free (sellist);
-      tmp_list = tmp_list->next;
+      tmp_list2 = tmp_list->next;
+      g_list_remove_link(lists, tmp_list);
+      if (tmp_list2)
+        tmp_list = tmp_list2->prev;
     }
-  g_list_free (lists);
-  gtk_object_set_data (GTK_OBJECT (widget), gtk_selection_handler_key, NULL);
+    if (tmp_list)
+      tmp_list = tmp_list->next;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -196,12 +200,14 @@ void nsClipboard::Init(void)
 
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::SetNativeClipboardData( PRInt32 aWhichClipboard )
+NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 {
+  SetWhichClipboard(aWhichClipboard);
+
   mIgnoreEmptyNotification = PR_TRUE;
 
 #ifdef DEBUG_CLIPBOARD
-  g_print("  nsClipboard::SetNativeClipboardData()\n");
+  g_print("  nsClipboard::SetNativeClipboardData(%i)\n", aWhichClipboard);
 #endif /* DEBUG_CLIPBOARD */
 
   // make sure we have a good transferable
@@ -214,7 +220,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData( PRInt32 aWhichClipboard )
   if (gdk_selection_owner_get(mSelectionAtom) == sWidget->window)
   {
     // if so, clear all the targets
-    __gtk_selection_target_list_remove(sWidget);
+    __gtk_selection_target_list_remove(sWidget, mSelectionAtom);
     //    gtk_selection_remove_all(sWidget);
   }
 
@@ -306,11 +312,12 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable, 
-                                      PRInt32 aWhichClipboard)
+                                    PRInt32 aWhichClipboard)
 {
+  SetWhichClipboard(aWhichClipboard);
 
 #ifdef DEBUG_CLIPBOARD
-  g_print("nsClipboard::GetNativeClipboardData()\n");
+  g_print("nsClipboard::GetNativeClipboardData(%i)\n", aWhichClipboard);
 #endif /* DEBUG_CLIPBOARD */
 
   // make sure we have a good transferable
@@ -505,8 +512,9 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
  *
  * @result NS_OK if successful.
  */
-NS_IMETHODIMP nsClipboard::ForceDataToClipboard( PRInt32 aWhichClipboard )
+NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 {
+  SetWhichClipboard(aWhichClipboard);
 #ifdef DEBUG_CLIPBOARD
   g_print("  nsClipboard::ForceDataToClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
@@ -532,7 +540,8 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
   // check for plain text. If it's there, say "yes" as we will do the conversion
   // in GetNativeClipboardData(). From this point on, no client will
   // ever ask for text/plain explicitly. If they do, you must ASSERT!
-  
+  SetWhichClipboard(aWhichClipboard);
+
 #if 0
   *outResult = PR_FALSE;
   PRUint32 length;
@@ -672,8 +681,13 @@ void nsClipboard::SelectionClearCB(GtkWidget *aWidget,
   nsClipboard *cb = (nsClipboard *)gtk_object_get_data(GTK_OBJECT(aWidget),
                                                        "cb");
 
-  //XXX which clipboard do we empty here?!
-  cb->EmptyClipboard(kGlobalClipboard);
+  if (aEvent->selection == GDK_SELECTION_PRIMARY) {
+    g_print("clearing PRIMARY clipboard\n");
+    cb->EmptyClipboard(kSelectionClipboard);
+  } else if (aEvent->selection == GDK_SELECTION_CLIPBOARD) {
+    g_print("clearing CLIPBOARD clipboard\n");
+    cb->EmptyClipboard(kGlobalClipboard);
+  }
 }
 
 
@@ -713,12 +727,23 @@ nsClipboard::SelectionNotifyCB (GtkWidget *aWidget,
 
 
 
-
-
 /* helper functions*/
 
+/* inline */
+void nsClipboard::SetWhichClipboard(PRInt32 aWhichClipboard)
+{
+  switch (aWhichClipboard)
+  {
+  case kGlobalClipboard:
+    mSelectionAtom = GDK_SELECTION_CLIPBOARD;
+    break;
+  case kSelectionClipboard:
+    mSelectionAtom = GDK_SELECTION_PRIMARY;
+    break;
+  }
+}
 
-
+/* inline */
 void nsClipboard::AddTarget(GdkAtom aAtom, GdkAtom aSelectionAtom)
 {
   gtk_selection_add_target(sWidget, aSelectionAtom, aAtom, aAtom);
