@@ -440,11 +440,11 @@ nsSVGLength::GetTransformedValue(nsIDOMSVGMatrix *matrix,
 NS_IMETHODIMP
 nsSVGLength::SetContext(nsSVGCoordCtx* context)
 {
-  // XXX should we bracket this inbetween WillModify/DidModify pairs?
   MaybeRemoveAsObserver();
-  WillModify();
+
+  // Don't WillModify/DidModify - see bug 270257
   mContext = context;
-  DidModify();
+
   MaybeAddAsObserver();
   return NS_OK;
 }
