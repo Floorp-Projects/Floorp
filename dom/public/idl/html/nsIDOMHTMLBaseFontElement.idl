@@ -40,10 +40,21 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+/**
+ * The nsIDOMHTMLBaseFontElement interface is the interface to a
+ * [X]HTML basefont element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf90a6-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLBaseFontElement : nsIDOMHTMLElement
 {
            attribute DOMString        color;
            attribute DOMString        face;
+  // Modified in DOM Level 2:
            attribute long             size;
 };

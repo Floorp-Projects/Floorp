@@ -40,6 +40,16 @@
 
 #include "nsIDOMHTMLElement.idl"
 
+/**
+ * The nsIDOMHTMLTableSectionElement interface is the interface to a
+ * [X]HTML thead, tbody, and tfoot element.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-HTML/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(a6cf90b5-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLTableSectionElement : nsIDOMHTMLElement
 {
@@ -48,6 +58,10 @@ interface nsIDOMHTMLTableSectionElement : nsIDOMHTMLElement
            attribute DOMString            chOff;
            attribute DOMString            vAlign;
   readonly attribute nsIDOMHTMLCollection rows;
-  nsIDOMHTMLElement         insertRow(in long index);
-  void                      deleteRow(in long index);
+  // Modified in DOM Level 2:
+  nsIDOMHTMLElement         insertRow(in long index)
+                                               raises(DOMException);
+  // Modified in DOM Level 2:
+  void                      deleteRow(in long index)
+                                               raises(DOMException);
 };
