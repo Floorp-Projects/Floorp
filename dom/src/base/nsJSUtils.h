@@ -53,6 +53,11 @@ public:
                                      JSContext* aContext,
                                      jsval* aReturn);
 
+  static NS_EXPORT void nsConvertXPCObjectToJSVal(nsISupports* aSupports,
+                                                  const nsIID& aIID,
+                                                  JSContext* aContext,
+                                                  jsval* aReturn);
+
   static NS_EXPORT void nsConvertStringToJSVal(const nsString& aProp,
                                      JSContext* aContext,
                                      jsval* aReturn);
