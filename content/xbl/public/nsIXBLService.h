@@ -51,14 +51,13 @@ class nsIContent;
 class nsIDocument;
 class nsIDOMEventReceiver;
 class nsIDOMNodeList;
-class nsIXBLBinding;
+class nsXBLBinding;
 class nsIXBLDocumentInfo;
 class nsIURI;
 class nsIAtom;
 
-// {0E7903E1-C7BB-11d3-97FB-00400553EEF0}
 #define NS_IXBLSERVICE_IID \
-{ 0xe7903e1, 0xc7bb, 0x11d3, { 0x97, 0xfb, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
+{ 0x0b2e5289, 0xe7d8, 0x41f8, { 0x85, 0xa2, 0x8a, 0x57, 0x0b, 0x25, 0xf4, 0x95 } }
 
 class nsIXBLService : public nsISupports
 {
@@ -68,7 +67,7 @@ public:
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
   NS_IMETHOD LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFlag,
-                          nsIXBLBinding** aBinding, PRBool* aResolveStyle) = 0;
+                          nsXBLBinding** aBinding, PRBool* aResolveStyle) = 0;
 
   // Indicates whether or not a binding is fully loaded.
   NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, PRBool* aIsReady) = 0;

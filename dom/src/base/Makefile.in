@@ -110,7 +110,10 @@ CPPSRCS =			\
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-LOCAL_INCLUDES = -I$(srcdir)/../events
+LOCAL_INCLUDES = \
+		-I$(srcdir)/../events \
+		-I$(topsrcdir)/content/xbl/src \
+		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
 

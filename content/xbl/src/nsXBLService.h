@@ -47,7 +47,7 @@
 #include "jsclist.h"            // nsXBLJSClass derives from JSCList
 #include "nsFixedSizeAllocator.h"
 
-class nsIXBLBinding;
+class nsXBLBinding;
 class nsIXBLDocumentInfo;
 class nsIContent;
 class nsIDocument;
@@ -68,7 +68,7 @@ class nsXBLService : public nsIXBLService,
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
   NS_IMETHOD LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFlag,
-                          nsIXBLBinding** aBinding, PRBool* aResolveStyle);
+                          nsXBLBinding** aBinding, PRBool* aResolveStyle);
 
   // Indicates whether or not a binding is fully loaded.
   NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, PRBool* aIsReady);
@@ -91,11 +91,9 @@ public:
   nsXBLService();
   virtual ~nsXBLService();
 
+protected:
   // This function clears out the bindings on a given content node.
   nsresult FlushStyleBindings(nsIContent* aContent);
-
-  // This method loads a binding doc and then builds the specific binding required.
-  nsresult GetBinding(nsIContent* aBoundElement, nsIURI* aURI, nsIXBLBinding** aResult);
 
   // Release any memory that we can
   nsresult FlushMemory();
@@ -109,8 +107,9 @@ public:
 
   // This method loads a binding doc and then builds the specific binding required.  It
   // can also peek without building.
-  NS_IMETHOD GetBindingInternal(nsIContent* aBoundElement, nsIURI* aURI, 
-                                PRBool aPeekFlag, PRBool* aIsReady, nsIXBLBinding** aResult);
+  nsresult GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
+                      PRBool aPeekFlag, PRBool* aIsReady,
+                      nsXBLBinding** aResult);
 
 // MEMBER VARIABLES
 public:

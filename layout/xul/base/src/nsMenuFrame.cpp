@@ -67,7 +67,6 @@
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxLayoutState.h"
-#include "nsIXBLBinding.h"
 #include "nsIScrollableFrame.h"
 #include "nsIViewManager.h"
 #include "nsIBindingManager.h"

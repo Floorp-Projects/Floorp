@@ -46,7 +46,6 @@ MODULE		= content
 
 EXPORTS		= \
 	nsIBindingManager.h \
-	nsIXBLBinding.h \
 	nsIXBLDocumentInfo.h \
 	nsIXBLService.h \
 	$(NULL)

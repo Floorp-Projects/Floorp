@@ -118,7 +118,7 @@
 #include "nsMutationEvent.h"
 
 #include "nsIBindingManager.h"
-#include "nsIXBLBinding.h"
+#include "nsXBLBinding.h"
 
 #include "nsRuleWalker.h"
 
@@ -1747,8 +1747,7 @@ nsGenericHTMLElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
 
   if (document) {
-    nsCOMPtr<nsIXBLBinding> binding;
-    document->BindingManager()->GetBinding(this, getter_AddRefs(binding));
+    nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
     if (binding) {
       binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
     }

@@ -45,11 +45,10 @@
 #include "nsStubDocumentObserver.h"
 #include "pldhash.h"
 #include "nsInterfaceHashtable.h"
-#include "nsISupportsArray.h"
+#include "nsRefPtrHashtable.h"
 #include "nsURIHashKey.h"
 
 class nsIContent;
-class nsIXBLBinding;
 class nsIXPConnectWrappedJS;
 class nsIAtom;
 class nsIDOMNodeList;
@@ -70,8 +69,8 @@ public:
   nsBindingManager();
   ~nsBindingManager();
 
-  NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult);
-  NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding);
+  virtual nsXBLBinding* GetBinding(nsIContent* aContent);
+  NS_IMETHOD SetBinding(nsIContent* aContent, nsXBLBinding* aBinding);
 
   NS_IMETHOD GetInsertionParent(nsIContent* aContent, nsIContent** aResult);
   NS_IMETHOD SetInsertionParent(nsIContent* aContent, nsIContent* aResult);
@@ -93,16 +92,18 @@ public:
 
   NS_IMETHOD GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
-  NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, PRUint32* aIndex,  
-                                     PRBool* aMultipleInsertionPoints);
+  virtual nsIContent* GetInsertionPoint(nsIContent* aParent,
+                                        nsIContent* aChild, PRUint32* aIndex);
+  virtual nsIContent* GetSingleInsertionPoint(nsIContent* aParent,
+                                              PRUint32* aIndex,  
+                                              PRBool* aMultipleInsertionPoints);
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
                                  nsIDocument** aResult);
 
-  NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
+  NS_IMETHOD AddToAttachedQueue(nsXBLBinding* aBinding);
   NS_IMETHOD ClearAttachedQueue();
   NS_IMETHOD ProcessAttachedQueue();
 
@@ -116,7 +117,6 @@ public:
   NS_IMETHOD GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult);
   NS_IMETHOD RemoveLoadingDocListener(nsIURI* aURL);
 
-  NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD FlushSkinBindings();
 
   NS_IMETHOD GetBindingImplementation(nsIContent* aContent, REFNSIID aIID, void** aResult);
@@ -158,9 +158,9 @@ protected:
 
 // MEMBER VARIABLES
 protected: 
-  // A mapping from nsIContent* to the nsIXBLBinding* that is
+  // A mapping from nsIContent* to the nsXBLBinding* that is
   // installed on that element.
-  PLDHashTable mBindingTable;
+  nsRefPtrHashtable<nsISupportsHashKey,nsXBLBinding> mBindingTable;
 
   // A mapping from nsIContent* to an nsIDOMNodeList*
   // (nsAnonymousContentList*).  This list contains an accurate
@@ -201,9 +201,8 @@ protected:
   // table, they have not yet finished loading.
   nsInterfaceHashtable<nsURIHashKey,nsIStreamListener> mLoadingDocTable;
 
-  // A queue of binding attached event handlers that are awaiting
-  // execution.
-  nsCOMPtr<nsISupportsArray> mAttachedStack;
+  // A queue of binding attached event handlers that are awaiting execution.
+  nsVoidArray mAttachedStack;
   PRBool mProcessingAttachedStack;
 };
 

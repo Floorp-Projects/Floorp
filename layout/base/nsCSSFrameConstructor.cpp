@@ -94,7 +94,7 @@
 #include "nsIContentIterator.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBindingManager.h"
-#include "nsIXBLBinding.h"
+#include "nsXBLBinding.h"
 #include "nsITheme.h"
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
@@ -1681,7 +1681,7 @@ struct nsAutoEnqueueBinding
 
   ~nsAutoEnqueueBinding();
 
-  nsCOMPtr<nsIXBLBinding> mBinding;
+  nsRefPtr<nsXBLBinding> mBinding;
 private:
   nsIDocument* mDocument;
 };
@@ -4019,13 +4019,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     // Get the XBL loader.
     nsresult rv;
     PRBool resolveStyle;
-    nsCOMPtr<nsIXBLBinding> binding;
     
     nsIXBLService * xblService = GetXBLService();
     if (!xblService)
       return NS_ERROR_FAILURE;
 
-    rv = xblService->LoadBindings(aDocElement, display->mBinding, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
+    nsRefPtr<nsXBLBinding> binding;
+    rv = xblService->LoadBindings(aDocElement, display->mBinding, PR_FALSE,
+                                  getter_AddRefs(binding), &resolveStyle);
     if (NS_FAILED(rv))
       return NS_OK; // Binding will load asynchronously.
 
@@ -11387,12 +11388,16 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIFrame*     aParentFrame,
     }
 
     PRUint32 index;
-    bindingManager->GetInsertionPoint(container, aChildContent, getter_AddRefs(insertionElement), &index);
+    insertionElement = bindingManager->GetInsertionPoint(container,
+                                                         aChildContent,
+                                                         &index);
   }
   else {
     PRBool multiple;
     PRUint32 index;
-    bindingManager->GetSingleInsertionPoint(container, getter_AddRefs(insertionElement), &index, &multiple);
+    insertionElement = bindingManager->GetSingleInsertionPoint(container,
+                                                               &index,
+                                                               &multiple);
     if (multiple && aMultiple)
       *aMultiple = multiple; // Record the fact that filters are in use.
   }

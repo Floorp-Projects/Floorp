@@ -170,7 +170,7 @@
 
 // XBL related includes.
 #include "nsIXBLService.h"
-#include "nsIXBLBinding.h"
+#include "nsXBLBinding.h"
 #include "nsIBindingManager.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
@@ -5346,10 +5346,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // We must ensure that the XBL Binding is installed before we hand
   // back this object.
 
-  nsCOMPtr<nsIXBLBinding> binding;
-  doc->BindingManager()->GetBinding(content, getter_AddRefs(binding));
-
-  if (binding) {
+  if (doc->BindingManager()->GetBinding(content)) {
     // There's already a binding for this element so nothing left to
     // be done here.
 
@@ -5376,6 +5373,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
   NS_ENSURE_TRUE(xblService, NS_ERROR_NOT_AVAILABLE);
 
+  nsRefPtr<nsXBLBinding> binding;
   xblService->LoadBindings(content, bindingURL, PR_FALSE,
                            getter_AddRefs(binding), &dummy);
 
