@@ -44,4 +44,4 @@ Rights Reserved.
 <!ENTITY location "Location:">
 <!ENTITY useCurrent "Use Current Page">
 <!ENTITY browseFile "Select File...">
-
+<!ENTITY enableStartPage.label "Enabled">
