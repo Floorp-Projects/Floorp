@@ -452,8 +452,8 @@ protected:
 
   // A queue of binding attached event handlers that are awaiting
   // execution.
-  nsCOMPtr<nsISupportsArray> mAttachedQueue;
-  PRBool mProcessingAttachedQueue;
+  nsCOMPtr<nsISupportsArray> mAttachedStack;
+  PRBool mProcessingAttachedStack;
 };
 
 // Implementation /////////////////////////////////////////////////////////////////
@@ -465,7 +465,7 @@ NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier, ns
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
-: mProcessingAttachedQueue(PR_FALSE)
+: mProcessingAttachedStack(PR_FALSE)
 {
   mBindingTable.ops = nsnull;
   mContentListTable.ops = nsnull;
@@ -924,10 +924,10 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAString& a
 NS_IMETHODIMP
 nsBindingManager::AddToAttachedQueue(nsIXBLBinding* aBinding)
 {
-  if (!mAttachedQueue)
-    NS_NewISupportsArray(getter_AddRefs(mAttachedQueue)); // This call addrefs the array.
+  if (!mAttachedStack)
+    NS_NewISupportsArray(getter_AddRefs(mAttachedStack)); // This call addrefs the array.
 
-  mAttachedQueue->AppendElement(aBinding);
+  mAttachedStack->AppendElement(aBinding);
 
   return NS_OK;
 }
@@ -935,31 +935,29 @@ nsBindingManager::AddToAttachedQueue(nsIXBLBinding* aBinding)
 NS_IMETHODIMP
 nsBindingManager::ClearAttachedQueue()
 {
-  if (mAttachedQueue)
-    mAttachedQueue->Clear();
+  if (mAttachedStack)
+    mAttachedStack->Clear();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBindingManager::ProcessAttachedQueue()
 {
-  if (!mAttachedQueue || mProcessingAttachedQueue)
+  if (!mAttachedStack || mProcessingAttachedStack)
     return NS_OK;
 
-  mProcessingAttachedQueue = PR_TRUE;
+  mProcessingAttachedStack = PR_TRUE;
 
   PRUint32 count;
-  while (NS_SUCCEEDED(mAttachedQueue->Count(&count)) && count) {
-    nsCOMPtr<nsISupports> supp;
-    mAttachedQueue->GetElementAt(0, getter_AddRefs(supp));
-    mAttachedQueue->RemoveElementAt(0);
+  while (NS_SUCCEEDED(mAttachedStack->Count(&count)) && count--) {
+    nsCOMPtr<nsIXBLBinding> binding = do_QueryElementAt(mAttachedStack, count);
+    mAttachedStack->RemoveElementAt(count);
 
-    nsCOMPtr<nsIXBLBinding> binding(do_QueryInterface(supp));
     if (binding)
       binding->ExecuteAttachedHandler();
   }
 
-  mProcessingAttachedQueue = PR_FALSE;
+  mProcessingAttachedStack = PR_FALSE;
   ClearAttachedQueue();
   return NS_OK;
 }
