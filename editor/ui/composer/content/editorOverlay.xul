@@ -264,10 +264,6 @@
     <!-- Broadcasters/commands with no other home -->
     <!-- view menu -->
     <command id="cmd_newNavigator"/>
-  	<broadcaster id="cmd_newMessage"/>
-	  <broadcaster id="cmd_newCard"/>
-    <command id="cmd_newMessage"/>
-    <command id="cmd_newCard"/>
     <command id="cmd_newEditor"/>
     <command id="cmd_newEditorTemplate"/>
     <command id="cmd_newEditorDraft"/>
