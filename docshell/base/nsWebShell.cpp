@@ -244,7 +244,6 @@ protected:
   nsIDeviceContext* mDeviceContext;
   nsIPref* mPrefs;
   nsIWidget* mWindow;
-  nsISupports* mInnerWindow;
   nsIDocumentLoader* mDocLoader;
   nsIStreamObserver* mObserver;
 
@@ -379,7 +378,7 @@ nsWebShell::~nsWebShell()
   // Cancel any timers that were set for this loader.
   CancelRefreshURLTimers();
 
-  NS_IF_RELEASE(mInnerWindow);
+  NS_IF_RELEASE(mWindow);
 
   NS_IF_RELEASE(mContentViewer);
   NS_IF_RELEASE(mDeviceContext);
@@ -484,12 +483,6 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 #endif /* NS_DEBUG */
-
-  NS_LOCK_INSTANCE();
-  if (nsnull != mInnerWindow) {
-    rv = mInnerWindow->QueryInterface(aIID, aInstancePtr);
-  }
-  NS_UNLOCK_INSTANCE();
 
   return rv;
 }
@@ -619,27 +612,15 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDeviceContext->SetGamma(1.0f);
 
   // Create a Native window for the shell container...
-  rv = nsRepository::CreateInstance(kChildCID,
-                                    (nsISupports*)((nsIWebShell*)this),
-                                    kISupportsIID,
-                                    (void**)&mInnerWindow);
+  rv = nsRepository::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWindow);
   if (NS_OK != rv) {
     goto done;
   }
-  mInnerWindow->QueryInterface(kIWidgetIID, (void**) &mWindow);
-  if (NS_OK != rv) {
-    NS_RELEASE(mInnerWindow);
-  }
-  else {
-    nsWidgetInitData  widgetInit;
 
-    widgetInit.clipChildren = PR_FALSE;
-    mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
-                    mDeviceContext, nsnull, nsnull, &widgetInit);
-    // Get rid of extra reference count
-	// XXX FIX ME...
-    mWindow->Release();
-  }
+  nsWidgetInitData  widgetInit;
+  widgetInit.clipChildren = PR_FALSE;
+  mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
+                  mDeviceContext, nsnull, nsnull, &widgetInit);
 
 done:
   return rv;
