@@ -727,7 +727,7 @@ NET_FinishInitNetLib()
 
 #ifdef MOZILLA_CLIENT
     NET_CacheInit();
-    NET_ReadCookies("");
+/*  NET_ReadCookies(""); */
 #endif /* MOZILLA_CLIENT */
 
 	NET_RegisterEnableUrlMatchCallback();
