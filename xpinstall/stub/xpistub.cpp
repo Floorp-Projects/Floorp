@@ -178,9 +178,16 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     //--------------------------------------------------------------------
     nsCOMPtr<nsPIXPIStubHook>   hook = do_QueryInterface(gXPI);
     nsFileSpec                  dirSpec( aProgramDir );
-    nsCOMPtr<nsIFileSpec>       iDirSpec;
+    nsCOMPtr<nsILocalFile>           iDirSpec;
 
-    NS_NewFileSpecWithSpec( dirSpec, getter_AddRefs(iDirSpec) );    
+    //NS_NewFileSpecWithSpec( dirSpec, getter_AddRefs(iDirSpec) );    
+#if XP_MAC
+	NS_NewLocalFile(nsnull, getter_AddRefs(iDirSpec));
+	nsCOMPtr<nsILocalFileMac> macfile = do_QueryInterface(iDirSpec);
+	macfile->InitWithFSSpec(&aProgramDir);
+#else
+	NS_NewLocalFile(aProgramDir, getter_AddRefs(iDirSpec));
+#endif    
     
     if (hook && iDirSpec)
         hook->StubInitialize( iDirSpec );
@@ -238,14 +245,20 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
 {
     nsresult                rv = NS_ERROR_NULL_POINTER;
     nsString                args; args.AssignWithConversion(aArgs);
-    nsCOMPtr<nsIFileSpec>   iFile;
+    nsCOMPtr<nsILocalFile>  iFile;
     nsFileSpec              file(aFile);
     nsFileURL               URL(file);
     nsString                URLstr; URLstr.AssignWithConversion(URL.GetURLString());
 
     gInstallStatus = -322; // unique stub error code
-
-    NS_NewFileSpecWithSpec( file, getter_AddRefs(iFile) );
+    
+#if XP_MAC
+	NS_NewLocalFile(nsnull, getter_AddRefs(iFile));
+	nsCOMPtr<nsILocalFileMac> macfile = do_QueryInterface(iFile);
+	macfile->InitWithFSSpec(&aFile);
+#else
+	NS_NewLocalFile(aFile, getter_AddRefs(iFile));
+#endif  
 
     if (iFile && gXPI)
         rv = gXPI->InstallJar( iFile, URLstr.GetUnicode(), args.GetUnicode(), 

@@ -99,6 +99,7 @@ class nsXPInstallManager : public nsIXPINotifier,
 
         nsCOMPtr<nsIXPIProgressDlg>  mProxy;
         nsCOMPtr<nsIStringBundle>    mStringBundle;
+
 };
 
 #endif

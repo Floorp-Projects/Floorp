@@ -65,7 +65,7 @@ class nsInstallDelete : public nsInstallObject
 
         /* Private Fields */
 
-        nsFileSpec* mFinalFile;
+        nsCOMPtr<nsIFile> mFinalFile;
         
         nsString    mRegistryName;
         PRInt32     mDeleteStatus;

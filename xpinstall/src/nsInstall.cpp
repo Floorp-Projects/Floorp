@@ -37,6 +37,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryService.h"
 
 #include "nsIPref.h"
 
@@ -72,9 +73,11 @@
 #ifdef XP_MAC
 #include "Gestalt.h"
 #include "nsAppleSingleDecoder.h"
+#include "nsILocalFileMac.h"
 #endif 
 
 #include "nsILocalFile.h"
+#include "nsIURL.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -99,7 +102,7 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 MOZ_DECL_CTOR_COUNTER(nsInstallInfo);
 
-nsInstallInfo::nsInstallInfo(nsIFileSpec*     aFile, 
+nsInstallInfo::nsInstallInfo(nsIFile*         aFile, 
                              const PRUnichar* aURL,
                              const PRUnichar* aArgs, 
                              long             flags, 
@@ -122,17 +125,17 @@ nsInstallInfo::~nsInstallInfo()
 }
 
 nsresult
-nsInstallInfo::GetLocalFile(nsFileSpec& aSpec)
+nsInstallInfo::GetLocalFile(nsIFile** aSpec)
 {
     if (!mFile)
        return NS_ERROR_NULL_POINTER;
-       
-    return mFile->GetFileSpec(&aSpec);
+      
+    return mFile->Clone(getter_AddRefs(aSpec));
 }
 
 
-
-
+static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
+  
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
@@ -155,8 +158,8 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     mRegisterPackage        = PR_FALSE;
     mStatusSent             = PR_FALSE;
     mStartInstallCompleted  = PR_FALSE;
-    mJarFileLocation        = "";
-//  mInstallArguments       = "";
+    mJarFileLocation        = nsnull;
+    //mInstallArguments       = "";
     mPackageFolder          = nsnull;
 
     // mJarFileData is an opaque handle to the jarfile.
@@ -262,7 +265,9 @@ nsInstall::InternalAbort(PRInt32 errcode)
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull) 
     {
-        for (PRInt32 i=mInstalledFiles->Count() - 1; i >= 0; i--) 
+        //PRUint32 i;
+        //mInstalledFiles->Count(&i);
+        for (PRInt32 i = mInstalledFiles->Count(); i >= 0; i--) 
         {
             ie = (nsInstallObject *)mInstalledFiles->ElementAt(i);
             if (ie) 
@@ -730,9 +735,10 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
         return NS_OK;
     }
     
-    nsFileSpec fsFolder(aFolder);
+    nsCOMPtr<nsILocalFile> folder;
+    NS_NewLocalFile(aFolder.ToNewCString(), getter_AddRefs(folder));
 
-    *aReturn = fsFolder.GetDiskSpaceAvailable();
+    result = folder->GetDiskSpaceAvailable(aReturn);
     return NS_OK;
 }
 
@@ -790,8 +796,12 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     }
     
 
-    if ( mInstalledFiles != NULL && mInstalledFiles->Count() > 0 )
+    if ( mInstalledFiles != NULL)
     {
+      //PRUint32 i = 0;
+      //mInstalledFiles->Count(&i);
+      if ( mInstalledFiles->Count() > 0 )
+      {
         if ( mUninstallPackage )
         {
             VR_UninstallCreateNode( (char*)(const char*) nsAutoCString(mRegistryPackageName), 
@@ -817,6 +827,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
 
         nsInstallObject* ie = nsnull;
 
+        //PRUint32 numberOfFiles = 0;
+        //mInstalledFiles->Count(&numberOfFiles);
         for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
         {
             ie = (nsInstallObject*)mInstalledFiles->ElementAt(i);
@@ -879,6 +891,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
             mStatusSent = PR_TRUE;
         }
+      }
     }
     else
     {
@@ -1139,8 +1152,8 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         return NS_OK;
     }
     nsresult ret;
-    nsFileSpec* resFile;
-    nsFileURL* resFileURL = nsnull;
+    nsCOMPtr<nsIFile> resFile;
+    nsCOMPtr<nsIFileURL> resFileURL = nsnull;
     nsIURI *url = nsnull;
     nsILocale* locale = nsnull;
     nsIStringBundleService* service = nsnull;
@@ -1161,7 +1174,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 
     // extract properties file
     // XXX append locale info: lang code, country code, .properties suffix to aBaseName
-    PRInt32 err = ExtractFileFromJar(aBaseName, nsnull, &resFile);
+    PRInt32 err = ExtractFileFromJar(aBaseName, nsnull, getter_AddRefs(resFile));
     if ( (!resFile) || (err != nsInstall::SUCCESS)  )
     {
         SaveError( err );
@@ -1182,12 +1195,18 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         goto cleanup;
 
     // construct properties file URL as required by StringBundle interface
-    resFileURL = new nsFileURL( *resFile );
-    ret = NS_NewURI(&url, resFileURL->GetURLString());
-    if (resFileURL)
-        delete resFileURL;
-    if (NS_FAILED(ret)) 
-        goto cleanup;
+    
+    //nsCOMPtr<nsIFileURL> url;
+    ret = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
+                                             NS_GET_IID(nsIFileURL),
+                                             getter_AddRefs(resFileURL));
+
+    if (NS_FAILED(ret)) goto cleanup;
+
+    ret = resFileURL->SetFile(resFile);
+
+    if (NS_FAILED(ret)) goto cleanup;
+
 
     // get the string bundle using the extracted properties file
 #if 1
@@ -1262,12 +1281,6 @@ cleanup:
     NS_IF_RELEASE( url );
     NS_IF_RELEASE( bundle );
     NS_IF_RELEASE( propEnum );
-    if (resFile)
-    {
-		// delete the transient properties file
-		resFile->Delete(PR_FALSE);
-        delete resFile;
-    }
 
     return NS_OK;
 }
@@ -1410,6 +1423,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     mVersionInfo->Init(aVersion);
 
     mInstalledFiles = new nsVoidArray();
+    //nsresult rv = NS_NewISupportsArray(getter_AddRefs(mInstalledFiles));
     
     if (mInstalledFiles == nsnull)
     {
@@ -1473,7 +1487,7 @@ nsInstall::Uninstall(const nsString& aRegistryPackageName, PRInt32* aReturn)
 
 
 void       
-nsInstall::AddPatch(nsHashKey *aKey, nsFileSpec* fileName)
+nsInstall::AddPatch(nsHashKey *aKey, nsIFile* fileName)
 {
     if (mPatchList != nsnull)
     {
@@ -1482,7 +1496,7 @@ nsInstall::AddPatch(nsHashKey *aKey, nsFileSpec* fileName)
 }
 
 void       
-nsInstall::GetPatch(nsHashKey *aKey, nsFileSpec** fileName)
+nsInstall::GetPatch(nsHashKey *aKey, nsIFile** fileName)
 {
     if (!fileName) 
         return;
@@ -1491,72 +1505,23 @@ nsInstall::GetPatch(nsHashKey *aKey, nsFileSpec** fileName)
 
     if (mPatchList != nsnull)
     {
-        *fileName = (nsFileSpec*) mPatchList->Get(aKey);
+        *fileName = (nsIFile*) mPatchList->Get(aKey);
     }
 }
 
 PRInt32
 nsInstall::FileOpDirCreate(nsInstallFolder& aTarget, PRInt32* aReturn)
 {
-  nsFileSpec* localFS = new nsFileSpec(*aTarget.GetFileSpec());
-  if (localFS == nsnull)
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+  if (localFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_CREATE, *localFS, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_CREATE, localFile, aReturn);
   if (ifop == nsnull)
   {
-    delete localFS;  
-    *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-      return NS_OK;
-  }
-
-  PRInt32 result = SanityCheck();
-  if (result != nsInstall::SUCCESS)
-  {
-      delete localFS;
-      delete ifop;
-      *aReturn = SaveError( result );
-      return NS_OK;
-  }
-  
-  if (*aReturn == nsInstall::SUCCESS) 
-  {
-      *aReturn = ScheduleForInstall( ifop );
-  }
-  delete localFS;
-  
-  SaveError(*aReturn);
-
-  return NS_OK;
-}
-
-PRInt32
-nsInstall::FileOpDirGetParent(nsInstallFolder& aTarget, nsFileSpec* aReturn)
-{
-  nsFileSpec* localFS = aTarget.GetFileSpec();
-
-  localFS->GetParent(*aReturn);
-
-  return NS_OK;
-}
-
-PRInt32
-nsInstall::FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn)
-{
-  nsFileSpec* localFS = new nsFileSpec(*aTarget.GetFileSpec());
-  if (localFS == nsnull)
-  {
-     *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-     return NS_OK;
-  }
-
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_REMOVE, *localFS, aFlags, aReturn);
-  if (ifop == nsnull)
-  {
-      delete localFS;
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
       return NS_OK;
   }
@@ -1564,7 +1529,51 @@ nsInstall::FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aR
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
-      delete localFS;
+      delete ifop;
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+  
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+  
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpDirGetParent(nsInstallFolder& aTarget, nsIFile** aReturn)
+{
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+
+  localFile->GetParent(aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+{
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+  if (localFile == nsnull)
+  {
+     *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+     return NS_OK;
+  }
+
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_REMOVE, localFile, aFlags, aReturn);
+  if (ifop == nsnull)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
       delete ifop;
       *aReturn = SaveError( result );
       return NS_OK;
@@ -1575,8 +1584,6 @@ nsInstall::FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aR
       *aReturn = ScheduleForInstall( ifop );
   }
   
-  delete localFS;
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1585,17 +1592,16 @@ nsInstall::FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aR
 PRInt32
 nsInstall::FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
-  nsFileSpec* localFS = new nsFileSpec(*aSrc.GetFileSpec());
-  if (localFS == nsnull)
+  nsCOMPtr<nsIFile> localFile = aSrc.GetFileSpec();
+  if (localFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, *localFS, aTarget, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, localFile, aTarget, aReturn);
   if (ifop == nsnull)
   {
-      delete localFS;
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
       return NS_OK;
   }
@@ -1603,7 +1609,6 @@ nsInstall::FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aR
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
-      delete localFS;
       delete ifop;
       *aReturn = SaveError( result );
       return NS_OK;
@@ -1614,8 +1619,6 @@ nsInstall::FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aR
       *aReturn = ScheduleForInstall( ifop );
   }
   
-  delete localFS;
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1624,25 +1627,23 @@ nsInstall::FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aR
 PRInt32
 nsInstall::FileOpFileCopy(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn)
 {
-  nsFileSpec* localSrcFS = new nsFileSpec(*aSrc.GetFileSpec());
-  if (localSrcFS == nsnull)
+  nsCOMPtr<nsIFile> localSrcFile = aSrc.GetFileSpec();
+  if (localSrcFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsFileSpec* localTargetFS = new nsFileSpec(*aTarget.GetFileSpec());
-  if (localTargetFS == nsnull)
+  nsCOMPtr<nsIFile>localTargetFile = aTarget.GetFileSpec();
+  if (localTargetFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_COPY, *localSrcFS, *localTargetFS, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_COPY, localSrcFile, localTargetFile, aReturn);
   if (ifop == nsnull)
   {
-      delete localSrcFS;
-      delete localTargetFS;
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
       return NS_OK;
   }
@@ -1650,8 +1651,6 @@ nsInstall::FileOpFileCopy(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
-      delete localSrcFS;
-      delete localTargetFS;
       delete ifop;
       *aReturn = SaveError( result );
       return NS_OK;
@@ -1662,9 +1661,6 @@ nsInstall::FileOpFileCopy(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt
       *aReturn = ScheduleForInstall( ifop );
   }
 
-  delete localSrcFS;
-  delete localTargetFS;
-      
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1673,17 +1669,16 @@ nsInstall::FileOpFileCopy(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt
 PRInt32
 nsInstall::FileOpFileDelete(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn)
 {
-  nsFileSpec* localFS = new nsFileSpec(*aTarget.GetFileSpec());
-  if (localFS == nsnull)
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+  if (localFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_DELETE, *localFS, aFlags, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_DELETE, localFile, aFlags, aReturn);
   if (ifop == nsnull)
   {
-      delete localFS;
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
       return NS_OK;
   }
@@ -1691,7 +1686,6 @@ nsInstall::FileOpFileDelete(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* a
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
-      delete localFS;
       delete ifop;
       *aReturn = SaveError( result );
       return NS_OK;
@@ -1702,8 +1696,6 @@ nsInstall::FileOpFileDelete(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* a
       *aReturn = ScheduleForInstall( ifop );
   }
   
-  delete localFS;
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1712,17 +1704,16 @@ nsInstall::FileOpFileDelete(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* a
 PRInt32
 nsInstall::FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRInt32* aReturn)
 {
-  nsFileSpec* localFS = new nsFileSpec(*aTarget.GetFileSpec());
-  if (localFS == nsnull)
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
+  if (localFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_EXECUTE, *localFS, aParams, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_EXECUTE, localFile, aParams, aReturn);
   if (ifop == nsnull)
   {
-      delete localFS;
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
       return NS_OK;
   }
@@ -1730,7 +1721,6 @@ nsInstall::FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRInt3
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
-      delete localFS;
       delete ifop;
       *aReturn = SaveError( result );
       return NS_OK;
@@ -1741,8 +1731,6 @@ nsInstall::FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRInt3
       *aReturn = ScheduleForInstall( ifop );
   }
   
-  delete localFS;
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1751,9 +1739,9 @@ nsInstall::FileOpFileExecute(nsInstallFolder& aTarget, nsString& aParams, PRInt3
 PRInt32
 nsInstall::FileOpFileExists(nsInstallFolder& aTarget, PRBool* aReturn)
 {
-  nsFileSpec* localFS = aTarget.GetFileSpec();
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
 
-  *aReturn = localFS->Exists();
+  localFile->Exists(aReturn);
   return NS_OK;
 }
 
@@ -1766,78 +1754,80 @@ nsInstall::FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aRetur
 PRInt32
 nsInstall::FileOpFileGetDiskSpaceAvailable(nsInstallFolder& aTarget, PRInt64* aReturn)
 {
-  nsFileSpec* localFS = aTarget.GetFileSpec();
+  nsresult rv;
+  nsCOMPtr<nsIFile> file = aTarget.GetFileSpec();
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv); 
 
-  *aReturn = localFS->GetDiskSpaceAvailable();
+  localFile->GetDiskSpaceAvailable(aReturn);  //nsIFileXXX: need to figure out how to call GetDiskSpaceAvailable
   return NS_OK;
 }
 
+//nsIFileXXX: need to get nsIFile equivalent to GetModDate
 PRInt32
 nsInstall::FileOpFileGetModDate(nsInstallFolder& aTarget, nsFileSpec::TimeStamp* aReturn)
 {
-  nsFileSpec* localFS = aTarget.GetFileSpec();
+  //nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
 
-  localFS->GetModDate(*aReturn);
+  //localFile->GetModDate(*aReturn);
   return NS_OK;
 }
 
 PRInt32
-nsInstall::FileOpFileGetSize(nsInstallFolder& aTarget, PRUint32* aReturn)
+nsInstall::FileOpFileGetSize(nsInstallFolder& aTarget, PRInt64* aReturn)
 {
-  nsFileSpec* localFS = aTarget.GetFileSpec();
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
 
-  *aReturn = localFS->GetFileSize();
+  localFile->GetFileSize(aReturn);
   return NS_OK;
 }
 
 PRInt32
 nsInstall::FileOpFileIsDirectory(nsInstallFolder& aTarget, PRBool* aReturn)
 {
-  nsFileSpec* localFS = aTarget.GetFileSpec();
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
 
-  *aReturn = localFS->IsDirectory();
+  localFile->IsDirectory(aReturn);
   return NS_OK;
 }
 
 PRInt32
 nsInstall::FileOpFileIsFile(nsInstallFolder& aTarget, PRBool* aReturn)
 {
-  nsFileSpec* localFS = aTarget.GetFileSpec();
+  nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
 
-  *aReturn = localFS->IsFile();
+  localFile->IsFile(aReturn);
   return NS_OK;
 }
 
+//nsIFileXXX: need to get the ModDateChanged equivalent for nsIFile
 PRInt32
 nsInstall::FileOpFileModDateChanged(nsInstallFolder& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn)
 {
-  nsFileSpec* localFS = aTarget.GetFileSpec();
+  //nsFileSpec* localFS = aTarget.GetFileSpec();
 
-  *aReturn = localFS->ModDateChanged(aOldStamp);
+  //*aReturn = localFS->ModDateChanged(aOldStamp);
   return NS_OK;
 }
 
 PRInt32
 nsInstall::FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn)
 {
-  nsFileSpec* localSrcFS = new nsFileSpec(*aSrc.GetFileSpec());
-  if (localSrcFS == nsnull)
+  nsCOMPtr<nsIFile> localSrcFile = aSrc.GetFileSpec();
+  if (localSrcFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
-  nsFileSpec* localTargetFS = new nsFileSpec(*aTarget.GetFileSpec());
-  if (localTargetFS == nsnull)
+  nsCOMPtr<nsIFile> localTargetFile = aTarget.GetFileSpec();
+  if (localTargetFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_MOVE, *localSrcFS, *localTargetFS, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_MOVE, localSrcFile, localTargetFile, aReturn);
   if (ifop == nsnull)
   {
-      delete localSrcFS;
-      delete localTargetFS;
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
       return NS_OK;
   }
@@ -1845,8 +1835,6 @@ nsInstall::FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
-      delete localSrcFS;
-      delete localTargetFS;
       delete ifop;
       *aReturn = SaveError( result );
       return NS_OK;
@@ -1857,9 +1845,6 @@ nsInstall::FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt
       *aReturn = ScheduleForInstall( ifop );
   }
 
-  delete localSrcFS;
-  delete localTargetFS;
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1868,17 +1853,16 @@ nsInstall::FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt
 PRInt32
 nsInstall::FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
-  nsFileSpec* localFS = new nsFileSpec(*aSrc.GetFileSpec());
-  if (localFS == nsnull)
+  nsCOMPtr<nsIFile> localFile = aSrc.GetFileSpec();
+  if (localFile == nsnull)
   {
      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
      return NS_OK;
   }
 
-  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME,*localFS, aTarget, aReturn);
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME, localFile, aTarget, aReturn);
   if (ifop == nsnull)
   {
-      delete localFS;
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
       return NS_OK;
   }
@@ -1886,7 +1870,6 @@ nsInstall::FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* a
   PRInt32 result = SanityCheck();
   if (result != nsInstall::SUCCESS)
   {
-      delete localFS;
       delete ifop;
       *aReturn = SaveError( result );
       return NS_OK;
@@ -1897,15 +1880,13 @@ nsInstall::FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* a
       *aReturn = ScheduleForInstall( ifop );
   }
   
-  delete localFS;
-
   SaveError(*aReturn);
 
   return NS_OK;
 }
 
 PRInt32
-nsInstall::FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutPath, nsString& aDescription, nsFileSpec& aWorkingPath, nsString& aParams, nsFileSpec& aIcon, PRInt32 aIconId, PRInt32* aReturn)
+nsInstall::FileOpFileWindowsShortcut(nsIFile* aTarget, nsIFile* aShortcutPath, nsString& aDescription, nsIFile* aWorkingPath, nsString& aParams, nsIFile* aIcon, PRInt32 aIconId, PRInt32* aReturn)
 {
 
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_WIN_SHORTCUT, aTarget, aShortcutPath, aDescription, aWorkingPath, aParams, aIcon, aIconId, aReturn);
@@ -1940,9 +1921,13 @@ nsInstall::FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt
   *aReturn = nsInstall::SUCCESS;
 
 #ifdef XP_MAC
-  nsFileSpec nsfsSource(aSourcePath, PR_FALSE);
-  nsFileSpec nsfsAlias(aAliasPath, PR_TRUE);
+  //nsFileSpec nsfsSource(aSourcePath, PR_FALSE);
+  //nsFileSpec nsfsAlias(aAliasPath, PR_TRUE);
+  nsCOMPtr<nsILocalFile> nsfsSource;
+  nsCOMPtr<nsILocalFile> nsfsAlias;
   
+  NS_NewLocalFile(aSourcePath.ToNewCString(), getter_AddRefs(nsfsSource));
+  NS_NewLocalFile(aAliasPath.ToNewCString(), getter_AddRefs(nsfsAlias));
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_MAC_ALIAS, nsfsSource, nsfsAlias, aReturn);
 
   PRInt32 result = SanityCheck();
@@ -2239,13 +2224,15 @@ nsInstall::CleanUp(void)
 {
     nsInstallObject* ie;
     
-    if ( mInstalledFiles != NULL ) 
+    if ( mInstalledFiles != nsnull ) 
     {
+        //PRUint32 numberOfObjects = 0;
+        //mInstalledFiles->Count(&numberOfObjects);
         for (PRInt32 i=0; i < mInstalledFiles->Count(); i++) 
         {
             ie = (nsInstallObject*)mInstalledFiles->ElementAt(i);
             if (ie)
-                delete (ie);
+                delete ie;
         }
 
         mInstalledFiles->Clear();
@@ -2274,11 +2261,13 @@ nsInstall::CleanUp(void)
 void       
 nsInstall::GetJarFileLocation(nsString& aFile)
 {
-    aFile.AssignWithConversion(mJarFileLocation.GetCString());
+    char* temp;
+    mJarFileLocation->GetPath(&temp);
+    aFile.AssignWithConversion(temp);
 }
 
 void       
-nsInstall::SetJarFileLocation(const nsFileSpec& aFile)
+nsInstall::SetJarFileLocation(nsIFile* aFile)
 {
     mJarFileLocation = aFile;
 }
@@ -2331,14 +2320,19 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 // aRealName        - This is the name that we did extract to.  This will be allocated by use and should be disposed by the caller.
 
 PRInt32    
-nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName)
+nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName, nsIFile** aRealName)
 {
     PRInt32 extpos = 0;
-    nsFileSpec *extractHereSpec;
+    nsCOMPtr<nsIFile> extractHereSpec;
+    nsCOMPtr<nsILocalFile> tempFile;
+    nsresult rv;
 
     if (aSuggestedName == nsnull)
     {
-        nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+
+        directoryService->Get("system.OS_TemporaryDirectory", NS_GET_IID(nsIFile), getter_AddRefs(tempFile));
+  
         nsString tempFileName; tempFileName.AssignWithConversion("xpinstall");
 
         // Get the extension of the file in the JAR
@@ -2351,12 +2345,12 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
             tempFileName += extension;
         }
 
-        tempFile += tempFileName;
+        tempFile->Append(tempFileName.ToNewCString());
 
         // Create a temporary file to extract to
-        tempFile.MakeUnique();
+        MakeUnique(tempFile);
 
-        extractHereSpec = new nsFileSpec(tempFile);
+        tempFile->Clone(getter_AddRefs(extractHereSpec));
 
         if (extractHereSpec == nsnull)
             return nsInstall::OUT_OF_MEMORY;
@@ -2364,30 +2358,34 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     else
     {
         // extract to the final destination.
-        extractHereSpec = new nsFileSpec(*aSuggestedName);
-        if (extractHereSpec == nsnull)
+        nsCOMPtr<nsIFile> temp;
+        aSuggestedName->Clone(getter_AddRefs(temp));
+        tempFile = do_QueryInterface(temp, &rv);
+        if (tempFile == nsnull)
             return nsInstall::OUT_OF_MEMORY;
 
-        extractHereSpec->MakeUnique();
+        MakeUnique(tempFile);
+        extractHereSpec = tempFile;
     }
 
     // We will overwrite what is in the way.  is this something that we want to do?  
     extractHereSpec->Delete(PR_FALSE);
 
-    nsresult rv;
-    nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(*extractHereSpec, getter_AddRefs(file));
-    if (NS_SUCCEEDED(rv))
-        rv = mJarFileData->Extract(nsAutoCString(aJarfile), file);
+    //nsCOMPtr<nsILocalFile> file;
+    //rv = NS_NewLocalFile(*extractHereSpec, getter_AddRefs(file));
+    //if (NS_SUCCEEDED(rv))
+    rv = mJarFileData->Extract(nsAutoCString(aJarfile), extractHereSpec);
     if (NS_FAILED(rv)) 
     {
-        if (extractHereSpec != nsnull)
-            delete extractHereSpec;
         return EXTRACTION_FAILED;
     }
     
 #ifdef XP_MAC
-	FSSpec finalSpec, extractedSpec = extractHereSpec->GetFSSpec();
+	FSSpec finalSpec, extractedSpec;
+    
+    nsCOMPtr<nsILocalFileMac> tempExtractHereSpec;
+    tempExtractHereSpec = do_QueryInterface(extractHereSpec, &rv);
+    tempExtractHereSpec->GetFSSpec(&extractedSpec);
 	
 	if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
 	{
@@ -2399,8 +2397,6 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
 	
 		if (decodeErr != noErr)
 		{			
-			if (extractHereSpec)
-				delete extractHereSpec;
 			if (asd)
 				delete asd;
 			return EXTRACTION_FAILED;
@@ -2414,12 +2410,13 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
 			FSpDelete(&extractedSpec);
 			
 			// "real name" in AppleSingle entry may cause file rename
-			*extractHereSpec = finalSpec;
+			tempExtractHereSpec->InitWithFSSpec(&finalSpec);
+			extractHereSpec = do_QueryInterface(tempExtractHereSpec, &rv);
 		}
 	}		
 #endif
 
-    *aRealName = extractHereSpec;
+    extractHereSpec->Clone(getter_AddRefs(aRealName));
 
     return nsInstall::SUCCESS;
 }
@@ -2542,3 +2539,46 @@ nsInstall::DeleteVector(nsVoidArray* vector)
         vector = nsnull;
     }
 }
+
+nsresult MakeUnique(nsILocalFile* file)
+{
+    PRBool flagExists;
+
+    nsresult rv = file->Exists(&flagExists);
+
+    if (NS_FAILED(rv)) return rv;
+    if (!flagExists) return NS_ERROR_FAILURE;
+
+    char* leafName;
+    
+    rv = file->GetLeafName(&leafName);
+    if (NS_FAILED(rv)) return rv;
+
+    char* lastDot = strrchr(leafName, '.');
+    char* suffix = "";
+    if (lastDot)
+    {
+        suffix = nsCRT::strdup(lastDot); // include '.'
+        *lastDot = '\0'; // strip suffix and dot.
+    }
+
+    // 27 should work on Macintosh, Unix, and Win32. 
+    const int maxRootLength = 27 - nsCRT::strlen(suffix) - 1;
+
+    if ((int)nsCRT::strlen(leafName) > (int)maxRootLength)
+        leafName[maxRootLength] = '\0';
+
+    for (short indx = 1; indx < 1000 && flagExists; indx++)
+    {
+        // start with "Picture-1.jpg" after "Picture.jpg" exists
+        char newName[32];
+        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
+        file->SetLeafName(newName);
+
+        rv = file->Exists(&flagExists);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_OK;
+}
+
+

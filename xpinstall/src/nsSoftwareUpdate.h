@@ -45,12 +45,12 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
          *  information used within the XPI module -- not
          *  available through any interface
          */
-        static nsIFileSpec* GetProgramDirectory() { return mProgramDir; }
+        static nsIFile* GetProgramDirectory() { return mProgramDir; }
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSIAPPSHELLCOMPONENT
         
-        NS_IMETHOD InstallJar( nsIFileSpec* localFile,
+        NS_IMETHOD InstallJar( nsIFile* localFile,
                                const PRUnichar* URL,
                                const PRUnichar* arguments,
                                long flags = 0,
@@ -68,15 +68,15 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
          *  once, and is also set by the AppShellComponent initialize
          *  so it can't be called during a normal Mozilla run
          */
-        NS_IMETHOD StubInitialize(nsIFileSpec *dir);
+        NS_IMETHOD StubInitialize(nsIFile *dir);
 
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
 
 
     private:
-        static   nsSoftwareUpdate* mInstance;
-        static   nsIFileSpec*      mProgramDir;
+        static   nsSoftwareUpdate*  mInstance;
+        static   nsCOMPtr<nsIFile>  mProgramDir;
 
 #if NOTIFICATION_ENABLE
         static   nsIUpdateNotification *mUpdateNotifier;

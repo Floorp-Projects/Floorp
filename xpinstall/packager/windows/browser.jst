@@ -25,7 +25,7 @@ function createShortcuts()
   winreg               = getWinRegistry();
   fWindows             = getFolder("Windows");
   fCommunicator        = getFolder("Communicator");
-  fTemp                = fCommunicator + "\\$MainExeFile$";
+  fTemp                = fCommunicator + "$MainExeFile$";
   fileExe              = getFolder("file:///", fTemp);
   scExeDesc            = "$ProductName$";
   scProfileDesc        = "Profile Manager";
@@ -226,7 +226,7 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
   // check return value
   if(!checkError(err))
   {
-    fileComponentRegStr = fCommunicator + "\\component.reg";
+    fileComponentRegStr = fCommunicator + "component.reg";
     fileComponentReg    = getFolder("file:///", fileComponentRegStr);
     err                 = fileDelete(fileComponentReg);
     logComment("fileDelete() returned: " + err);

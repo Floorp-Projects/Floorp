@@ -39,6 +39,7 @@
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
+#include "nsILocalFile.h"
 
 #include "nsSoftwareUpdate.h"
 
@@ -61,7 +62,7 @@ class nsInstallInfo
 {
   public:
     
-    nsInstallInfo( nsIFileSpec*     aFile, 
+    nsInstallInfo( nsIFile*     aFile, 
                    const PRUnichar* aURL, 
                    const PRUnichar* aArgs, 
                    long             aFlags, 
@@ -69,7 +70,7 @@ class nsInstallInfo
 
     virtual ~nsInstallInfo();
 
-    nsresult GetLocalFile(nsFileSpec& aSpec);
+    nsresult GetLocalFile(nsIFile** aSpec);
 
     void GetURL(nsString& aURL) { aURL = mURL; }
 
@@ -87,7 +88,7 @@ class nsInstallInfo
     nsString   mURL;
     nsString   mArgs;
 
-    nsCOMPtr<nsIFileSpec>       mFile;
+    nsCOMPtr<nsIFile>           mFile;
     nsCOMPtr<nsIXPINotifier>    mNotifier;
 };
 
@@ -221,7 +222,7 @@ class nsInstall
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);
         
         PRInt32    FileOpDirCreate(nsInstallFolder& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpDirGetParent(nsInstallFolder& aTarget, nsFileSpec* aReturn);
+        PRInt32    FileOpDirGetParent(nsInstallFolder& aTarget, nsIFile** aReturn);
         PRInt32    FileOpDirRemove(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
         PRInt32    FileOpDirRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileCopy(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn);
@@ -231,25 +232,25 @@ class nsInstall
         PRInt32    FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aReturn);
         PRInt32    FileOpFileGetDiskSpaceAvailable(nsInstallFolder& aTarget, PRInt64* aReturn);
         PRInt32    FileOpFileGetModDate(nsInstallFolder& aTarget, nsFileSpec::TimeStamp* aReturn);
-        PRInt32    FileOpFileGetSize(nsInstallFolder& aTarget, PRUint32* aReturn);
+        PRInt32    FileOpFileGetSize(nsInstallFolder& aTarget, PRInt64* aReturn);
         PRInt32    FileOpFileIsDirectory(nsInstallFolder& aTarget, PRBool* aReturn);
         PRInt32    FileOpFileIsFile(nsInstallFolder& aTarget, PRBool* aReturn);
         PRInt32    FileOpFileModDateChanged(nsInstallFolder& aTarget, nsFileSpec::TimeStamp& aOldStamp, PRBool* aReturn);
         PRInt32    FileOpFileMove(nsInstallFolder& aSrc, nsInstallFolder& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileRename(nsInstallFolder& aSrc, nsString& aTarget, PRInt32* aReturn);
-        PRInt32    FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutPath, nsString& aDescription, nsFileSpec& aWorkingPath, nsString& aParams, nsFileSpec& aIcon, PRInt32 aIconId, PRInt32* aReturn);
+        PRInt32    FileOpFileWindowsShortcut(nsIFile* aTarget, nsIFile* aShortcutPath, nsString& aDescription, nsIFile* aWorkingPath, nsString& aParams, nsIFile* aIcon, PRInt32 aIconId, PRInt32* aReturn);
         PRInt32    FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt32* aReturn);
         PRInt32    FileOpFileUnixLink(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32* aReturn);
 
         void       LogComment(nsString& aComment);
 
-        PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedName, nsFileSpec** aRealName);
+        PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName, nsIFile** aRealName);
         char*      GetResourcedString(const nsString& aResName);
-        void       AddPatch(nsHashKey *aKey, nsFileSpec* fileName);
-        void       GetPatch(nsHashKey *aKey, nsFileSpec** fileName);
+        void       AddPatch(nsHashKey *aKey, nsIFile* fileName);
+        void       GetPatch(nsHashKey *aKey, nsIFile** fileName);
         
         void       GetJarFileLocation(nsString& aFile);
-        void       SetJarFileLocation(const nsFileSpec& aFile);
+        void       SetJarFileLocation(nsIFile* aFile);
 
         void       GetInstallArguments(nsString& args);
         void       SetInstallArguments(const nsString& args);
@@ -273,7 +274,7 @@ class nsInstall
         JSObject*           mWinProfileObject;
 
         
-        nsFileSpec          mJarFileLocation;
+        nsCOMPtr<nsIFile>   mJarFileLocation;
         nsIZipReader*       mJarFileData;
         
         nsString            mInstallArguments;
@@ -292,6 +293,7 @@ class nsInstall
         nsInstallVersion*   mVersionInfo;           /* Component version info */
         
         nsVoidArray*        mInstalledFiles;        
+        //nsCOMPtr<nsISupportsArray>   mInstalledFiles;
         nsHashtable*        mPatchList;
         
         nsIXPINotifier      *mNotifier;
@@ -319,5 +321,7 @@ class nsInstall
 
         static void DeleteVector(nsVoidArray* vector);    
 };
+
+nsresult MakeUnique(nsILocalFile* file);
 
 #endif

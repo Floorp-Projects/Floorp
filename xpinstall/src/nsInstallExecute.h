@@ -62,7 +62,7 @@ class nsInstallExecute : public nsInstallObject
         nsString mJarLocation; // Location in the JAR
         nsString mArgs;        // command line arguments
         
-        nsFileSpec *mExecutableFile;    // temporary file location
+        nsCOMPtr<nsIFile> mExecutableFile;    // temporary file location
         
 
         PRInt32 NativeComplete(void);

@@ -53,14 +53,14 @@
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, const nsFileSpec& jarfile, const PRUnichar* url, const PRUnichar* args, nsIZipReader* hZip);
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, nsIZipReader* hZip);
 extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
-static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(nsIZipReader* hZip, const nsFileSpec& jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
+static nsresult SetupInstallContext(nsIZipReader* hZip, const nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
@@ -163,15 +163,16 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 static PRInt32
-GetInstallScriptFromJarfile(nsIZipReader* hZip, nsFileSpec& jarFile, char** scriptBuffer, PRUint32 *scriptLength)
+GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength)
 {
     PRInt32 result = NS_OK;
     
     *scriptBuffer = nsnull;
     *scriptLength = 0;
 
-    nsCOMPtr<nsILocalFile> jFile;
-    nsresult rv = NS_NewLocalFile(jarFile, getter_AddRefs(jFile));
+    nsIFile* jFile;
+    nsresult rv =jarFile->Clone(&jFile);
+    //NS_NewLocalFile(jarFile, getter_AddRefs(jFile));
     if (NS_SUCCEEDED(rv))
       rv = hZip->Init(jFile);
 
@@ -250,7 +251,7 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsFileSpec& jarFile, char** scri
 // Argument         : JSObject **jsGlob  - created global object
 ///////////////////////////////////////////////////////////////////////////////////////////////
 static nsresult SetupInstallContext(nsIZipReader* hZip,
-                                    const nsFileSpec& jarFile,
+                                    nsIFile* jarFile,
                                     const PRUnichar* url,
                                     const PRUnichar* args, 
                                     JSRuntime *rt, 
@@ -383,10 +384,10 @@ extern "C" void RunInstallOnThread(void *data)
     nsString args;
     installInfo->GetArguments(args);
 
-    nsFileSpec jarpath;
-    rv = installInfo->GetLocalFile(jarpath);
+    nsCOMPtr<nsIFile> jarpath;
+    rv = installInfo->GetLocalFile(getter_AddRefs(jarpath));
     if (NS_SUCCEEDED(rv))
-	{
+    {
         finalStatus = GetInstallScriptFromJarfile( hZip,
                                                    jarpath,
                                                    &scriptBuffer, 
@@ -468,6 +469,8 @@ extern "C" void RunInstallOnThread(void *data)
             if ( ownRuntime ) 
                 JS_DestroyRuntime(rt);
         }
+        // force zip archive closed before other cleanup
+        hZip = 0;
     }
     else 
     {

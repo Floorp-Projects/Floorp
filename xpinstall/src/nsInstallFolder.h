@@ -44,12 +44,12 @@ class nsInstallFolder
        virtual ~nsInstallFolder();
 
        void GetDirectoryPath(nsString& aDirectoryPath);
-       nsFileSpec* GetFileSpec();
+       nsIFile* GetFileSpec();
        PRInt32 ToString(nsAutoString* outString);
        
     private:
         
-        nsFileSpec*  mFileSpec;
+        nsCOMPtr<nsIFile>  mFileSpec;
 
         void         SetDirectoryPath(const nsString& aFolderID, const nsString& aRelativePath);
         void         PickDefaultDirectory();

@@ -66,6 +66,8 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 {
     MOZ_COUNT_CTOR(nsInstallFile);
 
+    PRBool flagExists, flagIsFile;
+
     if ((folderSpec == nsnull) || (inInstall == NULL))
     {
         *error = nsInstall::INVALID_ARGUMENTS;
@@ -136,24 +138,26 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     Recycle(qualifiedRegNameString);
 #endif
 
-    nsFileSpec* tmp = folderSpec->GetFileSpec();
+    nsCOMPtr<nsIFile> tmp = folderSpec->GetFileSpec();
     if (!tmp)
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
 
-    mFinalFile = new nsFileSpec(*tmp);
+    tmp->Clone(getter_AddRefs(mFinalFile));
     if (mFinalFile == nsnull)
     {
         *error = nsInstall::OUT_OF_MEMORY;
         return;
     }
 
-    if ( mFinalFile->Exists() )
+    mFinalFile->Exists(&flagExists);
+    if (flagExists)
     {
         // is there a file with the same name as the proposed folder?
-        if ( mFinalFile->IsFile() ) 
+        mFinalFile->IsFile(&flagIsFile);
+        if ( flagIsFile) 
         {
             *error = nsInstall::FILENAME_ALREADY_USED;
             return;
@@ -166,25 +170,63 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
          * to be an existing dir
          */
         int dirPermissions = 0755; // std default for UNIX, ignored otherwise
-        mFinalFile->CreateDir(dirPermissions);
+        mFinalFile->Create(1, dirPermissions);
     }
 
-    *mFinalFile += inPartialPath;
+    //Need to parse the inPartialPath to remove any separators
+    PRBool finished = PR_FALSE;
+    PRUint32 offset = 0;
+    PRInt32 location = 0, pass = 0;
+    nsString subString;
+
+    //nsString tempPartialPath(inPartialPath);
+
+    while (!finished)
+    {
+        location = inPartialPath.FindChar('/',PR_FALSE, offset);
+        if ((location < 0) && (pass == 0)) //no separators were found
+        {
+            mFinalFile->Append(inPartialPath.ToNewCString());
+            finished = PR_TRUE;
+        }
+        else if ((location < 0) && (pass > 0) && (offset < inPartialPath.mLength)) //last occurance
+        {
+            nsresult rv = inPartialPath.Mid(subString, offset, inPartialPath.mLength);
+            mFinalFile->Append(subString.ToNewCString());
+            finished = PR_TRUE;
+        }
+        else
+        {
+            nsresult rv = inPartialPath.Mid(subString, offset, location);
+            mFinalFile->Append(subString.ToNewCString());
+            offset = location + 1;
+            pass++;
+        }
+    }
+
+    //{
+    //    nsresult rv = mFinalFile->Append(inPartialPath.ToNewCString());
+    //    if (rv != NS_OK)
+    //    {
+    //        *error = nsInstall::ILLEGAL_RELATIVE_PATH;
+    //       return;
+    //    }
+    //}
     
-    mReplaceFile = mFinalFile->Exists();
-    
+    mFinalFile->Exists(&mReplaceFile);
     if (mReplaceFile == PR_FALSE)
     {
        /* although it appears that we are creating the dir _again_ it is necessary
         * when inPartialPath has arbitrary levels of nested dirs before the leaf
         */
-        nsFileSpec parent;
-        mFinalFile->GetParent(parent);
-        nsFileSpec makeDirs(parent.GetCString(), PR_TRUE);
+        nsCOMPtr<nsIFile> parent;
+        mFinalFile->GetParent(getter_AddRefs(parent));
+        //nsFileSpec makeDirs(parent.GetCString(), PR_TRUE);
+        parent->Create(1, 0755); //nsIFileXXX: What kind of permissions are required here?
     }
 
-    mVersionRegistryName    = new nsString(inComponentName);
-    mJarLocation            = new nsString(inJarLocation);
+    mVersionRegistryName  = new nsString(inComponentName);
+    mJarLocation          = new nsString(inJarLocation);
     mVersionInfo	        = new nsString(inVInfo);
      
     if (mVersionRegistryName == nsnull ||
@@ -222,14 +264,14 @@ nsInstallFile::~nsInstallFile()
     if (mJarLocation)
         delete mJarLocation;
   
-    if (mExtractedFile)
-        delete mExtractedFile;
-
-    if (mFinalFile)
-        delete mFinalFile;
-  
     if (mVersionInfo)
-      delete mVersionInfo;
+        delete mVersionInfo;
+    
+    //if(mFinalFile)
+    //    mFinalFile = nsnull;
+
+    //if(mExtractedFile)
+    //    mExtractedFile = nsnull;
 
     MOZ_COUNT_DTOR(nsInstallFile);
 }
@@ -245,7 +287,7 @@ PRInt32 nsInstallFile::Prepare()
     if (mInstall == nsnull || mFinalFile == nsnull || mJarLocation == nsnull )
         return nsInstall::INVALID_ARGUMENTS;
 
-    return mInstall->ExtractFileFromJar(*mJarLocation, mFinalFile, &mExtractedFile);
+    return mInstall->ExtractFileFromJar(*mJarLocation, mFinalFile, getter_AddRefs(mExtractedFile)); 
 }
 
 /* Complete
@@ -290,7 +332,7 @@ char* nsInstallFile::toString()
 {
     char* buffer = new char[RESBUFSIZE];
     char* rsrcVal = nsnull;
-    const char* fname = nsnull;
+    char* fname = nsnull;
 
     if (buffer == nsnull || !mInstall)
         return nsnull;
@@ -313,7 +355,7 @@ char* nsInstallFile::toString()
     if (rsrcVal)
     {
         if (mFinalFile)
-            fname = mFinalFile->GetCString();
+            mFinalFile->GetPath(&fname);
 
         PR_snprintf( buffer, RESBUFSIZE, rsrcVal, fname );
 
@@ -333,14 +375,14 @@ PRInt32 nsInstallFile::CompleteFileMove()
         return nsInstall::UNEXPECTED_ERROR;
     }
    	
-    if ( *mExtractedFile == *mFinalFile ) 
+    if ( mExtractedFile == mFinalFile ) 
     {
         /* No need to rename, they are the same */
         result = nsInstall::SUCCESS;
     } 
     else 
     {
-        result = ReplaceFileNowOrSchedule(*mExtractedFile, *mFinalFile );
+        result = ReplaceFileNowOrSchedule(mExtractedFile, mFinalFile );
     }
 
   return result;  
@@ -388,8 +430,10 @@ nsInstallFile::RegisterInVersionRegistry()
         refCount = 0;
     }
 
+    char* temp;
+    mFinalFile->GetPath(&temp);
     VR_Install( (char*)(const char*)nsAutoCString(*mVersionRegistryName), 
-                (char*)(const char*)mFinalFile->GetNativePathCString(),  // DO NOT CHANGE THIS. 
+                (char*)(const char*)temp,  // DO NOT CHANGE THIS. 
                 (char*)(const char*)nsAutoCString(*mVersionInfo), 
                 PR_FALSE );
 

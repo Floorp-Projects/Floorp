@@ -67,17 +67,17 @@ class nsInstallPatch : public nsInstallObject
         
         nsInstallVersion        *mVersionInfo;
         
-        nsFileSpec              *mTargetFile;
-        nsFileSpec              *mPatchFile;
-        nsFileSpec              *mPatchedFile;
+        nsCOMPtr<nsIFile>       mTargetFile;
+        nsCOMPtr<nsIFile>       mPatchFile;
+        nsCOMPtr<nsIFile>       mPatchedFile;
 
         nsString                *mJarLocation;
         nsString                *mRegistryName;
         
        
 
-        PRInt32  NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patchfile, nsFileSpec **newFile);
-        void*    HashFilePath(const nsFilePath& aPath);
+        PRInt32  NativePatch(nsIFile *sourceFile, nsIFile *patchfile, nsIFile **newFile);
+        void*    HashFilePath(nsIFile* aPath);
 };
 
 #endif /* nsInstallPatch_h__ */

@@ -63,8 +63,6 @@ nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
 
 nsInstallExecute::~nsInstallExecute()
 {
-    if (mExecutableFile)
-        delete mExecutableFile;
 
     MOZ_COUNT_DTOR(nsInstallExecute);
 }
@@ -76,22 +74,26 @@ PRInt32 nsInstallExecute::Prepare()
     if (mInstall == NULL || mJarLocation.IsEmpty()) 
         return nsInstall::INVALID_ARGUMENTS;
 
-    return mInstall->ExtractFileFromJar(mJarLocation, nsnull, &mExecutableFile);
+    return mInstall->ExtractFileFromJar(mJarLocation, nsnull, getter_AddRefs(mExecutableFile));
 }
 
 PRInt32 nsInstallExecute::Complete()
 {
+    PRBool flagExists;
+    PRInt32 result = NS_OK;
+    
     if (mExecutableFile == nsnull)
         return nsInstall::INVALID_ARGUMENTS;
 
-    nsFileSpec app( *mExecutableFile);
+    nsCOMPtr<nsIFile> app = mExecutableFile;
     
-    if (!app.Exists())
-	{
-		return nsInstall::INVALID_ARGUMENTS;
-	}
+    app->Exists(&flagExists);
+    if (!flagExists)
+    {
+        return nsInstall::INVALID_ARGUMENTS;
+    }
 
-    PRInt32 result = app.Execute( mArgs );
+    //PRInt32 result = app->Spawn(); // nsIFileXXX: Need to implement Spawn or stay with Execute.
     
     DeleteFileNowOrSchedule( app );
     
@@ -104,7 +106,7 @@ void nsInstallExecute::Abort()
     if (mExecutableFile == nsnull) 
         return;
 
-    DeleteFileNowOrSchedule(*mExecutableFile);
+    DeleteFileNowOrSchedule(mExecutableFile);
 }
 
 char* nsInstallExecute::toString()
@@ -137,7 +139,9 @@ char* nsInstallExecute::toString()
 
         if (rsrcVal)
         {
-            sprintf( buffer, rsrcVal, mExecutableFile->GetCString());
+            char* temp;
+            mExecutableFile->GetPath(&temp);
+            sprintf( buffer, rsrcVal, temp);
             nsCRT::free(rsrcVal);
         }
     }
