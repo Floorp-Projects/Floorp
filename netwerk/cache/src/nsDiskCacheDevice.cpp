@@ -915,7 +915,6 @@ nsDiskCacheDevice::Visit(nsICacheVisitor * visitor)
     return NS_OK;
 }
 
-
 nsresult
 nsDiskCacheDevice::EvictEntries(const char * clientID)
 {
@@ -929,12 +928,20 @@ nsDiskCacheDevice::EvictEntries(const char * clientID)
     rv = updateDiskCacheEntries();
     if (NS_FAILED(rv)) return rv;
     
+    nsDiskCacheRecord records[nsDiskCacheMap::kRecordsPerBucket];
     for (PRUint32 i = 0; i < nsDiskCacheMap::kBucketsPerTable; ++i) {
-        nsDiskCacheRecord* bucket = mCacheMap->GetBucket(i);
-        for (PRUint32 j = 0; j < nsDiskCacheMap::kRecordsPerBucket; ++j) {
-            nsDiskCacheRecord* record = bucket++;
+        // XXX copy the i-th bucket from the cache map. GetBucket()
+        // should probably be changed to do this.
+        PRUint32 j, count = 0;
+        const nsDiskCacheRecord* bucket = mCacheMap->GetBucket(i);
+        for (j = 0; j < nsDiskCacheMap::kRecordsPerBucket; ++j) {
+            const nsDiskCacheRecord* record = bucket++;
             if (record->HashNumber() == 0)
                 break;
+            records[count++] = *record;
+        }
+        for (j = 0; j < count; ++j) {
+            nsDiskCacheRecord* record = &records[j];
 
             // if the entry is currently in use, then doom it rather than evicting right here.
             nsDiskCacheEntry* diskEntry = mBoundEntries.GetEntry(record->HashNumber());
@@ -945,7 +952,7 @@ nsDiskCacheDevice::EvictEntries(const char * clientID)
             
             // delete the metadata file.
             nsCOMPtr<nsIFile> metaFile;
-            rv = getFileForHashNumber(record->HashNumber(), PR_TRUE, 0, getter_AddRefs(metaFile));
+            rv = getFileForHashNumber(record->HashNumber(), PR_TRUE, record->FileGeneration(), getter_AddRefs(metaFile));
             if (NS_SUCCEEDED(rv)) {
                 if (clientID) {
                     // if filtering by clientID, make sure key prefix and clientID match.
@@ -970,7 +977,7 @@ nsDiskCacheDevice::EvictEntries(const char * clientID)
 
             // delete the data file
             nsCOMPtr<nsIFile> dataFile;
-            rv = getFileForHashNumber(record->HashNumber(), PR_FALSE, 0, getter_AddRefs(dataFile));
+            rv = getFileForHashNumber(record->HashNumber(), PR_FALSE, record->FileGeneration(), getter_AddRefs(dataFile));
             if (NS_SUCCEEDED(rv)) {
                 PRInt64 fileSize;
                 rv = dataFile->GetFileSize(&fileSize);
