@@ -32,14 +32,22 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIContent.h"
+#include "nsICSSStyleRule.h"
 
 // The style context cache impl
 nsresult 
-nsOutlinerStyleCache::GetStyleContext(nsIPresContext* aPresContext, nsIContent* aContent, 
+nsOutlinerStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
+                                      nsIPresContext* aPresContext, nsIContent* aContent, 
                                       nsIStyleContext* aContext, nsISupportsArray* aInputWord,
                                       nsIStyleContext** aResult)
 {
   *aResult = nsnull;
+  
+  nsCOMPtr<nsIStyleContext> nextContext;
+  nsIAtom* pseudo = NS_NewAtom(":-moz-outliner-row");
+  aPresContext->ResolvePseudoStyleWithComparator(aContent, pseudo,
+                                             aContext, PR_FALSE,
+                                             aComparator, getter_AddRefs(nextContext));
 
   PRUint32 count;
   aInputWord->Count(&count);
@@ -70,9 +78,10 @@ nsOutlinerStyleCache::GetStyleContext(nsIPresContext* aPresContext, nsIContent* 
       nextContext = getter_AddRefs(NS_STATIC_CAST(nsIStyleContext*, mCache->Get(currState)));
     if (!nextContext) {
       // We missed. Resolve this pseudo-style.
-      aPresContext->ResolvePseudoStyleContextFor(aContent, pseudo,
-                                                 currContext, PR_FALSE,
-                                                 getter_AddRefs(nextContext));
+      aPresContext->ResolvePseudoStyleWithComparator(aContent, pseudo,
+                                                     currContext, PR_FALSE,
+                                                     aComparator,
+                                                     getter_AddRefs(nextContext));
       // Put it in our table.
       if (!mCache)
         mCache = new nsSupportsHashtable;
@@ -307,7 +316,18 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
 nsresult 
 nsOutlinerBodyFrame::GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyleContext** aResult)
 {
-  return mStyleCache.GetStyleContext(aPresContext, mContent, mStyleContext, mScratchArray, aResult);
+  return mStyleCache.GetStyleContext(this, aPresContext, mContent, mStyleContext, mScratchArray, aResult);
+}
+
+// Our comparator for resolving our complex pseudos
+NS_IMETHODIMP
+nsOutlinerBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult)
+{
+  if (aSelector->mTag == aTag) {
+    printf("LA!");
+  }
+  return NS_OK;
+
 }
 
 void
@@ -352,4 +372,5 @@ nsOutlinerBodyFrame::EnsureColumns(nsIPresContext* aPresContext)
 //
 NS_INTERFACE_MAP_BEGIN(nsOutlinerBodyFrame)
   NS_INTERFACE_MAP_ENTRY(nsIOutlinerBoxObject)
+  NS_INTERFACE_MAP_ENTRY(nsICSSPseudoComparator)
 NS_INTERFACE_MAP_END_INHERITING(nsLeafFrame)

@@ -26,6 +26,7 @@
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerView.h"
 #include "nsIOutlinerRangeList.h"
+#include "nsICSSPseudoComparator.h"
 
 class nsSupportsHashtable;
 
@@ -77,13 +78,14 @@ public:
   }
 };
 
-class nsOutlinerStyleCache
+class nsOutlinerStyleCache 
 {
 public:
   nsOutlinerStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {};
   virtual ~nsOutlinerStyleCache() { delete mTransitionTable; delete mCache; };
 
-  nsresult GetStyleContext(nsIPresContext* aPresContext, nsIContent* aContent, 
+  nsresult GetStyleContext(nsICSSPseudoComparator* aComparator, nsIPresContext* aPresContext, 
+                           nsIContent* aContent, 
                            nsIStyleContext* aContext, nsISupportsArray* aInputWord,
                            nsIStyleContext** aResult);
 
@@ -122,20 +124,23 @@ class nsOutlinerColumn {
   nsIFrame* mColFrame;
 
 public:
-  nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame);
-  virtual ~nsOutlinerColumn();
+  nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame) {};
+  virtual ~nsOutlinerColumn() {};
 
   void SetNext(nsOutlinerColumn* aNext) { mNext = aNext; };
 
-  PRUint32 GetColumnWidth();
+  PRUint32 GetColumnWidth() { return 0; };
 };
 
 // The actual frame that paints the cells and rows.
-class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject
+class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject, public nsICSSPseudoComparator
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOUTLINERBOXOBJECT
+
+  // nsICSSPseudoComparator
+  NS_IMETHOD PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBool* aResult);
 
   // Painting methods.
   // Paint is the generic nsIFrame paint method.  We override this method
