@@ -87,7 +87,7 @@ public:
 
     NS_IMETHOD BeginResizingChildren(void);
     NS_IMETHOD EndResizingChildren(void);
-    NS_IMETHOD SetFocus(void);
+    NS_IMETHOD SetFocus(PRBool aRaise);
 
     virtual PRBool IsChild() const;
     virtual PRBool IsPopup() const { return mIsPopup; };

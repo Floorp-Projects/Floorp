@@ -85,7 +85,7 @@ public:
   NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
   NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD           SetCursor(nsCursor aCursor);
-  NS_IMETHOD           SetFocus(void);
+  NS_IMETHOD           SetFocus(PRBool aRaise);
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
 

@@ -1647,7 +1647,8 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
       nsCOMPtr<nsIWidget> widget;
       vm->GetWidget(getter_AddRefs(widget));
       if (widget)
-        result = widget->SetFocus();
+        // raise the window since this was a focus call on the window.
+        result = widget->SetFocus(PR_TRUE);
     }
   }
 

@@ -322,7 +322,7 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSyn
 }
 
 
-NS_IMETHODIMP nsWindow::SetFocus(void)
+NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
 {
   nsEventStatus status;
   nsGUIEvent event; 

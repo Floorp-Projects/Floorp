@@ -91,7 +91,7 @@ public:
                       PRBool aRepaint);
 
     NS_IMETHOD Enable(PRBool aState);
-    NS_IMETHOD SetFocus(void);
+    NS_IMETHOD SetFocus(PRBool aRaise);
 
     PRBool OnResize(nsSizeEvent event);
     virtual PRBool OnResize(nsRect &aRect);

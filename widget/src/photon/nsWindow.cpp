@@ -286,7 +286,7 @@ NS_IMETHODIMP nsWindow::SetBackgroundColor( const nscolor &aColor ) {
 	}
 
 
-NS_IMETHODIMP nsWindow::SetFocus( void ) {
+NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise) {
   return nsWidget::SetFocus();
 	}
 

@@ -679,7 +679,7 @@ NS_METHOD nsWindow::Enable(PRBool bState)
 // Give the focus to this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFocus(void)
+NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
   // Go get the parent of all widget's to determine which widget 
   // tree to use to set the focus. 

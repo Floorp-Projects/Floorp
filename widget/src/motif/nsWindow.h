@@ -88,7 +88,7 @@ public:
                                    PRInt32 aHeight,
                                    PRBool   aRepaint);
     NS_IMETHOD            Enable(PRBool bState);
-    NS_IMETHOD            SetFocus(void);
+    NS_IMETHOD            SetFocus(PRBool aRaise);
     NS_IMETHOD            GetBounds(nsRect &aRect);
     virtual nscolor         GetForegroundColor(void);
     NS_IMETHOD            SetForegroundColor(const nscolor &aColor);

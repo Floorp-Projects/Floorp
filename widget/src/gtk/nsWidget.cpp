@@ -689,7 +689,7 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 // Give the focus to this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWidget::SetFocus(void)
+NS_IMETHODIMP nsWidget::SetFocus(PRBool aRaise)
 {
   // call this so that any cleanup will happen that needs to...
   LoseFocus();

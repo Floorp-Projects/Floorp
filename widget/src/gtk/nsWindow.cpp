@@ -1075,7 +1075,7 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
 }
 
 NS_IMETHODIMP
-nsWindow::SetFocus(void)
+nsWindow::SetFocus(PRBool aRaise)
 {
   PRBool sendActivate = gJustGotActivate;
   gJustGotActivate = PR_FALSE;
@@ -1090,7 +1090,7 @@ nsWindow::SetFocus(void)
     toplevel = gtk_widget_get_toplevel(top_mozarea);
 
   // map the window if the pref says to
-  if (gRaiseWindows)
+  if (gRaiseWindows && aRaise)
     GetAttention();
 
 #ifdef DEBUG_FOCUS

@@ -102,7 +102,7 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD GetClientBounds( nsRect &aRect);
    NS_IMETHOD GetBorderSize( PRInt32 &aWidth, PRInt32 &aHeight);
    NS_IMETHOD Enable( PRBool bState);
-   NS_IMETHOD SetFocus();
+   NS_IMETHOD SetFocus(PRBool aRaise);
    NS_IMETHOD IsVisible( PRBool &aState);
    NS_IMETHOD PlaceBehind(nsIWidget *aWidget, PRBool aActivate);
 

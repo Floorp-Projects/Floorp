@@ -152,7 +152,7 @@ NS_METHOD nsWindow::RemoveTooltips()
     return NS_OK;
 }
 
-NS_METHOD nsWindow::SetFocus()
+NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 {
     PR_LOG(QtWidgetsLM,
            PR_LOG_DEBUG,

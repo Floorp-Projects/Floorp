@@ -516,7 +516,7 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::SetFocus(void)
+NS_IMETHODIMP nsWidget::SetFocus(PRBool aRaise)
 {
 
   if (mBaseWindow) {
