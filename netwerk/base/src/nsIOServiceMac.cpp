@@ -68,17 +68,21 @@ NS_IMETHODIMP nsIOService::GetURLSpecFromFile(nsIFile* aFile, char * *aURL)
      *aURL = nsnull;
      
      nsresult rv;
-     char* ePath = nsnull;
+     nsXPIDLCString ePath;
      nsCAutoString escPath;
  
-     rv = aFile->GetPath(&ePath);
+     rv = aFile->GetPath(getter_Copies(ePath));
      if (NS_SUCCEEDED(rv)) {
- 
-         SwapSlashColon(ePath);
+
+         SwapSlashColon((char*)ePath.get());
          
          // Escape the path with the directory mask
          rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
          if (NS_SUCCEEDED(rv)) {
+
+             // colons [originally slashes, before SwapSlashColon() usage above]
+             // need encoding
+             escPath.ReplaceSubstring(":", "%2F");
 
              if (escPath[escPath.Length() - 1] != '/') {
  
@@ -98,7 +102,6 @@ NS_IMETHODIMP nsIOService::GetURLSpecFromFile(nsIFile* aFile, char * *aURL)
              rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
          }
      }
-     CRTFREEIF(ePath);
      return rv;
 }
 
@@ -136,6 +139,12 @@ NS_IMETHODIMP nsIOService::InitFileFromURLSpec(nsIFile* aFile, const char * aURL
      {
          nsStdEscape(directory, esc_Directory, component);
          path += component;
+
+         // "%2F"s need to become slashes, while all other slashes need to
+         // become colons. If we start out by changing "%2F"s to colons, we
+         // can then rely on SwapSlashColon() to do what we need
+         path.ReplaceSubstring("%2F", ":");
+
          SwapSlashColon((char*)path.get());
      }
      if (fileBaseName)
