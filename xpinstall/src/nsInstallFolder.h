@@ -34,6 +34,16 @@
 #include "nsFileSpec.h"
 #include "nsSpecialSystemDirectory.h"
 
+#ifdef XP_MAC
+#define INSTALL_PLUGINS_DIR     "Plug-ins"
+#define INSTALL_COMPONENTS_DIR  "Components"
+#define INSTALL_CHROME_DIR      "Chrome"
+#else
+#define INSTALL_PLUGINS_DIR     "plugins"
+#define INSTALL_COMPONENTS_DIR  "components"
+#define INSTALL_CHROME_DIR      "chrome"
+#endif
+
 class nsInstallFolder
 {
     public:

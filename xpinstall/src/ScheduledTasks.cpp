@@ -35,6 +35,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 static nsresult 
 GetPersistentStringFromSpec(nsIFile* inSpec, char **string)
@@ -135,15 +136,28 @@ char* GetRegFilePath()
     if (NS_FAILED(rv))
         return nsnull;
 
-    directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
-                          NS_GET_IID(nsIFile), 
-                          getter_AddRefs(iFileUtilityPath));
-    if (!iFileUtilityPath)
-        return nsnull;
+    if (nsSoftwareUpdate::GetProgramDirectory()) // In the stub installer
+    {
+        nsCOMPtr<nsIFile> tmp;
+        rv = nsSoftwareUpdate::GetProgramDirectory()->Clone(getter_AddRefs(tmp));
+
+        if (NS_FAILED(rv) || !tmp) 
+            return nsnull;
 
 #if defined (XP_MAC)
-    iFileUtilityPath->Append(ESSENTIAL_FILES);
+        tmp->Append(ESSENTIAL_FILES);
 #endif
+        iFileUtilityPath = do_QueryInterface(tmp);
+    }
+    else
+    {
+        rv = directoryService->Get(NS_APP_INSTALL_CLEANUP_DIR,
+                                  NS_GET_IID(nsIFile),
+                                  getter_AddRefs(iFileUtilityPath));
+    }
+    if (NS_FAILED(rv) || !iFileUtilityPath) 
+        return nsnull;
+
     iFileUtilityPath->Append(CLEANUP_REGISTRY);
 
     //Yes, we know using GetPath is buggy on the Mac.

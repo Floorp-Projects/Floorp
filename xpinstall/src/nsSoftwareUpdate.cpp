@@ -41,6 +41,7 @@
 #include "VerReg.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nsInstall.h"
 #include "nsSoftwareUpdateIIDs.h"
@@ -199,12 +200,26 @@ nsSoftwareUpdate::Shutdown()
         //Get the program directory
         nsCOMPtr<nsIProperties> directoryService =
                  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        directoryService->Get(NS_OS_CURRENT_PROCESS_DIR,
-                              NS_GET_IID(nsIFile),
-                              getter_AddRefs(pathToCleanupUtility));
+
+        if (nsSoftwareUpdate::GetProgramDirectory()) // In the stub installer
+        {
+            nsCOMPtr<nsIFile> tmp;
+            rv = nsSoftwareUpdate::GetProgramDirectory()->Clone(getter_AddRefs(tmp));
 #if defined (XP_MAC)
-        pathToCleanupUtility->Append(ESSENTIAL_FILES);
+            tmp->Append(ESSENTIAL_FILES);
 #endif
+            pathToCleanupUtility = do_QueryInterface(tmp);
+
+        }
+        else
+        {
+            rv = directoryService->Get(NS_APP_INSTALL_CLEANUP_DIR,
+                                      NS_GET_IID(nsIFile),
+                                      getter_AddRefs(pathToCleanupUtility));
+        }
+
+        NS_ASSERTION(pathToCleanupUtility,"No path to cleanup utility in nsSoftwareUpdate::Shutdown()");
+
         //Create the Process framework
         pathToCleanupUtility->Append(CLEANUP_UTIL);
         nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(kIProcessCID);

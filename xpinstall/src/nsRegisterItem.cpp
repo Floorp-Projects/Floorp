@@ -33,6 +33,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 MOZ_DECL_CTOR_COUNTER(nsRegisterItem)
 
@@ -259,36 +260,52 @@ PRInt32 nsRegisterItem::Complete()
     {
         // Either script asked for delayed chrome or we can't find
         // the chrome registry to do it now.
-        NS_ASSERTION(mProgDir, "this.Prepare() failed to set mProgDir");
 
         // construct a reference to the magic file
         PRFileDesc* fd = nsnull;
         nsCOMPtr<nsIFile> tmp;
         PRBool bExists = PR_FALSE;
-        rv = mProgDir->Clone(getter_AddRefs(tmp));
-        if (NS_SUCCEEDED(rv))
+        if (!nsSoftwareUpdate::GetProgramDirectory())  // not in the stub installer
+        { 
+            nsCOMPtr<nsIProperties> directoryService = 
+                     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+            if (NS_SUCCEEDED(rv) && directoryService) 
+            {
+                rv = directoryService->Get(NS_APP_CHROME_DIR, 
+                                       NS_GET_IID(nsIFile), 
+                                       getter_AddRefs(tmp));
+                if(NS_FAILED(rv))
+                {
+                    result = nsInstall::CHROME_REGISTRY_ERROR;
+                    return result;
+                }
+            }
+        }
+        else
         {
-            nsCOMPtr<nsILocalFile> startupFile( do_QueryInterface(tmp, &rv) );
+            rv = nsSoftwareUpdate::GetProgramDirectory()->Clone(getter_AddRefs(tmp));
 
             if (NS_SUCCEEDED(rv))
             {
-                rv = startupFile->Append("chrome");
+                tmp->Append(INSTALL_CHROME_DIR);
+            }
+        }
+        nsCOMPtr<nsILocalFile> startupFile( do_QueryInterface(tmp, &rv) );
+
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = startupFile->Exists(&bExists);
+            if (NS_SUCCEEDED(rv) && !bExists)
+                rv = startupFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
+            if (NS_SUCCEEDED(rv))
+            {
+                rv = startupFile->Append("installed-chrome.txt");
                 if (NS_SUCCEEDED(rv))
                 {
-                    rv = startupFile->Exists(&bExists);
-                    if (NS_SUCCEEDED(rv) && !bExists)
-                        rv = startupFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
-                    if (NS_SUCCEEDED(rv))
-                    {
-                        rv = startupFile->Append("installed-chrome.txt");
-                        if (NS_SUCCEEDED(rv))
-                        {
-                            rv = startupFile->OpenNSPRFileDesc(
-                                            PR_CREATE_FILE | PR_WRONLY,
-                                            0744,
-                                            &fd);
-                        }
-                    }
+                    rv = startupFile->OpenNSPRFileDesc(
+                                    PR_CREATE_FILE | PR_WRONLY,
+                                    0744,
+                                    &fd);
                 }
             }
         }
