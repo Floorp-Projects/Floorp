@@ -67,7 +67,7 @@ interface nsIGenericWindow : nsISupports
 
 	@param cy - This is the height for the window to be.
 	*/
-	[noscript]void InitWindow(in nativeWindow parentNativeWindow, 
+	[noscript]void initWindow(in nativeWindow parentNativeWindow, 
 		in nsIWidget parentWidget,	in long x, in long y, in long cx, in long cy);
 
 	/*
@@ -75,7 +75,7 @@ interface nsIGenericWindow : nsISupports
 	called the window can actually create itself based on the setup
 	information handed to it.
 	*/
-	void Create();
+	void create();
 
 	/*
 	Tell the window that it can destroy itself.  This allows re-using the same
@@ -86,37 +86,49 @@ interface nsIGenericWindow : nsISupports
 				NS_ERROR_NOT_IMPLEMENTED - State preservation is not supported.
 					Release the interface and create a new object.
 	*/
-	void Destroy();
+	void destroy();
 
 	/*
 	Sets the current x and y coordinates of the control.  This is relative to
 	the parent window.
 	*/
-	void SetPosition(in long x, in long y);
+	void setPosition(in long x, in long y);
 
 	/*
 	Gets the current x and y coordinates of the control.  This is relatie to the
 	parent window.
 	*/
-	void GetPosition(out long x, out long y);
+	void getPosition(out long x, out long y);
 
 	/*
 	Sets the width and height of the control.
 	*/
-	void SetSize(in long cx, in long cy, in boolean fRepaint);
+	void setSize(in long cx, in long cy, in boolean fRepaint);
 
 	/*
 	Gets the width and height of the control.
 	*/
-	void GetSize(out long cx, out long cy);
+	void getSize(out long cx, out long cy);
 
 	/*
 	Convenience function combining the SetPosition and SetSize into one call.
 	*/
-	void SetPositionAndSize(in long x, in long y, in long cx, in long cy, 
+	void setPositionAndSize(in long x, in long y, in long cx, in long cy, 
 		in boolean fRepaint); 
 
-	/*
+	/**
+	* Tell the window to shrink-to-fit its contents
+	*/
+	void sizeToContent();
+
+	/** 
+	 * Tell the window to repaint itself
+	 * @param aForce - if true, repaint immediately
+	 *                 if false, the window may defer repainting as it sees fit.
+	 */
+	void repaint(in boolean force);
+
+	/*			  
 	This is the parenting widget for the control.  This may be null if only the
 	native window was handed in for the parent during initialization.  If this
 	is returned, it should refer to the same object as parentNativeWindow.
@@ -140,5 +152,22 @@ interface nsIGenericWindow : nsISupports
 	on the object, this may return the parent widget in which this object
 	lives if it has not had to create it's own widget.
 	*/
-	readonly attribute nsIWidget mainWidget; 	
+	readonly attribute nsIWidget mainWidget;
+	
+	/**
+	* Give the window focus.
+	*/
+	void setFocus();
+
+	/**
+	* Remove focus from the window
+	*/
+	void removeFocus();
+
+	attribute wstring title;
+
+	/**
+	* Set/Get the document scale factor
+	*/
+	attribute float zoom;
 };
