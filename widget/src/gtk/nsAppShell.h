@@ -24,14 +24,13 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
+#include "nsIEventQueue.h"
+
 #include <gtk/gtk.h>
 
 /**
  * Native GTK+ Application shell wrapper
  */
-
-class  EventQueueTokenQueue;
-
 class nsAppShell : public nsIAppShell
 {
 public:
@@ -42,8 +41,7 @@ public:
   NS_DECL_NSIAPPSHELL
 
 private:
-  nsDispatchListener   *mDispatchListener;
-  EventQueueTokenQueue *mEventQueueTokens;
+  nsIEventQueue* mEventQueue;
 };
 
 #endif // nsAppShell_h__

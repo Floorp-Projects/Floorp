@@ -97,93 +97,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-// a linked, ordered list of event queues and their tokens
-class EventQueueToken {
-public:
-  EventQueueToken(nsIEventQueue *aQueue, const gint aToken);
-  virtual ~EventQueueToken();  
-  nsIEventQueue   *mQueue;
-  gint mToken;
-  EventQueueToken *mNext;
-};
-
-EventQueueToken::EventQueueToken(nsIEventQueue *aQueue, const gint aToken) {
-  mQueue = aQueue;
-  NS_IF_ADDREF(mQueue);
-  mToken = aToken;
-  mNext = 0;
-}
-
-EventQueueToken::~EventQueueToken(){
- NS_IF_RELEASE(mQueue);
-}
-
-class EventQueueTokenQueue {
-public:
-  EventQueueTokenQueue();
-  virtual ~EventQueueTokenQueue();
-  nsresult PushToken(nsIEventQueue *aQueue, gint aToken);
-  PRBool PopToken(nsIEventQueue *aQueue, gint *aToken);
-
-private:
-  EventQueueToken *mHead;
-};
-
-EventQueueTokenQueue::EventQueueTokenQueue() {
-  mHead = 0;
-}
-
-EventQueueTokenQueue::~EventQueueTokenQueue() {
-
-  // if we reach this point with an empty token queue, well, fab. however,
-  // we expect the first event queue to still be active. so we take
-  // special care to unhook that queue (not that failing to do so seems
-  // to hurt anything). more queues than that would be an error.
-//NS_ASSERTION(!mHead || !mHead->mNext, "event queue token list deleted when not empty");
-  // (and skip the assertion for now. we're leaking event queues because they
-  // are referenced by things that leak, so this assertion goes off a lot.)
-  if (mHead) {
-    gdk_input_remove(mHead->mToken);
-    delete mHead;
-    // and leak the rest. it's an error, anyway
-  }
-}
-
-nsresult EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken) {
-  EventQueueToken *newToken = new EventQueueToken(aQueue, aToken);
-  NS_ASSERTION(newToken, "couldn't allocate token queue element");
-  if (!newToken)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  newToken->mNext = mHead;
-  mHead = newToken;
-  return NS_OK;
-}
-
-PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
-  EventQueueToken *token, *lastToken;
-  PRBool          found = PR_FALSE;
-  NS_ASSERTION(mHead, "attempt to retrieve event queue token from empty queue");
-  if (mHead)
-    NS_ASSERTION(mHead->mQueue == aQueue, "retrieving event queue from past head of queue queue");
-
-  token = mHead;
-  lastToken = 0;
-  while (token && token->mQueue != aQueue) {
-    lastToken = token;
-    token = token->mNext;
-  }
-  if (token) {
-    if (lastToken)
-      lastToken->mNext = token->mNext;
-    else
-      mHead = token->mNext;
-    found = PR_TRUE;
-    *aToken = token->mToken;
-    delete token;
-  }
-  return found;
-}
 
 //-------------------------------------------------------------------------
 //
@@ -192,11 +105,8 @@ PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken) {
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 {
+  mEventQueue  = nsnull;
   NS_INIT_REFCNT();
-  mDispatchListener = 0;
-  mEventQueueTokens = new EventQueueTokenQueue();
-  // throw on error would really be civilized here
-  NS_ASSERTION(mEventQueueTokens, "couldn't allocate event queue token queue");
 }
 
 //-------------------------------------------------------------------------
@@ -206,7 +116,6 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-  delete mEventQueueTokens;
 }
 
 //-------------------------------------------------------------------------
@@ -220,7 +129,6 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
-  mDispatchListener = aDispatchListener;
   return NS_OK;
 }
 
@@ -331,7 +239,33 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Spinup()
 {
-  return NS_OK;
+  nsresult   rv = NS_OK;
+  
+  // Get the event queue service 
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) {
+    NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
+    return rv;
+  }
+
+  //Get the event queue for the thread.
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
+  
+  // If a queue already present use it.
+  if (mEventQueue)
+    return rv;
+
+  // Create the event queue for the thread
+  rv = eventQService->CreateThreadEventQueue();
+  if (NS_OK != rv) {
+    NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
+    return rv;
+  }
+
+  //Get the event queue for the thread
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
+  
+  return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -341,6 +275,11 @@ NS_IMETHODIMP nsAppShell::Spinup()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Spindown()
 {
+  if (mEventQueue)
+  { 
+    mEventQueue->ProcessPendingEvents();
+    NS_RELEASE(mEventQueue);
+  }
   return NS_OK;
 }
 
@@ -351,57 +290,22 @@ NS_IMETHODIMP nsAppShell::Spindown()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Run()
 {
-  NS_ADDREF_THIS();
-  nsresult   rv = NS_OK;
-  nsIEventQueue * EQueue = nsnull;
+  if (!mEventQueue)
+    Spinup();
+  
+  if (!mEventQueue)
+    return NS_ERROR_NOT_INITIALIZED;
 
-  // Get the event queue service 
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
-    return rv;
-  }
-
-#ifdef DEBUG
-  printf("Got the event queue from the service\n");
-#endif /* DEBUG */
-
-  //Get the event queue for the thread.
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &EQueue);
-
-  // If a queue already present use it.
-  if (EQueue)
-    goto done;
-
-  // Create the event queue for the thread
-  rv = eventQService->CreateThreadEventQueue();
-  if (NS_OK != rv) {
-    NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
-    return rv;
-  }
-  //Get the event queue for the thread
-  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &EQueue);
-  if (NS_OK != rv) {
-    NS_ASSERTION("Could not obtain the thread event queue", PR_FALSE);
-    return rv;
-  }    
-
-
-done:
-
-#ifdef DEBUG
-  printf("Calling gdk_input_add with event queue\n");
-#endif /* DEBUG */
-
-  // (has to be called explicitly for this, the primordial appshell, because
-  // of startup ordering problems.)
-  ListenToEventQueue(EQueue, PR_TRUE);
-
+    
+  our_gdk_input_add(mEventQueue->GetEventQueueSelectFD(),
+                    event_processor_callback,
+                    mEventQueue, 
+                    G_PRIORITY_DEFAULT);
   gtk_main();
 
-  NS_IF_RELEASE(EQueue);
-  Release();
-  return NS_OK;
+  Spindown();
+
+  return NS_OK; 
 }
 
 //-------------------------------------------------------------------------
@@ -412,8 +316,7 @@ done:
 
 NS_IMETHODIMP nsAppShell::Exit()
 {
-  gtk_main_quit ();
-
+  gtk_main_quit();
   return NS_OK;
 }
 
@@ -431,25 +334,17 @@ NS_IMETHODIMP nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *& aEvent)
 // this method will be removed once xp eventloops are working.
 NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
+  if (!mEventQueue)
+    return NS_ERROR_NOT_INITIALIZED;
+  
   g_main_iteration(PR_TRUE);
-  return NS_OK;
+
+  return mEventQueue->ProcessPendingEvents();
 }
 
 NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                              PRBool aListen)
 {
-  // tell gdk to listen to the event queue or not
-
-  gint queueToken;
-  if (aListen) {
-    queueToken = our_gdk_input_add(aQueue->GetEventQueueSelectFD(),
-                                   event_processor_callback,
-                                   aQueue, G_PRIORITY_DEFAULT_IDLE);
-    mEventQueueTokens->PushToken(aQueue, queueToken);
-  } else {
-    if (mEventQueueTokens->PopToken(aQueue, &queueToken))
-      gdk_input_remove(queueToken);
-  }
   return NS_OK;
 }
 
