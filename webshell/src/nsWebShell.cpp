@@ -76,6 +76,8 @@
 #include "nsIDOMDocument.h"
 #include "nsTimer.h"
 #include "nsIBaseWindow.h"
+#include "nsIDocShell.h"
+#include "nsCURILoader.h"
 
 #include "nsILocaleService.h"
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -164,7 +166,8 @@ class nsWebShell : public nsIWebShell,
                    public nsIURIContentListener,
                    public nsIClipboardCommands,
                    public nsIInterfaceRequestor,
-                   public nsIBaseWindow
+                   public nsIBaseWindow,
+                   public nsIDocShell
 {
 public:
   nsWebShell();
@@ -184,7 +187,6 @@ public:
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
                    const char* aCommand,
                    nsISupports* aExtraInfo);
-  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
 
   // nsIWebShell
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
@@ -203,9 +205,6 @@ public:
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
   NS_IMETHOD GetTopLevelWindow(nsIWebShellContainer** aWebShellWindow);
-  NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver);
-  NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver** aResult);
-  NS_IMETHOD SetPrefs(nsIPref* aPrefs);
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
@@ -217,7 +216,6 @@ public:
   NS_IMETHOD RemoveChild(nsIWebShell* aChild);
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult);
   NS_IMETHOD GetName(const PRUnichar** aName);
-  NS_IMETHOD SetName(const PRUnichar* aName);
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
 
@@ -229,17 +227,8 @@ public:
   NS_IMETHOD GetScrolling(PRInt32& aScrolling);
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
 
-  NS_IMETHOD GetMarginWidth (PRInt32* aWidth);
-  NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
-  NS_IMETHOD GetMarginHeight(PRInt32* aWidth);
-  NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
-
-  NS_IMETHOD SetZoom(float aZoom);
-  NS_IMETHOD GetZoom(float *aZoom);
-
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
-  NS_IMETHOD SetDocument(nsIDOMDocument *aDoc, nsIDOMElement *aRootNode);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
@@ -266,6 +255,8 @@ public:
                      const PRUnichar* aReferrer=nsnull);
 
   NS_IMETHOD Stop(void);
+  NS_IMETHOD StopBeforeRequestingURL();
+  NS_IMETHOD StopAfterURLAvailable();
 
   NS_IMETHOD Reload(nsLoadFlags aType);
 
@@ -320,13 +311,7 @@ public:
   NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
 
   // nsIScriptContextOwner
-  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
-  NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
-  NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
-  NS_IMETHOD ReportScriptError(const char* aErrorString,
-                               const char* aFileName,
-                               PRInt32     aLineNo,
-                               const char* aLineBuf);
+  NS_DECL_NSISCRIPTCONTEXTOWNER
 
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader,
@@ -381,6 +366,9 @@ public:
   // nsIBaseWindow
   NS_DECL_NSIBASEWINDOW
 
+  // nsIDocShell
+  NS_DECL_NSIDOCSHELL
+
   // nsWebShell
   nsIEventQueue* GetEventQueue(void);
   void HandleLinkClickEvent(nsIContent *aContent,
@@ -410,15 +398,10 @@ public:
   NS_IMETHOD GetURL(const PRUnichar** aURL);
   NS_IMETHOD SetURL(const PRUnichar* aURL);
 
-  NS_IMETHOD SetParentURIContentListener(nsIURIContentListener * aContentListener);
-  NS_IMETHOD GetParentURIContentListener(nsIURIContentListener ** aContentListener);
-
 protected:
   void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURI* aURL);
-  nsresult StopBeforeRequestingURL(void);
-  nsresult StopAfterURLAvailable(void);
   nsresult GetViewManager(nsIViewManager* *viewManager);
 
   nsIEventQueue* mThreadEventQueue;
@@ -433,7 +416,7 @@ protected:
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
 
-  nsIWebShell* mParent;
+  nsCOMPtr<nsIDocShell> mParent;
   nsVoidArray mChildren;
   nsString mName;
   nsString mDefaultCharacterSet;
@@ -747,12 +730,12 @@ nsWebShell::ReleaseChildren()
 {
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsIWebShell* shell = (nsIWebShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIDocShell> shell = (nsIDocShell*) mChildren.ElementAt(i);
     shell->SetParent(nsnull);
 
     //Break circular reference of webshell to contentviewer
-    shell->SetContentViewer(nsnull);
-    NS_RELEASE(shell);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
+    webShell->SetContentViewer(nsnull);
   }
   mChildren.Clear();
 }
@@ -762,10 +745,10 @@ nsWebShell::DestroyChildren()
 {
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsIWebShell* shell = (nsIWebShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIDocShell> shell = (nsIDocShell*) mChildren.ElementAt(i);
     shell->SetParent(nsnull);
-    shell->Destroy();
-    NS_RELEASE(shell);
+    nsCOMPtr<nsIBaseWindow> shellWin(do_QueryInterface(shell));
+    shellWin->Destroy();
   }
   mChildren.Clear();
 }
@@ -790,6 +773,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIDocShell)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
@@ -920,20 +904,6 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
 }
 
 NS_IMETHODIMP
-nsWebShell::GetContentViewer(nsIContentViewer** aResult)
-{
-  nsresult rv = NS_OK;
-
-  if (nsnull == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-  } else {
-    *aResult = mContentViewer;
-    NS_IF_ADDREF(mContentViewer);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader,
                                      nsIChannel* channel,
                                      const char *aContentType,
@@ -986,11 +956,12 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   }
 */
   // Create a document loader...
-  if (nsnull != mParent) {
+  nsCOMPtr<nsIWebShell> webShellParent(do_QueryInterface(mParent));
+  if (webShellParent) {
     nsIDocumentLoader* parentLoader;
 
     // Create a child document loader...
-    rv = mParent->GetDocumentLoader(parentLoader);
+    rv = webShellParent->GetDocumentLoader(parentLoader);
     if (NS_SUCCEEDED(rv)) {
       rv = parentLoader->CreateDocumentLoader(&mDocLoader);
       NS_RELEASE(parentLoader);
@@ -1299,36 +1270,6 @@ nsWebShell::HandleEvent(nsGUIEvent *aEvent)
 }
 
 NS_IMETHODIMP
-nsWebShell::SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver)
-{
-//  if (anObserver != nsnull) {
-  NS_IF_RELEASE(mDocLoaderObserver);
-
-  mDocLoaderObserver = anObserver;
-  NS_IF_ADDREF(mDocLoaderObserver);
-//  }
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsWebShell::GetDocLoaderObserver(nsIDocumentLoaderObserver** aResult)
-{
-  *aResult = mDocLoaderObserver;
-  NS_IF_ADDREF(mDocLoaderObserver);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetPrefs(nsIPref* aPrefs)
-{
-  NS_IF_RELEASE(mPrefs);
-  mPrefs = aPrefs;
-  NS_IF_ADDREF(mPrefs);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWebShell::GetPrefs(nsIPref*& aPrefs)
 {
   aPrefs = mPrefs;
@@ -1372,22 +1313,21 @@ nsWebShell::GetRootWebShellEvenIfChrome(nsIWebShell** aResult)
 NS_IMETHODIMP
 nsWebShell::SetParent(nsIWebShell* aParent)
 {
-  NS_IF_RELEASE(mParent);
-  mParent = aParent;
-  NS_IF_ADDREF(aParent);
-  return NS_OK;
+   mParent = do_QueryInterface(aParent);
+   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::GetParent(nsIWebShell*& aParent)
 {
+  nsCOMPtr<nsIWebShell> webShellParent(do_QueryInterface(mParent));
   if (mWebShellType == nsWebShellContent)
   {
     // We cannot return our parent if it is a chrome webshell.
     nsWebShellType parentType;
-    if (mParent)
+    if (webShellParent)
     {
-      mParent->GetWebShellType(parentType);
+      webShellParent->GetWebShellType(parentType);
       if (parentType == nsWebShellChrome)
       {
         aParent = nsnull; // Just return null.
@@ -1396,16 +1336,18 @@ nsWebShell::GetParent(nsIWebShell*& aParent)
     }
   }
 
-  aParent = mParent;
-  NS_IF_ADDREF(mParent);
+  aParent = webShellParent;
+  NS_IF_ADDREF(aParent);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::GetParentEvenIfChrome(nsIWebShell*& aParent)
 {
-  aParent = mParent;
-  NS_IF_ADDREF(mParent);
+   if(mParent)
+      mParent->QueryInterface(NS_GET_IID(nsIWebShell), (void**)&aParent);
+   else
+      aParent = nsnull;
   return NS_OK;
 }
 
@@ -1425,12 +1367,12 @@ nsWebShell::GetChildCount(PRInt32& aResult)
 NS_IMETHODIMP
 nsWebShell::AddChild(nsIWebShell* aChild)
 {
-  NS_PRECONDITION(nsnull != aChild, "null ptr");
-  if (nsnull == aChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  mChildren.AppendElement(aChild);
-  aChild->SetParent(this);
+   NS_ENSURE_ARG(aChild);
+
+   nsCOMPtr<nsIDocShell> docShellChild(do_QueryInterface(aChild));
+
+  mChildren.AppendElement(docShellChild);
+  docShellChild->SetParent(this);
   PRUnichar *defaultCharset=nsnull;
   PRUnichar *forceCharset=nsnull;
   nsCOMPtr<nsIContentViewer> cv;
@@ -1444,7 +1386,7 @@ nsWebShell::AddChild(nsIWebShell* aChild)
       NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
     }
     nsCOMPtr<nsIContentViewer> childCV;
-    NS_ENSURE_SUCCESS(aChild->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(docShellChild->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
     if (childCV)
     {
       nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(cv);
@@ -1463,12 +1405,10 @@ nsWebShell::AddChild(nsIWebShell* aChild)
 NS_IMETHODIMP
 nsWebShell::RemoveChild(nsIWebShell* aChild)
 {
-  NS_PRECONDITION(nsnull != aChild, "nsWebShell::RemoveChild(): null ptr");
-  if (nsnull == aChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  mChildren.RemoveElement(aChild);
-  aChild->SetParent(nsnull);
+   NS_ENSURE_ARG(aChild);
+   nsCOMPtr<nsIDocShell> docShellChild(do_QueryInterface(aChild));
+  mChildren.RemoveElement(docShellChild);
+  docShellChild->SetParent(nsnull);
   NS_RELEASE(aChild);
 
   return NS_OK;
@@ -1477,30 +1417,22 @@ nsWebShell::RemoveChild(nsIWebShell* aChild)
 NS_IMETHODIMP
 nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
 {
+   nsIDocShell*   element;
   if (PRUint32(aIndex) >= PRUint32(mChildren.Count())) {
     aResult = nsnull;
   }
   else {
-    aResult = (nsIWebShell*) mChildren.ElementAt(aIndex);
-    NS_IF_ADDREF(aResult);
+    element = (nsIDocShell*) mChildren.ElementAt(aIndex);
+    element->QueryInterface(NS_GET_IID(nsIWebShell), (void**)&aResult);
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsWebShell::GetName(const PRUnichar** aName) 
-{ 
-  // XXX This is wrong unless the parameter is marked "shared". 
-  // It should otherwise be copied and freed by the caller. 
-  *aName = mName.GetUnicode(); 
-  return NS_OK; 
-} 
-
 NS_IMETHODIMP
-nsWebShell::SetName(const PRUnichar* aName)
+nsWebShell::GetName(const PRUnichar** aName)
 {
-  mName = aName;
-  return NS_OK;
+   *aName = mName.GetUnicode();
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1540,20 +1472,21 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
   aResult = nsnull;
   nsString aName(aName1);
 
-  const PRUnichar *childName;
+  nsXPIDLString   childName;
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
+    nsIDocShell* child = (nsIDocShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIWebShell> webShellChild(do_QueryInterface(child));
     if (nsnull != child) {
-      child->GetName(&childName);
+      child->GetName(getter_Copies(childName));
       if (aName.Equals(childName)) {
-        aResult = child;
-        NS_ADDREF(child);
+        aResult = webShellChild;
+        NS_ADDREF(aResult);
         break;
       }
 
       // See if child contains the shell with the given name
-      nsresult rv = child->FindChildWithName(aName.GetUnicode(), aResult);
+      nsresult rv = webShellChild->FindChildWithName(aName.GetUnicode(), aResult);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1603,38 +1536,6 @@ nsWebShell::SetChromeEventHandler(nsIChromeEventHandler* aChromeEventHandler)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetMarginWidth(PRInt32* aWidth)
-{
-  NS_ENSURE_ARG_POINTER(aWidth);
-
-  *aWidth = mMarginWidth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetMarginWidth(PRInt32 aWidth)
-{
-  mMarginWidth = aWidth;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetMarginHeight(PRInt32* aHeight)
-{
-  NS_ENSURE_ARG_POINTER(aHeight);
-
-  *aHeight = mMarginHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetMarginHeight(PRInt32 aHeight)
-{
-  mMarginHeight = aHeight;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsWebShell::GetScrolling(PRInt32& aScrolling)
 {
   aScrolling = mScrolling[1];
@@ -1648,55 +1549,6 @@ nsWebShell::SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial)
   if (aSetCurrentAndInitial) {
     mScrolling[0] = aScrolling;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetZoom(float aZoom)
-{
-  mZoom = aZoom;
-
-  if (mDeviceContext)
-    mDeviceContext->SetZoom(mZoom);
-
-  if (mContentViewer) {
-    nsIDocumentViewer* docv = nsnull;
-    mContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-    if (nsnull != docv) {
-      nsIPresContext* cx = nsnull;
-      docv->GetPresContext(cx);
-      if (nsnull != cx) {
-        nsIPresShell  *shell = nsnull;
-        cx->GetShell(&shell);
-        if (nsnull != shell) {
-          nsIViewManager  *vm = nsnull;
-          shell->GetViewManager(&vm);
-          if (nsnull != vm) {
-            nsIView *rootview = nsnull;
-            nsIScrollableView *sv = nsnull;
-            vm->GetRootScrollableView(&sv);
-            if (nsnull != sv)
-              sv->ComputeScrollOffsets();
-            vm->GetRootView(rootview);
-            if (nsnull != rootview)
-              vm->UpdateView(rootview, 0);
-              NS_RELEASE(vm);
-          }
-          NS_RELEASE(shell);
-        }
-        NS_RELEASE(cx);
-      }
-      NS_RELEASE(docv);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetZoom(float *aZoom)
-{
-  *aZoom = mZoom;
   return NS_OK;
 }
 
@@ -1744,114 +1596,6 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
   {
     aOut = aIn;
   }
-}
-
-NS_IMETHODIMP
-nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
-{
-
-  // The tricky part is bypassing the normal load process and just putting a document into
-  // the webshell.  This is particularly nasty, since webshells don't normally even know
-  // about their documents
-
-  // (1) Create a document viewer 
-  nsCOMPtr<nsIContentViewer> documentViewer;
-  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
-  static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
-  NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
-                                                       nsIDocumentLoaderFactory::GetIID(),
-                                                       (void**)getter_AddRefs(docFactory)),
-                    NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
-  if (!doc) { return NS_ERROR_NULL_POINTER; }
-
-  NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(NS_STATIC_CAST(nsIContentViewerContainer*, this),
-                                                          doc,
-                                                          "view",
-                                                          getter_AddRefs(documentViewer)),
-                    NS_ERROR_FAILURE); 
-
-  // (2) Feed the webshell to the content viewer
-  NS_ENSURE_SUCCESS(documentViewer->SetContainer((nsIWebShell*)this), NS_ERROR_FAILURE);
-
-  // (3) Tell the content viewer container to embed the content viewer.
-  //     (This step causes everything to be set up for an initial flow.)
-  NS_ENSURE_SUCCESS(Embed(documentViewer, "view", nsnull), NS_ERROR_FAILURE);
-
-  // XXX: It would be great to get rid of this dummy channel!
-  const nsAutoString uriString = "about:blank";
-  nsCOMPtr<nsIURI> uri;
-  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
-  if (!uri) { return NS_ERROR_OUT_OF_MEMORY; }
-
-  nsCOMPtr<nsIChannel> dummyChannel;
-  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
-
-  // (4) fire start document load notification
-  nsIStreamListener* outStreamListener=nsnull;  // a valid pointer is required for the returned stream listener
-  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, NS_STATIC_CAST(nsIContentViewerContainer*, this),
-   &outStreamListener), 
-                    NS_ERROR_FAILURE);
-  NS_IF_RELEASE(outStreamListener);
-  NS_ENSURE_SUCCESS(OnStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
-
-  // (5) hook up the document and its content
-  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
-  if (!doc) { return NS_ERROR_OUT_OF_MEMORY; }
-  NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
-  doc->SetRootContent(rootContent);
-  rootContent->SetDocument(doc, PR_TRUE);
-
-  // (6) reflow the document
-  SetScrolling(-1, PR_FALSE);
-  PRInt32 i;
-  PRInt32 ns = doc->GetNumberOfShells();
-  for (i = 0; i < ns; i++) 
-  {
-    nsCOMPtr<nsIPresShell> shell(dont_AddRef(doc->GetShellAt(i)));
-    if (shell) 
-    {
-      // Make shell an observer for next time
-      NS_ENSURE_SUCCESS(shell->BeginObservingDocument(), NS_ERROR_FAILURE);
-
-      // Resize-reflow this time
-      nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(documentViewer);
-      if (!docViewer) { return NS_ERROR_OUT_OF_MEMORY; }
-      nsCOMPtr<nsIPresContext> presContext;
-      NS_ENSURE_SUCCESS(docViewer->GetPresContext(*(getter_AddRefs(presContext))), NS_ERROR_FAILURE);
-      if (!presContext) { return NS_ERROR_OUT_OF_MEMORY; }
-      float p2t;
-      presContext->GetScaledPixelsToTwips(&p2t);
-
-      nsRect r;
-      GetBounds(r.x, r.y, r.width, r.height);
-      NS_ENSURE_SUCCESS(shell->InitialReflow(NSToCoordRound(r.width * p2t), NSToCoordRound(r.height * p2t)), NS_ERROR_FAILURE);
-
-      // Now trigger a refresh
-      nsCOMPtr<nsIViewManager> vm;
-      NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
-      if (vm) 
-      {
-        PRBool enabled;
-        documentViewer->GetEnableRendering(&enabled);
-        if (enabled) {
-          vm->EnableRefresh();
-        }
-        NS_ENSURE_SUCCESS(vm->SetWindowDimensions(NSToCoordRound(r.width * p2t), 
-                                                  NSToCoordRound(r.height * p2t)), 
-                          NS_ERROR_FAILURE);
-      }
-    }
-  }
-
-  // (7) fire end document load notification
-	mProcessedEndDocumentLoad = PR_FALSE;
-  nsresult rv = NS_OK;
-  NS_ENSURE_SUCCESS(OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this), NS_ERROR_FAILURE);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2078,24 +1822,6 @@ nsWebShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandl
     return mParentContentListener->GetProtocolHandler(aURI, aProtocolHandler);
   else
     return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::SetParentURIContentListener(nsIURIContentListener * aContentListener)
-{
-  mParentContentListener = aContentListener;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener ** aContentListener)
-{
-  nsresult rv = NS_OK;
-  if (mParentContentListener)
-  {
-    *aContentListener = mParentContentListener;
-    NS_ADDREF(*aContentListener);
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
@@ -2429,8 +2155,9 @@ NS_IMETHODIMP nsWebShell::Stop(void)
   // Stop the documents being loaded by children too...
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsIWebShell* shell = (nsIWebShell*) mChildren.ElementAt(i);
-    shell->Stop();
+    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
+    webShell->Stop();
   }
 
   return NS_OK;
@@ -2438,7 +2165,7 @@ NS_IMETHODIMP nsWebShell::Stop(void)
 
 // This "stops" the current document load enough so that the document loader
 // can be used to load a new URL.
-nsresult
+NS_IMETHODIMP
 nsWebShell::StopBeforeRequestingURL()
 {
   if (mDocLoader) {
@@ -2449,8 +2176,9 @@ nsWebShell::StopBeforeRequestingURL()
   // Recurse down the webshell hierarchy.
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsWebShell* shell = (nsWebShell*) mChildren.ElementAt(i);
-    shell->StopBeforeRequestingURL();
+    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
+    webShell->StopBeforeRequestingURL();
   }
 
   return NS_OK;
@@ -2459,7 +2187,7 @@ nsWebShell::StopBeforeRequestingURL()
 // This "stops" the current document load completely and is called once
 // it has been determined that the new URL is valid and ready to be thrown
 // at us from netlib.
-nsresult
+NS_IMETHODIMP
 nsWebShell::StopAfterURLAvailable()
 {
   if (nsnull != mContentViewer) {
@@ -2472,8 +2200,9 @@ nsWebShell::StopAfterURLAvailable()
   // Recurse down the webshell hierarchy.
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    nsWebShell* shell = (nsWebShell*) mChildren.ElementAt(i);
-    shell->StopAfterURLAvailable();
+    nsIDocShell* shell = (nsIDocShell*) mChildren.ElementAt(i);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
+    webShell->StopAfterURLAvailable();
   }
 
   return NS_OK;
@@ -2719,16 +2448,18 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
     mContainer->FocusAvailable(this, aFocusTaken);
   }
 
-  nsIWebShell* shell = nsnull;
+  nsIDocShell* shell = nsnull;
 
   //Other wise, check children and move focus to next one
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
-    shell = (nsIWebShell*)mChildren.ElementAt(i);
-    if (shell == aFocusedWebShell) {
+    shell = (nsIDocShell*)mChildren.ElementAt(i);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(shell));
+    if (webShell.get() == aFocusedWebShell) {
       if (++i < n) {
-        shell = (nsIWebShell*)mChildren.ElementAt(i);
-        shell->SetFocus();
+        shell = (nsIDocShell*)mChildren.ElementAt(i);
+        nsCOMPtr<nsIBaseWindow> shellWin(do_QueryInterface(shell));
+        shellWin->SetFocus();
         break;
       }
       else if (nsnull != mContainer) {
@@ -4164,8 +3895,10 @@ NS_IMETHODIMP nsWebShell::Destroy()
   SetDocLoaderObserver(nsnull);
 
   // Remove this webshell from its parent's child list
-  if (nsnull != mParent) {
-    mParent->RemoveChild(this);
+  nsCOMPtr<nsIWebShell> webShellParent(do_QueryInterface(mParent));
+
+  if (webShellParent) {
+    webShellParent->RemoveChild(this);
   }
 
   if (nsnull != mDocLoader) {
@@ -4382,12 +4115,382 @@ NS_IMETHODIMP nsWebShell::SetTitle(const PRUnichar* aTitle)
       } while (0);
     }
   } else {
-    parent->SetTitle(aTitle);
+    nsCOMPtr<nsIBaseWindow> parentWin(do_QueryInterface(parent));
+    parentWin->SetTitle(aTitle);
     NS_RELEASE(parent);
   }
 
   return NS_OK;
 }
+
+//*****************************************************************************
+// nsWebShell::nsIDocShell
+//*****************************************************************************   
+
+NS_IMETHODIMP nsWebShell::LoadURI(nsIURI* aUri, 
+   nsIPresContext* presContext)
+{
+   //NS_ENSURE_ARG(aUri);  // Done in LoadURIVia for us.
+
+   return LoadURIVia(aUri, presContext, 0);
+}
+
+NS_IMETHODIMP nsWebShell::LoadURIVia(nsIURI* aUri, 
+   nsIPresContext* aPresContext, PRUint32 aAdapterBinding)
+{
+   NS_ENSURE_ARG(aUri);
+   NS_WARN_IF_FALSE(PR_FALSE, "Not Implemented");
+   return NS_ERROR_FAILURE;
+
+/*   nsCOMPtr<nsIURILoader> uriLoader = do_CreateInstance(NS_URI_LOADER_PROGID);
+   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(uriLoader->OpenURI(aUri, nsnull, nsnull, this,
+      nsnull, nsnull, getter_AddRefs(mLoadCookie)), NS_ERROR_FAILURE); */
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetDocument(nsIDOMDocument** aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+  NS_ENSURE_STATE(mContentViewer);
+
+  nsCOMPtr<nsIPresShell> presShell;
+  NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(presShell)), NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument>doc;
+  NS_ENSURE_SUCCESS(presShell->GetDocument(getter_AddRefs(doc)), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
+
+  // the result's addref comes from this QueryInterface call
+  NS_ENSURE_SUCCESS(CallQueryInterface(doc, aDocument), NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetCurrentURI(nsIURI** aURI)
+{
+   NS_ENSURE_ARG_POINTER(aURI);
+
+   NS_WARN_IF_FALSE(PR_FALSE, "Not yet implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, 
+   nsIDOMElement *aRootNode)
+{
+  // The tricky part is bypassing the normal load process and just putting a document into
+  // the webshell.  This is particularly nasty, since webshells don't normally even know
+  // about their documents
+
+  // (1) Create a document viewer 
+  nsCOMPtr<nsIContentViewer> documentViewer;
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
+  static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+  NS_ENSURE_SUCCESS(nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
+                                                       nsIDocumentLoaderFactory::GetIID(),
+                                                       (void**)getter_AddRefs(docFactory)),
+                    NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
+  if (!doc) { return NS_ERROR_NULL_POINTER; }
+
+  NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(NS_STATIC_CAST(nsIContentViewerContainer*, this),
+                                                          doc,
+                                                          "view",
+                                                          getter_AddRefs(documentViewer)),
+                    NS_ERROR_FAILURE); 
+
+  // (2) Feed the webshell to the content viewer
+  NS_ENSURE_SUCCESS(documentViewer->SetContainer((nsIWebShell*)this), NS_ERROR_FAILURE);
+
+  // (3) Tell the content viewer container to embed the content viewer.
+  //     (This step causes everything to be set up for an initial flow.)
+  NS_ENSURE_SUCCESS(Embed(documentViewer, "view", nsnull), NS_ERROR_FAILURE);
+
+  // XXX: It would be great to get rid of this dummy channel!
+  const nsAutoString uriString = "about:blank";
+  nsCOMPtr<nsIURI> uri;
+  NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uri), uriString), NS_ERROR_FAILURE);
+  if (!uri) { return NS_ERROR_OUT_OF_MEMORY; }
+
+  nsCOMPtr<nsIChannel> dummyChannel;
+  NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
+
+  // (4) fire start document load notification
+  nsIStreamListener* outStreamListener=nsnull;  // a valid pointer is required for the returned stream listener
+  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, NS_STATIC_CAST(nsIContentViewerContainer*, this),
+   &outStreamListener), 
+                    NS_ERROR_FAILURE);
+  NS_IF_RELEASE(outStreamListener);
+  NS_ENSURE_SUCCESS(OnStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
+
+  // (5) hook up the document and its content
+  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(aRootNode);
+  if (!doc) { return NS_ERROR_OUT_OF_MEMORY; }
+  NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
+  doc->SetRootContent(rootContent);
+  rootContent->SetDocument(doc, PR_TRUE);
+
+  // (6) reflow the document
+  SetScrolling(-1, PR_FALSE);
+  PRInt32 i;
+  PRInt32 ns = doc->GetNumberOfShells();
+  for (i = 0; i < ns; i++) 
+  {
+    nsCOMPtr<nsIPresShell> shell(dont_AddRef(doc->GetShellAt(i)));
+    if (shell) 
+    {
+      // Make shell an observer for next time
+      NS_ENSURE_SUCCESS(shell->BeginObservingDocument(), NS_ERROR_FAILURE);
+
+      // Resize-reflow this time
+      nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(documentViewer);
+      if (!docViewer) { return NS_ERROR_OUT_OF_MEMORY; }
+      nsCOMPtr<nsIPresContext> presContext;
+      NS_ENSURE_SUCCESS(docViewer->GetPresContext(*(getter_AddRefs(presContext))), NS_ERROR_FAILURE);
+      if (!presContext) { return NS_ERROR_OUT_OF_MEMORY; }
+      float p2t;
+      presContext->GetScaledPixelsToTwips(&p2t);
+
+      nsRect r;
+      GetBounds(r.x, r.y, r.width, r.height);
+      NS_ENSURE_SUCCESS(shell->InitialReflow(NSToCoordRound(r.width * p2t), NSToCoordRound(r.height * p2t)), NS_ERROR_FAILURE);
+
+      // Now trigger a refresh
+      nsCOMPtr<nsIViewManager> vm;
+      NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(vm)), NS_ERROR_FAILURE);
+      if (vm) 
+      {
+        PRBool enabled;
+        documentViewer->GetEnableRendering(&enabled);
+        if (enabled) {
+          vm->EnableRefresh();
+        }
+        NS_ENSURE_SUCCESS(vm->SetWindowDimensions(NSToCoordRound(r.width * p2t), 
+                                                  NSToCoordRound(r.height * p2t)), 
+                          NS_ERROR_FAILURE);
+      }
+    }
+  }
+
+  // (7) fire end document load notification
+	mProcessedEndDocumentLoad = PR_FALSE;
+  nsresult rv = NS_OK;
+  NS_ENSURE_SUCCESS(OnEndDocumentLoad(mDocLoader, dummyChannel, rv, this), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetName(PRUnichar** aName)
+{
+  *aName = mName.ToNewUnicode(); 
+  return NS_OK; 
+}
+
+NS_IMETHODIMP nsWebShell::SetName(const PRUnichar* aName)
+{
+  mName = aName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetPresContext(nsIPresContext** aPresContext)
+{
+   NS_ENSURE_ARG_POINTER(aPresContext);
+
+   NS_WARN_IF_FALSE(PR_FALSE, "Not yet implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::GetPresShell(nsIPresShell** aPresShell)
+{
+   NS_ENSURE_ARG_POINTER(aPresShell);
+
+   NS_WARN_IF_FALSE(PR_FALSE, "Not yet implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsWebShell::GetContentViewer(nsIContentViewer** aContentViewer)
+{
+   NS_ENSURE_ARG_POINTER(aContentViewer);
+
+   *aContentViewer = mContentViewer;
+   NS_IF_ADDREF(*aContentViewer);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetParent(nsIDocShell** parent)
+{
+   NS_ENSURE_ARG_POINTER(parent);
+   
+   *parent = mParent;
+   NS_IF_ADDREF(*parent);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetParent(nsIDocShell* aParent)
+{
+   mParent = aParent;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetParentURIContentListener(nsIURIContentListener**
+   aParent)
+{
+   NS_ENSURE_ARG_POINTER(aParent);
+
+  nsresult rv = NS_OK;
+  if (mParentContentListener)
+  {
+    *aParent = mParentContentListener;
+    NS_ADDREF(*aParent);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsWebShell::SetParentURIContentListener(nsIURIContentListener*
+   aParent)
+{
+  mParentContentListener = aParent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetPrefs(nsIPref** aPrefs)
+{
+   NS_ENSURE_ARG_POINTER(aPrefs);
+
+  *aPrefs = mPrefs;
+  NS_IF_ADDREF(*aPrefs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetPrefs(nsIPref* aPrefs)
+{
+  NS_IF_RELEASE(mPrefs);
+  mPrefs = aPrefs;
+  NS_IF_ADDREF(mPrefs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetRootDocShell(nsIDocShell** aRootDocShell)
+{
+  NS_ENSURE_ARG_POINTER(aRootDocShell);
+  *aRootDocShell = NS_STATIC_CAST(nsIDocShell*, this);
+
+  nsCOMPtr<nsIDocShell> parent;
+  NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  while (parent)
+  {
+    *aRootDocShell = parent;
+    NS_ENSURE_TRUE(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  }
+  NS_IF_ADDREF(*aRootDocShell);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::GetZoom(float* aZoom)
+{
+  *aZoom = mZoom;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWebShell::SetZoom(float aZoom)
+{
+  mZoom = aZoom;
+
+  if (mDeviceContext)
+    mDeviceContext->SetZoom(mZoom);
+
+  if (mContentViewer) {
+    nsIDocumentViewer* docv = nsnull;
+    mContentViewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+    if (nsnull != docv) {
+      nsIPresContext* cx = nsnull;
+      docv->GetPresContext(cx);
+      if (nsnull != cx) {
+        nsIPresShell  *shell = nsnull;
+        cx->GetShell(&shell);
+        if (nsnull != shell) {
+          nsIViewManager  *vm = nsnull;
+          shell->GetViewManager(&vm);
+          if (nsnull != vm) {
+            nsIView *rootview = nsnull;
+            nsIScrollableView *sv = nsnull;
+            vm->GetRootScrollableView(&sv);
+            if (nsnull != sv)
+              sv->ComputeScrollOffsets();
+            vm->GetRootView(rootview);
+            if (nsnull != rootview)
+              vm->UpdateView(rootview, 0);
+              NS_RELEASE(vm);
+          }
+          NS_RELEASE(shell);
+        }
+        NS_RELEASE(cx);
+      }
+      NS_RELEASE(docv);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShell::GetDocLoaderObserver(nsIDocumentLoaderObserver * *aDocLoaderObserver)
+{
+   NS_ENSURE_ARG_POINTER(aDocLoaderObserver);
+
+   *aDocLoaderObserver = mDocLoaderObserver;
+   NS_IF_ADDREF(mDocLoaderObserver);
+   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShell::SetDocLoaderObserver(nsIDocumentLoaderObserver * aDocLoaderObserver)
+{
+  NS_IF_RELEASE(mDocLoaderObserver);
+
+  mDocLoaderObserver = aDocLoaderObserver;
+  NS_IF_ADDREF(mDocLoaderObserver);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetMarginWidth(PRInt32* aWidth)
+{
+  NS_ENSURE_ARG_POINTER(aWidth);
+
+  *aWidth = mMarginWidth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetMarginWidth(PRInt32 aWidth)
+{
+  mMarginWidth = aWidth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::GetMarginHeight(PRInt32* aHeight)
+{
+  NS_ENSURE_ARG_POINTER(aHeight);
+
+  *aHeight = mMarginHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetMarginHeight(PRInt32 aHeight)
+{
+  mMarginHeight = aHeight;
+  return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 
