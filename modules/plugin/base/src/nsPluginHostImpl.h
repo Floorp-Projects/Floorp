@@ -209,6 +209,9 @@ public:
   NS_IMETHOD
   GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]);
 
+  NS_IMETHOD
+  HandleBadPlugin(PRLibrary* aLibrary);
+
   //nsIPluginManager2 interface - secondary methods that nsIPlugin communicates to
 
   NS_IMETHOD
