@@ -89,8 +89,6 @@
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
       <menuseparator/>
-      <menuitem id="ShowExtraMarkup" value="&showExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayMode(1)" hidden="true"/>
-      <menuitem id="HideExtraMarkup" value="&hideExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayMode(0)"/>
       <menuitem id="viewSourceMenuitem"/>
       <menuitem id="viewParagraphMarks"/>
       <menuseparator />
@@ -125,7 +123,7 @@
     <!-- help menu filled from globalOverlay -->
     <menu id="menu_Help"/>
 
-    <spring flex="100%"/>
+    <spring flex="1"/>
   </menubar>
 
 <toolbox id="EditorToolbox">
@@ -145,72 +143,83 @@
     <button id="tableButton"/>
     <button id="linkButton"/>
     <button id="namedAnchorButton"/>
-    <spring flex="100%"/>
+    <spring flex="1"/>
 
-		<box id="toolbar_throbber_box" orient="vertical">
+	  <box id="toolbar_throbber_box" align="vertical">
 			<titledbutton id="Throbber" oncommand='goClickThrobber("editor.throbber.url")'>
-				<observes element="Editor:Throbber" attribute="busy"/>
+        <observes element="Editor:Throbber" attribute="busy"/>
 			</titledbutton>
-		</box>
+	  </box>
   </toolbar>
-  <toolbar id="FormatToolbar" class="chromeclass-toolbar" persist="collapsed">
-    <html:div>
-      <!-- items are filled out from editorOverlay -->
-      <html:select id="ParagraphSelect"/>
-      <html:select id="FontFaceSelect"/>
-    </html:div>
 
-    <html:div id="ColorButtons"/>
-  
-    <titledbutton id="DecreaseFontSizeButton"/>
-    <titledbutton id="IncreaseFontSizeButton"/>
-    <titledbutton id="boldButton"/>
-    <titledbutton id="italicButton"/>
-    <titledbutton id="underlineButton"/>
+  <toolbar id="FormatToolbar" class="chromeclass-toolbar" persist="collapsed">
+  <!-- We need this else menulists get stretched -->
+  <box autostretch="never">
+    <!-- from editorOverlay -->
+    <menulist id="ParagraphSelect"/>
+    <menulist id="FontFaceSelect"/>
+
+    <stack id="ColorButtons"/>
+
+    <button id="DecreaseFontSizeButton"/>
+    <button id="IncreaseFontSizeButton"/>
+    <button id="boldButton"/>
+    <button id="italicButton"/>
+    <button id="underlineButton"/>
     <spring class="separator_small"/>
-    <titledbutton id="ulButton"/>
-    <titledbutton id="olButton"/>
-    <titledbutton id="outdentButton"/>
-    <titledbutton id="indentButton"/>
+    <button id="ulButton"/>
+    <button id="olButton"/>
+    <button id="outdentButton"/>
+    <button id="indentButton"/>
     <spring class="separator_small"/>
+    <!-- TODO: Change to a menulist? -->
     <menu>
-      <titledbutton id="AlignPopupButton"/>
+      <button id="AlignPopupButton"/>
       <menupopup id="AlignmentPopup"/>
     </menu>
-    <spring flex="100%"/>
+  </box>
+    <spring flex="1"/>
   </toolbar>
 </toolbox>
 
 <!-- sidebar/toolbar/content/status -->
-<box id="sidebar-parent" align="horizontal" flex="100%">
-  <!-- toolbar/content/status -->
-
+<box id="sidebar-parent" flex="1">
+  <!-- From sidebarOverlay.xul -->
   <box id="sidebar-box" class="chromeclass-extrachrome"/>
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome"/>
+
+  <box id="appcontent" orient="vertical" flex="1">
   
-  <box id="appcontent" orient="vertical" flex="100%">
-    <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
+    <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
 
-    <box align="horizontal" id="EditModeToolbar">
-      <spring class="spacer5"/>
-      <box orient="vertical">
-        <spring style="height: 1px;"/>
-        <html:div>&displayMode.label;</html:div>
+    <toolbar id="EditModeToolbar" chromeclass="extrachrome" persist="collapsed">
+      <text class="margin-left-right" value="&editMode.label;"/>
+      <!-- From editorOverlay.xul -->
+      <text id="WYSIWYGModeButton"/>
+      <text id="NormalModeButton"/>
+      <text id="TagModeButton"/>
+<!--      <text id="HTMLModeButton"/> -->
+      <spring flex="1"/>
+    </toolbar>
+
+    <!-- Some of this is from globarOverlay.xul -->
+    <box id="status-bar" class="chromeclass-status">
+      <box flex="1" style="min-width: 1px">
+        <box orient="vertical" style="width:100px">
+          <spring flex="1"/>
+          <progressmeter id="statusbar-icon" mode="normal" value="0">
+              <observes element="Editor:Throbber" attribute="busy"/>
+          </progressmeter>
+          <spring flex="1"/>
+        </box>
+        <spring style="width: 1em"/>
+        <text id="statusText" class="status-bar" align="left" flex="1" 
+          value="&statusText.label;"  style="min-width: 1px"/>
+        <!-- This is used for buildID in browser --> 
+        <text class="status-bar" align="left"/>
+        <text id="lock-button" class="borderless" align="left"/>    
       </box>
-      <spring class="spacer3"/>
-      <titledbutton id="WYSIWYGModeButton" class="DisplayModeButton" selected="0" value="&hideExtraMarkup.label;" oncommand="EditorSetDisplayMode(0)"/>
-      <titledbutton id="NormalModeButton"  class="DisplayModeButton" selected="1" value="&showExtraMarkup.label;" oncommand="EditorSetDisplayMode(1)"/>
-      <titledbutton id="TagModeButton"     class="DisplayModeButton" selected="0" value="&showAllTags.label;"     oncommand="EditorSetDisplayMode(2)"/>
-<!--
-Use this when implemented...
-      <button id="HTMLModeButton"    class="DisplayModeButton" selected="0" value="HTML Source"   oncommand="EditorSetDisplayMode(1)"/>
-      <spring flex="100%"/>
-      <titledbutton id="PreviewModeButton" class="DisplayModeButton" selected="0" value="Full Preview"  oncommand="EditorSetDisplayMode(0)"/>
--->
-    </box>
-
-    <!-- status bar, from editorOverlay.xul -->
-    <!-- box id="status-bar" / -->
+    </box><!-- status-bar -->
   </box> <!-- appcontent -->
 </box><!-- sidebar-parent -->
 <toolbar id="taskbar" chromeclass="extrachrome" />

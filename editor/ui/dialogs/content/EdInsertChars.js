@@ -18,7 +18,14 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *   Baki Bon <bakibon@yahoo.com>   (original author)
  */
+
+var currentTab = 0;
+// These must be the index of the <tab> elements in proper order
+var LatinTab = 0;
+var HangulTab = 1;
+// Add more character classes here
 
 //------------------------------------------------------------------
 // From Unicode 3.0 Page 54. 3.11 Conjoining Jamo Behavior
@@ -32,10 +39,51 @@ var TCount = 28;
 var NCount = VCount * TCount;
 // End of Unicode 3.0
 
+// dialog initialization code
+function Startup()
+{
+  if (!InitEditorShell())
+    return;
+  
+  // Let's try this out without the Korean portion
+  StartupLatin();
+  StartupHangul();
+  window.sizeToContent();
+}
+ 
+function SelectTab(tabNumber)
+{
+  currentTab = tabNumber;
+}
+
+function InsertCharacter()
+{
+  // This is non-modal, so check if opener still exists
+  // and simply close if parent is gone
+  // THIS DOESN'T WORK! Editor window is not destroyed yet,
+  //  so we still call into EditorShell -> nsEditor.cpp 
+  //  and crash trying to access mViewManager!
+
+  if (window.opener)
+  {
+    switch (currentTab)
+    {
+      case LatinTab:
+        editorShell.InsertSource(LatinChar);
+        break;
+      case HangulTab:
+        editorShell.InsertSource(HangulChar);
+        break;
+    }
+  }
+  else
+    window.close();
+}
+
+//------------------------------------------------------------------
 var HangulL;
 var HangulV;
 var HangulT;
-var AddHangul;
 var HangulChar= String.fromCharCode(SBase);
 
 function StartupHangul()
@@ -44,7 +92,6 @@ function StartupHangul()
   HangulL = document.getElementById("HangulL");
   HangulV = document.getElementById("HangulV");
   HangulT = document.getElementById("HangulT");
-  AddHangul = document.getElementById("AddHangul");
 
   for(var i =0 ; i < LCount; i++)
        AppendStringToMenulist(HangulL , String.fromCharCode(i+LBase));
@@ -67,38 +114,40 @@ function SelectHangul()
         HangulV.selectedIndex) * TCount + 
         HangulT.selectedIndex + 
         SBase ); 
-  AddHangul.value =  HangulChar;
+  HangulCharacter.value = HangulChar;
 }
-function InsertHangul()
-{
-  editorShell.InsertSource(HangulChar);
-}
+
 //------------------------------------------------------------------
 var LatinC;
 var LatinL;
 var LatinM;
-var AddLatin;
 var LatinChar;
 var oldC=0;
 var oldL=0;
 var oldM=0;
 var LItems=0;
+// Index in the "Category list
+var SymbolIndex = 4;
+
+
 function StartupLatin()
 {
   LatinC = document.getElementById("LatinC");
   LatinL = document.getElementById("LatinL");
   LatinM = document.getElementById("LatinM");
-  AddLatin = document.getElementById("AddLatin");
+  LatinL_Label = document.getElementById("LatinL_Label");
+  LatinM_Label = document.getElementById("LatinM_Label");
+  
   UpdateLatinL();
   UpdateLatinM();
-  UpdateLatinI();
+  UpdateLatinC();
 }
 function SelectLatinCategory()
 {
   if(LatinC.selectedIndex != oldC ) {
     UpdateLatinL();
     UpdateLatinM();
-    UpdateLatinI();
+    UpdateLatinC();
     oldC = LatinC.selectedIndex;
   }
 }
@@ -106,14 +155,14 @@ function SelectLatinLetter()
 {
   if(LatinL.selectedIndex != oldL ) {
     UpdateLatinM();
-    UpdateLatinI();
+    UpdateLatinC();
     oldL = LatinL.selectedIndex;
   }
 }
 function SelectLatinModifier()
 {
   if(LatinM.selectedIndex != oldM ) {
-    UpdateLatinI();
+    UpdateLatinC();
     oldM = LatinM.selectedIndex;
   }
 }
@@ -419,6 +468,7 @@ function UpdateLatinM()
   switch(LatinC.selectedIndex) {
     case 0: // Uppercase Diacritical
      LatinM.disabled=false;
+     LatinM_Label.setAttribute("disabled","false");
      for(var basic=0; basic < upper[LatinL.selectedIndex].length; basic++)
        AppendStringToMenulist(LatinM , 
              String.fromCharCode(upper[LatinL.selectedIndex][basic]));
@@ -429,6 +479,7 @@ function UpdateLatinM()
      break;
     case 1: // Lowercase Diacritical
      LatinM.disabled=false;
+     LatinM_Label.setAttribute("disabled","false");
      for(var basic=0; basic < lower[LatinL.selectedIndex].length; basic++)
        AppendStringToMenulist(LatinM , 
              String.fromCharCode(lower[LatinL.selectedIndex][basic]));
@@ -439,10 +490,11 @@ function UpdateLatinM()
      break;
     default:
      LatinM.disabled=true;
+     LatinM_Label.setAttribute("disabled","true");
      break;
   }
 }
-function UpdateLatinI()
+function UpdateLatinC()
 {
   switch(LatinC.selectedIndex) {
     case 0: // Uppercase Diacritical
@@ -463,23 +515,4 @@ function UpdateLatinI()
     default:
      break;
   }
-  AddLatin.value = LatinChar;
-}
-function InsertLatin()
-{
-  editorShell.InsertSource(LatinChar);
-}
-//------------------------------------------------------------------
-// dialog initialization code
-function Startup()
-{
-  if (!InitEditorShell())
-    return;
-  StartupHangul();
-  StartupLatin();
-  doSetOKCancel(onOK, null);
-}
-function onOK()
-{
-  return true;
 }

@@ -43,53 +43,44 @@
 
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
-  <box>
-    <text class="label" value="&location.label;" flex ="1" align="left"/>
-    <spring class="spacer"/>
-    <spring flex="1"/>
-    <text class="label" value="&locationNewPage.label;" id="PageLocation" align="left"/>
-  </box>  
-  <spring class="spacer"/>
-  <box>
-    <text class="label" value="&lastModified.label;" flex ="1" align="left"/>
-    <spring class="spacer"/>
-    <spring flex="1"/>
-    <text class="label" value="[fill this in!]" id="PageModDate" align="left"/>
-  </box>  
-  <spring class="spacer"/>
-  <box>
-    <text class="label" value="&titleInput.label;" flex ="1" align="left"/>
-    <spring class="spacer"/>
-    <spring flex="1"/>
-    <textfield id="TitleInput"/>
-  </box>  
-  <spring class="spacer"/>
-  <box>
-    <text class="label" value="&authorInput.label;" flex ="1" align="left"/>
-    <spring class="spacer"/>
-    <spring flex="1"/>
-    <textfield id="AuthorInput"/>
-  </box>  
-  <spring class="spacer"/>
-  <box>
-    <text class="label" value="&descriptionInput.label;" flex ="1" align="left"/>
-    <spring flex="1"/>
-    <html:input class="MinWidth20em" type="text" id="DescriptionInput"/>
-  </box>  
+  <grid>
+    <columns><column/><column flex="1"/></columns>
+    <rows>
+      <row>
+        <text class="label" value="&location.label;" flex ="1"/>
+        <text class="label" value="&locationNewPage.label;" id="PageLocation" flex ="1"/>
+      </row>
+      <row>
+        <text class="label" value="&lastModified.label;" flex ="1" align="left"/>
+        <text class="label" value="[fill this in!]" id="PageModDate" align="left"/>
+      </row>
+      <row vertical-align="middle">
+        <text class="label" value="&titleInput.label;"/>
+        <textfield id="TitleInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
+      </row>
+      <row vertical-align="middle">
+        <text class="label" value="&authorInput.label;"/>
+        <textfield id="AuthorInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
+      </row>
+      <row vertical-align="middle">
+        <text class="label" value="&descriptionInput.label;"/>
+        <textfield class="MinWidth20em" id="DescriptionInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
+      </row>
+    </rows>
+  </grid>
   <spring class="bigspacer"/>
-  <box align="horizontal">
-    <titledbutton 
-      class   = "push dialog" 
-      id      = "MoreFewerButton"
-      align   = "left" 
-      oncommand = "onMoreFewer()" 
-      persist = "more"/>
+  <box>
+    <button class="dialog" align="left" id="MoreFewerButton" oncommand="onMoreFewer()" persist = "more"/>
     <spring flex="1"/>
   </box>
   <box id="MoreSection" orient="vertical" flex="1">
-    <spring class="bigspacer"/>
-    <html:div> [Meta Tags editing widgets will go here] </html:div>
-    <spring class="bigspacer"/>
+    <!-- html used for labels that need to wrap -->
+    <html class="wrap" flex="1">"&headSection.label;</html>
+    <textfield class="MinWidth20em" id="HeadSrcInput" multiline="true" rows="10" flex="1"/>
+    <box>
+      <box orient="vertical"><text class="label" value="&example.label;"/></box>
+      <html class="wrap bold" flex="1">&example.value;</html>
+    </box>
   </box>
   <separator class="groove"/>
   <box id="okCancelButtons"/> 

@@ -34,7 +34,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    orient="vertical" flex="100%">
+    orient="vertical" flex="1">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -45,7 +45,8 @@
   <keyset id="keyset"/>
 
   <text class="label" id="srcMessage" value="&sourceEditField.label;"/>
-  <textfield id="srcInput" multiline="true" rows="6" flex="1"/>
+  <html:textarea rows="16" cols="80" id="srcInput" flex="1"/> 
+<!--  <textfield id="srcInput" multiline="true" rows="6" flex="1"/> -->
   <!-- Will this accept the embedded HTML tags? -->
   <box>
     <spring class="bigspacer"/>

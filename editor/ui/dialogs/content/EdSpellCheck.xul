@@ -39,14 +39,14 @@
   <broadcaster id="args" value=""/>
 
 <box orient="vertical">
-  <box align="horizontal">
+  <box>
     <!-- value is set in JS -->
     <text class="label" id="MisspelledWordLabel"/>
     <spring class="bigspacer"/>
     <text class="label bold" id="MisspelledWord"/>
   </box>
   <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
-  <box align="horizontal">
+  <box>
     <textfield class="MinWidth20em" id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
     <spring class="spacer"/>
     <box flex="1">
@@ -56,7 +56,7 @@
   </box>
   <spring class="spacer"/>
   <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
-  <box align="horizontal">
+  <box>
     <tree rows="8" class="list MinWidth20em" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()"/>
     <spring class="spacer"/>
     <grid flex="1">

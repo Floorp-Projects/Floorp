@@ -2684,19 +2684,60 @@ nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
 
 NS_IMETHODIMP
 nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
-                             PRUnichar **contentsAs)
+                             PRUnichar **aContentsAs)
 {
   nsresult  err = NS_NOINTERFACE;
 
   nsAutoString aFormat (format);
-  nsAutoString aContentsAs;
+  nsAutoString contentsAs;
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor)
-    err = editor->OutputToString(aContentsAs, aFormat, flags);
+    err = editor->OutputToString(contentsAs, aFormat, flags);
 
-  *contentsAs = aContentsAs.ToNewUnicode();
+  *aContentsAs = contentsAs.ToNewUnicode();
   
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetHeadContentsAsHTML(PRUnichar **aHeadContents)
+{
+  nsresult  err = NS_NOINTERFACE;
+
+  nsAutoString headContents;
+
+  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(mEditor);
+  if (editor)
+    err = editor->GetHeadContentsAsHTML(headContents);
+
+  *aHeadContents = headContents.ToNewUnicode();
+  
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorShell::ReplaceHeadContentsWithHTML(const PRUnichar *aSourceToInsert)
+{
+  nsresult  err = NS_NOINTERFACE;
+  
+  nsAutoString sourceToInsert(aSourceToInsert);
+  
+  switch (mEditorType)
+  {
+    case ePlainTextEditorType:
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+        if (htmlEditor)
+          err = htmlEditor->ReplaceHeadContentsWithHTML(sourceToInsert);
+      }
+      break;
+
+    default:
+      err = NS_NOINTERFACE;
+  }
+
   return err;
 }
 

@@ -143,7 +143,8 @@
     <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"   oncommand="EditorInsertOrEditImage()"/>
     <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"   oncommand="EditorInsertOrEditHLine()"/>
     <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"   oncommand="EditorInsertTable()"/>
-    <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"   oncommand="EditorInsertHTML()"/>
+    <broadcaster id="Editor:InsertHTML"   value="&HTMLSourceCmd.label;"    oncommand="EditorInsertHTML()"/>
+    <broadcaster id="Editor:EditHTML"     value="&HTMLSourceCmd.label;"    oncommand="EditorEditHTML()"/>
     <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
     <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
     <broadcaster id="cmd_preferences"/>
@@ -198,12 +199,14 @@
       <menuitem id="menu_delete"/>
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
-      <menuseparator id="edEditMenuSep3" />
+      <menuseparator class="hide-in-IM"/>
       <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
-      <menuseparator id="edEditMenuSep4" />
+      <menuseparator class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_checkSpelling"/>
-      <menuseparator id="edEditMenuSep5" />
+      <menuseparator class="hide-in-IM"/>
+      <menuitem class="hide-in-IM" id="menu_editHTML"    accesskey="&HTMLsource.accesskey;" observes="Editor:EditHTML"/>
+      <menuseparator/>
       <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-composer.xul','editor')"/>
     </menupopup>
   </menu>
@@ -317,7 +320,7 @@
       <menuitem accesskey="&insertimage.accesskey;"                              observes="Editor:InsertImage"/>
       <menuitem accesskey="&inserthline.accesskey;"                              observes="Editor:InsertHLine"/>
       <menuitem accesskey="&inserttable.accesskey;"                              observes="Editor:InsertTable"/>
-      <menuitem accesskey="&insertsource.accesskey;" key="inserthtmlkb"          observes="Editor:InsertHTML"/>
+      <menuitem accesskey="&HTMLsource.accesskey;"       key="inserthtmlkb"      observes="Editor:InsertHTML"/>
       <menuitem accesskey="&insertchars.accesskey;"                              observes="Editor:InsertChars"/>
       <menuseparator />
       <menuitem accesskey="&insertlinebreak.accesskey;"  disabled="true"         observes="Editor:InsertBreak"/>
@@ -328,43 +331,34 @@
   <!-- Format Menu -->
   <menupopup id="formatMenuPopup" oncreate="EditorInitFormatMenu()">
     <!-- Font face submenu -->
-    <menu id="fontFaceMenu" value="&fontfaceMenu.label;" 
-          accesskey="&formatfontmenu.accesskey;" position="1">
-    <menupopup>
-      <menuitem value="&defaultVariableWidthCmd.label;" 
-                accesskey="&fontvarwidth.accesskey;"
-                oncommand="EditorSetFontFace('')"/>
-      <menuitem value="&defaultFixedWidthCmd.label;"
-                oncommand="EditorSetFontFace('tt')"/>
-      <menuseparator/>
-      <menuitem value="&arialHelveticaFont.label;"
-                accesskey="&fonthelvetica.accesskey;"
-                oncommand="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
-      <menuitem value="&timesFont.label;"
-                accesskey="&fonttimes.accesskey;"
-                oncommand="EditorSetFontFace('Times New Roman, Times, serif')"/>
-      <menuitem value="&courierFont.label;"
-                accesskey="&fontcourier.accesskey;"
-                oncommand="EditorSetFontFace('Courier New, Courier, mono')"/>
-    </menupopup>
+    <menu id="fontFaceMenu" value="&fontfaceMenu.label;" accesskey="&formatfontmenu.accesskey;" 
+          position="1">
+      <menupopup oncommand="EditorSetFontFace(event.target.data)">
+        <menuitem value="&fontVarWidth.label;"      accesskey="&fontvarwidth.accesskey;"    data=""/>
+        <menuitem value="&fontFixedWidth.label;"    accesskey="&fontfixedwidth.accesskey;"  data="tt"/>
+        <menuseparator/>
+        <menuitem value="&fontHelveticaFont.label;" accesskey="&fonthelvetica.accesskey;"   data="Arial, Helvetica, sans-serif"/>
+        <menuitem value="&fontTimes.label;"         accesskey="&fonttimes.accesskey;"       data="Times New Roman, Times, serif"/>
+        <menuitem value="&fontCourier.label;"       accesskey="&fontcourier.accesskey;"     data="Courier New, Courier, mono"/>
+      </menupopup>
     </menu>
 
     <!-- Font size submenu -->
     <menu id="fontSizeMenu" value="&fontsizeMenu.label;"
           accesskey="&formatsizemenu.accesskey;" 
           position="2">
-    <menupopup>
-      <menuitem value="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" oncommand="EditorDecreaseFontSize()" key="decreasefontsizekb"/>
-      <menuitem value="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" oncommand="EditorIncreaseFontSize()" key="increasefontsizekb"/>
-      <menuseparator/>
-      <menuitem value="&size-xx-smallCmd.label;" accesskey="&size-xx-small.accesskey;" oncommand="EditorSetFontSize('xx-small')"/>
-      <menuitem value="&size-x-smallCmd.label;"  accesskey="&size-x-small.accesskey;"  oncommand="EditorSetFontSize('x-small')"/>
-      <menuitem value="&size-smallCmd.label;"    accesskey="&size-small.accesskey;"    oncommand="EditorSetFontSize('small')"/>
-      <menuitem value="&size-mediumCmd.label;"   accesskey="&size-medium.accesskey;"   oncommand="EditorSetFontSize('medium')"/>
-      <menuitem value="&size-largeCmd.label;"    accesskey="&size-large.accesskey;"    oncommand="EditorSetFontSize('large')"/>
-      <menuitem value="&size-x-largeCmd.label;"  accesskey="&size-x-large.accesskey;"  oncommand="EditorSetFontSize('x-large')"/>
-      <menuitem value="&size-xx-largeCmd.label;" accesskey="&size-xx-large.accesskey;" oncommand="EditorSetFontSize('xx-large')"/>
-    </menupopup>
+      <menupopup>
+        <menuitem value="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" oncommand="EditorDecreaseFontSize()" key="decreasefontsizekb"/>
+        <menuitem value="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" oncommand="EditorIncreaseFontSize()" key="increasefontsizekb"/>
+        <menuseparator/>
+        <menuitem value="&size-xx-smallCmd.label;" accesskey="&size-xx-small.accesskey;" oncommand="EditorSetFontSize('xx-small')"/>
+        <menuitem value="&size-x-smallCmd.label;"  accesskey="&size-x-small.accesskey;"  oncommand="EditorSetFontSize('x-small')"/>
+        <menuitem value="&size-smallCmd.label;"    accesskey="&size-small.accesskey;"    oncommand="EditorSetFontSize('small')"/>
+        <menuitem value="&size-mediumCmd.label;"   accesskey="&size-medium.accesskey;"   oncommand="EditorSetFontSize('medium')"/>
+        <menuitem value="&size-largeCmd.label;"    accesskey="&size-large.accesskey;"    oncommand="EditorSetFontSize('large')"/>
+        <menuitem value="&size-x-largeCmd.label;"  accesskey="&size-x-large.accesskey;"  oncommand="EditorSetFontSize('x-large')"/>
+        <menuitem value="&size-xx-largeCmd.label;" accesskey="&size-xx-large.accesskey;" oncommand="EditorSetFontSize('xx-large')"/>
+      </menupopup>
     </menu>
 
     <!-- Font style submenu -->
@@ -466,30 +460,30 @@
     <menu id="headingMenu" value="&headingMenu.label;"
           accesskey="&formatheadingmenu.accesskey;"
           position="9">
-    <menupopup>
-      <menuitem value="&headingNormalCmd.label;"  accesskey="&headingnone.accesskey;"   oncommand="EditorSetParagraphFormat('normal')"/>
-      <menuitem value="&heading1Cmd.label;"       accesskey="&heading1.accesskey;"      oncommand="EditorSetParagraphFormat('h1')"/>
-      <menuitem value="&heading2Cmd.label;"       accesskey="&heading2.accesskey;"      oncommand="EditorSetParagraphFormat('h2')"/>
-      <menuitem value="&heading3Cmd.label;"       accesskey="&heading3.accesskey;"      oncommand="EditorSetParagraphFormat('h3')"/>
-      <menuitem value="&heading4Cmd.label;"       accesskey="&heading4.accesskey;"      oncommand="EditorSetParagraphFormat('h4')"/>
-      <menuitem value="&heading5Cmd.label;"       accesskey="&heading5.accesskey;"      oncommand="EditorSetParagraphFormat('h5')"/>
-      <menuitem value="&heading6Cmd.label;"       accesskey="&heading6.accesskey;"      oncommand="EditorSetParagraphFormat('h6')"/>
-    </menupopup>
+      <menupopup oncommand="EditorSetParagraphFormat(event.target.data)">
+        <menuitem value="&normalCmd.label;"   accesskey="&normal.accesskey;"   data=""/>
+        <menuitem value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="H1"/>
+        <menuitem value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="H2"/>
+        <menuitem value="&heading3Cmd.label;" accesskey="&heading3.accesskey;" data="H3"/>
+        <menuitem value="&heading4Cmd.label;" accesskey="&heading4.accesskey;" data="H4"/>
+        <menuitem value="&heading5Cmd.label;" accesskey="&heading5.accesskey;" data="H5"/>
+        <menuitem value="&heading6Cmd.label;" accesskey="&heading6.accesskey;" data="H6"/>
+      </menupopup>
     </menu>
 
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
           position="10">
-    <menupopup>
-      <menuitem value="&paragraphNormalCmd.label;"      accesskey="&paragraphnormal.accesskey;"     oncommand="EditorSetParagraphFormat('normal')"/>
-      <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  oncommand="EditorSetParagraphFormat('p')" disabled="true"/>
-      <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" oncommand="EditorSetParagraphFormat('blockquote')"/>
-      <menuitem value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    oncommand="EditorSetParagraphFormat('address')"/>
-      <menuitem value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  oncommand="EditorSetParagraphFormat('pre')"/>
-      <menuitem value="&paragraphDfnTermCmd.label;"     accesskey="&paragraphterm.accesskey;"       oncommand="EditorSetParagraphFormat('dt')"/>
-      <menuitem value="&paragraphDfnDescCmd.label;"     accesskey="&paragraphdesc.accesskey;"       oncommand="EditorSetParagraphFormat('dd')"/>
-    </menupopup>
+      <menupopup oncommand="EditorSetParagraphFormat(event.target.data)">
+        <menuitem value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
+        <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="P"/>
+        <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="BLOCKQUOTE"/>
+        <menuitem value="&paragraphAddressCmd.label;"     accesskey="&paragraphaddress.accesskey;"    data="ADDRESS"/>   
+        <menuitem value="&paragraphPreformatCmd.label;"   accesskey="&paragraphpreformat.accesskey;"  data="PRE"/>       
+        <menuitem value="&paragraphDfnTermCmd.label;"     accesskey="&paragraphterm.accesskey;"       data="DT"/>        
+        <menuitem value="&paragraphDfnDescCmd.label;"     accesskey="&paragraphdesc.accesskey;"       data="DD"/>        
+      </menupopup>
     </menu>
 
     <!-- List Style (opens dialog)  -->
@@ -580,49 +574,49 @@
   <popup id="TextColorPopup"  popupanchor="bottomleft">
     <text id="TextColorCaption" class="color-caption" value="&textColorCaption.label;" flex="1"/>
       <!-- TODO: Add "Last color picked" button and text -->
-<!--      <colorpicker id="TextColorPicker" palettename="standard" oncommand="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/> -->
-    <titledbutton class="push" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
+      <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/>
+    <button class="button-toolbar" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
   </popup>
 
   <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup()">
     <!-- Text is filled in at runtime according to what background element will be set -->
     <text id="BackColorCaption" class="color-caption" value="Background Color" flex="1"/>
       <!-- TODO: Add "Last color picked" button and text -->
-<!--        <colorpicker id="BackColorPicker" palettename="standard" oncommand="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/> -->
-    <titledbutton class="push" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
+      <colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/>
+    <button class="button-toolbar" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
   </popup>
 
   <menupopup id="AlignmentPopup">
     <menuitem oncommand="EditorAlign('left')">
-     <titledbutton id="text-align-left" align="left" value="&alignLeft.label;"/>
+     <button class="borderless" id="text-align-left" align="left" value="&alignLeft.label;"/>
     </menuitem>
     <menuitem oncommand="EditorAlign('center')">
-     <titledbutton id="text-align-center" align="left" value="&alignCenter.label;"/>
+     <button class="borderless" id="text-align-center" align="left" value="&alignCenter.label;"/>
     </menuitem>
     <menuitem oncommand="EditorAlign('right')">
-     <titledbutton id="text-align-right" align="left" value="&alignRight.label;"/>
+     <button class="borderless" id="text-align-right" align="left" value="&alignRight.label;"/>
     </menuitem>
     <menuitem oncommand="EditorAlign('justify')">
-     <titledbutton id="text-align-justify" align="left" value="&alignJustify.label;"/>
+     <button class="borderless" id="text-align-justify" align="left" value="&alignJustify.label;"/>
     </menuitem>
   </menupopup>
   
   <!-- InsertPopup is used by messengercompose.xul -->
   <menupopup id="InsertPopup">
     <menuitem oncommand="EditorInsertOrEditLink()">
-     <titledbutton id="linkButton-dark" darkcolor="true" align="left" value="&linkToolbarCmd.label;"/>
+     <button class="borderless" id="linkButton-dark" darkcolor="true" align="left" value="&linkToolbarCmd.label;"/>
     </menuitem>
     <menuitem oncommand="EditorInsertOrEditNamedAnchor()">
-     <titledbutton id="namedAnchorButton-dark" align="left" value="&anchorToolbarCmd.label;"/>
+     <button class="borderless" id="namedAnchorButton-dark" align="left" value="&anchorToolbarCmd.label;"/>
     </menuitem>
     <menuitem oncommand="EditorInsertOrEditImage()">
-     <titledbutton id="imageButton-dark" align="left" value="&imageToolbarCmd.label;"/>
+     <button class="borderless" id="imageButton-dark" align="left" value="&imageToolbarCmd.label;"/>
     </menuitem>
     <menuitem oncommand="EditorInsertOrEditHLine()">
-     <titledbutton id="hlineButton-dark" align="left" value="&hruleToolbarCmd.label;"/>
+     <button class="borderless" id="hlineButton-dark" align="left" value="&hruleToolbarCmd.label;"/>
     </menuitem>
     <menuitem oncommand="EditorInsertOrEditTable(true)">
-     <titledbutton id="tableButton-dark" align="left" value="&tableToolbarCmd.label;"/>
+     <button class="borderless" id="tableButton-dark" align="left" value="&tableToolbarCmd.label;"/>
     </menuitem>
   </menupopup>
 
@@ -642,93 +636,92 @@
   <button class="toolbar left" orient="vertical" id="linkButton" value="&linkToolbarCmd.label;" oncommand="EditorInsertOrEditLink()"/>
   <button class="toolbar left" orient="vertical" id="namedAnchorButton" value="&anchorToolbarCmd.label;" oncommand="EditorInsertOrEditNamedAnchor()"/>
 
-  <!-- Formatting toolbar items -->
-  <html:select class="toolbar" id="ParagraphSelect" size="1" onchange="EditorSelectParagraphFormat()">
+  <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
+  <menulist id="ParagraphSelect">
     <observes element="Editor:Paragraph:Format" attribute="format" onbroadcast="onParagraphFormatChange()"/>
-    <html:option>&headingNormalCmd.label;</html:option>
-    <html:option>&paragraphParagraphCmd.label;</html:option>
-    <html:option>&heading1Cmd.label;</html:option>
-    <html:option>&heading2Cmd.label;</html:option>
-    <html:option>&heading3Cmd.label;</html:option>
-    <html:option>&heading4Cmd.label;</html:option>
-    <html:option>&heading5Cmd.label;</html:option>
-    <html:option>&heading6Cmd.label;</html:option>
-    <html:option>&paragraphBlockquoteCmd.label;</html:option>
-    <html:option>&paragraphAddressCmd.label;</html:option>
-    <html:option>&paragraphPreformatCmd.label;</html:option>
-    <html:option>&paragraphDfnTermCmd.label;</html:option>
-    <html:option>&paragraphDfnDescCmd.label;</html:option>
-  </html:select>
+    <menupopup oncommand="EditorSetParagraphFormat(event.target.data)">
+      <menuitem value="&normalCmd.label;"              data=""/>
+      <menuitem value="&paragraphParagraphCmd.label;"  data="P"/>
+      <menuitem value="&heading1Cmd.label;"            data="H1"/>
+      <menuitem value="&heading2Cmd.label;"            data="H2"/>
+      <menuitem value="&heading3Cmd.label;"            data="H3"/>
+      <menuitem value="&heading4Cmd.label;"            data="H4"/>
+      <menuitem value="&heading5Cmd.label;"            data="H5"/>
+      <menuitem value="&heading6Cmd.label;"            data="H6"/>
+      <menuitem value="&paragraphBlockquoteCmd.label;" data="BLOCKQUOTE"/>
+      <menuitem value="&paragraphAddressCmd.label;"    data="ADDRESS"/>
+      <menuitem value="&paragraphPreformatCmd.label;"  data="PRE"/>
+      <menuitem value="&paragraphDfnTermCmd.label;"    data="DT"/>
+      <menuitem value="&paragraphDfnDescCmd.label;"    data="DD"/>
+    </menupopup>
+  </menulist>
 
   <!-- TODO: Use actual "face" value when combobox can display arbitrary HTML -->
-  <html:select class="toolbar" id="FontFaceSelect" size="1" onchange="EditorSelectFontFace()">
+  <!-- "data" are HTML tagnames, don't translate -->
+  <menulist id="FontFaceSelect">
     <observes element="Editor:Font:Face" attribute="face" onbroadcast="onFontFaceChange()"/>
-    <html:option>&defaultVariableWidthCmd.label;</html:option>
-    <html:option>&defaultFixedWidthCmd.label;</html:option>
-    <html:option>&arialHelveticaFont.label;</html:option>
-    <html:option>&timesFont.label;</html:option>
-    <html:option>&courierFont.label;</html:option>
-  </html:select>
-
-  <html:select class="toolbar" id="FontSizeSelect" size="1" onchange="EditorSelectFontSize()">
+    <menupopup  oncommand="EditorSetFontFace(event.target.data)">
+      <menuitem value="&fontVarWidth.label;"      data=""/>
+      <menuitem value="&fontFixedWidth.label;"    data="tt"/>
+      <menuseparator/>
+      <menuitem value="&fontHelveticaFont.label;" data="Arial, Helvetica, sans-serif"/>
+      <menuitem value="&fontTimes.label;"         data="Times New Roman, Times, serif"/>
+      <menuitem value="&fontCourier.label;"       data="Courier New, Courier, mono"/>
+    </menupopup>
+  </menulist>  
+  
+  <menulist id="FontSizeSelect" oncommand="EditorSelectFontSize()">
     <observes element="Editor:Font:Size" attribute="fontsize" onbroadcast="onFontSizeChange()"/>
-    <html:option>&size-xx-smallCmd.label;</html:option>
-    <html:option>&size-x-smallCmd.label;</html:option>
-    <html:option>&size-smallCmd.label;</html:option>
-    <html:option>&size-mediumCmd.label;</html:option>
-    <html:option>&size-largeCmd.label;</html:option>
-    <html:option>&size-x-largeCmd.label;</html:option>
-    <html:option>&size-xx-largeCmd.label;</html:option>
-  </html:select>
+    <menupopup>
+      <menuitem value="&size-xx-smallCmd.label;"/>
+      <menuitem value="&size-x-smallCmd.label;"/>
+      <menuitem value="&size-smallCmd.label;"/>
+      <menuitem value="&size-mediumCmd.label;"/>
+      <menuitem value="&size-largeCmd.label;"/>
+      <menuitem value="&size-x-largeCmd.label;"/>
+      <menuitem value="&size-xx-largeCmd.label;"/>
+    </menupopup>
+  </menulist>          
 
-  <!-- The new Color Picker UI
-  <html:div id="ColorButtons">
-    <titledbutton id="BackColorPopupButton" popup="BackColorPopup"
-     tooltiptext="Set text color"/>
-    <titledbutton id="TextColorPopupButton" popup="TextColorPopup"
-     tooltiptext="Set page, table, or cell background color"/>
-  </html:div>
--->
-  <stack style="width: 20px; height: 20px;">
-    <box autostretch="never">
-      <spring style="margin-left: 5px;"/>
-      <box orient="vertical">
-        <spring style="margin-top: 5px;"/>
-        <titledbutton value="T" style="width: 14px; height: 14px;" id="BackColorPopupButton" popup="BackColorPopup"/>
-      </box>
-    </box>
-    <box autostretch="never">
-      <titledbutton value="B" style="width: 14px; height: 14px;" id="TextColorPopupButton" popup="BackColorPopup"/>
-    </box>
+  <stack id="ColorButtons" autostretch="never">
+    <text class="borderless" id="BackColorPopupButton" popup="BackColorPopup"/>
+    <text class="borderless" id="TextColorPopupButton" popup="TextColorPopup"/>
   </stack>
+  
+  <button class="button-toolbar" id="DecreaseFontSizeButton" oncommand="EditorDecreaseFontSize()"/>
+  <button class="button-toolbar" id="IncreaseFontSizeButton" oncommand="EditorIncreaseFontSize()"/>
 
-  <titledbutton id="DecreaseFontSizeButton" oncommand="EditorDecreaseFontSize()"/>
-  <titledbutton id="IncreaseFontSizeButton" oncommand="EditorIncreaseFontSize()"/>
-
-  <titledbutton id="boldButton" class="format" align="center" oncommand="EditorToggleStyle('bold')">
+  <button class="button-toolbar FormatButton" id="boldButton" align="center" oncommand="EditorToggleStyle('bold')">
     <observes element="Editor:Bold" attribute="bold" onbroadcast="onStyleChange('bold')"/>
-  </titledbutton>
-  <titledbutton id="italicButton" class="format" align="center" oncommand="EditorToggleStyle('italic')">
+  </button>
+  <button class="button-toolbar FormatButton" id="italicButton" align="center" oncommand="EditorToggleStyle('italic')">
     <observes element="Editor:Italic" attribute="italic" onbroadcast="onStyleChange('italic')"/>
-  </titledbutton>
-  <titledbutton id="underlineButton" class="format" align="center" oncommand="EditorToggleStyle('underline')">
+  </button>
+  <button class="button-toolbar FormatButton" id="underlineButton" align="center" oncommand="EditorToggleStyle('underline')">
     <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
-  </titledbutton>
+  </button>
 
-  <titledbutton id="ulButton" class="format" oncommand="EditorMakeOrChangeList('ul')">
+  <button class="button-toolbar FormatButton" id="ulButton" oncommand="EditorMakeOrChangeList('ul')">
       <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ul')"/>
-  </titledbutton>
+  </button>
 
-  <titledbutton id="olButton" class="format" oncommand="EditorMakeOrChangeList('ol')">
+  <button class="button-toolbar FormatButton" id="olButton" oncommand="EditorMakeOrChangeList('ol')">
       <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ol')"/>
-  </titledbutton>
+  </button>
 
-  <titledbutton id="outdentButton"    class="format"        oncommand="EditorIndent('outdent')"/>
-  <titledbutton id="indentButton"     class="format"        oncommand="EditorIndent('indent')"/>
-  <titledbutton id="AlignPopupButton" class="format popup"/>
+  <button class="button-toolbar format" id="outdentButton"    oncommand="EditorIndent('outdent')"/>
+  <button class="button-toolbar format" id="indentButton"     oncommand="EditorIndent('indent')"/>
+  <button class="button-toolbar format popup" id="AlignPopupButton"/>
+  
+  <!-- Edit Mode toolbar -->
+  <text id="WYSIWYGModeButton" class="EditModeButton" selected="0" value="&hideExtraMarkup.label;" onclick="EditorSetDisplayMode(0)"/>
+  <text id="NormalModeButton"  class="EditModeButton" selected="1" value="&showExtraMarkup.label;" onclick="EditorSetDisplayMode(1)"/>
+  <text id="TagModeButton"     class="EditModeButton" selected="0" value="&showAllTags.label;"     onclick="EditorSetDisplayMode(2)"/>
+  <text id="HTMLModeButton"    class="EditModeButton" selected="0" value="&HTMLSourceCmd.label;"   onclick="EditorSetDisplayMode(3)"/>
   
   <!-- InsertPopupButton is used by messengercompose.xul -->
-  <titledbutton id="InsertPopupButton" class="format popup"/>
+  <button class="button-toolbar format popup" id="InsertPopupButton"/>
+
 
   <!-- Paste as quotation is used by mail compose,
        but in composer it has to go in the debug menu
@@ -784,23 +777,4 @@
   </menu>
   <!-- end DEBUG only -->
 
-  <!-- Window bottom -->
-  <box id="status-bar" class="chromeclass-status">
-    <box id="state-box" align="horizontal" flex="100%" style="min-width: 1px">
-      <box orient="vertical" style="width:100px">
-        <spring flex="100%"/>
-        <progressmeter id="statusbar-icon" mode="normal" align="horizontal" value="0">
-            <observes element="Editor:Throbber" attribute="busy"/>
-        </progressmeter>
-        <spring flex="100%"/>
-      </box>
-      <spring style="width: 1em"/>
-      <titledbutton id="statusText" class="status-bar" align="left" flex="100%" 
-        value="&tempDoneLoading.label;"  style="min-width: 1px">
-      </titledbutton>
-
-      <titledbutton class="status-bar" align="left" value=""/>
-    </box>
-  </box>
-     
 </overlay>

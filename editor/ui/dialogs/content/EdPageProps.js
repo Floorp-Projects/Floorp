@@ -26,8 +26,12 @@ var author = "";
 var description = "";
 var authorElement;
 var descriptionElement;
+var headNode;
 var insertNewAuthor = false;
 var insertNewDescription = false;
+var titleWasEdited = false;
+var authorWasEdited = false;
+var descWasEdited = false;
 
 //Cancel() is in EdDialogCommon.js
 // dialog initialization code
@@ -49,7 +53,7 @@ function Startup()
   dialog.DescriptionInput = document.getElementById("DescriptionInput");
   dialog.MoreSection      = document.getElementById("MoreSection");
   dialog.MoreFewerButton  = document.getElementById("MoreFewerButton");
-
+  dialog.HeadSrcInput     = document.getElementById("HeadSrcInput");
   doSetOKCancel(onOK, null);
   
   // Default string for new page is set from DTD string in XUL,
@@ -77,6 +81,10 @@ function Startup()
 
     insertNewDescription = true;
   }
+  
+  headNode = editorShell.editorDocument.getElementsByTagName("head").item(0);
+  if (!headNode)
+    window.close();
 
   InitMoreFewer();
   InitDialog();
@@ -89,6 +97,8 @@ function InitDialog()
   dialog.TitleInput.value = editorShell.GetDocumentTitle();
   dialog.AuthorInput.value = authorElement.getAttribute("content");
   dialog.DescriptionInput.value = descriptionElement.getAttribute("content");
+  // Get the entire contents of the "head" region.
+  dialog.HeadSrcInput.value = editorShell.GetHeadContentsAsHTML();
 }
 
 
@@ -178,6 +188,22 @@ function AppendHeadElement(element)
     head.appendChild(element);
 }
 
+function TextfieldChanged(ID)
+{
+  switch(ID)
+  {
+    case "TitleInput":
+      titleWasEdited = true;
+      break;
+    case "AuthorInput":
+      authorWasEdited = true;
+      break;
+    case "DescriptionInput":
+      descWasEdited = true;
+      break;
+  }
+}
+
 function ValidateData()
 {
   title = dialog.TitleInput.value.trimString();
@@ -192,12 +218,39 @@ function onOK()
   {
     editorShell.BeginBatchChanges();
 
-    // Set title contents even if string is empty
-    //  because TITLE is a required HTML element
-    editorShell.SetDocumentTitle(title);
+    // Save only if advanced "head editing" region is open?
+    if (SeeMore)
+    {
+      // Delete existing children of HEAD      
+      // Note that we must use editorShell method so this is undoable
+      var children = dialog.HeadSrcInput.childNodes;
+      if (children)
+      {
+        for(i=0; i < children.length; i++) 
+          editorShell.DeleteElement(children.item(i));
+      }
+
+      var headSrcString = dialog.HeadSrcInput.value;
+      if (headSrcString.length > 0)
+        editorShell.ReplaceHeadContentsWithHTML(headSrcString);        
+    }
+
+    //Problem: How do we reconcile changes in same elements in 
+    //         advanced region and here? 
+    // 1. Save manually-edited results first
+    // 2. Save each of the 3 textfield results only if user actually changed a value
+
+    if (titleWasEdited)
+    {
+      // Set title contents even if string is empty
+      //  because TITLE is a required HTML element
+      editorShell.SetDocumentTitle(title);
+    }
     
-    SetMetaElementContent(authorElement, author, insertNewAuthor);
-    SetMetaElementContent(descriptionElement, description, insertNewDescription);
+    if (authorWasEdited)
+      SetMetaElementContent(authorElement, author, insertNewAuthor);
+    if (descWasEdited)
+      SetMetaElementContent(descriptionElement, description, insertNewDescription);
 
     editorShell.EndBatchChanges();
     return true; // do close the window

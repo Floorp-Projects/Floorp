@@ -62,7 +62,7 @@
               <image class="popup-trigger"/>
             </box>
     	      <menupopup id="normalMenuPopup">
-              <colorpicker id="textCP" palettename="standard" oncommand="GetColorAndUpdate('textCP','textCW',this);"/>
+              <colorpicker id="textCP" palettename="standard" onclick="GetColorAndUpdate('textCP','textCW',this);"/>
     	      </menupopup>
           </menu>
         </row>
@@ -74,7 +74,7 @@
               <image class="popup-trigger"/>
             </box>
     	      <menupopup>
-              <colorpicker id="linkCP" palettename="standard" oncommand="GetColorAndUpdate('linkCP','linkCW',this);"/>
+              <colorpicker id="linkCP" palettename="standard" onclick="GetColorAndUpdate('linkCP','linkCW',this);"/>
     	      </menupopup>
           </menu>
         </row>
@@ -86,7 +86,7 @@
               <image class="popup-trigger"/>
             </box>
     	      <menupopup>
-              <colorpicker id="activeCP" palettename="standard" oncommand="GetColorAndUpdate('activeCP','activeCW',this);"/>
+              <colorpicker id="activeCP" palettename="standard" onclick="GetColorAndUpdate('activeCP','activeCW',this);"/>
     	      </menupopup>
           </menu>
         </row>
@@ -98,7 +98,7 @@
               <image class="popup-trigger"/>
             </box>
     	      <menupopup>
-              <colorpicker id="visitedCP" palettename="standard" oncommand="GetColorAndUpdate('visitedCP','visitedCW',this);"/>
+              <colorpicker id="visitedCP" palettename="standard" onclick="GetColorAndUpdate('visitedCP','visitedCW',this);"/>
     	      </menupopup>
           </menu>
         </row>
@@ -110,7 +110,7 @@
               <image class="popup-trigger"/>
             </box>
     	      <menupopup>
-              <colorpicker id="backgroundCP" palettename="standard" oncommand="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
+              <colorpicker id="backgroundCP" palettename="standard" onclick="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
     	      </menupopup>
           </menu>
         </row>
@@ -131,7 +131,8 @@
     <button class="dialog" id="ChooseFile"/>
   </box>
   <box>
-    <html id="SaveImageMsg" value="&saveImageMsg.label;"/>
+    <!-- This message needs to wrap -->
+    <html class="label wrap" flex="1">&saveImageMsg.label;</html>
     <spring class="bigspacer"/>
     <spring flex="1"/>
     <box orient="vertical">

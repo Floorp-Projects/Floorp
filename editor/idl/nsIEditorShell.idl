@@ -172,6 +172,7 @@ interface nsIEditorShell : nsISupports
        /* TypedText actionToTake param is an enum - values in nsIHTMLEditor.h */
   void TypedText(in wstring textToInsert, in PRInt32 actionToTake);
   void InsertText(in wstring textToInsert);
+  /* Insert HTML source at current location (replace current selection) */
   void InsertSource(in wstring textToInsert);
   void InsertSourceWithCharset(in wstring textToInsert, in wstring charset);
   void InsertBreak();
@@ -453,9 +454,20 @@ interface nsIEditorShell : nsISupports
   /* Output.
    * format is mime type, e.g. text/html;
    * See nsIEditor.h for legal flag values.
+   *
+   * Get the contents, for output or other uses
    */
-  /* Get the contents, for output or other uses */
   wstring GetContentsAs(in wstring format, in PRUint32 flags);
+
+  /* Get the contents of the <head> section of the document 
+   * Format is text/html
+   */
+  wstring GetHeadContentsAsHTML();
+
+  /* Replace all contents in head with the HTML string supplied
+   * It will be inserted using InsertSource
+   */
+  void ReplaceHeadContentsWithHTML(in wstring textToInsert);
 
   /* Debugging: dump content tree to stdout */
   void DumpContentTree();

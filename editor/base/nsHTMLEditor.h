@@ -273,6 +273,9 @@ public:
                             const nsString* aCharsetOverride,
                             PRUint32 aFlags);
 
+  NS_IMETHOD GetHeadContentsAsHTML(nsString& aOutputString);
+  NS_IMETHOD ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert);
+
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
   /** All editor operations which alter the doc should be prefaced

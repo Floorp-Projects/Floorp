@@ -48,7 +48,7 @@ function Startup()
   }
   // Create dialog object to store controls for easy access
   dialog = new Object;
-  dialog.rowsInput = document.getElementById("rowsInput");
+  dialog.rowsInput    = document.getElementById("rowsInput");
   dialog.columnsInput = document.getElementById("columnsInput");
   dialog.widthInput = document.getElementById("widthInput");
   dialog.heightInput = document.getElementById("heightInput");

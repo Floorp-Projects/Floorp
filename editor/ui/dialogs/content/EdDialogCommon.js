@@ -466,17 +466,16 @@ function onAdvancedEdit()
     window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal,resizable=yes", "", globalElement);
     if (window.AdvancedEditOK) {
       // Copy edited attributes to the dialog widgets:
-      //  to setup for validation
       InitDialog();
-      // Try to just close the parent dialog as well,
-      //  but this will do validation first
+/*
+// Use this if we want to close the parent dialog immediately
       if (onOK()) {
         // I'm not sure why, but calling onOK() from JS doesn't trigger closing
         //   automatically as it does when you click on the OK button!
         window.close();
       }
+*/
     }
-    // Should we Cancel the parent dialog if user Cancels in AdvancedEdit?
   }
 }
 

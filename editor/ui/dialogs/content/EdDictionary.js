@@ -138,7 +138,7 @@ function FillDictionaryList()
   do {
     word = spellChecker.GetPersonalDictionaryWord();
     if (word != "") {
-      AppendStringToList(DictionaryList, word);
+      AppendStringToTreelist(DictionaryList, word);
     }
   } while (word != "");
 

@@ -4939,6 +4939,79 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   return encoder->EncodeToStream(aOutputStream);
 }
 
+static SetSelectionAroundHeadChildren(nsCOMPtr<nsIDOMSelection> aSelection, nsWeakPtr aDocWeak)
+{
+  nsresult res = NS_OK;
+  // Set selection around <head> node
+  nsCOMPtr<nsIDOMNodeList>nodeList; 
+  nsAutoString headTag; headTag.AssignWithConversion("head"); 
+
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(aDocWeak);
+  if (!doc) return NS_ERROR_NOT_INITIALIZED;
+  res = doc->GetElementsByTagName(headTag, getter_AddRefs(nodeList));
+  if (NS_FAILED(res)) return res;
+  if (!nodeList) return NS_ERROR_NULL_POINTER;
+
+  PRUint32 count; 
+  nodeList->GetLength(&count);
+  if (count < 1) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> headNode;
+  res = nodeList->Item(0, getter_AddRefs(headNode)); 
+  if (NS_FAILED(res)) return res;
+  if (!headNode) return NS_ERROR_NULL_POINTER;
+
+  // Collapse selection to before first child of the head,
+  res = aSelection->Collapse(headNode, 0);
+  if (NS_FAILED(res)) return res;
+
+  //  then extend it to just after
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  res = headNode->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(res)) return res;
+  if (!childNodes) return NS_ERROR_NULL_POINTER;
+  PRUint32 childCount;
+  childNodes->GetLength(&childCount);
+
+  return aSelection->Extend(headNode, childCount+1);
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetHeadContentsAsHTML(nsString& aOutputString)
+{
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  // Save current selection
+  nsAutoSelectionReset selectionResetter(selection, this);
+
+  res = SetSelectionAroundHeadChildren(selection, mDocWeak);
+  if (NS_FAILED(res)) return res;
+
+  return OutputToString(aOutputString, NS_ConvertASCIItoUCS2("text/html"),
+                        nsIDocumentEncoder::OutputSelectionOnly);
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
+{
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+
+  // Save current selection
+  nsAutoSelectionReset selectionResetter(selection, this);
+  
+  res = SetSelectionAroundHeadChildren(selection, mDocWeak);
+  if (NS_FAILED(res)) return res;
+
+  return InsertHTML(aSourceToInsert);
+}
+
+
 NS_IMETHODIMP
 nsHTMLEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 {
