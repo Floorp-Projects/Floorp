@@ -158,7 +158,7 @@ function loadElements()
 
 
 // function : <profileSelection.js>::onStart();
-// purpose  : starts mozilla given the selected profile (user choice: "Start Mozilla")
+// purpose  : sets the current profile to the selected profile (user choice: "Start Mozilla")
 function onStart()
 {
   var profileTree = document.getElementById("profiles");
@@ -219,6 +219,8 @@ function onStart()
       return;
     }
 
+    // All this really does is set the current profile.
+    // It has nothing to do with starting the application.
     profile.startApprunner(profilename);
   }
   catch (ex) {
@@ -235,11 +237,11 @@ function onExit()
 {
   try {
     profile.forgetCurrentProfile();
-    window.close();
   }
   catch (ex) {
     dump("Failed to forget current profile.\n");
   }
+  return true;
 }
 
 function foo()

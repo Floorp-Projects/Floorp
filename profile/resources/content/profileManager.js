@@ -269,9 +269,6 @@ function HandleKeyEvent( aEvent )
 {
   switch( aEvent.keyCode ) 
   {
-  case 13:
-    onStart();
-    break;
   case 46:
     if( profileManagerMode != "manager" )
       return;
@@ -289,7 +286,11 @@ function HandleClickEvent( aEvent )
 {
   if( aEvent.detail == 2 && aEvent.button == 0 ) {
     if( aEvent.target.nodeName.toLowerCase() == "treecell" && 
-        aEvent.target.parentNode.parentNode.nodeName.toLowerCase() != "treehead" )
-      return onStart(); 
+        aEvent.target.parentNode.parentNode.nodeName.toLowerCase() != "treehead" ) {
+          if (!onStart())
+            return false;
+          window.close();
+          return true;
+    } 
   }
 }
