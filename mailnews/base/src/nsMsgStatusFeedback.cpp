@@ -165,7 +165,6 @@ nsMsgStatusFeedback::OnSecurityChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 {
-	nsAutoString statusMsg(status);
   if (mStatusFeedback)
     mStatusFeedback->ShowStatusString(status);
 	return NS_OK;

@@ -4193,12 +4193,10 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
 nsresult
 nsMsgComposeAndSend::SetStatusMessage(const PRUnichar *aMsgString)
 {
-  PRUnichar     *progressMsg;
   nsresult rv;
   if ( (!aMsgString) || (!mGUINotificationEnabled) )
     return NS_OK;
 
-  progressMsg = nsCRT::strdup(aMsgString);
   nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(kMsgMailSessionCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -4216,7 +4214,7 @@ nsMsgComposeAndSend::SetStatusMessage(const PRUnichar *aMsgString)
   rv = msgWindow->GetStatusFeedback(getter_AddRefs(feedback));
   if(NS_FAILED(rv)) return NS_OK;
 
-  feedback->ShowStatusString(progressMsg);
+  feedback->ShowStatusString(aMsgString);
   return NS_OK;
 }
 
