@@ -1723,6 +1723,11 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
   MOZ_UPDATE_XTERM=1)
 
+dnl NECKO is the new netlib landing.
+MOZ_ARG_ENABLE_BOOL(necko,
+[  --enable-necko  Enable NECKO, the new network library.],
+  NECKO=1)
+
 dnl commenting this out
 dnl according to waterson it is obsolete.
 dnl I'll remove it once I hear back from jband.  
@@ -1800,6 +1805,7 @@ AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(NS_USE_NATIVE)
 AC_SUBST(MOZ_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
+AC_SUBST(NECKO)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)
