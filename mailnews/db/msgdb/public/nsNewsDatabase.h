@@ -49,7 +49,6 @@ public:
   NS_IMETHOD				IsRead(nsMsgKey key, PRBool *pRead);
 
   virtual PRBool			IsArticleOffline(nsMsgKey key);
-  NS_IMETHOD				MarkAllRead(nsMsgKeyArray *thoseMarked = NULL);
   virtual nsresult          AddHdrFromXOver(const char * line,  nsMsgKey *msgId);
   NS_IMETHOD				AddHdrToDB(nsMsgHdr *newHdr, PRBool *newThread, PRBool notify = PR_FALSE);
   

@@ -248,10 +248,6 @@ PRBool nsNewsDatabase::IsArticleOffline(nsMsgKey key)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult		nsNewsDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
 nsresult		nsNewsDatabase::AddHdrFromXOver(const char * line,  nsMsgKey *msgId)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
