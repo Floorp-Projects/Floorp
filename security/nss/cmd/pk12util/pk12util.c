@@ -860,6 +860,8 @@ main(int argc, char **argv)
 
 done:
     if (slot) PK11_FreeSlot(slot);
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+	exit(1);
+    }
     exit(pk12uErrno);
 }

@@ -122,7 +122,8 @@ exitErr(char *function)
 {
     errWarn(function);
     /* Exit gracefully. */
-    NSS_Shutdown();
+    /* ignoring return value of NSS_Shutdown as code exits with 1 anyway*/
+    (void) NSS_Shutdown();
     PR_Cleanup();
     exit(1);
 }
@@ -429,7 +430,9 @@ breakout:
 
 punt:
     forgetCerts();
-    NSS_Shutdown();
+    if (NSS_Shutdown != SECSuccess) {
+	exit(1);
+    }
     PR_Cleanup();
     return 0;
 }
