@@ -1059,12 +1059,6 @@ case $os in
 	-gnu/linux*)
 		os=`echo $os | sed -e 's|gnu/linux|linux-gnu|'`
 		;;
-#### MozillaHack 
-	-os2_emx)
-		;;
-	-os2_vacpp)
-		;;
-#### End MozillaHack 
 	# First accept the basic system types.
 	# The portable systems comes first.
 	# Each alternative MUST END IN A *, to match a version number.
