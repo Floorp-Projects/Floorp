@@ -64,7 +64,8 @@ private:
   nsresult NotifyObservers();
   void     DeInitialize();
 
-  PRUint32                       mPopupPerm;
+  PRUint32                       mPolicy;
+  PRBool                         mCustomPermissions;
   nsCOMPtr<nsIObserverService>   mOS;
   nsCOMPtr<nsIPermissionManager> mPermManager;
   nsCOMPtr<nsIPrefBranch>        mPopupPrefBranch;
