@@ -218,18 +218,18 @@ ssl_simple_client_auth()
   START_AT=1; export START_AT
   STOP_AT=106160; export STOP_AT
   unset NISCC_TEST; export NISCC_TEST
-  selfserv -p $PORT -d $SERVER -n server_crt -rr -t 5 -w test > $HOME/nisccLog1 2>&1 &
+  selfserv -p $PORT -d $SERVER -n server_crt -rr -t 5 -w test > $HOME/nisccLog01 2>&1 &
 
   NISCC_TEST=$TEST/simple_client; export NISCC_TEST
-  strsclnt -d $CLIENT -n client_crt -p $PORT -t 4 -c 106160 -o -N -w test $HOSTNAME > $HOME/nisccLog2 2>&1
+  strsclnt -d $CLIENT -n client_crt -p $PORT -t 4 -c 106160 -o -N -w test $HOSTNAME > $HOME/nisccLog02 2>&1
 
   unset NISCC_TEST; export NISCC_TEST
   echo "starting tstclnt to shutdown simple client selfserv process"
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog2 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog2 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog2 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog2 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog2 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog02 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog02 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog02 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog02 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog02 2>&1
   sleep 10
 
   find_core
@@ -246,17 +246,17 @@ ssl_simple_server_auth()
   START_AT=1; export START_AT
   STOP_AT=106167; export STOP_AT
   NISCC_TEST=$TEST/simple_server; export NISCC_TEST
-  selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > $HOME/nisccLog3 2>&1 &
+  selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > $HOME/nisccLog03 2>&1 &
 
   unset NISCC_TEST; export NISCC_TEST
-  strsclnt -d $CLIENT -p $PORT -t 4 -c 106167 -o -N $HOSTNAME > $HOME/nisccLog4 2>&1 
+  strsclnt -d $CLIENT -p $PORT -t 4 -c 106167 -o -N $HOSTNAME > $HOME/nisccLog04 2>&1 
 
   echo "starting tstclnt to shutdown simple server selfserv process"
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog4 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog4 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog4 2>&1 
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog4 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog4 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog04 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog04 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog04 2>&1 
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog04 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog04 2>&1
   sleep 10
 
   find_core
@@ -271,19 +271,19 @@ ssl_simple_rootca()
   SERVER=/share/builds/sbstools/nsstools/tmp/niscc_ssl/simple_server; export SERVER
   PORT=8445; export PORT
   START_AT=1; export START_AT
-  STOP_AT=99960; export STOP_AT
+  STOP_AT=106190; export STOP_AT
   NISCC_TEST=$TEST/simple_rootca; export NISCC_TEST
-  selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > $HOME/nisccLog5 2>&1 &
+  selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > $HOME/nisccLog05 2>&1 &
 
   unset NISCC_TEST; export NISCC_TEST
-  strsclnt -d $CLIENT -p $PORT -t 4 -c 99960 -o -N $HOSTNAME> $HOME/nisccLog6 2>&1
+  strsclnt -d $CLIENT -p $PORT -t 4 -c 106190 -o -N $HOSTNAME> $HOME/nisccLog06 2>&1
 
   echo "starting tstclnt to shutdown simple rootca selfserv process"
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog6 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog6 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog6 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog6 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog6 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog06 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog06 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog06 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog06 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog06 2>&1
   sleep 10
 
   find_core
@@ -298,20 +298,20 @@ ssl_resigned_client_auth()
   SERVER=/share/builds/sbstools/nsstools/tmp/niscc_ssl/resigned_server; export SERVER
   PORT=8446; export PORT
   START_AT=0; export START_AT
-  STOP_AT=99982; export STOP_AT
+  STOP_AT=99981; export STOP_AT
   unset NISCC_TEST; export NISCC_TEST
-  selfserv -p $PORT -d $SERVER -n server_crt -rr -t 5 -w test > $HOME/nisccLog7 2>&1 &
+  selfserv -p $PORT -d $SERVER -n server_crt -rr -t 5 -w test > $HOME/nisccLog07 2>&1 &
 
   NISCC_TEST=$TEST/resigned_client; export NISCC_TEST
-  strsclnt -d $CLIENT -n client_crt -p $PORT -t 4 -c 99982 -o -N -w test $HOSTNAME > $HOME/nisccLog8 2>&1 
+  strsclnt -d $CLIENT -n client_crt -p $PORT -t 4 -c 99982 -o -N -w test $HOSTNAME > $HOME/nisccLog08 2>&1 
 
   unset NISCC_TEST; export NISCC_TEST
   echo "starting tstclnt to shutdown resigned client selfserv process"
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog8 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog8 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog8 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog8 2>&1
-  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog8 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog08 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog08 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog08 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog08 2>&1
+  tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog08 2>&1
   sleep 10
 
   find_core
@@ -326,12 +326,12 @@ ssl_resigned_server_auth()
   SERVER=/share/builds/sbstools/nsstools/tmp/niscc_ssl/resigned_server; export SERVER
   PORT=8447; export PORT
   START_AT=0; export START_AT
-  STOP_AT=99960; export STOP_AT
+  STOP_AT=100068; export STOP_AT
   NISCC_TEST=$TEST/resigned_server; export NISCC_TEST
-  selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > $HOME/nisccLog9 2>&1 &
+  selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > $HOME/nisccLog09 2>&1 &
 
   unset NISCC_TEST; export NISCC_TEST
-  strsclnt -d $CLIENT -p $PORT -t 4 -c 99960 -o -N $HOSTNAME> $HOME/nisccLog10 2>&1 
+  strsclnt -d $CLIENT -p $PORT -t 4 -c 100069 -o -N $HOSTNAME> $HOME/nisccLog10 2>&1 
 
   echo "starting tstclnt to shutdown resigned server selfserv process"
   tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog10 2>&1
@@ -353,12 +353,12 @@ ssl_resigned_rootca()
   SERVER=/share/builds/sbstools/nsstools/tmp/niscc_ssl/resigned_server; export SERVER
   PORT=8448; export PORT
   START_AT=0; export START_AT
-  STOP_AT=100069; export STOP_AT
+  STOP_AT=99959; export STOP_AT
   NISCC_TEST=$TEST/resigned_rootca; export NISCC_TEST
   selfserv -p $PORT -d $SERVER -n server_crt -t 5 -w test > $HOME/nisccLog11 2>&1 &
 
   unset NISCC_TEST; export NISCC_TEST
-  strsclnt -d $CLIENT -p $PORT -t 4 -c 100069 -o -N $HOSTNAME> $HOME/nisccLog12 2>&1 
+  strsclnt -d $CLIENT -p $PORT -t 4 -c 99960 -o -N $HOSTNAME> $HOME/nisccLog12 2>&1 
 
   echo "starting tstclnt to shutdown resigned rootca selfserv process"
   tstclnt -h $HOSTNAME -p $PORT -d $CLIENT -n client_crt -o -f -w test < $CLIENT/stop.txt >> nisccLog12 2>&1
@@ -416,15 +416,15 @@ append_all_logs()
   cat $HOME/NISCC_SMIME_testcases/p7m-sd-dt-results.txt >> $HOME/nisccLog
   cat $HOME/NISCC_SMIME_testcases/p7m-sd-op-results.txt >> $HOME/nisccLog
 
-  cat $HOME/nisccLog1 >> $HOME/nisccLog
-  cat $HOME/nisccLog2 >> $HOME/nisccLog
-  cat $HOME/nisccLog3 >> $HOME/nisccLog
-  cat $HOME/nisccLog4 >> $HOME/nisccLog
-  cat $HOME/nisccLog5 >> $HOME/nisccLog
-  cat $HOME/nisccLog6 >> $HOME/nisccLog
-  cat $HOME/nisccLog7 >> $HOME/nisccLog
-  cat $HOME/nisccLog8 >> $HOME/nisccLog
-  cat $HOME/nisccLog9 >> $HOME/nisccLog
+  cat $HOME/nisccLog01 >> $HOME/nisccLog
+  cat $HOME/nisccLog02 >> $HOME/nisccLog
+  cat $HOME/nisccLog03 >> $HOME/nisccLog
+  cat $HOME/nisccLog04 >> $HOME/nisccLog
+  cat $HOME/nisccLog05 >> $HOME/nisccLog
+  cat $HOME/nisccLog06 >> $HOME/nisccLog
+  cat $HOME/nisccLog07 >> $HOME/nisccLog
+  cat $HOME/nisccLog08 >> $HOME/nisccLog
+  cat $HOME/nisccLog09 >> $HOME/nisccLog
   cat $HOME/nisccLog10 >> $HOME/nisccLog
   cat $HOME/nisccLog11 >> $HOME/nisccLog
   cat $HOME/nisccLog12 >> $HOME/nisccLog
@@ -438,9 +438,14 @@ log_summary()
   HOME=/share/builds/sbstools/nsstools/tmp; export HOME
 
   for a in $HOME/nisccLog[0-9]*
-      do echo ====================== $a
+      do echo ================================== $a
       grep -v using $a | sort | uniq -c | sort -b -n +0 -1
       done | tee $HOME/nisccLogSummary
+
+  for a in $HOME/niscc_smime/p7m-*-results.txt
+      do echo ================================== $a
+      grep -v using $a | sort | uniq -c | sort -b -n +0 -1
+      done | tee -a $HOME/nisccLogSummary
 }
 
 
@@ -458,11 +463,11 @@ move_files()
   mv crashLog crashLog.old
   mv nisccBuildLog nisccBuildLog.old
 
-  rm -f nisccLog1 nisccLog2 nisccLog3 nisccLog4 nisccLog5 nisccLog6 \
-      nisccLog7 nisccLog8 nisccLog9 nisccLog10 nisccLog11 nisccLog12
-  rm -f NISCC_SMIME_testcases/p7m-ed-m-results.txt \
-      NISCC_SMIME_testcases/p7m-sd-dt-results.txt \
-      NISCC_SMIME_testcases/p7m-sd-op-results.txt
+  rm -f nisccLog01 nisccLog02 nisccLog03 nisccLog04 nisccLog05 nisccLog06 \
+      nisccLog07 nisccLog08 nisccLog09 nisccLog10 nisccLog11 nisccLog12
+  rm -f niscc_smime/p7m-ed-m-results.txt \
+      niscc_smime/p7m-sd-dt-results.txt \
+      niscc_smime/p7m-sd-op-results.txt
 }
 
 ############################## main ##############################
