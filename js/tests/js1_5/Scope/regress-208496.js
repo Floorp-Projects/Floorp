@@ -109,6 +109,9 @@ eval(s);
  */
 function g(par)
 {
+  // Add outer variables to complicate the scope chain -
+  var a = '(TEST FAILURE)';
+  var b = '(TEST FAILURE)';
   h(par);
 
   function h(par)
