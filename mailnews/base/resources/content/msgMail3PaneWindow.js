@@ -679,13 +679,17 @@ function ClearMessagePane()
 
 function GetSelectedFolder()
 {
+  try {
 	var tree = GetFolderTree();
 	var selection = tree.selectedItems;
 	if(selection.length > 0)
 		return selection[0];
 	else
 		return null;
-
+  }
+  catch (ex) {
+    return null;
+  }
 }
 
 function FolderPaneOnClick(event)
