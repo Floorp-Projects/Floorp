@@ -54,7 +54,7 @@
     <caption label="&SSLClientAuthMethod;"/>
     <html> &certselect.description; </html>
     <!-- Prefs -->
-    <radiogroup id="certSelection" pref="true" preftype="string" 
+    <radiogroup id="certSelection" orient="horizontal" pref="true" preftype="string" 
 	        prefstring="security.default_personal_cert" prefattribute="value">
     <radio group="certSelection" label="&certselect.auto;" value="Select Automatically"/>
     <radio group="certSelection" label="&certselect.ask;" value="Ask Every Time"/>
