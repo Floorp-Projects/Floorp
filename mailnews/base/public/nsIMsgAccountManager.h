@@ -12,9 +12,9 @@
 #include "nsIMsgSignature.h" /* interface nsIMsgSignature */
 #include "nsIMsgIdentity.h" /* interface nsIMsgIdentity */
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
+#include "nsrootidl.h" /* interface nsrootidl */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsIMsgAccount.h" /* interface nsIMsgAccount */
-#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -56,6 +56,9 @@ class nsIMsgAccountManager : public nsISupports {
 
   /* readonly attribute nsISupportsArray allServers; */
   NS_IMETHOD GetAllServers(nsISupportsArray * *aAllServers) = 0;
+
+  /* nsISupportsArray FindServersByHostname (in string hostname, in nsIIDRef iid); */
+  NS_IMETHOD FindServersByHostname(const char *hostname, const nsIID & iid, nsISupportsArray **_retval) = 0;
 
   /* void LoadAccounts (); */
   NS_IMETHOD LoadAccounts() = 0;

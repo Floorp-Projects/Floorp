@@ -24,7 +24,9 @@
 #include "nsHashtable.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPref.h"
+#include "nsCOMPtr.h"
 #include "prmem.h"
+#include "plstr.h"
 
 #include "nsCRT.h"  // for nsCRT::strtok
 
@@ -42,6 +44,11 @@ struct findEntry {
   nsHashKey* hashKey;
 };
 
+struct findServerEntry {
+  const char *hostname;
+  nsIID iid;
+  nsISupportsArray *servers;
+};
 
 class nsMsgAccountManager : public nsIMsgAccountManager {
 public:
@@ -84,13 +91,16 @@ public:
 
   NS_IMETHOD LoadAccounts();
 
+  NS_IMETHOD FindServersByHostname(const char* hostname,
+                                   const nsIID& iid,
+                                   nsISupportsArray* *serverArray);
+  
 private:
   nsHashtable *m_accounts;
   nsIMsgAccount *m_defaultAccount;
 
 
   nsHashKey *findAccount(nsIMsgAccount *);
-
   // hash table enumerators
 
   // add the server to the nsISupportsArray closure
@@ -104,6 +114,9 @@ private:
   static PRBool hashTableFindFirst(nsHashKey *aKey, void *aData,
                                    void *closure);
 
+  // nsISupportsArray enumerators
+  static PRBool findServerByName(nsISupports *aElement, void *data);
+  
   nsresult upgradePrefs();
   nsIMsgAccount *LoadAccount(char *accountKey);
   
@@ -606,6 +619,52 @@ nsMsgAccountManager::upgradePrefs()
     }
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::FindServersByHostname(const char* hostname,
+                                           const nsIID& iid,
+                                           nsISupportsArray* *matchingServers)
+{
+  nsresult rv;
+  nsCOMPtr<nsISupportsArray> servers;
+  
+  rv = GetAllServers(getter_AddRefs(servers));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = NS_NewISupportsArray(matchingServers);
+  if (NS_FAILED(rv)) return rv;
+  
+  findServerEntry serverInfo = { hostname, iid, *matchingServers};
+  servers->EnumerateForwards(findServerByName, (void *)&serverInfo);
+
+  // as long as we have an nsISupportsArray, we are successful
+  return NS_OK;
+
+}
+
+// if the aElement matches the given hostname, add it to the given array
+PRBool
+nsMsgAccountManager::findServerByName(nsISupports *aElement, void *data)
+{
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aElement);
+  if (!server) return PR_TRUE;
+
+  findServerEntry *entry = (findServerEntry*) data;
+
+  char *thisHostname;
+  nsresult rv = server->GetHostName(&thisHostname);
+  if (NS_FAILED(rv)) return PR_TRUE;
+
+  // do a QI to see if we support this interface, but be sure to release it!
+  nsISupports *dummy;
+  if (PL_strcasecmp(entry->hostname, thisHostname)==0 &&
+      NS_SUCCEEDED(server->QueryInterface(entry->iid, (void **)&dummy))) {
+    NS_RELEASE(dummy);
+    entry->servers->AppendElement(aElement);
+  }
+
+  return PR_TRUE;
 }
 
 nsresult
