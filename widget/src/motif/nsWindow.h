@@ -121,9 +121,33 @@ public:
     virtual void            BeginResizingChildren(void);
     virtual void            EndResizingChildren(void);
 
+    static  PRBool          ConvertStatus(nsEventStatus aStatus);
+    virtual PRBool          DispatchEvent(nsGUIEvent* event);
+    virtual PRBool          DispatchMouseEvent(nsMouseEvent& aEvent);
+
+    virtual void            OnDestroy();
+    virtual PRBool          OnPaint(nsPaintEvent &event);
+    virtual PRBool          OnResize(nsSizeEvent &aEvent);
+    virtual PRBool          OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent);
+
+    virtual PRBool          DispatchFocus(nsGUIEvent &aEvent);
+    virtual PRBool          OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
+
+<<<<<<< nsWindow.h
+    virtual void            SetIgnoreResize(PRBool aIgnore);
+    virtual PRBool          IgnoreResize();
+=======
     virtual PRBool IsChild() { return(PR_FALSE); };
+>>>>>>> 1.32
 
+<<<<<<< nsWindow.h
+    virtual PRUint32        GetYCoord(PRUint32 aNewY);
+=======
+>>>>>>> 1.32
 
+<<<<<<< nsWindow.h
+		virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
+=======
      // Utility methods
     void SetBounds(const nsRect &aRect);
     PRBool ConvertStatus(nsEventStatus aStatus);
@@ -138,6 +162,7 @@ public:
     PRUint32 GetYCoord(PRUint32 aNewY);
     PRBool DispatchMouseEvent(nsMouseEvent& aEvent);
     PRBool OnResize(nsSizeEvent &aEvent);
+>>>>>>> 1.32
 
    
      // Resize event management

@@ -121,6 +121,8 @@ public:
     virtual void            EndResizingChildren(void);
 
     virtual void            SetUpForPaint(HDC aHDC);
+   	virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
+
 
     // nsSwitchToUIThread interface
     virtual BOOL            CallMethod(MethodInfo *info);

@@ -127,6 +127,8 @@ public:
 
     virtual PRUint32        GetYCoord(PRUint32 aNewY);
     
+    virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY);
+    
 
      // Resize event management
     void SetResizeRect(nsRect& aRect);

@@ -499,6 +499,8 @@ class nsIWidget : public nsISupports {
      */
 
     virtual void EndResizingChildren(void) = 0;
+    
+    virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
 };
 
 #endif // nsIWidget_h__
