@@ -522,7 +522,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     PRStatus status = PR_GetFileInfo64(nsprPath, &mFileInfo64);
     if ( status == PR_SUCCESS )
     {
-        mResolvedPath.SetString(workingFilePath);
+        mResolvedPath.Assign(workingFilePath);
 		mDirty = PR_FALSE;
 		return NS_OK;
     }
@@ -537,7 +537,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     if (NS_FAILED(result))
        return result;
     
-	mResolvedPath.SetString(resolvePath);
+	mResolvedPath.Assign(resolvePath);
     nsAllocator::Free(resolvePath);
 
     // if we are not resolving the terminal node, we have to "fake" windows
@@ -607,7 +607,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     if(temp[len] == '\\')
         temp[len] = '\0';
     
-    mWorkingPath.SetString(nativeFilePath);
+    mWorkingPath.Assign(nativeFilePath);
     nsAllocator::Free( nativeFilePath );
     return NS_OK;
 }

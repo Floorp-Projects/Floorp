@@ -482,7 +482,7 @@ PRBool
 nsFTPDirListingConv::IsLSDate(char *aCStr) {
 
     /* must start with three alpha characters */
-    if (!nsString::IsAlpha(*aCStr++) || !nsString::IsAlpha(*aCStr++) || !nsString::IsAlpha(*aCStr++))
+    if (!nsCRT::IsAsciiAlpha(*aCStr++) || !nsCRT::IsAsciiAlpha(*aCStr++) || !nsCRT::IsAsciiAlpha(*aCStr++))
         return PR_FALSE;
 
     /* space */
@@ -491,12 +491,12 @@ nsFTPDirListingConv::IsLSDate(char *aCStr) {
     aCStr++;
 
     /* space or digit */
-    if ((*aCStr != ' ') && !nsString::IsDigit(*aCStr))
+    if ((*aCStr != ' ') && !nsCRT::IsAsciiDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* digit */
-    if (!nsString::IsDigit(*aCStr))
+    if (!nsCRT::IsAsciiDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
@@ -506,27 +506,27 @@ nsFTPDirListingConv::IsLSDate(char *aCStr) {
     aCStr++;
 
     /* space or digit */
-    if ((*aCStr != ' ') && !nsString::IsDigit(*aCStr))
+    if ((*aCStr != ' ') && !nsCRT::IsAsciiDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* digit */
-    if (!nsString::IsDigit(*aCStr))
+    if (!nsCRT::IsAsciiDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* colon or digit */
-    if ((*aCStr != ':') && !nsString::IsDigit(*aCStr))
+    if ((*aCStr != ':') && !nsCRT::IsAsciiDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* digit */
-    if (!nsString::IsDigit(*aCStr))
+    if (!nsCRT::IsAsciiDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* space or digit */
-    if ((*aCStr != ' ') && !nsString::IsDigit(*aCStr))
+    if ((*aCStr != ' ') && !nsCRT::IsAsciiDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
@@ -653,7 +653,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 	char *ptr, *escName;
 
     for (ptr = &aLine[PL_strlen(aLine) - 1];
-            (ptr > aLine+13) && (!nsString::IsSpace(*ptr) || !IsLSDate(ptr-12)); ptr--)
+            (ptr > aLine+13) && (!nsCRT::IsAsciiSpace(*ptr) || !IsLSDate(ptr-12)); ptr--)
                 ; /* null body */
 	save_char = *ptr;
     *ptr = '\0';
@@ -665,7 +665,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 		*ptr = save_char;
 		// find the first whitespace and  terminate
 		for(ptr=aLine; *ptr != '\0'; ptr++)
-			if(nsString::IsSpace(*ptr)) {
+			if(nsCRT::IsAsciiSpace(*ptr)) {
 				*ptr = '\0';
 				break;
             }
@@ -683,7 +683,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 	// parse size
 	if(ptr > aLine+15) {
         ptr -= 14;
-        while (nsString::IsDigit(*ptr)) {
+        while (nsCRT::IsAsciiDigit(*ptr)) {
             size_num += ((PRInt32) (*ptr - '0')) * base;
             base *= 10;
             ptr--;
@@ -734,7 +734,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         // XXX we need to handle comments in the raw stream.
 
         // special case windows servers who masquerade as unix servers
-        if (NT == mServerType && !nsString::IsSpace(line[8]))
+        if (NT == mServerType && !nsCRT::IsAsciiSpace(line[8]))
             mServerType = UNIX;
 
 
@@ -771,7 +771,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
 
                 /* strip off " -> pathname" */
                 PRInt32 i;
-                for (i = len - 1; (i > 3) && (!nsString::IsSpace(line[i])
+                for (i = len - 1; (i > 3) && (!nsCRT::IsAsciiSpace(line[i])
                     || (line[i-1] != '>') 
                     || (line[i-2] != '-')
                     || (line[i-3] != ' ')); i--)

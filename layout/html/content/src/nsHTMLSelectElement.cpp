@@ -455,10 +455,10 @@ nsHTMLSelectElement::GetType(nsString& aType)
   result = GetMultiple(&isMultiple);
   if (NS_OK == result) {
     if (isMultiple) {
-      aType.SetString("select-multiple");
+      aType.Assign("select-multiple");
     }
     else {
-      aType.SetString("select-one");
+      aType.Assign("select-one");
     }
   }
   

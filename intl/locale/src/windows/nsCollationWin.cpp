@@ -79,7 +79,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   }
 
   // default charset name
-  mCharset.SetString("ISO-8859-1");
+  mCharset.Assign("ISO-8859-1");
   
   // default LCID (en-US)
   mLCID = 1033;
@@ -106,7 +106,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   // Get LCID and charset name from locale, if available
   if (NS_SUCCEEDED(res)) {
     nsString aLocale;
-    aLocale.SetString(aLocaleUnichar);
+    aLocale.Assign(aLocaleUnichar);
     if (NULL != aLocaleUnichar) {
       nsAllocator::Free(aLocaleUnichar);
     }
@@ -128,7 +128,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.SetString(mappedCharset);
+        mCharset.Assign(mappedCharset);
         nsAllocator::Free(mappedCharset);
       }
     }

@@ -888,7 +888,8 @@ nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aM
   
   if(NS_SUCCEEDED(result)) {
     if(('a'<=theChar) && (theChar<='z')) {
-      result=aScanner.ReadWhile(mTextValue,gAlphaChars,PR_TRUE,PR_FALSE);
+      nsAutoString temp(gAlphaChars);
+      result=aScanner.ReadWhile(mTextValue,temp,PR_FALSE);
       if(NS_OK==result) {
         //ok, now look for an option parameter...
 
@@ -899,7 +900,10 @@ nsresult CRTFControlWord::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aM
           case '0': case '1': case '2': case '3': case '4': 
           case '5': case '6': case '7': case '8': case '9': 
           case kMinus:
-            result=aScanner.ReadWhile(mArgument,gDigits,PR_TRUE,PR_FALSE);
+            {
+              nsAutoString theDigits(gDigits);
+              result=aScanner.ReadWhile(mArgument,theDigits,PR_FALSE);
+            }
             break;
 
           case kSpace:
@@ -956,7 +960,7 @@ PRInt32 CRTFContent::GetTokenType() {
 nsresult CRTFContent::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) {
   static const char* textTerminators="\\{}\r\n";
   mTextValue.Append(aChar);
-  PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE,PR_FALSE);
+  PRInt32 result=aScanner.ReadUntil(mTextValue,textTerminators,PR_FALSE);
   if(NS_SUCCEEDED(result)) {
     mTypeID=eHTMLTag_text;
   }

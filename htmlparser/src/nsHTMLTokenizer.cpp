@@ -316,7 +316,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
         return ConsumeNewline(theChar,theToken,aScanner);
       }
       else {
-        if(!nsString::IsSpace(theChar)) {
+        if(!nsCRT::IsAsciiSpace(theChar)) {
           nsAutoString temp(theChar);
           result=ConsumeText(temp,theToken,aScanner);
           break;
@@ -352,7 +352,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         PRUnichar ch; 
         result=aScanner.Peek(ch);
         if(NS_OK==result) {
-          if(nsString::IsAlpha(ch)||(kGreaterThan==ch)) {
+          if(nsCRT::IsAsciiAlpha(ch)||(kGreaterThan==ch)) {
             result=ConsumeEndTag(aChar,aToken,aScanner);
           }
           else result=ConsumeComment(aChar,aToken,aScanner);
@@ -376,7 +376,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         break;
 
       default:
-        if(nsString::IsAlpha(aChar))
+        if(nsCRT::IsAsciiAlpha(aChar))
           result=ConsumeStartTag(aChar,aToken,aScanner,aFlushTokens);
         else if(kEOF!=aChar) {
           // We are not dealing with a tag. So, put back the char
@@ -583,7 +583,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
 
   CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
   if(NS_OK==result) {
-    if(nsString::IsAlpha(theChar)) { //handle common enity references &xxx; or &#000.
+    if(nsCRT::IsAsciiAlpha(theChar)) { //handle common enity references &xxx; or &#000.
        aToken = theRecycler->CreateTokenOfType(eToken_entity,eHTMLTag_entity);
        result = aToken->Consume(theChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
     }

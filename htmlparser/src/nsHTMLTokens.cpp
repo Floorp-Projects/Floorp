@@ -492,7 +492,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
 
@@ -683,7 +683,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
       if((kCR==aChar) && (NS_OK==result)) {
@@ -793,7 +793,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
               if(NS_OK==result) {
                 if(NS_OK==result) {
                   temp="->";
-                  result=aScanner.ReadUntil(aString,temp,PR_FALSE,PR_FALSE);
+                  result=aScanner.ReadUntil(aString,temp,PR_FALSE);
                 }
               } 
             }
@@ -1143,7 +1143,7 @@ void CAttributeToken::SanitizeKey() {
   PRInt32   length=mTextKey.Length();
   if(length > 0) {
     PRUnichar theChar=mTextKey.Last();
-    while(!nsString::IsAlpha(theChar) && !nsString::IsDigit(theChar)) {
+    while(!nsCRT::IsAsciiAlpha(theChar) && !nsCRT::IsAsciiDigit(theChar)) {
       mTextKey.Truncate(length-1);
       length = mTextKey.Length();
       if(length <= 0) break;
@@ -1227,7 +1227,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
 static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
   static nsString theTerminals("\b\t\n\r >",6);
-  nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_TRUE,PR_FALSE);
+  nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE);
   
   //Let's force quotes if either the first or last char is quoted.
   PRUnichar theLast=aString.Last();
@@ -1266,7 +1266,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
         if(NS_OK==result) {
           result=aScanner.Peek(aChar);  //peek ahead to make sure the next char is a legal attr-key
           if(NS_OK==result) {
-            if(nsString::IsAlpha(aChar) || nsString::IsDigit(aChar)){
+            if(nsCRT::IsAsciiAlpha(aChar) || nsCRT::IsAsciiDigit(aChar)){
               mTextKey=aChar;
               result=ConsumeQuotedString(aChar,mTextKey,aScanner);
             }
@@ -1287,7 +1287,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
           //If you're here, handle an unquoted key.
           //Don't forget to reduce entities inline!
         static nsString theTerminals("\b\t\n\r \"<=>",9);
-        result=aScanner.ReadUntil(mTextKey,theTerminals,PR_TRUE,PR_FALSE);
+        result=aScanner.ReadUntil(mTextKey,theTerminals,PR_FALSE);
       }
 
         //now it's time to Consume the (optional) value...

@@ -188,7 +188,7 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsString& aPropertyName,
   }
 
   if ((NS_OK == result) && isImportant) {
-    aReturn.SetString("!important");    
+    aReturn.Assign("!important");    
   }
   else {
     aReturn.SetLength(0);

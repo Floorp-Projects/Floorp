@@ -86,7 +86,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
   }
 
   // default charset name
-  mCharset.SetString("ISO-8859-1");
+  mCharset.Assign("ISO-8859-1");
   
   // default LCID (en-US)
   mLCID = 1033;
@@ -100,7 +100,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
       if (NS_SUCCEEDED(res)) {
         res = appLocale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
         if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-          mAppLocale.SetString(aLocaleUnichar); // cache app locale name
+          mAppLocale.Assign(aLocaleUnichar); // cache app locale name
         }
         appLocale->Release();
       }
@@ -112,7 +112,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
 
   // Get LCID and charset name from locale, if available
   if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-    mLocale.SetString(aLocaleUnichar); // cache locale name
+    mLocale.Assign(aLocaleUnichar); // cache locale name
     nsAllocator::Free(aLocaleUnichar);
 
     nsCOMPtr <nsIWin32Locale> win32Locale;
@@ -128,7 +128,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.SetString(mappedCharset);
+        mCharset.Assign(mappedCharset);
         nsAllocator::Free(mappedCharset);
       }
     }
@@ -242,17 +242,17 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (PRUint32) (timeLen + 1), "internal time buffer is not large enough");
 
   // Copy the result
-  stringOut.SetString("");
+  stringOut.Assign("");
   if (dateLen != 0 && timeLen != 0) {
-    stringOut.SetString(dateBuffer, dateLen);
+    stringOut.Assign(dateBuffer, dateLen);
     stringOut.Append((PRUnichar *)(L" "), 1);
     stringOut.Append(timeBuffer, timeLen);
   }
   else if (dateLen != 0 && timeLen == 0) {
-    stringOut.SetString(dateBuffer, dateLen);
+    stringOut.Assign(dateBuffer, dateLen);
   }
   else if (dateLen == 0 && timeLen != 0) {
-    stringOut.SetString(timeBuffer, timeLen);
+    stringOut.Assign(timeBuffer, timeLen);
   }
 
   return NS_OK;

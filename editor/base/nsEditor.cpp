@@ -4082,7 +4082,7 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
     {
       // easy case: next char is in same node
       textNode->SubstringData(aOffset,aOffset+1,tempString);
-      *outIsSpace = nsString::IsSpace(tempString.First());
+      *outIsSpace = nsCRT::IsAsciiSpace(tempString.First());
       *outIsNBSP = (tempString.First() == nbsp);
       if (outNode) *outNode = do_QueryInterface(aParentNode);
       if (outOffset) *outOffset = aOffset+1;  // yes, this is _past_ the character; 
@@ -4105,7 +4105,7 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
         {
           // you could use nsITextContent::IsOnlyWhitespace here
           textNode->SubstringData(0,1,tempString);
-          *outIsSpace = nsString::IsSpace(tempString.First());
+          *outIsSpace = nsCRT::IsAsciiSpace(tempString.First());
           *outIsNBSP = (tempString.First() == nbsp);
           if (outNode) *outNode = do_QueryInterface(node);
           if (outOffset) *outOffset = 1;  // yes, this is _past_ the character; 
@@ -4152,7 +4152,7 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
     {
       // easy case: prev char is in same node
       textNode->SubstringData(aOffset-1,aOffset,tempString);
-      *outIsSpace = nsString::IsSpace(tempString.First());
+      *outIsSpace = nsCRT::IsAsciiSpace(tempString.First());
       *outIsNBSP = (tempString.First() == nbsp);
       if (outNode) *outNode = do_QueryInterface(aParentNode);
       if (outOffset) *outOffset = aOffset-1;  
@@ -4175,7 +4175,7 @@ nsEditor::IsPrevCharWhitespace(nsIDOMNode *aParentNode,
         {
           // you could use nsITextContent::IsOnlyWhitespace here
           textNode->SubstringData(strLength-1,strLength,tempString);
-          *outIsSpace = nsString::IsSpace(tempString.First());
+          *outIsSpace = nsCRT::IsAsciiSpace(tempString.First());
           *outIsNBSP = (tempString.First() == nbsp);
           if (outNode) *outNode = do_QueryInterface(aParentNode);
           if (outOffset) *outOffset = strLength-1;  

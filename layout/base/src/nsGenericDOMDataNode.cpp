@@ -240,10 +240,10 @@ nsresult
 nsGenericDOMDataNode::GetData(nsString& aData)
 {
   if (mText.Is2b()) {
-    aData.SetString(mText.Get2b(), mText.GetLength());
+    aData.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aData.SetString(mText.Get1b(), mText.GetLength());
+    aData.Assign(mText.Get1b(), mText.GetLength());
   }
   return NS_OK;
 }
@@ -297,10 +297,10 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
     amount = textLength - aStart;
   }
   if (mText.Is2b()) {
-    aReturn.SetString(mText.Get2b() + aStart, amount);
+    aReturn.Assign(mText.Get2b() + aStart, amount);
   }
   else {
-    aReturn.SetString(mText.Get1b() + aStart, amount);
+    aReturn.Assign(mText.Get1b() + aStart, amount);
   }
 
   return NS_OK;
@@ -993,10 +993,10 @@ nsresult
 nsGenericDOMDataNode::CopyText(nsString& aResult)
 {
   if (mText.Is2b()) {
-    aResult.SetString(mText.Get2b(), mText.GetLength());
+    aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.SetString(mText.Get1b(), mText.GetLength());
+    aResult.Assign(mText.Get1b(), mText.GetLength());
   }
   return NS_OK;
 }

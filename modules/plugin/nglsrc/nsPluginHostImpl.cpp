@@ -2519,8 +2519,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* i
     return NS_ERROR_FAILURE;
   }
   
-  cookieString.SetString((const char *) inCookieBuffer, 
-                         (PRInt32) inCookieSize);
+  cookieString.Assign((const char *) inCookieBuffer,(PRInt32) inCookieSize);
   
   rv = cookieService->SetCookieString(uriIn, cookieString);
   

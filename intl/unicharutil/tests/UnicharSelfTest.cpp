@@ -371,7 +371,7 @@ static void TestEntityConversion(PRUint32 version)
   nsresult res;
 
 
-  inString.SetString("\xA0\xA1\xA2\xA3");
+  inString.Assign("\xA0\xA1\xA2\xA3");
   uChar = (PRUnichar) 8364; //euro
   inString.Append(&uChar, 1);
   uChar = (PRUnichar) 9830; //

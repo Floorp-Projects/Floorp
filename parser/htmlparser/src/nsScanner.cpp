@@ -845,6 +845,7 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
   return result;
 }
 
+
 /**
  *  Consume chars as long as they are <i>in</i> the 
  *  given validSet of input chars.
@@ -857,10 +858,7 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
  */
 nsresult nsScanner::ReadWhile(nsString& aString,
                              nsString& aValidSet,
-                             PRBool anOrderedSet,
                              PRBool addTerminal){
-
-  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aValidSet.IsOrdered()),kUnorderedStringError);
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
@@ -871,7 +869,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
  
     theChar=theBuf[mOffset++];
     if(theChar) {
-      PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.FindChar(theChar);
+      PRInt32 pos=aValidSet.FindChar(theChar);
       if(kNotFound==pos) {
         if(!addTerminal)
           mOffset-=1;
@@ -892,85 +890,6 @@ nsresult nsScanner::ReadWhile(nsString& aString,
 
   return result;
 
-}
-
-/**
- *  Consume chars as long as they are <i>in</i> the 
- *  given validSet of input chars.
- *  
- *  @update  gess 3/25/98
- *  @param   aString will contain the result of this method
- *  @param   aValidSet is an ordered string that contains the
- *           valid characters
- *  @return  error code
- */
-nsresult nsScanner::ReadWhile(nsString& aString,
-                             nsCString& aValidSet,
-                             PRBool anOrderedSet,
-                             PRBool addTerminal){
-
-  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aValidSet.IsOrdered()),kUnorderedStringError);
-
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
-  const PRUnichar*  theBuf=mBuffer.GetUnicode();
-  PRInt32           theOrigin=mOffset;
-
-  while(NS_OK==result) {
- 
-    theChar=theBuf[mOffset++];
-    if(theChar) {
-      PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.FindChar(theChar);
-      if(kNotFound==pos) {
-        if(!addTerminal)
-          mOffset-=1;
-        aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
-        break;
-      }
-    }
-    else if ((PRUint32)mBuffer.Length()<=mOffset) {
-      mOffset -= 1;
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
-      result=Peek(theChar);
-      theBuf=mBuffer.GetUnicode();
-      theOrigin=mOffset;
-    }
-  }
-
-  //DoErrTest(aString);
-
-  return result;
-
-}
-
-/**
- *  Consume chars as long as they are <i>in</i> the 
- *  given validSet of input chars.
- *  
- *  @update  gess 3/25/98
- *  @param   aString will contain the result of this method
- *  @param   anInputSet contains the legal input chars
- *           valid characters
- *  @return  error code
- */
-nsresult nsScanner::ReadWhile(nsString& aString,
-                             const char* anInputSet,
-                             PRBool anOrderedSet,
-                             PRBool addTerminal)
-{
-
-  nsresult   result=NS_OK;
-  if(anInputSet) {
-    PRInt32 len=nsCRT::strlen(anInputSet);
-    if(0<len) {
-
-      CBufDescriptor buf(anInputSet,PR_TRUE,len+1,len);
-      nsCAutoString theSet(buf);
-
-      result=ReadWhile(aString,theSet,anOrderedSet,addTerminal);
-    } //if
-  }//if
-  return result;
 }
 
 /**
@@ -985,11 +904,8 @@ nsresult nsScanner::ReadWhile(nsString& aString,
  */
 nsresult nsScanner::ReadUntil(nsString& aString,
                              nsString& aTerminalSet,
-                             PRBool anOrderedSet,
                              PRBool addTerminal){
   
-  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aTerminalSet.IsOrdered()),kUnorderedStringError);
-
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
@@ -1000,7 +916,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
  
     theChar=theBuf[mOffset++];
     if(theChar) {
-      PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.FindChar(theChar);
+      PRInt32 pos=aTerminalSet.FindChar(theChar);
       if(kNotFound!=pos) {
         if(!addTerminal)
           mOffset-=1;
@@ -1035,12 +951,8 @@ nsresult nsScanner::ReadUntil(nsString& aString,
  */
 nsresult nsScanner::ReadUntil(nsString& aString,
                              nsCString& aTerminalSet,
-                             PRBool anOrderedSet,
                              PRBool addTerminal){
   
-  NS_ASSERTION(((PR_FALSE==anOrderedSet) || aTerminalSet.IsOrdered()),kUnorderedStringError);
-
-
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
   const PRUnichar*  theBuf=mBuffer.GetUnicode();
@@ -1050,7 +962,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
  
     theChar=theBuf[mOffset++];
     if(theChar) {
-      PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.FindChar(theChar);
+      PRInt32 pos=aTerminalSet.FindChar(theChar);
       if(kNotFound!=pos) {
         if(!addTerminal)
           mOffset-=1;
@@ -1085,7 +997,6 @@ nsresult nsScanner::ReadUntil(nsString& aString,
  */
 nsresult nsScanner::ReadUntil(nsString& aString,
                               const char* aTerminalSet,
-                             PRBool anOrderedSet,
                              PRBool addTerminal)
 {
   nsresult   result=NS_OK;
@@ -1096,7 +1007,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
       CBufDescriptor buf(aTerminalSet,PR_TRUE,len+1,len);
       nsCAutoString theSet(buf);
 
-      result=ReadUntil(aString,theSet,anOrderedSet,addTerminal);
+      result=ReadUntil(aString,theSet,addTerminal);
     } //if
   }//if
   return result;

@@ -252,10 +252,10 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     JSString *jsstring = JS_ValueToString(cx, id);
     if (nsnull != jsstring) {
-      name.SetString(JS_GetStringChars(jsstring));
+      name.Assign(JS_GetStringChars(jsstring));
     }
     else {
-      name.SetString("");
+      name.Assign("");
     }
 
     if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {

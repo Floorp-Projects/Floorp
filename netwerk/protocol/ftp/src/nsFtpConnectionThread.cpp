@@ -1630,7 +1630,7 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     if (port > 0)
         mPort = port;
 
-    mCacheKey.SetString(host);
+    mCacheKey.Assign(host);
     mCacheKey.Append(port);
 
     NS_WITH_SERVICE(nsIEventQueueService, eqs, kEventQueueServiceCID, &rv);

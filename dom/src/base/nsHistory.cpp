@@ -101,7 +101,7 @@ HistoryImpl::GetCurrent(nsString& aCurrent)
   if (webShell && NS_OK == webShell->GetHistoryIndex(curIndex)) {
     webShell->GetURL(curIndex, &curURL);
   }
-  aCurrent.SetString(curURL);
+  aCurrent.Assign(curURL);
 
   return NS_OK;
 }
@@ -116,7 +116,7 @@ HistoryImpl::GetPrevious(nsString& aPrevious)
   if (webShell && NS_OK == webShell->GetHistoryIndex(curIndex)) {
     webShell->GetURL(curIndex-1, &prevURL);
   }
-  aPrevious.SetString(prevURL);
+  aPrevious.Assign(prevURL);
 
   return NS_OK;
 }
@@ -131,7 +131,7 @@ HistoryImpl::GetNext(nsString& aNext)
   if (webShell && NS_OK == webShell->GetHistoryIndex(curIndex)) {
     webShell->GetURL(curIndex+1, &nextURL);
   }
-  aNext.SetString(nextURL);
+  aNext.Assign(nextURL);
 
   return NS_OK;
 }
@@ -188,7 +188,7 @@ HistoryImpl::Go(JSContext* cx, jsval* argv, PRUint32 argc)
           // method are not XPCOM compliant. If they were correct, 
           // we'd be deallocating the string passed back.
           result = webShell->GetURL(i, &urlstr);
-          url.SetString(urlstr);
+          url.Assign(urlstr);
 
           if (-1 != url.Find(substr)) {
             result = webShell->GoTo(i);

@@ -84,7 +84,7 @@ nsEntityConverter::LoadVersionPropertyFile()
       if (NULL == mVersionList) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
 
       for (PRUint32 i = 0; i < mVersionListLength && NS_SUCCEEDED(rv); i++) {
-        key.SetString("");
+        key.Assign("");
         key.Append(i+1, 10);
 	      rv = entityProperties->GetStringProperty(key, value);
         PRUint32 len = value.Length();

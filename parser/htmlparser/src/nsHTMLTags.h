@@ -25,7 +25,7 @@
 
 #include "nshtmlpars.h"
 
-struct nsStr;
+class nsString;
 class nsCString;
 
 /*
@@ -55,7 +55,8 @@ public:
   static void AddRefTable(void);
   static void ReleaseTable(void);
 
-  static nsHTMLTag LookupTag(const nsStr& aTag);
+  static nsHTMLTag LookupTag(const nsString& aTag);
+  static nsHTMLTag LookupTag(const nsCString& aTag);
   static const nsCString& GetStringValue(nsHTMLTag aEnum);
   static const char* GetCStringValue(nsHTMLTag aEnum);
 };

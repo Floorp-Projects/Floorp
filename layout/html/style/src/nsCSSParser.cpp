@@ -1874,13 +1874,13 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
 		char  buffer[10];
 		switch (tk->mType) {
 			case eCSSToken_Ident:
-				str.SetString(tk->mIdent);
+				str.Assign(tk->mIdent);
 				break;
 
 			case eCSSToken_Number:
 				if (tk->mIntegerValid) {
 					sprintf(buffer, "%06d", tk->mInteger);
-					str.SetString(buffer);
+					str.Assign(buffer);
 				}
 				break;
 
@@ -1888,7 +1888,7 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
 				if (tk->mIdent.Length() <= 6) {
 					sprintf(buffer, "%06.0f", tk->mNumber);
 					nsAutoString temp;
-					temp.SetString(buffer);
+					temp.Assign(buffer);
 					temp.Right(str, 6 - tk->mIdent.Length());
 					str.Append(tk->mIdent);
 				}

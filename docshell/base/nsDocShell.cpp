@@ -1739,7 +1739,7 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
 {
    //XXX Needs some international work.
    nsAutoString error;
-   error.SetString("JavaScript Error: ");
+   error.Assign("JavaScript Error: ");
    error.Append(aErrorString);
    error += "\n";
 

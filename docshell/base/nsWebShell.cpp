@@ -2161,7 +2161,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
 
   switch(aVerb) {
     case eLinkVerb_New:
-      target.SetString("_blank");
+      target.Assign("_blank");
       // Fall into replace case
     case eLinkVerb_Replace:
       {

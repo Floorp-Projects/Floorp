@@ -535,7 +535,7 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
   mFormat.Clear();
 
   do {
-    while (*aFormatStr && nsString::IsSpace(PRUnichar(*aFormatStr)))
+    while (*aFormatStr && nsCRT::IsAsciiSpace(PRUnichar(*aFormatStr)))
       ++aFormatStr;
 
     if (! *aFormatStr)
@@ -543,7 +543,7 @@ nsHTTPIndexParser::ParseFormat(const char* aFormatStr)
 
     nsCAutoString name;
     PRInt32	len = 0;
-    while (aFormatStr[len] && !nsString::IsSpace(PRUnichar(aFormatStr[len])))
+    while (aFormatStr[len] && !nsCRT::IsAsciiSpace(PRUnichar(aFormatStr[len])))
     	++len;
     name.SetCapacity(len + 1);
     name.Append(aFormatStr, len);
@@ -627,7 +627,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     if (! *aDataStr)
       break;
 
-    while (*aDataStr && nsString::IsSpace(PRUnichar(*aDataStr)))
+    while (*aDataStr && nsCRT::IsAsciiSpace(PRUnichar(*aDataStr)))
       ++aDataStr;
 
     nsCAutoString	value;
@@ -650,7 +650,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     else {
       // it's unquoted. snarf until we see whitespace.
       len = 0;
-      while (aDataStr[len] && !nsString::IsSpace(aDataStr[len]))
+      while (aDataStr[len] && !nsCRT::IsAsciiSpace(aDataStr[len]))
         ++len;
       value.SetCapacity(len + 1);
       value.Append(aDataStr, len);

@@ -33,7 +33,7 @@ struct EntityNode {
       mUnicode(-1)
   {}
 
-  EntityNode(const nsStr& aStringValue)
+  EntityNode(const nsString& aStringValue)
     : mStr(),
       mUnicode(-1)
   { // point to the incomming buffer
@@ -146,9 +146,8 @@ nsHTMLEntities::ReleaseTable(void)
   }
 }
 
-
 PRInt32 
-nsHTMLEntities::EntityToUnicode(const nsStr& aEntity)
+nsHTMLEntities::EntityToUnicode(const nsString& aEntity)
 {
   NS_ASSERTION(gEntityToCodeTree, "no lookup table, needs addref");
   if (gEntityToCodeTree) {
@@ -167,7 +166,7 @@ nsHTMLEntities::EntityToUnicode(const nsStr& aEntity)
     EntityNode node(aEntity);
     EntityNode*  found = (EntityNode*)gEntityToCodeTree->FindItem(&node);
     if (found) {
-      NS_ASSERTION(found->mStr.Equals(aEntity), "bad tree");
+      NS_ASSERTION(found->mStr.Equals(aEntity.mUStr,PR_FALSE,aEntity.mLength), "bad tree");
       return found->mUnicode;
     }
   }
@@ -213,7 +212,7 @@ public:
        NS_ASSERTION(value == gEntityArray[i].mUnicode, "bad unicode value");
 
        entity = nsHTMLEntities::UnicodeToEntity(value);
-       NS_ASSERTION(entity.Equals(gEntityArray[i].mStr), "bad entity name");
+       NS_ASSERTION(entity.Equals(gEntityArray[i].mStr.mStr), "bad entity name");
      }
 
      // Make sure we don't find things that aren't there
