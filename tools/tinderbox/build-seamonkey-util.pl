@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.238 $ ';
+$::UtilsVersion = '$Revision: 1.239 $ ';
 
 package TinderUtils;
 
@@ -391,9 +391,9 @@ sub SetupPath {
         # you have to match BuildDebug and --enable-optimize, 
         # --disable-debug to make things work here.
         if ($Settings::BuildDebug) {
-            $Settings::DistBin = "dist/MozillaDebug.app/Contents/MacOS";
+            $Settings::DistBin = "dist/".$Settings::ProductName."Debug.app/Contents/MacOS";
         } else {
-            $Settings::DistBin = "dist/Mozilla.app/Contents/MacOS";
+            $Settings::DistBin = "dist/".$Settings::ProductName.".app/Contents/MacOS";
         }
     }
 
