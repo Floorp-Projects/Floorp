@@ -523,7 +523,8 @@ SSMStatus SSMResourceCert_Verify(SSMResourceCert  * resource,
 
   if (CERT_VerifyCertNow(SSMRESOURCE(resource)->m_connection->m_certdb, 
 			 resource->cert, PR_TRUE, 
-			 certUsage, NULL) != SECSuccess) 
+			 certUsage, 
+			 SSMRESOURCE(resource)->m_connection) != SECSuccess) 
     goto loser;
   return PR_SUCCESS;
 loser:
