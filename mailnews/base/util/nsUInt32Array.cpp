@@ -20,9 +20,6 @@
 
 #include "MailNewsTypes.h"
 #include "nsUInt32Array.h"
-#include "xp_qsort.h"   // XXX we need to remove this dependency
-#include "xp.h"			// XXX  we need to remove this dependency..
-
 
 nsUInt32Array::nsUInt32Array()
 {
@@ -70,7 +67,7 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
 	else if (m_pData == NULL)
 	{
 		// Create a new array
-		m_nMaxSize = MAX(8, nSize);
+		m_nMaxSize = PR_MAX(8, nSize);
 		m_pData = (PRUint32 *)PR_Calloc(1, m_nMaxSize * sizeof(PRUint32));
 		if (m_pData)
 			m_nSize = nSize;
@@ -82,7 +79,7 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
 		// The new size is within the current maximum size, make sure new
 		// elements are to initialized to zero
 		if (nSize > m_nSize)
-			memset(&m_pData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
+			nsCRT::memset(&m_pData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
 
 		m_nSize = nSize;
 	}
@@ -90,20 +87,20 @@ PRBool nsUInt32Array::SetSize(PRUint32 nSize, PRUint32 nGrowBy)
 	{
 		// The array needs to grow, figure out how much
 		PRUint32 nMaxSize;
-		nGrowBy  = MAX(m_nGrowBy, MIN(1024, MAX(8, m_nSize / 8)));
-		nMaxSize = MAX(nSize, m_nMaxSize + nGrowBy);
+		nGrowBy  = PR_MAX(m_nGrowBy, PR_MIN(1024, PR_MAX(8, m_nSize / 8)));
+		nMaxSize = PR_MAX(nSize, m_nMaxSize + nGrowBy);
 #ifdef MAX_ARR_ELEMS
-		nMaxSize = MIN(MAX_ARR_ELEMS, nMaxSize);
+		nMaxSize = PR_MIN(MAX_ARR_ELEMS, nMaxSize);
 #endif
 
 		PRUint32 *pNewData = (PRUint32 *)PR_Malloc(nMaxSize * sizeof(PRUint32));
 		if (pNewData)
 		{
 			// Copy the data from the old array to the new one
-			XP_MEMCPY(pNewData, m_pData, m_nSize * sizeof(PRUint32));
+			nsCRT::memcpy(pNewData, m_pData, m_nSize * sizeof(PRUint32));
 
 			// Zero out the remaining elements
-			memset(&pNewData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
+			nsCRT::memset(&pNewData[m_nSize], 0, (nSize - m_nSize) * sizeof(PRUint32));
 			m_nSize = nSize;
 			m_nMaxSize = nMaxSize;
 
@@ -159,7 +156,7 @@ PRUint32 nsUInt32Array::Add(PRUint32 newElement)
 PRUint32 nsUInt32Array::Add(PRUint32 *elementPtr, PRUint32 numElements) 
 { 
 	if (SetSize(m_nSize + numElements))
-		XP_MEMCPY(m_pData + m_nSize, elementPtr, numElements * sizeof(PRUint32)); 
+		nsCRT::memcpy(m_pData + m_nSize, elementPtr, numElements * sizeof(PRUint32)); 
 
 	return m_nSize; 
 } 
@@ -168,7 +165,7 @@ PRUint32 *nsUInt32Array::CloneData()
 { 
 	PRUint32 *copyOfData = (PRUint32 *)PR_Malloc(m_nSize * sizeof(PRUint32)); 
 	if (copyOfData) 
-		XP_MEMCPY(copyOfData, m_pData, m_nSize * sizeof(PRUint32)); 
+		nsCRT::memcpy(copyOfData, m_pData, m_nSize * sizeof(PRUint32)); 
 
 	return copyOfData; 
 } 
@@ -190,7 +187,7 @@ void nsUInt32Array::InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCou
 		SetSize(m_nSize + nCount);
 
 		// Move the data after the insertion point
-		XP_MEMMOVE(&m_pData[nIndex + nCount], &m_pData[nIndex],
+		nsCRT::memmove(&m_pData[nIndex + nCount], &m_pData[nIndex],
 			       (nOldSize - nIndex) * sizeof(PRUint32));
 	}
 
@@ -228,7 +225,7 @@ void nsUInt32Array::RemoveAt(PRUint32 nIndex, PRUint32 nCount)
 		// Make sure not to overstep the end of the array
 		int nMoveCount = m_nSize - (nIndex + nCount);
 		if (nCount && nMoveCount)
-			XP_MEMMOVE(&m_pData[nIndex], &m_pData[nIndex + nCount],
+			nsCRT::memmove(&m_pData[nIndex], &m_pData[nIndex + nCount],
 		               nMoveCount * sizeof(PRUint32));
 
 		m_nSize -= nCount;
@@ -259,7 +256,7 @@ void nsUInt32Array::CopyArray(nsUInt32Array &oldA)
 	m_nMaxSize = oldA.m_nMaxSize;
 	m_pData = (PRUint32 *)PR_Malloc(m_nSize * sizeof(PRUint32));
 	if (m_pData)
-		XP_MEMCPY(m_pData, oldA.m_pData, m_nSize * sizeof(PRUint32));
+		nsCRT::memcpy(m_pData, oldA.m_pData, m_nSize * sizeof(PRUint32));
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -274,6 +271,10 @@ static int CompareDWord (const void *v1, const void *v2)
 
 void nsUInt32Array::QuickSort (int (*compare) (const void *elem1, const void *elem2))
 {
+	// we don't have a quick sort method in mozilla yet....commenting out for now.
+	NS_ASSERTION(0, "quick sort not implemented yet");
+#if 0
 	if (m_nSize > 1)
 		XP_QSORT (m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord);
+#endif
 }
