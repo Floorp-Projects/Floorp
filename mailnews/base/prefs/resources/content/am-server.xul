@@ -77,12 +77,12 @@ Contributors:
       </row>
       <row>
         <hbox align="center">
-            <label value="&port.label;"/>
+            <label hidable="true" hidefor="movemail" value="&port.label;"/>
         </hbox>
         <hbox align="center">
             <label id="fixedServerPort" collapsed="true" use="server.port"/>
             <textbox wsm_persist="true" size="5" id="server.port"
-                     preftype="int"
+                     preftype="int" hidable="true" hidefor="movemail" 
                      prefstring="mail.server.%serverkey%.port"/>
         </hbox>
       </row>
@@ -128,18 +128,20 @@ Contributors:
 
     <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
               label="&leaveOnServer.label;" oncommand="setupMailOnServerUI();"
+              hidable="true" hidefor="movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.leave_on_server"/>
 
     <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer" class="indent"
               label="&deleteOnServer.label;"
+              hidable="true" hidefor="movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
   </vbox>
   <!-- IMAP -->
   <hbox iscontrolcontainer="true" align="center" id="imap.deleteModel.box">
     <label value="&deleteMessagePrefix.label;"/>
-    <menulist hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.deleteModel"
+    <menulist hidable="true" hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.deleteModel"
               prefstring="mail.server.%serverkey%.delete_model">
       <menupopup>
         <menuitem value="1" label="&modelMoveToTrash.label;"/>
@@ -149,9 +151,8 @@ Contributors:
     </menulist>
     <spacer flex="1"/>
   </hbox>
-  <separator class="thin"/>
 
-  <checkbox hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.cleanupInboxOnExit"
+  <checkbox hidable="true" hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.cleanupInboxOnExit"
             label="&expungeOnExit.label;" iscontrolcontainer="true"
             prefattribute="value"
             prefstring="mail.server.%serverkey%.cleanup_inbox_on_exit"/>
@@ -169,7 +170,7 @@ Contributors:
               prefstring="mail.server.%serverkey%.advanced.disable"/>
     </hbox>
 
-    <checkbox hidable="true" hidefor="pop3,nntp" hidden="true" wsm_persist="true" id="imap.dualUseFolders"
+    <checkbox hidable="true" hidefor="pop3,nntp,movemail" hidden="true" wsm_persist="true" id="imap.dualUseFolders"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.dual_use_folders"/>
     <checkbox hidden="true" wsm_persist="true" id="imap.usingSubscription"
@@ -187,7 +188,7 @@ Contributors:
 
   <!-- NNTP -->
   <hbox iscontrolcontainer="true">
-    <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.notifyOn"
+    <checkbox hidable="true" hidefor="pop3,imap,movemail" wsm_persist="true" id="nntp.notifyOn"
               label="&maxMessagesStart.label;"
               oncommand="setupNotifyUI();"
               prefattribute="value"
@@ -202,7 +203,7 @@ Contributors:
     </hbox>
   </hbox>
   <hbox iscontrolcontainer="true">
-    <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.pushAuth"
+    <checkbox hidable="true" hidefor="pop3,imap,movemail" wsm_persist="true" id="nntp.pushAuth"
               label="&alwaysAuthenticate.label;"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.always_authenticate"/>
@@ -212,7 +213,7 @@ Contributors:
       <groupbox>
          <caption class="header" label="&abbreviate.label;"/>
 
-         <radiogroup hidable="true" hidefor="pop3,imap" wsm_persist="true"
+         <radiogroup hidable="true" hidefor="pop3,imap,movemail" wsm_persist="true"
                      id="nntp.abbreviate">
            <radio wsm_persist="true" value="true"
                   label="&abbreviateOn.label;"/>
@@ -225,7 +226,7 @@ Contributors:
 
   <vbox iscontrolcontainer="true">
     <label value="&newsrcFilePath.label;" control="nntp.newsrcFilePath"/>
-    <textbox hidable="true" hidefor="imap,pop3" wsm_persist="true" id="nntp.newsrcFilePath"
+    <textbox hidable="true" hidefor="imap,pop3,movemail" wsm_persist="true" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"
                prefstring="mail.server.%serverkey%.newsrc.file" class="uri-element"/>
   </vbox>

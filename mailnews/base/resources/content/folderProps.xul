@@ -48,8 +48,8 @@
 <tabbox>
   <tabs>
     <tab id="GeneralTab" label="&generalInfo.label;"/>
-    <tab hidefor="pop3,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
-    <tab hidefor="pop3,none,nntp" hidable="true" id="SharingTab" label="&folderSharingTab.label;"/>
+    <tab hidefor="movemail,pop3,none" hidable="true" id="OfflineTab" label="&folderOfflineTab.label;"/>
+    <tab hidefor="movemail,pop3,none,nntp" hidable="true" id="SharingTab" label="&folderSharingTab.label;"/>
   </tabs>
   <tabpanels id="folderPropTabPanel">
     <vbox>
@@ -70,13 +70,13 @@
           </menulist>
         </hbox> 
         <checkbox class="indent" id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
-        <checkbox hidable="true" hidefor="pop3,none,nntp"
+        <checkbox hidable="true" hidefor="movemail,pop3,none,nntp"
                   class="indent" id="folderCheckForNewMessages"
                   label="&folderCheckForNewMessages.label;" />
       </vbox>
     </vbox>
  
-    <vbox hidable="true" hidefor="pop3,none" valign="top" align="start">
+    <vbox hidable="true" hidefor="movemail,pop3,none" valign="top" align="start">
       <vbox>
         <checkbox iscontrolcontainer="true" hidable="true"  
                   wsm_persist="true" id="offline.selectForOfflineFolder"  
@@ -92,7 +92,7 @@
               oncommand="onOfflineFolderDownload();" 
               id="offline.offlineNewsgroupDownloadButton" hidefor="imap" orient="right"/>
     </vbox>
-    <vbox hidable="true" hidefor="pop3,none,nntp" valign="top" align="start">
+    <vbox hidable="true" hidefor="movemail,pop3,none,nntp" valign="top" align="start">
       <hbox>
       <label value="&folderType.label;" id="folderTypeLabel"/>
       <label value="" id="folderType.text"/>
@@ -104,7 +104,7 @@
       <spacer flex="100%"/>
       <button iscontrolcontainer="true" hidable="true" label="&privileges.button.label;" 
               oncommand="onFolderPrivileges();" 
-              id="imap.FolderPrivileges" hidefor="pop3,none,nntp" orient="right"/>
+              id="imap.FolderPrivileges" hidefor="movemail,pop3,none,nntp" orient="right"/>
     </vbox>
   </tabpanels>
 </tabbox>

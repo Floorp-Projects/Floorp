@@ -58,6 +58,7 @@ public:
     nsMovemailIncomingServer();
     virtual ~nsMovemailIncomingServer();
     
+    NS_IMETHOD GetIsSecureServer(PRBool *aIsSecureServer);
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 };

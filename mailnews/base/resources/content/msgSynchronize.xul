@@ -48,7 +48,7 @@ Contributors:
     <label value="&MsgSyncDirections.label;"/>
 
     <vbox class="indent" align="start">
-        <checkbox id="syncMail" hidable="true" hidefor="pop3" label="&syncTypeMail.label;"/>
+        <checkbox id="syncMail" hidable="true" hidefor="movemail,pop3" label="&syncTypeMail.label;"/>
         <checkbox id="syncNews" label="&syncTypeNews.label;"/>
     </vbox>
     <vbox align="start">
