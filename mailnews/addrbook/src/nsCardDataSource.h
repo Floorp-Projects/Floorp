@@ -137,7 +137,7 @@ protected:
 
 };
 
-PR_EXTERN(nsresult) NS_NewAbCardDataSource(const nsIID& iid, void **result);
+nsresult NS_NewAbCardDataSource(const nsIID& iid, void **result);
 
 
 #endif

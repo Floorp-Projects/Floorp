@@ -138,7 +138,7 @@ protected:
 	nsCOMPtr<nsIRDFNode> kFalseLiteral;
 };
 
-PR_EXTERN(nsresult) NS_NewAbDirectoryDataSource(const nsIID& iid, void **result);
+nsresult NS_NewAbDirectoryDataSource(const nsIID& iid, void **result);
 
 
 #endif
