@@ -64,6 +64,7 @@ $xpinstallVersion = $ENV{WIZ_xpinstallVersion};
 $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
 $nameProductNoVersion = $ENV{WIZ_nameProductNoVersion};
+$nameProductInternal = $ENV{WIZ_nameProductInternal};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
 
@@ -121,6 +122,7 @@ while($line = <fpInTemplate>)
     $line =~ s/\$CompanyName\$/$nameCompany/i;
     $line =~ s/\$ProductName\$/$nameProduct/i;
     $line =~ s/\$ProductNameNoVersion\$/$nameProductNoVersion/i;
+    $line =~ s/\$ProductNameInternal\$/$nameProductInternal/i;
     $line =~ s/\$MainExeFile\$/$fileMainExe/i;
     $line =~ s/\$UninstallFile\$/$fileUninstall/i;
   }
