@@ -78,7 +78,11 @@
                (when laitem-maybe-forbidden-entry
                  (terminalset-intersection-f (cdr laitem-maybe-forbidden-entry) maybe-forbidden))
                (unless (terminalset-<= new-forbidden (or (cdr laitem-maybe-forbidden-entry) *empty-terminalset*))
-                 (error "Two laitems in the same state differing only in forbidden initial terminal constraints: ~S" laitem))
+                 (error "Two laitems in the same state differing only in forbidden initial terminal constraints: ~S ~%old forbidden: ~S ~%new forbidden: ~S~%maybe forbidden: ~S"
+                        laitem
+                        (terminalset-list grammar (laitem-forbidden laitem))
+                        (terminalset-list grammar forbidden)
+                        (and laitem-maybe-forbidden-entry (terminalset-list grammar (cdr laitem-maybe-forbidden-entry)))))
                (setf (laitem-forbidden laitem) new-forbidden)
                (terminalset-union-f (laitem-lookaheads laitem) lookaheads))
              (let ((item-next-symbol (item-next-symbol item)))
