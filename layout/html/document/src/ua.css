@@ -22,13 +22,7 @@ HTML {
 BODY {
   display: block;
   line-height: normal;
-
-/*
- * XXX Note: see the code in nsHTMLBodyElement that hacks away at the padding
- * when body margin attributes are used
- * XXX not yet... margin: 8px;
- */
-  padding: 8px;
+  margin: 8px;
 }
 
 FRAMESET {
