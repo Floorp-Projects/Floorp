@@ -188,6 +188,7 @@ UNZIP_PROG	= $(LOCAL_BIN)/unzip
 ZIP_PROG	= $(LOCAL_BIN)/zip
 ZIP_COMPR	= 9
 ZIP_FLAGS	= -$(ZIP_COMPR)r
+IDL_COMPILE = xpidl
 
 ifeq ($(OS_ARCH),OS2)
 EMPTY		:=
@@ -502,6 +503,10 @@ endif # ! USE_AUTOCONF
 
 ifdef MOZ_MAIL_COMPOSE
 DEFINES		+= -DMOZ_MAIL_COMPOSE
+endif
+
+ifdef MOZ_MAIL_NEWS
+DEFINES += -DMOZ_MAIL_NEWS
 endif
 
 ifdef MOZ_DARK
