@@ -1124,9 +1124,9 @@ PRBool nsClipboard::DoConvert(const char *aMimeStr, GdkAtom aSelectionAtom)
   nsCAutoString mimeStr(aMimeStr);
 
   if (mimeStr.Equals(kUnicodeMime)) {
-    r = DoRealConvert(gdk_atom_intern("COMPOUND_TEXT", FALSE), aSelectionAtom);
-    if (r) return r;
     r = DoRealConvert(gdk_atom_intern("UTF8_STRING", FALSE), aSelectionAtom);
+    if (r) return r;
+    r = DoRealConvert(gdk_atom_intern("COMPOUND_TEXT", FALSE), aSelectionAtom);
     if (r) return r;
     r = DoRealConvert(GDK_SELECTION_TYPE_STRING, aSelectionAtom);
     if (r) return r;
