@@ -163,6 +163,13 @@ nsCairoImage::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *a
 {
 }
 
+PRBool
+nsCairoImage::GetIsImageComplete()
+{
+  /* TODO: nsCairoImage needs to store coords of decoded data */
+  return PR_TRUE;
+}
+
 nsresult
 nsCairoImage::Optimize(nsIDeviceContext* aContext)
 {

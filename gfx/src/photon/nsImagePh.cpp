@@ -243,6 +243,16 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   	return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIImage.h
+ */
+PRBool nsImagePh::GetIsImageComplete() {
+  return mDecodedX1 == 0 &&
+         mDecodedY1 == 0 &&
+         mDecodedX2 == mWidth &&
+         mDecodedY2 == mHeight;
+}
+
 /** ----------------------------------------------------------------
   * Draw the bitmap, this method has a source and destination coordinates
   * @update dc - 11/20/98

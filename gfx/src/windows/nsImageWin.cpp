@@ -259,6 +259,17 @@ nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *a
     mDecodedX2 = aUpdateRect->XMost();
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIImage.h
+ */
+PRBool nsImageWin::GetIsImageComplete() {
+  return mInitialized &&
+         mDecodedX1 == 0 &&
+         mDecodedY1 == 0 &&
+         mDecodedX2 == mBHead->biWidth &&
+         mDecodedY2 == mBHead->biHeight;
+}
+
 //------------------------------------------------------------
 
 struct MONOBITMAPINFO {
@@ -1088,8 +1099,7 @@ nsImageWin::ProgressiveDoubleBlit(nsIDeviceContext *aContext,
         return PR_FALSE;
       }
     }
-    mTmpHBitmap = ::CreateCompatibleBitmap(theHDC, mBHead->biWidth,
-                                           mBHead->biHeight);
+    mTmpHBitmap = ::CreateCompatibleBitmap(theHDC, mDecodedX2, mDecodedY2);
     if (!mTmpHBitmap) {
       ::DeleteDC(imgDC);
       if (maskDC) {

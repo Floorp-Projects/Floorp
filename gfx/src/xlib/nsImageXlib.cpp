@@ -265,6 +265,16 @@ void nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
     mDecodedX2 = aUpdateRect->XMost();
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIImage.h
+ */
+PRBool nsImageXlib::GetIsImageComplete() {
+  return mDecodedX1 == 0 &&
+         mDecodedY1 == 0 &&
+         mDecodedX2 == mWidth &&
+         mDecodedY2 == mHeight;
+}
+
 void nsImageXlib::UpdateCachedImage()
 {
   nsRegionRectIterator ri(mUpdateRegion);

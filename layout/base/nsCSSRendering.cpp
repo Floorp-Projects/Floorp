@@ -2936,12 +2936,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
         nsCOMPtr<gfxIImageFrame> gfxImgFrame;
         image->GetCurrentFrame(getter_AddRefs(gfxImgFrame));
         if (gfxImgFrame) {
-          gfx_format frameFormat;
-          gfxImgFrame->GetFormat(&frameFormat);
-          NS_ASSERTION(frameFormat >= 0 && frameFormat <= 7,
-                       "Unknown gfxIFormats value");
-          needBackgroundColor = frameFormat != gfxIFormats::RGB &&
-                                frameFormat != gfxIFormats::BGR;
+          gfxImgFrame->GetNeedsBackground(&needBackgroundColor);
 
           /* check for tiling of a image where frame smaller than container */
           nsSize iSize;

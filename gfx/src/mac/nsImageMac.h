@@ -70,6 +70,7 @@ public:
   // mAlphaBits).  'aFlags' is ignored.
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags,
                                    nsRect *aUpdateRect);
+  virtual PRBool      GetIsImageComplete();
 
   // Optimizes memory usage for object.
   virtual nsresult    Optimize(nsIDeviceContext* aContext);

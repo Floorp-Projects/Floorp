@@ -214,6 +214,16 @@ void nsImageQt::ImageUpdated(nsIDeviceContext *aContext,
     mDecodedRect.UnionRect(mDecodedRect, *aUpdateRect);
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIImage.h
+ */
+PRBool nsImageQt::GetIsImageComplete() {
+  return mDecodedRect.x == 0 &&
+         mDecodedRect.y == 0 &&
+         mDecodedRect.width == mWidth &&
+         mDecodedRect.height == mHeight;
+}
+
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP nsImageQt::Draw(nsIRenderingContext &aContext,
                               nsIDrawingSurface *aSurface,

@@ -74,6 +74,7 @@ public:
 
     virtual void ImageUpdated(nsIDeviceContext *aContext,
                               PRUint8 aFlags,nsRect *aUpdateRect);
+    virtual PRBool      GetIsImageComplete();
 
     virtual nsresult    Optimize(nsIDeviceContext *aContext);
 

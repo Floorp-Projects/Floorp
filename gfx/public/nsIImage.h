@@ -164,6 +164,13 @@ public:
    * @param aUpdateRect The rectangle to update
    */
   virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsIntRect *aUpdateRect) = 0;
+  
+  /**
+   * Get whether this image's region is completely filled with data.
+   * @return PR_TRUE if image is complete, PR_FALSE if image is not yet 
+   *         complete or broken
+   */
+  virtual PRBool GetIsImageComplete() = 0;
 
   /**
    * Converted this pixelmap to an optimized pixelmap for the device
