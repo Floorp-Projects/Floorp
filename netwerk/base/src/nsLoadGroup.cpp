@@ -710,7 +710,7 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
 
         // If that was the last request -> remove ourselves from loadgroup
         if (mForegroundCount == 0 && mLoadGroup) {
-            mLoadGroup->RemoveRequest(this, nsnull);
+            mLoadGroup->RemoveRequest(this, nsnull, aStatus);
         }
     }
 
