@@ -679,14 +679,14 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   // there are enough broken servers out there that such a gross work-around
   // is necessary.  :(
 
-  PRBool tlsOn;
-  SSL_OptionGet(fd->lower, SSL_ENABLE_TLS, &tlsOn);
   
-  if (bytesWritten == -1 && tlsOn) {
+  if (bytesWritten == -1) {
     // Let's see if there was an error set by the SSL libraries that we
     // should tell the user about.
     PRInt32 err = PR_GetError();
     if (firstWrite) {
+      PRBool tlsOn;
+      SSL_OptionGet(fd->lower, SSL_ENABLE_TLS, &tlsOn);
       if (tlsOn) {
         // Make necko re-try this connection by sending back an EOF
         // on the first read. (ie premature EOF)
