@@ -31,7 +31,7 @@
  * @update	harishd 04/04/99
  * @update  gess 04/22/99
  */
-nsTagStack::nsTagStack()  {
+nsEntryStack::nsEntryStack()  {
   mCapacity=0;
   mCount=0;
   mEntries=0;
@@ -42,7 +42,7 @@ nsTagStack::nsTagStack()  {
  * @update  harishd 04/04/99
  * @update  gess 04/22/99
  */
-nsTagStack::~nsTagStack() {
+nsEntryStack::~nsEntryStack() {
   if(mEntries)
     delete [] mEntries;
 }
@@ -51,7 +51,7 @@ nsTagStack::~nsTagStack() {
  * Resets state of stack to be empty.
  * @update harishd 04/04/99
  */
-void nsTagStack::Empty(void) {
+void nsEntryStack::Empty(void) {
   mCount=0;
 }
 
@@ -59,7 +59,7 @@ void nsTagStack::Empty(void) {
  * 
  * @update  gess 04/22/99
  */
-void nsTagStack::Push(eHTMLTags aTag) {
+void nsEntryStack::Push(eHTMLTags aTag) {
   if(mCount==mCapacity){ 
     nsTagEntry* temp=new nsTagEntry[mCapacity+=50]; 
     PRUint32 index=0; 
@@ -80,7 +80,7 @@ void nsTagStack::Push(eHTMLTags aTag) {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsTagStack::Pop() {
+eHTMLTags nsEntryStack::Pop() {
   eHTMLTags result=eHTMLTag_unknown;
   if(0<mCount) {
     result=mEntries[--mCount].mTag;
@@ -93,7 +93,7 @@ eHTMLTags nsTagStack::Pop() {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsTagStack::First() const {
+eHTMLTags nsEntryStack::First() const {
   eHTMLTags result=eHTMLTag_unknown;
   if(0<mCount){
     result=mEntries[0].mTag;
@@ -106,7 +106,7 @@ eHTMLTags nsTagStack::First() const {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsTagStack::TagAt(PRUint32 anIndex) const {
+eHTMLTags nsEntryStack::TagAt(PRUint32 anIndex) const {
   eHTMLTags result=eHTMLTag_unknown;
   if(anIndex<mCount) {
     result=mEntries[anIndex].mTag;
@@ -118,7 +118,7 @@ eHTMLTags nsTagStack::TagAt(PRUint32 anIndex) const {
  * 
  * @update  gess 04/21/99
  */
-nsTagEntry& nsTagStack::EntryAt(PRUint32 anIndex) const {
+nsTagEntry& nsEntryStack::EntryAt(PRUint32 anIndex) const {
   static nsTagEntry gSentinel;
   if(anIndex<mCount) {
     return mEntries[anIndex];
@@ -132,7 +132,7 @@ nsTagEntry& nsTagStack::EntryAt(PRUint32 anIndex) const {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsTagStack::operator[](PRUint32 anIndex) const {
+eHTMLTags nsEntryStack::operator[](PRUint32 anIndex) const {
   eHTMLTags result=eHTMLTag_unknown;
   if(anIndex<mCount) {
     result=mEntries[anIndex].mTag;
@@ -146,7 +146,7 @@ eHTMLTags nsTagStack::operator[](PRUint32 anIndex) const {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-eHTMLTags nsTagStack::Last() const {
+eHTMLTags nsEntryStack::Last() const {
   return TagAt(mCount-1);
 }
 
@@ -155,7 +155,7 @@ eHTMLTags nsTagStack::Last() const {
  * @update  harishd 04/04/99
  * @update  gess 04/21/99
  */
-PRInt32 nsTagStack::GetTopmostIndexOf(eHTMLTags aTag) const {
+PRInt32 nsEntryStack::GetTopmostIndexOf(eHTMLTags aTag) const {
   int theIndex=0;
   for(theIndex=mCount-1;theIndex>=0;theIndex--){
     if(aTag==TagAt(theIndex))
@@ -272,12 +272,12 @@ eHTMLTags nsDTDContext::Last() const {
  * @update  gess7/9/98
  * @update  gess 4/26/99
  */
-nsTagStack* nsDTDContext::GetStyles(void) const {
-  nsTagStack* result=0;
+nsEntryStack* nsDTDContext::GetStyles(void) const {
+  nsEntryStack* result=0;
   if(0<mStack.mCount){
     PRInt32 theIndex=mStack.mEntries[mStack.mCount-1].mStyleIndex;  
     if(-1<theIndex){
-      result=(nsTagStack*)mStyles.ObjectAt(theIndex);
+      result=(nsEntryStack*)mStyles.ObjectAt(theIndex);
     }
   }
   return result;

@@ -66,10 +66,10 @@ struct nsTagEntry {
   PRInt8    mStyleIndex;
 };
 
-class nsTagStack {
+class nsEntryStack {
 public:
-              nsTagStack();
-              ~nsTagStack();
+              nsEntryStack();
+              ~nsEntryStack();
   void        Push(eHTMLTags aTag);
   eHTMLTags   Pop();
   eHTMLTags   First() const;
@@ -106,13 +106,13 @@ public:
   eHTMLTags     Last() const;
   void          Empty(void); 
   PRInt32       GetCount(void);
-  nsTagStack*   GetStyles(void) const;
+  nsEntryStack*   GetStyles(void) const;
 
   void          SaveToken(CToken* aToken, PRInt32 aID);
   CToken*       RestoreTokenFrom(PRInt32 aID);
   PRInt32       TokenCountAt(PRInt32 aID);
 
-  nsTagStack    mStack;
+  nsEntryStack    mStack;
   nsDeque       mSkipped; //each entry will hold a deque full of skipped tokens...
   nsDeque       mStyles;  //each entry will hold a tagstack full of style tags...
 #ifdef  NS_DEBUG

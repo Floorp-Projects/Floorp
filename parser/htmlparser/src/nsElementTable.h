@@ -46,8 +46,8 @@ public:
     mTagList=aTagList;
   }
 
-  PRInt32 GetTopmostIndexOf(nsTagStack& aTagStack);
-  PRInt32 GetBottommostIndexOf(nsTagStack& aTagStack,PRInt32 aStartOffset);
+  PRInt32 GetTopmostIndexOf(nsEntryStack& aTagStack);
+  PRInt32 GetBottommostIndexOf(nsEntryStack& aTagStack,PRInt32 aStartOffset);
   PRBool  Contains(eHTMLTags aTag);
 
   eHTMLTags   mTags[5];
