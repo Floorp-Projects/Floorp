@@ -25,7 +25,7 @@ Camino is still under development. It is stable enough to use day-to-day, but yo
 \
 To install Camino, simply drag the Camino icon onto your hard disk. We recommend that you copy it to the Applications folder. You can then Eject the disk image. If you like, you can drag Camino to your dock to have it easily accessible at all times. You might also wish to select Camino as your default browser in the Internet system preferences pane (under the Web tab).\
 \
-After installation, you may want to import bookmarks from another browser. Run Camino, choose \'d3Manage Bookmarks\'d3 from the Bookmarks menu, and choose \'d2Import Bookmarks\'d3 from the submenu. In the resulting file dialog, choose the bookmarks file you wish to import, and click Open. The bookmarks will be imported.\
+After installation, you may want to import bookmarks from another browser. Run Camino, choose \'d2Import Bookmarks\'d3 from the "Camino" application menu. In the resulting file dialog, choose the bookmarks file you wish to import, and click Open. The bookmarks will be imported.\
 \
 
 \f0\b\fs36 Where information is kept on disk
@@ -35,13 +35,17 @@ When you first run Camino, it makes a folder in
 \f3\fs20 ~/Library/Application Support/
 \f1\fs24  (where 
 \f3\fs20 ~
-\f1\fs24  is your Home directory) called \'d2Chimera\'d3. A folder down inside this folder contains your \'d3profile\'d3 information (bookmarks, cookies, cache etc). One of the containing folders has an odd-looking \'d2salted\'d3 name for security reasons.\
+\f1\fs24  is your Home directory) called \'d2Camino\'d3 which contains your \'d3profile\'d3 information (bookmarks, cookies, cache etc). \
 \
 There are two files in your profile that you might need to know about. First, 
-\f3\fs20 bookmarks.xml
+\f3\fs20 bookmarks.plist
 \f1\fs24  contains your bookmarks. You might want to regularly make copies of this file if you run nightly builds. 
 \f3\fs20 prefs.js
 \f1\fs24  contains most of the application preferences. Not all preferences are exposed in the preferences window yet, so you might see advice to \'d2edit your prefs file\'d3. To do that, drag prefs.js onto your favorite editor, make whatever changes are necessary, and save. Make sure the file gets saved in plain text format.\
+\
+Previous versions of Camino used a folder in 
+\f3\fs20 ~/Library/Application Support/Camino/
+\f1\fs24  for the profile. On first run, your profile will be copied to the new location and upgraded automatically. The old profile remains unchanged so you can revert to older versions of Camino if you desire. This version no longer uses the "salted" directory inside the profile.\
 \
 
 \f0\b\fs36 Uninstall
@@ -51,7 +55,7 @@ To get rid of all the files related to Camino, do the following:\
 \
    1. Drag the Camino icon to the trash\
    2. Drag the 
-\f3\fs20 ~/Library/Application Support/Chimera
+\f3\fs20 ~/Library/Application Support/Camino
 \f1\fs24  folder to the trash\
 \
 
