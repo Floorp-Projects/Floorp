@@ -223,7 +223,7 @@ nsMsgStripLine (char * string)
 #define ENCODE_AND_PUSH(name, structured, body, charset, usemime) \
   { \
     PUSH_STRING((name)); \
-    convbuf = nsMsgI18NEncodeMimePartIIStr((body), (structured), (charset), nsCRT::strlen(name), (usemime)); \
+    convbuf = nsMsgI18NEncodeMimePartIIStr((body), (structured), (charset), strlen(name), (usemime)); \
     if (convbuf) { \
       PUSH_STRING (convbuf); \
       PR_FREEIF(convbuf); \

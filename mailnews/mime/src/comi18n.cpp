@@ -259,7 +259,7 @@ static unsigned char * utf8_nextchar(unsigned char *str)
   if (*str < 128) {
     return (str+1);
   }
-  int len = nsCRT::strlen((char *) str);
+  int len = strlen((char *) str);
   // RFC 2279 defines more than 3 bytes sequences (0xF0, 0xF8, 0xFC),
   // but I think we won't encounter those cases as long as we're supporting UCS-2 and no surrogate.
   if ((len >= 3) && (*str >= 0xE0)) {
@@ -318,7 +318,7 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
         nsMemory::Free(_pUCS2);
       return -1;
     }
-    encodedword_headlen = nsCRT::strlen(encodedword_head);
+    encodedword_headlen = strlen(encodedword_head);
 
     // Load HANKAKU-KANA prefrence and cache it.
     if (!nsCRT::strcasecmp("ISO-2022-JP", charset)) {
@@ -373,7 +373,7 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
   */
   if (linelen + encodedword_headlen + encodedword_taillen < foldlen) {
     if (foldingonly) {
-      offset = nsCRT::strlen(pUTF8Head = pUTF8);
+      offset = strlen(pUTF8Head = pUTF8);
       pUTF8 += offset;
     }
     else {
@@ -385,7 +385,7 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
       }
       if (method == 'B') {
         /* 4 / 3 = B encoding multiplier */
-        offset = nsCRT::strlen(ibuf) * 4 / 3;
+        offset = strlen(ibuf) * 4 / 3;
       }
       else {
         /* 3 = Q encoding multiplier */
@@ -461,7 +461,7 @@ PRInt32 generate_encodedwords(char *pUTF8, const char *charset, char method, cha
         }
         if (method == 'B') {
           /* 4 / 3 = B encoding multiplier */
-          offset = nsCRT::strlen(ibuf) * 4 / 3;
+          offset = strlen(ibuf) * 4 / 3;
         }
         else {
           /* 3 = Q encoding multiplier */
@@ -475,15 +475,15 @@ process_lastline:
         PRInt32 enclen;
         if (foldingonly) {
           strcpy(o, pUTF8Head);
-          enclen = nsCRT::strlen(o);
+          enclen = strlen(o);
           o += enclen;
           *pUTF8 = cUTF8Tmp;
         }
         else {
           if (method == 'B')
-            enclen = intlmime_encode_b((const unsigned char *)ibuf, nsCRT::strlen(ibuf), o);
+            enclen = intlmime_encode_b((const unsigned char *)ibuf, strlen(ibuf), o);
           else
-            enclen = intlmime_encode_q((const unsigned char *)ibuf, nsCRT::strlen(ibuf), o);
+            enclen = intlmime_encode_q((const unsigned char *)ibuf, strlen(ibuf), o);
           PR_Free(ibuf);
           o += enclen;
           strcpy(o, "?=");
@@ -680,7 +680,7 @@ char * apply_rfc2047_encoding(const char *_src, PRBool structured, const char *c
   /* allocate enough buffer for conversion, this way it can avoid
      do another memory allocation which is expensive
    */
-  outputlen = nsCRT::strlen(src) * 4 + kMAX_CSNAME + 8;
+  outputlen = strlen(src) * 4 + kMAX_CSNAME + 8;
   if ((outputtail = output = (char *)PR_Malloc(outputlen)) == nsnull) {
     PR_Free(src_head);
     return nsnull;
@@ -701,12 +701,12 @@ char * apply_rfc2047_encoding(const char *_src, PRBool structured, const char *c
             output = nsnull;
             break;
           }
-          usedlen = nsCRT::strlen(outputtail);
+          usedlen = strlen(outputtail);
           outputtail += usedlen;
           outputlen -= usedlen;
         }
         if (list->addrspec) {
-          usedlen = nsCRT::strlen(list->addrspec);
+          usedlen = strlen(list->addrspec);
           if (cursor + usedlen > foldlen) {
             if (PR_snprintf(outputtail, outputlen - 1, "\r\n %s", list->addrspec) < 0) {
               PR_Free(output);
@@ -758,7 +758,7 @@ char * apply_rfc2047_encoding(const char *_src, PRBool structured, const char *c
         PR_Free(output);
         return nsnull;
       }
-      overhead = nsCRT::strlen(head) + 2 + 4; // 2 : "?=", 4 : a B-encoded chunk
+      overhead = strlen(head) + 2 + 4; // 2 : "?=", 4 : a B-encoded chunk
       skiplen = spacepos + 1 - src;
       if (cursor + skiplen + overhead < foldlen) {
         char tmp = *(spacepos + 1);
@@ -948,7 +948,7 @@ char *intl_decode_mime_part2_str(const char *header,
   charset[0] = '\0';
 
   /* Assume no more than 3X expansion due to UTF-8 conversion */
-  retbuff = (char *)PR_Malloc(3*nsCRT::strlen(header)+1);
+  retbuff = (char *)PR_Malloc(3*strlen(header)+1);
 
   if (retbuff == NULL)
     return NULL;
@@ -1055,7 +1055,7 @@ char *intl_decode_mime_part2_str(const char *header,
   }
 
   /* put the tail back  */
-  intl_copy_uncoded_header(&output_p, begin, nsCRT::strlen(begin), default_charset);
+  intl_copy_uncoded_header(&output_p, begin, strlen(begin), default_charset);
   *output_p = '\0';
   convert_htab(retbuff);
 
@@ -1081,7 +1081,7 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
 
   // If no MIME encoded then do nothing otherwise decode the input.
   if (PL_strstr(header, "=?") ||
-      (default_charset && !intl_is_legal_utf8(header, nsCRT::strlen(header)))) {
+      (default_charset && !intl_is_legal_utf8(header, strlen(header)))) {
 	  result = intl_decode_mime_part2_str(header, default_charset, override_charset);
   } else if (eatContinuations && 
              (PL_strchr(header, '\n') || PL_strchr(header, '\r'))) {

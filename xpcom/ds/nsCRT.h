@@ -108,44 +108,28 @@ public:
     CR='\r'   /* Carriage Return */
   };
 
-  /** Copy bytes from aSrc to aDest.
-    @param aDest the destination address
-    @param aSrc the source address
-    @param aCount the number of bytes to copy
-    */
-
-  /**** 
-   ****  nsCRT::memcpy() is no longer supported.  
-   ****  Please use memcpy from standard C instead.
-   ****/
-
-  /**** 
-   ****  nsCRT::memcmp() is no longer supported.  
-   ****  Please use memcpy from standard C instead.
-   ****/
-
-  /**** 
-   ****  nsCRT::memmove() is no longer supported.  
-   ****  Please use memmove from standard C instead.
-   ****/
-
-  /**** 
-   ****  nsCRT::memset() is no longer supported.  
-   ****  Please use memset from standard C instead.
-   ****/
-
-  /**** 
-   ****  nsCRT::zero() is no longer supported.  
-   ****  Please use memset from standard C instead.
-   ****/
+  /*** 
+   ***  The following nsCRT::mem* functions are no longer
+   ***  supported. Please use lib C functions instead.  
+   ***
+   ***  nsCRT::memcpy()
+   ***  nsCRT::memcmp()
+   ***  nsCRT::memmove()
+   ***  nsCRT::memset()
+   ***  nsCRT::zero()
+   ***
+   ***  In addition, the following char* string utilities
+   ***  are no longer supported either.  Please use lib C 
+   ***  also.  Avoid calling into PL_str* if possible.
+   ***
+   ***  nsCRT::strlen()
+   ***
+   ***/
 
   /** Compute the string length of s
    @param s the string in question
    @return the length of s
    */
-  static PRUint32 strlen(const char* s) {
-    return PRUint32(::strlen(s));
-  }
 
   /// Compare s1 and s2.
   static PRInt32 strcmp(const char* s1, const char* s2) {
