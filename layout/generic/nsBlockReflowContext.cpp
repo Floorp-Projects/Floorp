@@ -132,6 +132,13 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   }
   htmlReflow->WillReflow(mPresContext);
 
+#ifdef DEBUG
+  if (nsnull != mMetrics.maxElementSize) {
+    mMetrics.maxElementSize->width = nscoord(0xdeadbeef);
+    mMetrics.maxElementSize->height = nscoord(0xdeadbeef);
+  }
+#endif
+
   // Adjust spacemanager coordinate system for the frame. The
   // spacemanager coordinates are <b>inside</b> the callers
   // border+padding, but the x/y coordinates are not (recall that
@@ -149,6 +156,17 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 #ifdef DEBUG_kipp
   NS_ASSERTION((mMetrics.width > -200000) && (mMetrics.width < 200000), "oy");
   NS_ASSERTION((mMetrics.height > -200000) && (mMetrics.height < 200000), "oy");
+#endif
+#ifdef DEBUG
+  if ((nsnull != mMetrics.maxElementSize) &&
+      ((nscoord(0xdeadbeef) == mMetrics.maxElementSize->width) ||
+       (nscoord(0xdeadbeef) == mMetrics.maxElementSize->height))) {
+    printf("nsBlockReflowContext: ");
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" didn't set max-element-size!\n");
+    mMetrics.maxElementSize->width = 0;
+    mMetrics.maxElementSize->height = 0;
+  }
 #endif
 
   aFrame->GetFrameState(&state);
@@ -293,7 +311,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     nsRect r(mX, mY, 0, 0);
     mFrame->SetRect(r);
     aInFlowBounds = r;
-    aCombinedRect = r;
+    aCombinedRect = mMetrics.mCombinedArea;
     fits = PR_TRUE;
   }
   else {
