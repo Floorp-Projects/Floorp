@@ -324,9 +324,28 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
                                  aObserver);
   }
 
-  // If scripts aren't enabled there's no point in going on.
+  // Check whether we should be executing scripts at all for this document
   if (!mDocument->IsScriptEnabled()) {
     return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+  }
+  
+  // Script evaluation can also be disabled in the current script
+  // context even though it's enabled in the document.
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  if (globalObject)
+  {
+    nsCOMPtr<nsIScriptContext> context;
+    if (NS_SUCCEEDED(globalObject->GetContext(getter_AddRefs(context)))
+        && context) {
+      PRBool scriptsEnabled = PR_TRUE;
+      context->GetScriptsEnabled(&scriptsEnabled);
+      // If scripts aren't enabled in the current context, there's no
+      // point in going on.
+      if (!scriptsEnabled) {
+        return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
+      }
+    }
   }
 
   PRBool isJavaScript = PR_TRUE;
@@ -409,8 +428,6 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       return FireErrorNotification(rv, aElement, aObserver);
     }
     
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
     // After the security manager, the content-policy stuff gets a veto
     if (globalObject) {
       nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
