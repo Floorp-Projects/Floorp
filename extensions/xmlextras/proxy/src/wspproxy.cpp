@@ -39,3 +39,4 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "wspprivate.h"
+#include "nsIWSDL.h"
