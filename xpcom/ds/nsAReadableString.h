@@ -458,12 +458,21 @@ operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
       return PRBool(Compare(lhs, NS_READABLE_CAST(_CharT, rhs)) comp 0);  \
     }
 
+#define NS_DEF_1_STRING_STRING_COMPARISON_OPERATOR(comp, _StringT, _CharT)  \
+  inline                                                                    \
+  PRBool                                                                    \
+  operator comp( const _StringT& lhs, const _StringT& rhs )                 \
+    {                                                                       \
+      return PRBool(Compare(NS_READABLE_CAST(_CharT, lhs), NS_READABLE_CAST(_CharT, rhs)) comp 0); \
+    }
+
 #define NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(comp, _StringT, _CharT) \
   template <class _CharT> NS_DEF_1_STRING_PTR_COMPARISON_OPERATOR(comp, _StringT, _CharT) \
   template <class _CharT> NS_DEF_1_PTR_STRING_COMPARISON_OPERATOR(comp, _StringT, _CharT)
 
-#define NS_DEF_2_STRING_COMPARISON_OPERATORS(comp, _StringT, _CharT)  \
-  NS_DEF_1_STRING_PTR_COMPARISON_OPERATOR(comp, _StringT, _CharT) \
+#define NS_DEF_3_STRING_COMPARISON_OPERATORS(comp, _StringT, _CharT)  \
+  NS_DEF_1_STRING_STRING_COMPARISON_OPERATOR(comp, _StringT, _CharT)  \
+  NS_DEF_1_STRING_PTR_COMPARISON_OPERATOR(comp, _StringT, _CharT)     \
   NS_DEF_1_PTR_STRING_COMPARISON_OPERATOR(comp, _StringT, _CharT)
 
 #define NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(_StringT, _CharT) \
@@ -475,12 +484,12 @@ operator!=( const nsReadingIterator<CharT>& lhs, const nsReadingIterator<CharT>&
   NS_DEF_2_TEMPLATE_STRING_COMPARISON_OPERATORS(> , _StringT, _CharT)
 
 #define NS_DEF_STRING_COMPARISON_OPERATORS(_StringT, _CharT) \
-  NS_DEF_2_STRING_COMPARISON_OPERATORS(!=, _StringT, _CharT) \
-  NS_DEF_2_STRING_COMPARISON_OPERATORS(< , _StringT, _CharT) \
-  NS_DEF_2_STRING_COMPARISON_OPERATORS(<=, _StringT, _CharT) \
-  NS_DEF_2_STRING_COMPARISON_OPERATORS(==, _StringT, _CharT) \
-  NS_DEF_2_STRING_COMPARISON_OPERATORS(>=, _StringT, _CharT) \
-  NS_DEF_2_STRING_COMPARISON_OPERATORS(> , _StringT, _CharT)
+  NS_DEF_3_STRING_COMPARISON_OPERATORS(!=, _StringT, _CharT) \
+  NS_DEF_3_STRING_COMPARISON_OPERATORS(< , _StringT, _CharT) \
+  NS_DEF_3_STRING_COMPARISON_OPERATORS(<=, _StringT, _CharT) \
+  NS_DEF_3_STRING_COMPARISON_OPERATORS(==, _StringT, _CharT) \
+  NS_DEF_3_STRING_COMPARISON_OPERATORS(>=, _StringT, _CharT) \
+  NS_DEF_3_STRING_COMPARISON_OPERATORS(> , _StringT, _CharT)
 
 
 NS_DEF_TEMPLATE_STRING_COMPARISON_OPERATORS(basic_nsAReadableString<CharT>, CharT)
@@ -1093,7 +1102,7 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
 
         NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
-        nsCharTraits<typename OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+        nsCharTraits<OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
 
         last -= PRInt32(lengthToCopy);
         result -= PRInt32(lengthToCopy);
