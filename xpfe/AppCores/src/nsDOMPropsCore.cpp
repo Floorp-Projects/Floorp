@@ -448,8 +448,10 @@ nsDOMPropsCore::ShowProperties(const nsString& aUrl, nsIDOMWindow* aParent, nsID
   if (NS_FAILED(rv)) return rv;
 
   nsIURI *uri = nsnull;
-  const char *uriStr = aUrl.GetBuffer();
+  char *uriStr = aUrl.ToNewCString();
+  if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
   rv = service->NewURI(uriStr, nsnull, &uri);
+  nsCRT::free(uriStr);
   if (NS_FAILED(rv)) return rv;
 
   rv = uri->QueryInterface(nsIURI::GetIID(), (void**)&urlObj);

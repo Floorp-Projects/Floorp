@@ -81,8 +81,10 @@ nsSoftwareUpdateListener::nsSoftwareUpdateListener(const nsString& fromURL, cons
 
     // XXX NECKO verb? getter?
     nsIChannel *channel = nsnull;
-    const char *urlStr = fromURL.GetBuffer();
+    char *urlStr = fromURL.ToNewCString();
+    if (!urlStr) return NS_ERROR_OUT_OF_MEMORY;
     rv = service->NewChannel("load", urlStr, nsnull, nsnull, &channel);
+    nsCRT::free(urlStr);
     if (NS_FAILED(mResult)) return;
 
     rv = channel->AsyncRead(0, -1, nsnull, this);
