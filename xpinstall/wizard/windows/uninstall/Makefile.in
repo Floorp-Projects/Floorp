@@ -45,6 +45,8 @@ CSRCS		= \
 		process.c \
 		$(NULL)
 
+MOZ_WINCONSOLE = 0
+
 LOCAL_INCLUDES	= -I$(srcdir)
 
 ifdef GNU_CC
