@@ -44,10 +44,12 @@
 
 #include "nsISupports.idl"
 
+interface nsIURI;
+
 [scriptable, uuid(D60B3710-166D-11d5-A542-0010A401EB10)]
 interface nsIImgManager : nsISupports
 {
-  void block(in string imageURL);
+  void block(in nsIURI imageURL);
 };
 
 %{ C++

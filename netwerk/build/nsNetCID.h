@@ -57,6 +57,19 @@
     {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+// service implementing nsIURLParsingUtils.
+#define NS_URLPARSINGUTILS_CLASSNAME \
+    "nsURLParsingUtils"
+#define NS_URLPARSINGUTILS_CONTRACTID \
+    "@mozilla.org/network/url-parsing-utils;1"
+#define NS_URLPARSINGUTILS_CID                       \
+{ /* bb567799-182e-443f-8c01-d1f97ceb51c8 */         \
+    0xbb567799,                                      \
+    0x182e,                                          \
+    0x443f,                                          \
+    {0x8c, 0x01, 0xd1, 0xf9, 0x7c, 0xeb, 0x51, 0xc8} \
+}
+
 // component implementing nsILoadGroup.
 #define NS_LOADGROUP_CLASSNAME \
     "nsLoadGroup"

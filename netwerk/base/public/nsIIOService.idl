@@ -40,33 +40,48 @@
 interface nsIProtocolHandler;
 interface nsIChannel;
 interface nsIURI;
-interface nsIURLParser;
 interface nsIFile;
 
+/**
+ * nsIIOService provides a set of utility functions for necko.  The interface
+ * duplicates many of the nsIProtocolHandler methods in a protocol handler
+ * independent way (e.g., NewURI sniffs the scheme to determine which protocol
+ * handler's NewURI should be invoked).  nsIIOService also provides a set of
+ * URL parsing utility functions.  These are provided to make the programmers
+ * job easier and in some cases to improve performance by eliminating
+ * intermediate data structures and interfaces.
+ *
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(ab7c3a84-d488-11d3-8cda-0060b0fc14a3)]
 interface nsIIOService : nsISupports
 {
+    /*************************************************************************
+     * Protocol handler utilities
+     */
+
     /**
      * Returns a protocol handler for a given URI scheme.
      *
-     * @param scheme  URI scheme
-     * @return reference to nsIProtcolHandler
+     * @param aScheme the URI scheme
+     * @return reference to corresponding nsIProtocolHandler
      */
-    nsIProtocolHandler getProtocolHandler(in string scheme);
+    nsIProtocolHandler getProtocolHandler(in string aScheme);
 
     /**
      * Returns the protocol flags for a given scheme.
      *
-     * @param scheme  URI scheme 
-     * @return returns unsigned long for protocol flags
+     * @param aScheme the URI scheme
+     * @return value of corresponding nsIProtocolHandler::protocolFlags
      */
-    unsigned long getProtocolFlags(in string scheme);
+    unsigned long getProtocolFlags(in string aScheme);
 
     /**
      * This method constructs a new URI by first determining the scheme
      * of the URI spec, and then delegating the construction of the URI
      * to the protocol handler for that scheme. QueryInterface can be used
      * on the resulting URI object to obtain a more specific type of URI.
+     *
      * @see nsIProtocolHandler::newURI
      */
     nsIURI newURI(in AUTF8String aSpec,
@@ -74,32 +89,23 @@ interface nsIIOService : nsISupports
                   in nsIURI aBaseURI);
 
     /**
-     * This method constructs a new file URI 
+     * This method constructs a new URI from a nsIFile.
      *
-     * @param aFile  nsIFile from which to make an URI from
+     * @param aFile specifies the file path
      * @return reference to a new nsIURI object
      */
     nsIURI newFileURI(in nsIFile aFile);
 
     /**
-     * Creates a channel for a given URI. The notificationCallbacks argument
-     * is used to obtain the appropriate callbacks for the URI's protocol 
-     * from the application.
+     * Creates a channel for a given URI.
      *
-     * @param originalURI - Specifies the original URI which caused the 
-     * creation of this channel. This can occur when the construction of 
-     * one channel (e.g. for resource:) causes another channel to be created 
-     * on its behalf (e.g. a file: channel), or if a redirect occurs, 
-     * causing the current URL to become different from the original URL. 
-     * If NULL, the aURI parameter will be used as the originalURI instead.
-     *
-     * @param aURI  nsIURI to make a channel from
-     * @return a reference to the new nsIChannel object
+     * @param aURI nsIURI from which to make a channel
+     * @return reference to the new nsIChannel object
      */
     nsIChannel newChannelFromURI(in nsIURI aURI);
 
     /**
-     * Shortcut equivalent to newChannelFromURI(newURI(...))
+     * Equivalent to newChannelFromURI(newURI(...))
      */
     nsIChannel newChannel(in AUTF8String aSpec,
                           in string aOriginCharset,
@@ -115,91 +121,56 @@ interface nsIIOService : nsISupports
     attribute boolean offline;
 
     /**
-     * Checks if a port number is banned.
+     * Checks if a port number is banned. This involves consulting a black-
+     * list of port numbers corresponding to services that may be easily
+     * exploitable. If the given port is found on the black-list, then the
+     * protocol handler (corresponding to aScheme) will be asked if it wishes
+     * to override the IO service's decision to block the port. This gives
+     * the protocol handler ultimate control over its own security policy
+     * while ensuring reasonable, default protection.
      *
-     * |allowPort| will check a list of "known-to-do-bad-things" 
-     * port numbers.  If the given port is found on the blacklist, 
-     * |allowPort| will ask the protocol handler if it wishes to override. 
-     * Scheme can be null. 
+     * @see nsIProtocolHandler::allowPort
      */
-    boolean allowPort(in long port, in string scheme);
+    boolean allowPort(in long aPort, in string aScheme);
 
-    ////////////////////////////////////////////////////////////////////////////
-    // URL parsing utilities
+
+    /*************************************************************************
+     * URL parsing utilities
+     *
+     * The set of methods provided here is intentionally limited.  Most of
+     * Necko's URL parsing functionality is provided via nsIURI.  This is
+     * done to ensure a common point of access to URL parsing, which is
+     * protocol dependent.  Do not try to parse a random URL string as the
+     * result will likely differ (perhaps only in some subtle way) from the
+     * value of the corresponding nsIURI attribute.  Violating this rule
+     * may make your code vulnerable to various kinds of security exploits.
+     * DON'T RISK IT!  --darin
+     */
 
     /**
-     * Utility for protocol implementors -- extracts the scheme from a URL 
-     * string, consistently and according to spec.
+     * Utility to extract the scheme from a URL string, consistently and
+     * according to spec (see RFC 2396).
      *
-     * @param urlString  the URL string to parse
-     * @return scheme 
+     * @param aSpec the URL string to parse
+     * @return URL scheme
      *
-     * @throws NS_ERROR_MALFORMED_URI if urlString is not of the right form.
+     * @throws NS_ERROR_MALFORMED_URI if URL string is not of the right form.
      */
     ACString extractScheme(in AUTF8String urlString);
 
     /**
-     * returns the protocol specific URL parser
-     */
-    nsIURLParser getParserForScheme(in string scheme);
-
-    /**
-     * @param urlString  absolute URL path.
-     * @param flags      combination of url_XXX flags.
+     * Converts the nsIFile to the corresponding URL string.  NOTE: under
+     * some platforms this is a lossy conversion (e.g., Mac Carbon build).
+     * If the nsIFile is a local file, then the result will be a file://
+     * URL string.
      *
-     * @throws NS_ERROR_MALFORMED_URI if urlString is not of the right form.
-     */
-    AUTF8String extractUrlPart(in AUTF8String urlString, in short flags);
-
-    /**
-     * Constants for the mask in the call to extractUrlPart
-     *
-     * XXX these should really be enumerated in left-to-right order!
-     */
-    const short url_Scheme        = (1<<0);
-    const short url_Username      = (1<<1);
-    const short url_Password      = (1<<2);
-    const short url_Host          = (1<<3);
-    const short url_Directory     = (1<<4);
-    const short url_FileBaseName  = (1<<5);
-    const short url_FileExtension = (1<<6);
-    const short url_Param         = (1<<7);
-    const short url_Query         = (1<<8);
-    const short url_Ref           = (1<<9);
-    const short url_Path          = (1<<10);
-    const short url_Port          = (1<<11);
-
-    /**
-     * Resolves a relative path string containing "." and ".."
-     * with respect to a base path (assumed to already be resolved). 
-     * For example, resolving "../../foo/./bar/../baz.html" w.r.t.
-     * "/a/b/c/d/e/" yields "/a/b/c/foo/baz.html". Attempting to 
-     * ascend above the base results in the NS_ERROR_MALFORMED_URI
-     * exception. If basePath is null, it treats it as "/".
-     *
-     * @param relativePath  a relative URI
-     * @param basePath      a base URI
-     *
-     * @return a new string, representing canonical uri
-     */
-    AUTF8String resolveRelativePath(in AUTF8String relativePath,
-                                    in AUTF8String basePath);
-
-    /**
-     * conversions between nsILocalFile and a file url string
-     */
-
-    /**
-     * gets a file:// url out of an nsIFile
-     * @param file  the file to extract the path from
-     * @return a file:// style url string
+     * The resulting string may contain URL-escaped characters.
      */
     AUTF8String getURLSpecFromFile(in nsIFile file);
 
     /**
-     * Sets the native path of the file given the url string
-     * @param file  the file to initialize with the given spec
-     * @param url   the url string which will be used to initialize the file
+     * Converts the URL string into the corresponding nsIFile if possible.
+     * A local file will be created if the URL string begins with file://.
      */
-    void initFileFromURLSpec(in nsIFile file, in AUTF8String url);
+    nsIFile getFileFromURLSpec(in AUTF8String url);
 };
