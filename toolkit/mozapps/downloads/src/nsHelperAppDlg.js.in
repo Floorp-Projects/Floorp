@@ -429,6 +429,19 @@ nsUnknownContentTypeDialog.prototype = {
       openHandlerBox.appendChild(openHandler);
 
       this.mDialog.setTimeout("dialog.postShowCallback()", 0);
+      
+      this.mDialog.document.documentElement.getButton("accept").disabled = true;
+      const nsITimer = Components.interfaces.nsITimer;
+      this._timer = Components.classes["@mozilla.org/timer;1"]
+                              .createInstance(nsITimer);
+      this._timer.initWithCallback(this, 250, nsITimer.TYPE_ONE_SHOT);
+    },
+    
+    _timer: null,
+    notify: function (aTimer) {
+      if (!this._blurred)
+        this.mDialog.document.documentElement.getButton('accept').disabled = false;
+      this._delayExpired = true;
     },
     
     postShowCallback: function () {
@@ -500,6 +513,21 @@ nsUnknownContentTypeDialog.prototype = {
         }
         
         type.value = typeString;
+    },
+    
+    _blurred: false,
+    _delayExpired: false, 
+    onBlur: function() {
+      this._blurred = true;
+      this.mDialog.document.documentElement.getButton("accept").disabled = true;
+    },
+    
+    onFocus: function() {
+      this._blurred = false;
+      if (this._delayExpired) {
+        var script = "document.documentElement.getButton('accept').disabled = false";
+        this.mDialog.setTimeout(script, 250);
+      }
     },
 
     // Returns true if opening the default application makes sense.
