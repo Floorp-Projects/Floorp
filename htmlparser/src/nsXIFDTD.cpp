@@ -85,7 +85,7 @@ nsXIFTagEntry gXIFTagTable[] =
   {"leaf",                  eXIFTag_leaf},
   {"link",                  eXIFTag_link},
 
-  {"markup_declaration",    eXIFTag_mdo},
+  {"markup_declaration",    eXIFTag_markupDecl},
 
   {"section",               eXIFTag_section},
   {"section_body",          eXIFTag_section_body}, 
@@ -716,7 +716,7 @@ nsresult nsXIFDTD::HandleStartToken(CToken* aToken) {
         AddCSSDeclaration(node);
       break;
 
-      case eXIFTag_mdo:
+      case eXIFTag_markupDecl:
         mSink->OpenContainer(node);
         break;
 
@@ -780,7 +780,7 @@ nsresult nsXIFDTD::HandleEndToken(CToken* aToken) {
       EndCSSDeclarationList(node);
     break;
 
-    case eXIFTag_mdo:
+    case eXIFTag_markupDecl:
       mSink->CloseContainer(node);
 
     default:

@@ -1186,7 +1186,7 @@ nsHTMLElement gHTMLElements[] = {
     /*special props, prop-range*/       0, kNoPropRange,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 
-  { /*tag*/                             eHTMLTag_mdo,  // Markup Declaration Open, i.e., "<!"
+  { /*tag*/                             eHTMLTag_markupDecl,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
     /*autoclose starttags and endtags*/ 0,0,0,

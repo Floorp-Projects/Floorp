@@ -682,7 +682,7 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
   if(theIndex==kNotFound)
     aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
   else
-    aToken = theRecycler->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_unknown);
+    aToken = theRecycler->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_markupDecl);
   
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
