@@ -69,7 +69,7 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
                              const nsIID &aIID,
                              void **aResult)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     if (aResult == nsnull)
         return NS_ERROR_NULL_POINTER;
