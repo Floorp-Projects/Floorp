@@ -23,8 +23,6 @@
  * Command-specific code. This stuff should be called by the widgets
  */
 
-var messenger = Components.classes['component://netscape/messenger'].createInstance();
-messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 
 var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);		
@@ -36,58 +34,7 @@ var prefs = Components.classes['component://netscape/preferences'].getService();
 prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 var showPerformance = prefs.GetBoolPref('mail.showMessengerPerformance');
 
-//Create datasources
-var accountManagerDataSource = Components.classes["component://netscape/rdf/datasource?name=msgaccountmanager"].createInstance();
-var folderDataSource = Components.classes["component://netscape/rdf/datasource?name=mailnewsfolders"].createInstance();
-var messageDataSource = Components.classes["component://netscape/rdf/datasource?name=mailnewsmessages"].createInstance();
-var messageViewDataSource = Components.classes["component://netscape/rdf/datasource?name=mail-messageview"].createInstance();
 
-//Create windows status feedback
-var statusFeedback = Components.classes["component://netscape/messenger/statusfeedback"].createInstance();
-statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
-
-//put this in a function so we can change the position in hierarchy if we have to.
-function GetFolderTree()
-{
-	var folderTree = FindInSidebar(frames[0].frames[0], 'folderTree'); 
-	return folderTree;
-}
-
-function FindInSidebar(currentWindow, id)
-{
-	var item = currentWindow.document.getElementById(id);
-	if(item)
-		return item;
-
-	for(var i = 0; i < frames.length; i++)
-	{
-		var frameItem = FindInSidebar(currentWindow.frames[i], id);
-		if(frameItem)
-			return frameItem;
-	}
-}
-
-function GetThreadPane()
-{
-	return frames[0].frames[1].frames[0];
-}
-
-function GetThreadTree()
-{
-	var threadTree = GetThreadPane().document.getElementById('threadTree');
-	return threadTree;
-}
-
-function GetThreadTreeFolder()
-{
-  var tree = GetThreadTree();
-  return tree;
-}
-
-function FindMessenger()
-{
-  return messenger;
-}
 
 function OpenURL(url)
 {
@@ -213,9 +160,7 @@ function ChangeFolderByURI(uri)
 
 function SortThreadPane(column, sortKey)
 {
-    var threadPane = GetThreadPane();
-
-	var node = threadPane.document.getElementById(column);
+	var node = document.getElementById(column);
 	if(!node)
 		return false;
 
@@ -301,12 +246,7 @@ function SetFolderCharset(folderResource, aCharset)
 	db2.Assert(folderResource, charsetProperty, charsetResource, true);
 }
 
-function RefreshThreadTreeView()
-{
-	var currentFolder = GetThreadTreeFolder();  
-	var currentFolderID = currentFolder.getAttribute('ref');
-	currentFolder.setAttribute('ref', currentFolderID);
-}
+
 
 function ToggleMessageRead(treeItem)
 {
@@ -337,12 +277,6 @@ function ThreadPaneSelectionChange(selectedElement)
 		LoadMessage(selArray[0]);
 	else
 		ClearMessagePane();
-
-}
-
-function ClearMessagePane()
-{
-	messenger.OpenURL("about:blank");	
 
 }
 
@@ -409,72 +343,11 @@ function IsSpecialFolderSelected(folderName)
 	return false;
 }
 
-function AddDataSources()
-{
 
-	//to move menu item
-	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	var moveMenu = document.getElementById('moveMenu');
-	moveMenu.database.AddDataSource(accountManagerDataSource);
-	moveMenu.database.AddDataSource(folderDataSource);
-	moveMenu.setAttribute('ref', 'msgaccounts:/');
-
-	//to copy menu item
-	var copyMenu = document.getElementById('copyMenu');
-	copyMenu.database.AddDataSource(accountManagerDataSource);
-	copyMenu.database.AddDataSource(folderDataSource);
-	copyMenu.setAttribute('ref', 'msgaccounts:/');
-
-	//Add statusFeedback
-	var windowData = folderDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
-
-	windowData = messageDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
-
-	windowData = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
-
-	windowData = messageViewDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
-
-}	
-
-function OnLoadFolderPane(folderTree)
-{
-	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#Name');
-	//Add folderDataSource and accountManagerDataSource to folderPane
-	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	folderTree.database.AddDataSource(accountManagerDataSource);
-    folderTree.database.AddDataSource(folderDataSource);
-	folderTree.setAttribute('ref', 'msgaccounts:/');
-}
-
-function OnLoadThreadPane(threadTree)
-{
-	//Add FolderDataSource
-	//to messageview in thread pane.
-	messageViewDataSource = messageViewDataSource.QueryInterface(Components.interfaces.nsIRDFCompositeDataSource);
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	messageViewDataSource.AddDataSource(folderDataSource);
-
-	// add messageViewDataSource to thread pane
-	messageViewDataSource = messageViewDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	threadTree.database.AddDataSource(messageViewDataSource);
-
-	//Add message data source
-	messageDataSource = messageDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	threadTree.database.AddDataSource(messageDataSource);
-
-	ShowThreads(false);
-}
 
 function ChangeThreadView()
 {
-	var threadPane = GetThreadPane();
-	var threadColumn = threadPane.document.getElementById('ThreadColumnHeader');
+	var threadColumn = document.getElementById('ThreadColumnHeader');
 	if(threadColumn)
 	{
 		var currentView = threadColumn.getAttribute('currentView');
@@ -492,12 +365,12 @@ function ChangeThreadView()
 
 function ShowThreads(showThreads)
 {
+	dump('in showthreads\n');
 	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
 	if(view)
 	{
 		view.SetShowThreads(showThreads);
-		var threadPane = GetThreadPane();
-		var threadColumn = threadPane.document.getElementById('ThreadColumnHeader');
+		var threadColumn = document.getElementById('ThreadColumnHeader');
 		if(threadColumn)
 		{
 			if(showThreads)
