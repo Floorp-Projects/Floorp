@@ -61,11 +61,12 @@ public:
     nsresult Init();
 
 protected:
-    nsDSURIContentListener();
+    nsDSURIContentListener(nsDocShell* aDocShell);
     virtual ~nsDSURIContentListener();
 
-    void DocShell(nsDocShell* aDocShell);
-    nsDocShell* DocShell();
+    void DropDocShellreference() {
+        mDocShell = nsnull;
+    }
 
 protected:
     nsDocShell*                      mDocShell;

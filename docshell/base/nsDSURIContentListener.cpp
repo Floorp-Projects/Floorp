@@ -49,8 +49,9 @@
 //***    nsDSURIContentListener: Object Management
 //*****************************************************************************
 
-nsDSURIContentListener::nsDSURIContentListener() : mDocShell(nsnull), 
-    mParentContentListener(nsnull)
+nsDSURIContentListener::nsDSURIContentListener(nsDocShell* aDocShell)
+    : mDocShell(aDocShell), 
+      mParentContentListener(nsnull)
 {
 }
 
@@ -210,7 +211,7 @@ nsDSURIContentListener::CanHandleContent(const char* aContentType,
 NS_IMETHODIMP
 nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
 {
-    NS_ADDREF(*aLoadCookie = NS_STATIC_CAST(nsIDocumentLoader*, mDocShell));
+    NS_IF_ADDREF(*aLoadCookie = NS_STATIC_CAST(nsIDocumentLoader*, mDocShell));
     return NS_OK;
 }
 
@@ -267,20 +268,3 @@ nsDSURIContentListener::SetParentContentListener(nsIURIContentListener*
     return NS_OK;
 }
 
-//*****************************************************************************
-// nsDSURIContentListener: Helpers
-//*****************************************************************************   
-
-//*****************************************************************************
-// nsDSURIContentListener: Accessors
-//*****************************************************************************   
-
-void nsDSURIContentListener::DocShell(nsDocShell* aDocShell)
-{
-    mDocShell = aDocShell;
-}
-
-nsDocShell* nsDSURIContentListener::DocShell()
-{
-    return mDocShell;
-}

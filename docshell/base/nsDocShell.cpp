@@ -257,7 +257,6 @@ nsDocShell::nsDocShell():
     mMarginWidth(0),
     mMarginHeight(0),
     mItemType(typeContent),
-    mContentListener(nsnull),
     mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto),
     mEditorData(nsnull),
     mTreeOwner(nsnull),
@@ -296,6 +295,12 @@ nsDocShell::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ASSERTION(mLoadGroup, "Something went wrong!");
+
+    mContentListener = new nsDSURIContentListener(this);
+    NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = mContentListener->Init();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // We want to hold a strong ref to the loadgroup, so it better hold a weak
     // ref to us...  use an InterfaceRequestorProxy to do this.
@@ -370,8 +375,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
 
     *aSink = nsnull;
 
-    if (aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
-        NS_SUCCEEDED(EnsureContentListener())) {
+    if (aIID.Equals(NS_GET_IID(nsIURIContentListener))) {
         *aSink = mContentListener;
     }
     else if (aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
@@ -1316,8 +1320,7 @@ nsDocShell::GetChromeEventHandler(nsIChromeEventHandler ** aChromeEventHandler)
 NS_IMETHODIMP
 nsDocShell::GetParentURIContentListener(nsIURIContentListener ** aParent)
 {
-    NS_ENSURE_ARG_POINTER(aParent);
-    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
+    NS_PRECONDITION(aParent, "Null out param?");
 
     return mContentListener->GetParentContentListener(aParent);
 }
@@ -1325,8 +1328,6 @@ nsDocShell::GetParentURIContentListener(nsIURIContentListener ** aParent)
 NS_IMETHODIMP
 nsDocShell::SetParentURIContentListener(nsIURIContentListener * aParent)
 {
-    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-
     return mContentListener->SetParentContentListener(aParent);
 }
 
@@ -3414,10 +3415,11 @@ nsDocShell::Destroy()
     mSessionHistory = nsnull;
     SetTreeOwner(nsnull);
 
+    // Note: mContentListener can be null if Init() failed and we're being
+    // called from the destructor.
     if (mContentListener) {
-        mContentListener->DocShell(nsnull);
+        mContentListener->DropDocShellreference();
         mContentListener->SetParentContentListener(nsnull);
-        NS_RELEASE(mContentListener);
     }
 
     return NS_OK;
@@ -6973,27 +6975,6 @@ nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
     if (*aOutScrollView == nsnull) {
         return NS_ERROR_FAILURE;
     }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::EnsureContentListener()
-{
-    nsresult rv = NS_OK;
-    if (mContentListener)
-        return NS_OK;
-
-    mContentListener = new nsDSURIContentListener();
-    NS_ENSURE_TRUE(mContentListener, NS_ERROR_OUT_OF_MEMORY);
-
-    NS_ADDREF(mContentListener);
-
-    rv = mContentListener->Init();
-    if (NS_FAILED(rv))
-        return rv;
-
-    mContentListener->DocShell(this);
-
     return NS_OK;
 }
 
