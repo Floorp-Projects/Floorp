@@ -39,4 +39,22 @@ public interface PlugletTagInfo {
      * @return Returns the value of the named attribute as a <code>String</code>.
      */
     public String getAttribute(String name);
+
+    /**
+     * Returns the DOM element corresponding to the tag which references
+     * this pluglet in the document.
+     * 
+     * REMINDERS: 
+     *       <ul>
+     *       <li>  You need to have JavaDOM installed.
+     *       (see http://www.mozilla.org/projects/blacwood/dom)    
+     *       </li>
+     *       <li>
+     *       You need to cast return value to org.w3c.dom.Element
+     *       </li>
+     *       </ul>
+     * @return Return org.w3c.dom.Element correspondig to the tag
+     */
+    public Object getDOMElement();
 } 
+

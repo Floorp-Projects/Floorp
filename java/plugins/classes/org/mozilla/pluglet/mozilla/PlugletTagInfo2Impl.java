@@ -52,6 +52,7 @@ public class PlugletTagInfo2Impl implements PlugletTagInfo2  {
 	}
 	return result;
     }
+    public native Object getDOMElement();
     public native String getParameter(String name);
     /* Get the type of the HTML tag that was used ot instantiate this
      * pluglet.  Currently supported tags are EMBED, APPLET and OBJECT.

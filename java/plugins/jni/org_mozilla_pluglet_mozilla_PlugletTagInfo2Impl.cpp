@@ -1,4 +1,4 @@
-/* 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -23,6 +23,9 @@
 #include "PlugletLog.h"
 
 static jfieldID peerFID = NULL;
+static jclass DOMAccessorImpl = NULL;
+static jmethodID getElementByHandle = NULL;
+
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
  * Method:    getAttributesArray
@@ -94,6 +97,41 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
     env->ReleaseStringUTFChars(_name,name);
     return env->NewStringUTF(result);
 }
+
+
+/*
+ * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
+ * Method:    getDOMElement
+ * Signature: ()Ljava/lang/Object;
+ */
+JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getDOMElement
+(JNIEnv *env, jobject jthis) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+           ("PlugletTagInfo2Impl.getDOMElement\n"));
+    if ( !DOMAccessorImpl ) {
+        DOMAccessorImpl = env->FindClass("org/mozilla/dom/DOMAccessorImpl");
+        if (!DOMAccessorImpl) {
+            return NULL;
+        }
+        DOMAccessorImpl = (jclass) env->NewGlobalRef(DOMAccessorImpl); // nb who is going to Delete this ref
+        if (!DOMAccessorImpl) {
+            return NULL;
+        }
+        getElementByHandle = env->GetStaticMethodID(DOMAccessorImpl,"getElementByHandle","(J)Lorg/w3c/dom/Element;");
+        if (!getElementByHandle) {
+            DOMAccessorImpl = NULL;
+            return NULL;
+        }
+    }
+    nsIPluginTagInfo2 * info = (nsIPluginTagInfo2*)env->GetLongField(jthis, peerFID);
+    nsIDOMElement * elem = NULL; 
+    if (!info 
+        || NS_FAILED(info->GetDOMElement(&elem))) {
+        return NULL;
+    }
+    return env->CallStaticObjectMethod(DOMAccessorImpl,getElementByHandle,(jlong) elem);
+}
+
 
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl

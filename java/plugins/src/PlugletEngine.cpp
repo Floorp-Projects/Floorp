@@ -178,6 +178,13 @@ void PlugletEngine::StartJVM(void) {
 	    ("PlugletEngine::StartJVM\n"));
     JNIEnv *env = NULL;	
     jint res;
+    jsize jvmCount;
+    JNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
+    if (jvmCount) {
+        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+               ("PlugletEngine::StartJVM we have running jvm. We do not need to start another one\n"));
+        return;
+    }
     JDK1_1InitArgs vm_args;
     char classpath[1024];
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
@@ -186,7 +193,7 @@ void PlugletEngine::StartJVM(void) {
     sprintf(classpath, "%s%c%s",
             vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	   ("PlugletEngine::StartJVM classpath=%s\n",classpath));
+           ("PlugletEngine::StartJVM classpath=%s\n",classpath));
     char **props = new char*[2];
     props[0]="java.compiler=NONE";
     props[1]=0;
@@ -195,10 +202,10 @@ void PlugletEngine::StartJVM(void) {
     /* Create the Java VM */	
     res = JNI_CreateJavaVM(&jvm, &env, &vm_args);
     if(res < 0 ) {
-	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	       ("PlugletEngine::StartJVM JNI_CreateJavaVM failed \n"));
     } else {
-	PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+        PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	       ("PlugletEngine::StartJVM jvm was started \n"));
     }
 }
