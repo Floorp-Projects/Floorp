@@ -38,10 +38,14 @@ public:
   nsSelectionMgr();
   virtual ~nsSelectionMgr();
 
+  //
+  // nsISelectionMgr methods:
+  //
   NS_IMETHOD GetCopyOStream(ostream** aStream);
 
   NS_IMETHOD CopyToClipboard();
 
+  // Other methods specific to X:
   static void SetTopLevelWidget(GtkWidget* w);
 
 private:
@@ -49,13 +53,19 @@ private:
 
   static GtkWidget* sWidget;    // the app's top level widget, set by nsWindow
 
+  void SelectionClear( GtkWidget *w,
+                       GdkEventSelection *event );
   void SelectionRequestor( GtkWidget *w,
-                           GtkSelectionData *selection_data);
-  static void SelectionRequestCB( GtkWidget        *widget, 
+                           GtkSelectionData *selection_data );
+
+  static void SelectionRequestCB( GtkWidget *widget, 
                                   GtkSelectionData *selection_data,
-                                  guint      info,
-                                  guint      time,
-                                  gpointer   data);
+                                  guint info,
+                                  guint time,
+                                  gpointer data );
+  static void SelectionClearCB( GtkWidget *widget, 
+                                GdkEventSelection *event,
+                                gpointer data );
 };
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult);
