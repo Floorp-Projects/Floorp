@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.51 $ ';
+$Version = '$Revision: 1.52 $ ';
 
 
 sub PrintUsage {
@@ -145,8 +145,8 @@ sub BuildIt {
     if ($UseCVSMirror) {
       # Compute time of last completed update on mirror.
       $cycle = 5 * 60; # Updates every 5 minutes.
-      $offset = 2 * 60; # Starting 2 minutes after the hour.
-      $update_duration = 1 * 60; # Takes 1 minute to update.
+      $offset = 0 * 60; # Starting 0 minutes after the hour.
+      $update_duration = 2 * 60; # Takes 2 minutes to update.
       $StartTime = int(($StartTime + $offset) / $cycle) * $cycle;
       $StartTime -= $offset + $update_duration;
       $UseTimeStamp = 1;
