@@ -27,6 +27,13 @@
 #include "nsError.h"
 
 #include "windows.h"
+
+#if (_MSC_VER == 1100)
+#define INITGUID
+#include "objbase.h"
+DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
+#endif
+
 #include "shlobj.h"
 #include "shellapi.h"
 #include "shlguid.h"
