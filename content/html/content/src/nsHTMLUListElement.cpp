@@ -45,8 +45,8 @@
 #include "nsHTMLAttributes.h"
 #include "nsRuleNode.h"
 
-extern nsGenericHTMLElement::EnumTable kListTypeTable[];
-extern nsGenericHTMLElement::EnumTable kOldListTypeTable[];
+extern nsHTMLValue::EnumTable kListTypeTable[];
+extern nsHTMLValue::EnumTable kOldListTypeTable[];
 
 class nsHTMLUListElement : public nsGenericHTMLContainerElement,
                            public nsIDOMHTMLUListElement
@@ -171,17 +171,17 @@ nsHTMLUListElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (ParseEnumValue(aValue, kListTypeTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kListTypeTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
 
-    if (ParseCaseSensitiveEnumValue(aValue, kOldListTypeTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
 
   if (aAttribute == nsHTMLAtoms::start) {
-    if (ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1)) {
       return NS_CONTENT_ATTR_HAS_VALUE; 
     }
   }
@@ -201,11 +201,11 @@ nsHTMLUListElement::AttributeToString(nsIAtom* aAttribute,
       case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
       case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
-        EnumValueToString(aValue, kOldListTypeTable, aResult);
+        aValue.EnumValueToString(kOldListTypeTable, aResult);
 
         break;
       default:
-        EnumValueToString(aValue, kListTypeTable, aResult);
+        aValue.EnumValueToString(kListTypeTable, aResult);
 
         break;
     }

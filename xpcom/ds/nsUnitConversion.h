@@ -38,6 +38,7 @@
 #define nsUnitConversion_h__
 
 #include "nscore.h"
+#include "nsCoord.h"
 #include <math.h>
 
 /// handy constants

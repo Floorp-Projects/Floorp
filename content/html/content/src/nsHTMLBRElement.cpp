@@ -159,7 +159,7 @@ nsHTMLBRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMPL_STRING_ATTR(nsHTMLBRElement, Clear, clear)
 
-static nsGenericHTMLElement::EnumTable kClearTable[] = {
+static nsHTMLValue::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
   { "right", NS_STYLE_CLEAR_RIGHT },
   { "all", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
@@ -173,7 +173,7 @@ nsHTMLBRElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::clear) {
-    if (ParseEnumValue(aValue, kClearTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kClearTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -187,7 +187,7 @@ nsHTMLBRElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::clear) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kClearTable, aResult);
+      aValue.EnumValueToString(kClearTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

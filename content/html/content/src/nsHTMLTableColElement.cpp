@@ -184,20 +184,20 @@ nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
   /* ignore these attributes, stored simply as strings ch */
   /* attributes that resolve to integers */
   if (aAttribute == nsHTMLAtoms::charoff) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::span) {
     /* protection from unrealistic large colspan values */
-    if (ParseValue(aValue, 1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1, MAX_COLSPAN)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents or proportions */
 
-    if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -239,7 +239,7 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (ValueOrPercentOrProportionalToString(aValue, aResult)) {
+    if (aValue.ToString(aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

@@ -246,7 +246,7 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
     }
   } else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     if (aAttribute == nsHTMLAtoms::size) {
-      if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
     } else if (aAttribute == nsHTMLAtoms::align) {
@@ -255,7 +255,7 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
       }
     } else if ((aAttribute == nsHTMLAtoms::width) ||
                (aAttribute == nsHTMLAtoms::height)) {
-      if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+      if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
     }

@@ -163,7 +163,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width)
 
-static nsGenericHTMLElement::EnumTable kAlignTable[] = {
+static nsHTMLValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -176,12 +176,12 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::width) {
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    if (ParseValue(aValue, 1, 1000, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 1, 1000)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -190,7 +190,7 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseEnumValue(aValue, kAlignTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kAlignTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -205,7 +205,7 @@ nsHTMLHRElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kAlignTable, aResult);
+      aValue.EnumValueToString(kAlignTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

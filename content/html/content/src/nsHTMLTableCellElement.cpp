@@ -318,7 +318,7 @@ nsHTMLTableCellElement::SetAlign(const nsAString& aValue)
 }
 
 
-static nsGenericHTMLElement::EnumTable kCellScopeTable[] = {
+static nsHTMLValue::EnumTable kCellScopeTable[] = {
   { "row",      NS_STYLE_CELL_SCOPE_ROW },
   { "col",      NS_STYLE_CELL_SCOPE_COL },
   { "rowgroup", NS_STYLE_CELL_SCOPE_ROWGROUP },
@@ -340,15 +340,15 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::charoff) {
     /* attributes that resolve to integers with a min of 0 */
 
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if ((aAttribute == nsHTMLAtoms::colspan) ||
            (aAttribute == nsHTMLAtoms::rowspan)) {
     PRBool parsed = (aAttribute == nsHTMLAtoms::colspan)
-      ? ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)
-      : ParseValue(aValue, -1, MAX_ROWSPAN, aResult, eHTMLUnit_Integer);
+      ? aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, -1, MAX_COLSPAN)
+      : aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, -1, MAX_ROWSPAN);
     if (parsed) {
       PRInt32 val = aResult.GetIntValue();
       // quirks mode does not honor the special html 4 value of 0
@@ -363,14 +363,14 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::height) {
     /* attributes that resolve to integers or percents */
 
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents */
 
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -382,12 +382,12 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (ParseColor(aValue, mDocument, aResult)) {
+    if (aResult.ParseColor(aValue, mDocument)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::scope) {
-    if (ParseEnumValue(aValue, kCellScopeTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kCellScopeTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -417,7 +417,7 @@ nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::scope) {
-    if (EnumValueToString(aValue, kCellScopeTable, aResult)) {
+    if (aValue.EnumValueToString(kCellScopeTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

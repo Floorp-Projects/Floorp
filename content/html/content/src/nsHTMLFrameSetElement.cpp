@@ -352,7 +352,7 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
                                          nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    if (nsGenericHTMLElement::ParseColor(aValue, mDocument, aResult)) {
+    if (aResult.ParseColor(aValue, mDocument)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   } 
@@ -362,7 +362,7 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
     }
   } 
   else if (aAttribute == nsHTMLAtoms::border) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, 100, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0, 100)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

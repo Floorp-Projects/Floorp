@@ -1819,7 +1819,7 @@ nsHTMLInputElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 
 // nsIHTMLContent
 
-static nsGenericHTMLElement::EnumTable kInputTypeTable[] = {
+static nsHTMLValue::EnumTable kInputTypeTable[] = {
   { "browse", NS_FORM_BROWSE }, // XXX not valid html, but it is convenient
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
@@ -1840,7 +1840,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    nsGenericHTMLElement::EnumTable *table = kInputTypeTable;
+    nsHTMLValue::EnumTable *table = kInputTypeTable;
     nsAutoString valueStr(aValue);
     while (nsnull != table->tag) { 
       if (valueStr.EqualsIgnoreCase(table->tag)) {
@@ -1869,40 +1869,40 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::height) {
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::maxlength) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
     if (mType == NS_FORM_INPUT_TEXT ||
         mType == NS_FORM_INPUT_PASSWORD) {
-      if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
     }
     else {
-      if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
     }
   }
   else if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::border) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -1936,7 +1936,7 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
       // http://bugzilla.mozilla.org/show_bug.cgi?id=113174#c12
       // -- bzbarsky@mit.edu
 
-      EnumValueToString(aValue, kInputTypeTable, aResult);
+      aValue.EnumValueToString(kInputTypeTable, aResult);
 
       return NS_CONTENT_ATTR_HAS_VALUE;
     }

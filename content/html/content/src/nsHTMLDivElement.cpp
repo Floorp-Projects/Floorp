@@ -176,17 +176,17 @@ nsHTMLDivElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::cols) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::gutter) {
-    if (ParseValue(aValue, 1, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 1)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

@@ -295,14 +295,14 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
    */
   /* attributes that resolve to integers */
   if (aAttribute == nsHTMLAtoms::charoff) {
-    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::height) {
     /* attributes that resolve to integers or percents */
 
-    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
+    if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -314,7 +314,7 @@ nsHTMLTableSectionElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (ParseColor(aValue, mDocument, aResult)) {
+    if (aResult.ParseColor(aValue, mDocument)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

@@ -377,7 +377,7 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   return rv;
 }
 
-static nsGenericHTMLElement::EnumTable kButtonTypeTable[] = {
+static nsHTMLValue::EnumTable kButtonTypeTable[] = {
   { "button", NS_FORM_BUTTON_BUTTON },
   { "reset", NS_FORM_BUTTON_RESET },
   { "submit", NS_FORM_BUTTON_SUBMIT },
@@ -390,12 +390,12 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (ParseValue(aValue, 0, 32767, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0, 32767)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::type) {
-    nsGenericHTMLElement::EnumTable *table = kButtonTypeTable;
+    nsHTMLValue::EnumTable *table = kButtonTypeTable;
     nsAutoString val(aValue);
     while (nsnull != table->tag) { 
       if (val.EqualsIgnoreCase(table->tag)) {
@@ -421,7 +421,7 @@ nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kButtonTypeTable, aResult);
+      aValue.EnumValueToString(kButtonTypeTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

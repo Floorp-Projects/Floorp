@@ -47,6 +47,8 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
+class nsIDocument;
+
 class nsCheapStringBufferUtils {
 public:
   /**
@@ -216,9 +218,101 @@ public:
   void  SetColorValue(nscolor aValue);
   void  SetEmptyValue(void);
 
+  /**
+   * Get this HTML value as a string (depends on the type)
+   * @param aResult the resulting string
+   * @return whether the value was successfully turned to a string
+   */
+  PRBool ToString(nsAString& aResult) const;
+
 #ifdef DEBUG
   void  AppendToString(nsAString& aBuffer) const;
 #endif
+
+  /**
+   * Structure for a mapping from int (enum) values to strings.  When you use
+   * it you generally create an array of them.
+   * Instantiate like this:
+   * EnumTable myTable[] = {
+   *   { "string1", 1 },
+   *   { "string2", 2 },
+   *   { 0 }
+   * }
+   */
+  struct EnumTable {
+    /** The string the value maps to */
+    const char* tag;
+    /** The enum value that maps to this string */
+    PRInt32 value;
+  };
+
+  /**
+   * Parse and output this HTMLValue in a variety of ways
+   */
+  // Attribute parsing utilities
+
+  /**
+   * Map a string to its enum value and return result as HTMLValue
+   * (case-insensitive matching)
+   *
+   * @param aValue the string to find the value for
+   * @param aTable the enumeration to map with
+   * @param aResult the enum mapping [OUT]
+   * @return whether the enum value was found or not
+   */
+  PRBool ParseEnumValue(const nsAString& aValue,
+                        EnumTable* aTable,
+                        PRBool aCaseSensitive = PR_FALSE);
+
+  /**
+   * Map an enum HTMLValue to its string
+   *
+   * @param aValue the HTMLValue with the int in it
+   * @param aTable the enumeration to map with
+   * @param aResult the string the value maps to [OUT]
+   * @return whether the enum value was found or not
+   */
+  PRBool EnumValueToString(EnumTable* aTable,
+                           nsAString& aResult) const;
+
+  /**
+   * Parse a string value into an int or pixel HTMLValue with minimum
+   * value and maximum value (can optionally parse percent (n%) and
+   * proportional (n%)
+   *
+   * @param aString the string to parse
+   * @param aDefaultUnit the unit to use (eHTMLUnit_Pixel or Integer)
+   * @param aCanBePercent true if it can be a percent value (%)
+   * @param aCanBeProportional true if it can be a proportional value (*)
+   * @return whether the value could be parsed
+   */
+  PRBool ParseIntValue(const nsAString& aString, nsHTMLUnit aDefaultUnit,
+                       PRBool aCanBePercent = PR_FALSE,
+                       PRBool aCanBeProportional = PR_FALSE);
+
+  /**
+   * Parse a string value into an int or pixel HTMLValue with minimum
+   * value and maximum value
+   *
+   * @param aString the string to parse
+   * @param aMin the minimum value (if value is less it will be bumped up)
+   * @param aMax the maximum value (if value is greater it will be chopped down)
+   * @param aValueUnit the unit to use (eHTMLUnit_Pixel or Integer)
+   * @return whether the value could be parsed
+   */
+  PRBool ParseIntWithBounds(const nsAString& aString, nsHTMLUnit aValueUnit,
+                            PRInt32 aMin, PRInt32 aMax = PR_INT32_MAX);
+
+  /**
+   * Parse a string into a color HTMLValue (with hexes or color names)
+   *
+   * @param aString the string to parse
+   * @param aDocument the document (to find out whether we're in quirks mode)
+   * @param aResult the resulting HTMLValue [OUT]
+   * @return whether the value could be parsed
+   */
+  PRBool ParseColor(const nsAString& aString, nsIDocument* aDocument);
+
 
 protected:
   /**
@@ -226,6 +320,7 @@ protected:
    * @see nsHTMLUnit
    */
   PRUint32 mUnit;
+
   /**
    * The actual value.  Please to not be adding more-than-4-byte things to this
    * union.
@@ -242,6 +337,7 @@ protected:
     /** Color. */
     nscolor       mColor;
   } mValue;
+
 private:
   /**
    * Copy into this HTMLValue from aCopy.  Please be aware that if this is an

@@ -332,7 +332,7 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (ParseValue(aValue, 0, 32767, aResult, eHTMLUnit_Integer)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0, 32767)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

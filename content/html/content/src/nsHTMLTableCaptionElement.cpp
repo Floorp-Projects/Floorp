@@ -161,7 +161,7 @@ nsHTMLTableCaptionElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLTableCaptionElement, Align, align)
 
 
-static nsGenericHTMLElement::EnumTable kCaptionAlignTable[] = {
+static nsHTMLValue::EnumTable kCaptionAlignTable[] = {
   { "left",  NS_SIDE_LEFT },
   { "right", NS_SIDE_RIGHT },
   { "top",   NS_SIDE_TOP},
@@ -175,7 +175,7 @@ nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue&    aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseEnumValue(aValue, kCaptionAlignTable, aResult)) {
+    if (aResult.ParseEnumValue(aValue, kCaptionAlignTable)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -189,7 +189,7 @@ nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kCaptionAlignTable, aResult);
+      aValue.EnumValueToString(kCaptionAlignTable, aResult);
 
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
