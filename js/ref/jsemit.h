@@ -115,9 +115,12 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
 
 /*
  * Release cx->codePool and cx->tempPool to marks set by js_InitCodeGenerator.
+ * Note that cgs are magic: they own tempPool and codePool "tops-of-stack" 
+ * above their codeMark and tempMark points.  This means you cannot alloc
+ * from tempPool and save the pointer beyond the next JS_FinishCodeGenerator.
  */
 extern JS_FRIEND_API(void)
-js_ResetCodeGenerator(JSContext *cx, JSCodeGenerator *cg);
+js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg);
 
 /*
  * Emit one bytecode.
@@ -342,7 +345,7 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg);
 /*
  * Allocate cg->treeContext.tryCount notes (plus one for the end sentinel)
  * from cx->tempPool and set up cg->tryBase/tryNext for exactly tryCount
- * js_NewTryNote calls.  The storage is freed by js_ResetCodeGenerator.
+ * js_NewTryNote calls.  The storage is freed by js_FinishCodeGenerator.
  */
 extern JSBool
 js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);

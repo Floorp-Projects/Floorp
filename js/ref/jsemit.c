@@ -64,7 +64,7 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
 }
 
 JS_FRIEND_API(void)
-js_ResetCodeGenerator(JSContext *cx, JSCodeGenerator *cg)
+js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg)
 {
     PR_ARENA_RELEASE(&cx->codePool, cg->codeMark);
     PR_ARENA_RELEASE(&cx->tempPool, cg->tempMark);
@@ -556,7 +556,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	fun = pn->pn_fun;
 	if (!js_EmitFunctionBody(cx, &cg2, pn2, fun))
 	    return JS_FALSE;
-	js_ResetCodeGenerator(cx, &cg2);
+	js_FinishCodeGenerator(cx, &cg2);
 
 	/* Make the function object a literal in the outer script's pool. */
 	atom = js_AtomizeObject(cx, fun->object, 0);
@@ -740,14 +740,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		    }
 		} else {
 		    /* Pre-ECMAv2 switch evals case exprs at compile time. */
-		    if (!cg2.base) {
-			if (!js_InitCodeGenerator(cx, &cg2, cg->filename,
-						  pn3->pn_pos.begin.lineno,
-						  cg->principals)) {
-			    return JS_FALSE;
-			}
-		    } else {
-			js_ResetCodeGenerator(cx, &cg2);
+		    if (!js_InitCodeGenerator(cx, &cg2, cg->filename,
+					      pn3->pn_pos.begin.lineno,
+					      cg->principals)) {
+			return JS_FALSE;
 		    }
 		    cg2.currentLine = pn4->pn_pos.begin.lineno;
 		    if (!js_EmitTree(cx, &cg2, pn4))
@@ -797,7 +793,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		PR_ASSERT(!cg2.base);
 	    } else {
 		if (cg2.base)
-		    js_ResetCodeGenerator(cx, &cg2);
+		    js_FinishCodeGenerator(cx, &cg2);
 		if (switchop == JSOP_TABLESWITCH) {
 		    tablen = (uint32)(high - low + 1);
 		    if (tablen >= PR_BIT(16) || tablen > 2 * ncases)

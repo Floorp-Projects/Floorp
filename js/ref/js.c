@@ -206,7 +206,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 	    }
 	}
 	cg.firstLine = ts->lineno;
-	js_ResetCodeGenerator(cx, &cg);
+	js_FinishCodeGenerator(cx, &cg);
 	RESET_TOKENBUF(ts);
     } while (!(ts->flags & TSF_EOF));
 

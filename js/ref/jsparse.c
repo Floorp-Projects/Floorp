@@ -378,7 +378,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     }
 
     cx->gcDisabled--;
-    js_ResetCodeGenerator(cx, &funcg);
+    js_FinishCodeGenerator(cx, &funcg);
     return ok;
 }
 

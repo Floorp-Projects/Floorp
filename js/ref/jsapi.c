@@ -1949,7 +1949,7 @@ CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
     }
 out:
     cg.tempMark = tempMark;
-    js_ResetCodeGenerator(cx, &cg);
+    js_FinishCodeGenerator(cx, &cg);
     return script;
 }
 
