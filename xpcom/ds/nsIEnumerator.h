@@ -34,30 +34,30 @@ public:
 
   /** First will reset the list. will return NS_FAILED if no items
    */
-  NS_IMETHOD First()=0;
+  virtual nsresult First()=0;
 
   /** Last will reset the list to the end. will return NS_FAILED if no items
    */
-  NS_IMETHOD Last()=0;
+  virtual nsresult Last()=0;
   
   /** Next will advance the list. will return failed if allready at end
    */
-  NS_IMETHOD Next()=0;
+  virtual nsresult Next()=0;
 
   /** Prev will decrement the list. will return failed if allready at beginning
    */
-  NS_IMETHOD Prev()=0;
+  virtual nsresult Prev()=0;
 
   /** CurrentItem will return the CurrentItem item it will fail if the list is empty
    *  @param aItem return value
    */
-  NS_IMETHOD CurrentItem(nsISupports **aItem)=0;
+  virtual nsresult CurrentItem(nsISupports **aItem)=0;
 
   /** return if the collection is at the end.  that is the beginning following a call to Prev
    *  and it is the end of the list following a call to next
    *  @param aItem return value
    */
-  NS_IMETHOD IsDone()=0;
+  virtual nsresult IsDone()=0;
 
 };
 
