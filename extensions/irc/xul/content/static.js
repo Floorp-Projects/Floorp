@@ -181,6 +181,23 @@ function initStatic()
     client.globalHistory =
         Components.classes[GHIST_CONTRACTID].getService(nsIGlobalHistory);
 
+    const nsISDateFormat = Components.interfaces.nsIScriptableDateFormat;
+    const DTFMT_CID = "@mozilla.org/intl/scriptabledateformat;1";
+    client.dtFormatter = 
+        Components.classes[DTFMT_CID].createInstance(nsISDateFormat);
+    
+    // Mmmm, fun. This ONLY affects the ChatZilla window, don't worry!
+    Date.prototype.toStringInt = Date.prototype.toString;
+    Date.prototype.toString = function() {
+        var dtf = client.dtFormatter;
+        return dtf.FormatDateTime("", dtf.dateFormatLong, 
+                                  dtf.timeFormatSeconds, 
+                                  this.getFullYear(), this.getMonth() + 1, 
+                                  this.getDate(), this.getHours(), 
+                                  this.getMinutes(), this.getSeconds()
+                                 );
+    }
+    
     multilineInputMode(client.prefs["multiline"]);
     if (client.prefs["showModeSymbols"])
         setListMode("symbol");
@@ -2819,15 +2836,19 @@ function __display(message, msgtype, sourceObj, destObj)
         mins = "0" + mins;
     var statusString;
     
-    var timeStamp = getMsg(MSG_FMT_DATE, [d.getMonth() + 1, d.getDate(),
-                                          d.getHours(), mins]);
+    var dtf = client.dtFormatter;
+    var timeStamp = dtf.FormatDateTime("", dtf.dateFormatShort, 
+                                       dtf.timeFormatNoSeconds, d.getFullYear(), 
+                                       d.getMonth() + 1, d.getDate(), 
+                                       d.getHours(), d.getMinutes(), 
+                                       d.getSeconds()
+                                      );
     logText = "[" + timeStamp + "] ";
 
     if (fromUser)
     {
         statusString =
-            getMsg(MSG_FMT_STATUS, [d.getMonth() + 1, d.getDate(),
-                                    d.getHours(), mins,
+            getMsg(MSG_FMT_STATUS, [timeStamp,
                                     sourceObj.nick + "!" + 
                                     sourceObj.name + "@" + sourceObj.host]);
     }
@@ -2845,8 +2866,7 @@ function __display(message, msgtype, sourceObj, destObj)
                 this.unicodeName : this.name;
         }
 
-        statusString = getMsg(MSG_FMT_STATUS, [d.getMonth() + 1, d.getDate(),
-                                               d.getHours(), mins, name]);
+        statusString = getMsg(MSG_FMT_STATUS, [timeStamp, name]);
     }
     
     var msgTimestamp = document.createElementNS("http://www.w3.org/1999/xhtml",
