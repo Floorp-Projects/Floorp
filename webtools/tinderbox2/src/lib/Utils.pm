@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.20 $ 
-# $Date: 2001/08/02 20:11:03 $ 
+# $Revision: 1.21 $ 
+# $Date: 2001/08/14 16:34:36 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -140,6 +140,12 @@ sub set_static_vars {
   # taint perl requires we clean up these bad environmental variables.
   
   delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV', 'LD_PRELOAD'};
+
+  # sudo deletes these variables as well
+
+  delete @ENV{'KRB_CONF', 'KRB5_CONFIG'};
+  delete @ENV{'LOCALDOMAIN', 'RES_OPTIONS', 'HOSTALIASES'};
+
 
 
 
