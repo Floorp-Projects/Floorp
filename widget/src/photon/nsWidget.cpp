@@ -22,6 +22,8 @@
  *	   Dale.Stansberry@Nexwarecorop.com
  */
 
+//#undef DEBUG
+
 #include "nsWidget.h"
 
 #include "nsIAppShell.h"
@@ -95,6 +97,8 @@ static nsAutoString GuiEventToString(nsGUIEvent * aGuiEvent);
 
 nsWidget::nsWidget()
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::nsWidget this=(%p)\n", this));
+
   // XXX Shouldn't this be done in nsBaseWidget?
   // NS_INIT_REFCNT();
 
@@ -308,7 +312,7 @@ NS_METHOD nsWidget::Show(PRBool bState)
     return NS_OK; // Will be null durring printing
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show this=<%p> IsRealized=<%d>\n", this, PtWidgetIsRealized( mWidget )));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show this=<%p> IsRealized=<%d>\n", this, PtWidgetIsRealized(mWidget) ));
 
 /* Note: Calling  PtWidgetIsRealized(mWidget) is not valid because usually
 the parent window has not been realized yet when we get into this code. Also
@@ -326,7 +330,7 @@ the PtRealizeWidget functions */
       if (err == -1)
 	  {
         PtWidget_t *parent = PtWidgetParent(mWidget);
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent)));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent) ));
       }
 
       EnableDamage( mWidget, PR_TRUE );
@@ -874,7 +878,7 @@ NS_METHOD nsWidget::doPaint()
   PhTile_t * nativeRegion = nsnull;
   PtWidget_t *widget = GetNativeData(NS_NATIVE_WIDGET);  
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::doPaint this=<%p> mWidget=<%p> widget=<%p> PtWidgetIsRealized(widget)=<%d>\n", this, mWidget, widget,PtWidgetIsRealized(widget)));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::doPaint this=<%p> mWidget=<%p> widget=<%p> PtWidgetIsRealized(widget)=<%d>\n", this, mWidget, widget,PtWidgetIsRealized(widget) ));
 
   if ((widget) && (PtWidgetIsRealized(widget)))
   {
@@ -1266,7 +1270,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsNativeWidget aNativeParent)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d> aRect=<%d,%d,%d,%d> aContext=<%p>\n", this, mRefCnt, aRect.x, aRect.y, aRect.width, aRect.height, aContext));
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> aParent=<%p> aNativeParent=<%p>\n", this, aParent, aNativeParent));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> aParent=<%p> aNativeParent=<%p> mParent=<%p>\n", this, aParent, aNativeParent, mParent));
 
   if (aParent)
   {
@@ -1283,27 +1287,26 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   			
   PtWidget_t *parentWidget = nsnull;
 
- nsIWidget *baseParent = aInitData &&
+  nsIWidget *baseParent = aInitData &&
     (aInitData->mWindowType == eWindowType_dialog ||
-     aInitData->mWindowType == eWindowType_toplevel ) ?
+    aInitData->mWindowType == eWindowType_toplevel ) ?
     nsnull : aParent;
+
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget before BaseCreate this=<%p> mParent=<%p> baseParent=<%p>\n", this, mParent, baseParent));
 
   BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
 
   mParent = aParent;
-  //NS_IF_ADDREF(mParent);
 
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after BaseCreate  mRefCnt=<%d> mBounds=<%d,%d,%d,%d> mContext=<%p>\n", 
-    mRefCnt, mBounds.x, mBounds.y, mBounds.width, mBounds.height, mContext));
-
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after BaseCreate  mRefCnt=<%d> mBounds=<%d,%d,%d,%d> mContext=<%p> mParent=<%p> baseParent=<%p> aParent=<%p>\n", 
+    mRefCnt, mBounds.x, mBounds.y, mBounds.width, mBounds.height, mContext, mParent, baseParent, aParent));
 
   if( aNativeParent )
   {
     parentWidget = (PtWidget_t*)aNativeParent;
-    /* Kirk added this back in... */
-    //mParent = GetInstance( (PtWidget_t*)aNativeParent );
+    // we've got a native parent so listen for resizes
+    mListenForResizes = PR_TRUE;
   }
   else if( aParent )
   {
@@ -1314,34 +1317,13 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - No parent specified!\n" ));
   }
 
-
   mBounds = aRect;
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget before CreateNative this=<%p> mParent=<%p> baseParent=<%p>\n", this, mParent, baseParent));
+
   CreateNative (parentWidget);
 
   Resize(aRect.width, aRect.height, PR_FALSE);
 
-  /* place the widget in its parent if it isn't a toplevel window*/
-  if (mIsToplevel)
-  {
-    if (parentWidget)
-    {
-      // set transient properties
-    }
-  }
-  else
-  {
-    // Find the native client widget and store for ALL non-toplevel widgets
-    if( parentWidget )
-    {
-      PtWidget_t *pTop = PtFindDisjoint( parentWidget );
-      nsWindow * pWin = (nsWindow *) GetInstance( pTop );
-      if( pWin )
-      {
-        //mClient = (PtWidget_t*) pWin->GetNativeData( NS_NATIVE_WIDGET );
-      }
-    }
-  }
-  
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - bounds=(%i,%i,%i,%i) mRefCnt=<%d>\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height, mRefCnt));
 
   if( mWidget )
@@ -1481,7 +1463,7 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::DispatchEvent this=<%p> widget=<%p> eventType=<%d> message=<%d> <%s>\n", 
      this, aEvent->widget, aEvent->eventStructType, aEvent->message,
-	 (const char *) nsCAutoString(GuiEventToString(aEvent))));
+	 (const char *) nsCAutoString(GuiEventToString(aEvent)) ));
 
 /* Stolen from GTK */
 
@@ -1945,7 +1927,7 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 //-------------------------------------------------------------------------
 int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 {
-  //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::RawEventHandler raweventhandler widget=<%p> this=<%p> IsFocused=<%d>\n", widget, data,  PtIsFocused(widget)));
+  //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::RawEventHandler raweventhandler widget=<%p> this=<%p> IsFocused=<%d>\n", widget, data,  PtIsFocused(widget) ));
   //printf("nsWidget::RawEventHandler raweventhandler widget=<%p> this=<%p> IsFocused=<%d>\n", widget, data,  PtIsFocused(widget));
 
   // Get the window which caused the event and ask it to process the message
@@ -2589,7 +2571,7 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
 
   if ((widget->parent) && (PtIsFocused(widget) != 2))
   {
-     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::LostFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget)));
+     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::LostFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget) ));
      printf("nsWidget::LostFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
      return Pt_CONTINUE;
   }

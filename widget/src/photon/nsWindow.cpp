@@ -22,6 +22,9 @@
  *	   Dale.Stansberry@Nexwarecorop.com
  */
 
+
+//#undef DEBUG
+
 #include "nsPhWidgetLog.h"
 #include <Pt.h>
 #include "PtRawDrawContainer.h"
@@ -230,7 +233,7 @@ void nsWindow::DestroyNative(void)
 
 void nsWindow::DestroyNativeChildren(void)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::DestroyNativeChildren this=(%p)\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::DestroyNativeChildren this=(%p)\n", this));
 
   nsCOMPtr <nsIEnumerator> children (getter_AddRefs(GetChildren()));
   
@@ -395,7 +398,12 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
   if (!PtWidgetIsRealized(mWidget))
   {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Invalidate 1 - mWidget is not realized\n"));
+#if 1
       return NS_OK;
+#else
+      /* Hack to force dialogs to show themselves if Invalidated! */
+        Show(PR_TRUE);
+#endif
   }
 
   /* Damage has to be relative Widget coords */
@@ -462,7 +470,7 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSyn
       return NS_OK;
   }
   
-#if defined(DEBUG)
+#if defined(DEBUG) && defined(PHOTON1_ONLY)
 {
   PRUint32 len;
   PRUint32 i;
@@ -677,7 +685,6 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::CreateNative - bounds = (%d,%d,%d,%d)\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height ));
 
-#ifdef DEBUG
   switch( mWindowType )
   {
   case eWindowType_popup :
@@ -697,7 +704,6 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     mIsToplevel = PR_FALSE;
 	break;
   }
-#endif
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("\tborder style = %X\n", mBorderStyle ));
 
@@ -861,7 +867,14 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     }
 	else
 	{
+      /* Dialog and TopLevel Windows */
+#if 0
+      /* Make sure there is no parent set */
+	  PtSetParentWidget( nsnull );
+      mWidget = PtCreateWidget( PtWindow, nsnull, arg_count, arg );
+#else
       mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
+#endif
 	}
 	
 #endif
@@ -1297,7 +1310,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       if (mShown)
       {
         printf("nsWindow::Resize Forcing small toplevel window window to Hide\n");
-		Show(PR_FALSE);
+		//Show(PR_FALSE);
       }
     }
     else
@@ -1306,7 +1319,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
       printf("nsWindow::Resize Forcing small non-toplevel window to Hide\n");
-	  Show(PR_FALSE);
+	  //Show(PR_FALSE);
     }
   }
   else
@@ -1430,28 +1443,32 @@ NS_METHOD nsWindow::Show(PRBool bState)
     return NS_OK; // Will be null durring printing
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Show this=<%p> IsRealized=<%d>\n", this, PtWidgetIsRealized( mWidget )));
-
-  EnableDamage(mMenuRegion, PR_FALSE);
-  
-  if (bState)
-  {
-	if ((mMenuRegion) && (!PtWidgetIsRealized(mMenuRegion)))
-	  PtRealizeWidget(mMenuRegion);
-  }
-  else
-  {
-	if ((mMenuRegion) && (PtWidgetIsRealized(mMenuRegion)))
-	  PtUnrealizeWidget(mMenuRegion);  
-  }
-  
-  EnableDamage(mMenuRegion, PR_TRUE);
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Show this=<%p> IsRealized=<%d> mIsTooSmall=<%d>\n", this, PtWidgetIsRealized( mWidget ), mIsTooSmall));
 
 #if 0
   // don't show if we are too small
   if (mIsTooSmall)
     return NS_OK;
 #endif
+
+  EnableDamage(mMenuRegion, PR_FALSE);
+  
+  if (bState)
+  {
+	if ((mMenuRegion) && (!PtWidgetIsRealized(mMenuRegion)))
+	{
+	  PtRealizeWidget(mMenuRegion);
+    }
+  }
+  else
+  {
+	if ((mMenuRegion) && (PtWidgetIsRealized(mMenuRegion)))
+	{
+	  PtUnrealizeWidget(mMenuRegion);  
+    }
+  }
+  
+  EnableDamage(mMenuRegion, PR_TRUE);
 
   return nsWidget::Show(bState);
 }
@@ -1489,7 +1506,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for mWidget=<%p> this=<%p> this->mContext=<%p> pWin->mParent=<%p> mClientWidget=<%p>\n", 
     pWidget, pWin, pWin->mContext, pWin->mParent, pWin->mClientWidget));
 
-#if 1
+#if defined(DEBUG) && 1
 {
   /* Print out the Photon Damage tiles */
   PhTile_t *top = damage;
@@ -1502,7 +1519,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   } while (top);
 }
 #endif
-  
+    
   if ( !pWin )
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  aborted because instance is NULL!\n"));
@@ -1542,9 +1559,17 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc area=<%d,%d,%d,%d>\n", area.pos.x, area.pos.y, area.size.w, area.size.h));
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset=<%d,%d>\n", offset.x, offset.y));
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc mBounds=<%d,%d,%d,%d>\n", pWin->mBounds.x, pWin->mBounds.y, pWin->mBounds.width, pWin->mBounds.height));
-//    offset.x += area.pos.x;  
-//    offset.y += area.pos.y;  
-//    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset+area =<%d,%d>\n", offset.x, offset.y));
+
+#if 0
+    offset.x = area.pos.x;  
+    offset.y = area.pos.y;  
+#endif
+
+#if 0
+    offset.x += area.pos.x;  
+    offset.y += area.pos.y;  
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc offset+area =<%d,%d>\n", offset.x, offset.y));
+#endif
 
     /* Build a List of Tiles that might be in front of me.... */
     PhTile_t *clip_tiles=pWin->GetWindowClipping(offset);
@@ -1590,7 +1615,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
       return;	
     }
 
-#if 1
+#if defined(DEBUG) && 1
 {
   /* Print out the Photon Damage tiles */
   PhTile_t *top = new_damage;
@@ -1627,9 +1652,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc Bounding Damage=<%d,%d,%d,%d> next=<%p>\n",
    BoundingDmg->rect.ul.x,BoundingDmg->rect.ul.y,BoundingDmg->rect.lr.x,BoundingDmg->rect.lr.y));
-
 #endif
-
 
     pWin->InitEvent(pev, NS_PAINT);
     pev.eventStructType = NS_PAINT_EVENT;
@@ -1659,66 +1682,72 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect = <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
 
-#if 1
       /* Do I need to Translate it?? If so by what? offset? offset+area?*/
-      //PtTranslateRect(&rect, &offset);
+#if 1
+#ifdef PHOTON1_ONLY
       PtDeTranslateRect(&rect, &offset);
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect after translate = <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
+#else
+      rect.ul.x -= offset.x;
+      rect.ul.y -= offset.y;
+#endif
 #endif
 
-    // If the damage tile is not within our bounds, do nothing
-    if(( rect.ul.x >= area.size.w ) || ( rect.ul.y >= area.size.h ) || ( rect.lr.x < 0 ) || ( rect.lr.y < 0 ))
-    {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage tile is not within our bounds, do nothing\n"));
-      return;
-	}
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect after translate = <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
 
-    // clip damage to widgets bounds...
-    if( rect.ul.x < 0 ) rect.ul.x = 0;
-    if( rect.ul.y < 0 ) rect.ul.y = 0;
-    if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
-    if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
+      /* If the damage tile is not within our bounds, do nothing */
+      if(( rect.ul.x >= area.size.w ) || ( rect.ul.y >= area.size.h ) || ( rect.lr.x < 0 ) || ( rect.lr.y < 0 ))
+      {
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage tile is not within our bounds, do nothing\n"));
 
-    nsDmg.x = rect.ul.x;
-    nsDmg.y = rect.ul.y;
-    nsDmg.width = rect.lr.x - rect.ul.x + 1;
-    nsDmg.height = rect.lr.y - rect.ul.y + 1;
+        /* Move to the next Damage Tile */
+        dmg = dmg->next;
+        continue;
+      }
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height));
+      /* clip damage to widgets bounds... */
+      if( rect.ul.x < 0 ) rect.ul.x = 0;
+      if( rect.ul.y < 0 ) rect.ul.y = 0;
+      if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
+      if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
 
-    if ( (nsDmg.width <= 0 ) || (nsDmg.height <= 0 ) )
-    {
-      return;
-    }
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
 
-    /* Setup Paint Event */
-//    nsPaintEvent pev;
-    pWin->InitEvent(pev, NS_PAINT);
-    pev.eventStructType = NS_PAINT_EVENT;
-	pev.point.x = nsDmg.x;
-	pev.point.y = nsDmg.y;
-    pev.rect = new nsRect(nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
-	
-//      pev.renderingContext = nsnull;
-//      pev.renderingContext = pWin->GetRenderingContext();
+      nsDmg.x = rect.ul.x;
+      nsDmg.y = rect.ul.y;
+      nsDmg.width = rect.lr.x - rect.ul.x + 1;
+      nsDmg.height = rect.lr.y - rect.ul.y + 1;
+
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height));
+
+      if ( (nsDmg.width <= 0 ) || (nsDmg.height <= 0 ) )
+      {
+        /* Move to the next Damage Tile */
+        dmg = dmg->next;
+        continue;
+      }
+
+      /* Re-Setup Paint Event */
+      pWin->InitEvent(pev, NS_PAINT);
+      pev.eventStructType = NS_PAINT_EVENT;
+      pev.point.x = nsDmg.x;
+      pev.point.y = nsDmg.y;
+      pev.rect = new nsRect(nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
 
       if (pev.renderingContext)
       {
         ClipRegion = pWin->GetRegion();
         ClipRegion->SetTo(nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
         pev.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *(ClipRegion)),
-                                            nsClipCombine_kReplace, aClipState);
+                                          nsClipCombine_kReplace, aClipState);
 		
-         /* Not sure WHAT this sould be, probably nsDmg rect... */
+        /* Not sure WHAT this sould be, probably nsDmg rect... */
          // pev.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *(ClipRegion)),
          // pev.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *(pWin->mUpdateArea)),
          //                                     nsClipCombine_kReplace, aClipState);
 
+         /* You can turn off most drawing if you take this out */
          result = pWin->DispatchWindowEvent(&pev);
-
-//	    NS_RELEASE(pev.renderingContext);
       }
 
       /* Move to the next Damage Tile */
@@ -1726,7 +1755,6 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 	}
 
     NS_RELEASE(pev.renderingContext);
-
   }
   
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc  End of RawDrawFunc\n"));
@@ -2179,11 +2207,20 @@ PhTile_t *nsWindow::GetWindowClipping(PhPoint_t &offset)
 #endif
 
 #if 1
+/* working! */ 
             tile->rect.ul.x = area->pos.x;
             tile->rect.ul.y = area->pos.y;
             tile->rect.lr.x = area->pos.x + area->size.w - 1;
             tile->rect.lr.y = area->pos.y + area->size.h - 1;
 #endif
+
+#if 0
+            tile->rect.ul.x = area->pos.x + w_offset.x;
+            tile->rect.ul.y = area->pos.y + w_offset.y;
+            tile->rect.lr.x = area->pos.x + area->size.w - 1;
+            tile->rect.lr.y = area->pos.y + area->size.h - 1;
+#endif
+
             tile->next = NULL;
             if( !clip_tiles )
               clip_tiles = tile;
@@ -2224,7 +2261,7 @@ PhTile_t *nsWindow::GetWindowClipping(PhPoint_t &offset)
       {
         PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
         PtGetResources( w, 1, &arg );
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetWindowClipping BrotherInFront: %p: area=<%d,%d,%d,%d> IsRealized=<%d>\n",w,area->pos.x,area->pos.y,area->size.w,area->size.h, PtWidgetIsRealized(w)));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::GetWindowClipping BrotherInFront: %p: area=<%d,%d,%d,%d> IsRealized=<%d>\n",w,area->pos.x,area->pos.y,area->size.w,area->size.h, PtWidgetIsRealized(w) ));
 
         if( PtWidgetIsRealized( w ))
         {
