@@ -932,7 +932,7 @@ public class ScriptRuntime {
             index = (int) d;
             s = ((double) index) == d ? null : toString(id);
         } else {
-            s = toString(id);
+            s = (id instanceof String) ? (String)id : toString(id);
             long indexTest = indexFromString(s);
             if (indexTest >= 0) {
                 index = (int)indexTest;
@@ -941,30 +941,16 @@ public class ScriptRuntime {
                 index = 0;
             }                
         }
+    
         Scriptable start = obj instanceof Scriptable
                            ? (Scriptable) obj
                            : toObject(scope, obj);
-        Scriptable m = start;
         if (s != null) {
-            if (s.equals("__proto__"))
-                return start.getPrototype();
-            if (s.equals("__parent__"))
-                return start.getParentScope();
-            while (m != null) {
-                Object result = m.get(s, start);
-                if (result != Scriptable.NOT_FOUND)
-                    return result;
-                m = m.getPrototype();
-            }
-            return Undefined.instance;
+            return getStrIdElem(start, s);
         }
-        while (m != null) {
-            Object result = m.get(index, start);
-            if (result != Scriptable.NOT_FOUND)
-                return result;
-            m = m.getPrototype();
+        else {
+            return getElem(start, index);
         }
-        return Undefined.instance;
     }
 
 
@@ -972,11 +958,28 @@ public class ScriptRuntime {
      * A cheaper and less general version of the above for well-known argument
      * types.
      */
-    public static Object getElem(Scriptable obj, int index)
-    {
+    public static Object getElem(Scriptable obj, int index) {
         Scriptable m = obj;
         while (m != null) {
             Object result = m.get(index, obj);
+            if (result != Scriptable.NOT_FOUND)
+                return result;
+            m = m.getPrototype();
+        }
+        return Undefined.instance;
+    }
+
+    static Object getStrIdElem(Scriptable obj, String id) {
+        int l = id.length();
+        if (l == 9) {
+            if (id.equals("__proto__")) { return obj.getPrototype(); }
+        }
+        else if (l == 10) {
+            if (id.equals("__parent__")) { return obj.getParentScope(); }
+        }
+        Scriptable m = obj;
+        while (m != null) {
+            Object result = m.get(id, obj);
             if (result != Scriptable.NOT_FOUND)
                 return result;
             m = m.getPrototype();
@@ -994,7 +997,7 @@ public class ScriptRuntime {
             index = (int) d;
             s = ((double) index) == d ? null : toString(id);
         } else {
-            s = toString(id);
+            s = (id instanceof String) ? (String)id : toString(id);
             long indexTest = indexFromString(s);
             if (indexTest >= 0) {
                 index = (int)indexTest;
@@ -1007,41 +1010,19 @@ public class ScriptRuntime {
         Scriptable start = obj instanceof Scriptable
                      ? (Scriptable) obj
                      : toObject(scope, obj);
-        Scriptable m = start;
         if (s != null) {
-            if (s.equals("__proto__"))
-                return setProto(obj, value, scope);
-            if (s.equals("__parent__"))
-                return setParent(obj, value, scope);
-
-            do {
-                if (m.has(s, start)) {
-                    m.put(s, start, value);
-                    return value;
-                }
-                m = m.getPrototype();
-            } while (m != null);
-            start.put(s, start, value);
-            return value;
-       }
-
-        do {
-            if (m.has(index, start)) {
-                m.put(index, start, value);
-                return value;
-            }
-            m = m.getPrototype();
-        } while (m != null);
-        start.put(index, start, value);
-        return value;
+            return setStrIdElem(start, s, value, scope);
+        }
+        else {
+            return setElem(start, index, value);
+        }
     }
 
     /*
      * A cheaper and less general version of the above for well-known argument
      * types.
      */
-    public static Object setElem(Scriptable obj, int index, Object value)
-    {
+    public static Object setElem(Scriptable obj, int index, Object value) {
         Scriptable m = obj;
         do {
             if (m.has(index, obj)) {
@@ -1051,6 +1032,28 @@ public class ScriptRuntime {
             m = m.getPrototype();
         } while (m != null);
         obj.put(index, obj, value);
+        return value;
+    }
+
+    static Object setStrIdElem(Scriptable obj, String id, Object value,
+                               Scriptable scope)
+    {
+        int l = id.length();
+        if (l == 9) {
+            if (id.equals("__proto__")) return setProto(obj, value, scope);
+        }
+        else if (l == 10) {
+            if (id.equals("__parent__")) return setParent(obj, value, scope);
+        }
+        Scriptable m = obj;
+        do {
+            if (m.has(id, obj)) {
+                m.put(id, obj, value);
+                return value;
+            }
+            m = m.getPrototype();
+        } while (m != null);
+        obj.put(id, obj, value);
         return value;
     }
 

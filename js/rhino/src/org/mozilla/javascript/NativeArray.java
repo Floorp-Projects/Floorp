@@ -419,7 +419,7 @@ public class NativeArray extends IdScriptable {
     private static Object getElem(Scriptable target, long index) {
         if (index > Integer.MAX_VALUE) {
             String id = Long.toString(index);
-            return ScriptRuntime.getElem(target, id, target);
+            return ScriptRuntime.getStrIdElem(target, id);
         } else {
             return ScriptRuntime.getElem(target, (int)index);
         }
@@ -428,7 +428,7 @@ public class NativeArray extends IdScriptable {
     private static void setElem(Scriptable target, long index, Object value) {
         if (index > Integer.MAX_VALUE) {
             String id = Long.toString(index);
-            ScriptRuntime.setElem(target, id, value, target);
+            ScriptRuntime.setStrIdElem(target, id, value, target);
         } else {
             ScriptRuntime.setElem(target, (int)index, value);
         }
@@ -482,8 +482,7 @@ public class NativeArray extends IdScriptable {
 
         if (!iterating) {
             for (i = 0; i < length; i++) {
-                if (i > 0)
-                    result.append(separator);
+                if (i > 0) result.append(separator);
                 Object elem = getElem(thisObj, i);
                 if (elem == null || elem == Undefined.instance) {
                     haslast = false;
@@ -492,13 +491,13 @@ public class NativeArray extends IdScriptable {
                 haslast = true;
 
                 if (elem instanceof String) {
+                    String s = (String)elem;
                     if (toSource) {
                         result.append('\"');
-                        result.append(ScriptRuntime.escapeString
-                                      (ScriptRuntime.toString(elem)));
+                        result.append(ScriptRuntime.escapeString(s));
                         result.append('\"');
                     } else {
-                        result.append(ScriptRuntime.toString(elem));
+                        result.append(s);
                     }
                 } else {
                     /* wrap changes to cx.iterating in a try/finally

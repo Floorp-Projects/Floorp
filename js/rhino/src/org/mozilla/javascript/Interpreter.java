@@ -1139,7 +1139,7 @@ public class Interpreter extends LabelTable {
     }
     
     private static int getShort(byte[] iCode, int pc) {
-        return (iCode[pc] << 8) + (iCode[pc + 1] & 0xFF);
+        return (iCode[pc] << 8) | (iCode[pc + 1] & 0xFF);
     }
     
     private static int getInt(byte[] iCode, int pc) {
@@ -1821,25 +1821,12 @@ public class Interpreter extends LabelTable {
                                 = ScriptRuntime.setProp(lhs, name, rhs, scope);
                         break;
                     case TokenStream.GETELEM :
-                        id = stack[stackTop];    
-                        if (id == DBL_MRK) id = doubleWrap(sDbl[stackTop]);
+                        do_getElem(stack, sDbl, stackTop, scope);
                         --stackTop;
-                        lhs = stack[stackTop];    
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
-                                = ScriptRuntime.getElem(lhs, id, scope);
                         break;
                     case TokenStream.SETELEM :
-                        rhs = stack[stackTop];    
-                        if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        id = stack[stackTop];    
-                        if (id == DBL_MRK) id = doubleWrap(sDbl[stackTop]);
-                        --stackTop;
-                        lhs = stack[stackTop];    
-                        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-                        stack[stackTop] 
-                                = ScriptRuntime.setElem(lhs, id, rhs, scope);
+                        do_setElem(stack, sDbl, stackTop, scope);
+                        stackTop -= 2;
                         break;
                     case TokenStream.PROPINC :
                         name = (String)stack[stackTop];
@@ -2376,8 +2363,6 @@ public class Interpreter extends LabelTable {
         }
     }
 
-
-    
     private static boolean do_eq(Object[] stack, double[] stackDbl,
                                  int stackTop)
     {
@@ -2460,6 +2445,64 @@ public class Interpreter extends LabelTable {
         return result;
     }
     
+    private static void do_getElem(Object[] stack, double[] stackDbl,
+                                   int stackTop, Scriptable scope)
+    {
+        Object lhs = stack[stackTop - 1];
+        if (lhs == DBL_MRK) lhs = doubleWrap(stackDbl[stackTop - 1]);
+
+        Object result;
+        Object id = stack[stackTop];
+        if (id != DBL_MRK) {
+            result = ScriptRuntime.getElem(lhs, id, scope);
+        }
+        else {
+            Scriptable obj = (lhs instanceof Scriptable) 
+                             ? (Scriptable)lhs
+                             : ScriptRuntime.toObject(scope, lhs);
+            double val = stackDbl[stackTop];
+            int index = (int)val;
+            if (index == val) {
+                result = ScriptRuntime.getElem(obj, index);
+            }
+            else {
+                String s = ScriptRuntime.toString(val);
+                result = ScriptRuntime.getStrIdElem(obj, s);
+            }
+        }
+        stack[stackTop - 1] = result; 
+    }
+
+    private static void do_setElem(Object[] stack, double[] stackDbl,
+                                   int stackTop, Scriptable scope)
+    {
+        Object rhs = stack[stackTop];    
+        if (rhs == DBL_MRK) rhs = doubleWrap(stackDbl[stackTop]);
+        Object lhs = stack[stackTop - 2];
+        if (lhs == DBL_MRK) lhs = doubleWrap(stackDbl[stackTop - 2]);
+
+        Object result;
+        Object id = stack[stackTop - 1];
+        if (id != DBL_MRK) {
+            result = ScriptRuntime.setElem(lhs, id, rhs, scope);
+        }
+        else {
+            Scriptable obj = (lhs instanceof Scriptable) 
+                             ? (Scriptable)lhs
+                             : ScriptRuntime.toObject(scope, lhs);
+            double val = stackDbl[stackTop - 1];
+            int index = (int)val;
+            if (index == val) {
+                result = ScriptRuntime.setElem(obj, index, rhs);
+            }
+            else {
+                String s = ScriptRuntime.toString(val);
+                result = ScriptRuntime.setStrIdElem(obj, s, rhs, scope);
+            }
+        }
+        stack[stackTop - 2] = result; 
+    }
+
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,
                                          int stackTop, int count)
     {
