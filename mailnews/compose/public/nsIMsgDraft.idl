@@ -39,6 +39,7 @@
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgHdr.idl"
 
+interface nsIMsgWindow;
 
 [scriptable, uuid(A6237474-453B-11d3-8F0F-00A024A7D144)]
 
@@ -49,9 +50,9 @@ interface nsIMsgDraft : nsISupports
 	 * a URI
 	 */
 	void		OpenDraftMsg(in string msgURI, out nsIMsgDBHdr aMsgToReplace,
-                             in nsIMsgIdentity identity, in PRBool addInlineHeaders);
+                             in nsIMsgIdentity identity, in PRBool addInlineHeaders, in nsIMsgWindow aMsgWindow);
 
 	void		OpenEditorTemplate(in string msgURI, out nsIMsgDBHdr aMsgReplace,
-                                   in nsIMsgIdentity identity);  
+                                   in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow);  
 };
 

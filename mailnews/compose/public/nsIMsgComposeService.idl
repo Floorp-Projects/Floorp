@@ -43,14 +43,15 @@
 
 interface nsIURI;
 interface nsIDOMWindowInternal;
-
+interface nsIMsgWindow;
 
 [scriptable, uuid(B004F4AE-1AC2-11d3-A715-0060B0EB39B5)]
 interface nsIMsgComposeService : nsISupports {
 
-	/* ... */
+	/* we need a msg window because when we forward inline we may need progress */
 	void OpenComposeWindow(in string msgComposeWindowURL, in string originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
-						   in nsIMsgIdentity identity);
+						   in nsIMsgIdentity identity,
+                                                   in nsIMsgWindow aMsgWindow);
 
     /* use this method to invoke a compose window given a mailto url.
 	   aMsgComposeWindowURL --> can be null in most cases. If you have your own chrome

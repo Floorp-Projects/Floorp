@@ -64,7 +64,6 @@
 #include "nsMsgCopy.h"
 #include "nsNetUtil.h"
 #include "nsMsgMimeCID.h"
-#include "nsIMsgMailSession.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgBaseCID.h"
 
@@ -104,7 +103,7 @@ static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_C
 
 nsresult    
 nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType aOutType, 
-                                            nsIMsgIdentity * identity, nsIMsgDBHdr **aMsgToReplace)
+                                            nsIMsgIdentity * identity, nsIMsgDBHdr **aMsgToReplace, nsIMsgWindow *aMsgWindow)
 {
   nsresult  rv;
 
@@ -166,25 +165,17 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   nsCOMPtr<nsIURI> aURL;
   rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
 
-  // HACK: if we are forwarding a message and that message used a charset over ride
-  // (as speciifed in the top most window (assuming the reply originated from that window)
+  // if we are forwarding a message and that message used a charset over ride
   // then use that over ride charset instead of the charset specified in the message
-	nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID);          
   nsXPIDLString mailCharset;
-  if (mailSession)
+  if (aMsgWindow)
   {
-    nsCOMPtr<nsIMsgWindow>    msgWindow;
-    mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-    if (msgWindow)
+    aMsgWindow->GetMailCharacterSet(getter_Copies(mailCharset));
+    if (mailCharset)
     {
-      
-      msgWindow->GetMailCharacterSet(getter_Copies(mailCharset));
-      if (mailCharset)
-      {
-        nsCOMPtr<nsIMsgI18NUrl> i18nUrl(do_QueryInterface(aURL));
-        if (i18nUrl)
-          i18nUrl->SetCharsetOverRide(mailCharset);
-      }
+      nsCOMPtr<nsIMsgI18NUrl> i18nUrl(do_QueryInterface(aURL));
+      if (i18nUrl)
+        i18nUrl->SetCharsetOverRide(mailCharset);
     }
   }
 
@@ -207,7 +198,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
      GetMsgDBHdrFromURI(msgURI, aMsgToReplace);
 
   // Now, just plug the two together and get the hell out of the way!
-  rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull, nsnull, mailCharset, nsnull);
+  rv = mMessageService->DisplayMessage(mURI, convertedListener, aMsgWindow, nsnull, mailCharset, nsnull);
 
   ReleaseMessageServiceFromURI(mURI, mMessageService);
   mMessageService = nsnull;
@@ -221,7 +212,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
 
 nsresult
 nsMsgDraft::OpenDraftMsg(const char *msgURI, nsIMsgDBHdr **aMsgToReplace,
-                         nsIMsgIdentity * identity, PRBool addInlineHeaders)
+                         nsIMsgIdentity * identity, PRBool addInlineHeaders, nsIMsgWindow *aMsgWindow)
 {
   // We should really never get here, but if we do, just return 
   // with an error
@@ -230,14 +221,14 @@ nsMsgDraft::OpenDraftMsg(const char *msgURI, nsIMsgDBHdr **aMsgToReplace,
   
   mAddInlineHeaders = addInlineHeaders;
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageDraftOrTemplate, 
-                                         identity, aMsgToReplace);
+                                         identity, aMsgToReplace, aMsgWindow);
 }
 
 nsresult
 nsMsgDraft::OpenEditorTemplate(const char *msgURI, nsIMsgDBHdr **aMsgToReplace,
-							   nsIMsgIdentity * identity)
+							   nsIMsgIdentity * identity, nsIMsgWindow *aMsgWindow)
 {
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageEditorTemplate, 
-                                         identity, aMsgToReplace);
+                                         identity, aMsgToReplace, aMsgWindow);
 }
 

@@ -157,7 +157,7 @@ static nsresult openWindow( const char *chrome, nsIMsgComposeParams *params )
 
 NS_IMETHODIMP
 nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const char *originalMsgURI,
-	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity)
+	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity, nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv;
 	
@@ -175,13 +175,13 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
 			switch(type)
 			{
 				case nsIMsgCompType::ForwardInline:
-	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_TRUE);
+	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_TRUE, aMsgWindow);
 					break;
 				case nsIMsgCompType::Draft:
-	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_FALSE);
+	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_FALSE, aMsgWindow);
 					break;
 				case nsIMsgCompType::Template:
-	    			rv = pMsgDraft->OpenEditorTemplate(uriToOpen.get(), nsnull, identity);
+	    			rv = pMsgDraft->OpenEditorTemplate(uriToOpen.get(), nsnull, identity, aMsgWindow);
 					break;
 			}
 		}

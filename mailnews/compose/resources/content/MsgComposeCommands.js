@@ -1469,12 +1469,7 @@ function SendMessage()
 
 function SendMessageWithCheck()
 {
-    var warn;
-    try {
-        warn = prefs.GetBoolPref("mail.warn_on_send_accel_key");
-    } catch (ex) {
-        warn = true;
-    }
+    var warn = prefs.GetBoolPref("mail.warn_on_send_accel_key");
 
     if (warn) {
         var buttonPressed = {value:1};

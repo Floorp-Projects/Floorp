@@ -183,13 +183,13 @@ function ComposeMessage(type, format, folder, messageArray)
 	if (type == msgComposeType.New) //new message
 	{
 		//dump("OpenComposeWindow with " + identity + "\n");
-		msgComposeService.OpenComposeWindow(null, null, type, format, identity);
+		msgComposeService.OpenComposeWindow(null, null, type, format, identity, msgWindow);
 		return;
 	}
     else if (type == msgComposeType.NewsPost) 
 	{
 		//dump("OpenComposeWindow with " + identity + " and " + newsgroup + "\n");
-		msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity);
+		msgComposeService.OpenComposeWindow(null, newsgroup, type, format, identity, msgWindow);
 		return;
 	}
 		
@@ -211,7 +211,7 @@ function ComposeMessage(type, format, folder, messageArray)
 				type == msgComposeType.ReplyToSenderAndGroup ||
 				type == msgComposeType.Template || type == msgComposeType.Draft)
 			{
-				msgComposeService.OpenComposeWindow(null, messageUri, type, format, identity);
+				msgComposeService.OpenComposeWindow(null, messageUri, type, format, identity, msgWindow);
 			}
 			else
 			{
@@ -222,7 +222,7 @@ function ComposeMessage(type, format, folder, messageArray)
 		}
 		if (type == msgComposeType.ForwardAsAttachment)
 		{
-			msgComposeService.OpenComposeWindow(null, uri, type, format, identity);
+			msgComposeService.OpenComposeWindow(null, uri, type, format, identity, msgWindow);
 		}
 	}
 	else

@@ -16,7 +16,7 @@
 
     function goOpenNewMessage()
       {
-        try 
+        try
         {
           var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
           var iwindowManager = Components.interfaces.nsIWindowMediator;
@@ -26,14 +26,14 @@
           return;
         }
         catch(ex) {
-          ;
         }
+
         var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
         msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
         msgComposeService.OpenComposeWindow(null, null,
                                             Components.interfaces.nsIMsgCompType.New,
                                             Components.interfaces.nsIMsgCompFormat.Default,
-                                            null);
+                                            null, null);
       }
 
   ]]>
