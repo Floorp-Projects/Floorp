@@ -995,7 +995,7 @@ nsLocalFile::Spawn(const char *args)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::Load(PRLibrary * *_retval);
+nsLocalFile::Load(PRLibrary * *_retval)
 {
     PRBool isFile;
     nsresult rv = IsFile(&isFile);
