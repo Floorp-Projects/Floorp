@@ -76,6 +76,7 @@
                 mPageMenu = NSMenu; 
                 mPersonalToolbar = CHBookmarksToolbar; 
                 mProgress = NSProgressIndicator; 
+                mProxyIcon = NSImageView; 
                 mSidebarBookmarksDataSource = BookmarksDataSource; 
                 mSidebarBrowserView = id; 
                 mSidebarDrawer = NSDrawer; 
