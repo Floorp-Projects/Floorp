@@ -2342,12 +2342,18 @@ PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
 	SECITEM_FreeItem(derSerial, PR_TRUE);
 	return STAN_GetCERTCertificate(cert);
     }
+retry:
     cert = NSSTrustDomain_FindCertificateByIssuerAndSerialNumber(
                                                   STAN_GetDefaultTrustDomain(),
                                                   &issuer,
                                                   &serial);
     if (cert) {
 	rvCert = STAN_GetCERTCertificate(cert);
+	/* Check to see if the cert's token is still there */
+	if (!PK11_IsPresent(rvCert->slot)) {
+	    CERT_DestroyCertificate(rvCert);
+	    goto retry;
+	}
 	if (slotPtr) *slotPtr = PK11_ReferenceSlot(rvCert->slot);
     }
     SECITEM_FreeItem(derSerial, PR_TRUE);
