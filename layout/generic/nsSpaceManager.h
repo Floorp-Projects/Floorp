@@ -38,19 +38,23 @@ public:
   virtual nscoord YMost() const;
   virtual PRInt32 GetBandData(nscoord       aYOffset,
                               const nsSize& aMaxSize,
-                              nsBandData&   aAvailableSpace) const;
+                              nsBandData&   aBandData) const;
   virtual void AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFrame);
   virtual void ClearRegions();
 
 protected:
+  struct nsBandRect : nsRect {
+    nsIFrame* frame;
+  };
+
   class RectArray {
   public:
     RectArray();
     ~RectArray();
 
     // Functions to add rects
-    void Append(const nsRect& aRect);
-    void InsertAt(const nsRect& aRect, PRInt32 aIndex);
+    void Append(const nsRect& aRect, nsIFrame* aFrame);
+    void InsertAt(const nsRect& aRect, PRInt32 aIndex, nsIFrame* aFrame);
     void RemoveAt(PRInt32 aIndex);
 
     // Clear the list of rectangles
@@ -61,9 +65,9 @@ protected:
 
   public:
     // Access to the underlying storage
-    nsRect* mRects;  // y-x banded array of rectangles of unavailable space
-    PRInt32 mCount;  // current number of rects
-    PRInt32 mMax;    // capacity of rect array
+    nsBandRect* mRects;  // y-x banded array of rectangles of unavailable space
+    PRInt32     mCount;  // current number of rects
+    PRInt32     mMax;    // capacity of rect array
   };
 
   nsIFrame* const mFrame;      // frame associated with the space manager
@@ -71,16 +75,17 @@ protected:
   RectArray       mRectArray;  // y-x banded array of rectangles of unavailable space
 
 protected:
-  PRBool  GetNextBand(nsRect*& aRect, PRInt32& aIndex) const;
-  PRInt32 LengthOfBand(const nsRect* aBand, PRInt32 aIndex) const;
-  void    CoalesceBand(nsRect* aBand, PRInt32 aIndex);
-  void    DivideBand(nsRect* aBand, PRInt32 aIndex, nscoord aB1Height);
-  void    AddRectToBand(nsRect* aBand, PRInt32 aIndex, const nsRect& aRect);
-  PRInt32 GetBandAvailableSpace(const nsRect* aBand,
-                                PRInt32       aIndex,
-                                nscoord       aY,
-                                const nsSize& aMaxSize,
-                                nsBandData&   aAvailableSpace) const;
+  PRBool  GetNextBand(nsBandRect*& aRect, PRInt32& aIndex) const;
+  PRInt32 LengthOfBand(const nsBandRect* aBand, PRInt32 aIndex) const;
+  PRBool  CoalesceBand(nsBandRect* aBand, PRInt32 aIndex);
+  void    DivideBand(nsBandRect* aBand, PRInt32 aIndex, nscoord aB1Height);
+  void    AddRectToBand(nsBandRect* aBand, PRInt32 aIndex,
+                        const nsRect& aRect, nsIFrame* aFrame);
+  PRInt32 GetBandAvailableSpace(const nsBandRect* aBand,
+                                PRInt32           aIndex,
+                                nscoord           aY,
+                                const nsSize&     aMaxSize,
+                                nsBandData&       aAvailableSpace) const;
 
 private:
 	SpaceManager(const SpaceManager&);    // no implementation

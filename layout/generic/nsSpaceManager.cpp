@@ -62,7 +62,8 @@ nscoord SpaceManager::YMost() const
 }
 
 /**
- * Internal function that returns the available space within the band
+ * Internal function that returns the list of available and unavailable space
+ * within the band
  *
  * @param aBand the first rect in the band
  * @param aIndex aBand's index in the rect array
@@ -70,25 +71,24 @@ nscoord SpaceManager::YMost() const
  * @param aMaxSize the size to use to constrain the band data
  * @param aAvailableBand
  */
-PRInt32 SpaceManager::GetBandAvailableSpace(const nsRect* aBand,
-                                            PRInt32       aIndex,
-                                            nscoord       aY,
-                                            const nsSize& aMaxSize,
-                                            nsBandData&   aAvailableSpace) const
+PRInt32 SpaceManager::GetBandAvailableSpace(const nsBandRect* aBand,
+                                            PRInt32           aIndex,
+                                            nscoord           aY,
+                                            const nsSize&     aMaxSize,
+                                            nsBandData&       aBandData) const
 {
   PRInt32          numRects = LengthOfBand(aBand, aIndex);
   nscoord          localY = aY - mY;
   nscoord          height = PR_MIN(aBand->YMost() - aY, aMaxSize.height);
-  nsBandTrapezoid* trapezoid = aAvailableSpace.trapezoids;
+  nsBandTrapezoid* trapezoid = aBandData.trapezoids;
   nscoord          rightEdge = mX + aMaxSize.width;
 
   // Initialize the band data
-  aAvailableSpace.count = 0;
-  trapezoid->xTopLeft = mX;
+  aBandData.count = 0;
 
   // Skip any rectangles that are to the left of the local coordinate space
   while (numRects > 0) {
-    if (aBand->XMost() >= mX) {
+    if (aBand->XMost() > mX) {
       break;
     }
 
@@ -97,60 +97,74 @@ PRInt32 SpaceManager::GetBandAvailableSpace(const nsRect* aBand,
     numRects--;
   }
 
-  // Process all the remaining rectangles that are within the clip width
+  // This is used to track the current x-location within the band. This is in
+  // world coordinates
+  nscoord   left = mX;
+
+  // Process the remaining rectangles that are within the clip width
   while ((numRects > 0) && (aBand->x < rightEdge)) {
-    if (aBand->x > trapezoid->xTopLeft) {
-      // We found some available space
-      trapezoid->xTopRight = trapezoid->xBottomRight = aBand->x;
-
-      // Convert from world to local coordinates
-      trapezoid->xTopLeft -= mX;
-      trapezoid->xTopRight -= mX;
-      trapezoid->xBottomLeft = trapezoid->xTopLeft;
-      trapezoid->xBottomRight = trapezoid->xTopRight;
-
-      trapezoid->yTop = localY;
-      trapezoid->yBottom = localY + height;
+    // Compare the left edge of the occupied space with the current left
+    // coordinate
+    if (aBand->x > left) {
+      // The rect is to the right of our current left coordinate, so we've
+      // found some available space
       trapezoid->state = nsBandTrapezoid::smAvailable;
       trapezoid->frame = nsnull;
-  
+
+      // Assign the trapezoid a rectangular shape. The trapezoid must be in the
+      // local coordinate space, so convert the current left coordinate
+      *trapezoid = nsRect(left - mX, localY, aBand->x - left, height);
+
       // Move to the next output rect
       trapezoid++;
-      aAvailableSpace.count++;
+      aBandData.count++;
     }
 
-    trapezoid->xTopLeft = aBand->XMost();
+    // The rect represents unavailable space, so add another trapezoid
+    trapezoid->state = nsBandTrapezoid::smOccupied;
+    trapezoid->frame = aBand->frame;
 
-    // Move to the next rect in the band
+    nscoord x = aBand->x;
+    // The first band can straddle the clip rect
+    if (x < mX) {
+      // Clip the left edge
+      x = mX;
+    }
+
+    // Assign the trapezoid a rectangular shape. The trapezoid must be in the
+    // local coordinate space, so convert the rects's left coordinate
+    *trapezoid = nsRect(x - mX, localY, aBand->XMost() - x, height);
+
+    // Move to the next output rect
+    trapezoid++;
+    aBandData.count++;
+
+    // Adjust our current x-location within the band
+    left = aBand->XMost();
+
+    // Move to the next rect within the band
     numRects--;
     aBand++;
   }
 
   // No more rects left in the band. If we haven't yet reached the right edge,
   // then all the remaining space is available
-  if (trapezoid->xTopLeft < rightEdge) {
-    trapezoid->xTopRight = rightEdge;
-
-    // Convert from world to local coordinates
-    trapezoid->xTopLeft -= mX;
-    trapezoid->xTopRight -= mX;
-    trapezoid->xBottomLeft = trapezoid->xTopLeft;
-    trapezoid->xBottomRight = trapezoid->xTopRight;
-
-    trapezoid->yTop = localY;
-    trapezoid->yBottom = localY + height;
+  if (left < rightEdge) {
     trapezoid->state = nsBandTrapezoid::smAvailable;
     trapezoid->frame = nsnull;
 
-    aAvailableSpace.count++;
+    // Assign the trapezoid a rectangular shape. The trapezoid must be in the
+    // local coordinate space, so convert the current left coordinate
+    *trapezoid = nsRect(left - mX, localY, rightEdge - left, height);
+    aBandData.count++;
   }
 
-  return aAvailableSpace.count;
+  return aBandData.count;
 }
 
 PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
                                   const nsSize& aMaxSize,
-                                  nsBandData&   aAvailableSpace) const
+                                  nsBandData&   aBandData) const
 {
   // Convert the y-offset to world coordinates
   nscoord y = mY + aYOffset;
@@ -158,35 +172,29 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
   // If there are no unavailable rects or the offset is below the bottommost
   // band then all the space is available
   if ((0 == mRectArray.mCount) || (y >= mRectArray.YMost())) {
-    aAvailableSpace.count = 1;
-
-    nsBandTrapezoid& trapezoid = aAvailableSpace.trapezoids[0];
-
-    trapezoid.xTopLeft = trapezoid.xBottomLeft = 0;
-    trapezoid.yTop = aYOffset;
-    trapezoid.xTopRight = trapezoid.xBottomRight = aMaxSize.width;
-    trapezoid.yBottom = aYOffset + aMaxSize.height;
-    trapezoid.state = nsBandTrapezoid::smAvailable;
-    trapezoid.frame = nsnull;
+    // All the requested space is available
+    aBandData.count = 1;
+    aBandData.trapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
+    aBandData.trapezoids[0].state = nsBandTrapezoid::smAvailable;
+    aBandData.trapezoids[0].frame = nsnull;
   } else {
     // Find the first band that contains the y-offset or is below the y-offset
-    nsRect* band = mRectArray.mRects;
+    nsBandRect* band = mRectArray.mRects;
 
     for (PRInt32 i = 0; i < mRectArray.mCount; ) {
       if (band->y > y) {
-        // The band is below the y-offset
-        nsBandTrapezoid& trapezoid = aAvailableSpace.trapezoids[0];
-    
-        trapezoid.xTopLeft = trapezoid.xBottomLeft = 0;
-        trapezoid.yTop = aYOffset;
-        trapezoid.xTopRight = trapezoid.xBottomRight = aMaxSize.width;
-        trapezoid.yBottom = aYOffset + PR_MIN(band->y - y, aMaxSize.height);
-        trapezoid.state = nsBandTrapezoid::smAvailable;
-        trapezoid.frame = nsnull;
+        // The band is below the y-offset. The area between the y-offset and
+        // the top of the band is available
+        aBandData.count = 1;
+        aBandData.trapezoids[0] =
+          nsRect(0, aYOffset, aMaxSize.width, PR_MIN(band->y - y, aMaxSize.height));
+        aBandData.trapezoids[0].state = nsBandTrapezoid::smAvailable;
+        aBandData.trapezoids[0].frame = nsnull;
         break;
       } else if (y < band->YMost()) {
-        // The band contains the y-offset
-        return GetBandAvailableSpace(band, i, y, aMaxSize, aAvailableSpace);
+        // The band contains the y-offset. Return a list of available and
+        // unavailable rects within the band
+        return GetBandAvailableSpace(band, i, y, aMaxSize, aBandData);
       } else {
         // Skip to the next band
         GetNextBand(band, i);
@@ -194,7 +202,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
     }
   }
 
-  return aAvailableSpace.count;
+  return aBandData.count;
 }
 
 /**
@@ -207,7 +215,7 @@ PRInt32 SpaceManager::GetBandData(nscoord       aYOffset,
  *          next band. If there is no next band then aRect is undefined
  *          and aIndex is set to the number of rects in the rect array
  */
-PRBool SpaceManager::GetNextBand(nsRect*& aRect, PRInt32& aIndex) const
+PRBool SpaceManager::GetNextBand(nsBandRect*& aRect, PRInt32& aIndex) const
 {
   nscoord topOfBand = aRect->y;
 
@@ -231,7 +239,7 @@ PRBool SpaceManager::GetNextBand(nsRect*& aRect, PRInt32& aIndex) const
  * @param aBand the first rect in the band
  * @param aIndex aBand's index in the rect array
  */
-PRInt32 SpaceManager::LengthOfBand(const nsRect* aBand, PRInt32 aIndex) const
+PRInt32 SpaceManager::LengthOfBand(const nsBandRect* aBand, PRInt32 aIndex) const
 {
   nscoord topOfBand = aBand->y;
   PRInt32 result = 1;
@@ -252,36 +260,48 @@ PRInt32 SpaceManager::LengthOfBand(const nsRect* aBand, PRInt32 aIndex) const
 }
 
 /**
- * Tries to coalesce horizontally overlapping rectangles within a band
+ * Tries to coalesce adjoining rectangles within a band. Returns PR_TRUE if any
+ * of the rects are coalesced and PR_FALSE otherwise
  *
- * @param aRect a rect in the band
- * @param aIndex aRect's index in the rect array
+ * @param aRect the first rect in the band
+ * @param aIndex aBand's index in the rect array
  */
-void SpaceManager::CoalesceBand(nsRect* aRect, PRInt32 aIndex)
+PRBool SpaceManager::CoalesceBand(nsBandRect* aBand, PRInt32 aIndex)
 {
+  PRBool  result = PR_FALSE;
+
   while ((aIndex + 1) < mRectArray.mCount) {
     // Is there another rect in this band?
-    nsRect* nextRect = aRect + 1;
+    nsBandRect* nextRect = aBand + 1;
 
-    if (nextRect->y == aRect->y) {
-      // Yes. Do the two rects overlap horizontally?
-      if (aRect->XMost() > nextRect->x) {
-        // Yes. Extend the right edge of aRect
-        aRect->width = nextRect->XMost() - aRect->x;
+    if (nextRect->y == aBand->y) {
+      // The rects must not be overlapping
+      NS_ASSERTION(nextRect->x >= aBand->XMost(), "overlapping rects");
+
+      // Are the two rects adjoining and have the same tagged frame?
+      if ((aBand->XMost() == nextRect->x) && (aBand->frame == nextRect->frame)) {
+        // Yes. Extend the right edge of the current rect
+        aBand->width = nextRect->XMost() - aBand->x;
 
         // Remove the next rect
         mRectArray.RemoveAt(aIndex + 1);
-        aRect = mRectArray.mRects + aIndex;  // memory may have changed...
+        aBand = mRectArray.mRects + aIndex;  // memory may have changed...
+
+        // Continue through the loop trying to coalesce this rect
+        result = PR_TRUE;
 
       } else {
-        // No. We're all done
-        break;
+        // No. Move to the next rect within the band
+        aBand++;
+        aIndex++;
       }
     } else {
       // The next rect is part of a different band, so we're all done
       break;
     }
   }
+
+  return result;
 }
 
 /**
@@ -291,7 +311,7 @@ void SpaceManager::CoalesceBand(nsRect* aRect, PRInt32 aIndex)
  * @param aIndex aBand's index in the rect array
  * @param aB1Height the height of the new band to create
  */
-void SpaceManager::DivideBand(nsRect* aBand, PRInt32 aIndex, nscoord aB1Height)
+void SpaceManager::DivideBand(nsBandRect* aBand, PRInt32 aIndex, nscoord aB1Height)
 {
   NS_PRECONDITION(aB1Height < aBand->height, "bad height");
 
@@ -305,7 +325,7 @@ void SpaceManager::DivideBand(nsRect* aBand, PRInt32 aIndex, nscoord aB1Height)
     // Insert a new bottom band
     nsRect  r(aBand->x, aBand->y + aB1Height, aBand->width, aB2Height);
 
-    mRectArray.InsertAt(r, insertAt);
+    mRectArray.InsertAt(r, insertAt, aBand->frame);
     aBand = mRectArray.mRects + aIndex;  // memory may have changed...
 
     // Adjust the height of the top band
@@ -322,62 +342,127 @@ void SpaceManager::DivideBand(nsRect* aBand, PRInt32 aIndex, nscoord aB1Height)
  *
  * @param aBand the first rect in the band
  * @param aIndex aBand's index in the rect array
- * @param aRect the rect to add to the band
+ * @param aRect the rect to add to the band. It's in world coordinates
  * @returns PR_TRUE if successful and PR_FALSE if this is the last band
  */
-void SpaceManager::AddRectToBand(nsRect*       aBand,
+void SpaceManager::AddRectToBand(nsBandRect*   aBand,
                                  PRInt32       aIndex,
-                                 const nsRect& aRect)
+                                 const nsRect& aRect,
+                                 nsIFrame*     aFrame)
 {
   NS_PRECONDITION((aBand->y == aRect.y) && (aBand->height == aRect.height), "bad band");
 
   nscoord topOfBand = aBand->y;
+  nsRect  rect(aRect);
 
-  // Figure out where in the band to horizontally insert the rect. Try and
-  // coalesce it with an existing rect if possible.
+  // Figure out where in the band horizontally to insert the rect. Try and
+  // coalesce it with an existing rect if possible. We can only do this if
+  // they're tagged with the same frame
   do {
     // Compare the left edge of the new rect with the left edge of the existing
     // rect
-    if (aRect.x <= aBand->x) {
-      // The new rect's left edge is to the left of the existing rect's left
-      // edge. Does the new rect overlap the existing rect?
-      if (aRect.XMost() >= aBand->x) {
-        // Yes. Extend the existing rect
-        if (aRect.XMost() > aBand->XMost()) {
-          aBand->x = aRect.x;
-          aBand->width = aRect.width;
-
-          // We're extending the right edge of the existing rect which may
-          // cause the rect to overlap the remaining rects in the band
-          CoalesceBand(aBand, aIndex);
-        } else {
-          aBand->width = aBand->XMost() - aRect.x;
-          aBand->x = aRect.x;
-        }
-      } else {
-        // No, it's completely to the left of the existing rect. Insert a new
-        // rect
-        mRectArray.InsertAt(aRect, aIndex);
+    if (rect.x < aBand->x) {
+      // The new rect's left edge is to the left of the existing rect's left edge.
+      // Could be any of these cases (N is new rect, E is existing rect):
+      //
+      //   Case 1: left-of      Case 2: overlaps     Case 3: N.contains(E)
+      //   ---------------      ----------------     ---------------------
+      //   +-----+ +-----+      +-----+              +---------+
+      //   |  N  | |  E  |      |  N  |              |    N    |
+      //   +-----+ +-----+      +-----+              +---------+
+      //                           +-----+              +---+
+      //                           |  E  |              | E |
+      //                           +-----+              +---+
+      //
+      // Do the two rectangles overlap?
+      if (rect.XMost() <= aBand->x) {
+        // No, the new rect is completely to the left of the existing rect
+        // (case #1). Insert a new rect
+        mRectArray.InsertAt(rect, aIndex, aFrame);
+        return;
       }
-      return;
 
-    } else if (aRect.x <= aBand->XMost()) {
-      // The two rects are overlapping or adjoining. Extend the right edge of
-      // the existing rect
-      aBand->width = aRect.XMost() - aBand->x;
+      // Yes, they overlap. Insert a new rect for the part that's to the left
+      // of the existing rect
+      nsRect  r1(rect.x, rect.y, aBand->x - rect.x, rect.height);
 
-      // Since we extended the right edge of the existing rect it may now
-      // overlap the remaining rects in the band
-      CoalesceBand(aBand, aIndex);
+      mRectArray.InsertAt(r1, aIndex, aFrame);
+      aIndex++;
+      aBand = mRectArray.mRects + aIndex;  // memory may have changed...
+
+      // Adjust rect to reflect the overlap
+      rect.width = rect.XMost() - aBand->x;
+      rect.x = aBand->x;
+      
+    } else if (rect.x > aBand->x) {
+      // The new rect's left edge is to the right of the existing rect's left
+      // edge. Could be any one of these cases:
+      //
+      //   Case 4: right-of    Case 5: overlaps     Case 6: E.Contains(N)
+      //   ---------------    ----------------     ---------------------
+      //   +-----+ +-----+    +-----+              +------------+
+      //   |  E  | |  N  |    |  E  |              |      E     |
+      //   +-----+ +-----+    +-----+              +------------+
+      //                         +-----+              +-----+
+      //                         |  N  |              |  N  |
+      //                         +-----+              +-----+
+      //
+      if (rect.x >= aBand->XMost()) {
+        // The new rect is to the right of the existing rect (case #4), so move
+        // to the next rect in the band
+        aBand++; aIndex++;
+        continue;
+      }
+
+      // The rects overlap, so divide the existing rect into two rects: the
+      // part to the left of the new rect, and the part that overlaps
+      nsRect  r1(rect.x, aBand->y, aBand->XMost() - rect.x, aBand->height);
+
+      // Modify the left half of the existing rect
+      aBand->width = rect.x - aBand->x;
+
+      // Insert the new right half of the existing rect, and make it the current
+      // rect
+      aIndex++;
+      mRectArray.InsertAt(r1, aIndex, aBand->frame);
+      aBand = mRectArray.mRects + aIndex;  // memory may have changed...
+    }
+
+    // At this point the left edge of the new rect is the same as the left edge
+    // of the existing rect
+    NS_ASSERTION(rect.x == aBand->x, "unexpected rect");
+
+    // Compare which rect is wider, the new rect or the existing rect
+    if (aBand->width > rect.width) {
+      // The existing rect is wider (cases 2 and 6). Divide the existing rect
+      // into two rects: the part that overlaps, and the part to the right of
+      // the new rect
+      nsRect  r1(rect.XMost(), aBand->y, aBand->XMost() - rect.XMost(), aBand->height);
+
+      // Modify the left half of the existing rect
+      aBand->width = r1.x - aBand->x;
+
+      // Insert the new right half of the existing rect
+      mRectArray.InsertAt(r1, aIndex, aBand->frame);
+      aBand = mRectArray.mRects + aIndex;  // memory may have changed...
+    }
+
+    // XXX Mark the existing rect as being shared by the two frames...
+
+    if (rect.width == aBand->width) {
+      // We're all done
       return;
     }
 
-    // Move to the next rect in the band
+    // The new rect is wider than the existing rect (cases 3 and 5). Set rect
+    // to be the overhang and move to the next rect within the band
+    rect.width = rect.XMost() - aBand->XMost();
+    rect.x = aBand->XMost();
     aBand++; aIndex++;
   } while ((aIndex < mRectArray.mCount) && (aBand->y == topOfBand));
 
   // Insert a new rect
-  mRectArray.InsertAt(aRect, aIndex);
+  mRectArray.InsertAt(aRect, aIndex, aFrame);
 }
 
 // When comparing a rect to a band there are seven cases to consider.
@@ -417,12 +502,12 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
   // then add a new band
   if ((0 == mRectArray.mCount) || (rect.y >= mRectArray.YMost())) {
       // Append a new bottommost band
-      mRectArray.Append(rect);
+      mRectArray.Append(rect, aFrame);
       return;
   }
 
   // Examine each band looking for a band that intersects this rect
-  nsRect* band = mRectArray.mRects;
+  nsBandRect* band = mRectArray.mRects;
 
   for (PRInt32 i = 0; i < mRectArray.mCount; ) {
     // Compare the top edge of this rect with the top edge of the band
@@ -432,7 +517,7 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
       if (rect.YMost() <= band->y) {
         // Case #1. This rect is completely above the band, so insert a
         // new band
-        mRectArray.InsertAt(rect, i);
+        mRectArray.InsertAt(rect, i, aFrame);
         break;  // we're all done
       }
 
@@ -441,7 +526,7 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
       nsRect  r1(rect.x, rect.y, rect.width, band->y - rect.y);
 
       // Insert r1 as a new band
-      mRectArray.InsertAt(r1, i);
+      mRectArray.InsertAt(r1, i, aFrame);
       i++;
       band = mRectArray.mRects + i;  // memory may have changed...
 
@@ -480,7 +565,7 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
 
     if (rect.height == band->height) {
       // Add the rect to the band
-      AddRectToBand(band, i, rect);
+      AddRectToBand(band, i, rect, aFrame);
       break;
 
     } else {
@@ -489,7 +574,7 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
       nsRect  r1(rect.x, rect.y, rect.width, band->YMost() - rect.y);
 
       // Add r1 to the band
-      AddRectToBand(band, i, r1);
+      AddRectToBand(band, i, r1, aFrame);
       band = mRectArray.mRects + i;  // memory may have changed...
 
       // Modify rect to be the part below the band
@@ -499,7 +584,7 @@ void SpaceManager::AddRectRegion(const nsRect& aUnavailableSpace, nsIFrame* aFra
       // Continue with the next band
       if (!GetNextBand(band, i)) {
         // Append a new bottommost band
-        mRectArray.Append(rect);
+        mRectArray.Append(rect, aFrame);
         break;
       }
     }
@@ -532,29 +617,40 @@ nscoord SpaceManager::RectArray::YMost() const
   return mRects[mCount - 1].YMost();
 }
 
-void SpaceManager::RectArray::Append(const nsRect& aRect)
+void SpaceManager::RectArray::Append(const nsRect& aRect, nsIFrame* aFrame)
 {
   // Ensure there's enough capacity
   if (mCount >= mMax) {
     mMax += 8;
-    mRects = (nsRect*)realloc(mRects, mMax * sizeof(nsRect));
+    mRects = (nsBandRect*)realloc(mRects, mMax * sizeof(nsBandRect));
   }
 
-  mRects[mCount++] = aRect;
+  mRects[mCount].x = aRect.x;
+  mRects[mCount].y = aRect.y;
+  mRects[mCount].width = aRect.width;
+  mRects[mCount].height = aRect.height;
+  mRects[mCount].frame = aFrame;
+  mCount++;
 }
 
-void SpaceManager::RectArray::InsertAt(const nsRect& aRect, PRInt32 aIndex)
+void SpaceManager::RectArray::InsertAt(const nsRect& aRect,
+                                       PRInt32       aIndex,
+                                       nsIFrame*     aFrame)
 {
   NS_PRECONDITION(aIndex <= mCount, "bad index");  // no holes in the array
 
   // Ensure there's enough capacity
   if (mCount >= mMax) {
     mMax += 8;
-    mRects = (nsRect*)realloc(mRects, mMax * sizeof(nsRect));
+    mRects = (nsBandRect*)realloc(mRects, mMax * sizeof(nsBandRect));
   }
 
-  memmove(&mRects[aIndex + 1], &mRects[aIndex], (mCount - aIndex) * sizeof(nsRect));
-  mRects[aIndex] = aRect;
+  memmove(&mRects[aIndex + 1], &mRects[aIndex], (mCount - aIndex) * sizeof(nsBandRect));
+  mRects[aIndex].x = aRect.x;
+  mRects[aIndex].y = aRect.y;
+  mRects[aIndex].width = aRect.width;
+  mRects[aIndex].height = aRect.height;
+  mRects[aIndex].frame = aFrame;
   mCount++;
 }
 
@@ -564,7 +660,7 @@ void SpaceManager::RectArray::RemoveAt(PRInt32 aIndex)
 
   mCount--;
   if (aIndex < mCount) {
-    memmove(&mRects[aIndex], &mRects[aIndex + 1], (mCount - aIndex) * sizeof(nsRect));
+    memmove(&mRects[aIndex], &mRects[aIndex + 1], (mCount - aIndex) * sizeof(nsBandRect));
   }
 }
 
