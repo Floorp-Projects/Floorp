@@ -2926,7 +2926,6 @@ XULDocumentImpl::SetPopupElement(nsIDOMElement* anElement)
 	return NS_OK;
 }
 
-
 NS_IMETHODIMP
 XULDocumentImpl::GetTooltipElement(nsIDOMElement** anElement)
 {
@@ -3967,16 +3966,7 @@ XULDocumentImpl::StartLayout(void)
 			  nsCOMPtr<nsIWebShell> webShell;
 			  webShell = do_QueryInterface(container);
 			  if (webShell) {
-				nsCOMPtr<nsIStyleContext> styleContext;
-				if (NS_SUCCEEDED(cx->ResolveStyleContextFor(mRootContent, nsnull,
-										   PR_FALSE,
-										   getter_AddRefs(styleContext)))) {
-
-					const nsStyleDisplay* disp = (const nsStyleDisplay*)
-						styleContext->GetStyleData(eStyleStruct_Display);
-
-					webShell->SetScrolling(disp->mOverflow);
-				}
+					webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
 			  }
 			}
 		}
