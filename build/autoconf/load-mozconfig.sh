@@ -86,7 +86,8 @@ done
 
 # Call find-mozconfig.sh 
 #   In params:   $MOZCONFIG $HOME (old:$MOZ_MYCONFIG)
-MOZCONFIG=`$TOPSRCDIR/build/autoconf/find-mozconfig.sh`
+_topsrcdir=`dirname $0`
+MOZCONFIG=`$_topsrcdir/build/autoconf/find-mozconfig.sh`
 
 if [ "$MOZCONFIG" ]; then
   . $MOZCONFIG
