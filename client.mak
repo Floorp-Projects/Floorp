@@ -24,6 +24,14 @@ DEPTH=.
 MOZ_TOP=mozilla
 !endif
 
+MOZ_SRC_FLIPPED = $(MOZ_SRC:\=/)
+MOZ_DIST_FLIPPED = $(MOZ_SRC_FLIPPED)/mozilla/dist
+!ifdef MOZ_DEBUG
+MOZ_OBJDIR = WIN32_D.OBJ
+!else
+MOZ_OBJDIR = WIN32_O.OBJ
+!endif
+
 #
 # Command macro defines
 #
@@ -115,6 +123,14 @@ NSPR_CO_FLAGS=-r NSPRPUB_CLIENT_BRANCH
 !endif
 
 CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS) -P
+
+NSPR_CONFIGURE = configure --with-mozilla \
+                 --includedir=$(MOZ_DIST_FLIPPED)/include \
+                 --bindir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/bin \
+                 --libdir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/lib
+!if !defined(MOZ_DEBUG)
+NSPR_CONFIGURE=$(NSPR_CONFIGURE) --enable-optimize --disable-debug
+!endif
 
 #//------------------------------------------------------------------------
 #// Figure out how to pull NSS and PSM libs.
@@ -217,7 +233,11 @@ build_all: build_nspr build_seamonkey
 
 clobber_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+!ifdef USE_NSPR_AUTOCONF
+	gmake clobber_all
+!else
 	nmake -f makefile.win clobber_all
+!endif
 
 clobber_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
@@ -255,7 +275,12 @@ depend:
 
 build_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+!ifdef USE_NSPR_AUTOCONF
+	sh $(NSPR_CONFIGURE)
+	gmake
+!else
 	nmake -f makefile.win export
+!endif
 
 build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
