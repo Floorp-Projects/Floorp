@@ -53,7 +53,7 @@
 #include "mkcertld.h"
 
 #ifdef MOZ_LDAP
-#incclude "mkldap.h"
+#include "mkldap.h"
 #endif
 
 #ifdef MOZ_MAIL_NEWS
