@@ -43,7 +43,6 @@ CPPSRCS		= \
 		nsTarget.cpp \
 		nsUserDialogHelper.cpp \
 		nsUserTarget.cpp \
-		nsZig.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -56,8 +55,6 @@ EXTRA_DSO_LDOPTS = \
 
 CSRCS		= \
 		jpermission.c \
-		nsLoadZig.c \
-		nsZip.c \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -35,7 +35,6 @@ EXPORTS=                           \
         nsCCapsManager.h           \
         nsCertificatePrincipal.h   \
         nsCodebasePrincipal.h      \
-        nsLoadZig.h                \
         nsPrincipalArray.h         \
         nsPrincipalManager.h       \
         nsPrivilege.h              \
@@ -45,8 +44,7 @@ EXPORTS=                           \
         nsTarget.h                 \
         nsUserDialogHelper.h       \
         nsUserTarget.h             \
-        nsZig.h                    \
-        nsZip.h
+        $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

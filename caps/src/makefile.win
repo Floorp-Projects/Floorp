@@ -50,8 +50,6 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 C_OBJS=                                     \
     .\$(OBJDIR)\jpermission.obj             \
-    .\$(OBJDIR)\nsLoadZig.obj               \
-    .\$(OBJDIR)\nsZip.obj                   \
      $(NULL)
 
 CPP_OBJS=                                    \
@@ -70,7 +68,6 @@ CPP_OBJS=                                    \
     .\$(OBJDIR)\nsTarget.obj                 \
     .\$(OBJDIR)\nsUserDialogHelper.obj       \
     .\$(OBJDIR)\nsUserTarget.obj             \
-    .\$(OBJDIR)\nsZig.obj                    \
      $(NULL)
 
 #//------------------------------------------------------------------------
