@@ -5190,38 +5190,19 @@ nsEventStateManager::IsIFrameDoc(nsIDocShell* aDocShell)
 {
   NS_ASSERTION(aDocShell, "docshell is null");
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(aDocShell);
-  nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  treeItem->GetParent(getter_AddRefs(parentItem));
-  if (!parentItem)
-    return PR_FALSE;
-  
-  nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentItem);
-  nsCOMPtr<nsIPresShell> parentPresShell;
-  parentDS->GetPresShell(getter_AddRefs(parentPresShell));
-  NS_ASSERTION(parentPresShell, "presshell is null");
-
-  nsCOMPtr<nsIDocument> parentDoc;
-  parentPresShell->GetDocument(getter_AddRefs(parentDoc));
-
-  // The current docshell may not have a presshell, eg if it's a display:none
-  // iframe or if the presshell just hasn't been created yet. Get the
-  // document off the docshell directly.
-  nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(aDocShell);
-  if (!domDoc) {
-    NS_ERROR("No document in docshell!  How are we to decide whether this"
-             " is an iframe?  Arbitrarily deciding it's not.");
+  nsCOMPtr<nsPIDOMWindow> domWindow = do_GetInterface(aDocShell);
+  if (!domWindow) {
+    NS_ERROR("We're a child of a docshell without a window?");
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  NS_ASSERTION(doc, "DOM document not implementing nsIDocument");
-
-  nsIContent *docContent = parentDoc->FindContentForSubDocument(doc);
-
-  if (!docContent)
+  nsCOMPtr<nsIContent> docContent =
+    do_QueryInterface(domWindow->GetFrameElementInternal());
+  
+  if (!docContent) {
     return PR_FALSE;
-
+  }
+  
   return docContent->Tag() == nsHTMLAtoms::iframe;
 }
 
