@@ -3482,7 +3482,6 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
       wallet_Initialize(PR_TRUE);
       if (!Wallet_IsKeySet()) {
         NS_RELEASE(doc);
-        NS_RELEASE(shell);
         return NS_ERROR_FAILURE;
       }
       wallet_InitializeCurrentURL(doc);
@@ -3566,7 +3565,6 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
       }
       NS_RELEASE(doc);
     }
-    NS_RELEASE(shell);
   }
 
   /* return if no elements were put into the list */
@@ -3639,7 +3637,6 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
       wallet_Initialize(PR_TRUE);
       if (!Wallet_IsKeySet()) {
         NS_RELEASE(doc);
-        NS_RELEASE(shell);
         return;
       }
       wallet_InitializeCurrentURL(doc);
@@ -3718,7 +3715,6 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
       }
       NS_RELEASE(doc);
     }
-    NS_RELEASE(shell);
   }
 }
 
