@@ -151,7 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Stanje opravka">
 <!ENTITY newtodo.duetime.warning    "Pričetek je po času roka opravka.">
 <!ENTITY newtodo.duedate.warning    "Datum pričetka je po roku opravka.">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "Za ponavljanje je potreben datum pričetka.">
 
 <!ENTITY calendar.confirm.deleteevent "Želite res zbrisati dogodek: ">
 <!ENTITY calendar.confirm.deleteuntitledevent "Želite res zbrisati ta neimenovani dogodek?">
@@ -252,25 +252,25 @@
 
 <!ENTITY calendar.choosedate.button.label       "Izberite datum">
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "Izreži" >
+<!ENTITY calendar.copy.button.tooltip           "Kopiraj" >
+<!ENTITY calendar.paste.button.tooltip          "Prilepi" >
+<!ENTITY calendar.print.button.tooltip          "Natisni koledar" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "Izreži" >
+<!ENTITY calendar.copy.button.label             "Kopiraj" >
+<!ENTITY calendar.paste.button.label            "Prilepi" >
+<!ENTITY calendar.print.button.label            "Natisni" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "Uvozi: uvozi dogodke iz lokalne datoteke." >
+<!ENTITY calendar.export.button.tooltip            "Izvozi: izvozi dogodke v lokalno datoteko." >
+<!ENTITY calendar.subscribe.button.tooltip         "Naroči: naroči se na koledarsko datoteko na oddaljeni napravi." >
+<!ENTITY calendar.publish.button.tooltip           "Objavi: objavi dogodke na oddaljeni napravi." >
 
-<!ENTITY calendar.import.button.label              "Import" >
-<!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.import.button.label              "Uvoz" >
+<!ENTITY calendar.export.button.label              "Izvoz" >
+<!ENTITY calendar.subscribe.button.label           "Naroči" >
+<!ENTITY calendar.publish.button.label             "Objavi" >
 
 <!ENTITY calendar.dayview.button.label          "Dnevni pogled">
 <!ENTITY calendar.weekview.button.label         "Tedenski pogled">
@@ -318,7 +318,7 @@
 <!-- Orodne vrstice po meri -->
 <!ENTITY calendar.context.customize.label             "Po meri ...">
 <!ENTITY calendar.context.customize.accesskey         "P">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
+<!ENTITY calendar.menu.customize.label                "Orodne vrstice po meri">
 <!ENTITY calendar.menu.customize.accesskey            "C">
 <!ENTITY calendar.maintoolbar.name                    "Glavna orodna vrstica">
 <!ENTITY calendar.maintoolbar.accesskey               "G">
