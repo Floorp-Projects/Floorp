@@ -942,7 +942,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     // We won't want to do anything with these in formatted mode either,
     // so just return now:
     return NS_OK;
-  } 
+  }
   else if (type == eHTMLTag_tr) {
     PopBool(mHasWrittenCellsForRow);
     // Should always end a line, but get no more whitespace
