@@ -15,8 +15,6 @@ typedef union {
 #define	SEMICOLON	266
 #define	MINUS	267
 #define	TIMESEPERATOR	268
-#define	TRUE	269
-#define	FALSE	270
 #define	FREQ	271
 #define	BYDAY	272
 #define	BYHOUR	273
