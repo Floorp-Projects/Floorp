@@ -107,10 +107,9 @@ interface nsIURILoader : nsISupports
 
     /* these are nsURILoadCommand */
 	const long viewNormal = 0;
-    const long viewSource = 1;
-    const long viewUserClick = 2;
-	const long viewNewWindow = 3;
-	const long viewNormalBackground = 4;
+   const long viewUserClick = 1;
+	const long viewNewWindow = 2;
+	const long viewNormalBackground = 3;
 
   /* mscott -> I'm going to move this out into a separate private interface
    */
@@ -124,9 +123,5 @@ interface nsIURILoader : nsISupports
 					   out string aDesiredContentType,
 					   out nsIURIContentListener aTargetListener,
 					   out boolean abortDispatch);
-  /* this command should become obsolete once we get rid of the old layout "verb" command
-     string and replace it with the enumerated type nsURILoaderCommand
-  */
-  void getStringForCommand (in nsURILoadCommand aCommand, out string aStringVersion);
 };
 
