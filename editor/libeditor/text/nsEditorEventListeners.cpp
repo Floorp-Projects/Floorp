@@ -35,6 +35,11 @@
 #include "nsIHTMLEditor.h"
 // end for testing only
 
+// for repainting hack only
+#include "nsIView.h"
+#include "nsIViewManager.h"
+// end repainting hack only
+
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
@@ -1390,7 +1395,7 @@ nsTextEditorFocusListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 nsresult
-nsTextEditorFocusListener::Focus(nsIDOMEvent* aDragEvent)
+nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 {
   // turn on selection and caret
   if (mEditor)
@@ -1403,15 +1408,27 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aDragEvent)
       if (ps)
       {
         ps->SetCaretEnabled(PR_TRUE);
-      }
-      nsCOMPtr<nsIDOMDocument>domDoc;
-      editor->GetDocument(getter_AddRefs(domDoc));
-      if (domDoc)
-      {
-        nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-        if (doc)
+
+        nsCOMPtr<nsIDOMDocument>domDoc;
+        editor->GetDocument(getter_AddRefs(domDoc));
+        if (domDoc)
         {
-          doc->SetDisplaySelection(PR_TRUE);
+          nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+          if (doc)
+          {
+            doc->SetDisplaySelection(PR_TRUE);
+          }
+        }
+// begin hack repaint
+        nsCOMPtr<nsIViewManager> viewmgr;
+        ps->GetViewManager(getter_AddRefs(viewmgr));
+        if (viewmgr) {
+          nsIView* view;
+          viewmgr->GetRootView(view);			// views are not refCounted
+          if (view) {
+            viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
+          }
+// end hack repaint
         }
       }
     }
@@ -1420,7 +1437,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aDragEvent)
 }
 
 nsresult
-nsTextEditorFocusListener::Blur(nsIDOMEvent* aDragEvent)
+nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
 {
   // turn off selection and caret
   if (mEditor)
