@@ -735,7 +735,10 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
     // See whether the generated content should be displayed.
     display = (const nsStyleDisplay*)pseudoStyleContext->GetStyleData(eStyleStruct_Display);
 
-    if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
+    if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+      aState.mFrameManager->SetUndisplayedPseudoIn(pseudoStyleContext, aContent);
+    }
+    else {  // has valid display type
       // See if there was any content specified
       const nsStyleContent* styleContent =
         (const nsStyleContent*)pseudoStyleContext->GetStyleData(eStyleStruct_Content);
@@ -4854,7 +4857,10 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*          aPresContext,
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       styleContext->GetStyleData(eStyleStruct_Display);
 
-    if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
+    if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+      aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
+    }
+    else {
       nsIFrame* lastChild = aFrameItems.lastChild;
 
       // Handle specific frame types
@@ -4919,6 +4925,7 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
       // frame to placeholder frame
       state.mFrameManager->ClearPrimaryFrameMap();
       state.mFrameManager->ClearPlaceholderFrameMap();
+      state.mFrameManager->ClearUndisplayedContentMap();
 
       if (docElementFrame) {
         nsIFrame* docParentFrame;
@@ -6061,6 +6068,7 @@ DeletingFrameSubtree(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
     aFrameManager->SetPrimaryFrameFor(content, nsnull);
+    aFrameManager->ClearAllUndisplayedContentIn(content);
     
     // Recursively walk aFrame's child frames looking for placeholder frames
     nsIFrame* childFrame;
@@ -6148,6 +6156,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   nsIFrame* childFrame;
   shell->GetPrimaryFrameFor(aChild, &childFrame);
 
+  if (! childFrame) {
+    frameManager->ClearUndisplayedContentIn(aChild, aContainer);
+  }
   // When the last item is removed from a select, 
   // we need to add a pseudo frame so select gets sized as the best it can
   // so here we see if it is a select and then we get the number of options
@@ -6492,6 +6503,7 @@ SyncAndInvalidateView(nsIView* aView, nsIFrame* aFrame,
   if (viewIsVisible) {
     aViewManager->SetViewContentTransparency(aView, viewHasTransparentContent);
     aViewManager->SetViewVisibility(aView, nsViewVisibility_kShow);
+    aViewManager->UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
   }
   else {
     aViewManager->SetViewVisibility(aView, nsViewVisibility_kHide); 
@@ -6682,17 +6694,15 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   PRInt32 count = aChangeList.Count();
   while (0 < count--) {
     nsIFrame* frame;
+    nsIContent* content;
     PRInt32 hint;
-    aChangeList.ChangeAt(count, frame, hint);
+    aChangeList.ChangeAt(count, frame, content, hint);
     switch (hint) {
       case NS_STYLE_HINT_RECONSTRUCT_ALL:
         NS_ERROR("This shouldn't happen");
         break;
       case NS_STYLE_HINT_FRAMECHANGE:
-        nsIContent* content;
-        frame->GetContent(&content);
         RecreateFramesForContent(aPresContext, content);
-        NS_IF_RELEASE(content);
         break;
       case NS_STYLE_HINT_REFLOW:
         StyleChangeReflow(aPresContext, frame, nsnull);
@@ -6926,7 +6936,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       PRInt32 maxHint = aHint;
       nsStyleChangeList changeList;
       // put primary frame on list to deal with, re-resolve may update or add next in flows
-      changeList.AppendChange(primaryFrame, maxHint);
+      changeList.AppendChange(primaryFrame, aContent, maxHint);
       nsCOMPtr<nsIFrameManager> frameManager;
       shell->GetFrameManager(getter_AddRefs(frameManager));
       frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame, changeList,
