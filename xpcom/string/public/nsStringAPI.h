@@ -59,7 +59,7 @@ class nsACString;
 /**
  * nsStringContainer
  *
- * This is an opaque data type that is large enough to hold the canonical 
+ * This is an opaque data type that is large enough to hold the canonical
  * implementation of nsAString.  The binary structure of this class is an
  * implementation detail.
  *
@@ -130,7 +130,7 @@ class nsStringContainer;
  *
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_StringContainerFinish should be called.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -138,11 +138,11 @@ NS_StringContainerInit(nsStringContainer &aContainer);
 
 /**
  * NS_StringContainerFinish
- * 
+ *
  * @param aContainer    string container reference
  *
  * This function frees any memory owned by aContainer.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(void)
@@ -164,7 +164,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
  *                      whether or not aStr's internal buffer is null-
  *                      terminated
  * @return              length of aStr's internal buffer
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(PRUint32)
@@ -173,7 +173,7 @@ NS_StringGetData
    PRBool *aTerminated = nsnull);
 
 /**
- * NS_StringGetData
+ * NS_StringCloneData
  *
  * This function returns a null-terminated copy of the string's
  * internal buffer.
@@ -181,7 +181,7 @@ NS_StringGetData
  * @param aStr          abstract string reference
  * @return              null-terminated copy of the string's internal buffer
  *                      (it must be free'd using using nsMemory::Free)
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(PRUnichar *)
@@ -201,10 +201,10 @@ NS_StringCloneData
  * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
- * from aData.  The behavior depends on the implementation of the abstract 
+ * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -234,10 +234,10 @@ NS_StringSetData
  * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
- * from aData.  The behavior depends on the implementation of the abstract 
+ * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -259,7 +259,7 @@ NS_StringSetDataRange
  * data from aSrcStr.  The behavior depends on the implementation of the
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -313,7 +313,7 @@ NS_StringInsertData(nsAString &aStr, PRUint32 aOffset, const PRUnichar *aData,
 {
   return NS_StringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
 }
-      
+
 /**
  * NS_StringCutData
  *
@@ -336,7 +336,7 @@ NS_StringCutData(nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
 /**
  * nsCStringContainer
  *
- * This is an opaque data type that is large enough to hold the canonical 
+ * This is an opaque data type that is large enough to hold the canonical
  * implementation of nsACString.  The binary structure of this class is an
  * implementation detail.
  *
@@ -355,7 +355,7 @@ class nsCStringContainer;
  *
  * This function may allocate additional memory for aContainer.  When
  * aContainer is no longer needed, NS_CStringContainerFinish should be called.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -363,11 +363,11 @@ NS_CStringContainerInit(nsCStringContainer &aContainer);
 
 /**
  * NS_CStringContainerFinish
- * 
+ *
  * @param aContainer    string container reference
  *
  * This function frees any memory owned by aContainer.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(void)
@@ -389,7 +389,7 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer);
  *                      whether or not aStr's internal buffer is null-
  *                      terminated
  * @return              length of aStr's internal buffer
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(PRUint32)
@@ -398,7 +398,7 @@ NS_CStringGetData
    PRBool *aTerminated = nsnull);
 
 /**
- * NS_CStringGetData
+ * NS_CStringCloneData
  *
  * This function returns a null-terminated copy of the string's
  * internal buffer.
@@ -406,7 +406,7 @@ NS_CStringGetData
  * @param aStr          abstract string reference
  * @return              null-terminated copy of the string's internal buffer
  *                      (it must be free'd using using nsMemory::Free)
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(char *)
@@ -426,10 +426,10 @@ NS_CStringCloneData
  * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
- * from aData.  The behavior depends on the implementation of the abstract 
+ * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -459,10 +459,10 @@ NS_CStringSetData
  * @return              NS_OK if function succeeded
  *
  * This function does not necessarily null-terminate aStr after copying data
- * from aData.  The behavior depends on the implementation of the abstract 
+ * from aData.  The behavior depends on the implementation of the abstract
  * string, aStr.  If aStr is a reference to a nsStringContainer, then its data
  * will be null-terminated by this function.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -484,7 +484,7 @@ NS_CStringSetDataRange
  * data from aSrcStr.  The behavior depends on the implementation of the
  * abstract string, aDestStr.  If aDestStr is a reference to a
  * nsStringContainer, then its data will be null-terminated by this function.
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -538,7 +538,7 @@ NS_CStringInsertData(nsACString &aStr, PRUint32 aOffset, const char *aData,
 {
   return NS_CStringSetDataRange(aStr, aOffset, 0, aData, aDataLength);
 }
-      
+
 /**
  * NS_CStringCutData
  *
@@ -589,7 +589,7 @@ enum nsCStringEncoding {
  * @param aSource       abstract string reference containing source string
  * @param aSrcEncoding  character encoding of the source string
  * @param aDest         abstract string reference to hold the result
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -608,7 +608,7 @@ NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
  * @param aSource       abstract string reference containing source string
  * @param aDestEncoding character encoding of the resulting string
  * @param aDest         abstract string reference to hold the result
- * 
+ *
  * @status FROZEN
  */
 NS_STRINGAPI(nsresult)
@@ -626,7 +626,7 @@ NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,
  * These classes should be treated as abstract classes with unspecified
  * structure.  The inline methods are provided as helper functions around the
  * C-style API provided above.
- * 
+ *
  * Do not try to mix these definitions of nsAString and nsACString with the
  * internal definition of these classes from nsAString.h in the Mozilla tree.
  */
@@ -678,7 +678,7 @@ public:
   {
     NS_StringSetData(*this, &aChar, 1);
   }
-  
+
   NS_HIDDEN_(self_type&) operator=(const self_type& aString) { Assign(aString);   return *this; }
   NS_HIDDEN_(self_type&) operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
   NS_HIDDEN_(self_type&) operator=(char_type aChar)          { Assign(aChar);     return *this; }
@@ -760,7 +760,7 @@ public:
   {
     NS_CStringSetData(*this, &aChar, 1);
   }
-  
+
   NS_HIDDEN_(self_type&) operator=(const self_type& aString) { Assign(aString);   return *this; }
   NS_HIDDEN_(self_type&) operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
   NS_HIDDEN_(self_type&) operator=(char_type aChar)          { Assign(aChar);     return *this; }
