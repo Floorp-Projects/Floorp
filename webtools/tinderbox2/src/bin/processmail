@@ -1,4 +1,4 @@
-#!#perl# -T --
+#!#perl# #perlflags# --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
@@ -11,8 +11,8 @@
 # logs in compressed form for future reference.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2000/10/27 15:29:52 $ 
+# $Revision: 1.10 $ 
+# $Date: 2000/11/09 19:43:49 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
 # $Name:  $ 
@@ -45,7 +45,6 @@ use File::Basename;
 use Sys::Hostname;
 use File::stat;
 use Getopt::Long;
-use Time::Local;
 
 # Tinderbox libraries
 use lib '#tinder_libdir#';
@@ -56,6 +55,7 @@ use FileStructure;
 use HTMLPopUp;
 use VCDisplay;
 use Error_Parse;
+use BuildStatus;
 use Utils;
 use Persistence;
 use TinderDB::Build;
@@ -150,7 +150,7 @@ The required tinderbox variable:
 	                            processing the log file}
 	tinderbox: status :{the results of the build, must be a valid status 
 				as determined by
-			TinderDB::Build::is_status_valid(); }
+			BuildStatus::is_status_valid(); }
 	tinderbox: timenow : {the time the update was sent, in time() format.
 				There can be several updates for a given build
 				as long as they return the status 'building'
@@ -308,17 +308,16 @@ sub set_filenames{
 
 
 
-sub fix_nonunix_times {
+# If the field is a date prefer the output of fix_time_format to what
+# is passed into the program.  We may recieve human readable strings
+# and these need to be converted to time() format.
 
-  foreach $key (keys %TINDERBOX) {
 
-    # convert dates in form "MM/DD/YY HH:MM:SS" to unix date
+sub fix_tinderboxvar_time_format {
 
-    if( $TINDERBOX{$key} =~ 
-        /([0-9]+)\/([0-9]+)\/([0-9]+)\s+([0-9]+)\:([0-9]+)\:([0-9]+)/ ){
-      $TINDERBOX{$key} = timelocal($6,$5,$4,$2,$1-1,$3);
-    }
-
+  foreach $key (@DATE_FIELDS) {
+    ($TINDERBOX{$key}) || next;
+    $TINDERBOX{$key} = main::fix_time_format($TINDERBOX{$key});
   }
 
   return 1;
@@ -382,48 +381,6 @@ sub check_required_vars {
 
   my ($err_string) = '';
 
-  my $build_start = '';
-  my $stamp_file = $FILE{'update_time_stamp'};
-
-  if (-r $stamp_file) {
-    open (STAMP, "<$stamp_file") ||
-      die("Could not open file: $stamp_file, $!\n");
-    
-    $build_start = <STAMP>;
-    chomp $build_start;
-    $build_start = main::extract_digits($build_start);
-    
-    close (STAMP) ||
-      die("Could not close file: $stamp_file, $!\n");
-    
-    ($build_start < $TINDERBOX{'starttime'} ) ||
-      die("New build started before the previous one.  ".
-          "Something is very wrong with the clock on the build machine, ".
-          "time is going backwards.\n".
-          "old starttime: $build_start, ".
-          "new starttime: $TINDERBOX{'starttime'}, ".
-          "delta: ". ($TINDERBOX{'starttime'}-$build_start).
-          "\n");
-
-    # Keep the spacing between builds greater then our minumum HTML
-    # grid spacing.  There can be very frequent updates but different
-    # builds must be spaced apart.
-    my $safe_min = TinderDB::TABLE_SPACING + ($main::SECONDS_PER_MINUTE*2);
-    ($build_start > $safe_min) ||
-       die("New build started too frequently.  Builds must start".
-           "at least ".($safe_min).
-           " seconds apart.  Build not accepted.\n");
-  }      
-
-  # There is a small chance that we may run into update problems here
-  # because we do not lock out other instances of processmail from
-  # updating this file at the same time.  The odds are really low
-  # because overwrite_file will perform the update as atomically as
-  # possible, and new build times will only come in less then once
-  # every five minutes.  If mail were to queue on this sytem (and
-  # potentially many old mail messages were to be delivered at the
-  # same time) the developers would notice and complain.
-
   $TINDERBOX{'starttime'} = main::extract_digits($TINDERBOX{'starttime'});
   if ($build_start != $TINDERBOX{'starttime'} ) {
     overwrite_file( $stamp_file, 
@@ -452,7 +409,8 @@ sub check_required_vars {
     ($err_string .= "Variable: 'tinderbox: administrator:' not set.\n");
   
   ($TINDERBOX{'administrator'} =~ m/\@\w/) ||
-    ($err_string .= "Variable: 'tinderbox: administrator:' not a valid email address.\n");
+    ($err_string .= "Variable: 'tinderbox: administrator:' ".
+     "is not a valid email address.\n");
 
   ($TINDERBOX{'errorparser'}) ||
     ($err_string .= "Variable: 'tinderbox: errorparser:' not set.\n");
@@ -493,7 +451,8 @@ sub check_required_vars {
                       "MM/DD/YY HH:MM:SS, or unix date, ".
                       "or your clock is set incorrectly, ".
                       "or the mail was delayed for a long time.\n".
-                      "variable timenow: $TINDERBOX{'timenow'}, timenow: $TIME,  (".
+                      "variable timenow: $TINDERBOX{'timenow'}, ".
+                      "timenow: $TIME,  (".
                       ( ($TINDERBOX{'timenow'}-$TIME) / 
                         $main::SECONDS_PER_MINUTE ).
                       " minutes)\n".
@@ -529,9 +488,9 @@ sub check_required_vars {
   ($TINDERBOX{'status'}) ||
     ($err_string .= "Variable: 'tinderbox: status:' not set.\n");
   
-     ( TinderDB::Build::is_status_valid($TINDERBOX{'status'}) ) ||
+     ( BuildStatus::is_status_valid($TINDERBOX{'status'}) ) ||
      ($err_string .= "Variable: 'tinderbox: status:' must be one of: ".
-      join( ', ', TinderDB::Build::get_all_status()).
+      join( ', ', BuildStatus::get_all_sorted_status()).
       "Variable: 'tinderbox: status is set to $TINDERBOX{status}', \n".
      "\n");
   
@@ -1039,7 +998,9 @@ sub assemble_files {
 
   %MAIL_HEADER =  MailProcess::parse_mail_header();
   %TINDERBOX = MailProcess::parse_tinderbox_vars();
-  fix_nonunix_times();
+  @DATE_FIELDS = qw(builddate starttime timenow);
+
+  fix_tinderboxvar_time_format();
   backward_compatibility();
   set_filenames();
 
