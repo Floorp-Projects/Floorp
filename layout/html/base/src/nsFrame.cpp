@@ -1994,6 +1994,27 @@ NS_IMETHODIMP nsFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
 
     // Set the frame state bit that says the frame has a view
     mState |= NS_FRAME_HAS_VIEW;
+
+     
+    // Let all of the containing frames know they have a child 
+    // with a view until a frame is hit that has the 
+    // NS_FRAME_HAS_CHILD_WITH_VIEW bit set already or a we
+    // reached the top of the frame tree.
+    PRBool isSet = PR_FALSE;
+    nsIFrame* parent = nsnull;
+    GetParent(&parent);
+    
+    while ((parent != nsnull) && (! isSet)) {
+      nsFrameState frameState;
+      parent->GetFrameState(&frameState);
+      isSet = ((frameState & NS_FRAME_HAS_CHILD_WITH_VIEW) == NS_FRAME_HAS_CHILD_WITH_VIEW
+);
+      if (! isSet) {
+        frameState |= NS_FRAME_HAS_CHILD_WITH_VIEW;
+        parent->SetFrameState(frameState);
+      }
+      parent->GetParent(&parent);
+    }
   }
 
   return NS_OK;
