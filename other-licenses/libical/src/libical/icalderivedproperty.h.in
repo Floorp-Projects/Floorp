@@ -1,0 +1,23 @@
+/* -*- Mode: C -*-
+  ======================================================================
+  FILE: icalderivedproperties.{c,h}
+  CREATOR: eric 09 May 1999
+  
+  $Id: icalderivedproperty.h.in,v 1.2 2001/12/21 18:56:17 mikep%oeone.com Exp $
+    
+ (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
+ ======================================================================*/
+
+
+#ifndef ICALDERIVEDPROPERTY_H
+#define ICALDERIVEDPROPERTY_H
+
+#include <time.h>
+#include "icalparameter.h"
+#include "icalderivedvalue.h"  
+#include "icalrecur.h"
+
+typedef void icalproperty;
+
+
+/* Everything below this line is machine generated. Do not edit. */

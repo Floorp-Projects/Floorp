@@ -1,0 +1,39 @@
+
+TODOs for libical-0.16
+---------------------
+
+libical treats properties with multiple values incorrecty -- it always
+seperates multiple values into multiple properties. This is not
+acceptable for CATEGORIES and RESOURCES.
+
+Some TEXT valued properties, like METHOD, have a limited set of valid
+values. The code should check that the values of these properites are
+valid. ( Although METHOD now uses enums, and is not really TEXT valued )
+
+Finish implementing values
+	ATTACH/BINARY
+	content_type
+	language
+
+Check for buffer overflow on external input. 
+
+Error Handling
+
+   Dates and times: the parser will accept many illegal date time
+   values
+
+RECUR values ignore integers in BYDAY clauses, ie 'FREQ=MONTHLY;BYDAY=-1SU'
+
+Restrictions code does not catch lack of DTEND or DURATION
+
+For some value types, if there illegal characters in the value ( like
+4.56 in an integer value), the parser will output the characters to
+stdout.
+
+Check all uses of strcpy and sprinf for buffer overflows
+
+Make the mime parsing code in sspm grow the list of parts as needed,
+rather than having a hard limit.
+
+in sspm.c, and unrecognized content-transfer-encoding values must
+force a content type of application/octet-stream.

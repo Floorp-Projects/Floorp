@@ -1,0 +1,54 @@
+Thanks to: 
+
+Allan Clark <allanc@atlas.platypus.bc.ca> for testing libical against
+UnixWare.
+
+Graham Davison <g.m.davison@computer.org> for MacOS support and
+miscelaneous code bits
+
+Seth Alves <alves@hungry.com> for the first cut at the Makefile.am
+files and various utility functions.
+
+Russ Steinthal <rms39@columbia.edu> for several utility functions and
+comments.
+
+Ola Lundqvist <olalu526@student.liu.se> for the vCal test data file. 
+
+Colin DuPlantis <colin@cp.net> for new functions in icalparser.c
+
+Holger Schmidt <hschmidt@chronolabs.de> for all of icalcstp.c, The
+CSTP protocol implementation, and modifications to icalcstp.h
+
+Gisle Hannemyr <gisle@oslonett.no> The decode*() functions in sspm.c
+are based on the decode() routine in the mimelite program, Copyright
+(c) 1994 Gisle Hannemyr.
+
+The Evolution team at Helixcode ( Federico Mena Quintero
+<federico@helixcode.com>, JP Rosevear <jpr@helixcode.com>, Ettore
+Perazzoli <ettore@helixcode.com>, Christopher James Lahey
+<clahey@helixcode.com>, Peter Williams <peterw@helixcode.com>) for
+miscelaneous patches and adjustments to the build system.
+
+Cornelius Schumacher <schumacher@kde.org> for many insightful
+suggestions and a few patches.
+
+Mark D. Anderson <mda@discerning.com> for discussions and ideas. 
+
+Martin Neimeier <nei@ibn.de> for correcting bugs in icalrecur.c
+
+Tom Leitner <tom@radar.tu-graz.ac.at> For several bug fixes in
+compiling on Tru64 UNIX.
+
+Patrick Lewis <plewis@inetarena.com> for several bug reports and
+contributions to the Python bindings
+
+Larry W. Virden <lvirden@cas.org> for several bug reports in compiling
+on Solaris.
+
+Bryan Bartone <bsb@mesasys.com> for code changes based on porting
+libical to Windows.
+
+Hubert V <hubertv@bigfoot.com> for checking and analyzing the output
+of the recurrence rule system.
+
+Jonathan Yue <jonathan.yue@cp.net> for  icalproperty_get_name()

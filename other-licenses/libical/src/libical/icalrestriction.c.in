@@ -1,0 +1,447 @@
+/*  -*- Mode: C -*- */
+/*  ======================================================================
+  File: icalrestriction.c
+    
+ (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
+ ======================================================================*/
+/*#line 7 "icalrestriction.c.in"*/
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include "icalrestriction.h"
+#include "icalenums.h"
+#include "icalerror.h"
+
+#include <assert.h>
+#include <stdio.h> /* For snprintf */   
+
+#define TMP_BUF_SIZE 1024
+
+
+/* Define the structs for the restrictions. these data are filled out
+in machine generated code below */
+
+struct icalrestriction_property_record;
+
+typedef char* (*restriction_func)(struct icalrestriction_property_record* rec,icalcomponent* comp,icalproperty* prop);
+
+
+typedef struct icalrestriction_property_record {
+	icalproperty_method method;
+	icalcomponent_kind component;
+	icalproperty_kind property;
+	icalrestriction_kind restriction;
+	restriction_func function;
+} icalrestriction_property_record;
+
+
+typedef struct icalrestriction_component_record {
+	icalproperty_method method;
+	icalcomponent_kind component;
+	icalcomponent_kind subcomponent;
+	icalrestriction_kind restriction;
+	restriction_func function;
+} icalrestriction_component_record;
+
+icalrestriction_property_record*
+icalrestriction_get_property_restriction(icalproperty_method method,
+					 icalcomponent_kind component,
+					 icalproperty_kind property);
+icalrestriction_component_record*
+icalrestriction_get_component_restriction(icalproperty_method method,
+					  icalcomponent_kind component,
+					  icalcomponent_kind subcomponent);
+
+icalrestriction_component_record icalrestriction_component_records[];
+icalrestriction_property_record icalrestriction_property_records[]; 
+
+icalrestriction_property_record null_prop_record =   {ICAL_METHOD_NONE,ICAL_NO_COMPONENT,ICAL_NO_PROPERTY,ICAL_RESTRICTION_UNKNOWN,0};
+icalrestriction_component_record null_comp_record =   {ICAL_METHOD_NONE,ICAL_NO_COMPONENT,ICAL_NO_COMPONENT,ICAL_RESTRICTION_UNKNOWN,0};
+
+
+/* The each row gives the result of comparing a restriction against a
+   count. The columns in each row represent 0,1,2+. '-1' indicates
+   'invalid, 'don't care' or 'needs more analysis' So, for
+   ICAL_RESTRICTION_ONE, if there is 1 of a property with that
+   restriction, it passes, but if there are 0 or 2+, it fails. */
+
+char compare_map[ICAL_RESTRICTION_UNKNOWN+1][3] = {
+    { 1, 1, 1},/*ICAL_RESTRICTION_NONE*/
+    { 1, 0, 0},/*ICAL_RESTRICTION_ZERO*/
+    { 0, 1, 0},/*ICAL_RESTRICTION_ONE*/
+    { 1, 1, 1},/*ICAL_RESTRICTION_ZEROPLUS*/
+    { 0, 1, 1},/*ICAL_RESTRICTION_ONEPLUS*/
+    { 1, 1, 0},/*ICAL_RESTRICTION_ZEROORONE*/
+    { 1, 1, 0},/*ICAL_RESTRICTION_ONEEXCLUSIVE*/
+    { 1, 1, 0},/*ICAL_RESTRICTION_ONEMUTUAL*/
+    { 1, 1, 1} /*ICAL_RESTRICTION_UNKNOWN*/
+};
+
+char restr_string_map[ICAL_RESTRICTION_UNKNOWN+1][60] = {
+    "unknown number",/*ICAL_RESTRICTION_NONE*/
+    "0",/*ICAL_RESTRICTION_ZERO*/
+    "1",/*ICAL_RESTRICTION_ONE*/
+    "zero or more",/*ICAL_RESTRICTION_ZEROPLUS*/
+    "one or more" ,/*ICAL_RESTRICTION_ONEPLUS*/
+    "zero or one",/*ICAL_RESTRICTION_ZEROORONE*/
+    "zero or one, exclusive with another property",/*ICAL_RESTRICTION_ONEEXCLUSIVE*/
+    "zero or one, mutual with another property",/*ICAL_RESTRICTION_ONEMUTUAL*/
+    "unknown number" /*ICAL_RESTRICTION_UNKNOWN*/
+};
+
+
+int
+icalrestriction_compare(icalrestriction_kind restr, int count){
+
+    if ( restr < ICAL_RESTRICTION_NONE || restr > ICAL_RESTRICTION_UNKNOWN
+	 || count < 0){
+	return -1;
+    }
+
+    if (count > 2) {
+	count = 2;
+    }
+
+    return compare_map[restr][count];
+
+}
+
+/* Special case routines */
+
+char* icalrestriction_may_be_draft_final_canceled(
+    icalrestriction_property_record *rec,
+    icalcomponent* comp, 
+    icalproperty* prop)
+{
+
+    icalproperty_status stat = icalproperty_get_status(prop);
+
+    if( !( stat == ICAL_STATUS_DRAFT ||
+	   stat == ICAL_STATUS_FINAL ||
+	   stat == ICAL_STATUS_CANCELLED )){
+
+	return "Failed iTIP restrictions for STATUS property. Value must be one of DRAFT, FINAL, or CANCELED";
+
+    }
+
+    return 0;    
+}
+
+char* icalrestriction_may_be_comp_need_process(
+    icalrestriction_property_record *rec,
+    icalcomponent* comp, 
+    icalproperty* prop)
+{
+    icalproperty_status stat = icalproperty_get_status(prop);
+
+    if( !( stat == ICAL_STATUS_COMPLETED ||
+	   stat == ICAL_STATUS_NEEDSACTION ||
+	   stat == ICAL_STATUS_INPROCESS )){
+
+	return "Failed iTIP restrictions for STATUS property. Value must be one of COMPLETED, NEEDS-ACTION or IN-PROCESS";
+
+    }
+
+    return 0;    
+}
+char* icalrestriction_may_be_tent_conf(icalrestriction_property_record *rec,
+				       icalcomponent* comp, 
+				       icalproperty* prop){
+    icalproperty_status stat = icalproperty_get_status(prop);
+
+    if( !( stat == ICAL_STATUS_TENTATIVE ||
+	   stat == ICAL_STATUS_CONFIRMED )){
+
+	return "Failed iTIP restrictions for STATUS property. Value must be one of TENTATIVE or CONFIRMED";
+
+    }
+
+    return 0;    
+}
+char* icalrestriction_may_be_tent_conf_cancel(
+    icalrestriction_property_record *rec,
+    icalcomponent* comp, 
+    icalproperty* prop)
+{
+    icalproperty_status stat = icalproperty_get_status(prop);
+
+    if( !( stat == ICAL_STATUS_TENTATIVE ||
+	   stat == ICAL_STATUS_CONFIRMED ||
+	   stat == ICAL_STATUS_CANCELLED )){
+
+	return "Failed iTIP restrictions for STATUS property. Value must be one of TENTATIVE, CONFIRMED or CANCELED";
+
+    }
+
+    return 0;    
+}
+
+char* icalrestriction_must_be_cancel_if_present(
+    icalrestriction_property_record *rec,
+    icalcomponent* comp, 
+    icalproperty* prop)
+{
+    /* This routine will not be called if prop == 0 */
+    icalproperty_status stat = icalproperty_get_status(prop);
+
+    if( stat != ICAL_STATUS_CANCELLED)
+    {
+	return "Failed iTIP restrictions for STATUS property. Value must be CANCELLED";
+
+    }
+ 
+
+    return 0;    
+}
+
+char* icalrestriction_must_be_canceled_no_attendee(
+    icalrestriction_property_record *rec,
+    icalcomponent* comp, 
+    icalproperty* prop)
+{
+
+    /* Hack. see rfc2446, 3.2.5 CANCEL for porperty STATUS. I don't
+       understand the note */
+
+    return 0;    
+}
+char* icalrestriction_must_be_recurring(icalrestriction_property_record *rec,
+					icalcomponent* comp, 
+					icalproperty* prop){
+    /* Hack */
+    return 0;    
+}
+char* icalrestriction_must_have_duration(icalrestriction_property_record *rec,
+					 icalcomponent* comp, 
+					 icalproperty* prop){
+    
+    if( !icalcomponent_get_first_property(comp,ICAL_DURATION_PROPERTY)){
+
+	return "Failed iTIP restrictions for STATUS property. This component must have a DURATION property";
+
+    }
+
+    return 0;    
+}
+char* icalrestriction_must_have_repeat(icalrestriction_property_record *rec,
+				       icalcomponent* comp, 
+				       icalproperty* prop){
+    if( !icalcomponent_get_first_property(comp,ICAL_REPEAT_PROPERTY)){
+
+	return "Failed iTIP restrictions for STATUS property. This component must have a REPEAT property";
+
+    }
+
+    return 0;    
+}
+char* icalrestriction_must_if_tz_ref(icalrestriction_property_record *rec,
+				     icalcomponent* comp, 
+				     icalproperty* prop){
+
+    /* Hack */
+    return 0;    
+}
+char* icalrestriction_no_dtend(icalrestriction_property_record *rec,
+			       icalcomponent* comp, 
+			       icalproperty* prop){
+
+    if( !icalcomponent_get_first_property(comp,ICAL_DTEND_PROPERTY)){
+
+	return "Failed iTIP restrictions for STATUS property. The component must not have both DURATION and DTEND";
+
+    }
+
+    return 0;    
+}
+char* icalrestriction_no_duration(icalrestriction_property_record *rec,
+				icalcomponent* comp, 
+				  icalproperty* prop){
+
+    /* _no_dtend takes care of this one */
+    return 0;    
+}                                     
+
+
+int icalrestriction_check_component(icalproperty_method method,
+				    icalcomponent* comp)
+{
+    icalproperty_kind kind;
+    icalcomponent_kind comp_kind;
+    icalrestriction_kind restr;
+    icalrestriction_property_record *prop_record;
+    icalrestriction_component_record *comp_record;
+    char* funcr = 0;
+    icalproperty *prop;
+
+    int count;
+    int compare;
+    int valid = 1;
+
+    comp_kind = icalcomponent_isa(comp);
+
+    /* Check all of the properties in this component */
+
+    for(kind = ICAL_ANY_PROPERTY+1; kind != ICAL_NO_PROPERTY; kind++){
+	count = icalcomponent_count_properties(comp, kind);
+	
+	prop_record = icalrestriction_get_property_restriction(method, 
+							 comp_kind,
+							 kind);
+
+	restr = prop_record->restriction;
+
+	if(restr == ICAL_RESTRICTION_ONEEXCLUSIVE ||
+	    restr == ICAL_RESTRICTION_ONEMUTUAL) {
+
+	    /* First treat is as a 0/1 restriction */
+	    restr = ICAL_RESTRICTION_ZEROORONE;
+	    compare = icalrestriction_compare(restr,count);
+
+	} else {
+
+	    compare = icalrestriction_compare(restr,count);
+	}
+
+	assert(compare != -1);
+
+	if (compare == 0){
+	    char temp[TMP_BUF_SIZE];
+	    
+	    snprintf(temp, TMP_BUF_SIZE,"Failed iTIP restrictions for %s property. Expected %s instances of the property and got %d",
+		    icalenum_property_kind_to_string(kind),
+		    restr_string_map[restr], count);
+	    
+	    icalcomponent_add_property
+		(comp,
+		 icalproperty_vanew_xlicerror(
+		     temp,
+		     icalparameter_new_xlicerrortype(ICAL_XLICERRORTYPE_INVALIDITIP),
+		     0));   
+	} 
+
+
+	prop = icalcomponent_get_first_property(comp, kind);
+
+	if (prop != 0 && prop_record->function !=0  ){
+	    funcr =  prop_record->function(prop_record,comp,prop);
+	}
+
+	if(funcr !=0){
+	    icalcomponent_add_property
+		(comp,
+		 icalproperty_vanew_xlicerror(
+		     funcr,
+		     icalparameter_new_xlicerrortype(
+			 ICAL_XLICERRORTYPE_INVALIDITIP),
+		     0));   
+
+	    compare = 0;
+	}
+
+	valid = valid && compare;
+    }
+
+
+
+    return valid;
+
+
+}
+
+int icalrestriction_check(icalcomponent* outer_comp)
+{
+    icalcomponent_kind comp_kind;
+    icalproperty_method method;
+    icalcomponent* inner_comp;
+    icalproperty *method_prop;
+    int valid;
+    
+    icalerror_check_arg_rz( (outer_comp!=0), "outer comp");
+
+
+    /* Get the Method value from the outer component */
+
+    comp_kind = icalcomponent_isa(outer_comp);
+
+    if (comp_kind != ICAL_VCALENDAR_COMPONENT){
+	icalerror_set_errno(ICAL_BADARG_ERROR);
+	return 0;
+    }
+
+    method_prop = icalcomponent_get_first_property(outer_comp,
+						   ICAL_METHOD_PROPERTY);
+
+    if (method_prop == 0){
+	method = ICAL_METHOD_NONE;
+    } else {
+	method = icalproperty_get_method(method_prop);
+    }
+   
+
+    /* Check the VCALENDAR wrapper */
+    valid = icalrestriction_check_component(ICAL_METHOD_NONE,outer_comp);
+
+
+    /* Now check the inner components */
+
+    for(inner_comp= icalcomponent_get_first_component(outer_comp,
+						      ICAL_ANY_COMPONENT);
+	inner_comp != 0;
+	inner_comp= icalcomponent_get_next_component(outer_comp,
+						     ICAL_ANY_COMPONENT)){
+
+	valid = valid && icalrestriction_check_component(method,inner_comp);
+
+    }
+
+
+    return valid;
+
+}
+
+icalrestriction_property_record*
+icalrestriction_get_property_restriction(icalproperty_method method,
+					 icalcomponent_kind component,
+					 icalproperty_kind property)
+{
+    int i;
+
+    for(i = 0;
+	icalrestriction_property_records[i].restriction != ICAL_RESTRICTION_NONE;
+	i++){
+
+	if (method == icalrestriction_property_records[i].method &&
+	    component == icalrestriction_property_records[i].component &&
+	    property ==  icalrestriction_property_records[i].property ){
+	    return  &icalrestriction_property_records[i];
+	}
+    }
+	
+    return &null_prop_record;
+}
+
+
+icalrestriction_component_record*
+icalrestriction_get_component_restriction(icalproperty_method method,
+					  icalcomponent_kind component,
+					  icalcomponent_kind subcomponent)
+{
+
+    int i;
+
+    for(i = 0;
+	icalrestriction_component_records[i].restriction != ICAL_RESTRICTION_NONE;
+	i++){
+
+	if (method == icalrestriction_component_records[i].method &&
+	    component == icalrestriction_component_records[i].component &&
+	    subcomponent ==  icalrestriction_component_records[i].subcomponent ){
+	    return  &icalrestriction_component_records[i];
+	}
+    }
+	
+    return &null_comp_record;
+}
+

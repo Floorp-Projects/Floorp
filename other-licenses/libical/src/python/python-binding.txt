@@ -1,0 +1,434 @@
+
+Classes for python binding to libical
+(Indentation indicates inheritance)
+
+	Component
+		Event
+		JournalEntry
+		Todo
+		FreeBusy
+		Timezone
+		Alarm
+			AudioAlarm
+			EmailAlarm
+			ProcedureAlarm
+			DisplayAlarm
+
+	Property
+		Attendee
+		Organizer
+		Status
+		Error
+
+	Time
+	Period
+	Date
+	RecurrenceSet
+
+	Timezone
+	TimezonePhase
+
+	Store
+		FileStore
+		DirStore
+		CAPStore
+		HeapStore
+		MySQLStore
+
+
+
+Component is the central class in the design. The component can be
+though of as a container for child components and properties, or as
+representation of a specific kind of iCal object. The first
+interface offers general property and component accessors, and the
+second treats some types of objects in a special way. 
+
+The general interface offers simple manipulators for child property
+and components, and it only works with immediate children. So, given
+the Component:
+
+	BEGIN:VCALENDAR
+	METHOD:PUBLISH
+	BEGIN:VEVENT
+	BEGIN:VALARM
+	COMMENT: An Alarm
+	END:VALARM
+	END:VEVENT
+	END:VCALENDAR
+
+A caller would have to descend three levels to access the COMMENT
+property in the alarm, but only one to access the METHOD property. 
+
+Libical is almost entirely dedicated to the general interface; it
+includes all of the *get_first_*, *_next_next_*, *_add_* and *_remove_*
+routines. 
+
+The specific interface works with derived classes of Property and
+Component. In this interface, the caller could get the COMMENT in the
+alarm in the example in two steps. First the caller would ask the
+Event object for its alarms, then then the caller would ask the first
+Alarm object for its comment. 
+
+The Specific interface is part of the
+derived classes of Component. This interface names all of the types of 
+properties and components that can be accessed from the derived
+component type. 
+
+In libical, the specific interface is primarily the "convenience
+routines in icalcomponent.h, such as: 
+
+
+	struct icaltimetype icalcomponent_get_dtend(icalcomponent* comp);
+	void icalcomponent_set_dtend(icalcomponent* comp, struct icaltimetype v);
+
+	void icalcomponent_set_duration(icalcomponent* comp, 
+				struct icaldurationtype v);
+	struct icaldurationtype icalcomponent_get_duration(icalcomponent* comp);
+
+These routines are smarter and do more work than the general
+interface. From the general interface, you can set the DTEND
+property of a component by creating the property and adding it to a
+component. But, if the component already has a DURATION property, then 
+this is an error -- a component can't have both. 
+
+icalcomponent_set_dtend determines if the component already has a
+DURATION. If it does, it substracts the dtstart time from the new
+dtend time and sets the duration to that. Otherwise, it creates aor
+changes the DTEND. 
+
+Also, icalcomponent_set_duration works the same regardless if the
+component is a VCALENDAR or a VEVENT. If it is a VCALENDAR, the
+routine descends into the VEVENT before making any changes. If it is
+allready a VEVENT ( or VTODO or VJOURNAL ) the routine just makes the
+changes. With icalcomponent_add_property, you need to do this check
+yourself. 
+
+( There should probably be a class between Component
+and Event ,JournalEntry and Todo that names all of the properties and
+components. Then Event, JournalEntry and Todo would remove the
+accessors that did not apply to them. )
+	
+Parameters are accessed as dictionaries from Property or as attributes
+of a derived class of Property. Both the names and the values of the
+parameters are strings.
+
+The Store hierarchy is a interface to various ways to store iCal
+components. Each of these has the same interface as its corresponding
+libical module:
+
+	FileStore icalfileset	Store iCal components in a single file
+	DirStore  icaldirset	Use multiple files, one per month of
+				DTSTART
+	CAPStore		Access components in a CAP server
+	HeapStore		Components stored in memory
+	MySQLStore		Components stored in a MySQL
+				database. 
+
+The only iCal value objects that will be implemented as Python classes 
+are Time, Duration and Period. RecurrenceSet handles recurrence
+rules. It replaces the properties RRULE, RDATE, EXRULE and EXDATE. 
+
+(Not all of the libical modules are implemented )
+
+
+How to Use the library
+----------------------
+
+The most common usecases will be something like this: 
+
+1)Caller opens a Store object on a file, server or database. The
+caller retrieves one or more component. Some of the components will be 
+booked on the user's calendar. Other components will be messages that
+other users have sent, like requests for meetings. 
+
+2) The caller will use the Specific interface ( using methods specific 
+to each property ) to example the component and decide what to do with 
+it. 
+
+3) Rarely, the caller will access the general interface to do things
+that the specific interface has not implemented or cannot manage
+well. 
+
+4) Cller may create a new component, using a combination of the
+general and specific interfaces. The caller may send the message to
+another user via mail, or may submit it to the user's CAP server with
+the CAPStore class. 
+
+	
+Following are the methods in each of the classes. 
+
+Component
+	Construct from string
+	output string in ical form
+	
+	Get a Property by type
+	Get a set of Properties by type
+	Remove a Property by reference
+
+	Get a Component by type
+	Get a set of Components by type
+	Remove a Component  by reference
+
+	Validate the component ( insert properties for errors )
+	Count error properties
+	Remove error properties
+	Convert error properties into REQUEST-STATUS properties
+
+Event, JournalEntry, Todo
+	
+	Construct from string
+	output string in ical form
+
+	There are get/set accessors for every property. These are
+	listed in a later section
+
+
+FreeBusy
+
+	Construct from string
+	Construct from arguments 
+	output string in ical form
+
+	Accessors for the following properties. See below for return
+	types for these properties:
+
+	method
+	prodid
+	attendee
+	dtstamp
+	dtstart
+	freebusy
+	organizer
+	uid
+	comment
+	contact
+	request-status
+	url
+	duration
+	sequence
+
+TimezonePhase
+
+	Construct from string
+	Construct from arguments 
+	output string in ical form
+
+	Accessors for the following properties. See below for return
+	types for these properties:
+
+	tzname
+	offsetto
+	offsetfrom
+	rrule
+	rdate
+	comment
+
+TimeZone
+
+	Construct from string
+	Construct from arguments 
+	output string in ical form
+
+	Accessors for the following properties. See below for return
+	types for these properties:
+
+	tzid
+	last-modified
+	tzurl
+	standard (returns TimezonePhase)
+	daylight (returns TimezonePhase)
+
+
+Property
+	
+	Construct from string
+	Construct from arguments
+	output string in ical form
+
+	Dictionary access to parameters
+
+	Get/set value
+
+Attendee
+
+	Construct from string
+	Construct from arguments
+	output string in ical form
+
+	Access to the following properties and parameters:
+	cuid
+	cutype
+	member
+	role
+	rsvp
+	delto
+	delfrom
+	sentby
+	cn
+	dir
+	language
+
+Organizer
+
+	Access to the following properties:
+	common_name
+	dir
+	sentby
+	language
+
+
+Time
+Date
+Period
+
+	Same interfaces as libical modules. 
+
+RecurenceSet
+	I don't know -- need to think about it more. 
+
+Store
+	Similar methods to the icalset modules. 
+
+
+RFC2445 Properties
+
+This is a list of all of the RFC2445 properties and their associated
+VALUE type.
+
+
+Property	     Value
+----------------------------
+CALSCALE             TEXT		
+METHOD		     TEXT
+PRODID               TEXT
+VERSION              TEXT
+CATEGORIES           TEXT
+CLASS                TEXT
+COMMENT              TEXT
+DESCRIPTION          TEXT
+LOCATION             TEXT
+PERCENT-COMPLETE     INTEGER
+PRIORITY             INTEGER
+RESOURCES            TEXT
+STATUS               STATUS
+SUMMARY              TEXT
+COMPLETED            DATE-TIME
+FREEBUSY             PERIOD
+TRANSP               TEXT
+TZNAME               TEXT
+TZOFFSETFROM         UTC-OFFSET
+TZOFFSETTO           UTC-OFFSET
+TZURL                URI
+TZID                 TEXT
+ATTENDEE             CAL-ADDRESS
+CONTACT              TEXT
+ORGANIZER            CAL-ADDRESS
+RELATED-TO           TEXT
+URL                  URI
+UID                  TEXT
+EXRULE               RECUR
+RRULE                RECUR
+ACTION               TEXT
+REPEAT               INTEGER
+CREATED              DATE-TIME
+DTSTAMP              DATE-TIME
+LAST-MODIFIED        DATE-TIME
+SEQUENCE             INTEGER
+X         	     TEXT
+REQUEST-STATUS       STRING             
+ATTACH               URL, BINARY
+GEO                  FLOAT
+DTEND                DATE-TIME
+DUE                  DATE-TIME
+DTSTART              DATE-TIME
+RECURRENCE-ID        DATE-TIME
+EXDATE               DATE-TIME
+RDATE                DATE-TIME, PERIOD
+TRIGGER              DATE-TIME, DURATION
+DURATION	     DURATION 
+
+Some of the properties can appear multiple times in a component, other 
+can appear only once. For a particular component, the number of times
+a property can apper may also change with the METHOD property
+associated with the component. This list shows which properties can
+appear multiple times for some ( but not all ) combinations of
+component type and METHOD value: 
+
+ATTACH
+ATTENDEE
+CATEGORIES
+COMMENT
+CONTACT
+EXDATE
+EXRULE
+FREEBUSY
+NONE
+RDATE
+RELATEDTO
+REQUESTSTATUS
+RESOURCES
+RRULE
+TZNAME
+TZURL
+X          
+
+
+This is a list of the value types and their associated python return
+types. A lowercased return type is a python builtin, and an
+uppercase-first-letter is a class in the library:
+
+
+Value			Return Type
+-----------------------------------
+BINARY			file
+BOOLEAN			number
+CAL-ADDRESS		string
+DATE			Time
+DATE-TIME		Time
+DURATION		Duration
+FLOAT			number
+GEO			tuple
+INTEGER			number
+METHOD			string
+PERIOD			Period
+RECUR			RecurrenceSet
+TEXT			string
+TIME			Time
+URI			string
+UTC-OFFSET		number
+STATUS			string
+X			string
+
+
+I suspect that the Component class should use the three previous
+tables to create the property accessor methods on the fly. If the
+method generation system is general enough, we could also use it for
+other classes, such as Alarm, Timezone, Attendee, Organizer and
+Freebusy. 
+
+
+Memory Handling
+---------------
+
+One of the things that made the perl binding to libcal difficult was
+that if a Component (in perl) returns a reference to a child Component
+(in perl), the child Component (in perl) will contain a reference to a
+libical component. When the caller is done with the child component in
+perl, the caller just drops it and lets perl reclaim the memory.
+
+The destructor for Component needs to free the libical component that
+it holds a reference to, but the child's libical component is still
+being used by libical. So perl frees the libical component and later,
+libical tries to reference freed memory.
+
+The situation is actually a little better than that, because libical
+will throw an error when you try to free a component that is still
+attached to a parent. 
+
+So, the perl library has to be able to determine when the destructor
+should free a libical component or not. The perl library calls
+icalcomponent_get_parent(), and if is it non-zero, it does not free
+the component.
+
+It is not hard, just more code, and something to watch out for. 
+
