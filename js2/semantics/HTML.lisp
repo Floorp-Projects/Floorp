@@ -499,7 +499,7 @@
     (:nonterminal-argument (span (class "nonterminal-argument")))
     (:nonterminal-sub (span (class "nonterminal-sub")))
     (:semantic-keyword (span (class "semantic-keyword")))
-    (:type-name (span (class "type-name")))
+    (:domain-name (span (class "domain-name")))
     (:field-name (span (class "field-name")))
     (:tag-name (span (class "tag-name")))
     (:global-variable (span (class "global-variable")))

@@ -365,14 +365,14 @@
     (:semantic-keyword cs :semantic-keyword-num b :times)
     ((+ :styles) (* :semantic-keyword additive sbasedon :default-paragraph-font-num "Semantic Keyword;"))
     
-    (:type-name-num 52)
-    (:type-name cs :type-name-num scaps :times :red :no-language)
-    ((+ :styles) (* :type-name additive sbasedon :default-paragraph-font-num "Type Name;"))
-    (:type-name-index-entry v scaps :times :red :no-language)
+    (:domain-name-num 52)
+    (:domain-name cs :domain-name-num scaps :times :red :no-language)
+    ((+ :styles) (* :domain-name additive sbasedon :default-paragraph-font-num "Domain Name;"))
+    (:domain-name-index-entry v scaps :times :red :no-language)
     
-    (:type-sub-num 53)
-    (:type-sub cs :type-sub-num :red)
-    ((+ :styles) (* :type-sub additive sbasedon :default-paragraph-font-num "Type Sub;"))
+    (:domain-sub-num 53)
+    (:domain-sub cs :domain-sub-num :red)
+    ((+ :styles) (* :domain-sub additive sbasedon :default-paragraph-font-num "Domain Sub;"))
     
     (:field-name-num 54)
     (:field-name cs :field-name-num :helvetica :no-language)
@@ -551,8 +551,8 @@
 
 (defparameter *rtf-link-prefixes*
   '(("N-" #\n :nonterminal-index-entry "Nonterminals")
-    ("R-" #\r :tag-name-index-entry "Tags")
-    ("T-" #\t :type-name-index-entry "Types")
+    ("T-" #\t :tag-name-index-entry "Tags")
+    ("D-" #\d :domain-name-index-entry "Semantic Domains")
     ("V-" #\v :global-variable-index-entry "Globals")))
 
 

@@ -197,7 +197,7 @@
   (when (eq link :reference)
     (setq link (tag-link tag)))
   (multiple-value-bind (link-name name) (tag-link-name-and-name tag)
-    (depict-link (markup-stream link "R-" link-name nil)
+    (depict-link (markup-stream link "T-" link-name nil)
       (depict-char-style (markup-stream :tag-name)
         (depict-item-or-list markup-stream name)))))
 
@@ -213,7 +213,7 @@
     (unless type-name
       (warn "Accessing field ~A of anonymous type ~S" label type)
       (setq link nil))
-    (depict-link (markup-stream link "T-" (symbol-upper-mixed-case-name type-name) nil)
+    (depict-link (markup-stream link "D-" (symbol-upper-mixed-case-name type-name) nil)
       (depict-char-style (markup-stream :field-name)
         (depict markup-stream (symbol-lower-mixed-case-name label))))))
 
@@ -239,8 +239,8 @@
 ;   nil          if this use of the type name should not be cross-referenced.
 (defun depict-type-name (markup-stream type-name link)
   (let ((name (symbol-upper-mixed-case-name type-name)))
-    (depict-link (markup-stream link "T-" name nil)
-      (depict-char-style (markup-stream :type-name)
+    (depict-link (markup-stream link "D-" name nil)
+      (depict-char-style (markup-stream :domain-name)
         (depict markup-stream name)))))
 
 

@@ -63,10 +63,10 @@ A.nonterminal:active, .nonterminal A:active, A:active .nonterminal {color: #00FF
 .nonterminal-argument {color: #009900}
 .nonterminal-sub {color: #009900}
 .semantic-keyword {font-family: "Times New Roman", Times, serif; font-weight: bold}
-.type-name, A.type-name:link, A.type-name:visited {font-family: "Times New Roman", Times, serif; font-variant: small-caps; color: #CC0000}
-A.type-name:hover, A:hover .type-name {color: #990000}
-A.type-name:active, A:active .type-name {color: #FF6666}
-.type-sub {color: #CC0000}
+.domain-name, A.domain-name:link, A.domain-name:visited {font-family: "Times New Roman", Times, serif; font-variant: small-caps; color: #CC0000}
+A.domain-name:hover, A:hover .domain-name {color: #990000}
+A.domain-name:active, A:active .domain-name {color: #FF6666}
+.domain-sub {color: #CC0000}
 .tag-name, A.tag-name:link, A.tag-name:visited {font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #990000}
 A.tag-name:hover, A:hover .tag-name {color: #660000}
 A.tag-name:active, A:active .tag-name {color: #CC3333}
