@@ -1319,16 +1319,21 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
 
     // Start by removing all disallowed proxies if required:
     if (!(info.flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP)) {
-        nsProxyInfo *last = nsnull; 
-        for (nsProxyInfo *iter = head; iter; iter = iter->mNext, last = iter) {
+        nsProxyInfo *last = nsnull, *iter = head; 
+        while (iter) {
             if (iter->Type() == kProxyType_HTTP) {
                 // reject!
                 if (last)
                     last->mNext = iter->mNext;
                 else
                     head = iter->mNext;
+                nsProxyInfo *next = iter->mNext;
                 iter->mNext = nsnull;
-                NS_RELEASE(iter);
+                iter->Release();
+                iter = next;
+            } else {
+                last = iter;
+                iter = iter->mNext;
             }
         }
         if (!head)
