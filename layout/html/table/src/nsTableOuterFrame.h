@@ -102,43 +102,16 @@ protected:
     * or if the table style attributes or parent max height/width have
     * changed.
     */
-  virtual PRBool NeedsReflow(const nsSize& aMaxSize);
+  PRBool NeedsReflow(const nsSize& aMaxSize);
 
   /** create all child frames for this table */
-  virtual nsresult CreateChildFrames(nsIPresContext* aPresContext);
+  nsresult CreateChildFrames(nsIPresContext* aPresContext);
 
-  /** reflow the captions in an infinite space, caching the min/max sizes for each
+  /**
+    * Reflow the caption and get its max element size
     */
-  virtual nsReflowStatus ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
-                                                   OuterTableReflowState& aState,
-                                                   PRBool aIsInitialReflow);
-
-#if 0
-  /** reflow the top captions in a space constrained by the computed table width
-    * and the heigth given to us by our parent.  Top captions are laid down
-    * before the inner table.
-    */
-  virtual nsReflowStatus ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
-                                                    nsReflowMetrics& aDesiredSize,
-                                                    const nsSize&    aMaxSize,
-                                                    nsSize*          aMaxElementSize,
-                                                    OuterTableReflowState& aState);
-
-  /** reflow the bottom captions in a space constrained by the computed table width
-    * and the heigth given to us by our parent.  Bottom captions are laid down
-    * after the inner table.
-    */
-  virtual nsReflowStatus ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext,
-                                                         nsReflowMetrics& aDesiredSize,
-                                                         const nsSize&    aMaxSize,
-                                                         nsSize*          aMaxElementSize,
-                                                         nscoord          aYOffset,
-                                                         OuterTableReflowState& aState);
-#endif
-
-  nscoord       GetTopMarginFor(nsIPresContext* aCX,
-                                OuterTableReflowState& aState,
-                                const nsMargin& aKidMargin);
+  nsReflowStatus ReflowCaptionPass1(nsIPresContext* aPresContext,
+                                    OuterTableReflowState& aState);
 
   void          PlaceChild( OuterTableReflowState& aState,
                             nsIFrame*          aKidFrame,
@@ -169,9 +142,6 @@ protected:
   PRBool        PullUpChildren(nsIPresContext*        aPresContext,
                                OuterTableReflowState& aState,
                                nsSize*                aMaxElementSize);
-
-  virtual       void SetReflowState(OuterTableReflowState& aState, 
-                                    nsIFrame*              aKidFrame);
 
   virtual nsReflowStatus ReflowChild( nsIFrame*              aKidFrame,
                                       nsIPresContext*        aPresContext,
@@ -208,10 +178,12 @@ protected:
    */
   PRBool DeleteChildsNextInFlow(nsIFrame* aChild);
 
-  /** create the inner table frame (nsTableFrame)
-    * handles initial creation as well as creation of continuing frames
+  /**
+    * Create the inner table frame (nsTableFrame). Handles initial
+    * creation as well as creation of continuing frames
     */
-  virtual void CreateInnerTableFrame(nsIPresContext* aPresContext);
+  nsresult CreateInnerTableFrame(nsIPresContext* aPresContext,
+                                 nsTableFrame*&  aTableFrame);
 
   nsresult RecoverState(OuterTableReflowState& aState, nsIFrame* aKidFrame);
   nsresult IncrementalReflow(nsIPresContext* aPresContext,
@@ -229,9 +201,8 @@ private:
   nsTableFrame *mInnerTableFrame;
   nsIFrame* mCaptionFrame;
 
-  /** used to keep track of min/max caption requirements */
+  /** used to track caption max element size */
   PRInt32 mMinCaptionWidth;
-  PRInt32 mMaxCaptionWidth;
 
   /** used to cache reflow results so we can optimize out reflow in some circumstances */
   nsReflowMetrics mDesiredSize;
