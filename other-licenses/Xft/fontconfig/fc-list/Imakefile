@@ -1,0 +1,10 @@
+INCLUDES=$(FREETYPE2INCLUDES) $(LIBXML2INCLUDES) -I..
+
+LOCAL_LIBRARIES=FontconfigClientLibs
+        DEPLIBS=FontconfigClientDepLibs
+
+SRCS=fc-list.c
+OBJS=fc-list.o
+
+ComplexProgramTarget(fc-list)
+LinkBuildBinary(ProgramTargetName(fc-list))

@@ -1,0 +1,55 @@
+\documentclass[10pt]{article}
+\usepackage{latexsym}
+\usepackage{epsfig}
+\usepackage{times}
+
+\begin{document}
+\date{}
+\title{The Fontconfig Library:\\
+Architecture and Users Guide}
+\author{Keith Packard\\
+{\em XFree86 Core Team}\\
+keithp@keithp.com}
+\maketitle
+\thispagestyle{empty}
+
+\abstract
+
+The Fontconfig library provides for central administration and configuration
+of fonts in a POSIX system.  All font consumers can share a common database
+of fonts and use common matching rules for font names.  The set of available
+fonts can be configured for each user and a set of configurable matching
+rules allow for customizing the selection of fonts and configuring various
+parameters related to rasterizing of those fonts for display in a variety of
+media.  The Fontconfig library is designed to co-exist peacefully with
+existing font configuration and rasterization mechanisms; while it uses the
+FreeType library to discover characteristics of available fonts, there
+is no requirement to use FreeType for rasterization.
+
+\section				{Introduction}
+
+\section				{Configuration Files}
+
+\section				{Application Interface}
+
+\subsection				{Datatypes}
+
+\subsection				{Font Set Interface}
+
+\subsection				{Font Patterns}
+
+\subsection				{Listing Available Fonts}
+
+\subsection				{Using Font Names}
+
+\subsection				{Manipulating Matrices}
+
+\subsection				{UTF-8 Helper Functions}
+
+\section				{Font Sub-System Interface}
+
+\subsection				{Extending Font Names}
+
+\subsection				{Executing Configuration Rules}
+
+\end{document}
