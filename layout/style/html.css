@@ -554,4 +554,9 @@ noembed, noscript, param {
   img[usemap], object[usemap], object, embed, applet, iframe {
     -moz-user-focus: none !important;
   }
+
+  blink {
+    text-decoration: none;
+  }
+  
 }
