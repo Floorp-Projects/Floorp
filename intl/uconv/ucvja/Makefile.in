@@ -55,8 +55,6 @@ EXPORTS		= \
 		nsUCVJA2CID.h \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk

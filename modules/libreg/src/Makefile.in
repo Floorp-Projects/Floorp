@@ -35,7 +35,7 @@ ifeq ($(OS_ARCH),Darwin)
 REQUIRES = macmorefiles
 endif
 
-CSRCS		= reg.c VerReg.c vr_stubs.c nr_bufio.c
+CSRCS		= $(MODULES_LIBREG_SRC_LCSRCS) nr_bufio.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
 PROGOBJS        = $(addprefix R_,$(BIN_SRCS:.c=.o))
@@ -58,9 +58,5 @@ DEFINES         += -DUSE_BUFFERED_REGISTRY_IO
 include $(topsrcdir)/config/rules.mk
 
 R_%.o: %.c
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-	$(CC) -Fo$@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
-else
-	$(CC) -o $@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
-endif
+	$(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) -DSTANDALONE_REGISTRY $<
 

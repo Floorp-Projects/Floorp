@@ -31,9 +31,6 @@ EXPORTS		= \
 		nsMPFileLocProvider.h   \
 		$(NULL)
 
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
 
 

@@ -40,17 +40,22 @@ CPPSRCS		= \
 EXPORTS        = InstallCleanupDefines.h \
 	$(NULL)
 
-libs::
-	$(INSTALL) $(srcdir)/cmessage.txt $(DIST)/bin/res
-
 ifeq ($(OS_ARCH),OS2)
 CPPSRCS += InstallCleanupOS2.cpp
 else
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += InstallCleanupWin.cpp
+MOZ_WINCONSOLE = 0
+USE_NON_MT_LIBS = 1
+else
 CPPSRCS += InstallCleanupUnix.cpp
 endif
+endif
+
+EXTRA_DSO_LIBS = mozregsa_s
 
 LIBS        = \
-        -lmozregsa_s \
+	$(EXTRA_DSO_LIBS) \
         $(NULL)
 
 DEFINES += -DSTANDALONE_REGISTRY
@@ -62,4 +67,10 @@ LIBS += -lmacmorefiles_s
 LDFLAGS += $(TK_LIBS)
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES	+= -DWIN32_LEAN_AND_MEAN
+LDFLAGS += /SUBSYSTEM:WINDOWS
+endif
 
+libs::
+	$(INSTALL) $(srcdir)/cmessage.txt $(DIST)/bin/res

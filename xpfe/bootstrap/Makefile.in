@@ -59,11 +59,14 @@ REQUIRES	+= \
 		  profile \
 		  $(NULL)
 endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+REQUIRES	+= intl profile appcomps
+endif
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
 else
-PROGRAM		= mozilla-bin
+PROGRAM		= mozilla-bin$(BIN_SUFFIX)
 endif
 
 ifdef BUILD_STATIC_LIBS
@@ -79,6 +82,9 @@ _COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 endif
 else
 EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
+ifdef MOZ_OJI
+EXTRA_DSO_LIBS += jsj
+endif
 endif
 
 
@@ -144,7 +150,6 @@ endif
 
 XP_LIBS		+= \
 		$(XPCOM_LIBS) \
-		$(OJI_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
@@ -158,10 +163,6 @@ endif
 
 ifdef MOZ_JPROF
 XP_LIBS         += -ljprof
-endif
-
-ifdef MOZ_OJI
-OJI_LIBS	= -ljsj
 endif
 
 LIBS		= $(XP_LIBS)
@@ -191,6 +192,12 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 CPPSRCS += nsNativeAppSupportGtk.cpp \
 	   nsNativeAppSupportBase.cpp
 LIBS += $(MOZ_GTK_LDFLAGS)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+DEFINES	+= -DWIN32_LEAN_AND_MEAN
+CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
+OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib
 endif
 
 XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
@@ -231,12 +238,18 @@ ifeq ($(MOZ_WINCONSOLE),1)
 ifeq ($(MOZ_OS2_TOOLS),EMX)
 BIN_FLAGS	:= -Zlinker /PM:VIO -Zlinker /Stack:0x30000
 endif
-else
+ifeq ($(OS_ARCH),WINNT)
+LDFLAGS		+= /SUBSYSTEM:CONSOLE
+endif
+else # MOZ_WINCONSOLE
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 LDFLAGS += /PM:PM
 endif
 ifeq ($(MOZ_OS2_TOOLS),EMX)
 BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
+endif
+ifeq ($(OS_ARCH),WINNT)
+LDFLAGS		+= /SUBSYSTEM:WINDOWS
 endif
 endif
 

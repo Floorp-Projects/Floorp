@@ -38,9 +38,8 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 LIBS		= \
-		$(MOZ_JS_LIBS) \
+		$(LIBS_DIR) \
 		$(XPCOM_LIBS) \
-		$(TK_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

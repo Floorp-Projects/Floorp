@@ -49,9 +49,11 @@ XPIDLSRCS	= \
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 XPIDLSRCS	+= nsIInternetConfigService.idl
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+XPIDLSRCS	+= nsINativeAppSupportWin.idl
 endif
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+endif
 
 include $(topsrcdir)/config/rules.mk
 

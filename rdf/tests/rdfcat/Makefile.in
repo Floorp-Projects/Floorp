@@ -40,11 +40,14 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 LIBS		= \
-		$(MOZ_JS_LIBS) \
+		$(LIBS_DIR) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
-		$(TK_LIBS) \
 		$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+MAPFILE=rdfcat.map
+endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -41,7 +41,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpctools
 LIBRARY_NAME	= xpctools
-SHORT_LIBNAME	= xpctools
 REQUIRES	= xpcom \
 		  xpconnect \
 		  js \
@@ -51,20 +50,12 @@ MODULE_NAME	= xpctools
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
-        	nsXPCToolsCompiler.o \
-        	nsXPCToolsProfiler.o \
-        	nsXPCToolsModule.o \
+		nsXPCToolsCompiler.cpp \
+		nsXPCToolsProfiler.cpp \
+		nsXPCToolsModule.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
-
-# this is automatically discovered under BeOS
-ifneq ($(OS_ARCH),BeOS)
-LIBS		+= \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-endif
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
@@ -74,4 +65,7 @@ EXTRA_DSO_LDOPTS += \
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DJSFILE -DJS_THREADSAFE
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
 

@@ -35,6 +35,9 @@ SHORT_LIBNAME	= gkcontnt
 IS_COMPONENT	= 1
 MODULE_NAME	= nsContentModule
 EXTRA_DSO_LIBS	= gkgfx
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS += mozutil_s
+endif
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
@@ -90,14 +93,8 @@ SHARED_LIBRARY_LIBS += \
 		$(NULL)
 endif
 
-ifdef MOZ_PERF_METRICS
-SHARED_LIBRARY_LIBS += \
-		$(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
@@ -118,7 +115,7 @@ endif
 
 DEFINES		+= -D_IMPL_NS_HTML
 
-INCLUDES	+= -I$(srcdir)/../base/src \
+LOCAL_INCLUDES	= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../html/base/src \
 		   -I$(srcdir)/../html/style/src \
 		   -I$(srcdir)/../xul/content/src \
@@ -136,4 +133,5 @@ export:: $(BUILD_DATE)
 $(BUILD_DATE): gbdate.pl
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
+
 

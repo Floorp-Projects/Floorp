@@ -40,7 +40,6 @@ CPPSRCS		= \
 		FilesTest.cpp \
 		nsIFileEnumerator.cpp \
 		nsIFileTest.cpp \
-		PropertiesTest.cpp \
 		TestArray.cpp \
 		TestAtoms.cpp \
 		TestAutoLock.cpp \

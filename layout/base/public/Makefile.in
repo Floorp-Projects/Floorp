@@ -81,7 +81,5 @@ XPIDLSRCS	= \
 		nsIPrintListener.idl        \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
 

@@ -119,8 +119,8 @@ ifndef MOZ_NATIVE_ZLIB
 tier_9_dirs	+= modules/zlib
 endif
 
-# Linux and Solaris installer needs standalone libjar, hence standalone zlib
-ifneq (,$(filter Linux SunOS,$(OS_ARCH)))
+# Installer needs standalone libjar, hence standalone zlib
+ifneq (,$(filter Linux SunOS WINNT,$(OS_ARCH)))
 tier_9_dirs	+= modules/zlib/standalone
 endif
 

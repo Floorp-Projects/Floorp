@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 
 EXPORTS		= \
-    nsMutationEvent.h \
+		nsMutationEvent.h \
 		nsIEventListenerManager.h \
 		nsIEventStateManager.h \
 		nsIPrivateDOMEvent.h \
@@ -37,8 +37,6 @@ EXPORTS		= \
 		nsIPrivateTextRange.h \
 		nsIPrivateCompositionEvent.h \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 

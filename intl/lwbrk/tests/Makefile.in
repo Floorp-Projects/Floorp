@@ -37,5 +37,6 @@ LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(srcdir)/../public
+DEFINES		+= -DUSE_NSREG
+LOCAL_INCLUDES	= -I$(srcdir)/../public
 

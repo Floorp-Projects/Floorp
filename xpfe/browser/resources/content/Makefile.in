@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(OS_ARCH), OS2)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 DIRS		= win
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
@@ -38,9 +38,4 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-# the need for this stuff got whacked when smfr removed the build id
-# from viewSource.xul (yay!). Can someone remove the garbage? :-)
-# GARBAGE	+= viewSource.xul.out
-# for some reason puma decided to create a directory viewSource.xul.out
-GARBAGE_DIRS	+= viewSource.xul.out
 

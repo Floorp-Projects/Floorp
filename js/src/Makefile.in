@@ -132,6 +132,10 @@ EXPORTS		= \
 		jsstddef.h \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+EXPORTS		+= jscpucfg.h
+endif
+
 FDLIBM_LIBRARY	= fdlibm/$(LIB_PREFIX)fdm.$(LIB_SUFFIX)
 JSMATH_PRELINK	= jsmathtemp.o
 JS_SAFE_ARENA	= 1
@@ -140,7 +144,7 @@ DASH_R		= -r
 
 include $(topsrcdir)/config/config.mk
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
+EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
 ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 SHARED_LIBRARY_LIBS += $(FDLIBM_LIBRARY)
@@ -272,11 +276,7 @@ ifneq ($(OS_ARCH),OS2)
 jsmath.o: jsmath.c $(FDLIBM_LIBRARY) Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS)
-ifeq ($(OS_ARCH),WINNT)
-	$(ELOG) $(CC) -Fo$(JSMATH_PRELINK) -c $(CFLAGS) $<
-else
-	$(ELOG) $(CC) -o $(JSMATH_PRELINK) -c $(COMPILE_CFLAGS) $<
-endif
+	$(ELOG) $(CC) $(OUTOPTION)$(JSMATH_PRELINK) -c $(COMPILE_CFLAGS) $<
 ifeq ($(OS_ARCH),QNX)
 ifneq ($(OS_TARGET),NTO)
 	@cp $(JSMATH_PRELINK) $@

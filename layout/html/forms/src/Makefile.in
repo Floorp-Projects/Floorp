@@ -79,16 +79,15 @@ CPPSRCS		= \
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 
-CHROME_DIR	= locales/en-US
-CHROME_L10N_DIR	= communicator/locale/layout
-CHROME_L10N	= ./HtmlForm.properties
-CHROME_L10N = ./ImageDocument.properties
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
-INCLUDES	+= \
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
+
+LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../style/src \

@@ -36,6 +36,10 @@ ifeq ($(OS_ARCH),Darwin)
 REQUIRES = macmorefiles
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+USE_NON_MT_LIBS = 1
+endif
+
 CSRCS		= $(MODULES_LIBREG_SRC_LCSRCS)
 
 FORCE_STATIC_LIB = 1

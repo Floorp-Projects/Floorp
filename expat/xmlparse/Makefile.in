@@ -51,8 +51,6 @@ CSRCS		= \
 
 EXPORTS		= xmlparse.h
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 LOCAL_INCLUDES	= -I$(srcdir)/../xmltok
 
 # We want only the static lib, not the shared lib

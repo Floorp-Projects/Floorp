@@ -45,7 +45,6 @@ CPPSRCS = \
 		LangCyrillicModel.cpp \
 		LangGreekModel.cpp \
 		LangHungarianModel.cpp \
-		LangThaiModel.cpp \
 		nsBig5Prober.cpp \
 		nsEUCJPProber.cpp \
 		nsEUCKRProber.cpp \
@@ -63,9 +62,17 @@ CPPSRCS = \
 		nsUniversalDetector.cpp \
 		$(NULL)
 
+# Not built on win32. Not sure why not
+ifneq ($(OS_ARCH),WINNT)
+CPPSRCS	+= LangThaiModel.cpp
+endif
+
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN -D__STDC__
+endif

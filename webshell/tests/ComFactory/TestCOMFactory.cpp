@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 
         webShell->Release();
     } else if (REGDB_E_CLASSNOTREG == hr) {
-        printf("Error: No registry entry.  Try running REGSVR32 raptorweb.dll\n");
+        printf("Error: No registry entry.  Try running REGSVR32 webshell.dll\n");
     } else {
         printf("Error: CoCreateInstance(...) failed.\n");
     }

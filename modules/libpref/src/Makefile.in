@@ -62,6 +62,9 @@ PREF_JS_EXPORTS	= \
 ifdef MOZ_DEBUG
 PREF_JS_EXPORTS	+= $(srcdir)/debug-developer.js
 endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+PREF_JS_EXPORTS += $(srcdir)/win/winpref.js
+else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 PREF_JS_EXPORTS	+= $(srcdir)/os2/os2pref.js
 else
@@ -74,13 +77,14 @@ endif
 PREF_JS_EXPORTS	+= $(srcdir)/unix/unix.js
 endif
 endif
+endif
 
 ifeq ($(OS_ARCH),OpenVMS)
 PREF_JS_EXPORTS	+= $(srcdir)/unix/openvms.js
 endif
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
+		$(LIBS_DIR) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

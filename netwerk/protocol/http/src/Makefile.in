@@ -60,3 +60,8 @@ LOCAL_INCLUDES=-I$(srcdir)/../../../streamconv/converters
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D_IMPL_NS_NET
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif

@@ -43,7 +43,6 @@ CPPSRCS		= \
 
 LIBS		= \
 		$(XPCOM_LIBS) \
-		$(MOZ_JS_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
@@ -75,3 +74,8 @@ libs::
 	$(INSTALL) -m 555 $(srcdir)/TestOutSinks.pl $(DIST)/bin
 	$(INSTALL) $(addprefix $(srcdir)/, $(TEST_FILES)) $(DIST)/bin/OutTestData
 
+ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CC
+LDFLAGS		+= -SUBSYSTEM:CONSOLE
+endif
+endif

@@ -30,14 +30,16 @@ MODULE		= imglib2
 
 EXPORTS		= ImageErrors.h ImageLogging.h
 
-XPIDLSRCS	= imgICache.idl             \
-						imgIContainer.idl         \
-						imgIContainerObserver.idl \
-						imgIDecoder.idl           \
-						imgIDecoderObserver.idl	  \
-						imgILoad.idl              \
-						imgILoader.idl            \
-						imgIRequest.idl
+XPIDLSRCS	= \
+		imgICache.idl             \
+		imgIContainer.idl         \
+		imgIContainerObserver.idl \
+		imgIDecoder.idl           \
+		imgIDecoderObserver.idl	  \
+		imgILoad.idl              \
+		imgILoader.idl            \
+		imgIRequest.idl		  \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

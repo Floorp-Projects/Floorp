@@ -36,10 +36,8 @@ EXPORTS		= \
 		nsIViewObserver.h \
 		nsIScrollPositionListener.h \
 		nsICompositeListener.h \
-    nsIEventProcessor.h \
+		nsIEventProcessor.h \
 		$(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 

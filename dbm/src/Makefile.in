@@ -44,13 +44,17 @@ CSRCS		= \
 		nsres.c \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+CSRCS		+= memmove.c snprintf.c
+else
 ifeq (,$(filter -DHAVE_MEMMOVE=1,$(DEFS)))
-CSRC += memmove.c
+CSRCS += memmove.c
 endif
 
 ifeq (,$(filter -DHAVE_SNPRINTF=1,$(DEFS)))
-CSRC += snprintf.c
+CSRCS += snprintf.c
 endif
+endif # WINNT
 
 LOCAL_INCLUDES	= -I$(srcdir)/../include
 

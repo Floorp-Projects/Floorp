@@ -188,19 +188,11 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 
-ifdef LIBRARY_NAME
-PDBFILE=$(LIBRARY_NAME).pdb
-ifdef MOZ_DEBUG
-MAPFILE=$(LIBRARY_NAME).map
-CODFILE=$(LIBRARY_NAME).cod
-endif
-else
 PDBFILE=$*.pdb
 ifdef MOZ_DEBUG
 MAPFILE=$*.map
 CODFILE=$*.cod
 endif
-endif # LIBRARY_NAME
 
 ifdef DEFFILE
 CFLAGS += /DEF:$(DEFFILE)
@@ -830,13 +822,19 @@ ifneq ($(OS_ARCH),OS2)
 # that are built using other static libraries.  Confused...?
 #
 ifdef SHARED_LIBRARY_LIBS
-ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS Darwin,$(OS_ARCH)))
+ifneq (,$(filter OSF1 BSD_OS FreeBSD NetBSD OpenBSD SunOS Darwin WINNT,$(OS_ARCH)))
 CLEANUP1	:= | egrep -v '(________64ELEL_|__.SYMDEF)'
 CLEANUP2	:= rm -f ________64ELEL_ __.SYMDEF
 else
 CLEANUP2	:= true
 endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+ifdef SHARED_LIBRARY_LIBS
+SUB_LOBJS	= $(SHARED_LIBRARY_LIBS)
+endif
 endif
 
 $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
@@ -1358,9 +1356,13 @@ else
 _JAR_REGCHROME_DISABLE_JAR=0
 endif
 
+ifeq ($(OS_ARCH),WINNT)
+_NO_FLOCK=-l
+endif
+
 libs:: $(CHROME_DEPS)
-	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
-	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl $(_NO_FLOCK) -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-chromelist.pl $(DIST)/bin/chrome $(JAR_MANIFEST) $(_NO_FLOCK); fi
 
 REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
 
@@ -1425,7 +1427,9 @@ else # ! COMPILER_DEPEND
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND_BUILTIN):
+ifneq ($(OS_ARCH),WINNT)
 	$(MAKE) -C $(DEPTH)/config nsinstall$(BIN_SUFFIX)
+endif
 	$(MAKE) -C $(MKDEPEND_DIR) mkdepend
 endif
 
@@ -1439,13 +1443,16 @@ define MAKE_DEPS_NOAUTO
 endef
 
 $(MDDEPDIR)/%.pp: %.c
-	$(MAKE_DEPS_NOAUTO)
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_NOAUTO)
 
 $(MDDEPDIR)/%.pp: %.cpp
-	$(MAKE_DEPS_NOAUTO)
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_NOAUTO)
 
 $(MDDEPDIR)/%.pp: %.s
-	$(MAKE_DEPS_NOAUTO)
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_NOAUTO)
 
 ifneq (,$(OBJS))
 depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MKDEPEND_BUILTIN) $(MDDEPFILES)

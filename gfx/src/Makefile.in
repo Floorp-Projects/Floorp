@@ -42,13 +42,13 @@ REQUIRES    = xpcom \
           unicharutil \
           $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
 DIRS        =
 else
 DIRS        = ps
 endif
 
-ifneq (,$(filter beos os2 mac,$(MOZ_GFX_TOOLKIT)))
+ifneq (,$(filter beos os2 mac windows,$(MOZ_GFX_TOOLKIT)))
 DIRS        += $(MOZ_GFX_TOOLKIT)
 endif
 
@@ -82,7 +82,6 @@ CPPSRCS = \
         nsBlender.cpp \
         nsColor.cpp \
         nsColorNames.cpp \
-        nsCompressedCharMap.cpp \
         nsDeviceContext.cpp \
         nsFont.cpp \
         nsFontList.cpp \
@@ -93,6 +92,10 @@ CPPSRCS = \
         nsGraphicsImpl.cpp \
         nsPrintOptionsImpl.cpp \
         $(NULL)
+
+ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += nsCompressedCharMap.cpp
+endif
 
 ifneq (,$(filter gtk xlib os2,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += \
@@ -111,11 +114,8 @@ CPPSRCS += \
         $(NULL)
 endif
 
-SHARED_LIBRARY_LIBS = \
-        $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
-        $(NULL)
-
 EXTRA_DSO_LDOPTS = \
+        $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
         $(MOZ_UNICHARUTIL_LIBS) \
         $(MOZ_COMPONENT_LIBS) \
         $(NULL)
@@ -129,6 +129,9 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES     += -D_IMPL_NS_GFX
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
 
 libs:: icon_0.gif icon_1.gif
 	$(INSTALL) -m 555 $^ $(DIST)/bin/res/gfx

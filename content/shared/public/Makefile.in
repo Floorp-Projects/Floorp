@@ -58,7 +58,5 @@ ifdef MOZ_SVG
 EXPORTS += nsSVGAtomList.h nsSVGAtoms.h
 endif
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
 

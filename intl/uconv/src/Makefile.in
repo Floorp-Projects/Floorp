@@ -79,12 +79,17 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS			+= nsOS2Charset.cpp
 EXPORT_RESOURCE		+= os2charset.properties
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS			+= nsWinCharset.cpp
+EXPORT_RESOURCE		+= wincharset.properties
+else
 CPPSRCS			+= nsUNIXCharset.cpp
 EXPORT_RESOURCE		+= unixcharset.properties
 # add platform charset remapping properties files here if necessary
 # (see unixcharset.sample.properties for an example file)
 # eg: if we needed a charset remap for OSARCH=Linux then add the following line:
 #EXPORT_RESOURCE		+= unixcharset.Linux.properties
+endif
 endif
 
 EXTRA_DSO_LDOPTS = $(MOZ_NECKO_UTIL_LIBS) \
@@ -100,12 +105,9 @@ OS_LIBS += -llibuni
 endif
 endif
 
-#LOCAL_INCLUDES	= -I$(srcdir)/../ucvlatin -I$(srcdir)/../ucvja
-LOCAL_INCLUDES	= 
-
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DUSE_NSREG
+CFLAGS		+= -DUSE_NSREG -D_IMPL_NS_INTL
 
 # Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
 # QNX simply objects to the way it's being redefined.
@@ -118,6 +120,10 @@ endif
 # nl_langinfo(CODESET) to compile on these systems.
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_XOPEN_SOURCE=500
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
 
 libs:: $(EXPORT_RESOURCE)

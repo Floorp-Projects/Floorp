@@ -38,9 +38,12 @@ REQUIRES	= xpcom \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 DIRS		= os2
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+DIRS		= windows
+else
 DIRS		= unix
 endif
-
+endif
 
 CPPSRCS		= \
 		nsCollation.cpp \
@@ -67,3 +70,9 @@ include $(topsrcdir)/config/rules.mk
 
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+
+DEFINES	+= -D_IMPL_NS_INTL
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES	+= -DWIN32_LEAN_AND_MEAN
+endif

@@ -44,7 +44,6 @@ CPPSRCS		= \
 		$(NULL)
 
 EXPORTS		= nsRDFCID.h
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 # XXX Note dependencies on implementation headers for factory functions
 
@@ -55,7 +54,7 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
@@ -63,7 +62,7 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= \
+LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base/src \
 		-I$(srcdir)/../content/src \
 		-I$(srcdir)/../datasource/src \

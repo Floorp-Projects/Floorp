@@ -26,4 +26,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Placeholder for jar.mn
+
 include $(topsrcdir)/config/rules.mk

@@ -100,6 +100,10 @@ EXTRA_LIBS = $(NSS_LIBS)
 
 EXTRA_DEPS = $(EXTRA_LIBS)
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DNSS_USE_STATIC_LIBS
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # Use local includes because they are inserted before INCLUDES

@@ -52,7 +52,14 @@ CPPSRCS		= nsJSProtocolHandler.cpp
 
 EXPORTS		= $(srcdir)/nsJSProtocolHandler.h
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(MOZ_JS_LIBS)
+EXTRA_DSO_LDOPTS = \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(NULL)
+
+ifdef BUILD_DEBUG_GC
+DEFINES		+= -DDEBUG_GC
+endif
 
 include $(topsrcdir)/config/rules.mk
 

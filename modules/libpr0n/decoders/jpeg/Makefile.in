@@ -42,7 +42,7 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= nsJPEGDecoder.cpp nsJPEGFactory.cpp
 
-EXTRA_DSO_LDOPTS = $(JPEG_LIBS) $(ZLIB_LIBS) \
+EXTRA_DSO_LDOPTS = $(JPEG_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

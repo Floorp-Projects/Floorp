@@ -44,9 +44,11 @@ ifdef MOZ_MATHML
 DIRS           += ucvmath
 endif
 
-#ifdef ENABLE_TESTS
-#DIRS		+= tests
-#endif
+ifeq ($(OS_ARCH),WINNT)
+ifdef ENABLE_TESTS
+DIRS		+= tests
+endif
+endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -1,0 +1,95 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Mozilla browser.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications, Inc.  Portions created by Netscape are
+# Copyright (C) 2001, Mozilla.  All Rights Reserved.
+# 
+# Contributor(s):
+
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+PROGRAM		= mfcEmbed$(BIN_SUFFIX)
+RESFILE		= mfcEmbed.res
+
+REQUIRES = \
+	xpcom \
+	string \
+	necko \
+	webbrwsr \
+	widget \
+	docshell \
+	dom \
+	uriloader \
+	embed_base \
+	webshell \
+	shistory \
+	pref \
+	profile \
+	find \
+	gfx \
+	windowwatcher \
+	layout \
+	webbrowserpersist \
+	$(NULL)
+
+CPPSRCS		= \
+		MfcEmbed.cpp     \
+		BrowserFrm.cpp   \
+		BrowserFrameGlue.cpp   \
+		BrowserView.cpp \
+		BrowserImpl.cpp \
+		BrowserImplWebPrgrsLstnr.cpp \
+		BrowserImplCtxMenuLstnr.cpp \
+		Dialogs.cpp       \
+		ProfileMgr.cpp \
+		ProfilesDlg.cpp \
+		winEmbedFileLocProvider.cpp \
+		MostRecentUrls.cpp \
+		PrintProgressDialog.cpp       \
+		Preferences.cpp \
+		nsPrintSettingsImpl.cpp       \
+		PrintSetupDialog.cpp       \
+		StdAfx.cpp       \
+		$(NULL)
+
+EXTRA_DSO_LIBS	= embed_base_s gkgfx mfcEmbedComponents
+
+LIBS		= \
+		$(EXTRA_DSO_LIBS) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+OS_LIBS		+= \
+		ole32.lib \
+		comdlg32.lib \
+		shell32.lib \
+		version.lib \
+		$(NULL)
+
+LOCAL_INCLUDES	= -I$(srcdir)/components
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+= /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON"
+LDFLAGS		+= -SUBSYSTEM:windows
+
+libs:: mfcembed.htm
+	$(INSTALL) $^ $(DIST)/bin

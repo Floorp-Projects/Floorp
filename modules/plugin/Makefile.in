@@ -39,6 +39,10 @@ DIRS		+= samples/simple
 endif
 
 endif
+
+ifeq ($(OS_ARCH),WINNT)
+DIRS		+= samples/default/windows
+endif
  
 include $(topsrcdir)/config/rules.mk
 

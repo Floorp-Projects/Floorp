@@ -35,6 +35,9 @@ libs::
 	$(INSTALL) $(srcdir)/resources/content/res/viewer-registry.rdf $(DIST)/bin/res/inspector
 	$(INSTALL) $(srcdir)/resources/content/res/search-registry.rdf $(DIST)/bin/res/inspector
 	$(INSTALL) $(srcdir)/resources/content/prefs/inspector.js $(DIST)/bin/defaults/pref
+ifeq ($(OS_ARCH),WINNT)
+	$(INSTALL) $(srcdir)/resources/content/res/winInspectorMain.ico $(DIST)/bin/chrome/icons/default
+endif
 
 libs::
 	$(REGCHROME) content inspector inspector.jar

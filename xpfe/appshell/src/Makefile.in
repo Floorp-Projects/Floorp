@@ -75,14 +75,23 @@ CPPSRCS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS	+= nsUserInfoOS2.cpp
 else
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += nsUserInfoWin.cpp
+else
 CPPSRCS	+= nsUserInfoUnix.cpp
+endif
+endif
+
+DEFINES		+= -D_IMPL_NS_APPSHELL
+
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
 endif
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)

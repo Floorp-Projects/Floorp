@@ -26,22 +26,36 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+REQUIRES	= \
+		string \
+		xpcom \
+		uconv \
+		locale \
+		$(NULL)
+
 CPPSRCS		= \
+		convperf.cpp \
 		nsTestUConv.cpp \
 		nsconv.cpp \
 		plattest.cpp \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DUSE_NSREG
 
 INCLUDES	+= \
 		-I$(srcdir)/../ucvlatin \
 		-I$(srcdir)/../ucvja \
 		$(NULL)
 
-LIBS		+= -L$(DIST)/bin $(XPCOM_LIBS) $(NSPR_LIBS)
+LIBS		+= \
+		$(LIBS_DIR) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 # needed for mac linux
 ifeq ($(OS_ARCH),Linux)

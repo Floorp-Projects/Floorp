@@ -129,6 +129,14 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
 
+ifeq ($(OS_ARCH),WINNT)
+DEFINES		+= -DWIN32_LEAN_AND_MEAN
+endif
+
+ifdef XP_NEW_SELECTION
+DEFINES		+= -DXP_NEW_SELECTION
+endif
+
 INCLUDES	+= \
 		-I$(srcdir)/../../style/src \
 		-I$(srcdir)/../../../base/src \

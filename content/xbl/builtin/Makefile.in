@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifeq ($(OS_ARCH),OS2)
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 DIRS		= win
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
@@ -38,5 +38,16 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-libs:: $(TARGETS)
-	$(INSTALL) $(srcdir)/htmlBindings.xml $(DIST)/bin/res/builtin
+_BUILTINS = htmlBindings.xml
+
+ifeq ($(OS_ARCH),WINNT)
+_BUILTINS += \
+	buttonBindings.xml \
+	selectBindings.xml \
+	checkboxBindings.xml \
+	fieldsetBindings.xml \
+	$(NULL)
+endif
+
+libs:: $(_BUILTINS)
+	$(INSTALL) $^ $(DIST)/bin/res/builtin
