@@ -47,7 +47,6 @@
 #include "nsPrintSetupDialog.h"
 #include "nsTableInspectorDialog.h"
 #include "nsImageInspectorDialog.h"
-#include "nsIPrompt.h"
 #include "nsITextWidget.h"
 
 class nsILabel;
@@ -68,8 +67,7 @@ class nsWebCrawler;
  */
 class nsBrowserWindow : public nsIBaseWindow,
                         public nsIProgressEventSink,
-                        public nsIWebShellContainer,
-                        public nsIPrompt
+                        public nsIWebShellContainer
 {
 friend class nsWebBrowserChrome;
 
@@ -125,9 +123,6 @@ public:
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
-
-  // nsIPrompt
-  NS_DECL_NSIPROMPT
 
   // nsBrowserWindow
   void SetWebCrawler(nsWebCrawler* aWebCrawler);

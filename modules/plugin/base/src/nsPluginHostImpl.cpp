@@ -267,7 +267,8 @@ void DisplayNoDefaultPluginDialog(const char *mimeType)
 
   PRInt32 buttonPressed;
   rv = prompt->ConfirmEx(titleUni, messageUni,
-                         nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0, nsnull,
+                         nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
+                         nsnull, nsnull, nsnull,
                          checkboxMessageUni, &checkboxState, &buttonPressed);
 
   // if the user checked the checkbox, make it so the dialog doesn't
@@ -4461,7 +4462,8 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary)
   }
                                
   rv = prompt->ConfirmEx(title, message,
-                         nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0, nsnull,
+                         nsIPrompt::BUTTON_TITLE_OK * nsIPrompt::BUTTON_POS_0,
+                         nsnull, nsnull, nsnull,
                          checkboxMessage, &checkboxState, &buttonPressed);
 
 

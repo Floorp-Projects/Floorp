@@ -1221,7 +1221,7 @@ CheckConfirmDialog(JSContext* cx, const PRUnichar *szMessage, const PRUnichar *s
     res = prompter->ConfirmEx(dialogTitle.GetUnicode(), szMessage,
                               (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                               (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                              nsnull, szCheckMessage, checkValue, &buttonPressed);
+                              nsnull, nsnull, nsnull, szCheckMessage, checkValue, &buttonPressed);
     
     if (NS_FAILED(res)) {
         *checkValue = 0;

@@ -137,14 +137,16 @@ nsPrompt::ConfirmCheck(const PRUnichar* dialogTitle,
 NS_IMETHODIMP
 nsPrompt::ConfirmEx(const PRUnichar *dialogTitle,
                     const PRUnichar *text,
-                    PRUint32 button0And1Flags,
+                    PRUint32 buttonFlags,
+                    const PRUnichar *button0Title,
+                    const PRUnichar *button1Title,
                     const PRUnichar *button2Title,
                     const PRUnichar *checkMsg,
                     PRBool *checkValue,
                     PRInt32 *buttonPressed)
 {
   return mPromptService->ConfirmEx(mParent, dialogTitle, text,
-                                   button0And1Flags, button2Title,
+                                   buttonFlags, button0Title, button1Title, button2Title,
                                    checkMsg, checkValue, buttonPressed);
 }
 

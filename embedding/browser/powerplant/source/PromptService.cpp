@@ -258,7 +258,10 @@ NS_IMETHODIMP CPromptService::ConfirmCheck(nsIDOMWindow *parent, const PRUnichar
 
 NS_IMETHODIMP CPromptService::ConfirmEx(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
                                         const PRUnichar *text,
-                                        PRUint32 button0And1Flags, const PRUnichar *button2Title,
+                                        PRUint32 buttonFlags,
+                                        const PRUnichar *button0Title,
+                                        const PRUnichar *button1Title,
+                                        const PRUnichar *button2Title,
                                         const PRUnichar *checkMsg, PRBool *checkValue,
                                         PRInt32 *buttonPressed)
 {
