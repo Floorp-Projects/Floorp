@@ -34,14 +34,15 @@
 #include "nsIDOMComment.h" 
 #include "nsIDOMWindow.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIPostToServer.h"  
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
-#endif // NECKO
+#else
+#include "nsIPostToServer.h"  
 #include "nsIURLGroup.h"
+#endif // NECKO
 #include "nsIContentViewerContainer.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
@@ -570,31 +571,20 @@ nsHTMLDocument:: SetBaseURL(const nsString& aURLSpec)
 
   NS_IF_RELEASE(mBaseURL);
   if (0 < aURLSpec.Length()) {
+#ifndef NECKO
     nsIURLGroup* urlGroup = nsnull;
     (void)mDocumentURL->GetURLGroup(&urlGroup);
     if (urlGroup) {
       result = urlGroup->CreateURL(&mBaseURL, mDocumentURL, aURLSpec, nsnull);
       NS_RELEASE(urlGroup);
     }
-    else {
+    else
+#endif
+    {
 #ifndef NECKO
         result = NS_NewURL(&mBaseURL, aURLSpec, mDocumentURL);
 #else
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-        if (NS_FAILED(result)) return result;
-
-        nsIURI *uri = nsnull, *baseUri = nsnull;
-
-        result = mDocumentURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-        if (NS_FAILED(result)) return result;
-
-        const char *uriStr = aURLSpec.GetBuffer();
-        result = service->NewURI(uriStr, baseUri, &uri);
-        NS_RELEASE(baseUri);
-        if (NS_FAILED(result)) return result;
-
-        result = uri->QueryInterface(nsIURI::GetIID(), (void**)&mBaseURL);
-        NS_RELEASE(uri);
+        result = NS_NewURI(&mBaseURL, aURLSpec, mDocumentURL);
 #endif // NECKO
     }
   }
@@ -1202,8 +1192,8 @@ nsHTMLDocument::GetCookie(nsString& aCookie)
 #ifndef NECKO
   nsINetService *service;
   nsresult res = nsServiceManager::GetService(kNetServiceCID,
-                                          kINetServiceIID,
-                                          (nsISupports **)&service);
+                                              kINetServiceIID,
+                                              (nsISupports **)&service);
   if ((NS_OK == res) && (nsnull != service) && (nsnull != mDocumentURL)) {
 
     res = service->GetCookieString(mDocumentURL, aCookie);
@@ -1274,16 +1264,7 @@ nsHTMLDocument::GetSourceDocumentURL(JSContext* cx,
 #ifndef NECKO            
             result = NS_NewURL(sourceURL, url);
 #else
-            NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-            if (NS_FAILED(result)) return result;
-
-            nsIURI *uri = nsnull;
-            const char *uriStr = url.GetBuffer();
-            result = service->NewURI(uriStr, nsnull, &uri);
-            if (NS_FAILED(result)) return result;
-
-            result = uri->QueryInterface(nsIURI::GetIID(), (void**)sourceURL);
-            NS_RELEASE(uri);
+            result = NS_NewURI(sourceURL, url);
 #endif // NECKO
           }
         }
@@ -1359,15 +1340,7 @@ nsHTMLDocument::Open()
 #ifndef NECKO
   result = NS_NewURL(&sourceURL, "about:blank");
 #else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-  if (NS_FAILED(result)) return result;
-
-  nsIURI *uri = nsnull;
-  result = service->NewURI("about:blank", nsnull, &uri);
-  if (NS_FAILED(result)) return result;
-
-  result = uri->QueryInterface(nsIURI::GetIID(), (void**)&sourceURL);
-  NS_RELEASE(uri);
+  result = NS_NewURL(&sourceURL, "about:blank");
 #endif // NECKO
 
   if (NS_SUCCEEDED(result)) {
@@ -1392,15 +1365,7 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 #ifndef NECKO
       result = NS_NewURL(&sourceURL, "about:blank");
 #else
-      NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-      if (NS_FAILED(result)) return result;
-
-      nsIURI *uri = nsnull;
-      result = service->NewURI("about:blank", nsnull, &uri);
-      if (NS_FAILED(result)) return result;
-
-      result = uri->QueryInterface(nsIURI::GetIID(), (void**)&sourceURL);
-      NS_RELEASE(uri);
+      result = NS_NewURI(&sourceURL, "about:blank");
 #endif // NECKO
   }
 

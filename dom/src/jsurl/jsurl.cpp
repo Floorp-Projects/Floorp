@@ -21,10 +21,12 @@
 #include "xp.h"
 #include "plstr.h"
 #include "prmem.h"
+#ifndef NECKO
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
 #include "mkgeturl.h"
+#endif
 
 #include <stddef.h>
 #include <memory.h>
@@ -32,7 +34,9 @@
 #include "net.h"
 #include "jsurl.h"
 #include "nsIURL.h"
+#ifndef NECKO
 #include "nsIConnectionInfo.h"
+#endif
 #include "nsIStreamListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptContext.h"
@@ -434,7 +438,7 @@ PR_IMPLEMENT(void)
 NET_InitJavaScriptProtocol(void)
 {
 #ifdef NECKO
-  NS_WARNING(0, "Brendan said he would implement the javascript: protocol.");
+  NS_WARNING("Brendan said he would implement the javascript: protocol.");
 #else
         static NET_ProtoImpl mocha_proto_impl;
 
