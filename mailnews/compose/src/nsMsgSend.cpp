@@ -2188,28 +2188,41 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   // First, look at what was passed in via the "fields" structure...if that was
   // set then use it, otherwise, fall back to what is set in the prefs...
   //
-  const char *fieldsFCC = fields->GetFcc();
-  if (fieldsFCC && *fieldsFCC)
+  // But even before that, pay attention to the new OVERRIDE pref that will cancel
+  // any and all copy operations!
+  //
+  PRBool    doFcc = PR_TRUE;
+  rv = mUserIdentity->GetDoFcc(&doFcc);
+  if (!doFcc)
   {
-    if (PL_strcasecmp(fieldsFCC, "nocopy://") == 0)
-      mCompFields->SetFcc("");
-    else
-      SetMimeHeader(MSG_FCC_HEADER_MASK, fieldsFCC); 
+    // If the identity pref "fcc" is set to false, then we will not do
+    // any FCC operation!
+    mCompFields->SetFcc("");
   }
   else
   {
-    // RICHIE SHERRY - need to deal with news FCC's also!
-    char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, mUserIdentity);
-    if ( (uri) && (*uri) )
+    const char *fieldsFCC = fields->GetFcc();
+    if (fieldsFCC && *fieldsFCC)
     {
-      if (PL_strcasecmp(uri, "nocopy://") == 0)
+      if (PL_strcasecmp(fieldsFCC, "nocopy://") == 0)
         mCompFields->SetFcc("");
       else
-        mCompFields->SetFcc(uri);
-      PL_strfree(uri);
+        SetMimeHeader(MSG_FCC_HEADER_MASK, fieldsFCC); 
     }
     else
-      mCompFields->SetFcc("");
+    {
+      char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, mUserIdentity);
+      if ( (uri) && (*uri) )
+      {
+        if (PL_strcasecmp(uri, "nocopy://") == 0)
+          mCompFields->SetFcc("");
+        else
+          mCompFields->SetFcc(uri);
+        PL_strfree(uri);
+      }
+      else
+        mCompFields->SetFcc("");
+    }
   }
 
 	mCompFields->SetNewspostUrl((char *) fields->GetNewspostUrl());
