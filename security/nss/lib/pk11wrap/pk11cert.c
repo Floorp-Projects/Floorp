@@ -1240,7 +1240,8 @@ transfer_token_certs_to_collection(nssList *certList, NSSToken *token,
 }
 
 CERTCertificate *
-PK11_FindCertFromNickname(char *nickname, void *wincx) {
+PK11_FindCertFromNickname(char *nickname, void *wincx) 
+{
 #ifdef NSS_CLASSIC
     PK11SlotInfo *slot;
     int count=0;
