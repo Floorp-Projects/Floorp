@@ -17,7 +17,7 @@
 
 DEPTH=..\..
 
-DIRS=public src  \
+DIRS=idl public src  \
      ucvlatin \
      ucvja \
      ucvcn \
