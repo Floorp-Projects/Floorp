@@ -41,6 +41,19 @@ class nsString;
 class nsIWebShell;
 class nsIPresShell;
 
+/**
+ * Additional frame-state bits used by nsBlockFrame
+ * See the meanings at http://www.mozilla.org/newlayout/doc/block-and-line.html
+ */
+#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
+#define NS_BLOCK_HAS_FIRST_LETTER_STYLE     0x20000000
+#define NS_BLOCK_SHRINK_WRAP                0x00100000
+#define NS_BLOCK_NO_AUTO_MARGINS            0x00200000
+#define NS_BLOCK_MARGIN_ROOT                0x00400000
+#define NS_BLOCK_SPACE_MGR                  0x00800000
+#define NS_BLOCK_WRAP_SIZE                  0x01000000
+#define NS_BLOCK_FLAGS_MASK                 0xFFF00000
+
 // Factory method for creating a content iterator for generated
 // content
 extern nsresult
@@ -253,14 +266,6 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 
 // These are variations on AreaFrame with slightly different layout
 // policies.
-
-// Flags for block/area frames
-#define NS_BLOCK_SHRINK_WRAP     0x00010000
-#define NS_BLOCK_NO_AUTO_MARGINS 0x00020000
-#define NS_BLOCK_MARGIN_ROOT     0x00040000
-#define NS_BLOCK_SPACE_MGR       0x00080000
-#define NS_BLOCK_WRAP_SIZE       0x00100000
-#define NS_BLOCK_FLAGS_MASK      0x00ff0000
 
 // Create a frame that supports "display: block" layout behavior
 extern nsresult NS_NewBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
