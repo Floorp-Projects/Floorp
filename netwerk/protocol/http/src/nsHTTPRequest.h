@@ -23,14 +23,13 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamObserver.h"
 #include "nsIURL.h"
-#include "nsIRequest.h"
+#include "nsIChannel.h"
 #include "nsHTTPHeaderArray.h"
 #include "nsHTTPEnums.h"
 
 class nsIInputStream;
 class nsIBufferInputStream;
 class nsIInputStream;
-class nsIChannel;
 class nsHTTPChannel;
 
 /* 
