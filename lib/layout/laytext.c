@@ -3455,17 +3455,46 @@ lo_FlushTextBlock ( MWContext *context, lo_DocState *state )
 	state->cur_text_block = NULL;
 }
 
+/* Only the first call here actually changes the text color */
 void
-lo_ChangeBodyTextFGColor(MWContext *context, lo_DocState *state, 
-                         LO_Color *color)
+lo_ChangeBodyTextFGColor(MWContext *context, lo_DocState *state, LO_Color *color)
 {
+    if( (state->top_state->body_attr & BODY_ATTR_TEXT) != 0)
+        return;
+
+    /* Set the flag so we don't change the color again 
+       unless we relayout from the URL again.
+    */
+    state->top_state->body_attr |= BODY_ATTR_TEXT;
+
+    lo_SetBodyTextFGColor(context, state, color);     
+}
+
+
+/* This REALLY sets the color. "state" may be NULL and it will be figured out */
+void
+lo_SetBodyTextFGColor(MWContext *context, lo_DocState *state, LO_Color *color)
+{
+    int32 doc_id;
+    lo_TopState *top_state;
 	lo_FontStack *fptr;
 	LO_TextAttr *attr;
 
-	if ((state->top_state->body_attr & BODY_ATTR_TEXT) != 0)
-        return;
-    
-    state->top_state->body_attr |= BODY_ATTR_TEXT;
+	if( !context )
+		return;
+
+    if( !state )
+    {
+        doc_id = XP_DOCID(context);
+        top_state = lo_FetchTopState(doc_id);
+        if (top_state != NULL && top_state->doc_state == NULL)
+            return;
+
+        state = top_state->doc_state;
+
+        if (color == NULL)
+            color = &lo_master_colors[LO_COLOR_FG];
+    }
 
     state->text_fg = *color;
     fptr = state->font_stack;
@@ -6430,7 +6459,16 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 				text_data->prev = NULL;
 
 				text_data->text = (PA_Block) text;
-				text_data->text_len = lineLength;
+                /* HACK: The editor needs spaces to be included in the length of the last text element on a line.  
+                   If we do not do this, navigation between lines gets broken.  So, for "1111 2222", if we break the
+                   line after the first number, the text element should contain "1111 " rather than "1111".  The fix is
+                   to add 1 to the length of the text element once we have ensured that the extra character being added
+                   is a space and that this text element is going to be followed by a linebreak. */
+                if (EDT_IS_EDITOR( context ) && !allTextFits && !justify && XP_IS_SPACE(((char *) text_data->text)[lineLength]))
+                    text_data->text_len = lineLength + 1;
+                else
+				    text_data->text_len = lineLength;
+
 
 				text_data->anchor_href = block->anchor_href;
 				text_data->text_attr = block->text_attr;

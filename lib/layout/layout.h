@@ -903,6 +903,9 @@ extern Bool lo_ChangeText ( LO_TextBlock * block, char * text );
 extern void lo_FlushLineBuffer(MWContext *, lo_DocState *);
 extern void lo_FlushTextBlock ( MWContext *context, lo_DocState *state );
 extern void lo_ResetFontStack(MWContext *, lo_DocState *);
+/* This always sets the color. "state" will be obtained in function if NULL */
+extern void lo_SetBodyTextFGColor(MWContext *context, lo_DocState *state, LO_Color *color);
+/* This sets the color only the first time its called for one GetURL+layout cycle */
 extern void lo_ChangeBodyTextFGColor(MWContext *context, lo_DocState *state, LO_Color *color);
 extern void lo_PushFont(lo_DocState *, intn, LO_TextAttr *);
 extern LO_TextAttr *lo_PopFont(lo_DocState *, intn);

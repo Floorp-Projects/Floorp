@@ -1229,12 +1229,26 @@ lo_BumpPosition(MWContext *context, lo_DocState *state, LO_Position* position, B
 PRIVATE
 Bool lo_ValidEditableElement(MWContext *context, LO_Element* eptr)
 {
+    XP_Bool bEditable = FALSE;
+    
     if( eptr )
-        return lo_EditableElement(eptr->type) &&
+    {
+        bEditable = lo_EditableElement(eptr->type) &&
             ( (!EDT_IS_EDITOR(context) ) ||
                 (eptr->lo_any.edit_element != 0 &&
                  eptr->lo_any.edit_offset >= 0));
-    return FALSE;
+        /* cmanske. Not sure why these are created, 
+           but after backspacing from the beginning of line 2 of wrapped text,
+           then type a space to cause wrapping again, a 0-len lo_text element
+           is inserted. It stops caret navigation of left arrow from 
+           the 2nd line up to the end of the first.
+           This fixes that, but now the caret moves 1 char too far into 
+           the 1st line (should be after the last visible char and before the space,
+           but its before the last visible char. */
+        if( bEditable && eptr->type == LO_TEXT && eptr->lo_text.text_len == 0 )
+            bEditable = FALSE;
+    }    
+    return bEditable;
 }
 
 PRIVATE

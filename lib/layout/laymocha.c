@@ -795,6 +795,8 @@ LO_SetDocumentColor(MWContext *context, int type, LO_Color *color)
         LO_SetDocBgColor(context, color);
         break;
       case LO_COLOR_FG:
+        /* Note: The color will be changed only if no one else 
+           has called this function before */
         lo_ChangeBodyTextFGColor(context, doc_state, color);
         break;
       case LO_COLOR_LINK:
