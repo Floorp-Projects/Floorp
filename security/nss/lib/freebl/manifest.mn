@@ -97,7 +97,6 @@ CSRCS = \
 	dsa.c \
 	rsa.c \
 	shvfy.c \
-	libpath.c \
 	$(MPI_SRCS) \
 	$(NULL)
 endif

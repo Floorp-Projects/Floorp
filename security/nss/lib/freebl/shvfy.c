@@ -33,7 +33,7 @@
  *
  * shvfy.c - routines to verify signature on a shared library.
  *
- * $Id: shvfy.c,v 1.4 2003/02/14 05:32:35 wtc%netscape.com Exp $
+ * $Id: shvfy.c,v 1.5 2003/02/21 00:41:24 wtc%netscape.com Exp $
  */
 
 #include "shsign.h"
@@ -42,13 +42,6 @@
 #include "blapi.h"
 #include "seccomon.h"
 #include "stdio.h"
-
-#ifndef NSPR_HAS_FILEPATH_FUNC
-char *
-freebl_GetLibraryFilePathname(const char *name, PRFuncPtr addr);
-#else
-#define freebl_GetLibraryFilePathname NSPR_GetLibraryFilePathname
-#endif
 
 /* #define DEBUG_SHVERIFY 1 */
 
@@ -107,7 +100,7 @@ PRBool
 BLAPI_SHVerify(const char *name, PRFuncPtr addr)
 {
     /* find our shared library name */
-    char *shName = freebl_GetLibraryFilePathname(name, addr);
+    char *shName = PR_GetLibraryFilePathname(name, addr);
     char *checkName = NULL;
     PRFileDesc *checkFD = NULL;
     PRFileDesc *shFD = NULL;
