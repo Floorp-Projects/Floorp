@@ -1131,15 +1131,25 @@ nsMenuFrame::Escape(PRBool& aHandledFlag)
   return NS_OK;
 }
 
+
+//
+// Enter
+//
+// Called when the user hits the <Enter>/<Return> keys or presses the
+// shortcut key. If this is a leaf item, the item's action will be executed.
+// If it is a submenu parent, open the submenu and select the first time.
+// In either case, do nothing if the item is disabled.
+//
 NS_IMETHODIMP
 nsMenuFrame::Enter()
 {
+  if ( IsDisabled() )
+    return NS_OK;
+    
   if (!mMenuOpen) {
     // The enter key press applies to us.
-    if (!IsMenu() && mMenuParent) {
-      // Execute our event handler
-      Execute();
-    }
+    if (!IsMenu() && mMenuParent)
+      Execute();          // Execute our event handler
     else {
       OpenMenu(PR_TRUE);
       SelectFirstItem();
