@@ -397,7 +397,7 @@ sub validateData
       }
   }
 
-  return $data;
+  return $data || '';
 }
 
 my $filename;
