@@ -37,12 +37,18 @@ static const char kURI_bookmarks[] = "rdf:bookmarks"; // XXX?
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Bookmark);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns); // XXX this is unsavory.
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonalToolbarFolderCategory);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkAddDate);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Description);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonalToolbarFolderCategory);
+
+// XXX these are here until we can undo the hard-coding of the column
+// info in the data source. See BookmarkParser::AddColumns() for more
+// info.
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Column);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Title);
 
 
 #define WEB_NAMESPACE_URI "http://home.netscape.com/WEB-rdf#"
@@ -186,15 +192,50 @@ BookmarkParser::AddColumns(void)
 
     nsIRDFNode* columns = nsnull;
 
-    if (NS_FAILED(rv = rdf_CreateAnonymousNode(mResourceMgr, columns)))
+    static const char* gColumnTitles[] = {
+        "Name", 
+        "Date Added",
+        "Last Visited",
+        "Last Modified",
+        nsnull
+    };
+
+    static const char* gColumnURIs[] = {
+        kURINC_Name,
+        kURINC_BookmarkAddDate,
+        kURIWEB_LastVisitDate,
+        kURIWEB_LastModifiedDate,
+        nsnull
+    };
+
+
+    const char* const* columnTitle = gColumnTitles;
+    const char* const* columnURI   = gColumnURIs;
+
+    if (NS_FAILED(rv = rdf_CreateSequence(mResourceMgr, mDataSource, columns)))
         goto done;
 
-    rdf_Assert(mResourceMgr, mDataSource, kURI_bookmarks, kURINC_Columns, columns);
+    while (*columnTitle && *columnURI) {
+        nsIRDFNode* column              = nsnull;
+        nsIRDFNode* columnURIResource   = nsnull;
+        nsIRDFNode* columnTitleResource = nsnull;
 
-    rdf_Assert(mResourceMgr, mDataSource, columns, kURINC_Name,              "Name");
-    rdf_Assert(mResourceMgr, mDataSource, columns, kURINC_BookmarkAddDate,   "Date Added");
-    rdf_Assert(mResourceMgr, mDataSource, columns, kURIWEB_LastVisitDate,    "Last Visited");
-    rdf_Assert(mResourceMgr, mDataSource, columns, kURIWEB_LastModifiedDate, "Last Modified");
+        if (NS_SUCCEEDED(rv = rdf_CreateAnonymousNode(mResourceMgr, column))) {
+            rdf_Assert(mResourceMgr, mDataSource, column, kURINC_Title,  *columnTitle);
+            rdf_Assert(mResourceMgr, mDataSource, column, kURINC_Column, *columnURI);
+
+            rdf_ContainerAddElement(mResourceMgr, mDataSource, columns, column);
+            NS_IF_RELEASE(column);
+        }
+
+        ++columnTitle;
+        ++columnURI;
+
+        if (NS_FAILED(rv))
+            break;
+    }
+
+    rdf_Assert(mResourceMgr, mDataSource, kURI_bookmarks, kURINC_Columns, columns);
 
 done:
     NS_IF_RELEASE(columns);
@@ -235,8 +276,7 @@ BookmarkParser::NextToken(void)
 
     /* ok, we have a piece of content. can be the title, or a description */
     if ((mState == eBookmarkParserState_InTitle) ||
-        (mState == eBookmarkParserState_InH3) || 
-        (mState == eBookmarkParserState_InItemTitle)) {
+        (mState == eBookmarkParserState_InH3)) {
         // Create a new folder
         nsAutoString folderURI(kURI_bookmarks);
         folderURI.Append('#');
@@ -266,6 +306,14 @@ BookmarkParser::NextToken(void)
 
         if (mLine.Find(kPersonalToolbar) == 0)
             rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURIRDF_instanceOf, kURINC_PersonalToolbarFolderCategory);
+    }
+    else if (mState == eBookmarkParserState_InItemTitle) {
+        PR_ASSERT(mLastItem);
+        if (! mLastItem)
+            return;
+
+        rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURINC_Name, mLine);
+        NS_IF_RELEASE(mLastItem);
     }
     else if (mState == eBookmarkParserState_InItemDescription) {
         rdf_Assert(mResourceMgr, mDataSource, mLastItem, kURINC_Description, mLine);
@@ -384,7 +432,7 @@ BookmarkParser::CreateBookmark(void)
     if (values[eBmkAttribute_LastModified].Length() > 0)
         AssertTime(bookmark, kURIWEB_LastModifiedDate, values[eBmkAttribute_LastModified]);
 
-    NS_RELEASE(bookmark);
+    mLastItem = bookmark;
 }
 
 
