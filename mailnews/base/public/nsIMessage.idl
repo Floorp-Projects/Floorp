@@ -32,4 +32,4 @@ interface nsIDBMessage : nsIMessage {
 	void SetMsgDBHdr(in nsIMsgDBHdr hdr);
 	nsIMsgDBHdr GetMsgDBHdr();
 };
-
+ 

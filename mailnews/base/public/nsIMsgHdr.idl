@@ -92,7 +92,7 @@ interface nsIMsgHdr : nsISupports
   readonly attribute string charSet;
 
   void MarkRead(in boolean markRead);
-  
+  void MarkFlagged(in boolean markFlagged);
 };
 
 interface nsIMsgDBHdr : nsIMsgHdr

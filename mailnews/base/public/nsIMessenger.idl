@@ -55,6 +55,12 @@ interface nsIMessenger : nsISupports {
 	void MarkMessageRead(in nsIRDFCompositeDataSource database, in nsIDOMXULElement message,
 						  in boolean markRead);
 	void MarkAllMessagesRead(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
+
+	void MarkMessagesFlagged(in nsIRDFCompositeDataSource database, in nsIDOMNodeList messages,
+						  in boolean markFlagged);
+	void MarkMessageFlagged(in nsIRDFCompositeDataSource database, in nsIDOMXULElement message,
+						  in boolean markFlagged);
+
 	void NewFolder(in nsIRDFCompositeDataSource database, in nsIDOMXULElement parentFolderElement,
 				   in string name);
 
