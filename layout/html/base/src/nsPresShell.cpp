@@ -300,7 +300,7 @@ protected:
   PRBool                        mDisplayNonTextSelection;
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
   CantRenderReplacedElementEvent* mPostedEvents;
-  nsIFrameManager*              mFrameManager;
+  nsIFrameManager*              mFrameManager;  // we hold a reference
 
 private:
   void RevokePostedEvents();
@@ -468,7 +468,10 @@ PresShell::~PresShell()
   }
   // Revoke any events posted to the event queue that we haven't processed yet
   RevokePostedEvents();
-  mFrameManager->Release();
+  // Destroy the frame manager before destroying the frame hierarchy. That way
+  // we won't waste time removing content->frame mappings for frames being
+  // destroyed
+  NS_IF_RELEASE(mFrameManager);
   if (mRootFrame)
     mRootFrame->Destroy(*mPresContext);
   if (mDocument)
@@ -1864,7 +1867,17 @@ NS_IMETHODIMP
 PresShell::GetPrimaryFrameFor(nsIContent* aContent,
                               nsIFrame**  aResult) const
 {
-  return mFrameManager->GetPrimaryFrameFor(aContent, aResult);
+  nsresult  rv;
+
+  if (mFrameManager) {
+    rv = mFrameManager->GetPrimaryFrameFor(aContent, aResult);
+
+  } else {
+    *aResult = nsnull;
+    rv = NS_OK;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -1900,7 +1913,17 @@ NS_IMETHODIMP
 PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                   nsIFrame** aResult) const
 {
-  return mFrameManager->GetPlaceholderFrameFor(aFrame, aResult);
+  nsresult  rv;
+
+  if (mFrameManager) {
+    rv = mFrameManager->GetPlaceholderFrameFor(aFrame, aResult);
+
+  } else {
+    *aResult = nsnull;
+    rv = NS_OK;
+  }
+
+  return rv;
 }
 
 //nsIViewObserver
