@@ -166,16 +166,6 @@ protected:
 
     // Set registry according to settings.
     NS_IMETHOD SetRegistry();
-
-private:
-    // Module stuff.
-    static NS_METHOD CreateWindowsHooks( nsISupports  *aOuter,
-                                         REFNSIID      aIID,
-                                         void        **aResult );
-    static nsWindowsHooks *mInstance;
-
-public:
-    static nsModuleComponentInfo components[];
 }; // nsWindowsHooksSettings
 
 // Use standard implementation of nsISupports stuff.
@@ -341,42 +331,14 @@ nsWindowsHooks::SetRegistry() {
     return NS_OK;
 }
 
-NS_IMETHODIMP      
-nsWindowsHooks::CreateWindowsHooks( nsISupports  *aOuter,
-                                    REFNSIID      aIID,
-                                     void        **aResult ) {                                                                  
-    if ( !aResult ) {                                                
-        return NS_ERROR_INVALID_POINTER;                           
-    }                                                              
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 
-    if ( aOuter ) {                                                  
-        *aResult = nsnull;                                         
-        return NS_ERROR_NO_AGGREGATION;                              
-    }                                                                
-    
-    if (mInstance == nsnull) {
-        mInstance = new nsWindowsHooks();
-    }
-
-    if ( mInstance == nsnull )
-        return NS_ERROR_OUT_OF_MEMORY;
-    
-    nsresult rv = mInstance->QueryInterface( aIID, aResult );                        
-    if ( NS_FAILED(rv) )  {                                             
-        *aResult = nsnull;                                           
-    }                                                                
-
-    return rv;                                                       
-}
-
-nsWindowsHooks* nsWindowsHooks::mInstance = nsnull;
-
-nsModuleComponentInfo nsWindowsHooks::components[] = {
+nsModuleComponentInfo components[] = {
   { NS_IWINDOWSHOOKS_CLASSNAME, 
     NS_IWINDOWSHOOKS_CID, 
     NS_IWINDOWSHOOKS_PROGID, 
-    nsWindowsHooks::CreateWindowsHooks },
+    nsWindowsHooksConstructor },
 };
 
-NS_IMPL_NSGETMODULE( "nsWindowsHooks", nsWindowsHooks::components )
+NS_IMPL_NSGETMODULE( "nsWindowsHooks", components )
 

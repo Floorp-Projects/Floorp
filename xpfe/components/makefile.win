@@ -21,6 +21,27 @@
 
 DEPTH=..\..
 
-DIRS= public bookmarks directory filepicker find history prefwindow search sidebar regviewer related ucth xfer shistory timebomb console autocomplete urlbarhistory winhooks urlwidget
+DIRS= \
+    public \
+    bookmarks \
+    directory \
+    filepicker \
+    find \
+    history \
+    prefwindow \
+    search \
+    sidebar \
+    regviewer \
+    related \
+    ucth \
+    xfer \
+    shistory \
+    timebomb \
+    console \
+    autocomplete \
+    urlbarhistory \
+    winhooks \
+    urlwidget \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

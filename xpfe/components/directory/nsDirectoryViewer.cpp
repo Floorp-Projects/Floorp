@@ -34,22 +34,17 @@
 
 */
 
+#include "nsDirectoryViewer.h"
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
-#include "nsNetUtil.h"
-#include "nsIContentViewer.h"
-#include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderFactory.h"
 #include "nsIDocumentViewer.h"
 #include "nsIEnumerator.h"
 #include "nsIGenericFactory.h"
-#include "nsIHTTPIndex.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
-#include "nsIRDFDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -65,17 +60,11 @@
 #include "nsIInterfaceRequestor.h"
 #include "iostream.h"
 #include "nsITextToSubURI.h"
-#include "nsITimer.h"
-#include "nsISupportsArray.h"
 
 //----------------------------------------------------------------------
 //
 // Common CIDs
 //
-
-// {82776710-5690-11d3-BE36-00104BDE6048}
-#define NS_DIRECTORYVIEWERFACTORY_CID \
-{ 0x82776710, 0x5690, 0x11d3, { 0xbe, 0x36, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
@@ -89,55 +78,6 @@ static NS_DEFINE_CID(kTextToSubURICID,           NS_TEXTTOSUBURI_CID);
 //
 // nsHTTPIndex
 //
-
-class nsHTTPIndex : public nsIHTTPIndex, public nsIRDFDataSource
-{
-private:
-
-	// note: these are NOT statics due to the native of nsHTTPIndex
-	// where it may or may not be treated as a singleton
-
-	nsIRDFResource		*kNC_Child;
-	nsIRDFResource		*kNC_loading;
-	nsIRDFLiteral		*kTrueLiteral;
-
-protected:
-	// We grab a reference to the content viewer container (which
-	// indirectly owns us) so that we can insert ourselves as a global
-	// in the script context _after_ the XUL doc has been embedded into
-	// content viewer. We'll know that this has happened once we receive
-	// an OnStartRequest() notification
-
-	nsCOMPtr<nsIRDFDataSource>	mInner;
-	nsCOMPtr<nsISupportsArray>	mConnectionList;
-	nsCOMPtr<nsITimer>		mTimer;
-	nsISupports			*mContainer;	// [WEAK]
-	nsCString			mBaseURL;
-
-			    nsHTTPIndex(nsISupports* aContainer);
-	nsresult	CommonInit(void);
-	nsresult 	Init(nsIURI* aBaseURL);
-	PRBool		isWellknownContainerURI(nsIRDFResource *r);
-static	void	FireTimer(nsITimer* aTimer, void* aClosure);
-
-public:
-			    nsHTTPIndex();
-	virtual		~nsHTTPIndex();
-	nsresult	Init(void);
-	nsCString   mEncoding;
-
-static	nsresult	Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
-
-	// nsIHTTPIndex interface
-	NS_DECL_NSIHTTPINDEX
-
-	// NSIRDFDataSource interface
-	NS_DECL_NSIRDFDATASOURCE
-
-	// nsISupports interface
-	NS_DECL_ISUPPORTS
-};
-
 
 //----------------------------------------------------------------------
 //
@@ -1578,39 +1518,6 @@ nsHTTPIndex::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 //
 // nsDirectoryViewerFactory
 //
-
-class nsDirectoryViewerFactory : public nsIDocumentLoaderFactory
-{
-protected:
-  nsDirectoryViewerFactory();
-  virtual ~nsDirectoryViewerFactory();
-
-public:
-  // constructor
-  static NS_IMETHODIMP
-  Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-
-  // nsIDocumentLoaderFactory interface
-  NS_IMETHOD CreateInstance(const char *aCommand,
-                            nsIChannel* aChannel,
-                            nsILoadGroup* aLoadGroup,
-                            const char* aContentType, 
-                            nsISupports* aContainer,
-                            nsISupports* aExtraInfo,
-                            nsIStreamListener** aDocListenerResult,
-                            nsIContentViewer** aDocViewerResult);
-
-  NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
-                                       nsIDocument* aDocument,
-                                       const char *aCommand,
-                                       nsIContentViewer** aDocViewerResult);
-};
-
-
-
 nsDirectoryViewerFactory::nsDirectoryViewerFactory()
 {
   NS_INIT_REFCNT();
@@ -1622,27 +1529,6 @@ nsDirectoryViewerFactory::~nsDirectoryViewerFactory()
 {
 }
 
-
-
-NS_IMETHODIMP
-nsDirectoryViewerFactory::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
-{
-  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
-
-  nsDirectoryViewerFactory* result
-    = new nsDirectoryViewerFactory();
-
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(result); // stabilize
-  nsresult rv = result->QueryInterface(aIID, aResult);
-  NS_RELEASE(result);
-
-  return rv;
-}
 
 NS_IMPL_ISUPPORTS1(nsDirectoryViewerFactory, nsIDocumentLoaderFactory);
 
@@ -1728,12 +1614,13 @@ nsDirectoryViewerFactory::CreateInstanceForDocument(nsISupports* aContainer,
 // Component Exports
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
 
 // The list of components we register
 static nsModuleComponentInfo components[] = {
     { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
       NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/application/http-index-format",
-      nsDirectoryViewerFactory::Create,
+      nsDirectoryViewerFactoryConstructor,
     },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_PROGID,
       nsHTTPIndexConstructor },

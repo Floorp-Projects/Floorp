@@ -27,25 +27,27 @@
 #include "nsRDFCID.h"
 #include "nsIGenericFactory.h"
 #include "nsISearchService.h"
+#include "nsLocalSearchService.h"
+#include "nsInternetSearchService.h"
 
-NS_IMETHODIMP	NS_NewLocalSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
-NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 
-static nsModuleComponentInfo gSearchComponents[] =
+static nsModuleComponentInfo components[] =
 {
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
-      NS_LOCALSEARCH_SERVICE_PROGID, NS_NewLocalSearchService,
+      NS_LOCALSEARCH_SERVICE_PROGID, LocalSearchDataSourceConstructor,
     },
     { "Local Search", NS_RDFFINDDATASOURCE_CID,
-      NS_LOCALSEARCH_DATASOURCE_PROGID, NS_NewLocalSearchService,
+      NS_LOCALSEARCH_DATASOURCE_PROGID, LocalSearchDataSourceConstructor,
     },
     { "Internet Search", NS_RDFSEARCHDATASOURCE_CID,
-      NS_INTERNETSEARCH_SERVICE_PROGID, NS_NewInternetSearchService,
+      NS_INTERNETSEARCH_SERVICE_PROGID, InternetSearchDataSourceConstructor,
     },
     { "Internet Search", NS_RDFSEARCHDATASOURCE_CID,
-      NS_INTERNETSEARCH_DATASOURCE_PROGID, NS_NewInternetSearchService,
+      NS_INTERNETSEARCH_DATASOURCE_PROGID, InternetSearchDataSourceConstructor,
     },
 };
 
-NS_IMPL_NSGETMODULE("nsSearchModule", gSearchComponents)
+NS_IMPL_NSGETMODULE("nsSearchModule", components)
 

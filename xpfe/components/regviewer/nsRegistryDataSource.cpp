@@ -13,7 +13,7 @@
  * The Original Code is Mozilla Communicator client code.
  *
  * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are
+ * Corporation.  Portions   d by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
@@ -27,18 +27,11 @@
 
 */
 
-#include "nsCOMPtr.h"
+#include "nsRegistryDataSource.h"
 #include "nsIFileSpec.h"
 #include "nsIModule.h"
-#include "nsEnumeratorUtils.h"
 #include "nsIComponentManager.h"
-#include "nsIEnumerator.h"
 #include "nsIGenericFactory.h"
-#include "nsIRDFDataSource.h"
-#include "nsIRDFService.h"
-#include "nsIRegistry.h"
-#include "nsIRegistryDataSource.h"
-#include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
@@ -53,64 +46,6 @@ static const char kKeyPrefix[] = NS_REGISTRY_NAMESPACE_URI "key:";
 static const char kValuePrefix[] = NS_REGISTRY_NAMESPACE_URI "value:";
 
 //------------------------------------------------------------------------
-
-class nsRegistryDataSource : public nsIRDFDataSource,
-                             public nsIRegistryDataSource
-{
-public:
-    static NS_IMETHODIMP
-    Create(nsISupports* aOuter, const nsIID& aIID, void** aResult);
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIRDFDATASOURCE
-
-    NS_DECL_NSIREGISTRYDATASOURCE
-
-    // Implementation methods
-    PRInt32 GetKey(nsIRDFResource* aResource);
-
-    nsCOMPtr<nsIRegistry> mRegistry;
-    nsCOMPtr<nsISupportsArray> mObservers;
-
-    static nsrefcnt gRefCnt;
-    static nsIRDFService* gRDF;
-
-    static nsIRDFResource* kKeyRoot;
-    static nsIRDFResource* kSubkeys;
-    static nsIRDFLiteral*  kBinaryLiteral;
-
-    class SubkeyEnumerator : public nsISimpleEnumerator
-    {
-    public:
-        NS_DECL_ISUPPORTS
-
-        NS_DECL_NSISIMPLEENUMERATOR
-
-        static nsresult
-        Create(nsRegistryDataSource* aViewer, nsIRDFResource* aRootKey, nsISimpleEnumerator** aResult);
-
-    protected:
-        nsRegistryDataSource*        mViewer;
-        nsCOMPtr<nsIRDFResource> mRootKey;
-        nsCOMPtr<nsIEnumerator>  mEnum;
-        nsCOMPtr<nsIRDFResource> mCurrent;
-        PRBool                   mStarted;
-
-        SubkeyEnumerator(nsRegistryDataSource* aViewer, nsIRDFResource* aRootKey);
-        virtual ~SubkeyEnumerator();
-        nsresult Init();
-
-        nsresult
-        ConvertRegistryNodeToResource(nsISupports* aRegistryNode, nsIRDFResource** aResult);
-    };
-
-protected:
-    nsRegistryDataSource();
-    virtual ~nsRegistryDataSource();
-    nsresult Init();
-};
-
 
 nsrefcnt nsRegistryDataSource::gRefCnt = 0;
 nsIRDFService* nsRegistryDataSource::gRDF;
@@ -140,35 +75,6 @@ nsRegistryDataSource::~nsRegistryDataSource()
         NS_IF_RELEASE(kSubkeys);
         NS_IF_RELEASE(kBinaryLiteral);
     }
-}
-
-
-NS_IMETHODIMP
-nsRegistryDataSource::Create(nsISupports* aOuter, const nsIID& aIID, void** aResult)
-{
-    NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    nsRegistryDataSource* result = new nsRegistryDataSource();
-    if (! result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv;
-    rv = result->Init();
-    if (NS_FAILED(rv)) {
-        delete result;
-        return rv;
-    }
-
-    NS_ADDREF(result);
-    rv = result->QueryInterface(aIID, aResult);
-    NS_RELEASE(result);
-    return rv;
 }
 
 //------------------------------------------------------------------------
@@ -933,10 +839,13 @@ nsRegistryDataSource::SubkeyEnumerator::GetNext(nsISupports** _retval)
 //
 // Module implementation
 //
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsRegistryDataSource, Init)
+
 // The list of components we register
 static nsModuleComponentInfo components[] = {
     { "Registry Viewer", NS_REGISTRYVIEWER_CID,
-      "component://netscape/registry-viewer", nsRegistryDataSource::Create,
+      "component://netscape/registry-viewer", nsRegistryDataSourceConstructor,
     },
 };
 
