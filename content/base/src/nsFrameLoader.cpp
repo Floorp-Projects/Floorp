@@ -450,17 +450,8 @@ nsFrameLoader::EnsureDocShell()
       }
     }
 
-    if (isContent) {
-      // The web shell's type is content.
-
-      docShellAsItem->SetItemType(nsIDocShellTreeItem::typeContent);
-    } else {
-      // Inherit our type from our parent webshell.  If it is
-      // chrome, we'll be chrome.  If it is content, we'll be
-      // content.
-
-      docShellAsItem->SetItemType(parentType);
-    }
+    PRInt32 shellType = isContent ? nsIDocShellTreeItem::typeContent : parentType;
+    docShellAsItem->SetItemType(shellType);
 
     parentAsNode->AddChild(docShellAsItem);
 
@@ -469,7 +460,8 @@ nsFrameLoader::EnsureDocShell()
       parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
 
       if(parentTreeOwner) {
-        PRBool is_primary = value.Equals(NS_LITERAL_STRING("content-primary"));
+        PRBool is_primary = shellType == nsIDocShellTreeItem::typeChrome &&
+                            value.Equals(NS_LITERAL_STRING("content-primary"));
 
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
                                            value.get());
