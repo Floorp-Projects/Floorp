@@ -4319,7 +4319,14 @@ void nsImapProtocol::InsecureLogin(const char *userName, const char *password)
   command.Append(" login \"");
   command.Append(userName);
   command.Append("\" \"");
-  command.Append(password);
+
+  // if the password contains a \, login will fail
+  // turn foo\bar into foo\\bar
+  nsCString correctedPassword;
+  correctedPassword = password;
+  correctedPassword.ReplaceSubstring("\\","\\\\");
+  command.Append((const char *)correctedPassword);
+
   command.Append("\""CRLF);
 
   nsresult rv = SendData(command.GetBuffer(), PR_TRUE /* supress logging */);
