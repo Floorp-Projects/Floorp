@@ -130,6 +130,8 @@ struct nsMouseEvent : public nsInputEvent {
 struct nsKeyEvent : public nsInputEvent {
                 /// see NS_VK codes
     PRUint32        keyCode;   
+                /// OS translated Unicode char
+    PRUint32        charCode;
 };
 
 /**
@@ -419,6 +421,11 @@ struct nsDragDropEvent : public nsGUIEvent {
 #define NS_VK_CLOSE_BRACKET  0xDD
 #define NS_VK_QUOTE          0xDE
 
+#define NS_EVENT_FLAG_NONE          0x0000
+#define NS_EVENT_FLAG_INIT          0x0001
+#define NS_EVENT_FLAG_BUBBLE        0x0002
+#define NS_EVENT_FLAG_CAPTURE       0x0004
+#define NS_EVENT_FLAG_POST_PROCESS  0x0008
 
 #endif // nsGUIEvent_h__
 
