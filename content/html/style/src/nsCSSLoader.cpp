@@ -99,7 +99,9 @@ public:
   {
     MOZ_COUNT_DTOR(URLKey);
     NS_RELEASE(mURL);
-    CRTFREEIF((char *)mSpec);
+    if (mSpec)
+      nsCRT::free((char *)mSpec);
+    mSpec = nsnull;
   }
 
   virtual PRUint32 HashCode(void) const
