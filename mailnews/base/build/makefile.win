@@ -38,6 +38,7 @@ LLIBS=										\
 			$(DIST)\lib\plc3.lib			\
 			$(DIST)\lib\msgbaseutil.lib		\
 			$(DIST)\lib\msgbase_s.lib		\
+			$(DIST)\lib\msgsearch.lib			\
 			$(DIST)\lib\netlib.lib			\
 			$(DIST)\lib\raptorgfxwin.lib    \
 			$(LIBNSPR)						\
