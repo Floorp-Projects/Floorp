@@ -77,7 +77,7 @@ Rights Reserved.
 			<treechildren>
 				<treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
 					<treerow>
-						<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+						 <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 						<treecell allowevents="true" class="subscribedcol image" onclick="return top.ReverseStateFromNode(event.target.parentNode.parentNode.parentNode)"/>
 						<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
 					</treerow>
