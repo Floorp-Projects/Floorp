@@ -25,7 +25,6 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
@@ -67,6 +66,10 @@ Rights Reserved.
       <command id="file_message_button"/>
     </commandset>
   </commands>
+
+  <broadcasterset id="mailBroadcasters">
+    <broadcaster id="Communicator:WorkMode"/>
+  </broadcasterset>
 
   <dummy class="usesMailWidgets"/>
     
@@ -185,5 +188,12 @@ Rights Reserved.
     </hbox>      
   </vbox>
 
-  <statusbar class="chromeclass-status" id="status-bar"/>
+  <statusbar class="chromeclass-status" id="status-bar"> 
+    <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
+    <statusbarpanel class="statusbarpanel-progress">
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
+    </statusbarpanel>
+    <statusbarpanel id="statusText" crop="right" flex="1"/>
+  </statusbar> 
+
 </window>
