@@ -158,8 +158,6 @@ static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
 
 #define SIZE_PERSISTENCE_TIMEOUT 500 // msec
 
-const char * kPrimaryContentTypeValue  = "content-primary";
-
 struct ThreadedWindowEvent {
   PLEvent           event;
   nsWebShellWindow  *window;
