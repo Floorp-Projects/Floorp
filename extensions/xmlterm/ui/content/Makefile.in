@@ -48,6 +48,7 @@ CHROME_CONTENT	= \
 		xmlterm.html \
 		xmlterm.xul \
 		xmlterm2.xul \
+		xmltermDummy.xul \
 		xmltermOverlay.xul \
 		xmltermOverlay.js \
 		XMLTermChrome.js \

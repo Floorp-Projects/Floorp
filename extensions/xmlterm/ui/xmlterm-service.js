@@ -55,8 +55,12 @@ const SIMPLEURI_CONTRACTID =
     "@mozilla.org/network/simple-uri;1";
 const ASS_CONTRACTID =
     "@mozilla.org/appshell/appShellService;1";
+const SCRIPTSECURITYMANAGER_CONTRACTID =
+    "@mozilla.org/scriptsecuritymanager;1";
+const NS_IOSERVICE_CID_STR =
+    "{9ac9e770-18bc-11d3-9337-00104ba0fd40}";
 
-/* interafces used in this file */
+/* interfaces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
 const nsICmdLineHandler  = Components.interfaces.nsICmdLineHandler;
 const nsICategoryManager = Components.interfaces.nsICategoryManager;
@@ -66,6 +70,8 @@ const nsIURI             = Components.interfaces.nsIURI;
 const nsIChannel         = Components.interfaces.nsIChannel;
 const nsIRequest         = Components.interfaces.nsIRequest;
 const nsIAppShellService = Components.interfaces.nsIAppShellService;
+const nsIIOService       = Components.interfaces.nsIIOService;
+const nsIScriptSecurityManager = Components.interfaces.nsIScriptSecurityManager;
 const nsISupports        = Components.interfaces.nsISupports;
 
 /* Command Line handler service */
@@ -159,7 +165,7 @@ function TelnetProtocolHandler()
 }
 
 TelnetProtocolHandler.prototype.scheme = "telnet";
-TelnetProtocolHandler.prototype.defaultPort = 9999;
+TelnetProtocolHandler.prototype.defaultPort = -1;
 
 TelnetProtocolHandler.prototype.newURI =
 function (aSpec, aBaseURI)
@@ -176,10 +182,60 @@ function (aSpec, aBaseURI)
     return uri;
 }
 
+// "Global" variable
+var gSystemPrincipal = null;
+
 TelnetProtocolHandler.prototype.newChannel =
 function (aURI)
 {
-    return new BogusChannel (aURI);
+    var uriSpec = aURI.spec
+    dump("TelnetProtocolHandler.newChannel: uriSpec="+uriSpec+"\n");
+
+    if (uriSpec != "telnet:xmlterm")
+       return new BogusChannel (aURI);
+
+    // Re-direct to chrome HTML document, but with system principal
+
+    var ioServ = Components.classesByID[NS_IOSERVICE_CID_STR].getService();
+    ioServ = ioServ.QueryInterface(nsIIOService);
+
+    dump(ioServ+"\n");
+
+    // Open temporary XUL channel
+    var xulURI = ioServ.newURI("chrome://xmlterm/content/xmltermDummy.xul",
+                               null);
+    dump("xulURI="+xulURI+"\n");
+    dump("xulURI.spec="+xulURI.spec+"\n");
+    var temChannel = ioServ.newChannelFromURI(xulURI);
+
+    dump("temChannel="+temChannel+"\n");
+
+    // Get owner of XUL channel
+    var xulOwner = temChannel.owner;
+
+    if (!gSystemPrincipal) {
+       if (!xulOwner) {
+          dump("xmlterm: Internal error; unable to obtain system principal\n");
+          throw Components.results.NS_ERROR_FAILURE;
+       }
+       gSystemPrincipal = xulOwner;
+    }
+
+    dump("gSystemPrincipal="+gSystemPrincipal+"\n");
+
+    // Cancel XUL request and release channel
+    temChannel.cancel(Components.results.NS_BINDING_ABORTED);
+    temChannel = null;
+
+    var newChannel = ioServ.newChannel("chrome://xmlterm/content/xmlterm.html",
+                                       null);
+
+    dump(newChannel+"\n");
+
+    // Make new channel owned by system principal
+    newChannel.owner = gSystemPrincipal;
+
+    return newChannel;
 }
 
 /* protocol handler factory object (TelnetProtocolHandler) */
