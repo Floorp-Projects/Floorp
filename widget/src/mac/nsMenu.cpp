@@ -28,6 +28,7 @@
 #if defined(XP_MAC)
 #include <TextUtils.h>
 #include <ToolUtils.h>
+#include <Devices.h>
 #endif
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -35,7 +36,14 @@ static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
+#ifdef APPLE_MENU_HACK
+const PRInt16 kAppleMenuID = 1;
+const PRInt16 kMacMenuID = 2;
+#else
 const PRInt16 kMacMenuID = 1;
+#endif /* APPLE_MENU_HACK */
+
+
 PRInt16 nsMenu::mMacMenuIDCount = kMacMenuID;
 
 nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
@@ -387,6 +395,22 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
       
   // Determine if this is the correct menu to handle the event
   PRInt16 menuID = HiWord(((nsMenuEvent)aMenuEvent).mCommand);
+
+#ifdef APPLE_MENU_HACK
+  if(kAppleMenuID == menuID)
+	{
+    PRInt16 menuItemID = LoWord(((nsMenuEvent)aMenuEvent).mCommand);
+
+		if (menuItemID > 2)			// don't handle the about or separator items yet
+		{
+			Str255		itemStr;
+			::GetMenuItemText(GetMenuHandle(menuID), menuItemID, itemStr);
+			::OpenDeskAcc(itemStr);
+			eventStatus = nsEventStatus_eConsumeNoDefault;
+		}
+	}
+	else
+#endif
   if(mMacMenuID == menuID)
   {
     // Call MenuSelected on the correct nsMenuItem

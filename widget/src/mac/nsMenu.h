@@ -28,6 +28,15 @@
 class nsIMenuBar;
 class nsIMenuListener;
 
+
+// temporary hack to get apple menu -- sfraser, approved saari
+#define APPLE_MENU_HACK		1
+
+#ifdef APPLE_MENU_HACK
+extern const PRInt16 kMacMenuID;
+extern const PRInt16 kAppleMenuID;
+#endif /* APPLE_MENU_HACK */
+
 class nsMenu : public nsIMenu, public nsIMenuListener
 {
 
