@@ -66,7 +66,7 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD AddSearchableGroup(const char *groupname) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD QuerySearchableGroup(const char *groupname, char **_retval) = 0;
+  NS_IMETHOD QuerySearchableGroup(const char *groupname, PRBool *_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddVirtualGroup(const char *responseText) = 0;
@@ -102,7 +102,7 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD DisplaySubscribedGroup(const char *groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages, PRBool visit_now) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetFirstGroupNeedingExtraInfo(nsINNTPNewsgroup **_retval) = 0;
+  NS_IMETHOD GetFirstGroupNeedingExtraInfo(char **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool needsExtraInfo) = 0;

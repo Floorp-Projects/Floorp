@@ -43,7 +43,7 @@ interface nsINNTPHost : nsISupports {
     string QueryPropertyForGet(in string name);
     
     void AddSearchableGroup(in string groupname);
-    string QuerySearchableGroup(in string groupname);
+    boolean QuerySearchableGroup(in string groupname);
     
     void AddVirtualGroup(in string responseText);
     void SetIsVirtualGroup(in string groupname, in boolean isVirtual);
@@ -94,7 +94,7 @@ interface nsINNTPHost : nsISupports {
                                 in long total_messages,
                                 in boolean visit_now);
 
-    nsINNTPNewsgroup GetFirstGroupNeedingExtraInfo();
+    string GetFirstGroupNeedingExtraInfo();
     void SetGroupNeedsExtraInfo(in string groupname, in boolean needsExtraInfo);
 
   
