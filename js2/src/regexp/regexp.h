@@ -62,8 +62,8 @@ struct JS2RegExp {
 };
 
 typedef struct RECapture {
-    int16 index;              /* start of contents, -1 for empty  */
-    int16 length;             /* length of capture */
+    int32 index;                /* start of contents, -1 for empty  */
+    uint16 length;              /* length of capture */
 } RECapture;
 
 struct REMatchResult {

@@ -234,8 +234,8 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
             int32 num = (int32)(*dollarValue - '0');
             if (num <= match->parenCount) {
                 if ((dollarPos < (replaceStr->length() - 2)) && (dollarValue[1] >= '0') && (dollarValue[1] <= '9')) {
-                        int32 tmp = (num * 10) + (dollarValue[1] - '0');
-                        if (tmp <= match->parenCount) {
+                    int32 tmp = (num * 10) + (dollarValue[1] - '0');
+                    if (tmp <= match->parenCount) {
                         num = tmp;
                         skip = 3;
                     }
@@ -243,7 +243,7 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
                 return searchStr->substr((uint32)(match->parens[num - 1].index), (uint32)(match->parens[num - 1].length));
             }
         }
-    // fall thru
+    // fall thru...
     default:
         skip = 1;
         return meta->engine->Dollar_StringAtom;
@@ -283,6 +283,9 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 {
     const String *S = meta->toString(thisValue);
     DEFINE_ROOTKEEPER(meta, rk1, S);
+    const String *replaceStr = NULL;
+    DEFINE_ROOTKEEPER(meta, rk2, replaceStr);
+    bool replaceFunction = false;
 
     js2val searchValue = JS2VAL_UNDEFINED;
     js2val replaceValue = JS2VAL_UNDEFINED;
@@ -300,8 +303,12 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
     }
 
     if (argc > 1) replaceValue = argv[1];
-    const String *replaceStr = meta->toString(replaceValue);
-    DEFINE_ROOTKEEPER(meta, rk2, replaceStr);
+    if (JS2VAL_IS_OBJECT(replaceValue) 
+            && (JS2VAL_TO_OBJECT(replaceValue)->kind == SimpleInstanceKind)
+            && ((checked_cast<SimpleInstance *>(JS2VAL_TO_OBJECT(replaceValue)))->type == meta->functionClass))
+        replaceFunction = true;
+    else
+        replaceStr = meta->toString(replaceValue);
 
 
     RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
@@ -316,20 +323,34 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
             break;
         else {
             String insertString;
-            uint32 start = 0;
-            while (true) {
-                    // look for '$' in the replacement string and interpret it as necessary
-                uint32 dollarPos = replaceStr->find('$', start);
-                if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
-                    uint32 skip;
-                    insertString += replaceStr->substr(start, dollarPos - start);
-                    insertString += interpretDollar(meta, replaceStr, dollarPos, S, match, skip);
-                    start = dollarPos + skip;
-                }
-                else {
-                        // otherwise, absorb the entire replacement string
-                    insertString += replaceStr->substr(start, replaceStr->length() - start);
-                    break;
+            if (replaceFunction) {                
+                uint32 m = match->parenCount;
+                js2val *argv = new js2val[m + 3];
+                argv[0] = meta->engine->allocString(S->substr((uint32)match->startIndex, (uint32)match->endIndex - match->startIndex));                
+                for (uint32 i = 0; i < m; i++)
+                    argv[i + 1] = meta->engine->allocString(S->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
+                argv[m + 1] = INT_TO_JS2VAL(match->startIndex);
+                argv[m + 2] = thisValue;
+                js2val rval = meta->invokeFunction(JS2VAL_TO_OBJECT(replaceValue), JS2VAL_NULL, argv, (m + 3), NULL);
+                insertString = *meta->toString(rval);
+                delete [] argv;
+            }
+            else {
+                uint32 start = 0;
+                while (true) {
+                        // look for '$' in the replacement string and interpret it as necessary
+                    uint32 dollarPos = replaceStr->find('$', start);
+                    if ((dollarPos != String::npos) && (dollarPos < (replaceStr->length() - 1))) {
+                        uint32 skip;
+                        insertString += replaceStr->substr(start, dollarPos - start);
+                        insertString += interpretDollar(meta, replaceStr, dollarPos, S, match, skip);
+                        start = dollarPos + skip;
+                    }
+                    else {
+                            // otherwise, absorb the entire replacement string
+                        insertString += replaceStr->substr(start, replaceStr->length() - start);
+                        break;
+                    }
                 }
             }
                 // grab everything preceding the match

@@ -3399,7 +3399,7 @@ doUnary:
         Multiname *definedMultiname = NULL;
         Multiname *searchedMultiname = NULL;
         if (requestedMultiname.nsList->empty()) {
-            definedMultiname = new Multiname(id, publicNamespace);
+            definedMultiname = new (this) Multiname(id, publicNamespace);
             searchedMultiname = &openMultiname;
         }
         else {

@@ -264,7 +264,7 @@ typedef struct CompilerState {
 typedef struct REProgState {
     jsbytecode *continue_pc;        /* current continuation data */
     REOp continue_op;                  
-    int16 index;                    /* progress in text */
+    uint16 index;                   /* progress in text */
     uintN parenSoFar;               /* highest indexed paren started */
     union {
         struct {
@@ -1182,6 +1182,17 @@ doSimple:
     case '?':        
         js_ReportCompileErrorNumber(state->meta, JSMSG_BAD_QUANTIFIER, state->cp - 1);
         return JS_FALSE;
+    case '{':
+        /* Treat left-curly in a non-quantifier context as an error only 
+         * if it's followed immediately by a decimal digit.
+         * This is an Perl extension.
+         */
+        if ((state->cp != state->cpend) && JS7_ISDEC(*state->cp)) {
+            js_ReportCompileErrorNumber(state->meta,
+                                        JSMSG_BAD_QUANTIFIER, state->cp - 1);
+            return JS_FALSE;
+        }
+        /* fall thru... */
     default:
         state->result = NewRENode(state, REOP_FLAT);
         if (!state->result) 
