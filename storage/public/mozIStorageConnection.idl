@@ -38,15 +38,9 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#include <sqlite3.h>
-%}
-
 interface mozIStorageFunction;
 interface mozIStorageStatement;
 interface nsIFile;
-
-[ptr] native sqlite3ptr(sqlite3);
 
 [scriptable, uuid(623b8b2e-c9f9-4cc3-b15a-f3c96df2cc1c)]
 interface mozIStorageConnection : nsISupports {
@@ -182,9 +176,4 @@ interface mozIStorageConnection : nsISupports {
                       in string aParameters);
 
   void removeTrigger (in string aTriggerName);
-
-  /*
-   * native support
-   */
-  [noscript] readonly attribute sqlite3ptr sqliteHandle;
 };

@@ -416,16 +416,6 @@ mozStorageConnection::RemoveTrigger(const char *aTriggerName)
 }
 
 /**
- ** Native support
- **/
-NS_IMETHODIMP
-mozStorageConnection::GetSqliteHandle(sqlite3 **aSqliteHandle)
-{
-    *aSqliteHandle = mDBConn;
-    return NS_OK;
-}
-
-/**
  ** Other bits
  **/
 void

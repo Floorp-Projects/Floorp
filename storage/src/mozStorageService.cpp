@@ -73,8 +73,9 @@ mozStorageService::GetProfileStorage(const char *aStorageKey, mozIStorageConnect
         return rv;
     }
 
-    nsCOMPtr<mozStorageConnection> conn = new mozStorageConnection();
-    rv = conn->Initialize (storageFile);
+    mozStorageConnection *msc = new mozStorageConnection();
+    nsCOMPtr<mozIStorageConnection> conn = msc;
+    rv = msc->Initialize (storageFile);
     if (NS_FAILED(rv)) return rv;
 
     *_retval = conn;
@@ -88,8 +89,9 @@ mozStorageService::OpenDatabase(nsIFile *aDatabaseFile, mozIStorageConnection **
 {
     nsresult rv;
 
-    nsCOMPtr<mozStorageConnection> conn = new mozStorageConnection();
-    rv = conn->Initialize (aDatabaseFile);
+    mozStorageConnection *msc = new mozStorageConnection();
+    nsCOMPtr<mozIStorageConnection> conn = msc;
+    rv = msc->Initialize (aDatabaseFile);
     if (NS_FAILED(rv)) return rv;
 
     *_retval = conn;

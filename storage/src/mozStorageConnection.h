@@ -39,6 +39,8 @@
 #ifndef _MOZSTORAGECONNECTION_H_
 #define _MOZSTORAGECONNECTION_H_
 
+#include "nsCOMPtr.h"
+
 #include "nsString.h"
 #include "mozIStorageConnection.h"
 
@@ -59,6 +61,9 @@ public:
     // interfaces
     NS_DECL_ISUPPORTS
     NS_DECL_MOZISTORAGECONNECTION
+
+    // fetch the native handle
+    sqlite3 *GetNativeConnection() { return mDBConn; }
 
 private:
     ~mozStorageConnection();

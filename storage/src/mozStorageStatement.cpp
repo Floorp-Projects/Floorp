@@ -41,6 +41,7 @@
 #include "nsError.h"
 #include "nsISimpleEnumerator.h"
 
+#include "mozStorageConnection.h"
 #include "mozStorageStatement.h"
 #include "mozStorageValueArray.h"
 
@@ -163,8 +164,11 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     nsresult rv;
 
     sqlite3 *db = nsnull;
-    rv = aDBConnection->GetSqliteHandle(&db);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // XXX - need to implement a private iid to QI for here, to make sure
+    // we have a real mozStorageConnection
+    mozStorageConnection *msc = NS_STATIC_CAST(mozStorageConnection*, aDBConnection);
+    db = msc->GetNativeConnection();
+    NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
     srv = sqlite3_prepare (db, nsPromiseFlatCString(aSQLStatement).get(), aSQLStatement.Length(), &mDBStatement, NULL);
     if (srv != SQLITE_OK) {
@@ -358,9 +362,9 @@ mozStorageStatement::Execute()
     int srv = sqlite3_step (mDBStatement);
     if (srv == SQLITE_MISUSE || srv == SQLITE_ERROR) {
 #ifdef PR_LOGGING
-        sqlite3 *sqh;
-        mDBConnection->GetSqliteHandle(&sqh);
-        PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::Execute error: %s", sqlite3_errmsg(sqh)));
+        nsCAutoString errStr;
+        mDBConnection->GetLastErrorString(errStr);
+        PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::Execute error: %s", errStr.get()));
 #endif
         return NS_ERROR_FAILURE; // XXX error code
     }
@@ -391,9 +395,9 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
 
 #ifdef PR_LOGGING
     if (srv != SQLITE_ROW && srv != SQLITE_DONE) {
-        sqlite3 *sqh;
-        mDBConnection->GetSqliteHandle(&sqh);
-        PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::ExecuteStep error: %s", sqlite3_errmsg(sqh)));
+        nsCAutoString errStr;
+        mDBConnection->GetLastErrorString(errStr);
+        PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::ExecuteStep error: %s", errStr.get()));
     }
 #endif
 
