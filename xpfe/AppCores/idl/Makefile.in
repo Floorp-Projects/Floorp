@@ -22,15 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-IDLSRCS =	\
-	nsIDOMAppCores.idl	\
-	nsIDOMBaseAppCore.idl	\
-	nsIDOMBrowserAppCore.idl	\
-	nsIDOMMailCore.idl	\
-	nsIDOMRDFCore.idl	\
-	nsIDOMToolbar.idl	\
-	$(NULL)
-
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
