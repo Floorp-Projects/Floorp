@@ -65,6 +65,11 @@
 
 #include "nsCaret.h"
 
+// The bidi indicator hangs off the caret to one side, to show which
+// direction the typing is in. It needs to be at least 2x2 to avoid looking like 
+// an insignificant dot
+static const PRUint32 kMinBidiIndicatorPixels = 2;
+
 #if !defined(XP_UNIX) || defined(XP_MACOSX)
 // Because of drawing issues, we currently always make a new RC. See bug 28068
 // Before removing this, stuff will need to be fixed and tested on all platforms.
