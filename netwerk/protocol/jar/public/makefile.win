@@ -26,9 +26,10 @@ include <$(DEPTH)/config/config.mak>
 
 XPIDL_MODULE = necko_jar
 
-XPIDLSRCS =                  \
-        .\nsIJARChannel.idl \
-	.\nsIJARURI.idl \
+XPIDLSRCS =                         \
+        .\nsIJARChannel.idl         \
+	.\nsIJARURI.idl             \
+	.\nsIJARProtocolHandler.idl \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
