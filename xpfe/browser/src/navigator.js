@@ -84,6 +84,9 @@
           }
           else if (choice == 2) {
             var history = Components.classes['component://netscape/browser/global-history'];
+            if (history) {
+               history = history.getService();
+	    }
 	    if (history) {
                history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
 	    }
