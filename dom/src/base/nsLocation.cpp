@@ -486,6 +486,13 @@ LocationImpl::GetHref(nsAString& aHref)
 NS_IMETHODIMP
 LocationImpl::SetHref(const nsAString& aHref)
 {
+  if (!aHref.IsEmpty() && aHref.First() == PRUnichar('#')) {
+    // Special-case anchor loads so that we don't stop content
+    // Note that SetHash (or more precisely nsIURL::SetRef) deals with
+    // the leading '#'.
+    return SetHash(aHref);
+  }
+  
   nsAutoString oldHref;
   nsresult rv = NS_OK;
 
