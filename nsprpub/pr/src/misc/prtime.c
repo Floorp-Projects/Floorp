@@ -1609,7 +1609,7 @@ PR_ParseTimeString(
  */
 
 PR_IMPLEMENT(PRUint32)
-PR_FormatTime(char *buf, int buflen, char *fmt, const PRExplodedTime *tm)
+PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
 {
     struct tm a;
     a.tm_sec = tm->tm_sec;
