@@ -1,2 +1,4 @@
 cd Core
-N6Setup.exe
+Setup.exe
+echo off
+cls
