@@ -113,4 +113,3 @@ comm4xMailModuleDtor(nsIModule* self)
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsComm4xMailImportModule, components, comm4xMailModuleDtor)
 
-
