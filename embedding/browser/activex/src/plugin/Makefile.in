@@ -39,6 +39,9 @@ REQUIRES = \
     plugin \
     string \
     dom \
+    content \
+    widget \
+    gfx \
     $(NULL)
 XPIFILE         = mozactivex.xpi
 
@@ -179,6 +182,7 @@ EXTRA_DSO_LDOPTS = \
     $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
     $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
     $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+    $(MOZ_COMPONENT_LIBS) \
     $(NSPR_LIBS) \
     $(NULL)
 

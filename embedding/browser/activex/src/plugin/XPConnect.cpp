@@ -48,6 +48,12 @@
 #include "nsIVariant.h"
 #include "nsMemory.h"
 
+#include "nsIAtom.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIEventListenerManager.h"
+#include "nsGUIEvent.h"
+
 #include "LegacyPlugin.h"
 #include "XPConnect.h"
 
@@ -62,14 +68,17 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 ///////////////////////////////////////////////////////////////////////////////
 // nsScriptablePeer
 
-nsScriptablePeer::nsScriptablePeer()
+nsScriptablePeer::nsScriptablePeer() :
+    mTearOff(new nsScriptablePeerTearOff(this))
 {
     NS_INIT_ISUPPORTS();
+    NS_ASSERTION(mTearOff, "can't create tearoff");
     xpc_AddRef();
 }
 
 nsScriptablePeer::~nsScriptablePeer()
 {
+    delete mTearOff;
     xpc_Release();
 }
 
@@ -569,11 +578,11 @@ nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant *propertyValu
 HRESULT
 nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-
     FUNCDESC *pFuncDesc = NULL;
     HRESULT hr = S_OK;
+    CComBSTR bstrName;
 
-    // Must search compare each member to the dispid...
+    // Must search and compare each member to the dispid...
     if (m_spEventSinkTypeInfo)
     {
 	    HRESULT hr = S_OK;
@@ -582,28 +591,34 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
         if (pAttr)
         {
 	        int i;
-	        for (i=0; i < pAttr->cFuncs;i++)
+	        for (i = 0; i < pAttr->cFuncs;i++)
 	        {
 		        hr = m_spEventSinkTypeInfo->GetFuncDesc(i, &pFuncDesc);
 		        if (FAILED(hr))
 			        return hr;
 		        if (pFuncDesc->memid == dispIdMember)
+                {
+                    UINT cNames = 0;
+                    m_spEventSinkTypeInfo->GetNames(dispIdMember, &bstrName, 1, &cNames);
 			        break;
+                }
+                
 		        m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
 		        pFuncDesc = NULL;
 	        }
 	        m_spEventSinkTypeInfo->ReleaseTypeAttr(pAttr);
         }
     }
+    if (!pFuncDesc)
+    {
+        // Return
+        return S_OK;
+    }
 
 #ifdef DEBUG
-    // Dump out some info to look at
-    ATLTRACE(_T("Invoke(%d)\n"), (int) dispIdMember);
-    if (pFuncDesc)
     {
-        UINT cNames = 0;
-        CComBSTR bstrName;
-        HRESULT hr = m_spEventSinkTypeInfo->GetNames(dispIdMember, &bstrName, 1, &cNames);
+        // Dump out some info to look at
+        ATLTRACE(_T("Invoke(%d)\n"), (int) dispIdMember);
 
         ATLTRACE(_T("  "));
 
@@ -665,18 +680,131 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
     }
 #endif
 
-    // TODO fire an outgoing event with the types in the correct format
-
-    if (pFuncDesc)
+    nsCOMPtr<nsIDOMElement> element;
+    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMElement, (void *) &element);
+    if (element)
     {
-        m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
+        // TODO Turn VARIANT args into js objects
+
+        nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(element);
+        if (eventReceiver)
+        {
+            // Get the event manager
+            nsCOMPtr<nsIEventListenerManager> eventManager;
+            eventReceiver->GetListenerManager(getter_AddRefs(eventManager));
+            if (eventManager)
+            {
+                nsAutoString keyName(bstrName.m_str);
+                nsStringKey key(keyName);
+                nsEvent event;
+                event.message = NS_USER_DEFINED_EVENT;
+                event.userType = &key;
+
+                // Fire the event!
+                nsCOMPtr<nsIDOMEvent> domEvent;
+                nsEventStatus eventStatus;
+                nsresult rv = eventManager->HandleEvent(nsnull, &event, getter_AddRefs(domEvent),
+                    eventReceiver, NS_EVENT_FLAG_INIT, &eventStatus);
+            }
+        }
+
+        // TODO Turn js objects back into VARIANTS specifying VT_BYREF
+
+        // TODO Turn js return code into VARIANT
+
+        // TODO handle js exception and fill in exception info
     }
+
+    if (pExcepInfo)
+    {
+        pExcepInfo->wCode = 0;
+    }
+
+    m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
 
     return S_OK;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// nsScriptablePeerTearOff
+
+nsScriptablePeerTearOff::nsScriptablePeerTearOff(nsScriptablePeer *pOwner) :
+    mOwner(pOwner)
+{
+    NS_ASSERTION(mOwner, "no owner");
+}
+
+HRESULT STDMETHODCALLTYPE nsScriptablePeerTearOff::QueryInterface(REFIID riid, void **ppvObject)
+{
+    if (::IsEqualIID(riid, _uuidof(IDispatch)))
+    {
+        *ppvObject = dynamic_cast<IDispatch *>(this);
+        mOwner->AddRef();
+        return NS_OK;
+    }
+    nsID iid;
+    memcpy(&iid, &riid, sizeof(nsID));
+    return mOwner->QueryInterface(iid, ppvObject);
+}
+
+ULONG STDMETHODCALLTYPE nsScriptablePeerTearOff::AddRef()
+{
+    return mOwner->AddRef();
+}
+
+ULONG STDMETHODCALLTYPE nsScriptablePeerTearOff::Release()
+{
+    return mOwner->Release();
+}
+
+// IDispatch
+HRESULT STDMETHODCALLTYPE nsScriptablePeerTearOff::GetTypeInfoCount(UINT __RPC_FAR *pctinfo)
+{
+    CComPtr<IDispatch> disp;
+    if (FAILED(mOwner->GetIDispatch(&disp)))
+    {
+        return E_UNEXPECTED;
+    }
+    return disp->GetTypeInfoCount(pctinfo);
+}
+
+HRESULT STDMETHODCALLTYPE nsScriptablePeerTearOff::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo)
+{
+    CComPtr<IDispatch> disp;
+    if (FAILED(mOwner->GetIDispatch(&disp)))
+    {
+        return E_UNEXPECTED;
+    }
+    return disp->GetTypeInfo(iTInfo, lcid, ppTInfo);
+}
+
+HRESULT STDMETHODCALLTYPE nsScriptablePeerTearOff::GetIDsOfNames(REFIID riid, LPOLESTR __RPC_FAR *rgszNames, UINT cNames, LCID lcid, DISPID __RPC_FAR *rgDispId)
+{
+    CComPtr<IDispatch> disp;
+    if (FAILED(mOwner->GetIDispatch(&disp)))
+    {
+        return E_UNEXPECTED;
+    }
+    return disp->GetIDsOfNames(riid, rgszNames, cNames, lcid, rgDispId);
+}
+
+HRESULT STDMETHODCALLTYPE nsScriptablePeerTearOff::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS __RPC_FAR *pDispParams, VARIANT __RPC_FAR *pVarResult, EXCEPINFO __RPC_FAR *pExcepInfo, UINT __RPC_FAR *puArgErr)
+{
+    CComPtr<IDispatch> disp;
+    if (FAILED(mOwner->GetIDispatch(&disp)))
+    {
+        return E_UNEXPECTED;
+    }
+    return disp->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // Some public methods
+
 
 static PRUint32 gInstances = 0;
 
@@ -718,7 +846,6 @@ CLSID xpc_GetCLSIDForType(const char *mimeType)
 	        USES_CONVERSION;
 	        TCHAR szGUID[64];
 	        ULONG nCount = 64;
-	        LONG lRes;
 
             GUID guidValue = GUID_NULL;
             if (keyMimeType.QueryValue(_T("CLSID"), szGUID, &nCount) == ERROR_SUCCESS &&

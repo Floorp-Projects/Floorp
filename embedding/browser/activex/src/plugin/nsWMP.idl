@@ -172,8 +172,11 @@ interface nsIWMPCore : nsISupports
     /** Returns or sets the URL */
     attribute AString URL;
 
-    // openState
-    // playState
+    // [ id( DISPID_WMPCORE_OPENSTATE ), propget, helpstring( "Returns the open state of the player" ) ]
+    // HRESULT openState( [out, retval] WMPOpenState *pwmpos );
+
+    /** Returns the play state of the player */
+    readonly attribute unsigned long playState;
 
     /** Returns the control handler */
     readonly attribute nsIWMPControls controls;

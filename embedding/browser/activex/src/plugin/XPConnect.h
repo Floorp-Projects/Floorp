@@ -75,16 +75,20 @@ template <class T> class nsIClassInfoImpl : public nsIClassInfo
     { return NS_ERROR_NOT_IMPLEMENTED; }
 };
 
+class nsScriptablePeerTearOff;
+
 class nsScriptablePeer :
     public nsIClassInfoImpl<nsScriptablePeer>,
     public nsIMozAxPlugin
 {
+    friend nsScriptablePeerTearOff;
 protected:
     virtual ~nsScriptablePeer();
 
 public:
     nsScriptablePeer();
 
+    nsScriptablePeerTearOff *mTearOff;
     PluginInstanceData* mPlugin;
 
     NS_DECL_ISUPPORTS
@@ -98,9 +102,30 @@ protected:
     NS_IMETHOD InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsIVariant *aArgs[]);
 };
 
+class nsScriptablePeerTearOff :
+    public IDispatch
+{
+public:
+    nsScriptablePeerTearOff(nsScriptablePeer *pOwner);
+    nsScriptablePeer *mOwner;
+
+// IUnknown
+    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void **ppvObject);
+    virtual ULONG STDMETHODCALLTYPE AddRef(void);
+    virtual ULONG STDMETHODCALLTYPE Release( void);
+
+// IDispatch
+    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT __RPC_FAR *pctinfo);
+    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo);
+    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR __RPC_FAR *rgszNames, UINT cNames, LCID lcid, DISPID __RPC_FAR *rgDispId);
+    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS __RPC_FAR *pDispParams, VARIANT __RPC_FAR *pVarResult, EXCEPINFO __RPC_FAR *pExcepInfo, UINT __RPC_FAR *puArgErr);
+};
+
 class nsEventSink : public CControlEventSink
 {
 public:
+    PluginInstanceData* mPlugin;
+
     virtual HRESULT InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 };
 
