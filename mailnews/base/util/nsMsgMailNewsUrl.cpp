@@ -59,24 +59,22 @@
 #include "nsIFileSpec.h"
 #include <time.h>
 
-static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 {
-	// nsIURI specific state
-	m_errorMessage = nsnull;
-	m_runningUrl = PR_FALSE;
-	m_updatingFolder = PR_FALSE;
+  // nsIURI specific state
+  m_errorMessage = nsnull;
+  m_runningUrl = PR_FALSE;
+  m_updatingFolder = PR_FALSE;
   m_addContentToCache = PR_FALSE;
   m_msgIsInLocalCache = PR_FALSE;
   m_suppressErrorMsgs = PR_FALSE;
-
-	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, NS_GET_IID(nsIUrlListenerManager), (void **) getter_AddRefs(m_urlListeners));
-	nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(m_baseURL));
+  
+  m_urlListeners = do_CreateInstance(NS_URLLISTENERMANAGER_CONTRACTID);
+  m_baseURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID);
 }
- 
+
 nsMsgMailNewsUrl::~nsMsgMailNewsUrl()
 {
 	PR_FREEIF(m_errorMessage);

@@ -476,10 +476,16 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
+    char *unescapedUserPass = ToNewCString(userPass);
+    if (!unescapedUserPass)
+      return NS_ERROR_OUT_OF_MEMORY;
+    nsUnescape(unescapedUserPass);
+
     // find the server
     nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = accountManager->FindServer(userPass.get(), hostName.get(), "nntp",
+    rv = accountManager->FindServer(unescapedUserPass, hostName.get(), "nntp",
                                     getter_AddRefs(server));
+    PR_FREEIF(unescapedUserPass);
     NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
     if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
     

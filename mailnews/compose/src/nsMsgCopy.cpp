@@ -62,7 +62,6 @@
 #include "nsIEventQueueService.h"
 #include "nsMsgSimulateError.h"
 
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -623,8 +622,7 @@ MessageFolderIsLocal(nsIMsgIdentity   *userIdentity,
 
   if (!aFolderURI) return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr <nsIURL> url;
-  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), getter_AddRefs(url));
+  nsCOMPtr <nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = url->SetSpec(nsDependentCString(aFolderURI));

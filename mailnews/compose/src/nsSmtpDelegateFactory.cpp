@@ -51,9 +51,9 @@
 #include "nsISmtpServer.h"
 #include "nsISmtpService.h"
 #include "nsMsgCompCID.h"
-
-static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+#include "nsReadableUtils.h"
+#include "nsEscape.h"
+#include "prmem.h"
 
 NS_IMPL_ISUPPORTS1(nsSmtpDelegateFactory, nsIRDFDelegateFactory)
 
@@ -70,16 +70,12 @@ nsSmtpDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
                                       const char *aKey,
                                       const nsIID & aIID, void * *aResult)
 {
-
   nsresult rv;
   const char* uri;
   aOuter->GetValueConst(&uri);
 
-  nsCOMPtr<nsIURL> url;
-  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
-                                          NS_GET_IID(nsIURL),
-                                          (void **)getter_AddRefs(url));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   rv = url->SetSpec(nsDependentCString(uri));
 
@@ -93,11 +89,17 @@ nsSmtpDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
   url->GetAsciiHost(hostname);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISmtpService> smtpService = do_GetService(kSmtpServiceCID, &rv);
+  nsCOMPtr<nsISmtpService> smtpService = do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  char *unescapedUserPass = ToNewCString(userpass);
+  if (!unescapedUserPass)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsUnescape(unescapedUserPass);
   nsCOMPtr<nsISmtpServer> smtpServer;
-  rv = smtpService->FindServer(userpass.get(), hostname.get(), getter_AddRefs(smtpServer));
+  rv = smtpService->FindServer(unescapedUserPass, hostname.get(), getter_AddRefs(smtpServer));
+  PR_FREEIF(unescapedUserPass);
 
   // no server, it's a failure!
   if (NS_FAILED(rv)) return rv;

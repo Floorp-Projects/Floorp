@@ -80,10 +80,6 @@
 #include "nsIImapUrl.h"
 #include "nsIMessengerOSIntegration.h"
 
-#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
-#define DEBUG_ACCOUNTMANAGER 1
-#endif
-
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 #define PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT "mail.accountmanager.defaultaccount"
 #define PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER "mail.accountmanager.localfoldersserver"
@@ -511,9 +507,6 @@ nsMsgAccountManager::createKeyedServer(const char* key,
   serverContractID += type;
   
   // finally, create the server
-#ifdef DEBUG_ACCOUNTMANAGER
-  printf("serverContractID = %s\n", serverContractID.get());
-#endif
   nsCOMPtr<nsIMsgIncomingServer> server =
            do_CreateInstance(serverContractID.get(), &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -759,9 +752,6 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
   PRUint32 count;
   if (!m_defaultAccount) {
     m_accounts->Count(&count);
-#ifdef DEBUG_ACCOUNTMANAGER
-    printf("There are %d accounts\n", count);
-#endif
     if (count == 0) {
       *aDefaultAccount=nsnull;
       return NS_ERROR_FAILURE;
@@ -1417,17 +1407,10 @@ nsMsgAccountManager::LoadAccounts()
   m_haveShutdown = PR_FALSE;
   
   if (!accountList || !accountList[0]) {
-#ifdef DEBUG_ACCOUNTMANAGER
-    printf("No accounts.\n");
-#endif
     return NS_OK;
   }
   
-    /* parse accountList and run loadAccount on each string, comma-separated */
-#ifdef DEBUG_ACCOUNTMANAGER
-    printf("accountList = %s\n", (const char*)accountList);
-#endif
-   
+    /* parse accountList and run loadAccount on each string, comma-separated */   
     nsCOMPtr<nsIMsgAccount> account;
     char *newStr;
     char *rest = NS_CONST_CAST(char*,(const char*)accountList);
@@ -1439,9 +1422,6 @@ nsMsgAccountManager::LoadAccounts()
       str.StripWhitespace();
       
       if (!str.IsEmpty()) {
-#ifdef DEBUG_ACCOUNTMANAGER
-	  printf("account = %s\n",str.get());
-#endif
           rv = GetAccount(str.get(), getter_AddRefs(account));
       }
 
@@ -1809,10 +1789,6 @@ nsMsgAccountManager::InternalFindServer(const char* username,
 {
   nsresult rv;
   nsCOMPtr<nsISupportsArray> servers;
-	
-#ifdef DEBUG_ACCOUNTMANAGER
-  printf("FindServer(%s,%s,%s,??)\n", username,hostname,type);
-#endif
  
   // If 'useRealSetting' is set then we want to scan all existing accounts
   // to make sure there's no duplicate including those whose host and/or
@@ -1821,19 +1797,11 @@ nsMsgAccountManager::InternalFindServer(const char* username,
       (!nsCRT::strcmp((hostname?hostname:""),m_lastFindServerHostName.get())) &&
       (!nsCRT::strcmp((username?username:""),m_lastFindServerUserName.get())) &&
       (!nsCRT::strcmp((type?type:""),m_lastFindServerType.get())) &&
-      m_lastFindServerResult) {
-#ifdef DEBUG_ACCOUNTMANAGER
-    printf("HIT:   FindServer() cache\n");
-#endif
-    *aResult = m_lastFindServerResult;
-    NS_ADDREF(*aResult);
+      m_lastFindServerResult) 
+  {
+    NS_ADDREF(*aResult = m_lastFindServerResult);
     return NS_OK;
   }
-#ifdef DEBUG_ACCOUNTMANAGER
-  else {
-    printf("MISS:  FindServer() cache\n");
-  }
-#endif
 
   rv = GetAllServers(getter_AddRefs(servers));
   if (NS_FAILED(rv)) return rv;

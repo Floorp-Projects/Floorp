@@ -96,7 +96,6 @@
 #endif
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 static NS_DEFINE_CID(kAddressBookCID, NS_ADDRESSBOOK_CID);
 
 #define IMAP_SCHEMA "imap:/"
@@ -676,11 +675,11 @@ nsMessengerMigrator::UpgradePrefs()
     rv = MigrateIdentity(identity);
     if (NS_FAILED(rv)) return rv;    
     
-    nsCOMPtr<nsISmtpServer> smtpServer;
     nsCOMPtr<nsISmtpService> smtpService = 
-             do_GetService(kSmtpServiceCID, &rv);
+             do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;    
 
+    nsCOMPtr<nsISmtpServer> smtpServer;
     rv = smtpService->CreateSmtpServer(getter_AddRefs(smtpServer));
     if (NS_FAILED(rv)) return rv;    
 

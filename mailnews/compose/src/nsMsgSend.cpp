@@ -109,11 +109,6 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
-// use these macros to define a class IID for our component. Our object currently 
-// supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
-// for these two interfaces 
-//
-static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -3389,7 +3384,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
       buf = convbuf;
   }
   
-  nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv));
+  nsCOMPtr<nsISmtpService> smtpService(do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && smtpService)
   {
     nsMsgDeliveryListener * aListener = new nsMsgDeliveryListener(SendDeliveryCallback, nsMailDelivery, this);
@@ -3534,7 +3529,7 @@ nsMsgComposeAndSend::FormatStringWithSMTPHostNameByID(PRInt32 aMsgId, PRUnichar 
   NS_ENSURE_ARG(aString);
 
   nsresult rv;
-  nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv));
+  nsCOMPtr<nsISmtpService> smtpService(do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Get the smtp hostname and format the string.

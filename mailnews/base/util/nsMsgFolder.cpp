@@ -82,9 +82,8 @@
 
 #define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 nsrefcnt nsMsgFolder::gInstanceCount  = 0;
@@ -156,7 +155,7 @@ nsMsgFolder::nsMsgFolder(void)
     initializeStrings();
     createCollationKeyGenerator();
 #ifdef MSG_FASTER_URI_PARSING
-    mParsingURL = do_CreateInstance(kStandardUrlCID);
+    mParsingURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID);
 #endif
   }
 
@@ -587,7 +586,7 @@ nsMsgFolder::parseURI(PRBool needServer)
 #ifdef MSG_FASTER_URI_PARSING
   nsMsgAutoBool parsingUrlState;
   if (mParsingURLInUse) {
-    url = do_CreateInstance(kStandardUrlCID, &rv);
+    url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
   }
 
   else {
@@ -597,9 +596,7 @@ nsMsgFolder::parseURI(PRBool needServer)
   }
 
 #else
-  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
-                                          NS_GET_IID(nsIURL),
-                                          (void **)getter_AddRefs(url));
+  url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 #endif
 

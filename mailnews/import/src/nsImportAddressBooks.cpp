@@ -70,7 +70,6 @@
 #include "ImportDebug.h"
 
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kSupportsWStringCID, NS_SUPPORTS_STRING_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
@@ -258,12 +257,10 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 	
 	if (!nsCRT::strcasecmp( dataId, "addressDestination")) {
 		if (m_pDestinationUri) {
-			nsCOMPtr<nsIURL>	url;
-			rv = nsComponentManager::CreateInstance( kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), getter_AddRefs( url));
-			if (NS_SUCCEEDED( rv)) {
+			nsCOMPtr<nsIURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+			if (NS_SUCCEEDED(rv)) {
 				url->SetSpec( nsDependentCString(m_pDestinationUri));
-				*_retval = url;
-				NS_IF_ADDREF( *_retval);
+				NS_IF_ADDREF(*_retval = url);
 			}
 		}
 	}

@@ -72,7 +72,6 @@
 #include "nsMsgMimeCID.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
 
 NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)

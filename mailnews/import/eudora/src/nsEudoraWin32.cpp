@@ -41,7 +41,6 @@
 
 static NS_DEFINE_IID(kISupportsIID,			NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
 
 static const char *	kWhitespace = "\b\t\r\n ";
 
@@ -880,7 +879,7 @@ void nsEudoraWin32::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pA
 {
 	nsresult	rv;
 	
-	nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv)); 
+	nsCOMPtr<nsISmtpService> smtpService(do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv)); 
 	if (NS_SUCCEEDED(rv) && smtpService) {
 		nsCOMPtr<nsISmtpServer>		foundServer;
 	

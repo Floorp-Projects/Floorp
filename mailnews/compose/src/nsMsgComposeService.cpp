@@ -433,12 +433,13 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
       pMsgComposeParams->SetIdentity(identity);
       
       if (originalMsgURI && *originalMsgURI)
+      {
         if (type == nsIMsgCompType::NewsPost) 
         {
           nsCAutoString newsURI(originalMsgURI);
           nsCAutoString group;
           nsCAutoString host;
-        
+          
           PRInt32 slashpos = newsURI.RFindChar('/');
           if (slashpos > 0 )
           {
@@ -448,12 +449,13 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
           }
           else
             group = originalMsgURI;
-
+          
           pMsgCompFields->SetNewsgroups(group.get());
           pMsgCompFields->SetNewshost(host.get());
+        }
+        else
+          pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
       }
-      else
-        pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
 
       pMsgComposeParams->SetComposeFields(pMsgCompFields);
 

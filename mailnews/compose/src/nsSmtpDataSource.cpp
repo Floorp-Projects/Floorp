@@ -48,7 +48,6 @@
 #include "nsMsgCompCID.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 
 #define NC_RDF_SMTPSERVERS "NC:smtpservers"
 #define NC_RDF_ISDEFAULT        NC_NAMESPACE_URI "IsDefaultServer"
@@ -181,7 +180,7 @@ nsSmtpDataSource::GetTarget(nsIRDFResource *aSource,
              aProperty == kNC_IsSessionDefaultServer.get()) {
 
         nsCOMPtr<nsISmtpService> smtpService =
-            do_GetService(kSmtpServiceCID, &rv);
+            do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv);
 
         NS_ENSURE_SUCCESS(rv, rv);
         
@@ -242,7 +241,7 @@ nsSmtpDataSource::GetSmtpServerTargets(nsISupportsArray **aResultArray)
 {
     nsresult rv;
     nsCOMPtr<nsISmtpService> smtpService =
-        do_GetService(kSmtpServiceCID, &rv);
+        do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFService> rdf =

@@ -64,7 +64,6 @@
 
 static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kSmtpServiceCID,		NS_SMTPSERVICE_CID); 
 
 class OESettings {
 public:
@@ -573,7 +572,7 @@ void OESettings::SetSmtpServer( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 	nsresult	rv;
 
 
-	nsCOMPtr<nsISmtpService> smtpService(do_GetService(kSmtpServiceCID, &rv)); 
+	nsCOMPtr<nsISmtpService> smtpService(do_GetService(NS_SMTPSERVICE_CONTRACTID, &rv)); 
 	if (NS_SUCCEEDED(rv) && smtpService) {
 		nsCOMPtr<nsISmtpServer>		foundServer;
 	
