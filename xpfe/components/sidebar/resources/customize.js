@@ -352,7 +352,14 @@ function AddPanel()
     addOption(database, rdfNode, isFirstAddition);
     isFirstAddition = false;
   }
+
+  // Remove the selection in the other list.
+  // Selection will move to "current" list.
+  var other_panels = document.getElementById('other-panels');
+  other_panels.clearItemSelection();
+
   enableButtons();
+  enableOtherButtons();
   enableSave();
 }
 
