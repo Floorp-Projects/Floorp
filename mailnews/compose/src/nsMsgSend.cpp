@@ -1609,7 +1609,7 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
     if (PL_strcasecmp(fieldsFCC, "nocopy://") == 0)
       mCompFields->SetFcc("");
     else
-      mCompFields->SetFcc(fieldsFCC);
+      SetMimeHeader(MSG_FCC_HEADER_MASK, fieldsFCC); 
   }
   else
   {
@@ -1637,7 +1637,6 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 	SetMimeHeader(MSG_REPLY_TO_HEADER_MASK, fields->GetReplyTo());
 	SetMimeHeader(MSG_TO_HEADER_MASK, fields->GetTo());
 	SetMimeHeader(MSG_CC_HEADER_MASK, fields->GetCc());
-	SetMimeHeader(MSG_FCC_HEADER_MASK, fields->GetFcc());
 	SetMimeHeader(MSG_BCC_HEADER_MASK, fields->GetBcc());
 	SetMimeHeader(MSG_NEWSGROUPS_HEADER_MASK, fields->GetNewsgroups());
 	SetMimeHeader(MSG_FOLLOWUP_TO_HEADER_MASK, fields->GetFollowupTo());
