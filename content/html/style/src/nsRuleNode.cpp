@@ -412,10 +412,26 @@ nsRuleNode::GetRule(nsIStyleRule** aResult)
   return NS_OK;
 }
 
+PRBool PR_CALLBACK ClearCachedDataHelper(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsRuleNode* ruleNode = (nsRuleNode*)aData;
+  ruleNode->ClearPath();
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsRuleNode::ClearPath()
 {
-  return ClearCachedData(mRule);
+  // Any children must not be allowed to obtain cached data from parents.  We must
+  // clear any bits in descendants that indicate inheritance.
+  mInheritBits &= ~NS_STYLE_INHERIT_MASK;
+  if (mStyleData.mResetData || mStyleData.mInheritedData)
+    mStyleData.Destroy(0, mPresContext);
+
+  if (mChildren)
+    mChildren->Enumerate(ClearCachedDataHelper);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -425,7 +441,6 @@ nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
   while (ruleDest) {
     if (ruleDest->mRule == aRule)
       break;
-
     ruleDest = ruleDest->mParent;
   }
 
@@ -449,7 +464,7 @@ nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
   return NS_OK;
 }
 
-PRBool PR_CALLBACK ClearCachedDataHelper(nsHashKey* aKey, void* aData, void* aClosure)
+PRBool PR_CALLBACK ClearCachedDataInSubtreeHelper(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsIRuleNode* ruleNode = (nsIRuleNode*)aData;
   nsIStyleRule* rule = (nsIStyleRule*)aClosure;
@@ -469,7 +484,7 @@ nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
   }
 
   if (mChildren)
-    mChildren->Enumerate(ClearCachedDataHelper, (void*)aRule);
+    mChildren->Enumerate(ClearCachedDataInSubtreeHelper, (void*)aRule);
 
   return NS_OK;
 }
