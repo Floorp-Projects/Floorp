@@ -91,10 +91,10 @@ typedef struct _writeData {
 
 NS_METHOD
 nsReadData(void* closure, // the data from
-                 char* toRawSegment, // where to put the data
-                 PRUint32 offset, // where to start
-                 PRUint32 count, // how much data is there
-                 PRUint32 *readCount) { // how much data was read
+           char* toRawSegment, // where to put the data
+           PRUint32 offset, // where to start
+           PRUint32 count, // how much data is there
+           PRUint32 *readCount) { // how much data was read
   nsresult rv = NS_OK;
   writeData *dataToWrite = (writeData*)closure;
   PRUint32 write = PR_MIN(count, dataToWrite->dataLen - offset);
@@ -102,7 +102,7 @@ nsReadData(void* closure, // the data from
   *readCount = 0;
 
   if (offset == dataToWrite->dataLen)
-      return NS_BASE_STREAM_EOF;
+      return NS_OK;     // *readCount == 0 is EOF
 
   nsCRT::memcpy(toRawSegment, dataToWrite->data + offset, write);
 
@@ -305,7 +305,7 @@ nsDataChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 streamLen;
-    rv = mDataStream->GetLength(&streamLen);
+    rv = mDataStream->Available(&streamLen);
     if (NS_FAILED(rv)) return rv;
 
     rv = listener->OnDataAvailable(this, ctxt, mDataStream, 0, streamLen);
