@@ -23,7 +23,7 @@ MODULE=raptor
 XPIDL_MODULE=appshell 
 
 XPIDLSRCS =                       \
-       .\ nsIFileLocator.idl      \
+       .\nsIFileLocator.idl       \
         $(NULL)
 
 EXPORTS =                         \
