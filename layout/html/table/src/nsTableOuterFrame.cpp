@@ -290,7 +290,6 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   nsIHTMLReflow* htmlReflow;
   if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
     htmlReflow->WillReflow(*aPresContext);
-    kidFrame->MoveTo(kidMargin.left, aState.y);
     nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize);
     if (kidFrame != mInnerTableFrame) {
       // Reflow captions to the width of the inner table
@@ -512,7 +511,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         nsReflowStatus  captionStatus;
         htmlReflow->WillReflow(aPresContext);
-        mCaptionFrame->MoveTo(captionMargin.left, captionY);
         htmlReflow->Reflow(aPresContext, captionSize, captionReflowState,
                            captionStatus);
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(captionStatus), "unexpected reflow status");

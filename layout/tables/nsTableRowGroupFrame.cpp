@@ -305,7 +305,6 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
 
     if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->WillReflow(*aPresContext);
-      kidFrame->MoveTo(kidMargin.left, aState.y + topMargin);
       if (gsDebug) printf("%p RG reflowing child %d (frame=%p) with avail width = %d\n",
                           this, debugCounter, kidFrame, kidAvailSize.width);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);

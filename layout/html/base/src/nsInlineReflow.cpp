@@ -382,7 +382,6 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
 
   mFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
   htmlReflow->WillReflow(mPresContext);
-  mFrame->MoveTo(x, y);
 
   aBounds.x = x;
   aBounds.y = y;
