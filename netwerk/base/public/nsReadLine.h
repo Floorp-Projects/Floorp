@@ -35,13 +35,13 @@
 
 #define kLineBufferSize 1024
 
-typedef struct {
+struct nsLineBuffer {
   char buf[kLineBufferSize+1];
   char* start;
   char* current;
   char* end;
   PRBool empty;
-} nsLineBuffer;
+};
 
 static nsresult
 NS_InitLineBuffer (nsLineBuffer ** aBufferPtr) {
