@@ -771,7 +771,8 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
         //try to load the module with "gtk-2.0/modules" appended
         char *curLibPath = PR_GetLibraryPath();
         nsCAutoString libPath(curLibPath);
-        MAI_LOG_DEBUG(("Current Lib path=%s\n", curLibPath));
+        libPath.Append(":/usr/lib");
+        MAI_LOG_DEBUG(("Current Lib path=%s\n", libPath.get()));
         PR_FreeLibraryName(curLibPath);
 
         PRInt16 loc1 = 0, loc2 = 0;
