@@ -40,10 +40,11 @@
 #define __nsHTMLSelectAccessible_h__
 
 #include "nsIAccessibleSelectable.h"
+#include "nsAccessibilityAtoms.h"
+#include "nsFormControlAccessible.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
-#include "nsFormControlAccessible.h"
 #include "nsIAccessibilityService.h"
 
 /**
@@ -151,6 +152,7 @@ public:
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetParent(nsIAccessible **aParent);
   NS_IMETHOD GetName(nsAString& aName);
+  nsIFrame*  GetBoundsFrame();
   static nsresult GetFocusedOptionNode(nsIDOMNode *aListNode, nsIDOMNode **aFocusedOptionNode);
 };
 

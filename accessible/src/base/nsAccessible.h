@@ -104,7 +104,6 @@ protected:
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
-  void GetScrollOffset(nsRect *aRect);
   void GetScreenOrigin(nsPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
   virtual void CacheChildren(PRBool aWalkAnonContent);
