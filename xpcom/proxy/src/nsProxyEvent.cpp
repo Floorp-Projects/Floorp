@@ -50,9 +50,9 @@ nsProxyObjectCallInfo::~nsProxyObjectCallInfo()
 }
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_IMPL_ISUPPORTS(nsProxyObject, kISupportsIID)
 
+static NS_DEFINE_IID(kIEventQIID, NS_IEVENTQUEUE_IID);
 
 nsProxyObject::nsProxyObject()
 {
@@ -73,10 +73,20 @@ nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, nsISu
 
     mRealObjectOwned = PR_FALSE;
     mRealObject      = realObject;
-    mDestQueue       = destQueue;
     mProxyType       = proxyType;
 
     mRealObject->AddRef();
+
+    nsresult rv = nsComponentManager::CreateInstance(NS_EVENTQUEUE_PROGID,
+                                                     nsnull,
+                                                     kIEventQIID,
+                                                     (void **)&mDestQueue);
+
+    if (NS_SUCCEEDED(rv))
+    {
+        mDestQueue->InitFromPLQueue(destQueue);
+    }
+
 }
 
 
@@ -86,7 +96,6 @@ nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, const
     NS_ADDREF_THIS();
 
     mRealObjectOwned = PR_TRUE;
-    mDestQueue       = destQueue;
     mProxyType       = proxyType;
     
     nsresult rv = nsComponentManager::CreateInstance(aClass, 
@@ -99,13 +108,25 @@ nsProxyObject::nsProxyObject(PLEventQueue *destQueue, ProxyType proxyType, const
         mRealObjectOwned = PR_FALSE;
         mRealObject      = nsnull;
     }
+
+    rv = nsComponentManager::CreateInstance(NS_EVENTQUEUE_PROGID,
+                                            nsnull,
+                                            kIEventQIID,
+                                            (void **)&mDestQueue);
+
+    if (NS_SUCCEEDED(rv))
+    {
+        mDestQueue->InitFromPLQueue(destQueue);
+    }
+
 }
 
 nsProxyObject::~nsProxyObject()
 {
-    PL_ENTER_EVENT_QUEUE_MONITOR(mDestQueue);
-    PL_RevokeEvents(mDestQueue, this);
-	
+    if (mDestQueue)
+        mDestQueue->EnterMonitor();
+        // Shit!   mDestQueue->RevokeEvents(this);
+    	
     if(mRealObject != nsnull)
     {
         if (!mRealObjectOwned)
@@ -114,7 +135,11 @@ nsProxyObject::~nsProxyObject()
             NS_RELEASE(mRealObject);
     }
 
-    PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
+    if (mDestQueue)
+        mDestQueue->ExitMonitor();
+
+    if (mDestQueue != nsnull)
+        NS_RELEASE(mDestQueue);
 }
 
 nsresult
@@ -123,7 +148,13 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
                       nsXPTCVariant   *params)
 {
     
-    PL_ENTER_EVENT_QUEUE_MONITOR(mDestQueue);
+    if (mDestQueue == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (mRealObject == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mDestQueue->EnterMonitor();
     
     NS_ASSERTION(mRealObject, "no native object");
     
@@ -133,7 +164,7 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
     
     if (event == nsnull) 
     {
-        PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
+        mDestQueue->ExitMonitor();
         return NS_ERROR_OUT_OF_MEMORY;   
     }
 
@@ -147,27 +178,22 @@ nsProxyObject::Post(  PRUint32        methodIndex,           /* which method to 
    
     if (mProxyType == PROXY_SYNC)
     {
-        PL_PostSynchronousEvent(mDestQueue, event);
+        mDestQueue->PostSynchronousEvent(event, nsnull);
         
         nsresult rv = info->GetResult();
-
         delete info;
 
-        PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
-
+        mDestQueue->ExitMonitor();
         return rv;
-
     }
     else if (mProxyType == PROXY_ASYNC)
     {
-        PL_PostEvent(mDestQueue, event);
-        
-        PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
-
+        mDestQueue->PostEvent(event);
+        mDestQueue->ExitMonitor();
         return NS_OK;
     }
     
-    PL_EXIT_EVENT_QUEUE_MONITOR(mDestQueue);
+    mDestQueue->ExitMonitor();
     return NS_ERROR_UNEXPECTED;
     
 }
@@ -191,12 +217,17 @@ void* EventHandler(PLEvent *self)
 {
     nsProxyObjectCallInfo *info        = (nsProxyObjectCallInfo*)PL_GetEventOwner(self);
     nsProxyObject         *proxyObject = info->GetProxyObject();
-    PLEventQueue          *eventQ      = proxyObject->GetQueue();
+    nsIEventQueue         *eventQ      = proxyObject->GetQueue();
 
     if (info != nsnull)
     {
-       
-       PL_ENTER_EVENT_QUEUE_MONITOR(eventQ);
+       if (eventQ == nsnull || proxyObject == nsnull)
+       {
+            info->SetResult(NS_ERROR_OUT_OF_MEMORY) ;
+            return NULL;
+       }
+
+       eventQ->EnterMonitor();
 
         // invoke the magic of xptc...
        nsresult rv = XPTC_InvokeByIndex( proxyObject->GetRealObject(), 
@@ -206,7 +237,7 @@ void* EventHandler(PLEvent *self)
     
        info->SetResult(rv);
 
-       PL_EXIT_EVENT_QUEUE_MONITOR(eventQ);
+       eventQ->ExitMonitor();
     }
     return NULL;
 }

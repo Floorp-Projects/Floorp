@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 
+#include "nsIEventQueue.h"
 #include "plevent.h"
 #include "xptcall.h"
 
@@ -33,6 +34,23 @@ typedef enum
     PROXY_ASYNC      // fire and forget.  This will return immediately and you will lose all return information.
 
 } ProxyType;
+
+// WARNING about PROXY_ASYNC:  
+//
+// If the calling thread goes away, any function which accesses the calling stack 
+// will blow up.
+//
+//  example:
+//
+//     myFoo->bar(&x)
+//
+//     ... thread goes away ...
+//
+//    bar(PRInt32 *x)
+//    {
+//         *x = 0;   <-----  You will blow up here.
+//
+
 
 
 
@@ -65,12 +83,12 @@ class nsProxyObject : public nsISupports
 
         
         nsISupports*        GetRealObject() const { return mRealObject; }
-        PLEventQueue*       GetQueue() const { return mDestQueue; }
+        nsIEventQueue*      GetQueue() const { return mDestQueue; }
         ProxyType           GetProxyType() const { return mProxyType; }
 
     private:
         
-        PLEventQueue    *mDestQueue;                 /* destination queue */
+        nsIEventQueue   *mDestQueue;                 /* destination queue */
         nsISupports     *mRealObject;                /* the non-proxy object that this event is referring to */
         
         PRBool          mRealObjectOwned;

@@ -25,6 +25,7 @@
 
 #include "plevent.h"
 #include "xptcall.h"    // defines nsXPTCVariant
+#include "nsIEventQueue.h"
 
 #include "nsProxyEvent.h"
 #include "nsProxyObjectManager.h"
@@ -88,8 +89,9 @@ public:
                                                  REFNSIID aIID);
 
 
-    PLEventQueue*        GetQueue() const { return mProxyObject->GetQueue(); }
-    
+    nsIEventQueue*        GetQueue() const { return mProxyObject->GetQueue(); }
+    nsIEventQueue*        GetPLQueue() const { return mProxyObject->GetQueue(); }
+
     REFNSIID             GetIID()   const {return GetClass()->GetIID();}
     nsProxyEventClass*   GetClass() const { return mClass; }
 

@@ -262,9 +262,9 @@ void TestCase_TwoClassesOneInterface(void *arg)
     PR_ASSERT(foo);
     PR_ASSERT(foo2);
 
-    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo, PROXY_ASYNC, (void**)&proxyObject);
+    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo, PROXY_SYNC, (void**)&proxyObject);
     
-    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo2, PROXY_ASYNC, (void**)&proxyObject2);
+    proxyObjectFactory->GetProxyObject(argsStruct->queue, nsITestXPCFoo::GetIID(), foo2, PROXY_SYNC, (void**)&proxyObject2);
 
     if (proxyObject && proxyObject2)
     {
@@ -305,7 +305,7 @@ void TestCase_TwoClassesOneInterface(void *arg)
         NS_RELEASE(proxyObject2);
     }    
 
-    PR_Sleep( PR_MillisecondsToInterval(10000) );
+   // PR_Sleep( PR_MillisecondsToInterval(10000) );  // If your thread goes away, your stack goes away.  Only use ASYNC on calls that do not have out parameters
 }
 
 
@@ -410,7 +410,7 @@ main(int argc, char **argv)
                                      0 );
 
     
-    PR_Sleep(PR_MillisecondsToInterval(5000));
+    PR_Sleep(PR_MillisecondsToInterval(1000));
 
     PR_ASSERT(gEventQueue); // BAD BAD BAD.  EVENT THREAD DID NOT CREATE QUEUE.  This may be a timing issue, set the 
                             // sleep about longer, and try again.

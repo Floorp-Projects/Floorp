@@ -40,19 +40,25 @@ class nsIEventQueue : public nsISupports
 public:
 	static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUE_IID; return iid;}
 
-  NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent) = 0;
-  NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult) = 0;
+    NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent) = 0;
+    NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult) = 0;
 	
-  NS_IMETHOD ProcessPendingEvents() = 0;
-  NS_IMETHOD EventLoop() = 0;
+    NS_IMETHOD ProcessPendingEvents() = 0;
+    NS_IMETHOD EventLoop() = 0;
 
 	NS_IMETHOD EventAvailable(PRBool& aResult) = 0;
 	NS_IMETHOD GetEvent(PLEvent** aResult) = 0;
 
-  NS_IMETHOD_(PRInt32) GetEventQueueSelectFD() = 0;
+    NS_IMETHOD_(PRInt32) GetEventQueueSelectFD() = 0;
 
 	NS_IMETHOD Init() = 0;
 	NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue) = 0;
+
+    NS_IMETHOD EnterMonitor() = 0;
+    NS_IMETHOD ExitMonitor() = 0;
+
+    NS_IMETHOD RevokeEvents(void* owner) = 0;
+    NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue) = 0;
 };
 
 #endif /* nsIEventQueue_h___ */

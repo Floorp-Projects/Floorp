@@ -71,6 +71,41 @@ nsEventQueueImpl::PostSynchronousEvent(PLEvent* aEvent, void** aResult)
 }
 
 NS_IMETHODIMP
+nsEventQueueImpl::EnterMonitor()
+{
+    PL_ENTER_EVENT_QUEUE_MONITOR(mEventQueue);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::ExitMonitor()
+{
+    PL_EXIT_EVENT_QUEUE_MONITOR(mEventQueue);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsEventQueueImpl::RevokeEvents(void* owner)
+{
+    PL_RevokeEvents(mEventQueue, owner);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsEventQueueImpl::GetPLEventQueue(PLEventQueue** aEventQueue)
+{
+    *aEventQueue = mEventQueue;
+    
+    if (mEventQueue == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
 {
 	PL_ProcessPendingEvents(mEventQueue);
