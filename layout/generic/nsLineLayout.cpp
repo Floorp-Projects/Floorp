@@ -101,7 +101,6 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mTextAlign = mStyleText->mTextAlign;
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
                                                      aOuterReflowState->frame);
-  mBRFrame = nsnull;
   mLineNumber = 0;
   mColumn = 0;
   mEndsInWhiteSpace = PR_TRUE;
@@ -202,7 +201,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mSpansAllocated = mSpansFreed = mFramesAllocated = mFramesFreed = 0;
 #endif
 
-  mBRFrame = nsnull;
   mColumn = 0;
   mEndsInWhiteSpace = PR_TRUE;
   mUnderstandsWhiteSpace = PR_FALSE;

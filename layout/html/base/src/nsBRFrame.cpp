@@ -93,7 +93,24 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
   // Only when the BR is operating in a line-layout situation will it
   // behave like a BR.
   if (nsnull != aReflowState.lineLayout) {
-    aReflowState.lineLayout->SetBRFrame(this);
+    if (aReflowState.lineLayout->CanPlaceFloaterNow()) {
+      // If we can place a floater on the line now it means that the
+      // line is effectively empty (there may be zero sized compressed
+      // white-space frames on the line, but they are to be ignored).
+      //
+      // Because this frame is going to terminate the line we know
+      // that nothing else will go on the line. Therefore, in this
+      // case only, we provide some height for the BR frame so that it
+      // creates some vertical whitespace.
+      const nsStyleFont* font = (const nsStyleFont*)
+        mStyleContext->GetStyleData(eStyleStruct_Font);
+      aReflowState.rendContext->SetFont(font->mFont);
+      nsIFontMetrics* fm;
+      aReflowState.rendContext->GetFontMetrics(fm);
+      fm->GetHeight(aMetrics.height);
+      NS_RELEASE(fm);
+      aMetrics.ascent = aMetrics.height;
+    }
 
     // Return our reflow status
     PRUint32 breakType = aReflowState.mStyleDisplay->mBreakType;

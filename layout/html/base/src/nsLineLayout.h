@@ -156,19 +156,6 @@ public:
   PRBool LineIsBreakable() const;
 
   //----------------------------------------
-
-  // Inform the line-layout engine about the presence of a BR frame
-  // XXX get rid of this: use get-frame-type?
-  void SetBRFrame(nsIFrame* aFrame) {
-    mBRFrame = aFrame;
-  }
-
-  // Return the line's BR frame if any
-  nsIFrame* GetBRFrame() const {
-    return mBRFrame;
-  }
-
-  //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
   // XXX get rid of this: use get-frame-type?
   void InitFloater(nsPlaceholderFrame* aFrame);
@@ -231,7 +218,6 @@ protected:
 
   // This state varies during the reflow of a line but is line
   // "global" state not span "local" state.
-  nsIFrame* mBRFrame;
   nsIFrame* mFirstLetterFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
