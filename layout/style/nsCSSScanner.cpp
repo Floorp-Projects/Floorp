@@ -280,7 +280,8 @@ void nsCSSScanner::OutputError()
   }
   ClearError();
 }
-
+#else
+#define REPORT_UNEXPECTED_EOF(err_)
 #endif // CSS_REPORT_PARSE_ERRORS
 
 PRUint32 nsCSSScanner::GetLineNumber()
