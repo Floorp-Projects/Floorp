@@ -174,25 +174,6 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsI
 	UpdateProgressPercent();
 	UpdateStatusText(LOCAL_STATUS_DOCUMENT_DONE);
 
-
-	//For timing
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if(NS_SUCCEEDED(rv))
-	{
-		PRBool showPerf;
-		rv = prefs->GetBoolPref("mail.showMessengerPerformance", &showPerf);
-		if(NS_SUCCEEDED(rv) && showPerf)
-		{
-			nsTime currentTime;
-			nsInt64 difference = currentTime - m_startTime;
-			nsInt64 seconds(1000000);
-			nsInt64 timeInSeconds = difference / seconds;
-			PRUint32 timeInSecondsUint32 = (PRUint32)timeInSeconds;
-
-			printf("Time to parse %s= %d seconds\n", m_mailboxName, timeInSecondsUint32);
-		}
-	}
 	return NS_OK;
 
 }
