@@ -1,0 +1,5 @@
+<!-- extracted from ./related-panel.xul -->
+
+<!ENTITY related.row.label    "Related Links">
+<!ENTITY sitemap.row.label    "Sitemap">
+<!ENTITY lastsearch.row.label "Last Search Results">
