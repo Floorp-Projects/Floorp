@@ -205,7 +205,8 @@ sub build_blame {
 }
 
 sub print_warnings_as_html {
-  my ($fh, $buildname, $buildtime) = @_;
+  my ($fh, $br) = @_;
+  my ($buildname, $buildtime) = ($br->{buildname}, $br->{buildtime});
 
   my $time_str = print_time( $buildtime );
 
