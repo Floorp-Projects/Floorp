@@ -45,6 +45,7 @@ XPIDLSRCS = \
       nsIAccessibleTable.idl \
       nsIAccessibleText.idl \
       nsIAccessibleValue.idl \
+      nsIAccessibleWin32Object.idl \
       $(NULL)
 
 include $(topsrcdir)/config/rules.mk
