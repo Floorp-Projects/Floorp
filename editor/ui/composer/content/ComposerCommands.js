@@ -165,6 +165,19 @@ var nsPreviewCommand =
   }
 };
 
+//-----------------------------------------------------------------------------------
+var nsQuitCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return true;    // we can always do this
+  },
+
+  doCommand: function(aCommand)
+  {
+    goQuitApplication();
+  }
+};
 
 //-----------------------------------------------------------------------------------
 var nsFindCommand =
@@ -558,6 +571,7 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_open",       nsOpenCommand);
   gComposerCommandManager.registerCommand("cmd_openRemote", nsOpenRemoteCommand);
   gComposerCommandManager.registerCommand("cmd_preview",    nsPreviewCommand);
+  gComposerCommandManager.registerCommand("cmd_quit",       nsQuitCommand);
 
   gComposerCommandManager.registerCommand("cmd_find",       nsFindCommand);
   gComposerCommandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
