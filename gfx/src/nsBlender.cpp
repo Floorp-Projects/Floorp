@@ -113,39 +113,56 @@ nsBlender::Init(nsIDeviceContext *aContext)
   return NS_OK;
 }
 
+static void rangeCheck(nsIDrawingSurface* surface, PRInt32& aX, PRInt32& aY, PRInt32& aWidth, PRInt32& aHeight)
+{
+  PRUint32 width, height;
+  surface->GetDimensions(&width, &height);
+  
+  // ensure that the origin is within bounds of the drawing surface.
+  if (aX < 0)
+    aX = 0;
+  else if (aX > (PRInt32)width)
+    aX = width;
+  if (aY < 0)
+    aY = 0;
+  else if (aY > (PRInt32)height)
+    aY = height;
+  
+  // ensure that the dimensions are within bounds.
+  if (aX + aWidth > (PRInt32)width)
+    aWidth = width - aX;
+  if (aY + aHeight > (PRInt32)height)
+    aHeight = height - aY;
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsBlender.h
  *	@update 2/25/00 dwc
  */
 NS_IMETHODIMP
-nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
-                    nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                    nsDrawingSurface aSecondSrc, nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsDrawingSurface aSrc,
+                 nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                 nsDrawingSurface aSecondSrc, nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
-nsresult      result = NS_ERROR_FAILURE;
-nsPoint       srcloc, maskloc;
-nsPixelFormat pixformat;
-nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
+  nsresult result = NS_ERROR_FAILURE;
 
+  nsIDrawingSurface* srcSurface = (nsIDrawingSurface *)aSrc;
+  nsIDrawingSurface* destSurface = (nsIDrawingSurface *)aDst;
+  nsIDrawingSurface* secondSrcSurface = (nsIDrawingSurface *)aSecondSrc;
 
-  SrcSurf = (nsIDrawingSurface *)aSrc;
-  DstSurf = (nsIDrawingSurface *)aDst;
-  SecondSrcSurf = (nsIDrawingSurface *)aSecondSrc;
+  // range check the coordinates in both the source and destination buffers.
+  rangeCheck(srcSurface, aSX, aSY, aWidth, aHeight);
+  rangeCheck(destSurface, aDX, aDY, aWidth, aHeight);
 
   mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
 
-  if (NS_OK == SrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY)){
-    if (NS_OK == DstSurf->Lock(aDX, aDY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0)){
-      if (SecondSrcSurf)
-        SecondSrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
+  if (NS_OK == srcSurface->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY)) {
+    if (NS_OK == destSurface->Lock(aDX, aDY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0)) {
+      if (secondSrcSurface)
+        secondSrcSurface->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
 
-      srcloc.x = 0;
-      srcloc.y = 0;
-
-      maskloc.x = 0;
-      maskloc.y = 0;
-
-      SrcSurf->GetPixelFormat(&pixformat);
+      nsPixelFormat pixformat;
+      srcSurface->GetPixelFormat(&pixformat);
 
       result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
                      mDestBytes, mDestRowBytes, mDestSpan,
@@ -153,13 +170,13 @@ nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
                      aHeight, (PRInt32)(aSrcOpacity * 100), pixformat,
                      aSrcBackColor, aSecondSrcBackColor);
 
-      DstSurf->Unlock();
+      destSurface->Unlock();
 
-      if (SecondSrcSurf)
-        SecondSrcSurf->Unlock();
+      if (secondSrcSurface)
+        secondSrcSurface->Unlock();
     }
 
-    SrcSurf->Unlock();
+    srcSurface->Unlock();
   }
 
   return result;
@@ -170,58 +187,18 @@ nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
  *	@update 2/25/00 dwc
  */
 NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIRenderingContext *aSrc,
-                   nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
-                   nsIRenderingContext *aSecondSrc, nscolor aSrcBackColor,
-                   nscolor aSecondSrcBackColor)
+                               nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
+                               nsIRenderingContext *aSecondSrc, nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
-  nsresult          result = NS_ERROR_FAILURE;
-  PRUint32          width,height;
-  nsPixelFormat     pixformat;
-  nsDrawingSurface  srcsurf;
-
-  mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
-
-  aSrc->GetDrawingSurface(&srcsurf);
-  ((nsIDrawingSurface *)srcsurf)->GetDimensions(&width,&height);
-
-  if(aSY > (PRInt32)height)
-    return NS_OK;
-  
-  if ((aSY+aHeight) > (PRInt32)height)
-    aHeight = aHeight-aSY;
-
-
-  if (NS_OK == aSrc->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY))
-  {
-    if (NS_OK == aDest->LockDrawingSurface(aDX, aDY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0))
-    {
-      if (aSecondSrc)
-        aSecondSrc->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
-
-      aSrc->GetDrawingSurface(&srcsurf);
-      ((nsIDrawingSurface *)srcsurf)->GetPixelFormat(&pixformat);
-      ((nsIDrawingSurface *)srcsurf)->GetDimensions(&width,&height);
-
-      if(aHeight > (PRInt32)height)
-        aHeight = height;
-
-      if (aSY > (PRInt32)height)
-        return NS_OK;
-        
-      result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
-                     mDestBytes, mDestRowBytes, mDestSpan,
-                     mSecondSrcBytes, mSecondSrcRowBytes, mSecondSrcSpan,
-                     aHeight, (PRInt32)(aSrcOpacity * 100), pixformat,
-                     aSrcBackColor, aSecondSrcBackColor);
-
-      aDest->UnlockDrawingSurface();
-
-      if (aSecondSrc)
-        aSecondSrc->UnlockDrawingSurface();
-    }
-    aSrc->UnlockDrawingSurface();
-  }
-  return result;
+  // just hand off to the drawing surface blender, to make code easier to maintain.
+  nsDrawingSurface srcSurface, destSurface, secondSrcSurface = nsnull;
+  aSrc->GetDrawingSurface(&srcSurface);
+  aDest->GetDrawingSurface(&destSurface);
+  if (aSecondSrc != nsnull)
+    aSecondSrc->GetDrawingSurface(&secondSrcSurface);
+  return Blend(aSX, aSY, aWidth, aHeight, srcSurface, destSurface,
+               aDX, aDY, aSrcOpacity, secondSrcSurface,
+               aSrcBackColor, aSecondSrcBackColor);
 }
 
 /** ---------------------------------------------------
@@ -587,7 +564,7 @@ extern void inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 bits,PRUint32 *di
 void
 nsBlender::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
 {
-PRUint32   r,g,b,r1,g1,b1,i;
+PRUint32  r,g,b,r1,g1,b1,i;
 PRUint8   *d1,*d2,*s1,*s2;
 PRInt32   x,y,val1,val2,numlines,xinc,yinc;;
 PRUint8   *mapptr,*invermap;
@@ -728,7 +705,7 @@ PRUint32        r,g,b;
   x = 1 << nbits;                               // 8
   xsqr = 1 << (2 * nbits);                      // 64   
 
-  // Compute "strides" for accessing the arrays. */
+  // Compute "strides" for accessing the arrays
   gstride = colormax;                           // 32
   rstride = colormax * colormax;                // 1024
 
