@@ -68,7 +68,7 @@ interface nsISVGGradient;
  *
  * @nosubgrouping
  */
-[scriptable, uuid(1130c772-f329-4ab7-8a77-41dac7b85add)]
+[uuid(1130c772-f329-4ab7-8a77-41dac7b85add)]
 interface nsISVGGeometrySource : nsISupports
 {
   /**
@@ -83,7 +83,7 @@ interface nsISVGGeometrySource : nsISupports
    * @name Presentation context
    * @{
    */
-  [noscript] readonly attribute nsPresContext presContext;
+  readonly attribute nsPresContext presContext;
   const unsigned long UPDATEMASK_PRES_CONTEXT      = 0x00000001;
   /** @} */
   
@@ -187,7 +187,6 @@ interface nsISVGGeometrySource : nsISupports
    * @name Paint type constants for stroke and fill paint
    * @{
    */
-  /* these values must be kept in sync with content/shared/public/nsStyleStruct.h */
   const unsigned short PAINT_TYPE_NONE          = 0;
   const unsigned short PAINT_TYPE_SOLID_COLOR   = 1;
   const unsigned short PAINT_TYPE_SERVER        = 2; 
@@ -197,33 +196,45 @@ interface nsISVGGeometrySource : nsISupports
    * @name Stroke paint
    * @{
    */
-  /* **** stroke paint XXX needs consolidation ********************* */  
   readonly attribute unsigned short strokePaintType; 
   const unsigned long UPDATEMASK_STROKE_PAINT_TYPE   = 0x00000800;
 
-  [noscript] readonly attribute nscolor strokePaint; 
+  /* strokePaint will only be valid if strokePaintType ==
+   * PAINT_TYPE_SOLID_COLOR */
+  readonly attribute nscolor strokePaint;
+  
+  /* GetStrokeGradient will only return a valid result if
+   * strokePaintType == PAINT_TYPE_SERVER */
+  void GetStrokeGradient(out nsISVGGradient aGrad);
+  
+  /* signifies that either paint color or server have changed,
+   * depending on current strokePaintType */
   const unsigned long UPDATEMASK_STROKE_PAINT        = 0x00001000;
 
-  // convenience function to get a gradient from a PaintServer
-  [noscript] void GetStrokeGradient(out nsISVGGradient aGrad);
   /** @} */
 
   /**
    * @name Fill paint
    * @{
    */
-  /* **** fill paint XXX needs consolidation *********************** */
   readonly attribute unsigned short fillPaintType; 
   const unsigned long UPDATEMASK_FILL_PAINT_TYPE     = 0x00004000;
 
-  [noscript] readonly attribute nscolor fillPaint; 
-  const unsigned long UPDATEMASK_FILL_PAINT          = 0x00008000;  
-
-  // convenience function to get a gradient from a PaintServer
-  [noscript] void GetFillGradient(out nsISVGGradient aGrad);
+  /* fillPaint will only be valid if fillPaintType ==
+   * PAINT_TYPE_SOLID_COLOR */
+  readonly attribute nscolor fillPaint;
+  
+  /* GetFillGradient will only return a valid result if
+   * fillPaintType == PAINT_TYPE_SERVER */
+  void GetFillGradient(out nsISVGGradient aGrad);
+  
+  /* signifies that either paint color or server have changed,
+   * depending on current fillPaintType */
+  const unsigned long UPDATEMASK_FILL_PAINT          = 0x00008000;
+  
   /** @} */
 
-  [noscript] boolean IsClipChild();
+  boolean IsClipChild();
 };
 
 /** @} */
