@@ -174,7 +174,7 @@ interface nsIMsgCompose : nsISupports {
   readonly attribute boolean composeHTML;
 
 	/* ... */
-  readonly attribute MSG_ComposeType type;
+  attribute MSG_ComposeType type;
 
 	/* ... */
   readonly attribute long wrapLength;
@@ -192,7 +192,7 @@ interface nsIMsgCompose : nsISupports {
 	[noscript] void setCiteReference(in nsString citeReference);
 
   /* Set the URI of the folder where the message has been saved */
-  [noscript] void setSavedFoldeURI(in string folderURI);
+  [noscript] attribute string savedFolderURI;
 
   /* Append the signature defined in the identity to the msgBody */
   [noscript] void processSignature(in nsIMsgIdentity identity, inout nsString aMsgBody);

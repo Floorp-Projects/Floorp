@@ -3237,6 +3237,13 @@ nsMsgComposeAndSend::SetMessageKey(PRUint32 aMessageKey)
 }
 
 NS_IMETHODIMP
+nsMsgComposeAndSend::GetMessageKey(PRUint32 *aMessageKey)
+{
+    *aMessageKey = m_messageKey;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgComposeAndSend::GetMessageId(nsCString* aMessageId)
 {
   NS_ENSURE_ARG(aMessageId);

@@ -2529,3 +2529,24 @@ NS_IMETHODIMP nsMsgFolder::GetUriForMsg(nsIMsgDBHdr *msgHdr, char **aURI)
   *aURI = uri.ToNewCString();
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgFolder::GenerateMessageURI(nsMsgKey msgKey, char **aURI)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsXPIDLCString baseURI;
+
+  nsresult rv = GetBaseMessageURI(getter_Copies(baseURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCAutoString uri;
+  uri.Assign(baseURI);
+
+  // append a "#" followed by the message key.
+  uri.Append('#');
+  uri.AppendInt(msgKey);
+
+  *aURI = uri.ToNewCString();
+  if (! *aURI)
+	  return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}

@@ -4801,6 +4801,9 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                         command = "SEARCH SEEN HEADER Message-ID ";
                         command.Append(messageId);
 
+                        // Clean up result sequence before issuing the cmd.
+                        GetServerStateParser().ResetSearchResultSequence();
+ 
                         Search(command, PR_TRUE, PR_FALSE);
                         if (GetServerStateParser().LastCommandSuccessful())
             {

@@ -184,6 +184,8 @@ public:
 	// nsIWebProgressListener interface
 	NS_DECL_NSIWEBPROGRESSLISTENER
 
+  nsresult    RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBool calledByCopy);
+
 private:
   nsWeakPtr               mWeakComposeObj;
 	MSG_DeliverMode         mDeliverMode;

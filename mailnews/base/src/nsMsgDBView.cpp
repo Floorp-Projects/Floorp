@@ -469,17 +469,7 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
 nsresult nsMsgDBView::GenerateURIForMsgKey(nsMsgKey aMsgKey, nsIMsgFolder *folder, char ** aURI)
 {
   NS_ENSURE_ARG(folder);
-  nsXPIDLCString baseURI;
-  folder->GetBaseMessageURI(getter_Copies(baseURI));
-  nsCAutoString uri;
-  uri.Assign(baseURI);
-
-  // append a "#" followed by the message key.
-  uri.Append('#');
-  uri.AppendInt(aMsgKey);
-
-  *aURI = uri.ToNewCString();
-  return NS_OK;
+	return(folder->GenerateMessageURI(aMsgKey, aURI));
 }
 
 nsresult nsMsgDBView::CycleThreadedColumn(nsIDOMElement * aElement)

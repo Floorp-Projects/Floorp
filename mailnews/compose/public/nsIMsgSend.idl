@@ -39,6 +39,7 @@
 #include "nsIMsgComposeProgress.idl"
 #include "domstubs.idl"
 #include "nsIPrompt.idl"
+#include "MailNewsTypes2.idl"
 
 %{C++
 #include "nsIURL.h"
@@ -213,8 +214,8 @@ interface nsIMsgSend : nsISupports
     [noscript] void notifyListenerOnStartCopy(); 
     [noscript] void notifyListenerOnProgressCopy(in unsigned long aProgress, in unsigned long aProgressMax);
     [noscript] void notifyListenerOnStopCopy(in nsresult aStatus);
-    [noscript] void setMessageKey(in unsigned long  aMessageKey);
     [noscript] void getMessageId(in nsCString messageID);
+    [noscript] attribute nsMsgKey messageKey;
 
     [noscript] nsIPrompt getDefaultPrompt();
     

@@ -214,6 +214,8 @@ public:
 
 	NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 
+	NS_IMETHOD GenerateMessageURI(nsMsgKey msgKey, char **aURI);
+
 
 protected:
   
