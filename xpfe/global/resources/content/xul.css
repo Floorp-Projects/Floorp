@@ -214,11 +214,11 @@ tree {
 tree {
  behavior: url("chrome://global/content/treeBindings.xml#tree");
 }
+*/
 
 tree > treechildren {
  behavior: url("chrome://global/content/treeBindings.xml#treerows");
 }
-*/
 
 treeitem { 
  display: table-row-group; 

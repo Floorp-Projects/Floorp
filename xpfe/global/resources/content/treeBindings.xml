@@ -25,7 +25,7 @@
                         parentNode.toggleItemSelection(event.target.parentNode.parentNode);"/>
       <handler type="click" shift="true" primary="false"
                value="if (event.target.tagName == 'treecell') 
-                        parentNode.selectItemRange(event.target.parentNode.parentNode);"/>
+                        parentNode.selectItemRange(null, event.target.parentNode.parentNode);"/>
       <handler type="click" shift="false" primary="false" clickcount="2">
       <![CDATA[
          if (event.target.tagName == 'treecell') {
