@@ -3087,19 +3087,18 @@ void CHTMLView::ClickSelfLayer(
 			if ( cr.IsClickOnSelection() ) {
 				// are we dragging? Use a try block to ensure that we set click record back to nil
 				mCurrentClickRecord = &cr;
-				CHTMLClickRecord::EClickState theMouseAction = CHTMLClickRecord::eUndefined;				
+				EClickState theMouseAction = eMouseUndefined;				
 				try {
 					// don't allow context menus here, we'll handle them below. Is this the
 					// right thing to do?
-					theMouseAction
-						= cr.WaitForMouseAction(inMouseDown, this, GetDblTime(), false);
+					theMouseAction = cr.WaitForMouseAction(inMouseDown, this, GetDblTime(), false);
 				}
 				catch(...) {}
 				mCurrentClickRecord = nil;
 				
 				// if so, drag the selection
 				try {
-					if ( theMouseAction == CHTMLClickRecord::eMouseDragging ) {
+					if ( theMouseAction == eMouseDragging ) {
 						StValueChanger<Boolean> val (mDragSelection, true);
 						ClickDragSelection(inMouseDown, theElement);
 						bClickHandled = true;
@@ -3121,12 +3120,11 @@ void CHTMLView::ClickSelfLayer(
 				LO_HighlightAnchor(*mContext, theElement, true);
 		
 				mCurrentClickRecord = &cr;
-				CHTMLClickRecord::EClickState theMouseAction = CHTMLClickRecord::eUndefined;
+				EClickState theMouseAction = eMouseUndefined;
 				// Use a try block to ensure that we set it back to nil
 				try
 				{
-					theMouseAction
-						= cr.WaitForMouseAction(inMouseDown, this, GetDblTime(), ContextMenuPopupsEnabled());
+					theMouseAction = cr.WaitForMouseAction(inMouseDown, this, GetDblTime(), ContextMenuPopupsEnabled());
 				}
 				catch(...) {}
 				mCurrentClickRecord = nil;
@@ -3139,11 +3137,11 @@ void CHTMLView::ClickSelfLayer(
 				
 				switch (theMouseAction)
 				{
-					case CHTMLClickRecord::eMouseDragging:
+					case eMouseDragging:
 						ClickDragLink(inMouseDown, theElement);
 						break;
 					
-					case CHTMLClickRecord::eMouseTimeout:
+					case eMouseTimeout:
 /*
 					{
 						Int16 thePopResult = this->DoPopup(inMouseDown, cr);
@@ -3155,12 +3153,12 @@ void CHTMLView::ClickSelfLayer(
 */
 						break;
 					
-					case CHTMLClickRecord::eMouseUpEarly:
+					case eMouseUpEarly:
 						ClickSelfLink(inMouseDown, cr, false);
 						doUnhighlight = false;
 						break;
 					
-					case CHTMLClickRecord::eHandledByAttachment:
+					case eMouseHandledByAttachment:
 						// Nothing else to do.
 						break;
 					default:
@@ -3175,14 +3173,14 @@ void CHTMLView::ClickSelfLayer(
 			{
 				// ¥ allow dragging of non-anchor images
 				mCurrentClickRecord = &cr;
-				CHTMLClickRecord::EClickState theMouseAction = CHTMLClickRecord::eUndefined;
+				EClickState theMouseAction = eMouseUndefined;
 				try
 				{
 					theMouseAction = cr.WaitForMouseAction(inMouseDown.whereLocal, inMouseDown.macEvent.when, GetDblTime());
 				}
 				catch(...) {}
 				mCurrentClickRecord = nil;
-				if (theMouseAction == CHTMLClickRecord::eMouseDragging)
+				if (theMouseAction == eMouseDragging)
 				{
 					ClickDragLink(inMouseDown, theElement);
 					bClickHandled = true;
@@ -3291,15 +3289,14 @@ void CHTMLView::ClickSelfLayer(
 	if (!bClickHandled && ContextMenuPopupsEnabled())
 	{
 		mCurrentClickRecord = &cr;
-		CHTMLClickRecord::EClickState mouseAction = CHTMLClickRecord::eUndefined;
+		EClickState mouseAction = eMouseUndefined;
 		try
 		{
-			mouseAction = CHTMLClickRecord::WaitForMouseAction(
-				inMouseDown, this, GetDblTime());
+			mouseAction = CHTMLClickRecord::WaitForMouseAction(inMouseDown, this, GetDblTime());
 		}
 		catch (...) {}
 		mCurrentClickRecord = nil;
-		if ( mouseAction == CHTMLClickRecord::eHandledByAttachment )
+		if ( mouseAction == eMouseHandledByAttachment )
 			bClickHandled = TRUE;
 /*
 		if ( mouseAction == CHTMLClickRecord::eMouseTimeout ) // No popup when we have grids
