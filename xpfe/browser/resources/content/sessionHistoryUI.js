@@ -100,7 +100,13 @@ function executeUrlBarHistoryCommand( aTarget )
     var label = aTarget.getAttribute("label");
     if (index != "nothing_available" && label)
       {
-        loadURI(getShortcutOrURI(label));
+        var uri = getShortcutOrURI(label);
+        if (gURLBar) {
+          gURLBar.value = uri;
+          BrowserLoadURL();
+        }
+        else
+          loadURI(uri);
       }
   }
 
