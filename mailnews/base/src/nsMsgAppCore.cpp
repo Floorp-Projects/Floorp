@@ -525,9 +525,7 @@ nsMsgAppCore::OpenURL(const char * url)
 			{
 				nsString folderURI;
 				nsParseLocalMessageURI(url, folderURI, &msgIndex);
-				char *rootURI = folderURI.ToNewCString();
-				nsURI2Path(kMessageRootURI, rootURI, folderPath);
-				delete[] rootURI;
+				nsURI2Path(kMessageRootURI, nsAutoCString(folderURI), folderPath);
 				displayNumber = PR_FALSE;
 			}
 			nsIMailboxService * mailboxService = nsnull;
