@@ -1058,7 +1058,22 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   if (mCellSpacingTotal > 0) {
     mCellSpacingTotal += spacingX; // add last cell spacing on right
   }
-
+//set the table col fixed width if present
+  for (colX = 0; colX < numCols; colX++) { 
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+    if (!colFrame) continue;
+    nscoord fixColWidth = colFrame->GetWidth(FIX);
+    // use the style width of a col only if the col hasn't gotten a fixed width from any cell
+    if (fixColWidth <= 0) {
+      nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
+      if (eStyleUnit_Coord == colStyleWidth.GetUnit()) {
+        fixColWidth = colStyleWidth.GetCoordValue();
+        if (fixColWidth > 0) {
+          colFrame->SetWidth(FIX, fixColWidth);
+        }
+      }
+    }
+  }
   PRBool* pctRequest = (hasPctCol) ? nsnull : &hasPctCol;
   ComputeNonPctColspanWidths(aReflowState, PR_FALSE, aPixelToTwips, pctRequest);
 
@@ -1104,22 +1119,9 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     }
   }
 
-  // Set the col's fixed width if present 
   // Set the table col width for each col to the content min. 
   for (colX = 0; colX < numCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    if (!colFrame) continue;
-    nscoord fixColWidth = colFrame->GetWidth(FIX);
-    // use the style width of a col only if the col hasn't gotten a fixed width from any cell
-    if (fixColWidth <= 0) {
-      nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
-      if (eStyleUnit_Coord == colStyleWidth.GetUnit()) {
-        fixColWidth = colStyleWidth.GetCoordValue();
-        if (fixColWidth > 0) {
-          colFrame->SetWidth(FIX, fixColWidth);
-        }
-      }
-    }
     nscoord minWidth = colFrame->GetMinWidth();
     mTableFrame->SetColumnWidth(colX, minWidth);
   }
