@@ -74,6 +74,8 @@
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
 
+#include "nsXPFEComponentsCID.h"
+
 #define RUNKEY "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 
 // Objects that describe the Windows registry entries that we need to tweak.
