@@ -3421,7 +3421,7 @@ nsDocument::AdoptNode(nsIDOMNode *source, nsIDOMNode **aReturn)
 }
 
 NS_IMETHODIMP
-nsDocument::GetConfig(nsIDOMDOMConfiguration **aConfig)
+nsDocument::GetDomConfig(nsIDOMDOMConfiguration **aConfig)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
