@@ -67,7 +67,7 @@ nsPSPrinterList::Init()
     NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
 
     // Should we try cups?
-    PRBool useCups;
+    PRBool useCups = PR_TRUE;
     rv = mPref->GetBoolPref("postscript.cups.enabled", &useCups);
     if (useCups)
         mCups.Init();
