@@ -35,6 +35,7 @@
 #include "nsScriptableRegion.h"
 #include "nsIImageManager.h"
 #include "nsScreenManagerWin.h"
+#include "nsPrintOptionsWin.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
@@ -48,6 +49,7 @@ static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_
 static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
 static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
+static NS_DEFINE_IID(kCPrintOptions, NS_PRINTOPTIONS_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -204,6 +206,9 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
     {
       res = iManager->QueryInterface(NS_GET_IID(nsISupports), (void**)&inst);
     }
+  }
+  else if (mClassID.Equals(kCPrintOptions)) {
+    NS_NEWXPCOM(inst, nsPrintOptionsWin);
   }
   else if (mClassID.Equals(kCFontEnumerator)) {
     nsFontEnumeratorWin* fe;
