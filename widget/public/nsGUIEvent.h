@@ -234,6 +234,12 @@ enum nsDragDropEventStatus {
 // Menu item selected
 #define NS_MENU_SELECTED                (NS_WINDOW_START + 38)
 
+// Form control changed: currently == combo box selection changed
+// but could be expanded to mean textbox, checkbox changed, etc.
+// This is a GUI specific event that does not necessarily correspond
+// directly to a mouse click or a key press.
+#define NS_CONTROL_CHANGE                (NS_WINDOW_START + 39)
+
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
