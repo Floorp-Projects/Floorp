@@ -265,7 +265,7 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
 {
   nsHTMLValue val;                                                 
-  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::checked, val);       
+  nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::defaultchecked, val);       
   *aDefaultChecked = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
   return NS_OK;                                                     
 }
@@ -275,9 +275,9 @@ nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
 {
   nsHTMLValue empty(eHTMLUnit_Empty);
   if (aDefaultChecked) {                                                     
-    return mInner.SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
+    return mInner.SetHTMLAttribute(nsHTMLAtoms::defaultchecked, empty, PR_TRUE); 
   } else {                                                            
-    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);             
+    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultchecked, PR_TRUE);             
     return NS_OK;                                                   
   }                                                                 
 }
@@ -349,44 +349,23 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(PRBool* aValue)
 {
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_CHECKBOX == type) {
-    if (nsnull != mWidget) {
-      nsICheckButton* checkbox = nsnull;
-      if (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkbox)) {
-        checkbox->GetState(*aValue); 
-        NS_RELEASE(checkbox);
-        return NS_OK;
-      }
-    }
-  } else if (NS_FORM_INPUT_RADIO == type) {
-    if (nsnull != mWidget) {
-      nsIRadioButton* radio = nsnull;
-      if (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio)) {
-        radio->GetState(*aValue); 
-        NS_RELEASE(radio);
-        return NS_OK;
-      }
-    }
-  }
-  
-  return GetDefaultChecked(aValue);
+  nsString val;                                                 
+  nsresult rv = mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, val);       
+  *aValue = (NS_CONTENT_ATTR_NOT_THERE != rv);                        
+  return NS_OK;  
 }
 
 
 NS_IMETHODIMP 
 nsHTMLInputElement::SetChecked(PRBool aValue)
 {
-  PRInt32 type;
-  GetType(&type);
-  if ((NS_FORM_INPUT_CHECKBOX == type) || (NS_FORM_INPUT_RADIO == type)) {
-    nsAutoString value;
-    value = (aValue) ? "1" : "0"; // XXX this should use nsHTMLValue and store an empty or not
-    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, value, PR_TRUE);
-  } 
-
-  return SetDefaultChecked(aValue);
+  nsAutoString empty;                                               
+  if (aValue) {                                                     
+    return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, empty, PR_TRUE); 
+  } else {                                                            
+    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);             
+    return NS_OK;                                                   
+  }         
 }
 
 NS_IMETHODIMP

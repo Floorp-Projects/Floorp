@@ -254,6 +254,39 @@ protected:
                     const nsHTMLReflowState& aReflowState,
                     nsSize& aSize);
 
+//
+//-------------------------------------------------------------------------------------
+//  Utility methods for managing checkboxes and radiobuttons
+//-------------------------------------------------------------------------------------
+//   
+   /**
+    * Get the state of the checked attribute.
+    * @param aState set to PR_TRUE if the checked attribute is set,
+    * PR_FALSE if the checked attribute has been removed
+    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
+    */
+
+  nsresult GetCurrentCheckState(PRBool* aState);
+ 
+   /**
+    * Set the state of the checked attribute.
+    * @param aState set to PR_TRUE to set the attribute,
+    * PR_FALSE to unset the attribute
+    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
+    */
+
+  nsresult SetCurrentCheckState(PRBool aState);
+
+   /**
+    * Get the state of the defaultchecked attribute.
+    * @param aState set to PR_TRUE if the defaultchecked attribute is set,
+    * PR_FALSE if the defaultchecked attribute has been removed
+    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
+    */
+ 
+  nsresult GetDefaultCheckState(PRBool* aState);
+
+
   //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
   //                    nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
@@ -389,10 +422,11 @@ protected:
 	  * 
     * @param aRenderingContext the rendering context
 	  * @param aPixelsToTwips scale factor for convering pixels to twips.
+    * @param aBackgroundColor color for background of checkbox 
     */
 
   static void PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderingContext,
-                         float aPixelsToTwips);
+                         float aPixelsToTwips, const nsStyleColor& aBackgroundColor);
 
    /**
     * Paint a rectangular button. Includes background, string, and focus indicator

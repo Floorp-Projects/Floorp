@@ -44,6 +44,7 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 class nsCheckboxControlFrame : public nsFormControlFrame {
 public:
+  nsCheckboxControlFrame();
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);
@@ -70,13 +71,9 @@ public:
 
   virtual void Reset();
 
-  NS_IMETHOD GetChecked(PRBool* aResult);
-
   //
   // Methods used to GFX-render the checkbox
   // 
-
-  virtual void GetCurrentCheckState(PRBool* aState);
 
   virtual void PaintCheckBox(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,
@@ -86,6 +83,11 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
+
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
+
   //End of GFX-rendering methods
   
 protected:
@@ -93,6 +95,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
+  PRBool mMouseDownOnCheckbox;
 };
 
 nsresult
@@ -103,6 +106,11 @@ NS_NewCheckboxControlFrame(nsIFrame*& aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
+}
+
+nsCheckboxControlFrame::nsCheckboxControlFrame()
+{
+  mMouseDownOnCheckbox = PR_FALSE;
 }
 
 const nsIID&
@@ -137,25 +145,6 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredLayoutSize.descent = 0;
 }
 
-NS_IMETHODIMP
-nsCheckboxControlFrame::GetChecked(PRBool* aResult)
-{
-  nsresult result = NS_FORM_NOTOK;
-  *aResult = PR_FALSE;
-  if (mContent) {
-    nsIHTMLContent* iContent = nsnull;
-    result = mContent->QueryInterface(kIHTMLContentIID, (void**)&iContent);
-    if ((NS_OK == result) && iContent) {
-      nsHTMLValue value;
-      result = iContent->GetHTMLAttribute(nsHTMLAtoms::checked, value);
-      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-        *aResult = PR_TRUE;
-      }
-      NS_RELEASE(iContent);
-    }
-  }
-  return result;
-}
 
 void 
 nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
@@ -171,7 +160,7 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& 
   nsICheckButton* checkbox = nsnull;
   if (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox)) {
     PRBool checked;
-    nsresult result = GetChecked(&checked);
+    nsresult result = GetCurrentCheckState(&checked);
     if (NS_CONTENT_ATTR_HAS_VALUE == result) {
       checkbox->SetState(checked);
     }
@@ -192,7 +181,7 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       result = mWidget->QueryInterface(GetIID(), (void**)&button);
       if ((NS_SUCCEEDED(result)) && (nsnull != button)) {
         PRBool checkedAttr;
-        GetChecked(&checkedAttr);
+        GetCurrentCheckState(&checkedAttr);
         PRBool checkedPrevState;
         button->GetState(checkedPrevState);
         if (checkedAttr != checkedPrevState) {
@@ -205,37 +194,14 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   return result;
 }
 
-void nsCheckboxControlFrame::GetCurrentCheckState(PRBool *aState)
-{
-  nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
-    inputElement->GetChecked(aState);
-    NS_RELEASE(inputElement);
-  }
-}
-
-//XXX: This may be needed later when we actually need the correct state for the checkbox
-//void nsCheckboxControlFrame::SetCurrentCheckState(PRBool aState)
-//{
-//   nsIDOMHTMLInputElement* inputElement;
-//  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
-//    inputElement->SetDefaultChecked(aState); //XXX: TEMPORARY this should be GetChecked but it get's it's state from the widget instead
-//    NS_RELEASE(inputElement);
-//  }
-//}
-
 void 
 nsCheckboxControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  nsICheckButton* checkbox = nsnull;
-  if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox))) {
-    PRBool oldState;
-    checkbox->GetState(oldState);
-    PRBool newState = oldState ? PR_FALSE : PR_TRUE;
-    checkbox->SetState(newState);
- //   SetCurrentCheckState(newState); // Let content model know about the change
-    NS_IF_RELEASE(checkbox);
-  }
+  mMouseDownOnCheckbox = PR_FALSE;
+  PRBool oldState;
+  GetCurrentCheckState(&oldState);
+  PRBool newState = oldState ? PR_FALSE : PR_TRUE;
+  SetCurrentCheckState(newState); 
 }
 
 PRInt32 
@@ -284,24 +250,40 @@ nsCheckboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
 
 void 
 nsCheckboxControlFrame::Reset() 
-{ 
-  nsICheckButton*  checkBox = nsnull;
-  if ((mWidget != nsnull) && 
-      (NS_OK == mWidget->QueryInterface(kICheckButtonIID,(void**)&checkBox))) {
-    PRBool checked;
-    GetChecked(&checked);
-    checkBox->SetState(checked);
-    NS_RELEASE(checkBox);
-  }
+{
+  PRBool checked;
+  GetDefaultCheckState(&checked);
+  SetCurrentCheckState(checked);
 }  
 
 void
 nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
-                                      nsIRenderingContext& aRenderingContext,
-                                      const nsRect& aDirtyRect)
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect)
 {
-  aRenderingContext.PushState();
+  //XXX: Resolution of styles should be cached. This is very
+  // inefficient to do this each time the checkbox is cliced on.
+  /**
+   * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
+   * The tag should be uppercase and inclue the colon.
+   * ie: NS_NewAtom(":FIRST-LINE");
+   */
+  nsIStyleContext* style = nsnull;
+  if (PR_TRUE == mMouseDownOnCheckbox) {
+    nsIAtom * sbAtom = NS_NewAtom(":CHECKBOX-LOOK");
+    style = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+    NS_RELEASE(sbAtom);
+  }
+  else {
+    nsIAtom * sbAtom = NS_NewAtom(":CHECKBOX-SELECT-LOOK");
+    style = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+    NS_RELEASE(sbAtom);
+  }
 
+  const nsStyleColor* color = (const nsStyleColor*)style->GetStyleData(eStyleStruct_Color);
+
+  aRenderingContext.PushState();
+ 
   float p2t;
   aPresContext.GetScaledPixelsToTwips(p2t);
  
@@ -312,16 +294,19 @@ nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
                               NSIntPixelsToTwips(printOffsetY, p2t));
 
     // Draw's background + border
-  nsFormControlFrame::PaintFixedSizeCheckMarkBorder(aRenderingContext, p2t);
+  nsFormControlFrame::PaintFixedSizeCheckMarkBorder(aRenderingContext, p2t, *color);
  
   PRBool checked = PR_TRUE;
-  GetCurrentCheckState(&checked); // Get check state from the content model
 
+    // Get current checked state from content model
+  nsresult result = GetCurrentCheckState(&checked);
   if (PR_TRUE == checked) {
     PaintFixedSizeCheckMark(aRenderingContext, p2t);
+
   }
   PRBool clip;
   aRenderingContext.PopState(clip);
+  NS_IF_RELEASE(style);
 }
 
 
@@ -336,5 +321,43 @@ nsCheckboxControlFrame::Paint(nsIPresContext& aPresContext,
   }
   return NS_OK;
 }
+
+NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                          nsGUIEvent* aEvent,
+                                          nsEventStatus& aEventStatus)
+{
+  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
+  }
+
+  if (nsnull == mWidget) {
+      // Handle GFX rendered widget Mouse Down event
+    PRInt32 type;
+    PRBool checked;
+    GetType(&type);
+    switch (aEvent->message) {
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+         mMouseDownOnCheckbox = PR_TRUE;
+        // XXX: Hack, force refresh by changing attribute to current
+        GetCurrentCheckState(&checked);
+        SetCurrentCheckState(checked);
+     
+      break;
+
+      case NS_MOUSE_EXIT:
+        mMouseDownOnCheckbox = PR_FALSE;
+        // XXX: Hack, force refresh by changing attribute to current
+        GetCurrentCheckState(&checked);
+        SetCurrentCheckState(checked);
+      break;
+
+    }
+  }
+
+  return(nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus));
+}
+
+
+
 
 

@@ -50,6 +50,7 @@
 #include "nsGlobalVariables.h"
 #include "nsStyleUtil.h"
 #include "nsINameSpaceManager.h"
+#include "nsIDOMHTMLInputElement.h"
 
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -58,6 +59,7 @@ static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 
 nsFormControlFrame::nsFormControlFrame()
@@ -220,15 +222,21 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
 {
   nsresult result = NS_OK;
 
-
   nsIDeviceContext* dx = nsnull;
   dx = aPresContext.GetDeviceContext();
   PRBool supportsWidgets = PR_TRUE;
-  if (nsnull != dx) { 
-	PRBool native = PR_FALSE;
-    dx->SupportsNativeWidgets(supportsWidgets);
-    NS_RELEASE(dx);
+  //XXX: Temporary flag for getting GFX rendered widgets on the screen
+  PRBool useGfxWidgets = PR_FALSE;
+
+  if (PR_FALSE == useGfxWidgets) {
+    supportsWidgets = PR_TRUE;
+    if (nsnull != dx) { 
+      dx->SupportsNativeWidgets(supportsWidgets);
+      NS_RELEASE(dx);
+    }
   }
+  else
+    supportsWidgets = PR_FALSE;
 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
@@ -953,6 +961,40 @@ nsFormControlFrame::Reset()
 {
 }
 
+nsresult nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
+{
+	nsresult res = NS_OK;
+  nsIDOMHTMLInputElement* inputElement;
+  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+    res = inputElement->GetDefaultChecked(aState);
+    NS_RELEASE(inputElement);
+  }
+	return res;
+}
+
+nsresult nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
+{
+	nsresult res = NS_OK;
+  nsIDOMHTMLInputElement* inputElement;
+  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+    res = inputElement->GetChecked(aState);
+    NS_RELEASE(inputElement);
+  }
+	return res;
+}
+
+nsresult nsFormControlFrame::SetCurrentCheckState(PRBool aState)
+{
+	nsresult res = NS_OK;
+  nsIDOMHTMLInputElement* inputElement;
+  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+    inputElement->SetChecked(aState); 
+   NS_RELEASE(inputElement);
+  }
+	return res;
+}
+
+
 //
 //-------------------------------------------------------------------------------------
 // Utility methods for rendering Form Elements using GFX
@@ -1183,10 +1225,9 @@ nsFormControlFrame::PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingConte
 
 void
 nsFormControlFrame::PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderingContext,
-                         float aPixelsToTwips)
+                         float aPixelsToTwips, const nsStyleColor& aBackgroundColor)
 {
- //XXX: Future, use CSS to paint border instead of painting it ourselves here.   
-// nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+//XXX: This method should use the CSS Border rendering code.
 
     // Offsets to x,y location
   PRUint32 ox = 0;
@@ -1198,8 +1239,9 @@ nsFormControlFrame::PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderin
   nscoord twelvePixels = NSIntPixelsToTwips(12, aPixelsToTwips);
 
     // Draw Background
+ 
+  aRenderingContext.SetColor(aBackgroundColor.mBackgroundColor);
   nsRect rect(0, 0, twelvePixels, twelvePixels);
-  aRenderingContext.SetColor(NS_RGB(255, 255, 255));
   aRenderingContext.FillRect(rect);
 
     // Draw Border

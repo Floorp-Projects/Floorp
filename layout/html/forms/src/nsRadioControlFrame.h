@@ -59,7 +59,6 @@ public:
   // under windows. Later it may be used to GFX-render the controls to the display. 
   // Expect this code to repackaged and moved to a new location in the future.
   //
-  virtual void GetCurrentRadioState(PRBool *aState);
 
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
