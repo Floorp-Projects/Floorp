@@ -2485,7 +2485,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			compForm.ptCurrentPos.x = 100;
 			compForm.ptCurrentPos.y = 100;
 
-			::ImmSetCompositionWindow(hIMEContext,&compForm);
+//			::ImmSetCompositionWindow(hIMEContext,&compForm);	don't do this! it's bad.
 			::ImmReleaseContext(mWnd,hIMEContext);
 
 			HandleStartComposition();
