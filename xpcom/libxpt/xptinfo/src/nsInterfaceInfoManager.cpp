@@ -43,6 +43,13 @@
 // so that xpt stuff doesn't try to define it itself...
 #include "xpt_xdr.h"
 
+#ifdef DEBUG_mccabe
+#define TRACE(x) fprintf x
+#else
+#define TRACE(x)
+#endif
+
+
 static NS_DEFINE_IID(kIIIManagerIID, NS_IINTERFACEINFO_MANAGER_IID);
 NS_IMPL_ISUPPORTS(nsInterfaceInfoManager, kIIIManagerIID);
 
@@ -252,10 +259,10 @@ PRIntn check_nametable_enumerator(PLHashEntry *he, PRIntn index, void *arg) {
     nsInterfaceRecord *value = (nsInterfaceRecord *)he->value;
     nsHashtable *iidtable = (nsHashtable *)arg;
 
-    fprintf(stderr, "name table has %s\n", key);
+    TRACE((stderr, "name table has %s\n", key));
 
     if (value->interfaceDescriptor == NULL) {
-        fprintf(stderr, "unresolved interface %s\n", key);
+        TRACE((stderr, "unresolved interface %s\n", key));
     } else {
         nsIDKey idKey(value->iid);
         char *name_from_iid = (char *)iidtable->Get(&idKey);
@@ -274,8 +281,8 @@ PRBool check_iidtable_enumerator(nsHashKey *aKey, void *aData, void *closure) {
 //      PLHashTable *nameTable = (PLHashTable *)closure;
     nsInterfaceRecord *record = (nsInterfaceRecord *)aData;
     // can I do anything with the key?
-    fprintf(stderr, "record has name %s, iid %s\n",
-            record->name, record->iid.ToString());
+    TRACE((stderr, "record has name %s, iid %s\n",
+            record->name, record->iid.ToString()));
     return PR_TRUE;
 }
 
@@ -338,7 +345,7 @@ nsInterfaceInfoManager::initInterfaceTables()
         // it's a valid file, read it in.
 #ifdef DEBUG
         which++;
-        fprintf(stderr, "%d %s\n", which, fullname);
+        TRACE((stderr, "%d %s\n", which, fullname));
 #endif
         nsresult nsr = this->indexify_file(fullname);
         if (NS_IS_ERROR(nsr)) {
@@ -351,13 +358,13 @@ nsInterfaceInfoManager::initInterfaceTables()
     PR_CloseDir(xptdir);
 
 #ifdef DEBUG
-    fprintf(stderr, "\nchecking name table for unresolved entries...\n");
+    TRACE((stderr, "\nchecking name table for unresolved entries...\n"));
     // scan here to confirm that all interfaces are resolved.
     PL_HashTableEnumerateEntries(this->nameTable,
                                  check_nametable_enumerator,
                                  this->IIDTable);
 
-    fprintf(stderr, "\nchecking iid table for unresolved entries...\n");
+    TRACE((stderr, "\nchecking iid table for unresolved entries...\n"));
     IIDTable->Enumerate(check_iidtable_enumerator, this->nameTable);
 
 #endif
