@@ -585,7 +585,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
         spanTotal -= spanCellSpacing;
         nscoord cellWidth = cellWidths[widthX] - spanCellSpacing;
         if ((cellWidth > 0) && !((widthX == MIN_CON) && (cellWidth <= spanTotal))) {
-          for (spanX = 0; spanX < colSpan; spanX++) {
+          for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
             nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
             nscoord colWidth = colFrame->GetWidth(widthX);
             nscoord minWidth = colFrame->GetMinWidth();
@@ -859,7 +859,7 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
         }
         if (colPctWidthTotal < cellPctWidth) { 
           // record the percent contributions for the spanned cols
-          for (spanX = 0; spanX < colSpan; spanX++) {
+          for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
             nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
             if (colFrame->GetWidth(PCT) > 0) { // skip pct cols
               continue;
