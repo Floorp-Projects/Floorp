@@ -30,6 +30,7 @@ B<Moz> comprises the routines needed to slap CodeWarrior around, force it to bui
 
 package			Moz;
 require			Exporter;
+use Mac::Events;
 
 @ISA				= qw(Exporter);
 @EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest SetBuildNumber SetAgentString SetTimeBomb Delay);
@@ -245,7 +246,7 @@ sub build_project($$$)
 		$had_errors = CodeWarriorLib::build_project(
 			$project_path, $target_name, $recent_errors_file, $clean_build
 		);
-
+		WaitNextEvent();
 
 #		$had_errors =
 #MacPerl::DoAppleScript(<<END_OF_APPLESCRIPT);
@@ -253,7 +254,7 @@ sub build_project($$$)
 #END_OF_APPLESCRIPT
 
 			# Append any errors to the globally accumulated log file
-		if ( $had_errors )
+#		if ( $had_errors ) # Removed this test, because we want warnings, too.  -- jrm
 			{
 				log_recent_errors($project_path);
 			}
@@ -342,6 +343,8 @@ sub InstallFromManifest($;$)
 
 		chop($dest_dir) if $dest_dir =~ m/:$/;
 
+		#Mac::Events->import();
+		WaitNextEvent();
 		print "Doing manifest on \"$manifest_file\"\n" unless $QUIET;
 		
 		my $read = maniread(full_path_to($manifest_file));
