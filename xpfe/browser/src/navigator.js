@@ -38,6 +38,15 @@
     }
   }
 
+  function Shutdown() {
+    // Close the app core.
+    if ( appCore ) {
+        appCore.close();
+        // Remove app core from app core manager.
+        XPAppCoresManager.Remove( appCore );
+    }
+  }
+
   function onLoadWithArgs() {
     // See if Startup has been run.
     if ( appCore ) {
@@ -857,16 +866,17 @@
             var meter    = document.getElementById("Browser:LoadingProgress");
             if ( throbber && meter ) {
                 var busy = throbber.getAttribute("busy");
+                var wasBusy = meter.getAttribute("mode") == "undetermined" ? "true" : "false";
                 if ( busy == "true" ) {
-                    mode = "undetermined";
-					if ( !startTime ) {
-						startTime = (new Date()).getTime();
-					}
-                } else {
-                    mode = "normal";
-                }
-                meter.setAttribute("mode",mode);
-                if ( mode == "normal" ) {
+                    if ( wasBusy == "false" ) {
+                        // Remember when loading commenced.
+    				    startTime = (new Date()).getTime();
+                        // Turn progress meter on.
+                        meter.setAttribute("mode","undetermined");
+                    }
+                    // Update status bar.
+                } else if ( busy == "false" && wasBusy == "true" ) {
+                    // Record page loading time.
                     var status = document.getElementById("Browser:Status");
                     if ( status ) {
 						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
@@ -875,7 +885,8 @@
                         status.setAttribute("value",msg);
                         defaultStatus = msg;
                     }
-					startTime = 0;
+                    // Turn progress meter off.
+                    meter.setAttribute("mode","normal");
                 }
             }
         }
