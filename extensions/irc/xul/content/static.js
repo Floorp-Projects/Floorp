@@ -115,6 +115,9 @@ CIRCChanUser.prototype.MAX_MESSAGES = 200;
 
 function init()
 {
+    if (("initialized" in client) && client.initialized)
+        return;
+    
     client.initialized = false;
 
     client.networks = new Object();
