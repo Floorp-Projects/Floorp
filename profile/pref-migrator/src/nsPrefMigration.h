@@ -18,7 +18,7 @@ class nsPrefMigration: public nsIPrefMigration
 
       NS_DECL_ISUPPORTS
 
-      NS_IMETHOD ProcessPrefs(char* , char* );
+      NS_IMETHOD ProcessPrefs(char* , char*, nsresult *aResult );
     
     private:
 
