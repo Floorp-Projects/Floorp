@@ -53,6 +53,9 @@
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 #endif
 
+// XXX until I fix aspect scaling...
+#undef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
+
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 
 // Value's for mSuppress
@@ -67,6 +70,8 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 //----------------------------------------------------------------------
 
 nsHTMLImageLoader::nsHTMLImageLoader()
+  : mHaveImageSize(PR_FALSE),
+    mImageSize(0, 0)
 {
   mImageLoader = nsnull;
   mLoadImageFailed = PR_FALSE;
@@ -84,6 +89,14 @@ nsHTMLImageLoader::~nsHTMLImageLoader()
     delete mURLSpec;
   }
   NS_IF_RELEASE(mBaseURL);
+}
+
+void
+nsHTMLImageLoader::StopLoadImage(nsIPresContext& aPresContext,
+                                 nsIFrame* aTargetFrame)
+{
+  aPresContext.StopLoadImage(aTargetFrame);
+  NS_RELEASE(mImageLoader);
 }
 
 nsIImage*
@@ -167,8 +180,21 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
   if (nsnull == mImageLoader) {
     // Start image loading. Note that we don't specify a background color
     // so transparent images are always rendered using a transparency mask
-    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aCallBack,
-                                      aNeedSizeUpdate, PR_TRUE, &mImageLoader);
+#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
+    printf("loading ");
+    fputs(*mURLSpec, stdout);
+    printf(" at %d,%d size\n", mImageSize.width, mImageSize.height);
+#else
+    nsSize zero(0, 0);
+#endif
+    rv = aPresContext->StartLoadImage(src, nsnull, aForFrame,
+#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
+                                      mImageSize,
+#else
+                                      mHaveImageSize ? mImageSize : zero,
+#endif
+                                      aCallBack, aNeedSizeUpdate,
+                                      PR_TRUE, &mImageLoader);
     if ((NS_OK != rv) || (nsnull == mImageLoader)) {
       return rv;
     }
@@ -204,6 +230,13 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
                                   nsFrameImageLoaderCB aCallBack,
                                   nsHTMLReflowMetrics& aDesiredSize)
 {
+  // If we have the image size then we are finished
+  if (mHaveImageSize) {
+    aDesiredSize.width = mImageSize.width;
+    aDesiredSize.height = mImageSize.height;
+    return;
+  }
+
   // Determine whether the image has fixed content width and height
   PRBool  fixedContentWidth = aReflowState.HaveFixedContentWidth();
   PRBool  fixedContentHeight = aReflowState.HaveFixedContentHeight();
@@ -213,12 +246,6 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
   if (NS_INTRINSICSIZE == aReflowState.computedHeight) {
     fixedContentHeight = PR_FALSE;
   }
-  
-  // Start the image loading
-  PRIntn loadStatus;
-  StartLoadImage(aPresContext, aTargetFrame, aCallBack,
-                 !(fixedContentWidth && fixedContentHeight),
-                 loadStatus);
 
   // Choose reflow size
   if (fixedContentWidth || fixedContentHeight) {
@@ -226,8 +253,24 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       // The image is fully constrained. Use the constraints directly.
       aDesiredSize.width = aReflowState.computedWidth;
       aDesiredSize.height = aReflowState.computedHeight;
+
+      // Load image using the constrained widths so that it is scaled
+      // properly.
+      mHaveImageSize = PR_TRUE;
+      mImageSize.SizeTo(aDesiredSize.width, aDesiredSize.height);
+      PRIntn loadStatus;
+      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
+                     !(fixedContentWidth && fixedContentHeight),
+                     loadStatus);
     }
     else {
+      // Get current image loading status (this may kick off an
+      // initial load with no specified size).
+      PRIntn loadStatus;
+      StartLoadImage(aPresContext, aTargetFrame, aCallBack,
+                     !(fixedContentWidth && fixedContentHeight),
+                     loadStatus);
+
       // The image is partially constrained. Preserve aspect ratio of
       // image with unbound dimension.
       if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
@@ -238,6 +281,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         aDesiredSize.height = 1;
       }
       else {
+        // Now we know the correct size (compute it).
         float p2t;
         aPresContext->GetScaledPixelsToTwips(&p2t);
         nsSize imageSize;
@@ -265,11 +309,34 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
           aDesiredSize.width = 1;
           aDesiredSize.height = 1;
         }
+
+#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
+        if (!mHaveImageSize) {
+          // Now we have an image size, but last time we didn't
+          mImageSize.SizeTo(aDesiredSize.width, aDesiredSize.height);
+          mHaveImageSize = PR_TRUE;
+
+          // Load image again so that it is scaled properly.
+
+          // XXX: optimization: don't do the second load if the sizes
+          // happen to match
+          StopLoadImage(*aPresContext, aTargetFrame);
+          StartLoadImage(aPresContext, aTargetFrame, aCallBack,
+                         !(fixedContentWidth && fixedContentHeight),
+                         loadStatus);
+        }
+#endif
       }
     }
   }
   else {
-    // The image is unconstrained
+    // Get current image loading status (this may kick off an
+    // initial load with no specified size).
+    PRIntn loadStatus;
+    StartLoadImage(aPresContext, aTargetFrame, aCallBack,
+                   !(fixedContentWidth && fixedContentHeight),
+                   loadStatus);
+
     if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
         (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
@@ -283,6 +350,10 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       mImageLoader->GetSize(imageSize);
       aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
       aDesiredSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
+
+      // Save size away for next time
+      mImageSize.SizeTo(aDesiredSize.width, aDesiredSize.height);
+      mHaveImageSize = PR_TRUE;
     }
   }
 }
@@ -297,7 +368,7 @@ nsHTMLImageLoader::GetLoadImageFailed() const
 
     // Ask the image loader whether the load failed
     mImageLoader->GetImageLoadStatus(loadStatus);
-    result = (loadStatus & NS_IMAGE_LOAD_STATUS_ERROR) == NS_IMAGE_LOAD_STATUS_ERROR;
+    result = 0 != (loadStatus & NS_IMAGE_LOAD_STATUS_ERROR);
   }
 
   result |= PRBool(mLoadImageFailed);
@@ -655,13 +726,6 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer)
 {
-  if ((0 == mRect.width) || (0 == mRect.height)) {
-    // Do not render when given a zero area. This avoids some useless
-    // scaling work while we wait for our image dimensions to arrive
-    // asynchronously.
-    return NS_OK;
-  }
-
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
   if (disp->mVisible) {
@@ -682,7 +746,11 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
       return NS_OK;
     }
 
-    if (eFramePaintLayer_Content == aWhichLayer) {
+    if ((eFramePaintLayer_Content == aWhichLayer)
+#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
+        && mImageLoader.HaveImageSize()
+#endif
+      ) {
       // Now render the image into our content area (the area inside the
       // borders and padding)
       nsRect inner;
@@ -982,6 +1050,9 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
 
       // Fire up a new image load request
       PRIntn loadStatus;
+#ifdef LET_IMAGE_LIBRARY_SCALE_ASPECT_IMAGES
+      mImageLoader.StopLoadImage(*aPresContext, this);
+#endif
       mImageLoader.SetURLSpec(newSRC);
       mImageLoader.StartLoadImage(aPresContext, this, nsnull,
                                   PR_FALSE, loadStatus);

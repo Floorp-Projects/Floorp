@@ -72,6 +72,9 @@ public:
                           PRBool aNeedSizeUpdate,
                           PRIntn& aLoadStatus);
 
+  void StopLoadImage(nsIPresContext& aPresContext,
+                     nsIFrame* aTargetFrame);
+
   void GetDesiredSize(nsIPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsIFrame* aTargetFrame,
@@ -80,14 +83,23 @@ public:
 
   PRBool GetLoadImageFailed() const;
 
+  PRBool HaveImageSize() const {
+    return mHaveImageSize;
+  }
+
 protected:
+
   nsIFrameImageLoader* mImageLoader;
+
   PRPackedBool mLoadImageFailed;
+  PRPackedBool mHaveImageSize;
 #ifndef _WIN32
   PRPackedBool mLoadBrokenImageFailed;
 #endif
+
   nsString* mURLSpec;
-  nsIURL*   mBaseURL;
+  nsIURL* mBaseURL;
+  nsSize mImageSize;
 };
 
 //----------------------------------------------------------------------
