@@ -18,14 +18,15 @@
 DEPTH=..\..\..
 
 EXPORTS =				\
-	nsICharsetConverterManager.h	\
-	nsICharsetConverterInfo.h	\
-	nsIUnicodeDecoder.h		\
-	nsIUnicodeDecodeUtil.h		\
-	nsIUnicodeEncoder.h		\
-	nsIUnicodeEncodeHelper.h	\
-	nsIPlatformCharset.h		\
-	uconvutil.h			\
+	nsICharsetAlias.h \
+	nsICharsetConverterInfo.h \
+	nsICharsetConverterManager.h \
+	nsIPlatformCharset.h \
+	nsIUnicodeDecodeUtil.h \
+	nsIUnicodeDecoder.h \
+	nsIUnicodeEncodeHelper.h \
+	nsIUnicodeEncoder.h \
+	uconvutil.h \
         $(NULL)
 
 MODULE=uconv 
