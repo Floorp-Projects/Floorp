@@ -67,8 +67,7 @@ OBJS=						              \
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=$(MODULE).dll
-LIBNAME=$(MODULE).lib
+DLLNAME=$(MODULE)
 PDBFILE=$(MODULE).pdb
 MAPFILE=$(MODULE).map
 DEFFILE=$(MODULE).def
@@ -80,7 +79,7 @@ DEFFILE=$(MODULE).def
 #//
 #//------------------------------------------------------------------------
 #
-DLL=.\$(OBJDIR)\$(DLLNAME)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
@@ -126,7 +125,7 @@ LINCS=$(LINCS)  -I.             \
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin\mimeplugins
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\mimeplugins
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME)

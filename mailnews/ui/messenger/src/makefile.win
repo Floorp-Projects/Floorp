@@ -17,7 +17,6 @@
 
 
 DEPTH=..\..\..\..
-IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE = DLL
 MODULE=messenger
@@ -26,9 +25,9 @@ EXPORTS = \
 	nsJSMsgAppCore.h	\
 	$(NULL)
 
-DLLNAME=messenger.dll
-LIBNAME=messenger.lib
-DLL=.\$(OBJDIR)\$(DLLNAME)
+DLLNAME=messenger
+LIBNAME=messenger
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
@@ -78,10 +77,10 @@ LLIBS =				            \
 include <$(DEPTH)\config\rules.mak>
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBNAME)
-	rm -f $(DIST)\bin\$(DLLNAME)
+	rm -f $(DIST)\lib\$(LIBNAME).dll
+	rm -f $(DIST)\bin\$(DLLNAME).lib
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME) $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin

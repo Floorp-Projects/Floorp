@@ -17,7 +17,6 @@
 
 
 DEPTH=..\..\..\..
-IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE = DLL
 MODULE=compose
@@ -26,9 +25,9 @@ EXPORTS = \
 	nsJScomposeAppCore.h	\
 	$(NULL)
 
-DLLNAME=compose.dll
-LIBNAME=compose.lib
-DLL=.\$(OBJDIR)\$(DLLNAME)
+DLLNAME=compose
+LIBNAME=compose
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
@@ -80,10 +79,10 @@ LLIBS =				            \
 include <$(DEPTH)\config\rules.mak>
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBNAME)
-	rm -f $(DIST)\bin\$(DLLNAME)
+	rm -f $(DIST)\lib\$(LIBNAME).dll
+	rm -f $(DIST)\bin\$(DLLNAME).lib
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME) $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin

@@ -14,7 +14,6 @@
 # Reserved.
 #
 NODEPEND=1
-IGNORE_MANIFEST = 1
 
 #
 # MIME.DLL 
@@ -126,9 +125,8 @@ OBJS=							\
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=$(MODULE).dll
-LIBNAME=$(MODULE).lib
-PDBFILE=$(MODULE).pdb
+DLLNAME=$(MODULE)
+LIBNAME=$(MODULE)
 MAPFILE=$(MODULE).map
 DEFFILE=$(MODULE).def
 
@@ -139,7 +137,7 @@ DEFFILE=$(MODULE).def
 #//
 #//------------------------------------------------------------------------
 #
-DLL=.\$(OBJDIR)\$(DLLNAME)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
@@ -188,8 +186,8 @@ LINCS=$(LINCS)  -I.                         		\
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME) $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) .\$(CSS) $(DIST)\bin\res
 	$(MAKE_INSTALL) .\$(JS)  $(DIST)\bin\res
 

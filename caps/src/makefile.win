@@ -15,8 +15,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-IGNORE_MANIFEST=1
-
 
 #//------------------------------------------------------------------------
 #//
@@ -112,7 +110,7 @@ LLIBS = \
 	$(DIST)\lib\libplc21.lib	\
 	$(DIST)\lib\xpcom32.lib         \
 	$(DIST)\lib\xplib.lib           \
-	$(ZIPLIB)                       \
+	$(DIST)\lib\zip3250.lib         \
 	$(NULL)
 
 

@@ -14,7 +14,6 @@
 # Reserved.
 
 NODEPEND=1
-IGNORE_MANIFEST = 1
 
 #//------------------------------------------------------------------------
 #//
@@ -57,8 +56,7 @@ OBJS=										\
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-DLLNAME=mailnews.dll
-PDBFILE=mailnews.pdb
+DLLNAME=mailnews
 MAPFILE=mailnews.map
 # DEFFILE=msg.def
 
@@ -70,7 +68,7 @@ MAPFILE=mailnews.map
 #//
 #//------------------------------------------------------------------------
 
-DLL=.\$(OBJDIR)\$(DLLNAME)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
@@ -115,10 +113,9 @@ LINCS=$(LINCS) -I,							\
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME) $(DIST)\bin
-#	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME) $(DIST)\lib
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME)
-#	rm -f $(DIST)\lib\$(LIBNAME)
+
 

@@ -146,6 +146,25 @@ LFLAGS=$(EXE_LFLAGS) $(LFLAGS)
 OS_LIBS=$(EXE_LIBS) $(OS_LIBS)
 !endif
 
+#//------------------------------------------------------------------------
+#//
+#// Use various library names as default name for PDB Files
+#//
+#// LIBRARY_NAME - Static Library
+#// DLLNAME - Dynamic Load Library
+#//
+#//
+#//------------------------------------------------------------------------
+
+# Replace optimizer and pdb related flags to use our own conventions
+!ifdef LIBRARY_NAME
+PDBFILE=$(LIBRARY_NAME)
+!endif
+
+# Replace optimizer and pdb related flags to use our own conventions
+!ifdef DLLNAME
+PDBFILE=$(DLLNAME)
+!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -158,7 +177,7 @@ OS_LIBS=$(EXE_LIBS) $(OS_LIBS)
 !ifdef PDBFILE
 PDBFILE=.\$(OBJDIR)\$(PDBFILE)
 !else
-PDBFILE=NONE
+PDBFILE=.\$(OBJDIR)\default
 !endif
 !ifdef RESFILE
 RESFILE=.\$(OBJDIR)\$(RESFILE)
