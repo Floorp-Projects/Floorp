@@ -1988,8 +1988,7 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
           mWriter_LineSize = stream->PutIndent(ev, 0); // no indent
       }
       
-      mork_rid rid;
-      rid = roid->mOid_Id;
+      mork_rid rid = roid->mOid_Id;
       *p++ = '['; // start row punct=1
       mork_size punctSize = 9; // counting "{ /*r=*/ "
       
