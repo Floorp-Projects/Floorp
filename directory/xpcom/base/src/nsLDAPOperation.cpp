@@ -89,9 +89,6 @@ nsLDAPOperation::GetConnection(nsILDAPConnection* *aConnection)
 NS_IMETHODIMP
 nsLDAPOperation::SimpleBind(const char *who, const char *passwd)
 {
-    NS_ENSURE_ARG(who);
-    NS_ENSURE_ARG(passwd);
-
     this->mMsgId = ldap_simple_bind(this->mConnectionHandle, who, 
 				   passwd);
 
