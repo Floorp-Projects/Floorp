@@ -221,8 +221,9 @@ void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
     if (err == NS_ERROR_FAILURE)
       abort();
 
-    mWidthFloat  = (float) aWidth;
-    mHeightFloat = (float) aHeight;  
+    // HACK multipled by three to make Mozilla work on 3x3 virtual console
+    mWidthFloat  = (float) aWidth * 3;
+    mHeightFloat = (float) aHeight * 3;  
   }
     
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CommonInit with aWidget: Screen Size (%f,%f)\n", mWidthFloat,mHeightFloat));
