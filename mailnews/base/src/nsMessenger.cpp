@@ -131,9 +131,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 
-// Find / Find Again 
-#include "nsIFindComponent.h"
-
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
@@ -540,76 +537,6 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
     {
         return NS_OK;
     }
-    return rv;
-}
-
-nsresult
-nsMessenger::InitializeSearch( nsIFindComponent *finder )
-{
-    nsresult rv = NS_OK;
-    if (!finder) return NS_ERROR_NULL_POINTER;
-
-    if (!mSearchContext )
-    {
-        nsCOMPtr<nsIInterfaceRequestor> docShellIR = do_QueryInterface(mDocShell);
-        if (!docShellIR) return NS_ERROR_FAILURE;
-        
-        nsCOMPtr<nsIDOMWindowInternal> domWindow;
-        docShellIR->GetInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(domWindow));
-        if (!domWindow) return NS_ERROR_FAILURE;
-        
-        // we need to get the nsIDOMWindowInternal for mWebShell
-        // Create the search context for this browser window.
-        rv = finder->CreateContext(domWindow, nsnull, getter_AddRefs(mSearchContext));
-    }
-
-    return rv;
-}
-
-
-NS_IMETHODIMP
-nsMessenger::Find()
-{
-    nsresult rv = NS_OK;
-    PRBool   found = PR_FALSE;
-
-    // Get find component.
-    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    if (!finder) return NS_ERROR_FAILURE;
-
-    // Make sure we've initialized searching for this document.
-    rv = InitializeSearch( finder );
-    if (NS_FAILED(rv)) return rv;
-
-    // Perform find via find component.
-    if (mSearchContext) {
-            rv = finder->Find( mSearchContext, &found );
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
-nsMessenger::FindAgain()
-{
-    nsresult rv = NS_OK;
-    PRBool   found = PR_FALSE;
-
-    // Get find component.
-    nsCOMPtr <nsIFindComponent> finder = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    if (!finder) return NS_ERROR_FAILURE;
-
-    // Make sure we've initialized searching for this document.
-    rv = InitializeSearch( finder );
-    if (NS_FAILED(rv)) return rv;
-
-    // Perform find via find component.
-    if (mSearchContext) {
-            rv = finder->FindNext( mSearchContext, &found );
-    }
-
     return rv;
 }
 

@@ -101,8 +101,6 @@ interface nsIMessenger : nsISupports {
     void saveAllAttachments(in unsigned long count, [array, size_is(count)] in string contentTypeArray,
                             [array, size_is(count)] in string urlArray, [array, size_is(count)] in string displayNameArray,
                             [array, size_is(count)] in string messageUriArray);
-    void find();
-    void findAgain();
 
     attribute boolean sendingUnsentMsgs;
 

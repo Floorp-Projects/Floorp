@@ -46,7 +46,6 @@
 #include "nsFileSpec.h"
 #include "nsIDocShell.h"
 #include "nsIStringBundle.h"
-#include "nsIFindComponent.h"
 #include "nsILocalFile.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
@@ -76,8 +75,6 @@ protected:
   nsresult InitStringBundle();
 
 private:
-  nsresult InitializeSearch(nsIFindComponent *finder);
-
   nsresult GetLastSaveDirectory(nsILocalFile **aLastSaveAsDir);
   // if aLocalFile is a dir, we use it.  otherwise, we use the parent of aLocalFile.
   nsresult SetLastSaveDirectory(nsILocalFile *aLocalFile);
