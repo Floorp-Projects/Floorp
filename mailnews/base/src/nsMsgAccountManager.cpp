@@ -373,6 +373,7 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   serverPref += ".type";
   nsXPIDLCString serverType;
   rv = m_prefs->CopyCharPref(serverPref, getter_Copies(serverType));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
   
   //
   // .userName
@@ -380,19 +381,19 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   serverPref += ".userName";
   nsXPIDLCString username;
   rv = m_prefs->CopyCharPref(serverPref, getter_Copies(username));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
 
   // .hostname
   serverPref = serverPrefPrefix;
   serverPref += ".hostname";
   nsXPIDLCString hostname;
   rv = m_prefs->CopyCharPref(serverPref, getter_Copies(hostname));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_NOT_INITIALIZED);
   
     // the server type doesn't exist. That's bad.
-  if (NS_FAILED(rv))
-    return NS_ERROR_NOT_INITIALIZED;
 
   rv = createKeyedServer(key, username, hostname, serverType, _retval);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
