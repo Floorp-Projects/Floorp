@@ -21,11 +21,11 @@
 
 #include "EditAggregateTxn.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsCOMPtr.h"
 
 class nsIDOMDocument;
-class nsIDOMRange;
 
 #define DELETE_RANGE_TXN_IID \
 {/* 5ec6b260-ac49-11d2-86d8-000064657374 */ \
