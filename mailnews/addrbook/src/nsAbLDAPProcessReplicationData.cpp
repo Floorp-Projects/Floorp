@@ -49,7 +49,7 @@
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsProxiedService.h"
 
-NS_IMPL_ISUPPORTS2(nsAbLDAPProcessReplicationData, nsIAbLDAPProcessReplicationData, nsILDAPMessageListener)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsAbLDAPProcessReplicationData, nsIAbLDAPProcessReplicationData, nsILDAPMessageListener)
 
 nsAbLDAPProcessReplicationData::nsAbLDAPProcessReplicationData()
  : mState(kQueryNotStarted),
