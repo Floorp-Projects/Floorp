@@ -55,7 +55,7 @@ interface nsIXPCTestOut : nsISupports {
 	void GetOctet( out octet o );
 	void SetOctet( in octet o );
 
-	void GetLongLong( in long long ll );
+	void GetLongLong( out long long ll );
 	void SetLongLong( in long long ll );
 
 	void GetUnsignedShort( out unsigned short us );

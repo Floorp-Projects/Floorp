@@ -120,12 +120,12 @@ NS_IMETHODIMP xpcTestOut :: SetOctet(PRUint8 o){
 	octetProperty = o;
 	return NS_OK;
 };
-NS_IMETHODIMP xpcTestOut :: GetLongLong(PRInt64 ll){
-	ll = longProperty;
+NS_IMETHODIMP xpcTestOut :: GetLongLong(PRInt64 *ll){
+	*ll = longLongProperty;
 	return NS_OK;
 };
 NS_IMETHODIMP xpcTestOut :: SetLongLong(PRInt64 ll){
-	JSLL_L2I(longProperty, ll);
+	longLongProperty = ll;
 	return NS_OK;
 };
 NS_IMETHODIMP xpcTestOut :: GetUnsignedShort(PRUint16 *us){
