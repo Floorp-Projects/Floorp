@@ -99,6 +99,7 @@ interface nsMsgViewSortType
 	const nsMsgViewSortTypeValue byLabel = 0x1e;
 	const nsMsgViewSortTypeValue byJunkStatus = 0x1f;
 	const nsMsgViewSortTypeValue byAttachments = 0x20;
+  const nsMsgViewSortTypeValue byAccount = 0x21;
 };
 
 [scriptable, uuid(255d1c1e-fde7-11d4-a5be-0060b0fc04b7)]

@@ -525,6 +525,34 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
   return NS_OK;
 }
 
+nsresult nsMsgDBView::FetchAccount(nsIMsgHdr * aHdr, PRUnichar ** aAccount)
+{
+  nsXPIDLCString accountKey;
+
+  nsresult rv = aHdr->GetAccountKey(getter_Copies(accountKey));
+
+  // Cache the account manager?
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  nsCOMPtr <nsIMsgAccount> account;
+  if (accountKey.IsEmpty())
+  {
+  }
+  else
+  {
+    rv = accountManager->GetAccount(accountKey, getter_AddRefs(account));
+  }
+  if (account)
+  {
+    nsCOMPtr <nsIMsgIncomingServer> server;
+    account->GetIncomingServer(getter_AddRefs(server));
+    if (server)
+      server->GetPrettyName(aAccount);
+  }
+  return NS_OK;
+}
+
+
 nsresult nsMsgDBView::FetchRecipients(nsIMsgHdr * aHdr, PRUnichar ** aRecipientsString)
 {
   nsXPIDLString unparsedRecipients;
@@ -1548,6 +1576,13 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAStr
   case 'l': // label
     rv = FetchLabel(msgHdr, getter_Copies(valueText));
     aValue.Assign(valueText);
+    break;
+  case 'a': // account
+    if (colID[1] == 'c') // account
+    {
+      rv = FetchAccount(msgHdr, getter_Copies(valueText));
+      aValue.Assign(valueText);
+    }
     break;
   case 't':   
     // total msgs in thread column
@@ -3173,9 +3208,9 @@ FnSortIdDWord(const void *pItem1, const void *pItem2, void *privateData)
 //systems such as HP-UX these values must be 4 bytes
 //aligned.  Don't break this when modify the constants
 const int kMaxSubjectKey = 160;
-const int kMaxLocationKey = 160;
+const int kMaxLocationKey = 160;  // also used for account
 const int kMaxAuthorKey = 160;
-const int kMaxRecipientKey = 80;
+const int kMaxRecipientKey = 80; 
 
 nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType, PRUint16 *pMaxLen, eFieldType *pFieldType)
 {
@@ -3187,6 +3222,7 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
             *pFieldType = kCollationKey;
             *pMaxLen = kMaxSubjectKey;
             break;
+        case nsMsgViewSortType::byAccount:
         case nsMsgViewSortType::byLocation:
             *pFieldType = kCollationKey;
             *pMaxLen = kMaxLocationKey;
@@ -3365,6 +3401,19 @@ nsMsgDBView::GetCollationKey(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sortType,
     case nsMsgViewSortType::byAuthor:
         rv = msgHdr->GetAuthorCollationKey(result, len);
         break;
+    case nsMsgViewSortType::byAccount:
+      {
+        nsXPIDLString accountName;
+        nsCOMPtr <nsIMsgDatabase> dbToUse = m_db;
+    
+        if (!dbToUse) // probably search view
+          GetDBForViewIndex(0, getter_AddRefs(dbToUse));
+
+        rv = FetchAccount(msgHdr, getter_Copies(accountName));
+        if (NS_SUCCEEDED(rv) && dbToUse)
+          rv = dbToUse->CreateCollationKey(accountName, result, len);
+      }
+      break;
     default:
         rv = NS_ERROR_UNEXPECTED;
         break;

@@ -178,8 +178,7 @@ NS_IMETHODIMP nsMsgHdr::GetThreadId(nsMsgKey *result)
 NS_IMETHODIMP nsMsgHdr::SetThreadId(nsMsgKey inKey)
 {
   m_threadId = inKey;
-  SetUInt32Column(m_threadId, m_mdb->m_messageThreadIdColumnToken);
-  return NS_OK;
+  return SetUInt32Column(m_threadId, m_mdb->m_messageThreadIdColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetMessageKey(nsMsgKey value)
@@ -217,8 +216,7 @@ NS_IMETHODIMP nsMsgHdr::SetFlags(PRUint32 flags)
 #endif
   m_flags = flags;
   // don't write out MSG_FLAG_NEW to MDB.
-  SetUInt32Column(m_flags & ~MSG_FLAG_NEW, m_mdb->m_flagsColumnToken);
-  return NS_OK;
+  return SetUInt32Column(m_flags & ~MSG_FLAG_NEW, m_mdb->m_flagsColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::OrFlags(PRUint32 flags, PRUint32 *result)
@@ -492,24 +490,23 @@ NS_IMETHODIMP nsMsgHdr::SetCCListArray(const char *names, const char *addresses,
 
 NS_IMETHODIMP nsMsgHdr::SetMessageSize(PRUint32 messageSize)
 {
-	SetUInt32Column(messageSize, m_mdb->m_messageSizeColumnToken);
-	m_messageSize = messageSize;
-    return NS_OK;
+  SetUInt32Column(messageSize, m_mdb->m_messageSizeColumnToken);
+  m_messageSize = messageSize;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetOfflineMessageSize(PRUint32 *result)
 {
-	PRUint32 size;
-	nsresult res = GetUInt32Column(m_mdb->m_offlineMessageSizeColumnToken, &size);
+  PRUint32 size;
+  nsresult res = GetUInt32Column(m_mdb->m_offlineMessageSizeColumnToken, &size);
 
-	*result = size;
-	return res;
+  *result = size;
+  return res;
 }
 
 NS_IMETHODIMP nsMsgHdr::SetOfflineMessageSize(PRUint32 messageSize)
 {
-	SetUInt32Column(messageSize, m_mdb->m_offlineMessageSizeColumnToken);
-  return NS_OK;
+  return SetUInt32Column(messageSize, m_mdb->m_offlineMessageSizeColumnToken);
 }
 
 
@@ -572,6 +569,24 @@ NS_IMETHODIMP nsMsgHdr::GetLabel(nsMsgLabelValue *result)
 
   return GetUInt32Column(m_mdb->m_labelColumnToken, result);
 }
+
+// I'd like to not store the account key, if the msg is in
+// the same account as it was received in, to save disk space and memory.
+// This might be problematic when a message gets moved...
+// And I'm not sure if we should short circuit it here,
+// or at a higher level where it might be more efficient.
+NS_IMETHODIMP nsMsgHdr::SetAccountKey(const char *aAccountKey)
+{
+  return SetStringProperty("account", aAccountKey);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetAccountKey(char **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  return GetStringProperty("account", aResult);
+}
+
 
 NS_IMETHODIMP nsMsgHdr::GetMessageOffset(PRUint32 *result)
 {

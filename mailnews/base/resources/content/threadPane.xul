@@ -83,7 +83,10 @@
              display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
     <treecol id="labelCol" persist="hidden ordinal width" flex="1" hidden="true"
-             label="&labelColumn.label;" tooltiptext="&labelColumn.tooltip;"/>
+       label="&labelColumn.label;" tooltiptext="&labelColumn.tooltip;"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="accountCol" persist="hidden ordinal width" flex="1" hidden="true"
+             label="&accountColumn.label;" tooltiptext="&accountColumn.tooltip;"/>
     <splitter class="tree-splitter"/>
     <treecol id="priorityCol" persist="hidden ordinal width" flex="1"
              label="&priorityColumn.label;" tooltiptext="&priorityColumn.tooltip;"/>

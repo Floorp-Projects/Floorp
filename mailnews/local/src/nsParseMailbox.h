@@ -137,6 +137,7 @@ public:
   struct message_header m_envelope_from;
   struct message_header m_envelope_date;
   struct message_header m_priority;
+  struct message_header m_account_key;
   // Mdn support
   struct message_header m_mdn_original_recipient;
   struct message_header m_return_path;

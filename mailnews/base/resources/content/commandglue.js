@@ -486,6 +486,9 @@ function ConvertColumnIDToSortType(columnID)
     case "locationCol":
       sortKey = nsMsgViewSortType.byLocation;
       break;
+    case "accountCol":
+      sortKey = nsMsgViewSortType.byAccount;
+      break;
     case "unreadButtonColHeader":
       sortKey = nsMsgViewSortType.byUnread;
       break;
@@ -544,6 +547,9 @@ function ConvertSortTypeToColumnID(sortKey)
       break;
     case nsMsgViewSortType.byLocation:
       columnID = "locationCol";
+      break;
+    case nsMsgViewSortType.byAccount:
+      columnID = "accountCol";
       break;
     case nsMsgViewSortType.byUnread:
       columnID = "unreadButtonColHeader";

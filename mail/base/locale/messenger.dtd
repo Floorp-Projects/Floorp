@@ -501,6 +501,7 @@
 <!ENTITY dateColumn.label "Date">
 <!ENTITY priorityColumn.label "Priority">
 <!ENTITY labelColumn.label "Label">
+<!ENTITY accountColumn.label "Account">
 <!ENTITY statusColumn.label "Status">
 <!ENTITY sizeColumn.label "Size">
 <!ENTITY junkStatusColumn.label "Junk Status">
@@ -522,6 +523,7 @@
 <!ENTITY dateColumn.tooltip "Click to sort by date">
 <!ENTITY priorityColumn.tooltip "Click to sort by priority">
 <!ENTITY labelColumn.tooltip "Click to sort by label">
+<!ENTITY accountColumn.tooltip "Click to sort by account">
 <!ENTITY statusColumn.tooltip "Click to sort by status">
 <!ENTITY sizeColumn.tooltip "Click to sort by size">
 <!ENTITY junkStatusColumn.tooltip "Click to sort by junk status">
