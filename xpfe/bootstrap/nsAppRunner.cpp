@@ -77,8 +77,8 @@ static NS_DEFINE_CID( kToolkitCoreCID, NS_TOOLKITCORE_CID );
 #include "macstdlibextras.h"
 #include <TextServices.h>
 
-  // Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
-  // to make it as unlikely as possible that somebody calls printf() before we get initialized.
+// Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
+// to make it as unlikely as possible that somebody calls printf() before we get initialized.
 static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gInitializer;
 
 
@@ -86,9 +86,9 @@ class stTSMCloser
 {
 public:
 	stTSMCloser()
-	{
-		// TSM is initialized in InitializeMacToolbox
-	};
+  {
+    // TSM is initialized in InitializeMacToolbox
+  };
 	
 	~stTSMCloser()
 	{
@@ -158,13 +158,13 @@ extern "C" void NS_SetupRegistry_1();
 static void
 PrintUsage(void)
 {
-   fprintf(stderr, "Usage: apprunner <url>\n");
-   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
+  fprintf(stderr, "Usage: apprunner <url>\n");
+  fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
 }
 
 //----------------------------------------------------------------------------------------
 static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
-//----------------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------
 {
   // Support the "-pref" command-line option, which just puts up the pref window, so that
   // apprunner becomes a "control panel". The "OK" and "Cancel" buttons will quit
@@ -175,53 +175,53 @@ static PRBool CheckAndRunPrefs(nsICmdLineService* cmdLineArgs)
   {
     nsIPrefWindow* prefWindow;
     rv = nsComponentManager::CreateInstance(
-	  NS_PREFWINDOW_PROGID,
-      nsnull,
-      nsIPrefWindow::GetIID(),
-      (void **)&prefWindow);
-	if (NS_SUCCEEDED(rv))
-	  prefWindow->ShowWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
-	NS_IF_RELEASE(prefWindow);
-	return PR_TRUE;
+                                            NS_PREFWINDOW_PROGID,
+                                            nsnull,
+                                            nsIPrefWindow::GetIID(),
+                                            (void **)&prefWindow);
+    if (NS_SUCCEEDED(rv))
+      prefWindow->ShowWindow(nsString("Apprunner::main()").GetUnicode(), nsnull, nsnull);
+    NS_IF_RELEASE(prefWindow);
+    return PR_TRUE;
   }
   return PR_FALSE;
 } // CheckandRunPrefs
 
 static void InitFullCircle()
 {
-// initialization for Full Circle
+  // initialization for Full Circle
 #ifdef MOZ_FULLCIRCLE
-	  FC_ERROR fcstatus = FC_ERROR_FAILED;
-	  fcstatus = FCInitialize();
+  FC_ERROR fcstatus = FC_ERROR_FAILED;
+  fcstatus = FCInitialize();
 	  
-	  // Print out error status.
-	  switch(fcstatus)
-	  {
-		  case FC_ERROR_OK:
-			  printf("Talkback loaded Ok.\n");
-			  break;
-		  case FC_ERROR_CANT_INITIALIZE:
-			  printf("Talkback error: Can't initialize.\n");
-			  break;
-		  case FC_ERROR_NOT_INITIALIZED:
-			  printf("Talkback error: Not initialized.\n");
-			  break;
-		  case FC_ERROR_ALREADY_INITIALIZED:
-			  printf("Talkback error: Already initialized.\n");
-			  break;
-		  case FC_ERROR_FAILED:
-			  printf("Talkback error: Failure.\n");
-			  break;
-		  case FC_ERROR_OUT_OF_MEMORY:
-			  printf("Talkback error: Out of memory.\n");
-			  break;
-		  case FC_ERROR_INVALID_PARAMETER:
-			  printf("Talkback error: Invalid parameter.\n");
-			  break;
-		  default:
-			  printf("Talkback error: Unknown error status.\n");
-			  break;
-	  }
+  // Print out error status.
+  switch(fcstatus)
+  {
+    case FC_ERROR_OK:
+      printf("Talkback loaded Ok.\n");
+      break;
+    case FC_ERROR_CANT_INITIALIZE:
+      printf("Talkback error: Can't initialize.\n");
+      break;
+    case FC_ERROR_NOT_INITIALIZED:
+      printf("Talkback error: Not initialized.\n");
+      break;
+    case FC_ERROR_ALREADY_INITIALIZED:
+      printf("Talkback error: Already initialized.\n");
+      break;
+    case FC_ERROR_FAILED:
+      printf("Talkback error: Failure.\n");
+      break;
+    case FC_ERROR_OUT_OF_MEMORY:
+      printf("Talkback error: Out of memory.\n");
+      break;
+    case FC_ERROR_INVALID_PARAMETER:
+      printf("Talkback error: Invalid parameter.\n");
+      break;
+    default:
+      printf("Talkback error: Unknown error status.\n");
+      break;
+  }
 #endif
 }
 
@@ -233,16 +233,16 @@ static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs )
 	nsresult rv;
   
 	rv = cmdLineArgs->GetCmdLineValue("-edit", &cmdResult);
-    if (NS_SUCCEEDED(rv))
-    {
-      if (cmdResult && (strcmp("1",cmdResult)==0)) {
-        urlstr = "chrome://editor/content/";
-        withArgs = "chrome://editor/content/EditorInitPage.html";
+  if (NS_SUCCEEDED(rv))
+  {
+    if (cmdResult && (strcmp("1",cmdResult)==0)) {
+      urlstr = "chrome://editor/content/";
+      withArgs = "chrome://editor/content/EditorInitPage.html";
      
      	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkit, kToolkitCoreCID, &rv);
-      	if (NS_SUCCEEDED(rv))
-      	{
-          toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
+      if (NS_SUCCEEDED(rv))
+      {
+        toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
      	}
     }
     // Check for -editor -- this will eventually go away
@@ -274,11 +274,11 @@ static nsresult OpenChromURL( char * urlstr, PRInt32 height = NS_SIZETOCONTENT, 
 	nsCOMPtr<nsIWebShellWindow> newWindow;
 	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
  	rv = appShell->CreateTopLevelWindow(nsnull, url,
-               PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-               nsnull, width, height,
-               getter_AddRefs(newWindow));
-    NS_IF_RELEASE( url );
-    return rv;
+                                      PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+                                      nsnull, width, height,
+                                      getter_AddRefs(newWindow));
+  NS_IF_RELEASE( url );
+  return rv;
 }
 
 static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
@@ -294,10 +294,10 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
 	char* tempString = NULL;
 	rv = cmdLineArgs->GetCmdLineValue("-width", &tempString);
 	if (NS_FAILED(rv))
-	   return rv;
+    return rv;
 	
 	if (tempString)
-	    PR_sscanf(tempString, "%d", &width);
+    PR_sscanf(tempString, "%d", &width);
 	  
 	// Get the value of -height option
 	rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
@@ -314,9 +314,9 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
   {
     if (cmdResult && (strcmp("1",cmdResult)==0))
     {
-          OpenChromURL("chrome://messenger/content/", height, width);
+      OpenChromURL("chrome://messenger/content/", height, width);
           
-   }
+    }
   }
 
 
@@ -324,11 +324,8 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
   if (NS_SUCCEEDED(rv))
   {
     if (cmdResult && (strcmp("1",cmdResult)==0))
-    OpenChromURL("chrome://messenger/content/", height, width);
+      OpenChromURL("chrome://messenger/content/", height, width);
   }
-	
-	
-	
 	
   rv = cmdLineArgs->GetCmdLineValue("-compose", &cmdResult);
   if (NS_SUCCEEDED(rv))
@@ -339,20 +336,18 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs )
       withArgs = "chrome://editor/content/EditorInitPage.html";
   	  
   	  NS_WITH_SERVICE(nsIDOMToolkitCore, toolkit, kToolkitCoreCID, &rv);
-	  if (NS_SUCCEEDED(rv))
-	  {
- 		 toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
- 	  }
-   }
- }
-	
-	
+      if (NS_SUCCEEDED(rv))
+      {
+        toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
+      }
+    }
+  }
 	
   rv = cmdLineArgs->GetCmdLineValue("-addressbook", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
     if (cmdResult && (strcmp("1",cmdResult)==0))
-     OpenChromURL("chrome://addressbook/content/",height, width);
+      OpenChromURL("chrome://addressbook/content/",height, width);
   }
 	
 	return NS_OK;    
@@ -371,7 +366,7 @@ private:
 
 void nsPrefProfile::Shutdown()
 {
-	 /* Release the global preferences... */
+  /* Release the global preferences... */
   if (prefs) {
     prefs->SavePrefFile(); 
     prefs->ShutDown();
@@ -391,7 +386,7 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 {
 	char* cmdResult = nsnull;
 	nsresult rv;
-	 // initializations for profile manager
+  // initializations for profile manager
 #if defined(NS_USING_PROFILES)
 	nsFileSpec currProfileDirSpec;
 	PRBool profileDirSet = PR_FALSE;
@@ -399,7 +394,7 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 	char *profstr = nsnull;
 	int numProfiles = 0;
   
-// get and start the ProfileManager service
+  // get and start the ProfileManager service
   
   rv = nsServiceManager::GetService(kProfileCID, 
                                     nsIProfile::GetIID(), 
@@ -413,15 +408,15 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
   profileService->GetProfileCount(&numProfiles); 
 
   printf("Profile Manager : Command Line Options : Begin\n");
- // check for command line arguments for profile manager
- //	
- // -P command line option works this way:
- // apprunner -P profilename 
- // runs the app using the profile <profilename> 
- // remembers profile for next time 
+  // check for command line arguments for profile manager
+  //	
+  // -P command line option works this way:
+  // apprunner -P profilename 
+  // runs the app using the profile <profilename> 
+  // remembers profile for next time 
 	rv = cmdLineArgs->GetCmdLineValue("-P", &cmdResult);
-    if (NS_SUCCEEDED(rv))
-    {
+  if (NS_SUCCEEDED(rv))
+  {
 		if (cmdResult) {
 			char* currProfileName = cmdResult;
 
@@ -434,7 +429,7 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 				profileDirSet = PR_TRUE;
 			}
 		}
-    }
+  }
 
 	// -CreateProfile command line option works this way:
 	// apprunner -CreateProfile profilename 
@@ -448,21 +443,21 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 	// remembers profile for next time
 
 	rv = cmdLineArgs->GetCmdLineValue("-CreateProfile", &cmdResult);
-    if (NS_SUCCEEDED(rv))
-    {
+  if (NS_SUCCEEDED(rv))
+  {
 		if (cmdResult) {
 			char* currProfileName = strtok(cmdResult, " ");
-            char* currProfileDirString = strtok(NULL, " ");
+      char* currProfileDirString = strtok(NULL, " ");
 			
 			if (currProfileDirString)
-			    currProfileDirSpec = currProfileDirString;
+        currProfileDirSpec = currProfileDirString;
 			else
 			{
 				// No directory name provided. Get File Locator
 				nsIFileLocator* locator = nsnull;
 				rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
 				if (NS_FAILED(rv))
-				    return rv;
+          return rv;
 				if (!locator)
 				  return NS_ERROR_FAILURE;
 				
@@ -484,33 +479,33 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 
 			fprintf(stderr, "profileName & profileDir are: %s\n", cmdResult);
 			profileService->SetProfileDir(currProfileName, currProfileDirSpec);
-	  		profileDirSet = PR_TRUE;
+      profileDirSet = PR_TRUE;
 			
 		}
-    }
+  }
 
 	// Start Profile Manager
 	rv = cmdLineArgs->GetCmdLineValue("-ProfileManager", &cmdResult);
-    if (NS_SUCCEEDED(rv))
-    {		
+  if (NS_SUCCEEDED(rv))
+  {		
 		if (cmdResult) {
 			profstr = "resource:/res/profile/pm.xul"; 
 		}
-    }
+  }
 
 	// Start Profile Wizard
 	rv = cmdLineArgs->GetCmdLineValue("-ProfileWizard", &cmdResult);
-    if (NS_SUCCEEDED(rv))
-    {		
+  if (NS_SUCCEEDED(rv))
+  {		
 		if (cmdResult) {
 			profstr = "resource:/res/profile/cpw.xul"; 
 		}
-    }
+  }
 
 	// Start Migaration activity
 	rv = cmdLineArgs->GetCmdLineValue("-installer", &cmdResult);
-    if (NS_SUCCEEDED(rv))
-    {		
+  if (NS_SUCCEEDED(rv))
+  {		
 		if (cmdResult) {
 #ifdef XP_PC
 			profileService->MigrateProfileInfo();
@@ -530,14 +525,12 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 			}
 #endif
 		}
-    }
+  }
 
-    printf("Profile Manager : Command Line Options : End\n");
+  printf("Profile Manager : Command Line Options : End\n");
 
 #endif // defined(NS_USING_PROFILES)
 
-
-  
 
   /*
    * Load preferences, causing them to be initialized, and hold a reference to them.
@@ -546,12 +539,10 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
                                     nsIPref::GetIID(), 
                                     (nsISupports **)&prefs);
   if (NS_FAILED(rv))
-   return rv;
+    return rv;
 
 #if defined (NS_USING_PROFILES)
-
-
-    	printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
+  printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
 
 	/* 
 	 * If default profile is current, launch CreateProfile Wizard. 
@@ -569,8 +560,8 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 	 	 * Create the Application Shell instance...
 		 */
 		rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    nsIAppShellService::GetIID(),
-                                    (nsISupports**)&profAppShell);
+                                      nsIAppShellService::GetIID(),
+                                      (nsISupports**)&profAppShell);
 		if (NS_FAILED(rv))
 			return rv;
 
@@ -616,9 +607,9 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 
 	 		nsCOMPtr<nsIWebShellWindow>  profWindow;
 			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL,
-				PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-				nsnull, profWinWidth, profWinHeight,
-				getter_AddRefs(profWindow));
+                                              PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
+                                              nsnull, profWinWidth, profWinHeight,
+                                              getter_AddRefs(profWindow));
 
 			NS_RELEASE(profURL);
 		
@@ -636,7 +627,7 @@ nsresult nsPrefProfile::Startup( nsICmdLineService* cmdLineArgs )
 		if (pregPref && PL_strcmp(isPregInfoSet, "true") != 0)
 			profileService->ProcessPRegCookie();
 	}
-    	printf("Profile Manager : Profile Wizard and Manager activites : End\n");
+  printf("Profile Manager : Profile Wizard and Manager activites : End\n");
 #endif
 
   // Now we have the right profile, read the user-specific prefs.
@@ -657,10 +648,10 @@ static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs)
 	char* tempString = NULL;
 	rv = cmdLineArgs->GetCmdLineValue("-width", &tempString);
 	if (NS_FAILED(rv))
-	   return rv;
+    return rv;
 	
 	if (tempString)
-	    PR_sscanf(tempString, "%d", &width);
+    PR_sscanf(tempString, "%d", &width);
 	
 	  
 	// Get the value of -height option
@@ -673,9 +664,9 @@ static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs)
 		PR_sscanf(tempString, "%d", &height);
 	
 
-	  rv = cmdLineArgs->GetCmdLineValue("-chrome", &cmdResult); 
-	  if ( NS_SUCCEEDED(rv) && cmdResult )
-	      OpenChromURL(cmdResult, height, width);
+  rv = cmdLineArgs->GetCmdLineValue("-chrome", &cmdResult); 
+  if ( NS_SUCCEEDED(rv) && cmdResult )
+    OpenChromURL(cmdResult, height, width);
 	 
   
 	return NS_OK;    
@@ -705,37 +696,37 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 	NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
-    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
-    {
-	      PRBool more;
+  if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
+  {
+    PRBool more;
 	      
-	      windowEnumerator->HasMoreElements(&more);
-	   	  if ( !more )
-		  {
-				// No window exists so lets create a browser one
-				PRInt32 height  = NS_SIZETOCONTENT;
-				PRInt32 width  = NS_SIZETOCONTENT;
+    windowEnumerator->HasMoreElements(&more);
+    if ( !more )
+    {
+      // No window exists so lets create a browser one
+      PRInt32 height  = NS_SIZETOCONTENT;
+      PRInt32 width  = NS_SIZETOCONTENT;
 				
-				// Get the value of -width option
-				char* tempString = NULL;
-				rv = cmdLineArgs->GetCmdLineValue("-width", &tempString);
-				if (NS_FAILED(rv))
-				   return rv;
-				if (tempString)
-				    PR_sscanf(tempString, "%d", &width);
+      // Get the value of -width option
+      char* tempString = NULL;
+      rv = cmdLineArgs->GetCmdLineValue("-width", &tempString);
+      if (NS_FAILED(rv))
+        return rv;
+      if (tempString)
+        PR_sscanf(tempString, "%d", &width);
 				
 				  
-				// Get the value of -height option
-				rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
-				if (NS_FAILED(rv))
-					return rv;
+      // Get the value of -height option
+      rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
+      if (NS_FAILED(rv))
+        return rv;
 
-				if (tempString)
-					PR_sscanf(tempString, "%d", &height);
+      if (tempString)
+        PR_sscanf(tempString, "%d", &height);
 				 
 				
-				rv = OpenChromURL("chrome://navigator/content/", height, width );
-		 }
+      rv = OpenChromURL("chrome://navigator/content/", height, width );
+    }
 	}
 	return rv;
 }
@@ -754,15 +745,15 @@ static nsresult main1(int argc, char* argv[])
  
   InitFullCircle();
 
- #if XP_MAC 
-    stTSMCloser  tsmCloser;
- #endif
+#if XP_MAC 
+  stTSMCloser  tsmCloser;
+#endif
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
 
   // Start up the core services:
 
-    // Initialize the cmd line service
+  // Initialize the cmd line service
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
  
   if (NS_FAILED(rv)) {
@@ -775,14 +766,14 @@ static nsresult main1(int argc, char* argv[])
     PrintUsage();
     return rv;
   }
+
+  // Kick off appcores
+  NS_WITH_SERVICE(nsIDOMAppCoresManager, appCoresManager, kAppCoresManagerCID, &rv);
   
-   // Kick off appcores
-   NS_WITH_SERVICE(nsIDOMAppCoresManager, appCoresManager, kAppCoresManagerCID, &rv);
-  
-   if (NS_SUCCEEDED(rv)){
+  if (NS_SUCCEEDED(rv)){
 		if (appCoresManager->Startup() != NS_OK) {
 		  appCoresManager->Shutdown();
-     	  nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
+      nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoresManager);
 		}
   }
   
@@ -790,7 +781,7 @@ static nsresult main1(int argc, char* argv[])
   // Create the Application Shell instance...
   NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   if (NS_FAILED(rv)) {
-   return rv;
+    return rv;
   }
 
   rv = appShell->Initialize( cmdLineArgs );
@@ -810,9 +801,9 @@ static nsresult main1(int argc, char* argv[])
   // different way (this way works too though).
   NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
 #ifndef XP_MAC
-// Until the cookie manager actually exists on the Mac we don't want to bail here
+  // Until the cookie manager actually exists on the Mac we don't want to bail here
   if (NS_FAILED(rv))
-     return rv;
+    return rv;
 #endif // XP_MAC
 #endif // NECKO
 	
@@ -822,12 +813,12 @@ static nsresult main1(int argc, char* argv[])
 	// This will go away once Components are handling there own commandlines
 	rv = DoCommandLines( cmdLineArgs );
 	if ( NS_FAILED(rv) )
-     return rv;
+    return rv;
      
-    // Make sure there exists at least 1 window. 
+  // Make sure there exists at least 1 window. 
 	rv = Ensure1Window( cmdLineArgs );
-    if (NS_FAILED(rv))
-     return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   // Fire up the walletService
   NS_WITH_SERVICE(nsIWalletService, walletService, kWalletServiceCID, &rv);
@@ -849,31 +840,31 @@ static nsresult main1(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    nsresult rv;
+  nsresult rv;
     
-    if( !NS_CanRun() )
-    	return 1; 
-    NS_ShowSplashScreen();
-    rv = NS_InitXPCOM(NULL);
-    NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
+  if( !NS_CanRun() )
+    return 1; 
+  NS_ShowSplashScreen();
+  rv = NS_InitXPCOM(NULL);
+  NS_ASSERTION( NS_SUCCEEDED(rv), "NS_InitXPCOM failed" );
 
 
-    nsresult result = main1( argc, argv );
+  nsresult result = main1( argc, argv );
 	
 	prefSingleton.Shutdown();
-    // calling this explicitly will cut down on a large number of leaks we're
-    // seeing:
+  // calling this explicitly will cut down on a large number of leaks we're
+  // seeing:
     
-    #if 0
-		if ( unsigned long count = NS_TotalWebShellsInExistence() )
-			{
-				printf("!!!Warning: there are still %l instances of nsWebShell outstanding.  OK?\n", count);
-				char cc;
-				scanf("%c", &cc);
-			}
-	#endif
+#if 0
+  if ( unsigned long count = NS_TotalWebShellsInExistence() )
+  {
+    printf("!!!Warning: there are still %l instances of nsWebShell outstanding.  OK?\n", count);
+    char cc;
+    scanf("%c", &cc);
+  }
+#endif
 
-    rv = NS_ShutdownXPCOM( NULL );
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-    return TranslateReturnValue( result );
+  rv = NS_ShutdownXPCOM( NULL );
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  return TranslateReturnValue( result );
 }
