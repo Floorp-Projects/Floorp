@@ -32,10 +32,10 @@ struct uTableSet
 
 MODULE_PRIVATE XP_Bool		uMapCode(uTable *uT, uint16 in, uint16* out);
 MODULE_PRIVATE XP_Bool 	uGenerate(uShiftTable *shift,int32* state, uint16 in, 
-						unsigned char* out, uint16 outbuflen, uint16* outlen);
+						unsigned char* out, uint32 outbuflen, uint32* outlen);
 MODULE_PRIVATE XP_Bool 	uScan(uShiftTable *shift, int32 *state, unsigned char *in,
-						uint16 *out, uint16 inbuflen, uint16* inscanlen);
-MODULE_PRIVATE XP_Bool 	UCS2_To_Other(uint16 ucs2, unsigned char *out, uint16 outbuflen, uint16* outlen,int16 *outcsid);
+						uint16 *out, uint32 inbuflen, uint32* inscanlen);
+MODULE_PRIVATE XP_Bool 	UCS2_To_Other(uint16 ucs2, unsigned char *out, uint32 outbuflen, uint32* outlen,int16 *outcsid);
 typedef void (*uMapIterateFunc)(uint16 ucs2, uint16 med, uint16 context);
 MODULE_PRIVATE void		uMapIterate(uTable *uT, uMapIterateFunc callback, uint16 context);
 

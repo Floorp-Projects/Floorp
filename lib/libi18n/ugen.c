@@ -31,8 +31,8 @@ typedef XP_Bool (*uGeneratorFunc) (
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 
 MODULE_PRIVATE XP_Bool uGenerate(		
@@ -40,8 +40,8 @@ MODULE_PRIVATE XP_Bool uGenerate(
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 
 #define uSubGennerator(sub,in,out)	(* m_subgenerator[sub])((in),(out))
@@ -51,48 +51,48 @@ PRIVATE XP_Bool uCheckAndGenAlways1Byte(
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 PRIVATE XP_Bool uCheckAndGenAlways2Byte(
 		uShiftTable 			*shift,
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 PRIVATE XP_Bool uCheckAndGenAlways2ByteShiftGR(
 		uShiftTable 			*shift,
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 PRIVATE XP_Bool uCheckAndGenByTable(
 		uShiftTable 			*shift,
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 PRIVATE XP_Bool uCheckAndGen2ByteGRPrefix8F(
 		uShiftTable 			*shift,
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 PRIVATE XP_Bool uCheckAndGen2ByteGRPrefix8EA2(
 		uShiftTable 			*shift,
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 );
 
 
@@ -155,8 +155,8 @@ MODULE_PRIVATE XP_Bool uGenerate(
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 )
 {
 	return (* m_generator[shift->classID]) (shift,state,in,out,outbuflen,outlen);
@@ -243,8 +243,8 @@ PRIVATE XP_Bool uCheckAndGenAlways1Byte(
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 )
 {
 	/*	Don't check inlen. The caller should ensure it is larger than 0 */
@@ -261,8 +261,8 @@ PRIVATE XP_Bool uCheckAndGenAlways2Byte(
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 )
 {
 	if(outbuflen < 2)
@@ -283,8 +283,8 @@ PRIVATE XP_Bool uCheckAndGenAlways2ByteShiftGR(
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 )
 {
 	if(outbuflen < 2)
@@ -305,8 +305,8 @@ PRIVATE XP_Bool uCheckAndGenByTable(
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 )
 {
 	int16 i;
@@ -340,8 +340,8 @@ PRIVATE XP_Bool uCheckAndGen2ByteGRPrefix8F( uShiftTable 			*shift,
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 )
 {
 	if(outbuflen < 3)
@@ -362,8 +362,8 @@ PRIVATE XP_Bool uCheckAndGen2ByteGRPrefix8EA2( uShiftTable 			*shift,
 		int32*				state,
 		uint16				in,
 		unsigned char*		out,
-		uint16 				outbuflen,
-		uint16*				outlen
+		uint32 				outbuflen,
+		uint32*				outlen
 )
 {
 	if(outbuflen < 4)

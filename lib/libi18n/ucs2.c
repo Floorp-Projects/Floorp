@@ -1269,8 +1269,8 @@ PUBLIC XP_Bool
 UCS2_To_Other(
 	uint16 ucs2, 
 	unsigned char *out, 
-	uint16 outbuflen, 
-	uint16* outlen,
+	uint32 outbuflen, 
+	uint32* outlen,
 	int16 *outcsid
 )
 {
@@ -1404,8 +1404,7 @@ UnicodeToStrWithFallback_p(
 	uint32* outlen,
 	uint16 *outcsid)
 {
-	uint16 outlen16;
-	if(! UCS2_To_Other(ucs2, out, (uint16)outbuflen, &outlen16, (int16 *)outcsid))
+	if(! UCS2_To_Other(ucs2, out, outbuflen, outlen, (int16*)outcsid))
 	{
 		if(outbuflen > 2)
 		{
@@ -1420,10 +1419,6 @@ UnicodeToStrWithFallback_p(
 		}
 		else
 			return FALSE;
-	}
-	else
-	{
-		*outlen = outlen16;
 	}
 	return TRUE;
 }
@@ -1671,7 +1666,8 @@ utf8_to_local_encoding(const unsigned char *utf8p, const int utf8len,
 	int16 i, utf8_char_len;
 	uint16 ucs2_char;
 	int16 seg_encoding;
-	int16 out_char_len, out_char_encoding;
+	int16 out_char_encoding;
+	uint32 out_char_len;
 	unsigned char tmpbuf[10];
 	XP_Bool result;
 
@@ -1687,8 +1683,8 @@ utf8_to_local_encoding(const unsigned char *utf8p, const int utf8len,
 	else if (utf8_char_len == -2) /* not enough input characters */
 		return 0;
 	else {
-		result = UCS2_To_Other(ucs2_char, tmpbuf, (uint16)10,
-											(uint16*)&out_char_len, (int16*)&seg_encoding);
+		result = UCS2_To_Other(ucs2_char, tmpbuf, 10,
+											&out_char_len, &seg_encoding);
 		if (result == FALSE) /* failed to convert */
 			seg_encoding = -2; /* no local encoding */
 	}
@@ -1715,7 +1711,7 @@ utf8_to_local_encoding(const unsigned char *utf8p, const int utf8len,
 			 * convert UCS2 to local encoding
 			 */
 			result = UCS2_To_Other(ucs2_char, tmpbuf, (uint16)10,
-											(uint16*)&out_char_len, (int16*)&out_char_encoding);
+											&out_char_len, &out_char_encoding);
 			if (result == FALSE) { /* failed to convert */
 				out_char_encoding = -2; /* no local encoding */
 				tmpbuf[0] = '?'; /* place holder */
@@ -1802,14 +1798,14 @@ PUBLIC void    INTL_UnicodeToStr(
 		}
 		if(i!=num)
 		{
-			uint16 outlen;
+			uint32 outlen;
 			XP_Bool ret;
 			/* MAP one, gen it */
 			ret = uGenerate(tableset.shift[i], 
 				(int32*)0, 
 				med, 
 				dest,
-				(uint16)destbuflen, 
+				destbuflen, 
 				&outlen);
 
 			XP_ASSERT(ret);
@@ -1985,8 +1981,8 @@ PUBLIC uint32    INTL_TextToUnicode(
 	/*
  	 * Use the Netscape conversion tables
 	 */
-	uint32	validlen;
-	uint16 num,scanlen, med;
+	uint32	validlen,scanlen;
+	uint16 num, med;
 	uTableSet tableset;
   XP_ASSERT( (CS_UNKNOWN != encoding) && (CS_DEFAULT != encoding));
 	num = LoadUCS2TableSet(encoding, &tableset,FALSE);
@@ -2005,7 +2001,7 @@ PUBLIC uint32    INTL_TextToUnicode(
 			if((tableset.tables[i] != NULL) &&
 			   (tableset.range[i].min <= src[0]) &&	
 			   (src[0] <= tableset.range[i].max) &&	
-			   (uScan(tableset.shift[i],(int32*) 0,src,&med,(uint16)srclen,&scanlen)))
+			   (uScan(tableset.shift[i],(int32*) 0,src,&med,srclen,&scanlen)))
 			{
 				uMapCode(tableset.tables[i],med, ustr);
 				if(*ustr != NOMAPPING)

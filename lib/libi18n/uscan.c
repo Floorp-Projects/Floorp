@@ -31,8 +31,8 @@ typedef XP_Bool (*uScannerFunc) (
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 
 MODULE_PRIVATE XP_Bool uScan(		
@@ -40,8 +40,8 @@ MODULE_PRIVATE XP_Bool uScan(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 
 #define uSubScanner(sub,in,out)	(* m_subscanner[sub])((in),(out))
@@ -51,48 +51,48 @@ PRIVATE XP_Bool uCheckAndScanAlways1Byte(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 PRIVATE XP_Bool uCheckAndScanAlways2Byte(
 		uShiftTable 			*shift,
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 PRIVATE XP_Bool uCheckAndScanAlways2ByteShiftGR(
 		uShiftTable 			*shift,
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 PRIVATE XP_Bool uCheckAndScanByTable(
 		uShiftTable 			*shift,
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 PRIVATE XP_Bool uCheckAndScan2ByteGRPrefix8F(
 		uShiftTable 			*shift,
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 PRIVATE XP_Bool uCheckAndScan2ByteGRPrefix8EA2(
 		uShiftTable 			*shift,
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 );
 
 
@@ -154,8 +154,8 @@ MODULE_PRIVATE XP_Bool uScan(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 )
 {
 	return (* m_scanner[shift->classID]) (shift,state,in,out,inbuflen,inscanlen);
@@ -238,8 +238,8 @@ PRIVATE XP_Bool uCheckAndScanAlways1Byte(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 )
 {
 	/*	Don't check inlen. The caller should ensure it is larger than 0 */
@@ -257,8 +257,8 @@ PRIVATE XP_Bool uCheckAndScanAlways2Byte(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 )
 {
 	if(inbuflen < 2)
@@ -278,8 +278,8 @@ PRIVATE XP_Bool uCheckAndScanAlways2ByteShiftGR(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 )
 {
 	if(inbuflen < 2)
@@ -299,8 +299,8 @@ PRIVATE XP_Bool uCheckAndScanByTable(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 )
 {
 	int16 i;
@@ -330,8 +330,8 @@ PRIVATE XP_Bool uCheckAndScan2ByteGRPrefix8F(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 )
 {
 	if((inbuflen < 3) ||(in[0] != 0x8F))
@@ -351,8 +351,8 @@ PRIVATE XP_Bool uCheckAndScan2ByteGRPrefix8EA2(
 		int32*				state,
 		unsigned char		*in,
 		uint16				*out,
-		uint16 				inbuflen,
-		uint16*				inscanlen
+		uint32 				inbuflen,
+		uint32*				inscanlen
 )
 {
 	if((inbuflen < 4) || (in[0] != 0x8E) || (in[1] != 0xA2))
