@@ -26,36 +26,28 @@
 # provisions above, a recipient may use your version of this file
 # under either the MPL or the GPL.
 
-package PLIF::Service::Session;
+package PLIF::Service::Passwords;
 use strict;
 use vars qw(@ISA);
 use PLIF::Service;
 @ISA = qw(PLIF::Service);
 1;
 
-sub objectProvides {
+sub provides {
     my $class = shift;
     my($service) = @_;
-    return ($service eq 'session' or $class->SUPER::provides($service));
+    return ($service eq 'service.passwords' or $class->SUPER::provides($service));
 }
 
-sub objectInit {
+sub newPassword {
     my $self = shift;
-    my($app) = @_;
-    $self->SUPER::objectInit(@_);
-    $self->app($app);
+    return (undef, undef); # opaque key (encrypted password), actual password for one-time sending to user
 }
 
-# expected by dataSource.strings
-sub selectVariant {
+sub checkPassword {
     my $self = shift;
-    my($protocol) = @_;
-    return undef; # 'use some other method to work it out...'
-}
-
-# expected by output modules
-sub getAddress {
-    my $self = shift;
-    my($protocol) = @_;
-    return undef; # 'not known over this protocol'
+    my($key, $userData) = @_;
+    # $key is the first value returned from newPassword, 
+    # $userData is the password given by the user.
+    return 0;
 }
