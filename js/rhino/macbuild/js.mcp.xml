@@ -507,6 +507,49 @@
                 <SETTING><NAME>MWCFM68K_termname</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWCFM68K_libfolder</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWCFM68K_alignment</NAME><VALUE>Align_2</VALUE></SETTING>
+                <PANELDATA><NAME>Java Command Line</NAME><VALUE>
+                    0001000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000000000000000000000000000000000000000000000000000
+                    0000000000000000
+                </VALUE></PANELDATA>
                 <PANELDATA><NAME>Java Language</NAME><VALUE>
                     0003000100000000000000000000000000000000000000000000000000000000
                     0000000000000000000000000000000000000000000000000000000000000000
@@ -642,10 +685,13 @@
                 <SETTING><NAME>MWMerge_MacOS_copyResources</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_skipResources</NAME>
                     <SETTING><VALUE></VALUE></SETTING>
-                    <SETTING><VALUE>z¿ð</VALUE></SETTING>
-                    <SETTING><VALUE>ò8</VALUE></SETTING>
-                    <SETTING><VALUE>Àè</VALUE></SETTING>
+                    <SETTING><VALUE>èP</VALUE></SETTING>
+                    <SETTING><VALUE>Wc8</VALUE></SETTING>
+                    <SETTING><VALUE>‚,@</VALUE></SETTING>
                 </SETTING>
+
+                <!-- Settings for "Perl Panel" panel -->
+                <SETTING><NAME>Perl_Prefix_Filename</NAME><VALUE>€A</VALUE></SETTING>
 
                 <!-- Settings for "PPC CodeGen" panel -->
                 <SETTING><NAME>MWCodeGen_PPC_structalignment</NAME><VALUE>MC68K</VALUE></SETTING>
@@ -736,76 +782,6 @@
                 <SETTING><NAME>MWRez_Language_escapecontrolchars</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWRez_Language_prefixname</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWRez_Language_filteredtypes</NAME><VALUE>'CODE' 'DATA' 'PICT'</VALUE></SETTING>
-
-                <!-- Settings for "WinRC Compiler" panel -->
-                <SETTING><NAME>MWWinRC_prefixname</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "x86 CodeGen" panel -->
-                <SETTING><NAME>MWCodeGen_X86_processor</NAME><VALUE>Generic</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_alignment</NAME><VALUE>bytes8</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_exceptions</NAME><VALUE>ZeroOverhead</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_mmx</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_3dnow</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_use_mmx_3dnow_convention</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_machinecodelisting</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_intrinsics</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_syminfo</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_codeviewinfo</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "x86 Exceptions Panel" panel -->
-                <SETTING><NAME>MWDebugger_X86_Exceptions</NAME>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                </SETTING>
-
-                <!-- Settings for "x86 Global Optimizer" panel -->
-                <SETTING><NAME>GlobalOptimizer_X86_optimizationlevel</NAME><VALUE>Level0</VALUE></SETTING>
-                <SETTING><NAME>GlobalOptimizer_X86_optfor</NAME><VALUE>Speed</VALUE></SETTING>
-
-                <!-- Settings for "x86 Linker" panel -->
-                <SETTING><NAME>MWLinker_X86_entrypointusage</NAME><VALUE>Default</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_entrypoint</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsystem</NAME><VALUE>WinGUI</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsysmajorid</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsysminorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_usrmajorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_usrminorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_commandfile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_generatemap</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_linksym</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_linkCV</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "x86 Project" panel -->
-                <SETTING><NAME>MWProject_X86_type</NAME><VALUE>Application</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_outfile</NAME><VALUE>NONAME.EXE</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_baseaddress</NAME><VALUE>4194304</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_maxstacksize</NAME><VALUE>1024</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_minstacksize</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_size</NAME><VALUE>1024</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_minsize</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_importlib</NAME><VALUE></VALUE></SETTING>
                 <PANELDATA><NAME>xpidl Settings</NAME><VALUE>
                     0001000101000000000000000000000000000000000000000000000000000000
                     0000000000000000
@@ -1829,6 +1805,15 @@
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
+                <FILE>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::</ACCESSPATH>
+                    <PATH>:org:mozilla:classfile:ClassManager.java</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
             </FILELIST>
             <LINKORDER>
                 <FILEREF>
@@ -2563,6 +2548,13 @@
                     <PATHTYPE>PathRelative</PATHTYPE>
                     <PATHROOT>Project</PATHROOT>
                     <ACCESSPATH>::</ACCESSPATH>
+                    <PATH>:org:mozilla:classfile:ClassManager.java</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>PathRelative</PATHTYPE>
+                    <PATHROOT>Project</PATHROOT>
+                    <ACCESSPATH>::</ACCESSPATH>
                     <PATH>:org:mozilla:javascript:ClassOutput.java</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -2656,6 +2648,14 @@
                 <PATHROOT>Project</PATHROOT>
                 <ACCESSPATH>::</ACCESSPATH>
                 <PATH>:org:mozilla:classfile:ClassFileWriter.java</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>js.jar</TARGETNAME>
+                <PATHTYPE>PathRelative</PATHTYPE>
+                <PATHROOT>Project</PATHROOT>
+                <ACCESSPATH>::</ACCESSPATH>
+                <PATH>:org:mozilla:classfile:ClassManager.java</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
