@@ -32,7 +32,7 @@ REQUIRES = \
 
 # The default is to include control support unless told to do otherwise
 MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
-MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
+# MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
 # MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
 
 # Path to the Mozilla ActiveX control (some files are copied from there)

@@ -63,9 +63,7 @@ struct PluginInstanceData {
         CActiveScriptSiteInstance *pScriptSite;
         CControlSiteInstance *pControlSite;
     };
-#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
     nsISupports *pScriptingPeer;
-#endif
 };
 
 
