@@ -56,7 +56,7 @@
 
     <html>&languages.customize.active.label;</html>
     <box flex="1">
-      <tree class="inset" id="active_languages" flex="1"
+      <tree class="inset" id="active_languages" flex="1" style="width: 0px; height: 0px;"
             datasources="rdf:null" multiple="true" onselect="SelectLanguage();">
         <treecolgroup>
           <treecol flex="1"/>
@@ -90,17 +90,15 @@
   </titledbox>
   <titledbox orient="vertical" autostretch="never">
     <label value="&languages.customize.Charset.grouplabel;"/>
-    <box autostretch="never">
-      <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
-      <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-          pref="true" preftype="string" prefstring="intl.charset.default"
-          prefattribute="value" wsm_attributes="value">
-          <template>
-            <menupopup>
-              <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-            </menupopup>
-          </template>
-      </menulist>       
-   </box> 
+    <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
+    <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
+        pref="true" preftype="string" prefstring="intl.charset.default"
+        prefattribute="value" wsm_attributes="value">
+        <template>
+          <menupopup>
+            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
+          </menupopup>
+        </template>
+    </menulist>       
   </titledbox>
 </window>
