@@ -983,6 +983,8 @@ sub BuildCommonProjects()
 		
 	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
+	BuildOneProject(":mozilla:js:macbuild:JSLoader.mcp",						"JSLoader$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+
 	BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",						"LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES, 0);
