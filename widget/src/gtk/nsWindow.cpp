@@ -19,6 +19,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "gtklayout.h"
+#include <gtk/gtkprivate.h>
 
 #include "nsWindow.h"
 #include "nsIFontMetrics.h"
@@ -310,32 +311,34 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
-#if 0
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!XtIsRealized(mWidget)) {
+  if (!GTK_IS_WIDGET (mWidget)) {
     return NS_ERROR_FAILURE;
   }
 
-  Window  win      = XtWindow(mWidget);
-  Display *display = XtDisplay(mWidget);
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+    return NS_ERROR_FAILURE;
+  }
 
+  GdkEventExpose event;
 
-  XEvent evt;
-  evt.xgraphicsexpose.type       = GraphicsExpose;
-  evt.xgraphicsexpose.send_event = False;
-  evt.xgraphicsexpose.display    = display;
-  evt.xgraphicsexpose.drawable   = win;
-  evt.xgraphicsexpose.x          = 0;
-  evt.xgraphicsexpose.y          = 0;
-  evt.xgraphicsexpose.width      = mBounds.width;
-  evt.xgraphicsexpose.height     = mBounds.height;
-  evt.xgraphicsexpose.count      = 0;
-  XSendEvent(display, win, False, ExposureMask, &evt);
-  XFlush(display);
-#endif
+  event.type = GDK_EXPOSE;
+  event.send_event = TRUE;
+  event.window = GTK_WIDGET(mWidget)->window;
+  event.area.width = mBounds.width;
+  event.area.height = mBounds.height;
+  event.area.x = 0;
+  event.area.y = 0;
+
+  event.count = 0;
+
+  gdk_window_ref (event.window);
+  gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
+  gdk_window_unref (event.window);
+
   return NS_OK;
 }
 
@@ -347,32 +350,35 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-#if 0
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!XtIsRealized(mWidget)) {
+  if (!GTK_IS_WIDGET (mWidget)) {
     return NS_ERROR_FAILURE;
   }
 
-  Window  win      = XtWindow(mWidget);
-  Display *display = XtDisplay(mWidget);
+  if (!GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+    return NS_ERROR_FAILURE;
+  }
 
+  GdkEventExpose event;
 
-  XEvent evt;
-  evt.xgraphicsexpose.type       = GraphicsExpose;
-  evt.xgraphicsexpose.send_event = False;
-  evt.xgraphicsexpose.display    = display;
-  evt.xgraphicsexpose.drawable   = win;
-  evt.xgraphicsexpose.x          = aRect.x;
-  evt.xgraphicsexpose.y          = aRect.y;
-  evt.xgraphicsexpose.width      = aRect.width;
-  evt.xgraphicsexpose.height     = aRect.height;
-  evt.xgraphicsexpose.count      = 0;
-  XSendEvent(display, win, False, ExposureMask, &evt);
-  XFlush(display);
-#endif
+  event.type = GDK_EXPOSE;
+  event.send_event = TRUE;
+  event.window = GTK_WIDGET(mWidget)->window;
+
+  event.area.width = aRect.width;
+  event.area.height = aRect.height;
+  event.area.x = aRect.x;
+  event.area.y = aRect.y;
+
+  event.count = 0;
+
+  gdk_window_ref (event.window);
+  gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
+  gdk_window_unref (event.window);
+
   return NS_OK;
 }
 
@@ -637,6 +643,19 @@ void nsWindow::GetResizeRect(nsRect* aRect)
 void nsWindow::SetResized(PRBool aResized)
 {
   mResized = aResized;
+  if (mVBox) {
+    if (aResized)
+      GTK_PRIVATE_SET_FLAG(mVBox, GTK_RESIZE_NEEDED);
+    else
+      GTK_PRIVATE_UNSET_FLAG(mVBox, GTK_RESIZE_NEEDED);
+  } else {
+    if (mWidget) {
+      if (aResized)
+        GTK_PRIVATE_SET_FLAG(mWidget, GTK_RESIZE_NEEDED);
+      else
+        GTK_PRIVATE_UNSET_FLAG(mWidget, GTK_RESIZE_NEEDED);
+    }
+  }
 }
 
 PRBool nsWindow::GetResized()
@@ -670,19 +689,16 @@ void nsWindow::UpdateVisibilityFlag()
 
 void nsWindow::UpdateDisplay()
 {
-    // If not displayed and needs to be displayed
-  if ((PR_FALSE==mDisplayed) &&
-     (PR_TRUE==mShown) &&
-     (PR_TRUE==mVisible)) {
+  // If not displayed and needs to be displayed
+  if ((PR_FALSE==mDisplayed) && (PR_TRUE==mShown) && (PR_TRUE==mVisible)) {
     gtk_widget_show(mWidget);
     mDisplayed = PR_TRUE;
   }
 
-    // Displayed and needs to be removed
+  // Displayed and needs to be removed
   if (PR_TRUE==mDisplayed) {
     if ((PR_FALSE==mShown) || (PR_FALSE==mVisible)) {
       gtk_widget_hide(mWidget);
-      //XtUnmanageChild(mWidget);
       mDisplayed = PR_FALSE;
     }
   }
@@ -743,8 +759,8 @@ gint DoRefresh(gpointer call_data)
     pevent.rect = (nsRect *)&bounds;
     win->OnPaint(pevent);
 
-    gtk_idle_add((GtkFunction)ResetResize, win);
-    //    gtk_timeout_add(10, (GtkFunction)ResetResize, win);
+    //    gtk_idle_add((GtkFunction)ResetResize, win);
+    gtk_timeout_add(10, (GtkFunction)ResetResize, win);
     return FALSE;
 }
 
@@ -768,8 +784,8 @@ void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
       DoRefresh(win);
     }
     else {
-      gtk_idle_add((GtkFunction)DoRefresh, win);
-      //gtk_timeout_add(250, (GtkFunction)DoRefresh, win);
+      // gtk_idle_add((GtkFunction)DoRefresh, win);
+      gtk_timeout_add(250, (GtkFunction)DoRefresh, win);
     }
   }
 
