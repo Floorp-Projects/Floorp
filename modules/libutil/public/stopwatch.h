@@ -95,6 +95,7 @@ public:
    void           SaveState();      // record current state of stopwatch
    void           RestoreState();   // restore last recored state of stopwatch
    double         RealTime();
+   double         RealTimeInMilliseconds();
    void           Reset() { ResetCpuTime(); ResetRealTime(); }
    void           ResetCpuTime(double aTime = 0) { Stop();  fTotalCpuTime = aTime; }
    void           ResetRealTime(double aTime = 0) { Stop(); fTotalRealTime = aTime; }
