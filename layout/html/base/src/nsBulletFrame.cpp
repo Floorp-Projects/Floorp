@@ -264,7 +264,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
         GetListItemText(aPresContext, *myList, text);
 
         if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-          nsStr::Delete2(text, 0, 1);
+          text.Cut(0, 1);
           text.Append(NS_LITERAL_STRING("."));
         }
         break;
