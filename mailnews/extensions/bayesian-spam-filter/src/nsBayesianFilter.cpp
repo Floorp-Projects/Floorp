@@ -224,9 +224,9 @@ static PRBool isDecimalNumber(const char* word)
     char c;
     while ((c = *p++)) {
         if (!isdigit(c))
-            return false;
+            return PR_FALSE;
     }
-    return true;
+    return PR_TRUE;
 }
 
 inline PRBool isUpperCase(char c) { return ('A' <= c) && (c <= 'Z'); }
@@ -775,7 +775,7 @@ static PRBool writeTokens(FILE* stream, Tokenizer& tokenizer)
 {
     PRUint32 tokenCount = tokenizer.countTokens();
     if (writeUInt32(stream, tokenCount) != 1)
-        return false;
+        return PR_FALSE;
 
     if (tokenCount > 0) {
         TokenEnumeration tokens = tokenizer.getTokens();
@@ -791,18 +791,18 @@ static PRBool writeTokens(FILE* stream, Tokenizer& tokenizer)
         }
     }
     
-    return true;
+    return PR_TRUE;
 }
 
 static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
 {
     PRUint32 tokenCount;
     if (readUInt32(stream, &tokenCount) != 1)
-        return false;
+        return PR_FALSE;
 
     PRUint32 bufferSize = 4096;
     char* buffer = new char[bufferSize];
-    if (!buffer) return false;
+    if (!buffer) return PR_FALSE;
 
     for (PRUint32 i = 0; i < tokenCount; ++i) {
         PRUint32 count;
@@ -817,7 +817,7 @@ static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
             while (size >= newBufferSize)
                 newBufferSize *= 2;
             buffer = new char[newBufferSize];
-            if (!buffer) return false;
+            if (!buffer) return PR_FALSE;
             bufferSize = newBufferSize;
         }
         if (fread(buffer, size, 1, stream) != 1)
@@ -828,7 +828,7 @@ static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
     
     delete[] buffer;
     
-    return true;
+    return PR_TRUE;
 }
 
 static const char kMagicCookie[] = { '\xFE', '\xED', '\xFA', '\xCE' };
