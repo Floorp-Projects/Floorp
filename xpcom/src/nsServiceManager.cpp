@@ -381,34 +381,18 @@ NS_NewServiceManager(nsIServiceManager* *result)
 ////////////////////////////////////////////////////////////////////////////////
 // Global service manager interface (see nsIServiceManager.h)
 
-nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
-
 nsresult
 nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
 {
+    nsresult rv = NS_OK;
     if (mGlobalServiceManager == NULL) {
-        nsIServiceManager* servMgr;
-        nsresult rv = NS_NewServiceManager(&servMgr);
-        if (NS_FAILED(rv)) return rv;
-
-        // The global service manager always has a global component manager service:
-        nsIComponentManager* compMgr;
-        rv = NS_GetGlobalComponentManager(&compMgr);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(servMgr);
-            return rv;
-        }
-        rv = servMgr->RegisterService(kComponentManagerCID, compMgr);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(servMgr);
-            return rv;
-        }
-
-        mGlobalServiceManager = servMgr;
+        // XPCOM not initialized yet. Let us do initialization of our module.
+        rv = NS_InitXPCOM(NULL);
     }
+    // No ADDREF as we are advicing no release of this.
+    if (NS_SUCCEEDED(rv)) *result = mGlobalServiceManager;
 
-    *result = mGlobalServiceManager;
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -451,3 +435,87 @@ nsServiceManager::UnregisterService(const nsCID& aClass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// XPCOM initialization
+//
+// To Control the order of initialization of these key components I am putting
+// this function.
+//
+//	- nsServiceManager
+//		- nsComponentManager
+//			- nsRegistry
+//
+// Here are key points to remember:
+//	- A global of all these need to exist. nsServiceManager is an independent object.
+//	  nsComponentManager uses both the globalServiceManager and its own registry.
+//
+//	- A static object of both the nsComponentManager and nsServiceManager
+//	  are in use. Hence InitXPCOM() gets triggered from both
+//	  NS_GetGlobale{Service/Component}Manager() calls.
+//
+//	- There exists no global Registry. Registry can be created from the component manager.
+//
+#include "nsComponentManager.h"
+#include "nsIRegistry.h"
+#include "nsXPComCIID.h"
+extern "C" NS_EXPORT nsresult
+NS_RegistryGetFactory(nsISupports* servMgr, nsIFactory** aFactory);
+
+nsIServiceManager* nsServiceManager::mGlobalServiceManager = NULL;
+nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
+
+nsresult NS_InitXPCOM(nsIServiceManager* *result)
+{
+    nsresult rv = NS_OK;
+
+    // 1. Create the Global Service Manager
+    nsIServiceManager* servMgr = NULL;
+    if (nsServiceManager::mGlobalServiceManager == NULL)
+    {
+        rv = NS_NewServiceManager(&servMgr);
+        if (NS_FAILED(rv)) return rv;
+        nsServiceManager::mGlobalServiceManager = servMgr;
+        NS_ADDREF(servMgr);
+        if (result && *result) *result = servMgr;
+    }
+
+    // 2. Create the Component Manager and register with global service manager
+    //    It is understood that the component manager can use the global service manager.
+    nsComponentManagerImpl *compMgr = NULL;
+    if (nsComponentManagerImpl::gComponentManager == NULL)
+    {
+        compMgr = new nsComponentManagerImpl();
+        if (compMgr == NULL)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(compMgr);
+        nsresult rv = compMgr->Init();
+        if (NS_FAILED(rv))
+        {
+            NS_RELEASE(compMgr);
+            return rv;
+        }
+        nsComponentManagerImpl::gComponentManager = compMgr;
+    }
+    
+    rv = servMgr->RegisterService(kComponentManagerCID, compMgr);
+    if (NS_FAILED(rv))
+    {
+        return rv;
+    }
+
+
+    // 3. Register the RegistryFactory with the component manager so that
+    //    clients can create new registry objects.
+    nsIFactory *registryFactory = NULL;
+    rv = NS_RegistryGetFactory(servMgr, &registryFactory);
+    if (NS_FAILED(rv)) return (rv);
+
+    NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
+
+    rv = compMgr->RegisterFactory(kRegistryCID, NS_REGISTRY_CLASSNAME,
+                                  NS_REGISTRY_PROGID, registryFactory,
+                                  PR_TRUE);
+    NS_RELEASE(registryFactory);
+
+   return (rv); 
+}

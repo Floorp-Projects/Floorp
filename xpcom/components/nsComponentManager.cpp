@@ -72,6 +72,7 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory)
     : cid(aClass), factory(aFactory), dll(NULL)
 
 {
+    NS_ADDREF(aFactory);
 }
 
 nsFactoryEntry::~nsFactoryEntry(void)
@@ -815,8 +816,6 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(nsCID *aClass,
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Public methods
 ////////////////////////////////////////////////////////////////////////////////
-
-nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
 
 /**
  * LoadFactory()
@@ -1996,20 +1995,21 @@ nsComponentManagerImpl::SelfUnregisterDll(nsDll *dll)
 NS_COM nsresult
 NS_GetGlobalComponentManager(nsIComponentManager* *result)
 {
-    if (nsComponentManagerImpl::gComponentManager == NULL) {
-        nsComponentManagerImpl::gComponentManager = 
-            new nsComponentManagerImpl();
-        if (nsComponentManagerImpl::gComponentManager == NULL)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(nsComponentManagerImpl::gComponentManager);
-        nsresult rv = nsComponentManagerImpl::gComponentManager->Init();
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(nsComponentManagerImpl::gComponentManager);
-            return rv;
-        }
+    nsresult rv = NS_OK;
+
+    if (nsComponentManagerImpl::gComponentManager == NULL)
+    {
+        // XPCOM needs initialization.
+        rv = NS_InitXPCOM(NULL);
     }
-    *result = nsComponentManagerImpl::gComponentManager;
-    return NS_OK;
+
+    if (NS_SUCCEEDED(rv))
+    {
+        // NO ADDREF since this is never intended to be released.
+        *result = nsComponentManagerImpl::gComponentManager;
+    }
+
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

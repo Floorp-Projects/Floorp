@@ -164,7 +164,6 @@ public:
     // release it.
     static nsresult GetGlobalServiceManager(nsIServiceManager* *result);
 
-protected:
     static nsIServiceManager* mGlobalServiceManager;
 
 };
@@ -334,6 +333,14 @@ public:
 
 extern NS_COM nsresult
 NS_NewServiceManager(nsIServiceManager* *result);
+
+////////////////////////////////////////////////////////////////////////////////
+// Initialization of XPCOM. Creates the global ComponentManager, ServiceManager
+// and registers xpcom components with the ComponentManager. Should be called
+// before any call can be made to XPCOM. Currently we are coping with this
+// not being called and internally initializing XPCOM if not already.
+extern NS_COM nsresult
+NS_InitXPCOM(nsIServiceManager* *result);
 
 ////////////////////////////////////////////////////////////////////////////////
 
