@@ -126,6 +126,13 @@ public:
 		virtual nsresult	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
 		virtual nsresult	ResetInputState();
 		
+		//
+		// Synthetic events, generated internally to do things at specific times and
+		// not have to rely on hacking up EventRecords to fake it.
+		//
+		virtual PRBool UpdateEvent ( ) ;
+		virtual PRBool ResizeEvent ( WindowRef inWindow ) ;
+		 
 protected:
 #if 1
 		virtual void			InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message);
@@ -134,7 +141,6 @@ protected:
 #endif
 		virtual PRBool	HandleKeyEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleActivateEvent(EventRecord& aOSEvent);
-		virtual PRBool	HandleUpdateEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseDownEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseMoveEvent(EventRecord& aOSEvent);

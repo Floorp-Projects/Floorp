@@ -122,6 +122,11 @@ protected:
 	DragTrackingHandlerUPP mDragTrackingHandlerUPP;
 	DragReceiveHandlerUPP mDragReceiveHandlerUPP;
 
+#if TARGET_CARBON
+  pascal static OSStatus WindowEventHandler ( EventHandlerCallRef inHandlerChain, 
+                                               EventRef inEvent, void* userData ) ;
+#endif
+
 	PRBool							mWindowMadeHere; // true if we created the window
 	PRBool							mIsDialog;       // true if the window is a dialog
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
