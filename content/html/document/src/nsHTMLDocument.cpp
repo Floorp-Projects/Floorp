@@ -4594,6 +4594,11 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
   if (NS_SUCCEEDED(rv) && cStringResult && cStringResult[0]) {
     _retval.Assign(NS_ConvertUTF8toUCS2(cStringResult));
   }
+  else if (NS_FAILED(rv)) {
+    // get string value if it's not a c-string; might be a font name
+    rv = cmdParams->GetStringValue("state_attribute", _retval);
+  }
+
   if (cStringResult) {
     nsMemory::Free(cStringResult);
   }
