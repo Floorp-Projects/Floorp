@@ -65,7 +65,7 @@ int EarlManagerNetTicklerCallback(void);
 EarlManager::EarlManager ()
 {
 	fInterruptContext = NULL;
-#if JAVA
+#ifdef JAVA
 	nsn_InstallTickleHookProc(&EarlManagerNetTicklerCallback);
 #endif
 }
