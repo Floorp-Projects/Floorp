@@ -104,6 +104,12 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
                                           GTK_DIALOG_DESTROY_WITH_PARENT,
                                           NULL);
 
+    // only add the dialog to the window group if the parent already has a window group,
+    // so as not to break app's expectations about modal dialogs.
+    if (aParentWindow && aParentWindow->group) {
+        gtk_window_group_add_window (aParentWindow->group, GTK_WINDOW (mWindow));
+    }
+
     // gtk will resize this for us as necessary
     gtk_window_set_default_size(GTK_WINDOW(mWindow), 100, 50);
 
