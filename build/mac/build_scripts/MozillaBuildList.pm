@@ -817,9 +817,6 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",                          "$distdirectory:mac:common:");
     InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",               "$distdirectory:mac:inst:");
 
-    #INCLUDE
-    InstallFromManifest(":mozilla:include:MANIFEST",                               "$distdirectory:include:");
-
     #INTL
     #CHARDET
     InstallFromManifest(":mozilla:intl:chardet:public:MANIFEST_IDL",               "$distdirectory:idl:");
