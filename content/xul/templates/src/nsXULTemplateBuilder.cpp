@@ -148,15 +148,15 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
 
     if (gRefCnt == 0) {
         kContainerAtom             = NS_NewAtom("container");
-	kIsContainerAtom           = NS_NewAtom("iscontainer");
-	kXULContentsGeneratedAtom  = NS_NewAtom("xulcontentsgenerated");
+		kIsContainerAtom           = NS_NewAtom("iscontainer");
+		kXULContentsGeneratedAtom  = NS_NewAtom("xulcontentsgenerated");
         kItemContentsGeneratedAtom = NS_NewAtom("itemcontentsgenerated");
         kTreeContentsGeneratedAtom = NS_NewAtom("treecontentsgenerated");
 
         kIdAtom              = NS_NewAtom("id");
         kOpenAtom            = NS_NewAtom("open");
         kResourceAtom        = NS_NewAtom("resource");
-	kURIAtom             = NS_NewAtom("uri");
+		kURIAtom             = NS_NewAtom("uri");
         kContainmentAtom     = NS_NewAtom("containment");
         kIgnoreAtom          = NS_NewAtom("ignore");
         kNaturalOrderPosAtom = NS_NewAtom("pos");
@@ -236,13 +236,13 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
     if (gRefCnt == 0) {
         NS_RELEASE(kContainerAtom);
         NS_RELEASE(kIsContainerAtom);
-	NS_RELEASE(kXULContentsGeneratedAtom);
+		NS_RELEASE(kXULContentsGeneratedAtom);
         NS_RELEASE(kItemContentsGeneratedAtom);
 
         NS_RELEASE(kIdAtom);
         NS_RELEASE(kOpenAtom);
         NS_RELEASE(kResourceAtom);
-	NS_RELEASE(kURIAtom);
+		NS_RELEASE(kURIAtom);
         NS_RELEASE(kContainmentAtom);
         NS_RELEASE(kIgnoreAtom);
         NS_RELEASE(kNaturalOrderPosAtom);
@@ -2305,12 +2305,23 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
 
     // Clear the contents-generated attribute so that the next time we
     // come back, we'll regenerate the kids we just killed.
-    if (NS_FAILED(rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                                kItemContentsGeneratedAtom,
-                                                PR_FALSE))) {
-        NS_ERROR("unable to clear contents-generated attribute");
-        return rv;
-    }
+    rv = aElement->UnsetAttribute(kNameSpaceID_None,
+								  kItemContentsGeneratedAtom,
+								  PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
+
+	// This is a _total_ hack to make sure that any XUL we blow away
+	// gets rebuilt.
+	rv = aElement->UnsetAttribute(kNameSpaceID_None,
+								  kXULContentsGeneratedAtom,
+								  PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = aElement->SetAttribute(kNameSpaceID_RDF,
+								kContainerAtom,
+								"true",
+								PR_FALSE);
+	if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
