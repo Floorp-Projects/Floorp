@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/AccountManager.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
