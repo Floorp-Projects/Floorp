@@ -868,7 +868,7 @@ hash_access(
 
 		if (bp[1] >= REAL_KEY) {
 			/* Real key/data pair */
-			if (size == (unsigned)(off - *bp) &&
+			if (size == (unsigned long)(off - *bp) &&
 			    memcmp(kp, rbufp->page + *bp, size) == 0)
 				goto found;
 			off = bp[1];
@@ -1012,7 +1012,7 @@ hash_seq(
 	for (bp = NULL; !bp || !bp[0]; ) {
 		if (!(bufp = hashp->cpage)) {
 			for (bucket = hashp->cbucket;
-			    bucket <= (unsigned)hashp->MAX_BUCKET;
+			    bucket <= (uint32)hashp->MAX_BUCKET;
 			    bucket++, hashp->cndx = 1) {
 				bufp = __get_buf(hashp, bucket, NULL, 0);
 				if (!bufp)
@@ -1116,7 +1116,7 @@ __expand_table(HTAB *hashp)
 		hashp->OVFL_POINT = spare_ndx;
 	}
 
-	if (new_bucket > (unsigned)hashp->HIGH_MASK) {
+	if (new_bucket > (uint32)hashp->HIGH_MASK) {
 		/* Starting a new doubling */
 		hashp->LOW_MASK = hashp->HIGH_MASK;
 		hashp->HIGH_MASK = new_bucket | hashp->LOW_MASK;
@@ -1152,7 +1152,7 @@ __call_hash(HTAB *hashp, char *k, size_t len)
 
 	n = hashp->hash(k, len);
 	bucket = n & hashp->HIGH_MASK;
-	if (bucket > (unsigned)hashp->MAX_BUCKET)
+	if (bucket > (uint32)hashp->MAX_BUCKET)
 		bucket = bucket & hashp->LOW_MASK;
 	return (bucket);
 }

@@ -1123,7 +1123,7 @@ __free_ovflpage(HTAB *hashp, BUFHEAD *obufp)
 	ndx = (((uint16)addr) >> SPLITSHIFT);
 	bit_address =
 	    (ndx ? hashp->SPARES[ndx - 1] : 0) + (addr & SPLITMASK) - 1;
-	 if (bit_address < (unsigned)hashp->LAST_FREED)
+	if (bit_address < (uint32)hashp->LAST_FREED)
 		hashp->LAST_FREED = bit_address;
 	free_page = (bit_address >> (hashp->BSHIFT + BYTE_SHIFT));
 	free_bit = bit_address & ((hashp->BSIZE << BYTE_SHIFT) - 1);
@@ -1165,11 +1165,13 @@ open_temp(HTAB *hashp)
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
 	sigset_t set, oset;
 #endif
+#if !defined(macintosh)
 	char * tmpdir;
 	size_t len;
+	char last;
+#endif
 	static const char namestr[] = "/_hashXXXXXX";
 	char filename[1024];
-	char last;
 
 #if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
 	/* Block signals; make sure file goes away at process exit. */
