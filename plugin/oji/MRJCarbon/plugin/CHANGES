@@ -3,6 +3,9 @@ Changes since 1.0b2:
 1. Added call to SizeJavaControl() when processing window size changes. This causes the applet
 to be correctly resized before calling MoveAndClipJavaControl().
 
+2. Fixed LiveConnect method that was causing stale plugin instance references to be retained
+in the active plugin list.
+
 Changes since 1.0b1:
 
 1. Repaired Security Context code that was broken by the checkin for bug 124042. This code now

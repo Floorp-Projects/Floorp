@@ -314,6 +314,24 @@ static MRJPluginInstance* GetCurrentInstance(JNIEnv* env)
 }
 
 /**
+ * Maps the given applet to a given plugin instance by walking the PluginInstance list looking
+ * for an instance which contains the current applet. 
+ * Note:  the reference count of the plugin instance isn't affected by this call.
+ */
+static MRJPluginInstance* GetCurrentInstance(JNIEnv* env, jobject applet)
+{
+    MRJPluginInstance* pluginInstance = MRJPluginInstance::getInstances();
+    while (pluginInstance != NULL) {
+        jobject object = NULL;
+        if (pluginInstance->GetJavaObject(&object) == NS_OK && env->IsSameObject(applet, object)) {
+            return pluginInstance;
+        }
+        pluginInstance = pluginInstance->getNextInstance();
+    }
+    return NULL;
+}
+
+/**
  * Wraps a JavaMessage in an nsIRunnable form, so that it runs on the correct native thread.
  */
 class MessageRunnable : public JavaMessage, public RunnableMixin {
@@ -493,12 +511,10 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv* env,
     }
 
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
-#endif
 
     /* Get the Unicode string for the JS property name */
     jboolean is_copy;
@@ -557,12 +573,11 @@ Java_netscape_javascript_JSObject_getSlot(JNIEnv* env,
                                           jint slot)
 {
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
+
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
-#endif
 
     jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
     jobject member = NULL;
@@ -615,12 +630,10 @@ Java_netscape_javascript_JSObject_setMember(JNIEnv* env,
     }
 
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return;
     }
-#endif
 
     /* Get the Unicode string for the JS property name */
     jboolean is_copy;
@@ -669,12 +682,11 @@ Java_netscape_javascript_JSObject_setSlot(JNIEnv* env,
                                           jobject java_obj)
 {
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
+
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return;
     }
-#endif
 
     jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
     java_obj = ToGlobalRef(env, java_obj);
@@ -722,12 +734,10 @@ Java_netscape_javascript_JSObject_removeMember(JNIEnv* env,
     }
 
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return;
     }
-#endif
 
     /* Get the Unicode string for the JS property name */
     jboolean is_copy;
@@ -785,12 +795,10 @@ Java_netscape_javascript_JSObject_call(JNIEnv* env, jobject java_wrapper_obj,
 
     /* Try to determine which plugin instance is responsible for this thread. This is done by checking class loaders. */
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
-#endif
 
     /* Get the Unicode string for the JS function name */
     jboolean is_copy;
@@ -857,27 +865,19 @@ Java_netscape_javascript_JSObject_eval(JNIEnv* env,
     jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
     jobject jresult = NULL;
     
-#ifdef MRJPLUGIN_4X
-    nsresult status = theLiveConnectManager->Eval(env, js_obj, script_ucs2, script_len, NULL, 0, NULL, &jresult);
-#else
     /* determine the plugin instance so we can obtain its codebase. */
     // beard: should file a bug with Apple that JMJNIToAWTContext doesn't work.
-    // MRJPluginInstance* pluginInstance = theJVMPlugin->getPluginInstance(env);
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
-#endif
 
     EvalMessage msg(pluginInstance, js_obj, script_ucs2, script_len, &jresult);
     sendMessage(env, &msg);
     
     if (jresult != NULL)
         jresult = ToLocalRef(env, jresult);
-    
-#endif
 
     env->ReleaseStringChars(script_jstr, script_ucs2);
 
@@ -918,12 +918,10 @@ Java_netscape_javascript_JSObject_toString(JNIEnv* env, jobject java_wrapper_obj
     jsobject js_obj = Unwrap_JSObject(env, java_wrapper_obj);
 
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
-#if 0
     if (pluginInstance == NULL) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"), "illegal JNIEnv (can't find plugin)");
         return NULL;
     }
-#endif
 
     ToStringMessage msg(pluginInstance, js_obj, &jresult);
     sendMessage(env, &msg);
@@ -961,20 +959,14 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv* env,
                                             jclass js_object_class,
                                             jobject java_applet_obj)
 {
-    MRJPluginInstance* pluginInstance = theJVMPlugin->getPluginInstance(java_applet_obj);
+    MRJPluginInstance* pluginInstance = GetCurrentInstance(env, java_applet_obj);
     if (pluginInstance != NULL) {
-#ifdef MRJPLUGIN_4X
-        // keep an extra reference to the plugin instance, until it is finalized.
-        jobject jwindow = Wrap_JSObject(env, jsobject(pluginInstance));
-        return jwindow;
-#else
         jsobject jswindow = NULL;
         GetWindowMessage msg(pluginInstance, &jswindow);
         sendMessage(env, &msg);
         
         if (jswindow != NULL)
             return Wrap_JSObject(env, jswindow);
-#endif
     }
     return NULL;
 }
@@ -1003,11 +995,6 @@ Java_netscape_javascript_JSObject_finalize(JNIEnv* env, jobject java_wrapper_obj
 {
     jsobject jsobj = Unwrap_JSObject(env, java_wrapper_obj);
 
-#ifdef MRJPLUGIN_4X
-    MRJPluginInstance* pluginInstance = (MRJPluginInstance*)jsobj;
-    NS_IF_RELEASE(pluginInstance);
-#else    
     FinalizeMessage msg(jsobj);
     sendMessage(env, &msg);
-#endif
 }
