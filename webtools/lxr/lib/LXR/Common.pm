@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.19 1999/08/07 09:28:37 mccabe%netscape.com Exp $
+# $Id: Common.pm,v 1.20 1999/09/10 19:03:39 endico%mozilla.org Exp $
 
 package LXR::Common;
 
@@ -11,7 +11,7 @@ require Exporter;
 @EXPORT = qw($Path &warning &fatal &abortall &fflush &urlargs 
 	     &fileref &idref &htmlquote &freetextmarkup &markupfile
 	     &markspecials &htmlquote &freetextmarkup &markupstring
-	     &init &makeheader &makefooter &expandtemplate);
+	     &init &glimpse_init &makeheader &makefooter &expandtemplate);
 
 
 $wwwdebug = 1;
@@ -122,6 +122,7 @@ sub idref {
 sub http_wash {
     my $t = shift;
     # $t =~ s/\+/%2B/g;
+
     #endico: don't use plus signs to represent spaces as is the normal
     #case. we need to use them in file names for gtk+
 
@@ -133,6 +134,7 @@ sub http_wash {
     # Should be sufficient to keep "open" from doing unexpected stuff.
     if ($t =~ tr/<>|\"\'\`//) {
 	&abortall("Illegal characters in HTTP-parameters.");
+
     }
     
     return($t);
@@ -396,25 +398,53 @@ sub fixpaths {
     $Path->{'xref'} =~ s#/</a>#</a>/#gi;
 }
 
+sub glimpse_init {
+
+    ($Conf, $HTTP, $Path) = &init_all;
+
+    $HTTP->{'this_url'} = join('', 'http://',
+					  $ENV{'SERVER_NAME'},
+					  ':', $ENV{'SERVER_PORT'},
+					  $ENV{'SCRIPT_NAME'},
+					  $ENV{'PATH_INFO'},
+					  '?', $ENV{'QUERY_STRING'});
+    my @a;
+    if ($ENV{'QUERY_STRING'} =~ s/&regexp=on//) {
+        $Conf->{'regexp'} = 'on';
+    } else {
+        $ENV{'QUERY_STRING'} =~ s/&regexp=off//;
+        $Conf->{'regexp'} = 'off';
+    }
+    foreach ($ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g) {
+	push(@a, $_);
+        }
+    $HTTP->{'param'} = {@a};
+
+    return($Conf, $HTTP, $Path);
+    }
+
 
 sub init {
-    my ($argv_0) = @_;
 
     my @a;
-
-    $HTTP->{'path_info'} = &http_wash($ENV{'PATH_INFO'});
+    ($Conf, $HTTP, $Path) = &init_all;
     $HTTP->{'this_url'} = &http_wash(join('', 'http://',
 					  $ENV{'SERVER_NAME'},
 					  ':', $ENV{'SERVER_PORT'},
 					  $ENV{'SCRIPT_NAME'},
 					  $ENV{'PATH_INFO'},
 					  '?', $ENV{'QUERY_STRING'}));
-
     foreach ($ENV{'QUERY_STRING'} =~ /([^;&=]+)(?:=([^;&]+)|)/g) {
 	push(@a, &http_wash($_));
-    }
+        }
     $HTTP->{'param'} = {@a};
+    return($Conf, $HTTP, $Path);
+    }
 
+sub init_all {
+    my ($argv_0) = @_;
+
+    $HTTP->{'path_info'} = &http_wash($ENV{'PATH_INFO'});
     $HTTP->{'param'}->{'v'} ||= $HTTP->{'param'}->{'version'};
     $HTTP->{'param'}->{'a'} ||= $HTTP->{'param'}->{'arch'};
     $HTTP->{'param'}->{'i'} ||= $HTTP->{'param'}->{'identifier'};
@@ -549,6 +579,13 @@ sub titleexpand {
 
     } elsif ($who eq 'search') {
 	my $s = $HTTP->{'param'}->{'string'};
+        $s =~ tr/+/ /;
+        $s =~ s/%(\w\w)/chr(hex $1)/ge;
+        $s =~ s/&/&amp;/g;
+        $s =~ s/</&lt;/g;
+        $s =~ s/>/&gt;/g;
+
+
 	return($Conf->sourcerootname.' freetext search'.
 	       ($s ? " \"$s\"" : ''));
 

@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: search,v 1.4 1998/06/12 21:58:38 jwz Exp $
+# $Id: search,v 1.5 1999/09/10 19:03:37 endico%mozilla.org Exp $
 
 # search --	Freetext search
 #
@@ -32,9 +32,11 @@ $maxhits = 1000;
 sub search {
     print("<P ALIGN=CENTER>\n",
 	  "Free-text search through the source code, including comments.\n",
-	  "<BR>(Need some <A HREF=\"search-help.html\">Hints</A> ",
-	  "on performing searches?)\n");
+          "<BR>By default, this form treats all characters as literals. \n",
+	  "<BR>Read the <A HREF=\"search-help.html\">documentation</A>",
+	  " for help with glimpse's regular expression syntax,\n");
 
+    print("<TABLE><TR><TD>");
     print("<form method=get action=\"search\">\n");
 
     foreach ($Conf->allvariables) {
@@ -44,21 +46,31 @@ sub search {
 	}
     }
 
-    print("<B>Search for: </B><input type=text name=\"string\" ",
-	  "value=\"",$searchtext,"\" size=50>\n",
-	  "<input type=submit value=\"search\">\n",
-#	  $Query->checkbox("case",0,0,"Case sensitive search"),
-#	  $Query->checkbox("regexp",1,0,"Regular expression search"),
-#	  $Query->popup_menu("fuzz",[0,1,2,3,4,5,6,7],0),
-	  "</form>\n");
+    $s = $searchtext;
+    $s =~ s/"/\&quot;/g;
+    print("<B>Search for: </B></TD><TD><input type=text name=\"string\" ",
+	  "value=\"",$s,"\" size=50>\n",
+	  "<input type=submit value=\"search\"><BR>\n",
+          "</TD></TR><TR><TD></TD><TD>\n",
+	  "<input type=\"checkbox\" name=\"regexp\"");
+          if ($Conf->{'regexp'} eq 'on') {
+              print (" CHECKED");
+              print (" value=\"on\">Regular Expression Search\n");
+          } else {
+              print (">Regular Expression Search\n");
+          }
+          print ("</TD></TR>\n</form>\n </TABLE>\n");
     
     $| = 1; print('');
-
+   
     if ($searchtext ne "") {
 	print("<hr>\n");
 	unless (open(GLIMPSE, "-|")) {
 	    open(STDERR, ">&STDOUT");
 	    $!='';
+            if ($Conf->{'regexp'} eq 'off') {
+                $searchtext =~ s/([;,#><\-\$.^*[^|()\!])/\\$1/g;
+            }
 	    exec($Conf->glimpsebin,"-i","-H".$Conf->dbdir,'-y','-n',$searchtext);
 	    print("Glimpse subprocess died unexpextedly: $!\n");
 	    exit;
@@ -88,6 +100,10 @@ sub search {
 		if ($numlines > $maxhits) {
 		    print("<b> Too many hits, displaying first $maxhits</b><br>\n");
 		}
+                $searchtext =~ s/&/&amp;/g;
+                $searchtext =~ s/</&lt;/g;
+                $searchtext =~ s/>/&gt;/g;
+
 		print("<h1>$searchtext</h1>\n");
 		$sourceroot = $Conf->sourceroot;
 		foreach $glimpseline (@glimpselines) {
@@ -115,11 +131,13 @@ sub search {
     }
 }
 
-($Conf, $HTTP, $Path) = &init;
+($Conf, $HTTP, $Path) = &glimpse_init;
 $searchtext = $HTTP->{'param'}->{'string'};
+$regexp = $HTTP->{'param'}->{'regexp'};
+$searchtext =~ tr/+/ /;
+$searchtext =~ s/%(\w\w)/chr(hex $1)/ge;
+
 
 &makeheader('search');
 &search;
 &makefooter('search');
-
-
