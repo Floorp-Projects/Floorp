@@ -87,6 +87,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  locale \
 		  profile \
+		  chrome \
 		  $(NULL)
 # for jprof
 REQUIRES	+= jprof

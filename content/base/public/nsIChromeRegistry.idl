@@ -23,6 +23,7 @@
  * Contributor(s):
  *   pav
  *   Blake Ross (blaker@netscape.com)
+ *   Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,10 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIURL.idl"
-#include "nsISimpleEnumerator.idl"
-#include "nsISupportsArray.idl"
-interface nsIDocShell;
+interface nsIURI;
 
 [scriptable, uuid(68389281-f6d0-4533-841d-344a2018140c)]
 interface nsIChromeRegistry : nsISupports
@@ -85,57 +83,13 @@ interface nsIChromeRegistry : nsISupports
   void checkForNewChrome();
 };
 
-[scriptable, uuid(fd1ee2f8-0238-40b0-9b54-27cf810d9c86)]
-interface nsIXULChromeRegistry : nsIChromeRegistry {
-
-  /* Applies a skin or locale to all possible packages */
-  void selectSkin(in ACString skinName, in boolean useProfile);
-  void selectLocale(in ACString localeName, in boolean useProfile);
-  void deselectSkin(in ACString skinName, in boolean useProfile);
-  void deselectLocale(in ACString localeName, in boolean useProfile);
-  PRInt32 isSkinSelected(in ACString skinName, in boolean useProfile);
-  PRInt32 isLocaleSelected(in ACString localeName, in boolean useProfile);
- 
-  //Special additional APIs for locales and skin.
-  void selectLocaleForProfile(in ACString localeName, in wstring profilePath);
-  void selectSkinForProfile(in ACString skinName, in wstring profilePath);
-  
+[scriptable, uuid(a1208469-47cf-4776-9062-f8b431afb6fa)]
+interface nsIXULChromeRegistry : nsIChromeRegistry
+{
   /* Should be called when locales change to reload all chrome (including XUL). */
   void reloadChrome();
   
-  /* runtimeProvider == true: don't assert the runtime change */
-  void setRuntimeProvider(in boolean runtimeProvider); 
-
-  boolean checkThemeVersion(in ACString skinName);
-  boolean checkLocaleVersion(in ACString localeName);
-
-  /* Apply skin/locale to a specific package */
-  void selectSkinForPackage(in ACString skinName,
-                            in wstring packageName,
-                            in boolean useProfile);
-  
-  void selectLocaleForPackage(in ACString localeName,
-                              in wstring packageName,
-                              in boolean useProfile);
-  
-  void deselectSkinForPackage(in ACString skinName,
-                              in wstring packageName,
-                              in boolean useProfile);
-  
-  void deselectLocaleForPackage(in ACString localeName,
-                                in wstring packageName,
-                                in boolean useProfile);
-  
-  boolean isSkinSelectedForPackage(in ACString skinName,
-                                   in wstring packageName,
-                                   in boolean useProfile);
-  
-  boolean isLocaleSelectedForPackage(in ACString localeName,
-                                     in wstring packageName,
-                                     in boolean useProfile);
-
   ACString getSelectedLocale(in ACString packageName);
-  ACString getSelectedSkin(in ACString packageName);
   
   /* Should be called when skins change. Reloads only stylesheets. */
   void refreshSkins();

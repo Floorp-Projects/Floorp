@@ -76,7 +76,7 @@
 #include "nsICategoryManager.h"
 #include "nsXPIDLString.h"
 #include "nsIXULWindow.h"
-#include "nsIChromeRegistry.h"
+#include "nsIChromeRegistrySea.h"
 #include "nsIEventQueueService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsBuildID.h"
@@ -868,14 +868,14 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     if (NS_SUCCEEDED(rv)){
         if (cmdUI) {
             nsCAutoString UILocaleName(cmdUI);
-            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+            nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if (chromeRegistry)
                 rv = chromeRegistry->SelectLocale(UILocaleName, PR_FALSE);
         }
     }
     // match OS when no cmdline override
     if (!cmdUI && matchOS) {
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+      nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);
         rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(uiLang), PR_FALSE);
@@ -887,14 +887,14 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     if (NS_SUCCEEDED(rv)){
         if (cmdContent) {
             nsCAutoString contentLocaleName(cmdContent);
-            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+            nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if(chromeRegistry)
                 rv = chromeRegistry->SelectLocale(contentLocaleName, PR_FALSE);
         }
     }
     // match OS when no cmdline override
     if (!cmdContent && matchOS) {
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+      nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);        
         rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(country), PR_FALSE);
@@ -918,7 +918,7 @@ static void CheckUseAccessibleSkin()
 
     if (useAccessibilityTheme) {
       // Use classic skin, it obeys the system's accessibility theme
-      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+      nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);  // The skin change isn't permanent
         chromeRegistry->SelectSkin(NS_LITERAL_CSTRING("classic/1.0"), PR_TRUE);

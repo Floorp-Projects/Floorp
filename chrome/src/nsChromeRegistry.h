@@ -59,6 +59,7 @@ class nsIProperties;
 #include "nsString.h"
 #include "nsIZipReader.h"
 #include "nsCOMArray.h"
+#include "nsInterfaceHashtable.h"
      
 // for component registration
 // {47049e42-1d87-482a-984d-56ae185e367a}
@@ -146,74 +147,18 @@ private:
                       const nsACString& aProvider, 
                       nsACString& aBaseURL);
 
-  nsresult InitOverrideJAR();
-  nsresult GetOverrideURL(const nsACString& aPackage,
-                          const nsACString& aProvider,
-                          const nsACString& aPath,
-                          nsACString& aResult);
-  
-  nsresult VerifyCompatibleProvider(nsIRDFResource* aPackageResource,
-                                    nsIRDFResource* aProviderResource,
-                                    nsIRDFResource* aArc,
-                                    PRBool *aAcceptable);
-
   nsresult FindProvider(const nsACString& aPackage,
                         const nsACString& aProvider,
-                        nsIRDFResource *aArc,
-                        nsIRDFNode **aSelectedProvider);
+                        nsCOMPtr<nsIRDFResource> &aProviderResource,
+                        nsCOMPtr<nsIRDFResource> &aPackageResource);
 
-  nsresult SelectPackageInProvider(nsIRDFResource *aPackageList,
-                                   const nsACString& aPackage,
-                                   const nsACString& aProvider,
-                                   const nsACString& aProviderName,
-                                   nsIRDFResource *aArc,
-                                   nsIRDFNode **aSelectedProvider);
+  nsresult TrySubProvider(const nsACString& aPackage, PRBool aIsLocale,
+                          nsIRDFResource* aProviderResource,
+                          nsCOMPtr<nsIRDFResource> &aSelectedProvider);
 
-  nsresult SetProvider(const nsACString& aProvider,
-                       nsIRDFResource* aSelectionArc,
-                       const nsACString& aProviderName,
-                       PRBool aAllUsers, 
-                       const char *aProfilePath, 
-                       PRBool aIsAdding);
-
-  nsresult SetProviderForPackage(const nsACString& aProvider,
-                                 nsIRDFResource* aPackageResource, 
-                                 nsIRDFResource* aProviderPackageResource, 
-                                 nsIRDFResource* aSelectionArc, 
-                                 PRBool aAllUsers, const char *aProfilePath, 
-                                 PRBool aIsAdding);
-
-  nsresult SelectProviderForPackage(const nsACString& aProviderType,
-                                    const nsACString& aProviderName, 
-                                    const PRUnichar *aPackageName, 
-                                    nsIRDFResource* aSelectionArc, 
-                                    PRBool aUseProfile, PRBool aIsAdding);
-
-  nsresult GetSelectedProvider(const nsACString& aPackage,
-                               const nsACString& aProviderName,
-                               nsIRDFResource* aSelectionArc,
-                               nsACString& aResult);
-  
-  nsresult CheckProviderVersion (const nsACString& aProviderType,
-                                 const nsACString& aProviderName,
-                                 nsIRDFResource* aSelectionArc,
-                                 PRBool *aCompatible);
-
-  nsresult IsProviderSelected(const nsACString& aProvider,
-                              const nsACString& aProviderName,
-                              nsIRDFResource* aSelectionArc,
-                              PRBool aUseProfile, PRInt32* aResult);
-  
-  nsresult IsProviderSelectedForPackage(const nsACString& aProviderType,
-                                        const nsACString& aProviderName, 
-                                        const PRUnichar *aPackageName, 
-                                        nsIRDFResource* aSelectionArc, 
-                                        PRBool aUseProfile, PRBool* aResult);
-  nsresult IsProviderSetForPackage(const nsACString& aProvider,
-                                     nsIRDFResource* aPackageResource, 
-                                     nsIRDFResource* aProviderPackageResource, 
-                                     nsIRDFResource* aSelectionArc, 
-                                     PRBool aUseProfile, PRBool* aResult);
+  nsresult FindSubProvider(const nsACString& aPackage,
+                           const nsACString& aProvider,
+                           nsCOMPtr<nsIRDFResource> &aSelectedProvider);
 
   nsresult InstallProvider(const nsACString& aProviderType,
                              const nsACString& aBaseURL,
@@ -239,9 +184,13 @@ protected:
   nsIRDFService* mRDFService;
   nsIRDFContainerUtils* mRDFContainerUtils;
 
+  nsCString mSelectedLocale;
+  nsCString mSelectedSkin;
+
+  nsInterfaceHashtable<nsCStringHashKey, nsIRDFResource> mSelectedLocales;
+  nsInterfaceHashtable<nsCStringHashKey, nsIRDFResource> mSelectedSkins;
+
   // Resources
-  nsCOMPtr<nsIRDFResource> mSelectedSkin;
-  nsCOMPtr<nsIRDFResource> mSelectedLocale;
   nsCOMPtr<nsIRDFResource> mBaseURL;
   nsCOMPtr<nsIRDFResource> mPackages;
   nsCOMPtr<nsIRDFResource> mPackage;
@@ -251,26 +200,16 @@ protected:
   nsCOMPtr<nsIRDFResource> mAllowScripts;
   nsCOMPtr<nsIRDFResource> mHasOverlays;
   nsCOMPtr<nsIRDFResource> mHasStylesheets;
-  nsCOMPtr<nsIRDFResource> mSkinVersion;
-  nsCOMPtr<nsIRDFResource> mLocaleVersion;
-  nsCOMPtr<nsIRDFResource> mPackageVersion;
   nsCOMPtr<nsIRDFResource> mDisabled;
+  nsCOMPtr<nsIRDFResource> mPlatformPackage;
 
-  nsCOMPtr<nsIZipReader> mOverrideJAR;
-  nsCString              mOverrideJARURL;
-  
   // useful atoms - these are static atoms, so don't use nsCOMPtr
   static nsIAtom* sCPrefix;            // "c"
   
   PRPackedBool mInstallInitialized;
   PRPackedBool mProfileInitialized;
   
-  PRPackedBool mRuntimeProvider;
-
   // Boolean that indicates we should batch flushes of the main
   // chrome.rdf file.
   PRPackedBool mBatchInstallFlushes;
-
-  // make sure we only look once for the JAR override
-  PRPackedBool mSearchedForOverride;
 };

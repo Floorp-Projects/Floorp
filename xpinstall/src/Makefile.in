@@ -79,6 +79,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  cookie \
 		  layout \
+		  chrome \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

@@ -88,6 +88,7 @@ bin/components/appshell.dll
 bin/components/appcomps.dll
 bin/components/autocomplete.xpt
 bin/components/bookmarks.xpt
+bin/components/chrome.xpt
 bin/components/directory.xpt
 bin/components/downloadmanager.xpt
 ;bin/components/embedcomponents.dll

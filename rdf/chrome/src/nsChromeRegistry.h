@@ -50,6 +50,7 @@ class nsIDOMWindowInternal;
 class nsIDocument;
 
 #include "nsIChromeRegistry.h"
+#include "nsIChromeRegistrySea.h"
 #include "nsIXULOverlayProvider.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIObserver.h"
@@ -63,7 +64,7 @@ class nsIDocument;
 #define NS_CHROMEREGISTRY_CID \
 { 0xd8c7d8a2, 0xe84c, 0x11d2, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-class nsChromeRegistry : public nsIXULChromeRegistry,
+class nsChromeRegistry : public nsIChromeRegistrySea,
                          public nsIXULOverlayProvider,
                          public nsIObserver,
                          public nsSupportsWeakReference
@@ -75,6 +76,7 @@ public:
   NS_DECL_NSICHROMEREGISTRY
   NS_DECL_NSIXULCHROMEREGISTRY
   NS_DECL_NSIXULOVERLAYPROVIDER
+  NS_DECL_NSICHROMEREGISTRYSEA
 
   NS_DECL_NSIOBSERVER
 

@@ -79,6 +79,7 @@ bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt
 bin\components\directory.xpt
 bin\components\downloadmanager.xpt
+bin\components\chrome.xpt
 
 ; These 3 files need to be in browser.xpi as well as xpcom.xpi (listed in xpcom-win.pkg)
 bin\nspr4.dll

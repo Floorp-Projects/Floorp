@@ -39,6 +39,8 @@ pref("general.useragent.vendor", "Thunderbird");
 pref("general.useragent.vendorSub",
 #expand __APP_VERSION__
 );
+pref("general.useragent.locale", "en-US");
+pref("general.skins.selectedSkin", "classic/1.0");
 
 // This is this application's unique identifier used by the Extension System to identify
 // this application as an extension target, and by the SmartUpdate system to identify
@@ -145,7 +147,6 @@ pref("mail.checkDefaultNews", false);
 /////////////////////////////////////////////////////////////////
 
 // l12n and i18n
-pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.mailedit", "chrome://global/locale/intl.properties");
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");
 // collationOption is only set on linux for japanese. see bug 18338 and 62015
