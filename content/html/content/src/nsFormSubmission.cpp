@@ -223,7 +223,7 @@ public:
  */
 static nsresult
 SendJSWarning(nsIHTMLContent* aContent,
-              const nsAFlatString& aWarningName);
+              const char* aWarningName);
 /**
  * Send a warning to the JS console
  * @param aContent the content the warning is about
@@ -233,7 +233,7 @@ SendJSWarning(nsIHTMLContent* aContent,
  */
 static nsresult
 SendJSWarning(nsIHTMLContent* aContent,
-              const nsAFlatString& aWarningName,
+              const char* aWarningName,
               const nsAFlatString& aWarningArg1);
 /**
  * Send a warning to the JS console
@@ -245,7 +245,7 @@ SendJSWarning(nsIHTMLContent* aContent,
  */
 static nsresult
 SendJSWarning(nsIHTMLContent* aContent,
-              const nsAFlatString& aWarningName,
+              const char* aWarningName,
               const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen);
 
 
@@ -339,7 +339,7 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
     if (formControl->GetType() == NS_FORM_INPUT_FILE) {
       nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(aSource);
-      SendJSWarning(content, NS_LITERAL_STRING("ForgotFileEnctypeWarning"));
+      SendJSWarning(content, "ForgotFileEnctypeWarning");
       mWarnedFileControl = PR_TRUE;
     }
   }
@@ -1072,14 +1072,14 @@ NS_INTERFACE_MAP_END
 
 static nsresult
 SendJSWarning(nsIHTMLContent* aContent,
-               const nsAFlatString& aWarningName)
+               const char* aWarningName)
 {
   return SendJSWarning(aContent, aWarningName, nsnull, 0);
 }
 
 static nsresult
 SendJSWarning(nsIHTMLContent* aContent,
-               const nsAFlatString& aWarningName,
+               const char* aWarningName,
                const nsAFlatString& aWarningArg1)
 {
   const PRUnichar* formatStrings[1] = { aWarningArg1.get() };
@@ -1088,65 +1088,25 @@ SendJSWarning(nsIHTMLContent* aContent,
 
 static nsresult
 SendJSWarning(nsIHTMLContent* aContent,
-              const nsAFlatString& aWarningName,
+              const char* aWarningName,
               const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen)
 {
-  nsresult rv = NS_OK;
-
-  //
   // Get the document URL to use as the filename
-  //
-  nsCAutoString documentURISpec;
 
   nsIDocument* document = aContent->GetDocument();
+  nsIURI *documentURI = nsnull;
   if (document) {
-    nsIURI *documentURI = document->GetDocumentURI();
+    documentURI = document->GetDocumentURI();
     NS_ENSURE_TRUE(documentURI, NS_ERROR_UNEXPECTED);
-    documentURI->GetPath(documentURISpec);
   }
 
-  //
-  // Get the error string
-  //
-  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIStringBundle> bundle;
-  rv = bundleService->CreateBundle(
-      "chrome://communicator/locale/layout/HtmlForm.properties",
-      getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsXPIDLString warningStr;
-  if (aWarningArgsLen > 0) {
-    bundle->FormatStringFromName(aWarningName.get(),
-                                 aWarningArgs, aWarningArgsLen,
-                                 getter_Copies(warningStr));
-  } else {
-    bundle->GetStringFromName(aWarningName.get(), getter_Copies(warningStr));
-  }
-
-  //
-  // Create the error
-  //
-  nsCOMPtr<nsIScriptError>
-      scriptError(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
-  NS_ENSURE_TRUE(scriptError, NS_ERROR_UNEXPECTED);
-
-  rv = scriptError->Init(warningStr.get(),
-                         NS_ConvertUTF8toUTF16(documentURISpec).get(),
-                         nsnull, (uintN)0,
-                         0, nsIScriptError::warningFlag,
-                         "HTML");
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  //
-  // Send the error to the console
-  //
-  nsCOMPtr<nsIConsoleService>
-      consoleService(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  NS_ENSURE_TRUE(consoleService, NS_ERROR_UNEXPECTED);
-
-  return consoleService->LogMessage(scriptError);
+  return nsContentUtils::ReportToConsole(nsContentUtils::eFORMS_PROPERTIES,
+                                         aWarningName,
+                                         aWarningArgs, aWarningArgsLen,
+                                         documentURI,
+                                         NS_LITERAL_STRING(""), 0, 0,
+                                         nsIScriptError::warningFlag,
+                                         "HTML");
 }
 
 nsresult
@@ -1207,7 +1167,7 @@ GetSubmissionFromForm(nsIHTMLContent* aForm,
         enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
       nsAutoString enctypeStr;
       aForm->GetAttr(kNameSpaceID_None, nsHTMLAtoms::enctype, enctypeStr);
-      SendJSWarning(aForm, NS_LITERAL_STRING("ForgotPostWarning"), PromiseFlatString(enctypeStr));
+      SendJSWarning(aForm, "ForgotPostWarning", PromiseFlatString(enctypeStr));
     }
     *aFormSubmission = new nsFSURLEncoded(charset, encoder,
                                           formProcessor, bidiOptions, method);

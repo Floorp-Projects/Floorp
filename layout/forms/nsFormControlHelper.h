@@ -58,10 +58,6 @@ class nsStyleContext;
 #define NS_STRING_TRUE   NS_LITERAL_STRING("1")
 #define NS_STRING_FALSE  NS_LITERAL_STRING("0")
 
-// for localization
-#define FORM_PROPERTIES "chrome://communicator/locale/layout/HtmlForm.properties"
-
-
 /**
   * Enumeration of possible mouse states used to detect mouse clicks
   */
@@ -169,10 +165,6 @@ public:
   static nsresult GetWrapProperty(nsIContent * aContent, nsString &aOutValue);
 
   static nsresult GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp);
-
-  // Localization Helper
-  static nsresult GetLocalizedString(const char * aPropFileName, const PRUnichar* aKey, nsString& oVal);
-  static const char * GetHTMLPropertiesFileName() { return FORM_PROPERTIES; }
 
 //
 //-------------------------------------------------------------------------------------

@@ -97,8 +97,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIPrintingPromptService.h"
 static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingprompt-service;1";
 
-#define NS_ERROR_GFX_PRINTER_BUNDLE_URL "chrome://global/locale/printing.properties"
-
 // Printing Timer
 #include "nsPagePrintTimer.h"
 
@@ -2199,23 +2197,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 
   PR_PL(("nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError=%lx, PRBool aIsPrinting=%d)\n", (long)aPrintError, (int)aIsPrinting));
 
-  static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(kCStringBundleServiceCID);
-
-  if (!stringBundleService) {
-    PR_PL(("ShowPrintErrorDialog: Failed to get StringBundle Service instance.\n"));
-    return;
-  }
-  nsCOMPtr<nsIStringBundle> myStringBundle;
-  nsresult rv = stringBundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(myStringBundle));
-  if (NS_FAILED(rv)) {
-    PR_PL(("ShowPrintErrorDialog(): CreateBundle() failure for NS_ERROR_GFX_PRINTER_BUNDLE_URL, rv=%lx\n", (long)rv));
-    return;
-  }
-
-  nsXPIDLString msg,
-                title;
-  nsAutoString  stringName;
+  nsCAutoString stringName;
 
   switch(aPrintError)
   {
@@ -2264,19 +2246,21 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
 #undef NS_ERROR_TO_LOCALIZED_PRINT_ERROR_MSG
   }
 
-  PR_PL(("ShowPrintErrorDialog:  stringName='%s'\n", NS_LossyConvertUCS2toASCII(stringName).get()));
+  PR_PL(("ShowPrintErrorDialog:  stringName='%s'\n", stringName.get()));
 
-  myStringBundle->GetStringFromName(stringName.get(), getter_Copies(msg));
-  if (aIsPrinting) {
-    myStringBundle->GetStringFromName(NS_LITERAL_STRING("print_error_dialog_title").get(), getter_Copies(title));
-  } else {
-    myStringBundle->GetStringFromName(NS_LITERAL_STRING("printpreview_error_dialog_title").get(), getter_Copies(title));
-  }
-
-  if (!msg) {
-    PR_PL(("ShowPrintErrorDialog(): msg==nsnull\n"));
+  nsString msg, title;
+  nsresult rv =
+    nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
+                                       stringName.get(), msg);
+  if (NS_FAILED(rv)) {
+    PR_PL(("GetLocalizedString failed\n"));
     return;
   }
+
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
+      aIsPrinting ? "print_error_dialog_title"
+                  : "printpreview_error_dialog_title",
+      title);
 
   nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
@@ -2296,7 +2280,7 @@ nsPrintEngine::ShowPrintErrorDialog(nsresult aPrintError, PRBool aIsPrinting)
     return;
   }
 
-  dialog->Alert(title, msg);
+  dialog->Alert(title.get(), msg.get());
   PR_PL(("ShowPrintErrorDialog(): alert displayed successfully.\n"));
 }
 

@@ -58,12 +58,6 @@ static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 #define OFFSET_NOT_SET -1
 
-// This is for localization of the "x of n" pages string
-// this class contains a helper method we need to get 
-// a string from a string bundle
-#include "nsFormControlHelper.h"
-#define PRINTING_PROPERTIES "chrome://global/locale/printing.properties"
-
 // Print Options
 #include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
@@ -573,7 +567,9 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
   // Doing this here so we only have to go get these formats once
   nsAutoString pageNumberFormat;
   // Now go get the Localized Page Formating String
-  nsresult rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_ConvertUTF8toUCS2(aPropName).get(), pageNumberFormat);
+  nsresult rv =
+    nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
+                                       aPropName, pageNumberFormat);
   if (NS_FAILED(rv)) { // back stop formatting
     pageNumberFormat.AssignASCII(aDefPropVal);
   }
@@ -716,14 +712,16 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*   aPresContext,
   //
   // Get default font name and size to be used for the headers and footers
   nsAutoString fontName;
-  rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_LITERAL_STRING("fontname").get(), fontName);
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
+                                         "fontname", fontName);
   if (NS_FAILED(rv)) {
     fontName.AssignLiteral("serif");
   }
 
   nsAutoString fontSizeStr;
   nscoord      pointSize = 10;;
-  rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_LITERAL_STRING("fontsize").get(), fontSizeStr);
+  rv = nsContentUtils::GetLocalizedString(nsContentUtils::ePRINTING_PROPERTIES,
+                                          "fontsize", fontSizeStr);
   if (NS_SUCCEEDED(rv)) {
     PRInt32 errCode;
     pointSize = fontSizeStr.ToInteger(&errCode);

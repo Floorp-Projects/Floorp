@@ -73,6 +73,7 @@
 #include "nsITextControlElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentUtils.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -309,8 +310,8 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 
   // Get Loc title
   nsString title;
-  nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
-                                          NS_LITERAL_STRING("FileUpload").get(), title);
+  nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                     "FileUpload", title);
 
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
   if (!filePicker)

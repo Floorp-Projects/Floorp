@@ -381,35 +381,6 @@ nsFormControlHelper::GetValueAttr(nsIContent* aContent, nsAString* aResult)
 }
 
 //----------------------------------------------------------------------------------
-// Return localised string for resource string (e.g. "Submit" -> "Submit Query")
-// This code is derived from nsBookmarksService::Init() and cookie_Localize()
-nsresult
-nsFormControlHelper::GetLocalizedString(const char * aPropFileName, const PRUnichar* aKey, nsString& oVal)
-{
-  NS_ENSURE_ARG_POINTER(aKey);
-  
-  nsresult rv;
-  
-  nsCOMPtr<nsIStringBundle> bundle;
-  
-  // Create a bundle for the localization
-  nsCOMPtr<nsIStringBundleService> stringService = 
-    do_GetService(kStringBundleServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && stringService)
-    rv = stringService->CreateBundle(aPropFileName, getter_AddRefs(bundle));
-
-  // Determine default label from string bundle
-  if (NS_SUCCEEDED(rv) && bundle) {
-    nsXPIDLString valUni;
-    rv = bundle->GetStringFromName(aKey, getter_Copies(valUni));
-    if (NS_SUCCEEDED(rv) && valUni) {
-      oVal.Assign(valUni);
-    } else {
-      oVal.Truncate();
-    }
-  }
-  return rv;
-}
 
 nsresult
 nsFormControlHelper::Reset(nsIFrame* aFrame, nsPresContext* aPresContext)

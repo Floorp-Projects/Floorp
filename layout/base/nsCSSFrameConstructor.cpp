@@ -100,7 +100,6 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
-#include "nsFormControlHelper.h"
 #include "nsObjectFrame.h"
 #include "nsRuleNode.h"
 #include "nsIDOMMutationEvent.h"
@@ -10372,8 +10371,8 @@ void nsCSSFrameConstructor::GetAlternateTextFor(nsIContent* aContent,
     // If there's no "value" attribute either, then use the localized string 
     // for "Submit" as the alternate text.
     if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-      nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
-                                              NS_LITERAL_STRING("Submit").get(), aAltText);      
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "Submit", aAltText);      
     }
   }
 }

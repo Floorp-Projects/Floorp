@@ -2141,13 +2141,71 @@ nsCxPusher::Pop()
   mScriptIsRunning = PR_FALSE;
 }
 
-static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][48] = {
+static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   // Must line up with the enum values in |PropertiesFile| enum.
   "chrome://global/locale/css.properties",
   "chrome://global/locale/xbl.properties",
   "chrome://global/locale/xul.properties",
-  "chrome://global/locale/layout_errors.properties"
+  "chrome://global/locale/layout_errors.properties",
+  "chrome://communicator/locale/layout/HtmlForm.properties",
+  "chrome://global/locale/printing.properties",
+  "chrome://communicator/locale/dom/dom.properties"
 };
+
+/* static */ nsresult
+nsContentUtils::EnsureStringBundle(PropertiesFile aFile)
+{
+  if (!sStringBundles[aFile]) {
+    if (!sStringBundleService) {
+      nsresult rv =
+        CallGetService(NS_STRINGBUNDLE_CONTRACTID, &sStringBundleService);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    nsIStringBundle *bundle;
+    nsresult rv =
+      sStringBundleService->CreateBundle(gPropertiesFiles[aFile], &bundle);
+    NS_ENSURE_SUCCESS(rv, rv);
+    sStringBundles[aFile] = bundle; // transfer ownership
+  }
+  return NS_OK;
+}
+
+/* static */
+nsresult nsContentUtils::GetLocalizedString(PropertiesFile aFile,
+                                            const char* aKey,
+                                            nsString& aResult)
+{
+  nsresult rv = EnsureStringBundle(aFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsIStringBundle *bundle = sStringBundles[aFile];
+
+  nsXPIDLString result;
+  rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
+                                 getter_Copies(result));
+  NS_ENSURE_SUCCESS(rv, rv);
+  aResult = result;
+  return NS_OK;
+}
+
+/* static */
+nsresult nsContentUtils::FormatLocalizedString(PropertiesFile aFile,
+                                               const char* aKey,
+                                               const PRUnichar **aParams,
+                                               PRUint32 aParamsLength,
+                                               nsString& aResult)
+{
+  nsresult rv = EnsureStringBundle(aFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsIStringBundle *bundle = sStringBundles[aFile];
+
+  nsXPIDLString result;
+  rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(aKey).get(),
+                                    aParams, aParamsLength,
+                                    getter_Copies(result));
+  NS_ENSURE_SUCCESS(rv, rv);
+  aResult = result;
+  return NS_OK;
+}
 
 /* static */ nsresult
 nsContentUtils::ReportToConsole(PropertiesFile aFile,
@@ -2162,25 +2220,14 @@ nsContentUtils::ReportToConsole(PropertiesFile aFile,
                                 const char *aCategory)
 {
   nsresult rv;
-
-  nsIStringBundle *bundle = sStringBundles[aFile];
-  if (!bundle) {
-    if (!sStringBundleService) {
-      rv = CallGetService(NS_STRINGBUNDLE_CONTRACTID, &sStringBundleService);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    if (!sConsoleService) { // only need to bother null-checking here
-      rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    sStringBundleService->CreateBundle(gPropertiesFiles[aFile], &bundle);
-    sStringBundles[aFile] = bundle; // transfer ownership
+  if (!sConsoleService) { // only need to bother null-checking here
+    rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsXPIDLString errorText;
-  rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2(aMessageName).get(),
-                                    aParams, aParamsLength,
-                                    getter_Copies(errorText));
+  nsString errorText;
+  rv = FormatLocalizedString(aFile, aMessageName, aParams, aParamsLength,
+                             errorText);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString spec;
