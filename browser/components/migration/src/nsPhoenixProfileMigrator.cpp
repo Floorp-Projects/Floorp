@@ -64,6 +64,7 @@
 #define FILE_NAME_MIMETYPES       NS_LITERAL_STRING("mimeTypes.rdf")
 #define FILE_NAME_DOWNLOADS       NS_LITERAL_STRING("downloads.rdf")
 #define FILE_NAME_PREFS           NS_LITERAL_STRING("prefs.js")
+#define FILE_NAME_USER_PREFS      NS_LITERAL_STRING("user.js")
 #define FILE_NAME_SEARCH          NS_LITERAL_STRING("search.rdf")
 #define FILE_NAME_USERCHROME      NS_LITERAL_STRING("userChrome.css")
 #define FILE_NAME_USERCONTENT     NS_LITERAL_STRING("userContent.css")
@@ -132,6 +133,9 @@ nsPhoenixProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
     GetSourceProfile(aProfile);
 
   MigrationData data[] = { { ToNewUnicode(FILE_NAME_PREFS),
+                             nsIBrowserProfileMigrator::SETTINGS,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_USER_PREFS),
                              nsIBrowserProfileMigrator::SETTINGS,
                              PR_TRUE },
                            { ToNewUnicode(FILE_NAME_COOKIES),
@@ -291,6 +295,7 @@ nsPhoenixProfileMigrator::CopyPreferences(PRBool aReplace)
 
   // Prefs files
   rv |= CopyFile(FILE_NAME_PREFS, FILE_NAME_PREFS);
+  rv |= CopyFile(FILE_NAME_USER_PREFS, FILE_NAME_USER_PREFS);
 
   // Security Stuff
   rv |= CopyFile(FILE_NAME_CERT8DB, FILE_NAME_CERT8DB);

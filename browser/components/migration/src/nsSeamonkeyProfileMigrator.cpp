@@ -65,6 +65,7 @@
 #define FILE_NAME_MIMETYPES       NS_LITERAL_STRING("mimeTypes.rdf")
 #define FILE_NAME_DOWNLOADS       NS_LITERAL_STRING("downloads.rdf")
 #define FILE_NAME_PREFS           NS_LITERAL_STRING("prefs.js")
+#define FILE_NAME_USER_PREFS      NS_LITERAL_STRING("user.js")
 #define FILE_NAME_SEARCH          NS_LITERAL_STRING("search.rdf")
 #define FILE_NAME_USERCONTENT     NS_LITERAL_STRING("userContent.css")
 #define DIR_NAME_CHROME           NS_LITERAL_STRING("chrome")
@@ -126,6 +127,9 @@ nsSeamonkeyProfileMigrator::GetMigrateData(const PRUnichar* aProfile,
     GetSourceProfile(aProfile);
 
   MigrationData data[] = { { ToNewUnicode(FILE_NAME_PREFS),
+                             nsIBrowserProfileMigrator::SETTINGS,
+                             PR_TRUE },
+                           { ToNewUnicode(FILE_NAME_USER_PREFS),
                              nsIBrowserProfileMigrator::SETTINGS,
                              PR_TRUE },
                            { ToNewUnicode(FILE_NAME_COOKIES),
@@ -539,6 +543,7 @@ nsSeamonkeyProfileMigrator::CopyPreferences(PRBool aReplace)
     return rv;
 
   rv |= TransformPreferences(FILE_NAME_PREFS, FILE_NAME_PREFS);
+  rv |= CopyFile(FILE_NAME_USER_PREFS, FILE_NAME_USER_PREFS);
 
   // Security Stuff
   rv |= CopyFile(FILE_NAME_CERT8DB, FILE_NAME_CERT8DB);
