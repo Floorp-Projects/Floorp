@@ -171,7 +171,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 
             case RETURN_VOID:
                 {
-                    JSValue result(NotARegister);
+                    JSValue result;
                     Linkage *linkage = mLinkage;
                     if (!linkage)
                         return result;
@@ -187,7 +187,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case RETURN:
                 {
                     Return* ret = static_cast<Return*>(instruction);
-                    JSValue result(NotARegister);
+                    JSValue result;
                     if (op1(ret) != NotARegister) 
                         result = (*registers)[op1(ret)];
                     Linkage* linkage = mLinkage;
@@ -222,41 +222,53 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_OBJECT:
                 {
                     NewObject* no = static_cast<NewObject*>(instruction);
-                    (*registers)[dst(no)].object = new JSObject();
+                    (*registers)[dst(no)] = JSValue(new JSObject());
                 }
                 break;
             case NEW_ARRAY:
                 {
                     NewArray* na = static_cast<NewArray*>(instruction);
-                    (*registers)[dst(na)].array = new JSArray();
+                    (*registers)[dst(na)] = JSValue(new JSArray());
                 }
                 break;
             case GET_PROP:
                 {
                     GetProp* gp = static_cast<GetProp*>(instruction);
-                    JSObject* object = (*registers)[src1(gp)].object;
-                    (*registers)[dst(gp)] = object->getProperty(*src2(gp));
+                    JSValue& value = (*registers)[src1(gp)];
+                    if (value.tag == JSValue::object_tag) {
+                        JSObject* object = value.object;
+                        (*registers)[dst(gp)] = object->getProperty(*src2(gp));
+                    }
                 }
                 break;
             case SET_PROP:
                 {
                     SetProp* sp = static_cast<SetProp*>(instruction);
-                    JSObject* object = (*registers)[dst(sp)].object;
-                    object->setProperty(*src1(sp), (*registers)[src2(sp)]);
+                    JSValue& value = (*registers)[dst(sp)];
+                    if (value.tag == JSValue::object_tag) {
+                        JSObject* object = value.object;
+                        object->setProperty(*src1(sp), (*registers)[src2(sp)]);
+                    }
                 }
                 break;
             case GET_ELEMENT:
                 {
                     GetElement* ge = static_cast<GetElement*>(instruction);
-                    JSArray* array = (*registers)[src1(ge)].array;
-                    (*registers)[dst(ge)] = (*array)[(*registers)[src2(ge)]];
+                    JSValue& value = (*registers)[src1(ge)];
+                    if (value.tag == JSValue::array_tag) {
+                        JSArray* array = value.array;
+                        (*registers)[dst(ge)] = (*array)[(*registers)[src2(ge)]];
+                    }
                 }
                 break;
             case SET_ELEMENT:
                 {
                     SetElement* se = static_cast<SetElement*>(instruction);
-                    JSArray* array = (*registers)[dst(se)].array;
-                    (*array)[(*registers)[src1(se)]] = (*registers)[src2(se)];
+                    JSValue& value = (*registers)[dst(se)];
+                    if (value.tag == JSValue::array_tag) {
+                        JSArray* array = value.array;
+                        (*array)[(*registers)[src1(se)]] = (*registers)[src2(se)];
+                    }
                 }
                 break;
             case LOAD_IMMEDIATE:
@@ -377,14 +389,14 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     float64 diff = 
                         ((*registers)[src1(cmp)].f64 - 
                          (*registers)[src2(cmp)].f64);
-                    (*registers)[dst(cmp)].i32 = 
-                        (diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1));
+                    (*registers)[dst(cmp)] = 
+                        JSValue(int32(diff == 0.0 ? 0 : (diff > 0.0 ? 1 : -1)));
                 }
                 break;
             case NOT:
                 {
                     Not* nt = static_cast<Not*>(instruction);
-                    (*registers)[dst(nt)].i32 = !(*registers)[src1(nt)].i32;
+                    (*registers)[dst(nt)] = JSValue(int32(!(*registers)[src1(nt)].i32));
                 }
                 break;
             
