@@ -2185,7 +2185,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSResolveOp resolve;
     JSResolvingKey key;
     JSDHashTable *table;
-    JSDHashEntryHdr *entry;
+    JSResolvingEntry *entry;
     uint32 generation;
     JSNewResolveOp newresolve;
     uintN flags;
@@ -2219,14 +2219,8 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 /* Avoid recursion on (obj, id) already being resolved on cx. */
                 key.obj = obj;
                 key.id = id;
-                if (cx->resolving != 0) {
-                    table = cx->resolvingTable;
-                    entry = JS_DHashTableOperate(table, &key, JS_DHASH_LOOKUP);
-                    if (JS_DHASH_ENTRY_IS_BUSY(entry)) {
-                        JS_UNLOCK_OBJ(cx, obj);
-                        goto out;
-                    }
-                } else if (!(table = cx->resolvingTable)) {
+                table = cx->resolvingTable;
+                if (!table) {
                     table = JS_NewDHashTable(&resolving_dhash_ops,
                                              NULL,
                                              sizeof(JSResolvingEntry),
@@ -2234,24 +2228,32 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                     if (!table)
                         goto outofmem;
                     cx->resolvingTable = table;
-                } else {
-                    /* cx->resolving is 0, so the table had better be empty! */
-                    JS_ASSERT(table->entryCount == 0);
                 }
+
+                /* If cx->resolving is 0, the table had better be empty! */
+                JS_ASSERT(table->entryCount == 0 || cx->resolving != 0);
 
                 /*
                  * Once we have successfully added an entry for key and bumped
                  * cx->resolving, control flow must go through cleanup: before
-                 * returning.
+                 * returning.  But note that JS_DHASH_ADD may find an existing
+                 * entry, in which case we bail to suppress runaway recursion.
                  */
-                entry = JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
+                entry = (JSResolvingEntry *)
+                        JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
                 if (!entry) {
             outofmem:
                     JS_UNLOCK_OBJ(cx, obj);
                     JS_ReportOutOfMemory(cx);
                     return JS_FALSE;
                 }
-                ((JSResolvingEntry *)entry)->key = key;
+                if (entry->key.obj) {
+                    /* An entry for key exists already -- damp recursion. */
+                    JS_ASSERT(entry->key.obj == obj && entry->key.id == id);
+                    JS_UNLOCK_OBJ(cx, obj);
+                    goto out;
+                }
+                entry->key = key;
                 generation = table->generation;
                 cx->resolving++;
 
@@ -2338,7 +2340,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  */
                 if (table->generation == generation &&
                     table->removedCount < JS_DHASH_TABLE_SIZE(table) >> 2) {
-                    JS_DHashTableRawRemove(table, entry);
+                    JS_DHashTableRawRemove(table, &entry->hdr);
                 } else {
                     JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
                 }
