@@ -519,7 +519,7 @@ function restorePage(pageId, serverId) {
 // gets the value of a widget
 //
 function getFormElementValue(formElement) {
-
+ try {
   var type = formElement.type.toLowerCase();
   if (type=="checkbox" || type=="radio") {
     if (formElement.getAttribute("reversed"))
@@ -537,10 +537,14 @@ function getFormElementValue(formElement) {
       return null;
     }
   }
-
-
-  else
+  else {
     return formElement.value;
+  }
+ }
+ catch (ex) {
+  dump("getFormElementValue failed, ex="+ex+"\n");
+  return null;
+ }
 }
 
 //
