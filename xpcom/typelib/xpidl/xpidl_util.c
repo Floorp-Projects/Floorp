@@ -260,6 +260,13 @@ verify_attribute_declaration(IDL_tree attr_tree)
                        "types must be marked [noscript]\n");
         return FALSE;
     }
+
+    if (IDL_LIST(IDL_ATTR_DCL(attr_tree).simple_declarations).next != NULL)
+    {
+        IDL_tree_error(attr_tree,
+            "multiple attributes in a single declaration is not supported\n");
+        return FALSE;
+    }
     return TRUE;
 }
 
