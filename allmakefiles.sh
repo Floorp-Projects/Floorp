@@ -582,6 +582,54 @@ if [ "$NECKO" ]; then
 END_NECKO_MAKEFILES
 fi
 
+#
+# l10n/
+#
+if [ "$MOZ_L10N" ]; then
+	add_makefiles <<END_L10N_MAKEFILES
+	#
+	l10n/Makefile
+	#
+	END_L10N_MAKEFILES
+	#
+	if [ "$MOZ_L10N_LANG" ]; then
+		add_makefiles <<END_L10N_LANG_MAKEFILES
+		#
+		l10n/lang/Makefile
+		#
+		l10n/lang/addressbook/Makefile
+		l10n/lang/bookmarks/Makefile
+		l10n/lang/directory/Makefile
+		l10n/lang/editor/Makefile
+		l10n/lang/global/Makefile
+		l10n/lang/history/Makefile
+		l10n/lang/messenger/Makefile
+		l10n/lang/messengercompose/Makefile
+		l10n/lang/navigator/Makefile
+		l10n/lang/pref/Makefile
+		l10n/lang/related/Makefile
+		l10n/lang/sidebar/Makefile
+		#
+		#
+		l10n/lang/addressbook/locale/Makefile
+		l10n/lang/bookmarks/locale/Makefile
+		l10n/lang/directory/locale/Makefile
+		l10n/lang/editor/locale/Makefile
+		l10n/lang/global/locale/Makefile
+		l10n/lang/history/locale/Makefile
+		l10n/lang/messenger/locale/Makefile
+		l10n/lang/messengercompose/locale/Makefile
+		l10n/lang/navigator/locale/Makefile
+		l10n/lang/pref/locale/Makefile
+		l10n/lang/related/locale/Makefile
+		l10n/lang/sidebar/locale/Makefile
+		#
+		END_L10N_LANG_MAKEFILES
+		#
+	fi
+fi
+#
+
 # tools/leaky
 if [ "$MOZ_LEAKY" ]; then
   add_makefiles <<END_LEAKY_MAKEFILES
