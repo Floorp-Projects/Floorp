@@ -135,14 +135,20 @@ nsresult nsRDFFactory::LockFactory(PRBool aLock)
 extern "C" PR_EXTERN(nsresult)
 NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
+    static PRBool gInitialized = PR_FALSE;
+    if (! gInitialized) {
+        gInitialized = PR_TRUE;
+
+        // do one-time library initialization
+        RDF_Init();
+    }
+
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
     *aFactory = new nsRDFFactory(aClass);
-
-    if (nsnull == aFactory) {
+    if (aFactory == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
