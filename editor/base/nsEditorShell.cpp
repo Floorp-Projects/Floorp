@@ -1270,7 +1270,8 @@ nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retv
 
         nsAutoString saveMsg;
         GetBundleString(NS_ConvertASCIItoUCS2("SaveFilePrompt"), saveMsg);
-        saveMsg.ReplaceSubstring(NS_ConvertASCIItoUCS2("%title%"), title).ReplaceSubstring(NS_ConvertASCIItoUCS2("%reason%"), reasonToSaveStr);
+        saveMsg.ReplaceSubstring(NS_ConvertASCIItoUCS2("%title%"), title);
+        saveMsg.ReplaceSubstring(NS_ConvertASCIItoUCS2("%reason%"), reasonToSaveStr);
 
         nsAutoString saveDocString;
         GetBundleString(NS_ConvertASCIItoUCS2("SaveDocument"), saveDocString);
@@ -2204,7 +2205,7 @@ nsEditorShell::Rewrap(PRBool aRespectNewlines)
   if (NS_FAILED(rv)) return rv;
 
   // Variables we'll need either way
-  nsAutoString format("text/plain");
+  nsAutoString format; format.AssignWithConversion("text/plain");
   nsAutoString current;
   nsString wrapped;
   nsCOMPtr<nsIEditor> nsied (do_QueryInterface(mEditor));
@@ -2268,7 +2269,7 @@ nsEditorShell::StripCites()
   if (NS_FAILED(rv)) return rv;
 
   // Variables we'll need either way
-  nsAutoString format("text/plain");
+  nsAutoString format; format.AssignWithConversion("text/plain");
   nsAutoString current;
   nsString stripped;
   nsCOMPtr<nsIEditor> nsied (do_QueryInterface(mEditor));

@@ -720,8 +720,8 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
         else if (nsHTMLEditUtils::IsListItem(blockParent))
         {
           nsAutoString indentstr;
-          if (isShift) indentstr = "outdent";
-          else         indentstr = "indent";
+          if (isShift) indentstr.AssignWithConversion("outdent");
+          else         indentstr.AssignWithConversion("indent");
           res = Indent(indentstr);
           bHandled = PR_TRUE;
         }
@@ -2703,7 +2703,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 NS_IMETHODIMP nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 {
   //Kinda sad to waste memory just to force lower case
-  nsAutoString tag = aParagraphFormat;
+  nsAutoString tag; tag.Assign(aParagraphFormat);
   tag.ToLowerCase();
   return InsertBasicBlock(tag);
 }
