@@ -22,6 +22,6 @@
 DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
-DIRS = public src res
+DIRS = public src
 
 include <$(DEPTH)\config\rules.mak>
