@@ -236,10 +236,7 @@ struct already_AddRefed
         // nothing else to do here
       }
 
-    operator T*() const
-      {
-        return mRawPtr;
-      }
+    T* get() const { return mRawPtr; }
 
     T* mRawPtr;
   };
