@@ -381,12 +381,15 @@ function Startup()
   }
 
   // Focus the content area unless we're loading a blank page
-  var elt;  
-  var navBar = document.getElementById("nav-bar");    
-  if (uriToLoad == "about:blank" && navBar && !navBar.hidden && gURLBar && !gURLBar.parentNode.parentNode.collapsed)
-    elt = gURLBar;
-  else
+  var elt;      
+  if (uriToLoad == "about:blank") {
+    var navBar = document.getElementById("nav-bar");
+    if (navBar && !navBar.hidden && gURLBar && !gURLBar.parentNode.parentNode.collapsed)
+      elt = gURLBar;
+  }  
+  else {
     elt = _content;
+  }
   
   setTimeout(delayedStartup, 0, elt);
 }
