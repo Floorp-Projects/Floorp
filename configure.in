@@ -333,6 +333,7 @@ TARGET_MD_ARCH=unix
 
 OS_TARGET=`uname -s`
 _COMPILER_PREFIX=
+AC_DEFINE(NECKO)
 
 dnl ========================================================
 dnl GNU specific defaults
@@ -2135,7 +2136,7 @@ MOZ_ARG_DISABLE_BOOL(async-dns,
 dnl build mozilla/xpfe by default
 MOZ_BUILD_XPFE=1
 MOZ_ARG_DISABLE_BOOL(build-xpfe,
-[  --disable-build-xpfe    Disable building of mozilla/xpfe],
+[  --disable-build-xpfe    Disable building of mozilla/xpfe (BROKEN)],
   MOZ_BUILD_XPFE= )
 
 dnl build editor by default
@@ -2143,12 +2144,6 @@ MOZ_EDITOR=1
 MOZ_ARG_DISABLE_BOOL(editor,
 [  --disable-editor        Disable building of editor component],
   MOZ_EDITOR= )
-
-dnl This will be part of the address book
-dnl MOZ_ARG_ENABLE_BOOL(ldap,
-dnl [  --enable-ldap           Enable LDAP directory access],
-dnl [ MOZ_LDAP=1 NO_UNIX_LDAP= ],
-dnl [ NO_UNIX_LDAP=1 ])
 
 dnl build Mail & News by default
 MOZ_MAIL_NEWS=1
@@ -2160,26 +2155,10 @@ if test "$MOZ_MAIL_NEWS"; then
 fi
 AC_SUBST(MOZ_MAIL_NEWS)
 
-dnl NECKO is the new netlib module. Build Necko by default
-NECKO=1
-MOZ_ARG_DISABLE_BOOL(necko,
-[  --disable-necko         Dont build Necko, the new network library.],
-  NECKO=)
-if test "$NECKO"; then
-  AC_DEFINE(NECKO)
-fi
-AC_SUBST(NECKO)
-
 dnl Note: This conflicts with --disable-shared
 MOZ_ARG_ENABLE_BOOL(oji,
 [  --enable-oji            Enable use of Open JVM Interface],
   [MOZ_OJI=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
-
-dnl Build PICS (mozilla/extensions/pics) code
-MOZ_ARG_ENABLE_BOOL(pics,
-[  --enable-pics           Enable PICS code],
-  ENABLE_PICS=1
-  AC_DEFINE(ENABLE_PICS))
 
 dnl build the tests by default
 ENABLE_TESTS=1
@@ -2319,12 +2298,12 @@ CookieManagement=1
 SingleSignon=1
 
 MOZ_ARG_DISABLE_BOOL(client-wallet,
-[  --disable-client-wallet Disable ClientWallet (BROKEN)],
+[  --disable-client-wallet Disable ClientWallet],
   ClientWallet= )
 
 MOZ_ARG_DISABLE_BOOL(cookie-management,
 [  --disable-cookie-management
-                          Disable CookieManagement (BROKEN)],
+                          Disable CookieManagement],
   CookieManagement= )
 
 MOZ_ARG_DISABLE_BOOL(single-signon,
@@ -2585,7 +2564,7 @@ MOZ_ARG_ENABLE_BOOL(boehm,
 
 dnl This will enable logging of addref, release, ctor, dtor.
 MOZ_ARG_ENABLE_BOOL(logrefcnt,
-[  --enable-logrefcnt         Enable Logging of refcounts (default=no) ],
+[  --enable-logrefcnt      Enable Logging of refcounts (default=no) ],
   MOZ_LOG_REFCNT=1
   AC_DEFINE(MOZ_LOG_REFCNT))
 
@@ -2682,20 +2661,12 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 
 dnl
 dnl --enable mathml
-dnl if enabled, also update CFLAGS & CXXFLAGS
-dnl so you don't have to worry about those flags in Makefiles
 dnl TODO: handle include files here ?
 dnl
 MOZ_ARG_ENABLE_BOOL(mathml,
 [  --enable-mathml         Enable MathML (default=no) ],
   MOZ_MATHML=1
   AC_DEFINE(MOZ_MATHML))
-
-if test "$MOZ_MATHML"
-then
-  CFLAGS="$CFLAGS -DMOZ_MATHML"
-  CXXFLAGS="$CXXFLAGS -DMOZ_MATHML"
-fi
 
 dnl Need the contents of config-defs.h in the build logs
 VERBOSE_CONFIG_DEFS=1
@@ -2734,11 +2705,6 @@ dnl = Untested or Broken Options
 dnl = 
 dnl ========================================================
 MOZ_ARG_HEADER(Untested or Broken Options)
-
-dnl Netcaster is dead
-dnl MOZ_ARG_ENABLE_BOOL(netcast,
-dnl [  --enable-netcast        Enable use of netcast (untested)],
-dnl  MOZ_NETCAST=1)
 
 dnl Note: This needs to come after --disable-shared
 MOZ_ARG_ENABLE_BOOL(java,
