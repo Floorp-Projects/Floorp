@@ -4807,17 +4807,15 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
       return mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
   }
   else if (nsLayoutAtoms::floaterList == aListName) {
-    // Remove floater from the floater list first
-    mFloaters.RemoveFrame(aOldFrame);
-
     // Find which line contains the floater
     line_iterator line = begin_lines(), line_end = end_lines();
     for ( ; line != line_end; ++line) {
       if (line->IsInline() && line->RemoveFloater(aOldFrame)) {
-        aOldFrame->Destroy(aPresContext);
         break;
       }
     }
+
+    mFloaters.DestroyFrame(aPresContext, aOldFrame);
 
     // Mark every line at and below the line where the floater was dirty
     // XXXldb This could be done more efficiently.
