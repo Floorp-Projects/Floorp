@@ -537,7 +537,7 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(const char * a
   // Only skip asking if we are absolutely sure the user does not want
   // to be asked.  Any sort of bofus data should mean we ask.
   aMIMEInfo->SetAlwaysAskBeforeHandling(!stringValue ||
-                                        !falseString.Equals(stringValue)));
+                                        !falseString.Equals(stringValue));
 
 
   // now digest the external application information
