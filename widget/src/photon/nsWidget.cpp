@@ -87,7 +87,6 @@ nsILookAndFeel     *nsWidget::sLookAndFeel = nsnull;
 nsIDragService     *nsWidget::sDragService = nsnull;
 #endif
 PRUint32            nsWidget::sWidgetCount = 0;
-PRBool              nsWidget::sJustGotActivated = PR_FALSE;
 nsWidget*						nsWidget::sFocusWidget = 0;
 
 nsWidget::nsWidget()
@@ -974,12 +973,6 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
 				PtWidget_t *disjoint = PtFindDisjoint( widget );
  				if( PtWidgetIsClassMember( disjoint, PtServer ) )
 					PtContainerGiveFocus( widget, aCbInfo->event );
-				else {
-					if( sJustGotActivated ) {
-						sJustGotActivated = PR_FALSE;
-						DispatchStandardEvent(NS_ACTIVATE);
-						}
-					}
 
         if( ptrev ) {
           ScreenToWidgetPos( ptrev->pos );
@@ -1149,25 +1142,13 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
 
 	if( PtWidgetIsClass( widget, PtWindow ) ) {
 		if( pWidget->mEventCallback ) {
-
 			/* the WM_ACTIVATE code */
-
-			sJustGotActivated = PR_TRUE;
-		
-			nsMouseEvent event;
-			pWidget->InitEvent(event, NS_MOUSE_ACTIVATE);
-			event.acceptActivation = PR_TRUE;
-
-			pWidget->DispatchWindowEvent(&event);
+			pWidget->DispatchStandardEvent(NS_ACTIVATE);
+			return Pt_CONTINUE;
 			}
 		}
 
 	pWidget->DispatchStandardEvent(NS_GOTFOCUS);
-
- 	if( sJustGotActivated ) {
-		sJustGotActivated = PR_FALSE;
-		pWidget->DispatchStandardEvent(NS_ACTIVATE);
- 		}
 
   return Pt_CONTINUE;
 }

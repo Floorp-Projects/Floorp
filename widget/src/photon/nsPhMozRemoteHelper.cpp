@@ -102,7 +102,7 @@ nsPhXRemoteWidgetHelper::EnableXRemoteCommands( nsIWidget *aWidget, const char *
 {
 	static PRBool ConnectorCreated = PR_FALSE;
 
-/* ATENTIE */ printf( "aProgram=%s aProfile=%s aWidget=%p\n", aProgram?aProgram:"NULL", aProfile?aProfile:"NULL", aWidget );
+///* ATENTIE */ printf( "aProgram=%s aProfile=%s aWidget=%p\n", aProgram?aProgram:"NULL", aProfile?aProfile:"NULL", aWidget );
 
 	if( !ConnectorCreated ) {
 		char RemoteServerName[128];
