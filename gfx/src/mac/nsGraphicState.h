@@ -21,8 +21,12 @@
 #define nsGraphicState_h___
 
 #include "nsIRenderingContext.h"
+#include "nsTransform2D.h"
 #include "nsCRT.h"
-#include <QuickDraw.h>
+
+#ifndef __QUICKDRAW__
+#include <Quickdraw.h>
+#endif
 
 //------------------------------------------------------------------------
 
@@ -39,13 +43,16 @@ public:
 	void				Init(GrafPtr aPort);
 	void				Init(nsIWidget* aWindow);
 	void				Duplicate(nsGraphicState* aGS);	// would you prefer an '=' operator? <anonymous>
-																						// - no thanks, <pierre>
+																							// - no thanks, <pierre>
+
+	void				SetChanges(PRUint32 aChanges) { mChanges = aChanges; }
+	PRUint32		GetChanges() { return mChanges; }	
 
 protected:
-	RgnHandle		DuplicateRgn(RgnHandle aRgn);
+	RgnHandle		DuplicateRgn(RgnHandle aRgn, RgnHandle aDestRgn = nsnull);
 
 public:
-  nsTransform2D * 			mTMatrix; 					// transform that all the graphics drawn here will obey
+	nsTransform2D 				mTMatrix; 						// transform that all the graphics drawn here will obey
 
 	PRInt32               mOffx;
   PRInt32               mOffy;
@@ -57,6 +64,12 @@ public:
   PRInt32               mFont;
   nsIFontMetrics * 			mFontMetrics;
 	PRInt32               mCurrFontHandle;
+	
+	PRUint32							mChanges;							// flags indicating changes between this graphics state and the previous.
+
+private:
+	friend class nsGraphicStatePool;
+	nsGraphicState*				mNext;								// link into free list of graphics states.
 };
 
 //------------------------------------------------------------------------
@@ -71,6 +84,7 @@ public:
 	void							ReleaseGS(nsGraphicState* aGS);
 
 private:
+#if 0
 	static const short	kGSPoolCount = 80;  // sizeof(nsGraphicState) = 36 bytes
 
 	typedef struct nsGSRec
@@ -80,6 +94,9 @@ private:
 	} nsGSRec;
 
 	nsGSRec						mGSArray[kGSPoolCount];
+#endif
+
+	nsGraphicState*	mFreeList;
 };
 
 //------------------------------------------------------------------------
