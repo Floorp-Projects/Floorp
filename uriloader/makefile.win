@@ -25,7 +25,6 @@ MODULE = uriloader
 
 DIRS=             	\
 	base            \
-	extprotocol     \
         exthandler\win  \
 	exthandler	\
 	build     	\

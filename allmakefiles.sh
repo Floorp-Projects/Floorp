@@ -402,9 +402,6 @@ MAKEFILES_uriloader="
 uriloader/Makefile
 uriloader/base/Makefile
 uriloader/build/Makefile
-uriloader/extprotocol/Makefile
-uriloader/extprotocol/base/Makefile
-uriloader/extprotocol/unix/Makefile
 uriloader/exthandler/Makefile
 "
 
