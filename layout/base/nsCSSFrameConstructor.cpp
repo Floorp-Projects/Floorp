@@ -10416,7 +10416,7 @@ HasDisplayableChildren(nsIPresContext* aPresContext, nsIFrame* aContainerFrame)
     // If it's not a text frame, then assume that it's displayable.
     nsCOMPtr<nsIAtom> frameType;
     frame->GetFrameType(getter_AddRefs(frameType));
-    if (frameType != nsLayoutAtoms::textFrame)
+    if (frameType.get() != nsLayoutAtoms::textFrame)
       return PR_TRUE;
 
     // Get the text content...
@@ -10577,7 +10577,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
     nsIFrame* newFrame = frameItems.childList;
 
     if (nsHTMLAtoms::applet == tag.get()
-        && !HasDisplayableChildren(aPresContext, newFrame))
+        && !HasDisplayableChildren(aPresContext, newFrame)) {
       // If it's an <applet> tag without any displayable content, then
       // it may have "alt" text specified that we could use to render
       // text. Nuke the frames we just created, and use
