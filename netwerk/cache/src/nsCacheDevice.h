@@ -26,12 +26,13 @@
 
 #include "nspr.h"
 #include "nsError.h"
-#include "nsITransport.h"
-#include "nsCacheEntry.h"
+#include "nsICache.h"
 
-
+class nsIFile;
+class nsCString;
 class nsCacheEntry;
 class nsICacheVisitor;
+class nsITransport;
 
 class nsCacheDevice {
 public:
