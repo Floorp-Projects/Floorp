@@ -2497,31 +2497,35 @@ nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  // If this event is going to the plugin, we want to kill it.
-  // Not actually sending keypress to the plugin, since we didn't before.
-  aKeyEvent->PreventDefault();
-  aKeyEvent->PreventBubble();
-  return NS_ERROR_FAILURE; // means consume event
+  if (mInstance) {
+    // If this event is going to the plugin, we want to kill it.
+    // Not actually sending keypress to the plugin, since we didn't before.
+    aKeyEvent->PreventDefault();
+    aKeyEvent->PreventBubble();
+    return NS_ERROR_FAILURE; // means consume event
+  }
+  return NS_OK;
 }
     
 nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
-  if (privateEvent) {
-    nsKeyEvent* keyEvent = nsnull;
-    privateEvent->GetInternalNSEvent((nsEvent**)&keyEvent);
-    if (keyEvent) {
-      nsEventStatus rv = ProcessEvent(*keyEvent);
-      if (nsEventStatus_eConsumeNoDefault == rv) {
-        aKeyEvent->PreventDefault();
-        aKeyEvent->PreventBubble();
-        return NS_ERROR_FAILURE; // means consume event
+  if (mInstance) {
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
+    if (privateEvent) {
+      nsKeyEvent* keyEvent = nsnull;
+      privateEvent->GetInternalNSEvent((nsEvent**)&keyEvent);
+      if (keyEvent) {
+        nsEventStatus rv = ProcessEvent(*keyEvent);
+        if (nsEventStatus_eConsumeNoDefault == rv) {
+          aKeyEvent->PreventDefault();
+          aKeyEvent->PreventBubble();
+          return NS_ERROR_FAILURE; // means consume event
+        }
       }
+      else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, keyEvent null");   
     }
-    else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, keyEvent null");   
+    else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, privateEvent null");   
   }
-  else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, privateEvent null");   
-  
   return NS_OK;
 }    
 

@@ -427,6 +427,7 @@ MoveChildrenTo(nsIPresContext* aPresContext,
                nsIFrame* aNewParent,
                nsIFrame* aFrameList)
 {
+  // XXX We ignore the new parent SC: should we be reparenting?
   while (aFrameList) {
     aFrameList->SetParent(aNewParent);
     aFrameList->GetNextSibling(&aFrameList);
@@ -10233,7 +10234,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       placeholderFrame->GetParent(&inFlowParent);
     }
 
-    absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext, inFlowParent),
+    absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext, inFlowParent);
     floaterContainingBlock = GetFloaterContainingBlock(aPresContext, inFlowParent);
 
 #ifdef NS_DEBUG
@@ -10294,7 +10295,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
       // Replace the primary frame
       if (listName == nsnull) {
-        if (IsInlineFrame(aFrame) && !AreAllKidsInline(newFrame)) {
+        if (IsInlineFrame(parentFrame) && !AreAllKidsInline(newFrame)) {
           // We're in the uncomfortable position of being an inline
           // that now contains a block. As in ConstructInline(), break
           // the newly constructed frames into three lists: the inline
@@ -10302,23 +10303,22 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
           // frames after the last block frame (list3), and all the
           // frames between the first and last block frames (list2).
           nsIFrame* list1 = newFrame;
+
           nsIFrame* prevToFirstBlock;
           nsIFrame* list2 = FindFirstBlock(aPresContext, list1, &prevToFirstBlock);
 
-          if (prevToFirstBlock) {
+          if (prevToFirstBlock)
             prevToFirstBlock->SetNextSibling(nsnull);
-          }
-          else {
-            list1 = nsnull;
-          }
+          else list1 = nsnull;
 
           nsIFrame* afterFirstBlock;
           list2->GetNextSibling(&afterFirstBlock);
-          nsIFrame* list3 = nsnull;
+
           nsIFrame* lastBlock = FindLastBlock(aPresContext, afterFirstBlock);
-          if (! lastBlock) {
+          if (! lastBlock)
             lastBlock = list2;
-          }
+
+          nsIFrame* list3 = nsnull;
           lastBlock->GetNextSibling(&list3);
           lastBlock->SetNextSibling(nsnull);
 
@@ -10329,7 +10329,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
 
           // Recursively split inlines back up to the first containing
           // block frame.
-          SplitToContainingBlock(aPresContext, state, aFrame, list1, list2, list3, PR_FALSE);
+          SplitToContainingBlock(aPresContext, state, parentFrame, list1, list2, list3, PR_FALSE);
         }
       } else if (listName.get() == nsLayoutAtoms::absoluteList) {
         newFrame = state.mAbsoluteItems.childList;
@@ -12803,7 +12803,68 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
   return PR_FALSE;
 }
 
-
+// Recursively split an inline frame until we reach a block frame.
+// Below is an example of how SplitToContainingBlock() works.
+//
+// 1. In the initial state, you've got a block frame B that contains a
+//    bunch of inline frames eventually winding down to the <object>
+//    frame o
+//
+//     A-->B-->C
+//         |
+//         a-->1-->a'
+//             |
+//             b-->2-->b'
+//                 |
+//                 o
+//
+// 2. Now the object frame o gets split into the left inlines (o), the
+//    block frames (O), and the right inlines (o').
+//
+//             o O o'
+//
+// 3. We call SplitToContainingBlock(), which will split 2 as follows. 
+//
+//             .--------.
+//            /          \
+//       b-->2   2*  2'   b'
+//           |   |   |
+//           o   O   o'
+//
+//    Note that 2 gets split into 2* and 2', which correspond to the
+//    anonymous block and inline frames, respectively. Furthermore,
+//    note that 2 still refers to b' as its next sibling, and that 2'
+//    does not.
+//
+// 4. We recurse again to split 1. At this point, we'll break the
+//    link between 2 and b', and make b' be the next sibling of 2'.
+//
+//             .-----------.
+//            /             \
+//       a-->1      1*  1'   a'
+//           |      |   |
+//           b-->2  2*  2'-->b'
+//               |  |   |
+//               o  O   o'
+//
+//     As before, 1 retains a' as its next sibling. 
+//
+// 5. When we hit B, the recursion terminates. We now insert 1* and 1'
+//    immediately after 1, resulting in the following frame model. This
+//    is done using the "normal" frame insertion mechanism,
+//    nsIFrame::InsertFrames(), which properly recomputes the line boxes.
+//
+//     A-->B-->C
+//         |
+//         a-->1------>1*-->1'-->a'      
+//             |       |    |
+//             b-->2   2*   2'-->b'
+//                 |   |    |
+//                 o   O    o'
+//
+//    Since B is a block, it is allowed to contain both block and
+//    inline frames, so we can let 1* and 1' be "real siblings" of 1.
+//
 nsresult
 nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
                                               nsFrameConstructorState& aState,
@@ -12815,13 +12876,24 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
 {
   // If aFrame is an inline frame, then recursively "split" it until
   // we reach a block frame. aLeftInlineChildFrame is the original
-  // inline child of aFrame; aBlockChildFrame and
+  // inline child of aFrame (or null, if there were no frames to the
+  // left of the new block); aBlockChildFrame and
   // aRightInlineChildFrame are the newly created frames that were
-  // constructed as a result of the previous recursion's "split".
+  // constructed as a result of the previous recursion's
+  // "split". aRightInlineChildFrame may be null if there are no
+  // inlines to the right of the new block.
   //
   // aBlockChildFrame and aRightInlineChildFrame will be "orphaned" frames upon
   // entry to this routine; that is, they won't be parented. We'll
   // assign them proper parents.
+  NS_PRECONDITION(aFrame != nsnull, "no frame to split");
+  if (! aFrame)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(aBlockChildFrame != nsnull, "no block child");
+  if (! aBlockChildFrame)
+    return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
 
@@ -12831,9 +12903,41 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
     // and insert aBlockChildFrame and aRightInlineChildFrame after
     // aLeftInlineChildFrame
     aBlockChildFrame->SetParent(aFrame);
-    aRightInlineChildFrame->SetParent(aFrame);
+
+    if (aRightInlineChildFrame)
+      aRightInlineChildFrame->SetParent(aFrame);
+
     aBlockChildFrame->SetNextSibling(aRightInlineChildFrame);
     aFrame->InsertFrames(aPresContext, *shell, nsnull, aLeftInlineChildFrame, aBlockChildFrame);
+
+    // If aLeftInlineChild has a view...
+    if (aLeftInlineChildFrame) {
+      nsFrameState state;
+      aLeftInlineChildFrame->GetFrameState(&state);
+
+      if (state & NS_FRAME_HAS_VIEW) {
+        // ...create a new view for the block child, and reparent views
+        nsCOMPtr<nsIStyleContext> sc;
+        aLeftInlineChildFrame->GetStyleContext(getter_AddRefs(sc));
+
+        nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aBlockChildFrame,
+                                                 sc, nsnull, PR_FALSE);
+
+        nsIFrame* frame;
+        aBlockChildFrame->FirstChild(aPresContext, nsnull, &frame);
+        nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, frame, aLeftInlineChildFrame, aBlockChildFrame);
+
+        if (aRightInlineChildFrame) {
+          // Same for the right inline children
+          nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aRightInlineChildFrame,
+                                                   sc, nsnull, PR_FALSE);
+
+          aRightInlineChildFrame->FirstChild(aPresContext, nsnull, &frame);
+          nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, frame, aLeftInlineChildFrame, aRightInlineChildFrame);
+        }
+      }
+    }
+
     return NS_OK;
   }
 
@@ -12847,6 +12951,8 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
   // will parent it.
   nsIFrame* blockFrame;
   NS_NewBlockFrame(shell, &blockFrame);
+  if (! blockFrame)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIStyleContext> styleContext;
   aFrame->GetStyleContext(getter_AddRefs(styleContext));
@@ -12867,8 +12973,10 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
   // Create an anonymous inline frame that will parent
   // aRightInlineChildFrame. The new frame won't have a parent yet:
   // the recursion will parent it.
-  nsIFrame* inlineFrame;
+  nsIFrame* inlineFrame = nsnull;
   NS_NewInlineFrame(shell, &inlineFrame);
+  if (! inlineFrame)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   InitAndRestoreFrame(aPresContext, aState, content,
                       nsnull, styleContext, nsnull, inlineFrame);
@@ -12916,9 +13024,13 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
   // and aBlockChildFrame and aRightInlineChildFrame are the anonymous
   // frames we created to protect the inline-block invariant.
   if (aTransfer) {
+    // We'd better have the left- and right-inline children!
+    NS_ASSERTION(aLeftInlineChildFrame != nsnull, "no left inline child frame");
+    NS_ASSERTION(aRightInlineChildFrame != nsnull, "no right inline child frame");
+
     // We need to move any successors of the original inline
     // (aLeftInlineChildFrame) to aRightInlineChildFrame.
-    nsIFrame* nextInlineFrame;
+    nsIFrame* nextInlineFrame = nsnull;
     aLeftInlineChildFrame->GetNextSibling(&nextInlineFrame);
     aLeftInlineChildFrame->SetNextSibling(nsnull);
     aRightInlineChildFrame->SetNextSibling(nextInlineFrame);
