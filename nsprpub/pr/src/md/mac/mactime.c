@@ -39,8 +39,7 @@
 
 #include "mactime.h"
 
-PR_IMPLEMENT(UnsignedWide) dstLocalBaseMicroseconds;
-PR_IMPLEMENT(unsigned long) gJanuaryFirst1970Seconds;
+unsigned long gJanuaryFirst1970Seconds;
 
 /*
  * The geographic location and time zone information of a Mac
@@ -97,39 +96,6 @@ void MacintoshInitializeTime(void)
      * the Mac epoch.  Whew! :-)
      */
     gJanuaryFirst1970Seconds = 2082844800 + GMTDelta();
-
-	/*
-	 * Set up dstLocalBaseMicroseconds just for "prmjtime.c" for Mocha
-	 * needs.  The entire MOcha time needs to be rewritten using NSPR 2.0
-	 * time.
-	 */
-	{
-	UnsignedWide			upTime;
-	unsigned long			currentLocalTimeSeconds,
-							startupTimeSeconds;
-	uint64					startupTimeMicroSeconds;
-	uint32					upTimeSeconds;	
-	uint64					oneMillion, upTimeSecondsLong, microSecondsToSeconds;
-
-	Microseconds(&upTime);
-	
-	GetDateTime(&currentLocalTimeSeconds);
-	
-	LL_I2L(microSecondsToSeconds, PR_USEC_PER_SEC);
-	LL_DIV(upTimeSecondsLong,  *((uint64 *)&upTime), microSecondsToSeconds);
-	LL_L2I(upTimeSeconds, upTimeSecondsLong);
-	
-	startupTimeSeconds = currentLocalTimeSeconds - upTimeSeconds;
-	
-	startupTimeSeconds -= gJanuaryFirst1970Seconds;
-	
-	//	Now convert the startup time into a wide so that we
-	//	can figure out GMT and DST.
-	
-	LL_I2L(startupTimeMicroSeconds, startupTimeSeconds);
-	LL_I2L(oneMillion, PR_USEC_PER_SEC);
-	LL_MUL(dstLocalBaseMicroseconds, oneMillion, startupTimeMicroSeconds);
-	}
 }
 
 /*
