@@ -29,6 +29,7 @@
 
 %{ C++
 #include "nsIPresContext.h"
+#include "nsIDocumentLoaderObserver.h"
 %}
 
 /**
@@ -49,6 +50,7 @@
  */
 
 [ptr] native nsIPresContext(nsIPresContext);
+[ptr] native nsIDocumentLoaderObserver(nsIDocumentLoaderObserver);
 
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
@@ -84,9 +86,9 @@ interface nsIDocShell : nsISupports
 	a load.
 
 	@param document - The document to load.
-	@param 
+	@param rootNode - The root of the document content, to be hooked up
 	*/
-	[noscript]void SetDocument(in nsIDOMDocument document, in nsIPresContext presContext);
+	[noscript]void setDocument(in nsIDOMDocument document, in nsIDOMElement rootNode);
 
 	/*
 	The current document that is loaded in the DocShell.
@@ -97,6 +99,11 @@ interface nsIDocShell : nsISupports
 	The current URI that is loaded.
 	*/
 	readonly attribute nsIURI currentURI;
+
+  /* clients may get and set an nsIDocumentLoaderObserver, which will be notified
+   * during loadURI, loadURIVia, and setDocument
+   */
+  attribute nsIDocumentLoaderObserver docLoaderObserver;
 
 	/*
 	name of the DocShell
