@@ -165,8 +165,7 @@ nsGlobalHistory::matchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
   if (NS_FAILED(rv)) 
     return PR_FALSE;
   
-  PRBool val = LL_CMP(lastVisitedTime, <, expirationDate);
-  return val;
+  return LL_CMP(lastVisitedTime, <, *expirationDate);
 }
 
 static PRBool
