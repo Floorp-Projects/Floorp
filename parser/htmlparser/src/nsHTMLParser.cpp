@@ -718,7 +718,7 @@ PRBool VerifyContextVector(CTokenizer * tokenizer, PRInt32 aTags[],PRInt32 count
       }
 
       // generate a filename to dump the html source into
-      char filename[_MAX_PATH];
+      char filename[1024];
       do {
          // use system time to generate a temporary file name
          time_t ltime;
