@@ -105,14 +105,16 @@ NS_IMPL_ADDREF(nsMsgRFC822Parser)
 NS_IMPL_RELEASE(nsMsgRFC822Parser)
 NS_IMPL_QUERY_INTERFACE(nsMsgRFC822Parser, kIMsgRFC822Parser); /* we need to pass in the interface ID of this interface */
 
-nsresult nsMsgRFC822Parser::ParseRFC822Addresses (const char *line, char **names, char **addresses)
+nsresult nsMsgRFC822Parser::ParseRFC822Addresses (const char *line, char **names, char **addresses, PRUint32& numAddresses)
 {
-	return msg_parse_rfc822_addresses(CS_APP_DEFAULT, line, names, addresses);
+	numAddresses = msg_parse_rfc822_addresses(CS_APP_DEFAULT, line, names, addresses);
+	return NS_OK;
 }
 
-nsresult nsMsgRFC822Parser::ParseRFC822Addresses_Intl (PRInt16 csid, const char *line, char **names, char **addresses)
+nsresult nsMsgRFC822Parser::ParseRFC822Addresses_Intl (PRInt16 csid, const char *line, char **names, char **addresses, PRUint32& numAddresses)
 {
-	return msg_parse_rfc822_addresses(csid, line, names, addresses);
+	numAddresses = msg_parse_rfc822_addresses(csid, line, names, addresses);
+	return NS_OK;
 }
 
 nsresult nsMsgRFC822Parser::ExtractRFC822AddressMailboxes (const char *line, char ** mailboxes)

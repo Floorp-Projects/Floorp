@@ -49,8 +49,8 @@
        Either of the provided pointers may be NULL if the caller is not interested
        in those components.
     */
-	NS_IMETHOD ParseRFC822Addresses (const char *line, char **names, char **addresses) = 0;
-	NS_IMETHOD ParseRFC822Addresses_Intl (PRInt16 csid, const char *line, char **names, char **addresses) = 0;
+	NS_IMETHOD ParseRFC822Addresses (const char *line, char **names, char **addresses, PRUint32& numAddresses) = 0;
+	NS_IMETHOD ParseRFC822Addresses_Intl (PRInt16 csid, const char *line, char **names, char **addresses,  PRUint32& numAddresses) = 0;
 
 	/* Given a string which contains a list of RFC822 addresses, returns a
 	   comma-seperated list of just the `mailbox' portions.
