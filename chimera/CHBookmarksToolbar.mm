@@ -35,7 +35,7 @@
     mButtons = [[NSMutableArray alloc] init];
     mDragInsertionButton = nil;
     mDragInsertionPosition = BookmarksService::CHInsertNone;
-    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, nil]];
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", nil]];
   }
   return self;
 }
@@ -284,25 +284,10 @@
   }
 }
 
-/*src=(null)
-pasteboard=CFPasteboardUnique-11c50e715b
-types=(
-    "CorePasteboardFlavorType 0x4D5A0000", 
-    "CorePasteboardFlavorType 0x4D5A0001", 
-    "CorePasteboardFlavorType 0x75747874", 
-    "NeXT plain ascii pasteboard type", 
-    "CorePasteboardFlavorType 0x54455854", 
-    "Apple CorePasteboard Fallback Text Script", 
-    "CorePasteboardFlavorType 0x4D4F5A6D", 
-    NSStringPboardType, 
-    NSStringPboardType
-)
-op=Copy Link Generic Private Move Delete 
-*/
 // NSDraggingDestination ///////////
 
 - (unsigned int)draggingEntered:(id <NSDraggingInfo>)sender
-{  
+{
   return NSDragOperationGeneric;
 }
 
@@ -335,9 +320,6 @@ op=Copy Link Generic Private Move Delete
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  NSString *value = [[sender draggingPasteboard] stringForType:@"CorePasteboardFlavorType 0x4D4F5A6D"];
-  NSLog(@"*** DROP %s",[value cString]);
-
   BookmarksService::CompleteBookmarkDrag([sender draggingPasteboard], BookmarksService::gToolbarRoot, 
                                          mDragInsertionButton ? [mDragInsertionButton element] : nil,
                                          mDragInsertionPosition);
