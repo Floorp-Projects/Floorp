@@ -130,26 +130,26 @@ sub Checkout()
 	}
 	if ($main::pull{xpcom})
 	{
-		$session->checkout("mozilla/modules/libreg ") || die "checkout failure";
+		$session->checkout("mozilla/modules/libreg") || die "checkout failure";
 		$session->checkout("mozilla/xpcom") || die "checkout failure";
 	}
 	if ($main::pull{imglib})
 	{
 		my($IMGLIB_BRANCH) = "MODULAR_IMGLIB_BRANCH";
 
-		$session->checkout("mozilla/jpeg ", $IMGLIB_BRANCH) || die "checkout failure";
+		$session->checkout("mozilla/jpeg", $IMGLIB_BRANCH) || die "checkout failure";
 		$session->checkout("mozilla/modules/libutil", $IMGLIB_BRANCH) || die "checkout failure";
 		$session->checkout("mozilla/modules/libimg", $IMGLIB_BRANCH) || die "checkout failure";
 	}
 	if ($main::pull{netlib})
 	{
-		$session->checkout("mozilla/lib/xp ") || die "checkout failure";
+		$session->checkout("mozilla/lib/xp") || die "checkout failure";
 		$session->checkout("mozilla/network") || die "checkout failure";
 		$session->checkout("mozilla/include") || die "checkout failure";
 	}
 	if ($main::pull{nglayout})
 	{
-		$session->checkout("mozilla/base ") || die "checkout failure";
+		$session->checkout("mozilla/base") || die "checkout failure";
 		$session->checkout("mozilla/dom") || die "checkout failure";
 		$session->checkout("mozilla/gfx") || die "checkout failure";
 		$session->checkout("mozilla/htmlparser") || die "checkout failure";
@@ -160,7 +160,7 @@ sub Checkout()
 	}
 	if ($main::pull{mac})
 	{
-		$session->checkout("mozilla/build/mac ") || die "checkout failure";
+		$session->checkout("mozilla/build/mac") || die "checkout failure";
 		$session->checkout("mozilla/cmd/macfe") || die "checkout failure";
 		$session->checkout("mozilla/lib/mac/MacMemoryAllocator") || die "checkout failure";
 		$session->checkout("mozilla/lib/mac/NSStdLib") || die "checkout failure";
