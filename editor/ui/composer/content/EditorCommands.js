@@ -985,11 +985,7 @@ function SetDisplayMode(mode)
     ContentWindowDeck.setAttribute("index","1");
 
     // Hide normal chrome
-    // BUG IN CSS/BOXES MAKES THIS ASSERT LIKE MAD!
-    //EditorToolbox.setAttribute("style", "visibility:collapse");
-
-    // THIS DOESN'T WORK!?
-    //EditorToolbox.setAttribute("collapsed", "true");
+    EditorToolbox.setAttribute("collapsed", "true");
 
     // TODO: WE MUST DISABLE ALL KEYBOARD COMMANDS!
 
@@ -1002,8 +998,7 @@ function SetDisplayMode(mode)
     ContentWindowDeck.setAttribute("index","0");
 
     // Show normal chrome
-    // BUG IN CSS/BOXES MAKES THIS ASSERT LIKE MAD!
-    //EditorToolbox.setAttribute("style","visibility:inherit");
+    EditorToolbox.removeAttribute("collapsed");
 
     // TODO: WE MUST ENABLE ALL KEYBOARD COMMANDS!
 
