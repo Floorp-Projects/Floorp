@@ -28,7 +28,7 @@ srcdir		= .
 VPATH		= .
 
 MAKE_OBJ_TYPE=DLL
-MODULE=javaSample
+MODULE=bcBlackConnectInit
 COMPONENT=1
 DLLNAME=$(MODULE)
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -43,7 +43,7 @@ LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 include <$(DEPTH)\config\rules.mak>
 
 COMPONENT=bcBlackConnectInit
-CLASSES=bcIBlackConnectInit.class bcJavaSample.class
+CLASSES=bcIBlackConnectInit.class
 
 $(COMPONENT).jar.comp: manifest $(CLASSES)
 	$(JDKHOME)\bin\jar cvfm $(COMPONENT).jar.comp  manifest *.class
