@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.31 2002/11/15 05:03:53 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.32 2002/11/19 21:37:50 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -1059,8 +1059,6 @@ PRIntn PR_CALLBACK FreeIssuer(PLHashEntry *he, PRIntn i, void *arg)
 
 SECStatus ShutdownCRLCache(void)
 {
-    PR_ASSERT(crlcache.lock);
-    PR_ASSERT(crlcache.issuers);
     if (!crlcache.lock || !crlcache.issuers)
     {
         return SECFailure;
