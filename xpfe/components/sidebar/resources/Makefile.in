@@ -19,51 +19,47 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR	= sidebar
+CHROME_DIR = sidebar
 
-CHROME_CONTENT	= \
-		customize-panel.js \
-		customize-panel.xul \
-		customize.js \
-		customize.xul \
-		preview.js \
-		preview.xul \
-		sidebarOverlay.js \
-		sidebarOverlay.xul \
-		local-panels.rdf \
-		remote-panels.rdf \
-		$(NULL)
+CHROME_CONTENT = \
+	customize-panel.js \
+	customize-panel.xul \
+	customize.js \
+	customize.xul \
+	preview.js \
+	preview.xul \
+	sidebarOverlay.js \
+	sidebarOverlay.xul \
+	local-panels.rdf \
+	$(NULL)
 
-CHROME_SKIN	= \
-		customize-panel.css \
-		customize.css \
-		preview.css \
-		sidebar.css \
-		sidebarOverlay.css \
-		sidebar-icon.gif \
-		list-down-dis.gif \
-		list-down.gif \
-		list-up-dis.gif \
-		list-up.gif \
-		sidebar-bottomright-cap.gif \
-		sidebar-topright-cap.gif \
-		$(NULL)
+CHROME_SKIN = \
+	customize.css \
+	preview.css \
+	sidebar.css \
+	sidebarOverlay.css \
+	sidebar-icon.gif \
+	list-down-dis.gif \
+	list-down.gif \
+	list-up-dis.gif \
+	list-up.gif \
+	sidebar-bottomright-cap.gif \
+	sidebar-topright-cap.gif \
+	$(NULL)
 
-CHROME_L10N	= \
-		locale/en-US/customize-panel.dtd \
-		locale/en-US/customize.dtd \
-		locale/en-US/preview.dtd \
-		locale/en-US/sidebar-registry-rdf.dtd \
-		locale/en-US/sidebar-rdf.dtd \
-		locale/en-US/sidebarOverlay.dtd \
-		$(NULL)
+CHROME_L10N = \
+	locale/en-US/customize.dtd \
+	locale/en-US/preview.dtd \
+	locale/en-US/local-panels.dtd \
+	locale/en-US/sidebarOverlay.dtd \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
