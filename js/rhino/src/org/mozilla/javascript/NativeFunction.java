@@ -78,17 +78,19 @@ public class NativeFunction extends BaseFunction {
      */
 
     public String decompile(Context cx, int indent, boolean justbody) {
+        Object[] srcData = new Object[1];
         StringBuffer result = new StringBuffer();
-        decompile_r(this, indent, true, justbody, result);
+        decompile_r(this, indent, true, justbody, srcData, result);
         return result.toString();
 
     }
 
     private static void decompile_r(NativeFunction f, int indent,
                                     boolean toplevel, boolean justbody,
-                                    StringBuffer result)
+                                    Object[] srcData, StringBuffer result)
     {
         String source = f.source;
+
         if (source == null) {
             if (!justbody) {
                 result.append("function ");
@@ -129,17 +131,10 @@ public class NativeFunction extends BaseFunction {
 
         int i = 0;
 
-        if (length > 0) {
-            /* special-case FUNCTION as the first token; if it is,
-             * (and it's not followed by a NAME or LP) then we're
-             * decompiling a function (and not the toplevel script.)
-
-             * FUNCTION appearing elsewhere is an escape that means we'll
-             * need to call toString of the given function (object).
-
-             * If not at the top level, don't add an initial indent;
-             * let the caller do it, so functions as expressions look
-             * reasonable.  */
+        if (length != 0) {
+            // If the first token is TokenStream.SCRIPT, then we're
+            // decompiling the toplevel script, otherwise it a function
+            // and should start with TokenStream.FUNCTION
 
             if (toplevel) {
                 // add an initial newline to exactly match js.
@@ -149,13 +144,9 @@ public class NativeFunction extends BaseFunction {
                     result.append(' ');
             }
 
-            if (source.charAt(0) == TokenStream.FUNCTION
-                // make sure it's not a script that begins with a
-                // reference to a function definition.
-                && length > 1
-                && (source.charAt(1) == TokenStream.NAME
-                    || source.charAt(1) == TokenStream.LP))
-            {
+            int token = source.charAt(i);
+            ++i;
+            if (token == TokenStream.FUNCTION) {
                 if (!justbody) {
                     result.append("function ");
 
@@ -168,33 +159,42 @@ public class NativeFunction extends BaseFunction {
                      * less than 1.2... or if it's greater than 1.2, because
                      * we need to be closer to ECMA.  (ToSource, please?)
                      */
-                    if (nextIs(source, length, i, TokenStream.LP)
+                    if (source.charAt(i) == TokenStream.LP
                         && f.version != Context.VERSION_1_2
                         && f.functionName != null
                         && f.functionName.equals("anonymous"))
-                        result.append("anonymous");
-                    ++i;
-                } else {
-                    /* Skip past the entire function header to the next EOL.
-                     * Depends on how NAMEs are encoded.
-                     */
-                    while (i < length
-                           && (source.charAt(i) != TokenStream.EOL
-                               // the length char of a NAME sequence
-                               // can look like an EOL.
-                               || (i > 0
-                                   && source.charAt(i-1) == TokenStream.NAME)))
                     {
-                        ++i;
+                        result.append("anonymous");
                     }
-                    // Skip past the EOL, too.
-                    ++i;
+                } else {
+                    // Skip past the entire function header pass the next EOL.
+                    skipLoop: for (;;) {
+                        token = source.charAt(i);
+                        ++i;
+                        switch (token) {
+                            case TokenStream.EOL:
+                                break skipLoop;
+                            case TokenStream.NAME:
+                                // Skip function or argument name
+                                i = Parser.getSourceString(source, i, null);
+                                break;
+                            case TokenStream.LP:
+                            case TokenStream.COMMA:
+                            case TokenStream.RP:
+                                break;
+                            default:
+                                // Bad function header
+                                throw new RuntimeException();
+                        }
+                    }
                 }
+            } else if (token != TokenStream.SCRIPT) {
+                // Bad source header
+                throw new RuntimeException();
             }
         }
 
         while (i < length) {
-            int stop;
             switch(source.charAt(i)) {
             case TokenStream.NAME:
             case TokenStream.REGEXP:  // re-wrapped in '/'s in parser...
@@ -205,50 +205,23 @@ public class NativeFunction extends BaseFunction {
                  * Also change function-header skipping code above,
                  * used when decompling under decompileFunctionBody.
                  */
-                ++i;
-                stop = i + (int)source.charAt(i);
-                result.append(source.substring(i + 1, stop + 1));
-                i = stop;
-                break;
+                i = Parser.getSourceString(source, i + 1, srcData);
+                result.append((String)srcData[0]);
+                continue;
 
-            case TokenStream.NUMBER:
-                ++i;
-                long lbits = 0;
-                switch(source.charAt(i)) {
-                case 'S':
-                    ++i;
-                    result.append((int)source.charAt(i));
-                    break;
-
-                case 'J':
-                    lbits |= (long)source.charAt(++i) << 48;
-                    lbits |= (long)source.charAt(++i) << 32;
-                    lbits |= (long)source.charAt(++i) << 16;
-                    lbits |= (long)source.charAt(++i);
-
-                    result.append(lbits);
-                    break;
-                case 'D':
-                    lbits |= (long)source.charAt(++i) << 48;
-                    lbits |= (long)source.charAt(++i) << 32;
-                    lbits |= (long)source.charAt(++i) << 16;
-                    lbits |= (long)source.charAt(++i);
-
-                    double dval = Double.longBitsToDouble(lbits);
-                    result.append(ScriptRuntime.numberToString(dval, 10));
-                    break;
-                }
-                break;
+            case TokenStream.NUMBER: {
+                i = Parser.getSourceNumber(source, i + 1, srcData);
+                double number = ((Number)srcData[0]).doubleValue();
+                result.append(ScriptRuntime.numberToString(number, 10));
+                continue;
+            }
 
             case TokenStream.STRING:
-                ++i;
-                stop = i + (int)source.charAt(i);
+                i = Parser.getSourceString(source, i + 1, srcData);
                 result.append('"');
-                result.append(ScriptRuntime.escapeString
-                              (source.substring(i + 1, stop + 1)));
+                result.append(ScriptRuntime.escapeString((String)srcData[0]));
                 result.append('"');
-                i = stop;
-                break;
+                continue;
 
             case TokenStream.PRIMARY:
                 ++i;
@@ -307,7 +280,7 @@ public class NativeFunction extends BaseFunction {
                     throw Context.reportRuntimeError(message);
                 }
                 decompile_r(f.nestedFunctions[functionNumber], indent,
-                            false, false, result);
+                            false, false, srcData, result);
                 break;
             }
             case TokenStream.COMMA:
@@ -367,19 +340,21 @@ public class NativeFunction extends BaseFunction {
                  */
                 if (i + 1 < length) {
                     int less = 0;
-                    if (nextIs(source, length, i, TokenStream.CASE)
-                        || nextIs(source, length, i, TokenStream.DEFAULT))
+                    int nextToken = source.charAt(i + 1);
+                    if (nextToken == TokenStream.CASE
+                        || nextToken == TokenStream.DEFAULT)
                         less = SETBACK;
-                    else if (nextIs(source, length, i, TokenStream.RC))
+                    else if (nextToken == TokenStream.RC)
                         less = OFFSET;
 
                     /* elaborate check against label... skip past a
                      * following inlined NAME and look for a COLON.
                      * Depends on how NAME is encoded.
                      */
-                    else if (nextIs(source, length, i, TokenStream.NAME)) {
-                        int skip = source.charAt(i + 2);
-                        if (source.charAt(i + skip + 3) == TokenStream.COLON)
+                    else if (nextToken == TokenStream.NAME) {
+                        int afterName = Parser.getSourceString(source, i + 2,
+                                                               null);
+                        if (source.charAt(afterName) == TokenStream.COLON)
                             less = OFFSET;
                     }
 

@@ -104,6 +104,9 @@ class Parser {
          * we've collected all the source */
         Object tempBlock = nf.createLeaf(TokenStream.BLOCK);
 
+        // Add script indicator
+        sourceAdd((char)ts.SCRIPT);
+
         while (true) {
             ts.flags |= ts.TSF_REGEXP;
             tt = ts.getToken();
@@ -1462,17 +1465,43 @@ class Parser {
     }
 
     private void sourceAddString(int type, String str) {
-        int L = str.length();
-        // java string length < 2^16?
-        if (Context.check && L > Character.MAX_VALUE) Context.codeBug();
-
-        if (sourceTop + L + 2 > sourceBuffer.length) {
-            increaseSourceCapacity(sourceTop + L + 2);
-        }
         sourceAdd((char)type);
-        sourceAdd((char)L);
+        sourceAddString(str);
+    }
+
+    private void sourceAddString(String str) {
+        int L = str.length();
+        int lengthEncodingSize = 1;
+        if (L >= 0x8000) {
+            lengthEncodingSize = 2;
+        }
+        int nextTop = sourceTop + lengthEncodingSize + L;
+        if (nextTop > sourceBuffer.length) {
+            increaseSourceCapacity(nextTop);
+        }
+        if (L >= 0x8000) {
+            // Use 2 chars to encode strings exceeding 32K, were the highest
+            // bit in the first char indicates presence of the next byte
+            sourceBuffer[sourceTop] = (char)(0x8000 | (L >>> 16));
+            ++sourceTop;
+        }
+        sourceBuffer[sourceTop] = (char)L;
+        ++sourceTop;
         str.getChars(0, L, sourceBuffer, sourceTop);
-        sourceTop += L;
+        sourceTop = nextTop;
+    }
+
+    static int getSourceString(String source, int offset, Object[] result) {
+        int length = source.charAt(offset);
+        ++offset;
+        if ((0x8000 & length) != 0) {
+            length = ((0x7FFF & length) << 16) | source.charAt(offset);
+            ++offset;
+        }
+        if (result != null) {
+            result[0] = source.substring(offset, offset + length);
+        }
+        return offset + length;
     }
 
     private void sourceAddNumber(double n) {
@@ -1525,6 +1554,38 @@ class Parser {
                 sourceAdd((char)lbits);
             }
         }
+    }
+
+    static int getSourceNumber(String source, int offset, Object[] result) {
+        char type = source.charAt(offset);
+        ++offset;
+        if (type == 'S') {
+            if (result != null) {
+                int ival = source.charAt(offset);
+                result[0] = new Integer(ival);
+            }
+            ++offset;
+        } else if (type == 'J' || type == 'D') {
+            if (result != null) {
+                long lbits;
+                lbits = (long)source.charAt(offset) << 48;
+                lbits |= (long)source.charAt(offset + 1) << 32;
+                lbits |= (long)source.charAt(offset + 2) << 16;
+                lbits |= (long)source.charAt(offset + 3);
+                double dval;
+                if (type == 'J') {
+                    dval = lbits;
+                } else {
+                    dval = Double.longBitsToDouble(lbits);
+                }
+                result[0] = new Double(dval);
+            }
+            offset += 4;
+        } else {
+            // Bad source
+            throw new RuntimeException();
+        }
+        return offset;
     }
 
     private void increaseSourceCapacity(int minimalCapacity) {
