@@ -304,7 +304,7 @@ typedef struct _PRInterruptTable {
 #define _PR_CPU_PTR(_qp) \
     ((_PRCPU*) ((char*) (_qp) - offsetof(_PRCPU,links)))
 
-#if !defined(IRIX) && !defined(WIN32)
+#if !defined(IRIX) && !defined(WIN32) && !defined(XP_OS2)
 #define _MD_GET_ATTACHED_THREAD()        (_PR_MD_CURRENT_THREAD())
 #endif
 

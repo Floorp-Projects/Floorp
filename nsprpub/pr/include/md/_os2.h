@@ -482,7 +482,8 @@ typedef struct __NSPR_TLS
 extern _NSPR_TLS*  pThreadLocalStorage;
 NSPR_API(void) _PR_MD_ENSURE_TLS(void);
 
-#define _MD_CURRENT_THREAD() pThreadLocalStorage->_pr_currentThread
+#define _MD_GET_ATTACHED_THREAD() pThreadLocalStorage->_pr_currentThread
+extern struct PRThread * _MD_CURRENT_THREAD(void);
 #define _MD_SET_CURRENT_THREAD(_thread) _PR_MD_ENSURE_TLS(); pThreadLocalStorage->_pr_currentThread = (_thread)
 
 #define _MD_LAST_THREAD() pThreadLocalStorage->_pr_thread_last_run
