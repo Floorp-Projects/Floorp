@@ -1,5 +1,6 @@
 messenger.jar:
     content/messenger/contents.rdf                                             (base/resources/content/contents.rdf)
+    content/messenger-region/contents.rdf                                      (base/resources/content/contents-region.rdf)
     content/messenger/addressbook/pref-addressing.xul                          (addrbook/prefs/resources/content/pref-addressing.xul)
     content/messenger/addressbook/pref-addressbookOverlay.xul                  (addrbook/prefs/resources/content/pref-addressbookOverlay.xul)
     content/messenger/addressbook/abAddressBookNameDialog.js                   (addrbook/resources/content/abAddressBookNameDialog.js)
@@ -244,3 +245,7 @@ en-US.jar:
     locale/en-US/messenger/mime.properties                              (mime/resources/mime.properties)
     locale/en-US/messenger/mimeheader.properties                        (mime/resources/mimeheader.properties)
     locale/en-US/messenger/vcard.properties                             (mime/cthandlers/resources/vcard.properties)
+
+US.jar:
+    locale/US/messenger-region/contents.rdf                             (base/resources/locale/en-US/contents-region.rdf)
+    locale/US/messenger-region/region.properties                        (base/resources/locale/en-US/region.properties)

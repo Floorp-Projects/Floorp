@@ -30,6 +30,9 @@ if(verifyDiskSpace(fProgram, srDest))
   err = registerChrome(CONTENT | DELAYED_CHROME, 
                        getFolder("Chrome","messenger.jar"),
                        "content/messenger/");
+  err = registerChrome(CONTENT | DELAYED_CHROME, 
+                       getFolder("Chrome","messenger.jar"),
+                       "content/messenger-region/");
   logComment("registerChrome() returned: "+err);
 
   // check return value

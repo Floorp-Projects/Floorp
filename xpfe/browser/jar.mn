@@ -1,5 +1,8 @@
 comm.jar:
         content/navigator/contents.rdf                 (resources/content/contents.rdf)
+        content/navigator-region/contents.rdf          (resources/content/contents-region.rdf)
+        content/navigator/openLocation.js              (resources/content/openLocation.js)
+        content/navigator/openLocation.xul             (resources/content/openLocation.xul)
         content/navigator/viewsource.js                (resources/content/viewsource.js)
         content/navigator/viewSource.xul               (resources/content/viewSource.xul)
         content/navigator/pageInfo.js                  (resources/content/pageInfo.js)
@@ -18,3 +21,7 @@ en-US.jar:
         locale/en-US/navigator/pageInfo.dtd                 (resources/locale/en-US/pageInfo.dtd)
         locale/en-US/navigator/navigator.dtd                (resources/locale/en-US/navigator.dtd)
         locale/en-US/navigator/navigator.properties         (resources/locale/en-US/navigator.properties)
+
+US.jar:
+        locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)
+        locale/US/navigator-region/region.properties        (resources/locale/en-US/region.properties)

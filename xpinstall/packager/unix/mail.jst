@@ -21,6 +21,10 @@ if (verifyDiskSpace(communicatorFolder, srDest))
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger/");
 
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-region/");
+
     if (err==SUCCESS)
     {
 	    err = performInstall(); 

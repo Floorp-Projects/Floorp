@@ -28,6 +28,7 @@ C2=Component2
 C3=Component3
 C4=Component4
 C5=Component5
+C6=Component6
 
 [Setup Type1]
 ; *** LOCALIZE ME BABY ***
@@ -40,6 +41,7 @@ C2=Component2
 C3=Component3
 C4=Component4
 C5=Component5
+C6=Component6
 
 [Dialog Select Components]
 ; *** LOCALIZE ME BABY ***
@@ -91,6 +93,14 @@ Description Short=English US Language Pack
 Description Long=English US Language Pack
 Archive=langenus.xpi
 Install Size=<#langenus_size>
+Attributes=SELECTED|INVISIBLE
+
+[Component6]
+Description Short=US Region Pack
+; *** LOCALIZE ME BABY ***
+Description Long=Regional contents for US users
+Archive=regus.xpi
+Install Size=<#regus_size>
 Attributes=SELECTED|INVISIBLE
 
 [Dialog Start Install]

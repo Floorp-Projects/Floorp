@@ -27,4 +27,6 @@ include <$(DEPTH)\config\rules.mak>
 
 chrome::
         $(REGCHROME) content messenger messenger.jar
+        $(REGCHROME) content messenger-region messenger.jar
         $(REGCHROME) locale en-US/messenger en-US.jar
+        $(REGCHROME) locale US/messenger-region US.jar

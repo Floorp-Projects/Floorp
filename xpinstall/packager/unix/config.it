@@ -42,6 +42,7 @@ C3=Component3
 C4=Component5
 C5=Component6
 C6=Component7
+C7=Component8
 
 [Setup Type1]
 ; *** LOCALIZE ME BABY ***
@@ -56,6 +57,7 @@ C4=Component4
 C5=Component5
 C6=Component6
 C7=Component7
+C8=Component8
 
 [Setup Type2]
 ; *** LOCALIZE ME BABY ***
@@ -68,6 +70,7 @@ C2=Component3
 C3=Component5
 C4=COmponent6
 C5=Component7
+C6=Component8
 
 [Setup Type3]
 ; *** LOCALIZE ME BABY ***
@@ -82,6 +85,7 @@ C4=Component4
 C5=Component5
 C6=Component6
 C7=Component7
+C8=Component8
 
 
 ;-------------------------------------------------------------------------
@@ -161,6 +165,15 @@ Description Short=English US Language Pack
 Description Long=English US Language Pack
 Archive=langenus.xpi
 $InstallSize$:langenus
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
+[Component8]
+Description Short=US Regional Pack
+; *** LOCALIZE ME BABY ***
+Description Long=Regional contents for US users
+Archive=regus.xpi
+$InstallSize$:regus
 Attributes=SELECTED|INVISIBLE
 URL0=$URLPath$
 

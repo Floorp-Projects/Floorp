@@ -11,13 +11,18 @@
 [langenus]
 ;
 ; en-US
-bin/defaults/profile/en-US/*
 bin/chrome/en-US.jar
+
+[regus]
+;
+; US
+bin/chrome/US.jar
+bin/defaults/profile/US/*
 bin/searchplugins/*
 
 [deflenus]
 ;
-; default files for en-US
+; default files for US
 bin/defaults/profile/bookmarks.html
 bin/defaults/profile/panels.rdf
 bin/defaults/profile/localstore.rdf

@@ -90,7 +90,8 @@ if(!(-d "$inStagePath"))
                    "psm",
                    "chatzilla",
                    "deflenus",
-                   "langenus");
+                   "langenus",
+                   "regus");
 
 if(VerifyComponents()) # return value of 0 means no errors encountered
 {

@@ -11,8 +11,8 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          xmlns:nc="http://home.netscape.com/NC-rdf#">
 
-  <box id="taskbarMenuBox" datasources="chrome://communicator/locale/taskbar.rdf"
-       ref="chrome://communicator/locale/taskbar.rdf#root" 
+  <box id="taskbarMenuBox" datasources="chrome://communicator-region/locale/taskbar.rdf"
+       ref="chrome://communicator-region/locale/taskbar.rdf#root" 
        containment="http://home.netscape.com/NC-rdf#entry http://home.netscape.com/NC-rdf#child">
        
    <spring flex="1"/>

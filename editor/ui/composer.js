@@ -45,7 +45,7 @@ pref("editor.prettyprint", true);
 
 pref("editor.htmlWrapColumn", 72);
 
-pref("editor.throbber.url","chrome://editor/locale/editor.properties");
+pref("editor.throbber.url","chrome://editor-region/locale/region.properties");
 
 pref("editor.auto_save",                    false);
 pref("editor.auto_save_delay",              10);    // minutes

@@ -447,4 +447,4 @@ pref("bidi.support", 1);
 pref("bidi.characterset", 1);
 
 
-pref("browser.throbber.url","chrome://navigator/locale/navigator.properties");
+pref("browser.throbber.url","chrome://navigator-region/locale/region.properties");

@@ -1,5 +1,6 @@
 toolkit.jar:
 	content/global/contents.rdf                 (resources/content/contents.rdf)
+	content/global-region/contents.rdf          (resources/content/contents-region.rdf)
 	content/global/hiddenWindow.xul             (resources/content/hiddenWindow.xul) 
 	content/global/globalOverlay.xul            (resources/content/globalOverlay.xul) 
 	content/global/globalOverlay.js             (resources/content/globalOverlay.js) 
@@ -52,7 +53,6 @@ en-US.jar:
     locale/en-US/global/intl.css                    (resources/locale/en-US/intl.css) 
     locale/en-US/global/globalOverlay.dtd           (resources/locale/en-US/globalOverlay.dtd) 
     locale/en-US/global/dialogOverlay.dtd           (resources/locale/en-US/dialogOverlay.dtd) 
-    locale/en-US/global/builtinURLs.rdf             (resources/locale/en-US/builtinURLs.rdf) 
     locale/en-US/global/commonDialog.dtd            (resources/locale/en-US/commonDialog.dtd) 
     locale/en-US/global/charsetOverlay.dtd          (resources/locale/en-US/charsetOverlay.dtd) 
     locale/en-US/global/charsetDetectorsOverlay.dtd (resources/locale/en-US/charsetDetectorsOverlay.dtd) 
@@ -68,3 +68,9 @@ en-US.jar:
     locale/en-US/global/regionNames.properties      (resources/locale/en-US/regionNames.properties) 
     locale/en-US/global/about.html                  (resources/locale/en-US/about.html) 
     locale/en-US/global/commonDialogs.properties    (resources/locale/en-US/commonDialogs.properties) 
+
+US.jar:
+    locale/US/global-region/contents.rdf            (resources/locale/en-US/contents-region.rdf) 
+    locale/US/global-region/region.dtd              (resources/locale/en-US/region.dtd)
+    locale/US/global-region/region.properties       (resources/locale/en-US/region.properties)
+    locale/US/global-region/builtinURLs.rdf         (resources/locale/en-US/builtinURLs.rdf) 
