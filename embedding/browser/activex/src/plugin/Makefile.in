@@ -58,6 +58,7 @@ REQUIRES = \
     string \
     dom \
     content \
+    layout \
     widget \
     gfx \
     js \
