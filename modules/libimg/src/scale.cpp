@@ -365,7 +365,7 @@ il_scale_CI_row(
  * Accumulate the mask in 32-bit chunks for efficiency.
  *******
 
-   A Special thanks to Glenn Randers-Pehrson <glennrp@home.com> for 
+   A Special thanks to Glenn Randers-Pehrson <randeg@alum.rpi.edu> for 
    contributing a nice, fast dithering function, the 
    "GlennRP_random_dither_alpha" function,  to convert
    8 bit alpha masks to 1bit dithered masks for use where 8 bit 
