@@ -172,7 +172,7 @@ sub ValidateBugID {
 
     return if $skip_authorization;
     
-    return if CanSeeBug($id, $::userid);
+    return if Bugzilla->user->can_see_bug($id);
 
     # The user did not pass any of the authorization tests, which means they
     # are not authorized to see the bug.  Display an error and stop execution.

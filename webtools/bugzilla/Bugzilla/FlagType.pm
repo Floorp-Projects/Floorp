@@ -226,7 +226,7 @@ sub validate {
             my $requestee = Bugzilla::User->new_from_login($requestee_email);
 
             # Throw an error if the user can't see the bug.
-            if (!&::CanSeeBug($bug_id, $requestee->id))
+            if (!$requestee->can_see_bug($bug_id))
             {
                 ThrowUserError("flag_requestee_unauthorized",
                                { flag_type => $flag_type,

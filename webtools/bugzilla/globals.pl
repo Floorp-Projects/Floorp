@@ -630,48 +630,6 @@ sub GetFieldDefs {
 }
 
 
-sub CanSeeBug {
-
-    my ($id, $userid) = @_;
-
-    # Query the database for the bug, retrieving a boolean value that
-    # represents whether or not the user is authorized to access the bug.
-
-    # if no groups are found --> user is permitted to access
-    # if no user is found for any group --> user is not permitted to access
-    my $query = "SELECT bugs.bug_id, reporter, assigned_to, qa_contact," .
-        " reporter_accessible, cclist_accessible," .
-        " cc.who IS NOT NULL," .
-        " COUNT(DISTINCT(bug_group_map.group_id)) as cntbugingroups," .
-        " COUNT(DISTINCT(user_group_map.group_id)) as cntuseringroups" .
-        " FROM bugs" .
-        " LEFT JOIN cc ON bugs.bug_id = cc.bug_id" .
-        " AND cc.who = $userid" .
-        " LEFT JOIN bug_group_map ON bugs.bug_id = bug_group_map.bug_id" .
-        " LEFT JOIN user_group_map ON" .
-        " user_group_map.group_id = bug_group_map.group_id" .
-        " AND user_group_map.isbless = 0" .
-        " AND user_group_map.user_id = $userid" .
-        " WHERE bugs.bug_id = $id GROUP BY bugs.bug_id";
-    PushGlobalSQLState();
-    SendSQL($query);
-    my ($found_id, $reporter, $assigned_to, $qa_contact,
-        $rep_access, $cc_access,
-        $found_cc, $found_groups, $found_members) 
-        = FetchSQLData();
-    PopGlobalSQLState();
-    return (
-               ($found_groups == 0) 
-               || (($userid > 0) && 
-                  (
-                       ($assigned_to == $userid) 
-                    || (Param('useqacontact') && $qa_contact == $userid)
-                    || (($reporter == $userid) && $rep_access) 
-                    || ($found_cc && $cc_access) 
-                    || ($found_groups == $found_members)
-                  ))
-           );
-}
 
 sub ValidatePassword {
     # Determines whether or not a password is valid (i.e. meets Bugzilla's
@@ -947,7 +905,7 @@ sub GetAttachmentLink {
             my ($bugid, $isobsolete, $desc) = FetchSQLData();
             my $title = "";
             my $className = "";
-            if (CanSeeBug($bugid, $::userid)) {
+            if (Bugzilla->user->can_see_bug($bugid)) {
                 $title = $desc;
             }
             if ($isobsolete) {
@@ -1018,7 +976,7 @@ sub GetBugLink {
                 $title .= " $bug_res";
                 $post = '</span>';
             }
-            if (CanSeeBug($bug_num, $::userid)) {
+            if (Bugzilla->user->can_see_bug($bug_num)) {
                 $title .= " - $bug_desc";
             }
             $::buglink{$bug_num} = [$pre, value_quote($title), $post];

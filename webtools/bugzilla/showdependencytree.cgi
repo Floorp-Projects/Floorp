@@ -146,7 +146,7 @@ sub GetBug {
     my ($id) = @_;
     
     my $bug = {};
-    if (CanSeeBug($id, $::userid)) {
+    if (Bugzilla->user->can_see_bug($id)) {
         SendSQL("SELECT 1, 
                                   bug_status, 
                                   short_desc, 

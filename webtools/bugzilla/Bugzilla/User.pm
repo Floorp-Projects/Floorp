@@ -244,6 +244,75 @@ sub in_group {
     return defined($res);
 }
 
+sub can_see_bug {
+    my ($self, $bugid) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $sth  = $self->{sthCanSeeBug};
+    my $userid  = $self->{id};
+    # Get fields from bug, presence of user on cclist, and determine if
+    # the user is missing any groups required by the bug. The prepared query
+    # is cached because this may be called for every row in buglists or
+    # every bug in a dependency list.
+    unless ($sth) {
+        $sth = $dbh->prepare("SELECT reporter, assigned_to, qa_contact,
+                             reporter_accessible, cclist_accessible,
+                             COUNT(cc.who), COUNT(bug_group_map.bug_id)
+                             FROM bugs
+                             LEFT JOIN cc 
+                               ON cc.bug_id = bugs.bug_id
+                               AND cc.who = $userid
+                             LEFT JOIN bug_group_map 
+                               ON bugs.bug_id = bug_group_map.bug_id
+                               AND bug_group_map.group_ID NOT IN(" .
+                               join(',',(-1, values(%{$self->groups}))) .
+                               ") WHERE bugs.bug_id = ? GROUP BY bugs.bug_id");
+    }
+    $sth->execute($bugid);
+    my ($reporter, $owner, $qacontact, $reporter_access, $cclist_access,
+        $isoncclist, $missinggroup) = $sth->fetchrow_array();
+    $self->{sthCanSeeBug} = $sth;
+    return ( (($reporter == $userid) && $reporter_access)
+           || (Param('qacontact') && ($qacontact == $userid) && $userid)
+           || ($owner == $userid)
+           || ($isoncclist && $cclist_access)
+           || (!$missinggroup) );
+}
+
+sub get_selectable_products {
+    my ($self, $by_id) = @_;
+
+    if (defined $self->{SelectableProducts}) {
+        my %list = @{$self->{SelectableProducts}};
+        return \%list if $by_id;
+        return values(%list);
+    }
+
+    my $query = "SELECT id, name " .
+                "FROM products " .
+                "LEFT JOIN group_control_map " .
+                "ON group_control_map.product_id = products.id ";
+    if (Param('useentrygroupdefault')) {
+        $query .= "AND group_control_map.entry != 0 ";
+    } else {
+        $query .= "AND group_control_map.membercontrol = " .
+                  CONTROLMAPMANDATORY . " ";
+    }
+    $query .= "AND group_id NOT IN(" . 
+               join(',', (-1,values(%{Bugzilla->user->groups}))) . ") " .
+              "WHERE group_id IS NULL ORDER BY name";
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+    my @products = ();
+    while (my @row = $sth->fetchrow_array) {
+        push(@products, @row);
+    }
+    $self->{SelectableProducts} = \@products;
+    my %list = @products;
+    return \%list if $by_id;
+    return values(%list);
+}
+
 # visible_groups_inherited returns a reference to a list of all the groups
 # whose members are visible to this user.
 sub visible_groups_inherited {
@@ -939,6 +1008,10 @@ intended for cases where we are not looking at the currently logged in user,
 and only need to make a quick check for the group, where calling C<groups>
 and getting all of the groups would be overkill.
 
+=item C<can_see_bug(bug_id)>
+
+Determines if the user can see the specified bug.
+
 =item C<derive_groups>
 
 Bugzilla allows for group inheritance. When data about the user (or any of the
@@ -946,6 +1019,13 @@ groups) changes, the database must be updated. Handling updated groups is taken
 care of by the constructor. However, when updating the email address, the
 user may be placed into different groups, based on a new email regexp. This
 method should be called in such a case to force reresolution of these groups.
+
+=item C<get_selectable_products(by_id)>
+
+Returns an alphabetical list of product names from which
+the user can select bugs.  If the $by_id parameter is true, it returns
+a hash where the keys are the product ids and the values are the
+product names.
 
 =item C<visible_groups_inherited>
 

@@ -493,8 +493,9 @@ sub DuplicateUserConfirm {
     
     SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($dupe));
     my $reporter = FetchOneColumn();
+    my $rep_user = Bugzilla::User->new($reporter);
 
-    if (CanSeeBug($original, $reporter)) {
+    if ($rep_user->can_see_bug($original)) {
         $::FORM{'confirm_add_duplicate'} = "1";
         return;
     }
@@ -1773,7 +1774,7 @@ foreach my $id (@idlist) {
 
 # now show the next bug
 if ($next_bug) {
-    if (detaint_natural($next_bug) && CanSeeBug($next_bug, $::userid)) {
+    if (detaint_natural($next_bug) && Bugzilla->user->can_see_bug($next_bug)) {
         my $bug = new Bugzilla::Bug($next_bug, $::userid);
         ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;
 

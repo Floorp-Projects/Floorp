@@ -185,7 +185,7 @@ sub validate {
                 my $requestee = Bugzilla::User->new_from_login($requestee_email);
 
                 # Throw an error if the user can't see the bug.
-                if (!&::CanSeeBug($bug_id, $requestee->id))
+                if (!$requestee->can_see_bug($bug_id))
                 {
                     ThrowUserError("flag_requestee_unauthorized",
                                    { flag_type => $flag->{'type'},
@@ -592,7 +592,7 @@ sub notify {
               || next;
 
             next if $flag->{'target'}->{'bug'}->{'restricted'}
-              && !&::CanSeeBug($flag->{'target'}->{'bug'}->{'id'}, $ccuser->id);
+              && !$ccuser->can_see_bug($flag->{'target'}->{'bug'}->{'id'});
             next if $flag->{'target'}->{'attachment'}->{'isprivate'}
               && Param("insidergroup")
               && !$ccuser->in_group(Param("insidergroup"));

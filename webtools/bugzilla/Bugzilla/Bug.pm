@@ -133,7 +133,7 @@ sub initBug  {
      }
   }
 
-  $self->{'whoid'} = $user_id;
+  $self->{'who'} = new Bugzilla::User($user_id);
 
   my $query = "
     SELECT
@@ -156,7 +156,7 @@ sub initBug  {
   &::SendSQL($query);
   my @row = ();
 
-  if ((@row = &::FetchSQLData()) && &::CanSeeBug($bug_id, $self->{'whoid'})) {
+  if ((@row = &::FetchSQLData()) && $self->{'who'}->can_see_bug($bug_id)) {
     my $count = 0;
     my %fields;
     foreach my $field ("bug_id", "alias", "product_id", "product", "version", 

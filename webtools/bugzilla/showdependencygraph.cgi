@@ -170,7 +170,7 @@ foreach my $k (keys(%seen)) {
     $summary ||= '';
 
     # Resolution and summary are shown only if user can see the bug
-    if (!CanSeeBug($k, $::userid)) {
+    if (!Bugzilla->user->can_see_bug($k)) {
         $resolution = $summary = '';
     }
 

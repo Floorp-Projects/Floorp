@@ -185,7 +185,7 @@ sub show_user {
             # and they can see there are votes 'missing', but not on what bug
             # they are. This seems a reasonable compromise; the alternative is
             # to lie in the totals.
-            next if !CanSeeBug($id, $userid);            
+            next if !Bugzilla->user->can_see_bug($id);            
             
             push (@bugs, { id => $id, 
                            summary => $summary,

@@ -75,7 +75,7 @@ my @bugs;
 
 foreach my $bug_id (split(/[:,]/, $buglist)) {
     detaint_natural($bug_id) || next;
-    CanSeeBug($bug_id, $::userid) || next;
+    Bugzilla->user->can_see_bug($bug_id) || next;
     SendSQL("$generic_query AND bugs.bug_id = $bug_id");
 
     my %bug;

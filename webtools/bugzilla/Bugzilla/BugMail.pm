@@ -720,7 +720,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     # see the action of restricting the bug itself; the bug will just 
     # quietly disappear from their radar.
     #
-    return unless CanSeeBug($id, $userid);
+    return unless $user->can_see_bug($id);
 
     #  Drop any non-insiders if the comment is private
     return if (Param("insidergroup") && 
@@ -733,7 +733,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
         my $save_id = $dep_id;
         detaint_natural($dep_id) || warn("Unexpected Error: \@depbugs contains a non-numeric value: '$save_id'")
                                  && return;
-        return unless CanSeeBug($dep_id, $userid);
+        return unless $user->can_see_bug($dep_id);
     }
 
     my %mailhead = %defmailhead;
