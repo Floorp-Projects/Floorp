@@ -38,6 +38,10 @@ nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 {
   mColIndex = 0;
   mRepeat = 0;
+  mMaxColWidth = 0;
+  mMinColWidth = 0;
+  mMaxEffectiveColWidth = 0;
+  mMinEffectiveColWidth = 0;
 }
 
 
@@ -55,11 +59,12 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
 }
 
 
-NS_METHOD nsTableColFrame::Reflow(nsIPresContext&      aPresContext,
+NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
                                   nsReflowMetrics&     aDesiredSize,
                                   const nsReflowState& aReflowState,
                                   nsReflowStatus&      aStatus)
 {
+  NS_ASSERTION(nsnull!=aPresContext, "bad arg");
   aDesiredSize.width=0;
   aDesiredSize.height=0;
   if (nsnull!=aDesiredSize.maxElementSize)

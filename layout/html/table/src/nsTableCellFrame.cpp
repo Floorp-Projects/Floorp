@@ -511,10 +511,10 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     return;
 
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
-  nsIStyleContextPtr tableSC;
-  tableFrame->GetStyleContext(aPresContext, tableSC.AssignRef());
-  nsStyleTable* tableStyle = (nsStyleTable*)tableSC->GetStyleData(eStyleStruct_Table);
-  nsStyleSpacing* tableSpacingStyle = (nsStyleSpacing*)tableSC->GetStyleData(eStyleStruct_Spacing);
+  nsStyleTable* tableStyle;
+  tableFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  nsStyleSpacing* tableSpacingStyle;
+  tableFrame->GetStyleData(eStyleStruct_Spacing,(nsStyleStruct *&)tableSpacingStyle);
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
 
   // check to see if cellpadding or cellspacing is defined

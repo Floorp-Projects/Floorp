@@ -336,19 +336,22 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
   nscoord     maxCellTopMargin = 0;
   nscoord     maxCellBottomMargin = 0;
 
+  if (PR_TRUE==gsDebug1) printf("%p: RR\n", this);
+
   // Reflow each of our existing cell frames
-  for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
-    // Get the frame's margins, and compare the top and bottom margin
-    // against our current max values
-    nsMargin       kidMargin;
+  for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) 
+  {
+
+    nscoord cellSpacing = aState.tableFrame->GetCellSpacing();
+
+// just cellSpacing? QQQ
+    nsMargin kidMargin;
     aState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame,kidMargin);
     if (kidMargin.top > maxCellTopMargin)
       maxCellTopMargin = kidMargin.top;
     if (kidMargin.bottom > maxCellBottomMargin)
       maxCellBottomMargin = kidMargin.bottom;
  
-    // left and right margins already taken into account by table layout strategy
-
     // Compute the x-origin for the child, taking into account straddlers (cells from prior
     // rows with rowspans > 1)
     PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
@@ -357,10 +360,14 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
       for (PRInt32 colIndex=prevColIndex+1; colIndex<cellColIndex; colIndex++)
       {
         aState.x += aState.tableFrame->GetColumnWidth(colIndex);
-        aState.x += kidMargin.left + kidMargin.right;
+        aState.x += cellSpacing;
+        if (PR_TRUE==gsDebug1)
+          printf("  in loop, aState.x set to %d from cellSpacing %d and col width\n", 
+                  aState.x, aState.tableFrame->GetColumnWidth(colIndex), cellSpacing);
       }
     }
-    aState.x += kidMargin.left;
+    aState.x += cellSpacing;
+    if (PR_TRUE==gsDebug1) printf("  past loop, aState.x set to %d\n", aState.x);
 
     // at this point, we know the column widths.  
     // so we get the avail width from the known column widths
@@ -369,13 +376,15 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
     for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
     {
       availWidth += aState.tableFrame->GetColumnWidth(cellColIndex+numColSpan);
-      if (0<numColSpan)
+      if (numColSpan != 0)
       {
-        availWidth += kidMargin.right;
-        if (0!=cellColIndex)
-          availWidth += kidMargin.left;
+        availWidth += cellSpacing;
       }
+      if (PR_TRUE==gsDebug1) 
+        printf("  in loop, availWidth set to %d from colIndex %d width %d and cellSpacing\n", 
+                availWidth, cellColIndex, aState.tableFrame->GetColumnWidth(cellColIndex+numColSpan), cellSpacing);
     }
+    if (PR_TRUE==gsDebug1) printf("  availWidth for this cell is %d\n", availWidth);
 
     prevColIndex = cellColIndex + (cellColSpan-1);  // remember the rightmost column this cell spans into
 
@@ -461,7 +470,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
 
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aDesiredSize.maxElementSize,
                pKidMaxElementSize);
-    aState.x += kidMargin.right;  // add in right margin only after cell has been placed
+
+    if (PR_TRUE==gsDebug1) printf("  past PlaceChild, aState.x set to %d\n", aState.x);
 
     // Get the next child
     kidFrame->GetNextSibling(kidFrame);
