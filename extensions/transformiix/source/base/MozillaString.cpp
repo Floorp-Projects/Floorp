@@ -26,6 +26,7 @@
 //
 // Modification History:
 // Who  When        What
+// JS   20/09/2000  Modified charAt() to return -1 if outof range. Matches TxString
 // TK   01/13/2000  Added a means to retrieve the nsString object.  This
 //                  provides an efficient way to retreive nsString data from
 //                  Mozilla functions expecting nsString references as
@@ -444,11 +445,15 @@ void String::deleteChars(Int32 offset, Int32 count)
   ptrNSString->Cut(offset, count);
 }
 
-//Retreive the character stored at "index" (starting from 0)
+//Retrieve the character stored at "index" (starting from 0)
+//If the index is out of bounds, -1 will be returned.
 //( PRUnichar nsString::CharAt(PRUint32) )
 UNICODE_CHAR String::charAt(Int32 index) const
 {
-  return ptrNSString->CharAt(index);
+  if ((index < length()) && (index >= 0))
+    return ptrNSString->CharAt(index);
+  else
+    return (UNICODE_CHAR)-1;
 }
 
 //
