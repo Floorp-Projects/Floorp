@@ -35,17 +35,52 @@
  */
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "nsPluginDefs.idl"
+#include "nsISupports.idl"
+%{C++
+#include "nsplugindefs.h"
+%}
 
-/**
+// CLSID for the browser's global plugin manager object.
+%{C++
+#define NS_PLUGINMANAGER_CID                         \
+{ /* ce768990-5a4e-11d2-8164-006008119d7a */         \
+    0xce768990,                                      \
+    0x5a4e,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+%}
+
+interface nsIPluginStreamListener;
+native nsPluginManagerVariable(nsPluginManagerVariable);
+native REFNSIID(REFNSIID);
+native nativeVoid(void *);
+native nativeChar(const char * *);
+
+[scriptable, uuid(da58ad80-4eb6-11d2-8164-006008119d7a)]
+
+/*
  * The nsIPluginManager interface defines the minimum set of functionality that
  * the browser will support if it allows plugins. Plugins can call QueryInterface
  * to determine if a plugin manager implements more specific APIs or other 
  * browser interfaces for the plugin to use (e.g. nsINetworkManager).
  */
-[scriptable, uuid(a268450e-2df8-11d4-8cf4-0060b0fc14a3)]
+
 interface nsIPluginManager : nsISupports
 {
+
+    /**
+     * Returns the value of a variable associated with the plugin manager.
+     *
+     * (Corresponds to NPN_GetValue.)
+     *
+     * @param variable - the plugin manager variable to get
+     * @param value - the address of where to store the resulting value
+     * @result - NS_OK if this operation was successful
+     */
+     [noscript] void GetValue(in nsPluginManagerVariable variable, 
+			         in nativeVoid value);
+
     /**
      * Causes the plugins directory to be searched again for new plugin 
      * libraries.
@@ -62,9 +97,9 @@ interface nsIPluginManager : nsISupports
      *
      * (Corresponds to NPN_UserAgent.)
      *
-     * @result - the resulting user agent string
+     * @param resultingAgentString - the resulting user agent string
      */
-    readonly attribute string userAgent;
+     [noscript] void UserAgent(in nativeChar resultingAgentString);
 
     /**
      * Fetches a URL.
@@ -87,13 +122,16 @@ interface nsIPluginManager : nsISupports
      *   specify PR_FALSE) 
      * @result - NS_OK if this operation was successful
      */
-    void getURL(in nsISupports pluginInst, 
-                in wstring url, 
-                in wstring  target,
-                in nsIPluginStreamListener streamListener,
-                in wstring altHost,
-                in wstring referrer,
-                in boolean forceJSEnabled);
+%{C++
+    NS_IMETHOD
+    GetURL(nsISupports* pluginInst,
+           const char* url,
+           const char* target = NULL,
+           nsIPluginStreamListener* streamListener = NULL,
+           const char* altHost = NULL,
+           const char* referrer = NULL,
+           PRBool forceJSEnabled = PR_FALSE) = 0;
+%}
 
     /**
      * Posts to a URL with post data and/or post headers.
@@ -120,20 +158,91 @@ interface nsIPluginManager : nsISupports
      *   URLs, even if the user currently has JavaScript disabled (usually 
      *   specify PR_FALSE) 
      * @param postHeadersLength - the length of postHeaders (if non-NULL)
-     * @param postHeaders - the headers to POST. NULL specifies that there 
-     *   are no post headers
+     * @param postHeaders - the headers to POST. Must be in the form of
+     * "HeaderName: HeaderValue\r\n".  Each header, including the last,
+     * must be followed by "\r\n".  NULL specifies that there are no
+     * post headers
      * @result - NS_OK if this operation was successful
      */
-    void postURL(in nsISupports pluginInst,
-                 in wstring url,
-                 in unsigned long postDataLen, 
-                 in string postData,    // XXX wstring?
-                 in unsigned long postHeadersLength, 
-                 in string postHeaders, // XXX wstring?
-                 in boolean isFile,
-                 in wstring target,
-                 in nsIPluginStreamListener streamListener,
-                 in wstring altHost, 
-                 in wstring referrer,
-                 in boolean forceJSEnabled);
+%{C++
+    NS_IMETHOD
+    PostURL(nsISupports* pluginInst,
+            const char* url,
+            PRUint32 postDataLen,
+            const char* postData,
+            PRBool isFile = PR_FALSE,
+            const char* target = NULL,
+            nsIPluginStreamListener* streamListener = NULL,
+            const char* altHost = NULL,
+            const char* referrer = NULL,
+            PRBool forceJSEnabled = PR_FALSE,
+            PRUint32 postHeadersLength = 0,
+            const char* postHeaders = NULL) = 0;
+%}
+
+    /**
+     * Persistently register a plugin with the plugin
+     * manager. aMimeTypes, aMimeDescriptions, and aFileExtensions are
+     * parallel arrays that contain information about the MIME types
+     * that the plugin supports.
+     *
+     * @param aCID - the plugin's CID
+     * @param aPluginName - the plugin's name
+     * @param aDescription - a description of the plugin
+     * @param aMimeTypes - an array of MIME types that the plugin
+     *   is prepared to handle
+     * @param aMimeDescriptions - an array of descriptions for the
+     *   MIME types that the plugin can handle.
+     * @param aFileExtensions - an array of file extensions for
+     *   the MIME types that the plugin can handle.
+     * @param aCount - the number of elements in the aMimeTypes,
+     *   aMimeDescriptions, and aFileExtensions arrays.
+     * @result - NS_OK if the operation was successful.
+     */
+     [noscript] void RegisterPlugin(in REFNSIID    aCID,
+			            in string      aPluginName,
+			            in string      aDescription,
+			            in nativeChar  aMimeTypes,
+			            in nativeChar  aMimeDescriptions, 
+			            in nativeChar  aFileExtensions,
+			            in  long       aCount);
+
+    /**
+     * Unregister a plugin from the plugin manager
+     *
+     * @param aCID the CID of the plugin to unregister.
+     * @result - NS_OK if the operation was successful.
+     */
+     [noscript] void UnregisterPlugin(in REFNSIID aCID);
+
+    /**
+     * Fetches a URL, with Headers
+
+     * @see GetURL.  Identical except for additional params headers and
+     * headersLen
+
+     * @param getHeadersLength - the length of getHeaders (if non-NULL)
+
+     * @param getHeaders - the headers to GET. Must be in the form of
+     * "HeaderName: HeaderValue\r\n".  Each header, including the last,
+     * must be followed by "\r\n".  NULL specifies that there are no
+     * get headers
+
+     * @result - NS_OK if this operation was successful
+
+     */
+%{C++
+    NS_IMETHOD
+    GetURLWithHeaders(nsISupports* pluginInst,
+                      const char* url,
+                      const char* target = NULL,
+                      nsIPluginStreamListener* streamListener = NULL,
+                      const char* altHost = NULL,
+                      const char* referrer = NULL,
+                      PRBool forceJSEnabled = PR_FALSE,
+                      PRUint32 getHeadersLength = 0,
+                      const char* getHeaders = NULL) = 0;
+%}
+
 };
+

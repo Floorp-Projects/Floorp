@@ -18,15 +18,13 @@
 #
 # Contributor(s): 
 # 
-
 #
 # This is a list of local files which get copied to the mozilla:dist directory
 #
-
 nsIJRIPlugin.h
 nsIJVMConsole.h
 nsIJVMPlugin.h
-nsIJVMPluginInstance.h
+#nsIJVMPluginInstance.h
 nsIJVMPluginTagInfo.h
 nsISymantecDebugger.h
 nsISymantecDebugManager.h

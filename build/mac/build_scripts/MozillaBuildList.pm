@@ -583,8 +583,10 @@ sub BuildClientDist()
     #PLUGIN
     InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",                 "$distdirectory:plugin:");
     InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",                 "$distdirectory:plugin:");
+    InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST_IDL",             "$distdirectory:idl:");
     InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",                       "$distdirectory:oji:");
     InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",                    "$distdirectory:oji:");
+    InstallFromManifest(":mozilla:modules:oji:public:MANIFEST_IDL",                "$distdirectory:idl:");
     
     #DB
     InstallFromManifest(":mozilla:db:mdb:public:MANIFEST",                         "$distdirectory:db:");

@@ -40,7 +40,6 @@ EXPORTS		= \
 		nsIPluginInstance.h \
 		nsIPluginInstancePeer.h \
 		nsIPluginInstancePeer2.h \
-		nsIPluginManager.h \
 		nsIPluginManager2.h \
 		nsIPluginStream.h \
 		nsIPluginTagInfo.h \
@@ -66,6 +65,7 @@ EXPORTS		+= \
 XPIDLSRCS 	= \
 		nsIScriptablePlugin.idl \
 		nsIHTTPHeaderListener.idl     \
+		nsIPluginManager.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
