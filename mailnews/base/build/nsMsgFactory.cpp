@@ -246,6 +246,7 @@ nsMsgFactory::CreateInstance(nsISupports * aOuter,
         delete identity;
     }
   }
+#if 0
   else if (mClassID.Equals(kMsgIncomingServerCID)) {
     nsMsgIncomingServer *server = new nsMsgIncomingServer();
     if (!server)
@@ -256,6 +257,7 @@ nsMsgFactory::CreateInstance(nsISupports * aOuter,
         delete server;
     }
   }
+#endif
 	else if (mClassID.Equals(kMailNewsFolderDataSourceCID)) 
 	{
 		rv = NS_NewMsgFolderDataSource(aIID, aResult);
@@ -426,14 +428,14 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
-  
+#if 0  
   rv = compMgr->RegisterComponent(kMsgIncomingServerCID,
                                   "Messenger Incoming Server",
                                   NS_MSGINCOMINGSERVER_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
-  
+#endif
   rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
                                   "Mail Session",
                                   NS_MSGMAILSESSION_PROGID,
