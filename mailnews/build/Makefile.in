@@ -150,6 +150,7 @@ endif
 LOCAL_INCLUDES = -I$(srcdir) \
                  -I$(srcdir)/../base/src \
                  -I$(srcdir)/../local/src \
+                 -I$(srcdir)/../addrbook/src \
                  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

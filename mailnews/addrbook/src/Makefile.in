@@ -106,43 +106,13 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsAbBaseCID.h \
-		nsAddressBook.h \
-		nsAddrBookSession.h \
-		nsAbRDFDataSource.h \
-		nsDirectoryDataSource.h \
-		nsAbCardProperty.h \
 		nsDirPrefs.h \
-		nsAddrDatabase.h \
-		nsAbDirProperty.h \
-		nsAbAutoCompleteSession.h \
-		nsAbAddressCollecter.h \
-		nsAddbookProtocolHandler.h  \
-		nsAddbookUrl.h  \
-		nsAbMDBDirProperty.h \
-		nsAbMDBDirectory.h \
-		nsAbMDBCardProperty.h \
-		nsAbMDBCard.h \
-		nsAbBSDirectory.h \
-		nsAbDirFactoryService.h	\
-		nsAbMDBDirFactory.h	\
-		nsAbDirectoryQuery.h    \
-		nsAbDirectoryQueryProxy.h    \
-                nsAbDirSearchListener.h \
-		nsAbBooleanExpression.h \
-                nsAbDirectoryRDFResource.h \
-                nsAbView.h \
                 nsVCard.h \
                 nsVCardObj.h \
-                nsMsgVCardService.h \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
-EXPORTS		+= \
-		nsAbOutlookCard.h \
-		nsAbOutlookDirFactory.h \
-		nsAbOutlookDirectory.h \
-		$(NULL)
 
 CPPSRCS		+= \
 		nsAbOutlookCard.cpp \
@@ -159,18 +129,6 @@ endif
 ifdef MOZ_LDAP_XPCOM
 REQUIRES    += mozldap \
                $(NULL)
-
-EXPORTS		+= nsAbLDAPDirectoryQuery.h \
-		nsAbLDAPDirectory.h \
-		nsAbLDAPDirFactory.h \
-		nsAbLDAPCard.h \
-		nsAbLDAPAutoCompFormatter.h \
-                nsAbLDAPReplicationService.h \
-                nsAbLDAPReplicationQuery.h \
-                nsAbLDAPReplicationData.h \
-                nsAbLDAPChangeLogQuery.h \
-                nsAbLDAPChangeLogData.h \
-		$(NULL)
 
 CPPSRCS		+= nsAbLDAPDirectory.cpp \
 		nsAbLDAPDirFactory.cpp	\

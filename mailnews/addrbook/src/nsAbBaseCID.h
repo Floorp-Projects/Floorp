@@ -41,7 +41,6 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
-#include "nsAbDirFactoryService.h"
 
 //
 // nsAddressBook
