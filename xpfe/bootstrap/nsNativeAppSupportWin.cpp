@@ -142,8 +142,10 @@ activateWindow( nsIDOMWindowInternal *win ) {
     // Try to get native window handle.
     HWND hwnd = hwndForDOMWindow( win );
     if ( hwnd ) {
-        // Restore the window in case it is minimized.
-        ::ShowWindow( hwnd, SW_RESTORE );
+        // Restore the window if it is minimized.
+        if ( ::IsIconic( hwnd ) ) {
+            ::ShowWindow( hwnd, SW_RESTORE );
+        }
         // Use the OS call, if possible.
         ::SetForegroundWindow( hwnd );
     } else {
@@ -1262,6 +1264,8 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             printf( "Handling dde request: [%s]...\n", (char*)request );
 #endif
             HandleRequest( request );
+            // Release the data.
+            DdeUnaccessData( hdata );
             result = (HDDEDATA)DDE_FACK;
         } else {
             result = (HDDEDATA)DDE_FNOTPROCESSED;
