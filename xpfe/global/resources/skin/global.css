@@ -130,6 +130,39 @@ toolbar.standard {
 }
 
 /**
+ * Navigation Toolbar
+ */
+toolbar.decorated {
+	background-image: url("chrome://global/skin/navbar-bg.gif");
+	background-repeat: repeat-x;
+	background-position: 0% 0%;
+	background-color: #CCCCCC;
+	padding: 0px;
+	padding-bottom: 4px;
+}
+
+toolbar.decorated > #toolbar_throbber_box { 
+	background-color: #CCCCCC;
+	min-width: 68px;
+	max-width: 68px;
+	background-image: url("chrome://global/skin/n-box-navbar.gif");
+	background-repeat: no-repeat;
+	background-position: 100% 0%;
+}
+
+toolbar.decorated > #toolbar_throbber_box > titledbutton#Throbber
+{
+	margin-top: 0px;
+	margin-left: 9px;
+}
+
+toolbar.decorated > #toolbar_throbber_box > titledbutton#Throbber:active {
+	margin-top: 1px;
+	margin-left: 10px;
+}
+
+
+/**
  * round buttons used in 'standard toolbar'
  */
 titledbutton.button28 {
@@ -326,6 +359,20 @@ titledbutton#Throbber:active {
 
 titledbutton#Throbber[busy="true"] {
 	list-style-image:url("chrome://global/skin/animthrob.gif");
+}
+
+/* icons titledbuttons */
+titledbutton.message-icon {
+  list-style-image: url("chrome://global/skin/message-icon.gif");
+}
+titledbutton.alert-icon {
+  list-style-image: url("chrome://global/skin/alert-icon.gif");
+}
+titledbutton.error-icon {
+  list-style-image: url("chrome://global/skin/error-icon.gif");
+}
+titledbutton.question-icon {
+  list-style-image: url("chrome://global/skin/question-icon.gif");
 }
 
 
@@ -979,7 +1026,7 @@ treecell.image > titledbutton:active {
 }
 
 .tree-icon {
- width: 100%;
+  width: 100%;
 }
 
 .tree-button {
@@ -1199,6 +1246,7 @@ html|legend {
 	margin-top: 0px;
 	margin-left: 4px;
 	margin-right: 3px;
+  cursor: default;
 }
 
 html|label {
@@ -1304,5 +1352,7 @@ html|input[type=checkbox]:focus {
   border:1px dotted rgb(153, 153, 153);
 }
 
-
+html|div, html|td {
+  cursor: default;
+}
 

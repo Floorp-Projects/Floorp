@@ -9,14 +9,14 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 	<!-- Wizard Buttons -->
-	 <box id="wizardButtons" align="horizontal" style="margin-top: 0.5em">
+	 <box id="wizardButtons" align="horizontal">
     <spring flex="100%"/>
-		<titledbutton id="wiz.cancel.button" value="&cancelButton.label;" onclick="wizardManager.onCancel()" align="left" style=" margin-top: 1em;"/>
+		<titledbutton class="dialog push" id="wiz.cancel.button" value="&cancelButton.label;" onclick="wizardManager.onCancel()" />
     <spring flex="20%"/>
-		<titledbutton id="wiz.back.button" value="&backButton.label;" onclick="wizardManager.onBack()" align="left" style="margin-top: 1em;"/>
-		<titledbutton id="wiz.next.button" value="&nextButton.label;" onclick="wizardManager.onNext()" align="right" style="margin-top: 1em;"/>
+		<titledbutton class="dialog push" id="wiz.back.button" value="&backButton.label;" onclick="wizardManager.onBack()" align="left" />
+		<titledbutton class="dialog push" id="wiz.next.button" value="&nextButton.label;" onclick="wizardManager.onNext()" align="right" />
     <spring flex="5%"/>
-		<titledbutton id="wiz.finish.button" value="&finishButton.label;" onclick="wizardManager.onFinish()" align="right" style="margin-top: 1em;"/>
+		<titledbutton class="dialog push" id="wiz.finish.button" value="&finishButton.label;" onclick="wizardManager.onFinish()" />
     <spring flex="5%"/>
 	</box>
 	
