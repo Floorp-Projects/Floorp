@@ -141,6 +141,10 @@ endif
 DIRS		+= security/manager
 endif
 
+ifdef MOZ_LDAP_XPCOM
+DIRS	+=	directory/c-sdk/ldap directory/xpcom
+endif
+
 ifdef MOZ_EXTENSIONS
 DIRS		+= extensions
 endif
@@ -155,10 +159,6 @@ endif
 
 ifdef ENABLE_TESTS
 DIRS		+= xpcom/tests
-endif
-
-ifdef MOZ_LDAP_XPCOM
-DIRS	+=	directory/c-sdk/ldap directory/xpcom
 endif
 
 DIRS	+= l10n
