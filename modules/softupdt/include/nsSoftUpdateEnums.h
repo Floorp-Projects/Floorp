@@ -22,9 +22,6 @@
 
 typedef enum nsSoftUpdateError {
 
-  nsSoftUpdateError_INVALID_PATH_ERR = -100,
-  nsSoftUpdateError_USER_CANCELLED_ERR = -101,
-
   /* Errors -200 to -300 */
   nsSoftUpdateError_BAD_PACKAGE_NAME = -200,
   nsSoftUpdateError_UNEXPECTED_ERROR = -201,
@@ -43,7 +40,15 @@ typedef enum nsSoftUpdateError {
   nsSoftUpdateError_FILE_DOES_NOT_EXIST = -214,      /* File cannot be deleted as it does not exist */
   nsSoftUpdateError_FILE_READ_ONLY = -215,	       /* File cannot be deleted as it is read only. */
   nsSoftUpdateError_FILE_IS_DIRECTORY = -216,	       /* File cannot be deleted as it is a directory */
+  nsSoftUpdateError_NETWORK_FILE_IS_IN_USE = -217,	/* File on the network is in-use */
   nsSoftUpdateError_APPLE_SINGLE_ERR = -218,         /* error in AppleSingle unpacking */
+  
+  nsSoftUpdateError_INVALID_PATH_ERR = -219,  /* GetFolder() did not like the folderID */
+  nsSoftUpdateError_PATCH_BAD_DIFF = -220,   /* error in GDIFF patch */
+  nsSoftUpdateError_PATCH_BAD_CHECKSUM_TARGET = -221,  /* source file doesn't checksum  */
+  nsSoftUpdateError_PATCH_BAD_CHECKSUM_RESULT = -222,  /* final patched file fails checksum  */
+  nsSoftUpdateError_UNINSTALL_FAILED = -223,  /* error while uninstalling a package  */
+  
   nsSoftUpdateError_GESTALT_UNKNOWN_ERR = -5550,         
   nsSoftUpdateError_GESTALT_INVALID_ARGUMENT = -5551,
 } nsSoftUpdateError;
@@ -54,7 +59,8 @@ typedef enum nsSoftUpdateError {
 typedef enum nsInstallType {
   nsInstallType_LIMITED_INSTALL= 0,
   nsInstallType_FULL_INSTALL = 1,
-  nsInstallType_SILENT_INSTALL = 2
+  nsInstallType_NO_STATUS_DLG = 2,
+  nsInstallType_NO_FINALIZE_DLG = 4
 } nsInstallType;
 
 typedef enum nsVersionEnum {

@@ -34,13 +34,12 @@ public:
    */
   nsFolderSpec(char* inFolderID , char* inVRPath, char* inPackageName);
   ~nsFolderSpec();
-
-
-  /*
+ 
+   /*
    * GetDirectoryPath
    * returns full path to the directory in the standard URL form
    */
-  char* GetDirectoryPath(char* *errorMsg);
+  char* GetDirectoryPath(void);
 
   /**
    * Returns full path to a file. Makes sure that the full path is bellow
@@ -69,6 +68,13 @@ private:
 
   /* Private Methods */
 
+  /*
+   * SetDirectoryPath
+   * sets full path to the directory in the standard URL form
+   */
+  
+  char* SetDirectoryPath(char* *errorMsg);
+  
   /* PickDefaultDirectory
    * asks the user for the default directory for the package
    * stores the choice

@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+
 #include "nsWinProfileItem.h"
 #include "xp.h"
 #include "xp_str.h"
@@ -76,5 +77,27 @@ char* nsWinProfileItem::Prepare()
 {
 	return NULL;
 }
+
+
+/* CanUninstall
+* WinProfileItem() does not install any files which can be uninstalled,
+* hence this function returns false. 
+*/
+PRBool 
+nsWinProfileItem::CanUninstall()
+{
+    return FALSE;
+}
+
+/* RegisterPackageNode
+* WinProfileItem() installs files which need to be registered,
+* hence this function returns true.
+*/
+PRBool
+nsWinProfileItem::RegisterPackageNode()
+{
+    return TRUE;
+}
+
 
 PR_END_EXTERN_C

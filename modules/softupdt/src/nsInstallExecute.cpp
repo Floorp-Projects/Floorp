@@ -220,4 +220,25 @@ void nsInstallExecute::NativeAbort(void)
   XP_ASSERT(result == 0);
 }
 
+/* CanUninstall
+* InstallExecute() installs files which cannot be uninstalled,
+* since they are executed, hence this function returns false. 
+*/
+PRBool 
+nsInstallExecute::CanUninstall()
+{
+    return FALSE;
+}
+
+/* RegisterPackageNode
+* InstallExecute() installs files which need to be registered,
+* hence this function returns true.
+*/
+PRBool
+nsInstallExecute::RegisterPackageNode()
+{
+    return TRUE;
+}
+
+
 PR_END_EXTERN_C

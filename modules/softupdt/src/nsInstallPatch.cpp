@@ -138,9 +138,12 @@ nsInstallPatch::~nsInstallPatch()
 char* nsInstallPatch::Prepare(void)
 {
   char* errorMsg = NULL;
-  char* srcname;
+  char* srcname = NULL;
   PRBool deleteOldSrc;
   nsTarget* priv = NULL;
+  char * targetfileURL;
+  XP_StatStruct statinfo;
+  int err = 0;
 
   if ((softUpdate == NULL) || (jarLocation == NULL) || (targetfile == NULL)) {
     return SU_GetErrorMsg3("Invalid arguments to the constructor", 
@@ -162,6 +165,46 @@ char* nsInstallPatch::Prepare(void)
     }
   }
 
+  /* Check for READONLY or DIRECTORY */
+  	
+          
+	targetfileURL = XP_PlatformFileToURL(targetfile);
+    if (targetfileURL != NULL)
+	{
+		char * temp = XP_STRDUP(&targetfileURL[7]);
+		XP_FREEIF(targetfileURL);
+		targetfileURL = temp;
+		if (targetfileURL)
+		{
+			err = XP_Stat(targetfileURL, &statinfo, xpURL);
+			if (err != -1)
+			{
+				if ( XP_STAT_READONLY( statinfo ) )
+				{
+					errorMsg = SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, nsSoftUpdateError_FILE_READ_ONLY);
+					
+				}
+				else if (!S_ISDIR(statinfo.st_mode))
+				{
+					errorMsg =  SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, nsSoftUpdateError_FILE_IS_DIRECTORY);
+				}
+			}
+			else
+			{
+				errorMsg =  SU_GetErrorMsg4(SU_ERROR_UNEXPECTED, nsSoftUpdateError_FILE_DOES_NOT_EXIST);
+			}
+			
+			XP_FREEIF(targetfileURL);
+		}
+	}
+
+	if (errorMsg != NULL)
+	{
+		return errorMsg;
+	}
+
+  /* DFT */
+  
   patchURL = softUpdate->ExtractJARFile( jarLocation, targetfile, &errorMsg );
 
   IntegerKey ikey(PL_HashString(targetfile));
@@ -422,6 +465,27 @@ void  nsInstallPatch::NativeDeleteFile( char* filename )
     }
   }
   XP_FREEIF( fnameURL );
+}
+
+
+/* CanUninstall
+* InstallPatch() installs files, which can be uninstalled,
+* hence this function returns true. 
+*/
+PRBool
+nsInstallPatch::CanUninstall()
+{
+    return TRUE;
+}
+
+/* RegisterPackageNode
+* InstallPatch() installs files which need to be registered,
+* hence this function returns true.
+*/
+PRBool
+nsInstallPatch::RegisterPackageNode()
+{
+    return TRUE;
 }
 
 PR_END_EXTERN_C

@@ -73,6 +73,11 @@ public:
   
   char* toString(void);
   
+  /* should these be protected? */
+  PRBool CanUninstall();
+  PRBool RegisterPackageNode();
+  
+
 private:
   
   /* Private Fields */

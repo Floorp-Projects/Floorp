@@ -78,9 +78,9 @@ typedef struct PASResource
 #endif
 
 
-#define kCreator	'????'
-#define kType		'????'
-#define PAS_BUFFER_SIZE 8192
+#define kCreator	'MOSS'
+#define kType		'PASf'
+#define PAS_BUFFER_SIZE (1024*512)
 
 #define PAS_MAGIC_NUM	(0x00244200)
 #define PAS_VERSION		(0x00010000)

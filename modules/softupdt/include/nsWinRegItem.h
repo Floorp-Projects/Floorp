@@ -52,6 +52,10 @@ public:
   float GetInstallOrder();
   
   
+/* should these be protected? */
+  PRBool CanUninstall();
+  PRBool RegisterPackageNode();
+	  
 private:
   
   /* Private Fields */

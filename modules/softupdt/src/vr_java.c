@@ -97,7 +97,6 @@ native_netscape_softupdate_Registry_nOpen(
     /* Registry must not be already open */
     if ( hReg == NULL ) {
 
-        /* this is incorrect, want OS chars, not UTF-8! */
         pFilename = (char*)JRI_GetStringPlatformChars( env, filename, "", 0 );
 
         if ( pFilename != NULL ) {
@@ -324,7 +323,7 @@ native_netscape_softupdate_RegistryNode_setEntryI(
     pValue = (char*)JRI_GetIntArrayElements( env, value );
 
     if ( pName != NULL && pValue != NULL && hReg != NULL ) {
-        datalen = JRI_GetIntArrayLength( env, value );
+        datalen = JRI_GetIntArrayLength( env, value ) * sizeof(jint);
         status = NR_RegSetEntry( hReg, key, pName,
             REGTYPE_ENTRY_INT32_ARRAY, pValue, datalen );
     }
@@ -454,9 +453,9 @@ native_netscape_softupdate_RegistryNode_nGetEntry(
 
 
                     case REGTYPE_ENTRY_INT32_ARRAY:
-                        valObj = (struct java_lang_Object *)JRI_NewByteArray( 
+                        valObj = (struct java_lang_Object *)JRI_NewIntArray( 
                             env, 
-                            size, 
+                            size/sizeof(jint), 
                             (char*)pValue );
                         break;
 
@@ -468,6 +467,14 @@ native_netscape_softupdate_RegistryNode_nGetEntry(
                             env, 
                             size, 
                             (char*)pValue );
+                        break;
+
+
+                    case REGTYPE_ENTRY_FILE:
+                        valObj = (struct java_lang_Object *)JRI_NewStringPlatform( 
+                            env, 
+                            (char*)pValue, 
+                            XP_STRLEN((char*)pValue), "", 0 );
                         break;
                     }
                 }

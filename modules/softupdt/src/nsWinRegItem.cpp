@@ -235,4 +235,25 @@ void nsWinRegItem::reverseString(char* s)
 		}
 }
 
+/* CanUninstall
+* WinRegItem() does not install any files which can be uninstalled,
+* hence this function returns false. 
+*/
+PRBool
+nsWinRegItem:: CanUninstall()
+{
+    return FALSE;
+}
+
+/* RegisterPackageNode
+* WinRegItem() installs files which need to be registered,
+* hence this function returns true.
+*/
+PRBool
+nsWinRegItem:: RegisterPackageNode()
+{
+    return TRUE;
+}
+
+
 PR_END_EXTERN_C

@@ -18,6 +18,7 @@
 
 #include "xp_mcom.h"
 #include "zlib.h"
+#include "nsSoftUpdateEnums.h"
 
 #include "gdiff.h"
 
@@ -199,14 +200,24 @@ int32 SU_PatchFile( char* srcfile, XP_FileType srctype, char* patchfile,
         if ( dd->fSrc != NULL && dd->fOut != NULL )
         {
             status = gdiff_validateFile( dd, SRCFILE );
-
+			
+			/* specify why diff failed */
+			if (status == GDIFF_ERR_CHECKSUM)
+				status = GDIFF_ERR_CHECKSUM_TARGET;
+			
             if ( status == GDIFF_OK )
                 status = gdiff_ApplyPatch( dd );
 
             if ( status == GDIFF_OK )
                 status = gdiff_validateFile( dd, OUTFILE );
+
+			/* specify why diff failed */
+			if (status == GDIFF_ERR_CHECKSUM)
+				status = GDIFF_ERR_CHECKSUM_RESULT;
+			
         }
-        else {
+        else 
+		{
             status = GDIFF_ERR_ACCESS;
         }
     }
@@ -316,19 +327,15 @@ cleanup:
 
 
         if ( dd->fDiff != NULL )
-        {
             XP_FileClose( dd->fDiff );
-			
-			if ( status != GDIFF_OK )
-			{
-        		XP_FileRemove( outfile, outtype );
-			}
-		}
 		
 		if ( dd->fOut != NULL )
             XP_FileClose( dd->fOut );
 
-        XP_FREEIF( dd->databuf );
+		if ( status != GDIFF_OK )
+		   	XP_FileRemove( outfile, outtype );
+		        
+		XP_FREEIF( dd->databuf );
         XP_FREEIF( dd->oldChecksum );
         XP_FREEIF( dd->newChecksum );
         XP_FREE(dd);
@@ -339,6 +346,33 @@ cleanup:
         XP_FREE( tmpurl );
     }
     
+	/* lets map any GDIFF error to nice SU errors */
+
+	switch (status)
+	{
+        case GDIFF_OK:
+                break;
+		case GDIFF_ERR_HEADER:
+		case GDIFF_ERR_BADDIFF:
+		case GDIFF_ERR_OPCODE:
+		case GDIFF_ERR_CHKSUMTYPE:
+				status = nsSoftUpdateError_PATCH_BAD_DIFF;
+				break;
+		case GDIFF_ERR_CHECKSUM_TARGET:
+				status = nsSoftUpdateError_PATCH_BAD_CHECKSUM_TARGET;
+				break;
+		case GDIFF_ERR_CHECKSUM_RESULT:
+				status = nsSoftUpdateError_PATCH_BAD_CHECKSUM_RESULT;
+				break;
+		case GDIFF_ERR_OLDFILE:
+		case GDIFF_ERR_ACCESS:
+		case GDIFF_ERR_MEM:
+		case GDIFF_ERR_UNKNOWN:
+		default:
+				status = nsSoftUpdateError_UNEXPECTED_ERROR;
+				break;
+	}
+
     return status;
 }
 

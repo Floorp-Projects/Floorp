@@ -195,20 +195,21 @@ PR_PUBLIC_API(char *) FE_GetDirectoryPath( su_DirSpecID folderID)
 
 int FE_ExecuteFile( const char * fileName, const char * cmdline )
 {
-	OSErr 	err;
-	FSSpec 	appSpec;
-	char* 	doomedPath;
+	OSErr 				err;
+	FSSpec 				appSpec;
+	char* 				doomedPath;
+	LaunchParamBlockRec launchThis;
 	
 	
     if ( fileName == NULL )
+    {
         return -1;
-
-	try
+	}
+	
+	err = CFileMgr::FSSpecFromLocalUnixPath(fileName, &appSpec, true);
+	
+	if (err == noErr)
 	{
-		err = CFileMgr::FSSpecFromLocalUnixPath(fileName, &appSpec, true);
-		ThrowIfOSErr_(err);
-		LaunchParamBlockRec launchThis;
-		
 		launchThis.launchAppSpec = (FSSpecPtr)&appSpec;
 		launchThis.launchAppParameters = NULL;
 		/* launch the thing */
@@ -216,30 +217,26 @@ int FE_ExecuteFile( const char * fileName, const char * cmdline )
 		launchThis.launchEPBLength = extendedBlockLen;
 		launchThis.launchFileFlags = NULL;
 		launchThis.launchControlFlags = launchContinue + launchNoFileFlags + launchUseMinimum;
+		
 		if (!IsFrontApplication())
-			launchThis.launchControlFlags += launchDontSwitch;
-		err = LaunchApplication(&launchThis);
-		ThrowIfOSErr_(err);
-		
-		
-		/* add this file to the registry to be deleted when we restart communicator */
-		
-		if ( err == noErr)
 		{
-		
-			/* Returns a full pathname to the given file */
-			doomedPath = CFileMgr::PathNameFromFSSpec(appSpec, true );    
-		    
-			if (doomedPath)
-			{    
-				su_DeleteOldFileLater(doomedPath);
-				XP_FREEIF(doomedPath);
-			}
+			launchThis.launchControlFlags += launchDontSwitch;
 		}
 		
+		err = LaunchApplication(&launchThis);
 		
+		/* Returns a full pathname to the given file */
+		doomedPath = CFileMgr::PathNameFromFSSpec(appSpec, true );    
+		    
+		if (doomedPath)
+		{    
+			su_DeleteOldFileLater(doomedPath);
+			XP_FREEIF(doomedPath);
+		}
 	}
-	catch (OSErr err)
+	
+	
+	if (err != noErr)
 	{
 		return -1;
 	}

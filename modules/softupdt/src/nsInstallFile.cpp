@@ -483,6 +483,18 @@ end:
   return result;
 }
 
+
+
+void nsInstallFile::AddToClasspath(nsString* file)
+{
+  if ( file != NULL ) {
+    char *final_file = file->ToNewCString();
+    JVM_AddToClassPath(final_file);
+    delete final_file;
+  }
+}
+
+
 /* Finds out if the file exists
  */
 PRBool nsInstallFile::NativeDoesFileExist()
@@ -514,13 +526,28 @@ PRBool nsInstallFile::NativeDoesFileExist()
 
 }
 
-void nsInstallFile::AddToClasspath(nsString* file)
+
+
+
+
+/* CanUninstall
+* InstallFile() installs files which can be uninstalled,
+* hence this function returns true. 
+*/
+PRBool
+nsInstallFile::CanUninstall()
 {
-  if ( file != NULL ) {
-    char *final_file = file->ToNewCString();
-    JVM_AddToClassPath(final_file);
-    delete final_file;
-  }
+    return TRUE;
+}
+
+/* RegisterPackageNode
+* InstallFile() installs files which need to be registered,
+* hence this function returns true.
+*/
+PRBool
+nsInstallFile::RegisterPackageNode()
+{
+    return TRUE;
 }
 
 PR_END_EXTERN_C

@@ -47,6 +47,10 @@ public:
   void Abort();
   
   char* toString();
+
+  /* should these be protected? */
+  PRBool CanUninstall();
+  PRBool RegisterPackageNode();
   
 private:
   

@@ -38,18 +38,9 @@
 
 extern int MK_OUT_OF_MEMORY;
 
-#define MOCHA_CONTEXT_PREFIX "autoinstall:"
-#define REG_SOFTUPDT_DIR    "Netscape/Communicator/SoftwareUpdate/"
-#define LAST_REGPACK_TIME   "LastRegPackTime"
-
-/* error codes */
-#define su_ErrInvalidArgs -1
-#define su_ErrUnknownInstaller -2
-#define su_ErrInternalError -3
-#define su_ErrBadScript -4
-#define su_JarError -5
-
 /* xp_string defines */
+extern int SU_LOW_DISK_SPACE_WARNING;
+extern int SU_NOT_A_ENOUGH_SPACE;
 extern int SU_NOT_A_JAR_FILE;
 extern int SU_SECURITY_CHECK;
 extern int SU_INSTALL_FILE_HEADER;
@@ -59,6 +50,9 @@ extern int SU_PROGRESS_DOWNLOAD_LINE1;
 extern int REGPACK_PROGRESS_TITLE;
 extern int REGPACK_PROGRESS_LINE1;
 extern int REGPACK_PROGRESS_LINE2;
+
+
+extern uint32 FE_DiskSpaceAvailable (MWContext *context, const char *lpszPath );
 
 
 /* structs */
@@ -89,10 +83,10 @@ typedef struct su_URLFeData_struct {
 static char * EncodeSoftUpJSArgs(const char * fileName, XP_Bool silent, XP_Bool force, const char* charset);
 
 /* Stream callbacks */
-int su_HandleProcess (NET_StreamClass *stream, const char *buffer, int32 buffLen);
-void su_HandleComplete (NET_StreamClass *stream);
-void su_HandleAbort (NET_StreamClass *stream, int reason);
-unsigned int su_HandleWriteReady (NET_StreamClass *stream);
+int su_HandleProcess (void *streamData, const char *buffer, int32 buffLen);
+void su_HandleComplete (void *streamData);
+void su_HandleAbort (void *streamData, int reason);
+unsigned int su_HandleWriteReady (void * streamData );
 
 /* Completion routine for stream handler. Deletes su_DownloadStream */
 void su_CompleteSoftwareUpdate(MWContext * context,  
@@ -253,6 +247,48 @@ su_startCallback *QGetItem(void)
 	return NULL;
 }
 
+ 
+int TestFreeSpacePriorToPassing(char* file)
+{
+	XP_StatStruct 	st;
+	int	            status = 0;
+	uint32			availSpace = 0;
+
+	char* tempFolder;
+	
+	
+	status = XP_Stat( file, &st,  xpURL );
+	
+	if (status != 0)
+	{
+	   return status;
+	}
+	    
+	    
+	tempFolder	=	XP_TempDirName();
+	
+	if(tempFolder == NULL)
+	{
+		return su_ErrInternalError;
+	}
+	
+	availSpace  = FE_DiskSpaceAvailable (NULL, tempFolder );
+
+	/* 
+	   At best, a zip jar file will produce 50 percent compresssion.  Let's
+	   make sure we have this. 
+	*/
+	
+    if ( availSpace > (st.st_size * 1.5) ) 
+	{
+		return 0;
+	}
+	else
+	{
+		return su_DiskSpaceError;
+	}
+}
+
 /* 
  * timer callback to start the network download of a JAR file
  */
@@ -325,7 +361,18 @@ void su_NetExitProc(URL_Struct* url, int result, MWContext * context)
 {
 	su_startCallback * c;
     
-    if (result != MK_CHANGING_CONTEXT)
+	if (result == MK_UNABLE_TO_CONVERT)
+	{
+		PR_EnterMonitor(su_monitor);
+		DnLoadInProgress = FALSE;
+		
+		if (context)
+		{
+			FE_Alert(context, XP_GetString(SU_NOT_A_ENOUGH_SPACE));
+		}
+		PR_ExitMonitor(su_monitor);
+	} 
+	else if (result != MK_CHANGING_CONTEXT)
 	{
 	    PR_EnterMonitor(su_monitor);
 	    if ((c = QGetItem()) != NULL)
@@ -477,7 +524,7 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 		goto fail;
 	}
     
-    prg = PW_Create(context, pwApplicationModal);
+    prg = PW_Create(context, pwStandard);
 	fContext = PW_CreateProgressContext();
     PW_AssociateWindowWithContext(fContext, prg);
 	fContext->url = request->address;
@@ -502,7 +549,7 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 	streamData->fCompletion = completion;
 	streamData->fCompletionClosure = completionClosure;
     streamData->fFlags = flags;
-    streamData->progress = prg;
+   	streamData->progress = prg;
 
 	if (request->fe_data)
 	{
@@ -524,7 +571,7 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 		result = su_ErrInternalError;
 		goto fail;
 	}
-
+    
     PW_SetCancelCallback(streamData->progress, cancelProgressDlg, streamData);
     PW_SetWindowTitle(streamData->progress, XP_GetString(SU_PROGRESS_DOWNLOAD_TITLE));
 /*
@@ -554,19 +601,17 @@ fail:
 /* su_HandleProcess
  * stream method, writes to disk
  */
-int su_HandleProcess (NET_StreamClass *stream, const char *buffer, int32 buffLen)
+int su_HandleProcess (void *streamData, const char *buffer, int32 buffLen)
 {
-	void *streamData=stream->data_object;
 	return XP_FileWrite( buffer, buffLen, ((su_DownloadStream*)streamData)->fFile );
 }
 
 /* su_HandleAbort
  * Clean up
  */
-void su_HandleAbort (NET_StreamClass *stream, int reason)
+void su_HandleAbort (void *streamData, int reason)
 {
-	void *streamData=stream->data_object;
-	su_DownloadStream* realStream = (su_DownloadStream*)stream->data_object;
+	su_DownloadStream* realStream = (su_DownloadStream*)streamData;
 	
 	/* Close the files */
 	if (realStream->fFile)
@@ -579,7 +624,7 @@ void su_HandleAbort (NET_StreamClass *stream, int reason)
 					realStream->fCompletion, realStream->fCompletionClosure, reason, realStream);
 }
 
-unsigned int su_HandleWriteReady (NET_StreamClass *stream)
+unsigned int su_HandleWriteReady (void * streamData )
 {
 	return USHRT_MAX;	/* Returning -1 causes errors when loading local file */
 }
@@ -587,10 +632,10 @@ unsigned int su_HandleWriteReady (NET_StreamClass *stream)
 /* su_HandleComplete
  * Clean up
  */
-void su_HandleComplete (NET_StreamClass *stream)
+void su_HandleComplete (void *streamData)
 {
 
-	su_DownloadStream* realStream = (su_DownloadStream*)stream->data_object;
+	su_DownloadStream* realStream = (su_DownloadStream*)streamData;
 
 	if (realStream->fFile)
 		XP_FileClose(realStream->fFile);
@@ -717,23 +762,60 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	unsigned long bufferSize;
 	char * installerJarName = NULL;
 	char * installerFileNameURL = NULL;
-    char * codebase = NULL;
-    int32  urlLen;
+	char * codebase = NULL;
+	int32  urlLen;
 	unsigned long fileNameLength;
   	char * charset = NULL;
 	unsigned long charsetLen;
 	ZIG * jarData = NULL;
 	char s[255];
 	char * jsScope = NULL;
-    char * nativeJar;
 	Chrome chrome;
 	MWContext * context;
 	JSPrincipals * principals = NULL;
   	ETEvalStuff * stuff = NULL;
 	char * jarCharset = NULL;
 	unsigned long jarCharsetLen;
+	XP_Bool		didConfirm;
+	
+#if 0
+	/* hold off on this change -- may create security holes 
+	   see later in this function for more detail */
+    char * nativeJar;
+#endif
+
+	
+	result = TestFreeSpacePriorToPassing(realStream->fJarFile);
+/*	
+	if (result != 0)
+	{
+		PR_snprintf(s, 255, XP_GetString(SU_NOT_A_ENOUGH_SPACE), installerJarName);
+		FE_Alert(realStream->fContext, s);
+		result = su_DiskSpaceError;
+		goto fail;
+	}
+*/
+
+	if (result != 0)
+	{
+		PR_snprintf(s, 255, XP_GetString(SU_LOW_DISK_SPACE_WARNING), installerJarName);
+		didConfirm = FE_Confirm (realStream->fContext, s);
+		
+		if (didConfirm)
+		{
+			/* the user wants to bail */
+			result = su_DiskSpaceError;
+			goto fail;
+		}
+		else
+		{
+			/* the user is a daredevil */
+			result = 0;
+		}
+	}
 	
 	
+
 	/* Initialize the JAR file */
 
 	jarData = SOB_new();
@@ -825,8 +907,15 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	/* Extract the script out */
 
 	result = SOB_verified_extract( jarData, installerJarName, installerFileNameURL);
-
-	if (result < 0)
+	
+	if (result == ZIG_ERR_DISK)
+	{
+		PR_snprintf(s, 255, XP_GetString(SU_NOT_A_ENOUGH_SPACE), installerJarName);
+		FE_Alert(realStream->fContext, s);
+		result = su_DiskSpaceError;
+		goto fail;
+	}
+	else if (result < 0)
 	{
 		PR_snprintf(s, 255, XP_GetString(SU_INSTALL_FILE_MISSING), installerJarName);
 		FE_Alert(realStream->fContext, s);
@@ -851,11 +940,20 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	jarData = NULL;
 
     /* add installer .JAR to the classpath */
+#if 0
+    /* hold off on this change -- may create security holes if we switch
+     * to the Sun JVM. Wouldn't want to offer this functionality and then
+     * take it away.
+     *   This fix doesn't work, by the way. The temp name MUST have a .jar
+     * or .zip extension or else Java tries to treat them as directories.
+     * we must first guarantee the correct extension.
+     */
     nativeJar = WH_FileName( realStream->fJarFile, xpURL );
     if ( nativeJar != NULL ) {
-        JVM_AddToClassPath( nativeJar );
+        LJ_AddToClassPath( nativeJar );
         XP_FREE( nativeJar );
     }
+#endif
 
 	/* For security reasons, installer JavaScript has to execute inside a
 	special context. This context is created by ET_EvaluateBuffer as a JS object
@@ -869,10 +967,10 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
     if (jsScope == NULL)
         goto fail;
 
-		XP_BZERO(&chrome, sizeof(Chrome));
-		chrome.location_is_chrome = TRUE;
+	XP_BZERO(&chrome, sizeof(Chrome));
+	chrome.location_is_chrome = TRUE;
 #ifndef XP_MAC
-		chrome.type = MWContextDialog;
+    chrome.type = MWContextDialog;
 #else
     /* MacFE doesn't respect chrome.is_modal for MWContextDialog anymore.
        We need a different solution for int'l content encoding on macs    */
@@ -914,11 +1012,9 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	stuff->data = realStream;
 	stuff->version = JSVERSION_DEFAULT;
 	stuff->principals = principals;
-    /* TODO: The following member doesn't exist
-	stuff->charset = charset;
-    */
+/* FIX	stuff->charset = charset; */
 
-		ET_EvaluateScript(context, buffer, stuff, su_mocha_eval_exit_fn);
+	ET_EvaluateScript(context, buffer, stuff, su_mocha_eval_exit_fn);
 
 	goto done;
 
@@ -945,6 +1041,91 @@ done:
 	/* Should we purge stuff from the disk cache here? */
 }
 
+/* XXX: Move JavaGetBoolPref to lj_init.c.
+ * Delete IsJavaSecurityEnabled and IsJavaSecurityDefaultTo30Enabled functions
+ * XXX: Cache all security preferences while we are running on mozilla
+ *      thread. Hack for 4.0 
+ */
+#define MAX_PREF 20
+
+struct {
+  char *pref_name;
+  XP_Bool value;
+} cachePref[MAX_PREF];
+
+static int free_idx=0;
+static XP_Bool locked = FALSE;
+
+static void AddPrefToCache(char *pref_name, XP_Bool value) 
+{
+  if (!pref_name)
+      return;
+
+  if (free_idx >= MAX_PREF) {
+      XP_ASSERT(FALSE); /* Implement dynamic growth of preferences */
+      return;
+  }
+
+  cachePref[free_idx].pref_name = XP_STRDUP(pref_name);
+  cachePref[free_idx].value = value;
+  free_idx++;
+}
+
+static XP_Bool GetPreference(char *pref_name, XP_Bool *pref_value) 
+{
+  int idx = 0;
+  *pref_value = FALSE;
+
+  if (!pref_name) 
+      return FALSE;
+
+  for (; idx < free_idx; idx++) {
+    if (XP_STRCMP(cachePref[idx].pref_name, pref_name) == 0) {
+        *pref_value = cachePref[idx].value;
+        locked = TRUE;
+        return TRUE;
+    }
+  }
+
+  if (locked) {
+    XP_ASSERT(FALSE); /* Implement dynamic growth of preferences */
+    return FALSE;
+  }
+      
+  if (PREF_GetBoolPref(pref_name, pref_value) >=0) {
+      AddPrefToCache(pref_name, *pref_value);
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+#ifdef XP_MAC
+#pragma export on
+#endif
+
+int PR_CALLBACK JavaGetBoolPref(char * pref_name) 
+{
+	XP_Bool pref;
+        int ret_val;
+        GetPreference(pref_name, &pref);
+        ret_val = pref;
+	return ret_val;
+}
+
+int PR_CALLBACK IsJavaSecurityEnabled() 
+{
+	XP_Bool pref;
+        int ret_val;
+	GetPreference("signed.applets.codebase_principal_support", &pref);
+        ret_val = !pref;
+	return ret_val;
+}
+
+int PR_CALLBACK IsJavaSecurityDefaultTo30Enabled() 
+{
+	return JavaGetBoolPref("signed.applets.local_classes_have_30_powers");
+}
 
 #ifdef XP_MAC
 #pragma export reset
@@ -1040,7 +1221,6 @@ REGERR su_UninstallProcessItem(char *component_path)
 #ifdef XP_MAC
 #pragma export on
 #endif
-
 int32 SU_Uninstall(char *regPackageName)
 {
     REGERR status = REGERR_FAIL;
@@ -1356,10 +1536,24 @@ XP_Bool su_RegPackTime()
     intervalSec = intervalDays*24*60*60;
     err = su_GetLastRegPackTime(&lastRegPackTime);
   
-    now = PR_Now();
+    #ifdef NSPR20
+		now = PR_Now();
+	#else
+		now = PR_LocalTime();
+	#endif
    
     LL_DIV(nowSec, now, bigNumber);
     LL_L2I(nowSecInt, nowSec);
+
+    /* We should not pack the Netscape Client Registry, the first
+    time we use Nova, instead we should set the current time in the
+    registry, so that the packing can happen at the intervalDays
+    set in the preferences */
+    if (lastRegPackTime == 0)
+    {
+        su_SetLastRegPackTime(nowSecInt);
+        return FALSE;
+    }
 
     i = nowSecInt - lastRegPackTime;
     if ((i > intervalSec) || (i < 0))
@@ -1422,7 +1616,12 @@ int su_PackRegistry()
        which is is called if the cancel button of the progress dialog is clicked,
        in which case we will not set the lastRegPackTime.
     */
-        now = PR_Now();
+        #ifdef NSPR20
+			now = PR_Now();
+		#else
+			now = PR_LocalTime();
+		#endif
+   
         LL_DIV(nowSec, now, bigNumber);
         LL_L2I(nowSecInt, nowSec);
         su_SetLastRegPackTime(nowSecInt);

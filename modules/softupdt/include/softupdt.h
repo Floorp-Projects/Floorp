@@ -76,10 +76,25 @@ extern int32 SU_Uninstall(char *regPackageName);
 extern int32 SU_EnumUninstall(void** context, char* packageName,
                               int32 len1, char*regPackageName, int32 len2);
 
-#define AUTOUPDATE_ENABLE_PREF "autoupdate.enabled"
-#define AUTOUPDATE_CONFIRM_PREF "autoupdate.confirm_install"
-#define CHARSET_HEADER "Charset"
-#define CONTENT_ENCODING_HEADER "Content-encoding"
-#define INSTALLER_HEADER "Install-Script"
+#ifdef XP_UNIX
+    #define AUTOUPDATE_ENABLE_PREF     "autoupdate.enabled_on_unix"
+#else
+    #define AUTOUPDATE_ENABLE_PREF     "autoupdate.enabled"
+#endif
 
+#define AUTOUPDATE_CONFIRM_PREF    "autoupdate.confirm_install"
+#define CHARSET_HEADER             "Charset"
+#define CONTENT_ENCODING_HEADER    "Content-encoding"
+#define INSTALLER_HEADER           "Install-Script"
+#define MOCHA_CONTEXT_PREFIX       "autoinstall:"
+#define REG_SOFTUPDT_DIR           "Netscape/Communicator/SoftwareUpdate/"
+#define LAST_REGPACK_TIME          "LastRegPackTime"
+
+/* error codes */
+#define su_ErrInvalidArgs          -1
+#define su_ErrUnknownInstaller     -2
+#define su_ErrInternalError        -3
+#define su_ErrBadScript            -4
+#define su_JarError                -5
+#define su_DiskSpaceError          -6
 XP_END_PROTOS

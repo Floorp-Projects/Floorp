@@ -57,7 +57,7 @@ extern int SU_INSTALL_ASK_FOR_DIRECTORY;
 /* Makes sure that the path ends with a slash (or other platform end character)
  * @return  alloc'd new path that ends with a slash
  */
-char *
+static char *
 AppendSlashToDirPath(char * dirPath)
 {
     char pathSeparator; /* Gross, but harmless */
@@ -108,7 +108,7 @@ GetDirectoryPathCallbackFunction(MWContext *context,
 }
 
 /* Callback for the timer set by FE_SetTimer */
-PR_EXTERN(void) 
+PR_STATIC_CALLBACK(void) 
 pickDirectoryCallback(void * a)
 {
     su_PickDirTimer *t = (su_PickDirTimer *)a;
@@ -126,14 +126,12 @@ pickDirectoryCallback(void * a)
 
 
 /* 
- *Directory manipulation 
- */
-
-/* Entry for the DirectoryTable[] */
-/* DirectoryTable holds the info about built-in directories:
+ * Directory manipulation 
+ *
+ * DirectoryTable holds the info about built-in directories:
  * Text name, security level, enum
  */
-struct su_DirectoryTable DirectoryTable[] = 
+static struct su_DirectoryTable DirectoryTable[] = 
 {
 	{"Plugins",         ePluginFolder,              TRUE},
 	{"Program",         eProgramFolder,             FALSE},
@@ -174,7 +172,7 @@ struct su_DirectoryTable DirectoryTable[] =
 
 /* MapNameToEnum
  * maps name from the directory table to its enum */
-su_DirSpecID MapNameToEnum(const char * name)
+static su_DirSpecID MapNameToEnum(const char * name)
 {
 	int i = 0;
 	XP_ASSERT( name );
@@ -183,7 +181,7 @@ su_DirSpecID MapNameToEnum(const char * name)
 
 	while ( DirectoryTable[i].directoryName[0] != 0 )
 	{
-		if ( strcmp(name, DirectoryTable[i].directoryName) == 0 )
+		if ( XP_STRCASECMP(name, DirectoryTable[i].directoryName) == 0 )
 			return DirectoryTable[i].folderEnum;
 		i++;
 	}

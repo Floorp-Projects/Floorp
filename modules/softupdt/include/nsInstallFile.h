@@ -72,7 +72,11 @@ public:
 
   char* toString();
 
-
+/* should these be protected? */
+  PRBool CanUninstall();
+  PRBool RegisterPackageNode();
+	  
+  
 private:
 
   /* Private Fields */
@@ -98,7 +102,6 @@ private:
   int NativeComplete();
   PRBool NativeDoesFileExist();
   void AddToClasspath(nsString* file);
-
 };
 
 PR_END_EXTERN_C

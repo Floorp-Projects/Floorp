@@ -157,6 +157,22 @@ char* nsUninstallObject::NativeComplete(char* regname)
   }
   return errorMsg;
 }
-  
+/* CanUninstall
+* UninstallObject() uninstall files, 
+* hence this function returns false. 
+*/
+protected boolean CanUninstall()
+{
+    return false;
+}
+
+/* RegisterPackageNode
+* UninstallObject() uninstalls files which no longer need to be registered,
+* hence this function returns false.
+*/
+protected boolean RegisterPackageNode()
+{
+    return false;
+}
 
 PR_END_EXTERN_C

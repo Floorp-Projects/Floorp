@@ -88,10 +88,20 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
     case eTemporaryFolder:
     {
         char* tmpdir = XP_TempDirName();
-        XP_STRCPY( path, tmpdir );
-        XP_STRCAT( path, "\\" );
+        int slen;
+
+        XP_STRNCPY_SAFE( path, tmpdir, _MAX_PATH );
         XP_FREEIF(tmpdir);
 
+        slen = XP_STRLEN(path);
+        if ( slen < _MAX_PATH - 1)
+        {
+            path[slen]   = '\\';
+            path[slen+1] = '\0';
+        }
+        else
+            break;
+ 		
         directory = XP_STRDUP( path );
     }
         break;
@@ -112,8 +122,9 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 
     case eWin_System16Folder:
         len = GetSystemDirectory( path, _MAX_PATH );
-    	// If Windows NT
+		
 #ifndef XP_OS2
+        // If Windows NT
     	dwVersion = GetVersion();
         if ( dwVersion < 0x80000000 ) {
             // and the last two chars of the system dir are "32"
@@ -123,19 +134,35 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
             }
         }
 #endif
-        XP_STRCPY( path+len, "\\" );
+
+        // Need enough space to add the trailing backslash
+        if(len > _MAX_PATH-2)
+            break;
+        path[len]   = '\\';
+        path[len+1] = '\0';
+
         directory = XP_STRDUP( path );
         break;
 
 	case eWin_SystemFolder:
         len = GetSystemDirectory( path, _MAX_PATH );
-        XP_STRCPY( path+len, "\\" );
+        // Need enough space to add the trailing backslash
+        if(len > _MAX_PATH-2)
+            break;
+        path[len]   = '\\';
+        path[len+1] = '\0';
+
         directory = XP_STRDUP( path );
         break;
 
 	case eWin_WindowsFolder:
         len = GetWindowsDirectory( path, _MAX_PATH );
-        XP_STRCPY( path+len, "\\" );
+        // Need enough space to add the trailing backslash
+        if(len > _MAX_PATH-2)
+            break;
+        path[len]   = '\\';
+        path[len+1] = '\0';
+
         directory = XP_STRDUP( path );
         break;
 
@@ -164,6 +191,8 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
             else {
                 /* windows FE couldn't find registry setting */
                 FE_GetProgramDirectory( path, _MAX_PATH );
+                if(strlen(path)+strlen("NetHelp\\")+1 > _MAX_PATH)
+                    break;
                 XP_STRCAT( path, "NetHelp\\" );
                 directory = XP_STRDUP( path );
             }
@@ -287,7 +316,7 @@ int    FE_ReplaceExistingFile(char *CurrentFname, XP_FileType ctype,
                     BOOL nameFound = FALSE;
                     char tmpname[_MAX_PATH];
 
-                    strcpy( tmpname, finalName );
+                    XP_STRNCPY_SAFE( tmpname, finalName, _MAX_PATH );
                     int len = strlen(tmpname);
                     while (!nameFound && len < _MAX_PATH ) {
                         tmpname[len-1] = '~';

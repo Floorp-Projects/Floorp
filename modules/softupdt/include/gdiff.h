@@ -82,6 +82,8 @@
 #define GDIFF_ERR_OLDFILE       -8
 #define GDIFF_ERR_CHKSUMTYPE    -9
 #define GDIFF_ERR_CHECKSUM      -10
+#define GDIFF_ERR_CHECKSUM_TARGET  -11
+#define GDIFF_ERR_CHECKSUM_RESULT  -12
 
 
 /*--------------------------------------

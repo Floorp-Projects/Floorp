@@ -40,7 +40,7 @@ unsigned long PAS_getDataSize(FSSpec *spec);
 short PAS_getResourceID(Handle resource);
 
 OSErr PAS_flattenResource(ResType type, short *ids, long count, short source, short dest);
-OSErr PAS_unflattenResource(PASResource *pasRes, Ptr buffer, short dest);
+OSErr PAS_unflattenResource(PASResource *pasRes, Ptr buffer);
 
 void PAS_sortTypes(short sourceRefNum, ResType **resTypePtr, long *count);
 void PAS_sortIDs(short sourceRefNum, OSType theType, short **IdPtr, long *count);
@@ -55,6 +55,11 @@ OSErr PAS_EncodeFile(FSSpec *inSpec, FSSpec *outSpec)
 	
 	PASEntry 	dataEntry, miscEntry, resourceEntry;
 	long		sizeOfEntry;
+
+
+	if (inSpec == NULL || outSpec == NULL)
+		return paramErr;
+		
 
 	memset(&dataEntry, 0, sizeof(PASEntry));
 	memset(&miscEntry, 0, sizeof(PASEntry));
@@ -77,6 +82,16 @@ OSErr PAS_EncodeFile(FSSpec *inSpec, FSSpec *outSpec)
 	err = PAS_encodeHeader(outRefNum);
 	if (err != noErr)  goto error;
 	
+	/* Why am I using three (3)?
+		
+		E stand for entry.
+		
+	   The data for the entry is after the THREE headers 
+	
+		|---------|----|----|----|---------------------->
+		   header    E    E    E
+	
+	*/
 	
 	
 	/* Write Out Data Entry */
@@ -167,7 +182,10 @@ OSErr PAS_DecodeFile(FSSpec *inSpec, FSSpec *outSpec)
 	PASEntry 	dataEntry, miscEntry, resourceEntry;
 	long		sizeOfEntry;
 
-	
+	if (inSpec == NULL || outSpec == NULL)
+		return paramErr;
+		
+		
 	FSpDelete( outSpec ) ;
 	
 	err = FSpCreate( outSpec, kCreator, kType ,smSystemScript );
@@ -238,10 +256,10 @@ OSErr PAS_DecodeFile(FSSpec *inSpec, FSSpec *outSpec)
 
 	err =  PAS_decodeData(&dataEntry, outSpec, inRefNum);	
 	if (err != noErr) 	goto error;
-	
+
 	err =  PAS_decodeMisc(&miscEntry, outSpec, inRefNum);
 	if (err != noErr) 	goto error;
-	
+
 	err =  PAS_decodeResource(&resourceEntry, outSpec, inRefNum);	
 	if (err == kResFileNotOpened)
 	{
@@ -252,7 +270,7 @@ OSErr PAS_DecodeFile(FSSpec *inSpec, FSSpec *outSpec)
 	{
 		goto error;
 	}
-	
+
 	
 	FSClose(inRefNum);
 	
@@ -292,10 +310,13 @@ OSErr PAS_encodeResource(FSSpec *inFile, short outRefNum)
 	short			*ids;
 	long			idCount;
 	
+	short			oldResFile;
 	
-	
+	oldResFile=CurResFile();
 	inRefNum = FSpOpenResFile(inFile, fsRdPerm);
 	if (inRefNum < noErr)	return inRefNum;
+
+	UseResFile(inRefNum);
 		
 	memset(&resInfo, 0, sizeof(PASResFork));   
 	
@@ -308,38 +329,36 @@ OSErr PAS_encodeResource(FSSpec *inFile, short outRefNum)
 	err = FSWrite(outRefNum, &currentWrite, &resInfo);
 	if (err != noErr)	return err;
 	
-	for (typeCount = 0; typeCount < resInfo.NumberOfTypes; typeCount++)
+	for (typeCount = 0; ((typeCount < resInfo.NumberOfTypes) && (err == noErr)); typeCount++)
 	{
 		PAS_sortIDs(inRefNum, resTypes[typeCount], &ids, &idCount);
-		PAS_flattenResource(resTypes[typeCount], ids, idCount, inRefNum, outRefNum);
+		err = PAS_flattenResource(resTypes[typeCount], ids, idCount, inRefNum, outRefNum);
 		DisposePtr((Ptr)ids);
 	}
 	
 	DisposePtr((Ptr)resTypes);
-			
+	
+	
+	UseResFile(oldResFile);		
 	CloseResFile(inRefNum);
 	
-	return noErr;
+	return err;
 }
 
 OSErr PAS_decodeResource(PASEntry *entry, FSSpec *outFile, short inRefNum)
 {
-	OSErr 			err;	
+	OSErr 			err = noErr;	
 	short			outRefNum;
 	PASResFork		info;
 	SInt32			infoSize;
+	short			oldResFile;
 	
 	PASResource		pasRes;
 	SInt32			pasResSize;
 	
-	
-	
-	Ptr				buffer;
 	long			bufSize;
-	
-	outRefNum = FSpOpenResFile(outFile, fsRdWrPerm);
-	if (outRefNum < noErr)	return outRefNum;
-	
+	Handle			buffer;
+	long			counter=0;
 	
 	infoSize	=	sizeof(PASResFork);
 	
@@ -351,50 +370,81 @@ OSErr PAS_decodeResource(PASEntry *entry, FSSpec *outFile, short inRefNum)
 
 	if(infoSize != sizeof(PASResFork))
 	{
-		return -1;
+		err = -1;
+		goto error;
 	}
 	
+	oldResFile=CurResFile();
 	
-	while (err == noErr)
+	outRefNum = FSpOpenResFile(outFile, fsRdWrPerm);
+	if (outRefNum < noErr)	return outRefNum;
+				
+	UseResFile(outRefNum);
+	
+	
+	while (1)
 	{
 		pasResSize	=	sizeof(PASResource);
-		
 		err	= FSRead( inRefNum, &pasResSize, &pasRes);
 		
-		if(err == eofErr)
-		{
-			break;
-		}
 		if (err != noErr)
 		{
-			goto error;
+			if(err == eofErr)
+				err = noErr;
+				
+			break;
 		}
 		
 		bufSize	=	pasRes.length;
-		buffer	=	NewPtrClear(bufSize);
+		buffer	=	NewHandle(bufSize);
+		HLock(buffer);
 		
-		err	= FSRead( inRefNum, &bufSize, buffer);
-		if (err != noErr && err != eofErr)	goto error;
+		if(buffer == NULL)
+		{
+			/*  if we did not get our memory, try updateresfile */
 		
+			HUnlock(buffer);
+
+
+			UpdateResFile(outRefNum);
+			counter=0;
+			
+			buffer	=	NewHandle(bufSize);
+			HLock(buffer);
+			
+			if(buffer == NULL)
+			{
+				err = memFullErr;
+				break;
+			}
+		}
 		
+		err	= FSRead( inRefNum, &bufSize, &(**buffer));
+		if (err != noErr && err != eofErr)	break;
 		
-		err	=  PAS_unflattenResource(	&pasRes, 
-										buffer, 
-										outRefNum);
+		AddResource(buffer, pasRes.attrType, pasRes.attrID, pasRes.attrName);
+		WriteResource(buffer);
 		
-		if (err != noErr)	goto error;
+		SetResAttrs(buffer, pasRes.attr);
+		ChangedResource(buffer);	
+		WriteResource(buffer);
 		
-		DisposePtr(buffer);
-				
+		ReleaseResource(buffer);	
+		
+		if (counter++ > 100)
+		{
+			UpdateResFile(outRefNum);
+			counter=0;
+		}
+	
 	}
-	
-	CloseResFile(outRefNum);
-	
-	return noErr;
 
 error:
-
-	return -1;
+		
+	UseResFile(oldResFile);	
+	CloseResFile(outRefNum);
+		
+	return err;
 }
 
 #pragma mark -
@@ -516,8 +566,10 @@ OSErr PAS_encodeData(FSSpec *inFile, short outRefNum)
 {
 	OSErr 		err;	
 	short		inRefNum;
-	char 		buffer[PAS_BUFFER_SIZE];
+	Ptr 		buffer;
 	SInt32 		currentRead = 	PAS_BUFFER_SIZE;
+		
+	buffer	=	NewPtr(currentRead);
 
 	err = FSpOpenDF(inFile, fsRdPerm, &inRefNum);
 	if (err != noErr)	return err;
@@ -533,6 +585,8 @@ OSErr PAS_encodeData(FSSpec *inFile, short outRefNum)
 	
 	FSClose(inRefNum);
 	
+	DisposePtr(buffer);
+	
 	return noErr;
 }
 
@@ -540,9 +594,13 @@ OSErr PAS_decodeData(PASEntry *entry, FSSpec *outFile, short inRefNum)
 {
 	OSErr 		err;	
 	short		outRefNum;
-	char 		buffer[PAS_BUFFER_SIZE];
+	Ptr 		buffer;
 	SInt32 		currentWrite = 	PAS_BUFFER_SIZE;
 	SInt32		totalSize;
+	
+	
+	buffer = NewPtr(currentWrite);
+	
 	
 	err = FSpOpenDF(outFile, fsRdWrPerm, &outRefNum);
 	if (err != noErr)	return err;
@@ -577,7 +635,7 @@ OSErr PAS_decodeData(PASEntry *entry, FSSpec *outFile, short inRefNum)
 	
 	FSClose(outRefNum);
 	
-	
+	DisposePtr(buffer);
 	
 	return noErr;
 
@@ -668,7 +726,7 @@ short PAS_getResourceID(Handle resource)
 OSErr PAS_flattenResource(ResType type, short *ids, long count, short source, short dest)
 {
 	long 			idIndex;
-	short			oldResFile;
+	
 	
 	Handle			resToCopy;
 	long			handleLength;
@@ -678,18 +736,14 @@ OSErr PAS_flattenResource(ResType type, short *ids, long count, short source, sh
 	
 	OSErr			err;
 	
-	
-	oldResFile=CurResFile();
-	UseResFile(source);
-	
 	for (idIndex=0; idIndex < count; idIndex++)
 	{
 		if( (type == 'SIZE') && ( ids[idIndex] == 1 || ids[idIndex] == 0  ) )
 		{
 			/* 	
 				We do not want to encode/flatten SIZE 0 or 1 because this
-				is the resource that the user can motify.  Most applications
-				will not be effected if we remove these resources
+				is the resource that the user can modify.  Most applications
+				will not be affected if we remove these resources
 			*/
 		}
 		else
@@ -726,67 +780,21 @@ OSErr PAS_flattenResource(ResType type, short *ids, long count, short source, sh
 			}
 			
 			err = FSWrite(dest, &handleLength, &(**resToCopy));
-			
-			
-			
+
 			if(err != noErr) 
 			{
 				return err;
 			}
 			
+			HUnlock(resToCopy);
 			DisposeHandle(resToCopy);		
 		}
 	}
 	
-	UseResFile(oldResFile);
 	
 	return noErr;
 }
 
-OSErr PAS_unflattenResource(PASResource *pasRes, Ptr buffer, short dest)
-{
-	short		oldResFile;
-	Handle		resToCopy;
-	OSErr		err = noErr;
-	
-	if(	dest 				< 	0 		||
-		pasRes->length		<=	0 		||
-		buffer				==	NULL	)
-	{
-		return paramErr;
-	}	
-	
-	
-	oldResFile=CurResFile();		
-	UseResFile(dest);	
-
-	
-	resToCopy = NewHandle(pasRes->length);
-	
-	if(resToCopy == NULL)
-	{
-		return memFullErr;
-	}
-	
-	HLock(resToCopy);
-	BlockMove(buffer, *resToCopy, pasRes->length);
-		
-	AddResource(resToCopy, pasRes->attrType, pasRes->attrID, pasRes->attrName);
-	WriteResource(resToCopy);
-	UpdateResFile(dest);	
-	
-	
-	SetResAttrs(resToCopy, pasRes->attr);
-	WriteResource(resToCopy);
-	UpdateResFile(dest);	
-
-
-	ReleaseResource(resToCopy);	
-
-	UseResFile(oldResFile);	
-	
-	return noErr;
-}
 
 #pragma mark -
 

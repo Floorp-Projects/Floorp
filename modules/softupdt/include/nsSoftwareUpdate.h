@@ -35,7 +35,7 @@ PR_BEGIN_EXTERN_C
 #define IMPERSONATOR "Impersonator"
 #define INSTALL_PRIV "SoftwareInstall"
 #define SILENT_PRIV "SilentInstall"
-#define FOLDER_FILE_URL "File URL"
+#define FOLDER_FILE_URL "file:///"
 
 struct nsProgressDetails;
 
@@ -143,15 +143,16 @@ public:
    *                          Can be null, in which case package is installed
    *                          without a version. Having a null version, this package is
    *                          automatically updated in the future (ie. no version check is performed).
-   * @param securityLevel     ignored (was LIMITED_INSTALL or FULL_INSTALL)
+   * @param flags             Once was securityLevel(LIMITED_INSTALL or FULL_INSTALL).  Now
+   *                          can be either NO_STATUS_DLG or NO_FINALIZE_DLG
    */
-  PRInt32 StartInstall(char* vrPackageName, nsVersionInfo* inVInfo, PRInt32 securityLevel, char* *errorMsg);
+  PRInt32 StartInstall(char* vrPackageName, nsVersionInfo* inVInfo, PRInt32 flags, char* *errorMsg);
 
 
   /**
    * An new form that doesn't require the security level
    */
-  PRInt32 StartInstall(char* vrPackageName, nsVersionInfo* inVInfo, char* *errorMsg);
+  PRInt32 StartInstall(char* vrPackageName, char* inVer, PRInt32 flags, char* *errorMsg);
 
   /**
    * another StartInstall() simplification -- version as char*
@@ -333,6 +334,8 @@ private:
   PRBool force;                    /* Force install? */
   PRInt32 lastError;               /* the most recent non-zero error */
   char* filesep;                   /* the platform-specific file separator */
+  PRBool bShowProgress;            /* true if we should show the inital progress dialog    */
+  PRBool bShowFinalize;            /* true if we should show the finalize progress dialog. */
 
   char* installerJarName;          /* Name of the installer file */
   unsigned long installerJarNameLength;    /* Length of Name of the installer file */
@@ -342,11 +345,23 @@ private:
   void* zigPtr;                    /* Stores the pointer to ZIG * */
   nsPrincipal* installPrincipal;   /* principal with the signature from the JAR file */
 
+  PRBool bUninstallPackage;        /* Create an uninstall node in registry? */
+  PRBool bRegisterPackage;         /* Create package node in registry? */
+  PRBool bUserCancelled;           /* User cancels the install prg dialog -true else false */
+    
 
   /* Private Field Accessors */
 
   /* Private Methods */
-
+  
+  int SanityCheck(char**errorMsg);
+  PRBool BadRegName(char* regName);
+  
+  /*
+   * Parses the StartInstall flags and set class varibles.
+   */   
+  void ParseFlags(int flags);
+   
   /*
    * Reads in the installer certificate, and creates its principal
    */
@@ -385,9 +400,18 @@ private:
    * This routine converts a package-relative component registry name
    * into a full name that can be used in calls to the version registry.
    */
-  char* GetQualifiedRegName(char* name);
-
-
+  char* GetQualifiedRegName(char* name, char** errMsg);
+  
+  /**
+   * GetQualifiedPackageName
+   *
+   * This routine converts a package-relative component registry name
+   * into a full name that can be used in calls to the version registry.
+   */
+   
+  char* GetQualifiedPackageName( char* name );
+  char* CurrentUserNode();
+  char* NativeProfileName();
 
   /* Private Native methods */
 
@@ -428,6 +452,14 @@ private:
   void     NativeSetProgDlgRange(void* progptr, PRInt32 max);
   void     NativeSetProgDlgThermo(void* progptr, PRInt32 value);
   PRBool   UserWantsConfirm();
+  
+  
+  
+  
+  
+  
+  
+  
 
 };
 

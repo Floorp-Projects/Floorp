@@ -56,6 +56,10 @@ public:
   // no need for set-up
   char* Prepare();
   
+  /* should these be protected? */
+  PRBool CanUninstall();
+  PRBool RegisterPackageNode();
+  
 private:
   
   /* Private Fields */

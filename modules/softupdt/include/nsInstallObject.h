@@ -46,6 +46,10 @@ public:
   /* Override with your clean-up function */
   virtual void Abort();
   
+  /* should these be protected? */
+  virtual PRBool CanUninstall();
+  virtual PRBool RegisterPackageNode();
+
 private:
 
   /* Private Field Accessors */

@@ -65,9 +65,11 @@ PR_BEGIN_EXTERN_C
  */
 nsFolderSpec::nsFolderSpec(char* inFolderID , char* inVRPath, char* inPackageName)
 {
+  char *errorMsg = NULL;
+  
   urlPath = folderID = versionRegistryPath = userPackageName = NULL;
 
-  /* May be we should return an error message */
+  /* Since urlPath is set to NULL, this FolderSpec is essentially the error message */
   if ((inFolderID == NULL) || (inVRPath == NULL) || (inPackageName == NULL)) {
     return;
   }
@@ -75,6 +77,19 @@ nsFolderSpec::nsFolderSpec(char* inFolderID , char* inVRPath, char* inPackageNam
   folderID = XP_STRDUP(inFolderID);
   versionRegistryPath = XP_STRDUP(inVRPath);
   userPackageName = XP_STRDUP(inPackageName);
+  
+  /* Setting the urlPath to a real file patch. */
+  
+  *errorMsg = NULL;
+  urlPath = SetDirectoryPath(&errorMsg);
+  if (errorMsg != NULL) 
+  {
+    urlPath = NULL;
+    return;
+  }
+  
+  
+  
 }
 
 nsFolderSpec::~nsFolderSpec(void)
@@ -89,14 +104,24 @@ nsFolderSpec::~nsFolderSpec(void)
     XP_FREE(urlPath);
 }
 
+
 /*
  * GetDirectoryPath
- * returns full path to the directory in the standard URL form
- *
- * Caller shouldn't free the returned value. It returns it copy.
- *
+ * Returns urlPath
+ * 
+ * Caller should not dispose of the return value
  */
-char* nsFolderSpec::GetDirectoryPath(char* *errorMsg)
+char* nsFolderSpec::GetDirectoryPath(void)
+{
+  return urlPath;
+}
+
+
+/*
+ * SetDirectoryPath
+ * sets full path to the directory in the standard URL form
+ */
+char* nsFolderSpec::SetDirectoryPath(char* *errorMsg)
 {
   if ((folderID == NULL) || (versionRegistryPath == NULL)) {
     *errorMsg = SU_GetErrorMsg3("Invalid arguments to the constructor", 
@@ -145,8 +170,9 @@ char* nsFolderSpec::MakeFullPath(char* relativePath, char* *errorMsg)
   char *fullPath=NULL;
   char *dir_path;
   *errorMsg = NULL;
-  dir_path = GetDirectoryPath(errorMsg);
-  if (errorMsg != NULL) {
+  dir_path = GetDirectoryPath();
+  if (dir_path == NULL) 
+  {
     return NULL;
   }
   fullPath = XP_Cat(dir_path, GetNativePath(relativePath));
@@ -158,15 +184,14 @@ char* nsFolderSpec::MakeFullPath(char* relativePath, char* *errorMsg)
  */
 char* nsFolderSpec::toString()
 {
-  char *errorMsg = NULL;
-  char* path = GetDirectoryPath(&errorMsg);
-  if (errorMsg != NULL) {
-    path = NULL;
-  } else {
-    PR_ASSERT(path != NULL);
-    XP_STRDUP(path);
+  char* path = GetDirectoryPath();
+  char* copyPath = NULL;
+
+  if (path != NULL) 
+  {
+    copyPath = XP_STRDUP(path);
   }
-  return path;
+  return copyPath;
 }
 
 

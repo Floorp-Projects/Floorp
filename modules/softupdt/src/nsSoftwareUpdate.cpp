@@ -49,6 +49,8 @@
 #include "xpgetstr.h"
 #include "pw_public.h"
 
+#include "NSReg.h"
+
 #ifdef XP_MAC
 #include "su_aplsn.h"
 #endif
@@ -119,13 +121,21 @@ nsSoftwareUpdate::nsSoftwareUpdate(void* env, char* inUserPackageName)
   force = PR_FALSE;
   jarName = NULL;
   jarURL = NULL;
+  
+  bUninstallPackage = PR_FALSE;
+  bRegisterPackage	= PR_FALSE;
+  bShowProgress		= PR_TRUE;
+  bShowFinalize		= PR_TRUE;
+  bUserCancelled	= PR_FALSE;
+  
   char *errorMsg;
-
+        
   /* Need to verify that this is a SoftUpdate JavaScript object */
   errorMsg = VerifyJSObject(env);
 
   /* XXX: FIX IT. How do we get data from env 
   jarName = (String) env.getMember("src");
+  jarCharset = (String) env.getMember("jarCharset");
   jarURL = (String) env.getMember("srcURL");
   silent = ((PRBool) env.getMember("silent")).booleanValue();
   force  = ((PRBool) env.getMember("force")).booleanValue();
@@ -142,12 +152,12 @@ nsSoftwareUpdate::nsSoftwareUpdate(void* env, char* inUserPackageName)
 
 nsSoftwareUpdate::~nsSoftwareUpdate()
 {
-  if (patchList)
-    delete patchList;
-  if (packageFolder)
-    delete packageFolder;
-  if (versionInfo)
-    delete versionInfo;
+  if(patchList) 
+	  delete patchList;
+  if(packageFolder)
+	delete packageFolder;
+  if(versionInfo)
+	delete versionInfo;
 
   CleanUp();
 }
@@ -216,9 +226,12 @@ nsFolderSpec* nsSoftwareUpdate::GetFolder(char* folderID, char* *errorMsg)
     spec = new nsFolderSpec(folderID, packageName, userPackageName);
     if (XP_STRCMP(folderID, "User Pick") == 0) {
       // Force the prompt
-      char * ignore = spec->GetDirectoryPath(errorMsg);
-      if (*errorMsg != NULL) {
-        delete spec;
+      char * ignore = spec->GetDirectoryPath();
+      if (ignore == NULL) 
+      {
+        if(spec)
+          delete spec;
+
         return NULL;
       }
     }
@@ -234,28 +247,48 @@ nsFolderSpec* nsSoftwareUpdate::GetFolder(char* folderID, char* *errorMsg)
 nsFolderSpec* nsSoftwareUpdate::GetComponentFolder(char* component)
 {
   char* dir;
+  char* qualifiedComponent;
+  
   nsFolderSpec* spec = NULL;
-
-  dir = nsVersionRegistry::getDefaultDirectory( component );
+  
+  qualifiedComponent = GetQualifiedPackageName( component );
+  
+  if (qualifiedComponent == NULL)
+  {
+        return NULL;
+  }
+  
+  dir = nsVersionRegistry::getDefaultDirectory( qualifiedComponent );
 
   if ( dir == NULL ) {
-    dir = nsVersionRegistry::componentPath( component );
+    dir = nsVersionRegistry::componentPath( qualifiedComponent );
     if ( dir != NULL ) {
       int i;
 
       nsString dirStr(dir);
       if ((i = dirStr.RFind(filesep)) > 0) {
-        XP_FREE(dir);
+        XP_FREEIF(dir);  
         dir = (char*)XP_ALLOC(i);
         dir = dirStr.ToCString(dir, i);
       }
     }
   }
 
-  if ( dir != NULL ) {
+  if ( dir != NULL ) 
+  {
     /* We have a directory */
-    spec = new nsFolderSpec("Installed", dir, userPackageName);
-    XP_FREE(dir);
+   
+        if (su_PathEndsWithSeparator(dir, filesep)) 
+        {
+            spec = new nsFolderSpec("Installed", dir, userPackageName);
+        } 
+        else 
+        {
+           dir = XP_AppendStr(dir, filesep);
+           spec = new nsFolderSpec("Installed", dir, userPackageName);
+        }
+    
+        XP_FREEIF(dir);
   }
   return spec;
 }
@@ -266,7 +299,10 @@ nsFolderSpec* nsSoftwareUpdate::GetComponentFolder(char* component,
 {
   nsFolderSpec* spec = GetComponentFolder( component );
   nsFolderSpec* ret_val = GetFolder( spec, subdir, errorMsg );
-  if (spec) delete spec;
+  
+  if(spec);
+	delete spec;
+
   return ret_val;
 }
 
@@ -291,13 +327,13 @@ void* nsSoftwareUpdate::GetWinProfile(nsFolderSpec* folder,
   nsWinProfile* profile = NULL;
   *errorMsg = NULL;
 
-  if ( packageName == NULL ) {
-    *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, 
-                                nsSoftUpdateError_INSTALL_NOT_STARTED );
-    return NULL;
+  SanityCheck(errorMsg);
+  
+  if (*errorMsg == NULL)
+  {
+      profile = new nsWinProfile(this, folder, file);
   }
-  profile = new nsWinProfile(this, folder, file);
-
+  
   return profile;
 #else
   return NULL;
@@ -313,12 +349,13 @@ void* nsSoftwareUpdate::GetWinRegistry(char* *errorMsg)
 #ifdef XP_PC
   nsWinReg* registry = NULL;
 
-  if ( packageName == NULL ) {
-    *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, 
-                                nsSoftUpdateError_INSTALL_NOT_STARTED );
-    return NULL;
+  SanityCheck(errorMsg);
+  
+  if (*errorMsg == NULL)
+  {
+      registry = new nsWinReg(this);
   }
-  registry = new nsWinReg(this);
+  
   return registry;
 #else
   return NULL;
@@ -411,66 +448,88 @@ char* nsSoftwareUpdate::ExtractJARFile(char* inJarLocation,
   return outExtractLocation;
 }
 
+
+void
+nsSoftwareUpdate::ParseFlags(int flags)
+{
+ 
+    if ((flags & nsInstallType_NO_STATUS_DLG) == nsInstallType_NO_STATUS_DLG)
+    {
+        bShowProgress = PR_FALSE;
+    }
+    if ((flags & nsInstallType_NO_FINALIZE_DLG) == nsInstallType_NO_FINALIZE_DLG)
+    {
+        bShowFinalize = PR_FALSE;
+    }
+}
+
 /**
  * Call this to initialize the update
  * Opens the jar file and gets the certificate of the installer
  * Opens up the gui, and asks for proper security privileges
+ *
  * @param vrPackageName     Full qualified  version registry name of the package
  *                          (ex: "/Plugins/Adobe/Acrobat")
  *                          NULL or empty package names are errors
+ *
  * @param inVInfo           version of the package installed.
  *                          Can be NULL, in which case package is installed
  *                          without a version. Having a NULL version, this 
  *                          package is automatically updated in the future 
  *                          (ie. no version check is performed).
- * @param securityLevel     ignored (was LIMITED_INSTALL or FULL_INSTALL)
+ *
+ * @param flags             Once was securityLevel(LIMITED_INSTALL or FULL_INSTALL).  Now
+ *                          can be either NO_STATUS_DLG or NO_FINALIZE_DLG
  */
+     
 PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName, 
                                        nsVersionInfo* inVInfo, 
-                                       PRInt32 securityLevel, char* *errorMsg)
-{
-  // ignore securityLevel
-  return StartInstall( vrPackageName, inVInfo, errorMsg );
-}
-
-/**
- * An new form that doesn't require the security level
- */
-PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName, 
-                                       nsVersionInfo* inVInfo, 
+                                       PRInt32 flags, 
                                        char* *errorMsg)
 {
   int errcode= nsSoftwareUpdate_SUCCESS;
   *errorMsg = NULL;
   ResetError();
-  
+  ParseFlags(flags);
+  bUserCancelled = PR_FALSE; 
+  packageName = NULL;
 
-  if ( (vrPackageName	== NULL) ) {
+  if ( vrPackageName == NULL ) 
+  {
     *errorMsg = SU_GetErrorMsg4(SU_ERROR_BAD_PACKAGE_NAME, 
                                 nsSoftUpdateError_INVALID_ARGUMENTS );
     return nsSoftUpdateError_INVALID_ARGUMENTS;
   }
+  
+  packageName	= GetQualifiedPackageName( vrPackageName );
       
-  int len = XP_STRLEN(vrPackageName);
+  int len = XP_STRLEN(packageName);
   int last_pos = len-1;
   char* tmpPackageName = new char[len+1];
-  XP_STRCPY(tmpPackageName, vrPackageName);
-  while ((last_pos >= 0) && (tmpPackageName[last_pos] == '/')) {
+  XP_STRCPY(tmpPackageName, packageName);
+  
+  
+  while ((last_pos >= 0) && (tmpPackageName[last_pos] == '/')) 
+  {
     // Make sure that package name does not end with '/'
     char* ptr = new char[last_pos+1];
     memcpy(tmpPackageName, ptr, last_pos);
     ptr[last_pos] = '\0';
-    delete tmpPackageName;
+    
+	if(tmpPackageName);
+		delete tmpPackageName;
+
     tmpPackageName = ptr;
     last_pos = last_pos - 1;
   }
   packageName = XP_STRDUP(tmpPackageName);
-  delete tmpPackageName;
+  if(tmpPackageName);
+		delete tmpPackageName;
   
-  if (versionInfo) {
-    /* delete the old nsVersionInfo object. */
-    delete versionInfo;
-  }
+  /* delete the old nsVersionInfo object. */
+  if(versionInfo); 
+	delete versionInfo;
+
   versionInfo	= inVInfo;
   installedFiles = new nsVector();
       
@@ -487,17 +546,38 @@ PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName,
   if (*errorMsg != NULL) 
     return errcode;
 
-  OpenProgressDialog();
+    if (bShowProgress)
+    {
+	    OpenProgressDialog();
+	}
       
   // set up default package folder, if any
   char* path = nsVersionRegistry::getDefaultDirectory( packageName );
   if ( path !=  NULL ) {
     packageFolder = new nsFolderSpec("Installed", path, userPackageName);
-    XP_FREE(path); 
+    XP_FREEIF(path); 
   }
   
   saveError( errcode );
+  
+  if (errcode != 0)
+  {
+      packageName = NULL; // Reset!
+  }
+  
   return errcode;
+}
+
+/*
+ * another forms of StartInstall()
+ */
+
+PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName, 
+                                       char* inVer,
+                                       PRInt32 flags, 
+                                       char* *errorMsg)
+{
+ 	return StartInstall(vrPackageName,  new nsVersionInfo( inVer ), flags, errorMsg);
 }
 
 /**
@@ -506,10 +586,7 @@ PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName,
 PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName, char* inVer, 
                                        char* *errorMsg)
 {
-  /* StartInstall saves the nsVersionInfo and it deletes the object when 
-   *  nsSoftwareUpdate is deleted. 
-   */
-  return StartInstall( vrPackageName, new nsVersionInfo( inVer ), errorMsg );
+  return StartInstall( vrPackageName, new nsVersionInfo( inVer ), 0, errorMsg );
 }
 
 /*
@@ -518,7 +595,6 @@ PRInt32 nsSoftwareUpdate::StartInstall(char* vrPackageName, char* inVer,
 void nsSoftwareUpdate::UserCancelled()
 {
   userChoice = 0;
-  AbortInstall();
 }
 
 void nsSoftwareUpdate::UserApproved()
@@ -535,14 +611,15 @@ PRInt32 nsSoftwareUpdate::FinalizeInstall(char* *errorMsg)
 {
   PRBool rebootNeeded = PR_FALSE;
   int result = nsSoftwareUpdate_SUCCESS;
+  *errorMsg = NULL;
   
-  SetProgressDialogItem(""); // blank the "current item" line
-      
-  if (packageName == NULL) {
-    //	probably didn't	call StartInstall()          
-    *errorMsg = SU_GetErrorMsg4(SU_ERROR_WIN_PROFILE_MUST_CALL_START, 
-                                nsSoftUpdateError_INSTALL_NOT_STARTED);
-    return nsSoftUpdateError_INVALID_ARGUMENTS;
+  
+  result = SanityCheck(errorMsg);
+  
+  if (*errorMsg != NULL)
+  {
+	saveError( result );
+	return result;
   }
       
   if ( installedFiles == NULL || installedFiles->GetSize() == 0 ) {
@@ -570,17 +647,22 @@ PRInt32 nsSoftwareUpdate::FinalizeInstall(char* *errorMsg)
       return saveError(nsSoftUpdateError_USER_CANCELLED);
     }
   }
-      
-  SetProgressDialogRange( installedFiles->GetSize() );
-      
-      
-  // Register default package folder if set
-  if ( packageFolder != NULL ) {
-    char* packageFolderStr = packageFolder->toString();
-    nsVersionRegistry::setDefaultDirectory( packageName, 
-                                            packageFolderStr );
-    XP_FREEIF(packageFolderStr);
+  
+  // If the user passed NO_FINALIZE_DLG, we should close the progress dialog here.
+  // If the user passed !NO_FINALIZE_DLG, we should open the progress dialog here.
+	
+  if ( bShowFinalize )
+  {
+    OpenProgressDialog();
   }
+  else
+  {
+    CloseProgressDialog();
+  }
+	
+  SetProgressDialogItem(""); // blank the "current item" line    
+  SetProgressDialogRange( installedFiles->GetSize() );
+  
       
   /* call Complete() on all the elements */
   /* If an error occurs in the middle, call Abort() on the rest */
@@ -589,7 +671,12 @@ PRInt32 nsSoftwareUpdate::FinalizeInstall(char* *errorMsg)
       
   // Main loop
   int count = 0;
-  nsVersionRegistry::uninstallCreate(packageName, userPackageName);
+  
+  if ( bUninstallPackage )
+  {
+	  nsVersionRegistry::uninstallCreate(packageName, userPackageName);
+  }
+
   PRUint32 i=0;
   for (i=0; i < ve->GetSize(); i++) {
     ie = (nsInstallObject*)ve->Get(i);
@@ -603,9 +690,17 @@ PRInt32 nsSoftwareUpdate::FinalizeInstall(char* *errorMsg)
     SetProgressDialogThermo(++count);
   }
   // add overall version for package
-  if ( versionInfo != NULL) {
+  if ( (versionInfo != NULL) && (bRegisterPackage)) 
+  {
     result = nsVersionRegistry::installComponent(packageName, NULL, 
                                                  versionInfo);
+  
+    // Register default package folder if set
+	if ( packageFolder != NULL )
+	{
+		nsVersionRegistry::setDefaultDirectory( packageName, packageFolder->toString() );
+	}
+  
   }
   CleanUp();
   
@@ -663,6 +758,17 @@ char* nsSoftwareUpdate::ScheduleForInstall(nsInstallObject* ob)
   installedFiles->Add( ob );
   // if (confdlg != NULL)
   //    confdlg.ScheduleForInstall( ob );
+  
+  
+	
+  // turn on flags for creating the uninstall node and
+  // the package node for each InstallObject
+  if (ob->CanUninstall())
+    bUninstallPackage = PR_TRUE;
+	
+  if (ob->RegisterPackageNode())
+    bRegisterPackage = PR_TRUE;
+  
   return NULL;
 }
 
@@ -713,19 +819,27 @@ PRInt32 nsSoftwareUpdate::AddSubcomponent(char* name,
                                 nsSoftUpdateError_INVALID_ARGUMENTS );
     return nsSoftUpdateError_INVALID_ARGUMENTS;
   }
-      
-  if (packageName == NULL) {
-    // probably didn't call StartInstall()
-    *errorMsg = SU_GetErrorMsg4(SU_ERROR_BAD_PACKAGE_NAME_AS, 
-                                nsSoftUpdateError_BAD_PACKAGE_NAME );
-    return nsSoftUpdateError_BAD_PACKAGE_NAME;
-  }
+   
+   
+  result = SanityCheck(errorMsg);
+  
+  if (*errorMsg == NULL)
+  {
+      saveError( result );
+      return result;
+  }    
+  
       
   if ((name == NULL) || (XP_STRLEN(name) == 0)) {
     // Default subName = location in jar file
-    new_name = GetQualifiedRegName( jarSource );
+    new_name = GetQualifiedRegName( jarSource, errorMsg );
   } else {
-    new_name = GetQualifiedRegName( name );
+    new_name = GetQualifiedRegName( name, errorMsg );
+  }
+  
+  if (*errorMsg != NULL)
+  {
+  	return nsSoftUpdateError_BAD_PACKAGE_NAME;
   }
       
   if ( (relativePath == NULL) || (XP_STRLEN(relativePath) == 0) ) {
@@ -737,12 +851,19 @@ PRInt32 nsSoftwareUpdate::AddSubcomponent(char* name,
   PRBool versionNewer = PR_FALSE;
   if ( (forceInstall == PR_FALSE ) &&
        (version !=  NULL) &&
-       ( nsVersionRegistry::validateComponent( new_name ) == 0 ) ) {
+       ( nsVersionRegistry::validateComponent( new_name ) == 0 ) ) 
+  {
     nsVersionInfo* oldVersion = nsVersionRegistry::componentVersion(new_name);
-    if ( version->compareTo( oldVersion ) != nsVersionEnum_EQUAL )
+    
+	if ( version->compareTo( oldVersion ) != nsVersionEnum_EQUAL )
       versionNewer = PR_TRUE;
-    delete oldVersion;
-  } else {
+      
+	if( oldVersion )
+		  delete oldVersion;
+
+  } 
+  else 
+  {
     versionNewer = PR_TRUE;
   }
       
@@ -758,7 +879,7 @@ PRInt32 nsSoftwareUpdate::AddSubcomponent(char* name,
     result = nsSoftUpdateError_UNEXPECTED_ERROR;
   }
 
-  delete new_name;
+  XP_FREEIF (new_name);
   saveError( result );
   return result;
 }
@@ -771,6 +892,15 @@ PRInt32 nsSoftwareUpdate::AddSubcomponent(char* name,
 PRInt32 nsSoftwareUpdate::Execute(char* jarSource, char* *errorMsg, char* args)
 {
   int errcode = nsSoftwareUpdate_SUCCESS;
+  
+  errcode = SanityCheck(errorMsg);
+  
+  if (*errorMsg != NULL)
+  {
+    saveError( errcode );
+    return errcode;
+  }
+  
   
   nsInstallExecute* ie = new nsInstallExecute(this, jarSource, errorMsg, args);
   if (*errorMsg != NULL) {
@@ -851,7 +981,21 @@ PRInt32 nsSoftwareUpdate::Patch(char* regName,
     return saveError( nsSoftUpdateError_INVALID_ARGUMENTS );
   }
   
-  char* rname = GetQualifiedRegName( regName );
+  errcode = SanityCheck(errorMsg);
+  
+  if (*errorMsg != NULL)
+  {
+  		saveError( errcode );
+    	return errcode;
+  }
+    
+  char* rname = GetQualifiedRegName( regName, errorMsg);
+  if (*errorMsg != NULL) 
+  {
+  	errcode = nsSoftUpdateError_BAD_PACKAGE_NAME;
+  	saveError( errcode );
+    return errcode;
+  }
   
   nsInstallPatch* ip = new nsInstallPatch(this, rname, version, patchname, 
                                           errorMsg);
@@ -863,7 +1007,7 @@ PRInt32 nsSoftwareUpdate::Patch(char* regName,
       errcode = nsSoftUpdateError_UNEXPECTED_ERROR;
     }
   }
-  delete rname;
+  XP_FREEIF( rname );
   saveError( errcode );
   return errcode;
 }
@@ -890,8 +1034,23 @@ PRInt32 nsSoftwareUpdate::Patch(char* regName,
   
   int errcode = nsSoftwareUpdate_SUCCESS;
   
-  char* rname = GetQualifiedRegName( regName );
-
+  errcode = SanityCheck(errorMsg);
+  
+  if (*errorMsg != NULL)
+  {
+  		saveError( errcode );
+    	return errcode;
+  }
+  
+  char* rname = GetQualifiedRegName( regName, errorMsg );
+  if (*errorMsg != NULL) 
+  {
+    errcode = nsSoftUpdateError_BAD_PACKAGE_NAME;
+    saveError( errcode );
+  	return errcode;
+  }
+  
+  
   nsInstallPatch* ip = new nsInstallPatch( this, rname, version,
                                            patchname, folder, filename, 
                                            errorMsg );
@@ -903,7 +1062,7 @@ PRInt32 nsSoftwareUpdate::Patch(char* regName,
       errcode = nsSoftUpdateError_UNEXPECTED_ERROR;
     }
   }
-  delete rname;
+  XP_FREEIF ( rname );
   saveError( errcode );
   return errcode;
 }
@@ -919,6 +1078,14 @@ PRInt32 nsSoftwareUpdate::DeleteFile(nsFolderSpec* folder,
                                      char* *errorMsg)
 {
   int errcode = nsSoftwareUpdate_SUCCESS;
+  
+  errcode = SanityCheck(errorMsg);
+  
+  if (*errorMsg != NULL)
+  {
+  		saveError( errcode );
+    	return errcode;
+  }
   
   nsInstallDelete* id = new nsInstallDelete(this, folder, relativeFileName, 
                                             errorMsg);
@@ -950,7 +1117,23 @@ PRInt32 nsSoftwareUpdate::DeleteComponent(char* registryName, char* *errorMsg)
 {
   int errcode = nsSoftwareUpdate_SUCCESS;
   
-  nsInstallDelete* id = new nsInstallDelete(this, NULL, registryName, errorMsg);
+  errcode = SanityCheck(errorMsg);
+  
+  if (*errorMsg != NULL)
+  {
+  		saveError( errcode );
+    	return errcode;
+  }
+  
+  char* rname = GetQualifiedRegName( registryName, errorMsg );
+  if (*errorMsg != NULL) 
+  {
+	 errcode = nsSoftUpdateError_UNEXPECTED_ERROR;
+	 saveError( errcode );
+	return errcode;
+  }
+
+  nsInstallDelete* id = new nsInstallDelete(this, NULL, rname, errorMsg);
   if (*errorMsg != NULL) {
     errcode = nsSoftUpdateError_ACCESS_DENIED;
   } else {
@@ -963,6 +1146,8 @@ PRInt32 nsSoftwareUpdate::DeleteComponent(char* registryName, char* *errorMsg)
   if (errcode == nsSoftUpdateError_FILE_DOES_NOT_EXIST) {
     errcode = nsSoftwareUpdate_SUCCESS;
   }
+  
+  XP_FREEIF (rname );
   saveError( errcode );
   return errcode;
 }
@@ -998,7 +1183,7 @@ nsFolderSpec* nsSoftwareUpdate::GetFolder(char* targetFolder,
         path = XP_AppendStr(path, filesep);
         spec = new nsFolderSpec("Installed", path, userPackageName);
       }
-      XP_FREE(path);
+      XP_FREEIF(path);
       return spec;
     } else {
       return NULL;
@@ -1006,7 +1191,8 @@ nsFolderSpec* nsSoftwareUpdate::GetFolder(char* targetFolder,
   } else {
     nsFolderSpec* spec = GetFolder(targetFolder, errorMsg);
     nsFolderSpec* ret_val = GetFolder( spec, subdirectory, errorMsg );
-    if (spec) {
+    if (spec) 
+	{
       delete spec;
     }
     return ret_val;
@@ -1021,10 +1207,13 @@ nsFolderSpec* nsSoftwareUpdate::GetFolder(nsFolderSpec* folder,
   char*         path = NULL;
   char*         newPath = NULL;
   
-  if ( subdir == NULL || (XP_STRLEN(subdir) == 0 )) {
+  if ( subdir == NULL || (XP_STRLEN(subdir) == 0 )) 
+  {
     // no subdir, return what we were passed
-    spec = folder;
-  } else if ( folder != NULL ) {
+    return folder;
+  } 
+  else if ( folder != NULL ) 
+  {
     path = folder->MakeFullPath( subdir, errorMsg );
     if (path != NULL) {
       if (su_PathEndsWithSeparator(path, filesep)) {
@@ -1033,7 +1222,7 @@ nsFolderSpec* nsSoftwareUpdate::GetFolder(nsFolderSpec* folder,
         path = XP_AppendStr(path, filesep);
         spec = new nsFolderSpec("Installed", path, userPackageName);
       }
-      XP_FREE(path);
+      XP_FREEIF(path);
     }
   }
   return spec;
@@ -1046,8 +1235,8 @@ nsFolderSpec* nsSoftwareUpdate::GetFolder(nsFolderSpec* folder,
 long nsSoftwareUpdate::DiskSpaceAvailable(nsFolderSpec* folder)
 {
   char *errorMsg = NULL;
-  char* path = folder->GetDirectoryPath(&errorMsg);
-  if ((path == NULL) || (errorMsg == NULL))
+  char* path = folder->GetDirectoryPath();
+  if (path == NULL)
     return 0;
 
   return NativeDiskSpaceAvailable(path);
@@ -1090,10 +1279,16 @@ PRInt32 nsSoftwareUpdate::AddDirectory(char* name,
       
   if ((name == NULL) || (XP_STRLEN(name) == 0)) {
     // Default subName = location in jar file
-    qualified_name = GetQualifiedRegName( jarSource );
+    qualified_name = GetQualifiedRegName( jarSource, errorMsg );
   } else {
-    qualified_name = GetQualifiedRegName( name );
+    qualified_name = GetQualifiedRegName( name, errorMsg );
   }
+  
+  if (*errorMsg != NULL)
+  {
+  	return nsSoftUpdateError_BAD_PACKAGE_NAME;
+  }
+  
       
   if ( subdir == NULL ) {
     subdir = NULL;
@@ -1123,7 +1318,10 @@ PRInt32 nsSoftwareUpdate::AddDirectory(char* name,
       // Only install if newer
       nsVersionInfo* oldVer = nsVersionRegistry::componentVersion(fullRegName);
       bInstall = ( version->compareTo(oldVer) > 0 );
-      delete oldVer; 
+      
+	  if (oldVer)
+		  delete oldVer;
+	  
     } else {
       // file doesn't exist or "forced" install
       bInstall = PR_TRUE;
@@ -1151,7 +1349,8 @@ PRInt32 nsSoftwareUpdate::AddDirectory(char* name,
         /* We have an error and we haven't scheduled, 
          * thus we can delete it 
          */
-        delete ie;
+        if (ie)
+			delete ie;
       }
       XP_FREEIF(newJarSource);
       XP_FREEIF(newSubDir);
@@ -1173,12 +1372,24 @@ PRInt32 nsSoftwareUpdate::Uninstall(char* packageName, char* *errorMsg)
 {
   int errcode = nsSoftwareUpdate_SUCCESS;
   
-  nsUninstallObject* u = new nsUninstallObject( this, packageName, errorMsg );
+  errcode = SanityCheck(errorMsg);
+  
+  if (*errorMsg != NULL)
+  {
+	 saveError( errcode );
+	 return errcode;
+  }
+  
+  char* rname = GetQualifiedPackageName( packageName );
+   
+  nsUninstallObject* u = new nsUninstallObject( this, rname, errorMsg );
   if (*errorMsg != NULL) {
     errcode = nsSoftUpdateError_UNEXPECTED_ERROR;
   } else {
     ScheduleForInstall( u );
   }
+  
+  XP_FREEIF (rname);
   
   saveError( errcode );
   return errcode;
@@ -1196,7 +1407,7 @@ PRInt32 nsSoftwareUpdate::Uninstall(char* packageName, char* *errorMsg)
  *******************************/
 void nsSoftwareUpdate::OpenProgressDialog(void)
 {
-  if ( !silent ) {
+  if ( !silent && progwin == 0) {
     progwin = NativeOpenProgDlg( GetUserPackageName() );
   }
 }
@@ -1370,10 +1581,10 @@ void nsSoftwareUpdate::CleanUp()
     PRUint32 i=0;
     for (; i < installedFiles->GetSize(); i++) {
       ie = (nsInstallObject*)installedFiles->Get(i);
-      delete ie;
+      XP_FREEIF (ie);
     }
     installedFiles->RemoveAll();
-    delete installedFiles;
+    XP_FREEIF (installedFiles);
     installedFiles = NULL;
   }
   XP_FREEIF(packageName);
@@ -1390,26 +1601,43 @@ void nsSoftwareUpdate::CleanUp()
  * This routine converts a package-relative component registry name
  * into a full name that can be used in calls to the version registry.
  */
-char* nsSoftwareUpdate::GetQualifiedRegName(char* name)
+char* nsSoftwareUpdate::GetQualifiedRegName(char* name, char**errorMsg)
 {
 
   char *comm = "=COMM=/";
   PRUint32 comm_len = XP_STRLEN(comm);
-  PRBool starts_with_comm = PR_FALSE;
-  if ((XP_STRLEN(name)) >= comm_len) {
+  char *usr = "=USER=/";
+  PRUint32 usr_len = XP_STRLEN(usr);
+  
+  
+  if ((XP_STRLEN(name)) >= comm_len) 
+  {
     PRUint32 i;
-    for (i=0; i<comm_len; i++) {
+    for (i=0; i<comm_len; i++) 
+    {
       if (XP_TO_UPPER(name[i]) != comm[i])
         break;
     }
-    if (i == comm_len) {
-      starts_with_comm = PR_TRUE;
+    if (i == comm_len) 
+    {
+      name = XP_STRDUP(&name[comm_len]);
     }
   }
-  
-  if (starts_with_comm) {
-    name = XP_STRDUP(&name[comm_len]);
-  } else if (name[0] != '/') {
+  else if ((XP_STRLEN(name)) >= usr_len) 
+  {
+    PRUint32 i;
+    for (i=0; i<usr_len; i++) 
+    {
+      if (XP_TO_UPPER(name[i]) != usr[i])
+        break;
+    }
+    if (i == usr_len) 
+    {
+      name = XP_STRDUP(&name[usr_len]);
+    }
+  }  
+  else if (name[0] != '/') 
+  {
     // Relative package path
     char* packagePrefix;
     if (XP_STRLEN(packageName) != 0) {
@@ -1418,6 +1646,13 @@ char* nsSoftwareUpdate::GetQualifiedRegName(char* name)
     } else {
       name = XP_STRDUP(name);
     }
+  }
+  
+  
+  if (BadRegName(name)) 
+  {
+  	*errorMsg = SU_GetErrorMsg4(nsSoftUpdateError_BAD_PACKAGE_NAME, nsSoftUpdateError_BAD_PACKAGE_NAME);
+  	name = NULL;
   }
   
   return name;
@@ -1541,10 +1776,10 @@ void nsSoftwareUpdate::freeIfCertificates(void* prins)
   PRUint32 i;
   for (i=0; i < noOfPrins; i++) {
     nsPrincipal* prin = (nsPrincipal*)prinArray->Get(i);
-    delete prin;
+    XP_FREEIF (prin);
     prinArray->Set(i, NULL);
   }
-  delete prinArray;
+  XP_FREEIF (prinArray);
 }
 
 #define APPLESINGLE_MAGIC_HACK 1		/* Hack to automatically detect applesingle files until we get tdell to do the right thing */
@@ -1639,7 +1874,7 @@ char* nsSoftwareUpdate::NativeExtractJARFile(char* inJarLocation,
       result = SU_DecodeAppleSingle(tempName, &newTempName);
       if ( result == 0 ) {
         XP_FileRemove( tempName, xpURL );
-        XP_FREE(tempName);
+        XP_FREEIF(tempName);
         tempName = newTempName;
       } else {
         XP_FileRemove( tempName, xpURL );
@@ -1839,6 +2074,146 @@ PRBool nsSoftwareUpdate::UserWantsConfirm()
   else
     return PR_FALSE;
 }
+
+
+
+ /**
+ * GetQualifiedPackageName
+ *
+ * This routine converts a package-relative component registry name
+ * into a full name that can be used in calls to the version registry.
+ */
+char*
+nsSoftwareUpdate::GetQualifiedPackageName( char* name )
+{
+ 	char* qualifedName;
+ 	
+ 	if (XP_STRNCMP(name, "=USER=/", XP_STRLEN( name )) == 0)
+    {
+		char* currentUserNode;
+
+    	currentUserNode = CurrentUserNode();
+    	
+    	qualifedName = XP_STRDUP(currentUserNode);
+
+		/* Append the the the path to the CurrentUserName.
+		   name[7], should be after the =USER=/   
+		*/
+
+    	qualifedName = XP_AppendStr(qualifedName, &name[7]);
+    
+    	XP_FREEIF (currentUserNode);
+    }
+	
+	if (BadRegName(qualifedName)) 
+	{
+		XP_FREEIF (qualifedName);
+		qualifedName = NULL;     
+	}
+
+    return qualifedName;
+}
+
+
+
+char*
+nsSoftwareUpdate::CurrentUserNode()
+{
+	char *qualifedName;
+	char *profileName;
+
+	qualifedName = XP_STRDUP("/Netscape/Users/");
+	profileName  = NativeProfileName();
+	
+	XP_AppendStr(qualifedName, profileName);
+	XP_AppendStr(qualifedName, "/");
+    
+	XP_FREEIF(profileName);
+
+    return qualifedName;
+}
+
+char* 
+nsSoftwareUpdate::NativeProfileName( ) 
+{
+    char *profname;
+    int len = MAXREGNAMELEN;
+    int err;
+
+	profname = (char*) malloc(len);
+
+    err = PREF_GetCharPref( "profile.name", profname, &len );
+
+    if ( err != PREF_OK )
+    {
+		XP_FREEIF(profname);
+		profname = NULL;
+	}
+
+	return profname;
+}
+
+
+/**
+ * SanityCheck
+ *
+ * This routine checks if the packageName is null. It also checks the flag if the user cancels
+ * the install progress dialog is set and acccordingly aborts the install.
+ */
+int
+nsSoftwareUpdate::SanityCheck(char**errorMsg)
+{
+    if ( packageName == NULL ) 
+    {
+        *errorMsg = SU_GetErrorMsg4(nsSoftUpdateError_INSTALL_NOT_STARTED, nsSoftUpdateError_INSTALL_NOT_STARTED);
+        return nsSoftUpdateError_INSTALL_NOT_STARTED;	
+    }
+
+    if (bUserCancelled) 
+    {
+        AbortInstall();
+        saveError(nsSoftUpdateError_USER_CANCELLED);
+        *errorMsg = SU_GetErrorMsg4(nsSoftUpdateError_USER_CANCELLED, nsSoftUpdateError_USER_CANCELLED);
+        return nsSoftUpdateError_USER_CANCELLED;
+    }
+	
+	return 0;
+}
+
+
+
+
+// catch obvious registry name errors proactively
+// rather than returning some cryptic libreg error
+PRBool 
+nsSoftwareUpdate::BadRegName(char* regName)
+{
+    long regNameLen;
+    
+    if (regName== NULL)
+	    return PR_TRUE;
+	
+	regNameLen = XP_STRLEN(regName);
+	
+    if ((regName[0] == ' ' ) || (regName[regNameLen] == ' ' ))
+        return PR_TRUE;
+        
+    if ( XP_STRSTR(regName, "//") != NULL )
+        return PR_TRUE;
+     
+    if ( XP_STRSTR(regName, " /") != NULL )
+        return PR_TRUE;
+
+    if ( XP_STRSTR(regName, "/ ") != NULL )
+        return PR_TRUE;        
+    
+    if ( XP_STRSTR(regName, "=") != NULL )
+        return PR_TRUE;           
+  
+    
+    return PR_FALSE;
+}
+
 
 
 PR_END_EXTERN_C

@@ -216,7 +216,7 @@ void nsInstallDelete::processInstallDelete(char* *errorMsg)
     if (err == 0) {
       /* System.out.println("File exists and is not read only" + finalFile);*/
     } else if (err == nsSoftUpdateError_FILE_DOES_NOT_EXIST)	{
-      /*throw( new SoftUpdateException(Strings.error_FileDoesNotExist()  +  finalFile, err));*/
+      msg = SU_GetString1(nsSoftUpdateError_FILE_DOES_NOT_EXIST, finalFile);
     } else if (err == nsSoftUpdateError_FILE_READ_ONLY) {
       msg = SU_GetString1(SU_ERROR_FILE_READ_ONLY, finalFile);
     } else if (err == nsSoftUpdateError_FILE_IS_DIRECTORY) {
@@ -335,5 +335,23 @@ int nsInstallDelete::NativeCheckFileStatus()
   XP_FREEIF(fileName);
   return err;
 }
+
+
+PRBool 
+nsInstallDelete::CanUninstall()
+{
+    return FALSE;
+}
+
+/* RegisterPackageNode
+* InstallDelete() deletes files which no longer need to be registered,
+* hence this function returns false.
+*/
+PRBool
+nsInstallDelete::RegisterPackageNode()
+{
+    return FALSE;
+}
+
 
 PR_END_EXTERN_C
