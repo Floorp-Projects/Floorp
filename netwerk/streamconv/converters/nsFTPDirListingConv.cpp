@@ -53,21 +53,8 @@ PRLogModuleInfo* gFTPDirListConvLog = nsnull;
 
 #endif /* PR_LOGGING */
 
-
-PRBool is_charAlpha(char chr) {
-    if ( ( ((chr >= 'a') && (chr <= 'z')) || ((chr >= 'A') && (chr <= 'Z')) ) ) 
-        return PR_TRUE;
-    return PR_FALSE;
-}
-
-#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : (x == ' ' || x == '\r' || x == '\n' || x == '\t') )
-
-#define IS_DIGITx(x) ( (PRBool) ( x >= '0' && x <= '9' ) ? PR_TRUE : PR_FALSE )
-
-
 // nsISupports implementation
 NS_IMPL_ISUPPORTS2(nsFTPDirListingConv, nsIStreamConverter, nsIStreamListener);
-
 
 // nsIStreamConverter implementation
 
@@ -178,7 +165,12 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         mBuffer.Truncate();
     }
 
+#ifndef DEBUG_valeski
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer) );
+#else
+    printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
+#endif // DEBUG_valeski
+
 
     if (!mSentHeading) {
         // build up the 300: line
@@ -226,7 +218,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         // XXX we need to handle comments in the raw stream.
 
         // special case windows servers who masquerade as unix servers
-        if (NT == mServerType && !NET_IS_SPACE(line[8]))
+        if (NT == mServerType && !nsString::IsSpace(line[8]))
             mServerType = UNIX;
 
 
@@ -263,7 +255,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
                 /* strip off " -> pathname" */
                 PRInt32 i;
-                for (i = len - 1; (i > 3) && (!NET_IS_SPACE(line[i])
+                for (i = len - 1; (i > 3) && (!nsString::IsSpace(line[i])
                     || (line[i-1] != '>') 
                     || (line[i-2] != '-')
                     || (line[i-3] != ' ')); i--)
@@ -418,13 +410,13 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         // ENTRY TYPE
         switch (thisEntry->mType) {
         case Dir:
-            indexFormat.Append("Directory");
+            indexFormat.Append("DIRECTORY");
             break;
         case Link:
-            indexFormat.Append("Sym-Link");
+            indexFormat.Append("SYM-LINK");
             break;
         default:
-            indexFormat.Append("File");
+            indexFormat.Append("FILE");
         }
         indexFormat.Append(' ');
 
@@ -439,8 +431,15 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             line = eol+1;
     } // end while(eol)
 
+#ifndef DEBUG_valeski
     PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
         indexFormat.Length(), indexFormat.GetBuffer()) );
+#else
+    char *unescData = indexFormat.ToNewCString();
+    nsUnescape(unescData);
+    printf("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
+    nsAllocator::Free(unescData);
+#endif // DEBUG_valeski
 
     // if there's any data left over, buffer it.
     if (line && *line) {
@@ -598,7 +597,7 @@ PRBool
 nsFTPDirListingConv::IsLSDate(char *aCStr) {
 
     /* must start with three alpha characters */
-    if (!is_charAlpha(*aCStr++) || !is_charAlpha(*aCStr++) || !is_charAlpha(*aCStr++))
+    if (!nsString::IsAlpha(*aCStr++) || !nsString::IsAlpha(*aCStr++) || !nsString::IsAlpha(*aCStr++))
         return PR_FALSE;
 
     /* space */
@@ -607,12 +606,12 @@ nsFTPDirListingConv::IsLSDate(char *aCStr) {
     aCStr++;
 
     /* space or digit */
-    if ((*aCStr != ' ') && !IS_DIGITx(*aCStr))
+    if ((*aCStr != ' ') && !nsString::IsDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* digit */
-    if (!IS_DIGITx(*aCStr))
+    if (!nsString::IsDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
@@ -622,27 +621,27 @@ nsFTPDirListingConv::IsLSDate(char *aCStr) {
     aCStr++;
 
     /* space or digit */
-    if ((*aCStr != ' ') && !IS_DIGITx(*aCStr))
+    if ((*aCStr != ' ') && !nsString::IsDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* digit */
-    if (!IS_DIGITx(*aCStr))
+    if (!nsString::IsDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* colon or digit */
-    if ((*aCStr != ':') && !IS_DIGITx(*aCStr))
+    if ((*aCStr != ':') && !nsString::IsDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* digit */
-    if (!IS_DIGITx(*aCStr))
+    if (!nsString::IsDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
     /* space or digit */
-    if ((*aCStr != ' ') && !IS_DIGITx(*aCStr))
+    if ((*aCStr != ' ') && !nsString::IsDigit(*aCStr))
         return PR_FALSE;
     aCStr++;
 
@@ -797,7 +796,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 	char *ptr, *escName;
 
     for (ptr = &aLine[PL_strlen(aLine) - 1];
-            (ptr > aLine+13) && (!NET_IS_SPACE(*ptr) || !IsLSDate(ptr-12)); ptr--)
+            (ptr > aLine+13) && (!nsString::IsSpace(*ptr) || !IsLSDate(ptr-12)); ptr--)
                 ; /* null body */
 	save_char = *ptr;
     *ptr = '\0';
@@ -809,7 +808,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 		*ptr = save_char;
 		// find the first whitespace and  terminate
 		for(ptr=aLine; *ptr != '\0'; ptr++)
-			if(NET_IS_SPACE(*ptr)) {
+			if(nsString::IsSpace(*ptr)) {
 				*ptr = '\0';
 				break;
             }
@@ -827,7 +826,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 	// parse size
 	if(ptr > aLine+15) {
         ptr -= 14;
-        while (IS_DIGITx(*ptr)) {
+        while (nsString::IsDigit(*ptr)) {
             size_num += ((PRInt32) (*ptr - '0')) * base;
             base *= 10;
             ptr--;
@@ -901,8 +900,8 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
 
         // get the date. 
         if ((cpd=PL_strchr(cp, '-')) != NULL &&
-                PL_strlen(cpd) > 9 && IS_DIGITx(*(cpd-1)) &&
-                is_charAlpha(*(cpd+1)) && *(cpd+4) == '-') 
+                PL_strlen(cpd) > 9 && nsString::IsDigit(*(cpd-1)) &&
+                nsString::IsAlpha(*(cpd+1)) && *(cpd+4) == '-') 
 		  {
 
             /* Month 
@@ -922,7 +921,7 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
 
             /** Day **/
             *cpd = '\0';
-            if (IS_DIGITx(*(cpd-2)))
+            if (nsString::IsDigit(*(cpd-2)))
                 sprintf(date+4, "%.32s ", cpd-2);
             else
                 sprintf(date+4, " %.32s ", cpd-1);
@@ -951,13 +950,13 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
 		  {
             /* Appears be in used/allocated format */
             cps = cpd;
-            while (IS_DIGITx(*(cps-1)))
+            while (nsString::IsDigit(*(cps-1)))
                 cps--;
             if (cps < cpd)
                 *cpd = '\0';
             aEntry->mContentLen = atol(cps);
             cps = cpd+1;
-            while (IS_DIGITx(*cps))
+            while (nsString::IsDigit(*cps))
                 cps++;
             *cps = '\0';
             ialloc = atoi(cpd+1);
@@ -973,7 +972,7 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
             while ((cps=strtok(NULL, sp)) != NULL) 
 			  {
                  cpd = cps;
-                 while (IS_DIGITx(*cpd))
+                 while (nsString::IsDigit(*cpd))
                      cpd++;
                  if (*cpd == '\0') 
 				   {
