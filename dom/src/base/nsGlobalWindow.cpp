@@ -1250,6 +1250,9 @@ GlobalWindowImpl::Home()
   rv = prefs->CopyCharPref(PREF_BROWSER_STARTUP_HOMEPAGE, &url);
   if (NS_FAILED(rv) || (!url)) {
     // if all else fails, use this
+#ifdef DEBUG_seth
+    printf("all else failed.  using %s as the home page\n",DEFAULT_HOME_PAGE);
+#endif
     homeURL = DEFAULT_HOME_PAGE;
   }
   else {
