@@ -27,6 +27,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install::
     $(MAKE_INSTALL) broken.gif                 $(DIST)\bin\chrome\navigator\skin\default
+    $(MAKE_INSTALL) lock.gif                   $(DIST)\bin\chrome\navigator\skin\default
     $(MAKE_INSTALL) unlock.gif                 $(DIST)\bin\chrome\navigator\skin\default
     $(MAKE_INSTALL) NavSecurityOverlay.css     $(DIST)\bin\chrome\navigator\skin\default
     
