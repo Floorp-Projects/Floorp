@@ -26,7 +26,7 @@
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
-#include content/browser-doctype.inc
+#include browser-doctype.inc
 
 <overlay id="hidden-overlay"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -34,20 +34,20 @@
 
 # All JS files that browser.xul wishes to include *must* go into the browser-scripts.inc file
 # so that they can be shared by hiddenWindow.xul.
-#include content/browser-scripts.inc
+#include browser-scripts.inc
 
 <window id="main-window">
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
 # browser-sets.inc file for sharing with hiddenWindow.xul.
-#include content/browser-sets.inc
+#include browser-sets.inc
 
 # The hacky hidden tree used by the Go menu to build items.
-#include content/browser-gotreehack.inc
+#include browser-gotreehack.inc
 
 # The entire main menubar is placed into browser-menubar.inc, so that it can be shared by 
 # hiddenWindow.xul.
-#include content/browser-menubar.inc
+#include browser-menubar.inc
 
 </window>
 
