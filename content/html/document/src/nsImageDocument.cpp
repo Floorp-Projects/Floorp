@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *    Morten Nilsen <morten@nilsen.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -468,7 +468,7 @@ nsresult nsImageDocument::UpdateTitle( void )
   //  - get the URL interface, get the extension, convert to upper-case
   //  Unless the Imagerequest or Image can tell us the type this is the best we can do.
   nsIURL *pURL=nsnull;
-  if(NS_SUCCEEDED(mDocumentURL->QueryInterface(NS_GET_IID(nsIURL),(void **)&pURL))){
+  if(NS_SUCCEEDED(mDocumentURL->QueryInterface(NS_GET_IID(nsIURL),(void **)&pURL))) {
     char *pExtension=nsnull;
     pURL->GetFileExtension(&pExtension);
     if(pExtension){
@@ -491,10 +491,22 @@ nsresult nsImageDocument::UpdateTitle( void )
     rv = stringService->CreateBundle(NSIMAGEDOCUMENT_PROPERTIES_URI, getter_AddRefs(bundle));
   }
   if (NS_SUCCEEDED(rv) && bundle) {
-    nsAutoString key;
     nsXPIDLString valUni;
+    nsAutoString widthStr;
+    nsAutoString heightStr;
+    nsXPIDLString fileStr;
+    PRUint32 width = 0, height = 0;
+
+    nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
+    if (url) {
+      nsXPIDLCString pName;
+      url->GetFileName(getter_Copies(pName));
+      if(pName){
+        fileStr.Assign(NS_ConvertUTF8toUCS2(pName));
+      }
+    }
+
     if (mImageRequest) {
-      PRUint32 width, height;
 #ifdef USE_IMG2
       imgIContainer* imgContainer;
       rv = mImageRequest->GetImage(&imgContainer);
@@ -509,19 +521,30 @@ nsresult nsImageDocument::UpdateTitle( void )
 #else
       mImageRequest->GetNaturalImageSize(&width, &height);
 #endif
+
+      widthStr.AppendInt(width);
+      heightStr.AppendInt(height);
+    }
+    // If we got a filename, display it
+    if(!fileStr.IsEmpty()) {
       // if we got a valid size (sometimes we do not) then display it
       if (width != 0 && height != 0){
-        key.Assign(NS_LITERAL_STRING("ImageTitleWithDimensions"));
-        nsAutoString widthStr; widthStr.AppendInt(width);
-        nsAutoString heightStr; heightStr.AppendInt(height);
+        const PRUnichar *formatStrings[3]  = {fileStr.get(), widthStr.get(), heightStr.get()};
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensionsAndFile").get(), formatStrings, 3, getter_Copies(valUni));
+      } else {
+        const PRUnichar *formatStrings[1] = {fileStr.get()};
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithoutDimensions").get(), formatStrings, 1, getter_Copies(valUni));
+      }
+    } else {
+      // if we got a valid size (sometimes we do not) then display it
+      if (width != 0 && height != 0){
         const PRUnichar *formatStrings[2]  = {widthStr.get(), heightStr.get()};
-        rv = bundle->FormatStringFromName(key.get(), formatStrings, 2, getter_Copies(valUni));
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensions").get(), formatStrings, 2, getter_Copies(valUni));
+      } else {
+        rv = bundle->GetStringFromName(NS_LITERAL_STRING("ImageTitleWithoutDimensionsAndFile").get(), getter_Copies(valUni));
       }
     }
-    if (!valUni || !valUni[0]) {
-      key.Assign(NS_LITERAL_STRING("ImageTitleWithoutDimensions"));
-      rv = bundle->GetStringFromName(key.get(), getter_Copies(valUni));
-    }
+
     if (NS_SUCCEEDED(rv) && valUni) {
       // set it on the document
       SetTitle(nsDependentString(valUni));
