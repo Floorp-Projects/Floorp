@@ -1085,7 +1085,7 @@ NS_IMETHODIMP nsDragService::NativeDrop(PDRAGINFO pdinfo, HWND hwnd,
     if (isUrl &&
         pditem->hstrTargetName &&
         NS_SUCCEEDED(GetAtom(pditem->hstrTargetName, getter_Copies(titleText))))
-      for (char* ptr=strchr(titleText.get(),'\n'); ptr; ptr=strchr(ptr, '\n'))
+      for (char* ptr=strchr(titleText.BeginWriting(),'\n'); ptr; ptr=strchr(ptr, '\n'))
         *ptr = ' ';
 
     rv = NativeDataToTransferable( dropText.get(), titleText.get(), isUrl);

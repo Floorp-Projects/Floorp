@@ -4123,7 +4123,7 @@ BuildURLAttachmentData(nsIURI *url)
 {
   int                 attachCount = 2;  // one entry and one empty entry
   nsMsgAttachmentData *attachments = nsnull;
-  char                *theName = nsnull;
+  const char          *theName = nsnull;
 
   if (!url)
     return nsnull;    
@@ -4137,7 +4137,7 @@ BuildURLAttachmentData(nsIURI *url)
   url->GetSpec(spec);
   if (!spec.IsEmpty())
   {
-    theName = (char *)strrchr(spec.get(), '/');
+    theName = strrchr(spec.get(), '/');
   }
 
   if (!theName)

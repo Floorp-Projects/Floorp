@@ -3077,7 +3077,7 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
         NS_ASSERTION(imapFolder, "The draft folder MUST be an imap folder in order to mark the msg delete!");
         if (NS_SUCCEEDED(rv) && imapFolder)
         {
-          char * str = PL_strstr(curDraftIdURL.get(), "#");
+          const char * str = PL_strstr(curDraftIdURL.get(), "#");
           NS_ASSERTION(str, "Failed to get current draft id url");
           if (str)
           {

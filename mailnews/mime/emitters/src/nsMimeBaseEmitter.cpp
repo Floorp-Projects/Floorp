@@ -609,11 +609,13 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
     
     if (NS_SUCCEEDED(mChannel->GetContentType(contentType)) && !contentType.IsEmpty())
     {
-      char *cPtr = (char *) PL_strcasestr(contentType.get(), "charset=");
+      char *cBegin = contentType.BeginWriting();
+
+      const char *cPtr = PL_strcasestr(cBegin, "charset=");
 
       if (cPtr)
       {
-        char  *ptr = (char *) contentType.get();
+        char  *ptr = cBegin;
         while (*ptr)
         {
           if ( (*ptr == ' ') || (*ptr == ';') ) 
@@ -629,8 +631,8 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
         }
       }
 
-      // have to recompute strlen since contentType could have an embedded null byte
-      mChannel->SetContentType(nsDependentCString(contentType.get()));
+      // have to set content-type since it could have an embedded null byte
+      mChannel->SetContentType(nsDependentCString(cBegin));
       mChannel->SetContentCharset(nsDependentCString(aCharset));
     }
   }

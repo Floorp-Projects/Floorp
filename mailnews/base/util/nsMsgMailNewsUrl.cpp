@@ -428,10 +428,10 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetSpec(nsACString &aSpec)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetSpec(const nsACString &aSpec)
 {
-  const nsPromiseFlatCString &spec = PromiseFlatCString(aSpec);
+  nsCAutoString spec(aSpec);
   // Parse out "filename" attribute if present.
   char *start, *end;
-  start = PL_strcasestr(spec.get(),FILENAME_PART);
+  start = PL_strcasestr(spec.BeginWriting(),FILENAME_PART);
   if (start)
   {	// Make sure we only get our own value.
     end = PL_strcasestr((char*)(start+FILENAME_PART_LEN),"&");

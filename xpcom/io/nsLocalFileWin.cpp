@@ -1846,7 +1846,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         GetNativePath(path);
 
     // Get extension.
-    char* ext = ::strrchr( path.get(), '.' );
+    char* ext = ::strrchr( path.BeginWriting(), '.' );
     if ( ext ) {
         // Convert extension to lower case.
         for( char *p = ext; *p; p++ ) {

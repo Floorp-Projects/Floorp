@@ -147,7 +147,7 @@ nsSoundDatasource::GetTarget(nsIRDFResource *source,
   if (property == kNC_Name.get()) {
     nsCOMPtr<nsIRDFLiteral> name;
     if (strcmp(value.get(), DEFAULT_SOUND_URL)) {
-      char *lastSlash = strrchr(value.get(), '/');
+      const char *lastSlash = strrchr(value.get(), '/');
       // turn "file://C|/winnt/media/foo.wav" into "foo".
       nsCAutoString soundName(lastSlash + 1);
       soundName.Truncate(soundName.Length() - WAV_EXTENSION_LENGTH);
@@ -350,7 +350,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
   else if (property == kNC_Name.get()) {
     nsCOMPtr<nsIRDFLiteral> name;
     if (strcmp(value.get(), DEFAULT_SOUND_URL)) {
-      char *lastSlash = strrchr(value.get(), '/');
+      const char *lastSlash = strrchr(value.get(), '/');
       // turn "file://C|/winnt/media/foo.wav" into "foo".
       nsCAutoString soundName(lastSlash + 1);
       soundName.Truncate(soundName.Length() - WAV_EXTENSION_LENGTH);

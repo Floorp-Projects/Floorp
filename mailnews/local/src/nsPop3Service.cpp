@@ -321,7 +321,8 @@ NS_IMETHODIMP nsPop3Service::NewURI(const nsACString &aSpec,
     popSpec += ":";
     popSpec.AppendInt(port);
     popSpec += "?";
-    const char *uidl = PL_strstr(PromiseFlatCString(aSpec).get(), "uidl=");
+    const nsCString &flatSpec = PromiseFlatCString(aSpec);
+    const char *uidl = PL_strstr(flatSpec.get(), "uidl=");
     if (!uidl) return NS_ERROR_FAILURE;
     popSpec += uidl;
     nsCOMPtr<nsIUrlListener> urlListener = do_QueryInterface(folder, &rv);

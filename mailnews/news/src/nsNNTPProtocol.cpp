@@ -982,7 +982,7 @@ nsresult nsNNTPProtocol::OpenCacheEntry()
   nsCAutoString urlSpec;
   mailnewsUrl->GetAsciiSpec(urlSpec);
   // for now, truncate of the query part so we don't duplicate urls in the cache...
-  char * anchor = (char *)strrchr(urlSpec.get(), '?');
+  char * anchor = (char *)strrchr(urlSpec.BeginWriting(), '?');
   if (anchor)
     *anchor = '\0';
   return cacheSession->AsyncOpenCacheEntry(urlSpec.get(), nsICache::ACCESS_READ_WRITE, this);
