@@ -435,7 +435,11 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     nsrefcnt cnt;
-    NS_RELEASE2(nsServiceManager::mGlobalServiceManager, cnt);
+
+    // We may have AddRef'd for the caller of NS_InitXPCOM, so release it       
+    // here again:                                                              
+    NS_IF_RELEASE(servMgr);
+    NS_RELEASE2(nsServiceManager::mGlobalServiceManager, cnt);                  
     NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
 
     // Finally, release the component manager last because it unloads the
