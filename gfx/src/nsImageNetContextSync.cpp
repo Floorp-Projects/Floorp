@@ -71,9 +71,10 @@ public:
   virtual PRBool IsURLInDiskCache(ilIURL* aUrl);
 #endif /* NU_CACHE */
 
-  virtual int GetURL(ilIURL*          aUrl,
-                     ImgCachePolicy aLoadMethod,
-		                 ilINetReader*    aReader);
+  virtual int GetURL(ilIURL* aUrl,ImgCachePolicy aLoadMethod,
+		             ilINetReader* aReader, PRBool IsAnimationLoop);
+
+  virtual int GetContentLength (ilIURL * aURL);
 
   ImgCachePolicy mReloadPolicy;
 };
@@ -162,10 +163,21 @@ ImageNetContextSyncImpl::IsURLInDiskCache(ilIURL *aUrl)
 }
 #endif /* NU_CACHE */
 
+
+
 int 
-ImageNetContextSyncImpl::GetURL(ilIURL*          aURL, 
-			                          ImgCachePolicy aLoadMethod,
-			                          ilINetReader*    aReader)
+ImageNetContextSyncImpl::GetContentLength (ilIURL * aURL)
+{
+
+    return 0;
+}
+
+
+int 
+ImageNetContextSyncImpl::GetURL(ilIURL*  aURL, 
+			                     ImgCachePolicy aLoadMethod,
+			                     ilINetReader* aReader,
+                                 PRBool IsAnimationLoop)
 {
   NS_PRECONDITION(nsnull != aURL, "null URL");
   NS_PRECONDITION(nsnull != aReader, "null reader");
