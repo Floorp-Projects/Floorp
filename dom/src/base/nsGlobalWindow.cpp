@@ -90,6 +90,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPkcs11.h"
+#include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventStateManager.h"

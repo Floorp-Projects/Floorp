@@ -42,6 +42,7 @@
 #include "nsComputedDOMStyle.h"
 
 #include "nsDOMError.h"
+#include "nsDOMString.h"
 #include "nsIDOMCSS2Properties.h"
 #include "nsIDOMElement.h"
 #include "nsStyleContext.h"

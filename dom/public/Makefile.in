@@ -49,6 +49,7 @@ EXPORTS=nsIScriptContext.h		\
 	nsIJSEventListener.h		\
 	nsIDOMClassInfo.h		\
 	nsIBaseDOMException.h		\
+	nsDOMString.h			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -52,6 +52,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMRange.h"
+#include "nsDOMString.h"
 #include "nsIModifyableXPointer.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
