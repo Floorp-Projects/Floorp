@@ -48,6 +48,8 @@ public:
   virtual const nsFont& GetDefaultFixedFont(void);
   NS_IMETHOD GetDefaultColor(nscolor& aColor);
   NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor);
+  NS_IMETHOD SetDefaultColor(const nscolor& aColor);
+  NS_IMETHOD SetDefaultBackgroundColor(const nscolor& aColor);
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
   NS_IMETHOD LoadImage(const nsString& aURL,
                        const nscolor* aBackgroundColor,

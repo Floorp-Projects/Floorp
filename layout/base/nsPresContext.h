@@ -109,6 +109,8 @@ public:
    */
   NS_IMETHOD GetDefaultColor(nscolor& aColor) = 0;
   NS_IMETHOD GetDefaultBackgroundColor(nscolor& aColor) = 0;
+  NS_IMETHOD SetDefaultColor(const nscolor& aColor) = 0;
+  NS_IMETHOD SetDefaultBackgroundColor(const nscolor& aColor) = 0;
 
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult) = 0;
 
