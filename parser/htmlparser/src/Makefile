@@ -54,6 +54,7 @@ EXPORTS =     \
   nsHTMLContentSinkStream.h \
   nsHTMLEntities.h    \
   nsHTMLTokens.h    \
+  nsHTMLTags.h    \
   nsILoggingSink.h   \
   nsIParserNode.h   \
   nsIParser.h   \

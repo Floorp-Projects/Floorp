@@ -78,11 +78,16 @@ ifndef NS_USE_GCC
 PLATFORM_FLAGS		+= -multigot -Wl,-nltgot,170
 endif
 PORT_FLAGS		+= -DNO_UINT32_T -DNO_INT64_T -DNEED_BSD_TYPES
-SHLIB_LD_OPTS		= -no_unresolved
+# SHLIB_LD_OPTS		= -no_unresolved
 ifeq ($(AWT_11),1)
 JAVAC_ZIP		= $(NS_LIB)/rt.jar:$(NS_LIB)/dev.jar:$(NS_LIB)/i18n.jar:$(NS_LIB)/tiny.jar
 endif
 endif
+
+# nglayout build combines static and dynamic libraries into bigger
+# uberlibraries, which requires these flags:
+LD_ALL = -all
+LD_NONE = -none
 
 ifndef NS_USE_GCC
 CC			= cc
