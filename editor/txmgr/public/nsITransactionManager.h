@@ -65,6 +65,11 @@ public:
   virtual nsresult Redo(void) = 0;
 
   /**
+   * Clears the undo and redo stacks.
+   */
+  virtual nsresult Clear(void) = 0;
+
+  /**
    * Returns the number of items on the undo stack.
    * @param aNumItems will contain number of items.
    */
@@ -75,6 +80,18 @@ public:
    * @param aNumItems will contain number of items.
    */
   virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems) = 0;
+
+  /**
+   * Returns a pointer to the transaction at the top of the undo stack.
+   * @param aTransaction will contain pointer to the transaction.
+   */
+  virtual nsresult PeekUndoStack(nsITransaction **aTransaction) = 0;
+
+  /**
+   * Returns a pointer to the transaction at the top of the redo stack.
+   * @param aTransaction will contain pointer to the transaction.
+   */
+  virtual nsresult PeekRedoStack(nsITransaction **aTransaction) = 0;
 
   /**
    * Writes a stream representation of the transaction manager and it's
