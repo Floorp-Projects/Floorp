@@ -112,6 +112,7 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   mUpdatedBand = PR_FALSE;
   mPlacedFloaters = 0;
   mImpactedByFloaters = PR_FALSE;
+  mLastFloaterWasLetterFrame = PR_FALSE;
   mTotalPlacedFrames = 0;
   mTopEdge = mBottomEdge = 0;
   mReflowTextRuns = nsnull;
@@ -270,6 +271,7 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mImpactedByFloaters = aImpactedByFloaters;
   mTotalPlacedFrames = 0;
   mCanPlaceFloater = PR_TRUE;
+  mLineEndsInBR = PR_FALSE;
   mSpanDepth = 0;
   mMaxTopBoxHeight = mMaxBottomBoxHeight = 0;
 
@@ -342,12 +344,11 @@ nsLineLayout::EndLineReflow()
 // tracks where a child frame is going in its span; they don't need a
 // per-span mLeftEdge?
 
-// XXX currently broken because it doesn't recurse through the nested
-// spans that are currently open to update their right edge.
 void
 nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
                          nscoord aWidth, nscoord aHeight,
-                         PRBool aPlacedLeftFloater)
+                         PRBool aPlacedLeftFloater,
+                         nsIFrame* aFloaterFrame)
 {
   PerSpanData* psd = mRootSpan;
   NS_PRECONDITION(psd->mX == psd->mLeftEdge, "update-band called late");
@@ -398,6 +399,10 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
   mUpdatedBand = PR_TRUE;
   mPlacedFloaters |= (aPlacedLeftFloater ? PLACED_LEFT : PLACED_RIGHT);
   mImpactedByFloaters = PR_TRUE;
+
+  nsCOMPtr<nsIAtom> frameType;
+  aFloaterFrame->GetFrameType(getter_AddRefs(frameType));
+  mLastFloaterWasLetterFrame = nsLayoutAtoms::letterFrame == frameType.get();
 
   // Now update all of the open spans...
   psd = mCurrentSpan;
@@ -778,7 +783,8 @@ nsLineLayout::LineIsBreakable() const
 nsresult
 nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                           nsIFrame** aNextRCFrame,
-                          nsReflowStatus& aReflowStatus)
+                          nsReflowStatus& aReflowStatus,
+                          nsHTMLReflowMetrics* aMetrics)
 {
   PerFrameData* pfd;
   nsresult rv = NewPerFrameData(&pfd);
@@ -936,7 +942,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsIAtom* frameType;
   aFrame->GetFrameType(&frameType);
   pfd->mIsTextFrame = PR_FALSE;
+  pfd->mIsLetterFrame = PR_FALSE;
   pfd->mIsNonEmptyTextFrame = PR_FALSE;
+  pfd->mIsSticky = PR_FALSE;
   if (frameType) {
     if (frameType == nsLayoutAtoms::placeholderFrame) {
       nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)aFrame)->GetOutOfFlowFrame();
@@ -969,6 +977,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       if (metrics.width) {
         pfd->mIsNonEmptyTextFrame = PR_TRUE;
       }
+    }
+    else if (frameType == nsLayoutAtoms::letterFrame) {
+      pfd->mIsLetterFrame = PR_TRUE;
     }
     NS_RELEASE(frameType);
   }
@@ -1054,6 +1065,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   if (eReflowReason_Initial == reason) {
     aFrame->GetFrameState(&state);
     aFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
+  }
+
+  if (aMetrics) {
+    *aMetrics = metrics;
   }
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aReflowStatus)) {
@@ -1259,7 +1274,6 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     if (!mImpactedByFloaters) {
 #ifdef NOISY_CAN_PLACE_FRAME
       printf("   ==> not-safe and not-impacted fits: ");
-      PerSpanData* psd = mCurrentSpan;
       while (nsnull != psd) {
         printf("<psd=%p x=%d left=%d> ", psd, psd->mX, psd->mLeftEdge);
         psd = psd->mParent;
@@ -1267,6 +1281,63 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
       printf("\n");
 #endif
       return PR_TRUE;
+    }
+    else if (mLastFloaterWasLetterFrame) {
+      // Another special case: see if the floater is a letter
+      // frame. If it is, then allow the frame next to it to fit.
+      if (pfd->mIsNonEmptyTextFrame) {
+        // This must be the first piece of non-empty text (because
+        // aNotSafeToBreak is true) or its a piece of text that is
+        // part of a larger word.
+        pfd->mIsSticky = PR_TRUE;
+      }
+      else if (pfd->mSpan) {
+        PerFrameData* pf = pfd->mSpan->mFirstFrame;
+        while (pf) {
+          if (pf->mIsSticky) {
+            // If one of the spans children was sticky then the span
+            // itself is sticky.
+            pfd->mIsSticky = PR_TRUE;
+          }
+          pf = pf->mNext;
+        }
+      }
+
+      if (pfd->mIsSticky) {
+#ifdef NOISY_CAN_PLACE_FRAME
+        printf("   ==> last floater was letter frame && frame is sticky\n");
+#endif
+        return PR_TRUE;
+      }
+    }
+  }
+
+  // If this is a piece of text inside a letter frame...
+  if (pfd->mIsNonEmptyTextFrame) {
+    if (psd->mFrame && psd->mFrame->mIsLetterFrame) {
+      nsIFrame* prevInFlow;
+      psd->mFrame->mFrame->GetPrevInFlow(&prevInFlow);
+      if (prevInFlow) {
+        nsIFrame* prevPrevInFlow;
+        prevInFlow->GetPrevInFlow(&prevPrevInFlow);
+        if (!prevPrevInFlow) {
+          // And it's the first continuation of the letter frame...
+          // Then make sure that the text fits
+          return PR_TRUE;
+        }
+      }
+    }
+  }
+  else if (pfd->mIsLetterFrame) {
+    // If this is the first continuation of the letter frame...
+    nsIFrame* prevInFlow;
+    pfd->mFrame->GetPrevInFlow(&prevInFlow);
+    if (prevInFlow) {
+      nsIFrame* prevPrevInFlow;
+      prevInFlow->GetPrevInFlow(&prevPrevInFlow);
+      if (!prevPrevInFlow) {
+        return PR_TRUE;
+      }
     }
   }
 
@@ -1343,6 +1414,8 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     pfd->mDescent = aMetrics.descent;
     pfd->mIsTextFrame = PR_FALSE;
     pfd->mIsNonEmptyTextFrame = PR_FALSE;
+    pfd->mIsLetterFrame = PR_FALSE;
+    pfd->mIsSticky = PR_FALSE;
 
     // Note: y value will be updated during vertical alignment
     aFrame->GetRect(pfd->mBounds);

@@ -67,7 +67,8 @@ public:
   void EndLineReflow();
 
   void UpdateBand(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                  PRBool aPlacedLeftFloater);
+                  PRBool aPlacedLeftFloater,
+                  nsIFrame* aFloaterFrame);
 
   nsresult BeginSpan(nsIFrame* aFrame,
                      const nsHTMLReflowState* aSpanReflowState,
@@ -87,7 +88,8 @@ public:
 
   nsresult ReflowFrame(nsIFrame* aFrame,
                        nsIFrame** aNextRCFrame,
-                       nsReflowStatus& aReflowStatus);
+                       nsReflowStatus& aReflowStatus,
+                       nsHTMLReflowMetrics* aMetrics = nsnull);
 
   nscoord GetCarriedOutBottomMargin() const {
     return mCarriedOutBottomMargin;
@@ -147,6 +149,10 @@ public:
   PRBool LineIsEmpty() const;
 
   PRBool LineIsBreakable() const;
+
+  PRBool GetLineEndsInBR() const { return mLineEndsInBR; }
+
+  void SetLineEndsInBR(PRBool aOn) { mLineEndsInBR = aOn; }
 
   //----------------------------------------
   // Inform the line-layout about the presence of a floating frame
@@ -220,9 +226,11 @@ protected:
   PRBool mIsTopOfPage;
   PRBool mUpdatedBand;
   PRBool mImpactedByFloaters;
+  PRBool mLastFloaterWasLetterFrame;
   PRBool mCanPlaceFloater;
   PRBool mKnowStrictMode;
   PRBool mInStrictMode;
+  PRBool mLineEndsInBR;
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mWordFrames;
@@ -277,6 +285,8 @@ protected:
     PRUint8 mVerticalAlign;
     PRBool mIsTextFrame;
     PRBool mIsNonEmptyTextFrame;
+    PRBool mIsLetterFrame;
+    PRBool mIsSticky;
 
     PerFrameData* Last() {
       PerFrameData* pfd = this;
