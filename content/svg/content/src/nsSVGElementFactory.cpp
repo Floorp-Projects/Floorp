@@ -75,6 +75,10 @@ nsresult
 NS_NewSVGDefsElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGScriptElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGUseElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGSymbolElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -113,6 +117,10 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGDefsElement(aResult, aNodeInfo);
   if (name == nsSVGAtoms::script)
     return NS_NewSVGScriptElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::use)
+    return NS_NewSVGUseElement(aResult, aNodeInfo);
+  if (name == nsSVGAtoms::symbol)
+    return NS_NewSVGSymbolElement(aResult, aNodeInfo);
 
   // if we don't know what to create, just create a standard xml element:
   return NS_NewXMLElement(aResult, aNodeInfo);

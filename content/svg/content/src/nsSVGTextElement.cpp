@@ -242,8 +242,15 @@ NS_IMETHODIMP nsSVGTextElement::GetNumberOfChars(PRInt32 *_retval)
 /* float getComputedTextLength (); */
 NS_IMETHODIMP nsSVGTextElement::GetComputedTextLength(float *_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_UNEXPECTED;
+  nsCOMPtr<nsIDOMSVGRect> bbox;
+
+  GetBBox(getter_AddRefs(bbox));
+  if (bbox)
+    bbox->GetWidth(_retval);
+  else
+    *_retval = 0;
+  
+  return NS_OK;
 }
 
 /* float getSubStringLength (in unsigned long charnum, in unsigned long nchars); */
