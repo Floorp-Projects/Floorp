@@ -136,6 +136,7 @@ function initCommands()
          ["quit",              cmdQuit,                            CMD_CONSOLE],
          ["quit-mozilla",      cmdQuitMozilla,                     CMD_CONSOLE],
          ["quote",             cmdQuote,            CMD_NEED_SRV | CMD_CONSOLE],
+         ["reload-plugin",     cmdReload,                          CMD_CONSOLE],
          ["rlist",             cmdRlist,            CMD_NEED_SRV | CMD_CONSOLE],
          ["reload-ui",         cmdReloadUI,                                  0],
          ["say",               cmdSay,              CMD_NEED_SRV | CMD_CONSOLE],
@@ -562,25 +563,63 @@ function cmdAblePlugin(e)
 {
     if (e.command.name == "disable-plugin")
     {
-        if (!("disablePlugin" in e.plugin.scope))
+        if (!e.plugin.enabled)
+        {
+            display(getMsg(MSG_IS_DISABLED, e.plugin.id));
+            return;
+        }
+
+        if (e.plugin.API > 0)
+        {
+            if (!e.plugin.disable())
+            {
+                display(getMsg(MSG_CANT_DISABLE, e.plugin.id));
+                return;
+            }
+        }
+        else if (!("disablePlugin" in e.plugin.scope))
         {
             display(getMsg(MSG_CANT_DISABLE, e.plugin.id));
             return;
         }
+        else
+        {
+            e.plugin.scope.disablePlugin();
+        }
 
         e.plugin.enabled = false;
-        e.plugin.scope.disablePlugin();
+        e.plugin.prefs["enabled"] = false;
     }
     else
     {
-        if (!("enablePlugin" in e.plugin.scope))
+        if (e.plugin.enabled)
         {
-            display(getMsg(MSG_CANT_ENABLE, e.plugin.id));
+            display(getMsg(MSG_IS_ENABLED, e.plugin.id));
             return;
         }
 
+        if (e.plugin.API > 0)
+        {
+            if (!e.plugin.enable())
+            {
+                display(getMsg(MSG_CANT_ENABLE, e.plugin.id));
+                e.plugin.prefs["enabled"] = false;
+                return;
+            }
+        }
+        else if (!("enablePlugin" in e.plugin.scope))
+        {
+            display(getMsg(MSG_CANT_ENABLE, e.plugin.id));
+            e.plugin.prefs["enabled"] = false;
+            return;
+        }
+        else
+        {
+            e.plugin.scope.enablePlugin();
+        }
+
         e.plugin.enabled = true;
-        e.plugin.scope.enablePlugin();
+        e.plugin.prefs["enabled"] = true;
     }
 }
 
@@ -1468,7 +1507,7 @@ function cmdListPlugins(e)
     function listPlugin(plugin, i)
     {
         var enabled;
-        if ("disablePlugin" in plugin.scope)
+        if ((plugin.API > 0) || ("disablePlugin" in plugin.scope))
             enabled = plugin.enabled;
         else
             enabled = MSG_ALWAYS;
@@ -1799,9 +1838,54 @@ function cmdLeave(e)
     }
 }
 
-function cmdLoad (e)
+function cmdReload(e)
+{
+    dispatch("load " + e.plugin.url);
+}
+
+function cmdLoad(e)
 {
     var ex;
+    var plugin;
+
+    function removeOldPlugin(id)
+    {
+        var oldPlugin;
+
+        var i = getPluginIndexByURL(e.url);
+        if ((i == -1) && id)
+            i = getPluginIndexById(id);
+        if (i == -1)
+            return -1;
+
+        oldPlugin = client.plugins[i];
+        if (oldPlugin.enabled)
+        {
+            if (oldPlugin.API > 0)
+            {
+                if (!oldPlugin.disable())
+                {
+                    display(getMsg(MSG_CANT_DISABLE, oldPlugin.id));
+                    display (getMsg(MSG_ERR_SCRIPTLOAD, e.url));
+                    return null;
+                }
+                client.prefManager.removeObserver(oldPlugin.prefManager);
+                oldPlugin.prefManager.destroy();
+            }
+            else if ("disablePlugin" in oldPlugin.scope)
+            {
+                oldPlugin.scope.disablePlugin();
+            }
+            else
+            {
+                display(getMsg(MSG_CANT_DISABLE, oldPlugin.id));
+                display (getMsg(MSG_ERR_SCRIPTLOAD, e.url));
+                return null;
+            }
+        }
+
+        return i;
+    }
 
     if (!e.scope)
         e.scope = new Object();
@@ -1809,46 +1893,67 @@ function cmdLoad (e)
     if (!("plugin" in e.scope))
     {
         e.scope.plugin = { url: e.url, id: MSG_UNKNOWN, version: -1,
-                           description: "", status: MSG_LOADING, enabled: true};
+                           description: "", status: MSG_LOADING, enabled: false,
+                           PluginAPI: 1, cwd: e.url.match(/^(.*?)[^\/]+$/)[1]};
+
     }
 
-    e.scope.plugin.scope = e.scope;
+    plugin = e.scope.plugin;
+    plugin.scope = e.scope;
 
     try
     {
         var rvStr;
         var rv = rvStr = client.load(e.url, e.scope);
-        if ("initPlugin" in e.scope)
-            rv = rvStr = e.scope.initPlugin(e.scope);
+        var index;
 
-        /* do this again, in case the plugin trashed it */
-        if (!("plugin" in e.scope))
+        if ((index = removeOldPlugin(plugin.id)) == null)
+            return null;
+
+        if ("init" in plugin)
         {
-            e.scope.plugin = { url: e.url, id: MSG_UNKNOWN, version: -1,
-                               description: "", status: MSG_ERROR,
-                               enabled: true };
+            if (!("enable" in plugin) || !("disable" in plugin) ||
+                !("id" in plugin) || !(plugin.id.match(/^[A-Za-z-_]+$/)))
+            {
+                display (getMsg(MSG_ERR_PLUGINAPI, e.url));
+                display (getMsg(MSG_ERR_SCRIPTLOAD, e.url));
+                return null;
+            }
+
+            plugin.API = 1;
+            plugin.prefary = [["enabled", true, ""]];
+            rv = rvStr = plugin.init(e.scope);
+
+            var branch = "extensions.irc.plugins." + plugin.id + ".";
+            var prefManager = new PrefManager(branch, client.defaultBundle);
+            prefManager.addPrefs(plugin.prefary);
+            plugin.prefManager = prefManager;
+            plugin.prefs = prefManager.prefs;
+            if ("onPrefChanged" in plugin)
+                prefManager.addObserver(plugin);
+            client.prefManager.addObserver(prefManager);
         }
         else
         {
-            e.scope.plugin.status = "loaded";
+            plugin.API = 0;
+            if ("initPlugin" in e.scope)
+                rv = rvStr = e.scope.initPlugin(e.scope);
+            plugin.enabled = true;
         }
-
-        e.scope.plugin.scope = e.scope;
+        plugin.status = "loaded";
 
         if (typeof rv == "function")
             rvStr = "function";
-        if (!("__id" in e.scope))
-            e.scope.__id = null;
-        if (!("__description" in e.scope))
-            e.scope.__description = null;
 
-        var i = getPluginIndexByURL(e.url);
-        if (i != -1)
-            client.plugins[i] = e.scope.plugin;
+        if (index != -1)
+            client.plugins[index] = plugin;
         else
-            client.plugins.push(e.scope.plugin);
+            index = client.plugins.push(plugin) - 1;
 
         feedback(e, getMsg(MSG_SUBSCRIPT_LOADED, [e.url, rvStr]), MT_INFO);
+
+        if ((plugin.API > 0) && plugin.prefs["enabled"])
+            dispatch("enable-plugin " + index);
         return rv;
     }
     catch (ex)
