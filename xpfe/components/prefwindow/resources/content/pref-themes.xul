@@ -51,7 +51,9 @@
   
   <listbox id="skinsList" datasources="rdf:chrome" 
         onselect="themeSelect();"
-        ref="urn:mozilla:skin:root" rows="5">
+        ref="urn:mozilla:skin:root" rows="5"
+        sortResource="http://www.mozilla.org/rdf/chrome#displayName"
+        sortDirection="ascending">
     <template>
       <rule>
         <listitem uri="..." skin="true"
