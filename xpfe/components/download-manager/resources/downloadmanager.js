@@ -139,10 +139,7 @@ function onSelect(aEvent) {
   window.updateCommands("tree-select");
 }
 
-function onDoubleClick(aEvent) {
-  if (aEvent.button != 0)
-    return;
-
+function onTrigger() {
   if (downloadViewController.isCommandEnabled('cmd_properties'))
     goDoCommand('cmd_properties');
   else if (downloadViewController.isCommandEnabled('cmd_openfile'))

@@ -171,8 +171,10 @@
 
   <tree id="downloadView" flex="1" class="plain" context="downloadPaneContext"
             datasources="rdf:null" ref="NC:DownloadsRoot" flags="dont-test-empty"
-            ondblclick="onDoubleClick(event);" enableColumnDrag="true"
-            onselect="onSelect(event);">
+            enableColumnDrag="true" onselect="onSelect(event);"
+            ondblclick="if (event.button == 0) onTrigger();"
+            onkeypress="if ((event.keyCode == KeyEvent.DOM_VK_RETURN) ||
+                            (event.keyCode == KeyEvent.DOM_VK_ENTER)) onTrigger();">
     <treecols onclick="doSort(event.target)">
       <treecol id="Name" primary="true"
                    label="&view.header.name.label;"
