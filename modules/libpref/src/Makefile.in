@@ -70,6 +70,9 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 PREF_JS_EXPORTS	+= $(srcdir)/beos/beos.js
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+PREF_JS_EXPORTS += $(srcdir)/unix/photon.js
+endif
 PREF_JS_EXPORTS	+= $(srcdir)/unix/unix.js
 endif
 endif
@@ -91,5 +94,5 @@ DEFINES		+= -DB_ONE_M
 GARBAGE		+= $(addprefix $(DIST)/bin/components/, \
                         debug-developer.js \
 			initpref.js all.js mailnews.js editor.js config.js \
-			beos.js unix.js winpref.js os2prefs.js openvms.js)
+			beos.js unix.js winpref.js os2prefs.js openvms.js photon.js)
 
