@@ -956,67 +956,117 @@ fi
 
 for extension in $MOZ_EXTENSIONS; do
     case "$extension" in
-        cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/cookie/Makefile
-	    extensions/cookie/tests/Makefile
+        access-builtin ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/access-builtin/Makefile
+            extensions/access-builtin/accessproxy/Makefile
             " ;;
+        content-packs ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/content-packs/Makefile
+            extensions/content-packs/resources/Makefile
+            " ;;
+        cookie ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/cookie/Makefile
+            extensions/cookie/tests/Makefile
+            " ;;
+        ctl ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/ctl/Makefile
+            extensions/ctl/public/Makefile
+            extensions/ctl/src/Makefile
+            extensions/ctl/src/pangoLite/Makefile
+            extensions/ctl/src/thaiShaper/Makefile
+            " ;;
+        cview ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/cview/Makefile
+            extensions/cview/resources/Makefile
+            " ;;
+        help ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/help/Makefile
+            extensions/help/resources/Makefile
+            " ;;
+        inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
+            $MAKEFILES_inspector"
+            ;;
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/irc/Makefile
+            extensions/irc/Makefile
+            " ;;
+        p3p ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/p3p/Makefile
+            extensions/p3p/public/Makefile
+            extensions/p3p/resources/Makefile
+            extensions/p3p/resources/content/Makefile
+            extensions/p3p/resources/locale/Makefile
+            extensions/p3p/resources/locale/en-US/Makefile
+            extensions/p3p/resources/skin/Makefile
+            extensions/p3p/src/Makefile
+            " ;;
+        pics ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/pics/Makefile
+            extensions/pics/public/Makefile
+            extensions/pics/src/Makefile
+            extensions/pics/tests/Makefile
+            " ;;
+        transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
+            $MAKEFILES_transformiix"
+            ;;
+        universalchardet ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/universalchardet/Makefile
+            extensions/universalchardet/src/Makefile
+            extensions/universalchardet/tests/Makefile
             " ;;
         venkman ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/venkman/Makefile"
-	    ;;
-	transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    $MAKEFILES_transformiix"
-	    ;;
-        wallet ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/wallet/Makefile
-	    extensions/wallet/public/Makefile
-	    extensions/wallet/src/Makefile
-	    extensions/wallet/editor/Makefile
-	    extensions/wallet/cookieviewer/Makefile
-	    extensions/wallet/signonviewer/Makefile
-	    extensions/wallet/walletpreview/Makefile
-	    extensions/wallet/build/Makefile
+            extensions/venkman/Makefile"
+            ;;
+        vixen ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/vixen/Makefile
+            extensions/vixen/base/Makefile
+            extensions/vixen/base/public/Makefile
+            extensions/vixen/base/src/Makefile
+            extensions/vixen/build/Makefile
+            extensions/vixen/build/src/Makefile
+            extensions/vixen/resources/Makefile
             " ;;
-        access-builtin ) MAKEFILES_access_builtin="$MAKEFILES_extensions
-	    extensions/access-builtin/Makefile
-	    extensions/access-builtin/accessproxy/Makefile
+        wallet ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/wallet/Makefile
+            extensions/wallet/public/Makefile
+            extensions/wallet/src/Makefile
+            extensions/wallet/editor/Makefile
+            extensions/wallet/cookieviewer/Makefile
+            extensions/wallet/signonviewer/Makefile
+            extensions/wallet/walletpreview/Makefile
+            extensions/wallet/build/Makefile
             " ;;
         xmlextras ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/xmlextras/Makefile
-	    extensions/xmlextras/base/Makefile
-	    extensions/xmlextras/base/src/Makefile
-	    extensions/xmlextras/base/public/Makefile
-	    extensions/xmlextras/build/Makefile
-	    extensions/xmlextras/build/src/Makefile
-	    extensions/xmlextras/soap/Makefile
-	    extensions/xmlextras/soap/public/Makefile
-	    extensions/xmlextras/soap/src/Makefile
-	    extensions/xmlextras/tests/Makefile
-            " ;;
-        xmlterm ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/xmlterm/Makefile
-	    extensions/xmlterm/base/Makefile
-	    extensions/xmlterm/geckoterm/Makefile
-	    extensions/xmlterm/linetest/Makefile
-	    extensions/xmlterm/scripts/Makefile
-	    extensions/xmlterm/tests/Makefile
-	    extensions/xmlterm/ui/Makefile
+            extensions/xmlextras/Makefile
+            extensions/xmlextras/base/Makefile
+            extensions/xmlextras/base/src/Makefile
+            extensions/xmlextras/base/public/Makefile
+            extensions/xmlextras/build/Makefile
+            extensions/xmlextras/build/src/Makefile
+            extensions/xmlextras/schema/Makefile
+            extensions/xmlextras/schema/public/Makefile
+            extensions/xmlextras/schema/src/Makefile
+            extensions/xmlextras/soap/Makefile
+            extensions/xmlextras/soap/public/Makefile
+            extensions/xmlextras/soap/src/Makefile
+            extensions/xmlextras/tests/Makefile
+            extensions/xmlextras/wsdl/Makefile
+            extensions/xmlextras/wsdl/public/Makefile
+            extensions/xmlextras/wsdl/src/Makefile
             " ;;
         xml-rpc ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    extensions/xml-rpc/Makefile
-	    extensions/xml-rpc/idl/Makefile
-	    extensions/xml-rpc/src/Makefile
+            extensions/xml-rpc/Makefile
+            extensions/xml-rpc/idl/Makefile
+            extensions/xml-rpc/src/Makefile
             " ;;
-	inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
-	    $MAKEFILES_inspector"
-	    ;;
- 	help ) MAKEFILES_extensions="$MAKEFILES_extensions
- 	    extensions/help/resources/Makefile
-	    extensions/help/Makefile
+        xmlterm ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/xmlterm/Makefile
+            extensions/xmlterm/base/Makefile
+            extensions/xmlterm/geckoterm/Makefile
+            extensions/xmlterm/linetest/Makefile
+            extensions/xmlterm/scripts/Makefile
+            extensions/xmlterm/tests/Makefile
+            extensions/xmlterm/ui/Makefile
             " ;;
- 
     esac
 done
 
@@ -1062,9 +1112,9 @@ $MAKEFILES_libpr0n
 $MAKEFILES_libjar
 $MAKEFILES_libpref
 $MAKEFILES_libutil
-$MAKEFILES_mpfilelocprovider
 $MAKEFILES_liveconnect
 $MAKEFILES_mailnews
+$MAKEFILES_mpfilelocprovider
 $MAKEFILES_oji
 $MAKEFILES_plugin
 $MAKEFILES_netwerk
