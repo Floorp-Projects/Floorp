@@ -27,80 +27,106 @@
 
 [%# Note: use Template comments and not JS ones here, to avoid bloating
     what we actually send to the browser %]
+
+[% IF Param('usetargetmilestone') %]
+[%   tms = 1 %]
+[% ELSE %]
+[%   tms = 0 %]
+[% END %]
     
 <script language="JavaScript" type="text/javascript"> <!--
 
-var first_load = 1;            [%# is this the first time we load the page? %]
-var last_sel = [];                                [%# caches last selection %]
-var usetms = [% IF Param('usetargetmilestone') %]true[% ELSE %]false[% END %]; 
-                                           [%# do we have target milestone? %]
+var first_load = true;         [%# is this the first time we load the page? %]
+var last_sel = new Array();    [%# caches last selection %]
+var usetms = [% IF tms %]true[% ELSE %]false[% END %];
+                               [%# do we have target milestone? %]
 
-var cpts = new Object();
-var vers = new Object();
-var tms = new Object();
+var cpts = new Array();
+var vers = new Array();
+var tms = new Array();
 
+[%# Create three arrays of components, versions and target milestones, indexed 
+  # numerically according to the product they refer to. #%]
+
+[% n = 0 %]
 [% FOREACH p = product %]
-  cpts['[% p FILTER js %]'] = [ 
-    [%- FOREACH item = componentsbyproduct.$p %]'[% item FILTER js %]', [%- END -%]]
-  vers['[% p FILTER js %]'] = [ 
-    [%- FOREACH item = versionsbyproduct.$p -%]'[%  item FILTER js %]', [%- END -%]]
-   tms['[% p FILTER js %]'] = [ 
-    [%- FOREACH item = milestonesbyproduct.$p %]'[% item FILTER js %]', [%- END -%]]
+  cpts[[% n %]] = [ 
+    [%- FOREACH item = componentsbyproduct.$p %]'[% item FILTER js %]', [%- END -%]];
+  vers[[% n %]] = [ 
+    [%- FOREACH item = versionsbyproduct.$p -%]'[%  item FILTER js %]', [%- END -%]];
+  [% IF tms %]
+  tms[[% n %]]  = [ 
+     [%- FOREACH item = milestonesbyproduct.$p %]'[% item FILTER js %]', [%- END -%]];
+  [% END %]
+  [% n = n+1 %]
 [% END %]
 
-[%# Adds to the target select object all elements in array that
+[%# updateSelect(array, sel, target, merging)
+  #
+  # Adds to the target select object all elements in array that
   # correspond to the elements selected in source.
-  # - array should be a array of arrays, indexed by product name. the
-  #   array should contain the elements that correspont to that
-  #   product. Example:
-  #     var array = Array();
-  #     array['ProductOne'] = [ 'ComponentA', 'ComponentB' ];
-  #     updateSelect(array, source, target);
+  # - array should be a array of arrays, indexed by number. the
+  #   array should contain the elements that correspond to that
+  #   product. 
   # - sel is a list of selected items, either whole or a diff
-  #   depending on sel_is_diff.
-  # - sel_is_diff determines if we are sending in just a diff or the
-  #   whole selection. a diff is used to optimize adding selections.
+  #   depending on merging.
   # - target should be the target select object.
-  # - single specifies if we selected a single item. if we did, no
-  #   need to merge. %]
-function updateSelect(array, sel, target, sel_is_diff, single) {
+  # - merging (boolean) determines if we are mergine in a diff or
+  #   substituting the whole selection. a diff is used to optimize adding
+  #   selections.
+  #
+  # Example (compsel is a select form control)
+  #
+  #     var components = Array();
+  #     components[1] = [ 'ComponentA', 'ComponentB' ];
+  #     components[2] = [ 'ComponentC', 'ComponentD' ];
+  #     source = [ 2 ];
+  #     updateSelect(components, source, compsel, 0, 0);
+  #
+  # would clear compsel and add 'ComponentC' and 'ComponentD' to it.
+  #
+  %]
+
+function updateSelect(array, sel, target, merging) {
         
-    var i, comp;
+    var i, item;
 
-    [%# if single, even if it's a diff (happens when you have nothing
-        selected and select one item alone), skip this. %]
-    if (!single) {
+    [%# If we have no versions/components/milestones %]
+    if (array.length < 1) {
+        target.options.length = 0;
+        return false;
+    }
+
+    if (merging) {
         [%# array merging/sorting in the case of multiple selections %]
-        if (sel_is_diff) {        
-            [%# merge in the current options with the first selection %]
-            comp = merge_arrays(array[sel[0]], target.options, 1);
+        [%# merge in the current options with the first selection %]
+        item = merge_arrays(array[sel[0]], target.options, 1);
 
-            [%# merge the rest of the selection with the results %]
-            for (i = 1 ; i < sel.length ; i++) {
-                comp = merge_arrays(array[sel[i]], comp, 0);
-            }
-        } else {
-            [%# here we micro-optimize for two arrays to avoid merging with a
-                null array %]
-            comp = merge_arrays(array[sel[0]],array[sel[1]], 0);
-
-            [%# merge the arrays. not very good for multiple selections. %]
-            for (i = 2; i < sel.length; i++) {
-                comp = merge_arrays(comp, array[sel[i]], 0);
-            }
+        [%# merge the rest of the selection with the results %]
+        for (i = 1 ; i < sel.length ; i++) {
+            item = merge_arrays(array[sel[i]], item, 0);
         }
-    } else {
-        [%# single item in selection, just get me the list %]
-        comp = array[sel[0]];
+    } else if ( sel.length > 1 ) {
+        [%# here we micro-optimize for two arrays to avoid merging with a
+            null array %]
+        item = merge_arrays(array[sel[0]],array[sel[1]], 0);
+
+        [%# merge the arrays. not very good for multiple selections. %]
+        for (i = 2; i < sel.length; i++) {
+            item = merge_arrays(item, array[sel[i]], 0);
+        }
+    } else { [%# single item in selection, just get me the list %]
+        item = array[sel[0]];
     }
 
     [%# clear select %]
     target.options.length = 0;
 
     [%# load elements of list into select %]
-    for (i = 0; i < comp.length; i++) {
-        target.options[i] = new Option(comp[i], comp[i]);
+    for (i = 0; i < item.length; i++) {
+        target.options[i] = new Option(item[i], item[i]);
     }
+    return true;
 }
 
 [%# Returns elements in a that are not in b. 
@@ -108,19 +134,19 @@ function updateSelect(array, sel, target, sel_is_diff, single) {
   #    - a,b: arrays of values to be compare. %]
 function fake_diff_array(a, b) {
     var newsel = new Array();
+    var found = false;
 
     [%# do a boring array diff to see who's new %]
     for (var ia in a) {
-        var found = 0;
         for (var ib in b) {
             if (a[ia] == b[ib]) {
-                found = 1;
+                found = true;
             }
         }
         if (!found) {
             newsel[newsel.length] = a[ia];
         }
-        found = 0;
+        found = false;
     }
     return newsel;
 }
@@ -185,6 +211,34 @@ function merge_arrays(a, b, b_is_select) {
     return ret;
 }
 
+[%# Returns an array of indexes.
+  #    - control: select control from which to find selections
+  #    - findall: boolean, dumping all options if all or just the selected 
+  #      indexes. %]
+function getSelection(control, findall) {
+    var ret = new Array();
+
+    if ((!findall) && (control.selectedIndex == -1)) {
+        return ret;
+    }
+
+    for (var i=0; i<control.length; i++) {
+        if (findall || control.options[i].selected) {
+            ret[ret.length] = i;
+        }
+    }
+    return ret;
+}
+
+[%# Selects items in control that have index defined in sel
+  #    - control: SELECT control to be restored
+  #    - sel: array of indexes in select form control %]
+function restoreSelection(control, sel) {
+    for (var s in sel) {
+        control.options[sel[s]].selected = true;
+    }
+}
+
 [%# selectProduct reads the selection from f.product and updates
   # f.version, component and target_milestone accordingly.
   #     - f: a form containing product, component, varsion and
@@ -202,7 +256,7 @@ function merge_arrays(a, b, b_is_select) {
   #       changed, and optimize for additions. %]
 function selectProduct(f) {
     [%# this is to avoid handling events that occur before the form
-       itself is ready, which happens in buggy browsers. %]
+        itself is ready, which could happen in buggy browsers. %]
     if ((!f) || (!f.product)) {
         return;
     }
@@ -210,7 +264,7 @@ function selectProduct(f) {
     [%# if this is the first load and nothing is selected, no need to
        merge and sort all components; perl gives it to us sorted. %]
     if ((first_load) && (f.product.selectedIndex == -1)) {
-        first_load = 0;
+        first_load = false;
         return;
     }
     
@@ -221,49 +275,40 @@ function selectProduct(f) {
         item, selectProduct will be called but the clause will be valid
         (since selectedIndex == -1), and we will return - incorrectly -
         without merge/sorting. %]
-    first_load = 0;
+    first_load = false;
 
     [%# - sel keeps the array of products we are selected. 
-        - is_diff says if it is a full list or just a list of products that
-          were added to the current selection.
-        - single indicates if a single item was selected %]
+        - merging says if it is a full list or just a list of products that
+          were added to the current selection. %]
+    var merging = false;
     var sel = Array();
-    var is_diff = 0;
-    var single;
 
     [%# if nothing selected, pick all %]
     if (f.product.selectedIndex == -1) {
-        for (var i = 0 ; i < f.product.length ; i++) {
-            sel[sel.length] = f.product.options[i].value;
-        }
-        single = 0;
+        sel = getSelection(f.product, true);
     } else {
-        for (i = 0 ; i < f.product.length ; i++) {
-            if (f.product.options[i].selected) {
-                sel[sel.length] = f.product.options[i].value;
-            }
-        }
+        sel = getSelection(f.product, false);
 
-        single = (sel.length == 1);
-
-        [%# save last_sel before we kill it %]
-        var tmp = last_sel;
-        last_sel = sel;
+        [%# save sel for the next invocation of selectProduct() %]
+        var tmp = sel;
     
-        [%# this is an optimization: if we have added components, no need
-           to remerge them; just merge the new ones with the existing
-           options. %]
-        if ((tmp) && (tmp.length < sel.length)) {
-            sel = fake_diff_array(sel, tmp);
-            is_diff = 1;
+        [%# this is an optimization: if we have just added products to an
+            existing selection, no need to clear the form controls and add 
+            everybody again; just merge the new ones with the existing 
+            options. %]
+        if ((last_sel.length > 0) && (last_sel.length < sel.length)) {
+            sel = fake_diff_array(sel, last_sel);
+            merging = true;
         }
+
+        last_sel = tmp;
     }
 
     [%# do the actual fill/update %]
-    updateSelect(cpts, sel, f.component, is_diff, single);
-    updateSelect(vers, sel, f.version, is_diff, single);
+    updateSelect(cpts, sel, f.component, merging);
+    updateSelect(vers, sel, f.version, merging);
     if (usetms) {
-        updateSelect(tms, sel, f.target_milestone, is_diff, single);
+        updateSelect(tms, sel, f.target_milestone, merging);
     }
 }
 
