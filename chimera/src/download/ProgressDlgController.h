@@ -65,6 +65,7 @@ class nsDownloadListener;
 
     BOOL      mDownloadIsPaused;
     BOOL      mSaveFileDialogShouldStayOpen;
+    BOOL      mIsFileSave;
     BOOL      mDownloadIsComplete;
     long      mCurrentProgress; // if progress bar is indeterminate, can still calc stats.
         

@@ -68,7 +68,7 @@ DownloadListenerFactory::DownloadListenerFactory()
 : mControllerFactory(nil)
 {
   NS_INIT_ISUPPORTS();
-  mControllerFactory = [[[ChimeraDownloadControllerFactory alloc] init] retain];
+  mControllerFactory = [[ChimeraDownloadControllerFactory alloc] init];
 }
 
 DownloadListenerFactory::~DownloadListenerFactory()

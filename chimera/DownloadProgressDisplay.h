@@ -110,7 +110,7 @@ class CHDownloader;
 // protocol, and reuse nsDownloadListener to get download UI.
 @protocol DownloadProgressDisplay
 
-- (void)onStartDownload;
+- (void)onStartDownload:(BOOL)isFileSave;
 - (void)onEndDownload;
 
 - (void)setProgressTo:(long)aCurProgress ofMax:(long)aMaxProgress;
@@ -153,9 +153,14 @@ public:
     virtual void CreateDownloadDisplay();
     
 protected:
+  
+    PRBool      IsFileSave() { return mIsFileSave; }
+    void        SetIsFileSave(PRBool inIsFileSave) { mIsFileSave = inIsFileSave; }
+
+protected:
 
     DownloadControllerFactory*    mControllerFactory;
     id <DownloadProgressDisplay>  mDownloadDisplay;   // something that implements the DownloadProgressDisplay protocol
-    
+    PRBool                        mIsFileSave;        // true if we're doing a save, rather than a download
 };
 

@@ -72,8 +72,10 @@ nsDownloadListener::Init(nsIURI *aSource, nsILocalFile *aTarget, const PRUnichar
   {
     mWebPersist = aPersist;
     mWebPersist->SetProgressListener(this);   // we form a cycle here, since we're a listener.
-                                              // we'll break this cycle in DownloadDone()  
+                                              // we'll break this cycle in DownloadDone()
   }
+  
+  SetIsFileSave(aPersist != NULL);
   
   mDestination = aTarget;
   mURI = aSource;
@@ -250,7 +252,7 @@ void
 nsDownloadListener::InitDialog()
 {
   // dialog has to be shown before the outlets get hooked up
-  [mDownloadDisplay onStartDownload];
+  [mDownloadDisplay onStartDownload:(BOOL)IsFileSave()];
 
   if (mURI)
   {
