@@ -23,6 +23,7 @@
    -                 Mike Potter <mikep@oeone.com>
    -                 Colin Phillips <colinp@oeone.com> 
    -                 Chris Charabaruk <ccharabaruk@meldstar.com>
+   -                 ArentJan Banck <ajbanck@planet.nl>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -262,6 +263,19 @@
 										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
 									</hbox>       
                         </vbox>
+                    </row>
+
+
+                    <!-- Categories -->
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="&newtodo.categories.label;"/>
+                        </hbox>
+                        <menulist id="categories-field" flex="1">
+                            <menupopup id="categories-menulist-menupopup">
+                                <menuitem label="&priority.level.none;" value="0"/>
+                            </menupopup>
+                        </menulist>
                     </row>
                   </rows>
                </grid>

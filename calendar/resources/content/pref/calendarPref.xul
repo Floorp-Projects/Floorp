@@ -20,6 +20,7 @@
    -
    - Contributor(s):
    -  Mike Potter <mikep@oeone.com>
+   -  ArentJan Banck <ajbanck@planet.nl>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,20 +47,20 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://calendar/content/pref/calendarPref.xul');"
-      headertitle="Calendar">
+      headertitle="&calendarPanel.label;">
 
    <script type="application/x-javascript" src="chrome://calendar/content/pref/calendarPref.js"/>
 
    <script type="application/x-javascript">
      <![CDATA[
        var _elementIDs = [
-         "alarmshow", "alarmplaysound", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength"
+         "alarmshow", "alarmplaysound", "categories", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength"
        ];
      ]]>
    </script>
 
    <groupbox align="start" orient="vertical">
-      <caption label="&pref.mainbox.caption;"/>
+      <caption label="&pref.mainbox.label;"/>
       <description>&pref.alarmgoesoff.label;</description>
       <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
           label="&pref.playasound;" />
@@ -68,40 +69,45 @@
           label="&pref.showalarmbox;" />
           
       <vbox>
-         <description>Date Text Format: </description>
+         <description>&pref.dateformat.label;</description>
          <menulist id="dateformat" crop="none" prefstring="calendar.date.format">
              <menupopup id="dateformat">
-               <menuitem label="Long (ie. Apr 1, 2002)"    value="0"/>
-               <menuitem label="Short Format (ie. 04/01/02)"    value="1"/>
+               <menuitem label="&pref.dateformat.long;" value="0"/>
+               <menuitem label="&pref.dateformat.short;" value="1"/>
              </menupopup>
            </menulist>
       </vbox>
       
       <vbox>
-         <description>First Day Of The Week: </description>
+         <description>&pref.weekstarts.label;</description>
          <menulist id="weekstarts" prefstring="calendar.week.start">
           <menupopup id="weekstarts">
-            <menuitem label="Sunday"    value="0"/>
-            <menuitem label="Monday"    value="1"/>
-            <menuitem label="Tuesday"   value="2"/>
-            <menuitem label="Wednesday" value="3"/>
-            <menuitem label="Thursday"  value="4"/>
-            <menuitem label="Friday"    value="5"/>
-            <menuitem label="Saturday"  value="6"/>
+            <menuitem label="&pref.weekstarts.sunday;"    value="0"/>
+            <menuitem label="&pref.weekstarts.monday;"    value="1"/>
+            <menuitem label="&pref.weekstarts.tuesday;"   value="2"/>
+            <menuitem label="&pref.weekstarts.wednesday;" value="3"/>
+            <menuitem label="&pref.weekstarts.thursday;"  value="4"/>
+            <menuitem label="&pref.weekstarts.friday;"    value="5"/>
+            <menuitem label="&pref.weekstarts.saturday;"  value="6"/>
           </menupopup>
         </menulist>   
       </vbox>
       
       <hbox align="center">
-         <description>Default Event Length: </description>
+         <description>&pref.defaultlength.label;</description>
          <textbox id="defaultlength" preftype="int" prefstring="calendar.event.defaultlength" maxlength="3" size="3"/>
          <label value="Minutes"/>
       </hbox>
       
       <hbox align="center">
-         <description>Default Snooze Length: </description>
+         <description>&pref.defaultsnoozelength.label;</description>
          <textbox id="defaultsnoozelength" preftype="int" prefstring="calendar.alarms.defaultsnoozelength" maxlength="3" size="3"/>
          <label value="Minutes"/>
       </hbox>
+      
+   </groupbox>
+   <groupbox>
+      <caption label="&pref.categories.label;"/>
+      <textbox id="categories" prefstring="calendar.categories.names"/>
    </groupbox>
 </page>

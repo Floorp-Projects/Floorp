@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Mike Potter <mikep@oeone.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,6 +76,15 @@ calendarPrefObserver.prototype =
 
 function calendarPreferences( CalendarWindow )
 {
+   function getDefaultCategories()
+   {  
+      try {
+         var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/categories.properties");
+         return categoriesStringBundle.GetStringFromName("categories" );
+      }
+      catch(e) { return "" }
+   }
+   
    window.calendarPrefObserver = new calendarPrefObserver( this );
    
    this.calendarWindow = CalendarWindow;
@@ -94,6 +104,7 @@ function calendarPreferences( CalendarWindow )
      this.calendarPref.setIntPref( "week.start", 0 );
      this.calendarPref.setIntPref( "event.defaultlength", 60 );
      this.calendarPref.setIntPref( "alarms.defaultsnoozelength", 10 );
+     this.calendarPref.setCharPref( "categories.names", getDefaultCategories() );
      this.loadPreferences();
   }
   
@@ -113,6 +124,8 @@ calendarPreferences.prototype.loadPreferences = function()
    this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
 
    this.arrayOfPrefs.defaultsnoozelength = this.calendarPref.getIntPref( "alarms.defaultsnoozelength" );
+
+   this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
 }
 
 calendarPreferences.prototype.getPref = function( Preference )

@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com> 
  *                 Chris Charabaruk <coldacid@meldstar.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -163,9 +164,8 @@ function loadCalendarToDoDialog()
    setFieldValue( "alarm-length-units", gToDo.alarmUnits );
 
 
-   // Load default categories
-   this.categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/categories.properties");
-   var categoriesString = this.categoriesStringBundle.GetStringFromName("categories" );
+   // Load categories
+   var categoriesString = opener.gCalendarWindow.calendarPreferences.getPref( "categories" );
    var categoriesList = categoriesString.split( "," );
    
    // insert the category already in the task so it doesn't get lost

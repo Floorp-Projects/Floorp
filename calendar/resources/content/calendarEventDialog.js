@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com> 
  *                 Chris Charabaruk <ccharabaruk@meldstar.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -220,6 +221,31 @@ function loadCalendarEventDialog()
    
    setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
    
+   
+   // Load categories
+   var categoriesString = opener.gCalendarWindow.calendarPreferences.getPref( "categories" );
+   var categoriesList = categoriesString.split( "," );
+   
+   // insert the category already in the task so it doesn't get lost
+   if( gEvent.categories )
+      if( categoriesString.indexOf( gEvent.categories ) == -1 )
+         categoriesList[categoriesList.length] =  gEvent.categories;
+
+   // categoriesList.sort();
+
+   var oldMenulist = document.getElementById( "categories-menulist-menupopup" );
+   while( oldMenulist.hasChildNodes() )
+      oldMenulist.removeChild( oldMenulist.lastChild );
+
+   for (var i = 0; i < categoriesList.length ; i++)
+   {
+      document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
+   }
+
+   document.getElementById( "categories-field" ).selectedIndex = -1;
+   setFieldValue( "categories-field", gEvent.categories );
+
+
    // update enabling and disabling
    
    updateRepeatItemEnabled();
@@ -309,6 +335,9 @@ function onOKCommand()
    {
       gEvent.alarmEmailAddress = "";
    }
+
+   gEvent.categories    = getFieldValue( "categories-field", "value" );
+
    gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
    gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value" );  
    gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "selected" );
