@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.6 $ 
-# $Date: 2000/09/18 19:29:31 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/09/22 14:59:20 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -44,6 +44,7 @@ use FileStructure;
 use Persistence;
 use TinderHeader;
 use Utils;
+use HTMLPopUp;
 
 
 # Normally we filter user input for 'tainting' and to prevent this:
