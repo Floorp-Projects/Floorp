@@ -379,12 +379,45 @@ function CheckSpelling()
   
 // --------------------------- Debug stuff ---------------------------
 
+function EditorExecuteScript(fileSpec)
+{
+  fileSpec.openStreamForReading();
+  var buf = { value:null };
+  fileSpec.read(buf, fileSpec.FileSize);
+
+  // fileSpec.read() reads in only the characters, without
+  // a zero terminator. eval() needs the string to be zero
+  // terminated. This is a workaround to get a zero terminated
+  // string.
+
+  buf.value = buf.value.substr(0, fileSpec.FileSize);
+
+  eval(buf.value);
+}
+
+function EditorGetScriptFileSpec()
+{
+  var fs = Components.classes["component://netscape/filespec"].createInstance();
+  fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
+  fs.UnixStyleFilePath = "journal.js";
+  return fs;
+}
+
+function EditorRunJournal()
+{
+  var fs;
+  // dump("Executing script ...\n");
+  fs = EditorGetScriptFileSpec();
+  EditorExecuteScript(fs);
+  // dump("Done executing script!\n");
+}
+
 function EditorGetNodeFromOffsets(offsets)
 {
   var node = null;
   var i;
 
-  node = appCore.editorDocument;
+  node = window.editorShell.editorDocument;
 
   for (i = 0; i < offsets.length; i++)
   {
@@ -397,7 +430,7 @@ function EditorGetNodeFromOffsets(offsets)
 function EditorSetSelectionFromOffsets(selRanges)
 {
   var rangeArr, start, end, i, node, offset;
-  var selection = appCore.editorSelection;
+  var selection = window.editorShell.editorSelection;
 
   selection.clearSelection();
 
@@ -407,7 +440,7 @@ function EditorSetSelectionFromOffsets(selRanges)
     start    = rangeArr[0];
     end      = rangeArr[1];
 
-    var range = appCore.editorDocument.createRange();
+    var range = window.editorShell.editorDocument.createRange();
 
     node   = EditorGetNodeFromOffsets(start[0]);
     offset = start[1];
