@@ -3592,6 +3592,9 @@ const   char* sSelectWordRightString= "cmd_selectWordNext";
 const   char* sScrollPageUp    = "cmd_scrollPageUp";
 const   char* sScrollPageDown  = "cmd_scrollPageDown";
 
+const   char* sScrollLineUp    = "cmd_scrollLineUp";
+const   char* sScrollLineDown  = "cmd_scrollLineDown";
+
 const   char* sMovePageUp    = "cmd_scrollPageUp";
 const   char* sMovePageDown  = "cmd_scrollPageDown";
 const   char* sSelectMovePageUp     = "cmd_selectPageUp";
@@ -3757,6 +3760,8 @@ NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand, 
       (PR_TRUE== nsAutoString(sSelectWordRightString).Equals(aCommand)) ||
       (PR_TRUE== nsAutoString(sScrollPageUp).Equals(aCommand)) ||
       (PR_TRUE== nsAutoString(sScrollPageDown).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sScrollLineUp).Equals(aCommand)) ||
+      (PR_TRUE== nsAutoString(sScrollLineDown).Equals(aCommand)) ||
       (PR_TRUE== nsAutoString(sMovePageUp).Equals(aCommand)) ||
       (PR_TRUE== nsAutoString(sMovePageDown).Equals(aCommand)) ||
       (PR_TRUE== nsAutoString(sSelectMovePageUp).Equals(aCommand)) ||
@@ -3809,6 +3814,16 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollPage(PR_TRUE);
+  }
+  else if (PR_TRUE==nsAutoString(sScrollLineUp).Equals(aCommand))  //ScrollLineUp
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollLine(PR_FALSE);
+  }
+  else if (PR_TRUE==nsAutoString(sScrollLineDown).Equals(aCommand))  //ScrollLineDown
+  { 
+    NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
+    return selCont->ScrollLine(PR_TRUE);
   }
 
   return NS_OK;
