@@ -62,7 +62,6 @@
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
 #elif defined(XP_MAC)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
-#define IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x " Rules"   
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "MagicCookie"
@@ -86,6 +85,7 @@
 #define PREF_NEWS_DIRECTORY "news.directory"
 #define PREF_MAIL_IMAP_ROOT_DIR "mail.imap.root_dir"
 #define PREF_NETWORK_HOSTS_POP_SERVER "network.hosts.pop_server"
+#define PREF_4X_NETWORK_HOSTS_IMAP_SERVER "network.hosts.imap_servers"  
 #define PREF_MAIL_SERVER_TYPE	"mail.server_type"
 #define POP_4X_MAIL_TYPE 0
 #define IMAP_4X_MAIL_TYPE 1
@@ -533,7 +533,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   nsFileSpec newProfilePath(newProfilePathStr); /* Ditto for the profile's new 5.x root dir         */
 
 #if defined(XP_UNIX) || defined(XP_MAC)
-  printf("TODO:  port the code that checks for space before copying.\n");
+  printf("TODO:  port / turn on the code that checks for space before copying.\n");
 #else  
   PRUint32 totalMailSize = 0, 
            totalNewsSize = 0, 
@@ -676,14 +676,13 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
   PRBool needToRenameFilterFiles;
   if (PL_strcmp(IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x)) {
-#ifdef MAIL_FILTER_FILE_SUFFIX_IN_4x
-    // if our filter files had a suffix (the weren't all named the same thing)
-    // we don't need to rename them when we copy.
-    // we do that later.
+#ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x
+    // if we defined a format, the filter files don't live in the host directories
+    // (mac does this.)  we'll take care of those filter files later, in DoSpecialUpdates()
     needToRenameFilterFiles = PR_FALSE;
 #else
     needToRenameFilterFiles = PR_TRUE;
-#endif /* MAIL_FILTER_FILE_SUFFIX_IN_4x */
+#endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
   }
   else {
     // if the name was the same in 4x as in 5x, no need to rename it
@@ -694,18 +693,21 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
   rv = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG_seth
 #ifdef XP_UNIX
-  printf("TODO: do we need to copy the .newsrc files?\n");
+  printf("TODO: do we need to copy/move/rename the .newsrc files?\n");
 #endif /* XP_UNIX */
+#endif
   if(hasIMAP)
   {
-    rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles,IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
+    rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
     rv = DoTheCopyAndRename(oldIMAPLocalMailPath, newIMAPLocalMailPath, PR_TRUE, needToRenameFilterFiles,IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
   }
   else {
-    rv = DoTheCopyAndRename(oldPOPMailPath, newPOPMailPath, PR_TRUE,needToRenameFilterFiles,IMAP_MAIL_FILTER_FILE_NAME_IN_4x,IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
+    // we take care of the POP filter file later, in DoSpecialUpdates()
+    rv = DoTheCopy(oldPOPMailPath, newPOPMailPath, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -1079,17 +1081,12 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
 /*----------------------------------------------------------------------------
  * DoSpecialUpdates updates is a routine that does some miscellaneous updates 
  * like renaming certain files, etc.
- *
  *--------------------------------------------------------------------------*/
 nsresult
 nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
 {
   nsresult rv;
   PRInt32 serverType;
-
-#if defined(XP_MAC)
-  printf("TODO: move and rename the mail filter files\n"); 
-#endif /* XP_MAC*/
 
   nsFileSpec fs(profilePath);
   fs += PREF_FILE_NAME_IN_5x;
@@ -1116,10 +1113,10 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
   rv = Rename4xFileAfterMigration(profilePath,BOOKMARKS_FILE_NAME_IN_4x,BOOKMARKS_FILE_NAME_IN_5x);
   if (NS_FAILED(rv)) return rv;
 
-#ifdef IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
+#ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x 
   rv = RenameAndMove4xImapFilterFiles(profilePath);
   if (NS_FAILED(rv)) return rv;
-#endif /* IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x */
+#endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
     
    /* Create the new mail directory from the setting in prefs.js or a default */
   rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
@@ -1141,11 +1138,10 @@ nsPrefMigration::RenameAndMove4xPopFilterFile(nsFileSpec profilePath)
   nsFileSpec file(profilePath);
   file += POP_MAIL_FILTER_FILE_NAME_IN_4x;
 
-
   // figure out where the 4.x pop mail directory got copied to
   char *popServerName = nsnull;
   nsFileSpec migratedPopDirectory(profilePath);
-  migratedPopDirectory += "Mail";
+  migratedPopDirectory += NEW_MAIL_DIR_NAME;
   m_prefs->CopyCharPref(PREF_NETWORK_HOSTS_POP_SERVER, &popServerName);
   migratedPopDirectory += popServerName;
   PR_FREEIF(popServerName);
@@ -1165,21 +1161,75 @@ nsPrefMigration::RenameAndMove4xPopFilterFile(nsFileSpec profilePath)
   return rv;
 }
 
+#ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x
+#define BUFFER_LEN	128
+nsresult
+nsPrefMigration::RenameAndMove4xImapFilterFile(nsFileSpec profilePath, const char *hostname)
+{
+  nsresult rv = NS_OK;
+  char imapFilterFileName[BUFFER_LEN];
+
+  // the 4.x imap filter file lives in "<profile>/<hostname> Rules"
+  nsFileSpec file(profilePath);
+  PR_snprintf(imapFilterFileName, BUFFER_LEN, IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x, hostname);
+  file += imapFilterFileName;
+
+  // if that file didn't exist, because they didn't use filters for that server, return now
+  if (!file.Exists()) return NS_OK;
+
+  // figure out where the 4.x pop mail directory got copied to
+  nsFileSpec migratedImapDirectory(profilePath);
+  migratedImapDirectory += NEW_IMAPMAIL_DIR_NAME;
+  migratedImapDirectory += hostname;
+
+  // copy the 4.x file from "<profile>/<hostname> Rules" to <profile>/ImapMail/<hostname>/
+  file.Copy(migratedImapDirectory);
+
+  // make migratedPopDirectory point the the copied filter file,
+  // "<profile>/ImapMail/<hostname>/<hostname> Rules"
+  migratedImapDirectory += imapFilterFileName;
+
+  // rename "<profile>/ImapMail/<hostname>/<hostname> Rules" to  "<profile>/ImapMail/<hostname>/rules.dat"
+  migratedImapDirectory.Rename(IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
+
+  return rv;         
+}
+
 nsresult
 nsPrefMigration::RenameAndMove4xImapFilterFiles(nsFileSpec profilePath)
 {
-  // unlike windows and unix, in 4.x the mac stored the filter files in
-  // <profile>/<hostname> Rules
-  // instead of
-  // <profile>/ImapMail/<hostname>/rules.dat
-  //
-  // find all files in profilePath that end with IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
-  // hostname = filename - IMAP_MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
-  // copy file to Mail/<hostname>/MAIL_FILTER_NAME_IN_5x
-  // or
-  // copy file to ImapMail/<hostname>/MAIL_FILTER_NAME_IN_5x
-  return NS_OK;
+  nsresult rv;
+  char *hostList=nsnull;
+
+  rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &hostList);
+  if (NS_FAILED(rv)) return rv;
+
+  if (!hostList || !*hostList) return NS_OK; 
+
+  char *token = nsnull;
+  char *rest = NS_CONST_CAST(char*,(const char*)hostList);
+  nsCAutoString str;
+
+  token = nsCRT::strtok(rest, ",", &rest);
+  while (token && *token) {
+    str = token;
+    str.StripWhitespace();
+
+    if (!str.IsEmpty()) {
+      // str is the hostname
+      rv = RenameAndMove4xImapFilterFile(profilePath,str);
+      if  (NS_FAILED(rv)) {
+        // failed to migrate.  bail.
+        return rv;
+      }
+      str = "";
+    }
+    token = nsCRT::strtok(rest, ",", &rest);
+  }
+  PR_FREEIF(hostList);
+  return NS_OK;    
 }
+#endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
 
 nsresult
 nsPrefMigration::Rename4xFileAfterMigration(nsFileSpec profilePath, const char *oldFileName, const char *newFileName)
@@ -1295,7 +1345,7 @@ nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsFileSpec &fileP
 	char *premigration_pref = nsnull;
 	premigration_pref = PR_smprintf("%s.%s", PREMIGRATION_PREFIX,pref_name);
 	if (!premigration_pref) return NS_ERROR_FAILURE;
-#ifdef NS_DEBUG
+#ifdef DEBUG_seth
 	printf("setting %s (from a nsFileSpec) for later...\n", premigration_pref);
 #endif
 	rv = m_prefs->SetFilePref(premigration_pref, path, PR_FALSE /* set default */);
@@ -1317,7 +1367,7 @@ nsPrefMigration::SetPremigratedCharPref(const char *pref_name, char *value)
 	char *premigration_pref = nsnull;
 	premigration_pref = PR_smprintf("%s.%s", PREMIGRATION_PREFIX,pref_name);
 	if (!premigration_pref) return NS_ERROR_FAILURE;
-#ifdef NS_DEBUG
+#ifdef DEBUG_seth
 	printf("setting %s (from a char *) for later...\n", premigration_pref);
 #endif
 	rv = m_prefs->SetCharPref(premigration_pref, value);
