@@ -268,7 +268,7 @@ function getFirstItemByTag(root, tag)
     if (root.childNodes) {
         for (node = root.firstChild; node; node=node.nextSibling) {
             if (node.localName != "template") {
-                result = getFirstItemByTag(node, tag);
+                var result = getFirstItemByTag(node, tag);
                 if (result) return result;
             }
         }
