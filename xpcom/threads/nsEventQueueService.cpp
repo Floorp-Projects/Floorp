@@ -102,7 +102,7 @@ PRBool hash_enum_remove_queues(nsHashKey *aKey, void *aData, void* closure)
 nsEventQueueServiceImpl::~nsEventQueueServiceImpl()
 {
   // XXX make it so we only enum over this once
-  mEventQTable.Enumerate(hash_enum_remove_queues, nsnull); // call StopAcceptingEvents on everything
+  mEventQTable.Enumerate(NS_STATIC_CAST(nsHashtableEnumFunc, hash_enum_remove_queues), nsnull); // call StopAcceptingEvents on everything
   mEventQTable.Reset(); // this should release all the 
 
   PR_DestroyMonitor(mEventQMonitor);
