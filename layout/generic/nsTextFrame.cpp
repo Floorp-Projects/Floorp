@@ -2826,6 +2826,10 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     PRInt32 wordLen, contentLen;
     bp = tx.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace);
     if (nsnull == bp) {
+      // Advance the offset in case we just consumed a bunch of
+      // discarded characters. Otherwise, if this is the first piece
+      // of content for this frame we will attempt to break-before it.
+      offset += contentLen;
       break;
     }
     lastWordLen = wordLen;
@@ -2849,6 +2853,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
 
         // Only set flag when we actually do skip whitespace
         mState |= TEXT_SKIP_LEADING_WS;
+        firstThing = PR_FALSE;
         continue;
       }
       if ('\t' == bp[0]) {
