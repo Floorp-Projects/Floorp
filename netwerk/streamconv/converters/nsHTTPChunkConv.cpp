@@ -41,6 +41,7 @@ nsHTTPChunkConv::nsHTTPChunkConv()
     NS_INIT_ISUPPORTS ();
     mListener    = nsnull;
 	mChunkBuffer = NULL;
+	mState = CHUNK_STATE_INIT;
 }
 
 nsHTTPChunkConv::~nsHTTPChunkConv ()
@@ -67,9 +68,9 @@ nsHTTPChunkConv::AsyncConvertData (
 	if (!PL_strncasecmp (fromStr, HTTP_CHUNK_TYPE, strlen (HTTP_CHUNK_TYPE  ) )
 		&&
 		!PL_strncasecmp (toStr, HTTP_UNCHUNK_TYPE, strlen (HTTP_UNCHUNK_TYPE)))
-		mMode = DO_CHUNKING;
-	else
 		mMode = DO_UNCHUNKING;
+	else
+		mMode = DO_CHUNKING;
 
 	nsAllocator::Free (fromStr);
 	nsAllocator::Free (  toStr);
@@ -152,7 +153,7 @@ nsHTTPChunkConv::OnDataAvailable (
 	{
 		// DO_UNCHUNKING
 
-		while (streamLen > 0)
+		while (streamLen > 0 || mState == CHUNK_STATE_FINAL)
 		{
 			switch (mState)
 			{
@@ -254,7 +255,11 @@ nsHTTPChunkConv::OnDataAvailable (
 					{
 						mLenBuf[mLenBufCnt] = 0;
 						sscanf (mLenBuf, "%x", &mChunkBufferLength);
-						mState = CHUNK_STATE_CR;
+
+						if (c != '\r')
+							return NS_ERROR_FAILURE;
+				
+						mState = CHUNK_STATE_LF;
 					}
 					break;
 			
