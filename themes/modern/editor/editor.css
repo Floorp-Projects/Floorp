@@ -45,6 +45,5 @@
 
 /* Multiline textarea for HTML source editing */
 #content-source, #doctype-text {
-  font-family   : -moz-fixed, monospace;
-  font-size     : larger;
+  font-family   : -moz-fixed;
 }

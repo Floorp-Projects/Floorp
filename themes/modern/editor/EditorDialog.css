@@ -89,6 +89,8 @@
   min-width: 12em;
 }
 
+/* ::::: table properties dialog ::::: */
+
 #PreviousButton {
   list-style-image: url("chrome://global/skin/arrow/arrow-lft.gif");
 }
@@ -105,8 +107,19 @@
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
+/* ::::: spelling dialog ::::: */
+
 #MisspelledWord {
   font-weight: bold;
+}
+
+#ReplaceWordInput {
+  min-width: 16em;
+  width: 16em;
+}
+
+.spell-check {
+  min-width: 8em;
 }
 
 /* ::::: spacers ::::: */
