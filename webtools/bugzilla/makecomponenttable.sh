@@ -113,6 +113,7 @@ insert into components (value, program, initialowner) values ("Rendering", "NGLa
 insert into components (value, program, initialowner) values ("Selection and Search", "NGLayout", "rods@netscape.com");
 insert into components (value, program, initialowner) values ("Style System", "NGLayout", "peterl@netscape.com");
 insert into components (value, program, initialowner) values ("Threading", "NGLayout", "rpotts@netscape.com");
+insert into components (value, program, initialowner) values ("Viewer App", "NGLayout", "scullin@netscape.com");
 insert into components (value, program, initialowner) values ("Widget Set", "NGLayout", "kmcclusk@netscape.com");
 insert into components (value, program, initialowner) values ("XPCOM", "NGLayout", "scullin@netscape.com");
 
