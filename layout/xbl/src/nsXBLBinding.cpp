@@ -214,8 +214,8 @@ nsXBLBinding::nsXBLBinding(void)
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
-        entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
-        ++entry;
+      entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
+      ++entry;
     }
   }
 }
@@ -233,6 +233,12 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kTypeAtom);
     NS_RELEASE(kCapturerAtom);
+
+    EventHandlerMapEntry* entry = kEventHandlerMap;
+    while (entry->mAttributeName) {
+      NS_IF_RELEASE(entry->mAttributeAtom);
+      ++entry;
+    }
   }
 }
 
