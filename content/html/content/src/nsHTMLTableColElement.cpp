@@ -179,7 +179,7 @@ nsHTMLTableColElement::ParseAttribute(nsIAtom* aAttribute,
 {
   /* ignore these attributes, stored simply as strings ch */
   if (aAttribute == nsHTMLAtoms::charoff) {
-    return aResult.ParseIntWithBounds(aValue, 0);
+    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
   if (aAttribute == nsHTMLAtoms::span) {
     /* protection from unrealistic large colspan values */
