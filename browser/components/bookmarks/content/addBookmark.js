@@ -242,7 +242,7 @@ function onOK()
 
     var url, rSource;
     if (addingGroup()) {
-      rSource = BMDS.createGroup(gFld_Name.value);
+      rSource = BMDS.createFolder(gFld_Name.value);
       const groups  = window.arguments[5];
       for (var i = 0; i < groups.length; ++i) {
         url = getNormalizedURL(groups[i].url);
