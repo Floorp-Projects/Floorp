@@ -25,6 +25,8 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsLayoutAtoms.h"
+#include "nsIStyleSet.h"
+#include "nsIPresShell.h"
 
 nsPageFrame::nsPageFrame()
 {
@@ -81,14 +83,16 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
       nsIFrame* prevLastChild = prevPage->mFrames.LastChild();
 
       // Create a continuing child of the previous page's last child
-      nsIStyleContext* kidSC;
-      prevLastChild->GetStyleContext(&kidSC);
-      nsIFrame* newFrame;
-      nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
-                                                         kidSC,
-                                                         newFrame);
+      nsIPresShell* presShell;
+      nsIStyleSet*  styleSet;
+      nsIFrame*     newFrame;
+
+      aPresContext.GetShell(&presShell);
+      presShell->GetStyleSet(&styleSet);
+      NS_RELEASE(presShell);
+      styleSet->CreateContinuingFrame(&aPresContext, prevLastChild, this, &newFrame);
+      NS_RELEASE(styleSet);
       mFrames.SetFrames(newFrame);
-      NS_RELEASE(kidSC);
     }
 
     // Resize our frame allowing it only to be as big as we are

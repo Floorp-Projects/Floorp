@@ -42,6 +42,7 @@
 #include "nsDOMEvent.h"
 #include "nsIScrollableView.h"
 #include "nsWidgetsCID.h"
+#include "nsIStyleSet.h"
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
@@ -160,11 +161,15 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext& aPresContext,
     // into our lines child list.
     nsIFrame* nextFrame;
     aFrame->GetNextSibling(&nextFrame);
-    nsIStyleContext* kidSC;
-    aFrame->GetStyleContext(&kidSC);
-    aFrame->CreateContinuingFrame(aPresContext, aOuterFrame,
-                                  kidSC, nextInFlow);
-    NS_RELEASE(kidSC);
+
+    nsIPresShell* presShell;
+    nsIStyleSet*  styleSet;
+    aPresContext.GetShell(&presShell);
+    presShell->GetStyleSet(&styleSet);
+    NS_RELEASE(presShell);
+    styleSet->CreateContinuingFrame(&aPresContext, aFrame, aOuterFrame, &nextInFlow);
+    NS_RELEASE(styleSet);
+
     if (nsnull == nextInFlow) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

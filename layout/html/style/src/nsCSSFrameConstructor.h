@@ -99,6 +99,12 @@ public:
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
 
+  // Request to create a continuing frame
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
+                                   nsIFrame*       aFrame,
+                                   nsIFrame*       aParentFrame,
+                                   nsIFrame**      aContinuingFrame);
+
 protected:
 
   nsresult ResolveStyleContext(nsIPresContext*   aPresContext,

@@ -44,6 +44,8 @@
 #include "nsIReflowCommand.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDeviceContext.h"
+#include "nsIStyleSet.h"
+#include "nsIPresShell.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -3586,13 +3588,15 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         if (nsnull == kidNextInFlow) {
           // The child doesn't have a next-in-flow so create a continuing
           // frame. This hooks the child into the flow
-          nsIFrame* continuingFrame;
-           
-          nsIStyleContext* kidSC;
-          kidFrame->GetStyleContext(&kidSC);
-          kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
-          NS_RELEASE(kidSC);
-          NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
+          nsIFrame*     continuingFrame;
+          nsIPresShell* presShell;
+          nsIStyleSet*  styleSet;
+
+          aPresContext.GetShell(&presShell);
+          presShell->GetStyleSet(&styleSet);
+          NS_RELEASE(presShell);
+          styleSet->CreateContinuingFrame(&aPresContext, kidFrame, this, &continuingFrame);
+          NS_RELEASE(styleSet);
 
           // Add the continuing frame to the sibling list
           nsIFrame* nextSib;
@@ -3738,13 +3742,14 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
         // The child doesn't have a next-in-flow so create a
         // continuing frame. The creation appends it to the flow and
         // prepares it for reflow.
-        nsIFrame* continuingFrame;
-
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(&kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
-        NS_RELEASE(kidSC);
-        NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
+        nsIFrame*     continuingFrame;
+        nsIPresShell* presShell;
+        nsIStyleSet*  styleSet;
+        aPresContext.GetShell(&presShell);
+        presShell->GetStyleSet(&styleSet);
+        NS_RELEASE(presShell);
+        styleSet->CreateContinuingFrame(&aPresContext, kidFrame, this, &continuingFrame);
+        NS_RELEASE(styleSet);
 
         // Add the continuing frame to our sibling list and then push
         // it to the next-in-flow. This ensures the next-in-flow's
