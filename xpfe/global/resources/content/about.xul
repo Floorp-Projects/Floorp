@@ -48,7 +48,7 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
   <tabpanels orient="vertical" flex="100%">
     <iframe style="border: 1px inset gray;" src="about:"/>
-    <iframe style="border: 1px inset gray;" src="credits.html"/>
+    <iframe style="border: 1px inset gray;" src="about:credits"/>
   </tabpanels>
 </tabbox>
 

@@ -1,5 +1,6 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-     "http://www.w3.org/TR/html4/strict.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 
 <!--
    - The contents of this file are subject to the Netscape Public
@@ -26,17 +27,8 @@
    -    Alexey Chernyak <alexeyc@bigfoot.com>
 -->
   
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<script type="text/javascript">
-function htmlEscape(s)
-{
-   s = s.replace(/\&/g, "&amp;");
-   s = s.replace(/\>/g, "&gt;");
-   s = s.replace(/\</g, "&lt;");
-   return s;
-}
-</script>
 <title>About:</title>
 <style type="text/css">
 table {
@@ -52,32 +44,43 @@ p {
 h1 {
   margin: 0;
 }
+:link {
+  color: #00e;
+}
+:visited {
+  color: #551a8b;
+}
+:active {
+  color: #f00;
+}
 </style>
 </head>
 <body>
 
 <table>
+<tbody>
 <tr>
 
 <td>
 <a href="http://www.mozilla.org/">
-<img src="chrome://global/content/logo.gif" alt="Mozilla" width="200" height="200"></a>
+<img src="chrome://global/content/logo.gif" alt="Mozilla" width="200" height="200" /></a>
 </td>
 
-<td>
+<td id="mozver">
 <h1>
-<a href="http://www.mozilla.org/releases/">Mozilla
-<script type="text/javascript">
-   document.write(htmlEscape( navigator.userAgent.match(/rv:([^;)]+)/)[1] ));
-</script></a>
+<a id="mozlink" href="http://www.mozilla.org/releases/">Mozilla </a>
 </h1>
-<script type="text/javascript">document.write(htmlEscape(navigator.userAgent));</script>
+<script type="application/x-javascript">
+  document.getElementById("mozlink").firstChild.appendData(navigator.userAgent.match(/rv:([^;)]+)/)[1]);
+  document.getElementById("mozver").appendChild(document.createTextNode(navigator.userAgent));
+</script>
 </td>
 
 </tr>
+</tbody>
 </table>
 
-<hr>
+<hr />
 
 <ul>
 <li>Copyright &copy; 1998-2001 by <a href="about:credits">Contributors</a> to 
