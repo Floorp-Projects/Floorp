@@ -87,6 +87,13 @@ Rights Reserved.
 	<broadcaster id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
 	<broadcaster id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
 	<broadcaster id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
+	<broadcaster id="cmd_reply" oncommand="goDoCommand('cmd_reply')"/>
+	<broadcaster id="cmd_replyall" oncommand="goDoCommand('cmd_replyall')"/>
+	<broadcaster id="cmd_forward" oncommand="goDoCommand('cmd_forward')"/>
+	<broadcaster id="button_reply"/>
+	<broadcaster id="button_replyall"/>
+	<broadcaster id="button_forward"/>
+
 </broadcasterset>
 
 <keyset id="keyset">
@@ -111,6 +118,9 @@ Rights Reserved.
 	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" observes="cmd_nextUnreadThread"/>
 	<key id="key_previousMsg" key="&previousMsgCmd.key;" control="false" shift="true" observes="cmd_previousMsg"/>
 	<key id="key_previousUnreadMsg" key="&previousUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_previousUnreadMsg"/>
+	<key id="key_reply" key="&replyMsgCmd.key;" xulkey="true" shift="false" observes="cmd_reply"/>
+	<key id="key_replyall" key="&replyToAllMsgCmd.key;" xulkey="true" shift="true" observes="cmd_replyall"/>
+	<key id="key_forward" key="&forwardMsgCmd.key;" xulkey="true" shift="false" observes="cmd_forward"/>
 </keyset>
 
 	<popup id="messagePaneContext"   
@@ -312,7 +322,7 @@ Rights Reserved.
 	<menu id="menu_File">
 		<menupopup id="menu_FilePopup">
 			<menuitem value="&newMessage.label;"
-			 accessKey="&newMessage.accesskey;"
+			 accesskey="&newMessage.accesskey;"
 			 key="key_newMessage"
 			 observes="cmd_newMessage"/>
 			<menu id="menu_New">
@@ -585,10 +595,19 @@ Rights Reserved.
 <menu value="&msgMenu.label;">
 	<menupopup>
 		<menuitem value="&newMsgCmd.label;" oncommand="MsgNewMessage(event);"/>
- 		<menuitem value="&replyMsgCmd.label;" oncommand="MsgReplyMessage(event);"/>
- 		<menuitem value="&replyToAllMsgCmd.label;" oncommand="MsgReplyToAllMessage(event);"/>
- 		<menuitem value="&forwardMsgCmd.label;" oncommand="MsgForwardMessage(event);"/>
-		<menu value="&forwardAsMenu.label;">
+		<menuitem value="&replyMsgCmd.label;" 
+			accesskey="&replyMsgCmd.accesskey;"
+			key="key_reply"
+			oncommand="MsgReplyMessage(event);"/>
+		<menuitem value="&replyToAllMsgCmd.label;"
+			accesskey="&replyToAllMsgCmd.accesskey;"
+			key="key_replyall"
+			oncommand="MsgReplyToAllMessage(event);"/>
+		<menuitem value="&forwardMsgCmd.label;"
+			accesskey="&forwardMsgCmd.accesskey;"
+			key="key_forward"
+			oncommand="MsgForwardMessage(event);"/>
+ 		<menu value="&forwardAsMenu.label;">
 			<menupopup>
 				<menuitem value="&forwardAsInline.label;" oncommand="MsgForwardAsInline(event);"/>
 				<menuitem value="&forwardAsAttachmentCmd.label;" oncommand="MsgForwardAsAttachment(event);"/>
@@ -728,9 +747,9 @@ Rights Reserved.
 			<button class="button-toolbar-2 top" id="button-getmsg" value="&getMsgButton.label;"  tooltiptext="&getMsgButton.tooltip;" onclick="MsgGetMessage()"/>
 			<button class="button-toolbar-2 top" id="button-newmsg" value="&newMsgButton.label;"  tooltiptext="&newMsgButton.tooltip;" onclick="MsgNewMessage(event)"/>
 			<toolbarseparator/>
-			<button class="button-toolbar-2 top" id="button-reply" value="&replyButton.label;"  tooltiptext="&replyButton.tooltip;" onclick="MsgReplyMessage(event)"/>
-			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltiptext="&replyAllButton.tooltip;" onclick="MsgReplyToAllMessage(event)"/>
-			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;"  tooltiptext="&forwardButton.tooltip;" onclick="MsgForwardMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button-reply" value="&replyButton.label;"  tooltiptext="&replyButton.tooltip;" observes="button_reply" onclick="MsgReplyMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" onclick="MsgReplyToAllMessage(event)"/>
+			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" onclick="MsgForwardMessage(event)"/>
 			<toolbarseparator/>
 			<menu id="FileButtonMenu" datasources="rdf:null" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 				<button class="button-toolbar-2 top" id="button-file" value="&fileButton.label;"  tooltiptext="&fileButton.tooltip;"/>

@@ -231,9 +231,15 @@ Rights Reserved.
 <!ENTITY forwardCmd.label ".Forward">  
 <!ENTITY msgMenu.label "Message">  
 <!ENTITY newMsgCmd.label "New Message">  
-<!ENTITY replyMsgCmd.label "Reply">  
+<!ENTITY replyMsgCmd.label "Reply">
+<!ENTITY replyMsgCmd.accesskey	"r">
+<!ENTITY replyMsgCmd.key	"r">
 <!ENTITY replyToAllMsgCmd.label "Reply to All">  
-<!ENTITY forwardMsgCmd.label "Forward">  
+<!ENTITY replyToAllMsgCmd.accesskey	"p">
+<!ENTITY replyToAllMsgCmd.key	"r">
+<!ENTITY forwardMsgCmd.label "Forward">
+<!ENTITY forwardMsgCmd.accesskey	"f">
+<!ENTITY forwardMsgCmd.key	"l">
 <!ENTITY forwardAsMenu.label "Forward As">  
 <!ENTITY forwardAsInline.label "Inline">  
 <!ENTITY forwardAsAttachmentCmd.label "Attachment">  

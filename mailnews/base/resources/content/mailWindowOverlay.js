@@ -123,7 +123,7 @@ function MsgReplyMessage(event)
   var messageArray = GetSelectedMessages();
 
   dump("\nMsgReplyMessage from XUL\n");
-  if (event.shiftKey)
+  if (event && event.shiftKey)
     ComposeMessage(msgComposeType.Reply, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
     ComposeMessage(msgComposeType.Reply, msgComposeFormat.Default, loadedFolder, messageArray);
@@ -135,7 +135,7 @@ function MsgReplyToAllMessage(event)
   var messageArray = GetSelectedMessages();
 
   dump("\nMsgReplyToAllMessage from XUL\n");
-  if (event.shiftKey)
+  if (event && event.shiftKey)
     ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
     ComposeMessage(msgComposeType.ReplyAll, msgComposeFormat.Default, loadedFolder, messageArray);
@@ -162,7 +162,7 @@ function MsgForwardAsAttachment(event)
   var messageArray = GetSelectedMessages();
 
   dump("\nMsgForwardAsAttachment from XUL\n");
-  if (event.shiftKey)
+  if (event && event.shiftKey)
     ComposeMessage(msgComposeType.ForwardAsAttachment,
                    msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
@@ -175,7 +175,7 @@ function MsgForwardAsInline(event)
   var messageArray = GetSelectedMessages();
 
  dump("\nMsgForwardAsInline from XUL\n");
-  if (event.shiftKey)
+  if (event && event.shiftKey)
     ComposeMessage(msgComposeType.ForwardInline,
                    msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else

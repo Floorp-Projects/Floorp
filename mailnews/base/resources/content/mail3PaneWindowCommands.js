@@ -193,6 +193,12 @@ var DefaultController =
 
 		switch ( command )
 		{
+			case "cmd_reply":
+			case "button_reply":
+			case "cmd_replyall":
+			case "button_replyall":
+			case "cmd_forward":
+			case "button_forward":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -228,6 +234,12 @@ var DefaultController =
 	{
 		switch ( command )
 		{
+			case "cmd_reply":
+			case "button_reply":
+			case "cmd_replyall":
+			case "button_replyall":
+			case "cmd_forward":
+			case "button_forward":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -290,6 +302,15 @@ var DefaultController =
 
 		switch ( command )
 		{
+			case "cmd_reply":
+				MsgReplyMessage(null);
+				break;
+			case "cmd_replyall":
+				MsgReplyToAllMessage(null);
+				break;
+			case "cmd_forward":
+				MsgForwardMessage(null);
+				break;
 			case "cmd_delete":
 				MsgDeleteMessage(false, false);
 				break;
@@ -394,6 +415,9 @@ function CommandUpdate_Mail()
 		
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('button_delete');
+	goUpdateCommand('button_reply');
+	goUpdateCommand('button_replyall');
+	goUpdateCommand('button_forward');
 	goUpdateCommand('cmd_shiftDelete');
 	goUpdateCommand('cmd_nextMsg');
 	goUpdateCommand('cmd_nextUnreadMsg');
