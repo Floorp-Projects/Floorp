@@ -62,23 +62,25 @@
           hidversionField.value = brandShortNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
           versionField.value = hidversionField.value;
           versionField.width = hidversionField.width;
+          var userAgentField = document.getElementById("userAgent");
+          userAgentField.value = navigator.userAgent;
         }
       ]]>
     </script>
 
-    <vbox align="center" flex="1">
+    <vbox flex="1">
       <image src="chrome://messenger/content/about-thunderbird.png"/>
-
-      <hbox>
-        <vbox>
+      <vbox style="padding: 8px 10px 10px 8px;" align="center" flex="1">
+        <separator class="thin"/>
+        <hbox>
           <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
           <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important; font-weight: bold;" tabindex="2"/>
-        </vbox>
-      </hbox>
-
-      <separator class="thin"/>
-
-      <html:a href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
+        </hbox>
+        <spacer flex="1"/>
+        <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
+        <html:a href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
+        <spacer flex="1"/>
+      </vbox>
     </vbox>
     <separator class="groove"/>
     
