@@ -203,9 +203,6 @@ nsSOAPException::ToString(char **_retval)
 NS_NAMED_LITERAL_STRING(realSOAPExceptionEmpty, "");
 const nsAString & nsSOAPException::kEmpty = realSOAPExceptionEmpty;
 
-static NS_NAMED_LITERAL_STRING(kFailure, "SOAP_FAILURE");
-static NS_NAMED_LITERAL_STRING(kNoDescription, "No description");
-
 nsresult nsSOAPException::AddException(nsresult aStatus, const nsAString & aName,
   const nsAString & aMessage,PRBool aClear)
 {
@@ -220,8 +217,12 @@ nsresult nsSOAPException::AddException(nsresult aStatus, const nsAString & aName
         xs->GetCurrentException(getter_AddRefs(old));
       // Need to cast the NS_LITERAL_STRING to const nsAString& to make
       // it compile on CW on Mac.
-      const nsAString& name = aName.IsEmpty() ? kFailure : aName;
-      const nsAString& message = aMessage.IsEmpty() ? kNoDescription : aMessage;
+      const nsAString& name = aName.IsEmpty() ?
+        NS_STATIC_CAST(const nsAString&, NS_LITERAL_STRING("SOAP_FAILURE")) :
+        aName;
+      const nsAString& message = aMessage.IsEmpty() ?
+        NS_STATIC_CAST(const nsAString&, NS_LITERAL_STRING("No description")) :
+        aMessage;
       nsCOMPtr<nsIException> exception = new nsSOAPException(aStatus, name, 
         message, old);
       if (exception) {
