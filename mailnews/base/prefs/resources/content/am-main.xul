@@ -41,6 +41,7 @@
       <html:td flex="40%">&organization.label;</html:td>
       <html:td align="right"><html:input name="identity.organization" type="text" size="30"/></html:td>
     </html:tr>
+<!-- no vcard in PR1
     <html:tr class="checkboxrow">
       <html:td colspan="2">
         <html:input name="identity.attachVCard" type="checkbox"/>
@@ -55,6 +56,7 @@
         <html:input type="text" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
       </html:td>
       </html:tr>
+-->
 <!--
       <html:select flex="100%">
          <html:option value="sig1">&sampleSig1.label;</html:option>
