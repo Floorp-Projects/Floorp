@@ -1467,7 +1467,52 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 		}
 	}
 
-	return mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
+	rv = mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
+
+#ifdef	XP_WIN
+	// under Windows, munge IE favorite names to strip off the ".url"
+	if (NS_SUCCEEDED(rv) && (aTruthValue) && (aProperty == kNC_Name))
+	{
+		// XXX should ensure that aSource's URI begins with  nsSpecialSystemDirectory::Win_Favorites
+
+		nsCOMPtr<nsIRDFNode>		tempNode = do_QueryInterface(*aTarget);
+		if (tempNode)
+		{
+			nsCOMPtr<nsIRDFLiteral>	litTemp = do_QueryInterface(tempNode);
+			if (litTemp)
+			{
+				const PRUnichar	*uniName = nsnull;
+				if (NS_SUCCEEDED(litTemp->GetValueConst(&uniName)) && (uniName))
+				{
+					nsAutoString	name(uniName), extension;
+					PRInt32		len = name.Length();
+					if (len > 4)
+					{
+						name.Right(extension, 4);
+						if (extension.EqualsIgnoreCase(".url"))
+						{
+							name.Truncate(len-4);
+
+							nsIRDFLiteral	*literal;
+							if (NS_SUCCEEDED(gRDF->GetLiteral(name.GetUnicode(),
+									&literal)))
+							{
+								// be sure to release the original name we got back!
+								NS_IF_RELEASE(*aTarget);
+
+								rv = literal->QueryInterface(nsIRDFNode::GetIID(),
+										(void**) aTarget);
+								NS_RELEASE(literal);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+#endif
+
+	return(rv);
 }
 
 
