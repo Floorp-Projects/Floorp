@@ -457,54 +457,52 @@ void ReplaceScheduledFiles( HREG reg )
         nsCOMPtr<nsILocalFile>       dest;
         nsresult                rv1, rv2;
 
-        rv1 = NS_NewLocalFile("", getter_AddRefs(src));
-        rv2 = NS_NewLocalFile("", getter_AddRefs(dest));
-        if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
+        memset(srcFile, 0, sizeof(srcFile));
+        memset(doomedFile, 0, sizeof(doomedFile));
+        
+        uint32 bufsize;
+        REGENUM state = 0;
+        while (REGERR_OK == NR_RegEnumSubkeys( reg, key, &state, 
+                               keyname, sizeof(keyname), REGENUM_CHILDREN))
         {
-            uint32 bufsize;
-            REGENUM state = 0;
-            while (REGERR_OK == NR_RegEnumSubkeys( reg, key, &state, 
-                                   keyname, sizeof(keyname), REGENUM_CHILDREN))
+            bufsize = sizeof(srcFile);
+            REGERR err1 = NR_RegGetEntry( reg, (RKEY)state,
+                               REG_REPLACE_SRCFILE, srcFile, &bufsize);
+
+            bufsize = sizeof(doomedFile);
+            REGERR err2 = NR_RegGetEntry( reg, (RKEY)state,
+                               REG_REPLACE_DESTFILE, doomedFile, &bufsize);
+
+            if ( err1 == REGERR_OK && err2 == REGERR_OK )
             {
-                bufsize = sizeof(srcFile);
-                REGERR err1 = NR_RegGetEntry( reg, (RKEY)state,
-                                    REG_REPLACE_SRCFILE, srcFile, &bufsize);
+                rv1 = NS_NewLocalFile((char*)srcFile, getter_AddRefs(src));
+                rv1 = src->Clone(getter_AddRefs(srcSpec));
 
-                bufsize = sizeof(doomedFile);
-                REGERR err2 = NR_RegGetEntry( reg, (RKEY)state,
-                                    REG_REPLACE_DESTFILE, doomedFile, &bufsize);
+                rv2 = NS_NewLocalFile((char*)doomedFile, getter_AddRefs(dest));
+                rv2 = dest->Clone(getter_AddRefs(doomedSpec));
 
-                if ( err1 == REGERR_OK && err2 == REGERR_OK )
+                if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
                 {
-                    src->InitWithPath((char*)srcFile);
-                    rv1 = src->Clone(getter_AddRefs(srcSpec));
+                    // finally now try to do the replace
+                    PRInt32 result = ReplaceFileNow( srcSpec, doomedSpec );
 
-                    dest->InitWithPath((char*)doomedFile);
-                    rv2 = dest->Clone(getter_AddRefs(doomedSpec));
-
-                    if (NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2))
+                    if ( result == nsInstall::DOES_NOT_EXIST ||
+                         result == nsInstall::SUCCESS )
                     {
-                        // finally now try to do the replace
-                        PRInt32 result = ReplaceFileNow( srcSpec, doomedSpec );
-
-                        if ( result == nsInstall::DOES_NOT_EXIST ||
-                             result == nsInstall::SUCCESS )
-                        {
-                            // This one is done
-                            NR_RegDeleteKey( reg, key, keyname );
-                        }
+                        // This one is done
+                        NR_RegDeleteKey( reg, key, keyname );
                     }
                 }
             }
+        }
 
 
-            /* delete list node if empty */
-            state = 0;
-            if (REGERR_NOMORE == NR_RegEnumSubkeys( reg, key, &state, keyname,
-                                          sizeof(keyname), REGENUM_CHILDREN ))
-            {
-                NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY);
-            }
+        /* delete list node if empty */
+        state = 0;
+        if (REGERR_NOMORE == NR_RegEnumSubkeys( reg, key, &state, keyname,
+                                     sizeof(keyname), REGENUM_CHILDREN ))
+        {
+            NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY);
         }
     }
 }
