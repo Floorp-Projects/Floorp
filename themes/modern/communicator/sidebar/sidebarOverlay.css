@@ -96,7 +96,7 @@
 #sidebar-box {
     margin-top: 1px;
     width: 162px;
-    min-height: 1px;
+    min-height: 10px;
     min-width: 30px;
     max-width: 400px;
     border: none;
