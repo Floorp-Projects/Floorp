@@ -1617,28 +1617,30 @@ nsGenericHTMLElement::MapImageBorderAttributesInto(nsIHTMLAttributes* aAttribute
     spacing->mBorder.SetRight(coord);
     spacing->mBorder.SetBottom(coord);
     spacing->mBorder.SetLeft(coord);
-    spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
-    spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
-    spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
-    spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+    
+	spacing->SetBorderStyle(0,NS_STYLE_BORDER_STYLE_SOLID);
+	spacing->SetBorderStyle(1,NS_STYLE_BORDER_STYLE_SOLID);
+	spacing->SetBorderStyle(2,NS_STYLE_BORDER_STYLE_SOLID);
+	spacing->SetBorderStyle(3,NS_STYLE_BORDER_STYLE_SOLID);
+
 
     // Use supplied colors if provided, otherwise use color for border
     // color
     if (nsnull != aBorderColors) {
-      spacing->mBorderColor[0] = aBorderColors[0];
-      spacing->mBorderColor[1] = aBorderColors[1];
-      spacing->mBorderColor[2] = aBorderColors[2];
-      spacing->mBorderColor[3] = aBorderColors[3];
+        spacing->SetBorderColor(0, aBorderColors[0]);
+		spacing->SetBorderColor(1, aBorderColors[1]);
+		spacing->SetBorderColor(2, aBorderColors[2]);
+		spacing->SetBorderColor(3, aBorderColors[3]);
     }
     else {
       // Color is inherited from "color"
       const nsStyleColor* styleColor = (const nsStyleColor*)
         aContext->GetStyleData(eStyleStruct_Color);
       nscolor color = styleColor->mColor;
-      spacing->mBorderColor[0] = color;
-      spacing->mBorderColor[1] = color;
-      spacing->mBorderColor[2] = color;
-      spacing->mBorderColor[3] = color;
+      spacing->SetBorderColor(0, color);
+      spacing->SetBorderColor(1, color);
+      spacing->SetBorderColor(2, color);
+      spacing->SetBorderColor(3, color);
     }
   }
 }
