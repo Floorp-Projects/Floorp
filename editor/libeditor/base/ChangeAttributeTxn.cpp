@@ -23,13 +23,16 @@
 ChangeAttributeTxn::ChangeAttributeTxn(nsEditor *aEditor,
                                        nsIDOMElement *aElement,
                                        const nsString& aAttribute,
-                                       const nsString& aValue)
+                                       const nsString& aValue,
+                                       PRBool aRemoveAttribute)
   : EditTxn(aEditor)
 {
   mElement = aElement;
   mAttribute = aAttribute;
   mValue = aValue;
+  mRemoveAttribute = aRemoveAttribute;
   mAttributeWasSet=PR_FALSE;
+  mUndoValue="";
 }
 
 nsresult ChangeAttributeTxn::Do(void)
@@ -40,13 +43,22 @@ nsresult ChangeAttributeTxn::Do(void)
   char valueAsCString[stringlen+1];
   mAttribute.ToCString(attributeAsCString, stringlen);
   mAttributeWasSet;
-  mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, mAttributeWasSet);
+  nsresult result = mEditor->GetAttributeValue(mElement, mAttribute, mUndoValue, mAttributeWasSet);
+  // XXX: hack until attribute-was-set code is implemented
+      if (PR_FALSE==mUndoValue.Equals(""))
+        mAttributeWasSet=PR_TRUE;
+  // XXX: end hack
   
   if (mAttributeWasSet)
     mUndoValue.ToCString(valueAsCString, stringlen);
 
   // now set the attribute to the new value
-  return mEditor->SetAttribute(mElement, mAttribute, mValue);
+  if (PR_FALSE==mRemoveAttribute)
+   result = mEditor->SetAttribute(mElement, mAttribute, mValue);
+  else
+   result = mEditor->RemoveAttribute(mElement, mAttribute);
+
+  return result;
 }
 
 nsresult ChangeAttributeTxn::Undo(void)
@@ -66,7 +78,14 @@ nsresult ChangeAttributeTxn::Undo(void)
 
 nsresult ChangeAttributeTxn::Redo(void)
 {
-  return mEditor->SetAttribute(mElement, mAttribute, mValue);
+  nsresult result;
+
+  if (PR_FALSE==mRemoveAttribute)
+   result = mEditor->SetAttribute(mElement, mAttribute, mValue);
+  else
+   result = mEditor->RemoveAttribute(mElement, mAttribute);
+
+  return result;
 }
 
 nsresult ChangeAttributeTxn::GetIsTransient(PRBool *aIsTransient)
@@ -89,13 +108,25 @@ nsresult ChangeAttributeTxn::Write(nsIOutputStream *aOutputStream)
 nsresult ChangeAttributeTxn::GetUndoString(nsString **aString)
 {
   if (nsnull!=aString)
-    *aString=nsnull;
+  {
+    if (PR_FALSE==mRemoveAttribute)
+      **aString="Change Attribute: ";
+    else
+      **aString="Remove Attribute: ";
+    **aString += mAttribute;
+  }
   return NS_OK;
 }
 
 nsresult ChangeAttributeTxn::GetRedoString(nsString **aString)
 {
   if (nsnull!=aString)
-    *aString=nsnull;
+  {
+    if (PR_FALSE==mRemoveAttribute)
+      **aString="Change Attribute: ";
+    else
+      **aString="Add Attribute: ";
+    **aString += mAttribute;
+  }
   return NS_OK;
 }
