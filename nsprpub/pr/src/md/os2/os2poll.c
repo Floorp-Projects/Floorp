@@ -237,8 +237,7 @@ retry:
     {
         PRInt32 ticksPerSecond = PR_TicksPerSecond();
         tv.tv_sec = remaining / ticksPerSecond;
-        tv.tv_usec = remaining - (ticksPerSecond * tv.tv_sec);
-        tv.tv_usec = (PR_USEC_PER_SEC * tv.tv_usec) / ticksPerSecond;
+        tv.tv_usec = PR_IntervalToMicroseconds( remaining % ticksPerSecond );
         tvp = &tv;
     }
 
