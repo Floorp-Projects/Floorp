@@ -3585,6 +3585,12 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
       if (imapFolder)
         imapFolder->SetPerformingBiff(PR_TRUE);
     }
+    PRBool isOpen = PR_FALSE;
+    nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID);
+    if (mailSession && aRootFolder)
+      mailSession->IsFolderOpenInWindow(aRootFolder, &isOpen);
+    // eventually, the gGotStatusPref should go away, once we work out the kinks
+    // from using STATUS.
     if (!gGotStatusPref)
     {
       nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -3592,7 +3598,7 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
         prefBranch->GetBoolPref("mail.imap.use_status_for_biff", &gUseStatus);
       gGotStatusPref = PR_TRUE;
     }
-    if (gUseStatus)
+    if (gUseStatus && !isOpen)
     {
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aRootFolder);
       if (imapFolder)
