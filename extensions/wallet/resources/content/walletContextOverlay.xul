@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!--
+  XXX: hack for bug 135222
+  For folks who upgrade from a build when this overlay was registered the
+  presence of a stub prevents their browser from turning into a useless,
+  chromeless, blank window.
+ -->
+<overlay>
+</overlay>

@@ -2,6 +2,7 @@ comm.jar:
     content/wallet/contents.rdf                         (resources/content/contents.rdf)
     content/wallet/walletNavigatorOverlay.xul           (resources/content/walletNavigatorOverlay.xul)
     content/wallet/walletTasksOverlay.xul               (resources/content/walletTasksOverlay.xul)
+    content/wallet/walletContextOverlay.xul             (resources/content/walletContextOverlay.xul)
     content/wallet/walletPrefsOverlay.xul               (resources/content/walletPrefsOverlay.xul)
     content/wallet/pref-wallet.xul                      (resources/content/pref-wallet.xul)
     content/wallet/pref-passwords.xul                   (resources/content/pref-passwords.xul)
