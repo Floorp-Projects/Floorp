@@ -202,6 +202,7 @@ bin\chrome\packages\core\*
 bin\chrome\packages\widget-toolkit\*
 bin\chrome\skins\modern\*
 bin\chrome\skins\classic\*
+bin\chrome\skins\blue\*
 -bin\chrome\packages\core\editor\content\EditorInitPage.html
 -bin\chrome\packages\core\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
