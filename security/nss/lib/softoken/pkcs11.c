@@ -2573,6 +2573,16 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
     int i;
     int moduleIndex = isFIPS? NSC_FIPS_MODULE : NSC_NON_FIPS_MODULE;
 
+
+    if (isFIPS) {
+	/* make sure that our check file signatures are OK */
+	if (!BLAPI_VerifySelf(NULL) || 
+	    !BLAPI_SHVerify(SOFTOKEN_LIB_NAME, (PRFuncPtr) pk11_closePeer)) {
+	    crv = CKR_DEVICE_ERROR; /* better error code? checksum error? */
+	    return crv;
+	}
+    }
+
     rv = RNG_RNGInit();         /* initialize random number generator */
     if (rv != SECSuccess) {
 	crv = CKR_DEVICE_ERROR;
