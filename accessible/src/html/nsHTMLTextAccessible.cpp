@@ -50,51 +50,12 @@
 #include "nsIDOMXULLabelElement.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsLinkableAccessible(aDomNode, aShell)
+nsTextAccessible(aDomNode, aShell)
 { 
 }
 
 /* wstring getAccName (); */
 NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAWritableString& _retval)
 { 
-  // handles descriptions and label XUL elements
-  nsCOMPtr<nsIDOMXULDescriptionElement> descriptionElement(do_QueryInterface(mDOMNode));
-  if (descriptionElement) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    return AppendFlatStringFromSubtree(content, &_retval);
-  }
-  // HTML elements
-  else {
-    return mDOMNode->GetNodeValue(_retval);
-  }
-  return NS_ERROR_FAILURE;
-}
-
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccRole(PRUint32 *_retval)
-{
-  *_retval = ROLE_TEXT;
-
-  return NS_OK;
-}
-
-/* nsIAccessible getAccFirstChild (); */
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* nsIAccessible getAccLastChild (); */
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccLastChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  return NS_OK;
-}
-
-/* long getAccChildCount (); */
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  *_retval = 0;
-  return NS_OK;
+  return mDOMNode->GetNodeValue(_retval);
 }

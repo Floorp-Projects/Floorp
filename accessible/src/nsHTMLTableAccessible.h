@@ -41,8 +41,9 @@
 #define _nsHTMLTableAccessible_H_
 
 #include "nsAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 
-class nsHTMLTableCellAccessible : public nsHTMLBlockAccessible
+class nsHTMLTableCellAccessible : public nsBlockAccessible
 {
 public:
   nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
@@ -50,7 +51,7 @@ public:
 };
 
 
-class nsHTMLTableAccessible : public nsHTMLBlockAccessible
+class nsHTMLTableAccessible : public nsBlockAccessible
 {
 public:
   nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);

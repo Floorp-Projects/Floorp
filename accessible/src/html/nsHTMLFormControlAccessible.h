@@ -41,6 +41,7 @@
 #define _nsHTMLFormControlAccessible_H_
 
 #include "nsAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 
 class nsICheckboxControlFrame;
 
@@ -97,7 +98,7 @@ public:
   NS_IMETHOD AccDoAction(PRUint8 index);
 };
 
-class nsHTML4ButtonAccessible : public nsHTMLBlockAccessible
+class nsHTML4ButtonAccessible : public nsBlockAccessible
 {
 
 public:

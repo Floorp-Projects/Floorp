@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Author: Aaron Leventhal (aaronl@netscape.com)
+ * Author: John Gaunt (jgaunt@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,19 +37,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsHTMLLinkAccessible_H_
-#define _nsHTMLLinkAccessible_H_
+// NOTE: alphabetically ordered
+#include "nsIDOMXULDescriptionElement.h"
+#include "nsIDOMXULLabelElement.h"
+#include "nsWeakReference.h"
+#include "nsXULTextAccessible.h"
 
-#include "nsAccessible.h"
-#include "nsBaseWidgetAccessible.h"
+/**
+  * For XUL descriptions and labels
+  */
+nsXULTextAccessible::nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsTextAccessible(aDomNode, aShell)
+{ 
+}
 
-class nsHTMLLinkAccessible : public nsLinkableAccessible
-{
-
-public:
-  nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-};
-
-#endif  
+/* wstring getAccName (); */
+NS_IMETHODIMP nsXULTextAccessible::GetAccName(nsAWritableString& _retval)
+{ 
+  nsCOMPtr<nsIDOMXULDescriptionElement> descriptionElement(do_QueryInterface(mDOMNode));
+  if (descriptionElement) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    return AppendFlatStringFromSubtree(content, &_retval);
+  }
+  return NS_ERROR_FAILURE;
+}

@@ -66,6 +66,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMXULCheckboxElement.h"
+#include "nsXULFormControlAccessible.h"
+#include "nsXULTextAccessible.h"
 
 // IFrame
 #include "nsIDocShell.h"
@@ -199,7 +201,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULCheckboxAccessible(nsIDOMNode *aN
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
   // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsHTMLCheckboxAccessible(aNode, weakShell);
+  *_retval = new nsXULCheckboxAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -267,7 +269,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULButtonAccessible(nsIDOMNode *aNod
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
   // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsHTML4ButtonAccessible(aNode, weakShell);
+  *_retval = new nsXULButtonAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -299,7 +301,7 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULTextAccessible(nsIDOMNode *aNode,
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
   // reusing the HTML accessible widget and enhancing for XUL
-  *_retval = new nsHTMLTextAccessible(aNode, weakShell);
+  *_retval = new nsXULTextAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -661,6 +663,18 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!aNode)
     return NS_ERROR_NULL_POINTER;
 
+  // ---- Is it a XUL element? -- they impl nsIAccessibleProvider via XBL
+  nsCOMPtr<nsIAccessible> newAcc;
+  nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
+  if (accProv)  {
+    accProv->GetAccessible(getter_AddRefs(newAcc));
+    if (newAcc) {
+      *_retval = newAcc;
+      NS_ADDREF(*_retval);
+      return NS_OK;
+    }
+  }
+
   // ---- Get the document for this node  ----
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIDocument> nodeIsDoc(do_QueryInterface(aNode));
@@ -710,15 +724,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!frame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAccessible> newAcc;
   frame->GetAccessible(getter_AddRefs(newAcc));
-
-  // ---- Is it a XUL element? -- they impl nsIAccessibleProvider via XBL
-  if (!newAcc) {
-    nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
-    if (accProv)  
-      accProv->GetAccessible(getter_AddRefs(newAcc));
-  }
 
   // ---- If link, create link accessible ----
   if (!newAcc) {

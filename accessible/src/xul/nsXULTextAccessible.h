@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Author: Aaron Leventhal (aaronl@netscape.com)
+ * Author: John Gaunt (jgaunt@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -37,19 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsHTMLLinkAccessible_H_
-#define _nsHTMLLinkAccessible_H_
+#ifndef _nsXULTextAccessible_H_
+#define _nsXULTextAccessible_H_
 
 #include "nsAccessible.h"
 #include "nsBaseWidgetAccessible.h"
 
-class nsHTMLLinkAccessible : public nsLinkableAccessible
+class nsIWeakReference;
+
+class nsXULTextAccessible : public nsTextAccessible
 {
 
 public:
-  nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsXULTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccName(nsAWritableString& _retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
 };
 
 #endif  

@@ -40,6 +40,7 @@
 #define __nsHTMLSelectListAccessible_h__
 
 #include "nsAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 
 #include "nsCOMPtr.h"
 

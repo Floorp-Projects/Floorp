@@ -64,6 +64,9 @@ CPPSRCS   = \
     nsHTMLComboboxAccessible.cpp \
     nsHTMLListboxAccessible.cpp \
     nsGenericAccessible.cpp \
+    nsXULFormControlAccessible.cpp \
+    nsXULTextAccessible.cpp \
+    nsBaseWidgetAccessible.obj \
     $(NULL)
 
 EXPORTS = \

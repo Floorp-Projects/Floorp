@@ -146,11 +146,6 @@ NS_IMETHODIMP nsHTMLFormControlAccessible::GetAccState(PRUint32 *_retval)
     htmlFormElement->GetType(typeString);
     if (typeString.EqualsIgnoreCase("password"))
       *_retval |= STATE_PROTECTED;
-    }
-  else {
-    nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mDOMNode));
-    if (xulFormElement)
-      xulFormElement->GetDisabled(&disabled);
   }
 
   if (disabled)
@@ -209,15 +204,9 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::AccDoAction(PRUint8 index)
     if (htmlCheckboxElement) {
       htmlCheckboxElement->GetChecked(&checked);
       htmlCheckboxElement->SetChecked(!checked);
+      return NS_OK;
     }
-    else {
-      nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
-      if (xulCheckboxElement) {
-        xulCheckboxElement->GetChecked(&checked);
-        xulCheckboxElement->SetChecked(!checked);
-      }
-    }
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
   return NS_ERROR_INVALID_ARG;
 }
@@ -230,11 +219,6 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccState(PRUint32 *_retval)
   nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
   if (htmlCheckboxElement) 
     htmlCheckboxElement->GetChecked(&checked);
-  else {
-    nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
-    if (xulCheckboxElement)
-      xulCheckboxElement->GetChecked(&checked);
-  }
 
   if (checked) 
     *_retval |= STATE_CHECKED;
@@ -370,7 +354,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccName(nsAWritableString& _retval)
 // ----- HTML 4 Button: can contain arbitrary HTML content -----
 
 nsHTML4ButtonAccessible::nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsHTMLBlockAccessible(aNode, aShell)
+nsBlockAccessible(aNode, aShell)
 { 
 }
 
@@ -401,15 +385,6 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::AccDoAction(PRUint8 index)
       inputElement->Click();
       return NS_OK;
     }
-    else
-    {
-      nsCOMPtr<nsIDOMXULButtonElement> buttonElement(do_QueryInterface(mDOMNode));
-      if ( buttonElement )
-      {
-        buttonElement->DoCommand();
-        return NS_OK;
-      }
-    }
     return NS_ERROR_FAILURE;
   }
   return NS_ERROR_INVALID_ARG;
@@ -434,11 +409,6 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccState(PRUint32 *_retval)
 /* wstring getAccName (); */
 NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAWritableString& _retval)
 {
-  nsCOMPtr<nsIDOMXULButtonElement> buttonElement(do_QueryInterface(mDOMNode));
-  if ( buttonElement ) {
-    return buttonElement->GetLabel(_retval);
-  }
-
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 
