@@ -38,15 +38,6 @@ LLIBS=\
 
 MISCDEP=$(LLIBS)
 
-# XXX Note dependencies on implementation dirs for factory methods.
-
-LINCS=  -I$(PUBLIC)\rdf                 \
-        -I$(PUBLIC)\xpcom               \
-        -I$(PUBLIC)\raptor              \
-        -I$(PUBLIC)\netlib              \
-		-I$(PUBLIC)\chrome              \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)

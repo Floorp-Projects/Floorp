@@ -33,12 +33,7 @@ OBJS=           .\$(OBJDIR)\nsBrowsingProfileReader.obj
 
 LCFLAGS=        -DXP_WIN32 -DWIN32
 
-LINCS=          -I$(PUBLIC)\rdf                 \
-                -I$(PUBLIC)\brprof              \
-                -I$(PUBLIC)\xpcom               \
-                -I$(PUBLIC)\netlib              \
-                -I$(PUBLIC)\raptor              \
-                -I$(LIBNSPR)                    \
+LINCS=          -I$(LIBNSPR)                    \
                 -I$(SUITESPOT)\include          \
                 -I$(SUITESPOT)\wai\include      \
                 $(NULL)

@@ -26,12 +26,6 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRDFResource.obj             \
 	$(NULL)
 
-LINCS=  -I$(PUBLIC)\xpcom        \
-        -I$(PUBLIC)\rdf          \
-        -I$(PUBLIC)\rdfutil      \
-        -I$(PUBLIC)\raptor      \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
