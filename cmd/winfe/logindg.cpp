@@ -2052,8 +2052,8 @@ int     login_UpdateFilesToNewLocation(const char * path,CWnd *pParent,BOOL bCop
 	CString csHist = theApp.GetProfileString("History","History File","");
 	if (!csHist.IsEmpty()) {
 		csTmp = path;
-		csTmp += "\\netscape.hst";
-		pDlg->StartFileUpdate("General Files","netscape.hst");
+		csTmp += "\\mozilla.hst";
+		pDlg->StartFileUpdate("General Files","mozilla.hst");
 		if (bCopyDontMove) {
 			WFE_CopyFile(csHist,csTmp);
 		} else {
@@ -2063,9 +2063,9 @@ int     login_UpdateFilesToNewLocation(const char * path,CWnd *pParent,BOOL bCop
 	} else {
 		if (!csMain.IsEmpty()) {
 			csTmp = path;
-			csTmp += "\\netscape.hst";
-			pDlg->StartFileUpdate("General Files","netscape.hst");
-			WFE_CopyFile(csMain + "\\netscape.hst" ,csTmp);
+			csTmp += "\\mozilla.hst";
+			pDlg->StartFileUpdate("General Files","mozilla.hst");
+			WFE_CopyFile(csMain + "\\mozilla.hst" ,csTmp);
 		}
 	}
 
