@@ -29,6 +29,7 @@ class nsSupportsIDImpl : public nsISupportsID
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSID
 
     nsSupportsIDImpl();
@@ -44,6 +45,7 @@ class nsSupportsStringImpl : public nsISupportsString
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSSTRING
 
     nsSupportsStringImpl();
@@ -59,6 +61,7 @@ class nsSupportsWStringImpl : public nsISupportsWString
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSWSTRING
 
     nsSupportsWStringImpl();
@@ -74,6 +77,7 @@ class nsSupportsPRBoolImpl : public nsISupportsPRBool
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRBOOL
 
     nsSupportsPRBoolImpl();
@@ -89,6 +93,7 @@ class nsSupportsPRUint8Impl : public nsISupportsPRUint8
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRUINT8
 
     nsSupportsPRUint8Impl();
@@ -104,6 +109,7 @@ class nsSupportsPRUint16Impl : public nsISupportsPRUint16
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRUINT16
 
     nsSupportsPRUint16Impl();
@@ -119,6 +125,7 @@ class nsSupportsPRUint32Impl : public nsISupportsPRUint32
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRUINT32
 
     nsSupportsPRUint32Impl();
@@ -134,6 +141,7 @@ class nsSupportsPRUint64Impl : public nsISupportsPRUint64
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRUINT64
 
     nsSupportsPRUint64Impl();
@@ -149,6 +157,7 @@ class nsSupportsPRTimeImpl : public nsISupportsPRTime
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRTIME
 
     nsSupportsPRTimeImpl();
@@ -164,6 +173,7 @@ class nsSupportsCharImpl : public nsISupportsChar
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSCHAR
 
     nsSupportsCharImpl();
@@ -179,6 +189,7 @@ class nsSupportsPRInt16Impl : public nsISupportsPRInt16
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRINT16
 
     nsSupportsPRInt16Impl();
@@ -194,6 +205,7 @@ class nsSupportsPRInt32Impl : public nsISupportsPRInt32
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRINT32
 
     nsSupportsPRInt32Impl();
@@ -209,6 +221,7 @@ class nsSupportsPRInt64Impl : public nsISupportsPRInt64
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSPRINT64
 
     nsSupportsPRInt64Impl();
@@ -224,6 +237,7 @@ class nsSupportsFloatImpl : public nsISupportsFloat
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSFLOAT
 
     nsSupportsFloatImpl();
@@ -239,6 +253,7 @@ class nsSupportsDoubleImpl : public nsISupportsDouble
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSDOUBLE
 
     nsSupportsDoubleImpl();
@@ -254,6 +269,7 @@ class nsSupportsVoidImpl : public nsISupportsVoid
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSVOID
 
     nsSupportsVoidImpl();

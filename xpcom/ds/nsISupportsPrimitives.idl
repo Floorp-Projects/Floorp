@@ -29,15 +29,38 @@
  * using the nsIAllocator. Be careful!
  */ 
 
+[scriptable, uuid(d0d4b136-1dd1-11b2-9371-f0727ef827c0)]
+interface nsISupportsPrimitive : nsISupports
+{
+    const unsigned short TYPE_ID         = 1;
+    const unsigned short TYPE_STRING     = 2;
+    const unsigned short TYPE_WSTRING    = 3;
+    const unsigned short TYPE_PRBOOL     = 4;
+    const unsigned short TYPE_PRUINT8    = 5;
+    const unsigned short TYPE_PRUINT16   = 6;
+    const unsigned short TYPE_PRUINT32   = 7;
+    const unsigned short TYPE_PRUINT64   = 8;
+    const unsigned short TYPE_PRTIME     = 9;
+    const unsigned short TYPE_CHAR       = 10;
+    const unsigned short TYPE_PRINT16    = 11;
+    const unsigned short TYPE_PRINT32    = 12;
+    const unsigned short TYPE_PRINT64    = 13;
+    const unsigned short TYPE_FLOAT      = 14;
+    const unsigned short TYPE_DOUBLE     = 15;
+    const unsigned short TYPE_VOID       = 16;
+
+    readonly attribute unsigned short type;
+};
+
 [scriptable, uuid(d18290a0-4a1c-11d3-9890-006008962422)]
-interface nsISupportsID : nsISupports
+interface nsISupportsID : nsISupportsPrimitive
 {
     attribute nsIDPtr data;
     string toString();
 };
 
 [scriptable, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
-interface nsISupportsString : nsISupports
+interface nsISupportsString : nsISupportsPrimitive
 {
     attribute string data;
     string toString();
@@ -49,7 +72,7 @@ interface nsISupportsString : nsISupports
 };
 
 [scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
-interface nsISupportsWString : nsISupports
+interface nsISupportsWString : nsISupportsPrimitive
 {
     attribute wstring data;
     wstring toString();
@@ -65,91 +88,91 @@ interface nsISupportsWString : nsISupports
  */ 
 
 [scriptable, uuid(ddc3b490-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRBool : nsISupports
+interface nsISupportsPRBool : nsISupportsPrimitive
 {
     attribute PRBool data;
     string toString();
 };
 
 [scriptable, uuid(dec2e4e0-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRUint8 : nsISupports
+interface nsISupportsPRUint8 : nsISupportsPrimitive
 {
     attribute PRUint8 data;
     string toString();
 };
 
 [scriptable, uuid(dfacb090-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRUint16 : nsISupports
+interface nsISupportsPRUint16 : nsISupportsPrimitive
 {
     attribute PRUint16 data;
     string toString();
 };
 
 [scriptable, uuid(e01dc470-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRUint32 : nsISupports
+interface nsISupportsPRUint32 : nsISupportsPrimitive
 {
     attribute PRUint32 data;
     string toString();
 };
 
 [scriptable, uuid(e13567c0-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRUint64 : nsISupports
+interface nsISupportsPRUint64 : nsISupportsPrimitive
 {
     attribute PRUint64 data;
     string toString();
 };
 
 [scriptable, uuid(e2563630-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRTime : nsISupports
+interface nsISupportsPRTime : nsISupportsPrimitive
 {
     attribute PRTime data;
     string toString();
 };
 
 [scriptable, uuid(e2b05e40-4a1c-11d3-9890-006008962422)]
-interface nsISupportsChar : nsISupports
+interface nsISupportsChar : nsISupportsPrimitive
 {
     attribute char data;
     string toString();
 };
 
 [scriptable, uuid(e30d94b0-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRInt16 : nsISupports
+interface nsISupportsPRInt16 : nsISupportsPrimitive
 {
     attribute PRInt16 data;
     string toString();
 };
 
 [scriptable, uuid(e36c5250-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRInt32 : nsISupports
+interface nsISupportsPRInt32 : nsISupportsPrimitive
 {
     attribute PRInt32 data;
     string toString();
 };
 
 [scriptable, uuid(e3cb0ff0-4a1c-11d3-9890-006008962422)]
-interface nsISupportsPRInt64 : nsISupports
+interface nsISupportsPRInt64 : nsISupportsPrimitive
 {
     attribute PRInt64 data;
     string toString();
 };
 
 [scriptable, uuid(abeaa390-4ac0-11d3-baea-00805f8a5dd7)]
-interface nsISupportsFloat : nsISupports
+interface nsISupportsFloat : nsISupportsPrimitive
 {
     attribute float data;
     string toString();
 };
 
 [scriptable, uuid(b32523a0-4ac0-11d3-baea-00805f8a5dd7)]
-interface nsISupportsDouble : nsISupports
+interface nsISupportsDouble : nsISupportsPrimitive
 {
     attribute double data;
     string toString();
 };
 
 [scriptable, uuid(464484f0-568d-11d3-baf8-00805f8a5dd7)]
-interface nsISupportsVoid : nsISupports
+interface nsISupportsVoid : nsISupportsPrimitive
 {
     /*
     *  This would be: "[noscript] attribute voidPtr data;" but for...
