@@ -1858,11 +1858,11 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
       superwin = GDK_SUPERWIN(parentWidget);
       GdkWindow *topGDKWindow =
         gdk_window_get_toplevel(GDK_SUPERWIN(parentWidget)->shell_window);
-        gpointer data;
-        gdk_window_get_user_data(topGDKWindow, &data);
-        if (GTK_IS_WINDOW(data)) {
-          topLevelParent = GTK_WINDOW(data);
-        }
+      gpointer data;
+      gdk_window_get_user_data(topGDKWindow, &data);
+      if (GTK_IS_WINDOW(data)) {
+        topLevelParent = GTK_WINDOW(data);
+      }
     }
     else if (GTK_IS_CONTAINER(parentWidget)) {
       parentContainer = GTK_CONTAINER(parentWidget);
@@ -1870,10 +1870,9 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
       topLevelParent =
         GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(parentWidget)));
     }
-#ifdef DEBUG
-    else
-      g_print("warning: attempted to CreateNative() width a non-superwin and non gtk container parent\n");
-#endif
+    else {
+      NS_WARNING("Unknown parent widget type");
+    }
   }
 
   switch(mWindowType)
