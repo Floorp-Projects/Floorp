@@ -809,7 +809,7 @@
 
   <binding id="select-optgroup">
     <content>
-      <xul:menu flex="1" inherits="label" class="select-menuitem">
+      <xul:menu flex="1" xbl:inherits="label" class="select-menuitem">
         <xul:menupopup class="select-optgrouppopup">
           <children/>
         </xul:menupopup>

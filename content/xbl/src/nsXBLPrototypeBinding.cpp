@@ -1174,13 +1174,8 @@ nsXBLPrototypeBinding::ShouldBuildChildFrames(PRBool* aResult)
 void
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 {
-  nsresult rv;
   nsAutoString inherits;
-  rv = aElement->GetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, inherits);
-  // XXX fallback to using "inherits" in the null namespace
-  // We shouldn't do this once bug 119317 is fully fixed
-  if (rv == NS_CONTENT_ATTR_NOT_THERE)
-    aElement->GetAttr(kNameSpaceID_None, nsXBLAtoms::inherits, inherits);
+  aElement->GetAttr(kNameSpaceID_XBL, nsXBLAtoms::inherits, inherits);
 
   if (!inherits.IsEmpty()) {
     if (!mAttributeTable) {
