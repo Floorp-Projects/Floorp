@@ -731,6 +731,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:dom:public:idl:stylesheets:MANIFEST_IDL",        "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:views:MANIFEST_IDL",              "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:xbl:MANIFEST_IDL",                "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:dom:public:idl:xpath:MANIFEST_IDL",              "$distdirectory:idl:");
     InstallFromManifest(":mozilla:dom:public:idl:xul:MANIFEST_IDL",                "$distdirectory:idl:");
     
     # SVG
@@ -1112,6 +1113,7 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:dom:macbuild:dom_stylesheetsIDL.xml",                 "dom_stylesheets");
     BuildIDLProject(":mozilla:dom:macbuild:dom_viewsIDL.xml",                       "dom_views");
     BuildIDLProject(":mozilla:dom:macbuild:dom_xblIDL.xml",                         "dom_xbl");
+    BuildIDLProject(":mozilla:dom:macbuild:dom_xpathIDL.xml",                       "dom_xpath");
     BuildIDLProject(":mozilla:dom:macbuild:dom_xulIDL.xml",                         "dom_xul");
 
 	if ($main::options{svg}) {

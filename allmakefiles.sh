@@ -85,6 +85,7 @@ dom/public/idl/range/Makefile
 dom/public/idl/stylesheets/Makefile
 dom/public/idl/views/Makefile
 dom/public/idl/xbl/Makefile
+dom/public/idl/xpath/Makefile
 dom/public/idl/xul/Makefile
 dom/src/Makefile
 dom/src/base/Makefile
