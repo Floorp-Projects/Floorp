@@ -5654,8 +5654,13 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
           aParent->GetNodeInfo() &&
           aParent->GetNodeInfo()->Equals(nsSVGAtoms::use, kNameSpaceID_SVG))
         bindingParent = aParent;
+      else
 #endif
-
+      // Empty block to serve as the else clause to keep the
+      // following statement from accidentally falling into the
+      // |else| when the #defines are changed.
+      {}
+      
       rv = content->BindToTree(aDocument, aParent, bindingParent, PR_TRUE);
       if (NS_FAILED(rv)) {
         content->UnbindFromTree();
