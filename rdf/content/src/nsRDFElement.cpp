@@ -62,7 +62,7 @@
 #include "nsIRDFResourceManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
-#include "nsRDFBaseCID.h"
+#include "nsRDFCID.h"
 #include "nsRDFElement.h"
 #include "nsINameSpaceManager.h"
 
