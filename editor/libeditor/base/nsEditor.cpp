@@ -4108,9 +4108,11 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   result = ps->GetPrimaryFrameFor(content, &frame);
   if (NS_FAILED(result)) return result;
-  
-  ::GetStyleData(frame, &styleText);
-  if (!styleText)
+
+  NS_ASSERTION(frame, "no frame, see bug #188946");
+  if (frame)
+    ::GetStyleData(frame, &styleText);
+  if (!frame || !styleText)
   {
     // Consider nodes without a style context to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
