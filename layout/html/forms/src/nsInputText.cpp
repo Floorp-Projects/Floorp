@@ -323,9 +323,7 @@ void nsInputText::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   else if ((aAttribute == nsHTMLAtoms::cols) && (kInputText_Area == mType)) {
     CacheAttribute(aValue, ATTR_NOTSET, mNumCols);
   }
-  else {
-    nsInputTextSuper::SetAttribute(aAttribute, aValue);
-  }
+  nsInputTextSuper::SetAttribute(aAttribute, aValue);
 }
 
 nsContentAttr nsInputText::GetAttribute(nsIAtom* aAttribute,

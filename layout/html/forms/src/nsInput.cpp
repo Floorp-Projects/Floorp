@@ -283,7 +283,7 @@ void nsInput::CacheAttribute(const nsString& aValue, PRInt32 aMinValue, PRInt32&
 void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   if (aAttribute == nsHTMLAtoms::type) { // You cannot set the type of a form element
-    return;
+    ;
   } 
   else if (aAttribute == nsHTMLAtoms::name) {
     CacheAttribute(aValue, mName);
@@ -305,9 +305,8 @@ void nsInput::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     }
     return;
   }
-  else {
-    nsInputSuper::SetAttribute(aAttribute, aValue); 
-  }
+  // XXX the following is necessary so that MapAttributesInto gets called
+  nsInputSuper::SetAttribute(aAttribute, aValue); 
 }
 
 nsContentAttr nsInput::GetCacheAttribute(nsString* const& aLoc, nsHTMLValue& aValue) const

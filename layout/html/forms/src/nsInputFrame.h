@@ -137,8 +137,6 @@ public:
     */
   virtual const nsIID& GetIID(); 
 
-  nscoord GetDefaultPadding() const;
-  virtual nscoord GetPadding() const;
   /**
     * Get the widget associated with this frame
     * @param aView the view associated with the frame. It is a convience parm.

@@ -348,16 +348,6 @@ nsInputFrame::GetWidgetInitData(nsIPresContext& aPresContext)
   return nsnull;
 }
 
-nscoord nsInputFrame::GetDefaultPadding() const 
-{
-  return NS_POINTS_TO_TWIPS_INT(2); // XXX should be pixels, need pres context
-} 
-
-nscoord nsInputFrame::GetPadding() const
-{
-  return 0;
-}
-
 void 
 nsInputFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {

@@ -43,6 +43,8 @@ public:
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
 
+  virtual void MapAttributesInto(nsIStyleContext* aContext, 
+                                     nsIPresContext* aPresContext);
   virtual void Reset();
 
 protected:
