@@ -25,7 +25,6 @@ MOZ_TOP=mozilla
 #                              tree by default)
 
 MODULAR_NETLIB = 1
-NGLAYOUT_PLUGINS = 1
 
 #
 # Command macro defines

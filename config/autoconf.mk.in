@@ -254,7 +254,6 @@ MOZ_LDAP	=
 SMART_MAIL	=
 
 # XXX - these need to be cleaned up and have real checks added -cls
-NGLAYOUT_PLUGINS=1 
 CM_BLDTYPE=dbg 
 AWT_11=1 
 MOZ_BITS=32 
