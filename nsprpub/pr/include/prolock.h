@@ -86,7 +86,7 @@ typedef void * PROrderedLock;
 ** is not compiled in.
 **  
 */
-#include <prlock.h>
+#include "prlock.h"
 
 typedef PRLock PROrderedLock;
 #endif
