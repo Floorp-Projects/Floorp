@@ -77,3 +77,12 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 export:: private_export
 
+test: $(PROGRAMS)
+	@cd $(OBJDIR); \
+	echo hello world | ./minigzip | ./minigzip -d || \
+	  echo '		*** minigzip test FAILED ***' ; \
+	if ./example; then \
+	  echo '		*** zlib test OK ***'; \
+	else \
+	  echo '		*** zlib test FAILED ***'; \
+	fi
