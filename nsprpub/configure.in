@@ -220,6 +220,10 @@ fi
 if test "$GCC" = "yes"; then
     GNU_CC=1
 fi
+if test "`echo | $AS -V 2>&1 | grep -c GNU`" != "0"; then
+    GNU_AS=1
+fi
+rm -f a.out
 
 dnl ========================================================
 dnl Checks for programs.
@@ -658,7 +662,10 @@ case "$target" in
     else
         DSO_CFLAGS=-KPIC
     fi
-    ASFLAGS="$ASFLAGS -Wa,-P"
+    AS='$(CC)'
+    if test -z "$GNU_AS"; then
+        ASFLAGS="$ASFLAGS -Wa,-P"
+    fi
     NOSUCHFILE=/no-such-file
     if test -n "$GNU_CC"; then
         if test -n "$USE_MDUPDATE"; then
@@ -680,7 +687,10 @@ case "$target" in
     if test "${target_cpu}" = "i386"; then
         AC_DEFINE(i386)
         if test -n "$MOZ_DEBUG" && test -n "$GNU_CC"; then
-            _DEBUG_FLAGS="$_DEBUG_FLAGS -Wa,-s -gstabs"
+            _DEBUG_FLAGS="$_DEBUG_FLAGS -gstabs"
+            if test -z "$GNU_AS"; then
+                _DEBUG_FLAGS="$_DEBUG_FLAGS -Wa,-s"
+            fi
         fi
     fi
     case "${target_os}" in
