@@ -389,21 +389,24 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIHTMLContent> node; // Node we are a label for
     switch (aEvent->message) {
       case NS_FOCUS_CONTENT:
-      case NS_KEY_PRESS:
-      case NS_KEY_UP:
-      case NS_KEY_DOWN:
+
+// Bug 49897: According to the spec, the following should not be passed
+// Bug 7554: Despite the spec, IE passes left click events, so for compatability:
       case NS_MOUSE_LEFT_CLICK:
-      case NS_MOUSE_LEFT_DOUBLECLICK:
-      case NS_MOUSE_LEFT_BUTTON_UP:
-      case NS_MOUSE_LEFT_BUTTON_DOWN:
-      case NS_MOUSE_MIDDLE_CLICK:
-      case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      case NS_MOUSE_MIDDLE_BUTTON_UP:
-      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      case NS_MOUSE_RIGHT_CLICK:
-      case NS_MOUSE_RIGHT_DOUBLECLICK:
-      case NS_MOUSE_RIGHT_BUTTON_UP:
-      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+//      case NS_MOUSE_LEFT_DOUBLECLICK:
+//      case NS_MOUSE_LEFT_BUTTON_UP:
+//      case NS_MOUSE_LEFT_BUTTON_DOWN:
+//      case NS_MOUSE_MIDDLE_CLICK:
+//      case NS_MOUSE_MIDDLE_DOUBLECLICK:
+//      case NS_MOUSE_MIDDLE_BUTTON_UP:
+//      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+//      case NS_MOUSE_RIGHT_CLICK:
+//      case NS_MOUSE_RIGHT_DOUBLECLICK:
+//      case NS_MOUSE_RIGHT_BUTTON_UP:
+//      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+//      case NS_KEY_PRESS:
+//      case NS_KEY_UP:
+//      case NS_KEY_DOWN:
       {
         // Get the element that this label is for
         nsAutoString elementId;
