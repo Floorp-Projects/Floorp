@@ -150,6 +150,24 @@ $ops{"SET_PROP"} =
    rem    => "object, name, source",
    params => [ ("TypedRegister", "const StringAtom*", "TypedRegister") ]
   };
+$ops{"GET_SLOT"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, object, slot number",
+   params => [ ("TypedRegister", "TypedRegister", "uint32") ]
+  };
+$ops{"SET_SLOT"} =
+  {
+   super  => "Instruction_3",
+   rem    => "object, slot number, source",
+   params => [ ("TypedRegister", "uint32", "TypedRegister") ]
+  };
+$ops{"SLOT_XCR"} =
+  {
+   super  => "Instruction_4",
+   rem    => "dest, source, slot number, value",
+   params => [ ("TypedRegister", "TypedRegister", "uint32", "double") ]
+  };
 $ops{"PROP_XCR"} =
   {
    super  => "Instruction_4",

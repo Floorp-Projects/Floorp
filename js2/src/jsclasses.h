@@ -88,6 +88,8 @@ namespace JSClasses {
         JSClass* getSuperClass()    { return mSuperClass; }
         JSScope* getScope()         { return mScope; }
         
+        virtual bool isClassType() const { return true; }
+        
         JSSlot& addSlot(const String& name, const JSType* type)
         {
             JSSlot& slot = mSlots[name];

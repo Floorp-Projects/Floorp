@@ -71,6 +71,7 @@ namespace VM {
         ELEM_XCR, /* dest, base, index, value */
         GET_ELEMENT, /* dest, base, index */
         GET_PROP, /* dest, object, prop name */
+        GET_SLOT, /* dest, object, slot number */
         INSTANCEOF, /* dest, source1, source2 */
         JSR, /* target */
         LOAD_BOOLEAN, /* dest, immediate value (boolean) */
@@ -97,8 +98,10 @@ namespace VM {
         SAVE_NAME, /* name, source */
         SET_ELEMENT, /* base, index, value */
         SET_PROP, /* object, name, source */
+        SET_SLOT, /* object, slot number, source */
         SHIFTLEFT, /* dest, source1, source2 */
         SHIFTRIGHT, /* dest, source1, source2 */
+        SLOT_XCR, /* dest, source, slot number, value */
         STRICT_EQ, /* dest, source1, source2 */
         STRICT_NE, /* dest, source1, source2 */
         SUBTRACT, /* dest, source1, source2 */
@@ -135,6 +138,7 @@ namespace VM {
         "ELEM_XCR      ",
         "GET_ELEMENT   ",
         "GET_PROP      ",
+        "GET_SLOT      ",
         "INSTANCEOF    ",
         "JSR           ",
         "LOAD_BOOLEAN  ",
@@ -161,8 +165,10 @@ namespace VM {
         "SAVE_NAME     ",
         "SET_ELEMENT   ",
         "SET_PROP      ",
+        "SET_SLOT      ",
         "SHIFTLEFT     ",
         "SHIFTRIGHT    ",
+        "SLOT_XCR      ",
         "STRICT_EQ     ",
         "STRICT_NE     ",
         "SUBTRACT      ",
@@ -216,7 +222,7 @@ namespace VM {
     /********************************************************************/
     
     typedef uint32 Register;
-    typedef std::pair<Register, const JSType*> TypedRegister;
+    typedef std::pair<Register, JSType*> TypedRegister;
     typedef std::vector<TypedRegister> RegisterList;        
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
@@ -610,6 +616,22 @@ namespace VM {
         }
     };
 
+    class GetSlot : public Instruction_3<TypedRegister, TypedRegister, uint32> {
+    public:
+        /* dest, object, slot number */
+        GetSlot (TypedRegister aOp1, TypedRegister aOp2, uint32 aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, uint32>
+            (GET_SLOT, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[GET_SLOT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            return f;
+        }
+    };
+
     class Instanceof : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
@@ -994,6 +1016,22 @@ namespace VM {
         }
     };
 
+    class SetSlot : public Instruction_3<TypedRegister, uint32, TypedRegister> {
+    public:
+        /* object, slot number, source */
+        SetSlot (TypedRegister aOp1, uint32 aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, uint32, TypedRegister>
+            (SET_SLOT, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[SET_SLOT] << "\t" << "R" << mOp1.first << ", " << mOp2 << ", " << "R" << mOp3.first;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
+            return f;
+        }
+    };
+
     class Shiftleft : public Arithmetic {
     public:
         /* dest, source1, source2 */
@@ -1010,6 +1048,22 @@ namespace VM {
             Arithmetic
             (SHIFTRIGHT, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
+    };
+
+    class SlotXcr : public Instruction_4<TypedRegister, TypedRegister, uint32, double> {
+    public:
+        /* dest, source, slot number, value */
+        SlotXcr (TypedRegister aOp1, TypedRegister aOp2, uint32 aOp3, double aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, uint32, double>
+            (SLOT_XCR, aOp1, aOp2, aOp3, aOp4) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[SLOT_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3 << ", " << mOp4;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
+            return f;
+        }
     };
 
     class StrictEQ : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {

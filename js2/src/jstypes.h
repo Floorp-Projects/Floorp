@@ -450,6 +450,8 @@ namespace JSTypes {
 
         const String& getName() const { return mName; }
 
+        virtual bool isClassType() const { return false; }
+
         int32 distance(const JSType *other) const;
     };
 
