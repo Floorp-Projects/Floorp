@@ -186,8 +186,8 @@ nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
             const char* value = data;
             PRUint32 valueSize = nsCRT::strlen(value);
             data += 1 + valueSize;
-            rv = SetElement(nsLiteralCString(name, nameSize),
-                                   nsLiteralCString(value, valueSize));
+            rv = SetElement(nsLocalCString(name, nameSize),
+                                   nsLocalCString(value, valueSize));
             if (NS_FAILED(rv)) break;
         }
     }
