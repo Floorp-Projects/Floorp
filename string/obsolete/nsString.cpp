@@ -1885,7 +1885,7 @@ NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
     char* out = mStr;
     PRUint32 ucs4=0;
 
-    for (p = aString, utf8len=0, count = aLength; 0 != count && 0 != (*p); count--, p++)
+    for (p = aString, count = aLength; 0 != count && 0 != (*p); count--, p++)
       {
         if (0 == ucs4)
           {
