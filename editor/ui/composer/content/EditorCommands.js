@@ -103,8 +103,6 @@ function EditorStartup(editorType, editorElement)
   
   dump("EditorAppCore windows have been set.\n");
 
-  SetupToolbarElements();
-  
   // Set focus to the edit window
   // This still doesn't work!
   // It works after using a toolbar button, however!
@@ -131,86 +129,8 @@ function TestMenuCreation()
     dump("Failed to find new menu item\n");
 }
 
-// NOT USED?
-function GenerateFormatToolbar()
-{
-  var toolbarButtons = [
-  
-    // bold button
-    {
-      "id"          : "boldButton",
-      "value"       : "B",
-      "onclick"     : "EditorToggleStyle('bold')"
-    },
-    
-    // italics button
-    {
-      "id"          : "italicButton",
-      "value"       : "I"
-    },
-  
-    // underline button
-    {
-      "id"          : "underlineButton",
-      "value"       : "U"
-    },
-
-    // ul button
-    {
-      "id"          : "ulButton",
-      "src"         : "chrome://editor/skin/images/ED_Bullets.gif",
-      "align"       : "bottom"
-    },
-
-    // ol button
-    {
-      "id"          : "olButton",
-      "src"         : "chrome://editor/skin/images/ED_Numbers.gif",
-      "align"       : "bottom"
-    },
-  
-  ];
-  
-  
-  var toolbar = document.getElementById("FormatToolbar");
-
-  for (i = 0; i < toolbarButtons.length; i ++)
-  {
-    var newChild = document.createElement("titledbutton");
-    var thisButton = toolbarButtons[i];
-    
-    for (prop in thisButton)
-    {
-      var theValue = thisButton[prop];
-      newChild.setAttribute(prop, theValue);
-    }
-    
-    toolbar.appendChild(newChild);
-  }
-  
-  // append a spring
-  
-  var theSpring = document.createElement("spring");
-  theSpring.setAttribute("flex", "100%");
-  toolbar.appendChild(theSpring);
-
-  // testing
-  var boldButton = document.getElementById("boldButton");
-  if (!boldButton)
-    dump("Failed to find button\n");
-  
-}
-
 function SetupToolbarElements()
 {
-  // Create an object to store controls for easy access
-  toolbar = new Object;
-  if (!toolbar) {
-    dump("Failed to create toolbar object!!!\n");
-    EditorExit();
-  }
-  toolbar.boldButton = document.getElementById("BoldButton");
-  toolbar.IsBold = document.getElementById("Editor:Style:IsBold");
 }
 
 function _EditorNotImplemented()
@@ -834,47 +754,7 @@ function EditorImageMap()
   }
 }
 
-// --------------------------- Output ---------------------------
-
-function EditorGetText()
-{
-  if (editorShell) {
-    dump("Getting text\n");
-    var  outputText = editorShell.GetContentsAs("text/plain", 2);
-    dump(outputText + "\n");
-  }
-}
-
-function EditorGetHTML()
-{
-  if (editorShell) {
-    dump("Getting HTML\n");
-    var  outputHTML = editorShell.GetContentsAs("text/html", 0);
-    dump(outputHTML + "\n");
-  }
-}
-
-function EditorGetXIF()
-{
-  if (window.editorShell) {
-    dump("Getting XIF\n");
-    var  outputHTML = editorShell.GetContentsAs("text/xif", 2);
-    dump(outputHTML + "\n");
-  }
-}
-
-function EditorDumpContent()
-{
-  if (window.editorShell) {
-    dump("==============  Content Tree: ================\n");
-    window.editorShell.DumpContentTree();
-  }
-}
-
-function EditorInsertText(textToInsert)
-{
-  editorShell.InsertText(textToInsert);
-}
+// --------------------------- Dialogs ---------------------------
 
 function EditorInsertHTML()
 {
@@ -1183,85 +1063,6 @@ function OnCreateAlignmentPopup()
   dump("Creating Alignment popup window\n");
 }
   
-// --------------------------- Debug stuff ---------------------------
-
-function EditorExecuteScript(fileSpec)
-{
-  fileSpec.openStreamForReading();
-
-  var buf         = { value:null };
-  var tmpBuf      = { value:null };
-  var didTruncate = { value:false };
-  var lineNum     = 0;
-  var ex;
-
-  // Log files can be quite huge, so read in a line
-  // at a time and execute it:
-
-  while (!fileSpec.eof())
-  {
-    buf.value         = "";
-    didTruncate.value = true;
-
-    // Keep looping until we get a complete line of
-    // text, or we hit the end of file:
-
-    while (didTruncate.value && !fileSpec.eof())
-    {
-      didTruncate.value = false;
-      fileSpec.readLine(tmpBuf, 1024, didTruncate);
-      buf.value += tmpBuf.value;
-
-      // XXX Need to null out tmpBuf.value to avoid crashing
-      // XXX in some JavaScript string allocation method.
-      // XXX This is probably leaking the buffer allocated
-      // XXX by the readLine() implementation.
-
-      tmpBuf.value = null;
-    }
-
-    ++lineNum;
-
-    try       { eval(buf.value); }
-    catch(ex) { dump("Playback ERROR: Line " + lineNum + "  " + ex + "\n"); return; }
-  }
-
-  buf.value = null;
-}
-
-function EditorGetScriptFileSpec()
-{
-  var fs = Components.classes["component://netscape/filespec"].createInstance();
-  fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
-  fs.unixStyleFilePath = "journal.js";
-  return fs;
-}
-
-function EditorStartLog()
-{
-  var fs;
-
-  fs = EditorGetScriptFileSpec();
-  editorShell.StartLogging(fs);
-  contentWindow.focus();
-
-  fs = null;
-}
-
-function EditorStopLog()
-{
-  editorShell.StopLogging();
-  contentWindow.focus();
-}
-
-function EditorRunLog()
-{
-  var fs;
-  fs = EditorGetScriptFileSpec();
-  EditorExecuteScript(fs);
-  contentWindow.focus();
-}
-
 function EditorSetDefaultPrefs()
 {
   /* only set defaults for new documents */
@@ -1272,9 +1073,7 @@ function EditorSetDefaultPrefs()
   var domdoc;
   try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n"); }
   if ( !domdoc )
-  {
     return;
-  }
 
   // try to get preferences service
   var prefs = null;
@@ -1292,57 +1091,58 @@ function EditorSetDefaultPrefs()
   // if one is found, don't do anything.
   // if not, create one and make it a child of the head tag 
   //   and set its content attribute to the value of the editor.author preference.
-  var nodelist = domdoc.getElementsByTagName("meta");
-  if ( nodelist )
+  
+  var prefAuthorString = prefs.CopyCharPref("editor.author");
+  if ( prefAuthorString && prefAuthorString != 0)
   {
-    var found = false;
-    var node = 0;
-    var listlength = nodelist.length;
-
-    dump("meta nodelist length is "+listlength+"\n");
-    for (var i = 0; i < listlength && !found; i++)
+    var nodelist = domdoc.getElementsByTagName("meta");
+    if ( nodelist )
     {
-      node = nodelist.item(i);
-      if ( node )
+      var found = false;
+      var node = 0;
+      var listlength = nodelist.length;
+
+      for (var i = 0; i < listlength && !found; i++)
       {
-        var value = node.getAttribute("name");
-        if (value == "author")
+        node = nodelist.item(i);
+        if ( node )
         {
-          found = true;
+          var value = node.getAttribute("name");
+          if (value == "author")
+          {
+            found = true;
+          }
         }
       }
-    }
 
-    if ( !found )
-    {
-      dump("no meta tag for author found\n");
-      /* create meta tag with 2 attributes */
-      var element = domdoc.createElement("meta");
-      if ( element )
+      if ( !found )
       {
-        AddAttrToElem(domdoc, "name", "Author", element);
-        AddAttrToElem(domdoc, "content", prefs.CopyCharPref("editor.author"), element);
+        /* create meta tag with 2 attributes */
+        var element = domdoc.createElement("meta");
+        if ( element )
+        {
+          AddAttrToElem(domdoc, "name", "Author", element);
+          AddAttrToElem(domdoc, "content", prefs.CopyCharPref("editor.author"), element);
 
-        var headelement = 0;
-        var headnodelist = domdoc.getElementsByTagName("head");
-        if (headnodelist)
-        {
-          var sz = headnodelist.length;
-          if ( sz >= 1 )
+          var headelement = 0;
+          var headnodelist = domdoc.getElementsByTagName("head");
+          if (headnodelist)
           {
-            dump("nodelist is "+sz+" long for head, getting 0\n");
-            headelement = headnodelist.item(0);
+            var sz = headnodelist.length;
+            if ( sz >= 1 )
+            {
+              headelement = headnodelist.item(0);
+            }
           }
-          else
-            dump("nodelist is 0 long for head\n");
+
+          if ( headelement )
+          {
+              headelement.appendChild( element );
+          }
         }
-        else
-          dump("no headlist retrieved from domdoc\n");
-        
-        if ( headelement )
-        {
-            headelement.appendChild( element );
-        }
+
+        /* create doctype comment */
+        element = domdoc.createComment("");
       }
     }
   }
@@ -1464,6 +1264,8 @@ function EditorReflectDocState()
   return true;
 }
 
+// --------------------------- Logging stuff ---------------------------
+
 function EditorGetNodeFromOffsets(offsets)
 {
   var node = null;
@@ -1508,186 +1310,11 @@ function EditorSetSelectionFromOffsets(selRanges)
   }
 }
 
-function EditorTestSelection()
-{
-  dump("Testing selection\n");
-  var selection = editorShell.editorSelection;
-  if (!selection)
-  {
-    dump("No selection!\n");
-    return;
-  }
-
-  dump("Selection contains:\n");
-  dump(selection.toString() + "\n");
-
-  var output;
-
-  dump("\n====== Selection as XIF =======================\n");
-  output = editorShell.GetContentsAs("text/xif", 1);
-  dump(output + "\n\n");
-
-  dump("====== Selection as unformatted text ==========\n");
-  output = editorShell.GetContentsAs("text/plain", 1);
-  dump(output + "\n\n");
-
-  dump("====== Selection as formatted text ============\n");
-  output = editorShell.GetContentsAs("text/plain", 3);
-  dump(output + "\n\n");
-
-  dump("====== Selection as HTML ======================\n");
-  output = editorShell.GetContentsAs("text/html", 1);
-  dump(output + "\n\n");  
-
-  dump("====== Length and status =====================\n");
-  output = "Document is ";
-  if (editorShell.documentIsEmpty)
-    output += "empty\n";
-  else
-    output += "not empty\n";
-  output += "Document length is " + editorShell.documentLength + " characters";
-  dump(output + "\n\n");
-
-
-}
-
-function EditorTestTableLayout()
-{
-  var table = editorShell.GetElementOrParentByTagName("table", null);
-  if (!table) {
-    dump("Enclosing Table not found: Place caret in a table cell to do this test\n\n");
-    return;
-  }
-    
-  var cell;
-  var startRowIndexObj = new Object();
-  var startColIndexObj = new Object();
-  var rowSpanObj = new Object();
-  var colSpanObj = new Object();
-  var isSelectedObj = new Object();
-  var startRowIndex = 0;
-  var startColIndex = 0;
-  var rowSpan;
-  var colSpan;
-  var isSelected;
-  var col = 0;
-  var row = 0;
-  var rowCount = 0;
-  var maxColCount = 0;
-  var doneWithRow = false;
-  var doneWithCol = false;
-
-  dump("\n\n\n************ Starting Table Layout test ************\n");
-
-  // Note: We could also get the number of rows, cols and use for loops,
-  //   but this tests using out-of-bounds offsets to detect end of row or column
-
-  while (!doneWithRow)  // Iterate through rows
-  {  
-    while(!doneWithCol)  // Iterate through cells in the row
-    {
-      try {
-        cell = editorShell.GetCellDataAt(table, row, col, startRowIndexObj, startColIndexObj,
-                                         rowSpanObj, colSpanObj, isSelectedObj);
-
-        if (cell)
-        {
-          rowSpan = rowSpanObj.value;
-          colSpan = colSpanObj.value;
-          isSelected = isSelectedObj.value;
-          
-          dump("Row,Col: "+row+","+col+" StartRow,StartCol: "+startRowIndexObj.value+","+startColIndexObj.value+" RowSpan="+rowSpan+" ColSpan="+colSpan);
-          if (isSelected)
-            dump("  Cell is selected\n");
-          else
-            dump("  Cell is NOT selected\n");
-
-          // Save the indexes of a cell that will span across the cellmap grid
-          if (rowSpan > 1)
-            startRowIndex = startRowIndexObj.value;
-          if (colSpan > 1)
-            startColIndex = startColIndexObj.value;
-
-          // Initialize these for efficient spanned-cell search
-          startRowIndexObj.value = startRowIndex;
-          startColIndexObj.value = startColIndex;
-
-          col++;
-        } else {
-          doneWithCol = true;
-          // Get maximum number of cells in any row
-          if (col > maxColCount)
-            maxColCount = col;
-          dump(" End of row found\n\n");
-        }
-      }
-      catch (e) {
-        dump("  *** GetCellDataAt barfed at Row,Col:"+row+","+col+" ***\n\n");
-        col++;
-      }
-    }
-    if (col == 0) {
-      // Didn't find a cell in the first col of a row,
-      // thus no more rows in table
-      doneWithRow = true;
-      rowCount = row;
-      dump("No more rows in table\n\n");
-    } else {
-      // Setup for next row
-      col = 0;
-      row++;
-      doneWithCol = false;
-      dump("Setup for next row\n");
-    }      
-  }
-  dump("Counted during scan: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n");
-  rowCount = editorShell.GetTableRowCount(table);
-  maxColCount = editorShell.GetTableColumnCount(table);
-  dump("From nsITableLayout: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n****** End of Table Layout Test *****\n\n");
-}
-
-function EditorShowEmbeddedObjects()
-{
-  dump("\nEmbedded Objects:\n");
-  var objectArray = editorShell.GetEmbeddedObjects();
-  dump(objectArray.Count() + " embedded objects\n");
-  for (var i=0; i < objectArray.Count(); ++i)
-    dump(objectArray.GetElementAt(i) + "\n");
-}
-
-function EditorUnitTests()
-{
-  dump("Running Unit Tests\n");
-  editorShell.RunUnitTests();
-}
-
 function EditorExit()
 {
 	dump("Exiting\n");
   // This is in globalOverlay.js
   goQuitApplication();
-}
-
-function EditorTestDocument()
-{
-  dump("Getting document\n");
-  var theDoc = editorShell.editorDocument;
-  if (theDoc)
-  {
-    dump("Got the doc\n");
-    dump("Document name:" + theDoc.nodeName + "\n");
-    dump("Document type:" + theDoc.doctype + "\n");
-  }
-  else
-  {
-    dump("Failed to get the doc\n");
-  }
-}
-
-// --------------------------- Callbacks ---------------------------
-function OpenFile(url)
-{
-    alert( "EditorCommands.js OpenFile should not be called!" );
 }
 
 // --------------------------- Status calls ---------------------------
@@ -1705,6 +1332,7 @@ function onStyleChange(theStyle)
   }
 }
 
+/* onDirtyChange() is not called */
 function onDirtyChange()
 {
   // this should happen through style, but that doesn't seem to work.
