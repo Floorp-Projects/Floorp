@@ -1223,7 +1223,7 @@ PRBool PREF_HasUserPref(const char *pref_name)
 
     if (!pref) return PR_FALSE;
     
-    // convert PREF_HAS_USER_VALUE to bool
+    /* convert PREF_HAS_USER_VALUE to bool */
     return (PREF_HAS_USER_VALUE(pref) != 0);
 
 }
