@@ -538,7 +538,9 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         err.append("xsl:preserve-space");
                         notifyError(err);
                     }
-                    else aPs->preserveSpace(elements);
+                    else {
+                        aPs->shouldStripSpace(elements, MB_FALSE);
+                    }
                     break;
                 }
                 case XSLType::STRIP_SPACE :
@@ -550,7 +552,9 @@ void XSLTProcessor::processTopLevel(Document* aSource,
                         err.append("xsl:strip-space");
                         notifyError(err);
                     }
-                    else aPs->stripSpace(elements);
+                    else {
+                        aPs->shouldStripSpace(elements,MB_TRUE);
+                    }
                     break;
                 }
                 default:
