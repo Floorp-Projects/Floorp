@@ -2062,14 +2062,11 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
   // which will traverse it's parent hierarchy till it finds a
   // view with a widget.
 
-  result = frame->GetWindow(presContext, aResult);
-
-  if (NS_FAILED(result))
-    return result;
-
+  *aResult = frame->GetWindow();
   if (!*aResult)
     return NS_ERROR_FAILURE;
 
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
