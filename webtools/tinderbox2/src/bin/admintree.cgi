@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.10 $ 
-# $Date: 2001/01/04 00:25:14 $ 
+# $Revision: 1.11 $ 
+# $Date: 2001/01/04 16:40:53 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -477,6 +477,17 @@ sub change_motd {
 sub security_problem {
   my (@out) = ();
 
+  ($REMOTE_HOST =~ m!$ADMINISTRATIVE_NETWORK_PAT!) ||
+    (push @out, ("Error, Host: '$REMOTE_HOST' not valid. ".
+                 " Requests must be made from an IP address".
+                 " in an administrative network.\n"));
+
+  # If they are not on a valid network they should not see what our
+  # other security checks are.
+
+  scalar(@out) &&
+    return @out;
+
   ($MAILADDR) ||
     (push @out, "Error, No Mail Address\n");
 
@@ -492,11 +503,6 @@ sub security_problem {
     ($encoded eq $PASSWD_TABLE{$TREE}{$MAILADDR}) ||
       (push @out, "Error, Password Not Valid\n");
   }
-
-  ($REMOTE_HOST =~ m!$ADMINISTRATIVE_NETWORK_PAT!) ||
-    (push @out, ("Error, Host: '$REMOTE_HOST' not valid. ".
-                 " Requests must be made from an IP address".
-                 " in an administrative network.\n"));
 
   return @out;
 }
