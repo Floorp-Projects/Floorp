@@ -170,26 +170,27 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
           m_numVisibleMessagesColumnToken(0),
           m_expiredMarkColumnToken(0)
 {
-    NS_INIT_REFCNT();
-	m_mdbTable = NULL;
-	m_mdbRow = NULL;
-	m_version = 1;			// for upgrading...
-	m_IMAPHierarchySeparator = 0;	// imap path separator
-	// mail only (for now)
-	m_folderSize = 0;
-	m_folderDate = 0;
-	m_expungedBytes = 0;	// sum of size of deleted messages in folder
-	m_highWaterMessageKey = 0;
-
-	m_numNewMessages = 0;
-	m_numMessages = 0;
-	m_numVisibleMessages = 0;
-	// IMAP only
-	m_ImapUidValidity = 0;
-	m_totalPendingMessages =0;
-	m_unreadPendingMessages = 0;
-
-	m_mdbTokensInitialized = PR_FALSE;
+  NS_INIT_REFCNT();
+  m_mdbTable = NULL;
+  m_mdbRow = NULL;
+  m_version = 1;			// for upgrading...
+  m_IMAPHierarchySeparator = 0;	// imap path separator
+  // mail only (for now)
+  m_folderSize = 0;
+  m_folderDate = 0;
+  m_expungedBytes = 0;	// sum of size of deleted messages in folder
+  m_highWaterMessageKey = 0;
+  
+  m_numNewMessages = 0;
+  m_numMessages = 0;
+  m_numVisibleMessages = 0;
+  // IMAP only
+  m_ImapUidValidity = 0;
+  m_totalPendingMessages =0;
+  m_unreadPendingMessages = 0;
+  
+  m_mdbTokensInitialized = PR_FALSE;
+  m_charSetOverride = PR_FALSE;
 
   if (!gInitializeObserver)
   {
