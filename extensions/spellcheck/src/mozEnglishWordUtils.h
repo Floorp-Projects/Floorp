@@ -63,8 +63,6 @@ protected:
 
   nsString mLanguage;
   nsString mCharset;
-  nsCOMPtr<nsIUnicodeEncoder> mEncoder; 
-  nsCOMPtr<nsIUnicodeDecoder> mDecoder; 
   nsCOMPtr<nsICaseConversion> mCaseConv;
 };
 

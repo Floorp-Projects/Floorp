@@ -60,6 +60,8 @@
 #include "mozCStr2CStrHashtable.h"
 #include "mozAffixMod.h"
 #include "nsNetUtil.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeDecoder.h"
 
 /* Modifications for mozilla Copyright 2001 David Einstein Deinst@world.std.com  */
 
@@ -89,10 +91,9 @@ public:
   ~myspAffixMgr();
   nsresult GetPersonalDictionary(mozIPersonalDictionary * *aPersonalDictionary);
   nsresult SetPersonalDictionary(mozIPersonalDictionary * aPersonalDictionary);
-  PRBool check(const nsAFlatCString &word);
-  nsString get_encoding();
-  nsCString get_try_string();
-  nsresult Load(const nsString& aDictionary);
+  PRBool check(const nsAFlatString &word);
+  void get_try_string(nsAString &aTryString);
+  nsresult Load(const nsString &aDictionary);
 
 protected:
 
@@ -105,10 +106,13 @@ protected:
   mozAffixState prefixes;
   mozAffixState suffixes;
 
-  nsCString               trystring;
-  nsString                mEncoding;
+  nsCString             trystring;
+  nsCString             mEncoding;
+  nsString              mLanguage;
   mozCStr2CStrHashtable mHashTable;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;
+  nsCOMPtr<nsIUnicodeEncoder>      mEncoder; 
+  nsCOMPtr<nsIUnicodeDecoder>      mDecoder; 
 };
 
 #endif

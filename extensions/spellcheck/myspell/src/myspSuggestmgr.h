@@ -68,23 +68,23 @@
 
 class myspSuggestMgr
 {
-  nsSharableCString   ctry;
-  myspAffixMgr*       pAMgr;
-  PRUint32             maxSug;
+  nsString       ctry;
+  myspAffixMgr*  pAMgr;
+  PRUint32       maxSug;
  
 public:
   myspSuggestMgr();
   ~myspSuggestMgr();
 
-  void setup(const nsAFlatCString  &tryme, int maxn, myspAffixMgr *aptr);
-  nsresult suggest(char ***slst, const nsAFlatCString &word, PRUint32 *num);
+  void setup(const nsAFlatString  &tryme, int maxn, myspAffixMgr *aptr);
+  nsresult suggest(PRUnichar ***slst, const nsAFlatString &word, PRUint32 *num);
 
 protected:
-   nsresult forgotchar(char **wlst,const  nsAFlatCString &word, PRUint32 *num);
-   nsresult swapchar(char **wlst,const nsAFlatCString &word, PRUint32 *num);
-   nsresult extrachar(char **wlst,const nsAFlatCString &word, PRUint32 *num);
-   nsresult badchar(char **wlst,const nsAFlatCString &word, PRUint32 *num);
-   nsresult twowords(char **wlst,const nsAFlatCString &word, PRUint32 *num);
+   nsresult forgotchar(PRUnichar **wlst,const  nsAFlatString &word, PRUint32 *num);
+   nsresult swapchar(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *num);
+   nsresult extrachar(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *num);
+   nsresult badchar(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *num);
+   nsresult twowords(PRUnichar **wlst,const nsAFlatString &word, PRUint32 *num);
 };
 
 #endif

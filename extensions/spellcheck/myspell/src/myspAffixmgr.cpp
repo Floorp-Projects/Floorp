@@ -60,7 +60,11 @@
 #include "nsDirectoryServiceDefs.h"
 #include "plstr.h"
 #include "nsNetUtil.h"
+#include "nsICharsetConverterManager.h"
+#include "nsUnicharUtilCIID.h"
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
 static PRInt32 SplitString(nsACString &in,nsSharableCString out[],PRInt32 size);
 static void doubleReverseHack(nsACString &s);
@@ -134,17 +138,9 @@ myspAffixMgr::Load(const nsString& aDictionary)
   if(!affStream)return NS_ERROR_FAILURE;
   res = parse_file(affStream);
 
-
-  res = mPersonalDictionary->SetCharset(mEncoding.get());
-  if(NS_FAILED(res)) return res;
-
   PRInt32 pos=aDictionary.FindChar('-');
   if(pos<1) pos = 2;  // FIXME should be min of 2 and aDictionary.Length()
-  nsAutoString lang;
-  lang.Assign(Substring(aDictionary,0,pos));
-  res = mPersonalDictionary->SetLanguage(lang.get());
-  if(NS_FAILED(res)) return res;
-
+  mLanguage = Substring(aDictionary,0,pos);
 
   // load the dictionary
   nsCOMPtr<nsIInputStream> dicStream;
@@ -163,8 +159,7 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
   PRInt32 j;
   PRInt32 numents;
   nsLineBuffer *lineBuffer;
-  nsresult res;
-  res= NS_InitLineBuffer(&lineBuffer);
+  nsresult rv = NS_InitLineBuffer(&lineBuffer);
   nsCAutoString line;
   PRBool moreData=PR_TRUE;
   PRInt32 pos;
@@ -199,10 +194,8 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
 
         pos = line.FindChar(' ');
         if(pos != -1){
-          nsCAutoString cencoding;
-          cencoding.Assign(Substring(line,pos+1,line.Length()-pos-1));
-          cencoding.CompressWhitespace(PR_TRUE,PR_TRUE);
-          mEncoding.AssignWithConversion(cencoding.get());
+          mEncoding.Assign(Substring(line,pos+1,line.Length()-pos-1));
+          mEncoding.CompressWhitespace(PR_TRUE,PR_TRUE);
         } 
       }
 
@@ -282,7 +275,18 @@ nsresult  myspAffixMgr::parse_file(nsIInputStream *strm)
       }
     }
   }
-  return NS_OK;
+
+  // We do this here, instead of where we set the charset, 
+  // to prevent all kind of leakage in case it fails.
+  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ccm->GetUnicodeDecoder(mEncoding.get(), getter_AddRefs(mDecoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = ccm->GetUnicodeEncoder(mEncoding.get(), getter_AddRefs(mEncoder));
+  if (mEncoder && NS_SUCCEEDED(rv)) {
+    mEncoder->SetOutputErrorBehavior(mEncoder->kOnError_Signal, nsnull, '?');
+  }
+  return rv;
 }
 
 
@@ -332,23 +336,24 @@ myspAffixMgr::LoadDictionary(nsIInputStream *strm)
   return NS_OK;
 }
 
-
-
-
-
-
-
-// return text encoding of dictionary
-nsString myspAffixMgr::get_encoding()
-{
-  return mEncoding;
-}
-
-
 // return the preferred try string for suggestions
-nsCString myspAffixMgr::get_try_string()
+void myspAffixMgr::get_try_string(nsAString &aTryString)
 {
-  return trystring;
+  PRInt32 outLength;
+  PRInt32 inLength = trystring.Length();
+  nsresult rv = mDecoder->GetMaxLength(trystring.get(), inLength, &outLength);
+
+  if (NS_SUCCEEDED(rv)) {
+    PRUnichar *tmpPtr = (PRUnichar *) malloc(sizeof(PRUnichar) * (outLength + 1));
+    if (tmpPtr) {
+      rv = mDecoder->Convert(trystring.get(), &inLength, tmpPtr, &outLength);
+      if (NS_SUCCEEDED(rv)) {
+        tmpPtr[outLength] = 0;
+        aTryString = tmpPtr;
+      }
+      free(tmpPtr);
+    }
+  }
 }
 
 PRBool 
@@ -428,19 +433,34 @@ PRBool myspAffixMgr::suffixCheck(const nsAFlatCString &word,PRBool cross,char cr
   return PR_FALSE;
 }
 
-PRBool myspAffixMgr::check(const nsAFlatCString &word)
+PRBool myspAffixMgr::check(const nsAFlatString &word)
 {
-  const char * he = NULL;
+  const char *he = nsnull;
 
-  he = mHashTable.Get(word.get());;
+  PRInt32 inLength = word.Length();
+  PRInt32 outLength;
+  nsresult rv = mEncoder->GetMaxLength(word.get(), inLength, &outLength);
+  // NS_ERROR_UENC_NOMAPPING is a NS_SUCCESS, no error.
+  if (NS_FAILED(rv) || rv == NS_ERROR_UENC_NOMAPPING) {
+    // not a word in the current charset, so likely not
+    // a word in the current language
+    return PR_FALSE;
+  }
+  char *charsetWord = (char *) nsMemory::Alloc(sizeof(char) * (outLength+1));
+  rv = mEncoder->Convert(word.get(), &inLength, charsetWord, &outLength);
+  charsetWord[outLength] = '\0';
+
+  he = mHashTable.Get(charsetWord);
 
   if(he != nsnull) return PR_TRUE;
-  if(prefixCheck(word))return PR_TRUE;
-  if(suffixCheck(word))return PR_TRUE;
+  if(prefixCheck(nsDependentCString(charsetWord)))
+    return PR_TRUE;
+  if(suffixCheck(nsDependentCString(charsetWord)))
+    return PR_TRUE;
 
   PRBool good=PR_FALSE;
-  nsresult res = mPersonalDictionary->Check(word.get(),&good);
-  if(NS_FAILED(res))
+  rv = mPersonalDictionary->Check(word.get(), mLanguage.get(), &good);
+  if(NS_FAILED(rv))
     return PR_FALSE;
   return good;
 }

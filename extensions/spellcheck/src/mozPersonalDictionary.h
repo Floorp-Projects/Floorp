@@ -69,12 +69,8 @@ public:
 protected:
   nsStringArray  mDictionary;  /* use something a little smarter eventually*/
   PRBool         mDirty;       /* has the dictionary been modified */
-  nsString       mCharset;     /* charset that the spell checker is using */
-  nsString       mLanguage;     /* the name of the language currently in use */
   nsAVLTree     *mUnicodeTree;  /* the dictionary entries */
-  nsAVLTree     *mCharsetTree;  /* the dictionary entries in the current charset */
   nsAVLTree     *mUnicodeIgnoreTree;  /* the ignore all entries */
-  nsAVLTree     *mCharsetIgnoreTree;  /* the ignore all entries in the current charset */
   nsCOMPtr<nsIUnicodeEncoder> mEncoder; /*Encoder to use to compare with spellchecker word */
 };
 

@@ -113,8 +113,9 @@ NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar * aDictionary)
       NS_WARNING("Dictionary load failed");
       return res;
     }
-    mSMgr.setup(mAMgr.get_try_string(),64,&mAMgr);
-    nsString encoding=mAMgr.get_encoding();
+    nsAutoString tryString;
+    mAMgr.get_try_string(tryString);
+    mSMgr.setup(tryString, 64, &mAMgr);
     nsString language;
     PRInt32 pos = mDictionary.FindChar('-');
     if(pos == -1){
@@ -126,24 +127,7 @@ NS_IMETHODIMP mozMySpell::SetDictionary(const PRUnichar * aDictionary)
     nsCOMPtr<mozISpellI18NManager> serv(do_GetService("@mozilla.org/spellchecker/i18nmanager;1", &res));
     if(serv && NS_SUCCEEDED(res)){
       res = serv->GetUtil(language.get(),getter_AddRefs(mConverter));
-      if(NS_SUCCEEDED(res))
-        res=mConverter->SetCharset(encoding.get());
     }
-  }
-  return res;
-}
-
-/* readonly attribute wstring charset; */
-NS_IMETHODIMP mozMySpell::GetCharset(PRUnichar * *aCharset)
-{
-  nsresult res=NS_OK;
-  NS_PRECONDITION(aCharset != nsnull, "null ptr");
-  if(!aCharset){
-    res = NS_ERROR_NULL_POINTER;
-  }
-  else{
-    *aCharset = ToNewUnicode(mAMgr.get_encoding());
-    if(!aCharset) res = NS_ERROR_OUT_OF_MEMORY;
   }
   return res;
 }
@@ -279,47 +263,50 @@ NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***dictionaries, PRUint32 
 }
 
 /* boolean Check (in wstring word); */
-NS_IMETHODIMP mozMySpell::Check(const PRUnichar *aWord, PRBool *_retval)
+NS_IMETHODIMP mozMySpell::Check(const PRUnichar *aWord, PRBool *aResult)
 {
-  if(!aWord || !_retval || !mConverter )
-    return NS_ERROR_NULL_POINTER;
-  char **tmpPtr;
-  PRUint32 count,i;
-  nsresult res;
-  *_retval = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aWord);
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(mConverter);
 
-  res = mConverter->GetRootForm(aWord, mozISpellI18NUtil::kCheck, &tmpPtr, &count);
-  if(NS_FAILED(res)) return res;
-  for(i=0;i<count;i++){
-    *_retval = mAMgr.check(nsDependentCString(tmpPtr[i]));
-    if(*_retval) break;
+  PRUnichar **tmpPtr;
+  PRUint32 count,i;
+  *aResult = PR_FALSE;
+
+  nsresult rv = mConverter->GetRootForm(aWord, mozISpellI18NUtil::kCheck, &tmpPtr, &count);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for(i=0 ; i<count ; i++){
+    *aResult = mAMgr.check(nsDependentString(tmpPtr[i]));
+    if (*aResult) break;
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, tmpPtr);
-  return res;
+  return rv;
 }
 
 /* void Suggest (in wstring word, [array, size_is (count)] out wstring suggestions, out PRUint32 count); */
-NS_IMETHODIMP mozMySpell::Suggest(const PRUnichar *aword, PRUnichar ***suggestions, PRUint32 *scount)
+NS_IMETHODIMP mozMySpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggestions, PRUint32 *aSuggestionCount)
 {
-  if(!suggestions || !scount || !mConverter){
-    return NS_ERROR_NULL_POINTER;
-  }
-  *suggestions = 0;
-  *scount=0;
-  char **tmpPtr;
-  nsAutoString word(aword);
-  char **slst=nsnull;
+  NS_ENSURE_ARG_POINTER(aSuggestions);
+  NS_ENSURE_ARG_POINTER(aSuggestionCount);
+  NS_ENSURE_ARG_POINTER(mConverter);
+
+  *aSuggestions = 0;
+  *aSuggestionCount=0;
+  PRUnichar **tmpPtr;
+  nsAutoString word(aWord);
+  PRUnichar **slst = nsnull;
   PRUint32 count;
   PRUint32 ccount=0;
-  nsresult res;
-  res = mConverter->GetRootForm(aword, mozISpellI18NUtil::kSuggest, &tmpPtr, &count);
-  if(NS_FAILED(res)) return res;
-  for(PRUint32 i=0;(i<count)&&!NS_FAILED(res);i++){
-      res = mSMgr.suggest(&slst,nsDependentCString(tmpPtr[i]),&ccount); 
+
+  nsresult rv = mConverter->GetRootForm(aWord, mozISpellI18NUtil::kSuggest, &tmpPtr, &count);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; (i < count) && NS_SUCCEEDED(rv) ; i++){
+    rv = mSMgr.suggest(&slst, nsDependentString(tmpPtr[i]), &ccount); 
   }
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, tmpPtr);
-  res=mConverter->FromRootForm(aword,(const char **)slst,ccount,suggestions,scount);
+  rv=mConverter->FromRootForm(aWord, (const PRUnichar **)slst, ccount, aSuggestions, aSuggestionCount);
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(ccount, slst);
-  return res;
+  return rv;
 
 }

@@ -46,12 +46,6 @@
 
 interface mozIPersonalDictionary : nsISupports {
 
-  /* The language being spell checked (In case we want to qualify words by language */
-  attribute wstring language;
-  
-  /* the charset that the spell checker is using */
-  attribute wstring charset;
-
   /* Initialize the dictionary */
   void Init();
 
@@ -65,10 +59,7 @@ interface mozIPersonalDictionary : nsISupports {
   void GetWordList([array, size_is(count)] out wstring words, out PRUint32 count);
 
   /* Check a unicode string */
-  boolean CheckUnicode(in wstring word);
-
-  /* Check a string in the current charset */
-  boolean Check(in string word);
+  boolean Check(in wstring word, in wstring lang);
 
   /* Add a word to the personal dictionary */
   void AddWord(in wstring word, in wstring lang);

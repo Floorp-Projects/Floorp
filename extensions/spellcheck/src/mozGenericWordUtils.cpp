@@ -57,24 +57,14 @@ NS_IMETHODIMP mozGenericWordUtils::GetLanguage(PRUnichar * *aLanguage)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute wstring charset; */
-NS_IMETHODIMP mozGenericWordUtils::GetCharset(PRUnichar * *aCharset)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP mozGenericWordUtils::SetCharset(const PRUnichar * aCharset)
+/* void GetRootForm (in wstring word, in PRUint32 type, [array, size_is (count)] out wstring words, out PRUint32 count); */
+NS_IMETHODIMP mozGenericWordUtils::GetRootForm(const PRUnichar *word, PRUint32 type, PRUnichar ***words, PRUint32 *count)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void GetRootForm (in wstring word, in PRUint32 type, [array, size_is (count)] out string words, out PRUint32 count); */
-NS_IMETHODIMP mozGenericWordUtils::GetRootForm(const PRUnichar *word, PRUint32 type, char ***words, PRUint32 *count)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void FromRootForm (in wstring word, [array, size_is (icount)] in string iwords, in PRUint32 icount, [array, size_is (ocount)] out wstring owords, out PRUint32 ocount); */
-NS_IMETHODIMP mozGenericWordUtils::FromRootForm(const PRUnichar *word, const char **iwords, PRUint32 icount, PRUnichar ***owords, PRUint32 *ocount)
+/* void FromRootForm (in wstring word, [array, size_is (icount)] in wstring iwords, in PRUint32 icount, [array, size_is (ocount)] out wstring owords, out PRUint32 ocount); */
+NS_IMETHODIMP mozGenericWordUtils::FromRootForm(const PRUnichar *word, const PRUnichar **iwords, PRUint32 icount, PRUnichar ***owords, PRUint32 *ocount)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

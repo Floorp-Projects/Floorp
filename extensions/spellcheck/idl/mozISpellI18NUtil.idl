@@ -52,14 +52,18 @@ interface mozISpellI18NUtil : nsISupports {
     /* The language being spell checked*/
     readonly attribute wstring language;
     
-    /* The charset that the spell checker is using */
-    attribute wstring charset;
-
     /* Given a word return a list of possible root forms of that word */
-    void GetRootForm(in wstring word, in PRUint32 type, [array, size_is(count)] out string words, out PRUint32 count);
+    void getRootForm(in wstring word,
+                     in PRUint32 type,
+                     [array, size_is(count)] out wstring words,
+                     out PRUint32 count);
     
     /* Given a word return a list of possible root forms of that word */
-    void FromRootForm(in wstring word, [array, size_is(icount)] in string iwords, in PRUint32 icount, [array, size_is(ocount)] out wstring owords, out PRUint32 ocount);
+    void FromRootForm(in wstring word,
+                      [array, size_is(icount)] in wstring iwords,
+                      in PRUint32 icount,
+                      [array, size_is(ocount)] out wstring owords,
+                      out PRUint32 ocount);
     
     /* Given a unicode string and an offset find the beginning and end of the next word
      * begin and end are -1 if there are no words remaining in the string 
