@@ -1067,7 +1067,7 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
         key.id = (jsid) rt->atomState.FunctionAtom;
         entry = (JSResolvingEntry *)
                 JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
-        if (entry && entry->key.obj) {
+        if (entry && entry->key.obj && (entry->flags & JSRESFLAG_LOOKUP)) {
             /* Already resolving Function, record Object too. */
             JS_ASSERT(entry->key.obj == obj);
             key.id = (jsid) rt->atomState.ObjectAtom;
@@ -1078,24 +1078,29 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
             JS_ReportOutOfMemory(cx);
             return NULL;
         }
+        JS_ASSERT(!entry->key.obj && entry->flags == 0);
         entry->key = key;
+        entry->flags = JSRESFLAG_LOOKUP;
     }
 
     /* Initialize the function class first so constructors can be made. */
     fun_proto = js_InitFunctionClass(cx, obj);
     if (!fun_proto)
-        return NULL;
+        goto out;
 
     /* Initialize the object class next so Object.prototype works. */
     obj_proto = js_InitObjectClass(cx, obj);
-    if (!obj_proto)
-        return NULL;
+    if (!obj_proto) {
+        fun_proto = NULL;
+        goto out;
+    }
 
     /* Function.prototype and the global object delegate to Object.prototype. */
     OBJ_SET_PROTO(cx, fun_proto, obj_proto);
     if (!OBJ_GET_PROTO(cx, obj))
         OBJ_SET_PROTO(cx, obj, obj_proto);
 
+out:
     /* If resolving, remove the other entry (Object or Function) from table. */
     if (resolving)
         JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);

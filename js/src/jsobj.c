@@ -1066,20 +1066,145 @@ out:
     return ok;
 }
 
+JS_STATIC_DLL_CALLBACK(const void *)
+resolving_GetKey(JSDHashTable *table, JSDHashEntryHdr *hdr)
+{
+    JSResolvingEntry *entry = (JSResolvingEntry *)hdr;
+
+    return &entry->key;
+}
+
+JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+resolving_HashKey(JSDHashTable *table, const void *ptr)
+{
+    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
+
+    return ((JSDHashNumber)key->obj >> JSVAL_TAGBITS) ^ key->id;
+}
+
+JS_PUBLIC_API(JSBool)
+resolving_MatchEntry(JSDHashTable *table,
+                     const JSDHashEntryHdr *hdr,
+                     const void *ptr)
+{
+    const JSResolvingEntry *entry = (const JSResolvingEntry *)hdr;
+    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
+
+    return entry->key.obj == key->obj && entry->key.id == key->id;
+}
+
+static const JSDHashTableOps resolving_dhash_ops = {
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    resolving_GetKey,
+    resolving_HashKey,
+    resolving_MatchEntry,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub,
+    NULL
+};
+
+static JSBool
+StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+               JSResolvingEntry **entryp)
+{
+    JSDHashTable *table;
+    JSResolvingEntry *entry;
+
+    table = cx->resolvingTable;
+    if (!table) {
+        table = JS_NewDHashTable(&resolving_dhash_ops, NULL,
+                                 sizeof(JSResolvingEntry),
+                                 JS_DHASH_MIN_SIZE);
+        if (!table)
+            goto outofmem;
+        cx->resolvingTable = table;
+    }
+
+    entry = (JSResolvingEntry *)
+            JS_DHashTableOperate(table, key, JS_DHASH_ADD);
+    if (!entry)
+        goto outofmem;
+
+    if (entry->flags & flag) {
+        /* An entry for (key, flag) exists already -- dampen recursion. */
+        entry = NULL;
+    } else {
+        /* Fill in key if we were the first to add entry, then set flag. */
+        if (!entry->key.obj)
+            entry->key = *key;
+        entry->flags |= flag;
+    }
+    *entryp = entry;
+    return JS_TRUE;
+
+outofmem:
+    JS_ReportOutOfMemory(cx);
+    return JS_FALSE;
+}
+
+static void
+StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
+              JSResolvingEntry *entry, uint32 generation)
+{
+    JSDHashTable *table;
+
+    /*
+     * Clear flag from entry->flags and return early if other flags remain.
+     * We must take care to re-lookup entry if the table has changed since
+     * it was found by StartResolving.
+     */
+    table = cx->resolvingTable;
+    if (table->generation != generation) {
+        entry = (JSResolvingEntry *)
+                JS_DHashTableOperate(table, key, JS_DHASH_LOOKUP);
+    }
+    entry->flags &= ~flag;
+    if (entry->flags)
+        return;
+
+    /*
+     * Do a raw remove only if fewer entries were removed than would cause
+     * alpha to be less than .5 (alpha is at most .75).  Otherwise, we just
+     * call JS_DHashTableOperate to re-lookup the key and remove its entry,
+     * compressing or shrinking the table as needed.
+     */
+    if (table->removedCount < JS_DHASH_TABLE_SIZE(table) >> 2)
+        JS_DHashTableRawRemove(table, &entry->hdr);
+    else
+        JS_DHashTableOperate(table, key, JS_DHASH_REMOVE);
+}
+
 #if JS_HAS_OBJ_WATCHPOINT
 
 static JSBool
 obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
                   void *closure)
 {
+    JSResolvingKey key;
+    JSResolvingEntry *entry;
+    uint32 generation;
     JSObject *funobj;
     jsval argv[3];
+    JSBool ok;
+
+    /* Avoid recursion on (obj, id) already being watched on cx. */
+    key.obj = obj;
+    key.id = id;
+    if (!StartResolving(cx, &key, JSRESFLAG_WATCH, &entry))
+        return JS_FALSE;
+    if (!entry)
+        return JS_TRUE;
+    generation = cx->resolvingTable->generation;
 
     funobj = (JSObject *) closure;
     argv[0] = id;
     argv[1] = old;
     argv[2] = *nvp;
-    return js_InternalCall(cx, obj, OBJECT_TO_JSVAL(funobj), 3, argv, nvp);
+    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(funobj), 3, argv, nvp);
+    StopResolving(cx, &key, JSRESFLAG_WATCH, entry, generation);
+    return ok;
 }
 
 static JSBool
@@ -2175,45 +2300,6 @@ bad:
     return JS_FALSE;
 }
 
-JS_STATIC_DLL_CALLBACK(const void *)
-resolving_GetKey(JSDHashTable *table, JSDHashEntryHdr *hdr)
-{
-    JSResolvingEntry *entry = (JSResolvingEntry *)hdr;
-
-    return &entry->key;
-}
-
-JS_STATIC_DLL_CALLBACK(JSDHashNumber)
-resolving_HashKey(JSDHashTable *table, const void *ptr)
-{
-    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
-
-    return ((JSDHashNumber)key->obj >> JSVAL_TAGBITS) ^ key->id;
-}
-
-JS_PUBLIC_API(JSBool)
-resolving_MatchEntry(JSDHashTable *table,
-                     const JSDHashEntryHdr *hdr,
-                     const void *ptr)
-{
-    const JSResolvingEntry *entry = (const JSResolvingEntry *)hdr;
-    const JSResolvingKey *key = (const JSResolvingKey *)ptr;
-
-    return entry->key.obj == key->obj && entry->key.id == key->id;
-}
-
-static const JSDHashTableOps resolving_dhash_ops = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    resolving_GetKey,
-    resolving_HashKey,
-    resolving_MatchEntry,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
-
 #if defined JS_THREADSAFE && defined DEBUG
 JS_FRIEND_API(JSBool)
 _js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
@@ -2230,7 +2316,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSClass *clasp;
     JSResolveOp resolve;
     JSResolvingKey key;
-    JSDHashTable *table;
     JSResolvingEntry *entry;
     uint32 generation;
     JSNewResolveOp newresolve;
@@ -2265,16 +2350,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 /* Avoid recursion on (obj, id) already being resolved on cx. */
                 key.obj = obj;
                 key.id = id;
-                table = cx->resolvingTable;
-                if (!table) {
-                    table = JS_NewDHashTable(&resolving_dhash_ops,
-                                             NULL,
-                                             sizeof(JSResolvingEntry),
-                                             JS_DHASH_MIN_SIZE);
-                    if (!table)
-                        goto outofmem;
-                    cx->resolvingTable = table;
-                }
 
                 /*
                  * Once we have successfully added an entry for (obj, key) to
@@ -2282,22 +2357,16 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                  * returning.  But note that JS_DHASH_ADD may find an existing
                  * entry, in which case we bail to suppress runaway recursion.
                  */
-                entry = (JSResolvingEntry *)
-                        JS_DHashTableOperate(table, &key, JS_DHASH_ADD);
-                if (!entry) {
-            outofmem:
+                if (!StartResolving(cx, &key, JSRESFLAG_LOOKUP, &entry)) {
                     JS_UNLOCK_OBJ(cx, obj);
-                    JS_ReportOutOfMemory(cx);
                     return JS_FALSE;
                 }
-                if (entry->key.obj) {
-                    /* An entry for key exists already -- damp recursion. */
-                    JS_ASSERT(entry->key.obj == obj && entry->key.id == id);
+                if (!entry) {
+                    /* Already resolving id in obj -- dampen recursion. */
                     JS_UNLOCK_OBJ(cx, obj);
                     goto out;
                 }
-                entry->key = key;
-                generation = table->generation;
+                generation = cx->resolvingTable->generation;
 
                 /* Null *propp here so we can test it at cleanup: safely. */
                 *propp = NULL;
@@ -2318,9 +2387,14 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                            ? start
                            : NULL;
                     JS_UNLOCK_OBJ(cx, obj);
+
+                    /* Protect id and all atoms from a GC nested in resolve. */
+                    JS_KEEP_ATOMS(cx->runtime);
                     ok = newresolve(cx, obj, ID_TO_VALUE(id), flags, &obj2);
+                    JS_UNKEEP_ATOMS(cx->runtime);
                     if (!ok)
                         goto cleanup;
+
                     JS_LOCK_OBJ(cx, obj);
                     SET_OBJ_INFO(obj, file, line);
                     if (obj2) {
@@ -2373,19 +2447,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                 }
 
             cleanup:
-                /*
-                 * Do a raw remove only if the table hasn't changed since entry
-                 * was added, and only if fewer entries were removed than would
-                 * cause alpha to be  < .5 (alpha is at most .75).  Otherwise,
-                 * use JS_DHashTableOperate to re-lookup the key and remove its
-                 * entry, compressing or shrinking the table as needed.
-                 */
-                if (table->generation == generation &&
-                    table->removedCount < JS_DHASH_TABLE_SIZE(table) >> 2) {
-                    JS_DHashTableRawRemove(table, &entry->hdr);
-                } else {
-                    JS_DHashTableOperate(table, &key, JS_DHASH_REMOVE);
-                }
+                StopResolving(cx, &key, JSRESFLAG_LOOKUP, entry, generation);
                 if (!ok || *propp)
                     return ok;
             }
