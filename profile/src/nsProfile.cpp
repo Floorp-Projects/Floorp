@@ -295,9 +295,11 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs)
 	PRBool profileDirSet = PR_FALSE;
 	char *profstr=nsnull;
   
+  printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
   Startup(nsnull);
 
 
+  
   if (cmdLineArgs)
     rv = ProcessArgs(cmdLineArgs, &profileDirSet, &profstr);
   
@@ -534,9 +536,6 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_FAILED(rv))
         return rv;
 
-#if defined (NS_USING_PROFILES)
-    printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
-#endif
   
     return NS_OK;
 }
@@ -2802,7 +2801,7 @@ nsProfile::OnShutdown(const nsCID& serviceCID, nsISupports* service) {
   if (serviceCID.Equals(kPrefCID)) {
     unloadPrefs();
     // are we supposed to do this?
-    nsServiceManager::ReleaseService(serviceCID, service);
+    //nsServiceManager::ReleaseService(serviceCID, service);
   }
 
   return NS_OK;
