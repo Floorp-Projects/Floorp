@@ -40,6 +40,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMUIEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIStatefulFrame.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
@@ -48,6 +49,9 @@
 static NS_DEFINE_IID(kIDOMMouseListenerIID,       NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,         NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMNodeIID,                NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIFrameIID,                  NS_IFRAME_IID);
+static NS_DEFINE_IID(kIPrivateDOMEventIID,        NS_IPRIVATEDOMEVENT_IID);
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -95,6 +99,8 @@ nsListControlFrame::nsListControlFrame()
   mStartExtendedIndex = kNothingSelected;
   mIgnoreMouseUp      = PR_FALSE;
   mIsCapturingMouseEvents = PR_FALSE;
+  mSelectionCache     = nsnull;
+  mSelectionCacheLength = -1;
 }
 
 //---------------------------------------------------------
@@ -113,6 +119,9 @@ nsListControlFrame::~nsListControlFrame()
   mComboboxFrame = nsnull;
   mFormFrame = nsnull;
   NS_IF_RELEASE(mPresContext);
+  if (mSelectionCache) {
+    delete[] mSelectionCache;
+  }
 }
 
 //---------------------------------------------------------
@@ -969,6 +978,8 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
    // selected attribute.
   if (!mIsInitializedFromContent) {
     Reset();
+  } else {
+    InitSelectionCache(-1);
   }
 
   // get the reciever interface from the browser button's content node
@@ -1322,6 +1333,13 @@ nsListControlFrame::Reset()
     }
   }
   NS_RELEASE(options);
+
+  // Start with index 0 selected if nothing is selected
+  if (mSelectedIndex == kNothingSelected) {
+    mSelectedIndex = 0;
+    SetContentSelected(0, PR_TRUE);
+  }
+  InitSelectionCache(numOptions);
 } 
 
 //---------------------------------------------------------
@@ -1596,6 +1614,7 @@ nsListControlFrame::AddOption(PRInt32 aIndex)
     }
   } else {
     mSelectedIndex = selectedIndex;
+    InitSelectionCache(-1); // Reset sel cache so as not to send event
   }
   return NS_OK;
 }
@@ -1617,6 +1636,8 @@ nsListControlFrame::RemoveOption(PRInt32 aIndex)
   mSelectedIndex = selectedIndex;
   if (nsnull != mComboboxFrame) {
     mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
+  } else {
+    InitSelectionCache(-1); // Reset cache to not send event
   }
 
   return NS_OK;
@@ -1645,11 +1666,136 @@ nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
         }
       }
     }
+    // Should we send an event here or not?
     if (nsnull != mComboboxFrame) {
       rv = mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, aIndex); // don't dispatch event
+    } else {
+      InitSelectionCache(-1);
     }
   }
   return rv;
+}
+
+// Initialize selection cache from content state;
+nsresult
+nsListControlFrame::InitSelectionCache(PRInt32 aLength)
+{
+  nsresult rv = NS_OK;
+  
+  // Get number of options from content if needed
+  if (0 > aLength) {
+    rv = GetNumberOfOptions(&aLength);
+  }
+
+  // Allocate a new array or realloc if the length has changed
+  if (NS_SUCCEEDED(rv) && (mSelectionCacheLength != aLength)) {
+    if (mSelectionCache) {
+      delete[] mSelectionCache;
+      mSelectionCacheLength = 0;
+    }
+    mSelectionCache = new PRBool[aLength];
+    if (!mSelectionCache) return NS_ERROR_OUT_OF_MEMORY;
+    mSelectionCacheLength = aLength;
+  }
+
+  // Sync the cache to the content
+  if (NS_SUCCEEDED(rv)) {
+    for (PRInt32 i = 0; i < mSelectionCacheLength; i++) {
+      mSelectionCache[i] = IsContentSelectedByIndex(i);
+    }
+  }
+  return rv;
+}
+
+// Compare content state with local cache of last known state
+// If there was a change, call SelectionChanged()
+NS_IMETHODIMP
+nsListControlFrame::UpdateSelection(PRBool aDoDispatchEvent, nsIContent* aContent)
+{
+  nsresult rv = NS_OK;
+  PRBool changed = PR_FALSE;
+
+  // Paranoia: check if cache is up to date with content
+  PRInt32 length = 0;
+  GetNumberOfOptions(&length);
+  if (mSelectionCacheLength != length) {
+    NS_ASSERTION(0,"nsListControlFrame: Cache sync'd with content!\n");
+    rv = InitSelectionCache(length);
+    changed = PR_TRUE; // Assume the worst, there was a change.
+  }
+
+  // Step through content looking for change in selection
+  if (NS_SUCCEEDED(rv)) {
+    if (!changed) {
+      PRBool selected;
+      for (PRInt32 i = 0; i < length; i++) {
+        selected = IsContentSelectedByIndex(i);
+        if (selected != mSelectionCache[i]) {
+          mSelectionCache[i] = selected;
+          changed = PR_TRUE;
+        }
+      }
+    }
+
+    if (changed) {
+      if (aDoDispatchEvent) {
+        rv = SelectionChanged(aContent); // Dispatch event
+      }
+      if (mComboboxFrame) {
+        rv = mComboboxFrame->SelectionChanged(); // Update view
+      }
+    }
+  }
+  return rv;
+}
+
+// Send out an onchange notification.
+nsresult
+nsListControlFrame::SelectionChanged(nsIContent* aContent)
+{
+  // Dispatch the NS_FORM_CHANGE event
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsGUIEvent event;
+  event.eventStructType = NS_GUI_EVENT;
+  event.widget = nsnull;
+  event.message = NS_FORM_CHANGE;
+  event.flags = NS_EVENT_FLAG_NONE;
+
+  // Here we create our own DOM event and set the target to the Select
+  // We'll pass this DOM event in, in hopes that the target is used.
+  nsIDOMEvent* DOMEvent = nsnull;
+  nsresult res = NS_NewDOMUIEvent(&DOMEvent, *mPresContext, &event);
+  if (NS_SUCCEEDED(res) && DOMEvent && mContent) {
+    nsIDOMNode* node = nsnull;
+    res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    if (NS_SUCCEEDED(res) && node) {
+      nsIPrivateDOMEvent* pDOMEvent = nsnull;
+      res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)&pDOMEvent);
+      if (NS_SUCCEEDED(res) && pDOMEvent) {
+        res = pDOMEvent->SetTarget(node);
+	if (NS_SUCCEEDED(res)) {
+          // Have the content handle the event.
+          res = mContent->HandleDOMEvent(*mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status);
+        }
+        NS_RELEASE(pDOMEvent);
+      }
+      NS_RELEASE(node);
+    }
+    NS_RELEASE(DOMEvent);
+  }
+
+  // Now have the frame handle the event
+  if (NS_SUCCEEDED(res)) {
+    if (this) {
+      nsIFrame* frame = nsnull;
+      res = this->QueryInterface(kIFrameIID, (void**)&frame);
+      if ((NS_SUCCEEDED(res)) && (nsnull != frame)) {
+        res = frame->HandleEvent(*mPresContext, &event, status);
+        // NS_RELEASE(frame);
+      }
+    }
+  }
+  return res;
 }
 
 //---------------------------------------------------------
@@ -1680,9 +1826,12 @@ nsListControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
        // Select the specified item in the list box. 
       if (mSelectedIndex != selectedIndex) {
         ToggleSelected(selectedIndex);// sets mSelectedIndex
+	// Should we send an event here?
         if (nsnull != mComboboxFrame) {
           mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
-        }
+        } else {
+	  InitSelectionCache(-1);
+	}
       }
     }
   }
@@ -2000,6 +2149,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   } else {
     mButtonDown = PR_FALSE;
     CaptureMouseEvents(PR_FALSE);
+    UpdateSelection(PR_TRUE, mContent);
   }
 
   return NS_OK;
@@ -2232,21 +2382,20 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
           printf("  After: %d\n", mSelectedIndex);
         } if (code == nsIDOMUIEvent::DOM_VK_RETURN) {
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
-            mComboboxFrame->ListWasSelected(mPresContext); 
-          } 
+            mComboboxFrame->ListWasSelected(mPresContext);
+          } else {
+	    UpdateSelection(PR_TRUE, mContent);
+	  }
         } if (code == nsIDOMUIEvent::DOM_VK_ESCAPE) {
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
             ResetSelectedItem();
             mComboboxFrame->ListWasSelected(mPresContext); 
           } 
-        } else {
+        } else { // Select option with this as the first character
           // Not I18N compliant
-          PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1);
+          PRInt32 selectedIndex = (mSelectedIndex == kNothingSelected ? 0 : mSelectedIndex+1) % numOptions;
           PRInt32 startedAtIndex    = selectedIndex;
           PRBool  loopedAround  = PR_FALSE;
-          if (selectedIndex == (PRInt32)numOptions) {
-            selectedIndex = 0;
-          }
           while ((selectedIndex < startedAtIndex && loopedAround) || !loopedAround) {
             nsIDOMHTMLOptionElement* optionElement = GetOption(*options, selectedIndex);
             if (nsnull != optionElement) {
