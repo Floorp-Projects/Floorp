@@ -128,13 +128,16 @@ function calendarManager( CalendarWindow )
 /*
 ** Launch the new calendar file dialog
 */
-calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( aName )
+calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( aName, aPath )
 {
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
    
    if( aName )
       ThisCalendarObject.name = aName;
+
+   if( aPath )
+      ThisCalendarObject.path = aPath;
 
    var args = new Object();
    args.mode = "new";
@@ -191,7 +194,7 @@ calendarManager.prototype.launchEditCalendarDialog = function calMan_launchEditC
 /*
 ** Launch the new calendar file dialog
 */
-calendarManager.prototype.launchAddRemoteCalendarDialog = function calMan_launchAddCalendarDialog( aName, aUrl )
+calendarManager.prototype.launchAddRemoteCalendarDialog = function calMan_launchAddRemoteCalendarDialog( aName, aUrl )
 {
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
@@ -316,7 +319,7 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    else
    {
       node.setAttribute("http://home.netscape.com/NC-rdf#remote", "false");
-      
+      this.reloadCalendar( node ); 
       dump( "Calendar Number "+CalendarObject.serverNumber+" Added\n" );
    }
    
@@ -425,6 +428,18 @@ calendarManager.prototype.removeCalendar = function calMan_removeCalendar( ThisC
 }
 
 
+/* 
+** Reload the calendar
+*/
+calendarManager.prototype.reloadCalendar = function calMan_reloadCalendar( ThisCalendarObject )
+{
+  //TODO implement reloadCalendar inside gICalLib
+  gICalLib.removeCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+  gICalLib.addCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ),
+                        ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#type" ));
+  refreshView();
+}
+
 /*
 ** Delete the calendar. Remove the file, it won't be used any longer.
 */
@@ -510,11 +525,7 @@ calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrie
          CalendarManager.addCalendar( ThisCalendarObject );
       }
       
-      refreshEventTree( getAndSetEventTable() );
-      
-      refreshToDoTree( false );
-      
-      CalendarManager.CalendarWindow.currentView.refreshEvents();
+      refreshView();
       
       document.getElementById( ThisCalendarObject.getSubject() ).childNodes[1].childNodes[0].removeAttribute( "synching" );
    }
@@ -595,9 +606,7 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
 
          this.launchAddRemoteCalendarDialog( CalendarName, Channel.URI.spec );
 
-      }
-      else
-      {
+      } else {
          var CalendarManager = this;
       
          var onResponse = function( CalendarData )
@@ -633,7 +642,8 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
                var profileFile = CalendarManager.getProfileDirectory();
       
                profileFile.append("Calendar");
-               profileFile.append("Email"+ this.nextCalendar()+ ".ics");
+               var CalendarName = "Local"+ CalendarManager.nextCalendar();
+               profileFile.append( calendarName + ".ics");
                 
                FilePath = profileFile.path;
                saveDataToFile(FilePath, CalendarData, null);
@@ -654,11 +664,9 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
       
          //document.getElementById( "calendar-list-item-"+calendarSubscribed.serverNumber ).setAttribute( "checked", "true" );
 
-         refreshEventTree( getAndSetEventTable() );
-
-         refreshToDoTree( false );
-   
-         this.CalendarWindow.currentView.refreshEvents();
+         refreshView();
+      } else {
+        this.reloadCalendar( calendarSubscribed );
       }
    }
 }
@@ -690,7 +698,7 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
                                calendarStringBundle.formatStringFromName('httpError',[ch.responseStatus, ch.responseStatusText],2));
          }
 
-         else if (!Components.isSuccessCode(loader.request.status)) {
+         else if (ch && !Components.isSuccessCode(loader.request.status)) {
            // XXX this should be made human-readable.
            promptService.alert(null, calendarStringBundle.GetStringFromName('errorTitle'),
                                calendarStringBundle.formatStringFromName('otherError',[loader.request.status.toString(16)],1));
@@ -876,6 +884,12 @@ function makeURLFromPath( path ) {
   return ioService.newFileURI(localFile); 
 }
 
+function refreshView() {
+  refreshEventTree( getAndSetEventTable() );
+  refreshToDoTree( false );
+  gCalendarWindow.currentView.refreshEvents();
+}
+
 /*
 ** swithces the calendar from on to off and off to on
 */
@@ -924,11 +938,7 @@ function switchCalendar( event )
       
    gCalendarWindow.calendarManager.rdf.flush();
    
-   refreshEventTree( getAndSetEventTable() );
-
-   refreshToDoTree( false );
-   
-   gCalendarWindow.currentView.refreshEvents();
+   refreshView();
 }
 
 
@@ -964,11 +974,7 @@ function deleteCalendar( )
       return false; 
    } 
    
-   refreshEventTree( getAndSetEventTable() );
-
-   refreshToDoTree( false );
-
-   gCalendarWindow.currentView.refreshEvents();
+   refreshView();
 
    return true;
 }
