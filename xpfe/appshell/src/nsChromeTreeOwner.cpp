@@ -181,6 +181,12 @@ NS_IMETHODIMP nsChromeTreeOwner::ShowModal()
    return mXULWindow->ShowModal();   
 }
 
+NS_IMETHODIMP nsChromeTreeOwner::IsModal(PRBool *_retval)
+{
+  *_retval = mXULWindow->mContinueModalLoop;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::ExitModalLoop(nsresult aStatus)
 {
    return mXULWindow->ExitModalLoop(aStatus);   

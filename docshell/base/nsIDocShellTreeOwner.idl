@@ -71,12 +71,18 @@ interface nsIDocShellTreeOwner : nsISupports
 	*/
 	void showModal();	
     
-    /*
-    Exit a modal loop if we're in one
-    @param aStatus - the result code to return from showModal
-     */
-    void exitModalLoop(in nsresult aStatus);
-      
+	/**
+	Is the window modal (that is, currently executing a modal loop)?
+        @return true if it's a modal window
+	*/
+	boolean isModal();
+
+	/**
+	Exit a modal loop if we're in one
+	@param aStatus - the result code to return from showModal
+	*/
+	void exitModalLoop(in nsresult aStatus);
+
 	/*
 	Tells the implementer of this interface to create a new window.  This is
 	a new logical window.  Meaning in some implementations the result may not
