@@ -53,7 +53,7 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
 {
   mJavaObject = aJavaEnv->NewGlobalRef(aJavaObject);
 
-#ifdef DEBUG
+#ifdef DEBUG_pedemonte
   jboolean isCopy = PR_FALSE;
   jstring name;
   const char* javaObjectName = nsnull;
@@ -85,7 +85,7 @@ nsJavaXPTCStub::nsJavaXPTCStub(JNIEnv* aJavaEnv, jobject aJavaObject,
 
 nsJavaXPTCStub::~nsJavaXPTCStub()
 {
-#ifdef DEBUG
+#ifdef DEBUG_pedemonte
   jboolean isCopy = PR_FALSE;
   jstring name;
   const char* javaObjectName = nsnull;
@@ -108,7 +108,7 @@ nsJavaXPTCStub::~nsJavaXPTCStub()
       delete (nsJavaXPTCStub*) mChildren[i];
     }
 
-    RemoveJavaXPCOMBinding(mJavaEnv, mJavaObject, this);
+    gBindings->RemoveBinding(mJavaEnv, mJavaObject, this);
   }
 
   mJavaEnv->DeleteGlobalRef(mJavaObject);
@@ -205,9 +205,10 @@ nsJavaXPTCStub::QueryInterface(const nsID &aIID, void **aInstancePtr)
   }
 
   // construct IID string
+  jstring iid_jstr = nsnull;
   char* iid_str = aIID.ToString();
   if (iid_str) {
-    jstring iid_jstr = mJavaEnv->NewStringUTF(iid_str);
+    iid_jstr = mJavaEnv->NewStringUTF(iid_str);
   }
   if (!iid_str || !iid_jstr) {
     mJavaEnv->ExceptionClear();
@@ -312,7 +313,7 @@ nsJavaXPTCStub::CallMethod(PRUint16 aMethodIndex,
                            const nsXPTMethodInfo *aMethodInfo,
                            nsXPTCMiniVariant *aParams)
 {
-#ifdef DEBUG
+#ifdef DEBUG_pedemonte
   const char* ifaceName;
   mIInfo->GetNameShared(&ifaceName);
   LOG(("nsJavaXPTCStub::CallMethod [%s::%s]\n", ifaceName, aMethodInfo->GetName()));
@@ -820,7 +821,7 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
       jobject java_stub = nsnull;
       if (xpcom_obj) {
-        java_stub = GetMatchingJavaObject(mJavaEnv, xpcom_obj);
+        java_stub = gBindings->GetJavaObject(mJavaEnv, xpcom_obj);
 
         if (java_stub == nsnull) {
           // wrap xpcom instance
@@ -845,7 +846,9 @@ nsJavaXPTCStub::SetupJavaParams(const nsXPTParamInfo &aParamInfo,
 
           if (java_stub) {
             // Associate XPCOM object w/ Java stub
-            AddJavaXPCOMBinding(mJavaEnv, java_stub, inst);
+            rv = gBindings->AddBinding(mJavaEnv, java_stub, inst);
+            if (NS_FAILED(rv))
+              break;
           }
         }
       }
@@ -1366,7 +1369,7 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
       nsISupports** variant = NS_STATIC_CAST(nsISupports**, aVariant.val.p);
       if (java_obj) {
         // Check if we already have a corresponding XPCOM object
-        void* inst = GetMatchingXPCOMObject(mJavaEnv, java_obj);
+        void* inst = gBindings->GetXPCOMObject(mJavaEnv, java_obj);
 
         // Get IID for this param
         nsID iid;
@@ -1394,7 +1397,9 @@ nsJavaXPTCStub::FinalizeJavaParams(const nsXPTParamInfo &aParamInfo,
             break;
           }
           inst = SetAsXPTCStub(xpcomStub);
-          AddJavaXPCOMBinding(mJavaEnv, java_obj, inst);
+          rv = gBindings->AddBinding(mJavaEnv, java_obj, inst);
+          if (NS_FAILED(rv))
+            break;
         }
 
         // Get appropriate XPCOM object
