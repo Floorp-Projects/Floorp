@@ -2924,7 +2924,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
       return NS_OK;
     }
 
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID, &rv));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
     // If getting a window watcher fails, we'd fail downstream anyway when trying to
     // open a new window so just bail here.
     NS_ENSURE_SUCCESS(rv, rv);
