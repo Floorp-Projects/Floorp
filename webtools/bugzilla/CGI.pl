@@ -20,6 +20,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
+#                 Dave Miller <justdave@syndicomm.com>
 
 # Contains some global routines used throughout the CGI scripts of Bugzilla.
 
@@ -914,9 +915,14 @@ Content-type: text/html
 	    $nexturl = $&;
         }
         my $method = "POST";
-        if (defined $ENV{"REQUEST_METHOD"} && length($::buffer) > 1) {
-            $method = $ENV{"REQUEST_METHOD"};
-        }
+# We always want to use POST here, because we're submitting a password and don't
+# want to see it in the location bar in the browser in case a co-worker is looking
+# over your shoulder.  If you have cookies off and need to bookmark the query, you
+# can bookmark it from the screen asking for your password, and it should still
+# work.  See http://bugzilla.mozilla.org/show_bug.cgi?id=15980
+#        if (defined $ENV{"REQUEST_METHOD"} && length($::buffer) > 1) {
+#            $method = $ENV{"REQUEST_METHOD"};
+#        }
         print "
 <FORM action=$nexturl method=$method>
 <table>

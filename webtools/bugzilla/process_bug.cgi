@@ -724,8 +724,14 @@ The changes made were:
         $::FORM{'delta_ts'} = $delta_ts;
         print "<li><form method=post>";
         foreach my $i (keys %::FORM) {
-            my $value = value_quote($::FORM{$i});
-            print qq{<input type=hidden name="$i" value="$value">\n};
+            # Make sure we don't include the username/password fields in the
+            # HTML.  If cookies are off, they'll have to reauthenticate after
+            # hitting "submit changes anyway".
+            # see http://bugzilla.mozilla.org/show_bug.cgi?id=15980
+            if ($i !~ /^(Bugzilla|LDAP)_(login|password)$/) {
+              my $value = value_quote($::FORM{$i});
+              print qq{<input type=hidden name="$i" value="$value">\n};
+            }
         }
         print qq{<input type=submit value="Submit my changes anyway">\n};
         print " This will cause all of the above changes to be overwritten";
