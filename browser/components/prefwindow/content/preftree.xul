@@ -71,6 +71,13 @@
       </treerow>
     </treeitem>
 
+    <treeitem>
+      <treerow>
+        <treecell url="chrome://browser/content/pref/pref-connection.xul" label="&connection.label;" />
+      </treerow>
+    </treeitem>
+
+
     <treeitem id="advancedItem" container="true">
       <treerow>
         <treecell url="chrome://browser/content/pref/pref-advanced.xul" label="&advance.label;"/>
@@ -79,6 +86,11 @@
         <treeitem>
           <treerow>
             <treecell url="chrome://browser/content/pref/pref-scripts.xul" label="&scriptsAndWindows.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://browser/content/pref/pref-tabs.xul" label="&tabs.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
