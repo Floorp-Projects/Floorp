@@ -66,7 +66,8 @@ nsPresState::GetStateProperty(const nsAString& aName,
 
   // Retrieve from hashtable.
   if (mPropertyTable) {
-    nsStringKey key(aName);
+    const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
+    nsStringKey key(flatString);
 
     nsCOMPtr<nsISupportsString> supportsStr =
             dont_AddRef(NS_STATIC_CAST(nsISupportsString*,
@@ -92,7 +93,8 @@ nsPresState::SetStateProperty(const nsAString& aName, const nsAString& aValue)
   }
 
   // Add to hashtable
-  nsStringKey key(aName);
+  const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
+  nsStringKey key(flatString);
 
   nsCOMPtr<nsISupportsString> supportsStr(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
@@ -109,7 +111,8 @@ nsPresState::RemoveStateProperty(const nsAString& aName)
   if (!mPropertyTable)
     return NS_OK;
 
-  nsStringKey key(aName);
+  const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
+  nsStringKey key(flatString);
 
   mPropertyTable->Remove(&key);
   return NS_OK;
@@ -122,7 +125,8 @@ nsPresState::GetStatePropertyAsSupports(const nsAString& aName, nsISupports** aR
   nsCOMPtr<nsISupports> supp;
 
   if (mPropertyTable) {
-    nsStringKey key(aName);
+    const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
+    nsStringKey key(flatString);
     supp = dont_AddRef(NS_STATIC_CAST(nsISupports*, mPropertyTable->Get(&key)));
   }
 
@@ -140,7 +144,9 @@ nsPresState::SetStatePropertyAsSupports(const nsAString& aName, nsISupports* aVa
   }
 
   // Add to hashtable
-  nsStringKey key(aName);
+  const nsPromiseFlatString& flatString = PromiseFlatString(aName);   
+  nsStringKey key(flatString);
+  
   mPropertyTable->Put(&key, aValue);
   return NS_OK;
 }

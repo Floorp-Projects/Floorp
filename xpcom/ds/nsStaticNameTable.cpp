@@ -96,7 +96,9 @@ inline PRInt32
 LookupLowercasedKeyword(const nsACString& aLowercasedKeyword, 
                         nsHashtable* aTable)
 {
-    nsCStringKey key(aLowercasedKeyword);
+    const nsPromiseFlatCString& flatString = PromiseFlatCString(aLowercasedKeyword);   
+    nsCStringKey key(flatString);
+
     void* val = aTable->Get(&key);
     return val ? NS_PTR_TO_INT32(val) - 1 : 
                  nsStaticCaseInsensitiveNameTable::NOT_FOUND;
