@@ -203,11 +203,6 @@ public:
     }                                                         \
   PR_END_MACRO
 
-// Note: Macros below this line are the old ones; please start using
-// the new ones. The old ones will be removed eventually!
-
-//////////////////////////////////////////////////////////////////////
-
 /**
  * Test a precondition for truth. If the expression is not true then
  * trigger a program failure.
