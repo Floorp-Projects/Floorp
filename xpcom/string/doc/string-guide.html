@@ -5,7 +5,6 @@
 
     <link rel="stylesheet" href="http://www.mozilla.org/projects/string/string-guide.css" title="remote stylesheet" type="text/css">
     <link rel="alternate stylesheet" href="string-guide.css" title="local stylesheet" type="text/css">
-    <!-- meta http-equiv="Default-Style" content="remote stylesheet" -->
   </head>
   <body>
 <!-- ----|---------|---------|---------|---------|---------|---------|---------| -->
@@ -144,6 +143,7 @@
 
 <div class="contents">
   <ul>
+<!--
     <li>
       I have a wide string, i.e., an instance of a class derived from <span class="code">nsAString</span>
       <ul>
@@ -186,7 +186,135 @@
     <li>How can I get a pointer to the characters in a string?</li>
     <li>How can I <span class="code">printf</span> a string?</li>
   </ul>
+-->
 </div>
+
+
+<table class="chart">
+  <tr>
+    <th></th>
+    <th colspan="5">you have some <span class="code">char</span>s</th>
+  </tr>
+  <tr>
+    <th>you want</th>
+    <th><span class="code">'x'</span></th>
+    <th><span class="code">char c</span></th>
+    <th><span class="code">"foo"</span></th>
+    <th><span class="code">char* cp</span></th>
+    <th><span class="code">nsACString& cs</span></th>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">char</span></th>
+<!-- 'x'            -->    <td>-</td>
+<!-- char c         -->    <td>-</td>
+<!-- "foo"          -->    <td><span class="code">[]</span></td>
+<!-- char* cp       -->    <td><span class="code">[]</span></td>
+<!-- nsACString& cs -->    <td><a href="#faq_how_to_extract_a_character">how to extract a character</a></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">PRUnichar</span></th>
+<!-- 'x'            -->    <td><span class="code">PRUnichar('x')</span></td>
+<!-- char c         -->    <td><span class="code">PRUnichar(c)</span></td>
+<!-- "foo"          -->    <td></td>
+<!-- char* cp       -->    <td></td>
+<!-- nsACString& cs -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">char*</span></th>
+<!-- 'x'            -->    <td></td>
+<!-- char c         -->    <td></td>
+<!-- "foo"          -->    <td></td>
+<!-- char* cp       -->    <td></td>
+<!-- nsACString& cs -->    <td><a href="#faq_how_to_get_a_pointer">how to get a pointer</a></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">PRUnichar*</span></th>
+<!-- 'x'            -->    <td></td>
+<!-- char c         -->    <td></td>
+<!-- "foo"          -->    <td></td>
+<!-- char* cp       -->    <td></td>
+<!-- nsACString& cs -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">nsACString</span></th>
+<!-- 'x'            -->    <td></td>
+<!-- char c         -->    <td></td>
+<!-- "foo"          -->    <td></td>
+<!-- char* cp       -->    <td></td>
+<!-- nsACString& cs -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">nsAString</span></th>
+<!-- 'x'            -->    <td></td>
+<!-- char c         -->    <td></td>
+<!-- "foo"          -->    <td></td>
+<!-- char* cp       -->    <td></td>
+<!-- nsACString& cs -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label">to call <span class="code">printf</span></th>
+<!-- 'x'            -->    <td></td>
+<!-- char c         -->    <td></td>
+<!-- "foo"          -->    <td></td>
+<!-- char* cp       -->    <td></td>
+<!-- nsACString& cs -->    <td></td>
+  </tr>
+</table>
+
+<table class="chart">
+  <tr>
+    <th></th>
+    <th colspan="3">you have some <span class="code">PRUnichar</span>s</th>
+  </tr>
+  <tr>
+    <th>you want</th>
+    <th><span class="code">PRUnichar w</span></th>
+    <th><span class="code">PRUnichar* wp</span></th>
+    <th><span class="code">nsAString& s</span></th>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">char</span></th>
+<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar* wp  -->    <td></td>
+<!-- nsAString& s   -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">PRUnichar</span></th>
+<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar* wp  -->    <td></td>
+<!-- nsAString& s   -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">char*</span></th>
+<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar* wp  -->    <td></td>
+<!-- nsAString& s   -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">PRUnichar*</span></th>
+<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar* wp  -->    <td></td>
+<!-- nsAString& s   -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">nsACString</span></th>
+<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar* wp  -->    <td></td>
+<!-- nsAString& s   -->    <td></td>
+  </tr>
+  <tr>
+    <th class="row-label"><span class="code">nsAString</span></th>
+<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar* wp  -->    <td></td>
+<!-- nsAString& s   -->    <td><a href="#faq_how_to_get_a_pointer">how to get a pointer</td>
+  </tr>
+  <tr>
+    <th class="row-label">to call <span class="code">printf</span></th>
+<!-- PRUnichar w    -->    <td></td>
+<!-- PRUnichar* wp  -->    <td></td>
+<!-- nsAString& s   -->    <td></td>
+  </tr>
+</table>
 
 <div class="faq">
   <dl>
@@ -197,13 +325,109 @@
       Yes, you're soaking in it!
     </dd>
 
+
+
+<!-- getting a pointer -->
     <dt>
-      I have a string, how to I get a pointer to the characters?
+      <a name="faq_how_to_get_a_pointer">I have a string, how do I get a pointer to the characters?</a>
     </dt>
     <dd>
-      ...
+      You want to avoid this situation.
+      In your own interfaces, prefer string types over raw pointers.
+      Any interface that wants to process a string using a single pointer is making two expensive assumptions.
+      First, that the string is stored in one contiguous hunk; and
+        second, that the string is zero-terminated.
+      If this isn't the case,
+        then to get a pointer, storage must be allocated and the entire string must be copied to it and zero-terminated.
+      You may not be able to avoid needing a pointer when interacting with system calls. 
+    </dd>
+    <dd>
+      Some string classes guarantee that they are `flat'.
+      That is, that their data is stored in one contiguous zero-terminated hunk.
+      This <strong>does not</strong> imply that there are no embedded nulls.  Caveat emptor.
+      All strings that explicitly promise flatness
+        inherit from the class <span class="code">nsAFlatString</span>
+          or <span class="code">nsAFlatCString</span>
+        and can produce a constant pointer to their data with the <span class="code">get()</span> member function.
+      Even strings that don't explicitly promise to be flat
+        may happen to be flat.
+      The helper function <span class="code">PromiseFlatString</span> will produce
+        a <span class="code">const</span> dependent string that is guaranteed to be flat.
+      If you use this on a string that already happens to be flat,
+        the result is simply a reference through to that string.
+      Otherwise,
+        <span class="code">PromiseFlatString</span> does the work to allocate, copy, terminate, and manage
+        a temporary flat string.
+      Since the result of <span class="code">PromiseFlatString</span> is a temporary,
+        you must be careful not to get and hold a pointer to it's data for longer than the temporary itself lives.
+    </dd>
+    <dd>
+<div class="source-code">
+<pre>
+  /* I have a string, how do I get a pointer to the characters? */
+
+extern void EvilNarrowOSFunction( const char* );    // evil OS routines that want a pointers
+extern void EvilWideOSFunction( const PRUnichar* );
+
+void func( const nsAString&amp; aString, const nsACString&amp; aCString )
+  {
+    EvilWideOSFunction( NS_LITERAL_STRING("Hello, World!").<span class="notice">get()</span> );
+      // literal strings are flat already (as are |nsString|s, et al), just use |.get()|
+
+    EvilWideOSFunction( <span class="notice">PromiseFlatString(</span>aString<span class="notice">).get()</span> );
+      // for strings that don't explicitly guarantee flatness, use |PromiseFlatString|
+
+
+      // beware holding the pointer for longer than the life of the promise
+    <span class="warning">const PRUnichar* wp = PromiseFlatString(aString).get(); // BAD! |wp| dangles
+    EvilWideOSFunction(wp);</span>
+
+      // if you really need to use the pointer from |PromiseFlatString| in more than one expression...
+    const nsAFlatString&amp; flat = <span class="notice">PromiseFlatString(</span>aString<span class="notice">)</span>;
+    EvilWideOSFunction(flat.<span class="notice">get()</span>);
+    SomeOtherFunction(flat.<span class="notice">get()</span>);
+
+      // similarly for |char| strings
+    EvilNarrowOSFunction( <span class="notice">PromiseFlatCString(</span>aCString<span class="notice">).get()</span> );
+  }
+</pre>
+</div>
     </dd>
 
+
+
+<!-- extracting a character -->
+    <dt>
+      <a name="faq_how_to_extract_a_character">How do I get a particular character out of a string?</a>
+    </dt>
+    <dd>
+      Flat strings provide <span class="code">operator[]</span> and <span class="code">CharAt()</span>.
+      All strings provide <span class="code">First()</span>, <span class="code">Last()</span>, and access with iterators.
+      <strong>Don't</strong> promise a string flat just to do character indexing.
+      Prefer, instead, to get an iterator and <span class="code">advance</span> it to the position you care about.
+    </dd>
+    <dd>
+<div class="source-code">
+<pre>
+PRUnichar Get5thCharacterOf( const nsAString& aString )
+  {
+    if ( aString.Length() >= 5 )
+      {
+        nsAString::const_iterator iter;
+        aString.BeginReading(iter); // make |iter| point to the beginning of |aString|
+        iter.advance(5);
+        return *iter;
+      }
+
+    return PRUnichar(0);
+  }
+</pre>
+</div>
+    </dd>
+
+
+
+<!-- how to return a string -->
     <dt>
       What is the best way to return a string?
     </dt>
@@ -225,26 +449,27 @@
             moving characters around.
       </p>
     </dd>
-<!--
     <dd>
 <div class="source-code">
 <pre>
+  /* What is the best way to return a string? */
+
 class foo
   {
     public:
       // ...
       void GetShortName( nsAString&amp; aResult ) const;
-      nsSharableString GetFullName() const;
+      nsCommonString GetFullName() const;
       
     private:
-      nsSharableString  mFullName;
+      nsCommonString    mFullName;
 
       const PRUnichar*  mShortName;
       PRUint32          mShortNameLength;
       
   };
 
-nsSharableString
+nsCommonString
 foo::GetFullName() const
   {
     return mFullName;
@@ -258,7 +483,7 @@ foo::GetShortName( nsAString&amp; aResult ) const
 </pre>
 </div>
     </dd>
--->
+
 
     <dt>
       If I have a <span class="code">PRUnichar *aKey</span> [or other representation of a wide] string,
