@@ -432,32 +432,6 @@ nsXULDocument::~nsXULDocument()
         }
     }
 
-    // set all builder references to document to nsnull -- out of band notification
-    // to break ownership cycle
-    if (mBuilders)
-    {
-        PRUint32 cnt = 0;
-        nsresult rv = mBuilders->Count(&cnt);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-
-        for (PRUint32 i = 0; i < cnt; ++i) {
-          nsIRDFContentModelBuilder* builder
-            = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
-
-          NS_ASSERTION(builder != nsnull, "null ptr");
-          if (! builder) continue;
-
-          rv = builder->SetDocument(nsnull);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from document");
-          // XXX ignore error code?
-
-          rv = builder->SetDataBase(nsnull);
-          NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from database");
-
-          NS_RELEASE(builder);
-        }
-    }
-
     if (mLocalStore) {
         nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mLocalStore);
         if (remote)
@@ -1313,6 +1287,31 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
         // focused window is ourself.
         if (mCommandDispatcher)
             mCommandDispatcher->SetFocusedWindow(nsnull);
+
+        // set all builder references to document to nsnull -- out of band notification
+        // to break ownership cycle
+        if (mBuilders) {
+            PRUint32 cnt = 0;
+            nsresult rv = mBuilders->Count(&cnt);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+
+            for (PRUint32 i = 0; i < cnt; ++i) {
+                nsIRDFContentModelBuilder* builder
+                    = (nsIRDFContentModelBuilder*) mBuilders->ElementAt(i);
+
+                NS_ASSERTION(builder != nsnull, "null ptr");
+                if (! builder) continue;
+
+                rv = builder->SetDocument(nsnull);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from document");
+                // XXX ignore error code?
+
+                rv = builder->SetDataBase(nsnull);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "error unlinking builder from database");
+
+                NS_RELEASE(builder);
+            }
+        }
     }
 
     mScriptGlobalObject = aScriptGlobalObject;
