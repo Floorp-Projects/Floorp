@@ -35,7 +35,6 @@
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
 #include "nsIDocumentLoaderObserver.h"
-#include "nsIDocumentLoadInfo.h"
 #include "nsVoidArray.h"
 #include "nsIHttpUrl.h"
 #include "nsILoadAttribs.h"
@@ -70,7 +69,6 @@ NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 NS_DEFINE_IID(kIDocumentLoaderIID,        NS_IDOCUMENTLOADER_IID);
 NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 NS_DEFINE_IID(kDocumentBindInfoIID,       NS_DOCUMENTBINDINFO_IID);
-NS_DEFINE_IID(kIDocumentLoadInfoIID,      NS_IDOCUMENTLOADINFO_IID);
 NS_DEFINE_IID(kIURLGroupIID,              NS_IURLGROUP_IID);
 NS_DEFINE_IID(kRefreshURLIID,             NS_IREFRESHURL_IID);
 NS_DEFINE_IID(kHTTPURLIID,                NS_IHTTPURL_IID);
@@ -94,8 +92,7 @@ NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
  * represents the set of documents actively being loaded...
  */
 class nsDocumentBindInfo : public nsIStreamListener, 
-                           public nsIRefreshUrl,
-                           public nsIDocumentLoadInfo
+                           public nsIRefreshUrl
 {
 public:
     nsDocumentBindInfo();
@@ -125,12 +122,6 @@ public:
     NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString& aMsg);
 
     nsresult GetStatus(void) { return mStatus; }
-
-    /* nsIDocumentLoadInfo interface methods */
-    NS_IMETHOD GetCommand(nsString &aCommand);
-    NS_IMETHOD GetURL(nsIURL **aURL);
-    NS_IMETHOD GetContainer(nsIContentViewerContainer **aContainer);
-    NS_IMETHOD GetExtraInfo(nsISupports **aExtraInfo);
 
     /* nsIRefreshURL interface methods... */
     NS_IMETHOD RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat);
@@ -1103,11 +1094,6 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDocumentLoadInfoIID)) {
-    *aInstancePtrResult = (void*) ((nsIDocumentLoadInfo*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(kDocumentBindInfoIID)) {
     *aInstancePtrResult = (void*) this;
     NS_ADDREF_THIS();
@@ -1394,40 +1380,6 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
     m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
 
     return rv;
-}
-
-NS_IMETHODIMP 
-nsDocumentBindInfo::GetCommand(nsString &aCommand)
-{
-    aCommand.SetString(m_Command);
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDocumentBindInfo::GetURL(nsIURL **aURL)
-{
-    *aURL = m_Url;
-    NS_IF_ADDREF(m_Url);
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDocumentBindInfo::GetContainer(nsIContentViewerContainer **aContainer)
-{
-    *aContainer = m_Container;
-    NS_IF_ADDREF(m_Container);
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsDocumentBindInfo::GetExtraInfo(nsISupports **aExtraInfo)
-{
-    *aExtraInfo = m_ExtraInfo;
-    NS_IF_ADDREF(m_ExtraInfo);
-
-    return NS_OK;
 }
 
 NS_METHOD
