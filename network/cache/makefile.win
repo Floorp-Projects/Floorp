@@ -83,7 +83,8 @@ LINCS= \
     -I$(XPDIST)\public\js 	\
     -I$(XPDIST)\public\java 	\
     -I$(XPDIST)\public\fileurl 	\
-    -I$(XPDIST)\public\security 
+    -I$(XPDIST)\public\security \
+    -I$(XPDIST)\public\jtools
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 
