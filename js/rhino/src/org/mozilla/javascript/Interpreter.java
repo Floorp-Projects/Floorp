@@ -1543,11 +1543,6 @@ public class Interpreter
                | ((iCode[pc + 2] & 0xFF) << 8) | (iCode[pc + 3] & 0xFF);
     }
 
-    private static int getTarget(byte[] iCode, int pc) {
-        int displacement = getShort(iCode, pc);
-        return pc - 1 + displacement;
-    }
-
     private static int getExceptionHandler(int[] exceptionTable, int pc)
     {
         // OPT: use binary search
@@ -1657,7 +1652,7 @@ public class Interpreter
                     case Token.IFEQ :
                     case Token.IFNE :
                     case Icode_IFEQ_POP : {
-                        int newPC = getTarget(iCode, pc);
+                        int newPC = pc + getShort(iCode, pc) - 1;
                         out.println(tname + " " + newPC);
                         pc += 2;
                         break;
@@ -2145,7 +2140,6 @@ public class Interpreter
         int indexReg = 0;
 
         Loop: for (;;) {
-            int pcJump;
             try {
                 int op = 0xFF & iCode[pc++];
                 switch (op) {
@@ -2158,7 +2152,7 @@ public class Interpreter
         // simplify logic.
         if (javaException == null) Kit.codeBug();
 
-        pcJump = -1;
+        pc = -1;
         boolean doCatch = false;
         int handlerOffset = getExceptionHandler(idata.itsExceptionTable,
                                                 exceptionPC);
@@ -2188,16 +2182,16 @@ public class Interpreter
                 if (exType == SCRIPT_CAN_CATCH) {
                     // Allow JS to catch only JavaScriptException and
                     // EcmaError
-                    pcJump = idata.itsExceptionTable[handlerOffset
-                                                     + EXCEPTION_CATCH_SLOT];
-                    if (pcJump >= 0) {
+                    pc = idata.itsExceptionTable[handlerOffset
+                                                 + EXCEPTION_CATCH_SLOT];
+                    if (pc >= 0) {
                         // Has catch block
                         doCatch = true;
                     }
                 }
-                if (pcJump < 0) {
-                    pcJump = idata.itsExceptionTable[handlerOffset
-                                                     + EXCEPTION_FINALLY_SLOT];
+                if (pc < 0) {
+                    pc = idata.itsExceptionTable[handlerOffset
+                                                 + EXCEPTION_FINALLY_SLOT];
                 }
             }
         }
@@ -2206,7 +2200,7 @@ public class Interpreter
             debuggerFrame.onExceptionThrown(cx, javaException);
         }
 
-        if (pcJump < 0) {
+        if (pc < 0) {
             break Loop;
         }
 
@@ -2237,8 +2231,14 @@ public class Interpreter
         // clear exception
         javaException = null;
 
-        // go to generic jump code
-        break;
+        if (instructionThreshold != 0) {
+            if (instructionCount > instructionThreshold) {
+                cx.observeInstructionCount(instructionCount);
+                instructionCount = 0;
+            }
+            pcPrevBranch = pc;
+        }
+        continue Loop;
     }
     case Token.THROW: {
         Object value = stack[stackTop];
@@ -2359,7 +2359,6 @@ public class Interpreter
             pc += 2;
             continue Loop;
         }
-        pcJump = getTarget(iCode, pc);
         break;
     }
     case Token.IFEQ : {
@@ -2369,7 +2368,6 @@ public class Interpreter
             pc += 2;
             continue Loop;
         }
-        pcJump = getTarget(iCode, pc);
         break;
     }
     case Icode_IFEQ_POP : {
@@ -2381,31 +2379,36 @@ public class Interpreter
         }
         stack[stackTop] = null;
         --stackTop;
-        pcJump = getTarget(iCode, pc);
         break;
     }
     case Token.GOTO :
-        pcJump = getTarget(iCode, pc);
         break;
     case Icode_GOSUB :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = pc + 2;
-        pcJump = getTarget(iCode, pc);
         break;
     case Icode_RETSUB : {
         // indexReg: local to store return address
+        if (instructionThreshold != 0) {
+            instructionCount += pc - pcPrevBranch;
+            if (instructionCount > instructionThreshold) {
+                cx.observeInstructionCount(instructionCount);
+                instructionCount = 0;
+            }
+        }
         Object value = stack[LOCAL_SHFT + indexReg];
         if (value != DBL_MRK) {
             // Invocation from exception handler, restore object to rethrow
             javaException = (Throwable)value;
             exceptionPC = pc - 1;
-            pcJump = getJavaCatchPC(iCode);
+            pc = getJavaCatchPC(iCode);
         } else {
             // Normal return from GOSUB
-            pcJump = (int)sDbl[LOCAL_SHFT + indexReg];
+            pc = (int)sDbl[LOCAL_SHFT + indexReg];
+            pcPrevBranch = pc;
         }
-        break;
+        continue Loop;
     }
     case Token.POP :
         stack[stackTop] = null;
@@ -3035,20 +3038,22 @@ public class Interpreter
                 }  // end of interpreter switch
 
                 // This should be reachable only for jump implementation
+                // when pc points to encoded target offset
                 if (instructionThreshold != 0) {
-                    instructionCount += pc - pcPrevBranch;
+                    instructionCount += pc + 2 - pcPrevBranch;
                     if (instructionCount > instructionThreshold) {
                         cx.observeInstructionCount(instructionCount);
                         instructionCount = 0;
                     }
-                    pcPrevBranch = pcJump;
                 }
-                pc = pcJump;
+                // -1 accounts to the fact that pc points to one byte past
+                // instruction
+                pc += getShort(iCode, pc) - 1;
+                pcPrevBranch = pc;
                 continue Loop;
 
             }  // end of interpreter try
             catch (Throwable ex) {
-                pcJump = getJavaCatchPC(iCode);
                 if (instructionThreshold != 0) {
                     if (instructionCount < 0) {
                         // throw during function call
@@ -3058,12 +3063,10 @@ public class Interpreter
                         instructionCount += pc - pcPrevBranch;
                         cx.instructionCount = instructionCount;
                     }
-                    pcPrevBranch = pcJump;
                 }
-
                 javaException = ex;
                 exceptionPC = pc - 1;
-                pc = pcJump;
+                pc = getJavaCatchPC(iCode);
                 continue Loop;
             }
         } // end of interpreter loop
@@ -3072,9 +3075,9 @@ public class Interpreter
 
         if (debuggerFrame != null) {
             if (javaException != null) {
-                    debuggerFrame.onExit(cx, true, javaException);
+                debuggerFrame.onExit(cx, true, javaException);
             } else {
-                    debuggerFrame.onExit(cx, false, result);
+                debuggerFrame.onExit(cx, false, result);
             }
         }
         if (idata.itsNeedsActivation || debuggerFrame != null) {
