@@ -25,3 +25,6 @@
  */
 
 #include "MacPrefix_debug.h"
+
+  // while we're still a part of xpcom, make stuff get exported
+#define _IMPL_NS_COM 1
