@@ -19,7 +19,9 @@
 #include "nsIDOMMsgAppCore.h"
 #include "nsMsgAppCore.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsAppCoresCIDs.h"
 #include "nsIDOMBaseAppCore.h"
+#include "nsIDOMAppCoresManager.h"
 #include "nsJSMsgAppCore.h"
 
 /* rhp - for access to webshell */
@@ -54,6 +56,8 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 
+static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
+static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
@@ -202,16 +206,28 @@ nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset)
 //
 nsMsgAppCore::nsMsgAppCore() : m_folderPath("")
 {
-  NS_INIT_REFCNT();
-  mScriptObject = nsnull;
-  mWebShell = nsnull; 
-  mWindow = nsnull;
-  InitializeFolderRoot();
+	NS_INIT_REFCNT();
+	mScriptObject = nsnull;
+	mWebShell = nsnull; 
+	mWindow = nsnull;
+
+	InitializeFolderRoot();
 }
 
 nsMsgAppCore::~nsMsgAppCore()
 {
+	// remove ourselves from the app cores manager...
+	// if we were able to inherit directly from nsBaseAppCore then it would do this for
+	// us automatically
 
+	nsIDOMAppCoresManager * appCoreManager;
+	nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID, kIDOMAppCoresManagerIID,
+											   (nsISupports**)&appCoreManager);
+	if (NS_SUCCEEDED(rv) && appCoreManager)
+	{
+		appCoreManager->Remove((nsIDOMBaseAppCore *) this);
+		nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
+	}
 }
 
 //
@@ -287,16 +303,27 @@ nsMsgAppCore::SetScriptObject(void* aScriptObject)
 nsresult
 nsMsgAppCore::Init(const nsString& aId)
 {
-	printf("Init\n");
-  mId = aId;
-  return NS_OK;
+	mId = aId;
+	
+	// add ourselves to the app cores manager...
+	// if we were able to inherit directly from nsBaseAppCore then it would do this for
+	// us automatically
+
+	nsIDOMAppCoresManager * appCoreManager;
+	nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID, kIDOMAppCoresManagerIID,
+											   (nsISupports**)&appCoreManager);
+	if (NS_SUCCEEDED(rv) && appCoreManager)
+	{
+		appCoreManager->Add((nsIDOMBaseAppCore *) this);
+		nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
+	}
+	return NS_OK;
 }
 
 
 nsresult
 nsMsgAppCore::GetId(nsString& aId)
 {
-	printf("GetID\n");
   aId = mId;
   return NS_OK;
 }
@@ -494,6 +521,7 @@ nsMsgAppCore::OpenURL(const char * url)
 				nsParseLocalMessageURI(url, folderURI, &msgIndex);
 				char *rootURI = folderURI.ToNewCString();
 				nsURI2Path(kMessageRootURI, rootURI, folderPath);
+				delete[] rootURI;
 				displayNumber = PR_FALSE;
 			}
 			nsIMailboxService * mailboxService = nsnull;
