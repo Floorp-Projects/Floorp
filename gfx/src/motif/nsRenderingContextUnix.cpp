@@ -32,6 +32,8 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mFontCache = nsnull ;
   mFontMetrics = nsnull ;
   mContext = nsnull ;
+  mRenderingSurface = nsnull ;
+  mOffscreenSurface = nsnull ;
 }
 
 nsRenderingContextUnix :: ~nsRenderingContextUnix()
@@ -52,11 +54,11 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mSurface = new nsDrawingSurfaceUnix();
+  mRenderingSurface = new nsDrawingSurfaceUnix();
 
-  mSurface->display =  XtDisplay((Widget)aWindow->GetNativeData(NS_NATIVE_WIDGET));
-  mSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
-  mSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+  mRenderingSurface->display =  XtDisplay((Widget)aWindow->GetNativeData(NS_NATIVE_WIDGET));
+  mRenderingSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
+  mRenderingSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
   
 #if 0
   mFontCache = mContext->GetFontCache();
@@ -66,17 +68,16 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 					nsDrawingSurface aSurface)
 {
-  // XXX We are doomed if this is the case .... need to remove this API. In X, you need both
-  //         a drawable and gc for rendering
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mSurface = (nsDrawingSurfaceUnix *) aSurface;
-
+  mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;
 }
 
 nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
+  mOffscreenSurface = mRenderingSurface;
+  mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;
   return NS_OK;
 }
 
@@ -125,8 +126,8 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
   values.foreground = mCurrentColor;
   values.background = mCurrentColor;
 
-  XChangeGC(mSurface->display,
-	    mSurface->gc,
+  XChangeGC(mRenderingSurface->display,
+	    mRenderingSurface->gc,
 	    GCForeground | GCBackground,
 	    &values);
 }
@@ -138,11 +139,11 @@ nscolor nsRenderingContextUnix :: GetColor() const
 
 void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 {
-  Font id = ::XLoadFont(mSurface->display, "fixed");
+  Font id = ::XLoadFont(mRenderingSurface->display, "fixed");
 
-  XFontStruct * fs = ::XQueryFont(mSurface->display, id);
+  XFontStruct * fs = ::XQueryFont(mRenderingSurface->display, id);
 
-  ::XSetFont(mSurface->display, mSurface->gc, id);
+  ::XSetFont(mRenderingSurface->display, mRenderingSurface->gc, id);
 
 
 #if 0
@@ -179,23 +180,52 @@ nsTransform2D * nsRenderingContextUnix :: GetCurrentTransform()
 
 nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
 {
-  return nsnull ;
+  // Must make sure this code never gets called when nsRenderingSurface is nsnull
+  PRUint32 depth = DefaultDepth(mRenderingSurface->display,
+				DefaultScreen(mRenderingSurface->display));
+
+  Pixmap p = ::XCreatePixmap(mRenderingSurface->display,
+			     mRenderingSurface->drawable,
+			     aBounds->width, aBounds->height, depth);
+
+  nsDrawingSurfaceUnix * surface = new nsDrawingSurfaceUnix();
+
+  surface->drawable = p ;
+  surface->display  = mRenderingSurface->display;
+  surface->gc       = mRenderingSurface->gc;
+
+  return ((nsDrawingSurface)surface);
 }
 
 void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
+  nsDrawingSurfaceUnix * surface = (nsDrawingSurfaceUnix *) aDS;
+
+  // XXX - Could this be a GC? If so, store the type of surface in nsDrawingSurfaceUnix
+  ::XFreePixmap(surface->display, surface->drawable);
+
+  delete aDS;
 }
 
 void nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+  ::XDrawLine(mRenderingSurface->display, 
+	      mRenderingSurface->drawable,
+	      mRenderingSurface->gc,
+	      aX0, aX1, aY0, aY1);
 }
 
 void nsRenderingContextUnix :: DrawRect(const nsRect& aRect)
 {
+  DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 void nsRenderingContextUnix :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  ::XDrawRectangle(mRenderingSurface->display, 
+		   mRenderingSurface->drawable,
+		   mRenderingSurface->gc,
+		   aX, aY, aWidth, aHeight);
 }
 
 void nsRenderingContextUnix :: FillRect(const nsRect& aRect)
@@ -205,9 +235,9 @@ void nsRenderingContextUnix :: FillRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  ::XFillRectangle(mSurface->display, 
-		   mSurface->drawable,
-		   mSurface->gc,
+  ::XFillRectangle(mRenderingSurface->display, 
+		   mRenderingSurface->drawable,
+		   mRenderingSurface->gc,
 		   aX, aY,
 		   aWidth, aHeight);
 }
@@ -248,6 +278,10 @@ void nsRenderingContextUnix :: DrawArc(const nsRect& aRect,
 void nsRenderingContextUnix :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+  ::XDrawArc(mRenderingSurface->display, 
+	     mRenderingSurface->drawable,
+	     mRenderingSurface->gc,
+	     aX, aY, aWidth, aHeight, aStartAngle, aEndAngle);
 }
 
 void nsRenderingContextUnix :: FillArc(const nsRect& aRect,
@@ -259,6 +293,10 @@ void nsRenderingContextUnix :: FillArc(const nsRect& aRect,
 void nsRenderingContextUnix :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+  ::XFillArc(mRenderingSurface->display, 
+	     mRenderingSurface->drawable,
+	     mRenderingSurface->gc,
+	     aX, aY, aWidth, aHeight, aStartAngle, aEndAngle);
 }
 
 void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
@@ -266,11 +304,11 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
                                     nscoord aWidth)
 {
   // XXX Hack
-  ::XLoadFont(mSurface->display, "fixed");
+  ::XLoadFont(mRenderingSurface->display, "fixed");
 
-  ::XDrawString(mSurface->display, 
-		mSurface->drawable,
-		mSurface->gc,
+  ::XDrawString(mRenderingSurface->display, 
+		mRenderingSurface->drawable,
+		mRenderingSurface->gc,
 		aX, aY, aString, aWidth);
 }
 
@@ -317,5 +355,26 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 
 nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 {
+  ::XCopyArea(mRenderingSurface->display, 
+	      mRenderingSurface->drawable,
+	      mOffscreenSurface->drawable,
+	      mOffscreenSurface->gc,
+	      aBounds.x, aBounds.y, aBounds.width, aBounds.height, 0, 0);
+
   return NS_OK;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -128,11 +128,14 @@ public:
   virtual nsresult CopyOffScreenBits(nsRect &aBounds);
 
 protected:
+
   nscolor mCurrentColor ;
-  nsDrawingSurfaceUnix * mSurface;  
-  nsIDeviceContext  *mContext;
-  nsIFontMetrics    *mFontMetrics;
-  nsIFontCache      *mFontCache;
+
+  nsDrawingSurfaceUnix   *mOffscreenSurface;  
+  nsDrawingSurfaceUnix   *mRenderingSurface;
+  nsIDeviceContext       *mContext;
+  nsIFontMetrics         *mFontMetrics;
+  nsIFontCache           *mFontCache;
 
 };
 
