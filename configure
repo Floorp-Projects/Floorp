@@ -51,7 +51,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-static-qt        Link qt statically if possible"
 ac_help="$ac_help
-  --disable-libIDL        Disable checking of libIDL"
+  --without-libIDL        Skip check for libIDL"
 ac_help="$ac_help
   --with-libIDL-prefix=PFX
                           Prefix where libIDL is installed (optional)"
