@@ -1105,12 +1105,6 @@ nsHTMLDocument::CreateElement(const nsString& aTagName,
   if (NS_SUCCEEDED(rv)) {
     rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
   }
-
-  nsresult result;
-  nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &result);
-  if (NS_SUCCEEDED(result)) {
-    result = select->DoneAddingContent();
-  }
   return rv;
 }
 
