@@ -59,7 +59,6 @@
 #include "nsIStringBundle.h"
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
-#include "nsIAlertsService.h"
  
 enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
 

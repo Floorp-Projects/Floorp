@@ -63,7 +63,9 @@
 #include "nsISound.h"
 #include "nsIPrefService.h"
 #include "nsIFileURL.h"
+#ifndef MOZ_THUNDERBIRD
 #include "nsIAlertsService.h"
+#endif
 #include "nsEmbedCID.h"
 
 /* Outstanding issues/todo:
@@ -1158,6 +1160,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
 void nsDownload::DisplayDownloadFinishedAlert()
 {
   nsresult rv;
+#ifndef MOZ_THUNDERBIRD
   nsCOMPtr<nsIAlertsService> alertsService(do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return;
@@ -1188,6 +1191,7 @@ void nsDownload::DisplayDownloadFinishedAlert()
   alertsService->ShowAlertNotification(NS_LITERAL_STRING("moz-icon://") + NS_ConvertUTF8toUTF16(url),
                                        finishedTitle, finishedText, PR_TRUE,
                                        NS_LITERAL_STRING("download"), this);
+#endif
 }
 
 NS_IMETHODIMP
