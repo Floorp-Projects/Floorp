@@ -68,21 +68,17 @@ sub expand {
     }
     node: while (1) {
         if ($index > $#$stack) {
-            # end of this level, pop the stack
+            # end of this level
+            # deal with any pending text first
+            $self->appendPendingText($app, \$pendingText, \$result, $scope);
             if (@stack) {
+                # pop the stack
                 $stack = pop(@stack);
                 $index = pop(@index);
                 $scope = pop(@scope);
             } else {
-                # end of stack
-                # deal with any pending text first
-                if ($pendingText =~ /\S/o) {
-                    $pendingText =~ s/^\n//os;
-                    $pendingText =~ s/\n$//os;
-                    $result .= $self->escape($app, $pendingText, $scope);
-                    # XXX this code is also duplicated a few lines lower
-                }
-                return $result; # have a nice day!
+                # end of stack -- have a nice day!
+                return $result;
             }
         } else {
             # more data to deal with at this level
@@ -92,17 +88,7 @@ sub expand {
             $index += 2; # move the pointer on to the next node
             if ($node) {
                 # first, get rid of any pending text
-                # xml:space="default" so only include text nodes with non-whitespace
-                # and trim leading and closing newlines
-                if ($pendingText =~ /\S/o) {
-                    $pendingText =~ s/^\n//os;
-                    $pendingText =~ s/\n$//os;
-                    $result .= $self->escape($app, $pendingText, $scope);
-                    # this code is also duplicated at the end of the loop XXX
-                    # (which is above here, at the return)
-                }
-                $pendingText = '';
-
+                $self->appendPendingText($app, \$pendingText, \$result, $scope);
                 # element node
                 my $attributes = $contents->[0];
                 if ($attributes->{'{http://www.w3.org/XML/1998/namespace}space'}) {
@@ -315,6 +301,19 @@ sub expand {
             }
         }
     }
+}
+
+sub appendPendingText {
+    my $self = shift;
+    my($app, $pendingText, $result, $scope) = @_;
+    if ($$pendingText =~ m/\S/o) {
+        # xml:space="default" so only include text nodes with non-whitespace
+        # and trim leading and closing newlines
+        $$pendingText =~ s/^\n//os;
+        $$pendingText =~ s/\n$//os;
+        $$result .= $self->escape($app, $$pendingText, $scope);
+    }
+    $$pendingText = '';
 }
 
 sub evaluateVariable {
