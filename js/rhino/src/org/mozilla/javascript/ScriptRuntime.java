@@ -1276,7 +1276,6 @@ public class ScriptRuntime {
                               Object[] args)
         throws JavaScriptException
     {
-        // OPT: call fun directly rather than having runtime mediate
         Function function;
         try {
             function = (Function) fun;
@@ -1287,7 +1286,7 @@ public class ScriptRuntime {
                         Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.isnt.function", 
                                                  errorArgs),
-                        fun);
+                        thisArg);
         }
 
         Scriptable thisObj;
