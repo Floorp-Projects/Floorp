@@ -338,7 +338,7 @@ registers, or set the value of a single register."},
     }
     
     void
-    Shell::doPrint (Context *cx, Lexer &lex)
+    Shell::doPrint (Context *, Lexer &lex)
     {
         const Token *t = &(lex.get(true));
 
