@@ -158,8 +158,7 @@
 
     <text class="label" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <box valign="middle" autostretch="never">
-      <textfield id="BackgroundImageInput" onkeyup="ChangeBackgroundImage()"
-       style="min-width : 12em"/>
+      <textfield id="BackgroundImageInput" onkeyup="ChangeBackgroundImage()" style="min-width : 16em"/>
       <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
               oncommand="ChooseImageFile()"/>
       <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>

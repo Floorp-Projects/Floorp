@@ -16,7 +16,7 @@ var customActiveColor;
 var customVisitedColor;
 var customBackgroundColor;
 var previewBGColor;
-var backgroundImage;
+var backgroundImage = "";
 
 // Strings we use often
 var styleStr =       "style";
@@ -75,7 +75,6 @@ function Startup()
   customVisitedColor = dialog.VisitedLinkData.getAttribute("value");
   customBackgroundColor = dialog.BackgroundColorData.getAttribute("value");
   backgroundImage = dialog.BackgroundImageData.getAttribute("value");
-dump(" *** customTextColor="+customTextColor+",customLinkColor="+customLinkColor+",  customActiveColor="+customActiveColor+", customVisitedColor="+customVisitedColor+", customBackgroundColor="+customBackgroundColor+"\n");
   if (backgroundImage)
     dialog.BackgroundImageInput.value = backgroundImage;
 
@@ -285,7 +284,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
     }
     else
     {
-      backgroundImage = null;
+      backgroundImage = "";
       if (ShowErrorMessage)
       {
         SetTextfieldFocus(dialog.BackgroundImageInput);
@@ -295,12 +294,13 @@ function ValidateAndPreviewImage(ShowErrorMessage)
     }
   }
   else
-    backgroundImage = null;
+    backgroundImage = "";
 
   // Set style on preview (removes image if not valid)
   dialog.ColorPreview.setAttribute(styleStr, styleValue);
   
   // Set the pref data so pref code saves it 
-  document.getElementById("backgroundImageData").setAttribute("value", backgroundImage);
+dump(" *** Setting default image ="+backgroundImage+"\n");
+  dialog.BackgroundImageData.setAttribute("value", backgroundImage ? backgroundImage : "");
 }
 
