@@ -96,7 +96,7 @@ nsXPCWrappedNativeScope::FindInJSObjectScope(XPCContext* xpcc, JSObject* obj)
     JSObject* compobj;
     JSClass* clazz;
     JSContext* cx = xpcc->GetJSContext();
-    jsid id = xpcc->GetRuntime()->GetStringID(XPCJSRuntime::IDX_COMPONENTS);
+    const char* name = xpcc->GetRuntime()->GetStringName(XPCJSRuntime::IDX_COMPONENTS);
     nsISupports* supports;
     nsresult rv;
  
@@ -108,10 +108,13 @@ nsXPCWrappedNativeScope::FindInJSObjectScope(XPCContext* xpcc, JSObject* obj)
     while(nsnull != (parent = JS_GetParent(cx, obj)))
         obj = parent;
 
-    if(!OBJ_GET_PROPERTY(cx, obj, id, &prop) ||
+    if(!JS_LookupProperty(cx, obj, name, &prop) ||
        JSVAL_IS_PRIMITIVE(prop) ||
        !(compobj = JSVAL_TO_OBJECT(prop)))
+    {
+        NS_ASSERTION(0,"No 'Components' in scope!");
         return nsnull;
+    }
 
 #ifdef JS_THREADSAFE
     clazz = JS_GetClass(cx, compobj);
