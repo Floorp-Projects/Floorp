@@ -29,8 +29,8 @@
 package PLIF;
 use strict; # require strict adherence to perl standards
 use vars qw($AUTOLOAD); # it's a package global
-use Carp qw(cluck confess); # stack trace versions of warn and die
 use POSIX qw(strftime); # timestamps in debug output
+use PLIF::Exception;
 my $DEBUG = 9; # level of warnings and dumps to print to STDERR (none go to user)
 my $USER = 1; # level of errors to report to user (all go to STDERR)
 my @FATAL = (); # a list of pointers to functions that want to report errors to the user
@@ -126,6 +126,7 @@ sub bless {
 sub AUTOLOAD {
     my $self = shift;
     my $name = $AUTOLOAD;
+    syntaxError "Use of inherited AUTOLOAD for non-method $name is deprecated" if not defined($self);
     $name =~ s/^.*://o; # strip fully-qualified portion
     if ($self->propertyImpliedAccessAllowed($name)) {
         if (scalar(@_) == 1) {
@@ -200,11 +201,13 @@ sub warn {
     my($level, @data) = @_;
     if ($self->isAtDebugLevel($level)) {
         $self->dump($level, ('-'x12).' Start of Warning Stack Trace '.('-'x12));
-        cluck(@data); # warn with stack trace
+        report PLIF::Exception ('message' => join("\n", @data));
         $self->dump($level, ('-'x12).            ('-'x30)            .('-'x12));
     }
 }
 
+# raises a generic error with the arguments passed as the message.
+# use this for internal errors that you don't want other code to catch.
 sub error { 
     my $self = shift;
     my($level, @data) = @_;
@@ -229,7 +232,7 @@ sub error {
         $self->dump(9, "$key = $ENV{$key}");
     }
     $self->dump(9, 'Stack trace:');
-    confess(@data); # die with stack trace
+    raise PLIF::Exception ('message', join("\n", @data)); # die with stack trace
 }
 
 # this should not be called with the @data containing a trailing dot
