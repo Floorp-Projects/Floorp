@@ -109,38 +109,16 @@ xptc_invoke_copy_to_stack_keeper (void)
   it call non-static functions so preserving and loading the PIC register
   is unnecessary. Define MOZ_PRESERVE_PIC if this changes. See mozilla
   bug 140412 for details. However, avoid this if you can. It's slower.
-*/
-/*
- * Hack for gcc for win32.  Functions used externally must be
- * explicitly dllexported.
- * Bug 226609
  */
-#ifdef XP_WIN32
-extern "C" {
-    nsresult _XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                                   PRUint32 paramCount, nsXPTCVariant* params);
-    XPTC_PUBLIC_API(nsresult)
-         XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
-                            PRUint32 paramCount, nsXPTCVariant* params) { 
-        return _XPTC_InvokeByIndex(that, methodIndex, paramCount, params);
-    }
-}
-#endif
 
 __asm__ (
 	".text\n\t"
 /* alignment here seems unimportant here; this was 16, now it's 2 which
    is what xptcstubs uses. */
 	".align 2\n\t"
-#ifdef XP_WIN32
-	".globl " SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex\n\t"
-	".type  " SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex,@function\n"
-	SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex:\n\t"
-#else
 	".globl " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
 	".type  " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex,@function\n"
 	SYMBOL_UNDERSCORE "XPTC_InvokeByIndex:\n\t"
-#endif
 	"pushl %ebp\n\t"
 	"movl  %esp, %ebp\n\t"
 #ifdef MOZ_PRESERVE_PIC 
@@ -193,11 +171,7 @@ __asm__ (
 	"movl  %ebp, %esp\n\t"
 	"popl  %ebp\n\t"
 	"ret\n"
-#ifdef XP_WIN32
-	".size " SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex, . -" SYMBOL_UNDERSCORE "_XPTC_InvokeByIndex\n\t"
-#else
 	".size " SYMBOL_UNDERSCORE "XPTC_InvokeByIndex, . -" SYMBOL_UNDERSCORE "XPTC_InvokeByIndex\n\t"
-#endif
 );
 
 #else
