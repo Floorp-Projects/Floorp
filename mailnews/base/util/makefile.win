@@ -36,6 +36,7 @@ CPPSRCS=                     \
 	nsMsgIdentity.cpp		\
 	nsMsgIncomingServer.cpp	\
 	nsNewsSummarySpec.cpp \
+	nsMsgUtils.cpp \
 	$(NULL)
 
 
@@ -50,6 +51,7 @@ CPP_OBJS=                               \
 	.\$(OBJDIR)\nsMsgIdentity.obj		\
 	.\$(OBJDIR)\nsMsgIncomingServer.obj	\
 	.\$(OBJDIR)\nsNewsSummarySpec.obj \
+	.\$(OBJDIR)\nsMsgUtils.obj \
 	$(NULL)
 
 
@@ -63,6 +65,7 @@ EXPORTS=                \
 	nsMsgIdentity.h			\
 	nsMsgIncomingServer.h	\
 	nsNewsSummarySpec.h \
+	nsMsgUtils.h \
 	$(NULL)
 
 LINCS=                       \

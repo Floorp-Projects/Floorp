@@ -25,4 +25,5 @@ nsLocalFolderSummarySpec.h
 nsMsgIdentity.h
 nsMsgIncomingServer.h
 nsNewsSummarySpec.h
+nsMsgUtils.h
 
