@@ -2,6 +2,7 @@
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://messengercompose/content/addressingWidgetOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
@@ -71,11 +72,9 @@ Rights Reserved.
 
 <broadcaster id="args" value="editorType=default"/>
 
-<!-- The Following broadcasters have been imported from editorAppShell.xul -->
-<broadcaster id="Editor:Style:IsBold" bold="false"/>
-<broadcaster id="Editor:Style:IsItalic"/>
-<broadcaster id="Editor:Style:IsUnderline"/>
-
+<!-- Broadcasters get added as children here from the overlay-->
+<broadcasterset id="broadcasterset">
+</broadcasterset>
 
 <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
 <broadcaster id="dialog.start" ready="false"/>
@@ -90,7 +89,7 @@ Rights Reserved.
 		<menuitem value="&saveCmd.label;" cmd="nsCmd:ComposeSave"/>
 		<menuitem value="&saveAsCmd.label;" oncommand="SaveAsDraft()"/>
 		<menuitem value="&saveAsTemplateCmd.label;" oncommand="SaveAsTemplate()"/>
-      		<menu value="&attachMenu.label;">
+			<menu value="&attachMenu.label;">
 			<menupopup>
 			<menuitem value="&attachFileCmd.label;" oncommand="AttachFile()"/>
 			<menuitem value="&attachPageCmd.label;" oncommand="AttachPage()"/>
@@ -112,7 +111,7 @@ Rights Reserved.
 		<menuitem value="&closeCmd.label;" oncommand="CloseWindow();"/>
 		</menupopup>
 	</menu>
-    <menu value="&editMenu.label;">
+	<menu value="&editMenu.label;">
 		<menupopup>
 		<menuitem value="&undoCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<menuseparator/>
@@ -131,8 +130,8 @@ Rights Reserved.
 		<menuseparator/>
 		<menuitem value="&prefsCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		</menupopup>
-    </menu>
-    <menu value="&viewMenu.label;">
+	</menu>
+	<menu value="&viewMenu.label;">
 		<menupopup>
 		<menuitem value="&showCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<menuseparator/>
@@ -141,7 +140,7 @@ Rights Reserved.
 		<menuseparator/>
 		<menuitem value="&wrapCmd.label;" cmd="nsCmd:ComposeNYI"/>
 		<menuseparator/>
-      		<menu value="&dcharMenu.label;">
+			<menu value="&dcharMenu.label;">
 			<menupopup>
 			<menuitem value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-1');"/>
 			<menuitem value="&dcharIso2Cmd.label;" oncommand="SetDocumentCharacterSet('ISO-8859-2');"/>
@@ -172,15 +171,34 @@ Rights Reserved.
 			 <menuseparator />
 			<menuitem value="&dcharArmCmd.label;" oncommand="SetDocumentCharacterSet('ARMSCII-8');"/>
 			</menupopup>
-	   </menu>
-	   </menupopup>
+		</menu>
+	</menupopup>
     </menu>
-    <menu value="&insertMenu.label;">
-    </menu>
+
+	<!-- menu comes from editorOverlay -->
+	<menu id="insertMenu"/>
+	<!-- menu items come from editorOverlay -->
     <menu value="&formatMenu.label;">
+    <menupopup>
+      <menu id="fontFaceMenu"/>
+      <menu id="fontSizeMenu"/>
+      <menu id="fontStyleMenu"/>
+      <menu id="fontColorMenu"/>
+      <menu id="backgroundColorMenu"/>
+  
+      <menuitem id="removeAllStylesMenuitem"/>
+      <menuitem id="removeLinksMenuitem"/>
+      <menuseparator />
+      
+      <menu id="headingMenu"/>
+      <menu id="paragraphMenu"/>
+      <menuseparator />
+      <menu id="stylesheetMenu"/>
+    </menupopup>
     </menu>
-    <menu value="&messageMenu.label;">
-	   	<menupopup>
+
+	<menu value="&messageMenu.label;">
+		<menupopup>
 		<menu value="&priorityMenu.label;" oncommand="PriorityMenuSelect(event.target);">
     		<menupopup>
 			<menuitem value="&lowestPriorityCmd.label;" id="lowest"/>
@@ -219,39 +237,7 @@ Rights Reserved.
 		</menu>
 	  </menupopup>
     </menu>
-    <menu value="&debugMenu.label;">
-      <menupopup>
-	  <menuitem value="&outputTextCmd.label;"
-				     oncommand="EditorGetText()"/>
-      <menuitem value="&outputHTMLCmd.label;"
-				     oncommand="EditorGetHTML()"/>
-      <menuitem value="&outputXIFCmd.label;"
-				     oncommand="EditorGetXIF()"/>
-      <menuseparator />
-      <menuitem value="&insertTextCmd.label;"
-				     oncommand="EditorInsertText('All good things come to those who wait. ')"/>
-      <menuseparator />
-      <menuitem value="&testSelectionCmd.label;"
-				     oncommand="EditorTestSelection()"/>
-      <menuitem value="&testTableLayoutCmd.label;"
-				     oncommand="EditorTestTableLayout()"/>
-      <menuitem value="&showEmbeddedCmd.label;"
-				     oncommand="EditorShowEmbeddedObjects()"/>
-      <menuitem value="&dumpContentCmd.label;"
-				     oncommand="EditorDumpContent()"/>
-      <menuitem value="&testDocumentCmd.label;"
-				     oncommand="EditorTestDocument()"/>
-      <menuitem value="&runUnitTestsCmd.label;"
-				     oncommand="EditorUnitTests()"/>
-      <menuseparator />
-      <menuitem value="&startLogCmd.label;"
-				     oncommand="EditorStartLog()"/>
-      <menuitem value="&stopLogCmd.label;"
-				     oncommand="EditorStopLog()"/>
-      <menuitem value="&runLogCmd.label;"
-				     oncommand="EditorRunLog()"/>
-	  </menupopup>
-    </menu>
+    <menu id="debugMenu"/>
 	<menu id="tasksMenu"/>
 	<menu id="helpMenu"/>
 	<spring flex="100%"/>
@@ -294,40 +280,46 @@ Rights Reserved.
 			</box>
 		</box>
 	</toolbar>
-	
 
-    <!-- The Following toolbar has been imported from editorAppShell.xul -->
-      <toolbar id="FormatToolbar">
-		    <titledbutton id="ParagraphPopup" value="Paragraph" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="FontFacePopup" value="Font" class="popup" align="left" popup="FontFaceMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="FontSizePopup" value="Size" class="popup" align="left" popup="FontSizeMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu" popupanchor="bottomleft"/>
-        <titledbutton id="BoldButton" value="&formatToolbar.boldChar;" onclick="EditorApplyStyle('b')">
-		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
-        </titledbutton>
-	      <titledbutton id="ItalicButton" value="&formatToolbar.italicChar;" onclick="EditorApplyStyle('i')"/>
-	      <titledbutton id="UnderlineButton" value="&formatToolbar.underlineChar;" onclick="EditorApplyStyle('u')"/>
-<!--
-        <titledbutton id="BoldButton" src="chrome://editor/skin/images/ED_Bold.gif" align="bottom" onclick="EditorApplyStyle('b')">
-		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
-        </titledbutton>
-	      <titledbutton id="ItalicButton" src="chrome://editor/skin/images/ED_Italic.gif" align="bottom" onclick="EditorApplyStyle('i')"/>
-	      <titledbutton id="UnderlineButton" src="chrome://editor/skin/images/ED_Underline.gif" align="bottom" onclick="EditorApplyStyle('u')"/>
--->
-	      <titledbutton src="chrome://editor/skin/images/ED_Bullets.gif" align="top" onclick="EditorInsertList('ul')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Numbers.gif" align="top" onclick="EditorInsertList('ol')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Outdent.gif" align="top" onclick="EditorIndent('outdent')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Indent.gif" align="top" onclick="EditorIndent('indent')"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Align.gif" align="top" class="popup" popup="AlignmentWindow" popupanchor="bottomleft"/>
+    <!-- These toolbar items get filled out from the editorOverlay -->
+	<toolbar id="FormatToolbar">
+      <menu>
+      	<titledbutton id="ParagraphPopupButton"/>
+        <menupopup id="ParagraphPopup"/>
+      </menu>
+      <menu>
+        <titledbutton id="FontFacePopupButton"/>
+        <menupopup id="FontFacePopup"/>
+      </menu>
+      <menu>
+        <titledbutton id="FontSizePopupButton"/>
+        <menupopup id="FontSizePopup"/>
+      </menu>
+      <menu>
+        <titledbutton id="TextColorPopupButton"/>
+        <menupopup id="TextColorPopup"/>
+      </menu>
+      <menu>
+        <titledbutton id="BackColorPopupButton"/>
+        <menupopup id="BackColorPopup"/>
+      </menu>
+      
+      <titledbutton id="boldButton"/>
+      <titledbutton id="italicButton"/>
+      <titledbutton id="underlineButton"/>
 
-	      <titledbutton src="chrome://editor/skin/images/ED_Link.gif" align="top" value="Link" onclick="EditorInsertLink()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Image.gif" align="top" value="Image" onclick="EditorInsertImage()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Target.gif" align="top" value="Anchor" onclick="EditorInsertNamedAnchor()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_HLine.gif" align="top" value="H.Line" onclick="EditorInsertHLine()"/>
-	      <titledbutton src="chrome://editor/skin/images/ED_Spell.gif" align="top" value="Spell" class="popup" onclick="CheckSpelling()"/>
-		  <spring flex="100%"/>
-	  </toolbar>
+      <titledbutton id="ulButton"/>
+      <titledbutton id="olButton"/>
+
+      <titledbutton id="outdentButton"/>
+      <titledbutton id="indentButton"/>
+
+      <menu>
+        <titledbutton id="AlignPopupButton"/>
+        <menupopup id="AlignmentPopup"/>
+      </menu>
+      <spring flex="100%"/>
+  </toolbar>
 </toolbox>
 
     <!-- The main mail three pane frame -->
