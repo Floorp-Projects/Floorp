@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Henrik Gemal <gemal@gemal.dk>
  */
 
 /*
@@ -919,7 +920,7 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 			char *statusTemplate = XP_GetString (MK_HDR_DOWNLOAD_COUNT);
 			char *statusString = PR_smprintf (statusTemplate, numDownloaded, totToDownload);
 #else
-			char *statusString = PR_smprintf ("Received %d of %d headers", numDownloaded, totToDownload);
+			char *statusString = PR_smprintf ("Downloading %d of %d headers", numDownloaded, totToDownload);
 #endif
 
 			SetProgressStatus(statusString);
