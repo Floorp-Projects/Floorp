@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/search/internetresults.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
+
+<page onload="onLoadInternetResults();"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      title="&internetresults.title;"
+      context="disallowcontext">
+
+  <popupset>
+    <popup id="disallowcontext" onpopupshowing="return false;" />
+  </popupset>
+
+  <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/internetresults.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
+
+  <hbox id="multi-results-header"> 
+    <label value="&results.header.label;"/>
+  </hbox>
+
+  <hbox id="engineTabs" align="center"
+        ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" 
+        style="overflow: none; min-width: 1px;">
+    <template>
+      <button type="radio" group="engineButton" class="engineTabs button-toolbar" uri="..." 
+              oncommand="doEngineClick(event, this);" crop="right" 
+              src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" 
+              label="rdf:http://home.netscape.com/NC-rdf#Name" 
+              loading="rdf:http://home.netscape.com/NC-rdf#loading" />
+    </template>
+    <button type="radio" group="engineButton" class="engineTabs button-toolbar" id="allEngines" 
+            oncommand="doEngineClick(event, this);" label="&allresults.title.label;"
+            checked="true"/>
+    <separator orient="vertical"/>
+    <label value="&viewbyprovider.label;"/>
+    <separator orient="vertical" class="thin"/>
+  </hbox>
+
+  <menupopup id="contextual" onpopupshowing="return fillContextMenu('contextual', 'resultsList');"/>
+  
+  <tree id="resultsList" flex="1" class="plain"
+           datasources="rdf:internetsearch" context="contextual"
+           onselect="listSelect(event);"
+           onclick="listClick(event);">
+
+    <treecols onclick="doSort(event.target.id, 'http://home.netscape.com/NC-rdf#PageRank');">
+      <treecol id="NameColumn" primary="true" label="&name.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="PageRankColumn" label="&pagerank.column.label;"
+               resource="http://home.netscape.com/NC-rdf#PageRank"
+               resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="RelevanceColumn" label="&relevance.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Relevance"
+               resource2="http://home.netscape.com/NC-rdf#Name"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="PriceColumn" label="&price.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Price"
+               resource2="http://home.netscape.com/NC-rdf#Availability"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="AvailabilityColumn" label="&availability.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Availability"
+               resource2="http://home.netscape.com/NC-rdf#Price"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="DateColumn" label="&date.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Date"
+               resource2="http://home.netscape.com/NC-rdf#Name"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="SiteColumn" label="&site.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Site"
+               resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="EngineColumn" label="&engine.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Engine"
+               resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    </treecols>
+
+    <template>
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+        <treeseparator uri="..."/>
+      </rule>
+      
+      <rule>
+        <treechildren>
+          <treeitem uri="...">
+            <treerow>
+              <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon" 
+                        label="rdf:http://home.netscape.com/NC-rdf#Name" />
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#PageRank"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Price"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Availability"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Date"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Site"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Engine"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
+
+  </tree>
+
+  <splitter id="results-splitter" persist="state" collapse="after">
+    <grippy/>
+  </splitter>
+  
+  <hbox flex="1">
+    <iframe id="content" flex="1" src="chrome://communicator/locale/search/default.htm"/>
+  </hbox>
+  
+</page>

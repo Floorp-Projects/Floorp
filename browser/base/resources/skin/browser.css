@@ -371,3 +371,10 @@ sidebarheader[type="box"] {
   padding: 1px 3px 1px 4px;
   list-style-image: url("chrome://global/skin/icons/close-button.gif");
 }
+
+#boxSidebar {
+  border-left: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  background-color: AppWorkspace;
+}
+
