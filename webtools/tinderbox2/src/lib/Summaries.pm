@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.15 $ 
-# $Date: 2003/08/17 01:44:07 $ 
+# $Revision: 1.16 $ 
+# $Date: 2003/12/27 21:15:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -253,7 +253,7 @@ sub create_global_index {
                            "\t\t<LI>".
                            HTMLPopUp::Link(
                                            "linktxt"=>$_,
-                                           "href"=>"./$_/index.html",
+                                           "href"=>"./$_/status.html",
                                           ).
                            "</LI>\n"
                           );
