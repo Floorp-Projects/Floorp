@@ -653,6 +653,8 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
       // that may come from reconstructing the frame tree. Our rules only need
       // a re-resolve of style data and a reflow, not a reconstruct-all...
       sheet->SetOwningDocument(nsnull);
+      // We're about to manipulate the CSSOM, so we better do this
+      sheet->SetComplete();
     }
 
     // check for duplicate, if a similar rule is already there, don't bother to add another one

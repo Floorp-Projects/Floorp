@@ -393,7 +393,6 @@ public:
   nsString mBaseHREF;
   nsString mBaseTarget;
 
-  PRInt32 mStyleSheetCount;
   nsICSSLoader *mCSSLoader;
   PRInt32 mInsideNoXXXTag;
   PRInt32 mInMonolithicContainer;
@@ -4810,7 +4809,6 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
   PRBool doneLoading;
   result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
                                      kNameSpaceID_Unknown,
-                                     mStyleSheetCount++, 
                                      ((blockParser) ? mParser : nsnull),
                                      doneLoading, 
                                      this);
@@ -4918,10 +4916,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK)) {
-        mStyleSheetCount++;
-      }
+      result = ssle->UpdateStyleSheet(nsnull);
 
       // look for <link rel="next" href="url">
       nsAutoString relVal;
@@ -5341,10 +5336,16 @@ NS_IMETHODIMP
 HTMLContentSink::StyleSheetAdded(nsIDocument *aDocument,
                                  nsIStyleSheet* aStyleSheet)
 {
-  // Processing of a new style sheet causes recreation of the frame
-  // model. As a result, all contexts should update their notion of
-  // how much frame creation has happened.
-  UpdateAllContexts();
+  // We only care when applicable sheets are added
+  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
+  PRBool applicable;
+  aStyleSheet->GetApplicable(applicable);
+  if (applicable) {
+    // Processing of a new style sheet causes recreation of the frame
+    // model. As a result, all contexts should update their notion of
+    // how much frame creation has happened.
+    UpdateAllContexts();
+  }
 
   return NS_OK;
 }
@@ -5353,22 +5354,28 @@ NS_IMETHODIMP
 HTMLContentSink::StyleSheetRemoved(nsIDocument *aDocument,
                                    nsIStyleSheet* aStyleSheet)
 {
-  // Removing a style sheet causes recreation of the frame model.
-  // As a result, all contexts should update their notion of how
-  // much frame creation has happened.
-  UpdateAllContexts();
+  // We only care when applicable sheets are removed
+  NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
+  PRBool applicable;
+  aStyleSheet->GetApplicable(applicable);
+  if (applicable) {
+    // Removing a style sheet causes recreation of the frame model.
+    // As a result, all contexts should update their notion of how
+    // much frame creation has happened.
+    UpdateAllContexts();
+  }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                                nsIStyleSheet* aStyleSheet,
-                                                PRBool aDisabled)
+HTMLContentSink::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
+                                                  nsIStyleSheet* aStyleSheet,
+                                                  PRBool aApplicable)
 {
-  // Disabling/enabling a style sheet causes recreation of the frame
-  // model. As a result, all contexts should update their notion of
-  // how much frame creation has happened.
+  // Changing a style sheet's applicable state causes recreation of
+  // the frame model. As a result, all contexts should update their
+  // notion of how much frame creation has happened.
   UpdateAllContexts();
 
   return NS_OK;
@@ -5723,10 +5730,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   if (ssle) {
     ssle->SetEnableUpdates(PR_TRUE);
-    rv = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-    if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK)) {
-      mStyleSheetCount++;
-    }
+    rv = ssle->UpdateStyleSheet(nsnull);
   }
 
   return rv;

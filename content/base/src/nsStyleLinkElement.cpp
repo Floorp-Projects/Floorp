@@ -26,6 +26,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIContent.h"
 #include "nsICSSLoader.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIDocument.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMNode.h"
@@ -53,7 +54,16 @@ NS_IMETHODIMP
 nsStyleLinkElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
 {
   mStyleSheet = aStyleSheet;
-
+  nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(aStyleSheet);
+  if (cssSheet) {
+    nsCOMPtr<nsIDOMNode> node;
+    CallQueryInterface(this,
+                       NS_STATIC_CAST(nsIDOMNode**, getter_AddRefs(node)));
+    if (node) {
+      cssSheet->SetOwningNode(node);
+    }
+  }
+    
   return NS_OK;
 }
 
@@ -153,8 +163,7 @@ const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
 NS_IMETHODIMP
-nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
-                                     PRInt32 aDocIndex)
+nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument)
 {
   if (mDontLoadStyle || !mUpdatesEnabled) {
     return NS_OK;
@@ -255,76 +264,6 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     }
   */
 
-  // The way we determine the stylesheet's position in the cascade is by looking
-  // at the first of the next siblings that are style linking elements, and
-  // insert just before that one. I'm not sure this is correct for every case for
-  // XML documents (it seems to be all right for HTML). The sink should disable
-  // this search by directly specifying a position.
-  PRInt32 insertionPoint;
-
-  if (aDocIndex > -1) {
-    insertionPoint = aDocIndex;
-  }
-  else {
-    // We're not getting them in document order, look for where to insert.
-    nsCOMPtr<nsIDOMNode> parentNode;
-    nsCOMPtr<nsIStyleSheet> nextSheet;
-    PRUint16 nodeType = 0;
-    nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(thisContent));
-    nsCOMPtr<nsIContent> nextNode;
-    nsCOMPtr<nsIStyleSheetLinkingElement> nextLink;
-
-    thisNode->GetParentNode(getter_AddRefs(parentNode));
-    if (parentNode)
-      parentNode->GetNodeType(&nodeType);
-    if (nodeType == nsIDOMNode::DOCUMENT_NODE) {
-      nsCOMPtr<nsIDocument> parent(do_QueryInterface(parentNode));
-      if (parent) {
-        PRInt32 index, count;
-
-        parent->GetChildCount(count);
-        parent->IndexOf(thisContent, index);
-        while (++index < count) {
-          parent->ChildAt(index, *getter_AddRefs(nextNode));
-          nextLink = do_QueryInterface(nextNode);
-          if (nextLink) {
-            nextLink->GetStyleSheet(*getter_AddRefs(nextSheet));
-            if (nextSheet)
-              // Found the first following sibling that is a style linking element.
-              break;
-          }
-        }
-      }
-    }
-    else {
-      nsCOMPtr<nsIContent> parent(do_QueryInterface(parentNode));
-      if (parent) {
-        PRInt32 index, count;
-
-        parent->ChildCount(count);
-        parent->IndexOf(thisContent, index);
-        while (++index < count) {
-          parent->ChildAt(index, *getter_AddRefs(nextNode));
-          nextLink = do_QueryInterface(nextNode);
-          if (nextLink) {
-            nextLink->GetStyleSheet(*getter_AddRefs(nextSheet));
-            if (nextSheet)
-              // Found the first following sibling that is a style linking element.
-              break;
-          }
-        }
-      }
-    }
-    if (nextSheet) {
-      PRInt32 sheetIndex = 0;
-      doc->GetIndexOfStyleSheet(nextSheet, &sheetIndex);
-      insertionPoint = sheetIndex - 1;
-    }
-    else {
-      doc->GetNumberOfStyleSheets(&insertionPoint);
-    }
-  }
-
   if (!isAlternate && !title.IsEmpty()) {  // possibly preferred sheet
     nsAutoString prefStyle;
     doc->GetHeaderData(nsHTMLAtoms::headerDefaultStyle, prefStyle);
@@ -373,13 +312,13 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
     // Now that we have a url and a unicode input stream, parse the
     // style sheet.
     rv = loader->LoadInlineStyle(thisContent, uin, title, media,
-                                 kNameSpaceID_Unknown, insertionPoint,
+                                 kNameSpaceID_Unknown,
                                  ((blockParser) ? parser.get() : nsnull),
                                  doneLoading, nsnull);
   }
   else {
     rv = loader->LoadStyleLink(thisContent, uri, title, media,
-                               kNameSpaceID_Unknown, insertionPoint, 
+                               kNameSpaceID_Unknown,
                                ((blockParser) ? parser.get() : nsnull),
                                doneLoading, nsnull);
   }

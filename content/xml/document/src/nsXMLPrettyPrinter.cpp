@@ -58,9 +58,9 @@
 NS_IMPL_ISUPPORTS1(nsXMLPrettyPrinter,
                    nsIDocumentObserver)
 
-nsXMLPrettyPrinter::nsXMLPrettyPrinter() : mUnhookPending(PR_FALSE),
-                                           mDocument(nsnull),
-                                           mUpdateDepth(0)
+nsXMLPrettyPrinter::nsXMLPrettyPrinter() : mDocument(nsnull),
+                                           mUpdateDepth(0),
+                                           mUnhookPending(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 }

@@ -73,10 +73,11 @@ ParseCSSFile(nsIURI *aSheetURI)
 {
     nsCOMPtr<nsICSSLoader> loader(do_CreateInstance(kCSSLoaderCID));
     nsCOMPtr<nsICSSStyleSheet> sheet;
+    loader->LoadAgentSheet(aSheetURI, getter_AddRefs(sheet));
+    NS_ASSERTION(sheet, "sheet load failed");
     PRBool complete;
-    loader->LoadAgentSheet(aSheetURI, *getter_AddRefs(sheet),
-                           complete, nsnull);
-    NS_ASSERTION(complete, "not complete");
+    sheet->GetComplete(complete);
+    NS_ASSERTION(complete, "synchronous load did not complete");
 }
 
 int main(int argc, char** argv)

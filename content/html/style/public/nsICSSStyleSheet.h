@@ -75,7 +75,7 @@ public:
   NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
 
   NS_IMETHOD  Init(nsIURI* aURL) = 0;
-  NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
+  NS_IMETHOD  SetTitle(const nsAString& aTitle) = 0;
   NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
   NS_IMETHOD  ClearMedia(void) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;

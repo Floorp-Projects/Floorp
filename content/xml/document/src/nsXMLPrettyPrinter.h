@@ -46,7 +46,7 @@ class nsXMLPrettyPrinter : public nsIDocumentObserver
 {
 public:
     nsXMLPrettyPrinter();
-    ~nsXMLPrettyPrinter();
+    virtual ~nsXMLPrettyPrinter();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOCUMENTOBSERVER

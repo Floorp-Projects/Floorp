@@ -131,9 +131,9 @@ public:
                              nsIStyleSheet* aStyleSheet) { return NS_OK; }
   NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
                                nsIStyleSheet* aStyleSheet) { return NS_OK; }
-  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
-                                            nsIStyleSheet* aStyleSheet,
-                                            PRBool aDisabled) { return NS_OK; }
+  NS_IMETHOD StyleSheetApplicableStateChanged(nsIDocument *aDocument,
+                                              nsIStyleSheet* aStyleSheet,
+                                              PRBool aApplicable) { return NS_OK; }
   NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,

@@ -43,6 +43,7 @@
 #include "nsAString.h"
 #include "nsString.h"
 #include "nsChangeHint.h"
+#include "nsCOMArray.h"
 
 class nsIAtom;
 class nsIArena;
@@ -269,19 +270,79 @@ public:
   NS_IMETHOD GetChildCount(PRInt32& aCount) = 0;
 
   /**
-   * Get the style sheets owned by this document.
+   * Accessors to the collection of stylesheets owned by this document.
    * Style sheets are ordered, most significant last.
    */
-  NS_IMETHOD GetNumberOfStyleSheets(PRInt32* aCount) = 0;
-  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet) = 0;
-  NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex) = 0;
-  virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags) = 0;
-  virtual void RemoveStyleSheet(nsIStyleSheet* aSheet) = 0;
-  NS_IMETHOD UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets) = 0;
 
-  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify) = 0;
-  virtual void SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
-                                          PRBool aDisabled) = 0;
+  /**
+   * Get the number of stylesheets
+   *
+   * @param aIncludeSpecialSheets if this is set to true, all sheets
+   *   that are document sheets (including "special" sheets like
+   *   attribute sheets and inline style sheets) will be returned.  If
+   *   false, only "normal" stylesheets will be returned   
+   * @return the number of stylesheets
+   * @throws no exceptions
+   */
+  NS_IMETHOD GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets,
+                                    PRInt32* aCount) = 0;
+  
+  /**
+   * Get a particular stylesheet
+   * @param aIndex the index the stylesheet lives at.  This is zero-based
+   * @param aIncludeSpecialSheets see GetNumberOfStyleSheets.  If this
+   *   is false, not all sheets will be returnable
+   * @return the stylesheet at aIndex.  Null if aIndex is out of range.
+   * @throws no exceptions
+   */
+  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, PRBool aIncludeSpecialSheets,
+                             nsIStyleSheet** aSheet) = 0;
+  
+  /**
+   * Insert a sheet at a particular spot in the stylesheet list (zero-based)
+   * @param aSheet the sheet to insert
+   * @param aIndex the index to insert at.  This index will be
+   *   adjusted for the "special" sheets.
+   * @throws no exceptions
+   */
+  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet,
+                                PRInt32 aIndex) = 0;
+
+  /**
+   * Get the index of a particular stylesheet.  This will _always_
+   * consider the "special" sheets as part of the sheet list.
+   * @param aSheet the sheet to get the index of
+   * @return aIndex the index of the sheet in the full list
+   */
+  NS_IMETHOD GetIndexOfStyleSheet(nsIStyleSheet* aSheet, PRInt32* aIndex) = 0;
+
+  /**
+   * Replace the stylesheets in aOldSheets with the stylesheets in
+   * aNewSheets. The two lists must have equal length, and the sheet
+   * at positon J in the first list will be replaced by the sheet at
+   * position J in the second list.  Some sheets in the second list
+   * may be null; if so the corresponding sheets in the first list
+   * will simply be removed.
+   */
+  NS_IMETHOD UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
+                               nsCOMArray<nsIStyleSheet>& aNewSheets) = 0;
+
+  /**
+   * Add a stylesheet to the document
+   */
+  virtual void AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags) = 0;
+
+  /**
+   * Remove a stylesheet from the document
+   */
+  virtual void RemoveStyleSheet(nsIStyleSheet* aSheet) = 0;
+
+  /**
+   * Notify the document that the applicable state of the sheet changed
+   * and that observers should be notified and style sets updated
+   */
+  virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
+                                            PRBool aApplicable) = 0;  
 
   /**
    * Set the object from which a document can get a script context.

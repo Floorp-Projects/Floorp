@@ -170,7 +170,6 @@ nsXMLContentSink::nsXMLContentSink()
   mTextSize = 0;
   mConstrainSize = PR_TRUE;
   mInTitle = PR_FALSE;
-  mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
   mNeedToBlockParser = PR_FALSE;
   mPrettyPrintXML = PR_TRUE;
@@ -692,12 +691,9 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      rv = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-      if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK)) {
-        if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-          mParser->BlockParser();
-        }
-        ++mStyleSheetCount;
+      rv = ssle->UpdateStyleSheet(nsnull);
+      if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+        mParser->BlockParser();
       }
     }
   }
@@ -836,15 +832,12 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     }
     PRBool doneLoading;
     rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
-                                   mStyleSheetCount++, 
                                    ((!aAlternate) ? mParser : nsnull),
                                    doneLoading, 
                                    this);
-    if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK)) {
-      if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-        mParser->BlockParser();
-      }
-      mStyleSheetCount++;
+    // XXX should probably use kBlockByDefault here, no?
+    if (NS_SUCCEEDED(rv) && !doneLoading && !aAlternate && mParser) {
+      mParser->BlockParser();
     }
   }
   return rv;
@@ -1644,10 +1637,10 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
   if (doc) {
     PRBool alreadyLoaded = PR_FALSE;
     PRInt32 i = 0, sheetCount = 0;
-    doc->GetNumberOfStyleSheets(&sheetCount);
+    doc->GetNumberOfStyleSheets(PR_TRUE, &sheetCount);
     for (; i < sheetCount; i++) {
       nsCOMPtr<nsIStyleSheet> sheet;
-      doc->GetStyleSheetAt(i, getter_AddRefs(sheet));
+      doc->GetStyleSheetAt(i, PR_TRUE, getter_AddRefs(sheet));
       NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
       if (sheet) {
         nsCOMPtr<nsIURI> uri;
@@ -1669,9 +1662,8 @@ MathMLElementFactoryImpl::CreateInstanceByTag(nsINodeInfo* aNodeInfo,
           nsCOMPtr<nsIURI> uri;
           NS_NewURI(getter_AddRefs(uri), kMathMLStyleSheetURI);
           if (uri) {
-            PRBool complete;
             nsCOMPtr<nsICSSStyleSheet> sheet;
-            cssLoader->LoadAgentSheet(uri, *getter_AddRefs(sheet), complete, nsnull);
+            cssLoader->LoadAgentSheet(uri, getter_AddRefs(sheet));
 #ifdef NS_DEBUG
             nsCAutoString uriStr;
             uri->GetSpec(uriStr);
@@ -1919,9 +1911,9 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
     // exit codes, error are not fatal here, just that the stylesheet won't apply
     nsCOMPtr<nsIURI> uri(do_QueryInterface(aCatalogData));
     if (uri) {
-      PRBool complete;
       nsCOMPtr<nsICSSStyleSheet> sheet;
-      mCSSLoader->LoadAgentSheet(uri, *getter_AddRefs(sheet), complete, nsnull);
+      mCSSLoader->LoadAgentSheet(uri, getter_AddRefs(sheet));
+      
 #ifdef NS_DEBUG
       nsCAutoString uriStr;
       uri->GetSpec(uriStr);
@@ -1975,16 +1967,14 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-      if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
-        mStyleSheetCount++; // This count may not reflect the real stylesheet count
-    }
+      result = ssle->UpdateStyleSheet(nsnull);
 
-    if (NS_FAILED(result)) {
-      if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
-        mParser->BlockParser();
+      if (NS_FAILED(result)) {
+        if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
+          mParser->BlockParser();
+        }
+        return result;
       }
-      return result;
     }
 
     // If it's not a CSS stylesheet PI...

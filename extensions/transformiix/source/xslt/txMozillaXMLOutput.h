@@ -188,7 +188,6 @@ private:
     nsCOMPtr<nsIDOMNode> mNonAddedParent;
     nsCOMPtr<nsIDOMNode> mNonAddedNode;
 
-    PRInt32 mStyleSheetCount;
     PRUint32 mBadChildLevel;
     nsCString mRefreshString;
 

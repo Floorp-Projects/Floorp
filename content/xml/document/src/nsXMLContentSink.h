@@ -191,7 +191,6 @@ protected:
   nsString mRef; // ScrollTo #ref
   nsString mTitleText; 
   
-  PRInt32 mStyleSheetCount;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
   PRUint32 mScriptLineNo;

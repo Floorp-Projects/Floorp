@@ -137,6 +137,8 @@ protected:
   // subclass hooks for sheet ordering
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags);
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
+  virtual already_AddRefed<nsIStyleSheet> InternalGetStyleSheetAt(PRInt32 aIndex);
+  virtual PRInt32 InternalGetNumberOfStyleSheets();
 
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
   

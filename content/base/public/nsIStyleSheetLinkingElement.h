@@ -88,12 +88,8 @@ public:
    * @param aOldDocument the document that this element was part
    *                     of (nsnull if we're not moving the element
    *                     from one document to another).
-   * @param aDocIndex index of the stylesheet in the document's
-   *                  stylesheet list. -1 means we'll look up the
-   *                  index from the position of the element.
    */
-  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument,
-                              PRInt32 aDocIndex) = 0;
+  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument) = 0;
 
   /**
    * Tells this element wether to update the stylesheet when the

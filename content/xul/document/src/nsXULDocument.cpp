@@ -1294,15 +1294,40 @@ nsXULDocument::GetChildCount(PRInt32& aCount)
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetNumberOfStyleSheets(PRInt32 *aCount)
+nsXULDocument::GetNumberOfStyleSheets(PRBool aIncludeSpecialSheets,
+                                      PRInt32 *aCount)
 {
-    *aCount = mStyleSheets.Count();
-    return NS_OK;
+    PRInt32 count = mStyleSheets.Count();
+    if (aIncludeSpecialSheets) {
+        *aCount = count;
+        return NS_OK;
+    }
+
+    if (count != 0 &&
+        (nsIHTMLCSSStyleSheet*)mInlineStyleSheet == mStyleSheets.ElementAt(count - 1)) {
+        // subtract the inline style sheet
+        --count;
+    }
+
+    if (count != 0 &&
+        (nsIHTMLStyleSheet*)mAttrStyleSheet == mStyleSheets.ElementAt(0)) {
+        // subtract the attr sheet
+        --count;
+    }
+
+    NS_ASSERTION(count >= 0, "How did we get a negative count?");
+
+    *aCount = count;
+    return NS_OK;    
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetStyleSheetAt(PRInt32 aIndex, nsIStyleSheet** aSheet)
+nsXULDocument::GetStyleSheetAt(PRInt32 aIndex, PRBool aIncludeSpecialSheets,
+                               nsIStyleSheet** aSheet)
 {
+    if (!aIncludeSpecialSheets) {
+        ++aIndex; // adjust for the attr sheet
+    }
     *aSheet = NS_STATIC_CAST(nsIStyleSheet*, mStyleSheets[aIndex]);
     NS_IF_ADDREF(*aSheet);
     return NS_OK;
@@ -1359,84 +1384,82 @@ nsXULDocument::AddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
 
     aSheet->SetOwningDocument(this);
 
-    PRBool enabled;
-    aSheet->GetEnabled(enabled);
-
-    if (enabled) {
+    PRBool applicable;
+    aSheet->GetApplicable(applicable);
+    
+    if (applicable) {
         AddStyleSheetToStyleSets(aSheet);
-
-        // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
-        // if an observer removes itself, we're ok (not if it removes others though)
-        for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
-            observer->StyleSheetAdded(this, aSheet);
-        }
     }
+
+    // if an observer removes itself, we're ok (not if it removes
+    // others though)
+    PRInt32 i;
+    for (i = mObservers.Count() - 1; i >= 0; --i) {
+        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
+        observer->StyleSheetAdded(this, aSheet);
+    }   
 }
 
 NS_IMETHODIMP
-nsXULDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aNewSheets)
+nsXULDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
+                                 nsCOMArray<nsIStyleSheet>& aNewSheets)
 {
-  PRUint32 oldCount;
-  aOldSheets->Count(&oldCount);
-  nsCOMPtr<nsIStyleSheet> sheet;
-  PRUint32 i;
-  for (i = 0; i < oldCount; i++) {
-    aOldSheets->QueryElementAt(i, NS_GET_IID(nsIStyleSheet), getter_AddRefs(sheet));
-    if (sheet) {
-      mStyleSheets.RemoveElement(sheet);
-      PRBool enabled = PR_TRUE;
-      sheet->GetEnabled(enabled);
-      if (enabled) {
-        RemoveStyleSheetFromStyleSets(sheet);
-      }
+  // XXX Need to set the sheet on the ownernode if any
+  NS_PRECONDITION(aOldSheets.Count() == aNewSheets.Count(),
+                  "The lists must be the same length!");
+  PRInt32 count = aOldSheets.Count();
 
-      sheet->SetOwningDocument(nsnull);
-      nsIStyleSheet* sheetPtr = sheet.get();
-      NS_RELEASE(sheetPtr);
+  nsCOMPtr<nsIStyleSheet> oldSheet;
+  PRInt32 i;
+  for (i = 0; i < count; ++i) {
+    oldSheet = aOldSheets[i];
+
+    // First remove the old sheet.
+    NS_ASSERTION(oldSheet, "None of the old sheets should be null");
+    PRInt32 oldIndex = mStyleSheets.IndexOf((void*)oldSheet);
+    NS_ASSERTION(oldIndex != -1, "stylesheet not found");
+    mStyleSheets.RemoveElementAt(oldIndex);
+
+    PRBool applicable = PR_TRUE;
+    oldSheet->GetApplicable(applicable);
+    if (applicable) {
+      RemoveStyleSheetFromStyleSets(oldSheet);
     }
-  }
+    // XXX we should really notify here, but right now that would
+    // force things like a full reframe on every sheet.  We really
+    // need a way to batch this sucker...
 
-  PRUint32 newCount;
-  aNewSheets->Count(&newCount);
-  for (i = 0; i < newCount; i++) {
-    aNewSheets->QueryElementAt(i, NS_GET_IID(nsIStyleSheet), getter_AddRefs(sheet));
-    if (sheet) {
-      if (sheet == mAttrStyleSheet.get()) {  // always first
-        mStyleSheets.InsertElementAt(sheet, 0);
-      }
-      else if (sheet == (nsIHTMLCSSStyleSheet*)mInlineStyleSheet) {  // always last
-        mStyleSheets.AppendElement(sheet);
-      }
-      else {
-        PRInt32 count = mStyleSheets.Count();
-        if (count != 0 &&
-            (nsIHTMLCSSStyleSheet*)mInlineStyleSheet == mStyleSheets.ElementAt(count - 1)) {
-          // keep attr sheet last
-          mStyleSheets.InsertElementAt(sheet, mStyleSheets.Count() - 1);
-        }
-        else {
-          mStyleSheets.AppendElement(sheet);
-        }
-      }
+    oldSheet->SetOwningDocument(nsnull);
+    nsIStyleSheet* sheetPtr = oldSheet.get();
+    NS_RELEASE(sheetPtr);
 
-      nsIStyleSheet* sheetPtr = sheet;
+    // Now put the new one in its place.  If it's null, just ignore it.
+    nsIStyleSheet* newSheet = aNewSheets[i];
+    if (newSheet) {
+      mStyleSheets.InsertElementAt((void*)newSheet, oldIndex);
+      nsIStyleSheet* sheetPtr = newSheet;
       NS_ADDREF(sheetPtr);
-      sheet->SetOwningDocument(this);
-
-      PRBool enabled = PR_TRUE;
-      sheet->GetEnabled(enabled);
-      if (enabled) {
-        AddStyleSheetToStyleSets(sheet);
-        sheet->SetOwningDocument(nsnull);
+      newSheet->SetOwningDocument(this);
+      PRBool applicable = PR_TRUE;
+      newSheet->GetApplicable(applicable);
+      if (applicable) {
+        AddStyleSheetToStyleSets(newSheet);
       }
+
+      // XXX we should be notifying here too.
     }
   }
 
-  // if an observer removes itself, we're ok (not if it removes others though)
-  for (PRInt32 indx = mObservers.Count() - 1; indx >= 0; --indx) {
-    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
-    observer->StyleSheetRemoved(this, sheet);
+  // Now notify so _something_ happens, assuming we did anything
+  if (oldSheet) {
+      // if an observer removes itself, we're ok (not if it removes
+      // others though)
+      // XXXldb Hopefully the observer doesn't care which sheet you use.
+      for (PRInt32 indx = mObservers.Count() - 1; indx >= 0; --indx) {
+          nsIDocumentObserver*  observer =
+              (nsIDocumentObserver*)mObservers.ElementAt(indx);
+          observer->StyleSheetRemoved(this, oldSheet);
+      }
   }
 
   return NS_OK;
@@ -1464,18 +1487,16 @@ nsXULDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   mStyleSheets.RemoveElement(aSheet);
 
-  PRBool enabled = PR_TRUE;
-  aSheet->GetEnabled(enabled);
-
-  if (enabled) {
+  PRBool applicable = PR_TRUE;
+  aSheet->GetApplicable(applicable);
+  if (applicable) {
     RemoveStyleSheetFromStyleSets(aSheet);
+  }
 
-    // XXX should observers be notified for disabled sheets??? I think not, but I could be wrong
-    // if an observer removes itself, we're ok (not if it removes others though)
-    for (PRInt32 indx = mObservers.Count() - 1; indx >= 0; --indx) {
-      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
-      observer->StyleSheetRemoved(this, aSheet);
-    }
+  // if an observer removes itself, we're ok (not if it removes others though)
+  for (PRInt32 indx = mObservers.Count() - 1; indx >= 0; --indx) {
+    nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
+    observer->StyleSheetRemoved(this, aSheet);
   }
 
   aSheet->SetOwningDocument(nsnull);
@@ -1483,7 +1504,7 @@ nsXULDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
 }
 
 NS_IMETHODIMP
-nsXULDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify)
+nsXULDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 {
   NS_PRECONDITION(nsnull != aSheet, "null ptr");
 
@@ -1492,36 +1513,26 @@ nsXULDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool 
   NS_ADDREF(aSheet);
   aSheet->SetOwningDocument(this);
 
-  PRBool enabled = PR_TRUE;
-  aSheet->GetEnabled(enabled);
-
-  PRInt32 count;
-  PRInt32 i;
-  if (enabled) {
-    count = mPresShells.Count();
-    for (i = 0; i < count; i++) {
-      nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.ElementAt(i);
-      nsCOMPtr<nsIStyleSet> set;
-      shell->GetStyleSet(getter_AddRefs(set));
-      if (set) {
-        set->AddDocStyleSheet(aSheet, this);
-      }
-    }
+  PRBool applicable;
+  aSheet->GetApplicable(applicable);
+    
+  if (applicable) {
+    AddStyleSheetToStyleSets(aSheet);
   }
-  if (aNotify) {  // notify here even if disabled, there may have been others that weren't notified
-    // if an observer removes itself, we're ok (not if it removes others though)
-    for (i = mObservers.Count() - 1; i >= 0; --i) {
+
+  // if an observer removes itself, we're ok (not if it removes
+  // others though)
+  PRInt32 i;
+  for (i = mObservers.Count() - 1; i >= 0; --i) {
       nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
       observer->StyleSheetAdded(this, aSheet);
-    }
-  }
-
+  }   
   return NS_OK;
 }
 
 void
-nsXULDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
-                                          PRBool aDisabled)
+nsXULDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
+                                            PRBool aApplicable)
 {
     NS_PRECONDITION(nsnull != aSheet, "null arg");
     PRInt32 count;
@@ -1529,28 +1540,22 @@ nsXULDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
 
     // If we're actually in the document style sheet list
     if (-1 != mStyleSheets.IndexOf((void *)aSheet)) {
-        count = mPresShells.Count();
-        for (i = 0; i < count; i++) {
-            nsCOMPtr<nsIPresShell> shell =
-                (nsIPresShell*)mPresShells.ElementAt(i);
-
-            nsCOMPtr<nsIStyleSet> set;
-            shell->GetStyleSet(getter_AddRefs(set));
-            if (set) {
-                if (aDisabled) {
-                    set->RemoveDocStyleSheet(aSheet);
-                }
-                else {
-                    set->AddDocStyleSheet(aSheet, this);  // put it first
-                }
-            }
+        if (aApplicable) {
+            AddStyleSheetToStyleSets(aSheet);
+        } else {
+            RemoveStyleSheetFromStyleSets(aSheet);
         }
     }
+    
+
+    // XXX Some (nsHTMLEditor, eg) call this function for sheets that
+    // are not document sheets!  So we have to always notify.
 
     // if an observer removes itself, we're ok (not if it removes others though)
     for (i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(i);
-        observer->StyleSheetDisabledStateChanged(this, aSheet, aDisabled);
+        nsIDocumentObserver*  observer =
+            (nsIDocumentObserver*)mObservers.ElementAt(i);
+        observer->StyleSheetApplicableStateChanged(this, aSheet, aApplicable);
     }
 }
 
@@ -6308,11 +6313,9 @@ nsXULDocument::AddPrototypeSheets()
             // other than a skin switch anyway (since skin switching is the
             // only system that partially invalidates the XUL cache).
             // - dwh
-            PRBool complete;
             nsCOMPtr<nsICSSLoader> loader;
             GetCSSLoader(*getter_AddRefs(loader));
-            rv = loader->LoadAgentSheet(uri, *getter_AddRefs(sheet), complete,
-                                        nsnull);
+            rv = loader->LoadAgentSheet(uri, getter_AddRefs(sheet));
             if (NS_FAILED(rv)) return rv;
         }
      

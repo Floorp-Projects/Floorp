@@ -82,8 +82,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(const String& aRootName,
                                        nsIDOMDocument* aSourceDocument,
                                        nsIDOMDocument* aResultDocument,
                                        nsITransformObserver* aObserver)
-    : mStyleSheetCount(0),
-      mBadChildLevel(0),
+    : mBadChildLevel(0),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
@@ -101,8 +100,7 @@ txMozillaXMLOutput::txMozillaXMLOutput(const String& aRootName,
 
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
                                        nsIDOMDocumentFragment* aFragment)
-    : mStyleSheetCount(0),
-      mBadChildLevel(0),
+    : mBadChildLevel(0),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
@@ -314,10 +312,7 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
 
     if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
-        rv = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-        if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK)) {
-            mStyleSheetCount++;
-        }
+        ssle->UpdateStyleSheet(nsnull);
     }
 }
 
@@ -615,9 +610,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             do_QueryInterface(aElement);
         if (ssle) {
             ssle->SetEnableUpdates(PR_TRUE);
-            rv = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
-            if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK))
-              mStyleSheetCount++;
+            ssle->UpdateStyleSheet(nsnull);
         }
     }
 }

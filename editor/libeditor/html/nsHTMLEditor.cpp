@@ -3560,19 +3560,9 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool complete;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = cssLoader->LoadAgentSheet(uaURI, *getter_AddRefs(sheet),
-                                 complete, this);
+  rv = cssLoader->LoadAgentSheet(uaURI, this);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (complete)
-    StyleSheetLoaded(sheet, PR_FALSE);
-
-  //
-  // If not complete, we will be notified later
-  // with a call to StyleSheetLoaded()
-  //
 
   return NS_OK;
 }
@@ -3621,15 +3611,12 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
   rv = NS_NewURI(getter_AddRefs(uaURI), aURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // We use null for the callback and data pointer because
-  //  we MUST ONLY load synchronous local files (no @import)
-  PRBool complete;
+  // We MUST ONLY load synchronous local files (no @import)
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = cssLoader->LoadAgentSheet(uaURI, *getter_AddRefs(sheet),
-                                 complete, nsnull);
+  rv = cssLoader->LoadAgentSheet(uaURI, getter_AddRefs(sheet));
 
   // Synchronous loads should ALWAYS return completed
-  if (!complete || !sheet)
+  if (!sheet)
     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIStyleSheet> styleSheet;
@@ -3659,7 +3646,7 @@ nsHTMLEditor::AddOverrideStyleSheet(const nsAString& aURL)
 
   // This notifies document observers to rebuild all frames
   // (this doesn't affect style sheet because it is not a doc sheet)
-  document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+  document->SetStyleSheetApplicableState(styleSheet, PR_TRUE);
 
   // Save as the last-loaded sheet
   mLastOverrideStyleSheetURL = aURL;
@@ -3718,7 +3705,7 @@ nsHTMLEditor::RemoveOverrideStyleSheet(const nsAString &aURL)
 
   // This notifies document observers to rebuild all frames
   // (this doesn't affect style sheet because it is not a doc sheet)
-  document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+  document->SetStyleSheetApplicableState(styleSheet, PR_FALSE);
 
   // Remove it from our internal list
   return RemoveStyleSheetFromList(aURL);
