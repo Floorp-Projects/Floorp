@@ -39,6 +39,8 @@
 
 class GraphicsState;
 
+typedef GrafPtr nsDrawingSurfaceMac;
+
 class nsRenderingContextMac : public nsIRenderingContext
 {
 public:
@@ -132,17 +134,18 @@ public:
 
 protected:
 
-  /*nscolor mCurrentColor ;
+  nscolor 					mCurrentColor ;
   nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
   float             mP2T;
 
-  nsDrawingSurfaceMac   *mRenderingSurface;  // Can be a BackBuffer if Selected in
-  nsDrawingSurfaceMac   *mFrontBuffer;
-  nsIDeviceContext       *mContext;
-  nsIFontMetrics         *mFontMetrics;
-  nsIFontCache           *mFontCache;
-  Region                 mRegion;
-  Font                   mCurrFontHandle;*/
+  nsDrawingSurfaceMac		mRenderingSurface;  // Can be a BackBuffer if Selected in
+  nsDrawingSurfaceMac		mFrontBuffer;
+  nsDrawingSurfaceMac		mCurrentSurface;
+  nsIDeviceContext			*mContext;
+  nsIFontMetrics				*mFontMetrics;
+  nsIFontCache					*mFontCache;
+  RgnHandle							mClipRegion;
+  PRInt32               mCurrFontHandle;
 
   //state management
   nsVoidArray       *mStateCache;
