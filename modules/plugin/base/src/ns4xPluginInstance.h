@@ -22,9 +22,10 @@
 #define _UINT32
 
 /* On HPUX, int32 is already defined in /usr/include/moduel.h */
-#ifndef hpux
+/* #ifndef hpux */
+#ifndef HPUX11
 #define _INT32
-#endif
+#endif /* HPUX11 */
 
 #include "nsplugin.h"
 #include "npupp.h"
