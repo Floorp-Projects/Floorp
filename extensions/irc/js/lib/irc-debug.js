@@ -41,8 +41,11 @@ function event_tracer (e)
             {
                 var nextLine =
                     e.destObject.sendQueue[e.destObject.sendQueue.length - 1];
-                data = "'" + nextLine.replace ("\n", "\\n")
-                    + "' (may retry a few times)";
+                if (nextLine)
+                    data = "'" + nextLine.replace ("\n", "\\n")
+                        + "' (may retry a few times)";
+                else
+                    data = "!!! Nothing to send !!!";
                 if (debugData.lastEventType == "senddata"  &&
                     debugData.lastEventData == data)
                 {
