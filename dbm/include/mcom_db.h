@@ -450,4 +450,14 @@ __END_DECLS
 #include <machine/endian.h>
 #endif
 
+#ifdef __alpha
+#ifndef WIN32
+#else
+/* Alpha NT */
+#define BYTE_ORDER LITTLE_ENDIAN
+#define BIG_ENDIAN      4321
+#define LITTLE_ENDIAN   1234 
+#endif
+#endif
+
 #endif /* !_DB_H_ */
