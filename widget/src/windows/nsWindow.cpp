@@ -1028,6 +1028,29 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Invalidate this component visible area
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+{
+  RECT rect;
+
+  if (mWnd) {
+    rect.left   = aRect.x;
+    rect.top    = aRect.y;
+    rect.right  = aRect.x + aRect.width;
+    rect.bottom = aRect.y  + aRect.height;
+    VERIFY(::InvalidateRect(mWnd, &rect, TRUE));
+    if (aIsSynchronous) {
+      VERIFY(::UpdateWindow(mWnd));
+    }
+  }
+  return NS_OK;
+}
+
+
 
 //-------------------------------------------------------------------------
 //

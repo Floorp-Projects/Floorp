@@ -373,7 +373,16 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD Invalidate(PRBool aIsSynchronous) = 0;
 
-  
+    /**
+     * Invalidate a specified rect for a widget and repaints it.
+     *
+     * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
+     *
+     */
+
+    NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous) = 0;
+
+
     /**
      * Adds a mouse listener to this widget
      * Any existing mouse listener is replaced
