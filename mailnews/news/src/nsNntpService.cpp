@@ -61,7 +61,7 @@
 
 #define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
 
-#ifdef DEBUG_sspitzer_
+#if defined(DEBUG_sspitzer) || defined (DEBUG_seth)
 #define DEBUG_NEWS 1
 #endif
 
