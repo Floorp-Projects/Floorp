@@ -58,7 +58,6 @@ XPIDLSRCS	= \
 
 EXPORTS		= \
 		netCore.h \
-		nsIProxy.h \
 		nsNetUtil.h \
 		$(NULL)
 
