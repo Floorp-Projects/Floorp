@@ -36,7 +36,7 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
 
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
 {
-    //** dealloc all memory
+    // XXX dealloc all memory
 }
 
 
@@ -47,7 +47,7 @@ nsMemoryCacheDevice::Init()
 
     rv = mMemCacheEntries.Init();
 
-    //** read user prefs for memory cache limits
+    // XXX read user prefs for memory cache limits
 
     return rv;
 }
@@ -79,7 +79,7 @@ nsMemoryCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
     if (entry->IsDoomed()) {
 #if debug
-        //** verify we've removed it from mMemCacheEntries & eviction list
+        // XXX verify we've removed it from mMemCacheEntries & eviction list
 #endif
         delete entry;
         return NS_OK;
@@ -110,7 +110,7 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
         return rv;
     }
 
-    //** add size of entry to memory totals
+    // XXX add size of entry to memory totals
     return NS_OK;
 }
 
@@ -161,11 +161,11 @@ nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry *    entry,
 nsresult
 nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 {
-    //** keep track of totals
+    // XXX keep track of totals
     return NS_OK;
 }
 
-//** need methods for enumerating entries
+// XXX need methods for enumerating entries
 
 
-//** check entry->IsInUse() before evicting.
+// XXX check entry->IsInUse() before evicting.

@@ -59,23 +59,23 @@ public:
 
     nsCString *  Key(void)  { return mKey; }
 
-    PRInt32  FetchCount(void)                     { return mFetchCount;}
-    void     SetFetchCount( PRInt32   count)      { mFetchCount = count;}
+    PRInt32  FetchCount(void)                          { return mFetchCount;}
+    void     SetFetchCount( PRInt32   count)           { mFetchCount = count;}
 
-    PRTime   LastFetched(void)                    { return mLastFetched;}
-    void     SetLastFetched( PRTime lastFetched)  { mLastFetched = lastFetched;}
+    PRUint32 LastFetched(void)                         { return mLastFetched;}
+    void     SetLastFetched( PRUint32  lastFetched)    { mLastFetched = lastFetched;}
 
-    PRTime   LastValidated(void)                     { return mLastValidated;}
-    void     SetLastValidated( PRTime lastValidated) { mLastValidated = lastValidated;}
+    PRUint32 LastValidated(void)                       { return mLastValidated;}
+    void     SetLastValidated( PRUint32 lastValidated) { mLastValidated = lastValidated;}
 
-    PRTime   ExpirationTime(void)               { return mExpirationTime;}
-    void     SetExpirationTime( PRTime expires) { mExpirationTime = expires;}
+    PRUint32 ExpirationTime(void)                 { return mExpirationTime;}
+    void     SetExpirationTime( PRUint32 expires) { mExpirationTime = expires;}
 
-    PRUint32 DataSize(void)                     { return mDataSize;}
-    void     SetDataSize( PRUint32   size)      { mDataSize = size;}
+    PRUint32 DataSize(void)                       { return mDataSize;}
+    void     SetDataSize( PRUint32   size)        { mDataSize = size;}
 
-    PRUint32 MetaDataSize(void)                 { return mMetaSize;}
-    void     SetMetaDataSize( PRUint32   size)  { mMetaSize = size;}
+    PRUint32 MetaDataSize(void)                   { return mMetaSize;}
+    void     SetMetaDataSize( PRUint32   size)    { mMetaSize = size;}
 
     nsCacheDevice * CacheDevice(void)                        { return mCacheDevice;}
     void            SetCacheDevice( nsCacheDevice * device)  { mCacheDevice = device;}
@@ -91,7 +91,7 @@ public:
     nsresult FlattenMetaData(char ** data, PRUint32 * size);
     nsresult UnflattenMetaData(char * data, PRUint32 size);
 
-    //** enumerate MetaData method
+    // XXX enumerate MetaData method
 
 
     enum CacheEntryFlags {
@@ -161,11 +161,11 @@ private:
     void MarkInactive()        { mFlags &= ~eActiveMask; }
 
     PRCList                mListLink;       // 8  for holding entry on various lists
-    nsCString *            mKey;            // 4  //** ask scc about const'ness
+    nsCString *            mKey;            // 4  // XXX ask scc about const'ness
     PRUint32               mFetchCount;     // 4
-    PRTime                 mLastFetched;    // 8
-    PRTime                 mLastValidated;  // 8
-    PRTime                 mExpirationTime; // 8
+    PRUint32               mLastFetched;    // 8
+    PRUint32               mLastValidated;  // 8
+    PRUint32               mExpirationTime; // 8
     PRUint32               mFlags;          // 4
     PRUint32               mDataSize;       // 4
     PRUint32               mMetaSize;       // 4
@@ -194,7 +194,7 @@ public:
     nsCacheEntry *GetEntry( const nsCString * key);
     nsresult      AddEntry( nsCacheEntry *entry);
     nsresult      RemoveEntry( nsCacheEntry *entry);
-    //** enumerate entries?
+    // XXX enumerate entries?
 
 private:
 

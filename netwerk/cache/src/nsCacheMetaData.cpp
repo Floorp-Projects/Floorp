@@ -50,7 +50,6 @@ nsCacheMetaData::nsCacheMetaData()
 
 nsCacheMetaData::~nsCacheMetaData()
 {
-    //** maybe we should finalize the table...
     PL_DHashTableFinish(&table);
 }
 
@@ -90,8 +89,8 @@ nsCacheMetaData::GetElement(const nsAReadableCString * key)
     PLDHashEntryHdr * hashEntry;
     nsCString *       result = nsnull;
 
-    //** need to copy string until we have scc's new flat string abstract class
-    //** see nsCacheMetaData::HashKey below (bug 70075)
+    // XXX need to copy string until we have scc's new flat string abstract class
+    // XXX see nsCacheMetaData::HashKey below (bug 70075)
     nsCString * tempKey = new nsCString(*key);
     if (!tempKey) return result;
 
@@ -114,12 +113,12 @@ nsCacheMetaData::SetElement(const nsAReadableCString& key,
 
     NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
 
-    //** need to copy string until we have scc's new flat string abstract class
-    //** see nsCacheMetaData::HashKey below (bug 70075)
+    // XXX need to copy string until we have scc's new flat string abstract class
+    // XXX see nsCacheMetaData::HashKey below (bug 70075)
     nsCString * tempKey = new nsCString(key);
     if (!tempKey) return NS_ERROR_OUT_OF_MEMORY;
 
-    //** should empty value remove the key?
+    // XXX should empty value remove the key?
 
     metaEntry = (nsCacheMetaDataHashTableEntry *)
         PL_DHashTableOperate(&table, tempKey, PL_DHASH_ADD);
@@ -135,7 +134,7 @@ nsCacheMetaData::SetElement(const nsAReadableCString& key,
 
     metaEntry->value = new nsCString(value);
     if (metaEntry->value == nsnull) {
-        //** remove key?
+        // XXX remove key?
         delete tempKey;
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -195,7 +194,7 @@ nsCacheMetaData::GetKey( PLDHashTable * /* table */, PLDHashEntryHdr *hashEntry)
 PLDHashNumber
 nsCacheMetaData::HashKey( PLDHashTable * table, const void *key)
 {
-    //** need scc's new flat string abstract class here (bug 70075)
+    // XXX need scc's new flat string abstract class here (bug 70075)
     return PL_DHashStringKey(table, ((nsCString *)key)->get());
 }
 

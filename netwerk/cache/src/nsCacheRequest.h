@@ -53,10 +53,10 @@ private:
         PR_INIT_CLIST(&mListLink);
     }
     
-    virtual ~nsCacheRequest()
+    ~nsCacheRequest()
     {
-        // delete mKey;
-        // XXX need to do anything with mListLink?
+        delete mKey;
+        NS_ASSERTION(PR_CLIST_IS_EMPTY(&mListLink), "request still on a list");
     }
     
 

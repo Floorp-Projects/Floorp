@@ -30,14 +30,19 @@
 #include "nsError.h"
 #include "nsICacheService.h"
 
-#define ONE_YEAR (PR_USEC_PER_SEC * 60 * 60 * 24 * 365)
+
+// XXX find better place to put this
+          // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
+PRUint32  ConvertPRTimeToSeconds(PRTime time64);
+
+
 nsCacheEntry::nsCacheEntry(nsCString *          key,
                            PRBool               streamBased,
                            nsCacheStoragePolicy storagePolicy)
     : mKey(key),
       mFetchCount(0),
-      mLastValidated(LL_ZERO),
-      mExpirationTime(LL_ZERO),
+      mLastValidated(0),
+      mExpirationTime(0),
       mFlags(0),
       mDataSize(0),
       mMetaSize(0),
@@ -49,7 +54,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
     PR_INIT_CLIST(&mRequestQ);
     PR_INIT_CLIST(&mDescriptorQ);
 
-    mLastFetched = PR_Now();
+    mLastFetched = ConvertPRTimeToSeconds(PR_Now());
     
     if (streamBased) MarkStreamBased();
 
@@ -225,9 +230,9 @@ nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
     } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         // queue request
         PR_APPEND_LINK(request->GetListNode(), &mRequestQ);
-        //** allocate PRCondVar for request, if none
-        //** release service lock
-        //** wait until valid or doomed
+        // XXX allocate PRCondVar for request, if none
+        // XXX release service lock
+        // XXX wait until valid or doomed
     }
     return rv;
 }
@@ -244,11 +249,11 @@ nsCacheEntry::AsyncOpen(nsCacheRequest * request)
         nsICacheEntryDescriptor * descriptor;
         rv = nsCacheEntryDescriptor::Create(this, accessGranted, &descriptor);
         if (NS_SUCCEEDED(rv)) {
-            //** queue the descriptor
-            //** post event to call listener with 
+            // XXX queue the descriptor
+            // XXX post event to call listener with 
         }
     } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        //** queue request and we're done (MarkValid will notify pending requests)
+        // XXX queue request and we're done (MarkValid will notify pending requests)
     }
     return rv;
 }
@@ -257,7 +262,7 @@ nsCacheEntry::AsyncOpen(nsCacheRequest * request)
 PRBool
 nsCacheEntry::RemoveRequest(nsCacheRequest * request)
 {
-    //** if debug: verify this request belongs to this entry
+    // XXX if debug: verify this request belongs to this entry
     PR_REMOVE_AND_INIT_LINK(request->GetListNode());
 
     // return true if this entry should stay active
@@ -269,7 +274,7 @@ nsCacheEntry::RemoveRequest(nsCacheRequest * request)
 PRBool
 nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
 {
-    //** if debug: verify this descriptor belongs to this entry
+    // XXX if debug: verify this descriptor belongs to this entry
     PR_REMOVE_AND_INIT_LINK(descriptor->GetListNode());
 
     if (!PR_CLIST_IS_EMPTY(&mDescriptorQ))
@@ -278,7 +283,7 @@ nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
     if (PR_CLIST_IS_EMPTY(&mRequestQ))
         return PR_FALSE; // no descriptors or requests, we can deactivate
 
-    //** find next best request to give a descriptor to
+    // XXX find next best request to give a descriptor to
     return PR_TRUE;
 }
 
@@ -363,7 +368,7 @@ nsCacheEntryHashTable::RemoveEntry( nsCacheEntry *cacheEntry)
     NS_ASSERTION(initialized, "nsCacheEntryHashTable not initialized");
     if (!cacheEntry) return NS_ERROR_NULL_POINTER;
 
-    //** debug code to make sure we have the entry we're trying to remove
+    // XXX debug code to make sure we have the entry we're trying to remove
 
     (void) PL_DHashTableOperate(&table, cacheEntry->mKey, PL_DHASH_REMOVE);
     return NS_OK;

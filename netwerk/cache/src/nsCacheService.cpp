@@ -112,9 +112,9 @@ nsCacheService::Shutdown()
                  "can't shutdown nsCacheService unless it has been initialized.");
 
     if (mCacheServiceLock) {
-        //** check for pending requests...
+        // XXX check for pending requests...
 
-        //** finalize active entries
+        // XXX finalize active entries
 
         // deallocate memory and disk caches
         delete mMemoryDevice;
@@ -221,12 +221,12 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     if (NS_FAILED(rv))  return rv;
 
     while (1) {
-        //** acquire lock
+        // XXX acquire lock
         rv = ActivateEntry(request, &entry);
         if (NS_FAILED(rv)) break;
-        //** check for NS_ERROR_CACHE_KEY_NOT_FOUND & READ-ONLY request
+        // XXX check for NS_ERROR_CACHE_KEY_NOT_FOUND & READ-ONLY request
 
-        rv = entry->Open(request, result); //** release lock before waiting on request
+        rv = entry->Open(request, result); // XXX release lock before waiting on request
         if (rv != NS_ERROR_CACHE_ENTRY_DOOMED) break;
 
     }
@@ -250,10 +250,10 @@ nsCacheService::AsyncOpenCacheEntry(nsCacheSession *   session,
 
     nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
 
-    //** acquire service lock PR_Lock(mCacheServiceLock);
+    // XXX acquire service lock PR_Lock(mCacheServiceLock);
     rv = ActivateEntry(request, &entry);
     if (NS_SUCCEEDED(rv)) {
-        entry->AsyncOpen(request); //** release lock after request queued, etc.
+        entry->AsyncOpen(request); // XXX release lock after request queued, etc.
     }
 
    return rv;
@@ -286,11 +286,16 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         goto error;
     }
 
-    if (entry && (request->mAccessRequested == nsICache::ACCESS_WRITE)) {
-        // this is FORCE-WRITE request
+    if (entry &&
+        ((request->mAccessRequested == nsICache::ACCESS_WRITE) ||
+         (entry->mExpirationTime &&
+          entry->mExpirationTime < ConvertPRTimeToSeconds(PR_Now()))))
+        // XXX beginning to look a lot like lisp
+    {
+        // this is FORCE-WRITE request or the entry has expired
         rv = DoomEntry_Internal(entry);
         if (NS_FAILED(rv)) {
-            //** what to do?
+            // XXX what to do?  Increment FailedDooms counter?
         }
 
         if (entry->IsNotInUse()) {
@@ -306,7 +311,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
         
-        //** we could perform an early bind in some cases based on storage policy
+        // XXX  we could perform an early bind in some cases based on storage policy
     }
 
     rv = mActiveEntries.AddEntry(entry);
@@ -319,7 +324,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
  error:
     *result = nsnull;
     if (entry) {
-        //** clean up
+        // XXX clean up
     }
     return rv;
 }
@@ -368,8 +373,8 @@ nsCacheService::BindEntry(nsCacheEntry * entry)
 nsresult
 nsCacheService::ValidateEntry(nsCacheEntry * entry)
 {
-    //** bind if not bound
-    //** convert pending requests to descriptors, etc.
+    // XXX bind if not bound
+    // XXX convert pending requests to descriptors, etc.
     entry->MarkValid();
     return NS_OK;
 }
@@ -394,7 +399,7 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
     nsCacheDevice * device = entry->CacheDevice();
     if (device) {
         rv = device->DoomEntry(entry);
-        //** check rv, but what can we really do...
+        // XXX check rv, but what can we really do...
     }
 
     if (entry->IsActive()) {
@@ -402,7 +407,7 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
         rv = mActiveEntries.RemoveEntry(entry);
         entry->MarkInactive();
         if (NS_FAILED(rv)) {
-            //** what to do
+            // XXX what to do
         }
     }
     // put on doom list to wait for descriptors to close
@@ -496,4 +501,31 @@ nsCacheService::DeactivateEntry(nsCacheEntry * entry)
         ++mDeactivatedUnboundEntries;
         delete entry; // because no one else will
     }
+}
+
+/**
+ * Cache Service Utility Functions
+ */
+
+// time conversion utils from nsCachedNetData.cpp
+// Convert PRTime to unix-style time_t, i.e. seconds since the epoch
+PRUint32
+ConvertPRTimeToSeconds(PRTime time64)
+{
+    double fpTime;
+    LL_L2D(fpTime, time64);
+    return (PRUint32)(fpTime * 1e-6 + 0.5);
+}
+
+
+// Convert unix-style time_t, i.e. seconds since the epoch, to PRTime
+PRTime
+ConvertSecondsToPRTime(PRUint32 seconds)
+{
+    PRInt64 t64;
+    LL_I2L(t64, seconds);
+    PRInt64 mil;
+    LL_I2L(mil, 1000000);
+    LL_MUL(t64, t64, mil);
+    return t64;
 }

@@ -59,7 +59,7 @@ private:
 
     PRCList                 mEvictionList;
 
-    //** what other stats do we want to keep?
+    // XXX what other stats do we want to keep?
 };
 
 
