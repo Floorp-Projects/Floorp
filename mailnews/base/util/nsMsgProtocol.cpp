@@ -18,6 +18,7 @@
 
 #include "msgCore.h"
 #include "nsMsgProtocol.h"
+#include "nsIMsgMailNewsUrl.h"
 #include "nsINetService.h"
 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
@@ -52,7 +53,7 @@ nsresult nsMsgProtocol::OpenNetworkSocket(nsIURL * aURL, PRUint32 aPort, const c
 	return rv;
 }
 
-nsresult nsMsgProtocol::OpenFileSocket(nsIURL * aURL, nsFileSpec * aFileSpec)
+nsresult nsMsgProtocol::OpenFileSocket(nsIURL * aURL, const nsFileSpec * aFileSpec)
 {
 	nsresult rv = NS_OK;
 	
@@ -132,3 +133,46 @@ PRInt32 nsMsgProtocol::SendData(nsIURL * aURL, const char * dataBuffer)
 
 	return status;
 }
+
+// Whenever data arrives from the connection, core netlib notifices the protocol by calling
+// OnDataAvailable. We then read and process the incoming data from the input stream. 
+NS_IMETHODIMP nsMsgProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, PRUint32 aLength)
+{
+	// right now, this really just means turn around and churn through the state machine
+	return ProcessProtocolState(aURL, aIStream, aLength);
+}
+
+NS_IMETHODIMP nsMsgProtocol::OnStartBinding(nsIURL* aURL, const char *aContentType)
+{
+	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
+	return aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
+}
+
+// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
+NS_IMETHODIMP nsMsgProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PRUnichar* aMsg)
+{
+	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
+	return aMsgUrl->SetUrlState(PR_FALSE, aStatus);
+}
+
+nsresult nsMsgProtocol::LoadUrl(nsIURL * aURL)
+{
+	// okay now kick us off to the next state...
+	// our first state is a process state so drive the state machine...
+	PRBool transportOpen = PR_FALSE;
+	nsresult rv = NS_OK;
+	nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
+
+	rv = m_transport->IsTransportOpen(&transportOpen);
+	if (NS_SUCCEEDED(rv))
+	{
+		rv = aMsgUrl->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
+		if (!transportOpen)
+			rv = m_transport->Open(aURL);  // opening the url will cause to get notified when the connection is established
+		else  // the connection is already open so we should begin processing our new url...
+			rv = ProcessProtocolState(aURL, nsnull, 0); 
+	}
+
+	return rv;
+}
+
