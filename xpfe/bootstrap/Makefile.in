@@ -66,10 +66,18 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 REQUIRES	+= intl profile appcomps
 endif
 
+ifdef MOZ_PHOENIX
+ifeq ($(USE_SHORT_LIBNAME),1)
+PROGRAM		= mozbrowser$(BIN_SUFFIX)
+else
+PROGRAM		= mozbrowser-bin$(BIN_SUFFIX)
+endif
+else
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
 else
 PROGRAM		= mozilla-bin$(BIN_SUFFIX)
+endif
 endif
 
 CPPSRCS		= \
@@ -283,18 +291,24 @@ libs:: mozilla.1
 install:: mozilla.1
 	$(SYSINSTALL) $(IFLAGS) $< $(DESTDIR)$(mandir)/man1
 
-mozilla:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+ifdef MOZ_PHOENIX
+MOZILLA_SCRIPT=mozbrowser
+else
+MOZILLA_SCRIPT=mozilla
+endif
+
+$(MOZILLA_SCRIPT):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
 		-e "s|%MREDIR%|$(mredir)|" > $@
 	chmod +x $@
 
-libs:: mozilla
+libs:: $(MOZILLA_SCRIPT)
 	$(INSTALL) $< $(DIST)/bin
 
-install:: mozilla
+install:: $(MOZILLA_SCRIPT)
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
-GARBAGE += mozilla.1 mozilla
+GARBAGE += mozilla.1 $(MOZILLA_SCRIPT)
 
 endif
 
