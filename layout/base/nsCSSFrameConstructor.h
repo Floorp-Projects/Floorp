@@ -237,7 +237,7 @@ protected:
                              nsIFrame*        aParentFrame,
                              nsIStyleContext* aParentStyleContext,
                              nsAbsoluteItems& aAbsoluteItems,
-                             nsIFrame*&       aChildFrame,
+                             nsFrameItems&    aChildItems,
                              nsAbsoluteItems& aFixedItems,
                              nsTableCreator&  aTableCreator);
 
