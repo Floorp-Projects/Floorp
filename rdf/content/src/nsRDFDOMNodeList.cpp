@@ -215,3 +215,13 @@ nsRDFDOMNodeList::AppendNode(nsIDOMNode* aNode)
 
     return mElements->AppendElement(aNode);
 }
+
+nsresult
+nsRDFDOMNodeList::RemoveNode(nsIDOMNode* aNode)
+{
+    NS_PRECONDITION(aNode != nsnull, "null ptr");
+    if (! aNode)
+        return NS_ERROR_NULL_POINTER;
+
+    return mElements->RemoveElement(aNode);
+}
