@@ -96,15 +96,7 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
-/* ..... Saved Search Folder ..... */
-
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
-  list-style-image: url("chrome://messenger/skin/icons/folder-search.png");
-}
-
-
 /* ..... Servers  ..... */
-
 
 treechildren::-moz-tree-image(folderNameCol, isServer-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
@@ -157,6 +149,12 @@ treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp) {
 
 treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-news-lock.png");
+}
+
+/* ..... Saved Search Folder ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
+  list-style-image: url("chrome://messenger/skin/icons/folder-search.png");
 }
 
 /* ::::: All Servers ::::: */

@@ -123,9 +123,6 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
-/* ..... Saved Search Folder ..... */
-treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {  list-style-image: url("chrome://messenger/skin/icons/saved-search-folder.png");}
-
 treechildren::-moz-tree-image(folderNameCol, isServer-true) {
     list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
 }
@@ -177,6 +174,12 @@ treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp) {
 
 treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-news-lock.png");
+}
+
+/* ..... Saved Search Folder ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
+  list-style-image: url("chrome://messenger/skin/icons/saved-search-folder.png");
 }
 
 /* ::::: All Servers ::::: */
@@ -444,11 +447,29 @@ treechildren::-moz-tree-image(news, threadCol, ignore) {
         border-right: 1px solid #bebebe;
 }
 
-/* ::::: group rows ::::: */ treechildren::-moz-tree-row(dummy)  {	background-image: url("chrome://messenger/skin/icons/group-background.gif");
+/* ::::: group rows ::::: */ 
+
+treechildren::-moz-tree-row(dummy)  {
+	background-image: url("chrome://messenger/skin/icons/group-background.gif");
 	background-repeat: repeat-x;
-	background-color: rgb(246, 246, 246);	border: 1px solid rgb(197, 199, 202);
+	background-color: rgb(246, 246, 246);
+	border: 1px solid rgb(197, 199, 202);
 	margin-right: 1px;
-	margin-left: 1px;}treechildren::-moz-tree-row(dummy, selected) {	background-color: -moz-Dialog;}treechildren::-moz-tree-row(dummy, selected, focus)  {	background-color: Highlight;}treechildren::-moz-tree-cell-text(dummy) {	font-weight: bold;}
+	margin-left: 1px;
+}
+
+treechildren::-moz-tree-row(dummy, selected) {
+	background-color: -moz-Dialog;
+}
+
+treechildren::-moz-tree-row(dummy, selected, focus)  {
+	background-color: Highlight;
+}
+
+treechildren::-moz-tree-cell-text(dummy) {
+	font-weight: bold;
+}
+
 
 /* ::::: thread labels decoration ::::: */
 
