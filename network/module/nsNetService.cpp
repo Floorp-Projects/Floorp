@@ -51,6 +51,8 @@ extern "C" {
 #include "nsCRT.h"
 #include "nsSocketTransport.h"
 
+#include "nsIChromeRegistry.h"
+
 #ifdef XP_PC
 #include <windows.h>
 static HINSTANCE g_hInst = NULL;
@@ -102,7 +104,8 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
 nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURL* aURL);
 #endif /* XP_WIN && !NETLIB_THREAD */
 
-char *mangleResourceIntoFileURL(const char* aResourceFileName) ;
+char *mangleResourceIntoFileURL(const char* aResourceFileName);
+
 extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener, PLEventQueue* aEventQ);
 
 extern "C" {
@@ -126,6 +129,11 @@ static NS_DEFINE_IID(kINetlibURLIID,  NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
+// Chrome registry service for handling of chrome URLs
+static NS_DEFINE_IID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_IID(kIChromeRegistryIID, NS_ICHROMEREGISTRY_IID);
+nsIChromeRegistry* nsNetlibService::gChromeRegistry = nsnull;
+int nsNetlibService::gRefCnt = 0;
 
 nsNetlibService::nsNetlibService()
 {
@@ -209,6 +217,20 @@ nsNetlibService::nsNetlibService()
 
     mProtocols = new nsHashtable();
     PR_ASSERT(mProtocols);
+
+    // Create the chrome registry.  If it fails, that's ok.
+    gRefCnt++;
+    
+    if (gRefCnt == 1)
+    {
+        gChromeRegistry = nsnull;
+        if (NS_FAILED(nsServiceManager::GetService(kChromeRegistryCID,
+                                      kIChromeRegistryIID,
+                                      (nsISupports **)&gChromeRegistry))) {
+            gChromeRegistry = nsnull;
+        }
+        else gChromeRegistry->Init(); // Load the chrome registry
+    }
 }
 
 
@@ -219,6 +241,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsNetlibService,kINetServiceIID);
 nsNetlibService::~nsNetlibService()
 {
     TRACEMSG(("nsNetlibService is being destroyed...\n"));
+
+    gRefCnt--;
+    if (gRefCnt == 0)
+    {
+        NS_IF_RELEASE(gChromeRegistry);
+        gChromeRegistry = nsnull;
+    }
 
     /*
       if (NULL != m_stubContext) {
@@ -363,6 +392,20 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     const char* protocol;
     result = aUrl->GetProtocol(&protocol);
     NS_ASSERTION(result == NS_OK, "deal with this");
+
+    // Deal with chrome URLS
+    if ((PL_strcmp(protocol, "chrome") == 0) &&
+        gChromeRegistry != nsnull) {        
+	  
+      if (NS_FAILED(result = gChromeRegistry->ConvertChromeURL(aUrl))) {
+          NS_ERROR("Unable to convert chrome URL.");
+          return result;
+      }
+      
+      result = aUrl->GetProtocol(&protocol);
+      NS_ASSERTION(result == NS_OK, "deal with this");
+	}
+
     if (PL_strcmp(protocol, "resource") == 0) {
       char* fileName;
       const char* file;
@@ -372,7 +415,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
       aUrl->SetSpec(fileName);
       PR_Free(fileName);
     } 
-
+	
     /* Create the URLStruct... */
 
     const char* spec = NULL;
@@ -504,6 +547,20 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
         const char* protocol;
         result = aUrl->GetProtocol(&protocol);
         NS_ASSERTION(result == NS_OK, "deal with this");
+
+        // Deal with chrome URLS
+        if ((PL_strcmp(protocol, "chrome") == 0) &&
+            gChromeRegistry != nsnull) {        
+	  
+          if (NS_FAILED(result = gChromeRegistry->ConvertChromeURL(aUrl))) {
+              NS_ERROR("Unable to convert chrome URL.");
+              return result;
+          }
+      
+          result = aUrl->GetProtocol(&protocol);
+          NS_ASSERTION(result == NS_OK, "deal with this");
+	    }
+
         if (PL_strcmp(protocol, "resource") == 0) {
             char* fileName;
             const char* file;

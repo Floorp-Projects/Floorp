@@ -148,6 +148,7 @@ LINCS=$(LINCS)  -I.                         \
                 -I$(PUBLIC)\sockstub        \
                 -I$(PUBLIC)\remoturl        \
                 -I$(PUBLIC)\netlib      \
+				-I$(PUBLIC)\chrome \
                 $(NULL)
 
 # clobber and clobber_all will remove the following garbage:
