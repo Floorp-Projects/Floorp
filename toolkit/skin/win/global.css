@@ -112,6 +112,7 @@ statusbar {
   border-right: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDHighlight;
   background-color: -moz-Dialog;
+  min-height: 22px;
 }
 
 statusbarpanel {
