@@ -150,6 +150,8 @@ public:
   static PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   static PRInt32       IndexOf(nsIDOMNode* aNode);
   static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
+  static PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
+                                              nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
   static nsCOMPtr<nsIDOMNode>   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   static nsresult      GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);
   static nsresult      GetContentFromDOMNode(nsIDOMNode* inDomNode, nsCOMPtr<nsIContent>* outContentNode);
@@ -172,9 +174,6 @@ public:
                        
   nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
   
-  
-  PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
-                        nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
   
   nsresult      AddToListOf(nsIDOMNode* aNode);
   

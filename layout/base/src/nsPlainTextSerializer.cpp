@@ -281,6 +281,9 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
   mContent = 0;
   mOutputString = nsnull;
 
+  if (!mInHead && id == eHTMLTag_head)
+    mInHead = PR_TRUE;    
+
   return rv;
 } 
  
@@ -310,6 +313,9 @@ nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
   mContent = 0;
   mOutputString = nsnull;
 
+  if (mInHead && id == eHTMLTag_head)
+    mInHead = PR_FALSE;    
+
   return rv;
 }
 
@@ -326,8 +332,6 @@ NS_IMETHODIMP
 nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();
-  const nsString&   namestr = aNode.GetText();
-  nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(namestr));
 
   mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
   return DoOpenContainer(type);

@@ -35,6 +35,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsEscape.h"
 
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
@@ -66,21 +67,6 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
 
 nsHTMLContentSerializer::~nsHTMLContentSerializer()
 {
-}
-
-nsresult
-nsHTMLContentSerializer::GetEntityConverter(nsIEntityConverter** aConverter)
-{
-  if (!mEntityConverter) {
-    nsresult rv;
-    rv = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
-                                            NS_GET_IID(nsIEntityConverter),
-                                            getter_AddRefs(mEntityConverter));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  }
-
-  CallQueryInterface(mEntityConverter.get(), aConverter);
-  return NS_OK;
 }
 
 nsresult
@@ -149,7 +135,8 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
   PRInt32 lastNewlineOffset = kNotFound;
   PRBool hasLongLines = HasLongLines(data, lastNewlineOffset);
 
-  if (mPreLevel || (!mDoFormat && !hasLongLines)) {
+  if (mPreLevel || (!mDoFormat && !hasLongLines) ||
+      (mFlags & nsIDocumentEncoder::OutputRaw)) {
     AppendToString(data, aStr);
 
     if (lastNewlineOffset != kNotFound) {
@@ -378,7 +365,6 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
   PRBool    done = PR_FALSE;
   PRInt32   indx = 0;
   PRInt32   strOffset = 0;
-  PRInt32   oldLineOffset = 0;
   PRInt32   lineLength, oldLineEnd;
   
   // Make sure we haven't gone too far already
@@ -468,26 +454,17 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
     return;
   }
 
-  nsresult rv;
-
   if (aIncrColumn) {
     mColPos += aStr.Length();
   }
   
   if (aTranslateEntities) {
-    nsCOMPtr<nsIEntityConverter> converter;
-
-    GetEntityConverter(getter_AddRefs(converter));
-    if (converter) {
-      PRUnichar *encodedBuffer;
-      rv = mEntityConverter->ConvertToEntities(nsPromiseFlatString(aStr),
-                                               nsIEntityConverter::html40Latin1,
-                                               &encodedBuffer);
-      if (NS_SUCCEEDED(rv)) {
-        aOutputStr.Append(encodedBuffer);
-        nsCRT::free(encodedBuffer);
-        return;
-      }
+    PRUnichar *encodedBuffer;
+    encodedBuffer = nsEscapeHTML2(nsPromiseFlatString(aStr), aStr.Length());
+    if (encodedBuffer) {
+      aOutputStr.Append(encodedBuffer);
+      nsCRT::free(encodedBuffer);
+      return;
     }
   }
   
@@ -513,7 +490,8 @@ PRBool
 nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName, 
                                              PRBool aHasDirtyAttr)
 {
-  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel || !mColPos) {
+  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel || !mColPos ||
+      (mFlags & nsIDocumentEncoder::OutputRaw)) {
     return PR_FALSE;
   }
         
@@ -548,7 +526,8 @@ PRBool
 nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName, 
                                             PRBool aHasDirtyAttr)
 {
-  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel) {
+  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel ||
+      (mFlags & nsIDocumentEncoder::OutputRaw)) {
     return PR_FALSE;
   }
 
@@ -576,7 +555,8 @@ PRBool
 nsHTMLContentSerializer::LineBreakBeforeClose(nsIAtom* aName, 
                                               PRBool aHasDirtyAttr)
 {
-  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel || !mColPos) {
+  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel || !mColPos ||
+      (mFlags & nsIDocumentEncoder::OutputRaw)) {
     return PR_FALSE;
   }
 
@@ -598,7 +578,8 @@ PRBool
 nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName, 
                                              PRBool aHasDirtyAttr)
 {
-  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel) {
+  if ((!mDoFormat && !aHasDirtyAttr) || mPreLevel ||
+      (mFlags & nsIDocumentEncoder::OutputRaw)) {
     return PR_FALSE;
   }
 

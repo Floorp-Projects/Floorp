@@ -224,55 +224,51 @@ nsEscapeHTML(const char * string)
 }
 
 NS_COM PRUnichar *
-nsEscapeHTML2(const PRUnichar * string)
+nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
 {
-  PRUnichar *rv = (PRUnichar *) nsMemory::Alloc(nsCRT::strlen(string)*6*sizeof(PRUnichar) + sizeof(PRUnichar));
-	PRUnichar *ptr = rv;
+  // if the caller didn't calculate the length
+  if (aSourceBufferLen == -1) {
+    aSourceBufferLen = nsCRT::strlen(aSourceBuffer); // ...then I will
+  }
 
-	if(rv)
-	  {
-		for(; *string != 0; string++)
-		  {
-			if(*string == '<')
-			  {
-				*ptr++ = '&';
-				*ptr++ = 'l';
-				*ptr++ = 't';
-				*ptr++ = ';';
-			  }
-			else if(*string == '>')
-			  {
-				*ptr++ = '&';
-				*ptr++ = 'g';
-				*ptr++ = 't';
-				*ptr++ = ';';
-			  }
-			else if(*string == '&')
-			  {
-				*ptr++ = '&';
-				*ptr++ = 'a';
-				*ptr++ = 'm';
-				*ptr++ = 'p';
-				*ptr++ = ';';
-			  }
-			else if (*string == '"')
-			  {
-				*ptr++ = '&';
-				*ptr++ = 'q';
-				*ptr++ = 'u';
-				*ptr++ = 'o';
-				*ptr++ = 't';
-				*ptr++ = ';';
-			  }			
-			else
-			  {
-				*ptr++ = *string;
-			  }
-		  }
-		*ptr = 0;
-	  }
+  PRUnichar *resultBuffer = (PRUnichar *)nsMemory::Alloc(aSourceBufferLen*6*sizeof(PRUnichar) + sizeof(PRUnichar('\0')));
+  PRUnichar *ptr = resultBuffer;
 
-	return(rv);
+  if (resultBuffer) {
+    PRInt32 i;
+
+    for(i = 0; i < aSourceBufferLen; i++) {
+      if(aSourceBuffer[i] == '<') {
+        *ptr++ = '&';
+        *ptr++ = 'l';
+        *ptr++ = 't';
+        *ptr++ = ';';
+      } else if(aSourceBuffer[i] == '>') {
+        *ptr++ = '&';
+        *ptr++ = 'g';
+        *ptr++ = 't';
+        *ptr++ = ';';
+      } else if(aSourceBuffer[i] == '&') {
+        *ptr++ = '&';
+        *ptr++ = 'a';
+        *ptr++ = 'm';
+        *ptr++ = 'p';
+        *ptr++ = ';';
+      } else if (aSourceBuffer[i] == '"') {
+        *ptr++ = '&';
+        *ptr++ = 'q';
+        *ptr++ = 'u';
+        *ptr++ = 'o';
+        *ptr++ = 't';
+        *ptr++ = ';';
+      } else {
+        *ptr++ = aSourceBuffer[i];
+      }
+    }
+    *ptr = 0;
+  }
+
+  return resultBuffer;
 }
 
 
