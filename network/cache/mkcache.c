@@ -2726,12 +2726,12 @@ net_cache_recursive_file_finder(XP_HashList *hash_table,
 								char *base_dir,
 								char *buffer)
 {
-	XP_Dir dir_ptr;
-   	XP_DirEntryStruct * dir_entry;
+	PRDir *dir_ptr;
+   	PRDirEntry *dir_entry;
 	int base_len;
 	int prefix_len, d_len, status;
 	char *dir_prefix=0;
-	char *d_name;
+	const char *d_name;
 	XP_Bool add_dir_prefix=TRUE;
 
 	/* compute the difference between base_dir and
@@ -2750,7 +2750,7 @@ net_cache_recursive_file_finder(XP_HashList *hash_table,
 	else if(dir_prefix[PL_strlen(dir_prefix)-1] == '/')
 		dir_prefix[PL_strlen(dir_prefix)-1] = '\0';
 
-    if(!(dir_ptr = XP_OpenDir (cur_dir, xpCache)))
+    if(!(dir_ptr = PR_OpenDir (cur_dir)))
 	{
 		PR_Free(dir_prefix);
 		return(-1);
@@ -2759,12 +2759,12 @@ net_cache_recursive_file_finder(XP_HashList *hash_table,
 	/* add all the files on disk to a hash table
 	 */
 	prefix_len = PL_strlen(prefix);
-    while((dir_entry = XP_ReadDir(dir_ptr)) != 0)
+    while((dir_entry = PR_ReadDir(dir_ptr, PR_SKIP_BOTH)) != 0)
       {
 		/* only do comparison and delete if the prefix
 		 * is the same
 		 */
-		d_name = dir_entry->d_name;
+		d_name = dir_entry->name;
 		d_len = PL_strlen(d_name);
 		status = 0;
 		if(PL_strncmp(d_name, prefix, prefix_len))
@@ -2795,16 +2795,9 @@ net_cache_recursive_file_finder(XP_HashList *hash_table,
 				   ((d_name[1] >= '0' && d_name[1] <= '9') ||
 					(d_name[1] >= 'A' && d_name[1] <= 'F'))))
 			  continue;
-#else /* !XP_UNIX */
-			/* This is redundant on Unix because of the above check. */
-			if(!PL_strcmp(d_name, ".") || !PL_strcmp(d_name, ".."))
-			  {
-				/* ignore . and .. */
-				status = -1;
-			  }
 #endif /* !XP_UNIX */
 
-			else if(add_dir_prefix)
+			if(add_dir_prefix)
 		  	  {
 				sprintf(buffer, "%.250s/%.250s", dir_prefix, d_name);
 		  	  }
@@ -2840,7 +2833,7 @@ net_cache_recursive_file_finder(XP_HashList *hash_table,
 
 	PR_Free(dir_prefix);
 
-	XP_CloseDir(dir_ptr);
+	PR_CloseDir(dir_ptr);
 	return 0;
 }
 /* cleans up the cache directory by listing every
