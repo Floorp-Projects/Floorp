@@ -143,7 +143,7 @@ PRBool nsHTMLContainer::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex)
 
 PRBool nsHTMLContainer::AppendChild(nsIContent* aKid)
 {
-  NS_PRECONDITION(nsnull != aKid, "null ptr");
+  NS_PRECONDITION((nsnull != aKid) && (aKid != this), "null ptr");
   PRBool rv = mChildren.AppendElement(aKid);
   if (rv) {
     NS_ADDREF(aKid);

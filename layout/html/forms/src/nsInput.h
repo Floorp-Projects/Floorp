@@ -154,6 +154,7 @@ public:
   }
 
   virtual void GetType(nsString& aResult) const = 0;
+  PRInt32 GetSize() const { return mSize; }
   virtual PRBool GetChecked(PRBool aGetInitialValue) const;
   virtual void SetChecked(PRBool aState, PRBool aSetInitialValue);
   virtual void SetClickPoint(nscoord aX, nscoord aY);

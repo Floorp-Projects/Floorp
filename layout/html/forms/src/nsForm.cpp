@@ -516,7 +516,6 @@ nsForm::OnRadioChecked(nsIFormControl& aControl)
     nsString groupName;
     group->GetName(groupName);
     nsIFormControl* checkedRadio = group->GetCheckedRadio();
-  printf("\n group name=%s radio name=%s", groupName.ToNewCString(), radioName.ToNewCString());
     if (groupName.Equals(radioName) && (nsnull != checkedRadio) & (&aControl != checkedRadio)) {
       checkedRadio->SetChecked(PR_FALSE, PR_FALSE);
       group->SetCheckedRadio(&aControl);
