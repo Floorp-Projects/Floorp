@@ -90,7 +90,7 @@ function Startup()
       // We found an image element, convert it to an input type="image"
       var attributes = ["src", "alt", "width", "height", "hspace", "vspace", "border", "align", "usemap", "ismap"];
       for (i in attributes)
-        imageElement.setAttribute(attributes[i], imageElement.getAttribute(attributes[i]));
+        imageElement.setAttribute(attributes[i], imgElement.getAttribute(attributes[i]));
     }
   }
 

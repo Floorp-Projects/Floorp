@@ -98,15 +98,15 @@ function Startup()
       return;
     }
 
-    var imageElement = editor.getSelectedElement("img");
-    if (imageElement)
+    var imgElement = editor.getSelectedElement("img");
+    if (imgElement)
     {
       // We found an image element, convert it to an input type="image"
       inputElement.setAttribute("type", "image");
 
       var attributes = ["src", "alt", "width", "height", "hspace", "vspace", "border", "align"];
       for (i in attributes)
-        inputElement.setAttribute(attributes[i], imageElement.getAttribute(attributes[i]));
+        inputElement.setAttribute(attributes[i], imgElement.getAttribute(attributes[i]));
     }
     else
       inputElement.setAttribute("value", GetSelectionAsText());
