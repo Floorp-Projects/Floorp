@@ -29,9 +29,10 @@ CPPSRCS =				\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
 	nsFrameImageLoader.cpp		\
+	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
-	nsPrintContext.cpp	\
+	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
 	nsSpaceManager.cpp		\
 	nsStyleContext.cpp		\
@@ -39,9 +40,9 @@ CPPSRCS =				\
 	nsStyleSet.cpp			\
 	nsTextFragment.cpp		\
 	nsXIFConverter.cpp		\
-	nsRangeList.cpp		\
+	nsRangeList.cpp			\
 	nsLayoutAtoms.cpp		\
-	nsRange.cpp		\
+	nsRange.cpp			\
 	$(NULL)
 
 MODULE=raptor 
@@ -54,9 +55,10 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\
 	.\$(OBJDIR)\nsFrameImageLoader.obj	\
+	.\$(OBJDIR)\nsFrameUtil.obj		\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
 	.\$(OBJDIR)\nsPresContext.obj		\
-	.\$(OBJDIR)\nsPrintContext.obj	\
+	.\$(OBJDIR)\nsPrintContext.obj		\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
 	.\$(OBJDIR)\nsStyleContext.obj		\
@@ -66,7 +68,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsXIFConverter.obj		\
 	.\$(OBJDIR)\nsRangeList.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
-	.\$(OBJDIR)\nsRange.obj		\
+	.\$(OBJDIR)\nsRange.obj			\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
