@@ -1,5 +1,6 @@
 #- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
-$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
+#$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
+$BuildAdministrator = ($ENV{USER} || "cltbld") . "\@" . ($ENV{HOST} || "dhcp");
 
 #- You'll need to change these to suit your machine's needs
 $DisplayServer = ':0.0';
