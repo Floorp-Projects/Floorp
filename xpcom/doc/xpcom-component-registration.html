@@ -3,7 +3,7 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="Author" content="Suresh Duddi">
-   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
    <title>XPCOM Dynamic Component Registration</title>
 </head>
 <body>
@@ -151,7 +151,7 @@ do to salvage this situation other than warning the user of possible instability
 and advice a restart upon which the re-registration will happen.
 <h3>
 <a NAME="ProgID Spec"></a>ProgID Spec</h3>
-The general format of ProgIDs is <i><font color="#990000">component://</font>netscape<font color="#990000">/</font>compname<font color="#990000">?</font>var<font color="#990000">=</font>value<font color="#990000">;</font>var<font color="#990000">=</font>value<font color="#990000">;</font>var<font color="#990000">=</font>value...</i><i></i>
+The general format of ProgIDs is <i><b><font color="#990000">component://</font></b>netscape<b><font color="#990000">/</font></b>compname<b><font color="#990000">?</font></b>var<b><font color="#990000">=</font></b>value<b><font color="#990000">;</font></b>var<b><font color="#990000">=</font></b>value<b><font color="#990000">;</font></b>var<b><font color="#990000">=</font></b>value...</i>
 <p>Let us consider some more examples:
 <ol>
 <li>
@@ -183,8 +183,7 @@ they particularly do.
 <tt>component://netscape/data-converter?type=application/x-zip</tt></li>
 
 <li>
-<tt>component://netscape/plugin?type=image/gif;name=ImageMedia Gif Image
-Plugin;Description=Reders GIF Images....</tt></li>
+<tt>component://netscape/plugin?type=image/gif;name=ImageMedia%20Gif%20Image%20Plugin;Description=Renders%20GIF%20Images....</tt></li>
 
 <li>
 <tt>component://netscape/widget?type=toolbar</tt></li>
@@ -203,6 +202,33 @@ for
 <br>component://netscape/plugin?type=image/gif should pass for the progid
 specified above. We could extend this
 <br>mechanism with wildcards, but I dont want to go there yet... :-)
+<br>&nbsp;
+<h3>
+<a NAME="Startup Components"></a>Components created on events</h3>
+Some dlls have components that want to be created on certain events namely
+Startup, Shutdown (for now). Example is xpinstall.
+<blockquote>RegisterComponentForEvent(..., RegisterationTime when, ...)
+<br>RegisterFactoryForEvent(..., RegistrationTime when,...)</blockquote>
+exists for this purpose. When an application wants to Fire the particular
+event, it calls
+<blockquote>nsComponentManager::FireEvent(RegistrationTime when)</blockquote>
+ComponentManager will look for components that are registered to be created
+on these events and do the following for each of the components:
+<ol>
+<li>
+CreateInstance(...,CID, knsIStartupComponentIID, &amp;obj);</li>
+
+<br>For a shutdown event, knsIShutdownComponentIID would be used.
+<br>&nbsp;
+<li>
+obj->Release();</li>
+
+<br>The component needs to take adequate measures to keep itself alive
+and figure out how it would delete the object, since a Release() happens
+immediately after a CreateInstace()</ol>
+<b><i>Warning: </i></b>Order of creation of multiple components registered
+on the same event is not defined. Component dependencies aren't thought
+of yet.
 <br>&nbsp;
 <h3>
 <a NAME="How will all this help me"></a>How will all this help me</h3>
