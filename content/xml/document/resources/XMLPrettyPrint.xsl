@@ -36,6 +36,8 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/xml/prettyprint.dtd">
+
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns="http://www.w3.org/1999/xhtml">
@@ -47,8 +49,7 @@
     <link title="Monospace" href="chrome://communicator/content/xml/XMLMonoPrint.css" type="text/css" rel="alternate stylesheet"/>
     <div id="header">
       <p>
-        This XML file does not appear to have any style information
-        associated with it. The document tree is shown below.
+        &xml.nostylesheet;
       </p>
     </div>
     <xsl:apply-templates/>
