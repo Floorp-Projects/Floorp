@@ -15,7 +15,7 @@ and a
 
 <p>
 
-This is being maintained by <a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a>.
+This is being maintained by <a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a>.
 Feel free to email me with questions or to volunteer to contribute xptcall code for any platform.
 
 <h3>Status</h3>
@@ -24,86 +24,140 @@ Feel free to email me with questions or to volunteer to contribute xptcall code 
 <TR align="left" BGCOLOR="yellow">
 <TH>Status</TH>
 <TH>Platform</TH>
-<TH><img src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">Contributors&nbsp;and&nbsp;<font color="red"><b>?</b></font>&nbsp;Possible&nbsp;Contributors</TH>
+<TH><img src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">Contributors and <font color="red"><b>?</b></font> Possible Contributors</TH>
 <TH>Notes</TH>
 </TR>
 
 <TR>
 <TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
 <TD>Win32</TD>
-<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif"><a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a></TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a></TD>
 <TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/win32">win32</a></TD>
 </TR>
 
 <TR>
 <TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
 <TD>Linux x86</TD>
-<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif"><a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a></TD>
-<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a>(could be better without inline asm overhead)</TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a> (could be better without inline asm overhead)</TD>
 </TR>
 
 <TR>
 <TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
 <TD>FreeBSD and NetBSD x86</TD>
-<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif"><a href="mailto:toshok@hungry.com">Christoph&nbsp;Toshok&nbsp;&lt;toshok@hungry.com&gt;</a><BR>
-<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif"><a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a></TD>
-<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a><BR>(same as Linux 86 code)</TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:toshok@hungry.com">Christoph Toshok &lt;toshok@hungry.com&gt;</a>,<BR>
+<img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a> (same as Linux 86 code)</TD>
 </TR>
 
 <TR>
-<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
+<TD bgcolor="green"><font color="white"><b>Done</b></font></TD>
+<TD>BSD/OS x86</TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:bert_driehuis@nl.compuware.com">Bert Driehuis &lt;bert_driehuis@nl.compuware.com&gt;</a></TD>
+<TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a> (same as Linux 86 code)
+Bert contributed patches that *should* do the right thing for all the unixish-x86
+versions of this code for GCC 2.7 or 2.8 vs. EGCS 1.1. He notes that the vtbl 
+scheme is different. He is hoping that others will help test the changes using 
+these two compilers on the various platforms where this same code is used. 
+<a href="news://news.mozilla.org/372DD257.4248C821%40nl.compuware.com">Bert's details</a>
+</TD>
+</TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Coded</b></font></TD>
 <TD>Mac PPC</TD>
-<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif"><a href="mailto:rogerl@netscape.com">Roger&nbsp;Lawrence&nbsp;&lt;rogerl@netscape.com&gt;</a></TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:rogerl@netscape.com">Roger Lawrence &lt;rogerl@netscape.com&gt;</a></TD>
 <TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/mac">mac</a> (just needs testing and debugging)</TD>
 </TR>
 
 <TR>
-<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
+<TD bgcolor="khaki"><font color="black"><b>Coded</b></font></TD>
 <TD>Solaris Sparc</TD>
-<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif"><a href="mailto:rogerl@netscape.com">Roger&nbsp;Lawrence&nbsp;&lt;rogerl@netscape.com&gt;</a></TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:rogerl@netscape.com">Roger Lawrence &lt;rogerl@netscape.com&gt;</a></TD>
 <TD><a href="http://lxr.mozilla.org/mozilla/source/xpcom/libxpt/xptcall/src/md/unix">unix</a> (just needs testing and debugging)</TD>
 </TR>
 
 <TR>
-<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD bgcolor="khaki"><font color="black"><b>Coded</b></font></TD>
 <TD>OS/2</TD>
-<TD>&nbsp;<font color="red"><b>?</b></font>&nbsp;<a href="mailto:mjf35@cam.ac.uk">John&nbsp;Fairhurst&nbsp;&lt;mjf35@cam.ac.uk&gt;</a></TD>
-<TD>John will likely do this</TD>
+<TD><img alt="Contributed code!" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:mjf35@cam.ac.uk">John Fairhurst &lt;mjf35@cam.ac.uk&gt;</a></TD>
+<TD>
+Henry Sobotka &lt;sobotka@axess.com&gt; wrote: 
+This is just to let you know that John Fairhurst's port of xptcinvoke
+and xptcstubs for our emx+gcc and pgcc builds has been done since March
+27th (based on the timestamps of the two *_emx files in my copy of
+md/os2). While I haven't tested it yet (just started working through
+build breaks that occur with ENABLE_TESTS on), knowing John, I expect he
+has. Don't know what the status of the port is for our VAC++ build.
+John?
+</TD>
 </TR>
+
+<TR>
+<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
+<TD>OpenVMS Alpha and VAX</TD>
+<TD><img alt="Started" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:colin@theblakes.com">Colin R. Blake &lt;colin@theblakes.com&gt;</a></TD>
+<TD>
+Colin wrote: 
+I am porting Mozilla to OpenVMS. I guess you can put me down as someone who will port xptcall to
+OpenVMS Alpha and OpenVMS VAX. Won't be for a while though since Mozilla's nowhere near
+building on OpenVMS yet. 
+</TD>
+</TR>
+
 
 <TR>
 <TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
 <TD>Linux ARM</TD>
-<TD>&nbsp;<font color="red"><b>?</b></font>&nbsp;<a href="mailto:willy@bofh.ai">Matthew&nbsp;Wilcox&nbsp;&lt;willy@bofh.ai&gt;</a></TD>
+<TD> <font color="red"><b>?</b></font>
+<a href="mailto:willy@bofh.ai">Matthew Wilcox &lt;willy@bofh.ai&gt;</a></TD>
 <TD align="center">-</TD>
 </TR>
 
 <TR>
 <TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
 <TD>Linux Sparc</TD>
-<TD>&nbsp;<font color="red"><b>?</b></font>&nbsp;<a href="mailto:anton@progsoc.uts.edu.au">Anton&nbsp;Blanchard&nbsp;&lt;anton@progsoc.uts.edu.au&gt;</a></TD>
+<TD> <font color="red"><b>?</b></font> 
+<a href="mailto:anton@progsoc.uts.edu.au">Anton Blanchard &lt;anton@progsoc.uts.edu.au&gt;</a></TD>
 <TD align="center">-</TD>
 </TR>
 
 <TR>
 <TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
 <TD>Linux PPC</TD>
-<TD>&nbsp;<font color="red"><b>?</b></font>&nbsp;<a href="mailto:jsproul@condor.fddi.wesleyan.edu">Jason&nbsp;Y.&nbsp;Sproul&nbsp;&lt;jsproul@condor.fddi.wesleyan.edu&gt;</a><BR>
-&nbsp;<font color="red"><b>?</b></font>&nbsp;<a href="mailto:darkmane@w-link.net">Sean&nbsp;Chitwood&nbsp;&lt;darkmane@w-link.net&gt;</a></TD>
+<TD> <font color="red"><b>?</b></font> 
+<a href="mailto:jsproul@condor.fddi.wesleyan.edu">Jason Y. Sproul &lt;jsproul@condor.fddi.wesleyan.edu&gt;</a><BR>
+ <font color="red"><b>?</b></font> 
+ <a href="mailto:darkmane@w-link.net">Sean Chitwood &lt;darkmane@w-link.net&gt;</a></TD>
 <TD align="center">-</TD>
 </TR>
 
 <TR>
-<TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
+<TD bgcolor="khaki"><font color="black"><b>Started</b></font></TD>
 <TD>Linux Alpha</TD>
-<TD>&nbsp;<font color="red"><b>?</b></font>&nbsp;Dan&nbsp;Morril (address unknown)</TD>
-<TD align="center">-</TD>
+<TD><img alt="Started" src="http://cvs-mirror.mozilla.org/webtools/tinderbox/star.gif">
+<a href="mailto:morrildl@nycap.rr.com">Dan Morril &lt;morrildl@nycap.rr.com&gt;</a><BR>
+</TD>
+<TD>
+Dan is working on this. I get the feeling that he wouldn't
+mind getting some help.
+</TD>
 </TR>
 
 <TR>
 <TD bgcolor="red"><font color="white"><b>HELP!</b></font></TD>
 <TD>SunOS x86</TD>
-<TD>&nbsp;<font color="red"><b>?</b></font>&nbsp;<a href="mailto:ppokorny@mindspring.com">Philip&nbsp;Pokorny&nbsp;&lt;ppokorny@mindspring.com&gt;</a></TD>
+<TD> <font color="red"><b>?</b></font> 
+<a href="mailto:ppokorny@mindspring.com">Philip Pokorny &lt;ppokorny@mindspring.com&gt;</a></TD>
 <TD align="center">-</TD>
 </TR>
 
@@ -151,7 +205,7 @@ on. We're all in this together.
 <p>
 
 <hr>
-<b>Author:</b> <a href="mailto:jband@netscape.com">John&nbsp;Bandhauer&nbsp;&lt;jband@netscape.com&gt;</a><br>
+<b>Author:</b> <a href="mailto:jband@netscape.com">John Bandhauer &lt;jband@netscape.com&gt;</a><br>
 <b>Last modified:</b> 30 April 1999
 
 </body>
