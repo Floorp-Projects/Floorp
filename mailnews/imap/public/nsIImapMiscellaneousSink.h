@@ -64,8 +64,6 @@ public:
   NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol) = 0;
   // ****
   NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,  nsMsgBiffState biffState) = 0;
-  NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol, uid_validity_info* aInfo) = 0;
-  NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol, PRUint32 uidValidity) = 0;
   NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol, PRUint32 aMsgId, const PRUnichar *extraInfo) = 0;
   NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol, ProgressInfo* aInfo) = 0;
 };

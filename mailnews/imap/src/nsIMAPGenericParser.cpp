@@ -561,11 +561,8 @@ char *nsIMAPGenericParser::CreateLiteral()
                  numberOfCharsInMessage - charsReadSoFar : currentLineLength);
         NS_ASSERTION (bytesToCopy, "0 length literal?");
 
-        if (ContinueParse())
-        {
-          memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder, bytesToCopy); 
-          charsReadSoFar += bytesToCopy;
-        }
+        memcpy(returnString + charsReadSoFar, terminatedLine ? fCurrentLine : fCurrentTokenPlaceHolder, bytesToCopy); 
+        charsReadSoFar += bytesToCopy;
       }
 		}
 		

@@ -327,10 +327,6 @@ public:
   // ****
   NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                nsMsgBiffState biffState);
-  NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
-                              uid_validity_info* aInfo);
-  NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
-                               PRUint32 uidValidity);
   NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
                         PRUint32 aMsgId, const PRUnichar *extraInfo);
   NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,

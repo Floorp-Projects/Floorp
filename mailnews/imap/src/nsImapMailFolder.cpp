@@ -2335,6 +2335,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 
     aSpec->GetFlagState(getter_AddRefs(flagState));
 
+    m_uidValidity = folderValidity;
     if ((imapUIDValidity != folderValidity) /* && // if UIDVALIDITY Changed 
       !NET_IsOffline() */)
     {
@@ -4916,17 +4917,15 @@ nsImapMailFolder::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::GetStoredUIDValidity(nsIImapProtocol* aProtocol,
-                                       uid_validity_info* aInfo)
+nsImapMailFolder::GetUidValidity(PRInt32 *uidValidity)
 {
-  NS_ENSURE_ARG(aInfo);
-  aInfo->returnValidity = m_uidValidity;
+  NS_ENSURE_ARG(uidValidity);
+  *uidValidity = m_uidValidity;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
-                                        PRUint32 uidValidity)
+nsImapMailFolder::SetUidValidity(PRInt32 uidValidity)
 {
   m_uidValidity = uidValidity;
   return NS_OK;

@@ -601,17 +601,11 @@ PRBool nsImapOfflineSync::CreateOfflineFolder(nsIMsgFolder *folder)
 
 PRInt32 nsImapOfflineSync::GetCurrentUIDValidity()
 {
-   uid_validity_info uidStruct;
-
   if (m_currentFolder)
   {
-    nsCOMPtr <nsIImapMiscellaneousSink> miscellaneousSink = do_QueryInterface(m_currentFolder);
-    if (miscellaneousSink)
-    {
-      uidStruct.returnValidity = kUidUnknown;
-      miscellaneousSink->GetStoredUIDValidity(nsnull, &uidStruct);
-      mCurrentUIDValidity = uidStruct.returnValidity;    
-    }
+    nsCOMPtr <nsIImapMailFolderSink> imapFolderSink = do_QueryInterface(m_currentFolder);
+    if (imapFolderSink)
+      imapFolderSink->GetUidValidity(&mCurrentUIDValidity);
   }
   return mCurrentUIDValidity; 
 }

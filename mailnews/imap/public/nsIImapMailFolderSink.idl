@@ -71,7 +71,7 @@ interface nsIImapMailFolderSink : nsISupports {
   attribute boolean folderNeedsAdded;
   attribute boolean folderVerifiedOnline;
   attribute unsigned long aclFlags;
-
+  attribute long uidValidity;
   /**
    * Whether we have asked the server for this folder's quota information.
    * If the server supports quotas, this occurs when the folder is opened.

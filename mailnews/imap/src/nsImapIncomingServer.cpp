@@ -449,10 +449,6 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
       NS_ASSERTION(PR_FALSE, "shouldn't get an error loading url");
         rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
     }
-    else
-    {
-        // *** jt - alert user that error has occurred
-    }   
   }
   else
   {   // unable to get an imap connection to run the url; add to the url
