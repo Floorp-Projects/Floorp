@@ -54,7 +54,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   {
     nsCOMPtr<nsIFile> application;   
 
-    nsMIMEInfoHandlerAction action = nsIMIMEInfo::useSystemDefault;
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
     aMIMEInfo->GetPreferredAction(&action);
 
     if (action==nsIMIMEInfo::useHelperApp)
