@@ -59,7 +59,7 @@ OS_CFLAGS		= $(DSO_CFLAGS) $(PLATFORM_FLAGS) $(PORT_FLAGS)
 ######################################################################
 
 ifeq ($(CPU_ARCH),alpha)
-PLATFORM_FLAGS		+= -D_ALPHA_ -D__alpha
+PLATFORM_FLAGS		+= -D_ALPHA_ -D__alpha -mieee
 PORT_FLAGS		+= -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),ppc)

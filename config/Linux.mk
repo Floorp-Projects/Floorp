@@ -69,7 +69,7 @@ I2_LOCALE		= i2
 ######################################################################
 
 ifeq ($(CPU_ARCH),alpha)
-PLATFORM_FLAGS		+= -D__$(CPU_ARCH) -D_ALPHA_ 
+PLATFORM_FLAGS		+= -D__$(CPU_ARCH) -D_ALPHA_ -mieee
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
 endif
 ifeq ($(CPU_ARCH),m68k)
