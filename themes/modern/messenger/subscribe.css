@@ -33,7 +33,7 @@
   list-style-image: url("chrome://messenger/skin/icons/dot.gif");
 }
 
-.subscribedcol[value="true"] {
+.subscribedcol[Subscribed="true"] {
   list-style-image: url("chrome://messenger/skin/icons/check.gif");
 }
 
