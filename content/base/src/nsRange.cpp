@@ -1363,7 +1363,7 @@ nsresult nsRange::DeleteContents()
     if (hasChildren)
     {
       PRInt32 i;  
-      for (i=mEndOffset; i>=mStartOffset; --i)
+      for (i=mEndOffset - 1; i >= mStartOffset; --i)
       {
         res = cStart->RemoveChildAt(i, PR_TRUE);
         if (NS_FAILED(res)) 
