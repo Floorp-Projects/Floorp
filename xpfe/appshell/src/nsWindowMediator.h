@@ -81,13 +81,17 @@ private:
   PRInt32 RemoveEnumerator( nsAppShellWindowEnumerator* inEnumerator);
   nsWindowInfo *MostRecentWindowInfo(const PRUnichar* inType);
 
-  NS_IMETHOD UnregisterWindow( nsWindowInfo *inInfo );
+  NS_IMETHOD    UnregisterWindow(nsWindowInfo *inInfo);
+  nsWindowInfo *GetInfoFor(nsIXULWindow *aWindow);
+  nsWindowInfo *GetInfoFor(nsIWidget *aWindow);
+  void          SortZOrderFrontToBack();
+  void          SortZOrderBackToFront();
 
   nsVoidArray   mEnumeratorList;
   nsWindowInfo *mOldestWindow,
                *mTopmostWindow;
   PRInt32       mTimeStamp;
-  PRInt32       mUpdateBatchNest;
+  PRBool        mSortingZOrder;
   PRLock       *mListLock;
   nsCOMPtr<nsISupportsArray> mListeners;
 
