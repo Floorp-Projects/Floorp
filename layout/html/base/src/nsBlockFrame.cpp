@@ -1712,56 +1712,47 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       printf(": trying to avoid marking all lines dirty\n");
     }
 #endif
-    
-    PRBool notWrapping = aState.GetFlag(BRS_NOWRAP);
+
+    PRBool wrapping = !aState.GetFlag(BRS_NOWRAP);
     while (nsnull != line) {
 
-      if (line->IsBlock()) {
-        // We have to let child blocks make their own decisions.
+      // We let child blocks make their own decisions the same
+      // way we are here.
+      //
+      // For inline lines with no-wrap, the only way things
+      // could change is if there is a percentage-sized child.
+      if (line->IsBlock() ||
+          line->HasPercentageChild() || 
+          (wrapping &&
+           ((line->mNext && !line->HasBreak()) ||
+           line->ResizeReflowOptimizationDisabled() ||
+           line->HasFloaters() ||
+           line->IsImpactedByFloater() ||
+           (line->mBounds.XMost() > newAvailWidth)))) {
         line->MarkDirty();
       }
-      else {
-        // We can avoid reflowing *some* inline lines in some cases.
-#ifdef REALLY_NOISY_REFLOW
-      printf("PrepareResizeReflow thinks line %p is %simpacted by floaters\n", 
-        line, line->IsImpactedByFloater() ? "" : "not ");
-#endif
-        if (notWrapping) {
-          // When no-wrap is set then the only line-breaking that
-          // occurs for inline lines is triggered by BR elements or by
-          // newlines. Therefore, we don't need to reflow the line.
-        }
-        else if ((line->mNext && !line->HasBreak()) ||
-			           line->ResizeReflowOptimizationDisabled() ||
-                 line->HasFloaters() || line->IsImpactedByFloater() ||
-                 line->HasPercentageChild() ||
-                 (line->mBounds.XMost() > newAvailWidth)) {
-          // When an inline line has:
-          //
-          //  - a next line and it doesn't end in a break, or
-          //  - floaters, or
-          //  - is impacted by a floater, or
-          //  - is wider than the new available space
-          //
-          // Then we must reflow it.
-          line->MarkDirty();
-        }
 
-#ifdef DEBUG
-        if (gNoisyReflow && !line->IsDirty() && !notWrapping) {
-          IndentBy(stdout, gNoiseIndent + 1);
-          printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
-                 line, line->mNext,
-                 line->IsBlock() ? "block" : "inline",
-                 aState.GetFlag(BRS_NOWRAP) ? "no-wrap" : "wrapping",
-                 line->HasBreak() ? "has-break " : "",
-                 line->HasFloaters() ? "has-floaters " : "",
-                 line->IsImpactedByFloater() ? "impacted " : "",
-                 line->GetBreakType(),
-                 line->mBounds.XMost());
-        }
-#endif
+#ifdef REALLY_NOISY_REFLOW
+      if (!line->IsBlock()) {
+        printf("PrepareResizeReflow thinks line %p is %simpacted by floaters\n", 
+        line, line->IsImpactedByFloater() ? "" : "not ");
       }
+#endif
+#ifdef DEBUG
+      if (gNoisyReflow && !line->IsDirty() && wrapping) {
+        IndentBy(stdout, gNoiseIndent + 1);
+        printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
+           line, line->mNext,
+           line->IsBlock() ? "block" : "inline",
+           "wrapping",
+           line->HasBreak() ? "has-break " : "",
+           line->HasFloaters() ? "has-floaters " : "",
+           line->IsImpactedByFloater() ? "impacted " : "",
+           line->GetBreakType(),
+           line->mBounds.XMost());
+      }
+#endif
+
       line = line->mNext;
     }
   }
