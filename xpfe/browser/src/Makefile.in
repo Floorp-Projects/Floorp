@@ -39,7 +39,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/navigator.js \
 	$(srcdir)/unknownContent.xul \
 	$(srcdir)/viewSource.xul \
-	$(srcdir)/viewSource.js \
+	$(srcdir)/viewsource.js \
 	$(srcdir)/downloadProgress.xul \
 	$(srcdir)/downloadProgress.css \
 	$(srcdir)/navigator-shiny.css \
