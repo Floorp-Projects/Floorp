@@ -423,9 +423,11 @@ TCP_Server(void *arg)
     PR_PostSem(sp->addr_sem);
 
     for (i = 0; i < (num_tcp_clients * num_tcp_connections_per_client); i++) {
+        /* test both null and non-null 'addr' argument to PR_Accept */
+        PRNetAddr *addrp = (i%2 ? &netaddr: NULL);
 
     DPRINTF(("TCP_Server: Accepting connection\n"));
-        if ((newsockfd = PR_Accept(sockfd, &netaddr,
+        if ((newsockfd = PR_Accept(sockfd, addrp,
             PR_INTERVAL_NO_TIMEOUT)) == NULL) {
             fprintf(stderr,"prsocket_test: ERROR - PR_Accept failed\n");
             goto exit;
@@ -1750,8 +1752,10 @@ TransmitFile_Server(void *arg)
     PR_PostSem(sp->addr_sem);
 
     for (i = 0; i < num_transmitfile_clients ; i++) {
+        /* test both null and non-null 'addr' argument to PR_Accept */
+        PRNetAddr *addrp = (i%2 ? &netaddr: NULL);
 
-        if ((newsockfd = PR_Accept(sockfd, &netaddr,
+        if ((newsockfd = PR_Accept(sockfd, addrp,
             PR_INTERVAL_NO_TIMEOUT)) == NULL) {
             fprintf(stderr,
                 "prsocket_test: ERROR - PR_Accept failed\n");
