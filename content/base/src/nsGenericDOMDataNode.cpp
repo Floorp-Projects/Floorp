@@ -507,7 +507,11 @@ nsGenericDOMDataNode::AppendData(const nsAString& aData)
     nsAutoString old_data;
     mText.AppendTo(old_data);
     length = old_data.Length();
-    rv = SetText(old_data + aData, PR_FALSE);
+    // XXXjag We'd like to just say |old_data + aData|, but due
+    // to issues with dependent concatenation and sliding (sub)strings
+    // we'll just have to copy for now. See bug 121841 for details.
+    old_data.Append(aData);
+    rv = SetText(old_data, PR_FALSE);
   } else {
     nsCAutoString old_data;
     mText.AppendTo(old_data);
