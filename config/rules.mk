@@ -577,30 +577,26 @@ alltags:
 $(PROGRAM): $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LD) -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS) $(LIBS) $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) /ST:0x1000000
-ifdef OS2_PROGRAM_RESOURCE
-	rc -n -x2 -r $(OS2_PROGRAM_RESOURCE)
-	rc -n -x2 $(patsubst %.rc,%.res,$(OS2_PROGRAM_RESOURCE)) $@
-endif # os2_prog_rsrc
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(PROFILER_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
-ifeq ($(OS_ARCH),BeOS)
-ifdef BEOS_PROGRAM_RESOURCE
-	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
-	mimeset $@
-endif
-endif # BeOS
 else # ! CPP_PROG_LINK
 	$(CC) -o $@ $(CFLAGS) $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS)
+endif # CPP_PROG_LINK
+endif # OS2
 ifeq ($(OS_ARCH),BeOS)
 ifdef BEOS_PROGRAM_RESOURCE
 	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
 	mimeset $@
 endif
 endif # BeOS
-endif # CPP_PROG_LINK
-endif # OS2
+ifeq ($(OS_ARCH),OS2)
+ifdef OS2_PROGRAM_RESOURCE
+	rc -n -x2 -r $(OS2_PROGRAM_RESOURCE)
+	rc -n -x2 $(patsubst %.rc,%.res,$(OS2_PROGRAM_RESOURCE)) $@
+endif # os2_prog_rsrc
+endif
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
