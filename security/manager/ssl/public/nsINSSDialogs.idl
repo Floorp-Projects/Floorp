@@ -26,7 +26,7 @@ interface nsIInterfaceRequestor;
 
 /**
  * nsITokenPasswordDialogs
- *  This is the interface for setting and changin password
+ *  This is the interface for setting and changing password
  *  on a PKCS11 token.
  */
 [scriptable, uuid(be26b580-1dd1-11b2-9946-c598d0d07727)]
@@ -56,6 +56,41 @@ interface nsINSSDialogs : nsISupports
    * 
    * nsITokenPasswordDialogs is one such implementation.
    */
+};
+
+
+/**
+ * nsISecurityWarningDialogs - functions that
+ *   display warnings for transitions between secure
+ *   and insecure pages, posts to insecure servers etc.
+ */
+[scriptable, uuid(1c399d06-1dd2-11b2-bc58-c87cbcacdb78)]
+interface nsISecurityWarningDialogs : nsISupports
+{
+  /**
+   * alertEnteringSecure
+   */
+  void alertEnteringSecure(in nsIInterfaceRequestor ctx);
+
+  /**
+   * alertLeavingSecure
+   */
+  void alertLeavingSecure(in nsIInterfaceRequestor ctx);
+
+  /**
+   * alertMixedMode
+   */
+  void alertMixedMode(in nsIInterfaceRequestor ctx);
+
+  /**
+   * confirmPostToInsecure
+   */
+  boolean confirmPostToInsecure(in nsIInterfaceRequestor ctx);
+
+  /**
+   * confirmPostToInsecureFromSecure
+   */
+  boolean confirmPostToInsecureFromSecure(in nsIInterfaceRequestor ctx);
 };
 
 /**
