@@ -27,8 +27,8 @@ struct stub_private {
     IDL_tree    iface;
     IDL_tree    *funcs;
     unsigned    nfuncs;
-    IDL_tree    *const_dbls;
-    unsigned    nconst_dbls;
+    IDL_tree    *enums;
+    unsigned    nenums;
     IDL_tree    *props;
     unsigned    nprops;
 };
@@ -38,8 +38,8 @@ free_stub_private(struct stub_private *priv)
 {
     if (priv->funcs)
         free(priv->funcs);
-    if (priv->const_dbls)
-        free(priv->const_dbls);
+    if (priv->enums)
+        free(priv->enums);
     if (priv->props)
         free(priv->props);
     free(priv);
@@ -149,15 +149,15 @@ js_convert_arguments_format(IDL_tree type)
 
 static gboolean
 emit_convert_result(TreeState *state, const char *from, const char *to,
-                    const char *extra)
+                    const char *extra_space)
 {
     switch (IDL_NODE_TYPE(state->tree)) {
       case IDLN_TYPE_INTEGER:
         fprintf(state->file,
                 "%s  if (!JS_NewNumberValue(cx, (jsdouble) %s, %s))\n"
                 "%s    return JS_FALSE;\n",
-                extra, from, to,
-                extra);
+                extra_space, from, to,
+                extra_space);
         break;
       case IDLN_TYPE_STRING:
         /* XXXbe must free 'from' using priv's nsIAllocator iff not weak! */
@@ -166,15 +166,15 @@ emit_convert_result(TreeState *state, const char *from, const char *to,
                 "%s  if (!str)\n"
                 "%s    return JS_FALSE;\n"
                 "%s  *%s = STRING_TO_JSVAL(str);\n",
-                extra, from,
-                extra,
-                extra,
-                extra, to);
+                extra_space, from,
+                extra_space,
+                extra_space,
+                extra_space, to);
         break;
       case IDLN_TYPE_BOOLEAN:
         fprintf(state->file,
                 "%s  *%s = BOOLEAN_TO_JSVAL(%s);\n",
-                extra, to, from);
+                extra_space, to, from);
         break;
       case IDLN_IDENT:
         if (IDL_NODE_UP(state->tree) &&
@@ -182,14 +182,14 @@ emit_convert_result(TreeState *state, const char *from, const char *to,
             /* XXXbe issue warning, method should have been noscript? */
             fprintf(state->file,
                     "%s  *%s = JSVAL_NULL;\n",
-                    extra, to);
+                    extra_space, to);
             break;
         }
         fprintf(state->file,
                 "%s  *%s = OBJECT_TO_JSVAL(%s::GetJSObject(cx, %s));\n"
                 "%s  NS_RELEASE(%s);\n",
-                extra, to, IDL_IDENT(state->tree).str, from,
-                extra, from);
+                extra_space, to, IDL_IDENT(state->tree).str, from,
+                extra_space, from);
         break;
       default:
         assert(0); /* XXXbe */
@@ -211,7 +211,7 @@ stub_op_dcl(TreeState *state)
         return TRUE;
 
     append_to_vector(&priv->funcs, &priv->nfuncs, method);
-    xpidl_dump_comment(state, 0);
+    xpidl_write_comment(state, 0);
 
     assert(IDL_NODE_UP(IDL_NODE_UP(method)));
     iface = IDL_NODE_UP(IDL_NODE_UP(method));
@@ -291,7 +291,9 @@ stub_op_dcl(TreeState *state)
 static gboolean
 stub_type_enum(TreeState *state)
 {
-    fputs("XXXbe type_enum\n", state->file);
+    struct stub_private *priv = state->priv;
+    if (priv)
+        append_to_vector(&priv->enums, &priv->nenums, state->tree);
     return TRUE;
 }
 
@@ -309,6 +311,8 @@ emit_property_op(TreeState *state, const char *className, char which)
             "    return JS_TRUE;\n"
             "  nsresult result;\n"
             "  %s *priv = (%s *)JS_GetPrivate(cx, obj);\n"
+            "  if (!priv)\n"
+            "    return JS_TRUE;\n"
             "  switch (JSVAL_TO_INT(id)) {\n",
             className, which, className, className);
 
@@ -404,12 +408,22 @@ stub_interface(TreeState *state)
             fputs("  {0}\n};\n", state->file);
         }
 
-        if (priv->const_dbls) {
+        if (priv->enums) {
             fprintf(state->file,
                     "\nstatic JSConstDoubleSpec %s_const_dbls[] = {\n",
                     className);
-            for (i = 0; i < priv->nconst_dbls; i++) {
-                fprintf(state->file, "  {%g, \"%s\"},\n", 0., "d'oh!");
+            for (i = 0; i < priv->nenums; i++) {
+                unsigned j = 0;
+                IDL_tree iter;
+                for (iter = IDL_TYPE_ENUM(priv->enums[i]).enumerator_list;
+                     iter;
+                     iter = IDL_LIST(iter).next) {
+                    fprintf(state->file,
+                            "  {%u, \"%s\"},\n",
+                            j,
+                            IDL_IDENT(IDL_LIST(iter).data).str);
+                    j++;
+                }
             }
             fputs("  {0}\n};\n", state->file);
 
@@ -510,7 +524,7 @@ stub_interface(TreeState *state)
         else
             fputc('0', state->file);
         fputs(  ", 0, 0);\n", state->file);
-        if (priv->const_dbls) {
+        if (priv->enums) {
             fprintf(state->file,
                     "  if (!proto)\n"
                     "    return 0;\n"

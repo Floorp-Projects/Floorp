@@ -112,9 +112,10 @@ gboolean
 xpidl_process_node(TreeState *state);
 
 /*
- * Dump a comment containing IDL source decompiled from state->tree.
+ * Write a newline folllowed by an indented, one-line comment containing IDL
+ * source decompiled from state->tree.
  */
 void
-xpidl_dump_comment(TreeState *state, int indent);
+xpidl_write_comment(TreeState *state, int indent);
 
 #endif /* __xpidl_h */

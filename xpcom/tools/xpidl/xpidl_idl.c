@@ -507,7 +507,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
 }
 
 void
-xpidl_dump_comment(TreeState *state, int indent)
+xpidl_write_comment(TreeState *state, int indent)
 {
     fprintf(state->file, "\n%*s/* ", indent, "");
     IDL_tree_to_IDL(state->tree, state->ns, state->file,
