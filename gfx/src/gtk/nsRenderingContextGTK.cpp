@@ -289,7 +289,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
       delete mTMatrix;
     mTMatrix = state->mMatrix;
 
-    NS_RELEASE(mClipRegion);
+    NS_IF_RELEASE(mClipRegion);
 
 // restore everything
     mClipRegion = state->mClipRegion;
