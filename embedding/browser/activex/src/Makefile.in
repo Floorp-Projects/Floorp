@@ -26,4 +26,8 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS=control control_kicker
 
+ifdef MOZ_ACTIVEX_SCRIPTING_SUPPORT
+DIRS += plugin
+endif
+
 include $(topsrcdir)/config/rules.mk

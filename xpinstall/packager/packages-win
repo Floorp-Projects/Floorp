@@ -251,6 +251,8 @@ bin\ISimpleDOMDocumentMarshal.dll
 bin\components\nsSetDefaultBrowser.js
 bin\components\typeaheadfind.xpt
 bin\components\typeaheadfind.dll
+; ActiveX plugin
+bin\plugins\npmozax.dll
 
 ; LDAP components need to be in the browser for AutoConfig
 bin\components\mozldap.dll

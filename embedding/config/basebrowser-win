@@ -22,6 +22,10 @@
 mozctl.dll
 mozctlx.dll
 
+;
+; ActiveX plugin
+;
+plugins\npmozax.dll
 
 ; 
 ; NSPR:
