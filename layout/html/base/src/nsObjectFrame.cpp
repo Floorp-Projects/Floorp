@@ -852,6 +852,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
 #else
 
+#define JAVA_CLASS_ID "8AD9C840-044E-11D1-B3E9-00805F499D93"
+
 NS_IMETHODIMP
 nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
@@ -881,9 +883,11 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     NS_ADDREF(mInstanceOwner);
     mInstanceOwner->Init(&aPresContext, this);
 
-    nsISupports               *container;
-    nsIPluginHost             *pluginHost;
-    nsIContentViewerContainer *cv;
+    nsISupports               *container = nsnull;
+    nsIPluginHost             *pluginHost = nsnull;
+    nsIContentViewerContainer *cv = nsnull;
+    nsIURL* baseURL = nsnull;
+	  nsIURL* fullURL = nsnull;
 
     nsAutoString classid;
     PRInt32 nameSpaceID;
@@ -893,18 +897,18 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid))
     {
       nsCID widgetCID;
+      
+      classid.Cut(0, 6); // Strip off the "clsid:". What's left is the class ID.
 
-      // if we find "java:" in the class idea, we have a java applet
-      if(classid.Find("java:") != -1)
+      // if we find "java:" in the class id, or we match the Java classid number, we have a java applet
+      if((classid.Find("java:") != -1) || classid == JAVA_CLASS_ID)
       {
-        nsIURL* baseURL;
-	      nsIURL* fullURL;
-
         mimeType = (char *)PR_Malloc(PL_strlen("application/x-java-vm") + 1);
         PL_strcpy(mimeType, "application/x-java-vm");
 
         // removing the "java:" leaves us with the class file
-        classid.Cut(0, 5);
+        if(classid != JAVA_CLASS_ID)
+          classid.Cut(0, 5); 
 
 	      if((rv = GetBaseURL(baseURL)) != NS_OK)
 	        return rv;
@@ -914,7 +918,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
           baseURL->GetURLGroup(&group);
 
         nsAutoString codeBase;
-        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) 
+        if(NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase) &&
+           classid != JAVA_CLASS_ID) 
 		    {
           nsIURL* codeBaseURL = nsnull;
           rv = NS_NewURL(&codeBaseURL, codeBase, baseURL, nsnull, group);
@@ -925,8 +930,17 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
           }
         }
 
+        const char* url;
+        (void)baseURL->GetSpec(&url);
+
         // Create an absolute URL
-        rv = NS_NewURL(&fullURL, classid, baseURL, nsnull, group);
+        if(classid != JAVA_CLASS_ID)
+          rv = NS_NewURL(&fullURL, classid, baseURL, nsnull, group);
+        else
+        {
+          fullURL = baseURL;
+          NS_ADDREF(fullURL);
+        }
         NS_IF_RELEASE(group);
 
         // get the nsIPluginHost interface
@@ -945,15 +959,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         }
 
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
-
-  	    NS_RELEASE(pluginHost);
-	      NS_RELEASE(cv);
-	      NS_RELEASE(container);
       }
       else // otherwise, we're either an ActiveX control or an internal widget
       {
-        classid.Cut(0, 6); // Strip off the clsid:. What's left is the class ID.
-
         // These are some builtin types that we know about for now.
         // (Eventually this will move somewhere else.)
         if (classid == "treeview")
@@ -975,9 +983,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         {
 	      // if we haven't matched to an internal type, check to see if we have an ActiveX handler
 	      // if not, create the default plugin
-          nsIURL* baseURL;
-	        nsIURL* fullURL;
-
 	        if((rv = GetBaseURL(baseURL)) != NS_OK)
 	          return rv;
 
@@ -991,6 +996,11 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	        {
             nsIURL* codeBaseURL = nsnull;
             rv = NS_NewURL(&fullURL, codeBase, baseURL, nsnull, group);
+            if(rv == NS_OK)
+            {
+              NS_IF_RELEASE(baseURL);
+              baseURL = codeBaseURL;
+            }
           }
 	        else
 	          fullURL = baseURL;
@@ -1018,12 +1028,14 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	          rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/oleobject", fullURL);
 	        else
 	          rv = NS_ERROR_FAILURE;
-
-  	      NS_RELEASE(pluginHost);
-	        NS_RELEASE(cv);
-	        NS_RELEASE(container);
         }
       }
+
+	    NS_IF_RELEASE(baseURL);
+	    NS_IF_RELEASE(fullURL);
+	    NS_IF_RELEASE(pluginHost);
+	    NS_IF_RELEASE(cv);
+	    NS_IF_RELEASE(container);
 
       // finish up
       if(rv == NS_OK)
@@ -1044,8 +1056,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	  // if we're here, the object is either an applet or a plugin
 
     nsIAtom* atom = nsnull;
-	  nsIURL* baseURL = nsnull;
-	  nsIURL* fullURL = nsnull;
     nsAutoString    src;
 
 	  if((rv = GetBaseURL(baseURL)) != NS_OK)
@@ -1601,7 +1611,8 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   if (nsnull != mInstance)
   {
     mInstance->Stop();
-    mInstance->Destroy();
+    mInstance->SetWindow(nsnull);
+    //mInstance->Destroy();
     NS_RELEASE(mInstance);
   }
 
