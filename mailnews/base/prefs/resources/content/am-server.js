@@ -176,8 +176,6 @@ function onAdvanced()
     document.getElementById("pop3.deferGetNewMail").checked = serverSettings.deferGetNewMail;
     document.getElementById("pop3.deferredToAccount").setAttribute("value", serverSettings.deferredToAccount);
     var pop3Server = gServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
-    // we're explicitly setting this so we'll go through the SetDeferredToAccount method
-    pop3Server.deferredToAccount = serverSettings.deferredToAccount;
     // if we were using default special folders for this server, and we're deferring it,
     // switch the special folders to the deferred to account.
     if (serverSettings.deferredToAccount.length > 0)

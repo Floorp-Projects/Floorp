@@ -147,6 +147,7 @@ NS_IMETHODIMP nsPop3IncomingServer::SetDeferredToAccount(const char *aAccountKey
 {
   nsXPIDLCString deferredToAccount;
   GetDeferredToAccount(getter_Copies(deferredToAccount));
+  m_rootMsgFolder = nsnull; // clear this so we'll recalculate it on demand.
   //Notify listeners who listen to every folder
 
   nsresult rv =  SetCharValue("deferred_to_account", aAccountKey);
