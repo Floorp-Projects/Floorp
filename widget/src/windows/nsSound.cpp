@@ -54,6 +54,7 @@ public:
   CWinMM(const char* aModuleName="WINMM.DLL") {
     mInstance=::LoadLibrary(aModuleName);  
     mPlay=(mInstance) ? (PlayPtr)GetProcAddress(mInstance,"PlaySound") : 0;
+    sIsInitialized = PR_TRUE;
   }
 
   ~CWinMM() {
@@ -67,10 +68,17 @@ public:
     return (mPlay) ? mPlay(aSoundFile, aModule, aOptions) : FALSE;
   }
 
+  static BOOL IsInitialized() {
+    return sIsInitialized;
+  }
+ 
 private:
   HINSTANCE mInstance;  
   PlayPtr mPlay;
+  static BOOL sIsInitialized;
 };
+
+BOOL CWinMM::sIsInitialized = PR_FALSE;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -166,6 +174,8 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 
 NS_IMETHODIMP nsSound::Init()
 {
+  if (CWinMM::IsInitialized())
+    return NS_OK;
   CWinMM& theMM = CWinMM::GetModule();
 
   // This call halts a sound if it was still playing.
