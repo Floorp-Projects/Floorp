@@ -49,6 +49,20 @@ var gStyleTags = {
     "underline"  : "u"
   };
   
+function EditorOnLoad() {
+    // See if argument was passed.
+    if ( window.arguments && window.arguments[0] ) {
+        // Opened via window.openDialog with URL as argument.    
+        // Put argument where EditorStartup expects it.
+        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
+        // Continue with normal startup.
+        EditorStartup( 'html' );
+        return;
+    } else {
+        // No problem, proceed the old-fashioned way.
+        return;
+    }
+}
   
 function EditorStartup(editorType)
 {
