@@ -432,7 +432,7 @@ nsCairoRenderingContext::GetColor(nscolor &aColor) const
 NS_IMETHODIMP
 nsCairoRenderingContext::Translate(nscoord aX, nscoord aY)
 {
-    fprintf (stderr, "++ Xlate: %g %g\n", (double)aX, (double)aY);
+//    fprintf (stderr, "++ Xlate: %g %g\n", (double)aX, (double)aY);
     cairo_translate (mCairo, (double) aX, (double) aY);
     return NS_OK;
 }
@@ -494,6 +494,16 @@ nsCairoRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
     UpdateTempTransformMatrix();
     aTransform = &mTempTransform;
     return NS_OK;
+}
+
+void
+nsCairoRenderingContext::TransformCoord (nscoord *aX, nscoord *aY)
+{
+    double x = double(*aX);
+    double y = double(*aY);
+    cairo_transform_point (mCairo, &x, &y);
+    *aX = nscoord(x);
+    *aY = nscoord(y);
 }
 
 NS_IMETHODIMP
@@ -733,18 +743,20 @@ nsCairoRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
     nsCairoDrawingSurface *cds = (nsCairoDrawingSurface *) aSrcSurf;
     cairo_surface_t *src = cds->GetCairoSurface();
 
+    fprintf (stderr, "***** nsCairoRenderingContext::CopyOffScreenBits: [%p] %d,%d -> %d,%d %dx%d\n",
+             aSrcSurf, aSrcX, aSrcY, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height);
+
     PRUint32 srcWidth, srcHeight;
     cds->GetDimensions (&srcWidth, &srcHeight);
 
     cairo_save (mCairo);
 
-    cairo_matrix_t *mat = cairo_matrix_create();
-    cairo_surface_get_matrix (src, mat);
-    cairo_matrix_translate (mat, -double(aSrcX), -double(aSrcY));
-    cairo_matrix_scale (mat, double(aDestBounds.width)/double(srcWidth), double(aDestBounds.height)/double(srcHeight));
-    cairo_surface_set_matrix (src, mat);
-
     cairo_pattern_t *imgpat = cairo_pattern_create_for_surface (src);
+    cairo_matrix_t *mat = cairo_matrix_create();
+    cairo_matrix_scale (mat, 1.0/15.0, 1.0/15.0);
+    cairo_matrix_scale (mat, double(aDestBounds.width)/double(srcWidth), double(aDestBounds.height)/double(srcHeight));
+    cairo_matrix_translate (mat, double(aSrcX), double(aSrcY));
+    cairo_pattern_set_matrix (imgpat, mat);
     cairo_set_pattern (mCairo, imgpat);
 
     cairo_new_path (mCairo);
@@ -753,11 +765,8 @@ nsCairoRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
                      double(aDestBounds.width), double(aDestBounds.height));
     cairo_fill (mCairo);
 
-    cairo_pattern_destroy (imgpat);
-
     cairo_set_pattern (mCairo, nsnull);
-    cairo_matrix_set_identity (mat);
-    cairo_surface_set_matrix (src, mat);
+    cairo_pattern_destroy (imgpat);
     cairo_matrix_destroy(mat);
 
     cairo_restore (mCairo);
