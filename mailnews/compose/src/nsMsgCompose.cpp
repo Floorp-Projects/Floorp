@@ -4263,6 +4263,9 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
                  !color.Equals(NS_LITERAL_STRING("#FFFFFF"), nsCaseInsensitiveStringComparator())) {
           *_retval = nsIMsgCompConvertible::Altering;
         }
+		else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("dir"), &hasAttribute))
+            && hasAttribute)  // dir=rtl attributes should not downconvert
+          *_retval = nsIMsgCompConvertible::No; 
 
         //ignore special color setting for link, vlink and alink at this point.
       }
