@@ -104,7 +104,6 @@ public:
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
-                      PRUint32 aZlevel,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                       PRBool aIsHiddenWindow, nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
@@ -151,11 +150,10 @@ protected:
   nsIDOMNode * contextMenuTest;
 
   nsCOMPtr<nsITimer>      mSPTimer;
-  PRBool                  mSPTimerSize, mSPTimerPosition, mSPTimerMode;
   PRLock *                mSPTimerLock;
   nsCOMPtr<nsIPrompt>     mPrompter;
 
-  void        SetPersistenceTimer(PRBool aSize, PRBool aPosition, PRBool aMode);
+  void        SetPersistenceTimer(PRUint32 aDirtyFlags);
   static void FirePersistenceTimer(nsITimer *aTimer, void *aClosure);
 
 private:
