@@ -621,6 +621,12 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Paint(nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect) = 0;
    
+    /**
+     * Enables the dropping of files to a widget (XXX this is temporary)
+     *
+     */
+    NS_IMETHOD EnableFileDrop(PRBool aEnable) = 0;
+   
     virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
 };
 
