@@ -1197,17 +1197,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       break;
 
     case eToken_entity:
-      {
-        nsAutoString theStr;
-        theStr.Assign(aToken->GetStringValue());
-        if(!theStr.LowerCaseEqualsLiteral("xi")) {
-          PRUnichar theChar=theStr.CharAt(0);
-          if((nsCRT::IsAsciiDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
-            theStr.Assign(NS_LITERAL_STRING("#") + theStr);
-          }
-        }
-        result=WriteTag(mEntityTag,theStr,0,aToken->IsInError());
-      }
+      result=WriteTag(mEntityTag,aToken->GetStringValue(),0,aToken->IsInError());
       break;
 
     case eToken_instruction:
