@@ -65,7 +65,7 @@ var SMIMEModule = new Object();
 SMIMEModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-  dump("*** Registering smime account manager extension.\n");
+  debug("*** Registering smime account manager extension.\n");
   compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
   compMgr.registerFactoryLocation(SMIME_EXTENSION_SERVICE_CID,
                                   "SMIME Account Manager Extension Service",

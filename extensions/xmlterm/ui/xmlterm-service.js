@@ -120,7 +120,7 @@ function (aContentType, aCommand, aWindowContext, aRequest)
 
     var aChannel = aRequest.QueryInterface(Components.interfaces.nsIChannel);
 		
-    dump("XMLTermContentHandler.handleContent (" + aContentType + ", " +
+    debug("XMLTermContentHandler.handleContent (" + aContentType + ", " +
           aCommand + ", " + aWindowContext + ", " +
           aChannel.URI.spec + ")\n");
 
@@ -162,7 +162,7 @@ function (aSpec, aCharset, aBaseURI)
 {
     if (aBaseURI)
     {
-        dump("XMLTermProtocolHandler: aBaseURI passed to newURI, bailing.\n");
+        debug("XMLTermProtocolHandler: aBaseURI passed to newURI, bailing.\n");
         return null;
     }
     
@@ -199,7 +199,7 @@ function (aURI)
 
     if (!gSystemPrincipal) {
        if (!xulOwner) {
-          dump("XMLTermProtocolHandler: Internal error; unable to obtain system principal\n");
+          debug("XMLTermProtocolHandler: Internal error; unable to obtain system principal\n");
           throw Components.results.NS_ERROR_FAILURE;
        }
        gSystemPrincipal = xulOwner;
@@ -322,7 +322,7 @@ var XMLtermModule = new Object();
 XMLtermModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-    dump("*** Registering -terminal handler.\n");
+    debug("*** Registering -terminal handler.\n");
     
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
@@ -339,7 +339,7 @@ function (compMgr, fileSpec, location, type)
                              "terminal command line handler",
                  XMLTERMCLINE_SERVICE_CONTRACTID, true, true);
 
-    dump("*** Registering x-application-terminal handler.\n");
+    debug("*** Registering x-application-terminal handler.\n");
     compMgr.registerFactoryLocation(XMLTERMCNT_HANDLER_CID,
                                     "XMLTerm Content Handler",
                                     XMLTERMCNT_HANDLER_CONTRACTID, 
@@ -347,7 +347,7 @@ function (compMgr, fileSpec, location, type)
                                     location, 
                                     type);
 
-    dump("*** Registering terminal protocol handler.\n");
+    debug("*** Registering terminal protocol handler.\n");
     compMgr.registerFactoryLocation(XMLTERMPROT_HANDLER_CID,
                                     "XMLTerm protocol handler",
                                     XMLTERMPROT_HANDLER_CONTRACTID, 

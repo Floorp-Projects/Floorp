@@ -114,7 +114,7 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
     var channel = aRequest.QueryInterface(nsIChannel);
     
     /*
-    dump ("ircLoader.handleContent (" + aContentType + ", " +
+    debug ("ircLoader.handleContent (" + aContentType + ", " +
           aCommand + ", " + aWindowTarget + ", " + channel.URI.spec + ")\n");
     */
 
@@ -179,7 +179,7 @@ function (aSpec, aCharset, aBaseURI)
 {
     if (aBaseURI)
     {
-        dump ("-*- ircHandler: aBaseURI passed to newURI, bailing.\n");
+        debug ("-*- ircHandler: aBaseURI passed to newURI, bailing.\n");
         return null;
     }
     
@@ -282,7 +282,7 @@ var ChatzillaModule = new Object();
 ChatzillaModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-    dump("*** Registering -chat handler.\n");
+    debug("*** Registering -chat handler.\n");
     
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
@@ -299,7 +299,7 @@ function (compMgr, fileSpec, location, type)
                             "chatzilla command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
 
-    dump("*** Registering x-application-irc handler.\n");
+    debug("*** Registering x-application-irc handler.\n");
     compMgr.registerFactoryLocation(IRCCNT_HANDLER_CID,
                                     "IRC Content Handler",
                                     IRCCNT_HANDLER_CONTRACTID, 
@@ -307,7 +307,7 @@ function (compMgr, fileSpec, location, type)
                                     location, 
                                     type);
 
-    dump("*** Registering irc protocol handler.\n");
+    debug("*** Registering irc protocol handler.\n");
     compMgr.registerFactoryLocation(IRCPROT_HANDLER_CID,
                                     "IRC protocol handler",
                                     IRCPROT_HANDLER_CONTRACTID, 

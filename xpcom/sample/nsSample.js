@@ -27,7 +27,7 @@ mySample.prototype = {
     set value(newval) { return this.val = newval; },
 
     writeValue: function (aPrefix) {
-        dump("mySample::writeValue => " + aPrefix + this.val + "\n");
+        debug("mySample::writeValue => " + aPrefix + this.val + "\n");
     },
     poke: function (aValue) { this.val = aValue; },
 
@@ -60,11 +60,11 @@ var myModule = {
      */
     registerSelf: function (compMgr, fileSpec, location, type) {
         if (this.firstTime) {
-            dump("*** Deferring registration of sample JS components\n");
+            debug("*** Deferring registration of sample JS components\n");
             this.firstTime = false;
             throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
         }
-        dump("*** Registering sample JS components\n");
+        debug("*** Registering sample JS components\n");
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
         compMgr.registerFactoryLocation(this.myCID,
                                         "Sample JS Component",
@@ -103,7 +103,7 @@ var myModule = {
          * mightiest of XPCOM warriors to snivelling cowards.)
          */
         createInstance: function (outer, iid) {
-            dump("CI: " + iid + "\n");
+            debug("CI: " + iid + "\n");
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
 
@@ -123,7 +123,7 @@ var myModule = {
      * call it.
      */
     canUnload: function(compMgr) {
-        dump("*** Unloading sample JS components\n");
+        debug("*** Unloading sample JS components\n");
         return true;
     }
 };

@@ -75,7 +75,7 @@ var Module = new Object();
 Module.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-    dump("*** Registering -venkman handler.\n");
+    debug("*** Registering -venkman handler.\n");
     
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 

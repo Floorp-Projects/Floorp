@@ -65,7 +65,7 @@ var MDNModule = new Object();
 MDNModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-  dump("*** Registering mdn account manager extension.\n");
+  debug("*** Registering mdn account manager extension.\n");
   compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
   compMgr.registerFactoryLocation(MDN_EXTENSION_SERVICE_CID,
                                   "MDN Account Manager Extension Service",
