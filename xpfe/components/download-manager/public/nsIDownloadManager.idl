@@ -49,6 +49,15 @@ interface nsIDownloadItem;
 interface nsIDownloadManager : nsISupports {
 
   /**
+  * createDownload
+  * Creates a download item that can be managed.  Set the proper attributes
+  * on the nsIDownloadItem returned by this method, and then call addDownload to
+  * add it to the manager.
+  */
+ 
+  nsIDownloadItem createDownload();
+
+  /**
   * addDownload
   * Adds a download to be managed by the download manager.
   */

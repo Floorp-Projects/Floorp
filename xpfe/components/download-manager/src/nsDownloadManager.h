@@ -109,7 +109,6 @@ protected:
   nsresult GetDialogListener(nsIWebProgressListener** aInternalListener);
 
 private:
-  nsIRDFResource* mDownloadItem;
   nsIRDFDataSource* mDataSource;
   nsDownloadManager* mDownloadManager;
 
