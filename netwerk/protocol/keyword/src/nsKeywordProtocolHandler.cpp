@@ -38,7 +38,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsKeywordProtocolHandler::nsKeywordProtocolHandler() {
     NS_INIT_REFCNT();
-    mEnabled = PR_FALSE;
 }
 
 nsresult
@@ -46,10 +45,6 @@ nsKeywordProtocolHandler::Init() {
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-
-    rv = prefs->GetBoolPref("keyword.enabled", &mEnabled);
-    // if we're not enabled, don't init.
-    if (NS_FAILED(rv) || (PR_FALSE == mEnabled)) return NS_ERROR_FAILURE;
 
     nsXPIDLCString url;
     rv = prefs->CopyCharPref("keyword.URL", getter_Copies(url));
@@ -163,7 +158,7 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 {
     nsresult rv;
 
-    NS_ASSERTION(mEnabled && (mKeywordURL.Length() > 0), "someone's trying to use the keyword handler even though it hasn't been init'd");
+    NS_ASSERTION((mKeywordURL.Length() > 0), "someone's trying to use the keyword handler even though it hasn't been init'd");
 
     nsXPIDLCString path;
     rv = uri->GetPath(getter_Copies(path));
