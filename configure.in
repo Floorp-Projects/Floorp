@@ -680,6 +680,9 @@ if [ test "$_NSPR_NEEDS_THREAD_LIB" = 1 ]; then
 
 LIBS=$_SAVE_LIBS
 case "$target" in
+*-*-solaris*) 
+	AC_CHECK_LIB(pthread, pthread_create, 
+		NSPR_LIBS="-lpthread $NSPR_LIBS") ;;
 *-*-linux*) 
 	AC_CHECK_LIB(pthread, pthread_create, 
 		NSPR_LIBS="-lpthread $NSPR_LIBS") ;;
