@@ -175,7 +175,7 @@
               onkeypress="onSearchTreeKeyPress(event);"
               onclick="SearchOnClick(event);"> 
          <treecols>
-           <treecol id="nameColumn2" persist="hidden" flex="1" primary="true" label="..." />
+           <treecol id="nameColumn2" flex="1" ignoreincolumnpicker="true" label="..." sortDirection="ascending" persist="hidden sortDirection"/>
            <splitter class="tree-splitter"/>
            <treecol id="subscribedColumn2" persist="hidden" cycler="true" label="&subscribedHeader.label;" />
            <!-- commenting out until bug 38906 is fixed 

@@ -60,6 +60,7 @@
 #include "nntpCore.h"
 #include "nsIWindowWatcher.h"
 #include "nsITreeColumns.h"
+#include "nsIDOMElement.h"
 #include "nsMsgFolderFlags.h"
 
 #define INVALID_VERSION         0
@@ -1787,6 +1788,8 @@ nsNntpIncomingServer::GetCellProperties(PRInt32 row, nsITreeColumn* col, nsISupp
         // add the "subscribed" property so the check mark shows up
         // in the "subscribedCol"
         nsCString name;
+        if (mSearchResultSortDescending)
+          row = mSubscribeSearchResult.Count() + ~row;
         mSubscribeSearchResult.CStringAt(row, name);
         if (mTempSubscribed.IndexOf(name) != -1) {
           properties->AppendElement(mSubscribedAtom); 
@@ -1905,6 +1908,8 @@ nsNntpIncomingServer::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _r
     nsresult rv = NS_OK;
     if (colID[0] == 'n') {
       nsCAutoString str;
+      if (mSearchResultSortDescending)
+        row = mSubscribeSearchResult.Count() + ~row;
       mSubscribeSearchResult.CStringAt(row, str);
       // some servers have newsgroup names that are non ASCII.  we store 
       // those as escaped. unescape here so the UI is consistent
@@ -1917,6 +1922,27 @@ NS_IMETHODIMP
 nsNntpIncomingServer::SetTree(nsITreeBoxObject *tree)
 {
   mTree = tree;
+  if (!tree)
+      return NS_OK;
+
+  nsCOMPtr<nsITreeColumns> cols;
+  tree->GetColumns(getter_AddRefs(cols));
+  if (!cols)
+      return NS_OK;
+
+  nsCOMPtr<nsITreeColumn> col;
+  cols->GetKeyColumn(getter_AddRefs(col));
+  if (!col)
+      return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> element;
+  col->GetElement(getter_AddRefs(element));
+  if (!element)
+      return NS_OK;
+
+  nsAutoString dir;
+  element->GetAttribute(NS_LITERAL_STRING("sortDirection"), dir);
+  mSearchResultSortDescending = dir.EqualsLiteral("descending");
   return NS_OK;
 }
 
@@ -1929,6 +1955,17 @@ nsNntpIncomingServer::ToggleOpenState(PRInt32 index)
 NS_IMETHODIMP 
 nsNntpIncomingServer::CycleHeader(nsITreeColumn* col)
 {
+    PRBool cycler;
+    col->GetCycler(&cycler);
+    if (!cycler) {
+        NS_NAMED_LITERAL_STRING(dir, "sortDirection");
+        nsCOMPtr<nsIDOMElement> element;
+        col->GetElement(getter_AddRefs(element));
+        mSearchResultSortDescending = !mSearchResultSortDescending;
+        element->SetAttribute(dir, mSearchResultSortDescending ?
+            NS_LITERAL_STRING("descending") : NS_LITERAL_STRING("ascending"));
+        mTree->Invalidate();
+    }
     return NS_OK;
 }
 

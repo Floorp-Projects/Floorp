@@ -117,6 +117,7 @@ private:
     nsCStringArray mSubscribedNewsgroups;
     nsCStringArray mGroupsOnServer;
     nsCStringArray mSubscribeSearchResult;
+    PRBool mSearchResultSortDescending;
     // the list of of subscribed newsgroups within a given
     // subscribed dialog session.  
     // we need to keep track of them so we know what to show as "checked"
