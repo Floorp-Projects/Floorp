@@ -22,6 +22,8 @@
 extern JSObject*
 js_InitFileClass(JSContext *cx, JSObject* obj);
 
+extern JSObject*
+NewFileObject(JSContext *cx, char *bytes);
 
 #endif /* _jsfile_h__ */
 
