@@ -51,8 +51,11 @@ var szUninstall;
 var fUninstall;
 var fCommunicator;
 var fWindowsSystem;
+var fileTemp;
 var fileComponentReg;
 var fileComponentRegStr;
+var fileMsvcrt;
+var fileMsvcirt;
 
 srDest = $SpaceRequired$:bin;
 err    = startInstall("Mozilla XPCom", "XPCom", "$Version$"); 
@@ -82,6 +85,55 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
                      "",                 // subdir name to create relative to fCommunicator
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
+
+  if(!checkError(err))
+  {
+    // install msvcrt.dll *only* if it does not exist
+    // we don't care if addFile() fails (if the file does not exist in the archive)
+    // bacause it will still install
+    fileTemp   = fWindowsSystem + "msvcrt.dll";
+    fileMsvcrt = getFolder("file:///", fileTemp);
+    rv         = File.exists(fileMsvcrt);
+    logComment("fileExists() returned: " + rv);
+    if(rv == false)
+    {
+      logComment("File not found: " + fileMsvcrt);
+      addFile("/Microsoft/Shared",
+              "$Version$",
+              "msvcrt.dll",         // dir name in jar to extract 
+              fWindowsSystem,       // Where to put this file (Returned from getFolder) 
+              "",                   // subdir name to create relative to fCommunicator
+              true);                // Force Flag 
+      logComment("addFile() of msvcrt.dll returned: " + err);
+    }
+    else
+    {
+      logComment("File found: " + fileMsvcrt);
+    }
+
+    // install msvcirt.dll *only* if it does not exist
+    // we don't care if addFile() fails (if the file does not exist in the archive)
+    // bacause it will still install
+    fileTemp    = fWindowsSystem + "msvcirt.dll";
+    fileMsvcirt = getFolder("file:///", fileTemp);
+    rv          = File.exists(fileMsvcirt);
+    logComment("fileExists() returned: " + rv);
+    if(rv == false)
+    {
+      logComment("File not found: " + fileMsvcirt);
+      addFile("/Microsoft/Shared",
+              "$Version$",
+              "msvcirt.dll",        // dir name in jar to extract 
+              fWindowsSystem,       // Where to put this file (Returned from getFolder) 
+              "",                   // subdir name to create relative to fCommunicator
+              true);                // Force Flag 
+      logComment("addFile() of msvcirt.dll returned: " + err);
+    }
+    else
+    {
+      logComment("File found: " + fileMsvcirt);
+    }
+  }
 
   // check return value
   if(!checkError(err))
