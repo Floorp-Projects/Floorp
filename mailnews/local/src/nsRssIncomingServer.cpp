@@ -47,8 +47,9 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsRssIncomingServer,
                              nsIRssIncomingServer,
                              nsILocalMailIncomingServer)
 
-nsRssIncomingServer::nsRssIncomingServer()
+nsRssIncomingServer::nsRssIncomingServer() 
 {
+  m_canHaveFilters = PR_TRUE;
 }
 
 nsRssIncomingServer::~nsRssIncomingServer()

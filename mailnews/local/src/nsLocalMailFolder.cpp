@@ -106,6 +106,7 @@
 #include "nsCOMArray.h"
 #include "nsILineInputStream.h"
 #include "nsIFileStreams.h"
+#include "nsAutoPtr.h"
 
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -3711,5 +3712,59 @@ nsMsgLocalMailFolder::GetUidlFromFolder(nsLocalFolderScanState *aState,
       }
     }
   }
+  return rv;
+}
+
+  // this adds a message to the end of the folder, parsing it as it goes, and
+  // applying filters, if applicable.
+NS_IMETHODIMP
+nsMsgLocalMailFolder::AddMessage(const char *aMessage)
+{
+  nsCOMPtr<nsIFileSpec> pathSpec;
+  nsresult rv = GetPath(getter_AddRefs(pathSpec));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsFileSpec fileSpec;
+  rv = pathSpec->GetFileSpec(&fileSpec);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsIOFileStream outFileStream(fileSpec);
+  outFileStream.seek(fileSpec.GetFileSize());
+      
+  // create a new mail parser
+  nsRefPtr<nsParseNewMailState> newMailParser = new nsParseNewMailState;
+  if (newMailParser == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool isLocked;
+  
+  GetLocked(&isLocked);
+  if(!isLocked)
+    AcquireSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+  else
+    return NS_MSG_FOLDER_BUSY;
+
+
+  rv = newMailParser->Init(rootFolder, this, 
+                           fileSpec, &outFileStream, nsnull);
+  if (NS_SUCCEEDED(rv))
+  {
+
+//  in_server->SetServerBusy(PR_TRUE);
+
+    outFileStream << aMessage;
+    newMailParser->BufferInput(aMessage, strlen(aMessage));
+
+    outFileStream.flush();
+    newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
+    newMailParser->SetDBFolderStream(nsnull); // stream is going away
+    if (outFileStream.is_open())
+        outFileStream.close();
+  }
+  ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
   return rv;
 }

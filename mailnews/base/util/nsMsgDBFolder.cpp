@@ -1027,10 +1027,10 @@ NS_IMETHODIMP nsMsgDBFolder::GetFlags(PRUint32 *_retval)
 
 NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element)
 {
-	nsresult rv = NS_OK;
-	nsXPIDLCString charset;
+  nsresult rv = NS_OK;
+  nsXPIDLCString charset;
 
-	element->GetInt32Property("flags", (PRInt32 *) &mFlags);
+  element->GetInt32Property("flags", (PRInt32 *) &mFlags);
 
   PRBool persistElided = PR_TRUE;
   rv = GetPersistElided(&persistElided);
@@ -1048,55 +1048,55 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
   element->GetInt32Property("expungedBytes", (PRInt32 *) &mExpungedBytes);
   element->GetInt32Property("folderSize", (PRInt32 *) &mFolderSize);
 
-	element->GetStringProperty("charset", getter_Copies(charset));
+  element->GetStringProperty("charset", getter_Copies(charset));
 
 #ifdef DEBUG_bienvenu1
-	char *uri;
+  char *uri;
 
-	GetURI(&uri);
-	printf("read total %ld for %s\n", mNumTotalMessages, uri);
-	PR_Free(uri);
+  GetURI(&uri);
+  printf("read total %ld for %s\n", mNumTotalMessages, uri);
+  PR_Free(uri);
 #endif
-	mCharset.AssignWithConversion(charset.get());
+  mCharset.AssignWithConversion(charset.get());
 
   mInitializedFromCache = PR_TRUE;
-	return rv;
+  return rv;
 }
 
 nsresult nsMsgDBFolder::GetFolderCacheKey(nsIFileSpec **aFileSpec)
 {
-	nsresult rv;
-	nsCOMPtr <nsIFileSpec> path;
-	rv = GetPath(getter_AddRefs(path));
-
-	// now we put a new file spec in aFileSpec, because we're going to change it.
-	rv = NS_NewFileSpec(aFileSpec);
-
-	if (NS_SUCCEEDED(rv) && *aFileSpec)
-	{
-		nsIFileSpec *dbPath = *aFileSpec;
-		dbPath->FromFileSpec(path);
-		// if not a server, we need to convert to a db Path with .msf on the end
-		PRBool isServer = PR_FALSE;
-		GetIsServer(&isServer);
-
-		// if it's a server, we don't need the .msf appended to the name
-		if (!isServer)
-		{
-			nsFileSpec		folderName;
-			dbPath->GetFileSpec(&folderName);
-			nsLocalFolderSummarySpec summarySpec(folderName);
-
-			dbPath->SetFromFileSpec(summarySpec);
-
-			// create the .msf file
-			// see bug #244217 for details
-			PRBool exists;
-			if (NS_SUCCEEDED(dbPath->Exists(&exists)) && !exists)
-				dbPath->Touch();
-		}
-	}
-	return rv;
+  nsresult rv;
+  nsCOMPtr <nsIFileSpec> path;
+  rv = GetPath(getter_AddRefs(path));
+  
+  // now we put a new file spec in aFileSpec, because we're going to change it.
+  rv = NS_NewFileSpec(aFileSpec);
+  
+  if (NS_SUCCEEDED(rv) && *aFileSpec)
+  {
+    nsIFileSpec *dbPath = *aFileSpec;
+    dbPath->FromFileSpec(path);
+    // if not a server, we need to convert to a db Path with .msf on the end
+    PRBool isServer = PR_FALSE;
+    GetIsServer(&isServer);
+    
+    // if it's a server, we don't need the .msf appended to the name
+    if (!isServer)
+    {
+      nsFileSpec		folderName;
+      dbPath->GetFileSpec(&folderName);
+      nsLocalFolderSummarySpec summarySpec(folderName);
+      
+      dbPath->SetFromFileSpec(summarySpec);
+      
+      // create the .msf file
+      // see bug #244217 for details
+      PRBool exists;
+      if (NS_SUCCEEDED(dbPath->Exists(&exists)) && !exists)
+        dbPath->Touch();
+    }
+  }
+  return rv;
 }
 
 nsresult nsMsgDBFolder::FlushToFolderCache()

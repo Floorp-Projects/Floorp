@@ -76,6 +76,9 @@ interface nsIMsgLocalMailFolder : nsISupports {
   [noscript] void markMsgsOnPop3Server(in nsISupportsArray aMessages, in PRInt32 aMark);
   void refreshSizeOnDisk(); // file size on disk has possibly changed - update and notify
 
+  // this adds a message to the end of the folder, parsing it as it goes, and
+  // applying filters, if applicable.
+  void addMessage(in string aMessage);
   /**
    * functions for updating the UI while running DownloadMessagesForOffline:
    * delete the old message before adding its newly downloaded body, and

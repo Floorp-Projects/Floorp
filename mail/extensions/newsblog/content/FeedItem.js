@@ -275,7 +275,7 @@ FeedItem.prototype.toUtf8 = function(str) {
 }
 
 FeedItem.prototype.writeToFolder = function() {
-  debug(this.identity + " writing to message folder");
+  debug(this.identity + " writing to message folder" + this.feed.name + "\n");
 
   var server = getIncomingServer();
 
@@ -326,42 +326,8 @@ FeedItem.prototype.writeToFolder = function() {
 
   // Get the folder and database storing the feed's messages and headers.
   var folder = server.rootMsgFolder.getChildNamed(this.feed.name);
-  folder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-
-  var mbox = new LocalFile(folder.path.nativePath,
-                           MODE_WRONLY | MODE_APPEND | MODE_CREATE);
-
-  // Create a message header object using the offset of the message
-  // from the front of the mbox file as the unique message key (which seems
-  // to be what other mail code does).
-  var key = mbox.localFile.fileSize;
-
-  var length = mbox.write(this.toUtf8(source));
-  mbox.flush();
-  mbox.close();
-
-  var db = folder.getMsgDatabase(getMessageWindow());
-  var header = db.CreateNewHdr(key);
-
-  // Not sure what date should be, but guessing it's seconds-since-epoch
-  // since that's what existing values look like.  For some reason the values
-  // in the database have three more decimal places than the values produced
-  // by Date.getTime(), and in the DB values I've inspected they were all zero,
-  // so I append three zeros here, which seems to work.  Sheesh what a hack.
-  // XXX Figure out what's up with that, maybe milliseconds?
-  header.date = new Date(this.date).getTime() + "000";
-  header.Charset = "UTF-8";
-  header.author = this.toUtf8(this.author);
-  header.subject = this.toUtf8(this.title);
-  header.messageId = this.messageID;
-  header.messageSize = length;
-  // Count the number of line break characters to determine the line count.
-  header.lineCount = this.content.match(/\r?\n?/g).length;
-  header.messageOffset = key;
-  header.statusOffset = openingLine.length;
-  header.flags = MSG_FLAG_NEW;
-
-  db.AddNewHdrToDB(header, true);
+  folder = folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
+  folder.addMessage(source);
 }
 
 function W3CToIETFDate(dateString) {

@@ -1958,6 +1958,9 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
   PRBool useCustomPrefs = PR_FALSE;
   PRInt32 incorp = nsIMsgMdnGenerator::eIncorporateInbox;
 
+  if (!identity)
+    return NS_ERROR_NULL_POINTER;
+
   identity->GetBoolAttribute("use_custom_prefs", &useCustomPrefs);
   if (useCustomPrefs)
     rv = GetIntValue("incorporate_return_receipt", &incorp);

@@ -1578,20 +1578,21 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved, nsIMsgWindow *msgWindow)
   m_msgMovedByFilter = PR_FALSE;
   
   nsCOMPtr<nsIMsgDBHdr> msgHdr = m_newMsgHdr;
-  nsCOMPtr<nsIMsgFolder> inbox;
+  nsCOMPtr<nsIMsgFolder> downloadFolder = m_downloadFolder;
   nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(m_rootFolder);
   if (rootMsgFolder)
   {
     PRUint32 numFolders;
-    rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
-    if (inbox)
-      inbox->GetURI(getter_Copies(m_inboxUri));
+    if (!downloadFolder)
+      rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(downloadFolder));
+    if (downloadFolder)
+      downloadFolder->GetURI(getter_Copies(m_inboxUri));
     char * headers = m_headers.GetBuffer();
     PRUint32 headersSize = m_headers.GetBufferPos();
     nsresult matchTermStatus;
     if (m_filterList)
       matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule,
-                  msgHdr, inbox, m_mailDB, headers, headersSize, this, msgWindow);
+                  msgHdr, downloadFolder, m_mailDB, headers, headersSize, this, msgWindow);
   }
   
   if (pMoved)
