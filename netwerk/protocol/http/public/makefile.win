@@ -19,6 +19,8 @@ MODULE = netwerk
 
 DEPTH = ..\..\..\..
 
+XPIDL_MODULE = netwerk_http
+
 XPIDLSRCS =                  \
         .\nsIHTTPChannel.idl \
 	.\nsIHttpNotify.idl  \
