@@ -58,8 +58,11 @@ interface nsILDAPOperation : nsISupports
     void init(in nsILDAPConnection aConnection, 
 	      in nsILDAPMessageListener aMessageListener);
 
-    // wrapper for ldap_simple_bind()
-    //
+    /**
+     * wrapper for ldap_simple_bind()
+     * 
+     * @param passwd 	the password used for binding; NULL for anon-binds
+     */
     void simpleBind(in string passwd);
 
     // wrapper for ldap_search_url()

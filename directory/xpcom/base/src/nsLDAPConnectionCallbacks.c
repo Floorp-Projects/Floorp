@@ -159,10 +159,12 @@ nsLDAPGetLderrno( char **aMatched, char **aErrMsg, void *aDummy )
    return( nle->mErrno );
 }
 
-/* these functions work with pthreads.  they might work with other threads too.
- * but maybe not.  ultimately, when LDAP C SDK 4.1 lands, we'll have NSPR
- * functions used by the SDK, so that we can use NSPR's errno, not the system
- * one. (and that should be cross-platform).
+/*
+ * these two functions work with pthreads.  they might work with other
+ * threads too.  but maybe not.  ultimately, when LDAP C SDK 4.1
+ * lands, we'll have NSPR functions used by the SDK, so that we can
+ * use NSPR's errno, not the system one. (and that should be
+ * cross-platform).
  */
 static void
 nsLDAPSetErrno( int aErr )

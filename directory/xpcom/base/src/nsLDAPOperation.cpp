@@ -138,7 +138,7 @@ nsLDAPOperation::SearchExt(const char *base, // base DN to search
  * @param aScope		One of LDAP_SCOPE_{BASE,ONELEVEL,SUBTREE}
  * @param aFilter		Search filter
  * @param aTimeOut		How long to wait
- * @param aSizeLimit	Maximum number of entries to return.
+ * @param aSizeLimit		Maximum number of entries to return.
  *
  * XXX doesn't currently handle LDAPControl params
  *
