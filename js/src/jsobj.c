@@ -1115,7 +1115,7 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (!JS_ValueToId(cx, argv[0], &id))
         return JS_FALSE;
-    /* Be compatible with an error in the ECMA spec; return false unless hasOwnProperty. */
+    /* XXX ECMA spec error compatible: return false unless hasOwnProperty. */
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     if (prop && obj2 != obj) {
@@ -1193,6 +1193,46 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                                NULL, (JSPropertyOp) JSVAL_TO_OBJECT(fval),
                                JSPROP_SETTER, NULL);
 }
+
+static JSBool
+obj_lookupGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *rval)
+{
+    jsid id;
+    JSObject *pobj;
+    JSScopeProperty *sprop;
+
+    if (!JS_ValueToId(cx, argv[0], &id))
+        return JS_FALSE;
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, (JSProperty **) &sprop))
+        return JS_FALSE;
+    if (sprop) {
+        if (sprop->attrs & JSPROP_GETTER)
+            *rval = OBJECT_TO_JSVAL(SPROP_GETTER(sprop, pobj));
+        OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+    }
+    return JS_TRUE;
+}
+
+static JSBool
+obj_lookupSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                 jsval *rval)
+{
+    jsid id;
+    JSObject *pobj;
+    JSScopeProperty *sprop;
+
+    if (!JS_ValueToId(cx, argv[0], &id))
+        return JS_FALSE;
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &pobj, (JSProperty **) &sprop))
+        return JS_FALSE;
+    if (sprop) {
+        if (sprop->attrs & JSPROP_SETTER)
+            *rval = OBJECT_TO_JSVAL(SPROP_SETTER(sprop, pobj));
+        OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+    }
+    return JS_TRUE;
+}
 #endif /* JS_HAS_GETTER_SETTER */
 
 #if JS_HAS_OBJ_WATCHPOINT
@@ -1207,6 +1247,8 @@ const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
 #if JS_HAS_GETTER_SETTER
 const char js_defineGetter_str[] = "__defineGetter__";
 const char js_defineSetter_str[] = "__defineSetter__";
+const char js_lookupGetter_str[] = "__lookupGetter__";
+const char js_lookupSetter_str[] = "__lookupSetter__";
 #endif
 
 static JSFunctionSpec object_methods[] = {
@@ -1229,6 +1271,8 @@ static JSFunctionSpec object_methods[] = {
 #if JS_HAS_GETTER_SETTER
     {js_defineGetter_str,         obj_defineGetter,   2,0,0},
     {js_defineSetter_str,         obj_defineSetter,   2,0,0},
+    {js_lookupGetter_str,         obj_lookupGetter,   1,0,0},
+    {js_lookupSetter_str,         obj_lookupSetter,   1,0,0},
 #endif
     {0,0,0,0,0}
 };
