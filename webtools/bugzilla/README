@@ -66,6 +66,27 @@ bugs database. You may have to hack the code to use "nobody"
 or whatever your HTTP server is running as.
 
 
+1.3 Perl
+
+    MySQL used to come with a perl module.  More recent versions do
+not; they count on you grabbing the DBI package from CPAN.  So, if you
+are installing a new version of MySQL, you will probably also need to
+grab the following:
+
+ftp://ftp.cpan.org/pub/CPAN/authors/id/TIMB/DBI-1.06.tar.gz
+ftp://ftp.cpan.org/pub/CPAN/authors/id/JWIED/Msql-Mysql-modules-1.2017.tar.gz
+
+   For Mysql support, the Msql-Mysql-modules (for 1.2017, at least)
+uses DBI, so that will have to be installed first (0.93 or later).
+Then, when making the Makefile for the Msql-Mysql modules, you will
+be asked which DB to support.  Only Mysql is necessary.  Also, you
+will be asked if you want to install the "MysqlPerl emulation".  You
+must say yes for Bugzilla to work.
+
+This assumes, of course, that you do not have a version of "MysqlPerl"
+already installed.
+
+
 2. Tweaking the Tools
 
   All scripts look in /usr/bonsaitools/bin for perl. Make 
