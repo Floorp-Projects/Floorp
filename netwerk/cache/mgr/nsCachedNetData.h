@@ -124,6 +124,9 @@ protected:
     // placement new for arena-allocation
     void *operator new (size_t aSize, nsIArena *aArena);
 
+    // placement new for recycling of arena-allocated nsCachedNetData instances
+    void *operator new (size_t aSize, nsCachedNetData *aEntry);
+
     friend class nsReplacementPolicy;
     friend class nsCacheManager;
     friend class StreamAsFile;

@@ -63,6 +63,15 @@ nsCachedNetData::operator new (size_t aSize, nsIArena *aArena)
     return entry;
 }
 
+// Placement new for recycling of arena-based nsCachedNetData
+// instances, clears all instance variables.
+void *
+nsCachedNetData::operator new (size_t aSize, nsCachedNetData *aEntry)
+{
+    nsCRT::zero(aEntry, aSize);
+    return aEntry;
+}
+
 // One element in a linked list of nsIStreamAsFileObserver's
 class StreamAsFileObserverClosure
 {
@@ -1087,6 +1096,10 @@ public:
             mCacheEntry->ClearFlag(nsCachedNetData::TRUNCATED_CONTENT);
         mCacheEntry->ClearFlag(nsCachedNetData::VESTIGIAL);
         mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
+
+        // Tell any stream-as-file observers that the file has been completely written
+        mCacheEntry->Notify(nsIStreamAsFileObserver::NOTIFY_AVAILABLE, NS_OK);
+
         return mOriginalListener->OnStopRequest(channel, ctxt, status, errorMsg);
     }
 
