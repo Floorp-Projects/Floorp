@@ -146,7 +146,6 @@ nsJVMPluginTagInfo::GetCodeBase(const char* *result)
     }
     
     PA_UNLOCK(docBase);
-    nsCRT::free((char *)docBase);
     *result = fSimulatedCodebase;
     return NS_OK;
 }
