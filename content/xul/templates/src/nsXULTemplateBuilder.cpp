@@ -5440,7 +5440,7 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
             if (NS_FAILED(rv)) return rv;
 
-            const nsAReadableString& id = NS_ConvertUTF8toUCS2(uri);
+            nsAutoString id = NS_ConvertUTF8toUCS2(uri);
             rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
             if (NS_FAILED(rv)) return rv;
