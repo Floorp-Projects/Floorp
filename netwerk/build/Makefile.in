@@ -59,6 +59,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkhttp_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkfile_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)nkftp_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkdata_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkjar_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkres_s.$(LIB_SUFFIX) \
@@ -77,6 +78,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../cache/src \
 		-I$(srcdir)/../protocol/http/src \
 		-I$(srcdir)/../protocol/file/src \
+		-I$(srcdir)/../protocol/ftp/src \
 		-I$(srcdir)/../protocol/data/src \
 		-I$(srcdir)/../protocol/jar/src \
 		-I$(srcdir)/../protocol/res/src \
