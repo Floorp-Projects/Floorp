@@ -183,7 +183,7 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 	nsresult rv = NS_OK;
 	// and close the article file if it was open....
 	if (m_tempMessageFile)
-		rv = m_tempMessageFile->closeStream();
+		rv = m_tempMessageFile->CloseStream();
 
 	// disply hack: run a file url on the temp file
 	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage && m_displayConsumer)
@@ -264,7 +264,7 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 					// we don't have pluggable converters yet. We want to let mkfile do the work of 
 					// converting the message from RFC-822 to HTML before displaying it...
 					ClearFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
-					m_tempMessageFile->openStreamForWriting();
+					m_tempMessageFile->OpenStreamForWriting();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
 
@@ -367,8 +367,8 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 				{
 					PRInt32 count = 0;
 					if (line)
-						m_tempMessageFile->write(line, PL_strlen(line), &count);
-					m_tempMessageFile->write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
+						m_tempMessageFile->Write(line, PL_strlen(line), &count);
+					m_tempMessageFile->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &count);
 				}
 				else
 					SetFlag(MAILBOX_MSG_PARSE_FIRST_LINE);

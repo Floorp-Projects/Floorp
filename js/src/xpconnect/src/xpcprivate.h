@@ -735,12 +735,12 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSID
 
-    PRBool initWithName(const nsID& id, const char *nameString);
-    PRBool setName(const char* name);
-    void   setNameToNoString()
+    PRBool InitWithName(const nsID& id, const char *nameString);
+    PRBool SetName(const char* name);
+    void   SetNameToNoString()
         {NS_ASSERTION(!mName, "name already set"); mName = gNoString;}
-    PRBool nameIsSet() const {return nsnull != mName;}
-    const nsID* getID() const {return &mID;}
+    PRBool NameIsSet() const {return nsnull != mName;}
+    const nsID* GetID() const {return &mID;}
 
     static nsJSID* NewID(const char* str);
 
@@ -748,7 +748,7 @@ public:
     virtual ~nsJSID();
 protected:
 
-    void reset();
+    void Reset();
     const nsID& GetInvalidIID() const;
 
 protected:
@@ -764,6 +764,7 @@ class nsJSIID : public nsIJSIID
 {
 public:
     NS_DECL_ISUPPORTS
+
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
 
@@ -776,7 +777,7 @@ public:
     virtual ~nsJSIID();
 
 private:
-    void resolveName();
+    void ResolveName();
 
 private:
     nsJSID mDetails;
@@ -788,6 +789,7 @@ class nsJSCID : public nsIJSCID
 {
 public:
     NS_DECL_ISUPPORTS
+
     // we manually delagate these to nsJSID
     NS_DECL_NSIJSID
 
@@ -800,7 +802,7 @@ public:
     virtual ~nsJSCID();
 
 private:
-    void resolveName();
+    void ResolveName();
 
 private:
     nsJSID mDetails;
@@ -943,7 +945,7 @@ public:
     virtual ~nsXPCException();
 
 protected:
-    void reset();
+    void Reset();
 private:
     char*                       mMessage;
     nsresult                    mCode;

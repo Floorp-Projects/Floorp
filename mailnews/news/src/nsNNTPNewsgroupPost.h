@@ -89,7 +89,7 @@ public:
     NS_IMPL_CLASS_GETTER_STR(GetReferences, m_header[HEADER_REFERENCES]);
 
 
-    NS_IMETHOD isValid(PRBool *_retval);
+    NS_IMETHOD IsValid(PRBool *_retval);
     
     NS_IMETHOD MakeControlCancel(const char *messageID);
 
@@ -103,7 +103,7 @@ public:
 	NS_IMETHOD GetPostMessageFile(nsFilePath ** aFileName);
     
     // helper routines
-    static char *appendAndAlloc(char *string, const char *newSubstring,
+    static char *AppendAndAlloc(char *string, const char *newSubstring,
                                 PRBool withComma);
 private:
     nsFilePath  m_fileName;

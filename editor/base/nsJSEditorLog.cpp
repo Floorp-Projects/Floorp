@@ -45,7 +45,7 @@ nsJSEditorLog::nsJSEditorLog(nsIEditor *aEditor, nsIFileSpec *aLogFile)
   nsresult result;
 
   if (mFileSpec)
-    result = mFileSpec->openStreamForWriting();
+    result = mFileSpec->OpenStreamForWriting();
   else
     result = NS_ERROR_NULL_POINTER;
 
@@ -58,7 +58,7 @@ nsJSEditorLog::nsJSEditorLog(nsIEditor *aEditor, nsIFileSpec *aLogFile)
 nsJSEditorLog::~nsJSEditorLog()
 {
   if (mFileSpec)
-    /* nsresult result = */ mFileSpec->closeStream();
+    /* nsresult result = */ mFileSpec->CloseStream();
 }
 
 #define DEBUG_JS_EDITOR_LOG_REFCNT 1
@@ -877,14 +877,14 @@ nsJSEditorLog::Write(const char *aBuffer)
   {
     PRInt32 retval;
 
-    result = mFileSpec->write(aBuffer, len, &retval);
+    result = mFileSpec->Write(aBuffer, len, &retval);
 
     if (NS_FAILED(result))
       return result;
 
 #ifdef VERY_SLOW
 
-    result = mFileSpec->flush();
+    result = mFileSpec->Flush();
 
     if (NS_FAILED(result))
       return result;
@@ -916,7 +916,7 @@ nsJSEditorLog::Flush()
   nsresult result = NS_OK;
 
   if (mFileSpec)
-    result = mFileSpec->flush();
+    result = mFileSpec->Flush();
   else
     fflush(stdout);
 

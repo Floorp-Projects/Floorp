@@ -36,7 +36,7 @@ write_indent(FILE *outfile) {
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
 {
-    char *ident = (char *)value;
+    const char *ident = (const char *)value;
     TreeState *state = (TreeState *)user_data;
     fprintf(state->file, "#include \"%s.h\"\n",
             ident);
@@ -45,7 +45,7 @@ write_header(gpointer key, gpointer value, gpointer user_data)
 static gboolean
 pass_1(TreeState *state)
 {
-    char *define = g_basename(state->basename);
+    const char *define = g_basename(state->basename);
     if (state->tree) {
         fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
                 " %s.idl\n */\n", state->basename);
@@ -217,17 +217,17 @@ interface(TreeState *state)
             break;
 
           case IDLN_CONST_DCL:
-              /* ignore it here; it doesn't contribute to the macro. */
-              continue;
+            /* ignore it here; it doesn't contribute to the macro. */
+            continue;
 
           case IDLN_CODEFRAG:
-              XPIDL_WARNING((iter, IDL_WARNING1,
-                             "%%{ .. %%} code fragment within interface "
-                             "ignored when generating NS_DECL_IFOO macro; "
-                             "if the code fragment contains method "
-                             "declarations, the macro probably isn't "
-                             "complete."));
-              continue;
+            XPIDL_WARNING((iter, IDL_WARNING1,
+                           "%%{ .. %%} code fragment within interface "
+                           "ignored when generating NS_DECL_IFOO macro; "
+                           "if the code fragment contains method "
+                           "declarations, the macro probably isn't "
+                           "complete."));
+            continue;
 
           default:
             IDL_tree_error(iter,
@@ -438,7 +438,7 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
     }
     fprintf(outfile, "%cet%c%s(",
             getter ? 'G' : 'S',
-            toupper(attrname[0]), attrname + 1);
+            toupper(*attrname), attrname + 1);
     if (!as_call) {
         if (!write_type(ATTR_TYPE_DECL(attr_tree), outfile))
             return FALSE;
@@ -545,15 +545,23 @@ do_typedef(TreeState *state)
                        "sequences not supported, ignored"));
     } else {
         state->tree = type;
-        fputs("typedef ", state->file);
+        fputs("\ntypedef ", state->file);
         if (!write_type(state->tree, state->file))
             return FALSE;
         fputs(" ", state->file);
         if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
-            fprintf(state->file, "%s[%ld]",
-                    IDL_IDENT(IDL_TYPE_ARRAY(complex).ident).str,
-                 (long)IDL_INTEGER(IDL_LIST(IDL_TYPE_ARRAY(complex).size_list).
-                                data).value);
+            IDL_tree dim = IDL_TYPE_ARRAY(complex).size_list;
+
+            fprintf(state->file, "%s",
+                    IDL_IDENT(IDL_TYPE_ARRAY(complex).ident).str);
+            do {
+                fputc('[', state->file);
+                if (IDL_LIST(dim).data) {
+                    fprintf(state->file, "%ld",
+                            (long)IDL_INTEGER(IDL_LIST(dim).data).value);
+                }
+                fputc(']', state->file);
+            } while ((dim = IDL_LIST(dim).next) != NULL);
         } else {
             fputs(" ", state->file);
             fputs(IDL_IDENT(IDL_LIST(dcls).data).str, state->file);
@@ -613,7 +621,7 @@ static gboolean
 forward_dcl(TreeState *state)
 {
     IDL_tree iface = state->tree;
-    char *className = IDL_IDENT(IDL_FORWARD_DCL(iface).ident).str;
+    const char *className = IDL_IDENT(IDL_FORWARD_DCL(iface).ident).str;
     if (!className)
         return FALSE;
     fprintf(state->file, "class %s; /* forward decl */\n", className);
@@ -632,6 +640,7 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
     gboolean no_generated_args = TRUE;
     gboolean op_notxpcom =
         (IDL_tree_property_get(op->ident, "notxpcom") != NULL);
+    const char *name;
     IDL_tree iter;
 
     if (!as_call) {
@@ -645,7 +654,8 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
         }
         fputc(' ', outfile);
     }
-    fprintf(outfile, "%s(", IDL_IDENT(op->ident).str);
+    name = IDL_IDENT(op->ident).str;
+    fprintf(outfile, " %c%s(", toupper(*name), name + 1);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         if (!as_call) {
             if (!write_param(IDL_LIST(iter).data, outfile))
@@ -729,7 +739,7 @@ static void
 write_codefrag_line(gpointer data, gpointer user_data)
 {
     TreeState *state = (TreeState *)user_data;
-    char *line = (char *)data;
+    const char *line = (const char *)data;
     fputs(line, state->file);
     fputc('\n', state->file);
 }
@@ -737,7 +747,7 @@ write_codefrag_line(gpointer data, gpointer user_data)
 static gboolean
 codefrag(TreeState *state)
 {
-    char *desc = IDL_CODEFRAG(state->tree).desc;
+    const char *desc = IDL_CODEFRAG(state->tree).desc;
     if (strcmp(desc, "C++")) {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
                        "ignoring '%%{%s' escape. "

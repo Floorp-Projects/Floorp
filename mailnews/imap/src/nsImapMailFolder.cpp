@@ -1779,9 +1779,9 @@ NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMessage *message)
     if (m_copyState->m_tmpFileSpec) // leftover file spec nuke it
     {
         PRBool isOpen = PR_FALSE;
-        rv = m_copyState->m_tmpFileSpec->isStreamOpen(&isOpen);
+        rv = m_copyState->m_tmpFileSpec->IsStreamOpen(&isOpen);
         if (isOpen)
-            m_copyState->m_tmpFileSpec->closeStream();
+            m_copyState->m_tmpFileSpec->CloseStream();
         nsFileSpec fileSpec;
         m_copyState->m_tmpFileSpec->GetFileSpec(&fileSpec);
         if (fileSpec.Valid())
@@ -1795,7 +1795,7 @@ NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMessage *message)
     rv = NS_NewFileSpecWithSpec(tmpFileSpec,
                                 getter_AddRefs(m_copyState->m_tmpFileSpec));
     if (NS_SUCCEEDED(rv) && m_copyState->m_tmpFileSpec)
-        rv = m_copyState->m_tmpFileSpec->openStreamForWriting();
+        rv = m_copyState->m_tmpFileSpec->OpenStreamForWriting();
     if (!m_copyState->m_dataBuffer)
     {
         m_copyState->m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
@@ -1836,7 +1836,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
             if (PL_strncasecmp(start, "X-Mozilla-Status:", 17) &&
                 PL_strncasecmp(start, "X-Mozilla-Status2:", 18) &&
                 PL_strncmp(start, "From - ", 7))
-                rv = m_copyState->m_tmpFileSpec->write(start,
+                rv = m_copyState->m_tmpFileSpec->Write(start,
                                                        end-start+2,
                                                        &writeCount);
             start = end+2;
@@ -1856,8 +1856,8 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
     if (copySucceeded && m_copyState && m_copyState->m_tmpFileSpec)
     {
         nsCOMPtr<nsIUrlListener> urlListener;
-        m_copyState->m_tmpFileSpec->flush();
-        m_copyState->m_tmpFileSpec->closeStream();
+        m_copyState->m_tmpFileSpec->Flush();
+        m_copyState->m_tmpFileSpec->CloseStream();
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
         if (NS_FAILED(rv)) return rv;
         rv = QueryInterface(nsIUrlListener::GetIID(),
@@ -3598,7 +3598,7 @@ nsImapMailCopyState::~nsImapMailCopyState()
         PRBool isOpen = PR_FALSE;
         nsFileSpec  fileSpec;
         if (isOpen)
-            m_tmpFileSpec->closeStream();
+            m_tmpFileSpec->CloseStream();
         m_tmpFileSpec->GetFileSpec(&fileSpec);
         if (fileSpec.Valid())
             fileSpec.Delete(PR_FALSE);

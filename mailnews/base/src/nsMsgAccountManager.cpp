@@ -133,7 +133,7 @@ private:
   // add all identities in the account
   static PRBool addAccountsToArray(nsHashKey *aKey, void *aData,
                                    void* closure);
-  static PRBool addIdentitiesToArray(nsHashKey *aKey, void *aData,
+  static PRBool AddIdentitiesToArray(nsHashKey *aKey, void *aData,
                                      void *closure);
 
   static PRBool hashTableGetAccountList(nsHashKey *aKey, void *aData,
@@ -287,7 +287,7 @@ nsMsgAccountManager::CreateAccountWithKey(nsIMsgIncomingServer *server,
 
   if (NS_SUCCEEDED(rv)) {
     rv = account->SetIncomingServer(server);
-    rv = account->addIdentity(identity);
+    rv = account->AddIdentity(identity);
   }
 
   account->SetKey(NS_CONST_CAST(char*, accountKey));
@@ -639,7 +639,7 @@ nsMsgAccountManager::GetAccounts(nsISupportsArray **_retval)
 
 /* string getAccountKey (in nsIMsgAccount account); */
 NS_IMETHODIMP
-nsMsgAccountManager::getAccountKey(nsIMsgAccount *account, char **_retval)
+nsMsgAccountManager::GetAccountKey(nsIMsgAccount *account, char **_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -656,7 +656,7 @@ nsMsgAccountManager::addAccountsToArray(nsHashKey *key, void *aData, void *closu
 }
 
 PRBool
-nsMsgAccountManager::addIdentitiesToArray(nsHashKey *key, void *aData, void *closure)
+nsMsgAccountManager::AddIdentitiesToArray(nsHashKey *key, void *aData, void *closure)
 {
   nsISupportsArray *array = (nsISupportsArray*)closure;
   nsIMsgAccount* account = (nsIMsgAccount *)aData;
@@ -697,7 +697,7 @@ nsMsgAccountManager::GetAllIdentities(nsISupportsArray **_retval)
   if (NS_FAILED(rv)) return rv;
 
   // convert hash table->nsISupportsArray of identities
-  m_accounts->Enumerate(addIdentitiesToArray, (void *)identities);
+  m_accounts->Enumerate(AddIdentitiesToArray, (void *)identities);
 
   // convert nsISupportsArray->nsISupportsArray
   // when do we free the nsISupportsArray?
@@ -885,11 +885,11 @@ nsMsgAccountManager::createSpecialFile(nsFileSpec & dir, const char *specialFile
     if (NS_FAILED(rv)) return rv;
 
 	PRBool specialFileExists;
-	rv = specialFile->exists(&specialFileExists);
+	rv = specialFile->Exists(&specialFileExists);
 	if (NS_FAILED(rv)) return rv;
 
 	if (!specialFileExists) {
-		rv = specialFile->touch();
+		rv = specialFile->Touch();
 	}
 
 	return rv;
@@ -1055,7 +1055,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   server->SetKey("server1");
   
   account->SetIncomingServer(server);
-  account->addIdentity(identity);
+  account->AddIdentity(identity);
 
   // adds account to the hash table.
   AddAccount(account);
@@ -1133,11 +1133,11 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
     if (NS_FAILED(rv)) return 0;
     
-    rv = mailDir->exists(&dirExists);
+    rv = mailDir->Exists(&dirExists);
     if (NS_FAILED(rv)) return 0;
     
     if (!dirExists) {
-      mailDir->createDir();
+      mailDir->CreateDir();
     }
     
     char *str = nsnull;
@@ -1149,11 +1149,11 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
       str = nsnull;
     }
     
-    rv = mailDir->exists(&dirExists);
+    rv = mailDir->Exists(&dirExists);
     if (NS_FAILED(rv)) return 0;
     
     if (!dirExists) {
-      mailDir->createDir();
+      mailDir->CreateDir();
     }
     
     // create the files for the special folders.
@@ -1320,7 +1320,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   rv = CopyIdentity(identity,copied_identity);
   if (NS_FAILED(rv)) return rv;
 
-  account->addIdentity(copied_identity);
+  account->AddIdentity(copied_identity);
 
   // adds account to the hash table.
   AddAccount(account);
@@ -1407,11 +1407,11 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
     str = nsnull;
   }
   
-  rv = imapMailDir->exists(&dirExists);
+  rv = imapMailDir->Exists(&dirExists);
   if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
-    imapMailDir->createDir();
+    imapMailDir->CreateDir();
   }
   
   return NS_OK;
@@ -1674,7 +1674,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	rv = CopyIdentity(identity,copied_identity);
 	if (NS_FAILED(rv)) return rv;
 
-	account->addIdentity(copied_identity);
+	account->AddIdentity(copied_identity);
 	
 	// adds account to the hash table.
 	AddAccount(account);
@@ -1758,11 +1758,11 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 		str = nsnull;
 	}
 	
-	rv = newsDir->exists(&dirExists);
+	rv = newsDir->Exists(&dirExists);
 	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 	
 	if (!dirExists) {
-		newsDir->createDir();
+		newsDir->CreateDir();
 	}
 	
 	nntpServer->SetNewsrcFilePath((char *)newsrcfile);

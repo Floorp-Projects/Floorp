@@ -146,7 +146,7 @@ NS_IMPL_ISUPPORTS( nsPrefWindow, nsIPrefWindow::GetIID())
 	return (sPrefWindow != nsnull);
 }
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::showWindow(
+NS_IMETHODIMP nsPrefWindow::ShowWindow(
 		const PRUnichar *id,
 		nsIDOMWindow *currentFrontWin,
 		const PRUnichar* panelURL)
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
 	if (mPrefs)
 	{
 #ifdef NS_DEBUG
-	    stream << "еее showWindow called twice! Existing pref object reused by "
+	    stream << "еее ShowWindow called twice! Existing pref object reused by "
 	    	<< nsString(id).ToCString(buf, sizeof(buf))
 	    	<< nsEndl;
 #endif
@@ -213,7 +213,7 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
                                NS_CHROME_ALL_CHROME | NS_CHROME_OPEN_AS_DIALOG,
                                cb, 504, 436);
     return rv;
-} // nsPrefWindow::showWindow()
+} // nsPrefWindow::ShowWindow()
 
 //----------------------------------------------------------------------------------------
 static PRBool CheckAndStrip(
@@ -625,7 +625,7 @@ nsresult nsPrefWindow::FinalizePrefWidgets()
 } // nsPrefWindow::FinalizePrefWidgets
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::changePanel(const PRUnichar* aURL)
+NS_IMETHODIMP nsPrefWindow::ChangePanel(const PRUnichar* aURL)
 // Start loading of a new prefs panel.
 //----------------------------------------------------------------------------------------
 {
@@ -649,7 +649,7 @@ NS_IMETHODIMP nsPrefWindow::changePanel(const PRUnichar* aURL)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::panelLoaded(nsIDOMWindow* aWin)
+NS_IMETHODIMP nsPrefWindow::PanelLoaded(nsIDOMWindow* aWin)
 // Callback after loading of a new prefs panel.
 //----------------------------------------------------------------------------------------
 {
@@ -716,7 +716,7 @@ static nsresult Close(nsIDOMWindow*& dw)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::savePrefs()
+NS_IMETHODIMP nsPrefWindow::SavePrefs()
 //----------------------------------------------------------------------------------------
 {
     FinalizePrefWidgets();
@@ -732,7 +732,7 @@ NS_IMETHODIMP nsPrefWindow::savePrefs()
 } // nsPrefWindow::SavePrefs
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::cancelPrefs()
+NS_IMETHODIMP nsPrefWindow::CancelPrefs()
 //----------------------------------------------------------------------------------------
 {
     // Do the prefs stuff...
@@ -767,7 +767,7 @@ char* nsPrefWindow::GetSubstitution(nsString& formatstr)
 } // nsPrefWindow::GetSubstitution
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefWindow::setSubstitutionVar(
+NS_IMETHODIMP nsPrefWindow::SetSubstitutionVar(
 	PRUint32 aStringnum,
     const char* aVal)
 //----------------------------------------------------------------------------------------

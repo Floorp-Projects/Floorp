@@ -4238,7 +4238,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         if (!dataBuffer) goto done;
         rv = fileSpec->GetFileSize(&fileSize);
         if (NS_FAILED(rv)) goto done;
-        rv = fileSpec->openStreamForReading();
+        rv = fileSpec->OpenStreamForReading();
         if (NS_FAILED(rv)) goto done;
         command.Append((PRInt32)fileSize);
         if (hasLiteralPlus)
@@ -4256,13 +4256,13 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         readCount = 0;
         while(NS_SUCCEEDED(rv) && !eof && totalSize > 0)
         {
-            rv = fileSpec->read(&dataBuffer, FOUR_K, &readCount);
+            rv = fileSpec->Read(&dataBuffer, FOUR_K, &readCount);
             if (NS_SUCCEEDED(rv))
             {
                 dataBuffer[readCount] = 0;
                 rv = SendData(dataBuffer);
                 totalSize -= readCount;
-                rv = fileSpec->eof(&eof);
+                rv = fileSpec->Eof(&eof);
             }
         }
         if (NS_SUCCEEDED(rv))
@@ -4336,9 +4336,9 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
     }
 done:
     PR_FREEIF(dataBuffer);
-    rv = fileSpec->isStreamOpen(&isOpen);
+    rv = fileSpec->IsStreamOpen(&isOpen);
     if (NS_SUCCEEDED(rv) && isOpen)
-        fileSpec->closeStream();
+        fileSpec->CloseStream();
     delete [] escapedName;
 }
 

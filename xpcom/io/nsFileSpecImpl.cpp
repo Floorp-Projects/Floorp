@@ -56,7 +56,7 @@ nsFileSpecImpl::nsFileSpecImpl(const nsFileSpec& inSpec)
 nsFileSpecImpl::~nsFileSpecImpl()
 //----------------------------------------------------------------------------------------
 {
-	closeStream();
+	CloseStream();
 }
 
 //----------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ nsresult nsFileSpecImpl::MakeInterface(const nsFileSpec& inSpec, nsIFileSpec** r
 #define FILESPEC(ifilespec) ((nsFileSpecImpl*)ifilespec)->mFileSpec
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::fromFileSpec(const nsIFileSpec *original)
+NS_IMETHODIMP nsFileSpecImpl::FromFileSpec(const nsIFileSpec *original)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec = FILESPEC(original);
@@ -186,14 +186,14 @@ NS_IMETHODIMP nsFileSpecImpl::GetNSPRPath(char * *aNSPRPath)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::error()
+NS_IMETHODIMP nsFileSpecImpl::Error()
 //----------------------------------------------------------------------------------------
 {
 	return mFileSpec.Error();
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::isValid(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::IsValid(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -202,7 +202,7 @@ NS_IMETHODIMP nsFileSpecImpl::isValid(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::failed(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::Failed(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	*_retval = mFileSpec.Failed();
@@ -237,7 +237,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetParent(nsIFileSpec * *aParent)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::makeUnique()
+NS_IMETHODIMP nsFileSpecImpl::MakeUnique()
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec.MakeUnique();
@@ -245,7 +245,7 @@ NS_IMETHODIMP nsFileSpecImpl::makeUnique()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::makeUniqueWithSuggestedName(const char *suggestedName)
+NS_IMETHODIMP nsFileSpecImpl::MakeUniqueWithSuggestedName(const char *suggestedName)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec.MakeUnique(suggestedName);
@@ -264,7 +264,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetModDate(PRUint32 *aModDate)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::modDateChanged(PRUint32 oldStamp, PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::ModDateChanged(PRUint32 oldStamp, PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -273,7 +273,7 @@ NS_IMETHODIMP nsFileSpecImpl::modDateChanged(PRUint32 oldStamp, PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::isDirectory(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::IsDirectory(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -282,7 +282,7 @@ NS_IMETHODIMP nsFileSpecImpl::isDirectory(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::isFile(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::IsFile(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -291,7 +291,7 @@ NS_IMETHODIMP nsFileSpecImpl::isFile(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::exists(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::Exists(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -300,7 +300,7 @@ NS_IMETHODIMP nsFileSpecImpl::exists(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::isHidden(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::IsHidden(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsFileSpecImpl::isHidden(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::isSymlink(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::IsSymlink(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -318,7 +318,7 @@ NS_IMETHODIMP nsFileSpecImpl::isSymlink(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::resolveSymlink()
+NS_IMETHODIMP nsFileSpecImpl::ResolveSymlink()
 //----------------------------------------------------------------------------------------
 {
     PRBool ignore;
@@ -352,19 +352,19 @@ NS_IMETHODIMP nsFileSpecImpl::AppendRelativeUnixPath(const char *relativePath)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::touch()
+NS_IMETHODIMP nsFileSpecImpl::Touch()
 //----------------------------------------------------------------------------------------
 {
 	// create an empty file, like the UNIX touch command.
 	nsresult rv;
-	rv = openStreamForReadingAndWriting();
+	rv = OpenStreamForReadingAndWriting();
 	if (NS_FAILED(rv)) return rv;
-	rv = closeStream();
+	rv = CloseStream();
 	return rv;
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::createDir()
+NS_IMETHODIMP nsFileSpecImpl::CreateDir()
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec.CreateDir();
@@ -372,35 +372,35 @@ NS_IMETHODIMP nsFileSpecImpl::createDir()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::rename(const char *newLeafName)
+NS_IMETHODIMP nsFileSpecImpl::Rename(const char *newLeafName)
 //----------------------------------------------------------------------------------------
 {
 	return mFileSpec.Rename(newLeafName);
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::copyToDir(const nsIFileSpec *newParentDir)
+NS_IMETHODIMP nsFileSpecImpl::CopyToDir(const nsIFileSpec *newParentDir)
 //----------------------------------------------------------------------------------------
 {
 	return mFileSpec.Copy(FILESPEC(newParentDir));
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::moveToDir(const nsIFileSpec *newParentDir)
+NS_IMETHODIMP nsFileSpecImpl::MoveToDir(const nsIFileSpec *newParentDir)
 //----------------------------------------------------------------------------------------
 {
 	return mFileSpec.Move(FILESPEC(newParentDir));
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::execute(const char *args)
+NS_IMETHODIMP nsFileSpecImpl::Execute(const char *args)
 //----------------------------------------------------------------------------------------
 {
 	return mFileSpec.Execute(args);
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::openStreamForReading()
+NS_IMETHODIMP nsFileSpecImpl::OpenStreamForReading()
 //----------------------------------------------------------------------------------------
 {
 	if (mInputStream || mOutputStream)
@@ -409,7 +409,7 @@ NS_IMETHODIMP nsFileSpecImpl::openStreamForReading()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::openStreamForWriting()
+NS_IMETHODIMP nsFileSpecImpl::OpenStreamForWriting()
 //----------------------------------------------------------------------------------------
 {
 	if (mInputStream || mOutputStream)
@@ -418,7 +418,7 @@ NS_IMETHODIMP nsFileSpecImpl::openStreamForWriting()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::openStreamForReadingAndWriting()
+NS_IMETHODIMP nsFileSpecImpl::OpenStreamForReadingAndWriting()
 //----------------------------------------------------------------------------------------
 {
 	if (mInputStream || mOutputStream)
@@ -430,7 +430,7 @@ NS_IMETHODIMP nsFileSpecImpl::openStreamForReadingAndWriting()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::closeStream()
+NS_IMETHODIMP nsFileSpecImpl::CloseStream()
 //----------------------------------------------------------------------------------------
 {
 	NS_IF_RELEASE(mInputStream);
@@ -439,7 +439,7 @@ NS_IMETHODIMP nsFileSpecImpl::closeStream()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::isStreamOpen(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::IsStreamOpen(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -453,7 +453,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetInputStream(nsIInputStream** _retval)
 {
 	TEST_OUT_PTR(_retval)
 	if (!mInputStream) {
-		nsresult rv = openStreamForReading();
+		nsresult rv = OpenStreamForReading();
 		if (NS_FAILED(rv)) return rv;
 	}
 	*_retval = mInputStream;
@@ -467,7 +467,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetOutputStream(nsIOutputStream** _retval)
 {
 	TEST_OUT_PTR(_retval)
 	if (!mOutputStream) {
-		nsresult rv = openStreamForWriting();
+		nsresult rv = OpenStreamForWriting();
 		if (NS_FAILED(rv)) return rv;
 	}
 	*_retval = mOutputStream;
@@ -479,11 +479,11 @@ NS_IMETHODIMP nsFileSpecImpl::GetOutputStream(nsIOutputStream** _retval)
 NS_IMETHODIMP nsFileSpecImpl::SetFileContents(char* inString)
 //----------------------------------------------------------------------------------------
 {
-	nsresult rv = openStreamForWriting();
+	nsresult rv = OpenStreamForWriting();
 	if (NS_FAILED(rv)) return rv;
 	PRInt32 count;
-	rv = write(inString, PL_strlen(inString), &count);
-	nsresult rv2 = closeStream();
+	rv = Write(inString, PL_strlen(inString), &count);
+	nsresult rv2 = CloseStream();
 	return NS_FAILED(rv) ? rv : rv2;
 }
 
@@ -493,15 +493,15 @@ NS_IMETHODIMP nsFileSpecImpl::GetFileContents(char** _retval)
 {
 	TEST_OUT_PTR(_retval)
 	*_retval = nsnull;
-	nsresult rv = openStreamForReading();
+	nsresult rv = OpenStreamForReading();
 	if (NS_FAILED(rv)) return rv;
 	PRInt32 theSize;
 	rv = GetFileSize((PRUint32*)&theSize);
 	if (NS_SUCCEEDED(rv))
-		rv = read(_retval, theSize, &theSize);
+		rv = Read(_retval, theSize, &theSize);
 	if (NS_SUCCEEDED(rv))
 		(*_retval)[theSize] = 0;
-	nsresult rv2 = closeStream();
+	nsresult rv2 = CloseStream();
 	return NS_FAILED(rv) ? rv : rv2;
 }
 
@@ -515,7 +515,7 @@ NS_IMETHODIMP nsFileSpecImpl::GetFileSpec(nsFileSpec *aFileSpec)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::setFromFileSpec(const nsFileSpec& aFileSpec)
+NS_IMETHODIMP nsFileSpecImpl::SetFromFileSpec(const nsFileSpec& aFileSpec)
 //----------------------------------------------------------------------------------------
 {
 	mFileSpec = aFileSpec;
@@ -523,7 +523,7 @@ NS_IMETHODIMP nsFileSpecImpl::setFromFileSpec(const nsFileSpec& aFileSpec)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::eof(PRBool *_retval)
+NS_IMETHODIMP nsFileSpecImpl::Eof(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -535,13 +535,13 @@ NS_IMETHODIMP nsFileSpecImpl::eof(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::read(char** buffer, PRInt32 requestedCount, PRInt32 *_retval)
+NS_IMETHODIMP nsFileSpecImpl::Read(char** buffer, PRInt32 requestedCount, PRInt32 *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
 	TEST_OUT_PTR(buffer)
 	if (!mInputStream) {
-		nsresult rv = openStreamForReading();
+		nsresult rv = OpenStreamForReading();
 		if (NS_FAILED(rv)) return rv;
 	}
 	if (!*buffer)
@@ -554,13 +554,13 @@ NS_IMETHODIMP nsFileSpecImpl::read(char** buffer, PRInt32 requestedCount, PRInt3
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::readLine(char** line, PRInt32 bufferSize, PRBool *wasTruncated)
+NS_IMETHODIMP nsFileSpecImpl::ReadLine(char** line, PRInt32 bufferSize, PRBool *wasTruncated)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(wasTruncated)
 	TEST_OUT_PTR(line)
 	if (!mInputStream) {
-		nsresult rv = openStreamForReading();
+		nsresult rv = OpenStreamForReading();
 		if (NS_FAILED(rv)) return rv;
 	}
 	if (!*line)
@@ -573,15 +573,16 @@ NS_IMETHODIMP nsFileSpecImpl::readLine(char** line, PRInt32 bufferSize, PRBool *
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::write(const char * data, PRInt32 requestedCount, PRInt32 *_retval)
+NS_IMETHODIMP nsFileSpecImpl::Write(const char * data, PRInt32 requestedCount, PRInt32 *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
 	//if (!mOutputStream)
 	//	return NS_ERROR_NULL_POINTER;
 	if (!mOutputStream) {
-		nsresult rv=openStreamForWriting();
-		if (NS_FAILED(rv)) return rv;
+		nsresult rv = OpenStreamForWriting();
+		if (NS_FAILED(rv))
+			return rv;
 	}
 	nsOutputFileStream s(mOutputStream);
 	*_retval = s.write(data, requestedCount);
@@ -589,7 +590,7 @@ NS_IMETHODIMP nsFileSpecImpl::write(const char * data, PRInt32 requestedCount, P
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::flush()
+NS_IMETHODIMP nsFileSpecImpl::Flush()
 //----------------------------------------------------------------------------------------
 {
 	if (!mOutputStream)
@@ -600,7 +601,7 @@ NS_IMETHODIMP nsFileSpecImpl::flush()
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::seek(PRInt32 offset)
+NS_IMETHODIMP nsFileSpecImpl::Seek(PRInt32 offset)
 //----------------------------------------------------------------------------------------
 {
 	nsresult result = NS_OK;
@@ -620,7 +621,7 @@ NS_IMETHODIMP nsFileSpecImpl::seek(PRInt32 offset)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::tell(PRInt32 *_retval)
+NS_IMETHODIMP nsFileSpecImpl::Tell(PRInt32 *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -632,7 +633,7 @@ NS_IMETHODIMP nsFileSpecImpl::tell(PRInt32 *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsFileSpecImpl::endline()
+NS_IMETHODIMP nsFileSpecImpl::EndLine()
 //----------------------------------------------------------------------------------------
 {
 	nsOutputFileStream s(mOutputStream);
@@ -669,7 +670,7 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::Init(nsIFileSpec *parent, PRBool resolveS
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsDirectoryIteratorImpl::exists(PRBool *_retval)
+NS_IMETHODIMP nsDirectoryIteratorImpl::Exists(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
 	TEST_OUT_PTR(_retval)
@@ -680,7 +681,7 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::exists(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsDirectoryIteratorImpl::next()
+NS_IMETHODIMP nsDirectoryIteratorImpl::Next()
 //----------------------------------------------------------------------------------------
 {
 	if (!mDirectoryIterator)

@@ -95,9 +95,9 @@ xpctestNoisy::~xpctestNoisy()
     printf("Noisy %d - Destroyed, %d total\n", mID, sCount);
 }
 
-NS_IMETHODIMP xpctestNoisy::squawk()
+NS_IMETHODIMP xpctestNoisy::Squawk()
 {
-    printf("Noisy %d - squawk called\n", mID);
+    printf("Noisy %d - Squawk called\n", mID);
     return NS_OK;
 }
 

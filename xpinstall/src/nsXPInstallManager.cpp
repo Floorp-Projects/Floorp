@@ -341,7 +341,7 @@ nsXPInstallManager::OnStartRequest(nsIURI* aURL,
                              const char *aContentType)
 #endif
 {
-    mItem->mFile->openStreamForWriting();
+    mItem->mFile->OpenStreamForWriting();
     return NS_OK;
 }
 
@@ -375,7 +375,7 @@ nsXPInstallManager::OnStopRequest(nsIURI* aURL,
             rv = NS_ERROR_ILLEGAL_VALUE;
     }
 
-    mItem->mFile->closeStream();
+    mItem->mFile->CloseStream();
     DownloadNext();
     return rv;
 }
@@ -405,7 +405,7 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
         
         if (NS_SUCCEEDED(err))
         {
-            err = mItem->mFile->write( buffer, len, &result);
+            err = mItem->mFile->Write( buffer, len, &result);
             if ( NS_SUCCEEDED(err) && result != (PRInt32)len )
             {
                 /* Error */ 

@@ -447,7 +447,7 @@ nsCOMPtr<nsIMsgCompFields>  compFields = nsnull;
 nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
 
   // If for some reason the tmp file didn't get created, we've failed here
-  mTempIFileSpec->exists(&created);
+  mTempIFileSpec->Exists(&created);
   if (!created)
     return NS_ERROR_FAILURE;
 

@@ -57,10 +57,10 @@ public:
   NS_IMETHOD SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity);
 
   /* void addIdentity (in nsIMsgIdentity identity); */
-  NS_IMETHOD addIdentity(nsIMsgIdentity *identity);
+  NS_IMETHOD AddIdentity(nsIMsgIdentity *identity);
 
   /* void removeIdentity (in nsIMsgIdentity identity); */
-  NS_IMETHOD removeIdentity(nsIMsgIdentity *identity);
+  NS_IMETHOD RemoveIdentity(nsIMsgIdentity *identity);
 
   // nsIShutdownListener
 
@@ -269,7 +269,7 @@ nsMsgAccount::SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity)
 
 /* void addIdentity (in nsIMsgIdentity identity); */
 NS_IMETHODIMP
-nsMsgAccount::addIdentity(nsIMsgIdentity *identity)
+nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
 {
   // hack hack - need to add this to the list of identities.
   // for now just tread this as a Setxxx accessor
@@ -283,7 +283,7 @@ nsMsgAccount::addIdentity(nsIMsgIdentity *identity)
 
 /* void removeIdentity (in nsIMsgIdentity identity); */
 NS_IMETHODIMP
-nsMsgAccount::removeIdentity(nsIMsgIdentity *identity)
+nsMsgAccount::RemoveIdentity(nsIMsgIdentity *identity)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -338,7 +338,7 @@ nsMsgAccount::SetKey(char *accountKey)
 
   PR_FREEIF(identityKey);
   if (NS_SUCCEEDED(rv))
-    rv = addIdentity(identity);
+    rv = AddIdentity(identity);
 
   return rv;
 }

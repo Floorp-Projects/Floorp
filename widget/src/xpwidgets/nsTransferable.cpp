@@ -69,7 +69,7 @@ DataStruct::~DataStruct()
   if (mCacheFileName) {
     delete [] mCacheFileName; 
     //nsIFileSpec * cacheFile = GetFileSpec(mCacheFileName);
-    //cacheFile->remove();
+    //cacheFile->Remove();
   }
 }
 
@@ -154,7 +154,7 @@ nsIFileSpec * DataStruct::GetFileSpec(const char * aFileName)
   }
 
   // now set the entire path for the nsIFileSpec
-  cacheFile->setFromFileSpec(*sysCacheFile);
+  cacheFile->SetFromFileSpec(*sysCacheFile);
 
   // delete the temp for getting the system info
   delete sysCacheFile;

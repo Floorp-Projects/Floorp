@@ -79,7 +79,7 @@ nsNNTPNewsgroupPost::~nsNNTPNewsgroupPost()
 }
 
 nsresult
-nsNNTPNewsgroupPost::isValid(PRBool *_retval)
+nsNNTPNewsgroupPost::IsValid(PRBool *_retval)
 {
     if (!_retval) return NS_OK;
 
@@ -97,7 +97,7 @@ nsNNTPNewsgroupPost::isValid(PRBool *_retval)
     }
 
     *_retval=valid;
-    printf("nsNNTPNewsgroupPost::isValid() -> %s (%d is first invalid)\n",
+    printf("nsNNTPNewsgroupPost::IsValid() -> %s (%d is first invalid)\n",
            *_retval ? "TRUE": "FALSE", i);
     return NS_OK;
 }
@@ -123,7 +123,7 @@ nsNNTPNewsgroupPost::GetFullMessage(char **message)
 {
     if (!message) return NS_ERROR_NULL_POINTER;
     PRBool valid=PR_FALSE;
-    isValid(&valid);
+    IsValid(&valid);
     if (!valid) return NS_ERROR_NOT_INITIALIZED;
 
     int len=0;
@@ -162,7 +162,7 @@ nsNNTPNewsgroupPost::GetFullMessage(char **message)
 }
 
 char *
-nsNNTPNewsgroupPost::appendAndAlloc(char *string,
+nsNNTPNewsgroupPost::AppendAndAlloc(char *string,
                                     const char *newSubstring,
                                     PRBool withComma)
 {
@@ -189,13 +189,13 @@ nsNNTPNewsgroupPost::appendAndAlloc(char *string,
 nsresult
 nsNNTPNewsgroupPost::AddNewsgroup(const char *newsgroup)
 {
-    m_header[HEADER_NEWSGROUPS]=appendAndAlloc(m_header[HEADER_NEWSGROUPS], newsgroup, PR_TRUE);
+    m_header[HEADER_NEWSGROUPS]=AppendAndAlloc(m_header[HEADER_NEWSGROUPS], newsgroup, PR_TRUE);
     return NS_OK;
 }
 nsresult
 nsNNTPNewsgroupPost::AddReference(const char *reference)
 {
-    m_header[HEADER_REFERENCES]=appendAndAlloc(m_header[HEADER_REFERENCES], reference, PR_FALSE);
+    m_header[HEADER_REFERENCES]=AppendAndAlloc(m_header[HEADER_REFERENCES], reference, PR_FALSE);
     return NS_OK;
 }
 

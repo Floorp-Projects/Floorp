@@ -52,9 +52,9 @@ interface nsIFileSpec : nsISupports
 	void fromFileSpec([const] in nsIFileSpec original);
 
 	attribute string URLString;
-	attribute string UnixStyleFilePath;
-	attribute string PersistentDescriptorString;
-	attribute string NativePath;
+	attribute string unixStyleFilePath;
+	attribute string persistentDescriptorString;
+	attribute string nativePath;
 
 	readonly attribute string NSPRPath;
 
@@ -63,37 +63,37 @@ interface nsIFileSpec : nsISupports
 	boolean isValid();
 	boolean failed();
 
-	attribute string LeafName;
+	attribute string leafName;
 
-	readonly attribute nsIFileSpec Parent;
-	readonly attribute nsIInputStream InputStream;
-	readonly attribute nsIOutputStream OutputStream;
-	[noscript] readonly attribute nsFileSpec FileSpec;
+	readonly attribute nsIFileSpec parent;
+	readonly attribute nsIInputStream inputStream;
+	readonly attribute nsIOutputStream outputStream;
+	[noscript] readonly attribute nsFileSpec fileSpec;
 	[noscript] void setFromFileSpec([const] in nsFileSpecRef spec);
 	
-	attribute string FileContents;
+	attribute string fileContents;
 
 	void makeUnique();
 	void makeUniqueWithSuggestedName(in string suggestedName);
 
-	readonly attribute unsigned long ModDate;
+	readonly attribute unsigned long modDate;
 	boolean modDateChanged(in unsigned long oldStamp);
 
 	boolean isDirectory();
 	boolean isFile();
 	boolean exists();
-    boolean isHidden();
+	boolean isHidden();
 
-	readonly attribute unsigned long FileSize;
-	readonly attribute unsigned long DiskSpaceAvailable;
+	readonly attribute unsigned long fileSize;
+	readonly attribute unsigned long diskSpaceAvailable;
 
-	void AppendRelativeUnixPath(in string relativePath);
+	void appendRelativeUnixPath(in string relativePath);
 
 	void createDir();
 	void touch();
     
-    boolean isSymlink();
-    void resolveSymlink();
+	boolean isSymlink();
+	void resolveSymlink();
 
 	void rename([const] in string newLeafName);
 	void copyToDir([const] in nsIFileSpec newParentDir);
@@ -119,7 +119,7 @@ interface nsIFileSpec : nsISupports
 	
 	void seek(in long offset);
 	long tell();
-	void endline();
+	void endLine();
 	
 };
 	
@@ -136,7 +136,7 @@ interface nsIFileSpec : nsISupports
 [scriptable, uuid(d8c0a083-0868-11d3-915f-d9d889d48e3c)]
 interface nsIDirectoryIterator : nsISupports
 {
-	void Init(in nsIFileSpec parent, in boolean resolveSymlink);
+	void init(in nsIFileSpec parent, in boolean resolveSymlink);
 	boolean exists();
 	void next();
 	readonly attribute nsIFileSpec currentSpec;
@@ -149,8 +149,8 @@ NS_COM nsresult NS_NewFileSpec(nsIFileSpec** result);
 NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
 
 #define NS_BOOL_ACCESSOR(_method) { PRBool yes; return NS_SUCCEEDED(f->_method(&yes)) && yes; }
-inline PRBool Exists(nsIFileSpec* f) NS_BOOL_ACCESSOR(exists)
-inline PRBool Exists(nsIDirectoryIterator* f) NS_BOOL_ACCESSOR(exists)
-inline PRBool IsDirectory(nsIFileSpec* f) NS_BOOL_ACCESSOR(isDirectory)
+inline PRBool Exists(nsIFileSpec* f) NS_BOOL_ACCESSOR(Exists)
+inline PRBool Exists(nsIDirectoryIterator* f) NS_BOOL_ACCESSOR(Exists)
+inline PRBool IsDirectory(nsIFileSpec* f) NS_BOOL_ACCESSOR(IsDirectory)
 
 %}

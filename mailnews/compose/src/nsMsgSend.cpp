@@ -948,6 +948,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	if (status < 0)
 		goto FAIL;
 
+
   //
   // Ok, I think I can do the magic here and make MHTML messages with
   // attachments work. This is where we set up the subsequent parts, but
@@ -2997,7 +2998,7 @@ nsMsgComposeAndSend::SendMessageFile(
     return NS_ERROR_INVALID_ARG;
 
   PRBool valid;
-  if (NS_FAILED(sendIFileSpec->isValid(&valid)))
+  if (NS_FAILED(sendIFileSpec->IsValid(&valid)))
     return NS_ERROR_INVALID_ARG;
 
   if (!valid)
@@ -3540,7 +3541,7 @@ FAIL:
   {
     tempOutfile.close();
     if (mCopyFileSpec)
-      mCopyFileSpec->closeStream();
+      mCopyFileSpec->CloseStream();
   }
 
   if (inputFile.is_open()) 
