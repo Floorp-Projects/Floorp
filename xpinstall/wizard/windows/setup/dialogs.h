@@ -47,8 +47,7 @@ void              ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag);
 BOOL              AskCancelDlg(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
 HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
-void              DlgSequenceNext(void);
-void              DlgSequencePrev(void);
+void              DlgSequence(int iDirection);
 void              PaintGradientShade(HWND hWnd, HDC hdc);
 BOOL              BrowseForDirectory(HWND hDlg, char *szCurrDir);
 LRESULT CALLBACK  BrowseHookProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -64,6 +63,7 @@ void              SaveAdditionalOptions(HWND hDlg, HWND hwndCBSiteSelector);
 WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void              DisableSystemMenuItems(HWND hWnd, BOOL bDisableClose);
+void              CommitInstall(void);
 
 #endif /* _DIALOGS_H_ */
 
