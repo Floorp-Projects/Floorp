@@ -194,6 +194,7 @@ pref("network.cookie.filterName",			"");
 pref("network.sendRefererHeader",           true);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("network.padPacURL",                   ""); // The proxy autodiscovery url
+pref("privacy.warn_no_policy",              false); // Warn when submitting to site without policy
 
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
