@@ -188,8 +188,8 @@ nsresult nsMsgOfflineImapOperation::GetCopiesFromDB()
   nsXPIDLCString copyDests;
   m_copyDestinations.Clear();
   nsresult rv = m_mdb->GetProperty(m_mdbRow, PROP_COPY_DESTS, getter_Copies(copyDests));
-  nsCString copyDestsCString((const char *) copyDests);
-  if (NS_SUCCEEDED(rv))
+  nsCAutoString copyDestsCString((const char *) copyDests);
+  if (NS_SUCCEEDED(rv) && copyDestsCString.Length() > 0)
   {
     PRInt32 curCopyDestStart = 0;
     PRInt32 nextCopyDestPos = 0;
@@ -197,11 +197,11 @@ nsresult nsMsgOfflineImapOperation::GetCopiesFromDB()
     while (nextCopyDestPos != -1)
     {
       nsCString curDest;
-      nextCopyDestPos = copyDestsCString.FindChar(' ', PR_FALSE, nextCopyDestPos);
+      nextCopyDestPos = copyDestsCString.FindChar(' ', PR_FALSE, curCopyDestStart);
       if (nextCopyDestPos > 0)
         copyDestsCString.Mid(curDest, curCopyDestStart, nextCopyDestPos - curCopyDestStart);
       else
-        copyDestsCString.Mid(curDest, curCopyDestStart, copyDestsCString.Length() - curCopyDestStart - 1);
+        copyDestsCString.Mid(curDest, curCopyDestStart, copyDestsCString.Length() - curCopyDestStart);
       curCopyDestStart = nextCopyDestPos + 1;
       m_copyDestinations.AppendCString(curDest);
     }
