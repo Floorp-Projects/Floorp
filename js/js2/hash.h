@@ -86,7 +86,12 @@ namespace JavaScript {
 
 	  public:
 		explicit GenericHashTable(uint32 nEntriesDefault);
-		~GenericHashTable() {ASSERT(nReferences == 0); delete[] buckets;}
+		~GenericHashTable() {
+		  #ifndef _WIN32
+			ASSERT(nReferences == 0);
+		  #endif
+			delete[] buckets;
+		}
 
 		void recomputeMinMaxNEntries(uint lgNBuckets);
 		void rehash();
@@ -167,7 +172,7 @@ namespace JavaScript {
 		    Reference(const Reference&);		// No copy constructor
 		    void operator=(const Reference&);	// No assignment operator
 		  public:
-		  #ifdef DEBUG
+		  #if defined(DEBUG) && !defined(_WIN32)
 			~Reference() {if (ht) --ht->nReferences;}
 		  #endif
 			
