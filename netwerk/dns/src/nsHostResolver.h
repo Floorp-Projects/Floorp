@@ -85,15 +85,18 @@ public:
     char       *host;
     PRAddrInfo *addrinfo;
     PRNetAddr  *addr;
+    PRUint32    expiration; /* measured in minutes since epoch */
 
     PRBool HasResult() const { return (addrinfo || addr) != nsnull; }
 
 private:
     friend class nsHostResolver;
 
-    /* these fields are used internally by the host resolver */
-    PRUint32    expiration; /* measured in minutes since epoch */
-    PRCList     callbacks;
+    PRCList callbacks; /* list of callbacks */
+
+    PRBool  resolving; /* true if this record is being resolved, which means
+                        * that it is either on the pending queue or owned by
+                        * one of the worker threads. */ 
 
    ~nsHostRecord();
 };
