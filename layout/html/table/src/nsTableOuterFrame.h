@@ -229,10 +229,14 @@ protected:
 
   nsresult RecoverState(OuterTableReflowState& aState, nsIFrame* aKidFrame);
   nsresult IncrementalReflow(nsIPresContext* aPresContext,
+                             OuterTableReflowState& aState,
                              nsReflowMetrics& aDesiredSize,
                              const nsReflowState& aReflowState,
                              nsReflowStatus& aStatus);
-
+  nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
+                                     OuterTableReflowState& aState,
+                                     nsIFrame*              aKidFrame,
+                                     nscoord                aDeltaY);
 
 private:
   /** used to keep track of this frame's children */
