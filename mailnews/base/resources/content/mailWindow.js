@@ -148,7 +148,12 @@ function CreateMailWindowGlobals()
   // set the JS implementation of status feedback before creating the c++ one..
   window.MsgStatusFeedback = new nsMsgStatusFeedback();
   // double register the status feedback object as the xul browser window implementation
-  window.XULBrowserWindow = window.MsgStatusFeedback;
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIWebNavigation)
+        .QueryInterface(Components.interfaces.nsIDocShellTreeItem).treeOwner
+        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIXULWindow)
+        .XULBrowserWindow = window.MsgStatusFeedback;
 
   statusFeedback = Components.classes[statusFeedbackContractID].createInstance();
   statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
