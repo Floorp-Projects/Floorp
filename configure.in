@@ -524,10 +524,6 @@ dnl on win32, gmake.exe is the generally the wrong version
 case "$host_os" in
 cygwin*|mingw*|mks*|msvc*)
     AC_PATH_PROGS(MAKE, $MAKE make gmake, :)
-    _cygwin_make=`$MAKE -h | grep cygwin 2>/dev/null`
-    if test -z "$_cygwin_make"; then
-        AC_MSG_ERROR([Cygwin make must be used to build Mozilla on win32.])
-    fi
     ;;
 *)
     AC_PATH_PROGS(MAKE, $MAKE gmake make, :)
