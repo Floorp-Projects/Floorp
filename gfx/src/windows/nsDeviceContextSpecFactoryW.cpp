@@ -63,7 +63,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIDevice
   prntdlg.hDevMode = NULL;
   prntdlg.hDevNames = NULL;
   prntdlg.hDC = NULL;
-  prntdlg.Flags = PD_ALLPAGES | PD_RETURNIC;
+  prntdlg.Flags = PD_ALLPAGES | PD_RETURNIC | PD_NOSELECTION | PD_HIDEPRINTTOFILE;
   prntdlg.nFromPage = 0;
   prntdlg.nToPage = 0;
   prntdlg.nMinPage = 0;
@@ -77,6 +77,13 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIDevice
   prntdlg.lpSetupTemplateName = NULL;
   prntdlg.hPrintTemplate = NULL;
   prntdlg.hSetupTemplate = NULL;
+
+
+  if(PR_TRUE == aQuiet){
+    prntdlg.Flags = PD_RETURNDEFAULT;
+  }
+
+
 
   BOOL res = ::PrintDlg(&prntdlg);
 
