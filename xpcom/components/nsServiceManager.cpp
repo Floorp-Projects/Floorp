@@ -306,7 +306,7 @@ nsServiceManagerImpl::RegisterService(const nsCID& aClass, nsISupports* aService
         rv = NS_ERROR_FAILURE;
     }
     else {
-        nsServiceEntry* entry = new nsServiceEntry(aClass, aService);
+        entry = new nsServiceEntry(aClass, aService);
         if (entry == NULL) 
             rv = NS_ERROR_OUT_OF_MEMORY;
         else {
