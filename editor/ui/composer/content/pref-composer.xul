@@ -37,6 +37,9 @@
     var _elementIDs = ["maintainTableStructure", "preserveFormatting", "recentFiles"];
   ]]>
   </script>        
+  <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
         
   <!-- Recent files menu -->
   <groupbox>
@@ -50,6 +53,7 @@
         value="10" 
         preftype="int" 
         prefstring="editor.history.url_maximum"
+        oninput=" ValidateNumber(this, null, 0, 99); LimitStringLength('recentFiles',2);"
       />
     </hbox>
   </groupbox>
