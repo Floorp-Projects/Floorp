@@ -443,11 +443,127 @@ function PrintTxnList(txnList, prefixStr)
 
     if (txn)
     {
-      txn = txn.QueryInterface(Components.interfaces.nsPIEditorTransaction);
-      desc = txn.txnDescription;
+      try {
+        txn = txn.QueryInterface(Components.interfaces.nsPIEditorTransaction);
+        desc = txn.txnDescription;
+      } catch(e) {
+        desc = "UnknownTxnType";
+      }
     }
     dump(prefixStr + "+ " + desc + "\n");
     PrintTxnList(txnList.getChildListForItem(i), prefixStr + "|    ");
+  }
+}
+
+// ------------------------ 3rd Party Transaction Test ------------------------
+
+
+function sampleJSTransaction()
+{
+  this.wrappedJSObject = this;
+}
+
+sampleJSTransaction.prototype = {
+
+  isTransient: false,
+  mStrData:    "[Sample-JS-Transaction-Content]",
+  mObject:     null,
+  mContainer:  null,
+  mOffset:     null,
+
+  doTransaction: function()
+  {
+    if (this.mContainer.nodeName != "#text")
+    {
+      // We're not in a text node, so create one and
+      // we'll just insert it at (mContainer, mOffset).
+
+      this.mObject = this.mContainer.ownerDocument.createTextNode(this.mStrData);
+    }
+
+    this.redoTransaction();
+  },
+
+  undoTransaction: function()
+  {
+    if (!this.mObject)
+      this.mContainer.deleteData(this.mOffset, this.mStrData.length);
+    else
+      this.mContainer.removeChild(this.mObject);
+  },
+
+  redoTransaction: function()
+  {
+    if (!this.mObject)
+      this.mContainer.insertData(this.mOffset, this.mStrData);
+    else
+      this.insert_node_at_point(this.mObject, this.mContainer, this.mOffset);
+  },
+
+  merge: function(aTxn)
+  {
+    // We don't do any merging!
+
+    return false;
+  },
+
+  QueryInterface: function(theUID, theResult)
+  {
+    if (theUID == Components.interfaces.nsITransaction ||
+        theUID == Components.interfaces.nsISupports)
+     return this;
+
+    return nsnull;
+  },
+
+  insert_node_at_point: function(node, container, offset)
+  {
+    var childList = container.childNodes;
+
+    if (childList.length == 0 || offset >= childList.length)
+      container.appendChild(node);
+    else
+      container.insertBefore(node, childList.item(offset));
+  }
+}
+
+function ExecuteJSTransactionViaTxmgr()
+{
+  try {
+    var editor = GetCurrentEditor();
+    var txmgr = editor.transactionManager;
+    txmgr = txmgr.QueryInterface(Components.interfaces.nsITransactionManager);
+
+    var selection = editor.selection;
+    var range =  selection.getRangeAt(0);
+
+    var txn = new sampleJSTransaction();
+
+    txn.mContainer = range.startContainer;
+    txn.mOffset = range.startOffset;
+
+    txmgr.doTransaction(txn);
+  } catch (e) {
+    dump("ExecuteJSTransactionViaTxmgr() failed!");
+  }
+}
+
+function ExecuteJSTransactionViaEditor()
+{
+  try {
+    var editor = GetCurrentEditor();
+
+    var selection = editor.selection;
+    var range =  selection.getRangeAt(0);
+
+    var txn = new sampleJSTransaction();
+
+    txn.mContainer = range.startContainer;
+    txn.mOffset = range.startOffset;
+
+    editor.doTransaction(txn);
+  } catch (e) {
+    dump("ExecuteJSTransactionViaEditor() failed!");
   }
 }
 

@@ -177,14 +177,14 @@ interface nsIEditor  : nsISupports
     */
   readonly attribute nsITransactionManager transactionManager;
 
-  /** do() fires a transaction.
+  /** doTransaction() fires a transaction.
     * It is provided here so clients can create their own transactions.
     * If a transaction manager is present, it is used.  
     * Otherwise, the transaction is just executed directly.
     *
     * @param aTxn the transaction to execute
     */
-  void do(in nsITransaction txn);
+  void doTransaction(in nsITransaction txn);
 
 
   /** turn the undo system on or off

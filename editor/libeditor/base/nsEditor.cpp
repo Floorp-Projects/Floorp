@@ -452,9 +452,9 @@ nsEditor::GetSelection(nsISelection **aSelection)
 }
 
 NS_IMETHODIMP 
-nsEditor::Do(nsITransaction *aTxn)
+nsEditor::DoTransaction(nsITransaction *aTxn)
 {
-  if (gNoisy) { printf("Editor::Do ----------\n"); }
+  if (gNoisy) { printf("Editor::DoTransaction ----------\n"); }
   
   nsresult result = NS_OK;
   
@@ -480,9 +480,9 @@ nsEditor::Do(nsITransaction *aTxn)
     plcTxn->Init(mPlaceHolderName, mSelState, this);
     mSelState = nsnull;  // placeholder txn took ownership of this pointer
 
-    // finally we QI to an nsITransaction since that's what Do() expects
+    // finally we QI to an nsITransaction since that's what DoTransaction() expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
-    Do(theTxn);  // we will recurse, but will not hit this case in the nested call
+    DoTransaction(theTxn);  // we will recurse, but will not hit this case in the nested call
 
     if (mTxnMgr)
     {
@@ -509,6 +509,25 @@ nsEditor::Do(nsITransaction *aTxn)
 
   if (aTxn)
   {  
+    // XXX: Why are we doing selection specific batching stuff here?
+    // XXX: Most entry points into the editor have auto variables that
+    // XXX: should trigger Begin/EndUpdateViewBatch() calls that will make
+    // XXX: these selection batch calls no-ops.
+    // XXX:
+    // XXX: I suspect that this was placed here to avoid multiple
+    // XXX: selection changed notifications from happening until after
+    // XXX: the transaction was done. I suppose that can still happen
+    // XXX: if an embedding application called DoTransaction() directly
+    // XXX: to pump its own transactions through the system, but in that
+    // XXX: case, wouldn't we want to use Begin/EndUpdateViewBatch() or
+    // XXX: its auto equivalent nsAutoUpdateViewBatch to ensure that
+    // XXX: selection listeners have access to accurate frame data?
+    // XXX:
+    // XXX: Note that if we did add Begin/EndUpdateViewBatch() calls
+    // XXX: we will need to make sure that they are disabled during
+    // XXX: the init of the editor for text widgets to avoid layout
+    // XXX: re-entry during initial reflow. - kin
+
     // get the selection and start a batch change
     nsCOMPtr<nsISelection>selection;
     result = GetSelection(getter_AddRefs(selection));
@@ -517,6 +536,7 @@ nsEditor::Do(nsITransaction *aTxn)
     nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
     selPrivate->StartBatchChanges();
+
     if (mTxnMgr) {
       result = mTxnMgr->DoTransaction(aTxn);
     }
@@ -526,7 +546,7 @@ nsEditor::Do(nsITransaction *aTxn)
     if (NS_SUCCEEDED(result)) {
       result = DoAfterDoTransaction(aTxn);
     }
-  
+
     selPrivate->EndBatchChanges(); // no need to check result here, don't lose result of operation
   }
  
@@ -1051,7 +1071,7 @@ nsEditor::SetAttribute(nsIDOMElement *aElement, const nsAString & aAttribute, co
   ChangeAttributeTxn *txn;
   nsresult result = CreateTxnForSetAttribute(aElement, aAttribute, aValue, &txn);
   if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
+    result = DoTransaction(txn);  
   }
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
@@ -1087,7 +1107,7 @@ nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsAString& aAttribute)
   ChangeAttributeTxn *txn;
   nsresult result = CreateTxnForRemoveAttribute(aElement, aAttribute, &txn);
   if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
+    result = DoTransaction(txn);  
   }
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
@@ -1136,7 +1156,7 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsAString& aTag,
   nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition, &txn);
   if (NS_SUCCEEDED(result)) 
   {
-    result = Do(txn);  
+    result = DoTransaction(txn);  
     if (NS_SUCCEEDED(result)) 
     {
       result = txn->GetNewNode(aNewNode);
@@ -1183,7 +1203,7 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
   InsertElementTxn *txn;
   nsresult result = CreateTxnForInsertElement(aNode, aParent, aPosition, &txn);
   if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
+    result = DoTransaction(txn);  
   }
   // The transaction system (if any) has taken ownwership of txn
   NS_IF_RELEASE(txn);
@@ -1227,7 +1247,7 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
   nsresult result = CreateTxnForSplitNode(aNode, aOffset, &txn);
   if (NS_SUCCEEDED(result))  
   {
-    result = Do(txn);
+    result = DoTransaction(txn);
     if (NS_SUCCEEDED(result))
     {
       result = txn->GetNewNode(aNewLeftNode);
@@ -1288,7 +1308,7 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
   JoinElementTxn *txn;
   result = CreateTxnForJoinNode(aLeftNode, aRightNode, &txn);
   if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
+    result = DoTransaction(txn);  
   }
 
   // The transaction system (if any) has taken ownwership of txn
@@ -1334,7 +1354,7 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
   DeleteElementTxn *txn;
   result = CreateTxnForDeleteElement(aElement, &txn);
   if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
+    result = DoTransaction(txn);  
   }
 
   // The transaction system (if any) has taken ownwership of txn
@@ -2493,7 +2513,7 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
   
   // XXX we may not need these view batches anymore.  This is handled at a higher level now I believe
   BeginUpdateViewBatch();
-  result = Do(txn);
+  result = DoTransaction(txn);
   EndUpdateViewBatch();
 
   mRangeUpdater.SelAdjInsertText(aTextNode, aOffset, aStringToInsert);
@@ -2713,7 +2733,7 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
       }
     }
     
-    result = Do(txn); 
+    result = DoTransaction(txn); 
     
     // let listeners know what happened
     if (mActionListeners)
@@ -4300,28 +4320,37 @@ nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode,
 
 nsresult nsEditor::BeginUpdateViewBatch()
 {
-  NS_PRECONDITION(mUpdateCount>=0, "bad state");
+  NS_PRECONDITION(mUpdateCount >= 0, "bad state");
 
-  nsCOMPtr<nsISelection>selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(rv) && selection) 
-  {
-    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
-    selPrivate->StartBatchChanges();
-  }
 
-  if (nsnull!=mViewManager)
+  if (0 == mUpdateCount)
   {
-    if (0==mUpdateCount)
+    // Turn off selection updates and notifications.
+
+    nsCOMPtr<nsISelection> selection;
+    GetSelection(getter_AddRefs(selection));
+
+    if (selection) 
     {
-      mViewManager->BeginUpdateViewBatch();
-      nsCOMPtr<nsIPresShell> presShell;
-      rv = GetPresShell(getter_AddRefs(presShell));
-      if (NS_SUCCEEDED(rv) && presShell)
-        presShell->BeginReflowBatching();
+      nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
+      selPrivate->StartBatchChanges();
     }
-    mUpdateCount++;
+
+    // Turn off view updating.
+
+    if (mViewManager)
+      mViewManager->BeginUpdateViewBatch();
+
+    // Turn off reflow.
+
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+
+    if (presShell)
+      presShell->BeginReflowBatching();
   }
+
+  mUpdateCount++;
 
   return NS_OK;
 }
@@ -4329,56 +4358,58 @@ nsresult nsEditor::BeginUpdateViewBatch()
 
 nsresult nsEditor::EndUpdateViewBatch()
 {
-  NS_PRECONDITION(mUpdateCount>0, "bad state");
+  NS_PRECONDITION(mUpdateCount > 0, "bad state");
   
-  nsresult rv;
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak,&rv);
-  if (NS_FAILED(rv))
-    return rv;
-  if (!selCon)
-    return NS_ERROR_FAILURE;
-    
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  nsCOMPtr<nsICaret> caret;
-  if (!ps)
-    return NS_ERROR_FAILURE;
-
-  rv = ps->GetCaret(getter_AddRefs(caret));
-  if (NS_FAILED(rv))
-    return rv;
-  if (!caret)
-    return NS_ERROR_FAILURE;
-
-  if (mViewManager)
+  if (mUpdateCount <= 0)
   {
-    mUpdateCount--;
-    if (0==mUpdateCount)
+    mUpdateCount = 0;
+    return NS_ERROR_FAILURE;
+  }
+
+  mUpdateCount--;
+
+  if (0 == mUpdateCount)
+  {
+    // Hide the caret with an StCaretHider. By the time it goes out
+    // of scope and tries to show the caret, reflow and selection changed
+    // notifications should've happened so the caret should have enough info
+    // to draw at the correct position.
+
+    nsCOMPtr<nsICaret> caret;
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+
+    if (presShell)
+      presShell->GetCaret(getter_AddRefs(caret));
+
+    StCaretHider caretHider(caret);
+        
+    PRUint32 flags = 0;
+
+    GetFlags(&flags);
+
+    // Turn reflow back on.
+    //
+    // Make sure we enable reflowing before we call
+    // mViewManager->EndUpdateViewBatch().  This will make sure that any
+    // new updates caused by a reflow, that may happen during the
+    // EndReflowBatching(), get included if we force a refresh during
+    // the mViewManager->EndUpdateViewBatch() call.
+
+    if (presShell)
     {
-      PRUint32 flags = 0;
-
-      rv = GetFlags(&flags);
-
-      if (NS_FAILED(rv))
-        return rv;
-
-      StCaretHider caretHider(caret);
-
-      // Make sure we enable reflowing before we call
-      // mViewManager->EndUpdateViewBatch().  This will make sure that any
-      // new updates caused by a reflow, that may happen during the
-      // EndReflowBatching(), get included if we force a refresh during
-      // the mViewManager->EndUpdateViewBatch() call.
-
       PRBool forceReflow = PR_TRUE;
 
       if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
         forceReflow = PR_FALSE;
 
-      nsCOMPtr<nsIPresShell>    presShell;
-      rv = GetPresShell(getter_AddRefs(presShell));
-      if (NS_SUCCEEDED(rv) && presShell)
-        presShell->EndReflowBatching(forceReflow);
+      presShell->EndReflowBatching(forceReflow);
+    }
 
+    // Turn view updating back on.
+
+    if (mViewManager)
+    {
       PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
 
       if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
@@ -4386,13 +4417,16 @@ nsresult nsEditor::EndUpdateViewBatch()
 
       mViewManager->EndUpdateViewBatch(updateFlag);
     }
-  }  
 
-  nsCOMPtr<nsISelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
-    selPrivate->EndBatchChanges();
+    // Turn selection updating and notifications back on.
+
+    nsCOMPtr<nsISelection>selection;
+    GetSelection(getter_AddRefs(selection));
+
+    if (selection) {
+      nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
+      selPrivate->EndBatchChanges();
+    }
   }
 
   return NS_OK;
@@ -4439,7 +4473,7 @@ nsEditor::DeleteSelectionImpl(nsIEditor::EDirection aAction)
       }
     }
 
-    res = Do(txn);  
+    res = DoTransaction(txn);  
 
     if (mActionListeners)
     {

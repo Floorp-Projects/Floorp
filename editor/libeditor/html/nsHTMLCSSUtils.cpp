@@ -470,7 +470,7 @@ nsHTMLCSSUtils::SetCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, con
       result = txn->DoTransaction();
     }
     else {
-      result = mHTMLEditor->Do(txn);
+      result = mHTMLEditor->DoTransaction(txn);
     }
   }
   // The transaction system (if any) has taken ownwership of txn
@@ -492,7 +492,7 @@ nsHTMLCSSUtils::RemoveCSSProperty(nsIDOMElement *aElement, nsIAtom * aProperty, 
       result = txn->DoTransaction();
     }
     else {
-      result = mHTMLEditor->Do(txn);
+      result = mHTMLEditor->DoTransaction(txn);
     }
   }
   // The transaction system (if any) has taken ownwership of txn

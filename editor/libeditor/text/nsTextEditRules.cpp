@@ -1189,7 +1189,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
       res = mEditor->CreateTxnForDeleteText(textNode, offset, 1, (DeleteTextTxn**)&txn);
       if (NS_FAILED(res))  return res; 
       if (!txn)  return NS_ERROR_OUT_OF_MEMORY;
-      res = mEditor->Do(txn); 
+      res = mEditor->DoTransaction(txn); 
       if (NS_FAILED(res))  return res; 
       // The transaction system (if any) has taken ownwership of txn
       NS_IF_RELEASE(txn);
