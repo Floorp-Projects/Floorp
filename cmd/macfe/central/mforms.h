@@ -331,8 +331,12 @@ public:
 	void FinishCreateSelf();
 
 // ее Misc
-	virtual	void BeTarget();
-	virtual	void DontBeTarget();
+	virtual	void 	FindCommandStatus( CommandT inCommand, Boolean& outEnabled, 
+						Boolean& outUsesMark, Char16& outMark, Str255 outName );
+
+	virtual	Boolean ObeyCommand( CommandT inCommand, void *ioParam );
+	virtual	void 	BeTarget();
+	virtual	void 	DontBeTarget();
 };
 
 

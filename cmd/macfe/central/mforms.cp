@@ -758,6 +758,59 @@ void CFormHTMLArea::FinishCreateSelf()
 	CHTMLView::FinishCreateSelf();
 }
 
+void CFormHTMLArea::FindCommandStatus( CommandT inCommand, Boolean& outEnabled, 
+						Boolean& outUsesMark, Char16& outMark, Str255 outName )
+{
+	outUsesMark = false;
+	outEnabled = false;
+
+	// We don't want composer to control all the commands it would if it were
+	// not inside a form, so short circuit these and hand them off to the 
+	// browser
+	switch ( inCommand )
+	{
+		case cmd_AddToBookmarks:
+		case cmd_Print:
+		case cmd_ViewSource:
+		case cmd_Publish:
+		case cmd_Refresh:
+		case cmd_Reload:
+		case cmd_EditSource:
+		case cmd_BrowseDocument:
+		case cmd_Save:	
+		case cmd_SaveAs:
+		case cmd_DocumentInfo:
+			LCommander::FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
+			break;
+		default:
+			CEditView::FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
+	}
+}
+
+Boolean CFormHTMLArea::ObeyCommand( CommandT inCommand, void *ioParam )
+{
+	// We don't want composer to control all the commands it would if it were
+	// not inside a form, so short circuit these and hand them off to the 
+	// browser
+	switch ( inCommand )
+	{		
+		case cmd_AddToBookmarks:
+		case cmd_Print:
+		case cmd_ViewSource:
+		case cmd_Publish:
+		case cmd_Refresh:
+		case cmd_Reload:
+		case cmd_EditSource:
+		case cmd_BrowseDocument:
+		case cmd_Save:	
+		case cmd_SaveAs:
+		case cmd_DocumentInfo:
+			return LCommander::ObeyCommand (inCommand, ioParam);
+			break;
+		default:
+			return CEditView::ObeyCommand (inCommand, ioParam);
+	}
+}
 
 void CFormHTMLArea::BeTarget()
 {
