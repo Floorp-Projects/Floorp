@@ -600,19 +600,17 @@ public:
   nsresult  GetData(const nsID& aSID, nsCSSStruct** aData);
   nsresult  EnsureData(const nsID& aSID, nsCSSStruct** aData);
 
-  nsresult AppendValue(const char* aProperty, const nsCSSValue& aValue);
   nsresult AppendValue(PRInt32 aProperty, const nsCSSValue& aValue);
-  nsresult SetValueImportant(const char* aProperty);
   nsresult SetValueImportant(PRInt32 aProperty);
   nsresult AppendComment(const nsString& aComment);
 
-  nsresult GetValue(const char* aProperty, nsCSSValue& aValue);
   nsresult GetValue(PRInt32 aProperty, nsCSSValue& aValue);
   nsresult GetValue(PRInt32 aProperty, nsString& aValue);
   nsresult GetValue(const nsString& aProperty, nsString& aValue);
 
   nsresult GetImportantValues(nsICSSDeclaration*& aResult);
-  nsresult GetValueIsImportant(const char *aProperty, PRBool& aIsImportant);
+  nsresult GetValueIsImportant(PRInt32 aProperty, PRBool& aIsImportant);
+  nsresult GetValueIsImportant(const nsString& aProperty, PRBool& aIsImportant);
 
   PRBool   AppendValueToString(PRInt32 aProperty, nsString& aResult);
   PRBool   AppendValueToString(PRInt32 aProperty, const nsCSSValue& aValue, nsString& aResult);
@@ -761,11 +759,6 @@ nsresult CSSDeclarationImpl::EnsureData(const nsID& aSID, nsCSSStruct** aDataPtr
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;
-}
-
-nsresult CSSDeclarationImpl::AppendValue(const char* aProperty, const nsCSSValue& aValue)
-{
-  return AppendValue(nsCSSProps::LookupName(aProperty), aValue);
 }
 
 #define CSS_ENSURE(data)              \
@@ -1261,17 +1254,8 @@ nsresult CSSDeclarationImpl::AppendValue(PRInt32 aProperty, const nsCSSValue& aV
         mOrder->AppendElement((void*)aProperty);
       }
     }
-    if (nsnull != mImportant) { // remove from important
-      nsCSSValue  null;
-      mImportant->AppendValue(aProperty, null);
-    }
   }
   return result;
-}
-
-nsresult CSSDeclarationImpl::SetValueImportant(const char* aProperty)
-{
-  return SetValueImportant(nsCSSProps::LookupName(aProperty));
 }
 
 #define CSS_ENSURE_IMPORTANT(data)            \
@@ -1935,11 +1919,6 @@ nsresult CSSDeclarationImpl::AppendComment(const nsString& aComment)
   return result;
 }
 
-nsresult CSSDeclarationImpl::GetValue(const char* aProperty, nsCSSValue& aValue)
-{
-  return GetValue(nsCSSProps::LookupName(aProperty), aValue);
-}
-
 nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
 {
   nsresult result = NS_OK;
@@ -2596,6 +2575,12 @@ PRBool CSSDeclarationImpl::AppendValueToString(PRInt32 aProperty, const nsCSSVal
 
 nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsString& aValue)
 {
+  PRBool  isImportant = PR_FALSE;
+  GetValueIsImportant(aProperty, isImportant);
+  if (PR_TRUE == isImportant) {
+    return mImportant->GetValue(aProperty, aValue);
+  }
+
   aValue.Truncate(0);
 
   // shorthands
@@ -2864,7 +2849,16 @@ nsresult CSSDeclarationImpl::GetImportantValues(nsICSSDeclaration*& aResult)
   return NS_OK;
 }
 
-nsresult CSSDeclarationImpl::GetValueIsImportant(const char *aProperty,
+nsresult CSSDeclarationImpl::GetValueIsImportant(const nsString& aProperty,
+                                                 PRBool& aIsImportant)
+{
+  char prop[50];
+  aProperty.ToCString(prop, sizeof(prop));
+  PRInt32 propID = nsCSSProps::LookupName(prop);
+  return GetValueIsImportant(propID, aIsImportant);
+}
+
+nsresult CSSDeclarationImpl::GetValueIsImportant(PRInt32 aProperty,
                                                  PRBool& aIsImportant)
 {
   nsCSSValue val;
