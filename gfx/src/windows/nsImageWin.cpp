@@ -1265,3 +1265,20 @@ nsRect  destRect;
 }
 
 
+/**
+ * Get a pointer to the bits for the pixelmap. Will convert to DIB if
+ * only stored in optimized HBITMAP form.
+ *
+ * @return address of the DIB pixel array
+ */
+
+PRUint8*
+nsImageWin::GetBits()
+{
+  if ( !mImageBits )
+    ConvertDDBtoDIB(GetWidth(), GetHeight());
+
+  return mImageBits;
+
+} // GetBits
+
