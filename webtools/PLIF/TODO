@@ -10,19 +10,7 @@ Move PLIF/Service/User* to PLIF/Session/*
 Move PLIF/Service/Session.pm to PLIF/Session.pm
 Move PLIF/Service/ContactMethods to PLIF/ProtocolHelper/...
 Move PLIF/DataSource/*/MySQL.pm to PLIF/DataSource/MySQL/*.pm
-Move PLIF/Service/Coses.pm and PLIF/Service/TemplateToolkit.bm to PLIF/???
-
-
-CGI input needs POST support
-
-
-Abstract out the metadata stuff in the Input classes.
-
-
-Change output system (again) by removing the pointless
-dispatch.generic layer. All it does is convert a set of parameters
-into a hash labelling those parameters. The callers can do that, it's
-just like requiring named arguments.
+Move PLIF/Service/Coses.pm and PLIF/Service/TemplateToolkit.bm to PLIF/OutputHelper ?
 
 
 Make the DBI Results Frame return array refs and not arrays (will
@@ -30,10 +18,6 @@ require rather large changes throughout PLIF).
 
 
 Make getSettings return a boolean instead of raising an exception.
-
-
-Need a pass-through command that output can use to bring up specific
-templates
 
 
 Stylesheet should be a template
