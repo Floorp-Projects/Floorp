@@ -62,6 +62,7 @@ XUL_ATOM(treecol, "treecol") // A column in the tree view
 XUL_ATOM(treecolgroup, "treecolgroup") // A column group in the tree view
 XUL_ATOM(treefoot, "treefoot") // The footer of the tree view
 XUL_ATOM(treepusher, "treepusher") // A column pusher (left or right) for the tree view
+XUL_ATOM(scrollbarlist, "scrollbarlist") // An atom for internal use by the tree view
 
 XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 
