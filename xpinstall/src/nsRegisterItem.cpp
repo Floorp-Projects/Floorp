@@ -26,7 +26,6 @@
 #include "nsRegisterItem.h"
 #include "nsInstallResources.h"
 #include "nsNetUtil.h"
-#include "nsIFileURL.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsInstallTrigger.h"
@@ -458,27 +457,14 @@ nsRegisterItem::GetURLFromIFile(nsIFile* aFile, char** aOutURL)
     // it will for the install wizards which don't have Necko)
     // then use warren's local hack.
 
-    nsCOMPtr<nsIURI> pURL;
-    nsresult rv = NS_NewURI(getter_AddRefs(pURL), "file:");
-    if (NS_SUCCEEDED(rv)) 
-    {
-        nsCOMPtr<nsIFileURL> fileURL( do_QueryInterface(pURL) );
-        if (fileURL)
-        {
-            rv = fileURL->SetFile(aFile);
-            if (NS_SUCCEEDED(rv))
-            {
-                nsCAutoString spec;
-                rv = fileURL->GetSpec(spec);
-                *aOutURL = ToNewCString(spec);
-            }
-        }
-    }
-
-    if ( NS_FAILED(rv))
-    {
-        // Necko couldn't do it (wasn't present?), try the hack
+    nsCAutoString spec;
+    nsresult rv = NS_GetURLSpecFromFile(aFile, spec);
+    if (NS_FAILED(rv))
         rv = hack_nsIFile2URL(aFile, aOutURL);
+    else {
+        *aOutURL = ToNewCString(spec);
+        if (!*aOutURL)
+            rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
     return rv;

@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  xpconnect \
 		  js \
+		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -56,7 +57,7 @@ CPPSRCS		= \
 		nsHttpPipeline.cpp \
 		$(NULL)
 
-LOCAL_INCLUDES=-I$(srcdir)/../../../streamconv/converters
+LOCAL_INCLUDES=-I$(srcdir)/../../../base/src
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

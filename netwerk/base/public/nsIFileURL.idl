@@ -41,17 +41,24 @@
 interface nsIFile;
 
 /**
- * nsIFileURL is used for the file: protocol, and gives access to the
- * underlying nsIFile object.
+ * nsIFileURL provides access to the underlying nsIFile object corresponding to
+ * an URL.  The URL scheme need not be file:, since other local protocols may
+ * map URLs to files (e.g., resource:).
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 [scriptable, uuid(d26b2e2e-1dd1-11b2-88f3-8545a7ba7949)]
 interface nsIFileURL : nsIURL
 {
     /**
-     * setter clones and getter references, meaning that you must clone the
-     * resulting nsIFile if you wish to modify it.
+     * Get/Set nsIFile corresponding to this URL.
+     *
+     *  - Getter returns a reference to an immutable object.  Callers must clone
+     *    before attempting to modify the returned nsIFile object.  NOTE: this
+     *    constraint might not be enforced at runtime, so beware!!
+     *
+     *  - Setter clones the nsIFile object (allowing the caller to safely modify
+     *    the nsIFile object after setting it on this interface).
      */
     attribute nsIFile file;
 };

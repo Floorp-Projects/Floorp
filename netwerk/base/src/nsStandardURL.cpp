@@ -301,7 +301,7 @@ nsSegmentEncoder::EncodeSegment(const nsASingleFragmentCString &str,
 // nsStandardURL <public>
 //----------------------------------------------------------------------------
 
-nsStandardURL::nsStandardURL()
+nsStandardURL::nsStandardURL(PRBool aSupportsFileURL)
     : mDefaultPort(-1)
     , mPort(-1)
     , mURLType(URLTYPE_STANDARD)
@@ -309,6 +309,7 @@ nsStandardURL::nsStandardURL()
     , mHostEncoding(eEncoding_Unknown)
     , mSpecEncoding(eEncoding_Unknown)
     , mMutable(PR_TRUE)
+    , mSupportsFileURL(aSupportsFileURL)
 {
 #if defined(PR_LOGGING)
     if (!gStandardURLLog)
@@ -804,7 +805,9 @@ NS_INTERFACE_MAP_BEGIN(nsStandardURL)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsIURI)
     NS_INTERFACE_MAP_ENTRY(nsIURL)
-    NS_INTERFACE_MAP_ENTRY(nsIFileURL)
+    if (mSupportsFileURL && aIID.Equals(NS_GET_IID(nsIFileURL)))
+        foundInterface = NS_STATIC_CAST(nsIFileURL *, this);
+    else
     NS_INTERFACE_MAP_ENTRY(nsIStandardURL)
     NS_INTERFACE_MAP_ENTRY(nsISerializable)
     NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
@@ -1422,6 +1425,9 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         *result = PR_FALSE;
         return NS_OK;
     }
+
+    // XXX this needs to allow for case insensitive paths in some cases (e.g.,
+    // file: URLs under windows).
 
     *result = 
         SegmentIs(mScheme, other->mSpec.get(), other->mScheme) &&
@@ -2249,6 +2255,7 @@ nsStandardURL::Init(PRUint32 urlType,
         return NS_ERROR_INVALID_ARG;
     }
     mDefaultPort = defaultPort;
+    mURLType = urlType;
 
     if (charset == nsnull || *charset == '\0') {
         mOriginCharset.Truncate();

@@ -42,11 +42,10 @@
 interface nsIURI;
 
 /**
- * Protocol writers can obtain a default nsIURL implementation by calling the
- * component manager with NS_STANDARDURL_CID. The implementation returned will 
- * implement only the set of accessors specified by nsIURL. After obtaining the
- * instance from the component manager, the Init routine must be called on the
- * new instance to initialize it from the user's URL spec. 
+ * nsIStandardURL defines the interface to an URL with the standard
+ * file path format common to protocols like http, ftp, and file.
+ * It supports initialization from a relative path and provides
+ * some customization on how URLs are normalized.
  *
  * @status UNDER_REVIEW
  */
@@ -80,7 +79,7 @@ interface nsIStandardURL : nsISupports
     /**
      * Initialize a standard URL.
      *
-     * @param aUrlType       - one of the URLTYPE_XXX flags.
+     * @param aUrlType       - one of the URLTYPE_ flags listed above.
      * @param aDefaultPort   - if the port parsed from the URL string matches
      *                         this port, then the port will be removed from the
      *                         canonical form of the URL.

@@ -90,7 +90,7 @@
 #include "nsIWindowMediator.h"
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
-#include "nsIFileURL.h"
+#include "nsIURL.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsIPrompt.h"
@@ -3270,7 +3270,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // Once we get here, we need to figure out if we have the correct file
   // type for the editor.
   //
-  nsCOMPtr<nsIFileURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
+  nsCOMPtr<nsIURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
   if (fileUrl)
   {
     fileUrl->SetFilePath(sigNativePath);

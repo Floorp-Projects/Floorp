@@ -48,14 +48,12 @@
 #include "nsCOMPtr.h"
 
 #include "nsILocalFile.h"
-#include "nsNetCID.h"
-#include "nsIFileURL.h"
+#include "nsNetUtil.h"
 
 #include "nsContentCID.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 
 static already_AddRefed<nsIURI>
@@ -65,11 +63,9 @@ FileToURI(const char *aFilename)
     // XXX Handle relative paths somehow.
     lf->InitWithNativePath(nsDependentCString(aFilename));
 
-    nsIFileURL *url;
-    CallCreateInstance(kStandardURLCID, &url);
-    if (url)
-        url->SetFile(lf);
-    return url;
+    nsIURI *uri = nsnull;
+    NS_NewFileURI(&uri, lf);
+    return uri;
 }
 
 static void

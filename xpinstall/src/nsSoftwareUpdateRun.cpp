@@ -530,23 +530,11 @@ extern "C" void RunChromeInstallOnThread(void *data)
         spec.SetCapacity(200);
         spec = "jar:";
 
-        nsCOMPtr<nsIURI> pURL;
-        rv = NS_NewURI(getter_AddRefs(pURL), "file:");
-        if (NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(pURL);
-            if (fileURL)
-                rv = fileURL->SetFile(info->GetFile());
-            else
-                rv = NS_ERROR_NO_INTERFACE;
-
-            if (NS_SUCCEEDED(rv))
-            {
-                nsCAutoString localURL;
-                rv = fileURL->GetSpec(localURL);
-                spec.Append(localURL);
-                spec.Append("!/");
-            }
+        nsCAutoString localURL;
+        rv = NS_GetURLSpecFromFile(info->GetFile(), localURL);
+        if (NS_SUCCEEDED(rv)) {
+            spec.Append(localURL);
+            spec.Append("!/");
         }
 
         // Now register the new chrome

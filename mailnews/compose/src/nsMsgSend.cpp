@@ -60,6 +60,7 @@
 #include "nsIMsgSendListener.h"
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIFileSpec.h"
+#include "nsIURL.h"
 #include "nsIFileURL.h"
 #include "nsMsgCopy.h"
 #include "nsXPIDLString.h"
@@ -2202,7 +2203,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
           nsCOMPtr<nsIMIMEService> mimeFinder (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
           if (NS_SUCCEEDED(rv) && mimeFinder) 
           {
-            nsCOMPtr<nsIFileURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
+            nsCOMPtr<nsIURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
             if (fileUrl)
             {
               nsCAutoString fileExt;

@@ -59,7 +59,7 @@
 #include "nsMsgSimulateError.h"
 #include "nsITextToSubURI.h"
 #include "nsEscape.h"
-#include "nsIFileURL.h"
+#include "nsIURL.h"
 #include "nsNetCID.h"
 
 
@@ -672,7 +672,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       // then, if we have a resource fork, check the filename extension, maybe we don't need the resource fork!
       if (sendResourceFork)
       {
-        nsCOMPtr<nsIFileURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
+        nsCOMPtr<nsIURL> fileUrl(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
         if (fileUrl)
         {
           nsresult rv = fileUrl->SetSpec(url_string);

@@ -40,14 +40,16 @@
 #include "nsIStreamConverterService.h"
 #include "nsIFileURL.h"
 #include "nsIURL.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIFileTransportService.h"
 #include "nsIFile.h"
+#include "nsIEventQueueService.h"
 #include "nsIOutputStream.h"
+#include "nsXPIDLString.h"
+#include "nsStandardURL.h"
+#include "nsReadableUtils.h"
 #include "nsInt64.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -715,11 +717,11 @@ nsFileChannel::Init(nsIFile* file,
                     PRInt32 perm)
 {
     nsresult rv;
-    nsCOMPtr<nsIFileURL> url;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                            NS_GET_IID(nsIFileURL),
-                                            getter_AddRefs(url));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIFileURL> url = new nsStandardURL(PR_TRUE);
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // XXX shouldn't we set nsIURI::originCharset ??
 
     rv = url->SetFile(file);
     if (NS_FAILED(rv)) return rv;

@@ -41,7 +41,6 @@
 #include "nsIURLParser.h"
 #include "nsIStandardURL.h"
 #include "nsIFileURL.h"
-#include "nsCRT.h"
 #include "nsIPref.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -51,11 +50,11 @@
 #include "nsIThread.h"
 #include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
-#include "nsFileSpec.h"
-#include "nsAutoLock.h"
 #include "nsXPIDLString.h"
+#include "nsStandardURL.h"
 #include "nsNetCID.h"
 #include "nsURLHelper.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -139,15 +138,9 @@ nsFileProtocolHandler::NewURI(const nsACString &aSpec,
 {
     nsresult rv;
 
-    // file: URLs (currently) have no additional structure beyond that provided by standard
-    // URLs, so there is no "outer" given to CreateInstance 
-
-    nsCOMPtr<nsIStandardURL> url;
-
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, 
-                                            nsnull, NS_GET_IID(nsIStandardURL),
-                                            getter_AddRefs(url));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIStandardURL> url = new nsStandardURL(PR_TRUE);
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;
@@ -193,12 +186,11 @@ nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
 {
     nsresult rv;
 
-    nsCOMPtr<nsIFileURL> url;
+    nsCOMPtr<nsIFileURL> url = new nsStandardURL(PR_TRUE);
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, 
-                                            nsnull, NS_GET_IID(nsIFileURL),
-                                            getter_AddRefs(url));
-    if (NS_FAILED(rv)) return rv;
+    // XXX shouldn't we set nsIURI::originCharset ??
 
     rv = url->SetFile(file);
     if (NS_FAILED(rv)) return rv;

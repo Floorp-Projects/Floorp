@@ -342,19 +342,18 @@ nsHelperAppDialog.prototype = {
         var pathString = this.mSourcePath;
         try 
         {
-          var fileURL = url.QueryInterface( Components.interfaces.nsIFileURL);
-          // All URLs will QI to nsIFileURL.  Need to check the scheme to determine type
-          if (fileURL.schemeIs("file"))
+          var fileURL = url.QueryInterface(Components.interfaces.nsIFileURL);
+          if (fileURL)
           {
-             var fileObject = fileURL.file;
-             if (fileObject)
-             {
-               var parentObject = fileObject.parent;
-               if (parentObject)
-               {
-                 pathString = parentObject.path;
-               }
-             }
+            var fileObject = fileURL.file;
+            if (fileObject)
+            {
+              var parentObject = fileObject.parent;
+              if (parentObject)
+              {
+                pathString = parentObject.path;
+              }
+            }
           }
         } catch(ex) {}
 

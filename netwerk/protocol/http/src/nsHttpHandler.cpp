@@ -35,6 +35,7 @@
 #include "nsHttpTransaction.h"
 #include "nsHttpAuthCache.h"
 #include "nsHttpPipeline.h"
+#include "nsStandardURL.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpNotify.h"
 #include "nsIURL.h"
@@ -1830,11 +1831,17 @@ nsHttpHandler::NewURI(const nsACString &aSpec,
 
     LOG(("nsHttpHandler::NewURI\n"));
 
-    nsCOMPtr<nsIStandardURL> url = do_CreateInstance(kStandardURLCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIStandardURL> url;
+    NS_NEWXPCOM(url, nsStandardURL);
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    // XXX need to choose the default port based on the scheme
-    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 80, aSpec, aCharset, aBaseURI);
+    // use the correct default port
+    PRInt32 defaultPort;
+    GetDefaultPort(&defaultPort);
+
+    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY,
+                   defaultPort, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
     return CallQueryInterface(url, aURI);
@@ -2207,7 +2214,6 @@ nsHttpsHandler::GetScheme(nsACString &aScheme)
 NS_IMETHODIMP
 nsHttpsHandler::GetDefaultPort(PRInt32 *aPort)
 {
-    NS_ENSURE_ARG_POINTER(aPort);
     *aPort = 443;
     return NS_OK;
 }
