@@ -125,6 +125,8 @@ NS_NewStringUnicharInputStream(nsIUnicharInputStream** aInstancePtrResult,
  * changing it right now into a module private visibility because there are
  * better and more xpcom-like ways to get a Converter.
  */
+
+nsresult NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult, nsISupports* aOuter, nsString* aCharSet);
 nsresult
 NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult,
                    nsISupports* aOuter,
