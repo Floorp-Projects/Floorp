@@ -10,6 +10,7 @@
     <key id="goBackKbMac"  key="[" observes="Browser:Back" modifiers="accel"/>
     <key id="goForwardKbMac"  key="]" observes="Browser:Forward" modifiers="accel"/>
     <key id="stopMac"  key="." oncommand="BrowserStop();" modifiers="accel"/>
+    <key id="goHome" keycode="VK_HOME" observes="Browser:Home" modifiers="meta"/>
   </keyset>  
 
 </overlay>
