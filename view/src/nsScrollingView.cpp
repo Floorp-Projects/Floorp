@@ -395,7 +395,7 @@ nsresult nsScrollingView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  
+  *aInstancePtr = nsnull;
   if (aIID.Equals(kIScrollableViewIID)) {
     *aInstancePtr = (void*)(nsIScrollableView*)this;
     return NS_OK;
