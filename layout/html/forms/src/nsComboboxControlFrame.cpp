@@ -636,8 +636,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
   nsIFrame* displayFrame = GetDisplayFrame(aPresContext);
   nsIFrame* dropdownFrame = GetDropdownFrame();
 
-   // Don't try to do any special sizing and positioning unless all of the frames
-   // have been created.
+  // Don't try to do any special sizing and positioning unless all of the frames
+  // have been created.
   if ((nsnull == displayFrame) ||
      (nsnull == buttonFrame) ||
      (nsnull == dropdownFrame)) 
@@ -837,6 +837,18 @@ nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
   return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsComboboxControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+{
+  if (nsFormFrame::GetDisabled(this)) {
+    *aFrame = this;
+    return NS_OK;
+  } else {
+    return nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  }
+  return NS_OK;
+}
+
 
 //--------------------------------------------------------------
 NS_IMETHODIMP
@@ -948,10 +960,8 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
   if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
     return NS_OK;
   }
-
-  if (aEvent->message == NS_KEY_PRESS) {
-    int x = 0;
-    x++;
+  if (nsFormFrame::GetDisabled(this)) { 
+    return NS_OK;
   }
 
   return NS_OK;
