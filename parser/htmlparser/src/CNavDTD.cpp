@@ -492,9 +492,21 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           mTokenizer->PushTokenFront(theToken);
         }
           //if the content model is empty, then begin by opening <html>...
-        theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));
-        if(theToken) {
-          mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
+        theToken = (CStartToken*)mTokenizer->GetTokenAt(0);
+        if (theToken) {
+          eHTMLTags theTag = (eHTMLTags)theToken->GetTypeID();
+          if (theTag != eHTMLTag_html) {
+            theToken = NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));          	
+            if (theToken) {
+              mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
+            }
+          }
+        }
+        else {
+          theToken = NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));
+          if (theToken) {
+            mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
+          }
         }
       }
     
