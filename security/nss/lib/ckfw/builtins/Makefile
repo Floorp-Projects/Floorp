@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.3 $ $Date: 2000/09/09 03:41:11 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.4 $ $Date: 2000/10/03 00:58:17 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -54,11 +54,19 @@ else
 #
 ifneq ($(OS_ARCH), OSF1)
 
+ifeq ($(OS_ARCH), OS2)
+PLC_STATIC_LIB = $(DIST)/lib/plc4.$(LIB_SUFFIX)
+PLDS_STATIC_LIB = $(DIST)/lib/plds4.$(LIB_SUFFIX)
+else
+PLC_STATIC_LIB = $(DIST)/lib/libplc4.$(LIB_SUFFIX)
+PLDS_STATIC_LIB = $(DIST)/lib/libplds4.$(LIB_SUFFIX)
+endif
+
 EXTRA_LIBS += \
-        $(DIST)/lib/libnssckfw.a \
-        $(DIST)/lib/libnssb.a \
-	$(DIST)/lib/libplc4.a \
-	$(DIST)/lib/libplds4.a \
+        $(DIST)/lib/libnssckfw.$(LIB_SUFFIX) \
+        $(DIST)/lib/libnssb.$(LIB_SUFFIX) \
+	$(PLC_STATIC_LIB) \
+	$(PLDS_STATIC_LIB) \
 	$(NULL)
 
 endif

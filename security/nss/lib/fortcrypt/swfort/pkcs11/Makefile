@@ -78,8 +78,16 @@ ifdef MOZILLA_SECURITY_BUILD
 CRYPTO_LIB = $(DIST)/lib/libcrypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-CRYPTO_LIB += $(DIST)/lib/libbsafe.a
-CRYPTO_LIB += $(DIST)/lib/libfreebl.a 
+CRYPTO_LIB += $(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+CRYPTO_LIB += $(DIST)/lib/libfreebl.$(LIB_SUFFIX)
+endif
+
+ifeq ($(OS_ARCH), OS2)
+PLC_STATIC_LIB = $(DIST)/lib/plc4.$(LIB_SUFFIX)
+PLDS_STATIC_LIB = $(DIST)/lib/plds4.$(LIB_SUFFIX)
+else
+PLC_STATIC_LIB = $(DIST)/lib/libplc4.$(LIB_SUFFIX)
+PLDS_STATIC_LIB = $(DIST)/lib/libplds4.$(LIB_SUFFIX)
 endif
 
 EXTRA_LIBS += \
@@ -87,8 +95,8 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libsoftoken.$(LIB_SUFFIX) \
 	$(CRYPTO_LIB) \
 	$(DIST)/lib/libsecutil.$(LIB_SUFFIX) \
-	$(DIST)/lib/libplc4.$(LIB_SUFFIX) \
-	$(DIST)/lib/libplds4.$(LIB_SUFFIX) \
+	$(PLC_STATIC_LIB) \
+	$(PLDS_STATIC_LIB) \
 	$(NULL)
 
 endif
