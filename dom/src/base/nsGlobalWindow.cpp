@@ -2063,11 +2063,6 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
   }
   chromeFlags = CalculateChromeFlags(options);
 
-  if (aAttachArguments) {
-    // Opening a dialog.
-    chromeFlags |= NS_CHROME_OPEN_AS_DIALOG;
-  }
-
   nsIWebShell *newOuterShell = nsnull;
   nsIWebShellContainer *webShellContainer;
 
@@ -2146,12 +2141,14 @@ GlobalWindowImpl::AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 a
 PRUint32
 GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
 
-  PRUint32  chromeFlags = 0;
+  PRUint32  chromeFlags;
 
   if (nsnull == aFeatures)
     return NS_CHROME_ALL_CHROME;
 
   PRBool presenceFlag = PR_FALSE;
+
+  chromeFlags = NS_CHROME_WINDOW_BORDERS_ON;
 
   // ((only) titlebars default to "on" if not mentioned)
   chromeFlags |= WinHasOption(aFeatures, "titlebar", presenceFlag) ? NS_CHROME_TITLEBAR_ON : 0;

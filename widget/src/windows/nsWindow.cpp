@@ -663,20 +663,29 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
       if (aInitData->mBorderStyle != eBorderStyle_all) {
         if (aInitData->mBorderStyle == eBorderStyle_none ||
+            !(aInitData->mBorderStyle & eBorderStyle_border))
+          style &= ~WS_BORDER;
+
+        if (aInitData->mBorderStyle == eBorderStyle_none ||
             !(aInitData->mBorderStyle & eBorderStyle_title)) {
           style &= ~WS_DLGFRAME;
           style |= WS_POPUP;
         }
         if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & eBorderStyle_close)) {
+            !(aInitData->mBorderStyle & (eBorderStyle_close | eBorderStyle_menu)))
           style &= ~WS_SYSMENU;
-        }
+
         if (aInitData->mBorderStyle == eBorderStyle_none ||
-            !(aInitData->mBorderStyle & eBorderStyle_resizeh)) {
+            !(aInitData->mBorderStyle & eBorderStyle_resizeh))
           style &= ~WS_THICKFRAME;
+
+        if (aInitData->mBorderStyle == eBorderStyle_none ||
+            !(aInitData->mBorderStyle & eBorderStyle_minimize))
           style &= ~WS_MINIMIZEBOX;
+
+        if (aInitData->mBorderStyle == eBorderStyle_none ||
+            !(aInitData->mBorderStyle & eBorderStyle_maximize))
           style &= ~WS_MAXIMIZEBOX;
-        }
       }
     }
 
