@@ -90,8 +90,7 @@ public:
 
   /**
    * Get the form for this form control.
-   * @param aForm the form to get
-   * @return NS_OK
+   * @param aForm the form [OUT]
    */
   NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
 
@@ -100,20 +99,19 @@ public:
    * @param aForm the form
    * @param aRemoveFromForm set false if you do not want this element removed
    *        from the form.  (Used by nsFormControlList::Clear())
-   * @return NS_OK
    */
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
                      PRBool aRemoveFromForm = PR_TRUE) = 0;
 
   /**
-   * Get the type of this control
-   * @param aType the type to be returned
-   * @return NS_OK
+   * Get the type of this control as an int (see NS_FORM_* above)
+   * @param aType the type to be returned [OUT]
    */
   NS_IMETHOD GetType(PRInt32* aType) = 0;
 
   /**
-   * Reset this form control
+   * Reset this form control (as it should be when the user clicks the Reset
+   * button)
    */
   NS_IMETHOD Reset() = 0;
 
@@ -129,12 +127,17 @@ public:
                                nsIContent* aSubmitElement) = 0;
 
   /**
-   * Save to presentation state
+   * Save to presentation state.  The form control will determine whether it
+   * has anything to save and if so, create an entry in the layout history for
+   * its pres context.
    */
   NS_IMETHOD SaveState() = 0;
 
   /**
-   * Restore from presentation state
+   * Restore from presentation state.  You pass in the presentation state for
+   * this form control (generated with GenerateStateKey() + "-C") and the form
+   * control will grab its state from there.
+   *
    * @param aState the pres state to use to restore the control
    */
   NS_IMETHOD RestoreState(nsIPresState* aState) = 0;
