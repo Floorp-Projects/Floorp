@@ -284,7 +284,6 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 	ControlPartCode	part;
 	ControlHandle	currCntl;
 	short 			checkboxVal;
-	ThreadID 		tid;
 	GrafPtr			oldPort;
 	GetPort(&oldPort);
 	
@@ -350,30 +349,40 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(gControls->backB, evt->where, NULL);
 		if (part)
 		{
-			KillControls(gWPtr);
-			if (&gControls->tw->startMsgBox)
-			{
-				EraseRect(&gControls->tw->startMsgBox);
-				InvalRect(&gControls->tw->startMsgBox);
-			}
-			else
-			{
-				ErrorHandler(eParam);	
-				return;
-			}
-			ClearSaveBitsMsg();
-			
-			/* treat last setup type  selection as custom */
-			if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
-			{
-				if (gControls->cfg->bAdditionsExist)
-					ShowAdditionsWin();
-				else
-					ShowComponentsWin();
-			}
-			else
-				ShowSetupTypeWin();
-			return;
+		    /* before install has started */
+		    if (gControls->state == eInstallNotStarted)
+		    {
+    			KillControls(gWPtr);
+    			if (&gControls->tw->startMsgBox)
+    			{
+    				EraseRect(&gControls->tw->startMsgBox);
+    				InvalRect(&gControls->tw->startMsgBox);
+    			}
+    			else
+    			{
+    				ErrorHandler(eParam);	
+    				return;
+    			}
+    			ClearSaveBitsMsg();
+    			
+    			/* treat last setup type  selection as custom */
+    			if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
+    			{
+    				if (gControls->cfg->bAdditionsExist)
+    					ShowAdditionsWin();
+    				else
+    					ShowComponentsWin();
+    			}
+    			else
+    				ShowSetupTypeWin();
+    			return;
+            }
+            
+            /* pause button pressed */
+            else if (gControls->state == eDownloading || gControls->state == eResuming)
+            {
+                SetPausedState();
+            }
 		}
 	}
 			
@@ -388,14 +397,32 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		part = TrackControl(gControls->nextB, evt->where, NULL);
 		if (part)
 		{
-		    DisableNavButtons();
-            ClearDownloadSettings();
-		    gInstallStarted = true;
-			SpawnSDThread(Install, &tid);
-			return;
+            BeginInstall();
 		}
 	}
+	
 	SetPort(oldPort);
+}
+
+void 
+BeginInstall(void)
+{
+    ThreadID tid;
+
+    /* starting download first time or resume download */
+    if (gControls->state == eInstallNotStarted || gControls->state == ePaused)
+    {
+        if (gControls->state == eInstallNotStarted)
+        {
+            SetupPauseResumeButtons();
+            ClearDownloadSettings();
+            gInstallStarted = true;
+        }
+        else if (gControls->state == ePaused)
+            SetResumedState();
+
+        SpawnSDThread(Install, &tid);
+    }
 }
 
 void
@@ -632,14 +659,35 @@ ClearSaveBitsMsg(void)
 void
 EnableTerminalWin(void)
 {
-	EnableNavButtons();
-	
-	if (gControls->tw->siteSelector)
-		HiliteControl(gControls->tw->siteSelector, kEnableControl);
-	if (gControls->tw->saveBitsCheckbox)
-	    HiliteControl(gControls->tw->saveBitsCheckbox, kEnableControl);
-    if (gControls->tw->proxySettingsBtn)
-        HiliteControl(gControls->tw->proxySettingsBtn, kEnableControl);	    
+    if (gControls->state == eInstallNotStarted)
+    {
+	    EnableNavButtons();
+    	
+    	if (gControls->tw->siteSelector)
+    		HiliteControl(gControls->tw->siteSelector, kEnableControl);
+    	if (gControls->tw->saveBitsCheckbox)
+    	    HiliteControl(gControls->tw->saveBitsCheckbox, kEnableControl);
+        if (gControls->tw->proxySettingsBtn)
+            HiliteControl(gControls->tw->proxySettingsBtn, kEnableControl);	    
+    }
+    else if (gControls->state == eDownloading || gControls->state == eResuming)
+    {
+        if (gControls->nextB)
+            HiliteControl(gControls->nextB, kDisableControl);       
+        if (gControls->backB)
+            HiliteControl(gControls->backB, kEnableControl);    
+        if (gControls->cancelB)
+            HiliteControl(gControls->cancelB, kDisableControl);
+    }
+    else if (gControls->state == ePaused)
+    {
+        if (gControls->nextB)
+            HiliteControl(gControls->nextB, kEnableControl);       
+        if (gControls->backB)
+            HiliteControl(gControls->backB, kDisableControl); 
+        if (gControls->cancelB)
+            HiliteControl(gControls->cancelB, kDisableControl);    
+    } 
 }
 
 void
@@ -653,4 +701,67 @@ DisableTerminalWin(void)
 	    HiliteControl(gControls->tw->saveBitsCheckbox, kDisableControl);
     if (gControls->tw->proxySettingsBtn)
         HiliteControl(gControls->tw->proxySettingsBtn, kDisableControl);		    
+}
+
+void
+SetupPauseResumeButtons(void)
+{
+    Str255 pPauseLabel, pResumeLabel;
+    
+    /* rename labels to pause/resume */
+    if (gControls->backB)
+    {
+    	GetResourcedString(pPauseLabel, rInstList, sPauseBtn);
+        SetControlTitle(gControls->backB, pPauseLabel); 
+        ShowControl(gControls->backB);
+    }
+    
+    if (gControls->nextB)
+    {
+	    GetResourcedString(pResumeLabel, rInstList, sResumeBtn);
+        SetControlTitle(gControls->nextB, pResumeLabel); 
+        ShowControl(gControls->nextB);    
+    }
+    
+    /* disable cancel button */
+    if (gControls->cancelB)
+        HiliteControl(gControls->cancelB, kDisableControl);
+        
+    /* disable pause button  */
+    if (gControls->nextB)
+        HiliteControl(gControls->nextB, kDisableControl);   
+    
+    /* enable resume button */
+    if (gControls->backB)
+        HiliteControl(gControls->backB, kEnableControl);    
+
+    gControls->state = eDownloading;
+}
+
+void
+SetPausedState(void)
+{   
+    /*  disable resume button */
+    if (gControls->backB)
+        HiliteControl(gControls->backB, kDisableControl);
+    
+    /* enable pause button */
+    if (gControls->nextB)
+        HiliteControl(gControls->nextB, kEnableControl);     
+          
+    gControls->state = ePaused;
+}
+
+void
+SetResumedState(void)
+{    
+    /* disable pause button  */
+    if (gControls->nextB)
+        HiliteControl(gControls->nextB, kDisableControl);   
+    
+    /* enable resume button */
+    if (gControls->backB)
+        HiliteControl(gControls->backB, kEnableControl);
+        
+    gControls->state = eResuming;
 }

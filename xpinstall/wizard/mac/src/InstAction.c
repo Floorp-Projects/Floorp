@@ -39,6 +39,8 @@ static int sCurrFullPathLen = 0;
 static char *sCurrURL = 0;
 static time_t sCurrStartTime;  /* start of download of current file */
 
+ConstStr255Param kDLMarker = "\pCurrent Download";
+
 pascal void* Install(void* unused)
 {	
 	short			vRefNum, srcVRefNum;
@@ -120,16 +122,22 @@ pascal void* Install(void* unused)
             HUnlock(gControls->cfg->globalURL);
             HUnlock(gControls->cfg->site[siteIndex].domain);
 	    }
-
-        InitDLProgControls();
+        
+        if (gControls->state != eResuming)
+            InitDLProgControls();
         dlErr = DownloadXPIs(srcVRefNum, srcDirID);
+        if (dlErr == nsFTPConn::E_USER_CANCEL)
+        {
+            return (void *) nil;
+        }
 		if (dlErr != 0)
 		{
 		    ErrorHandler(dlErr);
 			return (void*) nil;
 		}
         ClearDLProgControls();
-
+        DisableNavButtons();
+        
 		SetPort(oldPort);
 	
 		if (gWPtr)
@@ -149,9 +157,9 @@ pascal void* Install(void* unused)
     }
 	else
 		bCoreExists = true;
-    /* otherwise core exists in cwd:InstallerModules, different from extraction location */
+    /* otherwise core exists in cwd:Installer Modules, different from extraction location */
 
-	
+
 	/* check if coreFile was downloaded */
 	HLock(gControls->cfg->coreFile);
 	if (*gControls->cfg->coreFile != NULL)
@@ -230,6 +238,7 @@ ComputeTotalDLSize(void)
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{    
+			    // XXX should this change to look at archive size instead?
                 totalDLSize += gControls->cfg->comp[i].size;
                 
                 compsDone++;
@@ -248,15 +257,17 @@ DownloadXPIs(short destVRefNum, long destDirID)
     short rv = 0;
     Handle dlPath;
     short dlPathLen = 0;
-    int i, compsDone, instChoice;
-        
-    GetFullPath(destVRefNum, destDirID, "\p", &dlPathLen, &dlPath);
+    int i, compsDone = 0, instChoice = gControls->opt->instChoice-1, resPos = 0;
+    Boolean bResuming = false;
+    int markedIndex = 0;
     
-	compsDone = 0;
-	instChoice = gControls->opt->instChoice-1;
-	
+    GetFullPath(destVRefNum, destDirID, "\p", &dlPathLen, &dlPath);
+	DLMarkerGetCurrent(&markedIndex, &compsDone);
+	if (markedIndex >= 0)
+	    resPos = GetResPos(&gControls->cfg->comp[markedIndex]);
+    
 	// loop through 0 to kMaxComponents
-	for(i=0; i<kMaxComponents; i++)
+	for(i = 0; i < kMaxComponents; i++)
 	{
 		// general test: if component in setup type
 		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
@@ -267,25 +278,47 @@ DownloadXPIs(short destVRefNum, long destDirID)
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{    
+			    // stat file even if index is less than markedIndex
+			    // and download file if it isn't locally there;
+			    // this can happen if a new setup type was selected
+			    if (i < markedIndex)
+			    {
+			        if (noErr == ExistsXPI(i))
+			            continue;  
+			    }
+			    
 			    // set up vars for dl callback to use
                 sCurrComp = i;
                 sCurrFullPath = dlPath;
                 sCurrFullPathLen = dlPathLen;
                 
                 // download given full path and archive name
-                rv = DownloadFile(dlPath, dlPathLen, gControls->cfg->comp[i].archive);
+                if (i == markedIndex && resPos > 0)
+                {
+                    gControls->resPos = resPos;
+                    gControls->state = eResuming;
+                }
+                rv = DownloadFile(dlPath, dlPathLen, gControls->cfg->comp[i].archive, resPos);
+                if (rv == nsFTPConn::E_USER_CANCEL)
+                {
+                    break;
+                }
                 if (rv != 0)
                 {
                     ErrorHandler(rv);
                     break;
                 }
-                
+                resPos = 0; // reset after first file was resumed in the middle 
+                gControls->state = eDownloading;
                 compsDone++;
             }
         }
 		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
 			break;  
     }
+    
+    if (rv == 0)
+        DLMarkerDelete();
         
     return rv;
 }
@@ -294,15 +327,17 @@ const char kHTTP[8] = "http://";
 const char kFTP[7] = "ftp://";
 
 short
-DownloadFile(Handle destFolder, long destFolderLen, Handle archive)
+DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos)
 {
     short rv = 0;
     char *URL = 0, *proxyServerURL = 0, *destFile = 0, *destFolderCopy = 0;
     int globalURLLen, archiveLen, proxyServerURLLen;
     char *ftpHost = 0, *ftpPath = 0;
+    Boolean bGetTried = false;
     
     // make URL using globalURL
     HLock(archive);
+    DLMarkerSetCurrent(*archive);
     HLock(gControls->cfg->globalURL);
     globalURLLen = strlen(*gControls->cfg->globalURL);
     archiveLen = strlen(*archive);
@@ -348,7 +383,8 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive)
         if (rv == nsHTTPConn::OK)
         {
             sCurrStartTime = time(NULL);
-            rv = conn->Get(DLProgressCB, destFile);
+            bGetTried = true;
+            rv = conn->Get(DLProgressCB, destFile, resPos);
             conn->Close();
         }
     }
@@ -363,7 +399,8 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive)
         if (rv == nsHTTPConn::OK)
         {
             sCurrStartTime = time(NULL);
-            rv = conn->Get(DLProgressCB, destFile);
+            bGetTried = true;
+            rv = conn->Get(DLProgressCB, destFile, resPos);
             conn->Close();
         }
     }
@@ -385,7 +422,8 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive)
             if (rv == nsFTPConn::OK)
             {
                 sCurrStartTime = time(NULL);
-                rv = conn->Get(ftpPath, destFile, nsFTPConn::BINARY, 1, DLProgressCB);
+                bGetTried = true;
+                rv = conn->Get(ftpPath, destFile, nsFTPConn::BINARY, resPos, 1, DLProgressCB);
                 conn->Close();
             }
         }
@@ -398,8 +436,237 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive)
     // else not supported so report an error
     else
         rv = nsHTTPConn::E_MALFORMED_URL;
-        
+    
+    if (bGetTried && rv != 0)
+    {
+        /* the get failed before completing; simulate pause */
+        SetPausedState();
+        rv = nsFTPConn::E_USER_CANCEL;
+    }
+    
     return rv;
+}
+
+OSErr 
+DLMarkerSetCurrent(char *aXPIName)
+{
+    OSErr err = noErr;
+    short vRefNum = 0;
+    long dirID = 0;
+    FSSpec fsMarker;
+    short markerRefNum;
+    long count = 0;
+    
+    if (!aXPIName)
+        return paramErr;
+        
+    err = GetInstallerModules(&vRefNum, &dirID);
+    if (err != noErr)
+        return err;
+        
+    // check if marker file exists        
+    err = FSMakeFSSpec(vRefNum, dirID, kDLMarker, &fsMarker);
+    
+    // delete old marker and recreate it so we truncate to 0
+    if (err == noErr)
+        FSpDelete(&fsMarker);
+
+    err = FSpCreate(&fsMarker, 'ttxt', 'TEXT', smSystemScript);
+    if (err != noErr)
+        return err;
+        
+    // open data fork
+    err = FSpOpenDF(&fsMarker, fsWrPerm, &markerRefNum);
+    if (err != noErr)
+        goto BAIL;
+        
+    // write xpi name into marker's data fork at offset 0    
+    count = strlen(aXPIName);
+    err = FSWrite(markerRefNum, &count, (void *) aXPIName);
+    
+BAIL:
+    // close marker file
+    FSClose(markerRefNum);
+    
+    return err;
+}
+
+OSErr
+DLMarkerGetCurrent(int *aMarkedIndex, int *aCompsDone)
+{
+    OSErr err = noErr;
+    char xpiName[255];
+    short vRefNum = 0;
+    long dirID = 0;
+    long count = 0;
+    FSSpec fsMarker;
+    short markerRefNum;
+    
+    if (!aMarkedIndex || !aCompsDone)
+        return paramErr;
+        
+    err = GetInstallerModules(&vRefNum, &dirID);
+    if (err != noErr)
+        return err;
+        
+    // check if marker file exists
+    err = FSMakeFSSpec(vRefNum, dirID, kDLMarker, &fsMarker);
+    if (err == noErr)
+    {
+        // open for reading
+        err = FSpOpenDF(&fsMarker, fsRdPerm, &markerRefNum);
+        if (err != noErr)
+            goto CLOSE_FILE;
+            
+        // get file size
+        err = GetEOF(markerRefNum, &count);
+        if (err != noErr)
+            goto CLOSE_FILE;
+            
+        // read file contents
+        err = FSRead(markerRefNum, &count, (void *) xpiName);
+        if (err == noErr)
+        {
+            if (count <= 0)
+                err = readErr;
+            else
+            {
+                xpiName[count] = 0; // ensure only reading 'count' bytes
+                err = GetIndexFromName(xpiName, aMarkedIndex, aCompsDone);
+            }
+        }
+        
+CLOSE_FILE:
+        // close file
+        FSClose(markerRefNum);
+    }
+    
+    return err;
+}
+
+OSErr 
+DLMarkerDelete(void)
+{
+    OSErr err;
+    short vRefNum = 0;
+    long dirID = 0;
+    FSSpec fsMarker;
+    
+    err = GetInstallerModules(&vRefNum, &dirID);
+    if (err == noErr)
+    {
+        err = FSMakeFSSpec(vRefNum, dirID, kDLMarker, &fsMarker);
+        if (err == noErr)
+            FSpDelete(&fsMarker);
+    }
+    
+    return noErr;
+}
+
+OSErr
+GetIndexFromName(char *aXPIName, int *aIndex, int *aCompsDone)
+{
+    OSErr err = noErr;
+    int i, compsDone = 0, instChoice = gControls->opt->instChoice - 1;
+    
+    if (!aXPIName || !aIndex || !aCompsDone)
+        return paramErr;
+        
+    // loop through 0 to kMaxComponents
+	for(i = 0; i < kMaxComponents; i++)
+	{
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+            // if custom and selected -or- not custom setup type
+            if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+                 (gControls->cfg->comp[i].selected == true)) ||
+                 (instChoice < gControls->cfg->numSetupTypes-1) )
+            {   
+                HLock(gControls->cfg->comp[i].archive);
+                if (strncmp(aXPIName, (*(gControls->cfg->comp[i].archive)), strlen(aXPIName)) == 0)
+                {
+                    HUnlock(gControls->cfg->comp[i].archive);
+                    *aIndex = i;
+                    *aCompsDone = compsDone;
+                    break;
+                }   
+                else
+                    HUnlock(gControls->cfg->comp[i].archive);                 
+                compsDone++;
+            }
+        }
+		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
+		{
+		    err = userDataItemNotFound;
+			break;
+	    }
+    }
+    return err;
+}
+
+int
+GetResPos(InstComp *aComp)
+{
+    OSErr err = noErr;
+    int resPos = 0;
+    short vRefNum = 0;
+    long dirID = 0;
+    Str255 pArchiveName;
+    long dataSize = 0, rsrcSize = 0;
+    
+    if (!aComp)
+        return 0;
+    
+    err = GetInstallerModules(&vRefNum, &dirID);
+    if (err == noErr)
+    {
+        HLock(aComp->archive);
+        my_c2pstrcpy(*(aComp->archive), pArchiveName);
+        HUnlock(aComp->archive);
+        
+        err = GetFileSize(vRefNum, dirID, pArchiveName, &dataSize, &rsrcSize);
+        if (err == noErr && dataSize > 0)
+            resPos = dataSize;
+    }
+    
+    return resPos;
+}
+
+OSErr
+GetInstallerModules(short *aVRefNum, long *aDirID)
+{
+    short cwdVRefNum = 0;
+    long cwdDirID = 0, imDirID = 0;
+    OSErr err;
+    Boolean isDir = false;
+    Str255 pIMFolder;  // "Installer Modules" fodler
+    
+    if (!aVRefNum || !aDirID)
+        return paramErr;
+      
+    *aVRefNum = 0;
+    *aDirID = 0;
+      
+    err = GetCWD(&cwdDirID, &cwdVRefNum);
+    if (err != noErr)
+        return err;
+        
+    GetIndString(pIMFolder, rStringList, sInstModules);
+    err = GetDirectoryID(cwdVRefNum, cwdDirID, pIMFolder, &imDirID, &isDir);
+    if (err != noErr)
+        return err;
+        
+    if (isDir)
+    {
+        *aVRefNum = cwdVRefNum;
+        *aDirID = imDirID;
+    }
+    else
+        return dirNFErr;
+        
+    return err;
 }
 
 int 
@@ -481,6 +748,14 @@ CompressToFit(char *origStr, char *outStr, int outStrLen)
     halfOutStrLen = outStrLen/2;
     lastPart = origStr + origStrLen - halfOutStrLen;
     
+    // don't truncate if already less than acceptable max len
+    if (origStrLen < outStrLen)
+    {
+        strcpy(outStr, origStr);
+        *(outStr + strlen(origStr)) = 0;
+        return; 
+    }
+    
     strncpy(outStr, origStr, halfOutStrLen);
     *(outStr + halfOutStrLen) = 0;
     strcat(outStr, "É");
@@ -500,11 +775,12 @@ ComputeRate(int bytes, time_t startTime, time_t endTime)
 }
 
 #define kProgMsgLen 51
+#define kLowRateThreshold ((float)20)
 
 int
 DLProgressCB(int aBytesSoFar, int aTotalFinalSize)
 {   
-    static int yielder = 0, yieldFrequency = 64;
+    static int yielder = 0, yieldFrequency = 8;
     int len;
     char compressedStr[kProgMsgLen + 1];  // add one for NULL termination
     char *fullPathCopy = 0; // GetFullPath doesn't null terminate
@@ -514,6 +790,11 @@ DLProgressCB(int aBytesSoFar, int aTotalFinalSize)
     Str255 dlStr;
     char tmp[kKeyMaxLen];
       
+    if (gControls->state == ePaused)
+    {
+        return nsFTPConn::E_USER_CANCEL;
+    }
+            
     if (aTotalFinalSize != sCurrTotalDLSize)
     {
         sCurrTotalDLSize = aTotalFinalSize;
@@ -578,25 +859,28 @@ DLProgressCB(int aBytesSoFar, int aTotalFinalSize)
     }
         
     if (gControls->tw->dlProgressBar)
-    {                
-        if (++yielder == yieldFrequency)
+    {      
+        // update rate info
+        now = time(NULL);
+        rate = ComputeRate(aBytesSoFar, sCurrStartTime, now);                      
+        
+        if ((rate < kLowRateThreshold) || ((++yielder) == yieldFrequency))
         {
-            SetControlValue(gControls->tw->dlProgressBar, (aBytesSoFar/1024));
-
-            // update rate info
-            now = time(NULL);
-            rate = ComputeRate(aBytesSoFar, sCurrStartTime, now);
+            int adjustedBytesSoFar = aBytesSoFar;
+            if (gControls->state == eResuming)
+                adjustedBytesSoFar += gControls->resPos;
+            SetControlValue(gControls->tw->dlProgressBar, (adjustedBytesSoFar/1024));
             
             // create processing string "%d KB of %d KB  (%.2f KB/sec)"
             GetResourcedString(dlStr, rInstList, sDownloadKB);
             strcpy(compressedStr, PascalToC(dlStr));
-            sprintf(tmp, "%d", aBytesSoFar/1024);
+            sprintf(tmp, "%d", adjustedBytesSoFar/1024);
             strtran(compressedStr, "%d1", tmp);
             sprintf(tmp, "%d", aTotalFinalSize/1024);
             strtran(compressedStr, "%d2", tmp);
             sprintf(tmp, "%.2f", rate);
             strtran(compressedStr, "%.2f", tmp);
-            
+
             HLock((Handle)gControls->tw->dlProgressMsgs[3]);
             teRect = (**(gControls->tw->dlProgressMsgs[3])).viewRect;
             HUnlock((Handle)gControls->tw->dlProgressMsgs[3]);
@@ -852,6 +1136,30 @@ ExistArchives(short vRefNum, long dirID)
 	}
 	
 	return bAllExist;
+}
+
+OSErr
+ExistsXPI(int aIndex)
+{
+    OSErr err = noErr;
+    FSSpec fsComp;
+    short vRefNum = 0;
+    long dirID = 0;
+    Str255 pArchive;
+    
+    if (aIndex < 0)
+        return paramErr;
+        
+    err = GetInstallerModules(&vRefNum, &dirID);
+    if (err == noErr)
+    {
+        HLock(gControls->cfg->comp[aIndex].archive);
+        my_c2pstrcpy(*(gControls->cfg->comp[aIndex].archive), pArchive);
+        HUnlock(gControls->cfg->comp[aIndex].archive);
+        err = FSMakeFSSpec(vRefNum, dirID, pArchive, &fsComp);
+    }
+    
+    return err;
 }
 
 void 
