@@ -317,7 +317,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
 {
     event.widget = this;
-// OS2TODO    NS_ADDREF(event.widget);
+    NS_ADDREF(event.widget);
     event.nativeMsg = nsnull;
 
     if (nsnull == aPoint) {     // use the point from the event
@@ -417,7 +417,7 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg, PRUint8 aEST)
   InitEvent(event, aMsg);
 
   PRBool result = DispatchWindowEvent(&event);
-// OS2TODO  NS_RELEASE(event.widget);
+  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -1780,10 +1780,14 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    event.charCode = 0;
 
    PRBool rc = DispatchWindowEvent( &event);
-// OS2TODO  NS_RELEASE(event.widget);
+   NS_RELEASE(event.widget);
 
    // Break off now if this was a key-up.
-   if( fsFlags & KC_KEYUP) return rc;
+   if( fsFlags & KC_KEYUP)
+   {
+      NS_RELEASE( event.widget);
+      return rc;
+   }
 
    // Break off if we've got an "invalid composition" -- that is, the user
    // typed a deadkey last time, but has now typed something that doesn't
@@ -1793,6 +1797,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       mHaveDeadKey = FALSE;
       // XXX actually, not sure whether we're supposed to abort the keypress
       //     or process it as though the dead key has been pressed.
+      NS_RELEASE( event.widget);
       return rc;
    }
 
@@ -1811,7 +1816,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       gModuleData.ConvertToUcs( (char *)inbuf, (PRUnichar *)outbuf, 4);
 
       event.charCode = outbuf[0];
-   
+
       if( event.isControl && !event.isShift && event.charCode >= 'A' && event.charCode <= 'Z' )
       {
          event.charCode = tolower(event.charCode);
@@ -1835,14 +1840,16 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       }
    }
 
-   return DispatchWindowEvent( &event);
+   rc = DispatchWindowEvent( &event);
+   NS_RELEASE( event.widget);
+   return rc;
 }
 
 // 'Window procedure'
 PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 {
     PRBool result = PR_FALSE; // call the default window procedure
-            
+
     switch (msg) {
 #if 0
         case WM_COMMAND: // fire off menu selections
@@ -1870,7 +1877,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           event.tipIndex = LONGFROMMP(mp1);
           event.eventStructType = NS_TOOLTIP_EVENT;
           result = DispatchWindowEvent(&event);
-// OS2TODO        NS_RELEASE(event.widget);
+          NS_RELEASE(event.widget);
           break;
         }
 
@@ -2151,7 +2158,7 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
   event.eventStructType = NS_GUI_EVENT;
 
   PRBool result = DispatchWindowEvent( &event);
-// OS2TODO  NS_RELEASE(event.widget);
+  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -2192,7 +2199,7 @@ PRBool nsWindow::DispatchResizeEvent( PRInt32 aX, PRInt32 aY)
    event.mWinHeight = mBounds.height;
 
    result = DispatchWindowEvent( &event);
-// OS2TODO  NS_RELEASE(event.widget);
+   NS_RELEASE(event.widget);
    return result;
 }                                           
 
@@ -2380,7 +2387,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
     }
 #endif //OS2TODO
     g_bHandlingMouseClick = TRUE;
-// OS2TODO   NS_RELEASE(event.widget);
+    NS_RELEASE(event.widget);
     return result;
   }
 
@@ -2422,7 +2429,7 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
   } 
 
   g_bHandlingMouseClick = TRUE;
-// OS2TODO  NS_RELEASE(event.widget);
+  NS_RELEASE(event.widget);
   return result;
 }
 
@@ -2468,8 +2475,8 @@ PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
             break;
         }
         DispatchWindowEvent(&scrollEvent);
+        NS_RELEASE(scrollEvent.widget);
     }
-// OS2TODO    NS_RELEASE(scrollEvent.widget);
     return PR_FALSE;
 }
 
@@ -2505,8 +2512,8 @@ PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
             break;
         }
         DispatchWindowEvent(&scrollEvent);
+        NS_RELEASE(scrollEvent.widget);
     }
-// OS2TODO    NS_RELEASE(scrollEvent.widget);
 #endif
     return PR_FALSE;
 }

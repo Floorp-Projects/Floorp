@@ -303,6 +303,7 @@ PRBool nsScrollbar::OnScroll( ULONG msgid, MPARAM mp1, MPARAM mp2)
             event.eventStructType = NS_SCROLLBAR_EVENT;
             event.position = newpos;
             DispatchWindowEvent( &event);
+            NS_RELEASE( event.widget);
 
             // Ensure position is still sensible
             newpos = event.position;
