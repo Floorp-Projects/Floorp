@@ -4,9 +4,15 @@ use FileHandle;
 use FileNameFind;
 
 $tree = 'SeaMonkey';
-$cvsroot = '/u/slamm/tt/cvsroot/mozilla';
+$cvsroot = '/cvsroot/mozilla';
 @ignore = ( 'long long', '__cmsg_data' );
 $ignore_pat = "(?:".join('|',@ignore).")";
+
+print STDERR "Updating file index...";
+$find = new FileNameFind;
+$find->update($cvsroot, $tree);
+$find->close;
+print STDERR "done\n";
 
 for $br (last_successful_builds($tree)) {
   next unless $br->{errorparser} eq 'unix';
