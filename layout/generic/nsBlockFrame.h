@@ -194,8 +194,6 @@ protected:
                                 nsFirstLineFrame* aLineFrame,
                                 nsIFrame* aDeletedFrame);
 
-  nsresult WrapFrameInFirstLetterFrame(nsIPresContext* aPresContext);
-
   nsresult WrapFramesInFirstLineFrame(nsIPresContext* aPresContext);
 
   nsresult PrepareInitialReflow(nsBlockReflowState& aState);
