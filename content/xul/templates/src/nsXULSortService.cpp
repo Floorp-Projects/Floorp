@@ -831,7 +831,12 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 	nsCOMPtr<nsIDOMXULElement>	dom1 = do_QueryInterface(node1);
 	if (!dom1)	return(NS_ERROR_FAILURE);
 
-	nsCOMPtr<nsIRDFResource>	res1 = do_QueryInterface(dom1);
+//	nsCOMPtr<nsIRDFResource>	res1 = do_QueryInterface(dom1);
+	nsCOMPtr<nsIRDFResource>	res1;
+	if (NS_FAILED(rv = dom1->GetResource(getter_AddRefs(res1))))
+	{
+		res1 = null_nsCOMPtr();
+	}
 	// Note: don't check for res1 QI failure here.  It only succeeds for RDF nodes,
 	// but for XUL nodes it will failure; in the failure case, the code below gets
 	// the cell's text value straight from the DOM
