@@ -89,5 +89,5 @@ verify( f14(a:4, b:2, c:3), 3);
 verify( f14(c:3, b:2, a:4), 3);
 verify( f14(b:2, a:4, c:3), 3);
 
-verify( f14(a:4, c:3), 3);
+verify( f15(a:4, c:3), 3);
 
