@@ -3769,7 +3769,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
         m_nsIPop3Sink->AbortMailDelivery(this);
       }
       
-      if (TestFlag(POP3_PASSWORD_FAILED))
+      if (TestFlag(POP3_PASSWORD_FAILED) && m_pop3ConData->logonFailureCount < 6)
       {
       /* We got here because the password was wrong, so go
         read a new one and re-open the connection. */
