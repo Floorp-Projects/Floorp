@@ -281,8 +281,21 @@ shift @::legal_resolution;
       # Another hack - this array contains "" for some reason. See bug 106589.
 $vars->{'resolution'} = \@::legal_resolution;
 
-my @chfields = @::log_columns;
+my @chfields;
+
 push @chfields, "[Bug creation]";
+
+# This is what happens when you have variables whose definition depends
+# on the DB schema, and then the underlying schema changes...
+foreach my $val (@::log_columns) {
+    if ($val eq 'product_id') {
+        $val = 'product';
+    } elsif ($val eq 'component_id') {
+        $val = 'component';
+    }
+    push @chfields, $val;
+}
+
 if (UserInGroup(Param('timetrackinggroup'))) {
     push @chfields, "work_time";
 } else {
