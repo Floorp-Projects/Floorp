@@ -110,12 +110,12 @@ and Communicator detects no existing Communicator user preferences or user profi
 
 <!-- The layer below contains the button that links to Account Setup. -->
 
-<LAYER NAME="buttontext" WIDTH =275 LEFT=340 TOP=154 VISIBILITY=HIDE>
+<LAYER NAME="buttontext" WIDTH =275 LEFT=340 TOP=114 VISIBILITY=HIDE>
 
 <TABLE border=0 CELLSPACING="0" CELLPADDING="0">
 <TR>
 	<TD VALIGN="MIDDLE" ALIGN="LEFT" HEIGHT=75>
-		<A HREF="about:blank" onClick="document.images['start'].SRC='images/str_dn.gif'; setPath('Next'); return false" onMouseOver="document.images['start'].src='images/str_mo.gif'" onMouseOut="document.images['start'].src='images/start.gif'" ID="main101"><IMG NAME="start" SRC="images/start.gif" LOWSRC="images/str_dn.gif" BORDER=0 HEIGHT=53 WIDTH=54></A>
+		<A HREF="about:blank" onClick="document.images['start'].SRC='images/str_dn.gif'; parent.controls.go('Setup'); return false" onMouseOver="document.images['start'].src='images/str_mo.gif'" onMouseOut="document.images['start'].src='images/start.gif'" ID="main101"><IMG NAME="start" SRC="images/start.gif" LOWSRC="images/str_dn.gif" BORDER=0 HEIGHT=53 WIDTH=54></A>
 	</TD>
 	<TD WIDTH="4"></TD>
 	<TD VALIGN="MIDDLE" ALIGN="LEFT">
@@ -141,6 +141,11 @@ and Communicator detects no existing Communicator user preferences or user profi
 
 <TR><TD WIDTH=200 HEIGHT=16 BGCOLOR="#006666" VALIGN="MIDDLE" CLASS="previewhead">&nbsp;<B>COMMUNICATOR PREVIEW</B></TD><TD ALIGN=LEFT VALIGN=TOP BACKGROUND=images/filler.gif ROWSPAN=2><spacer type=vertical size=10><A HREF="about:blank" onClick="document.images['info2'].SRC='images/info_dn.gif'; setPath('Preview'); return(false)" onMouseOver="document.images['info2'].src='images/info_mo.gif'" onMouseOut="document.images['info2'].src='images/info.gif'" ID="main103"><IMG NAME="info2" SRC="images/info.gif" BORDER=0 HEIGHT=31 WIDTH=30></A></TD><TD WIDTH=10 BGCOLOR="#006666" VALIGN="BOTTOM"><FONT COLOR="#006666">'</FONT></TD></TR>
 <TR><TD HEIGHT="22" CLASS="blurb">Learn more about all the features<BR>you get in Dial-Up Edition.</TD><TD VALIGN="BOTTOM" ROWSPAN=2></TD></TR>
+<TR><TD HEIGHT=8 COLSPAN=3></TD></TR>
+
+<TR><TD WIDTH=200 HEIGHT=16 BGCOLOR="#006666" VALIGN="MIDDLE" CLASS="previewhead">&nbsp;<B>SETUP COMMUNICATOR </B></TD><TD ALIGN=LEFT VALIGN=TOP BACKGROUND=images/filler.gif ROWSPAN=2><spacer type=vertical size=10><A HREF="about:blank" onClick="document.images['info'].SRC='images/info_dn.gif'; setPath('Next'); return(false)" onMouseOver="document.images['info'].src='images/info_mo.gif'" onMouseOut="document.images['info'].src='images/info.gif'" ID="main104"><IMG NAME="info" SRC="images/info.gif" BORDER=0 HEIGHT=31 WIDTH=30></A></TD><TD WIDTH=10 BGCOLOR="#006666" VALIGN="BOTTOM"><FONT COLOR="#006666">'</FONT></TD></TR>
+<TR><TD HEIGHT="22" CLASS="blurb">Learn more about setting up your<BR>Communicator to access the Internet.</TD><TD VALIGN="BOTTOM" ROWSPAN=2></TD></TR>
+
 </TABLE>
 
 </LAYER>
