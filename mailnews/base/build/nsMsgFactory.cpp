@@ -382,8 +382,8 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path,
                                   PR_TRUE, PR_TRUE);
   if ( NS_SUCCEEDED( rv ) ) {
-  /* Add to appshell component list. */
-	NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
+    /* Add to appshell component list. */
+    NS_WITH_SERVICE(nsIRegistry, registry, NS_REGISTRY_PROGID, &rv); 
 
     if ( NS_SUCCEEDED( rv ) ) { 
       registry->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
@@ -394,12 +394,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                    "%s/%s", 
                    NS_IAPPSHELLCOMPONENT_KEY, 
                    cid ? cid : "unknown" ); 
-                    delete [] cid; 
-                    nsIRegistry::Key key; 
-                    rv = registry->AddSubtree( nsIRegistry::Common, 
-                                               buffer, 
-                                               &key ); 
-	}
+      nsCRT::free(cid); 
+      nsIRegistry::Key key; 
+      rv = registry->AddSubtree( nsIRegistry::Common, 
+                                 buffer, 
+                                 &key ); 
+    }
   }
   else finalResult = rv;
 

@@ -577,7 +577,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *path)
                      "%s/%s",
                      NS_IAPPSHELLCOMPONENT_KEY,
                      cid ? cid : "unknown" );
-        delete [] cid;
+        nsCRT::free(cid);
 
         nsIRegistry::Key key;
         rv = registry->AddSubtree( nsIRegistry::Common,
