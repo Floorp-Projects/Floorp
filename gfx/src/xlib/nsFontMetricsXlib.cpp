@@ -1142,7 +1142,7 @@ void nsFontMetricsXlib::RealizeFont()
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
-  nscoord lineSpacing = (mFontHandle->ascent + mFontHandle->descent) * f;
+  nscoord lineSpacing = nscoord((mFontHandle->ascent + mFontHandle->descent) * f);
   // XXXldb Shouldn't we get mEmHeight from the metrics?
   mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
   if (lineSpacing > mEmHeight)

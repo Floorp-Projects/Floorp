@@ -1139,7 +1139,7 @@ void nsFontMetricsGTK::RealizeFont()
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
-  nscoord lineSpacing = (fontInfo->ascent + fontInfo->descent) * f;
+  nscoord lineSpacing = nscoord((fontInfo->ascent + fontInfo->descent) * f);
   // XXXldb Shouldn't we get mEmHeight from the metrics?
   mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
   if (lineSpacing > mEmHeight) {
