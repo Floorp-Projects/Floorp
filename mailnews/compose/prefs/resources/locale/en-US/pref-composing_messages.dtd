@@ -38,10 +38,8 @@ Rights Reserved.
 <!ENTITY aboveQuote.accesskey                 "v">
 <!ENTITY belowQuote.label                     "start my reply below the quoted text">
 <!ENTITY belowQuote.accesskey                 "b">
-<!ENTITY selectAndAboveQuote.label            "start my reply above, and select the quoted text">
-<!ENTITY selectAndAboveQuote.accesskey        "e">
-<!ENTITY selectAndBelowQuote.label            "start my reply below, and select the quoted text">
-<!ENTITY selectAndBelowQuote.accesskey        "r">
+<!ENTITY selectAndQuote.label                 "select the quoted text">
+<!ENTITY selectAndQuote.accesskey             "e">
 
 <!ENTITY readingMessagesHeader.label          "For incoming messages">
 <!ENTITY messageWrapping.label                "Message Wrapping">

@@ -82,8 +82,7 @@
         <menupopup>
           <menuitem value="1" label="&aboveQuote.label;" accesskey="&aboveQuote.accesskey;"/>
           <menuitem value="0" label="&belowQuote.label;" accesskey="&belowQuote.accesskey;"/>
-          <menuitem value="2" label="&selectAndAboveQuote.label;" accesskey="&selectAndAboveQuote.accesskey;"/>
-          <menuitem value="3" label="&selectAndBelowQuote.label;" accesskey="&selectAndBelowQuote.accesskey;"/>
+          <menuitem value="2" label="&selectAndQuote.label;" accesskey="&selectAndQuote.accesskey;"/>
         </menupopup>
       </menulist>        
     </box>
