@@ -19,6 +19,7 @@
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
 #include "nsILookAndFeel.h"
+#include <gtk/gtk.h>
 
 class nsLookAndFeel: public nsILookAndFeel {
   NS_DECL_ISUPPORTS
@@ -30,6 +31,8 @@ public:
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor);
   NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
   NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
+protected:
+  GtkStyle *mStyle;
 };
 
 #endif
