@@ -1,31 +1,34 @@
 // To Do...
 
-Add test for |Replace|...
+  . Implement chunky iterators
 
-Add tests for Find and RFind
+  . Get "nsAReadableString.h" and "nsAWritableString.h" to added to the MANIFEST, etc.
 
-Implement the Find and RFind signatures
+  - Get "nsAReadableString.h" and "nsAWritableString.h" to compile everywhere
 
-Fix Truncate / SetLength confusion (make SetLength the real function in |nsString|)
+  - Add test for |Replace|...
 
-Write tests for Strip..., Trim?, CompressSet?
+  - Add tests for Find and RFind
 
-Write non-member functions for Strip..., Trim?, CompressSet?
+  - Implement the Find and RFind signatures
 
-Chop out conflicting |ns[C]String| operators
+  . Fix Truncate / SetLength confusion (make SetLength the real function in |nsString|)
 
-Figure out how if we can make PRUnichar be wchar_t, so we get the cheap constructors,
-  ...and ensure the cheap constructors can be made to work everywhere
+  . Chop out conflicting |ns[C]String| operators
 
-Add tests for |nsShared[C]String|
+  . Figure out how if we can make PRUnichar be wchar_t, so we get the cheap constructors,
+      ...and ensure the cheap constructors can be made to work everywhere
 
-Implement |nsShared[C]String|
+  - Try the |static const unsigned long kLeftString = 1 - 1; /* because VC++ doesn't like =0 */| hack
 
-Add tests for the shared string smart pointer
+  - Add tests for |nsShared[C]String|
 
-Implement the shared string smart pointer
+  - Implement |nsShared[C]String|
 
-Figure out why StdStringWrapper isn't as good as raw std::string
+  - Add tests for the shared string smart pointer
 
-Implement a smart allocator for StdStringWrapper
+  - Implement the shared string smart pointer
 
+  . Figure out why StdStringWrapper isn't as good as raw std::string
+
+  - Implement a smart allocator for StdStringWrapper

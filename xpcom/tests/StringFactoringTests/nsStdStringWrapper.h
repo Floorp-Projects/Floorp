@@ -69,23 +69,28 @@ class basic_nsStdStringWrapper
   	static const size_type npos = size_type(-1);
 
     protected:
-      virtual const char* Implementation() const;
+      virtual const void* Implementation() const;
 
       virtual const CharT* GetConstFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
       virtual CharT* GetFragment( Fragment&, FragmentRequest, PRUint32 );
 
     public:
+      basic_nsStdStringWrapper() { }
+
+#if 0
     	explicit
     	basic_nsStdStringWrapper( const AllocatorT& a = AllocatorT() )
     	    : mRawString(a)
     	  {
     	  }
+#endif
 
       basic_nsStdStringWrapper( const basic_nsAReadableString<CharT>& str )
-          : mRawString(str.Begin(), str.End())
         {
+          Assign(str);
         }
 
+#if 0
     	basic_nsStdStringWrapper( const basic_string_t& str, size_type pos = 0, size_type n = npos )
     	    : mRawString(str, pos, n)
     	  {
@@ -95,6 +100,7 @@ class basic_nsStdStringWrapper
     	    : mRawString(str, pos, n, a)
     	  {
     	  }
+#endif
 
     	basic_nsStdStringWrapper( const CharT* s, size_type n, const AllocatorT& a = AllocatorT() )
     	    : mRawString(s, n, a)
@@ -106,11 +112,12 @@ class basic_nsStdStringWrapper
     	  {
     	  }
 
+#if 0
     	basic_nsStdStringWrapper( size_type n, CharT c, const AllocatorT& a = AllocatorT() )
     	    : mRawString(n, c, a)
     	  {
     	  }
-
+#endif
 
       virtual
       PRUint32
@@ -147,7 +154,7 @@ NS_DEF_STRING_COMPARISONS(basic_nsStdStringWrapper<CharT>)
 
 
 template <class CharT, class TraitsT, class AllocatorT>
-const char*
+const void*
 basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Implementation() const
   {
     static const char* implementation = "nsStdStringWrapper";
@@ -202,7 +209,10 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::Assign( const basic_nsARea
     if ( rhs.Implementation() == Implementation() )
       mRawString = NS_STATIC_CAST(this_t, rhs).mRawString;
     else
-      mRawString.assign(rhs.Begin(), rhs.End());
+      {
+        mRawString.reserve(rhs.Length());
+        basic_nsAWritableString<CharT>::Assign(rhs);
+      }
   }
 
 template <class CharT, class TraitsT, class AllocatorT>
