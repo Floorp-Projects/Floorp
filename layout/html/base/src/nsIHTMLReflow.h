@@ -171,9 +171,6 @@ struct nsHTMLReflowState : nsReflowState {
   nscoord          mComputedMinWidth, mComputedMaxWidth;
   nscoord          mComputedMinHeight, mComputedMaxHeight;
 
-  // Run-in frame made available for reflow
-  nsBlockFrame*    mRunInFrame;
-
   // Compact margin available space
   nscoord          mCompactMarginWidth;
 
@@ -428,16 +425,6 @@ public:
   NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY) = 0;
-
-  NS_IMETHOD VerticalAlignFrames(nsIPresContext& aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nscoord aLineHeight,
-                                 nscoord aDistanceFromTopEdge,
-                                 nsRect& aCombinedRect) = 0;
-
-#if 0
-  NS_IMETHOD RelativePositionFrames(nsRect& aCombinedArea) = 0;
-#endif
 };
 
 #endif /* nsIHTMLReflow_h___ */

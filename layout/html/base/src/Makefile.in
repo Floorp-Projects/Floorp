@@ -44,7 +44,6 @@ CPPSRCS=				\
 	nsImageFrame.cpp		\
 	nsImageMap.cpp			\
 	nsInlineFrame.cpp		\
-	nsInlineReflow.cpp		\
 	nsLeafFrame.cpp			\
 	nsLineBox.cpp			\
 	nsLineLayout.cpp		\

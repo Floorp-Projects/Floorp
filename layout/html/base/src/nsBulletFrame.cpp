@@ -71,6 +71,7 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
   if (disp->mVisible) {
     const nsStyleList* myList =
       (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+    PRUint8 listStyleType = myList->mListStyleType;
 
     if (myList->mListStyleImage.Length() > 0) {
       nsIImage* image = mImageLoader.GetImage();
@@ -81,11 +82,14 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
         }
       }
       else {
-        nsRect innerArea(mPadding.left, mPadding.top,
-                         mRect.width - (mPadding.left + mPadding.right),
-                         mRect.height - (mPadding.top + mPadding.bottom));
-        aRenderingContext.DrawImage(image, innerArea);
-        return NS_OK;
+        if (!mImageLoader.GetLoadImageFailed()) {
+          nsRect innerArea(mPadding.left, mPadding.top,
+                           mRect.width - (mPadding.left + mPadding.right),
+                           mRect.height - (mPadding.top + mPadding.bottom));
+          aRenderingContext.DrawImage(image, innerArea);
+          return NS_OK;
+        }
+        listStyleType = NS_STYLE_LIST_STYLE_DISC;
       }
     }
 
@@ -98,7 +102,7 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
     aRenderingContext.SetColor(myColor->mColor);
 
     nsAutoString text;
-    switch (myList->mListStyleType) {
+    switch (listStyleType) {
     case NS_STYLE_LIST_STYLE_NONE:
       break;
 

@@ -1,3 +1,4 @@
+#if 0
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -109,6 +110,10 @@ public:
     return mRightEdge - mX;
   }
 
+  nscoord GetWidth() const {
+    return mX - mLeftEdge;
+  }
+
   PRBool IsZeroHeight() const;
 
 protected:
@@ -193,3 +198,4 @@ protected:
 };
 
 #endif /* nsInlineReflow_h___ */
+#endif

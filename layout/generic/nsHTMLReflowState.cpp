@@ -126,7 +126,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
 void
 nsHTMLReflowState::Init(nsIPresContext& aPresContext)
 {
-  mRunInFrame = nsnull;
   mCompactMarginWidth = 0;
   mAlignCharOffset = 0;
   mUseAlignCharOffset = 0;
@@ -1119,25 +1118,23 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
         sc->GetStyleData(eStyleStruct_Text);
       if (nsnull != text) {
         nsStyleUnit unit = text->mLineHeight.GetUnit();
-        if (eStyleUnit_Enumerated == unit) {
-          // Normal value; we use 1.0 for normal
-          // XXX could come from somewhere else
+        if (eStyleUnit_Normal == unit) {
+          // Normal value; we use a factor of 1.0 for normal
+          lineHeight = elementFont->mFont.size;
 #ifdef NOISY_VERTICAL_ALIGN
-          printf("  line-height: normal\n");
+          printf("  line-height: normal result=%d\n", lineHeight);
 #endif
           break;
         } else if (eStyleUnit_Factor == unit) {
-          if (nsnull != elementFont) {
-            // CSS2 spec says that the number is inherited, not the
-            // computed value. Therefore use the font size of the
-            // element times the inherited number.
-            nscoord size = elementFont->mFont.size;
-            lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
+          // CSS2 spec says that the number is inherited, not the
+          // computed value. Therefore use the font size of the
+          // element times the inherited number.
+          nscoord size = elementFont->mFont.size;
+          lineHeight = nscoord(size * text->mLineHeight.GetFactorValue());
 #ifdef NOISY_VERTICAL_ALIGN
-            printf("  line-height: factor=%g result=%d\n",
-                   text->mLineHeight.GetFactorValue(), lineHeight);
+          printf("  line-height: factor=%g result=%d\n",
+                 text->mLineHeight.GetFactorValue(), lineHeight);
 #endif
-          }
           break;
         }
         else if (eStyleUnit_Coord == unit) {

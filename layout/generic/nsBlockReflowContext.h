@@ -40,10 +40,6 @@ public:
                        PRBool aComputeMaxElementSize);
   ~nsBlockReflowContext() { }
 
-  void SetRunInFrame(nsBlockFrame* aRunInFrame) {
-    mRunInFrame = aRunInFrame;
-  }
-
   void SetCompactMarginWidth(nscoord aCompactMarginWidth) {
     mCompactMarginWidth = aCompactMarginWidth;
   }
@@ -132,7 +128,6 @@ protected:
   const nsHTMLReflowState& mOuterReflowState;
 
   nsIFrame* mFrame;
-  nsBlockFrame* mRunInFrame;
   nscoord mCompactMarginWidth;
   nsRect mSpace;
   nsIFrame* mNextRCFrame;
