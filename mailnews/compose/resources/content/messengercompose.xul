@@ -81,6 +81,7 @@ Rights Reserved.
     <commandset id="composerSaveMenuItems"/>    
     <commandset id="composerStyleMenuItems"/>
     <commandset id="composerTableMenuItems"/>
+    <commandset id="composerListMenuItems"/>
 </commands>
 
 <broadcasterset id="broadcasterset">
