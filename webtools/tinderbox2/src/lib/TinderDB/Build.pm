@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.56 $ 
-# $Date: 2003/01/19 13:40:06 $ 
+# $Revision: 1.57 $ 
+# $Date: 2003/04/13 14:18:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -1202,9 +1202,9 @@ sub status_table_row {
 
     if  ( $current_rec->{'timenow'} < $row_times->[$row_index] ) {
 
-      my ($rowspan) = 1;
+      my ($rowspan) = 0;
       while ( 
-             ( ($row_index + $rowspan) <= $#{$row_times}) &&
+             ( ($row_index + $rowspan) < $#{$row_times}) &&
              ( $current_rec->{'timenow'}  <  
                $row_times->[$row_index + $rowspan] ) 
             ) {
