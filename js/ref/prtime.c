@@ -211,10 +211,11 @@ PR_LocalGMTDifference()
     LL_SUB(gmtDelta,gmtDelta,gmtOffsetSeconds);
 
     /* Is Daylight Savings On?  If so, we need to add an hour to the offset. */
-    if (machineLocation.u.dlsDelta != 0)
+    if (machineLocation.u.dlsDelta != 0) {
 	LL_UI2L(dlsOffset, PR_HOUR_SECONDS);
-    else
+    } else {
 	LL_I2L(dlsOffset, 0);
+    }
 
     LL_ADD(gmtDelta,gmtDelta, dlsOffset);
     LL_L2I(offset,gmtDelta);
@@ -230,6 +231,10 @@ PR_LocalGMTDifference()
 
 #define G2037GMTMICROHI        0x00e45fab /* micro secs to 2037 high */
 #define G2037GMTMICROLOW       0x7a238000 /* micro secs to 2037 low */
+
+/* Convert from extended time to base time (time since Jan 1 1970) it
+ * truncates dates if time is before 1970 and after 2037.
+ */
 
 /* Convert from base time to extended time */
 static int64
@@ -249,7 +254,12 @@ PR_ToExtendedTime(int32 time)
 
     LL_UI2L(g1970GMTMicroSeconds,G1970GMTMICROHI);
     LL_UI2L(low,G1970GMTMICROLOW);
+#ifndef HAVE_LONG_LONG
+    LL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
+    LL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,16);
+#else
     LL_SHL(g1970GMTMicroSeconds,g1970GMTMicroSeconds,32);
+#endif
     LL_ADD(g1970GMTMicroSeconds,g1970GMTMicroSeconds,low);
 
     LL_I2L(exttime,time);
