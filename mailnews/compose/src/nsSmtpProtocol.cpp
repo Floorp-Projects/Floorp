@@ -1660,7 +1660,7 @@ nsresult nsSmtpProtocol::RequestOverrideInfo(nsISmtpServer * aSmtpServer)
 
     nsCOMPtr<nsIPrompt> prompter;
     m_runningURL->GetPrompt(getter_AddRefs(prompter));
-		rv = m_logonRedirector->Logon(userName, password, prompter, NS_STATIC_CAST(nsIMsgLogonRedirectionRequester *, this), nsMsgLogonRedirectionServiceIDs::Smtp);
+		rv = m_logonRedirector->Logon(userName, password, redirectionType, prompter, NS_STATIC_CAST(nsIMsgLogonRedirectionRequester *, this), nsMsgLogonRedirectionServiceIDs::Smtp);
 	}
 
   // this protocol instance now needs to wait until

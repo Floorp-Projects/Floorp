@@ -82,4 +82,10 @@ interface nsIImapIncomingServer : nsISupports {
   nsIMsgFolder GetReadMailPFC(in boolean createIfMissing);
   nsIMsgFolder GetSentMailPFC(in boolean createIfMissing);
   attribute boolean doingLsub;
+
+  void allowFolderConversion(out boolean allowConversion);
+  void convertFolderName(in string originalName, out wstring convertedName);
+  void hideFolderName(in string originalName, out boolean hideFolder);
+  string getTrashFolderByRedirectorType();
+  attribute string redirectorType;
 };

@@ -620,6 +620,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 	// iterate through the connection cache for a connection that can handle this url.
   PRUint32 cnt;
   nsCOMPtr<nsISupports> aSupport;
+  PRBool userCancelled = PR_FALSE;
 
   rv = m_connectionCache->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
@@ -670,7 +671,10 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
         rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
       
       RequestOverrideInfo(aMsgWindow);
+      if (m_waitingForConnectionInfo)
       canRunButBusy = PR_TRUE;
+      else 
+        userCancelled = PR_TRUE;
     }    
   }
   // if we got here and we have a connection, then we should return it!
@@ -682,6 +686,10 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   else if (canRunButBusy)
   {
       // do nothing; return NS_OK; for queuing
+  }
+  else if (userCancelled)
+  {
+    rv = NS_BINDING_ABORTED;  // user cancelled
   }
   else if (cnt < ((PRUint32)maxConnections) && aEventQueue)
   {	
@@ -1099,6 +1107,12 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
         hostFolder->SetHierarchyDelimiter(hierarchyDelimiter);
     }
 
+    // Check to see if we need to ignore this folder (like AOL's 'RECYCLE_OUT').
+    PRBool hideFolder;
+    rv = HideFolderName(dupFolderPath.get(), &hideFolder);
+    if (hideFolder)
+      return NS_OK;
+
 	nsCOMPtr <nsIMsgFolder> child;
 
 //	nsCString possibleName(aSpec->allocatedPathName);
@@ -1166,22 +1180,180 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       // or the canonical path - one or the other, but be consistent.
       dupFolderPath.ReplaceChar('/', hierarchyDelimiter);
       if (hierarchyDelimiter != '/')
-        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*,(const char*) dupFolderPath));
+        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, dupFolderPath.get()));
 
-      if (! ((const char*) onlineName) || nsCRT::strlen((const char *) onlineName) == 0
-				|| nsCRT::strcmp((const char *) onlineName, dupFolderPath))
+      if (! (onlineName.get()) || nsCRT::strlen(onlineName.get()) == 0
+				|| nsCRT::strcmp(onlineName.get(), dupFolderPath))
 				imapFolder->SetOnlineName(dupFolderPath);
       if (hierarchyDelimiter != '/')
-        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*,(const char*) folderName));
+        nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, folderName.get()));
 			if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName, getter_Copies(unicodeName))))
 				child->SetName(unicodeName);
-      if (isAOLServer && onlineName && !nsCRT::strcasecmp(onlineName, "RECYCLE"))
+      // Call ConvertFolderName() and HideFolderName() to do special folder name
+      // mapping and hiding, if configured to do so. For example, need to hide AOL's
+      // 'RECYCLE_OUT' & convert a few AOL folder names. Regular imap accounts
+      // will do no-op in the calls.
+      nsXPIDLString convertedName;
+      PRBool hideFolder;
+      rv = HideFolderName(onlineName.get(), &hideFolder);
+      if (hideFolder)
       {
-        nsAutoString trashName; trashName.AssignWithConversion("Trash");
-        child->SetPrettyName(trashName.GetUnicode()); // don't localize - it's a semi-reserved name for IMAP
+        nsCOMPtr<nsISupports> support(do_QueryInterface(child, &rv));
+        a_nsIFolder->PropagateDelete(child, PR_FALSE);
+      }
+      else
+      {
+        rv = ConvertFolderName(onlineName.get(), getter_Copies(convertedName));
+        if (NS_SUCCEEDED(rv))
+          child->SetPrettyName(convertedName);
       }
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::GetRedirectorType(char **redirectorType)
+{
+  nsresult rv;
+  
+  // Differentiate 'aol' and non-aol redirector type.
+  rv = GetCharValue("redirector_type", redirectorType);
+  if (*redirectorType && !nsCRT::strcasecmp(*redirectorType, "aol"))
+      {
+    nsXPIDLCString hostName;
+    GetHostName(getter_Copies(hostName));
+
+    // Change redirector_type from "aol" to "netscape" if necessary
+    if (hostName.get() && !nsCRT::strcasecmp(hostName, "imap.mail.netcenter.com"))
+      SetRedirectorType("netscape");
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::SetRedirectorType(const char *redirectorType)
+{
+  return (SetCharValue("redirector_type", redirectorType));
+}
+
+NS_IMETHODIMP nsImapIncomingServer::GetTrashFolderByRedirectorType(char **specialTrashName)
+{
+  NS_ENSURE_ARG_POINTER(specialTrashName);
+  *specialTrashName = nsnull;
+  nsresult rv;
+
+  // see if it has a predefined trash folder name. The pref setting is like:
+  //    pref("imap.aol.treashFolder", "RECYCLE");  where the redirector type = 'aol'
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLCString redirectorType;
+  GetRedirectorType(getter_Copies(redirectorType));
+  if (!redirectorType)
+    return NS_OK; // return if no redirector type
+  nsCAutoString prefName("imap.");
+  prefName.Append(redirectorType);
+  prefName.Append(".trashFolder");
+  rv = prefs->GetCharPref(prefName.get(), specialTrashName);
+  if (NS_SUCCEEDED(rv) && ((!*specialTrashName) || (!**specialTrashName)))
+    return NS_ERROR_FAILURE;
+  else
+    return rv;
+      }
+
+NS_IMETHODIMP nsImapIncomingServer::AllowFolderConversion(PRBool *allowConversion)
+{
+  NS_ENSURE_ARG_POINTER(allowConversion);
+
+  nsresult rv;
+  PRInt32 stringId = 0;
+  *allowConversion = PR_FALSE;
+
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // See if the redirector type allows folder name conversion. The pref setting is like:
+  //    pref("imap.aol.convertFolders",true);     where the redirector type = 'aol'
+  // Construct pref name (like "imap.aol.hideFolders.RECYCLE_OUT") and get the setting.
+  nsXPIDLCString redirectorType;
+  GetRedirectorType(getter_Copies(redirectorType));
+  if (!redirectorType)
+    return NS_OK; // return if no redirector type
+
+  nsCAutoString prefName("imap.");
+  prefName.Append(redirectorType);
+  prefName.Append(".convertFolders");
+  // In case this pref is not set we need to return NS_OK.
+  rv = prefs->GetBoolPref(prefName.get(), allowConversion);
+  return NS_OK;
+    }
+
+NS_IMETHODIMP nsImapIncomingServer::ConvertFolderName(const char *originalName, PRUnichar **convertedName)
+{
+  NS_ENSURE_ARG_POINTER(convertedName);
+
+  nsresult rv = NS_OK;
+  PRInt32 stringId = 0;
+  *convertedName = nsnull;
+
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // See if the redirector type allows folder name conversion.
+  PRBool allowConversion;
+  rv = AllowFolderConversion(&allowConversion);
+  if (NS_SUCCEEDED(rv) && !allowConversion)
+    return NS_ERROR_FAILURE;
+
+  // Get string bundle based on redirector type and convert folder name.
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  nsCAutoString propertyURL;
+  nsXPIDLCString redirectorType;
+  GetRedirectorType(getter_Copies(redirectorType));
+  if (!redirectorType)
+    return NS_ERROR_FAILURE; // return if no redirector type
+
+  propertyURL = "chrome://messenger/locale/";
+  propertyURL.Append(redirectorType);
+  propertyURL.Append("-imap.properties");
+
+  nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && (nsnull != sBundleService)) 
+    rv = sBundleService->CreateBundle(propertyURL, getter_AddRefs(stringBundle));
+  if (NS_SUCCEEDED(rv))
+    rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(originalName).GetUnicode(), convertedName);
+
+  if (NS_SUCCEEDED(rv) && ((!*convertedName) || (!**convertedName)))
+    return NS_ERROR_FAILURE;
+  else
+    return rv;
+  }
+
+NS_IMETHODIMP nsImapIncomingServer::HideFolderName(const char *folderName, PRBool *hideFolder)
+{
+  NS_ENSURE_ARG_POINTER(hideFolder);
+
+  nsresult rv;
+  *hideFolder = PR_FALSE;
+
+  if (!folderName || !*folderName) return NS_OK;
+
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // See if the redirector type allows folder hiding. The pref setting is like:
+  //    pref("imap.aol.hideFolders.RECYCLE_OUT",true);    where the redirector type = 'aol'
+  nsXPIDLCString redirectorType;
+  GetRedirectorType(getter_Copies(redirectorType));
+  if (!redirectorType)
+    return NS_OK; // return if no redirector type
+
+  nsCAutoString prefName("imap.");
+  prefName.Append(redirectorType);
+  prefName.Append(".hideFolder.");
+  prefName.Append(folderName);
+  // In case this pref is not set we need to return NS_OK.
+  prefs->GetBoolPref(prefName.get(), hideFolder);
   return NS_OK;
 }
 
@@ -1813,9 +1985,6 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
   return rv;
 }
 
-/* This is the next generation string retrieval call */
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define IMAP_MSGS_URL       "chrome://messenger/locale/imapMsgs.properties"
 
 nsresult nsImapIncomingServer::GetStringBundle()
@@ -1827,7 +1996,7 @@ nsresult nsImapIncomingServer::GetStringBundle()
 
 		propertyURL = IMAP_MSGS_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
 			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
@@ -2209,7 +2378,7 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
       nsCOMPtr<nsIPrompt> dialogPrompter;
       if (aMsgWindow)
         aMsgWindow->GetPromptDialog(getter_AddRefs(dialogPrompter));
-  		rv = m_logonRedirector->Logon(userName, password, dialogPrompter, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
+  		rv = m_logonRedirector->Logon(userName, password, redirectorType, dialogPrompter, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
       if (NS_FAILED(rv)) return OnLogonRedirectionError(nsnull, PR_TRUE);
 		}
 	}

@@ -408,14 +408,26 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
         nsXPIDLCString onlineFullUtf7Name;
 
         rv = cacheElement->GetStringProperty("onlineName", getter_Copies(onlineFullUtf7Name));
-        if (NS_SUCCEEDED(rv) && (const char *) onlineFullUtf7Name && nsCRT::strlen((const char *) onlineFullUtf7Name))
+        if (NS_SUCCEEDED(rv) && onlineFullUtf7Name.get() && nsCRT::strlen(onlineFullUtf7Name.get()))
         {
+          // Call ConvertFolderName() and HideFolderName() to do special folder name
+          // mapping and hiding, if configured to do so. For example, need to hide AOL's
+          // 'RECYCLE_OUT' & convert a few AOL folder names. Regular imap accounts
+          // will do no-op in the calls
           if (imapServer)
+          {
+            PRBool hideFolder;
+            rv = imapServer->HideFolderName(onlineFullUtf7Name.get(), &hideFolder);
+            if (hideFolder)
+              continue;	// skip this folder
+            else
+            {
+              rv = imapServer->ConvertFolderName(onlineFullUtf7Name.get(), getter_Copies(unicodeName));
+              if (NS_FAILED(rv))
+                imapServer->CreatePRUnicharStringFromUTF7(onlineFullUtf7Name, getter_Copies(unicodeName));
+            }
+          }
 
-            imapServer->CreatePRUnicharStringFromUTF7(onlineFullUtf7Name, getter_Copies(unicodeName));
-
-
-          // take the full unicode folder name and find the unicode leaf name.
           currentFolderNameStr.Assign(unicodeName);
 
           PRUnichar delimiter = 0;
@@ -620,7 +632,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     rv = imapService->SelectFolder(eventQ, this, this, msgWindow, nsnull);
     if (NS_SUCCEEDED(rv))
       m_urlRunning = PR_TRUE;
-    else if (rv == NS_MSG_ERROR_OFFLINE)
+    else if ((rv == NS_MSG_ERROR_OFFLINE) || (rv == NS_BINDING_ABORTED))
     {
       rv = NS_OK;
       NotifyFolderEvent(mFolderLoadedAtom);
@@ -2028,6 +2040,12 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 
     inbox->SetGettingNewMessages(PR_TRUE);
     rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
+
+    if (rv == NS_BINDING_ABORTED)
+    {
+      inbox->NotifyFolderEvent(mFolderLoadedAtom);
+      rv = NS_OK;
+    }
   }
 
   return rv;
@@ -3555,18 +3573,22 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
 
     if (NS_SUCCEEDED(rv) && imapServer) 
     {
-      PRBool isAOLServer = PR_FALSE;
-      imapServer->GetIsAOLServer(&isAOLServer);
-      nsCOMPtr<nsIMsgIncomingServer> incomingServer (do_QueryInterface(imapServer));
-      nsXPIDLCString hostName;
-      incomingServer->GetHostName(getter_Copies(hostName));
-      
-      if (isAOLServer && ((const char *) hostName) && !nsCRT::strcmp(hostName, "imap.mail.aol.com"))
+      // See if the redirector type has a different trash folder name (ie, not 'TRASH').
+      // If so then convert it to the beautified name (if configured) and compare it 
+      // against the current folder name.
+      nsXPIDLCString specialTrashName;
+      rv = imapServer->GetTrashFolderByRedirectorType(getter_Copies(specialTrashName));
+      if (NS_SUCCEEDED(rv))
+      {
+        nsXPIDLString convertedName;
+        rv = imapServer->ConvertFolderName(specialTrashName.get(), getter_Copies(convertedName));
+        if (NS_SUCCEEDED(rv))
       {
         nsXPIDLString folderName;
         GetName(getter_Copies(folderName));
-        if (!nsCRT::strncasecmp(folderName, "Trash", 5))
+          if (!nsCRT::strncasecmp(folderName, convertedName, nsCRT::strlen(convertedName)))
           showDeleted = PR_TRUE;
+        }
       }
     }
   }

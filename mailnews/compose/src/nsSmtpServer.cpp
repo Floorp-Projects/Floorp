@@ -397,5 +397,20 @@ nsSmtpServer::GetRedirectorType(char **aResult)
     getPrefString("redirector_type", pref);
     rv = prefs->CopyCharPref(pref, aResult);
     if (NS_FAILED(rv)) *aResult=nsnull;
+
+    // Check if we need to change 'aol' to 'netscape' per #4696
+    if (*aResult && !nsCRT::strcasecmp(*aResult, "aol"))
+    {
+      nsXPIDLCString hostName;
+      rv = GetHostname(getter_Copies(hostName));
+      if (NS_SUCCEEDED(rv) && (hostName.get()) && !nsCRT::strcmp(hostName, "smtp.netscape.net"))
+      {
+        PL_strfree(*aResult);
+        pref = "netscape";
+        rv = SetRedirectorType(pref);
+        *aResult = PL_strdup(pref);
+      }
+    }
+
     return NS_OK;
 }
