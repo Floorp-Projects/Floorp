@@ -426,7 +426,8 @@ PromptDlg::PromptPassword(HWND hwndParent,
         *_retval = FALSE;
     }
 
-    return NS_OK;}
+    return NS_OK;
+}
 
 
 BOOL CALLBACK
