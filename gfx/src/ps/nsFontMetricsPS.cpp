@@ -119,6 +119,7 @@ NS_IMETHODIMP
 nsFontMetricsPS :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIDeviceContext *aContext)
 {
+  mLangGroup = aLangGroup;
 
   mFont = new nsFont(aFont);
   //don't addref this to avoid circular refs
@@ -384,8 +385,8 @@ nsFontMetricsPS :: GetLangGroup(nsIAtom** aLangGroup)
     return NS_ERROR_NULL_POINTER;
   }
 
-  // XXX need to return real lang group
-  *aLangGroup = nsnull;
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
 
   return NS_OK;
 }

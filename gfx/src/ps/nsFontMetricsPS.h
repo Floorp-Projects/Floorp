@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
+#include "nsCOMPtr.h"
 #include "nsCRT.h"
 
 class nsDeviceContextPS;
@@ -70,6 +71,9 @@ public:
   NS_IMETHOD  GetStringWidth(const PRUnichar *aString,nscoord &aWidth,nscoord aLength);
 
   PRInt16 GetFontIndex() { return mFontIndex; }
+
+private:
+  nsCOMPtr<nsIAtom> mLangGroup;
 
 protected:
   void RealizeFont();
