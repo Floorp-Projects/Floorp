@@ -5962,16 +5962,6 @@ if (gAllowDoubleByteSpecialChars) {
     }
   }
 
-  // If this is is the 'unknown' char (ie: converter could not 
-  // convert it) there is no sense in searching any further for 
-  // a font.  This test shows up in several locations; if we did
-  // this test earlier in the search we would only need to do it
-  // once but we don't want to slow down the typical search.
-  if (aChar == UCS2_NOMAPPING) {
-    FIND_FONT_PRINTF(("      ignore the 'UCS2_NOMAPPING' character"));
-    return nsnull;
-  }
-
   //
   // Search all font prefs for generic
   //
@@ -6006,16 +5996,6 @@ nsFontGTK*
 nsFontMetricsGTK::FindAnyFont(PRUnichar aChar)
 {
   FIND_FONT_PRINTF(("    FindAnyFont"));
-  // If this is is the 'unknown' char (ie: converter could not 
-  // convert it) there is no sense in searching any further for 
-  // a font.  This test shows up in several locations; if we did
-  // this test earlier in the search we would only need to do it
-  // once but we don't want to slow down the typical search.
-  if (aChar == UCS2_NOMAPPING) {
-    FIND_FONT_PRINTF(("      ignore the 'UCS2_NOMAPPING' character"));
-    return nsnull;
-  }
-
   // XXX If we get to this point, that means that we have exhausted all the
   // families in the lists. Maybe we should try a list of fonts that are
   // specific to the vendor of the X server here. Because XListFonts for the
@@ -6231,6 +6211,14 @@ nsFontGTK*
 nsFontMetricsGTK::FindFont(PRUnichar aChar)
 {
   FIND_FONT_PRINTF(("\nFindFont(%c/0x%04x)", aChar, aChar));
+
+  // If this is is the 'unknown' char (ie: converter could not 
+  // convert it) there is no sense in searching any further for 
+  // a font. Just returing mWesternFont
+  if (aChar == UCS2_NOMAPPING) {
+    FIND_FONT_PRINTF(("      ignore the 'UCS2_NOMAPPING' character, return mWesternFont"));
+    return mWesternFont;
+  }
 
   nsFontGTK* font = FindUserDefinedFont(aChar);
   if (!font) {
