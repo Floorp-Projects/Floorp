@@ -209,7 +209,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                                                          PR_TRUE);
                     if (NS_SUCCEEDED(rv))
                         imapService->SelectFolder(eventQueue, folder,
-                                                  urlListener, nsnull);
+                                                  urlListener, nsnull, nsnull);
                 }
             }
         }
