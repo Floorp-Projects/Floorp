@@ -72,9 +72,9 @@ public:
   NS_IMETHOD ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEventQueue* *resultQueue) = 0;
 
 #ifdef XP_MAC
-// This is ment to be temporary until something better is worked out
- NS_IMETHOD ProcessEvents() = 0;
-#endif
+  NS_IMETHOD ProcessEvents() = 0;
+#endif 
+
 };
 
 #endif /* nsIEventQueueService_h___ */

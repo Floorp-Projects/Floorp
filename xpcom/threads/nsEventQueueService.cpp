@@ -33,11 +33,9 @@ static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 // XXX move to nsID.h or nsHashtable.h? (copied from nsComponentManager.cpp)
 class ThreadKey: public nsHashKey {
-private:
-  const PRThread* id;
-  
+ 
 public:
-  ThreadKey(const PRThread* aID) {
+  ThreadKey(PRThread* aID) {
     id = aID;
   }
   
@@ -56,6 +54,9 @@ public:
   nsHashKey *Clone(void) const {
     return new ThreadKey(id);
   }
+
+  PRThread* id;
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +78,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsIEventQueue* GetEventQueue(void); // addrefs!
-  nsresult       MakeNewQueue(nsIEventQueue **aQueue);
+  nsresult       MakeNewQueue(PRThread* thread, nsIEventQueue **aQueue);
   
   nsresult       AddQueue(void);
   void           RemoveQueue(nsIEventQueue *aQueue); // queue goes dark, and is released
@@ -106,7 +107,7 @@ EventQueueEntry::EventQueueEntry(nsEventQueueServiceImpl *aService, ThreadKey &a
 {
   NS_INIT_REFCNT();
   mService = aService;
-  MakeNewQueue(&mQueue);
+  MakeNewQueue(aKey.id, &mQueue);
   NS_ASSERTION(mQueue, "EventQueueEntry constructor failed");
   if (mService)
     mService->AddEventQueueEntry(this);
@@ -136,7 +137,7 @@ nsIEventQueue* EventQueueEntry::GetEventQueue(void)
   return answer;
 }
 
-nsresult EventQueueEntry::MakeNewQueue(nsIEventQueue **aQueue)
+nsresult EventQueueEntry::MakeNewQueue(PRThread* thread, nsIEventQueue **aQueue)
 {
   nsIEventQueue *queue = 0;
   nsresult      rv;
@@ -145,7 +146,7 @@ nsresult EventQueueEntry::MakeNewQueue(nsIEventQueue **aQueue)
                 NS_GET_IID(nsIEventQueue), (void**) &queue);
 
   if (NS_SUCCEEDED(rv)) {
-    rv = queue->Init();
+    rv = queue->InitFromPRThread(thread);
     if (NS_FAILED(rv)) {
       NS_RELEASE(queue);
       queue = 0;  // redundant, but makes me feel better
@@ -161,7 +162,7 @@ nsresult EventQueueEntry::AddQueue(void)
   nsresult      rv = NS_ERROR_NOT_INITIALIZED;
 
   if (mQueue) {
-    rv = MakeNewQueue(&newQueue);
+    rv = MakeNewQueue(PR_GetCurrentThread(), &newQueue);
 
     // add it to our chain of queues
     if (NS_SUCCEEDED(rv)) {
@@ -536,7 +537,6 @@ nsEventQueueServiceImpl::ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEv
     return NS_OK;
 }
 
-
 #ifdef XP_MAC
 // MAC specific. Will go away someday
 // Bwah ha ha h ha ah aha ha ha
@@ -566,5 +566,3 @@ NS_IMETHODIMP nsEventQueueServiceImpl::ProcessEvents()
 }
 
 #endif 
-
-////////////////////////////////////////////////////////////////////////////////
