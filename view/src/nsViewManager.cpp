@@ -168,8 +168,14 @@ struct DisplayZTreeNode {
   DisplayListElement2* mDisplayElement;  // tree leaf nodes
 };
 
-static void DestroyZTreeNode(DisplayZTreeNode* aNode) {
-  if (nsnull != aNode) {
+void nsViewManager::DestroyZTreeNode(DisplayZTreeNode* aNode) 
+{
+  if (aNode) {
+    if (mMapPlaceholderViewToZTreeNode.Count() > 0) {
+       nsVoidKey key(aNode->mView);
+       DisplayZTreeNode* placeholder = (DisplayZTreeNode *)mMapPlaceholderViewToZTreeNode.Remove(&key);
+    }
+  
     DestroyZTreeNode(aNode->mZChild);
     DestroyZTreeNode(aNode->mZSibling);
     delete aNode->mDisplayElement;
