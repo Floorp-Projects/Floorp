@@ -132,9 +132,12 @@
     // Prefill the form being displayed.
     function formPrefill() {
       var walletService = Components.classes["@mozilla.org/wallet/wallet-service;1"].getService(Components.interfaces.nsIWalletService);
-      walletService.WALLET_Prefill(false, window._content);
-      window.openDialog("chrome://communicator/content/wallet/WalletPreview.xul",
-                        "_blank", "chrome,modal=yes,dialog=yes,all, width=504, height=436");
+      try {
+        walletService.WALLET_Prefill(false, window._content);
+        window.openDialog("chrome://communicator/content/wallet/WalletPreview.xul",
+                          "_blank", "chrome,modal=yes,dialog=yes,all, width=504, height=436");
+      } catch(e) {
+      }
     }
 
 /*

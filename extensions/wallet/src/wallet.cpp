@@ -2066,8 +2066,8 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsString& schema) {
             break;
           }
           PRUnichar c;
-          for (i=0; i<text.Length(); i++) {
-            c = text.CharAt(i);
+          for (PRUint32 j=0; j<text.Length(); j++) {
+            c = text.CharAt(j);
 
             /* break out if an alphanumeric character is found */
 
@@ -2680,8 +2680,7 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
 
   PRUnichar * urlUnichar = ToNewUnicode(wallet_url);
   buffer.AppendWithConversion(BREAK);
-  buffer.AppendInt(NS_PTR_TO_INT32(wallet_list));
-  buffer.AppendWithConversion(BREAK);
+
   buffer += urlUnichar;
   Recycle(urlUnichar);
 
@@ -3171,7 +3170,6 @@ wallet_DecodeVerticalBars(nsString& s) {
 PUBLIC void
 WLLT_PrefillReturn(const nsString& results)
 {
-  nsAutoString listAsAscii;
   nsAutoString fillins;
   nsAutoString urlName;
   nsAutoString skip;
@@ -3179,7 +3177,6 @@ WLLT_PrefillReturn(const nsString& results)
 
   /* get values that are in environment variables */
   SI_FindValueInArgs(results, NS_LITERAL_STRING("|fillins|"), fillins);
-  SI_FindValueInArgs(results, NS_LITERAL_STRING("|list|"), listAsAscii);
   SI_FindValueInArgs(results, NS_LITERAL_STRING("|skip|"), skip);
   SI_FindValueInArgs(results, NS_LITERAL_STRING("|url|"), urlName);
   wallet_DecodeVerticalBars(fillins);
@@ -3198,11 +3195,9 @@ WLLT_PrefillReturn(const nsString& results)
   }
 
   /* process the list, doing the fillins */
-  nsVoidArray * list;
-  PRInt32 error;
-  list = (nsVoidArray *)listAsAscii.ToInteger(&error);
   if (fillins.Length() == 0) { /* user pressed CANCEL */
-    wallet_ReleasePrefillElementList(list);
+    wallet_ReleasePrefillElementList(wallet_list);
+    wallet_list = nsnull;
     return;
   }
 
@@ -3220,9 +3215,9 @@ WLLT_PrefillReturn(const nsString& results)
 
   wallet_PrefillElement * mapElementPtr;
   /* step through pre-fill list */
-  PRInt32 count = LIST_COUNT(list);
+  PRInt32 count = LIST_COUNT(wallet_list);
   for (PRInt32 i=0; i<count; i++) {
-    mapElementPtr = NS_STATIC_CAST(wallet_PrefillElement*, list->ElementAt(i));
+    mapElementPtr = NS_STATIC_CAST(wallet_PrefillElement*, wallet_list->ElementAt(i));
 
     /* advance in fillins list each time a new schema name in pre-fill list is encountered */
     if (mapElementPtr->count != 0) {
@@ -3291,7 +3286,8 @@ WLLT_PrefillReturn(const nsString& results)
   }
 
   /* Release the prefill list that was generated when we walked thru the html content */
-  wallet_ReleasePrefillElementList(list);
+  wallet_ReleasePrefillElementList(wallet_list);
+  wallet_list = nsnull;
 }
 
 /*
@@ -3442,6 +3438,10 @@ WLLT_PrefillOneElement
 PUBLIC nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick, nsIDOMWindowInternal* win)
 {
+  /* do not prefill if preview window is open in some other browser window */
+  if (wallet_list) {
+    return NS_ERROR_FAILURE;
+  }
 
   /* create list of elements that can be prefilled */
   nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();

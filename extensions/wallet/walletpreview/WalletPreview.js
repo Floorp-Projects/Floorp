@@ -44,7 +44,7 @@ function Startup() {
 
   /* create the fill-in entries */
 
-  for (var i=1; i<prefillList.length-2; i+=3) {
+  for (var i=1; i<prefillList.length-1; i+=3) {
 
     if(prefillList[i] != 0) {
       count = prefillList[i];
@@ -137,7 +137,6 @@ function EncodeVerticalBars(s) {
 }
 
 function Save() {
-  var list = prefillList[prefillList.length-2];
   var url = prefillList[prefillList.length-1];
   var fillins = "";
 
@@ -157,7 +156,7 @@ function Save() {
   var checkBox = document.getElementById("checkbox");
   var checked = checkBox.checked;
 
-  var result = "|list|"+list+"|fillins|"+EncodeVerticalBars(fillins)+
+  var result = "|fillins|"+EncodeVerticalBars(fillins)+
                "|url|"+EncodeVerticalBars(url)+"|skip|"+checked+"|";
   walletpreview.SetValue(result, window);
   return true;
