@@ -207,7 +207,7 @@ sub DoEmail {
         $vars->{'excludeself'} = 0;
     }
     
-    foreach my $flag qw(FlagRequestee FlagRequester) {
+    foreach my $flag (qw(FlagRequestee FlagRequester)) {
         $vars->{$flag} = 
           !exists($emailflags{$flag}) || $emailflags{$flag} eq 'on';
     }
