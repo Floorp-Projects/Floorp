@@ -27,6 +27,7 @@ use strict;
 
 use DBI;
 use RelationSet;
+use vars qw($unconfirmedstate $legal_keywords);
 require "globals.pl";
 require "CGI.pl";
 package Bug;
@@ -86,7 +87,7 @@ sub initBug  {
   }
   else {
      if ($user_id =~ /^\@/) {
-	$user_id = &::DBname_to_id($user_id); 
+        $user_id = &::DBname_to_id($user_id); 
      }
   }
      
@@ -127,11 +128,11 @@ sub initBug  {
                        "bug_file_loc", "short_desc", "target_milestone",
                        "qa_contact", "status_whiteboard", "creation_ts",
                        "groupset", "delta_ts", "votes") {
-	$fields{$field} = shift @row;
-	if ($fields{$field}) {
-	    $self->{$field} = $fields{$field};
-	}
-	$count++;
+        $fields{$field} = shift @row;
+        if ($fields{$field}) {
+            $self->{$field} = $fields{$field};
+        }
+        $count++;
     }
   } else {
     &::SendSQL("select groupset from bugs where bug_id = $bug_id");
