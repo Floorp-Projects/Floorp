@@ -501,12 +501,10 @@ NS_IMETHODIMP nsIsIndexFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
-  rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
-                                    NS_GET_IID(nsICharsetConverterManager),
-                                    (nsISupports**)&ccm);
+  rv = CallGetService(kCharsetConverterManagerCID, &ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoderRaw(charset.get(), encoder);
-     nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
+     NS_RELEASE(ccm);
      if (nsnull == encoder) {
        rv = NS_ERROR_FAILURE;
      }

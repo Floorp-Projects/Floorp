@@ -67,9 +67,7 @@ nsChromeUIDataSource::nsChromeUIDataSource(nsIRDFDataSource* aComposite)
   mComposite->AddObserver(this);
 
   nsresult rv;
-  rv = nsServiceManager::GetService(kRDFServiceCID,
-                                    NS_GET_IID(nsIRDFService),
-                                    (nsISupports**)&mRDFService);
+  rv = CallGetService(kRDFServiceCID, &mRDFService);
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 
   mRDFService->RegisterDataSource(this, PR_TRUE);
@@ -79,10 +77,7 @@ nsChromeUIDataSource::~nsChromeUIDataSource()
 {
   mRDFService->UnregisterDataSource(this);
 
-  if (mRDFService) {
-    nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
-    mRDFService = nsnull;
-  }
+  NS_IF_RELEASE(mRDFService);
 }
 
 // we require a special implementation of Release, which knows about

@@ -1214,9 +1214,7 @@ nsFT2FontCatalog::InitGlobals(FT_Library lib)
 
   nsulCodePageRangeLanguage *crl = nsnull;
 
-  nsServiceManager::GetService(NS_PREF_CONTRACTID,
-                               NS_GET_IID(nsIPref),
-                               (nsISupports**) &sPref);
+  CallGetService(NS_PREF_CONTRACTID, &sPref);
   if (!sPref)
     goto cleanup_and_return;
 

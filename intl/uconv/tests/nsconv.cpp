@@ -49,7 +49,6 @@
 #include "nsICharsetAlias.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
 
 #include <stdio.h>
 #include <string.h>
@@ -79,14 +78,12 @@ int main(int argc, const char** argv)
   FILE* infile = 0;
   FILE* outfile = 0;
   nsresult res= NS_OK;
-  nsICharsetConverterManager* ccMain=nsnull;
-  nsICharsetAlias* aliasmgr = nsnull;
 
   NS_InitXPCOM2(nsnull, nsnull, nsnull);
 
   // get ccMain;
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID,
-                                     kICharsetConverterManagerIID, (nsISupports**) &ccMain);
+  nsCOMPtr<nsICharsetConverterManager> ccMain =
+      do_GetService(kCharsetConverterManagerCID, &res);
   if(NS_FAILED(res))
   {
     fprintf(stderr, "Cannot get Character Converter Manager %x\n", res);
@@ -94,12 +91,11 @@ int main(int argc, const char** argv)
   }
 
   // Get the charset alias manager
-  res = nsServiceManager::GetService(NS_CHARSETALIAS_CONTRACTID, NS_GET_IID(nsICharsetAlias),
-                                     (nsISupports**) &aliasmgr);
+  nsCOMPtr<nsICharsetAlias> aliasmgr =
+      do_GetService(NS_CHARSETALIAS_CONTRACTID, &res);
   if (NS_FAILED(res))
   {
     fprintf(stderr, "Cannot get Charset Alias Manager %x\n", res);
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccMain);
     return -1;
   }
 
@@ -221,8 +217,6 @@ int main(int argc, const char** argv)
     fprintf(stderr, "Done!\n");
     NS_IF_RELEASE(encoder);
     NS_IF_RELEASE(decoder);
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccMain);
-    nsServiceManager::ReleaseService(NS_CHARSETALIAS_CONTRACTID, aliasmgr);
     return 0;
   }
   usage();
@@ -234,7 +228,5 @@ int main(int argc, const char** argv)
     fclose(outfile);
   NS_IF_RELEASE(encoder);
   NS_IF_RELEASE(decoder);
-  nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccMain);
-  nsServiceManager::ReleaseService(NS_CHARSETALIAS_CONTRACTID, aliasmgr);
   return -1;
 }

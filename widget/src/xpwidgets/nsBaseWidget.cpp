@@ -1172,9 +1172,7 @@ debug_PrefChangedCallback(const char * name,void * closure)
 
   nsIPref * prefs = nsnull;
   
-  nsresult rv = nsServiceManager::GetService(kPrefCID, 
-                         NS_GET_IID(nsIPref),
-                         (nsISupports**) &prefs);
+  nsresult rv = CallGetService(kPrefCID, &prefs);
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
   NS_ASSERTION(nsnull != prefs,"Prefs services is null.");
@@ -1204,9 +1202,7 @@ debug_RegisterPrefCallbacks()
 
     nsIPref * prefs = nsnull;
 
-    nsresult rv = nsServiceManager::GetService(kPrefCID, 
-                           NS_GET_IID(nsIPref),
-                           (nsISupports**) &prefs);
+    nsresult rv = CallGetService(kPrefCID, &prefs);
     
     NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get prefs service.");
     NS_ASSERTION(nsnull != prefs,"Prefs services is null.");

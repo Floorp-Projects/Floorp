@@ -204,26 +204,23 @@ bm_AddRefGlobals()
     if (gRefCnt++ == 0)
     {
         nsresult rv;
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**) &gRDF);
+        rv = CallGetService(kRDFServiceCID, &gRDF);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to get RDF service");
+            return rv;
+        }
 
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to get RDF container utils");
+            return rv;
+        }
 
-        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          NS_GET_IID(nsIRDFContainerUtils),
-                                          (nsISupports**) &gRDFC);
-
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
-        if (NS_FAILED(rv)) return rv;
-
-        rv = nsServiceManager::GetService(kCharsetAliasCID,
-                                          NS_GET_IID(nsICharsetAlias),
-                                          (nsISupports**) &gCharsetAlias);
-        
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get charset alias service");
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kCharsetAliasCID, &gCharsetAlias);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to get charset alias service");
+            return rv;
+        }
 
         nsCOMPtr<nsILocaleService> ls = do_GetService(NS_LOCALESERVICE_CONTRACTID);
         if (ls) {
@@ -346,23 +343,9 @@ bm_ReleaseGlobals()
 {
     if (--gRefCnt == 0)
     {
-        if (gRDF)
-        {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDF);
-            gRDF = nsnull;
-        }
-
-        if (gRDFC)
-        {
-            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
-            gRDFC = nsnull;
-        }
-
-        if (gCharsetAlias)
-        {
-            nsServiceManager::ReleaseService(kCharsetAliasCID, gCharsetAlias);
-            gCharsetAlias = nsnull;
-        }
+        NS_IF_RELEASE(gRDF);
+        NS_IF_RELEASE(gRDFC);
+        NS_IF_RELEASE(gCharsetAlias);
 
         NS_IF_RELEASE(gCollation);
 
@@ -1022,11 +1005,9 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
     if (charset.Length() < 1)   return NS_ERROR_UNEXPECTED;
 
     // found a charset, now try and get a decoder from it to Unicode
-    nsICharsetConverterManager  *charsetConv = nsnull;
-    rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-            NS_GET_IID(nsICharsetConverterManager), 
-            (nsISupports**)&charsetConv);
-    if (NS_SUCCEEDED(rv) && (charsetConv))
+    nsICharsetConverterManager *charsetConv;
+    rv = CallGetService(kCharsetConverterManagerCID, &charsetConv);
+    if (NS_SUCCEEDED(rv))
     {
         rv = charsetConv->GetUnicodeDecoderRaw(charset.get(), decoder);
         NS_RELEASE(charsetConv);
@@ -1670,17 +1651,19 @@ nsBookmarksService::Init()
     if (NS_FAILED(rv)) return rv;
 
     /* create a URL for the string resource file */
-    nsCOMPtr<nsIURI>    uri;
-    if (NS_SUCCEEDED(rv = mNetService->NewURI(bookmark_properties, nsnull, nsnull,
-        getter_AddRefs(uri))))
+    nsCOMPtr<nsIURI> uri;
+    mNetService->NewURI(bookmark_properties, nsnull, nsnull,
+                        getter_AddRefs(uri));
+    if (uri)
     {
         /* create a bundle for the localization */
-        nsCOMPtr<nsIStringBundleService>    stringService;
-        if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kStringBundleServiceCID,
-            NS_GET_IID(nsIStringBundleService), getter_AddRefs(stringService))))
+        nsCOMPtr<nsIStringBundleService> stringService =
+                do_GetService(kStringBundleServiceCID);
+        if (stringService)
         {
             nsCAutoString spec;
-            if (NS_SUCCEEDED(rv = uri->GetSpec(spec)))
+            uri->GetSpec(spec);
+            if (!spec.IsEmpty())
             {
                 stringService->CreateBundle(spec.get(), getter_AddRefs(mBundle));
             }

@@ -222,7 +222,6 @@ mime_locate_external_content_handler(const char *content_type,
                                      contentTypeHandlerInitStruct  *ctHandlerInfo)
 {
   MimeObjectClass               *newObj = NULL;
-  nsCID                         classID = {0};
   char                          lookupID[256];
   nsCOMPtr<nsIMimeContentTypeHandler>     ctHandler;
   nsresult rv;

@@ -200,7 +200,7 @@ nsPostScriptObj::nsPostScriptObj() :
 {
   PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::nsPostScriptObj()\n"));
 
-  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**) &gPrefs);
+  CallGetService(kPrefCID, &gPrefs);
 
   gLangGroups = new nsHashtable();
 }

@@ -59,22 +59,19 @@ nsWrapUtils::Rewrap(const nsAString& aInString,
   nsCOMPtr<nsILineBreaker> lineBreaker;
 
   nsILineBreakerFactory *lf;
-  nsresult rv;
-  rv = nsServiceManager::GetService(NS_LWBRK_CONTRACTID,
-                                    NS_GET_IID(nsILineBreakerFactory),
-                                    (nsISupports **)&lf);
+  nsresult rv = CallGetService(NS_LWBRK_CONTRACTID, &lf);
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString lbarg;
-    rv = lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
-    nsServiceManager::ReleaseService(NS_LWBRK_CONTRACTID, lf);
+    lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
+    NS_RELEASE(lf);
   }
 
   aOutString.Truncate();
 
   // Now we either have a line breaker, or we don't.
-  PRInt32 length = aInString.Length();
-  nsString tString(aInString);
+  const nsPromiseFlatString &tString = PromiseFlatString(aInString);
+  PRInt32 length = tString.Length();
   const PRUnichar* unicodeStr = tString.get();
   for (i = 0; i < length; )    // loop over lines
   {

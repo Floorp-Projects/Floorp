@@ -71,10 +71,8 @@ nsRDFResource::~nsRDFResource(void)
 
     gRDFService->UnregisterResource(this);
 
-    if (--gRDFServiceRefCnt == 0) {
-        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-        gRDFService = nsnull;
-    }
+    if (--gRDFServiceRefCnt == 0)
+        NS_RELEASE(gRDFService);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsRDFResource, nsIRDFResource, nsIRDFNode)

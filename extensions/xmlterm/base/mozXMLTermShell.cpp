@@ -381,17 +381,11 @@ NS_IMETHODIMP mozXMLTermShell::SendText(const PRUnichar* aString,
 NS_IMETHODIMP    
 mozXMLTermShell::Exit()
 {  
-  nsIAppShellService* appShell = nsnull;
-
   XMLT_LOG(mozXMLTermShell::Exit,10,("\n"));
 
   // Create the Application Shell instance...
   // XXXbsmedberg what the hell is this?
-  nsresult result = nsServiceManager::GetService(NS_APPSHELLSERVICE_CONTRACTID,
-                                                 NS_GET_IID(nsIAppShellService),
-                                                 (nsISupports**)&appShell);
-  if (NS_SUCCEEDED(result)) {
-    nsServiceManager::ReleaseService(NS_APPSHELLSERVICE_CONTRACTID, appShell);
-  } 
+  nsCOMPtr<nsIAppShellService> appShell =
+      do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
   return NS_OK;
 }

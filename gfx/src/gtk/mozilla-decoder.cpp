@@ -242,8 +242,7 @@ mozilla_decoder_get_charset (PangoFcDecoder *decoder,
     priv->charset = FcCharSetCreate();
 
     if (!gCharsetManager) {
-        nsServiceManager::GetService(kCharsetConverterManagerCID,
-        NS_GET_IID(nsICharsetConverterManager), (nsISupports**)&gCharsetManager);
+        CallGetService(kCharsetConverterManagerCID, &gCharsetManager);
     }
 
     nsCOMPtr<nsIUnicodeEncoder> encoder;

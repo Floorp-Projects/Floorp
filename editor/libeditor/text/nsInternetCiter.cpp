@@ -206,22 +206,21 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
   nsCOMPtr<nsILineBreaker> lineBreaker;
   nsILineBreakerFactory *lf;
   nsresult rv;
-  rv = nsServiceManager::GetService(NS_LWBRK_CONTRACTID,
-                                    NS_GET_IID(nsILineBreakerFactory),
-                                    (nsISupports **)&lf);
+  rv = CallGetService(NS_LWBRK_CONTRACTID, &lf);
   if (NS_SUCCEEDED(rv))
   {
     nsAutoString lbarg;
-    rv = lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
-    nsServiceManager::ReleaseService(NS_LWBRK_CONTRACTID, lf);
+    lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
+    NS_RELEASE(lf);
   }
 
   // Loop over lines in the input string, rewrapping each one.
-  PRUint32 length = aInString.Length();
+  PRUint32 length;
   PRUint32 posInString = 0;
   PRUint32 outStringCol = 0;
   PRUint32 citeLevel = 0;
-  const nsPromiseFlatString &tString = PromiseFlatString(aInString);//MJUDGE SCC NEED HELP
+  const nsPromiseFlatString &tString = PromiseFlatString(aInString);
+  length = tString.Length();
 #ifdef DEBUG_wrapping
   int loopcount = 0;
 #endif

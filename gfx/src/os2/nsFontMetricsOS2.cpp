@@ -214,8 +214,7 @@ static nsFontCleanupObserver *gFontCleanupObserver;
 static nsresult
 InitGlobals(void)
 {
-  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-    (nsISupports**) &gPref);
+  CallGetService(kPrefCID, &gPref);
   if (!gPref) {
     FreeGlobals();
     return NS_ERROR_FAILURE;

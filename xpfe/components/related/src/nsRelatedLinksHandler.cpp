@@ -196,7 +196,7 @@ RelatedLinksStreamListener::~RelatedLinksStreamListener()
 		 NS_IF_RELEASE(kNC_RelatedLinksRoot);
 		 mUnicodeDecoder = nsnull;
 
-		 nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+		 NS_IF_RELEASE(gRDFService);
 	 }
 }
 
@@ -207,20 +207,16 @@ RelatedLinksStreamListener::Init()
 {
 	if (gRefCnt++ == 0)
 	{
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-				    NS_GET_IID(nsIRDFService),
-				    (nsISupports**) &gRDFService);
-
-		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
+		nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
 		if (NS_FAILED(rv))
+    {
+      NS_ERROR("unable to get RDF service");
 			return(rv);
+    }
 
-		nsICharsetConverterManager	*charsetConv = nsnull;
-
-		rv = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-				NS_GET_IID(nsICharsetConverterManager), 
-				(nsISupports**)&charsetConv);
-		if (NS_SUCCEEDED(rv) && (charsetConv))
+		nsICharsetConverterManager *charsetConv;
+		rv = CallGetService(kCharsetConverterManagerCID, &charsetConv);
+		if (NS_SUCCEEDED(rv))
 		{
 			rv = charsetConv->GetUnicodeDecoderRaw("UTF-8",
 												getter_AddRefs(mUnicodeDecoder));
@@ -612,8 +608,7 @@ RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl()
 		NS_IF_RELEASE(kNC_RelatedLinksTopic);
 		NS_IF_RELEASE(kNC_Child);
 
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-		gRDFService = nsnull;
+		NS_IF_RELEASE(gRDFService);
 	}
 }
 
@@ -626,9 +621,7 @@ RelatedLinksHandlerImpl::Init()
 
 	if (gRefCnt++ == 0)
 	{
-		rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                  NS_GET_IID(nsIRDFService),
-                                                  (nsISupports**) &gRDFService);
+		rv = CallGetService(kRDFServiceCID, &gRDFService);
 		if (NS_FAILED(rv)) return rv;
 
 		gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_RelatedLinksRoot),

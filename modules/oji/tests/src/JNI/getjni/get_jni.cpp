@@ -41,7 +41,7 @@ nsresult GetJNI(JNIEnv** env) {
 	nsIJVMManager *jvmMngr = nsnull;
 	nsresult rv = NS_OK;
 	*env = nsnull;
-	rv = nsServiceManager::GetService(kJVMManagerCID, kIJVMManagerIID, (nsISupports**)&jvmMngr);
+	rv = CallGetService(kJVMManagerCID, &jvmMngr);
 	if (rv != NS_OK || !jvmMngr) {
 		fprintf(stderr, "ERROR: Can't get JVM manager !\n");
 		return NS_ERROR_FAILURE;

@@ -455,8 +455,7 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         mPixelSize = 1;
     }
     if (!gInitialized) {
-        nsServiceManager::GetService(kCharsetConverterManagerCID,
-        NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharsetManager);
+        CallGetService(kCharsetConverterManagerCID, &gCharsetManager);
         if (!gCharsetManager) {
             FreeGlobals();
             return NS_ERROR_FAILURE;
@@ -2711,8 +2710,7 @@ GetConverter(const char* aEncoding, nsIUnicodeEncoder **aConverter)
     nsresult rv;
 
     if (!gCharsetManager) {
-        nsServiceManager::GetService(kCharsetConverterManagerCID,
-        NS_GET_IID(nsICharsetConverterManager), (nsISupports**)&gCharsetManager);
+        CallGetService(kCharsetConverterManagerCID, &gCharsetManager);
         if (!gCharsetManager) {
             FreeGlobals();
             return NS_ERROR_FAILURE;

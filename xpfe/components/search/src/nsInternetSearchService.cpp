@@ -432,14 +432,10 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 {
 	if (gRefCnt++ == 0)
 	{
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-			NS_GET_IID(nsIRDFService), (nsISupports**) &gRDFService);
-		PR_ASSERT(NS_SUCCEEDED(rv));
+		nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
 
-		rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-						  NS_GET_IID(nsIRDFContainerUtils),
-						  (nsISupports**) &gRDFC);
-
+		rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
 
 		gRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_SearchEngineRoot),
@@ -545,8 +541,8 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 
 		gRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), &kTrueLiteral);
 
-		rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), getter_AddRefs(prefs));
-		if (NS_SUCCEEDED(rv) && (prefs))
+		prefs = do_GetService(kPrefCID);
+		if (prefs)
 		{
 			prefs->RegisterCallback("browser.search.mode", searchModePrefCallback, this);
 			prefs->GetIntPref("browser.search.mode", &gBrowserSearchMode);
@@ -635,18 +631,12 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 			prefs = nsnull;
 		}
 
-		if (gRDFC)
-		{
-			nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFC);
-			gRDFC = nsnull;
-		}
+    NS_IF_RELEASE(gRDFC);
 
 		if (gRDFService)
 		{
 			gRDFService->UnregisterDataSource(this);
-
-			nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-			gRDFService = nsnull;
+      NS_RELEASE(gRDFService);
 		}
 	}
 }
@@ -956,7 +946,7 @@ InternetSearchDataSource::Init()
 		return(rv);
 
 	rv = NS_NewLoadGroup(getter_AddRefs(mLoadGroup), nsnull);
-	PR_ASSERT(NS_SUCCEEDED(rv));
+	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create load group");
 
 	if (!mTimer)
 	{

@@ -176,15 +176,8 @@ nsChromeRegistry::~nsChromeRegistry()
       delete mDataSourceTable;
   }
 
-  if (mRDFService) {
-    nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
-    mRDFService = nsnull;
-  }
-
-  if (mRDFContainerUtils) {
-    nsServiceManager::ReleaseService(kRDFContainerUtilsCID, mRDFContainerUtils);
-    mRDFContainerUtils = nsnull;
-  }
+  NS_IF_RELEASE(mRDFService);
+  NS_IF_RELEASE(mRDFContainerUtils);
 
 }
 
@@ -231,14 +224,10 @@ nsChromeRegistry::Init()
   gChromeRegistry = this;
   
   nsresult rv;
-  rv = nsServiceManager::GetService(kRDFServiceCID,
-                                    NS_GET_IID(nsIRDFService),
-                                    (nsISupports**)&mRDFService);
+  rv = CallGetService(kRDFServiceCID, &mRDFService);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                    NS_GET_IID(nsIRDFContainerUtils),
-                                    (nsISupports**)&mRDFContainerUtils);
+  rv = CallGetService(kRDFContainerUtilsCID, &mRDFContainerUtils);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mRDFService->GetResource(nsDependentCString(kURICHROME_selectedSkin),

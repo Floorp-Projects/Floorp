@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsProxiedServiceManager_h_
-#define __nsProxiedServiceManager_h_
+#ifndef nsProxiedService_h_
+#define nsProxiedService_h_
 
 #include "nsIServiceManager.h"
 #include "nsIProxyObjectManager.h"
@@ -94,71 +94,45 @@
 
 class nsProxiedService
 {
- public:
-   
+public:
     nsProxiedService(const nsCID &aClass, const nsIID &aIID, 
-                     nsIEventQueue* pIProxyQueue, PRBool always, nsresult*rv)
+                     nsIEventQueue* aEventQ, PRBool always, nsresult* rv)
     {
-       *rv = nsServiceManager::GetService(aClass, 
-                                          aIID, 
-                                          getter_AddRefs(mService));
-       if (NS_FAILED(*rv)) return;
-       InitProxy(aIID, pIProxyQueue, always, rv);
+        nsCOMPtr<nsISupports> svc = do_GetService(aClass, rv);
+        if (NS_SUCCEEDED(*rv))
+            InitProxy(svc, aIID, aEventQ, always, rv);
     }
 
     nsProxiedService(const char* aContractID, const nsIID &aIID, 
-                     nsIEventQueue* pIProxyQueue, PRBool always, nsresult*rv)
+                     nsIEventQueue* aEventQ, PRBool always, nsresult* rv)
     {
-       *rv = nsServiceManager::GetService(aContractID, 
-                                          aIID, 
-                                          getter_AddRefs(mService));
-       if (NS_FAILED(*rv)) return;
-       InitProxy(aIID, pIProxyQueue, always, rv);
-    }
-
-    void InitProxy(const nsIID &aIID, nsIEventQueue* pIProxyQueue,
-                   PRBool always, nsresult*rv)
-    {
-       static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
-
-       nsCOMPtr<nsIProxyObjectManager> pIProxyObjectManager = 
-                do_GetService(kProxyObjectManagerCID, rv);
-       if (NS_FAILED(*rv)) return;
-
-       PRInt32 proxyType = PROXY_SYNC;
-       if (always) proxyType |= PROXY_ALWAYS;
-       *rv = pIProxyObjectManager->GetProxyForObject(pIProxyQueue, 
-                                                  aIID, 
-                                                  mService,
-                                                  proxyType, 
-                                                  getter_AddRefs(mProxiedService));
+        nsCOMPtr<nsISupports> svc = do_GetService(aContractID, rv);
+        if (NS_SUCCEEDED(*rv))
+            InitProxy(svc, aIID, aEventQ, always, rv);
     }
     
-    ~nsProxiedService()
+    operator nsISupports*() const
     {
+        return mProxiedService;
     }
 
-   nsISupports* operator->() const
-   {
-       NS_PRECONDITION(mProxiedService != 0, "Your code should test the error result from the constructor.");
-       return mProxiedService;
-   }
+private:
 
-   PRBool operator==(const nsISupports* other)
-   {
-      return ((mProxiedService == other) || (mService == other));
-   }
+    void InitProxy(nsISupports *aObj, const nsIID &aIID,
+                   nsIEventQueue* aEventQ, PRBool always, nsresult*rv)
+    {
+        PRInt32 proxyType = PROXY_SYNC;
+        if (always)
+            proxyType |= PROXY_ALWAYS;
 
-   operator nsISupports*() const
-   {
-       return mProxiedService;
-   }
+        *rv = NS_GetProxyForObject(aEventQ, 
+                                   aIID, 
+                                   aObj,
+                                   proxyType, 
+                                   getter_AddRefs(mProxiedService));
+    }
 
- protected:
-   nsCOMPtr<nsISupports> mProxiedService;
-   nsCOMPtr<nsISupports> mService;
- 
- };
+    nsCOMPtr<nsISupports> mProxiedService;
+};
 
-
-#endif //__nsProxiedServiceManager_h_
+#endif // nsProxiedService_h_

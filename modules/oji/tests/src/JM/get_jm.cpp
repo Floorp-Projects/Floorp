@@ -39,8 +39,8 @@
 #include <nsIServiceManager.h>
 
 nsresult GetJVMManager(nsIJVMManager** jvmMngr) {
-	*jvmMngr = nsnull;
-	nsresult rv = nsServiceManager::GetService(kJVMManagerCID, kIJVMManagerIID, (nsISupports**)jvmMngr);
+	*jvmMngr;
+	nsresult rv = CallGetService(kJVMManagerCID, jvmMngr);
 	if (rv != NS_OK || !jvmMngr) {
 		fprintf(stderr, "ERROR: Can't get JVM manager !\n");
 		return NS_ERROR_FAILURE;

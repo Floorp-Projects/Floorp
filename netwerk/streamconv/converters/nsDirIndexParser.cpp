@@ -91,9 +91,7 @@ nsDirIndexParser::Init() {
   nsresult rv;
   // XXX not threadsafe
   if (gRefCntParser++ == 0)
-    rv = nsServiceManager::GetService(NS_ITEXTTOSUBURI_CONTRACTID,
-                                      NS_GET_IID(nsITextToSubURI),
-                                      NS_REINTERPRET_CAST(nsISupports**, &gTextToSubURI));
+    rv = CallGetService(NS_ITEXTTOSUBURI_CONTRACTID, &gTextToSubURI);
   else
     rv = NS_OK;
 

@@ -745,8 +745,7 @@ nsresult nsCharsetMenu::Init()
     mRDFService->GetResource(NS_LITERAL_CSTRING(kURINC_type), &kRDF_type);
 
     nsIRDFContainerUtils * rdfUtil = NULL;
-    res = nsServiceManager::GetService(kRDFContainerUtilsCID, 
-      NS_GET_IID(nsIRDFContainerUtils), (nsISupports **)&rdfUtil);
+    res = CallGetService(kRDFContainerUtilsCID, &rdfUtil);
     if (NS_FAILED(res)) goto done;
 
     res = rdfUtil->MakeSeq(mInner, kNC_BrowserAutodetMenuRoot, NULL);
@@ -779,7 +778,7 @@ nsresult nsCharsetMenu::Init()
     if (NS_FAILED(res)) goto done;
 
   done:
-    if (rdfUtil != NULL) nsServiceManager::ReleaseService(kRDFContainerUtilsCID,rdfUtil);
+    NS_IF_RELEASE(rdfUtil);
     if (NS_FAILED(res)) return res;
   }
   mInitialized = NS_SUCCEEDED(res);

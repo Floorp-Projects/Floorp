@@ -90,39 +90,32 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
                                          char*            output,
                                          PRInt32*         aDestLength)
 {
-   PRSize outLen = 0;
+  PRSize outLen = 0;
 #ifdef DEBUG_prabhath_no_shaper
   printf("Debug/Test Case of No thai pango shaper Object\n");
   // Comment out mCtlObj == nsnull for test purposes
 #endif
 
   if (mCtlObj == nsnull) {
-    nsICharsetConverterManager*  gCharSetManager = nsnull;
-    nsIUnicodeEncoder*           gDefaultTISConverter = nsnull;
-    nsresult                     res;
-    nsServiceManager::GetService(kCharSetManagerCID,
-      NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharSetManager);
-
 #ifdef DEBUG_prabhath
     printf("ERROR: No CTL IMPLEMENTATION - Default Thai Conversion");
     // CP874 is the default converter for thai ; 
     // In case mCtlObj is absent (no CTL support), use it to convert.
 #endif
 
-    if (!gCharSetManager)
+    nsCOMPtr<nsICharsetConverterManager> charsetMgr =
+        do_GetService(kCharSetManagerCID);
+    if (!charsetMgr)
       return NS_ERROR_FAILURE;
     
-    res = gCharSetManager->GetUnicodeEncoderRaw("TIS-620", &gDefaultTISConverter);
-    
-    if (!gDefaultTISConverter) {
+    nsCOMPtr<nsIUnicodeEncoder> encoder;
+    charsetMgr->GetUnicodeEncoderRaw("TIS-620", getter_AddRefs(encoder));
+    if (!encoder) {
       NS_WARNING("cannot get default converter for tis-620");
-      NS_IF_RELEASE(gCharSetManager);
       return NS_ERROR_FAILURE;
     }
 
-    gDefaultTISConverter->Convert(input, aSrcLength, output, aDestLength);
-    NS_IF_RELEASE(gCharSetManager);
-    NS_IF_RELEASE(gDefaultTISConverter);
+    encoder->Convert(input, aSrcLength, output, aDestLength);
     return NS_OK;
   }
 

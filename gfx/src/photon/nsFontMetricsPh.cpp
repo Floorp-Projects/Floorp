@@ -87,7 +87,7 @@ nsFontMetricsPh::nsFontMetricsPh()
 
 static nsresult InitGlobals()
 {
-  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**) &gPref);
+  CallGetService(kPrefCID, &gPref);
   if (!gPref) return NS_ERROR_FAILURE;
 
 	gFontMetricsCache = new nsHashtable();

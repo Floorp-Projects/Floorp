@@ -415,23 +415,21 @@ RDFContainerImpl::Init()
     if (gRefCnt++ == 0) {
         nsresult rv;
 
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**) &gRDFService);
-
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to get RDF service");
+            return rv;
+        }
 
         rv = gRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "nextVal"),
                                       &kRDF_nextVal);
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          NS_GET_IID(nsIRDFContainerUtils),
-                                          (nsISupports**) &gRDFContainerUtils);
-
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils service");
-        if (NS_FAILED(rv)) return rv;
+        rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("unable to get RDF container utils service");
+            return rv;
+        }
     }
 
     return NS_OK;
@@ -449,16 +447,8 @@ RDFContainerImpl::~RDFContainerImpl()
     NS_IF_RELEASE(mDataSource);
 
     if (--gRefCnt == 0) {
-        if (gRDFContainerUtils) {
-            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
-            gRDFContainerUtils = nsnull;
-        }
-
-        if (gRDFService) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
-
+        NS_IF_RELEASE(gRDFContainerUtils);
+        NS_IF_RELEASE(gRDFService);
         NS_IF_RELEASE(kRDF_nextVal);
     }
 }

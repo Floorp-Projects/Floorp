@@ -1655,7 +1655,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   // Release the prefs service
   MimeObject *obj = (mdd ? mdd->obj : 0);  
   if ( (obj) && (obj->options) && (obj->options->prefs) )
-    nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
+    obj->options->prefs->Release();
   
   mdd->identity = nsnull;
   PR_Free(mdd->url_name);
@@ -2107,8 +2107,8 @@ mime_bridge_create_draft_stream(
   mdd->options->decompose_file_output_fn = mime_decompose_file_output_fn;
   mdd->options->decompose_file_close_fn = mime_decompose_file_close_fn;
 
-  rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(mdd->options->prefs));
-  if (! (mdd->options->prefs && NS_SUCCEEDED(rv)))
+  rv = CallGetService(kPrefCID, &(mdd->options->prefs));
+  if (NS_FAILED(rv))
     goto FAIL;
 
 #ifdef ENABLE_SMIME

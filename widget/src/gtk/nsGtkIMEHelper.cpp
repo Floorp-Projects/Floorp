@@ -137,13 +137,10 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
       charset.AssignLiteral("ISO-8859-1");   // default
     }
     nsICharsetConverterManager* manager = nsnull;
-    nsresult res = nsServiceManager::
-      GetService(kCharsetConverterManagerCID,
-                 NS_GET_IID(nsICharsetConverterManager),
-                 (nsISupports**)&manager);
+    nsresult res = CallGetService(kCharsetConverterManagerCID, &manager);
     if (manager && NS_SUCCEEDED(res)) {
       manager->GetUnicodeDecoderRaw(charset.get(), &mDecoder);
-      nsServiceManager::ReleaseService(kCharsetConverterManagerCID, manager);
+      NS_RELEASE(manager);
     }
   }
   NS_ASSERTION(mDecoder, "cannot get decoder");

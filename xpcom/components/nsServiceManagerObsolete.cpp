@@ -62,6 +62,7 @@ nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
 nsresult
 nsServiceManager::ShutdownGlobalServiceManager(nsIServiceManager* *result)
 {
+    NS_NOTREACHED("nsServiceManager::ShutdownGlobalServiceManager is deprecated");
     return NS_OK;
 }
 
@@ -70,7 +71,8 @@ nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
                              nsISupports* *result,
                              nsIShutdownListener* shutdownListener)
 {
-    
+    NS_NOTREACHED("nsServiceManager::GetService is deprecated");
+
     if (nsComponentManagerImpl::gComponentManager == nsnull)
         return NS_ERROR_UNEXPECTED;
     
@@ -81,6 +83,8 @@ nsresult
 nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
                                  nsIShutdownListener* shutdownListener)
 {
+    NS_NOTREACHED("nsServiceManager::ReleaseService is deprecated");
+
     NS_IF_RELEASE(service);
     return NS_OK;
 }
@@ -88,6 +92,7 @@ nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
 nsresult
 nsServiceManager::RegisterService(const nsCID& aClass, nsISupports* aService)
 {
+    NS_NOTREACHED("nsServiceManager::RegisterService is deprecated");
     
     if (nsComponentManagerImpl::gComponentManager == nsnull)
         return NS_ERROR_UNEXPECTED;
@@ -98,7 +103,8 @@ nsServiceManager::RegisterService(const nsCID& aClass, nsISupports* aService)
 nsresult
 nsServiceManager::UnregisterService(const nsCID& aClass)
 {
-    
+    NS_NOTREACHED("nsServiceManager::UnregisterService is deprecated");
+
     if (nsComponentManagerImpl::gComponentManager == nsnull)
         return NS_ERROR_UNEXPECTED;
     
@@ -113,6 +119,7 @@ nsServiceManager::GetService(const char* aContractID, const nsIID& aIID,
                              nsISupports* *result,
                              nsIShutdownListener* shutdownListener)
 {
+    NS_NOTREACHED("nsServiceManager::GetService is deprecated");
     
     if (nsComponentManagerImpl::gComponentManager == nsnull)
         return NS_ERROR_UNEXPECTED;
@@ -124,6 +131,8 @@ nsresult
 nsServiceManager::ReleaseService(const char* aContractID, nsISupports* service,
                                  nsIShutdownListener* shutdownListener)
 {
+    NS_NOTREACHED("nsServiceManager::ReleaseService is deprecated");
+
     NS_RELEASE(service);
     return NS_OK;
 }
@@ -131,6 +140,7 @@ nsServiceManager::ReleaseService(const char* aContractID, nsISupports* service,
 nsresult
 nsServiceManager::RegisterService(const char* aContractID, nsISupports* aService)
 {
+    NS_NOTREACHED("nsServiceManager::RegisterService is deprecated");
     
     if (nsComponentManagerImpl::gComponentManager == nsnull)
         return NS_ERROR_UNEXPECTED;
@@ -141,6 +151,8 @@ nsServiceManager::RegisterService(const char* aContractID, nsISupports* aService
 nsresult
 nsServiceManager::UnregisterService(const char* aContractID)
 {
+    NS_NOTREACHED("nsServiceManager::UnregisterService is deprecated");
+
     // Don't create the global service manager here because we might
     // be shutting down, and releasing all the services in its
     // destructor

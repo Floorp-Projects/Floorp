@@ -64,17 +64,15 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
   if(nsnull == _retval)
     return NS_ERROR_NULL_POINTER;
   *_retval = nsnull;
-  nsIUnicodeEncoder *encoder = nsnull;
   nsresult rv = NS_OK;
   
   // Get Charset, get the encoder.
-  nsICharsetConverterManager * ccm = nsnull;
-  rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
-                                    NS_GET_IID(nsICharsetConverterManager),
-                                    (nsISupports**)&ccm);
-  if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
+  nsICharsetConverterManager *ccm;
+  rv = CallGetService(kCharsetConverterManagerCID, &ccm);
+  if(NS_SUCCEEDED(rv)) {
+     nsIUnicodeEncoder *encoder;
      rv = ccm->GetUnicodeEncoder(charset, &encoder);
-     nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
+     NS_RELEASE(ccm);
      if (NS_SUCCEEDED(rv)) {
        rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
        if(NS_SUCCEEDED(rv))
@@ -109,7 +107,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
           if(pBuf != buf)
              PR_Free(pBuf);
        }
-       NS_IF_RELEASE(encoder);
+       NS_RELEASE(encoder);
      }
   }
   
@@ -152,10 +150,10 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
           }
         }
       }
-      NS_IF_RELEASE(decoder);
+      NS_RELEASE(decoder);
     }
   }
-  PR_FREEIF(unescaped);
+  PR_Free(unescaped);
 
   return rv;
 }

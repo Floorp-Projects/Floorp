@@ -1876,29 +1876,19 @@ nsresult
 getNSSDialogs(void **_result, REFNSIID aIID, const char *contract)
 {
   nsresult rv;
-  nsCOMPtr<nsISupports> result;
-  nsCOMPtr<nsISupports> proxiedResult;
 
-  rv = nsServiceManager::GetService(contract, 
-                                    aIID,
-                                    getter_AddRefs(result));
+  nsCOMPtr<nsISupports> svc = do_GetService(contract, &rv);
   if (NS_FAILED(rv)) 
     return rv;
 
-  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-  if (!proxyman)
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIProxyObjectManager> proxyman =
+      do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
  
-  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
-                              aIID, result, PROXY_SYNC,
-                              getter_AddRefs(proxiedResult));
-
-  if (!proxiedResult) {
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = proxiedResult->QueryInterface(aIID, _result);
-
+  rv = proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                                   aIID, svc, PROXY_SYNC,
+                                   _result);
   return rv;
 }
 

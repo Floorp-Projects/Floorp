@@ -1778,10 +1778,8 @@ wallet_StepForwardOrBack
 //#include "nsIUGenCategory.h"
 //#include "nsUnicharUtilCIID.h"
 //static NS_DEFINE_IID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-//static NS_DEFINE_IID(kIUGenCategoryIID, NS_IUGENCATEGORY_IID);
 
 //#include "nsICaseConversion.h"
-//static NS_DEFINE_IID(kICaseConversionIID, NS_ICASECONVERSION_IID);
 //static nsICaseConversion* gCaseConv = nsnull;
 
 static void
@@ -1870,12 +1868,10 @@ wallet_ResolvePositionalSchema(nsIDOMNode* elementNode, nsACString& schema) {
 
             /* break out if an alphanumeric character is found */
 
-//          nsresult res = nsServiceManager::GetService(kUnicharUtilCID, kICaseConversionIID,
-//                                      (nsISupports**)&gCaseConv);
+//          nsresult res = CallGetService(kUnicharUtilCID, &gCaseConv);
 //
 //          nsIUGenCategory* intl = nsnull;
-//          nsresult rv = nsServiceManager::GetService(kUnicharUtilCID, kIUGenCategoryIID,
-//                                      (nsISupports**)&intl);
+//          nsresult rv = CallGetService(kUnicharUtilCID, &intl);
 //          Whaaaaaa, intl is never released here!
 //          if (NS_SUCCEEDED(rv) && intl) {
 //            PRBool accept;

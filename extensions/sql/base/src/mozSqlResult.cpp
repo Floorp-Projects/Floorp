@@ -77,8 +77,7 @@ mozSqlResult::Init()
   nsresult rv;
 
   if (gRefCnt++ == 0) {
-    rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService),
-                                      (nsISupports**) &gRDFService);
+    rv = CallGetService(kRDFServiceCID, &gRDFService);
     if (NS_FAILED(rv)) return rv;
 
     rv = CallCreateInstance(kDateTimeFormatCID, &gFormat);
@@ -145,7 +144,7 @@ mozSqlResult::~mozSqlResult()
     NS_IF_RELEASE(kSQL_ResultRoot);
 
     NS_IF_RELEASE(gFormat);
-    nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+    NS_IF_RELEASE(gRDFService);
     gRDFService = nsnull;
   }
 }

@@ -76,9 +76,7 @@ nsXPConnect::nsXPConnect()
         dont_AddRef(XPTI_GetInterfaceInfoManager());
     CallQueryInterface(iim, &mInterfaceInfoManager);
 
-    nsServiceManager::GetService(XPC_CONTEXT_STACK_CONTRACTID,
-                                 NS_GET_IID(nsIThreadJSContextStack),
-                                 (nsISupports **)&mContextStack);
+    CallGetService(XPC_CONTEXT_STACK_CONTRACTID, &mContextStack);
 
 #ifdef XPC_TOOLS_SUPPORT
   {

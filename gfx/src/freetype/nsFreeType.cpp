@@ -783,9 +783,7 @@ nsFreeType2::GetCharSetManager()
     //
     // get the sCharSetManager
     //
-    nsServiceManager::GetService(kCharSetManagerCID,
-                                 NS_GET_IID(nsICharsetConverterManager),
-                                 (nsISupports**) &sCharSetManager);
+    CallGetService(kCharSetManagerCID, &sCharSetManager);
     NS_ASSERTION(sCharSetManager,"failed to create the charset manager");
   }
   return sCharSetManager;

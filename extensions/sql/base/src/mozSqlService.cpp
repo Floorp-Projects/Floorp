@@ -85,11 +85,8 @@ mozSqlService::~mozSqlService()
   NS_IF_RELEASE(kSQL_Database);
   NS_IF_RELEASE(kSQL_Priority);
 
-  nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
-  gRDFContainerUtils = nsnull;
-
-  nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-  gRDFService = nsnull;
+  NS_IF_RELEASE(gRDFContainerUtils);
+  NS_IF_RELEASE(gRDFService);
 }
 
 NS_IMPL_ISUPPORTS3(mozSqlService,
@@ -109,13 +106,10 @@ mozSqlService::Init()
 {
   nsresult rv;
 
-  rv = nsServiceManager::GetService(kRDFServiceCID, NS_GET_IID(nsIRDFService), 
-                                    (nsISupports**) &gRDFService);
+  rv = CallGetService(kRDFServiceCID, &gRDFService);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsServiceManager::GetService(kRDFContainerUtilsCID, NS_GET_IID(nsIRDFContainerUtils),
-                                    (nsISupports**) &gRDFContainerUtils);
-
+  rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
   if (NS_FAILED(rv)) return rv;
 
   gRDFService->GetResource(NS_LITERAL_CSTRING("SQL:AliasesRoot"),

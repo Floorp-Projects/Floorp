@@ -38,7 +38,7 @@
 #include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
-#include "nsIServiceManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsILineBreakerFactory.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreakerFactory.h"
@@ -52,8 +52,6 @@
 IMPL_NS_IBREAKSTATE( nsBreakState )
 
 NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
-NS_DEFINE_IID(kILineBreakerFactory, NS_ILINEBREAKERFACTORY_IID);
-NS_DEFINE_IID(kIWordBreakerFactory, NS_IWORDBREAKERFACTORY_IID);
 
 
 static char teng1[] = 
@@ -220,9 +218,7 @@ PRBool TestLineBreaker()
    nsILineBreakerFactory *t = NULL;
    nsresult res;
    PRBool ok = PR_TRUE;
-   res = nsServiceManager::GetService(kLWBrkCID,
-                                kILineBreakerFactory,
-                                (nsISupports**) &t);
+   res = CallGetService(kLWBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
@@ -230,13 +226,11 @@ PRBool TestLineBreaker()
      ok = PR_FALSE;
    } else {
 #ifdef WORD_AROUND_SERVICE_MANAGER_ASSERT
-     res = nsServiceManager::ReleaseService(kLWBrkCID, t);
+     NS_RELEASE(t);
 #endif
    }
 
-   res = nsServiceManager::GetService(kLWBrkCID,
-                                kILineBreakerFactory,
-                                (nsISupports**) &t);
+   res = CallGetService(kLWBrkCID, &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
@@ -288,7 +282,7 @@ PRBool TestLineBreaker()
      }
 
 #ifdef WORD_AROUND_SERVICE_MANAGER_ASSERT
-     res = nsServiceManager::ReleaseService(kLWBrkCID, t);
+     NS_RELEASE(t);
 #endif
    }
    printf("==================================\n");
@@ -306,21 +300,17 @@ PRBool TestWordBreaker()
    nsIWordBreakerFactory *t = NULL;
    nsresult res;
    PRBool ok = PR_TRUE;
-   res = nsServiceManager::GetService(kLWBrkCID,
-                                kIWordBreakerFactory,
-                                (nsISupports**) &t);
+   res = CallGetService(kLWBrkCID, &t);
            
    printf("Test 1 - GetService():\n");
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t1st GetService failed\n");
      ok = PR_FALSE;
    } else {
-     res = nsServiceManager::ReleaseService(kLWBrkCID, t);
+     NS_RELEASE(t);
    }
 
-   res = nsServiceManager::GetService(kLWBrkCID,
-                                kIWordBreakerFactory,
-                                (nsISupports**) &t);
+   res = CallGetService(kLWBrkCID, &t);
            
    if(NS_FAILED(res) || ( t == NULL ) ) {
      printf("\t2nd GetService failed\n");
@@ -371,7 +361,7 @@ PRBool TestWordBreaker()
          NS_IF_RELEASE(lb);
      }
 
-     res = nsServiceManager::ReleaseService(kLWBrkCID, t);
+     NS_RELEASE(t);
    }
    printf("==================================\n");
    printf("Finish nsIWordBreakerFactory Test \n");
@@ -413,9 +403,7 @@ void SamplePrintWordWithBreak()
    PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
    nsIWordBreakerFactory *t = NULL;
 
-   nsresult res = nsServiceManager::GetService(kLWBrkCID,
-                                kIWordBreakerFactory,
-                                (nsISupports**) &t);
+   nsresult res = CallGetService(kLWBrkCID, &t);
    nsIWordBreaker *wbk;
 
    nsAutoString wb_arg;
@@ -474,9 +462,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
    PRUint32 numOfFragment = sizeof(wb) / sizeof(char*);
    nsIWordBreakerFactory *t = NULL;
 
-   nsresult res = nsServiceManager::GetService(kLWBrkCID,
-                                kIWordBreakerFactory,
-                                (nsISupports**) &t);
+   nsresult res = CallGetService(kLWBrkCID, &t);
    nsIWordBreaker *wbk;
 
    nsAutoString wb_arg;

@@ -358,9 +358,7 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
     if (gRefCnt++ == 0) {
         nsresult rv;
 
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          NS_GET_IID(nsIRDFService),
-                                          (nsISupports**) &gRDFService);
+        rv = CallGetService(kRDFServiceCID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
@@ -388,11 +386,7 @@ RDFContainerUtilsImpl::~RDFContainerUtilsImpl()
 #endif
 
     if (--gRefCnt == 0) {
-        if (gRDFService) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
-        
+        NS_IF_RELEASE(gRDFService);
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_nextVal);
         NS_IF_RELEASE(kRDF_Bag);

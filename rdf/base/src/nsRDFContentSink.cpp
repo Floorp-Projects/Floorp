@@ -357,10 +357,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mDocumentURL(nsnull)
 {
     if (gRefCnt++ == 0) {
-        nsresult rv;
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          kIRDFServiceIID,
-                                          (nsISupports**) &gRDFService);
+        nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_SUCCEEDED(rv)) {
@@ -379,9 +376,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
         }
 
 
-        rv = nsServiceManager::GetService(kRDFContainerUtilsCID,
-                                          NS_GET_IID(nsIRDFContainerUtils),
-                                          (nsISupports**) &gRDFContainerUtils);
+        rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
 
         NS_RegisterStaticAtoms(rdf_atoms, NS_ARRAY_LENGTH(rdf_atoms));
     }
@@ -443,24 +438,14 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 
 
     if (--gRefCnt == 0) {
-        if (gRDFService) {
-            nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-            gRDFService = nsnull;
-        }
-
-
-        if (gRDFContainerUtils) {
-            nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
-            gRDFContainerUtils = nsnull;
-        }
-
+        NS_IF_RELEASE(gRDFService);
+        NS_IF_RELEASE(gRDFContainerUtils);
         NS_IF_RELEASE(kRDF_type);
         NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_Alt);
         NS_IF_RELEASE(kRDF_Bag);
         NS_IF_RELEASE(kRDF_Seq);
         NS_IF_RELEASE(kRDF_nextVal);
-
     }
 }
 

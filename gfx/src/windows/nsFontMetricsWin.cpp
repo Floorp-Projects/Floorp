@@ -279,14 +279,12 @@ static nsFontCleanupObserver *gFontCleanupObserver;
 static nsresult
 InitGlobals(void)
 {
-  nsServiceManager::GetService(kCharsetConverterManagerCID,
-    NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharsetManager);
+  CallGetService(kCharsetConverterManagerCID, &gCharsetManager);
   if (!gCharsetManager) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
-  nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref),
-    (nsISupports**) &gPref);
+  CallGetService(kPrefCID, &gPref);
   if (!gPref) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
@@ -386,8 +384,8 @@ static void CheckFontLangGroup(nsIAtom* lang1, nsIAtom* lang2, const char* lang3
   if (lang1 == lang2) {
     nsresult res = NS_OK;
     if (!gFontPackageProxy) {
-      res = nsServiceManager::GetService("@mozilla.org/intl/fontpackageservice;1",
-                    NS_GET_IID(nsIFontPackageProxy), (nsISupports**) &gFontPackageProxy);
+      res = CallGetService("@mozilla.org/intl/fontpackageservice;1",
+                           &gFontPackageProxy);
       if (NS_FAILED(res)) {
         NS_ERROR("Cannot get the font package proxy");
         return;

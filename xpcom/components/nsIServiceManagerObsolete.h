@@ -200,51 +200,7 @@ public:
     {0x81, 0x63, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
-class nsIShutdownListener;
-
-
-template <class DestinationType>
-inline
-nsresult
-CallGetService( const nsCID &aClass,
-                nsIShutdownListener* shutdownListener,
-                DestinationType** aDestination)
-{
-    NS_PRECONDITION(aDestination, "null parameter");
-    
-    return nsServiceManager::GetService(aClass,
-                                        NS_GET_IID(DestinationType),
-                                        NS_REINTERPRET_CAST(nsISupports**, aDestination),
-                                        shutdownListener);
-}
-
-template <class DestinationType>
-inline
-nsresult
-CallGetService( const char *aContractID,
-                nsIShutdownListener* shutdownListener,
-                DestinationType** aDestination)
-{
-    NS_PRECONDITION(aContractID, "null parameter");
-    NS_PRECONDITION(aDestination, "null parameter");
-    
-    return nsServiceManager::GetService(aContractID,
-                                        NS_GET_IID(DestinationType),
-                                        NS_REINTERPRET_CAST(nsISupports**, aDestination),
-                                        shutdownListener);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 
 #endif /* nsIServiceManagerObsolete_h___ */
-
-
-
-
-
-
-
-
-
-

@@ -956,7 +956,7 @@ mime_display_stream_complete (nsMIMESession *stream)
 
     // Release the prefs service
     if ( (obj->options) && (obj->options->prefs) )
-      nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
+      obj->options->prefs->Release();
     
     if ((obj->options) && (obj->options->headers == MimeHeadersOnly))
       abortNow = PR_TRUE;
@@ -1537,7 +1537,7 @@ mime_bridge_create_display_stream(
 //  memset(msd->options, 0, sizeof(*msd->options));
   msd->options->format_out = format_out;     // output format
 
-  rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(msd->options->prefs));
+  rv = CallGetService(kPrefCID, &(msd->options->prefs));
   if (! (msd->options->prefs && NS_SUCCEEDED(rv)))
 	{
     PR_FREEIF(msd);
@@ -1548,7 +1548,7 @@ mime_bridge_create_display_stream(
   rv = CallCreateInstance(MOZ_TXTTOHTMLCONV_CONTRACTID, &(msd->options->conv));
   if (NS_FAILED(rv))
 	{
-    nsServiceManager::ReleaseService(kPrefCID, msd->options->prefs);
+    msd->options->prefs->Release();
     PR_FREEIF(msd);
     return nsnull;
   }
