@@ -63,6 +63,7 @@ EXPORTS		= \
 XPIDLSRCS	= \
 		nsrootidl.idl \
 		nsISupports.idl \
+		nsIInterfaceRequestor.idl \
 		nsIWeakReference.idl \
 		$(NULL)
 
