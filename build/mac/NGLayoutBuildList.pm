@@ -542,6 +542,8 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:mime:src:MANIFEST",						"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:mime:emitters:src:MANIFEST",				"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:news:build:MANIFEST",						"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
