@@ -373,7 +373,7 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
   
   //Clear the new messages of the old folder
   var oldFolderURI = folder.getAttribute("ref");
-  if(oldFolderURI != "null")
+  if(oldFolderURI && (oldFolderURI != "null") && (oldFolderURI !=""))
   {
 	var oldFolder = GetMsgFolderFromURI(oldFolderURI);
 	if(oldFolder && oldFolder.hasNewMessages())
