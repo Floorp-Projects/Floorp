@@ -44,12 +44,14 @@ nsImapSearchResultSequence *nsImapSearchResultSequence::CreateSearchResultSequen
 
 void nsImapSearchResultSequence::Clear(void)
 {
-  PRInt32 i = mImpl->mCount;
-  while (0 <= --i) {
-    char* string = (char*)mImpl->mArray[i];
-    delete string;
-  }
-  nsVoidArray::Clear();
+    if (mImpl) {
+        PRInt32 i = mImpl->mCount;
+        while (0 <= --i) {
+            char* string = (char*)mImpl->mArray[i];
+            delete string;
+        }
+        nsVoidArray::Clear();
+    }
 }
 
 nsImapSearchResultSequence::~nsImapSearchResultSequence()
