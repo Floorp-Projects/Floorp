@@ -51,7 +51,7 @@ Main Key=[Product WinRegKey]
 Decrypt Main Key=TRUE
 
 Root Key=HKEY_LOCAL_MACHINE
-Key=[Product CurrentVersion]\Uninstall
+Key=SOFTWARE\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
 Decrypt Key=TRUE
 
 Uninstall Filename=$UninstallFile$
