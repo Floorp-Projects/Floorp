@@ -2,8 +2,6 @@ var msgComposeService = Components.classes['component://netscape/messengercompos
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;		
 
-var editorAppCore = null; // we still use an appcore for the editor as this one isn't scriptable yet!
-
 function GetArgs()
 {
 	var args = new Object();
@@ -45,55 +43,48 @@ function ComposeStartup()
 			var date = new Date();
 			sessionID = date.getTime() + Math.random();
 			
-			//Creating a Editor AppCore
-			appCoreName = "EditorAppCore:" + sessionID;
-			editorAppCore = XPAppCoresManager.Find(appCoreName);	
-			dump("Looking up EditorAppCore...\n");
-			if (! editorAppCore)
+			//Creating a Editor Shell
+  			var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+  			editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+			if (!editorShell)
 			{
-				dump("Creating EditorAppCore...\n");
-				editorAppCore = new EditorAppCore();
-				if (editorAppCore)
-				{
-					editorAppCore.Init(appCoreName);
-					dump("editor app core (" + sessionID + ") correctly added to app cores manager\n");
-				}
+				dump("Failed to create editorShell!\n");
+				return;
+			}
+			
+			// save the editorShell in the window. The editor JS expects to find it there.
+			window.editorShell = editorShell;
+			window.editorShell.Init();
+			dump("Created editorShell\n");
+
+			dump("initalizing the editor app core\n");
+			SetupToolbarElements(); //defined into EditorCommands.js
+
+			// setEditorType MUST be call before setContentWindow
+			if (msgCompose.composeHTML)
+			{
+				window.editorShell.SetEditorType("html");
+				dump("editor initialized in HTML mode\n");
 			}
 			else
-				dump("Editor Appcore has been already created, something wrong here!!!");
-
-			if (editorAppCore)
 			{
-				dump("initalizing the editor app core\n");
-				EditorSetup(appCoreName, editorAppCore); //defined into EditorCommands.js
-
-				// setEditorType MUST be call before setContentWindow
-				if (msgCompose.composeHTML)
-				{
-					editorAppCore.setEditorType("html");
-					dump("editor initialized in HTML mode\n");
-				}
-				else
-				{
-					editorAppCore.setEditorType("text");
-					dump("editor initialized in PLAIN TEXT mode\n");
-				}
-				editorAppCore.setContentWindow(window.frames[0]);
-				editorAppCore.setWebShellWindow(window);
-				editorAppCore.setToolbarWindow(window);
-
-				// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
-				editorAppCore.wrapColumn = msgCompose.wrapLength;
-				msgCompose.editor = editorAppCore;
-				
-				//Now we are ready to load all the fields (to, cc, subject, body, etc...)
-				msgCompose.LoadFields();
-//				document.getElementById("msgTo").focus();
-// If I call focus, Apprunner will crash later when closing this windows!
+				window.editorShell.SetEditorType("text");
+				window.editorShell.wrapColumn = msgCompose.wrapLength;
+				dump("editor initialized in PLAIN TEXT mode\n");
 			}
+
+			window.editorShell.SetContentWindow(window.frames[0]);
+			window.editorShell.SetWebShellWindow(window);
+			window.editorShell.SetToolbarWindow(window);
+
+			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
+			msgCompose.editor = window.editorShell;
+			
+			//Now we are ready to load all the fields (to, cc, subject, body, etc...)
+			msgCompose.LoadFields();
+//			document.getElementById("msgTo").focus();
+// If I call focus, Apprunner will crash later when closing this windows!
 		}
-		else
-			dump("### Cannot create a new msgCompose object!\n");	
 	}
 }
 
@@ -111,8 +102,7 @@ function ComposeExit()
 	dump("\nComposeExit from XUL\n");
 
 	//editor appcore knows how to shutdown the application, just use it...
-	if (editorAppCore)
-		editorAppCore.exit();
+	window.editorShell.Exit();
 }
 
 function SetDocumentCharacterSet(aCharset)
