@@ -105,12 +105,12 @@ public:
 };
 
 
-#define PAGE_URL_FOR_JAVASCRIPT "http://cgi.netscape.com/cgi-bin/plugins/get_plugin.cgi"
+#define PAGE_URL_FOR_JAVASCRIPT "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi"
 
-#define PLUGINFINDER_COMMAND_BEGINNING "javascript:window.open(\""
-#define PLUGINFINDER_COMMAND_END "\",\"plugin\",\"toolbar=no,status=no,resizable=no,scrollbars=no,height=252,width=626\");"
+#define PLUGINFINDER_COMMAND_BEGINNING ""
+#define PLUGINFINDER_COMMAND_END ""
 #define DEFAULT_PLUGINFINDER_URL "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi"
-#define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html"
+#define JVM_SMARTUPDATE_URL "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi"
 
 #ifdef WIN32
 #define REGISTRY_PLACE "Software\\Netscape\\Netscape Navigator\\Default Plugin"
