@@ -261,7 +261,7 @@
       <!-- observer -->
       <field name="DNDObserver" readonly="true"><![CDATA[
       ({
-        mOuter: null,
+        mOuter: this,
         onDragStart: function (aEvent, aXferData, aDragAction)
         {
           if (this.mOuter.outlinerBody.getAttribute("sortActive") == "true")
@@ -313,7 +313,7 @@
       <!-- nsIController -->
       <field name="controller" readonly="true"><![CDATA[
       ({
-        mOuter: null,
+        mOuter: this,
         
         supportsCommand: function BMOLController_supportsCommand(aCommand) 
         {
@@ -532,7 +532,7 @@
       <!-- nsIXULOutlinerBuilderObserver -->
       <field name="builderObserver"><![CDATA[
       ({
-        mOuter: null,
+        mOuter: this,
         inDropBefore: 1,
         inDropOn: 2,
         inDropAfter: 3,
