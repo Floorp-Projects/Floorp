@@ -153,7 +153,7 @@ NS_IMETHODIMP nsPrefService::Observe(nsISupports *aSubject, const char *aTopic, 
   nsresult rv = NS_OK;
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
-    if (!nsCRT::strcmp(someData, "shutdown-cleanse")) {
+    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       if (mCurrentFile) {
         mCurrentFile->Remove(PR_FALSE);
         NS_RELEASE(mCurrentFile);
