@@ -80,6 +80,7 @@ EXPORTS =     \
 	CRtfDTD.h \
 	nsXIFDTD.h \
 	nsParserCIID.h \
+	nsExpatDTD.h \
   $(NULL)
 
 EXTRA_EXPORTS = \
