@@ -191,16 +191,17 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
     }
   }
   else {
-    //added PR_TRUE to readId() call below to fix bug 46083. The problem was that the tag given
-    //was written <title_> but since we didn't respect the '_', we only saw <title>. Then 
-    //we searched for end title, which never comes (they give </title_>). 
-
     result=aScanner.ReadTagIdentifier(mTextValue);  
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
   if (NS_SUCCEEDED(result) && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
     result = aScanner.SkipWhitespace(mNewlineCount);
+  }
+
+  if (kEOF == result && !aScanner.IsIncremental()) {
+    // Take what we can get.
+    result = NS_OK;
   }
 
   return result;
@@ -285,7 +286,6 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   if (aFlag & NS_IPARSER_FLAG_HTML) {
     nsAutoString theSubstr;
     result=aScanner.ReadTagIdentifier(theSubstr);
-    NS_ENSURE_SUCCESS(result, result);
     
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
     // Save the original tag string if this is user-defined or if we
@@ -297,14 +297,18 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   }
   else {
     result = aScanner.ReadTagIdentifier(mTextValue);
-    NS_ENSURE_SUCCESS(result, result);
 
     mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 
-  if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+  if (NS_SUCCEEDED(result) && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
     result = aScanner.SkipWhitespace(mNewlineCount);
     NS_ENSURE_SUCCESS(result, result);
+  }
+
+  if (kEOF == result && !aScanner.IsIncremental()) {
+    // Take what we can get.
+    result = NS_OK;
   }
 
   return result;
@@ -1674,6 +1678,11 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
   
   if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
     result = aScanner.ReadWhitespace(wsstart, wsend, mNewlineCount);
+    if (kEOF == result && wsstart != wsend) {
+      // Do this here so if this is the final token in the document, we don't
+      // lose the whitespace.
+      aScanner.BindSubstring(mTextKey, wsstart, wsend);
+    }
   }
   else {
     result = aScanner.SkipWhitespace(mNewlineCount);
@@ -1694,6 +1703,11 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
 
     if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       aScanner.BindSubstring(mTextKey, start, end);
+    } 
+    else if (kEOF == result && wsstart != end) {
+      //Capture all of the text (from the beginning of the whitespace to the
+      //end of the document).
+      aScanner.BindSubstring(mTextKey, wsstart, end);
     }
 
     //now it's time to Consume the (optional) value...
@@ -1769,6 +1783,11 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                   }
                 }
               }//if
+              else {
+                //We saw an equal sign but ran out of room looking for a value.
+                mHasEqualWithoutValue=PR_TRUE;
+                mInError=PR_TRUE;
+              }
             }//if
           }//if
           else {
@@ -1819,6 +1838,19 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
 #endif
     }
   }//if
+
+  if (kEOF == result && !aScanner.IsIncremental()) {
+    // This is our run-of-the mill "don't lose content at the end of a 
+    // document" with a slight twist: we don't want to bother returning an
+    // empty attribute key, even if this is the end of the document.
+    if (mTextKey.Length() == 0) {
+      result = NS_ERROR_HTMLPARSER_BADATTRIBUTE;
+    }
+    else {
+      result = NS_OK;
+    }
+  }
+
   return result;
 }
 

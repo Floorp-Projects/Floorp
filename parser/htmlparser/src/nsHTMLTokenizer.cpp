@@ -697,6 +697,10 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
 
   if (NS_FAILED(result)) {
     aToken->SetInError(PR_TRUE);
+
+    if (!aScanner.IsIncremental()) {
+      result = NS_OK;
+    }
   }
 
   aToken->SetAttributeCount(theAttrCount);
@@ -854,6 +858,7 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
 
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken=theAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
+  PRInt32 theDequeSize=mTokenDeque.GetSize(); //remember this for later in case you have to unwind...
   nsresult result=NS_OK;
   
   if(aToken) {
@@ -869,7 +874,6 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
 
     if(kGreaterThan != aChar) {
       result = ConsumeAttributes(aChar, aToken, aScanner);
-      NS_ENSURE_SUCCESS(result, result);
     }
     else {
       aScanner.GetChar(aChar);
@@ -881,6 +885,16 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
         // Target reached. Stop preserving content.
         mPreserveTarget = eHTMLTag_unknown;
         mFlags &= ~NS_IPARSER_FLAG_PRESERVE_CONTENT;
+      }
+    }
+
+    // Do the same thing as we do in ConsumeStartTag. Basically, if we've run
+    // out of room in this *section* of the document, pop all of the tokens
+    // we've consumed this round and wait for more data.
+    if(NS_FAILED(result)) {
+      while(mTokenDeque.GetSize()>theDequeSize) {
+        CToken* theToken=(CToken*)mTokenDeque.Pop();
+        IF_FREE(theToken, mTokenAllocator);
       }
     }
   } //if
