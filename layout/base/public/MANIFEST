@@ -24,6 +24,7 @@ nsISpaceManager.h
 nsFrameList.h
 nsFrameTraversal.h
 nsLayoutAtoms.h
+nsStyleChangeList.h
 nsStyleCoord.h
 nsStyleStruct.h
 nsStyleConsts.h

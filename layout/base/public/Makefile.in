@@ -58,6 +58,7 @@ EXPORTS =				\
 	nsLayoutAtoms.h			\
 	nsFrameList.h			\
 	nsFrameTraversal.h	      \
+	nsStyleChangeList.h			\
 	nsStyleConsts.h			\
 	nsStyleCoord.h			\
 	nsStyleStruct.h			\

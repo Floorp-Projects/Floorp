@@ -45,6 +45,7 @@ CPPSRCS =				\
 	nsPrintPreviewContext.cpp	\
 	nsSpaceManager.cpp		\
 	nsStyleContext.cpp		\
+	nsStyleChangeList.cpp		\
 	nsStyleCoord.cpp		\
 	nsStyleSet.cpp			\
 	nsTextFragment.cpp		\
@@ -82,6 +83,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsPrintPreviewContext.obj	\
 	.\$(OBJDIR)\nsSpaceManager.obj		\
 	.\$(OBJDIR)\nsStyleContext.obj		\
+	.\$(OBJDIR)\nsStyleChangeList.obj		\
 	.\$(OBJDIR)\nsStyleCoord.obj		\
 	.\$(OBJDIR)\nsStyleSet.obj		\
 	.\$(OBJDIR)\nsTextFragment.obj		\

@@ -47,6 +47,7 @@ CPPSRCS = \
 	nsPrintContext.cpp		\
 	nsPrintPreviewContext.cpp	\
 	nsSpaceManager.cpp		\
+	nsStyleChangeList.cpp		\
 	nsStyleCoord.cpp		\
 	nsStyleContext.cpp		\
 	nsStyleSet.cpp			\
