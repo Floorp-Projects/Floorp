@@ -99,7 +99,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_pluglet_mozilla_PlugletInputStream_nativ
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletInputStream.nativeRead: %i bytes read\n", retval));
 
-    env->SetByteArrayRegion(b,off,len,bufElems);
+    env->SetByteArrayRegion(b,off,retval,bufElems);
     free(bufElems);
     return retval;
 }
