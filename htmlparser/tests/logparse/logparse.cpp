@@ -118,27 +118,45 @@ PRBool CompareFiles(const char* aFilename1, const char* aFilename2) {
 
 //----------------------------------------------------------------------
 
+void ComputeTempFilename(const char* anIndexFilename, char* aTempFilename) {
+	if(anIndexFilename) {
+		strcpy(aTempFilename,anIndexFilename);			
+		char* pos=strrchr(aTempFilename,'\\');
+		if(!pos)
+			pos=strrchr(aTempFilename,'/');
+		if(pos) {
+			(*pos)=0;
+			strcat(aTempFilename,"/temp.blx");
+			return;
+		}
+	}
+		//fall back to our last resort...
+	strcpy(aTempFilename,"c:/windows/temp/temp.blx");
+}
+
+//----------------------------------------------------------------------
+
 static const char* kAppName = "logparse ";
 static const char* kOption1 = "Compare baseline file-set";
 static const char* kOption2 = "Generate baseline ";
-static const char* kResultMsg[2] = {" does not match baseline."," matches baseline."};
+static const char* kResultMsg[2] = {" failed!"," ok."};
 
 void ValidateBaselineFiles(const char* anIndexFilename) {
 
 	fstream theIndexFile(anIndexFilename,ios::in | ios::nocreate);
 	char		theFilename[500];
 	char		theBaselineFilename[500];
+	char		theTempFilename[500];
 	PRBool	done=PR_FALSE;
+
+	ComputeTempFilename(anIndexFilename,theTempFilename);
 
 	while(!done) {
 		theIndexFile >> theFilename;
 		theIndexFile >> theBaselineFilename;
 		if(theFilename[0] && theBaselineFilename[0]) {
-			char theTempFile[500];
-			sprintf(theTempFile,theBaselineFilename);
-			strcat(theTempFile,"x");
-			if(0==GenerateBaselineFile(theFilename,theTempFile)) {
-				PRBool matches=CompareFiles(theTempFile,theBaselineFilename);
+			if(0==GenerateBaselineFile(theFilename,theTempFilename)) {
+				PRBool matches=CompareFiles(theTempFilename,theBaselineFilename);
 				cout << theFilename << kResultMsg[matches] << endl;
 			}
 		}
