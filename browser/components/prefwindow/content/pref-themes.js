@@ -133,11 +133,15 @@ function applyTheme()
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   if (oldTheme) {
-    var title = gNavigatorBundle.getString("oldthemetitle");
-    var message = gNavigatorBundle.getString("oldTheme");
+    var navbundle = document.getElementById("bundle_navigator");
+    var brandbundle = document.getElementById("bundle_brand");
+    var title = navbundle.getString("oldthemetitle");
+    var message = navbundle.getString("oldTheme");
+    var list = document.getElementById("skinsList");
+    var themeName = list.selectedItems.length ? list.selectedItems[0] : null;
 
     message = message.replace(/%theme_name%/, themeName.getAttribute("displayName"));
-    message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
+    message = message.replace(/%brand%/g, brandbundle.getString("brandShortName"));
 
     if (promptService.confirm(window, title, message)){
       var inUse = chromeRegistry.isSkinSelected(data.name, true);
@@ -148,11 +152,12 @@ function applyTheme()
                           .createInstance(Components.interfaces.nsISupportsString);
 
       str.data = true;
-      pref.setComplexValue("general.skins.removelist." + data.name,
+      kPrefSvc.setComplexValue("general.skins.removelist." + data.name,
                            Components.interfaces.nsISupportsString, str);
       
       if (inUse)
         chromeRegistry.refreshSkins();
+    list.selectedIndex = 0;
     }
 
     return;
