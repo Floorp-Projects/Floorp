@@ -41,17 +41,17 @@ nsresult nsEditorKeyListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMEventListenerIID)) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMKeyListenerIID)) {
     *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -149,17 +149,17 @@ nsresult nsEditorMouseListener::QueryInterface(REFNSIID aIID, void** aInstancePt
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMEventListenerIID)) {
     *aInstancePtr = (void*)(nsIDOMEventListener*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMMouseListenerIID)) {
     *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

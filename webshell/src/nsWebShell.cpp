@@ -431,44 +431,44 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIWebShellIID)) {
     *aInstancePtr = (void*)(nsIWebShell*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIContentViewerContainerIID)) {
     *aInstancePtr = (void*)(nsIContentViewerContainer*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIScriptContextOwnerIID)) {
     *aInstancePtr = (void*)(nsIScriptContextOwner*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIDocumentLoaderObserverIID)) {
     *aInstancePtr = (void*)(nsIDocumentLoaderObserver*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIWebShellContainerIID)) {
     *aInstancePtr = (void*)(nsIWebShellContainer*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kILinkHandlerIID)) {
     //I added this for plugin support of jumping
     //through links. maybe there is a better way... MMP
     *aInstancePtr = (void*)(nsILinkHandler*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kRefreshURLIID)) {
     *aInstancePtr = (void*)(nsIRefreshUrl*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShell*)this;
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (nsnull != mInnerWindow) {
@@ -486,12 +486,12 @@ nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
 
   if (aIID.Equals(kILinkHandlerIID)) {
     *aInstancePtr = (void*) ((nsILinkHandler*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIScriptContextOwnerIID)) {
     *aInstancePtr = (void*) ((nsIScriptContextOwner*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
 
@@ -620,6 +620,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
                     mDeviceContext, nsnull, nsnull, &widgetInit);
     // Get rid of extra reference count
+	// XXX FIX ME...
     mWindow->Release();
   }
 
@@ -1696,7 +1697,7 @@ nsWebShell::CancelRefreshURLTimers(void) {
         mRefreshments.RemoveElementAt(tmp);
         if (timer) {
             timer->Cancel();
-            timer->Release();
+            NS_RELEASE(timer);
         }
         tmp++;
     }
@@ -1847,7 +1848,7 @@ nsWebShellFactory::QueryInterface(const nsIID &aIID, void **aResult)
     return NS_NOINTERFACE;
   }
 
-  AddRef(); // Increase reference count for caller
+  NS_ADDREF_THIS();  // Increase reference count for caller
   return NS_OK;
 }
 
@@ -1884,7 +1885,7 @@ nsWebShellFactory::CreateInstance(nsISupports *aOuter,
     goto done;
   }
 
-  inst = new nsWebShell();
+  NS_NEWXPCOM(inst, nsWebShell);
   if (inst == NULL) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto done;

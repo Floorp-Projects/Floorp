@@ -99,12 +99,12 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   }
   if (aIID.Equals(kINetContainerApplicationIID)) {
     *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;
@@ -275,7 +275,7 @@ NS_IMETHODIMP
 nsViewerApp::ProcessArguments(int argc, char** argv)
 {
   mCrawler = new nsWebCrawler(this);
-  mCrawler->AddRef();
+  NS_ADDREF(mCrawler);
 
   int i;
   for (i = 1; i < argc; i++) {
