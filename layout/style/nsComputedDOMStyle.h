@@ -99,6 +99,10 @@ private:
                              nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue);
 
+  nsresult GetBorderRadiusFor(PRUint8 aSide,
+                              nsIFrame *aFrame,
+                              nsIDOMCSSPrimitiveValue*& aValue);
+
   nsresult GetBorderWidthFor(PRUint8 aSide,
                              nsIFrame *aFrame,
                              nsIDOMCSSPrimitiveValue*& aValue);
@@ -192,6 +196,10 @@ private:
   nsresult GetBorderBottomColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderLeftColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetBorderRightColor(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderRadiusBottomLeft(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderRadiusBottomRight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderRadiusTopLeft(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetBorderRadiusTopRight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetFloatEdge(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   /* Margin Properties */
