@@ -194,6 +194,14 @@ typedef PRUint16 PRUnichar;
   #define HAVE_CPP_UNAMBIGUOUS_STD_NOTEQUAL
 #endif
 
+  /*
+    If the compiler doesn't support |explicit|, we'll just make it go away, trusting
+    that the builds under compilers that do have it will keep us on the straight and narrow.
+  */
+#ifndef HAVE_CPP_EXPLICIT
+  #define explicit
+#endif
+
 #ifdef HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
   #define NS_SPECIALIZE_TEMPLATE  template <>
 #else
