@@ -62,6 +62,7 @@
 #include "nsITableLayout.h"    //selection neccesity
 #include "nsITableCellLayout.h"//  "
 #include "nsIGfxTextControlFrame.h"
+#include "nsINameSpaceManager.h"
 
 // For triple-click pref
 #include "nsIPref.h"
@@ -1025,11 +1026,16 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
     GetContent ( getter_AddRefs(content) );
     if ( content ) {
       do {
-        // are we an anchor? If so, bail out now!
+        // are we an anchor with an href? If so, bail out now!
         nsCOMPtr<nsIAtom> tag;
         content->GetTag(*getter_AddRefs(tag));
-        if ( tag.get() == nsHTMLAtoms::a )
-          return NS_OK;
+        if ( tag.get() == nsHTMLAtoms::a ) {
+          // Fix for bug #53326: Make sure we bail only
+          // in the presence of an href with a value!
+          nsAutoString href;
+          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href))
+            return NS_OK;
+        }
         
         // now try the parent
         nsIContent* parent;
