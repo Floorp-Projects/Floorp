@@ -1821,7 +1821,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_TOP:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_AHLP, nsnull);
   case PROP_VERTICAL_ALIGN:
-    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KP,
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_KLP,
                         kVerticalAlignKTable);
   case PROP_VISIBILITY:
     return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_HK, kVisibilityKTable);
