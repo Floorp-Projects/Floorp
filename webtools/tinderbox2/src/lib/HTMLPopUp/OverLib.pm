@@ -7,8 +7,8 @@
 # Contributed by dominik.stadler@gmx.at 
 
 
-# $Revision: 1.3 $
-# $Date: 2003/04/13 20:44:35 $
+# $Revision: 1.4 $
+# $Date: 2003/04/20 20:25:37 $
 # $Author: kestes%walrus.com $
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/OverLib.pm,v $
 # $Name:  $
@@ -1520,7 +1520,7 @@ sub Link {
       $href .= "HREF=\"javascript:void(0);\"";
   }
   
-    $out .= "<A $name $href $popup>$linktxt</a>";
+    $out .= "<A $name $href $popup>$linktxt</A>";
     
     return $out;
 }

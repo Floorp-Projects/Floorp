@@ -4,8 +4,8 @@
 # windows using javascript layers written by Elena Dykhno.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2002/05/02 23:15:48 $ 
+# $Revision: 1.5 $ 
+# $Date: 2003/04/20 20:25:37 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/PortableLayers.pm,v $ 
 # $Name:  $ 
@@ -284,7 +284,7 @@ sub Link {
 
   }
 
-  $out .= ">$args{'linktxt'}</a>";
+  $out .= ">$args{'linktxt'}</A>";
 
   return $out;
 }

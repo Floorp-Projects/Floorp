@@ -6,8 +6,8 @@
 # portable to all browsers.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2003/02/03 13:43:31 $ 
+# $Revision: 1.3 $ 
+# $Date: 2003/04/20 20:25:36 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaClick.pm,v $ 
 # $Name:  $ 
@@ -361,7 +361,7 @@ sub Link {
                    "");
     }
     
-    $out .= "<A $name $href $popup>$linktxt</a>";
+    $out .= "<A $name $href $popup>$linktxt</A>";
     
     return $out;
 }
