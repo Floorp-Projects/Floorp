@@ -1,12 +1,7 @@
 implementation
 --------------
-* get the ldap sdk unix build cleanly hooked up to the browser build
-  (we'll need to talk to the SDK guys about this -- the quick-n-dirty
-  thing to do might be to just whack some of the Makefile.client files
-  in the SDK; in the long run, autoconfifying it might be better).  
-
-* are we using the right constructs for -lldap40 and -llber40 in 
-  Makefile.in?  (maybe should set up MOZ_LDAP_LIBS?)
+* finish wiring up the unix build glue into the seamonkey build-glue
+  (in progress, dmose)
 
 * get the mac build glue wired up, and make the mac build work
 
@@ -85,6 +80,8 @@ housecleaning
 * change timeout value from PRTime to PRIntervalTime (wouldn't require
   LL_* macros).
 
+* are we using the right constructs for -lldap40 and -llber40 in 
+  Makefile.in?  (maybe should set up MOZ_LDAP_LIBS?)
 
 misc
 ----
@@ -131,4 +128,8 @@ later
 * PSM certs from directory glue(?)
 * secure (& proxied/socksified?) ldap
 * ldap_io_functions for portability? (wait for new mcs code?)
+* make the LDAP C SDK autoconf glue not be a shim and not require
+  nsprpub build infrastructure.  requires work with the LDAP C SDK
+  owners, and shouldn't this shouldn't happen until after the most
+  current ldap SDK code lands in mozilla.org anyway.
 
