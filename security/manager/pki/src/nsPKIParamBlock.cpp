@@ -35,8 +35,7 @@
 
 #include "nsPKIParamBlock.h"
 #include "nsIServiceManager.h"
-
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+#include "nsIDialogParamBlock.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsPKIParamBlock, nsIPKIParamBlock,
                                                nsIDialogParamBlock)
@@ -49,7 +48,7 @@ nsPKIParamBlock::nsPKIParamBlock() : mSupports(nsnull),mNumISupports(0)
 nsresult
 nsPKIParamBlock::Init()
 {
-  mDialogParamBlock = do_CreateInstance(kDialogParamBlockCID);
+  mDialogParamBlock = do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1");
   return (mDialogParamBlock == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
