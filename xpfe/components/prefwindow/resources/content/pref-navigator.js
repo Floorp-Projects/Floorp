@@ -48,7 +48,6 @@ const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
 const WINDOWMEDIATOR_CONTRACTID = "@mozilla.org/appshell/window-mediator;1";
 const PREFSERVICE_CONTRACTID    = "@mozilla.org/preferences-service;1";
 
-var gData;
 var gDefaultPage;
 
 function selectFile()
@@ -112,57 +111,16 @@ function getDefaultPage()
                               nsIPrefLocalizedString).data;
 }
 
-function Startup()
+function locationInputHandler()
 {
-  var radiogroup = document.getElementById("startupPage");
-  radiogroup.addEventListener("RadioStateChange", onRadioCheck, false);
-
-  var textbox = document.getElementById("browserStartupHomepage");
-  textbox.addEventListener("input", updateHomePageButtons, false);
-
   updateHomePageButtons();
-
-  gData = parent.hPrefWindow.wsm.dataManager
-                .pageData["chrome://communicator/content/pref/pref-navigator.xul"];
-
-  if (!("navigatorData" in gData)) {
-    gData.navigatorData = [];
-    gData.navigatorData["startupPage"] = [];
-    gData.navigatorData["startupPage"].changed = false;
-    gData.navigatorData["startupPage"].originalValue = radiogroup.value;
-    gData.navigatorData["startupPage"].value = radiogroup.value;
-  }
-
-  gDefaultPage = getDefaultPage();
-  parent.hPrefWindow.registerOKCallbackFunc(doOnOk);
 }
 
-function doOnOk()
+function Startup()
 {
-  var newPrefValue;
+  updateHomePageButtons();
 
-  // We'll have a null gData if we are clicking OK from a different pref panel.
-  // Doing |if (!gData)| will throw an exception so just try and get the value,
-  // and set gData if we don't yet have it.
-  try {
-    newPrefValue = gData.navigatorData["startupPage"].value;
-  }
-  catch(ex) {
-    gData = parent.hPrefWindow.wsm.dataManager
-                  .pageData["chrome://communicator/content/pref/pref-navigator.xul"];
-    newPrefValue = gData.navigatorData["startupPage"].value;
-  }
-
-  if (gData.navigatorData["startupPage"].changed) {
-    // if our home page isn't the last page visited anymore,
-    // set the last_page_visited to "" for privacy reasons.
-    if (gData.navigatorData["startupPage"].originalValue == 2) {
-      parent.hPrefWindow.setPref("string", "browser.history.last_page_visited", "");
-    }
-    else if (newPrefValue == 2) {
-      parent.hPrefWindow.setPref("string", "browser.history.last_page_visited", getCurrentPage());
-    }
-  }
+  gDefaultPage = getDefaultPage();
 }
 
 function updateHomePageButtons()
@@ -174,9 +132,3 @@ function updateHomePageButtons()
   defaultPageButton.disabled = (homepage == gDefaultPage);
 }
 
-function onRadioCheck(event)
-{
-  gData.navigatorData["startupPage"].value = document.getElementById("startupPage").value;
-  gData.navigatorData["startupPage"].changed =
-    gData.navigatorData["startupPage"].value != gData.navigatorData["startupPage"].originalValue;
-}
