@@ -272,33 +272,9 @@ public:
 
 //----------------------------------------------------------------------
 
-// Temporary factory code to create content objects
-
 static void
-GetAttributeValueAt(const nsIParserNode& aNode,
-                    PRInt32 aIndex,
-                    nsString& aResult,
-                    nsIScriptContextOwner* aScriptContextOwner)
+ReduceEntities(nsString& aString)
 {
-  // Copy value
-  const nsString& value = aNode.GetValueAt(aIndex);
-  aResult.Truncate();
-  aResult.Append(value);
-
-  // Strip quotes if present
-  PRUnichar first = aResult.First();
-  if ((first == '"') || (first == '\'')) {
-    if (aResult.Last() == first) {
-      aResult.Cut(0, 1);
-      PRInt32 pos = aResult.Length() - 1;
-      if (pos >= 0) {
-        aResult.Cut(pos, 1);
-      }
-    } else {
-      // Mismatched quotes - leave them in
-    }
-  }
-
   // Reduce any entities
   // XXX Note: as coded today, this will only convert well formed
   // entities.  This may not be compatible enough.
@@ -307,21 +283,21 @@ GetAttributeValueAt(const nsIParserNode& aNode,
   // so we should add a translate numeric entity method from the parser...
   char cbuf[100];
   PRInt32 index = 0;
-  while (index < aResult.Length()) {
+  while (index < aString.Length()) {
     // If we have the start of an entity (and it's not at the end of
     // our string) then translate the entity into it's unicode value.
-    if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
+    if ((aString.CharAt(index++) == '&') && (index < aString.Length())) {
       PRInt32 start = index - 1;
-      PRUnichar e = aResult.CharAt(index);
+      PRUnichar e = aString.CharAt(index);
       if (e == '#') {
         // Convert a numeric character reference
         index++;
         char* cp = cbuf;
         char* limit = cp + sizeof(cbuf) - 1;
         PRBool ok = PR_FALSE;
-        PRInt32 slen = aResult.Length();
+        PRInt32 slen = aString.Length();
         while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aResult.CharAt(index);
+          PRUnichar e = aString.CharAt(index);
           if (e == ';') {
             index++;
             ok = PR_TRUE;
@@ -348,8 +324,8 @@ GetAttributeValueAt(const nsIParserNode& aNode,
 
         // Remove entity from string and replace it with the integer
         // value.
-        aResult.Cut(start, index - start);
-        aResult.Insert(PRUnichar(ch), start);
+        aString.Cut(start, index - start);
+        aString.Insert(PRUnichar(ch), start);
         index = start + 1;
       }
       else if (((e >= 'A') && (e <= 'Z')) ||
@@ -360,9 +336,9 @@ GetAttributeValueAt(const nsIParserNode& aNode,
         char* limit = cp + sizeof(cbuf) - 1;
         *cp++ = char(e);
         PRBool ok = PR_FALSE;
-        PRInt32 slen = aResult.Length();
+        PRInt32 slen = aString.Length();
         while ((index < slen) && (cp < limit)) {
-          PRUnichar e = aResult.CharAt(index);
+          PRUnichar e = aString.CharAt(index);
           if (e == ';') {
             index++;
             ok = PR_TRUE;
@@ -388,8 +364,8 @@ GetAttributeValueAt(const nsIParserNode& aNode,
 
         // Remove entity from string and replace it with the integer
         // value.
-        aResult.Cut(start, index - start);
-        aResult.Insert(PRUnichar(ch), start);
+        aString.Cut(start, index - start);
+        aString.Insert(PRUnichar(ch), start);
         index = start + 1;
       }
       else if (e == '{') {
@@ -398,6 +374,35 @@ GetAttributeValueAt(const nsIParserNode& aNode,
       }
     }
   }
+}
+
+// Temporary factory code to create content objects
+
+static void
+GetAttributeValueAt(const nsIParserNode& aNode,
+                    PRInt32 aIndex,
+                    nsString& aResult,
+                    nsIScriptContextOwner* aScriptContextOwner)
+{
+  // Copy value
+  const nsString& value = aNode.GetValueAt(aIndex);
+  aResult.Truncate();
+  aResult.Append(value);
+
+  // Strip quotes if present
+  PRUnichar first = aResult.First();
+  if ((first == '"') || (first == '\'')) {
+    if (aResult.Last() == first) {
+      aResult.Cut(0, 1);
+      PRInt32 pos = aResult.Length() - 1;
+      if (pos >= 0) {
+        aResult.Cut(pos, 1);
+      }
+    } else {
+      // Mismatched quotes - leave them in
+    }
+  }
+  ReduceEntities(aResult);
 }
 
 static PRBool
@@ -1454,6 +1459,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   else {
     *mTitle = aValue;
   }
+  ReduceEntities(*mTitle);
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
   ((nsHTMLDocument*)mDocument)->SetTitle(*mTitle);
 
