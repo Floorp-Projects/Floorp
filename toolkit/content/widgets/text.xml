@@ -138,24 +138,27 @@
       <property name="accessKey">
         <getter>
           <![CDATA[
-            var accessKey = this.getAttribute('accesskey');
+            var accessKey = null;
+            var labeledEl = this.labeledControlElement;
+            if (labeledEl) {
+              accessKey = labeledEl.getAttribute('accesskey');
+            }
             if (!accessKey) {
-              var labeledEl = this.labeledControlElement;
-              if (labeledEl) {
-                accessKey = labeledEl.getAttribute('accesskey');
-              }
+              accessKey = this.getAttribute('accesskey');
             }
             return accessKey ? accessKey[0] : null;
           ]]>
         </getter>
         <setter>
           <![CDATA[
-            // If the control already has an accesskey store it there as well
+            // If this label already has an accesskey attribute store it here as well
+            if (this.hasAttribute('accesskey')) {
+              this.setAttribute('accesskey', val);
+            }
             var control = this.labeledControlElement;
-            if (control && control.hasAttribute('accesskey')) {
+            if (control) {
               control.setAttribute('accesskey', val);
             }
-            this.setAttribute('accesskey', val);
             this.formatAccessKey();
             return val;
           ]]>
