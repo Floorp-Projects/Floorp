@@ -18,6 +18,14 @@
 #include "nsSelection.h"
 #include "nsISelection.h"
 
+NS_LAYOUT nsresult
+NS_NewSelection(nsISelection** aInstancePtrResult)
+{
+  static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
+  nsSelection * sel = new nsSelection();
+  return sel->QueryInterface(kISelectionIID, (void**) aInstancePtrResult);
+}
+
 nsresult nsSelection::QueryInterface(const nsIID& aIID,
                                      void** aInstancePtrResult)
 {
@@ -28,13 +36,14 @@ nsresult nsSelection::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kISelectionIID)) {
     *aInstancePtrResult = (void*) ((nsISelection*)this);
-    //AddRef();
+    AddRef();
     return NS_OK;
   }
   return !NS_OK;
 }
 
 nsSelection::nsSelection() {
+  NS_INIT_REFCNT();
   mRange = new nsSelectionRange();
 } 
 
