@@ -130,6 +130,7 @@ public:
   NS_IMETHOD  GetScrollbarVisibility(nsIPresContext* aPresContext,
                                      PRBool *aVerticalVisible,
                                      PRBool *aHorizontalVisible) const;
+  NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult);
 
   NS_IMETHOD GetScrollPosition(nsIPresContext* aContext, nscoord &aX, nscoord& aY) const;
   NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags);
