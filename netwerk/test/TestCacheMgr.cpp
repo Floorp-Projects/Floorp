@@ -286,7 +286,7 @@ TestReadStream(nsICachedNetData *cacheEntry, nsITestDataStream *testDataStream,
     nsresult rv;
     PRUint32 actualContentLength;
 
-    rv = cacheEntry->NewChannel(0, 0, getter_AddRefs(channel));
+    rv = cacheEntry->NewChannel(0, getter_AddRefs(channel));
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
     rv = cacheEntry->GetStoredContentLength(&actualContentLength);
@@ -489,7 +489,7 @@ FillCache(nsINetDataCacheManager *aCache, PRUint32 aFlags, PRUint32 aCacheCapaci
         // Cache manager complains if expiration set without setting last-modified time
         rv = cacheEntry->SetLastModifiedTime(expirationTime);
 
-        rv = cacheEntry->NewChannel(0, 0, getter_AddRefs(channel));
+        rv = cacheEntry->NewChannel(0, getter_AddRefs(channel));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
         rv = cacheEntry->GetCache(getter_AddRefs(containingCache));
