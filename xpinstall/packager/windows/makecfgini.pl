@@ -91,6 +91,7 @@ $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
+$fileUninstallZip = $ENV{WIZ_fileUninstallZip};
 
 $inDomain;
 $inRedirDomain;
@@ -129,9 +130,9 @@ while($line = <fpInIt>)
       $componentName    = $colonSplit[1];
       chop($componentName);
 
-      if($componentName =~ /\$UninstallFile\$/i)
+      if($componentName =~ /\$UninstallFileZip\$/i)
       {
-        $installSize = OutputInstallSizeArchive("$inXpiPath\\$fileUninstall");
+        $installSize = OutputInstallSizeArchive("$inXpiPath\\$fileUninstallZip") * 2;
       }
       else
       {
@@ -170,7 +171,7 @@ while($line = <fpInIt>)
     {
       $componentName = $colonSplit[1];
       chop($componentName);
-      $componentName      =~ s/\$UninstallFile\$/$fileUninstall/gi;
+      $componentName      =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
       $installSizeArchive = OutputInstallSizeArchive("$inXpiPath\\$componentName");
     }
 
@@ -194,6 +195,7 @@ while($line = <fpInIt>)
     $line =~ s/\$ProductName\$/$nameProduct/gi;
     $line =~ s/\$MainExeFile\$/$fileMainExe/gi;
     $line =~ s/\$UninstallFile\$/$fileUninstall/gi;
+    $line =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
     print fpOutIni $line;
   }
 }

@@ -38,6 +38,8 @@ void              LogISXPInstallComponent(char *szComponentName);
 void              LogISXPInstallComponentResult(DWORD dwErrorNumber);
 void              LogISLaunchApps(int iWhen);
 void              LogISLaunchAppsComponent(char *szComponentName);
+void              LogISLaunchAppsComponentUncompress(char *szComponentName,
+                                                     DWORD dwErr);
 void              LogISProcessXpcomFile(int iStatus, int iResult);
 void              LogISDiskSpace(dsN *dsnComponentDSRequirement);
 void              LogISTurboMode(BOOL bTurboMode);

@@ -607,10 +607,10 @@ OS=NT51
 Description Short=$CompanyName$ Uninstaller
 ;*** LOCALIZE ME BABY ***
 Description Long=Uninstaller for $ProductName$
-Archive=$UninstallFile$
-$InstallSize$:$UninstallFile$
+Archive=$UninstallFileZip$
+$InstallSize$:$UninstallFileZip$
 $InstallSizeSystem$
-$InstallSizeArchive$:$UninstallFile$
+$InstallSizeArchive$:$UninstallFileZip$
 Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
 
 ;Since the uninstaller program is going to be installed into the Windows folder,
@@ -741,35 +741,25 @@ Message=
 ;                      the app runs once upon windows reboot.
 
 ;Uncompress FileX sections
-;[Uncompress File0]
-;Timing=post download
-;Source=[XPI PATH]\xpcom.xpi
-;Destination=[SETUP PATH]
-;Message=Configuring Seamonkey, please wait...
+[Uncompress File0]
+Timing=post smartupdate
+Source=[XPI PATH]\$UninstallFileZip$
+Destination=[WINDIR]
+;*** LOCALIZE ME BABY ***
+Message=Installing the uninstaller, please wait...
+Only If Exists=FALSE
 
-;[Uncompress File1]
-;Timing=post download
-;Source=[XPI PATH]\extratest.xpi
-;Destination=[SETUP PATH]
-;Message=Configuring Extra test files, please wait...
-
-;Move FileX sections
-;[Move File0]
-;Timing=post download
-;Source=[SETUP PATH]\bin\*
-;Destination=[SETUP PATH]\program
-
-;[Move File1]
-;Timing=post download
-;Source=[SETUP PATH]\ftmain\*
-;Destination=[SETUP PATH]\program
 
 ;Copy FileX sections
+;Copy the uninstaller to the [Setup Path]\Uninstall folder.
+;This copy is to be used when the user installed on a system with
+;restricted access.
 [Copy File0]
-Timing=post launchapp
-Source=[JRE BIN PATH]\np*.dll
-Destination=[SETUP PATH]\Plugins
+Timing=post smartupdate
+Source=[WINDIR]\$UninstallFile$
+Destination=[SETUP PATH]\Uninstall
 Fail If Exists=FALSE
+Do Not Uninstall=FALSE
 
 [Copy File1]
 Timing=post smartupdate
@@ -777,16 +767,6 @@ Source=[XPI PATH]\$UninstallFile$
 Destination=[WINDIR]
 Fail If Exists=FALSE
 Do Not Uninstall=TRUE
-
-;Copy the uninstaller to the [Setup Path]\Uninstall folder.
-;This copy is to be used when the user installed on a system with
-;restricted access.
-[Copy File2]
-Timing=post smartupdate
-Source=[XPI PATH]\$UninstallFile$
-Destination=[SETUP PATH]\Uninstall
-Fail If Exists=FALSE
-Do Not Uninstall=FALSE
 
 
 ;Copy File SequentialX sections

@@ -195,6 +195,7 @@ typedef int PRInt32;
 #define SIC_FORCE_UPGRADE               0x00000080
 #define SIC_IGNORE_DOWNLOAD_ERROR       0x00000100
 #define SIC_IGNORE_XPINSTALL_ERROR      0x00000200
+#define SIC_UNCOMPRESS                  0x00000400
 
 /* AC: Additional Components */
 #define AC_NONE                         0
@@ -414,6 +415,7 @@ struct sinfoComponent
   long            lRandomInstallValue;
   DWORD           dwAttributes;
   LPSTR           szArchiveName;
+  LPSTR           szArchiveNameUncompressed;
   LPSTR           szArchivePath;
   LPSTR           szDestinationPath;
   LPSTR           szDescriptionShort;

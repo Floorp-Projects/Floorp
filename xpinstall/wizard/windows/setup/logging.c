@@ -382,7 +382,15 @@ void LogISLaunchAppsComponent(char *szComponentName)
 {
   char szBuf[MAX_BUF];
 
-  wsprintf(szBuf, "        %s\n", szComponentName);
+  wsprintf(szBuf, "        launching %s\n", szComponentName);
+  UpdateInstallStatusLog(szBuf);
+}
+
+void LogISLaunchAppsComponentUncompress(char *szComponentName, DWORD dwErr)
+{
+  char szBuf[MAX_BUF];
+
+  wsprintf(szBuf, "        uncompressing %s: %d\n", szComponentName, dwErr);
   UpdateInstallStatusLog(szBuf);
 }
 
