@@ -353,7 +353,7 @@ PRBool TypeInState::IsPropCleared(nsIAtom *aProp,
 {
   if (FindPropInList(aProp, aAttr, aValue, mClearedArray, outIndex))
     return PR_TRUE;
-  if (FindPropInList(0, 0, 0, mClearedArray, outIndex))
+  if (FindPropInList(0, nsAutoString(), nsAutoString(), mClearedArray, outIndex))
   {
     // special case for all props cleared
     outIndex = -1;

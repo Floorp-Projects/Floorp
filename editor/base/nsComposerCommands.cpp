@@ -78,7 +78,7 @@ nsBaseComposerCommand::GetCommandNodeState(const PRUnichar *aCommand, nsIEditorS
   GetInterfaceNode(aCommand, editorShell, getter_AddRefs(uiNode));
   if (!uiNode) return NS_ERROR_FAILURE;
 
-  return uiNode->GetAttribute(NS_ConvertASCIItoUCS2("state").GetUnicode(), outNodeState);
+  return uiNode->GetAttribute(NS_ConvertASCIItoUCS2("state"), outNodeState);
 }
 
 
@@ -91,7 +91,7 @@ nsBaseComposerCommand::SetCommandNodeState(const PRUnichar *aCommand, nsIEditorS
   GetInterfaceNode(aCommand, editorShell, getter_AddRefs(uiNode));
   if (!uiNode) return NS_ERROR_FAILURE;
   
-  return uiNode->SetAttribute(NS_ConvertASCIItoUCS2("state").GetUnicode(), inNodeState);
+  return uiNode->SetAttribute(NS_ConvertASCIItoUCS2("state"), inNodeState);
 }
 
 
