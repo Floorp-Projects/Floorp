@@ -61,7 +61,7 @@ if(!(-e "$inStagePath"))
 # Make sure inDestPath exists
 if(!(-e "$inDistPath"))
 {
-  system("mkdir $inDestPath");
+  mkdir ("$inDestPath",0775);
 }
 
 # Make .js files
@@ -80,7 +80,7 @@ if(-e "$inDistPath\\setup")
 }
 else
 {
-  system("mkdir $inDistPath\\setup");
+  mkdir ("$inDistPath\\setup",0775);
 }
 
 # Copy the setup files to the dist setup directory.
