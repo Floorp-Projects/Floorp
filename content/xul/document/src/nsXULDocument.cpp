@@ -1952,7 +1952,29 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
     }
 
     // See if we need to attach a XUL template to this node
-    return CheckTemplateBuilder(aElement);
+    PRBool needsHookup;
+    nsresult rv = CheckTemplateBuilderHookup(aElement, &needsHookup);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (needsHookup) {
+        if (mResolutionPhase == nsForwardReference::eDone) {
+            rv = CreateTemplateBuilder(aElement);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+        else {
+            TemplateBuilderHookup* hookup = new TemplateBuilderHookup(aElement);
+            if (! hookup)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            rv = AddForwardReference(hookup);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3576,116 +3598,119 @@ nsXULDocument::AddAttributes(nsXULPrototypeElement* aPrototype,
 
 
 nsresult
-nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
+nsXULDocument::CheckTemplateBuilderHookup(nsIContent* aElement,
+                                          PRBool* aNeedsHookup)
 {
-    // Check aElement for a 'datasources' attribute, and if it has
-    // one, create and initialize a template builder.
-    nsresult rv;
-
     // See if the element already has a `database' attribute. If it
     // does, then the template builder has already been created.
     //
-    // XXX this approach will crash and burn (well, maybe not _that_
+    // XXX This approach will crash and burn (well, maybe not _that_
     // bad) if aElement is not a XUL element.
-    nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(aElement);
-    if (xulele) {
+    //
+    // XXXvarga Do we still want to support non XUL content?
+    nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(aElement);
+    if (xulElement) {
         nsCOMPtr<nsIRDFCompositeDataSource> ds;
-        xulele->GetDatabase(getter_AddRefs(ds));
-        if (ds)
-            return NS_OK;
-    }
-
-    nsAutoString datasources;
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::datasources,
-                           datasources);
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        return NS_OK;
-
-    // Get the document and its URL
-    nsCOMPtr<nsIDocument> doc;
-    aElement->GetDocument(*getter_AddRefs(doc));
-    NS_ASSERTION(doc != nsnull, "no document");
-    if (! doc)
-        return NS_ERROR_UNEXPECTED;
-
-    // construct a new builder
-    PRInt32 nameSpaceID = 0;
-    nsCOMPtr<nsIAtom> baseTag;
-
-    nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
-    if (xblService)
-        xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
-
-    // By default, we build content for an tree and then we attach
-    // the tree content view. However, if the `dont-build-content'
-    // flag is set, then we we'll attach an tree builder which
-    // directly implements the tree view.
-    // XXXwaterson maybe we should do the latter by default: it ought
-    // to reduce the footprint a great deal.
-    if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::tree)) {
-        nsAutoString flags;
-        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
-        if (flags.Find(NS_LITERAL_STRING("dont-build-content")) >= 0) {
-            nsCOMPtr<nsIXULTemplateBuilder> builder =
-                do_CreateInstance("@mozilla.org/xul/xul-tree-builder;1");
-
-            if (! builder)
-                return NS_ERROR_FAILURE;
-
-            builder->Init(aElement);
-
-            // Because the tree box object won't be created until the
-            // frame is available, we need to tuck the template builder
-            // away in the binding manager so there's at least one
-            // reference to it.
-            nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-            if (xuldoc)
-                xuldoc->SetTemplateBuilderFor(aElement, builder);
-
-            // Force an <treechildren> to be created if one isn't
-            // there already: this is the only way to create an
-            // <treebody> for the rdfliner.
-            nsCOMPtr<nsIContent> bodyContent;
-            nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL,
-                                              nsXULAtoms::treechildren,
-                                              getter_AddRefs(bodyContent));
-
-            if (! bodyContent) {
-                nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc);
-                if (domdoc) {
-                    nsCOMPtr<nsIDOMElement> bodyElement;
-                    domdoc->CreateElement(NS_LITERAL_STRING("treechildren"),
-                                          getter_AddRefs(bodyElement));
-
-                    bodyContent = do_QueryInterface(bodyElement);
-                    aElement->AppendChildTo(bodyContent, PR_FALSE, PR_TRUE);
-                }
-            }
-
+        xulElement->GetDatabase(getter_AddRefs(ds));
+        if (ds) {
+            *aNeedsHookup = PR_FALSE;
             return NS_OK;
         }
     }
 
-    // Create and initialize a content builder.
-    nsCOMPtr<nsIXULTemplateBuilder> builder
-        = do_CreateInstance("@mozilla.org/xul/xul-template-builder;1");
+    // Check aElement for a 'datasources' attribute, if it has
+    // one a XUL template builder needs to be hooked up.
+    *aNeedsHookup = aElement->HasAttr(kNameSpaceID_None,
+                                      nsXULAtoms::datasources);
+    return NS_OK;
+}
 
-    if (! builder)
-        return NS_ERROR_FAILURE;
+nsresult
+nsXULDocument::CreateTemplateBuilder(nsIContent* aElement)
+{
+    // Check if need to construct a tree builder or content builder.
+    PRBool isTreeBuilder = PR_FALSE;
 
-    builder->Init(aElement);
+    PRInt32 nameSpaceID;
+    nsCOMPtr<nsIAtom> baseTag;
 
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-    if (xulcontent) {
-        // Mark the XUL element as being lazy, so the template builder
-        // will run when layout first asks for these nodes.
-        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+    nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1");
+    if (xblService) {
+        xblService->ResolveTag(aElement, &nameSpaceID, getter_AddRefs(baseTag));
     }
     else {
-        // Force construction of immediate template sub-content _now_.
-        builder->CreateContents(aElement);
+        aElement->GetNameSpaceID(nameSpaceID);
+        aElement->GetTag(*getter_AddRefs(baseTag));
+    }
+
+    if ((nameSpaceID == kNameSpaceID_XUL) && (baseTag == nsXULAtoms::tree)) {
+        // By default, we build content for a tree and then we attach
+        // the tree content view. However, if the `dont-build-content'
+        // flag is set, then we we'll attach a tree builder which
+        // directly implements the tree view.
+
+        nsAutoString flags;
+        aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::flags, flags);
+        if (flags.Find(NS_LITERAL_STRING("dont-build-content")) >= 0) {
+            isTreeBuilder = PR_TRUE;
+        }
+    }
+
+    if (isTreeBuilder) {
+        // Create and initialize a tree builder.
+        nsCOMPtr<nsIXULTemplateBuilder> builder =
+            do_CreateInstance("@mozilla.org/xul/xul-tree-builder;1");
+
+        if (! builder)
+            return NS_ERROR_FAILURE;
+
+        builder->Init(aElement);
+
+        // Create a <treechildren> if one isn't there already.
+        nsCOMPtr<nsIContent> bodyContent;
+        nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL,
+                                          nsXULAtoms::treechildren,
+                                          getter_AddRefs(bodyContent));
+
+        if (! bodyContent) {
+            // Get the document.
+            nsCOMPtr<nsIDocument> doc;
+            aElement->GetDocument(*getter_AddRefs(doc));
+            NS_ASSERTION(doc, "no document");
+            if (! doc)
+                return NS_ERROR_UNEXPECTED;
+
+            nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc);
+            if (domdoc) {
+                nsCOMPtr<nsIDOMElement> bodyElement;
+                domdoc->CreateElement(NS_LITERAL_STRING("treechildren"),
+                                      getter_AddRefs(bodyElement));
+
+                bodyContent = do_QueryInterface(bodyElement);
+                aElement->AppendChildTo(bodyContent, PR_FALSE, PR_TRUE);
+            }
+        }
+    }
+    else {
+        // Create and initialize a content builder.
+        nsCOMPtr<nsIXULTemplateBuilder> builder
+            = do_CreateInstance("@mozilla.org/xul/xul-template-builder;1");
+
+        if (! builder)
+            return NS_ERROR_FAILURE;
+
+        builder->Init(aElement);
+
+        nsCOMPtr<nsIXULContent> xulContent = do_QueryInterface(aElement);
+        if (xulContent) {
+            // Mark the XUL element as being lazy, so the template builder
+            // will run when layout first asks for these nodes.
+            xulContent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+        }
+        else {
+            // Force construction of immediate template sub-content _now_.
+            builder->CreateContents(aElement);
+        }
     }
 
     return NS_OK;
@@ -4032,6 +4057,29 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
                 broadcasteridC.get()));
     }
 #endif
+}
+
+
+//----------------------------------------------------------------------
+//
+// nsXULDocument::TemplateBuilderHookup
+//
+
+nsForwardReference::Result
+nsXULDocument::TemplateBuilderHookup::Resolve()
+{
+    PRBool needsHookup;
+    nsresult rv = CheckTemplateBuilderHookup(mElement, &needsHookup);
+    if (NS_FAILED(rv))
+        return eResolve_Error;
+
+    if (needsHookup) {
+        rv = CreateTemplateBuilder(mElement);
+        if (NS_FAILED(rv))
+            return eResolve_Error;
+    }
+
+    return eResolve_Succeeded;
 }
 
 
