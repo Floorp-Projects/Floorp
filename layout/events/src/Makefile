@@ -40,5 +40,7 @@ include $(DEPTH)/config/config.mk
 
 INCLUDES += -I$(PUBLIC)/dom
 
+MKSHLIB :=
+
 include $(DEPTH)/config/rules.mk
 
