@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.49 $ 
-# $Date: 2002/05/06 23:38:38 $ 
+# $Revision: 1.50 $ 
+# $Date: 2002/05/06 23:51:43 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.49 $ )[1];
+$VERSION = ( qw $Revision: 1.50 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -426,14 +426,15 @@ sub status_table_row {
                      " -->\n");
    return @outrow;
   }
-    
+
   # create a multi-row dummy cell for missing data?
-  # cell stops if there is data or the treestate changes.
+  # cell stops if there is author data in the following cell or the
+  # treestate changes.
 
   # first find out what time the break will occur at.
 
   while (
-         ( $DB_TIMES[$NEXT_DB{$tree}] > $row_times->[$row_index+1] ) &&
+         ( $DB_TIMES[$NEXT_DB{$tree}] >= $row_times->[$#{$row_times}] ) &&
 
          (!(
             is_break_cell(
@@ -445,9 +446,6 @@ sub status_table_row {
     ) {
     $NEXT_DB{$tree}++
   }
-
-  $next_time = $DB_TIMES[$NEXT_DB{$tree}];
-
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
@@ -472,6 +470,7 @@ sub status_table_row {
   }
 
   # Do we need a multiline empty cell or do we have data?
+  $next_time = $DB_TIMES[$NEXT_DB{$tree}];
 
   if ( 
        (!(defined($DATABASE{$tree}{$next_time}{'author'}))) ||
@@ -502,6 +501,7 @@ sub status_table_row {
                      "$EMPTY_TABLE_CELL</td>\n");
 
       $NEXT_ROW{$tree} = $row_index + $rowspan;
+      $NEXT_DB{$tree}++
 
       return @outrow;
   }
