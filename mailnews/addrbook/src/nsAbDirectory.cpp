@@ -35,9 +35,6 @@
 #include "nsIAddrBookSession.h"
 #include "nsIAddressBook.h"
 
-#include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "mdb.h"
 #include "prlog.h"
 #include "prprf.h"
@@ -49,7 +46,6 @@ extern const char *kDirectoryDataSourceRoot;
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARD_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAddrBookCID, NS_ADDRESSBOOK_CID);
 
