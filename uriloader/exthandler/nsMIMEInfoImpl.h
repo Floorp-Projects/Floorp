@@ -45,7 +45,7 @@ class nsMIMEInfoImpl : public nsIMIMEInfo {
     nsCOMPtr<nsIURI>    mURI;         // URI pointing to data associated w/ this obj      
 		PRUint32						mMacType, mMacCreator; // Mac file type and creator
 protected:
-    nsString					 mMIMEType;
+    nsCString					 mMIMEType;
 
 };
 

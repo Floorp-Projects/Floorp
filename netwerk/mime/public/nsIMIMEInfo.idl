@@ -53,6 +53,10 @@ interface nsIMIMEInfo : nsISupports {
 	void GetFileExtensions(out PRInt32 elementCount,
                            [array, size_is(elementCount)] out string extensions);
 
+ 		/* Set File Extensions. Input is a comma deliminated list of extensions
+ 		*/
+ 		void SetFileExtensions( in string aExtensions );
+ 
     /* Returns whether or not the given extension is
      * associated with this MIME info.
      *
