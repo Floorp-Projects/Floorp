@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/accounttree.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/accounttree.dtd" >
 <window	xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
