@@ -29,13 +29,14 @@
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
 
 // Use this trick temporarily, to minimize delta to nsBrowserAppCore.cpp.
 #define nsBrowserAppCore nsBrowserInstance
 
 #include "nsIWebShell.h"
-#include "nsIDocShell.h"
-#include "nsIWebNavigation.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIClipboardCommands.h"
 #include "pratom.h"
@@ -53,6 +54,7 @@
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsCOMPtr.h"
@@ -172,10 +174,10 @@ static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
 static nsresult
-FindNamedXULElement(nsIWebShell * aShell, const char *aId, nsCOMPtr<nsIDOMElement> * aResult );
+FindNamedXULElement(nsIDocShell * aShell, const char *aId, nsCOMPtr<nsIDOMElement> * aResult );
 
 
-static nsresult setAttribute( nsIWebShell *shell,
+static nsresult setAttribute( nsIDocShell *shell,
                               const char *id,
                               const char *name,
                               const nsString &value );
@@ -188,7 +190,7 @@ nsBrowserAppCore::nsBrowserAppCore() : mIsClosed(PR_FALSE)
   mContentWindow        = nsnull;
   mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
-  mWebShell             = nsnull;
+  mDocShell             = nsnull;
   mContentAreaWebShell  = nsnull;
   mContentAreaDocLoader = nsnull;
   mSHistory             = nsnull;
@@ -331,7 +333,7 @@ nsBrowserAppCore::Stop()
   nsAutoString v( "false" );
   // XXX: The throbber should be turned off when the OnStopDocumentLoad 
   //      notification is received 
-  setAttribute( mWebShell, "Browser:Throbber", "busy", v );
+  setAttribute( mDocShell, "Browser:Throbber", "busy", v );
   return NS_OK;
 }
 
@@ -365,7 +367,7 @@ nsBrowserAppCore::BackButtonPopup()
 
  // Get handle to the "backbuttonpopup" element
   nsCOMPtr<nsIDOMElement>   backPopupElement;
-  nsresult rv = FindNamedXULElement(mWebShell, "backbuttonpopup", &backPopupElement);
+  nsresult rv = FindNamedXULElement(mDocShell, "backbuttonpopup", &backPopupElement);
 
   if (!NS_SUCCEEDED(rv) ||  !backPopupElement)
   {
@@ -520,7 +522,7 @@ nsBrowserAppCore::ForwardButtonPopup()
 
  // Get handle to the "forwardbuttonpopup" element
   nsCOMPtr<nsIDOMElement>   forwardPopupElement;
-  nsresult rv = FindNamedXULElement(mWebShell, "forwardbuttonpopup", &forwardPopupElement);
+  nsresult rv = FindNamedXULElement(mDocShell, "forwardbuttonpopup", &forwardPopupElement);
 
   if (!NS_SUCCEEDED(rv) ||  !forwardPopupElement)
   {
@@ -599,7 +601,7 @@ nsBrowserAppCore::UpdateGoMenu()
 
   // Get handle to the "main-menubar" element
   nsCOMPtr<nsIDOMElement>   mainMenubarElement;
-  nsresult rv = FindNamedXULElement(mWebShell, "main-menubar", &mainMenubarElement);
+  nsresult rv = FindNamedXULElement(mDocShell, "main-menubar", &mainMenubarElement);
 
   if (!NS_SUCCEEDED(rv) ||  !mainMenubarElement)
   {
@@ -1210,7 +1212,7 @@ nsBrowserAppCore::LoadInitialPage(void)
 
   nsCOMPtr<nsIDOMElement>    argsElement;
 
-  rv = FindNamedXULElement(mWebShell, "args", &argsElement);
+  rv = FindNamedXULElement(mDocShell, "args", &argsElement);
   if (!argsElement) {
     // Couldn't get the "args" element from the xul file. Load a blank page
     if (APP_DEBUG) printf("Couldn't find args element\n");
@@ -1271,7 +1273,7 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
   if (webShell) {
     mContentAreaWebShell = webShell;
     // NS_ADDREF(mContentAreaWebShell); WE DO NOT OWN THIS
-    webShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+    docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
   if (mSHistory)
        webShell->SetSessionHistory(mSHistory);
 
@@ -1282,8 +1284,9 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
     mContentAreaDocLoader = docLoader.get();
 
-    const PRUnichar * name;
-    webShell->GetName( &name);
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    nsXPIDLString name;
+    docShellAsItem->GetName(getter_Copies(name));
     nsAutoString str(name);
 
     if (APP_DEBUG) {
@@ -1312,22 +1315,23 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   nsCOMPtr<nsIDocShell> docShell;
   globalObj->GetDocShell(getter_AddRefs(docShell));
   if (docShell) {
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-    mWebShell = webShell.get();
-    //NS_ADDREF(mWebShell); WE DO NOT OWN THIS
+    mDocShell = docShell.get();
+    //NS_ADDREF(mDocShell); WE DO NOT OWN THIS
     // inform our top level webshell that we are its parent URI content listener...
     docShell->SetParentURIContentListener(this);
 
-    const PRUnichar * name;
-    webShell->GetName( &name);
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+    nsXPIDLString name;
+    docShellAsItem->GetName(getter_Copies(name));
     nsAutoString str(name);
 
     if (APP_DEBUG) {
       printf("Attaching to WebShellWindow[%s]\n", (const char *)nsCAutoString(str));
     }
 
-    nsIWebShellContainer * webShellContainer;
-    webShell->GetContainer(webShellContainer);
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+    nsCOMPtr<nsIWebShellContainer> webShellContainer;
+    webShell->GetContainer(*getter_AddRefs(webShellContainer));
     if (nsnull != webShellContainer)
     {
       nsCOMPtr<nsIWebShellWindow> webShellWin;
@@ -1335,7 +1339,6 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
       {
         mWebShellWin = webShellWin;   // WE DO NOT OWN THIS
       }
-      NS_RELEASE(webShellContainer);
     }
   }
   return NS_OK;
@@ -1344,12 +1347,12 @@ nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 
 
 // Utility to extract document from a webshell object.
-static nsCOMPtr<nsIDocument> getDocument( nsIWebShell *aWebShell ) {
+static nsCOMPtr<nsIDocument> getDocument( nsIDocShell *aDocShell ) {
     nsCOMPtr<nsIDocument> result;
 
     // Get content viewer from the web shell.
     nsCOMPtr<nsIContentViewer> contentViewer;
-    nsresult rv = aWebShell ? aWebShell->GetContentViewer(getter_AddRefs(contentViewer))
+    nsresult rv = aDocShell ? aDocShell->GetContentViewer(getter_AddRefs(contentViewer))
                             : NS_ERROR_NULL_POINTER;
 
     if ( contentViewer ) {
@@ -1370,7 +1373,7 @@ static nsCOMPtr<nsIDocument> getDocument( nsIWebShell *aWebShell ) {
 }
 
 // Utility to set element attribute.
-static nsresult setAttribute( nsIWebShell *shell,
+static nsresult setAttribute( nsIDocShell *shell,
                               const char *id,
                               const char *name,
                               const nsString &value ) {
@@ -1446,10 +1449,10 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   nsCOMPtr<nsISupports> container;
   aLoader->GetContainer(getter_AddRefs(container));
   if (container) {
-     nsCOMPtr<nsIWebShell>   ws(do_QueryInterface(container));
-   if (ws) {
-       nsCOMPtr<nsIWebShell> parent;
-     ws->GetParent(*getter_AddRefs(parent));
+     nsCOMPtr<nsIDocShellTreeItem>   docShellAsItem(do_QueryInterface(container));
+   if (docShellAsItem) {
+       nsCOMPtr<nsIDocShellTreeItem> parent;
+     docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
      if (parent) 
        isFrame = PR_TRUE;
      }
@@ -1464,30 +1467,30 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
     // XXX Ignore rv for now. They are using nsIEnumerator instead of
     // nsISimpleEnumerator.
     // set the url string in the urlbar only for toplevel pages, not for frames
-  setAttribute( mWebShell, "urlbar", "value", url);
+  setAttribute( mDocShell, "urlbar", "value", url);
   }
 
 
   // Kick start the throbber
   nsAutoString trueStr("true");
   nsAutoString emptyStr;
-  setAttribute( mWebShell, "Browser:Throbber", "busy", trueStr );
+  setAttribute( mDocShell, "Browser:Throbber", "busy", trueStr );
 
   // Enable the Stop buton
-  setAttribute( mWebShell, "canStop", "disabled", emptyStr );
+  setAttribute( mDocShell, "canStop", "disabled", emptyStr );
 
   //Disable the reload button
-  setAttribute(mWebShell, "canReload", "disabled", trueStr);
+  setAttribute(mDocShell, "canReload", "disabled", trueStr);
 
   PRBool result=PR_TRUE;
   // Check with sessionHistory if you can go forward
   CanGoForward(&result);
-  setAttribute(mWebShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
+  setAttribute(mDocShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
 
 
     // Check with sessionHistory if you can go back
   CanGoBack(&result);
-  setAttribute(mWebShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
+  setAttribute(mDocShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
 
 
   nsCRT::free(url);
@@ -1519,13 +1522,13 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 
   PRBool  isFrame=PR_FALSE;
   nsCOMPtr<nsISupports> container;
-  nsCOMPtr<nsIWebShell> webshell, parent;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem, parent;
 
   aLoader->GetContainer(getter_AddRefs(container));
   // Is this a frame ?
-  webshell = do_QueryInterface(container);
-  if (webshell) {
-    webshell->GetParent(*getter_AddRefs(parent));
+  docShellAsItem = do_QueryInterface(container);
+  if (docShellAsItem) {
+    docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
   }
   if (parent)
   isFrame = PR_TRUE;
@@ -1541,8 +1544,9 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   }
 
   /* Inform Session History about the status of the page load */
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShellAsItem));
   if (mSHistory) {
-    mSHistory->UpdateStatus(webshell, (PRInt32) aStatus); 
+    mSHistory->UpdateStatus(webShell, (PRInt32) aStatus); 
   }
   if (mIsLoadingHistory) {
       SetLoadingFlag(PR_FALSE);
@@ -1670,59 +1674,15 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   nsCRT::free(urls);
 #endif
 
-  setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
+  setAttribute( mDocShell, "Browser:Throbber", "busy", "false" );
 
     //Disable the Stop button
-  setAttribute( mWebShell, "canStop", "disabled", "true" );
+  setAttribute( mDocShell, "canStop", "disabled", "true" );
 
   //Enable the reload button
-  setAttribute(mWebShell, "canReload", "disabled", "");
+  setAttribute(mDocShell, "canReload", "disabled", "");
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
-                                           nsIChannel* channel,
-                                           const char *aContentType,
-                                           const char *aCommand )
-{
-    nsresult rv = NS_OK;
-
-    // Turn off the indicators in the chrome.
-    setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
-
-    // Get "unknown content type handler" and have it handle this.
-    nsIUnknownContentTypeHandler *handler;
-    rv = nsServiceManager::GetService( NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID,
-                                       NS_GET_IID(nsIUnknownContentTypeHandler),
-                                       (nsISupports**)&handler );
-
-    if ( NS_SUCCEEDED( rv ) ) {
-        /* Have handler take care of this. */
-        // Get DOM window.
-        nsCOMPtr<nsIDOMWindow> domWindow;
-        rv = mWebShellWin->ConvertWebShellToDOMWindow( mWebShell,
-                                                       getter_AddRefs( domWindow ) );
-        if ( NS_SUCCEEDED( rv ) && domWindow ) {
-            rv = handler->HandleUnknownContentType( channel, aContentType, domWindow );
-        } else {
-            #ifdef NS_DEBUG
-            printf( "%s %d: ConvertWebShellToDOMWindow failed, rv=0x%08X\n",
-                    __FILE__, (int)__LINE__, (int)rv );
-            #endif
-        }
-
-        // Release the unknown content type handler service object.
-        nsServiceManager::ReleaseService( NS_IUNKNOWNCONTENTTYPEHANDLER_PROGID, handler );
-    } else {
-        #ifdef NS_DEBUG
-        printf( "%s %d: GetService failed for unknown content type handler, rv=0x%08X\n",
-                __FILE__, (int)__LINE__, (int)rv );
-        #endif
-    }
-
-    return rv;
 }
 
 NS_IMETHODIMP
@@ -1752,7 +1712,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
 {
-  nsresult rv = setAttribute( mWebShell, "Browser:Status", "value", aMsg );
+  nsresult rv = setAttribute( mDocShell, "Browser:Status", "value", aMsg );
    return rv;
 }
 
@@ -2020,9 +1980,10 @@ nsBrowserAppCore::Copy()
 NS_IMETHODIMP    
 nsBrowserAppCore::Print()
 {  
-  if (mContentAreaWebShell) {
+   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContentAreaWebShell));
+  if (docShell) {
     nsCOMPtr<nsIContentViewer> viewer;    
-    mContentAreaWebShell->GetContentViewer(getter_AddRefs(viewer));    
+    docShell->GetContentViewer(getter_AddRefs(viewer));    
     if (nsnull != viewer) {
       nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
       if (viewerFile) {
@@ -2046,7 +2007,8 @@ nsBrowserAppCore::Close()
 
   // Undo other stuff we did in SetContentWindow.
   if ( mContentAreaWebShell ) {
-      mContentAreaWebShell->SetDocLoaderObserver( 0 );
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContentAreaWebShell));
+      docShell->SetDocLoaderObserver( 0 );
       mContentAreaWebShell->SetSessionHistory( 0 );
   }
 
@@ -2172,7 +2134,7 @@ nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aSc
 
 
 static nsresult
-FindNamedXULElement(nsIWebShell * aShell,
+FindNamedXULElement(nsIDocShell * aShell,
                               const char *aId,
                               nsCOMPtr<nsIDOMElement> * aResult ) {
     nsresult rv = NS_OK;
@@ -2284,7 +2246,7 @@ nsBrowserAppCore::Observe( nsISupports *aSubject,
                 if ( topic1 == aTopic ) {
                     // Update status text.
                     nsAutoString v(someData);
-                    rv = setAttribute( mWebShell, "Browser:Status", "value", v );
+                    rv = setAttribute( mDocShell, "Browser:Status", "value", v );
                 } else if ( topic2 == aTopic ) {
                     // We don't process this, yet.
                 }
