@@ -34,6 +34,7 @@ CPPSRCS= \
 	nsUcharUtilModule.cpp	\
 	nsHankakuToZenkaku.cpp	\
 	nsEntityConverter.cpp	\
+	nsSaveAsCharset.cpp	\
 	$(NULL)
 
 CPP_OBJS= \
@@ -42,6 +43,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsUcharUtilModule.obj \
 	.\$(OBJDIR)\nsHankakuToZenkaku.obj \
 	.\$(OBJDIR)\nsEntityConverter.obj \
+	.\$(OBJDIR)\nsSaveAsCharset.obj \
 	$(NULL)
 
 MODULE=unicharutil

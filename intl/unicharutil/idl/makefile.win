@@ -23,6 +23,7 @@ DEPTH=..\..\..
 
 XPIDLSRCS =										\
             .\nsIEntityConverter.idl			\
+            .\nsISaveAsCharset.idl			\
             $(NULL)
 
 
