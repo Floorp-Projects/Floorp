@@ -18,11 +18,14 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Seth Spitzer <sspitzer@netscape.com>
  */
 
 #include "nsISupports.idl"
 
 interface nsIMsgWindow;
+interface nsIMsgIncomingServer;
+interface nsIRDFResource;
 
 [scriptable, uuid(f337b84a-1dd1-11b2-97c7-fb8b2e3f2280)]
 interface nsISubscribeListener : nsISupports {
@@ -31,7 +34,16 @@ interface nsISubscribeListener : nsISupports {
 
 [scriptable, uuid(6f9d2e82-1dd2-11b2-bbed-bbea41ca33a7)]
 interface nsISubscribableServer : nsISupports {
+	void setIncomingServer(in nsIMsgIncomingServer server);
+	void setDelimiter(in char delimiter);
 	void populateSubscribeDatasource(in nsIMsgWindow aMsgWindow);
 	attribute nsISubscribeListener subscribeListener;
+	void startPopulatingSubscribeDS();
+  	void stopPopulatingSubscribeDS();
+  	void findAndAddParentToSubscribeDS(in string uri, in string serverUri, in string aName, in nsIRDFResource aChildResource);
+  	void setPropertiesInSubscribeDS(in string uri, in string aName, in nsIRDFResource aResource);
+	void addToSubscribeDS(in string aName);
+	void setAsSubscribedInSubscribeDS(in string aName);
+	void updateSubscribedInSubscribeDS();
 };
 

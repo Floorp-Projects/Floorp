@@ -2904,7 +2904,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
 	if (m_nntpServer) {
 		m_readNewsListCount++;
-		rv = m_nntpServer->AddNewNewsgroup(line);
+		rv = m_nntpServer->AddNewsgroupToSubscribeDS(line);
 	}
 	else {
 		rv = NS_ERROR_FAILURE;

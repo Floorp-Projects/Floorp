@@ -338,6 +338,16 @@
   {0xa5, 0x60, 0x00, 0x60, 0xb0, 0xfc, 0x04, 0xb7}}
 
 //
+// nsSubscribableServer
+//
+#define NS_SUBSCRIBABLESERVER_PROGID \
+ "component://netscape/messenger/subscribableserver"
+
+#define NS_SUBSCRIBABLESERVER_CID \
+{0x8510876a, 0x1dd2, 0x11b2, \
+  {0x82, 0x53, 0x91, 0xf7, 0x1b, 0x34, 0x8a, 0x25}}
+
+//
 // nsSubscribeDataSource
 //
 #define NS_SUBSCRIBEDATASOURCE_PROGID \

@@ -54,10 +54,6 @@ interface nsINntpIncomingServer : nsISupports {
 
 	attribute long maximumConnectionsNumber;
 
-	/* used when populating the subscribe dialog */
-	void addNewNewsgroup(in string name);
-	void addSubscribedNewsgroups();
-
 	readonly attribute long numGroupsNeedingCounts;
 	readonly attribute nsISupports firstGroupNeedingCounts;
 
@@ -68,8 +64,10 @@ interface nsINntpIncomingServer : nsISupports {
                                            out nsINNTPProtocol aNntpConnection);
 	void RemoveConnection(in nsINNTPProtocol aNntpConnection);
 
-	/* use for auto subscribing */
+	/* used for auto subscribing */
 	boolean containsNewsgroup(in string name);
 	void subscribeToNewsgroup(in string name);
 
+	/* used for the subscribe dialog */
+	void addNewsgroupToSubscribeDS(in string name);
 };

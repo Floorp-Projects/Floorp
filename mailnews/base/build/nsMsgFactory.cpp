@@ -76,6 +76,7 @@
 
 #include "nsMsgServiceProvider.h"
 #include "nsSubscribeDataSource.h"
+#include "nsSubscribableServer.h"
 
 #include "nsMsgPrintEngine.h"
 #include "nsMsgSearchSession.h"
@@ -111,6 +112,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgWindow,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgViewNavigationService,Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgServiceProviderService, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSubscribeDataSource, Init);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSubscribableServer);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgPrintEngine, Init)
 
 // The list of components we register
@@ -251,6 +253,10 @@ static nsModuleComponentInfo gComponents[] = {
     { "Mail/News Subscribe Data Source", NS_SUBSCRIBEDATASOURCE_CID,
       NS_SUBSCRIBEDATASOURCE_PROGID,
       nsSubscribeDataSourceConstructor,
+    },
+    { "Mail/News Subscribable Server", NS_SUBSCRIBABLESERVER_CID,
+	  NS_SUBSCRIBABLESERVER_PROGID,
+	  nsSubscribableServerConstructor,
     },
 };
 

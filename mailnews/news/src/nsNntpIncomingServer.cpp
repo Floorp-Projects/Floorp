@@ -56,6 +56,7 @@ static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
+static NS_DEFINE_CID(kSubscribableServerCID, NS_SUBSCRIBABLESERVER_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsNntpIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsNntpIncomingServer, nsMsgIncomingServer)
@@ -76,8 +77,6 @@ nsNntpIncomingServer::nsNntpIncomingServer()
   mHostInfoLoaded = PR_FALSE;
   mHostInfoHasChanged = PR_FALSE;
 }
-
-
 
 nsNntpIncomingServer::~nsNntpIncomingServer()
 {
@@ -471,200 +470,6 @@ NS_IMETHODIMP nsNntpIncomingServer::RemoveConnection(nsINNTPProtocol *aNntpConne
 }
 
 
-NS_IMETHODIMP
-nsNntpIncomingServer::AddSubscribedNewsgroups()
-{
-	nsresult rv;
-    nsCOMPtr<nsIEnumerator> subFolders;
-    nsCOMPtr<nsIFolder> rootFolder;
-    nsCOMPtr<nsIFolder> currFolder;
- 
-    rv = GetRootFolder(getter_AddRefs(rootFolder));
-    if (NS_FAILED(rv)) return rv;
-
-	rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
-    if (NS_FAILED(rv)) return rv;
-
-    nsAdapterEnumerator *simpleEnumerator = new nsAdapterEnumerator(subFolders);
-    if (simpleEnumerator == nsnull) return NS_ERROR_OUT_OF_MEMORY;
-
-    PRBool moreFolders;
-        
-    while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders) {
-        nsCOMPtr<nsISupports> child;
-        rv = simpleEnumerator->GetNext(getter_AddRefs(child));
-        if (NS_SUCCEEDED(rv) && child) {
-            currFolder = do_QueryInterface(child, &rv);
-            if (NS_SUCCEEDED(rv) && currFolder) {
-				nsXPIDLString name;
-				rv = currFolder->GetName(getter_Copies(name));
-				if (NS_SUCCEEDED(rv) && name) {
-					nsCAutoString asciiName; asciiName.AssignWithConversion(name);
-					rv = SetNewsgroupAsSubscribed((const char *)asciiName);
-				}
-            }
-        }
-    }
-
-    delete simpleEnumerator;
-	return NS_OK;
-}
-
-nsresult
-nsNntpIncomingServer::SetNewsgroupAsSubscribed(const char *aName)
-{
-	nsresult rv;
-
-	NS_ASSERTION(aName,"newsgroup with no name");
-	if (!aName) return NS_ERROR_FAILURE;
-
-	nsXPIDLCString serverUri;
-
-	rv = GetServerURI(getter_Copies(serverUri));
-	if (NS_FAILED(rv)) return rv;
-
-	nsCAutoString groupUri;
-	groupUri = (const char *)serverUri;
-	groupUri += "/";
-	groupUri += aName;
-
-	nsCOMPtr<nsIRDFResource> newsgroupResource;
-	rv = mRDFService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
-
-	nsCOMPtr<nsIRDFDataSource> ds;
-	rv = mRDFService->GetDataSource("rdf:subscribe",getter_AddRefs(mSubscribeDatasource));
-	if(NS_FAILED(rv)) return rv;
-	if (!mSubscribeDatasource) return NS_ERROR_FAILURE;
-
-	nsCOMPtr<nsIRDFNode> oldLiteral;
-	rv = mSubscribeDatasource->GetTarget(newsgroupResource, kNC_Subscribed, PR_TRUE, getter_AddRefs(oldLiteral));
-	if(NS_FAILED(rv)) return rv;
-
-	rv = mSubscribeDatasource->Change(newsgroupResource, kNC_Subscribed, oldLiteral, kTrueLiteral);
-	if(NS_FAILED(rv)) return rv;
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
-{
-	nsresult rv;
-
-	NS_ASSERTION(aName,"attempting to add newsgroup with no name");
-	if (!aName) return NS_ERROR_FAILURE;
-
-#ifdef DEBUG_NEWS
-	printf("AddNewNewsgroup(%s)\n",aName);
-#endif
-	nsXPIDLCString serverUri;
-
-	rv = GetServerURI(getter_Copies(serverUri));
-	if (NS_FAILED(rv)) return rv;
-
-	nsCAutoString groupUri;
-	groupUri = (const char *)serverUri;
-	groupUri += "/";
-	groupUri += aName;
-
-	nsCOMPtr<nsIRDFResource> newsgroupResource;
-	rv = mRDFService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
-	if(NS_FAILED(rv)) return rv;
-
-	rv = SetNewsgroupPropertiesInSubscribeDS((const char *)groupUri, aName, newsgroupResource);
-	if (NS_FAILED(rv)) return rv;
-
-	rv = FindParentGroupResource((const char *)groupUri, (const char *)serverUri, aName, newsgroupResource);
-	if(NS_FAILED(rv)) return rv;
-
-	return NS_OK;
-}
-
-nsresult
-nsNntpIncomingServer::SetNewsgroupPropertiesInSubscribeDS(const char *groupUri, const char *aName, nsIRDFResource *aResource)
-{
-	nsresult rv;
-
-#ifdef DEBUG_sspitzer_
-	printf("SetNewsgroupPropertiesInSubscribeDS(%s,%s,??)\n",groupUri,aName);
-#endif
-		
-	nsCOMPtr<nsIRDFLiteral> nameLiteral;
-	nsAutoString nameString; 
-	nameString.AssignWithConversion(aName);
-	rv = mRDFService->GetLiteral(nameString.GetUnicode(), getter_AddRefs(nameLiteral));
-	if(NS_FAILED(rv)) return rv;
-
-	rv = mSubscribeDatasource->Assert(aResource, kNC_Name, nameLiteral, PR_TRUE);
-	if(NS_FAILED(rv)) return rv;
-
-	rv = mSubscribeDatasource->Assert(aResource, kNC_Subscribed, kFalseLiteral, PR_TRUE);
-	if(NS_FAILED(rv)) return rv;
-
-	return rv;
-}
-
-nsresult
-nsNntpIncomingServer::FindParentGroupResource(const char *groupUri, const char *serverUri, 
-								const char *aName, nsIRDFResource *aChildResource)
-{
-	nsresult rv;
-#ifdef DEBUG_sspitzer_
-	printf("FindParentGroupResource(%s,%s,%s,??)\n",groupUri,serverUri,aName);
-#endif
-
-	nsCOMPtr <nsIRDFResource> parentResource;
-
-	nsCAutoString groupUriCStr(groupUri);
-
-	PRInt32 slashpos = groupUriCStr.RFindChar('/',PR_TRUE);
-	PRInt32 dotpos = groupUriCStr.RFindChar('.',PR_TRUE);
-
-	if (dotpos > slashpos) {
-		groupUriCStr.Truncate(dotpos);
-
-		nsCAutoString nameCStr(aName);
-		PRInt32 namedotpos = nameCStr.RFindChar('.',PR_TRUE);
-		nameCStr.Truncate(namedotpos);
-	
-		rv = mRDFService->GetResource((const char *) groupUriCStr, getter_AddRefs(parentResource));
-		if(NS_FAILED(rv)) return rv;
-
-		PRBool prune = PR_FALSE;
-		// this code isn't working yet.
-#if 0
-		rv = mSubscribeDatasource->HasAssertion(parentResource, kNC_Subscribed, kFalseLiteral, PR_TRUE, &prune);
-		if(NS_FAILED(rv)) return rv;
-#endif
-
-		if (!prune) {
-			rv = SetNewsgroupPropertiesInSubscribeDS((const char *)groupUriCStr, (const char *)nameCStr, parentResource);
-			if(NS_FAILED(rv)) return rv;
-		}
-
-		// assert the group as a child of the group above
-		rv = mSubscribeDatasource->Assert(parentResource, kNC_Child, aChildResource, PR_TRUE);
-		if(NS_FAILED(rv)) return rv;
-
-		// recurse
-		if (!prune) {
-			rv = FindParentGroupResource((const char *)groupUriCStr, serverUri, (const char *)nameCStr, parentResource);
-			if(NS_FAILED(rv)) return rv;
-		}
-	}
-	else {
-		rv = mRDFService->GetResource(serverUri, getter_AddRefs(parentResource));
-		if(NS_FAILED(rv)) return rv;
-
-		// assert the group as a child of the server
-		rv = mSubscribeDatasource->Assert(parentResource, kNC_Child, aChildResource, PR_TRUE);
-		if(NS_FAILED(rv)) return rv;
-	}
-
-	return rv;
-}
-
-
 NS_IMETHODIMP 
 nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
@@ -789,22 +594,19 @@ NS_IMETHODIMP
 nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 {
 	nsresult rv;
-	rv = AddSubscribedNewsgroups();
+	rv = UpdateSubscribedInSubscribeDS();
 	if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISubscribeListener> listener;
 	rv = GetSubscribeListener(getter_AddRefs(listener));
 	if (NS_FAILED(rv)) return rv;
 	if (!listener) return NS_ERROR_FAILURE;
-	
+
 	rv = listener->OnStopPopulating();
 	if (NS_FAILED(rv)) return rv;
 
-	mRDFService = nsnull;
-	mSubscribeDatasource = nsnull;
-	kNC_Name = nsnull;
-	kNC_Child = nsnull;
-	kNC_Subscribed = nsnull;
+	rv = StopPopulatingSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
 }
@@ -866,39 +668,12 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
   printf("in PopulateSubscribeDatasource()\n");
 #endif
 
-  mRDFService = do_GetService(kRDFServiceCID, &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv) && mRDFService,"no rdf server");
+  rv = StartPopulatingSubscribeDS();
   if (NS_FAILED(rv)) return rv;
-
-  rv = mRDFService->GetDataSource("rdf:subscribe",getter_AddRefs(mSubscribeDatasource));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && mSubscribeDatasource,"no subscribe datasource");
-  if (NS_FAILED(rv)) return rv;
-
-  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#Name", getter_AddRefs(kNC_Name));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Name,"no name resource");
-  if (NS_FAILED(rv)) return rv;
-
-  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Child,"no child resource");
-  if (NS_FAILED(rv)) return rv;
-
-  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Subscribed, "no subscribed resource");	
-  if (NS_FAILED(rv)) return rv;
- 
-  nsAutoString trueString; 
-  trueString.AssignWithConversion("true");
-  rv = mRDFService->GetLiteral(trueString.GetUnicode(), getter_AddRefs(kTrueLiteral));
-  if(NS_FAILED(rv)) return rv;
-
-  nsAutoString falseString; 
-  falseString.AssignWithConversion("false");
-  rv = mRDFService->GetLiteral(falseString.GetUnicode(), getter_AddRefs(kFalseLiteral));
-  if(NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
-  if (!nntpService) return NS_ERROR_FAILURE;
+  if (!nntpService) return NS_ERROR_FAILURE; 
 
   rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
   if (NS_FAILED(rv)) return rv;
@@ -907,20 +682,111 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 }
 
 NS_IMETHODIMP
+nsNntpIncomingServer::AddNewsgroupToSubscribeDS(const char *aName)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return AddToSubscribeDS(aName);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetIncomingServer(aServer);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetDelimiter(char aDelimiter)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetDelimiter(aDelimiter);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetAsSubscribedInSubscribeDS(const char *aName)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetAsSubscribedInSubscribeDS(aName);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::UpdateSubscribedInSubscribeDS()
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->UpdateSubscribedInSubscribeDS();
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::AddToSubscribeDS(const char *aName)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->AddToSubscribeDS(aName);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const char *aName, nsIRDFResource *aResource)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::FindAndAddParentToSubscribeDS(const char *uri, const char *serverUri, const char *aName, nsIRDFResource *aChildResource)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->FindAndAddParentToSubscribeDS(uri,serverUri,aName,aChildResource);
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::StopPopulatingSubscribeDS()
+{
+	nsresult rv;
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	rv = mInner->StopPopulatingSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
+
+	mInner = nsnull;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::StartPopulatingSubscribeDS()
+{
+	nsresult rv;
+	mInner = do_CreateInstance(kSubscribableServerCID,&rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!mInner) return NS_ERROR_FAILURE;
+
+    rv = SetIncomingServer(this);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetDelimiter('.');
+    if (NS_FAILED(rv)) return rv;
+
+	return mInner->StartPopulatingSubscribeDS();
+}
+
+NS_IMETHODIMP
 nsNntpIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
 {
-	if (!aListener) return NS_ERROR_NULL_POINTER;
-	mSubscribeListener = aListener;
-	return NS_OK;
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetSubscribeListener(aListener);
 }
 
 NS_IMETHODIMP
 nsNntpIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 {
-	if (!aListener) return NS_ERROR_NULL_POINTER;
-	if (mSubscribeListener) {
-			*aListener = mSubscribeListener;
-			NS_ADDREF(*aListener);
-	}
-	return NS_OK;
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->GetSubscribeListener(aListener);
 }

@@ -68,6 +68,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgLogonRedirectorServiceCID, NS_MSGLOGONREDIRECTORSERVICE_CID);
 static NS_DEFINE_CID(kImapServiceCID, NS_IMAPSERVICE_CID);
+static NS_DEFINE_CID(kSubscribableServerCID, NS_SUBSCRIBABLESERVER_CID);
 
 NS_IMPL_ADDREF_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
 NS_IMPL_RELEASE_INHERITED(nsImapIncomingServer, nsMsgIncomingServer)
@@ -685,6 +686,11 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
     
     if (!folderPath || !*folderPath) return NS_ERROR_NULL_POINTER;
 
+	if (mDoingSubscribeDialog) {
+		rv = AddToSubscribeDS(folderPath);
+		return rv;
+	}
+
     nsCAutoString dupFolderPath = folderPath;
     if (dupFolderPath.Last() == '/')
     {
@@ -748,10 +754,6 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 	uri.Append('/');
 	uri.Append(dupFolderPath);
 
-	if (mDoingSubscribeDialog) {
-		rv = AddFolderToSubscribeDialog((const char *)parentUri, (const char *)uri,(const char *)folderName);
-		return rv;
-	}
 
 	a_nsIFolder->GetChildWithURI(uri, PR_TRUE, getter_AddRefs(child));
 
@@ -1835,7 +1837,10 @@ nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 #ifdef DEBUG_sspitzer
 	printf("in PopulateSubscribeDatasource()\n");
 #endif
-	mDoingSubscribeDialog = PR_TRUE;
+	mDoingSubscribeDialog = PR_TRUE;	
+
+    rv = StartPopulatingSubscribeDS();
+    if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
 	if (NS_FAILED(rv)) return rv;
@@ -1848,25 +1853,6 @@ nsImapIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
-{
-	if (!aListener) return NS_ERROR_NULL_POINTER;
-	mSubscribeListener = aListener;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
-{
-	if (!aListener) return NS_ERROR_NULL_POINTER;
-	if (mSubscribeListener) {
-			*aListener = mSubscribeListener;
-			NS_ADDREF(*aListener);
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP
 nsImapIncomingServer::OnStartRunningUrl(nsIURI *url)
 {
     return NS_OK;
@@ -1876,6 +1862,8 @@ NS_IMETHODIMP
 nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 {
     nsresult rv;
+	rv = UpdateSubscribedInSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
 
     mDoingSubscribeDialog = PR_FALSE;
 
@@ -1884,17 +1872,114 @@ nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
     if (NS_FAILED(rv)) return rv;
     if (!listener) return NS_ERROR_FAILURE;
 
-    printf("set all the subscribed folders as subscribed\n");
-
     rv = listener->OnStopPopulating();
     if (NS_FAILED(rv)) return rv;
+	
+	rv = StopPopulatingSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
 
-nsresult
-nsImapIncomingServer::AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName)
+NS_IMETHODIMP
+nsImapIncomingServer::SetIncomingServer(nsIMsgIncomingServer *aServer)
 {
-	printf("AddFolderToSubscribeDialog(%s,%s,%s)\n",parentUri,uri,folderName);
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetIncomingServer(aServer);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetDelimiter(char aDelimiter)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetDelimiter(aDelimiter);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetAsSubscribedInSubscribeDS(const char *aName)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetAsSubscribedInSubscribeDS(aName);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::UpdateSubscribedInSubscribeDS()
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->UpdateSubscribedInSubscribeDS();
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::AddToSubscribeDS(const char *aName)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->AddToSubscribeDS(aName);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const char *aName, nsIRDFResource *aResource)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetPropertiesInSubscribeDS(uri,aName,aResource);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::FindAndAddParentToSubscribeDS(const char *uri, const char *serverUri, const char *aName, nsIRDFResource *aChildResource)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->FindAndAddParentToSubscribeDS(uri,serverUri,aName,aChildResource);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::StopPopulatingSubscribeDS()
+{
+	nsresult rv;
+
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	rv = mInner->StopPopulatingSubscribeDS();
+	if (NS_FAILED(rv)) return rv;
+
+	mInner = nsnull;
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::StartPopulatingSubscribeDS()
+{
+	nsresult rv;
+    mInner = do_CreateInstance(kSubscribableServerCID,&rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!mInner) return NS_ERROR_FAILURE;
+
+    rv = SetIncomingServer(this);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetDelimiter('/');		// not always true?
+    if (NS_FAILED(rv)) return rv;
+
+	return mInner->StartPopulatingSubscribeDS();
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->SetSubscribeListener(aListener);
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
+{
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
+	return mInner->GetSubscribeListener(aListener);
 }

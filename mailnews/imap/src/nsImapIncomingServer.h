@@ -90,9 +90,9 @@ private:
 	nsCOMPtr<nsIMsgLogonRedirector> m_logonRedirector;
 	
 	// subscribe dialog stuff
-    	nsCOMPtr <nsISubscribeListener> mSubscribeListener;	
 	PRBool	mDoingSubscribeDialog;
 	nsresult AddFolderToSubscribeDialog(const char *parentUri, const char *uri,const char *folderName);
+	nsCOMPtr <nsISubscribableServer> mInner;
 };
 
 
