@@ -50,20 +50,15 @@
  */
 
 #ifdef STANDALONE_PROFILEDIRSERVICE
+
 #define MOZILLA_STRICT_API
-#include "nsEmbedString.h"
+#include "nsStringAPI.h"
 
-typedef nsEmbedString nsString;
-typedef nsEmbedCString nsPromiseFlatCString;
-typedef nsEmbedCString nsCAutoString;
+typedef nsCString nsPromiseFlatCString;
+typedef nsCString nsCAutoString;
 
-#define NS_LITERAL_CSTRING nsEmbedCString
-#define EmptyString nsEmbedString
-#define PromiseFlatCString nsEmbedCString
-#define NS_NAMED_LITERAL_STRING(stringname, filename) \
-  nsEmbedString stringname; \
-  NS_CStringToUTF16(nsEmbedCString(filename), \
-                    NS_CSTRING_ENCODING_ASCII, stringname);
+#define PromiseFlatCString nsCString
+
 #else
 #include "nsString.h"
 #include "nsPromiseFlatString.h"
