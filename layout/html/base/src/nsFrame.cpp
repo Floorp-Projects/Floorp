@@ -2023,7 +2023,16 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
                                         edgeCase, //start from thisLine
                                         &(aPos->mResultFrame)
                                         );
-          doneLooping = PR_TRUE; //do not continue with while loop
+          if (aPos->mResultFrame == this)//we came back to same spot! keep going
+          {
+            aPos->mResultFrame = nsnull;
+            if (aPos->mDirection == eDirPrevious)
+              thisLine--;
+            else
+              thisLine++;
+          }
+          else
+            doneLooping = PR_TRUE; //do not continue with while loop
           if (NS_SUCCEEDED(result) && aPos->mResultFrame){
             result = aPos->mResultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
             if (NS_SUCCEEDED(result) && it)//we have struck another block element!
