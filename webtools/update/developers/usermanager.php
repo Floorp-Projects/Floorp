@@ -5,11 +5,11 @@ require"../core/config.php";
 $function = $_GET["function"];
 //Access Level: "user" code, to keep user from altering other profiles but their own.
 if ($_SESSION["level"] !=="admin" and $_SESSION["level"] !=="editor") {
-//Kill access to add user.
-if ($function=="adduser" or $function=="postnewuser") {unset($function);}
+  //Kill access to add user.
+  if ($function=="adduser" or $function=="postnewuser") {unset($function);}
 
-if (!$function) { $function="edituser"; }
-$userid=$_SESSION["uid"];
+  if (!$function) { $function="edituser"; }
+  $userid=$_SESSION["uid"];
 }
 
 ?>
@@ -310,38 +310,43 @@ if (!$userid) {$userid=escape_string($_POST["userid"]);}
     echo"<TR><TD><B>Password:</B></TD><TD><FONT STYLE=\"font-size:10pt; font-weight: bold\"><A HREF=\"?function=changepassword&userid=$userid\">Change Password</A></FONT></TD></TR>\n";
 
     echo"<TR><TD><B>Permissions:</B></TD><TD>";
-if ($_SESSION["level"]=="user" or $_SESSION[level]=="editor") {
-    if ($usermode=="U") {echo"User <INPUT NAME=\"user\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; //To prevent being reset to null on submit.
-     } else if ($usermode=="E") {
-      echo"Editor <INPUT NAME=\"editor\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
-     } else {
-      echo"Unknown <INPUT NAME=\"usermode\" TYPE=\"HIDDEN\" VALUE=\"$usermode\">\n";
-     }
 
-if ($trusted=="TRUE") {
-     echo"Trusted <INPUT NAME=\"trusted\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
-}
-
-} else if ($_SESSION["level"]=="admin") {
-
-if ($usermode=="A") {$a="TRUE"; $e="TRUE";
-} else if ($usermode=="E") {$e="TRUE"; $a="FALSE";
-} else if ($usermode=="U") {$e="FALSE"; $a="FALSE";
-}
-
-    echo"Editor: <INPUT NAME=\"editor\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED";} if ($a=="TRUE") {echo" DISABLED=\"DISABLED\"";} echo">\n ";
-    echo"Admin: <INPUT NAME=\"admin\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED";} echo">\n ";
-    echo"Trusted: <INPUT NAME=\"trusted\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($trusted=="TRUE") {echo"CHECKED";} echo">\n";
-}
+    if ($_SESSION["level"]=="user" or $_SESSION["level"]=="editor") {
+      if ($usermode=="U") {
+        echo"User <INPUT NAME=\"user\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n"; //To prevent being reset to null on submit.
+      } else if ($usermode=="E") {
+        echo"Editor <INPUT NAME=\"editor\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
+      } else {
+        echo"Unknown <INPUT NAME=\"usermode\" TYPE=\"HIDDEN\" VALUE=\"$usermode\">\n";
+      }
+    
+      if ($trusted=="TRUE") {
+        echo"Trusted <INPUT NAME=\"trusted\" TYPE=\"HIDDEN\" VALUE=\"TRUE\">\n";
+      }
+    
+    } else if ($_SESSION["level"]=="admin") {
+    
+      if ($usermode=="A") {
+        $a="TRUE"; $e="TRUE";
+      } else if ($usermode=="E") {
+        $e="TRUE"; $a="FALSE";
+      } else if ($usermode=="U") {
+        $e="FALSE"; $a="FALSE";
+      }
+    
+      echo"Editor: <INPUT NAME=\"editor\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($e=="TRUE") {echo"CHECKED";} if ($a=="TRUE") {echo" DISABLED=\"DISABLED\"";} echo">\n ";
+      echo"Admin: <INPUT NAME=\"admin\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($a=="TRUE") {echo"CHECKED";} echo">\n ";
+      echo"Trusted: <INPUT NAME=\"trusted\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\" "; if ($trusted=="TRUE") {echo"CHECKED";} echo">\n";
+    }
     echo"</TD></TR>\n";
 
     echo"<TR><TD><B>E-Mail Public:<B></TD><TD>";
     if ($useremailhide==="1") {
-    echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\" CHECKED> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
+      echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\" CHECKED> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
     } else if ($useremailhide==="0") {
-    echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\" CHECKED>";
+      echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\" CHECKED>";
     } else {
-    echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
+      echo"Hidden: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"1\"> Visible: <INPUT NAME=\"useremailhide\" TYPE=\"RADIO\" VALUE=\"0\">";
     }
     echo"</TD></TR>\n";
 ?>
@@ -376,7 +381,8 @@ $trusted = escape_string($_POST["trusted"]);
 $disabled = escape_string($_POST["disabled"]);
 //echo"$i - $admin - $editor - $trusted<br>\n";
 
-if ($admin=="TRUE") { $mode="A"; 
+// Set user level, but only allow admins to set the admin flag
+if ($admin=="TRUE" && $_SESSION["level"]=="admin") { $mode="A"; 
 } else if ($editor=="TRUE") { $mode="E"; 
 } else if ($disabled=="TRUE") {$mode="D";
 } else { $mode="U"; }
@@ -403,20 +409,34 @@ $useremailhide = escape_string($_POST[useremailhide]);
 ?>
 
 <h1>Add New User</h1>
-<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
 <FORM NAME="adduser" METHOD="POST" ACTION="?function=adduser">
 <?writeFormKey();?>
-    <TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME="useremail" TYPE="TEXT" VALUE="<?php echo"$_POST[email]"; ?>" SIZE=30 MAXLENGTH=100></TD></TR>
-    <TR><TD ALIGN=RIGHT><B>Show E-Mail:<B></TD><TD>Hidden: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="1" CHECKED> Visible: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="0"></TD></TR>
-    <TR><TD STYLE="width: 150px"><B>Name:</B></TD><TD><INPUT NAME="username" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
-    <TR><TD><B>Website:</B></TD><TD><INPUT NAME="userwebsite" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
-    <TR><TD><B>Password:</B></TD><TD><INPUT NAME="userpass" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
-    <TR><TD ALIGN=RIGHT><FONT STYLE="font-size: 10pt"><B>Confirm:</B></FONT>&nbsp;&nbsp;</TD><TD><INPUT NAME="userpassconfirm" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
-    <TR><TD><B>Permissions:</B></TD><TD>Editor: <INPUT NAME="editor" TYPE="CHECKBOX" VALUE="TRUE"> Admin: <INPUT NAME="admin" TYPE="CHECKBOX" VALUE="TRUE"> Trusted: <INPUT NAME="trusted" TYPE="CHECKBOX" VALUE="TRUE"></TD></TR>
-<TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Create User">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form"></TD></TR>
-</FORM>
-<TR><TD COLSPAN="2"><A HREF="?function=">&#171;&#171; Return to User Manager</A></TD></TR>
+<TABLE BORDER=0 CELLPADDING=2 CELLSPACING=2 ALIGN=CENTER STYLE="border: 0px; width: 95%">
+  <TR><TD><B>E-Mail:</B></TD><TD><INPUT NAME="useremail" TYPE="TEXT" VALUE="<?php echo"$_POST[email]"; ?>" SIZE=30 MAXLENGTH=100></TD></TR>
+  <TR><TD ALIGN=RIGHT><B>Show E-Mail:<B></TD><TD>Hidden: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="1" CHECKED> Visible: <INPUT NAME="useremailhide" TYPE="RADIO" VALUE="0"></TD></TR>
+  <TR><TD STYLE="width: 150px"><B>Name:</B></TD><TD><INPUT NAME="username" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
+  <TR><TD><B>Website:</B></TD><TD><INPUT NAME="userwebsite" TYPE="TEXT" VALUE="" SIZE=30 MAXLENGTH=100></TD></TR>
+  <TR><TD><B>Password:</B></TD><TD><INPUT NAME="userpass" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
+  <TR><TD ALIGN=RIGHT><FONT STYLE="font-size: 10pt"><B>Confirm:</B></FONT>&nbsp;&nbsp;</TD><TD><INPUT NAME="userpassconfirm" TYPE="PASSWORD" VALUE="" SIZE=30 MAXLENGTH=200></TD></TR>
+
+  <?php /* Display permission checkboxes - leave out the admin box when an editor is logged in */ ?>
+  <TR>
+    <TD><B>Permissions:</B></TD>
+    <TD>
+      Editor: <INPUT NAME="editor" TYPE="CHECKBOX" VALUE="TRUE">
+      <?php
+        if ($_SESSION["level"]=="admin") {
+          echo "Admin: <INPUT NAME=\"admin\" TYPE=\"CHECKBOX\" VALUE=\"TRUE\">";
+        }
+      ?>
+      Trusted: <INPUT NAME="trusted" TYPE="CHECKBOX" VALUE="TRUE">
+    </TD>
+  </TR>
+
+  <TR><TD COLSPAN="2" ALIGN="CENTER"><INPUT NAME="submit" TYPE="SUBMIT" VALUE="Create User">&nbsp;&nbsp;<INPUT NAME="reset" TYPE="RESET" VALUE="Reset Form"></TD></TR>
+  <TR><TD COLSPAN="2"><A HREF="?function=">&#171;&#171; Return to User Manager</A></TD></TR>
 </TABLE>
+</FORM>
 
 <?php
 } else if ($function=="changepassword") {
