@@ -269,8 +269,7 @@ void nsPref::useDefaultPrefFile()
       rv = StartUpWith(prefsFile);
     }
     else {
-      // no prefs file.  make a stub of one, then fill in some default prefs.  this is a hack to
-      // get people to use Messenger 5.0 by trying to set up some prefs.
+      // no prefs file.  make a stub of one
       nsOutputFileStream stream(prefsFile);
       if (stream.is_open()) {
         stream << PREFS_HEADER_LINE_1 << nsEndl << PREFS_HEADER_LINE_2 << nsEndl << nsEndl;
