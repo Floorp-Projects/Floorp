@@ -351,10 +351,6 @@ protected:
 // The type of break requested can be found in these bits.
 #define NS_INLINE_BREAK_TYPE_MASK    0xF000
 
-// This bit, when set, indicates that the frame has a float inside of
-// it that sticks outside of the frames bounding box.
-#define NS_FRAME_HAS_OUTSIDE_FLOATER 0x0400
-
 //----------------------------------------
 // Macros that use those bits
 
