@@ -4945,3 +4945,9 @@ loser:
     }
     return NULL;
 }
+
+PK11SymKey *
+PK11_GetNextSymKey(PK11SymKey *symKey)
+{
+    return symKey ? symKey->next : NULL;
+}
