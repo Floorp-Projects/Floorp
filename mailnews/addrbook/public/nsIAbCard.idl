@@ -158,4 +158,5 @@ interface nsIAbCard : nsISupports {
 
 	string convertToBase64EncodedXML();
 	wstring convertToXMLPrintData();
+	string convertToEscapedVCard();
 };

@@ -82,6 +82,9 @@ CPPSRCS		= \
                 nsAbDirectoryRDFResource.cpp \
                 nsAbQueryStringToExpression.cpp \
                 nsAbView.cpp \
+                nsVCard.cpp \
+                nsVCardObj.cpp \
+                nsMsgVCardService.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -111,6 +114,9 @@ EXPORTS		= \
 		nsAbBooleanExpression.h \
                 nsAbDirectoryRDFResource.h \
                 nsAbView.h \
+                nsVCard.h \
+                nsVCardObj.h \
+                nsMsgVCardService.h \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

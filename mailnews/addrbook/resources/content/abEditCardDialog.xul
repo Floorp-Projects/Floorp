@@ -24,10 +24,10 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/addressbook/abCardOverlay.xul"?>
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="abcardWindow"
+  id="abcardWindow"
         onload="OnLoadEditCard()"
         buttonpack="center"
-        ondialogaccept="return EditCardOKButton();">
+  ondialogaccept="return EditCardOKButton();">
 
   <stringbundleset id="stringbundleset"/>
   <vbox id="editcard"/>	

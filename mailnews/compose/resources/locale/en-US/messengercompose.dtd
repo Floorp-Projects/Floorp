@@ -102,10 +102,11 @@
 <!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
 <!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
 
-<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
 <!ENTITY addSignatureCmd.label ".Add Signature File">
-<!ENTITY attachVCardCmd.label ".Include Personal Card (vCard)">
-<!ENTITY attachVCardCmd.accesskey "P">
+
+<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
+<!ENTITY attachVCardMenu.label "Attach Personal Card (vCard)">
+<!ENTITY attachVCardMenu.accesskey "v">
 
 <!ENTITY quoteCmd.label "Quote Message">
 <!ENTITY quoteCmd.accesskey "Q">

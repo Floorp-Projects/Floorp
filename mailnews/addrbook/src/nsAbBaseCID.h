@@ -444,4 +444,11 @@
 #define NS_ABVIEW_CONTRACTID \
  "@mozilla.org/addressbook/abview;1"
 
+#define NS_MSGVCARDSERVICE_CID \
+{ 0x3c4ac0da, 0x2cda, 0x4018, \
+ { 0x95, 0x51, 0xe1, 0x58, 0xb2, 0xe1, 0x22, 0xd3 }}
+
+#define NS_MSGVCARDSERVICE_CONTRACTID \
+ "@mozilla.org/addressbook/msgvcardservice;1"
+
 #endif // nsAbBaseCID_h__

@@ -56,7 +56,6 @@ XPIDLSRCS	= \
 		nsIMsgMessageService.idl \
 		nsIMsgSignature.idl \
 		nsIMsgThread.idl \
-		nsIMsgVCard.idl \
 		nsIUrlListener.idl \
 		nsIUrlListenerManager.idl \
 		nsIMsgBiffManager.idl \

@@ -18,6 +18,9 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
+<!ENTITY chooseAddressBook.label                "Add to: ">
+<!ENTITY chooseAddressBook.accesskey            "A">
+
 <!ENTITY Contact.tab                     "Contact"> 
 <!ENTITY Name.box                        "Name"> 
 

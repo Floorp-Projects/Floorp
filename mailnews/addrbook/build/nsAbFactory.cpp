@@ -62,6 +62,7 @@
 #include "nsAbAddressCollecter.h"
 #include "nsAddbookProtocolHandler.h"
 #include "nsAddbookUrl.h"
+#include "nsCURILoader.h"
 
 #if defined(XP_WIN) && !defined(__MINGW32__)
 #include "nsAbOutlookDirectory.h"
@@ -73,6 +74,7 @@
 #include "nsAbBooleanExpression.h"
 #include "nsAbDirectoryQueryProxy.h"
 #include "nsAbView.h"
+#include "nsMsgVCardService.h"
 
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsAbLDAPDirectory.h"
@@ -127,6 +129,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgVCardService)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -201,6 +204,11 @@ static const nsModuleComponentInfo components[] =
     NS_ADDBOOK_HANDLER_CID,
     NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "addbook",
     nsAddbookProtocolHandlerConstructor },
+
+  { "add vCard content handler",
+    NS_ADDRESSBOOK_CID,
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-addvcard",
+    nsAddressBookConstructor },
 
   { "The directory factory service interface",
     NS_ABDIRFACTORYSERVICE_CID,
@@ -310,7 +318,12 @@ static const nsModuleComponentInfo components[] =
   { "addressbook view",
     NS_ABVIEW_CID,
     NS_ABVIEW_CONTRACTID,
-    nsAbViewConstructor }
+    nsAbViewConstructor },
+
+  { "vcard helper service",
+    NS_MSGVCARDSERVICE_CID,
+    NS_MSGVCARDSERVICE_CONTRACTID,
+    nsMsgVCardServiceConstructor }
 
 };
 

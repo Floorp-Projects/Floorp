@@ -43,6 +43,7 @@
 interface nsIDOMWindowInternal;
 interface nsIFileSpec;
 interface nsIAbDirectory;
+interface nsIAbCard;
 
 [scriptable, uuid(D60B84F1-2A8C-11d3-9E07-00A0C92B5F0D)]
 interface nsIAddressBook : nsISupports 
@@ -56,5 +57,7 @@ interface nsIAddressBook : nsISupports
   void convertNA2toLDIF(in nsIFileSpec srcFileSpec, in nsIFileSpec dstFileSpec);
   nsIAddrDatabase getAbDatabaseFromURI(in string URI);
   boolean mailListNameExists(in wstring name);
+  nsIAbCard escapedVCardToAbCard(in string escapedVCardStr);
+  string abCardToEscapedVCard(in nsIAbCard aCard);
 };
 

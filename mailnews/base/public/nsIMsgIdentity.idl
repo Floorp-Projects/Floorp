@@ -38,7 +38,6 @@
 #include "nsISupports.idl"
 #include "nsIMsgSignature.idl"
 #include "nsILocalFile.idl"
-#include "nsIMsgVCard.idl"
 
 /*
  * this interface contains all the personal outgoing mail information
@@ -97,8 +96,7 @@ interface nsIMsgIdentity : nsISupports {
   attribute nsILocalFile signature;
   attribute long signatureDate;
 
-  /* the current vcard */
-  attribute nsIMsgVCard vCard;
+  attribute string escapedVCard;
 
   attribute boolean doFcc;
   attribute string fccFolder;

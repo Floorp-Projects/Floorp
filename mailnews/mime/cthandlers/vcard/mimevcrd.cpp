@@ -45,8 +45,7 @@
 #include "prtypes.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "nsVCardObj.h"
-#include "nsVCard.h"
+#include "nsIMsgVCardService.h"
 #include "mimecth.h"
 #include "mimexpcom.h"
 #include "mimevcrd.h"
@@ -98,6 +97,7 @@ typedef struct
 #define kNumAttributes 12
 
 #define     VCARD_URL     "chrome://messenger/locale/vcard.properties"
+#define     MSGVCARDSERVICE_CONTRACT_ID "@mozilla.org/addressbook/msgvcardservice;1"
 
 /* This is the object definition. Note: we will set the superclass 
    to NULL and manually set this on the class creation */
@@ -239,6 +239,11 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
 static int
 MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
 {
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+             do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+
   int status = 0;
   MimeInlineTextVCardClass *clazz = ((MimeInlineTextVCardClass *) obj->clazz);
   
@@ -260,7 +265,8 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
 
   if (!clazz->vCardString) return 0;
   
-  v = Parse_MIME(clazz->vCardString, strlen(clazz->vCardString));
+  v = vCardService->Parse_MIME(clazz->vCardString, strlen(clazz->vCardString));
+  NS_ASSERTION(v, "parse of vCard failed");
   
   if (clazz->vCardString) {
     PR_Free ((char*) clazz->vCardString);
@@ -278,10 +284,10 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
       /* write out html */
       status = WriteOutVCard (obj, v);
       /* parse next vcard incase they're embedded */
-      v = nextVObjectInList(v);
+      v = vCardService->NextVObjectInList(v);
     }
     
-    cleanVObject(t);
+    (void)vCardService->CleanVObject(t);
   }
   
   if (status < 0) 
@@ -494,17 +500,22 @@ static int OutputVcardAttribute(MimeObject *obj, VObject *v, const char* id)
   VObject *prop = NULL;
   char *string = NULL;
 
-  prop = isAPropertyOf(v, id);
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+             do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+
+  prop = vCardService->IsAPropertyOf(v, id);
   if (prop)
     if (VALUE_TYPE(prop))
     {
       if (VALUE_TYPE(prop) != VCVT_RAW)
-        string = fakeCString (vObjectUStringZValue(prop));
+      {
+        string = vCardService->FakeCString(prop);
+      }
       else
       {
-        string = (char *)PR_MALLOC(strlen((char *) vObjectAnyValue(prop)) + 1);
-        if (string)
-          PL_strcpy(string, (char *) vObjectAnyValue(prop));
+        string = vCardService->VObjectAnyValue(prop);
       }
       if (string) {
         status = OutputFont(obj, PR_FALSE, "-1", NULL);
@@ -536,26 +547,31 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
   char * namestring = NULL;
   char * emailstring = NULL;
 
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+      do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+  
   /* get the name and email */
-  prop = isAPropertyOf(v, VCFullNameProp);
+  prop = vCardService->IsAPropertyOf(v, VCFullNameProp);
   if (prop)
   {
     if (VALUE_TYPE(prop))
     {
       if (VALUE_TYPE(prop) != VCVT_RAW)
-        namestring  = fakeCString (vObjectUStringZValue(prop));
+      {
+        namestring = vCardService->FakeCString(prop);
+      }
       else
       {
-        namestring = (char *)PR_MALLOC(strlen((char *) vObjectAnyValue(prop)) + 1);
-        if (namestring)
-          PL_strcpy(namestring, (char *) vObjectAnyValue(prop));
+        namestring = vCardService->VObjectAnyValue(prop);
       }
       if (namestring)
       {
-        prop = isAPropertyOf(v, VCURLProp);
+        prop = vCardService->IsAPropertyOf(v, VCURLProp);
         if (prop)
         {
-          urlstring  = fakeCString (vObjectUStringZValue(prop));
+          urlstring = vCardService->FakeCString(prop);
           if (urlstring)
             htmlLine1 = PR_smprintf ("<A HREF=""%s"" PRIVATE>%s</A> ", urlstring, namestring);
           else
@@ -566,14 +582,14 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
           htmlLine1 = PR_smprintf ("%s ", namestring);
 
         /* get the email address */
-        prop = isAPropertyOf(v, VCEmailAddressProp);
+        prop = vCardService->IsAPropertyOf(v, VCEmailAddressProp);
         if (prop)
         {
-          emailstring  = fakeCString (vObjectUStringZValue(prop));
+         emailstring = vCardService->FakeCString(prop);
           if (emailstring)
           {
             /* if its an internet address prepend the mailto url */
-            prop2 = isAPropertyOf(prop, VCInternetProp);
+            prop2 = vCardService->IsAPropertyOf(prop, VCInternetProp);
             if (prop2)
               htmlLine2 = PR_smprintf ("&lt;<A HREF=""mailto:%s"" PRIVATE>%s</A>&gt;", emailstring, emailstring);
             else
@@ -638,7 +654,7 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
   status = OutputVcardAttribute (obj, v, VCTitleProp);
   if (status < 0) return status;
   /* write out the org name and company name */
-  prop = isAPropertyOf(v, VCOrgProp);
+  prop = vCardService->IsAPropertyOf(v, VCOrgProp);
   if (prop)
   {
     status = OutputVcardAttribute (obj, prop, VCOrgNameProp);
@@ -672,6 +688,11 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
   char * emailstring = NULL;
   int numEmail = 0;
 
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+      do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+  
   status = OutputTable (obj, PR_FALSE, PR_FALSE, "0", "0", NULL);
   if (status < 0) return status;
   /* beginning of first row */
@@ -681,25 +702,25 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
   if (status < 0) return status;
 
   /* get the name and email */
-  prop = isAPropertyOf(v, VCFullNameProp);
+  prop = vCardService->IsAPropertyOf(v, VCFullNameProp);
   if (prop)
   {
     if (VALUE_TYPE(prop))
     {
-      if (VALUE_TYPE(prop) != VCVT_RAW)
-        namestring  = fakeCString (vObjectUStringZValue(prop));
+      if (VALUE_TYPE(prop) != VCVT_RAW) 
+      {
+        namestring = vCardService->FakeCString(prop);
+      }
       else
       {
-        namestring = (char *)PR_MALLOC(strlen((char *) vObjectAnyValue(prop)) + 1);
-        if (namestring)
-          PL_strcpy(namestring, (char *) vObjectAnyValue(prop));
+        namestring = vCardService->VObjectAnyValue(prop);
       }
       if (namestring)
       {
-        prop = isAPropertyOf(v, VCURLProp);
+        prop = vCardService->IsAPropertyOf(v, VCURLProp);
         if (prop)
         {
-          urlstring  = fakeCString (vObjectUStringZValue(prop));
+          urlstring = vCardService->FakeCString(prop);
           if (urlstring)
             htmlLine1 = PR_smprintf ("<A HREF=""%s"" PRIVATE>%s</A> ", urlstring, namestring);
           else
@@ -739,7 +760,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
   status = OutputVcardAttribute (obj, v, VCTitleProp);
   if (status < 0) return status;
   /* write out the org name and company name */
-  prop = isAPropertyOf(v, VCOrgProp);
+  prop = vCardService->IsAPropertyOf(v, VCOrgProp);
   if (prop)
   {
     status = OutputVcardAttribute (obj, prop, VCOrgNameProp);
@@ -763,15 +784,15 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
   if (status < 0) return status;
 
   /* get the email address */
-  prop = isAPropertyOf(v, VCEmailAddressProp);
+  prop = vCardService->IsAPropertyOf(v, VCEmailAddressProp);
   if (prop)
   {
-    emailstring  = fakeCString (vObjectUStringZValue(prop));
+    emailstring = vCardService->FakeCString(prop);
     if (emailstring)
     {
       numEmail++;
       /* if its an internet address prepend the mailto url */
-      prop2 = isAPropertyOf(prop, VCInternetProp);
+      prop2 = vCardService->IsAPropertyOf(prop, VCInternetProp);
       if (prop2)
         htmlLine2 = PR_smprintf ("&lt;<A HREF=""mailto:%s"" PRIVATE>%s</A>&gt;", emailstring, emailstring);
       else
@@ -798,12 +819,12 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
     status = OutputFont(obj, PR_TRUE, NULL, NULL);
     if (status < 0) return status;
     /* output html mail setting only if its true */
-    prop = isAPropertyOf(v, VCUseHTML);
+    prop = vCardService->IsAPropertyOf(v, VCUseHTML);
     if (prop)
     {
       if (VALUE_TYPE(prop))
       {
-        namestring  = fakeCString (vObjectUStringZValue(prop));
+        namestring = vCardService->FakeCString(prop);
         if (namestring)
           if (nsCRT::strcasecmp (namestring, "TRUE") == 0)
           {
@@ -834,7 +855,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
   /* first column */
   status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
   if (status < 0) return status;
-  prop = isAPropertyOf(v, VCAdrProp);
+  prop = vCardService->IsAPropertyOf(v, VCAdrProp);
   if (prop)
   {
     status = OutputVcardAttribute (obj, prop, VCPostalBoxProp);
@@ -870,19 +891,19 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
   /* output conference fields */
   status = OutputFont(obj, PR_FALSE, "-1", NULL);
   if (status < 0) return status;
-  prop = isAPropertyOf(v, VCCooltalk);
+  prop = vCardService->IsAPropertyOf(v, VCCooltalk);
   if (prop)
   {
     char *tString = VCardGetStringByID(VCARD_ADDR_CONFINFO);
     WriteLineToStream (obj, tString, PR_FALSE);
     PR_FREEIF(tString);
     if (status < 0) return status;
-    prop2 = isAPropertyOf(prop, VCUseServer);
+    prop2 = vCardService->IsAPropertyOf(prop, VCUseServer);
     if (prop2)
     {
       if (VALUE_TYPE(prop2)) 
       {
-        namestring  = fakeCString (vObjectUStringZValue(prop2));
+        namestring = vCardService->FakeCString(prop2);
         char *tString1 = NULL;
         if (nsCRT::strcmp (namestring, "0") == 0)
         {
@@ -920,7 +941,7 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 
   /* beginning of last row */
   /* output notes field */
-  prop = isAPropertyOf(v, VCCommentProp);
+  prop = vCardService->IsAPropertyOf(v, VCCommentProp);
   if (prop)
   {
     status = OutputTableRowOrData(obj, PR_TRUE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
@@ -974,15 +995,21 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 {
   int status = 0;
   char * htmlLine1 = NULL;
+  char *htmlLine2 = NULL;
   char* vCard = NULL;
   char* vEscCard = NULL;
   int len = 0;
   char* rsrcString = NULL;
-
+  
   if (!obj->options->output_vcard_buttons_p)
     return status;
 
-  vCard = writeMemoryVObjects(0, &len, v, PR_FALSE);
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+      do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+
+  vCard = vCardService->WriteMemoryVObjects(0, &len, v, PR_FALSE);
 
   if (!vCard)
     return VCARD_OUT_OF_MEMORY;
@@ -1006,23 +1033,17 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
     htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showBasic%d();\\\"></INPUT></FORM>", 
                               rsrcString, s_unique);
   }
-
   PR_FREEIF(rsrcString);
 
-/**** RICHIE: When we get the addbook:add protocol into the product, we need to turn this stuff back on!
   rsrcString = VCardGetStringByID(VCARD_MSG_ADD_TO_ADDR_BOOK);
-  htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
+  htmlLine2 = PR_smprintf("<FORM name=form1 METHOD=get ACTION=\"addbook:add?action=add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
                            vEscCard, rsrcString); 
   PR_FREEIF(rsrcString);
 
-  if (!htmlLine1 && !htmlLine2)
-******/
-  if (!htmlLine1)
+  if (!htmlLine1 || !htmlLine2)
   {
-    nsCRT::free (vEscCard);
-    PR_FREEIF (htmlLine1);
-    // PR_FREEIF (htmlLine2);
-    return VCARD_OUT_OF_MEMORY;
+    status = VCARD_OUT_OF_MEMORY;
+    goto FAIL;
   }
   
   status = OutputTableRowOrData (obj, PR_FALSE, PR_FALSE, "LEFT", "TOP", NULL, NULL);
@@ -1045,9 +1066,8 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
   status = WriteEachLineToStream (obj, "\")</SCRIPT>");
   if (status < 0) goto FAIL;
 
-  // RICHIE - this goes back in when the addcard feature is done!
-  // status = WriteLineToStream (obj, htmlLine2, PR_FALSE);
-  // if (status < 0) goto FAIL;
+  status = WriteLineToStream (obj, htmlLine2, PR_FALSE);
+  if (status < 0) goto FAIL;
 
   status = OutputTableRowOrData (obj, PR_FALSE, PR_TRUE, NULL, NULL, NULL, NULL);
   if (status < 0) goto FAIL;
@@ -1055,9 +1075,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
   FAIL:
   PR_FREEIF (vEscCard);
   PR_FREEIF (htmlLine1);
-
-  // RICHIE - this goes back in when the addcard feature is done!
-  // PR_FREEIF (htmlLine2);
+  PR_FREEIF(htmlLine2);
 
   return status;
 }
@@ -1251,12 +1269,17 @@ static int WriteOutVCard (MimeObject *obj, VObject* v)
 
 static void GetAddressProperties (VObject* o, char ** attribName)
 {
-  VObject* domProp = isAPropertyOf(o, VCDomesticProp);
-  VObject* intlProp = isAPropertyOf(o, VCInternationalProp);
-  VObject* postal = isAPropertyOf(o, VCPostalProp);
-  VObject* parcel = isAPropertyOf(o, VCParcelProp);
-  VObject* home = isAPropertyOf(o, VCHomeProp);
-  VObject* work = isAPropertyOf(o, VCWorkProp);
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+        do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+    return;
+    
+  VObject* domProp = vCardService->IsAPropertyOf(o, VCDomesticProp);
+  VObject* intlProp = vCardService->IsAPropertyOf(o, VCInternationalProp);
+  VObject* postal = vCardService->IsAPropertyOf(o, VCPostalProp);
+  VObject* parcel = vCardService->IsAPropertyOf(o, VCParcelProp);
+  VObject* home = vCardService->IsAPropertyOf(o, VCHomeProp);
+  VObject* work = vCardService->IsAPropertyOf(o, VCWorkProp);
   char    *tString = NULL;
 
   if (domProp) {
@@ -1289,15 +1312,20 @@ static void GetAddressProperties (VObject* o, char ** attribName)
 
 static void GetTelephoneProperties (VObject* o, char ** attribName)
 {
-  VObject* prefProp = isAPropertyOf(o, VCPreferredProp);
-  VObject* home = isAPropertyOf(o, VCHomeProp);
-  VObject* work = isAPropertyOf(o, VCWorkProp);
-  VObject* voiceProp = isAPropertyOf(o, VCVoiceProp);
-  VObject* fax = isAPropertyOf(o, VCFaxProp);
-  VObject* msg = isAPropertyOf(o, VCMessageProp);
-  VObject* cell = isAPropertyOf(o, VCCellularProp);
-  VObject* pager = isAPropertyOf(o, VCPagerProp);
-  VObject* bbs = isAPropertyOf(o, VCBBSProp);
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+    do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+    return;
+
+  VObject* prefProp = vCardService->IsAPropertyOf(o, VCPreferredProp);
+  VObject* home = vCardService->IsAPropertyOf(o, VCHomeProp);
+  VObject* work = vCardService->IsAPropertyOf(o, VCWorkProp);
+  VObject* voiceProp = vCardService->IsAPropertyOf(o, VCVoiceProp);
+  VObject* fax = vCardService->IsAPropertyOf(o, VCFaxProp);
+  VObject* msg = vCardService->IsAPropertyOf(o, VCMessageProp);
+  VObject* cell = vCardService->IsAPropertyOf(o, VCCellularProp);
+  VObject* pager = vCardService->IsAPropertyOf(o, VCPagerProp);
+  VObject* bbs = vCardService->IsAPropertyOf(o, VCBBSProp);
   char    *tString = NULL;
 
   if (prefProp) {
@@ -1338,22 +1366,26 @@ static void GetTelephoneProperties (VObject* o, char ** attribName)
 
 static void GetEmailProperties (VObject* o, char ** attribName)
 {
-  
-  VObject* prefProp = isAPropertyOf(o, VCPreferredProp);
-  VObject* home = isAPropertyOf(o, VCHomeProp);
-  VObject* work = isAPropertyOf(o, VCWorkProp);
-  VObject* aol = isAPropertyOf(o, VCAOLProp);
-  VObject* applelink = isAPropertyOf(o, VCAppleLinkProp);
-  VObject* att = isAPropertyOf(o, VCATTMailProp);
-  VObject* cis = isAPropertyOf(o, VCCISProp);
-  VObject* eworld = isAPropertyOf(o, VCEWorldProp);
-  VObject* internet = isAPropertyOf(o, VCInternetProp);
-  VObject* ibmmail = isAPropertyOf(o, VCIBMMailProp);
-  VObject* mcimail = isAPropertyOf(o, VCMCIMailProp);
-  VObject* powershare = isAPropertyOf(o, VCPowerShareProp);
-  VObject* prodigy = isAPropertyOf(o, VCProdigyProp);
-  VObject* telex = isAPropertyOf(o, VCTLXProp);
-  VObject* x400 = isAPropertyOf(o, VCX400Prop);
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+    do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+    return;
+
+  VObject* prefProp = vCardService->IsAPropertyOf(o, VCPreferredProp);
+  VObject* home = vCardService->IsAPropertyOf(o, VCHomeProp);
+  VObject* work = vCardService->IsAPropertyOf(o, VCWorkProp);
+  VObject* aol = vCardService->IsAPropertyOf(o, VCAOLProp);
+  VObject* applelink = vCardService->IsAPropertyOf(o, VCAppleLinkProp);
+  VObject* att = vCardService->IsAPropertyOf(o, VCATTMailProp);
+  VObject* cis = vCardService->IsAPropertyOf(o, VCCISProp);
+  VObject* eworld = vCardService->IsAPropertyOf(o, VCEWorldProp);
+  VObject* internet = vCardService->IsAPropertyOf(o, VCInternetProp);
+  VObject* ibmmail = vCardService->IsAPropertyOf(o, VCIBMMailProp);
+  VObject* mcimail = vCardService->IsAPropertyOf(o, VCMCIMailProp);
+  VObject* powershare = vCardService->IsAPropertyOf(o, VCPowerShareProp);
+  VObject* prodigy = vCardService->IsAPropertyOf(o, VCProdigyProp);
+  VObject* telex = vCardService->IsAPropertyOf(o, VCTLXProp);
+  VObject* x400 = vCardService->IsAPropertyOf(o, VCX400Prop);
   char     *tString = NULL;
 
   if (prefProp) {
@@ -1416,9 +1448,14 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
   char *value = NULL;
   int status = 0;
 
-  if (vObjectName(o)) 
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+      do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+  
+  if (vCardService->VObjectName(o)) 
   {
-    if (nsCRT::strcasecmp (VCTelephoneProp, vObjectName(o)) == 0) 
+    if (nsCRT::strcasecmp (VCTelephoneProp, vCardService->VObjectName(o)) == 0) 
     {
       if (VALUE_TYPE(o)) 
       {
@@ -1426,7 +1463,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
         if (!attribName)
           attribName = VCardGetStringByID(VCARD_LDAP_PHONE_NUMBER);
         attribName = NS_MsgSACat(&attribName, ": ");
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         if (value)
         {
           if (attribName)
@@ -1473,11 +1510,16 @@ static int WriteOutVCardPhoneProperties (MimeObject *obj, VObject* v)
   VObjectIterator t;
   VObject *eachProp;
 
-    WriteOutEachVCardPhoneProperty (obj, v);
-  initPropIterator(&t,v);
-  while (moreIteration(&t) && status >= 0)
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+    do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+    return -1;
+
+  WriteOutEachVCardPhoneProperty (obj, v);
+  vCardService->InitPropIterator(&t,v);
+  while (vCardService->MoreIteration(&t) && status >= 0)
   {
-    eachProp = nextVObject(&t);
+    eachProp = vCardService->NextVObject(&t);
     status = WriteOutEachVCardPhoneProperty (obj, eachProp);
   }
 
@@ -1493,14 +1535,19 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
   char *value = NULL;
   int status = 0;
 
-  if (vObjectName(o)) {
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+      do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+      return -1;
+  
+  if (vCardService->VObjectName(o)) {
 
-    if (nsCRT::strcasecmp (VCPhotoProp, vObjectName(o)) == 0) {
-      VObject* urlProp = isAPropertyOf(o, VCURLProp);
+    if (nsCRT::strcasecmp (VCPhotoProp, vCardService->VObjectName(o)) == 0) {
+      VObject* urlProp = vCardService->IsAPropertyOf(o, VCURLProp);
       if (urlProp) {
         attribName = VCardGetStringByID(VCARD_LDAP_PHOTOGRAPH);
         /* format the value string to the url */
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         if (value)
           url = PR_smprintf ("<IMG SRC = ""%s""", value);
         PR_FREEIF (value);
@@ -1509,112 +1556,112 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
       }
     }
 
-    if (nsCRT::strcasecmp (VCBirthDateProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCBirthDateProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_BIRTHDAY);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCDeliveryLabelProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCDeliveryLabelProp, vCardService->VObjectName(o)) == 0) {
       attribName = VCardGetStringByID(VCARD_LDAP_LABEL);
       GetAddressProperties(o, &attribName);
-      value = fakeCString (vObjectUStringZValue(o));
+      value = vCardService->FakeCString(o);
       goto DOWRITE;
     }
 
-    if (nsCRT::strcasecmp (VCEmailAddressProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCEmailAddressProp, vCardService->VObjectName(o)) == 0) {
       if ((*numEmail) != 1)
       {
         if (VALUE_TYPE(o)) {
           (*numEmail)++;
           attribName = VCardGetStringByID(VCARD_LDAP_EMAIL_ADDRESS);
           GetEmailProperties(o, &attribName);
-          value = fakeCString (vObjectUStringZValue(o));
+          value = vCardService->FakeCString(o);
           goto DOWRITE;
         };
       }
     }
 
-    if (nsCRT::strcasecmp (VCFamilyNameProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCFamilyNameProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_SURNAME);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCGivenNameProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCGivenNameProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_GIVEN_NAME);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCNamePrefixesProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCNamePrefixesProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_NAME_PREFIX);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCNameSuffixesProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCNameSuffixesProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_NAME_SUFFIX);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCAdditionalNamesProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCAdditionalNamesProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_MIDDLE_NAME);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCMailerProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCMailerProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_MAILER);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCTimeZoneProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCTimeZoneProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_TZ);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCGeoProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCGeoProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_GEO);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCBusinessRoleProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCBusinessRoleProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_ROLE);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCLogoProp, vObjectName(o)) == 0) {
-      VObject* urlProp = isAPropertyOf(o, VCURLProp);
+    if (nsCRT::strcasecmp (VCLogoProp, vCardService->VObjectName(o)) == 0) {
+      VObject* urlProp = vCardService->IsAPropertyOf(o, VCURLProp);
       if (urlProp) {
         attribName = VCardGetStringByID(VCARD_LDAP_LOGO);
         /* format the value string to the url */
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         if (value)
           url = PR_smprintf ("<IMG SRC = ""%s""", value);
         PR_FREEIF (value);
@@ -1622,32 +1669,32 @@ static int WriteOutEachVCardProperty (MimeObject *obj, VObject* o, int* numEmail
       }
     }
 
-    if (nsCRT::strcasecmp (VCAgentProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCAgentProp, vCardService->VObjectName(o)) == 0) {
       attribName = VCardGetStringByID(VCARD_LDAP_SECRETARY);
       goto DOWRITE;
     }
 
-    if (nsCRT::strcasecmp (VCLastRevisedProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCLastRevisedProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_REVISION);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
-    if (nsCRT::strcasecmp (VCPronunciationProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCPronunciationProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_SOUND);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
 
 
-    if (nsCRT::strcasecmp (VCVersionProp, vObjectName(o)) == 0) {
+    if (nsCRT::strcasecmp (VCVersionProp, vCardService->VObjectName(o)) == 0) {
       if (VALUE_TYPE(o)) {
         attribName = VCardGetStringByID(VCARD_LDAP_VERSION);
-        value = fakeCString (vObjectUStringZValue(o));
+        value = vCardService->FakeCString(o);
         goto DOWRITE;
       }
     }
@@ -1693,11 +1740,16 @@ static int WriteOutVCardProperties (MimeObject *obj, VObject* v, int* numEmail)
   VObjectIterator t;
   VObject *eachProp;
 
-    WriteOutEachVCardProperty (obj, v, numEmail);
-  initPropIterator(&t,v);
-  while (moreIteration(&t) && status >= 0)
+  nsCOMPtr<nsIMsgVCardService> vCardService = 
+    do_GetService(MSGVCARDSERVICE_CONTRACT_ID);
+  if (!vCardService)
+    return -1;
+
+  WriteOutEachVCardProperty (obj, v, numEmail);
+  vCardService->InitPropIterator(&t,v);
+  while (vCardService->MoreIteration(&t) && status >= 0)
   {
-    eachProp = nextVObject(&t);
+    eachProp = vCardService->NextVObject(&t);
     status = WriteOutVCardProperties (obj, eachProp, numEmail);
   }
 

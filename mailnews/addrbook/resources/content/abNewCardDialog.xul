@@ -29,7 +29,6 @@ Rights Reserved.
     xmlns:nc="http://home.netscape.com/NC-rdf#"
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     id="abcardWindow"
-    title="&editcardWindow.title;"
     onload="OnLoadNewCard()"
     buttonpack="center"
     ondialogaccept="return NewCardOKButton();">
@@ -38,7 +37,8 @@ Rights Reserved.
 
   <hbox align="center" valign="center">
 
-    <label control="abPopup" value="&chooseAddressBook.label;" accesskey="&chooseAddressBook.accesskey;"/>
+    <label id="abPopupLabel" control="abPopup" value="&chooseAddressBook.label;" accesskey="&chooseAddressBook.accesskey;"/>
+
     <menulist id="abPopup">
       <menupopup id="abPopup-menupopup" 
                  ref="moz-abdirectory://" 

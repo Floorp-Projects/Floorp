@@ -77,6 +77,17 @@
                 prefstring="mail.identity.%identitykey%.sigbrowse.disable"/>
       </hbox>
 
+      <hbox align="center">
+        <checkbox wsm_persist="true" id="identity.attachVCard" label="&attachVCard.label;" flex="1"
+                  prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.attach_vcard"/>
+        <button class="push" name="editVCard" label="&editVCard.label;"  
+                  oncommand="editVCard()"/>
+        <label hidden="true" wsm_persist="true" id="identity.escapedVCard"
+                  pref="true" preftype="string" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.escapedVCard"/>
+      </hbox>
+
       <separator class="thin"/>
     </groupbox>
 

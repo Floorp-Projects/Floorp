@@ -56,7 +56,6 @@ public:
   
 private:
   nsIMsgSignature* m_signature;
-  nsIMsgVCard* m_vCard;
   char *m_identityKey;
   nsIPrefBranch *m_prefBranch;
   nsWeakPtr m_smtpServer;

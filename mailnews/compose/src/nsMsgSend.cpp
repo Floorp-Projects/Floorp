@@ -2664,7 +2664,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       PR_FREEIF(m_attachments[i].m_encoding);
       m_attachments[i].m_encoding = PL_strdup ("7bit");
 
-      // real name is set in the case of vcard so don't change it.
+      // real name is set in the case of vcard so don't change it.  XXX STILL NEEDED?
       // m_attachments[i].m_real_name = 0;
 
       /* Count up attachments which are going to come from mail folders

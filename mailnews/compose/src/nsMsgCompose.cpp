@@ -115,6 +115,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIMsgMdnGenerator.h"
+#include "plbase64.h"
 
 // Defines....
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -516,6 +517,14 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
 
     if (!aBuf.IsEmpty() && mailEditor)
     {
+      // XXX see bug #206793
+      nsCOMPtr<nsIDocShell> docshell;
+      nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
+      if (globalObj)
+        globalObj->GetDocShell(getter_AddRefs(docshell));
+      if (docshell)
+        docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
+
       if (aHTMLEditor && !mCiteReference.IsEmpty())
         mailEditor->InsertAsCitedQuotation(aBuf,
                                            mCiteReference,
@@ -524,6 +533,11 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
       else
         mailEditor->InsertAsQuotation(aBuf,
                                       getter_AddRefs(nodeInserted));
+
+      // XXX see bug #206793
+      if (docshell)
+        docshell->SetAppType(nsIDocShell::APP_TYPE_UNKNOWN);
+
       m_editor->EndOfDocument();
     }
 
@@ -704,7 +718,6 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
     if (NS_FAILED(rv)) return rv;
 
     m_baseWindow = do_QueryInterface(treeOwner);
-    docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
   }
   
   MSG_ComposeFormat format;
@@ -725,7 +738,7 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
   rv = composeService->DetermineComposeHTML(m_identity, format, &m_composeHTML);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // Set return receipt flag and type.
+  // Set return receipt flag and type, and if we should attach a vCard
   if (m_identity && composeFields)
   {
     PRBool requestReturnReceipt = PR_FALSE;
@@ -738,6 +751,12 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
     rv = m_identity->GetReceiptHeaderType(&receiptType);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = composeFields->SetReceiptHeaderType(receiptType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool attachVCard;
+    rv = m_identity->GetAttachVCard(&attachVCard);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = composeFields->SetAttachVCard(attachVCard);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1048,6 +1067,51 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity
     mProgress->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, NS_OK);
   }
 
+  PRBool attachVCard = PR_FALSE;
+  if (m_compFields)
+      m_compFields->GetAttachVCard(&attachVCard);
+
+  if (attachVCard && identity && (deliverMode == nsIMsgCompDeliverMode::Now || deliverMode == nsIMsgCompDeliverMode::Later))
+  {
+      nsXPIDLCString escapedVCard;
+      // make sure, if there is no card, this returns an empty string, or NS_ERROR_FAILURE
+      if (NS_SUCCEEDED(identity->GetEscapedVCard(getter_Copies(escapedVCard))) && !escapedVCard.IsEmpty()) 
+      {
+          nsCString vCardUrl;
+          vCardUrl = "data:text/x-vcard;base64,";
+          char *unescapedData = PL_strdup(escapedVCard);
+          if (!unescapedData)
+              return NS_ERROR_OUT_OF_MEMORY;
+          nsUnescape(unescapedData);
+          char *result = PL_Base64Encode(unescapedData, 0, nsnull);
+          vCardUrl += result;
+          PR_Free(result);
+          PR_Free(unescapedData);
+              
+          nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
+          if (NS_SUCCEEDED(rv) && attachment)
+          {
+              // [comment from 4.x]
+              // Send the vCard out with a filename which distinguishes this user. e.g. jsmith.vcf
+              // The main reason to do this is for interop with Eudora, which saves off 
+              // the attachments separately from the message body
+              nsXPIDLCString userid;
+              (void)identity->GetEmail(getter_Copies(userid));
+              PRInt32 index = userid.FindChar('@');
+              if (index != kNotFound)
+                  userid.Truncate(index);
+
+              if (userid.IsEmpty()) 
+                  attachment->SetName(NS_LITERAL_STRING("vcard.vcf").get());
+              else
+                  attachment->SetName(NS_ConvertASCIItoUCS2(userid).get());
+ 
+              attachment->SetUrl(vCardUrl.get());
+              m_compFields->AddAttachment(attachment);
+          }
+      }
+  }
+
   rv = _SendMsg(deliverMode, identity, entityConversionDone);
   if (NS_FAILED(rv))
   {
@@ -1333,10 +1397,10 @@ nsresult nsMsgCompose::SetBodyModified(PRBool modified)
   return rv;  
 }
 
-nsresult nsMsgCompose::GetDomWindow(nsIDOMWindowInternal * *aDomWindow)
+NS_IMETHODIMP 
+nsMsgCompose::GetDomWindow(nsIDOMWindowInternal * *aDomWindow)
 {
-  *aDomWindow = m_window;
-  NS_IF_ADDREF(*aDomWindow);
+  NS_IF_ADDREF(*aDomWindow = m_window);
   return NS_OK;
 }
 
@@ -2311,6 +2375,18 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
     nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(aEditor));
     if (mailEditor)
     {
+      // XXX see bug #206793
+      nsCOMPtr<nsIMsgCompose> compose = do_QueryReferent(mWeakComposeObj);
+      nsCOMPtr<nsIDOMWindowInternal> domWindow;
+      if (compose)
+        compose->GetDomWindow(getter_AddRefs(domWindow));
+      nsCOMPtr<nsIDocShell> docshell;
+      nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(domWindow);
+      if (globalObj)
+        globalObj->GetDocShell(getter_AddRefs(docshell));
+      if (docshell)
+        docshell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
+      
       if (aHTMLEditor)
         mailEditor->InsertAsCitedQuotation(mMsgBody,
                                            NS_LITERAL_STRING(""),
@@ -2318,6 +2394,10 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
                                            getter_AddRefs(nodeInserted));
       else
         mailEditor->InsertAsQuotation(mMsgBody, getter_AddRefs(nodeInserted));
+
+      // XXX see bug #206793
+      if (docshell)
+        docshell->SetAppType(nsIDocShell::APP_TYPE_UNKNOWN);
     }
       
   }

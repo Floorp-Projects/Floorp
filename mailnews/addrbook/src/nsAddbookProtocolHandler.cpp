@@ -99,7 +99,7 @@ NS_IMETHODIMP nsAddbookProtocolHandler::NewURI(const nsACString &aSpec,
                                                nsIURI *aBaseURI,
                                                nsIURI **_retval)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 	nsCOMPtr <nsIAddbookUrl> addbookUrl = do_CreateInstance(NS_ADDBOOKURL_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -127,12 +127,11 @@ nsAddbookProtocolHandler::GenerateXMLOutputChannel( nsString &aOutput,
                                                      nsIURI *aURI, 
                                                      nsIChannel **_retval)
 {
-  nsresult                  rv = NS_OK;
   nsIChannel                *channel;
   nsCOMPtr<nsIInputStream>  inStr;
   NS_ConvertUCS2toUTF8 utf8String(aOutput.get());
 
-  rv = NS_NewCStringInputStream(getter_AddRefs(inStr), utf8String);
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inStr), utf8String);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = NS_NewInputStreamChannel(&channel, aURI, inStr,
@@ -147,7 +146,6 @@ NS_IMETHODIMP
 nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
   nsresult rv;
-  
   nsCOMPtr <nsIAddbookUrl> addbookUrl = do_QueryInterface(aURI, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
   
@@ -167,6 +165,21 @@ nsAddbookProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
     return NS_OK;
   }
  
+  if (mAddbookOperation == nsIAddbookUrlOperation::AddVCard) {
+      // create an empty pipe for use with the input stream channel.
+      nsCOMPtr<nsIInputStream> pipeIn;
+      nsCOMPtr<nsIOutputStream> pipeOut;
+      rv = NS_NewPipe(getter_AddRefs(pipeIn),
+          getter_AddRefs(pipeOut));
+      if (NS_FAILED(rv)) 
+          return rv;
+      
+      pipeOut->Close();
+      
+      return NS_NewInputStreamChannel(_retval, aURI, pipeIn,
+          NS_LITERAL_CSTRING("x-application-addvcard"));
+  }
+
   nsString output;
   rv = GeneratePrintOutput(addbookUrl, output);
   if (NS_FAILED(rv)) {

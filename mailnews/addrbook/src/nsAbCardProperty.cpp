@@ -54,6 +54,9 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 
+#include "nsEscape.h"
+#include "nsVCardObj.h"
+
 #include "mozITXTToHTMLConv.h"
 
 #define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
@@ -1328,6 +1331,218 @@ NS_IMETHODIMP nsAbCardProperty::Equals(nsIAbCard *card, PRBool *result)
   return NS_OK;
 }
 
+static VObject* myAddPropValue(VObject *o, const char *propName, const PRUnichar *propValue, PRBool *aCardHasData)
+{
+    if (aCardHasData)
+        *aCardHasData = PR_TRUE;
+    return addPropValue(o, propName, NS_ConvertUCS2toUTF8(propValue).get());
+}
+
+NS_IMETHODIMP nsAbCardProperty::ConvertToEscapedVCard(char **aResult)
+{
+    nsXPIDLString str;
+    PRBool vCardHasData = PR_FALSE;
+    VObject* vObj = newVObject(VCCardProp);
+    VObject* t;
+    
+    // [comment from 4.x]
+    // Big flame coming....so Vobject is not designed at all to work with  an array of 
+    // attribute values. It wants you to have all of the attributes easily available. You
+    // cannot add one attribute at a time as you find them to the vobject. Why? Because
+    // it creates a property for a particular type like phone number and then that property
+    // has multiple values. This implementation is not pretty. I can hear my algos prof
+    // yelling from here.....I have to do a linear search through my attributes array for
+    // EACH vcard property we want to set. *sigh* One day I will have time to come back
+    // to this function and remedy this O(m*n) function where n = # attribute values and
+    // m = # of vcard properties....  
+
+    (void)GetDisplayName(getter_Copies(str));
+    if (!str.IsEmpty()) {
+        myAddPropValue(vObj, VCFullNameProp, str.get(), &vCardHasData);
+    }
+    
+    (void)GetLastName(getter_Copies(str));
+    if (!str.IsEmpty()) {
+        t = isAPropertyOf(vObj, VCNameProp);
+        if (!t)
+            t = addProp(vObj, VCNameProp);
+        myAddPropValue(t, VCFamilyNameProp, str.get(), &vCardHasData);
+    }
+    
+    (void)GetFirstName(getter_Copies(str));
+    if (!str.IsEmpty()) {
+        t = isAPropertyOf(vObj, VCNameProp);
+        if (!t)
+            t = addProp(vObj, VCNameProp);
+        myAddPropValue(t, VCGivenNameProp, str.get(), &vCardHasData);
+    }
+
+    (void)GetCompany(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCOrgProp);
+        if (!t)
+            t = addProp(vObj, VCOrgProp);
+        myAddPropValue(t, VCOrgNameProp, str.get(), &vCardHasData);
+    }
+
+    (void)GetDepartment(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCOrgProp);
+        if (!t)
+            t = addProp(vObj, VCOrgProp);
+        myAddPropValue(t, VCOrgUnitProp, str.get(), &vCardHasData);
+    }
+ 
+    (void)GetWorkAddress2(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCAdrProp);
+        if  (!t)
+            t = addProp(vObj, VCAdrProp);
+        myAddPropValue(t, VCPostalBoxProp, str.get(), &vCardHasData);  
+    }
+
+    (void)GetWorkAddress(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCAdrProp);
+        if  (!t)
+            t = addProp(vObj, VCAdrProp);
+        myAddPropValue(t, VCStreetAddressProp, str.get(), &vCardHasData);
+    }
+
+    (void)GetWorkCity(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCAdrProp);
+        if  (!t)
+            t = addProp(vObj, VCAdrProp);
+        myAddPropValue(t, VCCityProp, str.get(), &vCardHasData);
+    }
+
+    (void)GetWorkState(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCAdrProp);
+        if  (!t)
+            t = addProp(vObj, VCAdrProp);
+        myAddPropValue(t, VCRegionProp, str.get(), &vCardHasData);
+    }
+
+    (void)GetWorkZipCode(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCAdrProp);
+        if  (!t)
+            t = addProp(vObj, VCAdrProp);
+        myAddPropValue(t, VCPostalCodeProp, str.get(), &vCardHasData);
+    }
+
+    (void)GetWorkCountry(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = isAPropertyOf(vObj, VCAdrProp);
+        if  (!t)
+            t = addProp(vObj, VCAdrProp);
+        myAddPropValue(t, VCCountryNameProp, str.get(), &vCardHasData);
+    }
+    else
+    {
+        // only add this if VCAdrProp already exists
+        t = isAPropertyOf(vObj, VCAdrProp);
+        if (t)
+        {
+            addProp(t, VCDomesticProp);
+        }
+    }
+
+    (void)GetPrimaryEmail(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = myAddPropValue(vObj, VCEmailAddressProp, str.get(), &vCardHasData);  
+        addProp(t, VCInternetProp);
+    }
+ 
+    (void)GetJobTitle(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        myAddPropValue(vObj, VCTitleProp, str.get(), &vCardHasData);
+    }
+
+    (void)GetWorkPhone(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = myAddPropValue(vObj, VCTelephoneProp, str.get(), &vCardHasData);
+        addProp(t, VCWorkProp);
+    }
+
+    (void)GetFaxNumber(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = myAddPropValue(vObj, VCTelephoneProp, str.get(), &vCardHasData);
+        addProp(t, VCFaxProp);
+    }
+
+    (void)GetPagerNumber(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = myAddPropValue(vObj, VCTelephoneProp, str.get(), &vCardHasData);
+        addProp(t, VCPagerProp);
+    }
+    
+    (void)GetHomePhone(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = myAddPropValue(vObj, VCTelephoneProp, str.get(), &vCardHasData);
+        addProp(t, VCHomeProp);
+    }
+
+    (void)GetCellularNumber(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        t = myAddPropValue(vObj, VCTelephoneProp, str.get(), &vCardHasData);
+        addProp(t, VCCellularProp);
+    }
+
+    (void)GetNotes(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        myAddPropValue(vObj, VCNoteProp, str.get(), &vCardHasData);
+    }
+    
+    PRUint32 format;
+    (void)GetPreferMailFormat(&format);
+    if (format == nsIAbPreferMailFormat::html) {
+        myAddPropValue(vObj, VCUseHTML, NS_LITERAL_STRING("TRUE").get(), &vCardHasData);
+    }
+    else if (format == nsIAbPreferMailFormat::plaintext) {
+        myAddPropValue(vObj, VCUseHTML, NS_LITERAL_STRING("FALSE").get(), &vCardHasData);
+    }
+
+    (void)GetWebPage1(getter_Copies(str));
+    if (!str.IsEmpty())
+    {
+        myAddPropValue(vObj, VCURLProp, str.get(), &vCardHasData);
+    }
+    
+    myAddPropValue(vObj, VCVersionProp, NS_LITERAL_STRING("2.1").get(), nsnull);
+
+    if (!vCardHasData) {
+        *aResult = PL_strdup("");
+        return NS_OK;
+    }
+
+    int len = 0;
+    char *vCard = writeMemVObject(0, &len, vObj);
+    if (vObj)
+        cleanVObject(vObj);
+
+    *aResult = nsEscape(vCard, url_Path);
+    return (*aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+}
+
 NS_IMETHODIMP nsAbCardProperty::ConvertToBase64EncodedXML(char **result)
 {
   nsresult rv;
@@ -1361,10 +1576,7 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToBase64EncodedXML(char **result)
   xmlStr.Append(NS_LITERAL_STRING("</directory>\n").get());
 
   *result = PL_Base64Encode(NS_ConvertUCS2toUTF8(xmlStr).get(), 0, nsnull);
-  if (!*result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return NS_OK;
+  return (*result ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
 
 NS_IMETHODIMP nsAbCardProperty::ConvertToXMLPrintData(PRUnichar **aXMLSubstr)

@@ -66,7 +66,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgIdentity,
 
 nsMsgIdentity::nsMsgIdentity():
   m_signature(0),
-  m_vCard(0),
   m_identityKey(0),
   m_prefBranch(0)
 {
@@ -448,10 +447,8 @@ nsMsgIdentity::ClearAllValues()
 }
 
 
-NS_IMPL_GETSET(nsMsgIdentity, VCard, nsIMsgVCard*, m_vCard)
-  
 NS_IMPL_GETTER_STR(nsMsgIdentity::GetKey, m_identityKey)
-
+NS_IMPL_IDPREF_STR(EscapedVCard, "escapedVCard")
 NS_IMPL_IDPREF_STR(SmtpServerKey, "smtpServer")
 NS_IMPL_IDPREF_WSTR(FullName, "fullName")
 NS_IMPL_IDPREF_STR(Email, "useremail")

@@ -79,6 +79,13 @@
 #include "nsIAbMDBCard.h"
 #include "plbase64.h"
 
+#include "nsEscape.h"
+#include "nsVCard.h"
+#include "nsVCardObj.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
+
 // according to RFC 2849
 // SEP = (CR LF / LF)
 // so we LF for unix and beos (since that is the natural line ending for
@@ -113,8 +120,7 @@ nsAddressBook::~nsAddressBook()
 
 NS_IMPL_THREADSAFE_ADDREF(nsAddressBook)
 NS_IMPL_THREADSAFE_RELEASE(nsAddressBook)
-
-NS_IMPL_QUERY_INTERFACE2(nsAddressBook, nsIAddressBook, nsICmdLineHandler)
+NS_IMPL_QUERY_INTERFACE3(nsAddressBook, nsIAddressBook, nsICmdLineHandler, nsIContentHandler)
 
 //
 // nsIAddressBook
@@ -1825,6 +1831,214 @@ nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *a
   }
 
   return NS_OK;
+}
+
+char *getCString(VObject *vObj)
+{
+    if (VALUE_TYPE(vObj) == VCVT_USTRINGZ)
+        return fakeCString(vObjectUStringZValue(vObj));
+    if (VALUE_TYPE(vObj) == VCVT_STRINGZ)
+        return PL_strdup(vObjectStringZValue(vObj));
+    return NULL;
+}
+
+static void convertNameValue(VObject *vObj, nsIAbCard *aCard)
+{
+  const char *cardColName = NULL;
+
+  // if the vCard property is not a root property then we need to determine its exact property.
+  // a good example of this is VCTelephoneProp, this prop has four objects underneath it:
+  // fax, work and home and cellular.
+  if (PL_strcasecmp(VCCityProp, vObjectName(vObj)) == 0)
+      cardColName = kWorkCityColumn;
+  else if (PL_strcasecmp(VCTelephoneProp, vObjectName(vObj)) == 0)
+  {
+      if (isAPropertyOf(vObj, VCFaxProp))
+          cardColName = kFaxColumn;
+      else if (isAPropertyOf(vObj, VCWorkProp))
+          cardColName = kWorkPhoneColumn; 
+      else if (isAPropertyOf(vObj, VCHomeProp))
+          cardColName = kHomePhoneColumn;
+      else if (isAPropertyOf(vObj, VCCellularProp))
+          cardColName = kCellularColumn;
+      else if (isAPropertyOf(vObj, VCPagerProp))
+          cardColName = kPagerColumn;
+      else
+          return;
+  }
+  else if (PL_strcasecmp(VCEmailAddressProp, vObjectName(vObj)) == 0)
+  {       
+      // only treat it as a match if it is an internet property
+      VObject* iprop = isAPropertyOf(vObj, VCInternetProp);
+      if (iprop)
+          cardColName = kPriEmailColumn;
+      else
+          return;
+  }
+  else if (PL_strcasecmp(VCFamilyNameProp, vObjectName(vObj)) == 0) 
+      cardColName = kLastNameColumn;
+  else if (PL_strcasecmp(VCFullNameProp, vObjectName(vObj)) == 0)
+      cardColName = kDisplayNameColumn;
+  else if (PL_strcasecmp(VCGivenNameProp, vObjectName(vObj)) == 0)
+      cardColName = kFirstNameColumn;
+  else if (PL_strcasecmp(VCOrgNameProp, vObjectName(vObj)) == 0) 
+      cardColName = kCompanyColumn;
+  else if (PL_strcasecmp(VCOrgUnitProp, vObjectName(vObj)) == 0)
+      cardColName = kDepartmentColumn;
+  else if (PL_strcasecmp(VCPostalCodeProp, vObjectName(vObj)) == 0) 
+      cardColName = kWorkZipCodeColumn;
+  else if (PL_strcasecmp(VCRegionProp, vObjectName(vObj)) == 0)
+      cardColName = kWorkStateColumn;
+  else if (PL_strcasecmp(VCStreetAddressProp, vObjectName(vObj)) == 0)
+      cardColName = kWorkAddressColumn;
+  else if (PL_strcasecmp(VCPostalBoxProp, vObjectName(vObj)) == 0) 
+      cardColName = kWorkAddress2Column;
+  else if (PL_strcasecmp(VCCountryNameProp, vObjectName(vObj)) == 0)
+      cardColName = kWorkCountryColumn;
+  else if (PL_strcasecmp(VCTitleProp, vObjectName(vObj)) == 0) 
+      cardColName = kJobTitleColumn;
+  else if (PL_strcasecmp(VCUseHTML, vObjectName(vObj)) == 0) 
+      cardColName = kPreferMailFormatColumn;
+  else if (PL_strcasecmp(VCNoteProp, vObjectName(vObj)) == 0) 
+      cardColName = kNotesColumn;
+  else if (PL_strcasecmp(VCURLProp, vObjectName(vObj)) == 0)
+      cardColName = kWebPage1Column;
+  else
+      return;
+  
+  if (!VALUE_TYPE(vObj))
+      return;
+
+  char *cardColValue = getCString(vObj);
+  aCard->SetCardValue(cardColName, NS_ConvertASCIItoUCS2(cardColValue).get());
+  PR_FREEIF(cardColValue);
+  return;
+}
+
+static void convertFromVObject(VObject *vObj, nsIAbCard *aCard)
+{
+    if (vObj)
+    {
+        VObjectIterator t;
+
+        convertNameValue(vObj, aCard);
+        
+        initPropIterator(&t, vObj);
+        while (moreIteration(&t))
+        {
+            VObject * nextObject = nextVObject(&t);
+            convertFromVObject(nextObject, aCard);
+        }
+    }
+    return;
+}
+
+NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType, const char * aCommand,
+                                           nsISupports * aWindowContext, nsIRequest *request)
+{
+  NS_ENSURE_ARG_POINTER(request);
+  
+  nsresult rv = NS_OK;
+
+  // First of all, get the content type and make sure it is a content type we know how to handle!
+  if (nsCRT::strcasecmp(aContentType, "x-application-addvcard") == 0) {
+    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
+    if (!aChannel) return NS_ERROR_FAILURE;
+
+    rv = aChannel->GetURI(getter_AddRefs(uri));
+    if (uri)
+    {
+        nsCAutoString path;
+        rv = uri->GetPath(path);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        const char *startOfVCard = strstr(path.get(), "add?vcard=");
+        if (startOfVCard)
+        {
+            char *unescapedData = PL_strdup(startOfVCard + strlen("add?vcard="));
+            
+            // XXX todo, explain why we is escaped twice
+            nsUnescape(unescapedData);
+            
+            if (!aWindowContext) 
+                return NS_ERROR_FAILURE;
+
+            nsCOMPtr<nsIDOMWindowInternal> parentWindow = do_GetInterface(aWindowContext);
+            if (!parentWindow) 
+                return NS_ERROR_FAILURE;
+            
+            nsCOMPtr <nsIAbCard> cardFromVCard;
+            rv = EscapedVCardToAbCard((const char *)unescapedData, getter_AddRefs(cardFromVCard));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsISupportsInterfacePointer> ifptr =
+                do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            ifptr->SetData(cardFromVCard);
+            ifptr->SetDataIID(&NS_GET_IID(nsIAbCard));
+
+            nsCOMPtr<nsIDOMWindow> dialogWindow;
+
+            rv = parentWindow->OpenDialog(
+                NS_LITERAL_STRING("chrome://messenger/content/addressbook/abNewCardDialog.xul"),
+                NS_LITERAL_STRING(""),
+                NS_LITERAL_STRING("chrome,resizable=no,titlebar,modal,centerscreen"),
+                ifptr, getter_AddRefs(dialogWindow));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            PL_strfree(unescapedData);
+        }
+        rv = NS_OK;
+    }
+  } 
+  else {
+    // The content-type was not x-application-addvcard...
+    return NS_ERROR_WONT_HANDLE_CONTENT;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsAddressBook::EscapedVCardToAbCard(const char *aEscapedVCardStr, nsIAbCard **aCard)
+{
+    NS_ENSURE_ARG_POINTER(aEscapedVCardStr);
+    NS_ENSURE_ARG_POINTER(aCard);
+    
+    nsCOMPtr <nsIAbCard> cardFromVCard = do_CreateInstance(NS_ABCARDPROPERTY_CONTRACTID);
+    if (!cardFromVCard)
+        return NS_ERROR_FAILURE;
+
+    // aEscapedVCardStr will be "" the first time, before you have a vCard
+    if (*aEscapedVCardStr != '\0') {   
+        char *unescapedData = PL_strdup(aEscapedVCardStr);
+        if (!unescapedData)
+            return NS_ERROR_OUT_OF_MEMORY;
+        
+        nsUnescape(unescapedData);
+        VObject *vObj = parse_MIME(unescapedData, strlen(unescapedData));
+        PL_strfree(unescapedData);
+        NS_ASSERTION(vObj, "Parse of vCard failed");
+
+        convertFromVObject(vObj, cardFromVCard);
+        
+        if (vObj)
+            cleanVObject(vObj);
+    }
+    
+    NS_IF_ADDREF(*aCard = cardFromVCard);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAddressBook::AbCardToEscapedVCard(nsIAbCard *aCard, char **aEscapedVCardStr)
+{
+    NS_ENSURE_ARG_POINTER(aCard);
+    NS_ENSURE_ARG_POINTER(aEscapedVCardStr);
+    
+    nsresult rv = aCard->ConvertToEscapedVCard(aEscapedVCardStr);
+    NS_ENSURE_SUCCESS(rv,rv);
+    return rv;
 }
 
 CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)

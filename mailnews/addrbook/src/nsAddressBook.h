@@ -46,6 +46,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsICmdLineHandler.h"
 #include "nsIComponentManager.h"
+#include "nsIContentHandler.h"
 
 class nsILocalFile;
 class nsIAbDirectory;
@@ -134,7 +135,7 @@ static ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[] = {
   {kCategoryColumn, MOZ_AB_LDIF_PREFIX "Category", PR_FALSE}, 
 };
 
-class nsAddressBook : public nsIAddressBook, public nsICmdLineHandler
+class nsAddressBook : public nsIAddressBook, public nsICmdLineHandler, public nsIContentHandler
 {
   
 public:
@@ -144,6 +145,7 @@ public:
 	NS_DECL_ISUPPORTS
  	NS_DECL_NSIADDRESSBOOK
 	NS_DECL_NSICMDLINEHANDLER
+    NS_DECL_NSICONTENTHANDLER
 
   CMDLINEHANDLER_REGISTERPROC_DECLS
     

@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  mailnews \
 		  msgdb \
+		  addrbook \
 		  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -63,8 +64,6 @@ LOCAL_INCLUDES = -I$(srcdir)/../glue
 
 CPPSRCS		= \
 		mimevcrd.cpp \
-		nsVCard.cpp \
-		nsVCardObj.cpp \
 		$(NULL)
 
 ifndef MOZ_STATIC_MAIL_BUILD

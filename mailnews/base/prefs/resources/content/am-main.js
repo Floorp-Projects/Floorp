@@ -123,3 +123,22 @@ function setupSignatureItems()
      broadcaster.setAttribute("disabled","true");
    }
 }
+
+function editVCardCallback(escapedVCardStr)
+{
+  var escapedVCard = document.getElementById("identity.escapedVCard");
+  escapedVCard.value = escapedVCardStr;
+}
+
+function editVCard()
+{
+  var escapedVCard = document.getElementById("identity.escapedVCard");
+
+  // read vCard hidden value from UI
+  window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+                    "",
+                    "chrome,resizable=no,titlebar,modal",
+                    {escapedVCardStr:escapedVCard.value, okCallback:editVCardCallback,
+                     titleProperty:"editVCardTitle", hideABPicker:true});
+}
+

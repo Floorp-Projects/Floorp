@@ -68,14 +68,15 @@ nsAddbookUrl::SetSpec(const nsACString &aSpec)
 
 nsresult nsAddbookUrl::ParseUrl()
 {
-	nsresult rv;
-
   nsCAutoString pathStr;
-  rv = m_baseURL->GetPath(pathStr);
+
+  nsresult rv = m_baseURL->GetPath(pathStr);
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (strstr(pathStr.get(), "?action=print"))
     mOperationType = nsIAddbookUrlOperation::PrintAddressBook;
+  else if (strstr(pathStr.get(), "?action=add"))
+    mOperationType = nsIAddbookUrlOperation::AddVCard;
   else
     mOperationType = nsIAddbookUrlOperation::InvalidUrl;
   return NS_OK;
