@@ -282,25 +282,28 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     mFrames->SetWebShell(aWebShell);
   }
 
-  // Get our enclosing chrome shell and retrieve its global window impl, so that we can
-  // do some forwarding to the chrome document.
-  nsCOMPtr<nsIWebShell> chromeShell;
-  mWebShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
-  if (chromeShell) {
-    // Convert the chrome shell to a DOM window.
-    nsCOMPtr<nsIScriptContextOwner> contextOwner = do_QueryInterface(chromeShell);
-    if (contextOwner) {
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      if (NS_OK == contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) {
-        nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(globalObject);
-        if (chromeWindow) {
-          nsCOMPtr<nsIDOMDocument> chromeDoc;
-          chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
-          nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
-          mChromeDocument = realDoc.get(); // Don't addref it
-        }
-      }
-    }
+  if (mWebShell)
+  {
+	  // Get our enclosing chrome shell and retrieve its global window impl, so that we can
+	  // do some forwarding to the chrome document.
+	  nsCOMPtr<nsIWebShell> chromeShell;
+	  mWebShell->GetContainingChromeShell(getter_AddRefs(chromeShell));
+	  if (chromeShell) {
+	    // Convert the chrome shell to a DOM window.
+	    nsCOMPtr<nsIScriptContextOwner> contextOwner = do_QueryInterface(chromeShell);
+	    if (contextOwner) {
+	      nsCOMPtr<nsIScriptGlobalObject> globalObject;
+	      if (NS_OK == contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) {
+	        nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(globalObject);
+	        if (chromeWindow) {
+	          nsCOMPtr<nsIDOMDocument> chromeDoc;
+	          chromeWindow->GetDocument(getter_AddRefs(chromeDoc));
+	          nsCOMPtr<nsIDocument> realDoc = do_QueryInterface(chromeDoc);
+	          mChromeDocument = realDoc.get(); // Don't addref it
+	        }
+	      }
+	    }
+	  }
   }
 }
 
