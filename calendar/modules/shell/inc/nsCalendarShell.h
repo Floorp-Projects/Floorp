@@ -93,6 +93,7 @@ private:
   NS_METHOD RegisterFactories();
   NS_METHOD SetDefaultPreferences();
   NS_METHOD EnvVarsToValues(JulianString& s);
+  NS_METHOD SendCommand(nsString& aCommand, nsString& aReply);
 
 private:
   nsIXPFCObserverManager * mObserverManager;
