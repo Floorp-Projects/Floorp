@@ -599,3 +599,33 @@ lo_LayoutInflowBuiltin(MWContext *context,
 					  &builtin->x_offset, &builtin->y_offset, line_inc, baseline_inc);
 }
 
+
+/* Utility function for hunting LO_Builtin_struct for stuff. */
+char*
+LO_GetBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, char* att)
+{
+  int n = 0;
+  if (!pBuiltin_struct || !att)
+    return NULL;
+#ifdef OJI
+  while (n < pBuiltin_struct->attributes.n) {
+    char* attName = *(pBuiltin_struct->attributes.names + n);
+    char* attValue = *(pBuiltin_struct->attributes.values + n);
+    if (attName && (XP_FILENAMECMP(attName, att) == 0)) {
+      return attValue; 
+    }
+    n++;
+  }
+#else
+  while (n < pBuiltin_struct->attribute_cnt) {
+    char* attName = *(pBuiltin_struct->attribute_list + n);
+    char* attValue = *(pBuiltin_struct->value_list + n);
+    if (attName && (XP_FILENAMECMP(attName, att) == 0)) {
+      return attValue; 
+    }
+    n++;
+  }
+#endif
+  return NULL;
+}
+

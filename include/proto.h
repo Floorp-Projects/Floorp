@@ -140,6 +140,9 @@ extern void LO_SetJavaAppTransparent(LO_JavaAppStruct *javaData);
 extern void LO_SetEmbedType(LO_EmbedStruct *embed, PRBool is_windowed);
 extern void LO_SetEmbedSize( MWContext *context, LO_EmbedStruct *embed, int32 width, int32 height );
 
+extern char* LO_GetBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, 
+                                     char* att);
+
 #ifdef JAVA
 extern void LO_SetJavaAppTransparent(LO_JavaAppStruct *javaData);
 #endif

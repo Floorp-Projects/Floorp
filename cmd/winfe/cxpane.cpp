@@ -1544,31 +1544,6 @@ BOOL CPaneCX::SubClass(HWND hWnd, BOOL bSubClass)
 #endif
 }
 
-char* getBuiltInAttribute (LO_BuiltinStruct *pBuiltin_struct, char* att) {
-	int n = 0;
-	if (!pBuiltin_struct || !att)
-		return NULL;
-#ifdef OJI
-	while (n < pBuiltin_struct->attributes.n) {
-		char* attName = *(pBuiltin_struct->attributes.names + n);
-		char* attValue = *(pBuiltin_struct->attributes.values + n);
-		if (attName && (stricmp(attName, att) == 0)) {
-			return attValue; 
-		}
-		n++;
-	}
-#else
-	while (n < pBuiltin_struct->attribute_cnt) {
-		char* attName = *(pBuiltin_struct->attribute_list + n);
-		char* attValue = *(pBuiltin_struct->value_list + n);
-		if (attName && (stricmp(attName, att) == 0)) {
-			return attValue; 
-		}
-		n++;
-	}
-#endif
-	return NULL;
-}
 
 void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruct *pBuiltin_struct)
 {
@@ -1586,14 +1561,14 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 	int height = pBuiltin_struct->height;
 
 #ifdef ENDER
-	classid = getBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
+	classid = LO_GetBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
 	if (!classid)
 		TRACE("Bad object tag NULL\n");
     if (!classid || XP_STRCMP(classid,"builtin:htmlarea")){ //left to default to tree here
 #endif //ENDER
 
-		char* url = getBuiltInAttribute(pBuiltin_struct, "data");
-		char* target = getBuiltInAttribute(pBuiltin_struct, "target");
+		char* url = LO_GetBuiltInAttribute(pBuiltin_struct, "data");
+		char* target = LO_GetBuiltInAttribute(pBuiltin_struct, "target");
 		if (pBuiltin_struct->FE_Data == NULL ){
 #ifdef OJI
 			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attributes.n, pBuiltin_struct->attributes.names, pBuiltin_struct->attributes.values);
@@ -1653,7 +1628,7 @@ void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin
 	}
 
 #ifdef ENDER
-	classid = getBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
+	classid = LO_GetBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
 	if (!classid)
 		TRACE("Bad object tag NULL\n");
 
