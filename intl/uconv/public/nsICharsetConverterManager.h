@@ -144,19 +144,6 @@ public:
       nsIUnicodeEncoder ** aResult) = 0;
   NS_IMETHOD GetUnicodeDecoder(const nsString * aSrc, 
       nsIUnicodeDecoder ** aResult) = 0;
-
-  NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount) = 0;
-  NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount) = 0;
-  NS_IMETHOD GetCharsetDetectorList(nsStringArray * aArray) = 0;
-
-  NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
-      nsString ** aResult) = 0;
-  NS_IMETHOD GetCharsetTitle(nsString * aCharset, nsString ** aResult) = 0;
-  NS_IMETHOD GetCharsetLangGroup(nsString * aCharset, nsIAtom ** aResult) = 0;
-
-  NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult) = 0;
-  NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, 
-      nsString ** aResult) = 0;
 };
 
 #endif /* nsICharsetConverterManager_h___ */
