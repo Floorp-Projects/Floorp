@@ -19,7 +19,7 @@
 #define nsISelection_h___
 
 #include "nsSelectionRange.h"
-#include "nsLayout.h"
+#include "nslayout.h"
 #include "nsISupports.h"
 
 // IID for the nsISelection interface
