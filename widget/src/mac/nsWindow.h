@@ -160,12 +160,12 @@ public:
 
     virtual void         	StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
     virtual void         	EndDraw();
-	NS_IMETHOD				Update();
-	virtual void			UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
+    NS_IMETHOD				Update();
+    virtual void			UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
     
     virtual void			ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
-	void					LocalToWindowCoordinate(nsPoint& aPoint)						{ ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
-	void					LocalToWindowCoordinate(nscoord& aX, nscoord& aY)				{ ConvertToDeviceCoordinates(aX, aY); }
+    void					LocalToWindowCoordinate(nsPoint& aPoint)						{ ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
+    void					LocalToWindowCoordinate(nscoord& aX, nscoord& aY)				{ ConvertToDeviceCoordinates(aX, aY); }
     void					LocalToWindowCoordinate(nsRect& aRect)							{ ConvertToDeviceCoordinates(aRect.x, aRect.y); }
 
     NS_IMETHOD				SetMenuBar(nsIMenuBar * aMenuBar);
@@ -184,17 +184,17 @@ public:
     // Mac specific methods
     void 					nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
     PRBool 					RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
-	virtual void			CalcWindowRegions();
+    virtual void			CalcWindowRegions();
 
-	virtual PRBool 			PointInWidget(Point aThePoint);
-	virtual nsWindow*		FindWidgetHit(Point aThePoint);
+    virtual PRBool 			PointInWidget(Point aThePoint);
+    virtual nsWindow*		FindWidgetHit(Point aThePoint);
 
- 	virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
- 	virtual PRBool			DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
+    virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
+    virtual PRBool			DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
   	virtual nsresult		HandleUpdateEvent(RgnHandle regionToValidate);
   	virtual void			AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
   	PRBool					AcceptFocusOnClick() { return mAcceptFocusOnClick;};
-	void 					Flash(nsPaintEvent	&aEvent);
+    void 					Flash(nsPaintEvent	&aEvent);
 
 public:
   	// nsIKBStateControl interface
@@ -206,8 +206,9 @@ protected:
 	PRBool					ReportMoveEvent();
 	PRBool					ReportSizeEvent();
 
-	NS_IMETHOD				CalcOffset(PRInt32 &aX,PRInt32 &aY);
-
+	void    				CalcOffset(PRInt32 &aX,PRInt32 &aY);
+  PRBool          ContainerHierarchyIsVisible();
+  
 	virtual PRBool			OnPaint(nsPaintEvent & aEvent);
 
 	// our own impl of ::ScrollRect() that uses CopyBits so that it looks good. On 
