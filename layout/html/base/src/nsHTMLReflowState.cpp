@@ -28,6 +28,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDeviceContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsBlockFrame.h"
@@ -2099,6 +2100,8 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
     aStyleContext->GetStyleData(eStyleStruct_Text);
   const nsStyleFont* font = (const nsStyleFont*)
     aStyleContext->GetStyleData(eStyleStruct_Font);
+  const nsStyleDisplay* display = (const nsStyleDisplay*)
+    aStyleContext->GetStyleData(eStyleStruct_Display);
 
   nsStyleUnit unit = text->mLineHeight.GetUnit();
   if (eStyleUnit_Inherit == unit) {
@@ -2127,9 +2130,14 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
     // font's normal line height (em height + leading).
     nscoord emHeight = -1;
     nscoord normalLineHeight = -1;
-    aRenderingContext->SetFont(font->mFont);
+    nsCOMPtr<nsIDeviceContext> deviceContext;
+    aRenderingContext->GetDeviceContext(*getter_AddRefs(deviceContext));
+    nsCOMPtr<nsIAtom> langGroup;
+    if (display->mLanguage) {
+      display->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+    }
     nsCOMPtr<nsIFontMetrics> fm;
-    aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
+    deviceContext->GetMetricsFor(font->mFont, langGroup, *getter_AddRefs(fm));
 #ifdef NEW_FONT_HEIGHT_APIS
     if (fm) {
       fm->GetEmHeight(emHeight);
