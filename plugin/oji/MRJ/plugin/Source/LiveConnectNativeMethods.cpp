@@ -214,8 +214,10 @@ NS_NewURI(nsIURI* *result,
     nsIIOService* ioService;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
     nsresult rv = theServiceManager->GetService(kIOServiceCID, NS_GET_IID(nsIIOService), (void**)&ioService);
+#ifdef NOT_BROKEN_BY_DARIN
     if (rv == NS_OK)
         rv = ioService->NewURI(nsDependentCString(spec), nsnull, baseURI, result);
+#endif
     NS_RELEASE(ioService);
     return rv;
 }
@@ -254,11 +256,13 @@ NS_METHOD MRJSecurityContext::Implies(const char* target, const char* action, PR
 NS_METHOD 
 MRJSecurityContext::GetOrigin(char* buf, int len)
 {
+#ifdef NOT_BROKEN_BY_DARIN
     nsCAutoString origin;
     if (mLocation && NS_SUCCEEDED(mLocation->GetUserPass(origin))) {
         ::strncpy(buf, origin.get(), len);
         return NS_OK;
     }
+#endif
     return NS_ERROR_FAILURE;
 }
 
