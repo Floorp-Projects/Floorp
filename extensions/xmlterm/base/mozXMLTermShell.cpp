@@ -492,7 +492,6 @@ mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args,
                                     PR_TRUE,
                                     PR_FALSE,
                                     (PRUint32) 0,
-                                    (nsIXULWindowCallbacks*)nsnull,
                                     width, height,
                                     getter_AddRefs(webShellWin));
 
