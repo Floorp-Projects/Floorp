@@ -244,10 +244,8 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 }
 
 NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-	PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect) 
+	PRInt32 aSXOffset, PRInt32 aSYOffset, PRInt32 aPadX, PRInt32 aPadY, const nsRect &aTileRect) 
 {
-
-		
 	PRInt32 validX = 0, validY = 0, validWidth = mWidth, validHeight = mHeight;
 
   	if (mDecodedX2 < mDecodedX1 || mDecodedY2 < mDecodedY1)
@@ -255,7 +253,7 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
     	
 	if (!mImageCurrent || (nsnull == mImage)) 
 		BuildImage(aSurface);
-	if (nsnull == mImage) 
+	if (nsnull == mImage || mImage->BitsLength() == 0) 
 		return NS_ERROR_FAILURE;
 	
 	// Limit the image rectangle to the size of the image data which
@@ -279,42 +277,8 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 	
 	PRInt32 aY0 = aTileRect.y - aSYOffset, aX0 = aTileRect.x - aSXOffset,
 		aY1 = aTileRect.y + aTileRect.height, aX1 = aTileRect.x + aTileRect.width;
-	//Creating temporary bitmap, compatible with mImage and  with size of area to be filled with tiles
-	BBitmap *tmpbmp = 0;
-	tmpbmp = new BBitmap(BRect(0, 0, aX1 - aX0, aY1 - aY0), mImage->ColorSpace());
-	if (!tmpbmp || !tmpbmp->IsValid())
-		return NS_ERROR_FAILURE;
 
-	uint8 *dst0 = (uint8 *)tmpbmp->Bits();
-	uint8 *src0 = (uint8 *)mImage->Bits();
-	uint8 *src = src0;
-	uint8 *dst = dst0;
-			
-	int32 srcRowLength = mImage->BytesPerRow();
-	int32 dstRowLength = tmpbmp->BytesPerRow();
-	ldiv_t rowscan = ldiv(dstRowLength, srcRowLength);
-	int32 srcColHeight = mImage->BitsLength()/srcRowLength;
-	int32 dstColHeight = tmpbmp->BitsLength()/dstRowLength;
-	ldiv_t colscan = ldiv(dstColHeight, srcColHeight);
-	int32 copyheight = colscan.quot*srcColHeight + colscan.rem;
-	//Rendering mImage tile to temporary bitmap
-	for (int32 y = 0, yy = 0; y < copyheight; ++y) 
-	{
-		for (int32 x = 0; x < rowscan.quot; ++x) 
-		{
-			memcpy(dst,src, srcRowLength);
-			dst += srcRowLength;
-		}
-		if (rowscan.rem)
-		{
-			memcpy(dst,src, rowscan.rem);
-			dst += rowscan.rem;
-		}
-		src = src0 + yy*srcRowLength;
-		if (++yy == srcColHeight) //PR_MIN(dstColHeight, srcColHeight))
-			yy = 0;
-	}
-	//Flushing temporary bitmap to proper are in drawable BView		
+	BBitmap *tmpbmp = 0;
 	nsDrawingSurfaceBeOS *beosdrawing = (nsDrawingSurfaceBeOS *)aSurface;
 	BView *view;
 	if (((nsRenderingContextBeOS&)aContext).LockAndUpdateView()) 
@@ -322,17 +286,69 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsDrawingSurf
 		beosdrawing->AcquireView(&view);
 		if (view) 
 		{
-			if (0 != mAlphaDepth) 
-			{
+			bool padding = (0 != aPadX || 0 != aPadY);
+			//Force transparency for bitmap blitting in case of padding even if mAlphaDepth == 0
+			if (0 != mAlphaDepth || padding) 
 				view->SetDrawingMode(B_OP_ALPHA);
+			//No tiling, no padding. Tile is bigger than update area - keep it simple
+			if (!padding && validWidth > (aX1-aX0) && validHeight > (aY1-aY0))
+			{
+				view->DrawBitmap(mImage, BRect(0,0, aX1 -aX0, aY1 - aY0), 
+								BRect(aX0, aY0, aX1, aY1));
+			}
+			else
+			{
+				//Creating temporary bitmap, compatible with mImage and  with size of area to be filled with tiles
+				tmpbmp = new BBitmap(BRect(0, 0, aX1 - aX0, aY1 - aY0), mImage->ColorSpace());
+				int32 tmpbitlength = tmpbmp->BitsLength();
+				if (!tmpbmp || tmpbitlength == 0)
+				{
+					//Failed. Cleaning things a bit.
+					view->UnlockLooper();
+					if(tmpbmp)
+						delete tmpbmp;
+					beosdrawing->ReleaseView();
+					return NS_ERROR_FAILURE;
+				}
+				//Filling tmpbmp with transparent color to preserve padding areas on destination
+				for (uint32 i=0, length = tmpbitlength>>2, *tmpbits = (uint32 *)tmpbmp->Bits(); i < length; ++i)
+					*(tmpbits++) = B_TRANSPARENT_MAGIC_RGBA32;
+	
+				uint8 *dst0 = (uint8 *)tmpbmp->Bits();
+				uint8 *src0 = (uint8 *)mImage->Bits();
+				uint8 *src = src0;
+				uint8 *dst = dst0;
+				int32 srcRowLength = mImage->BytesPerRow();
+				int32 dstRowLength = tmpbmp->BytesPerRow();
+				ldiv_t rowscan = ldiv(dstRowLength, srcRowLength + aPadX*4);
+				int32 srcColHeight = mImage->BitsLength()/srcRowLength;
+				int32 dstColHeight = tmpbitlength/dstRowLength;
+				ldiv_t colscan = ldiv(dstColHeight, srcColHeight);
+				int32 copyheight = colscan.quot*srcColHeight + colscan.rem  + aPadY;
+				int32 horshift = srcRowLength + aPadX*4;
+				//Rendering mImage tile to temporary bitmap
+				for (int32 y = 0, yy = 0; y < copyheight; ++y) 
+				{
+					for (int32 x = 0; x < rowscan.quot; ++x) 
+					{
+						memcpy(dst,src, srcRowLength);
+						dst += horshift;
+					}
+					if (rowscan.rem)
+						memcpy(dst,src, PR_MIN(srcRowLength,rowscan.rem));
+					src = src0 + yy*srcRowLength;
+					dst = dst0 + y*dstRowLength;
+					if (++yy == srcColHeight )
+					{
+						//Height of source reached. Adding vertical paddding.
+						yy = 0;
+						y += aPadY;
+					}
+				}
+				//Flushing temporary bitmap to proper area in drawable BView	
 				view->DrawBitmap(tmpbmp, BPoint(aX0, aY0));
 				view->SetDrawingMode(B_OP_COPY);
-			} 
-			else 
-			{
-				view->DrawBitmap(tmpbmp, BPoint(aX0, aY0));
 			}
-
 			view->UnlockLooper();
 		}
 		beosdrawing->ReleaseView();
@@ -363,7 +379,7 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 		}
 		
 		// If the previous BBitmap is the right dimensions and colorspace, then reuse it.
-		const color_space cs = B_RGB32;
+		const color_space cs = B_RGBA32;
 		if (nsnull != mImage) 
 		{
 			BRect bounds = mImage->Bounds();
@@ -395,7 +411,7 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 		{
 			uint32 *dest = (uint32 *)mImage->Bits();
 			uint8 *src = mImageBits;
-
+			uint32 srcstep = mRowBytes - (mWidth * mNumBytesPixel);
 			if (mAlphaBits) 
 			{
 				uint8 *alpha = mAlphaBits;
@@ -409,7 +425,7 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 							*dest++ = (a << 24) | (src[2] << 16) | (src[1] << 8) | src[0];
 							src += 3;
 						}
-						src += mRowBytes - (mWidth * mNumBytesPixel);
+						src += srcstep;
 						alpha += mAlphaRowBytes;
 					}				
 				} 
@@ -422,7 +438,7 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 							*dest++ = (alpha[x] << 24) | (src[2] << 16) | (src[1] << 8) | src[0];
 							src += 3;
 						}
-						src += mRowBytes - (mWidth * mNumBytesPixel);
+						src += srcstep;
 						alpha += mAlphaRowBytes;
 					}
 				}
@@ -437,7 +453,7 @@ void nsImageBeOS::CreateImage(nsDrawingSurface aSurface)
 						*dest++ = 0xff000000 | (src[2] << 16) | (src[1] << 8) | src[0];
 						src += 3;
 					}
-					src += mRowBytes - (mWidth * mNumBytesPixel);
+					src += srcstep;
 				}
 			}
 			
