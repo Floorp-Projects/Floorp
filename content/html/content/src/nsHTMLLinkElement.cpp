@@ -89,7 +89,19 @@ public:
                           const nsAReadableString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafElement::SetAttribute(aNodeInfo, aValue,
                                                          aNotify);
-    UpdateStyleSheet(aNotify);
+
+    // nsGenericHTMLLeafElement::SetAttribute(nsINodeInfo* aNodeInfo,
+    //                                        const nsAReadableString& aValue,
+    //                                        PRBool aNotify)
+    //
+    // calls
+    //
+    // SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+    //              const nsAReadableString& aValue, PRBool aNotify)
+    //
+    // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
+    // here ourselves.
+
     return rv;
   }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
