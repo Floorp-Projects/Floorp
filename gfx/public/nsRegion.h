@@ -70,7 +70,10 @@ class NS_GFX nsRegion
 
     RgnRect& operator = (const RgnRect& aRect)      // Do not overwrite prev/next pointers
     {
-      nsRectFast::operator = (aRect);               // Copy only the nsRectFast part
+      x = aRect.x;
+      y = aRect.y;
+      width = aRect.width;
+      height = aRect.height;
       return *this;
     }
   };
