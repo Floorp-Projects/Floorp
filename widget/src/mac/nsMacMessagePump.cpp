@@ -332,6 +332,9 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 		DoIdle(*anEvent);
 		if (mRunning)
 			Repeater::DoIdlers(*anEvent);
+
+		// yield to other threads
+		::PR_Sleep(PR_INTERVAL_NO_WAIT);
 	}
 
 	if (mRunning)
