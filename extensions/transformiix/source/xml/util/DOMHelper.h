@@ -19,7 +19,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.h,v 1.3 2000/04/19 10:31:32 kvisco%ziplink.net Exp $
+ * $Id: DOMHelper.h,v 1.4 2000/06/11 11:42:23 Peter.VanderBeken%pandora.be Exp $
  */
 
 #ifndef TRANSFRMX_DOMHELPER_H
@@ -59,7 +59,7 @@ class OrderInfo : public MITREObject {
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2000/04/19 10:31:32 $
+ * @version $Revision: 1.4 $ $Date: 2000/06/11 11:42:23 $
 **/
 class DOMHelper {
 
@@ -72,7 +72,7 @@ public:
 
     /**
      * Deletes this DOMHelper
-	**/
+    **/
     virtual ~DOMHelper();
 
    /**
@@ -115,8 +115,8 @@ private:
 
 
     /**
-	 * Adds the given child/parent mapping to the list of parents
-	**/
+     * Adds the given child/parent mapping to the list of parents
+    **/
     void addParentReference(Node* child, Node* parent);
 
     /**
@@ -131,7 +131,7 @@ private:
      * DocumentOrder of
      * @return the DocumentOrder for the given Node
     **/
-	OrderInfo* getDocumentOrder(Node* node);
+    OrderInfo* getDocumentOrder(Node* node);
 
 
     /**
@@ -141,7 +141,7 @@ private:
 
     /**
      * A Hashtable of Node/OrderInfo mappings
-	**/
+    **/
     HashTable orders;
 
     /**

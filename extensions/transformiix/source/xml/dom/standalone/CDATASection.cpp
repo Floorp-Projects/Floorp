@@ -33,7 +33,7 @@
 //
 //Construct a text object with the specified document owner and data
 //
-CDATASection::CDATASection(const DOMString& theData, Document* owner) :
+CDATASection::CDATASection(const String& theData, Document* owner) :
       Text(Node::CDATA_SECTION_NODE, "#cdata-section", theData, owner)
 {
 }

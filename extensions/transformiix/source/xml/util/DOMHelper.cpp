@@ -19,13 +19,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.cpp,v 1.2 2000/04/19 10:31:23 kvisco%ziplink.net Exp $
+ * $Id: DOMHelper.cpp,v 1.3 2000/06/11 11:42:20 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/19 10:31:23 $
+ * @version $Revision: 1.3 $ $Date: 2000/06/11 11:42:20 $
 **/
 
 #include "DOMHelper.h"
@@ -156,8 +156,6 @@ void DOMHelper::addParentReference(Node* child, Node* parent) {
 void DOMHelper::continueIndexing(Node* node) {
     if (!node) return;
 
-
-
     MITREObjectWrapper* wrapper = 0;
 
     //-- get indexing information
@@ -167,7 +165,7 @@ void DOMHelper::continueIndexing(Node* node) {
     while (iter->hasNext()) {
         idxState = (IndexState*)iter->next();
         if (idxState->document == doc) break;
-	idxState = 0;
+            idxState = 0;
     }
 
     if (!idxState) {
@@ -175,7 +173,7 @@ void DOMHelper::continueIndexing(Node* node) {
         indexes.add(idxState);
         idxState->document = doc;
         idxState->next = doc->getDocumentElement();
-        if (!idxState->next) idxState->done = MB_TRUE;	
+        if (!idxState->next) idxState->done = MB_TRUE;
     }
 
     if (idxState->done) return;
@@ -188,36 +186,36 @@ void DOMHelper::continueIndexing(Node* node) {
         if (!idxState->next) {
             idxState->done = MB_TRUE;
             break;
-	}
+        }
 
         if (!alreadyProcessed) {
-	    //-- index attributes
-	    if (idxState->next->getNodeType() == Node::ELEMENT_NODE) {
-	        Element* element = (Element*)idxState->next;
+            //-- index attributes
+            if (idxState->next->getNodeType() == Node::ELEMENT_NODE) {
+                Element* element = (Element*)idxState->next;
                 NamedNodeMap* atts = element->getAttributes();
-		if (atts) {
-		    for (int i = 0; i < atts->getLength(); i++) {
-		        Node* tmpNode = atts->item(i);
+                if (atts) {
+                    for (int i = 0; i < atts->getLength(); i++) {
+                        Node* tmpNode = atts->item(i);
                         addParentReference(tmpNode, element);
                         if (node == tmpNode) found = MB_TRUE;
-		    }
-		}
-	    } 
-	}
+                    }
+                }
+            } 
+        }
         
         //-- set next node to check
         if ((!alreadyProcessed) && (idxState->next->hasChildNodes())) {
-	    Node* child = idxState->next->getFirstChild();
+            Node* child = idxState->next->getFirstChild();
             idxState->next = child;
-	}
+        }
         else if (idxState->next->getNextSibling()) {
-	    idxState->next = idxState->next->getNextSibling();
+            idxState->next = idxState->next->getNextSibling();
             alreadyProcessed = MB_FALSE;
-	}
+        }
         else {
-	    idxState->next = getParentNode(idxState->next);
+            idxState->next = getParentNode(idxState->next);
             alreadyProcessed = MB_TRUE;
-	}     
+        }     
     }
 
 } //-- continueIndexing
@@ -240,11 +238,11 @@ int DOMHelper::getChildNumber(Node* node) {
     int c = 0;
     Node* tmp = node;
     switch (node->getNodeType()) {
-	    case Node::DOCUMENT_NODE:
-	    case Node::ATTRIBUTE_NODE:
-		    break;
-	    default:
-		    while (tmp = tmp->getPreviousSibling()) ++c;     
+        case Node::DOCUMENT_NODE:
+        case Node::ATTRIBUTE_NODE:
+            break;
+        default:
+            while (tmp = tmp->getPreviousSibling()) ++c;     
             break;
     }
     
@@ -266,15 +264,15 @@ OrderInfo* DOMHelper::getDocumentOrder(Node* node) {
     OrderInfo* orderInfo = (OrderInfo*)orders.retrieve(key);
 
     if (!orderInfo) {
-	    if (node->getNodeType() == Node::DOCUMENT_NODE) {
-		    orderInfo = new OrderInfo();
+        if (node->getNodeType() == Node::DOCUMENT_NODE) {
+            orderInfo = new OrderInfo();
             orderInfo->size = 1;
             orderInfo->order = new int[1];
             orderInfo->order[0] = 0;
         }
         else {
-		    Node* parent = getParentNode(node);
-	        OrderInfo* parentOrder = getDocumentOrder(parent);
+            Node* parent = getParentNode(node);
+            OrderInfo* parentOrder = getDocumentOrder(parent);
             orderInfo = new OrderInfo();
 
             if (parentOrder) {
@@ -282,15 +280,15 @@ OrderInfo* DOMHelper::getDocumentOrder(Node* node) {
                 orderInfo->order = new int[orderInfo->size];
                 int c = 0;
                 for ( ; c < parentOrder->size; c++)
-				    orderInfo->order[c] = parentOrder->order[c];
+                    orderInfo->order[c] = parentOrder->order[c];
                 orderInfo->order[c] = getChildNumber(node);
             }
             else {
                 orderInfo->size = 1;
                 orderInfo->order = new int[1];
                 orderInfo->order[0] = 0;            
-			}
-		}
+            }
+        }
         orders.add(orderInfo, key);
     }
 
@@ -347,7 +345,7 @@ int OrderInfo::compareTo(OrderInfo* orderInfo) {
 
     int c = 0;
     while ( (c < size) && (c < orderInfo->size)) {
-	    if (order[c] < orderInfo->order[c]) return -1;
+        if (order[c] < orderInfo->order[c]) return -1;
         else if (order[c] > orderInfo->order[c]) return 1;
         ++c;
     }

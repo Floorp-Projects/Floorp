@@ -35,8 +35,8 @@
 //
 //Construct a text object with the specified document owner and data
 //
-Entity::Entity(const DOMString& name, const DOMString& pubID,
-               const DOMString& sysID, const DOMString& notName) :
+Entity::Entity(const String& name, const String& pubID,
+               const String& sysID, const String& notName) :
           NodeDefinition(Node::ENTITY_NODE, name, NULL_STRING, NULL)
 {
   publicId = pubID;
@@ -47,7 +47,7 @@ Entity::Entity(const DOMString& name, const DOMString& pubID,
 //
 //Return the Public ID of the Entity
 //
-const DOMString& Entity::getPublicId() const
+const String& Entity::getPublicId() const
 {
   return publicId;
 }
@@ -55,7 +55,7 @@ const DOMString& Entity::getPublicId() const
 //
 //Return the System ID of the Entity
 //
-const DOMString& Entity::getSystemId() const
+const String& Entity::getSystemId() const
 {
   return systemId;
 }
@@ -63,7 +63,7 @@ const DOMString& Entity::getSystemId() const
 //
 //Return the Notation Name of the Entity
 //
-const DOMString& Entity::getNotationName() const
+const String& Entity::getNotationName() const
 {
   return notationName;
 }
