@@ -53,7 +53,7 @@ class nsIDocument;
 |   5. Release() the search context object and the find component when the     |
 |      browser window closes.                                                  |
 ------------------------------------------------------------------------------*/
-struct nsIFindComponent : public nsISupports {
+struct nsIFindComponent : public nsIAppShellComponent {
     NS_DEFINE_STATIC_IID_ACCESSOR( NS_IFINDCOMPONENT_IID )
 
     /*---------------------------- CreateContext -------------------------------

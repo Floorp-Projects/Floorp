@@ -173,7 +173,10 @@ nsFindComponent::CreateContext( nsIDocument *aDocument,
                                 mLastSearchString,
                                 mLastIgnoreCase,
                                 mLastSearchBackward );
-        if ( !*aResult ) {
+        if ( *aResult ) {
+            // Do the expected on behalf of caller.
+            (*aResult)->AddRef();
+        } else {
             // Allocation failed.
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
