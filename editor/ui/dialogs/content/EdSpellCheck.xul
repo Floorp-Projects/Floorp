@@ -60,16 +60,15 @@
       <row valign="middle" autostretch="never">
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
         <box valign="middle" autostretch="never" flex="1">
-          <!-- flex doesn't seem to work on textbox? -->
-          <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()" flex="1"/>
+          <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()"/>
           <button class="dialog" id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
         </box>
       </row>
     </rows>
   </grid>
   <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
-  <grid flex="1">
-    <columns><column flex="1"/><column flex="1"/></columns>
+  <grid>
+    <columns><column/><column/></columns>
     <rows>
       <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
