@@ -644,6 +644,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
 
       nsIFrame* focusFrame = nsnull;
+      nsISelfScrollingFrame* sf = nsnull;
       nsIView* focusView = nsnull;
       nsCOMPtr<nsIPresShell> presShell;
 
@@ -693,16 +694,11 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         // We need to make an exception here if we can get a SelfScrollingFrame
         // This needs reviewed
 
-#ifdef DEBUG_scroll
-        printf("mLastFocusedContent = %p\n", mLastFocusedContent);
-#endif
-
-        nsISelfScrollingFrame* sf = GetNearestSelfScrollingFrame(aTargetFrame);
+        sf = GetNearestSelfScrollingFrame(aTargetFrame);
         if (sf) {
 #ifdef DEBUG_scroll
-          printf("Found a SelfScrollingFrame\n");
+          printf("Found a SelfScrollingFrame: sf = %p\n", sf);
 #endif
-          focusFrame = aTargetFrame;
           focusView = aView;
         } else {
           focusFrame = GetDocumentFrame(aPresContext);
@@ -751,7 +747,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
 #ifdef DEBUG_scroll
         printf("No scrolling view, looking for a scrolling frame\n");
 #endif
-        nsISelfScrollingFrame* sf = GetNearestSelfScrollingFrame(focusFrame);
+        if (!sf)
+          sf = GetNearestSelfScrollingFrame(focusFrame);
         if (sf) {
 #ifdef DEBUG_scroll
           printf("Found a scrolling frame\n");
