@@ -91,10 +91,7 @@ function bov_scrollto (line, align)
 
     /* all rows are visible, nothing to scroll */
     if (first == 0 && last > this.rowCount)
-    {
-        dd ("scrollTo: view does not overflow");
         return;
-    }
     
     /* outliner lines are 0 based, we accept one based lines, deal with it */
     --line;
@@ -110,7 +107,6 @@ function bov_scrollto (line, align)
         if (line > this.rowCount - viz) /* overscroll, can't put a row from */
             line = this.rowCount - viz; /* last page at the top. */
         this.outliner.scrollToRow(line);
-        return;
     }
     else if (align > 0)
     {
