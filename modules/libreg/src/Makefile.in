@@ -25,12 +25,11 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/objs.mk
 
 MODULE		= libreg
 LIBRARY_NAME	= mozreg_s
 
-
-PROGRAM		= vreg$(BIN_SUFFIX)
 
 CSRCS		= reg.c VerReg.c vr_stubs.c nr_bufio.c
 

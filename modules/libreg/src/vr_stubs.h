@@ -99,6 +99,7 @@
 
 #define XP_STRCAT(a,b)      strcat((a),(b))
 #define XP_ATOI             atoi
+#define XP_STRNCPY(a,b,n)   strncpy((a),(b),(n))
 #define XP_STRCPY(a,b)      strcpy((a),(b))
 #define XP_STRLEN(x)        strlen(x)
 #define XP_SPRINTF          sprintf
