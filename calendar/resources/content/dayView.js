@@ -119,18 +119,12 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
    var allDayBox = document.getElementById( "all-day-content-box" );
    var allDayLabel = document.getElementById( "all-day-content-title" );
    var dayViewContent = document.getElementById( "day-view-content-box" );
-   var eventBoxList = document.getElementsByAttribute( "eventbox", "dayview" );
-   var eventBox;
    
    //remove all the all day row -boxes from the all day content box.
    while( allDayBox.hasChildNodes() )
       allDayBox.removeChild( allDayBox.firstChild );
    
-   // remove eventboxes
-   while (eventBoxList.item(0)) {
-      eventBox = eventBoxList[0];
-      eventBox.parentNode.removeChild( eventBox );
-   }
+   this.removeElementsByAttribute("eventBox", "dayview");
    
    // set view limits for the day
    var limits = this.getViewLimits(dayEventList,this.calendarWindow.getSelectedDate());
@@ -582,12 +576,7 @@ DayView.prototype.selectBoxForEvent = function dayview_selectBoxForEvent( calend
 DayView.prototype.clearSelectedEvent = function dayview_clearSelectedEvent( )
 {
   debug("clearSelectedEvent");
-   var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
-
-   for( i = 0; i < ArrayOfBoxes.length; i++ )
-   {
-      ArrayOfBoxes[i].removeAttribute( "eventselected" );   
-   }
+  this.removeAttributeFromElements("eventselected", "true");
 }
 
 

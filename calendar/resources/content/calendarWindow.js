@@ -906,3 +906,45 @@ CalendarView.prototype.setAllDayDrawProperties = function calView_setAllDayDrawP
     }
   }
 }
+
+/** PROTECTED 
+
+    Common function to remove elements with attribute from DOM tree.
+    
+    Works around diffences in getElementsByAttribute list between
+    Moz1.8+, and Moz1.7- (Moz1.8+ list contents is 'live', and changes
+    as elements are removed from dom, while in Moz1.7- list is not 'live').
+ **/
+CalendarView.prototype.removeElementsByAttribute =
+  function calView_removeElementsByAttribute(attributeName, attributeValue) 
+{
+  var liveList = document.getElementsByAttribute(attributeName, attributeValue);
+  // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
+  // 'live', so when an element is deleted the indexes of later elements
+  // change, but in Moz1.7- list is 'dead'.  Reversed order works with both.
+  for (var i = liveList.length - 1; i >= 0; i--) {
+    var element = liveList.item(i);
+    if (element.parentNode != null) 
+      element.parentNode.removeChild(element);
+  }
+}
+
+/** PROTECTED 
+
+    Common function to clear a marker attribute from elements in DOM tree.
+
+    Works around diffences in getElementsByAttribute list between
+    Moz1.8+, and Moz1.7- (Moz1.8+ list contents is 'live', and changes
+    as attributes are removed from dom, while in Moz1.7- it is not 'live').
+ **/
+CalendarView.prototype.removeAttributeFromElements =
+  function calView_removeAttributeFromElements(attributeName, attributeValue) 
+{
+  var liveList = document.getElementsByAttribute(attributeName, attributeValue);
+  // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
+  // 'live', so when an attribute is deleted the indexes of later elements
+  // change, but in Moz1.7- list is 'dead'.  Reversed order works with both.
+  for (var i = liveList.length - 1; i >= 0; i--) {
+    liveList.item(i).removeAttribute(attributeName);
+  }
+}

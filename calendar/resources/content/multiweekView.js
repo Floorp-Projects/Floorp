@@ -230,27 +230,13 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
    var viewEventList = gEventSource.getEventsDisplayForRange( this.firstDateOfView,this.lastDateOfView );
 
    // remove old event boxes
-   var eventBoxList = document.getElementsByAttribute( "eventbox", "multiweekview" );
-
-   var eventBox = null;
-
-   while( eventBoxList.item(0) )
-   {
-      eventBox = eventBoxList[ 0 ];
-      eventBox.parentNode.removeChild( eventBox );
-   }
+  this.removeElementsByAttribute("eventbox", "multiweekview");
    
    //getAllToDo's
    var viewToDoList = gEventSource.getToDosForRange( this.firstDateOfView,this.lastDateOfView );   
 
    // remove old todo boxes
-   var toDoBoxList = document.getElementsByAttribute( "todobox", "multiweekview" );
-
-   while( toDoBoxList.item(0) )
-   {
-      eventBox = toDoBoxList[ 0 ];
-      eventBox.parentNode.removeChild( eventBox );
-   }
+  this.removeElementsByAttribute("todobox","multiweekview");
 
    // clear calendarEvent counts. This controls how many events are shown full, and then the rest are shown as dots.
    // count them by adding a property numEvents to the dayItem, which is zeroed here
@@ -761,12 +747,7 @@ MultiweekView.prototype.hiliteSelectedDate = function multiweekView_hiliteSelect
 
 MultiweekView.prototype.clearSelectedDate = function multiweekView_clearSelectedDate( )
 {
-   var SelectedBoxes = document.getElementsByAttribute( "multiweekselected", "true" );
-   
-   while( SelectedBoxes.item(0) )
-   {
-      SelectedBoxes[0].removeAttribute( "multiweekselected" );
-   }
+  this.removeAttributeFromElements("multiweekselected", "true");
 }
 
 
@@ -778,12 +759,7 @@ MultiweekView.prototype.clearSelectedDate = function multiweekView_clearSelected
 MultiweekView.prototype.hiliteTodaysDate = function multiweekView_hiliteTodaysDate( )
 {
    // Clear the old selection if there was one
-   var TodayBoxes = document.getElementsByAttribute( "today", "true" );
-   
-   while( TodayBoxes.item(0) )
-   {
-      TodayBoxes[0].removeAttribute( "today" );
-   }
+  this.removeAttributeFromElements("today", "true");
 
    //highlight today.
    var Today = new Date( );
@@ -929,12 +905,7 @@ MultiweekView.prototype.clearSelectedEvent = function multiweekView_clearSelecte
 {
   debug("clearSelectedEvent");
 
-   var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
-
-   while( ArrayOfBoxes.item(0) )
-   {
-      ArrayOfBoxes[0].removeAttribute( "eventselected" );   
-   }
+  this.removeAttributeFromElements("eventselected", "true");
 }
 
 

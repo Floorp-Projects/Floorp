@@ -113,11 +113,7 @@ WeekView.prototype.refreshEvents = function( )
 {
    this.kungFooDeathGripOnEventBoxes = new Array();
    
-   var eventBoxList = document.getElementsByAttribute( "eventbox", "weekview" );
-   while( eventBoxList.item(0) ) {
-      var eventBox = eventBoxList[ 0 ];
-      eventBox.parentNode.removeChild( eventBox );
-   }
+   this.removeElementsByAttribute("eventbox","weekview");
    
    for( var dayIndex = 1; dayIndex <= 7; ++dayIndex ) {
       var headerDateItem = document.getElementById( "week-header-date-" + dayIndex );
@@ -487,11 +483,8 @@ WeekView.prototype.refreshDisplay = function( )
             arrayOfBoxes[i].setAttribute( "weekend", "true" );
          }
       } else {
-         /* its not a weekend */
-         arrayOfBoxes = document.getElementsByAttribute( "day", dayIndex );
-         for( i = 0; i < arrayOfBoxes.length; i++ ) {
-            arrayOfBoxes[i].removeAttribute( "weekend" );
-         }
+         /* it's not a weekend */
+        this.removeAttributeFromElements("day", dayIndex);
       }
       
       // advance to next day 
@@ -593,10 +586,7 @@ WeekView.prototype.hiliteSelectedDate = function multiweekView_hiliteSelectedDat
 WeekView.prototype.hiliteTodaysDate = function( )
 {
    //clear out the old today boxes.
-   var OldTodayArray = document.getElementsByAttribute( "today", "true" );
-   while ( OldTodayArray.item(0) ) {
-      OldTodayArray[0].removeAttribute( "today" );
-   }
+  this.removeAttributeFromElements("today","true");
    
    // get the events for the day and loop through them
    var FirstDay = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
@@ -631,10 +621,7 @@ WeekView.prototype.hiliteTodaysDate = function( )
 WeekView.prototype.clearSelectedEvent = function( )
 {
    //Event = gCalendarWindow.getSelectedEvent();
-   var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
-   while( ArrayOfBoxes.item(0) ) {
-      ArrayOfBoxes[0].removeAttribute( "eventselected" );   
-   }
+  this.removeAttributeFromElements("eventselected", "true");
 }
 
 /** PUBLIC
@@ -658,8 +645,5 @@ WeekView.prototype.getNewEventDate = function( )
 */
 WeekView.prototype.clearSelectedDate = function( )
 {
-   var SelectedBoxes = document.getElementsByAttribute( "weekselected", "true" );
-   while( SelectedBoxes.item(0) ) {
-      SelectedBoxes[0].removeAttribute( "weekselected" );
-   }
+  this.removeAttributeFromElements("weekselected","true");
 }

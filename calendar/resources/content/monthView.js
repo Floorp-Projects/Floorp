@@ -226,15 +226,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
    var monthEventList = gEventSource.getEventsDisplayForRange( this.firstDateOfView,this.lastDateOfView );
    
    // remove old event boxes
-   var eventBoxList = document.getElementsByAttribute( "eventbox", "monthview" );
-
-   var eventBox = null;
-
-   while ( eventBoxList.item(0) )
-   {
-      eventBox = eventBoxList[ 0 ];
-      eventBox.parentNode.removeChild( eventBox );
-   }
+  this.removeElementsByAttribute("eventbox", "monthview");
    
    // clear calendarEvent counts. This controls how many events are shown full, and then the rest are shown as dots.
 
@@ -635,12 +627,7 @@ MonthView.prototype.hiliteSelectedDate = function monthView_hiliteSelectedDate( 
 
 MonthView.prototype.clearSelectedDate = function monthView_clearSelectedDate( )
 {
-   var SelectedBoxes = document.getElementsByAttribute( "monthselected", "true" );
-   
-   while( SelectedBoxes.item(0) )
-   {
-      SelectedBoxes[0].removeAttribute( "monthselected" );
-   }
+  this.removeAttributeFromElements("monthselected","true");
 }
 
 /** PUBLIC
@@ -650,12 +637,7 @@ MonthView.prototype.clearSelectedDate = function monthView_clearSelectedDate( )
 
 MonthView.prototype.clearSelectedBoxes = function monthView_clearSelectedBoxes( )
 {
-   var SelectedBoxes = document.getElementsByAttribute( "eventselected", "true" );
-   
-   while( SelectedBoxes.item(0) )
-   {
-      SelectedBoxes[0].removeAttribute( "eventselected" );
-   }
+  this.removeAttributeFromElements("eventselected","true");
 }
 
 /** PRIVATE
@@ -666,12 +648,7 @@ MonthView.prototype.clearSelectedBoxes = function monthView_clearSelectedBoxes( 
 MonthView.prototype.hiliteTodaysDate = function monthView_hiliteTodaysDate( )
 {
    // Clear the old selection if there was one
-   var TodayBoxes = document.getElementsByAttribute( "today", "true" );
-   
-   while( TodayBoxes.item(0) )
-   {
-      TodayBoxes[0].removeAttribute( "today" );
-   }
+  this.removeAttributeFromElements("today","true");
 
    //highlight today.
    var Today = new Date( );
@@ -870,12 +847,7 @@ MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
 MonthView.prototype.clearSelectedEvent = function monthView_clearSelectedEvent( )
 {
   debug("clearSelectedEvent");
-   var ArrayOfBoxes = document.getElementsByAttribute( "eventselected", "true" );
-
-   while( ArrayOfBoxes.item(0) )
-   {
-      ArrayOfBoxes[0].removeAttribute( "eventselected" );   
-   }
+  this.removeAttributeFromElements("eventselected","true");
 }
 
 

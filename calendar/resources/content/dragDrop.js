@@ -79,13 +79,16 @@ var calendarViewDNDObserver = {
    onDragStart: function (aEvent, aXferData, aDragAction){
 
       //Clear any dragged over events left from last drag selection.
-      var allDraggedElements = document.getElementsByAttribute( "draggedover", "true" );
-      for( var i = 0; i < allDraggedElements.length; i++ )
+      var liveList = document.getElementsByAttribute( "draggedover", "true" );
+      // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
+      // 'live', so when attribute is deleted the indexes of later elements
+      // change, but Moz1.7- is not.  Reversed order works with both.
+      for (var i = liveList.length - 1; i >= 0; i--) 
       {
-         allDraggedElements[i].removeAttribute( "draggedover" );
+         liveList.item(i).removeAttribute( "draggedover" );
       }
 
-      // select clicked object, Mozilla doens't do this.
+      // select clicked object, Mozilla doesn't do this.
       calendarViewClick( aEvent );
 
       // aEvent.currentTarget;
@@ -380,10 +383,13 @@ var calendarViewDNDObserver = {
       }
       
       // cleanup
-      var allDraggedElements = document.getElementsByAttribute( "draggedover", "true" );
-      for( var i = 0; i < allDraggedElements.length; i++ )
+      var liveList = document.getElementsByAttribute( "draggedover", "true" );
+      // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
+      // 'live', so when attribute is deleted the indexes of later elements
+      // change, but Moz1.7- is not.  Reversed order works with both.
+      for (var i = liveList.length - 1; i >= 0; i--)
       {
-         allDraggedElements[i].removeAttribute( "draggedover" );
+         liveList.item(i).removeAttribute( "draggedover" );
       }
   },
 

@@ -573,10 +573,14 @@ function changeContextMenuForToDo( event )
    
    if( toDoItem )
    {
-      var ArrayOfElements = document.getElementById( "taskitem-context-menu" ).getElementsByAttribute( "checked", "true" );
-
-      for( var i = 0; i < ArrayOfElements.length; i++ )
-         ArrayOfElements[i].removeAttribute( "checked" );
+      var liveList = document.getElementById( "taskitem-context-menu" ).getElementsByAttribute( "checked", "true" );
+      // Delete in reverse order.  Moz1.8+ getElementsByAttribute list is
+      // 'live', so when attribute is deleted the indexes of later elements
+      // change, but Moz1.7- is not.  Reversed order works with both.
+      for (var i = liveList.length - 1; i >= 0; i-- )
+      {
+         liveList.item(i).removeAttribute( "checked" );
+      }
 
       if( document.getElementById( "percent-"+toDoItem.percent+"-menuitem" ) )
       {
