@@ -20,54 +20,16 @@
 #include "nsFrame.h"
 #include "nsHTMLIIDs.h"
 
-class WBRPart : public nsHTMLTagContent {
-public:
-  WBRPart(nsIAtom* aTag);
-
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
-
-protected:
-  virtual ~WBRPart();
-};
-
-WBRPart::WBRPart(nsIAtom* aTag)
-  : nsHTMLTagContent(aTag)
-{
-}
-
-WBRPart::~WBRPart()
-{
-}
-
 nsresult
-WBRPart::CreateFrame(nsIPresContext*  aPresContext,
-                     nsIFrame*        aParentFrame,
-                     nsIStyleContext* aStyleContext,
-                     nsIFrame*&       aResult)
+NS_NewWBRFrame(nsIContent* aContent,
+               nsIFrame* aParentFrame,
+               nsIFrame*& aResult)
 {
   nsIFrame* frame = nsnull;
-  nsresult rv = nsFrame::NewFrame(&frame, this, aParentFrame);
+  nsresult rv = nsFrame::NewFrame(&frame, aContent, aParentFrame);
   if (NS_OK != rv) {
     return rv;
   }
-  frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return NS_OK;
-}
-
-nsresult
-NS_NewHTMLWordBreak(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* it = new WBRPart(aTag);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
