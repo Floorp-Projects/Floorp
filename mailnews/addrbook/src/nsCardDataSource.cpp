@@ -469,28 +469,14 @@ nsABCardDataSource::getCardArcLabelsOut(nsIAbCard *card,
 	if(NS_FAILED(rv))
 		return rv;
 
-	nsCOMPtr<nsIEnumerator> cards;
-	if(NS_SUCCEEDED(card->GetChildNodes(getter_AddRefs(cards))))
-	{
-		if(NS_OK == cards->First())
-		{
-			nsCOMPtr<nsISupports> firstCard;
-			rv = cards->CurrentItem(getter_AddRefs(firstCard));
-			if (NS_SUCCEEDED(rv))
-			{
-				(*arcs)->AppendElement(kNC_PersonName);
-				(*arcs)->AppendElement(kNC_ListName);
-				(*arcs)->AppendElement(kNC_Email);
-				(*arcs)->AppendElement(kNC_City);
-				(*arcs)->AppendElement(kNC_Organization);
-				(*arcs)->AppendElement(kNC_WorkPhone);
-				(*arcs)->AppendElement(kNC_Nickname);
-
-			}
-		}
-	}
-  
-  return NS_OK;
+	(*arcs)->AppendElement(kNC_PersonName);
+	(*arcs)->AppendElement(kNC_ListName);
+	(*arcs)->AppendElement(kNC_Email);
+	(*arcs)->AppendElement(kNC_City);
+	(*arcs)->AppendElement(kNC_Organization);
+	(*arcs)->AppendElement(kNC_WorkPhone);
+	(*arcs)->AppendElement(kNC_Nickname);
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -680,7 +666,7 @@ nsresult nsABCardDataSource::createCardNode(nsIAbCard* card,
   else if (peq(kNC_WorkPhone, property))
     rv = card->GetWorkPhone(&name);
   else if (peq(kNC_Nickname, property))
-    rv = card->GetNickname(&name);
+    rv = card->GetNickName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
   createNode(nameString, target);
@@ -697,7 +683,8 @@ nsresult nsABCardDataSource::DoDeleteFromCard(nsIAbCard *card, nsISupportsArray 
 nsresult nsABCardDataSource::DoNewCard(nsIAbCard *card, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(arguments->ElementAt(0), &rv));
+	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0)); 
+	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(elem, &rv));
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUnichar *name;

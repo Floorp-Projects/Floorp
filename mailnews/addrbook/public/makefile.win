@@ -23,6 +23,9 @@ XPIDLSRCS =						 \
 			.\nsIAbListener.idl	 \
 			.\nsIAbDirectory.idl \
 			.\nsIAbCard.idl		 \
+			.\nsIAddrDBAnnouncer.idl	\
+			.\nsIAddrDBListener.idl		\
+			.\nsIAddrDatabase.idl		\
 			$(NULL)
 
 

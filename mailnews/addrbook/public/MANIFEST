@@ -20,3 +20,6 @@
 #[installed by xpidl] nsIAbListener.h
 #[installed by xpidl] nsIAbDirectory.h
 #[installed by xpidl] nsIAbCard.h
+#[installed by xpidl] nsIAddrDBListener.h
+#[installed by xpidl] nsIAddrDBAnnouncer.h
+#[installed by xpidl] nsIAddrDatabase.h

@@ -26,10 +26,17 @@
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
 #include "nsAbCard.h"
+
+#include "nsIFileSpec.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+#include "mdb.h"
 	 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID);
+static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -39,7 +46,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 nsABDirectory::nsABDirectory(void)
   :  nsRDFResource(), mListeners(nsnull),
      mInitialized(PR_FALSE), mCardInitialized(PR_FALSE),
-     mCsid(0), mDepth(0), mPrefFlags(0)
+     mCsid(0), mDepth(0), mPrefFlags(0), mDatabase(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -86,6 +93,13 @@ nsABDirectory::~nsABDirectory(void)
 		PRInt32 i;
 		for (i = count - 1; i >= 0; i--)
 			mSubCards->RemoveElementAt(i);
+	}
+
+	if (mDatabase)
+	{
+//		mDatabase->RemoveListener(this);
+		mDatabase->Close(PR_TRUE);
+		mDatabase = null_nsCOMPtr();
 	}
 
 	if (mListeners) 
@@ -156,6 +170,8 @@ nsABDirectory::GetChildNodes(nsIEnumerator* *result)
     if (!PL_strcmp(mURI, "abdirectory:/") && GetDirList())
 	{
 		PRInt32 count = GetDirList()->Count();
+		/* check :set count = 1 for personal addressbook only for now*/
+		/* count = 1; */
 		PRInt32 i;
 		for (i = 0; i < count; i++)
 		{
@@ -209,6 +225,42 @@ nsresult nsABDirectory::AddSubDirectory(nsAutoString name, nsIAbDirectory **chil
 	return rv;
 }
 
+nsresult nsABDirectory::GetAbDatabase()
+{
+	// find out which database, which directory to add
+	// get RDF directory selected node
+
+	nsresult openAddrDB = NS_OK;
+	if (!mDatabase)
+	{
+		nsresult rv = NS_ERROR_FAILURE;
+
+		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+		if (NS_FAILED(rv))
+			return rv;
+
+		nsIFileSpec* userdir;
+		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
+		if (NS_FAILED(rv))
+			return rv;
+		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+		
+		nsFileSpec dbPath;
+		userdir->GetFileSpec(&dbPath);
+		dbPath += "abook.mab";
+
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory;
+		rv = nsComponentManager::CreateInstance(kAddressBookDB, nsnull, nsIAddrDatabase::GetIID(), 
+												(void **) getter_AddRefs(addrDBFactory));
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			openAddrDB = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+
+//		if (mDatabase)
+//			mDatabase->AddListener(this);
+	}
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsABDirectory::GetChildCards(nsIEnumerator* *result)
 {
 	if (!mCardInitialized) 
@@ -237,6 +289,16 @@ NS_IMETHODIMP nsABDirectory::GetChildCards(nsIEnumerator* *result)
 	}
 //	return mSubCards->Enumerate(result);
 	return mSubDirectories->Enumerate(result);
+
+#ifdef HOOK_UP_DB
+	nsresult rv = GetAbDatabase();
+
+	if (NS_SUCCEEDED(rv) && mDatabase)
+	{
+		rv = mDatabase->EnumerateCards(result);
+	}
+	return rv;
+#endif
 }
 
 nsresult nsABDirectory::AddChildCards(nsAutoString name, nsIAbCard **childCard)
@@ -333,6 +395,8 @@ NS_IMETHODIMP nsABDirectory::GetName(char **name)
 	{
 		PRInt32 count = GetDirList()->Count();
 		PRInt32 i;
+		/* check :set count = 1 for personal addressbook only for now*/
+		/* count = 1; */
 		for (i = 0; i < count; i++)
 		{
 			DIR_Server *server = (DIR_Server *)GetDirList()->ElementAt(i);

@@ -24,8 +24,24 @@ interface nsIAbCard : nsIAbBase {
 	attribute string personName;
 	attribute string listName;
 	attribute string email;
-	attribute string workPhone;
 	attribute string city;
+
+	attribute string firstName;
+	attribute string lastName;
+	attribute string displayName;
+	attribute string primaryEmail;
+	attribute string secondEmail;
+	attribute string workPhone;
+	attribute string homePhone;
+	attribute string faxNumber;
+	attribute string pagerNumber;
+	attribute string cellularNumber;
+	attribute string workCity;
 	attribute string organization;
-	attribute string nickname;
+	attribute string nickName;
+    attribute unsigned long dbRowID;
+
+	void GetCardValue(in string attrname, out string value);
+	void SetCardValue(in string attrname, in string value);
+	void AddCardToDatabase();
 };

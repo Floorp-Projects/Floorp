@@ -28,6 +28,9 @@ XPIDLSRCS =				  \
 		nsIAbListener.idl	\
 		nsIAbDirectory.idl	\
 		nsIAbCard.idl	\
+		nsIAddrDBListener.idl	\
+		nsIAddrDBAnnouncer.idl	\
+		nsIAddrDatabase.idl	\
 		$(NULL)
 
 EXPORTS =				\
@@ -35,6 +38,9 @@ EXPORTS =				\
 		nsIAbListener.h		\
 		nsIAbDirectory.h	\
 		nsIAbCard.h		\
+		nsIAddrDBListener.h		\
+		nsIAddrDBAnnouncer.h		\
+		nsIAddrDatabase.h		\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -498,29 +498,9 @@ nsABDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 	if(NS_FAILED(rv))
 		return rv;
 	
-	nsCOMPtr<nsIEnumerator>  subDirectory;
-	if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectory))))
-	{
-		if(NS_OK == subDirectory->First())
-		{
-			nsCOMPtr<nsISupports> firstDir;
-			rv = subDirectory->CurrentItem(getter_AddRefs(firstDir));
-			if (NS_SUCCEEDED(rv))
-				(*arcs)->AppendElement(kNC_Child);
-		}
-	}
-
-	nsCOMPtr<nsIEnumerator> cards;
-	if(NS_SUCCEEDED(directory->GetChildCards(getter_AddRefs(cards)))) 
-	{
-		if(NS_OK == cards->First())
-		{
-			nsCOMPtr<nsISupports> firstCard;
-			rv = cards->CurrentItem(getter_AddRefs(firstCard));
-			if (NS_SUCCEEDED(rv))
-				(*arcs)->AppendElement(kNC_CardChild);
-		}
-	}
+	(*arcs)->AppendElement(kNC_DirName);
+	(*arcs)->AppendElement(kNC_Child);
+	(*arcs)->AppendElement(kNC_CardChild);
 	return NS_OK;
 }
 
@@ -750,7 +730,8 @@ nsresult nsABDirectoryDataSource::DoDeleteFromDirectory(nsIAbDirectory *director
 nsresult nsABDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(arguments->ElementAt(0), &rv));
+	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0)); 
+	nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(elem, &rv));
 	if(NS_SUCCEEDED(rv))
 	{
 		PRUnichar *name;

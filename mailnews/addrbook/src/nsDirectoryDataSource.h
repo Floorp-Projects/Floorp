@@ -22,6 +22,7 @@
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
 #include "nsDirPrefs.h"
+#include "nsIAbListener.h"
 
 static const char kAddrBookRootURI[] = "abdirectory:/";
 
@@ -41,7 +42,7 @@ private:
   // The cached service managers
   
   nsIRDFService*	mRDFService;
-  
+
 public:
   
   NS_DECL_ISUPPORTS

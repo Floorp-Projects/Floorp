@@ -22,10 +22,16 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
+#include "nsIFileSpec.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsAbBaseCID.h"
 
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -59,6 +65,19 @@ nsABCard::nsABCard(void)
 			}
 		}
 	}*/
+
+	m_pFirstName = nsnull;
+	m_pLastName = nsnull;
+	m_pDisplayName = nsnull;
+	m_pPrimaryEmail = nsnull;
+	m_pSecondEmail = nsnull;
+	m_pWorkPhone = nsnull;
+	m_pHomePhone = nsnull;
+	m_pFaxNumber = nsnull;
+	m_pPagerNumber = nsnull;
+	m_pCellularNumber = nsnull;
+
+	m_dbRowID = -1;
 }
 
 nsABCard::~nsABCard(void)
@@ -73,6 +92,9 @@ nsABCard::~nsABCard(void)
 			mSubDirectories->RemoveElementAt(i);
 	}
 
+	if(mDatabase)
+		mDatabase->RemoveListener(this);
+
 	if (mListeners) 
 	{
 		PRInt32 i;
@@ -80,6 +102,17 @@ nsABCard::~nsABCard(void)
 			mListeners->RemoveElementAt(i);
 		delete mListeners;
 	}
+
+	PR_FREEIF(m_pFirstName);
+	PR_FREEIF(m_pLastName);
+	PR_FREEIF(m_pDisplayName);
+	PR_FREEIF(m_pPrimaryEmail);
+	PR_FREEIF(m_pSecondEmail);
+	PR_FREEIF(m_pWorkPhone);
+	PR_FREEIF(m_pHomePhone);
+	PR_FREEIF(m_pFaxNumber);
+	PR_FREEIF(m_pPagerNumber);
+	PR_FREEIF(m_pCellularNumber);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsABCard, nsRDFResource, nsIAbCard)
@@ -115,6 +148,22 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
 #endif 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsABCard::OnCardAttribChange(PRUint32 abCode, nsIAddrDBListener *instigator)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::OnCardEntryChange
+(PRUint32 abCode, PRUint32 entryID, nsIAddrDBListener *instigator)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::OnAnnouncerGoingAway(nsIAddrDBAnnouncer *instigator)
+{
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsABCard::AddUnique(nsISupports* element)
@@ -300,26 +349,41 @@ NS_IMETHODIMP nsABCard::GetCity(char **city)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsABCard::GetOrganization(char **organization)
+NS_IMETHODIMP nsABCard::GetFirstName(char * *aFirstName)
 {
-	nsString tempName;
-    if (!PL_strcmp(mURI, "abcard://Pab1/Card1"))
-		tempName.Append("Market");
-    if (!PL_strcmp(mURI, "abcard://Pab1/Card2"))
-		tempName.Append("Sales");
-    if (!PL_strcmp(mURI, "abcard://Pab2/Card1"))
-		tempName.Append("Engineer");
-    if (!PL_strcmp(mURI, "abcard://Pab2/Card2"))
-		tempName.Append("Finance");
-    if (!PL_strcmp(mURI, "abcard://Pab3/Card1"))
-		tempName.Append("Human Resource");
-    if (!PL_strcmp(mURI, "abcard://Pab3/Card2"))
-		tempName.Append("Payroll");
-	*organization = tempName.ToNewCString();
+	if (aFirstName && m_pFirstName)
+		*aFirstName = PL_strdup(m_pFirstName);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsABCard::GetWorkPhone(char **workphone)
+NS_IMETHODIMP nsABCard::GetLastName(char * *aLastName)
+{
+	if (aLastName && m_pLastName)
+		*aLastName = PL_strdup(m_pLastName);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetDisplayName(char * *aDisplayName)
+{
+	if (aDisplayName && m_pDisplayName)
+		*aDisplayName = PL_strdup(m_pDisplayName);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetPrimaryEmail(char * *aPrimaryEmail)
+{
+	if (aPrimaryEmail && m_pPrimaryEmail)
+		*aPrimaryEmail = PL_strdup(m_pPrimaryEmail);
+	return NS_OK;
+}
+NS_IMETHODIMP nsABCard::GetSecondEmail(char * *aSecondEmail)
+{
+	if (aSecondEmail && m_pSecondEmail)
+		*aSecondEmail = PL_strdup(m_pSecondEmail);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetWorkPhone(char * *aWorkPhone)
 {
 	nsString tempName;
     if (!PL_strcmp(mURI, "abcard://Pab1/Card1"))
@@ -334,11 +398,67 @@ NS_IMETHODIMP nsABCard::GetWorkPhone(char **workphone)
 		tempName.Append("7777");
     if (!PL_strcmp(mURI, "abcard://Pab3/Card2"))
 		tempName.Append("3333");
-	*workphone = tempName.ToNewCString();
+	*aWorkPhone = tempName.ToNewCString();
+	return NS_OK;
+
+	if (aWorkPhone && m_pWorkPhone)
+		*aWorkPhone = PL_strdup(m_pWorkPhone);
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsABCard::GetNickname(char **nickname)
+NS_IMETHODIMP nsABCard::GetHomePhone(char * *aHomePhone)
+{
+	if (aHomePhone && m_pHomePhone)
+		*aHomePhone = PL_strdup(m_pHomePhone);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetFaxNumber(char * *aFaxNumber)
+{
+	if (aFaxNumber && m_pFaxNumber)
+		*aFaxNumber = PL_strdup(m_pFaxNumber);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetPagerNumber(char * *aPagerNumber)
+{
+	if (aPagerNumber && m_pPagerNumber)
+		*aPagerNumber = PL_strdup(m_pPagerNumber);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetCellularNumber(char * *aCellularNumber)
+{
+	if (aCellularNumber && m_pCellularNumber)
+		*aCellularNumber = PL_strdup(m_pCellularNumber);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetWorkCity(char * *aWorkCity)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsABCard::GetOrganization(char * *aOrganization)
+{
+	nsString tempName;
+    if (!PL_strcmp(mURI, "abcard://Pab1/Card1"))
+		tempName.Append("Market");
+    if (!PL_strcmp(mURI, "abcard://Pab1/Card2"))
+		tempName.Append("Sales");
+    if (!PL_strcmp(mURI, "abcard://Pab2/Card1"))
+		tempName.Append("Engineer");
+    if (!PL_strcmp(mURI, "abcard://Pab2/Card2"))
+		tempName.Append("Finance");
+    if (!PL_strcmp(mURI, "abcard://Pab3/Card1"))
+		tempName.Append("Human Resource");
+    if (!PL_strcmp(mURI, "abcard://Pab3/Card2"))
+		tempName.Append("Payroll");
+	*aOrganization = tempName.ToNewCString();
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetNickName(char * *aNickName)
 {
 	nsString tempName;
     if (!PL_strcmp(mURI, "abcard://Pab1/Card1"))
@@ -353,9 +473,10 @@ NS_IMETHODIMP nsABCard::GetNickname(char **nickname)
 		tempName.Append("Teri");
     if (!PL_strcmp(mURI, "abcard://Pab3/Card2"))
 		tempName.Append("Ted");
-	*nickname = tempName.ToNewCString();
+	*aNickName = tempName.ToNewCString();
 	return NS_OK;
 }
+
 
 NS_IMETHODIMP nsABCard::SetPersonName(char * aPersonName)
 {
@@ -372,12 +493,112 @@ NS_IMETHODIMP nsABCard::SetEmail(char * aEmail)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsABCard::SetWorkPhone(char * aWorkPhone)
+NS_IMETHODIMP nsABCard::SetCity(char * aCity)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsABCard::SetCity(char * aCity)
+NS_IMETHODIMP nsABCard::SetFirstName(char * aFirstName)
+{
+	if (aFirstName)
+	{
+		PR_FREEIF(m_pFirstName);
+		m_pFirstName = PL_strdup(aFirstName);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetLastName(char * aLastName)
+{
+	if (aLastName)
+	{
+		PR_FREEIF(m_pLastName);
+		m_pLastName = PL_strdup(aLastName);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetDisplayName(char * aDisplayName)
+{
+	if (aDisplayName)
+	{
+		PR_FREEIF(m_pDisplayName);
+		m_pDisplayName = PL_strdup(aDisplayName);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetPrimaryEmail(char * aPrimaryEmail)
+{
+	if (aPrimaryEmail)
+	{
+		PR_FREEIF(m_pPrimaryEmail);
+		m_pPrimaryEmail = PL_strdup(aPrimaryEmail);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetSecondEmail(char * aSecondEmail)
+{
+	if (aSecondEmail)
+	{
+		PR_FREEIF(m_pSecondEmail);
+		m_pSecondEmail = PL_strdup(aSecondEmail);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetWorkPhone(char * aWorkPhone)
+{
+	if (aWorkPhone)
+	{
+		PR_FREEIF(m_pWorkPhone);
+		m_pWorkPhone = PL_strdup(aWorkPhone);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetHomePhone(char * aHomePhone)
+{
+	if (aHomePhone)
+	{
+		PR_FREEIF(m_pHomePhone);
+		m_pHomePhone = PL_strdup(aHomePhone);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetFaxNumber(char * aFaxNumber)
+{
+	if (aFaxNumber)
+	{
+		PR_FREEIF(m_pFaxNumber);
+		m_pFaxNumber = PL_strdup(aFaxNumber);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetPagerNumber(char * aPagerNumber)
+{
+	if (aPagerNumber)
+	{
+		PR_FREEIF(m_pPagerNumber);
+		m_pPagerNumber = PL_strdup(aPagerNumber);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetCellularNumber(char * aCellularNumber)
+{
+	if (aCellularNumber)
+	{
+		PR_FREEIF(m_pCellularNumber);
+		m_pCellularNumber = PL_strdup(aCellularNumber);
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetWorkCity(char * aWorkCity)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -387,9 +608,122 @@ NS_IMETHODIMP nsABCard::SetOrganization(char * aOrganization)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsABCard::SetNickname(char * aNickname)
+NS_IMETHODIMP nsABCard::SetNickName(char * aNickName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsABCard::GetDbRowID(PRUint32 *aDbRowID)
+{
+	*aDbRowID = m_dbRowID;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetDbRowID(PRUint32 aDbRowID)
+{
+	m_dbRowID = aDbRowID;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::GetCardValue(const char *attrname, char **value)
+{
+    if (!PL_strcmp(attrname, "firstname"))
+		GetFirstName(value);
+    else if (!PL_strcmp(attrname, "lastname"))
+		GetLastName(value);
+    else if (!PL_strcmp(attrname, "displayname"))
+		GetDisplayName(value);
+    else if (!PL_strcmp(attrname, "nickname"))
+		GetNickName(value);
+    else if (!PL_strcmp(attrname, "primaryemail"))
+		GetPrimaryEmail(value);
+    else if (!PL_strcmp(attrname, "secondemail"))
+		GetSecondEmail(value);
+    else if (!PL_strcmp(attrname, "workphone"))
+		GetWorkPhone(value);
+    else if (!PL_strcmp(attrname, "homephone"))
+		GetHomePhone(value);
+    else if (!PL_strcmp(attrname, "faxnumber"))
+		GetFaxNumber(value);
+    else if (!PL_strcmp(attrname, "pagernumber"))
+		GetPagerNumber(value);
+    else if (!PL_strcmp(attrname, "cellularnumber"))
+		GetCellularNumber(value);
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::SetCardValue(const char *attrname, const char *value)
+{
+	nsAutoString cardValue(value);
+	char* valueStr = cardValue.ToNewCString();
+    if (!PL_strcmp(attrname, "firstname"))
+		SetFirstName(valueStr);
+    else if (!PL_strcmp(attrname, "lastname"))
+		SetLastName(valueStr);
+    else if (!PL_strcmp(attrname, "displayname"))
+		SetDisplayName(valueStr);
+    else if (!PL_strcmp(attrname, "nickname"))
+		SetNickName(valueStr);
+    else if (!PL_strcmp(attrname, "primaryemail"))
+		SetPrimaryEmail(valueStr);
+    else if (!PL_strcmp(attrname, "secondemail"))
+		SetSecondEmail(valueStr);
+    else if (!PL_strcmp(attrname, "workphone"))
+		SetWorkPhone(valueStr);
+    else if (!PL_strcmp(attrname, "homephone"))
+		SetHomePhone(valueStr);
+    else if (!PL_strcmp(attrname, "faxnumber"))
+		SetFaxNumber(valueStr);
+    else if (!PL_strcmp(attrname, "pagernumber"))
+		SetPagerNumber(valueStr);
+    else if (!PL_strcmp(attrname, "cellularnumber"))
+		SetCellularNumber(valueStr);
+
+	delete[] valueStr;
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsABCard::AddCardToDatabase()
+{
+	// find out which database, which directory to add
+	// get RDF directory selected node
+
+	nsresult openAddrDB = NS_OK;
+	if (!mDatabase)
+	{
+		nsresult rv = NS_ERROR_FAILURE;
+
+		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+		if (NS_FAILED(rv))
+			return rv;
+
+		nsIFileSpec* userdir;
+		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
+		if (NS_FAILED(rv))
+			return rv;
+		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+		
+		nsFileSpec dbPath;
+		userdir->GetFileSpec(&dbPath);
+		dbPath += "abook.mab";
+
+		nsCOMPtr<nsIAddrDatabase> addrDBFactory;
+		rv = nsComponentManager::CreateInstance(kAddressBookDB, nsnull, nsIAddrDatabase::GetIID(), 
+												(void **) getter_AddRefs(addrDBFactory));
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			openAddrDB = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+
+		if (mDatabase)
+		{
+			mDatabase->AddListener(this);
+			mDatabase->CreateNewCardAndAddToDB(this, PR_TRUE);
+			mDatabase->Close(PR_TRUE);
+		}
+	}
+	return NS_OK;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

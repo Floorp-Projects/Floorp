@@ -31,6 +31,7 @@ EXPORTS = \
 	nsAbDirectory.h \
 	nsDirectoryDataSource.h \
 	nsDirPrefs.h \
+	nsAddrDatabase.h\
 	$(NULL)
 
 CPPSRCS = \
@@ -39,6 +40,7 @@ CPPSRCS = \
 	nsCardDataSource.cpp	\
 	nsAbCard.cpp	\
 	nsDirPrefs.cpp	\
+	nsAddrDatabase.cpp\
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

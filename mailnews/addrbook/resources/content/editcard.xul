@@ -32,25 +32,25 @@
 						<spring flex="100%"/>
 						<html:div>First: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="firstname" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Last: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="lastname" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Display: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="displayname" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Nickname: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="nickname" type="text" class="CardEdit"/>
 					</box>
 				</box>
 
@@ -59,13 +59,13 @@
 						<spring flex="100%"/>
 						<html:div>* Primary email: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="primaryemail" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Secondary email: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="secondemail" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
@@ -79,31 +79,31 @@
 						<spring flex="100%"/>
 						<html:div>Work: </html:div>
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="workphone" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Home: </html:div>
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="homephone" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Fax: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="faxnumber" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Pager: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="pagernumber" type="text" class="CardEdit"/>
 					</box>
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Cellular: </html:div> 
 						<spring class="PromptEditSpacing"/>
-						<html:input type="text" class="CardEdit"/>
+						<html:input id="cellularnumber" type="text" class="CardEdit"/>
 					</box>
 				</box>
 			</box>

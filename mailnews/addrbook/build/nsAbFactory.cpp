@@ -34,6 +34,7 @@
 #include "nsCardDataSource.h"
 #include "nsAbDirectory.h"
 #include "nsAbCard.h"
+#include "nsAddrDatabase.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -41,6 +42,7 @@ static NS_DEFINE_CID(kAbDirectoryDataSourceCID, NS_ABDIRECTORYDATASOURCE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORYRESOURCE_CID); 
 static NS_DEFINE_CID(kAbCardDataSourceCID, NS_ABCARDDATASOURCE_CID);
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID); 
+static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -174,6 +176,19 @@ nsresult nsAbFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, voi
 			delete card;
 		return rv;
 	}
+	else if (mClassID.Equals(kAddressBookDB)) 
+	{
+		nsresult rv;
+		nsAddrDatabase * abDatabase = new nsAddrDatabase();
+		if (abDatabase)
+			rv = abDatabase->QueryInterface(aIID, aResult);
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+
+		if (NS_FAILED(rv) && abDatabase)
+			delete abDatabase;
+		return rv;
+	}
 	return NS_NOINTERFACE;  
 }  
 
@@ -251,6 +266,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
 	if (NS_FAILED(rv)) finalResult = rv;
 	
+	rv = compMgr->RegisterComponent(kAddressBookDB, nsnull, nsnull,
+								  path, PR_TRUE, PR_TRUE);
+	if (NS_FAILED(rv))finalResult = rv;
+
 	return finalResult;
 }
 
@@ -278,5 +297,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->UnregisterComponent(kAbCardCID, path);
 	if (NS_FAILED(rv)) finalResult = rv;
 	
+	rv = compMgr->UnregisterComponent(kAddressBookDB, path);
+	if (NS_FAILED(rv)) finalResult = rv;
+
 	return finalResult;
 }

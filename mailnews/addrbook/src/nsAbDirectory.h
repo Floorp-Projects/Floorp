@@ -32,6 +32,7 @@
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsDirPrefs.h"
+#include "nsIAddrDatabase.h"
 
  /* 
   * Address Book Directory
@@ -117,6 +118,7 @@ protected:
 //	nsresult NotifyItemAdded(nsISupports *item);
 //	nsresult NotifyItemDeleted(nsISupports *item);
   nsresult AddSubDirectory(nsAutoString name, nsIAbDirectory **childDir);
+  nsresult GetAbDatabase();
   nsresult AddChildCards(nsAutoString name, nsIAbCard **childDir);
 
   nsVoidArray* GetDirList(){ return DIR_GetDirectories(); }
@@ -133,6 +135,8 @@ protected:
   PRUint8 mDepth;
   PRInt32 mPrefFlags;       // prefs like MSG_PREF_OFFLINE, MSG_PREF_ONE_PANE, etc
 
+  nsCOMPtr<nsIAddrDatabase> mDatabase;  
+ 
 };
 
 #endif

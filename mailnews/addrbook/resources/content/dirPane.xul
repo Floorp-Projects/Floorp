@@ -20,7 +20,7 @@
     </treeitem>
   </treehead>
 
-  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
+  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
     <treeitem id="abdirectory:/" open="true">
       <treecell/>
       </treeitem>
