@@ -1267,9 +1267,9 @@ nsRangeList::GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnch
 	if (!outAnchorNode || !outAnchorOffset)
 		return NS_ERROR_NULL_POINTER;
 
-	NS_IF_ADDREF((nsIDOMNode *)mAnchorNode);
-  *outAnchorNode = mAnchorNode;
+	*outAnchorNode = mAnchorNode;
   *outAnchorOffset = mAnchorOffset;
+	NS_IF_ADDREF(*outAnchorNode);
 	return NS_OK;
 }
 
@@ -1283,9 +1283,9 @@ nsRangeList::GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusO
 	if (!outFocusNode || !outFocusOffset)
 		return NS_ERROR_NULL_POINTER;
 	
-	NS_IF_ADDREF((nsIDOMNode *)mFocusNode);
   *outFocusNode = mFocusNode;
-  *outFocusOffset = mFocusOffset;
+  *outFocusOffset = mFocusOffset;  
+  NS_IF_ADDREF(*outFocusNode);
   return NS_OK;
 }
 
