@@ -585,10 +585,14 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
 {
-    [self loadURL:[NSURL URLWithString:[sender stringValue]]];
+  // trim off any whitespace around url
+  NSMutableString *theURL = [[NSMutableString alloc] initWithString:[sender stringValue]];
+  CFStringTrimWhitespace((CFMutableStringRef)theURL);
+  [self loadURL:[NSURL URLWithString:theURL]];
+  [theURL release];
     
-    // Focus and activate our content area.
-    [[mBrowserView getBrowserView] setActive: YES];
+  // Focus and activate our content area.
+  [[mBrowserView getBrowserView] setActive: YES];
 }
 
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
