@@ -47,7 +47,9 @@
 
 #ifdef XP_MAC
 #include "nsMacMIMEDataSource.h"
+#include "nsInternetConfigService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacMIMEDataSource);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsInternetConfigService);
 #endif
 
 #include "nsUserInfo.h"
@@ -124,6 +126,11 @@ static nsModuleComponentInfo gAppShellModuleInfo[] =
     NS_NATIVEMIMEDATASOURCE_PROGID,
     nsMacMIMEDataSourceConstructor,
   },
+   { "Internet Config Service",
+   NS_INTERNETCONFIGSERVICE_CID,
+   NS_INTERNETCONFIGSERVICE_PROGID,
+   nsInternetConfigServiceConstructor,
+   },
  #endif
 };
 
