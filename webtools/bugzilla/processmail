@@ -414,10 +414,8 @@ sub getEmailAttributes ($@) {
         # the STATUS will be flagged for Severity, Status and 
         # Priority changes
         #
-        if ( $fieldName eq 'Status') {
-            if ($new eq 'RESOLVED' || $new eq 'VERIFIED') {
-                push (@flags, 'Resolved');
-            }
+        if ( $fieldName eq 'Status' && ($new eq 'RESOLVED' || $new eq 'VERIFIED')) {
+            push (@flags, 'Resolved');
         }
         elsif ( $fieldName eq 'Severity' || $fieldName eq 'Status' ||
                 $fieldName eq 'Priority' ) {
