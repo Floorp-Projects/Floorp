@@ -38,6 +38,7 @@
 #include "DefProcFakery.h"
 #include "nsMacResources.h"
 #include "nsRegionMac.h"
+#include "nsIRollupListener.h"
 #if TARGET_CARBON
 #include <CFString.h>
 #include <Gestalt.h>
@@ -65,6 +66,9 @@ static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1"
 	#define botRight(r)	(((Point *) &(r))[1])
 #endif
 
+// externs defined in nsWindow.cpp
+extern nsIRollupListener * gRollupListener;
+extern nsIWidget         * gRollupWidget;
 
 #if !TARGET_CARBON
 pascal long BorderlessWDEF ( short inCode, WindowPtr inWindow, short inMessage, long inParam ) ;
@@ -803,9 +807,20 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
     }
     ComeToFront();
   }
-  else
+  else {
+    // when a toplevel window goes away, make sure we rollup any popups that may 
+    // be lurking. We want to catch this here because we're guaranteed that
+    // we hide a window before we destroy it, and doing it here more closely
+    // approximates where we do the same thing on windows.
+  	if ( mWindowType == eWindowType_toplevel ) {
+  	  if ( gRollupListener )
+        gRollupListener->Rollup();
+      NS_IF_RELEASE(gRollupListener);
+      NS_IF_RELEASE(gRollupWidget);
+  	}
     ::HideWindow(mWindowPtr);
-
+  }
+  
   return NS_OK;
 }
 
