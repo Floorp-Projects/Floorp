@@ -1399,7 +1399,7 @@ XULContentSinkImpl::CreateElement(nsINodeInfo *aNodeInfo,
         return NS_ERROR_OUT_OF_MEMORY;
 
     element->mNodeInfo    = aNodeInfo;
-
+    
     *aResult = element;
     return NS_OK;
 }

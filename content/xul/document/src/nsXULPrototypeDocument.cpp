@@ -238,14 +238,15 @@ nsXULPrototypeDocument::Init()
     return NS_OK;
 }
 
-
 nsXULPrototypeDocument::~nsXULPrototypeDocument()
 {
     if (mGlobalObject) {
         mGlobalObject->SetContext(nsnull); // remove circular reference
         mGlobalObject->SetGlobalObjectOwner(nsnull); // just in case
     }
-    delete mRoot;
+    
+    if (mRoot)
+        mRoot->ReleaseSubtree();
 }
 
 NS_IMPL_ISUPPORTS3(nsXULPrototypeDocument,

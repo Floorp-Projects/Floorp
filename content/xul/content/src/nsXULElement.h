@@ -186,24 +186,31 @@ public:
 class nsXULPrototypeNode
 {
 public:
-    enum Type { eType_Element, eType_RefCounted_Element, eType_Script, eType_Text };
+    enum Type { eType_Element, eType_Script, eType_Text };
 
     Type                     mType;
 
-    union {
-      PRInt32                  mLineNo;
-      PRInt32                  mRefCnt;
-    };
-
+    PRInt32                  mLineNo;
+    PRInt32                  mRefCnt;
+          
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext);
 
+    void AddRef() { mRefCnt++; };
+    void Release() 
+    { 
+        mRefCnt--; 
+        if (mRefCnt == 0) 
+            delete this; 
+    };
+    virtual void ReleaseSubtree() { Release(); };
+
 protected:
     nsXULPrototypeNode(Type aType, PRInt32 aLineNo)
-        : mType(aType), mLineNo(aLineNo) {}
+        : mType(aType), mLineNo(aLineNo), mRefCnt(1) {}
 };
 
 class nsXULPrototypeElement : public nsXULPrototypeNode
@@ -226,11 +233,17 @@ public:
 
         delete[] mAttributes;
         delete mClassList;
-
-        for (PRInt32 i = mNumChildren - 1; i >= 0; --i)
-            delete mChildren[i];
-
         delete[] mChildren;
+    }
+
+    virtual void ReleaseSubtree() 
+    {
+      if (mChildren) {
+        for (PRInt32 i = mNumChildren-1; i >= 0; i--)
+          mChildren[i]->ReleaseSubtree();
+      }
+
+      nsXULPrototypeNode::ReleaseSubtree();
     }
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
