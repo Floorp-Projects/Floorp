@@ -81,9 +81,7 @@
 #include "nsXPIDLString.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-#if defined(OJI)
 #include "nsIJVMManager.h"
-#endif
 
 #include "nsMimeTypeArray.h"
 #include "nsPluginArray.h"

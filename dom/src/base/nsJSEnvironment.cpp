@@ -48,10 +48,8 @@
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
 
-#if defined(OJI)
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
-#endif
 
 const size_t gStackSize = 8192;
 
@@ -551,7 +549,6 @@ nsJSContext::InitializeExternalClasses()
 nsresult
 nsJSContext::InitializeLiveConnectClasses()
 {
-#if defined(OJI)
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsIJVMManager, jvmManager, nsIJVMManager::GetCID(), &rv);
   if (NS_SUCCEEDED(rv) && jvmManager != nsnull) {
@@ -563,7 +560,6 @@ nsJSContext::InitializeLiveConnectClasses()
       }
     }
   }
-#endif
 
   // return all is well until things are stable.
   return NS_OK;
@@ -761,7 +757,6 @@ nsJSEnvironment::nsJSEnvironment()
   if (NS_FAILED(rv))
     return;                     // XXX swallow error! need Init()?
 
-#if defined(OJI)
   // Initialize LiveConnect.  XXXbe uses GetCID rather than progid
   NS_WITH_SERVICE(nsILiveConnectManager, manager,
                   nsIJVMManager::GetCID(), &rv);
@@ -771,7 +766,6 @@ nsJSEnvironment::nsJSEnvironment()
     PRBool started = PR_FALSE;
     rv = manager->StartupLiveConnect(mRuntime, started);
   }
-#endif
 }
 
 nsJSEnvironment::~nsJSEnvironment()
