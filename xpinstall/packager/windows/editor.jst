@@ -1,13 +1,13 @@
 var err = StartInstall("Mozilla Editor", "Seamonkey", "$Version$"); 
 LogComment("StartInstall: " + err);
 
-var communicatorFolder = Install.GetFolder("Communicator");
+var communicatorFolder = Install.getFolder("Communicator");
 LogComment("communicatorFolder: " + communicatorFolder);
 
 err = AddDirectory("Program",
                    "$Version$",
                    "bin",              // fileName in jar, 
-                   communicatorFolder, // Where to put this file (Returned from GetFolder) 
+                   communicatorFolder, // Where to put this file (Returned from getFolder) 
                    "",                 // fileName in jar, 
                    true);              // Force Flag 
 
