@@ -255,7 +255,6 @@ sub init {
             push(@wherepart, "bugs.delta_ts >= $sql_chfrom") if ($sql_chfrom);
             push(@wherepart, "bugs.delta_ts <= $sql_chto") if ($sql_chto);
         } else {
-            push(@supptables, "bugs_activity actcheck");
             my $sql_bugschanged = '';
             my @list;
             foreach my $f (@chfield) {
@@ -269,6 +268,7 @@ sub init {
                 }
             }
             if(@list) {
+                push(@supptables, "bugs_activity actcheck");
                 $sql_bugschanged .= ' OR ' if($sql_bugschanged ne '');
                 $sql_bugschanged .= "(actcheck.bug_id = bugs.bug_id AND " .
                                        "(" . join(' OR ', @list) . ")";
