@@ -78,9 +78,7 @@ nsJPEGDecoder::nsJPEGDecoder()
   mFillState = READING_BACK;
 
   mSamples = nsnull;
-  mSamples3 = nsnull;
-  mRGBPadRow = nsnull;
-  mRGBPadRowLength = 0;
+  mRGBRow = nsnull;
 
   mBytesToSkip = 0;
   
@@ -102,8 +100,8 @@ nsJPEGDecoder::~nsJPEGDecoder()
     PR_Free(mBuffer);
   if (mBackBuffer)
     PR_Free(mBackBuffer);
-  if (mRGBPadRow)
-    PR_Free(mRGBPadRow);
+  if (mRGBRow)
+    PR_Free(mRGBRow);
 }
 
 
@@ -238,6 +236,20 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED)
       return NS_OK; /* I/O suspension */
 
+    /* let libjpeg take care of gray->RGB and YCbCr->RGB conversions */
+    switch (mInfo.jpeg_color_space) {
+      case JCS_GRAYSCALE:
+      case JCS_RGB:
+      case JCS_YCbCr:
+        mInfo.out_color_space = JCS_RGB;
+        break;
+      case JCS_CMYK:
+      case JCS_YCCK:
+      default:
+        mState = JPEG_ERROR;
+        return NS_ERROR_UNEXPECTED;
+    }
+
     /*
      * Don't allocate a giant and superfluous memory buffer
      * when the image is a sequential JPEG.
@@ -248,13 +260,6 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     jpeg_calc_output_dimensions(&mInfo);
 
     mObserver->OnStartDecode(nsnull);
-
-    /* we only support jpegs with 1 or 3 components currently. */
-    if (mInfo.output_components != 1 &&
-        mInfo.output_components != 3) {
-      mState = JPEG_ERROR;
-      return NS_ERROR_UNEXPECTED;
-    }
 
     /* Check if the request already has an image container.
        this is the case when multipart/x-mixed-replace is being downloaded
@@ -331,33 +336,20 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      */
     int row_stride;
 
-    if (mInfo.output_components == 1)
-      row_stride = mInfo.output_width;
-    else
-      row_stride = mInfo.output_width * 4; // use 4 instead of mInfo.output_components
-                                           // so we don't have to fuss with byte alignment.
-                                           // Mac wants 4 anyways.
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    row_stride = mInfo.output_width * 4;
+#else
+    row_stride = mInfo.output_width * 3;
+#endif
 
     mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
                                            JPOOL_IMAGE,
                                            row_stride, 1);
 
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
-    // allocate buffer to do byte flipping if needed
-    if (mInfo.output_components == 3) {
-      mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);
-      mRGBPadRowLength = row_stride;
-      memset(mRGBPadRow, 0, mRGBPadRowLength);
-    }
+    // allocate buffer to do byte flipping / padding
+    mRGBRow = (PRUint8*) PR_MALLOC(row_stride);
 #endif
-
-    /* Allocate RGB buffer for conversion from greyscale. */
-    if (mInfo.output_components != 3) {
-      row_stride = mInfo.output_width * 4;
-      mSamples3 = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
-                                              JPOOL_IMAGE,
-                                              row_stride, 1);
-    }
 
     mState = JPEG_START_DECOMPRESS;
   }
@@ -508,64 +500,34 @@ nsJPEGDecoder::OutputScanlines()
         break;
       }
 
-      /* If grayscale image ... */
-      if (mInfo.output_components == 1) {
-        JSAMPLE j;
-        JSAMPLE *j1 = mSamples[0];
-        const JSAMPLE *j1end = j1 + mInfo.output_width;
-        JSAMPLE *j3 = mSamples3[0];
-
-        /* Convert from grayscale to RGB. */
-        while (j1 < j1end) {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-          j = *j1++;
-          j3[0] = 0;
-          j3[1] = j;
-          j3[2] = j;
-          j3[3] = j;
-          j3 += 4;
-#else
-          j = *j1++;
-          j3[0] = j;
-          j3[1] = j;
-          j3[2] = j;
-          j3 += 3;
-#endif
-        }
-        samples = mSamples3[0];
-      } else {
-        /* 24-bit color image */
 #if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-        memset(mRGBPadRow, 0, mInfo.output_width * 4);
-        PRUint8 *ptrOutputBuf = mRGBPadRow;
+      PRUint8 *ptrOutputBuf = mRGBRow;
 
-        JSAMPLE *j1 = mSamples[0];
-        for (PRUint32 i=0;i<mInfo.output_width;++i) {
-          ptrOutputBuf[2] = *j1++;
-          ptrOutputBuf[1] = *j1++;
-          ptrOutputBuf[0] = *j1++;
-          ptrOutputBuf += 3;
-        }
-
-        samples = mRGBPadRow;
-#elif defined(XP_MAC) || defined(XP_MACOSX)
-        memset(mRGBPadRow, 0, mInfo.output_width * 4);
-        PRUint8 *ptrOutputBuf = mRGBPadRow;
-
-        JSAMPLE *j1 = mSamples[0];
-        for (PRUint32 i=0;i<mInfo.output_width;++i) {
-          ptrOutputBuf[0] = 0;
-          ptrOutputBuf[1] = *j1++;
-          ptrOutputBuf[2] = *j1++;
-          ptrOutputBuf[3] = *j1++;
-          ptrOutputBuf += 4;
-        }
-
-        samples = mRGBPadRow;
-#else
-        samples = mSamples[0];
-#endif
+      JSAMPLE *j1 = mSamples[0];
+      for (PRUint32 i=0;i<mInfo.output_width;++i) {
+        ptrOutputBuf[2] = *j1++;
+        ptrOutputBuf[1] = *j1++;
+        ptrOutputBuf[0] = *j1++;
+        ptrOutputBuf += 3;
       }
+
+      samples = mRGBRow;
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+      PRUint8 *ptrOutputBuf = mRGBRow;
+
+      JSAMPLE *j1 = mSamples[0];
+      for (PRUint32 i=0;i<mInfo.output_width;++i) {
+        ptrOutputBuf[0] = 0;
+        ptrOutputBuf[1] = *j1++;
+        ptrOutputBuf[2] = *j1++;
+        ptrOutputBuf[3] = *j1++;
+        ptrOutputBuf += 4;
+      }
+
+      samples = mRGBRow;
+#else
+      samples = mSamples[0];
+#endif
 
       PRUint32 bpr;
       mFrame->GetImageBytesPerRow(&bpr);
@@ -649,10 +611,10 @@ my_error_exit (j_common_ptr cinfo)
 
 /******************************************************************************/
 /* data source manager method 
-	Initialize source.  This is called by jpeg_read_header() before any
-	data is actually read.  May leave
-	bytes_in_buffer set to 0 (in which case a fill_input_buffer() call
-	will occur immediately).
+        Initialize source.  This is called by jpeg_read_header() before any
+        data is actually read.  May leave
+        bytes_in_buffer set to 0 (in which case a fill_input_buffer() call
+        will occur immediately).
 */
 void PR_CALLBACK
 init_source (j_decompress_ptr jd)
@@ -661,14 +623,14 @@ init_source (j_decompress_ptr jd)
 
 /******************************************************************************/
 /* data source manager method
-	Skip num_bytes worth of data.  The buffer pointer and count should
-	be advanced over num_bytes input bytes, refilling the buffer as
-	needed.  This is used to skip over a potentially large amount of
-	uninteresting data (such as an APPn marker).  In some applications
-	it may be possible to optimize away the reading of the skipped data,
-	but it's not clear that being smart is worth much trouble; large
-	skips are uncommon.  bytes_in_buffer may be zero on return.
-	A zero or negative skip count should be treated as a no-op.
+        Skip num_bytes worth of data.  The buffer pointer and count should
+        be advanced over num_bytes input bytes, refilling the buffer as
+        needed.  This is used to skip over a potentially large amount of
+        uninteresting data (such as an APPn marker).  In some applications
+        it may be possible to optimize away the reading of the skipped data,
+        but it's not clear that being smart is worth much trouble; large
+        skips are uncommon.  bytes_in_buffer may be zero on return.
+        A zero or negative skip count should be treated as a no-op.
 */
 void PR_CALLBACK
 skip_input_data (j_decompress_ptr jd, long num_bytes)
@@ -696,15 +658,15 @@ skip_input_data (j_decompress_ptr jd, long num_bytes)
 
 /******************************************************************************/
 /* data source manager method
-	This is called whenever bytes_in_buffer has reached zero and more
-	data is wanted.  In typical applications, it should read fresh data
-	into the buffer (ignoring the current state of next_input_byte and
-	bytes_in_buffer), reset the pointer & count to the start of the
-	buffer, and return TRUE indicating that the buffer has been reloaded.
-	It is not necessary to fill the buffer entirely, only to obtain at
-	least one more byte.  bytes_in_buffer MUST be set to a positive value
-	if TRUE is returned.  A FALSE return should only be used when I/O
-	suspension is desired.
+        This is called whenever bytes_in_buffer has reached zero and more
+        data is wanted.  In typical applications, it should read fresh data
+        into the buffer (ignoring the current state of next_input_byte and
+        bytes_in_buffer), reset the pointer & count to the start of the
+        buffer, and return TRUE indicating that the buffer has been reloaded.
+        It is not necessary to fill the buffer entirely, only to obtain at
+        least one more byte.  bytes_in_buffer MUST be set to a positive value
+        if TRUE is returned.  A FALSE return should only be used when I/O
+        suspension is desired.
 */
 boolean PR_CALLBACK
 fill_input_buffer (j_decompress_ptr jd)
