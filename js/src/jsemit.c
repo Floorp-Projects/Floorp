@@ -2368,15 +2368,13 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         pc += 2 * JUMP_OFFSET_LEN;
 
         /* Fill in the jump table, if there is one. */
-        if (tableLength) {
-            for (i = 0; i < (jsint)tableLength; i++) {
-                pn3 = table[i];
-                off = pn3 ? pn3->pn_offset - top : 0;
-                ok = js_SetJumpOffset(cx, cg, pc, off);
-                if (!ok)
-                    goto out;
-                pc += JUMP_OFFSET_LEN;
-            }
+        for (i = 0; i < (jsint)tableLength; i++) {
+            pn3 = table[i];
+            off = pn3 ? pn3->pn_offset - top : 0;
+            ok = js_SetJumpOffset(cx, cg, pc, off);
+            if (!ok)
+                goto out;
+            pc += JUMP_OFFSET_LEN;
         }
     } else if (switchOp == JSOP_LOOKUPSWITCH) {
         /* Skip over the already-initialized number of cases. */
