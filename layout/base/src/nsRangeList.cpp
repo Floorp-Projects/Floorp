@@ -4,7 +4,7 @@
 #include "nsIDOMRange.h"
 #include "nsISelection.h"
 
-static NS_DEFINE_IID(kIRangeListIterator, NS_IENUMERATOR_IID);
+static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
@@ -211,8 +211,8 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
+    *aInstancePtr = (void*)(nsISupports*)mRangeList;
+    NS_ADDREF(mRangeList);
     return NS_OK;
   }
   if (aIID.Equals(kICollectionIID)) {
@@ -220,7 +220,7 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF(mRangeList);
     return NS_OK;
   }
-  if (aIID.Equals(kIRangeListIterator)) {
+  if (aIID.Equals(kIEnumeratorIID)) {
     *aInstancePtr = (void*)(nsIEnumerator*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -310,9 +310,9 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIRangeListIterator)) {
+  if (aIID.Equals(kIEnumeratorIID)) {
     nsRangeListIterator *iterator =  new nsRangeListIterator(this);
-    iterator->QueryInterface(kIRangeListIterator,aInstancePtr);
+    iterator->QueryInterface(kIEnumeratorIID,aInstancePtr);
     *aInstancePtr = (void*)(iterator);
     return NS_OK;
   }
