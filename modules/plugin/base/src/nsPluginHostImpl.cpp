@@ -190,8 +190,9 @@
 // 0.04 added new mime entry point on Mac, bug 113464
 // 0.05 added new entry point check for the default plugin, bug 132430
 // 0.06 strip off suffixes in mime description strings, bug 53895
-// 0.07 changed nsIRegistry to flat file support for caching plugins info 
-static const char *kPluginRegistryVersion = "0.07";
+// 0.07 changed nsIRegistry to flat file support for caching plugins info
+// 0.08 mime entry point on MachO, bug 137535 
+static const char *kPluginRegistryVersion = "0.08";
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
