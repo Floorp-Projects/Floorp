@@ -6,32 +6,30 @@
 <!ENTITY keyword.label "keyword">
 <!ENTITY age.label "age in days">
 <!ENTITY to.label "to">
+
 <!-- LOCALIZATION NOTE (cc.label): DONT_TRANSLATE -->
 <!ENTITY cc.label "Cc">
-<!-- LOCALIZATION NOTE (toOrCc.label): Do not translate "cc" -->
-<!ENTITY toOrCc.label "to or cc">
+
 <!ENTITY status.label "status">
 <!ENTITY priority.label "priority">
 <!ENTITY body.label "body">
 <!ENTITY contains.label "contains">
 <!ENTITY nocontains.label "doesn't contain">
-<!ENTITY filterAction.label "Action">
-<!ENTITY filterActionDesc.label "When messages match the above conditions, perform the following action:">
-<!ENTITY moveToFolder.label "Move To Folder">
-<!ENTITY changePriority.label "Change Priority">
-<!ENTITY delete.label "Delete">
-<!ENTITY markRead.label "Mark as Read">
-<!ENTITY ignoreThread.label "Ignore Thread">
-<!ENTITY watchThread.label "Watch Thread">
-<!ENTITY filterName.label "Filter Name:">
+<!ENTITY moveToFolder.label "Move to folder">
+<!ENTITY changePriority.label "Change the priority to">
+<!ENTITY delete.label "Delete the message">
+<!ENTITY markRead.label "Mark the message as read">
+<!ENTITY ignoreThread.label "Ignore thread">
+<!ENTITY watchThread.label "Watch thread">
+<!ENTITY filterName.label "Filter name:">
 
-<!ENTITY lowestPriorityCmd.label "Lowest">
-<!ENTITY lowPriorityCmd.label "Low">
-<!ENTITY normalPriorityCmd.label "Normal">
-<!ENTITY highPriorityCmd.label "High">
-<!ENTITY highestPriorityCmd.label "Highest">
+<!ENTITY lowestPriorityCmd.label "lowest">
+<!ENTITY lowPriorityCmd.label "low">
+<!ENTITY normalPriorityCmd.label "normal">
+<!ENTITY highPriorityCmd.label "high">
+<!ENTITY highestPriorityCmd.label "highest">
 
-<!ENTITY conditionDesc.label "When new messages arrive in my Inbox, watch for messages that:">
-<!ENTITY conditions.label "Conditions">
+<!ENTITY conditionDesc.label "For incoming messages that match:">
+<!ENTITY filterActionDesc.label "Perform this action:">
 
-<!ENTITY newFolderButton.label "New Folder">
+<!ENTITY newFolderButton.label "New folder...">

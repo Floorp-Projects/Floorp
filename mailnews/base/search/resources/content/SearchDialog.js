@@ -16,12 +16,15 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Håkan Waara <hwaara@chello.se>
  */
 
 var rdfDatasourcePrefix = "@mozilla.org/rdf/datasource;1?name=";
 var rdfServiceContractID    = "@mozilla.org/rdf/rdf-service;1";
 var searchSessionContractID = "@mozilla.org/messenger/searchSession;1";
-var folderDSContractID         = rdfDatasourcePrefix + "mailnewsfolders";
+var folderDSContractID      = rdfDatasourcePrefix + "mailnewsfolders";
 var gSearchView;
 var gSearchSession;
 var gCurrentFolder;
@@ -210,7 +213,6 @@ function searchOnLoad()
   HideSearchColumn("statusCol");
   HideSearchColumn("sizeCol");
   HideSearchColumn("flaggedCol");
-  HideSearchColumn("totalCol");
   
   // we want to show the location column for search
   ShowSearchColumn("locationCol");
@@ -255,7 +257,6 @@ function onSearchStop() {
 }
 
 function onReset() {
-
 }
 
 function getFirstItemByTag(root, tag)
@@ -459,33 +460,6 @@ function setupSearchListener()
 {
     // Setup the javascript object as a listener on the search results
     gSearchSession.registerListener(gSearchNotificationListener);
-}
-
-
-// this is test stuff only, ignore for now
-function onTesting(event)
-{
-    var testattr;
-
-    DumpDOM(document.getElementById("searchTermTree"));
-    testattr = document.getElementById("searchAttr");
-    testelement(testattr);
-
-    testattr = document.getElementById("searchAttr0");
-    testelement(testattr);
-
-    testattr = document.getElementById("searchAttr99");
-    testelement(testattr);
-
-}
-
-function testelement(element)
-{
-    dump(element.id + " = " + element + "\n");
-    dump(element.id + ".searchScope = " + element.searchScope + "\n");
-    element.searchScope = 0;
-    dump(element.id + ".searchScope = " + element.searchScope + "\n");
-
 }
 
 // stuff after this is implemented to make the thread pane work

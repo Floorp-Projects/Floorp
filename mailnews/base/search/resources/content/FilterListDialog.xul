@@ -33,7 +33,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
   onload="onLoad();"
   width="440"
   height="320"
-  persist="width height"
+  persist="width height screenX screenY"
   title="&window.title;">
 
   <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
@@ -105,8 +105,7 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
           
             <treecolgroup>
               <treecol flex="85%" resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
-              <splitter class="tree-splitter"/>
-              <treecol flex="15%" id="activeColumn"/>
+              <treecol flex="15%" id="activeColumn" fixed="true"/>
             </treecolgroup>
           
             <treechildren flex="1"/>

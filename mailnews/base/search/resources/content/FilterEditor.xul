@@ -17,6 +17,10 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributor(s):
+  Håkan Waara <hwaara@chello.se>
+
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
@@ -24,14 +28,15 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterEditor.dtd" >
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterEditor.dtd">
+
 <window class="dialog"
   id="FilterEditor"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
   orient="vertical"
-  style="width: 40em;"
+  width="510" height="360"
   persist="width height screenX screenY"
   onload="filterEditorOnLoad('msgFccFolderPicker');">
 
@@ -47,23 +52,25 @@ Rights Reserved.
 
   <keyset id="dialogKeys"/>
   
-  <box autostretch="never">
+  <hbox autostretch="never">
     <text class="label" value="&filterName.label;"/>
-    <textbox flex="1" id="filterName"/>
-  </box>
+    <textbox flex="50%" id="filterName"/>
+    <spring flex="50%"/>
+  </hbox>
 
-  <titledbox orient="vertical">
-    <label value="&conditions.label;"/>
-    <text value="&conditionDesc.label;"/>
+  <separator/>
+
+  <vbox>
+    <text class="label" value="&conditionDesc.label;"/>
     <box id="searchTermListBox" flex="1"/>
-  </titledbox>
+  </vbox>
 
-  <titledbox autostretch="never" orient="vertical">
-    <label value="&filterAction.label;"/>
-    <text value="&filterActionDesc.label;"/>
-    <separator class="thin"/>
-    <box orient="horizontal" flex="1">
-      <menulist id="actionMenu" oncommand="onActionChanged(event)">
+  <separator/>
+
+  <vbox>
+    <text class="label" value="&filterActionDesc.label;" autostretch="never"/>
+    <hbox autostretch="never">
+      <menulist class="indent" id="actionMenu" oncommand="onActionChanged(event)">
         <menupopup>
           <menuitem value="1" actionvalueindex="0" label="&moveToFolder.label;"/>
           <menuitem value="2" actionvalueindex="1" label="&changePriority.label;"/>
@@ -71,9 +78,10 @@ Rights Reserved.
           <menuitem value="4" actionvalueindex="2" label="&markRead.label;"/>
         </menupopup>
       </menulist>
-      <deck id="actionValueDeck" flex="1">
-        <menulist id="actionTargetFolder" flex="1"/>
-        <menulist id="actionValuePriority" flex="1">
+      <!-- JS stuff depends on this deck being present, don't remove! -->
+      <deck id="actionValueDeck">
+        <menulist id="actionTargetFolder"/>
+        <menulist id="actionValuePriority">
           <menupopup>
             <!-- see MailNewsTypes2.idl -->
             <menuitem value="6" label="&highestPriorityCmd.label;"/>
@@ -83,11 +91,13 @@ Rights Reserved.
             <menuitem value="2" label="&lowestPriorityCmd.label;"/>
           </menupopup>
         </menulist>
-        <text id="actionValueNone" flex="1"/>
+        <text id="actionValueNone"/>
       </deck>
-        <button id="newFolderButton" label="&newFolderButton.label;" oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
-    </box>
-  </titledbox>
+      <spring flex="100%"/>
+      <button id="newFolderButton" label="&newFolderButton.label;" 
+              oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
+    </hbox>
+  </vbox>
 
   <separator/>
 

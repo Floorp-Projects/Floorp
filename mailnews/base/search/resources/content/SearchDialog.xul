@@ -169,10 +169,7 @@ Rights Reserved.
        </box>      
     </titledbox>
 
-
-        
     <box autostretch="never" align="right">
-
       <button label="&closeButton.label;" oncommand="onSearchStop(); window.close();"/>
     </box>
   

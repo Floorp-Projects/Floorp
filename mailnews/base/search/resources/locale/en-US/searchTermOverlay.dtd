@@ -1,4 +1,4 @@
 <!ENTITY more.label "More">
 <!ENTITY less.label "Fewer">
-<!ENTITY matchAll.label "match ALL of the following conditions">
-<!ENTITY matchAny.label "match at least ONE of the following conditions">
+<!ENTITY matchAll.label "All of the following">
+<!ENTITY matchAny.label "Any of the following">
