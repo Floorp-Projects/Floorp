@@ -18,11 +18,17 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
-   -   Charles Manxke (cmanske@netscape.com)
+   -   Charles Manske (cmanske@netscape.com)
   -->
 
 <!-- Window title -->
-<!ENTITY windowTitle.label     "Check Image and Link Locations">
-<!ENTITY urlsNotFound.label    "The following image or link locations were not found:">
-<!ENTITY notFoundKey.label     "(&quot;X&quot; = file not found, &quot;?&quot; = timed-out attempting to connect.)">
-<!ENTITY changeUrlButton.label "Change Location of Selected Item">
+<!ENTITY siteUrl.label         "Site URL:">
+<!ENTITY docSubdir.label       "Page subdirectory:">
+<!ENTITY otherSubdir.label     "Image subdirectory:">
+
+<!ENTITY fileList.label        "Publishing Status">
+<!ENTITY statusHeader.label    "Status">
+<!ENTITY filenameHeader.label  "Filename">
+<!ENTITY succeeded.label       "Succeeded">
+<!ENTITY failed.label          "Failed">
+<!ENTITY keepOpen              "Keep this window open after publishing is complete.">

@@ -32,10 +32,10 @@
 <!ENTITY siteList.label           "Site Name:">
 <!ENTITY newSiteButton.label      "New Site">
 <!ENTITY siteDirList.label        "Select or type a directory name in your publishing site:">
-<!ENTITY docDirList.label         "Subdirectory for this page:">
+<!ENTITY docDirList.label         "Site subdirectory for this page:">
 <!ENTITY publishImgCheckbox.label "Include images and other files">
 <!ENTITY sameLocationRadio.label  "Use same location as page">
-<!ENTITY useSubdirRadio.label     "Use this subdirectory:">
+<!ENTITY useSubdirRadio.label     "Use this site subdirectory:">
 <!ENTITY chooseDirButton.label    "Choose...">
 <!ENTITY pageTitle.label          "Page Title:">
 <!ENTITY pageTitleExample.label   "e.g.: &quot;My Web Page&quot;">

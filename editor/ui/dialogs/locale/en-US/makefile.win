@@ -55,6 +55,7 @@ CHROME_L10N = \
   .\EdColorPicker.dtd \
   .\EdConvertToTable.dtd \
   .\EditorPublish.dtd \
+  .\EditorPublishProgress.dtd \
   $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
