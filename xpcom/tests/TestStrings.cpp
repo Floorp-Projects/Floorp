@@ -576,6 +576,10 @@ PRBool test_rfindcharinset()
     if (index != kNotFound)
       return PR_FALSE;
 
+    index = buf.RFindCharInSet("h");
+    if (index != 7)
+      return PR_FALSE;
+
     return PR_TRUE;
   }
 
