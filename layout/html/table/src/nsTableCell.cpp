@@ -217,95 +217,120 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
-  if (nsnull != mAttributes) {
-    nsHTMLValue value;
-    nsStyleText* textStyle = nsnull;
 
-    // align: enum
-    GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+  nsHTMLValue value;
+  nsStyleText* textStyle = nsnull;
+
+  // align: enum
+  GetAttribute(nsHTMLAtoms::align, value);
+  if (value.GetUnit() == eHTMLUnit_Enumerated) 
+  {
+    textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+    textStyle->mTextAlign = value.GetIntValue();
+  }
+  // otherwise check the row for align and inherit it
+  else {
+    if (nsnull!=mRow)
     {
-      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mTextAlign = value.GetIntValue();
-    }
-    
-    // valign: enum
-    GetAttribute(nsHTMLAtoms::valign, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) 
-    {
-      if (nsnull==textStyle)
-        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
-    }
-    // otherwise check the row for valign and inherit it
-    else {
-      if (nsnull!=mRow)
+      // TODO: optimize by putting a flag on the row to say whether align attr is set
+      nsHTMLValue parentAlignValue;
+      mRow->GetAttribute(nsHTMLAtoms::align, parentAlignValue);
+      if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
       {
-        // TODO: optimize by putting a flag on the row to say whether valign attr is set
-        nsHTMLValue parentAlignValue;
-        mRow->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
-        if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
+        PRUint8 rowAlign = parentAlignValue.GetIntValue();
+        if (nsnull==textStyle)
+          textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+        textStyle->mTextAlign = rowAlign;
+      }
+      else
+      { // we need to check the row group as well
+        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
+        if (nsnull!=rowGroup)
         {
-          PRUint8 rowVAlign = parentAlignValue.GetIntValue();
-          if (NS_STYLE_VERTICAL_ALIGN_MIDDLE!=rowVAlign)
+          rowGroup->GetAttribute(nsHTMLAtoms::align, parentAlignValue);
+          if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
           {
+            PRUint8 rowGroupAlign = parentAlignValue.GetIntValue();
             if (nsnull==textStyle)
               textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-            textStyle->mVerticalAlign.SetIntValue(rowVAlign, eStyleUnit_Enumerated);
-          }
-        }
-        else
-        { // we need to check the row group as well
-          nsTableRowGroup *rowGroup = mRow->GetRowGroup();
-          if (nsnull!=rowGroup)
-          {
-            rowGroup->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
-            if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
-            {
-              PRUint8 rowGroupVAlign = parentAlignValue.GetIntValue();
-              if (NS_STYLE_VERTICAL_ALIGN_MIDDLE!=rowGroupVAlign)
-              {
-                if (nsnull==textStyle)
-                  textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-                textStyle->mVerticalAlign.SetIntValue(rowGroupVAlign, eStyleUnit_Enumerated);
-              }
-            }
+            textStyle->mTextAlign = rowGroupAlign;
           }
         }
       }
     }
-
-    MapBackgroundAttributesInto(aContext, aPresContext);
-
-    // nowrap
-    GetAttribute(nsHTMLAtoms::nowrap, value);
-    if (value.GetUnit() == eHTMLUnit_Empty)
+  }
+  
+  // valign: enum
+  GetAttribute(nsHTMLAtoms::valign, value);
+  if (value.GetUnit() == eHTMLUnit_Enumerated) 
+  {
+    if (nsnull==textStyle)
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+    textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+  }
+  // otherwise check the row for valign and inherit it
+  else {
+    if (nsnull!=mRow)
     {
-      if (nsnull==textStyle)
-        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
-    }
-
-    // width: pixel
-    float p2t = aPresContext->GetPixelsToTwips();
-    nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetMutableStyleData(eStyleStruct_Position);
-    GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = nscoord(p2t * value.GetPixelValue());
-      pos->mWidth.SetCoordValue(twips);
-    }
-    else if (value.GetUnit() == eHTMLUnit_Percent) {
-      pos->mWidth.SetPercentValue(value.GetPercentValue());
-    }
-
-    // height: pixel
-    GetAttribute(nsHTMLAtoms::height, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = nscoord(p2t * value.GetPixelValue());
-      pos->mHeight.SetCoordValue(twips);
+      // TODO: optimize by putting a flag on the row to say whether valign attr is set
+      nsHTMLValue parentAlignValue;
+      mRow->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
+      if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
+      {
+        PRUint8 rowVAlign = parentAlignValue.GetIntValue();
+        if (nsnull==textStyle)
+          textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+        textStyle->mVerticalAlign.SetIntValue(rowVAlign, eStyleUnit_Enumerated);
+      }
+      else
+      { // we need to check the row group as well
+        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
+        if (nsnull!=rowGroup)
+        {
+          rowGroup->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
+          if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
+          {
+            PRUint8 rowGroupVAlign = parentAlignValue.GetIntValue();
+            if (nsnull==textStyle)
+              textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+            textStyle->mVerticalAlign.SetIntValue(rowGroupVAlign, eStyleUnit_Enumerated);
+          }
+        }
+      }
     }
   }
+
+  MapBackgroundAttributesInto(aContext, aPresContext);
+
+  // nowrap
+  GetAttribute(nsHTMLAtoms::nowrap, value);
+  if (value.GetUnit() == eHTMLUnit_Empty)
+  {
+    if (nsnull==textStyle)
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+    textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
+  }
+
+  // width: pixel
+  float p2t = aPresContext->GetPixelsToTwips();
+  nsStylePosition* pos = (nsStylePosition*)
+    aContext->GetMutableStyleData(eStyleStruct_Position);
+  GetAttribute(nsHTMLAtoms::width, value);
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
+    nscoord twips = nscoord(p2t * value.GetPixelValue());
+    pos->mWidth.SetCoordValue(twips);
+  }
+  else if (value.GetUnit() == eHTMLUnit_Percent) {
+    pos->mWidth.SetPercentValue(value.GetPercentValue());
+  }
+
+  // height: pixel
+  GetAttribute(nsHTMLAtoms::height, value);
+  if (value.GetUnit() == eHTMLUnit_Pixel) {
+    nscoord twips = nscoord(p2t * value.GetPixelValue());
+    pos->mHeight.SetCoordValue(twips);
+  }
+
 
 }
 

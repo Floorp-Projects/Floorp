@@ -20,7 +20,6 @@
 
 #include "nscore.h"
 #include "nsBodyFrame.h"
-#include "nsTableCaption.h"
 
 /**
  * nsTableCaptionFrame
