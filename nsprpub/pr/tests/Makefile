@@ -125,6 +125,7 @@ CSRCS =             \
 	semaerr1.c 		\
 	semaping.c 		\
 	semapong.c 		\
+	sendzlf.c 		\
 	server_test.c	\
 	servr_kk.c		\
 	servr_ku.c		\
