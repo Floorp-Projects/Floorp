@@ -2006,6 +2006,7 @@ nsresult nsMsgDatabase::RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_to
 		{
 			nsString charset;
 			nsString decodedStr;
+			m_dbFolderInfo->GetCharacterSet(&charset);
 			err = converter->DecodeMimePartIIStr(nakedString, charset, resultStr);
 			NS_RELEASE(converter);
 		}
