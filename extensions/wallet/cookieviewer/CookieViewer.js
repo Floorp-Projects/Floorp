@@ -120,8 +120,6 @@ function Startup() {
   // be prepared to reload the display if anything changes
   kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
   kObserverService.addObserver(cookieReloadDisplay, "cookieChanged", false);
-
-  window.sizeToContent();
 }
 
 function Shutdown() {
