@@ -720,12 +720,6 @@ MakeContentObject(nsHTMLTag aNodeType,
     rv = NS_NewHTMLLabelElement(aResult, aAtom);
     SetForm(*aResult, aForm);
     break;
-  case eHTMLTag_layer:
-    rv = NS_NewHTMLLayerElement(aResult, aAtom);
-    break;
-  case eHTMLTag_ilayer:
-    rv = NS_NewHTMLLayerElement(aResult, aAtom);
-    break;
   case eHTMLTag_legend:
     rv = NS_NewHTMLLegendElement(aResult, aAtom);
     break;
@@ -1213,7 +1207,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       mSink->ProcessATag(aNode, content);
       break;
     case eHTMLTag_table:
-    case eHTMLTag_layer:
     case eHTMLTag_thead:
     case eHTMLTag_tbody:
     case eHTMLTag_tfoot:
