@@ -90,7 +90,7 @@ JSSL_throwSSLSocketException(JNIEnv *env, char *message)
      * Create the exception object
      */
     excepClass = (*env)->FindClass(env, SSLSOCKET_EXCEPTION);
-    /*PR_ASSERT(excepClass != NULL);*/
+    PR_ASSERT(excepClass != NULL);
     if( excepClass == NULL ) goto finish;
 
     excepCons = (*env)->GetMethodID(env, excepClass, "<init>",
