@@ -35,7 +35,6 @@
 #include "nsIPresContext.h"
 #include "nsITimerCallback.h"
 #include "nsITimer.h"
-#include "nsIDragTracker.h"
 #include "nsIReflowCallback.h"
 
 class nsCSSFrameConstructor;
@@ -147,11 +146,10 @@ private:
 
 
 class nsXULTreeOuterGroupFrame : public nsXULTreeGroupFrame, public nsIScrollbarMediator,
-                                 public nsIDragTracker, public nsIReflowCallback
+                                 public nsIReflowCallback
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDRAGTRACKER
   
   friend class nsDragAutoScrollTimer;
   friend class nsDragOverListener;
@@ -260,14 +258,12 @@ protected: // Data Members
   nsresult StartAutoScrollTimer(const nsPoint& aPoint, PRUint32 aDelay);
   nsresult StopAutoScrollTimer();
   nsresult DoAutoScroll(const nsPoint& aPoint);
-  void UnregisterTracking ( ) ;
 
   nsXULTreeRowGroupInfo* mRowGroupInfo;
   PRInt32 mRowHeight;
   nscoord mOnePixel;
   PRInt32 mCurrentIndex; // Row-based
   PRPackedBool mTreeIsSorted;
-  PRPackedBool mCurrentlyTrackingAutoScroll;    // used to track if we've done setup already
 
     // our auto-scroll event listener registered with the content model. See the discussion
     // in Init() for why this is a weak ref.
