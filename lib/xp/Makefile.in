@@ -69,9 +69,9 @@ ifeq ($(STAND_ALONE_JAVA),1)
 CSRCS		= xp_qsort.c
 endif
 
-ifeq ($(MOZ_MAIL_NEWS),1)
-CSRCS		+= xp_md5.c
-endif
+# ifeq ($(MOZ_MAIL_NEWS),1)
+# CSRCS		+= xp_md5.c
+# endif
 
 NO_STATIC_LIB=1
 
