@@ -5977,7 +5977,33 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
                                                        aIndexInContainer);
 
           if (prevSibling || innerFrame) {
-             // We're onscreen. Make sure a full reflow happens.
+            // We're onscreen, but because of the fact that we can be called to
+            // "kill" a displayed frame (e.g., when you close a tree node), we
+            // have to see if this slaying is taking place.  If so, then we don't
+            // really want to do anything.  Instead we need to add our node to
+            // the undisplayed content list so that the style system will know
+            // to check it for subsequent display changes (e.g., when you next
+            // reopen).
+            nsCOMPtr<nsIStyleContext> styleContext;
+            nsCOMPtr<nsIAtom> tagName;
+            aChild->GetTag(*getter_AddRefs(tagName));
+            ResolveStyleContext(aPresContext, innerFrame, aChild, tagName, getter_AddRefs(styleContext));
+
+            // Pre-check for display "none" - if we find that, don't reflow at all.
+            const nsStyleDisplay* display = (const nsStyleDisplay*)
+              styleContext->GetStyleData(eStyleStruct_Display);
+
+            if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+
+              nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
+                                    GetAbsoluteContainingBlock(aPresContext, innerFrame),
+                                    GetFloaterContainingBlock(aPresContext, innerFrame),
+                                    aFrameState);
+              state.mFrameManager->SetUndisplayedContent(aChild, styleContext);
+              return NS_OK;
+            }
+            
+            // Good call.  Make sure a full reflow happens.
             nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
             if(!nextSibling)
               treeRowGroup->OnContentAdded(aPresContext);
