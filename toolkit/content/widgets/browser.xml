@@ -404,6 +404,10 @@
       <field name="securityUI">
         null
       </field>
+      
+      <field name="userTypedValue">
+        null
+      </field>
 
       <field name="mFormFillAttached">
         false

@@ -154,14 +154,15 @@
 
       <!-- A web progress listener object definition for a given tab. -->
       <method name="mTabProgressListener">
-        <parameter name="aTabBrowser"/>
         <parameter name="aTab"/>
+        <parameter name="aBrowser"/>
         <parameter name="aStartsBlank"/>
         <body>
         <![CDATA[
           return ({
-            mTabBrowser: aTabBrowser,
+            mTabBrowser: this,
             mTab: aTab,
+            mBrowser: aBrowser,
             mBlank: aStartsBlank,
             mIcon: "", 
 
@@ -189,15 +190,23 @@
 
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
-              if (!this.mBlank && aStateFlags & nsIWebProgressListener.STATE_START && 
-                  aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
-                this.mTab.setAttribute("busy", "true"); 
-                this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
-                this.mTab.removeAttribute("image");
-                this.mIcon = "";
 
-                if (this.mTabBrowser.mCurrentTab == this.mTab)
-                  this.mTabBrowser.mIsBusy = true;
+              if (aStateFlags & nsIWebProgressListener.STATE_START && 
+                  aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+                // Reset so we can see if the user typed between the document
+                // load starting and the location changing.
+                if (aWebProgress.DOMWindow == this.mBrowser.contentWindow)
+                  this.mBrowser.userTypedValue = null;
+
+                if (!this.mBlank) {
+                  this.mTab.setAttribute("busy", "true");
+                  this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
+                  this.mTab.removeAttribute("image"); 
+                  this.mIcon = "";
+
+                  if (this.mTabBrowser.mCurrentTab == this.mTab)
+                    this.mTabBrowser.mIsBusy = true;
+                }
               }
               else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
                        aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
@@ -666,7 +675,7 @@
             }
 
             // Wire up a progress listener to our filter.
-            const listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
+            const listener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, false);
             filter.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[0] = listener;
           ]]>
@@ -725,7 +734,7 @@
 
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
-            var tabListener = (this.mTabProgressListener)(this, t, blank);
+            var tabListener = this.mTabProgressListener(t, b, blank);
             const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
@@ -1240,10 +1249,14 @@
                 onget="return this.mCurrentBrowser.canFindAgain;"
                 readonly="true"/>
 
+      <property name="userTypedValue"
+                onget="return this.mCurrentBrowser.userTypedValue;"
+                onset="return this.mCurrentBrowser.userTypedValue = val;"/>
+
       <constructor>
         <![CDATA[
-        this.mCurrentBrowser = this.mPanelContainer.firstChild;
-        this.mCurrentTab = this.mTabContainer.firstChild;
+          this.mCurrentBrowser = this.mPanelContainer.firstChild;
+          this.mCurrentTab = this.mTabContainer.firstChild;
         ]]>
       </constructor>
 
