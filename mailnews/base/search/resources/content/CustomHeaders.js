@@ -78,6 +78,14 @@ function onOk()
     var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService);
     prefService.savePrefFile(null);
   }
+  else
+  {
+    try
+    {
+      gPrefs.clearUserPref("mailnews.customHeaders"); //clear the pref, no custom headers 
+    }
+    catch(ex) {}  //will throw an exception if there is no "mailnews.customHeaders" in prefs.js
+  }
   window.close();
 }
 
@@ -118,7 +126,6 @@ function onRemoveHeader()
       break;
     }
   }
-
 }
 
 function GetListItemAttributeStr(listitem)
