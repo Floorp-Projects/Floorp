@@ -25,8 +25,13 @@
 #include "nsVoidArray.h"
 #include "nsHTMLIIDs.h"
 
+#if 1
 static PRBool gsDebugAssign  = PR_FALSE;
 static PRBool gsDebugBalance = PR_FALSE;
+#else
+static PRBool gsDebugAssign  = PR_TRUE;
+static PRBool gsDebugBalance = PR_TRUE;
+#endif
 
 PRBool CanAllocate(PRInt32          aTypeToAllocate,
                    PRInt32          aTypeAlreadyAllocated,
