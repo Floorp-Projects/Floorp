@@ -567,6 +567,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
          nsAllocator::Free(mSelectionData.data);
          mSelectionData.data = NS_REINTERPRET_CAST(guchar*, convertedText);
          mSelectionData.length = convertedTextLen * 2;
+		 foundFlavor = kUnicodeMime;
          foundData = PR_TRUE;
        }
      } // if plain text data on clipboard
