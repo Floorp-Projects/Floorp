@@ -658,7 +658,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 			case eCursor_cell:						cursor = kThemePlusCursor; 			 			break;
 			case eCursor_grab:						cursor = kThemeOpenHandCursor; 				break;
 			case eCursor_grabbing:				cursor = kThemeClosedHandCursor; 			break;
-			case eCursor_spinning:				cursor = kThemeSpinningCursor; 				break;
+			case eCursor_spinning:				cursor = 149; break;  // better than kThemeSpinningCursor
 			case eCursor_count_up:				cursor = kThemeCountingUpHandCursor; 					break;
 			case eCursor_count_down:			cursor = kThemeCountingDownHandCursor;				break;
 			case eCursor_count_up_down:		cursor = kThemeCountingUpAndDownHandCursor; 	break;
