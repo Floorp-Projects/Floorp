@@ -2149,17 +2149,16 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   PRBool zeroEffectiveSpanBox = PR_FALSE;
   // XXXldb If we really have empty continuations, then all these other
   // checks don't make sense for them.
-  if (emptyContinuation ||
-      (mCompatMode != eCompatibility_FullStandards &&
-       (psd == mRootSpan ||
-        (0 == spanFramePFD->mBorderPadding.top &&
-         0 == spanFramePFD->mBorderPadding.right &&
-         0 == spanFramePFD->mBorderPadding.bottom &&
-         0 == spanFramePFD->mBorderPadding.left &&
-         0 == spanFramePFD->mMargin.top &&
-         0 == spanFramePFD->mMargin.right &&
-         0 == spanFramePFD->mMargin.bottom &&
-         0 == spanFramePFD->mMargin.left)))) {
+  if ((emptyContinuation || mCompatMode != eCompatibility_FullStandards) &&
+      ((psd == mRootSpan) ||
+       ((0 == spanFramePFD->mBorderPadding.top) &&
+        (0 == spanFramePFD->mBorderPadding.right) &&
+        (0 == spanFramePFD->mBorderPadding.bottom) &&
+        (0 == spanFramePFD->mBorderPadding.left) &&
+        (0 == spanFramePFD->mMargin.top) &&
+        (0 == spanFramePFD->mMargin.right) &&
+        (0 == spanFramePFD->mMargin.bottom) &&
+        (0 == spanFramePFD->mMargin.left)))) {
     // This code handles an issue with compatability with non-css
     // conformant browsers. In particular, there are some cases
     // where the font-size and line-height for a span must be
