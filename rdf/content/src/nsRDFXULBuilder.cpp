@@ -84,6 +84,7 @@ static NS_DEFINE_CID(kRDFCompositeDataSourceCID,  NS_RDFCOMPOSITEDATASOURCE_CID)
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,          NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFMenuBuilderCID,          NS_RDFMENUBUILDER_CID);
+static NS_DEFINE_CID(kRDFToolbarBuilderCID,       NS_RDFTOOLBARBUILDER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // standard vocabulary items
@@ -128,6 +129,8 @@ private:
     static nsIAtom* kIdAtom;
     static nsIAtom* kTreeAtom;
     static nsIAtom* kMenuAtom;
+    static nsIAtom* kMenuBarAtom;
+    static nsIAtom* kToolbarAtom;
 
     static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_nextVal;
@@ -230,6 +233,8 @@ nsIAtom*        RDFXULBuilderImpl::kIdAtom;
 nsIAtom*        RDFXULBuilderImpl::kDataSourcesAtom;
 nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuAtom;
+nsIAtom*        RDFXULBuilderImpl::kMenuBarAtom;
+nsIAtom*        RDFXULBuilderImpl::kToolbarAtom;
 
 nsIRDFResource* RDFXULBuilderImpl::kRDF_instanceOf;
 nsIRDFResource* RDFXULBuilderImpl::kRDF_nextVal;
@@ -286,6 +291,8 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kTreeAtom                 = NS_NewAtom("tree");
         kMenuAtom                 = NS_NewAtom("menu");
+        kMenuBarAtom              = NS_NewAtom("menubar");
+        kToolbarAtom              = NS_NewAtom("toolbar");
 
         if (NS_SUCCEEDED(rv = nsServiceManager::GetService(kRDFServiceCID,
                                                            kIRDFServiceIID,
@@ -339,6 +346,8 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kDataSourcesAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kMenuAtom);
+        NS_IF_RELEASE(kMenuBarAtom);
+        NS_IF_RELEASE(kToolbarAtom);
     }
 }
 
@@ -1517,7 +1526,8 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
     }
 
     // There are some tags that we need to pay extra-special attention to...
-    if (aTag == kTreeAtom || aTag == kMenuAtom) {
+    if (aTag == kTreeAtom || aTag == kMenuAtom || aTag == kMenuBarAtom || 
+        aTag == kToolbarAtom) {
         nsAutoString dataSources;
         if (NS_CONTENT_ATTR_HAS_VALUE ==
             element->GetAttribute(kNameSpaceID_None,
@@ -1527,8 +1537,10 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
             nsCID builderCID;
             if (aTag == kTreeAtom)
                 builderCID = kRDFTreeBuilderCID;
-            else if (aTag == kMenuAtom)
+            else if (aTag == kMenuAtom || aTag == kMenuBarAtom)
                 builderCID = kRDFMenuBuilderCID;
+            else if (aTag == kToolbarAtom)
+                builderCID = kRDFToolbarBuilderCID;
 
             rv = CreateBuilder(builderCID, element, dataSources);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");

@@ -107,7 +107,7 @@ public:
     IsElementInWidget(nsIContent* aElement);
    
     PRBool
-    IsWidgetItemElement(nsIContent* aElement);
+    IsWidgetElement(nsIContent* aElement);
  
     PRBool
     IsWidgetInsertionRootElement(nsIContent* aElement);
@@ -140,6 +140,9 @@ public:
 
     virtual nsresult
     GetWidgetItemAtom(nsIAtom** aResult) = 0;
+
+    virtual nsresult
+    GetWidgetFolderAtom(nsIAtom** aResult) = 0;
 
     virtual nsresult
     GetInsertionRootAtom(nsIAtom** aResult) = 0;

@@ -742,13 +742,8 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
 
     // Now do the work to change the attribute. There are a couple of
     // special cases that we need to check for here...
-    nsCOMPtr<nsIAtom>       itemAtom;
-    if (NS_FAILED(rv = GetWidgetItemAtom(getter_AddRefs(itemAtom)))) {
-        return rv;
-    }
-
     if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
-        (elementNameAtom.get() == itemAtom) &&
+        IsWidgetElement(element) &&
         (attrNameSpaceID       == kNameSpaceID_None) &&
         (attrNameAtom.get()    == kOpenAtom)) {
         // We are possibly changing the value of the "open"
@@ -866,12 +861,8 @@ RDFGenericBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString
         return rv;
     }
 
-    nsCOMPtr<nsIAtom>       itemAtom;
-    if (NS_FAILED(rv = GetWidgetItemAtom(getter_AddRefs(itemAtom)))) {
-        return rv;
-    }
     if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
-        (elementNameAtom.get() == itemAtom) &&
+        IsWidgetElement(element) &&
         (attrNameSpaceID       == kNameSpaceID_None) &&
         (attrNameAtom.get()    == kOpenAtom)) {
         // We are removing the value of the "open" attribute. This may
@@ -1097,13 +1088,15 @@ RDFGenericBuilderImpl::FindWidgetRootElement(nsIContent* aElement,
 
 
 PRBool
-RDFGenericBuilderImpl::IsWidgetItemElement(nsIContent* aElement)
+RDFGenericBuilderImpl::IsWidgetElement(nsIContent* aElement)
 {
-    // Returns PR_TRUE if the element is a <xul:treeitem> element.
+    // Returns PR_TRUE if the element is an item in the widget.
     nsresult rv;
 
     nsCOMPtr<nsIAtom>       itemAtom;
-    if (NS_FAILED(rv = GetWidgetItemAtom(getter_AddRefs(itemAtom)))) {
+    nsCOMPtr<nsIAtom>       folderAtom;
+    if (NS_FAILED(rv = GetWidgetItemAtom(getter_AddRefs(itemAtom))) ||
+        NS_FAILED(rv = GetWidgetFolderAtom(getter_AddRefs(folderAtom)))) {
         return rv;
     }
 
@@ -1112,7 +1105,7 @@ RDFGenericBuilderImpl::IsWidgetItemElement(nsIContent* aElement)
     if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(tag))))
         return PR_FALSE;
 
-    if (tag.get() != itemAtom)
+    if (tag.get() != itemAtom && tag.get() != folderAtom)
         return PR_FALSE;
 
     return PR_TRUE;
@@ -1243,8 +1236,8 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
         return rv;
     }
 
-    nsCOMPtr<nsIAtom>       itemAtom;
-    if (NS_FAILED(rv = GetWidgetItemAtom(getter_AddRefs(itemAtom)))) {
+    nsCOMPtr<nsIAtom>       folderAtom;
+    if (NS_FAILED(rv = GetWidgetFolderAtom(getter_AddRefs(folderAtom)))) {
         return rv;
     }
 
@@ -1252,8 +1245,8 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
     if (tag.get() == insertionAtom)
         return PR_TRUE;
 
-    // If it's not a widget item, then it's not open.
-    if (tag.get() != itemAtom)
+    // If it's not a widget folder item, then it's not open.
+    if (tag.get() != folderAtom)
         return PR_FALSE;
 
     nsAutoString value;

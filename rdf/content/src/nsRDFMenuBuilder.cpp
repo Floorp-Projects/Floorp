@@ -106,9 +106,16 @@ public:
     }
 
     nsresult
-    GetInsertionRootAtom(nsIAtom** aResult) {
+    GetWidgetFolderAtom(nsIAtom** aResult) {
         NS_ADDREF(kMenuAtom);
         *aResult = kMenuAtom;
+        return NS_OK;
+    }
+
+    nsresult
+    GetInsertionRootAtom(nsIAtom** aResult) {
+        NS_ADDREF(kMenuBarAtom);
+        *aResult = kMenuBarAtom;
         return NS_OK;
     }
 
@@ -122,6 +129,7 @@ public:
     // pseudo-constants
     static nsrefcnt gRefCnt;
  
+    static nsIAtom* kMenuBarAtom;
     static nsIAtom* kMenuAtom;
     static nsIAtom* kMenuItemAtom;
 };
@@ -132,6 +140,7 @@ nsrefcnt RDFMenuBuilderImpl::gRefCnt = 0;
 
 nsIAtom* RDFMenuBuilderImpl::kMenuAtom;
 nsIAtom* RDFMenuBuilderImpl::kMenuItemAtom;
+nsIAtom* RDFMenuBuilderImpl::kMenuBarAtom;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -159,6 +168,7 @@ RDFMenuBuilderImpl::RDFMenuBuilderImpl(void)
     if (gRefCnt == 0) {
         kMenuAtom            = NS_NewAtom("menu");
         kMenuItemAtom        = NS_NewAtom("menuitem");
+        kMenuBarAtom         = NS_NewAtom("menubar");
     }
 
     ++gRefCnt;
@@ -171,6 +181,7 @@ RDFMenuBuilderImpl::~RDFMenuBuilderImpl(void)
         
         NS_RELEASE(kMenuAtom);
         NS_RELEASE(kMenuItemAtom);
+        NS_RELEASE(kMenuBarAtom);
     }
 }
 
@@ -187,7 +198,7 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     nsCOMPtr<nsIContent> menuParent;
     menuParent = dont_QueryInterface(aElement);
-    if (!IsWidgetItemElement(aElement) && !IsWidgetInsertionRootElement(aElement))
+    if (!IsWidgetElement(aElement) && !IsWidgetInsertionRootElement(aElement))
     {
         NS_ERROR("Can't add something here!");
         return NS_ERROR_UNEXPECTED;
