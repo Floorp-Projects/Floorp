@@ -2894,6 +2894,19 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 PRBool nsWindow::OnPaint()
 {
    PRBool rc = PR_FALSE;
+   nsEventStatus eventStatus = nsEventStatus_eIgnore;
+
+#ifdef NS_DEBUG
+   HRGN debugPaintFlashRegion = NULL;
+   HPS debugPaintFlashPS = NULL;
+
+   if (debug_WantPaintFlashing())
+   {
+      debugPaintFlashPS = ::WinGetPS(mWnd);
+      debugPaintFlashRegion = ::GpiCreateRegion(debugPaintFlashPS, 0, NULL);
+      ::WinQueryUpdateRegion(mWnd, debugPaintFlashRegion);
+   }
+#endif
 
    if( mContext && (mEventCallback || mEventListener))
    {
@@ -2951,7 +2964,7 @@ PRBool nsWindow::OnPaint()
                     if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget))
                     {
                       event.renderingContext->Init(mContext, surf);
-                      rc = DispatchWindowEvent(&event);
+                      rc = DispatchWindowEvent(&event, eventStatus);
                       event.renderingContext->DestroyDrawingSurface(surf);
                     }
 
@@ -2968,6 +2981,29 @@ PRBool nsWindow::OnPaint()
       if (hpsDrag)
         ReleaseIfDragHPS(hpsDrag);
    }
+
+#ifdef NS_DEBUG
+  if (debug_WantPaintFlashing())
+  {
+     // Only flash paint events which have not ignored the paint message.
+     // Those that ignore the paint message aren't painting anything so there
+     // is only the overhead of the dispatching the paint event.
+     if (nsEventStatus_eIgnore != eventStatus)
+     {
+        LONG CurMix = ::GpiQueryMix(debugPaintFlashPS);
+        ::GpiSetMix(debugPaintFlashPS, FM_INVERT);
+
+        ::GpiPaintRegion(debugPaintFlashPS, debugPaintFlashRegion);
+        PR_Sleep(PR_MillisecondsToInterval(30));
+        ::GpiPaintRegion(debugPaintFlashPS, debugPaintFlashRegion);
+        PR_Sleep(PR_MillisecondsToInterval(30));
+
+        ::GpiSetMix (debugPaintFlashPS, CurMix);
+     }
+     ::GpiDestroyRegion(debugPaintFlashPS, debugPaintFlashRegion);
+     ::WinReleasePS(debugPaintFlashPS);
+  }
+#endif
 
    return rc;
 }
