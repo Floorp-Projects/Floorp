@@ -663,6 +663,14 @@ dump("ONSELECTION CHANGED\n")
           }
         },
         
+        getImageSource: function(aItemIndex, aColumnID) {
+           if (aColumnId == "Name") {
+             var resource = this.mOuter.getRowResource(aItemIndex);
+             return BookmarksUtils.getProperty(resource, NC_NS+"Icon", this.mOuter.db);
+           }
+           return "";
+        },
+
         onCycleCell          : function (aItemIndex, aColumnID)          {},
         isEditable           : function (aItemIndex, aColumnID)          {},
         onSetCellText        : function (aItemIndex, aColumnID, aValue)  {},
@@ -761,7 +769,8 @@ dump("ONSELECTION CHANGED\n")
               <treechildren>
                 <treeitem uri="rdf:*">
                   <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                    <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon" 
+                              label="rdf:http://home.netscape.com/NC-rdf#Name" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
@@ -861,7 +870,8 @@ dump("ONSELECTION CHANGED\n")
             <treechildren>
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon" 
+                            label="rdf:http://home.netscape.com/NC-rdf#Name" />
                 </treerow>
               </treeitem>
             </treechildren>
