@@ -955,8 +955,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const PRUnichar *name, nsISupports ** a
       if (NS_SUCCEEDED(rv) &&
           folderName.Equals(name, nsCaseInsensitiveStringComparator()))
       {
-        *aChild = folder;
-        NS_ADDREF(*aChild);
+        NS_ADDREF(*aChild = folder);
         return NS_OK;
       }
     }
