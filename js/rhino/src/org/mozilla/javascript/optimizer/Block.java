@@ -398,9 +398,9 @@ public class Block {
             case Token.LSH:
             case Token.RSH:
             case Token.URSH:
-            case Token.SUB : {
-                    return Optimizer.NumberType;
-                }
+            case Token.SUB :
+                return Optimizer.NumberType;
+
             case Token.ADD : {
                     // if the lhs & rhs are known to be numbers, we can be sure that's
                     // the result, otherwise it could be a string.
