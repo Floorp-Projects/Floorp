@@ -143,7 +143,7 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
       // Detect if mouse point is within current selection for context click
       PRBool nodeIsInSelection = PR_FALSE;
-      if ( !(buttonNumber == 0 && clickCount == 2) )
+      if (isContextClick)
       {
         PRBool isCollapsed;
         selection->GetIsCollapsed(&isCollapsed);
@@ -177,12 +177,7 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
       if (node && !nodeIsInSelection)
       {
         PRBool elementIsLink = PR_FALSE;
-        if (element)
-        {
-          // Set caret just before an element
-          selection->Collapse(parent, offset);
-        }
-        else
+        if (!element)
         {
           // Get enclosing link if in text so we can select the link
           //XXX Although I'd prefer to not select a link on context click,
@@ -196,19 +191,31 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
         }
         // Select entire element clicked on if NOT within an existing selection
         //   and not the entire body, or table-related elements
-        if (element && !nodeIsInSelection &&
-            !nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("body")) &&
-            !nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("td")) &&
-            !nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("th")) &&
-            !nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("caption")) &&
-            !nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("tr")) &&
-            !nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("table")))
+        if (element)
         {
-          htmlEditor->SelectElement(element);
+          if (nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("body")) ||
+              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("td")) ||
+              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("th")) ||
+              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("caption")) ||
+              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("tr")) ||
+              nsTextEditUtils::NodeIsType(node, NS_LITERAL_STRING("table")))
+          {
+            // This will place caret just inside table cell or at start of body
+            selection->Collapse(parent, offset);
+          }
+          else
+          {
+            htmlEditor->SelectElement(element);
+          }
         }
       }
-      mouseEvent->PreventDefault();
-      return NS_OK;
+      // Prevent bubbling if we changed selection or 
+      //   for all context clicks
+      if (element || isContextClick)
+      {
+        mouseEvent->PreventDefault();
+        return NS_OK;
+      }
     }
   }
 
