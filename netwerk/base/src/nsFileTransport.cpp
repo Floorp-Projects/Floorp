@@ -1041,7 +1041,7 @@ nsFileTransport::Process(nsIProgressEventSink *progressSink)
         // see http://bugzilla.mozilla.org/show_bug.cgi?id=139556#c64
         // for the reason behind this evil reference counting.
         nsISupports* doomed = mContext.get();
-        NS_ADDREF(doomed);
+        NS_IF_ADDREF(doomed);
         mContext = 0;
         if (mProvider) {
             nsCOMPtr <nsIStreamProvider> provider = do_QueryInterface(mProvider);

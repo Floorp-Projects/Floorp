@@ -43,6 +43,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
+#include "nsIStreamProvider.h"
 #include "nsFileSpec.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
@@ -54,12 +55,16 @@
 #include "nsCOMPtr.h"
 #include "nsIFile.h"        /* Solaris/gcc needed this here. */
 #include "nsIFileChannel.h"
+#include "nsIUploadChannel.h"
+#include "nsIInputStream.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
 
 class nsFileChannel : public nsIFileChannel,
+                      public nsIUploadChannel,
                       public nsIInterfaceRequestor,
                       public nsIStreamListener,
+                      public nsIStreamProvider,
                       public nsIProgressEventSink
 {
 public:
@@ -67,9 +72,11 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIFILECHANNEL
+    NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMPROVIDER
     NS_DECL_NSIPROGRESSEVENTSINK
 
     nsFileChannel();
@@ -81,7 +88,7 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(PRInt32 ioFlags, PRInt32 perm, nsIURI* uri, PRBool generateHTMLDirs = PR_FALSE);
-    nsresult EnsureTransport();
+    nsresult GetFileTransport(nsITransport **);
     nsresult SetStreamConverter();
 
 protected:
@@ -105,6 +112,8 @@ protected:
     nsresult                            mStatus;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
     nsCOMPtr<nsIRequest>                mCurrentRequest;
+    nsCOMPtr<nsIInputStream>            mUploadStream;
+    PRUint32                            mUploadStreamLength;
     PRBool                              mGenerateHTMLDirs;
 
 #ifdef DEBUG

@@ -47,6 +47,7 @@
 #include "nsIMIMEService.h"
 #include "nsIFileTransportService.h"
 #include "nsIFile.h"
+#include "nsIOutputStream.h"
 #include "nsInt64.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -129,14 +130,20 @@ nsFileChannel::SetStreamConverter()
     return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS7(nsFileChannel,
-                              nsIFileChannel,
-                              nsIChannel,
-                              nsIRequest,
-                              nsIStreamListener,
-                              nsIRequestObserver,
-                              nsIProgressEventSink,
-                              nsIInterfaceRequestor)
+NS_IMPL_THREADSAFE_ADDREF(nsFileChannel)
+NS_IMPL_THREADSAFE_RELEASE(nsFileChannel)
+NS_INTERFACE_MAP_BEGIN(nsFileChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIFileChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamProvider)
+    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+    NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequestObserver, nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFileChannel)
+NS_INTERFACE_MAP_END
 
 NS_METHOD
 nsFileChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -247,7 +254,7 @@ nsFileChannel::GetURI(nsIURI* *aURI)
 }
 
 nsresult
-nsFileChannel::EnsureTransport()
+nsFileChannel::GetFileTransport(nsITransport **trans)
 {
     nsresult rv = NS_OK;
     
@@ -255,12 +262,11 @@ nsFileChannel::EnsureTransport()
              do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = fts->CreateTransport(mFile, mIOFlags, mPerm, PR_TRUE,
-                              getter_AddRefs(mFileTransport));
+    rv = fts->CreateTransport(mFile, mIOFlags, mPerm, PR_TRUE, trans);
     if (NS_FAILED(rv)) return rv;
 
-    mFileTransport->SetNotificationCallbacks(mCallbacks,
-                                             (mLoadFlags & LOAD_BACKGROUND));
+    // XXX why should file:// URLs be loaded in the background?
+    (*trans)->SetNotificationCallbacks(mCallbacks, (mLoadFlags & LOAD_BACKGROUND));
     return rv;
 }
 
@@ -270,17 +276,44 @@ nsFileChannel::Open(nsIInputStream **result)
     nsresult rv;
 
     if (mFileTransport)
-        return NS_ERROR_IN_PROGRESS;
+        return NS_ERROR_IN_PROGRESS; // AsyncOpen in progress
 
-    rv = EnsureTransport();
-    if (NS_FAILED(rv)) goto done;
+    nsCOMPtr<nsITransport> fileTransport;
+    rv = GetFileTransport(getter_AddRefs(fileTransport));
+    if (NS_FAILED(rv)) return rv;
 
-    rv = mFileTransport->OpenInputStream(0, PRUint32(-1), 0, result);
-  done:
-    if (NS_FAILED(rv)) {
-        // release the transport so that we don't think we're in progress
-        mFileTransport = nsnull;
+    if (mUploadStream) {
+        // open output stream for "uploading"
+        nsCOMPtr<nsIOutputStream> fileOut;
+        rv = fileTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(fileOut));
+        if (NS_FAILED(rv)) return rv;
+
+        // write all of mUploadStream to fileOut before returning
+        while (mUploadStreamLength) {
+            PRUint32 bytesWritten = 0;
+
+            rv = fileOut->WriteFrom(mUploadStream, mUploadStreamLength, &bytesWritten);
+            if (NS_FAILED(rv)) return rv;
+
+            if (bytesWritten == 0) {
+                NS_WARNING("wrote zero bytes");
+                return NS_ERROR_UNEXPECTED;
+            }
+
+            mUploadStreamLength -= bytesWritten;
+        }
+        if (NS_FAILED(rv)) return rv;
+
+        // return empty stream to caller...
+        nsCOMPtr<nsISupports> emptyIn;
+        rv = NS_NewByteInputStream(getter_AddRefs(emptyIn), "", 0);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = CallQueryInterface(emptyIn, result);
     }
+    else
+        rv = fileTransport->OpenInputStream(0, PRUint32(-1), 0, result);
+
     return rv;
 }
 
@@ -296,10 +329,11 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 #endif
 
     if (mFileTransport)
-        return NS_ERROR_IN_PROGRESS;
+        return NS_ERROR_IN_PROGRESS; // AsyncOpen in progress
 
-    rv = EnsureTransport();
-    if (NS_FAILED(rv)) 
+    nsCOMPtr<nsITransport> fileTransport;
+    rv = GetFileTransport(getter_AddRefs(fileTransport));
+    if (NS_FAILED(rv))
         return rv;
 
     NS_ASSERTION(listener, "null listener");
@@ -310,18 +344,25 @@ nsFileChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
         if (NS_FAILED(rv)) return rv;
     }
     
-    rv = mFileTransport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0,
-                                   getter_AddRefs(mCurrentRequest));
+    nsCOMPtr<nsIRequest> request;
+    if (mUploadStream)
+        rv = fileTransport->AsyncWrite(this, ctxt, 0, PRUint32(-1), 0,
+                                       getter_AddRefs(request));
+    else
+        rv = fileTransport->AsyncRead(this, ctxt, 0, PRUint32(-1), 0,
+                                      getter_AddRefs(request));
 
     if (NS_FAILED(rv)) {
-        if (mLoadGroup) {
-            (void) mLoadGroup->RemoveRequest(this, ctxt, rv);  
-        }
-        // release the transport so that we don't think we're in progress
-        mFileTransport = nsnull;
-        mCurrentRequest = nsnull;
+        if (mLoadGroup)
+            mLoadGroup->RemoveRequest(this, ctxt, rv);  
+        return rv;
     }
-    return rv;
+
+    // remember the transport and request; these will be released when
+    // OnStopRequest is called.
+    mFileTransport = fileTransport;
+    mCurrentRequest = request;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -472,7 +513,7 @@ nsFileChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIStreamListener methods:
+// nsIRequestObserver methods:
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
@@ -507,28 +548,34 @@ NS_IMETHODIMP
 nsFileChannel::OnStopRequest(nsIRequest* request, nsISupports* context,
                              nsresult aStatus)
 {
-    // unconditionally inherit the status of the file transport
-    mStatus = aStatus;
+    // if we were canceled, we should not overwrite the cancelation status
+    // since that could break security assumptions made in upper layers.
+    if (NS_SUCCEEDED(mStatus))
+        mStatus = aStatus;
+
 #ifdef DEBUG
     NS_ASSERTION(mInitiator == PR_CurrentThread(),
                  "wrong thread calling this routine");
 #endif
 
-    nsresult rv = NS_OK;
-    if (mRealListener) {
-        rv = mRealListener->OnStopRequest(this, context, aStatus);
-    }
+    NS_ENSURE_TRUE(mRealListener, NS_ERROR_UNEXPECTED);
+
+    // no point to capturing the return value of OnStopRequest
+    mRealListener->OnStopRequest(this, context, mStatus);
     
-    if (mLoadGroup) {
-        mLoadGroup->RemoveRequest(this, context, aStatus);
-    }
+    if (mLoadGroup)
+        mLoadGroup->RemoveRequest(this, context, mStatus);
 
     // Release the reference to the consumer stream listener...
     mRealListener = 0;
     mFileTransport = 0;
     mCurrentRequest = 0;
-    return rv;
+    return NS_OK;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
 nsFileChannel::OnDataAvailable(nsIRequest* request, nsISupports* context,
@@ -540,12 +587,44 @@ nsFileChannel::OnDataAvailable(nsIRequest* request, nsISupports* context,
                  "wrong thread calling this routine");
 #endif
 
-    nsresult rv = NS_OK;
-    if (mRealListener) {
-        rv = mRealListener->OnDataAvailable(this, context, aIStream,
-                                            aSourceOffset, aLength);
+    NS_ENSURE_TRUE(mRealListener, NS_ERROR_UNEXPECTED);
+
+    return mRealListener->OnDataAvailable(this, context, aIStream,
+                                          aSourceOffset, aLength);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamProvider methods:
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileChannel::OnDataWritable(nsIRequest *aRequest, nsISupports *aContext,
+                              nsIOutputStream *aOStream, PRUint32 aOffset,
+                              PRUint32 aLength)
+{
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
+
+    NS_ENSURE_TRUE(mUploadStream, NS_ERROR_UNEXPECTED);
+
+    if (mUploadStreamLength == 0)
+        return NS_BASE_STREAM_CLOSED; // done writing
+
+    PRUint32 bytesToWrite = PR_MIN(mUploadStreamLength, aLength);
+    PRUint32 bytesWritten = 0;
+
+    nsresult rv = aOStream->WriteFrom(mUploadStream, bytesToWrite, &bytesWritten);
+    if (NS_FAILED(rv)) return rv;
+
+    if (bytesWritten == 0) {
+        NS_WARNING("wrote zero bytes");
+        return NS_BASE_STREAM_CLOSED;
     }
-    return rv;
+
+    mUploadStreamLength -= bytesWritten;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -653,6 +732,55 @@ nsFileChannel::SetPermissions(PRInt32 aPermissions)
 {
     mPerm = aPermissions;
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// From nsIUploadChannel
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileChannel::SetUploadStream(nsIInputStream *aStream,
+                               const char *aContentType,
+                               PRInt32 aContentLength)
+{
+    if (mFileTransport)
+        return NS_ERROR_IN_PROGRESS; // channel is pending, so we can't add
+                                     // or remove an upload stream.
+
+    // ignore aContentType argument; query the stream for its length if not
+    // specified (allow upload of a partial stream).
+    
+    if (aContentLength < 0) {
+        nsresult rv = aStream->Available(&mUploadStreamLength);
+        if (NS_FAILED(rv)) return rv;
+    }
+    else
+        mUploadStreamLength = aContentLength;
+    mUploadStream = aStream;
+
+    if (mUploadStream) {
+        // configure mIOFlags for writing
+        mIOFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
+        if (mPerm == -1)
+            mPerm = PR_IRUSR | PR_IWUSR; // pick something reasonable
+    }
+    else {
+        // configure mIOFlags for reading
+        mIOFlags = PR_RDONLY;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetUploadFile(nsIFile *aFile,
+                               const char *aContentType,
+                               PRInt32 aContentLength)
+{
+    nsCOMPtr<nsIInputStream> inStream;
+    nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStream), aFile);
+    if (NS_FAILED(rv)) return rv;
+
+    return SetUploadStream(inStream, aContentType, aContentLength);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
