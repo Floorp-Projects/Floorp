@@ -57,7 +57,7 @@ static  nsModuleComponentInfo components[] =
 
 NS_IMPL_NSGETMODULE("BlackConnect Java stubs and proxies",components);
 
-NS_IMPL_ISUPPORTS(bcJavaStubsAndProxies,NS_GET_IID(bcJavaStubsAndProxies));
+NS_IMPL_THREADSAFE_ISUPPORTS(bcJavaStubsAndProxies,NS_GET_IID(bcJavaStubsAndProxies));
 
 
 class bcOIDKey : public nsHashKey { 
