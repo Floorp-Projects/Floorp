@@ -373,15 +373,16 @@ nsHTMLDocument::Release()
   return nsDocument::Release();
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 {
   nsresult result = nsDocument::Reset(aChannel, aLoadGroup);
   nsCOMPtr<nsIURI> aURL;
-  result = aChannel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(result)) return result;
-  if (NS_FAILED(result)) {
-    return result;
+
+  if (aChannel) {
+    result = aChannel->GetURI(getter_AddRefs(aURL));
+    if (NS_FAILED(result))
+        return result;
   }
 
   PRInt32 i;
@@ -400,32 +401,34 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   }
   NS_IF_RELEASE(mForms);
 
-  if (nsnull == mAttrStyleSheet) {
-    //result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
-    result = nsComponentManager::CreateInstance(kHTMLStyleSheetCID, nsnull,
-                                                NS_GET_IID(nsIHTMLStyleSheet),
-                                                (void**)&mAttrStyleSheet);
-    if (NS_SUCCEEDED(result)) {
-      result = mAttrStyleSheet->Init(aURL,this);
-      if (NS_FAILED(result)) {
-        NS_RELEASE(mAttrStyleSheet);
+  if (aURL) {
+    if (!mAttrStyleSheet) {
+      //result = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
+      result = nsComponentManager::CreateInstance(kHTMLStyleSheetCID, nsnull,
+                                                  NS_GET_IID(nsIHTMLStyleSheet),
+                                                  (void**)&mAttrStyleSheet);
+      if (NS_SUCCEEDED(result)) {
+        result = mAttrStyleSheet->Init(aURL,this);
+        if (NS_FAILED(result)) {
+          NS_RELEASE(mAttrStyleSheet);
+        }
       }
     }
-  }
-  else {
-    result = mAttrStyleSheet->Reset(aURL);
-  }
-  if (NS_OK == result) {
-    AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
-
-    if (nsnull == mStyleAttrStyleSheet) {
-      result = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
-    }
     else {
-      result = mStyleAttrStyleSheet->Reset(aURL);
+      result = mAttrStyleSheet->Reset(aURL);
     }
-    if (NS_OK == result) {
-      AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
+    if (NS_SUCCEEDED(result)) {
+      AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
+
+      if (!mStyleAttrStyleSheet) {
+        result = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
+      }
+      else {
+        result = mStyleAttrStyleSheet->Reset(aURL);
+      }
+      if (NS_SUCCEEDED(result)) {
+        AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
+      }
     }
   }
 
@@ -2150,7 +2153,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
         if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
           if (container) {
             webShell = do_QueryInterface(container);
-            }
+          }
         }
       }
       
