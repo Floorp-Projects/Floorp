@@ -10,12 +10,16 @@ box[class="CardEdit"] {
 }
 
 input[class="CardEdit"] {
-	height       : 22px;
-	width        : 190px;
+	height       : 12px;
+	width        : 25em;
 	margin-left  : 0px;
 	margin-right : 0px;
-	margin-top   : 1px;
-	margin-bottom: 1px;
+	margin-top   : 0px;
+	margin-bottom: 0px;
+}
+
+div[class="CardEdit"] {
+	vertical-align: middle;
 }
 
 
@@ -48,63 +52,6 @@ spring[class="CardViewHeadingSpace"] {
 	height: 3px;
 }
 
-
-/* General styles */
-
-spring[class="PromptEditSpacing"] {
-	width: 5px;
-}
-
-/* Standard Tree */
-
-/*
-tree {
- display: table;
- background-color: white;
- border: none;
- border-spacing: 0px;
- width: 100%;
- table-layout: fixed;
-}
-
-treeitem { 
- display: table-row; 
- color: black;
- font-family: Verdona;
- font-size: 10pt;
-} 
-
-treehead { 
- display: table-header-group; 
-} 
-
-treebody { 
- display: table-row-group; 
-} 
-
-treeitem[selected="true"] { 
- color: white;
- background-color: #666699; 
-}
-
-treecell { 
- display: table-cell; 
- white-space: nowrap;
-} 
-
-treehead treeitem treecell { 
- font-size: 10pt;
- background-color: #a0a0a0; 
- border: thin black solid; 
- border-top: none;
- color: black;
-} 
-
-
-treecol {
- display: table-column;
-}
-*/
 
 /* Custom Trees */
 

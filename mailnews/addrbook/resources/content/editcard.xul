@@ -7,141 +7,311 @@
 <!-- Title -->
 	<!ENTITY addressbookWindow.title "New Card">
 
+<!-- Tabs -->
+	
 <!-- Labels -->
-	<!ENTITY firstName.label		"First:"> 
+	<!ENTITY name.tab						"Name"> 
+		<!ENTITY name.box					"Name"> 
+			<!ENTITY firstname.label		"First:"> 
+			<!ENTITY lastname.label			"Last:"> 
+			<!ENTITY displayname.label		"Display:"> 
+			<!ENTITY nickname.label			"Nickname:"> 
+			<!ENTITY internet.box			"Internet"> 
+			<!ENTITY primaryemail.label		"* Primary email:"> 
+			<!ENTITY secondemail.label		"Secondary email:"> 
+			<!ENTITY sendplaintext.label	"Send email as plain text (no html)"> 
+			<!ENTITY phones.box				"Phones"> 
+			<!ENTITY workphone.label		"Work:"> 
+			<!ENTITY homephone.label		"Home:"> 
+			<!ENTITY faxnumber.label		"Fax:"> 
+			<!ENTITY pagernumber.label		"Pager:"> 
+			<!ENTITY cellularnumber.label	"Cellular:"> 
+		
+	<!ENTITY address.tab					"Address"> 
+		<!ENTITY home.box					"Home"> 
+			<!ENTITY homeaddress.label		"Address:"> 
+			<!ENTITY homeaddress2.label		""> 
+			<!ENTITY homecity.label			"City:"> 
+			<!ENTITY homestate.label		"State:"> 
+			<!ENTITY homezipcode.label		"Zip:"> 
+			<!ENTITY homecountry.label		"Country:">
+			<!ENTITY work.box				"Work"> 
+			<!ENTITY workaddress.label		"Address:"> 
+			<!ENTITY workaddress2.label		""> 
+			<!ENTITY workcity.label			"City:"> 
+			<!ENTITY workstate.label		"State:"> 
+			<!ENTITY workzipcode.label		"Zip:"> 
+			<!ENTITY workcountry.label		"Country:">
+			<!ENTITY web.box				"Web"> 
+			<!ENTITY webpage1.label			"Page:"> 
+			<!ENTITY webpage2.label			"Page:"> 
+		
+	<!ENTITY other.tab						"Other"> 
+			<!ENTITY custom1.label			"Custom 1:"> 
+			<!ENTITY custom2.label			"Custom 2:"> 
+			<!ENTITY custom3.label			"Custom 3:"> 
+			<!ENTITY custom4.label			"Custom 4:"> 
+		<!ENTITY notes.box					"Notes"> 
 ]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="&addressbookWindow.title;"
-	width="370" height="500">
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		title="&addressbookWindow.title;"
+		class="dialog"
+		width="400" style="height:100%">
 
 <html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
 <html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 
-<box align="vertical" style="width: 100%; height: 100%">
 	<tabcontrol align="vertical" style="margin: 5px; border: 2px groove white">
 	   <tabbox include="chrome://addressbook/content/nsFrag1.xul" align="horizontal">
-	      <tab>Name</tab>
-	      <tab>Address</tab>
-	      <tab>Other</tab>
+	      <tab>&name.tab;</tab>
+	      <tab>&address.tab;</tab>
+	      <tab>&other.tab;</tab>
 	   </tabbox>
 	   
-	   <tabpanel include="chrome://addressbook/content/nsFrag2.xul" align="vertical" flex="100%">
-			<box index="name" align="vertical">
-				<box align="vertical" value="Name" class="CardEdit">
+	   <tabpanel include="chrome://addressbook/content/nsFrag2.xul" align="vertical" style="width:100%">
+
+			<!-- ** Name Tab ** -->
+			<box index="name" align="vertical" flex="100%">
+				
+				<html:fieldset style="width:100%">
+					<html:legend align="left">
+						<html:div style="font-weight: bold">&name.box;</html:div>
+					</html:legend>
 		
+					<box align="vertical" style="width:100%">
+						<box align="horizontal" flex="100%">
+							<spring flex="100%"/>
+							<html:label for="firstname">&firstname.label;</html:label>
+							<html:input type="text" id="firstname" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="lastname">&lastname.label;</html:label>
+							<html:input id="lastname" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="displayname">&displayname.label;</html:label>
+							<html:input id="displayname" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="nickname">&nickname.label;</html:label>
+							<html:input id="nickname" type="text" class="CardEdit"/>
+						</box>
+					</box>
+				</html:fieldset>
+
+				<html:fieldset style="width:100%">
+					<html:legend align="left">
+						<html:div style="font-weight: bold">&internet.box;</html:div>
+					</html:legend>
 		
-					<html:div style="vertical-align: middle;">
-						<html:label for="firstname">&firstName.label;</html:label>
-						<html:input type="text" id="firstname" class="CardEdit"/>
-					</html:div>
+					<box align="vertical" style="width:100%">
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="primaryemail">&primaryemail.label;</html:label>
+							<html:input id="primaryemail" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="secondemail">&secondemail.label;</html:label>
+							<html:input id="secondemail" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<checkbox/><html:div>&sendplaintext.label;</html:div>
+						</box>
+					</box>
+				</html:fieldset>
 
-
-					<!--
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>First: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="firstname" type="text" class="CardEdit"/>
+				<html:fieldset style="width:100%">
+					<html:legend align="left">
+						<html:div style="font-weight: bold">&phones.box;</html:div>
+					</html:legend>
+		
+					<box align="vertical" style="width:100%">
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="workphone">&workphone.label;</html:label>
+							<html:input id="workphone" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="homephone">&homephone.label;</html:label>
+							<html:input id="homephone" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="faxnumber">&faxnumber.label;</html:label>
+							<html:input id="faxnumber" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="pagernumber">&pagernumber.label;</html:label>
+							<html:input id="pagernumber" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="cellularnumber">&cellularnumber.label;</html:label>
+							<html:input id="cellularnumber" type="text" class="CardEdit"/>
+						</box>
 					</box>
-					-->
-					
-					
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Last: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="lastname" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Display: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="displayname" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Nickname: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="nickname" type="text" class="CardEdit"/>
-					</box>
-				</box>
-
-				<box align="vertical" value="Internet" class="CardEdit">
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>* Primary email: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="primaryemail" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Secondary email: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="secondemail" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<checkbox/><html:div>Send email as plain text (no html)</html:div>
-						<spring style="width: 5px"/>
-					</box>
-				</box>
-
-				<box align="vertical" value="Phones" class="CardEdit">
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Work: </html:div>
-						<spring class="PromptEditSpacing"/>
-						<html:input id="workphone" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Home: </html:div>
-						<spring class="PromptEditSpacing"/>
-						<html:input id="homephone" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Fax: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="faxnumber" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Pager: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="pagernumber" type="text" class="CardEdit"/>
-					</box>
-					<box align="horizontal">
-						<spring flex="100%"/>
-						<html:div>Cellular: </html:div> 
-						<spring class="PromptEditSpacing"/>
-						<html:input id="cellularnumber" type="text" class="CardEdit"/>
-					</box>
-				</box>
-			</box>
-
-			<box>
-				<html:div>Address tab empty</html:div> 
+				</html:fieldset>
 			</box>
 			
-			<box>
-				<html:div>Other tab empty</html:div> 
+			<!-- ** Address Tab ** -->
+			<box index="address" align="vertical" flex="100%">
+				
+				<html:fieldset style="width:100%">
+					<html:legend align="left">
+						<html:div style="font-weight: bold">&home.box;</html:div>
+					</html:legend>
+		
+					<box align="vertical" style="width:100%">
+		
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="homeaddress">&homeaddress.label;</html:label>
+							<html:input type="text" id="homeaddress" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="homeaddress2">&homeaddress2.label;</html:label>
+							<html:input type="text" id="homeaddress2" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="homecity">&homecity.label;</html:label>
+							<html:input id="homecity" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="homestate">&homestate.label;</html:label>
+							<html:input id="homestate" type="text" class="CardEdit" style="min-width:1em; width:4em"/>
+							<spring style="width:1.5em"/>
+							<html:label for="homezipcode">&homezipcode.label;</html:label>
+							<html:input id="homezipcode" type="text" class="CardEdit" style="min-width:1em; width:3em"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="homecountry">&homecountry.label;</html:label>
+							<html:input id="homecountry" type="text" class="CardEdit"/>
+						</box>
+					</box>
+				</html:fieldset>
+
+				<html:fieldset style="width:100%">
+					<html:legend align="left">
+						<html:div style="font-weight: bold">&work.box;</html:div>
+					</html:legend>
+		
+					<box align="vertical" style="width:100%">
+		
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="workaddress">&workaddress.label;</html:label>
+							<html:input type="text" id="workaddress" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="workaddress2">&workaddress2.label;</html:label>
+							<html:input type="text" id="workaddress2" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="workcity">&workcity.label;</html:label>
+							<html:input id="workcity" type="text" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="workstate">&workstate.label;</html:label>
+							<html:input id="workstate" type="text" class="CardEdit" style="min-width:1em; width:4em"/>
+							<spring style="width:1.5em"/>
+							<html:label for="workzipcode">&workzipcode.label;</html:label>
+							<html:input id="workzipcode" type="text" class="CardEdit" style="min-width:1em; width:3em"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="workcountry">&workcountry.label;</html:label>
+							<html:input id="workcountry" type="text" class="CardEdit"/>
+						</box>
+					</box>
+				</html:fieldset>
+
+				<html:fieldset style="width:100%">
+					<html:legend align="left">
+						<html:div style="font-weight: bold">&web.box;</html:div>
+					</html:legend>
+		
+					<box align="vertical" style="width:100%">
+		
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="webpage1">&webpage1.label;</html:label>
+							<html:input type="text" id="webpage1" class="CardEdit"/>
+						</box>
+						<box align="horizontal">
+							<spring flex="100%"/>
+							<html:label for="webpage2">&webpage2.label;</html:label>
+							<html:input type="text" id="webpage2" class="CardEdit"/>
+						</box>
+					</box>
+				</html:fieldset>
 			</box>
+
+			<!-- ** Other Tab ** -->
+			<box index="other" align="vertical" flex="100%">
+				
+				<box align="vertical" style="width:100%">
+					<box align="horizontal" flex="100%">
+						<spring flex="100%"/>
+						<html:label for="custom1">&custom1.label;</html:label>
+						<html:input type="text" id="custom1" class="CardEdit"/>
+					</box>
+					<box align="horizontal" flex="100%">
+						<spring flex="100%"/>
+						<html:label for="custom2">&custom2.label;</html:label>
+						<html:input type="text" id="custom2" class="CardEdit"/>
+					</box>
+					<box align="horizontal" flex="100%">
+						<spring flex="100%"/>
+						<html:label for="custom3">&custom3.label;</html:label>
+						<html:input type="text" id="custom3" class="CardEdit"/>
+					</box>
+					<box align="horizontal" flex="100%">
+						<spring flex="100%"/>
+						<html:label for="custom4">&custom4.label;</html:label>
+						<html:input type="text" id="custom4" class="CardEdit"/>
+					</box>
+				</box>
+
+				<html:fieldset style="width:100%">
+					<html:legend align="left">
+						<html:div style="font-weight: bold">&notes.box;</html:div>
+					</html:legend>
+		
+					<box align="vertical" style="width:100%">
+						<html:input id="notes" type="text" class="CardEdit"/>
+					</box>
+				</html:fieldset>
+
+			</box>
+
 	   </tabpanel> 
 	</tabcontrol>
 
 	<spring style="height:10px"/>
 	
-	<box align="horizontal">
+	<box align="horizontal" flex="100%">
 		<spring flex="100%"/>
 		<titledbutton id="ok" value="OK" class="push" onclick="EditCardOKButton()" />	
 		<spring style="width:10px"/>
 		<titledbutton id="cancel" value="Cancel" class="push" onclick="EditCardCancelButton()" />	
 		<spring style="width:10px"/>
 	</box>
-</box>
 
 </window>
 
