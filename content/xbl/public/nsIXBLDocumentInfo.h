@@ -77,7 +77,7 @@ public:
   NS_IMETHOD FlushSkinStylesheets()=0;
 };
 
-extern nsresult
+nsresult
 NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult);
 
 #endif // nsIXBLDocumentInfo_h__

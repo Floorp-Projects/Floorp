@@ -80,7 +80,7 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLMouseMotionHandler(nsIDOMEventReceiver* aEventReceiver,
                             nsXBLPrototypeHandler* aHandlerElement,
                             nsXBLMouseMotionHandler** aResult);

@@ -337,6 +337,7 @@ protected:
 
 };
 
-extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);
+nsresult
+NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);
 
 #endif // nsEventStateManager_h__

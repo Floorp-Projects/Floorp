@@ -108,7 +108,7 @@ static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 // ==================================================================
 
 
-NS_EXPORT nsresult
+nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   const nsAString& aNamespaceURI, 
                   const nsAString& aQualifiedName, 
@@ -161,7 +161,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 }
 
 
-NS_EXPORT nsresult
+nsresult
 NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 {
   nsXMLDocument* doc = new nsXMLDocument();

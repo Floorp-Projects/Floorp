@@ -275,7 +275,7 @@ CSSCharsetRuleImpl::SetEncoding(const nsAString& aEncoding)
 }
 
 
-NS_EXPORT nsresult
+nsresult
 NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult, const nsAString& aEncoding)
 {
   if (! aInstancePtrResult) {
@@ -524,7 +524,7 @@ CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
   return NS_OK;
 }
 
-NS_EXPORT nsresult
+nsresult
 NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
                     const nsString& aURLSpec,
                     const nsString& aMedia)

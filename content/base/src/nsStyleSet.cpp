@@ -1842,7 +1842,7 @@ void StyleSetImpl::ListContexts(nsIFrame* aRootFrame, FILE* out, PRInt32 aIndent
 #endif
 
 
-NS_EXPORT nsresult
+nsresult
 NS_NewStyleSet(nsIStyleSet** aInstancePtrResult)
 {
   if (!aInstancePtrResult) {

@@ -37,7 +37,7 @@
 #ifndef nsTextFrame_h___
 #define nsTextFrame_h___
 
-extern PRBool
+PRBool
 BinarySearchForPosition(nsIRenderingContext* acx, 
                         const PRUnichar* aText,
                         PRInt32    aBaseWidth,

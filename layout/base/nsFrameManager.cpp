@@ -442,7 +442,7 @@ private:
 
 //----------------------------------------------------------------------
 
-NS_EXPORT nsresult
+nsresult
 NS_NewFrameManager(nsIFrameManager** aInstancePtrResult)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);

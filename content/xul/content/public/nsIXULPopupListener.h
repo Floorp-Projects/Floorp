@@ -59,7 +59,7 @@ public:
     NS_IMETHOD Init(nsIDOMElement* anElement, const XULPopupType& aPopupType) = 0;
 };
 
-extern nsresult
+nsresult
 NS_NewXULPopupListener(nsIXULPopupListener** result);
 
 #endif // nsIXULPopupListener_h__

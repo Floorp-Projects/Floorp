@@ -53,7 +53,7 @@ public:
 
 // Factory method to create a "paginated" presentation context for
 // printing
-extern NS_EXPORT nsresult
-  NS_NewPrintContext(nsIPrintContext** aInstancePtrResult);
+nsresult
+NS_NewPrintContext(nsIPrintContext** aInstancePtrResult);
 
 #endif

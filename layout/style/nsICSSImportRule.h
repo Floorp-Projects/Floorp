@@ -61,9 +61,8 @@ public:
   NS_IMETHOD SetSheet(nsICSSStyleSheet*) = 0;
 };
 
-extern NS_EXPORT nsresult
-  NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
-                      const nsString& aURLSpec,
-                      const nsString& aMedia);
+nsresult
+NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
+                    const nsString& aURLSpec, const nsString& aMedia);
 
 #endif /* nsICSSImportRule_h___ */

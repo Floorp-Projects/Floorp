@@ -76,9 +76,9 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLFocusHandler(nsIDOMEventReceiver* aEventReceiver,
-                      nsXBLPrototypeHandler* aHandlerElement, 
+                      nsXBLPrototypeHandler* aHandlerElement,
                       nsXBLFocusHandler** aResult);
 
 

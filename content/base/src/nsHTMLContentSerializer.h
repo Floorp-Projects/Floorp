@@ -154,6 +154,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   nsAutoVoidArray   mOLStateStack;// Stack to store one olState struct per <OL>.
 };
 
-extern nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);
+nsresult
+NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);
 
 #endif

@@ -185,7 +185,7 @@ public:
   NS_IMETHOD GetSystemEventGroupLM(nsIDOMEventGroup** aGroup) = 0;
 };
 
-extern nsresult
+nsresult
 NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
 #endif // nsIEventListenerManager_h__

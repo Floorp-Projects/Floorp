@@ -74,7 +74,7 @@ public:
   NS_IMETHOD RemoveObserver(nsISVGValueObserver* observer)=0;
 };
 
-extern nsresult
+nsresult
 NS_CreateSVGGenericStringValue(const nsAString& aValue, nsISVGValue** aResult);
 
 #endif // __NS_ISVGVALUE_H__

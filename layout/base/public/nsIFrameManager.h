@@ -260,7 +260,7 @@ public:
  * Create a frame manager. Upon success, call Init() before attempting to
  * use it.
  */
-extern NS_EXPORT nsresult
-  NS_NewFrameManager(nsIFrameManager** aInstancePtrResult);
+nsresult
+NS_NewFrameManager(nsIFrameManager** aInstancePtrResult);
 
 #endif /* nsIFrameManager_h___ */

@@ -140,9 +140,9 @@ public:
   NS_IMETHOD Initialize()=0;
 };
 
-extern nsresult
-NS_NewXBLPrototypeBinding(const nsACString& aRef, 
-                          nsIContent* aElement, nsIXBLDocumentInfo* aInfo, 
+nsresult
+NS_NewXBLPrototypeBinding(const nsACString& aRef, nsIContent* aElement,
+                          nsIXBLDocumentInfo* aInfo,
                           nsIXBLPrototypeBinding** aResult);
 
 #endif // nsIXBLPrototypeBinding_h__

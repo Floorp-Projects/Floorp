@@ -89,7 +89,7 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLXULHandler(nsIDOMEventReceiver* aEventReceiver,
                     nsXBLPrototypeHandler* aHandlerElement,
                     nsXBLXULHandler** aResult);

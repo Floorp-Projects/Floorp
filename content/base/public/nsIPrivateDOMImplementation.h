@@ -59,7 +59,7 @@ public:
   NS_IMETHOD Init(nsIURI* aBaseURI) = 0;
 };
 
-NS_EXPORT nsresult
+nsresult
 NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult);
 
 #endif // nsIPrivateDOMImplementation_h__

@@ -81,7 +81,8 @@ static NS_DEFINE_IID(kSVGDocumentCID, NS_SVGDOCUMENT_CID);
 static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
 
-extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
+nsresult
+NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 
 static const char* const gHTMLTypes[] = {
   "text/html",

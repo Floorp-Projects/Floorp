@@ -80,7 +80,7 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLLoadHandler(nsIDOMEventReceiver* aEventReceiver,
                      nsXBLPrototypeHandler* aHandlerElement,
                      nsXBLLoadHandler** aResult);

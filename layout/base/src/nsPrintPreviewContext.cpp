@@ -225,7 +225,7 @@ PrintPreviewContext::GetScaledPixelsToTwips(float* aResult) const
   return NS_OK;
 }
 
-NS_EXPORT nsresult
+nsresult
 NS_NewPrintPreviewContext(nsIPrintPreviewContext** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -227,12 +227,12 @@ XULSortServiceImpl::XULSortServiceImpl(void)
     kDescendingStr = new nsString(NS_LITERAL_STRING("descending"));
  
     nsresult rv = CallGetService(kRDFServiceCID, &gRDFService);
-    if (NS_FAILED(rv))
-      NS_ERROR("couldn't create rdf service");
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create rdf service");
 
     rv = CallGetService(kRDFContainerUtilsCID, &gRDFC);
-    if (NS_FAILED(rv))
-      NS_ERROR("couldn't create rdf container utils");
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create rdf container utils");
 
     // get a locale service 
     nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &rv);
@@ -241,8 +241,9 @@ XULSortServiceImpl::XULSortServiceImpl(void)
       if (NS_SUCCEEDED(rv = localeService->GetApplicationLocale(getter_AddRefs(locale))) && (locale)) {
         nsCOMPtr<nsICollationFactory> colFactory = do_CreateInstance(kCollationFactoryCID);
         if (colFactory) {
-          if (NS_FAILED(rv = colFactory->CreateCollation(locale, &gCollation)))
-            NS_ERROR("couldn't create collation instance");
+          rv = colFactory->CreateCollation(locale, &gCollation);
+
+          NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create collation instance");
         } else
           NS_ERROR("couldn't create instance of collation factory");
       } else

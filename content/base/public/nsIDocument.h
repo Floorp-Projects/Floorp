@@ -463,36 +463,28 @@ public:
 
 
 // XXX These belong somewhere else
-extern NS_EXPORT nsresult
-   NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
+nsresult
+NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
 
-extern NS_EXPORT nsresult
-   NS_NewXMLDocument(nsIDocument** aInstancePtrResult);
+nsresult
+NS_NewXMLDocument(nsIDocument** aInstancePtrResult);
 
 #ifdef MOZ_SVG
-extern NS_EXPORT nsresult
-   NS_NewSVGDocument(nsIDocument** aInstancePtrResult);
+nsresult
+NS_NewSVGDocument(nsIDocument** aInstancePtrResult);
 #endif
 
-extern NS_EXPORT nsresult
-   NS_NewImageDocument(nsIDocument** aInstancePtrResult);
+nsresult
+NS_NewImageDocument(nsIDocument** aInstancePtrResult);
 
-extern NS_EXPORT nsresult
-   NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
-                          nsIDocument* aOwnerDocument);
-extern NS_EXPORT nsresult
-   NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
-                     const nsAString& aNamespaceURI, 
-                     const nsAString& aQualifiedName, 
-                     nsIDOMDocumentType* aDoctype,
-                     nsIURI* aBaseURI);
-
-// Note: The buffer passed into NewPostData(...) becomes owned by the IPostData
-//       instance and is freed when the instance is destroyed...
-//
-#if 0
-extern NS_EXPORT nsresult
-   NS_NewPostData(PRBool aIsFile, char *aData, nsIPostData** aInstancePtrResult);
-#endif
+nsresult
+NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
+                       nsIDocument* aOwnerDocument);
+nsresult
+NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
+                  const nsAString& aNamespaceURI, 
+                  const nsAString& aQualifiedName, 
+                  nsIDOMDocumentType* aDoctype,
+                  nsIURI* aBaseURI);
 
 #endif /* nsIDocument_h___ */

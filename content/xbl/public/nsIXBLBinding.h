@@ -129,7 +129,8 @@ public:
   NS_IMETHOD ShouldBuildChildFrames(PRBool* aResult)=0;
 };
 
-extern nsresult
-NS_NewXBLBinding(nsIXBLPrototypeBinding* aProtoBinding, nsIXBLBinding** aResult);
+nsresult
+NS_NewXBLBinding(nsIXBLPrototypeBinding* aProtoBinding,
+                 nsIXBLBinding** aResult);
 
 #endif // nsIXBLBinding_h__

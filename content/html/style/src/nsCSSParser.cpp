@@ -368,7 +368,7 @@ PR_STATIC_CALLBACK(void) AppendRuleToSheet(nsICSSRule* aRule, void* aParser)
   parser->AppendRule(aRule);
 }
 
-NS_EXPORT nsresult
+nsresult
 NS_NewCSSParser(nsICSSParser** aInstancePtrResult)
 {
   CSSParserImpl *it = new CSSParserImpl();

@@ -59,8 +59,7 @@ protected:
   nsCOMPtr<nsITimer> mSelectTimer;
 };
 
-extern nsresult
-NS_NewTreeSelection(nsITreeBoxObject* aTree,
-                        nsITreeSelection** aResult);
+nsresult
+NS_NewTreeSelection(nsITreeBoxObject* aTree, nsITreeSelection** aResult);
 
 #endif

@@ -91,6 +91,6 @@ interface nsIXULSortService : nsISupports
 };
 
 %{C++
-extern nsresult
+nsresult
 NS_NewXULSortService(nsIXULSortService **result);
 %}

@@ -62,7 +62,7 @@ public:
  * nsIExpatSink.
  */
 
-extern nsresult
+nsresult
 NS_NewLoadSaveContentSink(nsILoadSaveContentSink** aResult,
                           nsIXMLContentSink* aBaseSink);
 

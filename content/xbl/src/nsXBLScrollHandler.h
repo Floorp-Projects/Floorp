@@ -78,7 +78,7 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLScrollHandler(nsIDOMEventReceiver* aEventReceiver,
                        nsXBLPrototypeHandler* aHandlerElement,
                        nsXBLScrollHandler** aResult);

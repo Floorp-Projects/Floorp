@@ -1276,7 +1276,7 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 // XXX For convenience and backwards compatibility
-NS_EXPORT nsresult
+nsresult
 NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL, 
                      nsIDocument* aDocument)
 {
@@ -1295,7 +1295,7 @@ NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL,
 }
 
 
-NS_EXPORT nsresult
+nsresult
 NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult)
 {
   NS_ASSERTION(aInstancePtrResult, "null out param");

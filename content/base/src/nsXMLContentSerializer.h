@@ -121,6 +121,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
   PRBool mInAttribute;
 };
 
-extern nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer);
+nsresult
+NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer);
 
 #endif 

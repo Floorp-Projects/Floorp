@@ -75,9 +75,9 @@ protected:
   // Members
 };
 
-extern nsresult
+nsresult
 NS_NewXBLContextMenuHandler(nsIDOMEventReceiver* aEventReceiver,
-                            nsXBLPrototypeHandler* aHandlerElement, 
+                            nsXBLPrototypeHandler* aHandlerElement,
                             nsXBLContextMenuHandler** aResult);
 
 

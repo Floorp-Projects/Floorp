@@ -164,7 +164,7 @@ protected:
   nsCOMPtr<nsIParserService>   mParserService;
 };
 
-extern nsresult NS_NewSanitizingHTMLSerializer(
-                                         nsIContentSerializer** aSerializer);
+nsresult
+NS_NewSanitizingHTMLSerializer(nsIContentSerializer** aSerializer);
 
 #endif

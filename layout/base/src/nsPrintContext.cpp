@@ -200,7 +200,7 @@ PrintContext::GetPrintSettings(nsIPrintSettings * *aPrintSettings)
 }
 
 
-NS_EXPORT nsresult
+nsresult
 NS_NewPrintContext(nsIPrintContext** aInstancePtrResult)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);

@@ -114,7 +114,7 @@ public:
 #define NS_CSS_GETINFO_CSS2         ((PRUint32) 0x00000004L)
 #define NS_CSS_GETINFO_CSS_FROSTING ((PRUint32) 0x00000008L)
 
-extern NS_EXPORT nsresult
-  NS_NewCSSParser(nsICSSParser** aInstancePtrResult);
+nsresult
+NS_NewCSSParser(nsICSSParser** aInstancePtrResult);
 
 #endif /* nsCSS1Parser_h___ */

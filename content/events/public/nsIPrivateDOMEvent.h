@@ -71,12 +71,15 @@ public:
   NS_IMETHOD SetTrusted(PRBool aTrusted)=0;
 };
 
-extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
-extern nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
-                                 nsIPresContext* aPresContext,
-                                 const nsAString& aEventType,
-                                 nsEvent *aEvent);
-extern nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsIPresContext* aPresContext, 
-                                       nsEvent* aEvent);
+nsresult
+NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext,
+               nsEvent *aEvent);
+nsresult
+NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
+                 nsIPresContext* aPresContext, const nsAString& aEventType,
+                 nsEvent *aEvent);
+nsresult
+NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsIPresContext* aPresContext, 
+                       nsEvent* aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

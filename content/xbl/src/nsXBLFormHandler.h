@@ -82,9 +82,9 @@ protected:
   // Members
 };
 
-extern nsresult
-NS_NewXBLFormHandler(nsIDOMEventReceiver* aEventReceiver, 
-                     nsXBLPrototypeHandler* aHandlerElement, 
+nsresult
+NS_NewXBLFormHandler(nsIDOMEventReceiver* aEventReceiver,
+                     nsXBLPrototypeHandler* aHandlerElement,
                      nsXBLFormHandler** aResult);
 
 

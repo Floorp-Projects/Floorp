@@ -3000,8 +3000,8 @@ CSSStyleSheetImpl::StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify)
 }
 
 // XXX for backwards compatibility and convenience
-NS_EXPORT nsresult
-  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL)
+nsresult
+NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL)
 {
   nsICSSStyleSheet* sheet;
   nsresult rv;
@@ -3017,8 +3017,8 @@ NS_EXPORT nsresult
   return NS_OK;
 }
 
-NS_EXPORT nsresult
-  NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
+nsresult
+NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;

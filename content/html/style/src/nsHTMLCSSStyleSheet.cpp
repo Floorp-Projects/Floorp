@@ -657,9 +657,9 @@ void HTMLCSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 #endif
 
 // XXX For backwards compatibility and convenience
-NS_EXPORT nsresult
-  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult, nsIURI* aURL,
-                          nsIDocument* aDocument)
+nsresult
+NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult,
+                        nsIURI* aURL, nsIDocument* aDocument)
 {
   nsresult rv;
   nsIHTMLCSSStyleSheet* sheet;
@@ -675,8 +675,8 @@ NS_EXPORT nsresult
   return NS_OK;
 }
 
-NS_EXPORT nsresult
-  NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult)
+nsresult
+NS_NewHTMLCSSStyleSheet(nsIHTMLCSSStyleSheet** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;

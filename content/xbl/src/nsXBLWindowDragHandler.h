@@ -84,7 +84,7 @@ protected:
 
 };
 
-extern nsresult
+nsresult
 NS_NewXBLWindowDragHandler(nsIDOMEventReceiver* aReceiver,
                            nsXBLWindowDragHandler** aResult);
 

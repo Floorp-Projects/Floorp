@@ -159,7 +159,7 @@ public:
 };
 
 #ifdef DEBUG
-extern nsISupports*
+nsISupports*
 value_to_isupports(const nsIID& aIID, const Value& aValue);
 
 #  define VALUE_TO_ISUPPORTS(type, v) \

@@ -82,7 +82,7 @@ protected:
 };
 
 // Create a new instance of nsTextContentChangeData with a refcnt of 1
-extern nsresult
+nsresult
 NS_NewTextContentChangeData(nsTextContentChangeData** aResult);
 
 #endif /* nsTextContentChangeData_h___ */

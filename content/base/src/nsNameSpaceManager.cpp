@@ -50,7 +50,7 @@
 
 static nsINameSpaceManager* gNameSpaceManager = nsnull;
 
-extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
+nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
 
 #define kXMLNSNameSpaceURI "http://www.w3.org/2000/xmlns/"
 #define kXMLNameSpaceURI "http://www.w3.org/XML/1998/namespace"

@@ -85,7 +85,7 @@ protected:
 
 };
 
-extern nsresult
+nsresult
 NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement,
                           nsIDOMEventReceiver* aReceiver,
                           nsXBLWindowKeyHandler** aResult);
