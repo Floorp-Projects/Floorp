@@ -45,11 +45,12 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH= ..\..\..
-MODULE = java
+MODULE = liveconnect
 REQUIRES	= xpcom \
 		  string\
                   js \
 		  xpconnect \
+		  java \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
