@@ -35,6 +35,7 @@ var gActionTargetElement;
 var gTotalSearchTerms=0;
 var gSearchRowContainer;
 var gSearchTermContainer;
+var gSearchRemovedTerms = new Array;
 
 var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
 
@@ -208,6 +209,40 @@ function constructRow(treeCellChildren)
     return treeitem;
 }
 
+function removeSearchRow(index)
+{
+    dump("removing search term " + index + "\n");
+    var searchTermElement = document.getElementById("searchTerm" + index);
+    if (!searchTermElement) {
+        dump("removeSearchRow: couldn't find search term " + index + "\n");
+        return;
+    }
+
+    // need to remove row from tree, so walk upwards from the
+    // searchattribute to find the first <treeitem>
+    var treeItemRow = searchTermElement.searchattribute;
+    while (treeItemRow) {
+        if (treeItemRow.tagName == "treeitem") break;
+        treeItemRow = treeItemRow.parentNode;
+    }
+
+    if (!treeItemRow) {
+        dump("Error: couldn't find parent treeitem!\n");
+        return;
+    }
+
+
+    if (searchTermElement.searchTerm) {
+        dump("That was a real row! queuing " + searchTermElement.searchTerm + " for disposal\n");
+        gSearchRemovedTerms[gSearchRemovedTerms.length] = searchTermElement.searchTerm;
+    } else {
+        dump("That wasn't real. ignoring \n");
+    }
+    
+    treeItemRow.parentNode.removeChild(treeItemRow);
+    searchTermElement.parentNode.removeChild(searchTermElement);
+}
+
 function saveFilter() {
 
     if (!gFilter) {
@@ -240,6 +275,17 @@ function saveFilter() {
         }
     }
 
+    var searchTerms = gFilter.searchTerms;
+    // now remove the queued elements
+    dump("Removing " + gSearchRemovedTerms.length + "\n");
+    for (var i=0; i<gSearchRemovedTerms.length; i++) {
+        // this is so nasty, we have to iterate through
+        // because GetIndexOf is acting funny
+        var searchTermSupports = gSearchRemovedTerms[i].QueryInterface(Components.interfaces.nsISupports);
+        dump("removing " + gSearchRemovedTerms[i] + "\n");
+        searchTerms.RemoveElement(searchTermSupports);
+    }
+
     var action = gActionElement.selectedItem.getAttribute("data");
     gFilter.action = action;
     if (action == nsMsgFilterAction.MoveToFolder &&
@@ -252,7 +298,7 @@ function saveFilter() {
 
 function onMore(event)
 {
-    createSearchRow(++gTotalSearchTerms, gSearchScope, null);
+    createSearchRow(gTotalSearchTerms++, gSearchScope, null);
 }
 
 function onLess(event)
