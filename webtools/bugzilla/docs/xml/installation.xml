@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.63 2004/03/06 08:21:08 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.64 2004/03/07 01:24:12 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1507,7 +1507,7 @@ $smtp->quit;
         <filename class="directory">/sw/include</filename> instead of
         <filename class="directory">/usr/lib</filename> and
         <filename class="directory">/usr/include</filename>. When the
-        Perl module config script asks where your <filename>libgdi</filename>
+        Perl module config script asks where your <filename>libgd</filename>
         is, be sure to tell it
         <filename class="directory">/sw/lib</filename>.
         </para>
