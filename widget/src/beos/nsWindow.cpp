@@ -52,6 +52,7 @@
 #include "resource.h"
 #include "prtime.h"
 #include "nsReadableUtils.h"
+#include "nsVoidArray.h"
 
 #include <InterfaceDefs.h>
 #include <Region.h>
@@ -97,6 +98,12 @@ static PRBool 			  gGotQuitShortcut = PR_FALSE;
 ////////////////////////////////////////////////////
 static BWindow           * gLastActiveWindow = NULL;
 static NS_DEFINE_IID(kIWidgetIID,       NS_IWIDGET_IID);
+
+// BCursor objects can't be created until they are used.  Some mozilla utilities, 
+// such as regxpcom, do not create a BApplication object, and therefor fail to run.,
+// since a BCursor requires a vaild BApplication (see Bug#129964).  But, we still want
+// to cache them for performance.  Currently, there are 18 cursors available;
+static nsVoidArray		gCursorArray(18);
 
 
 // Used in contrain position.  Specifies how much of a window must remain on screen
@@ -1432,111 +1439,132 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 		return NS_ERROR_FAILURE;
 
 	// Only change cursor if it's changing
-	if (aCursor != mCursor) {
+	if (aCursor != mCursor) 
+	{
 		BCursor const *newCursor = B_CURSOR_SYSTEM_DEFAULT;
-		bool doDelete = true;
-
-		switch (aCursor) {
-		case eCursor_standard:
-		case eCursor_wait:
-		case eCursor_move:
-			newCursor = B_CURSOR_SYSTEM_DEFAULT;
-			doDelete = false;
-			break;
-
-		case eCursor_select:
-			newCursor = B_CURSOR_I_BEAM;
-			doDelete = false;
-			break;
-
-		case eCursor_hyperlink:
-			newCursor = new BCursor(cursorHyperlink);
-			break;
-
-		case eCursor_sizeWE:
-			newCursor = new BCursor(cursorHorizontalDrag);
-			break;
-
-		case eCursor_sizeNS:
-			newCursor = new BCursor(cursorVerticalDrag);
-			break;
-
-		case eCursor_sizeNW:
-			newCursor = new BCursor(cursorUpperRight);
-			break;
-
-		case eCursor_sizeSE:
-			newCursor = new BCursor(cursorLowerLeft);
-			break;
-
-		case eCursor_sizeNE:
-			newCursor = new BCursor(cursorUpperLeft);
-			break;
-
-		case eCursor_sizeSW:
-			newCursor = new BCursor(cursorLowerRight);
-			break;
-
-		case eCursor_arrow_north:
-		case eCursor_arrow_north_plus:
-			newCursor = new BCursor(cursorTop);
-			break;
-
-		case eCursor_arrow_south:
-		case eCursor_arrow_south_plus:
-			newCursor = new BCursor(cursorBottom);
-			break;
-
-		case eCursor_arrow_east:
-		case eCursor_arrow_east_plus:
-			newCursor = new BCursor(cursorLeft);
-			break;
-
-		case eCursor_arrow_west:
-		case eCursor_arrow_west_plus:
-			newCursor = new BCursor(cursorRight);
-			break;
-
-		case eCursor_crosshair:
-			newCursor = new BCursor(cursorCrosshair);
-			break;
-
-		case eCursor_help:
-			newCursor = new BCursor(cursorHelp);
-			break;
-
-		case eCursor_grab:
-			newCursor = new BCursor(cursorGrab);
-			break;
-
-		case eCursor_grabbing:
-			newCursor = new BCursor(cursorGrabbing);
-			break;
-
-		case eCursor_copy:
-			newCursor = new BCursor(cursorCopy);
-			break;
-
-		case eCursor_alias:
-			newCursor = new BCursor(cursorAlias);
-			break;
-
-		case eCursor_spinning:
-			newCursor = new BCursor(cursorWatch2);
-			break;
-
-		default:
-			NS_ASSERTION(0, "Invalid cursor type");
-			doDelete = false;
-			break;
+		
+		// Check to see if the array has been loaded, if not, do it.
+		if (gCursorArray.Count() == 0) 
+		{
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorHyperlink),0);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorHorizontalDrag),1);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorVerticalDrag),2);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperRight),3);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerLeft),4);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorUpperLeft),5);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorLowerRight),6);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorTop),7);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorBottom),8);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorLeft),9);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorRight),10);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorCrosshair),11);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorHelp),12);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorGrab),13);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorGrabbing),14);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorCopy),15);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorAlias),16);
+			gCursorArray.InsertElementAt((void*) new BCursor(cursorWatch2),17);
 		}
 
-		if (mView && mView->LockLooper()) {
+		switch (aCursor) 
+		{
+			case eCursor_standard:
+			case eCursor_wait:
+			case eCursor_move:
+				newCursor = B_CURSOR_SYSTEM_DEFAULT;
+				break;
+	
+			case eCursor_select:
+				newCursor = B_CURSOR_I_BEAM;
+				break;
+	
+			case eCursor_hyperlink:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(0);
+				break;
+	
+			case eCursor_sizeWE:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(1);
+				break;
+	
+			case eCursor_sizeNS:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(2);
+				break;
+	
+			case eCursor_sizeNW:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(3);
+				break;
+	
+			case eCursor_sizeSE:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(4);
+				break;
+	
+			case eCursor_sizeNE:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(5);
+				break;
+	
+			case eCursor_sizeSW:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(6);
+				break;
+	
+			case eCursor_arrow_north:
+			case eCursor_arrow_north_plus:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(7);
+				break;
+	
+			case eCursor_arrow_south:
+			case eCursor_arrow_south_plus:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(8);
+				break;
+	
+			case eCursor_arrow_east:
+			case eCursor_arrow_east_plus:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(9);
+				break;
+	
+			case eCursor_arrow_west:
+			case eCursor_arrow_west_plus:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(10);
+				break;
+	
+			case eCursor_crosshair:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(11);
+				break;
+	
+			case eCursor_help:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(12);
+				break;
+	
+			case eCursor_grab:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(13);
+				break;
+	
+			case eCursor_grabbing:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(14);
+				break;
+	
+			case eCursor_copy:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(15);
+				break;
+	
+			case eCursor_alias:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(16);
+				break;
+	
+			case eCursor_spinning:
+				newCursor = (BCursor *)gCursorArray.SafeElementAt(17);
+				break;
+	
+			default:
+				NS_ASSERTION(0, "Invalid cursor type");
+				break;
+		}
+		NS_ASSERTION(newCursor != nsnull, "Cursor not stored in array properly!");
+		if (mView && mView->LockLooper()) 
+		{
 			mCursor = aCursor;
 			mView->SetViewCursor(newCursor, true);
 			mView->UnlockLooper();
 		}
-		if (doDelete) delete newCursor;
 	}
 	return NS_OK;
 }
