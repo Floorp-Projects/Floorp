@@ -1447,7 +1447,6 @@ PresShell::VerifyIncrementalReflow()
   nsRect r;
   mPresContext->GetVisibleArea(r);
   cx->SetVisibleArea(r);
-
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
   rv = mDocument->CreateShell(cx, vm, mStyleSet, &sh);
