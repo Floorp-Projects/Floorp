@@ -28,8 +28,9 @@
 #include "nsIRDFDataSource.h"
 #include "nsIRDFCursor.h"
 #include "nsHashtable.h"
-#include "prclist.h"
 #include "nsString.h"
+#include "prclist.h"
+#include "prprf.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -118,6 +119,9 @@ nsIRDFResource* nsBrowsingProfile::gCategoryIDProperty = nsnull;
 nsBrowsingProfile::nsBrowsingProfile()
 {
     nsCRT::zero(&mVector, sizeof(nsBrowsingProfileVector));
+    mVector.mHeader.mInfo.mCheck = nsBrowsingProfile_Check;
+    mVector.mHeader.mInfo.mMajorVersion = nsBrowsingProfile_CurrentMajorVersion;
+    mVector.mHeader.mInfo.mMinorVersion = nsBrowsingProfile_CurrentMinorVersion;
     PR_INIT_CLIST(&mCategoryChain);
     gRefCnt++;
 }
@@ -238,7 +242,31 @@ nsBrowsingProfile::GetCookieString(char buf[kBrowsingProfileCookieSize])
 NS_IMETHODIMP
 nsBrowsingProfile::GetDescription(char* *htmlResult)
 {
-    // XXX generate some nice html
+    // generate some nice html
+    // XXX really wish I had an nsStringStream here to use
+
+    nsresult rv;
+    char* buf = PR_smprintf("<h1>Browsing Profile</h1>format version %d.%d",
+                            mVector.mHeader.mInfo.mMajorVersion, 
+                            mVector.mHeader.mInfo.mMinorVersion);
+    if (buf == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY; 
+
+    for (PRUint32 i = 0; i < nsBrowsingProfile_CategoryCount; i++) {
+        nsBrowsingProfileCategoryDescriptor* desc = &mVector.mCategory[i];
+        nsIRDFInt* intLit;
+        rv = gRDFService->GetIntLiteral(desc->mID, &intLit);
+        nsIRDFResource* category;
+        rv = gCategoryDB->GetSource(gCategoryIDProperty, category, PR_TRUE, &category);
+        const char* uri;
+        rv = category->GetValue(&uri);
+        char* buf2 = PR_smprintf("%s%s: %d<b>", buf, uri, desc->mVisitCount);
+        PR_smprintf_free(buf);
+        if (buf2 == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY; 
+        buf = buf2;
+    }
+    *htmlResult = buf;
     return NS_OK;
 }
 
