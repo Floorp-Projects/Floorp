@@ -82,6 +82,11 @@ public class IRFactory {
         return new Node(nodeType, nodeOp);
     }
 
+    public int getLeafType(Object leaf) {
+        Node n = (Node) leaf;
+        return n.getType();
+    }
+
     /**
      * Statement leaf nodes.
      */

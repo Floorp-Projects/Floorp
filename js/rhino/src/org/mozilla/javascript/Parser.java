@@ -809,8 +809,12 @@ class Parser {
                     return pn;
                 }
 
-                if (lastExprType == ts.FUNCTION)
+                if (lastExprType == ts.FUNCTION) {
+                    if (nf.getLeafType(pn) != ts.FUNCTION) {
+                        reportError(ts, "msg.syntax");
+                    }
                     nf.setFunctionExpressionStatement(pn);
+                }
 
                 pn = nf.createExprStatement(pn, lineno);
                 
