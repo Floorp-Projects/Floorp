@@ -66,6 +66,9 @@ public:
     // nsISupports
     NS_DECL_ISUPPORTS
 
+    // nsIRDFNode
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+
     // nsIRDFResource
     NS_IMETHOD GetValue(const char* *uri) const;
     NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const;
@@ -120,6 +123,22 @@ ResourceImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
+ResourceImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
+{
+    nsresult rv;
+    nsIRDFResource* resource;
+    if (NS_SUCCEEDED(node->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
+        rv = EqualsResource(resource, result);
+        NS_RELEASE(resource);
+    }
+    else {
+        *result = PR_FALSE;
+        rv = NS_OK;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
 ResourceImpl::GetValue(const char* *uri) const
 {
     if (!uri)
@@ -162,9 +181,12 @@ public:
     // nsISupports
     NS_DECL_ISUPPORTS
 
+    // nsIRDFNode
+    NS_IMETHOD EqualsNode(nsIRDFNode* node, PRBool* result) const;
+
     // nsIRDFLiteral
     NS_IMETHOD GetValue(const PRUnichar* *value) const;
-    NS_IMETHOD Equals(const nsIRDFLiteral* literal, PRBool* result) const;
+    NS_IMETHOD EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const;
 
 private:
     nsAutoString mValue;
@@ -202,6 +224,22 @@ LiteralImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP
+LiteralImpl::EqualsNode(nsIRDFNode* node, PRBool* result) const
+{
+    nsresult rv;
+    nsIRDFLiteral* literal;
+    if (NS_SUCCEEDED(node->QueryInterface(kIRDFLiteralIID, (void**) &literal))) {
+        rv = EqualsLiteral(literal, result);
+        NS_RELEASE(literal);
+    }
+    else {
+        *result = PR_FALSE;
+        rv = NS_OK;
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
 LiteralImpl::GetValue(const PRUnichar* *value) const
 {
     NS_ASSERTION(value, "null ptr");
@@ -214,7 +252,7 @@ LiteralImpl::GetValue(const PRUnichar* *value) const
 
 
 NS_IMETHODIMP
-LiteralImpl::Equals(const nsIRDFLiteral* literal, PRBool* result) const
+LiteralImpl::EqualsLiteral(const nsIRDFLiteral* literal, PRBool* result) const
 {
     NS_ASSERTION(literal && result, "null ptr");
     if (!literal || !result)
