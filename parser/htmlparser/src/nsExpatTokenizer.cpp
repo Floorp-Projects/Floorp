@@ -404,7 +404,7 @@ nsExpatTokenizer::PushXMLErrorTokens(const char *aBuffer, PRUint32 aLength, PRBo
     // Adjust the column number so that it is one based rather than zero based.
     error->colNumber = XML_GetCurrentColumnNumber(mExpatParser) + 1;
     error->description.AssignWithConversion(XML_ErrorString(error->code));
-    error->sourceURL = mState->scanner->GetFilename();
+    error->sourceURL.Assign((PRUnichar*)XML_GetBase(mExpatParser));
     if (!aIsFinal) {
       PRInt32 byteIndexRelativeToFile = 0;
       byteIndexRelativeToFile = XML_GetCurrentByteIndex(mExpatParser);
