@@ -1775,13 +1775,6 @@ nsHTMLSelectElement::SelectSomething()
     return;
   }
 
-  // Don't select anything if we're disabled
-  PRBool isDisabled = PR_FALSE;
-  GetDisabled(&isDisabled);
-  if (isDisabled) {
-    return;
-  }
-
   PRUint32 count;
   GetLength(&count);
   for (PRUint32 i=0; i<count; i++) {
