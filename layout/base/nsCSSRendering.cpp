@@ -915,8 +915,16 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
   }
 }
 
-int xxx=0;
-
+/* draw the portions of the border described in aBorderEdges that are dashed.
+ * a border has 4 edges.  Each edge has 1 or more segments. 
+ * "inside edges" are drawn differently than "outside edges" so the shared edges will match up.
+ * in the case of table collapsing borders, the table edge is the "outside" edge and
+ * cell edges are always "inside" edges (so adjacent cells have 2 shared "inside" edges.)
+ * There is a case for each of the four sides.  Only the left side is well documented.  The others
+ * are very similar.
+ */
+// XXX: doesn't do corners or junctions well at all.  Just uses logic stolen 
+//      from DrawDashedSides which is insufficient
 void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
                                         const nsRect& aBounds,
                                         nsBorderEdges * aBorderEdges,
@@ -931,6 +939,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
   PRBool skippedSide = PR_FALSE;
   PRIntn whichSide=0;
   // do this just to set up initial condition for loop
+  // "segment" is the current portion of the edge we are computing
   nsBorderEdge * segment =  (nsBorderEdge *)(aBorderEdges->mEdges[whichSide].ElementAt(0));
   PRUint8 style = segment->mStyle;  
   for ( ; whichSide < 4; whichSide++) 
@@ -945,7 +954,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
     PRInt32 i;
     PRInt32 segmentCount = aBorderEdges->mEdges[whichSide].Count();
     nsBorderEdges * neighborBorderEdges=nsnull;
-    PRIntn neighborEdgeCount=0;
+    PRIntn neighborEdgeCount=0; // keeps track of which inside neighbor is shared with an outside segment
     for (i=0; i<segmentCount; i++)
     {
       bSolid=PR_TRUE;
@@ -963,25 +972,29 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
       aContext.SetColor(segment->mColor);  
       switch (whichSide) {
       case NS_SIDE_LEFT:
-      {
+      { // draw left segment i
         nsBorderEdge * topEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(0));
         if (0==y)
-        {
+        { // y is the offset to the top of this segment.  0 means its the topmost left segment
           y = aBorderEdges->mMaxBorderWidth.top - topEdge->mWidth;
           if (PR_TRUE==aBorderEdges->mOutsideEdge)
             y += topEdge->mWidth;
         }
+        // the x offset is the x position offset by the max width of the left edge minus this segment's width
         x = aBounds.x + (aBorderEdges->mMaxBorderWidth.left - segment->mWidth);
         nscoord height = segment->mLength;
+        // the space between borderOutside and borderInside inclusive is the segment.
         nsRect borderOutside(x, y, aBounds.width, height);
-        y += segment->mLength;
+        y += segment->mLength;  // keep track of the y offset for the next segment
         if ((style == NS_STYLE_BORDER_STYLE_DASHED) ||
             (style == NS_STYLE_BORDER_STYLE_DOTTED))
         {
           nsRect borderInside(borderOutside);
           nsMargin outsideMargin(segment->mWidth, 0, 0, 0);
           borderInside.Deflate(outsideMargin);
-          nscoord totalLength = segment->mLength;
+          nscoord totalLength = segment->mLength; // the computed length of this segment
+          // outside edges need info from their inside neighbor.  The following code keeps track
+          // of which segment of the inside neighbor's shared edge we should use for this outside segment
           if (PR_TRUE==aBorderEdges->mOutsideEdge)
           {
             if (segment->mInsideNeighbor == neighborBorderEdges)
@@ -1001,10 +1014,16 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
           dashRect.x = borderOutside.x;
           dashRect.y = borderOutside.y + (totalLength/2) - dashRect.height;
           if ((PR_TRUE==aBorderEdges->mOutsideEdge) && (0!=i))
-            dashRect.y -= topEdge->mWidth;
-          printf("  L: totalLength = %d, borderOutside.y = %d, midpoint %d, dashRect.y = %d\n", 
+            dashRect.y -= topEdge->mWidth;  // account for the topmost left edge corner with the leftmost top edge
+          if (0)
+          {
+            printf("  L: totalLength = %d, borderOutside.y = %d, midpoint %d, dashRect.y = %d\n", 
             totalLength, borderOutside.y, borderOutside.y +(totalLength/2), dashRect.y); 
+          }
           currRect = dashRect;
+
+          // we draw the segment in 2 halves to get the inside and outside edges to line up on the
+          // centerline of the shared edge.
 
           // draw the top half
           while (currRect.YMost() > borderInside.y) {
@@ -1017,8 +1036,11 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
             }
 
             //draw if necessary
-            printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
-                 currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+            if (0)
+            {
+              printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
+                   currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+            }
             if (bSolid) {
               aContext.FillRect(currRect);
             }
@@ -1048,8 +1070,11 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
             }
 
             //draw if necessary
-            printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
-                 currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+            if (0)
+            {
+              printf("DASHED LEFT: xywh in loop currRect = %d %d %d %d %s\n", 
+                   currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
+            }
             if (bSolid) {
               aContext.FillRect(currRect);
             }
@@ -1066,7 +1091,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
       break;
 
       case NS_SIDE_TOP:
-      {
+      { // draw top segment i
         if (0==x)
         {
           nsBorderEdge * leftEdge =  (nsBorderEdge *)(aBorderEdges->mEdges[NS_SIDE_LEFT].ElementAt(0));
@@ -1129,7 +1154,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
       break;
 
       case NS_SIDE_RIGHT:
-      {
+      { // draw right segment i
         nsBorderEdge * topEdge =  (nsBorderEdge *)
             (aBorderEdges->mEdges[NS_SIDE_TOP].ElementAt(aBorderEdges->mEdges[NS_SIDE_TOP].Count()-1));
         if (0==y)
@@ -1178,9 +1203,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
           dashRect.y = borderOutside.y + (totalLength/2) - dashRect.height;
           if ((PR_TRUE==aBorderEdges->mOutsideEdge) && (0!=i))
             dashRect.y -= topEdge->mWidth;
-		      printf("  R: totalLength = %d, borderOutside.y = %d, midpoint %d, dashRect.y = %d\n", 
-            totalLength, borderOutside.y, borderOutside.y +(totalLength/2), dashRect.y); 
-          currRect = dashRect;
+		      currRect = dashRect;
 
           // draw the top half
           while (currRect.YMost() > borderInside.y) {
@@ -1193,10 +1216,6 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
             }
 
             //draw if necessary
-            /*
-            printf("DASHED RIGHT: xywh in loop currRect = %d %d %d %d %s\n", 
-                   currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
-                   */
             if (bSolid) {
               aContext.FillRect(currRect);
             }
@@ -1226,10 +1245,6 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
             }
 
             //draw if necessary
-            /*
-            printf("DASHED RIGHT: xywh in loop currRect = %d %d %d %d %s\n", 
-                 currRect.x, currRect.y, currRect.width, currRect.height, bSolid?"TRUE":"FALSE");
-                 */
             if (bSolid) {
               aContext.FillRect(currRect);
             }
@@ -1247,7 +1262,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
       break;
 
       case NS_SIDE_BOTTOM:
-      {
+      {  // draw bottom segment i
         if (0==x)
         {
           nsBorderEdge * leftEdge =  (nsBorderEdge *)
@@ -1385,7 +1400,16 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   }
 }
 
-// XXX improve this to constrain rendering to the damaged area
+/* draw the edges of the border described in aBorderEdges one segment at a time.
+ * a border has 4 edges.  Each edge has 1 or more segments. 
+ * "inside edges" are drawn differently than "outside edges" so the shared edges will match up.
+ * in the case of table collapsing borders, the table edge is the "outside" edge and
+ * cell edges are always "inside" edges (so adjacent cells have 2 shared "inside" edges.)
+ * dashed segments are drawn by DrawDashedSegments().
+ */
+// XXX: doesn't do corners or junctions well at all.  Just uses logic stolen 
+//      from PaintBorder which is insufficient
+
 void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       nsIFrame* aForFrame,
