@@ -3399,6 +3399,8 @@ nsDocShell::EnsureContentViewer()
 {
     if (mContentViewer)
         return NS_OK;
+    if (mIsBeingDestroyed)
+        return NS_ERROR_FAILURE;
 
     return CreateAboutBlankContentViewer();
 }
@@ -3431,8 +3433,6 @@ nsDocShell::EnsureDeviceContext()
 NS_IMETHODIMP
 nsDocShell::CreateAboutBlankContentViewer()
 {
-  return NS_ERROR_NOT_IMPLEMENTED; // for now. not quite working yet.
-
   nsCOMPtr<nsIDocument> blankDoc;
   nsCOMPtr<nsIContentViewer> viewer;
 
@@ -3441,8 +3441,10 @@ nsDocShell::CreateAboutBlankContentViewer()
   if (!docFactory)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(mLoadCookie));
+
   // generate (about:blank) document to load
-  docFactory->CreateBlankDocument(getter_AddRefs(blankDoc));
+  docFactory->CreateBlankDocument(loadGroup, getter_AddRefs(blankDoc));
   if (!blankDoc)
     return NS_ERROR_FAILURE;
 
