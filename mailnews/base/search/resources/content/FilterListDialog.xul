@@ -25,6 +25,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd" >
 <window class="dialog"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
   onload="onLoad();"
@@ -56,7 +57,9 @@ Rights Reserved.
                      rdf:containment="http://home.netscape.com/NC-rdf#child"
                      ref="msgaccounts:/">
             <template>
-              <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              <rule nc:SupportsFilters="true">
+                <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              </rule>
             </template>
           </menupopup>
         </menulist>
