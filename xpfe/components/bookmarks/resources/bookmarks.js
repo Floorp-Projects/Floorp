@@ -584,6 +584,32 @@ function fillContextMenu(name)
         popupNode.appendChild(menuItem);
     }
 
+	// if one and only one node is selected
+	if (treeNode.selectedItems.length == 1)
+	{
+		// and its a bookmark or a bookmark folder (there can be other types,
+		// not just separators, so check explicitly for what we allow)
+		var type = select_list[0].getAttribute("type");
+		if ((type == "http://home.netscape.com/NC-rdf#Bookmark") ||
+			(type == "http://home.netscape.com/NC-rdf#Folder"))
+		{
+			// then add a menu separator (if necessary)
+			if (popupNode.childNodes.length > 0)
+			{
+				var menuSep = document.createElement("menuseparator");
+				popupNode.appendChild(menuSep);
+			}
+
+			// and then add a "Properties" menu items
+			var propMenuName = "Properties...";
+			
+			var menuItem = document.createElement("menuitem");
+			menuItem.setAttribute("value", "Properties...");		// XXX localize
+			menuItem.setAttribute("oncommand", "return BookmarkProperties();");
+			popupNode.appendChild(menuItem);
+		}
+	}
+
     return(true);
 }
 
