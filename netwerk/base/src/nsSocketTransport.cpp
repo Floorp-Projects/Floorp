@@ -1103,7 +1103,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 //-----
 nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 {
-  PRUint32 totalBytesWritten = 0;
+  PRUint32 totalBytesWritten;
   nsresult rv = NS_OK;
 
   NS_ASSERTION(eSocketState_WaitReadWrite == mCurrentState, "Wrong state.");
@@ -1115,23 +1115,29 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
           "mWriteCount = %d\n",
           mHostName, mPort, this, aSelectFlags, mWriteCount));
 
-  if (mWritePipeIn) {
-    // Writing from a nsIBufferInputStream...
-    rv = doWriteFromBuffer(&totalBytesWritten);
-  }
-  else {
-    // Writing from a generic nsIInputStream...
-    rv = doWriteFromStream(&totalBytesWritten);
-  }
+  do
+  {
+    totalBytesWritten = 0;
+    if (mWritePipeIn) {
+        // Writing from a nsIBufferInputStream...
+        rv = doWriteFromBuffer(&totalBytesWritten);
+    }
+    else {
+        // Writing from a generic nsIInputStream...
+        rv = doWriteFromStream(&totalBytesWritten);
+    }
 
-  // Update the counters...
-  if (mWriteCount > 0) {
-    NS_ASSERTION(mWriteCount >= (PRInt32)totalBytesWritten, 
+    // Update the counters...
+    if (mWriteCount > 0) {
+        NS_ASSERTION(mWriteCount >= (PRInt32)totalBytesWritten, 
                  "wrote more than humanly possible");
-    mWriteCount -= totalBytesWritten;
-  }
+        mWriteCount -= totalBytesWritten;
+    }
 
-  mWriteOffset += totalBytesWritten;
+    mWriteOffset += totalBytesWritten;
+
+  }
+  while (NS_SUCCEEDED (rv) && totalBytesWritten);
 
   //
   // The write operation has completed...
