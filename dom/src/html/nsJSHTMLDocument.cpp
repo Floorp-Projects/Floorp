@@ -73,8 +73,7 @@ enum HTMLDocument_slots {
   NSHTMLDOCUMENT_BGCOLOR = -15,
   NSHTMLDOCUMENT_FGCOLOR = -16,
   NSHTMLDOCUMENT_LASTMODIFIED = -17,
-  NSHTMLDOCUMENT_EMBEDS = -18,
-  NSHTMLDOCUMENT_PLUGINS = -19
+  NSHTMLDOCUMENT_EMBEDS = -18
 };
 
 /***********************************************************************/
@@ -359,26 +358,6 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsIDOMNSHTMLDocument* b;
           if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
             rv = b->GetEmbeds(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case NSHTMLDOCUMENT_PLUGINS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_PLUGINS, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMHTMLCollection* prop;
-          nsIDOMNSHTMLDocument* b;
-          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-            rv = b->GetPlugins(&prop);
             if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -1148,7 +1127,6 @@ static JSPropertySpec HTMLDocumentProperties[] =
   {"fgColor",    NSHTMLDOCUMENT_FGCOLOR,    JSPROP_ENUMERATE},
   {"lastModified",    NSHTMLDOCUMENT_LASTMODIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"embeds",    NSHTMLDOCUMENT_EMBEDS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"plugins",    NSHTMLDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

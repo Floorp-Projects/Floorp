@@ -33,7 +33,6 @@
      readonly attribute wstring lastModified;
 
      readonly attribute HTMLCollection embeds;
-     readonly attribute HTMLCollection plugins;
 
      wstring getSelection();
      jsval namedItem(/* ... */);
