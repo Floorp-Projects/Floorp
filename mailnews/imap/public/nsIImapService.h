@@ -56,10 +56,6 @@ class nsIImapService : public nsISupports
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IIMAPSERVICE_IID; return iid; }
 
-	NS_IMETHOD CreateImapConnection (nsIEventQueue *aEventQueue, nsIImapUrl * aImapUrl,
-                                     nsIImapProtocol ** aImapConnection) = 0;
-	
-    NS_IMETHOD LoadNextQueuedUrl() = 0;
 	// As always, you can pass in null for the url listener and the url if you don't require either.....
 	// aClientEventQueue is the event queue of the event sinks. We post events into this queue.
 	// mscott -- eventually this function will take in the account (identity/incoming server) associated with 
