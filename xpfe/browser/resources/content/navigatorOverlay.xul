@@ -215,15 +215,19 @@ Contributor(s): ______________________________________. -->
       <menuseparator />
       <menu value="&useStyleSheetMenu.label;" oncommand="BrowserReload();">
         <menupopup>
-          <menuitem value="&useStyleSheetDefaultCmd.label;"
-            oncommand="BrowserReload();"/>
+          <menuitem type="radio" name="stylesheet_group"
+                    value="&useStyleSheetDefaultCmd.label;"
+                    oncommand="BrowserReload();"/>
           <menuseparator />
-          <menuitem value="&useStyleSheetEasyReadingCmd.label;"
-            oncommand="BrowserReload();"/>
-          <menuitem value="&useStyleSheetMaxInfoCmd.label;"
-            oncommand="BrowserReload();"/>
-          <menuitem value="&useStlyleSheetBizarreCmd.label;" 
-            oncommand="BrowserReload();"/>
+          <menuitem type="radio" name="stylesheet_group"
+                    value="&useStyleSheetEasyReadingCmd.label;"
+                    oncommand="BrowserReload();"/>
+          <menuitem type="radio" name="stylesheet_group"
+                    value="&useStyleSheetMaxInfoCmd.label;"
+                    oncommand="BrowserReload();"/>
+          <menuitem type="radio" name="stylesheet_group"
+                    value="&useStlyleSheetBizarreCmd.label;" 
+                    oncommand="BrowserReload();"/>
         </menupopup>
       </menu>
       <menuseparator />
