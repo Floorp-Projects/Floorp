@@ -1044,7 +1044,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
 
     CHECK_mPath();
 
-    nsCString parentPath = NS_STATIC_CAST(const char*, mPath);
+    nsCString parentPath(NS_STATIC_CAST(const char*, mPath));
 
     // check to see whether or not we need to cut off any trailing
     // slashes
