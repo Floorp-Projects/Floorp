@@ -69,13 +69,7 @@ nsMathMLForeignFrameWrapper::Init(nsIPresContext*  aPresContext,
                                   nsIStyleContext* aContext,
                                   nsIFrame*        aPrevInFlow)
 {
-  nsresult rv;
-  rv = nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-  // let the base class inherit the scriptlevel and displaystyle from our parent
-  nsMathMLFrame::InheritAutomaticData(aPresContext, aParent);
-
-  return rv;
+  return nsBlockFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
 
 NS_IMETHODIMP

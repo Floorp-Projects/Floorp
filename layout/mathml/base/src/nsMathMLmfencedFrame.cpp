@@ -69,41 +69,46 @@ nsMathMLmfencedFrame::~nsMathMLmfencedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::Init(nsIPresContext*  aPresContext,
-                           nsIContent*      aContent,
-                           nsIFrame*        aParent,
-                           nsIStyleContext* aContext,
-                           nsIFrame*        aPrevInFlow)
+nsMathMLmfencedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                           nsIFrame*       aParent)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  // let the base class get the default from our parent
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
 
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  mOpenChar = nsnull;
-  mCloseChar = nsnull;
-  mSeparatorsChar = nsnull;
-  mSeparatorsCount = 0;
-
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-  return rv;
+  return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsMathMLmfencedFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
-  nsresult rv;
-
   // First, let the base class do its work
-  rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   if (NS_FAILED(rv)) return rv;
 
-  rv = CreateFencesAndSeparators(aPresContext);  
-  return rv;
+  // No need to tract the style contexts given to our MathML chars. 
+  // The Style System will use Get/SetAdditionalStyleContext() to keep them
+  // up-to-date if dynamic changes arise.
+  return CreateFencesAndSeparators(aPresContext);
+}
+
+NS_IMETHODIMP
+nsMathMLmfencedFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                       nsIContent*     aContent,
+                                       PRInt32         aNameSpaceID,
+                                       nsIAtom*        aAttribute,
+                                       PRInt32         aModType, 
+                                       PRInt32         aHint)
+{
+  RemoveFencesAndSeparators();
+  CreateFencesAndSeparators(aPresContext);
+
+  return nsMathMLContainerFrame::
+         AttributeChanged(aPresContext, aContent, aNameSpaceID,
+                          aAttribute, aModType, aHint);
 }
 
 void
@@ -112,7 +117,7 @@ nsMathMLmfencedFrame::RemoveFencesAndSeparators()
   if (mOpenChar) delete mOpenChar;
   if (mCloseChar) delete mCloseChar;
   if (mSeparatorsChar) delete[] mSeparatorsChar;
-  
+
   mOpenChar = nsnull;
   mCloseChar = nsnull;
   mSeparatorsChar = nsnull;
@@ -123,8 +128,8 @@ nsresult
 nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
 {
   nsresult rv;
-
   nsAutoString value, data;
+  PRBool isMutable;
 
   //////////////  
   // see if the opening fence is there ...
@@ -143,7 +148,8 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
     mOpenChar = new nsMathMLChar;
     if (!mOpenChar) return NS_ERROR_OUT_OF_MEMORY;
     mOpenChar->SetData(aPresContext, data);
-    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mOpenChar);
+    isMutable = nsMathMLOperators::IsMutableOperator(data);
+    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mOpenChar, isMutable);
   }
 
   //////////////
@@ -163,7 +169,8 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
     mCloseChar = new nsMathMLChar;
     if (!mCloseChar) return NS_ERROR_OUT_OF_MEMORY;
     mCloseChar->SetData(aPresContext, data);
-    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mCloseChar);
+    isMutable = nsMathMLOperators::IsMutableOperator(data);
+    ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mCloseChar, isMutable);
   }
 
   //////////////
@@ -192,12 +199,16 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
       if (!mSeparatorsChar) return NS_ERROR_OUT_OF_MEMORY;
       nsAutoString sepChar;
       for (PRInt32 i = 0; i < sepCount; i++) {
-        if (i < mSeparatorsCount)
+        if (i < mSeparatorsCount) {
           sepChar = data[i];
-        else
+          isMutable = nsMathMLOperators::IsMutableOperator(sepChar);
+        }
+        else {
           sepChar = data[mSeparatorsCount-1];
+          // keep the value of isMutable that was set earlier
+        }
         mSeparatorsChar[i].SetData(aPresContext, sepChar);
-        ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSeparatorsChar[i]);
+        ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSeparatorsChar[i], isMutable);
       }
     }
     mSeparatorsCount = sepCount;
@@ -212,12 +223,10 @@ nsMathMLmfencedFrame::Paint(nsIPresContext*      aPresContext,
                             nsFramePaintLayer    aWhichLayer,
                             PRUint32             aFlags)
 {
-  nsresult rv = NS_OK;
-
   /////////////
   // paint the content
-  rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
-                                     aDirtyRect, aWhichLayer);
+  nsresult rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
+                                              aDirtyRect, aWhichLayer);
   ////////////
   // paint fences and separators
   if (NS_SUCCEEDED(rv)) {
@@ -317,9 +326,9 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   nsBoundingMetrics containerSize;
   nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_VERTICAL;
 
-  nsEmbellishData embellishData;
-  mathMLFrame->GetEmbellishData(embellishData);
-  if (!NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(embellishData.flags)) {
+  nsPresentationData presentationData;
+  mathMLFrame->GetPresentationData(presentationData);
+  if (!NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(presentationData.flags)) {
     // case when the call is made for mfrac, we only need to stretch the '/' separator
     containerSize = aDesiredSize.mBoundingMetrics; // computed earlier
   }
@@ -331,8 +340,8 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
     childFrame = fisrtChild;
     while (childFrame) {
       nsIMathMLFrame* mathmlChild;
-      rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathmlChild);
-      if (NS_SUCCEEDED(rv) && mathmlChild) {
+      childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathmlChild);
+      if (mathmlChild) {
         // retrieve the metrics that was stored at the previous pass
         GetReflowAndBoundingMetricsFor(childFrame, childDesiredSize, childDesiredSize.mBoundingMetrics);
 
@@ -371,9 +380,6 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
                          containerSize.descent + axisHeight);
   containerSize.ascent = delta + axisHeight;
   containerSize.descent = delta - axisHeight;
-
-  nsPresentationData presentationData;
-  mathMLFrame->GetPresentationData(presentationData);
 
   /////////////////
   // opening fence ...

@@ -75,7 +75,7 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
   nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
 
   // sync with our current state
-
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
   mPresentationData.mstyle = this;
 
   // see if the displaystyle attribute is there
@@ -114,8 +114,6 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsMathMLmstyleFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-
   // Nothing particular to do here, the values that we computed in
   // InheritAutomaticData() are the values that we wanted to pass to
   // our children. Our children would have inherited these values in
@@ -205,17 +203,10 @@ nsMathMLmstyleFrame::AttributeChanged(nsIPresContext* aPresContext,
                                       PRInt32         aModType, 
                                       PRInt32         aHint)
 {
-  if (nsMathMLAtoms::displaystyle_ == aAttribute ||
-      nsMathMLAtoms::scriptlevel_ == aAttribute) {
-    // These attributes can affect too many things, ask our parent to re-layout
-    // its children so that we can pick up changes in our attributes & transmit
-    // them in our subtree. However, our siblings will be re-laid too. We used
-    // to have a more speedier but more verbose alternative that didn't re-layout
-    // our siblings. See bug 114909 - attachment 67668.
-    return ReLayout(aPresContext, mParent);
-  }
-
-  return nsMathMLContainerFrame::
-         AttributeChanged(aPresContext, aContent, aNameSpaceID,
-                          aAttribute, aModType, aHint);
+  // These attributes can affect too many things, ask our parent to re-layout
+  // its children so that we can pick up changes in our attributes & transmit
+  // them in our subtree. However, our siblings will be re-laid too. We used
+  // to have a more speedier but more verbose alternative that didn't re-layout
+  // our siblings. See bug 114909 - attachment 67668.
+  return ReLayoutChildren(aPresContext, mParent);
 }

@@ -34,12 +34,10 @@ class nsMathMLmiFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmiFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
- /* <mi> needs to switch to a normal-font (rather than italics) if
-  * its text content is not a single character (as per the MathML REC).
-  * special care is also needed for style-invariant chars - bug 65951
-  */
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext);
+  SetInitialChildList(nsIPresContext* aPresContext,
+                      nsIAtom*        aListName,
+                      nsIFrame*       aChildList);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
@@ -53,11 +51,22 @@ public:
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
+  NS_IMETHOD
+  ReflowDirtyChild(nsIPresShell* aPresShell,
+                   nsIFrame*     aChild);
+
 protected:
   nsMathMLmiFrame();
   virtual ~nsMathMLmiFrame();
-  
+
   virtual PRIntn GetSkipSides() const { return 0; }
+
+ /* <mi> needs to switch to a normal-font (rather than italics) if
+  * its text content is not a single character (as per the MathML REC).
+  * special care is also needed for style-invariant chars - bug 65951
+  */
+  void
+  ProcessTextData(nsIPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmiFrame_h___ */

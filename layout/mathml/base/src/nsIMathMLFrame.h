@@ -70,6 +70,11 @@ public:
   * Called to ask a stretchy MathML frame to stretch itself depending
   * on its context.
   *
+  * An embellished frame is treated in a special way. When it receives a
+  * Stretch() command, it passes the command to its embellished child and
+  * the stretched size is bubbled up from the inner-most <mo> frame. In other
+  * words, the stretch command descend through the embellished hierarchy.
+  *
   * @param aStretchDirection [in] the direction where to attempt to
   *        stretch.
   * @param aContainerSize [in] struct that suggests the maximumn size for
@@ -121,36 +126,6 @@ public:
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) = 0;
 
- /* EmbellishOperator :
-  * Call this method to probe and set a frame as an "embellished operator".
-  * Calls must be bottom up. The method will set the frame as an
-  * "embellished operator" if the frame satisfies the definition of 
-  * the MathML REC. Conversely, it will set the frame as
-  * non-embellished if it is not an "embellished operator".
-  *
-  * Note that this method must only be called from tags who *can* be
-  * embellished operators.
-  *
-  * The MathML REC precisely defines an "embellished operator" as:
-  * - an <mo> element;
-  * - or one of the elements <msub>, <msup>, <msubsup>, <munder>, <mover>,
-  *   <munderover>, <mmultiscripts>, <mfrac>, or <semantics>, whose first 
-  *   argument exists and is an embellished operator;
-  * - or one of the elements <mstyle>, <mphantom>, or <mpadded>, such that
-  *   an <mrow> containing the same arguments would be an embellished
-  *   operator;
-  * - or an <maction> element whose selected subexpression exists and is an
-  *   embellished operator;
-  * - or an <mrow> whose arguments consist (in any order) of one embellished
-  *   operator and zero or more spacelike elements.
-  *
-  * When an embellished frame receives a Stretch() command, it passes the
-  * command to its first child and the stretched size is bubbled up from the
-  * inner-most <mo> frame.
-  */
-  NS_IMETHOD
-  EmbellishOperator() = 0;
-
  /* GetEmbellishData/SetEmbellishData :
   * Get/Set the mEmbellishData member variable.
   */
@@ -184,17 +159,37 @@ public:
    * within their subtrees.
    *
    * InheritAutomaticData() is called in a top-down manner [like nsIFrame::Init],
-   * as we descend the frame tree during its construction, whereas
-   * TransmitAutomaticData() is called in a bottom-up manner, as we ascend the
-   * frame tree after its construction [like nsIFrame::SetInitialChildList].
-   * However, unlike Init() and SetInitialChildList() which are called only
-   * once during the life-time of a frame, these two methods are called
-   * whenever we are walking the frame tree to handle dynamic changes that
-   * happen in the content model.
+   * as we descend the frame tree, whereas TransmitAutomaticData() is called in a
+   * bottom-up manner, as we ascend the tree [like nsIFrame::SetInitialChildList].
+   * However, unlike Init() and SetInitialChildList() which are called only once
+   * during the life-time of a frame (when initially constructing the frame tree),
+   * these two methods are called to build automatic data after the <math>...</math>
+   * subtree has been constructed fully, and are called again as we walk a child's
+   * subtree to handle dynamic changes that happen in the content model.
+   *
+   * As a rule of thumb:
+   *
+   * 1. Use InheritAutomaticData() to set properties related to your ancestors:
+   *    - set properties that are intrinsic to yourself
+   *    - set properties that depend on the state that you expect your ancestors
+   *      to have already reached in their own InheritAutomaticData().
+   *    - set properties that your descendants assume that you would have set in
+   *      your InheritAutomaticData() -- this way, they can safely query them and
+   *      the process will feed upon itself.
+   *
+   * 2. Use TransmitAutomaticData() to set properties related to your descendants:
+   *    - set properties that depend on the state that you expect your descendants
+   *      to have reached upon processing their own TransmitAutomaticData().
+   *    - transmit properties that your descendants expect that you will transmit to
+   *      them in your TransmitAutomaticData() -- this way, they remain up-to-date.
+   *    - set properties that your ancestors expect that you would set in your
+   *      TransmitAutomaticData() -- this way, they can safely query them and the
+   *      process will feed upon itself.
    */
 
   NS_IMETHOD
-  InheritAutomaticData(nsIPresContext* aPresContext, nsIFrame* aParent) = 0;
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent) = 0;
 
   NS_IMETHOD
   TransmitAutomaticData(nsIPresContext* aPresContext) = 0;
@@ -305,35 +300,64 @@ public:
                        PRInt32         aParentScriptLevel) = 0;
 };
 
-// struct used by a frame to modulate its presentation
-struct nsPresentationData {
-  PRUint32  flags; // bits for: displaystyle, compressed, etc
-  nsIFrame* mstyle; // up-pointer on the mstyle frame, if any, that defines the scope
-  PRInt32   scriptLevel; // Relevant to nested frames within: msub, msup, msubsup, munder,
-                         // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
-  nsPresentationData()
-  {
-    flags = 0;
-    mstyle = nsnull;
-    scriptLevel = 0;
-  }
-};
-
-// struct used by an embellished container to keep track of its embellished child
+// struct used by a container frame to keep track of its embellishments.
+// By convention, the data that we keep here is bubbled from the embellished
+// hierarchy, and it remains unchanged unless we have to recover from a change
+// that occurs in the embellished hierarchy. The struct remains in its nil
+// state in those frames that are not part of the embellished hierarchy.
 struct nsEmbellishData {
-  PRUint32  flags;
-  nsIFrame* nextFrame; // handy pointer on our embellished child to descend the hierarchy
-  nsIFrame* coreFrame; // pointer on the mo frame at the core of the embellished hierarchy
-  nsStretchDirection direction;
-  nscoord leftSpace, rightSpace;
+  // bits used to mark certain properties of our embellishments 
+  PRUint32 flags;
 
-  nsEmbellishData()
-  {
+  // handy pointer on our embellished child to descend the embellished hierarchy
+  nsIFrame* nextFrame;
+
+  // pointer on the <mo> frame at the core of the embellished hierarchy
+  nsIFrame* coreFrame;
+
+  // stretchy direction that the nsMathMLChar owned by the core <mo> supports
+  nsStretchDirection direction;
+
+  // spacing that may come from <mo> depending on its 'form'. Since
+  // the 'form' may also depend on the position of the outermost
+  // embellished ancestor, the set up of these values may require
+  // looking up the position of our ancestors.
+  nscoord leftSpace;
+  nscoord rightSpace;
+
+  nsEmbellishData() {
     flags = 0;
     nextFrame = nsnull;
     coreFrame = nsnull;
     direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    leftSpace = rightSpace = 0;
+    leftSpace = 0;
+    rightSpace = 0;
+  }
+};
+
+// struct used by a container frame to modulate its presentation.
+// By convention, the data that we keep in this struct can change depending
+// on any of our ancestors and/or descendants. If a data can be resolved
+// solely from the embellished hierarchy, and it remains immutable once
+// resolved, we put it in |nsEmbellishData|. If it can be affected by other
+// things, it comes here. This struct is updated as we receive information
+// transmitted by our ancestors and is kept in sync with changes in our
+// descendants that affects us.
+struct nsPresentationData {
+  // bits for: displaystyle, compressed, etc
+  PRUint32 flags;
+
+  // up-pointer on the mstyle frame, if any, that defines the scope
+  nsIFrame* mstyle;
+
+  // level of nested frames within: msub, msup, msubsup, munder,
+  // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
+  PRInt32 scriptLevel;
+
+  nsPresentationData() {
+    flags = 0;
+    mstyle = nsnull;
+    scriptLevel = 0;
   }
 };
 
@@ -353,38 +377,40 @@ struct nsEmbellishData {
 // Internal use only, cannot be set by the user with an attribute.
 #define NS_MATHML_COMPRESSED                          0x00000002
 
+// This bit is set if the frame will fire a vertical stretch
+// command on all its (non-empty) children.
+// Tags like <mrow> (or an inferred mrow), mpadded, etc, will fire a
+// vertical stretch command on all their non-empty children
+#define NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY     0x00000004
+
+// This bit is set if the frame will fire a horizontal stretch
+// command on all its (non-empty) children.
+// Tags like munder, mover, munderover, will fire a 
+// horizontal stretch command on all their non-empty children
+#define NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY   0x00000008
+
 // This bit is set if the frame is actually an <mstyle> frame *and* that
 // <mstyle> frame has an explicit attribute scriptlevel="value".
 // Note: the flag is not set if the <mstyle> instead has an incremental +/-value.
-#define NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL    0x00000004
+#define NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL    0x00000010
 
 // This bit is set if the frame is actually an <mstyle> *and* that
 // <mstyle> has an explicit attribute displaystyle="true" or "false"
-#define NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE            0x00000008
-
-// This bit is set if the frame is an <mover> or <munderover> with
-// an accent frame
-#define NS_MATHML_ACCENTOVER                          0x00000010
-
-// This bit is set if the frame is an <munder> or <munderover> with
-// an accentunder frame
-#define NS_MATHML_ACCENTUNDER                         0x00000020
-
-// This bit is set if the frame is an <mover>, <munder> or <munderover>
-// whose base frame is a <mo> frame (or an embellished container with
-// a core <mo>) for which the movablelimits attribute is set to true
-#define NS_MATHML_MOVABLELIMITS                       0x00000040
+#define NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE            0x00000020
 
 // This bit is set when the frame cannot be formatted due to an
 // error (e.g., invalid markup such as a <msup> without an overscript).
 // When set, a visual feedback will be provided to the user.
 #define NS_MATHML_ERROR                               0x80000000
 
+// a bit used for debug
+#define NS_MATHML_STRETCH_DONE                        0x20000000
+
 // This bit is used for visual debug. When set, the bounding box
 // of your frame is painted. This visual debug enable to ensure that
 // you have properly filled your mReference and mBoundingMetrics in
 // Place().
-#define NS_MATHML_SHOW_BOUNDING_METRICS               0x40000000
+#define NS_MATHML_SHOW_BOUNDING_METRICS               0x10000000
 
 // Macros that retrieve those bits
 
@@ -394,23 +420,23 @@ struct nsEmbellishData {
 #define NS_MATHML_IS_COMPRESSED(_flags) \
   (NS_MATHML_COMPRESSED == ((_flags) & NS_MATHML_COMPRESSED))
 
+#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(_flags) \
+  (NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY))
+
+#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(_flags) \
+  (NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY))
+
 #define NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(_flags) \
   (NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE == ((_flags) & NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE))
 
 #define NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(_flags) \
   (NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL == ((_flags) & NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL))
 
-#define NS_MATHML_IS_ACCENTOVER(_flags) \
-  (NS_MATHML_ACCENTOVER == ((_flags) & NS_MATHML_ACCENTOVER))
-
-#define NS_MATHML_IS_ACCENTUNDER(_flags) \
-  (NS_MATHML_ACCENTUNDER == ((_flags) & NS_MATHML_ACCENTUNDER))
-
-#define NS_MATHML_IS_MOVABLELIMITS(_flags) \
-  (NS_MATHML_MOVABLELIMITS == ((_flags) & NS_MATHML_MOVABLELIMITS))
-
 #define NS_MATHML_HAS_ERROR(_flags) \
   (NS_MATHML_ERROR == ((_flags) & NS_MATHML_ERROR))
+
+#define NS_MATHML_STRETCH_WAS_DONE(_flags) \
+  (NS_MATHML_STRETCH_DONE == ((_flags) & NS_MATHML_STRETCH_DONE))
 
 #define NS_MATHML_PAINT_BOUNDING_METRICS(_flags) \
   (NS_MATHML_SHOW_BOUNDING_METRICS == ((_flags) & NS_MATHML_SHOW_BOUNDING_METRICS))
@@ -422,47 +448,37 @@ struct nsEmbellishData {
 // This bit is set if the frame is an embellished operator. 
 #define NS_MATHML_EMBELLISH_OPERATOR                0x00000001
 
-// This bit is set if the frame will fire a vertical stretch
-// command on all its (non-empty) children.
-// Tags like <mrow> (or an inferred mrow), mpadded, etc, will fire a
-// vertical stretch command on all their non-empty children
-#define NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY   0x00000002
+// This bit is set if the frame is an <mo> frame or an embellihsed
+// operator for which the core <mo> has movablelimits="true"
+#define NS_MATHML_EMBELLISH_MOVABLELIMITS           0x00000002
 
-// This bit is set if the frame will fire a horizontal stretch
-// command on all its (non-empty) children.
-// Tags like munder, mover, munderover, will fire a 
-// horizontal stretch command on all their non-empty children
-#define NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY 0x00000004
+// This bit is set if the frame is an <mo> frame or an embellihsed
+// operator for which the core <mo> has accent="true"
+#define NS_MATHML_EMBELLISH_ACCENT                  0x00000004
 
-// This bit is set if the frame is an <mo> frame that should behave
-// like an accent XXX since it is <mo> specific, use NS_MATHML_EMBELLISH_MO_ACCENT instead?
-#define NS_MATHML_EMBELLISH_ACCENT                  0x00000008
+// This bit is set if the frame is an <mover> or <munderover> with
+// an accent frame
+#define NS_MATHML_EMBELLISH_ACCENTOVER              0x00000008
 
-// This bit is set if the frame is an <mo> frame with the movablelimits
-// attribute set to true XXX since it is <mo> specific, use NS_MATHML_EMBELLISH_MO_MOVABLELIMITS instead?
-#define NS_MATHML_EMBELLISH_MOVABLELIMITS           0x00000010
-
-// a bit used for debug
-#define NS_MATHML_STRETCH_DONE                      0x80000000
+// This bit is set if the frame is an <munder> or <munderover> with
+// an accentunder frame
+#define NS_MATHML_EMBELLISH_ACCENTUNDER             0x00000010
 
 // Macros that retrieve those bits
 
 #define NS_MATHML_IS_EMBELLISH_OPERATOR(_flags) \
   (NS_MATHML_EMBELLISH_OPERATOR == ((_flags) & NS_MATHML_EMBELLISH_OPERATOR))
 
-#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(_flags) \
-  (NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY))
-
-#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(_flags) \
-  (NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY))
-
-#define NS_MATHML_STRETCH_WAS_DONE(_flags) \
-  (NS_MATHML_STRETCH_DONE == ((_flags) & NS_MATHML_STRETCH_DONE))
+#define NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(_flags) \
+  (NS_MATHML_EMBELLISH_MOVABLELIMITS == ((_flags) & NS_MATHML_EMBELLISH_MOVABLELIMITS))
 
 #define NS_MATHML_EMBELLISH_IS_ACCENT(_flags) \
   (NS_MATHML_EMBELLISH_ACCENT == ((_flags) & NS_MATHML_EMBELLISH_ACCENT))
 
-#define NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(_flags) \
-  (NS_MATHML_EMBELLISH_MOVABLELIMITS == ((_flags) & NS_MATHML_EMBELLISH_MOVABLELIMITS))
+#define NS_MATHML_EMBELLISH_IS_ACCENTOVER(_flags) \
+  (NS_MATHML_EMBELLISH_ACCENTOVER == ((_flags) & NS_MATHML_EMBELLISH_ACCENTOVER))
+
+#define NS_MATHML_EMBELLISH_IS_ACCENTUNDER(_flags) \
+  (NS_MATHML_EMBELLISH_ACCENTUNDER == ((_flags) & NS_MATHML_EMBELLISH_ACCENTUNDER))
 
 #endif /* nsIMathMLFrame_h___ */

@@ -88,6 +88,20 @@ nsMathMLmfracFrame::~nsMathMLmfracFrame()
   }
 }
 
+PRBool
+nsMathMLmfracFrame::IsBevelled()
+{
+  nsAutoString value;
+  if (NS_CONTENT_ATTR_HAS_VALUE == 
+      GetAttribute(mContent, mPresentationData.mstyle,
+                   nsMathMLAtoms::bevelled_, value)) {
+    if (value.Equals(NS_LITERAL_STRING("true"))) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
@@ -104,7 +118,7 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
     if (mSlashChar) {
       nsAutoString slashChar; slashChar.Assign(kSlashChar);
       mSlashChar->SetData(aPresContext, slashChar);
-      ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mSlashChar);
+      ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mSlashChar, PR_TRUE);
     }
   }
 
@@ -114,10 +128,6 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
 NS_IMETHODIMP
 nsMathMLmfracFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-
   // 1. The REC says:
   //    The <mfrac> element sets displaystyle to "false", or if it was already
   //    false increments scriptlevel by 1, within numerator and denominator.
@@ -132,14 +142,18 @@ nsMathMLmfracFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
   UpdatePresentationDataFromChildAt(aPresContext, 1,  1, 0,
      NS_MATHML_COMPRESSED,
      NS_MATHML_COMPRESSED);
-  // check whether or not this is an embellished operator
-  EmbellishOperator();
-  // even when embellished, we need to record that <mfrac> won't fire
-  // Stretch() on its embellished child
-  mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  // break the embellished hierarchy to stop propagating the stretching
-  // process, but keep access to mEmbellishData.coreFrame for convenience
-  mEmbellishData.nextFrame = nsnull;
+
+  // if our numerator is an embellished operator, let its state bubble to us
+  GetEmbellishDataFrom(mFrames.FirstChild(), mEmbellishData);
+  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
+    // even when embellished, we need to record that <mfrac> won't fire
+    // Stretch() on its embellished child
+    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+    // break the embellished hierarchy to stop propagating the stretching
+    // process, but keep access to mEmbellishData.coreFrame for convenience
+    mEmbellishData.nextFrame = nsnull;
+  }
+
   return NS_OK;
 }
 
@@ -253,34 +267,20 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   ////////////////////////////////////
   // Get the children's desired sizes
 
-  PRInt32 count = 0;
   nsBoundingMetrics bmNum, bmDen;
   nsHTMLReflowMetrics sizeNum (nsnull);
   nsHTMLReflowMetrics sizeDen (nsnull);
-  nsIFrame* frameNum = nsnull;
   nsIFrame* frameDen = nsnull;
-
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    if (0 == count) {
-    	// numerator
-      frameNum = childFrame;
-      GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
-    }
-    else if (1 == count) {
-    	// denominator
-      frameDen = childFrame;
-      GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
-    }
-    count++;
-    
-    childFrame->GetNextSibling(&childFrame);
-  }
-  if (2 != count) {
+  nsIFrame* frameNum = mFrames.FirstChild();
+  if (frameNum) 
+    frameNum->GetNextSibling(&frameDen);
+  if (!frameNum || !frameDen || HasNextSibling(frameDen)) {
     // report an error, encourage people to get their markups in order
     NS_WARNING("invalid markup");
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
   }
+  GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
+  GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
 
   //////////////////
   // Get shifts
@@ -300,19 +300,14 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 
   // by default, leave at least one-pixel padding at either end, or use
-  // lspace & rspace from <mo> if we are an embellished container
-  nscoord leftSpace = onePixel;
-  nscoord rightSpace = onePixel;
-  if (mEmbellishData.coreFrame) {
-    nsEmbellishData coreData;
-    nsIMathMLFrame* mathMLFrame;
-    mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    mathMLFrame->GetEmbellishData(coreData);
-    leftSpace = coreData.leftSpace;
-    rightSpace = coreData.rightSpace;
-  }
-  if (leftSpace < onePixel) leftSpace = onePixel; 
-  if (rightSpace < onePixel) rightSpace = onePixel; 
+  // lspace & rspace that may come from <mo> if we are an embellished container
+  // (we fetch values from the core since they may use units that depend
+  // on style data, and style changes could have occured in the core since
+  // our last visit there)
+  nsEmbellishData coreData;
+  GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
+  nscoord leftSpace = PR_MAX(onePixel, coreData.leftSpace);
+  nscoord rightSpace = PR_MAX(onePixel, coreData.rightSpace);
 
   // see if the linethickness attribute is there 
   nsAutoString value;
@@ -476,7 +471,7 @@ nsMathMLmfracFrame::AttributeChanged(nsIPresContext* aPresContext,
         if (mSlashChar) {
           nsAutoString slashChar; slashChar.Assign(kSlashChar);
           mSlashChar->SetData(aPresContext, slashChar);
-          ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mSlashChar);
+          ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mSlashChar, PR_TRUE);
         }
       }
     }

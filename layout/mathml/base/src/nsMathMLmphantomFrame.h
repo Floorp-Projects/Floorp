@@ -35,7 +35,8 @@ public:
   friend nsresult NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  TransmitAutomaticData(nsIPresContext* aPresContext);
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
 
   NS_IMETHOD
   Paint(nsIPresContext*      aPresContext,

@@ -74,13 +74,9 @@ IsStyleInvariant(PRUnichar aChar)
 }
 
 // if our content is not a single character, we turn the font to normal
-NS_IMETHODIMP
-nsMathMLmiFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+void
+nsMathMLmiFrame::ProcessTextData(nsIPresContext* aPresContext)
 {
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-
   // Get the text content that we enclose and its length
   // our content can include comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to make sure that we are only looking at text-nodes...
@@ -119,7 +115,7 @@ nsMathMLmiFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
                        nsMathMLAtoms::fontstyle_, fontstyle))
       {
         if (fontstyle.Equals(NS_LITERAL_STRING("italic")))
-          return NS_OK;
+          return;
       }
     }
 
@@ -142,7 +138,20 @@ nsMathMLmiFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
       }
     }
   }
-  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                     nsIAtom*        aListName,
+                                     nsIFrame*       aChildList)
+{
+  // First, let the base class do its work
+  nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  if (NS_FAILED(rv)) return rv;
+
+  // re-style our content depending on what it is
+  ProcessTextData(aPresContext);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -163,4 +172,18 @@ nsMathMLmiFrame::Place(nsIPresContext*      aPresContext,
 {
   return PlaceTokenFor(this, aPresContext, aRenderingContext,
                        aPlaceOrigin, aDesiredSize);
+}
+
+NS_IMETHODIMP
+nsMathMLmiFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
+                                  nsIFrame*     aChild)
+{
+  // if we get this, it means it was called by the nsTextFrame beneath us, and 
+  // this means something changed in the text content. So re-process our text
+
+  nsCOMPtr<nsIPresContext> presContext;
+  aPresShell->GetPresContext(getter_AddRefs(presContext));
+  ProcessTextData(presContext);
+
+  return mParent->ReflowDirtyChild(aPresShell, this);
 }

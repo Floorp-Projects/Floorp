@@ -33,26 +33,17 @@ class nsMathMLmsFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-#if 0  
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
-#endif
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList);
-#if 0
-  NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus);
-#endif
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aChild,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aModType, 
+                   PRInt32         aHint);
+
 protected:
   nsMathMLmsFrame();
   virtual ~nsMathMLmsFrame();

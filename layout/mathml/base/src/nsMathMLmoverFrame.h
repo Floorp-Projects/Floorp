@@ -42,6 +42,10 @@ public:
         nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
+
+  NS_IMETHOD
   TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
@@ -57,6 +61,14 @@ public:
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate);
+
+  NS_IMETHOD
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aChild,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aModType, 
+                   PRInt32         aHint);
 
 protected:
   nsMathMLmoverFrame();

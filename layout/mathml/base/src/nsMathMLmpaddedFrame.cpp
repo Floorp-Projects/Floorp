@@ -88,6 +88,14 @@ nsMathMLmpaddedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
   // let the base class get the default from our parent
   nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
 
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+
+  return NS_OK;
+}
+
+void
+nsMathMLmpaddedFrame::ProcessAttributes(nsIPresContext* aPresContext)
+{
   /*
   parse the attributes
 
@@ -135,8 +143,6 @@ nsMathMLmpaddedFrame::InheritAutomaticData(nsIPresContext* aPresContext,
                    nsMathMLAtoms::lspace_, value)) {
     ParseAttribute(value, mLeftSpaceSign, mLeftSpace, mLeftSpacePseudoUnit);
   }
-
-  return NS_OK;
 }
 
 PRBool
@@ -350,16 +356,14 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
 {
-  nsresult rv = NS_OK;
+  ProcessAttributes(aPresContext);
 
   ///////////////
   // Let the base class format our content like an inferred mrow
-  rv = nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
-                                      aReflowState, aStatus);
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv = nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
+                                               aReflowState, aStatus);
+  //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  if (NS_FAILED(rv)) return rv;
 
   nscoord height = mBoundingMetrics.ascent;
   nscoord depth  = mBoundingMetrics.descent;

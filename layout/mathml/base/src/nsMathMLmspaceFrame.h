@@ -32,13 +32,6 @@
 class nsMathMLmspaceFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  
-  NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
@@ -56,6 +49,10 @@ private:
   nscoord mWidth;
   nscoord mHeight;
   nscoord mDepth;
+
+  // helper method to initialize our member data
+  void 
+  ProcessAttributes(nsIPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmspaceFrame_h___ */

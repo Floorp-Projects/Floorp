@@ -42,11 +42,8 @@ public:
                             nsIStyleContext** aStyleContext) const;
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
 
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
@@ -65,6 +62,14 @@ public:
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer,
         PRUint32             aFlags = 0);
+
+  NS_IMETHOD
+  AttributeChanged(nsIPresContext* aPresContext,
+                   nsIContent*     aContent,
+                   PRInt32         aNameSpaceID,
+                   nsIAtom*        aAttribute,
+                   PRInt32         aModType, 
+                   PRInt32         aHint);
 
   // exported routine that both mfenced and mfrac share.
   // mfrac uses this when its bevelled attribute is set.

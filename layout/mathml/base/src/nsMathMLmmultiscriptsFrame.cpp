@@ -68,15 +68,63 @@ nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::Init(nsIPresContext*  aPresContext,
-                                 nsIContent*      aContent,
-                                 nsIFrame*        aParent,
-                                 nsIStyleContext* aContext,
-                                 nsIFrame*        aPrevInFlow)
+nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  nsresult rv = nsMathMLContainerFrame::Init
-    (aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  // if our base is an embellished operator, let its state bubble to us
+  GetEmbellishDataFrom(mFrames.FirstChild(), mEmbellishData);
+  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags))
+    mEmbellishData.nextFrame = mFrames.FirstChild();
 
+  // The REC says:
+  // The <mmultiscripts> element increments scriptlevel by 1, and sets
+  // displaystyle to "false", within each of its arguments except base
+  UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
+    ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
+
+  // The TeXbook (Ch 17. p.141) says the superscript inherits the compression
+  // while the subscript is compressed. So here we collect subscripts and set
+  // the compression flag in them.
+  PRInt32 count = 0;
+  PRBool isSubScript = PR_FALSE;
+  nsAutoVoidArray subScriptFrames;
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while (childFrame) {
+    nsCOMPtr<nsIContent> childContent;
+    nsCOMPtr<nsIAtom> childTag;
+    childFrame->GetContent(getter_AddRefs(childContent));
+    childContent->GetTag(*getter_AddRefs(childTag));
+    if (childTag.get() == nsMathMLAtoms::mprescripts_) {
+      // mprescripts frame
+    }
+    else if (0 == count) {
+      // base frame
+    }
+    else {
+      // super/subscript block
+      if (isSubScript) {
+        // subscript
+        subScriptFrames.AppendElement(childFrame);
+      }
+      else {
+        // superscript
+      }
+      isSubScript = !isSubScript;
+    }
+    count++;
+    childFrame->GetNextSibling(&childFrame);
+  }
+  for (PRInt32 i = subScriptFrames.Count() - 1; i >= 0; i--) {
+    childFrame = (nsIFrame*)subScriptFrames[i];
+    PropagatePresentationDataFor(aPresContext, childFrame, 0,
+      NS_MATHML_COMPRESSED, NS_MATHML_COMPRESSED);
+  }
+
+  return NS_OK;
+}
+
+void
+nsMathMLmmultiscriptsFrame::ProcessAttributes(nsIPresContext* aPresContext)
+{
   mSubScriptShift = 0;
   mSupScriptShift = 0;
   mScriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
@@ -98,27 +146,6 @@ nsMathMLmmultiscriptsFrame::Init(nsIPresContext*  aPresContext,
       mSupScriptShift = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
-{
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-
-  // check whether or not this is an embellished operator
-  EmbellishOperator();
-  // The REC says:
-  // The <mmultiscripts> element increments scriptlevel by 1, and sets
-  // displaystyle to "false", within each of its arguments except base, but
-  // leaves both attributes unchanged within base. 
-  // XXX Need to update the compression flags in the sub/sup pairs as per TeX
-  UpdatePresentationDataFromChildAt(aPresContext, 1, -1, 1,
-    ~NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -127,8 +154,6 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
                                   PRBool               aPlaceOrigin,
                                   nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsresult rv = NS_OK;
-
   ////////////////////////////////////
   // Get the children's desired sizes
 
@@ -139,16 +164,9 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   // depend only on the current font
   ////////////////////////////////////////
 
-  // get x-height (an ex)
-#if 0
-  nscoord xHeight = 0;
-  nsCOMPtr<nsIFontMetrics> fm;
-  const nsStyleFont* aFont =
-    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
-  aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
-  fm->GetXHeight (xHeight);
-#endif
+  ProcessAttributes(aPresContext);
 
+  // get x-height (an ex)
   const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
     mStyleContext->GetStyleData(eStyleStruct_Font));
   aRenderingContext.SetFont(font->mFont);
@@ -244,11 +262,9 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
   nsBoundingMetrics bmBase, bmSubScript, bmSupScript;
   nscoord italicCorrection = 0;
 
-  // XXX is there an NSPR macro for int_max ???
-  mBoundingMetrics.ascent = mBoundingMetrics.descent = -10000000;
   mBoundingMetrics.width = 0;
-
-  aDesiredSize.ascent = aDesiredSize.descent = -10000000;
+  mBoundingMetrics.ascent = mBoundingMetrics.descent = -0x7FFFFFFF;
+  aDesiredSize.ascent = aDesiredSize.descent = -0x7FFFFFFF;
   aDesiredSize.width = aDesiredSize.height = 0;
 
   nsIFrame* childFrame = mFrames.FirstChild();
@@ -259,6 +275,12 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
     childContent->GetTag(*getter_AddRefs(childTag));
 
     if (childTag.get() == nsMathMLAtoms::mprescripts_) {
+      if (mprescriptsFrame) {
+        // duplicate <mprescripts/> found
+        // report an error, encourage people to get their markups in order
+        NS_WARNING("invalid markup");
+        return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+      }
       mprescriptsFrame = childFrame;
       firstPrescriptsPair = PR_TRUE;
     }
@@ -446,5 +468,5 @@ nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
     } while (mprescriptsFrame != childFrame);
   }
 
-  return rv;
+  return NS_OK;
 }

@@ -67,13 +67,13 @@ nsMathMLmrowFrame::~nsMathMLmrowFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmrowFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+nsMathMLmrowFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                            nsIFrame*       aParent)
 {
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
+  // let the base class get the default from our parent
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
 
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
   return NS_OK;
 }

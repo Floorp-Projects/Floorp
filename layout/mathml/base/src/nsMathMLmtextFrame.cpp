@@ -65,18 +65,6 @@ nsMathMLmtextFrame::~nsMathMLmtextFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmtextFrame::Init(nsIPresContext*  aPresContext,
-                      nsIContent*      aContent,
-                      nsIFrame*        aParent,
-                      nsIStyleContext* aContext,
-                      nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = NS_OK;
-  rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmtextFrame::Reflow(nsIPresContext*       aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,

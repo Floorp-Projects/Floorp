@@ -36,13 +36,6 @@ public:
   friend nsresult NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD
   TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
@@ -62,6 +55,9 @@ private:
                          // = 0.5pt in plain TeX
   nscoord mSubScriptShift;
   nscoord mSupScriptShift;
+
+  void
+  ProcessAttributes(nsIPresContext* aPresContext);
 };
 
 #endif /* nsMathMLmmultiscriptsFrame_h___ */
