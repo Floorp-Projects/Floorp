@@ -62,6 +62,9 @@ function InitPrintEngineWindow()
     var uriArray = window.arguments[1];
     var statusFeedback = window.arguments[2];
     printSettings = window.arguments[3].QueryInterface(Components.interfaces.nsIPrintSettings);
+    if (printSettings) {
+      printSettings.isCancelled = false;
+    }
 
     printEngine.setStatusFeedback(statusFeedback);
 
