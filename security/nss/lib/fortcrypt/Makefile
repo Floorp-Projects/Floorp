@@ -94,7 +94,7 @@ $(CILIB):
 	fi
 	@$(RANLIB) $@
 
-$(STUBLIB): $(OBJDIR)/maci.o
+$(STUBLIB): $(OBJDIR)/maci$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
 	$(MAKE) $(STUBDLL)
