@@ -38,7 +38,7 @@ MOTIF			=
 MOTIFLIB		=
 OS_LIBS			=
 
-OS_MINOR		= $(shell echo $(OS_VERSION) | cut -f2 -d.)
+OS_MINOR		= $(shell echo $(OS_RELEASE) | cut -f2 -d.)
 
 # Don't define BSD, because it's already defined in /usr/include/sys/param.h.
 PLATFORM_FLAGS		= -DNETBSD $(DSO_CFLAGS)
@@ -93,7 +93,7 @@ BUILD_UNIX_PLUGINS	= 1
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
-DSO_CFLAGS		= -fpic
+DSO_CFLAGS		= -fPIC
 DSO_LDFLAGS		= 
 
 #
