@@ -615,10 +615,7 @@ nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
       if (aLangGroup == langGroup.get()) {
         if (cnt != 0) {
           // promote it to the front of the cache
-          for (PRInt32 i = cnt; i > 0; --i)
-            mFontMetrics.ReplaceElementAt(mFontMetrics[i - 1], i);
-
-          mFontMetrics.ReplaceElementAt(metrics, 0);
+          mFontMetrics.MoveElement(0, cnt);
         }
         NS_ADDREF(aMetrics = metrics);
         return NS_OK;

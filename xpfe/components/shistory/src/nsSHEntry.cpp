@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -299,24 +299,20 @@ nsSHEntry::AddChild(nsISHEntry * aChild, PRInt32 aOffset)
 
 	NS_ENSURE_SUCCESS(aChild->SetParent(this), NS_ERROR_FAILURE);
 	PRInt32 childCount = mChildren.Count();
-	if (aOffset < childCount)
-	  mChildren.ReplaceElementAt((void *) aChild, aOffset);
-	else
-        {
-          //
-          // Bug 52670: Ensure children are added in order.
-          //
-          //  Later frames in the child list may load faster and get appended
-          //  before earlier frames, causing session history to be scrambled.
-          //  By growing the list here, they are added to the right position.
-          //
-          //  Assert that aOffset will not be so high as to grow us a lot.
-          //
-          NS_ASSERTION(aOffset < (childCount + 1023), "Large frames array!\n");
-          while (aOffset > childCount++) 
-            mChildren.AppendElement(nsnull);
-	  mChildren.AppendElement((void *)aChild);
-        }
+    //
+    // Bug 52670: Ensure children are added in order.
+    //
+    //  Later frames in the child list may load faster and get appended
+    //  before earlier frames, causing session history to be scrambled.
+    //  By growing the list here, they are added to the right position.
+    //
+    //  Assert that aOffset will not be so high as to grow us a lot.
+    //
+    NS_ASSERTION(aOffset < (childCount + 1023), "Large frames array!\n");
+
+    // This implicitly extends the array to include aOffset
+    mChildren.ReplaceElementAt(aChild, aOffset);
+
 	NS_ADDREF(aChild);
 
     return NS_OK;

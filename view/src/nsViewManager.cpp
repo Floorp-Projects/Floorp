@@ -353,9 +353,9 @@ protected:
     }
     if (nsnull != mParent)
     {
-      nsIViewManager* vm = nsnull;
-      mParent->GetViewManager(vm);
-      if (nsnull != vm)
+      nsCOMPtr<nsIViewManager> vm;
+      mParent->GetViewManager(*getter_AddRefs(vm));
+      if (vm)
       {
         vm->RemoveChild(mParent, this);
       }
@@ -986,6 +986,8 @@ static void ApplyZOrderStableSort(nsVoidArray &aBuffer, nsVoidArray &aMergeTmp, 
         DisplayListElement2* e2 = NS_STATIC_CAST(DisplayListElement2*, aBuffer.ElementAt(j + 1));
         if (e1->mZIndex > e2->mZIndex) {
           sorted = PR_FALSE;
+          // We could use aBuffer.MoveElement(), but it wouldn't be much of
+          // a win if any for swapping two elements.
           aBuffer.ReplaceElementAt(e2, j);
           aBuffer.ReplaceElementAt(e1, j + 1);
         }

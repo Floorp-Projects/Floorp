@@ -536,7 +536,7 @@ nsBidiPresUtils::Reorder(nsIPresContext* aPresContext,
       mVisualFrames.Clear();
 
       for (i = 0; i < count; i++) {
-        mVisualFrames.ReplaceElementAt(mLogicalFrames[mIndexMap[i]], i);
+        mVisualFrames.AppendElement(mLogicalFrames[mIndexMap[i]]);
         if (i != mIndexMap[i]) {
           aBidiEnabled = PR_TRUE;
         }

@@ -97,9 +97,11 @@ struct nsFontStyle;
 struct nsFontWeight;
 struct nsFontLangGroup;
 
-class nsFontNodeArray : public nsVoidArray
+class nsFontNodeArray : public nsAutoVoidArray
 {
 public:
+  nsFontNodeArray() {};
+
   nsFontNode* GetElement(PRInt32 aIndex)
   {
     return (nsFontNode*) ElementAt(aIndex);
@@ -934,6 +936,11 @@ InitGlobals(void)
 }
 
 nsFontMetricsGTK::nsFontMetricsGTK()
+  : mFonts() // I'm not sure what the common size is here - I generally
+  // see 2-5 entries.  For now, punt and let it be allocated later.  We can't
+  // make it an nsAutoVoidArray since it's a cString array.
+  // XXX mFontIsGeneric will generally need to be the same size; right now
+  // it's an nsAutoVoidArray.  If the average is under 8, that's ok.
 {
   NS_INIT_REFCNT();
   gFontMetricsGTKCount++;
@@ -1084,19 +1091,19 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         getter_AddRefs(charset));
       if (NS_SUCCEEDED(res)) {
         res = gCharSetManager->GetUnicodeEncoder(charset,
-	  &gUserDefinedConverter);
+                                                 &gUserDefinedConverter);
         if (NS_SUCCEEDED(res)) {
           res = gUserDefinedConverter->SetOutputErrorBehavior(
-	    gUserDefinedConverter->kOnError_Replace, nsnull, '?');
+            gUserDefinedConverter->kOnError_Replace, nsnull, '?');
           nsCOMPtr<nsICharRepresentable> mapper =
-	    do_QueryInterface(gUserDefinedConverter);
+            do_QueryInterface(gUserDefinedConverter);
           if (mapper) {
             res = mapper->FillInfo(gUserDefinedMap);
-	  }
-	}
-	else {
+          }
+        }
+        else {
           return res;
-	}
+        }
       }
       else {
         return res;
@@ -1570,13 +1577,13 @@ DoubleByteConvert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
     if (count > 0) {
       if ((aDestBuf[0] & 0x80) && (!(aFont->max_byte1 & 0x80))) {
         for (PRInt32 i = 0; i < aDestLen; i++) {
-	  aDestBuf[i] &= 0x7F;
-	}
+          aDestBuf[i] &= 0x7F;
+        }
       }
       else if ((!(aDestBuf[0] & 0x80)) && (aFont->min_byte1 & 0x80)) {
         for (PRInt32 i = 0; i < aDestLen; i++) {
-	  aDestBuf[i] |= 0x80;
-	}
+          aDestBuf[i] |= 0x80;
+        }
       }
     }
   }
@@ -2516,7 +2523,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
         }
         font->mSize = scale_size;
         font->mCharSetInfo = aCharSet;
-	aStretch->mScaledFonts.AppendElement(font);
+        aStretch->mScaledFonts.AppendElement(font);
       }
       else {
         return nsnull;
@@ -3123,12 +3130,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       found = 1;
     }
     else {
-      PRInt32 n = aNodes->Count();
-      for (PRInt32 j = 0; j < n; j++) {
-        if (aNodes->GetElement(j) == node) {
-          found = 1;
-        }
-      }
+      found = (aNodes->IndexOf(node) >= 0);
     }
     previousNodeName = nodeName;
     if (!found) {
@@ -3281,7 +3283,9 @@ static nsresult
 GetAllFontNames(void)
 {
   if (!gGlobalList) {
-    gGlobalList = new nsFontNodeArray();
+    // This may well expand further (families * sizes * styles?), but it's
+    // only created once.
+    gGlobalList = new nsFontNodeArray;
     if (!gGlobalList) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -3419,6 +3423,9 @@ nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
     GetFontNames(pattern.get(), &nodes);
     // no need to call gNodes->Put() since GetFontNames already did
     if (nodes.Count() > 0) {
+      // XXX This assertion may be spurious; you can have more than
+      // -*-courier-iso8859-1 font, for example, from different
+      // foundries.
       NS_ASSERTION((nodes.Count() == 1), "unexpected number of nodes");
       node = nodes.GetElement(0);
     }
@@ -3545,6 +3552,8 @@ nsFontMetricsGTK::FindStyleSheetSpecificFont(PRUnichar aChar)
 
     /*
      * count hyphens
+     * XXX It might be good to try to pre-cache this information instead
+     * XXX of recalculating it on every font access!
      */
     const char* str = familyName->get();
     FIND_FONT_PRINTF(("        familyName = %s", str));
@@ -3824,7 +3833,7 @@ nsFontMetricsGTK::FindSubstituteFont(PRUnichar aChar)
   if (!mSubstituteFont) {
     for (int i = 0; i < mLoadedFontsCount; i++) {
       if (FONT_HAS_GLYPH(mLoadedFonts[i]->mMap, 'a')) {
-	mSubstituteFont = new nsFontGTKSubstitute(mLoadedFonts[i]);
+        mSubstituteFont = new nsFontGTKSubstitute(mLoadedFonts[i]);
         break;
       }
     }

@@ -168,7 +168,7 @@ public:
 
   nsCStringArray mFonts;
   PRUint16       mFontsIndex;
-  nsVoidArray    mFontIsGeneric;
+  nsAutoVoidArray   mFontIsGeneric;
 
   nsCAutoString     mDefaultFont;
   nsCString         *mGeneric;

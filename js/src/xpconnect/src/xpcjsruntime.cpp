@@ -930,6 +930,13 @@ XPCJSRuntime::DeferredRelease(nsISupports* obj)
     XPCLock* lock = GetMainThreadOnlyGC() ? nsnull : GetMapLock();
     {
         XPCAutoLock al(lock); // lock if necessary
+        if(!mNativesToReleaseArray.Count())
+        {
+            // This array sometimes has 1000's
+            // of entries, and usually has 50-200 entries. Avoid lots
+            // of incremental grows.  We compact it down when we're done.
+            mNativesToReleaseArray.SizeTo(256);
+        }
         return mNativesToReleaseArray.AppendElement(obj);
     }        
 }

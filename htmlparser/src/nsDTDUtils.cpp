@@ -1548,8 +1548,12 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniq
     PRInt32 theAttrCount =aNode.GetAttributeCount(); 
     PRInt32 theObserversCount=theObservers->GetSize(); 
     if(0<theObserversCount){
-      nsStringArray keys,values;
+      nsStringArray keys(theAttrCount+4),values(theAttrCount+4);
 
+      // XXX this and the following code may be a performance issue.
+      // Every key and value is copied and added to an voidarray (causing at
+      // least 2 allocations for mImpl, usually more, plus at least 1 per
+      // string (total = 2*(keys+3) + 2(or more) array allocations )).
       PRInt32 index;
       for(index=0; index<theAttrCount; index++) {
         keys.AppendString(aNode.GetKeyAt(index));
@@ -1643,6 +1647,7 @@ CObserverService::~CObserverService() {
   }
 }
 
+// XXX This may be more efficient as a HashTable instead of linear search
 nsObserverTopic* CObserverService::GetTopic(const nsString& aTopic) {
   PRInt32 theIndex=0;
   nsObserverTopic *theTopic=(nsObserverTopic*)mTopics.ObjectAt(theIndex++);

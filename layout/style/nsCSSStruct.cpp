@@ -1148,7 +1148,7 @@ CSSDeclarationImpl::CSSDeclarationImpl(const CSSDeclarationImpl& aCopy)
   }
 
   if (aCopy.mOrder) {
-    mOrder = new nsVoidArray();
+    mOrder = new nsAutoVoidArray();
     if (mOrder) {
       (*mOrder) = *(aCopy.mOrder);
     }
@@ -1853,13 +1853,16 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
 
   if (NS_OK == result) {
     if (nsnull == mOrder) {
-      mOrder = new nsVoidArray();
+      mOrder = new nsAutoVoidArray();
     }
-    if (nsnull != mOrder) {
+    else {
+      // order IS important for CSS, so remove and add to the end
       PRInt32 index = mOrder->IndexOf((void*)aProperty);
       if (-1 != index) {
         mOrder->RemoveElementAt(index);
       }
+    }
+    if (nsnull != mOrder) {
       if (eCSSUnit_Null != aValue.GetUnit()) {
         mOrder->AppendElement((void*)(PRInt32)aProperty);
       }
@@ -1934,13 +1937,16 @@ CSSDeclarationImpl::AppendStructValue(nsCSSProperty aProperty, void* aStruct)
 
   if (NS_OK == result) {
     if (nsnull == mOrder) {
-      mOrder = new nsVoidArray();
+      mOrder = new nsAutoVoidArray();
     }
-    if (nsnull != mOrder) {
+    else {
+      // order IS important for CSS, so remove and add to the end
       PRInt32 index = mOrder->IndexOf((void*)(PRInt32)aProperty);
       if (-1 != index) {
         mOrder->RemoveElementAt(index);
       }
+    }
+    if (nsnull != mOrder) {
       mOrder->AppendElement((void*)(PRInt32)aProperty);
     }
   }
@@ -3439,7 +3445,7 @@ CSSDeclarationImpl::AppendComment(const nsAReadableString& aComment)
   nsresult result = NS_ERROR_OUT_OF_MEMORY;
 
   if (nsnull == mOrder) {
-    mOrder = new nsVoidArray();
+    mOrder = new nsAutoVoidArray();
   }
   if (nsnull == mComments) {
     mComments = new nsStringArray();
