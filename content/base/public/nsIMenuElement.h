@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,11 +36,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMXULElement.idl"
+/*
+ * nsIMenuElement is an interface to be implemented on the
+ * parent nodes of elements which can be in the :-moz-menuactive
+ * state (this corresponds to hovering over the item or going to
+ * it with the arrow keys).  It is used by the CSS pseudoclass
+ * matching code to decide if a menu item matches :-moz-menuactive.
+ */
 
-[scriptable, uuid(159c637c-1dd2-11b2-ab18-811904c2e7fb)]
-interface nsIDOMXULMenuBarElement : nsIDOMXULElement {
+#ifndef _nsIMenuElement_h_
+#define _nsIMenuElement_h_
 
-  attribute nsIDOMElement activeMenu;
+#include "nsISupports.h"
 
+// IID for the nsIMenuElement interface
+#define NS_IMENUELEMENT_IID \
+ { 0xbfede654, 0x1dd1, 0x11b2, \
+   { 0x89, 0x35, 0x87, 0x92, 0xfc, 0xb7, 0xc9, 0xa1 } }
+
+class nsIMenuElement : public nsISupports {
+public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUELEMENT_IID);
+
+  /**
+    * Get the current active item for this menu.
+    */
+  virtual const nsIContent* GetActiveItem() const = 0;
+
+  /**
+    * Set the active item for this menu.
+    * @ param aItem The new active item
+    */
+  virtual void SetActiveItem(const nsIContent* aItem) = 0;
 };
+
+#endif

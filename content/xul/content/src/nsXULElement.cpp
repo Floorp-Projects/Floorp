@@ -129,6 +129,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsGenericElement.h"
+#include "nsXULMenuElement.h"
 
 #include "nsMutationEvent.h"
 #include "nsIDOMMutationEvent.h"
@@ -560,7 +561,15 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    nsXULElement* element = new nsXULElement();
+    nsXULElement* element;
+
+    if (aPrototype->mNodeInfo &&
+        (aPrototype->mNodeInfo->Equals(nsXULAtoms::menubar) ||
+         aPrototype->mNodeInfo->Equals(nsXULAtoms::menupopup)))
+        element = new nsXULMenuElement();
+    else
+        element = new nsXULElement();
+
     if (! element)
         return NS_ERROR_OUT_OF_MEMORY;
 

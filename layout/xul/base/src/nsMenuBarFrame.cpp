@@ -58,7 +58,7 @@
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
-#include "nsIDOMXULMenuBarElement.h"
+#include "nsIMenuElement.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #include "nsWidgetsCID.h"
@@ -236,16 +236,14 @@ nsMenuBarFrame::ToggleMenuActiveState()
   }
 
   // Update the state on the menubar content node
-  nsCOMPtr<nsIDOMXULMenuBarElement> menubar = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMElement> newActive;
+  nsCOMPtr<nsIMenuElement> menubar = do_QueryInterface(mContent);
+  nsCOMPtr<nsIContent> newActive;
   if (mCurrentMenu) {
     nsIFrame* frame = nsnull;
     CallQueryInterface(mCurrentMenu, &frame);
-    nsCOMPtr<nsIContent> content;
-    frame->GetContent(getter_AddRefs(content));
-    newActive = do_QueryInterface(content);
+    frame->GetContent(getter_AddRefs(newActive));
   }
-  menubar->SetActiveMenu(newActive);
+  menubar->SetActiveItem(newActive);
 
   // Now send a CSS state change notification
   if (mCurrentMenu)
@@ -558,17 +556,15 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   mCurrentMenu = aMenuItem;
 
   // Update the menubar content node
-  nsCOMPtr<nsIDOMXULMenuBarElement> menubar = do_QueryInterface(mContent);
-  nsCOMPtr<nsIDOMElement> newActive;
+  nsCOMPtr<nsIMenuElement> menubar = do_QueryInterface(mContent);
+  nsCOMPtr<nsIContent> newActive;
   if (mCurrentMenu) {
     nsIFrame* frame = nsnull;
     CallQueryInterface(mCurrentMenu, &frame);
-    nsCOMPtr<nsIContent> content;
-    frame->GetContent(getter_AddRefs(content));
-    newActive = do_QueryInterface(content);
+    frame->GetContent(getter_AddRefs(newActive));
   }
 
-  menubar->SetActiveMenu(newActive);
+  menubar->SetActiveItem(newActive);
 
   // Now send a CSS state change notification
   if (mCurrentMenu)

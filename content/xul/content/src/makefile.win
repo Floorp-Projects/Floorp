@@ -51,6 +51,7 @@ CPP_OBJS=					        \
         .\$(OBJDIR)\nsXULAttributes.obj                 \
         .\$(OBJDIR)\nsXULElement.obj                    \
         .\$(OBJDIR)\nsXULPopupListener.obj              \
+        .\$(OBJDIR)\nsXULMenuElement.obj                \
 	$(NULL)
 
 LINCS= \
