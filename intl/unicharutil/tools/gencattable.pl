@@ -292,7 +292,7 @@ for($t = 1; $t <= $tt; $t++)
    $th = $range[($t-1) * 2 + 1];
    printf OUT "    // Handle U+%04X to U+%04X\n", $tl, $th;
    printf OUT "    if((((PRUnichar)0x%04X)<=u)&&(u<=((PRUnichar)0x%04X))) {\n", $tl, $th;
-   printf OUT "        pat = gGenCatPat[gGenCatIdx%d [( u -(PRUnichar) 0x%04X )]];\n", $t, $tl;
+   printf OUT "        pat = gGenCatPat[gGenCatIdx%d [( u -(PRUnichar) 0x%04X ) / 8]];\n", $t, $tl;
    printf OUT "        return (pat  >> ((u % 8) * 4)) & 0x0F;\n";
    printf OUT "    }\n\n";
 }

@@ -653,11 +653,11 @@ PRInt32 i, ch;
   ungetc (ch, mAFMFile);
 
   // Read to the end of the line. 
-  for (i = 0, ch = getc (mAFMFile);((PRUint32)i) < sizeof (mToken) && ch != EOF && ch != '\n';i++, ch = getc (mAFMFile)){
+  for (i = 0, ch = getc (mAFMFile);((PRUint32)i) < sizeof (mToken) - 1 && ch != EOF && ch != '\n';i++, ch = getc (mAFMFile)){
     mToken[i] = ch;
   }
 
-  if (((PRUint32)i) >= sizeof (mToken)){
+  if (((PRUint32)i) >= sizeof (mToken) - 1){
     //parse_error (handle, AFM_ERROR_SYNTAX);
   }
 
