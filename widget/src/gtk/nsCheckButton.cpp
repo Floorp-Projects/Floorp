@@ -87,11 +87,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-#ifdef GTK_HAVE_FEATURES_1_1_13
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mWidget), aState);
-#else
-  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), aState);
-#endif
   return NS_OK;
 }
 
