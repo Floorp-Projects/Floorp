@@ -678,12 +678,10 @@ function EditorResetFontAndColorAttributes()
     if (bodyelement)
     {
       var editor = GetCurrentEditor();
-      editor.removeAttributeOrEquivalent(bodyelement, "text", true);
-      editor.removeAttributeOrEquivalent(bodyelement, "bgcolor", true);
-      bodyelement.removeAttribute("link");
-      bodyelement.removeAttribute("alink");
-      bodyelement.removeAttribute("vlink");
-      editor.removeAttributeOrEquivalent(bodyelement, "background", true);
+      // remove all the existing attributes on the body element
+      // by creating a dummy body element and cloning the attributes
+      // see bug #249882 for more details
+      editor.cloneAttributes(bodyelement, editor.document.createElement("body"));
     }
     gColorObj.LastTextColor = "";
     gColorObj.LastBackgroundColor = "";
