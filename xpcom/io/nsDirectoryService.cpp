@@ -109,13 +109,6 @@
 #define HOME_DIR NS_BEOS_HOME_DIR
 #endif
 
-// define default product directory
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
-#define DEFAULT_PRODUCT_DIR "Mozilla"
-#elif defined (XP_UNIX) || defined(XP_MACOSX)
-#define DEFAULT_PRODUCT_DIR ".mozilla"
-#endif
-
 //----------------------------------------------------------------------------------------
 nsresult 
 nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)

@@ -88,32 +88,7 @@ PRUnichar widestrFormat[] = { PRUnichar('%'),PRUnichar('s'),PRUnichar(0)};
 | It should not be necessary, but I'll leave in the code for the paranoid.     |
 ------------------------------------------------------------------------------*/
 
-
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-/* The default registry on the unix system is $HOME/.mozilla/registry per
- * vr_findGlobalRegName(). vr_findRegFile() will create the registry file
- * if it doesn't exist. But it wont create directories.
- *
- * Hence we need to create the directory if it doesn't exist already.
- *
- * Why create it here as opposed to the app ?
- * ------------------------------------------
- * The app cannot create the directory in main() as most of the registry
- * and initialization happens due to use of static variables.
- * And we dont want to be dependent on the order in which
- * these static stuff happen.
- *
- * Permission for the $HOME/.mozilla will be Read,Write,Execute
- * for user only. Nothing to group and others.
- */
-#define NS_MOZILLA_DIR_NAME		".mozilla"
-#define NS_MOZILLA_DIR_PERMISSION	00700
-#endif /* XP_UNIX */
-
-#ifdef XP_BEOS
-#define NS_MOZILLA_DIR_NAME		"Mozilla"
-#define NS_MOZILLA_DIR_PERMISSION	00700
-#endif /* XP_BEOS */
+#define NS_MOZILLA_DIR_PERMISSION 00700
 
 #include "nsRegistry.h"
 /*
@@ -477,7 +452,7 @@ NS_IMETHODIMP nsRegistry::Open( nsIFile *regFile ) {
 
 static void
 EnsureDefaultRegistryDirectory() {
-    #if defined(XP_UNIX) && !defined(XP_MACOSX)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     // Create ~/.mozilla as that is the default place for the registry file
 
     /* The default registry on the unix system is $HOME/.mozilla/registry per
@@ -501,7 +476,7 @@ EnsureDefaultRegistryDirectory() {
     {
         char dotMozillaDir[1024];
         PR_snprintf(dotMozillaDir, sizeof(dotMozillaDir),
-                    "%s/" NS_MOZILLA_DIR_NAME, home);
+                    "%s/" MOZ_USER_DIR, home);
         if (PR_Access(dotMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS)
         {
             PR_MkDir(dotMozillaDir, NS_MOZILLA_DIR_PERMISSION);
@@ -518,7 +493,7 @@ EnsureDefaultRegistryDirectory() {
         settings = p.Path();
     char settingsMozillaDir[1024];
     PR_snprintf(settingsMozillaDir, sizeof(settingsMozillaDir),
-                "%s/" NS_MOZILLA_DIR_NAME, settings);
+                "%s/" MOZ_USER_DIR, settings);
     if (PR_Access(settingsMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS) {
         PR_MkDir(settingsMozillaDir, NS_MOZILLA_DIR_PERMISSION);
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
