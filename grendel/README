@@ -1,11 +1,12 @@
 This is Grendel -- a Java mail/news client.
 
-It is runnable state right now, though there is still a lot of work to do. 
+It runs now, though there is still a lot of work to be done.
 
-It is currently being maintained by Jeff Galyan (talisman@anamorphic.com), 
+Grendel is maintained by Jeff Galyan (jeffrey.galyan@sun.com), 
 Giao Nguyen (grail@cafebabe.org) and Edwin Woudt (edwin@woudt.nl)
 
 See http://www.mozilla.org/projects/grendel/ for more info.
 
-See README.libs for the libraries you need.
-See README.build for build instructions
+Read README.libs for the libraries you need.
+Read README.build for build instructions
+

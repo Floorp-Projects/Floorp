@@ -1,20 +1,43 @@
 Building Grendel:
 
-Make sure you have the required (external) packages first. Then edit the 
-top-level rules.mk file, setting the CLASSPATH and other variables 
-appropriately for your system. 
+Make sure you have the required (external) packages first.  
 
-Remember to add two dirs to your classpath for grendel: the 
-your/path/mozilla/grendel dir itself *and* the your/path/mozilla/ dir.
+Then:
+	./configure
+	gmake
 
-Then run 'make' in your grendel dir. All files should build fine. 
+The 'configure' script will create the Makefiles with all necessary CLASSPATH
+settings and such set up appropriately for your system. You no longer have to 
+edit the Makefiles or set CLASSPATH manually.
 
+'configure' will look for three specific Java compilers (in this order):
+	1. 'javac-ea' - early access of next-generation Java compiler from
+	   Java Software (Sun)
+
+	2. 'javac' - standard Sun JDK compiler
+
+	3. 'jikes' - IBM's Java-compatible compiler (included because some
+	   people like to use it instead of 'javac')
+
+'configure' will use whichever of these three it finds first as the compiler
+for Grendel.
 
 Running Grendel: 
 
 There are currently two ways you can run Grendel:
 	
-1. Type 'java grendel.Main' (with the correct CLASSPATH of course)
+1. Type 'java grendel.Main' (with the correct CLASSPATH, or you can 
+	use the '-classpath' option to set the classpath on the 
+	command-line)
 2. Type 'make run' after building and watch it work.
 
+Editing Makefiles:
+
+Do not edit the generated Makefiles as they will be overwritten when you next
+run 'configure' or 'configure.status'. If you want to change something in the
+Makefiles, or add or delete targets, edit the Makefile.in files.
+
+If you edit 'configure.in' you will need to run GNU autoconf to remake the 
+'configure' script. If you don't have GNU autoconf and don't want to get it,
+just don't go there.
 
