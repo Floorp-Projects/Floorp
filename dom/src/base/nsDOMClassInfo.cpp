@@ -3485,6 +3485,9 @@ nsWindowSH::GetInvalidatedGlobalScopePolluter(JSContext *cx, JSObject *obj)
 
       ::JS_SetPrivate(cx, proto, nsnull);
 
+      // Pull the global scope polluter out of the prototype chain.
+      ::JS_SetPrototype(cx, obj, ::JS_GetPrototype(cx, proto));
+
       ::JS_ClearScope(cx, proto);
 
       break;
