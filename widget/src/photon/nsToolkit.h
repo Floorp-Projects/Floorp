@@ -37,7 +37,7 @@ public:
 
   NS_IMETHOD   Init( PRThread *aThread );
 
-  PhDrawContext_t *GetDefaultPhotonDrawContext();
+  static PhDrawContext_t *GetDefaultPhotonDrawContext();
 
 private:
                    
