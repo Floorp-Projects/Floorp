@@ -29,12 +29,12 @@ XPIDL_MODULE = necko_http
 XPIDLSRCS =                          \
         .\nsIHTTPHeader.idl          \
         .\nsIHTTPChannel.idl         \
-	.\nsIHttpNotify.idl          \
-	.\nsIHTTPProtocolHandler.idl \
+        .\nsIHttpNotify.idl          \
+        .\nsIHTTPProtocolHandler.idl \
+        .\nsIHTTPEventSink.idl       \
         $(NULL)
 
 EXPORTS =                   \
-        nsIHTTPEventSink.h  \
         nsHTTPEnums.h       \
         $(NULL)
 
