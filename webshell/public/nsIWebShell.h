@@ -58,6 +58,8 @@ typedef enum {
 // Container for web shell's
 class nsIWebShellContainer : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_CONTAINER_IID; return iid; }
+
   // History control
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
                          const PRUnichar* aURL,
@@ -118,6 +120,8 @@ public:
  */
 class nsIWebShell : public nsIContentViewerContainer {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IWEB_SHELL_IID; return iid; }
+
   /**
    * Initialization function for a WebShell instance.  This method provides 
    * information needed by the WebShell to embed itself inside of a native 
