@@ -376,19 +376,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
   rv = SplitURL(aChromeURL, package, provider, remaining);
   if (NS_FAILED(rv)) return rv;
 
-  if (!mInstallInitialized) {
-    // Load the installed search path for skins, content, and locales
-    // Prepend them to our list of substitutions
-    nsresult rv = GetInstallRoot(mInstallRoot);
-    if (NS_SUCCEEDED(rv)) {
-      mInstallInitialized = PR_TRUE;
-      AddToCompositeDataSource(PR_FALSE);
-
-      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
-      // This must always be the last line of install initialization!
-    }
-  }
-
   if (!mProfileInitialized) {
     // Just setSpec 
     nsresult rv = GetProfileRoot(mProfileRoot);
@@ -406,6 +393,18 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
       GetUserSheetURL(userSheetURL);
       if(!userSheetURL.IsEmpty()) {
         LoadStyleSheet(getter_AddRefs(mUserSheet), userSheetURL);
+      }
+    }
+    else if (!mInstallInitialized) {
+      // Load the installed search path for skins, content, and locales
+      // Prepend them to our list of substitutions
+      nsresult rv = GetInstallRoot(mInstallRoot);
+      if (NS_SUCCEEDED(rv)) {
+        mInstallInitialized = PR_TRUE;
+        AddToCompositeDataSource(PR_FALSE);
+
+        LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+        // This must always be the last line of install initialization!
       }
     }
   }
