@@ -31,6 +31,10 @@
 #include "nsIHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
+#include "nsIDOMElement.h"
+#include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLDocument.h"
+
 #define LOCK_DOC(doc)
 #define UNLOCK_DOC(doc)
 
@@ -259,7 +263,7 @@ nsTextServicesDocument::InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresSh
   mPresShell   = do_QueryInterface(aPresShell);
   mDOMDocument = do_QueryInterface(aDOMDocument);
 
-  result = CreateBodyContentIterator(getter_AddRefs(mIterator));
+  result = CreateDocumentContentIterator(getter_AddRefs(mIterator));
 
   if (NS_FAILED(result))
   {
@@ -329,7 +333,7 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
   {
     mDOMDocument = doc;
 
-    result = CreateBodyContentIterator(getter_AddRefs(mIterator));
+    result = CreateDocumentContentIterator(getter_AddRefs(mIterator));
 
     if (NS_FAILED(result))
     {
@@ -698,7 +702,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
       // walk backwards till you find a text node, then find
       // the beginning of the block.
 
-      result = CreateBodyToNodeOffsetRange(parent, offset, PR_TRUE, getter_AddRefs(range));
+      result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, PR_TRUE, getter_AddRefs(range));
 
       if (NS_FAILED(result))
       {
@@ -944,7 +948,7 @@ nsTextServicesDocument::FirstSelectedBlock(TSDBlockSelectionStatus *aSelStatus, 
     return result;
   }
 
-  result = CreateBodyToNodeOffsetRange(parent, offset, PR_TRUE, getter_AddRefs(range));
+  result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, PR_TRUE, getter_AddRefs(range));
 
   if (NS_FAILED(result))
   {
@@ -1179,7 +1183,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
       // position to the end of the document, then walk forwards
       // till you find a text node, then find the beginning of it's block.
 
-      result = CreateBodyToNodeOffsetRange(parent, offset, PR_FALSE, getter_AddRefs(range));
+      result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, PR_FALSE, getter_AddRefs(range));
 
       if (NS_FAILED(result))
       {
@@ -1425,7 +1429,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, P
     return result;
   }
 
-  result = CreateBodyToNodeOffsetRange(parent, offset, PR_FALSE, getter_AddRefs(range));
+  result = CreateDocumentContentRootToNodeOffsetRange(parent, offset, PR_FALSE, getter_AddRefs(range));
 
   if (NS_FAILED(result))
   {
@@ -2486,7 +2490,7 @@ nsTextServicesDocument::CreateContentIterator(nsIDOMRange *aRange, nsIContentIte
 }
 
 nsresult
-nsTextServicesDocument::GetBodyNode(nsIDOMNode **aNode)
+nsTextServicesDocument::GetDocumentContentRootNode(nsIDOMNode **aNode)
 {
   nsresult result;
 
@@ -2498,34 +2502,46 @@ nsTextServicesDocument::GetBodyNode(nsIDOMNode **aNode)
   if (!mDOMDocument)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsString bodyTag = "body"; 
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDOMDocument);
 
-  result = mDOMDocument->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+  if (htmlDoc)
+  {
+    // For HTML documents, the content root node is the body.
 
-  if (NS_FAILED(result))
-    return result;
-  
-  if (!nodeList)
-    return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMHTMLElement> bodyElement;
 
-  PRUint32 count; 
-  nodeList->GetLength(&count);
+    result = htmlDoc->GetBody(getter_AddRefs(bodyElement));
 
-  NS_ASSERTION(1==count, "More than one body found in document!"); 
+    if (NS_FAILED(result))
+      return result;
 
-  if (count < 1)
-    return NS_ERROR_FAILURE;
+    if (!bodyElement)
+      return NS_ERROR_FAILURE;
 
-  // Use the first body node in the list:
+    result = bodyElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aNode);
+  }
+  else
+  {
+    // For non-HTML documents, the content root node will be the document element.
 
-  result = nodeList->Item(0, aNode); 
+    nsCOMPtr<nsIDOMElement> docElement;
+
+    result = mDOMDocument->GetDocumentElement(getter_AddRefs(docElement));
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!docElement)
+      return NS_ERROR_FAILURE;
+
+    result = docElement->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aNode);
+  }
 
   return result;
 }
 
 nsresult
-nsTextServicesDocument::CreateBodyContentRange(nsIDOMRange **aRange)
+nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
 {
   nsresult result;
 
@@ -2536,7 +2552,7 @@ nsTextServicesDocument::CreateBodyContentRange(nsIDOMRange **aRange)
 
   nsCOMPtr<nsIDOMNode>node;
 
-  result = GetBodyNode(getter_AddRefs(node));
+  result = GetDocumentContentRootNode(getter_AddRefs(node));
 
   if (NS_FAILED(result))
     return result;
@@ -2567,7 +2583,7 @@ nsTextServicesDocument::CreateBodyContentRange(nsIDOMRange **aRange)
 }
 
 nsresult
-nsTextServicesDocument::CreateBodyToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, PRBool aToStart, nsIDOMRange **aRange)
+nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, PRBool aToStart, nsIDOMRange **aRange)
 {
   nsresult result;
 
@@ -2583,7 +2599,7 @@ nsTextServicesDocument::CreateBodyToNodeOffsetRange(nsIDOMNode *aParent, PRInt32
 
   nsCOMPtr<nsIDOMNode> bodyNode; 
 
-  result = GetBodyNode(getter_AddRefs(bodyNode));
+  result = GetDocumentContentRootNode(getter_AddRefs(bodyNode));
 
   if (NS_FAILED(result))
     return result;
@@ -2659,7 +2675,7 @@ nsTextServicesDocument::CreateBodyToNodeOffsetRange(nsIDOMNode *aParent, PRInt32
 }
 
 nsresult
-nsTextServicesDocument::CreateBodyContentIterator(nsIContentIterator **aIterator)
+nsTextServicesDocument::CreateDocumentContentIterator(nsIContentIterator **aIterator)
 {
   nsresult result;
 
@@ -2668,7 +2684,7 @@ nsTextServicesDocument::CreateBodyContentIterator(nsIContentIterator **aIterator
 
   nsCOMPtr<nsIDOMRange> range;
 
-  result = CreateBodyContentRange(getter_AddRefs(range));
+  result = CreateDocumentContentRange(getter_AddRefs(range));
 
   if (NS_FAILED(result))
     return result;

@@ -141,10 +141,10 @@ private:
 
   nsresult CreateContentIterator(nsIDOMRange *aRange, nsIContentIterator **aIterator);
 
-  nsresult GetBodyNode(nsIDOMNode **aNode);
-  nsresult CreateBodyContentRange(nsIDOMRange **aRange);
-  nsresult CreateBodyToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, PRBool aToStart, nsIDOMRange **aRange);
-  nsresult CreateBodyContentIterator(nsIContentIterator **aIterator);
+  nsresult GetDocumentContentRootNode(nsIDOMNode **aNode);
+  nsresult CreateDocumentContentRange(nsIDOMRange **aRange);
+  nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, PRInt32 aOffset, PRBool aToStart, nsIDOMRange **aRange);
+  nsresult CreateDocumentContentIterator(nsIContentIterator **aIterator);
 
   nsresult AdjustContentIterator();
 
