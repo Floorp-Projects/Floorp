@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by MfcEmbed.rc
+// Used by mfcembed.rc
 //
 #define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
@@ -11,11 +11,12 @@
 #define IDR_CTXMENU_IMAGE               133
 #define IDD_PROMPT_DIALOG               134
 #define IDD_PROMPT_PASSWORD_DIALOG      135
-#define	IDD_PROMPT_USERPASS_DIALOG		136
-#define	IDD_PROFILES					137
-#define	IDD_PROFILE_NEW					138
-#define	IDD_PROFILE_RENAME				139
-#define	IDD_FINDDLG						140
+#define IDD_PROMPT_USERPASS_DIALOG      136
+#define IDD_PROFILES                    137
+#define IDD_PROFILE_NEW                 138
+#define IDD_PROFILE_RENAME              139
+#define IDD_FINDDLG                     140
+#define IDD_PRINT_PROGRESS_DIALOG       141
 #define ID_URL_BAR                      1001
 #define ID_PROG_BAR                     1002
 #define IDC_PROMPT_ANSWER               1003
@@ -26,23 +27,21 @@
 #define IDC_CHECK_SAVE_PASSWORD         1008
 #define IDC_USERNAME_LABEL              1009
 #define IDC_PASSWORD_LABEL              1010
-#define IDC_LIST1						1011
-#define IDC_PROF_RENAME					1012
-#define IDC_PROF_DELETE					1013
-#define IDC_PROF_NEW					1014
-#define IDC_CHECK_ASK_AT_START			1015
-#define IDC_NEW_PROF_NAME				1016
-#define IDC_LOCALE_COMBO				1017
-#define IDC_NEW_NAME					1018
-// BEGIN - Do not change these IDs
-// These IDs are needed for the MFC FindReplaceDialog
-// to work properly
+#define IDC_LIST1                       1011
+#define IDC_PROF_RENAME                 1012
+#define IDC_PROF_DELETE                 1013
+#define IDC_PROF_NEW                    1014
+#define IDC_CHECK_ASK_AT_START          1015
+#define IDC_NEW_PROF_NAME               1016
+#define IDC_LOCALE_COMBO                1017
+#define IDC_NEW_NAME                    1018
+#define IDC_PPD_DOC_TXT                 1020
+#define IDC_PPD_DOC_TITLE_STATIC        1021
 #define IDC_MATCH_WHOLE_WORD            1040
 #define IDC_MATCH_CASE                  1041
 #define IDC_WRAP_AROUND                 1042
 #define IDC_SEARCH_BACKWARDS            1043
 #define IDC_FIND_EDIT                   1152
-// END - Do not change these IDs
 #define ID_NAV_BACK                     32773
 #define ID_NAV_FORWARD                  32774
 #define ID_NAV_HOME                     32775
@@ -57,16 +56,16 @@
 #define ID_SAVE_LINK_AS                 32784
 #define ID_SAVE_IMAGE_AS                32785
 #define ID_COPY_LINK_LOCATION           32786
-#define	ID_MANAGE_PROFILES				32787
+#define ID_MANAGE_PROFILES              32787
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_3D_CONTROLS				1
-#define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32788
-#define _APS_NEXT_CONTROL_VALUE         1019
+#define _APS_3D_CONTROLS                     1
+#define _APS_NEXT_RESOURCE_VALUE        142
+#define _APS_NEXT_COMMAND_VALUE         32789
+#define _APS_NEXT_CONTROL_VALUE         1022
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

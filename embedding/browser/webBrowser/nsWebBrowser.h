@@ -48,6 +48,7 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserFind.h"
+#include "nsIWebBrowserPrint.h"
 
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
@@ -89,7 +90,8 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsIInterfaceRequestor,
                      public nsIWebBrowserPersist,
                      public nsIWebBrowserFocus,
-                     public nsIWebBrowserFind
+                     public nsIWebBrowserFind,
+                     public nsIWebBrowserPrint
 {
 friend class nsDocShellTreeOwner;
 friend class nsWBURIContentListener;
@@ -109,7 +111,8 @@ public:
     NS_DECL_NSIWEBBROWSERPERSIST
     NS_DECL_NSIWEBBROWSERFOCUS
     NS_DECL_NSIWEBBROWSERFIND
-    
+    NS_DECL_NSIWEBBROWSERPRINT
+
 protected:
     virtual ~nsWebBrowser();
     NS_IMETHOD InternalDestroy();

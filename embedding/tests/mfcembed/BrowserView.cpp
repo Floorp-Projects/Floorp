@@ -52,6 +52,10 @@
 #include "BrowserFrm.h"
 #include "Dialogs.h"
 
+// Print Includes
+#include "PrintProgressDialog.h"
+
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -96,6 +100,8 @@ BEGIN_MESSAGE_MAP(CBrowserView, CWnd)
 	ON_COMMAND(ID_SAVE_LINK_AS, OnSaveLinkAs)
 	ON_COMMAND(ID_SAVE_IMAGE_AS, OnSaveImageAs)
 	ON_COMMAND(ID_EDIT_FIND, OnShowFindDlg)
+	ON_COMMAND(ID_FILE_PRINT, OnFilePrint)
+	ON_UPDATE_COMMAND_UI(ID_FILE_PRINT, OnUpdateFilePrint)
 	ON_REGISTERED_MESSAGE(WM_FINDMSG, OnFindMsg)
 
 	// Menu/Toolbar UI update handlers
@@ -122,8 +128,10 @@ CBrowserView::CBrowserView()
 	mbDocumentLoading = PR_FALSE;
 
 	m_pFindDlg = NULL;
+  m_pPrintProgressDlg = NULL;
 
-    m_bUrlBarClipOp = FALSE;
+  m_bUrlBarClipOp = FALSE;
+  m_bCurrentlyPrinting = FALSE;
 }
 
 CBrowserView::~CBrowserView()
@@ -900,6 +908,39 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 
     return 0;
 }
+
+void CBrowserView::OnFilePrint()
+{
+  nsCOMPtr<nsIDOMWindow> domWindow;
+	mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if(domWindow) {
+	  nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+	  if(print)
+	  {
+      CPrintProgressDialog  dlg(mWebBrowser, domWindow);
+
+	    nsCOMPtr<nsIURI> currentURI;
+	    nsresult rv = mWebNav->GetCurrentURI(getter_AddRefs(currentURI));
+      if(NS_SUCCEEDED(rv) || currentURI) 
+      {
+	      nsXPIDLCString path;
+	      currentURI->GetPath(getter_Copies(path));
+        dlg.SetURI(path.get());
+      }
+      m_bCurrentlyPrinting = TRUE;
+      dlg.DoModal();
+      m_bCurrentlyPrinting = FALSE;
+    }
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+void CBrowserView::OnUpdateFilePrint(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(!m_bCurrentlyPrinting);
+}
+
+
 
 // Called from the busy state related methods in the 
 // BrowserFrameGlue object

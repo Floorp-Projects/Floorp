@@ -108,6 +108,8 @@ BEGIN
         MENUITEM "&Open File...\tCtrl+O",       ID_FILE_OPEN
         MENUITEM "&Save Page As...\tCtrl+S",    ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl-P",           ID_FILE_PRINT
+        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_APP_EXIT
     END
     POPUP "&Edit"
@@ -232,7 +234,7 @@ BEGIN
     VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
-    VK_ESCAPE,      ID_NAV_STOP,            VIRTKEY
+    VK_ESCAPE,      ID_NAV_STOP,            VIRTKEY 
 END
 
 
@@ -356,6 +358,17 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,182,23,50,14
 END
 
+IDD_PRINT_PROGRESS_DIALOG DIALOG DISCARDABLE  0, 0, 294, 55
+STYLE DS_SYSMODAL | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION
+CAPTION "Printing..."
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,122,34,50,14
+    LTEXT           "Document:",IDC_PPD_DOC_TITLE_STATIC,7,7,36,8
+    LTEXT           "",IDC_PPD_DOC_TXT,43,7,244,8
+END
+
 
 #ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
@@ -438,6 +451,14 @@ BEGIN
         RIGHTMARGIN, 170
         TOPMARGIN, 7
         BOTTOMMARGIN, 69
+    END
+
+    IDD_PRINT_PROGRESS_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 287
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
     END
 END
 #endif    // APSTUDIO_INVOKED
