@@ -41,7 +41,6 @@
 #include "nsIStyleFrameConstruction.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
-#include "nsIStyleContext.h"
 #include "nsILayoutHistoryState.h"
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"

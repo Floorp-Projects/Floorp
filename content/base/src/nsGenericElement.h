@@ -294,8 +294,8 @@ public:
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
   NS_IMETHOD HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
-  NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker);
-  NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkInlineStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType, 
                                       PRInt32& aHint) const;
 

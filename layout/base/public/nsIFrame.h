@@ -34,13 +34,21 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #ifndef nsIFrame_h___
 #define nsIFrame_h___
+
+/* nsIFrame is in the process of being deCOMtaminated, i.e., this file is eventually
+   going to be eliminated, and all callers will use nsFrame instead.  At the moment
+   we're midway through this process, so you will see inlined functions and member
+   variables in this file.  -dwh */
 
 #include <stdio.h>
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsStyleStruct.h"
+#include "nsIStyleContext.h"
+#include "nsIContent.h"
 
 /**
  * New rules of reflow:
@@ -64,12 +72,10 @@ class nsIReflowCommand;
 struct nsHTMLReflowMetrics;
 
 class nsIAtom;
-class nsIContent;
 class nsIPresContext;
 class nsIPresShell;
 class nsIRenderingContext;
 class nsISizeOfHandler;
-class nsIStyleContext;
 class nsIView;
 class nsIWidget;
 class nsIDOMRange;
@@ -514,7 +520,7 @@ public:
    *
    * @see nsISupports#Release()
    */
-  NS_IMETHOD  GetContent(nsIContent** aContent) const = 0;
+  nsresult GetContent(nsIContent** aContent) const {  *aContent = mContent; NS_IF_ADDREF(*aContent); return NS_OK; }
 
   /**
    * Get the offsets of the frame. most will be 0,0
@@ -528,17 +534,41 @@ public:
    *
    * @see nsISupports#Release()
    */
-  NS_IMETHOD  GetStyleContext(nsIStyleContext** aStyleContext) const = 0;
-  NS_IMETHOD  SetStyleContext(nsIPresContext*  aPresContext,
-                              nsIStyleContext* aContext) = 0;
+  nsresult GetStyleContext(nsIStyleContext** aStyleContext) const { 
+    NS_IF_ADDREF(mStyleContext); *aStyleContext = mStyleContext; return NS_OK;
+  }
+  nsresult SetStyleContext(nsIPresContext*  aPresContext, nsIStyleContext* aContext) { 
+    if (aContext != mStyleContext) {
+      NS_IF_RELEASE(mStyleContext);
+      if (nsnull != aContext) {
+        mStyleContext = aContext;
+        NS_ADDREF(aContext);
+        DidSetStyleContext(aPresContext);
+      }
+    }
+    return NS_OK;
+  }
+
+  // Style post processing hook
+  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext) = 0;
 
   /**
    * Get the style data associated with this frame.
    */
-  NS_IMETHOD  GetStyleData(nsStyleStructID       aSID,
-                           const nsStyleStruct*& aStyleStruct) const = 0;
+  nsresult GetStyleData(nsStyleStructID       aSID,
+                        const nsStyleStruct*& aStyleStruct) const {
+    NS_ASSERTION(mStyleContext, "No style context found!");
+    aStyleStruct = mStyleContext->GetStyleData(aSID);
+    return NS_OK;
+  }
+
   // Fill a style struct with data
-  NS_IMETHOD  GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) const = 0;
+  nsresult GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) const {
+    NS_ASSERTION(mStyleContext, "No style context found!");
+    mStyleContext->GetStyle(aSID, aStruct);
+    return NS_OK;
+  }
+
   // Utility function: more convenient than 2 calls to GetStyleData to get border and padding
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const = 0;
 
@@ -560,8 +590,8 @@ public:
   /**
    * Accessor functions for geometric parent
    */
-  NS_IMETHOD  GetParent(nsIFrame** aParent) const = 0;
-  NS_IMETHOD  SetParent(const nsIFrame* aParent) = 0;
+  nsresult GetParent(nsIFrame** aParent) const { *aParent = mParent; return NS_OK; }
+  nsresult SetParent(const nsIFrame* aParent) { mParent = (nsIFrame*)aParent; return NS_OK; }
 
   /**
    * Bounding rect of the frame. The values are in twips, and the origin is
@@ -571,17 +601,45 @@ public:
    * Note: moving or sizing the frame does not affect the view's size or
    * position.
    */
-  NS_IMETHOD  GetRect(nsRect& aRect) const = 0;
-  NS_IMETHOD  GetOrigin(nsPoint& aPoint) const = 0;
-  NS_IMETHOD  GetSize(nsSize& aSize) const = 0;
-  NS_IMETHOD  SetRect(nsIPresContext* aPresContext,
-                      const nsRect&   aRect) = 0;
-  NS_IMETHOD  MoveTo(nsIPresContext* aPresContext,
-                     nscoord         aX,
-                     nscoord         aY) = 0;
-  NS_IMETHOD  SizeTo(nsIPresContext* aPresContext,
-                     nscoord         aWidth,
-                     nscoord         aHeight) = 0;
+  nsresult GetRect(nsRect& aRect) const {
+    aRect = mRect;
+    return NS_OK;
+  }
+
+  nsresult GetOrigin(nsPoint& aPoint) const {
+    aPoint.x = mRect.x;
+    aPoint.y = mRect.y;
+    return NS_OK;
+  }
+
+  nsresult GetSize(nsSize& aSize) const {
+    aSize.width = mRect.width;
+    aSize.height = mRect.height;
+    return NS_OK;
+  }
+
+  nsresult SetRect(nsIPresContext* aPresContext,
+               const nsRect&   aRect) {
+    MoveTo(aPresContext, aRect.x, aRect.y);
+    SizeTo(aPresContext, aRect.width, aRect.height);
+    return NS_OK;
+  }
+
+  nsresult MoveTo(nsIPresContext* aPresContext,
+                  nscoord         aX,
+                  nscoord         aY) {
+    mRect.x = aX;
+    mRect.y = aY;
+    return NS_OK;
+  }
+
+  nsresult SizeTo(nsIPresContext* aPresContext,
+                  nscoord         aWidth,
+                  nscoord         aHeight) {
+    mRect.width = aWidth;
+    mRect.height = aHeight;
+    return NS_OK;
+  }
 
   /**
    * Used to iterate the list of additional child list names. Returns the atom
@@ -611,8 +669,15 @@ public:
   /**
    * Child frames are linked together in a singly-linked
    */
-  NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const = 0;
-  NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
+  nsresult GetNextSibling(nsIFrame** aNextSibling) const {
+    *aNextSibling = mNextSibling;
+    return NS_OK;
+  }
+
+  nsresult SetNextSibling(nsIFrame* aNextSibling) {
+    mNextSibling = aNextSibling;
+    return NS_OK;
+  }
 
   /**
    * Paint is responsible for painting the a frame. The aWhichLayer
@@ -701,16 +766,20 @@ public:
 
  /**
    * Get the current frame-state value for this frame. aResult is
-   * filled in with the state bits. The return value has no
-   * meaning.
+   * filled in with the state bits. 
    */
-  NS_IMETHOD  GetFrameState(nsFrameState* aResult) = 0;
+  nsresult GetFrameState(nsFrameState* aResult) {
+    *aResult = mState;
+    return NS_OK;
+  }
 
   /**
-   * Set the current frame-state value for this frame. The return
-   * value has no meaning.
+   * Set the current frame-state value for this frame. 
    */
-  NS_IMETHOD  SetFrameState(nsFrameState aNewState) = 0;
+  nsresult SetFrameState(nsFrameState aNewState) {
+    mState = aNewState;
+    return NS_OK;
+  }
 
   /**
    * This call is invoked when content is changed in the content tree.
@@ -1060,6 +1129,15 @@ public:
                              nsIAtom*        aPropertyName,
                              void*           aPropertyValue) = 0;
 #endif // IBMBIDI
+
+protected:
+  // Members
+  nsRect           mRect;
+  nsIContent*      mContent;
+  nsIStyleContext* mStyleContext;
+  nsIFrame*        mParent;
+  nsIFrame*        mNextSibling;  // singly linked list of frames
+  nsFrameState     mState;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

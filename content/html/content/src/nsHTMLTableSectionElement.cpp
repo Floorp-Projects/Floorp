@@ -47,7 +47,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "GenericElementCollection.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 

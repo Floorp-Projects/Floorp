@@ -56,7 +56,7 @@
 #include "nsCOMPtr.h"
 
 #include "nsIStyleSet.h"
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 
 #include "nsISizeOfHandler.h"
 
@@ -248,7 +248,7 @@ public:
                            nsIAtom* aMedium,
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsIRuleWalker* aRuleWalker);
+                           nsRuleWalker* aRuleWalker);
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium,
@@ -256,7 +256,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsIRuleWalker* aRuleWalker);
+                           nsRuleWalker* aRuleWalker);
 
   NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
                                     nsIAtom*        aMedium,
@@ -400,7 +400,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                      nsIAtom* aMedium,
                                      nsIContent* aContent,
                                      nsIStyleContext* aParentContext,
-                                     nsIRuleWalker* aRuleWalker)
+                                     nsRuleWalker* aRuleWalker)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null arg");
   NS_PRECONDITION(nsnull != aContent, "null arg");
@@ -422,12 +422,10 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                      nsIAtom* aPseudoTag,
                                      nsIStyleContext* aParentContext,
                                      nsICSSPseudoComparator* aComparator,
-                                     nsIRuleWalker* aRuleWalker)
+                                     nsRuleWalker* aRuleWalker)
 {
   if (aPseudoTag == nsHTMLAtoms::firstLinePseudo) {
-    PRBool atRoot = PR_FALSE;
-    aRuleWalker->AtRoot(&atRoot);
-    if (!atRoot) {
+    if (!aRuleWalker->AtRoot()) {
       if (nsnull == mFirstLineRule) {
         mFirstLineRule = new CSSFirstLineRule(this);
         if (mFirstLineRule) {
@@ -441,9 +439,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     } 
   }
   if (aPseudoTag == nsHTMLAtoms::firstLetterPseudo) {
-    PRBool atRoot = PR_FALSE;
-    aRuleWalker->AtRoot(&atRoot);
-    if (!atRoot) {
+    if (!aRuleWalker->AtRoot()) {
       if (nsnull == mFirstLetterRule) {
         mFirstLetterRule = new CSSFirstLetterRule(this);
         if (mFirstLetterRule) {

@@ -42,7 +42,6 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRule.h"
-#include "nsIStyleContext.h"
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"
 #include "nsIPresContext.h"
@@ -56,7 +55,7 @@
 #include "nsNetUtil.h"
 #include "nsIStyleRuleSupplier.h"
 #include "nsRuleNode.h"
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 #include "nsIBodySuper.h"
 #include "nsIHTMLDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
@@ -134,7 +133,9 @@ public:
 
   NS_IMETHOD Shutdown();
 
-  virtual nsresult GetRuleTree(nsIRuleNode** aResult);
+  virtual nsresult GetRuleTree(nsRuleNode** aResult);
+  virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule);
+
   virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsIStyleContext* aContext);
 
   virtual nsresult RemoveBodyFixupRule(nsIDocument *aDocument);
@@ -232,7 +233,7 @@ public:
 #endif
   virtual void ResetUniqueStyleItems(void);
 
-  void AddImportantRules(nsIRuleNode* aRuleNode);
+  void AddImportantRules(nsRuleNode* aRuleNode);
 
 #ifdef MOZ_PERF_METRICS
   NS_DECL_NSITIMERECORDER
@@ -290,10 +291,10 @@ protected:
 
   nsCOMPtr<nsIStyleRuleSupplier> mStyleRuleSupplier; 
 
-  nsCOMPtr<nsIRuleNode> mRuleTree; // This is the root of our rule tree.  It is a lexicographic tree of
-                                   // matched rules that style contexts use to look up properties.
-  nsCOMPtr<nsIRuleWalker> mRuleWalker; // This is an instance of a rule walker that can be used
-                                       // to navigate through our tree.
+  nsRuleNode* mRuleTree; // This is the root of our rule tree.  It is a lexicographic tree of
+                         // matched rules that style contexts use to look up properties.
+  nsRuleWalker* mRuleWalker;   // This is an instance of a rule walker that can be used
+                               // to navigate through our tree.
 
   MOZ_TIMER_DECLARE(mStyleResolutionWatch)
 
@@ -316,7 +317,9 @@ StyleSetImpl::StyleSetImpl()
     mRecycler(nsnull),
     mFrameConstructor(nsnull),
     mQuirkStyleSheet(nsnull),
-    mStyleRuleSupplier(nsnull)
+    mStyleRuleSupplier(nsnull),
+    mRuleTree(nsnull),
+    mRuleWalker(nsnull)
 #ifdef MOZ_PERF_METRICS
     ,mTimerEnabled(PR_FALSE)
 #endif
@@ -746,7 +749,7 @@ struct RulesMatchingData {
                     nsIAtom* aMedium,
                     nsIContent* aContent,
                     nsIStyleContext* aParentContext,
-                    nsIRuleWalker* aRuleWalker)
+                    nsRuleWalker* aRuleWalker)
     : mPresContext(aPresContext),
       mMedium(aMedium),
       mContent(aContent),
@@ -758,7 +761,7 @@ struct RulesMatchingData {
   nsIAtom*          mMedium;
   nsIContent*       mContent;
   nsIStyleContext*  mParentContext;
-  nsCOMPtr<nsIRuleWalker> mRuleWalker;
+  nsRuleWalker*     mRuleWalker;
 };
 
 static PRBool
@@ -779,8 +782,7 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
 {
   nsIStyleContext* result = nsnull;
   
-  nsCOMPtr<nsIRuleNode> ruleNode;
-  mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+  nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
       
   if ((PR_FALSE == aForceUnique) && (nsnull != aParentContext)) {
     aParentContext->FindChildWithRules(aPseudoTag, ruleNode, result);
@@ -805,12 +807,11 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
 }
 
 void
-StyleSetImpl::AddImportantRules(nsIRuleNode* aCurrNode)
+StyleSetImpl::AddImportantRules(nsRuleNode* aCurrNode)
 {
   // XXX Note: this is still incorrect from a cascade standpoint, but
   // it preserves the existing incorrect cascade behavior.
-  nsCOMPtr<nsIRuleNode> parent;
-  aCurrNode->GetParent(getter_AddRefs(parent));
+  nsRuleNode* parent = aCurrNode->GetParent();
   if (parent)
     AddImportantRules(parent);
 
@@ -839,8 +840,8 @@ void StyleSetImpl::EnsureRuleWalker(nsIPresContext* aPresContext)
   if (mRuleWalker)
     return;
 
-  nsRuleNode::CreateRootNode(aPresContext, getter_AddRefs(mRuleTree));
-  NS_NewRuleWalker(mRuleTree, getter_AddRefs(mRuleWalker));
+  nsRuleNode::CreateRootNode(aPresContext, &mRuleTree);
+  mRuleWalker = new nsRuleWalker(mRuleTree);
 }
 
 nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
@@ -866,8 +867,7 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
       WalkRuleProcessors(EnumRulesMatching, &data, aContent);
       
       // Walk all of the rules and add in the !important counterparts.
-      nsCOMPtr<nsIRuleNode> ruleNode;
-      mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+      nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
       AddImportantRules(ruleNode);
       result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
      
@@ -888,7 +888,7 @@ struct PseudoRulesMatchingData {
                           nsIAtom* aPseudoTag,
                           nsIStyleContext* aParentContext,
                           nsICSSPseudoComparator* aComparator,
-                          nsIRuleWalker* aWalker)
+                          nsRuleWalker* aWalker)
     : mPresContext(aPresContext),
       mMedium(aMedium),
       mParentContent(aParentContent),
@@ -904,7 +904,7 @@ struct PseudoRulesMatchingData {
   nsIAtom*                mPseudoTag;
   nsIStyleContext*        mParentContext;
   nsICSSPseudoComparator* mComparator;
-  nsCOMPtr<nsIRuleWalker> mRuleWalker;
+  nsRuleWalker*          mRuleWalker;
 };
 
 static PRBool
@@ -945,8 +945,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
       WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
       
       // Walk all of the rules and add in the !important counterparts.
-      nsCOMPtr<nsIRuleNode> ruleNode;
-      mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+      nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
       AddImportantRules(ruleNode);
       result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
      
@@ -985,12 +984,9 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
       WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
     
       // Walk all of the rules and add in the !important counterparts.
-      nsCOMPtr<nsIRuleNode> ruleNode;
-      mRuleWalker->GetCurrentNode(getter_AddRefs(ruleNode));
+      nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
       AddImportantRules(ruleNode);
-      PRBool isAtRoot = PR_FALSE;
-      mRuleWalker->AtRoot(&isAtRoot);
-      if (!isAtRoot)
+      if (!mRuleWalker->AtRoot())
         result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
  
       // Now reset the walker back to the root of the tree.
@@ -1006,16 +1002,24 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 StyleSetImpl::Shutdown()
 {
-  mRuleWalker = nsnull; // Drop our ref.  This destroys all rule nodes.
+  delete mRuleWalker;
+  mRuleTree->Destroy();
   mRuleTree = nsnull;
   return NS_OK;
 }
 
 nsresult
-StyleSetImpl::GetRuleTree(nsIRuleNode** aResult)
+StyleSetImpl::GetRuleTree(nsRuleNode** aResult)
 {
   *aResult = mRuleTree;
-  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsresult
+StyleSetImpl::ClearCachedDataInRuleTree(nsIStyleRule* aInlineStyleRule)
+{
+  if (mRuleTree)
+    mRuleTree->ClearCachedDataInSubtree(aInlineStyleRule);
   return NS_OK;
 }
 
@@ -1028,8 +1032,8 @@ StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, 
   // style.left, we really only need to blow away cached
   // data in the position struct.
   if (aContext) {
-    nsCOMPtr<nsIRuleNode> ruleNode;
-    aContext->GetRuleNode(getter_AddRefs(ruleNode));
+    nsRuleNode* ruleNode;
+    aContext->GetRuleNode(&ruleNode);
     ruleNode->ClearCachedData(aRule); 
 
     // We don't need to mess with the style tree in this case, since the act of 
@@ -1109,8 +1113,8 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
       nsIAtom*  pseudoTag = nsnull;
       aStyleContext->GetPseudoType(pseudoTag);
 
-      nsCOMPtr<nsIRuleNode> ruleNode;
-      aStyleContext->GetRuleNode(getter_AddRefs(ruleNode));
+      nsRuleNode* ruleNode;
+      aStyleContext->GetRuleNode(&ruleNode);
       if (aNewParentContext) {
         result = aNewParentContext->FindChildWithRules(pseudoTag, ruleNode, newChild);
       }

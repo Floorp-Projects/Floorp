@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsFrame.h"
 #include "nsIContent.h"

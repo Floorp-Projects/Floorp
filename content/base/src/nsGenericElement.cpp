@@ -1954,13 +1954,13 @@ nsGenericElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 }
 
 NS_IMETHODIMP
-nsGenericElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
+nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGenericElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
+nsGenericElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -63,7 +63,6 @@
 #include "nsILinkHandler.h"
 #include "nsPIDOMWindow.h"
 #include "nsISizeOfHandler.h"
-#include "nsIStyleContext.h"
 #include "nsIStyleRule.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
@@ -112,7 +111,7 @@
 #include "nsIBindingManager.h"
 #include "nsIXBLBinding.h"
 
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 
 #include "nsIObjectFrame.h"
 #include "nsLayoutAtoms.h"
@@ -2400,7 +2399,7 @@ nsGenericHTMLElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 }
 
 nsresult
-nsGenericHTMLElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
+nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsresult result = NS_OK;
 
@@ -2416,7 +2415,7 @@ nsGenericHTMLElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
 }
 
 nsresult
-nsGenericHTMLElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
+nsGenericHTMLElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIStyleRule> rule;

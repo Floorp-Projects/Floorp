@@ -72,7 +72,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
 
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 class nsHTMLSelectElement;
 

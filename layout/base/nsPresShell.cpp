@@ -48,7 +48,6 @@
 #include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
-#include "nsIStyleContext.h"
 #include "nsIServiceManager.h"
 #include "nsFrame.h"
 #include "nsIReflowCommand.h"

@@ -51,7 +51,7 @@ class nsIContent;
 class nsISupportsArray;
 class nsIAtom;
 class nsICSSPseudoComparator;
-class nsIRuleWalker;
+class nsRuleWalker;
 
 // IID for the nsIStyleRuleProcessor interface {015575fe-7b6c-11d3-ba05-001083023c2b}
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
@@ -73,7 +73,7 @@ public:
                            nsIAtom* aMedium, 
                            nsIContent* aContent,
                            nsIStyleContext* aParentContext,
-                           nsIRuleWalker* aRuleWalker) = 0;
+                           nsRuleWalker* aRuleWalker) = 0;
 
   NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
                            nsIAtom* aMedium, 
@@ -81,7 +81,7 @@ public:
                            nsIAtom* aPseudoTag,
                            nsIStyleContext* aParentContext,
                            nsICSSPseudoComparator* aComparator,
-                           nsIRuleWalker* aRuleWalker) = 0;
+                           nsRuleWalker* aRuleWalker) = 0;
 
   // Test if style is dependent on content state
   NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,

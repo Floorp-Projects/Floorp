@@ -476,15 +476,6 @@ nsFrame::Destroy(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsFrame::GetContent(nsIContent** aContent) const
-{
-  NS_PRECONDITION(nsnull != aContent, "null OUT parameter pointer");
-  *aContent = mContent;
-  NS_IF_ADDREF(*aContent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
 {
   aStart = 0;
@@ -492,56 +483,10 @@ nsFrame::GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsFrame::GetStyleContext(nsIStyleContext** aStyleContext) const
-{
-  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
-  NS_ASSERTION(nsnull != mStyleContext, "frame should always have style context");
-  NS_IF_ADDREF(mStyleContext);
-  *aStyleContext = mStyleContext;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::SetStyleContext(nsIPresContext* aPresContext,nsIStyleContext* aContext)
-{
-//  NS_PRECONDITION(0 == (mState & NS_FRAME_IN_REFLOW), "Shouldn't set style context during reflow");
-  NS_PRECONDITION(nsnull != aContext, "null ptr");
-  if (aContext != mStyleContext) {
-    NS_IF_RELEASE(mStyleContext);
-    if (nsnull != aContext) {
-      mStyleContext = aContext;
-      NS_ADDREF(aContext);
-      DidSetStyleContext(aPresContext);
-    }
-  }
-
-  return NS_OK;
-}
-
 // Subclass hook for style post processing
 NS_IMETHODIMP nsFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
   return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const
-{
-  NS_ASSERTION(mStyleContext!=nsnull,"null style context");
-  if (mStyleContext) {
-    aStyleStruct = mStyleContext->GetStyleData(aSID);
-  } else {
-    aStyleStruct = nsnull;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP  nsFrame::GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) const {
-  NS_ASSERTION(mStyleContext!=nsnull,"null style context");
-  if (mStyleContext) {
-    return mStyleContext->GetStyle(aSID, aStruct);
-  }
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP  nsFrame::CalcBorderPadding(nsMargin& aBorderPadding) const {
@@ -574,65 +519,6 @@ nsFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 {
   NS_PRECONDITION(aIndex >= 0, "invalid index number");
   return ((aIndex < 0) ? NS_ERROR_INVALID_ARG : NS_OK);
-}
-
-// Geometric parent member functions
-
-NS_IMETHODIMP nsFrame::GetParent(nsIFrame** aParent) const
-{
-  NS_PRECONDITION(nsnull != aParent, "null OUT parameter pointer");
-  *aParent = mParent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::SetParent(const nsIFrame* aParent)
-{
-  mParent = (nsIFrame*)aParent;
-  return NS_OK;
-}
-
-// Bounding rect member functions
-
-NS_IMETHODIMP nsFrame::GetRect(nsRect& aRect) const
-{
-  aRect = mRect;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::GetOrigin(nsPoint& aPoint) const
-{
-  aPoint.x = mRect.x;
-  aPoint.y = mRect.y;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::GetSize(nsSize& aSize) const
-{
-  aSize.width = mRect.width;
-  aSize.height = mRect.height;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::SetRect(nsIPresContext* aPresContext,
-                               const nsRect&   aRect)
-{
-  MoveTo(aPresContext, aRect.x, aRect.y);
-  SizeTo(aPresContext, aRect.width, aRect.height);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY)
-{
-  mRect.x = aX;
-  mRect.y = aY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nscoord aHeight)
-{
-  mRect.width = aWidth;
-  mRect.height = aHeight;
-  return NS_OK;
 }
 
 // Child frame enumeration
@@ -1870,20 +1756,6 @@ nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 // Resize and incremental reflow
-NS_IMETHODIMP
-nsFrame::GetFrameState(nsFrameState* aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null OUT parameter pointer");
-  *aResult = mState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrame::SetFrameState(nsFrameState aNewState)
-{
-  mState = aNewState;
-  return NS_OK;
-}
 
 // nsIHTMLReflow member functions
 
@@ -2305,22 +2177,6 @@ NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
       aBase = PR_FALSE;
     }
   }
-  return NS_OK;
-}
-
-// Sibling pointer used to link together frames
-
-NS_IMETHODIMP nsFrame::GetNextSibling(nsIFrame** aNextSibling) const
-{
-  NS_PRECONDITION(nsnull != aNextSibling, "null OUT parameter pointer");
-  *aNextSibling = mNextSibling;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFrame::SetNextSibling(nsIFrame* aNextSibling)
-{
-  NS_ASSERTION(aNextSibling != this, "attempt to create circular frame list");
-  mNextSibling = aNextSibling;
   return NS_OK;
 }
 
@@ -4115,9 +3971,9 @@ nsFrame::CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
   if (!view)
   {
     nsresult rv = GetParentWithView(aPresContext, &parent);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
       return rv;
-    if (!parent) 
+    if (!parent)
       return NS_ERROR_FAILURE;
     parent->GetView(aPresContext,&view);
   }
@@ -4149,9 +4005,9 @@ nsFrame::IsMouseCaptured(nsIPresContext* aPresContext)
   {
     nsIFrame *parent;//might be THIS frame thats ok
     nsresult rv = GetParentWithView(aPresContext, &parent);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
       return rv;
-    if (!parent) 
+    if (!parent)
       return NS_ERROR_FAILURE;
 
     parent->GetView(aPresContext,&view);

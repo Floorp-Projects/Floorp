@@ -1132,7 +1132,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       
   }  
 
-  // finally move and resize it
   viewManager->MoveViewTo(view, xpos, ypos); 
   //viewManager->ResizeView(view, mRect.width, mRect.height);
   

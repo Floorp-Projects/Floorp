@@ -55,7 +55,6 @@
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIStyleContext.h"
 #include "nsIFrame.h"
 
 #include "nsIScriptGlobalObjectOwner.h"

@@ -36,34 +36,34 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsIRuleWalker_h___
-#define nsIRuleWalker_h___
 
-#include "nsCOMPtr.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
-class nsIRuleNode;
-
-// {6ED294B0-2E91-40a6-949D-7A0173691487}
-#define NS_IRULEWALKER_IID \
-{ 0x6ed294b0, 0x2e91, 0x40a6, { 0x94, 0x9d, 0x7a, 0x1, 0x73, 0x69, 0x14, 0x87 } }
-
-class nsIRuleWalker : public nsISupports {
+class nsRuleWalker {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRULEWALKER_IID)
+  nsRuleNode* GetCurrentNode() { return mCurrent; }
+  void SetCurrentNode(nsRuleNode* aNode) { mCurrent = aNode; }
 
-  NS_IMETHOD GetCurrentNode(nsIRuleNode** aResult)=0;
-  NS_IMETHOD SetCurrentNode(nsIRuleNode* aNode)=0;
+  void Forward(nsIStyleRule* aRule) { 
+    nsRuleNode* next;
+    mCurrent->Transition(aRule, &next);
+    mCurrent = next;
+  }
 
-  NS_IMETHOD Forward(nsIStyleRule* aRule)=0;
-  NS_IMETHOD Back()=0;
+  void Back() {
+    if (mCurrent != mRoot)
+      mCurrent = mCurrent->GetParent();
+  }
 
-  NS_IMETHOD Reset()=0;
+  void Reset() { mCurrent = mRoot; }
 
-  NS_IMETHOD AtRoot(PRBool* aResult)=0;
+  PRBool AtRoot() { return mCurrent == mRoot; }
+
+private:
+  nsRuleNode* mCurrent; // Our current position.
+  nsRuleNode* mRoot; // The root of the tree we're walking.
+
+public:
+  nsRuleWalker(nsRuleNode* aRoot) :mCurrent(aRoot), mRoot(aRoot) { MOZ_COUNT_CTOR(nsRuleWalker); };
+  ~nsRuleWalker() { MOZ_COUNT_DTOR(nsRuleWalker); };
 };
-
-extern nsresult
-NS_NewRuleWalker(nsIRuleNode* aRoot, nsIRuleWalker** aResult);
-
-#endif

@@ -38,8 +38,9 @@
 #define nsCSSRendering_h___
 
 #include "nsIRenderingContext.h"
-#include "nsIStyleContext.h"
 struct nsPoint;
+class nsIStyleContext;
+class nsIPresContext;
 
 class nsCSSRendering {
 public:

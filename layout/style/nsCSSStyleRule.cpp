@@ -69,7 +69,7 @@
 #include "nsINameSpace.h"
 #include "nsILookAndFeel.h"
 #include "xp_core.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"

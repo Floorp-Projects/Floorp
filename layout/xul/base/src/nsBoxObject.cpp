@@ -44,7 +44,6 @@
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIStyleContext.h"
 #include "nsIFrame.h"
 #include "nsReadableUtils.h"
 #include "nsILookAndFeel.h"

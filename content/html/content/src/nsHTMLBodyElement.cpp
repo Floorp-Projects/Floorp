@@ -68,7 +68,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 #include "nsIBodySuper.h"
 
 //----------------------------------------------------------------------
@@ -233,8 +233,8 @@ public:
                                const nsAReadableString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
-  NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker);
-  NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
+  NS_IMETHOD WalkInlineStyleRules(nsRuleWalker* aRuleWalker);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
 #ifdef DEBUG
@@ -995,7 +995,7 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
+nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   nsBodySuper::WalkContentStyleRules(aRuleWalker);
 
@@ -1032,7 +1032,7 @@ static nsIHTMLCSSStyleSheet* GetInlineStyleSheet(nsIDocument* aDocument)
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
+nsHTMLBodyElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
 {
   PRBool useBodyFixupRule = PR_FALSE;
 

@@ -47,18 +47,17 @@
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
-#include "nsIStyleSet.h"
-#include "nsIPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsILanguageAtom.h"
-#include "nsIFrame.h"
 
 class nsISizeOfHandler;
 
 class nsIFrame;
+class nsIStyleSet;
+class nsIPresContext;
 class nsISupportsArray;
 class nsIStyleContext;
-class nsIRuleNode;
+class nsRuleNode;
 
 //----------------------------------------------------------------------
 
@@ -78,7 +77,7 @@ public:
   NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const = 0;
 
   NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, 
-                                nsIRuleNode* aRules,
+                                nsRuleNode* aRules,
                                 nsIStyleContext*& aResult) = 0;
 
   virtual PRBool HasTextDecorations()=0;
@@ -89,7 +88,7 @@ public:
   // compute the effective difference between two contexts
   NS_IMETHOD CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint, PRBool aStopAtFirst = PR_FALSE) = 0;
 
-  NS_IMETHOD GetRuleNode(nsIRuleNode** aResult)=0;
+  NS_IMETHOD GetRuleNode(nsRuleNode** aResult)=0;
   NS_IMETHOD AddStyleBit(const PRUint32& aBit)=0;
   NS_IMETHOD GetStyleBits(PRUint32* aBits)=0;
 
@@ -115,6 +114,9 @@ public:
   // display.  Don't add support for new structs or use this method without careful consideration! -dwh
   virtual nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID) = 0;
 
+  // Used only for inline style.
+  virtual nsresult ClearCachedDataForRule(nsIStyleRule* aRule) = 0;
+
   // Used to clear away the style data for a given style context if it matches the specified |aRule|.
   // If |aRule| is null, then the style data is always blown away.
   virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule) = 0;
@@ -129,7 +131,7 @@ extern NS_EXPORT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                      nsIStyleContext* aParentContext,
                      nsIAtom* aPseudoType,
-                     nsIRuleNode* aRuleNode,
+                     nsRuleNode* aRuleNode,
                      nsIPresContext* aPresContext);
 
 

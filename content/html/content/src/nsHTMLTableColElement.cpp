@@ -46,7 +46,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 class nsHTMLTableColElement : public nsGenericHTMLContainerElement,
                               public nsIDOMHTMLTableColElement,

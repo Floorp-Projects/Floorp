@@ -121,7 +121,7 @@
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsXULDocument.h"
-#include "nsIRuleWalker.h"
+#include "nsRuleWalker.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsXULAtoms.h"
@@ -3851,13 +3851,13 @@ nsXULElement::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
 }
 
 NS_IMETHODIMP
-nsXULElement::WalkContentStyleRules(nsIRuleWalker* aRuleWalker)
+nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULElement::WalkInlineStyleRules(nsIRuleWalker* aRuleWalker)
+nsXULElement::WalkInlineStyleRules(nsRuleWalker* aRuleWalker)
 {
     // Fetch the cached style rule from the attributes.
     nsresult result = NS_ERROR_NULL_POINTER;

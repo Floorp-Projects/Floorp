@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
  
-#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
@@ -70,7 +69,7 @@ class nsStyleContext : public nsIStyleContext
 {
 public:
   nsStyleContext(nsIStyleContext* aParent, nsIAtom* aPseudoTag, 
-                   nsIRuleNode* aRuleNode, 
+                   nsRuleNode* aRuleNode, 
                    nsIPresContext* aPresContext);
   virtual ~nsStyleContext();
 
@@ -84,7 +83,7 @@ public:
 
   NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const;
 
-  NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, nsIRuleNode* aRules,
+  NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, nsRuleNode* aRules,
                                 nsIStyleContext*& aResult);
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
@@ -95,12 +94,14 @@ public:
   NS_IMETHOD GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct);
   NS_IMETHOD SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct);
 
-  NS_IMETHOD GetRuleNode(nsIRuleNode** aResult) { *aResult = mRuleNode; NS_IF_ADDREF(*aResult); return NS_OK; };
+  NS_IMETHOD GetRuleNode(nsRuleNode** aResult) { *aResult = mRuleNode; return NS_OK; };
   NS_IMETHOD AddStyleBit(const PRUint32& aBit) { mBits |= aBit; return NS_OK; };
   NS_IMETHOD GetStyleBits(PRUint32* aBits) { *aBits = mBits; return NS_OK; };
 
   virtual const nsStyleStruct* GetStyleData(nsStyleStructID aSID);
   virtual nsStyleStruct* GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleStructID& aSID);
+
+  virtual nsresult ClearCachedDataForRule(nsIStyleRule* aRule);
 
   virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
 
@@ -130,7 +131,7 @@ protected:
   nsIAtom*          mPseudoTag;
 
   PRUint32                mBits; // Which structs are inherited from the parent context.
-  nsIRuleNode*            mRuleNode; // Weak. Rules can't go away without us going away.
+  nsRuleNode*             mRuleNode;
   nsCachedStyleData       mCachedStyleData; // Our cached style data.
 };
 
@@ -138,7 +139,7 @@ static PRInt32 gLastDataCode;
 
 nsStyleContext::nsStyleContext(nsIStyleContext* aParent,
                                    nsIAtom* aPseudoTag,
-                                   nsIRuleNode* aRuleNode,
+                                   nsRuleNode* aRuleNode,
                                    nsIPresContext* aPresContext)
   : mParent((nsStyleContext*)aParent),
     mChild(nsnull),
@@ -219,12 +220,10 @@ nsStyleContext::GetFirstChild(nsIStyleContext** aContext)
 
 void nsStyleContext::AppendChild(nsStyleContext* aChild)
 {
-  PRBool isRoot = PR_FALSE;
-  nsCOMPtr<nsIRuleNode> ruleNode;
-  aChild->GetRuleNode(getter_AddRefs(ruleNode));
-  ruleNode->IsRoot(&isRoot);
-
-  if (isRoot) {
+  nsRuleNode* ruleNode;
+  aChild->GetRuleNode(&ruleNode);
+  
+  if (ruleNode->IsRoot()) {
     // We matched no rules.
     if (nsnull == mEmptyChild) {
       mEmptyChild = aChild;
@@ -257,12 +256,10 @@ void nsStyleContext::RemoveChild(nsStyleContext* aChild)
     return;
   }
 
-  PRBool isRoot = PR_FALSE;
-  nsCOMPtr<nsIRuleNode> ruleNode;
-  aChild->GetRuleNode(getter_AddRefs(ruleNode));
-  ruleNode->IsRoot(&isRoot);
-
-  if (isRoot) { // is empty 
+  nsRuleNode* ruleNode;
+  aChild->GetRuleNode(&ruleNode);
+  
+  if (ruleNode->IsRoot()) { // is empty 
     if (aChild->mPrevSibling != aChild) { // has siblings
       if (mEmptyChild == aChild) {
         mEmptyChild = mEmptyChild->mNextSibling;
@@ -302,7 +299,7 @@ nsStyleContext::GetPseudoType(nsIAtom*& aPseudoTag) const
 
 NS_IMETHODIMP
 nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag, 
-                                     nsIRuleNode* aRuleNode,
+                                     nsRuleNode* aRuleNode,
                                      nsIStyleContext*& aResult)
 {
   PRUint32 threshold = 10; // The # of siblings we're willing to examine
@@ -312,9 +309,7 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
 
   if ((nsnull != mChild) || (nsnull != mEmptyChild)) {
     nsStyleContext* child;
-    PRBool isRoot = PR_TRUE;
-    aRuleNode->IsRoot(&isRoot);
-    if (isRoot) {
+    if (aRuleNode->IsRoot()) {
       if (nsnull != mEmptyChild) {
         child = mEmptyChild;
         do {
@@ -566,6 +561,17 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
       uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_DEFAULT;
     }
   }
+}
+
+nsresult
+nsStyleContext::ClearCachedDataForRule(nsIStyleRule* aInlineStyleRule)
+{
+  mRuleNode->ClearCachedData(aInlineStyleRule); // XXXdwh.  If we're willing to *really* special case
+                                           // inline style, we could only invalidate the struct data
+                                           // that actually changed.  For example, if someone changes
+                                           // style.left, we really only need to blow away cached
+                                           // data in the position struct.
+  return NS_OK;
 }
 
 nsresult
@@ -846,19 +852,16 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
     fputs(" ", out);
   }
 
-  nsCOMPtr<nsIRuleNode> ruleNode;
-  GetRuleNode(getter_AddRefs(ruleNode));
-  if (ruleNode) {
+  if (mRuleNode) {
     fputs("{\n", out);
+    nsRuleNode* ruleNode = mRuleNode;
     while (ruleNode) {
       nsCOMPtr<nsIStyleRule> styleRule;
       ruleNode->GetRule(getter_AddRefs(styleRule));
       if (styleRule) {
         styleRule->List(out, aIndent + 1);
       }
-      nsIRuleNode* parent;
-      ruleNode->GetParent(&parent);
-      ruleNode = dont_AddRef(parent);
+      ruleNode = ruleNode->GetParent();
     }
     for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
     fputs("}\n", out);
@@ -1206,7 +1209,7 @@ NS_EXPORT nsresult
 NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                    nsIStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
-                   nsIRuleNode* aRuleNode,
+                   nsRuleNode* aRuleNode,
                    nsIPresContext* aPresContext)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -1215,7 +1218,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
   }
 
   nsStyleContext* context = new (aPresContext) nsStyleContext(aParentContext, aPseudoTag, 
-                                                                  aRuleNode, aPresContext);
+                                                              aRuleNode, aPresContext);
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

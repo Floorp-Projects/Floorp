@@ -58,7 +58,7 @@
 #include "nsIWebShell.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 // XXX nav attrs: suppress
 

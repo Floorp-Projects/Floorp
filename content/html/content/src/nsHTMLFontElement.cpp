@@ -49,7 +49,7 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 #include "nsICSSDeclaration.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 class nsHTMLFontElement : public nsGenericHTMLContainerElement,
                           public nsIDOMHTMLFontElement

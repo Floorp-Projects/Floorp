@@ -184,26 +184,11 @@ public:
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
   NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
-  NS_IMETHOD  GetContent(nsIContent** aContent) const;
-  NS_IMETHOD  GetStyleContext(nsIStyleContext** aStyleContext) const;
-  NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
-                              nsIStyleContext* aContext);
-  NS_IMETHOD  GetStyleData(nsStyleStructID aSID,
-                           const nsStyleStruct*& aStyleStruct) const;
-  NS_IMETHOD  GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) const;
   NS_IMETHOD  CalcBorderPadding(nsMargin& aBorderPadding) const;
   NS_IMETHOD  GetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext** aStyleContext) const;
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
-  NS_IMETHOD  GetParent(nsIFrame** aParent) const;
-  NS_IMETHOD  SetParent(const nsIFrame* aParent);
-  NS_IMETHOD  GetRect(nsRect& aRect) const;
-  NS_IMETHOD  GetOrigin(nsPoint& aPoint) const;
-  NS_IMETHOD  GetSize(nsSize& aSize) const;
-  NS_IMETHOD  SetRect(nsIPresContext* aPresContext, const nsRect& aRect);
-  NS_IMETHOD  MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
-  NS_IMETHOD  SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const;
   NS_IMETHOD  FirstChild(nsIPresContext* aPresContext,
                          nsIAtom*        aListName,
@@ -243,10 +228,6 @@ public:
                                         PRInt32 aLineStart, 
                                         PRInt8 aOutSideLimit
                                         );
-
-  NS_IMETHOD  GetFrameState(nsFrameState* aResult);
-  NS_IMETHOD  SetFrameState(nsFrameState aNewState);
-
   NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
                              nsIContent*     aChild,
                              nsISupports*    aSubContent);
@@ -271,8 +252,6 @@ public:
   NS_IMETHOD  GetWindow(nsIPresContext* aPresContext, nsIWidget**) const;
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
-  NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const;
-  NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  Scrolled(nsIView *aView);
 #ifdef NS_DEBUG
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
@@ -498,13 +477,6 @@ protected:
   // member function assumes that the caller has checked that the clip property
   // applies to its situation.
   void SetOverflowClipRect(nsIRenderingContext& aRenderingContext);
-
-  nsRect           mRect;
-  nsIContent*      mContent;
-  nsIStyleContext* mStyleContext;
-  nsIFrame*        mParent;
-  nsIFrame*        mNextSibling;  // singly linked list of frames
-  nsFrameState     mState;
 
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);

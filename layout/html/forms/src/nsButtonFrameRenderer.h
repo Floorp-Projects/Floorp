@@ -44,7 +44,6 @@
 #define nsButtonFrameRenderer_h___
 
 #include "nsCoord.h"
-#include "nsIStyleContext.h"
 #include "nsCOMPtr.h"
 #include "nsFrame.h"
 

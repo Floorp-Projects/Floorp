@@ -53,6 +53,38 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
+struct nsRuleList {
+  nsRuleNode* mRuleNode;
+  nsRuleList* mNext;
+  
+public:
+  nsRuleList(nsRuleNode* aNode, nsRuleList* aNext= nsnull) {
+    MOZ_COUNT_CTOR(nsRuleList);
+    mRuleNode = aNode;
+    mNext = aNext;
+  }
+ 
+  ~nsRuleList() {
+    MOZ_COUNT_DTOR(nsRuleList);
+    mRuleNode->Destroy();
+    if (mNext)
+      mNext->Destroy(mRuleNode->mPresContext);
+  }
+
+  void* operator new(size_t sz, nsIPresContext* aContext) {
+    void* result = nsnull;
+    aContext->AllocateFromShell(sz, &result);
+    return result;
+  };
+  void operator delete(void* aPtr) {} // Does nothing. The arena will free us up when the rule tree
+                                      // dies.
+
+  void Destroy(nsIPresContext* aContext) {
+    this->~nsRuleList();
+    aContext->FreeToShell(sizeof(nsRuleList), this);
+  }
+};
+
 class nsShellISupportsKey : public nsHashKey {
 public:
   nsISupports* mKey;
@@ -335,13 +367,6 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
   return result;
 }
 
-// nsRuleNode globals
-PRUint32 nsRuleNode::gRefCnt = 0;
-
-NS_IMPL_ADDREF(nsRuleNode)
-NS_IMPL_RELEASE_WITH_DESTROY(nsRuleNode, Destroy())
-NS_IMPL_QUERY_INTERFACE1(nsRuleNode, nsIRuleNode)
-
 // Overloaded new operator. Initializes the memory to 0 and relies on an arena
 // (which comes from the presShell) to perform the allocation.
 void* 
@@ -366,29 +391,34 @@ nsRuleNode::Destroy()
   mPresContext->FreeToShell(sizeof(nsRuleNode), this);
 }
 
-void nsRuleNode::CreateRootNode(nsIPresContext* aPresContext, nsIRuleNode** aResult)
+void nsRuleNode::CreateRootNode(nsIPresContext* aPresContext, nsRuleNode** aResult)
 {
   *aResult = new (aPresContext) nsRuleNode(aPresContext);
-  NS_IF_ADDREF(*aResult);
 }
 
 nsRuleNode::nsRuleNode(nsIPresContext* aContext, nsIStyleRule* aRule, nsRuleNode* aParent)
-    :mPresContext(aContext), mParent(aParent), mChildren(nsnull), mInheritBits(0), mNoneBits(0)
+    :mPresContext(aContext), mParent(aParent), mInheritBits(0), mNoneBits(0)
 {
-  NS_INIT_REFCNT();
-  gRefCnt++;
+  MOZ_COUNT_CTOR(nsRuleNode);
   mRule = aRule;
+  if (mParent)
+    mChildren = nsnull;
+  else
+    mRootChildren = nsnull;
 }
 
 nsRuleNode::~nsRuleNode()
 {
+  MOZ_COUNT_DTOR(nsRuleNode);
   if (mStyleData.mResetData || mStyleData.mInheritedData)
     mStyleData.Destroy(0, mPresContext);
-  delete mChildren;
-  gRefCnt--;
+  if (mParent && mChildren)
+    mChildren->Destroy(mPresContext);
+  else if (!mParent)
+    delete mRootChildren;
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsRuleNode::GetBits(PRInt32 aType, PRUint32* aResult)
 {
   switch (aType) {
@@ -401,48 +431,51 @@ nsRuleNode::GetBits(PRInt32 aType, PRUint32* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsRuleNode::Transition(nsIStyleRule* aRule, nsIRuleNode** aResult)
+nsresult 
+nsRuleNode::Transition(nsIStyleRule* aRule, nsRuleNode** aResult)
 {
-  nsCOMPtr<nsIRuleNode> next;
-  nsShellISupportsKey key(aRule);
-  if (mChildren)
-    next = getter_AddRefs(NS_STATIC_CAST(nsIRuleNode*, mChildren->Get(&key)));
-  
-  if (!next) {
-    // Create the new entry in our table.
-    nsRuleNode* newNode = new (mPresContext) nsRuleNode(mPresContext, aRule, this);
-    next = newNode;
+  nsRuleNode* next = nsnull;
 
-    if (!mChildren)
-      mChildren = new nsSupportsHashtable(4);
+  if (!mParent) {
+    nsShellISupportsKey key(aRule);
+    if (mRootChildren)
+      next = NS_STATIC_CAST(nsRuleNode*, mRootChildren->Get(&key));
+    if (!next) {
+      // Create the new entry in our table.
+      nsRuleNode* newNode = new (mPresContext) nsRuleNode(mPresContext, aRule, this);
+      next = newNode;
 
-    // Clone the key ourselves by allocating it from the shell's arena.
-    nsShellISupportsKey* clonedKey = new (mPresContext) nsShellISupportsKey(aRule);
-    mChildren->Put(clonedKey, next);
+      if (!mRootChildren)
+        mRootChildren = new nsHashtable(4);
+      
+      // Clone the key ourselves by allocating it from the shell's arena.
+      nsShellISupportsKey* clonedKey = new (mPresContext) nsShellISupportsKey(aRule);
+      mRootChildren->Put(clonedKey, next);
+    }
   }
+  else {
+    if (mChildren) {
+      for (nsRuleList* curr = mChildren; curr && curr->mRuleNode->mRule != aRule; curr = curr->mNext);
+      if (curr)
+        next = curr->mRuleNode;
+    }
+    if (!next) {
+      // Create the new entry in our table.
+      nsRuleNode* newNode = new (mPresContext) nsRuleNode(mPresContext, aRule, this);
+      next = newNode;
 
+      if (!mChildren)
+        mChildren = new (mPresContext) nsRuleList(newNode);
+      else
+        mChildren = new (mPresContext) nsRuleList(newNode, mChildren);
+    }
+  }
+    
   *aResult = next;
-  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRuleNode::GetParent(nsIRuleNode** aResult)
-{
-  *aResult = mParent;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRuleNode::IsRoot(PRBool* aResult)
-{
-  *aResult = (mParent == nsnull);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 nsRuleNode::GetRule(nsIStyleRule** aResult)
 {
   *aResult = mRule;
@@ -450,7 +483,7 @@ nsRuleNode::GetRule(nsIStyleRule** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRuleNode::PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched)
 {
   *aMatched = PR_FALSE;
@@ -466,7 +499,7 @@ nsRuleNode::PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
 {
   nsRuleNode* ruleDest = this;
@@ -501,13 +534,13 @@ nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
 
 PRBool PR_CALLBACK ClearCachedDataInSubtreeHelper(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  nsIRuleNode* ruleNode = (nsIRuleNode*)aData;
+  nsRuleNode* ruleNode = (nsRuleNode*)aData;
   nsIStyleRule* rule = (nsIStyleRule*)aClosure;
   ruleNode->ClearCachedDataInSubtree(rule);
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
 {
   if (aRule == nsnull || mRule == aRule) {
@@ -519,13 +552,18 @@ nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
     aRule = nsnull;
   }
 
-  if (mChildren)
-    mChildren->Enumerate(ClearCachedDataInSubtreeHelper, (void*)aRule);
+  if (!mParent) {
+    if (mRootChildren)
+      mRootChildren->Enumerate(ClearCachedDataInSubtreeHelper, (void*)aRule);
+  } 
+  else
+    for (nsRuleList* curr = mChildren; curr; curr = curr->mNext)
+      curr->mRuleNode->ClearCachedDataInSubtree(curr->mRuleNode->mRule);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRuleNode::GetPresContext(nsIPresContext** aResult)
 {
   *aResult = mPresContext;
@@ -1926,7 +1964,8 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
   PRBool dummy;
   PRUint32 noneBits;
   PRUint32 fontBit = nsCachedStyleData::GetBitForSID(eStyleStruct_Font);
-  nsCOMPtr<nsIRuleNode> ruleNode, tmpNode;
+  nsRuleNode* ruleNode = nsnull;
+  
   nsCOMPtr<nsIStyleRule> rule;
 
   for (; i >= 0; --i) {
@@ -1936,9 +1975,9 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     ruleData.mFontData = &fontData;
 
     // Trimmed down version of ::WalkRuleTree() to re-apply the style rules
-    context->GetRuleNode(getter_AddRefs(ruleNode));
+    context->GetRuleNode(&ruleNode);
     while (ruleNode) {
-      ruleNode->GetBits(nsIRuleNode::eNoneBits, &noneBits);
+      ruleNode->GetBits(nsRuleNode::eNoneBits, &noneBits);
       if (noneBits & fontBit) // no more font rules on this branch, get out
         break;
 
@@ -1946,8 +1985,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
       if (rule)
         rule->MapRuleInfoInto(&ruleData);
 
-      tmpNode = ruleNode;
-      tmpNode->GetParent(getter_AddRefs(ruleNode));
+      ruleNode = ruleNode->GetParent();
     }
 
     // Compute the delta from the information that the rules specified
@@ -4232,7 +4270,7 @@ nsRuleNode::gGetStyleDataFn[] = {
   nsnull
 };
 
-inline const nsStyleStruct* 
+const nsStyleStruct* 
 nsRuleNode::GetStyleData(nsStyleStructID aSID, 
                          nsIStyleContext* aContext)
 {

@@ -65,7 +65,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsGUIEvent.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 

@@ -53,7 +53,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsIChromeEventHandler.h"
 #include "nsDOMError.h"
-#include "nsIRuleNode.h"
+#include "nsRuleNode.h"
 
 class nsHTMLIFrameElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLIFrameElement,

@@ -35,6 +35,8 @@ EXPORTS =				\
   nsImageMapUtils.h \
   nsLayoutAtomList.h \
   nsLayoutAtoms.h \
+  nsRuleNode.h \
+  nsRuleWalker.h \
   nsStyleCoord.h \
   nsStyleUtil.h \
   nsStyleStruct.h \
