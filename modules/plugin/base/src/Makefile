@@ -45,6 +45,6 @@ LCFLAGS =-D_IMPL_NS_PLUGIN
 
 TARGETS = $(LIBRARY)
 
-INCLUDES += -I.
+INCLUDES += -I. -I$(DIST)/oji
 
 include $(DEPTH)/config/rules.mk
