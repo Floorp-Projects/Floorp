@@ -652,7 +652,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
 
   nscoord theHeight;
   nsIBox* box;
-  nsresult result = kidFrame->QueryInterface(kIBoxIID, (void**)&box);
+  nsresult result = kidFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
   if (NS_SUCCEEDED(result))
      theHeight = scrollAreaSize.height;
   else 

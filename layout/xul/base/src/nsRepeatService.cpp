@@ -88,6 +88,5 @@ void nsRepeatService::Notify(nsITimer *timer)
   mCallback->Notify(timer);
 }
 
-static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
-NS_IMPL_ISUPPORTS(nsRepeatService, kITimerCallbackIID);
+NS_IMPL_ISUPPORTS(nsRepeatService, NS_GET_IID(nsITimerCallback));
 

@@ -1990,23 +1990,6 @@ nsBoxFrameInner::GetDebugInset(nsMargin& inset)
     }
 }
 
-NS_IMETHODIMP nsBoxFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIBoxIID)) {                                         
-    *aInstancePtr = (void*)(nsIBox*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
-
-  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
-
 NS_IMETHODIMP_(nsrefcnt) 
 nsBoxFrame::AddRef(void)
 {
@@ -2018,6 +2001,12 @@ nsBoxFrame::Release(void)
 {
     return NS_OK;
 }
+
+NS_INTERFACE_MAP_BEGIN(nsBoxFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIBox)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
+NS_INTERFACE_MAP_END
+
 
 NS_IMETHODIMP
 nsBoxFrame::GetFrameName(nsString& aResult) const

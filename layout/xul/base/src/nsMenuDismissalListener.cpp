@@ -30,6 +30,7 @@
 
 NS_IMPL_ADDREF(nsMenuDismissalListener)
 NS_IMPL_RELEASE(nsMenuDismissalListener)
+NS_IMPL_QUERY_INTERFACE2(nsMenuDismissalListener, nsIDOMMouseListener, nsIRollupListener)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -46,36 +47,6 @@ nsMenuDismissalListener::~nsMenuDismissalListener()
 {
 }
 
-////////////////////////////////////////////////////////////////////////
-nsresult
-nsMenuDismissalListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventReceiver>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)(nsIDOMKeyListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsIRollupListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIRollupListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMMouseListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  return NS_NOINTERFACE;
-}
 
 ////////////////////////////////////////////////////////////////////////
 nsresult

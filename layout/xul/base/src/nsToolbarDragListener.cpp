@@ -39,6 +39,7 @@
 
 NS_IMPL_ADDREF(nsToolbarDragListener)
 NS_IMPL_RELEASE(nsToolbarDragListener)
+NS_IMPL_QUERY_INTERFACE2(nsToolbarDragListener, nsIDOMDragListener, nsIDOMEventListener)
 
 
 //
@@ -65,38 +66,6 @@ nsToolbarDragListener :: nsToolbarDragListener ( nsToolbarFrame* inToolbar, nsIP
 //
 nsToolbarDragListener::~nsToolbarDragListener() 
 {
-}
-
-
-//
-// QueryInterface
-//
-// Modeled after scc's reference implementation
-//   http://www.mozilla.org/projects/xpcom/QI.html
-//
-nsresult
-nsToolbarDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if ( !aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventListener>::GetIID()))
-    *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*, NS_STATIC_CAST(nsIDOMDragListener*, this));
-  else if (aIID.Equals(nsCOMTypeInfo<nsIDOMDragListener>::GetIID()))
-    *aInstancePtr = NS_STATIC_CAST(nsIDOMDragListener*, this);
-  else if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))                                   
-    *aInstancePtr = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMDragListener*, this));
-  else
-    *aInstancePtr = 0;
-  
-  nsresult status;
-  if ( !*aInstancePtr )
-    status = NS_NOINTERFACE;
-  else {
-    NS_ADDREF( NS_REINTERPRET_CAST(nsISupports*, *aInstancePtr) );
-    status = NS_OK;
-  }
-  return status;
 }
 
 

@@ -49,6 +49,7 @@
 
 NS_IMPL_ADDREF(nsMenuBarListener)
 NS_IMPL_RELEASE(nsMenuBarListener)
+NS_IMPL_QUERY_INTERFACE1(nsMenuBarListener, nsIDOMKeyListener)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -65,31 +66,7 @@ nsMenuBarListener::~nsMenuBarListener()
 {
 }
 
-////////////////////////////////////////////////////////////////////////
-nsresult
-nsMenuBarListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventReceiver>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)(nsIDOMKeyListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMKeyListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMKeyListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMKeyListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  return NS_NOINTERFACE;
-}
 
 ////////////////////////////////////////////////////////////////////////
 nsresult

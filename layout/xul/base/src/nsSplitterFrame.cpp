@@ -53,9 +53,6 @@
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
 
-static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
-static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
-
 class nsSplitterInfo {
 public:
     nscoord min;
@@ -150,8 +147,6 @@ public:
 };
 
 
-static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 NS_IMPL_ISUPPORTS2(nsSplitterFrameImpl, nsIDOMMouseListener, nsIDOMMouseMotionListener)
 
 nsSplitterFrameImpl::ResizeType
@@ -236,6 +231,11 @@ nsSplitterFrame::~nsSplitterFrame()
   mImpl->RemoveListener();
   mImpl->Release();
 }
+
+NS_INTERFACE_MAP_BEGIN(nsSplitterFrame)
+  NS_INTERFACE_MAP_ENTRY(nsIAnonymousContentCreator)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAnonymousContentCreator)
+NS_INTERFACE_MAP_END
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
 
@@ -372,24 +372,6 @@ nsSplitterFrame::GetInitialAlignment()
   return PR_FALSE;
 }
 
-NS_IMETHODIMP 
-nsSplitterFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
-    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
-
 NS_IMETHODIMP
 nsSplitterFrame::HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
@@ -495,7 +477,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
               nsIView*           view;
               parent->GetView(aPresContext, &view);
               if (view) {
-                nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
+                nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
                 if (NS_SUCCEEDED(result)) {
                     nscoord xoff = 0;
                     nscoord yoff = 0;
@@ -595,8 +577,8 @@ nsSplitterFrameImpl::AddListener()
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this), kIDOMMouseListenerIID);
-  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this), kIDOMMouseMotionListenerIID);
+  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this), NS_GET_IID(nsIDOMMouseListener));
+  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this), NS_GET_IID(nsIDOMMouseMotionListener));
 }
 
 void
@@ -607,8 +589,8 @@ nsSplitterFrameImpl::RemoveListener()
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this),kIDOMMouseListenerIID);
-  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),kIDOMMouseMotionListenerIID);
+  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseListener*,this),NS_GET_IID(nsIDOMMouseListener));
+  reciever->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMMouseMotionListener*,this),NS_GET_IID(nsIDOMMouseMotionListener));
 }
 
 nsresult

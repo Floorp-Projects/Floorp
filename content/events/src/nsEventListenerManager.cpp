@@ -93,21 +93,7 @@ nsEventListenerManager::~nsEventListenerManager()
 
 NS_IMPL_ADDREF(nsEventListenerManager)
 NS_IMPL_RELEASE(nsEventListenerManager)
-
-nsresult nsEventListenerManager::QueryInterface(const nsIID& aIID,
-                                       void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIEventListenerManagerIID)) {
-    *aInstancePtrResult = (void*) ((nsIEventListenerManager*)this);
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_QUERY_INTERFACE1(nsEventListenerManager, nsIEventListenerManager)
 
 nsVoidArray** nsEventListenerManager::GetListenersByIID(const nsIID& aIID)
 {

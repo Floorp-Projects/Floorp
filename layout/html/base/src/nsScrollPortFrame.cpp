@@ -378,7 +378,7 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
  
   nscoord theHeight;
   nsIBox* box;
-  nsresult result = kidFrame->QueryInterface(kIBoxIID, (void**)&box);
+  nsresult result = kidFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
   if (NS_SUCCEEDED(result))
      theHeight = aReflowState.mComputedHeight;
   else 
@@ -643,7 +643,7 @@ nsScrollPortFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(kIBoxIID)) {                                         
+  if (aIID.Equals(NS_GET_IID(nsIBox))) {                                         
     *aInstancePtr = (void*)(nsIBox*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        

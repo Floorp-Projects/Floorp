@@ -33,17 +33,7 @@
 #include "nsIViewManager.h"
 #include "nsIPrivateCompositionEvent.h"
 
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
-static NS_DEFINE_IID(kIDOMUIEventIID, NS_IDOMUIEVENT_IID);
-static NS_DEFINE_IID(kIDOMKeyEventIID, NS_IDOMKEYEVENT_IID);
-static NS_DEFINE_IID(kIDOMMouseEventIID, NS_IDOMMOUSEEVENT_IID);
-static NS_DEFINE_IID(kIDOMNSUIEventIID, NS_IDOMNSUIEVENT_IID);
-static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
-static NS_DEFINE_IID(kIPrivateTextEventIID, NS_IPRIVATETEXTEVENT_IID);
-static NS_DEFINE_IID(kIPrivateCompositionEventIID,NS_IPRIVATECOMPOSITIONEVENT_IID);
 
 static char* mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
@@ -103,55 +93,17 @@ nsDOMEvent::~nsDOMEvent() {
 NS_IMPL_ADDREF(nsDOMEvent)
 NS_IMPL_RELEASE(nsDOMEvent)
 
-nsresult nsDOMEvent::QueryInterface(const nsIID& aIID,
-                                       void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIDOMEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMEvent*)(nsIDOMUIEvent*)(nsIDOMMouseEvent*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMUIEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMUIEvent*)(nsIDOMMouseEvent*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMMouseEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMMouseEvent*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMKeyEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMKeyEvent*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMNSUIEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMNSUIEvent*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIPrivateDOMEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIPrivateDOMEvent*)this);
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIPrivateTextEventIID)) {
-	*aInstancePtrResult=(void*)((nsIPrivateTextEvent*)this);
-	AddRef();
-	return NS_OK;
-  }
-  if (aIID.Equals(kIPrivateCompositionEventIID)) {
-    *aInstancePtrResult = (void*)((nsIPrivateCompositionEvent*)this);
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsDOMEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMMouseEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMUIEvent, nsIDOMMouseEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSUIEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateTextEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateCompositionEvent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMouseEvent)
+NS_INTERFACE_MAP_END
 
 // nsIDOMEventInterface
 NS_METHOD nsDOMEvent::GetType(nsString& aType)
@@ -183,7 +135,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
   }
   
   if (targetContent) {    
-    if (NS_OK == targetContent->QueryInterface(kIDOMNodeIID, (void**)&mTarget)) {
+    if (NS_OK == targetContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&mTarget)) {
       *aTarget = mTarget;
       NS_ADDREF(mTarget);
     }
@@ -199,7 +151,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
     }
 
     if (doc) {
-      if (NS_OK == doc->QueryInterface(kIDOMNodeIID, (void**)&mTarget)) {
+      if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)&mTarget)) {
         *aTarget = mTarget;
         NS_ADDREF(mTarget);
       }      
@@ -608,7 +560,7 @@ NS_METHOD nsDOMEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
   }
   
   if (relatedContent) {    
-    ret = relatedContent->QueryInterface(kIDOMNodeIID, (void**)aRelatedNode);
+    ret = relatedContent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aRelatedNode);
     NS_RELEASE(relatedContent);
   }
   else {
@@ -694,7 +646,7 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
                                               offset,
                                               endOffset,
                                               beginOfContent))) {
-      if (parent && NS_SUCCEEDED(parent->QueryInterface(kIDOMNodeIID, (void**)aRangeParent))) {
+      if (parent && NS_SUCCEEDED(parent->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aRangeParent))) {
         NS_RELEASE(parent);
         return NS_OK;
       }
@@ -925,7 +877,7 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPre
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
-  return it->QueryInterface(kIDOMEventIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIDOMEvent), (void **) aInstancePtrResult);
 }
 
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent) 

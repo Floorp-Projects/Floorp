@@ -22,8 +22,6 @@
 
 #include "nsPrivateTextRange.h"
 
-static NS_DEFINE_IID(kIPrivateTextRange, NS_IPRIVATETEXTRANGE_IID);
-static NS_DEFINE_IID(kIPrivateTextRangeList,NS_IPRIVATETEXTRANGELIST_IID);
 
 nsPrivateTextRange::nsPrivateTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint16 aRangeType)
 :	mRangeStart(aRangeStart),
@@ -37,24 +35,7 @@ nsPrivateTextRange::~nsPrivateTextRange(void)
 {
 }
 
-NS_IMPL_ADDREF(nsPrivateTextRange)
-NS_IMPL_RELEASE(nsPrivateTextRange)
-
-nsresult nsPrivateTextRange::QueryInterface(const nsIID& aIID,
-                                       void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIPrivateTextRange)) {
-    *aInstancePtrResult = (void*) ((nsIPrivateTextRange*)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS1(nsPrivateTextRange, nsIPrivateTextRange)
 
 NS_METHOD nsPrivateTextRange::GetRangeStart(PRUint16* aRangeStart)
 {
@@ -110,24 +91,7 @@ nsPrivateTextRangeList::~nsPrivateTextRangeList(void)
 		mList[i]->Release();
 }
 
-NS_IMPL_ADDREF(nsPrivateTextRangeList)
-NS_IMPL_RELEASE(nsPrivateTextRangeList)
-
-nsresult nsPrivateTextRangeList::QueryInterface(const nsIID& aIID,
-                                       void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIPrivateTextRangeList)) {
-    *aInstancePtrResult = (void*) ((nsIPrivateTextRangeList*)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS1(nsPrivateTextRangeList, nsIPrivateTextRangeList)
 
 NS_METHOD nsPrivateTextRangeList::GetLength(PRUint16* aLength)
 {
