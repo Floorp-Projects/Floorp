@@ -165,7 +165,8 @@ public:
                             nsISupports* aSubContent);
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
-                              nsIAtom*     aAttribute);
+                              nsIAtom*     aAttribute,
+                              PRInt32      aHint);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
                              nsIContent* aContainer,
                              PRInt32     aNewIndexInContainer);
@@ -479,7 +480,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       if (nsnull != root) {
         // Have style sheet processor construct a frame for the
         // root content object
-        mPresContext->ConstructFrame(root, nsnull, mRootFrame);
+        mStyleSet->ConstructFrame(mPresContext, root, nsnull, mRootFrame);
         NS_RELEASE(root);
       }
     }
@@ -687,48 +688,23 @@ PresShell::ContentChanged(nsIDocument *aDocument,
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   EnterReflowLock();
-
-  // Notify the first frame that maps the content. It will generate a reflow
-  // command
-  nsIFrame* frame = FindFrameWithContent(aContent);
-
-  // It's possible the frame whose content changed isn't inserted into the
-  // frame hierarchy yet, or that there is no frame that maps the content
-  if (nsnull != frame) {
-    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-       ("PresShell::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
-        aContent, ContentTag(aContent, 0),
-        aSubContent, frame));
-    frame->ContentChanged(this, mPresContext, aContent, aSubContent);
-  }
-
+  nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
   ExitReflowLock();
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
 PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIContent*  aContent,
-                            nsIAtom*     aAttribute)
+                            nsIAtom*     aAttribute,
+                            PRInt32      aHint)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   EnterReflowLock();
-
-  // Notify the first frame that maps the content. It will generate a reflow
-  // command, if necessary
-  nsIFrame* frame = FindFrameWithContent(aContent);
-
-  // Note: There may not be a frame that maps the content
-  if (nsnull != frame) {
-    NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-       ("PresShell::AttributeChanged: content=%p[%s] frame=%p",
-        aContent, ContentTag(aContent, 0), frame));
-    frame->AttributeChanged(this, mPresContext, aContent, aAttribute);
-  }
-
+  nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aAttribute, aHint);
   ExitReflowLock();
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -737,7 +713,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
                            PRInt32     aNewIndexInContainer)
 {
   EnterReflowLock();
-  nsresult  rv = mPresContext->ContentAppended(aDocument, aContainer, aNewIndexInContainer);
+  nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
   ExitReflowLock();
   return rv;
 }
@@ -749,7 +725,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
                            PRInt32      aIndexInContainer)
 {
   EnterReflowLock();
-  nsresult  rv = mPresContext->ContentInserted(aDocument, aContainer, aChild, aIndexInContainer);
+  nsresult  rv = mStyleSet->ContentInserted(mPresContext, aContainer, aChild, aIndexInContainer);
   ExitReflowLock();
   return rv;
 }
@@ -762,8 +738,8 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
                            PRInt32      aIndexInContainer)
 {
   EnterReflowLock();
-  nsresult  rv = mPresContext->ContentReplaced(aDocument, aContainer, aOldChild,
-                                               aNewChild, aIndexInContainer);
+  nsresult  rv = mStyleSet->ContentReplaced(mPresContext, aContainer, aOldChild,
+                                            aNewChild, aIndexInContainer);
   ExitReflowLock();
   return rv;
 }
@@ -775,8 +751,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
                           PRInt32     aIndexInContainer)
 {
   EnterReflowLock();
-  nsresult  rv = mPresContext->ContentRemoved(aDocument, aContainer,
-                                              aChild, aIndexInContainer);
+  nsresult  rv = mStyleSet->ContentRemoved(mPresContext, aContainer,
+                                           aChild, aIndexInContainer);
   ExitReflowLock();
   return rv;
 }
