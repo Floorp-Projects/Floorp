@@ -34,7 +34,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
 
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
@@ -51,6 +51,18 @@ public:
   /** convenience method, calls into cellmap */
   nsVoidArray * GetCells();
 
+  nscoord GetMaxColWidth();
+  void SetMaxColWidth(nscoord aMaxColWidth);
+
+  nscoord GetMinColWidth();
+  void SetMinColWidth(nscoord aMinColWidth);
+
+  nscoord GetEffectiveMaxColWidth();
+  void SetEffectiveMaxColWidth(nscoord aMaxColWidth);
+
+  nscoord GetEffectiveMinColWidth();
+  void SetEffectiveMinColWidth(nscoord aMinColWidth);
+
   /** convenience method, calls into cellmap */
   PRInt32 Count() const;
 
@@ -66,11 +78,11 @@ protected:
   /** the number of columns that the attributes of this column extend to */
   PRInt32  mRepeat;
 
-  nscoord  mMaxWidth;
-  nscoord  mMinWidth;
+  nscoord  mMaxColWidth;
+  nscoord  mMinColWidth;
 
-  nscoord mMaxEffectiveWidth;
-  nscoord mMinEffectiveWidth;
+  nscoord mMaxEffectiveColWidth;
+  nscoord mMinEffectiveColWidth;
 
 };
 
@@ -92,6 +104,30 @@ inline nsTableColFrame::GetRepeat()
   
 inline void nsTableColFrame::SetColumnIndex (int aColIndex)
 {  mColIndex = aColIndex;}
+
+inline nscoord nsTableColFrame::GetMaxColWidth()
+{ return mMaxColWidth; }
+
+inline void nsTableColFrame::SetMaxColWidth(nscoord aMaxColWidth)
+{ mMaxColWidth = aMaxColWidth; }
+
+inline nscoord nsTableColFrame::GetMinColWidth()
+{ return mMinColWidth; }
+
+inline void nsTableColFrame::SetMinColWidth(nscoord aMinColWidth)
+{ mMinColWidth = aMinColWidth; }
+
+inline nscoord nsTableColFrame::GetEffectiveMaxColWidth()
+{ return mMaxEffectiveColWidth; }
+
+inline void nsTableColFrame::SetEffectiveMaxColWidth(nscoord aMaxColWidth)
+{ mMaxEffectiveColWidth = aMaxColWidth; }
+
+inline nscoord nsTableColFrame::GetEffectiveMinColWidth()
+{ return mMinEffectiveColWidth; }
+
+inline void nsTableColFrame::SetEffectiveMinColWidth(nscoord aMinColWidth)
+{ mMinEffectiveColWidth = aMinColWidth; }
 
 #endif
 

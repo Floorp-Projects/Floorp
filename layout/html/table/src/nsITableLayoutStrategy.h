@@ -22,7 +22,6 @@
 #include "nscore.h"
 #include "nsSize.h"
 
-class nsIPresContext;
 class nsIStyleContext;
 struct nsReflowState;
 
@@ -30,25 +29,21 @@ class nsITableLayoutStrategy
 {
 public:
 
+  /** call once every time any table thing changes (content, structure, or style) 
+    * @param aMaxElementSize  [OUT] the min possible size of the table
+    */
+  virtual PRBool Initialize(nsSize* aMaxElementSize)=0;
+
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.
-    * @param aPresContext     the presentation context
     * @param aTableStyle      the resolved style for the table
     * @param aReflowState     the reflow state for the calling table frame
     * @param aMaxWidth        the width constraint
-    * @param aTotalFixedWidth [OUT] the computed fixed width of the table
-    * @param aMinTableWidth   [OUT] the computed min width of the table
-    * @param aMinTableWidth   [OUT] the computed max width of the table
-    * @param aMaxElementSize  [OUT] the min size of the largest indivisible object
+
     */
-  virtual PRBool BalanceColumnWidths(nsIPresContext* aPresContext,
-                                     nsIStyleContext *aTableStyle,
+  virtual PRBool BalanceColumnWidths(nsIStyleContext *aTableStyle,
                                      const nsReflowState& aReflowState,
-                                     nscoord aMaxWidth, 
-                                     nscoord &aTotalFixedWidth,
-                                     nscoord &aMinTableWidth,
-                                     nscoord &aMaxTableWidth,
-                                     nsSize* aMaxElementSize)=0;
+                                     nscoord aMaxWidth)=0;
 };
 
 #endif

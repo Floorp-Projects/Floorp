@@ -396,7 +396,7 @@ nsTableCellFrame * nsTableFrame::GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex)
 }
 
 
-// return the rows spanned by aCell starting at aRowIndex
+// return the number of rows spanned by aCell starting at aRowIndex
 // note that this is different from just the rowspan of aCell
 // (that would be GetEffectiveRowSpan (indexOfRowThatContains_aCell, aCell)
 //
@@ -414,6 +414,24 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *
   if (rowCount < (aRowIndex + rowSpan))
     return (rowCount - aRowIndex);
   return rowSpan;
+}
+
+// return the number of cols spanned by aCell starting at aColIndex
+// note that this is different from just the colspan of aCell
+// (that would be GetEffectiveColSpan (indexOfColThatContains_aCell, aCell)
+//
+// XXX Should be moved to colgroup, as GetEffectiveRowSpan should be moved to rowgroup?
+PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *aCell)
+{
+  NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
+  NS_PRECONDITION (nsnull!=mCellMap, "bad call, mCellMap not yet allocated.");
+  NS_PRECONDITION (0<=aColIndex && aColIndex<mCellMap->GetColCount(), "bad col index arg");
+
+  int colSpan = aCell->GetColSpan();
+  int colCount = mCellMap->GetColCount();
+  if (colCount < (aColIndex + colSpan))
+    return (colCount - aColIndex);
+  return colSpan;
 }
 
 /* call when the cell structure has changed.  mCellMap will be rebuilt on demand. */
@@ -1198,6 +1216,11 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     // XXX For the time being just fall through and treat it like a
     // pass 2 reflow...
     mPass = kPASS_SECOND;
+    // calling intialize here resets all the cached info based on new table content 
+    if (nsnull!=mTableLayoutStrategy)
+    {
+      mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize);
+    }
 #else
     // XXX Hack...
     AdjustSiblingsAfterReflow(&aPresContext, state, kidFrame, desiredSize.height -
@@ -2231,9 +2254,6 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
 {
   NS_ASSERTION(nsnull==mPrevInFlow, "never ever call me on a continuing frame!");
 
-  if (gsDebug)
-    printf ("BalanceColumnWidths...\n");
-
   if (nsnull==mCellMap)
     return; // we don't have any information yet, so we can't do any useful work
 
@@ -2243,11 +2263,6 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
     mColumnWidths = new PRInt32[numCols];
     nsCRT::memset (mColumnWidths, 0, numCols*sizeof(PRInt32));
   }
-
-  // need to track min and max table widths
-  PRInt32 minTableWidth = 0;
-  PRInt32 maxTableWidth = 0;
-  PRInt32 totalFixedWidth = 0;
 
   const nsStyleSpacing* spacing =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -2308,13 +2323,9 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   if (nsnull==mTableLayoutStrategy)
   { // TODO:  build a different strategy based on the compatibility mode
     mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
+    mTableLayoutStrategy->Initialize(aMaxElementSize);
   }
-  mTableLayoutStrategy->BalanceColumnWidths(aPresContext, mStyleContext,
-                                            aReflowState, maxWidth,
-                                            totalFixedWidth, 
-                                            minTableWidth, maxTableWidth,
-                                            aMaxElementSize);
-
+  mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
 }
 
 /**
@@ -2608,7 +2619,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
       nsIStyleContext* kidStyleContext =
         aPresContext.ResolveStyleContextFor(content, cf);               // kidStyleContext: REFCNT++
       nsIContentDelegate* kidDel = nsnull;
-      kidDel = content->GetDelegate(&aPresContext);                     // kidDel: REFCNT++
+      kidDel = content->GetDelegate(&aPresContext);                       // kidDel: REFCNT++
       nsIFrame* duplicateFrame;
       nsresult rv = kidDel->CreateFrame(&aPresContext, content, cf,
                                         kidStyleContext, duplicateFrame);
@@ -2825,6 +2836,19 @@ NS_METHOD nsTableFrame::GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin&
   return result;
 }
 
+nscoord nsTableFrame::GetCellSpacing()
+{
+  nsTableFrame* tableFrame = this;
+  //XXX remove when table style is fully resolved!
+  GetGeometricParent((nsIFrame *&)tableFrame); // get the outer frame
+  nsStyleTable* tableStyle;
+  tableFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  nscoord cellSpacing = 0;
+  if (tableStyle->mCellSpacing.GetUnit() == eStyleUnit_Coord)
+    cellSpacing = tableStyle->mCellSpacing.GetCoordValue();
+  return cellSpacing;
+}
+
 void nsTableFrame::GetColumnsByType(const nsStyleUnit aType, 
                                     PRInt32& aOutNumColumns,
                                     PRInt32 *& aOutColumnIndexes)
@@ -2989,27 +3013,34 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
           }
           else
           {
-            nsSize tableSize;
-            table->GetSize(tableSize);
-            parentWidth = tableSize.width;
-            spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
-            parentWidth -= (borderPadding.right + borderPadding.left);
-            // same for the row group
-            childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-            spacing->CalcBorderPaddingFor(childFrame, borderPadding);
-            parentWidth -= (borderPadding.right + borderPadding.left);
-            // same for the row
-            grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-            spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
-            parentWidth -= (borderPadding.right + borderPadding.left);
-            // same for the cell
-            greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-            spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
-            parentWidth -= (borderPadding.right + borderPadding.left);
-
+            if (nsnull!=((nsTableFrame*)table)->mColumnWidths)
+            {
+              PRInt32 colIndex = ((nsTableCellFrame*)greatgrandchildFrame)->GetColIndex();
+              parentWidth = ((nsTableFrame*)table)->GetColumnWidth(colIndex);
+            }
+            else
+            {
+              nsSize tableSize;
+              table->GetSize(tableSize);
+              parentWidth = tableSize.width;
+              spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
+              parentWidth -= (borderPadding.right + borderPadding.left);
+              // same for the row group
+              childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+              spacing->CalcBorderPaddingFor(childFrame, borderPadding);
+              parentWidth -= (borderPadding.right + borderPadding.left);
+              // same for the row
+              grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+              spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
+              parentWidth -= (borderPadding.right + borderPadding.left);
+              // same for the cell
+              greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+              spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
+              parentWidth -= (borderPadding.right + borderPadding.left);
+            }
             if (PR_TRUE==gsDebugNT)
-              printf("%p: found a table frame %p, returning parentWidth %d from frame width %d\n", 
-                     aReflowState.frame, table, parentWidth, tableSize.width);
+              printf("%p: found a table frame %p, returning parentWidth %d \n", 
+                     aReflowState.frame, table, parentWidth);
           }
           break;
         }

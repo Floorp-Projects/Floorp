@@ -31,19 +31,23 @@ struct nsStylePosition;
 
 struct SpanInfo
 {
-  nscoord span;
+  PRInt32 span;
+  const PRInt32 initialColSpan;
   nscoord cellMinWidth;
   nscoord cellDesiredWidth;
 
-  SpanInfo(nscoord aSpan, nscoord aMinWidth, nscoord aDesiredWidth)
-  {
-    span = aSpan;
-    cellMinWidth = aMinWidth;
-    cellDesiredWidth = aDesiredWidth;
-  };
-
+  SpanInfo(PRInt32 aSpan, nscoord aMinWidth, nscoord aDesiredWidth);
   ~SpanInfo() {};
 };
+
+inline SpanInfo::SpanInfo(PRInt32 aSpan, nscoord aMinWidth, nscoord aDesiredWidth)
+  : initialColSpan(aSpan)
+{
+  span = aSpan;
+  cellMinWidth = aMinWidth;
+  cellDesiredWidth = aDesiredWidth;
+}
+
 
 
 /* ---------- BasicTableLayoutStrategy ---------- */
@@ -60,86 +64,69 @@ public:
 
   ~BasicTableLayoutStrategy();
 
-  virtual PRBool BalanceColumnWidths(nsIPresContext* aPresContext,
-                                     nsIStyleContext *aTableStyle,
-                                     const nsReflowState& aReflowState,
-                                     nscoord aMaxWidth, 
-                                     nscoord &aTotalFixedWidth,
-                                     nscoord &aMinTableWidth,
-                                     nscoord &aMaxTableWidth,
-                                     nsSize* aMaxElementSize);
+  /** call once every time any table thing changes (content, structure, or style) */
+  virtual PRBool Initialize(nsSize* aMaxElementSize);
 
-  /** assign widths for each column that has fixed width.  
+  virtual PRBool BalanceColumnWidths(nsIStyleContext *    aTableStyle,
+                                     const nsReflowState& aReflowState,
+                                     nscoord              aMaxWidth);
+
+  /** assign widths for each column.
+    * if the column has a fixed coord width, use it.
+    * if the column includes col spanning cells, 
+    * then distribute the fixed space between cells proportionately.
     * Computes the minimum and maximum table widths. 
-    * Sets mColumnWidths as a side effect.
-    *
-    * @param aPresContext     the presentation context
-    * @param aMaxWidth        the maximum width of the table
-    * @param aTableStyle      the resolved style for the table
-    * @param aTotalFixedWidth out param, the sum of the fixed width columns
-    * @param aMinTableWidth   out param, the min possible table width
-    * @param aMaxTableWidth   out param, the max table width
+    * Set column width information in each column frame and in the table frame.
     *
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
-    * TODO: should be renamed to "AssignKnownWidthInformation
     */
-  virtual PRBool AssignFixedColumnWidths(nsIPresContext* aPresContext, 
-                                         nscoord   aMaxWidth, 
-                                         nscoord & aTotalFixedWidth,
-                                         nscoord & aMinTableWidth, 
-                                         nscoord & aMaxTableWidth);
+  virtual PRBool AssignPreliminaryColumnWidths();
 
   /** assign widths for each column that has proportional width inside a table that 
     * has auto width (width set by the content and available space.)
     * Sets mColumnWidths as a side effect.
     *
-    * @param aPresContext     the presentation context
-    * @param aTableStyle      the resolved style for the table
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    * @param aMaxWidth        the total amount of horizontal space available
-    * @param aMinTableWidth   the min possible table width
-    * @param aMaxTableWidth   the max table width
+    * @param aTableStyle          the resolved style for the table
+    * @param aAvailWidth          the remaining amount of horizontal space available
+    * @param aMaxWidth            the total amount of horizontal space available
+    * @param aTableSpecifiedWidth the width of the table based on its attributes and its parent's width
+    * @param aTableIsAutoWidth    PR_TRUE if the table is auto-width
     *
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool BalanceProportionalColumns(nsIPresContext*  aPresContext,
-                                            const nsReflowState& aReflowState,
+  virtual PRBool BalanceProportionalColumns(const nsReflowState& aReflowState,
                                             nscoord aAvailWidth,
                                             nscoord aMaxWidth,
-                                            nscoord aMinTableWidth, 
-                                            nscoord aMaxTableWidth,
-                                            nscoord aTableFixedWidth,
+                                            nscoord aTableSpecifiedWidth,
                                             PRBool  aTableIsAutoWidth);
 
   /** assign the minimum allowed width for each column that has proportional width.
     * Typically called when the min table width doesn't fit in the available space.
     * Sets mColumnWidths as a side effect.
     *
-    * @param aPresContext     the presentation context
     *
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
-  virtual PRBool SetColumnsToMinWidth(nsIPresContext* aPresContext);
+  virtual PRBool SetColumnsToMinWidth();
 
   /** assign the maximum allowed width for each column that has proportional width.
     * Typically called when the desired max table width fits in the available space.
     * Sets mColumnWidths as a side effect.
     *
-    * @param aPresContext     the presentation context
-    * @param aAvailWidth      the remaining amount of horizontal space available
-    * @param aMaxWidth        the total amount of horizontal space available
-    * @param aTableFixedWidth the specified width of the table.  If there is none,
-    *                         this param is 0
+    * @param aAvailWidth          the remaining amount of horizontal space available
+    * @param aMaxWidth            the total amount of horizontal space available
+    * @param aTableSpecifiedWidth the specified width of the table.  If there is none,
+    *                             this param is 0
+    * @param aTableIsAutoWidth    PR_TRUE if the table is auto-width
     * 
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
-  virtual PRBool BalanceColumnsTableFits(nsIPresContext*  aPresContext, 
-                                         const nsReflowState& aReflowState,
+  virtual PRBool BalanceColumnsTableFits(const nsReflowState& aReflowState,
                                          nscoord aAvailWidth,
                                          nscoord aMaxWidth,
-                                         nscoord aTableFixedWidth,
+                                         nscoord aTableSpecifiedWidth,
                                          PRBool  aTableIsAutoWidth);
 
   /** assign widths for each column that has proportional width inside a table that 
@@ -147,7 +134,6 @@ public:
     * HTML 4 specification.
     * Sets mColumnWidths as a side effect.
     *
-    * @param aPresContext     the presentation context
     * @param aTableStyle      the resolved style for the table
     * @param aAvailWidth      the remaining amount of horizontal space available
     * @param aMaxWidth        the total amount of horizontal space available
@@ -158,23 +144,19 @@ public:
     *
     * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
-  virtual PRBool BalanceColumnsConstrained(nsIPresContext*  aPresContext,
-                                           const nsReflowState& aReflowState,
+  virtual PRBool BalanceColumnsConstrained(const nsReflowState& aReflowState,
                                            nscoord aAvailWidth,
-                                           nscoord aMaxWidth,
-                                           nscoord aMinTableWidth, 
-                                           nscoord aMaxTableWidth);
+                                           nscoord aMaxWidth);
 
   /** post-process to AssignFixedColumnWidths
     *
     * @param aColSpanList         a list of fixed-width columns that have colspans
-    * @param aColWidths           the effective column widths (ignoring col span cells)
     *
     * NOTE: does not yet properly handle overlapping col spans
     *
     * @return void
     */  
-  virtual void DistributeFixedSpace(nsVoidArray *aColSpanList, nscoord *aColWidths);
+  virtual void DistributeFixedSpace(nsVoidArray *aColSpanList);
 
   /** starting with a partially balanced table, compute the amount
     * of space to pad each column by to completely balance the table.
@@ -189,8 +171,7 @@ public:
     */
   virtual void DistributeExcessSpace(nscoord  aAvailWidth,
                                      nscoord  aTableWidth, 
-                                     nscoord  aWidthOfFixedTableColumns,
-                                     nscoord *aColWidths);
+                                     nscoord  aWidthOfFixedTableColumns);
 
   /** starting with a partially balanced table, compute the amount
     * of space to remove from each column to completely balance the table.
@@ -203,14 +184,18 @@ public:
     * @return void
     */
   virtual void DistributeRemainingSpace(nscoord  aTableFixedWidth,
-                                        nscoord  aComputedTableWidth,
-                                        nscoord *aMinColWidths,
-                                        nscoord *aMaxColWidths);
+                                        nscoord  aComputedTableWidth);
 
   /** force all cells to be at least their minimum width, removing any excess space
     * created in the process from fat cells that can afford to lose a little tonnage.
     */
-  virtual void EnsureCellMinWidths(nscoord *aMinColWidths);
+  virtual void EnsureCellMinWidths();
+
+  virtual void AdjustTableThatIsTooWide(nscoord  aComputedWidth, 
+                                        nscoord  aTableWidth);
+
+  virtual void AdjustTableThatIsTooNarrow(nscoord  aComputedWidth, 
+                                          nscoord  aTableWidth);
 
   /** return true if the style indicates that the width is a specific width 
     * for the purposes of column width determination.
@@ -218,12 +203,15 @@ public:
     */
   virtual PRBool IsFixedWidth(const nsStylePosition* aStylePosition);
 
-  virtual PRBool IsAutoWidth(const nsStylePosition* aStylePosition);
 
 protected:
   nsTableFrame * mTableFrame;
   PRInt32        mCols;
   PRInt32        mNumCols;
+  // cached data
+  nscoord        mMinTableWidth;    // the absolute smallest width for the table
+  nscoord        mMaxTableWidth;    // the "natural" size for the table, if unconstrained
+  nscoord        mFixedTableWidth;  // the amount of space taken up by fixed-width columns
 
 };
 

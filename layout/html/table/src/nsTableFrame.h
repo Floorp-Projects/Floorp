@@ -142,6 +142,9 @@ public:
 
   /** set the width of the column at aColIndex to aWidth    */
   virtual void SetColumnWidth(PRInt32 aColIndex, nscoord aWidth);
+
+  /** helper to get the cell spacing style value */
+  virtual nscoord GetCellSpacing();
           
   /**
     * Calculate Layout Information
@@ -167,12 +170,25 @@ public:
 
   /** return the row span of a cell, taking into account row span magic at the bottom
     * of a table.
-    * @param aRowIndex  the first row that contains the cell
-    * @param aCell      the content object representing the cell
+    *
+    * @param aRowIndex  the row from which to measure effective row span
+    * @param aCell      the cell
+    *
     * @return  the row span, correcting for row spans that extend beyond the bottom
     *          of the table.
     */
   virtual PRInt32  GetEffectiveRowSpan(PRInt32 aRowIndex, nsTableCellFrame *aCell);
+
+  /** return the col span of a cell, taking into account col span magic at the edge
+    * of a table.
+    *
+    * @param aColIndex  the column from which to measure effective col span
+    * @param aCell      the cell
+    *
+    * @return  the col span, correcting for col spans that extend beyond the edge
+    *          of the table.
+    */
+  virtual PRInt32  GetEffectiveColSpan(PRInt32 aColIndex, nsTableCellFrame *aCell);
 
   // For DEBUGGING Purposes Only
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
