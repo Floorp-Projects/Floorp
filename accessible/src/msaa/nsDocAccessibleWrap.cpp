@@ -40,6 +40,8 @@
 #include "ISimpleDOMDocument_i.c"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleEvent.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMTreeWalker.h"
@@ -141,9 +143,8 @@ STDMETHODIMP nsDocAccessibleWrap::get_accChild(
         nsIPresShell *parentShell = parentDoc->GetShellAt(0);
         nsCOMPtr<nsIWeakReference> weakParentShell(do_GetWeakReference(parentShell));
         if (weakParentShell) {
-          nsCOMPtr<nsIAccessibleDocument> parentDocAccessible;
-          nsAccessNode::GetDocAccessibleFor(weakParentShell, 
-                                            getter_AddRefs(parentDocAccessible));
+          nsCOMPtr<nsIAccessibleDocument> parentDocAccessible = 
+            nsAccessNode::GetDocAccessibleFor(weakParentShell);
           nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(parentDocAccessible));
           IAccessible *msaaParentDoc;
           if (accessible) {
@@ -335,17 +336,17 @@ void nsDocAccessibleWrap::FireDocLoadFinished()
     return; // Don't consider load finished until window unhidden
   }
 
-  if (mIsNewDocument) {
-    mIsNewDocument = PR_FALSE;
+  // Cache decision before nsDocAccessible::FireDocLoadFinished
+  // changes mIsNewDocument and mBusy
+  PRBool fireStateChange = mIsNewDocument && mBusy != eBusyStateDone;
 
-    if (mBusy != eBusyStateDone) {
-      mBusy = eBusyStateDone; // before event callback so STATE_BUSY is not reported
-      FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
-      FireAnchorJumpEvent();
-    }
+  nsDocAccessible::FireDocLoadFinished();
+
+  if (fireStateChange) {
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE,
+                     this, nsnull);
   }
-
-  mBusy = eBusyStateDone;
+  FireAnchorJumpEvent();
 }
 
 NS_IMETHODIMP nsDocAccessibleWrap::OnLocationChange(nsIWebProgress *aWebProgress,

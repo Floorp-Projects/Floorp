@@ -45,6 +45,7 @@
 
 #include "ISimpleDOMDocument.h"
 #include "nsDocAccessible.h"
+#include "nsIDocShellTreeItem.h"
 
 class nsDocAccessibleWrap: public nsDocAccessible,
                            public ISimpleDOMDocument

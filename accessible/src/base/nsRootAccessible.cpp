@@ -502,8 +502,7 @@ void nsRootAccessible::FireCurrentFocusEvent()
       return;  // Could not get a focused document either
     }
   }
-  nsCOMPtr<nsIPresShell> eventShell;
-  GetEventShell(focusedNode, getter_AddRefs(eventShell));
+  nsCOMPtr<nsIPresShell> eventShell = GetPresShellFor(focusedNode);
   NS_ASSERTION(eventShell, "No presshell for focused node");
 
   nsCOMPtr<nsIAccessible> accessible;
@@ -511,26 +510,6 @@ void nsRootAccessible::FireCurrentFocusEvent()
                                     getter_AddRefs(accessible));
   if (accessible) {
     FireAccessibleFocusEvent(accessible, focusedNode);
-  }
-}
-
-void nsRootAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell)
-{
-  // XXX aaronl - this is not ideal.
-  // We could avoid this whole section and the fallible 
-  // doc->GetShellAt(0) by putting the event handler
-  // on nsDocAccessible instead.
-  // The disadvantage would be that we would be seeing some events
-  // for inner documents that we don't care about.
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  aNode->GetOwnerDocument(getter_AddRefs(domDocument));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
-  if (!doc) {   // This is necessary when the node is the document node
-    doc = do_QueryInterface(aNode);
-  }
-  if (doc) {
-    *aEventShell = doc->GetShellAt(0);
-    NS_IF_ADDREF(*aEventShell);
   }
 }
 
@@ -560,8 +539,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #endif
 
-  nsCOMPtr<nsIPresShell> eventShell;
-  GetEventShell(targetNode, getter_AddRefs(eventShell));
+  nsCOMPtr<nsIPresShell> eventShell = GetPresShellFor(targetNode);
 
 #ifdef MOZ_ACCESSIBILITY_ATK
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(targetNode));
@@ -581,8 +559,8 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     // Only get cached accessible for unload -- so that we don't create it
     // just to destroy it.
     nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(eventShell));
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
-    nsAccessNode::GetDocAccessibleFor(weakShell, getter_AddRefs(accessibleDoc));
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
+      nsAccessNode::GetDocAccessibleFor(weakShell);
     nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = do_QueryInterface(accessibleDoc);
     if (privateAccDoc) {
       privateAccDoc->Destroy();

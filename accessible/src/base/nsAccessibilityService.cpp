@@ -1569,8 +1569,8 @@ NS_IMETHODIMP nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
                                                           nsIWeakReference *aWeakShell,
                                                           nsIAccessNode **aAccessNode)
 {
-  nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
-  nsAccessNode::GetDocAccessibleFor(aWeakShell, getter_AddRefs(accessibleDoc));
+  nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
+    nsAccessNode::GetDocAccessibleFor(aWeakShell);
 
   if (!accessibleDoc) {
     *aAccessNode = nsnull;
@@ -1715,8 +1715,8 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       return NS_ERROR_FAILURE;   // No content, and not doc node
     }
     // This happens when we're on the document node, which will not QI to an nsIContent, 
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
-    nsAccessNode::GetDocAccessibleFor(aWeakShell, getter_AddRefs(accessibleDoc));
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc = 
+      nsAccessNode::GetDocAccessibleFor(aWeakShell);
     if (accessibleDoc) {
       newAcc = do_QueryInterface(accessibleDoc);
       NS_ASSERTION(newAcc, "nsIAccessibleDocument is not an nsIAccessible");

@@ -100,8 +100,6 @@ class nsRootAccessible : public nsDocAccessibleWrap,
 
     void ShutdownAll();
 
-    static void GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShell);
-
   protected:
     nsresult AddEventListeners();
     nsresult RemoveEventListeners();

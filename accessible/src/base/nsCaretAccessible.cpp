@@ -63,6 +63,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsCaretAccessible, nsLeafAccessible, nsIAccessibleC
 nsCaretAccessible::nsCaretAccessible(nsIDOMNode* aDocumentNode, nsIWeakReference* aShell, nsRootAccessible *aRootAccessible):
 nsLeafAccessible(aDocumentNode, aShell), mVisible(PR_TRUE), mCurrentDOMNode(nsnull), mRootAccessible(aRootAccessible)
 {
+  Init();
 }
 
 NS_IMETHODIMP nsCaretAccessible::Shutdown()
@@ -90,8 +91,8 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
 
   // When focus moves such that the caret is part of a new frame selection
   // this removes the old selection listener and attaches a new one for the current focus
-  nsCOMPtr<nsIPresShell> presShell;
-  nsRootAccessible::GetEventShell(aCurrentNode, getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = 
+    nsRootAccessible::GetPresShellFor(aCurrentNode);
   if (!presShell)
     return NS_ERROR_FAILURE;
 
@@ -134,8 +135,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     return NS_OK;
 #endif    
 
-  nsCOMPtr<nsIPresShell> presShell;
-  nsRootAccessible::GetEventShell(mCurrentDOMNode, getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresShell> presShell = GetPresShellFor(mCurrentDOMNode);
   nsCOMPtr<nsISelection> domSel(do_QueryReferent(mDomSelectionWeak));
   if (!presShell || domSel != aSel)
     return NS_OK;  // Only listening to selection changes in currently focused frame
