@@ -31,8 +31,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= jsdebug
 LIBRARY_NAME	= jsd
 
-DIRS 		+= jsdb
-
 REQUIRES	= java js
 
 EXPORTS		= jsdebug.h
@@ -54,6 +52,14 @@ CSRCS		= \
 		  jsd_text.c \
 		  jsd_val.c \
 		  $(NULL)
+
+ifdef JSD_STANDALONE
+DIRS	+= jsdb
+else
+DIRS	+= idl
+CPPSRCS	 = jsd_xpc.cpp
+IS_COMPONENT = 1
+endif
 
 ifndef MOZ_JSD
 CSRCS		+= jsdstubs.c jsd_java.c
