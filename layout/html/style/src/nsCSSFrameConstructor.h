@@ -162,6 +162,7 @@ protected:
                                          nsIFrame*&      aNewTableFrame);
 
   nsresult CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
+                                   nsIDocument*          aDocument,
                                    nsIFrame*             aParentFrame,
                                    nsIContent*           aContent,
                                    nsIStyleContext*      aStyleContext,

@@ -517,6 +517,7 @@ GetChildListNameFor(nsIFrame* aParentFrame,
 
 nsresult
 nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
+                                               nsIDocument*          aDocument,
                                                nsIFrame*             aParentFrame,
                                                nsIContent*           aContent,
                                                nsIStyleContext*      aStyleContext,
@@ -538,6 +539,11 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     // XXX Check if it's an image type we can handle...
     NS_NewHTMLImageElement(&imageContent, nsHTMLAtoms::img);
     imageContent->SetHTMLAttribute(nsHTMLAtoms::src, contentString, PR_FALSE);
+
+    // Set aContent as the parent content and set the document object. This
+    // way event handling works
+    imageContent->SetParent(aContent);
+    imageContent->SetDocument(aDocument, PR_TRUE);
   
     // Create an image frame and initialize it
     nsIFrame* imageFrame;
@@ -584,6 +590,11 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
             if (attrContent) {
               attrContent->Init(aContent, attrNameSpace, attrName);  
             }
+
+            // Set aContent as the parent content and set the document object. This
+            // way event handling works
+            content->SetParent(aContent);
+            content->SetDocument(aDocument, PR_TRUE);
 
             // Create a text frame and initialize it
             NS_NewTextFrame(&textFrame);
@@ -643,7 +654,13 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     nsIFrame*             textFrame = nsnull;
     
     NS_NewTextNode(&textContent);
-    if (nsnull != textContent) {
+    if (textContent) {
+      // Set aContent as the parent content and set the document object. This
+      // way event handling works
+      textContent->SetParent(aContent);
+      textContent->SetDocument(aDocument, PR_TRUE);
+
+      // Set the text
       textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
       domData->SetData(contentString);
       NS_RELEASE(domData);
@@ -762,12 +779,15 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
 
         // Now create content objects (and child frames) for each value of the
         // 'content' property
+        nsCOMPtr<nsIDocument> document;
+        aContent->GetDocument(*getter_AddRefs(document));
+
         for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
           nsIFrame* frame;
           nsresult  result;
 
           // Create a frame
-          result = CreateGeneratedFrameFor(aPresContext, containerFrame,
+          result = CreateGeneratedFrameFor(aPresContext, document, containerFrame,
                                            aContent, textStyleContext,
                                            styleContent, contentIndex, &frame);
           if (NS_SUCCEEDED(result) && frame) {
