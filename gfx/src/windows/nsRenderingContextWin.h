@@ -28,7 +28,6 @@
 #include "nsCRT.h"
 #include "nsTransform2D.h"
 #include "nsIViewManager.h"
-#include "nsIPresShell.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
 #include "nsIFontCache.h"
