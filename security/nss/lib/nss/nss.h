@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.2 2000/09/22 17:34:28 relyea%netscape.com Exp $
+ * $Id: nss.h,v 1.3 2000/10/06 21:37:25 nelsonb%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -42,12 +42,20 @@
 
 SEC_BEGIN_PROTOS
 /*
- * Open the Cert, Key, and Security Module databases.
+ * Open the Cert, Key, and Security Module databases, read only.
  * Initialize the Random Number Generator.
  * Does not initialize the cipher policies or enables.
  * Default policy settings disallow all ciphers.
  */
 extern SECStatus NSS_Init(const char *configdir);
+
+/*
+ * Open the Cert, Key, and Security Module databases, read/write.
+ * Initialize the Random Number Generator.
+ * Does not initialize the cipher policies or enables.
+ * Default policy settings disallow all ciphers.
+ */
+extern SECStatus NSS_InitReadWrite(const char *configdir);
 
 /*
  * initialize NSS without a creating cert db's, key db's, or secmod db's.
