@@ -3830,12 +3830,13 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             return NS_OK;
         }
 
-        nsCOMPtr<nsINodeInfo> ni = aTargetNode->GetNodeInfo();
+        nsINodeInfo *contentNi = aTargetNode->GetNodeInfo();
+        nsCOMPtr<nsINodeInfo> ni;
 
-        if (ni) {
-            nsCOMPtr<nsINodeInfoManager> manager = ni->NodeInfoManager();
-            manager->GetNodeInfo(attr, prefix, nameSpaceID,
-                                 getter_AddRefs(ni));
+        if (contentNi) {
+            contentNi->NodeInfoManager()->GetNodeInfo(attr, prefix,
+                                                      nameSpaceID,
+                                                      getter_AddRefs(ni));
         }
 
         rv = aTargetNode->SetAttr(ni, value, PR_FALSE);
