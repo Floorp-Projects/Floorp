@@ -30,6 +30,47 @@
 <html:script language="JavaScript" src="chrome://pref/content/PrefsWindow.js"/>
 <html:div flex="100%">
 
+<html:script>
+  function setColorWell(menu)
+  {
+    // Debug tree walking.
+    dump("\n");
+    
+    dump("parent: ");
+    dump(menu.id);
+    dump("\n");
+
+    dump("child 1: ");
+    dump(menu.firstChild.id);
+    dump("\n");
+
+    dump("child 2: ");
+    dump(menu.firstChild.nextSibling.id);
+    dump("\n");
+
+    dump("child 3: ");
+    dump(menu.firstChild.nextSibling.nextSibling.id);
+    dump("\n");
+
+    dump("child 3's child 1: ");
+    dump(menu.firstChild.nextSibling.nextSibling.firstChild.id);
+    dump("\n");
+
+
+    dump("\n");
+    dump("\n");
+
+    // Find the colorWell and colorPicker in the hierarchy.
+    var colorWell = menu.firstChild.nextSibling;
+    var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
+
+    // Extract color from colorPicker and assign to colorWell.
+    var color = colorPicker.getAttribute('color');
+    colorWell.style.backgroundColor = color;
+  }
+</html:script>
+
+
 	<box id="header" style="width:100%" align="horizontal">  
 		  <spring style="width:20px"/>
 		  <html:div style="vertical-align: middle;">
@@ -47,14 +88,24 @@
 			</html:div> 
 			</html:legend> 
 			<html:div>
-				&text;
-				<spring flex="50%"/>
-				<titledbutton name="textColorPicker" value="&colorPick;" />
+			<menu>
+				<titledbutton value="&text;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
+
 			</html:div>
 			<html:div>
-				&background;
-				<spring flex="50%"/>
-				<titledbutton name="backgroundColorPicker" value="&colorPick;" />
+			<menu>
+				<titledbutton value="&background;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
+
 			</html:div>
 			<html:div>
 				<html:input  type="checkbox" id="pref:0:bool:browser.wfe.use_windows_colors"
@@ -72,14 +123,22 @@
 			<html:div>&links;</html:div> 
 					</html:legend>
 			<html:div>
-				&unvisit;
-				<spring flex="50%"/>
-				<titledbutton name="unvisitedColorPicker" value="&colorPick;" />
+			<menu>
+				<titledbutton value="&unvisit;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
 				</html:div>
 			<html:div>
-				&visit;
-				<spring flex="50%"/>
-				<titledbutton name="unvisitedColorPicker" value="&colorPick;" />
+			<menu>
+				<titledbutton value="&visit;" class="popup" align="right"/>
+				<html:div style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+				</menupopup>
+			</menu>
 			</html:div>
 			<html:div><html:input  type="checkbox" id="pref:0:bool:browser.underline_anchors" val="checked" />		
 				<html:label for="pref:0:bool:browser.underline_anchors" accesskey="u" tabindex="0">				
