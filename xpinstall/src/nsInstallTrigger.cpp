@@ -305,14 +305,14 @@ nsInstallTriggerFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(nsrefcnt)
 nsInstallTriggerFactory::AddRef(void)
 {
     return ++mRefCnt;
 }
 
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(nsrefcnt)
 nsInstallTriggerFactory::Release(void)
 {
     if (--mRefCnt ==0)

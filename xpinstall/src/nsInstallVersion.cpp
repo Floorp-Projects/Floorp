@@ -379,14 +379,14 @@ nsInstallVersionFactory::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 
 
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(nsrefcnt)
 nsInstallVersionFactory::AddRef(void)
 {
     return ++mRefCnt;
 }
 
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(nsrefcnt)
 nsInstallVersionFactory::Release(void)
 {
     if (--mRefCnt ==0)
