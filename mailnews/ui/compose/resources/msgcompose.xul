@@ -63,6 +63,15 @@
 	  }
 	}
 
+  function SetDocumentCharacterSet(aCharset)
+	{
+    dump("SetDocumentCharacterSet Callback!\n");
+		if (composeAppCore != null) {
+		  composeAppCore.SetDocumentCharset(aCharset);
+		} else
+			dump("ComposeAppCore has not been created!\n");
+	}
+
         function EditorGetText()
 	{
 		if (editorAppCore != null) {
@@ -159,7 +168,10 @@
 		<separator/>
 		<menuitem name=".Wrap Long Lines" cmd="nsCmd:ComposeNYI"/>
 		<separator/>
-		<menuitem name=".Character Set" cmd="nsCmd:ComposeNYI"/>
+		<menu name="Character Set">
+    <menuitem name="Western (ISO-8859-1)" onclick="SetDocumentCharacterSet('ISO-8859-1');"/>
+    <menuitem name="Japanese (ISO-2022-JP)" onclick="SetDocumentCharacterSet('ISO-2022-JP');"/>
+    </menu>
     </menu>
     <menu name=".Tools">
 		<menuitem name=".Check Spelling..." cmd="nsCmd:ComposeSpelling"/>
