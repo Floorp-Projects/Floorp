@@ -984,9 +984,18 @@ NS_IMETHODIMP
           return rc;
       }
     }
-    rc = EncodeSimpleValue(aEncoding, kEmpty,
-                           aNamespaceURI, aName, aSchemaType, aDestination,
-                           aReturnValue);
+//  We still have to fake this one, because there is no struct type in schema.
+    if (aName.IsEmpty() && !aSchemaType) {
+      rc = EncodeSimpleValue(aEncoding, kEmpty,
+                             nsSOAPUtils::kSOAPEncURI, kStructSOAPType,
+                             aSchemaType, aDestination,
+                             aReturnValue);
+    }
+    else {
+      rc = EncodeSimpleValue(aEncoding, kEmpty,
+                             aNamespaceURI, aName, aSchemaType, aDestination,
+                             aReturnValue);
+    }
     if (NS_FAILED(rc))
       return rc;
     return EncodeStructParticle(aEncoding, pbptr, modelGroup, aAttachments, *aReturnValue);
@@ -1017,6 +1026,12 @@ NS_IMETHODIMP
   rc = aSource->GetAsAString(value);
   if (NS_FAILED(rc))
     return rc;
+//  We still have to fake this one, because there is no any simple type in schema.
+  if (aName.IsEmpty() && !aSchemaType) {
+    return EncodeSimpleValue(aEncoding, value,
+        nsSOAPUtils::kSOAPEncURI, kAnySimpleTypeSchemaType, aSchemaType, aDestination,
+                             aReturnValue);
+  }
   return EncodeSimpleValue(aEncoding, value,
                            aNamespaceURI, aName, aSchemaType, aDestination,
                            aReturnValue);
@@ -1338,7 +1353,7 @@ NS_IMETHODIMP
       }
       else {
 //  Arrays with no defaults are supposed to return 0, but apparently do not
-//      rc = ct->GetArrayType(getter_AddRefs(schemaArrayType));
+        rc = ct->GetArrayType(getter_AddRefs(schemaArrayType));
         if (NS_FAILED(rc))
           return rc;
       }
@@ -1353,9 +1368,17 @@ NS_IMETHODIMP
   nsAutoString arrayTypeSchemaURI;
   nsAutoString arrayTypeSchemaName;
   if (!schemaArrayType) {
-    rc = GetNativeType(arrayNativeType, arrayTypeSchemaURI, arrayTypeSchemaName);
-    if (NS_FAILED(rc))
-      return rc;
+    switch (arrayNativeType) {
+      case nsIDataType::VTYPE_INTERFACE:  //  In a variant, an interface is a struct, but here it is any
+      case nsIDataType::VTYPE_INTERFACE_IS:
+        arrayTypeSchemaName = kAnyTypeSchemaType;
+        arrayTypeSchemaURI = nsSOAPUtils::kXSURI;
+        break;
+      default:  //  Everything else can be interpreted correctly
+        rc = GetNativeType(arrayNativeType, arrayTypeSchemaURI, arrayTypeSchemaName);
+        if (NS_FAILED(rc))
+          return rc;
+    }
     nsCOMPtr < nsISchemaCollection > collection;
     nsresult rc =
         aEncoding->GetSchemaCollection(getter_AddRefs(collection));
@@ -2557,7 +2580,6 @@ NS_IMETHODIMP
       nsresult rc = ct->GetArrayDimension(&dimensionCount);
       if (NS_FAILED(rc))
         return rc;
-//  I believe we still have problem with dual class hierarchies.
       rc = ct->GetArrayType(getter_AddRefs(schemaArrayType));
       if (NS_FAILED(rc))
         return rc;

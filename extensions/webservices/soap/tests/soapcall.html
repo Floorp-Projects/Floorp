@@ -72,7 +72,7 @@ function makeCall(syncCall, faultCall) {
   // the last parameter is an object that will be serialized into
   // a struct parameter. It does not have a parameter wrapper because 
   // we don't need it to be named
-  s.encode(1, "GetLastTradePrice", "uri:some-namespace", 0, null, 3, new Array(p1, p2, p3, p4, new SOAPParameter(new Dog("Fido", "Lab", "Black"))));
+  s.encode(1, "GetLastTradePrice", "uri:some-namespace", 0, null, 5, new Array(p1, p2, p3, p4, new SOAPParameter(new Dog("Fido", "Lab", "Black"))));
 
 
   //  The following line allows the browser with default security 
