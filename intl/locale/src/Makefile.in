@@ -42,7 +42,6 @@ CPPSRCS		= \
 		nsScriptableDateFormat.cpp \
 		nsLanguageAtomService.cpp \
 		nsLocale.cpp \
-		nsLocaleFactory.cpp \
 		nsLocaleService.cpp \
 		nsFontPackageService.cpp \
 		nsFontPackageHandler.cpp \
@@ -50,7 +49,6 @@ CPPSRCS		= \
 
 EXPORTS		= \
 		nsCollation.h \
-		nsLocaleFactory.h \
 		$(NULL)
 
 EXPORT_RESOURCE = \

@@ -35,13 +35,6 @@
 #include "nsIMacLocale.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
-static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
-static NS_DEFINE_IID(kIMacLocaleIID, NS_IMACLOCALE_IID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Copy from FE_StrColl(), macfe/utility/locale.cp. */
@@ -115,7 +108,7 @@ inline unsigned char mac_sort_tbl_search(const unsigned char ch, const unsigned 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsCollationMac, kICollationIID);
+NS_IMPL_ISUPPORTS1(nsCollationMac, nsICollation);
 
 
 nsCollationMac::nsCollationMac() 
@@ -150,7 +143,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
     nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(kLocaleServiceCID, &res);
+             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
@@ -169,7 +162,7 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     nsMemory::Free(aLocaleUnichar);
 
     short scriptcode, langcode, regioncode;
-    nsCOMPtr <nsIMacLocale> macLocale = do_GetService(kMacLocaleFactoryCID, &res);
+    nsCOMPtr <nsIMacLocale> macLocale = do_GetService(NS_MACLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aLocale, &scriptcode, &langcode, &regioncode))) {
         m_scriptcode = scriptcode;

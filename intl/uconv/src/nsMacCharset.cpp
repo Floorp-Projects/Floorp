@@ -30,10 +30,6 @@
 #include "nsIMacLocale.h"
 #include "nsLocaleCID.h"
 
-NS_DEFINE_IID(kIPlatformCharsetIID, NS_IPLATFORMCHARSET_IID);
-NS_DEFINE_IID(kMacLocaleIID,NS_IMACLOCALE_IID);
-NS_DEFINE_CID(kMacLocaleFactoryCID,NS_MACLOCALEFACTORY_CID);
-
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt;
 
@@ -53,7 +49,7 @@ private:
   nsString mCharset;
 };
 
-NS_IMPL_ISUPPORTS(nsMacCharset, kIPlatformCharsetIID);
+NS_IMPL_ISUPPORTS1(nsMacCharset, nsIPlatformCharset);
 
 nsMacCharset::nsMacCharset()
 {
@@ -115,8 +111,8 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	nsString localeAsString(localeName), charset; charset.AssignWithConversion("x-mac-roman");
 	short script, language, region;
 	
-	nsresult rv = nsComponentManager::CreateInstance(kMacLocaleFactoryCID,nsnull,kMacLocaleIID,
-											getter_AddRefs(pMacLocale));
+	nsresult rv;
+  pMacLocale = do_CreateInstance(NS_MACLOCALE_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) { *_retValue = charset.ToNewUnicode(); return rv; }
 	
 	rv = pMacLocale->GetPlatformLocale(&localeAsString,&script,&language,&region);

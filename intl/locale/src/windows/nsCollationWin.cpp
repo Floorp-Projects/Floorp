@@ -35,12 +35,6 @@
 #include <windows.h>
 
 
-static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
-static NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
-static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-
 NS_IMPL_ISUPPORTS1(nsCollationWin, nsICollation);
 
 
@@ -90,7 +84,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
     nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(kLocaleServiceCID, &res);
+             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
@@ -112,7 +106,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
       nsMemory::Free(aLocaleUnichar);
     }
 
-    nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(kWin32LocaleFactoryCID, &res);
+    nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(NS_WIN32LOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       LCID lcid;
   	  res = win32Locale->GetPlatformLocale(&aLocale, &lcid);

@@ -34,15 +34,6 @@
 #include "nsIPref.h"
 //#define DEBUG_UNIX_COLLATION
 
-static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
-static NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
-static NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-
-NS_IMPL_ISUPPORTS(nsCollationUnix, kICollationIID);
-
-
 inline void nsCollationUnix::DoSetLocale()
 {
   char *locale = setlocale(LC_COLLATE, NULL);
@@ -73,6 +64,8 @@ nsCollationUnix::~nsCollationUnix()
   if (mCollation != NULL)
     delete mCollation;
 }
+
+NS_IMPL_ISUPPORTS1(nsCollationUnix, nsICollation)
 
 nsresult nsCollationUnix::Initialize(nsILocale* locale) 
 {
@@ -110,7 +103,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
     nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(kLocaleServiceCID, &res);
+             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
@@ -139,7 +132,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       aLocale.AssignWithConversion("C");
     }
 
-    nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(kPosixLocaleFactoryCID, &res);
+    nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       char platformLocale[kPlatformLocaleLength+1];
       res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);

@@ -33,9 +33,6 @@
 #include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
 
-NS_DEFINE_IID(kIOS2LocaleIID,NS_IOS2LOCALE_IID);
-NS_DEFINE_CID(kOS2LocaleFactoryCID,NS_OS2LOCALEFACTORY_CID);
-
 static nsURLProperties *gInfo = nsnull;
 static PRInt32 gCnt= 0;
 

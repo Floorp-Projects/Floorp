@@ -34,11 +34,6 @@
 
 #define NSDATETIMEFORMAT_BUFFER_LEN  80
 
-static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
-static NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
-
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
-
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatWin, nsIDateTimeFormat);
 
 
@@ -84,7 +79,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
   // get locale string, use app default if no locale specified
   if (NULL == locale) {
     nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(kLocaleServiceCID, &res);
+             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
@@ -106,7 +101,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
     mLocale.Assign(aLocaleUnichar); // cache locale name
     nsMemory::Free(aLocaleUnichar);
 
-    nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(kWin32LocaleFactoryCID, &res);
+    nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(NS_WIN32LOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
   	  res = win32Locale->GetPlatformLocale(&mLocale, (LCID *) &mLCID);
     }

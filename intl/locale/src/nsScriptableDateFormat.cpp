@@ -150,8 +150,19 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
   return rv;
 }
 
-nsISupports *NEW_SCRIPTABLE_DATEFORMAT(void)
+NS_IMETHODIMP
+NS_NewScriptableDateFormat(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  return (nsISupports *) new nsScriptableDateFormat;
-}
+  if (aOuter)
+    return NS_ERROR_NO_AGGREGATION;
 
+  nsScriptableDateFormat* result = new nsScriptableDateFormat();
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(result);
+  nsresult rv = result->QueryInterface(aIID, aResult);
+  NS_RELEASE(result);
+
+  return rv;
+}

@@ -20,21 +20,10 @@
  * Contributor(s): 
  */
 
-#include "nscore.h"
-#include "nsISupports.h"
-#include "nsIFactory.h"
-#include "nsCollationWin.h"
-#include "nsDateTimeFormatWin.h"
+#include "nsIModule.h"
 
-class nsLocaleWinFactory : public nsIFactory
-{   
-  public:   
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
-
-    nsLocaleWinFactory(const nsCID &aClass);   
-    ~nsLocaleWinFactory();   
-
-  private:   
-    nsCID     mClassID;
-};
+void
+XXXNotCalled()
+{
+  NSGetModule(nsnull, nsnull, nsnull);
+}

@@ -42,13 +42,7 @@
 #include "nsIPref.h"
 
 
-static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
-static NS_DEFINE_CID(kOS2LocaleFactoryCID, NS_OS2LOCALEFACTORY_CID);
-static NS_DEFINE_IID(kIOS2LocaleIID, NS_IOS2LOCALE_IID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-
-NS_IMPL_ISUPPORTS(nsCollationOS2, kICollationIID)
+NS_IMPL_ISUPPORTS1(nsCollationOS2, nsICollation)
 
 nsCollationOS2::nsCollationOS2()
 {
@@ -94,7 +88,7 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
     nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(kLocaleServiceCID, &res);
+             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
@@ -121,7 +115,7 @@ nsresult nsCollationOS2::Initialize(nsILocale *locale)
       aLocale.AssignWithConversion("C");
     }
 
-    nsCOMPtr <nsIOS2Locale> os2Locale = do_GetService(kOS2LocaleFactoryCID, &res);
+    nsCOMPtr <nsIOS2Locale> os2Locale = do_GetService(NS_OS2LOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar platformLocale[kPlatformLocaleLength+1];
       res = os2Locale->GetPlatformLocale(platformLocale, kPlatformLocaleLength+1);

@@ -25,7 +25,6 @@
 #include "pratom.h"
 #include "nsURLProperties.h"
 #include "nsCOMPtr.h"
-#include "nsIPosixLocale.h"
 #include "nsLocaleCID.h"
 #include "nsUConvDll.h"
 #include "nsIComponentManager.h"
@@ -43,10 +42,6 @@
 #if HAVE_NL_LANGINFO
 #include <langinfo.h>
 #endif
-
-// {84B0F181-C6C7-11d2-B3B0-00805F8A6670}
-static NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
-static NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
 
 class nsUNIXCharset : public nsIPlatformCharset
 {

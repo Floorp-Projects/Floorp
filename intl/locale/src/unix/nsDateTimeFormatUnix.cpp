@@ -32,14 +32,7 @@
 #include "nsIPosixLocale.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
-static NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_IID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID); 
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-
-NS_IMPL_THREADSAFE_ISUPPORTS(nsDateTimeFormatUnix, kIDateTimeFormatIID);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatUnix, nsIDateTimeFormat);
 
 // init this interface to a specified locale
 nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
@@ -72,7 +65,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
   // get locale name string, use app default if no locale specified
   if (NULL == locale) {
     nsCOMPtr<nsILocaleService> localeService = 
-             do_GetService(kLocaleServiceCID, &res);
+             do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsILocale *appLocale;
       res = localeService->GetApplicationLocale(&appLocale);
@@ -95,7 +88,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     mLocale = aLocaleUnichar; // cache locale name
     nsMemory::Free(aLocaleUnichar);
 
-    nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(kPosixLocaleFactoryCID, &res);
+    nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       res = posixLocale->GetPlatformLocale(&mLocale, mPlatformLocale, kPlatformLocaleLength+1);
     }
