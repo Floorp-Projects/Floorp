@@ -29,13 +29,10 @@
  */
 
 /**
- *  Implementation of nsIFile for ``Unixy'' systems.
+ * Implementation of nsIFile for ``Unixy'' systems.
  */
 
-/** 
- *  we're going to need some autoconf loving, 
- *  I can just tell 
- */
+// We're going to need some autoconf loving, I can just tell.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -301,17 +298,17 @@ nsLocalFile::CreateAllAncestors(PRUint32 permissions)
 #endif
 
     while ((slashp = strchr(slashp + 1, '/'))) {
-        /**
-         *  Sequences of '/' are equivalent to a single '/'.
+        /*
+         * Sequences of '/' are equivalent to a single '/'.
          */
         if (slashp[1] == '/')
             continue;
 
-        /**
-         *  If the path has a trailing slash, don't make the last component here,
-         *  because we'll get EEXISTS in Create when we try to build the final
-         *  component again, and it's easier to condition the logic here than
-         *  there.
+        /*
+         * If the path has a trailing slash, don't make the last component,
+         * because we'll get EEXIST in Create when we try to build the final
+         * component again, and it's easier to condition the logic here than
+         * there.
          */
         if (slashp[1] == '\0')
             break;
@@ -326,11 +323,11 @@ nsLocalFile::CreateAllAncestors(PRUint32 permissions)
         /* Put the / back before we (maybe) return */
         *slashp = '/';
 
-        /**
-         *  We could get EEXISTS for an existing file -- not directory --
-         *  with the name of one of our ancestors, but that's OK: we'll get
-         *  ENOTDIR when we try to make the next component in the path,
-         *  either here on back in Create, and error out appropriately.
+        /*
+         * We could get EEXIST for an existing file -- not directory --
+         * with the name of one of our ancestors, but that's OK: we'll get
+         * ENOTDIR when we try to make the next component in the path,
+         * either here on back in Create, and error out appropriately.
          */
         if (result == -1 && errno != EEXIST)
             return NSRESULT_FOR_ERRNO();
@@ -363,39 +360,41 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE **_retval)
     return NS_OK;
 }
 
-static int exclusive_create(const char *path, mode_t mode)
+static int
+do_create(const char *path, PRIntn flags, mode_t mode, PRFileDesc **_retval)
 {
-    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, mode);
-    if (fd >= 0)
-        close(fd);
-    return fd;
+    *_retval = PR_Open(path, flags, mode);
+    return *_retval ? 0 : -1;
 }
 
-static int exclusive_mkdir(const char *path, mode_t mode)
+static int
+do_mkdir(const char *path, PRIntn flags, mode_t mode, PRFileDesc **_retval)
 {
+    *_retval = nsnull;
     return mkdir(path, mode);
 }
 
-NS_IMETHODIMP
-nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
+nsresult
+nsLocalFile::CreateAndKeepOpen(PRUint32 type, PRIntn flags,
+                               PRUint32 permissions, PRFileDesc **_retval)
 {
     if (type != NORMAL_FILE_TYPE && type != DIRECTORY_TYPE)
         return NS_ERROR_FILE_UNKNOWN_TYPE;
 
     int result;
-    int (*exclusiveCreateFunc)(const char *, mode_t) =
-        (type == NORMAL_FILE_TYPE) ? exclusive_create : exclusive_mkdir;
+    int (*createFunc)(const char *, PRIntn, mode_t, PRFileDesc **) =
+        (type == NORMAL_FILE_TYPE) ? do_create : do_mkdir;
 
-    result = exclusiveCreateFunc(mPath.get(), permissions);
+    result = createFunc(mPath.get(), flags, permissions, _retval);
     if (result == -1 && errno == ENOENT) {
-        /**
-         *  If we failed because of missing ancestor components, try to create
-         *  them and then retry the original creation.
+        /*
+         * If we failed because of missing ancestor components, try to create
+         * them and then retry the original creation.
          *
-         *  Ancestor directories get the same permissions as the file we're
-         *  creating, with the X bit set for each of (user,group,other) with
-         *  an R bit in the original permissions.    If you want to do anything
-         *  fancy like setgid or sticky bits, do it by hand.
+         * Ancestor directories get the same permissions as the file we're
+         * creating, with the X bit set for each of (user,group,other) with
+         * an R bit in the original permissions.    If you want to do anything
+         * fancy like setgid or sticky bits, do it by hand.
          */
         int dirperm = permissions;
         if (permissions & S_IRUSR)
@@ -416,10 +415,24 @@ nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
 #ifdef DEBUG_NSIFILE
         fprintf(stderr, "nsIFile: Create(\"%s\") again\n", mPath.get());
 #endif
-        result = exclusiveCreateFunc(mPath.get(), permissions);
+        result = createFunc(mPath.get(), flags, permissions, _retval);
     }
 
     return NSRESULT_FOR_RETURN(result);
+}
+
+NS_IMETHODIMP
+nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
+{
+    PRFileDesc *junk = nsnull;
+    nsresult rv = CreateAndKeepOpen(type,
+                                    PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE |
+                                    PR_EXCL,
+                                    permissions,
+                                    &junk);
+    if (junk)
+        PR_Close(junk);
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -584,9 +597,9 @@ nsresult
 nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
 {
     nsresult rv;
-    /** 
-     *  dirCheck is used for various bool 
-     *  tests like Equals, Exists, isDir etc
+    /*
+     * dirCheck is used for various boolean test results such as from Equals,
+     * Exists, isDir, etc.
      */
     PRBool dirCheck, isSymlink;
     PRUint32 oldPerms;
@@ -715,66 +728,52 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
 #endif
 
         // actually create the file.
-        nsLocalFile *newFile = new nsLocalFile();
-        if (!newFile) {
+        nsCOMPtr<nsLocalFile> newFile = new nsLocalFile();
+        if (!newFile)
             return NS_ERROR_OUT_OF_MEMORY;
-        }
-        NS_ADDREF(newFile);
 
         rv = newFile->InitWithNativePath(newPathName);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(newFile);
+        if (NS_FAILED(rv))
             return rv;
-        }
 
         // get the old permissions
         PRUint32 myPerms;
         GetPermissions(&myPerms);
 
-        // create the new file with user rwx permissions
-        rv = newFile->Create(NORMAL_FILE_TYPE, S_IRWXU);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(newFile);
-            return rv;
-        }
+        // Create the new file with the old file's permissions, even if write
+        // permission is missing.  We can't create with write permission and
+        // then change back to myPerm on all filesystems (FAT on Linux, e.g.).
+        // But we can write to a read-only file on all Unix filesystems if we
+        // open it successfully for writing.
 
-        // open the new file.
-        PRInt32     openFlags = PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE;
-        PRInt32     modeFlags = myPerms;
         PRFileDesc *newFD;
-
-        rv = newFile->OpenNSPRFileDesc(openFlags, S_IRWXU, &newFD);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(newFile);
-            return rv;
-        }
-
-        // set the permissions of newFile to original files 
-        if (NS_FAILED(rv = newFile->SetPermissions(myPerms)))
+        rv = newFile->CreateAndKeepOpen(NORMAL_FILE_TYPE,
+                                        PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE,
+                                        myPerms,
+                                        &newFD);
+        if (NS_FAILED(rv))
             return rv;
 
         // open the old file, too
-        openFlags = PR_RDONLY;
-        PRFileDesc *oldFD;
-
         PRBool specialFile;
-        if (NS_FAILED(rv = IsSpecial(&specialFile)))
+        if (NS_FAILED(rv = IsSpecial(&specialFile))) {
+            PR_Close(newFD);
             return rv;
+        }
         if (specialFile) {
 #ifdef DEBUG
             printf("Operation not supported: %s\n", mPath.get());
 #endif
             // make sure to clean up properly
             PR_Close(newFD);
-            NS_RELEASE(newFile);
             return NS_OK;
         }
                
-        rv = OpenNSPRFileDesc(openFlags, modeFlags, &oldFD);
+        PRFileDesc *oldFD;
+        rv = OpenNSPRFileDesc(PR_RDONLY, myPerms, &oldFD);
         if (NS_FAILED(rv)) {
             // make sure to clean up properly
             PR_Close(newFD);
-            NS_RELEASE(newFile);
             return rv;
         }
 
@@ -811,9 +810,6 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
         // close the files
         PR_Close(newFD);
         PR_Close(oldFD);
-
-        // free our resources
-        NS_RELEASE(newFile);
 
         // check for read (or write) error after cleaning up
         if (bytesRead < 0) 
@@ -971,19 +967,18 @@ nsLocalFile::GetLastModifiedTimeOfLink(PRInt64 *aLastModTimeOfLink)
     return NS_OK;
 }
 
-/**
- *  utime(2) may or may not dereference symlinks, joy.
+/*
+ * utime(2) may or may not dereference symlinks, joy.
  */
-
 NS_IMETHODIMP
 nsLocalFile::SetLastModifiedTimeOfLink(PRInt64 aLastModTimeOfLink)
 {
     return SetLastModifiedTime(aLastModTimeOfLink);
 }
 
-/** 
- *  only send back permissions bits: maybe we want to send back the whole
- *  mode_t to permit checks against other file types?
+/*
+ * Only send back permissions bits: maybe we want to send back the whole
+ * mode_t to permit checks against other file types?
  */
 
 #define NORMALIZE_PERMS(mode)    ((mode)& (S_IRWXU | S_IRWXG | S_IRWXO))
@@ -1016,7 +1011,14 @@ nsLocalFile::SetPermissions(PRUint32 aPermissions)
     CHECK_mPath();
 
     InvalidateCache();
-    return NSRESULT_FOR_RETURN(chmod(mPath.get(), aPermissions));
+
+    /*
+     * Race condition here: we should use fchmod instead, there's no way to 
+     * guarantee the name still refers to the same file.
+     */
+    if (chmod(mPath.get(), aPermissions) < 0)
+        return NSRESULT_FOR_ERRNO();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1089,17 +1091,17 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 
     struct STATFS fs_buf;
 
-    /** 
-     *  Members of the STATFS struct that you should know about:
-     *  f_bsize = block size on disk.
-     *  f_bavail = number of free blocks available to a non-superuser.
-     *  f_bfree = number of total free blocks in file system.
+    /* 
+     * Members of the STATFS struct that you should know about:
+     * f_bsize = block size on disk.
+     * f_bavail = number of free blocks available to a non-superuser.
+     * f_bfree = number of total free blocks in file system.
      */
 
     if (STATFS(mPath.get(), &fs_buf) < 0) {
         // The call to STATFS failed.
 #ifdef DEBUG
-    printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
+        printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
 #endif
         return NS_ERROR_FAILURE;
     }
@@ -1108,28 +1110,26 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
          fs_buf.f_bsize * (fs_buf.f_bavail - 1));
 #endif
 
-    /** 
-     *  The number of Bytes free = The number of free blocks available to
-     *  a non-superuser, minus one as a fudge factor, multiplied by the size
-     *  of the beforementioned blocks.
+    /* 
+     * The number of bytes free == The number of free blocks available to
+     * a non-superuser, minus one as a fudge factor, multiplied by the size
+     * of the aforementioned blocks.
      */
+    PRInt64 bsize, bavail;
 
-    PRInt64 bsize,bavail;
-    LL_I2L( bsize,    fs_buf.f_bsize );
-    LL_I2L( bavail, fs_buf.f_bavail - 1 );
-    LL_MUL( *aDiskSpaceAvailable, bsize, bavail );
+    LL_I2L(bsize, fs_buf.f_bsize);
+    LL_I2L(bavail, fs_buf.f_bavail - 1);
+    LL_MUL(*aDiskSpaceAvailable, bsize, bavail);
     return NS_OK;
 
 #else
-    /**
-     *  This platform doesn't have statfs or statvfs.
-     *  I'm sure that there's a way to check for free disk space
-     *  on platforms that don't have statfs
-     *  (I'm SURE they have df, for example).
+    /*
+     * This platform doesn't have statfs or statvfs.  I'm sure that there's
+     * a way to check for free disk space on platforms that don't have statfs
+     * (I'm SURE they have df, for example).
      *
-     *    Until we figure out how to do that, lets be honest
-     *  and say that this command isn't implemented
-     *  properly for these platforms yet.
+     * Until we figure out how to do that, lets be honest and say that this
+     * command isn't implemented properly for these platforms yet.
      */
 #ifdef DEBUG
     printf("ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without statfs.\n");
@@ -1177,9 +1177,8 @@ nsLocalFile::GetParent(nsIFile **aParent)
     return rv;
 }
 
-/**
- * The results of Exists, isWritable and isReadable 
- * are not cached.
+/*
+ * The results of Exists, isWritable and isReadable are not cached.
  */
 
 NS_IMETHODIMP
