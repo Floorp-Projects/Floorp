@@ -32,7 +32,7 @@
 #include "es2mcf.h"
 #include "pm2rdf.h"
 #include "scook.h"
-
+#include "atalk.h"
 
 	/* globals */
 RDFL		gAllDBs = 0;
@@ -54,6 +54,12 @@ getTranslator (char* url)
     return MakeMailStore(url); */
   } else if (startsWith(url, "rdf:lfs")) {
     return MakeLFSStore(url);
+
+#ifdef	XP_MAC
+  } else if (startsWith(url, "rdf:appletalk")) {
+    return MakeAtalkStore(url);
+#endif
+
   } else if (endsWith(".rdf", url) || (endsWith(".mcf", url))) {
     return MakeFileDB(url);
   } else if (startsWith("rdf:columns", url)) {
@@ -246,37 +252,38 @@ containerIDp(char* id)
 char *
 makeNewID ()
 {
-
-  PRTime tm = PR_Now();
+	PRTime		tm = PR_Now();
+	char		*id;
 
 #ifndef HAVE_LONG_LONG
-  double doubletm;
+	double		doubletm;
 #endif /* !HAVE_LONG_LONG */
 
-  char* id = (char*)getMem(ID_BUF_SIZE);
 
- #ifdef HAVE_LONG_LONG
-  PR_snprintf(id, ID_BUF_SIZE, "%u", (double)tm);
- #else
-  LL_L2D(doubletm, tm);
-  PR_snprintf(id, ID_BUF_SIZE, "%d", doubletm);
- #endif /* HAVE_LONG_LONG */
+	id = (char *)getMem(ID_BUF_SIZE);
 
-  /* prevent collisions by checking hash. */
-  while (PL_HashTableLookup(resourceHash, id) != NULL) {
-     #ifdef HAVE_LONG_LONG
-	  tm = tm + (PR_MSEC_PER_SEC * 60); /* fix me - not sure what the increment should be */
-	  PR_snprintf(id, ID_BUF_SIZE, "%u", (double)tm);
-    #else
-      int64 incr;
-      LL_I2L(incr, (PR_MSEC_PER_SEC * 60));
-      LL_ADD(tm, tm, incr);
-      LL_L2D(doubletm, tm);
-      PR_snprintf(id, ID_BUF_SIZE, "%d", doubletm);
-    #endif /* HAVE_LONG_LONG */
-  }
+#ifdef HAVE_LONG_LONG
+	PR_snprintf(id, ID_BUF_SIZE, "%u", (double)tm);
+#else
+	LL_L2D(doubletm, tm);
+	PR_snprintf(id, ID_BUF_SIZE, "%1.0f", doubletm);
+#endif /* HAVE_LONG_LONG */
 
-  return id;
+	/* prevent collisions by checking hash. */
+	while (PL_HashTableLookup(resourceHash, id) != NULL)
+	{
+#ifdef HAVE_LONG_LONG
+		tm = tm + (PR_MSEC_PER_SEC * 60); /* fix me - not sure what the increment should be */
+		PR_snprintf(id, ID_BUF_SIZE, "%u", (double)tm);
+#else
+		int64 incr;
+		LL_I2L(incr, (PR_MSEC_PER_SEC * 60));
+		LL_ADD(tm, tm, incr);
+		LL_L2D(doubletm, tm);
+		PR_snprintf(id, ID_BUF_SIZE, "%1.0f", doubletm);
+#endif /* HAVE_LONG_LONG */
+	}
+	return (id);
 }
 
 
