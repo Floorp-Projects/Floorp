@@ -57,22 +57,56 @@ Flt64 doubleNegativeInfinity;
 Flt32 floatNaN;
 Flt64 doubleNaN;
 
-struct DummyInit
-{
-	DummyInit(Flt32 fZero, Flt64 dZero);
+#ifdef IS_LITTLE_ENDIAN
+#define DOUBLE_HI32(x)        (((uint32 *)&(x))[1])
+#define DOUBLE_LO32(x)        (((uint32 *)&(x))[0])
+#else
+#define DOUBLE_HI32(x)        (((uint32 *)&(x))[0])
+#define DOUBLE_LO32(x)        (((uint32 *)&(x))[1])
+#endif
+#define DOUBLE_HI32_SIGNBIT   0x80000000
+#define DOUBLE_HI32_EXPMASK   0x7ff00000
+#define DOUBLE_HI32_MANTMASK  0x000fffff
+
+union dpun {
+    struct {
+#ifdef IS_LITTLE_ENDIAN
+	uint32 lo, hi;
+#else
+	uint32 hi, lo;
+#endif
+    } s;
+    Flt64 d;
 };
 
-DummyInit dummyFloatInit(0.0f, 0.0);
-
-DummyInit::DummyInit(Flt32 fZero, Flt64 dZero)
+struct DummyInit
 {
-	floatPositiveInfinity = 1.0f/fZero;
-	doublePositiveInfinity = 1.0/dZero;
-	floatNegativeInfinity = -1.0f/fZero;
-	doubleNegativeInfinity = -1.0/dZero;
-	floatNaN = fZero/fZero;
-	doubleNaN = dZero/dZero;
-}
+  DummyInit() {
+    union dpun u;
+
+#if notyet    
+    floatPositiveInfinity = 1.0f/fZero;
+    floatNegativeInfinity = -1.0f/fZero;
+    floatNaN = fZero/fZero;
+#endif
+    
+	u.s.hi = DOUBLE_HI32_EXPMASK;
+	u.s.lo = 0x00000000;
+	doublePositiveInfinity = u.d;
+    
+	u.s.hi = DOUBLE_HI32_SIGNBIT | DOUBLE_HI32_EXPMASK;
+	u.s.lo = 0x00000000;
+	doubleNegativeInfinity = u.d;
+
+
+	u.s.hi = DOUBLE_HI32_EXPMASK | DOUBLE_HI32_MANTMASK;
+	u.s.lo = 0xffffffff;
+	doubleNaN = u.d;
+  }
+};
+
+DummyInit dummyFloatInit;
+
 #endif
 
 // Wrapper around fmod() is necessary because some implementations doesn't

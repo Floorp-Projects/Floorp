@@ -94,11 +94,7 @@ ifdef LIBRARY
 	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
 endif
 ifdef SHARED_LIBRARY
-ifeq ($(OS_ARCH),WINNT)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
-else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
-endif
 endif
 ifdef IMPORT_LIBRARY
 	$(INSTALL) -m 555 $(IMPORT_LIBRARY) $(DIST)/lib
@@ -222,7 +218,7 @@ $(PROGRAM): $(OBJS)
 ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(OBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(OS_LIBS)
+	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(OS_LIBS) 
 endif
 	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
 
@@ -272,7 +268,7 @@ else
 endif
 	$(INSTALL) -m 555 $(LIBRARY) $(DIST)/lib
 else
-	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(OS_LIBS) $(EXTRA_LIBS) -L$(DIST)/lib 
 	chmod +x $@
 endif
 endif
