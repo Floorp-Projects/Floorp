@@ -95,14 +95,17 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
 
   mOutType = aOutType;
 
+printf("___TRACE___BUG_79775___CP#009___\n");
   if (!msgURI)
     return NS_ERROR_INVALID_ARG;
 
   mURI = nsCRT::strdup(msgURI);
 
+printf("___TRACE___BUG_79775___CP#010___\n");
   if (!mURI)
     return NS_ERROR_OUT_OF_MEMORY;
 
+printf("___TRACE___BUG_79775___CP#011___\n");
   rv = GetMessageServiceFromURI(mURI, &mMessageService);
   if (NS_FAILED(rv) && !mMessageService)
   {
@@ -111,6 +114,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
 
   NS_ADDREF(this);
 
+printf("___TRACE___BUG_79775___CP#012___\n");
   // Now, we can create a mime parser (nsIStreamConverter)!
   nsCOMPtr<nsIStreamConverter> mimeParser;
   rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
@@ -118,6 +122,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
                                           (void **) getter_AddRefs(mimeParser)); 
   if (NS_FAILED(rv) || !mimeParser)
   {
+printf("___TRACE___BUG_79775___CP#013___\n");
     Release();
     ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
@@ -127,10 +132,12 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
     return rv;
   }
   
+printf("___TRACE___BUG_79775___CP#014___\n");
   // Set us as the output stream for HTML data from libmime...
   nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
   if (mimeConverter)
   {
+printf("___TRACE___BUG_79775___CP#015___\n");
 	  mimeConverter->SetMimeOutputType(mOutType);  // Set the type of output for libmime
       mimeConverter->SetForwardInline(mAddInlineHeaders);
       mimeConverter->SetIdentity(identity);
@@ -139,6 +146,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   nsCOMPtr<nsIStreamListener> convertedListener = do_QueryInterface(mimeParser);
   if (!convertedListener)
   {
+printf("___TRACE___BUG_79775___CP#016___\n");
     Release();
     ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
@@ -151,6 +159,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   nsCOMPtr<nsIURI> aURL;
   rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
 
+printf("___TRACE___BUG_79775___CP#017___\n");
   // HACK: if we are forwarding a message and that message used a charset over ride
   // (as speciifed in the top most window (assuming the reply originated from that window)
   // then use that over ride charset instead of the charset specified in the message
@@ -177,6 +186,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   rv = NS_NewInputStreamChannel(getter_AddRefs(dummyChannel), aURL, nsnull, nsnull, -1);
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {
+printf("___TRACE___BUG_79775___CP#018___\n");
     Release();
     ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
@@ -198,6 +208,7 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   mMessageService = nsnull;
   Release();
 
+printf("___TRACE___BUG_79775___CP#019___\n");
 	if (NS_FAILED(rv))
     return rv;    
   else
@@ -208,12 +219,14 @@ nsresult
 nsMsgDraft::OpenDraftMsg(const char *msgURI, nsIMsgDBHdr **aMsgToReplace,
                          nsIMsgIdentity * identity, PRBool addInlineHeaders)
 {
+printf("___TRACE___BUG_79775___CP#007___\n");
   // We should really never get here, but if we do, just return 
   // with an error
   if (!msgURI)
     return NS_ERROR_FAILURE;
   
   mAddInlineHeaders = addInlineHeaders;
+printf("___TRACE___BUG_79775___CP#008___\n");
   return ProcessDraftOrTemplateOperation(msgURI, nsMimeOutput::nsMimeMessageDraftOrTemplate, 
                                          identity, aMsgToReplace);
 }
