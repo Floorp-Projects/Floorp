@@ -94,9 +94,9 @@ foreach my $include_path (@include_paths) {
         {
             html_linebreak => sub { return $_; },
             js        => sub { return $_ } ,
-            inactive => sub { return $_; } ,
-            closed => sub { return $_; },
-            obsolete => sub { return $_; },
+            inactive => [ sub { return sub { return $_; } }, 1] ,
+            closed => [ sub { return sub { return $_; } }, 1] ,
+            obsolete => [ sub { return sub { return $_; } }, 1] ,
             url_quote => sub { return $_ } ,
             css_class_quote => sub { return $_ } ,
             xml       => sub { return $_ } ,
@@ -106,6 +106,7 @@ foreach my $include_path (@include_paths) {
             unitconvert => sub { return $_ },
             time      => sub { return $_ } ,
             none      => sub { return $_ } ,
+            ics       => [ sub { return sub { return $_; } }, 1] ,
         },
     }
     );
