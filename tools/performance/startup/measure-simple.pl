@@ -8,8 +8,7 @@
 # - a MOZ_TIMELINE build
 #
 # This starts mozilla with the profile "Default User" and makes it quit immediately.
-# Measurement is either of main1 from MOZ_TIMELINE output if it is found or
-# the app runtime.
+# Measurement is of main1 from MOZ_TIMELINE output
 #
 # This does multiple runs [default 3] and averages all but the first run.
 #
@@ -18,8 +17,6 @@
 #
 
 require 5.003;
-
-require "gettime.pl";
 
 use strict;
 use Cwd;
@@ -66,7 +63,7 @@ END_USAGE
           if (/^(.*): \.\.\.main1$/) {
               my $t = $1 + 0;
               push @runtimes, $t;
-              print "[$i] startup time : $t ms\n";
+              print "[$i] startup time : $t sec\n";
               last;
           }
       }
@@ -81,6 +78,6 @@ END_USAGE
   foreach $i (@runtimes) {
       $sum += $i;
   }
-  printf "Average startup time : %8.4f ms (%d trials - %s)\n", $sum/($ntimes-1), $ntimes-1, join(" ", @runtimes);
+  printf "Average startup time : %8.4f secs (%d trials - %s)\n", $sum/($ntimes-1), $ntimes-1, join(" ", @runtimes);
 }
 
