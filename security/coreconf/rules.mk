@@ -321,7 +321,7 @@ ifdef SHARED_LIBRARY_LIBS
 SUB_SHLOBJS = $(foreach dir,$(SHARED_LIBRARY_DIRS),$(addprefix $(dir)/,$(shell $(MAKE) -C $(dir) --no-print-directory get_objs)))
 endif
 
-$(SHARED_LIBRARY): $(OBJS)
+$(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
@@ -364,6 +364,17 @@ $(RES): $(RESNAME)
 	@$(MAKE_OBJDIR)
 	$(RC) -Fo$(RES) $(RESNAME)
 	@echo $(RES) finished
+endif
+
+$(MAPFILE): $(LIBRARY_NAME).def
+ifeq ($(OS_ARCH),SunOS)
+	grep -v 'UNIX_REMOVE' $(LIBRARY_NAME).def | sed -e 's,;+,,' | sed -e 's,;;,,' > $@
+endif
+ifeq ($(OS_ARCH),Linux)
+	grep -v 'UNIX_REMOVE' $(LIBRARY_NAME).def | sed -e 's,;+,,' > $@
+endif
+ifeq ($(OS_ARCH),AIX)
+	grep -v ';+' $(LIBRARY_NAME).def| sed -e 's,;,,g' > $@
 endif
 
 $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)

@@ -44,8 +44,9 @@ ifeq ($(USE_64), 1)
 	export OBJECT_MODE
 endif
 OS_CFLAGS	+= -DAIX4_3
-DSO_LDOPTS	= -brtl -bM:SRE -bnoentry -bexpall
+DSO_LDOPTS	= -brtl -bM:SRE -bnoentry $(EXPORT_RULES)
 MKSHLIB		= $(LD) $(DSO_LDOPTS) -lsvld -L/usr/lpp/xlC/lib -lc -lm
 
 OS_LIBS		+= -L/usr/lpp/xlC/lib -lc -lm
+EXPORT_RULES	= -bexpall
 
