@@ -210,7 +210,6 @@ public:
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE,
                   PRBool aIsSunkenBorder = PR_FALSE);
-  NS_IMETHOD SizeToContent();
   NS_IMETHOD RemoveFocus();
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
@@ -229,8 +228,6 @@ public:
   NS_IMETHOD SetName(const PRUnichar* aName);
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
-
-  NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
 
   NS_IMETHOD GetScrolling(PRInt32& aScrolling);
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
@@ -283,12 +280,6 @@ public:
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aStatus);
-  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell);
-  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
-  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
   NS_IMETHOD GetHistoryState(nsISupports** aLayoutHistoryState);
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
 
@@ -356,7 +347,6 @@ public:
   void ShowHistory();
 
   nsIWebShell* GetTarget(const PRUnichar* aName);
-  NS_IMETHOD CreateTargetLocation(const PRUnichar* aName, nsIDocShellTreeItem** aShell);
   nsIBrowserWindow* GetBrowserWindow(void);
 
   static void RefreshURLCallback(nsITimer* aTimer, void* aClosure);
@@ -1081,63 +1071,6 @@ nsWebShell::IsBusy(PRBool& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::SizeToContent()
-{
-  nsresult rv;
-
-  // get the presentation shell
-  nsCOMPtr<nsIContentViewer> cv;
-  GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-    nsCOMPtr<nsIDocumentViewer> dv = do_QueryInterface(cv);
-    if (dv) {
-      nsCOMPtr<nsIPresContext> pcx;
-      dv->GetPresContext(*getter_AddRefs(pcx));
-      if (pcx) {
-        nsCOMPtr<nsIPresShell> pshell;
-        pcx->GetShell(getter_AddRefs(pshell));
-
-        // whew! so resize the presentation shell
-        if (pshell) {
-          nsRect  shellArea;
-          PRInt32 width, height;
-          float   pixelScale;
-
-          rv = pshell->ResizeReflow(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-
-          // so how big is it?
-          pcx->GetVisibleArea(shellArea);
-          pcx->GetTwipsToPixels(&pixelScale);
-          width = PRInt32((float)shellArea.width*pixelScale);
-          height = PRInt32((float)shellArea.height*pixelScale);
-
-          // if we're the outermost webshell for this window, size the window
-          if (mContainer) {
-            nsCOMPtr<nsIBrowserWindow> browser = do_QueryInterface(mContainer);
-            if (browser) {
-              nsCOMPtr<nsIWebShell> browserWebShell;
-              PRInt32 oldX, oldY, oldWidth, oldHeight,
-                      widthDelta, heightDelta;
-              nsRect  windowBounds;
-
-              GetPositionAndSize(&oldX, &oldY, &oldWidth, &oldHeight);
-              widthDelta = width - oldWidth;
-              heightDelta = height - oldHeight;
-              browser->GetWindowBounds(windowBounds);
-              browser->SizeWindowTo(windowBounds.width + widthDelta,
-                                    windowBounds.height + heightDelta,
-                                    PR_FALSE, PR_FALSE);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsWebShell::RemoveFocus()
 {
   /*
@@ -1384,28 +1317,6 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
       CallQueryInterface(treeItem.get(), &aResult);
 
    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
-{
-   PRInt32 treeItemType;
-
-   switch(aWebShellType)
-      {
-      case nsWebShellChrome:
-         treeItemType = typeChrome;
-         break;
-
-      case nsWebShellContent:
-         treeItemType = typeContent;
-         break;
-
-      default:
-         NS_ERROR("Attempt to set bogus webshell type: values should be content or chrome.");
-         return NS_ERROR_FAILURE;
-      }
-   return SetItemType(treeItemType);
 }
 
 NS_IMETHODIMP
@@ -2517,51 +2428,6 @@ nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsresult aSta
   return rv;
 }
 
-
-NS_IMETHODIMP
-nsWebShell::NewWebShell(PRUint32 aChromeMask,
-                        PRBool aVisible,
-                        nsIWebShell *&aNewWebShell)
-{
-  if (nsnull != mContainer) {
-    return mContainer->NewWebShell(aChromeMask, aVisible, aNewWebShell);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
-{
-  if (nsnull != mContainer) {
-    return mContainer->ContentShellAdded(aChildShell, frameNode);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
-{
-   // First we try the new system
-   nsCOMPtr<nsIDocShellTreeItem> treeItem;
-
-   NS_ENSURE_SUCCESS(FindItemWithName(aName, nsnull, 
-      getter_AddRefs(treeItem)), NS_ERROR_FAILURE);
-
-   if(treeItem)
-      CallQueryInterface(treeItem.get(), &aResult);
-   else if(mContainer) // Then fall back to the old.
-      return mContainer->FindWebShellWithName(aName, aResult);
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
-{
-   nsCOMPtr<nsIBaseWindow> webShellAsWin(do_QueryInterface(aFocusedWebShell));
-   return FocusAvailable(webShellAsWin, &aFocusTaken);
-}
-
 NS_IMETHODIMP
 nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
 {
@@ -2794,82 +2660,6 @@ nsWebShell::GetTarget(const PRUnichar* aName)
    if(shellItem)
       CallQueryInterface(shellItem, &target);
    return target;   
-    
-/*  nsAutoString name(aName);
-  nsIWebShell* target = nsnull;
-
-  if (0 == name.Length()) {
-    NS_ADDREF_THIS();
-    return this;
-  }
-
-  if (name.EqualsIgnoreCase("_blank")) {
-    nsIWebShell *shell;
-    if (NS_OK == NewWebShell(NS_CHROME_ALL_CHROME, PR_TRUE, shell))
-      target = shell;
-    else
-    {
-      //don't know what to do here? MMP
-      NS_ASSERTION(PR_FALSE, "unable to get new webshell");
-    }
-  }
-  else if (name.EqualsIgnoreCase("_self")) {
-    target = this;
-    NS_ADDREF(target);
-  }
-  else if (name.EqualsIgnoreCase("_parent")) {
-    GetParent(target);
-    if (target == nsnull) {
-      target = this;
-      NS_ADDREF(target);
-    }
-  }
-  else if (name.EqualsIgnoreCase("_top")) {
-    GetRootWebShell(target);            // this addrefs, which is OK
-  }
-  else if (name.EqualsIgnoreCase("_content")) {
-    // a kind of special case: only the window can answer this question
-    NS_ASSERTION(mContainer, "null container in WebShell::GetTarget");
-    if (nsnull != mContainer)
-      mContainer->FindWebShellWithName(aName, target);
-      // (and don't SetName())
-    // else target remains nsnull, which would be bad
-  }
-  else {
-    // Look from the top of the tree downward
-    NS_ASSERTION(mContainer, "null container in WebShell::GetTarget");
-    if (nsnull != mContainer) {
-      mContainer->FindWebShellWithName(aName, target);
-      if (nsnull == target) {
-        mContainer->NewWebShell(NS_CHROME_ALL_CHROME, PR_TRUE, target);
-      }
-      if (nsnull != target) {
-        target->SetName(aName);
-      }
-      else {
-        target = this;
-        NS_ADDREF(target);
-      }
-    }
-  }
-
-  return target; */
-}
-
-NS_IMETHODIMP nsWebShell::CreateTargetLocation(const PRUnichar* aName, 
-   nsIDocShellTreeItem** aShell)
-{
-   nsCOMPtr<nsIWebShell> webShell;
-   mContainer->NewWebShell(NS_CHROME_ALL_CHROME, PR_TRUE, *getter_AddRefs(webShell));
-
-   NS_ENSURE_SUCCESS(CallQueryInterface(webShell, aShell), NS_ERROR_FAILURE);
-
-   if(*aShell && aName)
-      (*aShell)->SetName(aName);
-
-   NS_IF_ADDREF(*aShell);
-
-   return NS_OK;
 }
 
 nsIEventQueue* nsWebShell::GetEventQueue(void)
@@ -4085,49 +3875,10 @@ NS_IMETHODIMP nsWebShell::SetFocus()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, PRBool* aTookFocus)
+NS_IMETHODIMP nsWebShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
+   PRBool* aTookFocus)
 {
-   NS_ENSURE_ARG_POINTER(aTookFocus);
-   // Next person we should call is first the parent otherwise the 
-   // docshell tree owner.
-   nsCOMPtr<nsIBaseWindow> nextCallWin(do_QueryInterface(mParent));
-   if(!nextCallWin)
-      {//XXX Enable this when docShellTreeOwner is added
-      //nextCallWin = do_QueryInterface(mDocShellTreeOwner);
-      }
-
-   //If the current focus is us, offer it to the next owner.
-   if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
-      {
-      if(nextCallWin)
-         return nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
-      return NS_OK;
-      }
-
-   //Otherwise, check the chilren and offer it to the next sibling.
-   PRInt32 i;
-   PRInt32 n = mChildren.Count();
-   for(i = 0; i < n; i++)
-      {
-      nsCOMPtr<nsIBaseWindow> 
-         child(do_QueryInterface((nsISupports*)mChildren.ElementAt(i)));
-      if(child.get() == aCurrentFocus)
-         {
-         while(++i < n)
-            {
-            child = do_QueryInterface((nsISupports*)mChildren.ElementAt(i));
-            if(NS_SUCCEEDED(child->SetFocus()))
-               {
-               *aTookFocus = PR_TRUE;
-               return NS_OK;
-               }
-            }
-         }
-      }
-   if(nextCallWin)
-      return nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
-   return NS_OK;
+   return nsDocShell::FocusAvailable(aCurrentFocus, aTookFocus);
 }
 
 NS_IMETHODIMP nsWebShell::GetTitle(PRUnichar** aTitle)
