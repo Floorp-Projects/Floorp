@@ -99,10 +99,12 @@ struct PLEventQueue {
     EventQueueType type;
     PRPackedBool   processingEvents;
     PRPackedBool   notified;
+#if defined(XP_UNIX)
 #if defined(VMS)
     int		 efn;
-#elif defined(XP_UNIX)
+#else
     PRInt32      eventPipe[2];
+#endif
     PLGetEventIDFunc idFunc;
     void            *idFuncClosure;
 #elif defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
@@ -722,15 +724,15 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
 #endif
 
 #if defined(VMS)
-    {
-        unsigned int status;
-        status = LIB$GET_EF(&self->efn);
-        if (!$VMS_STATUS_SUCCESS(status))
-            return PR_FAILURE;
-        PR_LOG(event_lm, PR_LOG_DEBUG,
-           ("$$$ Allocated event flag %d", self->efn));
-        return PR_SUCCESS;
-    }
+    unsigned int status;
+    self->idFunc = 0;
+    self->idFuncClosure = 0;
+    status = LIB$GET_EF(&self->efn);
+    if (!$VMS_STATUS_SUCCESS(status))
+        return PR_FAILURE;
+    PR_LOG(event_lm, PR_LOG_DEBUG,
+       ("$$$ Allocated event flag %d", self->efn));
+    return PR_SUCCESS;
 #elif defined(XP_UNIX)
     int err;
     int flags;
