@@ -27,13 +27,6 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=cnvts
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-EXPORTS =                           \
-        nsMultiMixedConv.h          \
-        nsFTPDirListingConv.h       \
-	nsHTTPChunkConv.h	    \
-	nsHTTPCompressConv.h	    \
-        $(NULL)
-
 LLIBS= $(LLIBS) \
         $(DIST)\lib\xpcom.lib \
         $(LIBNSPR)            \
@@ -58,9 +51,10 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsFTPDirListingConv.obj       \
         .\$(OBJDIR)\nsConvFactories.obj           \
         .\$(OBJDIR)\mozTXTToHTMLConv.obj \
-	.\$(OBJDIR)\nsHTTPChunkConv.obj  \
-	.\$(OBJDIR)\nsHTTPCompressConv.obj  \
+        .\$(OBJDIR)\nsHTTPChunkConv.obj  \
+        .\$(OBJDIR)\nsHTTPCompressConv.obj  \
         .\$(OBJDIR)\nsUnknownDecoder.obj \
+        .\$(OBJDIR)\nsTXTToHTMLConv.obj \
         $(NULL)
 
 LOCAL_INCLUDES=-I. -I$(XPDIST)\public\zlib
