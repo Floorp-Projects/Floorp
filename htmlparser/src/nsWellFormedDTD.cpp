@@ -342,7 +342,7 @@ nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
 	// Check for the existence of a file called EXPAT in the current directory
 	nsSpecialSystemDirectory expatFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 	expatFile += "NOEXPAT";
-	theExpatState = expatFile.Exists();
+	theExpatState = (!expatFile.Exists());
 #endif
     if(theExpatState) {
       mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
