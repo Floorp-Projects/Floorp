@@ -130,6 +130,7 @@ const int ssl3CipherSuites[] = {
     TLS_DHE_DSS_WITH_AES_256_CBC_SHA, 	    	/* w */
     TLS_DHE_RSA_WITH_AES_256_CBC_SHA,       	/* x */
     TLS_RSA_WITH_AES_256_CBC_SHA,     	    	/* y */
+    SSL_RSA_WITH_NULL_SHA,			/* z */
     0
 };
 
@@ -212,8 +213,9 @@ Usage(const char *progName)
 "l    SSL3 RSA EXPORT WITH DES CBC SHA\t(new)\n"
 "m    SSL3 RSA EXPORT WITH RC4 56 SHA\t(new)\n"
 "n    SSL3 RSA WITH RC4 128 SHA\n"
-"v    TLS_RSA_WITH_AES_128_CBC_SHA\n"
-"y    TLS_RSA_WITH_AES_256_CBC_SHA\n"
+"v    SSL3 RSA WITH AES 128 CBC SHA\n"
+"y    SSL3 RSA WITH AES 256 CBC SHA\n"
+"z    SSL3 RSA WITH NULL SHA\n"
 	,progName);
 }
 
