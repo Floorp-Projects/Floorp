@@ -4886,10 +4886,7 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 	nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::GetIID(), (nsISupports **)&smtpService);
 	if (NS_SUCCEEDED(rv) && smtpService)
 	{	
-		if (pSmtpServer)
-			rv = smtpService->SendMailMessage(filePath, pSmtpServer, m_fields->GetFrom(), buf, nsnull, nsnull);
-		else
-			rv = smtpService->SendMailMessage(filePath, "", m_fields->GetFrom(), buf, nsnull, nsnull);
+		rv = smtpService->SendMailMessage(filePath, buf, nsnull, nsnull);
 		nsServiceManager::ReleaseService(kSmtpServiceCID, smtpService);
 	}
 

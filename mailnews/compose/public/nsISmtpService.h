@@ -60,7 +60,7 @@ public:
 	// If you don't care about listening to the url, feel free to pass in nsnull for that argument. 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath, const nsString& hostName, const nsString& aSender, const nsString& aRecipients, 
+	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath, const nsString& aRecipients, 
 								nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0; 
 };
 

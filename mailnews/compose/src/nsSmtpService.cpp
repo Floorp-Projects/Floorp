@@ -24,6 +24,8 @@
 
 #include "nsINetService.h"
 #include "nsSmtpService.h"
+#include "nsIMsgMailSession.h"
+#include "nsIMsgIdentity.h"
 
 #include "nsSmtpUrl.h"
 #include "nsSmtpProtocol.h"
@@ -44,23 +46,51 @@ nsSmtpService::~nsSmtpService()
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsSmtpService, nsISmtpService::GetIID());
 
-nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsString& aHostName, const nsString& aSender, 
-										const nsString& aRecipients, nsIUrlListener * aUrlListener, nsIURL ** aURL)
+
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
+
+nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsString& aRecipients, 
+										nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	nsIURL * urlToRun = nsnull;
 	nsresult rv = NS_OK;
 
 	NS_LOCK_INSTANCE();
-	rv = NS_MsgBuildMailtoUrl(aFilePath, aHostName, aSender, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
-	if (NS_SUCCEEDED(rv) && urlToRun)
-	{	
-		rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
-	}
+	// get the current identity from the mail session....
+	nsIMsgMailSession * mailSession = nsnull;
+	rv = nsServiceManager::GetService(kCMsgMailSessionCID,
+	    							  nsIMsgMailSession::GetIID(),
+                                      (nsISupports **) &mailSession);
+	if (NS_SUCCEEDED(rv) && mailSession)
+	{
+		nsIMsgIdentity * identity = nsnull;
+		rv = mailSession->GetCurrentIdentity(&identity);
+		// now release the mail service because we are done with it
+		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
+		if (NS_SUCCEEDED(rv) && identity)
+		{
+			const char * hostName = nsnull;
+			const char * senderName = nsnull;
 
-	if (aURL) // does the caller want a handle on the url?
-		*aURL = urlToRun; // transfer our ref count to the caller....
-	else
-		NS_IF_RELEASE(urlToRun);
+			identity->GetSmtpServer(&hostName);
+			identity->GetUserName(&senderName);
+			rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
+			if (NS_SUCCEEDED(rv) && urlToRun)
+			{	
+				rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
+			}
+
+			if (aURL) // does the caller want a handle on the url?
+				*aURL = urlToRun; // transfer our ref count to the caller....
+			else
+				NS_IF_RELEASE(urlToRun);
+
+			// release the identity
+			NS_IF_RELEASE(identity);
+		} // if we have an identity
+		else
+			NS_ASSERTION(0, "no current identity found for this user....");
+	} // if we had a mail session
 
 	NS_UNLOCK_INSTANCE();
 	return rv;

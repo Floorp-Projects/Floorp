@@ -392,20 +392,12 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 
 	recipients = PL_strdup(m_userData);
 
-	// now ask the user what their address is...
-	PL_strcpy(m_userData, DEFAULT_SENDER);
-	displayString = PR_smprintf("Email address of sender [%s]: ", m_userData);
-	rv = PromptForUserDataAndBuildUrl(displayString);
-	PR_FREEIF(displayString);
-
-	userName = PL_strdup(m_userData);
-
 	// SMTP is a connectionless protocol...so we always start with a new
 	// SMTP protocol instance every time we launch a mailto url...
 
 	nsFilePath filePath (fileName);
 	nsIURL * url = nsnull;
-	m_smtpService->SendMailMessage(filePath, m_host, userName, recipients, this, &url);
+	m_smtpService->SendMailMessage(filePath, recipients, this, &url);
 	if (url)
 		url->QueryInterface(nsISmtpUrl::GetIID(), (void **) &m_smtpUrl);
 	NS_IF_RELEASE(url);
