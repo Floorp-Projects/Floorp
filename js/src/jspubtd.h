@@ -527,9 +527,6 @@ typedef JSBool
                                     JSString *src1, JSString *src2,
                                     jsval *rval);
 
-typedef JSBool
-(* JS_DLL_CALLBACK JSLocaleToUnicode)(JSContext *cx, char *src, jsval *rval);
-
 /*
  * Security protocol types.
  */
