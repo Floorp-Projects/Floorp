@@ -23,7 +23,7 @@
 package Bugzilla::Auth;
 
 use strict;
-use Exporter qw(import);
+use base qw(Exporter);
 @Bugzilla::Auth::EXPORT = qw(bz_crypt);
 
 use Bugzilla::Config;
