@@ -68,6 +68,8 @@ typedef struct _RDF_FileStruct {
   int   assertionListCount;
   int   assertionListSize;
   struct _RDF_AssertionStruct** assertionList;
+  char* nsList[20];
+  int   nsStackPoint;
 } RDF_FileStruct;
 
 
