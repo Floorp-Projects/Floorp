@@ -208,19 +208,37 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
 }
 
 static int
-compare_iids(const void *ap, const void *bp)
+compare_IDEs(const void *ap, const void *bp)
 {
-    const nsID *a = ap, *b = bp;
+    const XPTInterfaceDirectoryEntry *a = ap, *b = bp;
+    const nsID *aid = &a->iid, *bid = &b->iid;
+    const char *ans, *bns;
+
     int i;
-#define COMPARE(field) if (a->field > b->field) return 1; \
-                       if (b->field > a->field) return -1;
+#define COMPARE(field) if (aid->field > bid->field) return 1; \
+                       if (bid->field > aid->field) return -1;
     COMPARE(m0);
     COMPARE(m1);
     COMPARE(m2);
     for (i = 0; i < 8; i++) {
         COMPARE(m3[i]);
     }
-    return 0;
+
+    /* defend against NULL name_space by using empty string. */
+    ans = a->name_space ? a->name_space : "";
+    bns = b->name_space ? b->name_space : "";
+
+    if (a->name_space && b->name_space) {
+        if ((i = strcmp(a->name_space, b->name_space)))
+            return i;
+    } else {
+        if (a->name_space || b->name_space) {
+            if (a->name_space)
+                return -1;
+            return 1;
+        }
+    }
+    return strcmp(a->name, b->name);
 #undef COMPARE
 }
 
@@ -241,7 +259,7 @@ sort_ide_block(TreeState *state)
     }
 #endif
     qsort(HEADER(state)->interface_directory, IFACES(state),
-          sizeof(*ide), compare_iids);
+          sizeof(*ide), compare_IDEs);
 #ifdef DEBUG_shaver_sort
     fputs("after sort:\n", stderr);
     for (i = 0; i < IFACES(state); i++) {
@@ -520,9 +538,35 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                 }
                 break;
               }
-              case IDLN_NATIVE:
-                td->prefix.flags = TD_VOID | XPT_TDP_POINTER;
-                break;
+              case IDLN_NATIVE: {
+                  char *ident = IDL_IDENT(type).str;
+                  gboolean isID = FALSE;
+                  /* check for nsID, nsCID, nsIID */
+                  if (ident[0] == 'n' && ident[1] == 's') {
+                      ident += 2;
+                      if (ident[0] == 'C')
+                          ident ++;
+                      else if (ident[0] == 'I' && ident[1] == 'I')
+                          ident ++;
+                      if (ident[0] == 'I' && ident[1] == 'D' &&
+                          ident[2] == '\0')
+                          isID = TRUE;
+                  }
+                  if (isID) {
+#ifdef DEBUG_shaver
+                      fprintf(stderr, "doing nsID for %s\n",
+                              IDL_IDENT(type).str);
+#endif
+                      td->prefix.flags = TD_PNSIID | XPT_TDP_POINTER;
+                  } else {
+#ifdef DEBUG_shaver
+                      fprintf(stderr, "not doing nsID for %s\n",
+                              IDL_IDENT(type).str);
+#endif
+                      td->prefix.flags = TD_VOID | XPT_TDP_POINTER;
+                  }                      
+                  break;
+                }
               default:
                 if (IDL_NODE_TYPE(IDL_NODE_UP(up)) == IDLN_TYPE_DCL) {
                     /* restart with the underlying type */
