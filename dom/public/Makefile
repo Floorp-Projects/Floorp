@@ -31,7 +31,7 @@ EXPORTS =			 \
 	nsIDOMWindow.h	         \
 	nsIDOMNavigator.h        \
 	nsIDOMLocation.h	 \
-	nsIDOMWindowCollection	 \
+	nsIDOMWindowCollection.h \
 	$(NULL)
 
 MODULE = dom

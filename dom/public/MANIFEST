@@ -25,3 +25,4 @@ nsIScriptEventListener.h
 nsIDOMWindow.h
 nsIDOMLocation.h
 nsIDOMNavigator.h
+nsIDOMWindowCollection.h
