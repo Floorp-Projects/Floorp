@@ -755,6 +755,11 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
     nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
     NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
     rv = webProgress->AddProgressListener(this);
+    NS_ENSURE_SUBMIT_SUCCESS(rv);
+  }
+  else {
+    // in case we didn't do anything, reset mIsSubmitting
+    mIsSubmitting = PR_FALSE;
   }
 
   return rv;
