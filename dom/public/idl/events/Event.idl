@@ -183,8 +183,11 @@
 	      const int EVENT_SHIFT_MASK	= 0x00000004;
 	      const int EVENT_META_MASK	= 0x00000008;
 
-	      attribute   int layerX;
-	      attribute   int layerY;
+	      attribute   int			layerX;
+	      attribute   int			layerY;
+	      attribute   int			pageX;
+	      attribute   int			pageY;
+	      attribute   unsigned long which;
 
 	      readonly attribute RenderingContext rc;
       };

@@ -306,6 +306,50 @@ NS_METHOD nsDOMEvent::SetLayerY(PRInt32 aLayerY)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
+{
+  return GetClientX(aPageX);
+}
+
+NS_METHOD nsDOMEvent::SetPageX(PRInt32 aPageX)
+{
+  return SetClientX(aPageX);
+}
+
+NS_METHOD nsDOMEvent::GetPageY(PRInt32* aPageY)
+{
+  return GetClientY(aPageY);
+}
+
+NS_METHOD nsDOMEvent::SetPageY(PRInt32 aPageY)
+{
+  return SetClientY(aPageY);
+}
+
+NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)
+{
+  switch (mEvent->eventStructType) {
+  case NS_KEY_EVENT:
+    return GetKeyCode(aWhich);
+    break;
+  case NS_MOUSE_EVENT:
+    return GetButton(aWhich);
+    break;
+  }
+}
+
+NS_METHOD nsDOMEvent::SetWhich(PRUint32 aWhich)
+{
+  switch (mEvent->eventStructType) {
+  case NS_KEY_EVENT:
+    return SetKeyCode(aWhich);
+    break;
+  case NS_MOUSE_EVENT:
+    return SetButton(aWhich);
+    break;
+  }
+}
+
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
 {
   //XXX Write me!
