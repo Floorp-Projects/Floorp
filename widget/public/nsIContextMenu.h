@@ -48,7 +48,7 @@ class nsIContextMenu : public nsISupports {
     * Creates the context menu
     *
     */
-    NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel) = 0;
+    NS_IMETHOD Create(nsISupports * aParent) = 0;
 
    /**
     * Get the context menu's Parent
@@ -115,6 +115,12 @@ class nsIContextMenu : public nsISupports {
     *
     */
     NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
+
+   /**
+    * Set location
+    *
+    */
+    NS_IMETHOD SetLocation(PRInt32 aX, PRInt32 aY) = 0;
 
    /**
     * Set DOMNode
