@@ -857,7 +857,7 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       // Redraw will happen later
       if (!transparentBG) {
         aRenderingContext.SetColor(aColor.mBackgroundColor);
-        aRenderingContext.FillRect(0, 0, aBounds.width, aBounds.height);
+        aRenderingContext.FillRect(aBounds);
       }
       return;
     }
@@ -869,7 +869,7 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     if (image->NeedsBlend()) {
       if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
         aRenderingContext.SetColor(aColor.mBackgroundColor);
-        aRenderingContext.FillRect(0, 0, aBounds.width, aBounds.height);
+        aRenderingContext.FillRect(aBounds);
       }
     }
 #endif
@@ -902,8 +902,7 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     }
 
     // Tile the background
-    nscoord xpos = 0, ypos = 0;
-    nscoord xpos0 = 0;
+    nscoord xpos = aBounds.x, ypos = aBounds.y;
 #if XXX
     // XXX support offset positioning
     PRIntn xPos = aColor.mBackgroundXPosition;
@@ -913,7 +912,7 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
     PRIntn x, y;
     for (y = 0;  y <= ycount;  ++y, ypos += tileHeight) {
-      for (x = 0, xpos = xpos0;  x <= xcount;  ++x, xpos += tileWidth) {
+      for (x = 0;  x <= xcount;  ++x, xpos += tileWidth) {
         aRenderingContext.DrawImage(image, xpos, ypos);
       }
     }
@@ -921,10 +920,10 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
   } else {
     if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
       // XXX This step can be avoided if we have an image and it doesn't
-      // have any transparent pixels and the image is tiled in both
+      // have any transparent pixels, and the image is tiled in both
       // the x and the y
       aRenderingContext.SetColor(aColor.mBackgroundColor);
-      aRenderingContext.FillRect(0, 0, aBounds.width, aBounds.height);
+      aRenderingContext.FillRect(aBounds);
     }
   }
 }

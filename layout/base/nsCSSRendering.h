@@ -43,6 +43,9 @@ public:
   /**
    * Render the background for an element using css rendering rules
    * for backgrounds.
+   *
+   * Both aDirtyRect and aBounds are in the local coordinate space
+   * of aForFrame
    */
   static void PaintBackground(nsIPresContext& aPresContext,
                               nsIRenderingContext& aRenderingContext,

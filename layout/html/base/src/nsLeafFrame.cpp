@@ -42,11 +42,12 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     const nsStyleSpacing* mySpacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+
+    nsRect  rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, mRect, *myColor);
+                                    aDirtyRect, rect, *myColor);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, nsRect(0, 0, mRect.width, mRect.height),
-                                *mySpacing, 0);
+                                aDirtyRect, rect, *mySpacing, 0);
   }
   return NS_OK;
 }

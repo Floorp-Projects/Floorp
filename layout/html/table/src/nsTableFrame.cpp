@@ -1103,11 +1103,11 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
+    nsRect  rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, mRect, *color);
+                                    aDirtyRect, rect, *color);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, nsRect(0, 0, mRect.width, mRect.height),
-                                *spacing, 0);
+                                aDirtyRect, rect, *spacing, 0);
   }
 
   // for debug...
