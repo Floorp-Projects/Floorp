@@ -35,6 +35,7 @@
 #include <iterator>
 
 #include "vmtypes.h"
+#include "jstypes.h"
 
 #define iter string::const_iterator
 
@@ -54,8 +55,9 @@ namespace ICodeASM {
         teNotARegister
     };
 
+/*
     enum TokenType {
-        /* verified token type */
+        // verified token type
         ttUndetermined,
         ttLabel,
         ttInstruction,
@@ -66,6 +68,24 @@ namespace ICodeASM {
         ttNumber,
         ttOffsetKeyword
     };
+*/
+
+    enum OperandType {
+        otNone = 0,
+        otArgumentList,
+        otBinaryOp,
+        otBool,
+        otDouble,
+        otICodeModule,
+        otJSClass,
+        otJSString,
+        otJSFunction,
+        otJSType,
+        otLabel,
+        otUInt32,
+        otRegister,
+        otStringAtom
+    };
 
     struct ICodeParseException {
         ICodeParseException (string aMsg, iter aPos = 0)
@@ -75,27 +95,21 @@ namespace ICodeASM {
     };
         
     struct TokenLocation {
-        TokenLocation () : begin(0), end(0), estimate(teIllegal),
-                           type(ttUndetermined) {}
-        iter begin, end;
+        TokenLocation () : begin(0), estimate(teIllegal) /*,
+                           type(ttUndetermined) */ {}
+        iter begin;
         TokenEstimation estimate;
-        TokenType type;
+//        TokenType type;
     };
 
-    union AnyOperand {
-        /* eww */
-        double asDouble;
-        uint32 asUInt32;
-        int32 asInt32;
-        bool asBoolean;
-        string *asString;
-        VM::Register asRegister;
-        VM::Label *asLabel;
-        VM::ArgumentList *asArgumentList;
+    struct AnyOperand {
+        OperandType type;
+        int64 data;
+        /*void *data;*/
     };
     
     struct StatementNode {
-        iter pos;
+        iter begin;
         uint icodeID;
         AnyOperand operand[3];
     };
@@ -110,7 +124,7 @@ namespace ICodeASM {
         LabelMap mNamedLabels;
 
     public:
-        void ParseSourceFromString (const string source);
+        void ParseSourceFromString (const string &source);
 
         /* locate the beginning of the next token and take a guess at what it
          * might be */
@@ -124,28 +138,39 @@ namespace ICodeASM {
         iter ParseAlpha (iter begin, iter end, string **rval);
         iter ParseBool (iter begin, iter end, bool *rval);
         iter ParseDouble (iter begin, iter end, double *rval);
-        iter ParseInt32 (iter begin, iter end, uint32 *rval);
+        iter ParseInt32 (iter begin, iter end, int32 *rval);
+        iter ParseRegister (iter begin, iter end, JSTypes::Register *rval);
         iter ParseString (iter begin, iter end, string **rval);
         iter ParseUInt32 (iter begin, iter end, uint32 *rval);
+
+        /* operand parse functions;  These functions take care of finding
+         * the start of the token with |SeekTokenStart|, and checking the
+         * "estimation" (explicit checking takes care of |begin| == |end|,
+         * aka EOF, because EOF is a token estimate.)  Once the start of the
+         * token is found, and it is the expected type, the actual parsing is
+         * carried out by one of the general purpose parse functions.
+         */
+        iter ParseArgumentListOperand (iter begin, iter end,
+                                       VM::ArgumentList **rval);
+        iter ParseBinaryOpOperand (iter begin, iter end,
+                                   VM::BinaryOperator::BinaryOp *rval);
+        iter ParseBoolOperand (iter begin, iter end, bool *rval);
+        iter ParseDoubleOperand (iter begin, iter end, double *rval);
+        iter ParseICodeModuleOperand (iter begin, iter end, string **rval);
+        iter ParseJSClassOperand (iter begin, iter end, string **rval);
+        iter ParseJSStringOperand (iter begin, iter end, string **rval);
+        iter ParseJSFunctionOperand (iter begin, iter end, string **rval);
+        iter ParseJSTypeOperand (iter begin, iter end, string **rval);
+        iter ParseLabelOperand (iter begin, iter end, VM::Label **rval);
+        iter ParseUInt32Operand (iter begin, iter end, uint32 *rval);
+        iter ParseRegisterOperand (iter begin, iter end,
+                                   JSTypes::Register *rval);
+        iter ParseStringAtomOperand (iter begin, iter end, string **rval);
 
         /* "high level" parse functions */
         iter ParseInstruction (uint icodeID, iter start, iter end);
         iter ParseStatement (iter begin, iter end);
 
-        /* parse particular operand types */
-        iter ParseArgumentListOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseBinaryOpOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseBoolOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseDoubleOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseICodeModuleOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseJSClassOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseJSStringOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseJSFunctionOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseJSTypeOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseLabelOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseUInt32Operand (iter begin, iter end, AnyOperand *o);
-        iter ParseRegisterOperand (iter begin, iter end, AnyOperand *o);
-        iter ParseStringAtomOperand (iter begin, iter end, AnyOperand *o);
     };
     
 }

@@ -100,6 +100,11 @@ void testUInt32 (JavaScript::ICodeASM::ICodeParser icp, const string &str,
              result);
 }
 
+void testParse (JavaScript::ICodeASM::ICodeParser icp, const string &str)
+{
+    icp.ParseSourceFromString (str);    
+}
+
 int
 main (int , char **)
 {
@@ -137,7 +142,19 @@ main (int , char **)
     testUInt32 (icp, "-12.3", 0);
     /* XXX what to do with the overflow? */
     //testUInt32 (icp, "12123687213612873621873438754387934657834", 0);
+
+    string src =
+"some_label:                                  \
+LOAD_STRING               R1, 'hello'         \
+CAST                      R2, R1, 'any'       \
+SAVE_NAME                 'x', R2             \
+LOAD_NAME                 R1, 'x'             \
+LOAD_NAME                 R2, 'print'         \
+CALL                      R3, R2, <NaR>, (R1) \
+RETURN                    R3";
     
+    testParse (icp, src);
+
     return 0;
 }
 
