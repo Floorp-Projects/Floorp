@@ -117,7 +117,6 @@ static char gShowCRC;
 #define NS_DTD_FLAG_HAD_FRAMESET           0x00000010
 #define NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE  0x00000020
 #define NS_DTD_FLAG_REQUESTED_HEAD         0x00000040
-#define NS_DTD_FLAG_IS_FORM_CONTAINER      0x00000080
 #define NS_DTD_FLAG_SCRIPT_ENABLED         0x00000100
 #define NS_DTD_FLAG_FRAMES_ENABLED         0x00000200
 #define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000400 // NOFRAMES, NOSCRIPT 
@@ -579,7 +578,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
               result=HandleToken(theTableToken,mParser);
             }
           }
-          if(result==NS_OK) {
+          if(NS_SUCCEEDED(result)) {
             eHTMLTags theTarget; 
 
             //now let's disable style handling to save time when closing remaining stack members...
@@ -2034,14 +2033,15 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
         PRInt32   attrCount;
         PRInt32   theTopIndex = anIndex + 1;
         PRInt32   theTagCount = mBodyContext->GetCount();
-        //eHTMLTags theParentTag= mBodyContext->TagAt(anIndex);
                
-        //XXX  In the content sink, FORM behaves as a container for parents 
-        //other than eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_col,
-        //eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup.In those cases the stack 
-        //position, in the parser, should be synchronized with the sink. -- Ref: Bug 20087.
-
-        if (!(~mFlags & (NS_DTD_FLAG_HAS_OPEN_FORM | NS_DTD_FLAG_IS_FORM_CONTAINER))) anIndex++;
+        if (mSink && mSink->IsFormOnStack()) {
+          // Do this to synchronize dtd stack and the sink stack.
+          // Note: FORM is never on the dtd stack because its always 
+          // considered as a leaf. However, in the sink FORM can either
+          // be a container or a leaf. Therefore, we have to check
+          // with the sink -- Ref: Bug 20087.
+          anIndex++;
+        }
 
         STOP_TIMER()
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
@@ -3188,18 +3188,8 @@ nsresult CNavDTD::CloseBody(const nsIParserNode *aNode){
  * @return  TRUE if ok, FALSE if error
  */
 nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
-  static eHTMLTags gTableElements[]={eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_tr,
-                                     eHTMLTag_tfoot,eHTMLTag_thead,
-                                     eHTMLTag_col,eHTMLTag_colgroup};
   nsresult result=NS_OK;
   if(!(mFlags & NS_DTD_FLAG_HAS_OPEN_FORM)) { // discard nested forms - bug 72639
-       
-    // Check if the parent is a table, tbody, thead, tfoot, tr, col or
-    // colgroup. If so, treat form as a leaf content. [ Ex. bug 92530 ]
-    if(!FindTagInSet(mBodyContext->Last(),gTableElements,
-                     sizeof(gTableElements)/sizeof(eHTMLTag_unknown))) {
-      mFlags |= NS_DTD_FLAG_IS_FORM_CONTAINER;
-    }
 
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
@@ -3238,8 +3228,6 @@ nsresult CNavDTD::CloseForm(const nsIParserNode *aNode){
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
     START_TIMER();
-      
-    mFlags &= ~NS_DTD_FLAG_IS_FORM_CONTAINER;
   }
   return result;
 }

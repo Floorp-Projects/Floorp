@@ -193,11 +193,12 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 //----------------------------------------------------------------------
 
-#define NS_SINK_FLAG_SCRIPT_ENABLED   0x8
-#define NS_SINK_FLAG_FRAMES_ENABLED   0x10
+#define NS_SINK_FLAG_SCRIPT_ENABLED       0x8
+#define NS_SINK_FLAG_FRAMES_ENABLED       0x10
 #define NS_SINK_FLAG_CAN_INTERRUPT_PARSER 0x20 //Interrupt parsing when mMaxTokenProcessingTime is exceeded
-#define NS_SINK_FLAG_DYNAMIC_LOWER_VALUE 0x40 // Lower the value for mNotificationInterval and mMaxTokenProcessingTime
-#define NS_SINK_FLAG_IS_BASE_HREF_SET 0x80 //Set a flag as soon as Base Href is set for the document
+#define NS_SINK_FLAG_DYNAMIC_LOWER_VALUE  0x40 // Lower the value for mNotificationInterval and mMaxTokenProcessingTime
+#define NS_SINK_FLAG_IS_BASE_HREF_SET     0x80 //Set a flag as soon as Base Href is set for the document
+#define NS_SINK_FLAG_FORM_ON_STACK        0x100
 
 #define NS_DELAY_FOR_WINDOW_CREATION  500000  // 1/2 second fudge factor for window creation
 #define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200 //200 determined empirically to provide good user response without
@@ -268,6 +269,7 @@ public:
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
   NS_IMETHOD CloseMap(const nsIParserNode& aNode);
   NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref);
+  NS_IMETHOD_(PRBool) IsFormOnStack();
 
 
   NS_IMETHOD DoFragment(PRBool aFlag);
@@ -1592,6 +1594,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
  
     case eHTMLTag_form:
       {
+        mSink->mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
         nsHTMLTag parserNodeType = nsHTMLTag(aNode.GetNodeType());
       
         // If there's a FORM on the stack, but this close tag doesn't
@@ -2936,9 +2939,16 @@ HTMLContentSink::SetParser(nsIParser* aParser)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PRBool)
+HTMLContentSink::IsFormOnStack() 
+{
+  return mFlags & NS_SINK_FLAG_FORM_ON_STACK;
+}
+
 NS_IMETHODIMP
 HTMLContentSink::BeginContext(PRInt32 aPosition)
-{
+{ 
+
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::BeginContext()\n"));
   MOZ_TIMER_START(mWatch);
   NS_PRECONDITION(aPosition > -1, "out of bounds");
@@ -3289,6 +3299,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     result = AddLeaf(aNode);
   }
   else {
+    mFlags |= NS_SINK_FLAG_FORM_ON_STACK;
     // Otherwise the form can be a content parent.
     result = mCurrentContext->OpenContainer(aNode);
     if (NS_SUCCEEDED(result)) {
@@ -3326,6 +3337,7 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
     // Check if this is a well-formed form
     if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
       result = mCurrentContext->CloseContainer(aNode);
+      mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
     }
     else if (mCurrentContext->IsAncestorContainer(eHTMLTag_form)) {
       result = mCurrentContext->DemoteForm(aNode);
