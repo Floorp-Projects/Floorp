@@ -143,7 +143,10 @@ public:
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
 
   void GetViewOffset(nsIView* aView, nsPoint& aPoint);
-  static void GetRootViewForPopup(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult);
+  static void GetRootViewForPopup(nsIPresContext* aPresContext,
+                                  nsIFrame* aStartFrame,
+                                  PRBool aStopAtViewManagerRoot,
+                                  nsIView** aResult);
 
   nsresult SyncViewWithFrame(nsIPresContext* aPresContext, const nsString& aPopupAnchor,
                              const nsString& aPopupAlign,
