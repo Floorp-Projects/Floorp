@@ -23,6 +23,7 @@
 #include "WizardMachine.h"
 #include "WizardMachineDlg.h"
 #include "ProgDlgThread.h"
+#include "ProgressDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -22,7 +22,7 @@
 #include "stdafx.h"
 #include "WizardMachine.h"
 #include "WizardMachineDlg.h"
-//#include "ImageDialog.h"
+#include "WizardUI.h"
 #include "ImgDlg.h"
 
 #ifdef _DEBUG

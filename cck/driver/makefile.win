@@ -42,12 +42,12 @@ LLFLAGS = \
 INCS = -I. \
 	$(INCS)
 
-#	.\$(OBJDIR)\Interpret.obj \
 
 OBJS = \
 	.\$(OBJDIR)\HelpDlg.obj \
 	.\$(OBJDIR)\ImageDialog.obj \
 	.\$(OBJDIR)\ImgDlg.obj \
+	.\$(OBJDIR)\Interpret.obj \
 	.\$(OBJDIR)\NavText.obj \
 	.\$(OBJDIR)\NewConfigDialog.obj \
 	.\$(OBJDIR)\NewDialog.obj \

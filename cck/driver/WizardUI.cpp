@@ -33,6 +33,7 @@
 #include "ProgDlgThread.h"
 #include "PropSheet.h"
 #include "WizardUI.h"
+#include "Interpret.h"
 
 #include <direct.h>
 #include <sys/types.h>
@@ -50,6 +51,7 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CWizardUI property page
 extern CWizardMachineApp theApp;
+extern CInterpret *theInterpreter;
 extern NODE *CurrentNode;
 extern HBITMAP hBitmap;
 extern CString Path;
@@ -692,7 +694,7 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		if (curWidget->action.dll == "NULL") 
 		{
 			if (curWidget->action.function == "command")
-				theApp.interpret(curWidget->action.parameters, curWidget);
+				theInterpreter->interpret(curWidget->action.parameters, curWidget);
 		}
 		else 
 			Progress();
@@ -1273,7 +1275,7 @@ BOOL CWizardUI::OnWizardFinish()
 	UpdateGlobals();
 
 	if (CurrentNode->navControls->onNextAction)
-		if (!theApp.interpret(CurrentNode->navControls->onNextAction, NULL))
+		if (!theInterpreter->interpret(CurrentNode->navControls->onNextAction, NULL))
 			return FALSE;
 	return CPropertyPage::OnWizardFinish();
 }
