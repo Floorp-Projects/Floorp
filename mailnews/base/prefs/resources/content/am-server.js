@@ -24,21 +24,23 @@
  *   hwaara@chello.se
  */
 
+var gRedirectorType = "";
+
 function onInit() 
 {
     initServerType();
 
     setupBiffUI();
     setupMailOnServerUI();
+    setupFixedUI();
 }
 
 function onPreInit(account, accountValues)
 {
     var type = parent.getAccountValue(account, accountValues, "server", "type", null, false);
-    
+    gRedirectorType = parent.getAccountValue(account, accountValues, "server", "redirectorType", null, false);
     hideShowControls(type);
 }
-
 
 function initServerType() {
   var serverType = document.getElementById("server.type").getAttribute("value");
@@ -197,3 +199,39 @@ function setupMailOnServerUI()
    document.getElementById("pop3.deleteMailLeftOnServer").disabled = locked || !checked ;
 }
 
+function setupFixedUI()
+{
+  // if the redirectorType is non-empty, then the fixedValue elements should be shown
+  //
+  // one day, add code that allows for the redirector type to specify
+  // to show fixed values or not.  see bug #132737
+  // use gRedirectorType to get a pref like
+  // "mail.accountmanager." + gRedirectorType + ".show_fixed_values"
+  //
+  // but for now, this isn't needed.  we'll assume those who implement
+  // redirector types want to show fixed values.
+  var showFixedValues = gRedirectorType != null;
+
+  var controls = [document.getElementById("fixedServerName"), 
+                  document.getElementById("fixedUserName"), 
+                  document.getElementById("fixedServerPort")];
+
+  var len = controls.length;  
+  for (var i=0; i<len; i++) {
+    var fixedElement = controls[i];
+    var otherElement = document.getElementById(fixedElement.getAttribute("use"));
+
+    if (showFixedValues) {
+      // get the value from the non-fixed element.
+      var fixedElementValue = otherElement.value;
+      fixedElement.setAttribute("value", fixedElementValue);
+
+      otherElement.setAttribute("collapsed","true");
+      fixedElement.removeAttribute("collapsed");
+    }
+    else {
+      fixedElement.setAttribute("collapsed","true");
+      otherElement.removeAttribute("collapsed");
+    }
+  }
+}

@@ -53,9 +53,14 @@ Contributors:
         <label id="servertype.verbose"/>
       </row>
       <row align="center">
+        <hbox>
             <label value="&serverName.label;"/>
+        </hbox>
+        <hbox iscontrolcontainer="true" align="center">
+            <label id="fixedServerName" collapsed="true" use="server.realHostName"/>
             <textbox wsm_persist="true" size="25" id="server.realHostName"
                      prefstring="mail.server.%serverkey%.realhostname"/>
+        </hbox>
       </row>
       <row align="center">
         <hbox iscontrolcontainer="true" align="center">
@@ -63,6 +68,7 @@ Contributors:
                   value="&userName.label;"/>
         </hbox>
         <hbox iscontrolcontainer="true" align="center">
+            <label id="fixedUserName" collapsed="true" use="server.realUsername"/>
             <textbox hidable="true" hidefor="nntp" wsm_persist="true"
                      size="25" id="server.realUsername"
                      prefstring="mail.server.%serverkey%.realusername"/>
@@ -73,6 +79,7 @@ Contributors:
             <label value="&port.label;"/>
         </hbox>
         <hbox align="center">
+            <label id="fixedServerPort" collapsed="true" use="server.port"/>
             <textbox wsm_persist="true" size="5" id="server.port"
                      preftype="int"
                      prefstring="mail.server.%serverkey%.port"/>
