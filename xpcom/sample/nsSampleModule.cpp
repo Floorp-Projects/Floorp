@@ -25,6 +25,13 @@
 #include "nsSample.h"
 
 ////////////////////////////////////////////////////////////////////////
+// NOTE this file supercedes nsSampleFactory.cpp.  nsSampleFactory has
+// extensive comments, but it has been CVS removed to reduce clutter
+// in this sample.  It's available to the interested via CVS history:
+// cvs up nsSampleFactory.cpp -r 1.10
+////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
 // With the below sample, you can define an implementation glue
 // that talks with xpcom for creation of component nsSampleImpl
 // that implement the interface nsISample. This can be extended for
