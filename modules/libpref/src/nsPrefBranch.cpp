@@ -76,7 +76,9 @@ static nsresult _convertRes(int res)
 
 #pragma mark -
 
-NS_IMPL_ISUPPORTS1(nsPrefBranch, nsIPrefBranch)
+/*
+ * Constructor/Destructor
+ */
 
 nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
   : mObservers(nsnull)
@@ -118,6 +120,25 @@ nsPrefBranch::~nsPrefBranch()
   }
 }
 
+
+/*
+ * nsISupports Implementation
+ */
+
+NS_IMPL_THREADSAFE_ADDREF(nsPrefBranch)
+NS_IMPL_THREADSAFE_RELEASE(nsPrefBranch)
+
+NS_INTERFACE_MAP_BEGIN(nsPrefBranch)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrefBranch)
+    NS_INTERFACE_MAP_ENTRY(nsIPrefBranch)
+    NS_INTERFACE_MAP_ENTRY(nsIPrefBranchInternal)
+NS_INTERFACE_MAP_END
+
+
+/*
+ * nsIPrefBranch Implementation
+ */
+
 NS_IMETHODIMP nsPrefBranch::GetRoot(char * *aRoot)
 {
   NS_ENSURE_ARG_POINTER(aRoot);
@@ -135,53 +156,99 @@ NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
 
 NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
 {
-  return _convertRes(PREF_GetBoolPref(getPrefName(aPrefName), _retval, mIsDefault));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = _convertRes(PREF_GetBoolPref(pref, _retval, mIsDefault));
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::SetBoolPref(const char *aPrefName, PRInt32 aValue)
 {
-  if (PR_FALSE == mIsDefault) {
-    return _convertRes(PREF_SetBoolPref(getPrefName(aPrefName), aValue));
-  } else {
-    return _convertRes(PREF_SetDefaultBoolPref(getPrefName(aPrefName), aValue));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    if (PR_FALSE == mIsDefault) {
+      rv = _convertRes(PREF_SetBoolPref(pref, aValue));
+    } else {
+      rv = _convertRes(PREF_SetDefaultBoolPref(pref, aValue));
+    }
   }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 {
-  return _convertRes(PREF_CopyCharPref(getPrefName(aPrefName), _retval, mIsDefault));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = _convertRes(PREF_CopyCharPref(pref, _retval, mIsDefault));
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::SetCharPref(const char *aPrefName, const char *aValue)
 {
-  if (PR_FALSE == mIsDefault) {
-    return _convertRes(PREF_SetCharPref(getPrefName(aPrefName), aValue));
-  } else {
-    return _convertRes(PREF_SetDefaultCharPref(getPrefName(aPrefName), aValue));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    if (PR_FALSE == mIsDefault) {
+      rv = _convertRes(PREF_SetCharPref(pref, aValue));
+    } else {
+      rv = _convertRes(PREF_SetDefaultCharPref(pref, aValue));
+    }
   }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, PRInt32 *_retval)
 {
-  return _convertRes(PREF_GetIntPref(getPrefName(aPrefName), _retval, mIsDefault));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = _convertRes(PREF_GetIntPref(pref, _retval, mIsDefault));
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, PRInt32 aValue)
 {
-  if (PR_FALSE == mIsDefault) {
-    return _convertRes(PREF_SetIntPref(getPrefName(aPrefName), aValue));
-  } else {
-    return _convertRes(PREF_SetDefaultIntPref(getPrefName(aPrefName), aValue));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    if (PR_FALSE == mIsDefault) {
+      rv = _convertRes(PREF_SetIntPref(pref, aValue));
+    } else {
+      rv = _convertRes(PREF_SetDefaultIntPref(pref, aValue));
+    }
   }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID & aType, void * *_retval)
 {
+  const char     *pref = getPrefName(aPrefName);
   nsresult       rv;
   nsXPIDLCString utf8String;
 
   // if we can't get the pref, there's no point in being here
-  rv = GetCharPref(getPrefName(aPrefName), getter_Copies(utf8String));
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = GetCharPref(pref, getter_Copies(utf8String));
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -260,7 +327,14 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 
 NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue)
 {
-  nsresult rv;
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  // if we can't get the pref, there's no point in being here
+  rv = QueryObserver(pref);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (aType.Equals(NS_GET_IID(nsILocalFile))) {
     nsCOMPtr<nsILocalFile> file = do_QueryInterface(aValue);
@@ -268,7 +342,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
     rv = file->GetPersistentDescriptor(getter_Copies(descriptorString));
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(getPrefName(aPrefName), descriptorString);
+      rv = SetCharPref(pref, descriptorString);
     }
     return rv;
   }
@@ -281,7 +355,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(getPrefName(aPrefName), NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(pref, NS_ConvertUCS2toUTF8(wideString).get());
       }
     }
     return rv;
@@ -295,7 +369,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(getPrefName(aPrefName), NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(pref, NS_ConvertUCS2toUTF8(wideString).get());
       }
     }
     return rv;
@@ -308,7 +382,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
     rv = file->GetPersistentDescriptorString(getter_Copies(descriptorString));
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(getPrefName(aPrefName), descriptorString);
+      rv = SetCharPref(pref, descriptorString);
     }
     return rv;
   }
@@ -319,31 +393,58 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
 NS_IMETHODIMP nsPrefBranch::ClearUserPref(const char *aPrefName)
 {
-  return _convertRes(PREF_ClearUserPref(getPrefName(aPrefName)));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = _convertRes(PREF_ClearUserPref(pref));
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::LockPref(const char *aPrefName)
 {
-  return _convertRes(PREF_LockPref(getPrefName(aPrefName)));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = _convertRes(PREF_LockPref(pref));
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, PRBool *_retval)
 {
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
   NS_ENSURE_ARG_POINTER(_retval);
 
-  *_retval = PREF_PrefIsLocked(getPrefName(aPrefName));
-  return NS_OK;
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    *_retval = PREF_PrefIsLocked(pref);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsPrefBranch::UnlockPref(const char *aPrefName)
 {
-  return _convertRes(pref_UnlockPref(getPrefName(aPrefName)));
+  const char *pref = getPrefName(aPrefName);
+  nsresult   rv;
+
+  rv = QueryObserver(pref);
+  if (NS_SUCCEEDED(rv)) {
+    rv = _convertRes(pref_UnlockPref(pref));
+  }
+  return rv;
 }
 
-/* void clearBranch (in string startingAt); */
-NS_IMETHODIMP nsPrefBranch::ClearBranch(const char *aStartingAt)
+/* void resetBranch (in string startingAt); */
+NS_IMETHODIMP nsPrefBranch::ResetBranch(const char *aStartingAt)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)

@@ -28,16 +28,16 @@
 [scriptable, uuid(56c35506-f14b-11d3-99d3-ddbfac2ccf65)]
 interface nsIPrefBranch : nsISupports
 {
-  const long ePrefInvalid = 0;
-  const long ePrefLocked = 1;
-  const long ePrefUserset = 2;
-  const long ePrefConfig = 4;
-  const long ePrefRemote = 8;
-  const long ePrefLilocal = 16;
-  const long ePrefString = 32;
-  const long ePrefInt = 64;
-  const long ePrefBool = 128;
-  const long ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool);
+  const long PREF_INVALID = 0;
+  const long PREF_LOCKED = 1;
+  const long PREF_USER_SET = 2;
+  const long PREF_CONFIG = 4;
+  const long PREF_REMOTE = 8;
+  const long PREF_LI_LOCAL = 16;
+  const long PREF_STRING = 32;
+  const long PREF_INT = 64;
+  const long PREF_BOOL = 128;
+  const long PREF_VALUE_TYPE_MASK = (PREF_STRING | PREF_INT | PREF_BOOL);
 
   /*
    * the root of this branch, such as "browser."
@@ -78,14 +78,6 @@ interface nsIPrefBranch : nsISupports
    */
 
   /*
-   * clearBranch
-   * 
-   * clears all user preferences starting at the given preference prefix
-   * pass in null or "" to clear this branch
-   */
-  void clearBranch(in string aStartingAt);
-
-  /*
    * deleteBranch
    * 
    * removes all preferences starting at the given preference prefix
@@ -106,43 +98,20 @@ interface nsIPrefBranch : nsISupports
                     out unsigned long aCount,
                     [array, size_is(aCount), retval] out string aChildArray);
 
-
   /*
-   * Listeners
+   * resetBranch
+   * 
+   * clears all user preferences starting at the given preference prefix
+   * pass in null or "" to clear this branch
    */
-
-  /*
-   * The observers have their |Observe| methods called with
-   * ([the observer], "nsPref:changed", [pref name]).
-   */
-  void addObserver(in string aDomain, in nsIObserver aObserver);
-  void removeObserver(in string aDomain, in nsIObserver aObserver);
+  void resetBranch(in string aStartingAt);
 
 };
 
-
-/*
- * nsIPrefLocalizedString is simply a wrapper for nsISupportsWString so we can have a unique
- * identifier to distinguish between requests for normal wstrings and localized wstrings
- */
-[scriptable, uuid(ae419e24-1dd1-11b2-b39a-d3e5e7073802)]
-interface nsIPrefLocalizedString : nsISupports
-{
-    attribute wstring data;
-    wstring toString();
-
-      // do not include space for null termination in |length|. It is handled
-      // internally. |length| is in characters, not in bytes.
-    void setDataWithLength(in unsigned long length,
-                           [size_is(length)] in wstring data);
-};
 
 %{C++
 
 #define NS_PREFBRANCH_CONTRACTID "@mozilla.org/preferencesbranch;1"
 #define NS_PREFBRANCH_CLASSNAME "Preferences Branch"
-
-#define NS_SUPPORTS_PREFLOCALIZEDSTRING_CONTRACTID "@mozilla.org/supports-preflocalizedstring;1"
-#define NS_SUPPORTS_PREFLOCALIZEDSTRING_CLASSNAME "Supports PrefLocalizedString"
 
 %}
