@@ -75,8 +75,11 @@ interface nsISupportsWeakReference : nsISupports
 
 %{C++
 
-// typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
-  // ...this definition had to be moved to nsWeakPtr.h to avoid circular includes, sorry
+#ifndef nsCOMPtr_h__
+#include "nsCOMPtr.h"
+#endif
+
+typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
 
 
 /**
@@ -104,5 +107,31 @@ CallQueryReferent( nsIWeakReference* aSource, T** aDestination )
 
     return aSource->QueryReferent(nsCOMTypeInfo<T>::GetIID(), (void**)aDestination);
   }
+
+
+class NS_EXPORT nsQueryReferent : public nsCOMPtr_helper
+	{
+		public:
+			nsQueryReferent( nsIWeakReference* aWeakPtr, nsresult* error )
+					: mWeakPtr(aWeakPtr),
+						mErrorPtr(error)
+				{
+					// nothing else to do here
+				}
+
+			virtual nsresult operator()( const nsIID& aIID, void** ) const;
+
+		private:
+			nsIWeakReference*	mWeakPtr;
+			nsresult*					mErrorPtr;
+	};
+
+inline
+const nsQueryReferent
+do_QueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
+  {
+    return nsQueryReferent(aRawPtr, error);
+  }
+
 
 %}
