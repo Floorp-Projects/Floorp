@@ -87,6 +87,7 @@ GetGlobalServiceManager__16nsServiceManagerFPP17nsIServiceManager		# nsServiceMa
 
 # GetFactory call
 NSGetFactory
+nsRegistry_GetFactory
 
 # nsServiceManager static method exports.
 ReleaseService__16nsServiceManagerFRC4nsIDP11nsISupportsP19nsIShutdownListener
