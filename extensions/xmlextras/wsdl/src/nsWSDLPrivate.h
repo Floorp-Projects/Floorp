@@ -38,6 +38,7 @@
 #include "nsVoidArray.h"
 #include "nsSupportsArray.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsWeakReference.h"
 
 // Typelib includes

@@ -47,8 +47,6 @@ SUB_LIBRARIES=                                        \
                 $(DIST)\lib\xmlextrasbase_s.lib       \
 !if defined(MOZ_SOAP)
                 $(DIST)\lib\xmlextrassoap_s.lib       \
-!endif
-!if defined(MOZ_WSDL)
 		$(DIST)\lib\xmlextrasschema_s.lib      \
 		$(DIST)\lib\xmlextraswsdl_s.lib        \
 !endif
@@ -61,10 +59,7 @@ LLIBS=						      \
 		$(NULL)
 
 !if defined(MOZ_SOAP)
-DEFINES = -DMOZ_SOAP
-!endif
-!if defined(MOZ_WSDL)
-DEFINES =$(DEFINES) -DMOZ_SCHEMA -DMOZ_WSDL
+DEFINES =$(DEFINES) -DMOZ_SOAP
 !endif
 
 LCFLAGS = \

@@ -42,10 +42,10 @@ function makeCall(syncCall, faultCall) {
   s.targetObjectURI = "uri:some-namespace";
   s.methodName = "GetLastTradePrice";
   if (faultCall) {
-    s.destinationURI = "http://blueviper/cgi-bin/soapfault.cgi";
+    s.transportURI = "http://blueviper/cgi-bin/soapfault.cgi";
   }
   else {
-    s.destinationURI = "http://blueviper/cgi-bin/soapsuccess.cgi";
+    s.transportURI = "http://blueviper/cgi-bin/soapsuccess.cgi";
   }
   s.actionURI = "uri:some action";
 

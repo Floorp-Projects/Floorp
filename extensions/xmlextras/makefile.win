@@ -24,10 +24,8 @@ DEPTH=..\..
 DIRS= \
 	base \
 !if defined(MOZ_SOAP)
-	soap \
-!endif
-!if defined(MOZ_WSDL)
 	schema \
+	soap \
 	wsdl \
 !endif
 	build \

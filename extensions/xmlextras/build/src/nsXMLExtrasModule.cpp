@@ -51,13 +51,11 @@
 #include "prprf.h"
 
 #ifdef MOZ_SOAP
+#include "nsSOAPHeaderBlock.h"
 #include "nsSOAPParameter.h"
 #include "nsSOAPCall.h"
 #include "nsDefaultSOAPEncoder.h"
 #include "nsHTTPSOAPTransport.h"
-#endif
-
-#ifdef MOZ_WSDL
 #include "nsSchemaLoader.h"
 #include "nsSchemaPrivate.h"
 #include "nsWSDLLoader.h"
@@ -79,12 +77,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 #ifdef MOZ_SOAP
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPHeaderBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
-#endif
+NS_DECL_CLASSINFO(nsSOAPCall)
+NS_DECL_CLASSINFO(nsSOAPHeaderBlock)
+NS_DECL_CLASSINFO(nsSOAPParameter)
+NS_DECL_CLASSINFO(nsHTTPSOAPTransport)
 
-#ifdef MOZ_WSDL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchema)
@@ -222,13 +223,17 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SOAPHeaderBlock",
+                                NS_SOAPHEADERBLOCK_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "SOAPParameter",
                                 NS_SOAPPARAMETER_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
-#endif
 
-#ifdef MOZ_WSDL
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "SchemaLoader",
                                 NS_SCHEMALOADER_CONTRACTID,
@@ -260,15 +265,29 @@ static nsModuleComponentInfo components[] = {
     nsDOMParserConstructor },
 #ifdef MOZ_SOAP
   { "SOAP Call", NS_SOAPCALL_CID, NS_SOAPCALL_CONTRACTID,
-    nsSOAPCallConstructor },
+    nsSOAPCallConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPCall), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPCall), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SOAP HeaderBlock", NS_SOAPHEADERBLOCK_CID, NS_SOAPHEADERBLOCK_CONTRACTID,
+    nsSOAPHeaderBlockConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPHeaderBlock), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPHeaderBlock), 
+    nsIClassInfo::DOM_OBJECT },
   { "SOAP Parameter", NS_SOAPPARAMETER_CID, NS_SOAPPARAMETER_CONTRACTID,
-    nsSOAPParameterConstructor },
+    nsSOAPParameterConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPParameter), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPParameter), 
+    nsIClassInfo::DOM_OBJECT },
   { "Default SOAP Encoder", NS_DEFAULTSOAPENCODER_CID,
-    NS_DEFAULTSOAPENCODER_CONTRACTID, nsDefaultSOAPEncoderConstructor },
+    NS_DEFAULTSOAPENCODER_CONTRACTID, 
+    nsDefaultSOAPEncoderConstructor },
   { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID,
-    NS_HTTPSOAPTRANSPORT_CONTRACTID, nsHTTPSOAPTransportConstructor },
-#endif
-#ifdef MOZ_WSDL
+    NS_HTTPSOAPTRANSPORT_CONTRACTID, 
+    nsHTTPSOAPTransportConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsHTTPSOAPTransport), 
+    nsnull, &NS_CLASSINFO_NAME(nsHTTPSOAPTransport), 
+    nsIClassInfo::DOM_OBJECT },
   { "SchemaLoader", NS_SCHEMALOADER_CID, NS_SCHEMALOADER_CONTRACTID,
     nsSchemaLoaderConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSchemaLoader), nsnull,
@@ -392,7 +411,7 @@ static nsModuleComponentInfo components[] = {
 void PR_CALLBACK
 XMLExtrasModuleDestructor(nsIModule* self)
 {
-#ifdef MOZ_WSDL
+#ifdef MOZ_SOAP
   nsSchemaAtoms::DestroySchemaAtoms();
   nsWSDLAtoms::DestroyWSDLAtoms();
 #endif    

@@ -398,7 +398,7 @@ nsWSDLInterfaceInfo::GetName(char * *aName)
 {
   NS_ENSURE_ARG_POINTER(aName);
 
-  *aName = mName.ToNewCString();
+  *aName = ToNewCString(mName);
   if (!*aName) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -29,11 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 DIRS            = base 
 
 ifdef MOZ_SOAP
-DIRS += soap
-endif
-
-ifdef MOZ_WSDL
-DIRS += schema wsdl
+DIRS += schema soap wsdl
 endif
 
 DIRS += build
