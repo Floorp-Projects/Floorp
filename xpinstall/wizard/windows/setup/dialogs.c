@@ -239,7 +239,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
               lstrcpy(szTempPath, szPath);
               AppendBackSlash(szTempPath, sizeof(szTempPath));
               lstrcat(szTempPath, szBufIndex);
-              if(FileExists(szTempPath) == TRUE)
+              if(FileExists(szTempPath))
               {
                 AppendBackSlash(szPath, sizeof(szPath));
                 lstrcpy(szPath, szTempPath);
@@ -252,7 +252,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 AppendBackSlash(szTempPath, sizeof(szTempPath));
                 lstrcat(szTempPath, szBuf);
 
-                if(FileExists(szTempPath) == TRUE)
+                if(FileExists(szTempPath))
                 {
                   AppendBackSlash(szPath, sizeof(szPath));
                   lstrcpy(szPath, szTempPath);
