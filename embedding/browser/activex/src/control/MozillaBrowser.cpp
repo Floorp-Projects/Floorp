@@ -312,7 +312,7 @@ void CMozillaBrowser::ShowURIPropertyDlg(const nsString &aURI)
     if (aURI.Length() > 0)
     {
         USES_CONVERSION;
-        linkDlg.mProtocol = "HyperText Transfer Protocol"; // TODO
+        linkDlg.mProtocol = "Hypertext Transfer Protocol"; // TODO
         linkDlg.mType = "HTML Document"; // TODO
         linkDlg.mURL.AssignWithConversion(aURI);
     }
