@@ -486,9 +486,18 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
           part = mime_set_url_part(obj->options->url, partnum.get(),
                        PR_FALSE);
           if (part) {
+            char *name = MimeHeaders_get_name(child->headers, child->options);
+            // let's stick the filename in the part so save as will work.
+            if (name)
+            {
+              char *savePart = part;
+              part = PR_smprintf("%s&filename=%s", savePart, name);
+              PR_Free(savePart);
+              PR_Free(name);
+            }
+            char *temp = part;
             /* If there's a space in the url, escape the url.
                (This happens primarily on Windows and Unix.) */
-            char *temp = part;
             if (PL_strchr(part, ' ') || PL_strchr(part, '>') || PL_strchr(part, '%'))
               temp = escape_for_mrel_subst(part);
             PL_HashTableAdd(relobj->hash, absolute, temp);
