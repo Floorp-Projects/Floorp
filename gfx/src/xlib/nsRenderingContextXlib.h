@@ -66,7 +66,6 @@ class nsRenderingContextXlib : public nsRenderingContextImpl
 public:
   nsRenderingContextXlib();
   virtual ~nsRenderingContextXlib();
-  static nsresult Shutdown(); // release statics
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -272,8 +271,10 @@ protected:
       w  = 32766 - x;
     }
   }
-
-  static nsGCCacheXlib *gcCache;
 };
+
+/* Prototypes */
+nsresult CreateRenderingContextXlibContext(nsIDeviceContext *aDevice, nsRenderingContextXlibContext **aContext);
+void DeleteRenderingContextXlibContext(nsRenderingContextXlibContext *aContext);
 
 #endif /* !nsRenderingContextXlib_h___ */

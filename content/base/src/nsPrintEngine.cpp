@@ -584,19 +584,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
 
-
-  if (mIsDoingPrintPreview) {
-    PRBool okToPrint = PR_FALSE;
-    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefBranch) {
-      prefBranch->GetBoolPref("print.whileInPrintPreview", &okToPrint);
-    }
-    if (!okToPrint) {
-      ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW, PR_FALSE);
-      return NS_OK;
-    }
-  }
-
   mPrt = new nsPrintData(nsPrintData::eIsPrinting);
   if (!mPrt) {
     PR_PL(("NS_ERROR_OUT_OF_MEMORY - Creating PrintData"));

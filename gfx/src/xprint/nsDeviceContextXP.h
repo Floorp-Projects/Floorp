@@ -103,7 +103,8 @@ public:
   NS_IMETHOD         CreateFontCache();
 
   virtual void GetFontMetricsContext(nsFontMetricsXlibContext *&aContext) { aContext = mFontMetricsContext; };
-
+  virtual void GetRCContext(nsRenderingContextXlibContext *&aContext) { aContext = mRCContext; };
+ 
 protected:
   virtual         ~nsDeviceContextXp();
   void             DestroyXPContext();
@@ -112,6 +113,7 @@ protected:
   nsCOMPtr<nsIDeviceContextSpec> mSpec;
   nsCOMPtr<nsIDeviceContext>     mParentDeviceContext;
   nsFontMetricsXlibContext      *mFontMetricsContext;
+  nsRenderingContextXlibContext *mRCContext;
 };
 
 #endif /* !nsDeviceContextXp_h___ */

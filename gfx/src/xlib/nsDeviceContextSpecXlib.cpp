@@ -125,7 +125,12 @@ public:
 
   /* Does this device allow to set/change number of copies for an document ? */
   void SetCanChangeNumCopies( PRBool aCanSetNumCopies );
-  
+
+  /* Does this device allow multiple devicecontext instances to be used in
+   * parallel (e.g. print while the device is already in use by print-preview
+   * or printing while another print job is in progress) ? */
+  void SetMultipleConcurrentDeviceContextsSupported( PRBool aCanUseMultipleInstances );
+   
 private:
   /* private helper methods */
   void SetBoolValue( const char *tagname, PRBool value );
@@ -202,6 +207,11 @@ void nsPrinterFeatures::SetCanChangeSpoolerCommand( PRBool aCanSetSpoolerCommand
 void nsPrinterFeatures::SetCanChangeNumCopies( PRBool aCanSetNumCopies )
 {
   SetBoolValue("can_change_num_copies", aCanSetNumCopies);
+}
+
+void nsPrinterFeatures::SetMultipleConcurrentDeviceContextsSupported( PRBool aCanUseMultipleInstances )
+{
+  SetBoolValue("can_use_multiple_devicecontexts_concurrently", aCanUseMultipleInstances);
 }
 
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
@@ -799,6 +809,10 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnic
     /* Xprint does not allow the client to set a spooler command. 
      * Job spooling is the job of the server side (=Xprt) */
     printerFeatures.SetCanChangeSpoolerCommand(PR_FALSE);
+
+    /* Mozilla's Xprint support allows multiple nsIDeviceContext instances
+     * be used in parallel */
+    printerFeatures.SetMultipleConcurrentDeviceContextsSupported(PR_TRUE);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
     XpuClosePrinterDisplay(pdpy, pcontext);

@@ -74,7 +74,34 @@ static void Widen8To16AndDraw(Drawable    drawable,
                               int          text_length);
 
 
-nsGCCacheXlib *nsRenderingContextXlib::gcCache = nsnull;
+class nsRenderingContextXlibContext
+{
+public:
+  nsGCCacheXlib mGcCache;
+};
+
+nsresult CreateRenderingContextXlibContext(nsIDeviceContext *aDevice, nsRenderingContextXlibContext **aContext)
+{
+  nsRenderingContextXlibContext *rcctx;
+  
+  *aContext = nsnull;
+  
+  rcctx = new nsRenderingContextXlibContext();
+  if (!rcctx)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  /* No |Init()|-function to call (yet) */ 
+  *aContext = rcctx;
+  
+  return NS_OK;
+}
+
+void DeleteRenderingContextXlibContext(nsRenderingContextXlibContext *aContext)
+{
+  if (aContext) {
+    delete aContext;
+  }
+}
 
 class GraphicsState
 {
@@ -140,16 +167,6 @@ nsRenderingContextXlib::~nsRenderingContextXlib()
   
   if (mGC)
     mGC->Release();
-}
-
-/*static*/ nsresult
-nsRenderingContextXlib::Shutdown()
-{
-  if (gcCache) {
-    delete gcCache;
-    gcCache = nsnull;
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -604,15 +621,13 @@ void nsRenderingContextXlib::UpdateGC()
    if (mClipRegion) { 
      mClipRegion->GetNativeRegion((void*&)rgn);
    }
- 
-   if (!gcCache) {
-     gcCache = new nsGCCacheXlib();
-     if (!gcCache) 
-       return;
-   }
 
-   mGC = gcCache->GetGC(mDisplay, drawable,
-                        valuesMask, &values, rgn);
+   nsRenderingContextXlibContext *rcContext;
+   nsIDeviceContext *dc = mContext;
+   NS_STATIC_CAST(nsDeviceContextX *, dc)->GetRCContext(rcContext);
+   
+   mGC = rcContext->mGcCache.GetGC(mDisplay, drawable,
+                                  valuesMask, &values, rgn);
 }
 
 NS_IMETHODIMP

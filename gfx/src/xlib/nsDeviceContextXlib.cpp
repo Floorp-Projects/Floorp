@@ -100,7 +100,7 @@ nsDeviceContextXlib::nsDeviceContextXlib()
   if (!mXlibRgbHandle)
     abort();
     
-  mFontMetricsContextCounter++;
+  mContextCounter++;
 }
 
 nsDeviceContextXlib::~nsDeviceContextXlib()
@@ -109,17 +109,20 @@ nsDeviceContextXlib::~nsDeviceContextXlib()
   NS_IF_RELEASE(surf);
   mSurface = nsnull;
   
-  mFontMetricsContextCounter--;
+  mContextCounter--;
   
-  if (mFontMetricsContext && (mFontMetricsContextCounter == 0))
+  if (mContextCounter == 0)
   {
+    DeleteRenderingContextXlibContext(mRCContext);
     DeleteFontMetricsXlibContext(mFontMetricsContext);
+    mRCContext          = nsnull;
     mFontMetricsContext = nsnull;
   }
 }
 
-nsFontMetricsXlibContext *nsDeviceContextXlib::mFontMetricsContext = nsnull;
-int                       nsDeviceContextXlib::mFontMetricsContextCounter = 0;
+nsFontMetricsXlibContext      *nsDeviceContextXlib::mFontMetricsContext = nsnull;
+nsRenderingContextXlibContext *nsDeviceContextXlib::mRCContext          = nsnull;
+int                            nsDeviceContextXlib::mContextCounter     = 0;
 
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
@@ -203,6 +206,15 @@ nsDeviceContextXlib::CommonInit(void)
   if (!mFontMetricsContext)
   {
     rv = CreateFontMetricsXlibContext(this, PR_FALSE, &mFontMetricsContext);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  if (!mRCContext)
+  {
+    rv = CreateRenderingContextXlibContext(this, &mRCContext);
+    if (NS_FAILED(rv))
+      return rv;
   }
    
   return rv;
