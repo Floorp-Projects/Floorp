@@ -353,7 +353,7 @@ sub MakeResourceAliases()
 	my($domds_dir) = "$samples_dir" . "rdf:";
 	_InstallResources(":mozilla:rdf:tests:domds:resources:MANIFEST",					"$domds_dir");
 
-	my($xpinstall_ch_dir) = "$chrome_dir" . "xpinstall";
+	my($xpinstall_ch_dir) = "$chrome_dir" . "XPinstall";
 	_InstallResources(":mozilla:xpinstall:res:locale:en-US:MANIFEST",					"$xpinstall_ch_dir:locale:en-US:", 0);
 	_InstallResources(":mozilla:xpinstall:res:content:MANIFEST",						"$xpinstall_ch_dir:content:default:", 0);
 	_InstallResources(":mozilla:xpinstall:res:skin:MANIFEST",							"$xpinstall_ch_dir:skin:default:", 0);
@@ -388,23 +388,26 @@ sub MakeResourceAliases()
 	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
 	_InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",				"$navigator_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
-	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",		"$navigator_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_CONTENT",	"$navigator_chrome_dir:content:default");
-	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_SKIN",	 "$navigator_chrome_dir:skin:default");
+	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",			"$navigator_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_CONTENT",				"$navigator_chrome_dir:content:default");
+	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_SKIN",				"$navigator_chrome_dir:skin:default");
+
+	 my($netwerk_chrome_dir) = "$chrome_dir" . "Netwerk";
+	_InstallResources(":mozilla:netwerk:protocol:http:res:MANIFEST",					"$netwerk_chrome_dir:content:default:https");
 
 	 my($global_chrome_dir) = "$chrome_dir" . "Global";
-	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",			"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",		"$global_chrome_dir:content:default");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",				"$global_chrome_dir:skin:default");
-  _InstallResources(":mozilla:xpfe:global:resources:skin:mac:MANIFEST",   "$chrome_dir");
-	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",		"$chrome_dir");
-	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",				"$global_chrome_dir:locale:en-US:", 0);
-	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",			"$global_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",				"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:global:resources:content:mac:MANIFEST",			"$global_chrome_dir:content:default");
+	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",					"$global_chrome_dir:skin:default");
+	_InstallResources(":mozilla:xpfe:global:resources:skin:mac:MANIFEST",  				"$chrome_dir");
+	_InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST_CHROME",			"$chrome_dir");
+	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:MANIFEST",			"$global_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:xpfe:global:resources:locale:en-US:mac:MANIFEST",		"$global_chrome_dir:locale:en-US:", 0);
 
-	_InstallResources(":mozilla:docshell:base:MANIFEST",							"$global_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:docshell:base:MANIFEST",								"$global_chrome_dir:locale:en-US:", 0);
 
 	 my($layout_chrome_dir) = "$chrome_dir" . "Layout";
-	_InstallResources(":mozilla:layout:html:forms:src:MANIFEST_PROPERTIES",			"$layout_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:layout:html:forms:src:MANIFEST_PROPERTIES",				"$layout_chrome_dir:locale:en-US:", 0);
 
 	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
 
@@ -538,7 +541,7 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:xpfe:components:sidebar:src:MANIFEST",					"${dist_dir}Components");
 	}
 	{
-		my($directory_dir) = "$chrome_dir"."timebomb";
+		my($directory_dir) = "$chrome_dir"."Timebomb";
 		_InstallResources(":mozilla:xpfe:components:timebomb:resources:content:MANIFEST",   "$directory_dir:content:default");
 		_InstallResources(":mozilla:xpfe:components:timebomb:resources:locale:en-US:MANIFEST",	"$directory_dir:locale:en-US");
 	}
