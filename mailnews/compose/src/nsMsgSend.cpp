@@ -144,8 +144,9 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mCompFields = nsnull;			/* Where to send the message once it's done */
   mListenerArray = nsnull;
   mListenerArrayCount = 0;
-  mSendListener = nsnull;
-
+  mNewsPostListener = nsnull;
+  mMailSendListener = nsnull;
+  mSendMailAlso = PR_FALSE;
 	mOutputFile = nsnull;
 
 	m_dont_deliver_p = PR_FALSE;
@@ -2354,8 +2355,9 @@ MailDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
     ptr->DeliverAsMailExit(aUrl, aExitCode);
 
-    if (ptr->mSendListener)
-      delete ptr->mSendListener;
+    if (ptr->mMailSendListener) {
+      delete ptr->mMailSendListener;
+    }
     NS_RELEASE(ptr);
   }
 
@@ -2368,10 +2370,13 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
   if (tagData)
   {
     nsMsgComposeAndSend *ptr = (nsMsgComposeAndSend *) tagData;
-    ptr->DeliverAsNewsExit(aUrl, aExitCode);
 
-    if (ptr->mSendListener)
-      delete ptr->mSendListener;
+    if (!ptr) return NS_ERROR_NULL_POINTER;
+
+    ptr->DeliverAsNewsExit(aUrl, aExitCode, ptr->mSendMailAlso);
+
+    if (ptr->mNewsPostListener)
+      delete ptr->mNewsPostListener;
     NS_RELEASE(ptr);
   }
 
@@ -2406,13 +2411,19 @@ nsMsgComposeAndSend::DeliverMessage()
 		return SaveAsTemplate();
 	}
 
-	if (news_p)
-		DeliverFileAsNews();   /* May call ...as_mail() next. */
-	else if (mail_p)
+	if (news_p) {
+      if (mail_p) {
+        mSendMailAlso = PR_TRUE;
+      }
+      DeliverFileAsNews();   /* will call DeliverFileAsMail if it needs to */
+    }
+	else if (mail_p) {
 		DeliverFileAsMail();
-	else
+    }
+	else {
       return NS_ERROR_UNEXPECTED;
-
+    }
+    
   return NS_OK;
 }
 
@@ -2487,8 +2498,8 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
   if (NS_SUCCEEDED(rv) && smtpService)
   {
-    mSendListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
-    if (!mSendListener)
+    mMailSendListener = new nsMsgDeliveryListener(MailDeliveryCallback, nsMailDelivery, this);
+    if (!mMailSendListener)
     {
       // RICHIE_TODO - message loss here?
       nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
@@ -2501,7 +2512,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
   	NS_ADDREF_THIS(); 
 	nsCOMPtr<nsIFileSpec> aFileSpec;
 	NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
-    rv = smtpService->SendMailMessage(aFileSpec, buf, mSendListener, nsnull, nsnull);
+    rv = smtpService->SendMailMessage(aFileSpec, buf, mMailSendListener, nsnull, nsnull);
   }
   
   PR_FREEIF(buf); // free the buf because we are done with it....
@@ -2511,16 +2522,16 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 nsresult
 nsMsgComposeAndSend::DeliverFileAsNews()
 {
-  if (mCompFields->GetNewsgroups() == nsnull) 
-    return NS_OK;
-
   nsresult rv = NS_OK;
+  if (!(mCompFields->GetNewsgroups()))
+    return rv;
+
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
 
   if (NS_SUCCEEDED(rv) && nntpService) 
-  {	
-    mSendListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
-    if (!mSendListener)
+  {
+    mNewsPostListener = new nsMsgDeliveryListener(NewsDeliveryCallback, nsNewsDelivery, this);
+    if (!mNewsPostListener)
     {
       // RICHIE_TODO - message loss here?
       nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
@@ -2536,7 +2547,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 	
 	rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
 	if (NS_FAILED(rv)) return rv;
-    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mSendListener, nsnull);
+    rv = nntpService->PostMessage(fileToPost, mCompFields->GetNewsgroups(), mNewsPostListener, nsnull);
   }
 
   return rv;
@@ -2565,7 +2576,7 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
 void
 nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckForMail)
 {
-  // If we fail on the news delivery, not sense in going on so just notify
+  // If we fail on the news delivery, no sense in going on so just notify
   // the user and exit.
   if (NS_FAILED(aExitCode))
   {
@@ -2640,9 +2651,9 @@ nsMsgComposeAndSend::DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode)
 }
 
 void
-nsMsgComposeAndSend::DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode)
+nsMsgComposeAndSend::DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode, PRBool sendMailAlso)
 {
-  DoDeliveryExitProcessing(aExitCode, PR_FALSE);
+  DoDeliveryExitProcessing(aExitCode, sendMailAlso);
   return;
 }
 

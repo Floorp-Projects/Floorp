@@ -192,7 +192,7 @@ public:
   NS_IMETHOD  DeliverFileAsMail();
   NS_IMETHOD  DeliverFileAsNews();
   void        DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode);
-  void        DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode);
+  void        DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode, PRBool sendMailAlso);
   void        DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckForMail);
 
   nsresult    DoFcc();
@@ -343,8 +343,12 @@ public:
   // These are needed for callbacks to the FE...  
   nsIMsgSendListener        **mListenerArray;
   PRInt32                   mListenerArrayCount;
-  nsMsgDeliveryListener     *mSendListener;
 
+  // we need two, in the case where we are sending and posting the same message
+  nsMsgDeliveryListener     *mNewsPostListener;
+  nsMsgDeliveryListener     *mMailSendListener;
+  
+  PRBool                    mSendMailAlso;
   nsIFileSpec               *mReturnFileSpec;     // a holder for file spec's to be returned to caller
 
   // File where we stored our HTML so that we could make the plaintext form.
