@@ -74,6 +74,12 @@
 // has a way of registering instances
 // (see http://bugzilla.mozilla.org/show_bug.cgi?id=3509 ).
 nsISelectionMgr* theSelectionMgr = 0;
+
+extern "C" NS_EXPORT nsISelectionMgr*
+GetSelectionMgr()
+{
+  return theSelectionMgr;
+}
 // BWEEP BWEEP
 
 //
