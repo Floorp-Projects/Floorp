@@ -271,7 +271,7 @@ nsBasePrincipal::Save(nsSupportsHashtable* aPrincipals, nsIPref *aPref)
     }
     if (!mPrefName) {
         nsCAutoString s("security.principal.X");
-        s += mCapabilitiesOrdinal++;
+        s.AppendInt(mCapabilitiesOrdinal++);
         mPrefName = s.ToNewCString();
     }
     nsresult rv = aPref->SetCharPref(mPrefName, streamableForm);
