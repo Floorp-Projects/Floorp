@@ -1343,7 +1343,6 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-printf("resizing to %d %d\n", aWidth, aHeight);
   if ( mWindow ) {
     NSRect newBounds = [mWindow frame];
     newBounds.size.width = aWidth;
@@ -1743,25 +1742,25 @@ void StopResizing ( )
 
 - (void)windowDidBecomeMain:(NSNotification *)aNotification
 {
-  printf("got activation\n");
+  //printf("got activation\n");
 }
 
 
 - (void)windowDidResignMain:(NSNotification *)aNotification
 {
-  printf("got deactivate\n");
+  //printf("got deactivate\n");
 }
 
 
 - (void)windowDidBecomeKey:(NSNotification *)aNotification
 {
-  printf("we're key window\n");
+  //printf("we're key window\n");
 }
 
 
 - (void)windowDidResignKey:(NSNotification *)aNotification
 {
-  printf("we're not the key window\n");
+  //printf("we're not the key window\n");
 }
 
 

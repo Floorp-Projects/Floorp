@@ -37,6 +37,7 @@
 #ifndef MacWindow_h__
 #define MacWindow_h__
 
+#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 

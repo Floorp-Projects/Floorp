@@ -114,16 +114,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
         break;
     case eColor_highlight: // CSS2 color
     case eColor_TextSelectBackground:
-        RGBColor macColor;
-        GrafPtr thePort;
-        ::GetPort(&thePort);
-       	if (thePort)
-       	{
-          ::GetPortHiliteColor(thePort,&macColor);
-          aColor = NS_RGB(macColor.red>>8, macColor.green>>8, macColor.blue>>8);
-       	}
-       	else
-        	aColor = NS_RGB(0x00,0x00,0x00);
+        res = GetMacBrushColor(kThemeBrushPrimaryHighlightColor, aColor, NS_RGB(0x00,0x00,0x00));
         break;
     case eColor_highlighttext:  // CSS2 color
     case eColor_TextSelectForeground:

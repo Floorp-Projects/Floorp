@@ -108,7 +108,10 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
       format = kScrapFlavorTypePicture;
     else if ( PL_strcmp(aMimeStr, kUnicodeMime) == 0 )
       format = kScrapFlavorTypeUnicode;
-
+/*
+    else if ( PL_strcmp(aMimeStr, kURLMime) == 0 )
+      format = 'url ';
+*/
     else if ( inAddIfNotPresent ) {
       // create the flavor based on the unique id in the lower two bytes and 'MZ' in the
       // upper two bytes.

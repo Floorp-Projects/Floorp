@@ -435,8 +435,8 @@ nsSound::GetSoundResourceName(const char* inSoundName, StringPtr outResourceName
     if (NS_FAILED(rv))
       return rv;
 
-    nsXPIDLCString  newMailSound;
-    rv = icService->GetString(nsIInternetConfigService::eICString_NewMailSoundName, getter_Copies(newMailSound));
+    nsCAutoString newMailSound;
+    rv = icService->GetString(nsIInternetConfigService::eICString_NewMailSoundName, newMailSound);
     if (NS_FAILED(rv))
       return rv;
       
@@ -855,7 +855,7 @@ nsMovieSoundRequest::Notify(nsITimer *timer)
   if (!mMovie)
   {
     NS_ASSERTION(0, "nsMovieSoundRequest has no movie in timer callback");
-    return NS_OK;;
+    return NS_OK;
   }
   
 #ifdef SOUND_DEBUG

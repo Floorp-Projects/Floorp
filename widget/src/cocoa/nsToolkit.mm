@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 #include "nsToolkit.h"
 #include "nsWidgetAtoms.h"
 
@@ -47,10 +46,9 @@
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
-#include "nsRepeater.h"
-
 // for some reason, this must come last. otherwise the appshell 
 // component fails to instantiate correctly at runtime.
+#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 static CFBundleRef getBundle(CFStringRef frameworkPath)
@@ -70,7 +68,6 @@ static CFBundleRef getBundle(CFStringRef frameworkPath)
   return bundle;
 }
 
-
 static void* getQDFunction(CFStringRef functionName)
 {
   static CFBundleRef systemBundle = getBundle(CFSTR("/System/Library/Frameworks/ApplicationServices.framework"));
@@ -78,7 +75,6 @@ static void* getQDFunction(CFStringRef functionName)
     return CFBundleGetFunctionPointerForName(systemBundle, functionName);
   return NULL;
 }
-
 
 
 //
@@ -89,11 +85,12 @@ static void* getQDFunction(CFStringRef functionName)
 //
 @interface EventQueueHandler : NSObject
 {
-  nsIEventQueueService* mEventQueueService;
-  NSTimer* mEventTimer;                                   // our timer [STRONG]
+  nsIEventQueue*  mMainThreadEventQueue;    // addreffed
+  NSTimer*        mEventTimer;              // our timer [STRONG]
 }
+
 - (void)eventTimer:(NSTimer *)theTimer;
-- (PRBool)eventsArePending;
+
 @end
 
 
@@ -118,14 +115,26 @@ static PRUintn gToolkitTLSIndex = 0;
 //
 - (id)init
 {
-  // lame, but we can't use an nsCOMPtr as a member variable
-  nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-  mEventQueueService = service.get();
-  NS_IF_ADDREF(mEventQueueService);  
+  if ( (self = [super init]) )
+  {
+    nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+    if (!service) {
+      [self release];
+      return nil;
+    }
+    
+    service->GetThreadEventQueue(NS_CURRENT_THREAD, &mMainThreadEventQueue);   // addref
 
-  mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.005 target:self selector:@selector(eventTimer:) userInfo:nil
-                           repeats:YES];
-  NS_ASSERTION(mEventTimer, "UH OH! couldn't create periodic event processing timer");
+    mEventTimer = [NSTimer scheduledTimerWithTimeInterval:0.005
+                              target:self
+                              selector:@selector(eventTimer:)
+                              userInfo:nil
+                              repeats:YES];
+    if (!mMainThreadEventQueue || !mEventTimer) {
+      [self release];
+      return nil;
+    }
+  }
   
   return self;
 }
@@ -140,10 +149,12 @@ static PRUintn gToolkitTLSIndex = 0;
 //
 - (void) dealloc
 {
-printf("shutting down event queue\n");
-  if ( mEventTimer )
-    [mEventTimer release];
-  NS_IF_RELEASE(mEventQueueService);
+#if DEBUG
+  printf("shutting down event queue\n");
+#endif
+  
+  [mEventTimer release];
+  NS_IF_RELEASE(mMainThreadEventQueue);
   
   gEventQueueHandler = nsnull;
   
@@ -157,49 +168,64 @@ printf("shutting down event queue\n");
 // Called periodically to process PLEvents from the queue on the current thread
 //
 
-#define LOOP_THRESHOLD 20
+#define MAX_PROCESS_EVENT_CALLS        20
+
+//#define DEBUG_EVENT_TIMING
+
+//#define TIMED_EVENT_PROCESSING
+#define MAX_PLEVENT_TIME_MILLISECONDS  500
+
 
 - (void)eventTimer:(NSTimer *)theTimer
 {
-  if ( mEventQueueService ) {
-    nsCOMPtr<nsIEventQueue> queue;
-    mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-    if (queue) {
-      nsresult rv = NS_OK;
-      for (PRInt32 i = 0; i < LOOP_THRESHOLD; i++) {
-        PRBool pendingEvents = PR_FALSE;
-        queue->PendingEvents(&pendingEvents);
-        if (!pendingEvents)
-          break;
-        queue->ProcessPendingEvents();
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
-      }
+#ifdef DEBUG_EVENT_TIMING
+  AbsoluteTime startTime = ::UpTime();
+#endif
+  
+  if (mMainThreadEventQueue)
+  {
+#ifdef TIMED_EVENT_PROCESSING
+    // the new way; process events until some time has elapsed, or there are
+    // no events left. UpTime() is a very low-overhead way to measure time.
+    AbsoluteTime bailTime = ::AddDurationToAbsolute(MAX_PLEVENT_TIME_MILLISECONDS * durationMillisecond, ::UpTime());
+    while (1)
+    {
+      PRBool pendingEvents = PR_FALSE;
+      mMainThreadEventQueue->PendingEvents(&pendingEvents);
+      if (!pendingEvents)
+        break;
+      mMainThreadEventQueue->ProcessPendingEvents();
+      
+      AbsoluteTime now = ::UpTime();
+      if (UnsignedWideToUInt64(now) > UnsignedWideToUInt64(bailTime))
+        break;
     }
-  }
-  
-  EventRecord anEvent;
-	Repeater::DoIdlers(anEvent);
-  Repeater::DoRepeaters(anEvent);
-}
-
-
-//
-// -eventsArePending
-//
-// See if events are pending on the event queue on the current thread.
-//
-- (PRBool)eventsArePending
-{
-  PRBool pendingEvents = PR_FALSE;
-  
-  if ( mEventQueueService ) {
-    nsCOMPtr<nsIEventQueue> queue;
-    mEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-    if (queue)
-      queue->PendingEvents(&pendingEvents);
+#else
+    // the old way; process events 20 times. Can suck CPU, and make the app
+    // unresponsive
+    for (PRInt32 i = 0; i < MAX_PROCESS_EVENT_CALLS; i ++)
+    {
+      PRBool pendingEvents = PR_FALSE;
+      mMainThreadEventQueue->PendingEvents(&pendingEvents);
+      if (!pendingEvents)
+        break;
+      mMainThreadEventQueue->ProcessPendingEvents();
+    } 
+#endif
   }
 
-  return pendingEvents;
+#ifdef DEBUG_EVENT_TIMING
+  Nanoseconds duration = ::AbsoluteDeltaToNanoseconds(::UpTime(), startTime);
+  UInt32 milliseconds = UnsignedWideToUInt64(duration) / 1000000;
+    
+  static UInt32 sMaxDuration = 0;
+  
+  if (milliseconds > sMaxDuration)
+    sMaxDuration = milliseconds;
+  
+  printf("Event handling took %u ms (max %u)\n", milliseconds, sMaxDuration);
+#endif
+  
 }
 
 
@@ -214,16 +240,22 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
 // assume we begin as the fg app
 bool nsToolkit::sInForeground = true;
 
+static const char* gQuartzRenderingPref = "browser.quartz.enable";
 
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
-nsToolkit::nsToolkit() : mInited(false)
+nsToolkit::nsToolkit()
+: mInited(false)
 {
   NS_INIT_ISUPPORTS();
   
-  if ( !gEventQueueHandler )
+  if (!gEventQueueHandler)
+  {
+    // autorelease this so that if Init is never called, it is not
+    // leaked. Init retains it.
     gEventQueueHandler = [[[EventQueueHandler alloc] init] autorelease];
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -251,107 +283,76 @@ nsToolkit::~nsToolkit()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
 {
-  if (gEventQueueHandler)
-    [gEventQueueHandler retain];
+  if (!gEventQueueHandler)
+    return NS_ERROR_FAILURE;
+  
+  [gEventQueueHandler retain];
 
   nsWidgetAtoms::AddRefAtoms();
 
-#if TARGET_CARBON
-  // from Apple's technote
-#if UNIVERSAL_INTERFACES_VERSION <= 0x4000
+  mInited = true;
+
+  SetupQuartzRendering();
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if ( prefs )
+    prefs->RegisterCallback(gQuartzRenderingPref, QuartzChangedCallback, nsnull);
+
+  return NS_OK;
+}
+
+
+//
+// QuartzChangedCallback
+//
+// The pref changed, reset the app to use quartz rendering as dictated by the pref
+//
+int nsToolkit::QuartzChangedCallback(const char* pref, void* data)
+{
+  SetupQuartzRendering();
+  return NS_OK;
+}
+
+
+//
+// SetupQuartzRendering
+//
+// Use apple's technote for 10.1.5 to turn on quartz rendering with CG metrics. This
+// slows us down about 12% when turned on.
+//
+void nsToolkit::SetupQuartzRendering()
+{
+  // from Apple's technote, yet un-numbered.
+#if UNIVERSAL_INTERFACES_VERSION <= 0x0400
   enum {
-    kQDDontChangeFlags = 0xFFFFFFFF,          // don't change anything
+    kQDDontChangeFlags = 0xFFFFFFFF,         // don't change anything
     kQDUseDefaultTextRendering = 0,          // bit 0
     kQDUseTrueTypeScalerGlyphs = (1 << 0),   // bit 1
     kQDUseCGTextRendering = (1 << 1),        // bit 2
     kQDUseCGTextMetrics = (1 << 2)
   };
 #endif
+  const int kFlagsWeUse = kQDUseCGTextRendering | kQDUseCGTextMetrics;
   
   // turn on quartz rendering if we find the symbol in the app framework. Just turn
   // on the bits that we need, don't turn off what someone else might have wanted. If
   // the pref isn't found, assume we want it on. That way, we have to explicitly put
   // in a pref to disable it, rather than force everyone who wants it to carry around
   // an extra pref.
-  //
-  // We use QD metrics for speed. i can't see any difference in layout with CG metrics.
   typedef UInt32 (*qd_procptr)(UInt32);  
-  qd_procptr SwapQDTextFlags = (qd_procptr) getQDFunction(CFSTR("SwapQDTextFlags"));
+  static qd_procptr SwapQDTextFlags = (qd_procptr) getQDFunction(CFSTR("SwapQDTextFlags"));
   if ( SwapQDTextFlags ) {
     nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
     if (!prefs)
-      return NS_OK;
+      return;
     PRBool enableQuartz = PR_TRUE;
-    nsresult rv = prefs->GetBoolPref("browser.quartz.enable", &enableQuartz);
-    if ( NS_FAILED(rv) || enableQuartz ) {
-      UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
-      SwapQDTextFlags(oldFlags | kQDUseTrueTypeScalerGlyphs | kQDUseCGTextRendering);
-    }
+    nsresult rv = prefs->GetBoolPref(gQuartzRenderingPref, &enableQuartz);
+    UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
+    if ( NS_FAILED(rv) || enableQuartz )
+      SwapQDTextFlags(oldFlags | kFlagsWeUse);
+    else 
+      SwapQDTextFlags(oldFlags & !kFlagsWeUse);
   }
-#endif
-
-  mInited = true;
-  return NS_OK;
 }
-
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-PRBool nsToolkit::ToolkitBusy()
-{
-  return (gEventQueueHandler) ? [gEventQueueHandler eventsArePending] : PR_FALSE;
-}
-
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-bool nsToolkit::HasAppearanceManager()
-{
-
-#define APPEARANCE_MIN_VERSION  0x0110    // we require version 1.1
-  
-  static bool inited = false;
-  static bool hasAppearanceManager = false;
-
-  if (inited)
-    return hasAppearanceManager;
-  inited = true;
-
-  SInt32 result;
-  if (::Gestalt(gestaltAppearanceAttr, &result) != noErr)
-    return false;   // no Appearance Mgr
-
-  if (::Gestalt(gestaltAppearanceVersion, &result) != noErr)
-    return false;   // still version 1.0
-
-  hasAppearanceManager = (result >= APPEARANCE_MIN_VERSION);
-
-  return hasAppearanceManager;
-}
-
-
-void 
-nsToolkit :: AppInForeground ( )
-{
-  sInForeground = true;
-}
-
-
-void 
-nsToolkit :: AppInBackground ( )
-{
-  sInForeground = false;
-} 
-
-
-bool
-nsToolkit :: IsAppInForeground ( )
-{
-  return sInForeground;
-}
-
 
 //-------------------------------------------------------------------------
 //
