@@ -63,6 +63,11 @@ nsresult nsDateTimeFormatOS2::FormatTime(nsILocale* locale,
   return FormatTMTime(locale, dateFormatSelector, timeFormatSelector, localtime( &timetTime ), stringOut);
 }
 
+/* Workaround for GCC problem */
+#ifndef LOCI_sDate
+#define LOCI_sDate 63
+#endif
+
 // performs a locale sensitive date formatting operation on the struct tm parameter
 nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale, 
                                const nsDateFormatSelector  dateFormatSelector, 
@@ -93,7 +98,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
       UniStrcat( uFmtD, (UniChar*)L"%x");
       break; 
     case kDateFormatYearMonth:
-      UniQueryLocaleItem( locObj, DATESEP, &pString);
+      UniQueryLocaleItem( locObj, LOCI_sDate, &pString);
       UniStrcat( uFmtD, (UniChar*)L"%y");
       UniStrcat( uFmtD, pString);
       UniStrcat( uFmtD, (UniChar*)L"%m");
