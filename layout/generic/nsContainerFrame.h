@@ -88,8 +88,8 @@ public:
 #endif  
 
   // nsContainerFrame methods
-  virtual void DeleteChildsNextInFlow(nsIPresContext* aPresContext,
-                                      nsIFrame* aChild);
+  virtual void DeleteNextInFlowChild(nsIPresContext* aPresContext,
+                                     nsIFrame*       aNextInFlow);
 
   static PRInt32 LengthOf(nsIFrame* aFrameList) {
     nsFrameList tmp(aFrameList);
@@ -143,7 +143,7 @@ public:
   /**
    * Invokes the WillReflow() function, positions the frame and its view (if
    * requested), and then calls Reflow(). If the reflow succeeds and the child
-   * frame is complete, deletes any next-in-flows using DeleteChildsNextInFlow()
+   * frame is complete, deletes any next-in-flows using DeleteNextInFlowChild()
    *
    * Flags:
    * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you

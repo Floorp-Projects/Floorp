@@ -1288,8 +1288,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
         nsHTMLContainerFrame* parent;
-        aFrame->GetParent((nsIFrame**) &parent);
-        parent->DeleteChildsNextInFlow(mPresContext, aFrame);
+        kidNextInFlow->GetParent((nsIFrame**) &parent);
+        parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
     }
 

@@ -883,7 +883,7 @@ nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
 /**
  * Invokes the WillReflow() function, positions the frame and its view (if
  * requested), and then calls Reflow(). If the reflow succeeds and the child
- * frame is complete, deletes any next-in-flows using DeleteChildsNextInFlow()
+ * frame is complete, deletes any next-in-flows using DeleteNextInFlowChild()
  */
 nsresult
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
@@ -953,10 +953,9 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
       // Remove all of the childs next-in-flows. Make sure that we ask
       // the right parent to do the removal (it's possible that the
       // parent is not this because we are executing pullup code)
-      nsIFrame* parent;
-      aKidFrame->GetParent(&parent);
-      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aPresContext,
-                                                          aKidFrame);
+      nsContainerFrame* parent;
+      kidNextInFlow->GetParent((nsIFrame**)&parent);
+      parent->DeleteNextInFlowChild(aPresContext, kidNextInFlow);
     }
   }
   return result;
@@ -1051,69 +1050,64 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                 aKidFrame,
 }
 
 /**
- * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow
+ * Remove and delete aNextInFlow and its next-in-flows. Updates the sibling and flow
  * pointers
- *
- * @param   aChild child this child's next-in-flow
- * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
 void
-nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
-                                         nsIFrame* aChild)
+nsContainerFrame::DeleteNextInFlowChild(nsIPresContext* aPresContext,
+                                        nsIFrame*       aNextInFlow)
 {
-  NS_PRECONDITION(mFrames.ContainsFrame(aChild), "bad geometric parent");
-
-  nsIFrame*         nextInFlow;
-  nsContainerFrame* parent;
-   
-  aChild->GetNextInFlow(&nextInFlow);
-  NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
-  nextInFlow->GetParent((nsIFrame**)&parent);
+  nsIFrame* prevInFlow;
+  aNextInFlow->GetPrevInFlow(&prevInFlow);
+  NS_PRECONDITION(prevInFlow, "bad prev-in-flow");
+  NS_PRECONDITION(mFrames.ContainsFrame(aNextInFlow), "bad geometric parent");
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
   nsIFrame* nextNextInFlow;
-
-  nextInFlow->GetNextInFlow(&nextNextInFlow);
-  if (nsnull != nextNextInFlow) {
-    parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
+  aNextInFlow->GetNextInFlow(&nextNextInFlow);
+  if (nextNextInFlow) {
+    nsContainerFrame* parent;
+    nextNextInFlow->GetParent((nsIFrame**)&parent);
+    parent->DeleteNextInFlowChild(aPresContext, nextNextInFlow);
   }
 
 #ifdef IBMBIDI
   nsIFrame* nextBidi;
-  aChild->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
-                          (void**) &nextBidi,sizeof(nextBidi));
-  if (nextBidi == nextInFlow) {
+  prevInFlow->GetBidiProperty(aPresContext, nsLayoutAtoms::nextBidi,
+                              (void**) &nextBidi,sizeof(nextBidi));
+  if (nextBidi == aNextInFlow) {
     return;
   }
 #endif // IBMBIDI
 
   // Disconnect the next-in-flow from the flow list
-  nsSplittableFrame::BreakFromPrevFlow(nextInFlow);
+  nsSplittableFrame::BreakFromPrevFlow(aNextInFlow);
 
   // Take the next-in-flow out of the parent's child list
-  PRBool  result = parent->mFrames.RemoveFrame(nextInFlow);
+  PRBool result = mFrames.RemoveFrame(aNextInFlow);
   if (!result) {
     // We didn't find the child in the parent's principal child list.
     // Maybe it's on the overflow list?
-    nsFrameList overflowFrames(parent->GetOverflowFrames(aPresContext, PR_TRUE));
+    nsFrameList overflowFrames(GetOverflowFrames(aPresContext, PR_TRUE));
 
-    if (overflowFrames.IsEmpty() || !overflowFrames.RemoveFrame(nextInFlow)) {
+    if (overflowFrames.IsEmpty() || !overflowFrames.RemoveFrame(aNextInFlow)) {
       NS_ASSERTION(result, "failed to remove frame");
     }
 
     // Set the overflow property again
     if (overflowFrames.NotEmpty()) {
-      parent->SetOverflowFrames(aPresContext, overflowFrames.FirstChild());
+      SetOverflowFrames(aPresContext, overflowFrames.FirstChild());
     }
   }
 
   // Delete the next-in-flow frame
-  nextInFlow->Destroy(aPresContext);
+  aNextInFlow->Destroy(aPresContext);
 
 #ifdef NS_DEBUG
-  aChild->GetNextInFlow(&nextInFlow);
-  NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
+  nsIFrame* nextInFlow;
+  prevInFlow->GetNextInFlow(&nextInFlow);
+  NS_POSTCONDITION(!nextInFlow, "non null next-in-flow");
 #endif
 }
 

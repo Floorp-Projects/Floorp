@@ -180,8 +180,8 @@ public:
 
 #endif
 
-  virtual void DeleteChildsNextInFlow(nsIPresContext* aPresContext,
-                                      nsIFrame* aNextInFlow);
+  virtual void DeleteNextInFlowChild(nsIPresContext* aPresContext,
+                                     nsIFrame*       aNextInFlow);
 
   /** return the topmost block child based on y-index.
     * almost always the first or second line, if there is one.
