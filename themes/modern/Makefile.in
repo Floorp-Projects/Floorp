@@ -28,9 +28,19 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
+SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)
+
+EXPORT_RESOURCE_SAMPLES = \
+	manifest.rdf \
+	$(NULL)
+
 DIRS  = communicator global navigator editor messenger 
 # extensions, need to deal with this soon.
 DIRS += chatzilla xmlterm
 
 include $(topsrcdir)/config/rules.mk
 
+GARBAGE += $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)

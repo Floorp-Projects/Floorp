@@ -26,3 +26,10 @@ DIRS=communicator editor global messenger navigator chatzilla xmlterm
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
+
+clobber::
+	rm -rf $(DIST)\chrome\$(THEME)\*.*
+
+install::
+	$(MAKE_INSTALL) manifest.rdf $(DIST)\bin\chrome\$(THEME)
+
