@@ -53,7 +53,10 @@
         >
 
   <script language="JavaScript" src="chrome://editor/content/editor.js"/>
+<!-- 
+  Loaded by editorOverlay.js
   <script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
+-->
   <script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
   <script language="JavaScript" src="chrome://editor/content/EditorContextMenu.js"/>
   <script language="javascript" src="chrome://global/content/strres.js"/>
@@ -102,7 +105,7 @@
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
-    <menu value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
+    <menu id="viewMenu" value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
@@ -198,7 +201,13 @@
 
   <box id="appcontent" orient="vertical" flex="1">
     <deck id="ContentWindowDeck" index="0" flex="1">
-      <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"/>
+      <!-- KLUDGE:  Temporary fix for bug 34414:
+           The current editor tag doesn't have a view, 
+           which breaks deck frame-hiding mechanism 
+       -->
+      <stack>
+        <editor type="content-primary" id="content-frame" src="about:blank" context="editorContentContext" flex="1"/>
+      </stack>
       <textfield class="source-editor" id="content-source" multiline="true" rows="1"
                  flex="1" style="width:1em; height:1em;"/>
     </deck>
