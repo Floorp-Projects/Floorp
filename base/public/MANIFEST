@@ -11,6 +11,8 @@ nsIStringStream.h
 nsFileSpec.h
 nsRepeater.h
 nsIProperties.h
+nsIScriptable.h
+nsIVariant.h
 nsCaretProperties.h
 nsSpecialSystemDirectory.h
 nsIObserverService.h

@@ -27,6 +27,8 @@ DEFINES += -D_IMPL_NS_BASE
 EXPORTS =		\
     nsAutoLock.h	\
     nsIProperties.h	\
+    nsIScriptable.h     \
+    nsIVariant.h        \
     nsISizeOfHandler.h	\
     nsIString.h		\
     nsCaretProperties.h \
