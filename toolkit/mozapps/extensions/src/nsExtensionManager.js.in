@@ -622,6 +622,8 @@ nsExtensionManager.prototype = {
           
           win.close();
         }
+        
+        this._checkForGlobalInstalls(cmdLineSvc.getCmdLineValue("-install-global"));
 
         this._finishOperations();
         this._loadDefaults();      
@@ -645,10 +647,44 @@ nsExtensionManager.prototype = {
     }
   },
   
+  _checkForGlobalInstalls: function (aPath)
+  {
+    if (!aPath)
+      return;
+      
+    // First see if the path supplied is a file path
+    var file = Components.classes["@mozilla.org/file/local;1"]
+                         .createInstance(Components.interfaces.nsILocalFile);
+    try {
+      file.initWithPath(aPath);
+    }
+    catch (e) {
+      // Try appending the path to the current proc dir. 
+      file = getDir("XCurProcD", []);
+      try {
+        file.append(aPath);
+      }
+      catch (e) { /* can't handle this */ }
+    }
+    
+    if (file.exists()) {
+      var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
+                                .createInstance(Components.interfaces.nsIZipReader);
+      zipReader.init(file);
+      zipReader.open();
+      this.installExtensionFromXPI(zipReader, nsIExtensionManager.FLAG_INSTALL_GLOBAL);
+      zipReader.close();
+    }
+    else {
+      printf("Invalid XPI Path: " + aPath + "\n");
+    }
+  },
+  
   _finishOperations: function ()
   {
-    var autoregFile = getFile("ProfD", [FILE_AUTOREG]);
-    if (autoregFile.exists()) {
+    var profileAutoReg = getFile("ProfD", [FILE_AUTOREG]);
+    var globalAutoReg = getFile("XCurProcD", [FILE_AUTOREG]);
+    if (profileAutoReg.exists() || globalAutoReg.exists()) {
       var win = this._showProgressWindow();
     
       // An existing autoreg file is an indication that something major has 
@@ -683,9 +719,12 @@ nsExtensionManager.prototype = {
         
       win.close();
       
-      // Now that we've finalized the EM operation, remove the autoreg file so
+      // Now that we've finalized the EM operation, remove the autoreg files so
       // we don't do this every time we start.
-      autoregFile.remove(false);
+      if (profileAutoReg.exists()) 
+        profileAutoReg.remove(false);
+      if (globalAutoReg.exists())
+        globalAutoReg.remove(false);
     }
   },
   
@@ -848,9 +887,11 @@ nsExtensionManager.prototype = {
     }
   },
 
-  _writeAutoReg: function ()
+  _writeAutoReg: function (aIsProfile)
   {
-    this._writeProfileFile(getFile("ProfD", [FILE_AUTOREG]), 
+    var autoRegFile = aIsProfile ? getFile("ProfD", [FILE_AUTOREG]) : 
+                                   getFile("XCurProcD", [FILE_AUTOREG]);
+    this._writeProfileFile(autoRegFile, 
                            this._getComponentsDir, 
                            this._writeAutoregLines);
   },
@@ -913,7 +954,7 @@ nsExtensionManager.prototype = {
     }
     tempManifest.remove(false);
     
-    this._writeAutoReg();
+    this._writeAutoReg(installProfile);
   },
   
   _canInstallExtension: function (aDataSource)
@@ -979,19 +1020,19 @@ nsExtensionManager.prototype = {
   uninstallExtension: function (aExtensionID)
   {
     this._ds.uninstallExtension(aExtensionID);
-    this._writeAutoReg();
+    this._writeAutoReg(this._ds.isProfileExtension(aExtensionID));
   },
   
   enableExtension: function (aExtensionID)
   {
     this._ds.enableExtension(aExtensionID);
-    this._writeAutoReg();
+    this._writeAutoReg(this._ds.isProfileExtension(aExtensionID));
   },
   
   disableExtension: function (aExtensionID)
   {
     this._ds.disableExtension(aExtensionID);
-    this._writeAutoReg();
+    this._writeAutoReg(this._ds.isProfileExtension(aExtensionID));
   },
   
   update: function (aItems, aItemCount)
@@ -1128,7 +1169,7 @@ nsExtensionItemUpdater.prototype = {
   {
     this._os.notifyObservers(null, "Update:Extension:Started", "");
     var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
-                              .getService(Components.interfaces.nsIWebServiceProxyFactory);
+                               .getService(Components.interfaces.nsIWebServiceProxyFactory);
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var wsdlURI = pref.getComplexValue(PREF_UPDATE_EXT_WSDL_URI,
@@ -1401,7 +1442,7 @@ nsExtensionsDataSource.prototype = {
     var items = [];
     if (aItemID) {
       var item = Components.classes["@mozilla.org/updates/item;1"]
-                            .createInstance(Components.interfaces.nsIUpdateItem);
+                           .createInstance(Components.interfaces.nsIUpdateItem);
       item.init(aItemID, this.getExtensionProperty(aItemID, "version"),
                 this.getExtensionProperty(aItemID, "name"),
                 -1, "", "", this.getExtensionProperty(aItemID, "updateURL"), 
@@ -1418,7 +1459,7 @@ nsExtensionsDataSource.prototype = {
         var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
         var id = this._stripPrefix(e.Value);
         var item = Components.classes["@mozilla.org/updates/item;1"]
-                              .createInstance(Components.interfaces.nsIUpdateItem);
+                             .createInstance(Components.interfaces.nsIUpdateItem);
         item.init(id, this.getExtensionProperty(id, "version"),
                   this.getExtensionProperty(id, "name"),
                   -1, "", "", 
@@ -1612,7 +1653,8 @@ nsExtensionsDataSource.prototype = {
   
   loadExtensions: function (aProfile)
   {
-    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
+    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
+                                .getService(Components.interfaces.nsIProperties);
     var extensionsFile  = getFile(getDirKey(aProfile), 
                                   [DIR_EXTENSIONS, FILE_EXTENSIONS]);
     
