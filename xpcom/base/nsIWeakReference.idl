@@ -59,6 +59,8 @@ interface nsIWeakReference : nsISupports
  * instances of |nsIWeakReference|.  Weak references in this scheme can only be
  * produced for objects that implement this interface.
  *
+ * @status FROZEN
+ * @version 1.0
  * @see nsIWeakReference
  * @see nsSupportsWeakReference
  */
