@@ -63,9 +63,12 @@ static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closu
 
 DeviceContextImpl :: ~DeviceContextImpl()
 {
+#if 0
+  //XXXrbs temprarily disable this code as it causes tinderbox to turn orange
   nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
   if (obs)
     obs->RemoveObserver(this, "memory-pressure");
+#endif
 
   if (nsnull != mFontCache)
   {
@@ -109,11 +112,15 @@ void DeviceContextImpl :: CommonInit(void)
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     mGammaTable[cnt] = cnt;
 
+#if 0
+  //XXXrbs temprarily disable this code as it causes tinderbox to turn orange
+
   // register as a memory-pressure observer to free font resources
   // in low-memory situations.
   nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
   if (obs)
     obs->AddObserver(this, "memory-pressure", PR_FALSE);
+#endif
 }
 
 NS_IMETHODIMP DeviceContextImpl :: GetTwipsToDevUnits(float &aTwipsToDevUnits) const
