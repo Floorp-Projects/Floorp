@@ -133,7 +133,11 @@ treeitem > treerow > .treecell-bookmark {
 
 treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"] > treerow > .treecell-bookmark,
 treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"][open="true"] > treerow > .treecell-bookmark
-{
-	 list-style-image: url("chrome://communicator/skin/bookmarks/iefolder.gif");
-}
+  {
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/iefolder.gif");
+  }
 
+#bookmarksTree
+  {
+    border-top            : none;
+  }
