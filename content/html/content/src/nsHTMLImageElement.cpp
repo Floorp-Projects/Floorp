@@ -268,34 +268,12 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         aContext->GetMutableStyleData(eStyleStruct_Display);
       nsStyleText* text = (nsStyleText*)
         aContext->GetMutableStyleData(eStyleStruct_Text);
-      nsStyleSpacing* spacing = (nsStyleSpacing*)
-        aContext->GetMutableStyleData(eStyleStruct_Spacing);
-
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
       switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         display->mFloats = NS_STYLE_FLOAT_LEFT;
-        // XXX This should end up in ua.css when we can support css2
-        // attribute selectors (e.g. IMG.align[left])
-        if (eStyleUnit_Auto >= spacing->mMargin.GetLeftUnit()) {
-          spacing->mMargin.SetLeft(three);
-        }
-        if (eStyleUnit_Auto >= spacing->mMargin.GetRightUnit()) {
-          spacing->mMargin.SetRight(three);
-        }
         break;
       case NS_STYLE_TEXT_ALIGN_RIGHT:
         display->mFloats = NS_STYLE_FLOAT_RIGHT;
-        // XXX This should end up in ua.css when we can support css2
-        // attribute selectors (e.g. IMG.align[left])
-        if (eStyleUnit_Auto >= spacing->mMargin.GetLeftUnit()) {
-          spacing->mMargin.SetLeft(three);
-        }
-        if (eStyleUnit_Auto >= spacing->mMargin.GetRightUnit()) {
-          spacing->mMargin.SetRight(three);
-        }
         break;
       default:
         text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
