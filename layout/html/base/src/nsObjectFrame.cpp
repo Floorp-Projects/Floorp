@@ -86,6 +86,7 @@
 
 #include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
+#include "nsIJVMManager.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
@@ -1024,6 +1025,41 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
     }
   }
 
+#ifdef XP_UNIX
+  // This is a work-around on Unix for a LiveConnect problem (bug 83698).
+  // The problem:
+  // The proxy JNI needs to be created by the browser. If it is created by
+  // someone else (e.g., a plugin) on a different thread, the proxy JNI will
+  // not work, and break LiveConnect.
+  // Currently, on Unix, when instantiating a Java plugin instance (by calling
+  // InstantiateEmbededPlugin() next), Java plugin will create the proxy JNI
+  // if it is not created yet. If that happens, LiveConnect will be broken.
+  // Before lazy start JVM was implemented, since at this point the browser
+  // already created the proxy JNI buring startup, the problem did not happen.
+  // But after the lazy start was implemented, at this point the proxy JNI was
+  // not created yet, so the Java plugin created the proxy JNI, and broke
+  // liveConnect.
+  // On Windows and Mac, Java plugin does not create the proxy JNI, but lets
+  // the browser to create it. Hence this is a Unix-only problem.
+  //
+  // The work-around:
+  // The root cause of the problem is in Java plugin's Unix implementation,
+  // which should not create the proxy JNI.
+  // As a work-around, here we make sure the proxy JNI has been created by the
+  // browser, before plugin gets a chance.
+  //
+
+  nsresult rv;
+  // If Java is installed, get proxy JNI. Otherwise (for other plugins) keep
+  // going.
+  nsCOMPtr<nsIJVMManager> jvmManager = do_GetService(nsIJVMManager::GetCID(),
+                                                     &rv);
+  if (NS_SUCCEEDED(rv)) {
+    JNIEnv* proxyEnv;
+    // Get proxy JNI, if not created yet, create it.
+    jvmManager->GetProxyJNI(&proxyEnv);
+  }
+#endif
   return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURI, mInstanceOwner);
 }
 
