@@ -70,6 +70,7 @@ ConnectToDatabase();
 
 sub sillyness {
     my $zz;
+    $zz = $Data::Dumper::Useqq;
     $zz = %::components;
     $zz = %::versions;
     $zz = %::keywordsbyname;
