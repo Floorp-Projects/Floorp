@@ -36,7 +36,7 @@ public:
     NS_IMETHOD GetCommand(nsString& aCommand) = 0;
 
     // Used for XUL popup child documents
-    NS_IMETHOD CreatePopupDocument(nsIDOMElement* aPopupElement, nsIDocument** aResult) = 0; 
+    NS_IMETHOD CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aResult) = 0; 
 };
 
 #endif // nsIXULParentDocument_h__

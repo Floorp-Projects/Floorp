@@ -614,7 +614,7 @@ public:
     // nsIXULParentDocument interface
     NS_IMETHOD    GetContentViewerContainer(nsIContentViewerContainer** aContainer);
     NS_IMETHOD    GetCommand(nsString& aCommand);
-    NS_IMETHOD    CreatePopupDocument(nsIDOMElement* aPopupElement, nsIDocument** aResult); 
+    NS_IMETHOD    CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aResult); 
 
     // nsIXULChildDocument Interface
     NS_IMETHOD    SetFragmentRoot(nsIRDFResource* aFragmentRoot);
@@ -686,6 +686,10 @@ public:
 
     nsresult
     MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIRDFResource** aResult);
+
+    NS_IMETHOD PrepareStyleSheets(nsIURL* anURL);
+    
+    void SetDocumentURLAndGroup(nsIURL* anURL);
 
 protected:
 		nsresult PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
@@ -833,7 +837,7 @@ XULDocumentImpl::~XULDocumentImpl()
 
     NS_IF_RELEASE(mListenerManager);
 
-	NS_IF_RELEASE(mPopup);
+	  NS_IF_RELEASE(mPopup);
 
     // mParentDocument is never refcounted
     // Delete references to sub-documents
@@ -1039,7 +1043,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
                                 nsIContentViewerContainer* aContainer,
                                 const char* aCommand,
                                 nsIURL* aOptionalURL )
-	{
+{
 		nsCOMPtr<nsIURL> syntheticURL;
 		if ( aOptionalURL )
 			syntheticURL = dont_QueryInterface(aOptionalURL);
@@ -1063,62 +1067,11 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
     mDocumentTitle.Truncate();
 
-    NS_IF_RELEASE(mDocumentURL);
-    NS_IF_RELEASE(mDocumentURLGroup);
+    SetDocumentURLAndGroup(syntheticURL);
 
-		mDocumentURL = syntheticURL;
-		NS_ADDREF(mDocumentURL);
-    syntheticURL->GetURLGroup(&mDocumentURLGroup);
+    if (NS_FAILED(rv = PrepareStyleSheets(syntheticURL))) 
+      return rv;
 
-
-    // Delete references to style sheets - this should be done in superclass...
-    PRInt32 index = mStyleSheets.Count();
-    while (--index >= 0) {
-        nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
-        sheet->SetOwningDocument(nsnull);
-        NS_RELEASE(sheet);
-    }
-    mStyleSheets.Clear();
-
-    // Create an HTML style sheet for the HTML content.
-    nsIHTMLStyleSheet* sheet;
-    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLStyleSheetCID,
-                                                       nsnull,
-                                                       kIHTMLStyleSheetIID,
-                                                       (void**) &sheet))) {
-        if (NS_SUCCEEDED(rv = sheet->Init(syntheticURL, this))) {
-            mAttrStyleSheet = sheet;
-            NS_ADDREF(mAttrStyleSheet);
-
-            AddStyleSheet(mAttrStyleSheet);
-        }
-        NS_RELEASE(sheet);
-    }
-
-    if (NS_FAILED(rv)) {
-        NS_ERROR("unable to add HTML style sheet");
-        return rv;
-    }
-
-    // Create an inline style sheet for inline content that contains a style 
-    // attribute.
-    nsIHTMLCSSStyleSheet* inlineSheet;
-    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLCSSStyleSheetCID,
-                                                       nsnull,
-                                                       kIHTMLCSSStyleSheetIID,
-                                                       (void**)&inlineSheet))) {
-        if (NS_SUCCEEDED(rv = inlineSheet->Init(syntheticURL, this))) {
-            mInlineStyleSheet = dont_QueryInterface(inlineSheet);
-            AddStyleSheet(mInlineStyleSheet);
-        }
-        NS_RELEASE(inlineSheet);
-    }
-
-    if (NS_FAILED(rv)) {
-        NS_ERROR("unable to add inline style sheet");
-        return rv;
-    }
-      
     // Create the composite data source and builder, but only do this if we're
     // not a XUL fragment.
     if (mFragmentRoot == nsnull) {
@@ -1262,6 +1215,74 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
 		return rv;
 	}
+
+NS_IMETHODIMP 
+XULDocumentImpl::PrepareStyleSheets(nsIURL* anURL)
+{
+    nsresult rv;
+    
+    // Delete references to style sheets - this should be done in superclass...
+    PRInt32 index = mStyleSheets.Count();
+    while (--index >= 0) {
+        nsIStyleSheet* sheet = (nsIStyleSheet*) mStyleSheets.ElementAt(index);
+        sheet->SetOwningDocument(nsnull);
+        NS_RELEASE(sheet);
+    }
+    mStyleSheets.Clear();
+
+    // Create an HTML style sheet for the HTML content.
+    nsIHTMLStyleSheet* sheet;
+    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLStyleSheetCID,
+                                                       nsnull,
+                                                       kIHTMLStyleSheetIID,
+                                                       (void**) &sheet))) {
+        if (NS_SUCCEEDED(rv = sheet->Init(anURL, this))) {
+            mAttrStyleSheet = sheet;
+            NS_ADDREF(mAttrStyleSheet);
+
+            AddStyleSheet(mAttrStyleSheet);
+        }
+        NS_RELEASE(sheet);
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("unable to add HTML style sheet");
+        return rv;
+    }
+
+    // Create an inline style sheet for inline content that contains a style 
+    // attribute.
+    nsIHTMLCSSStyleSheet* inlineSheet;
+    if (NS_SUCCEEDED(rv = nsComponentManager::CreateInstance(kHTMLCSSStyleSheetCID,
+                                                       nsnull,
+                                                       kIHTMLCSSStyleSheetIID,
+                                                       (void**)&inlineSheet))) {
+        if (NS_SUCCEEDED(rv = inlineSheet->Init(anURL, this))) {
+            mInlineStyleSheet = dont_QueryInterface(inlineSheet);
+            AddStyleSheet(mInlineStyleSheet);
+        }
+        NS_RELEASE(inlineSheet);
+    }
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("unable to add inline style sheet");
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+void
+XULDocumentImpl::SetDocumentURLAndGroup(nsIURL* anURL)
+{
+    NS_IF_RELEASE(mDocumentURL);
+    NS_IF_RELEASE(mDocumentURLGroup);
+
+	  mDocumentURL = anURL;
+		
+    NS_ADDREF(mDocumentURL);
+    anURL->GetURLGroup(&mDocumentURLGroup);
+}
 
 NS_IMETHODIMP 
 XULDocumentImpl::StartDocumentLoad(nsIURL *aURL, 
@@ -2876,10 +2897,41 @@ XULDocumentImpl::GetCommand(nsString& aCommand)
 
 
 NS_IMETHODIMP
-XULDocumentImpl::CreatePopupDocument(nsIDOMElement* aPopupElement, nsIDocument** aResult)
+XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aResult)
 {
-    *aResult = this;
-    NS_ADDREF(*aResult);
+    nsresult rv;
+
+    // Create and addref
+    XULDocumentImpl* popupDoc = new XULDocumentImpl();
+    if (popupDoc == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(popupDoc);
+
+    // Init our new document
+    if (NS_FAILED(rv = popupDoc->Init())) {
+      NS_RELEASE(popupDoc);
+      return rv;
+    }
+
+    // Our URL is exactly the same as the parent doc.
+    popupDoc->SetDocumentURLAndGroup(mDocumentURL);
+
+    // Set our character set.
+    popupDoc->SetDocumentCharacterSet(mCharSetID);
+
+    // Stylesheets? What the heck do we do here?
+
+    // We share the same data sources
+
+    // We share the same namespace manager
+
+    // We share the mPopup
+
+    // We share the element map
+
+    // Our root content is the first child of the popup 
+    // node.
+   
     return NS_OK;
 }
 
