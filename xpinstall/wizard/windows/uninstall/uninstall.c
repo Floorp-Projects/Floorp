@@ -93,7 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     {
       PostQuitMessage(1);
     }
-    else
+    else if(ugUninstall.bUninstallFiles == TRUE)
     {
       if(diUninstall.bShowDialog == TRUE)
         hDlgUninstall = InstantiateDialog(hWndMain, DLG_UNINSTALL, diUninstall.szTitle, DlgProcUninstall);
@@ -107,7 +107,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
   }
 
-  if(diUninstall.bShowDialog == TRUE)
+  if((ugUninstall.bUninstallFiles == TRUE) && (diUninstall.bShowDialog == TRUE))
   {
     while(GetMessage(&msg, NULL, 0, 0))
     {
