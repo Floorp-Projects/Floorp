@@ -37,9 +37,8 @@
 #endif
 
 
-#ifndef __icodeasm_h
-
-#define __icodeasm_h
+#ifndef icodeasm_h___
+#define icodeasm_h___
 
 #include <string>
 #include <iterator>
@@ -48,42 +47,8 @@
 #include "jstypes.h"
 #include "interpreter.h"
 
-#define iter string::const_iterator
-
 namespace JavaScript {
 namespace ICodeASM {
-    enum TokenEstimation {
-        /* guess at tokentype, based on first character of token */
-        teAlpha,
-        teCloseParen,
-        teComma,
-        teColon,
-        teEOF,
-        teIllegal,
-        teMinus,
-        teNewline,
-        teNotARegister,
-        teNumeric,
-        teOpenParen,
-        tePlus,
-        teString,
-        teUnknown,
-    };
-
-/*
-    enum TokenType {
-        // verified token type
-        ttUndetermined,
-        ttLabel,
-        ttInstruction,
-        ttRegister,
-        ttRegisterList,
-        ttNotARegister,
-        ttString,
-        ttNumber,
-        ttOffsetKeyword
-    };
-*/
 
     enum OperandType {
         otNone = 0,
@@ -100,21 +65,6 @@ namespace ICodeASM {
         otUInt32,
         otRegister,
         otStringAtom
-    };
-
-    struct ICodeParseException {
-        ICodeParseException (string aMsg, iter aPos = 0)
-            : msg(aMsg), pos(aPos) {}
-        string msg;
-        iter pos;
-    };
-        
-    struct TokenLocation {
-        TokenLocation () : begin(0), estimate(teIllegal) /*,
-                           type(ttUndetermined) */ {}
-        iter begin;
-        TokenEstimation estimate;
-//        TokenType type;
     };
 
     struct AnyOperand {
@@ -145,24 +95,7 @@ namespace ICodeASM {
         
     public:
         ICodeParser (Interpreter::Context *aCx) : mCx(aCx), mInstructions(0) {}
-        void ParseSourceFromString (const string &source);
-
-        /* locate the beginning of the next token and take a guess at what it
-         * might be */
-        TokenLocation SeekTokenStart (iter begin, iter end);
-
-        /* general purpose parse functions; |begin| is expected to point
-         * at the start of the token to be processed (eg, these routines
-         * don't call |SeekTokenStart|, and (currently, this might change) no
-         * initial check is done to ensure that |begin| != |end|.
-         */
-        iter ParseAlpha (iter begin, iter end, string **rval);
-        iter ParseBool (iter begin, iter end, bool *rval);
-        iter ParseDouble (iter begin, iter end, double *rval);
-        iter ParseInt32 (iter begin, iter end, int32 *rval);
-        iter ParseRegister (iter begin, iter end, JSTypes::Register *rval);
-        iter ParseString (iter begin, iter end, string **rval);
-        iter ParseUInt32 (iter begin, iter end, uint32 *rval);
+        void parseSourceFromString (const string8 &source);
 
         /* operand parse functions;  These functions take care of finding
          * the start of the token with |SeekTokenStart|, and checking the
@@ -171,31 +104,56 @@ namespace ICodeASM {
          * token is found, and it is of the expected type, the actual parsing is
          * carried out by one of the general purpose parse functions.
          */
-        iter ParseArgumentListOperand (iter begin, iter end,
-                                       VM::ArgumentList **rval);
-        iter ParseBinaryOpOperand (iter begin, iter end,
-                                   VM::BinaryOperator::BinaryOp *rval);
-        iter ParseBoolOperand (iter begin, iter end, bool *rval);
-        iter ParseDoubleOperand (iter begin, iter end, double *rval);
-        iter ParseICodeModuleOperand (iter begin, iter end, string **rval);
-        iter ParseJSClassOperand (iter begin, iter end, string **rval);
-        iter ParseJSStringOperand (iter begin, iter end,
-                                   JSTypes::JSString **rval);
-        iter ParseJSFunctionOperand (iter begin, iter end, string **rval);
-        iter ParseJSTypeOperand (iter begin, iter end, JSTypes::JSType **rval);
-        iter ParseLabelOperand (iter begin, iter end, VM::Label **rval);
-        iter ParseUInt32Operand (iter begin, iter end, uint32 *rval);
-        iter ParseRegisterOperand (iter begin, iter end,
-                                   JSTypes::Register *rval);
-        iter ParseStringAtomOperand (iter begin, iter end, StringAtom **rval);
+        string8_citer
+        parseArgumentListOperand (string8_citer begin, string8_citer end,
+                                  VM::ArgumentList **rval);
+        string8_citer
+        parseBinaryOpOperand (string8_citer begin, string8_citer end,
+                              VM::BinaryOperator::BinaryOp *rval);
+        string8_citer
+        parseBoolOperand (string8_citer begin, string8_citer end,
+                          bool *rval);
+        string8_citer
+        parseDoubleOperand (string8_citer begin, string8_citer end,
+                            double *rval);
+        string8_citer
+        parseICodeModuleOperand (string8_citer begin, string8_citer end,
+                                 string8 **rval);
+        string8_citer
+        parseJSClassOperand (string8_citer begin, string8_citer end,
+                             string8 **rval);
+        string8_citer
+        parseJSStringOperand (string8_citer begin, string8_citer end,
+                              JSTypes::JSString **rval);
+        string8_citer
+        parseJSFunctionOperand (string8_citer begin, string8_citer end,
+                                string8 **rval);
+        string8_citer
+        parseJSTypeOperand (string8_citer begin, string8_citer end,
+                            JSTypes::JSType **rval);
+        string8_citer
+        parseLabelOperand (string8_citer begin, string8_citer end,
+                           VM::Label **rval);
+        string8_citer
+        parseUInt32Operand (string8_citer begin, string8_citer end,
+                            uint32 *rval);
+        string8_citer
+        parseRegisterOperand (string8_citer begin, string8_citer end,
+                              JSTypes::Register *rval);
+        string8_citer
+        parseStringAtomOperand (string8_citer begin, string8_citer end,
+                                StringAtom **rval);
 
         /* "high level" parse functions */
-        iter ParseInstruction (uint icodeID, iter start, iter end);
-        iter ParseNextStatement (iter begin, iter end);
+        string8_citer
+        parseInstruction (uint icodeID, string8_citer start,
+                          string8_citer end);
+        string8_citer
+        parseNextStatement (string8_citer begin, string8_citer end);
 
     };
     
 }
 }
 
-#endif /* #ifndef __icodeasm_h */
+#endif /* #ifndef icodeasm_h___ */

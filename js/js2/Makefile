@@ -30,7 +30,10 @@ test_objs = hash.o \
 	world.o \
 	vmtypes.o \
 	xmlparser.o \
-	debugger.o
+	debugger.o \
+	exception.o \
+	exception_msgs.o \
+	lexutils.o
 
 gc_path = ../../gc/boehm/
 
