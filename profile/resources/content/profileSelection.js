@@ -24,12 +24,9 @@
  *   Dan Veditz <dveditz@netscape.com>
  */
 
-var selected    = null;
-var currProfile = "";
 var profile     = Components.classes["@mozilla.org/profile/manager;1"].getService();
 if (profile)
   profile       = profile.QueryInterface(Components.interfaces.nsIProfileInternal);
-var unset       = true;
 
 var Registry;
 
@@ -159,12 +156,7 @@ function loadElements()
 // purpose  : starts mozilla given the selected profile (user choice: "Start Mozilla")
 function onStart()
 {
-  var startButton = document.getElementById("ok");
-  var profileTree = document.getElementById("profiles");
-  if( startButton.getAttribute("disabled") == "true" ||
-      profileTree.selectedItems.length != 1 )
-    return false;
-    
+  var profileTree = document.getElementById("profiles");   
   var selected = profileTree.selectedItems[0];
     
   var profilename = selected.getAttribute("profile_name");
@@ -187,8 +179,6 @@ function onStart()
   ioService.offline = offlineState.checked;  
   
   try {
-    dump("start with profile: " + profilename + "\n");
-                                                        
     profile.startApprunner(profilename);
     ExitApp();
   }
@@ -197,6 +187,7 @@ function onStart()
     //var stringB = bundle.GetStringFromName(failProfileStartB);
     //alert(stringA + " " + profilename + " " + stringB);
   }
+  return true;
 }
 
 // function : <profileSelection.js>::onExit();
@@ -220,26 +211,6 @@ function ExitApp()
   var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
   appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
   appShell.Quit();
-}
-
-// function : <profileSelection.js>::showSelection();
-// purpose  : selects the profile and enables the start button
-function showSelection(node)
-{
-  DoEnabling();
-}
-
-// function : <profileSelection.js>::startWithProfile();
-// purpose  : starts mozilla with selected profile automatically on dblclick
-function startWithProfile(node)
-{
-  selected = node;
-  onStart();
-}
-
-function onManageProfiles()
-{
-  window.openDialog("chrome://communicator/content/profile/profileManager.xul","","chrome");
 }
 
 function foo()
