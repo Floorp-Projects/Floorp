@@ -6997,7 +6997,7 @@ nsXULDocument::RemoveElement(nsIContent* aParent, nsIContent* aChild)
     rv = aParent->IndexOf(aChild, nodeOffset);
     if (NS_FAILED(rv)) return rv;
 
-    rv = aParent->RemoveChildAt(nodeOffset, PR_FALSE);
+    rv = aParent->RemoveChildAt(nodeOffset, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
