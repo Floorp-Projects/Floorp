@@ -287,12 +287,14 @@ LocalStoreImpl::GetURI(char* *aURI)
 }
 
 
+
 NS_IMETHODIMP
 LocalStoreImpl::GetAllCommands(nsIRDFResource* aSource,
-                               nsIEnumerator/*<nsIRDFResource>*/** commands)
+                               nsIEnumerator/*<nsIRDFResource>*/** aCommands)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX Although this is the wrong thing to do, it works. I'll file a
+    // bug to fix it.
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -301,8 +303,8 @@ LocalStoreImpl::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
                                  nsISupportsArray/*<nsIRDFResource>*/* aArguments,
                                  PRBool* aResult)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aResult = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -310,6 +312,6 @@ LocalStoreImpl::DoCommand(nsISupportsArray* aSources,
                           nsIRDFResource*   aCommand,
                           nsISupportsArray* aArguments)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // no-op
+    return NS_OK;
 }
