@@ -58,6 +58,9 @@
       <td>
         <b>[% terms.Bug %]#:</b>
         <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
+        [% IF Param("usebugaliases") AND bug.alias %]  
+          ([% bug.alias FILTER html %])
+        [% END %]
       </td>
       [% PROCESS cell attr = { description => "Product",
                                name => "product" } %]

@@ -44,6 +44,7 @@ my $cgi = Bugzilla->cgi;
 my $generic_query = "
   SELECT 
     bugs.bug_id, 
+    IFNULL(bugs.alias,''), 
     products.name, 
     bugs.version, 
     bugs.rep_platform,
@@ -82,7 +83,7 @@ foreach my $bug_id (split(/[:,]/, $buglist)) {
     my %bug;
     my @row = FetchSQLData();
 
-    foreach my $field ("bug_id", "product", "version", "rep_platform",
+    foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
                        "op_sys", "bug_status", "resolution", "priority",
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
