@@ -65,11 +65,24 @@ void nsStringTokenizer::AddTokenSpec(const char* aTokenSpec) {
  * @update	gess7/10/99
  */
 inline PRBool nsStringTokenizer::IsValidDataChar(PRUnichar aChar) {
-  PRInt32 theByteNum=aChar/32;
-  PRInt32 theBitNum=aChar-(theByteNum*32);
-  PRInt32 shift=(1<<theBitNum);
-  PRInt32 value=PRInt32(mValidChars[theByteNum]&shift);
-  return PRBool(value>0);
+  PRBool result=PR_FALSE;
+  switch(mCharSpec) {
+    case eGivenChars:
+      {
+        PRInt32 theByteNum=aChar/32;
+        PRInt32 theBitNum=aChar-(theByteNum*32);
+        PRInt32 shift=(1<<theBitNum);
+        PRInt32 value=PRInt32(mValidChars[theByteNum]&shift);
+        result=PRBool(value>0);
+      }
+      break;
+    case eAllChars:
+      result=PR_TRUE;
+      break;
+    case eExceptChars:
+      break;
+  }
+  return result;
 }
 
 inline void SetChars(PRInt32 array[3],PRUnichar aStart,PRUnichar aStop){
@@ -315,7 +328,9 @@ PRInt32   nsStringTokenizer::GetNextToken(nsString& aToken){
       if(mDataEndDelimiter.Length()) {
         theTerm[2]=mDataEndDelimiter[0];
       }
-      result=ReadUntil(aToken,theTerm,PRBool(0!=mDataEndDelimiter[0]));
+      nsAutoString terms(mRecordSeparator);
+      terms+=mFieldSeparator;
+      result=ReadUntil(aToken,terms,PRBool(0!=mDataEndDelimiter[0]));
       if(NS_OK==result) {
         PRInt32  status=SkipOver(mFieldSeparator[0]);
       }
@@ -409,7 +424,7 @@ PRInt32 nsStringTokenizer::SkipOver(nsString& aString) {
   return result;
 }
 
-PRInt32 nsStringTokenizer::ReadUntil(nsString& aString,PRUnichar* aTermSet,PRBool addTerminal){
+PRInt32 nsStringTokenizer::ReadUntil(nsString& aString,nsString& aTermSet,PRBool addTerminal){
   PRInt32 result=NS_OK;
 
   PRUnichar   theChar=0;
@@ -421,13 +436,9 @@ PRInt32 nsStringTokenizer::ReadUntil(nsString& aString,PRUnichar* aTermSet,PRBoo
       if(NS_OK==result) {
 
         PRBool found=PR_FALSE;
-        PRInt32 index=-1;
-        while(aTermSet[++index]){
-          if(theChar==aTermSet[index]){
-            found=PR_TRUE;
-            break;
-          }
-        }
+        PRInt32 index=aTermSet.Find(theChar);
+        if(kNotFound<index)
+          found=PR_TRUE;
 
         if(found) {
           if(addTerminal)
