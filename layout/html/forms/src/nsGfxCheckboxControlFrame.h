@@ -42,7 +42,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXX
   NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
