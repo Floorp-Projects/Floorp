@@ -2662,6 +2662,33 @@ nsFrame::GetFirstLeaf(nsIFrame **aFrame)
   }
 }
 
+nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresShell,
+                                             nsIFrame*                    aTargetFrame,
+                                             nsIReflowCommand::ReflowType aReflowType,
+                                             nsIFrame*                    aChildFrame,
+                                             nsIAtom*                     aAttribute,
+                                             nsIAtom*                     aListName)
+{
+  nsresult rv;
+
+  if (!aPresShell || !aTargetFrame) {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+  else {
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), aTargetFrame,
+                                 aReflowType, aChildFrame, 
+                                 aAttribute);
+    if (NS_SUCCEEDED(rv)) {
+      if (nsnull != aListName) {
+        reflowCmd->SetChildListName(aListName);
+      }
+      aPresShell->AppendReflowCommand(reflowCmd);    
+    }
+  } 
+
+  return rv;
+}
 
 #ifdef NS_DEBUG
 static void
@@ -2733,31 +2760,4 @@ nsFrame::VerifyDirtyBitSet(nsIFrame* aFrameList)
   }
 }
 
-nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresShell,
-                                             nsIFrame*                    aTargetFrame,
-                                             nsIReflowCommand::ReflowType aReflowType,
-                                             nsIFrame*                    aChildFrame,
-                                             nsIAtom*                     aAttribute,
-                                             nsIAtom*                     aListName)
-{
-  nsresult rv;
-
-  if (!aPresShell || !aTargetFrame) {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-  else {
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), aTargetFrame,
-                                 aReflowType, aChildFrame, 
-                                 aAttribute);
-    if (NS_SUCCEEDED(rv)) {
-      if (nsnull != aListName) {
-        reflowCmd->SetChildListName(aListName);
-      }
-      aPresShell->AppendReflowCommand(reflowCmd);    
-    }
-  } 
-
-  return rv;
-}
 #endif
