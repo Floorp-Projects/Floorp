@@ -52,7 +52,26 @@ ssmpkcs12context_createpkcs12file(SSMPKCS12Context *cx,
                                   PRBool forceAuthenticate,
                                   CERTCertificate **certArr,
                                   PRIntn numCerts);
+#ifdef XP_MAC
 
+char* SSM_ConvertMacPathToUnix(char *path)
+{
+	char *cursor;
+	int len;
+		
+	len = PL_strlen(path);
+	cursor = PR_Realloc(path, len+2);
+	memmove(cursor+1, cursor, len+1);
+	path = cursor;
+	*cursor = '/';
+	while ((cursor = PL_strchr(cursor, ':')) != NULL) {
+		*cursor = '/';
+		cursor++;
+	}
+	return path;
+}
+
+#endif
 
 SECStatus
 SSM_UnicodeConversion(SECItem *dest, SECItem *src,
@@ -353,6 +372,9 @@ ssmpkcs12context_createpkcs12file(SSMPKCS12Context *cxt,
         rv = SSM_ERR_BAD_FILENAME;
         goto loser;
     }
+#ifdef XP_MAC
+	cxt->super.m_fileName = SSM_ConvertMacPathToUnix(cxt->super.m_fileName);
+#endif    
     cxt->m_file = PR_Open (cxt->super.m_fileName,
                            PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                            0600);
@@ -507,14 +529,8 @@ SSM_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
             ssm_switch_endian(inBuf, inBufLen);
         }
 #endif
-        memset(outBuf, 0, maxOutBufLen);
     	retval = nlsUnicodeToUTF8(inBuf, inBufLen, outBuf, maxOutBufLen, 
                                  outBufLen);
-        /* The value in *outBufLen isn't right, so we'll force it to be
-         * right.
-         */
-        *outBufLen = PL_strlen(outBuf);
-
 	}
 #ifdef DEBUG
     fprintf(stderr,"Output: \n");
@@ -535,26 +551,29 @@ static SECStatus
 ssmpkcs12context_digestopen(void *arg, PRBool readData)
 {
     char *tmpFileName=NULL;
-    char  filePathSep;
+    char *filePathSep;
     SSMPKCS12Context *cxt = (SSMPKCS12Context *)arg;
 
 #if defined(XP_UNIX)
-    filePathSep = '/';
+    filePathSep = "/";
 #elif defined(WIN32)
-    filePathSep = '\\';
+    filePathSep = "\\";
 #elif defined(XP_MAC)
-	filePathSep = ':';
+	filePathSep = "";
 #else
 #error Tell me what the file path separator is of this platform.
 #endif
 
-    tmpFileName = PR_smprintf("%s%c%s", 
+    tmpFileName = PR_smprintf("%s%s%s", 
                               SSMRESOURCE(cxt)->m_connection->m_dirRoot,
                               filePathSep,
                               ".nsm_p12_tmp");
     if (tmpFileName == NULL) {
         return SECFailure;
     }
+#ifdef XP_MAC
+	tmpFileName = SSM_ConvertMacPathToUnix(tmpFileName);
+#endif    
     if (readData) {
         cxt->m_digestFile = PR_Open(tmpFileName,
                                     PR_RDONLY, 0400);
@@ -739,8 +758,14 @@ SSMPKCS12Context_RestoreCertFromPKCS12File(SSMPKCS12Context *cxt)
         rv = SSM_ERR_NO_PASSWORD;
         goto loser;
     }
-    cxt->m_file = PR_Open(SSMRESOURCE(cxt)->m_fileName,
-                          PR_RDONLY, 0400);
+#ifdef XP_MAC
+
+	/*NSPR wants the path to be a UNIX style path.  So let's convert it here for MAC.*/
+	SSMRESOURCE(cxt)->m_fileName = SSM_ConvertMacPathToUnix(SSMRESOURCE(cxt)->m_fileName);
+	
+#endif  
+	cxt->m_file = PR_Open(SSMRESOURCE(cxt)->m_fileName,
+                          PR_RDONLY, 0400);                        
     if (cxt->m_file == NULL) {
         rv = SSM_ERR_BAD_FILENAME;
         goto loser;
@@ -792,11 +817,7 @@ SSMPKCS12Context_RestoreCertFromPKCS12File(SSMPKCS12Context *cxt)
         rv = SSM_ERR_OUT_OF_MEMORY;
         goto loser;
     }
-    cxt->m_file = PR_Open(SSMRESOURCE(cxt)->m_fileName, PR_RDONLY, 0400);
-    if (cxt->m_file == NULL) {
-        rv = SSM_ERR_BAD_FILENAME;
-        goto loser;
-    }
+
     while (PR_TRUE) {
         int readLen = PR_Read(cxt->m_file, buf, PKCS12_IN_BUFFER_SIZE);
         if (readLen < 0) {
