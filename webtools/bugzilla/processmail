@@ -131,6 +131,22 @@ sub ProcessOneBug {
     }
     $values{'estimated_time'} = FormatTimeUnit($values{'estimated_time'});
 
+    my @dependslist;
+    SendSQL("SELECT dependson FROM dependencies WHERE 
+             blocked = $id ORDER BY dependson");
+    while (MoreSQLData()) {
+        push(@dependslist, FetchOneColumn());
+    }
+    $values{'dependson'} = join(",", @dependslist);
+
+    my @blockedlist;
+    SendSQL("SELECT blocked FROM dependencies WHERE 
+             dependson = $id ORDER BY blocked");
+    while (MoreSQLData()) {
+        push(@blockedlist, FetchOneColumn());
+    }
+    $values{'blocked'} = join(",", @blockedlist);
+
     my @diffs;
 
 

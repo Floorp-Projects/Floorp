@@ -49,7 +49,7 @@ sub sillyness {
 use vars qw($vars $template);
 
 ConnectToDatabase();
-confirm_login();
+my $whoid = confirm_login();
 
 
 # The format of the initial comment can be structured by adding fields to the
@@ -231,6 +231,77 @@ if ($::FORM{'keywords'} && UserInGroup("editbugs")) {
     }
 }
 
+# Check for valid dependency info. 
+foreach my $field ("dependson", "blocked") {
+    if (UserInGroup("editbugs") && defined($::FORM{$field}) &&
+        $::FORM{$field} ne "") {
+        my @validvalues;
+        foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
+            next unless $id;
+            ValidateBugID($id, 1);
+            push(@validvalues, $id);
+        }
+        $::FORM{$field} = join(",", @validvalues);
+    }
+}
+# Gather the dependecy list, and make sure there are no circular refs
+my %deps;
+if (UserInGroup("editbugs") && defined($::FORM{'dependson'})) {
+    my $me = "blocked";
+    my $target = "dependson";
+    my %deptree;
+    for (1..2) {
+        $deptree{$target} = [];
+        my %seen;
+        foreach my $i (split('[\s,]+', $::FORM{$target})) {
+            if (!exists $seen{$i}) {
+                push(@{$deptree{$target}}, $i);
+                $seen{$i} = 1;
+            }
+        }
+        # populate $deps{$target} as first-level deps only.
+        # and find remainder of dependency tree in $deptree{$target}
+        @{$deps{$target}} = @{$deptree{$target}};
+        my @stack = @{$deps{$target}};
+        while (@stack) {
+            my $i = shift @stack;
+            SendSQL("select $target from dependencies where $me = " .
+                    SqlQuote($i));
+            while (MoreSQLData()) {
+                my $t = FetchOneColumn();
+                if (!exists $seen{$t}) {
+                    push(@{$deptree{$target}}, $t);
+                    push @stack, $t;
+                    $seen{$t} = 1;
+                } 
+            }
+        }
+        
+        if ($me eq 'dependson') {
+            my @deps   =  @{$deptree{'dependson'}};
+            my @blocks =  @{$deptree{'blocked'}};
+            my @union = ();
+            my @isect = ();
+            my %union = ();
+            my %isect = ();
+            foreach my $b (@deps, @blocks) { $union{$b}++ && $isect{$b}++ }
+            @union = keys %union;
+            @isect = keys %isect;
+            if (@isect > 0) {
+                my $both;
+                foreach my $i (@isect) {
+                    $both = $both . GetBugLink($i, "#" . $i) . " ";
+                }
+                $vars->{'both'} = $both;
+                ThrowUserError("dependency_loop_multi", undef, "abort");
+            }
+        }
+        my $tmp = $me;
+        $me = $target;
+        $target = $tmp;
+    }
+}
+
 # Build up SQL string to add bug.
 my $sql = "INSERT INTO bugs " . 
   "(" . join(",", @used_fields) . ", reporter, creation_ts, " .
@@ -300,6 +371,9 @@ SendSQL("LOCK TABLES bugs WRITE, bug_group_map WRITE, longdescs WRITE, cc WRITE,
 # Add the bug report to the DB.
 SendSQL($sql);
 
+SendSQL("select now()");
+my $timestamp = FetchOneColumn();
+
 # Get the bug ID back.
 SendSQL("select LAST_INSERT_ID()");
 my $id = FetchOneColumn();
@@ -319,10 +393,27 @@ foreach my $ccid (keys(%ccids)) {
     SendSQL("INSERT INTO cc (bug_id, who) VALUES ($id, $ccid)");
 }
 
+my @all_deps;
 if (UserInGroup("editbugs")) {
     foreach my $keyword (@keywordlist) {
         SendSQL("INSERT INTO keywords (bug_id, keywordid) 
                  VALUES ($id, $keyword)");
+    }
+    if (defined $::FORM{'dependson'}) {
+        my $me = "blocked";
+        my $target = "dependson";
+        for (1..2) {
+            foreach my $i (@{$deps{$target}}) {
+                SendSQL("INSERT INTO dependencies ($me, $target) values " .
+                        "($id, $i)");
+                push(@all_deps, $i); # list for mailing dependent bugs
+                # Log the activity for the other bug:
+                LogActivityEntry($i, $me, "", $id, $whoid, $timestamp);
+            }
+            my $tmp = $me;
+            $me = $target;
+            $target = $tmp;
+        }
     }
 }
 
@@ -359,6 +450,21 @@ $vars->{'type'} = "created";
 print "Content-type: text/html\n\n";
 $template->process("bug/create/created.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
+
+foreach my $i (@all_deps) {
+    $vars->{'mail'} = "";
+    open(PMAIL, "-|") or exec('./processmail', $i, $::COOKIE{'Bugzilla_login'});    $vars->{'mail'} .= $_ while <PMAIL>;
+    close(PMAIL);
+
+    $vars->{'id'} = $i;
+    $vars->{'type'} = "dep";
+
+    # Let the user know we checked to see if we should email notice
+    # of this new bug to users with a relationship to the depenedant
+    # bug and who did and didn't receive email about it
+    $template->process("bug/process/results.html.tmpl", $vars) 
+      || ThrowTemplateError($template->error());
+}
 
 $::FORM{'id'} = $id;
 

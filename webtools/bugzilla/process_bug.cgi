@@ -1013,49 +1013,16 @@ sub FindWrapPoint {
     return $wrappoint;
 }
 
-sub LogActivityEntry {
-    my ($i,$col,$removed,$added) = @_;
-    # in the case of CCs, deps, and keywords, there's a possibility that someone
-    # might try to add or remove a lot of them at once, which might take more
-    # space than the activity table allows.  We'll solve this by splitting it
-    # into multiple entries if it's too long.
-    while ($removed || $added) {
-        my ($removestr, $addstr) = ($removed, $added);
-        if (length($removestr) > 254) {
-            my $commaposition = FindWrapPoint($removed, 254);
-            $removestr = substr($removed,0,$commaposition);
-            $removed = substr($removed,$commaposition);
-            $removed =~ s/^[,\s]+//; # remove any comma or space
-        } else {
-            $removed = ""; # no more entries
-        }
-        if (length($addstr) > 254) {
-            my $commaposition = FindWrapPoint($added, 254);
-            $addstr = substr($added,0,$commaposition);
-            $added = substr($added,$commaposition);
-            $added =~ s/^[,\s]+//; # remove any comma or space
-        } else {
-            $added = ""; # no more entries
-        }
-        $addstr = SqlQuote($addstr);
-        $removestr = SqlQuote($removestr);
-        my $fieldid = GetFieldID($col);
-        SendSQL("INSERT INTO bugs_activity " .
-                "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
-                "($i,$whoid," . SqlQuote($timestamp) . ",$fieldid,$removestr,$addstr)");
-        $bug_changed = 1;
-    }
-}
-
 sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me) = (@_);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
         # Figure out what's really different...
         my ($removed, $added) = DiffStrings($oldstr, $newstr);
-        LogActivityEntry($i,$target,$removed,$added);
+        LogActivityEntry($i,$target,$removed,$added,$whoid,$timestamp);
         # update timestamp on target bug so midairs will be triggered
         SendSQL("UPDATE bugs SET delta_ts=NOW() WHERE bug_id=$i");
+        $bug_changed = 1;
         return 1;
     }
     return 0;
@@ -1210,7 +1177,9 @@ foreach my $id (@idlist) {
             AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
                 $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
             if ($::FORM{'work_time'} != 0) {
-                LogActivityEntry($id, "work_time", "", $::FORM{'work_time'});
+                LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
+                                 $whoid, $timestamp);
+                $bug_changed = 1;
             }
         }
     }
@@ -1278,7 +1247,9 @@ foreach my $id (@idlist) {
     my $groupDelNames = join(',', @groupDelNames);
     my $groupAddNames = join(',', @groupAddNames);
 
-    LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames); 
+    LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames,
+                     $whoid, $timestamp); 
+    $bug_changed = 1;
     
     my $removedCcString = "";
     if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
@@ -1313,7 +1284,8 @@ foreach my $id (@idlist) {
         if (scalar(@removed) || scalar(@added)) {
             my $removed = join(", ", @removed);
             my $added = join(", ", @added);
-            LogActivityEntry($id,"cc",$removed,$added);
+            LogActivityEntry($id,"cc",$removed,$added,$whoid,$timestamp);
+            $bug_changed = 1;
         }
     }
 
@@ -1499,7 +1471,8 @@ foreach my $id (@idlist) {
                 RemoveVotes($id, 0,
                             "This bug has been moved to a different product");
             }
-            LogActivityEntry($id,$col,$old,$new);
+            LogActivityEntry($id,$col,$old,$new,$whoid,$timestamp);
+            $bug_changed = 1;
         }
     }
     # Set and update flags.
@@ -1553,7 +1526,8 @@ foreach my $id (@idlist) {
         unless ($isreporter || $isoncc || ! $::FORM{'confirm_add_duplicate'}) {
             # The reporter is oblivious to the existence of the new bug and is permitted access
             # ... add 'em to the cc (and record activity)
-            LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
+            LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter),
+                             $whoid,$timestamp);
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
         # Bug 171639 - Duplicate notifications do not need to be private. 

@@ -894,6 +894,37 @@ sub CheckIfVotedConfirmed {
     }
 
 }
+sub LogActivityEntry {
+    my ($i,$col,$removed,$added,$whoid,$timestamp) = @_;
+    # in the case of CCs, deps, and keywords, there's a possibility that someone    # might try to add or remove a lot of them at once, which might take more
+    # space than the activity table allows.  We'll solve this by splitting it
+    # into multiple entries if it's too long.
+    while ($removed || $added) {
+        my ($removestr, $addstr) = ($removed, $added);
+        if (length($removestr) > 254) {
+            my $commaposition = FindWrapPoint($removed, 254);
+            $removestr = substr($removed,0,$commaposition);
+            $removed = substr($removed,$commaposition);
+            $removed =~ s/^[,\s]+//; # remove any comma or space
+        } else {
+            $removed = ""; # no more entries
+        }
+        if (length($addstr) > 254) {
+            my $commaposition = FindWrapPoint($added, 254);
+            $addstr = substr($added,0,$commaposition);
+            $added = substr($added,$commaposition);
+            $added =~ s/^[,\s]+//; # remove any comma or space
+        } else {
+            $added = ""; # no more entries
+        }
+        $addstr = SqlQuote($addstr);
+        $removestr = SqlQuote($removestr);
+        my $fieldid = GetFieldID($col);
+        SendSQL("INSERT INTO bugs_activity " .
+                "(bug_id,who,bug_when,fieldid,removed,added) VALUES " .
+                "($i,$whoid," . SqlQuote($timestamp) . ",$fieldid,$removestr,$addstr)");
+    }
+}
 
 sub GetBugActivity {
     my ($id, $starttime) = (@_);
