@@ -1629,24 +1629,202 @@ LRESULT CALLBACK DlgAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
   return(0);
 }
 
+void AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szString)
+{
+  DWORD i;
+  DWORD iInputStringCounter;
+  DWORD iInputStringLen;
+  DWORD iStringLen;
+
+
+  iInputStringLen = lstrlen(szInputString);
+  iStringLen      = lstrlen(szString);
+
+  if((iInputStringLen + iStringLen) >= dwInputStringSize)
+    return;
+
+  iInputStringCounter = iInputStringLen;
+  for(i = 0; i < iStringLen; i++)
+  {
+    if(szString[i] != '&')
+      szInputString[iInputStringCounter++] = szString[i];
+  }
+}
+
+LPSTR GetStartInstallMessage()
+{
+  char  szBuf[MAX_BUF];
+  siC   *siCObject   = NULL;
+  LPSTR szMessageBuf = NULL;
+  DWORD dwBufSize;
+  DWORD dwIndex0;
+
+  /* calculate the amount of memory to allocate for the buffer */
+  dwBufSize = 0;
+
+  /* setup type */
+  if(NS_LoadString(hSetupRscInst, IDS_STR_SETUP_TYPE, szBuf, MAX_BUF) == WIZ_OK)
+    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
+  dwBufSize += 4; // take into account 4 indentation spaces
+
+  switch(dwSetupType)
+  {
+    case ST_RADIO3:
+      dwBufSize += lstrlen(diSetupType.stSetupType3.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+      break;
+
+    case ST_RADIO2:
+      dwBufSize += lstrlen(diSetupType.stSetupType2.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+      break;
+
+    case ST_RADIO1:
+      dwBufSize += lstrlen(diSetupType.stSetupType1.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+      break;
+
+    default:
+      dwBufSize += lstrlen(diSetupType.stSetupType0.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+      break;
+  }
+  dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
+
+  /* selected components */
+  if(NS_LoadString(hSetupRscInst, IDS_STR_SELECTED_COMPONENTS, szBuf, MAX_BUF) == WIZ_OK)
+    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
+
+  dwIndex0 = 0;
+  siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
+  while(siCObject)
+  {
+    dwBufSize += 4; // take into account 4 indentation spaces
+    dwBufSize += lstrlen(siCObject->szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
+
+    ++dwIndex0;
+    siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
+  }
+  dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
+
+  /* destination path */
+  if(NS_LoadString(hSetupRscInst, IDS_STR_DESTINATION_DIRECTORY, szBuf, MAX_BUF) == WIZ_OK)
+    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
+
+  dwBufSize += 4; // take into account 4 indentation spaces
+  dwBufSize += lstrlen(sgProduct.szPath) + 2; // the extra 2 bytes is for the \r\n characters
+  dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
+
+  /* program folder */
+  if(NS_LoadString(hSetupRscInst, IDS_STR_PROGRAM_FOLDER, szBuf, MAX_BUF) == WIZ_OK)
+    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
+
+  dwBufSize += 4; // take into account 4 indentation spaces
+  dwBufSize += lstrlen(sgProduct.szProgramFolderName) + 2; // the extra 2 bytes is for the \r\n characters
+  dwBufSize += 1; // take into account the null character
+
+  /* allocate the memory */
+  if((szMessageBuf = NS_GlobalAlloc(dwBufSize)) != NULL)
+  {
+    ZeroMemory(szMessageBuf, dwBufSize);
+
+    /* Setup Type */
+    if(NS_LoadString(hSetupRscInst, IDS_STR_SETUP_TYPE, szBuf, MAX_BUF) == WIZ_OK)
+    {
+      lstrcat(szMessageBuf, szBuf);
+      lstrcat(szMessageBuf, "\r\n");
+    }
+    lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
+      
+    switch(dwSetupType)
+    {
+      case ST_RADIO3:
+        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType3.szDescriptionShort);
+        break;
+
+      case ST_RADIO2:
+        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType2.szDescriptionShort);
+        break;
+
+      case ST_RADIO1:
+        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType1.szDescriptionShort);
+        break;
+
+      default:
+        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType1.szDescriptionShort);
+        break;
+    }
+    lstrcat(szMessageBuf, "\r\n\r\n");
+
+    /* Selected Components */
+    if(NS_LoadString(hSetupRscInst, IDS_STR_SELECTED_COMPONENTS, szBuf, MAX_BUF) == WIZ_OK)
+    {
+      lstrcat(szMessageBuf, szBuf);
+      lstrcat(szMessageBuf, "\r\n");
+    }
+
+    dwIndex0  = 0;
+    siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
+    while(siCObject)
+    {
+      lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
+      lstrcat(szMessageBuf, siCObject->szDescriptionShort);
+      lstrcat(szMessageBuf, "\r\n");
+
+      ++dwIndex0;
+      siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
+    }
+    lstrcat(szMessageBuf, "\r\n");
+
+    /* destination directory */
+    if(NS_LoadString(hSetupRscInst, IDS_STR_DESTINATION_DIRECTORY, szBuf, MAX_BUF) == WIZ_OK)
+    {
+      lstrcat(szMessageBuf, szBuf);
+      lstrcat(szMessageBuf, "\r\n");
+    }
+    lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
+    lstrcat(szMessageBuf, sgProduct.szPath);
+    lstrcat(szMessageBuf, "\r\n\r\n");
+
+    /* program folder */
+    if(NS_LoadString(hSetupRscInst, IDS_STR_PROGRAM_FOLDER, szBuf, MAX_BUF) == WIZ_OK)
+    {
+      lstrcat(szMessageBuf, szBuf);
+      lstrcat(szMessageBuf, "\r\n");
+    }
+    lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
+    lstrcat(szMessageBuf, sgProduct.szProgramFolderName);
+    lstrcat(szMessageBuf, "\r\n");
+  }
+
+  return(szMessageBuf);
+}
+
 LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  RECT rDlg;
+  RECT  rDlg;
+  LPSTR szMessage = NULL;
 
   switch(msg)
   {
     case WM_INITDIALOG:
       SetWindowText(hDlg, diStartInstall.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessage0);
 
       if(GetClientRect(hDlg, &rDlg))
         SetWindowPos(hDlg, HWND_TOP, (dwScreenX/2)-(rDlg.right/2), (dwScreenY/2)-(rDlg.bottom/2), 0, 0, SWP_NOSIZE);
 
       if((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
+      {
         ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_HIDE);
+        SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageInstall);
+      }
       else
+      {
         ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_SHOW);
+        SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageDownload);
+      }
 
+      if((szMessage = GetStartInstallMessage()) != NULL)
+      {
+        SetDlgItemText(hDlg, IDC_CURRENT_SETTINGS, szMessage);
+        FreeMemory(&szMessage);
+      }
       break;
 
     case WM_COMMAND:
@@ -2001,6 +2179,15 @@ void DlgSequenceNext()
         /* save the installer files in the local machine */
         if(bSaveInstallerFiles)
           SaveInstallerFiles();
+
+        if(CheckInstances())
+        {
+          CleanupXpcomFile();
+          PostQuitMessage(0);
+
+          /* break out of switch statment */
+          break;
+        }
 
         hrErr = SmartUpdateJars();
         if((hrErr == WIZ_OK) || (hrErr == 999))

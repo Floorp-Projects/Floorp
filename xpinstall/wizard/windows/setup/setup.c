@@ -51,7 +51,6 @@ LPSTR           szEDllLoad;
 LPSTR           szEStringNull;
 LPSTR           szTempSetupPath;
 
-LPSTR           szClassName;
 LPSTR           szSetupDir;
 LPSTR           szTempDir;
 LPSTR           szOSTempDir;
@@ -113,6 +112,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   if(!hPrevInstance)
   {
+//    hInstance = GetModuleHandle(NULL);
     if(Initialize(hInstance))
       PostQuitMessage(1);
     else if(!InitApplication(hInstance, hSetupRscInst))

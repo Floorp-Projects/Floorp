@@ -54,5 +54,7 @@ void              InvalidateLBCheckbox(HWND hwndListBox);
 void              ProcessWindowsMessages(void);
 void              CheckWizardStateCustom(DWORD dwDefault);
 void              SunJavaDependencyHack(DWORD dwIndex, BOOL bSelected, DWORD dwACFlag);
+LPSTR             GetStartInstallMessage(void);
+void              AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szString);
 
 #endif

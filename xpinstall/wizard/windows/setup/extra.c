@@ -62,26 +62,27 @@ DWORD   GetPerfData    (HKEY        hPerfKey,
                         PPERF_DATA  *ppData,
                         DWORD       *pDataSize);
 
-BOOL InitDialogClass(HINSTANCE hInstance)
+BOOL InitDialogClass(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 {
-  WNDCLASS wc;
+  WNDCLASS  wc;
 
   wc.style         = CS_DBLCLKS | CS_SAVEBITS | CS_BYTEALIGNWINDOW;
   wc.lpfnWndProc   = DefDlgProc;
   wc.cbClsExtra    = 0;
   wc.cbWndExtra    = DLGWINDOWEXTRA;
-  wc.hInstance     = hInstance;
-  wc.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SETUP));
+  wc.hInstance     = hSetupRscInst;
+  wc.hIcon         = LoadIcon(hSetupRscInst, MAKEINTRESOURCE(IDI_SETUP));
   wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
   wc.lpszMenuName  = NULL;
-  wc.lpszClassName = szClassName;
+  wc.lpszClassName = CLASS_NAME_SETUP_DLG;
 
   return(RegisterClass(&wc));
 }
 
 BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 {
+  BOOL     bRv;
   WNDCLASS wc;
 
   wc.style         = CS_HREDRAW | CS_VREDRAW | CS_PARENTDC | CS_SAVEBITS;
@@ -93,10 +94,13 @@ BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
   wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = (HBRUSH)(COLOR_ACTIVECAPTION + 1);
   wc.lpszMenuName  = NULL;
-  wc.lpszClassName = szClassName;
+  wc.lpszClassName = CLASS_NAME_SETUP;
 
-//  InitDialogClass(HINSTANCE hInstance);
-  return(RegisterClass(&wc));
+  bRv = RegisterClass(&wc);
+  if(bRv == FALSE)
+    return(bRv);
+
+  return(InitDialogClass(hInstance, hSetupRscInst));
 }
 
 BOOL InitInstance(HINSTANCE hInstance, DWORD dwCmdShow)
@@ -107,8 +111,8 @@ BOOL InitInstance(HINSTANCE hInstance, DWORD dwCmdShow)
   dwScreenY = GetSystemMetrics(SM_CYSCREEN);
 
   hInst = hInstance;
-  hWnd = CreateWindow(szClassName,
-                      szClassName,
+  hWnd = CreateWindow(CLASS_NAME_SETUP,
+                      CLASS_NAME_SETUP,
                       WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_MAXIMIZE,
                       0,
                       0,
@@ -238,23 +242,17 @@ HRESULT Initialize(HINSTANCE hInstance)
   if(NS_LoadStringAlloc(hInstance, IDS_ERROR_STRING_NULL, &szEStringNull,  MAX_BUF))
     return(1);
 
-  ZeroMemory(szBuf, sizeof(MAX_BUF));
-  if((szClassName = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-
-  lstrcpy(szClassName, CLASS_NAME);
-
   /* Allow only one instance of setup to run.
    * Detect a previous instance of setup, bring it to the 
    * foreground, and quit current instance */
-  if((hwndFW = FindWindow(szClassName, szClassName)) != NULL)
+  if((hwndFW = FindWindow(CLASS_NAME_SETUP, CLASS_NAME_SETUP)) != NULL)
   {
     ShowWindow(hwndFW, SW_RESTORE);
     SetForegroundWindow(hwndFW);
     return(1);
   }
 
-  hAccelTable = LoadAccelerators(hInstance, szClassName);
+  hAccelTable = LoadAccelerators(hInstance, CLASS_NAME_SETUP);
 
   if((hSetupRscInst = LoadLibraryEx("Setuprsc.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) == NULL)
   {
@@ -274,6 +272,9 @@ HRESULT Initialize(HINSTANCE hInstance)
   getcwd(szSetupDir, MAX_BUF);
 
   if((szTempDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  if((szOSTempDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   if((szFileIniConfig = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1571,10 +1572,6 @@ HRESULT InitDlgSetupType(diST *diDialog)
   diDialog->stSetupType1.dwCItems = 0;
   diDialog->stSetupType2.dwCItems = 0;
   diDialog->stSetupType3.dwCItems = 0;
-  diDialog->stSetupType0.dwAItems = 0;
-  diDialog->stSetupType1.dwAItems = 0;
-  diDialog->stSetupType2.dwAItems = 0;
-  diDialog->stSetupType3.dwAItems = 0;
   if((diDialog->stSetupType0.szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->stSetupType0.szDescriptionLong = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -1734,7 +1731,9 @@ HRESULT InitDlgStartInstall(diSI *diDialog)
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szMessageInstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessageDownload = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -1743,7 +1742,8 @@ HRESULT InitDlgStartInstall(diSI *diDialog)
 void DeInitDlgStartInstall(diSI *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
-  FreeMemory(&(diDialog->szMessage0));
+  FreeMemory(&(diDialog->szMessageInstall));
+  FreeMemory(&(diDialog->szMessageDownload));
 }
 
 DWORD InitDlgReboot(diR *diDialog)
@@ -3762,17 +3762,33 @@ HRESULT CheckInstances()
           {
             if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
             {
-              MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION);
+              switch(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_RETRYCANCEL))
+              {
+                case IDCANCEL:
+                  /* User selected to cancel Setup */
+                  return(TRUE);
+
+                case IDRETRY:
+                  /* User selected to retry.  Reset counter */
+                  iIndex = -1;
+                  break;
+              }
             }
             else if(sgProduct.dwMode == AUTO)
             {
               ShowMessage(szMessage, TRUE);
               Delay(5);
               ShowMessage(szMessage, FALSE);
+
+              /* Setup mode is AUTO.  Show message, timeout, then cancel because we can't allow user to continue */
+              return(TRUE);
             }
           }
-
-          return(TRUE);
+          else
+          {
+            /* No message to display.  Assume cancel because we can't allow user to continue */
+            return(TRUE);
+          }
         }
       }
 
@@ -3781,7 +3797,7 @@ HRESULT CheckInstances()
     }
 
     /* Process Name= key did not exist, so look for other keys */
-    dwRv0 = GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniConfig);
+    dwRv0 = GetPrivateProfileString(szSection, "Class Name",  "", szClassName,  MAX_BUF, szFileIniConfig);
     dwRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniConfig);
     if((dwRv0 == 0L) &&
        (dwRv1 == 0L))
@@ -3806,17 +3822,33 @@ HRESULT CheckInstances()
         {
           if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
           {
-            MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION);
+            switch(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_RETRYCANCEL))
+            {
+              case IDCANCEL:
+                /* User selected to cancel Setup */
+                return(TRUE);
+
+              case IDRETRY:
+                /* User selected to retry.  Reset counter */
+                iIndex = -1;
+                break;
+            }
           }
           else if(sgProduct.dwMode == AUTO)
           {
             ShowMessage(szMessage, TRUE);
             Delay(5);
             ShowMessage(szMessage, FALSE);
-          }
-         }
 
-        return(TRUE);
+            /* Setup mode is AUTO.  Show message, timeout, then cancel because we can't allow user to continue */
+            return(TRUE);
+          }
+        }
+        else
+        {
+          /* No message to display.  Assume cancel because we can't allow user to continue */
+          return(TRUE);
+        }
       }
     }
   }
@@ -4203,22 +4235,23 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     diAdvancedSettings.bShowDialog = TRUE;
 
   /* Start Install dialog */
-  GetPrivateProfileString("Dialog Start Install",       "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Start Install",       "Title",        "", diStartInstall.szTitle,          MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Start Install",       "Message0",     "", diStartInstall.szMessage0,       MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Start Install",       "Show Dialog",      "", szShowDialog,                     MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Start Install",       "Title",            "", diStartInstall.szTitle,           MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Start Install",       "Message Install",  "", diStartInstall.szMessageInstall,  MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Start Install",       "Message Download", "", diStartInstall.szMessageDownload, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diStartInstall.bShowDialog = TRUE;
 
   /* Reboot dialog */
-  GetPrivateProfileString("Dialog Reboot",              "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Reboot", "Show Dialog", "", szShowDialog, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diReboot.dwShowDialog = TRUE;
   else if(lstrcmpi(szShowDialog, "AUTO") == 0)
     diReboot.dwShowDialog = AUTO;
 
-  GetPrivateProfileString("Windows Integration-Item0", "CheckBoxState", "", szBuf,                           MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item0", "CheckBoxState", "", szBuf,                                    MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Windows Integration-Item0", "Description",   "", diWindowsIntegration.wiCB0.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item0", "Archive",       "", diWindowsIntegration.wiCB0.szArchive, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item0", "Archive",       "", diWindowsIntegration.wiCB0.szArchive,     MAX_BUF, szFileIniConfig);
   /* Check to see if the checkbox need to be shown at all or not */
   if(*diWindowsIntegration.wiCB0.szDescription != '\0')
     diWindowsIntegration.wiCB0.bEnabled = TRUE;
@@ -5365,6 +5398,7 @@ void DeInitialize()
   DeInitSetupGeneral();
 
   FreeMemory(&szTempDir);
+  FreeMemory(&szOSTempDir);
   FreeMemory(&sgProduct.szProgramFolderPath);
   FreeMemory(&sgProduct.szProgramFolderName);
   FreeMemory(&sgProduct.szProductName);

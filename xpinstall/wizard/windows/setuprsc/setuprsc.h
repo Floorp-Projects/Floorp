@@ -65,7 +65,7 @@
 #define IDC_CHECK3                      1024
 #define IDC_EDIT_LICENSE                1024
 #define IDC_CHECK0                      1025
-#define IDC_EDIT_CURRENT_SETTINGS       1026
+#define IDC_CURRENT_SETTINGS            1026
 #define IDC_LIST_COMPONENTS             1027
 #define IDC_LIST_SUBCOMPONENTS          1029
 #define IDC_STATIC_DRIVE_SPACE_REQUIRED 1030
@@ -130,6 +130,10 @@
 #define IDS_ERROR_PROGRAM_FOLDER_NAME   11017
 #define IDS_CB_DEFAULT                  11018
 #define IDS_ERROR_DESTINATION_PATH      11019
+#define IDS_STR_SETUP_TYPE              11020
+#define IDS_STR_SELECTED_COMPONENTS     11021
+#define IDS_STR_DESTINATION_DIRECTORY   11022
+#define IDS_STR_PROGRAM_FOLDER          11023
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
