@@ -1,13 +1,32 @@
-#include "nscore.h"
-#include "prtypes.h"
-#include "nsISupports.h"
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
+ */
 
 #ifndef nsILoadAttribs_h___
 #define nsILoadAttribs_h___
 
+#include "nscore.h"
+#include "prtypes.h"
+#include "nsISupports.h"
+
 // Class ID for an implementation of nsILoadAttribs
 // {8942D321-48D3-11d2-9E7A-006008BF092E}
-#define NS_ILOAD_ATTRIBS_IDD \
+#define NS_ILOAD_ATTRIBS_IID \
  { 0x8942d321, 0x48d3, 0x11d2,{0x9e, 0x7a, 0x00, 0x60, 0x08, 0xbf, 0x09, 0x2e}}
 
 // Defining attributes of a url's load behavior.
