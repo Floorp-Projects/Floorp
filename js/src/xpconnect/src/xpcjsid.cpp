@@ -660,7 +660,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
             return NS_OK;
         }
         iid = *piid;
-        delete piid;
+        nsAllocator::Free(piid);
     }
     else
         iid = NS_GET_IID(nsISupports);
@@ -861,7 +861,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
             return NS_OK;
         }
         iid = *piid;
-        delete piid;
+        nsAllocator::Free(piid);
     }
     else
         iid = NS_GET_IID(nsISupports);

@@ -1338,7 +1338,7 @@ XPCConvert::JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
                     return JS_FALSE;
                 }
                 memcpy(*((char**)d), bytes, count);
-                ((char**)d)[count] = 0;
+                (*((char**)d))[count] = 0;
             }
             else
                 *((char**)d) = bytes;
@@ -1404,7 +1404,7 @@ XPCConvert::JSStringWithSize2Native(JSContext* cx, void* d, jsval s,
                     return JS_FALSE;
                 }
                 memcpy(*((jschar**)d), chars, alloc_len);
-                ((jschar**)d)[count] = 0;
+                (*((jschar**)d))[count] = 0;
             }
             else
                 *((jschar**)d) = chars;
