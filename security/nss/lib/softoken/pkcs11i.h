@@ -297,8 +297,8 @@ typedef enum {
 
 
 #define PK11_MAX_BLOCK_SIZE 16
-/* currently SHA1 is the biggest hash length */
-#define PK11_MAX_MAC_LENGTH 20
+/* currently SHA512 is the biggest hash length */
+#define PK11_MAX_MAC_LENGTH 64
 #define PK11_INVALID_MAC_SIZE 0xffffffff
 
 struct PK11SessionContextStr {
