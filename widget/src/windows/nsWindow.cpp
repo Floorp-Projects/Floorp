@@ -28,6 +28,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Roy Yokoyama <yokoyama@netscape.com>
+ *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -559,6 +560,51 @@ typedef struct tagRECONVERTSTRING {
 // from http://www.justsystem.co.jp/tech/atok/api12_04.html#4_11
 #define MSGNAME_ATOK_RECONVERT TEXT("Atok Message for ReconvertString")
 
+//
+// App Command messages for IntelliMouse and Natural Keyboard Pro
+//
+// These messages are not included in Visual C++ 6.0, but are in 7.0
+//
+#ifndef WM_APPCOMMAND
+#define WM_APPCOMMAND  0x0319
+
+#define APPCOMMAND_BROWSER_BACKWARD       1
+#define APPCOMMAND_BROWSER_FORWARD        2
+#define APPCOMMAND_BROWSER_REFRESH        3
+#define APPCOMMAND_BROWSER_STOP           4
+// keep these around in case we want them later
+//#define APPCOMMAND_BROWSER_SEARCH         5
+//#define APPCOMMAND_BROWSER_FAVORITES      6
+//#define APPCOMMAND_BROWSER_HOME           7
+//#define APPCOMMAND_VOLUME_MUTE            8
+//#define APPCOMMAND_VOLUME_DOWN            9
+//#define APPCOMMAND_VOLUME_UP              10
+//#define APPCOMMAND_MEDIA_NEXTTRACK        11
+//#define APPCOMMAND_MEDIA_PREVIOUSTRACK    12
+//#define APPCOMMAND_MEDIA_STOP             13
+//#define APPCOMMAND_MEDIA_PLAY_PAUSE       14
+//#define APPCOMMAND_LAUNCH_MAIL            15
+//#define APPCOMMAND_LAUNCH_MEDIA_SELECT    16
+//#define APPCOMMAND_LAUNCH_APP1            17
+//#define APPCOMMAND_LAUNCH_APP2            18
+//#define APPCOMMAND_BASS_DOWN              19
+//#define APPCOMMAND_BASS_BOOST             20
+//#define APPCOMMAND_BASS_UP                21
+//#define APPCOMMAND_TREBLE_DOWN            22
+//#define APPCOMMAND_TREBLE_UP              23
+
+//#define FAPPCOMMAND_MOUSE 0x8000
+//#define FAPPCOMMAND_KEY   0
+//#define FAPPCOMMAND_OEM   0x1000
+#define FAPPCOMMAND_MASK  0xF000
+
+#define GET_APPCOMMAND_LPARAM(lParam) ((short)(HIWORD(lParam) & ~FAPPCOMMAND_MASK))
+//#define GET_DEVICE_LPARAM(lParam)     ((WORD)(HIWORD(lParam) & FAPPCOMMAND_MASK))
+//#define GET_MOUSEORKEY_LPARAM         GET_DEVICE_LPARAM
+//#define GET_FLAGS_LPARAM(lParam)      (LOWORD(lParam))
+//#define GET_KEYSTATE_LPARAM(lParam)   GET_FLAGS_LPARAM(lParam)
+
+#endif  // #ifndef WM_APPCOMMAND
 
 static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
 {
@@ -1111,6 +1157,24 @@ PRBool nsWindow::DispatchStandardEvent(PRUint32 aMsg)
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
   return result;
+}
+
+//-------------------------------------------------------------------------
+//
+// Dispatch app command event
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchAppCommandEvent(PRUint32 aEventCommand)
+{
+  nsAppCommandEvent event;
+
+  InitEvent(event, NS_APPCOMMAND_START);
+  event.appCommand = NS_APPCOMMAND_START + aEventCommand;
+
+  DispatchWindowEvent(&event);
+  NS_RELEASE(event.widget);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -4073,6 +4137,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_RBUTTONDBLCLK:
             result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK, wParam);
             break;
+
+        case WM_APPCOMMAND:
+          {
+            PRUint32 appCommand = GET_APPCOMMAND_LPARAM(lParam);
+
+            switch (appCommand)
+            {
+              case APPCOMMAND_BROWSER_BACKWARD:
+              case APPCOMMAND_BROWSER_FORWARD:
+              case APPCOMMAND_BROWSER_REFRESH:
+              case APPCOMMAND_BROWSER_STOP:
+                DispatchAppCommandEvent(appCommand);
+                // tell the driver that we handled the event
+                result = PR_TRUE;
+                break;
+            }
+            // default = PR_FALSE - tell the driver that the event was not handled
+            break;
+          }
 
         case WM_HSCROLL:
         case WM_VSCROLL: 

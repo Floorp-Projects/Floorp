@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -479,6 +480,7 @@ protected:
     static PRBool ConvertStatus(nsEventStatus aStatus);
 
     PRBool DispatchStandardEvent(PRUint32 aMsg);
+    PRBool DispatchAppCommandEvent(PRUint32 aEventCommand);
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
     void GetNonClientBounds(nsRect &aRect);
