@@ -9,7 +9,7 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 #include "prlock.h"
 
 class nsInstallInfo;
@@ -17,12 +17,12 @@ class nsInstallInfo;
 #include "nsIScriptExternalNameSet.h"
 #include "nsIAppShellComponent.h"
 #include "nsIXPINotifier.h"
-#include "nsPvtIXPIStubHook.h"
+#include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
 class nsSoftwareUpdate: public nsIAppShellComponent, 
                         public nsISoftwareUpdate, 
-                        public nsPvtIXPIStubHook
+                        public nsPIXPIStubHook
 {
     public:
         
@@ -72,7 +72,7 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         PRLock*           mLock;
         PRBool            mInstalling;
         PRBool            mStubLockout;
-        nsVector*         mJarInstallQueue;
+        nsVoidArray*      mJarInstallQueue;
         nsTopProgressNotifier   mMasterNotifier;
 };
 

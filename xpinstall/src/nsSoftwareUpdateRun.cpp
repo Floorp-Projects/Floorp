@@ -43,7 +43,6 @@
 #include "nsIEnumerator.h"
 #include "nsIJAR.h"
 
-static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
 
@@ -277,7 +276,7 @@ static nsresult SetupInstallContext(const char* jarFile,
 ///////////////////////////////////////////////////////////////////////////////////////////////
 PRInt32 RunInstall(nsInstallInfo *installInfo)
 {   
-    if (installInfo->GetFlags() == 0x0000FFFF) // XXX bogus value -- do we want this feature?
+    if (installInfo->GetFlags() & XPI_NO_NEW_THREAD)
     {
         RunInstallOnThread((void *)installInfo);
     }

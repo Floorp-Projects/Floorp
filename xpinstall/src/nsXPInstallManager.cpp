@@ -24,7 +24,6 @@
 
 #include "nscore.h"
 #include "nsFileSpec.h"
-#include "nsVector.h"
 #include "pratom.h"
 
 #include "nsISupports.h"

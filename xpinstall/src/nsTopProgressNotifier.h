@@ -27,7 +27,7 @@
 #define nsTopProgressNotifier_h__
 
 #include "nsIXPINotifier.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 
 
 class nsTopProgressNotifier : public nsIXPINotifier
@@ -48,7 +48,7 @@ class nsTopProgressNotifier : public nsIXPINotifier
         NS_DECL_NSIXPINOTIFIER
    
    private:
-        nsVector        *mNotifiers;
+        nsVoidArray     *mNotifiers;
         nsIXPINotifier  *mActive;
 
 };

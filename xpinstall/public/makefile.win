@@ -34,7 +34,7 @@ EXPORTS=    nsIDOMInstallTriggerGlobal.h \
 XPIDLSRCS =                              \
             .\nsIXPINotifier.idl         \
             .\nsIXPIProgressDlg.idl      \
-            .\nsPvtIXPIStubHook.idl      \
+            .\nsPIXPIStubHook.idl      \
             $(NULL) 
 
 include <$(DEPTH)\config\rules.mak>

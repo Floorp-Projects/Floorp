@@ -36,6 +36,7 @@
 #define NS_IXPINSTALLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xpinstall"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
 
+#define XPI_NO_NEW_THREAD   0x1000
 
 #define NS_ISOFTWAREUPDATE_IID                   \
 { 0x18c2f992, 									 \

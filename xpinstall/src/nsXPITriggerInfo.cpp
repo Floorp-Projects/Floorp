@@ -74,7 +74,7 @@ nsXPITriggerInfo::~nsXPITriggerInfo()
         if (item) 
             delete item;
     }
-    mItems.RemoveAll();
+    mItems.Clear();
 
     if ( mCx && !JSVAL_IS_NULL(mGlobal) )
         JS_RemoveRoot( mCx, &mGlobal );

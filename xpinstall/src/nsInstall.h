@@ -36,7 +36,7 @@
 
 #include "nsString.h"
 #include "nsFileSpec.h"
-#include "nsVector.h"
+#include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
 
@@ -260,7 +260,7 @@ class nsInstall
 
         nsInstallVersion*   mVersionInfo;           /* Component version info */
         
-        nsVector*           mInstalledFiles;        
+        nsVoidArray*        mInstalledFiles;        
         nsHashtable*        mPatchList;
         
         nsIXPINotifier      *mNotifier;
@@ -284,11 +284,11 @@ class nsInstall
 
         PRInt32     OpenJARFile(void);
         void        CloseJARFile(void);
-        PRInt32     ExtractDirEntries(const nsString& directory, nsVector *paths);
+        PRInt32     ExtractDirEntries(const nsString& directory, nsVoidArray *paths);
 
         PRInt32     ScheduleForInstall(nsInstallObject* ob);
 
-        static void DeleteVector(nsVector* vector);    
+        static void DeleteVector(nsVoidArray* vector);    
 };
 
 #endif

@@ -27,7 +27,6 @@
 
 #include "nspr.h"
 #include "prlock.h"
-#include "nsVector.h"
 #include "VerReg.h"
 #include "nsSpecialSystemDirectory.h"
 
@@ -113,7 +112,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
     mLock = PR_NewLock();
     mInstalling = PR_FALSE;
-    mJarInstallQueue = new nsVector();
+    mJarInstallQueue = new nsVoidArray();
 
     /***************************************/
     /* Add us to the Javascript Name Space */
@@ -174,15 +173,15 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
     PR_Lock(mLock);
     if (mJarInstallQueue != nsnull)
     {
-        PRUint32 i=0;
-        for (; i < mJarInstallQueue->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mJarInstallQueue->Count(); i++) 
         {
-            nsInstallInfo* element = (nsInstallInfo*)mJarInstallQueue->Get(i);
+            nsInstallInfo* element = (nsInstallInfo*)mJarInstallQueue->ElementAt(i);
             //FIX:  need to add to registry....
             delete element;
         }
 
-        mJarInstallQueue->RemoveAll();
+        mJarInstallQueue->Clear();
         delete (mJarInstallQueue);
         mJarInstallQueue = nsnull;
     }
@@ -220,8 +219,8 @@ nsSoftwareUpdate::QueryInterface( REFNSIID anIID, void **anInstancePtr )
             *anInstancePtr = (void*) ( (nsISoftwareUpdate*)this );
         else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) 
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
-        else if (anIID.Equals( nsPvtIXPIStubHook::GetIID() ) )
-            *anInstancePtr = (void*) ( (nsPvtIXPIStubHook*)this );
+        else if (anIID.Equals( nsPIXPIStubHook::GetIID() ) )
+            *anInstancePtr = (void*) ( (nsPIXPIStubHook*)this );
         else if ( anIID.Equals( kISupportsIID ) )
             *anInstancePtr = (void*) ( (nsISupports*) (nsISoftwareUpdate*) this );
         else
@@ -244,7 +243,7 @@ nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService 
 {
     nsresult rv;
 
-    mStubLockout = PR_TRUE;  // prevent use of nsPvtIXPIStubHook by browser
+    mStubLockout = PR_TRUE;  // prevent use of nsPIXPIStubHook by browser
 
     rv = nsServiceManager::RegisterService( NS_IXPINSTALLCOMPONENT_PROGID, ( (nsISupports*) (nsISoftwareUpdate*) this ) );
 
@@ -310,7 +309,7 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
         return NS_ERROR_OUT_OF_MEMORY;
 
     PR_Lock(mLock);
-    mJarInstallQueue->Add( info );
+    mJarInstallQueue->AppendElement( info );
     PR_Unlock(mLock);
     RunNextInstall();
 
@@ -323,11 +322,11 @@ nsSoftwareUpdate::InstallJarCallBack()
 {
     PR_Lock(mLock);
 
-    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
+    nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->ElementAt(0);
     if (nextInstall != nsnull)
         delete nextInstall;
 
-    mJarInstallQueue->Remove(0);
+    mJarInstallQueue->RemoveElementAt(0);
     mInstalling = PR_FALSE;
 
     PR_Unlock(mLock);
@@ -345,9 +344,9 @@ nsSoftwareUpdate::RunNextInstall()
     PR_Lock(mLock);
     if (!mInstalling) 
     {
-        if ( mJarInstallQueue->GetSize() > 0 )
+        if ( mJarInstallQueue->Count() > 0 )
         {
-            info = (nsInstallInfo*)mJarInstallQueue->Get(0);
+            info = (nsInstallInfo*)mJarInstallQueue->ElementAt(0);
 
             if ( info )
                 mInstalling = PR_TRUE;

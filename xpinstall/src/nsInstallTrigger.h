@@ -9,7 +9,6 @@
 
 #include "prtypes.h"
 #include "nsHashtable.h"
-#include "nsVector.h"
 
 #include "nsIDOMInstallTriggerGlobal.h"
 #include "nsSoftwareUpdate.h"

@@ -37,7 +37,7 @@
 
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
-#include "nsPvtIXPIStubHook.h"
+#include "nsPIXPIStubHook.h"
 
 #include "plstr.h"
 
@@ -135,7 +135,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     // Override XPInstall's natural assumption that the current executable
     // is Mozilla. Use the given directory as the "Program" folder.
     //--------------------------------------------------------------------
-    nsCOMPtr<nsPvtIXPIStubHook> hook = do_QueryInterface(gXPI);
+    nsCOMPtr<nsPIXPIStubHook>   hook = do_QueryInterface(gXPI);
     nsFileSpec                  dirSpec( aDir );
     nsCOMPtr<nsIFileSpec>       iDirSpec;
 
@@ -206,7 +206,7 @@ PR_PUBLIC_API(nsresult) XPI_Install(
 
     if (iFile && gXPI)
         rv = gXPI->InstallJar( iFile, URLstr.GetUnicode(), args.GetUnicode(), 
-                               aFlags, gNotifier );
+                               (aFlags | XPI_NO_NEW_THREAD), gNotifier );
 
     return rv;
 }

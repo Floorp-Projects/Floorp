@@ -29,7 +29,7 @@
 nsTopProgressNotifier::nsTopProgressNotifier()
 {
     NS_INIT_ISUPPORTS();
-    mNotifiers = new nsVector();
+    mNotifiers = new nsVoidArray();
     mActive = 0;
 }
 
@@ -37,14 +37,14 @@ nsTopProgressNotifier::~nsTopProgressNotifier()
 {
     if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             delete element;
         }
 
-        mNotifiers->RemoveAll();
+        mNotifiers->Clear();
         delete (mNotifiers);
     }
 }
@@ -57,16 +57,16 @@ long
 nsTopProgressNotifier::RegisterNotifier(nsIXPINotifier * newNotifier)
 {
     NS_IF_ADDREF( newNotifier );
-    return mNotifiers->Add( newNotifier );
+    return mNotifiers->AppendElement( newNotifier );
 }
 
 
 void
 nsTopProgressNotifier::UnregisterNotifier(long id)
 {
-    nsIXPINotifier *item = (nsIXPINotifier*)mNotifiers->Get(id);
+    nsIXPINotifier *item = (nsIXPINotifier*)mNotifiers->ElementAt(id);
     NS_IF_RELEASE(item);
-    mNotifiers->Set(id, NULL);
+    mNotifiers->ReplaceElementAt(nsnull, id);
 }
 
 
@@ -79,10 +79,10 @@ nsTopProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 
     if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             if (element != NULL)
                 element->BeforeJavascriptEvaluation(URL);
         }
@@ -99,10 +99,10 @@ nsTopProgressNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 
     if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             if (element != NULL)
                 element->AfterJavascriptEvaluation(URL);
         }
@@ -118,10 +118,10 @@ nsTopProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIP
 
     if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             if (element != NULL)
                 element->InstallStarted(URL, UIPackageName);
         }
@@ -139,10 +139,10 @@ nsTopProgressNotifier::ItemScheduled( const PRUnichar* message )
 
     if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             if (element != NULL)
                 element->ItemScheduled( message );
         }
@@ -159,10 +159,10 @@ nsTopProgressNotifier::FinalizeProgress( const PRUnichar* message, PRInt32 itemN
 
     if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             if (element != NULL)
                 element->FinalizeProgress( message, itemNum, totNum );
         }
@@ -178,10 +178,10 @@ nsTopProgressNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
 
     if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             if (element != NULL)
                 element->FinalStatus(URL,status);
         }
@@ -197,10 +197,10 @@ nsTopProgressNotifier::LogComment(const PRUnichar* comment)
 
    if (mNotifiers)
     {
-        PRUint32 i=0;
-        for (; i < mNotifiers->GetSize(); i++) 
+        PRInt32 i=0;
+        for (; i < mNotifiers->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->Get(i);
+            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
             if (element != NULL)
                 element->LogComment(comment);
         }
