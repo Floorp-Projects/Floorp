@@ -1318,9 +1318,13 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    vector = argv;
         }
         else {
-            if (!ValueIsLength(cx, argv[0], &length))
-                return JS_FALSE;
-            vector = NULL;
+            if (!ValueIsLength(cx, argv[0], &length)) {
+                vector = argv;
+                length = 1;
+            } else {
+                vector = NULL;
+            }
+            
         }
     }
     return InitArrayObject(cx, obj, length, vector);
