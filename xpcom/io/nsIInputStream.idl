@@ -86,9 +86,9 @@ interface nsIInputStream : nsISupports
 
     /**
      * Allows users to set an observer on an input stream to receive notifications
-     * about the producer writing data into the input stream, or filling the buffer,
-     * i.e. that more data is not available. This is necessary for non-blocking streams
-     * so that the consumer can suspend itself until more data is available.
+     * about the consumer emptying the input stream's underlying buffer, or closing the
+     * stream. This is necessary for non-blocking streams so that the producer can suspend
+     * itself until more data can be written.
      */
     attribute nsIInputStreamObserver observer;
 };
@@ -97,7 +97,7 @@ interface nsIInputStream : nsISupports
 interface nsIInputStreamObserver : nsISupports
 {
     /**
-     * Called when the output stream's consumer has read all the existing data from the stream.
+     * Called when the input stream's consumer has read all the existing data from the stream.
      */
     void onEmpty(in nsIInputStream outStr);
 
