@@ -615,7 +615,7 @@ nsFontPSAFM::RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app)
   aFontMetrics->SetXHeight(xHeight);
   aFontMetrics->SetSuperscriptOffset(xHeight);
   aFontMetrics->SetSubscriptOffset(xHeight);
-  aFontMetrics->SetStrikeout((nscoord)(xHeight / TWIPS_PER_POINT_FLOAT), onePixel);
+  aFontMetrics->SetStrikeout((nscoord)(xHeight / 2), onePixel);
 
   offset = NSFloatPointsToTwips(fontSize * mAFMInfo->mPSFontInfo->mUnderlinePosition) / 1000.0f;
   aFontMetrics->SetUnderline(NSToCoordRound(offset), onePixel);
