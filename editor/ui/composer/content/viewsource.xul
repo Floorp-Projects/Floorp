@@ -1,0 +1,230 @@
+<?xml version="1.0"?> 
+
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -    Sammy Ford
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/viewSource.dtd" >
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onunload="EditorShutdown()"
+        title="&mainWindow.title;" align="vertical" width="640" height="480">
+  
+  <html:script src="chrome://editor/content/EditorCommands.js"></html:script>
+  <html:script src="chrome://editor/content/viewsource.js"></html:script>
+
+  <broadcaster id="args" value="http://www.mozilla.org/"/>
+  <broadcaster id="canPrint"/>
+  <broadcaster id="canGoBack" disabled="true"/>
+  <broadcaster id="Editor:LoadingProgress"/>
+  <broadcaster id="Editor:Status"/>
+  <broadcaster id="Editor:OnStartBinding"/>
+  <broadcaster id="Editor:OnStopBinding"/>
+  <broadcaster id="Editor:Throbber" busy="false"/>
+
+  
+  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+  <broadcaster id="dialog.start" ready="false"/>
+  <observes element="dialog.start" attribute="ready" onchange="StartupViewSource()"/>
+    
+  <menubar>
+    <menu value="&fileMenu.label;">
+	    <menupopup>
+			  <menuitem value="&browserCmd.label;" oncommand="BrowserNewWindow();"/>
+      			<menu value="&newMenu.label;">
+				  <menupopup>
+      				<menuitem value="&newMailCmd.label;" oncommand="MsgNewMessage();"/>
+					  <menuitem value="&newChatCmd.label;" oncommand=""/>
+					  <menuseparator />
+					  <menuitem value="&newBlankPageCmd.label;" oncommand="BrowserNewWindow();"/>
+					  <menuitem value="&newPageFromTemplateCmd.label;" oncommand="BrowserNewWindow();"/>
+					  <menuitem value="&newPageFromDraftCmd.label;" oncommand="BrowserNewWindow();"/>
+				  </menupopup>
+    			</menu>
+			  <menuitem value="&openCmd.label;" oncommand="BrowserOpenWindow();"/>
+			  <menuseparator />
+			  <menuitem value="&sendPageCmd.label;" oncommand="NotImplementedYet();"/>
+			   <menuseparator />
+			  <menu value="&offlineMenu.label;">
+				  <menupopup>
+				  <menuitem value="&offlineGoOfflineCmd.label;" oncommand="NotImplementedYet();"/>
+				  <menuseparator />
+				  <menuitem value="&offlineSynchronizeCmd.label;" oncommand="NotImplementedYet();"/>
+				  </menupopup>
+			  </menu>
+			  <menuseparator />
+			  <menuitem value="&printSetupCmd.label;" oncommand=";"/>
+			  <menuitem value="&printPreviewCmd.label;" oncommand=""/>
+			  <menuitem value="&printCmd.label;" oncommand="BrowserPrint()"/>
+			  <menuseparator />
+			  <menuitem value="&closeCmd.label;" oncommand="BrowserClose();"/>
+			  <menuitem value="&quitCmd.label;" oncommand="BrowserExit();"/>
+		</menupopup>
+    </menu>
+	<menu value="&editMenu.label;">
+	  <menupopup> 
+      <menuitem value="&undoCmd.label;" oncommand="NotImplementedYet();" disabled=""/> 
+      <menuitem value="&redoCmd.label;" oncommand="NotImplementedYet();" disabled=""/> 
+      <menuseparator /> 
+      <menuitem value="&cutCmd.label;" oncommand="NotImplementedYet();" disabled=""/> 
+      <menuitem value="&copyCmd.label;" oncommand="BrowserCopy();"/> 
+      <menuitem value="&pasteCmd.label;" oncommand="NotImplementedYet();" disabled=""/> 
+      <menuitem value="&deleteCmd.label;" oncommand="NotImplementedYet();" disabled=""/> 
+      <menuseparator /> 
+      <menuitem value="&selectAllCmd.label;" oncommand="NotImplementedYet();"/> 
+      <menuseparator /> 
+      <menuitem value="&preferences.label;" oncommand="DoPreferences();"/> 
+	  </menupopup>
+    </menu> 
+
+    <menu value="&viewMenu.label;">
+	  <menupopup>
+      <menuitem value="&toolbarsCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&sidebarCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuseparator />
+      <menuitem value="&enlargeTextSizeCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="Reduce Text Size" oncommand="NotImplementedYet();" disabled=""/>
+      <menuseparator />
+      <menu value="&useStyleSheetMenu.label;" oncommand="NotImplementedYet();">
+	      <menupopup>
+		  <menuitem value="&useStyleSheetDefaultCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	      <menuseparator />
+	      <menuitem value="&useStyleSheetEasyReadingCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	      <menuitem value="&useStyleSheetMaximumInformationCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	      <menuitem value="&useStlyleSheetBizarreCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+          </menupopup>
+	  </menu>
+      <menuseparator />
+      <menuitem value="&reloadCmd.label;" oncommand="BrowserReload();" disabled=""/>
+      <menuitem value="&showImagesCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&stopCmd.label;" oncommand="NotImplementedYet();"/>
+      <menuseparator />
+      <menuitem value="&pageSourceCmd.label;" oncommand="BrowserViewSource();" disabled=""/>
+      <menuitem value="&pageInfoCmd.label;" oncommand="NotImplementedYet();"/>
+      <menuseparator />
+      <menu value="&charSetMenu.label;">
+	      <menupopup>
+		  <menuitem value="&charWesternCmd.label;" oncommand="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+	      <menuitem value="&charJapaneseCmd.label;" oncommand="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
+	      <menuitem value="&charShiftJisCmd.label;" oncommand="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
+	      <menuitem value="&charEupCmd.label;" oncommand="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+	      </menupopup>
+	   </menu>
+	   </menupopup>
+    </menu>
+    <menu value="&searchMenu.label;">
+	  <menupopup>
+      <menuitem value="&findOnCmd.label;" oncommand="BrowserFind();;" disabled=""/>
+      <menuitem value="&findAgainCmd.label;" oncommand="BrowserFindAgain();" disabled=""/>
+      <menuseparator />
+      <menuitem value="&searchParentCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&searchParenet2Cmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&appSpecificCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&appSpecificCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuseparator />
+      <menuitem value="&searchInternetCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&searchAllMailCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&searchBookmarksCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&searchPeopleCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuseparator />
+      <menuitem value="&searchComputerCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	  </menupopup>
+    </menu>
+    <menu value="&goMenu.label;">
+	  <menupopup>
+      <menuitem value="&goBackCmd.label;" oncommand="BrowserBack();" disabled=""/>
+      <menuitem value="&goForwardCmd.label;" oncommand="BrowserForward();" disabled=""/>
+      <menuitem value="&goHomeCmd.label;" oncommand="BrowserHome();" disabled=""/>
+	  </menupopup>
+    </menu>
+	 <menu value="&tasksMenu.label;">
+	  <menupopup>
+      <menuitem value="&navigatorCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&messengerCmd.label;" oncommand="OpenMessenger();" />
+      <menuitem value="&editorCmd.label;"    oncommand="OpenEditor();" />
+      <menuitem value="&manageHistoryCmd.label;"    oncommand="OpenHistoryView();" />
+      <menuitem value="&chatCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&shoppingCartCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menu value="&toolsMenu.label;">
+	      <menupopup>
+		  <menuitem value="&toolsPluginsInfoCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	      <menuitem value="&toolsServerToolsCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	      <menuitem value="&toolsJavaConsoleCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	      <menuitem value="&toolsJavascriptDebuggerCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+		  </menupopup>
+      </menu>
+      <menuseparator />
+      <menuitem value="&securityInfo.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuseparator/>
+      <menuitem value="&window1Cmd.label;" oncommand="NotImplementedYet();" key="1" disabled=""/>
+      <menuitem value="&window2Cmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&window3Cmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+	  </menupopup>
+    </menu>
+    
+     <menu value="&helpMenuCmd.label;">
+	  <menupopup>
+      <menuitem value="&helpContentsCmd.label;" oncommand="window.frames[0].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'" disabled=""/>
+      <menuseparator />
+      <menuitem value="&howTutorialCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&helpChannelCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuseparator />
+      <menuitem value="&softwareUpdatesCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&technicalSupportCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menuitem value="&releaseNotesCmd.label;" 
+	            oncommand="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'" disabled=""/>
+      
+      <menuseparator />
+      <menuitem value="&aboutCommunicatorCmd.label;" 
+	            oncommand="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'" disabled=""/>
+	  </menupopup>
+    </menu>
+  </menubar>
+  
+  <html:iframe id="content-frame" type="content" html:name="content" html:src="about:blank" flex="100%"/>
+
+  <box align="horizontal" id="status-bar">
+ 
+	<box id="security-box" class="insecure" align="horizontal" flex="100%">
+		<box align="vertical" style="width:100px">
+			<spring flex="100%"/>
+			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
+				<observes element="Browser:LoadingProgress" attribute="mode"/>
+				<observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
+			</progressmeter>
+			<spring flex="100%"/>
+		</box>
+
+		<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
+		</titledbutton>
+
+		<spring flex="100%"/>		
+
+		<titledbutton align="right" value="Build ID: 1999082316" style="font-family:sans-serif;font-size:2.5mm;"/>
+     </box>
+  </box>
+ 
+</window>
