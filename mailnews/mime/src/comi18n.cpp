@@ -403,404 +403,354 @@ static int ResetLen( int iThreshold, const char* buffer, int16 wincsid )
 }
 
 
-static char * intlmime_encode_mail_address(char *name, const char *src,
-CCCDataObject obj,
-
-
-int maxLineLen)
+static 
+char * intlmime_encode_mail_address(char *name, const char *src,
+                                    CCCDataObject obj, int maxLineLen)
 {
   int wincsid = 0; //no longer used
-        char *begin, *end;
-        char *retbuf = NULL, *srcbuf = NULL;
-        char sep = '\0';
-        char *sep_p = NULL;
+  char *begin, *end;
+  char *retbuf = NULL, *srcbuf = NULL;
+  char sep = '\0';
+  char *sep_p = NULL;
 //        char *name;
-        int  retbufsize;
-        int line_len = 0;
-        int srclen;
-        int default_iThreshold;
-        int iThreshold;         /* how many bytes we can convert from the
-src */
-        int iEffectLen;         /* the maximum length we can convert from
-the src */
-        PRBool bChop = PR_FALSE;
-        PRBool is_being_used_in_email_summary_file = (maxLineLen > 120);
-        CCCFunc cvtfunc = NULL;
+  int  retbufsize;
+  int line_len = 0;
+  int srclen;
+  int default_iThreshold;
+  int iThreshold;         /* how many bytes we can convert from the src */
+  int iEffectLen;         /* the maximum length we can convert from the src */
+  PRBool bChop = PR_FALSE;
+  PRBool is_being_used_in_email_summary_file = (maxLineLen > 120);
+  CCCFunc cvtfunc = NULL;
 
-        if (obj)
-                cvtfunc = INTL_GetCCCCvtfunc(obj);
+  if (obj)
+    cvtfunc = INTL_GetCCCCvtfunc(obj);
 
-        if (src == NULL || *src == '\0')
-                return NULL;
-        /* make a copy, so don't need touch original buffer */
-        MSG_UnquotePhraseOrAddr_Intl(wincsid, src, &srcbuf);
-        if (srcbuf == NULL)
-                return NULL;
-        begin = srcbuf;
+  if (src == NULL || *src == '\0')
+    return NULL;
+  /* make a copy, so don't need touch original buffer */
+  MSG_UnquotePhraseOrAddr_Intl(wincsid, src, &srcbuf);
+  if (srcbuf == NULL)
+    return NULL;
+  begin = srcbuf;
 
- //       name = (char*)INTL_CsidToCharsetNamePt(intlmime_get_outgoing_mime_csid((int16)wincsid));
-        default_iThreshold = iEffectLen = ( maxLineLen - PL_strlen( name )
-- 7 ) * 3 / 4;
-        iThreshold = default_iThreshold;
+//       name = (char*)INTL_CsidToCharsetNamePt(intlmime_get_outgoing_mime_csid((int16)wincsid));
+  default_iThreshold = iEffectLen = ( maxLineLen - PL_strlen( name ) - 7 ) * 3 / 4;
+  iThreshold = default_iThreshold;
 
 
-        /* allocate enough buffer for conversion, this way it can avoid
-           do another memory allocation which is expensive
+  /* allocate enough buffer for conversion, this way it can avoid
+     do another memory allocation which is expensive
+   */
+
+  retbufsize = PL_strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
+  retbuf =  (char *) PR_Malloc(retbufsize);
+  if (retbuf == NULL)  /* Give up if not enough memory */
+  {
+    PR_Free(srcbuf);
+    return NULL;
+  }
+
+  *retbuf = '\0';
+
+  srclen = PL_strlen(srcbuf);
+  while (begin < (srcbuf + srclen))
+  { /* get block of data between commas */
+    char *p, *q;
+    char *buf1, *buf2;
+    int len, newsize, convlen, retbuflen;
+    PRBool non_ascii;
+
+    retbuflen = PL_strlen(retbuf);
+    end = NULL;
+    //naoki: I think this check is not needed for iso-2022-jp because it will be B encoded.
+    if (stateful_encoding((const char *) name) || is_being_used_in_email_summary_file) {
+    } else {
+    /* scan for separator, conversion happens on 8bit
+       word between separators
+     */
+      if (IS_MAIL_SEPARATOR(begin))
+      {   /*  skip white spaces and separator */
+              q = begin;
+              while ( IS_MAIL_SEPARATOR(q) )
+                      q ++ ;
+              sep = *(q - 1);
+              sep_p = (q - 1);
+              *(q - 1) = '\0';
+              end = q - 1;
+      }
+      else
+      {
+        sep = '\0';
+        /* scan for next separator */
+        non_ascii = PR_FALSE;
+        for (q = begin; *q;)
+        {
+          if ((unsigned char) *q > 0x7F)
+                  non_ascii = PR_TRUE;
+          if ( IS_MAIL_SEPARATOR(q) )
+          {
+            if ((*q == ' ') && (non_ascii == PR_TRUE))
+            {
+              while ((p = intlmime_encode_next8bitword(wincsid, q)) != NULL)
+              {
+                if (p == NULL)
+                  break;
+                q = p;
+                if (*p != ' ')
+                   break;
+              }
+            }
+            sep = *q;
+            sep_p = q;
+            *q = '\0';
+            end = q;
+            break;
+          }
+          q = INTL_NextChar(wincsid, q);
+        }
+      }
+    }
+
+    /* get the to_be_converted_buffer's len */
+    len = PL_strlen(begin);
+
+    //naoki: I changed the code to skip this for iso-2022-jp.
+    // TODO: However, this part also dealing with a truncation. The code should be rewritten in order to
+    // do the truncation correctly.
+    if ( stateful_encoding((const char *) name) || !intlmime_only_ascii_str(begin) )
+    {
+      if (obj && cvtfunc)
+      {
+        /*
+          the 30 lenght is calculated as follows (I think)
+          total:             30 = 7 + 11 + 8 + 4
+          --------------------------------------
+          Mime Part II tags: 7  = "=?...?B?...?="
+          Charset name:      11 = "iso-2022-jp"
+          JIS excape seq.    8  = "<ESC>$B" + "<ESC>(B" * 4/3
+          space for one char 4  = 2 * 4/3 rounded up to nearest 4
+          Brian Stell 10/97
          */
+        if ( ( maxLineLen - line_len < 30 ) || bChop ) {
+          /* chop first, then continue */
+          buf1 = retbuf + retbuflen;
+          *buf1++ = CR;   *buf1++ = LF; *buf1++ = '\t';
+          line_len = 0;
+          retbuflen += 3;
+          *buf1 = '\0';
+          bChop = PR_FALSE;
+          iThreshold = default_iThreshold;
+        }
+        /* iEffectLen - the max byte-string length of JIS ( converted form S-JIS )
+           name - such as "iso-2022-jp", the encoding name, MUST be shorter than 23 bytes
+           7    - is the "=?:?:?=" 
+         */
+        iEffectLen = ( maxLineLen - line_len - PL_strlen( name ) - 7 ) * 3 / 4;
+        while ( PR_TRUE ) {
+          int iBufLen;    /* converted buffer's length, not BASE64 */
+          if ( len > iThreshold )
+            len = ResetLen(iThreshold, begin, (int16)wincsid );
 
-        retbufsize = PL_strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
-        retbuf =  (char *) PR_Malloc(retbufsize);
-        if (retbuf == NULL)  /* Give up if not enough memory */
+          if ( iThreshold <= 1 )
+          {
+            /* Certain trashed mailboxes were causing an
+            ** infinite loop at this point, so we need a way of
+            ** getting out of trouble.
+            **
+            ** BEFORE:    iThreshold was becoming 1, then 0, and
+            **            we were looping indefinitely.
+            ** AFTER:     Now, first there will be
+            **            an assert in the previous call to ResetLen,
+            **            then we'll do that again on the repeat pass,
+            **            then we'll exit more or less gracefully.
+            **    - bug #83204, an oldie but goodie.
+            **    - jrm 98/03/25
+            */
+            return NULL;
+          }
+          buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
+          iBufLen = PL_strlen( buf1 );
+          PR_ASSERT( iBufLen > 0 );
+
+          /* recal iThreshold each time based on last experience */
+          iThreshold = len * iEffectLen / iBufLen;
+          if ( iBufLen > iEffectLen ){
+            /* the converted buffer is too large, we have to
+                    1. free the buffer;
+                    2. redo again based on the new iThreshold
+            */
+            bChop = PR_TRUE;           /* append CRLFTAB */
+            if (buf1 && (buf1 != begin)){
+                    PR_Free(buf1);
+                    buf1 = NULL;
+            }
+          } else {
+            end = begin + len - 1;
+            break;
+          }
+        }
+        if (bChop && (NULL!=sep_p)) {
+          *sep_p = sep;   /* we are length limited so we do not need this */
+          sep = '\0';     /* artifical terminator. So, restore the original character */
+          sep_p = NULL;
+        }
+
+        if (!buf1)
+        {
+          PR_Free(srcbuf);
+          PR_Free(retbuf);
+          return NULL;
+        }
+      }
+      else
+      {
+        buf1 = (char *) PR_Malloc(len + 1);
+        if (!buf1)
         {
                 PR_Free(srcbuf);
+                PR_Free(retbuf);
                 return NULL;
         }
+        XP_MEMCPY(buf1, begin, len);
+        *(buf1 + len) = '\0';
+      }
 
-        *retbuf = '\0';
-
-        srclen = PL_strlen(srcbuf);
-        while (begin < (srcbuf + srclen))
-        {       /* get block of data between commas */
-                char *p, *q;
-                char *buf1, *buf2;
-                int len, newsize, convlen, retbuflen;
-                PRBool non_ascii;
-
-                retbuflen = PL_strlen(retbuf);
-                end = NULL;
-                //naoki: I think this check is not needed for iso-2022-jp because it will be B encoded.
-                if (stateful_encoding((const char *) name) || is_being_used_in_email_summary_file) {
-                } else {
-                /* scan for separator, conversion happens on 8bit
-                   word between separators
-                 */
-                if (IS_MAIL_SEPARATOR(begin))
-                {   /*  skip white spaces and separator */
-                        q = begin;
-                        while ( IS_MAIL_SEPARATOR(q) )
-                                q ++ ;
-                        sep = *(q - 1);
-                        sep_p = (q - 1);
-                        *(q - 1) = '\0';
-                        end = q - 1;
-                }
-                else
-                {
-                        sep = '\0';
-                        /* scan for next separator */
-                        non_ascii = PR_FALSE;
-                        for (q = begin; *q;)
-                        {
-                                if ((unsigned char) *q > 0x7F)
-                                        non_ascii = PR_TRUE;
-                                if ( IS_MAIL_SEPARATOR(q) )
-                                {
-                                        if ((*q == ' ') && (non_ascii ==
-PR_TRUE))
-                                        {
-                                                while ((p =
-intlmime_encode_next8bitword(wincsid, q)) != NULL)
-                                                {
-                                                        if (p == NULL)
-                                                                break;
-                                                        q = p;
-                                                        if (*p != ' ')
-                                                                break;
-                                                }
-                                        }
-                                        sep = *q;
-                                        sep_p = q;
-                                        *q = '\0';
-                                        end = q;
-                                        break;
-                                }
-                                q = INTL_NextChar(wincsid, q);
-                        }
-                }
-                }
-
-                /* get the to_be_converted_buffer's len */
-                len = PL_strlen(begin);
-
-                //naoki: I changed the code to skip this for iso-2022-jp.
-                // TODO: However, this part also dealing with a truncation. The code should be rewritten in order to
-                // do the truncation correctly.
-                if ( stateful_encoding((const char *) name) || !intlmime_only_ascii_str(begin) )
-                {
-                        if (obj && cvtfunc)
-                        {
-                                /*
-                                        the 30 lenght is calculated as
-follows (I think)
-                                        total:             30 = 7 + 11 + 8
-+ 4
-
---------------------------------------
-                                        Mime Part II tags: 7  =
-"=?...?B?...?="
-                                        Charset name:      11 =
-"iso-2022-jp"
-                                        JIS excape seq.    8  = "<ESC>$B"
-+ "<ESC>(B" * 4/3
-                                        space for one char 4  = 2 * 4/3
-rounded up to nearest 4
-                                        Brian Stell 10/97
-                                */
-                                if ( ( maxLineLen - line_len < 30 ) ||
-bChop ) {
-                                        /* chop first, then continue */
-                                        buf1 = retbuf + retbuflen;
-                                        *buf1++ = CR;   *buf1++ = LF;
-*buf1++ = '\t';
-                                        line_len = 0;
-                                        retbuflen += 3;
-                                        *buf1 = '\0';
-                                        bChop = PR_FALSE;
-                                        iThreshold = default_iThreshold;
-                                }
-                                /*      iEffectLen - the max byte-string
-length of JIS ( converted form S-JIS )
-                                        name - such as "iso-2022-jp", the
-encoding name, MUST be shorter than 23 bytes
-                                        7    - is the "=?:?:?=" */
-                                iEffectLen = ( maxLineLen - line_len -
-PL_strlen( name ) - 7 ) * 3 / 4;
-                                while ( PR_TRUE ) {
-                                        int iBufLen;    /* converted
-buffer's length, not BASE64 */
-                                        if ( len > iThreshold )
-                                                len = ResetLen(
-iThreshold, begin, (int16)wincsid );
-
-                                        if ( iThreshold <= 1 )
-                                        {
-                                                /* Certain trashed
-mailboxes were causing an
-                                                ** infinite loop at this
-point, so we need a way of
-                                                ** getting out of trouble.
-                                                **
-                                                ** BEFORE:    iThreshold
-was becoming 1, then 0, and
-                                                **            we were
-looping indefinitely.
-                                                ** AFTER:     Now, first
-there will be
-                                                **            an assert in
-the previous call to ResetLen,
-                                                **            then we'll
-do that again on the repeat pass,
-                                                **            then we'll
-exit more or less gracefully.
-                                                **    - bug #83204, an
-oldie but goodie.
-                                                **    - jrm 98/03/25
-                                                */
-                                                return NULL;
-                                        }
-                                        buf1 = (char *) cvtfunc(obj,
-(unsigned char *)begin, len);
-                                        iBufLen = PL_strlen( buf1 );
-                                        PR_ASSERT( iBufLen > 0 );
-
-                                        /* recal iThreshold each time
-based on last experience */
-                                        iThreshold = len * iEffectLen /
-iBufLen;
-                                        if ( iBufLen > iEffectLen ){
-                                                /* the converted buffer is
-too large, we have to
-                                                        1. free the
-buffer;
-                                                        2. redo again
-based on the new iThreshold
-                                                */
-                                                bChop = PR_TRUE;           /*
-append CRLFTAB */
-                                                if (buf1 && (buf1 !=
-begin)){
-                                                        PR_Free(buf1);
-                                                        buf1 = NULL;
-                                                }
-                                        } else {
-                                                end = begin + len - 1;
-                                                break;
-                                        }
-                                }
-                                if (bChop && (NULL!=sep_p)) {
-                                        *sep_p = sep;   /* we are length
-limited so we do not need this */
-                                        sep = '\0';             /*
-artifical terminator. So, restore the original character */
-                                        sep_p = NULL;
-                                }
-
-                                if (!buf1)
-                                {
-                                        PR_Free(srcbuf);
-                                        PR_Free(retbuf);
-                                        return NULL;
-                                }
-                        }
-                        else
-                        {
-                                buf1 = (char *) PR_Malloc(len + 1);
-                                if (!buf1)
-                                {
-                                        PR_Free(srcbuf);
-                                        PR_Free(retbuf);
-                                        return NULL;
-                                }
-                                XP_MEMCPY(buf1, begin, len);
-                                *(buf1 + len) = '\0';
-                        }
-
-                        if (stateful_encoding((const char *) name))//(wincsid & MULTIBYTE)
-                        {
-                                /* converts to Base64 Encoding */
-                                buf2 = (char
-*)intlmime_encode_base64_buf(buf1, PL_strlen(buf1));
-                        }
-                        else
-                        {
-                                /* Converts to Quote Printable Encoding */
-                                buf2 = (char
-*)intlmime_encode_qp_buf(buf1);
-                        }
+      if (stateful_encoding((const char *) name))//(wincsid & MULTIBYTE)
+      {
+        /* converts to Base64 Encoding */
+        buf2 = (char *)intlmime_encode_base64_buf(buf1, PL_strlen(buf1));
+      }
+      else
+      {
+        /* Converts to Quote Printable Encoding */
+        buf2 = (char *)intlmime_encode_qp_buf(buf1);
+      }
 
 
-                        if (buf1 && (buf1 != begin))
-                                PR_Free(buf1);
+      if (buf1 && (buf1 != begin))
+        PR_Free(buf1);
 
-                        if (buf2 == NULL) /* QUIT if memory allocation
-failed */
-                        {
-                                PR_Free(srcbuf);
-                                PR_Free(retbuf);
-                                return NULL;
-                        }
+      if (buf2 == NULL) /* QUIT if memory allocation failed */
+      {
+        PR_Free(srcbuf);
+        PR_Free(retbuf);
+        return NULL;
+      }
 
-                        /* realloc memory for retbuff if necessary,
-                           7: =?...?B?..?=, 3: CR LF TAB */
-                        convlen = PL_strlen(buf2) + PL_strlen(name) + 7;
-                        newsize = convlen + retbuflen + 3 + 2;  /* 2:SEP
-'\0', 3:CRLFTAB */
+      /* realloc memory for retbuff if necessary,
+         7: =?...?B?..?=, 3: CR LF TAB */
+      convlen = PL_strlen(buf2) + PL_strlen(name) + 7;
+      newsize = convlen + retbuflen + 3 + 2;  /* 2:SEP '\0', 3:CRLFTAB */
 
-                        if (newsize > retbufsize)
-                        {
-                                char *tempbuf;
-                                tempbuf = (char *) PR_Realloc(retbuf,
-newsize);
-                                if (tempbuf == NULL)  /* QUIT, if not
-enough memory left */
-                                {
-                                        PR_Free(buf2);
-                                        PR_Free(srcbuf);
-                                        PR_Free(retbuf);
-                                        return NULL;
-                                }
-                                retbuf = tempbuf;
-                                retbufsize = newsize;
-                        }
-                        /* buf1 points to end of current retbuf */
-                        buf1 = retbuf + retbuflen;
-
-                        if ((line_len > 10) &&
-                            ((line_len + convlen) > maxLineLen))
-                        {
-                                *buf1++ = CR;
-                                *buf1++ = LF;
-                                *buf1++ = '\t';
-                                line_len = 0;
-                                iThreshold = default_iThreshold;
-                        }
-                        *buf1 = '\0';
-
-                        /* Add encoding tag for base62 and QP */
-                        PL_strcat(buf1, "=?");
-                        PL_strcat(buf1, name );
-                        if(stateful_encoding((const char *) name)/*wincsid & MULTIBYTE*/)
-                                PL_strcat(buf1, "?B?");
-                        else
-                                PL_strcat(buf1, "?Q?");
-                        PL_strcat(buf1, buf2);
-                        PL_strcat(buf1, "?=");
-
-                        line_len += convlen + 1;  /* 1: SEP */
-
-                        PR_Free(buf2);  /* free base64 buffer */
-                }
-                else  /* if no 8bit data in the block */
-                {
-                        newsize = retbuflen + len + 2 + 3; /* 2: ',''\0',
-3: CRLFTAB */
-                        if (newsize > retbufsize)
-                        {
-                                char *tempbuf;
-                                tempbuf = (char *) PR_Realloc(retbuf,
-newsize);
-                                if (tempbuf == NULL)
-                                {
-                                        PR_Free(srcbuf);
-                                        PR_Free(retbuf);
-                                        return NULL;
-                                }
-                                retbuf = tempbuf;
-                                retbufsize = newsize;
-                        }
-                        buf1 = retbuf + retbuflen;
-
-                        if ((line_len > 10) &&
-                            ((line_len + len) > maxLineLen))
-                        {
-                                *buf1++ = CR;
-                                *buf1++ = LF;
-                                *buf1++ = '\t';
-                                line_len = 0;
-                                iThreshold = default_iThreshold;
-                        }
-                        /* copy buffer from begin to buf1 stripping
-CRLFTAB */
-                        for (p = begin; *p; p++)
-                        {
-                                if (*p == CR || *p == LF || *p == TAB)
-                                        len --;
-                                else
-                                        *buf1++ = *p;
-                        }
-                        *buf1 = '\0';
-                        line_len += len + 1;  /* 1: SEP */
-                }
-
-                buf1 = buf1 + PL_strlen(buf1);
-                if (sep == CR || sep == LF || sep == TAB) /* strip
-CR,LF,TAB */
-                        *buf1 = '\0';
-                else
-                {
-                        *buf1 = sep;
-                        *(buf1+1) = '\0';
-                }
-
-                if (end == NULL)
-                        break;
-                begin = end + 1;
+      if (newsize > retbufsize)
+      {
+        char *tempbuf;
+        tempbuf = (char *) PR_Realloc(retbuf, newsize);
+        if (tempbuf == NULL)  /* QUIT, if not enough memory left */
+        {
+          PR_Free(buf2);
+          PR_Free(srcbuf);
+          PR_Free(retbuf);
+          return NULL;
         }
-        if (srcbuf)
-                PR_Free(srcbuf);
-        return retbuf;
+        retbuf = tempbuf;
+        retbufsize = newsize;
+      }
+      /* buf1 points to end of current retbuf */
+      buf1 = retbuf + retbuflen;
+
+      if ((line_len > 10) &&
+          ((line_len + convlen) > maxLineLen))
+      {
+        *buf1++ = CR;
+        *buf1++ = LF;
+        *buf1++ = '\t';
+        line_len = 0;
+        iThreshold = default_iThreshold;
+      }
+      *buf1 = '\0';
+
+      /* Add encoding tag for base62 and QP */
+      PL_strcat(buf1, "=?");
+      PL_strcat(buf1, name );
+      if(stateful_encoding((const char *) name)/*wincsid & MULTIBYTE*/)
+        PL_strcat(buf1, "?B?");
+      else
+        PL_strcat(buf1, "?Q?");
+      PL_strcat(buf1, buf2);
+      PL_strcat(buf1, "?=");
+
+      line_len += convlen + 1;  /* 1: SEP */
+
+      PR_Free(buf2);  /* free base64 buffer */
+    }
+    else  /* if no 8bit data in the block */
+    {
+      newsize = retbuflen + len + 2 + 3; /* 2: ',''\0', 3: CRLFTAB */
+      if (newsize > retbufsize)
+      {
+        char *tempbuf;
+        tempbuf = (char *) PR_Realloc(retbuf, newsize);
+        if (tempbuf == NULL)
+        {
+          PR_Free(srcbuf);
+          PR_Free(retbuf);
+          return NULL;
+        }
+        retbuf = tempbuf;
+        retbufsize = newsize;
+      }
+      buf1 = retbuf + retbuflen;
+
+      if ((line_len > 10) &&
+          ((line_len + len) > maxLineLen))
+      {
+        *buf1++ = CR;
+        *buf1++ = LF;
+        *buf1++ = '\t';
+        line_len = 0;
+        iThreshold = default_iThreshold;
+      }
+      /* copy buffer from begin to buf1 stripping CRLFTAB */
+      for (p = begin; *p; p++)
+      {
+        if (*p == CR || *p == LF || *p == TAB)
+          len --;
+        else
+          *buf1++ = *p;
+      }
+      *buf1 = '\0';
+      line_len += len + 1;  /* 1: SEP */
+    }
+
+    buf1 = buf1 + PL_strlen(buf1);
+    if (sep == CR || sep == LF || sep == TAB) /* strip CR,LF,TAB */
+      *buf1 = '\0';
+    else
+    {
+      *buf1 = sep;
+      *(buf1+1) = '\0';
+    }
+
+    if (end == NULL)
+      break;
+    begin = end + 1;
+  }
+  if (srcbuf)
+    PR_Free(srcbuf);
+  return retbuf;
 }
 
 /*
-        Latin1, latin2:
-           Source --> Quote Printable --> Encoding Info
-        Japanese:
-           EUC,JIS,SJIS --> JIS --> Base64 --> Encoding Info
-        Others:
-           No conversion
-    flag:   0:   8bit on
-                1:   mime_use_quoted_printable_p
-        return:  NULL  if no conversion occured
+  Latin1, latin2:
+    Source --> Quote Printable --> Encoding Info
+  Japanese:
+    EUC,JIS,SJIS --> JIS --> Base64 --> Encoding Info
+  Others:
+    Use MIME flag:  0:  8bit on
+                    1:  mime_use_quoted_printable_p
+  return: NULL  if no conversion occured
 
 */
 
@@ -808,111 +758,89 @@ static
 char *intl_EncodeMimePartIIStr(char *subject, char *name, PRBool bUseMime, int maxLineLen)
 {
   int16 wincsid = 0;//no longer used
-        int iSrcLen;
-        unsigned char *buf  = NULL;     /* Initial to NULL */
-        int16 mail_csid;
-        CCCDataObject   obj = NULL;
+  int iSrcLen;
+  unsigned char *buf  = NULL;     /* Initial to NULL */
+  int16 mail_csid;
+  CCCDataObject   obj = NULL;
 //        char  *name;
-        CCCFunc cvtfunc = NULL;
+  CCCFunc cvtfunc = NULL;
 
-        if (subject == NULL || *subject == '\0')
-                return NULL;
-
-
-        iSrcLen = PL_strlen(subject);
-        if (wincsid == 0)
-                wincsid = INTL_DefaultWinCharSetID(0) ;
-
-        mail_csid = intlmime_get_outgoing_mime_csid ((int16)wincsid);
- //       name = (char *)INTL_CsidToCharsetNamePt(mail_csid);
-
-        /* check to see if subject are all ascii or not */
-        if(!stateful_encoding((const char *) name) && intlmime_only_ascii_str(subject))
-                return (char *) XP_WordWrapWithPrefix(mail_csid, (unsigned
-char *)
+  if (subject == NULL || *subject == '\0')
+    return NULL;
 
 
-subject, maxLineLen, 0, " ", 1);
+  iSrcLen = PL_strlen(subject);
+  if (wincsid == 0)
+    wincsid = INTL_DefaultWinCharSetID(0) ;
 
-        if (mail_csid != wincsid)
+    mail_csid = intlmime_get_outgoing_mime_csid ((int16)wincsid);
+//       name = (char *)INTL_CsidToCharsetNamePt(mail_csid);
+
+    /* check to see if subject are all ascii or not */
+    if(!stateful_encoding((const char *) name) && intlmime_only_ascii_str(subject))
+      return (char *) XP_WordWrapWithPrefix(mail_csid, (unsigned char *) 
+                                            subject, maxLineLen, 0, " ", 1);
+
+    if (mail_csid != wincsid)
+    {
+      obj = INTL_CreateCharCodeConverter();
+      if (obj == NULL)
+        return 0;
+      /* setup converter from wincsid --> mail_csid */
+      INTL_GetCharCodeConverter((int16)wincsid, mail_csid, obj);
+      /* If we are sending JIS then check the pref setting and
+       * decide if we should convert hankaku (1byte) to zenkaku (2byte) kana.
+       * This flag to be referenced in the converters in euc2jis and sjis2jis.
+       */
+      if (CS_JIS == mail_csid && INTL_GetSendHankakuKana())
+      {
+        INTL_SetCCCCvtflag_SendHankakuKana(obj, PR_TRUE);
+      }
+      cvtfunc = INTL_GetCCCCvtfunc(obj);
+    }
+    /* Erik said in the case of STATEFUL mail encoding, we should FORCE it to use */
+    /* MIME Part2 to get ride of ESC in To: and CC: field, which may introduce more trouble */
+    if((bUseMime) || (mail_csid & STATEFUL))/* call intlmime_encode_mail_address */
+    {
+      buf = (unsigned char *)intlmime_encode_mail_address(name, subject, obj, maxLineLen);
+      if(buf == (unsigned char*)subject)      /* no encoding, set return value to NULL */
+        buf =  NULL;
+    }
+    else
+    { /* 8bit, just do conversion if necessary */
+      /* In this case, since the conversion routine may reuse the origional buffer */
+      /* We better allocate one first- We don't want to reuse the origional buffer */
+
+      if ((mail_csid != wincsid) && (cvtfunc))
+      {
+        char* newbuf = NULL;
+        /* Copy buf to newbuf */
+        StrAllocCopy(&newbuf, subject);
+        if(newbuf != NULL)
         {
-                obj = INTL_CreateCharCodeConverter();
-                if (obj == NULL)
-                        return 0;
-                /* setup converter from wincsid --> mail_csid */
-                INTL_GetCharCodeConverter((int16)wincsid, mail_csid, obj)
-;
-                /* If we are sending JIS then check the pref setting and
-                 * decide if we should convert hankaku (1byte) to zenkaku
-(2byte) kana.
-                 * This flag to be referenced in the converters in euc2jis
-and sjis2jis.
-                 */
-                if (CS_JIS == mail_csid && INTL_GetSendHankakuKana())
-                {
-                        INTL_SetCCCCvtflag_SendHankakuKana(obj, PR_TRUE);
-                }
-                cvtfunc = INTL_GetCCCCvtfunc(obj);
+          buf = (unsigned char *)cvtfunc(obj, (unsigned char*)newbuf, iSrcLen);
+          if(buf != (unsigned char*)newbuf)
+                  PR_Free(newbuf);
+          /* time for wrapping long line */
+          if (buf)
+          {
+            newbuf = (char*) buf;
+            buf = (unsigned char *) XP_WordWrapWithPrefix(mail_csid, (unsigned char *) newbuf, maxLineLen, 0, " ", 1);
+
+            if (buf != (unsigned char*) newbuf)
+              PR_Free(newbuf);
+          }
         }
-        /* Erik said in the case of STATEFUL mail encoding, we should
-FORCE it to use */
-        /* MIME Part2 to get ride of ESC in To: and CC: field, which may
-introduce more trouble */
-        if((bUseMime) || (mail_csid & STATEFUL))/* call
-intlmime_encode_mail_address */
-        {
-                buf = (unsigned char
-*)intlmime_encode_mail_address(name, subject, obj, maxLineLen);
-                if(buf == (unsigned char*)subject)      /* no encoding,
-set return value to NULL */
-                        buf =  NULL;
-        }
-        else
-        {       /* 8bit, just do conversion if necessary */
-                /* In this case, since the conversion routine may reuse
-the origional buffer */
-                /* We better allocate one first- We don't want to reuse
-the origional buffer */
+      }
+    }
+    if (obj)
+      PR_Free(obj);
+    return (char*)buf;
 
-                if ((mail_csid != wincsid) && (cvtfunc))
-                {
-                        char* newbuf = NULL;
-                        /* Copy buf to newbuf */
-                        StrAllocCopy(&newbuf, subject);
-                        if(newbuf != NULL)
-                        {
-                                buf = (unsigned char *)cvtfunc(obj,
-(unsigned char*)newbuf, iSrcLen);
-                                if(buf != (unsigned char*)newbuf)
-                                        PR_Free(newbuf);
-                                /* time for wrapping long line */
-                                if (buf)
-                                {
-                                        newbuf = (char*) buf;
-                                        buf = (unsigned char *)
-XP_WordWrapWithPrefix(mail_csid, (unsigned char *)
-
-
-newbuf, maxLineLen, 0, " ", 1);
-
-                                        if (buf != (unsigned char*)
-newbuf)
-                                                PR_Free(newbuf);
-                                }
-                        }
-                }
-        }
-        if (obj)
-                PR_Free(obj);
-        return (char*)buf;
-
-        /* IMPORTANT NOTE: */
-        /* Return NULL in this interface only mean ther are no conversion
-*/
-        /* It does not mean the conversion is store in the origional
-buffer */
-        /* and the length is not change. This is differ from other
-conversion routine */
+    /* IMPORTANT NOTE: */
+    /* Return NULL in this interface only mean ther are no conversion */
+    /* It does not mean the conversion is store in the origional buffer */
+    /* and the length is not change. This is differ from other conversion routine */
 }
 
 static char *intlmime_decode_qp(char *in)
