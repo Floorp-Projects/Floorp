@@ -755,7 +755,7 @@ if [ test "$MISSING_MOTIF" != "" ]; then
 fi
 
 if [ test "$MISSING_NSPR" != "" ]; then
-    AC_MSG_ERROR([Could not find standard nspr headers or libraries.]);
+    AC_MSG_ERROR([Could not find standard nspr headers or libraries: $MISSING_NSPR]);
 fi
 
 NG_MAKEFILES="
