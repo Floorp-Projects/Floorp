@@ -59,7 +59,6 @@ public:
 /*END interfaces from nsIDOMKeyListener*/
 
 protected:
-  virtual nsresult GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsShift, char *aChar);
   virtual nsresult ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed);
 
 protected:
