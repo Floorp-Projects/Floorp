@@ -294,7 +294,7 @@ nsButtonFrameRenderer::HandleEvent(nsIPresContext& aPresContext,
 	        break;
   }
 
-  aEventStatus = nsEventStatus_eConsumeNoDefault;
+  //aEventStatus = nsEventStatus_eConsumeNoDefault;
 
   return NS_OK;
 }
@@ -584,6 +584,9 @@ nsButtonFrameRenderer::AddFocusBordersAndPadding(nsIPresContext& aPresContext,
  
   aMetrics.width += aBorderPadding.left + aBorderPadding.right;
   aMetrics.height += aBorderPadding.top + aBorderPadding.bottom;
+  
+  aMetrics.ascent = aMetrics.height;
+  aMetrics.descent = 0;
 
  // printf("requested width='%d' height='%d'\n",aMetrics.width, aMetrics.height);
 }

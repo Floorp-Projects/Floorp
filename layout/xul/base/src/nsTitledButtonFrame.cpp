@@ -1009,7 +1009,7 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
 	      break;
   }
 
-  aEventStatus = nsEventStatus_eConsumeNoDefault;
+  //aEventStatus = nsEventStatus_eConsumeNoDefault;
 
   return NS_OK;
 }
