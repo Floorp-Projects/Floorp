@@ -94,9 +94,6 @@
 use diagnostics;
 use strict;
 
-#
-# This are the --LOCAL-- variables defined in 'localconfig'
-# 
 # 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
 # variables from this location.  We don't want these declared here.  They'll
 # automatically get declared in the process of reading in localconfig, and
@@ -410,7 +407,8 @@ LocalVar('opsys', '
         "Mac System 8.0",
         "Mac System 8.5",
         "Mac System 8.6",
-	"Mac System 9.0",
+        "Mac System 9.x",
+        "MacOS X",
         "Linux",
         "BSDI",
         "FreeBSD",
