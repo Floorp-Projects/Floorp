@@ -108,7 +108,6 @@ class nsEditorShell :   public nsIEditorShell,
   	
     nsIPresShell* 	GetPresShellFor(nsIWebShell* aWebShell);
     NS_IMETHOD 			DoEditorMode(nsIWebShell *aWebShell);
-    NS_IMETHOD	 		ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
     NS_IMETHOD			ScrollSelectionIntoView();
     NS_IMETHOD      TransferDocumentStateListeners();

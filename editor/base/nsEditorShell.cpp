@@ -3946,26 +3946,6 @@ void nsEditorShell::SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, co
 }
 #endif
 
-// XXXbe why is this needed?  eliminate
-NS_IMETHODIMP    
-nsEditorShell::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)
-{
-  if (nsnull != aContext) {
-    const char* url = "";
-    PRBool isUndefined = PR_FALSE;
-    nsAutoString rVal;
-
-#ifdef APP_DEBUG
-    char* script_str = aScript.ToNewCString();
-    printf("Executing [%s]\n", script_str);
-    nsCRT::free(script_str);
-#endif
-
-    aContext->EvaluateString(aScript, nsnull, nsnull, url, 0, nsnull, rVal, &isUndefined);
-  } 
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsEditorShell::RunUnitTests()
 {
