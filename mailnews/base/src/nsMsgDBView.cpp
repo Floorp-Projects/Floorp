@@ -2124,6 +2124,9 @@ nsMsgDBView::GetLocationCollationKey(nsIMsgHdr *msgHdr, PRUint8 **result, PRUint
     rv = msgHdr->GetFolder(getter_AddRefs(folder));
     NS_ENSURE_SUCCESS(rv,rv);
 
+    if (!folder)
+      return NS_ERROR_NULL_POINTER;
+
     nsCOMPtr <nsIMsgDatabase> dbToUse;
     rv = folder->GetMsgDatabase(nsnull, getter_AddRefs(dbToUse));
     NS_ENSURE_SUCCESS(rv,rv);

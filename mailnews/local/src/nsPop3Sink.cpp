@@ -186,7 +186,7 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
     rv = GetServerFolder(getter_AddRefs(serverFolder));
     if (NS_FAILED(rv)) return rv;
 
-    rv = m_newMailParser->Init(serverFolder, fileSpec, m_outFileStream);
+    rv = m_newMailParser->Init(serverFolder, m_folder, fileSpec, m_outFileStream);
 	// if we failed to initialize the parser, then just don't use it!!!
 	// we can still continue without one...
     if (NS_FAILED(rv))

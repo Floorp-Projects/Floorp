@@ -520,12 +520,12 @@ NS_IMETHODIMP nsParseMailMessageState::SetEnvelopePos(PRUint32 aEnvelopePos)
 
 NS_IMETHODIMP nsParseMailMessageState::GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader)
 {
-	if (aMsgHeader)
-	{
-		*aMsgHeader = m_newMsgHdr;
-		NS_IF_ADDREF(*aMsgHeader);
-	}
-	return NS_OK;
+  if (aMsgHeader)
+  {
+    *aMsgHeader = m_newMsgHdr;
+    NS_IF_ADDREF(*aMsgHeader);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::ParseAFolderLine(const char *line, PRUint32 lineLength)
@@ -679,14 +679,14 @@ nsParseMailMessageState::IsEnvelopeLine(const char *buf, PRInt32 buf_size)
 // We've found the start of the next message, so finish this one off.
 NS_IMETHODIMP nsParseMailMessageState::FinishHeader()
 {
-	if (m_newMsgHdr)
-	{
-		  m_newMsgHdr->SetMessageKey(m_envelope_pos);
-		  m_newMsgHdr->SetMessageSize(m_position - m_envelope_pos);	// dmb - no longer number of lines.
-		  m_newMsgHdr->SetLineCount(m_body_lines);
-	}
-
-	return NS_OK;
+  if (m_newMsgHdr)
+  {
+    m_newMsgHdr->SetMessageKey(m_envelope_pos);
+    m_newMsgHdr->SetMessageSize(m_position - m_envelope_pos);	// dmb - no longer number of lines.
+    m_newMsgHdr->SetLineCount(m_body_lines);
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::GetAllHeaders(char ** pHeaders, PRInt32 *pHeadersSize)
@@ -1342,7 +1342,7 @@ nsParseNewMailState::nsParseNewMailState()
 NS_IMPL_ISUPPORTS_INHERITED(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
 
 nsresult
-nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream)
+nsParseNewMailState::Init(nsIFolder *rootFolder, nsIMsgFolder *downloadFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream)
 {
     nsresult rv;
 	m_position = folder.GetFileSize();
@@ -1357,7 +1357,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	{
 		nsCOMPtr <nsIFileSpec> dbFileSpec;
 		NS_NewFileSpecWithSpec(folder, getter_AddRefs(dbFileSpec));
-		rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
+		rv = mailDB->OpenFolderDB(downloadFolder, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
 	}
 //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
     if (NS_FAILED(rv)) 
