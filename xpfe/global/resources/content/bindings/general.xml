@@ -177,28 +177,6 @@
       <children includes="menupopup"/>
     </content>
   </binding>
-  
-  <binding id="editor">
-    <implementation>
-      <property name="editorShell"
-                readonly="true"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell"/>
-      <property name="editor"
-                readonly="true"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).editorShell.editor"/>
-      <property name="webNavigation"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIWebNavigation);"
-                readonly="true"/>
-      <property name="contentDocument" readonly="true"
-                onget="return this.webNavigation.document;"/>
-      <property name="docShell"
-                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIEditorBoxObject).docShell;"
-                readonly="true"/>
-      <property name="webBrowserFind"
-                readonly="true"
-                onget="return this.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserFind);"/>
-    </implementation>
-  </binding>
 
   <binding id="iframe">
     <implementation implements="nsIAccessibleProvider">
