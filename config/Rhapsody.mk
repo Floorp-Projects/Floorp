@@ -39,7 +39,18 @@ MOVEMAIL_FLAGS		= -DHAVE_STRERROR
 PORT_FLAGS		= -DSW_THREADS -DHAVE_STDDEF_H -DHAVE_STDLIB_H -DHAVE_FILIO_H -DNTOHL_ENDIAN_H -DMACHINE_ENDIAN_H -DNO_REGEX -DNO_REGCOMP -DHAS_PGNO_T -DNO_TZNAME -DNO_X11
 PDJAVA_FLAGS		=
 
-OS_CFLAGS		= $(PLATFORM_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
+# "Commons" are tentative definitions in a global scope, like this:
+#     int x;
+# The meaning of a common is ambiguous.  It may be a true definition:
+#     int x = 0;
+# or it may be a declaration of a symbol defined in another file:
+#     extern int x;
+# Use the -fno-common option to force all commons to become true
+# definitions so that the linker can catch multiply-defined symbols.
+# Also, common symbols are not allowed with Rhapsody dynamic libraries.
+DSO_FLAGS		= -fno-common
+
+OS_CFLAGS		= $(PLATFORM_FLAGS) $(DSO_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
 
 ######################################################################
 # Version-specific stuff
@@ -53,7 +64,12 @@ CC			= /bin/cc
 CCC			= /bin/cc++
 EMACS			= /usr/bin/true
 PERL			= /usr/bin/true
-RANLIB			= /bin/libtool
+AR              = /bin/libtool -static -o $@
+RANLIB			= /usr/bin/true
+
+# Comment out MKSHLIB to build only static libraries.
+MKSHLIB                 = $(CC) -arch ppc -dynamiclib -compatibility_version 1 -current_version 1 -all_load
+DLL_SUFFIX              = dylib
 
 ######################################################################
 # Other
