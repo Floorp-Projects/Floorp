@@ -117,8 +117,8 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mCancel(PR_FALSE),
     mJustStartedLoading(PR_TRUE),
     mCompleted(PR_FALSE),
-    mPersistResult(NS_OK),
-    mPersistFlags(PERSIST_FLAGS_NONE)
+    mPersistFlags(PERSIST_FLAGS_NONE),
+    mPersistResult(NS_OK)
 {
     NS_INIT_REFCNT();
 }
@@ -972,7 +972,7 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     rv = data->mDataPath->Clone(getter_AddRefs(fileAsFile));
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
     nsCOMPtr<nsILocalFile> file = do_QueryInterface(fileAsFile);
-    file->AppendRelativePath(filename);
+    file->AppendRelativePath(filename.get());
 
     rv = pthis->SaveURIInternal(uri, nsnull, file, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
@@ -1207,7 +1207,7 @@ nsWebBrowserPersist::StoreURIAttribute(
         attrNode->GetNodeValue(oldValue);
         nsCString oldCValue; oldCValue.AssignWithConversion(oldValue);
         URIData *data = nsnull;
-        MakeAndStoreLocalFilenameInURIMap(oldCValue, aNeedsPersisting, &data);
+        MakeAndStoreLocalFilenameInURIMap(oldCValue.get(), aNeedsPersisting, &data);
         if (aData)
         {
             *aData = data;
@@ -1270,7 +1270,7 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode, char *aAttribute)
                 nsCAutoString rawPathURL;
                 rawPathURL.Assign(data->mRelativePathToData);
                 rawPathURL.Append(filename.get());
-                newValue.AssignWithConversion(nsEscape(rawPathURL, url_Path));
+                newValue.AssignWithConversion(nsEscape(rawPathURL.get(), url_Path));
             }
             else
             {
@@ -1407,7 +1407,7 @@ nsWebBrowserPersist::SaveDocumentToFileWithFixup(
     nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
     contractID.AppendWithConversion(aFormatType);
     
-    nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID, &rv);
+    nsCOMPtr<nsIDocumentEncoder> encoder = do_CreateInstance(contractID.get(), &rv);
     if (NS_FAILED(rv))
       return rv;
 
