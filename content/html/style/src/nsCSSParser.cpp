@@ -3607,7 +3607,7 @@ inline static PRBool
 css_RequiresAbsoluteURI(const nsString& uri)
 {
   // cheap shot at figuring out if this requires an absolute url translation
-  return Substring(uri, 0, 9).Equals(NS_LITERAL_STRING("chrome:")) == PR_FALSE;
+  return !StringBeginsWith(uri, NS_LITERAL_STRING("chrome:"));
 }
 
 PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
@@ -3622,14 +3622,11 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       // the style sheet.
       // XXX editors won't like this - too bad for now
       nsAutoString absURL;
+      nsresult rv = NS_ERROR_FAILURE;
       if (mURL && css_RequiresAbsoluteURI(tk->mIdent)) {
-        nsresult rv;
         rv = NS_MakeAbsoluteURI(absURL, tk->mIdent, mURL);
-        if (NS_FAILED(rv)) {
-          absURL = tk->mIdent;
-        }
       }
-      else {
+      if (NS_FAILED(rv)) {
         absURL = tk->mIdent;
       }
       if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
