@@ -481,6 +481,28 @@ public:
     NS_IMETHOD
     Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount); 
 
+    /**
+     * Writes data into the stream from an input stream.
+     * Implementer's note: This method is defined by this interface in order
+     * to allow the output stream to efficiently copy the data from the input
+     * stream into its internal buffer (if any). If this method was provide
+     * as an external facility, a separate char* buffer would need to be used
+     * in order to call the output stream's other Write method.
+     * @param fromStream the stream from which the data is read
+     * @param aWriteCount out parameter to hold the number of
+     *         bytes written. if an error occurs, the writecount
+     *         is undefined
+     *  @return error status
+     */
+    NS_IMETHOD
+    Write(nsIInputStream* fromStream, PRUint32 *aWriteCount);
+
+    /**
+     * Flushes the stream.
+     */
+    NS_IMETHOD
+    Flush(void);
+
     //////////////////////////////////////////////////////////////////////////
     //
     // Specific methods to nsIPluginManagerStream.
@@ -2263,6 +2285,34 @@ CPluginManagerStream::Write(const char* buffer, PRUint32 len, PRUint32 *aWriteCo
 
     *aWriteCount = NPN_Write(npp, pstream, len, (void* )buffer);
     return *aWriteCount >= 0 ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_METHOD
+CPluginManagerStream::Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
+{
+	nsresult rv = fromStream->GetLength(aWriteCount);
+	if (rv == NS_OK) {
+		char buffer[1024];
+		PRUint32 len = *aWriteCount;
+		while (len > 0) {		
+			PRUint32 count = (len < sizeof(buffer) ? len : sizeof(buffer));
+			rv = fromStream->Read(buffer, count, &count);
+			if (rv == NS_OK)
+				rv = Write(buffer, count, &count);
+			if (rv != NS_OK) {
+				*aWriteCount -= len;
+				break;
+			}
+			len -= count;
+		}
+	}
+	return rv;
+}
+
+NS_METHOD
+CPluginManagerStream::Flush()
+{
+	return NS_OK;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
