@@ -151,6 +151,84 @@ public class Interpreter
     // Last icode
         MIN_ICODE                       = -52;
 
+    // data for parsing
+
+    private CompilerEnvirons compilerEnv;
+
+    private boolean itsInFunctionFlag;
+
+    private InterpreterData itsData;
+    private ScriptOrFnNode scriptOrFn;
+    private int itsICodeTop;
+    private int itsStackDepth;
+    private int itsWithDepth;
+    private int itsLineNumber;
+    private int itsDoubleTableTop;
+    private ObjToIntMap itsStrings = new ObjToIntMap(20);
+    private int itsLocalTop;
+
+    private static final int MIN_LABEL_TABLE_SIZE = 32;
+    private static final int MIN_FIXUP_TABLE_SIZE = 40;
+    private int[] itsLabelTable;
+    private int itsLabelTableTop;
+// itsFixupTable[i] = (label_index << 32) | fixup_site
+    private long[] itsFixupTable;
+    private int itsFixupTableTop;
+    private ObjArray itsLiteralIds = new ObjArray();
+
+    private int itsExceptionTableTop;
+    // 5 = space for try start/end, catch begin, finally begin and with depth
+    private static final int EXCEPTION_SLOT_SIZE       = 6;
+    private static final int EXCEPTION_TRY_START_SLOT  = 0;
+    private static final int EXCEPTION_TRY_END_SLOT    = 1;
+    private static final int EXCEPTION_CATCH_SLOT      = 2;
+    private static final int EXCEPTION_FINALLY_SLOT    = 3;
+    private static final int EXCEPTION_WITH_DEPTH_SLOT = 4;
+    private static final int EXCEPTION_LOCAL_SLOT      = 5;
+
+    private static final Object DBL_MRK = new Object();
+
+
+    private static class State
+    {
+        State callerState;
+
+        InterpretedFunction fnOrScript;
+        InterpreterData idata;
+
+// Stack structure
+// stack[0 <= i < localShift]: variables
+// stack[localShift <= i <= emptyStackTop]: used for local temporaries
+// stack[emptyStackTop < i < stack.length]: stack data
+// sDbl[i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
+
+        Object[] stack;
+        double[] sDbl;
+        int localShift;
+        int emptyStackTop;
+
+        DebugFrame debuggerFrame;
+        boolean useActivation;
+        Scriptable thisObj;
+
+        Scriptable[] scriptRegExps;
+
+        State savedInterpreterLineCounting;
+
+// The values that change during interpretation
+
+        Object result;
+        double resultDbl;
+        int pc;
+        int pcPrevBranch;
+        int pcSourceLineStart;
+        int withDepth;
+        Scriptable scope;
+
+        int savedStackTop;
+        int savedCallOp;
+    }
+
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
 
@@ -1915,45 +1993,6 @@ public class Interpreter
                                    parent.evalScriptFlag);
     }
 
-    static class State
-    {
-        State callerState;
-
-        InterpretedFunction fnOrScript;
-        InterpreterData idata;
-
-// Stack structure
-// stack[0 <= i < localShift]: variables
-// stack[localShift <= i <= emptyStackTop]: used for local temporaries
-// stack[emptyStackTop < i < stack.length]: stack data
-// sDbl[i]: if stack[i] is DBL_MRK, sDbl[i] holds the number value
-
-        Object[] stack;
-        double[] sDbl;
-        int localShift;
-        int emptyStackTop;
-
-        DebugFrame debuggerFrame;
-        boolean useActivation;
-        Scriptable thisObj;
-
-        Scriptable[] scriptRegExps;
-
-        State savedInterpreterLineCounting;
-
-// The values that change during interpretation
-
-        Object result;
-        int pc;
-        int pcPrevBranch;
-        int pcSourceLineStart;
-        int withDepth;
-        Scriptable scope;
-
-        int savedStackTop;
-        int savedCallOp;
-    }
-
     static Object interpret(InterpretedFunction ifun,
                             Context cx, Scriptable scope,
                             Scriptable thisObj, Object[] args)
@@ -1976,7 +2015,8 @@ public class Interpreter
         initState(cx, scope, thisObj, args, null, 0, args.length,
                   ifun, state);
         interpret(cx, state);
-        return state.result;
+        return (state.result != DBL_MRK)
+            ? state.result : doubleWrap(state.resultDbl);
     }
 
     private static void interpret(Context cx, State state)
@@ -2118,7 +2158,7 @@ switch (op) {
         continue Loop;
     case Icode_POP_RESULT :
         state.result = stack[stackTop];
-        if (state.result == DBL_MRK) state.result = doubleWrap(sDbl[stackTop]);
+        state.resultDbl = sDbl[stackTop];
         stack[stackTop] = null;
         --stackTop;
         continue Loop;
@@ -2145,7 +2185,7 @@ switch (op) {
     }
     case Token.RETURN :
         state.result = stack[stackTop];
-        if (state.result == DBL_MRK) state.result = doubleWrap(sDbl[stackTop]);
+        state.resultDbl = sDbl[stackTop];
         --stackTop;
         break Loop;
     case Token.RETURN_RESULT :
@@ -3045,10 +3085,12 @@ switch (op) {
             releaseState(cx, state, null);
             if (state.callerState != null) {
                 Object calleeResult = state.result;
+                double calleeResultDbl = state.resultDbl;
                 state = state.callerState;
 
                 if (state.savedCallOp == Token.CALL) {
                     state.stack[state.savedStackTop] = calleeResult;
+                    state.sDbl[state.savedStackTop] = calleeResultDbl;
                 } else if (state.savedCallOp == Token.NEW) {
                     // If construct returns scriptable,
                     // then it replaces on stack top saved original instance
@@ -3543,38 +3585,4 @@ switch (op) {
         }
     }
 
-    private CompilerEnvirons compilerEnv;
-
-    private boolean itsInFunctionFlag;
-
-    private InterpreterData itsData;
-    private ScriptOrFnNode scriptOrFn;
-    private int itsICodeTop;
-    private int itsStackDepth;
-    private int itsWithDepth;
-    private int itsLineNumber;
-    private int itsDoubleTableTop;
-    private ObjToIntMap itsStrings = new ObjToIntMap(20);
-    private int itsLocalTop;
-
-    private static final int MIN_LABEL_TABLE_SIZE = 32;
-    private static final int MIN_FIXUP_TABLE_SIZE = 40;
-    private int[] itsLabelTable;
-    private int itsLabelTableTop;
-// itsFixupTable[i] = (label_index << 32) | fixup_site
-    private long[] itsFixupTable;
-    private int itsFixupTableTop;
-    private ObjArray itsLiteralIds = new ObjArray();
-
-    private int itsExceptionTableTop;
-    // 5 = space for try start/end, catch begin, finally begin and with depth
-    private static final int EXCEPTION_SLOT_SIZE       = 6;
-    private static final int EXCEPTION_TRY_START_SLOT  = 0;
-    private static final int EXCEPTION_TRY_END_SLOT    = 1;
-    private static final int EXCEPTION_CATCH_SLOT      = 2;
-    private static final int EXCEPTION_FINALLY_SLOT    = 3;
-    private static final int EXCEPTION_WITH_DEPTH_SLOT = 4;
-    private static final int EXCEPTION_LOCAL_SLOT      = 5;
-
-    private static final Object DBL_MRK = new Object();
 }
