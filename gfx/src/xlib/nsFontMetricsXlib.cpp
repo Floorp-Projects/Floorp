@@ -905,7 +905,8 @@ DoubleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
   // XXX do high-bit if font requires it
   return count;
 }
-
+static nsFontCharSetInfo CP1251 =
+{ "windows-1251", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88591 =
 { "iso-8859-1", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88592 =
@@ -928,6 +929,8 @@ static nsFontCharSetInfo ISO885915 =
 { "iso-8859-15", SingleByteConvert, 0 };
 static nsFontCharSetInfo JISX0201 =
 { "jis_0201", SingleByteConvert, 1 };
+static nsFontCharSetInfo KOI8R =
+{ "KOI8-R", SingleByteConvert, 0 };
 static nsFontCharSetInfo Big5 =
 { "x-x-big5", DoubleByteConvert, 1 };
 static nsFontCharSetInfo CNS116431 =
@@ -982,7 +985,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "cns11643.1992-2",    &CNS116432     },
   { "cns11643.1992-3",    &Ignore        },
   { "cns11643.1992-4",    &Ignore        },
-  { "cp1251-1",           &Ignore        },
+  { "cp1251-1",           &CP1251        },
   { "dec-dectech",        &Ignore        },
   { "dtsymbol-1",         &Ignore        },
   { "fontspecific-0",     &Ignore        },
@@ -1027,7 +1030,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "jisx0208.1983-0",    &JISX0208      },
   { "jisx0208.1990-0",    &JISX0208      },
   { "jisx0212.1990-0",    &JISX0212      },
-  { "koi8-r",             &Ignore        },
+  { "koi8-r",             &KOI8R         },
   { "ksc5601.1987-0",     &KSC5601       },
   { "misc-fontspecific",  &Ignore        },
   { "sgi-fontspecific",   &Ignore        },
