@@ -243,7 +243,7 @@ CSSStyleRuleCollection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 //
 // CSSStyleRuleCollection class initialization
 //
-nsresult NS_InitCSSStyleRuleCollectionClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitCSSStyleRuleCollectionClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

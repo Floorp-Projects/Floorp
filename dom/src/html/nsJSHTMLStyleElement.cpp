@@ -244,7 +244,7 @@ HTMLStyleElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 //
 // HTMLStyleElement class initialization
 //
-nsresult NS_InitHTMLStyleElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLStyleElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

@@ -354,7 +354,7 @@ HTMLFrameElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 //
 // HTMLFrameElement class initialization
 //
-nsresult NS_InitHTMLFrameElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLFrameElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

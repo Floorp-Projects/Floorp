@@ -180,7 +180,7 @@ public:
   NS_IMETHOD    Click() { return _to##Click(); }  \
 
 
-extern nsresult NS_InitHTMLInputElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLInputElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLInputElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

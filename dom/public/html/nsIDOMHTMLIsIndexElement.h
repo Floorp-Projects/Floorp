@@ -55,7 +55,7 @@ public:
   NS_IMETHOD    SetPrompt(const nsString& aPrompt) { return _to##SetPrompt(aPrompt); } \
 
 
-extern nsresult NS_InitHTMLIsIndexElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLIsIndexElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLIsIndexElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

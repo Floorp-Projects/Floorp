@@ -2882,7 +2882,7 @@ CSS2Properties(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 //
 // CSS2Properties class initialization
 //
-nsresult NS_InitCSS2PropertiesClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitCSS2PropertiesClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

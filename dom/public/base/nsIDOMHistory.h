@@ -70,7 +70,7 @@ public:
   NS_IMETHOD    Go(PRInt32 aIndex) { return _to##Go(aIndex); }  \
 
 
-extern nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHistory(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

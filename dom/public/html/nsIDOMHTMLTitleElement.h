@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetText(const nsString& aText) { return _to##SetText(aText); } \
 
 
-extern nsresult NS_InitHTMLTitleElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLTitleElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLTitleElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetWidth(PRInt32 aWidth) { return _to##SetWidth(aWidth); } \
 
 
-extern nsresult NS_InitHTMLPreElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLPreElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLPreElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -205,7 +205,7 @@ HTMLPreElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 //
 // HTMLPreElement class initialization
 //
-nsresult NS_InitHTMLPreElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLPreElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

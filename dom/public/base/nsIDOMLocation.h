@@ -111,7 +111,7 @@ public:
   NS_IMETHOD    ToString(nsString& aReturn) { return _to##ToString(aReturn); }  \
 
 
-extern nsresult NS_InitLocationClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitLocationClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptLocation(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

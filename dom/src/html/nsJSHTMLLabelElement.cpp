@@ -237,7 +237,7 @@ HTMLLabelElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 //
 // HTMLLabelElement class initialization
 //
-nsresult NS_InitHTMLLabelElementClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitHTMLLabelElementClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    SetType(const nsString& aType) { return _to##SetType(aType); } \
 
 
-extern nsresult NS_InitHTMLUListElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLUListElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLUListElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -127,7 +127,7 @@ public:
   NS_IMETHOD    Focus() { return _to##Focus(); }  \
 
 
-extern nsresult NS_InitHTMLSelectElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLSelectElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLSelectElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

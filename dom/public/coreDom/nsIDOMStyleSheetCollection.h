@@ -51,7 +51,7 @@ public:
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn) { return _to##Item(aIndex, aReturn); }  \
 
 
-extern nsresult NS_InitStyleSheetCollectionClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitStyleSheetCollectionClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptStyleSheetCollection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

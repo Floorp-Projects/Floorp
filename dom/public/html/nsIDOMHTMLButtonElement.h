@@ -87,7 +87,7 @@ public:
   NS_IMETHOD    SetValue(const nsString& aValue) { return _to##SetValue(aValue); } \
 
 
-extern nsresult NS_InitHTMLButtonElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLButtonElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLButtonElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

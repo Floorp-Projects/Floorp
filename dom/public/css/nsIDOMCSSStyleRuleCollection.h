@@ -51,7 +51,7 @@ public:
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMCSSStyleRule** aReturn) { return _to##Item(aIndex, aReturn); }  \
 
 
-extern nsresult NS_InitCSSStyleRuleCollectionClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCSSStyleRuleCollectionClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptCSSStyleRuleCollection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

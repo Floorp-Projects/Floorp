@@ -43,7 +43,7 @@ public:
 #define NS_FORWARD_IDOMCOMMENT(_to)  \
 
 
-extern nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptComment(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

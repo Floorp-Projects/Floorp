@@ -614,7 +614,7 @@ Node(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // Node class initialization
 //
-nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetVersion(const nsString& aVersion) { return _to##SetVersion(aVersion); } \
 
 
-extern nsresult NS_InitHTMLHtmlElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLHtmlElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLHtmlElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -135,7 +135,7 @@ public:
   NS_IMETHOD    Focus() { return _to##Focus(); }  \
 
 
-extern nsresult NS_InitHTMLAnchorElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLAnchorElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLAnchorElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -243,7 +243,7 @@ StyleSheetCollection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 //
 // StyleSheetCollection class initialization
 //
-nsresult NS_InitStyleSheetCollectionClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitStyleSheetCollectionClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

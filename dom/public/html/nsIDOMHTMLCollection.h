@@ -55,7 +55,7 @@ public:
   NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to##NamedItem(aName, aReturn); }  \
 
 
-extern nsresult NS_InitHTMLCollectionClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLCollectionClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLCollection(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

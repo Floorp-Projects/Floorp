@@ -815,7 +815,7 @@ Event(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 //
 // Event class initialization
 //
-nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype)
+extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;

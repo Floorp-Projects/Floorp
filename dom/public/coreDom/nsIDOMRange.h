@@ -143,7 +143,7 @@ public:
   NS_IMETHOD    ToString(nsString& aReturn) { return _to##ToString(aReturn); }  \
 
 
-extern nsresult NS_InitRangeClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitRangeClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptRange(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

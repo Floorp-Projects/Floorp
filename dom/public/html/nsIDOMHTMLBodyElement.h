@@ -85,7 +85,7 @@ public:
   NS_IMETHOD    SetVLink(const nsString& aVLink) { return _to##SetVLink(aVLink); } \
 
 
-extern nsresult NS_InitHTMLBodyElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLBodyElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLBodyElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

@@ -71,7 +71,7 @@ public:
   NS_IMETHOD    SetValueType(const nsString& aValueType) { return _to##SetValueType(aValueType); } \
 
 
-extern nsresult NS_InitHTMLParamElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLParamElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLParamElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

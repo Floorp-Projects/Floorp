@@ -57,7 +57,7 @@ public:
   NS_IMETHOD    SetValue(PRInt32 aValue) { return _to##SetValue(aValue); } \
 
 
-extern nsresult NS_InitHTMLLIElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLLIElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLLIElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 

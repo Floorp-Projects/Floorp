@@ -50,7 +50,7 @@ public:
   NS_IMETHOD    SetCite(const nsString& aCite) { return _to##SetCite(aCite); } \
 
 
-extern nsresult NS_InitHTMLQuoteElementClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitHTMLQuoteElementClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptHTMLQuoteElement(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
