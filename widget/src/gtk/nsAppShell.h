@@ -53,8 +53,6 @@ class nsAppShell : public nsIAppShell
   private:
     nsDispatchListener	*mDispatchListener;
 
-  protected:
-      nsIEventQueueService * mEventQService;
 };
 
 #endif // nsAppShell_h__
