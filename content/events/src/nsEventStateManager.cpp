@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  */
+#define FORCE_PR_LOG
+
 #include "nsCOMPtr.h"
 #include "nsIEventStateManager.h"
 #include "nsEventStateManager.h"
@@ -63,13 +65,10 @@
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIObserverService.h"
 
-#undef DEBUG_scroll            // define to see ugly mousewheel messages
-
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
 
 nsIFrame * gCurrentlyFocusedTargetFrame = 0; 
 nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong mCurrentFocus
@@ -77,6 +76,8 @@ nsIContent * gCurrentlyFocusedContent = 0; // Weak because it mirrors the strong
 nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
+
+PRLogModuleInfo *MOUSEWHEEL;
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
 
@@ -121,6 +122,8 @@ nsEventStateManager::nsEventStateManager()
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
+  if (!MOUSEWHEEL)
+    MOUSEWHEEL = PR_NewLogModule("MOUSEWHEEL");
 }
 
 NS_IMETHODIMP
@@ -2350,30 +2353,18 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* aPresContext)
   aPresContext->GetShell(getter_AddRefs(presShell));
     
   if (nsnull == presShell) {
-#ifdef DEBUG_scroll
-    printf("GetDocumentFrame: Got a null PresShell\n");
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetDocumentFrame: Got a null PresShell\n"));
     return nsnull;
   }
 
   presShell->GetDocument(&aDocument);
   presShell->GetPrimaryFrameFor(aDocument->GetRootContent(), &aFrame);
 
-#ifdef DEBUG_scroll
-  printf("GetDocumentFrame: aDocument = %p, aFrame = %p\n", aDocument, aFrame);
-  printf("GetDocumentFrame: aDocument.parent=%p\n",
-         aDocument->GetParentDocument());
-#endif
-
   aFrame->GetView(aPresContext, &aView);
-#ifdef DEBUG_scroll
-  printf("GetDocumentFrame: got document view = %p\n", aView);
-#endif
+  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetDocumentFrame: got document view = %p\n", aView));
 
   if (!aView) {
-#ifdef DEBUG_scroll
-    printf("GetDocumentFrame: looking for a parent with a view\n");
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetDocumentFrame: looking for a parent with a view\n"));
     aFrame->GetParentWithView(aPresContext, &aFrame);
   }
 
@@ -2391,10 +2382,7 @@ nsEventStateManager::GetScrollableFrameOrView(nsIScrollableView* &sv,
                                               nsIView* &focusView)
 {
   NS_ASSERTION(mPresContext, "ESM has a null prescontext");
-#ifdef DEBUG_scroll
-  printf("GetScrollableFrameOrView: gLastFocusedContent = %p\n",
-         gLastFocusedContent);
-#endif
+  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: gLastFocusedContent=%p\n", gLastFocusedContent));
 
   nsIFrame* focusFrame = nsnull;
   nsCOMPtr<nsIPresShell> presShell;
@@ -2409,21 +2397,15 @@ nsEventStateManager::GetScrollableFrameOrView(nsIScrollableView* &sv,
 
   presShell->GetPrimaryFrameFor(gLastFocusedContent, &focusFrame);
   if (focusFrame) {
-#ifdef DEBUG_scroll
-    printf("got focusFrame\n");
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got focusFrame\n"));
     focusFrame->GetView(mPresContext, &focusView);
   }
 
   if (focusView) {
-#ifdef DEBUG_scroll
-    printf("got focusView\n");
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got focusView\n"));
     sv = GetNearestScrollingView(focusView);
     if (sv) {
-#ifdef DEBUG_scroll
-      printf("got scrollingView\n");
-#endif
+      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got scrollingView\n"));
       sf = nsnull;
       return NS_OK; // success
     }
@@ -2431,10 +2413,8 @@ nsEventStateManager::GetScrollableFrameOrView(nsIScrollableView* &sv,
 
   if (focusFrame)
     sf = GetParentSelfScrollingFrame(focusFrame);
-#ifdef DEBUG_scroll
   if (sf)
-    printf("got SSF\n");
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got sf\n"));
   return NS_OK;
 }
 
@@ -2475,16 +2455,11 @@ nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
       return NS_OK;
     }
 
-#ifdef DEBUG_scroll
-  printf("------------------------\n");
-  printf("GetScrollableFrameOrView: aTargetFrame = %p, aView = %p\n",
-         aTargetFrame, aView);
-#endif
+  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("------------------------\n"));
+  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: aTargetFrame = %p, aView = %p\n", aTargetFrame, aView));
           
   if (mCurrentFocus) {
-#ifdef DEBUG_scroll
-    printf("GetScrollableFrameOrView: mCurrentFocus = %p\n", mCurrentFocus);
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: mCurrentFocus = %p\n", mCurrentFocus));
     
     presShell->GetPrimaryFrameFor(mCurrentFocus, &focusFrame);
     if (focusFrame)
@@ -2496,11 +2471,9 @@ nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
       // The focused frame doesn't have a view
       // Revert to the parameters passed in
       // XXX this might not be right
-      
-#ifdef DEBUG_scroll
-      printf("GetScrollableFrameOrView: Could not get a view for the focused frame\n");
-#endif
-      
+
+      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Couldn't get a view for focused frame"));
+
       focusFrame = aTargetFrame;
       focusView = aView;
     }
@@ -2508,60 +2481,45 @@ nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* aPresContext,
     // Focus is null.  This means the main document has the focus,
     // and we should scroll that.
     
-#ifdef DEBUG_scroll
-    printf("GetScrollableFrameOrView: mCurrentFocus = NULL\n");
-#endif
-    
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: mCurrentFocus = NULL\n"));
+
     // If we can get an nsISelfScrollingFrame, that is preferable to getting
     // the document view
 
     sf = GetParentSelfScrollingFrame(aTargetFrame);
-#ifdef DEBUG_scroll
     if (sf)
-      printf("GetScrollableFrameOrView: Found a SelfScrollingFrame: sf = %p\n", sf);
-#endif
-    if (!sf) {
+      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Found a SelfScrollingFrame: sf = %p\n", sf));
+    else {
       focusFrame = GetDocumentFrame(aPresContext);
       focusFrame->GetView(aPresContext, &focusView);
-      
-#ifdef DEBUG_scroll
+
       if (focusView)
-        printf("GetScrollableFrameOrView: Got view for document frame!\n");
-      else      // hopefully we won't be here
-        printf("GetScrollableFrameOrView: Couldn't get view for document frame\n");
-#endif
+        PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Got view for document frame!\n"));
+      else
+        PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Couldn't get view for document frame\n"));
       
     }
   }
 
-#ifdef DEBUG_scroll
-  printf("GetScrollableFrameOrView: focusFrame = %p, focusView = %p\n",
-         focusFrame, focusView);
-#endif
+  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: focusFrame=%p, focusView=%p\n", focusFrame, focusView));
   
   if (focusView)
     sv = GetNearestScrollingView(focusView);
 
   if (sv) {
-#ifdef DEBUG_scroll
-    printf("GetScrollableFrameOrView: Found a ScrollingView\n");
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Found a ScrollingView\n"));
 
    // We can stop now
     sf = nsnull;
     return NS_OK;
   }
   else {
-#ifdef DEBUG_scroll
-    printf("GetScrollableFrameOrView: No scrolling view, looking for a scrolling frame\n");
-#endif
+    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: No scrolling view, looking for scrolling frame\n"));
     if (!sf)
       sf = GetParentSelfScrollingFrame(aTargetFrame);
 
-#ifdef DEBUG_scroll
     if (sf)
-      printf("GetScrollableFrameOrView: Found a scrolling frame\n");
-#endif
+      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Found a scrolling frame\n"));
 
     sv = nsnull;
     focusView = nsnull;
