@@ -26,7 +26,6 @@
 
 #include "nsRange.h"
 
-#include "nsIDOMRange.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
@@ -58,6 +57,15 @@ nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewGenRegularIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
+
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  utility functions (some exposed through nsRangeUtils, below
+#pragma mark -
+#endif
+
+
 /******************************************************
  * stack based utilty class for managing monitor
  ******************************************************/
@@ -70,22 +78,9 @@ class nsAutoRangeLock
 };
 
 
-/******************************************************
- * non members
- ******************************************************/
-
-nsresult
-NS_NewRange(nsIDOMRange** aInstancePtrResult)
-{
-  nsRange * range = new nsRange();
-  if (range)
-    return range->QueryInterface(NS_GET_IID(nsIDOMRange), (void**) aInstancePtrResult);
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
 
 // Returns -1 if point1 < point2, 1, if point1 > point2,
-// 0 if error or if point1 == point2.
+// 0 if error or if point1 == point2. 
 PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                       nsIDOMNode* aParent2, PRInt32 aOffset2)
 {
@@ -155,7 +150,7 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
 // If outNodeAfter is returned true, then the node ends after the range does.
 // Note that both of the above might be true.
 // If neither are true, the node is contained inside of the range.
-// XXX - callers responsibility to ensure node in same doc as range!
+// XXX - callers responsibility to ensure node in same doc as range! 
 nsresult CompareNodeToRange(nsIContent* aNode, 
                         nsIDOMRange* aRange,
                         PRBool *outNodeBefore,
@@ -268,6 +263,125 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   return PR_TRUE;
 }
 
+
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  class nsRangeUtils
+#pragma mark -
+#endif
+
+
+/******************************************************
+ * non members
+ ******************************************************/
+
+nsresult
+NS_NewRangeUtils(nsIRangeUtils** aResult)
+{
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  nsRangeUtils* rangeUtil = new nsRangeUtils();
+  if (rangeUtil)
+    return rangeUtil->QueryInterface(NS_GET_IID(nsIRangeUtils), (void**) aResult);
+  return NS_ERROR_OUT_OF_MEMORY;
+}
+
+/******************************************************
+ * constructor/destructor
+ ******************************************************/
+
+nsRangeUtils::nsRangeUtils()
+{
+  NS_INIT_REFCNT();
+} 
+
+nsRangeUtils::~nsRangeUtils() 
+{
+} 
+
+/******************************************************
+ * nsISupports
+ ******************************************************/
+ 
+NS_IMPL_ADDREF(nsRangeUtils)
+NS_IMPL_RELEASE(nsRangeUtils)
+
+nsresult nsRangeUtils::QueryInterface(const nsIID& aIID,
+                                     void** aInstancePtrResult)
+{
+  NS_PRECONDITION(aInstancePtrResult, "null pointer");
+  if (!aInstancePtrResult) 
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kISupportsIID)) 
+  {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIRangeUtils *)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIRangeUtils))) 
+  {
+    *aInstancePtrResult = (void*)(nsIRangeUtils*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+
+/******************************************************
+ * nsIRangeUtils methods
+ ******************************************************/
+ 
+NS_IMETHODIMP_(PRInt32) 
+nsRangeUtils::ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                                     nsIDOMNode* aParent2, PRInt32 aOffset2)
+{
+  return ::ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsRangeUtils::IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
+{
+  return ::IsNodeIntersectsRange( aNode,  aRange);
+}
+
+NS_IMETHODIMP
+nsRangeUtils::CompareNodeToRange(nsIContent* aNode, 
+                                nsIDOMRange* aRange,
+                                PRBool *outNodeBefore,
+                                PRBool *outNodeAfter)
+{
+  return ::CompareNodeToRange(aNode, aRange, outNodeBefore, outNodeAfter);
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  class nsRange
+#pragma mark -
+#endif
+
+
+/******************************************************
+ * non members
+ ******************************************************/
+
+nsresult
+NS_NewRange(nsIDOMRange** aResult)
+{
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (! aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  nsRange * range = new nsRange();
+  if (range)
+    return range->QueryInterface(NS_GET_IID(nsIDOMRange), (void**) aResult);
+  return NS_ERROR_OUT_OF_MEMORY;
+}
 /******************************************************
  * constructor/destructor
  ******************************************************/

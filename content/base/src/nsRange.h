@@ -27,6 +27,7 @@
  */
 
 #include "nsIDOMRange.h"
+#include "nsIRangeUtils.h"
 #include "nsIDOMNSRange.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMDocumentFragment.h"
@@ -36,6 +37,30 @@
 #include "prmon.h"
 
 class nsVoidArray;
+
+// -------------------------------------------------------------------------------
+
+class nsRangeUtils : public nsIRangeUtils
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsRangeUtils();
+  virtual ~nsRangeUtils();
+
+  // nsIRangeUtils interface
+  NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                                     nsIDOMNode* aParent2, PRInt32 aOffset2);
+                               
+  NS_IMETHOD_(PRBool) IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
+  
+  NS_IMETHOD CompareNodeToRange(nsIContent* aNode, 
+                                nsIDOMRange* aRange,
+                                PRBool *outNodeBefore,
+                                PRBool *outNodeAfter);
+};
+
+// -------------------------------------------------------------------------------
 
 class nsRange : public nsIDOMRange,
                 public nsIDOMNSRange,
@@ -194,6 +219,9 @@ public:
 
 // Make a new nsIDOMRange object
 nsresult NS_NewRange(nsIDOMRange** aInstancePtrResult);
+
+// Make a new nsIRangeUtils object
+nsresult NS_NewRangeUtils(nsIRangeUtils** aInstancePtrResult);
 
 
 /*************************************************************************************

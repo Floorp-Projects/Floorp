@@ -42,6 +42,7 @@
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
 #include "nsIDOMRange.h"
+#include "nsIRangeUtils.h"
 #include "nsIContentIterator.h"
 #include "nsINameSpaceManager.h"
 #include "nsIScriptNameSetRegistry.h"
@@ -135,11 +136,13 @@ static NS_DEFINE_CID(kComputedDOMStyleCID, NS_COMPUTEDDOMSTYLE_CID);
 
 static NS_DEFINE_CID(kControllerCommandManagerCID, NS_CONTROLLERCOMMANDMANAGER_CID);
 static NS_DEFINE_CID(kContentHTTPStartupCID, NS_CONTENTHTTPSTARTUP_CID);
+static NS_DEFINE_CID(kRangeUtilsCID, NS_RANGEUTILS_CID);
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
 extern nsresult NS_NewDomSelection(nsISelection** aResult);
 extern nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
+extern nsresult NS_NewRangeUtils(nsIRangeUtils** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
@@ -602,6 +605,13 @@ nsContentFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewControllerCommandManager((nsIControllerCommandManager**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewControllerCommandManager", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kRangeUtilsCID)) {
+    res = NS_NewRangeUtils((nsIRangeUtils**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewRangeUtils", res);
       return res;
     }
   }
