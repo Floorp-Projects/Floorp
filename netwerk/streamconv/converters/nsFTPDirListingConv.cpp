@@ -1076,6 +1076,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         char *escapedDate = nsEscape(buffer, url_Path);
 
         aString.Append(escapedDate);
+        nsMemory::Free(escapedDate);
         aString.Append(' ');
 
 
