@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIURL.h"
 #include "nsWeakReference.h"
+#include "nsIMsgFilterList.h"
 
  /* 
   * MsgFolder
@@ -84,6 +85,7 @@ public:
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
   NS_IMETHOD GetCanCreateSubfolders(PRBool *aCanCreateSubfolders);
   NS_IMETHOD GetCanRename(PRBool *aCanRename);
+  NS_IMETHOD GetFilterList(nsIMsgFilterList **aFilterList);
   NS_IMETHOD ForceDBClosed(void);
   NS_IMETHOD Delete(void);
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
@@ -225,20 +227,7 @@ public:
 
 
 protected:
-	nsresult NotifyPropertyChanged(nsIAtom *property, char* oldValue, char* newValue);
-	nsresult NotifyIntPropertyChanged(nsIAtom *property, PRInt32 oldValue, PRInt32 newValue);
-	nsresult NotifyBoolPropertyChanged(nsIAtom *property, PRBool oldValue, PRBool newValue);
-  nsresult NotifyUnicharPropertyChanged(nsIAtom *property, const PRUnichar* oldValue, const PRUnichar* newValue);
-
   
-	nsresult NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldValue,
-												PRUint32 newValue);
-	nsresult NotifyItemAdded(nsISupports *parentItem, nsISupports *item, const char *viewString);
-	nsresult NotifyItemDeleted(nsISupports *parentItem, nsISupports *item, const char* viewString);
-
-	nsresult NotifyFolderLoaded();
-	nsresult NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder);
-
 	// this is a little helper function that is not part of the public interface. 
 	// we use it to get the IID of the incoming server for the derived folder.
 	// w/out a function like this we would have to implement GetServer in each
@@ -290,8 +279,8 @@ protected:
   PRBool mIsServer;
   nsString mName;
   nsCOMPtr<nsIFileSpec> mPath;
-  char * mBaseMessageURI; //The uri with the message scheme
   PRBool mDeleteIsMoveToTrash;
+  char * mBaseMessageURI; //The uri with the message scheme
 
   // static stuff for cross-instance objects like atoms
   static PRInt32 gInstanceCount;

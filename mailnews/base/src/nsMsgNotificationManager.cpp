@@ -248,6 +248,13 @@ nsMsgNotificationManager::OnItemPropertyFlagChanged(nsISupports *item,
 	return rv;
 }
 
+NS_IMETHODIMP
+nsMsgNotificationManager::OnItemEvent(nsIFolder *folder, nsIAtom *aEvent)
+{
+  return NS_OK;
+}
+  
+
 NS_IMETHODIMP nsMsgNotificationManager::OnFolderLoaded(nsIFolder *folder)
 {
 	nsresult rv = NS_OK;

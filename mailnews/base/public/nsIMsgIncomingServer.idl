@@ -26,6 +26,8 @@
 interface nsIFolder;
 interface nsIMsgFolderCache;
 interface nsIMsgWindow;
+interface nsIMsgFilterList;
+
 /*
  * Interface for incoming mail/news host
  * this is the base interface for all mail server types (imap, pop, nntp, etc)
@@ -111,8 +113,14 @@ interface nsIMsgIncomingServer : nsISupports {
 	 going off at the same time. */
   attribute boolean serverBusy;
 
+  /* should we use a secure channel? */
+  attribute boolean isSecure;
+
   /* what kind of logon redirector to use for this server, if any */
   attribute string redirectorType;
+
+  readonly attribute nsIMsgFilterList filterList;
+
   /* we use this to set the default local path.  we use this when migrating prefs */
   void SetDefaultLocalPath(in nsIFileSpec aDefaultLocalPath);
 
@@ -156,8 +164,6 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute boolean valid;
   
   wstring toString();
-
-  attribute boolean isSecure;
 
   /* used for comparing nsIMsgIncomingServers */
   boolean equals(in nsIMsgIncomingServer server);

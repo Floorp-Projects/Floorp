@@ -606,6 +606,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemRemoved(nsISupports *parentItem, nsI
 	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_FALSE);
 }
 
+
 nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString, PRBool added)
 {
 
@@ -724,6 +725,12 @@ nsMsgMessageDataSource::OnItemPropertyFlagChanged(nsISupports *item,
 		}
 	}
 	return rv;
+}
+
+NS_IMETHODIMP
+nsMsgMessageDataSource::OnItemEvent(nsIFolder *aFolder, nsIAtom *aEvent)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMessageDataSource::OnFolderLoaded(nsIFolder *folder)
@@ -892,7 +899,6 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 
   return rv;
 }
-
 
 nsresult
 nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,

@@ -25,6 +25,7 @@
 
 #include "nsIMsgIncomingServer.h"
 #include "nsIPref.h"
+#include "nsIMsgFilterList.h"
 #include "msgCore.h"
 #include "nsIFolder.h"
 #include "nsCOMPtr.h"
@@ -74,6 +75,7 @@ protected:
   nsresult CreateRootFolder();
   nsresult StorePassword();  // stuff the password in the single signon database
 
+  nsCOMPtr<nsIMsgFilterList> mFilterList;
   // pref callback to clear the user prefs
   static void clearPrefEnum(const char  *aPref, void *aClosure);
 };

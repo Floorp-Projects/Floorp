@@ -38,6 +38,7 @@ interface nsIMsgWindow;
 interface nsIMsgDatabase;
 interface nsIDBFolderInfo;
 interface nsMsgKeyArray;
+interface nsIMsgFilterList;
 
 interface nsIMsgFolderCacheElement;
 interface nsAutoString;
@@ -115,6 +116,9 @@ interface nsIMsgFolder : nsIFolder {
    * the phantom server folder
    */
 	readonly attribute nsIMsgFolder rootFolder;
+
+  /* filter for this folder */
+  readonly attribute nsIMsgFilterList filterList;
   
 	void ForceDBClosed ();
 	void Delete ();

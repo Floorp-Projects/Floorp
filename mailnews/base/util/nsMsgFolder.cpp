@@ -44,6 +44,7 @@
 #include "nsIAllocator.h"
 #include "nsIURL.h"
 #include "nsMsgUtils.h" // for NS_MsgHashIfNecessary()
+
 #include "nsIIOService.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -107,10 +108,12 @@ nsMsgFolder::nsMsgFolder(void)
 
 nsMsgFolder::~nsMsgFolder(void)
 {
+  nsresult rv;
+  
 	if(mSubFolders)
 	{
 		PRUint32 count;
-    nsresult rv = mSubFolders->Count(&count);
+    rv = mSubFolders->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
 
 		for (int i = count - 1; i >= 0; i--)
@@ -350,6 +353,26 @@ NS_IMETHODIMP nsMsgFolder::RemoveFolderListener(nsIFolderListener * listener)
 NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *aParent)
 {
 	mParent = getter_AddRefs(NS_GetWeakReference(aParent));
+
+    if (aParent) {
+      nsresult rv;
+      nsCOMPtr<nsIMsgFolder> parentMsgFolder =
+        do_QueryInterface(aParent, &rv);
+      
+      if (NS_SUCCEEDED(rv)) {
+
+        // servers do not have parents, so we must not be a server
+        mIsServer = PR_FALSE;
+        mIsServerIsValid = PR_TRUE;
+        
+        // also set the server itself while we're here.
+        
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        nsresult rv = parentMsgFolder->GetServer(getter_AddRefs(server));
+        if (NS_SUCCEEDED(rv) && server)
+          mServer = getter_AddRefs(NS_GetWeakReference(server));
+      }
+  }
   
 	return NS_OK;
 }
@@ -2038,7 +2061,7 @@ nsMsgFolder::SetDeleteIsMoveToTrash(PRBool bVal)
 
 nsresult
 nsMsgFolder::NotifyPropertyChanged(nsIAtom *property,
-                                   char *oldValue, char* newValue)
+                                   const char *oldValue, const char* newValue)
 {
 	nsCOMPtr<nsISupports> supports;
 	if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
@@ -2245,6 +2268,24 @@ nsresult nsMsgFolder::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *folder)
 	return NS_OK;
 }
 
+nsresult nsMsgFolder::NotifyFolderEvent(nsIAtom* aEvent)
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemEvent(this, aEvent);
+	}
+	//Notify listeners who listen to every folder
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->NotifyFolderEvent(this, aEvent);
+
+	return NS_OK;
+}
+
 nsresult
 nsGetMailFolderSeparator(nsString& result)
 {
@@ -2275,4 +2316,25 @@ nsMsgFolder::RecursiveSetDeleteIsMoveToTrash(PRBool bVal)
     }
   }
   return SetDeleteIsMoveToTrash(bVal);
+}
+
+NS_IMETHODIMP
+nsMsgFolder::GetFilterList(nsIMsgFilterList **aResult)
+{
+  nsresult rv;
+
+  // only get filters for root folders in the base class
+#ifdef NS_DEBUG
+  PRBool isServer=PR_FALSE;
+  rv = GetIsServer(&isServer);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "error getting serverness");
+  NS_ASSERTION(isServer, "Getting filter for non-server?");
+#endif
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
+
+  return server->GetFilterList(aResult);
 }

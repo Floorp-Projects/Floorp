@@ -28,15 +28,41 @@ interface nsIFolder;
 [scriptable, uuid(1c5ef9f0-d1c0-11d2-94CA-006097222B83)]    /* XXX regenerate */
 interface nsIFolderListener : nsISupports {
 
-	void OnItemAdded(in nsISupports parentItem, in nsISupports item, in string viewString);
-	void OnItemRemoved(in nsISupports parentItem, in nsISupports item, in string viewString);
+	void OnItemAdded(in nsISupports parentItem,
+                   in nsISupports item,
+                   in string viewString);
   
-	void OnItemPropertyChanged(in nsISupports item, in nsIAtom property, in string oldValue, in string newValue);
-	void OnItemIntPropertyChanged(in nsISupports item, in nsIAtom property, in long oldValue, in long newValue);
-	void OnItemBoolPropertyChanged(in nsISupports item, in nsIAtom property, in boolean oldValue, in boolean newValue);
-  void OnItemUnicharPropertyChanged(in nsISupports item, in nsIAtom property, in wstring oldValue, in wstring newValue);
-	void OnItemPropertyFlagChanged(in nsISupports item, in nsIAtom property, in unsigned long oldFlag,
-									in unsigned long newFlag);
+	void OnItemRemoved(in nsISupports parentItem,
+                     in nsISupports item,
+                     in string viewString);
+  
+	void OnItemPropertyChanged(in nsISupports item,
+                             in nsIAtom property,
+                             in string oldValue,
+                             in string newValue);
+  
+	void OnItemIntPropertyChanged(in nsISupports item,
+                                in nsIAtom property,
+                                in long oldValue,
+                                in long newValue);
+  
+	void OnItemBoolPropertyChanged(in nsISupports item,
+                                 in nsIAtom property,
+                                 in boolean oldValue,
+                                 in boolean newValue);
+  
+  void OnItemUnicharPropertyChanged(in nsISupports item,
+                                    in nsIAtom property,
+                                    in wstring oldValue,
+                                    in wstring newValue);
+  
+	void OnItemPropertyFlagChanged(in nsISupports item,
+                                 in nsIAtom property,
+                                 in unsigned long oldFlag,
+                                 in unsigned long newFlag);
+
+  void OnItemEvent(in nsIFolder item, in nsIAtom event);
+  
 	void OnFolderLoaded(in nsIFolder aFolder);
 	void OnDeleteOrMoveMessagesCompleted(in nsIFolder aFolder);
 };

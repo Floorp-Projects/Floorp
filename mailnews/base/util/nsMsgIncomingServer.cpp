@@ -29,19 +29,24 @@
 #include "prprf.h"
 
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+
+#include "nsMsgBaseCID.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
 #include "nsIMsgWindow.h"
+#include "nsIMsgFilterService.h"
+#include "nsIMsgProtocolInfo.h"
+
+#include "nsIPref.h"
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsINetPrompt.h"
 #include "nsIWalletService.h"
-#include "nsXPIDLString.h"
+
 #include "nsIRDFService.h"
-#include "nsIMsgProtocolInfo.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "nsIXULWindow.h"
@@ -55,6 +60,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
 
@@ -70,6 +76,13 @@ nsMsgIncomingServer::nsMsgIncomingServer():
 
 nsMsgIncomingServer::~nsMsgIncomingServer()
 {
+    nsresult rv;
+    if (mFilterList) {
+        nsCOMPtr<nsIMsgFilterService> filterService =
+            do_GetService(kMsgFilterServiceCID, &rv);
+        if (NS_SUCCEEDED(rv))
+            rv = filterService->CloseFilterList(mFilterList);
+    }
     if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID,
                                                   m_prefs,
                                                   nsnull);
@@ -861,6 +874,43 @@ nsMsgIncomingServer::clearPrefEnum(const char *aPref, void *aClosure)
     nsIPref *prefs = (nsIPref *)aClosure;
     prefs->ClearUserPref(aPref);
 }
+
+nsresult
+nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
+{
+
+  nsresult rv;
+  
+  if (!mFilterList) {
+      nsCOMPtr<nsIFolder> folder;
+      rv = GetRootFolder(getter_AddRefs(folder));
+
+      nsCOMPtr<nsIMsgFolder> msgFolder(do_QueryInterface(folder, &rv));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsCOMPtr<nsIFileSpec> thisFolder;
+      rv = msgFolder->GetPath(getter_AddRefs(thisFolder));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsFileSpec filterFile;
+      
+      rv = thisFolder->GetFileSpec(&filterFile);
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      filterFile += "rules.dat";
+      
+      nsCOMPtr<nsIMsgFilterService> filterService =
+          do_GetService(kMsgFilterServiceCID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      rv = filterService->OpenFilterList(&filterFile, getter_AddRefs(mFilterList));
+      NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  *aResult = mFilterList;
+  NS_IF_ADDREF(*aResult);
+    
+}    
 
 
 // use the convenience macros to implement the accessors

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -41,6 +41,32 @@ interface nsIFolder : nsICollection {
 	void RemoveFolderListener(in nsIFolderListener listener);
 	nsIFolder FindSubFolder(in string subFolderName);
 
+  void NotifyPropertyChanged(in nsIAtom property,
+                             in string oldValue,
+                             in string newValue);
+  void NotifyIntPropertyChanged(in nsIAtom property,
+                                in long oldValue,
+                                in long newValue);
+  void NotifyBoolPropertyChanged(in nsIAtom property,
+                                 in boolean oldValue,
+                                 in boolean newValue);
+  void NotifyPropertyFlagChanged(in nsISupports item,
+                                 in nsIAtom property,
+                                 in unsigned long oldValue,
+                                 in unsigned long newValue);
+  void NotifyUnicharPropertyChanged(in nsIAtom property,
+                                    in wstring oldValue,
+                                    in wstring newValue);
+  
+  void NotifyItemAdded(in nsISupports parentItem, in nsISupports item, in string viewString);
+  void NotifyItemDeleted(in nsISupports parentItem, in nsISupports item, in string viewString);
+
+  void NotifyFolderEvent(in nsIAtom event);
+  
+  void NotifyFolderLoaded();
+  void NotifyDeleteOrMoveMessagesCompleted(in nsIFolder folder);
+
+  
 	void Shutdown(in boolean shutdownChildren);
 };
 

@@ -875,6 +875,13 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
 
 }
 
+NS_IMETHODIMP
+nsMsgFolderDataSource::OnItemEvent(nsIFolder *aFolder, nsIAtom *aEvent)
+{
+	return NS_OK;
+}
+
+
 NS_IMETHODIMP nsMsgFolderDataSource::OnFolderLoaded(nsIFolder *folder)
 {
 	nsresult rv = NS_OK;
