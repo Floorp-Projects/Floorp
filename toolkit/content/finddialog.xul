@@ -31,7 +31,7 @@ Contributor(s):
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/findDialog.dtd">
+<!DOCTYPE window SYSTEM "chrome://global/locale/finddialog.dtd">
 
 <window id="findDialog"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -44,8 +44,8 @@ Contributor(s):
   title="&findDialog.title;"
   persist="screenX screenY">
 
-  <script type="application/x-javascript" src="chrome://global/content/findDialog.js"/>
-  <stringbundle id="findBundle" src="chrome://global/locale/findDialog.properties"/>
+  <script type="application/x-javascript" src="chrome://global/content/finddialog.js"/>
+  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   <keyset>
     <key keycode="VK_ESCAPE" oncommand="close();"/>
   </keyset>
