@@ -69,6 +69,8 @@
 #include "nsIBaseWindow.h"
 #include "nsXPIDLString.h"
 
+#include "nsCWebBrowser.h"
+
 #include "nsXIFDTD.h"
 #include "nsIParser.h"
 #include "nsHTMLContentSinkStream.h"
@@ -1107,18 +1109,21 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   mWindow->GetClientBounds(r);
 
   // Create web shell
-  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
+  mWebBrowser = do_CreateInstance(NS_WEBBROWSER_PROGID, &rv);
+/*  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
                                           NS_GET_IID(nsIDocShell),
                                           (void**)&mDocShell);
-  if (NS_OK != rv) {
+*/  if (NS_OK != rv) {
     return rv;
   }
-  nsCOMPtr<nsIDocumentLoader> docLoader;
   r.x = r.y = 0;
+  nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
+  rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+  webBrowserWin->Create();
+  mWebBrowser->GetDocShell(&mDocShell);
+  mDocShell->SetAllowPlugins(aAllowPlugins);
+  nsCOMPtr<nsIDocumentLoader> docLoader;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  rv = webShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-                       r.x, r.y, r.width, r.height,
-                       aAllowPlugins, PR_TRUE);
   webShell->SetContainer((nsIWebShellContainer*) this);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -1129,8 +1134,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   if (docLoader) {
     docLoader->AddObserver(this);
   }
-  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-  docShellWin->SetVisibility(PR_TRUE);
+  webBrowserWin->SetVisibility(PR_TRUE);
 
   if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
     rv = CreateMenuBar(r.width);
@@ -1200,9 +1204,10 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   r.x = r.y = 0;
   //nsRect ws = r;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  rv = webShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-                       r.x, r.y, r.width, r.height,
-                       aAllowPlugins);
+  mDocShell->SetAllowPlugins(aAllowPlugins);
+  nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
+  rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
+  webBrowserWin->Create();
   webShell->SetContainer((nsIWebShellContainer*) this);
   webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
@@ -1242,8 +1247,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   nsIDocumentViewer* docv;
   aDocumentViewer->CreateDocumentViewerUsing(aPresContext, docv);
   webShell->Embed(docv, "duh", nsnull);
-  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-  docShellWin->SetVisibility(PR_TRUE);
+  webBrowserWin->SetVisibility(PR_TRUE);
   NS_RELEASE(docv);
 
   return NS_OK;
@@ -1552,9 +1556,9 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   if(rr.height<0)
     rr.height=0;
 
-  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-  if (docShellWin) {
-    docShellWin->SetPositionAndSize(rr.x, rr.y, rr.width, rr.height, PR_FALSE);
+  nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
+  if (webBrowserWin) {
+    webBrowserWin->SetPositionAndSize(rr.x, rr.y, rr.width, rr.height, PR_FALSE);
   }
 }
 
@@ -1913,8 +1917,9 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
     nsCOMPtr<nsIWebShell> webShell;
     
     if (NS_OK == bw->GetWebShell(*getter_AddRefs(webShell))) {
-      const PRUnichar *name;
-      if (NS_OK == webShell->GetName(&name)) {
+      nsXPIDLString name;
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
+      if (NS_OK == docShellAsItem->GetName(getter_Copies(name))) {
         if (aNameStr.Equals(name)) {
           aResult = webShell;
           NS_ADDREF(aResult);
@@ -1922,8 +1927,13 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
         }
       }      
 
-      if (NS_OK == webShell->FindChildWithName(aName, aResult)) {
-        if (nsnull != aResult) {
+      nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(mDocShell));
+
+      nsCOMPtr<nsIDocShellTreeItem> result;
+      if (NS_OK == docShellAsNode->FindChildWithName(aName, PR_TRUE, PR_FALSE, nsnull,
+         getter_AddRefs(result))) {
+        if (result) {
+          CallQueryInterface(result, &aResult);
           return NS_OK;
         }
       }
@@ -2025,16 +2035,6 @@ nsBrowserWindow::OnEndURLLoad(nsIDocumentLoader* loader,
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsBrowserWindow::HandleUnknownContentType(nsIDocumentLoader* loader,
-                                          nsIChannel* channel,
-                                          const char *aContentType,
-                                          const char *aCommand)
-{
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsBrowserWindow::OnProgress(nsIChannel* channel, nsISupports *ctxt,
