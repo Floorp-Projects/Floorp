@@ -419,11 +419,11 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
     ident.SetLength(0);
 
     if (ch == ')') {
-      Unread();
+      Pushback(ch);
       // empty url spec: this is invalid
     } else {
       // start of a non-quoted url
-      Unread();
+      Pushback(ch);
       PRBool ok = PR_TRUE;
       for (;;) {
         ch = Read(aErrorCode);
