@@ -79,6 +79,10 @@ ifeq ($(OS_RELEASE), 5.5.1)
 endif
 endif
 	cd ../nss; gmake nss_RelEng_bld
+ifeq($(OS_ARCH), WINNT)
+	gmake import IMPORTS=nlslayer/m14 RELEASE_TREE=//drinan/dist
+else
 	gmake import IMPORTS=nlslayer/m14 RELEASE_TREE=/h/tortoise/export/share/builds/components
+endif
 	gmake
 
