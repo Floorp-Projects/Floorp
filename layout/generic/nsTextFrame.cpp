@@ -1859,13 +1859,14 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread)
       }
     }
   }
+  else if (thisNode == endNode){
+    if (mContentOffset < endOffset)
+      found = PR_TRUE;
+    else
+      found = PR_FALSE;
+  }
   else
-    if (thisNode == endNode){
-      if (mContentOffset < endOffset)
-        found = PR_TRUE;
-      else
-        found = PR_FALSE;
-    }
+    found = PR_TRUE;
   nsFrameState  frameState;
   GetFrameState(&frameState);
   if ( aSelected )
