@@ -1574,7 +1574,7 @@ JSStubGen::GenerateConstructor(IdlSpecification &aSpec)
     JSGEN_GENERATE_CONSTRUCTOR(buf, name, caps_name);
     *file << buf;
   }
-  else {
+  else if (!mIsGlobal) {
     JSGEN_GENERATE_EMPTYCONSTRUCTOR(buf, name);
     *file << buf;
   }
