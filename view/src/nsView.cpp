@@ -345,11 +345,11 @@ nsresult nsView :: Init(nsIViewManager* aManager,
     if (NS_OK == LoadWidget(*aWindowCIID))
     {
       if (aNative)
-        mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
+        mWindow->Create(aNative, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
       else
       {
         nsIWidget *parent = GetOffsetFromWidget(nsnull, nsnull); 
-        mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, aWidgetInitData);
+        mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
         NS_IF_RELEASE(parent);
       }
     }
