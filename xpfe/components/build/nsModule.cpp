@@ -178,6 +178,9 @@ static const nsModuleComponentInfo components[] = {
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
       nsBookmarksServiceConstructor },
+    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID,
+      "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1",
+      nsBookmarksServiceConstructor },
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
       nsBookmarksServiceConstructor },
     { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,

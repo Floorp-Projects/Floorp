@@ -281,8 +281,6 @@ protected:
   // ahmed 12-2
   PRInt32  mTexttype;
 
-  static nsrefcnt gRefCntRDFService;
-  static nsIRDFService* gRDF;
   static PRUint32 gWyciwygSessionCnt;
 
   static PRBool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,

@@ -95,7 +95,7 @@ enum eParserDocType {
 
 
 // define Charset source constants
-// note: the value order define the priority  
+// note: the value order defines the priority; higher numbers take priority
 #define kCharsetUninitialized           0
 #define kCharsetFromWeakDocTypeDefault  1
 #define kCharsetFromUserDefault         2

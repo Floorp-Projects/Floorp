@@ -38,37 +38,38 @@
 
 #include "nsISupports.idl"
 
-interface nsIDocShell;
+interface nsIWebNavigation;
 interface nsIChannel;
 
 [scriptable, uuid(d143a084-b626-4614-845f-41f3ca43a674)]
 interface nsICharsetResolver : nsISupports
 {
     /**
-     * requestCharset
-     * called to resolve the charset of an existing docshell.
-     * If the charset cannot be resolved, but the implementation is
-     * still curious what the final charset turned out to be, it can
-     * set wantCharset to true.
-     * If so, notifyResovedCharset will be called with the resulting
-     * closure
+     * Called to resolve the charset that should be used for parsing the
+     * document being loaded from aChannel.
+     *
+     * If the charset cannot be resolved, but the implementation of
+     * nsICharsetResolver wants to be notified of the final resolved charset
+     * when one is available, it can set wantCharset to true.  If this is done,
+     * the caller of requestCharset is responsible for calling
+     * notifyResovedCharset and passing it the final resolved charset and the
+     * closure that requestCharset set.
      * 
-     * @param docShell    the docshell the document is being loaded in
-     * @param channel     the channel the document is coming in from
-     * @param charsetSource a unique number which can be stored by the
-     *                    caller to remember which resolver actually
-     *                    resolved the charset.
-     * @param wantCharset gets set to true if notifyResolvedCharset should be
-     *                    called with the given closure object
-     * @param closure     a resulting object which should be passed
-     *                    to notifyResolvedCharset
-     * @returns           the resolved charset, or the empty string if no
-     *                    charset could be determined
+     * @param aWebNavigation the nsIWebNavigation the document is being loaded
+     *                       in.  May be null.
+     * @param aChannel the channel the document is coming in from.
+     * @param aWantCharset gets set to true if notifyResolvedCharset should be
+     *                     called with the given closure object.
+     * @param aClosure a resulting object which should be passed
+     *                 to notifyResolvedCharset if wantCharset is set to
+     *                 true.
+     * @returns the resolved charset, or the empty string if no
+     *          charset could be determined.
      */
-    ACString requestCharset(in nsIDocShell docShell, in nsIChannel channel,
-                            out long charsetSource,
-                            out boolean wantCharset,
-                            out nsISupports closure);
+    ACString requestCharset(in nsIWebNavigation aWebNavigation,
+                            in nsIChannel aChannel,
+                            out boolean aWantCharset,
+                            out nsISupports aClosure);
 
     /**
      * notifyResolvedCharset
