@@ -34,7 +34,7 @@ class ProfileStruct
 {    
 public:
      explicit ProfileStruct() { }
-     explicit ProfileStruct(const ProfileStruct& src);
+     ProfileStruct(const ProfileStruct& src);
                 
     ~ProfileStruct() { }
     
