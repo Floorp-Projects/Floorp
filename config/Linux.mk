@@ -79,6 +79,7 @@ endif
 ifeq ($(CPU_ARCH),sparc)
 PLATFORM_FLAGS		+= -D$(CPU_ARCH)
 OS_INCLUDES		+= -I/usr/X11R6/include
+OS_LIBS			+= -L/lib -ldl -lc
 endif
 ifeq ($(CPU_ARCH),x86)
 PLATFORM_FLAGS		+= -mno-486 -Di386
