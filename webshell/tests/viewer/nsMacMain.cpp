@@ -24,7 +24,6 @@
 
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
-#include "nsIImageManager.h"
 #include "nsIWidget.h"
 #include "nsIServiceManager.h"
 #include "resources.h"
@@ -438,12 +437,7 @@ int main(int argc, char **argv)
 	// Start up XPCOM?
  	nsresult rv = NS_InitXPCOM(nsnull, nsnull);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
- 
-	// Hack to get il_ss set so it doesn't fail in xpcompat.c
-	// looks like we don't need this any more.
-	// nsCOMPtr<nsIImageManager> manager = do_GetService(kImageManagerCID, &rv);
-	// NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get image manager service");
-	
+
 	gTheApp = new nsNativeViewerApp();
 	if (gTheApp != nsnull) {
 		NS_ADDREF(gTheApp);
