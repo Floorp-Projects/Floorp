@@ -98,7 +98,6 @@ NS_IMPL_RELEASE_INHERITED(nsDOMTextEvent, nsDOMUIEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMTextEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateTextEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIPrivateCompositionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 NS_METHOD nsDOMTextEvent::GetText(nsString& aText)
