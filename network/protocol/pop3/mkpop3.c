@@ -3487,7 +3487,7 @@ struct MimeEncoderData {
   void *closure;
 };
 
-pop_mime_encode_base64_buffer (MimeEncoderData *data, const char *buffer, int32 size);
+int pop_mime_encode_base64_buffer (MimeEncoderData *data, const char *buffer, int32 size);
 MimeEncoderData* pop_mime_encoder_init (int (*output_fn) (const char *, int32, void *),   void *closure);
 int PopMimeEncoderDestroy (MimeEncoderData *data, XP_Bool abort_p);
 int net_buffer_output_fn ( const char *buf, int32 size, void *closure);
