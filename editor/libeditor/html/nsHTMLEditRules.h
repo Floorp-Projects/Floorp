@@ -91,6 +91,7 @@ protected:
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
 
+  nsresult IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
