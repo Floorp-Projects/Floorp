@@ -1,0 +1,50 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
+
+<!DOCTYPE overlay [
+<!ENTITY % tasksDTD SYSTEM "chrome://communicator/locale/tasksOverlay.dtd" >
+%tasksDTD;
+]>
+
+<overlay id="tasksOverlay"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="chrome://communicator/content/tasksOverlay.js"/>
+
+
+
+<keyset id="tasksKeys">
+</keyset>
+
+<commandset id="tasksCommands">
+</commandset>
+
+
+      <!-- Tasks Menu -->
+      <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+        <menupopup id="taskPopup">
+          <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
+        </menupopup>
+      </menu>
+
+      <menu id="windowMenu" label="&windowMenu.label;" accesskey="&windowMenu.accesskey;"
+            datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
+            onpopupshown="checkFocusedWindow();">
+        <template>
+          <rule>
+            <menupopup>
+              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#KeyIndex rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
+                        oncommand="ShowWindowFromResource(event.target)" accesskey="rdf:http://home.netscape.com/NC-rdf#KeyIndex"/>
+            </menupopup>
+          </rule>
+        </template>
+        <menupopup id="windowPopup">          
+        </menupopup>
+      </menu>
+
+
+  <statusbarpanel id="component-bar" persist="collapsed">
+    <toolbarbutton class="taskbutton" id="mini-nav" oncommand="toNavigator();" 
+                   tooltiptext="&taskNavigator.tooltip;"/>
+  </statusbarpanel> 
+</overlay>

@@ -64,20 +64,14 @@ Rights Reserved.
 <!ENTITY emptyTrashCmd.accesskey		"y">
 <!ENTITY importCmd.label "Import...">
 <!ENTITY importCmd.accesskey "I">
-<!ENTITY offlineMenu.label "Offline">
-<!ENTITY offlineMenu.accesskey "l">
-<!ENTITY synchronizeOfflineCmd.label "Download/Sync Now...">
-<!ENTITY synchronizeOfflineCmd.accesskey "S">
-<!ENTITY settingsOfflineCmd.label "Offline Settings">
-<!ENTITY settingsOfflineCmd.accesskey "e">
-<!ENTITY downloadSelectedCmd.label "Get Selected Messages">
-<!ENTITY downloadSelectedCmd.accesskey "M">
-<!ENTITY downloadFlaggedCmd.label "Get Flagged Messages">
-<!ENTITY downloadFlaggedCmd.accesskey "F">
-<!ENTITY printPreviewCmd.label ".Print Preview">
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.key "p">
+<!ENTITY printPreviewCmd.label "Print Preview">
+<!ENTITY printPreviewCmd.accesskey "v">
+<!ENTITY printPreviewCmd.key "v">
+<!ENTITY printSetupCmd.label "Page Setup...">
+<!ENTITY printSetupCmd.accesskey "u">
 
 <!-- Edit Menu -->
 <!ENTITY deleteMsgCmd.label "Delete Message">
@@ -103,18 +97,16 @@ Rights Reserved.
 <!ENTITY selectThreadCmd.key "a">
 <!ENTITY selectInvertCmd.label ".Invert Selection">
 <!ENTITY selectInvertCmd.accesskey "I">
-<!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
-<!ENTITY spamFiltersCmd.accesskey "J">
 <!ENTITY filtersCmd.label "Message Filters...">
 <!ENTITY filtersCmd.accesskey "F">
-<!ENTITY filtersApply.label "Run Filters on Selected Folder">
+<!ENTITY filtersApply.label "Run Filters on Folder">
 <!ENTITY filtersApply.accesskey "R">
 <!ENTITY folderPropsCmd.label "Properties...">
 <!ENTITY folderPropsFolderCmd.label "Folder Properties...">
 <!ENTITY folderPropsNewsgroupCmd.label "Newsgroup Properties...">
 <!ENTITY folderPropsCmd.accesskey "o">
-<!ENTITY accountManagerCmd.label "Mail &amp; Newsgroups Account Settings...">
-<!ENTITY accountManagerCmd.accesskey "M">
+<!ENTITY accountManagerCmd.label "Account Settings...">
+<!ENTITY accountManagerCmd.accesskey "A">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
 <!ENTITY undoMoveMsgCmd.label "Undo Move Message">
@@ -134,6 +126,9 @@ Rights Reserved.
 <!ENTITY showMessengerToolbarCmd.label		"Mail Toolbar">
 <!ENTITY showMessengerToolbarCmd.accesskey	"o">
 
+<!ENTITY customizeToolbar.label		"Customize...">
+<!ENTITY customizeToolbar.accesskey	"C">
+
 <!-- showSearchToolbarCmd is also used by addressbook -->
 <!ENTITY showSearchToolbarCmd.label		"Search Bar">
 <!ENTITY showSearchToolbarCmd.accesskey	"e">
@@ -145,7 +140,7 @@ Rights Reserved.
 
 <!-- sortMenu is also used by addressbook -->
 <!ENTITY sortMenu.label "Sort by">
-<!ENTITY sortMenu.accesskey "t">
+<!ENTITY sortMenu.accesskey "S">
 
 <!ENTITY sortByDateCmd.label "Date">
 <!ENTITY sortByDateCmd.accesskey "e">
@@ -159,13 +154,13 @@ Rights Reserved.
 <!ENTITY sortByStatusCmd.accesskey "u">
 <!ENTITY sortByLabelCmd.label "Label">
 <!ENTITY sortByLabelCmd.accesskey "L">
-<!ENTITY sortByScoreCmd.label "Junk Score">
-<!ENTITY sortByScoreCmd.accesskey "C">
+<!ENTITY sortByJunkStatusCmd.label "Junk Status">
+<!ENTITY sortByJunkStatusCmd.accesskey "J">
 <!ENTITY sortBySubjectCmd.label "Subject">
 <!ENTITY sortBySubjectCmd.accesskey "S">
 <!-- Sender / Recipient lives in messenger.properties, since that item is dynamic -->
-<!ENTITY sortByUnreadCmd.label "Unread">
-<!ENTITY sortByUnreadCmd.accesskey "n">
+<!ENTITY sortByUnreadCmd.label "Read">
+<!ENTITY sortByUnreadCmd.accesskey "R">
 <!ENTITY sortByThreadCmd.label "Thread">
 <!ENTITY sortByThreadCmd.accesskey "T">
 <!ENTITY sortByOrderReceivedCmd.label "Order Received">
@@ -185,7 +180,7 @@ Rights Reserved.
 <!ENTITY expandAllThreadsCmd.key "*">
 <!ENTITY collapseAllThreadsCmd.label "Collapse All Threads">
 <!ENTITY collapseAllThreadsCmd.accesskey "C">
-<!ENTITY collapseAllThreadsCmd.key "/">
+<!ENTITY collapseAllThreadsCmd.key "\">
 <!ENTITY unreadMsgsCmd.label "Unread">
 <!ENTITY unreadMsgsCmd.accesskey "U">
 <!ENTITY threadsWithUnreadCmd.label "Threads With Unread">
@@ -203,14 +198,14 @@ Rights Reserved.
 <!ENTITY headersBriefCmd.label ".Brief">
 <!ENTITY headersBriefCmd.accesskey "B">
 <!ENTITY bodyMenu.label "Message Body As">
-<!ENTITY bodyMenu.accesskey "O">
+<!ENTITY bodyMenu.accesskey "B">
 <!ENTITY bodyAllowHTML.label "Original HTML">
 <!ENTITY bodyAllowHTML.accesskey "H">
 <!ENTITY bodySanitized.label "Simple HTML">
 <!ENTITY bodySanitized.accesskey "S">
 <!ENTITY bodyAsPlaintext.label "Plain Text">
 <!ENTITY bodyAsPlaintext.accesskey "P">
-<!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">
+<!ENTITY viewAttachmentsInlineCmd.label "Display Attachments Inline">
 <!ENTITY viewAttachmentsInlineCmd.accesskey "A">
 <!ENTITY reloadCmd.label "Reload">
 <!ENTITY reloadCmd.accesskey "R">
@@ -335,6 +330,8 @@ Rights Reserved.
 <!ENTITY watchThreadMenu.key "w">
 <!ENTITY fileHereMenu.label "File Here">
 <!ENTITY fileHereMenu.accesskey "F">
+<!ENTITY copyHereMenu.label "Copy Here">
+<!ENTITY copyHereMenu.accesskey "C">
 <!ENTITY addSenderToAddressBookCmd.label ".Add Sender to Address Book">
 <!ENTITY addSenderToAddressBookCmd.accesskey "S">
 <!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">
@@ -375,6 +372,10 @@ Rights Reserved.
 <!ENTITY markAllReadCmd.key "c">
 <!ENTITY markFlaggedCmd.label "Flag">
 <!ENTITY markFlaggedCmd.accesskey "F">
+<!ENTITY markAsJunkCmd.label "As Junk">
+<!ENTITY markAsJunkCmd.accesskey "J">
+<!ENTITY markAsNotJunkCmd.label "As Not Junk">
+<!ENTITY markAsNotJunkCmd.accesskey "N">
 <!ENTITY openMessageWindowCmd.label "Open Message">
 <!ENTITY openMessageWindowCmd.accesskey "O">
 <!ENTITY openMessageWindowCmd.key "o">
@@ -385,8 +386,8 @@ Rights Reserved.
 <!ENTITY totalColumn.label "Total">
 
 <!-- Toolbar items -->
-<!ENTITY getMsgButton.label "Get Msgs">
-<!ENTITY newMsgButton.label "Compose">
+<!ENTITY getMsgButton.label "Get Mail">
+<!ENTITY newMsgButton.label "Write">
 <!ENTITY replyButton.label "Reply">
 <!ENTITY replyAllButton.label "Reply All">
 <!ENTITY forwardButton.label "Forward">
@@ -397,8 +398,12 @@ Rights Reserved.
 <!ENTITY printButton.label "Print">
 <!ENTITY stopButton.label "Stop">
 <!ENTITY junkButton.label "Junk">
+<!ENTITY notJunkButton.label "Not Junk">
+<!ENTITY addressBookButton.label "Address Book">
 
 <!--Tooltips-->
+<!ENTITY menuBar.tooltip "Menu Bar">
+<!ENTITY mailToolbar.tooltip "Mail Toolbar">
 <!ENTITY advancedButton.tooltip "Advanced message search">
 <!ENTITY clearButton.tooltip "Clear the search criteria and show all messages">
 <!ENTITY getMsgButton.tooltip "Get new messages">
@@ -413,7 +418,9 @@ Rights Reserved.
 <!ENTITY printButton.tooltip "Print this message">
 <!ENTITY stopButton.tooltip "Stop the current transfer">
 <!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
-<!ENTITY junkButton.tooltip "Mark the selected messages as junk (or not junk)">
+<!ENTITY junkButton.tooltip "Mark the selected messages as junk">
+<!ENTITY notJunkButton.tooltip "Mark the selected messages as not junk">
+<!ENTITY addressBookButton.tooltip "Go to the address book">
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label "Done">
@@ -443,6 +450,7 @@ Rights Reserved.
 <!ENTITY contextSaveAs.accesskey "S">
 <!ENTITY contextPrint.label "Print...">
 <!ENTITY contextPrint.accesskey "P">
+<!ENTITY contextPrintPreview.label "Print Preview">
 <!ENTITY contextDelete.label "Delete">
 <!ENTITY contextDelete.accesskey "D">
 <!ENTITY contextAddSenderToAddressBook.label "Add Sender To Address Book">
@@ -512,54 +520,53 @@ Rights Reserved.
 <!ENTITY junkMailCmd.label "Junk Mail Controls...">
 <!ENTITY junkMailCmd.accesskey "J">
 
-<!ENTITY toolsMenu.label "Tools">
-<!ENTITY toolsMenu.accesskey "T">
+<!ENTITY runJunkControls.label "Run Junk Mail Controls on Folder">
+<!ENTITY runJunkControls.accesskey "u">
 
-<!ENTITY textZoomEnlargeCmd.label       "Increase Text Size">
-<!ENTITY textZoomEnlargeCmd.accesskey   "I">
-<!ENTITY textZoomEnlargeCmd.commandkey  "+">
-<!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
+<!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
+<!ENTITY deleteJunk.accesskey "e">
 
-<!ENTITY textZoomReduceCmd.label        "Decrease Text Size">
-<!ENTITY textZoomReduceCmd.accesskey    "D">
-<!ENTITY textZoomReduceCmd.commandkey   "-">
-<!ENTITY  newMessageCmd.key               "M">
-<!ENTITY  newMessageCmd.label             "Message">
-<!ENTITY  newMessageCmd.accesskey         "m">
-<!ENTITY threadColumn.label "Thread">
-<!ENTITY senderColumn.label "Sender">
-<!ENTITY subjectColumn.label "Subject">
-<!ENTITY dateColumn.label "Date">
-<!ENTITY priorityColumn.label "Priority">
-<!ENTITY labelColumn.label "Label">
-<!ENTITY statusColumn.label "Status">
-<!ENTITY sizeColumn.label "Size">
-<!ENTITY scoreColumn.label "Junk Score">
-<!ENTITY linesColumn.label "Lines">
-<!ENTITY unreadColumn.label "Unread">
-<!ENTITY totalColumn.label "Total">
-<!ENTITY orderReceivedColumn.label "Order Received">
-<!ENTITY readColumn.label "Read">
-<!ENTITY flagColumn.label "Flag">
-<!ENTITY locationColumn.label "Location">
+<!-- junk bar -->
+<!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
+<!ENTITY notJunkButton.label "This is Not Junk">
+<!ENTITY junkInfoButton.label "?">
 
-<!--Tooltips-->
-<!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 
-<!ENTITY columnChooser.tooltip "Click to select columns to display"> 
-<!ENTITY nameColumn.label   "Name"> 
-<!ENTITY unreadColumn.label "Unread"> 
-<!ENTITY totalColumn.label "Total"> 
-<!ENTITY accounts.label "Accounts">
-<!-- LOCALIZATION NOTE (accounts.img) : DONT_TRANSLATE -->
-<!ENTITY accounts.img "chrome://messenger/skin/local-mailhost.gif">
+<!--- Tools Menu Bar-->
+<!-- LOCALIZATION NOTE (messengerCmd.label): DONT_TRANSLATE -->
+<!ENTITY messengerCmd.label					"Mail &amp; Newsgroups">
+<!ENTITY messengerCmd.accesskey				"m">
+<!ENTITY messengerCmd.commandkey			"1">
+<!ENTITY addressBookCmd.label				"Address Book">  
+<!ENTITY addressBookCmd.accesskey			"a">
+<!ENTITY addressBookCmd.commandkey			"2">
 
+<!ENTITY taskMessenger.tooltip  "Mail &amp; Newsgroups">
+<!ENTITY taskAddressBook.tooltip  "Address Book">
+
+<!-- searchAddressesCmd is also used by addressbook -->
+<!ENTITY searchAddressesCmd.label                       "Search Addresses...">
+<!ENTITY searchAddressesCmd.accesskey                   "A">
+
+<!ENTITY searchMailCmd.label "Search Messages...">
+<!ENTITY searchMailCmd.accesskey "e">
+<!ENTITY searchMailCmd.key "f">
+
+<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey				"S">
+
+<!-- Tasks Menu -->
+
+<!ENTITY tasksMenu.label "Tools">
+<!ENTITY tasksMenu.accesskey "T"> 
+
+<!-- Help Menu -->
 <!ENTITY helpMenu.label "Help">
-<!ENTITY helpMenu.accesskey "H">
+<!ENTITY helpMenu.accesskey "H"> 
 <!ENTITY releaseCmd.label "Release Notes">
-<!ENTITY releaseCmd.accesskey "R">
-<!ENTITY aboutCmd.label "About">
-<!ENTITY aboutCmd.accesskey "A">
-<!ENTITY viewMenu.label "View">
-<!ENTITY viewMenu.accesskey "V">
-<!ENTITY viewToolbars.label "Toolbars">
-<!ENTITY viewToolbars.accesskey "T">
+<!ENTITY releaseCmd.accesskey "R"> 
+<!ENTITY hintsAndTips.label "Minotaur Help">
+<!ENTITY hintsAndTips.accesskey "M"> 
+
+
+
+

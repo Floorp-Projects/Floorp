@@ -1,0 +1,397 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s):
+  Seth Spitzer <sspitzer@netscape.com>
+--> 
+
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/tasksOverlay.css" type="text/css"?> 
+
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abResultsPaneOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/addressbook/abCardViewOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
+
+<!DOCTYPE window [
+<!ENTITY % abMainWindowDTD SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd" >
+%abMainWindowDTD;
+<!ENTITY % abResultsPaneOverlayDTD SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd" >
+%abResultsPaneOverlayDTD;
+<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
+%messengerDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    id="addressbookWindow"
+    height="450"
+    width="750"
+    title="&addressbookWindow.title;"
+    windowtype="mail:addressbook"
+    persist="width height screenX screenY sizemode"
+    onload="OnLoadAddressBook()"
+    onunload="OnUnloadAddressBook()">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  </stringbundleset>
+
+<script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/mailCore.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgPrintEngine.js"/>
+
+  <commandset id="addressBook">
+  <commandset id="CommandUpdate_AddressBook"
+        commandupdater="true"
+        events="focus,addrbook-select"
+        oncommandupdate="CommandUpdate_AddressBook()"/>
+  <commandset id="selectEditMenuItems"/> 
+  <commandset id="undoEditMenuItems"/>
+  <commandset id="globalEditMenuItems"/>
+    <command id="cmd_printSetup" oncommand="NSPrintSetup()"/>
+    <command id="cmd_printCard" oncommand="AbPrintCard()"/>
+    <command id="cmd_printPreviewCard" oncommand="AbPrintPreviewCard()"/>
+    <command id="cmd_printAddressBook" oncommand="AbPrintAddressBook()"/>
+    <command id="cmd_printPreviewAddressBook" oncommand="AbPrintPreviewAddressBook()"/>
+    <command id="cmd_quit"/>
+    <command id="cmd_close" oncommand="AbClose()"/>
+    <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
+    <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_paste"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_selectAll"/>
+    <command id="cmd_swapFirstNameLastName" oncommand="AbSwapFirstNameLastName()"/>
+</commandset>
+
+<broadcasterset id="abBroadcasters">
+  <!-- File Menu -->
+
+  <!-- Edit Menu -->
+  <broadcaster id="cmd_delete"
+         valueAddressBook="&deleteAbCmd.label;"
+         valueCard="&deleteCardCmd.label;"
+         valueCards="&deleteCardsCmd.label;"/>
+  <broadcaster id="broadcaster-throbber" busy="false"/>
+  <broadcaster id="button_delete" disabled="true"/>
+  <broadcaster id="Communicator:WorkMode"/>
+</broadcasterset>
+
+<keyset id="tasksKeys">
+  <!-- File Menu -->
+  <key id="key_printCard"  key="&printCardViewCmd.key;" command="cmd_printCard"  modifiers="accel"/>
+  <key id="key_close"/>
+  <key id="key_quit"/>
+  <!-- Edit Menu -->
+  <key id="key_delete"/>
+  <key id="key_undo"/>
+  <key id="key_redo"/>
+  <key id="key_cut"/>
+  <key id="key_copy"/>
+  <key id="key_paste"/>
+  <key id="key_selectAll"/>
+  <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
+
+  <!-- Tab/F6 Keys -->
+  <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
+  <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="control"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="shift"/>
+  <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
+
+  <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
+</keyset>
+
+<toolbox id="ab-toolbox" class="toolbox-top" mode="icons">
+  <toolbar type="menubar" id="addrbook-toolbar-menubar" class="chromeclass-menubar" customizable="false"
+     defaultset="menubar-items" mode="icons">
+
+   <toolbaritem id="menubar-items" align="center">
+     <menubar id="mail-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
+        <menu id="menu_File">
+            <menupopup id="menu_FilePopup">
+                <menu id="menu_New">
+                    <menupopup id="menu_NewPopup">
+                      <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard('dirTree')"/>
+                      <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList('dirTree')"/>
+                      <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
+                      <menuitem label="&newLDAPDirectoryCmd.label;" id="addLDAP" accesskey="&newLDAPDirectoryCmd.accesskey;" oncommand="AbNewLDAPDirectory()"/>
+                      <menuseparator/>
+                    </menupopup>
+                </menu>
+                <menuitem id="menu_close"/>
+                <menuseparator/>
+        <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
+        <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" accesskey="&printPreviewCardViewCmd.accesskey;" command="cmd_printPreviewCard"/>
+        <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" accesskey="&printPreviewAddressBook.accesskey;" command="cmd_printPreviewAddressBook"/>
+              <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
+              <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" command="cmd_printAddressBook"/>
+            </menupopup>
+        </menu>
+        
+        <menu id="menu_Edit">
+          <menupopup>
+            <menuitem id="menu_undo"/>
+            <menuitem id="menu_redo"/>
+            <menuseparator/>
+            <menuitem id="menu_cut"/>
+            <menuitem id="menu_copy"/>
+            <menuitem id="menu_paste"/>
+            <menuitem id="menu_delete" observes="button_delete"/>
+            <menuseparator/>
+            <menuitem id="menu_selectAll"/>
+            <menuseparator/>
+            <!-- LOCALIZATION NOTE: set "hideSwapFnLnUI" to false in .dtd to enable the UI -->
+            <menuitem label="&swapFirstNameLastNameCmd.label;"
+                      accesskey="&swapFirstNameLastNameCmd.accesskey;"
+                      hidden="&hideSwapFnLnUI;"
+                      command="cmd_swapFirstNameLastName"/>
+            <menuitem label="&propertiesCmd.label;"
+                      accesskey="&propertiesCmd.accesskey;"
+                      key="key_properties"
+                      command="cmd_properties"/>            
+          </menupopup>
+        </menu>
+        <menu id="menu_View">
+            <menupopup id="menu_View_Popup">
+                <menu id="menu_Toolbars">
+                    <menupopup id="view_toolbars_popup">
+                        <menuitem id="menu_showAbToolbar"
+                                  label="&showAbToolbarCmd.label;"
+                                  accesskey="&showAbToolbarCmd.accesskey;"
+                                  oncommand="onViewToolbarCommand('ab-bar', event);"
+                                  checked="true" type="checkbox"/>
+                        <menuitem label="&showSearchToolbarCmd.label;"
+                                  accesskey="&showSearchToolbarCmd.accesskey;" 
+                                  oncommand="goToggleToolbar('searchBox','menu_showSearchToolbar')"
+                                  checked="true" type="checkbox"/>
+                        <menuitem id="menu_showTaskbar" 
+                                  type="checkbox"/>
+                        <menuitem id="menu_showCardPane"
+                                  label="&showCardPane.label;"
+                                  accesskey="&showCardPane.accesskey;"
+                                  oncommand="goToggleSplitter('results-splitter', 'menu_showCardPane')"
+                                  checked="true" type="checkbox"/>
+                        <menuseparator/>
+                        <menuitem id="menu_customizeToolbar" oncommand="CustomizeMailToolbar('ab-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
+                    </menupopup>
+                </menu>
+                <menuseparator/>
+                <menu label="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;">
+                    <menupopup>
+                        <menuitem type="radio" name="shownameas"
+                                  id="firstLastCmd"
+                  label="&firstLastCmd.label;"
+                                  accesskey="&firstLastCmd.accesskey;"
+                                  oncommand="SetNameColumn('firstLastCmd')"/>
+                        <menuitem type="radio" name="shownameas"
+                                  id="lastFirstCmd"
+                  label="&lastFirstCmd.label;"
+                                  accesskey="&lastFirstCmd.accesskey;"
+                                  oncommand="SetNameColumn('lastFirstCmd')"/>
+                        <menuitem type="radio" name="shownameas"
+                                  id="displayNameCmd"
+                  label="&displayNameCmd.label;"
+                                  accesskey="&displayNameCmd.accesskey;"
+                                  oncommand="SetNameColumn('displayNameCmd')"/>
+                    </menupopup>
+                </menu>
+        <menu label="&sortMenu.label;" accesskey="&sortMenu.accesskey;">
+                    <menupopup id="sortMenuPopup" onpopupshowing="InitViewSortByMenu()">
+            <menuitem label="&GeneratedName.label;" 
+                                  id="cmd_SortByGeneratedName"
+                                  accesskey="&GeneratedName.accesskey;"
+                                  oncommand="SortResultPane('GeneratedName');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&PrimaryEmail.label;"
+                                  id="cmd_SortByPrimaryEmail"
+                                  accesskey="&PrimaryEmail.accesskey;"
+                                  oncommand="SortResultPane('PrimaryEmail');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&ScreenName.label;"
+                                  id="cmd_SortBy_AimScreenName"
+                                  accesskey="&ScreenName.accesskey;"
+                                  oncommand="SortResultPane('_AimScreenName');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&Company.label;"
+                                  id="cmd_SortByCompany"
+                                  accesskey="&Company.accesskey;"
+                                  oncommand="SortResultPane('Company');" name="sortas" type="radio" checked="true"/>
+            <!-- LOCALIZATION NOTE:
+             Fields for phonetic are disabled as default and can be enabled by 
+             editing "mail.addr_book.show_phonetic_fields"    
+             -->
+            <menuitem label="&_PhoneticName.label;"
+                                  id="cmd_SortBy_PhoneticName"
+                                  hidden="true"
+                                  accesskey="&_PhoneticName.accesskey;"
+                                  oncommand="SortResultPane('_PhoneticName');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&NickName.label;"
+                                  id="cmd_SortByNickName"
+                                  accesskey="&NickName.accesskey;"
+                                  oncommand="SortResultPane('NickName');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&SecondEmail.label;"
+                                  id="cmd_SortBySecondEmail"
+                                  accesskey="&SecondEmail.accesskey;"
+                                  oncommand="SortResultPane('SecondEmail');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&Department.label;"
+                                  id="cmd_SortByDepartment"
+                                  accesskey="&Department.accesskey;"
+                                  oncommand="SortResultPane('Department');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&JobTitle.label;"
+                                  id="cmd_SortByJobTitle"
+                                  accesskey="&JobTitle.accesskey;"
+                                  oncommand="SortResultPane('JobTitle');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&CellularNumber.label;"
+                                  id="cmd_SortByCellularNumber"
+                                  accesskey="&CellularNumber.accesskey;"
+                                  oncommand="SortResultPane('CellularNumber');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&PagerNumber.label;"
+                                  id="cmd_SortByPagerNumber"
+                                  accesskey="&PagerNumber.accesskey;"
+                                  oncommand="SortResultPane('PagerNumber');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&FaxNumber.label;"
+                                  id="cmd_SortByFaxNumber"
+                                  accesskey="&FaxNumber.accesskey;"
+                                  oncommand="SortResultPane('FaxNumber');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&HomePhone.label;"
+                                  id="cmd_SortByHomePhone"
+                                  accesskey="&HomePhone.accesskey;"
+                                  oncommand="SortResultPane('HomePhone');" name="sortas" type="radio" checked="true"/>
+            <menuitem label="&WorkPhone.label;"
+                                  id="cmd_SortByWorkPhone"
+                                  accesskey="&WorkPhone.accesskey;"
+                                  oncommand="SortResultPane('WorkPhone');" name="sortas" type="radio" checked="true"/>
+            <menuseparator/>
+            <menuitem id="sortAscending" type="radio" name="sortdirection" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="AbSortAscending()"/>
+            <menuitem id="sortDescending" type="radio" name="sortdirection" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="AbSortDescending()"/>
+                    </menupopup>
+                </menu>
+            </menupopup>
+        </menu>       
+        <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+          <menupopup id="taskPopup">
+            <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
+            <menuseparator />  
+            <menuitem label="&searchAddressesCmd.label;" 
+                      accesskey="&searchAddressesCmd.accesskey;"
+                      id="menu_search_addresses" 
+                      oncommand="onAdvancedAbSearch();"/>
+            <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
+            <menuitem label="&exportCmd.label;" accesskey="&exportCmd.accesskey;" oncommand="AbExport()"/>
+            <menuseparator />  
+            <menuitem id="menu_preferences" oncommand="goPreferences('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
+          </menupopup>
+        </menu>
+
+        <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
+          <menupopup id="menu_HelpPopup">
+            <menuitem accesskey="&releaseCmd.accesskey;" label="&releaseCmd.label;" oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
+            <menuitem accesskey="&hintsAndTips.accesskey;" label="&hintsAndTips.label;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
+          </menupopup>
+        </menu>
+
+    </menubar>
+   </toolbaritem>
+  </toolbar>
+  
+  <toolbarpalette id="AddressBookToolbarPalette">
+      <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard('dirTree');"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList('dirTree');"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-editcard" label="&editButton.label;" tooltiptext="&editButton.tooltip;" oncommand="goDoCommand('button_edit');"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-newmessage" label="&newmsgButton.label;" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
+      <toolbarbutton id="button-newim" class="toolbarbutton-1" label="&newIM.label;" tooltiptext="&newIM.tooltip;" oncommand="AbIMSelected();"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
+
+      <toolbaritem id="throbber-box" align="center" pack="center">
+        <button id="navigator-throbber" oncommand="loadThrobberUrl('addressbook.throbber.url')" tooltiptext="&throbber.tooltip;">
+          <observes element="broadcaster_throbber" attribute="busy"/>
+        </button>
+      </toolbaritem>
+  </toolbarpalette>
+  <!-- toolbar -->
+  <toolbar id="ab-bar" class="toolbar-primary chromeclass-toolbar"
+           toolbarname="Mail" 
+           fullscreentoolbar="true" mode="icons"
+           customizable="true"
+           defaultset="button-newcard,button-newlist,space,button-editcard,button-newmessage,button-newim,button-delete,spring,throbber-box">
+   </toolbar>
+   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
+  </toolbox>
+
+  <!-- The main address book three pane -->
+  <hbox flex="1">
+    <vbox id="dirTreeBox" persist="width collapsed">
+      <tree id="dirTree" style="min-width:150px" flex="1" persist="width"/>
+    </vbox>
+
+    <splitter id="dirTree-splitter" collapse="before" persist="state">
+      <grippy/>
+    </splitter>
+    
+    <vbox flex="1" style="min-width:100px">
+
+      <hbox id="searchBox" persist="collapsed" align="center">
+        <label id="searchCriteria" value="&SearchNameOrEmail.label;"
+               accesskey="&SearchNameOrEmail.accesskey;"
+               control="searchInput"/>
+        <textbox id="searchInput" flex="1" 
+                oninput="onAbSearchInput(false);"
+                onkeypress="onAbSearchKeyPress(event);"
+                onfocus="this.select();" onclick="this.select();"/>
+        <button id="clear" label="&clearButton.label;" disabled="true"
+                accesskey="&clearButton.accesskey;"
+                oncommand="onAbClearSearch();"
+                tooltiptext="&clearButton.tooltip;"/>
+        <button id="advancedButton" label="&advancedButton.label;" 
+                accesskey="&advancedButton.accesskey;"
+                tooltiptext="&advancedButton.tooltip;" 
+                oncommand="onAdvancedAbSearch();"/>
+      </hbox>
+
+      <!-- results pane -->
+      <tree id="abResultsTree" flex="1" persist="height"/>
+      
+      <splitter id="results-splitter" collapse="after" persist="state">
+        <grippy/>
+      </splitter>
+      
+      <!-- card view -->
+      <hbox id="CardViewOuterBox" flex="1">
+        <vbox id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
+      </hbox>
+    </vbox>
+  </hbox>
+  
+  <statusbar id="status-bar" class="chromeclass-status">
+    <statusbarpanel id="statusText" flex="1" value="&statusText.label;"/>            
+  </statusbar>  
+</window>
