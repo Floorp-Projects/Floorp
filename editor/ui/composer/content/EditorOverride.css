@@ -53,7 +53,7 @@ a:visited, a:activez {
   -moz-user-input: none;
 }
 
-input, select, textarea {
+input, button, select, textarea {
   -moz-user-select: all !important;
   -moz-user-input: none !important;
   -moz-user-focus: none !important;
