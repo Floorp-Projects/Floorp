@@ -56,6 +56,11 @@
 #include "nsLocaleCID.h"
 #include "nsLWBrkCIID.h"
 
+#ifdef XP_PC
+#include "nsIObserverService.h"
+#include "nsIObserver.h"
+#endif
+
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
 
@@ -198,6 +203,11 @@ static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElement, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+
+#ifdef XP_PC
+static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
+static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
+#endif
 
 //#define NEW_CLIPBOARD_SUPPORT
 
@@ -344,6 +354,11 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kNameSpaceManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCEventListenerManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
+#ifdef XP_PC
+  nsComponentManager::RegisterComponent(kObserverServiceCID, "ObserverService", NS_OBSERVERSERVICE_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kObserverCID, "Observer", NS_OBSERVER_PROGID, BASE_DLL,PR_FALSE, PR_FALSE);
+#endif
 
 #if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
 #if defined(XP_MAC) || defined (XP_UNIX)
