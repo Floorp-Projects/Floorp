@@ -2319,6 +2319,13 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     }
   }
 #endif
+
+#if 0
+  /* For the sake of bug 52443 I have back out my change in allowing 
+   * newlines/whitespace inside TABLE,TR,TBODY,TFOOT,THEAD. Once
+   * the table code is ready to deal with whitespaces/newlines then
+   * the parser can pass it through... But for now...it's out!!!! 
+   */
   if(!result) {
     // Bug 42429 - Preserve whitespace inside TABLE,TR,TBODY,TFOOT,etc.,
     if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
@@ -2327,6 +2334,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       }
     }
   }
+#endif
+
   return result;
 } 
 
