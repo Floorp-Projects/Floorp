@@ -14,8 +14,12 @@
 		<html:span id="lefttext">&pane.title;</html:span>
 	</html:div>
 
-&pinpoint.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&pinpoint.label;</html:div>
+</html:legend>
 	<html:table>
 	<html:tr><html:td>&lookFor.label;</html:td></html:tr>
 		<html:tr><html:td>
@@ -46,10 +50,17 @@
 			<html:label>&useAddress.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
 
-&displayFullname.label;
 <html:form>
+<box align="vertical" style="width: 100%;">
+<html:fieldset style="width: 100%;">
+<html:legend align="left">
+<html:div>&displayFullname.label;</html:div>
+</html:legend>
+
 	<html:table>
 		<html:tr><html:td>
 			<html:input name="displayname" type="radio" id="pref:0:int:mail.addr_book.lastnamefirst" checked="true"/>
@@ -60,6 +71,8 @@
 			<html:label>&useLastFirst.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
+</html:fieldset>
+</box>
 </html:form>
 
 </html:div>
