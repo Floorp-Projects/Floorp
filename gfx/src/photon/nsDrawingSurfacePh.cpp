@@ -90,7 +90,7 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh( )
 
 nsDrawingSurfacePh :: ~nsDrawingSurfacePh( ) 
 {
-	if(mDrawContext) {
+	if( mIsOffscreen ) {
 		mDrawContext->gc = NULL;
 		PhDCRelease( mDrawContext ); /* the mDrawContext->gc will be freed by the upper classes */
 	}
@@ -220,8 +220,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PRUint32 aWidth, PRUint32 aHeight, PRU
 	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, 0);
 	if( !mDrawContext ) return NS_ERROR_FAILURE;
 
-	PhDCSetCurrent( mDrawContext );
-	PgSetDrawBufferSize( 0xffff );
+	PgSetDrawBufferSizeCx( mDrawContext, 0xffff );
 
 	nsresult rv;
 	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
@@ -241,14 +240,13 @@ int nsDrawingSurfacePh::prefChanged(const char *aPref, void *aClosure)
 		surface->mLockDrawContext = nsnull;
 		}
 
-	if(surface->mDrawContext) {
+	if(surface->mIsOffscreen) {
 		surface->mDrawContext->gc = nsnull; /* because we do not want to destroy the one we have since other have it */
 		PhDCRelease( surface->mDrawContext ); 
 		surface->mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, surface->mWidth, surface->mHeight, 0);
 		if( !surface->mDrawContext ) return NS_ERROR_FAILURE;
 
-		PhDCSetCurrent( surface->mDrawContext );
-		PgSetDrawBufferSize( 0xffff );
+		PgSetDrawBufferSizeCx( surface->mDrawContext, 0xffff );
 
 		PgDestroyGC(surface->mDrawContext->gc);
 		surface->mDrawContext->gc = surface->mGC;

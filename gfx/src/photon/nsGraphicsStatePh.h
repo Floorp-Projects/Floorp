@@ -52,7 +52,7 @@ public:
   nsTransform2D  *mMatrix;
   nsCOMPtr<nsIRegion> mClipRegion;
   nscolor         mColor;
-  nsLineStyle     mLineStyle;
+	nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;
 
   nsGraphicsState *mNext; // link into free list of graphics states.

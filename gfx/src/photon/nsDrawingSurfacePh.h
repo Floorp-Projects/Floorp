@@ -85,7 +85,7 @@ public:
 		{
 		mGC = aGC;
 		mIsOffscreen = PR_FALSE;
-		mDrawContext = nsnull;
+		mDrawContext =  _Ph_->dflt_draw_context; /* it's the dc you get by doing a PhDCSetCurrent( NULL ) */
 		return NS_OK;
 		}
 
@@ -93,13 +93,16 @@ public:
   NS_IMETHOD Init( PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags );
 
   /* Make this DrawingSurface active */
-  inline NS_IMETHODIMP Select( ) { PhDCSetCurrent( mDrawContext ); PgSetGC( mGC ); return NS_OK; }
+  inline PhDrawContext_t* Select( )
+		{
+		PhDCSetCurrent( mDrawContext );
+		PgSetGCCx( mDrawContext, mGC );
+		return mDrawContext;
+		}
 
   /* Flush the Off-Screen draw buffer to the pixmap or PgFlush the On-Screen */
-  inline NS_IMETHODIMP				Flush( void ) { return NS_OK; }
   inline PhGC_t								*GetGC( void ) { return mGC; }
   inline PhDrawContext_t			*GetDC( void ) { return mDrawContext; }
-  inline PRBool								IsActive( void ) { return mDrawContext == PhDCGetCurrent() ? PR_TRUE : PR_FALSE; }
   inline void									GetSize( PRUint32 *aWidth, PRUint32 *aHeight ) { *aWidth = mWidth; *aHeight = mHeight;}
 
 private:

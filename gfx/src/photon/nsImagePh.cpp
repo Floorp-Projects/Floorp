@@ -46,142 +46,14 @@
 #include <photon/PxImage.h>
 #include "photon/PhRender.h"
 
-/*******************************************************************/
-#define GR_FPMUL(a,b)	((((uint64_t)(a)) * ((uint64_t)(b))) >> 16)
-#define GR_FPDIV(a,b)	((((uint64_t)(a)) << 16) / ((uint64_t)(b)))
-
-PhImage_t *MyPiResizeImage(PhImage_t *image,PhRect_t const *bounds,short w,short h,int flags)
-{
-	PhRect_t oldRect,newRect,srcRect;
-	PhPoint_t dst,src;
-	PhImage_t *newImage;
-	unsigned long value,xScale,yScale,xScaleInv = 0,yScaleInv = 0;
-	char *ptr,*new_mask_ptr;
-	char const *old_mask_ptr;
-	struct
-	{
-		unsigned long x,y;
-	} next;
-
-	if(bounds)
-		srcRect = *bounds;
-	else
-	{
-		srcRect.ul.x = srcRect.ul.y = 0;
-		srcRect.lr.x = image->size.w - 1;
-		srcRect.lr.y = image->size.h - 1;
-	}
-
-	oldRect.ul.x = oldRect.ul.y = 0;
-	oldRect.lr.x = w - 1;
-	oldRect.lr.y = h - 1;
-
-#ifdef DEBUG_Adrian
-printf( "MyPiResizeImage\n" );
-#endif
-			
-	if(!(newImage = PiInitImage(image,(PhRect_t const*)(&oldRect),&newRect,image->type,flags | Pi_USE_COLORS,image->colors)))
-		return(NULL);
-
-	memset(newImage->image, 0x22, newImage->bpl*newImage->size.h);
-	
-	if((xScale = GR_FPDIV(newImage->size.w << 16,(srcRect.lr.x - srcRect.ul.x + 1) << 16)) <= 0x10000)
-		xScaleInv = GR_FPDIV((srcRect.lr.x - srcRect.ul.x + 1) << 16,newImage->size.w << 16);
-	if((yScale = GR_FPDIV(newImage->size.h << 16,(srcRect.lr.y - srcRect.ul.y + 1) << 16)) <= 0x10000)
-		yScaleInv = GR_FPDIV((srcRect.lr.y - srcRect.ul.y + 1) << 16,newImage->size.h << 16);
-
-	for(dst.y = 0,next.y = srcRect.ul.y << 16,src.y = srcRect.ul.y,ptr = newImage->image,old_mask_ptr = image->mask_bm,new_mask_ptr = newImage->mask_bm;
-	  dst.y < newImage->size.h;
-	  dst.y++,ptr += newImage->bpl,new_mask_ptr += newImage->mask_bpl)
-	{
-		if(yScaleInv)
-		{
-			src.y = next.y >> 16;
-			next.y += yScaleInv;
-		}
-		else
-		{
-			if(dst.y < (next.y >> 16) || src.y > srcRect.lr.y)
-			{
-				memcpy(ptr,ptr - newImage->bpl,newImage->bpl);
-				if(newImage->mask_bm)
-					memcpy(new_mask_ptr,new_mask_ptr - newImage->mask_bpl,newImage->mask_bpl);
-
-				continue;
-			}
-			else
-				next.y += yScale;
-		}
-
-		if(newImage->mask_bm)
-			old_mask_ptr = image->mask_bm + (src.y * image->mask_bpl);
-
-		if(xScaleInv)
-		{
-			for(dst.x = 0,next.x = srcRect.ul.x << 16,src.x = srcRect.ul.x;
-			  dst.x < newImage->size.w;dst.x++,next.x += xScaleInv)
-			{
-				src.x = next.x >> 16;
-				PiGetPixel((const PhImage_t *)image,src.x,src.y,&value);
-				PiSetPixel(newImage,dst.x,dst.y,value);
-				
-				if(newImage->mask_bm && !PiGetPixelFromData((const uint8_t *)old_mask_ptr,Pg_BITMAP_TRANSPARENT,src.x,&value))
-				{
-					if(!value)
-						PiSetPixelInData((uint8_t *)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
-				}
-			}
-		}
-		else
-		{
-			unsigned long color = 0;
-			
-			for(dst.x = 0,next.x = srcRect.ul.x << 16,src.x = srcRect.ul.x;
-			  dst.x < newImage->size.w;dst.x++)
-			{
-				if(dst.x == (next.x >> 16) && src.y <= srcRect.lr.y)
-				{
-					if(!PiGetPixel((const PhImage_t *)image,src.x,src.y,&color) && (!newImage->mask_bm || PiGetPixelFromData((const uint8_t *)old_mask_ptr,Pg_BITMAP_TRANSPARENT,src.x,&value)))
-						value = 1;
-
-					next.x += xScale;
-					
-					src.x++;
-				}
-					
-				PiSetPixel(newImage,dst.x,dst.y,color);
-				
-				if(!value)
-					PiSetPixelInData((uint8_t *)new_mask_ptr,Pg_BITMAP_TRANSPARENT,dst.x,0);
-			}
-		}
-		
-		if(!yScaleInv)
-			src.y++;
-	}
-
-	/* Calculate CRC tags for new image */
-
-	if(!(flags & Pi_SUPPRESS_CRC))
-		newImage->image_tag = PtCRC(newImage->image,newImage->bpl * newImage->size.h);
-
-	if(flags & Pi_FREE)
-	{
-		image->flags |= Ph_RELEASE_IMAGE | Ph_RELEASE_PALETTE | Ph_RELEASE_TRANSPARENCY_MASK | Ph_RELEASE_GHOST_BITMAP;
-		PhReleaseImage(image);
-	}
-
-	return(newImage);	
-}
-/*******************************************************************/
-
-//#define ALLOW_PHIMAGE_CACHEING
-#define IsFlagSet(a,b) (a & b)
-
 
 NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 
+/* for mImageFlags */
 #define IMAGE_SHMEM							0x1
+#define ALPHA_SHMEM							0x2
+#define ZOOM_SHMEM							0x4
+
 #define IMAGE_SHMEM_THRESHOLD	4096
 
 // ----------------------------------------------------------------
@@ -194,23 +66,16 @@ nsImagePh :: nsImagePh()
 	mAlphaBits = nsnull;
 	mAlphaDepth = 0;
 	mRowBytes = 0;
-	mSizeImage = 0;
 	mAlphaHeight = 0;
 	mAlphaWidth = 0;
-	mConvertedBits = nsnull;
 	mImageFlags = 0;
 	mAlphaRowBytes = 0;
 	mNaturalWidth = 0;
 	mNaturalHeight = 0;
-	mIsOptimized = PR_FALSE;
 	memset(&mPhImage, 0, sizeof(PhImage_t));
 	mPhImageZoom = NULL;
 	mDecodedY2_when_scaled = 0;
 	mDirtyFlags = 0;
-
-#ifdef ALLOW_PHIMAGE_CACHEING
-	mPhImageCache=NULL;
-#endif
 }
 
 // ----------------------------------------------------------------
@@ -218,33 +83,23 @@ nsImagePh :: ~nsImagePh()
 {
   if (mImageBits != nsnull)
   {
-  	if (mImageFlags & IMAGE_SHMEM)
-  		DestroySRamImage(mImageBits);
-  	else 
-		delete [] mImageBits;
+  	if( mImageFlags & IMAGE_SHMEM ) PgShmemDestroy( mImageBits );
+		else delete [] mImageBits;
     mImageBits = nsnull;
   }
 
-  if (mConvertedBits != nsnull)
-	DestroySRamImage(mConvertedBits);
-
-#ifdef ALLOW_PHIMAGE_CACHEING
-  if (mPhImageCache)
-  {
-	PhDCRelease(mPhImageCache);
-	mPhImageCache=NULL;
-  }
-#endif
-
   if (mAlphaBits != nsnull)
   {
-    delete [] mAlphaBits;
+		if( mImageFlags & ALPHA_SHMEM ) PgShmemDestroy( mAlphaBits );
+    else delete [] mAlphaBits;
     mAlphaBits = nsnull;
   }
 
 	if( mPhImageZoom ) {
-		if ( PgShmemDestroy( mPhImageZoom->image ) == -1)
-			free(mPhImageZoom->image);
+		if( mImageFlags & ZOOM_SHMEM ) PgShmemDestroy( mPhImageZoom->image );
+		else free( mPhImageZoom->image );
+		if( mPhImageZoom->mask_bm )
+			free( mPhImageZoom->mask_bm );
 		free( mPhImageZoom );
 		mPhImageZoom = NULL;
 		}
@@ -264,24 +119,34 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 {
 	int type = -1;
 
+	mImageFlags = 0;
+
 	if (mImageBits != nsnull)
 	{
-		if (mImageFlags & IMAGE_SHMEM)
-			DestroySRamImage(mImageBits);
-		else
-			delete [] mImageBits;
+		if( mImageFlags & IMAGE_SHMEM ) PgShmemDestroy( mImageBits );
+		else delete [] mImageBits;
 		mImageBits = nsnull;
 	}
 
 	if (mAlphaBits != nsnull)
 	{
-		delete [] mAlphaBits;
+		if( mImageFlags & ALPHA_SHMEM ) PgShmemDestroy( mAlphaBits );
+		else delete [] mAlphaBits;
 		mAlphaBits = nsnull;
 	}
+
+	if( mPhImageZoom ) {
+		if( mImageFlags & ZOOM_SHMEM ) PgShmemDestroy( mPhImageZoom->image );
+		else free( mPhImageZoom->image );
+		if( mPhImageZoom->mask_bm )
+			free( mPhImageZoom->mask_bm );
+		free( mPhImageZoom );
+		mPhImageZoom = NULL;
+		}
   
-  	SetDecodedRect(0,0,0,0);  //init
+  SetDecodedRect(0,0,0,0);  //init
  
-    switch (aDepth)
+  switch (aDepth)
     {
         case 24:
             type = Pg_IMAGE_DIRECT_888;
@@ -304,28 +169,22 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 	mWidth = aWidth;
 	mHeight = aHeight;
 	mDepth = aDepth;
-	mIsTopToBottom = PR_TRUE;
 
-  	/* Allocate the Image Data */
-	mSizeImage = mNumBytesPixel * mWidth * mHeight;
+	/* Allocate the Image Data */
+	PRInt32 image_size = mNumBytesPixel * mWidth * mHeight;
 
 	/* TODO: don't allow shared memory contexts if the graphics driver isn't a local device */
 
-  	if (mSizeImage >= IMAGE_SHMEM_THRESHOLD)
-  	{
-		mImageBits = CreateSRamImage(mSizeImage);
+  if (image_size >= IMAGE_SHMEM_THRESHOLD)
+  {
+		mImageBits = (PRUint8 *) PgShmemCreate( image_size, NULL );
 		mImageFlags |= IMAGE_SHMEM;
-//	  	mImageBits = (PRUint8*) PgShmemCreate(mSizeImage,0);
-  	}
-  	else
-  	{
-	  	//mImageBits = (PRUint8*) new PRUint8[mSizeImage];
-	  	mImageBits = new PRUint8[mSizeImage];
-	  	memset(mImageBits, 0, mSizeImage);
-	  	mImageFlags &= ~IMAGE_SHMEM;
+  }
+  else
+  {
+		mImageBits = new PRUint8[ image_size ];
+	 	memset( mImageBits, 0, image_size );
 	}
-
-//	mImageCache = PdCreateOffscreenContext(0, aWidth, aHeight, 0);
 
 	switch(aMaskRequirements)
 	{
@@ -342,9 +201,6 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 			mAlphaRowBytes = (aWidth + 7) / 8;
 			mAlphaDepth = 1;
 
-			// 32-bit align each row
-			mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
-
 			int alphasize = mAlphaRowBytes * aHeight;
 			mAlphaBits = new PRUint8[ alphasize ];
 			memset( mAlphaBits, 0, alphasize );
@@ -359,11 +215,12 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 			mAlphaRowBytes = aWidth;
 			mAlphaDepth = 8;
 
-			// 32-bit align each row
-			mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
-
 			int alphasize = mAlphaRowBytes * aHeight;
-			mAlphaBits = new PRUint8[ alphasize ];
+			if( alphasize > IMAGE_SHMEM_THRESHOLD ) {
+				mAlphaBits = ( PRUint8 * ) PgShmemCreate( alphasize, NULL );
+				mImageFlags |= ALPHA_SHMEM;
+				}
+			else mAlphaBits = new PRUint8[ alphasize ];
 			memset( mAlphaBits, 0, alphasize );
 
 			mAlphaWidth = aWidth;
@@ -372,7 +229,7 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 			break;
 	}
 
-	mPhImage.image_tag = PtCRC((char *)mImageBits, mSizeImage);
+	// mPhImage.image_tag = PtCRC( (char *)mImageBits, image_size );
 	mPhImage.image = (char *)mImageBits;
 	mPhImage.size.w = mWidth;
 	mPhImage.size.h = 0;
@@ -412,32 +269,11 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 
 	if( !aSWidth || !aSHeight || !aDWidth || !aDHeight ) return NS_OK;
 
-#ifdef ALLOW_PHIMAGE_CACHEING
-  	PRBool 	aOffScreen;
-	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
-
-	drawing->IsOffscreen(&aOffScreen);
-	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
-	{
-		PhArea_t sarea, darea;
-
-		sarea.pos.x = aSX;
-		sarea.pos.y = aSY;
-		darea.pos.x = aDX;
-		darea.pos.y = aDY;
-		darea.size.w=sarea.size.w=aDWidth;
-		darea.size.h=sarea.size.h=aDHeight;
-		
-		PgContextBlitArea(mPhImageCache,&sarea,(PdOffscreenContext_t *)drawing->GetDC(),&darea);
-		PgFlush();	
-	}
-	else
-#endif
-	{
-
 ///* ATENTIE */ printf( "this=%p size=%d,%d  src=(%d %d %d %d) dest=(%d %d %d %d)\n",
 //this, mPhImage.size.w, mPhImage.size.h, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight );
 
+		PhDrawContext_t *dc = PhDCGetCurrent();
+		PhGC_t *gc = PgGetGCCx( dc );
 		if( (aSWidth != aDWidth || aSHeight != aDHeight) ) {
 
 			/* the case below happens frequently - a 1x1 image needs to be stretched, or a line or a column */
@@ -447,9 +283,15 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 				PhPoint_t space = { 0, 0 };
 				PhPoint_t rep = { aDWidth, aDHeight };
 
-    		PgSetMultiClip( 1, &clip );
-    		if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
-    		  PgDrawRepPhImagemx( &mPhImage, 0, &pos, &rep, &space );
+				/* is this a 1x1 transparent image used for spacing? */
+				if( mWidth == 1 && mHeight == 1 && mAlphaDepth == 1 && mAlphaBits[0] == 0x0 ) return NS_OK;
+
+    		PgSetMultiClipCx( gc, 1, &clip );
+    		if ((mAlphaDepth == 1) || (mAlphaDepth == 0)) {
+					if( mImageFlags & IMAGE_SHMEM )
+    		  	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
+					else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
+					}
     		else
     		{
     		  PgMap_t map;
@@ -457,16 +299,18 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     		  map.dim.h = mAlphaHeight;
     		  map.bpl = mAlphaRowBytes;
     		  map.bpp = mAlphaDepth;
-    		  map.map = (char *)mAlphaBits;
-    		  PgSetAlphaBlend(&map, 0);
+    		  map.map = (unsigned char *)mAlphaBits;
+    		  PgSetAlphaBlendCx( gc, &map, 0 );
 
-    		  PgAlphaOn();
-    		  PgDrawRepPhImagemx( &mPhImage, 0, &pos, &rep, &space );
-    		  PgAlphaOff();
+    		  PgAlphaOnCx( gc );
+					if( mImageFlags & IMAGE_SHMEM )
+    		  	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
+    		  else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
+    		  PgAlphaOffCx( gc );
 
-					PgSetAlphaBlend( NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
+					PgSetAlphaBlendCx( gc, NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
     		}
-    		PgSetMultiClip( 0, NULL );
+    		PgSetMultiClipCx( gc, 0, NULL );
 
 				return NS_OK;
 				}
@@ -484,28 +328,48 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 					mDirtyFlags = 0;
 
         	if ( mPhImageZoom ) {
-        	  mPhImageZoom->flags = Ph_RELEASE_IMAGE_ALL;
-        	  PhReleaseImage( mPhImageZoom );
-        	  free( mPhImageZoom );
-        	  mPhImageZoom = NULL;
+						if( mImageFlags & ZOOM_SHMEM ) {
+							PgFlushCx( dc );
+							PgShmemDestroy( mPhImageZoom->image );
+							}
+						else free( mPhImageZoom->image );
+						if( mPhImageZoom->mask_bm )
+					    free( mPhImageZoom->mask_bm );
+						free( mPhImageZoom );
+						mPhImageZoom = NULL;
         	  }
 
 					/* record the mDecodedY1 at the time of scaling */
 					mDecodedY2_when_scaled = mDecodedY2;
 
 					/* this is trying to estimate the image data size of the zoom image */
-					if (( mPhImage.bpl * scaled_w * scaled_h / mPhImage.size.w ) < IMAGE_SHMEM_THRESHOLD)
-						mPhImageZoom = MyPiResizeImage( &mPhImage, NULL, scaled_w, scaled_h, Pi_USE_COLORS);
-					else mPhImageZoom = MyPiResizeImage( &mPhImage, NULL, scaled_w, scaled_h, Pi_USE_COLORS|Pi_SHMEM);
+					if (( mPhImage.bpl * scaled_w * scaled_h / mPhImage.size.w ) < IMAGE_SHMEM_THRESHOLD) {
+						mPhImageZoom = PiResizeImage( &mPhImage, NULL, scaled_w, scaled_h, Pi_USE_COLORS);
+						mImageFlags |= ZOOM_SHMEM;
+						}
+					else {
+						mPhImageZoom = PiResizeImage( &mPhImage, NULL, scaled_w, scaled_h, Pi_USE_COLORS|Pi_SHMEM);
+						mImageFlags &= ~ZOOM_SHMEM;
+						}
 
 ///* ATENTIE */ printf( "\t\t\tzoom from=%d,%d to=%d,%d\n", mPhImage.size.w, mPhImage.size.h, scaled_w, scaled_h );
 					}
 				}
 			}
 
-		PgSetMultiClip( 1, &clip );
-		if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
-			PgDrawPhImagemx( &pos, use_zoom ? mPhImageZoom : &mPhImage, 0 );
+		PgSetMultiClipCx( gc, 1, &clip );
+		if ((mAlphaDepth == 1) || (mAlphaDepth == 0)) {
+			if( use_zoom ) {
+				if( mImageFlags & ZOOM_SHMEM )
+					PgDrawPhImageCxv( dc, &pos, mPhImageZoom, 0 );
+				else PgDrawPhImageCx( dc, &pos, mPhImageZoom, 0 );
+				}
+			else {
+				if( mImageFlags & IMAGE_SHMEM )
+					PgDrawPhImageCxv( dc, &pos, &mPhImage, 0 );
+				else PgDrawPhImageCx( dc, &pos, &mPhImage, 0 );
+				}
+			}
 		else
 		{
 			PgMap_t map;
@@ -514,18 +378,25 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 			map.dim.h = mAlphaHeight;
 			map.bpl = mAlphaRowBytes;
 			map.bpp = mAlphaDepth;
-			map.map = (char *)mAlphaBits;
-			PgSetAlphaBlend(&map, 0);
+			map.map = (unsigned char *)mAlphaBits;
+			PgSetAlphaBlendCx( gc, &map, 0 );
 
-			PgAlphaOn();
-			PgDrawPhImagemx( &pos, use_zoom ? mPhImageZoom : &mPhImage, 0 );
-			PgAlphaOff();
+			PgAlphaOnCx( gc );
+			if( use_zoom ) {
+				if( mImageFlags & ZOOM_SHMEM )
+					PgDrawPhImageCxv( dc, &pos, mPhImageZoom, 0 );
+				else PgDrawPhImageCx( dc, &pos, mPhImageZoom, 0 );
+				}
+			else {
+				if( mImageFlags & IMAGE_SHMEM )
+					PgDrawPhImageCxv( dc, &pos, &mPhImage, 0 );
+				else PgDrawPhImageCx( dc, &pos, &mPhImage, 0 );
+				}
+			PgAlphaOffCx( gc );
 
-			PgSetAlphaBlend( NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
+			PgSetAlphaBlendCx( gc, NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
 		}
-		PgSetMultiClip( 0, NULL );
-	}
-
+		PgSetMultiClipCx( gc, 0, NULL );
 
   	return NS_OK;
 }
@@ -538,55 +409,48 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	if (!aSurface || !mImageBits)
 		return (NS_ERROR_FAILURE);
 
-#ifdef ALLOW_PHIMAGE_CACHEING
-  	PRBool 	aOffScreen;
-  	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
-
-	drawing->IsOffscreen(&aOffScreen);
-	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
+	if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
 	{
-		PhArea_t sarea, darea;
-
-		sarea.pos.x=sarea.pos.y=0;
-		darea.pos=pos;
-		darea.size.w=sarea.size.w=aWidth;
-		darea.size.h=sarea.size.h=aHeight;
-		
-		PgContextBlitArea(mPhImageCache,&sarea,(PdOffscreenContext_t *)drawing->GetDC(),&darea);
-		PgFlush();	
-	}
-	else
-#endif
-	{
-		if ((mAlphaDepth == 1) || (mAlphaDepth == 0))
-		{
-			PgDrawPhImagemx(&pos, &mPhImage, 0);
-		}
-		else if (mAlphaDepth == 8)
-		{
-			PgMap_t map;
-
-			map.dim.w = mAlphaWidth;
-			map.dim.h = mAlphaHeight;
-			map.bpl = mAlphaRowBytes;
-			map.bpp = mAlphaDepth;
-			map.map = (char *)mAlphaBits;
-			PgSetAlphaBlend(&map, 0);
-
-			PgAlphaOn();
+		if( mImageFlags & IMAGE_SHMEM )
 			PgDrawPhImagemx( &pos, &mPhImage, 0 );
-			PgAlphaOff();
+		else PgDrawPhImage( &pos, &mPhImage, 0 );
+	}
+	else if (mAlphaDepth == 8)
+	{
+		PgMap_t map;
+		PhDrawContext_t *dc = PhDCGetCurrent();
+		PhGC_t *gc = PgGetGCCx( dc );
 
-			PgSetAlphaBlend( NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
-		}
+		map.dim.w = mAlphaWidth;
+		map.dim.h = mAlphaHeight;
+		map.bpl = mAlphaRowBytes;
+		map.bpp = mAlphaDepth;
+		map.map = (unsigned char *)mAlphaBits;
+		PgSetAlphaBlendCx( gc, &map, 0 );
+
+		PgAlphaOnCx( gc );
+		if( mImageFlags & IMAGE_SHMEM )
+			PgDrawPhImageCxv( dc, &pos, &mPhImage, 0 );
+		else PgDrawPhImageCx( dc, &pos, &mPhImage, 0 );
+		PgAlphaOffCx( gc );
+
+		PgSetAlphaBlendCx( gc, NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
 	}
 
-  	return NS_OK;
+ 	return NS_OK;
 }
 
 /* New Tile code *********************************************************************/
 NS_IMETHODIMP nsImagePh::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, nsRect &aSrcRect, nsRect &aTileRect ) {
 	PhPoint_t pos, space, rep;
+	PhDrawContext_t *dc;
+	PhGC_t *gc;
+
+	/* is this a 1x1 transparent image used for spacing? */
+	if( mWidth == 1 && mHeight == 1 && mAlphaDepth == 1 && mAlphaBits[0] == 0x0 ) return NS_OK;
+
+	dc = PhDCGetCurrent();
+	gc = PgGetGCCx( dc );
 
 	pos.x = aTileRect.x;
 	pos.y = aTileRect.y;
@@ -596,51 +460,47 @@ NS_IMETHODIMP nsImagePh::DrawTile(nsIRenderingContext &aContext, nsDrawingSurfac
 	rep.x = ( aTileRect.width + space.x - 1 ) / space.x;
 	rep.y = ( aTileRect.height + space.y - 1 ) / space.y;
 	PhRect_t clip = { {aTileRect.x, aTileRect.y}, {aTileRect.x + aTileRect.width, aTileRect.y + aTileRect.height} };
-	PgSetMultiClip( 1, &clip );
+	PgSetMultiClipCx( gc, 1, &clip );
 
-#ifdef ALLOW_PHIMAGE_CACHEING
-  	PRBool 	aOffScreen;
- 	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
-
-	drawing->IsOffscreen(&aOffScreen);
-	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
-	{
-		PhArea_t sarea, darea;
-		int x,y;
-		PdOffscreenContext_t *dc = (PdOffscreenContext_t *) drawing->GetDC(),*odc= (PdOffscreenContext_t *) PhDCSetCurrent(NULL);
-
-		sarea.pos.x=sarea.pos.y=0;
-		darea.pos=pos;
-		darea.size.w=sarea.size.w=mPhImage.size.w;
-		darea.size.h=sarea.size.h=mPhImage.size.h;
-
-		for (y=0; y<rep.y; y++)
-		{
-			for (x=0; x<rep.x; x++)
-			{
-				PgContextBlitArea(mPhImageCache,&sarea,dc,&darea);
-				darea.pos.x+=darea.size.w;
-			}
-			darea.pos.x=pos.x;
-			darea.pos.y+=darea.size.h;
+	if ((mAlphaDepth == 1) || (mAlphaDepth == 0)) {
+		if( mImageFlags & IMAGE_SHMEM )
+ 	  	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
+ 	  else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
 		}
+ 	else
+ 		{
+    PgMap_t map;
+    map.dim.w = mAlphaWidth;
+    map.dim.h = mAlphaHeight;
+    map.bpl = mAlphaRowBytes;
+    map.bpp = mAlphaDepth;
+    map.map = (unsigned char *)mAlphaBits;
+    PgSetAlphaBlendCx( gc, &map, 0 );
 
-		PgFlush();	
-		PhDCSetCurrent(odc);
-	}
-	else
-#endif
-	{
-		PgDrawRepPhImagemx( &mPhImage, 0, &pos, &rep, &space );
-	}
+    PgAlphaOnCx( gc );
+		if( mImageFlags & IMAGE_SHMEM )
+    	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
+    else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
+    PgAlphaOffCx( gc );
 
-	PgSetMultiClip( 0, NULL );
+		PgSetAlphaBlendCx( gc, NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
+   	}
+
+	PgSetMultiClipCx( gc, 0, NULL );
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect ) 
 {
 	PhPoint_t pos, space, rep;
+	PhDrawContext_t *dc ;
+	PhGC_t *gc;
+
+	/* is this a 1x1 transparent image used for spacing? */
+	if( mWidth == 1 && mHeight == 1 && mAlphaDepth == 1 && mAlphaBits[0] == 0x0 ) return NS_OK;
+
+	dc = PhDCGetCurrent();
+	gc = PgGetGCCx( dc );
 
 	// since there is an offset into the image and I only want to draw full
 	// images, shift the position back and set clipping so that it looks right
@@ -654,45 +514,33 @@ NS_IMETHODIMP nsImagePh::DrawTile( nsIRenderingContext &aContext, nsDrawingSurfa
 
 	/* not sure if cliping is necessary */
 	PhRect_t clip = { {aTileRect.x, aTileRect.y}, {aTileRect.x + aTileRect.width-1, aTileRect.y + aTileRect.height-1} };
-	PgSetMultiClip( 1, &clip );
+	PgSetMultiClipCx( gc, 1, &clip );
 
-#ifdef ALLOW_PHIMAGE_CACHEING
-  	PRBool 	aOffScreen;
-	nsDrawingSurfacePh* drawing = (nsDrawingSurfacePh*) aSurface;
-
-	drawing->IsOffscreen(&aOffScreen);
-	if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && aOffScreen)
-	{
-		PhArea_t sarea, darea;
-		int x,y;
-		PdOffscreenContext_t *dc = (PdOffscreenContext_t *) drawing->GetDC(),*odc= (PdOffscreenContext_t *) PhDCSetCurrent(NULL);
-
-		sarea.pos.x=sarea.pos.y=0;
-		darea.pos=pos;
-		darea.size.w=sarea.size.w=mPhImage.size.w;
-		darea.size.h=sarea.size.h=mPhImage.size.h;
-
-		for (y=0; y<rep.y; y++)
-		{
-			for (x=0; x<rep.x; x++)
-			{
-				PgContextBlitArea(mPhImageCache,&sarea,dc,&darea);
-				darea.pos.x+=darea.size.w;
-			}
-			darea.pos.x=pos.x;
-			darea.pos.y+=darea.size.h;
+	if ((mAlphaDepth == 1) || (mAlphaDepth == 0)) {
+		if( mImageFlags & IMAGE_SHMEM )
+ 	  	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
+ 	  else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
 		}
+ 	else
+ 		{
+    PgMap_t map;
+    map.dim.w = mAlphaWidth;
+    map.dim.h = mAlphaHeight;
+    map.bpl = mAlphaRowBytes;
+    map.bpp = mAlphaDepth;
+    map.map = (unsigned char *)mAlphaBits;
+    PgSetAlphaBlendCx( gc, &map, 0 );
+	
+    PgAlphaOnCx( gc );
+		if( mImageFlags & IMAGE_SHMEM )
+    	PgDrawRepPhImageCxv( dc, &mPhImage, 0, &pos, &rep, &space );
+    else PgDrawRepPhImageCx( dc, &mPhImage, 0, &pos, &rep, &space );
+    PgAlphaOffCx( gc );
 
-		PgFlush();	
-		PhDCSetCurrent(odc);
-	}
-	else
-#endif
-	{
-		PgDrawRepPhImagemx( &mPhImage, 0, &pos, &rep, &space );
-	}
+		PgSetAlphaBlendCx( gc, NULL, 0 ); /* this shouldn't be necessary, but the ph lib's gc is holding onto our mAlphaBits */
+ 	 	}
 
-	PgSetMultiClip( 0, NULL );
+	PgSetMultiClipCx( gc, 0, NULL );
 
 	return NS_OK;
 }
@@ -707,28 +555,6 @@ nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
 
 	/* TODO: remote graphics drivers should always cache the images offscreen regardless of wether there is a mask or not,
 			the Draw code will need to be updated for this */
-
-#ifdef ALLOW_PHIMAGE_CACHEING
-	PhPoint_t pos={0,0};
-	PhDrawContext_t *odc;
-
-	if ((mSizeImage > IMAGE_SHMEM_THRESHOLD) && (mPhImage.mask_bm == NULL))
-	{
-		if (mPhImageCache == NULL)
-		{
-			/* good candidate for an offscreen cached image */
-			if((mPhImageCache = PdCreateOffscreenContext(0,mPhImage.size.w,mPhImage.size.h,0)) != NULL)
-			{	
-				odc = PhDCSetCurrent (mPhImageCache);
-				PgDrawPhImagemx (&pos, &mPhImage, 0);
-				PgFlush();
-				PhDCSetCurrent(odc);
-				mIsOptimized = PR_TRUE;
-				return NS_OK;
-			}
-		}
-	}
-#endif // ALLOW_PHIMAGE_CACHEING
 
 	return NS_OK;
 }
@@ -756,66 +582,52 @@ NS_IMETHODIMP nsImagePh::DrawToImage(nsIImage* aDstImage,
   if (!dest->mPhImage.image)
     return NS_ERROR_FAILURE;
 
-#ifdef ALLOW_PHIMAGE_CACHEING
-    if (!mPhImage.mask_bm && mIsOptimized && mPhImageCache && dest->mPhImageCache)
-    {
-        PhArea_t sarea, darea;
-
-        sarea.pos.x = sarea.pos.y = 0;
-        darea.pos.x = aDX;
-        darea.pos.y = aDY;
-        darea.size.w = sarea.size.w = aDWidth;
-        darea.size.h = sarea.size.h = aDHeight;
-
-        PgContextBlitArea(mPhImageCache,&sarea,dest->mPhImageCache,&darea);
-        PgFlush();
-    }
-	else
-#endif
-	{
-		PhArea_t sarea, darea;
-		PhImage_t *pimage = NULL;
-		int start, x, y;
-		char mbit, mbyte;
-		int release = 0;
+	PhArea_t sarea, darea;
+	PhImage_t *pimage = NULL;
+	int start, x, y;
+	char mbit, mbyte;
+	int release = 0;
 		
-		sarea.pos.x = sarea.pos.y = 0;
-		darea.pos.x = aDX;
-		darea.pos.y = aDY;
-		darea.size.w = sarea.size.w = aDWidth;
-		darea.size.h = sarea.size.h = aDHeight;
+	sarea.pos.x = sarea.pos.y = 0;
+	darea.pos.x = aDX;
+	darea.pos.y = aDY;
+	darea.size.w = sarea.size.w = aDWidth;
+	darea.size.h = sarea.size.h = aDHeight;
 
-		if( mPhImage.size.h > 0 && ( aDWidth != mPhImage.size.w || aDHeight != mPhImage.size.h ) )
-		{
-			release = 1;
-			if ((aDHeight * mPhImage.bpl) < IMAGE_SHMEM_THRESHOLD)
-				pimage = MyPiResizeImage(&mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS);
-			else
-				pimage = MyPiResizeImage(&mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS|Pi_SHMEM);
-			if( !pimage ) pimage = &mPhImage;
-		}
-		else pimage = &mPhImage;
-
-		if( pimage == NULL ) return NS_OK;
-
-		start = (aDY * dest->mPhImage.bpl) + (aDX * mNumBytesPixel);
-		for (y = 0; y < pimage->size.h; y++)
-		{
-			for (x = 0; x < pimage->size.w; x++)
-			{
-				if (pimage->mask_bm)
-				{
-					mbyte = *(pimage->mask_bm + (pimage->mask_bpl * y) + (x >> 3));
-					mbit = x & 7;
-					if (!(mbyte & (0x80 >> mbit)))
-						continue;
-				}
-				memcpy(dest->mPhImage.image + start + (dest->mPhImage.bpl * y) + (x*mNumBytesPixel), 
-					   pimage->image + (pimage->bpl * y) + (x*mNumBytesPixel), mNumBytesPixel);
-			}
-		}
-		if (release)
-			PhReleaseImage(pimage);
+	if( mPhImage.size.h > 0 && ( aDWidth != mPhImage.size.w || aDHeight != mPhImage.size.h ) )
+	{
+		release = 1;
+		if ((aDHeight * mPhImage.bpl) < IMAGE_SHMEM_THRESHOLD)
+			pimage = PiResizeImage(&mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS);
+		else
+			pimage = PiResizeImage(&mPhImage, NULL, aDWidth, aDHeight, Pi_USE_COLORS|Pi_SHMEM);
 	}
+	else pimage = &mPhImage;
+
+	if( pimage == NULL ) return NS_OK;
+
+	start = (aDY * dest->mPhImage.bpl) + (aDX * mNumBytesPixel);
+	for (y = 0; y < pimage->size.h; y++)
+	{
+		for (x = 0; x < pimage->size.w; x++)
+		{
+			if (pimage->mask_bm)
+			{
+				mbyte = *(pimage->mask_bm + (pimage->mask_bpl * y) + (x >> 3));
+				mbit = x & 7;
+				if (!(mbyte & (0x80 >> mbit)))
+					continue;
+			}
+			memcpy(dest->mPhImage.image + start + (dest->mPhImage.bpl * y) + (x*mNumBytesPixel), 
+				   pimage->image + (pimage->bpl * y) + (x*mNumBytesPixel), mNumBytesPixel);
+		}
+	}
+
+	if( release ) {
+		pimage->flags = Ph_RELEASE_IMAGE_ALL;
+		PhReleaseImage(pimage);
+		free( pimage );
+		}
+
 	return NS_OK;
 }

@@ -144,6 +144,7 @@ protected:
 
   nsIDeviceContextSpec  *mSpec;
   nsNativeDeviceContext mDC;
+	PhGC_t								*mGC;
 
   static nscoord        mDpi;
 
