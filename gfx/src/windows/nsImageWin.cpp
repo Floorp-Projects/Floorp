@@ -20,6 +20,7 @@
 #include "nsImageWin.h"
 #include "nsRenderingContextWin.h"
 
+
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8  *aNumBitPix);
@@ -49,6 +50,7 @@ nsImageWin :: nsImageWin()
 	mHBitmap = nsnull;
 	mAlphaHBitmap = nsnull;
   mAlphaBits = nsnull;
+  mAlphaDepth = nsnull;
   mColorMap = nsnull;
   mBHead = nsnull;
 
@@ -140,13 +142,13 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     // Allocate mask image bits if requested
     if (aMaskRequirements != nsMaskRequirements_kNoMask){
       if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements){
-	mARowBytes = (aWidth + 7) / 8;
-	mAlphaDepth = 1;
+	       mARowBytes = (aWidth + 7) / 8;
+         mAlphaDepth = 1;
       }else{
-	NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
-		     "unexpected mask depth");
-	mARowBytes = aWidth;
-	mAlphaDepth = 8;
+         //NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
+		     // "unexpected mask depth");
+         mARowBytes = aWidth;
+         mAlphaDepth = 8;
       }
 
       // 32-bit align each row
@@ -269,7 +271,29 @@ struct MONOBITMAPINFO {
     bmiColors[1].rgbReserved = 0;
   }
 };
+struct ALPHA8BITMAPINFO {
+  BITMAPINFOHEADER  bmiHeader;
+  RGBQUAD           bmiColors[256];
 
+  ALPHA8BITMAPINFO(LONG aWidth, LONG aHeight)
+  {
+    memset(&bmiHeader, 0, sizeof(bmiHeader));
+    bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmiHeader.biWidth = aWidth;
+    bmiHeader.biHeight = aHeight;
+    bmiHeader.biPlanes = 1;
+    bmiHeader.biBitCount = 8;
+
+    /* fill in gray scale palette */
+     int i;
+     for(i=0; i < 256; i++){
+      bmiColors[i].rgbBlue = 255-i;
+      bmiColors[i].rgbGreen = 255-i;
+      bmiColors[i].rgbRed = 255-i;
+      bmiColors[1].rgbReserved = 0;
+     }
+  }
+};
 // Raster op used with MaskBlt(). Assumes our transparency mask has 0 for the
 // opaque pixels and 1 for the transparent pixels. That means we want the
 // background raster op (value of 0) to be SRCCOPY, and the foreground raster
@@ -297,14 +321,25 @@ void nsImageWin :: CreateDDB(nsDrawingSurface aSurface)
 
       if (nsnull != mAlphaBits)
       {
-	// Create a monochrome bitmap
-	// XXX Handle the case of 8-bit alpha...
-	NS_ASSERTION(1 == mAlphaDepth, "unexpected alpha depth");
-	mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
+        if(1==mAlphaDepth){
+     	// Create a monochrome bitmap
+    	// XXX Handle the case of 8-bit alpha...
+      	NS_ASSERTION(1 == mAlphaDepth, "unexpected alpha depth");
+      	mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
 
-	MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
-	::SetDIBits(TheHDC, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
-		    (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+      	MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+      	::SetDIBits(TheHDC, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
+		      (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+        }
+        if(8==mAlphaDepth)
+        {
+        	NS_ASSERTION(8 == mAlphaDepth, "unexpected alpha depth");
+        	mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 8, NULL);
+
+	        ALPHA8BITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+	        ::SetDIBits(TheHDC, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
+		          (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+        }
       }
 
       CleanUp(PR_FALSE);
@@ -455,17 +490,30 @@ PRInt32 canRaster;
       DWORD rop = SRCCOPY;
 
       if (nsnull != mAlphaBits){
-	      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+        if( 1==mAlphaDepth){
+	        MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
 
-	      ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
+	        ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,0, 0, 
+                    mAlphaWidth, mAlphaHeight, mAlphaBits,
 			            (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-	      rop = SRCPAINT;
+	         rop = SRCPAINT;
+        }
+        else if( 8==mAlphaDepth){              
+            ALPHA8BITMAPINFO bmi(mAlphaWidth, mAlphaHeight);
+
+          	::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
+	      	   	0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
+	     	    	(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+       	     rop = SRCPAINT;
+
+        }
       }
 
       ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
 		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
 		      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
 		      DIB_RGB_COLORS, rop);
+
     }else{
       nsIDeviceContext    *dx;
       aContext.GetDeviceContext(dx);
@@ -477,23 +525,32 @@ PRInt32 canRaster;
       if (nsnull != srcDS){
 	      srcDS->GetDC(&srcDC);
 
-	      if (NULL != srcDC){
-	        HBITMAP oldBits;
+      if (NULL != srcDC){
+        HBITMAP oldBits;
+        if((8 == mAlphaDepth)&&(nsnull==mAlphaHBitmap)){
+       	   mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 8, NULL);
 
-	        if (nsnull == mAlphaHBitmap){
-            canRaster = ::GetDeviceCaps(TheHDC, TECHNOLOGY);
-            if(canRaster == DT_RASPRINTER){
-              if(!(GetDeviceCaps(TheHDC,RASTERCAPS) &(RC_BITBLT | RC_STRETCHBLT))) {
+           ALPHA8BITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+           ::SetDIBits(TheHDC, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
+	             (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+        }
+
+        if (nsnull == mAlphaHBitmap){
+          canRaster = ::GetDeviceCaps(TheHDC, TECHNOLOGY);
+          if(canRaster == DT_RASPRINTER){
+            if(!(GetDeviceCaps(TheHDC,RASTERCAPS) &(RC_BITBLT | RC_STRETCHBLT))) {
                 // we have an error with the printer not supporting a raster device
-              } else {
-                PrintDDB(aSurface,aX,aY,aWidth,aHeight);
-              }
             } else {
-	            oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-	            ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-			         mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+                PrintDDB(aSurface,aX,aY,aWidth,aHeight);
             }
-	        }else {
+          } else {
+            oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
+            ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
+		         mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+          }
+        }else {  
+          /* mAlphaHBitmap > 0 */
+          if( 1==mAlphaDepth ){
             if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight)){
 	            oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
 	            ::MaskBlt(TheHDC, aX, aY, aWidth, aHeight,
@@ -511,15 +568,22 @@ PRInt32 canRaster;
 	              ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
 			           mBHead->biWidth, mBHead->biHeight, SRCPAINT);
 	            }
-            }
-	        ::SelectObject(srcDC, oldBits);
+          } //alphadepth
+          else if(8==mAlphaDepth){            
+              ALPHA8BITMAPINFO bmi(mAlphaWidth, mAlphaHeight);
 
-	        srcDS->ReleaseDC();
-	        }
-      }
-
-      NS_RELEASE(dx);
-    }
+          	  ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
+	      	     	0, 0, mAlphaWidth, mAlphaHeight, mAlphaBits,
+	     	      	(LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+       	       // rop = SRCPAINT;
+          }
+       }
+       ::SelectObject(srcDC, oldBits);
+       srcDS->ReleaseDC();
+     }
+   }
+   NS_RELEASE(dx);
+  }
 
     ((nsDrawingSurfaceWin *)aSurface)->ReleaseDC();
   }
