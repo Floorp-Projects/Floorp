@@ -84,6 +84,9 @@ public:
 
     static nsresult
     GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);
+
+    static nsresult
+    GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute, nsIRDFResource** aResult);
 };
 
 

@@ -562,9 +562,25 @@ nsRDFContentUtils::IsContainedBy(nsIContent* aElement, nsIContent* aContainer)
 nsresult
 nsRDFContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult)
 {
+    // construct a fully-qualified URI from the namespace/tag pair.
     NS_PRECONDITION(aAttribute != nsnull, "null ptr");
     if (! aAttribute)
         return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    nsAutoString attr;
+    rv = aAttribute->ToString(attr);
+    if (NS_FAILED(rv)) return rv;
+
+    return GetResource(aNameSpaceID, attr, aResult);
+}
+
+
+nsresult
+nsRDFContentUtils::GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute, nsIRDFResource** aResult)
+{
+    // construct a fully-qualified URI from the namespace/tag pair.
 
     // XXX should we allow nodes with no namespace???
     NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "no namespace");
@@ -573,7 +589,6 @@ nsRDFContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDF
 
     nsresult rv;
 
-    // construct a fully-qualified URI from the namespace/tag pair.
     NS_WITH_SERVICE(nsINameSpaceManager, nsmgr, kNameSpaceManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -582,12 +597,10 @@ nsRDFContentUtils::GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDF
     // XXX ignore failure; treat as "no namespace"
 
     // XXX check to see if we need to insert a '/' or a '#'
-    nsAutoString attr;
-    aAttribute->ToString(attr);
-    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && attr.First() != '#')
+    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && aAttribute.First() != '#')
         uri.Append('#');
 
-    uri.Append(attr);
+    uri.Append(aAttribute);
 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
