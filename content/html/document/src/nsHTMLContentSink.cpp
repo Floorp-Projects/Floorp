@@ -3712,7 +3712,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 		mHTMLDocument->GetDTDMode(mode);
 
 		PRBool isStyleSheet = PR_FALSE;			// see bug 18817
-		if (eDTDMode_noquirks== mode) {
+		if (eDTDMode_strict== mode) {
 			if (mimeType.EqualsIgnoreCase("text/css")) {
 				isStyleSheet = PR_TRUE;					// strict mode + good mime type
 			}
