@@ -81,6 +81,8 @@ CPPSRCS =				\
 	nsUnicodeToCP1257.cpp		\
 	nsUnicodeToCP1258.cpp		\
 	nsUnicodeToCP874.cpp		\
+	nsUnicodeToKOI8R.cpp		\
+	nsUnicodeToKOI8U.cpp		\
 	nsUnicodeToMacRoman.cpp		\
 	nsUnicodeToMacCE.cpp		\
 	nsUnicodeToMacGreek.cpp		\
@@ -120,6 +122,8 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsCP1257ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP1258ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP874ToUnicode.obj 		\
+	.\$(OBJDIR)\nsKOI8RToUnicode.obj 		\
+	.\$(OBJDIR)\nsKOI8UToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacRomanToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacCEToUnicode.obj 		\
 	.\$(OBJDIR)\nsMacGreekToUnicode.obj 		\
@@ -153,6 +157,8 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToCP1257.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP1258.obj		\
 	.\$(OBJDIR)\nsUnicodeToCP874.obj		\
+	.\$(OBJDIR)\nsUnicodeToKOI8R.obj		\
+	.\$(OBJDIR)\nsUnicodeToKOI8U.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacRoman.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacCE.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacGreek.obj		\
