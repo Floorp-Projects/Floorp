@@ -31,14 +31,12 @@ XPIDL_MODULE = windowds
 LIBRARY_NAME = windowds_s
 
 REQUIRES	= xpcom \
-			  string \
-			  appshell \
-			  rdf \
-			  dom \
-			  docshell \
-			  content \
-			  widget \
-			  $(NULL)
+		  string \
+		  appshell \
+		  rdf \
+		  dom \
+		  content \
+		  $(NULL)
 
 CPPSRCS = nsWindowDataSource.cpp
 

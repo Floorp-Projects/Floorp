@@ -44,15 +44,6 @@
 
 #include "nsIWindowMediator.h"
 
-// we need all these for GetAttribute() - *sigh*
-#include "nsIDocShell.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
-#include "nsIContentViewer.h"
-#include "nsIDocumentViewer.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-
 PRUint32 nsWindowDataSource::windowCount = 0;
 
 nsIRDFResource* nsWindowDataSource::kNC_Name = nsnull;
@@ -70,29 +61,19 @@ static const char kURINC_WindowRoot[] = "NC:WindowMediatorRoot";
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, KeyIndex);
 
-static void
-GetAttribute( nsIXULWindow* inWindow,
-              const nsAString& inAttribute, nsAString& outValue);
-
-static already_AddRefed<nsIDOMNode>
-GetDOMNodeFromDocShell(nsIDocShell* aShell);
-
-
 nsresult
 nsWindowDataSource::Init()
 {
     nsresult rv;
 
-    rv = nsServiceManager::GetService("@mozilla.org/rdf/rdf-service;1",
-                                      NS_GET_IID(nsIRDFService),
-                                      (nsISupports**)&gRDFService);
+    rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
     if (NS_FAILED(rv)) return rv;
 
     gRDFService->GetResource(kURINC_WindowRoot, &kNC_WindowRoot);
     gRDFService->GetResource(kURINC_Name,       &kNC_Name);
     gRDFService->GetResource(kURINC_KeyIndex,   &kNC_KeyIndex);
 
-    rv = CallCreateInstance("@mozilla.org/rdf/in-memory-datasource", &mInner);
+    rv = CallCreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource", &mInner);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFContainerUtils> rdfc =
@@ -124,6 +105,39 @@ nsWindowDataSource::~nsWindowDataSource()
     }
 }
 
+#if 0
+NS_IMETHODIMP_(nsrefcnt)
+nsWindowMediator::Release()
+{
+	// We need a special implementation of Release() due to having
+	// two circular references:  mInner and mContainer
+
+	NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
+	--mRefCnt;
+	NS_LOG_RELEASE(this, mRefCnt, "nsWindowMediator");
+
+	if (mInner && mRefCnt == 2)
+	{
+		NS_IF_RELEASE(mContainer);
+		mContainer = nsnull;
+
+		nsIRDFDataSource* tmp = mInner;
+		mInner = nsnull;
+		NS_IF_RELEASE(tmp);
+		return(0);
+	}
+	else if (mRefCnt == 0)
+	{
+		mRefCnt = 1;
+		delete this;
+		return(0);
+	}
+	return(mRefCnt);
+}
+
+#endif
+
+
 NS_IMPL_ISUPPORTS3(nsWindowDataSource,
                    nsIWindowMediatorListener,
                    nsIWindowDataSource,
@@ -138,42 +152,39 @@ NS_IMETHODIMP
 nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
                                         const PRUnichar *newTitle)
 {
+    nsresult rv;
+    
     nsISupportsKey key(window);
+
     nsCOMPtr<nsISupports> sup =
         dont_AddRef(mWindowResources.Get(&key));
+
+    NS_ENSURE_TRUE(sup, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIRDFResource> windowResource =
         do_QueryInterface(sup);
 
+    nsCOMPtr<nsIRDFLiteral> newTitleLiteral;
+    rv = gRDFService->GetLiteral(newTitle, getter_AddRefs(newTitleLiteral));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // get the old title
     nsCOMPtr<nsIRDFNode> oldTitleNode;
-    GetTarget(windowResource, kNC_Name, PR_TRUE, getter_AddRefs(oldTitleNode));
-
-    nsCOMPtr<nsIRDFLiteral> oldTitleLiteral = do_QueryInterface(oldTitleNode);
-
-    nsCOMPtr<nsIRDFLiteral> newTitleLiteral;
-    gRDFService->GetLiteral(newTitle, getter_AddRefs(newTitleLiteral));
-
+    rv = GetTarget(windowResource, kNC_Name, PR_TRUE,
+                   getter_AddRefs(oldTitleNode));
+    
     // assert the change
-    Change(windowResource, kNC_Name, oldTitleLiteral, newTitleLiteral);
+    if (NS_SUCCEEDED(rv) && oldTitleNode)
+        // has an existing window title, update it
+        rv = Change(windowResource, kNC_Name, oldTitleNode, newTitleLiteral);
+    else
+        // removed from the tasklist
+        rv = Assert(windowResource, kNC_Name, newTitleLiteral, PR_TRUE);
 
-    // todo: check the "intaskslist" attribute
-#if 0
-    // Should this title be displayed
-    PRBool display = PR_TRUE;
-    nsAutoString displayString;
-    GetAttribute( inWindow, NS_LITERAL_STRING("intaskslist"), displayString );
-    ToLowerCase(displayString);
-
-    if ( displayString.Equals(NS_LITERAL_STRING("false")) )
-      display=PR_FALSE;
-
-    rv = Assert( window , kNC_Name, newTitle, display );
     if (rv != NS_RDF_ASSERTION_ACCEPTED)
     {
       NS_ERROR("unable to set window name");
     }
-#endif
     
     return NS_OK;
 }
@@ -201,12 +212,11 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
 NS_IMETHODIMP
 nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
 {
-    
     nsISupportsKey key(window);
     nsCOMPtr<nsIRDFResource> resource;
 
     nsresult rv;
-    
+
     if (!mWindowResources.Remove(&key, getter_AddRefs(resource)))
         return NS_ERROR_UNEXPECTED;
 
@@ -272,7 +282,8 @@ nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
         else if (newKeyInt)
             Assert(windowResource, kNC_KeyIndex, newKeyInt, PR_TRUE);
         
-        // probably never going to happen - we've lost the current keyindex
+        // somehow inserting a window above this one,
+        // "9" to (none)
         else if (oldKeyInt)
             Unassert(windowResource, kNC_KeyIndex, oldKeyInt);
         
@@ -455,60 +466,3 @@ NS_IMETHODIMP nsWindowDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResou
     return mInner->HasArcOut(aSource, aArc, _retval);
 }
 
-// helper methods
-
-void
-GetAttribute( nsIXULWindow* inWindow,
-              const nsAString& inAttribute, nsAString& outValue)
-{
-  nsCOMPtr<nsIDocShell> shell;
-  if ( inWindow &&
-      NS_SUCCEEDED(inWindow->GetDocShell(getter_AddRefs(shell))))
-  {
-      nsCOMPtr<nsIDOMNode> node( GetDOMNodeFromDocShell(shell));
-    
-    if (node)
-    {
-      nsCOMPtr<nsIDOMElement> webshellElement( do_QueryInterface(node));
-      if ( webshellElement.get())
-        webshellElement->GetAttribute(nsAutoString(inAttribute), outValue);
-      }
-  }
-}
-
-already_AddRefed<nsIDOMNode>
-GetDOMNodeFromDocShell(nsIDocShell *aShell)
-{
-  nsIDOMNode* node = nsnull;
-
-  nsCOMPtr<nsIContentViewer> cv;
-  aShell->GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-    nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-    if (docv) {
-      nsCOMPtr<nsIDocument> doc;
-      docv->GetDocument(*getter_AddRefs(doc));
-      if (doc) {
-        nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(doc));
-        if (domdoc) {
-          nsCOMPtr<nsIDOMElement> element;
-          domdoc->GetDocumentElement(getter_AddRefs(element));
-          if (element)
-              CallQueryInterface(element, &node);
-        }
-      }
-    }
-  }
-
-  return node;
-}
-
-
-#if 0
-// this is how we need to be registered:
-  { "Window Mediator",
-    NS_WINDOWDATASOURCE_CID,
-    NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-    nsWindowDataSourceConstructor,
-  },
-#endif
