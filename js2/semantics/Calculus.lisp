@@ -3236,6 +3236,19 @@
            (list 'expr-annotation:special-form special-form vector-annotated-expr low-annotated-expr nil)))))))
 
 
+; (cons <value-expr> <vector-expr>)
+; Returns a vector consisting of <value-expr> followed by all values in <vector-expr>.
+(defun scan-cons (world type-env special-form value-expr vector-expr)
+  (multiple-value-bind (vector-code vector-type vector-annotated-expr) (scan-vector-value world type-env vector-expr)
+    (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env value-expr (vector-element-type vector-type))
+      (values
+       (if (eq vector-type (world-string-type world))
+         `(concatenate 'string (list ,value-code) ,vector-code)
+         (list 'cons value-code vector-code))
+       vector-type
+       (list 'expr-annotation:special-form special-form value-annotated-expr vector-annotated-expr)))))
+
+
 ; (append <vector-expr> <vector-expr>)
 ; Returns a vector contatenating the two given vectors, which must have the same element type.
 (defun scan-append (world type-env special-form vector1-expr vector2-expr)
@@ -4665,6 +4678,7 @@
      (vector-of scan-vector-of depict-vector-expr)
      (nth scan-nth depict-nth)
      (subseq scan-subseq depict-subseq)
+     (cons scan-cons depict-cons)
      (append scan-append depict-append)
      (set-nth scan-set-nth depict-set-nth)
      

@@ -652,6 +652,17 @@
       (depict markup-stream "]"))))
 
 
+; (cons <value-expr> <vector-expr>)
+(defun depict-cons (markup-stream world level value-annotated-expr vector-annotated-expr)
+  (depict-expr-parentheses (markup-stream level %term%)
+    (depict-logical-block (markup-stream 0)
+      (depict markup-stream :vector-begin)
+      (depict-expression markup-stream world value-annotated-expr %expr%)
+      (depict markup-stream :vector-end " " :vector-append)
+      (depict-break markup-stream 1)
+      (depict-expression markup-stream world vector-annotated-expr %term%))))
+
+
 ; (append <vector-expr> <vector-expr>)
 (defun depict-append (markup-stream world level vector1-annotated-expr vector2-annotated-expr)
   (depict-expr-parentheses (markup-stream level %term%)
