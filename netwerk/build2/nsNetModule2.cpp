@@ -39,8 +39,6 @@
 
 #include "nsGopherHandler.h"
 #include "nsFtpProtocolHandler.h"
-#include "nsFingerHandler.h"
-#include "nsDateTimeHandler.h"
 #include "nsViewSourceHandler.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
@@ -61,20 +59,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_FTPPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp",
       nsFtpProtocolHandlerConstructor
-    },
-
-    // from netwerk/protocol/finger:
-    { "The Finger Protocol Handler", 
-      NS_FINGERHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "finger",
-      nsFingerHandler::Create
-    },
-
-    // from netwerk/protocol/datetime:
-    { "The DateTime Protocol Handler", 
-      NS_DATETIMEHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "datetime",
-      nsDateTimeHandler::Create
     },
 
     // from netwerk/protocol/viewsource:

@@ -392,13 +392,9 @@ netwerk/protocol/about/src/Makefile
 netwerk/protocol/data/Makefile
 netwerk/protocol/data/public/Makefile
 netwerk/protocol/data/src/Makefile
-netwerk/protocol/datetime/src/Makefile
-netwerk/protocol/datetime/Makefile
 netwerk/protocol/file/Makefile
 netwerk/protocol/file/public/Makefile
 netwerk/protocol/file/src/Makefile
-netwerk/protocol/finger/Makefile
-netwerk/protocol/finger/src/Makefile
 netwerk/protocol/ftp/Makefile
 netwerk/protocol/ftp/public/Makefile
 netwerk/protocol/ftp/src/Makefile
@@ -1063,6 +1059,12 @@ for extension in $MOZ_EXTENSIONS; do
         cview ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/cview/Makefile
             extensions/cview/resources/Makefile
+            " ;;
+        datetime ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/datetime/Makefile
+            " ;;
+        finger ) MAKEFILES_extensions="$MAKEFILES_extensions
+            extensions/finger/Makefile
             " ;;
         help ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/help/Makefile
