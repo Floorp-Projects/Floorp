@@ -990,6 +990,8 @@ nsSystemFontsGTK::GetSystemFontInfo(GtkWidget *aWidget, nsFont* aFont,
   size = pango_font_description_get_size(desc);
 
   aFont->size = NSIntPointsToTwips(size / PANGO_SCALE);
+  
+  pango_font_description_free(desc);
 
   return NS_OK;
 }
@@ -1183,6 +1185,7 @@ xlfd_from_pango_font_description(GtkWidget *aWidget,
   for (i = 0; i < count; i++) {
     subfont = pango_x_font_subfont_xlfd(font, subfont_ids[i]);
     AppendFontFFREName(aFontName, subfont);
+    g_free(subfont);
     aFontName.Append(PRUnichar(','));
   }
 
