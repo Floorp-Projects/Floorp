@@ -190,6 +190,9 @@ JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script);
 extern JS_PUBLIC_API(uintN)
 JS_GetScriptLineExtent(JSContext *cx, JSScript *script);
 
+extern JS_PUBLIC_API(JSVersion)
+JS_GetScriptVersion(JSContext *cx, JSScript *script);
+     
 /************************************************************************/
 
 /*
