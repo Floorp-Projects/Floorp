@@ -536,6 +536,9 @@ public:
     Native2WrappedNativeMap* 
     GetWrappedNativeMap() const {return mWrappedNativeMap;}
 
+    nsXPCComponents*
+    GetComponents() const {return mComponents;}
+
     static nsXPCWrappedNativeScope* 
     FindInJSObjectScope(XPCContext* xpcc, JSObject* obj);
 
@@ -544,7 +547,7 @@ public:
 
     JSBool IsValid() const {return mRuntime != nsnull;}
 
-    nsXPCWrappedNativeScope(XPCContext* xpcc);
+    nsXPCWrappedNativeScope(XPCContext* xpcc, nsXPCComponents* comp);
     virtual ~nsXPCWrappedNativeScope();
 private:
     nsXPCWrappedNativeScope(); // not implemented
@@ -554,6 +557,7 @@ private:
 
     XPCJSRuntime*             mRuntime;
     Native2WrappedNativeMap*  mWrappedNativeMap;
+    nsXPCComponents*          mComponents;
     nsXPCWrappedNativeScope*  mNext;
 };
 
@@ -1155,7 +1159,8 @@ private:
 class nsXPCException : public nsIXPCException
 {
 public:
-    // all the interface method declarations...
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_XPCEXCEPTION_CID)
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCEXCEPTION
 
@@ -1227,6 +1232,8 @@ extern JSBool xpc_InitWrappedNativeJSOps();
 class nsJSID : public nsIJSID
 {
 public:
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_JS_ID_CID)
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIJSID
 
@@ -1371,11 +1378,14 @@ private:
     nsXPCComponents();
 
 private:
-    nsXPCInterfaces*         mInterfaces;
-    nsXPCClasses*            mClasses;
-    nsXPCClassesByID*        mClassesByID;
-    nsXPCResults*            mResults;
-    PRBool                   mCreating;
+    nsXPCComponents_Interfaces*  mInterfaces;
+    nsXPCComponents_Classes*     mClasses;
+    nsXPCComponents_ClassesByID* mClassesByID;
+    nsXPCComponents_Results*     mResults;
+    nsXPCComponents_ID*          mID;
+    nsXPCComponents_Exception*   mException;
+    nsXPCComponents_Constructor* mConstructor;
+    PRBool                       mCreating;
 };
 
 /***************************************************************************/

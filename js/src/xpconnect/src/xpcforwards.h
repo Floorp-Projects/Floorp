@@ -58,10 +58,14 @@ class XPCJSThrower;
 class XPCJSStack;
 class XPCNativeMemberDescriptor;
 
-class nsXPCInterfaces;
-class nsXPCClasses;
-class nsXPCClassesByID;
-class nsXPCResults;
-
+class nsXPCComponents;
+class nsXPCComponents_Interfaces;
+class nsXPCComponents_Classes;
+class nsXPCComponents_ClassesByID;
+class nsXPCComponents_Results;
+class nsXPCComponents_ID;
+class nsXPCComponents_Exception;
+class nsXPCComponents_Constructor;
+class nsXPCConstructor;
 
 #endif /* xpcforwards_h___ */
