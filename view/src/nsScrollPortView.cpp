@@ -77,7 +77,8 @@ public:
   nscoord mDestinationY;
 };
 
-nsScrollPortView::nsScrollPortView()
+nsScrollPortView::nsScrollPortView(nsViewManager* aViewManager)
+  : nsView(aViewManager)
 {
   mOffsetX = mOffsetY = 0;
   mOffsetXpx = mOffsetYpx = 0;

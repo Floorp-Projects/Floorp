@@ -90,7 +90,6 @@
 #endif
 #include "nsIServiceManager.h"
 
-static NS_DEFINE_CID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
 /******************************************************************************
@@ -698,14 +697,6 @@ nsresult
 nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
 {
   // create, init, set the parent of the view
-  nsIView* innerView;
-  nsresult rv = CallCreateInstance(kCViewCID, &innerView);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not create inner view");
-    return rv;
-  }
-  mInnerView = innerView;
-
   nsIView* outerView = GetView();
   NS_ASSERTION(outerView, "Must have an outer view already");
   nsRect viewBounds(0, 0, 0, 0); // size will be fixed during reflow
@@ -713,8 +704,13 @@ nsSubDocumentFrame::CreateViewAndWidget(nsContentType aContentType)
   nsIViewManager* viewMan = outerView->GetViewManager();
   // Create the inner view hidden if the outer view is already hidden
   // (it won't get hidden properly otherwise)
-  rv = innerView->Init(viewMan, viewBounds, outerView,
-                       outerView->GetVisibility());
+  nsIView* innerView = viewMan->CreateView(viewBounds, outerView,
+                                           outerView->GetVisibility());
+  if (!innerView) {
+    NS_ERROR("Could not create inner view");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mInnerView = innerView;
   viewMan->InsertChild(outerView, innerView, nsnull, PR_TRUE);
 
   nsWidgetInitData initData;

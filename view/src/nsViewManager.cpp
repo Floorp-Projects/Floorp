@@ -602,6 +602,35 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIView *)
+nsViewManager::CreateView(const nsRect& aBounds,
+                          const nsIView* aParent,
+                          nsViewVisibility aVisibilityFlag)
+{
+  nsView *v = new nsView(this, aVisibilityFlag);
+  if (v) {
+    v->SetPosition(aBounds.x, aBounds.y);
+    nsRect dim(0, 0, aBounds.width, aBounds.height);
+    v->SetDimensions(dim, PR_FALSE);
+    v->SetParent(NS_STATIC_CAST(nsView*, NS_CONST_CAST(nsIView*, aParent)));
+  }
+  return v;
+}
+
+NS_IMETHODIMP_(nsIScrollableView *)
+nsViewManager::CreateScrollableView(const nsRect& aBounds,
+                                    const nsIView* aParent)
+{
+  nsScrollPortView *v = new nsScrollPortView(this);
+  if (v) {
+    v->SetPosition(aBounds.x, aBounds.y);
+    nsRect dim(0, 0, aBounds.width, aBounds.height);
+    v->SetDimensions(dim, PR_FALSE);
+    v->SetParent(NS_STATIC_CAST(nsView*, NS_CONST_CAST(nsIView*, aParent)));
+  }
+  return v;
+}
+
 NS_IMETHODIMP nsViewManager::GetRootView(nsIView *&aView)
 {
   aView = mRootView;
@@ -2607,10 +2636,9 @@ NS_IMETHODIMP nsViewManager::InsertZPlaceholder(nsIView *aParent, nsIView *aChil
   NS_PRECONDITION(nsnull != parent, "null ptr");
   NS_PRECONDITION(nsnull != child, "null ptr");
 
-  nsZPlaceholderView* placeholder = new nsZPlaceholderView();
-  nsRect bounds(0, 0, 0, 0);
+  nsZPlaceholderView* placeholder = new nsZPlaceholderView(this);
   // mark the placeholder as "shown" so that it will be included in a built display list
-  placeholder->Init(this, bounds, parent, nsViewVisibility_kShow);
+  placeholder->SetParent(parent);
   placeholder->SetReparentedView(child);
   placeholder->SetZIndex(child->GetZIndexIsAuto(), child->GetZIndex(), child->IsTopMost());
   child->SetZParent(placeholder);

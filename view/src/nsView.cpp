@@ -168,18 +168,18 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
 MOZ_DECL_CTOR_COUNTER(nsView)
 
-nsView::nsView()
+nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
 {
   MOZ_COUNT_CTOR(nsView);
 
-  mVis = nsViewVisibility_kShow;
+  mVis = aVisibility;
   // Views should be transparent by default. Not being transparent is
   // a promise that the view will paint all its pixels opaquely. Views
   // should make this promise explicitly by calling
   // SetViewContentTransparency.
   mVFlags = NS_VIEW_FLAG_TRANSPARENT;
   mOpacity = 1.0f;
-  mViewManager = nsnull;
+  mViewManager = aViewManager;
   mChildRemoved = PR_FALSE;
   mDirtyRegion = nsnull;
 }
@@ -289,34 +289,6 @@ nsView* nsView::GetViewFor(nsIWidget* aWidget)
   if (wrapper)
     return wrapper->GetView();  
   return nsnull;
-}
-
-nsresult nsIView::Init(nsIViewManager* aManager,
-                       const nsRect &aBounds,
-                       const nsIView *aParent,
-                       nsViewVisibility aVisibilityFlag)
-{
-  //printf(" \n callback=%d data=%d", aWidgetCreateCallback, aCallbackData);
-  NS_PRECONDITION(nsnull != aManager, "null ptr");
-  if (nsnull == aManager) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (nsnull != mViewManager) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-  // we don't hold a reference to the view manager
-  mViewManager = NS_STATIC_CAST(nsViewManager*, aManager);
-
-  nsView* v = NS_STATIC_CAST(nsView*, this);
-  v->SetPosition(aBounds.x, aBounds.y);
-  nsRect dim(0, 0, aBounds.width, aBounds.height);
-  v->SetDimensions(dim, PR_FALSE);
-  v->SetVisibility(aVisibilityFlag);
-
-  // We shouldn't set the parent here. It should be set when we put this view
-  // into the view hierarchy.
-  v->SetParent(NS_STATIC_CAST(nsView*, NS_CONST_CAST(nsIView*, aParent)));
-  return NS_OK;
 }
 
 void nsIView::Destroy()

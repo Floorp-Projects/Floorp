@@ -226,7 +226,6 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aD
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
-static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
@@ -2641,13 +2640,9 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   nsRect tbounds = nsRect(0, 0, width, height);
 
   // Create a child window of the parent that is our "root view/window"
-  rv = CallCreateInstance(kViewCID, &aPO->mRootView);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = (aPO->mRootView)->Init(aPO->mViewManager, tbounds, nsnull);
-  if (NS_FAILED(rv)) {
-    return rv;
+  aPO->mRootView = aPO->mViewManager->CreateView(tbounds, nsnull);
+  if (!aPO->mRootView) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
 #ifdef NS_PRINT_PREVIEW

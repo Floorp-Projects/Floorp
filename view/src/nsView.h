@@ -84,7 +84,8 @@ class nsZPlaceholderView;
 class nsView : public nsIView
 {
 public:
-  nsView();
+  nsView(nsViewManager* aViewManager = nsnull,
+         nsViewVisibility aVisibility = nsViewVisibility_kShow);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 

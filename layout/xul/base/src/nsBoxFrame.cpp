@@ -89,7 +89,6 @@
 #include "nsWidgetsCID.h"
 #include "nsLayoutAtoms.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsViewsCID.h"
 #include "nsIScrollableView.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIWidget.h"
@@ -2440,18 +2439,12 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
       NS_ASSERTION(parent, "GetAncestorWithView failed");
       nsIView* parentView = parent->GetView();
       NS_ASSERTION(parentView, "no parent with view");
+      nsIViewManager* viewManager = parentView->GetViewManager();
+      NS_ASSERTION(nsnull != viewManager, "null view manager");
 
       // Create a view
-      static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
-      nsIView *view;
-      nsresult result = CallCreateInstance(kViewCID, &view);
-      if (NS_SUCCEEDED(result)) {
-        nsIViewManager* viewManager = parentView->GetViewManager();
-        NS_ASSERTION(nsnull != viewManager, "null view manager");
-
-        // Initialize the view
-        view->Init(viewManager, aFrame->GetRect(), parentView);
-
+      nsIView *view = viewManager->CreateView(aFrame->GetRect(), parentView);
+      if (view) {
         // If the frame has a fixed background attachment, then indicate that the
         // view's contents should be repainted and not bitblt'd
         if (fixedBackgroundAttachment) {
@@ -2525,7 +2518,8 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
         ("nsBoxFrame::CreateViewForFrame: frame=%p view=%p",
          aFrame));
-      return result;
+      if (!view)
+        return NS_ERROR_OUT_OF_MEMORY;
     }
   }
   return NS_OK;

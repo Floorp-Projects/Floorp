@@ -205,7 +205,6 @@ static void ColorToString(nscolor aColor, nsAutoString &aString);
 // Class ID's
 static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 
 #undef NOISY
 
@@ -7026,11 +7025,10 @@ PresShell::VerifyIncrementalReflow()
   // Create a child window of the parent that is our "root view/window"
   // Create a view
   nsRect tbounds = mPresContext->GetVisibleArea();
-  nsIView* view;
-  rv = CallCreateInstance(kViewCID, &view);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view");
-  rv = view->Init(vm, tbounds, nsnull);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to init scroll view");
+  nsIView* view = vm->CreateView(tbounds, nsnull);
+  NS_ASSERTION(view, "failed to create view");
+  if (!view)
+    return PR_FALSE;
 
   //now create the widget for the view
   rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE);

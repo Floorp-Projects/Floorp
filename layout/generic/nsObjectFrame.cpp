@@ -46,7 +46,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
-#include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIDOMKeyListener.h"
@@ -458,7 +457,6 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 #endif
 
 
-static NS_DEFINE_CID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_CID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -755,14 +753,7 @@ nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
                             nscoord aHeight,
                             PRBool aViewOnly)
 {
-  nsIView *view;
-
   // Create our view and widget
-
-  nsresult result = CallCreateInstance(kViewCID, &view);
-  if (NS_FAILED(result)) {
-    return result;
-  }
 
   nsRect boundBox(0, 0, aWidth, aHeight);
 
@@ -771,12 +762,12 @@ nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
 
   //  nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
     // initialize the view as hidden since we don't know the (x,y) until Paint
-  result = view->Init(viewMan, boundBox, parView, nsViewVisibility_kHide);
+  nsIView *view = viewMan->CreateView(boundBox, parView, nsViewVisibility_kHide);
   //  if (nsnull != initData) {
   //    delete(initData);
   //  }
 
-  if (NS_FAILED(result)) {
+  if (!view) {
     return NS_OK;       //XXX why OK? MMP
   }
 
@@ -808,7 +799,7 @@ nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
     // Bug 179822: Create widget and allow non-unicode SubClass
     nsWidgetInitData initData;
     initData.mUnicode = PR_FALSE;
-    result = view->CreateWidget(kWidgetCID, &initData);
+    nsresult result = view->CreateWidget(kWidgetCID, &initData);
     if (NS_FAILED(result)) {
       return NS_OK;       //XXX why OK? MMP
     }
@@ -846,7 +837,7 @@ nsObjectFrame::CreateWidget(nsPresContext* aPresContext,
 
   SetView(view);
 
-  return result;
+  return NS_OK;
 }
 
 #define EMBED_DEF_WIDTH 240

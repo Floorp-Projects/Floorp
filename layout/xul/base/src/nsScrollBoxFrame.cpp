@@ -43,7 +43,6 @@
 #include "nsPresContext.h"
 #include "nsIDeviceContext.h"
 #include "nsPageFrame.h"
-#include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
@@ -62,7 +61,6 @@
 #include "nsRepeatService.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kScrollBoxViewCID, NS_SCROLL_PORT_VIEW_CID);
 
 
 //----------------------------------------------------------------------
@@ -224,8 +222,6 @@ nsScrollBoxFrame::GetMouseCapturer() const
 nsresult
 nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
 {
-  nsIView*  view;
-
    //Get parent frame
   nsIFrame* parent = GetAncestorWithView();
   NS_ASSERTION(parent, "GetParentWithView failed");
@@ -238,11 +234,11 @@ nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
   nsIViewManager* viewManager = parentView->GetViewManager();
 
   // Create the scrolling view
-  nsresult rv = CallCreateInstance(kScrollBoxViewCID, &view);
+  nsIScrollableView* scrollingView = viewManager->CreateScrollableView(mRect, parentView);
 
-  if (NS_SUCCEEDED(rv)) {
+  if (scrollingView) {
     // Initialize the scrolling view
-    view->Init(viewManager, mRect, parentView);
+    nsIView* view = scrollingView->View();
 
     SyncFrameViewProperties(aPresContext, this, mStyleContext, view);
 
@@ -253,10 +249,6 @@ nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
     // If it's fixed positioned, then create a widget too
     CreateScrollingViewWidget(view, GetStyleDisplay());
 
-    // Get the nsIScrollableView interface
-    nsIScrollableView* scrollingView;
-    CallQueryInterface(view, &scrollingView);
-
     // Have the scrolling view create its internal widgets
     if (NeedsClipWidget()) {
       scrollingView->CreateScrollControls(); 
@@ -264,8 +256,10 @@ nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
 
     // Remember our view
     SetView(view);
+
+    return NS_OK;
   }
-  return rv;
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
