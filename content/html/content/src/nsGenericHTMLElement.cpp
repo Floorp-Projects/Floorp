@@ -1426,12 +1426,10 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
       }
     }
 
-    if (targetIsArea) {
-      //We are over an area.  If our element is not one, then return without
-      //running anchor code.
-      if (IsArea(this)) {
-        return ret;
-      }
+    if (targetIsArea && !IsArea(this)) {
+      // We are over an area and our element is not one.  Return without
+      // running anchor code.
+      return ret;
     }
   }
 
