@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.15 $ 
-# $Date: 2001/08/13 19:55:25 $ 
+# $Revision: 1.16 $ 
+# $Date: 2001/10/10 15:06:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -537,6 +537,7 @@ sub write_stats {
 
   my ($daemon_mode, $times_vec, $tree, ) =  
     parse_args();
+  chk_security();
   
   if ($daemon_mode) {
     daemon_main($times_vec, $tree, );

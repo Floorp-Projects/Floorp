@@ -6,8 +6,8 @@
 #		 on the tinderbox status page.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2001/08/02 20:06:02 $ 
+# $Revision: 1.9 $ 
+# $Date: 2001/10/10 15:06:47 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/addnote.cgi,v $ 
 # $Name:  $ 
@@ -263,6 +263,7 @@ sub make_all_changes {
 {
   set_static_vars();
   get_env();
+  chk_security();
   
   get_params();
 

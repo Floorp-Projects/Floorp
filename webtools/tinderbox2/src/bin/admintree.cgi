@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.16 $ 
-# $Date: 2001/08/13 20:11:55 $ 
+# $Revision: 1.17 $ 
+# $Date: 2001/10/10 15:06:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -594,6 +594,7 @@ sub make_all_changes {
 {
   set_static_vars();
   get_env();
+  chk_security();
   
   get_params();
 

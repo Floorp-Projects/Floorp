@@ -10,8 +10,8 @@
 # without the '.gz.html' extension.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/20 19:04:48 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/10/10 15:06:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/gunzip.cgi,v $ 
 # $Name:  $ 
@@ -149,6 +149,7 @@ sub parse_args {
   set_static_vars();
   get_env();
   parse_args();
+  chk_security();
 
   print "Content-type: text/html\n\n";
 

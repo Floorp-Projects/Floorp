@@ -23,8 +23,8 @@
 
 
 
-# $Revision: 1.10 $ 
-# $Date: 2001/08/13 20:03:10 $ 
+# $Revision: 1.11 $ 
+# $Date: 2001/10/10 15:06:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
@@ -364,6 +364,7 @@ sub set_tinderbox_variables {
   set_static_vars();
   get_env();
   MailProcess::parse_mailprocess_args();
+  chk_security();
 
   $SIG{'__DIE__'} = \&MailProcess::fatal_mailprocessing_error;
 

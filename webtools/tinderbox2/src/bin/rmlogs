@@ -6,8 +6,8 @@
 #          days set in TinderConfig.  This program should be 
 # 	   run from cron daily.
 
-# $Revision: 1.7 $ 
-# $Date: 2001/08/02 20:06:02 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/10/10 15:06:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/rmlogs,v $ 
 # $Name:  $ 
@@ -136,6 +136,7 @@ sub rm_old_logs {
 {
   set_static_vars();
   get_env();
+  chk_security();
 
   rm_old_logs('full-log', $FULL_TRIM);
   rm_old_logs('brief-log', $BRIEF_TRIM);
