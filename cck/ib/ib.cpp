@@ -1358,6 +1358,119 @@ void ModifyHelpMenu(CString inputFile, CString outputFile)
 	dstf.close();
 }
 
+BOOL RemoveNIMRestart(CString inputFile, CString outputFile)
+{
+
+        char tempbuf[MAX_SIZE];
+	BOOL bCheck0 = FALSE;
+	BOOL bCheck1 = FALSE;
+	BOOL bCheck2 = FALSE; 
+	BOOL bCheck3 = FALSE;
+	BOOL bCheck4 = FALSE;
+
+        ifstream srcf(inputFile);
+        if (!srcf)
+        {
+                AfxMessageBox("Cannot open input file: " + CString(inputFile),MB_OK);
+                return FALSE;
+        }
+        ofstream dstf(outputFile);
+        if (!dstf)
+        {
+                AfxMessageBox("Cannot open output file: " + CString(outputFile), MB_OK);
+		srcf.close();
+                return FALSE;
+        }
+	srcf.getline(tempbuf,MAX_SIZE);
+        while (!srcf.eof())
+        {
+		if ((CString(tempbuf).Find("var bTurboSet;")) != -1)
+		{
+			bCheck0 = TRUE;
+
+			dstf << "// The following has been commented out by your Customization Software\n";
+			dstf << "if(0)\n";
+			dstf << "{\n";
+			dstf << tempbuf << "\n";
+			dstf << "} //End of Customization change\n";
+
+			srcf.getline(tempbuf, MAX_SIZE);
+			while (!srcf.eof())
+			{
+				dstf << tempbuf << "\n";
+
+				// Search for start of block of code we want to comment out
+              			if ((CString(tempbuf).Find("// Register Aim to quick launch")) != -1)
+               			{ 
+					bCheck1 = TRUE;
+			
+					//Found start of block of code
+					//Add comments to describe what we are doing, and add if(0)
+					dstf << "// The following has been commented out by your Customization Software\n";
+					dstf << "if(0)\n";
+					dstf << "{\n";
+ 	
+					srcf.getline(tempbuf,MAX_SIZE);
+					while (!srcf.eof())
+					{
+						dstf << tempbuf << "\n";
+						if(((CString(tempbuf).Find("if(")) != -1) && ((CString(tempbuf).Find("AIM")) != -1))
+						{
+							bCheck2 = TRUE;
+
+							srcf.getline(tempbuf, MAX_SIZE);
+							while (!srcf.eof())
+							{
+								dstf << tempbuf << "\n";
+								if((CString(tempbuf).Find("gWinReg.setValueString(subkey, valname, newKey);")) != -1)
+								{
+									bCheck3 = TRUE;
+
+									srcf.getline(tempbuf, MAX_SIZE);
+									while (!srcf.eof())
+									{
+										dstf << tempbuf << "\n";
+										if((CString(tempbuf).Find("}")) != -1)
+										{
+											bCheck4 = TRUE;
+
+											dstf << "} //End of Customization change\n";
+											break;
+										}
+										srcf.getline(tempbuf, MAX_SIZE);
+									}
+								}
+								srcf.getline(tempbuf, MAX_SIZE);
+							}
+						}
+						srcf.getline(tempbuf, MAX_SIZE);
+					}
+				}
+				srcf.getline(tempbuf, MAX_SIZE);
+			}
+		}
+		else
+			dstf << tempbuf << "\n";
+		srcf.getline(tempbuf, MAX_SIZE);
+	}
+
+			
+        srcf.close();
+        dstf.close();
+
+	if(!(bCheck0 && bCheck1 && bCheck2 && bCheck3 && bCheck4))
+	{
+		//We didn't pass all the code checkpoints
+		//return FALSE and leave the file unchanged	
+		AfxMessageBox("Code change to remove NIM Restart feature was unsuccessful, leaving file unchanged", MB_OK);
+		return FALSE;
+	}
+
+	return TRUE;
+
+}
+	 
+
 int interpret(char *cmd)
 {
 	char *cmdname = strtok(cmd, "(");
@@ -1559,6 +1672,38 @@ int interpret(char *cmd)
 			
 		remove(inputFile);
 		rename(outputFile, inputFile);
+	}
+
+	else if (strcmp(cmdname, "removeNIMRestart") == 0)
+	{
+		// extract the file to be modified from the jar/xpi
+		// and process the file
+
+		char *xpiname   = strtok(NULL, ",)"); // xpi file name
+		char *jarname   = strtok(NULL, ",)"); // jar name within xpi file
+		char *filename  = strtok(NULL, ",)"); // file name within jar file
+
+		CString inputFile = filename;
+		inputFile.Replace("/","\\");
+		inputFile = tempPath + "\\" + inputFile;
+		CString outputFile = inputFile + ".new";
+
+		if (!xpiname || !filename)
+        		return TRUE;
+
+		//check to see if it is a jar and then do accordingly
+		if (stricmp(jarname,"no.jar")==0)
+  			ExtractXPIFile(xpiname, filename);
+		else
+      			ExtractJARFile(xpiname, (CString)jarname, filename);
+
+		if(!(RemoveNIMRestart(inputFile, outputFile)))
+			remove(outputFile);
+		else 
+		{	
+			remove(inputFile);
+			rename(outputFile, inputFile);
+		}
 	}
                
 	else if ((strcmp(cmdname, "modifyDTD") == 0) ||
