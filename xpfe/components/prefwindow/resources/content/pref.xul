@@ -37,7 +37,7 @@ Contributor(s): ______________________________________. -->
   onload="window.handle = new PrefWindow( 'panelFrame' );"
   persist="screenX screenY width height"
   screenX="24" screenY="24"
-  width="620" height="470"> 
+  width="620" height="550"> 
 
   <script language="javascript" src="chrome://global/content/strres.js" />
   <script language="javascript" src="chrome://global/content/dialogOverlay.js" />
