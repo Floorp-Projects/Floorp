@@ -56,6 +56,8 @@ struct _GtkMozEmbedClass
   void (* net_status)   (GtkMozEmbed *embed, gint status);
   void (* net_start)    (GtkMozEmbed *embed);
   void (* net_stop)     (GtkMozEmbed *embed);
+  void (* new_window)   (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask);
+  void (* visibility)   (GtkMozEmbed *embed, gboolean visibility);
 };
 
 extern GtkType      gtk_moz_embed_get_type         (void);
@@ -96,6 +98,29 @@ enum { gtk_moz_embed_flag_reloadNormal = 0,
        gtk_moz_embed_flag_reloadBypassCache = 1,
        gtk_moz_embed_flag_reloadBypassProxy = 2,
        gtk_moz_embed_flag_reloadBypassProxyAndCache = 3 };
+
+/* These are straight out of nsIWebBrowserChrome.h */
+
+enum { gtk_moz_embed_flag_defaultChrome = 1U,
+       gtk_moz_embed_flag_windowBordersOn = 2U,
+       gtk_moz_embed_flag_windowCloseOn = 4U,
+       gtk_moz_embed_flag_windowResizeOn = 8U,
+       gtk_moz_embed_flag_menuBarOn = 16U,
+       gtk_moz_embed_flag_toolBarOn = 32U,
+       gtk_moz_embed_flag_locationBarOn = 64U,
+       gtk_moz_embed_flag_statusBarOn = 128U,
+       gtk_moz_embed_flag_personalToolBarOn = 256U,
+       gtk_moz_embed_flag_scrollbarsOn = 512U,
+       gtk_moz_embed_flag_titlebarOn = 1024U,
+       gtk_moz_embed_flag_extraChromeOn = 2048U,
+       gtk_moz_embed_flag_windowRaised = 33554432U,
+       gtk_moz_embed_flag_windowLowered = 67108864U,
+       gtk_moz_embed_flag_centerScreen = 134217728U,
+       gtk_moz_embed_flag_dependent = 268435456U,
+       gtk_moz_embed_flag_modal = 536870912U,
+       gtk_moz_embed_flag_openAsDialog = 1073741824U,
+       gtk_moz_embed_flag_openAsChrome = 2147483648U,
+       gtk_moz_embed_flag_allChrome = 4094U };
 
 
 #ifdef __cplusplus
