@@ -30,7 +30,7 @@
 #include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
 #include "nsSpecialSystemDirectory.h"
-#ifdef XP_PC
+#ifdef XP_WIN
 #include <windows.h>
 #endif
 
@@ -87,14 +87,14 @@ nsLoggingService::Release(void)
   return mRefCnt; 
 } 
 
-static void*
+static void* PR_CALLBACK
 levelClone(nsHashKey *aKey, void *aData, void* closure)
 {
     PRUint32 level = (PRUint32)aData;
     return (void*)level;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 levelDestroy(nsHashKey *aKey, void *aData, void* closure)
 {
     return PR_TRUE;
@@ -319,7 +319,7 @@ NS_GetLog(const char* name, PRUint32 controlFlags)
     return log;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 DescribeLog(nsHashKey *aKey, void *aData, void* closure)
 {
     nsILog* log = (nsILog*)aData;
@@ -634,7 +634,7 @@ nsFileLogEventSink::Print(nsILog* log, const char* msg)
     nsAutoMonitor monitor(gLogMonitor);
     
     // do debug output first
-#ifdef XP_PC
+#ifdef XP_WIN
     OutputDebugString(msg);
 #elif defined(XP_MAC)
     {
