@@ -102,7 +102,6 @@ var WSucks;
 
 function Startup()
 {
-  sizeToContent(); //XXXpch buggy imo, we shouldn't need it
   initServices();
   initBMService();
   gName = document.getElementById("name");
@@ -116,12 +115,17 @@ function Startup()
   gName.value = window.arguments[0];
   gName.select();
   gName.focus();
-  gKeyword.value = window.arguments[7];
+  gSuggestedKeyword = window.arguments[7];
   gKeywordRequired = window.arguments[8];
-  if (!window.arguments[7] && !gKeywordRequired)
+  if (!gSuggestedKeyword && !gKeywordRequired) {
     gKeywordRow.hidden = true;
-  if (gKeywordRequired)
-    gRequiredFields.push(gKeyword);
+  } else {
+    if (gSuggestedKeyword)
+      gKeyword.value = gSuggestedKeyword;
+    if (gKeywordRequired)
+      gRequiredFields.push(gKeyword);
+  }
+  sizeToContent(); // do this here to ensure we size properly without the keyword field
   onFieldInput();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
