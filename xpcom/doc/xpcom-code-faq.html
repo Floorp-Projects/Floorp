@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
    <meta name="Author" content="Suresh Duddi">
    <title>XPCOM Code FAQ</title>
 </head>
@@ -75,7 +75,139 @@ component manager to create the their own registry access object. This
 is required because the open() call is supported by the nsIRegistry() and
 if we maintain a global registry arbitrating which registry file is opened
 is going to be a major headach.
-<p>The ProgID for the registry will be <font color="#990000">component://netscape/registry</font></blockquote>
+<p>The ProgID for the registry will be <font color="#990000">component://netscape/registry</font>
+<br>&nbsp;</blockquote>
+
+<h4>
+<font color="#000000">ComponentManager Vs ServiceManager</font></h4>
+
+<blockquote><font color="#000000">ComponentManager is the only way for
+component creation. ComponentManager always uses the component's factory
+to create the component instance. Clients (code that calls CreateInstance()
+to create and use a component) call the ComponentManager to create instances.
+Components (the code that implemented NSRegisterSelf()) calls the ComponentManager
+to register itself and gets called when a Client wants to instantiate a
+component.</font>
+<p><font color="#000000">ServiceManager is a convinience for getting singleton
+components, components for which only one instance stays alive for the
+entire application e.g Netlib. It enforces only one of a kind of a component
+to exist. Hence the notion of getting a service not creating one. (as opposed
+to the notion of Creating instances with the componentManager). ServiceManager
+is a convenience because components can technically force singletonism
+by making their factory return the same instance if one was created already.
+The other big use of ServiceManager is the (still unimplemented) notion
+of Shutting down a service.</font>
+<p><b><i><font color="#000000">Client</font></i></b>
+<ul>
+<li>
+<i><font color="#000000">When does a client use the service manager vs
+component manager</font></i></li>
+
+<p><br><font color="#000000">When a client knows that the component that
+they are trying to instantiate is a singleton, they need to call service
+manager instead of component manager. Clients dont have to worry about
+calling the ComponentManager at all in this case. The ServiceManager will
+take care of creating the instance if the first one doesn't exist already.</font>
+<br><font color="#000000">-</font>
+<li>
+<i><font color="#000000">When does a client use the Component Manager as
+opposed to Service Manager</font></i></li>
+
+<p><br><font color="#000000">When a client wants a private instance of
+a component, they call the Component Manager. From the Clients point of
+view, a new xpcom object creation happens everytime they call CreateInstance()
+Anything else is an implementation detail that the Client need not worry
+about.</font>
+<br><font color="#000000">-</font>
+<li>
+<i><font color="#000000">How does a Client know that they have to instantiate
+a singleton</font></i></li>
+
+<p><br><font color="#000000">For now, the Client just has to know. There
+is no way of telling which component is a Service and which isn't. In fact,
+in todays xpcom (Mar 1999) any component can be accessed as a Service.
+Use your judgement until there is a proper method or service manager is
+eliminated. There is nothing even in the code that detects Services from
+Instances.</font>
+<p><b><font color="#CC0000">Need a solution for this. Email suggestion
+to <a href="mailto:warren@netscape.com,dp@netscape.com">warren@netscape.com,
+dp@netscape.com</a></font></b>
+<br><font color="#000000">-</font></ul>
+<b><i><font color="#000000">Component</font></i></b>
+<ul>
+<li>
+<i><font color="#000000">Can a component enforce use only as a Service</font></i></li>
+
+<p><br><font color="#000000">No. The notion of the ServiceManager is available
+only to Clients.</font>
+<p><font color="#000000">Note that at some points when a component wants
+another component, it actually behaves as a client and hence follows the
+rules of the Client above to either CreateInstance() or GetService() the
+needed component.</font>
+<p><b><tt><font color="#990000">Workaround:</font></tt></b><font color="#000000">
+If however a component wants only one of its instances to exist and cannot
+ensure that Clients understand well enough only to use the Service Manager
+to get it, it can implement singletonism in its factory. Basically the
+factory on first instance creation should hang on to the instance. On subsequence
+instance creations, addref the instance it is holding to and return that
+instead creating a new one.</font>
+<ul>&nbsp;
+<br><font color="#000000">E.g preferences does this.</font> Code sample
+at
+<a href="http://lxr.mozilla.org/seamonkey/source/modules/libpref/src/nsPref.cpp#621">nsPref.cpp
+nsPrefFactory::CreateInstance()</a> and&nbsp; <a href="http://lxr.mozilla.org/seamonkey/source/modules/libpref/src/nsPref.cpp#227">nsPref.cpp
+nsPref::GetInstance()</a> With this implementation, whether Clients get
+to it by calling nsIServiceManager::GetService() or nsIComponentManager::CreateInstance(),
+the same object will be returned hence guaranteeing singletonism.</ul>
+<font color="#000000">-</font>
+<li>
+<i><font color="#000000">Should a component do anything at creation to
+become a Service</font></i></li>
+
+<p><br><font color="#000000">No. Again, the notion of a ServiceManager
+is available only to Clients.</font>
+<br><font color="#000000">-</font>
+<li>
+<i><font color="#000000">Can a component advertise that it is a service
+so clients can use it as one</font></i></li>
+
+<p><br>No. There isn't a way other than a comment in the interface of the
+header file.</ul>
+</blockquote>
+
+<h4>
+ProgID Vs CLSID</h4>
+
+<blockquote>ClassID or CLSID is the unique indentification of a component.
+It is a structure of huge numbers generated by using uuidgen on a windows
+box. It is represented as a string in documentation as {108d75a0-bab5-11d2-96c4-0060b0fb9956}
+<p>ProgID is the string identification of an implementation of a component
+the client is looking for. The representation takes a URI syntax. Eg. component://netscape/network/protocol&amp;name=http
+Some simplify this to, ProgID is a more readable string form of a CLSID.
+That is acceptable on the periphery. The ProgID is a Client thing. Components
+register with component manager to claim that they are the implementation
+for a ProgID. A component can register to be the implementation for multiple
+ProgIDs (not implemented yet).
+<p><b><i>Client</i></b>
+<ul>
+<li>
+<i>Should CreateInstance() calls use ProgID or CLSID<br>
+&nbsp;&nbsp;<br>
+</i>ProgID is what Clients should use to CreateInstances. Clients should
+not even know about the CLSID unless they are hell bent on creating a particular
+implementation of a component.<br>
+-</li>
+</ul>
+<b><i>Component</i></b>
+<ul>
+<li>
+<i>Should Components register with both a CID and ProgID<br>
+<br>
+</i>Absolutely.</li>
+</ul>
+
+<br>&nbsp;
+<br>&nbsp;</blockquote>
 
 <hr WIDTH="100%">
 </body>
