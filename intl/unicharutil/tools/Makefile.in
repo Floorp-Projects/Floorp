@@ -30,33 +30,16 @@ CSRCS = \
 
 include $(topsrcdir)/config/config.mk
 
+
+PROGRAM = ucgendat
+
 # XXX replace with proper configure test for glib
-CFLAGS += $(shell glib-config --cflags)
+CFLAGS += $(shell $GLIB-CONFIG --cflags)
 
 # XXX need configure test
-EX_LIBS = $(shell glib-config --libs)
-
-PROGS = $(OBJDIR)/ucgendat
-
-TARGETS= $(PROGS)
+EX_LIBS = $(shell $GLIB-CONFIG --libs)
 
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS): $(OBJS)
-	@$(MAKE_OBJDIR)
-	$(CC) -o $@ $(OBJS) $(LD_FLAGS) $(EX_LIBS) $(OS_LIBS)
 
-export::
 
-#install:: $(TARGETS)
-#	$(INSTALL) $(PROGS) $(DIST)/bin
-#	$(INSTALL) $(srcdir)/data/ctype.dat $(DIST)/bin/res/unicharutil
-#	$(INSTALL) $(srcdir)/data/case.dat $(DIST)/bin/res/unicharutil
-#
-#clobber::
-#	rm -f $(DIST)/bin/ucgendat
-#	rm -f $(PROGS) $(OBJS)
-
-install::
-
-clobber::
