@@ -1251,7 +1251,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
       // then loop through the list, set the property on each node
       PRUint32 listCount;
       arrayOfNodes->Count(&listCount);
-      for (j = 0; j < listCount; j++)
+      for (j = 0; j < (PRInt32)listCount; j++)
       {
         isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
         node = do_QueryInterface(isupports);
@@ -1587,7 +1587,7 @@ PRBool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
   if (!aNode) return PR_FALSE;  // oops
   PRUint32 len;
   GetLengthOfDOMNode(aNode, len);
-  if (aOffset == len) return PR_TRUE;
+  if (aOffset == (PRInt32)len) return PR_TRUE;
   
   if (IsTextNode(aNode))
   {
@@ -4348,6 +4348,14 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
     }
   }
 
+  // Try to scroll the selection into view if the paste succeeded:
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIPresShell> presShell;
+    if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
+      presShell->ScrollSelectionIntoView(SELECTION_NORMAL, SELECTION_FOCUS_REGION);
+  }
+
   return rv;
 }
 
@@ -6772,7 +6780,6 @@ nsHTMLEditor::MoveContiguousContentIntoNewParent(nsIDOMNode  *aStartNode,
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMNode>startNode, endNode;
   PRInt32 startOffset = aStartOffset; // this will be the left edge of what we change
-  PRInt32 endOffset = aEndOffset;     // this will be the right edge of what we change
   nsCOMPtr<nsIDOMNode>newLeftNode;  // this will be the middle text node
   if (IsTextNode(aStartNode))
   {
