@@ -26,8 +26,8 @@
 [
 <!ENTITY menu.file.label            "File">
 <!ENTITY menuitem.newWindow.label     "New Window">
-<!ENTITY menuitem.newBookmark.label   "New Bookmark...">
-<!ENTITY menuitem.newFolder.label     "New Folder...">
+<!ENTITY menuitem.newBookmark.label   "New Bookmark">
+<!ENTITY menuitem.newFolder.label     "New Folder">
 <!ENTITY menuitem.newSeparator.label  "New Separator">
 <!ENTITY menuitem.close.label         "Close">
 <!ENTITY menu.edit.label            "Edit">
@@ -66,9 +66,9 @@
                 onclick="window.open('resource:/res/samples/bookmarks.xul',
                                      'ManageBookmarks',
                                      'chrome');" />
-      <menuitem name="x&menuitem.newBookmark.label;"/>
-      <menuitem name="x&menuitem.newFolder.label;"/>
-      <menuitem name="x&menuitem.newSeparator.label;"/>
+      <menuitem name="&menuitem.newBookmark.label;" onClick="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />
+      <menuitem name="&menuitem.newFolder.label;" onClick="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newfolder');"/>
+      <menuitem name="&menuitem.newSeparator.label;" onClick="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newseparator');"/>
       <separator/>
       <menuitem name="&menuitem.close.label;"
                 onclick="window.close()" />
