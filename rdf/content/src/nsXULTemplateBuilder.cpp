@@ -815,7 +815,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				nsIAtom	*containmentAtom = NS_NewAtom(containmentValue);
 				if (nsnull != containmentAtom)
 				{
-					if (tag.get() == containmentAtom)
+					if (tag == containmentAtom)
 					{
 						if (NS_SUCCEEDED(rv = CreateResourceElement(kNameSpaceID_XUL,
 							containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
@@ -832,7 +832,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				nsIAtom	*containmentAtom = NS_NewAtom(containmentValue);
 				if (nsnull != containmentAtom)
 				{
-					if (tag.get() == containmentAtom)
+					if (tag == containmentAtom)
 					{
 						if (NS_SUCCEEDED(rv = CreateResourceElement(kNameSpaceID_XUL,
 							containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
@@ -845,7 +845,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 			}
 #endif
 
-			if ((tag.get() == containmentAtom) && (nameSpaceID == kNameSpaceID_XUL))
+			if ((tag == containmentAtom) && (nameSpaceID == kNameSpaceID_XUL))
 			{
 				if (NS_FAILED(rv = CreateResourceElement(nameSpaceID,
 					containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
@@ -853,7 +853,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				if (NS_FAILED(rv = SetAllAttributesOnElement(treeGrandchild, aValue)))
 					continue;
 			}
-			else if ((tag.get() == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL))
+			else if ((tag == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL))
 			{
 				// <xul:text rdf:resource="..."> is replaced by text of the
 				// actual value of the rdf:resource attribute for the given node
@@ -967,7 +967,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				}
 
 				// add into tree
-				if ((nsnull != XULSortService) && (tag.get() == containmentAtom))
+				if ((nsnull != XULSortService) && (tag == containmentAtom))
 				{
 					XULSortService->InsertContainerNode(treeChildren, treeGrandchild);
 				}
