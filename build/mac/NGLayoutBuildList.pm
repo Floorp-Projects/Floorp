@@ -291,17 +291,17 @@ sub BuildDist()
 
 	#WEBSHELL
     InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
-    InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",   "$distdirectory:webshell:");
+    InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",  			"$distdirectory:webshell:");
 
 	#LAYOUT
     InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:public:MANIFEST",						"$distdirectory:layout:");
-        InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",                               "$distdirectory:layout:");
+	InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",				"$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",				"$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",					"$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",					"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",				"$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",		"$distdirectory:layout:");
+    InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",				"$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:src:MANIFEST",						"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:events:public:MANIFEST",					"$distdirectory:layout:");
 	InstallFromManifest(":mozilla:layout:events:src:MANIFEST",						"$distdirectory:layout:");
@@ -353,22 +353,22 @@ sub BuildDist()
    #FULL CIRCLE    
    if ($main::MOZ_FULLCIRCLE)
    {
-		InstallFromManifest(":ns:fullsoft:public:MANIFEST",								"$distdirectory");
+		InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
 	
 		if ($main::DEBUG)
 		{
-			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory:viewer_debug:");
+			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer_debug:");
 		} 
 		else
 		{
-			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory:viewer:");
-			InstallFromManifest(":ns:fullsoft:public:MANIFEST",							"$distdirectory");
+			#InstallFromManifest(":ns:fullsoft:public:MANIFEST",					"$distdirectory:viewer:");
+			InstallFromManifest(":ns:fullsoft:public:MANIFEST",						"$distdirectory");
 		}
 	}
 
 	# XPAPPS
-   InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",						"$distdirectory:xpfe:");
-   InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",						"$distdirectory:xpfe:");
+   InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
+   InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
@@ -408,7 +408,7 @@ sub BuildOneProject($$$$$$)
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
-	my($component_dir) = $component ? "components:" : "";
+	my($component_dir) = $component ? "Components:" : "";
 
 	my($project_dir) = $project_path;
 	$project_dir =~ s/:[^:]+$/:/;			# chop off leaf name
@@ -578,7 +578,7 @@ sub MakeResouceAliases()
 	#//
 	my($resource_dir) = "$dist_dir" . "res:";
 	MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
-	MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",								"$resource_dir");
+	MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",				"$resource_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
 	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
@@ -650,7 +650,7 @@ sub BuildLayoutProjects()
 
 	BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",							"gfx$D.shlb", "gfx.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",							"plugin$D.shlb", "plugin.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",				"plugin$D.shlb", "plugin.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:layout:macbuild:layout.mcp",						"layout$D.shlb", "layout.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
@@ -660,10 +660,10 @@ sub BuildLayoutProjects()
 
 	BuildOneProject(":mozilla:webshell:macbuild:webshell.mcp",					"webshell$D.shlb", "webshell.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",					"RaptorShell$D.shlb", "RaptorShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",				"RaptorShell$D.shlb", "RaptorShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	#// XXX this is here because of a very TEMPORARY dependency
-	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",					"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
 }
 
 
@@ -680,11 +680,11 @@ sub BuildEditorProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
-	BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",					"EditorTxmgr$D.shlb", "txmgr.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",					"EditorTxmgr$D.shlb", "txmgr.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:editor:guimgr:macbuild:EditorGuiManager.mcp",		"EditorGuiManager$D.shlb", "EditorGuiManager.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:editor:guimgr:macbuild:EditorGuiManager.mcp",		"EditorGuiManager$D.shlb", "EditorGuiManager.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	BuildOneProject(":mozilla:editor:macbuild:editor.mcp",						"EditorCore$D.shlb", "EditorCore.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:editor:macbuild:editor.mcp",						"EditorCore$D.shlb", "EditorCore.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 }
 
