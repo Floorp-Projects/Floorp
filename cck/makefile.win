@@ -73,6 +73,8 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup\NCIFiles
 
+	-mkdir $(CCKDIST)\CCKTool\CCKDocs
+
 	-mkdir $(CCKDIST)\CCKTool\NSCPXPI
 
 #  We populate empty folders so zip will pick them up.
