@@ -478,28 +478,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     if (nsnull != mDocument) {
       nsIContent* root = mDocument->GetRootContent();
       if (nsnull != root) {
-// XXX CONSTRUCTION
-#if 0
-        nsIContentDelegate* cd = root->GetDelegate(mPresContext);
-        if (nsnull != cd) {
-          nsIStyleContext* rootSC =
-            mPresContext->ResolveStyleContextFor(root, nsnull);
-          nsresult rv = cd->CreateFrame(mPresContext, root, nsnull,
-                                        rootSC, mRootFrame);
-          NS_RELEASE(rootSC);
-          NS_RELEASE(cd);
-
-          // Bind root frame to root view (and root window)
-          nsIView* rootView;
-          mViewManager->GetRootView(rootView);
-          mRootFrame->SetView(rootView);
-        }
-#else
         // Have style sheet processor construct a frame for the
         // root content object
         mPresContext->ConstructFrame(root, nsnull, mRootFrame);
-#endif
-        NS_RELEASE(root);
       }
     }
   }
