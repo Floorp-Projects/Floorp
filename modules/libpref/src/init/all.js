@@ -309,7 +309,7 @@ pref("mime.table.allow_remove", true);
 pref("netcenter.register", false);
 
 pref("security.checkuri", true);
-pref("security.checkdomprops", false);
+pref("security.checkdomprops", true);
 pref("security.checkxpconnect", false);
 
 pref("security.policies", "default");
