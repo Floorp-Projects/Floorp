@@ -138,7 +138,7 @@ my($utf8_ver);
 # Now, let's put them into array form
 
 @utf8_cls = (
- [ 0x00 , 0x00 , 0 ],
+ [ 0x00 , 0x00 , 1 ],
  [ 0x0e , 0x0f , 0 ],
  [ 0x1b , 0x1b , 0 ],
  [ 0x01 , 0x0d , 1 ],
