@@ -23,6 +23,21 @@
   var debugSecurity = false; // Set this true to enable Security chrome testing.
   var explicitURL = false;
 
+  function UpdateHistory(event)
+  {
+    // This is registered as a capturing "load" event handler. When a
+    // document load completes in the content window, we'll be
+    // notified here. This allows us to update the global history and
+    // set the document's title information.
+
+    //dump("UpdateHistory: content's location is '" + window.content.location.href + "',\n");
+    //dump("                         title is '" + window.content.document.title + "'\n");
+
+    var history = Components.classes["component://netscape/browser/global-history"].getService();
+    history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+    history.SetPageTitle(window.content.location.href, window.content.document.title);
+  }
+
   function Startup()
   {
     dump("Doing Startup...\n");
@@ -36,6 +51,10 @@
 	  appCore.setToolbarWindow(window);
 	  tryToSetContentWindow();
     }
+
+    // Add a capturing event listener to the content window so we'll
+    // be notified when onloads complete.
+    window.addEventListener("load", UpdateHistory, true);
   }
 
   function Shutdown() {
