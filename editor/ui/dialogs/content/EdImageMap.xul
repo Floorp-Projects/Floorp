@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): 
+   -    Dan Haddix (dan6992@hotmail.com)
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageMap.dtd">
+
+
+<!-- dialog containing a control requiring initial setup -->
+<xul:window title="&windowTitle.label;"
+    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.w3.org/TR/REC-html40"
+    onload = "Startup()"
+    onunload="//finishMap();"
+    align="vertical"
+    width="640" height="480">
+   
+
+  <!-- Methods common to all editor dialogs -->
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
+  </script>
+  <script language="JavaScript" src="chrome://editor/content/EdImageMap.js">
+  </script>
+  <script language="JavaScript" src="chrome://editor/content/EdImageMapShapes.js">
+  </script>
+
+
+  <xul:broadcaster id="args" value=""/>
+
+  <xul:keyset id="defaultKeySet">
+
+    <xul:key id="removestyleskb" disabled="false" shift="true" command="true" alt="false" key="k" onkeypress="EditorRemoveStyle('all')" />
+    <xul:key id="decreasefontsizekb" disabled="false" shift="true" command="true" alt="false" key="[" onkeypress="DecreaseFontSize()" />
+    <xul:key id="increasefontsizekb" disabled="false" shift="true" command="true" alt="false" key="]" onkeypress="IncreaseFontSize()" />
+
+<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
+  </xul:keyset>
+
+  <xul:broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
+  <xul:broadcaster id="canPrint"/>
+  
+  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+  <xul:broadcaster id="dialog.start" ready="false"/>
+  <xul:observes element="dialog.start" attribute="ready" onchange="EditorStartup('html')"/>
+    
+  <xul:broadcaster id="Editor:Document:Dirty" dirty="false"/>
+
+<xul:menubar>
+  <!-- File menu -->
+  <xul:menu value="File" accesskey="f">
+    <xul:menupopup>
+      <xul:menuitem value="Clear All" accesskey="a" onaction=""/>
+      <xul:menuitem value="Exit" accesskey="f" onaction="exitImap()"/>
+    </xul:menupopup>
+  </xul:menu>
+
+  <xul:menu value="Edit" accesskey="e">
+    <xul:menupopup>
+      <xul:menuitem value="Cut" onaction=""/>
+      <xul:menuitem value="Copy" onaction=""/>
+      <xul:menuitem value="Paste" onaction=""/>
+      <xul:menuseparator/>
+      <xul:menuitem value="Hotspot Properties" onaction="hotSpotProps(currentElement[0])"/>
+    </xul:menupopup>
+  </xul:menu>
+
+  <xul:menu value="View" accesskey="v">
+    <xul:menupopup>
+      <xul:menuitem id="view_hidetoolbar" value="Hide Toolbar" onaction="hideToolbar()"/>
+      <xul:menu value="Scale" accesskey="v">
+        <xul:menupopup>
+          <xul:menuitem value="100%" onaction=""/>
+          <xul:menuitem value="200%" onaction=""/>
+          <xul:menuitem value="400%" onaction=""/>
+        </xul:menupopup>
+      </xul:menu>
+      <xul:menuseparator/>
+      <xul:menuitem value="High Contrast" onaction=""/>
+    </xul:menupopup>
+  </xul:menu>
+
+  <xul:menu value="Help">
+    <xul:menupopup>
+      <xul:menuitem value="About Image Map Editor" onaction=""/>
+    </xul:menupopup>
+  </xul:menu>
+
+  <xul:spring flex="100%"/>
+</xul:menubar>
+
+
+<xul:toolbar id="toolbar">
+  <xul:titledbutton src="&cutIcon.url;"/>
+  <xul:titledbutton src="&copyIcon.url;"/>
+  <xul:titledbutton src="&pasteIcon.url;"/>
+  <xul:menuseparator/>
+  <xul:titledbutton src="&zoomInIcon.url;"/>
+  <xul:titledbutton src="&zoomOutIcon.url;"/>
+  <xul:titledbutton toggled="0" src="&contrastIcon.url;" onclick="highContrast()"/>-
+  <xul:spring flex="100%"/>
+</xul:toolbar> 
+
+
+<xul:box align="horizontal" flex="100">
+  <xul:toolbar id="toolbox" align="vertical">
+    <xul:titledbutton src="&pointerIcon.url;" id="pointer" toggled="0" onclick="changeTool(event, 'select')"/>
+    <xul:titledbutton src="&rectangleIcon.url;" id="rect" toggled="1" onclick="changeTool(event, 'rect')"/>
+    <xul:titledbutton src="&circleIcon.url;" id="cir" toggled="0" onclick="changeTool(event, 'cir')"/>
+    <xul:titledbutton src="&polygonIcon.url;" id="poly" toggled="0" onclick="changeTool(event, 'poly')"/>
+    <xul:spring flex="100%"/>
+  </xul:toolbar>
+  <iframe id="content" src="EdImageMapPage.html" flex="100%"/>
+  <!--<div id="content" style="overflow:auto; background-color:#808080; border: 2 inset #000000;" flex="100%"  onmousedown="downMouse(event)" onmouseup="upMouse(event)" onmousemove="moveMouse(event)" onclick="clickMouse(event)" onkeypress="polyFinish()"></div>-->
+</xul:box>
+
+<xul:toolbar>
+  <!-- Cheap hack untill I get key events hooked up -->
+  <xul:titledbutton value="Delete Spot" onclick="deleteElement(currentElement)"/>  
+  <xul:spring flex="100%"/>
+  <xul:titledbutton value="OK" onclick="finishMap()"/>  
+  <xul:titledbutton value="Cancel" onclick="exitImageMap()"/> 
+</xul:toolbar>
+
+</xul:window>
