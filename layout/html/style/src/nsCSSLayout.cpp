@@ -23,8 +23,12 @@
 #include "nsIFontMetrics.h"
 #include "nsIPresContext.h"
 #include "nsRect.h"
+#include "nsIPtr.h"
 
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+
+NS_DEF_PTR(nsIStyleContext);
+NS_DEF_PTR(nsIContent);
 
 // XXX what about ebina's center vs. ncsa-center?
 /*
@@ -54,17 +58,15 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
   PRIntn kidCount = aChildCount;
   while (--kidCount >= 0) {
     nscoord kidAscent = *aAscents++;
-    nsIStyleContext* kidSC;
-    nsIContent* kidContent;
+    nsIStyleContextPtr kidSC;
+    nsIContentPtr kidContent;
 
-    kid->GetStyleContext(aCX, kidSC);
-    kid->GetContent(kidContent);
+    kid->GetStyleContext(aCX, kidSC.AssignRef());
+    kid->GetContent(kidContent.AssignRef());
     nsStyleMolecule* kidMol =
       (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     PRIntn verticalAlign = kidMol->verticalAlign;
     float verticalAlignPct = kidMol->verticalAlignPct;
-    NS_RELEASE(kidSC);
-    NS_RELEASE(kidContent);
 
     kid->GetRect(kidRect);
 
@@ -138,16 +140,14 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     kid = aFirstChild;
     while (--kidCount >= 0) {
       // Get kid's vertical align style data
-      nsIStyleContext* kidSC;
-      nsIContent* kidContent;
+      nsIStyleContextPtr kidSC;
+      nsIContentPtr kidContent;
 
-      kid->GetStyleContext(aCX, kidSC);
-      kid->GetContent(kidContent);
+      kid->GetStyleContext(aCX, kidSC.AssignRef());
+      kid->GetContent(kidContent.AssignRef());
       nsStyleMolecule* kidMol =
         (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
       PRIntn verticalAlign = kidMol->verticalAlign;
-      NS_RELEASE(kidSC);
-      NS_RELEASE(kidContent);
 
       // Vertically align the child
       if (verticalAlign == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
@@ -219,11 +219,11 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
   nsPoint origin;
   nsIFrame* kid = aFirstChild;
   while (--aChildCount >= 0) {
-    nsIContent* kidContent;
-    nsIStyleContext* kidSC;
+    nsIContentPtr kidContent;
+    nsIStyleContextPtr kidSC;
 
-    kid->GetContent(kidContent);
-    kid->GetStyleContext(aCX, kidSC);
+    kid->GetContent(kidContent.AssignRef());
+    kid->GetStyleContext(aCX, kidSC.AssignRef());
     nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
     if (NS_STYLE_POSITION_RELATIVE == kidMol->positionFlags) {
       kid->GetOrigin(origin);
@@ -231,8 +231,6 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
       nscoord dy = kidMol->top;
       kid->MoveTo(origin.x + dx, origin.y + dy);
     }
-    NS_RELEASE(kidContent);
-    NS_RELEASE(kidSC);
     kid->GetNextSibling(kid);
   }
 }
