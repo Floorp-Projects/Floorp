@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.10 2001/06/09 03:18:09 nelsonb%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.11 2001/06/09 19:30:21 nelsonb%netscape.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -234,7 +234,9 @@ static PRBool isMultiProcess  = PR_FALSE;
 #define MIN_SSL3_TIMEOUT          5   /* seconds  */
 
 #if defined(AIX) || defined(LINUX)
-#define MAX_SID_CACHE_LOCKS 8
+#define MAX_SID_CACHE_LOCKS 8	/* two FDs per lock */
+#elif defined(OSF1)
+#define MAX_SID_CACHE_LOCKS 16	/* one FD per lock */
 #else
 #define MAX_SID_CACHE_LOCKS 256
 #endif
@@ -1037,8 +1039,12 @@ SSL_ConfigServerSessionIDCacheInstance(	cacheDesc *cache,
 {
     SECStatus rv;
 
-/*  printf("sizeof(sidCacheEntry) == %u\n", sizeof(sidCacheEntry)); */
+#if defined(DEBUG_nelsonb)
+    printf("sizeof(sidCacheEntry) == %u\n", sizeof(sidCacheEntry));
+#endif
+#if !(defined(SOLARIS) && defined(i386))
     PORT_Assert(sizeof(sidCacheEntry) % 8 == 0);
+#endif
     PORT_Assert(sizeof(certCacheEntry) == 4096);
 
     myPid = SSL_GETPID();
