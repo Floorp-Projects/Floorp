@@ -280,12 +280,16 @@ nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
 // a nifty helper function to create a polygon representing a
 // particular side of a border. This helps localize code for figuring
 // mitered edges. It is mainly used by the solid, inset, and outset
-// styles...
+// styles.
+//
+// If the side can be represented as a line segment (because the thickness
+// is one pixel), then a line with two endpoints is returned
 PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
                                 nsIRenderingContext& aContext,
                                 PRIntn whichSide,
                                 const nsRect& inside, const nsRect& outside,
-                                PRIntn borderPart, float borderFrac)
+                                PRIntn borderPart, float borderFrac,
+                                nscoord twipsPerPixel)
 {
   float borderRest = 1.0f - borderFrac;
 
@@ -294,13 +298,22 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
   // block elements (paragraphs).
 
   PRIntn np = 0;
+  nscoord thickness;
+
+  // Base our thickness check on the segment being less than a pixel and 1/2
+  twipsPerPixel += twipsPerPixel >> 2;
+
   switch (whichSide) {
   case NS_SIDE_TOP:
     if (borderPart == BORDER_FULL) {
-      aPoints[np++].MoveTo(outside.x, outside.y);
+      thickness = outside.y - inside.y;
+
       aPoints[np++].MoveTo(outside.XMost(), outside.y);
-      aPoints[np++].MoveTo(inside.XMost(), inside.y);
-      aPoints[np++].MoveTo(inside.x, inside.y);
+      if (thickness >= twipsPerPixel) {
+        aPoints[np++].MoveTo(inside.XMost(), inside.y);
+        aPoints[np++].MoveTo(inside.x, inside.y);
+      }
+      aPoints[np++].MoveTo(outside.x, outside.y);
     } else if (borderPart == BORDER_INSIDE) {
       aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
                                    inside.x * borderRest),
@@ -328,9 +341,13 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
 
   case NS_SIDE_LEFT:
     if (borderPart == BORDER_FULL) {
+      thickness = inside.x - outside.x;
+
       aPoints[np++].MoveTo(outside.x, outside.y);
-      aPoints[np++].MoveTo(inside.x, inside.y);
-      aPoints[np++].MoveTo(inside.x, inside.YMost());
+      if (thickness >= twipsPerPixel) {
+        aPoints[np++].MoveTo(inside.x, inside.y);
+        aPoints[np++].MoveTo(inside.x, inside.YMost());
+      }
       aPoints[np++].MoveTo(outside.x, outside.YMost());
     } else if (borderPart == BORDER_INSIDE) {
       aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
@@ -359,9 +376,13 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
 
   case NS_SIDE_BOTTOM:
     if (borderPart == BORDER_FULL) {
+      thickness = outside.y - inside.y;
+
       aPoints[np++].MoveTo(outside.x, outside.YMost());
-      aPoints[np++].MoveTo(inside.x, inside.YMost());
-      aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
+      if (thickness >= twipsPerPixel) {
+        aPoints[np++].MoveTo(inside.x, inside.YMost());
+        aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
+      }
       aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
     } else if (borderPart == BORDER_INSIDE) {
       aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
@@ -390,10 +411,14 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
 
   case NS_SIDE_RIGHT:
     if (borderPart == BORDER_FULL) {
-      aPoints[np++].MoveTo(inside.XMost(), inside.y);
-      aPoints[np++].MoveTo(outside.XMost(), outside.y);
+      thickness = outside.x - inside.x;
+
       aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
-      aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
+      aPoints[np++].MoveTo(outside.XMost(), outside.y);
+      if (thickness >= twipsPerPixel) {
+        aPoints[np++].MoveTo(inside.XMost(), inside.y);
+        aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
+      }
     } else if (borderPart == BORDER_INSIDE) {
       aPoints[np++].MoveTo(inside.XMost(), inside.y);
       aPoints[np++].MoveTo(nscoord(outside.XMost() * borderFrac +
@@ -428,7 +453,8 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                               const nscolor borderColors[],
                               const nsRect& borderOutside,
                               const nsRect& borderInside,
-                              PRBool printing)
+                              PRBool printing,
+                              nscoord twipsPerPixel)
 {
   nsPoint theSide[MAX_POLY_POINTS];
   nscolor theColor = borderColors[whichSide];
@@ -446,41 +472,65 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
   case NS_STYLE_BORDER_STYLE_GROOVE:
   case NS_STYLE_BORDER_STYLE_RIDGE:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
-                   BORDER_INSIDE, 0.5f);
+                   BORDER_INSIDE, 0.5f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor, printing));
-    aContext.FillPolygon (theSide, np);
+    if (2 == np) {
+      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+    } else {
+      aContext.FillPolygon (theSide, np);
+    }
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
-                   BORDER_OUTSIDE, 0.5f);
+                   BORDER_OUTSIDE, 0.5f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide,
        (theStyle == NS_STYLE_BORDER_STYLE_RIDGE)
           ? NS_STYLE_BORDER_STYLE_GROOVE
           : NS_STYLE_BORDER_STYLE_RIDGE, theColor,printing));
-    aContext.FillPolygon (theSide, np);
+    if (2 == np) {
+      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+    } else {
+      aContext.FillPolygon (theSide, np);
+    }
     break;
 
   case NS_STYLE_BORDER_STYLE_SOLID:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
-                   BORDER_FULL, 1.0f);
+                   BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor (borderColors[whichSide]);
-    aContext.FillPolygon (theSide, np);
+    if (2 == np) {
+      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+    } else {
+      aContext.FillPolygon (theSide, np);
+    }
     break;
 
   case NS_STYLE_BORDER_STYLE_DOUBLE:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
-                   BORDER_INSIDE, 0.333333f);
+                   BORDER_INSIDE, 0.333333f, twipsPerPixel);
     aContext.SetColor (borderColors[whichSide]);
-    aContext.FillPolygon (theSide, np);
+    if (2 == np) {
+      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+    } else {
+      aContext.FillPolygon (theSide, np);
+    }
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
-                   BORDER_OUTSIDE, 0.333333f);
-    aContext.FillPolygon (theSide, np);
+                   BORDER_OUTSIDE, 0.333333f, twipsPerPixel);
+    if (2 == np) {
+      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+    } else {
+      aContext.FillPolygon (theSide, np);
+    }
     break;
 
   case NS_STYLE_BORDER_STYLE_OUTSET:
   case NS_STYLE_BORDER_STYLE_INSET:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
-                   BORDER_FULL, 1.0f);
+                   BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor,printing));
-    aContext.FillPolygon (theSide, np);
+    if (2 == np) {
+      aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
+    } else {
+      aContext.FillPolygon (theSide, np);
+    }
     break;
   }
 }
@@ -757,21 +807,23 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   }
 
   // Draw all the other sides
+  nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
+
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
     DrawSide(aRenderingContext, NS_SIDE_TOP, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside, printing);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
     DrawSide(aRenderingContext, NS_SIDE_LEFT, aStyle.mBorderStyle, 
-             aStyle.mBorderColor, inside, outside, printing);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
     DrawSide(aRenderingContext, NS_SIDE_BOTTOM, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside, printing);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
     DrawSide(aRenderingContext, NS_SIDE_RIGHT, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside, printing);
+             aStyle.mBorderColor, inside, outside, printing, twipsPerPixel);
   }
 }
 
