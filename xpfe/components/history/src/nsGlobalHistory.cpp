@@ -77,8 +77,8 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 #define DEBUG_LAST_PAGE_VISITED 1
 #endif /* DEBUG_sspitzer */
 
-#define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED "browser.history.last_page_visited"
-#define PREF_BROWSER_HISTORY_EXPIRE_DAYS "browser.history_expire_days"
+#define BROWSER_HISTORY_LAST_PAGE_VISITED_PREF "browser.history.last_page_visited"
+
 //----------------------------------------------------------------------
 //
 // CIDs
@@ -256,11 +256,9 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 nsGlobalHistory::nsGlobalHistory()
   : mEnv(nsnull),
     mStore(nsnull),
-    mTable(nsnull),
-    mExpireDays(9) // make default be nine days
+    mTable(nsnull)
 {
   NS_INIT_REFCNT();
-  LL_I2L(mFileSizeOnDisk, 0);
 }
 
 nsGlobalHistory::~nsGlobalHistory()
@@ -298,12 +296,7 @@ nsGlobalHistory::~nsGlobalHistory()
 //
 //   nsISupports methods
 
-NS_IMPL_ISUPPORTS5(nsGlobalHistory,
-                   nsIGlobalHistory,
-                   nsIObserver,
-                   nsISupportsWeakReference,
-                   nsIRDFDataSource,
-                   nsIRDFRemoteDataSource)
+NS_IMPL_ISUPPORTS3(nsGlobalHistory, nsIGlobalHistory, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
 //----------------------------------------------------------------------
 //
@@ -404,10 +397,6 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     
     rv = NotifyChange(url, kNC_Date, oldDateLiteral, date);
     if (NS_FAILED(rv)) return rv;
-
-    // ...now set the new date.
-    char buf[64];
-    PRInt64ToChars(aDate, buf, sizeof(buf));
 
     // visit count
     nsCOMPtr<nsIRDFInt> oldCountLiteral;
@@ -707,7 +696,24 @@ nsGlobalHistory::RemoveAllPages()
   NS_ASSERTION(err == 0, "error ending batch");
 
   // Do a "large commit" to flush the (almost empty) table to disk.
-  return Commit(kCompressCommit);
+  {
+    nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+    err = mStore->CompressCommit(mEnv, getter_Acquires(thumb));
+    if (err != 0) return NS_ERROR_FAILURE;
+
+    mdb_count total;
+    mdb_count current;
+    mdb_bool done;
+    mdb_bool broken;
+
+    do {
+      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+    } while ((err == 0) && !broken && !done);
+
+    if ((err != 0) || !done) return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 
@@ -763,7 +769,7 @@ nsGlobalHistory::SaveLastPageVisited(const char *aURL)
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = prefs->SetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, aURL);
+  rv = prefs->SetCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, aURL);
 
 #ifdef DEBUG_LAST_PAGE_VISITED
   printf("XXX saving last page visited as: %s\n", aURL);
@@ -783,7 +789,7 @@ nsGlobalHistory::GetLastPageVisited(char **_retval)
   if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString lastPageVisited;
-  rv = prefs->CopyCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, getter_Copies(lastPageVisited));
+  rv = prefs->CopyCharPref(BROWSER_HISTORY_LAST_PAGE_VISITED_PREF, getter_Copies(lastPageVisited));
   if (NS_FAILED(rv)) return rv;
 
   *_retval = nsCRT::strdup((const char *)lastPageVisited);
@@ -1503,7 +1509,25 @@ nsGlobalHistory::Refresh(PRBool aBlocking)
 NS_IMETHODIMP
 nsGlobalHistory::Flush()
 {
-  return Commit(kLargeCommit);
+	nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+	mdb_err err;
+
+	err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+	if (err != 0) return NS_ERROR_FAILURE;
+
+	mdb_count total;
+	mdb_count current;
+	mdb_bool done;
+	mdb_bool broken;
+
+	do
+	{
+		err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+	} while ((err == 0) && !broken && !done);
+
+	if ((err != 0) || !done) return NS_ERROR_FAILURE;
+
+	return NS_OK;
 }
 
 
@@ -1519,13 +1543,6 @@ nsresult
 nsGlobalHistory::Init()
 {
   nsresult rv;
-
-  // we'd like to get this pref when we need it, but at that point,
-  // we can't get the pref service. This means if the user changes
-  // this pref, we won't notice until the next time we run.
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
 
   if (gRefCnt++ == 0) {
     rv = nsServiceManager::GetService(kRDFServiceCID,
@@ -1749,191 +1766,32 @@ nsGlobalHistory::CreateTokens()
   return NS_OK;
 }
 
-nsresult nsGlobalHistory::Commit(eCommitType commitType)
-{
-  nsresult	err = NS_OK;
-  nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-
-  if (!mStore)
-    return NS_ERROR_NULL_POINTER;
-
-  if (commitType == kLargeCommit || commitType == kSessionCommit)
-  {
-    mdb_percent outActualWaste = 0;
-    mdb_bool outShould;
-    if (mStore) 
-    {
-      // check how much space would be saved by doing a compress commit.
-      // If it's more than 30%, go for it.
-      // N.B. - I'm not sure this calls works in Mork for all cases.
-      err = mStore->ShouldCompress(mEnv, 30, &outActualWaste, &outShould);
-      if (NS_SUCCEEDED(err) && outShould)
-      {
-          commitType = kCompressCommit;
-      }
-      else
-      {
-        mdb_count count;
-        err = mTable->GetCount(mEnv, &count);
-        // Since Mork's shouldCompress doesn't work, we need to look at the file
-        // size and the number of rows, and make a stab at guessing if we've got
-        // a lot of deleted rows. The file size is the size when we opened the db,
-        // and we really want it to be the size after we've written out the file,
-        // but I think this is a good enough approximation.
-        PRInt64 numRows;
-        PRInt64 bytesPerRow;
-        PRInt64 desiredAvgRowSize;
-
-        LL_UI2L(numRows, count);
-        LL_DIV(bytesPerRow, mFileSizeOnDisk, numRows);
-        LL_I2L(desiredAvgRowSize, 400);
-        if (LL_CMP(bytesPerRow, >, desiredAvgRowSize))
-          commitType = kCompressCommit;
-      }
-    }
-  }
-  switch (commitType)
-  {
-  case kLargeCommit:
-    err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
-    break;
-  case kSessionCommit:
-    err = mStore->SessionCommit(mEnv, getter_Acquires(thumb));
-    break;
-  case kCompressCommit:
-    err = mStore->CompressCommit(mEnv, getter_Acquires(thumb));
-    break;
-  }
-  if (err == 0) {
-    mdb_count total;
-    mdb_count current;
-    mdb_bool done;
-    mdb_bool broken;
-
-    do {
-      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
-    } while ((err == 0) && !broken && !done);
-  }
-  if (err != 0) // mork doesn't return NS error codes. Yet.
-    return NS_ERROR_FAILURE;
-  else
-    return NS_OK;
-
-}
-// if notify is true, we'll notify rdf of deleted rows.
-// If we're shutting down history, then (maybe?) we don't
-// need or want to notify rdf.
-nsresult nsGlobalHistory::ExpireEntries(PRBool notify)
-{
-  nsresult rv;
-
-  // we'd like to get the expire_days pref here, "browser.history_expire_days",
-  // but by the time we're called, we can't get the pref service because we're
-  // shutting down!
-
-  // Iterate through all the rows in the table, notifying observers
-  // that they're going away and cutting each out of the database.
-  // Start with a cursor across the entire table.
-  mdb_err err;
-  mdb_count count;
-  err = mTable->GetCount(mEnv, &count);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  // Begin the batch.
-  int marker;
-  err = mTable->StartBatchChangeHint(mEnv, &marker);
-  NS_ASSERTION(err == 0, "unable to start batch");
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIRDFResource> resource;
-
-  PRTime expirationDate;
-	PRTime now = PR_Now();
-	PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInExpireDays;
-	
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
-  LL_UI2L(secondsInDays, 60 * 60 * 24 * mExpireDays);
-	LL_MUL(microSecondsInExpireDays, secondsInDays, microSecondsPerSecond);
-  LL_SUB(expirationDate, now, microSecondsInExpireDays);
-
-  // XXX from here until end batch, no early returns!
-  for (mdb_pos pos = count - 1; pos >= 0; --pos) {
-    nsMdbPtr<nsIMdbRow> row(mEnv);
-    err = mTable->PosToRow(mEnv, pos, getter_Acquires(row));
-    NS_ASSERTION(err == 0, "unable to get row");
-    if (err != 0)
-      break;
-
-    NS_ASSERTION(row != nsnull, "no row");
-    if (! row)
-      continue;
-
-    mdbYarn yarn;
-    err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
-    if (err != 0) 
-      continue;
-
-    PRInt64 lastVisitedTime;
-    rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &lastVisitedTime);
-    if (NS_FAILED(rv)) 
-      continue;
-
-	  PRBool expireEntry = LL_CMP(lastVisitedTime, <, expirationDate);
-    if (expireEntry)
-    {
-      if (notify)
-      {
-        // What's the URL? We need to know to properly notify our RDF
-        // observers.
-        err = row->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
-        if (err != 0)
-          continue;
-
-        nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-
-        rv = gRDFService->GetResource(nsPromiseFlatCString(uri).get(), getter_AddRefs(resource));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-        if (NS_FAILED(rv))
-          continue;
-      }
-      // Officially cut the row *now*, before notifying any observers:
-      // that way, any re-entrant calls won't find the row.
-      err = mTable->CutRow(mEnv, row);
-      NS_ASSERTION(err == 0, "couldn't cut row");
-      if (err != 0)
-        continue;
-
-      // XXX possibly avoid leakage
-      err = row->CutAllColumns(mEnv);
-      NS_ASSERTION(err == 0, "couldn't cut all columns");
-      // XXX we'll notify regardless of whether we could successfully
-      // CutAllColumns or not.
-
-      // Notify observers that the row is, er, history.
-      if (notify)
-        NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
-    }
-  }
-
-  // Finish the batch.
-  err = mTable->EndBatchChangeHint(mEnv, &marker);
-  NS_ASSERTION(err == 0, "error ending batch");
-  return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
-}
 
 nsresult
 nsGlobalHistory::CloseDB()
 {
   mdb_err err;
 
-  ExpireEntries(PR_FALSE /* don't notify */);
-  err = Commit(kSessionCommit);
-
   if (mTable)
     mTable->CutStrongRef(mEnv);
 
-  if (mStore)
+  if (mStore) {
+    // Commit all changes here.
+    nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+    err = mStore->SessionCommit(mEnv, getter_Acquires(thumb));
+    if (err == 0) {
+      mdb_count total;
+      mdb_count current;
+      mdb_bool done;
+      mdb_bool broken;
+
+      do {
+        err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+      } while ((err == 0) && !broken && !done);
+    }
+
     mStore->CutStrongRef(mEnv);
+  }
 
   if (mEnv)
     mEnv->CloseMdbObject(mEnv /* XXX */);
@@ -2051,30 +1909,6 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
-                         const PRUnichar *aSomeData)
-{
-  nsresult rv;
-
-  
-  // topics we observe
-  NS_NAMED_LITERAL_STRING(prefChangedTopic, "nsPref:changed");
-
-  // pref changing - update member vars
-  if (prefChangedTopic.Equals(aTopic)) {
-
-    // expiration date
-    nsCAutoString pref; pref.AssignWithConversion(aSomeData);
-    if (pref.Equals(PREF_BROWSER_HISTORY_EXPIRE_DAYS)) {
-      nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
-      if (NS_SUCCEEDED(rv))
-        prefs->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
-    }
-
-  }
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 //

@@ -29,12 +29,10 @@
 #include "nsMdbPtr.h"
 #include "mdb.h"
 #include "nsIGlobalHistory.h"
-#include "nsIObserver.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsISupportsArray.h"
-#include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
 //----------------------------------------------------------------------
@@ -81,9 +79,7 @@ protected:
 //   nsIGlobalHistory interface.
 //
 
-class nsGlobalHistory : nsSupportsWeakReference,
-                        public nsIGlobalHistory,
-                        public nsIObserver,
+class nsGlobalHistory : public nsIGlobalHistory,
                         public nsIRDFDataSource,
                         public nsIRDFRemoteDataSource
 {
@@ -93,9 +89,6 @@ public:
 
   // nsIGlobalHistory
   NS_DECL_NSIGLOBALHISTORY
-
-  // nsIObserver - for observing prefs changes
-  NS_DECL_NSIOBSERVER
 
   // nsIRDFDataSource
   NS_DECL_NSIRDFDATASOURCE
@@ -110,21 +103,12 @@ public:
 protected:
 
 
-  enum eCommitType 
-  {
-    kLargeCommit = 0,
-    kSessionCommit = 1,
-    kCompressCommit = 2
-  };
-
   // Implementation Methods
   nsresult OpenDB();
   nsresult OpenExistingFile(nsIMdbFactory *factory, const char *filePath);
   nsresult OpenNewFile(nsIMdbFactory *factory, const char *filePath);
   nsresult CreateTokens();
   nsresult CloseDB();
-  nsresult Commit(eCommitType commitType);
-  nsresult ExpireEntries(PRBool notify);
 
   PRBool IsURLInHistory(nsIRDFResource* aResource);
 
@@ -167,9 +151,6 @@ protected:
   mdb_column kToken_FirstVisitDateColumn;
   mdb_column kToken_VisitCountColumn;
   mdb_column kToken_NameColumn;
-
-  PRInt32   mExpireDays;
-  PRInt64   mFileSizeOnDisk;
 
   // pseudo-constants. although the global history really is a
   // singleton, we'll use this metaphor to be consistent.
