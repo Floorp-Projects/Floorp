@@ -1433,8 +1433,8 @@ ClusterKeySet::ClusterKeySet()
     static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
     static const PRInt32 kInitialEntries = 8;
 
-    static const PRInt32 kInitialPoolSize = 
-        NS_SIZE_IN_HEAP(sizeof(Entry)) * kInitialEntries;
+    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
+    static const PRInt32 kInitialPoolSize = 256;
 
     mPool.Init("ClusterKeySet", kBucketSizes, kNumBuckets, kInitialPoolSize);
 
@@ -1755,12 +1755,8 @@ ConflictSet::Init()
 
     static const PRInt32 kNumResourceElements = 64;
 
-    static const PRInt32 kInitialSize =
-        (NS_SIZE_IN_HEAP(sizeof(ClusterEntry)) +
-         NS_SIZE_IN_HEAP(sizeof(SupportEntry)) +
-         NS_SIZE_IN_HEAP(sizeof(BindingEntry))) * kNumResourceElements +
-        (NS_SIZE_IN_HEAP(MatchSet::kEntrySize) +
-         NS_SIZE_IN_HEAP(MatchSet::kIndexSize)) * kNumResourceElements;
+    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
+    static const PRInt32 kInitialSize = 256;
 
     mPool.Init("ConflictSet", kBucketSizes, kNumBuckets, kInitialSize);
 
@@ -2425,12 +2421,12 @@ ContentSupportMap::Init()
     static const size_t kBucketSizes[] = { sizeof(Entry) };
     static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
 
-    static const PRInt32 kInitialEntries = 16; // XXX arbitrary
-
-    static const PRInt32 kInitialSize =
-        NS_SIZE_IN_HEAP(sizeof(Entry)) * kInitialEntries;
+    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
+    static const PRInt32 kInitialSize = 256;
 
     mPool.Init("ContentSupportMap", kBucketSizes, kNumBuckets, kInitialSize);
+
+    static const PRInt32 kInitialEntries = 8; // XXX arbitrary
 
     mMap = PL_NewHashTable(kInitialEntries,
                            HashPointer,
@@ -5708,12 +5704,11 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
     static const size_t kBucketSizes[] = { MatchSet::kEntrySize, MatchSet::kIndexSize };
     static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
 
-    PRInt32 poolsize =
-        (NS_SIZE_IN_HEAP(MatchSet::kEntrySize)
-         + NS_SIZE_IN_HEAP(MatchSet::kIndexSize)) * matches->Count();
+    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
+    static const PRInt32 kPoolSize = 256;
 
     nsFixedSizeAllocator pool;
-    pool.Init("nsXULTemplateBuilder::SynchronizeAll", kBucketSizes, kNumBuckets, poolsize);
+    pool.Init("nsXULTemplateBuilder::SynchronizeAll", kBucketSizes, kNumBuckets, kPoolSize);
 
     MatchSet copy;
     matches->CopyInto(copy, pool);
