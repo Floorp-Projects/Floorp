@@ -113,7 +113,7 @@ nsRefData	*theRefData;
 // create a nswindow, if aParent is null, we will create the main parent
 //
 //-------------------------------------------------------------------------
-void nsWindow::Create(nsIWidget *aParent,
+NS_IMETHODIMP nsWindow::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -128,6 +128,7 @@ void nsWindow::Create(nsIWidget *aParent,
     CreateMainWindow(0, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
   else
 		CreateChildWindow(aParent->GetNativeData(NS_NATIVE_WINDOW), aParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -135,7 +136,7 @@ void nsWindow::Create(nsIWidget *aParent,
 // Creates a main nsWindow using the native platforms window or widget
 //
 //-------------------------------------------------------------------------
-void nsWindow::Create(nsNativeWidget aParent,    						// this is a windowPtr, 
+NS_IMETHODIMP nsWindow::Create(nsNativeWidget aParent,    						// this is a windowPtr, 
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -156,6 +157,8 @@ nsRefData				*theRefData;
 		mParent = (nsWindow*)theRefData->GetCurWidget();
 		CreateChildWindow(aParent,mParent, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 	}		
+	
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -206,7 +209,8 @@ nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-Rect			bounds;
+PRInt32			top;
+Rect				bounds;
 nsRefData		*theReferenceData;
 	
   mAppShell = aAppShell;
@@ -222,16 +226,15 @@ nsRefData		*theReferenceData;
 	// build the main native window
 	if(0==aNativeParent)
 		{
-		// calculate the structure size offset by the menubar height
-		bounds.top = aRect.x + LMGetMBarHeight() + 20; 
+		top = aRect.x + LMGetMBarHeight() + 20; ;				// offset arect by the menubar and the dragbar
+		
+		
+		bounds.top = top; 
 		bounds.left = aRect.y;
-		bounds.bottom = bounds.top+aRect.height + LMGetMBarHeight() + 20;
+		bounds.bottom = bounds.top+aRect.height;
 		bounds.right = bounds.left+aRect.width;
 		
 		mWindowRecord = (WindowRecord*)new char[sizeof(WindowRecord)];   // allocate our own windowrecord space
-		if (bounds.top <= 0)
-			bounds.top = LMGetMBarHeight()+20;
-			
 			
 		theReferenceData = new nsRefData();	
 		theReferenceData->SetTopWidget(this);
@@ -345,7 +348,7 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aPare
 // Close this nsWindow
 //
 //-------------------------------------------------------------------------
-void nsWindow::Destroy()
+NS_IMETHODIMP nsWindow::Destroy()
 {
 nsRefData		*theRefData;
 
@@ -363,6 +366,7 @@ nsRefData		*theRefData;
 		DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
 		}
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -452,7 +456,7 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 // Hide or show this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Show(PRBool bState)
+NS_IMETHODIMP nsWindow::Show(PRBool bState)
 {
 	// set the state
   mShown = bState;
@@ -472,6 +476,7 @@ void nsWindow::Show(PRBool bState)
   	}
     	
   // update the change
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -479,7 +484,7 @@ void nsWindow::Show(PRBool bState)
 // Move this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Move(PRUint32 aX, PRUint32 aY)
+NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
   mBounds.x = aX;
   mBounds.y = aY;
@@ -490,7 +495,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
   
   
   // update this change
-  
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -498,7 +503,7 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 nsSizeEvent 	event;
 
@@ -525,7 +530,7 @@ nsSizeEvent 	event;
   event.eventStructType = NS_SIZE_EVENT;
   event.widget = this;
  	this->DispatchEvent(&event);
-
+	return NS_OK;
 }
 
     
@@ -534,7 +539,7 @@ nsSizeEvent 	event;
 // Resize this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 nsSizeEvent 	event;
 
@@ -560,7 +565,7 @@ nsSizeEvent 	event;
   event.widget = this;
   event.eventStructType = NS_SIZE_EVENT;
  	this->DispatchEvent(&event);
-
+	return NS_OK;
 }
 
     
@@ -569,8 +574,9 @@ nsSizeEvent 	event;
 // Enable/disable this component
 //
 //-------------------------------------------------------------------------
-void nsWindow::Enable(PRBool bState)
+NS_IMETHODIMP nsWindow::Enable(PRBool bState)
 {
+	return NS_OK;
 }
 
     
@@ -580,7 +586,7 @@ void nsWindow::Enable(PRBool bState)
  *  @param   NONE
  *  @return  NONE
  */
-void nsWindow::SetFocus(void)
+NS_IMETHODIMP nsWindow::SetFocus(void)
 {
 nsRect							therect;
 Rect								macrect;
@@ -589,6 +595,7 @@ Rect								macrect;
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	::ClipRect(&macrect);
+	return NS_OK;
 	
 }
 
@@ -598,9 +605,10 @@ Rect								macrect;
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetBounds(const nsRect &aRect)
+NS_IMETHODIMP nsWindow::SetBounds(const nsRect &aRect)
 {
  mBounds = aRect;
+ return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -608,38 +616,11 @@ void nsWindow::SetBounds(const nsRect &aRect)
 // Get this component dimension
 //
 //-------------------------------------------------------------------------
-void nsWindow::GetBounds(nsRect &aRect)
+NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
 {
 
-  /*XWindowAttributes attrs ;
-  Window w = nsnull;
-
-  if (mWidget)
-    w = ::XtWindow(mWidget);
-  
-  if (mWidget && w) {
-    
-    XWindowAttributes attrs ;
-    
-    Display * d = ::XtDisplay(mWidget);
-    
-    XGetWindowAttributes(d, w, &attrs);
-    
-    aRect.x = attrs.x ;
-    aRect.y = attrs.y ;
-    aRect.width = attrs.width ;
-    aRect.height = attrs.height;
-    
- } else {
-   //printf("Bad bounds computed for nsIWidget\n");
-
-   // XXX If this code gets hit, one should question why and how
-   // and fix it there.
-    aRect = mBounds;
-  
-  }
-  */
   aRect = mBounds;
+  return NS_OK;
 }
 
     
@@ -659,9 +640,10 @@ nscolor nsWindow::GetForegroundColor(void)
 // Set the foreground color
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetForegroundColor(const nscolor &aColor)
+NS_IMETHODIMP nsWindow::SetForegroundColor(const nscolor &aColor)
 {
   mForeground = aColor;
+  return NS_OK ;
 }
 
     
@@ -681,9 +663,10 @@ nscolor nsWindow::GetBackgroundColor(void)
 // Set the background color
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetBackgroundColor(const nscolor &aColor)
+NS_IMETHODIMP nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
   mBackground = aColor ;
+  return NS_OK;
 }
 
     
@@ -704,10 +687,10 @@ nsIFontMetrics* nsWindow::GetFont(void)
 // Set this component font
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetFont(const nsFont &aFont)
+NS_IMETHODIMP nsWindow::SetFont(const nsFont &aFont)
 {
     if (mContext == nsnull) {
-      return;
+      return NS_OK;
     }
     nsIFontCache* fontCache = nsnull;
     mContext->GetFontCache(fontCache);
@@ -715,19 +698,6 @@ void nsWindow::SetFont(const nsFont &aFont)
       nsIFontMetrics* metrics;
       fontCache->GetMetricsFor(aFont, metrics);
       if (metrics != nsnull) {
-
-        //XmFontList      fontList = NULL;
-        //XmFontListEntry entry    = NULL;
-        //XFontStruct * fontStruct = XQueryFont(XtDisplay(mWidget),(XID)metrics->GetFontHandle());
-        //if (fontStruct != NULL) {
-          //entry = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG,XmFONT_IS_FONT, fontStruct);
-          //fontList = XmFontListAppendEntry(NULL, entry);
-
-         // XtVaSetValues(mWidget, XmNfontList, fontList, NULL);
-
-          //XmFontListEntryFree(&entry);
-          //XmFontListFree(fontList);
-        //}
 
         NS_RELEASE(metrics);
       } else {
@@ -737,6 +707,8 @@ void nsWindow::SetFont(const nsFont &aFont)
     } else {
       printf("****** Error: FontCache is NULL!\n");
     }
+ 
+ 	return NS_OK;
 }
 
     
@@ -757,8 +729,9 @@ nsCursor nsWindow::GetCursor()
 //
 //-------------------------------------------------------------------------
 
-void nsWindow::SetCursor(nsCursor aCursor)
+NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
 {
+	return NS_OK;
 }
     
 //-------------------------------------------------------------------------
@@ -766,7 +739,7 @@ void nsWindow::SetCursor(nsCursor aCursor)
 // Invalidate this component visible area
 //
 //-------------------------------------------------------------------------
-void nsWindow::Invalidate(PRBool aIsSynchronous)
+NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
 GrafPtr	curport;
 
@@ -777,7 +750,7 @@ GrafPtr	curport;
 		::InvalRgn(mWindowRegion);
 		::SetPort(curport);
 		}
-
+	return NS_OK;
   
 }
 
@@ -876,8 +849,9 @@ nsIToolkit* nsWindow::GetToolkit()
 // Set the colormap of the window
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetColorMap(nsColorMap *aColorMap)
+NS_IMETHODIMP nsWindow::SetColorMap(nsColorMap *aColorMap)
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -907,8 +881,9 @@ nsIAppShell* nsWindow::GetAppShell()
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -916,8 +891,9 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle) 
+NS_IMETHODIMP nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle) 
 {
+	return NS_OK;
 } 
 
 //-------------------------------------------------------------------------
@@ -925,8 +901,9 @@ void nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
 // Scroll the bits of a window
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetTitle(const nsString& aTitle) 
+NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle) 
 {
+	return NS_OK;
 } 
 
 //-------------------------------------------------------------------------
@@ -934,10 +911,11 @@ void nsWindow::SetTitle(const nsString& aTitle)
 // Processes a mouse pressed event
 //
 //-------------------------------------------------------------------------
-void nsWindow::AddMouseListener(nsIMouseListener * aListener)
+NS_IMETHODIMP nsWindow::AddMouseListener(nsIMouseListener * aListener)
 {
   NS_PRECONDITION(mMouseListener == nsnull, "Null mouse listener");
   mMouseListener = aListener;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -945,10 +923,11 @@ void nsWindow::AddMouseListener(nsIMouseListener * aListener)
 // Processes a mouse pressed event
 //
 //-------------------------------------------------------------------------
-void nsWindow::AddEventListener(nsIEventListener * aListener)
+NS_IMETHODIMP nsWindow::AddEventListener(nsIEventListener * aListener)
 {
   NS_PRECONDITION(mEventListener == nsnull, "Null event listener");
   mEventListener = aListener;
+  return NS_OK;
 }
 
 PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
@@ -1138,8 +1117,9 @@ nsRect 					rr;
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::BeginResizingChildren(void)
+NS_IMETHODIMP nsWindow::BeginResizingChildren(void)
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1147,8 +1127,9 @@ void nsWindow::BeginResizingChildren(void)
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::EndResizingChildren(void)
+NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1156,8 +1137,9 @@ void nsWindow::EndResizingChildren(void)
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::OnDestroy()
+NS_IMETHODIMP nsWindow::OnDestroy()
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1218,9 +1200,10 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetIgnoreResize(PRBool aIgnore)
+NS_IMETHODIMP nsWindow::SetIgnoreResize(PRBool aIgnore)
 {
   mIgnoreResize = aIgnore;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1332,9 +1315,10 @@ PRInt32	offx,offy;
  *  @param   aY -- y offset in widget local coordinates
  *  @return  PR_TRUE if the pt is contained in the widget
  */
-void nsWindow::SetBounds(const Rect& aMacRect)
+NS_IMETHODIMP nsWindow::SetBounds(const Rect& aMacRect)
 {
 	MacRectToNSRect(aMacRect,mBounds);
+	return NS_OK;
 }
 
 
@@ -1521,7 +1505,7 @@ PRBool			result = PR_FALSE;
 
 //-------------------------------------------------------------------------
 
-void nsWindow::UpdateVisibilityFlag()
+NS_IMETHODIMP nsWindow::UpdateVisibilityFlag()
 {
   //Widget parent = XtParent(mWidget);
 
@@ -1531,7 +1515,7 @@ void nsWindow::UpdateVisibilityFlag()
     //XtVaGetValues(parent, XmNwidth, &pWidth, XmNheight, &pHeight, nsnull);
     if ((mBounds.y + mBounds.height) > pHeight) {
       mVisible = PR_FALSE;
-      return;
+      return NS_OK;
     }
  
     if (mBounds.y < 0)
@@ -1539,6 +1523,7 @@ void nsWindow::UpdateVisibilityFlag()
   }
   
   mVisible = PR_TRUE;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1548,7 +1533,7 @@ void nsWindow::UpdateVisibilityFlag()
  *  @param   aY -- y offset amount 
  *  @return  NOTHING
  */
-void nsWindow::CalcOffset(PRInt32 &aX,PRInt32 &aY)
+NS_IMETHODIMP nsWindow::CalcOffset(PRInt32 &aX,PRInt32 &aY)
 {
 nsIWidget	*theparent,*child;
 nsRect		therect;
@@ -1568,7 +1553,7 @@ nsRect		therect;
 		theparent = child;
 		}
 
-
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1576,7 +1561,7 @@ nsRect		therect;
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::UpdateDisplay()
+NS_IMETHODIMP nsWindow::UpdateDisplay()
 {
     // If not displayed and needs to be displayed
   if ((PR_FALSE==mDisplayed) &&
@@ -1593,6 +1578,8 @@ void nsWindow::UpdateDisplay()
       mDisplayed = PR_FALSE;
     }
   }
+  
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1645,8 +1632,9 @@ nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1654,8 +1642,9 @@ void nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 // 
 //
 //-------------------------------------------------------------------------
-void nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+NS_IMETHODIMP nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
+	return NS_OK;
 } 
 
 //-------------------------------------------------------------------------
@@ -1663,8 +1652,9 @@ void nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 // Setup initial tooltip rectangles
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
+NS_IMETHODIMP nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1672,8 +1662,9 @@ void nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
 // Update all tooltip rectangles
 //
 //-------------------------------------------------------------------------
-void nsWindow::UpdateTooltips(nsRect* aNewTips[])
+NS_IMETHODIMP nsWindow::UpdateTooltips(nsRect* aNewTips[])
 {
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1681,8 +1672,9 @@ void nsWindow::UpdateTooltips(nsRect* aNewTips[])
 // Remove all tooltip rectangles
 //
 //-------------------------------------------------------------------------
-void nsWindow::RemoveTooltips()
+NS_IMETHODIMP nsWindow::RemoveTooltips()
 {
+	return NS_OK;
 }
 
 //=================================================================
@@ -1699,7 +1691,6 @@ nsRect	rect;
 	this->GetBounds(rect);
   aX +=rect.x;
   aY +=rect.y;
-
 }
 
 //-------------------------------------------------------------------------
@@ -1904,4 +1895,42 @@ void nsWindow::Str255ToString(const Str255& aStr255, nsString& aText)
 	buffer[len] = 0;
 
 	aText = buffer;		
+}
+
+//-------------------------------------------------------------------------
+//
+// Return PR_TRUE if the whether the component is visible, PR_FALSE otherwise
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWindow::IsVisible(PRBool & bState)
+{
+  bState = mVisible;
+  return NS_OK;
+}
+
+/**
+ * Set the widget's MenuBar.
+ * Must be called after Create.
+ *
+ * @param aTitle string displayed as the title of the widget
+ */
+
+NS_IMETHODIMP nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
+{
+  return NS_OK;
+}
+
+
+NS_METHOD nsWindow::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+{
+  aWidth  = mPreferredWidth;
+  aHeight = mPreferredHeight;
+  return NS_ERROR_FAILURE;
+}
+
+NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+{
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
 }
