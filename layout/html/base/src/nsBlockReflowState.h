@@ -56,10 +56,12 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
 #undef NOISY_MAX_ELEMENT_SIZE
+#undef NOISY_RUNIN
 #else
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
 #undef NOISY_MAX_ELEMENT_SIZE
+#undef NOISY_RUNIN
 #endif
 
 #ifdef REALLY_NOISY_FIRST_LINE
@@ -187,6 +189,9 @@ struct nsBlockReflowState : public nsFrameReflowState {
 
   PRBool mInlineReflowPrepared;
 
+  nsBlockFrame* mRunInFrame;
+  nsBlockFrame* mRunInToFrame;
+
   PRUint8 mTextAlign;
 
   PRUintn mPrevMarginFlags;
@@ -293,6 +298,9 @@ public:
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY);
 
+  // nsBlockFrame
+  void TakeRunInFrames(nsBlockFrame* aRunInFrame);
+
 #ifdef DO_SELECTION
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
@@ -389,6 +397,8 @@ public:
   nsresult SplitLine(nsBlockReflowState& aState,
                      LineData* aLine,
                      nsIFrame* aFrame);
+
+  nsBlockFrame* IsReallyRunInFrame(nsIFrame* aFrame);
 
   PRBool ReflowBlockFrame(nsBlockReflowState& aState,
                           LineData* aLine,
@@ -1354,6 +1364,9 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
   mBlock->GetNextInFlow((nsIFrame*&)mNextInFlow);
   mKidXMost = 0;
 
+  mRunInFrame = nsnull;
+  mRunInToFrame = nsnull;
+
   mY = 0;
   mUnconstrainedWidth = maxSize.width == NS_UNCONSTRAINEDSIZE;
   mUnconstrainedHeight = maxSize.height == NS_UNCONSTRAINEDSIZE;
@@ -1795,6 +1808,46 @@ nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
+void
+nsBlockFrame::TakeRunInFrames(nsBlockFrame* aRunInFrame)
+{
+  // Simply steal the run-in-frame's line list and make it our
+  // own. XXX Very similar to the logic in DrainOverflowLines...
+  LineData* line = aRunInFrame->mLines;
+
+  // Make all the frames on the mOverflowLines list mine
+  nsIFrame* lastFrame = nsnull;
+  nsIFrame* frame = line->mFirstChild;
+  while (nsnull != frame) {
+    nsIFrame* geometricParent;
+    nsIFrame* contentParent;
+    frame->GetGeometricParent(geometricParent);
+    frame->GetContentParent(contentParent);
+    if (contentParent == geometricParent) {
+      frame->SetContentParent(this);
+    }
+    frame->SetGeometricParent(this);
+    lastFrame = frame;
+    frame->GetNextSibling(frame);
+  }
+
+  // Join the line lists
+  if (nsnull == mLines) {
+    mLines = line;
+  }
+  else {
+    // Join the sibling lists together
+    lastFrame->SetNextSibling(mLines->mFirstChild);
+
+    // Place overflow lines at the front of our line list
+    LineData* lastLine = LastLine(line);
+    lastLine->mNext = mLines;
+    mLines = line;
+  }
+
+  aRunInFrame->mLines = nsnull;
+}
+
 NS_IMETHODIMP
 nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
@@ -1834,11 +1887,22 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
-    RenumberLists(state);
+    if (nsnull != aReflowState.mRunInFrame) {
+#ifdef NOISY_RUNIN
+      ListTag(stdout);
+      printf(": run-in from: ");
+      aReflowState.mRunInFrame->ListTag(stdout);
+      printf("\n");
+#endif
+      // Take frames away from the run-in frame
+      TakeRunInFrames(aReflowState.mRunInFrame);
+    }
     if (!DrainOverflowLines()) {
+      RenumberLists(state);
       rv = InitialReflow(state);
     }
     else {
+      RenumberLists(state);
       rv = ResizeReflow(state);
     }
     mState &= ~NS_FRAME_FIRST_REFLOW;
@@ -2379,9 +2443,22 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   // Recover our reflow state
   LineData* firstDirtyLine = mLines;
   LineData* lastCleanLine = nsnull;
+  PRBool haveRunIn = PR_FALSE;
   while (nsnull != firstDirtyLine) {
     if (firstDirtyLine->IsDirty()) {
       break;
+    }
+
+    // Recover run-in state
+    if (firstDirtyLine->IsBlock()) {
+      nsIFrame* frame = firstDirtyLine->mFirstChild;
+      const nsStyleDisplay* display;
+      frame->GetStyleData(eStyleStruct_Display,
+                          (const nsStyleStruct*&) display);
+      if (NS_STYLE_DISPLAY_RUN_IN == display->mDisplay) {
+        haveRunIn = PR_TRUE;
+        break;
+      }
     }
 
     // Recover xmost
@@ -2411,6 +2488,16 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
     // Advance to the next line
     lastCleanLine = firstDirtyLine;
     firstDirtyLine = firstDirtyLine->mNext;
+  }
+
+  if (haveRunIn) {
+    // XXX For now, reflow the world when we contain a frame that is a
+    // run-in frame. (lazy code)
+    lastCleanLine = nsnull;
+    firstDirtyLine = mLines;
+    aState.mY = aState.mBorderPadding.top;
+    aState.mPrevMarginFlags = 0;
+    aState.mPrevBottomMargin = 0;
   }
 
   if (nsnull != lastCleanLine) {
@@ -3230,6 +3317,48 @@ nsBlockFrame::MoveInSpaceManager(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+nsBlockFrame*
+nsBlockFrame::IsReallyRunInFrame(nsIFrame* aFrame)
+{
+  nsBlockFrame* runInToFrame = nsnull;
+  nsIFrame* frame = aFrame;
+  for (;;) {
+    nsIFrame* nextFrame;
+    frame->GetNextSibling(nextFrame);
+    if (nsnull != nextFrame) {
+      const nsStyleDisplay* display;
+      nsresult rv = nextFrame->GetStyleData(eStyleStruct_Display,
+                                            (const nsStyleStruct*&) display);
+      if (NS_SUCCEEDED(rv) && (nsnull != display)) {
+        if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
+#ifdef NOISY_RUNIN
+          ListTag(stdout);
+          printf(": run-in: ");
+          aFrame->ListTag(stdout);
+          printf(" into: ");
+          nextFrame->ListTag(stdout);
+          printf("\n");
+#endif
+          runInToFrame = (nsBlockFrame*) nextFrame;
+          break;
+        }
+        else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
+          // If it's a text-frame and it's just whitespace and we are
+          // in a normal whitespace situation THEN skip it and keep
+          // going...
+          // XXX probably should really check this ...
+        }
+      }
+      else
+        break;
+      frame = nextFrame;
+    }
+    else
+      break;
+  }
+  return runInToFrame;
+}
+
 PRBool
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                LineData* aLine,
@@ -3242,6 +3371,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   nsInlineReflow& ir = *aState.mInlineReflow;
 
   // Prepare the inline reflow engine
+  nsBlockFrame* runInToFrame;
   PRBool asBlock = PR_TRUE;
   const nsStyleDisplay* display;
   nsresult rv = aFrame->GetStyleData(eStyleStruct_Display,
@@ -3250,6 +3380,37 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     switch (display->mDisplay) {
     case NS_STYLE_DISPLAY_TABLE:
       asBlock = PR_FALSE;
+      break;
+
+    case NS_STYLE_DISPLAY_RUN_IN:
+#ifdef NOISY_RUNIN
+      ListTag(stdout);
+      printf(": trying to see if ");
+      aFrame->ListTag(stdout);
+      printf(" is a run-in candidate\n");
+#endif
+      runInToFrame = IsReallyRunInFrame(aFrame);
+      if (nsnull != runInToFrame) {
+// XXX run-in frame should be pushed to the next-in-flow too if the
+// run-in-to frame is pushed.
+        aReflowResult = NS_FRAME_COMPLETE;
+        nsRect r(0, aState.mY, 0, 0);
+        aLine->mBounds = r;
+        aLine->mCombinedArea = r;
+        aLine->mCarriedOutTopMargin = 0;
+        aLine->mCarriedOutBottomMargin = 0;
+        aLine->SetMarginFlags(0);
+        aLine->ClearOutsideChildren();
+        aLine->mBreakType = NS_STYLE_CLEAR_NONE;
+//XXX        aFrame->WillReflow(aState.mPresContext);
+        aFrame->SetRect(r);
+        aState.mPrevChild = aFrame;
+        aState.mRunInToFrame = runInToFrame;
+        aState.mRunInFrame = (nsBlockFrame*) aFrame;
+        return PR_TRUE;
+      }
+      break;
+    case NS_STYLE_DISPLAY_BLOCK:
       break;
     }
 
@@ -3263,6 +3424,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                      (aFrame == aLine->mFirstChild));
 
   // Reflow the block frame
+  if (aFrame == aState.mRunInToFrame) {
+    ir.SetRunInFrame(aState.mRunInFrame);
+    // XXX premature, but hey! this is a prototype impl of run-in...
+    aState.mRunInToFrame = nsnull;
+  }
   nsReflowStatus reflowStatus = ir.ReflowFrame(aFrame);
   if (NS_IS_REFLOW_ERROR(reflowStatus)) {
     aReflowResult = reflowStatus;
@@ -3788,6 +3954,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         NS_RELEASE(brSC);
       }
     }
+  }
+  else {
+    aState.mRunInToFrame = nsnull;
+    aState.mRunInFrame = nsnull;
   }
 
   // Calculate the lines top and bottom margin values. The margin will
