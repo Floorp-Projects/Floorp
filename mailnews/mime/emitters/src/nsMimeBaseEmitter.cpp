@@ -61,9 +61,6 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
   // Initialize data output vars...
   mFirstHeaders = PR_TRUE;
 
-  if (mBufferMgr)
-    delete mBufferMgr;
-
   mBufferMgr = NULL;
   mTotalWritten = 0;
   mTotalRead = 0;
@@ -120,7 +117,10 @@ nsMimeBaseEmitter::~nsMimeBaseEmitter(void)
 
   // Delete the buffer manager...
   if (mBufferMgr)
+  {
     delete mBufferMgr;
+    mBufferMgr = nsnull;
+  }
 
   // Release the prefs service...
   if (mPrefs)
