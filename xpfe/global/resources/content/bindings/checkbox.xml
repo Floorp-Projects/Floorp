@@ -37,7 +37,7 @@
                                          event.initEvent('CheckboxStateChange', false, true);
                                          this.dispatchEvent(event);
                                          return val;"
-                                  onget="return this.hasAttribute('checked');"/>
+                                  onget="return this.getAttribute('checked') == 'true';"/>
     </implementation>
     
     <handlers>
