@@ -236,7 +236,7 @@ sub show_graph {
 
   # Multiplots, hard-coded for now.
   print "<li>\n";
-  print "Multiqueries: (<a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=startup&tboxes=comet,sleestack,openwound,mecca,rheeeet\">startup</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=xulwinopen&tboxes=comet,sleestack,openwound,mecca,rheeeet\">xulwinopen</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=pageload&tboxes=btek,mecca\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
+  print "Multiqueries: (<a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=startup&tboxes=comet,sleestack,mecca,openwound,rheeeet\">startup</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=xulwinopen&tboxes=comet,sleestack,mecca,openwound,rheeeet\">xulwinopen</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=pageload&tboxes=btek,mecca\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
   print "</li>\n";
 
 
