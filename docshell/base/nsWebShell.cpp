@@ -72,11 +72,9 @@
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 
-#ifndef XP_MAC
 #include "nsMultiMixedConv.h" // for 
 #include "nsIRegistry.h"
 static NS_DEFINE_CID(kRegistryCID,               NS_REGISTRY_CID);
-#endif // XP_MAC
 
 
 #ifdef XP_PC
@@ -1205,7 +1203,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
 
   // STREAM CONVERTER REGISTRATION
   // multipart mixed converter registration
-#ifndef XP_MAC
   nsIFactory *multiMixedFactSup;
   rv = nsComponentManager::FindFactory(kMultiMixedConverterCID, &multiMixedFactSup);
   if (NS_SUCCEEDED(rv)) {
@@ -1233,7 +1230,6 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
       rv = registry->AddSubtreeRaw(key, "?from=multipart/x-mixed-replace?to=text/html", &key1);
       if (NS_FAILED(rv)) goto done;
   }
-#endif // XP_MAC
   // END STREAM CONVERTER REGISTRATION
 
 done:
@@ -2706,6 +2702,7 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
       } while (0);
     }
   } else {
+    parent->SetTitle(aTitle);
     NS_RELEASE(parent);
   }
 
