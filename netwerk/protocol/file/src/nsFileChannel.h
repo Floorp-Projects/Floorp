@@ -19,6 +19,15 @@
 #ifndef nsFileChannel_h__
 #define nsFileChannel_h__
 
+// mscott --  this is just one temporary hack until we have a legit stream converter
+// story going....if the file we are opening is an rfc822 file then we want to 
+// go out and convert the data into html before we try to load it. so I'm inserting
+// code which if we are rfc-822 will cause us to literally insert a converter between
+// the file channel stream of incoming data and the consumer at the other end of the
+// AsyncRead call...
+
+#define STREAM_CONVERTER_HACK 
+
 #include "nsIFileChannel.h"
 #include "nsIThread.h"
 #include "nsFileSpec.h"
@@ -27,6 +36,11 @@
 #include "nsIBuffer.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
+
+#ifdef STREAM_CONVERTER_HACK
+#include "nsIStreamConverter2.h"
+#include "nsXPIDLString.h"
+#endif
 
 class nsIEventSinkGetter;
 class nsIStreamListener;
@@ -197,10 +211,16 @@ protected:
     nsIBufferOutputStream*      mBufferOutputStream;
     nsresult                    mStatus;
     PRUint32                    mSourceOffset;
-    PRInt32                     mAmount;
+    PRUint32                    mAmount;
+	PRBool						mReadFixedAmount;  // if user wants to only read a fixed number of bytes set this flag
 
     PRMonitor*                  mMonitor;
     PRUint32                    mLoadAttributes;
+
+#ifdef STREAM_CONVERTER_HACK
+	nsCOMPtr<nsIStreamConverter2> mStreamConverter;
+	nsXPIDLCString				 mStreamConverterOutType;
+#endif
 };
 
 #define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)
