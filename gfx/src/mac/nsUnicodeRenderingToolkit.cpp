@@ -63,6 +63,9 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 //#define DISABLE_TRANSLITERATE_FALLBACK
 //#define DISABLE_UPLUS_FALLBACK
 
+#define IS_FORMAT_CONTROL_CHARS(c) 	((0x2000==((c)&0xFFF0))||(0x2028==((c)&0xFFF8)))
+#define IS_CONTEXTUAL_CHARS(c) 		  ((0x0600<=(c))&&((c)<0x1000))
+#define IS_COMBINING_CHARS(c) 		  ((0x0300<=(c))&&((c)<0x0370))
 
 #define QUESTION_FALLBACKSIZE 9
 #define UPLUS_FALLBACKSIZE 9
@@ -124,6 +127,10 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
   )
 #define BAD_TEXT_ENCODING 0xFFFFFFFF
 
+
+
+#define IN_ARABIC_PRESENTATION_B(a) ((0xfe70 <= (a)) && ((a) <= 0xfeff))
+
 //------------------------------------------------------------------------
 static UnicodeToTextInfo gConverters[32] = { 
 	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
@@ -134,23 +141,28 @@ static UnicodeToTextInfo gConverters[32] = {
 //------------------------------------------------------------------------
 UnicodeToTextInfo nsUnicodeRenderingToolkit :: GetConverterByScript(ScriptCode sc)
 {
+  // because the Mac QuickDraw BIDI support are quite different from other platform
+  // we try not to use them and use the XP BIDI feature
+  // those text will be drawn by ATSUI intead one character at a time
+  if ((sc == smArabic) || (sc == smHebrew))
+     return nsnull;
 	NS_PRECONDITION(sc < 32, "illegal script id");
-    if(sc >= 32)
-      return nsnull;
-    if(gConverters[sc] != nsnull) {
-      return gConverters[sc];
-    }
-    OSStatus err = noErr;
+  if(sc >= 32)
+    return nsnull;
+  if (gConverters[sc] != nsnull) {
+    return gConverters[sc];
+  }
+  OSStatus err = noErr;
     
-    //
-    TextEncoding scriptEncoding;
-    err = ::UpgradeScriptInfoToTextEncoding(sc, kTextLanguageDontCare, kTextRegionDontCare, nsnull, &scriptEncoding);
-    if( noErr == err ) 
-  		err = ::CreateUnicodeToTextInfoByEncoding(scriptEncoding, &gConverters[sc] );
+  //
+  TextEncoding scriptEncoding;
+  err = ::UpgradeScriptInfoToTextEncoding(sc, kTextLanguageDontCare, kTextRegionDontCare, nsnull, &scriptEncoding);
+  if ( noErr == err ) 
+ 	  err = ::CreateUnicodeToTextInfoByEncoding(scriptEncoding, &gConverters[sc] );
 
-    if(noErr != err) 
-    	gConverters[sc] = nsnull;
-   	return gConverters[sc];
+  if (noErr != err) 
+    gConverters[sc] = nsnull;
+  return gConverters[sc];
 }
 //------------------------------------------------------------------------
 #pragma mark -
@@ -314,6 +326,36 @@ PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
 //------------------------------------------------------------------------
 static PRUnichar gSymbolReplacement[]={0xf8ee,0xf8f9,0xf8f0,0xf8fb,0x3008,0x3009};
 
+//------------------------------------------------------------------------
+
+static nsresult FormBIsolated(PRUnichar aChar, nsMacUnicodeFontInfo& aInfo, PRUnichar* aOutChar)
+{
+  static const PRUnichar arabicisolated[]=
+  {
+    0xFE70, 0x064B,  0xFE72, 0x064C,  0xFE74, 0x064D,  0xFE76, 0x064E,  0xFE78, 0x064F,
+    0xFE7A, 0x0650,  0xFE7C, 0x0651,  0xFE7E, 0x0652,  0xFE80, 0x0621,  0xFE81, 0x0622,
+    0xFE83, 0x0623,  0xFE85, 0x0624,  0xFE87, 0x0625,  0xFE89, 0x0626,  0xFE8D, 0x0627,
+    0xFE8F, 0x0628,  0xFE93, 0x0629,  0xFE95, 0x062A,  0xFE99, 0x062B,  0xFE9D, 0x062C,
+    0xFEA1, 0x062D,  0xFEA5, 0x062E,  0xFEA9, 0x062F,  0xFEAB, 0x0630,  0xFEAD, 0x0631,
+    0xFEAF, 0x0632,  0xFEB1, 0x0633,  0xFEB5, 0x0634,  0xFEB9, 0x0635,  0xFEBD, 0x0636,
+    0xFEC1, 0x0637,  0xFEC5, 0x0638,  0xFEC9, 0x0639,  0xFECD, 0x063A,  0xFED1, 0x0641,
+    0xFED5, 0x0642,  0xFED9, 0x0643,  0xFEDD, 0x0644,  0xFEE1, 0x0645,  0xFEE5, 0x0646,
+    0xFEE9, 0x0647,  0xFEED, 0x0648,  0xFEEF, 0x0649,  0xFEF1, 0x064A,
+    0x0000
+  };
+  const PRUnichar* p;
+  for ( p= arabicisolated; *p; p += 2) {
+    if (aChar == *p) {
+      if (aInfo.HasGlyphFor(*(p+1))) {
+        *aOutChar = *(p+1);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+//------------------------------------------------------------------------
+
 PRBool 
 nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
   const PRUnichar *aCharPt, 
@@ -321,6 +363,7 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
   short origFontNum,
   short aSize, PRBool aBold, PRBool aItalic, nscolor aColor) 
 {
+  
   nsMacUnicodeFontInfo info;
   if (nsATSUIUtils::IsAvailable()  
       && (IN_STANDARD_MAC_ROMAN_FONT(*aCharPt) 
@@ -332,10 +375,10 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
     nsresult res;
     if (SPECIAL_IN_SYMBOL_FONT(*aCharPt))
     {
-       short rep = 0;
+      short rep = 0;
       if ((*aCharPt) > 0x230b)
          rep = (*aCharPt) - 0x2325;
-       else 
+      else 
          rep = (*aCharPt) - 0x2308;
       res = mATSUIToolkit.GetTextDimensions(gSymbolReplacement+rep, oDim, aSize, 
                                             origFontNum, 
@@ -351,6 +394,37 @@ nsUnicodeRenderingToolkit::ATSUIFallbackGetDimensions(
     {
       return PR_TRUE;
     }
+  }
+  if (IN_ARABIC_PRESENTATION_B(*aCharPt))
+  {      
+    PRUnichar isolated;
+    if (NS_SUCCEEDED( FormBIsolated(*aCharPt, info, &isolated))) 
+    {
+      if(NS_SUCCEEDED(ATSUIFallbackGetDimensions(&isolated, oDim, origFontNum, 
+                                                 aSize, aBold, aItalic, aColor))) 
+      {
+         return PR_TRUE;
+      }
+    }                                                 
+  }
+
+  // we know some ATSUI font do not have bold, turn it off and try again
+  if (aBold) 
+  {
+	  if (NS_SUCCEEDED(ATSUIFallbackGetDimensions(aCharPt, oDim, origFontNum, 
+	                                              aSize, PR_FALSE, aItalic, aColor))) 
+	  {
+	     return PR_TRUE;
+	  }
+  }
+  // we know some ATSUI font do not have italic, turn it off and try again
+  if (aItalic) 
+  {
+	  if (NS_SUCCEEDED(ATSUIFallbackGetDimensions(aCharPt, oDim, origFontNum, 
+	                                              aSize, PR_FALSE, PR_FALSE, aColor))) 
+	  {
+	     return PR_TRUE;
+	  }
   }
   return PR_FALSE;
 }
@@ -374,11 +448,11 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
     nsresult res;
     if(SPECIAL_IN_SYMBOL_FONT(*aCharPt)) 
     {
-       short rep = 0;
-       if((*aCharPt) > 0x230b)
-         rep = (*aCharPt) - 0x2325;
-       else 
-         rep = (*aCharPt) - 0x2308;
+      short rep = 0;
+      if ((*aCharPt) > 0x230b)
+        rep = (*aCharPt) - 0x2325;
+      else 
+        rep = (*aCharPt) - 0x2308;
       res = mATSUIToolkit.DrawString(gSymbolReplacement+rep, x, y, oWidth, aSize, 
                                      origFontNum, 
                                      aBold, aItalic, aColor);
@@ -387,8 +461,37 @@ PRBool nsUnicodeRenderingToolkit :: ATSUIFallbackDrawChar(
                                      origFontNum, 
                                      aBold, aItalic, aColor);
     }
-    if(NS_SUCCEEDED(res))
+    if (NS_SUCCEEDED(res))
       return PR_TRUE;
+  }
+  if (IN_ARABIC_PRESENTATION_B(*aCharPt))
+  {      
+    PRUnichar isolated;
+    if (NS_SUCCEEDED( FormBIsolated(*aCharPt, info, &isolated))) {
+      if (NS_SUCCEEDED(ATSUIFallbackDrawChar(&isolated, x, y, oWidth, origFontNum, 
+                                             aSize, aBold, aItalic, aColor))) 
+      {
+         return PR_TRUE;
+      }
+    }                                                 
+  }
+  // we know some ATSUI font do not have bold, turn it off and try again
+  if (aBold)
+  {
+    if (NS_SUCCEEDED(ATSUIFallbackDrawChar(aCharPt, x, y, oWidth, origFontNum, 
+                                          aSize, PR_FALSE, aItalic, aColor))) 
+    {
+       return PR_TRUE;
+    }
+  }
+  // we know some ATSUI font do not have italic, turn it off and try again
+  if (aItalic)
+  {
+    if (NS_SUCCEEDED(ATSUIFallbackDrawChar(aCharPt, x, y, oWidth, origFontNum, 
+                                           aSize, PR_FALSE, PR_FALSE, aColor))) 
+    {
+       return PR_TRUE;
+    }
   }
   return PR_FALSE;
 }
@@ -1256,9 +1359,6 @@ nsUnicodeRenderingToolkit::GetTextDimensions(const PRUnichar *aString, PRUint32 
   return res;  
 }
 
-#define IS_FORMAT_CONTROL_CHARS(c) 	((0x2000==((c)&0xFFF0))||(0x2028==((c)&0xFFF8)))
-#define IS_CONTEXTUAL_CHARS(c) 		  ((0x0600<=(c))&&((c)<0x1000))
-#define IS_COMBINING_CHARS(c) 		  ((0x0300<=(c))&&((c)<0x0370))
 //------------------------------------------------------------------------
 
 nsresult
@@ -1312,39 +1412,11 @@ nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength
   else    // no spacing array
   {
     short thisFont, nextFont;
-    thisFont = fontmap->GetFontID(aString[0]);
+    
     PRUint32 start;
 
-    if (mRightToLeftText) {
-      // right to left
-	    for (i = 1, start = 0; i < aLength; i++)
-	    {
-	      PRUnichar  uch = aString[aLength - i - 1];
-	    	if(! IS_FORMAT_CONTROL_CHARS(uch))
-	    	{
-	    		nextFont = fontmap->GetFontID(uch);
-	    		if (thisFont != nextFont) 
-	        {
-	          // start new font run...
-	          PRInt32 transformedX = currentX, ignoreY = 0;
-	          mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
-	          
-            res = DrawTextSegment(aString + aLength - i, i-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
-	    	  	if (NS_FAILED(res))
-	    	 		  return res;
-	    	 		
-	    		  currentX += NSToCoordRound(float(thisWidth) * mP2T);
-	    		  start = i;
-	    		  thisFont = nextFont;
-	    		}
-	    	}
-	    }
-
-	    PRInt32 transformedX = currentX, ignoreY = 0;
-	    mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
-      res = DrawTextSegment(aString , aLength-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
-    } else { 
       // normal left to right
+        thisFont = fontmap->GetFontID(aString[0]);
 	    for (i = 1, start = 0; i < aLength; i++)
 	    {
 	    	PRUnichar uch = aString[i];
@@ -1371,7 +1443,6 @@ nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength
 	    PRInt32 transformedX = currentX, ignoreY = 0;
 	    mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
       res = DrawTextSegment(aString+start, aLength-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
-    }
     if (NS_FAILED(res))
       return res;
   }
