@@ -70,12 +70,23 @@ mail-emailaddress
     margin                : 0px;
   }
 
-#attachmentButton 
-  {
-    list-style-image      : url("chrome://messenger/skin/attach.gif");
-    min-height            : 20px;
-    margin                : 0px;
-  }
+#expandedAttachmentBox {
+  width: 20em;
+  height: 0px;
+  list-style-image: url("chrome://messenger/skin/icons/attach.gif");
+}
+
+#attachmentText
+{
+  font-weight: bold;
+}
+
+#attachmentTree {
+  margin: 3px 0px;
+  border: none;
+  height: 0px;
+  width: 20em;
+}
 
 .emailDisplayImage
   {
