@@ -51,9 +51,11 @@
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
+#include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+static NS_DEFINE_IID(kFrameIID, NS_IFRAME_IID);
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
@@ -874,6 +876,72 @@ NS_IMETHODIMP nsMenuPopupFrame::GetCurrentMenuItem(nsIMenuFrame** aResult)
   return NS_OK;
 }
 
+nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
+{
+  if ( ! aStart )
+    return nsnull;  
+
+  nsIFrame* currFrame;
+  nsIView* view=nsnull;
+  nsIScrollableView* scrollableView=nsnull;
+
+  // try start frame and siblings
+  currFrame=aStart;
+  do {
+    currFrame->GetView(mPresContext, &view);
+    if ( view )
+      view->QueryInterface(nsIScrollableView::GetIID(), (void**)&scrollableView);
+    if ( scrollableView )
+      return scrollableView;
+    currFrame->GetNextSibling(&currFrame);
+  } while ( currFrame );
+
+  // try children
+  nsIFrame* childFrame;
+  currFrame=aStart;
+  do {
+    currFrame->FirstChild(mPresContext, nsnull, &childFrame);
+    scrollableView=GetScrollableView(childFrame);
+    if ( scrollableView )
+      return scrollableView;
+    currFrame->GetNextSibling(&currFrame);
+  } while ( currFrame );
+
+  return nsnull;
+}
+
+void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsIMenuFrame* aMenuItem)
+{
+  nsIFrame* frame=nsnull;
+  aMenuItem->QueryInterface(kFrameIID, (void**)&frame);
+  if ( frame ) {
+    nsIFrame* childFrame=nsnull;
+    FirstChild(mPresContext, nsnull, &childFrame);
+    nsIScrollableView *scrollableView;
+    scrollableView=GetScrollableView(childFrame);
+    if ( scrollableView ) {
+      nsIView* view=nsnull;
+      scrollableView->QueryInterface(nsIView::GetIID(), (void**)&view);
+      if ( view ) {
+        nsRect viewRect, itemRect;
+        nscoord scrollX, scrollY;
+
+        view->GetBounds(viewRect);
+        frame->GetRect(itemRect);
+        scrollableView->GetScrollPosition(scrollX, scrollY);
+    
+        // scroll down
+        if ( itemRect.y + itemRect.height > scrollY + viewRect.height )
+          scrollableView->ScrollTo(scrollX, itemRect.y + itemRect.height - viewRect.height, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+        
+        // scroll up
+        else if ( itemRect.y < scrollY )
+          scrollableView->ScrollTo(scrollX, itemRect.y, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 {
   if (mCurrentMenu == aMenuItem)
@@ -906,6 +974,7 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
 
   // Set the new child.
   if (aMenuItem) {
+    EnsureMenuItemIsVisible(aMenuItem);
     aMenuItem->SelectMenu(PR_TRUE);
   }
 
@@ -1060,7 +1129,7 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 
   // For the vertical direction, we can move up or down.
   if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
-    
+
     nsIMenuFrame* nextItem;
     
     if (aDirection == NS_VK_DOWN)
