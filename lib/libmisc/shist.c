@@ -165,12 +165,22 @@ SHIST_CreateHistoryEntry (URL_Struct * URL_s, char * title)
 
 	new_entry->refresh        = URL_s->refresh;
 
+#ifdef NU_CACHE
+	/* TODO -Gagan */
+	/*
+	new_entry->transport_method = CacheManager_Contains(URL_s) ? 
+		MemModule_Contains(URL_s->address) ? SHIST_CAME_FROM_MEMORY_CACHE :
+		SHIST_CAME_FROM_DISK_CACHE : SHIST_CAME_FROM_NETWORK;
+	*/
+	new_entry->transport_method = SHIST_CAME_FROM_NETWORK;
+#else
     if(URL_s->memory_copy)
         new_entry->transport_method = SHIST_CAME_FROM_MEMORY_CACHE;
 	else if(URL_s->cache_file)
         new_entry->transport_method = SHIST_CAME_FROM_DISK_CACHE;
 	else
         new_entry->transport_method = SHIST_CAME_FROM_NETWORK;
+#endif /* NU_CACHE */
 
     StrAllocCopy(new_entry->referer,      URL_s->referer);
     StrAllocCopy(new_entry->refresh_url,  URL_s->refresh_url);
