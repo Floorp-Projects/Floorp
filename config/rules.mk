@@ -1041,7 +1041,7 @@ export:: FORCE
 	@echo "Please define MODULE or XPIDL_MODULE when defining XPIDLSRCS,"
 	@echo "so we have a module name to use when creating MODULE.xpt."
 	@echo; sleep 2; false
-else
+endif
 
 # export .idl files to $(XPDIST)/idl
 $(XPDIST)/idl::
@@ -1081,7 +1081,6 @@ install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 endif
 
 GARBAGE			+= $(XPIDL_GEN_DIR)
-endif
 endif
 
 ################################################################################
