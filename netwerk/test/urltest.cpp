@@ -109,10 +109,10 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 		"http://username:password@hostname.com:80/pathname/./more/stuff/../path",
 		"username@host:8080/path",
 		"http://gagan/",
-		"host:port/netlib", //port should now be 0
+		"scheme:host/netlib", 
 		"", //empty string
 		"mailbox:///foo", // No host specified path should be /foo
-		"user:pass@hostname.edu:80/pathname", //this is always user:pass and not http:user
+		"scheme:user@hostname.edu:80/pathname", //this is always http:user and not user:pass
 		"http://username:password@hostname:80/pathname",
 		"resource:/pathname"
 	};
@@ -122,10 +122,10 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
 		"http,username:password,hostname.com,80,/pathname/more/path",
 		",username,host,8080,/path",
 		"http,,gagan,-1,/",
-		",,host,0,/netlib",
-		",,,-1,",
+		"scheme,,host,-1,/netlib",
+		",,,-1,/",
 		"mailbox,,,-1,/foo",
-		",user:pass,hostname.edu,80,/pathname",
+		"scheme,user,hostname.edu,80,/pathname",
 		"http,username:password,hostname,80,/pathname",
 		"resource,,,-1,/pathname"
 	};

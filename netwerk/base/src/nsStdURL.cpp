@@ -249,8 +249,8 @@ switch (*nextbrk)
 			return NS_OK;
 			break;
 		case ':': // http://user:pass@host:port...
-			lastbrk = brk;
-			brk = PL_strpbrk(lastbrk+1, "/?");
+			lastbrk = brk+1;
+			brk = PL_strpbrk(lastbrk, "/?");
 			if (brk)    // http://user:pass@host:port/path
 			{
 				mPort = ExtractPortFrom(mSpec, (lastbrk-mSpec),(brk-lastbrk));
@@ -374,7 +374,7 @@ switch (*nextbrk)
 
 						ExtractString(mSpec, &mPreHost, 0, (brk-mSpec));
 						lastbrk = brk+1;
-						brk = PL_strpbrk(lastbrk, ":/");
+						brk = PL_strpbrk(lastbrk, ":/?");
 					// its user:pass@host so everthing else is just the host
 						if (!brk)
 						{
@@ -403,7 +403,8 @@ switch (*nextbrk)
 								return NS_OK;
 							}
 						}
-						else // (*brk == '/') so user:pass@host/path
+						else // (*brk == '/') || (*brk == '?') 
+							// so user:pass@host/path
 						{
 							ExtractString(mSpec, &mPath, (brk - mSpec), 
 								len - (brk - mSpec));
@@ -437,7 +438,48 @@ switch (*nextbrk)
 					case '@' : // scheme:user@host...
 						ExtractString(mSpec, &mPreHost, (lastbrk-mSpec), 
 							(brk-lastbrk));
-						// TODO more here...
+						lastbrk = brk+1;
+						brk = PL_strpbrk(lastbrk, delimiters);
+						if (!brk) // scheme:user@host only
+						{
+							ExtractString(mSpec, &mHost, (lastbrk - mSpec), 
+								len - (lastbrk-mSpec));
+							return NS_OK;
+						}
+						ExtractString(mSpec, &mHost, (lastbrk-mSpec),
+							(brk - lastbrk));
+						switch (*brk)
+						{
+							case ':' : // scheme:user@host:port...
+								lastbrk = brk+1;
+								brk = PL_strpbrk(lastbrk, "/?");
+								if (brk)    // user:pass@host:port/path
+								{
+									mPort = ExtractPortFrom(mSpec, 
+										(lastbrk-mSpec),(brk-lastbrk));
+									ExtractString(mSpec, &mPath, 
+										(brk-mSpec), len - (brk-mSpec));
+									return NS_OK;
+								}
+								else        // user:pass@host:port
+								{
+									mPort = ExtractPortFrom(mSpec, 
+										(lastbrk-mSpec),len - (lastbrk-mSpec));
+									return NS_OK;
+								}
+								break;
+							case '/' :
+							case '?' :
+								ExtractString(mSpec, &mPath, 
+									(brk-mSpec), len - (brk-mSpec));
+								return NS_OK;
+								break;
+							case '@' : // bad case
+								return NS_ERROR_MALFORMED_URI;
+								break;
+							default: NS_POSTCONDITION(0, "This just can't be!");
+								break;
+						}
 						break;
 					case ':' : // scheme:user:pass@host...or scheme:host:port...
 						/* TODO 
