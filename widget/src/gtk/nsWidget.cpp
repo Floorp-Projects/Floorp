@@ -452,12 +452,16 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   nRect.x = aRect.x;
   nRect.y = aRect.y;
 
-  if (aIsSynchronous)
+#ifdef HAVE_GTK_BETTER_THAN_1_1_13
+  if ( aIsSynchronous)
+#endif /* HAVE_GTK_BETTER_THAN_1_1_13 */
       ::gtk_widget_draw(mWidget, &nRect);
+#ifdef HAVE_GTK_BETTER_THAN_1_1_13
   else
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.width, aRect.height,
                                    aRect.x, aRect.y);
+#endif /* HAVE_GTK_BETTER_THAN_1_1_13 */
 
   return NS_OK;
 }
