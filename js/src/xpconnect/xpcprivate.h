@@ -80,8 +80,6 @@ private:
     XPCContext*  NewContext(JSContext* cx, JSObject* global);
 
 private:
-    // data...
-private:
     JSContext2XPCContextMap* mContextMap;
     static nsXPConnect*           mSelf;
 };
@@ -203,7 +201,7 @@ public:
     int GetMemberCount() const {return mMemberCount;}
     const XPCNativeMemberDescriptor* GetMemberDescriptor(int i) const
     {
-        NS_PRECONDITION(i>0&&i<mMemberCount,"bad index");
+        NS_PRECONDITION(i >= 0 && i < mMemberCount,"bad index");
         return &mMembers[i];
     }
 
