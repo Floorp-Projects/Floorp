@@ -44,7 +44,7 @@ class nsImageMap : public nsIDocumentObserver, public nsIDOMFocusListener
 public:
   nsImageMap();
 
-  nsresult Init(nsIDOMHTMLMapElement* aMap);
+  nsresult Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapElement* aMap);
 
   /**
    * See if the given aX,aY <b>pixel</b> coordinates are in the image
@@ -156,6 +156,8 @@ protected:
   nsresult ChangeFocus(nsIDOMEvent* aEvent, PRBool aFocus);
   nsresult Invalidate(nsIPresContext* aPresContext, nsIFrame* aFrame, nsRect& aRect);
 
+  nsIPresShell* mPresShell; // WEAK - owns the frame that owns us
+  nsIFrame* mImageFrame;  // the frame that owns us
   nsIDocument* mDocument; // WEAK - the imagemap will not outlive the document
   nsIDOMHTMLMapElement* mDomMap;
   nsIContent* mMap;

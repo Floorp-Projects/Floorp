@@ -45,6 +45,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
+#include "nsIFrameManager.h"
 #include "nsIViewManager.h"
 #include "nsCoord.h"
 
@@ -859,21 +860,27 @@ nsImageMap::QueryInterface(REFNSIID iid, void** result)
 void
 nsImageMap::FreeAreas()
 {
+  nsCOMPtr<nsIFrameManager> frameManager;
+  mPresShell->GetFrameManager(getter_AddRefs(frameManager));
+
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
+    frameManager->SetPrimaryFrameFor(area->mArea, nsnull);
     delete area;
   }
   mAreas.Clear();
 }
 
 nsresult
-nsImageMap::Init(nsIDOMHTMLMapElement* aMap)
+nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapElement* aMap)
 {
   NS_PRECONDITION(nsnull != aMap, "null ptr");
   if (nsnull == aMap) {
     return NS_ERROR_NULL_POINTER;
   }
+  mPresShell = aPresShell;
+  mImageFrame = aImageFrame;
   mDomMap = aMap;
 
   nsresult rv = aMap->QueryInterface(kIContentIID, (void**) &mMap);
@@ -988,6 +995,10 @@ nsImageMap::AddArea(nsIContent* aArea)
   if (rec) {
     rec->AddEventListenerByIID(this, NS_GET_IID(nsIDOMFocusListener));
   }
+
+  nsCOMPtr<nsIFrameManager> frameManager;
+  mPresShell->GetFrameManager(getter_AddRefs(frameManager));
+  frameManager->SetPrimaryFrameFor(aArea, mImageFrame);
 
   Area* area;
   if ((0 == shape.Length()) ||
