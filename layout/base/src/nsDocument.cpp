@@ -875,6 +875,7 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
     nsIScriptGlobalObject* mGlobal;
     if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&mGlobal)) {
       mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, DOM_EVENT_BUBBLE, aEventStatus);
+      NS_RELEASE(mGlobal);
     }
   }
 
