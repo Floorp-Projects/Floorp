@@ -32,7 +32,7 @@
 |   longer term, this code will be restructured to make it more reusable.      |
 ------------------------------------------------------------------------------*/
 
-const mailtolength = 7;
+const kMailToLength = 7;
 
 function nsContextMenu( xulMenu ) {
     this.target         = null;
@@ -614,10 +614,10 @@ nsContextMenu.prototype = {
         var qmark = url.indexOf( "?" );
         var addresses;
         
-        if ( qmark > mailtolength ) 
-            addresses = url.substring( mailtolength, qmark );
+        if ( qmark > kMailToLength ) 
+            addresses = url.substring( kMailToLength, qmark );
         else 
-            addresses = url.substr( mailtolength );
+            addresses = url.substr( kMailToLength );
 
         var clipboard = this.getService( "@mozilla.org/widget/clipboardhelper;1",
                                          Components.interfaces.nsIClipboardHelper );
