@@ -25,6 +25,13 @@
 #include "RDFView.h"
 #include "Frame.h" // for xfe_ExecuteCommand
 #include "xfe2_extern.h"
+#include "xpgetstr.h"
+#include <Xm/Xm.h>
+#include <XmL/Tree.h>
+
+
+#define TREE_NAME "RdfTree"
+
 #ifdef DEBUG_slamm
 #define D(x) x
 #else
@@ -36,40 +43,107 @@ fe_icon XFE_RDFView::bookmark = { 0 };
 fe_icon XFE_RDFView::closedFolder = { 0 };
 fe_icon XFE_RDFView::openedFolder = { 0 };
 
+#define SECONDS_PER_DAY		86400L
+
+extern int XP_BKMKS_HOURS_AGO;
+extern int XP_BKMKS_DAYS_AGO;
+extern int XP_BKMKS_LESS_THAN_ONE_HOUR_AGO;
+
+struct RDFColumnData
+{
+  RDFColumnData(void) : token(NULL), token_type(0) {}
+  RDFColumnData(void *t, uint32 tt) : token(t), token_type(tt) {}
+
+  void* token;
+  uint32 token_type;
+};
+
+
+void HTFE_MakePrettyDate(char* buffer, time_t lastVisited)
+{
+    buffer[0] = 0;
+    time_t today = XP_TIME();
+    int elapsed = today - lastVisited;
+
+    if (elapsed < SECONDS_PER_DAY) 
+    {
+        int32 hours = (elapsed + 1800L) / 3600L;
+        if (hours < 1) 
+        {
+            XP_STRCPY(buffer, XP_GetString(XP_BKMKS_LESS_THAN_ONE_HOUR_AGO));
+        }
+        sprintf(buffer, XP_GetString(XP_BKMKS_HOURS_AGO), hours);
+    } 
+    else if (elapsed < (SECONDS_PER_DAY * 31)) 
+    {
+        sprintf(buffer, XP_GetString(XP_BKMKS_DAYS_AGO),
+                (elapsed + (SECONDS_PER_DAY / 2)) / SECONDS_PER_DAY);
+    } 
+    else 
+    {
+	  struct tm* tmp;
+	  tmp = localtime(&lastVisited);
+
+	  sprintf(buffer, asctime(tmp));
+    }
+}
+
 XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                          XFE_View *parent_view, MWContext *context,
                          HT_View htview)
   : XFE_View(toplevel, parent_view, context)
 {
-  // xxx Pull this info out of rdf
-  int num_columns = 1;
-  static int column_widths[] = {40};
-
   m_toplevel = getToplevel();
-  m_widget = getBaseWidget();
 #ifdef DEBUG_spence
   if (m_toplevel != toplevel) {
     printf ("m_toplevel != toplevel\n");
   }
 #endif
 
-  m_outliner = new XFE_Outliner("rdfList",
-								this, 
-								getToplevel(),
-								parent,
-								False, // constantSize 
-								True,  // hasHeadings
-								1, //num_columns, // Number of columns.
-								1, //num_columns, // Number of visible columns.
-								column_widths, 
-								NULL /*BOOKMARK_OUTLINER_GEOMETRY_PREF*/);
+  Widget tree = 
+      XtVaCreateManagedWidget(TREE_NAME,
+                              xmlTreeWidgetClass,
+                              parent,
+							  XmNshadowThickness,       0,
+                              XmNhorizontalSizePolicy,  XmRESIZE_IF_POSSIBLE,
+                              XmNallowColumnResize,     True,
+							  XmNselectionPolicy,		XmSELECT_MULTIPLE_ROW,
+                              XmNheadingRows,           1,
+                              XmNvisibleRows,           14,
+                              /*XmNshowHideButton,        True,*/
+                              XmNdebugLevel, 1,
+                              NULL);
 
-  m_outliner->setHideColumnsAllowed( TRUE );
-  m_outliner->setPipeColumn( 0 /*OUTLINER_COLUMN_NAME*/ );
-  m_outliner->setMultiSelectAllowed( TRUE );
-  setBaseWidget(m_outliner->getBaseWidget());
+  setBaseWidget(tree);
 
-  {
+  XtVaSetValues(m_widget, XmNcellAlignment, XmALIGNMENT_LEFT, NULL);
+  XtVaSetValues(m_widget,
+                XmNcellDefaults, True,
+                XmNcellAlignment, XmALIGNMENT_LEFT,
+                NULL);
+
+  init_pixmaps();
+  
+  XtAddCallback(m_widget, XmNexpandCallback, expand_row_cb, this);
+  XtAddCallback(m_widget, XmNcollapseCallback, collapse_row_cb, this);
+  XtAddCallback(m_widget, XmNdeleteCallback, delete_cb, NULL);
+  XtAddCallback(m_widget, XmNactivateCallback, activate_cb, this);
+  XtAddCallback(m_widget, XmNresizeCallback, resize_cb, this);
+
+  //fe_AddTipStringCallback(outline, XFE_Outliner::tip_cb, this);
+
+  setRDFView(htview);
+}
+
+XFE_RDFView::~XFE_RDFView()
+{
+  //xxx what to delete?
+}
+
+
+void
+XFE_RDFView::init_pixmaps(void)
+{
     Pixel bg_pixel;
     
     XtVaGetValues(m_widget, XmNbackground, &bg_pixel, 0);
@@ -81,7 +155,8 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
 		     &bookmark,
 		     NULL,
 		     BM_Bookmark.width, BM_Bookmark.height,
-		     BM_Bookmark.mono_bits, BM_Bookmark.color_bits, BM_Bookmark.mask_bits, FALSE);
+		     BM_Bookmark.mono_bits, BM_Bookmark.color_bits,
+             BM_Bookmark.mask_bits, FALSE);
     if (!closedFolder.pixmap)
       fe_NewMakeIcon(m_widget,
 		     BlackPixelOfScreen(XtScreen(m_widget)),
@@ -89,7 +164,8 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
 		     &closedFolder,
 		     NULL,
 		     BM_Folder.width, BM_Folder.height,
-		     BM_Folder.mono_bits, BM_Folder.color_bits, BM_Folder.mask_bits, FALSE);
+		     BM_Folder.mono_bits, BM_Folder.color_bits,
+             BM_Folder.mask_bits, FALSE);
 
     if (!openedFolder.pixmap)
       fe_NewMakeIcon(m_widget,
@@ -98,237 +174,18 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
 		     &openedFolder,
 		     NULL,
 		     BM_FolderO.width, BM_FolderO.height,
-		     BM_FolderO.mono_bits, BM_FolderO.color_bits, BM_FolderO.mask_bits, FALSE);
-  }
-
-  setRDFView(htview);
-}
-
-XFE_RDFView::~XFE_RDFView()
-{
-  //xxx what to delete?
-}
-
-Boolean
-XFE_RDFView::isCommandEnabled(CommandType cmd, void *calldata,
-                              XFE_CommandInfo* info)
-{
-    {
-      return XFE_View::isCommandEnabled(cmd, calldata, info);
-    }
+		     BM_FolderO.mono_bits, BM_FolderO.color_bits,
+             BM_FolderO.mask_bits, FALSE);
 }
 
 void
-XFE_RDFView::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo*info)
+XFE_RDFView::activate_row(int row)
 {
-  const int *	selected;
-  int			count;
-  
-  m_outliner->getSelection(&selected, &count);
-		
-    {
-      XFE_View::doCommand(cmd,calldata,info);
-    }
-}
-
-Boolean
-XFE_RDFView::handlesCommand(CommandType cmd, void *calldata,
-                            XFE_CommandInfo* info)
-{
-    {
-      return XFE_View::handlesCommand(cmd, calldata, info);
-    }
-}
-
-XP_Bool
-XFE_RDFView::isCommandSelected(CommandType cmd,
-                                    void *calldata, XFE_CommandInfo* info)
-{
-    {
-      XFE_View *view = getParent();
-      return (view && view->isCommandSelected(cmd, calldata, info));
-    }
-}
-
-char *
-XFE_RDFView::commandToString(CommandType cmd, void*, XFE_CommandInfo*)
-{
-    return NULL;
-}
-
-
-// Methods from the outlinable interface.
-void *
-XFE_RDFView::ConvFromIndex(int /*index*/)
-{
-  XP_ASSERT(0);
-  return 0;
-}
-
-int
-XFE_RDFView::ConvToIndex(void */*item*/)
-{
-  XP_ASSERT(0);
-  return 0;
-}
-
-void *
-XFE_RDFView::acquireLineData(int line)
-{
-  m_node = HT_GetNthItem(m_rdfview, line /*+ 1*/);
-
-  if (!m_node)
-    return NULL;
-
-  m_nodeDepth = HT_GetItemIndentation(m_node);
-  m_ancestorInfo = new OutlinerAncestorInfo[ m_nodeDepth + 1];
-
-  if (m_nodeDepth)
-    {
-      HT_Resource tmp;
-      int i;
-		  
-      for (tmp = m_node, i = m_nodeDepth;
-           tmp != NULL;
-           tmp = HT_GetParent(tmp), i --)
-        {
-          m_ancestorInfo[i].has_prev = HT_ItemHasBackwardSibling(tmp);
-          m_ancestorInfo[i].has_next = HT_ItemHasForwardSibling(tmp);
-        }
-    }
-  else
-    {
-      m_ancestorInfo[0].has_prev = HT_ItemHasBackwardSibling(m_node);
-      m_ancestorInfo[0].has_next = HT_ItemHasForwardSibling(m_node);
-    }
-  
-  return m_node;
-}
-
-void
-XFE_RDFView::getTreeInfo(XP_Bool *expandable,
-			      XP_Bool *is_expanded,
-			      int *depth,
-			      OutlinerAncestorInfo **ancestor)
-{
-  XP_Bool is_node_expandable = False;
-  XP_Bool is_node_expanded = False;
-
-  XP_ASSERT(m_node);
-
-  if (!m_node)
-  {
-	  return;
-  }
-
-  is_node_expandable = HT_IsContainer(m_node);
-  if (is_node_expandable)
-    is_node_expanded = HT_IsContainerOpen(m_node);
-
-  if (expandable)
-    *expandable = is_node_expandable;
-
-  if (is_expanded)
-    *is_expanded = is_node_expanded;
-
-  if (depth)
-    *depth = m_nodeDepth;
-
-  if (ancestor)
-    *ancestor = m_ancestorInfo;
-}
-
-EOutlinerTextStyle
-XFE_RDFView::getColumnStyle(int /*column*/)
-{
-  XP_ASSERT(m_node);
-
-  return OUTLINER_Default;
-  //return BM_IsAlias(m_node) ? OUTLINER_Italic : OUTLINER_Default;
-}
-
-char *
-XFE_RDFView::getColumnText(int /*column*/)
-{
-  static char node_buf[2048]; // does this need to be thread safe???
-  void *data;
-
-  XP_ASSERT(m_node);
-
-  // xxx Need error handling and column switching
-  HT_NodeDisplayString(m_node, node_buf, sizeof(node_buf));
-  return node_buf;
-}
-
-fe_icon *
-XFE_RDFView::getColumnIcon(int column)
-{
-	XP_ASSERT(m_node);
-
-    if (column != 0) {
-      return NULL;
-    }
-    if (HT_IsContainer(m_node)) {
-      if (HT_IsContainerOpen(m_node)) {
-        return &openedFolder;
-      } else {
-        return &closedFolder;
-      }
-    } else {
-      return &bookmark;
-    }
-}
-
-char *
-XFE_RDFView::getColumnName(int /*column*/)
-{
-  // xxx Widget name
-  return "Name";
-}
-
-char *
-XFE_RDFView::getColumnHeaderText(int /*column*/)
-{
-  // xxx Column Label
-  return "Name";
-}
-
-fe_icon *
-XFE_RDFView::getColumnHeaderIcon(int /*column*/)
-{
-  return 0;
-}
-
-EOutlinerTextStyle
-XFE_RDFView::getColumnHeaderStyle(int /*column*/)
-{
-  return OUTLINER_Default;
-}
-
-void
-XFE_RDFView::releaseLineData()
-{
-  delete [] m_ancestorInfo;
-  m_ancestorInfo = NULL;
-}
-
-void
-XFE_RDFView::Buttonfunc(const OutlineButtonFuncData *data)
-{
-  if (data->row == -1) 
-    {
-      // Click on Column header
-
-      // data->column has the column
-      return;
-    }
-
-  HT_Resource node = HT_GetNthItem(m_rdfview, data->row);
+  HT_Resource node = HT_GetNthItem(m_rdfview, row);
 
   if (!node) return;
 
-  if (data->clicks == 1)
-    {
+#if 0
       if (data->ctrl) 
         {
           HT_ToggleSelection(node);	
@@ -344,84 +201,438 @@ XFE_RDFView::Buttonfunc(const OutlineButtonFuncData *data)
           HT_SetSelection(node);
           m_outliner->selectItemExclusive(data->row);
 
-          if (data->button == Button2) 
-            {
-              // Dispatch in new window (same as double click)
-              char *s = HT_GetNodeURL (node);
-              URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-              url->window_target = XP_STRDUP("_rdf_target");
-              fe_reuseBrowser (m_contextData, url);
-            }
         }
-    }
-  else if (data->clicks == 2) 
-    {
-      HT_SetSelection(node);
-      m_outliner->selectItemExclusive(data->row);
-      
-      if (HT_IsContainer(node))
-        {
-          PRBool isOpen;
-
-          HT_GetOpenState(node, &isOpen);
-          if (isOpen)
-            {
-              //BM_ClearAllChildSelection(m_contextData, node, TRUE);
-            }
-          
-          HT_SetOpenState(m_node, (PRBool)!isOpen);
-        }
-      else
-        {
-          // Dispatch in new window (same as button2 above)
-          char *s = HT_GetNodeURL (node);
-          URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-          url->window_target = XP_STRDUP("_rdf_target");
-          fe_reuseBrowser (m_contextData, url);
-        }
-    }
-  
   getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
+#endif /*0*/
+                
+  if (!HT_IsContainer(node)) {
+      // Dispatch in new window
+      char *s = HT_GetNodeURL (node);
+      URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
+      url->window_target = XP_STRDUP("_rdf_target");
+      fe_reuseBrowser (m_contextData, url);
+  }
 }
 
 void
-XFE_RDFView::Flippyfunc(const OutlineFlippyFuncData *data)
+XFE_RDFView::resize_cb(Widget,
+                       XtPointer clientData,
+                       XtPointer callData)
 {
-  HT_Resource node = HT_GetNthItem(m_rdfview, data->row);
-  if (node && HT_IsContainer(node)) 
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+
+	obj->resize(callData);
+}
+
+void
+XFE_RDFView::resize(XtPointer callData)
+{
+	XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct*)callData;
+
+	XP_ASSERT(m_widget);
+	if(!m_widget)
+		return;
+
+	if (cbs->reason == XmCR_RESIZE_COLUMN)
     {
-      PRBool isOpen;
-      
-      HT_GetOpenState(node, &isOpen);
-      if (isOpen)
-        {
-          //BM_ClearAllChildSelection(m_contextData, node, TRUE);
-        }
-      
-      HT_SetOpenState(m_node, (PRBool)!isOpen);
+        D( printf("Inside XFE_RDFView::resize(COLUMN, %d)\n", cbs->column);); 
     }
 }
 
-XFE_Outliner *
-XFE_RDFView::getOutliner()
+
+void
+XFE_RDFView::refresh(HT_Resource node)
 {
-  return m_outliner;
+  if (!m_rdfview) return;
+
+  XP_ASSERT(HT_IsContainer(node));
+  if (!HT_IsContainer(node)) return;
+
+  if (HT_IsContainerOpen(node))
+  {
+      HT_Resource child;
+    
+      HT_Cursor child_cursor = HT_NewCursor(node);
+      while (child = HT_GetNextItem(child_cursor))
+      {
+          add_row(child);
+
+          if (HT_IsContainer(child) && HT_IsContainerOpen(child))
+              refresh(child);
+      }
+      HT_DeleteCursor(child_cursor);
+  }
+  else
+  {
+      int row = HT_GetNodeIndex(m_rdfview, node);
+
+      XmLTreeDeleteChildren(m_widget, row);
+  }
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFView::notify(HT_Notification ns, HT_Resource n, 
+                    HT_Event whatHappened)
+{
+  switch (whatHappened) {
+  case HT_EVENT_NODE_ADDED:
+    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_ADDED",
+             HT_GetNodeName(n)););
+    break;
+  case HT_EVENT_NODE_DELETED_DATA:
+    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_DATA",
+             HT_GetNodeName(n)););
+    break;
+  case HT_EVENT_NODE_DELETED_NODATA:
+    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_NODATA",
+             HT_GetNodeName(n)););
+    break;
+  case HT_EVENT_NODE_VPROP_CHANGED:
+    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_VPROP_CHANGED",
+             HT_GetNodeName(n)););
+    break;
+  case HT_EVENT_NODE_SELECTION_CHANGED:
+    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_SELECTION_CHANGED",
+             HT_GetNodeName(n)););
+    break;
+  case HT_EVENT_NODE_OPENCLOSE_CHANGED: 
+    {
+      D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGED",
+               HT_GetNodeName(n)););
+      
+      refresh(n);
+
+      break;
+    }
+  case HT_EVENT_VIEW_CLOSED:
+    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_VIEW_CLOSED",
+             HT_GetNodeName(n)););
+    break;
+  case HT_EVENT_VIEW_SELECTED:
+    {
+      D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_VIEW_SELECTED",
+               HT_GetNodeName(n)););
+      
+      HT_View view = HT_GetView(n);
+      
+      if (m_rdfview != view)
+        setRDFView(view);
+    }
+    break;
+  case HT_EVENT_NODE_OPENCLOSE_CHANGING:
+    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGING",
+             HT_GetNodeName(n)););
+    break;
+  default:
+    D(printf("RDFView::HT_Event: Unknown type on %s\n",HT_GetNodeName(n)););
+    break;
+  }
+}
+//////////////////////////////////////////////////////////////////////
 void
 XFE_RDFView::setRDFView(HT_View htview)
 {
+  if (htview == m_rdfview) return;
+
   m_rdfview = htview;
 
   if (!m_rdfview) return;
-  
-  int itemCount =  HT_GetItemListCount(htview);
 
-  m_outliner->change(0, itemCount,
-                     (itemCount > 0 ? itemCount : 0));
+  fill_tree();
 }
 
+void
+XFE_RDFView::fill_tree()
+{
+  if (!m_rdfview) return;
+  
+  int item_count =  HT_GetItemListCount(m_rdfview);
 
+  XtVaSetValues(m_widget,
+                XmNlayoutFrozen, True,
+                XmNcolumns, 1,
+                XmNrows, 0,
+                NULL);
 
+  // Set default values for column headings
+  //  (Should make so that the grid widget has separate defaults
+  //     for headings and content cells)
+  XtVaSetValues(m_widget,
+                XmNcellDefaults, True,
+                XmNcellLeftBorderType, XmBORDER_LINE,
+                XmNcellRightBorderType, XmBORDER_LINE,
+                XmNcellTopBorderType, XmBORDER_LINE,
+                XmNcellBottomBorderType, XmBORDER_LINE,
+                NULL);
+  
+  // add columns
+  char *column_name;
+  uint32 column_width;
+  void *token;
+  uint32 token_type;
+  int ii = 0;
+  HT_Cursor column_cursor = HT_NewColumnCursor (m_rdfview);
+  while (HT_GetNextColumn(column_cursor, &column_name, &column_width,
+                          &token, &token_type)) {
+    add_column(ii, column_name, column_width, token, token_type);
+    ii++;
+  }
+  HT_DeleteColumnCursor(column_cursor);
 
+  // Set default values for new content cells
+  XtVaSetValues(m_widget,
+                XmNcellDefaults, True,
+                XmNcellMarginLeft, 1,
+                XmNcellMarginRight, 1,
+                XmNcellLeftBorderType, XmBORDER_NONE,
+                XmNcellRightBorderType, XmBORDER_NONE,
+                XmNcellTopBorderType, XmBORDER_NONE,
+                XmNcellBottomBorderType, XmBORDER_NONE,
+                NULL);
+  
+
+  // add rows
+  for (ii=0; ii < item_count; ii++) {
+    add_row(ii);
+  }
+
+  XtVaSetValues(m_widget,
+                XmNlayoutFrozen, False,
+                NULL);
+}
+
+void
+XFE_RDFView::destroy_tree()
+{
+}
+
+void
+XFE_RDFView::add_row(int row)
+{
+    HT_Resource node = HT_GetNthItem (m_rdfview, row);
+    add_row(node);
+}
+
+void
+XFE_RDFView::add_row(HT_Resource node)
+{
+  //HT_Resource node = GetNthItem (m_rdfview, row);
+    int row = HT_GetNodeIndex(m_rdfview, node);
+    char *name = HT_GetNodeName(node);
+    int  depth = HT_GetItemIndentation(node);
+    Boolean expands =    HT_IsContainer(node);
+    Boolean isExpanded = HT_IsContainerOpen(node);
+
+    /*D( fprintf(stderr,"XFE_RDFView::add_row(0x%x %d) name(%s) depth(%d)\n",
+             node,row, name, depth);)*/
+
+    Pixmap pixmap, mask;
+
+	//pixmap = XmUNSPECIFIED_PIXMAP;
+	//pixmask = XmUNSPECIFIED_PIXMAP;
+    if (expands && isExpanded) {
+      pixmap = openedFolder.pixmap;
+      mask   = openedFolder.mask;
+    } else if (expands && !isExpanded) {
+      pixmap = closedFolder.pixmap;
+      mask   = closedFolder.mask;
+    } else {
+      pixmap = bookmark.pixmap;
+      mask   = bookmark.mask;
+    }
+
+  	XmString xmstr = XmStringCreateSimple(name);
+
+    XmLTreeAddRow(m_widget,
+				  depth,
+				  expands,
+				  isExpanded,
+				  row,
+				  pixmap,
+				  mask,
+				  xmstr);
+
+	XmStringFree(xmstr);
+
+    int column_count;
+    // Should only need to do this for visible columns
+    XtVaGetValues(m_widget, XmNcolumns, &column_count, NULL);
+    RDFColumnData *column_data;
+    void *data;
+    for (int ii = 1; ii < column_count; ii++) 
+    {
+        XmLGridColumn column = XmLGridGetColumn(m_widget, XmCONTENT, ii);
+        XtVaGetValues(m_widget, 
+                      XmNcolumnPtr, column,
+                      XmNcolumnUserData, &column_data,
+                      NULL);
+
+        Boolean is_editable = HT_IsNodeDataEditable(node,
+                                                    column_data->token,
+                                                    column_data->token_type);
+        XtVaSetValues(m_widget,
+                      XmNrow,          row,
+                      XmNcolumn,       ii,
+                      XmNcellEditable, is_editable,
+                      NULL);
+
+        if (HT_GetNodeData (node, column_data->token,
+                            column_data->token_type, &data)
+            && data) 
+        {
+            time_t dateVal;
+            struct tm* time;
+            char buffer[200];
+            
+            switch (column_data->token_type)
+            {
+			case HT_COLUMN_DATE_STRING:
+				if ((dateVal = (time_t)atol((char *)data)) == 0) break;
+				if ((time = localtime(&dateVal)) == NULL) break;
+				HTFE_MakePrettyDate(buffer, dateVal);
+				break;
+			case HT_COLUMN_DATE_INT:
+				if ((time = localtime((time_t *) &data)) == NULL) break;
+				HTFE_MakePrettyDate(buffer, (time_t)data);
+				break;
+			case HT_COLUMN_INT:
+				sprintf(buffer,"%d",(int)data);
+				break;
+			case HT_COLUMN_STRING:
+				strcpy(buffer, (char*)data);
+				break;
+            }
+            /*D(fprintf(stderr,"Node data (%d, %d) = '%s'\n",row,ii,buffer););*/
+            XmLGridSetStringsPos(m_widget, 
+                                 XmCONTENT, row,
+                                 XmCONTENT, ii, 
+                                 buffer);
+        }
+        else
+        {
+            /*D(fprintf(stderr,"No column data r(%d) c(%d) type(%d)\n",row,ii,
+                      column_data->token_type););*/
+        }
+    }
+}
+
+void
+XFE_RDFView::delete_row(int row)
+{
+  XmLGridDeleteRows(m_widget, XmCONTENT, row, 1);
+}
+
+void
+XFE_RDFView::add_column(int index, char *name, uint32 width,
+                        void *token, uint32 token_type)
+{
+  D( fprintf(stderr,"XFE_RDFView::add_column index(%d) name(%s) width(%d)\n",
+             index, name,width););
+
+  if (index > 0) {
+      XmLGridAddColumns(m_widget, XmCONTENT, index, 1);
+  }
+
+  RDFColumnData *column_data = new RDFColumnData(token, token_type);
+  XtVaSetValues(m_widget,
+                XmNcolumn, index,
+                XmNcolumnSizePolicy, XmCONSTANT,
+                XmNcolumnWidth, width,
+                XmNcolumnUserData, column_data,
+                NULL);
+
+  XmLGridSetStringsPos(m_widget, 
+                       XmHEADING, 0,
+                       XmCONTENT, index, 
+                       name);
+}
+
+void
+XFE_RDFView::delete_column(HT_Resource cursor)
+{
+
+}
+
+void 
+XFE_RDFView::expand_row_cb(Widget,
+                           XtPointer clientData,
+                           XtPointer callData)
+{
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+    XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
+
+    D(fprintf(stderr,"expand_row_cb(%d)\n",cbs->row););
+
+	obj->expand_row(cbs->row);
+}
+
+void
+XFE_RDFView::expand_row(int row)
+{
+    HT_Resource node = HT_GetNthItem (m_rdfview, row);
+     
+    HT_SetOpenState (node, (PRBool)TRUE);
+}
+
+void 
+XFE_RDFView::collapse_row_cb(Widget,
+                             XtPointer clientData,
+                             XtPointer callData)
+{
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+    XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
+ 
+    D(fprintf(stderr,"collapse_row_cb(%d)\n",cbs->row););
+
+	obj->collapse_row(cbs->row);
+}
+
+void
+XFE_RDFView::collapse_row(int row)
+{
+    HT_Resource node = HT_GetNthItem (m_rdfview, row);
+     
+    HT_SetOpenState (node, (PRBool)FALSE);
+}
+
+void 
+XFE_RDFView::delete_cb(Widget w,
+                       XtPointer /*clientData*/,
+                       XtPointer callData)
+{
+    XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
+ 
+	XmLGridColumn column;
+    RDFColumnData *column_data = NULL;
+
+	cbs = (XmLGridCallbackStruct *)callData;
+
+ 	if (cbs->reason != XmCR_DELETE_COLUMN)
+		return;
+
+	column = XmLGridGetColumn(w, XmCONTENT, cbs->column);
+
+	XtVaGetValues(w,
+		XmNcolumnPtr, column,
+		XmNcolumnUserData, &column_data,
+		NULL);
+
+    delete column_data;
+}
+
+void 
+XFE_RDFView::activate_cb(Widget,
+                         XtPointer clientData,
+                         XtPointer callData)
+{
+	XFE_RDFView *obj = (XFE_RDFView*)clientData;
+    XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct *)callData;
+ 
+    if (cbs->rowType != XmCONTENT)
+        return;
+
+	obj->activate_row(cbs->row);
+}
 

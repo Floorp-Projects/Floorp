@@ -52,6 +52,7 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                                        pane, NULL);
 
   m_htview = NULL;
+  m_pane = NULL;
   m_rdfview = new XFE_RDFView(this, pane, 
                               NULL, context, m_htview);
 
@@ -162,41 +163,20 @@ XFE_NavCenterView::notify(HT_Notification ns, HT_Resource n,
                   HT_Event whatHappened)
 {
   switch (whatHappened) {
-  case HT_EVENT_NODE_ADDED:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_NODE_ADDED",
-             HT_GetNodeName(n)););
-    break;
-  case HT_EVENT_NODE_DELETED_DATA:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_DATA",
-             HT_GetNodeName(n)););
-    break;
-  case HT_EVENT_NODE_DELETED_NODATA:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_NODATA",
-             HT_GetNodeName(n)););
-    break;
-  case HT_EVENT_NODE_VPROP_CHANGED:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_NODE_VPROP_CHANGED",
-             HT_GetNodeName(n)););
-    break;
-  case HT_EVENT_NODE_SELECTION_CHANGED:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_NODE_SELECTION_CHANGED",
-             HT_GetNodeName(n)););
-    break;
-  case HT_EVENT_NODE_OPENCLOSE_CHANGED: 
-    {
-      D(printf("HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGED",
-               HT_GetNodeName(n)););
-      
-	  m_rdfview->setRDFView(m_htview);
-      break;
-    }
   case HT_EVENT_VIEW_CLOSED:
     D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_CLOSED",
              HT_GetNodeName(n)););
     break;
   case HT_EVENT_VIEW_SELECTED:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_SELECTED",
-             HT_GetNodeName(n)););
+    {
+      D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_SELECTED",
+               HT_GetNodeName(n)););
+      
+      HT_View view = HT_GetView(n);
+      
+      if (m_htview != view)
+        setRDFView(view);
+    }
     break;
   case HT_EVENT_VIEW_ADDED: 
     {
@@ -206,26 +186,37 @@ XFE_NavCenterView::notify(HT_Notification ns, HT_Resource n,
       HT_View view = HT_GetView(n);
       
       addRDFView(view);
+
+      return;
     }
     break;
+  case HT_EVENT_NODE_ADDED:
+  case HT_EVENT_NODE_DELETED_DATA:
+  case HT_EVENT_NODE_DELETED_NODATA:
+  case HT_EVENT_NODE_VPROP_CHANGED:
+  case HT_EVENT_NODE_SELECTION_CHANGED:
+  case HT_EVENT_NODE_OPENCLOSE_CHANGED: 
   case HT_EVENT_NODE_OPENCLOSE_CHANGING:
-    D(printf("HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGING",
-             HT_GetNodeName(n)););
     break;
   default:
-    D(printf("HT_Event: Unknown type on %s\n",HT_GetNodeName(n)););
+    D(printf("HT_Event(%d): Unknown type on %s\n",whatHappened,HT_GetNodeName(n)););
     break;
   }
+  // Pass through to the outliner
+  // xxxShould check to make sure that it applies to rdfview's view.
+  m_rdfview->notify(ns,n,whatHappened);
 }
 //////////////////////////////////////////////////////////////////////
 void
 XFE_NavCenterView::setRDFView(HT_View view) 
 {
-  //m_htview = HT_GetNthView(m_pane, viewnum);
-  HT_SetSelectedView(m_pane, view);
+  Widget toolbar;
+  //  WidgetList tool_items = NULL;
+  XtVaGetValues(m_selector,XmNtoolBar,&toolbar,NULL);
+  //XfeToolBarSetSelectedButton(toolbar, xxx);
 
+  HT_SetSelectedView(m_pane, view);
   m_htview = view;
-  m_rdfview->setRDFView(view);
 }
 //////////////////////////////////////////////////////////////////////
 void
