@@ -547,15 +547,15 @@ void nsRenderingContextMac :: SetFont(nsIFontMetrics *aFontMetrics)
 
 	if (mFontMetrics)
   {
-    nsFont font;
+    //nsFont font;
 
     //XXX this is incredibly hokey. nothing should really
     //be done with the fontmetrics passed in (either here or in
     //SetFont() above) until you want to actually *use* the font
     //for somethin. MMP
 
-    mFontMetrics->GetFont(&font);
-		nsFontMetricsMac::SetFont(font, mContext);
+    //mFontMetrics->GetFont(&font);
+		//nsFontMetricsMac::SetFont(font, mContext);
   }
 }
 
