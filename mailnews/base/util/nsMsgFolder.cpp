@@ -990,23 +990,28 @@ PRInt32 nsMsgFolder::GetNumPendingTotalMessages()
 	
 void nsMsgFolder::ChangeNumPendingUnread(PRInt32 delta)
 {
-	char *oldUnreadMessagesStr = PR_smprintf("%d", mNumUnreadMessages + mNumPendingUnreadMessages);
-	mNumPendingUnreadMessages += delta;
-	char *unreadMessagesStr = PR_smprintf("%d",mNumUnreadMessages + mNumPendingUnreadMessages);
-	NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, unreadMessagesStr);
-	PR_smprintf_free(unreadMessagesStr);
-	PR_smprintf_free(oldUnreadMessagesStr);
+	if (delta)
+	{
+		char *oldUnreadMessagesStr = PR_smprintf("%d", mNumUnreadMessages + mNumPendingUnreadMessages);
+		mNumPendingUnreadMessages += delta;
+		char *unreadMessagesStr = PR_smprintf("%d",mNumUnreadMessages + mNumPendingUnreadMessages);
+		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, unreadMessagesStr);
+		PR_smprintf_free(unreadMessagesStr);
+		PR_smprintf_free(oldUnreadMessagesStr);
+	}
 }
 
 void nsMsgFolder::ChangeNumPendingTotalMessages(PRInt32 delta)
 {
-	char *oldTotalMessagesStr = PR_smprintf("%d", mNumTotalMessages + mNumPendingTotalMessages);
-	mNumPendingTotalMessages += delta;
-	char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages + mNumPendingTotalMessages);
-	NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
-	PR_smprintf_free(totalMessagesStr);
-	PR_smprintf_free(oldTotalMessagesStr);
-
+	if (delta)
+	{
+		char *oldTotalMessagesStr = PR_smprintf("%d", mNumTotalMessages + mNumPendingTotalMessages);
+		mNumPendingTotalMessages += delta;
+		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages + mNumPendingTotalMessages);
+		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
+		PR_smprintf_free(totalMessagesStr);
+		PR_smprintf_free(oldTotalMessagesStr);
+	}
 }
 
 #ifdef HAVE_DB	
