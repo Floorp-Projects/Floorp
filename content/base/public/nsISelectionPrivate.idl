@@ -44,10 +44,14 @@ interface nsIDOMRange;
 interface nsISelectionListener;
 
 %{C++
+class nsIFrame;
 class nsIPresShell;
+struct nsPoint;
 %}
 
+[ptr] native nsIFrame(nsIFrame);
 [ptr] native nsIPresShell(nsIPresShell);
+[ref] native nsPointRef(nsPoint);
 
 [scriptable, uuid(2d5535e2-1dd2-11b2-8e38-d53ec833adf6)]
 interface nsISelectionPrivate : nsISupports
@@ -60,17 +64,17 @@ interface nsISelectionPrivate : nsISupports
     /* startBatchChanges
        match this up with endbatchChanges. will stop ui updates while multiple selection methods are called
     */
-		void		       startBatchChanges();
+    void  startBatchChanges();
     
     /* endBatchChanges
        match this up with startBatchChanges
     */
-		void		       endBatchChanges();
+    void  endBatchChanges();
 		
-		nsIEnumerator  getEnumerator();
-    wstring        toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapColumn);
-		void		       addSelectionListener(in nsISelectionListener newListener);
-		void		       removeSelectionListener(in nsISelectionListener listenerToRemove);
+    nsIEnumerator  getEnumerator();
+    wstring  toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapColumn);
+    void  addSelectionListener(in nsISelectionListener newListener);
+    void  removeSelectionListener(in nsISelectionListener listenerToRemove);
 
     /* Table selection stuff
        We should probably move this and table-related 
@@ -92,5 +96,18 @@ interface nsISelectionPrivate : nsISupports
     
     /* Internal utility method to set the pres shell on a newly created selection */
     [noscript] void setPresShell(in nsIPresShell aPresShell);
+
+    /* canCacheFrameOffset
+     * Frame Offset cache can be used just during calling nsEditor::EndPlaceHolderTransaction.
+     * EndPlaceHolderTransaction will give rise to reflow/refreshing view/scroll, and call times
+     * of nsTextFrame::GetPointFromOffset whose return value is to be cached.
+     * see bugs 35296 and 199412
+     */
+    [noscript] attribute boolean canCacheFrameOffset;
+
+    /* GetCachedOffsetForFrame
+     * Returns cached value for nsTextFrame::GetPointFromOffset.
+     */
+    [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in PRInt32 inOffset, in nsPointRef aPoint);
 };
 

@@ -756,18 +756,21 @@ nsEditor::EndPlaceHolderTransaction()
   NS_PRECONDITION(mPlaceHolderBatch > 0, "zero or negative placeholder batch count when ending batch!");
   if (mPlaceHolderBatch == 1)
   {
-    nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-    nsCOMPtr<nsICaret> caret;
-    if (!ps)
-      return NS_ERROR_FAILURE;
-
-    nsresult rv = ps->GetCaret(getter_AddRefs(caret));
+    nsCOMPtr<nsISelection>selection;
+    nsresult rv = GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(rv))
       return rv;
 
-    // optimizing drawcaret starts
-    if (caret) {
-      caret->SetOptimizeDrawCaret(PR_TRUE);
+    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
+
+   // By making the assumption that no reflow happens during the calls
+   // to EndUpdateViewBatch and ScrollSelectionIntoView, we are able to
+   // allow the selection to cache a frame offset which is used by the
+   // caret drawing code. We only enable this cache here; at other times,
+   // we have no way to know whether reflow invalidates it
+   // See bugs 35296 and 199412.
+    if (selPrivate) {
+      selPrivate->SetCanCacheFrameOffset(PR_TRUE);
     }
     
     // time to turn off the batch
@@ -775,9 +778,9 @@ nsEditor::EndPlaceHolderTransaction()
     // make sure selection is in view
     ScrollSelectionIntoView(PR_FALSE);
 
-    // optimizing drawcaret stops
-    if (caret) {
-      caret->SetOptimizeDrawCaret(PR_FALSE);
+    // cached for frame offset are Not available now
+    if (selPrivate) {
+      selPrivate->SetCanCacheFrameOffset(PR_FALSE);
     }
 
     if (mSelState)
