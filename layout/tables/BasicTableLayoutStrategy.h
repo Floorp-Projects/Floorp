@@ -238,8 +238,7 @@ protected:
     */
   virtual void DistributeRemainingSpace(nscoord  aTableFixedWidth,
                                         nscoord &aComputedTableWidth, 
-                                        PRBool   aTableIsAutoWidth,
-                                        PRInt32 &aRecursionControl);
+                                        PRBool   aTableIsAutoWidth);
 
   virtual void AdjustTableThatIsTooWide(nscoord  aComputedWidth, 
                                         nscoord  aTableWidth, 
