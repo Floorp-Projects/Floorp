@@ -1041,6 +1041,7 @@ void nsTableFrame::DumpCellMap ()
   {
     PRInt32 rowCount = mCellMap->GetRowCount();
     PRInt32 colCount = mCellMap->GetColCount();
+    printf("rowCount=%d, colCount=%d\n", rowCount, colCount);
     for (PRInt32 rowIndex = 0; rowIndex < rowCount; rowIndex++)
     {
       if (gsDebug==PR_TRUE)
@@ -1591,6 +1592,11 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
         delete mCellMap;
       mCellMap = new nsCellMap(0,0);
       ReBuildCellMap();
+      if (PR_TRUE==gsDebugIR)
+      {
+        DumpCellMap();
+        printf("tableFrame thinks colCount is %d\n", mEffectiveColCount);
+      }
       needsRecalc=PR_TRUE;
     }
     if (PR_FALSE==IsFirstPassValid())

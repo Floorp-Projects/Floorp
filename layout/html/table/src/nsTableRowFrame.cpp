@@ -107,6 +107,7 @@ nsTableRowFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 NS_IMETHODIMP
 nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
 {
+  if (gsDebug) printf("Row InitChildren: begin\n");
   nsTableFrame* table = nsnull;
   nsresult  result=NS_OK;
 
@@ -114,6 +115,7 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
   // for now, we remember globally whether we've added all or none
   if (PR_FALSE==mInitializedChildren)
   {
+    if (gsDebug) printf("Row InitChildren: mInitializedChildren=PR_FALSE\n");
     result = nsTableFrame::GetTableFrame(this, table);
     if ((NS_OK==result) && (table != nsnull))
     {
@@ -124,6 +126,7 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
       else
         rowIndex = aRowIndex;
       SetRowIndex(rowIndex);
+      if (gsDebug) printf("Row InitChildren: set row index to %d\n", rowIndex);
       PRInt32   colIndex = 0;
       for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
       {
@@ -133,6 +136,7 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
         {
           // what column does this cell belong to?
           colIndex = table->GetNextAvailColIndex(mRowIndex, colIndex);
+          if (gsDebug) printf("Row InitChildren: cell given colIndex %d\n", colIndex);
           /* for style context optimization, set the content's column index if possible.
            * this can only be done if we really have an nsTableCell.  
            * other tags mapped to table cell display won't benefit from this optimization
@@ -155,11 +159,13 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
           ((nsTableCellFrame *)kidFrame)->InitCellFrame(colIndex);
           if (gsDebug) printf("%p : set cell frame %p to col index = %d\n", this, kidFrame, colIndex);
           // add the cell frame to the table's cell map
+          if (gsDebug) printf("Row InitChildren: calling AddCellToTable...\n");
           table->AddCellToTable(this, (nsTableCellFrame *)kidFrame, kidFrame == mFirstChild);
         }
       }
     }
   }
+  if (gsDebug) printf("Row InitChildren: end\n");
   return NS_OK;
 }
 
@@ -170,6 +176,7 @@ NS_METHOD
 nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
                            nsDidReflowStatus aStatus)
 {
+  if (gsDebug) printf("Row DidReflow: begin\n");
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     // Resize and re-align the cell frames based on our row height
     nscoord           cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
@@ -183,13 +190,14 @@ nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
       if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
       {
         PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(mRowIndex, (nsTableCellFrame *)cellFrame);
+        if (gsDebug) printf("Row DidReflow: cellFrame %p\n", cellFrame);
         if (1==rowSpan)
         {
           // resize the cell's height
           nsSize  cellFrameSize;
           cellFrame->GetSize(cellFrameSize);
           cellFrame->SizeTo(cellFrameSize.width, cellHeight);
-  
+          if (gsDebug) printf("Row DidReflow: cellFrame %p given height %d\n", cellFrame, cellHeight);
           // realign cell content based on the new height
           ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(&aPresContext);
         }
@@ -201,10 +209,12 @@ nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
 
   // Let our base class do the usual work
   return nsContainerFrame::DidReflow(aPresContext, aStatus);
+  if (gsDebug) printf("Row DidReflow: end\n");
 }
 
 void nsTableRowFrame::ResetMaxChildHeight()
 {
+  if (gsDebug) printf("Row ResetMaxChildHeight\n");
   mTallestCell=0;
   mCellMaxTopMargin=0;
   mCellMaxBottomMargin=0;
@@ -212,6 +222,7 @@ void nsTableRowFrame::ResetMaxChildHeight()
 
 void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight, nscoord aTopMargin, nscoord aBottomMargin)
 {
+  if (gsDebug) printf("Row ResetMaxChildHeight to %d\n", aChildHeight);
   if (mTallestCell<aChildHeight)
     mTallestCell = aChildHeight;
 
@@ -961,7 +972,12 @@ NS_METHOD nsTableRowFrame::IR_CellInserted(nsIPresContext&      aPresContext,
     if (NS_FAILED(rv))
       return rv;
   }
+  
+  // set row state
+  GetMinRowSpan(tableFrame);
+  FixMinCellHeight(tableFrame);
 
+  // set table state
   tableFrame->InvalidateCellMap();
   tableFrame->InvalidateColumnCache();
 
@@ -1000,6 +1016,12 @@ NS_METHOD nsTableRowFrame::IR_CellAppended(nsIPresContext&      aPresContext,
     if (NS_FAILED(rv))
       return rv;
   }
+
+  // set row state
+  GetMinRowSpan(tableFrame);
+  FixMinCellHeight(tableFrame);
+
+  // set table state
 
   tableFrame->InvalidateCellMap();
   tableFrame->InvalidateColumnCache();
@@ -1055,10 +1077,17 @@ NS_METHOD nsTableRowFrame::IR_CellRemoved(nsIPresContext&      aPresContext,
   nsresult rv = RemoveFrame((nsIFrame*)aDeletedFrame);
   if (NS_SUCCEEDED(rv))
   {
+    ResetMaxChildHeight();
     nsTableFrame *tableFrame=nsnull;
     rv = nsTableFrame::GetTableFrame(this, tableFrame);
     if (NS_FAILED(rv) || nsnull==tableFrame)
       return rv;
+
+    // set row state
+    GetMinRowSpan(tableFrame);
+    FixMinCellHeight(tableFrame);
+
+    // set table state
     tableFrame->InvalidateCellMap();
     tableFrame->InvalidateColumnCache();
 
