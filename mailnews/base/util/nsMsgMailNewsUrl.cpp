@@ -24,6 +24,7 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
 #include "nsIDocumentLoader.h"
 #include "nsILoadGroup.h"

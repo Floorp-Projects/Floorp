@@ -37,6 +37,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgMailSession.h"
+#include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
 #include "nsIAllocator.h"
 #include "nsIURL.h"
