@@ -1321,6 +1321,26 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
+  // Calculate the min size of the text control as one char
+  // save the current default col size
+  nscoord tmpCol = aSpec.mColDefaultSize;
+  aSpec.mColDefaultSize = 1;
+  charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+
+  // set the default col size back
+  aMinSize.width  = aDesiredSize.width;
+  aMinSize.height = aDesiredSize.height;
+  aSpec.mColDefaultSize = tmpCol;
+
+  // determine the width, char height, row height
+  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
+    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+    col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
+    charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, col, aDesiredSize, aRendContext);
+  } else {
+    charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+  }
+
   nscoord fontHeight  = 0;
   // get leading
   nsCOMPtr<nsIFontMetrics> fontMet;
@@ -1328,29 +1348,7 @@ nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContex
   if (NS_SUCCEEDED(res) && fontMet) {
     aRendContext->SetFont(fontMet);
     fontMet->GetHeight(fontHeight);
-    aDesiredSize.height = fontHeight;
-  } else {
-    aDesiredSize.height = 150; // punt
   }
-
-  // Calculate the min size of the text control as one char
-  // save the current default col size
-  fontMet->GetAveCharWidth(charWidth);
-  aDesiredSize.width = charWidth;
-
-  // set the default col size back
-  aMinSize.width  = aDesiredSize.width;
-  aMinSize.height = aDesiredSize.height;
-
-  // determine the width, char height, row height
-  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
-    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-    col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-    aDesiredSize.width = (col+1) * charWidth;
-  } else {
-    aDesiredSize.width = (aSpec.mColDefaultSize+1) * charWidth;
-  }
-
   aRowHeight      = aDesiredSize.height;
   aMinSize.height = aDesiredSize.height;
   PRInt32 numRows = 0;
@@ -2627,15 +2625,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
     mEditor->SetFlags(flags);
   }
   else if ((nsHTMLAtoms::size == aAttribute ||
-            nsHTMLAtoms::rows == aAttribute ||
-            nsHTMLAtoms::cols == aAttribute) && aHint != NS_STYLE_HINT_REFLOW) {
-    // XXX Bug 34573 & 50280
-    // The following code should be all we need for these two bugs (it does work for bug 50280)
-    // This doesn't wrong entirely for rows/cols, the borders don't get painted
-    // to fix that I have added a REFLOW hint in nsHTMLTextAreaElement::GetMappedAttributeImpact
-    // but it appears there are some problems when you hold down the return key
-    mPrefSize.width  = -1;
-    mPrefSize.height = -1;
+            nsHTMLAtoms::rows == aAttribute) && aHint != NS_STYLE_HINT_REFLOW) {
     nsFormFrame::StyleChangeReflow(aPresContext, this);
   }
   // Allow the base class to handle common attributes supported
