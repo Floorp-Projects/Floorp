@@ -1216,9 +1216,10 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   aCompleted = PR_TRUE;
   if (aURL) {
     URLKey  key(aURL);
+    PRBool  sheetModified = PR_FALSE;
 
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
-    if (sheet && (NS_COMFALSE == sheet->IsUnmodified())) {  // if dirty, forget it
+    if (sheet && (NS_OK == sheet->IsModified(&sheetModified)) && sheetModified) {  // if dirty, forget it
       sheet = nsnull;
     }
 
@@ -1276,9 +1277,10 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
 
   if (aURL) {
     URLKey  key(aURL);
+    PRBool  sheetModified = PR_FALSE;
 
     nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)mLoadedSheets.Get(&key);
-    if (sheet && (NS_COMFALSE == sheet->IsUnmodified())) {  // if dirty, forget it
+    if (sheet && (NS_OK == sheet->IsModified(&sheetModified)) && sheetModified) {  // if dirty, forget it
       sheet = nsnull;
     }
 

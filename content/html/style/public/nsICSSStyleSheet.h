@@ -65,7 +65,7 @@ public:
 
   NS_IMETHOD  Clone(nsICSSStyleSheet*& aClone) const = 0;
 
-  NS_IMETHOD  IsUnmodified(void) const = 0; // NS_OK if not modified since construct/last reset, NS_COMFALSE otherwise
+  NS_IMETHOD  IsModified(PRBool* aModified) const = 0; // returns the mDirty status of the sheet
   NS_IMETHOD  SetModified(PRBool aModified) = 0;
 
   NS_IMETHOD  DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcessor) = 0;
