@@ -114,36 +114,9 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #define NS_MSG_FOLDER_UNREADABLE NS_MSG_GENERATE_FAILURE(14)
 
 #define NS_MSG_ERROR_WRITING_MAIL_FOLDER NS_MSG_GENERATE_FAILURE(15)
-#ifdef XP_MAC
-#  define LINEBREAK             "\012"
-#  define LINEBREAK_LEN 1
-#else
-#  ifdef XP_WIN
-#    define LINEBREAK           "\015\012"
-#    define LINEBREAK_LEN       2
-#  else
-#    ifdef XP_UNIX
-#      define LINEBREAK         "\012"
-#      define LINEBREAK_LEN     1
-#    endif /* XP_UNIX */
-#  endif /* XP_WIN */
-#endif /* XP_MAC */
 
-#ifdef XP_MAC
-#  define MSG_LINEBREAK             "\015"
-#  define MSG_LINEBREAK_LEN 1
-#else
-#  ifdef XP_WIN
-#    define MSG_LINEBREAK           "\015\012"
-#    define MSG_LINEBREAK_LEN       2
-#  else
-#    ifdef XP_UNIX
-#      define MSG_LINEBREAK         "\012"
-#      define MSG_LINEBREAK_LEN     1
-#    endif /* XP_UNIX */
-#  endif /* XP_WIN */
-#endif /* XP_MAC */
-
+#define MSG_LINEBREAK NS_LINEBREAK
+#define MSG_LINEBREAK_LEN NS_LINEBREAK_LEN
 
 /* mscott - i'm only turning  NS_MSG_BASE on for windows so
    define it as empty for the other platforms. */
