@@ -36,6 +36,10 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#if defined(VMS) && defined(DEBUG)
+#include <lib$routines.h>
+#include <ssdef.h>
+#endif
 
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL),
@@ -488,7 +492,9 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
             // Break in the debugger here.
             asm("int $3");
 #endif
-
+#if defined(VMS)
+	    lib$signal(SS$_DEBUG);
+#endif
         }
 #endif /* DEBUG */
     return;
