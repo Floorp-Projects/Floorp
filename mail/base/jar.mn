@@ -52,6 +52,7 @@ comm.jar:
 *+  content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
 *+  content/communicator/utilityOverlay.xul         (content/utilityOverlay.xul)
 *+  content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
+*+  content/communicator/contents.rdf               (content/contents-communicator.rdf)
 
 toolkit.jar:
 *+  content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
