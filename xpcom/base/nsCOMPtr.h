@@ -637,19 +637,17 @@ SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
 #endif // defined(NSCAP_FEATURE_ALLOW_COMPARISONS)
 
 
-#if 0
-template <class SourceType, class DestinationType>
+template <class DestinationType>
 inline
 nsresult
-CallQueryInterface( SourceType* aSource, nsCOMPtr<DestinationType>* aDestination )
+CallQueryInterface( nsISupports* aSource, nsCOMPtr<DestinationType>* aDestination )
 		// a type-safe shortcut for calling the |QueryInterface()| member function
 	{
 		NS_PRECONDITION(aSource, "null parameter");
 		NS_PRECONDITION(aDestination, "null parameter");
 
-		return aSource->QueryInterface(DestinationType::GetIID(), NS_STATIC_CAST(void**, getter_AddRefs(*aDestination)));
+		return aSource->QueryInterface(DestinationType::GetIID(), (void**)getter_AddRefs(*aDestination));
 	}
-#endif
 
 
 #endif // !defined(nsCOMPtr_h___)
