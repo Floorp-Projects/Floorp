@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "nsHTMLParts.h"
-#include "nsHTMLTagContent.h"
+#include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsGlobalVariables.h"
@@ -31,42 +31,12 @@
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
 #include "nsCSSLayout.h"
+#include "nsIDOMHTMLHRElement.h"
 
-#undef DEBUG_HR_REFCNT
+static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
 // default hr thickness in pixels
 #define DEFAULT_THICKNESS 3
-
-class HRulePart : public nsHTMLTagContent {
-public:
-  HRulePart(nsIAtom* aTag);
-
-#ifdef DEBUG_HR_REFCNT
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-#endif
-
-  virtual nsresult CreateFrame(nsIPresContext* aPresContext,
-                               nsIFrame* aParentFrame,
-                               nsIStyleContext* aStyleContext,
-                               nsIFrame*& aResult);
-
-  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-
-  virtual void MapAttributesInto(nsIStyleContext* aContext,
-                                 nsIPresContext* aPresContext);
-
-  PRInt32 GetThickness();
-
-  PRBool GetNoShade();
-
-protected:
-  virtual ~HRulePart();
-
-  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
-                                          nsHTMLValue& aValue,
-                                          nsString& aResult) const;
-};
 
 class HRuleFrame : public nsLeafFrame {
 public:
@@ -88,8 +58,23 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
 
+  PRBool GetNoShade();
+  PRInt32 GetThickness();
+
   nscoord mComputedWidth;
 };
+
+nsresult
+NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+              nsIFrame*& aResult)
+{
+  nsIFrame* frame = new HRuleFrame(aContent, aParentFrame);
+  if (nsnull == frame) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  aResult = frame;
+  return NS_OK;
+}
 
 HRuleFrame::HRuleFrame(nsIContent* aContent,
                        nsIFrame* aParentFrame)
@@ -113,7 +98,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   float p2t = aPresContext.GetPixelsToTwips();
-  nscoord thickness = NSIntPixelsToTwips(((HRulePart*)mContent)->GetThickness(), p2t);
+  nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
 
   // Get style data
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)
@@ -162,7 +147,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 
   PRBool bevel = nsGlobalVariables::Instance()->GetBeveledLines();
 
-	PRBool noShadeAttribute = PRBool(((HRulePart*)mContent)->GetNoShade());
+	PRBool noShadeAttribute = GetNoShade();
 
   // Now that we have the data to make the shading criteria, we next
   // collect the decision criteria for rending in solid black:
@@ -286,7 +271,7 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // Get the thickness of the rule (this is not css's height property)
   float p2t = aPresContext->GetPixelsToTwips();
-  nscoord thickness = NSIntPixelsToTwips(((HRulePart*)mContent)->GetThickness(), p2t);
+  nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
 
   // Compute height of "line" that hrule will layout within. Use the
   // default font to do this.
@@ -304,176 +289,52 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredSize.descent = 0;
 }
 
-//----------------------------------------------------------------------
-
-HRulePart::HRulePart(nsIAtom* aTag)
-  : nsHTMLTagContent(aTag)
-{
-}
-
-HRulePart::~HRulePart()
-{
-}
-
-#ifdef DEBUG_HR_REFCNT
-nsrefcnt HRulePart::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt HRulePart::Release(void)
-{
-  NS_PRECONDITION(mRefCnt != 0, "too many release's");
-  if (--mRefCnt == 0) {
-    if (mInHeap) {
-      delete this;
-    }
-  }
-  return mRefCnt;
-}
-#endif
-
 PRInt32
-HRulePart::GetThickness()
+HRuleFrame::GetThickness()
 {
   PRInt32 result = DEFAULT_THICKNESS;
-  nsHTMLValue value;
-  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::size, value)) {
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      PRInt32 pixels = value.GetPixelValue();
-      switch (pixels) {
-      case 0:
-      case 1:
-        result = 1;
-        break;
-      default:
-        result = pixels + 1;
-        break;
+
+  // See if the underlying content is an HR that also implements the
+  // nsIHTMLContent API.
+  // XXX the dependency on nsIHTMLContent is done to avoid reparsing
+  // the size value.
+  nsIDOMHTMLHRElement* hr = nsnull;
+  nsIHTMLContent* hc = nsnull;
+  mContent->QueryInterface(kIDOMHTMLHRElementIID, (void**) &hr);
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
+  if ((nsnull != hr) && (nsnull != hc)) {
+    // Winner. Get the size attribute to determine how thick the HR
+    // should be.
+    nsHTMLValue value;
+    if (eContentAttr_HasValue == hc->GetAttribute(nsHTMLAtoms::size, value)) {
+      if (value.GetUnit() == eHTMLUnit_Pixel) {
+        PRInt32 pixels = value.GetPixelValue();
+        switch (pixels) {
+        case 0:
+        case 1:
+          result = 1;
+          break;
+        default:
+          result = pixels + 1;
+          break;
+        }
       }
     }
   }
+  NS_IF_RELEASE(hc);
+  NS_IF_RELEASE(hr);
   return result;
 }
 
 PRBool
-HRulePart::GetNoShade()
+HRuleFrame::GetNoShade()
 {
   PRBool result = PR_FALSE;
-  nsHTMLValue value;
-  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::noshade, value)) {
-    if (value.GetUnit() == eHTMLUnit_Empty) {
-      result = PR_TRUE;
-    }
+  nsIDOMHTMLHRElement* hr = nsnull;
+  mContent->QueryInterface(kIDOMHTMLHRElementIID, (void**) &hr);
+  if (nsnull != hr) {
+    hr->GetNoShade(&result);
+    NS_RELEASE(hr);
   }
   return result;
-}
-
-static nsHTMLTagContent::EnumTable kAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { 0 }
-};
-
-void
-HRulePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
-{
-  nsHTMLValue val;
-  if (aAttribute == nsHTMLAtoms::width) {
-    ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-  }
-  else if (aAttribute == nsHTMLAtoms::size) {
-    ParseValue(aValue, 1, 100, val, eHTMLUnit_Pixel);
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-  }
-  else if (aAttribute == nsHTMLAtoms::noshade) {
-    val.SetEmptyValue();
-    nsHTMLTagContent::SetAttribute(aAttribute, val);
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseEnumValue(aValue, kAlignTable, val)) {
-      nsHTMLTagContent::SetAttribute(aAttribute, val);
-    }
-  }
-  else {
-    // Use default attribute catching code
-    nsHTMLTagContent::SetAttribute(aAttribute, aValue);
-  }
-}
-
-void
-HRulePart::MapAttributesInto(nsIStyleContext* aContext,
-                             nsIPresContext* aPresContext)
-{
-  if (nsnull != mAttributes) {
-    nsHTMLValue value;
-    // align: enum
-    GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      nsStyleText* text = (nsStyleText*)
-        aContext->GetMutableStyleData(eStyleStruct_Text);
-      text->mTextAlign = value.GetIntValue();
-    }
-
-    // width: pixel, percent
-    float p2t = aPresContext->GetPixelsToTwips();
-    nsStylePosition* pos = (nsStylePosition*)
-      aContext->GetMutableStyleData(eStyleStruct_Position);
-    GetAttribute(nsHTMLAtoms::width, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
-      pos->mWidth.SetCoordValue(twips);
-    }
-    else if (value.GetUnit() == eHTMLUnit_Percent) {
-      pos->mWidth.SetPercentValue(value.GetPercentValue());
-    }
-  }
-}
-
-nsContentAttr
-HRulePart::AttributeToString(nsIAtom*     aAttribute,
-                             nsHTMLValue& aValue,
-                             nsString&    aResult) const
-{
-  nsContentAttr ca = eContentAttr_NotThere;
-  if (aAttribute == nsHTMLAtoms::align) {
-    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      EnumValueToString(aValue, kAlignTable, aResult);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  return ca;
-}
-
-//----------------------------------------------------------------------
-
-nsresult
-HRulePart::CreateFrame(nsIPresContext*  aPresContext,
-                       nsIFrame*        aParentFrame,
-                       nsIStyleContext* aStyleContext,
-                       nsIFrame*&       aResult)
-{
-  nsIFrame* frame = new HRuleFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
-nsresult
-NS_NewHRulePart(nsIHTMLContent** aInstancePtrResult,
-                nsIAtom* aTag)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIHTMLContent* body = new HRulePart(aTag);
-  if (nsnull == body) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return body->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
 }
