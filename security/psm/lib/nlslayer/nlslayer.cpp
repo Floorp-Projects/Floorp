@@ -253,7 +253,7 @@ extern "C" PRBool nlsUnicodeToUTF8(unsigned char * inBuf, unsigned int inBufByte
 		goto loser;
 	}
 
-	/* outBuf[dstLength] = '\0';*/
+	outBuf[dstLength] = '\0';
 	*outBufLen = dstLength;
 	ret = PR_TRUE;
 
@@ -280,6 +280,8 @@ extern "C" PRBool nlsUTF8ToUnicode(unsigned char * inBuf, unsigned int inBufByte
 		goto loser;
 	}
 
+	*outBufLen = (unsigned int)dstLength*sizeof(PRUnichar);
+
 	ret = PR_TRUE;
 
 loser:
@@ -305,7 +307,7 @@ extern "C" PRBool nlsUnicodeToASCII(unsigned char * inBuf, unsigned int inBufByt
 		goto loser;
 	}
 
-	/* outBuf[dstLength] = '\0';*/
+	outBuf[dstLength] = '\0';
 	*outBufLen = dstLength;
 	ret = PR_TRUE;
 
@@ -331,7 +333,9 @@ extern "C" PRBool nlsASCIIToUnicode(unsigned char * inBuf, unsigned int inBufByt
 	if (NS_FAILED(res)) {
 		goto loser;
 	}
-	*outBufLen = (unsigned int)dstLength*2;
+	*outBufLen = (unsigned int)dstLength*sizeof(PRUnichar) + 2; // Extra NULL characters
+	outBuf[*outBufLen] = NULL;
+	outBuf[*outBufLen - 1] = NULL;
 	ret = PR_TRUE;
 
 loser:
