@@ -973,7 +973,7 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   nsRect brect;
   GetBounds(brect);
   out << brect;
-  fprintf(out, " z=%d vis=%d opc=%1.3f <\n", mZindex, mVis, mOpacity);
+  fprintf(out, " z=%d vis=%d opc=%1.3f clientData=%p <\n", mZindex, mVis, mOpacity, mClientData);
   nsIView* kid = mFirstChild;
   while (nsnull != kid) {
     kid->List(out, aIndent + 1);
