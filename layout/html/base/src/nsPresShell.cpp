@@ -351,8 +351,13 @@ protected:
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
-  
+  PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
   FrameHashTable*               mPlaceholderMap;
+private:
+  //helper funcs for disabing autoscrolling
+  void DisableScrolling(){mScrollingEnabled = PR_FALSE;}
+  void EnableScrolling(){mScrollingEnabled = PR_TRUE;}
+  PRBool IsScrollingEnabled(){return mScrollingEnabled;}
 };
 
 #ifdef NS_DEBUG
@@ -414,6 +419,7 @@ PresShell::PresShell()
 {
   //XXX joki 11/17 - temporary event hack.
   mIsDestroying = PR_FALSE;
+  EnableScrolling();
 }
 
 #ifdef NS_DEBUG
@@ -909,8 +915,11 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
 
-    if (mSelection)
+    if (mSelection){
+      DisableScrolling();
       mSelection->ResetSelection(this, mRootFrame);
+      EnableScrolling();
+    }
 
     // XXX if debugging then we should assert that the cache is empty
   } else {
@@ -948,9 +957,11 @@ PresShell::GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){
 NS_IMETHODIMP PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
   if (!aFrame)
     return NS_ERROR_NULL_POINTER;
-  return ScrollFrameIntoView(aFrame, 
+  if (IsScrollingEnabled())
+    return ScrollFrameIntoView(aFrame, 
            0, NS_PRESSHELL_SCROLL_TOP |NS_PRESSHELL_SCROLL_ANYWHERE,
            0, NS_PRESSHELL_SCROLL_LEFT|NS_PRESSHELL_SCROLL_ANYWHERE);
+  return NS_OK;
 }
 
 
