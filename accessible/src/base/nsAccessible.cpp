@@ -805,15 +805,18 @@ void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFram
       // Look for a widget so we can get screen coordinates
       nsIView* view = nsnull;
       aFrame->GetView(aPresContext, &view);
+      nsPoint origin;
       if (view) {
         view->GetWidget(*getter_AddRefs(widget));
         if (widget)
           break;
+        // Include position of view in calculation of starting coordinates
+        view->GetPosition(&origin.x, &origin.y);
       }
-      
-      // No widget yet, so count up the coordinates of the frame 
-      nsPoint origin;
-      aFrame->GetOrigin(origin);
+      else {
+        // No widget yet, so count up the coordinates of the frame 
+        aFrame->GetOrigin(origin);
+      }
       offsetX += origin.x;
       offsetY += origin.y;
   
