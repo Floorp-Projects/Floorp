@@ -71,9 +71,9 @@
 
       <vbox id="receiptRequest">
         <description>&requestMDN.label;</description>
-        <radiogroup id="receiptSend" prefstring="mail.receipt.return_some_receipts" oncommand="EnableDisableAllowedReceipts();">
-          <radio value="0" label="&never.label;"/>
-          <radio value="1" label="&returnSome.label;"/> 
+        <radiogroup id="receiptSend" preftype="bool" prefstring="mail.mdn.report.enabled" oncommand="EnableDisableAllowedReceipts();">
+          <radio value="false" label="&never.label;"/>
+          <radio value="true" label="&returnSome.label;"/> 
         </radiogroup>
 
         <hbox id="receiptSendIf" class="indent">

@@ -141,8 +141,7 @@ pref("mail.incorporate.return_receipt", 0);            // 0: Inbox/filter 1: Sen
 pref("mail.request.return_receipt", 2);                // 1: DSN 2: MDN 3: Both
 pref("mail.receipt.request_header_type", 0);           // 0: MDN-DNT header  1: RRT header 2: Both (MC)
 pref("mail.receipt.request_return_receipt_on", false);
-pref("mail.receipt.return_some_receipts", 1);          // 0: Never send 1: Send sometimes
-
+pref("mail.mdn.report.enabled", false);                // false: Never send true: Send sometimes
 
 pref("news.default_cc",                     "");
 pref("news.default_fcc",                    ""); // mailbox:URL or Imap://Host/OnlineFolderName

@@ -40,7 +40,7 @@ function onInit()
   requestReceipt = document.getElementById("identity.request_return_receipt_on");
   leaveInInbox = document.getElementById("leave_in_inbox");
   moveToSent = document.getElementById("move_to_sent");
-  receiptSend = document.getElementById("identity.return_some_receipts");
+  receiptSend = document.getElementById("server.mdn_report_enabled");
   neverReturn = document.getElementById("never_return");
   returnSome = document.getElementById("return_some");
   notInToCcPref = document.getElementById("server.mdn_not_in_to_cc");
@@ -63,7 +63,7 @@ function onSave()
 }
 
 function EnableDisableCustomSettings() {
-  if (useCustomPrefs && (useCustomPrefs.getAttribute("value") == 0)) {
+  if (useCustomPrefs && (useCustomPrefs.getAttribute("value") == "false")) {
     requestReceipt.setAttribute("disabled", "true");
     leaveInInbox.setAttribute("disabled", "true");
     moveToSent.setAttribute("disabled", "true");
@@ -87,7 +87,7 @@ function EnableDisableCustomSettings() {
 
 function EnableDisableAllowedReceipts() {
   if (receiptSend) {
-    if (!neverReturn.getAttribute("disabled") && (receiptSend.getAttribute("value") != 0)) {
+    if (!neverReturn.getAttribute("disabled") && (receiptSend.getAttribute("value") != "false")) {
       notInToCcPref.removeAttribute("disabled");
       notInToCcLabel.removeAttribute("disabled");
       outsideDomainPref.removeAttribute("disabled");

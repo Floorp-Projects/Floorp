@@ -472,6 +472,15 @@ function saveAccount(accountValues, account)
               dest.setCharAttribute(slot, typeArray[slot]);
             break;
           case "bool":
+            // in some cases
+            // like for radiogroups of type boolean
+            // the value will be "false" instead of false
+            // we need to convert it.
+            if (typeArray[slot] == "false")
+              typeArray[slot] = false;
+            else if (typeArray[slot] == "true")
+              typeArray[slot] = true;
+
             if (dest.getBoolAttribute(slot) != typeArray[slot])
               dest.setBoolAttribute(slot, typeArray[slot]);
             break;

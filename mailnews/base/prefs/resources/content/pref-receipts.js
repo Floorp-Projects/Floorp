@@ -55,7 +55,7 @@ function Startup() {
 }
 
 function EnableDisableAllowedReceipts() {
-  if (receiptSend && (receiptSend.getAttribute("value") == 0)) {
+  if (receiptSend && (receiptSend.getAttribute("value") == "false")) {
     notInToCcPref.setAttribute("disabled", "true");
     notInToCcLabel.setAttribute("disabled", "true");
     outsideDomainPref.setAttribute("disabled", "true");
