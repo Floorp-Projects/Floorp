@@ -50,6 +50,7 @@
 
 #include <OLE2.h>
 #include "OLEIDL.H"
+#include "shlobj.h";
 
 // shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <shellapi.h>
@@ -159,6 +160,18 @@ NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PR
 
   // Call the native D&D method
   HRESULT res = ::DoDragDrop(aDataObj, mNativeDragSrc, effects, &dropRes);
+
+  // For some drag/drop interactions, IDataObject::SetData doesn't get called with
+  // a CFSTR_PERFORMEDDROPEFFECT format and the intermediate file (if it was created)
+  // isn't deleted.  See http://bugzilla.mozilla.org/show_bug.cgi?id=203847#c4 for a
+  // detailed description of the different cases.  Now that we know that the drag/drop 
+  // operation has ended, call SetData() so that the intermediate file is deleted.
+  static CLIPFORMAT PerformedDropEffect = ::RegisterClipboardFormat( CFSTR_PERFORMEDDROPEFFECT );
+  FORMATETC fmte = {(CLIPFORMAT) PerformedDropEffect, NULL, DVASPECT_CONTENT, -1, TYMED_NULL};
+  STGMEDIUM medium;
+  medium.tymed = TYMED_NULL;
+  medium.pUnkForRelease = NULL;
+  aDataObj->SetData(&fmte, &medium, FALSE);
 
   mDoingDrag  = PR_FALSE;
 
