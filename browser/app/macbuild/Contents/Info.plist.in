@@ -26,6 +26,50 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+			    <string>text</string>
+				<string>txt</string>
+				<string>js</string>
+				<string>log</string>
+				<string>css</string>
+				<string>xul</string>
+				<string>rdf</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>document.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Text Document</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>TEXT</string>
+				<string>utxt</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>jpeg</string>
+				<string>jpg</string>
+				<string>png</string>
+				<string>gif</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>fileBookmark.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>document.icns</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>GIFf</string>
+				<string>JPEG</string>
+				<string>PNGf</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>firefox-bin</string>
