@@ -1747,19 +1747,23 @@ GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
   if (--aTimeout->ref_count > 0) {
     return;
   }
-  
-  cx = (JSContext *)(aContext ? aContext : mContext)->GetNativeContext();
-  
-  if (aTimeout->expr) {
-    JS_RemoveRoot(cx, &aTimeout->expr);
-  }
-  else if (aTimeout->funobj) {
-    JS_RemoveRoot(cx, &aTimeout->funobj);
-    if (aTimeout->argv) {
-      int i;
-      for (i = 0; i < aTimeout->argc; i++)
-        JS_RemoveRoot(cx, &aTimeout->argv[i]);
-      PR_FREEIF(aTimeout->argv);
+ 
+  if (!aContext)
+    aContext = mContext;
+  if (aContext) {
+    cx = (JSContext *) aContext->GetNativeContext();
+ 
+    if (aTimeout->expr) {
+      JS_RemoveRoot(cx, &aTimeout->expr);
+    }
+    else if (aTimeout->funobj) {
+      JS_RemoveRoot(cx, &aTimeout->funobj);
+      if (aTimeout->argv) {
+        int i;
+        for (i = 0; i < aTimeout->argc; i++)
+          JS_RemoveRoot(cx, &aTimeout->argv[i]);
+        PR_FREEIF(aTimeout->argv);
+      }
     }
   }
   NS_IF_RELEASE(aTimeout->timer);
@@ -2987,10 +2991,11 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult ret = NS_OK;
   nsIDOMEvent* domEvent = nsnull;
 
-  /* mChromeEventHandler goes dangling in the middle of this
-     function under some circumstances (events that destroy
-     the window) without this addref. */
-  nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip(mChromeEventHandler);
+  /* mChromeEventHandler and mContext go dangling in the middle of this
+     function under some circumstances (events that destroy the window)
+     without this addref. */
+  nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip1(mChromeEventHandler);
+  nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(mContext);
 
   if (NS_EVENT_FLAG_INIT == aFlags) {
     aDOMEvent = &domEvent;
