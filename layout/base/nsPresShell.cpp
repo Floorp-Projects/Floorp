@@ -88,7 +88,6 @@
 #include "nsITransferable.h"
 #include "nsIFormatConverter.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIBrowserWindow.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
