@@ -106,7 +106,7 @@ public:
 Code that wishes to make use of this <i>stubs</i> functionality (such as 
 <a href="http://www.mozilla.org/scriptable/">XPConnect</a>) implement a class
 which inherits from <code>nsXPTCStubBase</code> and implements the
-<code>GetInterfaceInfo</code> and <code>CallMethodCallMethod</code> to let the
+<code>GetInterfaceInfo</code> and <code>CallMethod</code> to let the
 platform specific code know how to get interface information and how to dispatch methods
 once their parameters have been pulled out of the platform specific calling
 frame.
@@ -120,7 +120,7 @@ class share that vtbl and the same stubs. The stubs forward calls to a platform
 specific method that uses the interface information supplied by
 the overridden <code>GetInterfaceInfo</code> to extract the parameters and build
 an array of platform independent <code>nsXPTCMiniVariant</code> structs which
-are in turn passed on to the overridden <code>CallMethodCallMethod</code>. The
+are in turn passed on to the overridden <code>CallMethod</code>. The
 platform dependent code is responsible for doing any cleanup and returning.
 
 <p>
