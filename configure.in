@@ -46,7 +46,7 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GTK_MAJ_VER=1
 GTK_MIN_VER=1
-GTK_REL_VER=0
+GTK_REL_VER=2
 GTK_VERSION=${GTK_MAJ_VER}.${GTK_MIN_VER}.${GTK_REL_VER}
 
 dnl Set various checks
@@ -258,28 +258,6 @@ AC_CACHE_VAL(ac_cv_ios_binary,
 ac_ios_binary=$ac_cv_ios_binary
 if test $ac_ios_binary = true ; then
   AC_DEFINE(HAVE_IOS_BINARY)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi  
-CC=$_SAVE_CC
-
-dnl Checks for c++ features
-dnl Is there a way to make AC_TRY_COMPILE use CXX instead of CC?
-_SAVE_CC=$CC
-CC=$CXX
-AC_MSG_CHECKING(for ios::bin)
-AC_CACHE_VAL(ac_cv_ios_bin,
- [AC_TRY_COMPILE([#include <iostream.h>]
-               [#include <fstream.h>],
-                 [char *buffer = "config.log";
-                fstream *mFileStream=new fstream(buffer, ios::bin);],
-                 [ac_ios_bin=true],
-                 [ac_ios_bin=false])
-  ac_cv_ios_bin=$ac_ios_bin])
-ac_ios_bin=$ac_cv_ios_bin
-if test $ac_ios_bin = true ; then
-  AC_DEFINE(HAVE_IOS_BIN)
   AC_MSG_RESULT(yes)
 else
   AC_MSG_RESULT(no)
@@ -613,7 +591,7 @@ fi
 
 res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
-    AM_PATH_GTK(1.1.2,,
+    AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
 
     AC_ARG_WITH(static-gtk,
