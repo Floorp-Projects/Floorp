@@ -87,7 +87,7 @@ while (my $bit = FetchOneColumn()) {
     
 SendSQL("select sum(bit) from groups where isbuggroup != 0");
 my $buggroupset = FetchOneColumn();
-if ($buggroupset eq "") {
+if (!defined $buggroupset || $buggroupset eq "") {
     $buggroupset = 0;
 }
 SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
