@@ -834,6 +834,8 @@ case "$target" in
         _PLATFORM_DEFAULT_TOOLKIT='mac'
         DSO_LDOPTS="$DSO_LDOPTS -arch ppc"
         MOZ_ENABLE_POSTSCRIPT=
+        # set MACOSX to generate lib/mac/MoreFiles/Makefile
+        MACOSX=1
         ;;
     esac
     ;;
