@@ -3036,7 +3036,7 @@ NS_IMETHODIMP
 nsHttpChannel::OnStatus(nsIRequest *req, nsISupports *ctx, nsresult status,
                         const PRUnichar *statusText)
 {
-    if (mProgressSink)
+    if (mProgressSink && !mCanceled)
         mProgressSink->OnStatus(this, mListenerContext, status, statusText);
 
     return NS_OK;
@@ -3047,7 +3047,7 @@ NS_IMETHODIMP
 nsHttpChannel::OnProgress(nsIRequest *req, nsISupports *ctx,
                           PRUint32 progress, PRUint32 progressMax)
 {
-    if (mProgressSink)
+    if (mProgressSink && !mCanceled)
         mProgressSink->OnProgress(this, mListenerContext, progress, progressMax);
 
     return NS_OK;
