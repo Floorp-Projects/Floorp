@@ -17,7 +17,7 @@
  */
 
 /* In some regards this class is a temporary class. As the new web shell
-   re-architecture begins to fall into place, the URIDispatcher will also
+   re-architecture begins to fall into place, the URILoader will also
    be the doc loader and this implementation will be grated onto the doc
    loader. 
 
@@ -26,22 +26,22 @@
 
 */
 
-#ifndef nsURIDispatcher_h__
-#define nsURIDispatcher_h__
+#ifndef nsURILoader_h__
+#define nsURILoader_h__
 
-#include "nsIURIDispatcher.h"
+#include "nsCURILoader.h"
 #include "nsCOMPtr.h"
 
 class nsVoidArray;
 
-class nsURIDispatcher : public nsIURIDispatcher
+class nsURILoader : public nsIURILoader
 {
 public:
-  NS_DECL_NSIURIDISPATCHER
+  NS_DECL_NSIURILOADER
   NS_DECL_ISUPPORTS
 
-  nsURIDispatcher();
-  virtual ~nsURIDispatcher();
+  nsURILoader();
+  virtual ~nsURILoader();
 
 protected:
   // we shouldn't need to have an owning ref count on registered
@@ -51,5 +51,5 @@ protected:
 
 };
 
-#endif /* nsURIDispatcher_h__ */
+#endif /* nsURILoader_h__ */
 

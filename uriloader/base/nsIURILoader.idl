@@ -43,7 +43,7 @@ interface nsIURI;
 
 
 [scriptable, uuid(40AECB53-8B65-11d3-989D-001083010E9B)]
-interface nsIURIDispatcher : nsISupports
+interface nsIURILoader : nsISupports
 {
   /* as applications such as messenger and the browser are instantiated,
      they register content listener's with the uri dispatcher corresponding
@@ -68,4 +68,3 @@ interface nsIURIDispatcher : nsISupports
                in nsIURIContentListener aContentListener, in nsISupports aContext,
                in nsIURI aReferringURI);          
 };
-
