@@ -573,13 +573,7 @@ nsMimeBaseEmitter::AddHeaderField(const char *field, const char *value)
   if ( (ptr) && tPtr)
   {
     ptr->name = nsCRT::strdup(field);
-
-    if ( ( (mDocHeader) || (mFormat == nsMimeOutput::nsMimeMessageSaveAs) ) &&
-         (mFormat != nsMimeOutput::nsMimeMessagePrintOutput) )
-      ptr->value = nsCRT::strdup(value);
-    else
-      ptr->value = NS_ConvertASCIItoUCS2(value).ToNewUTF8String();
-
+    ptr->value = nsCRT::strdup(value);
     tPtr->AppendElement(ptr);
   }
 
