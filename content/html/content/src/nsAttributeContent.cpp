@@ -64,7 +64,7 @@
 #include "nsVoidArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsITextContent.h"
-
+#include "nsIURI.h"
 // XXX share all id's in this dir
 
 
@@ -135,6 +135,8 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  NS_IMETHOD GetBaseURL(nsIURI** aURI) const;
+  
   NS_IMETHOD DoneCreatingElement() {
     return NS_OK;
   }
@@ -373,6 +375,20 @@ nsAttributeContent::GetRangeList(nsVoidArray** aResult) const
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsAttributeContent::GetBaseURL(nsIURI** aURI) const
+{
+  if (mParent) {
+    return mParent->GetBaseURL(aURI);
+  }
+
+  if (mDocument) {
+    return mDocument->GetBaseURL(aURI);
+  }
+
+  *aURI = nsnull;
+  return NS_OK;
+}
 
 
 

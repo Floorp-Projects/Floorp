@@ -431,7 +431,9 @@ nsImageBoxFrame::UpdateImage(nsIPresContext*  aPresContext, PRBool& aResize)
   }
 
   nsCOMPtr<nsIURI> baseURI;
-  GetBaseURI(getter_AddRefs(baseURI));
+  if (mContent) {
+    mContent->GetBaseURL(getter_AddRefs(baseURI));
+  }
   nsCOMPtr<nsIURI> srcURI;
   nsresult rv = NS_NewURI(getter_AddRefs(srcURI), mSrc, nsnull, baseURI);
 
@@ -709,26 +711,6 @@ nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-
-void
-nsImageBoxFrame::GetBaseURI(nsIURI **uri)
-{
-  nsresult rv;
-  nsCOMPtr<nsIURI> baseURI;
-  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    htmlContent->GetBaseURL(getter_AddRefs(baseURI));
-  }
-  else {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      doc->GetBaseURL(getter_AddRefs(baseURI));
-    }
-  }
-  *uri = baseURI;
-  NS_IF_ADDREF(*uri);
-}
 
 void
 nsImageBoxFrame::GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup)

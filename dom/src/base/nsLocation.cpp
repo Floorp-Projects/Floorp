@@ -930,14 +930,10 @@ LocationImpl::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = GetSourceDocument(cx, getter_AddRefs(doc));
   if (doc) {
-    rv = doc->GetBaseURL(sourceURL);
-
-    if (!*sourceURL) {
-      doc->GetDocumentURL(sourceURL);
-    }
-  } else {
-    *sourceURL = nsnull;
+    return doc->GetBaseURL(sourceURL);
   }
+
+  *sourceURL = nsnull;
   return rv;
 }
 

@@ -200,7 +200,6 @@ private:
   inline void SpecToURI(const nsAString& aSpec, nsIIOService *aIOService,
                         nsIURI **aURI);
 
-  inline void GetBaseURI(nsIURI **uri);
   inline void GetLoadGroup(nsIPresContext *aPresContext,
                            nsILoadGroup **aLoadGroup);
   nscoord GetContinuationOffset(nscoord* aWidth = 0) const;

@@ -100,7 +100,6 @@ protected:
                          const nsStyleList& aStyleList,
                          nsString& aResult);
 
-  void GetBaseURI(nsIURI **aURI);
   void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **aLoadGroup);
 
   PRInt32 mOrdinal;

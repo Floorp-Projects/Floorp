@@ -401,7 +401,9 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     nsCOMPtr<nsIURI> baseURI, scriptURI;
     
     // Use the SRC attribute value to load the URL
-    mDocument->GetBaseURL(getter_AddRefs(baseURI));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
+    NS_ASSERTION(content, "nsIDOMHTMLScriptElement not implementing nsIContent");
+    content->GetBaseURL(getter_AddRefs(baseURI));
     rv = NS_NewURI(getter_AddRefs(scriptURI), src, nsnull, baseURI);
     if (NS_FAILED(rv)) {
       return FireErrorNotification(rv, aElement, aObserver);

@@ -138,8 +138,6 @@ protected:
 
   void GetImageSource();
 
-  void GetBaseURI(nsIURI **uri);
-
   void GetLoadGroup(nsIPresContext *aPresContext, nsILoadGroup **group);
 
   virtual void GetImageSize(nsIPresContext* aPresContext);

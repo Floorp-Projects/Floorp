@@ -135,7 +135,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
     GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
     nsCOMPtr<nsIURI> baseURI;
-    GetBaseURI(getter_AddRefs(baseURI));
+    mContent->GetBaseURL(getter_AddRefs(baseURI));
 
     nsCOMPtr<nsIURI> imgURI;
     NS_NewURI(getter_AddRefs(imgURI), myList->mListStyleImage, nsnull, baseURI);
@@ -1597,7 +1597,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
 
   if (isStyleChange) {
     nsCOMPtr<nsIURI> baseURI;
-    GetBaseURI(getter_AddRefs(baseURI));
+    mContent->GetBaseURL(getter_AddRefs(baseURI));
 
     const nsStyleList* myList = GetStyleList();
 
@@ -1809,30 +1809,6 @@ NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
   Invalidate(mPresContext, r, PR_FALSE);
 
   return NS_OK;
-}
-
-
-
-void
-nsBulletFrame::GetBaseURI(nsIURI **aURI)
-{
-  NS_PRECONDITION(nsnull != aURI, "null OUT parameter pointer");
-
-  nsresult rv;
-  nsCOMPtr<nsIURI> baseURI;
-  nsCOMPtr<nsIHTMLContent> htmlContent(do_QueryInterface(mContent, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    htmlContent->GetBaseURL(getter_AddRefs(baseURI));
-  }
-  else {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
-    if (doc) {
-      doc->GetBaseURL(getter_AddRefs(baseURI));
-    }
-  }
-  *aURI = baseURI;
-  NS_IF_ADDREF(*aURI);
 }
 
 void

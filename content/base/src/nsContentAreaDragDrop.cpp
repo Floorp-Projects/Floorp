@@ -985,14 +985,12 @@ nsTransferableFactory::GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL)
       if (value.Equals(NS_LITERAL_STRING("simple"))) {
         content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value);
         if (!value.IsEmpty()) {
-          nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(inNode));
-          if (xml) {
-            nsCOMPtr<nsIURI> baseURI;
-            if (NS_SUCCEEDED(xml->GetXMLBaseURI(getter_AddRefs(baseURI)))) {
-              nsCAutoString absoluteSpec;
-              baseURI->Resolve(NS_ConvertUCS2toUTF8(value), absoluteSpec);
-              outURL = NS_ConvertUTF8toUCS2(absoluteSpec);
-            }
+          nsCOMPtr<nsIURI> baseURI;
+          content->GetBaseURL(getter_AddRefs(baseURI));
+          if (baseURI) {
+            nsCAutoString absoluteSpec;
+            baseURI->Resolve(NS_ConvertUCS2toUTF8(value), absoluteSpec);
+            CopyUTF8toUTF16(absoluteSpec, outURL);
           }
         }
       } else {

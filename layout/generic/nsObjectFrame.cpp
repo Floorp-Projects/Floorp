@@ -560,7 +560,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIURI> baseURL;
 
-    if (NS_FAILED(GetBaseURL(*getter_AddRefs(baseURL)))) return; // XXX NS_NewURI fails without base
+    aContent->GetBaseURL(getter_AddRefs(baseURL));
     rv = NS_NewURI(getter_AddRefs(uri), data, nsnull, baseURL);
     if (NS_FAILED(rv)) return;
 
@@ -1022,16 +1022,15 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
     nsAutoString classid;
 
-    if (NS_SUCCEEDED(rv = GetBaseURL(*getter_AddRefs(baseURL)))) {
-      nsAutoString codeBase;
-      if ((NS_CONTENT_ATTR_HAS_VALUE ==
-            mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase)) &&
-          !codeBase.IsEmpty()) {
-        nsCOMPtr<nsIURI> codeBaseURL;
-        rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
-        if (NS_SUCCEEDED(rv)) {
-          baseURL = codeBaseURL;
-        }
+    mContent->GetBaseURL(getter_AddRefs(baseURL));
+    nsAutoString codeBase;
+    if ((NS_CONTENT_ATTR_HAS_VALUE ==
+         mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase)) &&
+        !codeBase.IsEmpty()) {
+      nsCOMPtr<nsIURI> codeBaseURL;
+      rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURL);
+      if (NS_SUCCEEDED(rv)) {
+        baseURL = codeBaseURL;
       }
     }
 
@@ -1391,29 +1390,6 @@ nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
-
-
-nsresult
-nsObjectFrame::GetBaseURL(nsIURI* &aURL)
-{
-  nsIHTMLContent* htmlContent;
-  if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**)&htmlContent))) 
-  {
-    htmlContent->GetBaseURL(&aURL);
-    NS_RELEASE(htmlContent);
-  }
-  else 
-  {
-    nsCOMPtr<nsIDocument> doc;
-    mContent->GetDocument(getter_AddRefs(doc));
-    if (doc)
-      doc->GetBaseURL(&aURL);
-    else
-      return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
 
 PRBool
 nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
@@ -2289,6 +2265,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsCOMPtr<nsIDocument> doc;
   rv = GetDocument(getter_AddRefs(doc));
   if (NS_SUCCEEDED(rv) && doc) {
+    // XXX should this really be the document base URL?  Or the
+    // content's base URL?
     rv = doc->GetBaseURL(getter_AddRefs(baseURL));  // gets the document's url
   } else {
     mOwner->GetFullURL(*getter_AddRefs(baseURL)); // gets the plugin's content url
@@ -2846,13 +2824,11 @@ void nsObjectFrame::FixUpURLS(const nsString &name, nsString &value)
       name.EqualsIgnoreCase("PLUGINSPAGE")) {        
     
     nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(*getter_AddRefs(baseURL));
-    if (baseURL) {
-      nsAutoString newURL;
-      NS_MakeAbsoluteURI(newURL, value, baseURL);
-      if (!newURL.IsEmpty())
-        value = newURL;
-    }
+    mContent->GetBaseURL(getter_AddRefs(baseURL));
+    nsAutoString newURL;
+    NS_MakeAbsoluteURI(newURL, value, baseURL);
+    if (!newURL.IsEmpty())
+      value = newURL;
   }
 }
 

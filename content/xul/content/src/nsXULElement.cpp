@@ -1591,38 +1591,6 @@ nsXULElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::GetXMLBaseURI(nsIURI **aURI)
-{
-  // XXX TODO, should share the impl with nsXMLElement
-  NS_ENSURE_ARG_POINTER(aURI);
-  *aURI = nsnull;
-  if (mDocument) {
-    mDocument->GetBaseURL(aURI);
-    if (!*aURI) {
-      mDocument->GetDocumentURL(aURI);
-    }
-  }
-  return NS_OK;
-}
-
-#if 0
-NS_IMETHODIMP
-nsXULElement::GetBaseURI(nsAString &aURI)
-{
-  // XXX TODO, should share the impl with nsXMLElement
-  aURI.Truncate();
-  nsresult rv = NS_OK;
-  if (mDocument) {
-    nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
-    if (doc) {
-      rv = doc->GetBaseURI(aURI);
-    }
-  }
-  return rv;
-}
-#endif
-
 //----------------------------------------------------------------------
 // nsIXULContent interface
 
@@ -2472,12 +2440,10 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
     // Check to see if the STYLE attribute is being set.  If so, we need to
     // create a new style rule based off the value of this attribute, and we
     // need to let the document know about the StyleRule change.
-    // XXXbz this should not be checking for mDocument; it should get
-    // the document off the nodeinfo
-    if (aNodeInfo->Equals(nsXULAtoms::style, kNameSpaceID_None) && mDocument) {
-        nsCOMPtr <nsIURI> docURL;
-        mDocument->GetBaseURL(getter_AddRefs(docURL));
-        Attributes()->UpdateStyleRule(docURL, aValue);
+    if (aNodeInfo->Equals(nsXULAtoms::style, kNameSpaceID_None)) {
+        nsCOMPtr <nsIURI> baseURL;
+        GetBaseURL(getter_AddRefs(baseURL));
+        Attributes()->UpdateStyleRule(baseURL, aValue);
     }
 
     nsCOMPtr<nsIAtom> tag;
@@ -2750,17 +2716,15 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
     // XXXwaterson if aNotify == PR_TRUE, do we want to call
     // nsIDocument::BeginUpdate() now?
     if (aNameSpaceID == kNameSpaceID_None) {
-      if (mDocument) {
         if (aName == nsXULAtoms::clazz) {
             // If CLASS is being unset, delete our class list.
             Attributes()->UpdateClassList(nsAutoString());
         } else if (aName == nsXULAtoms::style) {
-            nsCOMPtr <nsIURI> docURL;
-            mDocument->GetBaseURL(getter_AddRefs(docURL));
-            Attributes()->UpdateStyleRule(docURL, nsAutoString());
+            nsCOMPtr <nsIURI> baseURL;
+            GetBaseURL(getter_AddRefs(baseURL));
+            Attributes()->UpdateStyleRule(baseURL, nsAutoString());
             // XXX Some kind of special document update might need to happen here.
         }
-      }
     }
 
     nsCOMPtr<nsIAtom> tag;
@@ -3381,6 +3345,18 @@ NS_IMETHODIMP
 nsXULElement::SetContentID(PRUint32 aID)
 {
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetBaseURL(nsIURI **aURI) const
+{
+  // XXX TODO, should share the impl with nsGenericElement
+  if (mDocument) {
+    return mDocument->GetBaseURL(aURI);
+  }
+
+  *aURI = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

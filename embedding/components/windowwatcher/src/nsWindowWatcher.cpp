@@ -1140,10 +1140,6 @@ nsWindowWatcher::URIfromURL(const char *aURL,
       doc = do_QueryInterface(domDoc);
       if (doc) {
         doc->GetBaseURL(getter_AddRefs(baseURI));
-
-        if (!baseURI) {
-          doc->GetDocumentURL(getter_AddRefs(baseURI));
-        }
       }
     }
   }

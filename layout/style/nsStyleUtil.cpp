@@ -647,22 +647,9 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
         // is it bad to re-use val here?
         aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, val);
 
-        // It's an XLink. Resolve it relative to its document.
+        // It's an XLink. Resolve it relative to aContent's base URI.
         nsCOMPtr<nsIURI> baseURI;
-        nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(aContent);
-        if (htmlContent) {
-          // XXX why do this? will nsIHTMLContent's
-          // GetBaseURL() may return something different
-          // than the URL of the document it lives in?
-          htmlContent->GetBaseURL(getter_AddRefs(baseURI));
-        }
-        else {
-          nsCOMPtr<nsIDocument> doc;
-          aContent->GetDocument(getter_AddRefs(doc));
-          if (doc) {
-            doc->GetBaseURL(getter_AddRefs(baseURI));
-          }
-        }
+        aContent->GetBaseURL(getter_AddRefs(baseURI));
 
         nsCOMPtr<nsIURI> absURI;
         // XXX should we make sure to get the right charset off the document?

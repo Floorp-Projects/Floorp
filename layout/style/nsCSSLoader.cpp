@@ -956,6 +956,7 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
  */
 nsresult
 CSSLoaderImpl::CreateSheet(nsIURI* aURI,
+                           nsIContent* aLinkingContent,
                            PRUint32 aDefaultNameSpaceID,
                            PRBool aSyncLoad,
                            StyleSheetState& aSheetState,
@@ -1039,8 +1040,8 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
     if (!sheetURI) {
       // Inline style.  Use the document's base URL so that @import in
       // the inline sheet picks up the right base.
-      NS_ASSERTION(mDocument, "How did we get in here without a document?");
-      mDocument->GetBaseURL(getter_AddRefs(sheetURI));
+      NS_ASSERTION(aLinkingContent, "Inline stylesheet without linking content?");
+      aLinkingContent->GetBaseURL(getter_AddRefs(sheetURI));
     }
 
     rv = NS_NewCSSStyleSheet(aSheet, sheetURI);
@@ -1094,7 +1095,7 @@ CSSLoaderImpl::PrepareSheet(nsICSSStyleSheet* aSheet,
  */
 nsresult
 CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
-                                nsIContent* aLinkingElement,
+                                nsIContent* aLinkingContent,
                                 nsIDocument* aDocument)
 {
   LOG(("CSSLoaderImpl::InsertSheetInDoc"));
@@ -1103,8 +1104,8 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
 
   // all nodes that link in sheets should be implementing nsIDOM3Node
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOM3Node> linkingNode = do_QueryInterface(aLinkingElement);
-  NS_ASSERTION(linkingNode || !aLinkingElement,
+  nsCOMPtr<nsIDOM3Node> linkingNode = do_QueryInterface(aLinkingContent);
+  NS_ASSERTION(linkingNode || !aLinkingContent,
                "Need to implement nsIDOM3Node to get insertion order right");
 
   // XXX Need to cancel pending sheet loads for this element, if any
@@ -1168,7 +1169,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet,
   // XXX <meta> elements do not implement nsIStyleSheetLinkingElement;
   // need to fix this for them to be ordered correctly.
   nsCOMPtr<nsIStyleSheetLinkingElement>
-    linkingElement = do_QueryInterface(aLinkingElement);
+    linkingElement = do_QueryInterface(aLinkingContent);
   if (linkingElement) {
     linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
   }
@@ -1589,8 +1590,8 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
   
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  nsresult rv = CreateSheet(nsnull, aDefaultNameSpaceID, PR_FALSE, state,
-                            getter_AddRefs(sheet));
+  nsresult rv = CreateSheet(nsnull, aElement, aDefaultNameSpaceID, PR_FALSE,
+                            state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(state == eSheetNeedsParser,
                "Inline sheets should not be cached");
@@ -1651,7 +1652,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = CreateSheet(aURL, aDefaultNameSpaceID, PR_FALSE, state,
+  rv = CreateSheet(aURL, aElement, aDefaultNameSpaceID, PR_FALSE, state,
                    getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1761,7 +1762,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   // loop) do so
   nsCOMPtr<nsICSSStyleSheet> sheet;
   StyleSheetState state;
-  rv = CreateSheet(aURL, aDefaultNameSpaceID,
+  rv = CreateSheet(aURL, nsnull, aDefaultNameSpaceID,
                    parentData ? parentData->mSyncLoad : PR_FALSE,
                    state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1833,8 +1834,8 @@ CSSLoaderImpl::InternalLoadAgentSheet(nsIURI* aURL,
   nsCOMPtr<nsICSSStyleSheet> sheet;
   PRBool syncLoad = (aObserver == nsnull);
   
-  nsresult rv = CreateSheet(aURL, kNameSpaceID_Unknown, syncLoad, state,
-                            getter_AddRefs(sheet));
+  nsresult rv = CreateSheet(aURL, nsnull, kNameSpaceID_Unknown, syncLoad,
+                            state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_NAMED_LITERAL_STRING(empty, "");

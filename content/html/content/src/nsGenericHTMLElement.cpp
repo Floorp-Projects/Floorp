@@ -2355,18 +2355,36 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 nsresult
 nsGenericHTMLElement::GetBaseURL(nsIURI** aBaseURL) const
 {
-  nsHTMLValue baseHref;
-  if (mAttributes) {
-    mAttributes->GetAttribute(nsHTMLAtoms::_baseHref, baseHref);
-  }
-
   nsCOMPtr<nsIDocument> doc(mDocument);
 
   if (!doc) {
     mNodeInfo->GetDocument(getter_AddRefs(doc));
   }
 
-  return GetBaseURL(baseHref, doc, aBaseURL);
+  if (mAttributes &&
+      mAttributes->HasAttribute(nsHTMLAtoms::_baseHref, kNameSpaceID_None)) {
+
+    nsHTMLValue baseHref;
+    mAttributes->GetAttribute(nsHTMLAtoms::_baseHref, baseHref);
+
+    if (baseHref.GetUnit() == eHTMLUnit_String) {
+      // We have a _baseHref attribute; that will determine our base URL
+      return GetBaseURL(baseHref, doc, aBaseURL);
+    }
+  }
+
+  // If we are a plain old HTML element (not XHTML), don't bother asking the
+  // base class -- our base URL is determined solely by the document base.
+  if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
+    if (doc) {
+      return doc->GetBaseURL(aBaseURL);
+    }
+
+    *aBaseURL = nsnull;
+    return NS_OK;
+  }
+  
+  return nsGenericElement::GetBaseURL(aBaseURL);
 }
 
 nsresult
@@ -2385,7 +2403,6 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
   if (eHTMLUnit_String == aBaseHref.GetUnit()) {
     nsAutoString baseHref;
     aBaseHref.GetStringValue(baseHref);
-    baseHref.Trim(" \t\n\r");
 
     *aBaseURL = nsnull;
     return NS_NewURI(aBaseURL, baseHref, nsnull, docBaseURL);
@@ -3101,7 +3118,7 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
   }
 
   if (doc) {
-    PRBool isCSS = PR_TRUE; // asume CSS until proven otherwise
+    PRBool isCSS = PR_TRUE; // assume CSS until proven otherwise
 
     nsAutoString styleType;
     doc->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
@@ -3130,11 +3147,12 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
         }
       }
       if (cssParser) {
-        nsCOMPtr<nsIURI> docURL;
-        doc->GetBaseURL(getter_AddRefs(docURL));
+        nsCOMPtr<nsIURI> baseURL;
+        GetBaseURL(getter_AddRefs(baseURL));
 
         nsCOMPtr<nsIStyleRule> rule;
-        result = cssParser->ParseStyleAttribute(aValue, docURL, getter_AddRefs(rule));
+        result = cssParser->ParseStyleAttribute(aValue, baseURL,
+                                                getter_AddRefs(rule));
         if (cssLoader) {
           cssLoader->RecycleParser(cssParser);
         }
@@ -3429,6 +3447,8 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
         value.GetStringValue(spec);
         if (!spec.IsEmpty()) {
           // Resolve url to an absolute url
+          // XXX this breaks if the HTML element has an xml:base
+          // attribute (the xml:base will not be taken into account)
           nsCOMPtr<nsIPresShell> shell;
           nsresult rv = aData->mPresContext->GetShell(getter_AddRefs(shell));
           if (NS_SUCCEEDED(rv) && shell) {
@@ -4604,10 +4624,6 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
 
     if (aDocument) {
       aDocument->GetBaseURL(getter_AddRefs(uri));
-
-      if (!uri) {
-        aDocument->GetDocumentURL(getter_AddRefs(uri));
-      }
     }
 
     if (uri) {
@@ -4615,7 +4631,7 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
     }
 
     if (protocol.IsEmpty()) {
-      // set the protocol to http since it is the mostlikely protocol
+      // set the protocol to http since it is the most likely protocol
       // to be used.
 
       CopyASCIItoUCS2(nsDependentCString("http:"), aProtocol);

@@ -459,11 +459,11 @@ public:
     NS_IMETHOD GetBindingParent(nsIContent** aContent);
     NS_IMETHOD SetBindingParent(nsIContent* aParent);
     NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+    NS_IMETHOD GetBaseURL(nsIURI** aURI) const;
     NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult);
 
     // nsIXMLContent
     NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
-    NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
     // nsIStyledContent
     NS_IMETHOD GetID(nsIAtom** aResult) const;
