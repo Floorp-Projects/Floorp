@@ -652,11 +652,9 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 {
   mDocument = aDocument;
 
-#ifdef IBMBIDI
   if (mDocument && mText.IsBidi()) {
     mDocument->SetBidiEnabled(PR_TRUE);
   }
-#endif
 
   return NS_OK;
 }
@@ -1206,9 +1204,7 @@ nsGenericDOMDataNode::SetText(const PRUnichar* aBuffer,
 
   mText.SetTo(aBuffer, aLength);
 
-#ifdef IBMBIDI
   SetBidiStatus();
-#endif // IBMBIDI
 
   if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
@@ -1287,9 +1283,7 @@ nsGenericDOMDataNode::SetText(const nsAString& aStr,
 
   mText = aStr;
 
-#ifdef IBMBIDI
   SetBidiStatus();
-#endif // IBMBIDI
 
   if (mDocument && nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(this));
@@ -1404,7 +1398,6 @@ nsGenericDOMDataNode::LookupRangeList() const
   return nsnull;
 }
 
-#ifdef IBMBIDI
 void nsGenericDOMDataNode::SetBidiStatus()
 {
   if (mDocument) {
@@ -1425,4 +1418,3 @@ void nsGenericDOMDataNode::SetBidiStatus()
     mDocument->SetBidiEnabled(PR_TRUE);
   }
 }
-#endif // IBMBIDI

@@ -139,7 +139,6 @@ public:
     return mState.mIs2b;
   }
 
-#ifdef IBMBIDI
   /**
    * Return PR_TRUE if this fragment contains Bidi text
    * For performance reasons this flag is not set automatically, but
@@ -149,8 +148,6 @@ public:
   {
     return mState.mIsBidi;
   }
-#endif
-
 
   /**
    * Get a pointer to constant PRUnichar data.
@@ -240,13 +237,11 @@ public:
     return mState.mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);
   }
 
-#ifdef IBMBIDI
   /**
    * Scan the contents of the fragment and turn on mState.mIsBidi if it
    * includes any Bidi characters.
    */
   void SetBidiFlag();
-#endif
 
   struct FragmentBits {
     PRBool mInHeap : 1;

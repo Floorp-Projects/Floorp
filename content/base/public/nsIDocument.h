@@ -189,7 +189,6 @@ public:
    */
   NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const = 0;
 
-#ifdef IBMBIDI
   // The state BidiEnabled should persist across multiple views (screen, print)
   // of the same document.
 
@@ -206,7 +205,6 @@ public:
    * the document no longer contains bidi data.
    */
   NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled) = 0;
-#endif // IBMBIDI
 
   /**
    * Return the Line Breaker for the document

@@ -65,15 +65,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,
 #include "nsIStringBundle.h"
 
 //BIDI
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#else
-//
-// Make BIDI stuff work when BIDI is off
-//
-#define GET_BIDI_OPTION_CONTROLSTEXTMODE(x) 0
-#define GET_BIDI_OPTION_DIRECTION(x) 0
-#endif
 //end
 
 
@@ -1154,10 +1146,8 @@ GetSubmissionFromForm(nsIHTMLContent* aForm,
   // Get BIDI options
   PRUint32 bidiOptions = 0;
   PRUint8 ctrlsModAtSubmit = 0;
-#ifdef IBMBIDI
   aPresContext->GetBidi(&bidiOptions);
   ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
-#endif
 
   // Get encoding type (default: urlencoded)
   PRInt32 enctype = NS_FORM_ENCTYPE_URLENCODED;
@@ -1293,7 +1283,6 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
     rv = doc->GetDocumentCharacterSet(oCharset);
   }
 
-#ifdef IBMBIDI
   if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
      && oCharset.Equals(NS_LITERAL_STRING("windows-1256"),
                  nsCaseInsensitiveStringComparator())) {
@@ -1316,7 +1305,6 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
     oCharset = NS_LITERAL_STRING("IBM864");
   }
 
-#endif
 }
 
 // JBK moved from nsFormFrame - bug 34297
@@ -1355,7 +1343,6 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
 {
   nsresult rv = NS_OK;
 
-#ifdef IBMBIDI
   PRUint8 ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(mBidiOptions);
   PRUint8 textDirAtSubmit = GET_BIDI_OPTION_DIRECTION(mBidiOptions);
   //ahmed 15-1
@@ -1409,7 +1396,6 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
     }
     aStr = (PRUnichar*)temp.get();
   }
-#endif
 
   
   char* res = nsnull;

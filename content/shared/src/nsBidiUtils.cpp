@@ -23,7 +23,6 @@
  *   Simon Montagu <smontagu@netscape.com>
  *   Roozbeh Pournader <roozbeh@sharif.edu>
  */
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
 
 #define FE_TO_06_OFFSET 0xfe70
@@ -522,4 +521,3 @@ nsresult HandleNumbers(const nsString& aSrc, nsString& aDst)
   return HandleNumbers((PRUnichar *)aDst.get(),aDst.Length(), IBMBIDI_NUMERAL_REGULAR);
 }
 
-#endif //IBMBIDI

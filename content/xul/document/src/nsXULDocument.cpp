@@ -429,9 +429,7 @@ nsXULDocument::nsXULDocument(void)
     nsCOMPtr<nsIDocumentObserver> observer(do_QueryInterface(mBindingManager));
     if (observer) // We must always be the first observer of the document.
       mObservers.InsertElementAt(observer, 0);
-#ifdef IBMBIDI
     mBidiEnabled = PR_FALSE;
-#endif // IBMBIDI
 
     mSubDocuments = nsnull;
 }
@@ -6995,7 +6993,6 @@ nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
         *aFocusController = nsnull;
 }
 
-#ifdef IBMBIDI
 /**
  *  Retrieve and get bidi state of the document
  *  set depending on presence of bidi data.
@@ -7019,7 +7016,6 @@ nsXULDocument::SetBidiEnabled(PRBool aBidiEnabled)
     }
     return NS_OK;
 }
-#endif // IBMBIDI
 
 
 //----------------------------------------------------------------------

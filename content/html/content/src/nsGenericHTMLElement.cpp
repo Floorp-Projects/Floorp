@@ -2568,7 +2568,6 @@ nsGenericHTMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   return NS_OK;
 }
 
-#ifdef IBMBIDI
 /**
  * Handle attributes on the BDO element
  */
@@ -2582,17 +2581,14 @@ MapBdoAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
-#endif // IBMBIDI
 
 NS_IMETHODIMP
 nsGenericHTMLElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-#ifdef IBMBIDI
   if (mNodeInfo->Equals(nsHTMLAtoms::bdo))
     aMapRuleFunc = &MapBdoAttributesInto;
   else
-#endif // IBMBIDI
-  aMapRuleFunc = &MapCommonAttributesInto;
+    aMapRuleFunc = &MapCommonAttributesInto;
   return NS_OK;
 }
 

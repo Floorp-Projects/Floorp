@@ -274,9 +274,7 @@ protected:
   PRInt32 mNumForms;
 
 //ahmed 12-2
-#ifdef IBMBIDI
   PRInt32  mTexttype;
-#endif
   
   static nsrefcnt gRefCntRDFService;
   static nsIRDFService* gRDF;

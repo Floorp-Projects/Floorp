@@ -206,14 +206,12 @@ LAYOUT_ATOM(mozdirty, "_moz_dirty")
 LAYOUT_ATOM(stylesheet, "stylesheet")
 LAYOUT_ATOM(transform, "transform")
 
-#ifdef IBMBIDI
 LAYOUT_ATOM(directionalFrame, "DirectionalFrame")
 LAYOUT_ATOM(baseLevel, "BaseLevel")                            // PRUint8
 LAYOUT_ATOM(embeddingLevel, "EmbeddingLevel")                  // PRUint8
 LAYOUT_ATOM(endsInDiacritic, "EndsInDiacritic")                // PRUint32
 LAYOUT_ATOM(nextBidi, "NextBidi")                              // nsIFrame*
 LAYOUT_ATOM(charType, "charType")                              // PRUint8
-#endif
 
 #ifdef DEBUG
   // Alphabetical list of atoms used by debugging code

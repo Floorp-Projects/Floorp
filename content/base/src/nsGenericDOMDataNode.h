@@ -267,9 +267,7 @@ private:
   void LookupListenerManager(nsIEventListenerManager **aListenerManager) const;
   nsVoidArray *LookupRangeList() const;
 
-#ifdef IBMBIDI
   void SetBidiStatus();
-#endif
 
 
   typedef long PtrBits;
