@@ -2074,7 +2074,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg)
 
 JS_FRIEND_API(JSTryNote *)
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
-	      ptrdiff_t end, ptrdiff_t catch, ptrdiff_t finally)
+	      ptrdiff_t end, ptrdiff_t catchStart, ptrdiff_t finallyStart)
 {
     JSTryNote *cur;
 
@@ -2083,8 +2083,8 @@ js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
     cg->tryNext++;
     cur->start = start;
     cur->end = end;
-    cur->catch = catch;
-    cur->finally = finally;
+    cur->catchStart = catchStart;
+    cur->finallyStart = finallyStart;
     return cur;
 }
 
@@ -2109,8 +2109,8 @@ js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp)
     memcpy(final, tmp, count * sizeof(JSTryNote));
     final[count].start = 0;
     final[count].end = 0;
-    final[count].catch = 0;
-    final[count].finally = 0;
+    final[count].catchStart = 0;
+    final[count].finallyStart = 0;
     *tryp = final;
     return JS_TRUE;
 }

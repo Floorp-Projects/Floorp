@@ -34,8 +34,8 @@ PR_BEGIN_EXTERN_C
 struct JSTryNote {
     ptrdiff_t	start;		/* beginning of try{} region */
     ptrdiff_t	end;		/* end of try{} region */
-    ptrdiff_t	catch;		/* beginning of catch{} (backptr during CG) */
-    ptrdiff_t	finally;	/* beginning of finally handler */
+    ptrdiff_t	catchStart;	/* beginning of catch{} (backptr during CG) */
+    ptrdiff_t	finallyStart;	/* beginning of finally handler */
 };
 
 struct JSScript {

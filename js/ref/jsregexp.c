@@ -1993,6 +1993,22 @@ js_NewRegExp(JSContext *cx, JSString *str, uintN flags)
 	goto out;
     }
 
+#ifdef DEBUG_notme
+    {
+        /* print the compiled regexp program bytecode */
+        jsuint i;
+        for (i=0; i < state.progLength; i++) {
+            int b = (int) re->program[i];
+            fprintf(stderr, "%d", b);
+            if ((i > 0 && i % 8 == 0) || i == state.progLength-1)
+                fprintf(stderr, "\n");
+            else
+                fprintf(stderr, ", ");
+        }
+        fprintf(stderr, "\n");
+    }
+#endif
+
     /* Success: lock re->source string. */
     (void) js_LockGCThing(cx, str);
 out:

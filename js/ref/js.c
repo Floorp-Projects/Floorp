@@ -536,7 +536,7 @@ ExceptionTable(JSContext *cx, JSFunction *fun)
     printf("\nException table:\nstart\tend\tcatch\tfinally\n");
     while (iter->start && iter->end) {
 	printf("  %d\t%d\t%d\t%d\n",
-	       iter->start, iter->end, iter->catch, iter->finally);
+	       iter->start, iter->end, iter->catchStart, iter->finallyStart);
 	iter++;
     }
     return JS_TRUE;
