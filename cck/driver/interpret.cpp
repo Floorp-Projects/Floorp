@@ -545,6 +545,30 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						}
 					}
 				}
+				else if (strcmp(pcmd, "toggleEnabled2") == 0)
+				{
+					// convert first parm into boolean...
+					char *p2 = strchr(parms, ',');
+					if (p2)
+					{
+						*p2++ = '\0';
+						CString value = replaceVars(parms, NULL);
+						BOOL newval = (!value.IsEmpty());
+						parms = p2;
+						p2 = strchr(parms, ',');
+						while (parms)
+						{
+							if (p2)
+								*p2++ = '\0';
+							WIDGET *w = theApp.findWidget(parms);
+							if (w)
+								w->control->EnableWindow(newval);
+							parms = p2;
+							if (parms)
+								p2 = strchr(parms, ',');
+						}
+					}
+				}
 			}
 			// This is an extra free...
 			//free(pcmd);

@@ -341,7 +341,7 @@ BOOL CWizardUI::NewConfig(WIDGET *curWidget, CString globalsName)
 	theApp.GenerateList(tmpFunction, tmpWidget, params);	
 	*/
 	if (tmpWidget->action.onInit)
-		theInterpreter->interpret(tmpWidget->action.onInit, curWidget);
+		theInterpreter->interpret(tmpWidget->action.onInit, tmpWidget);
 					
 	((CComboBox*)tmpWidget->control)->SelectString(0, configField);
 
@@ -467,13 +467,15 @@ BOOL CWizardUI::Progress()
 
 BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam) 
 {
+	UINT nID = LOWORD(wParam);
+
 	// Get screen values exchanged
 	UpdateData(TRUE);
 
 	for(int i=0; i < CurrentNode->numWidgets; i++)
 	{
 		WIDGET* curWidget = CurrentNode->pageWidgets[i];
-		if (curWidget->widgetID != (int)wParam) 
+		if (curWidget->widgetID != nID) 
 			continue;
 
 		if (curWidget->action.onCommand)
@@ -575,6 +577,8 @@ void CWizardUI::EnableWidget(WIDGET *curWidget)
 		// Cheat the interpret overhead since this is called a lot!
 		if (enableStr == "Enable(0)")
 			enabled = FALSE;
+		else if (enableStr == "Enable2()")
+			enabled = FALSE;
 		curWidget->control->EnableWindow(enabled);
 	}
 }
@@ -616,7 +620,7 @@ void CWizardUI::CreateControls()
 		int s_y = curWidget->location.y;
 		int s_width = curWidget->size.width;
 		int s_height = curWidget->size.height;
-		int ID = curWidget->widgetID;
+		UINT ID = curWidget->widgetID;
 
 		CRect tmpRect = CRect(s_x, s_y, (s_x + s_width), (s_y + s_height));
 
@@ -923,7 +927,10 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 	CString widgetType = curWidget->type;
 	CString rv("");
 
-	if (widgetType == "CheckBox") {
+	if (!curWidget->control)
+		rv = curWidget->value; // !!! Fix this so we're not copying strings all the time
+								// Should be able to just pass in an "assign" boolean
+	else if (widgetType == "CheckBox") {
 		// Mask off everything but the checked/not checked state 
 		// Ignore indeterminate state
 		int state = ((CButton*)curWidget->control)->GetState() & 0x0003;
@@ -940,7 +947,7 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 	{
 		// Mask off everything but the checked/not checked state 
 		// Ignore indeterminate state
-		int state = ((CButton*)curWidget->control)->GetState();
+		int state = ((CButton*)curWidget->control)->GetState() & 0x0003;
 		if (state == 2) 
 			state = 0;
 			

@@ -60,7 +60,7 @@ typedef struct WIDGET
 	OPTIONS options;
 	CString items;
 	BOOL cached;
-	int widgetID;
+	UINT widgetID;
 	CWnd *control;
 }WIDGET;
 
