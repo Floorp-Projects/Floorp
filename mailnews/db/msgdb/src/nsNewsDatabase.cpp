@@ -36,7 +36,7 @@ nsNewsDatabase::~nsNewsDatabase()
   // todo:  figure out where to delete m_newsgroupSpec
 
     if (m_unreadSet) {
-#ifdef DEBUG_MSGKEYSET
+#ifdef DEBUG_NEWS_DATABASE
         char *str = nsnull;
         str = m_unreadSet->Output();
         if (str) {
@@ -401,7 +401,7 @@ NS_IMETHODIMP nsNewsDatabase::SetUnreadSet(char * setStr)
     m_unreadSet = nsMsgKeySet::Create(setStr /* , this */);
     if (!m_unreadSet) return NS_ERROR_OUT_OF_MEMORY;
     
-#ifdef DEBUG_MSGKEYSET
+#ifdef DEBUG_NEWS_DATABASE
     char *str = nsnull;
     str = m_unreadSet->Output();
     if (str) {
