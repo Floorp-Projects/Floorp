@@ -36,7 +36,7 @@
   <toolbar id="tbInspectorPrimary">
 
     <hbox id="bxURLBar" flex="1">
-      <toolbarbutton id="btnSelecting" observes="cmd:selectByClick" 
+      <toolbarbutton id="btnSelecting" type="checkbox" observes="cmd:selectByClick" 
               tooltip="aTooltip" tooltiptext="&btnSelecting.tooltip;"/>
 
       <toolbarbutton id="btnFind" observes="cmd:find" 

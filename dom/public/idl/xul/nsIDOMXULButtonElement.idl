@@ -51,5 +51,8 @@ interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
   attribute boolean checked;
   attribute long checkState;
   attribute boolean autoCheck;
+
+  // For buttons of type="radio" only.
+  attribute DOMString group;
 };
 

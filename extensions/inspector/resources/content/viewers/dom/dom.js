@@ -361,7 +361,7 @@ DOMViewer.prototype =
     for (var i = 0; i < this.mSelectDocs.length; ++i)
       this.mSelectDocs[i].addEventListener("mousedown", MouseDownListener, true);
 
-    this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "toggled", "true");
+    this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "checked", "true");
   },
 
   selectByClickOver: function(aTarget)
@@ -388,7 +388,7 @@ DOMViewer.prototype =
     for (var i = 0; i < this.mSelectDocs.length; ++i)
       this.mSelectDocs[i].removeEventListener("mousedown", MouseDownListener, true);
 
-    this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "toggled", null);
+    this.mPanel.panelset.setCommandAttribute("cmd:selectByClick", "checked", null);
   },
 
   ////////////////////////////////////////////////////////////////////////////

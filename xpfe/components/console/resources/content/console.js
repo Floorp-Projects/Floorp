@@ -66,7 +66,6 @@ function changeMode(aMode)
   }
   
   document.persist("ConsoleBox", "mode");
-  updateModeCommand(aMode);
 }
 
 function clearConsole()
@@ -97,13 +96,8 @@ function updateSortCommand(aOrder)
 
 function updateModeCommand(aMode)
 {
-  var bcset = document.getElementById("ModeBroadcasters");
-  for (var i = 0; i < bcset.childNodes.length; i++) {
-    bcset.childNodes[i].removeAttribute("toggled");
-  }
-  
   var bc = document.getElementById("Console:mode" + aMode);
-  bc.setAttribute("toggled", "true");
+  bc.setAttribute("checked", true);
 }
 
 function toggleToolbar(aEl)

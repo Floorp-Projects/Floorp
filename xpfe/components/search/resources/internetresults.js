@@ -77,12 +77,7 @@ function loadResultsTree( aSearchURL )
 
 function doEngineClick( event, aNode )
 {
-  // do toggling
-  var engineTabBox = document.getElementById("engineTabs");
-  var toggledEls = engineTabBox.getElementsByAttribute("toggled", "true");
-  for (var i = 0; i < toggledEls.length; i++)
-    toggledEls[i].removeAttribute("toggled");
-  event.target.setAttribute("toggled", "true");
+  event.target.checked = true;
 
   var html = null;
 

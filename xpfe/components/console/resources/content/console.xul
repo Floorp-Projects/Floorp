@@ -65,12 +65,10 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
                oncommand="changeSortOrder(-1);"/>
 
   <broadcaster id="Console:toggleToolbarMode" label="&toolbarMode.label;" 
-               oncommand="toggleToolbar(this);"
-               type="checkbox" checked="true" 
+               oncommand="toggleToolbar(this);" checked="true" 
                _toolbar="ToolbarMode"/>
   <broadcaster id="Console:toggleToolbarEval" label="&toolbarEval.label;"
-               oncommand="toggleToolbar(this);"
-               type="checkbox" checked="true" 
+               oncommand="toggleToolbar(this);" checked="true" 
                _toolbar="ToolbarEval"/>
 
 <broadcasterset id="ModeBroadcasters">
@@ -118,8 +116,8 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
       <menupopup>
        <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;">
           <menupopup> 
-            <menuitem observes="Console:toggleToolbarMode"/>
-            <menuitem observes="Console:toggleToolbarEval"/>
+            <menuitem type="checkbox" observes="Console:toggleToolbarMode"/>
+            <menuitem type="checkbox" observes="Console:toggleToolbarEval"/>
           </menupopup>
         </menu>
         <menuseparator/>
@@ -136,10 +134,10 @@ Contributor(s): Joe Hewitt <hewitt@netscape.com>
   </menubar>
 
   <toolbar id="ToolbarMode" grippytooltip="aTooltip" grippytooltiptext="&modeToolbar.tooltip;">
-    <toolbarbutton observes="Console:modeAll"/>
-    <toolbarbutton observes="Console:modeErrors"/>
-    <toolbarbutton observes="Console:modeWarnings"/>
-    <toolbarbutton observes="Console:modeMessages"/>
+    <toolbarbutton type="radio" group="mode" observes="Console:modeAll"/>
+    <toolbarbutton type="radio" group="mode" observes="Console:modeErrors"/>
+    <toolbarbutton type="radio" group="mode" observes="Console:modeWarnings"/>
+    <toolbarbutton type="radio" group="mode" observes="Console:modeMessages"/>
     <toolbarseparator/>
     <toolbarbutton observes="Console:clear"/>
   </toolbar>
