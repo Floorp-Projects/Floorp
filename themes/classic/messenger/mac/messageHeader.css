@@ -96,7 +96,7 @@ mail-emailaddress {
   list-style-image      : url("chrome://global/skin/twisty-open.gif");
 }
 
-label.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
+.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
 .subjectvalue      {font-weight: bold;}
 
 .headerdisplayname 
@@ -146,7 +146,7 @@ label.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
   width: 12em
 }
 
-label.collapsedHeaderDisplayName 
+.collapsedHeaderDisplayName 
 { 
   font-weight: bold; 
   margin-left: .7em;

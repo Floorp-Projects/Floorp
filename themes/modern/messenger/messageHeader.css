@@ -77,7 +77,7 @@
   min-width: 50px;
 }
 
-label.headerValue {
+.headerValue {
   min-width: 50px;
   margin: 0px;
   white-space: normal;
@@ -156,7 +156,7 @@ label.headerValue {
   width: 12em;
 }
 
-label.collapsedHeaderDisplayName { 
+.collapsedHeaderDisplayName { 
   font-weight: bold; 
   margin-left: .7em;
   min-height: 16px;

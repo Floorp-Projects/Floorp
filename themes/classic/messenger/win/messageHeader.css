@@ -35,12 +35,6 @@
     min-width             : 1px;
   }
 
-mail-emailaddress 
-  {
-    -moz-binding          : url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
-    display               : -moz-inline-box;
-  }
-
 .buttonSpacer        
   { 
     width                 : 0.5em; 
@@ -88,7 +82,7 @@ mail-emailaddress
     -moz-box-pack: end;
   }
 
-label.emailDisplayButton 
+.emailDisplayButton 
   {
     color                 : blue;
     text-decoration       : underline;
@@ -107,21 +101,22 @@ label.emailDisplayButton
   list-style-image      : url("chrome://global/skin/twisty-open.gif");
 }
 
-label.headerValue   
+.headerValue   
   { 
     white-space           : normal;
+    margin: 0px;
     min-width             : 50px; 
   }
 
-label.subjectvalue  
+.subjectvalue  
   { 
     font-weight           : bold; 
   }
 
-label.headerdisplayname 
+.headerdisplayname 
   { 
     font-weight           : bold; 
-    margin                : 0em 0.5em 0em 0.5em !important;
+    margin                : 0em 0.5em 0em 0.5em;
     min-height: 16px;
   }
   
@@ -165,7 +160,7 @@ label.headerdisplayname
   width: 12em;
 }
 
-label.collapsedHeaderDisplayName 
+.collapsedHeaderDisplayName 
 { 
   font-weight: bold; 
   min-height: 16px;
