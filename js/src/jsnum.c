@@ -630,7 +630,7 @@ js_NewDouble(JSContext *cx, jsdouble d, uintN gcflag)
 {
     jsdouble *dp;
 
-    dp = (jsdouble *) js_NewGCThing(cx, gcflag | GCX_DOUBLE, sizeof(jsdouble));
+    dp = (jsdouble *) js_AllocGCThing(cx, gcflag | GCX_DOUBLE);
     if (!dp)
         return NULL;
     *dp = d;

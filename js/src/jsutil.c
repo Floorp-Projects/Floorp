@@ -156,7 +156,7 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 #endif
 }
 
-#if defined DEBUG_brendan && defined XP_UNIX
+#if defined DEBUG_notme && defined XP_UNIX
 
 #define __USE_GNU 1
 #include <dlfcn.h>
@@ -281,4 +281,4 @@ JS_Backtrace(int skip)
     return CallTree(bp);
 }
 
-#endif /* DEBUG_brendan && XP_UNIX */
+#endif /* DEBUG_notme && XP_UNIX */

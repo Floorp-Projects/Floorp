@@ -1815,7 +1815,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     CHECK_REQUEST(cx);
     JS_ASSERT(GCX_EXTERNAL_STRING <= type && type < (intN) GCX_NTYPES);
 
-    str = (JSString *) js_NewGCThing(cx, (uintN) type, sizeof(JSString));
+    str = (JSString *) js_AllocGCThing(cx, (uintN) type);
     if (!str)
         return NULL;
     str->length = length;
@@ -2610,7 +2610,6 @@ JS_GetMethod(JSContext *cx, JSObject *obj, const char *name, JSObject **objp,
         return JS_FALSE;
     id = ATOM_TO_JSID(atom);
 
-#if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, obj)) {
         JSXMLObjectOps *ops;
 
@@ -2618,9 +2617,7 @@ JS_GetMethod(JSContext *cx, JSObject *obj, const char *name, JSObject **objp,
         obj = ops->getMethod(cx, obj, id, vp);
         if (!obj)
             return JS_FALSE;
-    } else
-#endif
-    {
+    } else {
         if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
             return JS_FALSE;
     }

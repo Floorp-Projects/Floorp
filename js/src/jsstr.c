@@ -2443,7 +2443,7 @@ js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag)
         return NULL;
     }
 
-    str = (JSString *) js_NewGCThing(cx, gcflag | GCX_STRING, sizeof(JSString));
+    str = (JSString *) js_AllocGCThing(cx, gcflag | GCX_STRING);
     if (!str)
         return NULL;
     str->length = length;
@@ -2476,8 +2476,7 @@ js_NewDependentString(JSContext *cx, JSString *base, size_t start,
                                  gcflag);
     }
 
-    ds = (JSDependentString *)
-         js_NewGCThing(cx, gcflag | GCX_MUTABLE_STRING, sizeof(JSString));
+    ds = (JSDependentString *) js_AllocGCThing(cx, gcflag | GCX_MUTABLE_STRING);
     if (!ds)
         return NULL;
     if (start == 0) {
