@@ -25,10 +25,13 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsEventStateManager::nsEventStateManager() {
   mEventTarget = nsnull;
+  mLastMouseOverContent = nsnull;
   NS_INIT_REFCNT();
 }
 
 nsEventStateManager::~nsEventStateManager() {
+  NS_IF_RELEASE(mEventTarget);
+  NS_IF_RELEASE(mLastMouseOverContent);
 }
 
 NS_IMPL_ADDREF(nsEventStateManager)
@@ -48,7 +51,30 @@ NS_METHOD nsEventStateManager::GetEventTarget(nsISupports **aResult)
 
 NS_METHOD nsEventStateManager::SetEventTarget(nsISupports *aSupports)
 {
+  NS_IF_RELEASE(mEventTarget);
+  
   mEventTarget = aSupports;
+  NS_ADDREF(mEventTarget);
+  return NS_OK;
+}
+
+NS_METHOD nsEventStateManager::GetLastMouseOverContent(nsIContent **aContent)
+{
+  NS_PRECONDITION(nsnull != aContent, "null ptr");
+  if (nsnull == aContent) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aContent = mLastMouseOverContent;
+  NS_IF_ADDREF(mLastMouseOverContent);
+  return NS_OK;
+}
+
+NS_METHOD nsEventStateManager::SetLastMouseOverContent(nsIContent *aContent)
+{
+  NS_IF_RELEASE(mLastMouseOverContent);
+  
+  mLastMouseOverContent = aContent;
+  NS_ADDREF(mLastMouseOverContent);
   return NS_OK;
 }
 

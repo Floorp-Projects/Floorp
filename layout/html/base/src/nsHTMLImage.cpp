@@ -85,9 +85,10 @@ public:
   NS_METHOD HandleEvent(nsIPresContext& aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus& aEventStatus);
-  NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
                          const nsPoint& aPoint,
                          nsIFrame** aFrame,
+                         nsIContent** aContent,
                          PRInt32& aCursor);
 
 protected:
@@ -571,13 +572,15 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 NS_METHOD
-ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
+ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                         const nsPoint& aPoint,
                         nsIFrame** aFrame,
+                        nsIContent** aContent,
                         PRInt32& aCursor)
 {
   // The default cursor is to have no cursor
   aCursor = NS_STYLE_CURSOR_INHERIT;
+  *aContent = mContent;
 
   const nsStyleColor* styleColor = (const nsStyleColor*)
     mStyleContext->GetStyleData(eStyleStruct_Color);

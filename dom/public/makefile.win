@@ -22,7 +22,7 @@ DIRS=coreDom coreEvents events html
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIScriptContext.h nsIJSScriptObject.h nsIScriptObjectOwner.h \
         nsIScriptGlobalObject.h nsIDOMWindow.h nsIScriptContextOwner.h \
-	nsIDOMNavigator.h
+	nsIDOMNavigator.h nsIScriptEventListener.h
 
 MODULE=dom 
 

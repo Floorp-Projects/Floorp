@@ -998,11 +998,13 @@ void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
   //}
 }
 
-NS_METHOD nsFrame::GetCursorAt(nsIPresContext& aPresContext,
+NS_METHOD nsFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                const nsPoint&  aPoint,
                                nsIFrame**      aFrame,
+                               nsIContent**    aContent,
                                PRInt32&        aCursor)
 {
+  *aContent = mContent;
   aCursor = NS_STYLE_CURSOR_INHERIT;
   return NS_OK;
 }

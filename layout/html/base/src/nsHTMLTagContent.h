@@ -21,6 +21,7 @@
 #include "nsHTMLContent.h"
 #include "nsHTMLValue.h"
 #include "nsIDOMElement.h"
+#include "nsIJSScriptObject.h"
 
 class nsIHTMLAttributes;
 class nsIPresContext;
@@ -29,7 +30,7 @@ class nsIStyleContext;
 /** 
  * Base class for tagged html content objects, holds attributes.
  */
-class nsHTMLTagContent : public nsHTMLContent, public nsIDOMElement {
+class nsHTMLTagContent : public nsHTMLContent, public nsIDOMElement, public nsIJSScriptObject {
 public:
 
   // nsIContent
@@ -110,6 +111,16 @@ public:
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
+  // nsIJSScriptObject interface
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext);
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, jsval aID);
+  virtual void      Finalize(JSContext *aContext);
+  
   // nsISupports interface
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -145,6 +156,7 @@ public:
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
   NS_IMETHOD    Normalize();
 
+  // nsIDOMEventReceiver interface
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                             nsGUIEvent* aEvent, 
                             nsIDOMEvent* aDOMEvent,
@@ -257,6 +269,8 @@ protected:
                  const nsString& aURLSpec,
                  const nsString& aTargetSpec,
                  PRBool aClick);
+
+  nsresult SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID);
 
   nsIAtom* mTag;
   nsIHTMLAttributes* mAttributes;

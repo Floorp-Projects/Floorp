@@ -17,6 +17,6 @@
 
 DEPTH=../..
 
-DIRS = base coreDOM html build
+DIRS = base coreDOM html build events
 
 include $(DEPTH)/config/rules.mk

@@ -21,14 +21,15 @@ DIRS = coreDom coreEvents events html
 
 DEFINES = -D_IMPL_NS_DOM
  
-EXPORTS =			\
-	nsIScriptContext.h	\
-	nsIScriptContextOwner.h \
-	nsIJSScriptObject.h	\
-	nsIScriptObjectOwner.h	\
-	nsIScriptGlobalObject.h	\
-	nsIDOMWindow.h	        \
-	nsIDOMNavigator.h       \
+EXPORTS =			 \
+	nsIScriptContext.h	 \
+	nsIScriptContextOwner.h  \
+	nsIJSScriptObject.h	 \
+	nsIScriptEventListener.h \
+	nsIScriptObjectOwner.h	 \
+	nsIScriptGlobalObject.h	 \
+	nsIDOMWindow.h	         \
+	nsIDOMNavigator.h        \
 	$(NULL)
 
 MODULE = dom

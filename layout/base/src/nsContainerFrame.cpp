@@ -330,12 +330,14 @@ NS_METHOD nsContainerFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
+NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                         const nsPoint&  aPoint,
                                         nsIFrame**      aFrame,
+                                        nsIContent**    aContent,
                                         PRInt32&        aCursor)
 {
   aCursor = NS_STYLE_CURSOR_INHERIT;
+  *aContent = mContent;
 
   nsIFrame* kid;
   FirstChild(kid);
@@ -345,7 +347,7 @@ NS_METHOD nsContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
     kid->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      kid->GetCursorAt(aPresContext, tmp, aFrame, aCursor);
+      kid->GetCursorAndContentAt(aPresContext, tmp, aFrame, aContent, aCursor);
       break;
     }
     kid->GetNextSibling(kid);

@@ -129,9 +129,10 @@ public:
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-  NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursorAndContentAt(nsIPresContext& aPresContext,
                          const nsPoint& aPoint,
                          nsIFrame** aFrame,
+                         nsIContent** aContent,
                          PRInt32& aCursor);
   NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
                             nsIPresContext* aPresContext,
@@ -454,11 +455,13 @@ TextFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
   return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
-NS_METHOD TextFrame::GetCursorAt(nsIPresContext& aPresContext,
+NS_METHOD TextFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
                                  const nsPoint& aPoint,
                                  nsIFrame** aFrame,
+                                 nsIContent** aContent,
                                  PRInt32& aCursor)
 {
+  *aContent = mContent;
   aCursor = NS_STYLE_CURSOR_IBEAM;
   return NS_OK;
 }

@@ -20,13 +20,13 @@
 #define nsDOMEvent_h__
 
 #include "nsIDOMEvent.h"
-#include "nsINSEvent.h"
 #include "nsISupports.h"
+#include "nsIPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 class nsIContent;
 
-class nsDOMEvent : public nsIDOMEvent, public nsINSEvent {
+class nsDOMEvent : public nsIDOMEvent, public nsIDOMNSEvent {
 
 public:
 
@@ -36,7 +36,7 @@ public:
     nsEventStatus_eConsumeDoDefault // The event is consumed, but do default processing
   };
 
-  nsDOMEvent();
+  nsDOMEvent(nsIPresContext* aPresContext);
   virtual ~nsDOMEvent();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -44,29 +44,53 @@ public:
   NS_IMETHOD_(nsrefcnt) Release();
 
   // nsIDOMEventInterface
-  NS_IMETHOD GetType(nsString& aType);
+  NS_IMETHOD    GetType(nsString& aType);
+  NS_IMETHOD    SetType(const nsString& aType);
 
-  NS_IMETHOD GetTarget(nsIDOMNode** aTarget);
+  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);
+  NS_IMETHOD    SetTarget(nsIDOMNode* aTarget);
 
-  NS_IMETHOD GetScreenX(PRInt32& aX);
-  NS_IMETHOD GetScreenY(PRInt32& aY);
+  NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
+  NS_IMETHOD    SetScreenX(PRInt32 aScreenX);
 
-  NS_IMETHOD GetClientX(PRInt32& aX);
-  NS_IMETHOD GetClientY(PRInt32& aY);
+  NS_IMETHOD    GetScreenY(PRInt32* aScreenY);
+  NS_IMETHOD    SetScreenY(PRInt32 aScreenY);
 
-  NS_IMETHOD GetAltKey(PRBool& aIsDown);
-  NS_IMETHOD GetCtrlKey(PRBool& aIsDown);
-  NS_IMETHOD GetShiftKey(PRBool& aIsDown);
-  NS_IMETHOD GetMetaKey(PRBool& aIsDown);
+  NS_IMETHOD    GetClientX(PRInt32* aClientX);
+  NS_IMETHOD    SetClientX(PRInt32 aClientX);
 
-  NS_IMETHOD GetCharCode(PRUint32& aCharCode);
-  NS_IMETHOD GetKeyCode(PRUint32& aKeyCode);
-  NS_IMETHOD GetButton(PRUint32& aButton);
+  NS_IMETHOD    GetClientY(PRInt32* aClientY);
+  NS_IMETHOD    SetClientY(PRInt32 aClientY);
+
+  NS_IMETHOD    GetAltKey(PRBool* aAltKey);
+  NS_IMETHOD    SetAltKey(PRBool aAltKey);
+
+  NS_IMETHOD    GetCtrlKey(PRBool* aCtrlKey);
+  NS_IMETHOD    SetCtrlKey(PRBool aCtrlKey);
+
+  NS_IMETHOD    GetShiftKey(PRBool* aShiftKey);
+  NS_IMETHOD    SetShiftKey(PRBool aShiftKey);
+
+  NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);
+  NS_IMETHOD    SetMetaKey(PRBool aMetaKey);
+
+  NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
+  NS_IMETHOD    SetCharCode(PRUint32 aCharCode);
+
+  NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
+  NS_IMETHOD    SetKeyCode(PRUint32 aKeyCode);
+
+  NS_IMETHOD    GetButton(PRUint32* aButton);
+  NS_IMETHOD    SetButton(PRUint32 aButton);
 
   // nsINSEventInterface
-  NS_IMETHOD GetLayerX(PRInt32& aX);
-  NS_IMETHOD GetLayerY(PRInt32& aY);
+  NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
+  NS_IMETHOD    SetLayerX(PRInt32 aLayerX);
 
+  NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
+  NS_IMETHOD    SetLayerY(PRInt32 aLayerY);
+
+  // Local functions
   NS_IMETHOD SetGUIEvent(nsGUIEvent *aEvent);
   NS_IMETHOD SetEventTarget(nsISupports *aTarget);
 
@@ -75,6 +99,9 @@ protected:
   PRUint32 mRefCnt : 31;
   nsGUIEvent *kEvent;
   nsISupports *kTarget;
+  nsIPresContext *kPresContext;
+
+  const char* GetEventName(PRUint32 aEventType);
 
 };
 #endif // nsDOMEvent_h__
