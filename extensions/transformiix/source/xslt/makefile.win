@@ -36,7 +36,7 @@ CPPSRCS=						\
 	$(NULL)
 
 CPP_OBJS=					\
-	.\$(OBJDIR)\XSLProcessor.obj	\
+	.\$(OBJDIR)\XSLTProcessor.obj	\
 	.\$(OBJDIR)\ProcessorState.obj	\
 	.\$(OBJDIR)\Names.obj	\
 	$(NULL)
@@ -45,8 +45,8 @@ EXPORTS = 					\
 	XSLTProcessor.h			\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I.\expr -I.\util -I..\xml\dom \
-      -I..\base -I ..\xml
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\xpath -I..\xml\dom \
+      -I..\base -I ..\xml -I ..\xml\util -I .\util -I ..\net -I ..\xml\parser
 
 LCFLAGS = \
         $(LCFLAGS) \
