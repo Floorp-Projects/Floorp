@@ -26,6 +26,7 @@ locale/XXXX/communicator/security.properties, XXXX/locale/XXXX/communicator/secu
 locale/XXXX/navigator, XXXX/locale/XXXX/navigator
 locale/XXXX/navigator-platform, en-unix/locale/XXXX/navigator-platform
 locale/XXXX/global-platform, en-unix/locale/XXXX/global-platform
+locale/XXXX/communicator/layout, XXXX/locale/XXXX/communicator/layout
 
 # Help stuff
 content/help, help/content/help,
