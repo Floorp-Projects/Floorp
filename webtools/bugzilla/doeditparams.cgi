@@ -102,7 +102,7 @@ WriteParams();
 
 unlink "data/versioncache";
 print "<PRE>";
-system("./syncshadowdb", "-v");
+system("./syncshadowdb", "-v") if (Param("shadowdb"));
 print "</PRE>";
 
 print "OK, done.<p>\n";
