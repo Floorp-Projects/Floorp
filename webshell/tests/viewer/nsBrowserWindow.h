@@ -27,7 +27,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
-
+//#include "nsIPref.h"
 
 class nsILabel;
 class nsICheckButton;
@@ -148,6 +148,7 @@ public:
   void DoDebugRobot();
   void DoSiteWalker();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
+  void SetCompatibilityMode(PRBool aIsStandard);
 #endif
 
   nsEventStatus ProcessDialogEvent(nsGUIEvent *aEvent);

@@ -82,7 +82,13 @@ VIEWER MENU DISCARDABLE
     MENUITEM "Debu&g Robot", VIEWER_DEBUGROBOT
     MENUITEM SEPARATOR
     MENUITEM "Show Content Quality", VIEWER_SHOW_CONTENT_QUALITY
-  }
+    MENUITEM SEPARATOR
+    POPUP "&Compatibility Mode"
+    {
+      MENUITEM "Nav Quirks", VIEWER_NAV_QUIRKS_MODE
+      MENUITEM "Standard", VIEWER_STANDARD_MODE
+    }
+ }
   POPUP "&Tools"
   {
     MENUITEM "&JavaScript Console", JS_CONSOLE

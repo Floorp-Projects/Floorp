@@ -53,6 +53,8 @@
 #define VIEWER_DEBUGSAVE            40032
 #define VIEWER_SHOW_CONTENT_QUALITY 40033
 #define VIEWER_TOGGLE_SELECTION     40034
+#define VIEWER_NAV_QUIRKS_MODE      40035
+#define VIEWER_STANDARD_MODE        40036
 
 // Note: must be in ascending sequential order
 #define VIEWER_ONE_COLUMN       40040
