@@ -104,7 +104,7 @@ function filepickerLoad() {
   }
 
   // setup the dialogOverlay.xul button handlers
-  doSetOKCancel(onOK, onCancel);
+  doSetOKCancel(selectOnOK, onCancel);
   retvals.buttonStatus = nsIFilePicker.returnCancel;
 
   var outliner = document.getElementById("directoryOutliner");
@@ -155,7 +155,18 @@ function changeFilter(filterTypes)
   window.setCursor("auto");
 }
 
-function onOK()
+function openOnOK()
+{
+  var dir = outlinerView.getSelectedFile();
+  if (dir)
+    gotoDirectory(dir);
+  retvals.file = dir;
+  retvals.buttonStatus = nsIFilePicker.returnCancel;
+  doSetOKCancel(selectOnOK, onCancel);
+  return false;
+}
+
+function selectOnOK()
 {
   var errorTitle, errorMessage, promptService;
   var ret = nsIFilePicker.returnCancel;
@@ -403,20 +414,28 @@ function onOutlinerFocus(event) {
 }
 
 function getOKAction(file) {
-  if (file && file.isDirectory() && filePickerMode != nsIFilePicker.modeGetFolder)
-    return gFilePickerBundle.getString("openButtonLabel");
+  var buttonLabel;
 
-  switch(filePickerMode) {
-  case nsIFilePicker.modeGetFolder:
-    return gFilePickerBundle.getString("selectFolderButtonLabel");
-    break;
-  case nsIFilePicker.modeOpen:
-    return gFilePickerBundle.getString("openButtonLabel");
-    break;
-  case nsIFilePicker.modeSave:
-    return gFilePickerBundle.getString("saveButtonLabel");
-    break;
+  if (file && file.isDirectory() && filePickerMode != nsIFilePicker.modeGetFolder) {
+    doSetOKCancel(openOnOK, onCancel);
+    buttonLabel = gFilePickerBundle.getString("openButtonLabel");
   }
+  else {
+    doSetOKCancel(selectOnOK, onCancel);
+    switch(filePickerMode) {
+    case nsIFilePicker.modeGetFolder:
+      buttonLabel = gFilePickerBundle.getString("selectFolderButtonLabel");
+      break;
+    case nsIFilePicker.modeOpen:
+      buttonLabel = gFilePickerBundle.getString("openButtonLabel");
+      break;
+    case nsIFilePicker.modeSave:
+      buttonLabel = gFilePickerBundle.getString("saveButtonLabel");
+      break;
+    }
+  }
+
+  return buttonLabel;
 }
 
 function onSelect(file) {
