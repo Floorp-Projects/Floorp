@@ -60,7 +60,7 @@ typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val ar
 
 typedef bool (Read)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
 typedef bool (ReadPublic)(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
-typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
+typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag);
 typedef bool (WritePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
 typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);
 typedef bool (DeletePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
@@ -71,8 +71,8 @@ typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, Mu
 bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
 bool defaultReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
 bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
-bool arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
-bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue);
+bool arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag);
+bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag);
 bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
 bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
 bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result);

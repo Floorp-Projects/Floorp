@@ -85,7 +85,7 @@ js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
         Multiname *mn = new Multiname(meta->engine->length_StringAtom, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
         LookupKind lookup(false, JS2VAL_NULL);
-        defaultWriteProperty(meta, OBJECT_TO_JS2VAL(obj), meta->arrayClass, mn, &lookup, true, result);
+        defaultWriteProperty(meta, OBJECT_TO_JS2VAL(obj), meta->arrayClass, mn, &lookup, true, result, false);
     }
     else {
         JS2Class *c = meta->objectType(obj);

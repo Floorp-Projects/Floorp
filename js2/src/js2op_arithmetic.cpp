@@ -957,7 +957,7 @@
             if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num + 1.0)))
+            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num + 1.0), false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
@@ -973,7 +973,7 @@
             if (!limit->read(meta, &baseVal, limit, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num - 1.0)))
+            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, allocNumber(num - 1.0), false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             pushNumber(num);
             baseVal = JS2VAL_VOID;
@@ -990,7 +990,7 @@
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, a))
+            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, a, false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             baseVal = JS2VAL_VOID;
         }
@@ -1006,7 +1006,7 @@
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
-            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, a))
+            if (!limit->write(meta, baseVal, limit, mn, &lookup, true, a, false))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             baseVal = JS2VAL_VOID;
         }

@@ -633,7 +633,7 @@ namespace MetaData {
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return defaultWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue);
+        return defaultWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue, false);
     }
 
     bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval)
@@ -642,12 +642,12 @@ namespace MetaData {
         return limit->read(meta, base, limit, multiname, &lookup, phase, rval);
     }
 
-    bool arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
+    bool arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag)
     {
         ASSERT(JS2VAL_IS_OBJECT(base));
         JS2Object *obj = JS2VAL_TO_OBJECT(base);
 
-        bool result = defaultWriteProperty(meta, base, limit, multiname, lookupKind, createIfMissing, newValue);
+        bool result = defaultWriteProperty(meta, base, limit, multiname, lookupKind, createIfMissing, newValue, false);
         if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
 
             const char16 *numEnd;        
@@ -674,10 +674,10 @@ namespace MetaData {
         LookupKind lookup(false, JS2VAL_NULL);
         Multiname *mn = new Multiname(name, meta->publicNamespace);
         DEFINE_ROOTKEEPER(rk, mn);
-        return arrayWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue);
+        return arrayWriteProperty(meta, base, limit, mn, &lookup, createIfMissing, newValue, false);
     }
 
-    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue)
+    bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag)
     {
         InstanceMember *mBase = meta->findBaseInstanceMember(limit, multiname, WriteAccess);
         if (mBase) {
@@ -721,7 +721,7 @@ namespace MetaData {
         case Member::ConstructorMethodMember:
         case Member::SetterMember:
         case Member::GetterMember:
-            return meta->writeLocalMember(checked_cast<LocalMember *>(m), newValue, false);
+            return meta->writeLocalMember(checked_cast<LocalMember *>(m), newValue, initFlag);
         case Member::InstanceVariableMember:
         case Member::InstanceMethodMember:
         case Member::InstanceGetterMember:
@@ -742,7 +742,7 @@ namespace MetaData {
     bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue)
     {
         LookupKind lookup(false, JS2VAL_NULL);
-        return limit->write(meta, base, limit, multiname, &lookup, true, newValue);
+        return limit->write(meta, base, limit, multiname, &lookup, true, newValue, false);
     }
 
     bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result)

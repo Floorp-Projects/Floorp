@@ -516,7 +516,7 @@ namespace MetaData {
                                     // Set type to FUTURE_TYPE - it will be resolved during 'Setup'. The value is either FUTURE_VALUE
                                     // for 'const' - in which case the expression is compile time evaluated (or attempted) or set
                                     // to INACCESSIBLE until run time initialization occurs.
-                                    Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_FUTUREVALUE, immutable);
+                                    Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
                                     vb->member = v;
                                     v->vb = vb;
                                     vb->mn = defineLocalMember(env, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos, true);
@@ -2537,7 +2537,7 @@ doUnary:
             case PackageKind:
                 {
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, false, newValue);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, false, newValue, false);
                 }
                 break;
             case SystemKind:
@@ -2556,7 +2556,7 @@ doUnary:
                     WithFrame *wf = checked_cast<WithFrame *>(*fi);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, false, newValue);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, false, newValue, false);
                 }
                 break;
             }
@@ -2567,7 +2567,7 @@ doUnary:
         if (createIfMissing) {
             Package *pkg = getPackageFrame();
             JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(pkg));
-            result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, &lookup, true, newValue);
+            result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, &lookup, true, newValue, false);
             if (result)
                 return;
         }
@@ -2589,7 +2589,7 @@ doUnary:
             case PackageKind:
                 {
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(*fi));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, false, newValue);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(*fi), limit, multiname, &lookup, false, newValue, true);
                 }
                 break;
             case SystemKind:
@@ -2608,7 +2608,7 @@ doUnary:
                     WithFrame *wf = checked_cast<WithFrame *>(*fi);
                     // XXX uninitialized 'with' object?
                     JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(wf->obj));
-                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, false, newValue);
+                    result = limit->write(meta, OBJECT_TO_JS2VAL(wf->obj), limit, multiname, &lookup, false, newValue, true);
                 }
                 break;
             }
@@ -2620,7 +2620,7 @@ doUnary:
         ASSERT(false);
         Package *pkg = getPackageFrame();
         JS2Class *limit = meta->objectType(OBJECT_TO_JS2VAL(pkg));
-        result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, &lookup, true, newValue);
+        result = limit->write(meta, OBJECT_TO_JS2VAL(pkg), limit, multiname, &lookup, true, newValue, true);
         if (result)
             return;
     }
@@ -3334,7 +3334,7 @@ bool nullClass_ReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Mu
 bool nullClass_ReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval) { return false; }
 bool nullClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval) { return false; }
 bool nullClass_arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue) { return false; }
-bool nullClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue) { return false; }
+bool nullClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, bool initFlag) { return false; }
 bool nullClass_WritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue) { return false; }
 bool nullClass_BracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue) { return false; }
 bool nullClass_DeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result) { return false; }

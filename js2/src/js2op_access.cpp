@@ -71,7 +71,7 @@
             pc += sizeof(short);
             b = pop();
             JS2Class *limit = meta->objectType(b);
-            if (!limit->write(meta, b, limit, mn, &lookup, true, a)) {
+            if (!limit->write(meta, b, limit, mn, &lookup, true, a, false)) {
                 if (!meta->cxt.E3compatibility)
                     meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             }
