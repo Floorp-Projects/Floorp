@@ -58,7 +58,7 @@ LIBS = \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
-	-lgfxgtk	\
+	-lgfx$(MOZ_TOOLKIT)	\
 	-lraptorgfx	\
 	-lgfxps		\
 	-limg		\

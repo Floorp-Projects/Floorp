@@ -57,7 +57,7 @@ LIBS =	\
 		-lexpat \
 		-lxmltok \
 		-limg \
-		-lgfxgtk        \
+		-lgfx$(MOZ_TOOLKIT)        \
 		-lraptorgfx     \
 		-lgfxps         \
 		-lmozutil \

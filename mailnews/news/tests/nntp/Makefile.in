@@ -61,7 +61,7 @@ LIBS = \
 	-limg	\
 	-lpng	\
 	-ljpeg	\
-	-lgfxgtk 	\
+	-lgfx$(MOZ_TOOLKIT) 	\
 	-lraptorgfx 	\
 	-lgfxps		\
 	-lmozutil	\
