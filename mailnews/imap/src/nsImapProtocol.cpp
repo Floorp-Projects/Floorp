@@ -399,7 +399,6 @@ nsImapProtocol::nsImapProtocol() :
   m_closeNeededBeforeSelect = PR_FALSE;
   m_needNoop = PR_FALSE;
   m_noopCount = 0;
-  m_mailToFetch = PR_FALSE;
   m_fetchMsgListIsNew = PR_FALSE;
   m_fetchBodyListIsNew = PR_FALSE;
   m_flagChangeCount = 0;
@@ -3634,14 +3633,10 @@ void nsImapProtocol::PeriodicBiff()
 
 void nsImapProtocol::SendSetBiffIndicatorEvent(nsMsgBiffState newState)
 {
-    if (m_imapMiscellaneousSink)
+    if (m_imapMiscellaneousSink) {
       m_imapMiscellaneousSink->SetBiffStateAndUpdate(this, newState);
-
-  if (newState == nsIMsgFolder::nsMsgBiffState_NewMail)
-    m_mailToFetch = PR_TRUE;
-  else
-    m_mailToFetch = PR_FALSE;
-    WaitForFEEventCompletion();
+      WaitForFEEventCompletion();
+    }
 }
 
 

@@ -635,7 +635,6 @@ private:
 	PRInt64 m_lastProgressTime;				
 
 	PRBool m_notifySearchHit;
-	PRBool m_mailToFetch;
 	PRBool m_checkForNewMailDownloadsHeaders;
 	PRBool m_needNoop;
 	PRInt32 m_noopCount;

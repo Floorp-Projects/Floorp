@@ -319,43 +319,32 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
   nsCOMPtr<nsIMsgFolder> folder;
   nsXPIDLCString msgKey;
   rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
-	if (NS_SUCCEEDED(rv))
-	{
-    nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
-		if (NS_SUCCEEDED(rv))
-    {
-      nsCOMPtr<nsIImapUrl> imapUrl;
-      nsCAutoString urlSpec;
-      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
-      rv = CreateStartOfImapUrl(aMessageURI, getter_AddRefs(imapUrl), folder, nsnull, urlSpec, hierarchySeparator);
-      if (NS_FAILED(rv)) return rv;
-    	imapUrl->SetImapMessageSink(imapMessageSink);
-      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
-      mailnewsUrl->SetFolder(folder);
-      if (folder)
-      {
-        if (mailnewsUrl)
-        {
-          PRBool useLocalCache = PR_FALSE;
-          folder->HasMsgOffline(atoi(msgKey), &useLocalCache);  
-          mailnewsUrl->SetMsgIsInLocalCache(useLocalCache);
-        }
-      }
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIImapUrl> imapUrl;
+    nsCAutoString urlSpec;
+    PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
+    rv = CreateStartOfImapUrl(aMessageURI, getter_AddRefs(imapUrl), folder, nsnull, urlSpec, hierarchySeparator);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = SetImapUrlSink(folder, imapUrl);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
+    PRBool useLocalCache = PR_FALSE;
+    folder->HasMsgOffline(atoi(msgKey), &useLocalCache);
+    mailnewsUrl->SetMsgIsInLocalCache(useLocalCache);
 
-      nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl);
-      url->GetSpec(urlSpec);
+    nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl);
+    url->GetSpec(urlSpec);
+    urlSpec.Append("fetch>UID>");
+    urlSpec.Append(char(hierarchySeparator));
 
-		  urlSpec.Append("fetch>UID>");
-		  urlSpec.Append(char(hierarchySeparator));
-
-      nsXPIDLCString folderName;
-      GetFolderName(folder, getter_Copies(folderName));
-		  urlSpec.Append((const char *) folderName);
-		  urlSpec.Append(">");
-		  urlSpec.Append(msgKey);
-		  rv = url->SetSpec(urlSpec);
-      imapUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
-    }
+    nsXPIDLCString folderName;
+    GetFolderName(folder, getter_Copies(folderName));
+    urlSpec.Append((const char *) folderName);
+    urlSpec.Append(">");
+    urlSpec.Append(msgKey);
+    rv = url->SetSpec(urlSpec);
+    imapUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
   }
 
   return rv;
