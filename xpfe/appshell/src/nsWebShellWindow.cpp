@@ -266,11 +266,13 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIBrowserWindowIID)) {
+	if ( aIID.Equals(kIBrowserWindowIID) ) {
     *aInstancePtr = (void*) (nsIBrowserWindow*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  	
+  
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
     NS_ADDREF_THIS();
@@ -1429,6 +1431,13 @@ nsWebShellWindow::Show(PRBool aShow)
 {
   mWebShell->Show(); // crimminy -- it doesn't take a parameter!
   mWindow->Show(aShow);
+  
+  nsresult rv;
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  if ( NS_SUCCEEDED(rv) )
+  {
+   	windowMediator->UpdateWindowTimeStamp( this ); 
+  } 
   return NS_OK;
 }
 
@@ -2417,28 +2426,37 @@ NS_IMETHODIMP nsWebShellWindow::SetTitle(const PRUnichar* aTitle)
   nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
   nsCOMPtr<nsIDOMElement> webshellElement;
   nsString windowTitleModifier;
-
+  nsString windowSeparator;
   if (webshellNode)
     webshellElement = do_QueryInterface(webshellNode);
   if (webshellElement )
-  	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
-  nsString title( aTitle );
-  title += windowTitleModifier;
-      
-  if (windowWidget)
-    windowWidget->SetTitle(title);
-     
-  // Tell the window mediator that a title has changed
-  #if 1 
   {
-    nsIWindowMediator* service;
-    if (NS_FAILED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
-      return NS_OK;
-    service->UpdateWindowTitle( this, title );
-    nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+  	webshellElement->GetAttribute("titlemodifier", windowTitleModifier );
+  	webshellElement->GetAttribute("titleseperator", windowSeparator );
   }
-  #endif // Window Mediation
-  return NS_OK;
+   nsString title( aTitle );
+   
+   if( title.Length() > 0 )
+  	 title += windowSeparator+windowTitleModifier;
+   else
+   	title = windowTitleModifier;  
+   if (windowWidget)
+     windowWidget->SetTitle(title);
+
+     
+
+     // Tell the window mediator that a title has changed
+   #if 1 
+   {
+   	  nsIWindowMediator* service;
+  		if (NS_FAILED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
+    		return NS_OK;
+  		service->UpdateWindowTitle( this, title.GetUnicode() );
+	 		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
+   }
+   #endif // Window Mediation
+   return NS_OK;
+
 }
  
 NS_IMETHODIMP nsWebShellWindow::GetTitle(const PRUnichar** aResult)
