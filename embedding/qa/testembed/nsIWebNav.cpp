@@ -113,13 +113,13 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 			GoToIndexTest(2);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_LOADURI :
-			LoadUriTest(nsnull, nsnull, 2, PR_FALSE);
+			LoadURITest(nsnull, nsnull, 2, PR_FALSE);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_RELOAD  :
 			ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE, 2);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_STOP    :
-			StopUriTest("file://C|/Program Files",
+			StopURITest("file://C|/Program Files",
 						 nsIWebNavigation::STOP_CONTENT, 2);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_GETDOCUMENT :
@@ -152,8 +152,8 @@ void CNsIWebNav::RunAllTests()
    }
 
    // load a couple of URLs to get things going
-	LoadUriTest("http://www.cisco.com", nsIWebNavigation::LOAD_FLAGS_NONE, 2, PR_TRUE);
-	LoadUriTest("www.google.com", nsIWebNavigation::LOAD_FLAGS_NONE, 2, PR_TRUE);
+	LoadURITest("http://www.cisco.com", nsIWebNavigation::LOAD_FLAGS_NONE, 2, PR_TRUE);
+	LoadURITest("www.google.com", nsIWebNavigation::LOAD_FLAGS_NONE, 2, PR_TRUE);
 	
    // canGoBack attribute test
    CanGoBackTest(1);
@@ -179,9 +179,9 @@ void CNsIWebNav::RunAllTests()
 
  
 	// Stop() tests
-   StopUriTest("http://www.microsoft.com", nsIWebNavigation::STOP_ALL, 1);
-   StopUriTest("https://www.microsoft.com/", nsIWebNavigation::STOP_NETWORK, 1);
-   StopUriTest("ftp://ftp.microsoft.com/", nsIWebNavigation::STOP_CONTENT, 1);
+   StopURITest("http://www.microsoft.com", nsIWebNavigation::STOP_ALL, 1);
+   StopURITest("https://www.microsoft.com/", nsIWebNavigation::STOP_NETWORK, 1);
+   StopURITest("ftp://ftp.microsoft.com/", nsIWebNavigation::STOP_CONTENT, 1);
 
    // document test
    GetDocumentTest(1);
@@ -206,7 +206,7 @@ void CNsIWebNav::LoadUriandReload(int URItotal)
    {
 	   for (i=0; i < URItotal; i++)
 	   {
-		   LoadUriTest(UrlTable[i].theUri, UrlTable[j].theFlag, 2, PR_TRUE);
+		   LoadURITest(UrlTable[i].theURI, UrlTable[j].theFlag, 2, PR_TRUE);
 		   switch (i)
 		   {
 		   case 0:
@@ -274,7 +274,7 @@ void CNsIWebNav::GoToIndexTest(PRInt16 displayMode)
    RvTestResult(rv, "GotoIndex() test", displayMode);
 }
 
-void CNsIWebNav::LoadUriTest(char *theUrl, PRUint32 theFlag,
+void CNsIWebNav::LoadURITest(char *theUrl, PRUint32 theFlag,
 							 PRInt16 displayMode, PRBool runAllTests)
 {
    char theTotalString[500];
@@ -381,7 +381,7 @@ void CNsIWebNav::ReloadTest(PRUint32 theFlag, PRInt16 displayMode)
    RvTestResult(rv, theTotalString, displayMode);
 }
 
-void CNsIWebNav::StopUriTest(char *theUrl, PRUint32 theFlag,
+void CNsIWebNav::StopURITest(char *theUrl, PRUint32 theFlag,
 							 PRInt16 displayMode)
 {
    char theTotalString[200];

@@ -95,7 +95,7 @@ void CNsIHistory::OnStartTests(UINT nMenuID)
    nsCOMPtr<nsISimpleEnumerator> theSimpleEnum;
 
 
-   //nsCOMPtr<nsIURI> theUri;
+   //nsCOMPtr<nsIURI> theURI;
    // do_QueryInterface
    // NS_HISTORYENTRY_CONTRACTID
    // NS_SHISTORYLISTENER_CONTRACTID
@@ -376,15 +376,15 @@ void CNsIHistory::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theM
 void CNsIHistory::GetURIHistTest(nsIHistoryEntry* theHistoryEntry,
 								 PRInt16 displayMode)
 {
-	rv = theHistoryEntry->GetURI(getter_AddRefs(theUri));
+	rv = theHistoryEntry->GetURI(getter_AddRefs(theURI));
 	RvTestResult(rv, "GetURI() (URI attribute) test", 1);
 	RvTestResultDlg(rv, "GetURI() (URI attribute) test");
-	if (!theUri)
-		QAOutput("theUri for GetURI() invalid. Test failed.", 1);
+	if (!theURI)
+		QAOutput("theURI for GetURI() invalid. Test failed.", 1);
 	else
 	{
 		nsCAutoString uriString;
-		rv = theUri->GetSpec(uriString);
+		rv = theURI->GetSpec(uriString);
 		if (NS_FAILED(rv))
 			QAOutput("We didn't get the uriString.", 1);
 		else
@@ -448,11 +448,11 @@ void CNsIHistory::SimpleEnumTest(nsISimpleEnumerator *theSimpleEnum,
 	 nextHistoryEntry = do_QueryInterface(nextObj);
 	 if (!nextHistoryEntry)
 		continue;
-	 rv = nextHistoryEntry->GetURI(getter_AddRefs(theUri));
+	 rv = nextHistoryEntry->GetURI(getter_AddRefs(theURI));
 	 RvTestResult(rv, "theSimpleEnum nsIHistoryEntry->GetURI() test", 1);
 	 RvTestResultDlg(rv, "theSimpleEnum nsIHistoryEntry->GetURI() test");
 	 nsCAutoString uriString;
-	 rv = theUri->GetSpec(uriString);
+	 rv = theURI->GetSpec(uriString);
 	 if (NS_FAILED(rv))
 		QAOutput("uriString for GetSpec() invalid. Test failed.", 1);
 	 else

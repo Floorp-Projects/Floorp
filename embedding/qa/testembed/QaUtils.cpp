@@ -57,6 +57,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+storage getSupportObj;
+
 void RvTestResultDlg(nsresult rv, CString pLine,BOOL bClearList)
 {
 	static CShowTestResults dlgResult ;
@@ -401,7 +403,7 @@ nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *webBrowser)
 	return (theDOMWindow);
 }
 
-nsCAutoString GetTheUri(nsIURI *theURI, int displayMethod)
+nsCAutoString GetTheURI(nsIURI *theURI, int displayMethod)
 {
 	nsresult rv;
 	nsCAutoString uriString;
@@ -432,6 +434,11 @@ void onStateChangeString(char *theStateType, char *theDocType,
 	totalMsg += ", status (hex) = ";
 	totalMsg.AppendInt(status, 16);
 	QAOutput(totalMsg.get(), displayMode);
+}
+
+void SaveObject(nsISupports *theSupports)
+{
+	getSupportObj.sup = theSupports;
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -57,7 +57,7 @@ public:
 	// Mozilla interfaces
 	//
 	nsCOMPtr<nsIWebNavigation> qaWebNav;
-	nsCOMPtr<nsIURI> theUri;
+	nsCOMPtr<nsIURI> theURI;
 	//CTests *qaTests ;
 
 public:

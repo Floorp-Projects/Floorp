@@ -253,7 +253,7 @@ NS_IMETHODIMP CBrowserImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 	QAOutput("Entering nsIWebProgLstnr::OnLocationChange().");
 
 	// test nsIURI parameter
-	GetTheUri(location, 1);
+	GetTheURI(location, 1);
  
 	RequestName(aRequest, stringMsg);  
 

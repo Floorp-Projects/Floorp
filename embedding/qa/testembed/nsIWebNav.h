@@ -71,10 +71,10 @@ public:
 	void CanGoForwardTest(PRInt16);
 	void GoForwardTest(PRInt16);
 	void GoToIndexTest(PRInt16);
-	void LoadUriTest(char *, PRUint32, PRInt16 displayMode=1, 
+	void LoadURITest(char *, PRUint32, PRInt16 displayMode=1, 
 					 PRBool runAllTests=PR_FALSE);
 	void ReloadTest(PRUint32, PRInt16);
-	void StopUriTest(char *, PRUint32, PRInt16);
+	void StopURITest(char *, PRUint32, PRInt16);
 	void GetDocumentTest(PRInt16);
 	void GetCurrentURITest(PRInt16);
 	void GetReferringURITest(PRInt16);
@@ -95,7 +95,7 @@ protected:
 
 typedef struct
 {
-  char			theUri[1024];
+  char			theURI[1024];
   unsigned long theFlag;
 } NavElement;
 

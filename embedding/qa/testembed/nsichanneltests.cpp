@@ -154,7 +154,7 @@ void CnsIChannelTests::GetOriginalURITest(nsIChannel *theChannel, PRInt16 displa
 	   QAOutput("Didn't get URI object. GetOriginalURITest failed.", displayMode);
 	   return;
 	}
-	GetTheUri(theURI);
+	GetTheURI(theURI);
 }
 
 void CnsIChannelTests::GetURITest(nsIChannel *theChannel, PRInt16 displayMode)
@@ -173,7 +173,7 @@ void CnsIChannelTests::GetURITest(nsIChannel *theChannel, PRInt16 displayMode)
 	   QAOutput("Didn't get URI object. GetURITest failed.", displayMode);
 	   return;
 	}
-	GetTheUri(theURI);
+	GetTheURI(theURI);
 }
 
 void CnsIChannelTests::SetOwnerTest(nsIChannel *theChannel, PRInt16 displayMode)
@@ -370,11 +370,7 @@ void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode
 	if (!theSupports)
 	   QAOutput("Didn't get the nsISupports object. AsyncOpen() failed.", displayMode);
 
-	if (theSupports == theChannel)
-	   QAOutput("Supports = Channel.", displayMode);
-	else
-	   QAOutput("Supports != Channel.", displayMode);
-
+	SaveObject(theSupports);
 
 	rv = theChannel->AsyncOpen(listener, theSupports);
 	RvTestResult(rv, "AsyncOpen()", displayMode);
