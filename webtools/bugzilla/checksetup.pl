@@ -493,13 +493,13 @@ $table{bugs_activity} =
    'bug_id mediumint not null,
     who mediumint not null,
     bug_when datetime not null,
-    field varchar(64) not null,
+    fieldid mediumint not null,
     oldvalue tinytext,
     newvalue tinytext,
 
     index (bug_id),
     index (bug_when),
-    index (field)';
+    index (fieldid)';
 
 
 $table{attachments} =
@@ -542,6 +542,7 @@ $table{bugs} =
     keywords mediumtext not null, ' # Note: keywords field is only a cache;
                                 # the real data comes from the keywords table.
     . '
+    lastdiffed datetime not null,
 
     index (assigned_to),
     index (creation_ts),
@@ -643,9 +644,30 @@ $table{profiles} =
     groupset bigint not null,
     emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges",
     disabledtext mediumtext not null,
+    newemailtech tinyint not null,
 
     index(login_name)';
 
+
+# This isn't quite cooked yet...
+#
+#  $table{diffprefs} =
+#     'userid mediumint not null,
+#      fieldid mediumint not null,
+#      mailhead tinyint not null,
+#      maildiffs tinyint not null,
+#
+#      index(userid)';
+
+$table{fielddefs} =
+   'fieldid mediumint not null auto_increment primary key,
+    name varchar(64) not null,
+    description mediumtext not null,
+    mailhead tinyint not null default 0,
+    sortkey smallint not null,
+
+    unique(name),
+    index(sortkey)';
 
 $table{versions} =
    'value tinytext,
@@ -791,6 +813,47 @@ unless ($sth->rows) {
 
 
 
+
+
+###########################################################################
+# Populate the list of fields.
+###########################################################################
+
+my $headernum = 1;
+
+sub AddFDef ($$$) {
+    my ($name, $description, $mailhead) = (@_);
+
+    $name = $dbh->quote($name);
+    $description = $dbh->quote($description);
+
+    $dbh->do("REPLACE INTO fielddefs " .
+             "(name, description, mailhead, sortkey) VALUES " .
+             "($name, $description, $mailhead, $headernum)");
+    $headernum++;
+}
+
+
+AddFDef("bug_id", "Bug \#", 1);
+AddFDef("short_desc", "Summary", 1);
+AddFDef("product", "Product", 1);
+AddFDef("version", "Version", 1);
+AddFDef("rep_platform", "Platform", 1);
+AddFDef("op_sys", "OS/Version", 1);
+AddFDef("bug_status", "Status", 1);
+AddFDef("resolution", "Resolution", 1);
+AddFDef("bug_severity", "Severity", 1);
+AddFDef("priority", "Priority", 1);
+AddFDef("component", "Component", 1);
+AddFDef("assigned_to", "AssignedTo", 1);
+AddFDef("reporter", "ReportedBy", 1);
+AddFDef("qa_contact", "QAContact", 0);
+AddFDef("cc", "CC", 0);
+AddFDef("dependson", "BugsThisDependsOn", 0);
+AddFDef("blocked", "OtherBugsDependingOnThis", 0);
+AddFDef("target_milestone", "Target Milestone", 0);
+    
+    
 
 
 ###########################################################################
@@ -1186,6 +1249,56 @@ if (GetFieldDef('bugs', 'long_desc')) {
     system("./processmail regenerate");
 
 }
+
+
+# 2000-01-18 Added a new table fielddefs that records information about the
+# different fields we keep an activity log on.  The bugs_activity table
+# now has a pointer into that table instead of recording the name directly.
+
+if (GetFieldDef('bugs_activity', 'field')) {
+    AddField('bugs_activity', 'fieldid',
+             'mediumint not null, ADD INDEX (fieldid)');
+    print "Populating new fieldid field ...\n";
+
+    $dbh->do("LOCK TABLES bugs_activity WRITE, fielddefs WRITE");
+
+    my $sth = $dbh->prepare('SELECT DISTINCT field FROM bugs_activity');
+    $sth->execute();
+    my %ids;
+    while (my ($f) = ($sth->fetchrow_array())) {
+        my $q = $dbh->quote($f);
+        my $s2 =
+            $dbh->prepare("SELECT fieldid FROM fielddefs WHERE name = $q");
+        $s2->execute();
+        my ($id) = ($s2->fetchrow_array());
+        if (!$id) {
+            $dbh->do("INSERT INTO fielddefs (name, description) VALUES " .
+                     "($q, $q)");
+            $s2 = $dbh->prepare("SELECT LAST_INSERT_ID()");
+            $s2->execute();
+            ($id) = ($s2->fetchrow_array());
+        }
+        $dbh->do("UPDATE bugs_activity SET fieldid = $id WHERE field = $q");
+    }
+    $dbh->do("UNLOCK TABLES");
+
+    DropField('bugs_activity', 'field');
+}
+        
+
+# 2000-01-18 New email-notification scheme uses a new field in the bug to 
+# record when email notifications were last sent about this bug.  Also,
+# added a user pref whether a user wants to use the brand new experimental
+# stuff.
+
+if (!GetFieldDef('bugs', 'lastdiffed')) {
+    AddField('bugs', 'lastdiffed', 'datetime not null');
+    $dbh->do('UPDATE bugs SET lastdiffed = delta_ts, delta_ts = delta_ts');
+}
+
+AddField('profiles', 'newemailtech', 'tinyint not null')
+
+
 
 
 #

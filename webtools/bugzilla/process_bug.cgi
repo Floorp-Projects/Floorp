@@ -464,7 +464,10 @@ sub LogDependencyActivity {
     my ($i, $oldstr, $target, $me) = (@_);
     my $newstr = SnapShotDeps($i, $target, $me);
     if ($oldstr ne $newstr) {
-        SendSQL("insert into bugs_activity (bug_id,who,bug_when,field,oldvalue,newvalue) values ($i,$whoid,$timestamp,'$target','$oldstr','$newstr')");
+        my $fieldid = GetFieldID($target);
+        SendSQL("INSERT INTO bugs_activity " .
+                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                "($i,$whoid,$timestamp,$fieldid,'$oldstr','$newstr')");
         return 1;
     }
     return 0;
@@ -476,7 +479,7 @@ sub LogDependencyActivity {
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
-    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write, keywords write, longdescs write, keyworddefs read");
+    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write, dependencies write, votes write, keywords write, longdescs write, fielddefs write, keyworddefs read");
     my @oldvalues = SnapShotBug($id);
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
@@ -628,6 +631,15 @@ The changes made were:
         foreach my $ccid (keys %ccids) {
             SendSQL("insert into cc (bug_id, who) values ($id, $ccid)");
         }
+        my $newcclist = ShowCcList($id);
+        if ($newcclist ne $origcclist) {
+            my $col = GetFieldID('cc');
+            my $origq = SqlQuote($origcclist);
+            my $newq = SqlQuote($newcclist);
+            SendSQL("INSERT INTO bugs_activity " .
+                    "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                    "($id,$whoid,'$timestamp',$col,$origq,$newq)");
+        }
     }
 
 
@@ -713,10 +725,10 @@ The changes made were:
                 RemoveVotes($id,
                             "This bug has been moved to a different product");
             }
-            $col = SqlQuote($col);
+            $col = GetFieldID($col);
             $old = SqlQuote($old);
             $new = SqlQuote($new);
-            my $q = "insert into bugs_activity (bug_id,who,bug_when,field,oldvalue,newvalue) values ($id,$whoid,'$timestamp',$col,$old,$new)";
+            my $q = "insert into bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue) values ($id,$whoid,'$timestamp',$col,$old,$new)";
             # puts "<pre>$q</pre>"
             SendSQL($q);
         }

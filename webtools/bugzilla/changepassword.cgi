@@ -35,9 +35,9 @@ if (! defined $::FORM{'pwd1'}) {
         $qacontactpart = ", the current QA Contact";
     }
     my $loginname = SqlQuote($::COOKIE{'Bugzilla_login'});
-    SendSQL("select emailnotification,realname from profiles where login_name = " .
+    SendSQL("select emailnotification,realname,newemailtech from profiles where login_name = " .
             $loginname);
-    my ($emailnotification, $realname) = (FetchSQLData());
+    my ($emailnotification, $realname, $newemailtech) = (FetchSQLData());
     $realname = value_quote($realname);
     print qq{
 <form method=post>
@@ -79,6 +79,21 @@ On which of these bugs would you like email notification of changes?</td>
 </SELECT>
 </td>
 </tr>
+";
+    if (Param("newemailtech")) {
+        my $checkedpart = $newemailtech ? "CHECKED" : "";
+        print qq{
+<tr><td colspan=2><hr></td></tr>
+<tr><td align=right><font color="red">New!</font>  Bugzilla has a new email 
+notification scheme.  It is <b>experimental and bleeding edge</b> and will 
+hopefully evolve into a brave new happy world where all the spam and ugliness
+of the old notifications will go away.  If you wish to sign up for this (and 
+risk any bugs), check here.</td>
+<td><input type="checkbox" name="newemailtech" $checkedpart>New email tech</td>
+</tr>
+};
+    }
+    print "
 </table>
 <hr>
 <input type=submit value=Submit>
@@ -126,8 +141,10 @@ Please click <b>Back</b> and try again.\n";
 }
 
 
-SendSQL("update profiles set emailnotification='$::FORM{'emailnotification'}' where login_name = " .
-        SqlQuote($::COOKIE{'Bugzilla_login'}));
+SendSQL("UPDATE profiles " .
+        "SET emailnotification='$::FORM{'emailnotification'}', " .
+        "    newemailtech = '$::FORM{'newemailtech'}' " .
+        "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
 
 my $newrealname = $::FORM{'realname'};
 

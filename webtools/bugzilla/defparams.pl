@@ -246,6 +246,14 @@ Subject: [Bug %bugid%] %neworchanged% - %summary%
 
 %diffs%");
 
+DefParam("newemailtech",
+q{There is now experimental code in Bugzilla to do the email diffs in a 
+new and exciting way.  But this stuff is not very cooked yet.  So, right
+now, to use it, the maintainer has to turn on this checkbox, and each user
+has to then turn on the "New email tech" preference.},
+    "b",
+    0);
+
 
 
 DefParam("whinedays",

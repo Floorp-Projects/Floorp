@@ -265,6 +265,7 @@ $::bug{'long_desc'}
 
 my $didexclude = 0;
 my %seen;
+my @sentlist;
 sub fixaddresses {
     my ($field, $list) = (@_);
     my @result;
@@ -307,8 +308,233 @@ sub Log {
     Unlock();
 }
     
+
+sub FormatTriple {
+    my ($a, $b, $c) = (@_);
+    $^A = "";
+    my $temp = formline << 'END', $a, $b, $c;
+^>>>>>>>>>>>>>>>>>>|^<<<<<<<<<<<<<<<<<<<<<<<<<<<|^<<<<<<<<<<<<<<<<<<<<<<<<<<~~
+END
+    ; # This semicolon appeases my emacs editor macros. :-)
+    return $^A;
+}
+    
+sub FormatDouble {
+    my ($a, $b) = (@_);
+    $a .= ":";
+    $^A = "";
+    my $temp = formline << 'END', $a, $b;
+^>>>>>>>>>>>>>>>>>> ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<~~
+END
+    ; # This semicolon appeases my emacs editor macros. :-)
+    return $^A;
+}
+    
+
+sub NewProcessOneBug {
+    my ($id) = (@_);
+
+    my @headerlist;
+    my %values;
+    my %defmailhead;
+    my %fielddescription;
+
+    my $msg = "";
+
+    SendSQL("SELECT name, description, mailhead FROM fielddefs " .
+            "ORDER BY sortkey");
+    while (MoreSQLData()) {
+        my ($field, $description, $mailhead) = (FetchSQLData());
+        push(@headerlist, $field);
+        $defmailhead{$field} = $mailhead;
+        $fielddescription{$field} = $description;
+    }
+    SendSQL("SELECT " . join(',', @::log_columns) . ", lastdiffed, now() " .
+            "FROM bugs WHERE bug_id = $id");
+    my @row = FetchSQLData();
+    foreach my $i (@::log_columns) {
+        $values{$i} = shift(@row);
+    }
+    my ($start, $end) = (@row);
+    $values{'cc'} = ShowCcList($id);
+
+
+    $values{'assigned_to'} = DBID_to_name($values{'assigned_to'});
+    $values{'reporter'} = DBID_to_name($values{'reporter'});
+    if ($values{'qa_contact'}) {
+        $values{'qa_contact'} = DBID_to_name($values{'qa_contact'});
+    }
+
+    my @diffs;
+
+
+    SendSQL("SELECT profiles.login_name, fielddefs.description, " .
+            "       bug_when, oldvalue, newvalue " .
+            "FROM bugs_activity, fielddefs, profiles " .
+            "WHERE bug_id = $id " .
+            "  AND fielddefs.fieldid = bugs_activity.fieldid " .
+            "  AND profiles.userid = who " .
+            "  AND bug_when > '$start' " .
+            "  AND bug_when <= '$end' " .
+            "ORDER BY bug_when"
+            );
+
+    while (MoreSQLData()) {
+        my @row = FetchSQLData();
+        push(@diffs, \@row);
+    }
+
+    my $difftext = "";
+    my $lastwho = "";
+    foreach my $ref (@diffs) {
+        my ($who, $what, $when, $old, $new) = (@$ref);
+        if ($who ne $lastwho) {
+            $lastwho = $who;
+            $difftext .= "\n$who changed:\n\n";
+            $difftext .= FormatTriple("What    ", "Old Value", "New Value");
+            $difftext .= ('-' x 76) . "\n";
+        }
+        $difftext .= FormatTriple($what, $old, $new);
+    }
+
+    $difftext = trim($difftext);
+
+
+    my $newcomments = GetLongDescription($id, $start, $end);
+
+    my $count = 0;
+    for my $person ($values{'assigned_to'}, $values{'reporter'},
+                    split(/,/, $values{'cc'}),
+                    @forcecc) {
+        $count++;
+        if ($seen{$person}) {
+            next;
+        }
+        
+        SendSQL("SELECT userid, emailnotification, newemailtech," .
+                "       groupset & $values{'groupset'} " .
+                "FROM profiles WHERE login_name = " . SqlQuote($person));
+        my ($userid, $emailnotification, $newemailtech,
+            $groupset) = (FetchSQLData());
+        if (!$newemailtech || !Param('newemailtech')) {
+            next;
+        }
+        $seen{$person} = 1;
+        if ($groupset ne $values{'groupset'}) {
+            next;
+        }
+        if ($emailnotification eq "ExcludeSelfChanges" &&
+            lc($person) eq $nametoexclude) {
+            $didexclude = 1;
+            next;
+        }
+        if ($emailnotification eq "CCOnly" && $count < 3) {
+            next;
+        }
+
+        my %mailhead = %defmailhead;
+
+#          SendSQL("SELECT name, mailhead, maildiffs FROM diffprefs, fielddefs WHERE fielddefs.fieldid = diffprefs.fieldid AND userid = $userid");
+#          while (MoreSQLData()) {
+#              my ($field, $h, $d) = (FetchSQLData());
+#              $mailhead{$field} = $h;
+#              $maildiffs{$field} = $d;
+#          }
+
+#          my $maxlen = 0;
+#          foreach my $f (keys %mailhead) {
+#              if ($mailhead{$f}) {
+#                  my $l = length($fielddescription{$f});
+#                  if ($maxlen < $l) {
+#                      $maxlen = $l;
+#                  }
+#              }
+#          }
+
+        my $head = "";
+        
+        foreach my $f (@headerlist) {
+            if ($mailhead{$f}) {
+                my $value = $values{$f};
+                if (!defined $value) {
+                    # Probaby ought to whine or something. ###
+                    next;
+                }
+                my $desc = $fielddescription{$f};
+                $head .= FormatDouble($desc, $value);
+
+#                  my $extra = $maxlen - length($desc);
+#                  $head .= ($extra x " ");
+#                  $head .= $desc . ": ";
+#                  while (1) {
+#                      if (length($value) < 70) {
+#                          $head .= $value . "\n";
+#                          last;
+#                      }
+#                      my $pos = rindex($value, " ", 70);
+#                      if ($pos < 0) {
+#                          $pos = rindex($value, ",", 70);
+#                          if ($pos < 0) {
+#                              $pos = 70;
+#                          }
+#                      }
+#                      $head .= substr($value, 0, 70) . "\n";
+#                      $head .= (($extra + 2) x " ");
+#                      $value = substr($value, 70);
+#                  }
+            }
+        }
+        if ($difftext eq "" && $newcomments eq "") {
+            # Whoops, no differences!
+            next;
+        }
+
+        my $isnew = ($start !~ m/[1-9]/);
+
+        my %substs;
+        $substs{"neworchanged"} = $isnew ? "New" : "Changed";
+        $substs{"to"} = $person;
+        $substs{"cc"} = '';
+        $substs{"bugid"} = $id;
+        if ($isnew) {
+            $substs{"diffs"} = $head . "\n\n" . $newcomments;
+        } else {
+            $substs{"diffs"} = $difftext . "\n\n" . $newcomments;
+        }
+        $substs{"summary"} = $values{'short_desc'};
+        
+        # my $template = Param("changedmail");
+        my $template = "From: bugzilla-daemon
+To: %to%
+Cc: %cc%
+Subject: [Bug %bugid%] %neworchanged% - %summary%
+
+%urlbase%show_bug.cgi?id=%bugid%
+
+%diffs%";
+
+        my $msg = PerformSubsts(Param("changedmail"), \%substs);
+        open(SENDMAIL, "|/usr/lib/sendmail -t") ||
+            die "Can't open sendmail";
+        
+        print SENDMAIL trim($msg);
+        close SENDMAIL;
+        push(@sentlist, $person);
+    }
+
+        
+
+
+
+    SendSQL("UPDATE bugs SET lastdiffed = '$end', delta_ts = delta_ts " .
+            "WHERE bug_id = $id");
+}
+
+
+
 sub ProcessOneBug {
     my $i = $_[0];
+    NewProcessOneBug($i);
     my $old = "shadow/$i";
     my $new = "shadow/$i.tmp.$$";
     my $diffs = "shadow/$i.diffs.$$";
@@ -364,8 +590,16 @@ sub ProcessOneBug {
 
                 print SENDMAIL $msg;
                 close SENDMAIL;
+                foreach my $n (split(/[, ]+/, "$tolist,$cclist")) {
+                    if ($n ne "") {
+                        push(@sentlist, $n);
+                    }
+                }
+
                 $logstr = "$logstr; mail sent to $tolist, $cclist";
-                print "<B>Email sent to:</B> $tolist $cclist\n";
+            }
+            if (@sentlist) {
+                print "<B>Email sent to:</B> " . join(", ", @sentlist) . "\n";
                 if ($didexclude) {
                     print "<B>Excluding:</B> $nametoexclude (<a href=changepassword.cgi>change your preferences</a> if you wish not to be excluded)\n";
                 }
@@ -380,11 +614,13 @@ sub ProcessOneBug {
         print "$i ";
     }
     %seen = ();
+    @sentlist = ();
 }
 
 # Code starts here
 
 ConnectToDatabase();
+GetVersionTable();
 Lock();
 
 if (open(FID, "<data/nomail")) {

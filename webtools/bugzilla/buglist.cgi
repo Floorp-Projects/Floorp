@@ -452,7 +452,7 @@ if (defined $ref && 0 < @$ref) {
     
     my @list;
     foreach my $f (@$ref) {
-        push(@list, "\nbugs_activity.field = " . SqlQuote($f));
+        push(@list, "\nbugs_activity.fieldid = " . GetFieldID($f));
     }
     $query .= "and bugs_activity.bug_id = bugs.bug_id and (" .
         join(' or ', @list) . ") ";

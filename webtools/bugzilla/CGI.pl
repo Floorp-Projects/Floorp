@@ -777,13 +777,14 @@ sub DumpBugActivity {
         $datepart = "and bugs_activity.bug_when >= $starttime";
     }
     my $query = "
-        select bugs_activity.field, bugs_activity.bug_when,
+        SELECT fielddefs.name, bugs_activity.bug_when,
                 bugs_activity.oldvalue, bugs_activity.newvalue,
                 profiles.login_name
-        from bugs_activity,profiles
-        where bugs_activity.bug_id = $id $datepart
-        and profiles.userid = bugs_activity.who
-        order by bugs_activity.bug_when";
+        FROM bugs_activity,profiles,fielddefs
+        WHERE bugs_activity.bug_id = $id $datepart
+              AND fielddefs.fieldid = bugs_activity.fieldid
+              AND profiles.userid = bugs_activity.who
+        ORDER BY bugs_activity.bug_when";
 
     SendSQL($query);
     

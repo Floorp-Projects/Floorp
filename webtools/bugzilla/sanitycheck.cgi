@@ -336,18 +336,30 @@ while (@row = FetchSQLData()) {
 
 Status("Checking activity table");
 
-SendSQL("select bug_id,who from bugs_activity");
+SendSQL("select bug_id,who,fieldid from bugs_activity");
+
+my @fieldids;
 
 while (@row = FetchSQLData()) {
-    my ($id, $who) = (@row);
+    my ($id, $who, $f) = (@row);
     if (!defined $bugid{$id}) {
         Alert("Bad bugid " . BugLink($id));
     }
     if (!defined $profid{$who}) {
         Alert("Bad who $who in " . BugLink($id));
     }
+    $fieldids[$f] = 1;
 }
 
+for (my $f = 0 ; $f < @fieldids ; $f++) {
+    if ($fieldids[$f]) {
+        SendSQL("SELECT name FROM fielddefs WHERE fieldid = $f");
+        my $name = FetchOneColumn();
+        if (!$name) {
+            Alert("Bad fieldid $f in bugs_activity");
+        }
+    }
+}
 
 Status("Checking dependency table");
 

@@ -119,6 +119,22 @@ sub AppendComment {
     SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
 }
 
+sub GetFieldID {
+    my ($f) = (@_);
+    SendSQL("SELECT fieldid FROM fielddefs WHERE name = " . SqlQuote($f));
+    my $fieldid = FetchOneColumn();
+    if (!$fieldid) {
+        my $q = SqlQuote($f);
+        SendSQL("REPLACE INTO fielddefs (name, description) VALUES ($q, $q)");
+        SendSQL("SELECT LAST_INSERT_ID()");
+        $fieldid = FetchOneColumn();
+    }
+    return $fieldid;
+}
+        
+
+
+
 sub lsearch {
     my ($list,$item) = (@_);
     my $count = 0;
@@ -282,7 +298,7 @@ sub GenerateVersionTable {
     my $cols = LearnAboutColumns("bugs");
     
     @::log_columns = @{$cols->{"-list-"}};
-    foreach my $i ("bug_id", "creation_ts", "delta_ts", "long_desc") {
+    foreach my $i ("bug_id", "creation_ts", "delta_ts", "lastdiffed") {
         my $w = lsearch(\@::log_columns, $i);
         if ($w >= 0) {
             splice(@::log_columns, $w, 1);
@@ -463,15 +479,27 @@ sub DBNameToIdAndCheck {
 }
 
 sub GetLongDescription {
-    my ($id) = (@_);
+    my ($id, $start, $end) = (@_);
     my $result = "";
-    SendSQL("SELECT profiles.login_name, longdescs.bug_when, " .
-            "       longdescs.thetext " .
-            "FROM longdescs, profiles " .
-            "WHERE profiles.userid = longdescs.who " .
-            "      AND longdescs.bug_id = $id " .
-            "ORDER BY longdescs.bug_when");
     my $count = 0;
+    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
+                   "       longdescs.thetext " .
+                   "FROM longdescs, profiles " .
+                   "WHERE profiles.userid = longdescs.who " .
+                   "      AND longdescs.bug_id = $id ");
+
+    if ($start && $start =~ /[1-9]/) {
+        # If the start is all zeros, then don't do this (because we want to
+        # not emit a leading "Addition Comments" line in that case.)
+        $query .= "AND longdescs.bug_when > '$start'";
+        $count = 1;
+    }
+    if ($end) {
+        $query .= "AND longdescs.bug_when <= '$end'";
+    }
+
+    $query .= "ORDER BY longdescs.bug_when";
+    SendSQL($query);
     while (MoreSQLData()) {
         my ($who, $when, $text) = (FetchSQLData());
         if ($count) {
