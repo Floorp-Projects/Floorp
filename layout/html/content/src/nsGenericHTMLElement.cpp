@@ -438,6 +438,26 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
   
   if (nsnull != mAttributes) {
     result = mAttributes->Clone(&(aDst->mAttributes));
+
+    if (NS_SUCCEEDED(result)) {
+      nsHTMLValue val;
+      result = aDst->GetHTMLAttribute(nsHTMLAtoms::style, val);
+
+      if (result == NS_CONTENT_ATTR_HAS_VALUE &&
+          val.GetUnit() == eHTMLUnit_ISupports) {
+        nsCOMPtr<nsISupports> supports(dont_AddRef(val.GetISupportsValue()));
+        nsCOMPtr<nsICSSStyleRule> rule(do_QueryInterface(supports));
+
+        if (rule) {
+          nsCOMPtr<nsICSSRule> ruleClone;
+
+          result = rule->Clone(*getter_AddRefs(ruleClone));
+
+          val.SetISupportsValue(ruleClone);
+          aDst->SetHTMLAttribute(nsHTMLAtoms::style, val, PR_FALSE);
+        }
+      }
+    }
   }
 
   PRInt32 id;
