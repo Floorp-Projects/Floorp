@@ -126,7 +126,7 @@ public:
   friend struct Image;
   
   // for valueless units only (null, auto, inherit, none, normal)
-  nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
+  explicit nsCSSValue(nsCSSUnit aUnit = eCSSUnit_Null)
     : mUnit(aUnit)
   {
     NS_ASSERTION(aUnit <= eCSSUnit_Normal, "not a valueless unit");
@@ -139,9 +139,9 @@ public:
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
   nsCSSValue(float aValue, nsCSSUnit aUnit) NS_HIDDEN;
   nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit) NS_HIDDEN;
-  nsCSSValue(nscolor aValue) NS_HIDDEN;
-  nsCSSValue(URL* aValue) NS_HIDDEN;
-  nsCSSValue(Image* aValue) NS_HIDDEN;
+  explicit nsCSSValue(nscolor aValue) NS_HIDDEN;
+  explicit nsCSSValue(URL* aValue) NS_HIDDEN;
+  explicit nsCSSValue(Image* aValue) NS_HIDDEN;
   nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
   NS_FASTCALL ~nsCSSValue() NS_HIDDEN;
 

@@ -372,7 +372,7 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
 
-    if (aData->mDisplayData->mDisplay == eCSSUnit_Null) {
+    if (aData->mDisplayData->mDisplay.GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
       if (value && value->Type() == nsAttrValue::eString) {
         nsAutoString tmp(value->GetStringValue());
@@ -382,7 +382,8 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
             tmp.LowerCaseEqualsLiteral("block")) {
           // This is not strictly 100% compatible: if the spacer is given
           // a width of zero then it is basically ignored.
-          aData->mDisplayData->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+          aData->mDisplayData->mDisplay.SetIntValue(NS_STYLE_DISPLAY_BLOCK,
+                                                    eCSSUnit_Enumerated);
         }
       }
     }
