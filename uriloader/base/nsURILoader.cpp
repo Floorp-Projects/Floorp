@@ -553,7 +553,7 @@ NS_IMETHODIMP nsURILoader::GetTarget(nsIChannel * aChannel, const char * aWindow
     // during GetTarget, then tweak the load attributes on the channel to set the
     // LOAD_RETARGETED_DOCUMENT_URI flag...
     nsCOMPtr<nsISupports> retargetedWindowCtxt = do_QueryInterface(treeItem);
-    if (retargetedWindowCtxt && (aWindowContext != retargetedWindowCtxt))
+    if (retargetedWindowCtxt && (aWindowContext != retargetedWindowCtxt.get()))
     {
        // we must be retargeting...so set an appropriate flag on the channel
       nsLoadFlags loadAttribs = 0;
