@@ -84,8 +84,8 @@ configure:	mozilla/configure.in
 	(cd mozilla/$$autoobjdir; ../configure $(NSPR_CONFIG_FLAG) --enable-toolkit=$(MOZ_TOOLKIT)); \
 
 build:	configure
-	(cd mozilla/$$autoobjdir; gmake); \
-#	(cd mozilla/$$autoobjdir; gmake depend); \
+	(cd mozilla/$$autoobjdir; $(MAKE)); \
+#	(cd mozilla/$$autoobjdir; $(MAKE) depend); \
 
 # Build & install nspr.  Classic build, no autoconf.
 # Linux/RPM available.
