@@ -57,13 +57,10 @@
 
 #include "nsIParser.h"
 #include "nsDeque.h"
-#include "nsHTMLTokens.h"
 #include "nsParserNode.h"
-#include "nsTokenHandler.h"
 #include "nsParserTypes.h"
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
-#include "nsITokenizerDelegate.h"
 
 
 #define NS_IHTML_PARSER_IID      \
@@ -71,11 +68,11 @@
   {0xaa, 0xd9, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
 
-class CTokenizer;
 class IContentSink;
 class nsIHTMLContentSink;
 class nsIURL;
 class nsIDTD;
+class CScanner;
 
 
 class nsHTMLParser : public nsIParser, public nsIStreamListener {
@@ -106,6 +103,17 @@ friend class CTokenHandler;
      * @return  old sink, or NULL
      */
     virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
+    
+    virtual void SetDTD(nsIDTD* aDTD);
+    
+    /**
+     *  
+     *  
+     *  @update  gess 6/9/98
+     *  @param   
+     *  @return  
+     */
+    virtual CScanner* GetScanner(void);
 
     /**
      * Cause parser to parse input from given URL in given mode
@@ -143,108 +151,36 @@ friend class CTokenHandler;
     virtual PRInt32 ResumeParse(void);
 
     /**
-     * Retrieve ptr to internal context vector stack
+     * Causes the parser to scan foward, collecting nearby (sequential)
+     * attribute tokens into the given node.
      * @update	gess5/11/98
-     * @param   stack ptr to be set
-     * @return  count of items on stack (may be 0)
+     * @param   node to store attributes
+     * @return  number of attributes added to node.
      */
-    virtual PRInt32 GetStack(PRInt32* aStackPtr);
+    virtual PRInt32 CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 
     /**
-     * Ask parser if a given container is open ANYWHERE on stack
+     * Causes the next skipped-content token (if any) to
+     * be consumed by this node.
      * @update	gess5/11/98
-     * @param   id of container you want to test for
-     * @return  TRUE if the given container type is open -- otherwise FALSE
+     * @param   node to consume skipped-content
+     * @return  number of skipped-content tokens consumed.
      */
-    virtual PRBool HasOpenContainer(PRInt32 aContainer) const;
-
-
-    /**
-     * This method gets called when a start token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the start token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleStartToken(CToken* aToken);
+    virtual PRInt32 CollectSkippedContent(nsCParserNode& aNode);
 
     /**
-     * This method gets called when a start token has been consumed, and
-     * we want to use default start token handling behavior.
-     * This method gets called automatically by handleStartToken.
-     *
-     * @update	gess5/11/98
-     * @param   aToken is the start token to be handled
-     * @param   aChildTag is the tag-type of given token
-     * @param   aNode is a node be updated with info from given token
-     * @return  TRUE if the token was handled.
+     *  This debug routine is used to cause the tokenizer to
+     *  iterate its token list, asking each token to dump its
+     *  contents to the given output stream.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return  
      */
-    PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
+    void DebugDumpSource(ostream& out);
 
-    /**
-     * This method gets called when an end token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the end token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleEndToken(CToken* aToken);
 
-    /**
-     * This method gets called when an entity token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the entity token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleEntityToken(CToken* aToken);
-
-    /**
-     * This method gets called when a comment token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the comment token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleCommentToken(CToken* aToken);
-
-    /**
-     * This method gets called when a skipped-content token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the skipped-content token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleSkippedContentToken(CToken* aToken);
-
-    /**
-     * This method gets called when an attribute token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the attribute token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleAttributeToken(CToken* aToken);
-
-    /**
-     * This method gets called when a script token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the script token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleScriptToken(CToken* aToken);
-    
-    /**
-     * This method gets called when a style token has been consumed and needs 
-     * to be handled (possibly added to content model via sink).
-     * @update	gess5/11/98
-     * @param   aToken is the style token to be handled
-     * @return  TRUE if the token was handled.
-     */
-    PRInt32 HandleStyleToken(CToken* aToken);
-
-      //*********************************************
+     //*********************************************
       // These methods are callback methods used by
       // net lib to let us know about our inputstream.
       //*********************************************
@@ -278,227 +214,75 @@ protected:
      * @update	gess5/11/98
      * @return  YES if model building went well -- NO otherwise.
      */
-    PRInt32 IterateTokens(void);
-
-    /**
-     * Retrieve the tag type of the topmost item on context vector stack
-     * @update	gess5/11/98
-     * @return  tag type (may be unknown)
-     */
-    eHTMLTags GetTopNode() const;
-
-    /**
-     * Causes the parser to scan foward, collecting nearby (sequential)
-     * attribute tokens into the given node.
-     * @update	gess5/11/98
-     * @param   node to store attributes
-     * @return  number of attributes added to node.
-     */
-    PRInt32 CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
-
-    /**
-     * Causes the next skipped-content token (if any) to
-     * be consumed by this node.
-     * @update	gess5/11/98
-     * @param   node to consume skipped-content
-     * @return  number of skipped-content tokens consumed.
-     */
-    PRInt32 CollectSkippedContent(nsCParserNode& aNode);
-
-    /**
-     * Causes token handlers to be registered for this parser.
-     * DO NOT CALL THIS! IT'S DEPRECATED!
-     * @update	gess5/11/98
-     */
-    void InitializeDefaultTokenHandlers();
-
-   
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    CTokenHandler* GetTokenHandler(eHTMLTokenTypes aType) const;
-
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    CTokenHandler* AddTokenHandler(CTokenHandler* aHandler);
-
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    nsHTMLParser& DeleteTokenHandlers(void);
+    virtual PRInt32 IterateTokens(void);
   
-    //*************************************************
-    //these cover methods mimic the sink, and are used
-    //by the parser to manage its context-stack.
-    //*************************************************
-
-    /**
-     * This cover method opens the given node as a HTML item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   HTML (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    PRInt32 OpenHTML(const nsIParserNode& aNode);
-
-    /**
-     * 
-     * @update	gess5/11/98
-     * @param 
-     * @return
-     */
-    PRInt32 CloseHTML(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a head item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   HEAD (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    PRInt32 OpenHead(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink head to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseHead(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a body item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   BODY (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    PRInt32 OpenBody(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink body to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the body node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseBody(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a form item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FORM (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    PRInt32 OpenForm(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink form to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the form node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseForm(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a frameset item in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   FRAMESET (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    PRInt32 OpenFrameset(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes the content-sink frameset to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the frameeset node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseFrameset(const nsIParserNode& aNode);
-
-    /**
-     * This cover method opens the given node as a generic container in 
-     * content sink.
-     * @update	gess5/11/98
-     * @param   generic container (node) to be opened in content sink.
-     * @return  TRUE if all went well.
-     */
-    PRInt32 OpenContainer(const nsIParserNode& aNode);
-
-    /**
-     * This cover method causes a generic containre in the content-sink to be closed
-     * @update	gess5/11/98
-     * @param   aNode is the node to be closed in sink (usually ignored)
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseContainer(const nsIParserNode& aNode);
-    
-    /**
-     * This cover method causes the topmost container to be closed in sink
-     * @update	gess5/11/98
-     * @return  TRUE if all went well.
-     */
-    PRInt32 CloseTopmostContainer();
-    
-    /**
-     * Cause all containers down to topmost given tag to be closed
-     * @update	gess5/11/98
-     * @param   aTag is the tag at which auto-closure should stop (inclusive) 
-     * @return  TRUE if all went well -- otherwise FALSE
-     */
-    PRInt32 CloseContainersTo(eHTMLTags aTag);
-
-    /**
-     * Cause all containers down to given position to be closed
-     * @update	gess5/11/98
-     * @param   anIndex is the stack pos at which auto-closure should stop (inclusive) 
-     * @return  TRUE if all went well -- otherwise FALSE
-     */
-    PRInt32 CloseContainersTo(PRInt32 anIndex);
-
-    /**
-     * Causes leaf to be added to sink at current vector pos.
-     * @update	gess5/11/98
-     * @param   aNode is leaf node to be added.
-     * @return  TRUE if all went well -- FALSE otherwise.
-     */
-    PRInt32 AddLeaf(const nsIParserNode& aNode);
-
-
-    /**
-     * Finds the topmost occurance of given tag within context vector stack.
-     * @update	gess5/11/98
-     * @param   tag to be found
-     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
-     */
-    PRInt32 GetTopmostIndex(eHTMLTags aTag) const;
-
-    /**
-     * Causes auto-closures of context vector stack in order to find a 
-     * proper home for the given child. Propagation may also occur as 
-     * a fall out.
-     * @update	gess5/11/98
-     * @param   child to be added (somewhere) to context vector stack.
-     * @return  TRUE if succeeds, otherwise FALSE
-     */
-    PRInt32 ReduceContextStackFor(PRInt32 aChildTag);
-
-    /**
-     * Attempt forward and/or backward propagation for the given
-     * child within the current context vector stack.
-     * @update	gess5/11/98
-     * @param   type of child to be propagated.
-     * @return  TRUE if succeeds, otherwise FALSE
-     */
-    PRInt32 CreateContextStackFor(PRInt32 aChildTag);
-
 private:
     PRInt32 ParseFileIncrementally(const char* aFilename);  //XXX ONLY FOR DEBUG PURPOSES...
+
+    /*******************************************
+      These are the tokenization methods...
+     *******************************************/
+
+    /**
+     *  Cause the tokenizer to consume the next token, and 
+     *  return an error result.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   anError -- ref to error code
+     *  @return  new token or null
+     */
+    virtual PRInt32 ConsumeToken(CToken*& aToken);
+
+    /**
+     *  Part of the code sandwich, this gets called right before
+     *  the tokenization process begins. The main reason for
+     *  this call is to allow the delegate to do initialization.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return  TRUE if it's ok to proceed
+     */
+    PRBool WillTokenize(PRBool aIncremental);
+
+    /**
+     *  
+     *  @update  gess 3/25/98
+     *  @return  TRUE if it's ok to proceed
+     */
+    PRInt32 Tokenize(nsString& aSourceBuffer,PRBool appendTokens);
+
+    /**
+     *  This is the primary control routine. It iteratively
+     *  consumes tokens until an error occurs or you run out
+     *  of data.
+     *  
+     *  @update  gess 3/25/98
+     *  @return  error code 
+     */
+    PRInt32 Tokenize(void);
+
+    /**
+     *  This is the tail-end of the code sandwich for the
+     *  tokenization process. It gets called once tokenziation
+     *  has completed.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return  TRUE if all went well
+     */
+    PRBool DidTokenize(PRBool aIncremental);
+
+    /**
+     *  This debug routine is used to cause the tokenizer to
+     *  iterate its token list, asking each token to dump its
+     *  contents to the given output stream.
+     *  
+     *  @update  gess 3/25/98
+     *  @param   
+     *  @return  
+     */
+    void DebugDumpTokens(ostream& out);
+
 
 protected:
     //*********************************************
@@ -506,25 +290,22 @@ protected:
     //*********************************************
 
     nsIStreamListener*  mListener;
-    nsIHTMLContentSink* mSink;
-    CTokenizer*         mTokenizer;
-
-    PRInt32             mContextStack[50];
-    PRInt32             mContextStackPos;
-
-    CTokenHandler*      mTokenHandlers[eToken_last];
+    nsIContentSink*     mSink;
 
     nsDequeIterator*    mCurrentPos;
     nsDequeIterator*    mMarkPos;
 
     nsIDTD*             mDTD;
     eParseMode          mParseMode;
-    PRBool              mHasOpenForm;
     PRBool              mIncremental;
-    ITokenizerDelegate* mDelegate;
-    PRInt32             mIteration;
     char*               mTransferBuffer;
-    PRBool              mHasSeenOpenTag;
+
+    PRInt32             mMajorIteration;
+    PRInt32             mMinorIteration;
+
+    nsDeque             mTokenDeque;
+    CScanner*           mScanner;
+
 };
 
 

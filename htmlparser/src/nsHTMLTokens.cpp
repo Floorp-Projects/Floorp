@@ -172,12 +172,13 @@ HTMLTagEntry gHTMLTagTable[] =
 
   {"Q",           eHTMLTag_quotation},
 
-  {"S",           eHTMLTag_strike},       {"SAMP",       eHTMLTag_samp},         
-  {"SCRIPT",      eHTMLTag_script},       {"SELECT",     eHTMLTag_select},       
+  {"S",           eHTMLTag_strike},       {"SAMP",      eHTMLTag_samp},         
+  {"SCRIPT",      eHTMLTag_script},       {"SELECT",    eHTMLTag_select},       
   {"SERVER",      eHTMLTag_server},       {"SMALL",     eHTMLTag_small},
   {"SPACER",      eHTMLTag_spacer},
-  {"SPAN",        eHTMLTag_span},         {"STRIKE",     eHTMLTag_strike},       
-  {"STRONG",      eHTMLTag_strong},       {"STYLE",      eHTMLTag_style},        
+  {"SPAN",        eHTMLTag_span},         {"SPELL",     eHTMLTag_spell},       
+  {"STRIKE",      eHTMLTag_strike},       
+  {"STRONG",      eHTMLTag_strong},       {"STYLE",     eHTMLTag_style},        
   {"SUB",         eHTMLTag_sub},          {"SUP",       eHTMLTag_sup},
 
   {"TABLE",       eHTMLTag_table},        {"TBODY",     eHTMLTag_tbody},    

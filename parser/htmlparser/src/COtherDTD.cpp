@@ -23,15 +23,73 @@
  *         
  */
 
+/**
+ * TRANSIENT STYLE-HANDLING NOTES:
+ * @update  gess 6/15/98
+ * 
+ * ...add comments here about transient style stack.
+ *         
+ */
+
 #include "COtherDTD.h"
 #include "nsHTMLTokens.h"
 #include "nsCRT.h"
 #include "nsParserTypes.h"
-#include "nsIParser.h"
+#include "nsHTMLParser.h"
+#include "nsHTMLContentSink.h" 
+#include "nsScanner.h"
+
+#include "prenv.h"  //this is here for debug reasons...
+#include "prtypes.h"
+#include "prio.h"
+#include "plstr.h"
+#include "prstrm.h"
+#include <fstream.h>
+
+
+#ifdef XP_PC
+#include <direct.h> //this is here for debug reasons...
+#endif
+#include <time.h>
+#include "prmem.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOtherHTML_DTD_IID); 
+
+static const char* kNullURL = "Error: Null URL given";
+static const char* kNullFilename= "Error: Null filename given";
+static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
+static const char* kNullToken = "Error: Null token given";
+static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
+
+static char*        gVerificationOutputDir=0;
+static char*        gURLRef=0;
+static nsAutoString gEmpty;
+
+static char formElementTags[]= {  
+    eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
+    eHTMLTag_isindex, eHTMLTag_label,     eHTMLTag_legend,
+    eHTMLTag_select,  eHTMLTag_textarea,0};
+
+static char gHeadingTags[]={
+  eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
+  eHTMLTag_h4,  eHTMLTag_h5,  eHTMLTag_h6, 
+  0};
+
+static char  gStyleTags[]={
+  eHTMLTag_a,       eHTMLTag_bold,    eHTMLTag_big,
+  eHTMLTag_blink,   eHTMLTag_cite,    eHTMLTag_em, 
+  eHTMLTag_font,    eHTMLTag_italic,  eHTMLTag_kbd,     
+  eHTMLTag_small,   eHTMLTag_spell,   eHTMLTag_strike,  
+  eHTMLTag_strong,  eHTMLTag_sub,     eHTMLTag_sup,     
+  eHTMLTag_tt,      eHTMLTag_u,       eHTMLTag_var,     
+  0};
+  
+static char  gWhitespaceTags[]={
+  eHTMLTag_newline, eHTMLTag_whitespace,
+  0};
+
 
 
 /**
@@ -91,6 +149,84 @@ NS_IMPL_ADDREF(COtherDTD)
 NS_IMPL_RELEASE(COtherDTD)
 
 
+
+/**
+ *  
+ *  
+ *  @update  gess 6/9/98
+ *  @param   
+ *  @return  
+ */
+PRInt32 OtherDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
+  PRInt32         result=0;
+  CHTMLToken*     theToken= (CHTMLToken*)(aToken);
+  eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
+  COtherDTD*        theDTD=(COtherDTD*)aDTD;
+  
+  if(aDTD) {
+    switch(theType) {
+      case eToken_start:
+        result=theDTD->HandleStartToken(aToken); break;
+      case eToken_end:
+        result=theDTD->HandleEndToken(aToken); break;
+      case eToken_comment:
+        result=theDTD->HandleCommentToken(aToken); break;
+      case eToken_entity:
+        result=theDTD->HandleEntityToken(aToken); break;
+      case eToken_whitespace:
+        result=theDTD->HandleStartToken(aToken); break;
+      case eToken_newline:
+        result=theDTD->HandleStartToken(aToken); break;
+      case eToken_text:
+        result=theDTD->HandleStartToken(aToken); break;
+      case eToken_attribute:
+        result=theDTD->HandleAttributeToken(aToken); break;
+      case eToken_style:
+        result=theDTD->HandleStyleToken(aToken); break;
+      case eToken_skippedcontent:
+        result=theDTD->HandleSkippedContentToken(aToken); break;
+      default:
+        result=0;
+    }//switch
+  }//if
+  return result;
+}
+
+/**
+ *  init the set of default token handlers...
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+void COtherDTD::InitializeDefaultTokenHandlers() {
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_start));
+
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_end));
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_comment));
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_entity));
+
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_whitespace));
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_newline));
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_text));
+  
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_attribute));
+//  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_script));
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_style));
+  AddTokenHandler(new CTokenHandler(OtherDispatchTokenHandler,eToken_skippedcontent));
+}
+
+
+class COtherTokenDeallocator: public nsDequeFunctor{
+public:
+  virtual void operator()(void* anObject) {
+    CToken* aToken = (CToken*)anObject;
+    delete aToken;
+  }
+};
+
+COtherTokenDeallocator gTokenKiller;
+
 /**
  *  Default constructor
  *  
@@ -98,8 +234,19 @@ NS_IMPL_RELEASE(COtherDTD)
  *  @param   
  *  @return  
  */
-COtherDTD::COtherDTD() : nsIDTD() {
+COtherDTD::COtherDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   mParser=0;
+  nsCRT::zero(mLeafBits,sizeof(mLeafBits));
+  nsCRT::zero(mContextStack,sizeof(mContextStack));
+  nsCRT::zero(mStyleStack,sizeof(mStyleStack));
+  nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
+  mContextStackPos=0;
+  mStyleStackPos=0;
+  gURLRef = 0;
+  mHasOpenForm=PR_FALSE;
+  mHasOpenMap=PR_FALSE;
+  gVerificationOutputDir = PR_GetEnv("VERIFY_PARSER");
+  InitializeDefaultTokenHandlers();
 }
 
 /**
@@ -110,8 +257,505 @@ COtherDTD::COtherDTD() : nsIDTD() {
  *  @return  
  */
 COtherDTD::~COtherDTD(){
+  DeleteTokenHandlers();
+  if (gURLRef)
+  {
+     PL_strfree(gURLRef);
+     gURLRef = 0;
+  }
+//  NS_RELEASE(mSink);
 }
 
+/**
+ * 
+ * @update	gess5/18/98
+ * @param 
+ * @return
+ */
+PRInt32 COtherDTD::WillBuildModel(void){
+  PRInt32 result=0;
+
+  if(mSink)
+    mSink->WillBuildModel();
+
+  return result;
+}
+
+/**
+ * 
+ * @update	gess5/18/98
+ * @param 
+ * @return
+ */
+PRInt32 COtherDTD::DidBuildModel(PRInt32 anErrorCode){
+  PRInt32 result=0;
+
+  if((kNoError==anErrorCode) && (mContextStackPos>0)) {
+    CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
+  }
+  if(mSink) {
+    mSink->DidBuildModel();
+  }
+
+  return result;
+}
+
+/**
+ *  This big dispatch method is used to route token handler calls to the right place.
+ *  What's wrong with it? This table, and the dispatch methods themselves need to be 
+ *  moved over to the delegate. Ah, so much to do...
+ *  
+ *  @update  gess 5/21/98
+ *  @param   aType
+ *  @param   aToken
+ *  @param   aParser
+ *  @return  
+ */
+PRInt32 COtherDTD::HandleToken(CToken* aToken){
+  PRInt32 result=0;
+
+  if(aToken) {
+    CHTMLToken*     theToken= (CHTMLToken*)(aToken);
+    eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
+    CTokenHandler*  aHandler=GetTokenHandler(theType);
+
+    if(aHandler) {
+      result=(*aHandler)(theToken,this);
+      Verify("xxx",PR_TRUE);
+    }
+
+  }//if
+  return result;
+}
+
+
+
+/**
+ *  This method gets called when a start token has been 
+ *  encountered in the parse process. If the current container
+ *  can contain this tag, then add it. Otherwise, you have
+ *  two choices: 1) create an implicit container for this tag
+ *                  to be stored in
+ *               2) close the top container, and add this to
+ *                  whatever container ends up on top.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @param   aNode -- CParserNode representing this start token
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  eHTMLTags parentTag=(eHTMLTags)GetTopNode();
+  PRInt32   result=kNoError;
+  PRBool    contains=CanContain(parentTag,aChildTag);
+
+  if(PR_FALSE==contains){
+    result=CreateContextStackFor(aChildTag);
+    if(kNoError!=result) {
+      //if you're here, then the new topmost container can't contain aToken.
+      //You must determine what container hierarchy you need to hold aToken,
+      //and create that on the parsestack.
+      result=ReduceContextStackFor(aChildTag);
+      if(PR_FALSE==CanContain(GetTopNode(),aChildTag)) {
+        //we unwound too far; now we have to recreate a valid context stack.
+        result=CreateContextStackFor(aChildTag);
+      }
+    }
+  }
+
+  if(IsContainer(aChildTag)){
+    if(PR_TRUE==mLeafBits[mContextStackPos-1]) {
+      CloseTransientStyles(aChildTag);
+    }
+    result=OpenContainer(aNode,PR_TRUE);
+  }
+  else {
+    if(PR_FALSE==mLeafBits[mContextStackPos-1]) {
+      OpenTransientStyles(aChildTag);
+    }
+    result=AddLeaf(aNode);
+  }
+  return result;
+}
+
+/**
+ *  This method gets called when a start token has been 
+ *  encountered in the parse process. If the current container
+ *  can contain this tag, then add it. Otherwise, you have
+ *  two choices: 1) create an implicit container for this tag
+ *                  to be stored in
+ *               2) close the top container, and add this to
+ *                  whatever container ends up on top.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @param   aNode -- CParserNode representing this start token
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleStartToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  CStartToken*  st= (CStartToken*)(aToken);
+  eHTMLTags     tokenTagType=st->GetHTMLTag();
+
+  //Begin by gathering up attributes...
+  nsCParserNode attrNode((CHTMLToken*)aToken);
+  PRInt16       attrCount=aToken->GetAttributeCount();
+  PRInt32       result=(0==attrCount) ? kNoError : mParser->CollectAttributes(attrNode,attrCount);
+
+  if(kNoError==result) {
+      //now check to see if this token should be omitted...
+    if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
+  
+      switch(tokenTagType) {
+
+        case eHTMLTag_html:
+          result=OpenHTML(attrNode); break;
+
+        case eHTMLTag_title:
+          {
+            nsCParserNode theNode(st);
+            result=OpenHead(theNode); //open the head...
+            if(kNoError==result) {
+              mParser->CollectSkippedContent(attrNode);
+              mSink->SetTitle(attrNode.GetSkippedContent());
+              result=CloseHead(theNode); //close the head...
+            }
+          }
+          break;
+
+        case eHTMLTag_textarea:
+          {
+            mParser->CollectSkippedContent(attrNode);
+            result=AddLeaf(attrNode);
+          }
+          break;
+
+        case eHTMLTag_form:
+          result = OpenForm(attrNode);
+          break;
+
+        case eHTMLTag_meta:
+        case eHTMLTag_link:
+          {
+            nsCParserNode theNode((CHTMLToken*)aToken);
+            result=OpenHead(theNode);
+            if(kNoError==result)
+              result=AddLeaf(theNode);
+            if(kNoError==result)
+              result=CloseHead(theNode);
+          }
+          break;
+
+        case eHTMLTag_style:
+          {
+            nsCParserNode theNode((CHTMLToken*)aToken);
+            result=OpenHead(theNode);
+            if(kNoError==result) {
+              mParser->CollectSkippedContent(attrNode);
+              if(kNoError==result) {
+                result=AddLeaf(attrNode);
+                if(kNoError==result)
+                  result=CloseHead(theNode);
+              }
+            }
+          }
+          break;
+
+        case eHTMLTag_script:
+          result=HandleScriptToken(st); break;
+      
+
+        case eHTMLTag_head:
+          break; //ignore head tags...
+
+        case eHTMLTag_base:
+          result=OpenHead(attrNode);
+          if(kNoError==result) {
+            result=AddLeaf(attrNode);
+            if(kNoError==result)
+              result=CloseHead(attrNode);
+          }
+          break;
+
+        case eHTMLTag_nobr:
+          result=PR_TRUE;
+
+        case eHTMLTag_map:
+          result=PR_TRUE;
+
+        default:
+          result=HandleDefaultStartToken(aToken,tokenTagType,attrNode);
+          break;
+      } //switch
+    } //if
+  } //if
+  return result;
+}
+
+
+/**
+ *  This method gets called when an end token has been 
+ *  encountered in the parse process. If the end tag matches
+ *  the start tag on the stack, then simply close it. Otherwise,
+ *  we have a erroneous state condition. This can be because we
+ *  have a close tag with no prior open tag (user error) or because
+ *  we screwed something up in the parse process. I'm not sure
+ *  yet how to tell the difference.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleEndToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  PRInt32     result=kNoError;
+  CEndToken*  et = (CEndToken*)(aToken);
+  eHTMLTags   tokenTagType=et->GetHTMLTag();
+
+  // Here's the hacky part:
+  // Because we're trying to be backward compatible with Nav4/5, 
+  // we have to handle explicit styles the way it does. That means
+  // that we keep an internal style stack.When an EndToken occurs, 
+  // we should see if it is an explicit style tag. If so, we can 
+  // close AND explicit style tag (goofy, huh?)
+
+/*
+  if(0!=strchr(gStyleTags,tokenTagType)){
+    eHTMLTags topTag=(eHTMLTags)GetTopNode();
+    if(0!=strchr(gStyleTags,topTag)){
+      tokenTagType=topTag;
+    }
+  }
+*/
+
+    //now check to see if this token should be omitted...
+  if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
+    UpdateStyleStackForCloseTag(tokenTagType,tokenTagType);
+    return result;
+  }
+
+  nsCParserNode theNode((CHTMLToken*)aToken);
+  switch(tokenTagType) {
+
+    case eHTMLTag_style:
+    case eHTMLTag_link:
+    case eHTMLTag_meta:
+    case eHTMLTag_textarea:
+    case eHTMLTag_title:
+    case eHTMLTag_head:
+    case eHTMLTag_script:
+      break;
+
+    case eHTMLTag_map:
+      result=CloseContainer(theNode,tokenTagType,PR_TRUE);
+      break;
+
+    case eHTMLTag_form:
+      {
+        nsCParserNode aNode((CHTMLToken*)aToken);
+        result=CloseForm(aNode);
+      }
+      break;
+
+    default:
+      if(IsContainer(tokenTagType)){
+        result=CloseContainersTo(tokenTagType,PR_TRUE); 
+      }
+      //
+      break;
+  }
+  return result;
+}
+
+/**
+ *  This method gets called when an entity token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleEntityToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  CEntityToken* et = (CEntityToken*)(aToken);
+  PRInt32       result=kNoError;
+  eHTMLTags     tokenTagType=et->GetHTMLTag();
+
+  if(PR_FALSE==CanOmit(GetTopNode(),tokenTagType)) {
+    nsCParserNode aNode((CHTMLToken*)aToken);
+    result=AddLeaf(aNode);
+  }
+  return result;
+}
+
+/**
+ *  This method gets called when a comment token has been 
+ *  encountered in the parse process. After making sure
+ *  we're somewhere in the body, we handle the comment
+ *  in the same code that we use for text.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleCommentToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+  return kNoError;
+}
+
+/**
+ *  This method gets called when a skippedcontent token has 
+ *  been encountered in the parse process. After verifying 
+ *  that the topmost container can contain text, we call 
+ *  AddLeaf to store this token in the top container.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleSkippedContentToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  PRInt32 result=kNoError;
+
+  if(HasOpenContainer(eHTMLTag_body)) {
+    nsCParserNode aNode((CHTMLToken*)aToken);
+    result=AddLeaf(aNode);
+  }
+  return result;
+}
+
+/**
+ *  This method gets called when an attribute token has been 
+ *  encountered in the parse process. This is an error, since
+ *  all attributes should have been accounted for in the prior
+ *  start or end tokens
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleAttributeToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+  NS_ERROR("attribute encountered -- this shouldn't happen!");
+
+  CAttributeToken*  at = (CAttributeToken*)(aToken);
+  PRInt32 result=kNoError;
+  return result;
+}
+
+/**
+ *  This method gets called when a script token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleScriptToken(CToken* aToken) {
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  /*
+  CScriptToken*   st = (CScriptToken*)(aToken);
+
+  eHTMLTokenTypes subtype=eToken_attribute;
+  nsDeque&        deque=mTokenizer->GetDeque();
+  nsDequeIterator end=deque.End();
+
+  if(*mCurrentPos!=end) {
+    CHTMLToken* tkn=(CHTMLToken*)(++(*mCurrentPos));
+    subtype=eHTMLTokenTypes(tkn->GetTokenType());
+    if(eToken_skippedcontent==subtype) {
+      //WE INTENTIONALLY DROP THE TOKEN ON THE FLOOR!
+      //LATER, we'll pass this onto the javascript system.
+      return kNoError;
+    } 
+    else (*mCurrentPos)--;
+  }
+  */
+  return kInterrupted;
+
+}
+
+/**
+ *  This method gets called when a style token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aToken -- next (start) token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+PRInt32 COtherDTD::HandleStyleToken(CToken* aToken){
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  CStyleToken*  st = (CStyleToken*)(aToken);
+  PRInt32 result=kNoError;
+  return result;
+}
+
+
+/**
+ *  Finds a tag handler for the given tag type, given in string.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   aString contains name of tag to be handled
+ *  @return  valid tag handler (if found) or null
+ */
+void COtherDTD::DeleteTokenHandlers(void) {
+  int i=0;
+  for(i=eToken_unknown;i<eToken_last;i++){
+    delete mTokenHandlers[i];
+    mTokenHandlers[i]=0;
+  }
+  return;
+}
+
+
+/**
+ *  Finds a tag handler for the given tag type.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   aTagType type of tag to be handled
+ *  @return  valid tag handler (if found) or null
+ */
+CTokenHandler* COtherDTD::GetTokenHandler(eHTMLTokenTypes aType) const {
+  CTokenHandler* result=0;
+  if((aType>0) && (aType<eToken_last)) {
+    result=mTokenHandlers[aType];
+  } 
+  else {
+  }
+  return result;
+}
+
+
+/**
+ *  Register a handler.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   
+ *  @return  
+ */
+CTokenHandler* COtherDTD::AddTokenHandler(CTokenHandler* aHandler) {
+  NS_ASSERTION(0!=aHandler,"Error: Null handler");
+  
+  if(aHandler)  {
+    eHTMLTokenTypes type=(eHTMLTokenTypes)aHandler->GetTokenType();
+    if(type<eToken_last) {
+      CTokenHandler* old=mTokenHandlers[type];
+      mTokenHandlers[type]=aHandler;
+    }
+    else {
+      //add code here to handle dynamic tokens...
+    }
+  }
+  return 0;
+}
 
 /**
  * 
@@ -121,8 +765,23 @@ COtherDTD::~COtherDTD(){
  *  @return 
  */
 void COtherDTD::SetParser(nsIParser* aParser) {
-  mParser=aParser;
+  mParser=(nsHTMLParser*)aParser;
 }
+
+/**
+ *  This method gets called in order to set the content
+ *  sink for this parser to dump nodes to.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   nsIContentSink interface for node receiver
+ *  @return  
+ */
+nsIContentSink* COtherDTD::SetContentSink(nsIContentSink* aSink) {
+  nsIContentSink* old=mSink;
+  mSink=(nsIHTMLContentSink*)aSink;
+  return old;
+}
+
 
 /**
  *  This method is called to determine whether or not a tag
@@ -133,10 +792,26 @@ void COtherDTD::SetParser(nsIParser* aParser) {
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
+PRBool COtherDTD::CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const {
+  PRBool result=(mParser) ? HasOpenContainer(eHTMLTag_form) : PR_FALSE;
+  return result;
+}
+
+
+/**
+ *  This method is called to determine whether or not a tag
+ *  of one type can contain a tag of another type.
+ *  
+ *  @update  gess 4/8/98
+ *  @param   aParent -- tag enum of parent container
+ *  @param   aChild -- tag enum of child container
+ *  @return  PR_TRUE if parent can contain child
+ */
+PRBool COtherDTD::CanContain(eHTMLTags aParent,eHTMLTags aChild) const {
+
   PRBool result=PR_FALSE;
 
-    //tagset1 has 61 members...
+    //tagset1 has 65 members...
   static char  gTagSet1[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_address,   eHTMLTag_applet,
     eHTMLTag_bold,      eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,
@@ -146,29 +821,39 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
     eHTMLTag_hr,        eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_img,
-    eHTMLTag_input,     eHTMLTag_isindex,   eHTMLTag_kbd,       eHTMLTag_label,
-    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_noframes,  eHTMLTag_noscript,
+    eHTMLTag_input,     eHTMLTag_isindex,   
+    
+    eHTMLTag_kbd,       eHTMLTag_label,     eHTMLTag_listitem,
+    eHTMLTag_map,       eHTMLTag_menu,      eHTMLTag_newline,   eHTMLTag_nobr,
+    eHTMLTag_noframes,  eHTMLTag_noscript,
     eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_paragraph, eHTMLTag_pre,
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,
-    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_textarea,
-    eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        eHTMLTag_userdefined,
-    eHTMLTag_var,   0};
+    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
+    
+    eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
+    eHTMLTag_userdefined,   eHTMLTag_var,   
+    eHTMLTag_whitespace,  //JUST ADDED!
+    0};
 
-    //tagset2 has 37 members...
+    //tagset2 has 44 members...
   static char  gTagSet2[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
     eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
     eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        eHTMLTag_italic,    
     eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     eHTMLTag_kbd,       
-    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_object,    eHTMLTag_paragraph, 
+
+    eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
+    eHTMLTag_object,    eHTMLTag_paragraph, 
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_script,    
     eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
-    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_tt,        eHTMLTag_textarea,  
-    eHTMLTag_u,         eHTMLTag_var,0};
+    eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
+    eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
+    eHTMLTag_whitespace,//JUST ADDED!
+    0};
 
-    //tagset3 has 53 members...
+    //tagset3 has 57 members...
   static char  gTagSet3[]={ 
     eHTMLTag_a,         eHTMLTag_acronym,   eHTMLTag_applet,    eHTMLTag_bold,
     eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,        eHTMLTag_blockquote,
@@ -178,22 +863,33 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
     eHTMLTag_italic,    eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
-    eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_listitem,  eHTMLTag_noframes,
+
+    eHTMLTag_label,     eHTMLTag_legend,    
+    eHTMLTag_listitem,  eHTMLTag_newline,   //JUST ADDED!
+        
+    eHTMLTag_noframes,
     eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_paragraph, eHTMLTag_pre,
     eHTMLTag_quotation, eHTMLTag_strike,    eHTMLTag_samp,      eHTMLTag_small,
     eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
-    eHTMLTag_td,        eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         
-    eHTMLTag_var,0};
+    eHTMLTag_td,        eHTMLTag_text,
+    
+    eHTMLTag_th,        eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined,
+    eHTMLTag_var,       eHTMLTag_whitespace,  //JUST ADDED!
+    0};
 
     //This hack code is here because we don't yet know what to do
     //with userdefined tags...  XXX Hack
   if(eHTMLTag_userdefined==aChild)  // XXX Hack: For now...
     result=PR_TRUE;
 
+    //handle form elements (this is very much a WIP!!!)
+  if(0!=strchr(formElementTags,aChild)){
+    return CanContainFormElement(aParent,aChild);
+  }
+
+  
   switch(aParent) {
     case eHTMLTag_a:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
-
     case eHTMLTag_acronym:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
@@ -227,7 +923,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_big:
     case eHTMLTag_blink:
     case eHTMLTag_bold:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_blockquote:
     case eHTMLTag_body:
@@ -246,7 +942,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_cite:   case eHTMLTag_code:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_col:
     case eHTMLTag_colgroup:
@@ -272,7 +968,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       break;    //singletons can't contain anything...
 
     case eHTMLTag_em:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_fieldset:
       if(eHTMLTag_legend==aChild)
@@ -281,8 +977,6 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
       break;
 
     case eHTMLTag_font:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
-
     case eHTMLTag_form:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
@@ -298,7 +992,12 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_h1: case eHTMLTag_h2:
     case eHTMLTag_h3: case eHTMLTag_h4:
     case eHTMLTag_h5: case eHTMLTag_h6:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
+      {
+        if(0!=strchr(gHeadingTags,aChild))
+          result=PR_FALSE;
+        else result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      }
+      break;
 
     case eHTMLTag_head:
       {
@@ -334,7 +1033,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_kbd:
     case eHTMLTag_label:
     case eHTMLTag_legend:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_layer:
       break;
@@ -342,10 +1041,14 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_link:
       break;    //singletons can't contain anything...
 
-      // XXX hey rickg: listing is like xmp or plaintext and has
-      // NOTHING to do with html lists.
+    case eHTMLTag_listitem:
+      if (eHTMLTag_listitem == aChild) {
+        return PR_FALSE;
+      }
+      result=PRBool(!strchr(gHeadingTags,aChild)); break;
+
     case eHTMLTag_listing:
-      result=PRBool(eHTMLTag_listitem==aChild); break;
+      result = PR_TRUE; break;
 
     case eHTMLTag_map:
       result=PRBool(eHTMLTag_area==aChild); break;
@@ -358,6 +1061,16 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
     case eHTMLTag_meta:
       break;  //singletons can't contain other tags
+
+    case eHTMLTag_menu:
+    case eHTMLTag_dir:
+    case eHTMLTag_ol:
+    case eHTMLTag_ul:
+      // XXX kipp was here
+      result=PRBool(!strchr(gHeadingTags,aChild)); break;
+
+    case eHTMLTag_nobr:
+      result=PR_TRUE; break;
 
     case eHTMLTag_noframes:
       if(eHTMLTag_body==aChild)
@@ -373,23 +1086,9 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_object:
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
-    case eHTMLTag_menu:
-    case eHTMLTag_dir:
-    case eHTMLTag_ol:
-    case eHTMLTag_ul:
-      // XXX kipp was here
-      result = PR_TRUE;
-      break;
-
-    case eHTMLTag_listitem:
-      if (eHTMLTag_listitem == aChild) {
-        return PR_FALSE;
-      }
-      result = PR_TRUE;
-      break;
-
     case eHTMLTag_option:
-      break;  //singletons can't contain other tags
+      //for now, allow an option to contain anything but another option...
+      result=PRBool(eHTMLTag_option!=aChild); break;
 
     case eHTMLTag_paragraph:
       if(eHTMLTag_paragraph==aChild)
@@ -407,35 +1106,26 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_quotation:
       result=PRBool(0!=strchr(gTagSet2,aChild)); break;
 
-    case eHTMLTag_strike:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
-
     case eHTMLTag_script:
       break; //unadorned script text...
 
     case eHTMLTag_select:
-      result=PRBool(eHTMLTag_option==aChild); break;
+      result=PR_TRUE; break; //for now, allow select to contain anything...
 
     case eHTMLTag_small:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
-
     case eHTMLTag_span:
+    case eHTMLTag_spell:
+    case eHTMLTag_strike:
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_style:
       break;  //singletons can't contain other tags
 
-    case eHTMLTag_strong:
-    case eHTMLTag_samp:
-    case eHTMLTag_sub:
-    case eHTMLTag_sup:
-      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
-
     case eHTMLTag_table:
       {
         static char  okTags[]={ 
           eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,eHTMLTag_tbody,   
-          eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,   0};
+          eHTMLTag_tfoot,  /* eHTMLTag_tr,*/  eHTMLTag_thead,   0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
@@ -445,9 +1135,17 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     case eHTMLTag_thead:
       result=PRBool(eHTMLTag_tr==aChild); break;
 
-    case eHTMLTag_td:
     case eHTMLTag_th:
       result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      break;
+
+    case eHTMLTag_td:
+      {
+        static char  extraTags[]={eHTMLTag_newline,0};
+        result=PRBool(0!=strchr(extraTags,aChild));
+        if(PR_FALSE==result)
+          result=PRBool(0!=strchr(gTagSet1,aChild)); 
+      }
       break;
 
     case eHTMLTag_textarea:
@@ -463,15 +1161,13 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
 
     case eHTMLTag_tt:
     case eHTMLTag_u:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
-
     case eHTMLTag_var:
-      result=PRBool(0!=strchr(gTagSet2,aChild)); break;
+      result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_userdefined:
       result=PR_TRUE; break; //XXX for now...
 
-    case eHTMLTag_xmp:
+    case eHTMLTag_xmp: 
     default:
       break;
   } //switch
@@ -488,7 +1184,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  *  @param   aChild -- tag enum of child container
  *  @return  PR_TRUE if parent can contain child
  */
-PRBool COtherDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
+PRBool COtherDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
   PRBool result=PR_FALSE;
 
   switch(aParent) {
@@ -533,39 +1229,122 @@ PRBool COtherDTD::CanContainIndirect(PRInt32 aParent,PRInt32 aChild) const {
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool COtherDTD::CanOmit(PRInt32 aParent,PRInt32 aChild) const {
+PRBool COtherDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
   PRBool result=PR_FALSE;
 
-  switch((eHTMLTags)aParent) {
-    case eHTMLTag_tr:
-    case eHTMLTag_table:
-    case eHTMLTag_thead:
-    case eHTMLTag_tfoot:
-    case eHTMLTag_tbody:
-    case eHTMLTag_col:
-    case eHTMLTag_colgroup:
-      if((aChild==eHTMLTag_newline) ||
-         (aChild==eHTMLTag_whitespace))
-        result=PR_TRUE;
+  //begin with some simple (and obvious) cases...
+  switch((eHTMLTags)aChild) {
+
+    case eHTMLTag_userdefined:
+    case eHTMLTag_comment:
+      result=PR_TRUE; 
+      break;
+
+    case eHTMLTag_html:
+    case eHTMLTag_body:
+      result=HasOpenContainer(aChild); //don't bother if they're already open...
+      break;
+
+    case eHTMLTag_button:       case eHTMLTag_fieldset:
+    case eHTMLTag_input:        case eHTMLTag_isindex:
+    case eHTMLTag_label:        case eHTMLTag_legend:
+    case eHTMLTag_select:       case eHTMLTag_textarea:
+      if(PR_FALSE==HasOpenContainer(eHTMLTag_form))
+        result=PR_TRUE; 
+      break;
+
+    case eHTMLTag_newline:    
+    case eHTMLTag_whitespace:
+
+      switch((eHTMLTags)aParent) {
+        case eHTMLTag_html:     case eHTMLTag_head:   
+        case eHTMLTag_title:    case eHTMLTag_map:    
+        case eHTMLTag_tr:       case eHTMLTag_table:  
+        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+        case eHTMLTag_tbody:    case eHTMLTag_col:    
+        case eHTMLTag_colgroup: case eHTMLTag_unknown:
+          result=PR_TRUE;
+        default:
+          break;
+      } //switch
+      break;
+
+    case eHTMLTag_entity:
+      switch((eHTMLTags)aParent) {
+        case eHTMLTag_tr:       case eHTMLTag_table:  
+        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+        case eHTMLTag_tbody:    
+          result=PR_TRUE;
+        default:
+          break;
+      } //switch
       break;
 
     default:
-      result=PR_FALSE;
+      if(eHTMLTag_unknown==aParent)
+        result=PR_FALSE;
       break;
+  } //switch
+  return result;
+}
+
+
+/**
+ * 
+ * @update	gess6/16/98
+ * @param 
+ * @return
+ */
+PRBool IsCompatibleOtherStyleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
+  PRBool result=PR_FALSE;
+
+  if(0!=strchr(gStyleTags,aTag1)) {
+    result=PRBool(0!=strchr(gStyleTags,aTag2));
   }
   return result;
 }
 
 /**
- *  This method gets called to determine whether a given 
- *  tag can contain newlines. Most do not.
+ *  This method gets called to determine whether a given
+ *  ENDtag can be omitted. Admittedly,this is a gross simplification.
  *  
  *  @update  gess 3/25/98
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool COtherDTD::CanOmitEndTag(PRInt32 aParent,PRInt32 aChild) const {
+PRBool COtherDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
   PRBool result=PR_FALSE;
+
+  //begin with some simple (and obvious) cases...
+  switch((eHTMLTags)aChild) {
+
+    case eHTMLTag_userdefined:
+    case eHTMLTag_comment:
+      result=PR_TRUE; 
+      break;
+
+    case eHTMLTag_newline:    
+    case eHTMLTag_whitespace:
+
+      switch((eHTMLTags)aParent) {
+        case eHTMLTag_html:     case eHTMLTag_head:   
+        case eHTMLTag_title:    case eHTMLTag_map:    
+        case eHTMLTag_tr:       case eHTMLTag_table:  
+        case eHTMLTag_thead:    case eHTMLTag_tfoot:  
+        case eHTMLTag_tbody:    case eHTMLTag_col:    
+        case eHTMLTag_colgroup: case eHTMLTag_unknown:
+          result=PR_TRUE;
+        default:
+          break;
+      } //switch
+      break;
+
+    default:
+      if(IsCompatibleOtherStyleTag(aChild,(eHTMLTags)GetTopNode()))
+        result=PR_FALSE;
+      else result=(!HasOpenContainer(aChild));
+      break;
+  } //switch
   return result;
 }
 
@@ -577,7 +1356,7 @@ PRBool COtherDTD::CanOmitEndTag(PRInt32 aParent,PRInt32 aChild) const {
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
+PRBool COtherDTD::IsContainer(eHTMLTags aTag) const {
   PRBool result=PR_FALSE;
 
   switch(aTag){
@@ -589,10 +1368,14 @@ PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
     case eHTMLTag_input:      case eHTMLTag_isindex:
     case eHTMLTag_link:
     case eHTMLTag_math:       case eHTMLTag_meta:
-    case eHTMLTag_option:     case eHTMLTag_param:
+//    case eHTMLTag_option:     
+    case eHTMLTag_param:
     case eHTMLTag_style:      case eHTMLTag_spacer:
     case eHTMLTag_wbr:
     case eHTMLTag_form:
+    case eHTMLTag_newline:
+    case eHTMLTag_whitespace:
+    case eHTMLTag_text: 
       result=PR_FALSE;
       break;
 
@@ -610,11 +1393,15 @@ PRBool COtherDTD::IsContainer(PRInt32 aTag) const {
  * @param   aNode -- next node to be added to model
  * @return  TRUE if ok, FALSE if error
  */
-PRInt32 COtherDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
+eHTMLTags COtherDTD::GetDefaultParentTagFor(eHTMLTags aTag) const{
   eHTMLTags result=eHTMLTag_unknown;
   switch(aTag) {
+
+    case eHTMLTag_text:
+      result=eHTMLTag_paragraph; break;
+
     case eHTMLTag_html:
-      result=(eHTMLTags)kNotFound; break;
+      result=eHTMLTag_unknown; break;
 
     case eHTMLTag_body:
     case eHTMLTag_head:
@@ -637,8 +1424,10 @@ PRInt32 COtherDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
     case eHTMLTag_tbody:
     case eHTMLTag_tfoot:
     case eHTMLTag_thead:
-    case eHTMLTag_tr:
       result=eHTMLTag_table; break;
+
+    case eHTMLTag_tr:
+      result=eHTMLTag_tbody; break;
 
     case eHTMLTag_td:
     case eHTMLTag_th:
@@ -646,10 +1435,6 @@ PRInt32 COtherDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
 
     case eHTMLTag_col:
       result=eHTMLTag_colgroup; break;    
-
-      //These have to do with listings...
-    case eHTMLTag_listitem:
-      result=eHTMLTag_ul; break;    
 
     case eHTMLTag_dd:
     case eHTMLTag_dt:
@@ -679,56 +1464,1701 @@ PRInt32 COtherDTD::GetDefaultParentTagFor(PRInt32 aTag) const{
 
 
 /**
- * This method gets called at various times by the parser
- * whenever we want to verify a valid context stack. This
- * method also gives us a hook to add debugging metrics.
+ * This method tries to design a context vector (without actually
+ * changing our parser state) from the parent down to the
+ * child. 
  *
  * @update  gess4/6/98
- * @param   aStack[] array of ints (tokens)
- * @param   aCount number of elements in given array
- * @return  TRUE if stack is valid, else FALSE
+ * @param   aVector is the string where we store our output vector
+ *          in bottom-up order.
+ * @param   aParent -- tag type of parent
+ * @param   aChild -- tag type of child
+ * @return  TRUE if propagation closes; false otherwise
  */
-PRBool COtherDTD::VerifyContextVector(PRInt32* aVector,PRInt32 aCount) const {
-  PRBool result=PR_TRUE;
+PRBool COtherDTD::ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+  PRBool result=PR_FALSE;
 
-  if(aCount>0) {
+  switch(aParentTag) {
+    case eHTMLTag_table:
+      {
+        static char  tableTags[]={eHTMLTag_tr,eHTMLTag_td,0};
+        if(strchr(tableTags,aChildTag)) {
+          //if you're here, we know we can correctly backward propagate.
+          return BackwardPropagate(aVector,aParentTag,aChildTag);
+        }
+      }
+      //otherwise, intentionally fall through...
 
+    case eHTMLTag_tr:
+      if(PR_TRUE==CanContain(eHTMLTag_td,aChildTag)) {
+        aVector.Append((PRUnichar)eHTMLTag_td);
+        result=BackwardPropagate(aVector,aParentTag,eHTMLTag_td);
+//        result=PR_TRUE;
+      }
+
+      break;
+
+    case eHTMLTag_th:
+      break;
+
+    default:
+      break;
+  }//switch
+  return result;
+}
+
+
+/**
+ * This method tries to design a context map (without actually
+ * changing our parser state) from the child up to the parent.
+ *
+ * @update  gess4/6/98
+ * @param   aVector is the string where we store our output vector
+ *          in bottom-up order.
+ * @param   aParent -- tag type of parent
+ * @param   aChild -- tag type of child
+ * @return  TRUE if propagation closes; false otherwise
+ */
+PRBool COtherDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
+
+  PRBool    result=PR_FALSE;
+  eHTMLTags theParentTag=(eHTMLTags)aChildTag;
+
+//  aVector.Truncate();
+
+    //create the necessary stack of parent tags...
+    //continue your search until you run out of known parents,
+    //or you find the specific parent you were given (aParentTag).
+//  aVector.Append((PRUnichar)aChildTag);
+  do {
+    theParentTag=(eHTMLTags)GetDefaultParentTagFor(theParentTag);
+    if(theParentTag!=eHTMLTag_unknown) {
+      aVector.Append((PRUnichar)theParentTag);
+    }
+  } while((theParentTag!=eHTMLTag_unknown) && (theParentTag!=aParentTag));
+  
+  return PRBool(aParentTag==theParentTag);
+}
+
+/**
+ * 
+ * @update	gess6/4/98
+ * @param   aTag is the id of the html container being opened
+ * @return  0 if all is well.
+ */
+PRInt32 COtherDTD::DidOpenContainer(eHTMLTags aTag,PRBool /*anExplicitOpen*/){
+  PRInt32   result=0;
+  
+  switch (aTag) {
+
+    case eHTMLTag_a:
+    case eHTMLTag_bold:
+    case eHTMLTag_big:
+    case eHTMLTag_blink:
+    case eHTMLTag_cite:
+    case eHTMLTag_em:
+    case eHTMLTag_font:
+    case eHTMLTag_italic:
+    case eHTMLTag_kbd:
+    case eHTMLTag_small:
+    case eHTMLTag_spell:
+    case eHTMLTag_strike:
+    case eHTMLTag_strong:
+    case eHTMLTag_sub:
+    case eHTMLTag_sup:
+    case eHTMLTag_tt:
+    case eHTMLTag_u:
+    case eHTMLTag_var:
+      break;
+
+    default:
+      break;
+  }
+
+  return result;
+}
+
+/**
+ * 
+ * @update	gess6/4/98
+ * @param 
+ * @return
+ */
+PRInt32 COtherDTD::DidCloseContainer(eHTMLTags aTag,PRBool/*anExplicitClosure*/){
+  PRInt32 result=0;
+  return result;
+}
+
+
+/**
+ *  This method allows the caller to determine if a form
+ *  element is currently open.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   
+ *  @return  
+ */
+PRBool COtherDTD::HasOpenContainer(eHTMLTags aContainer) const {
+  PRBool result=PR_FALSE;
+
+  switch((eHTMLTags)aContainer) {
+    case eHTMLTag_form:
+      result=mHasOpenForm; break;
+
+    default:
+      result=(kNotFound!=GetTopmostIndexOf((eHTMLTags)aContainer)); break;
+  }
+  return result;
+}
+
+/**
+ *  This method retrieves the HTMLTag type of the topmost
+ *  container on the stack.
+ *  
+ *  @update  gess 4/2/98
+ *  @return  tag id of topmost node in contextstack
+ */
+eHTMLTags COtherDTD::GetTopNode() const {
+  if(mContextStackPos) 
+    return mContextStack[mContextStackPos-1];
+  return eHTMLTag_unknown;
+}
+
+
+/**
+ *  Determine whether the given tag is open anywhere
+ *  in our context stack.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   eHTMLTags tag to be searched for in stack
+ *  @return  topmost index of tag on stack
+ */
+PRInt32 COtherDTD::GetTopmostIndexOf(eHTMLTags aTag) const {
+  int i=0;
+  for(i=mContextStackPos-1;i>=0;i--){
+    if(mContextStack[i]==aTag)
+      return i;
+  }
+  return kNotFound;
+}
+
+/*********************************************
+  Here comes code that handles the interface
+  to our content sink.
+ *********************************************/
+
+
+/**
+ * It is with great trepidation that I offer this method (privately of course).
+ * The gets called whenever a container gets opened. This methods job is to 
+ * take a look at the (transient) style stack, and open any style containers that
+ * are there. Of course, we shouldn't bother to open styles that are incompatible
+ * with our parent container.
+ *
+ * @update	gess6/4/98
+ * @param   tag of the container just opened
+ * @return  0 (for now)
+ */
+PRInt32 COtherDTD::OpenTransientStyles(eHTMLTags aTag){
+  PRInt32 result=0;
+
+  if(0==strchr(gWhitespaceTags,aTag)){
+    PRInt32 pos=0;
+    for(pos=0;pos<mStyleStackPos;pos++) {
+
+      eHTMLTags theTag=mStyleStack[pos]; 
+      if(PR_FALSE==HasOpenContainer(theTag)) {
+
+        CStartToken   token(GetTagName(theTag));
+        nsCParserNode theNode(&token);
+
+        switch(theTag) {
+          case eHTMLTag_secret_h1style: case eHTMLTag_secret_h2style: 
+          case eHTMLTag_secret_h3style: case eHTMLTag_secret_h4style:
+          case eHTMLTag_secret_h5style: case eHTMLTag_secret_h6style:
+            break;
+          default:
+            token.SetHTMLTag(theTag);  //open the html container...
+            result=OpenContainer(theNode,PR_FALSE);
+            mLeafBits[mContextStackPos-1]=PR_TRUE;
+        } //switch
+      }
+      if(kNoError!=result)
+        break;
+    }//for
+  }//if
+  return result;
+}
+
+/**
+ * It is with great trepidation that I offer this method (privately of course).
+ * The gets called just prior when a container gets opened. This methods job is to 
+ * take a look at the (transient) style stack, and <i>close</i> any style containers 
+ * that are there. Of course, we shouldn't bother to open styles that are incompatible
+ * with our parent container.
+ * SEE THE TOP OF THIS FILE for more information about how the transient style stack works.
+ *
+ * @update	gess6/4/98
+ * @param   tag of the container just opened
+ * @return  0 (for now)
+ */
+PRInt32 COtherDTD::CloseTransientStyles(eHTMLTags aTag){
+  PRInt32 result=0;
+
+  if((mStyleStackPos>0) && (mLeafBits[mContextStackPos-1])) {
+    if(0==strchr(gWhitespaceTags,aTag)){
+
+      result=CloseContainersTo(mStyleStack[0],PR_FALSE);
+      mLeafBits[mContextStackPos-1]=PR_FALSE;
+
+    }//if
+  }//if
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * 
+ * @update  gess4/22/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::OpenHTML(const nsIParserNode& aNode){
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+
+  PRInt32 result=mSink->OpenHTML(aNode); 
+  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ *
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseHTML(const nsIParserNode& aNode){
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  PRInt32 result=mSink->CloseHTML(aNode); 
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  return result;
+}
+
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::OpenHead(const nsIParserNode& aNode){
+  mContextStack[mContextStackPos++]=eHTMLTag_head;
+  PRInt32 result=mSink->OpenHead(aNode); 
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseHead(const nsIParserNode& aNode){
+  PRInt32 result=mSink->CloseHead(aNode); 
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::OpenBody(const nsIParserNode& aNode){
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+
+  PRInt32 result=kNoError;
+  eHTMLTags topTag=(eHTMLTags)COtherDTD::GetTopNode();
+
+  if(eHTMLTag_html!=topTag) {
+    
+    //ok, there are two cases:
+    //  1. Nobody opened the html container
+    //  2. Someone left the head (or other) open
+    PRInt32 pos=GetTopmostIndexOf(eHTMLTag_html);
+    if(kNotFound!=pos) {
+      //if you're here, it means html is open, 
+      //but some other tag(s) are in the way.
+      //So close other tag(s).
+      result=CloseContainersTo(pos+1,eHTMLTag_body,PR_TRUE);
+    } else {
+      //if you're here, it means that there is
+      //no HTML tag in document. Let's open it.
+
+      result=CloseContainersTo(0,eHTMLTag_html,PR_TRUE);  //close current stack containers.
+
+      CHTMLToken    token(gEmpty);
+      nsCParserNode htmlNode(&token);
+
+      token.SetHTMLTag(eHTMLTag_html);  //open the html container...
+      result=OpenHTML(htmlNode);
+    }
+  }
+
+  if(kNoError==result) {
+    result=mSink->OpenBody(aNode); 
+    mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  }
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help close
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseBody(const nsIParserNode& aNode){
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+  PRInt32 result=mSink->CloseBody(aNode); 
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::OpenForm(const nsIParserNode& aNode){
+  if(mHasOpenForm)
+    CloseForm(aNode);
+  PRInt32 result=mSink->OpenForm(aNode);
+  if(kNoError==result)
+    mHasOpenForm=PR_TRUE;
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseForm(const nsIParserNode& aNode){
+  PRInt32 result=kNoError;
+  if(mHasOpenForm) {
+    mHasOpenForm=PR_FALSE;
+    result=mSink->CloseForm(aNode); 
+  }
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::OpenMap(const nsIParserNode& aNode){
+  if(mHasOpenMap)
+    CloseMap(aNode);
+
+  //NOTE: We need to change to method so that it opens a MAP, 
+  //      instead of a FORM. This was copy/paste coding at its best.
+
+  PRInt32 result=mSink->OpenForm(aNode);
+  if(kNoError==result)
+    mHasOpenMap=PR_TRUE;
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseMap(const nsIParserNode& aNode){
+  PRInt32 result=kNoError;
+  if(mHasOpenMap) {
+    mHasOpenMap=PR_FALSE;
+
+  //NOTE: We need to change to method so that it closes a MAP, 
+  //      instead of a FORM. This was copy/paste coding at its best.
+    
+    result=mSink->CloseForm(aNode); 
+  }
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::OpenFrameset(const nsIParserNode& aNode){
+  NS_PRECONDITION(mContextStackPos >= 0, kInvalidTagStackPos);
+  PRInt32 result=mSink->OpenFrameset(aNode); 
+  mContextStack[mContextStackPos++]=(eHTMLTags)aNode.GetNodeType();
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseFrameset(const nsIParserNode& aNode){
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  PRInt32 result=mSink->CloseFrameset(aNode); 
+  mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+  return result;
+}
+
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  
+  PRInt32   result=kNoError; 
+  eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
+
+//  CloseTransientStyles(nodeType);
+
+  switch(nodeType) {
+
+    case eHTMLTag_html:
+      result=OpenHTML(aNode); break;
+
+    case eHTMLTag_body:
+      result=OpenBody(aNode); break;
+
+    case eHTMLTag_style:
+    case eHTMLTag_textarea:
+    case eHTMLTag_head:
+    case eHTMLTag_title:
+      break;
+
+    case eHTMLTag_form:
+      result=OpenForm(aNode); break;
+
+    default:
+      result=mSink->OpenContainer(aNode); 
+      mContextStack[mContextStackPos++]=nodeType;
+      break;
+  }
+
+  if((kNoError==result) && (PR_TRUE==aUpdateStyleStack)){
+    UpdateStyleStackForOpenTag(nodeType,nodeType);
+  }
+
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aUpdateStyles){
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  PRInt32   result=kNoError; //was false
+  eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
+  
+  //XXX Hack! We know this is wrong, but it works
+  //for the general case until we get it right.
+  switch(nodeType) {
+
+    case eHTMLTag_html:
+      result=CloseHTML(aNode); break;
+
+    case eHTMLTag_style:
+    case eHTMLTag_textarea:
+      break;
+
+    case eHTMLTag_head:
+      //result=CloseHead(aNode); 
+      break;
+
+    case eHTMLTag_body:
+      result=CloseBody(aNode); break;
+
+    case eHTMLTag_form:
+      result=CloseForm(aNode); break;
+
+    case eHTMLTag_title:
+    default:
+      result=mSink->CloseContainer(aNode); 
+      mContextStack[--mContextStackPos]=eHTMLTag_unknown;
+      break;
+  }
+
+  mLeafBits[mContextStackPos]=PR_FALSE;
+  if((kNoError==result) && (PR_TRUE==aUpdateStyles)){
+    UpdateStyleStackForCloseTag(nodeType,aTag);
+  }
+
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,PRBool aUpdateStyles){
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+  PRInt32 result=kNoError;
+
+  CEndToken aToken(gEmpty);
+  nsCParserNode theNode(&aToken);
+
+  if((anIndex<mContextStackPos) && (anIndex>=0)) {
+    while(mContextStackPos>anIndex) {
+      eHTMLTags theTag=mContextStack[mContextStackPos-1];
+      aToken.SetHTMLTag(theTag);
+      result=CloseContainer(theNode,aTag,aUpdateStyles);
+    }
+  }
+  return result;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+
+  PRInt32 pos=GetTopmostIndexOf(aTag);
+
+  if(kNotFound!=pos) {
+    //the tag is indeed open, so close it.
+    return CloseContainersTo(pos,aTag,aUpdateStyles);
+  }
+
+  eHTMLTags theTopTag=(eHTMLTags)GetTopNode();
+  if(IsCompatibleOtherStyleTag(aTag,theTopTag)) {
+    //if you're here, it's because we're trying to close one style tag,
+    //but a different one is actually open. Because this is NAV4x
+    //compatibililty mode, we must close the one that's really open.
+    aTag=theTopTag;    
+    pos=GetTopmostIndexOf(aTag);
+    if(kNotFound!=pos) {
+      //the tag is indeed open, so close it.
+      return CloseContainersTo(pos,aTag,aUpdateStyles);
+    }
+  }
+  
+  PRInt32 result=kNoError;
+  eHTMLTags theParentTag=GetDefaultParentTagFor(aTag);
+  pos=GetTopmostIndexOf(theParentTag);
+  if(kNotFound!=pos) {
+    //the parent container is open, so close it instead
+    result=CloseContainersTo(pos+1,aTag,aUpdateStyles);
+  }
+  return result;
+}
+
+/**
+ * This method causes the topmost container on the stack
+ * to be closed. 
+ * @update  gess4/6/98
+ * @see     CloseContainer()
+ * @param   
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::CloseTopmostContainer(){
+  NS_PRECONDITION(mContextStackPos > 0, kInvalidTagStackPos);
+
+  CEndToken aToken(gEmpty);
+  eHTMLTags theTag=(eHTMLTags)mContextStack[mContextStackPos-1];
+  aToken.SetHTMLTag(theTag);
+  nsCParserNode theNode(&aToken);
+  return CloseContainer(theNode,theTag,PR_TRUE);
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+PRInt32 COtherDTD::AddLeaf(const nsIParserNode& aNode){
+  PRInt32 result=mSink->AddLeaf(aNode); 
+  return result;
+}
+
+/**
+ *  This method gets called to create a valid context stack
+ *  for the given child. We compare the current stack to the
+ *  default needs of the child, and push new guys onto the
+ *  stack until the child can be properly placed.
+ *
+ *  @update  gess 4/8/98
+ *  @param   aChildTag is the child for whom we need to 
+ *           create a new context vector
+ *  @return  true if we succeeded, otherwise false
+ */
+PRInt32 COtherDTD::CreateContextStackFor(eHTMLTags aChildTag){
+  nsAutoString  theVector;
+  
+  PRInt32   result=kNoError;
+  PRInt32   pos=0;
+  PRInt32   cnt=0;
+  eHTMLTags theTop=GetTopNode();
+  
+  if(PR_TRUE==ForwardPropagate(theVector,theTop,aChildTag)){
+    //add code here to build up context stack based on forward propagated context vector...
+    pos=0;
+    cnt=theVector.Length()-1;
+    if(mContextStack[mContextStackPos-1]==theVector[cnt])
+      result=kNoError;
+    else result=kContextMismatch;
+  }
+  else {
+    PRBool tempResult;
+    if(eHTMLTag_unknown!=theTop) {
+      tempResult=BackwardPropagate(theVector,theTop,aChildTag);
+      if(eHTMLTag_html!=theTop)
+        BackwardPropagate(theVector,eHTMLTag_html,theTop);
+    }
+    else tempResult=BackwardPropagate(theVector,eHTMLTag_html,aChildTag);
+
+    if(PR_TRUE==tempResult) {
+
+      //propagation worked, so pop unwanted containers, push new ones, then exit...
+      pos=0;
+      cnt=theVector.Length();
+      result=kNoError;
+      while(pos<mContextStackPos) {
+        if(mContextStack[pos]==theVector[cnt-1-pos]) {
+          pos++;
+        }
+        else {
+          //if you're here, you have something on the stack
+          //that doesn't match your needed tags order.
+          result=CloseContainersTo(pos,eHTMLTag_unknown,PR_TRUE);
+          break;
+        }
+      } //while
+    } //elseif
+    else result=kCantPropagate;
+  } //elseif
+
+    //now, build up the stack according to the tags 
+    //you have that aren't in the stack...
+  if(kNoError==result){
+    int i=0;
+    for(i=pos;i<cnt;i++) {
+      CStartToken* st=new CStartToken((eHTMLTags)theVector[cnt-1-i]);
+      HandleStartToken(st);
+    }
   }
   return result;
 }
 
 
 /**
- * This method tries to design a context map (without actually
- * changing our parser state) from the parent down to the
- * child. 
- *
- * @update  gess4/6/98
- * @param   aParent -- tag type of parent
- * @param   aChild -- tag type of child
- * @return  Non zero count of intermediate nodes; 
- *          0 if unable to comply
+ *  This method gets called to ensure that the context
+ *  stack is properly set up for the given child. 
+ *  We pop containers off the stack (all the way down 
+ *  html) until we get a container that can contain
+ *  the given child.
+ *  
+ *  @update  gess 4/8/98
+ *  @param   
+ *  @return  
  */
-PRBool COtherDTD::ForwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const {
-  PRBool result=PR_FALSE;
+PRInt32 COtherDTD::ReduceContextStackFor(eHTMLTags aChildTag){
+  PRInt32   result=kNoError;
+  eHTMLTags topTag=(eHTMLTags)GetTopNode();
+
+  while( (topTag!=kNotFound) && 
+         (PR_FALSE==CanContain(topTag,aChildTag)) &&
+         (PR_FALSE==CanContainIndirect(topTag,aChildTag))) {
+    CloseTopmostContainer();
+    topTag=(eHTMLTags)GetTopNode();
+  }
   return result;
 }
 
 
 /**
- * This method tries to design a context map (without actually
- * changing our parser state) from the parent down to the
- * child. 
+ * This method causes all explicit style-tag containers that
+ * are opened to be reflected on our internal style-stack.
  *
- * @update  gess4/6/98
- * @param   aParent -- tag type of parent
- * @param   aChild -- tag type of child
- * @return  Non zero count of intermediate nodes; 
- *          0 if unable to comply
+ * @update	gess6/4/98
+ * @param   aTag is the id of the html container being opened
+ * @return  0 if all is well.
  */
-PRBool COtherDTD::BackwardPropagate(nsString& aVector,PRInt32 aParentTag,PRInt32 aChildTag) const {
-  PRBool result=PR_FALSE;
+PRInt32 COtherDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
+  PRInt32   result=0;
+  
+  switch (aTag) {
+
+    case eHTMLTag_a:
+    case eHTMLTag_bold:
+    case eHTMLTag_big:
+    case eHTMLTag_blink:
+    case eHTMLTag_cite:
+    case eHTMLTag_em:
+    case eHTMLTag_font:
+    case eHTMLTag_italic:
+    case eHTMLTag_kbd:
+    case eHTMLTag_small:
+    case eHTMLTag_spell:
+    case eHTMLTag_strike:
+    case eHTMLTag_strong:
+    case eHTMLTag_sub:
+    case eHTMLTag_sup:
+    case eHTMLTag_tt:
+    case eHTMLTag_u:
+    case eHTMLTag_var:
+      mStyleStack[mStyleStackPos++]=aTag;
+      break;
+
+    case eHTMLTag_h1: case eHTMLTag_h2:
+    case eHTMLTag_h3: case eHTMLTag_h4:
+    case eHTMLTag_h5: case eHTMLTag_h6:
+      break;
+
+    default:
+      break;
+  }
+
+  return result;
+} //update...
+
+/**
+ * This method gets called when an explicit style close-tag is encountered.
+ * It results in the style tag id being popped from our internal style stack.
+ *
+ * @update	gess6/4/98
+ * @param 
+ * @return  0 if all went well (which it always does)
+ */
+PRInt32 COtherDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
+  PRInt32 result=0;
+  
+  switch (aTag) {
+
+    case eHTMLTag_a:
+    case eHTMLTag_bold:
+    case eHTMLTag_big:
+    case eHTMLTag_blink:
+    case eHTMLTag_cite:
+    case eHTMLTag_em:
+    case eHTMLTag_font:
+    case eHTMLTag_italic:
+    case eHTMLTag_kbd:
+    case eHTMLTag_small:
+    case eHTMLTag_spell:
+    case eHTMLTag_strike:
+    case eHTMLTag_strong:
+    case eHTMLTag_sub:
+    case eHTMLTag_sup:
+    case eHTMLTag_tt:
+    case eHTMLTag_u:
+    case eHTMLTag_var:
+      if(aTag==anActualTag)
+        mStyleStack[--mStyleStackPos]=eHTMLTag_unknown;
+      break;
+
+    case eHTMLTag_h1: case eHTMLTag_h2:
+    case eHTMLTag_h3: case eHTMLTag_h4:
+    case eHTMLTag_h5: case eHTMLTag_h6:
+      break;
+
+    default:
+      break;
+  }
+
+  return result;
+} //update...
+
+
+/*******************************************************************
+  These methods used to be hidden in the tokenizer-delegate. 
+  That file merged with the DTD, since the separation wasn't really
+  buying us anything.
+ *******************************************************************/
+
+/**
+ *  This method is called just after a "<" has been consumed 
+ *  and we know we're at the start of some kind of tagged 
+ *  element. We don't know yet if it's a tag or a comment.
+ *  
+ *  @update  gess 5/12/98
+ *  @param   aChar is the last char read
+ *  @param   aScanner is represents our input source
+ *  @param   aToken is the out arg holding our new token
+ *  @return  error code (may return kInterrupted).
+ */
+PRInt32 COtherDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+
+  nsAutoString empty("");
+  PRInt32 result=aScanner.GetChar(aChar);
+
+  if(kNoError==result) {
+
+    switch(aChar) {
+      case kForwardSlash:
+        PRUnichar ch; 
+        result=aScanner.Peek(ch);
+        if(kNoError==result) {
+          if(nsString::IsAlpha(ch))
+            aToken=new CEndToken(empty);
+          else aToken=new CCommentToken(empty); //Special case: </ ...> is treated as a comment
+        }//if
+        break;
+      case kExclamation:
+        aToken=new CCommentToken(empty);
+        break;
+      default:
+        if(nsString::IsAlpha(aChar))
+          return ConsumeStartTag(aChar,aScanner,aToken);
+        else if(kEOF!=aChar) {
+          nsAutoString temp("<");
+          return ConsumeText(temp,aScanner,aToken);
+        }
+    } //switch
+
+    if((0!=aToken) && (kNoError==result)) {
+      result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+      if(result) {
+        delete aToken;
+        aToken=0;
+      }
+    } //if
+  } //if
   return result;
 }
 
+/**
+ *  This method is called just after we've consumed a start
+ *  tag, and we now have to consume its attributes.
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aChar: last char read
+ *  @param   aScanner: see nsScanner.h
+ *  @return  
+ */
+PRInt32 COtherDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+  PRBool done=PR_FALSE;
+  PRInt32 result=kNoError;
+  nsAutoString as("");
+  PRInt16 theAttrCount=0;
+
+  while((!done) && (result==kNoError)) {
+    CToken* theToken= new CAttributeToken(as);
+    if(theToken){
+      result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+      if(kNoError==result){
+        theAttrCount++;
+        mTokenDeque.Push(theToken);
+      }//if
+      else delete theToken; //we can't keep it...
+    }//if
+    
+    if(kNoError==result){
+      result=aScanner.Peek(aChar);
+      if(aChar==kGreaterThan) { //you just ate the '>'
+        aScanner.GetChar(aChar); //skip the '>'
+        done=PR_TRUE;
+      }//if
+    }//if
+  }//while
+
+  aToken->SetAttributeCount(theAttrCount);
+  return result;
+}
+
+/**
+ *  This is a special case method. It's job is to consume 
+ *  all of the given tag up to an including the end tag.
+ *
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null
+ */
+PRInt32 COtherDTD::ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+  
+  //In the case that we just read the given tag, we should go and
+  //consume all the input until we find a matching end tag.
+
+  nsAutoString endTag("</");
+  endTag.Append(aString);
+  endTag.Append(">");
+  aToken=new CSkippedContentToken(endTag);
+  return aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+}
+
+/**
+ *  This method is called just after a "<" has been consumed 
+ *  and we know we're at the start of a tag.  
+ *  
+ *  @update gess 3/25/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+PRInt32 COtherDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+  PRInt32 theDequeSize=mTokenDeque.GetSize();
+  PRInt32 result=kNoError;
+
+  aToken=new CStartToken(nsAutoString(""));
+
+  if(aToken) {
+    result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
+    if(kNoError==result) {
+      if(((CStartToken*)aToken)->IsAttributed()) {
+        result=ConsumeAttributes(aChar,aScanner,aToken);
+      }
+      //now that that's over with, we have one more problem to solve.
+      //In the case that we just read a <SCRIPT> or <STYLE> tags, we should go and
+      //consume all the content itself.
+      if(kNoError==result) {
+        nsString& str=aToken->GetText();
+        CToken*   skippedToken=0;
+        if(str.EqualsIgnoreCase("SCRIPT") ||
+           str.EqualsIgnoreCase("STYLE") ||
+           str.EqualsIgnoreCase("TITLE") ||
+           str.EqualsIgnoreCase("TEXTAREA")) {
+          result=ConsumeContentToEndTag(str,aChar,aScanner,skippedToken);
+    
+          if((kNoError==result) && skippedToken){
+              //now we strip the ending sequence from our new SkippedContent token...
+            PRInt32 slen=str.Length()+3;
+            nsString& skippedText=skippedToken->GetText();
+    
+            skippedText.Cut(skippedText.Length()-slen,slen);
+            mTokenDeque.Push(skippedToken);
+  
+            //In the case that we just read a given tag, we should go and
+            //consume all the tag content itself (and throw it all away).
+
+            CEndToken* endtoken=new CEndToken(str);
+            mTokenDeque.Push(endtoken);
+          } //if
+        } //if
+      } //if
+
+      //EEEEECCCCKKKK!!! 
+      //This code is confusing, so pay attention.
+      //If you're here, it's because we were in the midst of consuming a start
+      //tag but ran out of data (not in the stream, but in this *part* of the stream.
+      //For simplicity, we have to unwind our input. Therefore, we pop and discard
+      //any new tokens we've cued this round. Later we can get smarter about this.
+      if(kNoError!=result) {
+        while(mTokenDeque.GetSize()>theDequeSize) {
+          delete mTokenDeque.PopBack();
+        }
+      }
+
+
+    } //if
+  } //if
+  return result;
+}
+
+/**
+ *  This method is called just after a "&" has been consumed 
+ *  and we know we're at the start of an entity.  
+ *  
+ *  @update gess 3/25/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+PRInt32 COtherDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+   PRUnichar  ch;
+   PRInt32 result=aScanner.GetChar(ch);
+
+   if(kNoError==result) {
+     if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
+       aToken = new CEntityToken(nsAutoString(""));
+       result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
+     }
+     else if(kHashsign==ch) {
+       aToken = new CEntityToken(nsAutoString(""));
+       result=aToken->Consume(0,aScanner);
+     }
+     else {
+       //oops, we're actually looking at plain text...
+       nsAutoString temp("&");
+       result=ConsumeText(temp,aScanner,aToken);
+     }
+   }//if
+   return result;
+}
+
+/**
+ *  This method is called just after whitespace has been 
+ *  consumed and we know we're at the start a whitespace run.  
+ *  
+ *  @update gess 3/25/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+PRInt32 COtherDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+  aToken = new CWhitespaceToken(nsAutoString(""));
+  PRInt32 result=kNoError;
+  if(aToken) {
+     result=aToken->Consume(aChar,aScanner);
+  }
+  return result;
+}
+
+/**
+ *  This method is called just after a "<!" has been consumed 
+ *  and we know we're at the start of a comment.  
+ *  
+ *  @update gess 3/25/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+PRInt32 COtherDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+  aToken = new CCommentToken(nsAutoString(""));
+  PRInt32 result=kNoError;
+  if(aToken) {
+     result=aToken->Consume(aChar,aScanner);
+  }
+  return result;
+}
+
+/**
+ *  This method is called just after a known text char has
+ *  been consumed and we should read a text run.
+ *  
+ *  @update gess 3/25/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+PRInt32 COtherDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
+
+  PRInt32 result=kNoError;
+  if(aToken=new CTextToken(aString)) {
+    PRUnichar ch=0;
+    result=aToken->Consume(ch,aScanner);
+  }
+  return result;
+}
+
+/**
+ *  This method is called just after a newline has been consumed. 
+ *  
+ *  @update gess 3/25/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+PRInt32 COtherDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
+  aToken=new CNewlineToken(nsAutoString(""));
+  PRInt32 result=kNoError;
+  if(aToken) {
+    result=aToken->Consume(aChar,aScanner);
+  }
+  return result;
+}
+
+/**
+ *  This method repeatedly called by the tokenizer. 
+ *  Each time, we determine the kind of token were about to 
+ *  read, and then we call the appropriate method to handle
+ *  that token type.
+ *  
+ *  @update gess 3/25/98
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+PRInt32 COtherDTD::ConsumeToken(CToken*& aToken){
+  
+  aToken=0;
+  if(mTokenDeque.GetSize()>0) {
+    aToken=(CToken*)mTokenDeque.Pop();
+    return kNoError;
+  }
+
+  PRInt32   result=kNoError;
+  CScanner* theScanner=mParser->GetScanner();
+  if(kNoError==result){
+    
+    PRUnichar aChar;
+    result=theScanner->GetChar(aChar);
+    switch(result) {
+      case kEOF:
+        break;
+
+      case kInterrupted:
+        theScanner->RewindToMark();
+        break; 
+
+      case kNoError:
+      default:
+        switch(aChar) {
+          case kLessThan:
+            return ConsumeTag(aChar,*theScanner,aToken);
+
+          case kAmpersand:
+            return ConsumeEntity(aChar,*theScanner,aToken);
+          
+          case kCR: case kLF:
+            return ConsumeNewline(aChar,*theScanner,aToken);
+          
+          case kNotFound:
+            break;
+          
+          default:
+            if(!nsString::IsSpace(aChar)) {
+              nsAutoString temp(aChar);
+              return ConsumeText(temp,*theScanner,aToken);
+            }
+            else return ConsumeWhitespace(aChar,*theScanner,aToken);
+            break;
+        } //switch
+        break; 
+    } //switch
+    if(kNoError==result)
+      result=theScanner->Eof();
+  } //while
+  return result;
+}
+
+/**
+ * 
+ * @update  gess4/11/98
+ * @param 
+ * @return
+ */
+CToken* COtherDTD::CreateTokenOfType(eHTMLTokenTypes aType) {
+  return 0;
+}
+
+
+/**
+ * 
+ * @update	gess5/18/98
+ * @param 
+ * @return
+ */
+void COtherDTD::WillResumeParse(void){
+  if(mSink) {
+    mSink->WillResume();
+  }
+  return;
+}
+
+/**
+ * 
+ * @update	gess5/18/98
+ * @param 
+ * @return
+ */
+void COtherDTD::WillInterruptParse(void){
+  if(mSink) {
+    mSink->WillInterrupt();
+  }
+  return;
+}
+
+
+/************************************************************************
+  Here's a bunch of stuff JEvering put into the parser to do debugging.
+ ************************************************************************/
+
+/** 
+ * This debug method records an invalid context vector and it's
+ * associated context vector and URL in a simple flat file mapping which
+ * resides in the verification directory and is named context.map
+ *
+ * @update  jevering 6/06/98
+ * @param   path is the directory structure indicating the bad context vector
+ * @param   pURLRef is the associated URL
+ * @param   filename to record mapping to if not already recorded
+ * @return  TRUE if it is already record (dont rerecord)
+ */
+
+#define CONTEXT_VECTOR_MAP	"/vector.map"
+#define CONTEXT_VECTOR_STAT	"/vector.stat"
+#define VECTOR_TABLE_HEADER "count  vector\r\n====== =============================================\r\n"    
+static PRBool DebugRecord(char * path, char * pURLRef, char * filename)
+{
+   char recordPath[2048];
+   PRIntn oflags = 0;
+
+   // create the record file name from the verification director
+   // and the default name.
+   strcpy(recordPath,gVerificationOutputDir);
+   strcat(recordPath,CONTEXT_VECTOR_MAP);
+
+   // create the file exists, only open for read/write
+   // otherwise, create it
+   if(PR_Access(recordPath,PR_ACCESS_EXISTS) != PR_SUCCESS)
+      oflags = PR_CREATE_FILE;
+   oflags |= PR_RDWR;
+
+   // open the record file
+   PRFileDesc * recordFile = PR_Open(recordPath,oflags,0);
+
+   if (recordFile) {
+
+      char * string = (char *)PR_Malloc(2048);
+      PRBool found = PR_FALSE;
+
+	  // vectors are stored on the format iof "URL vector filename"
+	  // where the vector contains the verification path and
+	  // the filename contains the debug source dump
+      sprintf(string,"%s %s %s\r\n", pURLRef, path, filename);
+
+	  // get the file size, read in the file and parse it line at
+	  // a time to check to see if we have already recorded this
+	  // occurance
+
+      PRInt32 iSize = PR_Seek(recordFile,0,PR_SEEK_END);
+      if (iSize) {
+
+         char * buffer = (char*)PR_Malloc(iSize);
+         char * stringbuf = (char*)PR_Calloc(sizeof(char*),2048);
+         if (buffer!=NULL && string!=NULL) {
+            PRInt32 ibufferpos, istringpos;
+
+			// beginning of file for read
+            PR_Seek(recordFile,0,PR_SEEK_SET);
+            PR_Read(recordFile,buffer,iSize);
+
+			// run through the file looking for a matching vector
+            for (ibufferpos = istringpos = 0; ibufferpos < iSize; ibufferpos++)
+            {
+			   // compare string once we have hit the end of the line
+               if (buffer[ibufferpos] == '\r') {
+                  stringbuf[istringpos] = '\0';
+                  istringpos = 0;
+                  // skip newline and space
+                  ibufferpos++;
+
+                  if (PL_strlen(stringbuf)) {
+					char * space;
+   					// chop of the filename for compare
+                    if ((space = PL_strrchr(stringbuf, ' '))!=NULL)
+						*space = '\0';
+
+					// we have already recorded this one, free up, and return
+                    if (!PL_strncmp(string,stringbuf,PL_strlen(stringbuf))) {
+						PR_Free(buffer);
+                        PR_Free(stringbuf);
+						PR_Free(string);
+                        return PR_TRUE;
+                    }
+                  }
+               }
+
+               // build up the compare string
+               else
+                  stringbuf[istringpos++] = buffer[ibufferpos];
+            }
+
+            // throw away the record file data
+            PR_Free(buffer);
+            PR_Free(stringbuf);
+         }
+      }
+
+      // if this bad vector was not recorded, add it to record file
+
+      if (!found) {
+         PR_Seek(recordFile,0,PR_SEEK_END);
+         PR_Write(recordFile,string,PL_strlen(string));
+      }
+
+      PR_Close(recordFile);
+	  PR_Free(string);
+   }
+
+   // vector was not recorded
+   return PR_FALSE;
+}
+
+// structure to store the vector statistic information
+
+typedef struct vector_info {
+	PRInt32 references;     // number of occurances counted
+	PRInt32 count;          // number of tags in the vector
+  PRBool  good_vector;    // is this a valid vector?
+	eHTMLTags* vector;       // and the vector
+} VectorInfo;
+
+// global table for storing vector statistics and the size
+static VectorInfo ** gVectorInfoArray = 0;
+static PRInt32 gVectorCount = 0;
+
+// the statistic vector table grows each time it exceeds this
+// stepping value
+#define TABLE_SIZE	128
+
+// compare function for quick sort.  Compares references and
+// sorts in decending order
+
+static int compare( const void *arg1, const void *arg2 )
+{
+	VectorInfo ** p1 = (VectorInfo**)arg1;
+	VectorInfo ** p2 = (VectorInfo**)arg2;
+	return (*p2)->references - (*p1)->references;
+}
+
+/**
+ * quick sort the statistic array causing the most frequently
+ * used vectors to be at the top (this makes it a little speedier
+ * when looking them up)
+ */
+static void SortVectorRecord(void) {
+    // of course, sort it only if there is something to sort
+	if (gVectorCount) {
+		qsort((void*)gVectorInfoArray,(size_t)gVectorCount,sizeof(VectorInfo*),compare);
+	}
+}
+
+
+/**
+ *  This debug routines stores statistical information about a
+ *  context vector.  The context vector statistics are stored in
+ *  a global array.  The table is resorted each time it grows to
+ *  aid in lookup speed.  If a vector has already been noted, its
+ *  reference count is bumped, otherwise it is added to the table
+ *
+ *  @update     jevering 6/11/98
+ *  @param      aTags is the tag list (vector)
+ *  @param      count is the size of the vector
+ *  @return
+ */
+
+static void NoteVector(eHTMLTags aTags[],PRInt32 count, PRBool good_vector)
+{
+    // if the table doesn't exist, create it
+	if (!gVectorInfoArray) {
+		gVectorInfoArray = (VectorInfo**)PR_Calloc(TABLE_SIZE,sizeof(VectorInfo*));
+	} 
+	else {
+        // attempt to look up the vector
+		for (PRInt32 i = 0; i < gVectorCount; i++)
+
+            // check the vector only if they are the same size, if they
+            // match then just return without doing further work
+			if (gVectorInfoArray[i]->count == count)
+				if (!memcmp(gVectorInfoArray[i]->vector, aTags, sizeof(eHTMLTags)*count)) {
+
+                    // bzzzt. and we have a winner.. bump the ref count
+					gVectorInfoArray[i]->references++;
+					return;
+				}
+	}
+
+    // the context vector hasn't been noted, so allocate it and
+    // initialize it one.. add it to the table
+	VectorInfo * pVectorInfo = (VectorInfo*)PR_Malloc(sizeof(VectorInfo));
+	pVectorInfo->references = 1;
+	pVectorInfo->count = count;
+	pVectorInfo->good_vector = good_vector;
+	pVectorInfo->vector = (eHTMLTags*)PR_Malloc(count*sizeof(eHTMLTags));
+	memcpy(pVectorInfo->vector,aTags,sizeof(eHTMLTags)*count);
+	gVectorInfoArray[gVectorCount++] = pVectorInfo;
+
+    // have we maxed out the table?  grow it.. sort it.. love it. 
+	if ((gVectorCount % TABLE_SIZE) == 0) {
+		gVectorInfoArray = (VectorInfo**)realloc(
+			gVectorInfoArray,
+			(sizeof(VectorInfo*)*((gVectorCount/TABLE_SIZE)+1)*TABLE_SIZE));
+		SortVectorRecord();
+	}
+}
+
+static void MakeVectorString(char * vector_string, VectorInfo * pInfo)
+{
+    sprintf (vector_string, "%6d ", pInfo->references);
+    for (PRInt32 j = 0; j < pInfo->count; j++) {
+	    PL_strcat(vector_string, "<");
+	    PL_strcat(vector_string, (const char *)GetTagName(pInfo->vector[j]));
+	    PL_strcat(vector_string, ">");
+    }
+    PL_strcat(vector_string,"\r\n");
+}
+
+/**
+ *  This debug routine dumps out the vector statistics to a text
+ *  file in the verification directory and defaults to the name
+ *  "vector.stat".  It contains all parsed context vectors and there
+ *  occurance count sorted in decending order.
+ *  
+ *  @update     jevering 6/11/98
+ *  @param
+ *  @return
+ */
+
+extern "C" NS_EXPORT void DumpVectorRecord_other(void)
+{
+    // do we have a table?
+	if (gVectorCount) {
+
+        // hopefully, they wont exceed 1K.
+      char vector_string[1024];
+      char path[1024];
+
+      path[0] = '\0';
+
+      // put in the verification directory.. else the root
+      if (gVerificationOutputDir)
+         strcpy(path,gVerificationOutputDir);
+
+      strcat(path,CONTEXT_VECTOR_STAT);
+
+      // open the stat file creaming any existing stat file
+      PRFileDesc * statisticFile = PR_Open(path,PR_CREATE_FILE|PR_RDWR,0);
+		if (statisticFile) {
+
+            PRInt32 i;
+            PRofstream ps;
+            ps.attach(statisticFile);
+        
+            // oh what the heck, sort it again
+            SortVectorRecord();
+
+            // cute little header
+            sprintf(vector_string,"Context vector occurance results. Processed %d unique vectors.\r\n\r\n", gVectorCount);
+            ps << vector_string;
+
+            ps << "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n";
+            ps << VECTOR_TABLE_HEADER;
+
+            // dump out the bad vectors encountered
+            for (i = 0; i < gVectorCount; i++) {
+               if (!gVectorInfoArray[i]->good_vector) {
+                  MakeVectorString(vector_string, gVectorInfoArray[i]);
+                  ps << vector_string;
+               }
+            }
+
+            ps << "\r\n\r\nValid context vector summary\r\n";
+            ps << VECTOR_TABLE_HEADER;
+            
+            // take a big vector table dump (good vectors)
+            for (i = 0; i < gVectorCount; i++) {
+               if (gVectorInfoArray[i]->good_vector) {
+                  MakeVectorString(vector_string, gVectorInfoArray[i]);
+                  ps << vector_string;
+               }
+                // free em up.  they mean nothing to me now (I'm such a user)
+
+            if (gVectorInfoArray[i]->vector)
+               PR_Free(gVectorInfoArray[i]->vector);
+            PR_Free(gVectorInfoArray[i]);
+         }
+      }
+
+        // ok, we are done with the table, free it up as well
+      PR_Free(gVectorInfoArray);
+      gVectorInfoArray = 0;
+      gVectorCount = 0;
+      PR_Close(statisticFile);
+   }
+}
+
+
+/**
+ * This debug method allows us to determine whether or not 
+ * we've seen (and can handle) the given context vector.
+ *
+ * @update  gess4/22/98
+ * @param   tags is an array of eHTMLTags
+ * @param   count represents the number of items in the tags array
+ * @param   aDTD is the DTD we plan to ask for verification
+ * @return  TRUE if we know how to handle it, else false
+ */
+PRBool COtherDTD::VerifyContextVector(void) const {
+
+  PRBool  result=PR_TRUE;
+
+  if(0!=gVerificationOutputDir) {
+  
+#ifdef XP_PC
+      char    path[_MAX_PATH+1];
+      strcpy(path,gVerificationOutputDir);
+#endif
+
+      int i=0;      
+      for(i=0;i<mContextStackPos;i++){
+
+#ifdef NS_WIN32
+        strcat(path,"/");
+        const char* name=GetTagName(mContextStack[i]);
+        strcat(path,name);
+        mkdir(path);
+#endif
+      }
+
+      //**************************************************
+      //Add code here to see if we understand this vector
+      //**************************************************
+
+	  if(PR_FALSE==result){
+#ifdef NS_WIN32
+      // save file to directory indicated by bad context vector
+      int iCount = 1;
+      char filename[_MAX_PATH];
+      do {
+         sprintf(filename,"%s/html%04d.dbg", path, iCount++);
+      } while (PR_Access(filename,PR_ACCESS_EXISTS) == PR_SUCCESS);
+      PRFileDesc * debugFile = PR_Open(filename,PR_CREATE_FILE|PR_RDWR,0);
+      if (debugFile) {
+         PR_Write(debugFile,gURLRef,PL_strlen(gURLRef));
+         PR_Write(debugFile,"\n",PL_strlen("\n"));
+         PR_Close(debugFile);
+      }
+#endif
+      //add debugging code here to record the fact that we just encountered
+      //a context vector we don't know how to handle.
+    }
+  }
+
+  return result;
+}
+
+/**
+ * This debug method allows us to determine whether or not 
+ * we've seen (and can handle) the given context vector.
+ *
+ * @update  gess4/22/98
+ * @param   tags is an array of eHTMLTags
+ * @param   count represents the number of items in the tags array
+ * @param   aDTD is the DTD we plan to ask for verification
+ * @return  TRUE if we know how to handle it, else false
+ */
+PRBool COtherDTD::Verify(const char* anOutputDir,PRBool aRecordStats) {
+
+  PRBool  result=PR_TRUE;
+
+  //ok, now see if we understand this vector
+
+  if(0!=anOutputDir || aRecordStats) 
+      result=VerifyContextVector();
+
+  if (aRecordStats) {
+	  NoteVector(mContextStack,mContextStackPos,result);
+  }
+
+  if(0!=anOutputDir) {
+      char    path[2048];
+      strcpy(path,anOutputDir);
+
+      int i=0;      
+      for(i=0;i<mContextStackPos;i++){
+        strcat(path,"/");
+        const char* name=GetTagName(mContextStack[i]);
+        strcat(path,name);
+        PR_MkDir(path,0);
+      }
+	  if(PR_FALSE==result){
+      static PRBool rnd_initialized = PR_FALSE;
+
+      if (!rnd_initialized) {
+         // seed randomn number generator to aid in temp file
+         // creation.
+         rnd_initialized = PR_TRUE;
+         srand((unsigned)time(NULL));
+      }
+
+      // generate a filename to dump the html source into
+      char filename[1024];
+      do {
+         // use system time to generate a temporary file name
+         time_t ltime;
+         time (&ltime);
+         // add in random number so that we can create uniques names
+         // faster than simply every second.
+         ltime += (time_t)rand();
+         sprintf(filename,"%s/%lX.html", path, ltime);
+         // try until we find one we can create
+      } while (PR_Access(filename,PR_ACCESS_EXISTS) == PR_SUCCESS);
+
+      // check to see if we already recorded an instance of this particular
+      // bad vector.  
+      if (!DebugRecord(path,gURLRef, filename))
+      {
+         // save file to directory indicated by bad context vector
+         PRFileDesc * debugFile = PR_Open(filename,PR_CREATE_FILE|PR_RDWR,0);
+         // if we were able to open the debug file, then
+         // write the true URL at the top of the file.
+         if (debugFile) {
+            // dump the html source into the newly created file.
+            PRofstream ps;
+            ps.attach(debugFile);
+            mParser->DebugDumpSource(ps);
+            PR_Close(debugFile);
+         }
+      }
+    }
+  }
+
+  return result;
+}
 

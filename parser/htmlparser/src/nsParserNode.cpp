@@ -29,11 +29,11 @@
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CHTMLToken* aToken): nsIParserNode(), 
+nsCParserNode::nsCParserNode(CToken* aToken): nsIParserNode(), 
   mName(), mEmptyString() {
   NS_PRECONDITION(0!=aToken, "Null Token");
   mAttributeCount=0;
-  mToken=aToken;
+  mToken=(CHTMLToken*)aToken;
   memset(mAttributes,0,sizeof(mAttributes));
 }
 
@@ -57,11 +57,11 @@ nsCParserNode::~nsCParserNode() {
  *  @param   aToken -- token to be added to attr list
  *  @return  
  */
-void nsCParserNode::AddAttribute(CHTMLToken* aToken) {
+void nsCParserNode::AddAttribute(CToken* aToken) {
   NS_PRECONDITION(mAttributeCount<sizeof(mAttributes), "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
   if(aToken) {
-    mAttributes[mAttributeCount++]=aToken;
+    mAttributes[mAttributeCount++]=(CHTMLToken*)aToken;
   }
 }
 
@@ -76,11 +76,11 @@ void nsCParserNode::AddAttribute(CHTMLToken* aToken) {
  *  @param   aToken -- really a skippedcontent token
  *  @return  nada
  */
-void nsCParserNode::SetSkippedContent(CHTMLToken* aToken){
+void nsCParserNode::SetSkippedContent(CToken* aToken){
   NS_PRECONDITION(mAttributeCount<sizeof(mAttributes)-1, "Buffer overrun!");
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
   if(aToken) {
-    mAttributes[mAttributeCount++]=aToken;
+    mAttributes[mAttributeCount++]=(CHTMLToken*)aToken;
   }
 }
 

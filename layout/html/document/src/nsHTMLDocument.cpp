@@ -31,6 +31,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
 #include "nsIPostToServer.h"  
+#include "nsIURL.h"
 
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);

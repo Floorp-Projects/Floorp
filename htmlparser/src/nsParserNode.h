@@ -51,7 +51,7 @@ class nsCParserNode :  public nsIParserNode {
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CHTMLToken* aToken);
+    nsCParserNode(CToken* aToken);
 
     /**
      * Destructor
@@ -136,7 +136,7 @@ class nsCParserNode :  public nsIParserNode {
      * @param 
      * @return
      */
-    virtual void AddAttribute(CHTMLToken* aToken);
+    virtual void AddAttribute(CToken* aToken);
 
     /**
      * 
@@ -144,7 +144,7 @@ class nsCParserNode :  public nsIParserNode {
      * @param 
      * @return
      */
-    virtual void SetSkippedContent(CHTMLToken* aToken);
+    virtual void SetSkippedContent(CToken* aToken);
 
               
   protected:
