@@ -417,7 +417,7 @@ SSM_UCS2_ASCIIConversion(PRBool toUnicode,
         unsigned int i;
         char tmp;
 
-        for (i=0; i<outBufLen; i+=2) {
+        for (i=0; i<*outBufLen; i+=2) {
             tmp = outBuf[i];
             outBuf[i]   = outBuf[i+1];
             outBuf[i+1] = tmp;

@@ -281,9 +281,6 @@ SSM_AddLogSocket(PRFileDesc *fd)
     return rv;
 }
 
-#ifdef XP_MAC
-#include "macglue.h"
-#endif
 
 /* Called by a newly created thread, this associates a name with the thread. */
 void
@@ -300,7 +297,7 @@ SSM_RegisterThread(char *threadName, SSMResource *ptr)
     	necessary because when a thread exits, we want it to delete itself
     	from the list of threads we need to kill at exit time. 
     */
-    {
+    { 
       PRUintn threadIndex = GetThreadIndex();
       if (threadIndex > 0)
       	PR_SetThreadPrivate(threadIndex, PR_GetCurrentThread());

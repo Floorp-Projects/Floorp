@@ -39,6 +39,7 @@
 #include "newproto.h"
 #include "messages.h"
 #include "certres.h"
+#include "sechash.h"
 
 #define SSMRESOURCE(object) (&(object)->super)
 

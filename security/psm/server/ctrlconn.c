@@ -1064,10 +1064,7 @@ static int ssm_ask_pref_to_pk11(int asktype)
 }
 
 #ifdef XP_MAC
-extern "C"
-{
-	OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
-}
+extern OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
 #endif
 
 /* Set up profile and password information. */

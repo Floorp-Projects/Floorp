@@ -83,6 +83,7 @@ typedef struct SSMDataConnection
                                       (usage depends on subclass) */
 } SSMDataConnection;
 
+PR_BEGIN_EXTERN_C
 
 PRBool AreConnectionsActive(void);
 
@@ -141,5 +142,6 @@ SSMStatus SSMDataConnection_SetupClientSocket(SSMDataConnection* conn);
 SSMStatus SSMDataConnection_ReadFromSocket(SSMDataConnection* conn,
                                           PRInt32* read,
                                           char* buffer);
+PR_END_EXTERN_C
 
 #endif
