@@ -44,12 +44,12 @@ import java.util.Enumeration;
  * <p>
  * This class has been deprecated in favor of the static methods 
  * <code>getProperty</code>, <code>putProperty</code>, and 
- * <code>deleteProperty</code>. Those methods provide the
+ * <code>deleteProperty</code> of ScripableObject. Those methods provide the
  * same functionality without the confusing and inefficient need to construct
  * a new object instance.
  *
  * @see org.mozilla.javascript.ScriptableObject
- *
+ * @deprecated
  * @author Norris Boyd
  */
 

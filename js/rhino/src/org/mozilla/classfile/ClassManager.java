@@ -40,16 +40,14 @@ import java.lang.reflect.Method;
 
 /**
  * ClassManager
- *
- * Provides a way to delegate class loading to an outer class loader
- * regardless of its actual type. For this to work, the class loader
- * must define the following public methods, which will be called
- * using reflection:
- *   <code>public Class defineClass(String name, byte[] data);</code>
- *   <code>public Class loadClass(String name, boolean resolve);</code>
- * This defines the protocol that will be used.
+ * This class is deprecated because it was incompatible with the JDK1.2 and
+ * later suggestions for class loading.
+ * @deprecated
  */
 public class ClassManager {
+    /*
+     * @deprecated
+     */
     public static Class defineClass(ClassLoader loader, String name, byte[] data)
     {
         try {
@@ -62,6 +60,9 @@ public class ClassManager {
         return null;
     }
     
+    /*
+     * @deprecated
+     */
     public static Class loadClass(ClassLoader loader, String name, boolean resolve)
     {
         try {
