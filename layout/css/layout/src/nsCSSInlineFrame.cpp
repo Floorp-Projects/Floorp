@@ -381,6 +381,13 @@ nsCSSInlineFrame::ComputeFinalSize(nsCSSInlineReflowState& aState,
     else {
       *aMetrics.maxElementSize = aState.mInlineLayout.mMaxElementSize;
     }
+
+    // Add in our border and padding to the max-element-size so that
+    // we don't shrink too far.
+    aMetrics.maxElementSize->width += aState.mBorderPadding.left +
+      aState.mBorderPadding.right;
+    aMetrics.maxElementSize->height += aState.mBorderPadding.top +
+      aState.mBorderPadding.bottom;
   }
 }
 

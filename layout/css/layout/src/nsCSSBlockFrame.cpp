@@ -1422,6 +1422,13 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
   aMetrics.descent = 0;
   if (aState.mComputeMaxElementSize) {
     *aMetrics.maxElementSize = aState.mMaxElementSize;
+
+    // Add in our border and padding to the max-element-size so that
+    // we don't shrink too far.
+    aMetrics.maxElementSize->width += aState.mBorderPadding.left +
+      aState.mBorderPadding.right;
+    aMetrics.maxElementSize->height += aState.mBorderPadding.top +
+      aState.mBorderPadding.bottom;
   }
   NS_ASSERTION(aDesiredRect.width < 1000000, "whoops");
 }
