@@ -46,6 +46,10 @@ sub init {
     my($app) = @_;
     $self->SUPER::init(@_);
     require Template; import Template; # DEPENDENCY
+    eval {
+        package PLIF::Service::TemplateToolkit::Context;
+        require Template::Context; import Template::Context; # DEPENDENCY
+    };
 }
 
 sub expand {
@@ -77,7 +81,6 @@ sub expand {
 package PLIF::Service::TemplateToolkit::Context;
 use strict;
 use vars qw(@ISA);
-use Template::Context;
 @ISA = qw(Template::Context);
 1;
 
