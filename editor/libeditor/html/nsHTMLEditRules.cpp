@@ -191,6 +191,7 @@ nsHTMLEditRules::nsHTMLEditRules() :
 mDocChangeRange(nsnull)
 ,mListenerEnabled(PR_TRUE)
 ,mReturnInEmptyLIKillsList(PR_TRUE)
+,mDidRangedDelete(PR_FALSE)
 ,mUtilRange(nsnull)
 ,mJoinOffset(0)
 {
@@ -289,6 +290,9 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
   if (!mActionNesting)
   {
+    // clear our flag about if just deleted a range
+    mDidRangedDelete = PR_FALSE;
+    
     // remember where our selection was before edit action took place:
     
     // get selection
@@ -414,6 +418,16 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
     // expand the "changed doc range" as needed
     res = PromoteRange(mDocChangeRange, action);
     if (NS_FAILED(res)) return res;
+
+    // if we did a ranged deletion, make sure we have a place to put caret.
+    // Note we only want to do this if the overall operation was deletion,
+    // not if deletion was done along the way for kOpLoadHTML, kOpInsertText, etc.
+    // That's why this is here rather than DidDeleteSelection().
+    if ((action == nsEditor::kOpDeleteSelection) && mDidRangedDelete)
+    {
+      res = InsertBRIfNeeded(selection);
+      if (NS_FAILED(res)) return res;
+    }  
     
     // add in any needed <br>s, and remove any unneeded ones.
     res = AdjustSpecialBreaks();
@@ -1130,9 +1144,9 @@ nsHTMLEditRules::GetFormatString(nsIDOMNode *aNode, nsAString &outFormat)
   
   nsCOMPtr<nsIAtom> atom = mHTMLEditor->GetTag(aNode);
   
-  if ( nsIEditProperty::p == atom.get()           ||
-       nsIEditProperty::address == atom.get()     ||
-       nsIEditProperty::pre == atom.get()           )
+  if ( nsIEditProperty::p == atom           ||
+       nsIEditProperty::address == atom     ||
+       nsIEditProperty::pre == atom           )
   {
     atom->ToString(format);
   }
@@ -1776,7 +1790,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   // initialize out param
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
-  
+
   // if there is only bogus content, cancel the operation
   if (mBogusNode) 
   {
@@ -1859,6 +1873,8 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       else
         res = wsObj.DeleteWSBackward();
       *aHandled = PR_TRUE;
+      if (NS_FAILED(res)) return res;
+      res = InsertBRIfNeeded(aSelection);
       return res;
     } 
     else if (wsType==nsWSRunObject::eText)
@@ -1877,12 +1893,22 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
       res = mHTMLEditor->DeleteText(nodeAsText,so,1);
       *aHandled = PR_TRUE;
+      if (NS_FAILED(res)) return res;    
+      res = InsertBRIfNeeded(aSelection);
       return res;
     }
     else if ( (wsType==nsWSRunObject::eSpecial)  || 
               (wsType==nsWSRunObject::eBreak)    ||
               nsHTMLEditUtils::IsHR(visNode) ) 
     {
+      // short circuit for invisible breaks.  delete them and recurse.
+      if (nsTextEditUtils::IsBreak(visNode) && !mHTMLEditor->IsVisBreak(visNode))
+      {
+        res = mHTMLEditor->DeleteNode(visNode);
+        if (NS_FAILED(res)) return res;
+        return WillDeleteSelection(aSelection, aAction, aCancel, aHandled);
+      }
+      
       // found break or image, or hr.  
       res = nsWSRunObject::PrepareToDeleteNode(mHTMLEditor, visNode);
       if (NS_FAILED(res)) return res;
@@ -1909,25 +1935,50 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           res = aSelection->Collapse(selNode, selOffset);
         }
       }
+      if (NS_FAILED(res)) return res;    
+      res = InsertBRIfNeeded(aSelection);
       return res;
     }
     else if (wsType==nsWSRunObject::eOtherBlock)
     {
-      // next to a block.  Look inside it and see if we can join to it
+      // next to a block.  See if we are between a block and a br.  If so, we really
+      // want to delete the br.  Else join content at selection to the block.
       
-      // first find the relavent nodes
-      nsCOMPtr<nsIDOMNode> leftNode, rightNode, leftParent, rightParent;
+      PRBool bDeletedBR = PR_FALSE;
+      PRInt16 otherWSType;
+      nsCOMPtr<nsIDOMNode> otherNode;
+      PRInt32 otherOffset;
+      
+      // find node in other direction
+      if (aAction == nsIEditor::eNext)
+        res = wsObj.PriorVisibleNode(startNode, startOffset, address_of(otherNode), &otherOffset, &otherWSType);
+      else
+        res = wsObj.NextVisibleNode(startNode, startOffset, address_of(otherNode), &otherOffset, &otherWSType);
+      if (NS_FAILED(res)) return res;
+      
+      // first find the adjacent node in the block
+      nsCOMPtr<nsIDOMNode> leafNode, leftNode, rightNode, leftParent, rightParent;
       if (aAction == nsIEditor::ePrevious) 
       {
-        res = mHTMLEditor->GetLastEditableLeaf( visNode, address_of(leftNode));
+        res = mHTMLEditor->GetLastEditableLeaf( visNode, address_of(leafNode));
         if (NS_FAILED(res)) return res;
+        leftNode = leafNode;
         rightNode = startNode;
       }
       else
       {
-        res = mHTMLEditor->GetFirstEditableLeaf( visNode, address_of(rightNode));
+        res = mHTMLEditor->GetFirstEditableLeaf( visNode, address_of(leafNode));
         if (NS_FAILED(res)) return res;
         leftNode = startNode;
+        rightNode = leafNode;
+      }
+      
+      if (nsTextEditUtils::IsBreak(otherNode))
+      {
+        res = mHTMLEditor->DeleteNode(otherNode);
+        if (NS_FAILED(res)) return res;
+        *aHandled = PR_TRUE;
+        bDeletedBR = PR_TRUE;
       }
       
       // dont cross table boundaries
@@ -1935,6 +1986,19 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
       if (NS_FAILED(res) || bInDifTblElems) return res;
 
+      if (bDeletedBR)
+      {
+        // put selection at edge of block and we are done.
+        nsCOMPtr<nsIDOMNode> newSelNode;
+        PRInt32 newSelOffset;
+        res = GetGoodSelPointForNode(leafNode, aAction, address_of(newSelNode), &newSelOffset);
+        if (NS_FAILED(res)) return res;
+        aSelection->Collapse(newSelNode, newSelOffset);
+        return res;
+      }
+      
+      // else we are joining content to block
+      
       // find the relavent blocks
       if (IsBlockNode(leftNode))
         leftParent = leftNode;
@@ -2022,6 +2086,9 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   res = ExpandSelectionForDeletion(aSelection);
   if (NS_FAILED(res)) return res;
   
+  // remember that we did a ranged delete for the benefit of AfterEditInner().
+  mDidRangedDelete = PR_TRUE;
+  
   // refresh start and end points
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
   if (NS_FAILED(res)) return res;
@@ -2032,7 +2099,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   if (NS_FAILED(res)) return res; 
   if (!endNode) return NS_ERROR_FAILURE;
 
-  // figure out if the enpoints are in nodes that can be merged  
+  // figure out if the endpoints are in nodes that can be merged  
   // adjust surrounding whitespace in preperation to delete selection
   if (!bPlaintext)
   {
@@ -2042,13 +2109,41 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
                                             address_of(endNode), &endOffset);
     if (NS_FAILED(res)) return res; 
   }
-  if (endNode.get() != startNode.get())
+  
   {
-    {
-      // track end location of where we are deleting
-      nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, address_of(endNode), &endOffset);
+    // track end location of where we are deleting
+    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, address_of(endNode), &endOffset);
+    // we are handling all ranged deletions directly now.
+    *aHandled = PR_TRUE;
     
-      // block parents the same?  use default deletion
+    if (endNode == startNode)
+    {
+      res = mHTMLEditor->DeleteSelectionImpl(aAction);
+      if (NS_FAILED(res)) return res; 
+    }
+    else
+    {
+      // figure out mailcite ancestors
+      nsCOMPtr<nsIDOMNode> endCiteNode, startCiteNode;
+      res = GetTopEnclosingMailCite(startNode, address_of(startCiteNode), 
+                                    mFlags & nsIPlaintextEditor::eEditorPlaintextMask);
+      if (NS_FAILED(res)) return res; 
+      res = GetTopEnclosingMailCite(endNode, address_of(endCiteNode), 
+                                    mFlags & nsIPlaintextEditor::eEditorPlaintextMask);
+      if (NS_FAILED(res)) return res; 
+      
+      // if we only have a mailcite at one of the two endpoints, set the directionality
+      // of the deletion so that the selection will end up outside the mailcite.
+      if (startCiteNode && !endCiteNode)
+      {
+        aAction = nsIEditor::eNext;
+      }
+      else if (!startCiteNode && endCiteNode)
+      {
+        aAction = nsIEditor::ePrevious;
+      }
+      
+      // figure out block parents
       nsCOMPtr<nsIDOMNode> leftParent;
       nsCOMPtr<nsIDOMNode> rightParent;
       if (IsBlockNode(startNode))
@@ -2059,131 +2154,213 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         rightParent = endNode;
       else
         rightParent = mHTMLEditor->GetBlockNodeParent(endNode);
-      if (leftParent.get() == rightParent.get()) return NS_OK;
-      
-      // deleting across blocks
-      // are the blocks of same type?
-      
-      // are the blocks siblings?
-      nsCOMPtr<nsIDOMNode> leftBlockParent;
-      nsCOMPtr<nsIDOMNode> rightBlockParent;
-      leftParent->GetParentNode(getter_AddRefs(leftBlockParent));
-      rightParent->GetParentNode(getter_AddRefs(rightBlockParent));
-
-      // MOOSE: this could conceivably screw up a table.. fix me.
-      if (   (leftBlockParent.get() == rightBlockParent.get())
-          && (mHTMLEditor->NodesSameType(leftParent, rightParent))  )
+        
+      // are endpoint block parents the same?  use default deletion
+      if (leftParent == rightParent) 
       {
-        if (nsHTMLEditUtils::IsParagraph(leftParent))
-        {
-          // first delete the selection
-          *aHandled = PR_TRUE;
-          res = mHTMLEditor->DeleteSelectionImpl(aAction);
-          if (NS_FAILED(res)) return res;
-          // then join para's, insert break
-          res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
-          if (NS_FAILED(res)) return res;
-          // fix up selection
-          res = aSelection->Collapse(selNode,selOffset);
-          return res;
-        }
-        if (nsHTMLEditUtils::IsListItem(leftParent)
-            || nsHTMLEditUtils::IsHeader(leftParent))
-        {
-          // first delete the selection
-          *aHandled = PR_TRUE;
-          res = mHTMLEditor->DeleteSelectionImpl(aAction);
-          if (NS_FAILED(res)) return res;
-          // join blocks
-          res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
-          if (NS_FAILED(res)) return res;
-          // fix up selection
-          res = aSelection->Collapse(selNode,selOffset);
-          return res;
-        }
+        res = mHTMLEditor->DeleteSelectionImpl(aAction);
       }
-      
-      // else blocks not same type, or not siblings.  Delete everything except
-      // table elements.
-      *aHandled = PR_TRUE;
-      nsCOMPtr<nsIEnumerator> enumerator;
-      nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
-      res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-      if (NS_FAILED(res)) return res;
-      if (!enumerator) return NS_ERROR_UNEXPECTED;
-
-      for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
+      else
       {
-        nsCOMPtr<nsISupports> currentItem;
-        res = enumerator->CurrentItem(getter_AddRefs(currentItem));
-        if (NS_FAILED(res)) return res;
-        if (!currentItem) return NS_ERROR_UNEXPECTED;
+        // deleting across blocks
+        // are the blocks of same type?
+        
+        // are the blocks siblings?
+        nsCOMPtr<nsIDOMNode> leftBlockParent;
+        nsCOMPtr<nsIDOMNode> rightBlockParent;
+        leftParent->GetParentNode(getter_AddRefs(leftBlockParent));
+        rightParent->GetParentNode(getter_AddRefs(rightBlockParent));
 
-        // build a list of nodes in the range
-        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-        nsCOMArray<nsIDOMNode> arrayOfNodes;
-        nsTrivialFunctor functor;
-        nsDOMSubtreeIterator iter;
-        res = iter.Init(range);
-        if (NS_FAILED(res)) return res;
-        res = iter.MakeList(functor, arrayOfNodes);
-        if (NS_FAILED(res)) return res;
-    
-        // now that we have the list, delete non table elements
-        PRInt32 listCount = arrayOfNodes.Count();
-        PRInt32 j;
-
-        for (j = 0; j < listCount; j++)
+        // MOOSE: this could conceivably screw up a table.. fix me.
+        if (   (leftBlockParent == rightBlockParent)
+            && (mHTMLEditor->NodesSameType(leftParent, rightParent))  )
         {
-          nsIDOMNode* somenode = arrayOfNodes[0];
-          res = DeleteNonTableElements(somenode);
-          arrayOfNodes.RemoveObjectAt(0);
+          if (nsHTMLEditUtils::IsParagraph(leftParent))
+          {
+            // first delete the selection
+            res = mHTMLEditor->DeleteSelectionImpl(aAction);
+            if (NS_FAILED(res)) return res;
+            // then join para's, insert break
+            res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
+            if (NS_FAILED(res)) return res;
+            // fix up selection
+            res = aSelection->Collapse(selNode,selOffset);
+            return res;
+          }
+          if (nsHTMLEditUtils::IsListItem(leftParent)
+              || nsHTMLEditUtils::IsHeader(leftParent))
+          {
+            // first delete the selection
+            res = mHTMLEditor->DeleteSelectionImpl(aAction);
+            if (NS_FAILED(res)) return res;
+            // join blocks
+            res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
+            if (NS_FAILED(res)) return res;
+            // fix up selection
+            res = aSelection->Collapse(selNode,selOffset);
+            return res;
+          }
         }
-      }
+        
+        // else blocks not same type, or not siblings.  Delete everything except
+        // table elements.
+        nsCOMPtr<nsIEnumerator> enumerator;
+        nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
+        res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
+        if (NS_FAILED(res)) return res;
+        if (!enumerator) return NS_ERROR_UNEXPECTED;
+
+        for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
+        {
+          nsCOMPtr<nsISupports> currentItem;
+          res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+          if (NS_FAILED(res)) return res;
+          if (!currentItem) return NS_ERROR_UNEXPECTED;
+
+          // build a list of nodes in the range
+          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+          nsCOMArray<nsIDOMNode> arrayOfNodes;
+          nsTrivialFunctor functor;
+          nsDOMSubtreeIterator iter;
+          res = iter.Init(range);
+          if (NS_FAILED(res)) return res;
+          res = iter.MakeList(functor, arrayOfNodes);
+          if (NS_FAILED(res)) return res;
       
-      // check endopints for possible text deletion.
-      // we can assume that if text node is found, we can
-      // delete to end or to begining as appropriate,
-      // since the case where both sel endpoints in same
-      // text node was already handled (we wouldn't be here)
-      if ( mHTMLEditor->IsTextNode(startNode) )
-      {
-        // delete to last character
-        nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-        PRUint32 len;
-        nodeAsText = do_QueryInterface(startNode);
-        nodeAsText->GetLength(&len);
-        if (len > (PRUint32)startOffset)
-        {
-          res = mHTMLEditor->DeleteText(nodeAsText,startOffset,len-startOffset);
-          if (NS_FAILED(res)) return res;
+          // now that we have the list, delete non table elements
+          PRInt32 listCount = arrayOfNodes.Count();
+          PRInt32 j;
+
+          for (j = 0; j < listCount; j++)
+          {
+            nsIDOMNode* somenode = arrayOfNodes[0];
+            res = DeleteNonTableElements(somenode);
+            arrayOfNodes.RemoveObjectAt(0);
+          }
         }
-      }
-      if ( mHTMLEditor->IsTextNode(endNode) )
-      {
-        // delete to first character
-        nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-        nodeAsText = do_QueryInterface(endNode);
-        if (endOffset)
+        
+        // check endopints for possible text deletion.
+        // we can assume that if text node is found, we can
+        // delete to end or to begining as appropriate,
+        // since the case where both sel endpoints in same
+        // text node was already handled (we wouldn't be here)
+        if ( mHTMLEditor->IsTextNode(startNode) )
         {
-          res = mHTMLEditor->DeleteText(nodeAsText,0,endOffset);
-          if (NS_FAILED(res)) return res;
+          // delete to last character
+          nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+          PRUint32 len;
+          nodeAsText = do_QueryInterface(startNode);
+          nodeAsText->GetLength(&len);
+          if (len > (PRUint32)startOffset)
+          {
+            res = mHTMLEditor->DeleteText(nodeAsText,startOffset,len-startOffset);
+            if (NS_FAILED(res)) return res;
+          }
+        }
+        if ( mHTMLEditor->IsTextNode(endNode) )
+        {
+          // delete to first character
+          nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+          nodeAsText = do_QueryInterface(endNode);
+          if (endOffset)
+          {
+            res = mHTMLEditor->DeleteText(nodeAsText,0,endOffset);
+            if (NS_FAILED(res)) return res;
+          }
         }
       }
     }
-    if (aAction == nsIEditor::eNext)
-    {
-      res = aSelection->Collapse(endNode,endOffset);
-    }
-    else
-    {
-      res = aSelection->Collapse(startNode,startOffset);
-    }
-    return NS_OK;
   }
-
+  if (aAction == nsIEditor::eNext)
+  {
+    res = aSelection->Collapse(endNode,endOffset);
+  }
+  else
+  {
+    res = aSelection->Collapse(startNode,startOffset);
+  }
   return res;
 }  
+
+
+/*****************************************************************************************************
+*    InsertBRIfNeeded: determines if a br is needed for current selection to not be spastic.
+*    If so, it inserts one.  Callers responsibility to only call with collapsed selection.
+*         nsISelection *aSelection      the collapsed selection 
+*/
+nsresult
+nsHTMLEditRules::InsertBRIfNeeded(nsISelection *aSelection)
+{
+  if (!aSelection)
+    return NS_ERROR_NULL_POINTER;
+  
+  // get selection  
+  nsCOMPtr<nsIDOMNode> node;
+  PRInt32 offset;
+  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, address_of(node), &offset);
+  if (NS_FAILED(res)) return res;
+  if (!node) return NS_ERROR_FAILURE;
+
+  // examine selection
+  nsWSRunObject wsObj(mHTMLEditor, node, offset);
+  if (((wsObj.mStartReason & nsWSRunObject::eBlock) || (wsObj.mStartReason & nsWSRunObject::eBreak))
+      && (wsObj.mEndReason & nsWSRunObject::eBlock))
+  {
+    // if we are tucked between block boundaries then insert a br
+    // first check that we are allowed to
+    if (mHTMLEditor->CanContainTag(node, NS_LITERAL_STRING("br")))
+    {
+      nsCOMPtr<nsIDOMNode> brNode;
+      res = mHTMLEditor->CreateBR(node, offset, address_of(brNode), nsIEditor::ePrevious);
+    }
+  }
+  return res;
+}
+
+/*****************************************************************************************************
+*    GetGoodSelPointForNode: Finds where at a node you would want to set the selection if you were
+*    trying to have a caret next to it.
+*         nsIDOMNode *aNode                  the node 
+*         nsIEditor::EDirection aAction      which edge to find: eNext indicates beginning, ePrevious ending
+*         nsCOMPtr<nsIDOMNode> *outSelNode   desired sel node
+*         PRInt32 *outSelOffset              desired sel offset
+*/
+nsresult
+nsHTMLEditRules::GetGoodSelPointForNode(nsIDOMNode *aNode, nsIEditor::EDirection aAction, 
+                                        nsCOMPtr<nsIDOMNode> *outSelNode, PRInt32 *outSelOffset)
+{
+  if (!aNode || !outSelNode || !outSelOffset)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsresult res = NS_OK;
+  
+  // default values
+  *outSelNode = aNode;
+  *outSelOffset = 0;
+  
+  if (mHTMLEditor->IsTextNode(aNode) || mHTMLEditor->IsContainer(aNode))
+  {
+    if (aAction == nsIEditor::ePrevious)
+    {
+      PRUint32 len;
+      res = mHTMLEditor->GetLengthOfDOMNode(aNode, len);
+      *outSelOffset = PRInt32(len);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  else 
+  {
+    res = nsEditor::GetNodeLocation(aNode, outSelNode, outSelOffset);
+    if (NS_FAILED(res)) return res;
+    if (!nsTextEditUtils::IsBreak(aNode) || mHTMLEditor->IsVisBreak(aNode))
+    {
+      if (aAction == nsIEditor::ePrevious)
+        (*outSelOffset)++;
+    }
+  }
+  return res;
+}
+
 
 /*****************************************************************************************************
 *    JoinBlocks: this method is used to join two block elements.  The right element is always joined
@@ -4457,8 +4634,8 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
 
   // set up for loops and cache our root element
   PRBool stillLooking = PR_TRUE;
-  nsCOMPtr<nsIDOMNode> visNode;
-  PRInt32 visOffset=0;
+  nsCOMPtr<nsIDOMNode> visNode, firstBRParent;
+  PRInt32 visOffset=0, firstBROffset=0;
   PRInt16 wsType;
   nsCOMPtr<nsIDOMElement> rootElement;
   res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElement));
@@ -4510,6 +4687,11 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
         }
         else
         { 
+          if (!firstBRParent)
+          {
+            firstBRParent = selEndNode;
+            firstBROffset = selEndOffset;
+          }
           nsEditor::GetNodeLocation(wsObj.mEndReasonNode, address_of(selEndNode), &selEndOffset);
           ++selEndOffset;
         }
@@ -4519,7 +4701,8 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
         // we want to keep looking up.  But stop if we are crossing table element
         // boundaries, or if we hit the root.
         if ( nsHTMLEditUtils::IsTableElement(wsObj.mEndReasonNode) ||
-            (rootElement == wsObj.mEndReasonNode))
+            (selCommon == wsObj.mEndReasonNode)                    ||
+            (rootElement == wsObj.mEndReasonNode) )
         {
           stillLooking = PR_FALSE;
         }
@@ -4537,7 +4720,44 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   }
   // now set the selection to the new range
   aSelection->Collapse(selStartNode, selStartOffset);
-  aSelection->Extend(selEndNode, selEndOffset);
+  
+  // expand selection endpoint only if we didnt pass a br,
+  // or if we really needed to pass that br (ie, it's block is now 
+  // totally selected)
+  PRBool doEndExpansion = PR_TRUE;
+  if (firstBRParent)
+  {
+    // find block node containing br
+    nsCOMPtr<nsIDOMNode> brBlock = firstBRParent;
+    if (!IsBlockNode(brBlock))
+      brBlock = nsHTMLEditor::GetBlockNodeParent(brBlock);
+    PRBool nodeBefore=PR_FALSE, nodeAfter=PR_FALSE;
+    
+    // create a range that represents expanded selection
+    nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
+    if (!range) return NS_ERROR_NULL_POINTER;
+    res = range->SetStart(selStartNode, selStartOffset);
+    if (NS_FAILED(res)) return res;
+    res = range->SetEnd(selEndNode, selEndOffset);
+    if (NS_FAILED(res)) return res;
+    
+    // check if block is entirely inside range
+    nsCOMPtr<nsIContent> brContentBlock = do_QueryInterface(brBlock);
+    res = mHTMLEditor->mRangeHelper->CompareNodeToRange(brContentBlock, range, &nodeBefore, &nodeAfter);
+    
+    // if block isn't contained, forgo grabbing the br in the expanded selection
+    if (nodeBefore || nodeAfter)
+      doEndExpansion = PR_FALSE;
+  }
+  if (doEndExpansion)
+  {
+    res = aSelection->Extend(selEndNode, selEndOffset);
+  }
+  else
+  {
+    // only expand to just before br
+    res = aSelection->Extend(firstBRParent, firstBROffset);
+  }
   
   return res;
 }
@@ -4557,7 +4777,7 @@ nsHTMLEditRules::AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *
   if (NS_FAILED(res)) return PR_TRUE;
   if (!priorNode) return PR_TRUE;
   nsCOMPtr<nsIDOMNode> blockParent = mHTMLEditor->GetBlockNodeParent(priorNode);
-  if (blockParent && (blockParent.get() == aBlock)) return PR_FALSE;
+  if (blockParent && (blockParent == aBlock)) return PR_FALSE;
   return PR_TRUE;
 }
 
@@ -4580,7 +4800,7 @@ nsHTMLEditRules::AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aB
   if (NS_FAILED(res)) return PR_TRUE;
   if (!nextNode) return PR_TRUE;
   nsCOMPtr<nsIDOMNode> blockParent = mHTMLEditor->GetBlockNodeParent(nextNode);
-  if (blockParent && (blockParent.get() == aBlock)) return PR_FALSE;
+  if (blockParent && (blockParent == aBlock)) return PR_FALSE;
   return PR_TRUE;
 }
 
@@ -7229,7 +7449,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult)
     range->GetStartContainer(getter_AddRefs(startParent));
     if (startParent)
     {
-      if (aNode == startParent.get())
+      if (aNode == startParent)
       {
         *aResult = PR_TRUE;
         return NS_OK;
@@ -7244,7 +7464,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult)
     if (startParent == endParent) continue;
     if (endParent)
     {
-      if (aNode == endParent.get()) 
+      if (aNode == endParent) 
       {
         *aResult = PR_TRUE;
         return NS_OK;
