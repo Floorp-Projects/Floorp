@@ -2688,23 +2688,23 @@ nsEventListenerManager::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
       nsCOMPtr<nsIDocument> document;
       targetContent->GetDocument(*getter_AddRefs(document));
 
-      if (document) {
-        // Obtain a presentation context
-        PRInt32 count = document->GetNumberOfShells();
-        if (count == 0)
-          return NS_OK;
+      // Do nothing if the element isn't in the document
+      if (!document)
+        return NS_OK;
 
-        nsCOMPtr<nsIPresShell> shell;
-        document->GetShellAt(0, getter_AddRefs(shell));
+      // Obtain a presentation shell
+      nsCOMPtr<nsIPresShell> shell;
+      document->GetShellAt(0, getter_AddRefs(shell));
+      if (!shell)
+        return NS_OK;
 
-        // Retrieve the context
-        nsCOMPtr<nsIPresContext> aPresContext;
-        shell->GetPresContext(getter_AddRefs(aPresContext));
+      // Retrieve the context
+      nsCOMPtr<nsIPresContext> aPresContext;
+      shell->GetPresContext(getter_AddRefs(aPresContext));
 
-        nsCOMPtr<nsIEventStateManager> esm;
-        if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
-          return esm->DispatchNewEvent(mTarget, aEvent, _retval);
-        }
+      nsCOMPtr<nsIEventStateManager> esm;
+      if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
+        return esm->DispatchNewEvent(mTarget, aEvent, _retval);
       }
     }
   }
