@@ -1,0 +1,97 @@
+<?xml version="1.0"?> 
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://global/locale/commonDialog.dtd">
+
+ 
+
+<window
+
+	xmlns:html="http://www.w3.org/TR/REC-html40"
+
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+
+	align="vertical"
+
+	onload="commonDialogOnLoad()"
+
+	class="dialog"> 
+
+    <html:script language="JavaScript" src="chrome://global/content/commonDialog.js" />
+
+     
+
+    <box align="horizontal" flex="100%" style="width: 36em;">
+
+		
+
+		<html:div style="width: 40px; margin: 5px;">
+
+			<html:img id="info.icon" src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0"/>
+
+		</html:div>
+
+		
+
+		<box align="vertical" flex="100%">
+
+				<html:div id="info.header" style="margin-left:2em; margin-right:2em; margin-top:5px; font-size: 110%; font-weight: bold;">
+
+					&header.label;
+
+				</html:div>
+
+				<html:div id="info.txt" style="margin-left:2em; margin-right:2em; margin-top:5px;" flex="100%">
+
+					&message.label;
+
+				</html:div>
+
+		</box>
+
+	</box>
+
+	
+
+	<box id="editFields" align="vertical" >
+
+		<box align="horizontal"  >
+
+			<html:div style="min-width: 6em;" id="login.text">&editfield1.label;</html:div>
+
+			<html:input accesskey="u" tabindex="0" type="text" id="dialog.loginname" flex="100%"/>
+
+		</box>
+
+		
+
+		<box align="horizontal"  id ="passwordEditfield">
+
+			<html:div style="min-width: 6em;">&editfield2.label;</html:div>
+
+			<html:input accesskey="p" tabindex="1" type="password" id="dialog.password" flex="100%"/>
+
+		</box>
+
+	</box>
+
+	
+
+	<html:label id="checkboxLabel"  onclick="onCheckboxClick()" >
+
+  		 <html:input type="checkbox" id="checkbox" />
+
+  		 &checkbox.label;
+
+    </html:label>		
+
+	
+
+	<box id="okCancelButtons"/>
+
+
+
+</window>
