@@ -1111,6 +1111,8 @@ nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
     NS_ASSERTION(entry, "### active entry = nsnull!");
     gService->ClearPendingRequests(entry);
     entry->DetachDescriptors();
+    
+    entry->MarkInactive();  // so we don't call Remove() while we're enumerating
     gService->DeactivateEntry(entry);
     
     return PL_DHASH_REMOVE; // and continue enumerating
