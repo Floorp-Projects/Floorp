@@ -2380,12 +2380,7 @@ dnl =
 dnl = Set the timer libs according to MOZ_MONOLITHIC_TOOLKIT
 dnl =
 dnl ========================================================
-if test "$MOZ_MONOLITHIC_TOOLKIT"
-then
-  MOZ_TIMER_LIBS=-ltimer_"$MOZ_WIDGET_TOOLKIT"_s
-else
-  MOZ_TIMER_LIBS=-ltimer_s
-fi
+MOZ_TIMER_LIBS=-ltimer_s
 dnl ========================================================
 dnl =
 dnl = End MOZ_TIMER_LIBS
