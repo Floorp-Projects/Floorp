@@ -32,7 +32,7 @@
  * GPL.
  */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.7 $ $Date: 2001/08/30 18:51:31 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.7 $ $Date: 2001/08/30 18:51:31 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.8 $ $Date: 2001/08/30 19:12:51 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.8 $ $Date: 2001/08/30 19:12:51 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -598,7 +598,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.7 $ $Date: 2001/08/30 18:51:31 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.7 $ $Date: 2001/08/30 18:51:31 $ $Name:  $", (PRUint32)178 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.8 $ $Date: 2001/08/30 19:12:51 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.8 $ $Date: 2001/08/30 19:12:51 $ $Name:  $", (PRUint32)179 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
@@ -9864,9 +9864,9 @@ static const NSSItem nss_builtins_items_177 [] = {
 , (PRUint32)20 },
   { (void *)"\260\367\377\277\260\331\000\100\001\000\000\000\240\344\004\010"
 , (PRUint32)16 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) }
+  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
 };
 static const NSSItem nss_builtins_items_178 [] = {
   { (void *)&cko_certificate, (PRUint32)sizeof(CK_OBJECT_CLASS) },
@@ -9955,9 +9955,9 @@ static const NSSItem nss_builtins_items_179 [] = {
 , (PRUint32)20 },
   { (void *)"\260\367\377\277\260\331\000\100\001\000\000\000\240\344\004\010"
 , (PRUint32)16 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) }
+  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_netscape_trusted_delegator, (PRUint32)sizeof(CK_TRUST) }
 };
 
 PR_IMPLEMENT_DATA(const builtinsInternalObject)
