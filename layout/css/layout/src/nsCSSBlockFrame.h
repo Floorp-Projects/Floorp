@@ -80,6 +80,12 @@ struct nsCSSBlockReflowState : public nsReflowState {
   nscoord mPrevNegBottomMargin;
   nscoord mKidXMost;
 
+  // When a block that contains a block is unconstrained we need to
+  // give the inner block a limited width otherwise they don't reflow
+  // properly.
+  PRPackedBool mHaveBlockMaxWidth;
+  nscoord mBlockMaxWidth;
+
   nsSize mMaxElementSize;
 
   nsCSSLineLayout mLineLayout;
