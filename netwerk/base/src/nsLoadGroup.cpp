@@ -476,7 +476,13 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
     char* uriStr;
     nsCOMPtr<nsIURI> uri;
 
-    rv = channel->GetURI(getter_AddRefs(uri));
+    if (channel) {
+    	rv = channel->GetURI(getter_AddRefs(uri));
+    }
+    else {
+	rv = NS_ERROR_NULL_POINTER;
+    }
+
     if (NS_SUCCEEDED(rv))
         rv = uri->GetSpec(&uriStr);
     if (NS_FAILED(rv))
