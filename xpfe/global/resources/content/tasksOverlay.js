@@ -216,3 +216,49 @@ function OpenTaskURL( inURL )
 	
 	window.open( inURL );
 }
+
+/** 
+ * WALLET submenu
+ */
+
+// perform a wallet action
+function WalletAction( action ) 
+{
+  if( appCore ) {
+    switch( action ) {
+      case "safefill":
+        appCore.walletPreview(window, window.content);
+        break;
+      case "password":
+        appCore.walletChangePassword();
+        break;
+      case "quickfill": 
+        appCore.walletQuickFillin(window.content);
+        break;
+      case "capture":
+      default:
+        appCore.walletRequestToCapture(window.content);
+        break;
+    }
+  }
+}  
+
+// display a Wallet Dialog
+function WalletDialog( which )
+{
+  switch( which ) {
+    case "signon":
+      window.openDialog("chrome://wallet/content/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
+      break;
+    case "cookie":
+      window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
+      break;
+    case "samples":
+      window.content.location.href= 'http://people.netscape.com/morse/wallet/samples/';
+      break;
+    case "wallet":
+    default:
+      window.openDialog("chrome://wallet/content/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
+      break;
+  }
+}
