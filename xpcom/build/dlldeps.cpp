@@ -190,5 +190,7 @@ void XXXNeverCalled()
       nsComponentManager::CreateInstance("", nsnull, id, nsnull);
       nsComponentManager::GetClassObject(id, id, nsnull);
       nsComponentManager::GetClassObjectByContractID("", id, nsnull);
+
+      nsServiceManager::GetGlobalServiceManager(nsnull);
     }
 }
