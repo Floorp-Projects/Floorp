@@ -1447,6 +1447,16 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
            || (xproperty == falseString && isModKey)))
           break;
 
+        // We know we're handling this.
+        aHandledFlag = PR_TRUE;
+
+        // Get the cancel attribute.
+        nsAutoString cancelValue;
+        keyElement->GetAttribute(nsAutoString("cancel"), cancelValue);
+        if (cancelValue == "true") {
+          return NS_OK;
+        }
+
 				// Modifier tests passed so execute onclick command
 				nsAutoString cmdToExecute;
 				nsAutoString oncommand;
@@ -1474,7 +1484,6 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 				// This code executes in every presentation context in which this
 				// document is appearing.
 				nsCOMPtr<nsIDocument> document = do_QueryInterface(aDocument);
-        aHandledFlag = PR_TRUE;
         nsCOMPtr<nsIContent> content = do_QueryInterface(keyElement);
         if (aDocument != mDOMDocument) {
           nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(keyElement);
