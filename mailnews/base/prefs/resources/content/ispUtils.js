@@ -39,6 +39,8 @@ var ispDefaults;
 var nsIRDFResource = Components.interfaces.nsIRDFResource;
 var nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
 
+var ispRoot = rdf.GetResource("NC:ispinfo");
+
 // given an ISP's domain URI, look up all relevant information about it
 function getIspDefaultsForUri(domainURI)
 {
