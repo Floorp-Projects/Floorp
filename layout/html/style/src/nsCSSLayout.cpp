@@ -291,6 +291,8 @@ GetStyleDimension(nsIPresContext* aPresContext,
   case eStyleUnit_Percent:
     // CSS2 has specified that percentage width/height values are basd
     // on the containing block's <B>width</B>.
+    // XXX need to subtract out padding, also this needs
+    // to be synced with nsFrame's IsPercentageBase
     aFrame->GetContentParent(parentFrame);
     while (nsnull != parentFrame) {
       nsBlockFrame* block;
@@ -305,6 +307,8 @@ GetStyleDimension(nsIPresContext* aPresContext,
       }
     }
     break;
+  default:
+    aResult = 0;
   }
   if (aResult < 0) {
     rv = PR_FALSE;
@@ -334,6 +338,7 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
                           aStyleSize.height)) {
       rv |= NS_SIZE_HAS_HEIGHT;
     }
+    NS_RELEASE(sc);
   }
   return rv;
 }
