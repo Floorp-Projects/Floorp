@@ -63,9 +63,6 @@ nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
 	nsresult rv;
-	nsAutoString sep;
-
-	sep += PR_GetDirectorySeparator();
 
 	nsAutoString sbdSep;
 
