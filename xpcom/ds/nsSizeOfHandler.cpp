@@ -18,16 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
 #include "nsISizeOfHandler.h"
 #include "nsIAtom.h"
@@ -43,10 +33,10 @@ public:
 
   // nsISizeOfHandler
   NS_IMETHOD Init();
-  NS_IMETHOD PR_CALLBACK RecordObject(void* aObject, PRBool* aResult);
-  NS_IMETHOD PR_CALLBACK AddSize(nsIAtom* aKey, PRUint32 aSize);
-  NS_IMETHOD PR_CALLBACK Report(nsISizeofReportFunc aFunc, void* aArg);
-  NS_IMETHOD PR_CALLBACK GetTotals(PRUint32* aCountResult, PRUint32* aTotalSizeResult);
+  NS_IMETHOD RecordObject(void* aObject, PRBool* aResult);
+  NS_IMETHOD AddSize(nsIAtom* aKey, PRUint32 aSize);
+  NS_IMETHOD Report(nsISizeofReportFunc aFunc, void* aArg);
+  NS_IMETHOD GetTotals(PRUint32* aCountResult, PRUint32* aTotalSizeResult);
 
 protected:
   PRUint32 mTotalSize;
@@ -54,9 +44,9 @@ protected:
   PLHashTable* mSizeTable;
   PLHashTable* mObjectTable;
 
-  static PRIntn RemoveObjectEntry(PLHashEntry* he, PRIntn i, void* arg);
-  static PRIntn RemoveSizeEntry(PLHashEntry* he, PRIntn i, void* arg);
-  static PRIntn ReportEntry(PLHashEntry* he, PRIntn i, void* arg);
+  static PRIntn PR_CALLBACK RemoveObjectEntry(PLHashEntry* he, PRIntn i, void* arg);
+  static PRIntn PR_CALLBACK RemoveSizeEntry(PLHashEntry* he, PRIntn i, void* arg);
+  static PRIntn PR_CALLBACK ReportEntry(PLHashEntry* he, PRIntn i, void* arg);
 };
 
 class SizeOfDataStats {
