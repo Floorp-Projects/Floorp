@@ -19,6 +19,8 @@
 #ifndef __XLIB_XTBIN_H__
 #define __XLIB_XTBIN_H__
 
+#include "xlibrgb.h"
+
 #include <X11/Intrinsic.h>
 #include <X11/Xutil.h>
 #include <X11/Xlib.h>
@@ -86,9 +88,11 @@ public:
   void xtbin_resize(int aX, int aY, int aWidth, int aHeight);
   Window xtbin_xtwindow() { return xtwindow; }
   int xtbin_initialized();
+  void sync();
   
-private:
+private: 
   int initialized;
+  XlibRgbHandle *mXlibRgbHandle;
   Display *xtdisplay;
   Window xtwindow;
   XtAppContext app_context;

@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Tim Copperfield <timecop@network.email.ne.jp>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -54,6 +56,8 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
+#elif MOZ_WIDGET_XLIB
+#include "xlibxtbin.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -165,6 +169,8 @@ protected:
     * within a Gtk Application
     */
    GtkWidget *mXtBin;
+#elif MOZ_WIDGET_XLIB
+   xtbin *mXlibXtBin;
 #endif
 
     /**

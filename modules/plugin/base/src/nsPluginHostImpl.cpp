@@ -147,6 +147,8 @@
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
 #elif defined(MOZ_WIDGET_QT)
 #include <qwindowdefs.h> // for qt_xdisplay()
+#elif defined(MOZ_WIDGET_XLIB)
+#include "xlibrgb.h" // for xlib_rgb_get_display()
 #endif
 #endif
 
@@ -2511,6 +2513,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
     *value = GDK_DISPLAY();
 #elif defined(MOZ_WIDGET_QT)
     *value = qt_xdisplay();
+#elif defined(MOZ_WIDGET_XLIB)
+    *value = xxlib_rgb_get_display(xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE));
 #endif
     if (!(*value)) {
       return NS_ERROR_FAILURE;
