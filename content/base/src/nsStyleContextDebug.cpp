@@ -31,7 +31,7 @@
 #ifdef XP_MAC
 #include <Events.h>
 #include <Timer.h>
-static bool MacKeyDown(unsigned char theKey)
+static PRBool MacKeyDown(unsigned char theKey)
 {
 	KeyMap map;
 	GetKeys(map);
@@ -40,15 +40,15 @@ static bool MacKeyDown(unsigned char theKey)
 #endif
 
 
-static bool IsTimeToDumpDebugData()
+static PRBool IsTimeToDumpDebugData()
 {
-  bool timeToDump = false;
+  PRBool timeToDump = PR_FALSE;
 #ifdef XP_MAC
 	static unsigned long lastTicks = 0;
   if (MacKeyDown(0x3b)) { // control key
     if ((unsigned long)(::TickCount() - lastTicks) > 60) {
 	    lastTicks = ::TickCount();
-	    timeToDump = true;
+	    timeToDump = PR_TRUE;
 	  }
 	}
 #endif
@@ -72,10 +72,10 @@ static void LogStyleStructs(nsStyleContextData* aStyleContextData)
   static unsigned long gotMutable[max_structs];
   static unsigned long gotMutableAndDefault[max_structs];
 
-	static bool resetCounters = true;
+	static PRBool resetCounters = PR_TRUE;
 
   if (IsTimeToDumpDebugData()) {
-    resetCounters = true;
+    resetCounters = PR_TRUE;
     printf("\n\n\n");
     printf("-------------------------------------------------------------------------------------------------------------\n");
     printf("Count of nsStyleContextData: %ld\n", totalCount);
@@ -134,7 +134,7 @@ static void LogStyleStructs(nsStyleContextData* aStyleContextData)
   }
 
 	if (resetCounters) {
-		resetCounters = false;
+		resetCounters = PR_FALSE;
 		totalCount = 0;
 		for (short i = 0; i < max_structs; i ++) {
 		  defaultStruct[i] = 0L;
@@ -344,7 +344,7 @@ static void LogStyleStructs(nsStyleContextData* aStyleContextData)
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
 
-static void LogGetStyleDataCall(nsStyleStructID aSID, LogCallType aLogCallType, nsIStyleContext* aStyleContext, bool aEnteringFunction)
+static void LogGetStyleDataCall(nsStyleStructID aSID, LogCallType aLogCallType, nsIStyleContext* aStyleContext, PRBool aEnteringFunction)
 {
 #define max_structs (eStyleStruct_Max + 1)
 #define small_depth_threshold	8
@@ -367,10 +367,10 @@ static void LogGetStyleDataCall(nsStyleStructID aSID, LogCallType aLogCallType, 
   }
 
 
-	static bool resetCounters = true;
+	static PRBool resetCounters = PR_TRUE;
 
   if (IsTimeToDumpDebugData()) {
-    resetCounters = true;
+    resetCounters = PR_TRUE;
     
     unsigned long totalCalls;
     unsigned long totalMaxdepth;
@@ -452,7 +452,7 @@ static void LogGetStyleDataCall(nsStyleStructID aSID, LogCallType aLogCallType, 
   }
 
 	if (resetCounters) {
-		resetCounters = false;
+		resetCounters = PR_FALSE;
 		totalMicrosecs = 0;
 		for (short i = 0; i < logCallType_Max; i ++) {
 		  microsecs[i] = 0L;
@@ -513,9 +513,9 @@ static void LogWriteMutableStyleDataCall(nsStyleStructID aSID, nsStyleStruct* aS
   static unsigned long calls[max_structs];
   static unsigned long unchanged[max_structs];
 
-	static bool resetCounters = true;
+	static PRBool resetCounters = PR_TRUE;
   if (IsTimeToDumpDebugData()) {
-    resetCounters = true;
+    resetCounters = PR_TRUE;
 
 	  printf("------------------------------------------------------------------------------------------\n");
 	  printf("WriteMutableStyleData\n");
@@ -554,7 +554,7 @@ static void LogWriteMutableStyleDataCall(nsStyleStructID aSID, nsStyleStruct* aS
   }
 
   if (resetCounters) {
-    resetCounters = false;
+    resetCounters = PR_FALSE;
     for (short i=0; i<max_structs; i++) {
       calls[i] = 0;
       unchanged[i] = 0;

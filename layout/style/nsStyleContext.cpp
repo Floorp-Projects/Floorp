@@ -2869,13 +2869,13 @@ const nsStyleStruct* StyleContextImpl::GetStyleData(nsStyleStructID aSID)
   NS_PRECONDITION(aSID > 0 && aSID <= eStyleStruct_Max, "Invalid style struct id");
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_GetStyleData, this, true);
+  LogGetStyleDataCall(aSID, logCallType_GetStyleData, this, PR_TRUE);
 #endif
 
   const nsStyleStruct* result = FetchInheritedStyleStruct(aSID);
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_GetStyleData, this, false);
+  LogGetStyleDataCall(aSID, logCallType_GetStyleData, this, PR_FALSE);
 #endif
 
   return result;
@@ -2988,7 +2988,7 @@ static void  ReleaseMutableStyleStruct(nsStyleStructID aSID, nsStyleStruct* aSty
       return;
     }
   }
-  NS_ASSERTION(false, "Can't release mutable style struct");
+  NS_ASSERTION(PR_FALSE, "Can't release mutable style struct");
 }
 
 
@@ -3002,10 +3002,10 @@ void StyleContextImpl::ReadMutableStyleData(nsStyleStructID aSID, nsStyleStruct*
   NS_PRECONDITION(aSID > 0 && aSID <= eStyleStruct_Max, "Invalid style struct id");
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_ReadMutableStyleData, this, true);
+  LogGetStyleDataCall(aSID, logCallType_ReadMutableStyleData, this, PR_TRUE);
 #endif
 #ifdef LOG_STYLE_STRUCTS
-  mStyleData->mGotMutable[aSID] = true;
+  mStyleData->mGotMutable[aSID] = PR_TRUE;
 #endif
 
   nsStyleStruct*   result  = GetNewMutableStyleStruct(aSID);
@@ -3021,7 +3021,7 @@ void StyleContextImpl::ReadMutableStyleData(nsStyleStructID aSID, nsStyleStruct*
 #endif
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_ReadMutableStyleData, this, false);
+  LogGetStyleDataCall(aSID, logCallType_ReadMutableStyleData, this, PR_FALSE);
 #endif
 
   *aStyleStructPtr = result;
@@ -3066,7 +3066,7 @@ nsresult StyleContextImpl::WriteMutableStyleData(nsStyleStructID aSID, nsStyleSt
   NS_PRECONDITION(aSID > 0 && aSID <= eStyleStruct_Max, "Invalid style struct id");
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_WriteMutableStyleData, this, true);
+  LogGetStyleDataCall(aSID, logCallType_WriteMutableStyleData, this, PR_TRUE);
 #endif
 #ifdef LOG_WRITE_STYLE_DATA_CALLS
   LogWriteMutableStyleDataCall(aSID, aStyleStruct, this);
@@ -3076,7 +3076,7 @@ nsresult StyleContextImpl::WriteMutableStyleData(nsStyleStructID aSID, nsStyleSt
   ReleaseMutableStyleStruct(aSID, aStyleStruct);
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_WriteMutableStyleData, this, false);
+  LogGetStyleDataCall(aSID, logCallType_WriteMutableStyleData, this, PR_FALSE);
 #endif
   return NS_OK;
 }
@@ -3106,7 +3106,7 @@ NS_IMETHODIMP
 StyleContextImpl::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const
 {
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_GetStyle, (nsIStyleContext*)this, true);
+  LogGetStyleDataCall(aSID, logCallType_GetStyle, (nsIStyleContext*)this, PR_TRUE);
 #endif
 
   if (aSID == eStyleStruct_BorderPaddingShortcut) {
@@ -3133,7 +3133,7 @@ StyleContextImpl::GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const
   }
 
 #ifdef LOG_GET_STYLE_DATA_CALLS
-  LogGetStyleDataCall(aSID, logCallType_GetStyle, (nsIStyleContext*)this, false);
+  LogGetStyleDataCall(aSID, logCallType_GetStyle, (nsIStyleContext*)this, PR_FALSE);
 #endif
   return NS_OK;
 }
