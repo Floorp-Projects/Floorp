@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 OS2_IMPLIB = 1
-OS2_LIBRARYNAME = gfx_$(MOZ_GFX_TOOLKIT)
+OS2_LIBRARYNAME = gfx_os2
 
 MODULE = raptor 
 
