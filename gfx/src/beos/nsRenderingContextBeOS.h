@@ -23,7 +23,7 @@
 #ifndef nsRenderingContextBeOS_h___
 #define nsRenderingContextBeOS_h___
 
-#include "nsIRenderingContext.h"
+#include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
@@ -40,7 +40,7 @@
 #include "nsDrawingSurfaceBeOS.h"
 #include "nsRegionBeOS.h"
 
-class nsRenderingContextBeOS : public nsIRenderingContext
+class nsRenderingContextBeOS : public nsRenderingContextImpl
 {
 public:
   nsRenderingContextBeOS();
