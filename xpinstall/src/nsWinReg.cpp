@@ -24,12 +24,8 @@
 
 nsWinReg::nsWinReg(nsInstall* suObj)
 {
-	su = suObj;
-
-//	principal = suObj->GetPrincipal();
-//	privMgr = nsPrivilegeManager::getPrivilegeManager();
-//	impersonation = nsTarget::findTarget(IMPERSONATOR);
-//	target = (nsUserTarget*)nsTarget::findTarget(INSTALL_PRIV);
+	su      = suObj;
+	rootkey = (PRInt32)HKEY_CLASSES_ROOT;
 }
 
 PRInt32
@@ -42,13 +38,10 @@ nsWinReg::setRootKey(PRInt32 key)
 PRInt32
 nsWinReg::createKey(nsString subkey, nsString classname, PRInt32* aReturn)
 {
-//	resolvePrivileges();
-
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_CREATE, subkey, classname, "null");
+
 	if(wi == nsnull)
   {
-//		return (-1);
-//    *aReturn = SaveError( result );
     return NS_OK;
   }
 	su->ScheduleForInstall(wi);
@@ -58,13 +51,10 @@ nsWinReg::createKey(nsString subkey, nsString classname, PRInt32* aReturn)
 PRInt32
 nsWinReg::deleteKey(nsString subkey, PRInt32* aReturn)
 {
-//	resolvePrivileges();
-
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_DELETE, subkey, "null", "null");
+
 	if(wi == nsnull)
   {
-//		return (-1);
-//    *aReturn = SaveError( result );
     return NS_OK;
   }
 	su->ScheduleForInstall(wi);
@@ -74,13 +64,10 @@ nsWinReg::deleteKey(nsString subkey, PRInt32* aReturn)
 PRInt32
 nsWinReg::deleteValue(nsString subkey, nsString valname, PRInt32* aReturn)
 {
-//	resolvePrivileges();
-
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_DELETE_VAL, subkey, valname, "null");
+
 	if(wi == nsnull)
   {
-//		return (-1);
-//    *aReturn = SaveError( result );
     return NS_OK;
   }
 	su->ScheduleForInstall(wi);
@@ -90,13 +77,10 @@ nsWinReg::deleteValue(nsString subkey, nsString valname, PRInt32* aReturn)
 PRInt32
 nsWinReg::setValueString(nsString subkey, nsString valname, nsString value, PRInt32* aReturn)
 {
-//	resolvePrivileges();
-
 	nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_SET_VAL_STRING, subkey, valname, value);
+
 	if(wi == nsnull)
   {
-//		return (-1);
-//    *aReturn = SaveError( result );
     return NS_OK;
   }
 	su->ScheduleForInstall(wi);
@@ -106,23 +90,19 @@ nsWinReg::setValueString(nsString subkey, nsString valname, nsString value, PRIn
 PRInt32
 nsWinReg::getValueString(nsString subkey, nsString valname, nsString** aReturn)
 {
-//	resolvePrivileges();
-
-//	return nativeGetValueString(subkey, valname);
+  // fix:
   return NS_OK;
 }
   
 PRInt32
 nsWinReg::setValue(nsString subkey, nsString valname, nsWinRegValue* value, PRInt32* aReturn)
 {
-//	resolvePrivileges();
-
   // fix: need to figure out what to do with nsWinRegValue class.
+  //
 	// nsWinRegItem* wi = new nsWinRegItem(this, rootkey, NS_WIN_REG_SET_VAL, subkey, valname, (nsWinRegValue*)value);
+  //
 	// if(wi == nsnull)
   // {
-//		return (-1);
-//    *aReturn = SaveError(-1);
   //   return NS_OK;
   // }
 	// su->ScheduleForInstall(wi);
@@ -132,9 +112,7 @@ nsWinReg::setValue(nsString subkey, nsString valname, nsWinRegValue* value, PRIn
 PRInt32
 nsWinReg::getValue(nsString subkey, nsString valname, nsWinRegValue** aReturn)
 {
-//	resolvePrivileges();
-
-//	return nativeGetValue(subkey, valname);
+  // fix:
   return NS_OK;
 }
   
@@ -401,14 +379,4 @@ nsWinReg::nativeGetValue(nsString subkey, nsString valname)
     return nsnull;
 #endif
 }
-
-// PRBool
-// nsWinReg::resolvePrivileges()
-// {
-// 	if(privMgr->enablePrivilege(impersonation, 1) && 
-// 		privMgr->enablePrivilege(target, principal, 1))
-// 		return TRUE;
-// 	else
-// 		return FALSE;
-// }
 
