@@ -46,14 +46,23 @@ sub write_number($) {
 sub UpdateBuildNumber($$) {
 
     my ($outfile, $official) = @_;
+    my $given_date = $ENV{"MOZ_BUILD_DATE"};
+    my $build_number;
 
-    # XP way of doing the build date.
-    # 1998091509 = 1998, September, 15th, 9am local time zone
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
+    if ($given_date eq "") {
+	# XP way of doing the build date.
+	# 1998091509 = 1998, September, 15th, 9am local time zone
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+	    localtime(time);
 
-    # localtime returns year minus 1900
-    $year = $year + 1900;
-    my $build_number = sprintf("%04d%02d%02d%02d", $year, 1+$mon, $mday, $hour);
+	# localtime returns year minus 1900
+	$year = $year + 1900;
+	$build_number = sprintf("%04d%02d%02d%02d", $year, 1+$mon,
+				$mday, $hour);
+    }
+    else {
+	$build_number = $given_date;
+    }
 
     if ("$outfile" eq "") {
         print "$build_number\n";
