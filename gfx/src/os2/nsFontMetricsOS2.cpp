@@ -513,6 +513,9 @@ static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   nsFontMetricsOS2* metrics = (nsFontMetricsOS2*) aData;
+  /* Hack for Truetype on OS/2 - if it's Arial and not 1252, just get another font */
+  if ((metrics->mCodePage != 1252) && (aFamily.Find("Arial") != -1))
+     return PR_TRUE; // don't stop
   metrics->mFonts.AppendString(aFamily);
   metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
   if (aGeneric) {
