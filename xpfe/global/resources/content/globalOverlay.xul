@@ -116,7 +116,7 @@
 
 	<!-- Help Menu -->
 	<menu id="menu_Help" value="&helpMenu.label;">
-		<menupopup id="helpPopup">
+		<menupopup id="helpPopup" oncreate="helpMenuCreate()">
 	        <!-- Help Menu disabled
 			<menu value="&helpContentCmd.label;">
 				<menupopup>
@@ -131,8 +131,8 @@
 				 </menupopup>
 			</menu>
 			-->
-			<menuitem value="&releaseCommCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/seamonkey/release-notes/')"/>
-			<menuitem value="&aboutCommCmd.label;" oncommand="goAboutDialog();"/>
+			<menuitem value="&releaseCommCmd.label;"  oncommand="openTopWin('http://www.mozilla.org/projects/seamonkey/release-notes/')"  />
+			<menuitem value="&aboutCommCmd.label;" name="&aboutCommCmd.label;" id="releaseName" oncommand="goAboutDialog();"/>
 		</menupopup>
 	</menu>
 	
