@@ -329,7 +329,7 @@ inCSSValueSearch::SearchStyleRule(nsIStyleRule* aStyleRule)
 nsresult
 inCSSValueSearch::SearchStyleValue(nsICSSDeclaration* aDec, nsCSSProperty aProp)
 {
-  const nsCString& cstring = nsCSSProps::GetStringValue(aProp);
+  const nsAFlatCString& cstring = nsCSSProps::GetStringValue(aProp);
 
   nsCSSValue value;
   aDec->GetValue(aProp, value);
