@@ -22,9 +22,9 @@ DEFINES = -D_IMPL_NS_DOM
 EXPORTS =               \
 	nsIDOMEvent.h			\
         nsIDOMEventListener.h		\
-        nsIDOMEventCapturer.h		\	
-        nsIDOMEventReceiver.h		\	
-        nsIDOMFocusListener.h		\
+	nsIDOMEventCapturer.h		\
+	nsIDOMEventReceiver.h		\
+	nsIDOMFocusListener.h		\
         nsIDOMKeyListener.h		\
         nsIDOMLoadListener.h		\
         nsIDOMMouseListener.h		\
