@@ -2392,7 +2392,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
                                    clipRect.x, clipRect.y);
       }
       /////////////////////
-      aRenderingContext.PopState(clipEmpty);
+      aRenderingContext.PopState();
     }
 #endif
   }

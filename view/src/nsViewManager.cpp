@@ -1138,10 +1138,8 @@ static void PushStateAndClip(nsIRenderingContext** aRCs, PRInt32 aCount, nsRect 
 
 static void PopState(nsIRenderingContext **aRCs, PRInt32 aCount) {
   for (int i = 0; i < aCount; i++) {
-    if (aRCs[i]) {
-      PRBool clipEmpty;
-      aRCs[i]->PopState(clipEmpty);
-    }
+    if (aRCs[i])
+      aRCs[i]->PopState();
   }
 }
 
@@ -1381,7 +1379,7 @@ void nsViewManager::RenderDisplayListElement(DisplayListElement2* element,
   
   element->mView->Paint(*aRC, drect, 0, clipEmpty);
   
-  aRC->PopState(clipEmpty);
+  aRC->PopState();
 }
 
 void nsViewManager::PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
@@ -1391,7 +1389,7 @@ void nsViewManager::PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x
   aRC.Translate(x, y);
   PRBool unused;
   aView->Paint(aRC, aDamageRect, 0, unused);
-  aRC.PopState(unused);
+  aRC.PopState();
 }
 
 static nsresult NewOffscreenContext(nsIDeviceContext* deviceContext, nsDrawingSurface surface,

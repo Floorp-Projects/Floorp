@@ -5542,10 +5542,8 @@ PresShell::Paint(nsIView              *aView,
     rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_FOREGROUND);
                       
-    if (setClipRect) {
-      PRBool clipState;
-      aRenderingContext.PopState(clipState);
-    }
+    if (setClipRect)
+      aRenderingContext.PopState();
 
 #ifdef NS_DEBUG
     // Draw a border around the frame
@@ -7494,8 +7492,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
       aRenderingContext->SetColor(color);
       aRenderingContext->DrawString(buf, strlen(buf), x,y);
 
-      PRBool clipEmpty;
-      aRenderingContext->PopState(clipEmpty);
+      aRenderingContext->PopState();
     }
   }
 }

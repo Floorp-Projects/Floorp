@@ -842,7 +842,7 @@ nsSVGOuterSVGFrame::Paint(nsIPresContext* aPresContext,
   printf("SVG Paint Timing: %f ms\n", (end-start)/1000.0);
 #endif
   
-  aRenderingContext.PopState(clipState);
+  aRenderingContext.PopState();
   
   return NS_OK;
   // see if we have to draw a selection frame around this container

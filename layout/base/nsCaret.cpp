@@ -1103,8 +1103,7 @@ void nsCaret::GetCaretRectAndInvert()
         {
           if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
           {
-            PRBool emptyClip;
-            mRendContext->PopState(emptyClip);
+            mRendContext->PopState();
             return;
           }
         }
@@ -1135,8 +1134,7 @@ void nsCaret::GetCaretRectAndInvert()
     mRendContext->InvertRect(mHookRect);
 #endif
 
-  PRBool emptyClip;
-  mRendContext->PopState(emptyClip);
+  mRendContext->PopState();
   
   ToggleDrawnStatus();
 

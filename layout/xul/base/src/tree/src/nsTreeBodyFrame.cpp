@@ -2134,7 +2134,7 @@ nsTreeBodyFrame::Paint(nsIPresContext*      aPresContext,
         PaintRow(i, rowRect, aPresContext, aRenderingContext, aDirtyRect);
 
         if (clip)
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
       }
     }
 
@@ -2470,8 +2470,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
         }
       }
 
-      PRBool clipState;
-      aRenderingContext.PopState(clipState);
+      aRenderingContext.PopState();
     }
 
     // Always leave space for the twisty.

@@ -216,7 +216,7 @@ NS_IMETHODIMP nsRenderingContextPh :: PushState( void )
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: PopState( PRBool &aClipEmpty ) 
+NS_IMETHODIMP nsRenderingContextPh :: PopState(void) 
 {
 	PRUint32 cnt = mStateCache->Count();
 	nsGraphicsState * state;
@@ -250,10 +250,6 @@ NS_IMETHODIMP nsRenderingContextPh :: PopState( PRBool &aClipEmpty )
 #endif
 	}
 	
-	if( mClipRegion ) 
-		aClipEmpty = mClipRegion->IsEmpty();
-	else
-		aClipEmpty = PR_TRUE;
 	return NS_OK;
 }
 

@@ -156,8 +156,7 @@ nsRenderingContextOS2::~nsRenderingContextOS2()
   NS_IF_RELEASE(mFontMetrics);
 
   //destroy the initial GraphicsState
-  PRBool clipState;
-  PopState (clipState);
+  PopState ();
 
   if (nsnull != mStateCache)
   {
@@ -327,8 +326,7 @@ NS_IMETHODIMP nsRenderingContextOS2::UnlockDrawingSurface()
 {
   mSurface->Unlock();
 
-  PRBool clipstate;
-  PopState(clipstate);
+  PopState();
 
   return NS_OK;
 }
@@ -437,10 +435,8 @@ NS_IMETHODIMP nsRenderingContextOS2 :: PushState(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2 :: PopState(PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextOS2 :: PopState(void)
 {
-  PRBool  retval = PR_FALSE;
-
   if (nsnull == mStates)
   {
     NS_ASSERTION(!(nsnull == mStates), "state underflow");
@@ -475,9 +471,6 @@ NS_IMETHODIMP nsRenderingContextOS2 :: PopState(PRBool &aClipEmpty)
           HRGN hrgn = GFX (::GpiCreateRegion (mPS, 0, NULL), RGN_ERROR);
           GFX (::GpiCombineRegion (mPS, hrgn, pstate->mClipRegion, 0, CRGN_COPY), RGN_ERROR);
           int cliptype = OS2_SetClipRegion (mPS, hrgn);
-
-          if (cliptype == RGN_NULL)
-            retval = PR_TRUE;
         }
       }
 
@@ -493,8 +486,6 @@ NS_IMETHODIMP nsRenderingContextOS2 :: PopState(PRBool &aClipEmpty)
     else
       mTranMatrix = nsnull;
   }
-
-  aClipEmpty = retval;
 
   return NS_OK;
 }

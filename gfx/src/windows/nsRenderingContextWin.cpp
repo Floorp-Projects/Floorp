@@ -244,8 +244,7 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
 
   //destroy the initial GraphicsState
 
-  PRBool clipState;
-  PopState(clipState);
+  PopState();
 
   //cleanup the DC so that we can just destroy objects
   //in the graphics state without worrying that we are
@@ -549,7 +548,7 @@ NS_IMETHODIMP nsRenderingContextWin :: UnlockDrawingSurface(void)
   mSurface->Unlock();
   mSurface->GetDC(&mDC);
 
-  PopState(clipstate);
+  PopState();
 
   mSurface->IsReleaseDCDestructive(&clipstate);
 
@@ -707,10 +706,8 @@ NS_IMETHODIMP nsRenderingContextWin :: PushState(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: PopState(PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextWin :: PopState(void)
 {
-  PRBool  retval = PR_FALSE;
-
   if (nsnull == mStates)
   {
     NS_ASSERTION(!(nsnull == mStates), "state underflow");
@@ -740,12 +737,7 @@ NS_IMETHODIMP nsRenderingContextWin :: PopState(PRBool &aClipEmpty)
           pstate = pstate->mNext;
 
         if (nsnull != pstate)
-        {
-          int cliptype = ::SelectClipRgn(mDC, pstate->mClipRegion);
-
-          if (cliptype == NULLREGION)
-            retval = PR_TRUE;
-        }
+          ::SelectClipRgn(mDC, pstate->mClipRegion);
       }
 
       oldstate->mFlags &= ~FLAGS_ALL;
@@ -764,8 +756,6 @@ NS_IMETHODIMP nsRenderingContextWin :: PopState(PRBool &aClipEmpty)
     else
       mTranMatrix = nsnull;
   }
-
-  aClipEmpty = retval;
 
   return NS_OK;
 }

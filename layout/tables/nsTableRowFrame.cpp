@@ -570,10 +570,8 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
   }
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect,
                 aWhichLayer, aFlags);
-  if (clip) {
-    PRBool clipState;
-    aRenderingContext.PopState(clipState);
-  }
+  if (clip)
+    aRenderingContext.PopState();
   return NS_OK;
 
 }

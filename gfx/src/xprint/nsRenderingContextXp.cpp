@@ -124,8 +124,7 @@ NS_IMETHODIMP
 nsRenderingContextXp::UnlockDrawingSurface(void)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::UnlockDrawingSurface()\n"));
-  PRBool clipstate;
-  PopState(clipstate);
+  PopState();
   return NS_OK;
 }
 

@@ -175,7 +175,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyleData, mStyleContext, skipSides);
   
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
 
 
           // draw right side
@@ -189,7 +189,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyleData, mStyleContext, skipSides);
   
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
 
           
         
@@ -204,7 +204,7 @@ nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
           nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *borderStyleData, mStyleContext, skipSides);
   
-          aRenderingContext.PopState(clipState);
+          aRenderingContext.PopState();
           
         } else {
 

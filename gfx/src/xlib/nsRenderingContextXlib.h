@@ -87,7 +87,7 @@ public:
   NS_IMETHOD GetHints(PRUint32& aResult);
 
   NS_IMETHOD PushState(void);
-  NS_IMETHOD PopState(PRBool &aClipEmpty);
+  NS_IMETHOD PopState(void);
 
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aVisible);
 

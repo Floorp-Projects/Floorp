@@ -1013,8 +1013,7 @@ nsSimplePageSequenceFrame::Paint(nsIPresContext*      aPresContext,
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
-  PRBool clipEmpty;
-  aRenderingContext.PopState(clipEmpty);
+  aRenderingContext.PopState();
   return rv;
 }
 

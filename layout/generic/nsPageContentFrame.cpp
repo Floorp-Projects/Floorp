@@ -210,7 +210,7 @@ nsPageContentFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif
 
-  aRenderingContext.PopState(clipEmpty);
+  aRenderingContext.PopState();
 
   return rv;
 }

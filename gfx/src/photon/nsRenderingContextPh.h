@@ -111,8 +111,7 @@ public:
 
 	 inline
    NS_IMETHODIMP UnlockDrawingSurface(void)
-		{ PRBool  clipstate;
-			PopState( clipstate );
+		{	PopState();
 			mSurface->Unlock();
 			return NS_OK;
 		}
@@ -136,7 +135,7 @@ public:
 		}
    
    NS_IMETHOD PushState(void);
-   NS_IMETHOD PopState(PRBool &aClipState);
+   NS_IMETHOD PopState(void);
    
 	 inline
    NS_IMETHODIMP IsVisibleRect( const nsRect& aRect, PRBool &aVisible )

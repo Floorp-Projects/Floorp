@@ -314,7 +314,7 @@ NS_IMETHODIMP nsRenderingContextMac::PushState(void)
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::PopState(PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMac::PopState(void)
 {
 	NS_ASSERTION(ValidateDrawingState(), "Bad drawing state");
 
@@ -342,8 +342,6 @@ NS_IMETHODIMP nsRenderingContextMac::PopState(PRBool &aClipEmpty)
 		mTranMatrix = &(mGS->mTMatrix);
 	}
 
-	aClipEmpty = (::EmptyRgn(mGS->mClipRegion));
-
 	return NS_OK;
 }
 
@@ -366,8 +364,7 @@ NS_IMETHODIMP nsRenderingContextMac::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
 
 NS_IMETHODIMP nsRenderingContextMac::UnlockDrawingSurface(void)
 {
-  PRBool  clipstate;
-  PopState(clipstate);
+  PopState();
 
   mCurrentSurface->Unlock();
   

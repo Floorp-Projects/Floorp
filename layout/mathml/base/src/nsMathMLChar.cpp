@@ -620,9 +620,8 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
     mFontName.StringAt(0, aFont.name);
     aRenderingContext.SetFont(aFont, nsnull);
   }
-  if (aClipRect) {
-    aRenderingContext.PopState(clipState);
-  }
+  if (aClipRect)
+    aRenderingContext.PopState();
 }
 
 // class to map a Unicode point to a string (used to store the list of
@@ -2216,7 +2215,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
         NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
-      aRenderingContext.PopState(clipState);
+      aRenderingContext.PopState();
 #ifdef SHOW_BORDERS
       // last glyph that may cross past its boundary and collide with the next
       nscoord height = bm.ascent + bm.descent;
@@ -2394,7 +2393,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
         NS_ASSERTION(1000 != count, "something is probably wrong somewhere");
         if (1000 == count) return NS_ERROR_UNEXPECTED;
       }
-      aRenderingContext.PopState(clipState);
+      aRenderingContext.PopState();
 #ifdef SHOW_BORDERS
       // last glyph that may cross past its boundary and collide with the next
       nscoord width = bm.rightBearing - bm.leftBearing;
