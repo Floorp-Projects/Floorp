@@ -978,12 +978,12 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 char*
 nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder)
 {
-#ifdef IBMBIDI_0 // Until we finalize the conversion routine
+#ifdef IBMBIDI
   //ahmed 15-1
-  nsString temp;
+  nsAutoString temp;
   nsresult rv = NS_OK;
-  nsIUBidiUtils* bidiUtils = do_getService("@mozilla.org/intl/unicharbidiutil;1");
-  nsString newBuffer;
+  nsCOMPtr<nsIUBidiUtils> bidiUtils = do_GetService("@mozilla.org/intl/unicharbidiutil;1");
+  nsAutoString newBuffer;
   //This condition handle the RTL,LTR for a logical file
   if( ( mCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL )&&( mCharset.EqualsIgnoreCase("windows-1256") ) ){
     bidiUtils->Conv_06_FE_WithReverse(nsString(aSrc), newBuffer,mTextDir);
@@ -1000,7 +1000,8 @@ nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeE
     if (mTextDir == 2) { //RTL
     //Now we need to reverse the Buffer, it is by searshing the buffer
       PRUint32 loop = aLen;
-      for (int z=0; z<=aLen; z++){
+      unsigned int z;
+      for (z=0; z<=aLen; z++){
         temp.SetCharAt((PRUnichar)aSrc[loop], z);
         loop--;
       }
@@ -1015,7 +1016,8 @@ nsFormFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeE
     aLen=newBuffer.Length();
     //Now we need to reverse the Buffer, it is by searshing the buffer
     PRUint32 loop = aLen;
-    for (int z=0; z<=aLen; z++){
+    unsigned int z;
+    for (z=0; z<=aLen; z++){
       temp.SetCharAt((PRUnichar)aSrc[loop], z);
       loop--;
     }
