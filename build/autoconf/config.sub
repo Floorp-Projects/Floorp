@@ -147,6 +147,10 @@ case $os in
 		basic_machine=i386-pc
 		os=-qnx`uname -v | cut -c1-1`
 		;;
+	-rhapsody*)
+		basic_machine=ppc-apple
+		os=-rhapsody`uname -r`
+		;;
 esac
 
 # Decode aliases for certain CPU-COMPANY combinations.
@@ -782,6 +786,8 @@ case $os in
 		;;
 	-xenix)
 		os=-xenix
+		;;
+	-rhapsody*)
 		;;
 	-qnx*)
 		;;
