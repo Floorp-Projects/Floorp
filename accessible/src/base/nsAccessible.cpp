@@ -646,7 +646,7 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
 { 
   nsCOMPtr<nsIAccessible> focusedChild;
   if (gLastFocusedNode == mDOMNode) {
-    NS_ADDREF(*aFocusedChild = this);
+    focusedChild = this;
   }
   else if (gLastFocusedNode) {
     nsCOMPtr<nsIAccessibilityService> accService =
