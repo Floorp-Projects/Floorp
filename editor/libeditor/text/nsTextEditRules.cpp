@@ -528,9 +528,6 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
       res = RemoveIMETextFromPWBuf(start, outString);
       if (NS_FAILED(res)) return res;
     }
-
-    res = EchoInsertionToPWBuff(start, end, outString);
-    if (NS_FAILED(res)) return res;
   }
 
   // People have lots of different ideas about what text fields
@@ -554,41 +551,33 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
 
   if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
   {
+    nsAutoString tString(*outString);
+
     if (singleLineNewlineBehavior == eReplaceWithSpaces)
     {
-      nsString tString;
-      tString.Assign(*outString);
       //nsAWritableString destString;
       //NormalizeCRLF(outString,destString);
 
       tString.ReplaceChar(CRLF, ' ');
-      outString->Assign(tString);
     }
     else if (singleLineNewlineBehavior == eStripNewlines)
-    {
-      nsString tString;
-      tString.Assign(*outString);
       tString.StripChars(CRLF);
-      outString->Assign(tString);
-    }
     else if (singleLineNewlineBehavior == ePasteFirstLine)
     {
-      nsString tString;
-      tString.Assign(*outString);
       PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
       if (firstCRLF > 0)
-      {
         tString.Truncate(firstCRLF);
-        outString->Assign(tString);
-      }
     }
     else // even if we're pasting newlines, don't paste leading/trailing ones
-    {
-      nsString tString;
-      tString.Assign(*outString);
       tString.Trim(CRLF, PR_TRUE, PR_TRUE);
-      outString->Assign(tString);
-    }
+
+    outString->Assign(tString);
+  }
+
+  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
+  {
+    res = EchoInsertionToPWBuff(start, end, outString);
+    if (NS_FAILED(res)) return res;
   }
 
   // get the (collapsed) selection location
