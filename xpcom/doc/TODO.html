@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
    <meta name="Author" content="Suresh Duddi">
    <title>TODO List for XPCOM</title>
 </head>
@@ -12,15 +12,14 @@
 <h1>
 TODO List for XPCOM</h1></center>
 
-<center>Last updated: 22 March 1999
+<center>Last updated: 25 March 1999
 <br><a href="mailto:dp@netscape.com">Suresh Duddi</a></center>
 
-<p><br>
 <table BORDER WIDTH="100%" NOSAVE >
 <tr NOSAVE>
 <th NOSAVE>Task</th>
 
-<th NOSAVE>Priority</th>
+<th NOSAVE><a href="http://bugzilla.mozilla.org/bug_status.html#priority">Priority</a></th>
 
 <th NOSAVE>Owner</th>
 
@@ -44,7 +43,7 @@ if the nsRegistry has a equivalent. If not we need to create them.</li>
 </ul>
 Mostly, there is equivalence between NR_*() calls and nsRegistry calls.&nbsp;</td>
 
-<td>P1</td>
+<td>P2</td>
 
 <td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
 
@@ -55,7 +54,7 @@ Mostly, there is equivalence between NR_*() calls and nsRegistry calls.&nbsp;</t
 <td>Startup components: Some components need to be created at startup.
 Have a framework for them.</td>
 
-<td>P0</td>
+<td>P1</td>
 
 <td></td>
 
@@ -65,17 +64,18 @@ Have a framework for them.</td>
 <tr>
 <td>nsIRegistry access via Javascript.</td>
 
-<td>P0</td>
+<td>P1</td>
 
 <td></td>
 
-<td></td>
+<td>IDL of nsIRegistry will fix this says <a href="mailto:jband@netscape.com">John
+Bandhauer</a></td>
 </tr>
 
 <tr>
 <td>API changes: Remove all pathlist. XPCOM should support only paths.</td>
 
-<td>P0</td>
+<td>P1</td>
 
 <td></td>
 
@@ -85,11 +85,13 @@ Have a framework for them.</td>
 <tr>
 <td>Fix xpcom from being initialized before main from static variables.</td>
 
-<td>P0</td>
+<td>P1</td>
 
-<td></td>
+<td><a href="mailto:dp@netscape.com">Suresh Duddi</a></td>
 
-<td></td>
+<td>3/22/1999 Started.
+<br>- checked in a fixed xpcom initialization sequence.
+<br>- Now got to fix all code statically calling it. I know Netlib does.</td>
 </tr>
 
 <tr>
@@ -99,19 +101,41 @@ mac aliases.</td>
 
 <td>P1</td>
 
+<td><a href="mailto:dp@netscape.com">Suresh Duddi</a>
+<br><a href="mailto:rjc@netscape.com">Robert Churchill</a></td>
+
+<td>3/24/1999 started</td>
+</tr>
+
+<tr>
+<td>Registry dump utility (regExport exists on windows) and about:registry
+(or) better yet an rdf data source for the registry.</td>
+
+<td>P3</td>
+
 <td></td>
 
 <td></td>
 </tr>
 </table>
 
-<h3>
-Priority</h3>
+<h2>
+Documentation on XPCOM</h2>
 
-<blockquote>P0 - Got to fix. Blocking others.
-<br>P1 - Important to fix. Otherwise things will suck
-<br>P2 - Would be nice
-<br>P3 - Request for Enhancement</blockquote>
+<ul>
+<li>
+<a href="TODO.html">TODO List</a> &lt;<i>this page></i></li>
 
+<li>
+XPCOM main page : <a href="http://www.mozilla.org/projects/xpcom">http://www.mozilla.org/projects/xpcom</a></li>
+
+<li>
+<a href="xpcom-code-faq.html">Code FAQ</a></li>
+
+<li>
+<a href="xpcom-component-registration.html">Component Registration</a></li>
+</ul>
+
+<hr WIDTH="100%">
 </body>
 </html>
