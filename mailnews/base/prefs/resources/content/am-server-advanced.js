@@ -152,7 +152,7 @@ function onOk()
                  getService(Components.interfaces.nsIPromptService);
       if (!promptService ||
           !promptService.confirm(window, confirmTitle, confirmDeferAccount))
-        return;
+        return false;
     }
     switch (radioGroup.value)
     {
