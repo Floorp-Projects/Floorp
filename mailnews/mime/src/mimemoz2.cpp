@@ -1399,7 +1399,7 @@ MimeGetStringByIDREAL(PRInt32 stringID)
 
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->GetCharPref("mail.strings.mime", propertyURL);
+    res = prefs->CopyCharPref("mail.strings.mime", propertyURL);
 
   if (!NS_SUCCEEDED(res) || !prefs)
     propertyURL = PL_strdup(MIME_URL);
