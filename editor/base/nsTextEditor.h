@@ -25,6 +25,7 @@
 #include "nsEditor.h"
 #include "nsTextEditRules.h"
 #include "TypeInState.h"
+#include "nsString.h"
 
 class nsIStyleContext;
 class nsIDOMRange;
