@@ -35,7 +35,6 @@ EXPORTS         = \
 		npupp.h \
 		ntypes.h \
                 platform.h \
-		xlate.h \
                 xp_core.h \
                 xp_file.h \
 		xp_mem.h \

@@ -20,10 +20,6 @@
  * Contributor(s): 
  */
 
-#if 0
-#include "xp.h"
-#include "xlate.h"
-#endif
 #include "nsPostScriptObj.h"
 
 extern PS_FontInfo *PSFE_MaskToFI[N_FONTS];

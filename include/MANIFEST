@@ -15,7 +15,6 @@ libi18n.h
 lo_ele.h
 merrors.h
 mime.h
-mimeenc.h
 minicom.h
 mk_cx_fn.h
 msgtypes.h
@@ -32,7 +31,6 @@ shistele.h
 structs.h
 unix-dns.h
 winfile.h
-xlate.h
 xp.h
 xpassert.h
 xpgetstr.h
