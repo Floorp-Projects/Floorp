@@ -295,7 +295,6 @@ Contributor(s): ______________________________________. -->
 		    <titledbutton id="home-button" align="left"
 		      value="&homeButton.label;"
 			  class="bookmarkbutton"  
-		      defaultURL="&defaultHomepage.url;"
 		      onclick="BrowserHome(); event.preventBubble();"/>
 		    <spring class="personaltoolbarspacer" flex="1"/>
 		    <titledbutton id="netscape-button" align="left"
