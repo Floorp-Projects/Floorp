@@ -191,8 +191,7 @@ if (err) 								\
 #define sExtracting		23		
 #define sInstalling		24
 #define	sFileSp			25
-#define sSpOfSp			26		
-#define sPrep2Inst      28 	
+#define sSpOfSp			26			
 
 #define rTitleStrList	170
 #define sNSInstTitle	1		/* end i18n strings */
@@ -506,6 +505,7 @@ void		ClearDiskSpaceMsgs(void);
 char*		ltoa(long);
 short		pstrcmp(unsigned char*, unsigned char*);
 unsigned char* pstrcpy(unsigned char*, unsigned char*);
+unsigned char* pstrcat(unsigned char*, unsigned char*);
 void		InSetupTypeContent(EventRecord *, WindowPtr);
 void		EnableSetupTypeWin(void);
 void		DisableSetupTypeWin(void);

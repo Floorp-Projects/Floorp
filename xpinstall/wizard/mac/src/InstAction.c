@@ -32,12 +32,15 @@ pascal void* Install(void* unused)
 	short			vRefNum, srcVRefNum;
 	long			dirID, srcDirID;
 	OSErr 			err;
-	FSSpec			idiSpec, coreFileSpec, tmpSpec;
+	FSSpec			idiSpec, coreFileSpec;
+#ifdef MIW_DEBUG
+	FSSpec			tmpSpec;
+#endif
 	SDISTRUCT		sdistruct;
 	Str255			pIDIfname;
 	StringPtr		coreFile;
 	THz				ourHZ;
-	Boolean 		isDir = false;
+	Boolean 		isDir = false, bCoreExists = false;
 	GrafPtr			oldPort;
 
 #ifndef MIW_DEBUG
@@ -73,6 +76,7 @@ pascal void* Install(void* unused)
 		ErrorHandler();
 		return (void*)nil;
 	}
+	
 	
 	if (!ExistArchives(srcVRefNum, srcDirID))
 	{
@@ -129,6 +133,8 @@ pascal void* Install(void* unused)
 	
 		FSpDelete(&idiSpec);
 	}
+	else
+		bCoreExists = true;
     /* otherwise core exists in cwd, different from extraction location */
 
 	
@@ -166,10 +172,13 @@ pascal void* Install(void* unused)
 				
 			CleanupExtractedFiles(vRefNum, dirID);
 			
-			err = FSpDelete(&coreFileSpec);
+			if (!bCoreExists)
+			{
+				err = FSpDelete(&coreFileSpec);
 #ifdef MIW_DEBUG
-			if (err!=noErr) SysBeep(10); 
+				if (err!=noErr) SysBeep(10); 
 #endif
+			}
 		}
 		
 		if (coreFile)
@@ -542,7 +551,7 @@ InitProgressBar(void)
 			gControls->tw->xpiProgressMsg = NULL;	/* used by XPInstall progress callback */
 			HLock((Handle)gControls->tw->progressBar);
 			SetRect(&r, (*gControls->tw->progressBar)->contrlRect.left,
-						(*gControls->tw->progressBar)->contrlRect.top - 21,
+						(*gControls->tw->progressBar)->contrlRect.top - 42,
 						(*gControls->tw->progressBar)->contrlRect.right,
 						(*gControls->tw->progressBar)->contrlRect.top - 5 );
 			HUnlock((Handle)gControls->tw->progressBar);

@@ -43,12 +43,10 @@ ShowComponentsWin(void)
 	Str255		compDescTitle;
 	StringPtr	selCompMsg;
 	Handle		listBoxRect;
-	Rect 		dataBounds, listBoxFrame, viewRect, firstCellRect;
+	Rect 		dataBounds, listBoxFrame, viewRect;
 	short		reserr;
 	int			totalRows = 0, i, instChoice;
 	Point		cSize;
-	Cell		firstCell;
-	UInt8		hiliteVal;
 	Boolean		bCellSelected;
 	GrafPtr		oldPort;
 	GetPort(&oldPort);

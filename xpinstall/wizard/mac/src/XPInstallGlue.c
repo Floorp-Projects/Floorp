@@ -70,7 +70,6 @@ void
 ProgressMsgInit()
 {
 	Rect	r;
-	Str255	installingStr;
 	
 	if (gControls->tw->progressMsg)
 	{
@@ -81,14 +80,7 @@ ProgressMsgInit()
 				(*gControls->tw->progressMsg)->viewRect.bottom );
 		HUnlock((Handle)gControls->tw->progressMsg);
 		
-		/* Preparing to install... */
-		GetIndString(installingStr, rStringList, sPrep2Inst);
-		
 		EraseRect(&r);
-		if (installingStr[0] > 0)
-			TESetText(&installingStr[1], installingStr[0], gControls->tw->progressMsg);
-
-		TEUpdate(&r, gControls->tw->progressMsg);
 	}
 	
 	bProgMsgInit = true;
@@ -102,7 +94,9 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 	Boolean indeterminateFlag = false;
 	Rect	r;
 	Str255	installingStr, fileStr, ofStr;
-	char	*valStr, *maxStr;
+	char	*valStr, *maxStr, *leaf;
+	StringPtr	pleaf = nil;
+	long		last;
 	GrafPtr oldPort;
 	GetPort(&oldPort);
 	
@@ -136,8 +130,32 @@ xpicbProgress(const char* msg, PRInt32 val, PRInt32 max)
 					if (msg)
 					{
 						EraseRect(&r);
-						TESetText(msg, strlen(msg), gControls->tw->xpiProgressMsg);
+						
+						GetIndString(installingStr, rStringList, sInstalling);
+						leaf = strrchr(msg, ':');
+						if (leaf)
+						{
+							pleaf = CToPascal(leaf+1);
+							pstrcat(installingStr, pleaf);
+						}
+						else
+						{
+							installingStr[0] = 1;
+							installingStr[1] = ' ';
+						}
+						
+						last = installingStr[0] + 1;
+						if (last > 255)
+							last = 255;
+						installingStr[last] = 0;
+						
+						if (installingStr[0] > 0)	
+							TESetText(&installingStr[1], installingStr[0], gControls->tw->xpiProgressMsg);
+							
 						TEUpdate(&r, gControls->tw->xpiProgressMsg);
+						
+						if (pleaf)
+							DisposePtr((Ptr) pleaf);
 					}
 				}
 			}
@@ -250,10 +268,18 @@ RunXPI(FSSpec& aXPI, XPI_InstallProc *xpi_installProc)
 	nsresult	rv;
 	OSErr	 	err = noErr;
 	long		flags = 0x1000; /* XPI_NO_NEW_THREAD = 0x1000 from nsISoftwareUpdate.h */
-
+	Boolean		indeterminateFlag = true;
+	
 	rv = (*xpi_installProc)( aXPI, "", flags );
+	
+	/* reset progress bar to barber poll */
+	bMaxDiscovered = false;
+	if (gControls->tw->progressBar)
+		SetControlData(gControls->tw->progressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+						sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
 	if (NS_FAILED(rv))
 		return -1;
+
 
 	return err;
 }
