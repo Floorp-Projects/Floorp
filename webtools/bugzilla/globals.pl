@@ -774,12 +774,17 @@ sub CanEnterProduct {
 #
 # This function returns an alphabetical list of product names to which
 # the user can enter bugs.
-sub GetEnterableProducts {
+sub GetSelectableProducts {
     my $query = "SELECT name " .
                 "FROM products " .
                 "LEFT JOIN group_control_map " .
-                "ON group_control_map.product_id = products.id " .
-                "AND group_control_map.entry != 0 ";
+                "ON group_control_map.product_id = products.id ";
+    if (Param('useentrygroupdefault')) {
+        $query .= "AND group_control_map.entry != 0 ";
+    } else {
+        $query .= "AND group_control_map.membercontrol = " .
+                  CONTROLMAPMANDATORY . " ";
+    }
     if ((defined @{$::vars->{user}{groupids}}) 
         && (@{$::vars->{user}{groupids}} > 0)) {
         $query .= "AND group_id NOT IN(" . 
@@ -796,19 +801,24 @@ sub GetEnterableProducts {
     return (@products);
 }
 
-# GetEnterableProductHash
+# GetSelectableProductHash
 # returns a hash containing 
 # legal_products => an enterable product list
 # legal_components => the list of components of enterable products
 # components => a hash of component lists for each enterable product
-sub GetEnterableProductHash {
+sub GetSelectableProductHash {
     my $query = "SELECT products.name, components.name " .
                 "FROM products " .
                 "LEFT JOIN components " .
                 "ON components.product_id = products.id " .
                 "LEFT JOIN group_control_map " .
-                "ON group_control_map.product_id = products.id " .
-                "AND group_control_map.entry != 0 ";
+                "ON group_control_map.product_id = products.id ";
+    if (Param('useentrygroupdefault')) {
+        $query .= "AND group_control_map.entry != 0 ";
+    } else {
+        $query .= "AND group_control_map.membercontrol = " .
+                  CONTROLMAPMANDATORY . " ";
+    }
     if ((defined @{$::vars->{user}{groupids}}) 
         && (@{$::vars->{user}{groupids}} > 0)) {
         $query .= "AND group_id NOT IN(" . 

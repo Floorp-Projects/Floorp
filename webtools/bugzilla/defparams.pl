@@ -261,8 +261,11 @@ sub check_netmask {
 
   {
    name => 'useentrygroupdefault',
-   desc => 'If this is on, Bugzilla will use product bug groups to restrict ' .
-           'who can enter bugs.  Requires makeproductgroups to be on as well.',
+   desc => 'If this is on, Bugzilla will use product bug groups by default ' .
+           'to restrict who can enter bugs. If this is on, users can see ' .
+           'any product to which they have entry access in search menus. ' .
+           'If this is off, users can see any product to which they have not ' .
+           'been excluded by a mandatory restriction.',
    type => 'b',
    default => 0
   },

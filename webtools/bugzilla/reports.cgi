@@ -61,9 +61,7 @@ GetVersionTable();
 # We only want those products that the user has permissions for.
 my @myproducts;
 push( @myproducts, "-All-");
-foreach my $this_product (@legal_product) {
-    push(@myproducts, $this_product) if CanEnterProduct($this_product);
-}
+push( @myproducts, GetSelectableProducts());
 
 if (! defined $FORM{'product'}) {
 

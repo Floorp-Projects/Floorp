@@ -254,10 +254,10 @@ sub queue {
     # menu when the products menu changes; used by the template to populate
     # the menus and keep the components menu consistent with the products menu
     GetVersionTable();
-    my $enterable = GetEnterableProductHash();
-    $vars->{'products'} = $enterable->{legal_products};
-    $vars->{'components'} = $enterable->{legal_components};
-    $vars->{'components_by_product'} = $enterable->{components};
+    my $selectable = GetSelectableProductHash();
+    $vars->{'products'} = $selectable->{legal_products};
+    $vars->{'components'} = $selectable->{legal_components};
+    $vars->{'components_by_product'} = $selectable->{components};
     
     $vars->{'excluded_columns'} = \@excluded_columns;
     $vars->{'group_field'} = $::FORM{'group'};

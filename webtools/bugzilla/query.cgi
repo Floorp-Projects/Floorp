@@ -198,7 +198,7 @@ my @products = ();
 my %component_set;
 my %version_set;
 my %milestone_set;
-foreach my $p (GetEnterableProducts()) {
+foreach my $p (GetSelectableProducts()) {
     # We build up boolean hashes in the "-set" hashes for each of these things 
     # before making a list because there may be duplicates names across products.
     push @products, $p;
