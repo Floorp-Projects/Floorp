@@ -202,12 +202,12 @@ ssl_cov()
           if [ `uname -s` = "HP-UX" ] ; then
               echo "workaround for HP-UX to avoid client and server writes at "
               echo "       the same time"
-              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
               tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
-                  -d . < ${REQUEST_FILE} >${TMP}/dump.tmp.$$  2>&1
+                  -d . < ${REQUEST_FILE} >${TMP}/$HOST.tmp.$$  2>&1
               ret=$?
-              cat ${TMP}/dump.tmp.$$ 
-              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+              cat ${TMP}/$HOST.tmp.$$ 
+              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           else
               tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
                   -d . < ${REQUEST_FILE}
@@ -236,15 +236,15 @@ ssl_auth()
 
           echo "tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} \\"
           echo "        < ${REQUEST_FILE}"
-          if [ `uname -n` = "dump" ] ; then
-              echo "workaround for dump to avoid client and server writes at "
+          if [ `uname -s` = "HP-UX" ] ; then
+              echo "workaround for HP-UX to avoid client and server writes at "
               echo "       the same time"
-              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
               tstclnt -p ${PORT} -h ${HOST} -f ${cparam} \
-                  -d . < ${REQUEST_FILE} >${TMP}/dump.tmp.$$  2>&1
+                  -d . < ${REQUEST_FILE} >${TMP}/$HOST.tmp.$$  2>&1
               ret=$?
-              cat ${TMP}/dump.tmp.$$ 
-              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+              cat ${TMP}/$HOST.tmp.$$ 
+              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           else
             tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} < ${REQUEST_FILE}
             ret=$?
