@@ -301,10 +301,18 @@ GetStyleDimension(nsIPresContext* aPresContext,
       nsIFrame* block = nsnull;
       rs->frame->QueryInterface(kBlockFrameCID, (void**) &block);
       if (nsnull != block) {
-        // We found the nearest containing block which defines what a
-        // percentage size is relative to. Use the width that it will
-        // reflow to as the basis for computing our width.
-        aResult = nscoord(rs->maxSize.width * aCoord.GetPercentValue());
+        if (NS_UNCONSTRAINEDSIZE == rs->maxSize.width) {
+          // When we find an unconstrained block it means that pass1
+          // table reflow is occuring. In this case the percentage
+          // value is unknown so assume it's epsilon for now.
+          aResult = 1;
+        }
+        else {
+          // We found the nearest containing block which defines what a
+          // percentage size is relative to. Use the width that it will
+          // reflow to as the basis for computing our width.
+          aResult = nscoord(rs->maxSize.width * aCoord.GetPercentValue());
+        }
         rv = PR_TRUE;
         break;
       }
