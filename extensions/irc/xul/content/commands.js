@@ -161,6 +161,7 @@ function initCommands()
          ["topic",             cmdTopic,           CMD_NEED_CHAN | CMD_CONSOLE],
          ["unignore",          cmdIgnore,           CMD_NEED_NET | CMD_CONSOLE],
          ["unstalk",           cmdUnstalk,                         CMD_CONSOLE],
+         ["urls",              cmdURLs,                            CMD_CONSOLE],
          ["usermode",          cmdUsermode,                        CMD_CONSOLE],
          ["user-motif",        cmdMotif,           CMD_NEED_USER | CMD_CONSOLE],
          ["user-pref",         cmdPref,            CMD_NEED_USER | CMD_CONSOLE],
@@ -3125,4 +3126,32 @@ function cmdInputTextDirection(e)
     }
 
     return true;
+}
+
+function cmdURLs(e)
+{
+    if (client.prefs["urls.list"].length == 0)
+    {
+        display(MSG_URLS_NONE);
+    }
+    else
+    {
+        /* Store the current URL list, so we can put it back afterwards. This
+         * is needed because the process of displaying the list changes the
+         * list! (think about it for a second)
+         */
+        var oldList = client.prefs["urls.list"];
+        client.prefs["urls.list"] = new Array();
+
+        var num = e.number || client.prefs["urls.display"];
+        if (num > oldList.length)
+            num = oldList.length;
+        display(getMsg(MSG_URLS_HEADER, num));
+
+        for (var i = 0; i < num; i++)
+            display(getMsg(MSG_URLS_ITEM, [i + 1, oldList[i]]));
+
+        // Restore old URL list so displaying it has no effect.
+        client.prefs["urls.list"] = oldList;
+    }
 }

@@ -622,6 +622,11 @@ function insertLink (matchText, containerTag)
         href = "http://" + linkText;
     }
 
+    var max = client.prefs["urls.store.max"];
+    if (client.prefs["urls.list"].unshift(href) > max)
+        client.prefs["urls.list"].pop();
+    client.prefs["urls.list"].update();
+
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
     anchor.setAttribute ("href", href);
