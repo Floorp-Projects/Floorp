@@ -37,21 +37,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 // Debug
-$config['debug'] = false;
+$config['debug'] = true;
 
 // Paths
-$config['app_url']                      = 'http://reporter.host.tld/app';
-$config['app_path']                     = '/opt/webtools/reporter';
-$config['pear_path']                    = ''; // empty if use default system path
-                                          ini_set('include_path', $config['pear_path'] . PATH_SEPARATOR . ini_get('include_path'));
-$config['nusoap_path']                  = $config['app_path'].'/contrib/nusoap';
+$config['app_url']                      = 'http://localhost/rmo/app';
+$config['app_path']                     = 'C:\Program Files\Apache Group\Apache\htdocs\rmo\app';
 
 // Database
 $config['db_type']                      = 'mysql';
 $config['db_server']                    = 'localhost';
-$config['db_user']                      = 'USERNAME';
-$config['db_pass']                      = 'PASSWORD';
-$config['db_database']                  = 'DATABASE_NAME';
+$config['db_user']                      = 'root';
+$config['db_pass']                      = 'kj5fc';
+$config['db_database']                  = 'reporter';
 $config['db_dsn']                       = $config['db_type'].'://'.$config['db_user'].':'.$config['db_pass'].'@'.$config['db_server'].'/'.$config['db_database'];
 $config['db_options']                   = array(
                                                 'debug'       => 2,

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../../config.inc.php');
-require_once('DB.php');
+require_once($config['app_path'].'/includes/adodb/adodb.inc.php');
 require_once($config['app_path'].'/includes/iolib.inc.php');
 
 $title = "Searching Results";
@@ -75,8 +75,9 @@ if (isset($_GET['count']) && $_GET['count'] == null){
 }
 
 // Open DB
-PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'handleErrors');
-$db =& DB::connect($config['db_dsn']);
+$db = NewADOConnection($config['db_dsn']);
+if (!$db) die("Connection failed");
+$db->SetFetchMode(ADODB_FETCH_ASSOC);
 
 // Initial selected array
 $selected = array('report_id' => 'Report ID', 'host_hostname' => 'Host');
@@ -99,12 +100,11 @@ else {
 
 // Build SELECT clause of SQL
 reset($selected);
-while (list($key, $title) = each($selected)) {	
+while (list($key, $title) = each($selected)) {
 	if ($key == 'count'){
-		$sql_select .= 'COUNT( `'.$db->escapeSimple($_GET['count']).'` ) AS count';	
+		$sql_select .= 'COUNT( '.mysql_real_escape_string($_GET['count']).'` ) AS count';
 	} else {
-		$key = $db->escapeSimple($key);
-		$sql_select .= "`$key`";
+		$sql_select .= mysql_real_escape_string($key);
 	}
 
 	$sql_select .= ',';
@@ -112,12 +112,12 @@ while (list($key, $title) = each($selected)) {
 $sql_select = substr($sql_select, 0, -1);
 
 if (isset($_GET['count'])){
-	$group_by = "GROUP BY ".$db->escapeSimple($_GET['count']);
+	$group_by = "GROUP BY ".mysql_real_escape_string($_GET['count']);
 }
 
 // Build the Where clause of the SQL
 if (isset($_GET['submit_reportID'])){
-	$sql_where = "report_id = '".$db->escapeSimple($_GET['report_id'])."' ";
+	$sql_where = "report_id = '".mysql_real_escape_string($_GET['report_id'])."' ";
 	$sql_where .= 'AND host.host_id = report_host_id';
 }
 else if ($_GET['submit_query']){
@@ -125,14 +125,14 @@ else if ($_GET['submit_query']){
 	while (list($param, $val) = each($_GET)) {
 		// To help prevent stupidity with params, we only add it to the WHERE statement if it's passes as a param we allow
 		if (
-			($param == 'report_description') || 
-			($param == 'host_hostname') || 
+			($param == 'report_description') ||
+			($param == 'host_hostname') ||
 			($param == 'report_problem_type') ||
-			($param == 'report_behind_login') || 
-			($param == 'report_useragent') || 
-			($param == 'report_gecko') || 
-			($param == 'report_language') || 
-			($param == 'report_platform') || 
+			($param == 'report_behind_login') ||
+			($param == 'report_useragent') ||
+			($param == 'report_gecko') ||
+			($param == 'report_language') ||
+			($param == 'report_platform') ||
 			($param == 'report_oscpu') ||
 			($param == 'report_product')){
 				// there sare our various ways of saying "no value"
@@ -145,7 +145,7 @@ else if ($_GET['submit_query']){
 						$operator = "LIKE";
 					}
 					// Add to query
-					$sql_where .= $db->escapeSimple($param)." ".$operator." '".$db->escapeSimple($val)."' AND ";
+					$sql_where .= mysql_real_escape_string($param)." ".$operator." '".mysql_real_escape_string($val)."' AND ";
 				}
 		}
 	}
@@ -159,23 +159,23 @@ else if ($_GET['submit_query']){
 		$_GET['report_file_date_end'] = null;
 	}
 	if (($_GET['report_file_date_start'] != null)  || ($_GET['report_file_date_end'] != null)){
-		
+
 		// if we have both, we do a BETWEEN
 		if ($_GET['report_file_date_start'] && $_GET['report_file_date_end']){
-			$sql_where .= "(report_file_date BETWEEN '".$db->escapeSimple($_GET['report_file_date_start'])."' and '".$db->escapeSimple($_GET['report_file_date_end'])."') AND ";
+			$sql_where .= "(report_file_date BETWEEN '".mysql_real_escape_string($_GET['report_file_date_start'])."' and '".mysql_real_escape_string($_GET['report_file_date_end'])."') AND ";
 		}
 
 		// if we have only a start, then we do a >
 		else if ($_GET['report_file_date_start']){
-			$sql_where .= "report_file_date > '".$db->escapeSimple($_GET['report_file_date_start'])."' AND ";
+			$sql_where .= "report_file_date > '".$mysql_real_escape_string($_GET['report_file_date_start'])."' AND ";
 		}
 
 		// if we have only a end, we do a <
 		else if ($_GET['report_file_date_end']){
-			$sql_where .= "report_file_date < '".$db->escapeSimple($_GET['report_file_date_end'])."' AND ";
+			$sql_where .= "report_file_date < '".mysql_real_escape_string($_GET['report_file_date_end'])."' AND ";
 		}
 	}
-	
+
 	$sql_where .= 'host.host_id = report_host_id AND ';
 	$sql_where = substr($sql_where, 0, -5);
 
@@ -195,28 +195,30 @@ $start = ($_GET['page']-1)*$_GET['show'];
 
 if($config['debug'] == true){
 	print "<!-- SELECT $sql_select
-			FROM `report`, `host`
-			WHERE $sql_where
-			$group_by
-			ORDER BY ".$db->escapeSimple($orderby)." ".$db->escapeSimple($ascdesc).$subOrder.
-			" LIMIT $start, ".$db->escapeSimple($_GET['show'])."-->";
+                       FROM `report`, `host`
+                       WHERE $sql_where
+                       $group_by
+                       ORDER BY ".mysql_real_escape_string($orderby)." ".mysql_real_escape_string($ascdesc).$subOrder.
+                       " LIMIT $start, ".$db->quote($_GET['show'])."-->";
 }
-$result = $db->query("SELECT $sql_select
-                      FROM `report`, `host`
-                      WHERE $sql_where
-                      $group_by
-                      ORDER BY ".$db->escapeSimple($orderby)." ".$db->escapeSimple($ascdesc).$subOrder.
-                      " LIMIT $start, ".$db->escapeSimple($_GET['show']));
-$numresults = $result->numRows();
+$query = $db->Execute("SELECT $sql_select
+                       FROM `report`, `host`
+                       WHERE $sql_where
+                       $group_by
+                       ORDER BY ".mysql_real_escape_string($orderby)." ".mysql_real_escape_string($ascdesc).$subOrder.
+                       " LIMIT $start, ".mysql_real_escape_string($_GET['show']));
+
+$numresults = $query->RecordCount();
 
 if (isset($_GET['count'])){
 	$totalresults = 2;
 }
 else {
-$totalresults = $db->getRow("SELECT count(*)
+$totalresults = $db->Execute("SELECT count(*)
                       FROM `report`, `host`
                       WHERE $sql_where");
-$totalresults = $totalresults[0];
+$totalresults = $totalresults->RecordCount();
+
 }
 ?><table id="query_table">
   <?php /*  RESULTS LIST HEADER */ ?>
@@ -255,48 +257,50 @@ $totalresults = $totalresults[0];
 	<?php if ($numresults < 1){ ?>
 		<tr><td colspan="<?php print sizeof($selected); ?>"><h3>No Results found</h3></td></tr>
 	<?php } else { ?>
-		<?php for ($i=0; $row = $result->fetchRow(DB_FETCHMODE_ASSOC); $i++) { ?>
+		<?php for ($i=0; !$query->EOF; $i++) { ?>
 			<tr <?PHP if ($i % 2 == 1){ ?>class="alt" <?PHP } ?> >
 			  	<?php reset($selected);
-			  		  while (list($key, $title) = each($selected)) { ?>	
-			  	<td><?php 
+			  		  while (list($key, $title) = each($selected)) { ?>
+			  	<td><?php
 			  		// For report_id we create a url, for anything else:  just dump it to screen
 			  		if ($key == 'report_id'){
-			  			?><a href="<?php print $config['app_url'].'/report/?report_id='.$row[$key] ?>">Report</a><?php
+			  			?><a href="<?php print $config['app_url'].'/report/?report_id='.$query->fields[$key] ?>">Report</a><?php
 			  		}
 			  		else if (substr($key, 0, 5) == "COUNT"){
-			  			print $row['count'];			  		
+			  			print $query->fields['count'];
 			  		} else {
 			  			if(($key == $_GET['count']) || ($key == 'host_hostname' && $_GET['count'] == 'host_id')){
 			  				if ($key == 'host_hostname' && $_GET['count'] == 'host_id'){
 			  					$subquery = 'host_hostname='.$row['host_hostname'];
 			  				}
 			  				else {
-			  					$subquery = $_GET['count'].'='.$row[$key];
+			  					$subquery = $_GET['count'].'='.$query->fields[$key];
 			  				}
 			  				?><a href="<?php print $config['app_url']; ?>/query/?<?PHP print $subquery; ?>&submit_query=true">
-			  				<?PHP print $row[$key]; ?></a>
+			  				<?PHP print $query->fields[$key]; ?></a>
 			  	<?PHP   }
 			  			else {
-			  				print $row[$key];
-			  			}	  			
+			  				print $query->fields[$key];
+			  			}
 		  			 }	?>
 		  			</td>
-				<?php $count++; 
+				<?php $count++;
 				     } ?>
 			</tr>
-	<?php     } 
+	<?php     $query->MoveNext();
+                  }
 		}
 	?>
-	
 
-<?php  // disconnect database
-       $db->disconnect();
+
+<?php
+      // disconnect database
+      $db->Close();
  ?>
 </table>
-<?php 
+<?php
     reset($_GET);
-    while (list($param, $val) = each($_GET)) {	
+    while (list($param, $val) = each($_GET)) {
 	if (($param != 'page') && ($param != 'show'))
 		$paginate_params .= $param.'='.rawurlencode($val).'&amp;';
 	}

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../../config.inc.php');
-require_once('DB.php');
+require_once($config['app_path'].'/includes/adodb/adodb.inc.php');
 require_once($config['app_path'].'/includes/iolib.inc.php');
 require_once($config['app_path'].'/includes/security.inc.php');
 
@@ -48,23 +48,24 @@ header("Cache-control: private"); //IE 6 Fix
 
 
 // Open DB
-PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'handleErrors');
-$db =& DB::connect($config['db_dsn']);
+$db = NewADOConnection($config['db_dsn']);
+if (!$db) die("Connection failed");
+$db->SetFetchMode(ADODB_FETCH_ASSOC);
 
-$data =& $db->getRow("SELECT *
+$query =& $db->Execute("SELECT *
                       FROM report, host
-                      WHERE report.report_id = '".$db->escapeSimple($_GET['report_id'])."' 
-                      AND host.host_id = report_host_id", DB_FETCHMODE_ASSOC);
+                      WHERE report.report_id = ".$db->qstr($_GET['report_id'],get_magic_quotes_gpc())."
+                      AND host.host_id = report_host_id");
 
 // disconnect database
-$db->disconnect();
-       
-$title = "Report for - ".$data['host_hostname'];
+$db->Close();
+
+$title = "Report for - ".$query->fields['host_hostname'];
 
 include($config['app_path'].'/includes/header.inc.php');
 include($config['app_path'].'/includes/message.inc.php');
 
-if (!$data){
+if (!$query->fields){
 	?><h1>No Report Found</h1><?php
 	exit;
 }
@@ -73,72 +74,72 @@ if (!$data){
 <table id="report_table">
 	<tr>
 		<th>Report ID:</th>
-		<td><?php print $data['report_id']; ?></td>
+		<td><?php print $query->fields['report_id']; ?></td>
 	</tr>
 	<tr>
 		<th>URL:</th>
-		<td><a href="<?php print $data['report_url']; ?>" target="_blank"><?php print $data['report_url']; ?></a></td>
+		<td><a href="<?php print $query->fields['report_url']; ?>" target="_blank"><?php print $query->fields['report_url']; ?></a></td>
 	</tr>
 	<tr>
 		<th>Host:</th>
-		<td><a href="<?php print $config['app_url']; ?>/query/?host_hostname=<?php print $data['host_hostname']; ?>&submit_query=Query">Reports For This Host</a></td>
+		<td><a href="<?php print $config['app_url']; ?>/query/?host_hostname=<?php print $query->fields['host_hostname']; ?>&submit_query=Query">Reports For This Host</a></td>
 	</tr>
-	
+
 	<tr>
 		<th>Problem Type:</th>
-		<td><?php print resolveProblemTypes($data['report_problem_type']); ?></td>
+		<td><?php print resolveProblemTypes($query->fields['report_problem_type']); ?></td>
 	</tr>
 	<tr>
 		<th>Behind Login:</th>
-		<td><?php print $boolTypes[$data['report_behind_login']]; ?></td>
+		<td><?php print $boolTypes[$query->fields['report_behind_login']]; ?></td>
 	</tr>
 	<tr>
 		<th>Product:</th>
-		<td><?php print $data['report_product']; ?></td>
+		<td><?php print $query->fields['report_product']; ?></td>
 	</tr>
 	<tr>
 		<th>Gecko:</th>
-		<td><?php print $data['report_gecko']; ?></td>
+		<td><?php print $query->fields['report_gecko']; ?></td>
 	</tr>
 	<tr>
 		<th>Useragent:</th>
-		<td><?php print $data['report_useragent']; ?></td>
+		<td><?php print $query->fields['report_useragent']; ?></td>
 	</tr>
 	<tr>
 		<th>Build Config:</th>
-		<td><?php print $data['report_buildconfig']; ?></td>
+		<td><?php print $query->fields['report_buildconfig']; ?></td>
 	</tr>
 
 	<tr>
 		<th>Platform:</th>
-		<td><?php print $data['report_platform']; ?></td>
+		<td><?php print $query->fields['report_platform']; ?></td>
 	</tr>
 	<tr>
 		<th>OS:</th>
-		<td><?php print $data['report_oscpu']; ?></td>
+		<td><?php print $query->fields['report_oscpu']; ?></td>
 	</tr>
 
 	<tr>
 		<th>Language:</th>
-		<td><?php print $data['report_language']; ?></td>
+		<td><?php print $query->fields['report_language']; ?></td>
 	</tr>
 	<tr>
 		<th>Date Filed:</th>
-		<td><?php print $data['report_file_date']; ?></td>
+		<td><?php print $query->fields['report_file_date']; ?></td>
 	</tr>
-	<?php if ($userlib->isLoggedIn()){ ?> 
+	<?php if ($userlib->isLoggedIn()){ ?>
 	<tr>
 		<th>Email:</th>
-		<td><a href="mailto:<?php print $data['report_email']; ?>"><?php print $data['report_email']; ?></a></td>
+		<td><a href="mailto:<?php print $query->fields['report_email']; ?>"><?php print $query->fields['report_email']; ?></a></td>
 	</tr>
 	<tr>
 		<th>IP:</th>
-		<td><a href="http://ws.arin.net/cgi-bin/whois.pl?queryinput=<?php print $data['report_ip']; ?>" target="_blank"><?php print $data['report_ip']; ?></a></td>
+		<td><a href="http://ws.arin.net/cgi-bin/whois.pl?queryinput=<?php print $query->fields['report_ip']; ?>" target="_blank"><?php print $query->fields['report_ip']; ?></a></td>
 	</tr>
 	<?php } ?>
 	<tr>
 		<th>Description:</th>
-		<td><?php print str_replace("\n", "<br />", $data['report_description']); ?></td>
+		<td><?php print str_replace("\n", "<br />", $query->fields['report_description']); ?></td>
 	</tr>
 </table>
 

@@ -37,9 +37,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 require_once('../config.inc.php');
-require_once('DB.php');
+require_once($config['app_path'].'/includes/adodb/adodb.inc.php');
 require_once($config['app_path'].'/includes/iolib.inc.php');
-require_once($config['nusoap_path'].'/nusoap.php');
+require_once($config['app_path'].'/includes/nusoap/lib/nusoap.php');
 
 // Create the server instance
 $server = new soap_server;
@@ -65,12 +65,12 @@ $server->register(
           'behind_login' => 'xsd:string',
           'platform' => 'xsd:string',
           'oscpu' => 'xsd:string',
-          'gecko' => 'xsd:string',    
-          'product' => 'xsd:string',    
-          'useragent' => 'xsd:string',    
-          'buildconfig' => 'xsd:string',    
-          'language' => 'xsd:string',    
-          'email' => 'xsd:string',    
+          'gecko' => 'xsd:string',
+          'product' => 'xsd:string',
+          'useragent' => 'xsd:string',
+          'buildconfig' => 'xsd:string',
+          'language' => 'xsd:string',
+          'email' => 'xsd:string',
           'sysid' => 'xsd:string'),     // input parameters
     array('return' => 'xsd:string'),    // output parameters
     'uri:MozillaReporter',              // namespace
@@ -80,7 +80,7 @@ $server->register(
 );
 function submitReport($rmoVers, $url, $problem_type, $description, $behind_login, $platform, $oscpu, $gecko, $product, $useragent, $buildconfig, $language, $email, $sysid) {
     global $config;
-    
+
     // Remove any HTML tags and whitespace
     $rmoVers = trim(strip_all_tags($rmoVers));
     $url = trim(strip_all_tags($url));
@@ -146,25 +146,27 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     // we can have dup's, so it's not a good thing for people to be saying 'mozilla.org reports 500,000 incompatable sites'
     $report_id = 'RMO'.str_replace(".", "", array_sum(explode(' ', microtime())));
 
-    // Initialize Database
-    $db =& DB::connect($config['db_dsn']);
+    // Open DB
+    $db = NewADOConnection($config['db_dsn']);
+    if (!$db) die("Connection failed");
+    $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
-    $sysIDQuery = $db->query("SELECT `sysid_id` FROM `sysid` WHERE `sysid_id` = '".$db->escapeSimple($sysid)."'");
-    $sysidCount = $sysIDQuery->numRows();
-	if ($sysidCount != 1){
-        return new soap_fault('Client', '', 'Invalid SysID', $sysid);
-	}
+    $sysIDQuery = $db->Execute("SELECT `sysid_id` FROM `sysid` WHERE `sysid_id` = '".mysql_real_escape_string($sysid)."'");
+    $sysidCount = $sysIDQuery->RecordCount();
+    if ($sysidCount != 1){
+      return new soap_fault('Client', '', 'Invalid SysID', $sysid);
+    }
 
-    $queryURL = $db->query("SELECT `host_id` FROM `host` WHERE `host_hostname` = '".$db->escapeSimple($parsedURL['host'])."'");
-    $resultURL = $queryURL->numRows();
+    $queryURL = $db->Execute("SELECT `host_id` FROM `host` WHERE `host_hostname` = '".mysql_real_escape_string($parsedURL['host'])."'");
+    $resultURL = $queryURL->RecordCount();
     if ($resultURL <= 0) {
         // generate hash
         $host_id = md5($parsedURL['host'].microtime());
         // We add the URL
-        $addURL = $db->query("INSERT INTO `host` (`host_id`, `host_hostname`, `host_date_added`)
+        $addURL = $db->Execute("INSERT INTO `host` (`host_id`, `host_hostname`, `host_date_added`)
                                 VALUES (
-                                    '".$db->escapeSimple($host_id)."',
-                                    '".$db->escapeSimple($parsedURL['host'])."',
+                                    '".mysql_real_escape_string($host_id)."',
+                                    '".mysql_real_escape_string($parsedURL['host'])."',
                                     now()
                                 )
                     ");
@@ -174,13 +176,12 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
     }
     else if ($resultURL == 1) {
         // pull the hash from DB
-		$queryURLResult = $queryURL->fetchRow(DB_FETCHMODE_ASSOC);
-        $host_id = $queryURLResult['host_id'];
+        $host_id = $queryURLResult->fields['host_id'];
     } else{
             return new soap_fault('SERVER', '', 'Host Exception Error');
     }
 
-    $addReport = $db->query("INSERT INTO `report` (
+    $addReport = $db->Execute("INSERT INTO `report` (
                                                     `report_id`,
                                                     `report_url`,
                                                     `report_host_id`,
@@ -194,34 +195,34 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
                                                     `report_gecko`,
                                                     `report_buildconfig`,
                                                     `report_product`,
-                                                    `report_email`,                                                        
-                                                    `report_ip`, 
+                                                    `report_email`,
+                                                    `report_ip`,
                                                     `report_file_date`,
-													`report_sysid` 
+													`report_sysid`
                                 )
                                 VALUES (
-                                        '".$db->escapeSimple($report_id)."',
-                                        '".$db->escapeSimple($url)."', 
-                                        '".$db->escapeSimple($host_id)."', 
-                                        '".$db->escapeSimple($problem_type)."', 
-                                        '".$db->escapeSimple($description)."', 
-                                        '".$db->escapeSimple($behind_login)."', 
-                                        '".$db->escapeSimple($useragent)."',
-                                        '".$db->escapeSimple($platform)."', 
-                                        '".$db->escapeSimple($oscpu)."', 
-                                        '".$db->escapeSimple($language)."', 
-                                        '".$db->escapeSimple($gecko)."', 
-                                        '".$db->escapeSimple($buildconfig)."', 
-                                        '".$db->escapeSimple($product)."', 
-                                        '".$db->escapeSimple($email)."', 
-                                        '".$db->escapeSimple($_SERVER['REMOTE_ADDR'])."', 
-                                        now(), 
-                                        '".$db->escapeSimple($sysid)."'
+                                        '".mysql_real_escape_string($report_id)."',
+                                        '".mysql_real_escape_string($url)."',
+                                        '".mysql_real_escape_string($host_id)."',
+                                        '".mysql_real_escape_string($problem_type)."',
+                                        '".mysql_real_escape_string($description)."',
+                                        '".mysql_real_escape_string($behind_login)."',
+                                        '".mysql_real_escape_string($useragent)."',
+                                        '".mysql_real_escape_string($platform)."',
+                                        '".mysql_real_escape_string($oscpu)."',
+                                        '".mysql_real_escape_string($language)."',
+                                        '".mysql_real_escape_string($gecko)."',
+                                        '".mysql_real_escape_string($buildconfig)."',
+                                        '".mysql_real_escape_string($product)."',
+                                        '".mysql_real_escape_string($email)."',
+                                        '".mysql_real_escape_string($_SERVER['REMOTE_ADDR'])."',
+                                        now(),
+                                        '".mysql_real_escape_string($sysid)."'
                                 )
         ");
 
     // Disconnect Database
-    $db->disconnect();
+    $db->Close();
 
     if (!$addReport) {
         return new soap_fault('SERVER', '', 'Database Error');
@@ -233,9 +234,10 @@ function submitReport($rmoVers, $url, $problem_type, $description, $behind_login
 function register($language){
     global $config;
 
-    // Initialize Database
-    //PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'handleErrorsSOAP');
-    $db =& DB::connect($config['db_dsn']);
+    // Open DB
+    $db = NewADOConnection($config['db_dsn']);
+    if (!$db) die("Connection failed");
+    $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
     // generate an ID
     $unique = false;
@@ -245,28 +247,28 @@ function register($language){
     while (!$unique) {
         $id = date("ymd").rand(1000,9999);
 
-        $query =& $db->query("SELECT sysid.sysid_id
+        $query =& $db->Execute("SELECT sysid.sysid_id
 		                      FROM sysid
                               WHERE sysid.sysid_id = '$newid'
                             ");
-        $numRows = $query->numRows();
+        $numRows = $query->RecordCount();
         if ($numRows == 0) {
             // It's unique, stop the loop.
             $unique = true;
         }
     }
 
-    $addsysid = $db->query("INSERT INTO `sysid` (
-                                 `sysid_id`, 
-                                 `sysid_created`, 
-                                 `sysid_created_ip`, 
-                                 `sysid_language` 
+    $addsysid = $db->Execute("INSERT INTO `sysid` (
+                                 `sysid_id`,
+                                 `sysid_created`,
+                                 `sysid_created_ip`,
+                                 `sysid_language`
                             )
                             VALUES (
-                                  '".$id."', 
+                                  '".$id."',
                                   now(),
                                   '".$_SERVER['REMOTE_ADDR']."',
-                                  '".$db->escapeSimple($language)."'
+                                  '".mysql_real_escape_string($language)."'
                             )
                      ");
     // Disconnect Database
