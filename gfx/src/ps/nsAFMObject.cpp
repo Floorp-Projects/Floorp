@@ -205,10 +205,10 @@ nsAFMObject::CheckBasicFonts(const nsFont &aFont,PRBool aPrimaryOnly)
 {
 PRInt16     ourfont = -1;
 PRInt32     i,curIndex,score;
-nsString    psfontname;
+nsAutoString    psfontname;
 
   // have to find the correct fontfamily, weight and style
-  psfontname.SetString(aFont.name);
+  psfontname = aFont.name;
   
   // look in the font table for one of the fonts in the passed in list
   for(i=0,curIndex=-1;i<NUM_AFM_FONTS;i++){
