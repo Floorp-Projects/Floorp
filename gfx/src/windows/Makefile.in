@@ -63,6 +63,7 @@ CPPSRCS		= \
 		nsGfxFactoryWin.cpp \
 		nsCompressedCharMap.cpp \
 		nsNativeThemeWin.cpp \
+		nsUnicodeRange.cpp \
 		$(NULL)
 
 EXPORTS	= nsIRenderingContextWin.h nsIDrawingSurfaceWin.h
