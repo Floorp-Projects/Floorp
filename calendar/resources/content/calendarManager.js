@@ -871,19 +871,31 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
 
          var retval = false;
          if( typeof( result ) != "string" ) { //for 1.7 compatibility
-           // Result is an array of integer unicode values.
-           // Convert to string by applying String.fromCharCode static function.
-           // Function.apply can take array of length < expt(2, 16),
-           // so convert slices half that length to strings, then join strings.
-           var sliceStringArray = new Array();
-           for (var start = 0, end;
-                start < (end = Math.min(result.length, start + 32768));
-                start = end) { 
-             var slice = result.slice(start, end);
-             var sliceString = String.fromCharCode.apply(null, slice);
-             sliceStringArray[sliceStringArray.length] = sliceString;
-           }
-           result = sliceStringArray.join("");
+            // Result is an array of integer unicode values.
+
+            try {
+               var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                                                .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+               // ics files are always utf8
+               unicodeConverter.charset = "UTF-8";
+               var result = unicodeConverter.convertFromByteArray( result, result.length );
+            } catch(e) {
+               // Now try the pre-1.8a5 method, which might have problems
+               // with utf8 chars
+
+               // Convert to string by applying String.fromCharCode static function.
+               // Function.apply can take array of length < expt(2, 16),
+               // so convert slices half that length to strings, then join strings.
+               var sliceStringArray = new Array();
+               for (var start = 0, end;
+                    start < (end = Math.min(result.length, start + 32768));
+                    start = end) { 
+                 var slice = result.slice(start, end);
+                 var sliceString = String.fromCharCode.apply(null, slice);
+                 sliceStringArray[sliceStringArray.length] = sliceString;
+               }
+               result = sliceStringArray.join("");
+            }
          }
 
          var ch;
