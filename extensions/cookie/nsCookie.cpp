@@ -632,12 +632,14 @@ cookie_GetLifetimeTime() {
   return get_current_time() + cookie_lifetimeLimit;
 }
 
+#if 0
 PRIVATE PRBool
 cookie_GetLifetimeAsk(time_t expireTime) {
   // return true if we should ask about this cookie
   return (cookie_GetLifetimePref() == COOKIE_Ask)
     && (cookie_GetLifetimeTime() < expireTime);
 }
+#endif
 
 PRIVATE time_t
 cookie_TrimLifetime(time_t expires) {
@@ -1015,7 +1017,6 @@ PUBLIC char *
 COOKIE_GetCookie(char * address) {
   char *name=0;
   cookie_CookieStruct * cookie_s;
-  PRBool first=PR_TRUE;
   PRBool xxx = PR_FALSE;
   time_t cur_time = get_current_time();
 
@@ -1077,18 +1078,13 @@ COOKIE_GetCookie(char * address) {
         cookie_cookieList->RemoveElementAt(i);
         deleteCookie((void*)cookie_s, nsnull);
         cookie_cookiesChanged = PR_TRUE;
-
-        /* start the list parsing over :( we must also start the string over */
-        PR_FREEIF(rv);
-        rv = NULL;
-        first = PR_TRUE; /* reset first */
         continue;
       }
-      if(first) {
-        first = PR_FALSE;
-      } else {
-        StrAllocCat(rv, "; ");
-      }
+
+      /* if we've already added a cookie to the return list, append a "; " so
+       * subsequent cookies are delimited in the final list. */
+      if (rv) StrAllocCat(rv, "; ");
+
       if(cookie_s->name && *cookie_s->name != '\0') {
         cookie_s->lastAccessed = cur_time;
         StrAllocCopy(name, cookie_s->name);
@@ -1706,7 +1702,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
       i--;
       tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
       NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
-      if(new_len > PL_strlen(tmp_cookie_ptr->path)) {
+      if(new_len <= PL_strlen(tmp_cookie_ptr->path)) {
         cookie_cookieList->InsertElementAt(prev_cookie, i);
         bCookieAdded = PR_TRUE;
         break;
@@ -2159,7 +2155,7 @@ cookie_Load() {
       i--;
       tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
       NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
-      if (new_len > PL_strlen(tmp_cookie_ptr->path)) {
+      if (new_len <= PL_strlen(tmp_cookie_ptr->path)) {
         cookie_cookieList->InsertElementAt(new_cookie, i);
         added_to_list = PR_TRUE;
         break;
