@@ -133,7 +133,11 @@ function Startup()
   // Set Initial Size
   var win = document.documentElement;
   if (!win.hasAttribute("width") || !win.hasAttribute("height")) {
+#ifdef MOZ_THUNDERBIRD
+    win.setAttribute("width", isExtensions ? 460 : 560);
+#else
     win.setAttribute("width", isExtensions ? 400 : 500);
+#endif
     win.setAttribute("height", isExtensions ? 300 : 380);
   }
 
