@@ -154,6 +154,6 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
         k+= inList[i].count;
         i++;
     }
-    return NS_NewGenericModule(NS_METAMODULE_NAME, count, outList, nsnull, result);
+    return NS_NewGenericModule(NS_METAMODULE_NAME, count, outList, nsnull, nsnull, result);
 }
 

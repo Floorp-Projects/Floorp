@@ -31,6 +31,8 @@
 { 0xc2f6ef7e, 0xafd5, 0x4be4, \
     {0xa1, 0xf5, 0xc8, 0x24, 0xef, 0xa4, 0x23, 0x1b} }
 
+struct nsModuleComponentInfo;
+
 class nsContentHTTPStartup : public nsIObserver
 {
 public:
@@ -41,8 +43,18 @@ public:
     NS_DECL_NSIOBSERVER
 
 public:
-    static nsresult RegisterHTTPStartup();
-    static nsresult UnregisterHTTPStartup();
+    static NS_IMETHODIMP
+    RegisterHTTPStartup(nsIComponentManager*         aCompMgr,
+                        nsIFile*                     aPath,
+                        const char*                  aRegistryLocation,
+                        const char*                  aComponentType,
+                        const nsModuleComponentInfo* aInfo);
+
+    static NS_IMETHODIMP
+    UnregisterHTTPStartup(nsIComponentManager*         aCompMgr,
+                          nsIFile*                     aPath,
+                          const char*                  aRegistryLocation,
+                          const nsModuleComponentInfo* aInfo);
   
 private:
     nsresult setUserAgent();

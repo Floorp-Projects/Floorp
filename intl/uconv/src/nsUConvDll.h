@@ -24,6 +24,9 @@
 #define nsUConvDll_h___
 
 #include "nsISupports.h"
+class nsIComponentManager;
+class nsIFile;
+struct nsModuleComponentInfo;
 
 // Factory methods
 
@@ -56,7 +59,17 @@ NS_NewTextToSubURI(nsISupports* aOuter, const nsIID& aIID,
                    void** aResult);
 
 NS_IMETHODIMP
-NS_RegisterConverterManagerData();
+NS_RegisterConverterManagerData(nsIComponentManager* aCompMgr,
+                                nsIFile* aPath,
+                                const char *aLocation,
+                                const char *aType,
+                                const nsModuleComponentInfo* aInfo);
+
+NS_IMETHODIMP
+NS_UnregisterConverterManagerData(nsIComponentManager* aCompMgr,
+                                  nsIFile* aPath,
+                                  const char* aRegistryLocation,
+                                  const nsModuleComponentInfo* aInfo);
 
 NS_IMETHODIMP
 NS_NewISO88591ToUnicode(nsISupports* aOuter, const nsIID& aIID,

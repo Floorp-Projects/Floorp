@@ -59,7 +59,11 @@ nsContentHTTPStartup::Observe( nsISupports *aSubject,
 }
 
 nsresult
-nsContentHTTPStartup::RegisterHTTPStartup()
+nsContentHTTPStartup::RegisterHTTPStartup(nsIComponentManager*         aCompMgr,
+                                          nsIFile*                     aPath,
+                                          const char*                  aRegistryLocation,
+                                          const char*                  aComponentType,
+                                          const nsModuleComponentInfo* aInfo)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager>
@@ -77,7 +81,10 @@ nsContentHTTPStartup::RegisterHTTPStartup()
 }
 
 nsresult
-nsContentHTTPStartup::UnregisterHTTPStartup()
+nsContentHTTPStartup::UnregisterHTTPStartup(nsIComponentManager*         aCompMgr,
+                                            nsIFile*                     aPath,
+                                            const char*                  aRegistryLocation,
+                                            const nsModuleComponentInfo* aInfo)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager>

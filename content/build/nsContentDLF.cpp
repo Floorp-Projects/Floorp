@@ -20,8 +20,9 @@
  * Contributor(s): 
  */
 #include "nsCOMPtr.h"
-#include "nsContentModule.h"
+#include "nsContentDLF.h"
 #include "nsIComponentManager.h"
+#include "nsICategoryManager.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIDocument.h"
@@ -59,6 +60,13 @@ static char* gHTMLTypes[] = {
   "text/html",
   "text/plain",
   "text/css",
+  "text/javascript",
+  "application/x-javascript",
+  "text/html; x-view-type=view-source",
+  "text/plain; x-view-type=view-source",
+  "text/css; x-view-type=view-source",
+  "text/javascript; x-view-type=view-source",
+  "application/x-javascript; x-view-type=view-source",
   0
 };
   
@@ -66,6 +74,9 @@ static char* gXMLTypes[] = {
   "text/xml",
   "application/xml",
   "application/xhtml+xml",
+  "text/xml; x-view-type=view-source",
+  "application/xml; x-view-type=view-source",
+  "application/xhtml+xml; x-view-type=view-source",
   0
 };
 
@@ -74,6 +85,8 @@ static char* gRDFTypes[] = {
   "text/rdf",
   "application/vnd.mozilla.xul+xml",
   "mozilla.application/cached-xul",
+  "application/vnd.mozilla.xul+xml; x-view-type=view-source",
+  "mozilla.application/cached-xul; x-view-type=view-source",
   0
 };
 
@@ -89,71 +102,7 @@ static char* gImageTypes[] = {
   0
 };
 
-class nsContentDLF : public nsIDocumentLoaderFactory,
-                    public nsIDocStreamLoaderFactory
-{
-public:
-  nsContentDLF();
-  virtual ~nsContentDLF();
-
-  NS_DECL_ISUPPORTS
-
-  // for nsIDocumentLoaderFactory
-  NS_IMETHOD CreateInstance(const char* aCommand,
-                            nsIChannel* aChannel,
-                            nsILoadGroup* aLoadGroup,
-                            const char* aContentType, 
-                            nsISupports* aContainer,
-                            nsISupports* aExtraInfo,
-                            nsIStreamListener** aDocListener,
-                            nsIContentViewer** aDocViewer);
-
-  NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
-                                       nsIDocument* aDocument,
-                                       const char *aCommand,
-                                       nsIContentViewer** aDocViewerResult);
-
-  // for nsIDocStreamLoaderFactory
-  NS_METHOD CreateInstance(nsIInputStream& aInputStream,
-                           const char* aContentType,
-                           const char* aCommand,
-                           nsISupports* aContainer,
-                           nsISupports* aExtraInfo,
-                           nsIContentViewer** aDocViewer);
-
-  nsresult InitUAStyleSheet();
-
-  nsresult CreateDocument(const char* aCommand,
-                          nsIChannel* aChannel,
-                          nsILoadGroup* aLoadGroup,
-                          nsISupports* aContainer,
-                          const nsCID& aDocumentCID,
-                          nsIStreamListener** aDocListener,
-                          nsIContentViewer** aDocViewer);
-
-  nsresult CreateRDFDocument(const char* aCommand,
-                             nsIChannel* aChannel,
-                             nsILoadGroup* aLoadGroup,
-                             const char* aContentType,
-                             nsISupports* aContainer,
-                             nsISupports* aExtraInfo,
-                             nsIStreamListener** aDocListener,
-                             nsIContentViewer** aDocViewer);
-
-  nsresult CreateXULDocumentFromStream(nsIInputStream& aXULStream,
-                                       const char* aCommand,
-                                       nsISupports* aContainer,
-                                       nsISupports* aExtraInfo,
-                                       nsIContentViewer** aDocViewer);
-
-  nsresult CreateRDFDocument(nsISupports*,
-                             nsCOMPtr<nsIDocument>*,
-                             nsCOMPtr<nsIDocumentViewer>*);
-
-  static nsICSSStyleSheet* GetUAStyleSheet() {
-    return nsContentModule::gUAStyleSheet;
-  }
-};
+nsICSSStyleSheet* nsContentDLF::gUAStyleSheet;
 
 nsresult
 NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
@@ -178,61 +127,31 @@ nsContentDLF::~nsContentDLF()
 {
 }
 
-NS_IMPL_ADDREF(nsContentDLF)
-NS_IMPL_RELEASE(nsContentDLF)
+NS_IMPL_ISUPPORTS2(nsContentDLF,
+                   nsIDocumentLoaderFactory,
+                   nsIDocStreamLoaderFactory);
 
 NS_IMETHODIMP
-nsContentDLF::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  if (NULL == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsIDocumentLoaderFactory))) {
-    nsIDocumentLoaderFactory *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDocStreamLoaderFactory))) {
-    nsIDocStreamLoaderFactory *tmp = this;
-    *aInstancePtrResult = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    nsIDocumentLoaderFactory *tmp = this;
-    nsISupports *tmp2 = tmp;
-    *aInstancePtrResult = (void*) tmp2;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-nsContentDLF::CreateInstance(const char *aCommand,
-                            nsIChannel* aChannel,
-                            nsILoadGroup* aLoadGroup,
-                            const char* aContentType, 
-                            nsISupports* aContainer,
-                            nsISupports* aExtraInfo,
-                            nsIStreamListener** aDocListener,
-                            nsIContentViewer** aDocViewer)
+nsContentDLF::CreateInstance(const char* aCommand,
+                             nsIChannel* aChannel,
+                             nsILoadGroup* aLoadGroup,
+                             const char* aContentType, 
+                             nsISupports* aContainer,
+                             nsISupports* aExtraInfo,
+                             nsIStreamListener** aDocListener,
+                             nsIContentViewer** aDocViewer)
 {
   nsresult rv = NS_OK;
-  if (!GetUAStyleSheet()) {
+  if (!gUAStyleSheet) {
     // Load the UA style sheet
-    nsCOMPtr<nsIURI> uaURL;
-    rv = NS_NewURI(getter_AddRefs(uaURL), UA_CSS_URL);
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), UA_CSS_URL);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsICSSLoader> cssLoader;
-      rv = NS_NewCSSLoader(getter_AddRefs(cssLoader));
+      NS_NewCSSLoader(getter_AddRefs(cssLoader));
       if (cssLoader) {
         PRBool complete;
-        rv = cssLoader->LoadAgentSheet(uaURL, nsContentModule::gUAStyleSheet, complete,
-                                       nsnull);
+        rv = cssLoader->LoadAgentSheet(uri, gUAStyleSheet, complete, nsnull);
       }
     }
     if (NS_FAILED(rv)) {
@@ -243,8 +162,40 @@ nsContentDLF::CreateInstance(const char *aCommand,
     }
   }
 
+  // Check aContentType to see if it's a view-source type
+  //
+  // If it's a "view-source:", aContentType will be of the form
+  //
+  //    <orig_type>; x-view-type=view-source
+  //
+  //  where <orig_type> can be text/html, text/xml etc.
+  //
+
+  nsCAutoString strContentType; strContentType.Append(aContentType);
+  PRInt32 idx = strContentType.Find("; x-view-type=view-source", PR_TRUE, 0, -1);
+  if(idx != -1)
+  { // Found "; x-view-type=view-source" param in content type. 
+
+      // Set aCommand to view-source
+
+      aCommand = "view-source";
+
+     // Null terminate at the ";" in "text/html; x-view-type=view-source"
+     // The idea is to end up with the original content type i.e. without 
+     // the x-view-type param was added to it.
+
+     strContentType.SetCharAt('\0', idx);
+
+     aContentType = strContentType.get(); //This will point to the "original" mime type
+  }
+
   if(0==PL_strcmp(aCommand,"view-source")) {
 #ifdef VIEW_SOURCE_HTML
+    NS_ENSURE_ARG(aChannel);
+    // It's a view-source. Reset channel's content type to the original 
+    // type so as not to choke the parser when it asks the channel 
+    // for the content type during the parse phase
+    aChannel->SetContentType(aContentType);
     aContentType=gHTMLTypes[0];    
 #else
     if(0==PL_strcmp(aContentType,gHTMLTypes[1])) {
@@ -309,19 +260,18 @@ nsContentDLF::CreateInstance(const char *aCommand,
 
 NS_IMETHODIMP
 nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
-                                       nsIDocument* aDocument,
-                                       const char *aCommand,
-                                       nsIContentViewer** aDocViewerResult)
+                                        nsIDocument* aDocument,
+                                        const char *aCommand,
+                                        nsIContentViewer** aDocViewerResult)
 {
   nsresult rv = NS_ERROR_FAILURE;  
 
   do {
     nsCOMPtr<nsIDocumentViewer> docv;
-    // Create the document viewer
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(nsContentDLF::GetUAStyleSheet());
+    docv->SetUAStyleSheet(gUAStyleSheet);
 
     // Bind the document to the Content Viewer
     rv = docv->LoadStart(aDocument);
@@ -334,12 +284,12 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
 
 nsresult
 nsContentDLF::CreateDocument(const char* aCommand,
-                            nsIChannel* aChannel,
-                            nsILoadGroup* aLoadGroup,
-                            nsISupports* aContainer,
-                            const nsCID& aDocumentCID,
-                            nsIStreamListener** aDocListener,
-                            nsIContentViewer** aDocViewer)
+                             nsIChannel* aChannel,
+                             nsILoadGroup* aLoadGroup,
+                             nsISupports* aContainer,
+                             const nsCID& aDocumentCID,
+                             nsIStreamListener** aDocListener,
+                             nsIContentViewer** aDocViewer)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -370,7 +320,7 @@ nsContentDLF::CreateDocument(const char* aCommand,
     rv = NS_NewDocumentViewer(getter_AddRefs(docv));
     if (NS_FAILED(rv))
       break;
-    docv->SetUAStyleSheet(nsContentDLF::GetUAStyleSheet());
+    docv->SetUAStyleSheet(gUAStyleSheet);
 
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
@@ -390,11 +340,11 @@ nsContentDLF::CreateDocument(const char* aCommand,
 
 NS_IMETHODIMP
 nsContentDLF::CreateInstance(nsIInputStream& aInputStream,
-                            const char* aContentType,
-                            const char* aCommand,
-                            nsISupports* aContainer,
-                            nsISupports* aExtraInfo,
-                            nsIContentViewer** aDocViewer)
+                             const char* aContentType,
+                             const char* aCommand,
+                             nsISupports* aContainer,
+                             nsISupports* aExtraInfo,
+                             nsIContentViewer** aDocViewer)
 
 {
   nsresult status = NS_ERROR_FAILURE;
@@ -417,8 +367,8 @@ nsContentDLF::CreateInstance(nsIInputStream& aInputStream,
 // ...common work for |CreateRDFDocument| and |CreateXULDocumentFromStream|
 nsresult
 nsContentDLF::CreateRDFDocument(nsISupports* aExtraInfo,
-                               nsCOMPtr<nsIDocument>* doc,
-                               nsCOMPtr<nsIDocumentViewer>* docv)
+                                nsCOMPtr<nsIDocument>* doc,
+                                nsCOMPtr<nsIDocumentViewer>* docv)
 {
   nsresult rv = NS_ERROR_FAILURE;
     
@@ -433,7 +383,7 @@ nsContentDLF::CreateRDFDocument(nsISupports* aExtraInfo,
   if (NS_FAILED(rv)) return rv;
 
   // Load the UA style sheet if we haven't already done that
-  (*docv)->SetUAStyleSheet(nsContentDLF::GetUAStyleSheet());
+  (*docv)->SetUAStyleSheet(gUAStyleSheet);
 
   return NS_OK;
 }
@@ -441,13 +391,13 @@ nsContentDLF::CreateRDFDocument(nsISupports* aExtraInfo,
 // ...note, this RDF document _may_ be XUL :-)
 nsresult
 nsContentDLF::CreateRDFDocument(const char* aCommand,
-                               nsIChannel* aChannel,
-                               nsILoadGroup* aLoadGroup,
-                               const char* aContentType,
-                               nsISupports* aContainer,
-                               nsISupports* aExtraInfo,
-                               nsIStreamListener** aDocListener,
-                               nsIContentViewer** aDocViewer)
+                                nsIChannel* aChannel,
+                                nsILoadGroup* aLoadGroup,
+                                const char* aContentType,
+                                nsISupports* aContainer,
+                                nsISupports* aExtraInfo,
+                                nsIStreamListener** aDocListener,
+                                nsIContentViewer** aDocViewer)
 {
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIDocumentViewer> docv;
@@ -481,10 +431,10 @@ nsContentDLF::CreateRDFDocument(const char* aCommand,
 
 nsresult
 nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
-                                         const char* aCommand,
-                                         nsISupports* aContainer,
-                                         nsISupports* aExtraInfo,
-                                         nsIContentViewer** aDocViewer)
+                                          const char* aCommand,
+                                          nsISupports* aContainer,
+                                          nsISupports* aExtraInfo,
+                                          nsIContentViewer** aDocViewer)
 {
   nsresult status = NS_OK;
 
@@ -514,20 +464,88 @@ nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
   return status;
 }
 
-nsresult
-nsContentModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                          nsIFile* aPath)
-{
-  // We do not register view or view-source document factories because
-  // that is for layout. Now load-as-data might be a different story...
-  return NS_OK;
-}
-
 static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
 
-void
-nsContentModule::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                            nsIFile* aPath)
+static nsresult
+RegisterTypes(nsIComponentManager* aCompMgr,
+              nsICategoryManager* aCatMgr,
+              const char* aCommand,
+              nsIFile* aPath,
+              const char *aLocation,
+              const char *aType,
+              char** aTypes)
 {
-  aCompMgr->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
+  nsresult rv = NS_OK;
+  while (*aTypes) {
+    char contractid[500];
+    char* contentType = *aTypes++;
+    PR_snprintf(contractid, sizeof(contractid),
+                NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
+                aCommand, contentType);
+#ifdef NOISY_REGISTRY
+    printf("Register %s => %s\n", contractid, aPath);
+#endif
+    rv = aCompMgr->RegisterComponentWithType(kDocumentFactoryImplCID, "Layout",
+                                         contractid, aPath, aLocation,
+                                         PR_TRUE, PR_TRUE, aType);
+    if (NS_FAILED(rv)) break;
+
+    // add the MIME types layotu can handle to the handlers category.
+    // this allows users of layout's viewers (the docshell for example)
+    // to query the types of viewers layout can create.
+    nsXPIDLCString previous;
+    rv = aCatMgr->AddCategoryEntry("Gecko-Content-Viewers", contentType,
+			                    contractid,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+    if (NS_FAILED(rv)) break;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
+                                        nsIFile* aPath,
+                                        const char *aLocation,
+                                        const char *aType,
+                                        const nsModuleComponentInfo* aInfo)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  do {
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gHTMLTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gHTMLTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gXMLTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gXMLTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gImageTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gRDFTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gRDFTypes);
+    if (NS_FAILED(rv))
+      break;
+  } while (PR_FALSE);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
+                                          nsIFile* aPath,
+                                          const char* aRegistryLocation,
+                                          const nsModuleComponentInfo* aInfo)
+{
+  // XXXwaterson seems like this leaves the registry pretty dirty.
+  return aCompMgr->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
 }

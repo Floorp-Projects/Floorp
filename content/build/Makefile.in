@@ -39,7 +39,6 @@ REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader websh
 
 CPPSRCS		= \
 		nsContentDLF.cpp \
-		nsContentFactory.cpp \
 		nsContentModule.cpp \
 		nsContentHTTPStartup.cpp \
 		$(NULL)

@@ -20,114 +20,63 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "nspr.h"
-#include "nsString.h"
-#include "nsCOMPtr.h"
-#include "nsLayoutModule.h"
+
+#include "nsIGenericFactory.h"
+
 #include "nsLayoutCID.h"
-#include "nsIComponentManager.h"
-#include "nsNetUtil.h"
-#include "nsICSSStyleSheet.h"
-#include "nsHTMLAtoms.h"
+#include "nsIAutoCopy.h"
+#include "nsIBoxObject.h"
+#include "nsICSSFrameConstructor.h"
+#include "nsIFrameTraversal.h"
+#include "nsIFrameUtil.h"
+#include "nsILayoutDebugger.h"
+#include "nsILayoutHistoryState.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIPresState.h"
+#include "nsIPrintContext.h"
+#include "nsTextTransformer.h"
+
+#include "nsHTMLAtoms.h"    // to addref/release table
+#include "nsLayoutAtoms.h"  // to addref/release table
 #include "nsCSSKeywords.h"  // to addref/release table
 #include "nsCSSProps.h"     // to addref/release table
 #include "nsCSSAtoms.h"     // to addref/release table
 #include "nsColorNames.h"   // to addref/release table
+
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
+#include "nsBulletinBoardLayout.h"
+#include "nsRepeatService.h"
+#include "nsSprocketLayout.h"
+#include "nsStackLayout.h"
 #endif
+
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
 #endif
-#include "nsLayoutAtoms.h"
-#include "nsDOMCID.h"
-#include "nsINameSpaceManager.h"
-
-#include "nsINodeInfo.h"
-
-#include "nsIElementFactory.h"
-
-#include "nsIDocumentEncoder.h"
-#include "nsIContentSerializer.h"
-#include "nsIHTMLToTextSink.h"
-
-#include "nsIGenericFactory.h"
 
 // SVG
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
 #endif
 
-// XXX
-#include "nsIServiceManager.h"
-
-#include "nsTextTransformer.h"
-#ifdef INCLUDE_XUL
-#include "nsBulletinBoardLayout.h"
-#include "nsRepeatService.h"
-#include "nsSprocketLayout.h"
-#include "nsStackLayout.h"
-#endif
-#include "nsContentPolicyUtils.h"
-
-static nsLayoutModule *gModule = NULL;
-
-extern "C" NS_EXPORT 
-nsresult NSGETMODULE_ENTRY_POINT(nsLayoutModule)(nsIComponentManager *servMgr,
-                                          nsIFile* location,
-                                          nsIModule** return_cobj)
-{
-  nsresult rv = NS_OK;
-
-  NS_ASSERTION(return_cobj, "Null argument");
-  NS_ASSERTION(gModule == NULL, "nsLayoutModule: Module already created.");
-
-  // Create an initialize the layout module instance
-  nsLayoutModule *m = new nsLayoutModule();
-  if (!m) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Increase refcnt and store away nsIModule interface to m in return_cobj
-  rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
-  if (NS_FAILED(rv)) {
-    delete m;
-    m = nsnull;
-  }
-  gModule = m;                  // WARNING: Weak Reference
-  return rv;
-}
 
 //----------------------------------------------------------------------
 
-nsICSSStyleSheet* nsLayoutModule::gUAStyleSheet = nsnull;
-
-nsLayoutModule::nsLayoutModule()
-  : mInitialized(PR_FALSE)
-{
-  NS_INIT_ISUPPORTS();
-}
-
-nsLayoutModule::~nsLayoutModule()
-{
-  Shutdown();
-}
-
-NS_IMPL_ISUPPORTS(nsLayoutModule, NS_GET_IID(nsIModule))
-
 // Perform our one-time intialization for this module
-nsresult
-nsLayoutModule::Initialize()
+static PRBool gInitialized = PR_FALSE;
+
+static nsresult
+Initialize(nsIModule* self)
 {
-  nsresult rv = NS_OK;
-
-  if (mInitialized) {
+  NS_PRECONDITION(!gInitialized, "module already initialized");
+  if (gInitialized)
     return NS_OK;
-  }
 
-  mInitialized = PR_TRUE;
+  gInitialized = PR_TRUE;
     
   // Register all of our atoms once
   nsCSSAtoms::AddRefAtoms();
@@ -150,21 +99,18 @@ nsLayoutModule::Initialize()
   nsSVGAtoms::AddRefAtoms();
 #endif
 
-  rv = nsTextTransformer::Initialize();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return rv;
+  return nsTextTransformer::Initialize();
 }
 
 // Shutdown this module, releasing all of the module resources
-void
-nsLayoutModule::Shutdown()
+static void
+Shutdown(nsIModule* self)
 {
-  if (!mInitialized) {
+  NS_PRECONDITION(gInitialized, "module not initialized");
+  if (! gInitialized)
     return;
-  }
+
+  gInitialized = PR_FALSE;
 
 #ifdef INCLUDE_XUL
   nsBulletinBoardLayout::Shutdown();
@@ -180,155 +126,189 @@ nsLayoutModule::Shutdown()
   nsCSSAtoms::ReleaseAtoms();
   nsHTMLAtoms::ReleaseAtoms();
   nsLayoutAtoms::ReleaseAtoms();
+
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
 #endif  
+
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
   nsMathMLOperators::ReleaseTable();
   nsMathMLAtoms::ReleaseAtoms();
 #endif
+
 // SVG
 #ifdef MOZ_SVG
   nsSVGAtoms::ReleaseAtoms();
 #endif
 
   nsTextTransformer::Shutdown();
-
-  NS_IF_RELEASE(gUAStyleSheet);
 }
 
-NS_IMETHODIMP
-nsLayoutModule::GetClassObject(nsIComponentManager *aCompMgr,
-                               const nsCID& aClass,
-                               const nsIID& aIID,
-                               void** r_classObj)
-{
-  nsresult rv;
+#ifdef NS_DEBUG
+extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
+extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
+#endif
 
-  if (!mInitialized) {
-    rv = Initialize();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
+extern nsresult NS_NewBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewPopupSetBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewOutlinerBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
+extern nsresult NS_CreateCSSFrameConstructor(nsICSSFrameConstructor** aResult);
+extern nsresult NS_NewLayoutHistoryState(nsILayoutHistoryState** aResult);
+extern nsresult NS_NewAutoCopyService(nsIAutoCopyService** aResult);
 
-  nsCOMPtr<nsIFactory> f = new nsLayoutFactory(aClass);
-  if (!f) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return f->QueryInterface(aIID, r_classObj);
+#define MAKE_CTOR(ctor_, iface_, func_)                   \
+static NS_IMETHODIMP                                      \
+ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
+{                                                         \
+  *aResult = nsnull;                                      \
+  if (aOuter)                                             \
+    return NS_ERROR_NO_AGGREGATION;                       \
+  iface_* inst;                                           \
+  nsresult rv = func_(&inst);                             \
+  if (NS_SUCCEEDED(rv)) {                                 \
+    rv = inst->QueryInterface(aIID, aResult);             \
+    NS_RELEASE(inst);                                     \
+  }                                                       \
+  return rv;                                              \
 }
+  
+#ifdef DEBUG
+MAKE_CTOR(CreateNewFrameUtil,           nsIFrameUtil,           NS_NewFrameUtil)
+MAKE_CTOR(CreateNewLayoutDebugger,      nsILayoutDebugger,      NS_NewLayoutDebugger)
+#endif
 
-//----------------------------------------
-
-struct Components {
-  const char* mDescription;
-  nsID mCID;
-  const char* mContractID;
-};
-
-// The HTML namespace.
+MAKE_CTOR(CreateNewPrintPreviewContext, nsIPresContext,         NS_NewPrintPreviewContext)
+MAKE_CTOR(CreateNewCSSFrameConstructor, nsICSSFrameConstructor, NS_CreateCSSFrameConstructor)
+MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
+MAKE_CTOR(CreateNewLayoutHistoryState,  nsILayoutHistoryState,  NS_NewLayoutHistoryState)
+MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
+MAKE_CTOR(CreateNewPresState,           nsIPresState,           NS_NewPresState)
+MAKE_CTOR(CreateNewGalleyContext,       nsIPresContext,         NS_NewGalleyContext)
+MAKE_CTOR(CreateNewPrintContext,        nsIPrintContext,        NS_NewPrintContext)
+MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
+MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
+MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
+MAKE_CTOR(CreateNewPopupSetBoxObject,   nsIBoxObject,           NS_NewPopupSetBoxObject)
+MAKE_CTOR(CreateNewBrowserBoxObject,    nsIBoxObject,           NS_NewBrowserBoxObject)
+MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxObject)
+MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
+MAKE_CTOR(CreateNewScrollBoxObject,     nsIBoxObject,           NS_NewScrollBoxObject)
+MAKE_CTOR(CreateNewOutlinerBoxObject,   nsIBoxObject,           NS_NewOutlinerBoxObject)
+MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 
 // The list of components we register
-static Components gComponents[] = {
-  { "Frame utility", NS_FRAME_UTIL_CID, nsnull, },
-  { "Print preview context", NS_PRINT_PREVIEW_CONTEXT_CID, nsnull, },
-  { "Layout debugger", NS_LAYOUT_DEBUGGER_CID, nsnull, },
+static nsModuleComponentInfo gComponents[] = {
+#ifdef DEBUG
+  { "Frame utility",
+    NS_FRAME_UTIL_CID,
+    nsnull,
+    CreateNewFrameUtil },
 
-  { "CSS Frame Constructor", NS_CSSFRAMECONSTRUCTOR_CID, nsnull, },
-  { "Frame Traversal", NS_FRAMETRAVERSAL_CID, nsnull, },
-  { "Layout History State", NS_LAYOUT_HISTORY_STATE_CID, nsnull, },
+  { "Layout debugger",
+    NS_LAYOUT_DEBUGGER_CID,
+    nsnull,
+    CreateNewLayoutDebugger },
+#endif
+
+  { "Print preview context",
+    NS_PRINT_PREVIEW_CONTEXT_CID,
+    nsnull,
+    CreateNewPrintPreviewContext },
+
+  { "CSS Frame Constructor",
+    NS_CSSFRAMECONSTRUCTOR_CID,
+    nsnull,
+    CreateNewCSSFrameConstructor },
+
+  { "Frame Traversal",
+    NS_FRAMETRAVERSAL_CID,
+    nsnull,
+    CreateNewFrameTraversal },
+
+  { "Layout History State",
+    NS_LAYOUT_HISTORY_STATE_CID,
+    nsnull,
+    CreateNewLayoutHistoryState },
 
   // XXX ick
-  { "Presentation shell", NS_PRESSHELL_CID, nsnull, },
-  { "Presentation state", NS_PRESSTATE_CID, nsnull, },
-  { "Galley context", NS_GALLEYCONTEXT_CID, nsnull, },
-  { "Print context", NS_PRINTCONTEXT_CID, nsnull, },
+  { "Presentation shell",
+    NS_PRESSHELL_CID,
+    nsnull,
+    CreateNewPresShell },
+
+  { "Presentation state",
+    NS_PRESSTATE_CID,
+    nsnull,
+    CreateNewPresState },
+
+  { "Galley context",
+    NS_GALLEYCONTEXT_CID,
+    nsnull,
+    CreateNewGalleyContext },
+
+  { "Print context",
+    NS_PRINTCONTEXT_CID,
+    nsnull,
+    CreateNewPrintContext },
   // XXX end ick
 
-  { "XUL Box Object", NS_BOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject;1" },
-  { "XUL Tree Box Object", NS_TREEBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-tree;1" },
-  { "XUL Menu Box Object", NS_MENUBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-menu;1" },
-  { "XUL PopupSet Box Object", NS_POPUPSETBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-popupset;1" },
-  { "XUL Browser Box Object", NS_BROWSERBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-browser;1" },
-  { "XUL Editor Box Object", NS_EDITORBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-editor;1" },
-  { "XUL Iframe Object", NS_IFRAMEBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-iframe;1" },
-  { "XUL ScrollBox Object", NS_SCROLLBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-scrollbox;1" },
-  { "XUL Outliner Box Object", NS_OUTLINERBOXOBJECT_CID, "@mozilla.org/layout/xul-boxobject-outliner;1" },
+  { "XUL Box Object",
+    NS_BOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject;1",
+    CreateNewBoxObject },
 
-  { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "@mozilla.org/autocopy;1" }
+  { "XUL Tree Box Object",
+    NS_TREEBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-tree;1",
+    CreateNewTreeBoxObject },
+
+  { "XUL Menu Box Object",
+    NS_MENUBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-menu;1",
+    CreateNewMenuBoxObject },
+
+  { "XUL PopupSet Box Object",
+    NS_POPUPSETBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-popupset;1",
+    CreateNewPopupSetBoxObject },
+
+  { "XUL Browser Box Object",
+    NS_BROWSERBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-browser;1",
+    CreateNewBrowserBoxObject },
+
+  { "XUL Editor Box Object",
+    NS_EDITORBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-editor;1",
+    CreateNewEditorBoxObject },
+
+  { "XUL Iframe Object",
+    NS_IFRAMEBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-iframe;1",
+    CreateNewIFrameBoxObject },
+
+  { "XUL ScrollBox Object",
+    NS_SCROLLBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-scrollbox;1",
+    CreateNewScrollBoxObject },
+
+  { "XUL Outliner Box Object",
+    NS_OUTLINERBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-outliner;1",
+    CreateNewOutlinerBoxObject  },
+
+  { "AutoCopy Service",
+    NS_AUTOCOPYSERVICE_CID,
+    "@mozilla.org/autocopy;1",
+    CreateNewAutoCopyService }
 };
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
-NS_IMETHODIMP
-nsLayoutModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFile* aPath,
-                             const char* registryLocation,
-                             const char* componentType)
-{
-  nsresult rv = NS_OK;
-
-#ifdef DEBUG
-  printf("*** Registering layout components\n");
-#endif
-
-  Components* cp = gComponents;
-  Components* end = cp + NUM_COMPONENTS;
-  while (cp < end) {
-    rv = aCompMgr->RegisterComponentWithType(cp->mCID, cp->mDescription,
-                                             cp->mContractID, aPath, 
-                                             registryLocation, PR_TRUE, 
-                                             PR_TRUE, componentType);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsLayoutModule: unable to register %s component => %x\n",
-             cp->mDescription, rv);
-#endif
-      break;
-    }
-    cp++;
-  }
-
-  rv = RegisterDocumentFactories(aCompMgr, aPath, registryLocation, 
-                                 componentType);
-
-  return rv;
-}
-
-NS_IMETHODIMP
-nsLayoutModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFile* aPath,
-                               const char* registryLocation)
-{
-#ifdef DEBUG
-  printf("*** Unregistering layout components\n");
-#endif
-  Components* cp = gComponents;
-  Components* end = cp + NUM_COMPONENTS;
-  while (cp < end) {
-    nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsLayoutModule: unable to unregister %s component => %x\n",
-             cp->mDescription, rv);
-#endif
-    }
-    cp++;
-  }
-
-  UnregisterDocumentFactories(aCompMgr, aPath);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-  if (!okToUnload) {
-    return NS_ERROR_INVALID_POINTER;
-  }
-  *okToUnload = PR_FALSE;
-  return NS_ERROR_FAILURE;
-}
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsLayoutModule, gComponents, Initialize, Shutdown)
