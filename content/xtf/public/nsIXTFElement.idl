@@ -41,6 +41,7 @@ interface nsIAtom;
 interface nsIDOMDocument;
 interface nsIDOMElement;
 interface nsIDOMNode;
+interface nsIDOMEvent;
 
 [scriptable, uuid(f0617ed1-db6a-4704-ac4b-67bf15a77788)]
 interface nsIXTFElement : nsISupports
@@ -114,6 +115,8 @@ interface nsIXTFElement : nsISupports
   
   const unsigned long NOTIFY_DONE_ADDING_CHILDREN  = 0x00004000;
   
+  const unsigned long NOTIFY_HANDLE_DEFAULT        = 0x00008000;
+  
   // Event notifications:
 
   void willChangeDocument(in nsIDOMDocument newDoc);
@@ -138,5 +141,11 @@ interface nsIXTFElement : nsISupports
   void attributeRemoved(in nsIAtom name);
 
   void doneAddingChildren();
+
+  // The default handler for DOM Events.
+  // This method is called after the normal DOM event flow.
+  // If the return value is true, the event is marked as handled and
+  // other default handlers won't be able to handle it again.
+  boolean handleDefault(in nsIDOMEvent aEvent);
 };
 
