@@ -52,6 +52,8 @@ NO_PKG_FILES = \
 	maptsv* \
 	mfc* \
 	mkdepend* \
+	msdump* \
+	msmap* \
 	nm2tsv* \
 	nsinstall* \
 	rebasedlls* \
@@ -59,6 +61,8 @@ NO_PKG_FILES = \
 	regxpcom* \
 	res/samples \
 	res/throbber \
+	shlibsign* \
+	winEmbed.exe \
 	xpcshell* \
 	xpidl* \
 	xpt_dump* \
