@@ -577,7 +577,8 @@ nsImageWin::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 
       if (!didComposite && 
           (GetDeviceCaps(TheHDC, RASTERCAPS) & (RC_BITBLT | RC_STRETCHBLT)))
-        PrintDDB(aSurface, aDX, aDY, aDWidth, aDHeight, rop);
+        PrintDDB(aSurface, aDX, aDY, aDWidth, aDHeight,
+                 aSX, srcy, aSWidth, aSHeight, rop);
 
     } else { 
       // we are going to the device that created this DDB
@@ -1565,7 +1566,10 @@ nsImageWin :: CleanUpDDB()
  * @return the result of the operation, if NS_OK, then the pixelmap is unoptimized
  */
 nsresult 
-nsImageWin::PrintDDB(nsIDrawingSurface* aSurface,PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,PRUint32 aROP)
+nsImageWin::PrintDDB(nsIDrawingSurface* aSurface,
+                     PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight,
+                     PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                     PRUint32 aROP)
 {
   HDC   theHDC;
   UINT  palType;
@@ -1584,8 +1588,8 @@ nsImageWin::PrintDDB(nsIDrawingSurface* aSurface,PRInt32 aX, PRInt32 aY, PRInt32
       }
 
 
-      ::StretchDIBits(theHDC, aX, aY, aWidth, aHeight,
-                      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
+      ::StretchDIBits(theHDC, aDX, aDY, aDWidth, aDHeight,
+                      aSX, aSY, aSWidth, aSHeight, mImageBits,
                       (LPBITMAPINFO)mBHead, palType, aROP);
 
 
