@@ -83,7 +83,6 @@ typedef unsigned long HMTX;
 #include "nsIDOMRange.h"
 #include "nsIURIContentListener.h"
 #include "nsIDOMDocument.h"
-#include "nsTimer.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -318,8 +317,6 @@ protected:
                         const char* aContentType,
                         const char* aCommand,
                         nsIStreamListener** aResult);
-
-  MOZ_TIMER_DECLARE(mTotalTime)
 
 #ifdef DETECT_WEBSHELL_LEAKS
 private:
@@ -1132,13 +1129,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
    if(loader != mDocLoader)
       return NS_OK;
 
-#ifdef MOZ_PERF_METRICS
-  MOZ_TIMER_DEBUGLOG(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
-  MOZ_TIMER_STOP(mTotalTime);
-  MOZ_TIMER_LOG(("Total (Layout + Page Load) Time (webshell=%p): ", this));
-  MOZ_TIMER_PRINT(mTotalTime);
-#endif
-
    nsresult rv = NS_ERROR_FAILURE;
    if(!channel)
       return NS_ERROR_NULL_POINTER;
@@ -1367,6 +1357,7 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
   {
     mDocLoaderObserver->OnStartURLLoad(mDocLoader, channel);
   }
+
   return NS_OK;
 }
 
