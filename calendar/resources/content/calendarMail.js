@@ -317,6 +317,199 @@ function saveCalendarObject(FilePath, CalendarStream)
 	FileOutput.close();
 }
 
+/***************************************************************
+ *
+ * AUTHOR: Dan Parent
+ * DATE:   Monday May 22, 2001
+ * 
+ * NOTES:
+ * Example Implementation (use brackets properly I removed them to keep this short):
+ * function sendMessage()
+ * {
+ *     var EmailSent = sendEmail("Here is a subject", "Here is the body", "danp@oeone.com", null, null, "Here is some text", null, null);
+ *     if (EmailSent)
+ *         alert("Mail should be on it's way");
+ *     else
+ *         alert("OOOoooouuuuuGAAAAHHHH!!!");
+ * }
+ *
+ * IMPLEMENTATION NOTES
+ * Attachments are still very untested, as is priority, all arguments to 
+ * this function are strings, with the to, cc and bcc being comma seperated
+ * email addresses.
+ **************************************************************/
+
+
+function sendEmail(Subject, Body, To, Cc, Bcc, Attachment, Priority)
+{
+	/* The message composer component */
+	var MessageComposeComponent = Components.classes["@mozilla.org/messengercompose/compose;1"];
+	var MessageComposeService = MessageComposeComponent.getService();
+	var MessageCompose = MessageComposeService.QueryInterface(Components.interfaces.nsIMsgCompose);
+	/* The message composer parameters component, needed by MessageCompose in order to initialize */
+	var MessageComposeParamsComponent = Components.classes["@mozilla.org/messengercompose/composeparams;1"];
+	var MessageComposeParams = MessageComposeParamsComponent.createInstance(Components.interfaces.nsIMsgComposeParams);
+	
+   nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
+	MessageComposeParams.format = nsIMsgCompFormat.PlainText; // this could be a pref for the user
+
+   /* The type of delivery to use, we always use send now */
+	var MessageDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
+	var AccountExists = true;
+	if ( !hasDefaultAccount())
+	{
+		AccountExists = accountSetupError();
+	}
+	/* The account manager is needed to get the default identity to send the mail out */
+	var AccountManagerComponent = Components.classes["@mozilla.org/messenger/account-manager;1"];
+	var AccountManagerService = AccountManagerComponent.getService();
+	var AccountManager = AccountManagerService.QueryInterface(Components.interfaces.nsIMsgAccountManager);
+	try
+    {
+      	var Account = AccountManager.defaultAccount;
+    }
+   catch(e)
+   {
+      dump( "\n------------------\nThere is no default account, and I caught an exception in penemail.js on line 45. "+e +"\n--------------------------------\n" );
+	   AccountExists = accountSetupError();
+   }
+	
+   if (!AccountExists)
+	{
+		return(false);
+	}
+
+	/* try to initialize the message composer, if not return false */
+	try
+	{
+		MessageCompose.Initialize(null, MessageComposeParams);
+	}
+	catch(Exception)
+	{
+		alert( "can't Initialize"+Exception );
+      return(false);
+	}
+	
+	/* The composer fields that need to be set in order to properly send an email */
+	/* TODO: should this really be set by the default account or is there going to be
+	   a system account, or is the system account the default account? */
+	var MessageComposeFields = MessageCompose.compFields;
+	if (Subject == "")
+	{
+		MessageComposeFields.subject = "[no subject]";
+	}
+	else
+	{
+		MessageComposeFields.subject = Subject;
+	}
+	if (To == "" || To == null)
+	{
+		return(false); // the email *has* to be addressed to somebody
+	}
+	else
+	{
+		MessageComposeFields.to = To;
+	}
+	if (Cc != "" && Cc != null)
+	{
+		MessageComposeFields.cc = Cc;
+	}
+	if (Bcc != "" && Bcc != null)
+	{
+		MessageComposeFields.bcc = Bcc;
+	}
+	if (Body != "" && Body != null)
+		MessageComposeFields.body = Body;
+	if (Attachment != "" && Attachment != null)
+		MessageComposeFields.attachments = Attachment;
+	if (Priority != "" && Priority != null)
+		MessageComposeFields.priority = Priority;
+	MessageComposeFields.from = Account.email;
+
+	/* try to send the email away, don't set a listener, we just trust that it makes it for now :) */
+	/* TODO: properly set a listener on this action and report errors back to the calling function */
+	try
+	{
+		MessageCompose.SendMsg(MessageDeliverMode.Now, Account.defaultIdentity, null);
+	}
+	catch(Exception)
+	{
+		alert( "can't SendMsg"+Exception );
+      return(false);
+	}
+	
+   /* we made it here so everything must be good unless something happens during the transport of the message */
+	return(true);
+}
+
+function accountSetupError( )
+{
+    var rv = confirm( "You do not have a default email account setup. Click OK and the Account Wizard will be started, otherwise click Cancel." );
+    if (rv)
+    {
+		launchAccountWizard();
+    }
+	var AccountManagerComponent = Components.classes["@mozilla.org/messenger/account-manager;1"];
+	var AccountManagerService = AccountManagerComponent.getService();
+	var AccountManager = AccountManagerService.QueryInterface(Components.interfaces.nsIMsgAccountManager);
+	try
+	{
+		if (AccountManager.defaultAccount)
+		{
+			return(true);
+		}
+		else
+		{
+			return(false);
+		}
+	}
+	catch(ex)
+	{
+		return(false);
+	}
+}
+
+/**** ADDED BY DAN 2001-10-29 ****
+ *
+ * RETURNS true if default account, false if no account
+ *
+ ********************************/
+
+function hasDefaultAccount()
+{
+	try
+	{
+		var AccountManagerComponent = Components.classes["@mozilla.org/messenger/account-manager;1"];
+		var AccountManagerService = AccountManagerComponent.getService();
+		var AccountManager = AccountManagerService.QueryInterface(Components.interfaces.nsIMsgAccountManager);
+		var DefaultAccount = AccountManager.defaultAccount;
+		var DefaultIncomingServer = DefaultAccount.incomingServer;
+		if (DefaultIncomingServer.hostName == "Local Folders")
+		{
+			return(false);
+		}
+		else
+		{
+			return(true);
+		}
+	}
+	catch(ex)
+	{
+		return(false);
+	}
+}
+
+/**** launchAccountWizard ****
+ *
+ * This will launch the Account Wizard from any point the email service can be used
+ *
+ ****/
+
+function launchAccountWizard()
+{
+	window.openDialog("chrome://messenger/content/AccountWizard.xul", "", "chrome,modal,titlebar,resizable");
+}
+
 /**** mdebug
  *
  * PURPOSE: display debugging messages

@@ -234,9 +234,10 @@
                               <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
                            </hbox>
                            
-                           <hbox id="alarm-box-email" collapsed="true" align="center">
+                           <hbox id="alarm-box-email" align="center">
+                               <spacer width="15"/>
                                <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
-                               <textbox id="alarm-email-field" disabled="true" size="39" value="" />
+                               <textbox id="alarm-email-field" size="39" value="" />
                            </hbox>       
                         </vbox>
                      </row>

@@ -655,30 +655,12 @@ CalendarAlarmObserver.prototype.firePendingAlarms = function calAlarm_firePendin
     
 }
 
-CalendarAlarmObserver.prototype.onStartBatch = function()
-{
-}
-
-CalendarAlarmObserver.prototype.onEndBatch = function()
-{
-}
-
-CalendarAlarmObserver.prototype.onLoad = function( calendarEvent )
-{
-}
-
-CalendarAlarmObserver.prototype.onAddItem = function( calendarEvent )
-{
-}
-
-CalendarAlarmObserver.prototype.onModifyItem = function( calendarEvent, originalEvent )
-{
-}
-
-CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent )
-{
-}
-
+CalendarAlarmObserver.prototype.onStartBatch = function(){}
+CalendarAlarmObserver.prototype.onEndBatch = function(){}
+CalendarAlarmObserver.prototype.onLoad = function( calendarEvent ){}
+CalendarAlarmObserver.prototype.onAddItem = function( calendarEvent ){}
+CalendarAlarmObserver.prototype.onModifyItem = function( calendarEvent, originalEvent ){}
+CalendarAlarmObserver.prototype.onDeleteItem = function( calendarEvent ){}
 
 CalendarAlarmObserver.prototype.onAlarm = function calAlarm_onAlarm( calendarEvent )
 {
@@ -713,7 +695,11 @@ CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calenda
 
    if ( calendarEvent.alarmEmailAddress )
    {
+      var EmailBody = "Calendar Event Alarm Went Off!\n----------------------------\n";
+      EmailBody += "Title: "+calendarEvent.title + " at " + calendarEvent.start.toString() +  "\n";
+      EmailBody += "This message sent to you from the Mozilla Calendar.\nhttp://www.mozilla.org/projects/calendar/";
+         
       //send an email for the event
-      // TO DO
+      sendEmail( "Mozilla Calendar Alarm: "+calendarEvent.title, EmailBody, calendarEvent.alarmEmailAddress, null, null, null, null );
    }
 }

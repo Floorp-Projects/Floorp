@@ -206,6 +206,9 @@ function loadCalendarEventDialog()
    setFieldValue( "alarm-length-field", gEvent.alarmLength );
    setFieldValue( "alarm-length-units", gEvent.alarmUnits );
 
+   if( gEvent.alarmEmailAddress == "" )
+      gEvent.alarmEmailAddress = opener.getCharPref( opener.gCalendarWindow.calendarPreferences.calendarPref, "alarms.emailaddress", "" );
+
    if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
    {
       setFieldValue( "alarm-email-checkbox", true, "checked" );
@@ -696,6 +699,7 @@ function commandAllDay()
 
 function commandAlarm()
 {
+   document.getElementById( "alarm-email-checkbox" ).removeAttribute( "checked" );
    updateAlarmItemEnabled();
 }
 
@@ -715,10 +719,11 @@ function updateAlarmItemEnabled()
    var alarmEmailCheckbox = "alarm-email-checkbox";
    var alarmEmailField = "alarm-email-field";
 
-   if( getFieldValue(alarmCheckBox, "checked" ) )
+   if( getFieldValue(alarmCheckBox, "checked" ) || getFieldValue( alarmEmailCheckbox, "checked" ) )
    {
       // call remove attribute beacuse some widget code checks for the presense of a 
       // disabled attribute, not the value.
+      setFieldValue( alarmCheckBox, true, "checked" );
       setFieldValue( alarmField, false, "disabled" );
       setFieldValue( alarmMenu, false, "disabled" );
       setFieldValue( alarmLabel, false, "disabled" );

@@ -643,7 +643,11 @@ function switchCalendar( event )
 
    if( event.currentTarget.childNodes[0].getAttribute( "checked" ) != "true" )
    {
+      window.setCursor( "wait" );
+
       gCalendarWindow.eventSource.gICalLib.addCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+      
+      window.setCursor( "default" );
       
       calendarNode.setAttribute( "http://home.netscape.com/NC-rdf#active", "true" );
       
@@ -651,7 +655,11 @@ function switchCalendar( event )
    }
    else
    {
+      window.setCursor( "wait" );
+
       gCalendarWindow.eventSource.gICalLib.removeCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+      
+      window.setCursor( "default" );
       
       calendarNode.setAttribute( "http://home.netscape.com/NC-rdf#active", "false" );
       

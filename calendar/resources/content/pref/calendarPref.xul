@@ -82,7 +82,7 @@
       */
        
       var _elementIDs = [
-         "alarmplaysound", "alarmshow", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength",
+         "alarmplaysound", "alarmshow", "alarmemailaddress", "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength",
          "reloadonlaunch", "categories"
        ];
    </script>
@@ -96,6 +96,9 @@
       <checkbox id="alarmshow" prefstring="calendar.alarms.show"
           label="&pref.showalarmbox;" />
           
+      <description>Default address to send alarms to:</description>
+      <textbox id="alarmemailaddress" prefstring="calendar.alarms.emailaddress" flex="1"/>      
+
       <vbox>
          <description>&pref.dateformat.label;</description>
          <menulist id="dateformat" crop="none" prefstring="calendar.date.format">
