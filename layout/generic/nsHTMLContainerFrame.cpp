@@ -262,11 +262,9 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
   }
 
   // Create the new frame
-  nsIStyleContext* kidSC;
-  kidSC = aPresContext->ResolveStyleContextFor(aChild, parent);
   nsIFrame* newFrame;
-//XXX  nsresult rv = parent->CreateFrameFor(aPresContext, aChild, kidSC, newFrame);
-  nsresult rv = nsHTMLBase::CreateFrame(aPresContext, this, aChild, nsnull, newFrame);
+  nsresult rv = nsHTMLBase::CreateFrame(aPresContext, this, aChild, nsnull,
+                                        newFrame);
   if (NS_OK != rv) {
     return rv;
   }

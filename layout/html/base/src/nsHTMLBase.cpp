@@ -145,7 +145,6 @@ nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
     kidSC->GetStyleData(eStyleStruct_Display);
 
   // Check whether it wants to floated or absolutely positioned
-  PRBool isBlock = PR_FALSE;
   nsIFrame* kidFrame = nsnull;
   nsresult rv;
   if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
@@ -178,10 +177,6 @@ nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
       }
       break;
 
-    case NS_STYLE_DISPLAY_BLOCK:
-    case NS_STYLE_DISPLAY_LIST_ITEM:
-      isBlock = PR_TRUE;
-      // FALL THROUGH
     default:
       kidDel = aKid->GetDelegate(aPresContext);
       rv = kidDel->CreateFrame(aPresContext, aKid, aParentFrame,

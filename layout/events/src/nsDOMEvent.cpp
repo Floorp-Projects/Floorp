@@ -124,7 +124,6 @@ NS_METHOD nsDOMEvent::GetKeyCode(PRUint32& aKeyCode)
     break;
   default:
     return NS_ERROR_FAILURE;
-    break;
   }
   return NS_OK;
 }
@@ -148,7 +147,6 @@ NS_METHOD nsDOMEvent::GetButton(PRUint32& aButton)
     break;
   default:
     return NS_ERROR_FAILURE;
-    break;
   }
   return NS_OK;
 }

@@ -133,7 +133,7 @@ static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 static PRLogModuleInfo* gShellLogModuleInfo;
 
-class PresShell : public nsIPresShell, nsIDocumentObserver {
+class PresShell : public nsIPresShell, private nsIDocumentObserver {
 public:
   PresShell();
 
