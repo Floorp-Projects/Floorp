@@ -135,6 +135,8 @@ public:
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:
+  NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+                                                   const nsHTMLReflowState& aSuggestedReflowState);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
   void GetTranslatedRect(nsRect& aRect);
