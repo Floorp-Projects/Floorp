@@ -4528,7 +4528,7 @@ fi
     CFLAGS="$CFLAGS -fpascal-strings -traditional-cpp -fno-common"
     CXXFLAGS="$CXXFLAGS -fpascal-strings -traditional-cpp -fno-common"
     DLL_SUFFIX=".dylib"
-    DSO_LDOPTS='-compatibility_version 1 -current_version 1'
+    DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
     case "${target_cpu}" in
     powerpc*)
