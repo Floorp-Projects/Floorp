@@ -75,7 +75,6 @@ OBJS	= $(CPPSRCS:.cpp=.o)
 EX_LIBS = \
 	-L$(DIST)/bin \
 	-lraptorbase    \
-	$(PNG_LIBS) \
 	-lpref \
 	-lraptorbase \
 	$(TOOLKIT_WIDGET_LIB) \
@@ -93,6 +92,7 @@ EX_LIBS = \
 	-lgophurl \
 	-lhttpurl \
 	-limg \
+	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
 	-ljs \
 	-ljsdom \
@@ -104,6 +104,7 @@ EX_LIBS = \
 	-lnetlib \
 	-lnetutil \
 	-lnetwork \
+	-lpwcac \
 	-lraptorwebwidget \
 	-lreg \
 	-lremoturl \
@@ -119,14 +120,8 @@ EX_LIBS = \
 	-lxpcom \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
-	$(NULL)
-
-ifneq (,$(filter FreeBSD Linux SunOS,$(OS_ARCH)))
-EX_LIBS += \
-	-lpwcac \
 	-ldbm \
 	$(NULL)
-endif
 
 PROGS   = main
 
