@@ -24,11 +24,13 @@ MODULE=raptor
 CPPSRCS=				\
  nsLinkHandler.cpp			\
  nsWebWidget.cpp			\
+ nsDocLoader.cpp            \
  $(NULL)
 
 CPP_OBJS=				\
  .\$(OBJDIR)\nsLinkHandler.obj		\
  .\$(OBJDIR)\nsWebWidget.obj		\
+ .\$(OBJDIR)\nsDocLoader.obj		\
  $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \

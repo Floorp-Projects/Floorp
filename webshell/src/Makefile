@@ -31,11 +31,13 @@ INCLUDES += -I../public -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$
 DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
+ nsDocLoader.cpp			\
  nsWebWidget.cpp			\
  nsLinkHandler.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
+ ./$(OBJDIR)/nsDocLoader.o		\
  ./$(OBJDIR)/nsWebWidget.o		\
  ./$(OBJDIR)/nsLinkHandler.o		\
  $(NULL)
