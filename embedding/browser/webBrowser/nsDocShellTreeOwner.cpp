@@ -41,7 +41,11 @@
 //*****************************************************************************
 
 nsDocShellTreeOwner::nsDocShellTreeOwner() : mWebBrowser(nsnull), 
-   mTreeOwner(nsnull)
+   mTreeOwner(nsnull),
+   mWebBrowserChrome(nsnull),
+   mOwnerProgressListener(nsnull),
+   mOwnerWin(nsnull),
+   mOwnerRequestor(nsnull)
 {
 	NS_INIT_REFCNT();
 }
@@ -204,6 +208,7 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    *aDocShellTreeItem = nsnull;
 
    nsCOMPtr<nsIWebBrowser> webBrowser;
+   NS_ENSURE_STATE(mWebBrowserChrome, NS_ERROR_FAILURE);
    mWebBrowserChrome->GetNewBrowser(aChromeFlags, getter_AddRefs(webBrowser));
    NS_ENSURE_TRUE(webBrowser, NS_ERROR_FAILURE);
 
