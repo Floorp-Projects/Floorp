@@ -276,9 +276,10 @@ res:builtin:platformHTMLBindings.xml
 res:entityTables:*
 
 ;
-; MathML (not yet built)
+; MathML
 ;
-; res:fonts:*
-; res:mathml.css
-; Components:ucvmath.shlb
+res:fonts:*
+res:mathml.css
+res:dtd:mathml.dtd
+Components:ucvmath.shlb
 

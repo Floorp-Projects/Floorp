@@ -323,6 +323,11 @@ viewer:res:throbber:*
 viewer:res:ua.css
 viewer:res:forms.css
 
+; MathML
+viewer:res:mathml.css
+viewer:res:fonts:*
+viewer:Components:ucvmath.shlb
+
 [mail] 
 viewer:chrome:messenger.jar
 viewer:Components:MsgAddrbook.shlb 
