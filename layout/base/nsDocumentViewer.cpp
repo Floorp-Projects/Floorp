@@ -991,6 +991,13 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
       mViewManager->DisableRefresh();
       mViewManager->SetWindowDimensions(width, height);
 
+      /* Setup default view manager background color */
+      /* This may be overridden by the docshell with the background color for the
+         last document loaded into the docshell */
+      nscolor bgcolor = NS_RGB(0, 0, 0);
+      mPresContext->GetDefaultBackgroundColor(&bgcolor);
+      mViewManager->SetDefaultBackgroundColor(bgcolor);
+
       if (!makeCX) {
         // Make shell an observer for next time
         // XXX - we observe the docuement always, see above after preshell is created

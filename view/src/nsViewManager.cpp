@@ -964,13 +964,8 @@ void nsViewManager::DefaultRefresh(nsIView* aView, const nsRect* aRect)
     nscolor bgcolor = mDefaultBackgroundColor;
 
     if (NS_GET_A(mDefaultBackgroundColor) == 0) {
-        // If we haven't been given a default bgcolor, then use the
-        // widget's bgcolor.
-        nsCOMPtr<nsIWidget> widget;
-        GetWidgetForView(aView, getter_AddRefs(widget));
-
-        if (widget)
-            bgcolor = widget->GetBackgroundColor();
+      NS_WARNING("nsViewManager: Asked to paint a default background, but no default background color is set!");
+      return;
     }
 
     context->SetColor(bgcolor);
