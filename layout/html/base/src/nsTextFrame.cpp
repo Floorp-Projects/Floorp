@@ -3463,7 +3463,7 @@ struct TextRun {
 };
 
 // Transforms characters in place from ascii to Unicode
-static
+static void
 TransformTextToUnicode(char* aText, PRInt32 aNumChars)
 {
   // Go backwards over the characters and convert them.
