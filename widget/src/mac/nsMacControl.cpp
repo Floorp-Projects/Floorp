@@ -466,6 +466,14 @@ void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 
 void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString title)
 {	
+#if TARGET_CARBON
+
+  // wow, it sure is nice being able to use core foundation ;)
+  CFStringRef str = CFStringCreateWithCharacters(NULL, title.GetUnicode(), title.Length());
+  SetControlTitleWithCFString(theControl, str);
+  CFRelease(str);
+
+#else
 	TextStyle				theStyle;
 	ScriptCode				fontScript;
 	OSErr					err;
@@ -547,7 +555,7 @@ void nsMacControl::NSStringSetControlTitle(ControlHandle theControl, nsString ti
 	//
 	::SetControlTitle(theControl,c2pstr(scriptRunText));
 	delete [] scriptRunText;	
-					
+#endif					
 }
 //-------------------------------------------------------------------------
 //
