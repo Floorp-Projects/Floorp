@@ -650,6 +650,9 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
   // loop for separating encoded words by the separators
   // the input string is utf-8 at this point
   srclen = PL_strlen(srcbuf);
+
+convert_and_encode:
+
   while (begin < (srcbuf + srclen))
   { /* get block of data between commas (and other separators) */
     char *p, *q;
@@ -775,7 +778,15 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
         }
 //        buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
 //        iBufLen = PL_strlen( buf1 );
-        PR_ASSERT( iBufLen > 0 );
+        if (iBufLen <= 0) {
+          if (NULL == end) {
+            PR_FREEIF(srcbuf);
+            PR_FREEIF(retbuf);
+            return NULL; //error
+          }
+          begin = end + 1;
+          goto convert_and_encode;  // nothing was converted, skip this part
+        }
 
         /* recal iThreshold each time based on last experience */
         iThreshold = len * iEffectLen / iBufLen;
