@@ -27,6 +27,7 @@
   h2 = "This page lets you enter a new $terms.bug into ${terms.Bugzilla}."
   onload="set_assign_to();"
 %]
+[% USE Bugzilla %]
 
 <script type="text/javascript" language="JavaScript">
 <!--
@@ -91,7 +92,7 @@ function set_assign_to() {
 
   <tr>
     <td align="right" valign="top"><strong>Reporter:</strong></td>
-    <td valign="top">[% reporter FILTER html %]</td>
+    <td valign="top">[% Bugzilla.user.login FILTER html %]</td>
 
     <td align="right" valign="top"><strong>Product:</strong></td>
     <td valign="top">[% product FILTER html %]</td>

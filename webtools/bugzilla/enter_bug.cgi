@@ -44,7 +44,6 @@ use vars qw(
   $unconfirmedstate
   $template
   $vars
-  %COOKIE
   @enterable_products
   @legal_opsys
   @legal_platform
@@ -52,7 +51,6 @@ use vars qw(
   @legal_severity
   @legal_keywords
   $userid
-  %MFORM
   %versions
   $proddesc
 );
@@ -63,7 +61,9 @@ Bugzilla->login(LOGIN_REQUIRED) if AnyEntryGroups();
 
 my $cgi = Bugzilla->cgi;
 
-if (!defined $::FORM{'product'}) {
+my $product = $cgi->param('product');
+
+if (!defined $product) {
     GetVersionTable();
     Bugzilla->login();
 
@@ -84,27 +84,24 @@ if (!defined $::FORM{'product'}) {
         $vars->{'proddesc'} = \%products;
 
         $vars->{'target'} = "enter_bug.cgi";
-        $vars->{'format'} = $::FORM{'format'};
+        $vars->{'format'} = $cgi->param('format');
         
         print $cgi->header();
         $template->process("global/choose-product.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;        
+    } else {
+        # Only one product exists
+        $product = (keys %products)[0];
     }
-
-    $::FORM{'product'} = (keys %products)[0];
-    $::MFORM{'product'} = [$::FORM{'product'}];
-
 }
-
-my $product = $::FORM{'product'};
 
 ##############################################################################
 # Useful Subroutines
 ##############################################################################
 sub formvalue {
     my ($name, $default) = (@_);
-    return $::FORM{$name} || $default || "";
+    return $cgi->param($name) || $default || "";
 }
 
 sub pickplatform {
@@ -242,7 +239,7 @@ if (0 == @{$::components{$product}}) {
 } 
 elsif (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
-    $::FORM{'component'} = $::components{$product}->[0];
+    $cgi->param('component', $::components{$product}->[0]);
 }
 
 my @components;
@@ -268,7 +265,6 @@ $default{'component_'} = formvalue('component');
 
 $vars->{'assigned_to'} = formvalue('assigned_to');
 $vars->{'cc'} = formvalue('cc');
-$vars->{'reporter'} = $::COOKIE{'Bugzilla_login'};
 $vars->{'product'} = $product;
 $vars->{'bug_file_loc'} = formvalue('bug_file_loc', "http://");
 $vars->{'short_desc'} = formvalue('short_desc');
@@ -299,9 +295,9 @@ $vars->{'blocked'} = formvalue('blocked');
 $vars->{'version'} = $::versions{$product} || [];
 if (formvalue('version')) {
     $default{'version'} = formvalue('version');
-} elsif (exists $::COOKIE{"VERSION-$product"} &&
-    lsearch($vars->{'version'}, $::COOKIE{"VERSION-$product"}) != -1) {
-    $default{'version'} = $::COOKIE{"VERSION-$product"};
+} elsif (defined $cgi->cookie("VERSION-$product") &&
+    lsearch($vars->{'version'}, $cgi->cookie("VERSION-$product")) != -1) {
+    $default{'version'} = $cgi->cookie("VERSION-$product");
 } else {
     $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 }
@@ -370,7 +366,8 @@ $vars->{'default'} = \%default;
 $vars->{'use_keywords'} = 1 if (@::legal_keywords);
 
 my $format = 
-  GetFormat("bug/create/create", $::FORM{'format'}, $::FORM{'ctype'});
+  GetFormat("bug/create/create", scalar $cgi->param('format'), 
+            scalar $cgi->param('ctype'));
 
 print $cgi->header($format->{'ctype'});
 $template->process($format->{'template'}, $vars)
