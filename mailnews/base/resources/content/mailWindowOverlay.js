@@ -588,21 +588,8 @@ function InitMessageMark()
 
 function UpdateJunkToolbarButton()
 {
-  try 
-  {
-    var junkButton = document.getElementById("button-junk");
-    if (SelectedMessagesAreJunk())
-    {
-      junkButton.label = junkButton.getAttribute('notjunk_label');
-      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('notjunk_tooltiptext'));
-    }
-    else
-    {
-      junkButton.label = junkButton.getAttribute('junk_label');
-      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('junk_tooltiptext'));
-    }
-  } 
-  catch(e) {}
+  var junkButtonDeck = document.getElementById("deck-junk");
+  junkButtonDeck.selectedIndex = SelectedMessagesAreJunk() ? 1 : 0;
 }
 
 function UpdateDeleteCommand()

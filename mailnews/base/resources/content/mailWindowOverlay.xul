@@ -1747,16 +1747,18 @@
         <menupopup/>
       </toolbarbutton>
       <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
+      
+      <deck id="deck-junk" oncommand="goDoCommand('button_junk')">
+        <toolbarbutton id="button-junk" class="toolbarbutton-1"
+                 label="&junkButton.label;"
+                 tooltiptext="&junkButton.tooltip;" 
+                 observes="button_junk"/>
 
-      <toolbarbutton class="toolbarbutton-1"
-               id="button-junk" label="&junkButton.label;"
-               tooltiptext="&junkButton.tooltip;" 
-               observes="button_junk"
-               oncommand="goDoCommand('button_junk')"
-               junk_label="&junkButton.label;"
-               junk_tooltiptext="&junkButton.tooltip;"
-               notjunk_label="&notJunkButton.label;"
-               notjunk_tooltiptext="&notJunkButton.tooltip;"/>
+        <toolbarbutton id="button-junk" class="toolbarbutton-1"
+                 label="&notJunkButton.label;"
+                 tooltiptext="&notJunkButton.tooltip;" 
+                 observes="button_junk"/>
+      </deck>
 
       <toolbarbutton class="toolbarbutton-1" id="button-delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/> 
       <toolbarbutton type="menu-button" id="button-mark" class="toolbarbutton-1" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
