@@ -566,11 +566,6 @@ NS_IMETHODIMP nsRenderingContextMac::GetHints(PRUint32& aResult)
 	// QuickDraw is prefered over to ATSUI for drawing 7-bit text
 	// (it's not 8-bit: the name of the constant is misleading)
 	result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
-#ifdef IBMBIDI
-  // QuickDraw can handle arabic and hebrew drawing
-  result |= NS_RENDERING_HINT_BIDI_REORDERING;
-  result |= NS_RENDERING_HINT_ARABIC_SHAPING;
-#endif
 	aResult = result;
 	return NS_OK;
 }
