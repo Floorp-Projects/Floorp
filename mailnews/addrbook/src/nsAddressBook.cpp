@@ -1458,6 +1458,7 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
             else {
               // something we don't support for the current export
               // for example, .tab doesn't export preferred html format
+              continue; // go to next field
             }
 
             if (i < EXPORT_ATTRIBUTES_TABLE_COUNT - 1) {

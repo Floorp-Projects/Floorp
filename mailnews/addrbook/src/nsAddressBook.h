@@ -98,7 +98,7 @@ static ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[] = {
   {kPagerColumn, "pager", PR_TRUE},
   {kPagerTypeColumn, MOZ_AB_LDIF_PREFIX "PagerNumberType", PR_FALSE},
   {kCellularColumn, "mobile", PR_TRUE},
-  {kCellularTypeColumn, MOZ_AB_LDIF_PREFIX "CellularNumberType", PR_TRUE},
+  {kCellularTypeColumn, MOZ_AB_LDIF_PREFIX "CellularNumberType", PR_FALSE},
   {kHomeAddressColumn, "homePostalAddress", PR_TRUE},
   {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomePostalAddress2", PR_TRUE},
   {kHomeCityColumn, MOZ_AB_LDIF_PREFIX "HomeLocalityName", PR_TRUE},
