@@ -56,6 +56,11 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
+# xpcom/io pulls in osx toolkit headers
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CXXFLAGS	+= $(TK_CFLAGS)
+endif
+
 DEFINES		+= -DJS_THREADSAFE
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE

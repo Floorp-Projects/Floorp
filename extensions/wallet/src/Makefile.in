@@ -78,6 +78,11 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+# xpcom/io pulls in osx toolkit headers
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CXXFLAGS	+= $(TK_CFLAGS)
+endif
+
 install::
 	$(INSTALL) $(DEFAULTS_FILES) $(DIST)/bin/defaults/wallet
 

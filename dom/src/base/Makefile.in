@@ -93,3 +93,8 @@ ifdef NS_TRACE_MALLOC
 DEFINES		+= -DNS_TRACE_MALLOC
 endif
 
+# plugins pull in osx toolkit headers
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CXXFLAGS	+= $(TK_CFLAGS)
+endif
+

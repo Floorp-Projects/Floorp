@@ -78,6 +78,10 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
 LIBS		+= -lpcap
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CXXFLAGS	+= $(TK_CFLAGS)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG

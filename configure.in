@@ -612,12 +612,9 @@ case "$target" in
         no_x=yes
         MACOSX=1
         MOZ_WIDGET_TOOLKIT='mac'
-        LDFLAGS="$LDFLAGS -framework Carbon"
         DSO_LDOPTS="$DSO_LDOPTS -arch ppc -install_name @executable_path/\$@"
-        TK_LIBS='/System/Library/Frameworks/Carbon.framework/Carbon'
+        TK_LIBS='-framework Carbon /System/Library/Frameworks/Carbon.framework/Carbon'
         TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
-        CFLAGS="$CFLAGS $TK_CFLAGS"
-        CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
         ;;
     esac
     ;;

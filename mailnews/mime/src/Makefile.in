@@ -125,3 +125,8 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
 endif
 
+# xpcom/io pulls in osx toolkit headers
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+CXXFLAGS	+= $(TK_CFLAGS)
+endif
+
