@@ -79,7 +79,7 @@ function find()
 
 function findMostRecentWindow(aType, aURI, aParam)
 {
-  var topWindow = WINDOWSVC.getMostRecentWindow(aType);
+  var topWindow = WINDOWSVC && WINDOWSVC.getMostRecentWindow(aType);
   if (!topWindow) gCreatingNewWindow = true;
   return topWindow || openDialog("chrome://communicator/content/bookmarks/bookmarksManager.xul", 
                                  "", "chrome,all,dialog=no", aParam);

@@ -97,20 +97,28 @@ function initServices()
 
   kPREFContractID  = "@mozilla.org/preferences-service;1";
   kPREFIID         = Components.interfaces.nsIPrefService;
-  PREF             = Components.classes[kPREFContractID].getService(kPREFIID)
-                               .getBranch(null);
+  try {
+    PREF             = Components.classes[kPREFContractID].getService(kPREFIID)
+                                 .getBranch(null);
+  } catch (e) {}
 
   kSOUNDContractID = "@mozilla.org/sound;1";
   kSOUNDIID        = Components.interfaces.nsISound;
-  SOUND            = Components.classes[kSOUNDContractID].createInstance(kSOUNDIID);
+  try {
+    SOUND            = Components.classes[kSOUNDContractID].createInstance(kSOUNDIID);
+  } catch (e) {}
 
   kWINDOWContractID = "@mozilla.org/appshell/window-mediator;1";
   kWINDOWIID        = Components.interfaces.nsIWindowMediator;
-  WINDOWSVC         = Components.classes[kWINDOWContractID].getService(kWINDOWIID);
+  try {
+    WINDOWSVC         = Components.classes[kWINDOWContractID].getService(kWINDOWIID);
+  } catch (e) {}
 
   kDSContractID     = "@mozilla.org/widget/dragservice;1";
   kDSIID            = Components.interfaces.nsIDragService;
-  DS                = Components.classes[kDSContractID].getService(kDSIID);
+  try {
+    DS                = Components.classes[kDSContractID].getService(kDSIID);
+  } catch (e) {}
 }
 
 function initBMService()
@@ -1309,7 +1317,7 @@ var BookmarksUtils = {
         transaction.index[i]  = RDFC.IndexOf(aSelection.item[i]);
       }
     }
-    if (aAction != "move" && !BookmarksUtils.all(transaction.isValid))
+    if (SOUND && aAction != "move" && !BookmarksUtils.all(transaction.isValid))
       SOUND.beep();
     var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
@@ -1354,7 +1362,7 @@ var BookmarksUtils = {
         transaction.parent[i] = aSelection.parent[i];
       } 
     }
-    if (!BookmarksUtils.all(transaction.isValid))
+    if (SOUND && !BookmarksUtils.all(transaction.isValid))
       SOUND.beep();
     var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
@@ -1371,7 +1379,7 @@ var BookmarksUtils = {
     var isCancelled = !BookmarksUtils.any(transaction.isValid);
     if (!isCancelled) {
       BMSVC.transactionManager.doTransaction(transaction);
-    } else
+    } else if (SOUND)
       SOUND.beep();
     return !isCancelled;
   }, 
