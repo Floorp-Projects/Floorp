@@ -589,10 +589,11 @@
     <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
           accesskey="&tableselectmenu.accesskey;">
     <menupopup>
-        <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorSelectTable()" disabled="true"/>
-        <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorSelectTableRow()" disabled="true"/>
-        <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorSelectTableColumn()" disabled="true"/>
-        <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorSelectTableCell()" disabled="true"/>
+        <menuitem value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorSelectTable()"/>
+        <menuitem value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      oncommand="EditorSelectTableRow()"/>
+        <menuitem value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   oncommand="EditorSelectTableColumn()"/>
+        <menuitem value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     oncommand="EditorSelectTableCell()"/>
+        <menuitem value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" oncommand="EditorSelectAllTableCells()"/>
     </menupopup>
     </menu>
     <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
@@ -620,7 +621,7 @@
     <menuseparator />
     <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"      accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
     <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()" disabled="true"/>
-    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)" disabled="true"/>
+    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
   </menupopup>
   </menu>
 
