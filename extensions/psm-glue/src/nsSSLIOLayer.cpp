@@ -43,7 +43,7 @@ public:
     ~nsPSMSocketInfo();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIPSMSOCKETINFO;
+    NS_DECL_NSIPSMSOCKETINFO
 
     // internal functions to psm-glue.
     nsresult SetSocketPtr(CMSocket *socketPtr);
