@@ -2132,11 +2132,14 @@ nsGfxScrollFrameInner::GetScrolledSize(nsPresContext* aPresContext,
   mScrollAreaBox->GetChildBox(&child);
   nsIFrame* frame;
   child->GetFrame(&frame);
+
   nsIView* view = frame->GetView();
   NS_ASSERTION(view,"Scrolled frame must have a view!!!");
   
   nsRect rect = view->GetBounds();
-  nsSize size(rect.width, rect.height);
+  // forget about the stuff above or to the left of the origin, since
+  // we can't currently scroll there anyway.
+  nsSize size(rect.XMost(), rect.YMost());
  
   nsBox::AddMargin(child, size);
   nsBox::AddBorderAndPadding(mScrollAreaBox, size);
