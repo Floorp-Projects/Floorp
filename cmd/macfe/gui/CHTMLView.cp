@@ -5627,6 +5627,9 @@ void CHTMLView::SaveEmbedWindow(
 	//	Un-intsall the plugin view, hide it, and re-target
 	//	it to the owning window.	
 	view->Hide();
+	
+	// PCB:  clear the plugin's knowledge that it has been positioned, so it will be layed out correctly.
+	view->SetPositioned(false);
 
 	LView *previousParentView = NULL;
 	LView *currentParentView = view->GetSuperView();
@@ -5684,7 +5687,8 @@ void CHTMLView::DestroyEmbedWindow(
 		ThrowIfNil_(inEmbeddedApp->np_data);
 		LO_EmbedStruct* embed_struct = ((np_data*) inEmbeddedApp->np_data)->lo_struct;
 	
-		ThrowIfNil_(embed_struct);
+		// XXX The following check crashes (why?) when embed_struct is NULL, which it always is.
+		// ThrowIfNil_(embed_struct);
 	
 		CPluginView* view = (CPluginView*) inEmbeddedApp->fe_data;
 		view->EmbedFree(*mContext, embed_struct);
