@@ -41,6 +41,7 @@ function nsContextMenu( xulMenu ) {
     this.onLink         = false;
     this.onMailtoLink   = false;
     this.onSaveableLink = false;
+    this.onMathML       = false;
     this.link           = false;
     this.inFrame        = false;
     this.hasBGImage     = false;
@@ -116,6 +117,8 @@ nsContextMenu.prototype = {
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
+        this.showItem( "context-viewpartialsource-selection", this.isTextSelected );
+        this.showItem( "context-viewpartialsource-mathml", this.onMathML && !this.isTextSelected );
         this.showItem( "context-viewsource", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
         this.showItem( "context-viewinfo", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
 
@@ -209,12 +212,14 @@ nsContextMenu.prototype = {
         this.onTextInput = false;
         this.imageURL   = "";
         this.onLink     = false;
+        this.onMathML   = false;
         this.inFrame    = false;
         this.hasBGImage = false;
         this.bgImageURL = "";
 
         // Remember the node that was clicked.
         this.target = node;
+
         // See if the user clicked on an image.
         if ( this.target.nodeType == Node.ELEMENT_NODE ) {
              if ( this.target.localName.toUpperCase() == "IMG" ) {
@@ -331,6 +336,13 @@ nsContextMenu.prototype = {
         // We have meta data on images.
         this.onMetaDataItem = this.onImage;
         
+        // See if the user clicked on MathML
+        const NS_MathML = "http://www.w3.org/1998/Math/MathML";
+        if ((this.target.nodeType == Node.TEXT_NODE &&
+               this.target.parentNode.namespaceURI == NS_MathML) 
+             || (this.target.namespaceURI == NS_MathML))   
+          this.onMathML = true;
+
         // See if the user clicked in a frame.
         if ( this.target.ownerDocument != window._content.document ) {
             this.inFrame = true;
@@ -467,6 +479,31 @@ nsContextMenu.prototype = {
     // Open clicked-in frame in the same window
     showOnlyThisFrame : function () {
         window._content.location.href = this.target.ownerDocument.location.href;
+    },
+    // View Partial Source
+    viewPartialSource : function ( context ) {
+        var focusedWindow = document.commandDispatcher.focusedWindow;
+        if (focusedWindow == window)
+          focusedWindow = _content;
+        var docCharset = null;
+        if (focusedWindow)
+          docCharset = "charset=" + focusedWindow.document.characterSet;
+
+        // "View Selection Source" and others such as "View MathML Source"
+        // are mutually exclusive, with the precedence given to the selection
+        // when there is one
+        var reference = null;
+        if (context == "selection")
+          reference = focusedWindow.getSelection();
+        else if (context == "mathml")
+          reference = this.target;
+        else
+          throw "not reached";
+
+        var docUrl = null; // unused (and play nice for fragments generated via XSLT too)
+        window.openDialog("chrome://navigator/content/viewPartialSource.xul",
+                          "_blank", "scrollbars,resizable,chrome,dialog=no",
+                          docUrl, docCharset, reference, context);
     },
     // Open new "view source" window with the frame's URL.
     viewFrameSource : function () {

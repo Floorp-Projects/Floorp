@@ -187,6 +187,14 @@
         </menupopup>
       </menu>
       <menuseparator id="context-sep-properties"/>
+      <menuitem id="context-viewpartialsource-selection"
+                label="&viewPartialSourceForSelectionCmd.label;"
+                accesskey="&viewPartialSourceCmd.accesskey;"
+                oncommand="gContextMenu.viewPartialSource('selection');"/>
+      <menuitem id="context-viewpartialsource-mathml"
+                label="&viewPartialSourceForMathMLCmd.label;"
+                accesskey="&viewPartialSourceCmd.accesskey;"
+                oncommand="gContextMenu.viewPartialSource('mathml');"/>
       <menuitem id="context-viewsource"
                 label="&viewPageSourceCmd.label;"
                 accesskey="&viewPageSourceCmd.accesskey;"

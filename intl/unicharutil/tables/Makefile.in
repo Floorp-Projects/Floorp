@@ -36,6 +36,10 @@ _PROP_TABLES = \
 	transliterate.properties \
 	$(NULL)
 
+ifdef MOZ_MATHML
+_PROP_TABLES += mathml20.properties
+endif
+
 libs:: $(_PROP_TABLES)
 	$(INSTALL) $^ $(DIST)/bin/res/entityTables
 
