@@ -32,6 +32,11 @@
 
 #include "png.h"
 
+#include "nsIStreamObserver.h"
+
+
+// XXX we need to be sure to fire onStopDecode messages to mObserver in error cases.
+
 
 NS_IMPL_ISUPPORTS2(nsPNGDecoder, nsIImageDecoder, nsIOutputStream)
 
@@ -56,15 +61,9 @@ nsPNGDecoder::~nsPNGDecoder()
 NS_IMETHODIMP nsPNGDecoder::Init(nsIImageRequest *aRequest)
 {
   mRequest = aRequest;
+  mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
 
-  nsCOMPtr<nsIImageContainer> container;
-  aRequest->GetImage(getter_AddRefs(container));
-
-  mImage = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-  if (!mImage)
-    return NS_ERROR_FAILURE;
-
-  container->AppendFrame(mImage);
+  aRequest->GetImage(getter_AddRefs(mImage));
 
   /* do png init stuff */
 
@@ -156,6 +155,9 @@ NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
   if (setjmp(mPNG->jmpbuf)) {
     png_destroy_read_struct(&mPNG, &mInfo, NULL);
     // is this NS_ERROR_FAILURE enough?
+
+    mRequest->Cancel(NS_BINDING_ABORTED); // XXX is this the correct error ?
+
     return NS_ERROR_FAILURE;
   }
 
@@ -204,132 +206,146 @@ void
 nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 {
 /*  int number_passes;   NOT USED  */
-    png_uint_32 width, height;
-    int bit_depth, color_type, interlace_type, compression_type, filter_type;
-    int channels;
-    double LUT_exponent, CRT_exponent = 2.2, display_exponent, aGamma;
+  png_uint_32 width, height;
+  int bit_depth, color_type, interlace_type, compression_type, filter_type;
+  int channels;
+  double LUT_exponent, CRT_exponent = 2.2, display_exponent, aGamma;
 
-    png_bytep trans=NULL;
-    int num_trans =0;
+  png_bytep trans=NULL;
+  int num_trans =0;
 
-    /* always decode to 24-bit RGB or 32-bit RGBA  */
-    png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-                 &interlace_type, &compression_type, &filter_type);
+  /* always decode to 24-bit RGB or 32-bit RGBA  */
+  png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+               &interlace_type, &compression_type, &filter_type);
 
-    if (color_type == PNG_COLOR_TYPE_PALETTE)
-      png_set_expand(png_ptr);
+  if (color_type == PNG_COLOR_TYPE_PALETTE)
+    png_set_expand(png_ptr);
 
-    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-      png_set_expand(png_ptr);
+  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+    png_set_expand(png_ptr);
 
-    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-      png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, NULL);
-      png_set_expand(png_ptr);
-    }
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+    png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, NULL);
+    png_set_expand(png_ptr);
+  }
 
-    if (bit_depth == 16)
-      png_set_strip_16(png_ptr);
+  if (bit_depth == 16)
+    png_set_strip_16(png_ptr);
 
-    if (color_type == PNG_COLOR_TYPE_GRAY ||
-        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-        png_set_gray_to_rgb(png_ptr);
+  if (color_type == PNG_COLOR_TYPE_GRAY ||
+      color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+      png_set_gray_to_rgb(png_ptr);
 
 
 #ifdef XP_PC
-    // windows likes BGR
-    png_set_bgr(png_ptr);
+  // windows likes BGR
+  png_set_bgr(png_ptr);
 #endif
 
-    /* set up gamma correction for Mac, Unix and (Win32 and everything else)
-     * using educated guesses for display-system exponents; do preferences
-     * later */
+  /* set up gamma correction for Mac, Unix and (Win32 and everything else)
+   * using educated guesses for display-system exponents; do preferences
+   * later */
 
 #if defined(XP_MAC)
-    LUT_exponent = 1.8 / 2.61;
+  LUT_exponent = 1.8 / 2.61;
 #elif defined(XP_UNIX)
 # if defined(__sgi)
-    LUT_exponent = 1.0 / 1.7;   /* typical default for SGI console */
+  LUT_exponent = 1.0 / 1.7;   /* typical default for SGI console */
 # elif defined(NeXT)
-    LUT_exponent = 1.0 / 2.2;   /* typical default for NeXT cube */
+  LUT_exponent = 1.0 / 2.2;   /* typical default for NeXT cube */
 # else
-    LUT_exponent = 1.0;         /* default for most other Unix workstations */
+  LUT_exponent = 1.0;         /* default for most other Unix workstations */
 # endif
 #else
-    LUT_exponent = 1.0;         /* virtually all PCs and most other systems */
+  LUT_exponent = 1.0;         /* virtually all PCs and most other systems */
 #endif
 
-    /* (alternatively, could check for SCREEN_GAMMA environment variable) */
-    display_exponent = LUT_exponent * CRT_exponent;
+  /* (alternatively, could check for SCREEN_GAMMA environment variable) */
+  display_exponent = LUT_exponent * CRT_exponent;
 
-    if (png_get_gAMA(png_ptr, info_ptr, &aGamma))
-        png_set_gamma(png_ptr, display_exponent, aGamma);
-    else
-        png_set_gamma(png_ptr, display_exponent, 0.45455);
+  if (png_get_gAMA(png_ptr, info_ptr, &aGamma))
+      png_set_gamma(png_ptr, display_exponent, aGamma);
+  else
+      png_set_gamma(png_ptr, display_exponent, 0.45455);
 
-    /* let libpng expand interlaced images */
-    if (interlace_type == PNG_INTERLACE_ADAM7) {
-        /* number_passes = */
-        png_set_interlace_handling(png_ptr);
-    }
+  /* let libpng expand interlaced images */
+  if (interlace_type == PNG_INTERLACE_ADAM7) {
+      /* number_passes = */
+      png_set_interlace_handling(png_ptr);
+  }
 
-    /* now all of those things we set above are used to update various struct
-     * members and whatnot, after which we can get channels, rowbytes, etc. */
-    png_read_update_info(png_ptr, info_ptr);
-    channels = png_get_channels(png_ptr, info_ptr);
-    PR_ASSERT(channels == 3 || channels == 4);
+  /* now all of those things we set above are used to update various struct
+   * members and whatnot, after which we can get channels, rowbytes, etc. */
+  png_read_update_info(png_ptr, info_ptr);
+  channels = png_get_channels(png_ptr, info_ptr);
+  PR_ASSERT(channels == 3 || channels == 4);
 
-    /* set the ic values */
+  /*---------------------------------------------------------------*/
+  /* copy PNG info into imagelib structs (formerly png_set_dims()) */
+  /*---------------------------------------------------------------*/
 
-    nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
+  PRInt32 alpha_bits = 1;
 
-    /*---------------------------------------------------------------*/
-    /* copy PNG info into imagelib structs (formerly png_set_dims()) */
-    /*---------------------------------------------------------------*/
+  if (channels > 3) {
 
-    PRInt32 alpha_bits = 1;
-
-    if (channels > 3) {
-
-      if (color_type || PNG_COLOR_MASK_ALPHA) {
-        /* check if alpha is coming from a tRNS chunk and is binary */
-        if (num_trans) {
-          alpha_bits = 1;
-
-            /* if it's not a indexed color image, tRNS means binary */
-          if (color_type == PNG_COLOR_TYPE_PALETTE) {
-            for (int i=0; i<num_trans; i++) {
-              if ((trans[i] != 0) && (trans[i] != 255)) {
-                alpha_bits = 8;
-                break;
-              }
-            }
-          } else {
-            alpha_bits = 8/*png_ptr->pixel_depth*/;   /* 8 */
-          }
-        }
-      } else {
+    if (color_type || PNG_COLOR_MASK_ALPHA) {
+      /* check if alpha is coming from a tRNS chunk and is binary */
+      if (num_trans) {
         alpha_bits = 1;
+
+          /* if it's not a indexed color image, tRNS means binary */
+        if (color_type == PNG_COLOR_TYPE_PALETTE) {
+          for (int i=0; i<num_trans; i++) {
+            if ((trans[i] != 0) && (trans[i] != 255)) {
+              alpha_bits = 8;
+              break;
+            }
+          }
+        } else {
+          alpha_bits = 8/*png_ptr->pixel_depth*/;   /* 8 */
+        }
       }
+    } else {
+      alpha_bits = 1;
     }
-    
+  }
 
-    // since the png is only 1 frame, initalize the container to the width and height of the frame
-    nsCOMPtr<nsIImageContainer> container;
-    decoder->mRequest->GetImage(getter_AddRefs(container));
-    container->Init(width, height);
+  nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
-    // then initalize the frame (which was appended above in nsPNGDecoder::Init())
-    if (channels == 3) {
-      decoder->mImage->Init(0, 0, width, height, nsIGFXFormat::RGB);
-    } else if (channels > 3) {
-      if (alpha_bits == 8) {
-        decoder->mImage->Init(0, 0, width, height, nsIGFXFormat::RGBA);
-      } else if (alpha_bits == 1) {
-        decoder->mImage->Init(0, 0, width, height, nsIGFXFormat::RGB_A1);
-      }
+  if (decoder->mObserver)
+    decoder->mObserver->OnStartDecode(nsnull);
+
+  // since the png is only 1 frame, initalize the container to the width and height of the frame
+  decoder->mImage->Init(width, height);
+
+  if (decoder->mObserver)
+    decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
+
+  decoder->mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
+#if 0
+  // XXX should we longjmp to png_ptr->jumpbuf here if we failed?
+  if (!decoder->mFrame)
+    return NS_ERROR_FAILURE;
+#endif
+
+  decoder->mImage->AppendFrame(decoder->mFrame);
+
+  if (decoder->mObserver)
+    decoder->mObserver->OnStartFrame(nsnull, decoder->mFrame);
+
+
+  // then initalize the frame (which was appended above in nsPNGDecoder::Init())
+  if (channels == 3) {
+    decoder->mFrame->Init(0, 0, width, height, nsIGFXFormat::RGB);
+  } else if (channels > 3) {
+    if (alpha_bits == 8) {
+      decoder->mFrame->Init(0, 0, width, height, nsIGFXFormat::RGBA);
+    } else if (alpha_bits == 1) {
+      decoder->mFrame->Init(0, 0, width, height, nsIGFXFormat::RGB_A1);
     }
+  }
 
-    return;
+  return;
 }
 
 
@@ -370,11 +386,11 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
   PRUint32 bpr;
-  decoder->mImage->GetBytesPerRow(&bpr);
+  decoder->mFrame->GetBytesPerRow(&bpr);
 
   PRUint32 length;
   PRUint8 *bits;
-  decoder->mImage->GetBits(&bits, &length);
+  decoder->mFrame->GetBits(&bits, &length);
 
   png_bytep line;
   if (bits) {
@@ -385,7 +401,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     line = new_row;
 
   if (new_row) {
-    decoder->mImage->SetBits((PRUint8*)line, bpr, row_num*bpr);
+    decoder->mFrame->SetBits((PRUint8*)line, bpr, row_num*bpr);
   }
 }
 
@@ -408,8 +424,11 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
 
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
-  gfx_format format;
-  decoder->mImage->GetFormat(&format);
+  if (decoder->mObserver) {
+    decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);
+    decoder->mObserver->OnStopContainer(nsnull, decoder->mImage);
+    decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
+  }
 
 }
 

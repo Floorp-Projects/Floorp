@@ -46,6 +46,8 @@ nsImageLoader::~nsImageLoader()
   /* destructor code */
 }
 
+//#define IMAGE_THREADPOOL 1
+
 /* nsIImageRequest loadImage (in nsIURI uri, in gfx_dimension width, in gfx_dimension height); */
 NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageRequest **_retval)
 {
@@ -59,11 +61,6 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageRequest **_retval)
                      PR_GLOBAL_THREAD);
   }
 #endif
-
-/* do we need a loadgroup of channels here?  what does that buy us?
-  if (!mLoadGroup)
-    NS_NewLoadGroup
-*/
 
   nsCOMPtr<nsIIOService> ioserv(do_GetService("@mozilla.org/network/io-service;1"));
   if (!ioserv) return NS_ERROR_FAILURE;

@@ -1,0 +1,77 @@
+/** -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is mozilla.org code.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Stuart Parmenter <pavlov@netscape.com>
+ */
+
+#include "nsISupports.idl"
+#include "gfxtypes.idl"
+
+interface nsIImageRequest;
+interface nsIImageContainer;
+interface nsIImageFrame;
+
+/**
+ * nsIImageDecoderObserver interface
+ *
+ * @author Stuart Parmenter <pavlov@netscape.com>
+ * @version 0.1
+ * @see imagelib2
+ */
+[scriptable, uuid(350163d2-1dd2-11b2-9e69-89959ecec1f3)]
+interface nsIImageDecoderObserver : nsISupports
+{
+  /**
+   * called as soon as the image begins getting decoded
+   */
+  void onStartDecode(in nsIImageRequest request);
+
+  /**
+   * called once the image has been inited and therefore has a width and height
+   */
+  void onStartContainer(in nsIImageRequest request, in nsIImageContainer image);
+
+  /**
+   * called when each frame is created
+   */
+  void onStartFrame(in nsIImageRequest request, in nsIImageFrame frame);
+
+  /**
+   * called when some part of the frame has new data in it
+   */
+  [noscript] void onDataAvailable(in nsIImageRequest request, in nsIImageFrame frame, [const] in nsRect2 rect);
+
+  /**
+   * called when a frame is finished decoding
+   */
+  void onStopFrame(in nsIImageRequest request, in nsIImageFrame frame);
+
+  /**
+   * probably not needed.  called right before onStopDecode
+   */
+  void onStopContainer(in nsIImageRequest request, in nsIImageContainer image);
+
+  /**
+   * called when the decoder is dying off
+   */
+  void onStopDecode(in nsIImageRequest request, in nsresult status,
+                    in wstring statusArg);
+
+};

@@ -27,7 +27,6 @@
 
 interface nsIChannel;
 interface nsIImageContainer;
-interface nsIImageLoader;
 
 [scriptable, uuid(ccf705f6-1dd1-11b2-82ef-e18eccf7f7ec)]
 interface nsIImageRequest : nsIRequest

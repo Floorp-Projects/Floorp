@@ -81,7 +81,6 @@ NS_IMETHODIMP nsImageRequest::GetImage(nsIImageContainer * *aImage)
 
 
 
-
 /** nsIRequest methods **/
 
 /* readonly attribute wstring name; */
@@ -118,6 +117,76 @@ NS_IMETHODIMP nsImageRequest::Suspend()
 NS_IMETHODIMP nsImageRequest::Resume()
 {
   return mChannel->Resume();
+}
+
+
+
+
+
+
+/** nsIImageDecoderObserver methods **/
+
+/* void onStartDecode (in nsIImageRequest request); */
+NS_IMETHODIMP nsImageRequest::OnStartDecode(nsIImageRequest *request)
+{
+  if (mObserver)
+    mObserver->OnStartDecode(this);
+
+  return NS_OK;
+}
+
+/* void onStartContainer (in nsIImageRequest request, in nsIImageContainer image); */
+NS_IMETHODIMP nsImageRequest::OnStartContainer(nsIImageRequest *request, nsIImageContainer *image)
+{
+  if (mObserver)
+    mObserver->OnStartContainer(this, image);
+
+  return NS_OK;
+}
+
+/* void onStartFrame (in nsIImageRequest request, in nsIImageFrame frame); */
+NS_IMETHODIMP nsImageRequest::OnStartFrame(nsIImageRequest *request, nsIImageFrame *frame)
+{
+  if (mObserver)
+    mObserver->OnStartFrame(this, frame);
+
+  return NS_OK;
+}
+
+/* [noscript] void onDataAvailable (in nsIImageRequest request, in nsIImageFrame frame, [const] in nsRect2 rect); */
+NS_IMETHODIMP nsImageRequest::OnDataAvailable(nsIImageRequest *request, nsIImageFrame *frame, const nsRect2 * rect)
+{
+  if (mObserver)
+    mObserver->OnDataAvailable(this, frame, rect);
+
+  return NS_OK;
+}
+
+/* void onStopFrame (in nsIImageRequest request, in nsIImageFrame frame); */
+NS_IMETHODIMP nsImageRequest::OnStopFrame(nsIImageRequest *request, nsIImageFrame *frame)
+{
+  if (mObserver)
+    mObserver->OnStopFrame(this, frame);
+
+  return NS_OK;
+}
+
+/* void onStopContainer (in nsIImageRequest request, in nsIImageContainer image); */
+NS_IMETHODIMP nsImageRequest::OnStopContainer(nsIImageRequest *request, nsIImageContainer *image)
+{
+  if (mObserver)
+    mObserver->OnStopContainer(this, image);
+
+  return NS_OK;
+}
+
+/* void onStopDecode (in nsIImageRequest request, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP nsImageRequest::OnStopDecode(nsIImageRequest *request, nsresult status, const PRUnichar *statusArg)
+{
+  if (mObserver)
+    mObserver->OnStopDecode(this, status, statusArg);
+
+  return NS_OK;
 }
 
 
@@ -189,7 +258,6 @@ NS_IMETHODIMP nsImageRequest::Run()
   if (!mChannel) return NS_ERROR_NOT_INITIALIZED;
 
   // create an event queue for this thread.
-#if 0
   nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -200,12 +268,12 @@ NS_IMETHODIMP nsImageRequest::Run()
   rv = service->GetThreadEventQueue(NS_CURRENT_THREAD, 
                                 getter_AddRefs(currentThreadQ));
   if (NS_FAILED(rv)) return rv;
-#endif
+
   // initiate the AsyncRead from this thread so events are
   // sent here for processing.
   rv = mChannel->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), nsnull);
   if (NS_FAILED(rv)) return rv;
-#if 0
+
   // process events until we're finished.
   PLEvent *event;
   while (mProcessing) {
@@ -218,7 +286,7 @@ NS_IMETHODIMP nsImageRequest::Run()
 
   rv = service->DestroyThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
-#endif
+
   // XXX make sure cleanup happens on the calling thread.
   return NS_OK;
 }

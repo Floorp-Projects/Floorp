@@ -26,11 +26,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= pref
+MODULE		= imglib2
 
 XPIDLSRCS	= nsIImageDecoder.idl         \
-		  nsIImageLoader.idl          \
-		  nsIImageRequest.idl
+			nsIImageDecoderObserver.idl	\
+			nsIImageLoader.idl          \
+			nsIImageRequest.idl
 
 include $(topsrcdir)/config/rules.mk
 
