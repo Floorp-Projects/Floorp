@@ -17,7 +17,7 @@
 
 DEPTH=../../../..
 
-LIBRARY_NAME = raptorhtmlline_s
+LIBRARY_NAME = nglcsslay_s
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
