@@ -21,6 +21,7 @@
 
 #include "nsVoidArray.h"
 #include "nsPlaceholderFrame.h"
+#include "nsILineIterator.h"
 
 // bits in nsLineBox.mFlags
 #define LINE_IS_DIRTY                 0x1
@@ -195,12 +196,32 @@ public:
 
 //----------------------------------------------------------------------
 
-struct nsLineIterator {
+class nsLineIterator : public nsILineIterator {
+public:
   nsLineIterator();
-  ~nsLineIterator();
+  virtual ~nsLineIterator();
 
-  nsresult Init(nsLineBox* aLines);
+  NS_DECL_ISUPPORTS
 
+  NS_IMETHOD GetNumLines(PRInt32* aResult);
+  NS_IMETHOD GetDirection(PRBool* aIsRightToLeft);
+  NS_IMETHOD GetLine(PRInt32 aLineNumber,
+                     nsIFrame** aFirstFrameOnLine,
+                     PRInt32* aNumFramesOnLine,
+                     nsRect& aLineBounds);
+  NS_IMETHOD FindLineContaining(nsIFrame* aFrame,
+                                PRInt32* aLineNumberResult);
+  NS_IMETHOD FindLineAt(nscoord aY,
+                        PRInt32* aLineNumberResult);
+  NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
+                         nscoord aX,
+                         nsIFrame** aFrameFound,
+                         PRBool* aXIsBeforeFirstFrame,
+                         PRBool* aXIsAfterLastFrame);
+
+  nsresult Init(nsLineBox* aLines, PRBool aRightToLeft);
+
+protected:
   PRInt32 NumLines() const {
     return mNumLines;
   }
@@ -233,6 +254,7 @@ struct nsLineIterator {
   nsLineBox** mLines;
   PRInt32 mIndex;
   PRInt32 mNumLines;
+  PRBool mRightToLeft;
 };
 
 #endif /* nsLineBox_h___ */
