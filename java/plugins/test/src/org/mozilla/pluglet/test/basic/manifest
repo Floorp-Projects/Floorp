@@ -1,0 +1,2 @@
+MIMEDescription: *:*:Pluglet Test
+Pluglet-Class: org.mozilla.pluglet.test.basic.TestLoaderPluglet

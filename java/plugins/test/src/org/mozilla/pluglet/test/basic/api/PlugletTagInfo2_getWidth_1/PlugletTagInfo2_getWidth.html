@@ -1,0 +1,31 @@
+<html>
+<head>
+<script language="JavaScript">
+<!-- 
+var iID;
+var width = 111;//the value of width attribute
+function init(timeout)
+{
+   iId = window.setInterval('verifyWidth()',timeout);
+}
+
+function verifyWidth()
+{
+   java.lang.System.err.println("Verify ..");
+   if (Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getWidth_0.actionPerformed) {
+     Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getWidth_0.verifyWidth(width);
+     window.clearInterval(iId);
+   } 
+}
+//-->
+</script>
+</head>
+<body onLoad="init(1000)">
+<center><H1>Depth 0</H1></center>
+<blockquote>
+This window contains a pluglet PlugletTagInfo2_getWidth test.
+EMBED tag has a width attribute, equals to 111.
+</blockquote>
+<EMBED type="application/x-api-pluglet" name="test" width=111 height=100>
+</body>
+</hmtl>

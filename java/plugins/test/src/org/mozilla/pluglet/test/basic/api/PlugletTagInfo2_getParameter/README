@@ -1,0 +1,18 @@
+PlugletTagInfo2_getParameter Information.
+
+Test name: PlugletTagInfo2_getParameter
+
+Synopsis: getParameter  method of class PlugletTagInfo2
+
+Pre-Conditions: Build mozilla, setup enviroment as for running mozilla
+and see api tests README for setup enviroment for run tests. 
+
+Description: This test call the getParameter method of the PlugletTagInfo2 object 
+at runstages, specified at TestProperties file. This test has 1 String parameter.
+For parameter values please see TestParameters and ParamCombinations files in this 
+test directory.
+
+Results: See the PlugletTest.log and PlugletTest.res in
+the $MOZILLA_FIVE_HOME/bin directory and additional logs in the
+PLUGLET_TEST_DIR/log directory  
+

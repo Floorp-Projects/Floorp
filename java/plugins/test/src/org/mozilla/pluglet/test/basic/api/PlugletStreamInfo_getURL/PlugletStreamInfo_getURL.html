@@ -1,0 +1,31 @@
+<html>
+<head>
+<script language="JavaScript">
+<!-- 
+var iID;
+var name = "TestImage.gif"; //Name of file, used as src.
+var src = "";
+function init(timeout)
+{
+   var loc = window.location.href;
+   src = loc.replace(/PlugletStreamInfo_getURL.html/,name); //src contains full URL, used in src
+   iId = window.setInterval('verifyURL()',timeout);
+}
+
+function verifyURL()
+{
+   java.lang.System.err.println("Verify ..");
+   if (Packages.org.mozilla.pluglet.test.basic.api.PlugletStreamInfo_getURL_0.actionPerformed) {
+     Packages.org.mozilla.pluglet.test.basic.api.PlugletStreamInfo_getURL_0.verifyUrl(src);
+     window.clearInterval(iId);
+   } 
+}
+//-->
+</script>
+</head>
+<body onLoad="init(1000)">
+<center><H1>Depth 0</H1></center>
+<blockquote>This window contains a pluglet with PlugletStreamInfo_getURL test.</blockquote>
+<EMBED type="application/x-api-pluglet" name="test" src=TestImage.gif width=100 height=100>
+</body>
+</hmtl>

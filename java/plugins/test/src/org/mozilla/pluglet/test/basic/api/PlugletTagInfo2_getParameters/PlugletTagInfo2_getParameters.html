@@ -1,0 +1,47 @@
+<html>
+<head>
+<script language="JavaScript">
+<!-- 
+var iID;
+var allParameters="";
+function init(timeout)
+{
+   for (j=0;j < window.document.body.childNodes.length;j++) {
+     if(window.document.body.childNodes[j].nodeName == "OBJECT") {
+       for(i=0;i<window.document.body.childNodes[j].childNodes.length;i++) {
+         if(window.document.body.childNodes[j].childNodes[i].nodeName == "PARAM") {
+            allParameters+=window.document.body.childNodes[j].childNodes[i].name + " = " + window.document.body.childNodes[j].childNodes[i].value + "\n";
+	 }
+       }
+       break;
+     }
+   }
+   java.lang.System.err.println(allParameters);
+ //String allParameters now contains all Parameters of OBJECT tag, used in this HTML file 
+   iId = window.setInterval('verifyParams()',timeout);
+}
+
+function verifyParams()
+{
+   java.lang.System.err.println("Verify ..");
+   if (Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getParameters_0.actionPerformed) {
+     Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getParameters_0.verifyParameters(allParameters);
+     window.clearInterval(iId);
+   } 
+}
+
+//-->
+</script>
+</head>
+<body onLoad="init(1000)">
+<center><H1>Depth 0</H1></center>
+<blockquote>This window contains a pluglet PlugletTagInfo2_getParameters test.</blockquote>
+<OBJECT type="application/x-api-pluglet" name="test" width=100 height=100>
+<PARAM name=Description value="Browser side Pluglet API tests">
+<PARAM name=TestID value=basic/api/PlugletTagInfo2_getParameters>
+<PARAM name=HTML_CREATION_DATE value="Feb-01-2000">
+</OBJECT>
+</body>
+</hmtl>
+
+

@@ -1,0 +1,39 @@
+<html>
+<head>
+<script language="JavaScript">
+<!-- 
+var iID;
+var allAttributes="";
+function init(timeout)
+{
+   for (j=0;j < window.document.body.childNodes.length;j++) {
+     if(window.document.body.childNodes[j].nodeName == "EMBED") {
+       for(i=0;i<window.document.body.childNodes[j].attributes.length;i++) {
+         allAttributes+=window.document.body.childNodes[j].attributes[i].name + " = " + window.document.body.childNodes[j].attributes[i].value + "\n";
+       }
+       break;
+     }
+   }
+   java.lang.System.err.println(allAttributes);
+ //String allAttributes now contains all attributes of EMBED tag, used in this HTML file 
+   iId = window.setInterval('verifyAttrs()',timeout);
+}
+
+function verifyAttrs()
+{
+   java.lang.System.err.println("Verify ..");
+   if (Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getAttributes_0.actionPerformed) {
+     Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getAttributes_0.verifyAttributes(allAttributes);
+     window.clearInterval(iId);
+   } 
+}
+
+//-->
+</script>
+</head>
+<body onLoad="init(1000)">
+<center><H1>Depth 0</H1></center>
+<blockquote>This window contains a pluglet PlugletTagInfo2_getAttributes test.</blockquote>
+<EMBED type="application/x-api-pluglet" name="test" width=100 height=100>
+</body>
+</hmtl>
