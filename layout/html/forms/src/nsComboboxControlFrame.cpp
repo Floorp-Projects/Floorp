@@ -210,7 +210,7 @@ nsComboboxControlFrame::MakeSureSomethingIsSelected(nsIPresContext* aPresContext
         rv = fcFrame->SetProperty(aPresContext, nsHTMLAtoms::selectedindex, "0");
         mSelectedIndex = 0;
       }
-      UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // Needed to reflow when removing last option
+      // XXX UpdateSelection(PR_FALSE, PR_TRUE, mSelectedIndex); // Needed to reflow when removing last option
     }
     
     // Don't NS_RELEASE fcFrame here as it isn't addRef'd in the QI (???)
@@ -562,7 +562,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
 
   //if (currentRect != dropdownRect) {
     dropdownFrame->SetRect(&aPresContext, dropdownRect);
-#ifdef DEBUG_rodsXXX
+#ifdef DEBUG_rodsXXXXXX
     printf("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
 #endif
   //}
@@ -649,7 +649,7 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
   return rv;
 }
 
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXX
 static int myCounter = 0;
 #endif
 
@@ -659,7 +659,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
 {
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXX
   printf("nsComboboxControlFrame::Reflow %d   Reason: ", myCounter++);
   switch (aReflowState.reason) {
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
@@ -822,7 +822,9 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
   PositionDropdown(aPresContext, aDesiredSize.height, absoluteTwips, absolutePixels);
 
   aStatus = NS_FRAME_COMPLETE;
+#if 0
   COMPARE_QUIRK_SIZE("nsComboboxControlFrame", 56, 22) 
+#endif
   return rv;
 
 }
@@ -1082,6 +1084,19 @@ nsComboboxControlFrame::SelectionChanged()
 //----------------------------------------------------------------------
 // nsISelectControlFrame
 //----------------------------------------------------------------------
+NS_IMETHODIMP
+nsComboboxControlFrame::DoneAddingContent()
+{
+  nsISelectControlFrame* listFrame = nsnull;
+  nsIFrame* dropdownFrame = GetDropdownFrame();
+  nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
+                                              (void**)&listFrame);
+  if (NS_SUCCEEDED(rv) && listFrame) {
+    rv = listFrame->DoneAddingContent();
+    NS_RELEASE(listFrame);
+  }
+  return rv;
+}
 
 NS_IMETHODIMP
 nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)

@@ -149,6 +149,7 @@ public:
   NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
+  NS_IMETHOD DoneAddingContent();
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
