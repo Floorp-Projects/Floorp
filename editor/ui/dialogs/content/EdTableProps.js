@@ -311,12 +311,10 @@ function InitDialog()
   gTableCaptionElement = gTableElement.caption;
   if (gTableCaptionElement)
   {
-    // Note: Other possible values are "left" and "right",
-    //  but "align" is deprecated, so should we even support "botton"?
-    if (GetHTMLOrCSSStyleValue(gTableCaptionElement, "align", "caption-side") == "bottom")
-      gDialog.TableCaptionList.value = "bottom";
-    else
-      gDialog.TableCaptionList.value = "top";
+    var align = GetHTMLOrCSSStyleValue(gTableCaptionElement, "align", "caption-side");
+    if (align != "bottom" && align != "left" && align != "right")
+      align = "top";
+    gDialog.TableCaptionList.value = align;
   }
 
   gTableColor = GetHTMLOrCSSStyleValue(globalTableElement, bgcolor, cssBackgroundColorStr);

@@ -46,6 +46,8 @@
 <!ENTITY tableCaption.accessKey           "N">
 <!ENTITY tableCaptionAbove.label          "Above Table">
 <!ENTITY tableCaptionBelow.label          "Below Table">
+<!ENTITY tableCaptionLeft.label           "Left of Table">
+<!ENTITY tableCaptionRight.label          "Right of table">
 <!ENTITY tableCaptionNone.label           "None">
 <!ENTITY tableInheritColor.label           "(Let page color show through)">
 
