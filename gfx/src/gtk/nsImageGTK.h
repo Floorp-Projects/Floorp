@@ -103,6 +103,7 @@ private:
   PRInt16    mAlphaWidth;        // alpha layer width
   PRInt16    mAlphaHeight;       // alpha layer height
   nsPoint    mLocation;          // alpha mask location
+  GdkPixmap  *mImagePixmap;
 };
 
 #endif
