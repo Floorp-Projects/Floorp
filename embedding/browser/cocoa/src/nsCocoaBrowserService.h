@@ -60,7 +60,7 @@ public:
   static void TermEmbedding();
 
   static void SetAlertController(nsAlertController* aController);
-  static nsAlertController* GetAlertController();
+  nsAlertController* GetAlertController();
 
 private:
   static nsCocoaBrowserService* sSingleton;

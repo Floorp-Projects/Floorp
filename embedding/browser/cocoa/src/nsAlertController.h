@@ -12,6 +12,19 @@
     IBOutlet id confirmCheckPanelText;
     IBOutlet id confirmPanel;
     IBOutlet id confirmPanelText;
+    IBOutlet id promptPanel;
+    IBOutlet id promptPanelCheck;
+    IBOutlet id promptPanelText;
+    IBOutlet id promptPanelInput;
+    IBOutlet id passwordPanel;
+    IBOutlet id passwordPanelCheck;
+    IBOutlet id passwordPanelText;
+    IBOutlet id passwordPanelInput;    
+    IBOutlet id usernamePanel;
+    IBOutlet id usernamePanelCheck;
+    IBOutlet id usernamePanelText;
+    IBOutlet id usernamePanelPassword;    
+    IBOutlet id usernamePanelUserName;    
     IBOutlet id owner;
 }
 - (IBAction)hitButton1:(id)sender;
@@ -23,4 +36,7 @@
 - (void)alertCheck:(NSWindow*)parent title:(NSString*)title text:(NSString*)text checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
 - (BOOL)confirm:(NSWindow*)parent title:(NSString*)title text:(NSString*)text;
 - (BOOL)confirmCheck:(NSWindow*)parent title:(NSString*)title text:(NSString*)text checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
+- (BOOL)prompt:(NSWindow*)parent title:(NSString*)title text:(NSString*)text promptText:(NSMutableString*)promptText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
+- (BOOL)promptUserNameAndPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text userNameText:(NSMutableString*)userNameText passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
+- (BOOL)promptPassword:(NSWindow*)parent title:(NSString*)title text:(NSString*)text passwordText:(NSMutableString*)passwordText checkMsg:(NSString*)checkMsg checkValue:(BOOL*)checkValue;
 @end

@@ -18,6 +18,19 @@
                 confirmPanel = id; 
                 confirmPanelText = id; 
                 owner = id; 
+                passwordCheck = id; 
+                passwordInput = id; 
+                passwordPanel = id; 
+                passwordText = id; 
+                promptPanel = id; 
+                promptPanelCheck = id; 
+                promptPanelInput = id; 
+                promptPanelText = id; 
+                usernameCheck = id; 
+                usernamePanel = id; 
+                usernamePasswordInput = id; 
+                usernameText = id; 
+                usernameUserNameInput = id; 
             }; 
             SUPERCLASS = NSObject; 
         }
