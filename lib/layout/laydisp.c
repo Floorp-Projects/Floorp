@@ -318,6 +318,18 @@ lo_DisplayEmbed(MWContext *context, LO_EmbedStruct *embed)
         }
 }
 
+#ifdef SHACK
+void
+lo_DisplayBuiltin(MWContext *context, LO_BuiltinStruct *builtin)
+{
+    XP_ASSERT (context->compositor);
+
+	/* need to deal with layers here XXX */
+    FE_DisplayBuiltin(context, FE_VIEW, builtin);
+
+}
+#endif /* SHACK */
+
 #ifdef JAVA
 void
 lo_DisplayJavaApp(MWContext *context, LO_JavaAppStruct *java_app)
@@ -720,6 +732,12 @@ lo_DisplayElement(MWContext *context, LO_Element *tptr,
     case LO_EMBED:
 		lo_DisplayEmbed(context, (LO_EmbedStruct *)tptr);
 		break;
+
+#ifdef SHACK
+    case LO_BUILTIN:
+		lo_DisplayBuiltin(context, (LO_BuiltinStruct *)tptr);
+		break;
+#endif /* SHACK */
 
 #ifdef JAVA
     case LO_JAVA:
