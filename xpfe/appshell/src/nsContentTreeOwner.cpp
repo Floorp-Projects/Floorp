@@ -606,17 +606,21 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   if (docTitle.IsEmpty())
     docTitle.Assign(mTitleDefault);
   
-  if (!mTitlePreface.IsEmpty()) {
-    // Title will be: "Preface: Doc Title - Mozilla"
-    title.Assign(mTitlePreface);
-    title.Append(docTitle);
-  }
-  else {
-    // Title will be: "Doc Title - Mozilla"
-    title = docTitle;
-  }
+  if (!docTitle.IsEmpty()) {
+    if (!mTitlePreface.IsEmpty()) {
+      // Title will be: "Preface: Doc Title - Mozilla"
+      title.Assign(mTitlePreface);
+      title.Append(docTitle);
+    }
+    else {
+      // Title will be: "Doc Title - Mozilla"
+      title = docTitle;
+    }
   
-  title += mTitleSeparator + mWindowTitleModifier;
+    title += mTitleSeparator + mWindowTitleModifier;
+  }
+  else
+    title.Assign(mWindowTitleModifier); // Title will just be plain "Mozilla"
 
   // XXX Don't need to fully qualify this once I remove nsWebShellWindow::SetTitle
   // return mXULWindow->SetTitle(title.get());
