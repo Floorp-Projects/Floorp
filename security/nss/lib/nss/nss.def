@@ -764,6 +764,8 @@ CERT_EncodeTimeChoice;
 NSS_Get_CERT_TimeChoiceTemplate;
 PK11_ExportEncryptedPrivKeyInfo;
 PK11_FindSlotsByAliases;
+SECMOD_GetDeadModuleList;
+SECMOD_GetDBModuleList;
 SEC_DupCrl;
 ;+    local:
 ;+       *;
