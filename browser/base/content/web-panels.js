@@ -48,18 +48,13 @@ var panelProgressListener = {
 var gLoadFired = false;
 function loadWebPanel(aURI) {
     var panelBrowser = document.getElementById('web-panels-browser');
-    panelBrowser.removeAttribute("cachedurl");
-    if (!gLoadFired)
-      load();
-    panelBrowser.webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
+    if (gLoadFired)
+        panelBrowser.webNavigation.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE, null, null, null);
     panelBrowser.setAttribute("cachedurl", aURI);
 }
 
 function load()
 {
-  if (gLoadFired)
-    return;
-
   var panelBrowser = document.getElementById('web-panels-browser');
   panelBrowser.webProgress.addProgressListener(panelProgressListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
   if (panelBrowser.getAttribute("cachedurl"))
