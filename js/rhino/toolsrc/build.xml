@@ -9,11 +9,9 @@ Requires Ant version 1.2
   <target name="properties">
     <property name="nest" value=".."/> 
     <property name="src.debugger" 
-              value="org/mozilla/javascript/tools/debugger"/>
+               value="org/mozilla/javascript/tools/debugger"/>
     <available file="${src.debugger}/AbstractCellEditor.java"
                property="swing-ex-available"/>
-    <available classname="java.lang.reflect.Proxy"
-               property="jdk1.3"/>
   </target>
 
   <target name="get-swing-ex" unless="swing-ex-available">
