@@ -52,6 +52,7 @@
 #include "nsIMsgDraft.h"
 #include "nsMsgCreate.h"    // For drafts...I know, awful file name...
 #include "nsSmtpServer.h"
+#include "nsIContentHandler.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer);
@@ -64,6 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuote);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuoteListener);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMailtoUrl);
 
 ////////////////////////////////////////////////////////////
 //
@@ -79,6 +81,10 @@ static nsModuleComponentInfo components[] =
     NS_MSGCOMPOSESERVICE_CID,
     NS_MSGCOMPOSESERVICE_PROGID,
     nsMsgComposeServiceConstructor },
+  { "mailto content handler",
+     NS_MSGCOMPOSESERVICE_CID,
+     NS_CONTENT_HANDLER_PROGID_PREFIX"x-application-mailto",
+     nsMsgComposeServiceConstructor },
   { "Msg Compose Fields",
     NS_MSGCOMPFIELDS_CID,
     NS_MSGCOMPFIELDS_PROGID,
@@ -111,6 +117,10 @@ static nsModuleComponentInfo components[] =
     NS_SMTPURL_CID,
     NS_SMTPURL_PROGID,
     nsSmtpUrlConstructor },
+  { "MAILTO URL",
+    NS_MAILTOURL_CID,
+    NS_MAILTOURL_PROGID,
+    nsMailtoUrlConstructor },
   { "Msg Quote",
     NS_MSGQUOTE_CID,
     NS_MSGQUOTE_PROGID,
