@@ -46,7 +46,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-debug	  enable debug symbols"
 ac_help="$ac_help
-  --enable-gprof	  enable gprof symbols and debugging"
+  --enable-gprof	  enable gprof symbols"
 ac_help="$ac_help
   --enable-profile        enable profiling (solaris only)"
 ac_help="$ac_help
@@ -5867,11 +5867,11 @@ fi
 if test "${enable_gprof+set}" = set; then
   enableval="$enable_gprof"
   if test "$enableval" = "yes"; then
-     MOZ_DEBUG=1 OPTIMIZE="-pg -g" 
+     GPROF="-pg" 
   elif test "$enableval" = "no"; then
     :
   else
-    MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` 
+    { echo "configure: error: Option, gprof, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
 fi
 
@@ -7526,7 +7526,7 @@ fi
 
 
 CFLAGS=$_SAVE_CFLAGS
-CFLAGS="${OPTIMIZE} ${COMPILER_WARNINGS} ${CFLAGS}"
+CFLAGS="${OPTIMIZE} ${GPROF} ${COMPILER_WARNINGS} ${CFLAGS}"
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
 
@@ -7947,6 +7947,8 @@ mailnews/compose/Makefile
 mailnews/compose/public/Makefile
 mailnews/compose/src/Makefile
 mailnews/compose/tests/Makefile
+mailnews/compose/tests/smtp/Makefile
+mailnews/compose/tests/compose/Makefile
 mailnews/public/Makefile
 "
 
