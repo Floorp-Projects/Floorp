@@ -102,6 +102,8 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'dataSource.strings' or
+            $service eq 'dispatcher.commands' or
+            $service eq 'dispatcher.output.generic' or 
             $class->SUPER::provides($service));
 }
 
@@ -196,4 +198,19 @@ sub getExpandedString {
     my($app, $session, $protocol, $name, $data) = @_;
     my($type, $version, $string) = $self->getString($app, $session, $protocol, $name);
     return $self->expandString($app, $session, $protocol, $name, $type, $string, $data);
+}
+
+# dispatcher.commands
+sub cmdShowTemplate {
+    my $self = shift;
+    my($app) = @_;
+    my $string = $app->input->getArgument('string');
+    $app->output->showTemplate($string);
+}
+
+# dispatcher.output.generic
+sub outputShowTemplate {
+    my $self = shift;
+    my($app, $output, $string) = @_;
+    $output->output($string, {});
 }
