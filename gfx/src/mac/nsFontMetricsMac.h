@@ -39,7 +39,7 @@ class nsFontMetricsMac : public nsIFontMetrics
 {
 public:
   nsFontMetricsMac();
-  ~nsFontMetricsMac();
+  virtual ~nsFontMetricsMac();
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
