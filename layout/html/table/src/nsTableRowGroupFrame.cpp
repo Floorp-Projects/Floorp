@@ -947,7 +947,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
 
         for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++) {
           nsTableCellFrame* cellFrame = aTableFrame->GetCellInfoAt(rowIndex, colIndex);
-          NS_ASSERTION(cellFrame, "no cell frame");
+          if (!cellFrame) {
+            // There is no cell at this column index. Go check the next column index
+            continue;
+          }
 
           // See if the cell frame is really in this row, or whether it's a
           // row span from a previous row
