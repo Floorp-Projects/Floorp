@@ -26,6 +26,7 @@
  *   Tony Tsui <tony@igelaus.com.au>
  *   Tim Copperfield <timecop@network.email.ne.jp>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Brian Stell <bstell@ix.netcom.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -42,6 +43,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define ENABLE_X_FONT_BANNING 1
+
+#include <stdlib.h>
+#include <sys/types.h>
 #include "xp_core.h"
 #include "nscore.h"
 #include "nsQuickSort.h"
@@ -61,13 +66,23 @@
 #include "nsXPIDLString.h"
 #include <stdlib.h>
 #include <errno.h>
-#include <X11/Xatom.h>
+#ifdef ENABLE_X_FONT_BANNING
+#include <regex.h>
+#endif /* ENABLE_X_FONT_BANNING */
 #ifdef USE_XPRINT
-#include <X11/extensions/Print.h>
+#include "xprintutil.h"
 #endif /* USE_XPRINT */
 #include "xlibrgb.h"
+#include <X11/Xatom.h>
 
 /* #define NOISY_FONTS 1 */
+
+#ifdef ENABLE_X_FONT_BANNING
+/* Not all platforms may have REG_OK */
+#ifndef REG_OK
+#define REG_OK (0)
+#endif /* !REG_OK */
+#endif /* ENABLE_X_FONT_BANNING */
 
 #ifdef USE_XPRINT 
 /* enable hack "fix" for bug 88554 ("Xprint module should avoid using GFX
@@ -230,6 +245,10 @@ static PRInt32 gOutlineScaleMinimum =  6;
 static PRInt32 gBitmapScaleMinimum  = 10;
 static double  gBitmapOversize      =  1.1;
 static double  gBitmapUndersize     =  0.9;
+#ifdef ENABLE_X_FONT_BANNING
+static regex_t *gFontRejectRegEx = nsnull,
+               *gFontAcceptRegEx = nsnull;
+#endif /* ENABLE_X_FONT_BANNING */
 
 static int SingleByteConvert(nsFontCharSetXlibInfo* aSelf, XFontStruct* aFont,
                              const PRUnichar* aSrcBuf, PRInt32 aSrcLen,
@@ -695,6 +714,20 @@ void
 nsFontMetricsXlib::FreeGlobals(void)
 {
   gInitialized = 0;
+
+#ifdef ENABLE_X_FONT_BANNING  
+  if (gFontRejectRegEx) {
+    regfree(gFontRejectRegEx);
+    delete gFontRejectRegEx;
+    gFontRejectRegEx = nsnull;
+  }
+  
+  if (gFontAcceptRegEx) {
+    regfree(gFontAcceptRegEx);
+    delete gFontAcceptRegEx;
+    gFontAcceptRegEx = nsnull;
+  }
+#endif /* ENABLE_X_FONT_BANNING */  
   
   if (gAliases) {
     delete gAliases;
@@ -959,6 +992,60 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  
+#ifdef ENABLE_X_FONT_BANNING
+  /* get the font banning pattern */
+  nsXPIDLCString fbpattern;
+  rv = gPref->GetCharPref(
+#ifdef USE_XPRINT
+                          nsFontMetricsXlib::mPrinterMode?
+                          "printer.font.xprint.rejectfontpattern":
+#endif /* USE_XPRINT */
+                          "font.x11.rejectfontpattern",
+                          getter_Copies(fbpattern));
+  if (NS_SUCCEEDED(rv)) {
+    gFontRejectRegEx = new regex_t;
+    if (!gFontRejectRegEx) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    /* Compile the pattern - and return an error if we get an invalid pattern... */
+    if (regcomp(gFontRejectRegEx, fbpattern.get(), REG_EXTENDED|REG_NOSUB) != REG_OK) {
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("Invalid rejectfontpattern '%s'\n", fbpattern.get()));
+      delete gFontRejectRegEx;
+      gFontRejectRegEx = nsnull;
+      
+      FreeGlobals();
+      return NS_ERROR_INVALID_ARG;
+    }    
+  }
+
+  rv = gPref->GetCharPref(
+#ifdef USE_XPRINT
+                          nsFontMetricsXlib::mPrinterMode?
+                          "printer.font.xprint.acceptfontpattern":
+#endif /* USE_XPRINT */
+                          "font.x11.acceptfontpattern",
+                          getter_Copies(fbpattern));
+  if (NS_SUCCEEDED(rv)) {
+    gFontAcceptRegEx = new regex_t;
+    if (!gFontAcceptRegEx) {
+      FreeGlobals();
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    /* Compile the pattern - and return an error if we get an invalid pattern... */
+    if (regcomp(gFontAcceptRegEx, fbpattern.get(), REG_EXTENDED|REG_NOSUB) != REG_OK) {
+      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("Invalid acceptfontpattern '%s'\n", fbpattern.get()));
+      delete gFontAcceptRegEx;
+      gFontAcceptRegEx = nsnull;
+      
+      FreeGlobals();
+      return NS_ERROR_INVALID_ARG;
+    }    
+  }  
+#endif /* ENABLE_X_FONT_BANNING */
 
   gInitialized = 1;
   
@@ -1711,16 +1798,17 @@ CheckSelf(void)
 }
 #endif /* DEBUG */
 
-static void
+static PRBool
 SetUpFontCharSetInfo(nsFontCharSetXlibInfo* aSelf)
 {
+
 #ifdef DEBUG
   static int checkedSelf = 0;
   if (!checkedSelf) {
     CheckSelf();
     checkedSelf = 1;
   }
-#endif /* DEBUG */
+#endif
 
   nsresult res;
   nsCOMPtr<nsIAtom> charset = getter_AddRefs(NS_NewAtom(aSelf->mCharSet));
@@ -1730,38 +1818,55 @@ SetUpFontCharSetInfo(nsFontCharSetXlibInfo* aSelf)
     if (NS_SUCCEEDED(res)) {
       aSelf->mConverter = converter;
       res = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
-          nsnull, '?');
+        nsnull, '?');
       nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
       if (mapper) {
         aSelf->mCCMap = MapperToCCMap(mapper);
-        if (!aSelf->mCCMap)
-          return;
-
-        /*
-         * We used to disable special characters like smart quotes
-         * in CJK fonts because if they are quite a bit larger than
-         * western glyphs and we did not want glyph fill-in to use them
-         * in single byte documents.
-         *
-         * Now, single byte documents find these special chars before
-         * the CJK fonts are searched so this is no longer needed
-         * and should be removed, as requested in bug 100233
-          */
-        if ((aSelf->Convert == DoubleByteConvert)
-            && (!gAllowDoubleByteSpecialChars)) {
-          PRUint16* ccmap = aSelf->mCCMap;
-          for (int i=0; gDoubleByteSpecialChars[i]; i++)
-            CCMAP_UNSET_CHAR(ccmap, gDoubleByteSpecialChars[i]);
+        if (aSelf->mCCMap) {
+          /*
+           * We used to disable special characters like smart quotes
+           * in CJK fonts because if they are quite a bit larger than
+           * western glyphs and we did not want glyph fill-in to use them
+           * in single byte documents.
+           *
+           * Now, single byte documents find these special chars before
+           * the CJK fonts are searched so this is no longer needed
+           * but is useful when trying to determine which font(s) the
+           * special chars are found in.
+           */
+          if ((aSelf->Convert == DoubleByteConvert) 
+              && (!gAllowDoubleByteSpecialChars)) {
+            PRUint16* ccmap = aSelf->mCCMap;
+            for (int i=0; gDoubleByteSpecialChars[i]; i++) {
+              CCMAP_UNSET_CHAR(ccmap, gDoubleByteSpecialChars[i]);
+            }
+          }
+          return PR_TRUE;
         }
       }
-      else
-       NS_WARNING("cannot get nsICharRepresentable");
+      else {
+        NS_WARNING("cannot get nsICharRepresentable");
+      }
     }
-    else
+    else {
       NS_WARNING("cannot get Unicode converter");
+    }
   }
-  else
+  else {
     NS_WARNING("cannot get atom");
+  }
+
+  //
+  // always try to return a map even if it is empty
+  //
+  nsCompressedCharMap empty_ccmapObj;
+  aSelf->mCCMap = empty_ccmapObj.NewCCMap();
+
+  // return false if unable to alloc a map
+  if (aSelf->mCCMap == nsnull)
+    return PR_FALSE;
+
+  return PR_TRUE;
 }
 
 #undef DEBUG_DUMP_TREE
@@ -2569,9 +2674,9 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
 /* gisburn: Small hack for Xprint:
  * Xprint usually operates at resolutions >= 300DPI. There are 
  * usually no "normal" bitmap fonts at those resolutions - only 
- * "scaleable outline fonts" and "printer buildin fonts" (which 
- * usually look like scaleable bitmap fonts) are available.
- * Therefore: force use of scaleable fonts to get rid of 
+ * "scalable outline fonts" and "printer buildin fonts" (which 
+ * usually look like scalable bitmap fonts) are available.
+ * Therefore: force use of scalable fonts to get rid of 
  * manually scaled bitmap fonts...
  */
  if (mPrinterMode)
@@ -2974,8 +3079,7 @@ nsFontMetricsXlib::SearchNode(nsFontNodeXlib* aNode, PRUnichar aChar)
       }
     }
     else {
-      SetUpFontCharSetInfo(charSetInfo);
-      if (!charSetInfo->mCCMap)
+      if (!SetUpFontCharSetInfo(charSetInfo))
         return nsnull;
     }
   }
@@ -3143,7 +3247,7 @@ NodeAddScalable(nsFontStretchXlib* aStretch, PRBool aOutlineScaled,
 #ifdef USE_XPRINT
   /* gisburn: disabled for Xprint - this kills printer buildin fonts
    * Xprint printer-buildin fonts look like bitmap scaled fonts but are 
-   * (scaleable) printer-buildin fonts in reality.
+   * (scalable) printer-buildin fonts in reality.
    */
   if (nsFontMetricsXlib::mPrinterMode)
     return PR_TRUE;
@@ -3229,6 +3333,7 @@ static void
 GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNodes)
 {
   Display       *dpy = xxlib_rgb_get_display(gXlibRgbHandle);
+  Screen        *scr = xxlib_rgb_get_screen (gXlibRgbHandle);
   nsCAutoString  previousNodeName;
   nsHashtable   *node_hash;
   
@@ -3259,6 +3364,33 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
   }               
 #endif /* DEBUG */
 #endif /* USE_XPRINT */
+
+#ifdef ENABLE_X_FONT_BANNING
+  int screen_xres,
+      screen_yres;
+
+  /* Get Xserver DPI. 
+   * We cannot use Mozilla's API here because it may "override" the DPI
+   * got from the Xserver via prefs. But we want to filter ("ban") fonts
+   * we get from the Xserver which _it_(=Xserver) has "choosen" for us
+   * using its DPI value ...
+   */
+#ifdef USE_XPRINT
+  if (nsFontMetricsXlib::mPrinterMode) {
+    Bool success;
+    long dpi = 0;
+    success = XpuGetResolution(dpy, XpGetContext(dpy), &dpi);
+    NS_ASSERTION(success, "XpuGetResolution(dpy, XpGetContext(dpy), &dpi); failure!");
+    screen_xres = screen_yres = dpi;
+  }
+  else
+#endif /* USE_XPRINT */
+  {  
+    screen_xres = int(((( double(::XWidthOfScreen(scr)))  * 25.4 / double(::XWidthMMOfScreen(scr)) ))  + 0.5);
+    screen_yres = int(((( double(::XHeightOfScreen(scr))) * 25.4 / double(::XHeightMMOfScreen(scr)) )) + 0.5);
+  }
+#endif /* ENABLE_X_FONT_BANNING */
+                
   int count;
   char** list = ::XListFonts(dpy, aPattern, INT_MAX, &count);
   if ((!list) || (count < 1)) {
@@ -3266,10 +3398,13 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
   }
 
   for (int i = 0; i < count; i++) {
-    char* name = list[i];
+    char name[256]; /* X11 font names are never larger than 255 chars */
+    strcpy(name, list[i]);
+    
     if ((!name) || (name[0] != '-')) {
       continue;
     }
+    
     char* p = name + 1;
     int scalable = 0;
     PRBool outline_scaled = PR_FALSE;
@@ -3360,7 +3495,7 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
  * implemented. See http://bugzilla.mozilla.org/show_bug.cgi?id=94327#c34
  * for additional comments...
  */      
-#ifndef ENABLE_X_FONT_BANNING
+#ifndef DISABLE_WORKAROUND_FOR_BUG_103159
 #ifdef USE_XPRINT
       /* The following check kills Xprint printer-buildin fonts... ;-( */
       if (!nsFontMetricsXlib::mPrinterMode)
@@ -3369,16 +3504,54 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNo
         // skip 'mysterious' and 'spurious' cases like
         // -adobe-times-medium-r-normal--17-120-100-100-p-0-iso8859-9
         if ((pixelSize[0] != '0' || pointSize[0] != 0) && 
-            (outline_scaled == PR_FALSE) )
+            (outline_scaled == PR_FALSE)) {
+          PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("rejecting font '%s' (via hardcoded workaround for bug 103159)\n", list[i]));
           continue;
+        }  
       }    
-#endif /* ENABLE_X_FONT_BANNING */        
+#endif /* DISABLE_WORKAROUND_FOR_BUG_103159 */
     }
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
     if (!*charSetName) {
       continue;
     }
-    
+
+#ifdef ENABLE_X_FONT_BANNING
+#define BOOL2STR(b) ((b)?("true"):("false"))    
+    if (gFontRejectRegEx || gFontAcceptRegEx) {
+      char fmatchbuf[512]; /* See sprintf() below. */
+     
+      sprintf(fmatchbuf, "fname=%s;scalable=%s;outline_scaled=%s;xdisplay=%s;xdpy=%d;ydpy=%d;xdevice=%s",
+              list[i], /* full font name */
+              BOOL2STR(scalable), 
+              BOOL2STR(outline_scaled),
+              XDisplayString(dpy),
+              screen_xres,
+              screen_yres,
+#ifdef USE_XPRINT
+              nsFontMetricsXlib::mPrinterMode?("printer"):
+#endif /* USE_XPRINT */
+              ("display")
+              ); 
+#undef BOOL2STR
+                  
+      if (gFontRejectRegEx) {
+        /* reject font if reject pattern matches it... */        
+        if (regexec(gFontRejectRegEx, fmatchbuf, 0, nsnull, 0) == REG_OK) {
+          PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("rejecting font '%s' (via reject pattern)\n", fmatchbuf));
+          continue;
+        }  
+      }
+
+      if (gFontAcceptRegEx) {
+        if (regexec(gFontAcceptRegEx, fmatchbuf, 0, nsnull, 0) == REG_NOMATCH) {
+          PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("rejecting font '%s' (via accept pattern)\n", fmatchbuf));
+          continue;
+        }
+      }       
+    }    
+#endif /* ENABLE_X_FONT_BANNING */
+
     nsCStringKey charSetKey(charSetName);
     nsFontCharSetMapXlib *charSetMap =
       (nsFontCharSetMapXlib *) gCharSetMaps->Get(&charSetKey);
