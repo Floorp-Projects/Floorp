@@ -236,6 +236,10 @@ protected:
 							nsIPluginHost* aPluginHost, 
 							const char* aMimetype,
 							nsIURI* aURL);
+  //~~~
+  nsresult ReinstantiatePlugin(nsIPresContext& aPresContext, 
+                               nsHTMLReflowMetrics& aMetrics, 
+                               const nsHTMLReflowState& aReflowState);
 
   nsresult HandleImage(nsIPresContext&          aPresContext,
 					   nsHTMLReflowMetrics&     aMetrics,
@@ -919,6 +923,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	  NS_IF_RELEASE(cv);
 	  NS_IF_RELEASE(container);
   }
+  else
+    rv = ReinstantiatePlugin(aPresContext, aMetrics, aReflowState);
 
   // finish up
   if(rv == NS_OK)
@@ -1013,6 +1019,47 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext&          aPresContext,
   window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
 #endif
   return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURL, mInstanceOwner);
+}
+
+//~~~This is called when the page containing plugin is resized, and plugin has its dimensions
+// specified in percentage, so it needs to follow the page on the fly.
+nsresult
+nsObjectFrame::ReinstantiatePlugin(nsIPresContext& aPresContext, nsHTMLReflowMetrics& aMetrics, const nsHTMLReflowState& aReflowState)
+{
+  nsIView *parentWithView;
+  nsPoint origin;
+  nsPluginWindow  *window;
+  float           t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+
+  // we need to recalculate this now that we have access to the nsPluginInstanceOwner
+  // and its size info (as set in the tag)
+  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+  if (nsnull != aMetrics.maxElementSize) 
+  {
+    //XXX              AddBorderPaddingToMaxElementSize(borderPadding);
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
+  }
+
+  mInstanceOwner->GetWindow(window);
+
+  GetOffsetFromView(origin, &parentWithView);
+  window->x = NSTwipsToIntPixels(origin.x, t2p);
+  window->y = NSTwipsToIntPixels(origin.y, t2p);
+  window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
+  window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
+  
+  window->clipRect.top = 0;
+  window->clipRect.left = 0;
+  window->clipRect.bottom = NSTwipsToIntPixels(aMetrics.height, t2p);
+  window->clipRect.right = NSTwipsToIntPixels(aMetrics.width, t2p);
+
+#ifdef XP_UNIX
+  window->ws_info = nsnull;   //XXX need to figure out what this is. MMP
+#endif
+
+  return NS_OK;
 }
 
 nsresult
