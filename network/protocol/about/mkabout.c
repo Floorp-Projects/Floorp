@@ -108,11 +108,20 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 
 	ADD_CELL(XP_GetString(XP_FILE_MIME_TYPE_), 
 			 URL_s->content_type ? URL_s->content_type : XP_GetString(XP_CURRENTLY_UNKNOWN)); 
+#ifdef NU_CACHE
+	ADD_CELL(XP_GetString(XP_SOURCE_), URL_s->cache_file
+							? XP_GetString(XP_CURRENTLY_IN_DISK_CACHE)
+							  : URL_s->cache_object ? 
+								XP_GetString(XP_CURRENTLY_IN_MEM_CACHE) 
+								: XP_GetString(XP_CURRENTLY_NO_CACHE));
+#else
+
 	ADD_CELL(XP_GetString(XP_SOURCE_), URL_s->cache_file
 							? XP_GetString(XP_CURRENTLY_IN_DISK_CACHE)
 							  : URL_s->memory_copy ? 
 								XP_GetString(XP_CURRENTLY_IN_MEM_CACHE) 
 								: XP_GetString(XP_CURRENTLY_NO_CACHE));
+#endif /* NU_CACHE */
 
 	ADD_CELL(XP_GetString(XP_LOCAL_CACHE_FILE_), URL_s->cache_file 
 								 ? URL_s->cache_file
