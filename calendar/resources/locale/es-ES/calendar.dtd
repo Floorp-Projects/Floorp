@@ -96,7 +96,7 @@
 <!ENTITY newevent.endtime.warning    "La hora de inicio es posterior a la de fin.">
 <!ENTITY newevent.enddate.warning    "La fecha de inicio es posterior a la de fin.">
 <!ENTITY newevent.repeatdate.tooltip    "Elija una fecha en la que finalizar" >
-<!ENTITY newevent.recurend.warning    "Repetir hasta">
+<!ENTITY newevent.recurend.warning    "La hora de repetir acaba antes que la hora de fin.">
 <!ENTITY newevent.endtime.tooltip    "Elija una hora de fin para este evento" >
 <!ENTITY newevent.starttimeerror.alertmessage "El evento no puede terminar antes de haber empezado. Por favor, compruebe las horas de inicio y fin." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "La hora de repetición del evento no puede ser anterior a la hora de final. Por favor, compruebe esto o desative la repetición." >
@@ -440,7 +440,7 @@
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importar: Importar eventos de un archivo local en un calendario existente.">
 <!ENTITY calendar.wizard.export.label              "Exportar: Exportar eventos de un calendario existente a un archivo local.">
-<!ENTITY calendar.wizard.subscribe.label           "Subscribir: suscribirse a un archivo de calendario en una máquina remota (p. ej. Internet)">
+<!ENTITY calendar.wizard.subscribe.label           "Subscribir: Suscribirse a un archivo de calendario en una máquina remota (p. ej. Internet)">
 <!ENTITY calendar.wizard.publish.label             "Publicar: Publicar eventos en una máquina remota (p. ej. Internet) para que otros se suscriban.">
 
 <!-- Calendar Import Outlook CSV Dialog -->
