@@ -56,3 +56,5 @@
 <!ENTITY            pmTextC.label         "You must select a profile, or create a new profile, the first time you start &brandShortName;.">
 <!ENTITY            pmTextB.label         "Indicates a profile created with a previous version of Communicator. These profiles must be converted before they can be loaded with &brandShortName;. This is an automated process.">
 
+<!ENTITY            offlineState.label    "Work Offline">
+<!ENTITY            offlineState.accesskey "o">
