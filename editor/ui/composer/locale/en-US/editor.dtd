@@ -21,7 +21,7 @@
   -->
 
 <!-- Window title -->
-<!-- LOCALIZATION NOTE  mainWindow.title: Do NOT localize "Composer" -->
+<!-- LOCALIZATION NOTE  (mainWindow.title): DONT_TRANSLATE -->
 <!ENTITY editorWindow.titlemodifier "Composer"> 
 <!ENTITY editorWindow.titlemodifiermenuseparator " - ">
 <!ENTITY textEditorWindow.titlemodifier "Text Editor"> 
