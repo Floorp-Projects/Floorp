@@ -94,6 +94,10 @@ SOURCE=.\WebBrowserChrome.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\WindowCreator.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\winEmbed.cpp
 # End Source File
 # End Group
@@ -111,6 +115,10 @@ SOURCE=.\StdAfx.h
 # Begin Source File
 
 SOURCE=.\WebBrowserChrome.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\WindowCreator.h
 # End Source File
 # Begin Source File
 
