@@ -476,7 +476,7 @@ InputTestConsumer::OnDataAvailable(nsIRequest *request,
 
 PR_STATIC_CALLBACK(void) DecrementDestroyHandler(PLEvent *self) 
 {
-    PR_DELETE(self);
+    PR_Free(self);
 }
 
 
