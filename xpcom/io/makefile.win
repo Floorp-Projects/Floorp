@@ -32,6 +32,7 @@ EXPORTS =                          \
         nsIStringStream.h          \
         nsIUnicharInputStream.h    \
         nsSpecialSystemDirectory.h \
+        nsPipe2.h                  \
         $(NULL)			
 
 NO_XPT_GEN=1
@@ -70,6 +71,8 @@ CPP_OBJS =                                       \
         .\$(OBJDIR)\nsIFileStream.obj            \
         .\$(OBJDIR)\nsIStringStream.obj          \
         .\$(OBJDIR)\nsPipe.obj                   \
+        .\$(OBJDIR)\nsSegmentedBuffer.obj        \
+        .\$(OBJDIR)\nsPipe2.obj                  \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
         .\$(OBJDIR)\nsUnicharInputStream.obj     \
         $(NULL)

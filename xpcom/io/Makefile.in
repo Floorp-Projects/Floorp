@@ -48,6 +48,8 @@ CPPSRCS =			     \
 	nsIFileStream.cpp            \
 	nsIStringStream.cpp          \
 	nsPipe.cpp                   \
+	nsSegmentedBuffer.cpp        \
+	nsPipe2.cpp                  \
 	nsSpecialSystemDirectory.cpp \
 	nsUnicharInputStream.cpp     \
 	$(NULL)
@@ -61,6 +63,7 @@ EXPORTS = \
 	nsIStringStream.h          \
 	nsIUnicharInputStream.h    \
 	nsSpecialSystemDirectory.h \
+        nsPipe2.h                  \
 	$(NULL)			
 
 
