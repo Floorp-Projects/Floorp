@@ -375,8 +375,13 @@ text, %to% gets replaced with the e-mail address of the person recieving
 the mail.  %bugid% gets replaced by the bug number.  %diffs% gets
 replaced with what's changed.  %neworchanged% is "New:" if this mail is
 reporting a new bug or empty if changes were made to an existing one.
-%summary% gets replaced by the summary of this bug. %<i>anythingelse</i>%
-gets replaced by the definition of that parameter (as defined on this
+%summary% gets replaced by the summary of this bug. %reasonsheader% 
+is replaced by an abbreviated list of reasons why the user is getting the email,
+suitable for use in an email header (such as X-Bugzilla-Reason).
+%reasonsbody% is replaced by text that explains why the user is getting the email 
+in more user friendly text than %reasonsheader%.
+%<i>anythingelse</i>% gets replaced by the definition of 
+that parameter (as defined on this
 page).},
          "l",
 "From: bugzilla-daemon
@@ -386,9 +391,11 @@ X-Bugzilla-Reason: %reasonsheader%
 
 %urlbase%show_bug.cgi?id=%bugid%
 
-%reasonsbody%
+%diffs%
 
-%diffs%");
+
+
+%reasonsbody%");
 
 
 

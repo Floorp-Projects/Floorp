@@ -687,7 +687,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
       return;
     }
     
-    my $reasonsbody = "You are receiving this mail because:\n";
+    my $reasonsbody = "------- You are receiving this mail because: -------\n";
 
     if (scalar(@reasons) == 0) {
         $reasonsbody .= "Whoops!  I have no idea!\n";
