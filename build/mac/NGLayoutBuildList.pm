@@ -958,6 +958,7 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:profile:macbuild:profileservices.mcp",					"profileservices$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
+	BuildOneProject(":mozilla:extensions:cookie:macbuild:cookie.mcp",     "Cookie$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:walletviewers.mcp",	"WalletViewers$D.shlb", "walletviewer.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
