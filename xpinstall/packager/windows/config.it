@@ -1133,7 +1133,7 @@ Error Corrupted Archives Detected AUTO mode=Setup has detected that at least one
 ;*** LOCALIZE ME BABY ***
 Error Too Many CRC Failures=Too many download failures.  Setup will cancel.  Any files already downloaded will not be deleted.  The next time Setup is run, these files will be taken into account during the download.
 ;*** LOCALIZE ME BABY ***
-Error Too Many Network Errors=Too many network errors trying to download %s.  Please retry again later.  Any files already downloaded will not be deleted.  The next time Setup is run, these files will be taken into account during the download.
+Error Too Many Network Errors=Too many network errors trying to download %s.  Setup will now Pause.  Please click Resume to retry downloading the files.
 ;*** LOCALIZE ME BABY ***
 Message Verifying Archives=Verifying integrity of archives, please wait...
 ;*** LOCALIZE ME BABY ***
