@@ -63,6 +63,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgWindow,
 
 nsMsgWindow::nsMsgWindow()
 {
+  m_stopped = PR_FALSE;
   NS_INIT_ISUPPORTS();
 }
 
@@ -340,6 +341,7 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
 
 NS_IMETHODIMP nsMsgWindow::StopUrls()
 {
+  m_stopped = PR_TRUE;
   nsCOMPtr<nsIDocShell> docShell;
   GetRootDocShell(getter_AddRefs(docShell));
   if (docShell)
@@ -553,3 +555,5 @@ nsMsgWindow::DisplayHTMLInMessagePane(const PRUnichar *title, const PRUnichar *b
 
     return NS_OK;
 }
+
+NS_IMPL_GETSET(nsMsgWindow, Stopped, PRBool, m_stopped);
