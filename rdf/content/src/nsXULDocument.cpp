@@ -509,8 +509,8 @@ public:
     NS_IMETHOD    GetCommand(nsString& aCommand);
 
     // nsIXULChildDocument Interface
-    NS_IMETHOD    SetFragmentRoot(nsIContent* aFragmentRoot);
-    NS_IMETHOD    GetFragmentRoot(nsIContent** aFragmentRoot);
+    NS_IMETHOD    SetFragmentRoot(nsIRDFResource* aFragmentRoot);
+    NS_IMETHOD    GetFragmentRoot(nsIRDFResource** aFragmentRoot);
 
     // nsIDOMNode interface
     NS_IMETHOD    GetNodeName(nsString& aNodeName);
@@ -618,7 +618,8 @@ protected:
     nsILineBreaker*            mLineBreaker;
     nsIContentViewerContainer* mContentViewerContainer;
     nsString                   mCommand;
-    nsIContent*                mFragmentRoot;          
+    nsIRDFResource*            mFragmentRoot;
+    nsVoidArray                mSubDocuments;
 };
 
 PRInt32 XULDocumentImpl::gRefCnt;
@@ -680,6 +681,13 @@ XULDocumentImpl::~XULDocumentImpl()
     }
 
     // mParentDocument is never refcounted
+    // Delete references to sub-documents
+    PRInt32 index = mSubDocuments.Count();
+    while (--index >= 0) {
+      nsIDocument* subdoc = (nsIDocument*) mSubDocuments.ElementAt(index);
+      NS_RELEASE(subdoc);
+    }
+
     NS_IF_RELEASE(mBuilders);
     NS_IF_RELEASE(mXULBuilder);
     NS_IF_RELEASE(mSelection);
@@ -694,7 +702,7 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mLineBreaker);
     NS_IF_RELEASE(mContentViewerContainer);
     NS_IF_RELEASE(mFragmentRoot);
-
+    
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
@@ -1165,22 +1173,24 @@ XULDocumentImpl::SetParentDocument(nsIDocument* aParent)
 void 
 XULDocumentImpl::AddSubDocument(nsIDocument* aSubDoc)
 {
-    // we don't do subdocs.
-    PR_ASSERT(0);
+    NS_ADDREF(aSubDoc);
+    mSubDocuments.AppendElement(aSubDoc);
 }
 
 PRInt32 
 XULDocumentImpl::GetNumberOfSubDocuments()
 {
-    return 0;
+    return mSubDocuments.Count();
 }
 
 nsIDocument* 
 XULDocumentImpl::GetSubDocumentAt(PRInt32 aIndex)
 {
-    // we don't do subdocs.
-    PR_ASSERT(0);
-    return nsnull;
+    nsIDocument* doc = (nsIDocument*) mSubDocuments.ElementAt(aIndex);
+    if (nsnull != doc) {
+        NS_ADDREF(doc);
+    }
+    return doc;
 }
 
 nsIContent* 
@@ -2355,7 +2365,7 @@ XULDocumentImpl::GetCommand(nsString& aCommand)
 ////////////////////////////////////////////////////////////////////////
 // nsIXULChildDocument interface
 NS_IMETHODIMP 
-XULDocumentImpl::SetFragmentRoot(nsIContent* aFragmentRoot)
+XULDocumentImpl::SetFragmentRoot(nsIRDFResource* aFragmentRoot)
 {
     if (aFragmentRoot != mFragmentRoot)
     {
@@ -2367,7 +2377,7 @@ XULDocumentImpl::SetFragmentRoot(nsIContent* aFragmentRoot)
 }
 
 NS_IMETHODIMP
-XULDocumentImpl::GetFragmentRoot(nsIContent** aFragmentRoot)
+XULDocumentImpl::GetFragmentRoot(nsIRDFResource** aFragmentRoot)
 {
     if (mFragmentRoot) {
         NS_ADDREF(mFragmentRoot);
@@ -2991,6 +3001,9 @@ XULDocumentImpl::Init(void)
 nsresult
 XULDocumentImpl::StartLayout(void)
 {
+    if (mFragmentRoot)
+      return NS_OK; // Subdocuments rely on the parent document for layout
+
     PRInt32 count = GetNumberOfShells();
     for (PRInt32 i = 0; i < count; i++) {
         nsIPresShell* shell = GetShellAt(i);

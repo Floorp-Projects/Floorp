@@ -602,6 +602,8 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
         }
 
         subDocument->SetParentDocument(parentDoc);
+        parentDoc->AddSubDocument(subDocument);
+
         nsCOMPtr<nsIStreamListener> streamListener;
         nsCOMPtr<nsIContentViewerContainer> container;
         nsCOMPtr<nsIXULParentDocument> xulParentDocument;
@@ -631,7 +633,20 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             return rv;
         }
         
-        xulChildDocument->SetFragmentRoot(aElement);
+        nsCOMPtr<nsIDOMXULElement> xulElement;
+        xulElement = do_QueryInterface(aElement);
+        if (!xulElement) {
+            NS_ERROR("The fragment root is not a XUL element.");
+            return rv;
+        }
+
+        nsCOMPtr<nsIRDFResource> rdfResource;
+        //xulElement->GetResource(rdfResource);
+        if (!rdfResource) {
+            NS_ERROR("The fragment root doesn't have an RDF resource behind it.");
+            return rv;
+        }
+        xulChildDocument->SetFragmentRoot(rdfResource);
 
         if (NS_FAILED(rv = subDocument->StartDocumentLoad(includeURL, container, getter_AddRefs(streamListener), 
                                                           commandChars))) {
