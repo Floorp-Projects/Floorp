@@ -120,7 +120,7 @@ function constructResults()
   if (numActions == expectednumActions)     row7[3] = "PASS"; else row7[3] = "FAIL";
   if (actionName == expectedactionName)     row8[3] = "PASS"; else row8[3] = "FAIL";
 
-  appendTableResHTML();
+  appendTableRes();
   if(!isRunningStandalone())
     WriteResults(res);
   else

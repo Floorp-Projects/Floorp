@@ -96,7 +96,7 @@ function constructResults()
   if (state == expectedState)         row3[3] = "PASS"; else row3[3] = "FAIL";
   if (newvalue.match(expectedValue))  row4[3] = "PASS"; else row4[3] = "FAIL";
 
-  appendTableResHTML();
+  appendTableRes();
   if(!isRunningStandalone())
     WriteResults(res);
   else

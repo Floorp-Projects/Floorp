@@ -111,7 +111,7 @@ function constructResults()
   if (nodeFocus == expectednodeFocus)       row5[3] = "PASS"; else row5[3] = "FAIL";
   if (varaccFocused == expectedaccFocused)  row6[3] = "PASS"; else row6[3] = "FAIL";
 
-  appendTableResHTML();
+  appendTableRes();
   if(!isRunningStandalone())
     WriteResults(res);
   else
