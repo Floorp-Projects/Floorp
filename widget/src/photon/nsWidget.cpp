@@ -54,12 +54,14 @@
 #include "nsIRollupListener.h"
 #include "nsIServiceManager.h"
 #include "nsWindow.h"
+#include "nsDragService.h"
 #include "nsReadableUtils.h"
 
 #include "nsIPref.h"
 #include "nsPhWidgetLog.h"
 
 #include <errno.h>
+#include <photon/PtServer.h>
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
@@ -82,6 +84,7 @@ nsIWidget         *nsWidget::gRollupWidget = nsnull;
 /* These are used to keep Popup Menus from drawing twice when they are put away */
 /* because of extra EXPOSE events from Photon */
 
+
 //
 // Keep track of the last widget being "dragged"
 //
@@ -91,10 +94,10 @@ PtWorkProcId_t     *nsWidget::mWorkProcID = nsnull;
 PRBool              nsWidget::mDmgQueueInited = PR_FALSE;
 #endif
 nsILookAndFeel     *nsWidget::sLookAndFeel = nsnull;
+nsIDragService     *nsWidget::sDragService = nsnull;
 PRUint32            nsWidget::sWidgetCount = 0;
-nsWidget           *nsWidget::sFocusWidget = nsnull;
 PRBool              nsWidget::sJustGotActivated = PR_FALSE;
-PRBool              nsWidget::sJustGotDeactivated = PR_TRUE;
+PRBool              nsWidget::sJustGotDeactivated = PR_FALSE;
 
 /* Enable this to queue widget damage, this should be ON by default */
 #define ENABLE_DAMAGE_QUEUE
@@ -119,6 +122,14 @@ nsWidget::nsWidget()
   if( sLookAndFeel )
     sLookAndFeel->GetColor( nsILookAndFeel::eColor_WindowBackground, mBackground );
 
+	if( !sDragService ) {
+		nsresult rv;
+		nsCOMPtr<nsIDragService> s;
+		s = do_GetService( "@mozilla.org/widget/dragservice;1", &rv );
+		sDragService = ( nsIDragService * ) s;
+		if( NS_FAILED( rv ) ) sDragService = 0;
+		}
+
   mWidget = nsnull;
   mParent = nsnull;
   mPreferredWidth  = 0;
@@ -130,10 +141,8 @@ nsWidget::nsWidget()
   mBounds.height = 0;
   mIsDestroying = PR_FALSE;
   mOnDestroyCalled = PR_FALSE;
-  mIsDragDest = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mListenForResizes = PR_FALSE;
-  mHasFocus = PR_FALSE;
 #if 0
   if (NS_OK == nsComponentManager::CreateInstance(kRegionCID,
                                                   nsnull,
@@ -208,8 +217,6 @@ NS_IMETHODIMP nsWidget::Destroy( void ) {
 
   // make sure no callbacks happen
   mEventCallback = nsnull;
-
-	if( sFocusWidget == this ) sFocusWidget = nsnull;
 
   return NS_OK;
 	}
@@ -503,38 +510,9 @@ NS_METHOD nsWidget::Enable( PRBool bState ) {
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus( PRBool aRaise ) {
-
-  if(sFocusWidget == this)
-    return NS_OK;
-
-  // call this so that any cleanup will happen that needs to...
-  if(sFocusWidget && mWidget->parent)
-    sFocusWidget->LoseFocus();
-
-  if(!mWidget->parent)
-    return NS_OK;
-
-  sFocusWidget = this;
-
-  if( mWidget && mWidget->parent) {
-       PtContainerGiveFocus( mWidget, NULL );
-  	}
-
-  DispatchStandardEvent(NS_GOTFOCUS);
-  mHasFocus = PR_TRUE;
+  if( mWidget ) PtContainerGiveFocus( mWidget, NULL );
   return NS_OK;
-}
-
-
-void nsWidget::LoseFocus( void ) 
-{
-
-  // doesn't do anything.  needed for nsWindow housekeeping, really.
-  if( mHasFocus == PR_FALSE ) return;
-  
-  mHasFocus = PR_FALSE;
-  sFocusWidget = nsnull;
-}
+	}
 
 
 //-------------------------------------------------------------------------
@@ -739,7 +717,7 @@ NS_METHOD nsWidget::Invalidate( const nsRect & aRect, PRBool aIsSynchronous ) {
 
   if( !mWidget ) return NS_OK; // mWidget will be null during printing
   if( !PtWidgetIsRealized( mWidget ) ) return NS_OK;
-  
+
 	PhRect_t prect;
 	prect.ul.x = aRect.x;
 	prect.ul.y = aRect.y;
@@ -942,8 +920,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   PtWidget_t *parentWidget = nsnull;
 
-	sJustGotActivated = PR_TRUE;
-
   nsIWidget *baseParent = aInitData && (aInitData->mWindowType == eWindowType_dialog ||
     	aInitData->mWindowType == eWindowType_toplevel ) ?  nsnull : aParent;
 
@@ -971,6 +947,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     PtAddCallback( mWidget, Pt_CB_GOT_FOCUS, GotFocusCallback, this );
     PtAddCallback( mWidget, Pt_CB_LOST_FOCUS, LostFocusCallback, this );
     PtAddCallback( mWidget, Pt_CB_IS_DESTROYED, DestroyedCallback, this );
+//    PtAddCallback( mWidget, Pt_CB_DND, DndCallback, this );
   	}
 
   DispatchStandardEvent(NS_CREATE);
@@ -1377,17 +1354,12 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     anEvent.point.x = 0; 
     anEvent.point.y = 0;
 
-
     PRBool IsChar;
     unsigned long keysym;
-	
-    if (Pk_KF_Sym_Valid & aPhKeyEvent->key_flags)
-        keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
-    else
-		/* Need this to support key release events on numeric key pad */
+    if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
     	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
-
-
+	else
+        keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
@@ -1397,7 +1369,6 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
     if ((aEventType == NS_KEY_PRESS) && (IsChar == PR_TRUE)) {
       anEvent.charCode = aPhKeyEvent->key_sym;
       anEvent.keyCode =  0;  /* I think the spec says this should be 0 */
-      //printf("nsWidget::InitKeyEvent charCode=<%d>\n", anEvent.charCode);
 
       if ((anEvent.isControl) || (anEvent.isAlt))
         anEvent.charCode = aPhKeyEvent->key_cap;
@@ -1409,6 +1380,7 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
  	    anEvent.keyCode  =  (keysym  & 0x00FF);
   	  }
   	}
+
 	}
 
 
@@ -1421,7 +1393,7 @@ PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {
   if ( (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid) == 0) {
 		//printf("nsWidget::DispatchKeyEvent throwing away invalid key: Modifiers Valid=<%d,%d,%d> this=<%p>\n",
 		//(aPhKeyEvent->key_flags & Pk_KF_Scan_Valid), (aPhKeyEvent->key_flags & Pk_KF_Sym_Valid), (aPhKeyEvent->key_flags & Pk_KF_Cap_Valid), this );
-		return PR_TRUE;
+		return PR_FALSE; //PR_TRUE;
 		}
 
   if ( PtIsFocused(mWidget) != 2) {
@@ -1436,12 +1408,12 @@ PRBool  nsWidget::DispatchKeyEvent( PhKeyEvent_t *aPhKeyEvent ) {
        || ( aPhKeyEvent->key_cap ==  Pk_Num_Lock )
        || ( aPhKeyEvent->key_cap ==  Pk_Scroll_Lock )
      )
-    return PR_TRUE;
+    return PR_FALSE; //PR_TRUE;
 
   nsWindow *w = (nsWindow *) this;
 
   w->AddRef();
-  
+ 
   if (aPhKeyEvent->key_flags & Pk_KF_Key_Down) {
     InitKeyEvent(aPhKeyEvent, this, keyEvent, NS_KEY_DOWN);
     result = w->OnKey(keyEvent); 
@@ -1480,7 +1452,7 @@ int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
   // kedl, shouldn't handle events if the window is being destroyed
   if ( (someWidget) &&
         (someWidget->mIsDestroying == PR_FALSE) &&
-        (someWidget->nsWidget::HandleEvent( cbinfo ))
+        (someWidget->nsWidget::HandleEvent( widget, cbinfo ))
 /* because nsWindow::HandleEvent() is simply calling nsWidget::HandleEvent(), try to save a call - it was (someWidget->HandleEvent( cbinfo )) */
       )
         return( Pt_END ); // Event was consumed
@@ -1488,8 +1460,11 @@ int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
   return( Pt_CONTINUE );
 	}
 
+#ifndef Ph_PTR_FLAG_Z_ONLY
+ #define Ph_PTR_FLAG_Z_ONLY 0x08
+#endif
 
-PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
+PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo ) {
   PRBool  result = PR_TRUE; // call the default nsWindow proc
   PhEvent_t* event = aCbInfo->event;
 
@@ -1506,6 +1481,8 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 
         if( ptrev ) {
 
+					if( ptrev->flags & Ph_PTR_FLAG_Z_ONLY ) break; // sometimes z presses come out of nowhere */
+
 ///* ATENTIE */ printf( "Ph_EV_PTR_MOTION_NOBUTTON (%d %d)\n", ptrev->pos.x, ptrev->pos.y );
 
         	ScreenToWidget( ptrev->pos );
@@ -1517,20 +1494,36 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 
       case Ph_EV_BUT_PRESS:
        {
+
 	    	PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
         nsMouseEvent   theMouseEvent;
+
+				/* there should be no reason to do this - mozilla should figure out how to call SetFocus */
+				/* this though fixes the problem with the plugins capturing the focus */
+				PtWidget_t *disjoint = PtFindDisjoint( widget );
+ 				if( PtWidgetIsClassMember( disjoint, PtServer ) )
+					PtContainerGiveFocus( widget, aCbInfo->event );
+				else {
+					if( sJustGotActivated ) {
+						sJustGotActivated = PR_FALSE;
+						DispatchStandardEvent(NS_ACTIVATE);
+						}
+					}
+
+
 
 				/* there is no big region to capture the button press events outside the menu's area - this will be checked here, and if the click was not on a menu item, close the menu, if any */
 				nsWidget *parent = (nsWidget*)mParent;
 				if( !parent || ( parent->mWindowType != eWindowType_popup ) ) {
 					if( gRollupWidget && gRollupListener ) {
 						gRollupListener->Rollup();
-						break;
 						}
 					}
 
         if( ptrev ) {
           ScreenToWidget( ptrev->pos );
+
+///* ATENTIE */ printf( "Ph_EV_PTR_PRESS (%d %d)\n", ptrev->pos.x, ptrev->pos.y );
 
           if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
 						InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN );
@@ -1565,6 +1558,8 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 					  else // middle button
 						 InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MIDDLE_BUTTON_UP );
 					  
+///* ATENTIE */ printf( "Ph_EV_PTR_RELEASE (%d %d)\n", ptrev->pos.x, ptrev->pos.y );
+
 					  result = DispatchMouseEvent(theMouseEvent);
 				  }
 			  }
@@ -1572,6 +1567,7 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 				  PhRect_t rect = {{0,0},{0,0}};
 				  PhRect_t boundary = {{-10000,-10000},{10000,10000}};
 				  PhInitDrag( PtWidgetRid(mWidget), ( Ph_DRAG_KEY_MOTION | Ph_DRAG_TRACK ),&rect, &boundary, aCbInfo->event->input_group , NULL, NULL, NULL, NULL, NULL);
+///* ATENTIE */ printf( "PhInitDrag\n" );
 			  }
 		  }
 	    break;
@@ -1581,8 +1577,17 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
         PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
 	    	nsMouseEvent   theMouseEvent;
 
-
         if( ptrev ) {
+
+					if( ptrev->flags & Ph_PTR_FLAG_Z_ONLY ) break; // sometimes z presses come out of nowhere */
+
+					if( sDragService ) {
+						nsDragService *d;
+						nsIDragService *s = sDragService;
+						d = ( nsDragService * )s;
+						d->SetNativeDndData( widget, event );
+						}
+
           ScreenToWidget( ptrev->pos );
  	      	InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MOVE );
           result = DispatchMouseEvent(theMouseEvent);
@@ -1592,8 +1597,29 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 
       case Ph_EV_KEY:
        	{
-	    	PhKeyEvent_t* keyev = (PhKeyEvent_t*) PhGetData( event );
+		    	PhKeyEvent_t* keyev = (PhKeyEvent_t*) PhGetData( event );
+				nsWidget *parent = (nsWidget*)mParent;
+				int old_menu = 0;
+
+				if (!parent || (parent->mWindowType != eWindowType_popup)) 
+				{
+					if (gRollupWidget && gRollupListener)
+						old_menu = 1;
+				}
+				
 				result = DispatchKeyEvent(keyev);
+#if 1
+				if ((result == PR_TRUE) && (keyev->key_cap != Pk_Up) && (keyev->key_cap != Pk_Down) &&
+					(keyev->key_cap != Pk_Left) && (keyev->key_cap != Pk_Right) && old_menu && (keyev->key_flags & Pk_KF_Key_Down))
+				{
+					/* there is no big region to capture the button press events outside the menu's area - this will be checked here, and if the click was not on a menu item, close the menu, if any */
+					if (!parent || (parent->mWindowType != eWindowType_popup)) 
+					{
+						if (gRollupWidget && gRollupListener)
+							gRollupListener->Rollup();
+					}
+				}
+#endif
        	}
         break;
 
@@ -1615,6 +1641,14 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo ) {
 		  			case Ph_EV_DRAG_MOTION_EVENT: {
       		    PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
       		    ScreenToWidget( ptrev2->pos );
+
+							if( sDragService ) {
+								nsDragService *d;
+								nsIDragService *s = sDragService;
+								d = ( nsDragService * )s;
+								d->SetNativeDndData( widget, event );
+								}
+
   	  		    InitMouseEvent(ptrev2, this, theMouseEvent, NS_MOUSE_MOVE );
       		    result = DispatchMouseEvent(theMouseEvent);
 							}
@@ -1884,51 +1918,61 @@ int nsWidget::WorkProc( void *data )
   return Pt_END;
 	}
 #endif
+
 int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) 
 {
   nsWidget *pWidget = (nsWidget *) data;
 
-  if(!widget->parent)
-  {
-    	pWidget->DispatchStandardEvent(NS_GOTFOCUS);
-  }
+	if( widget->class_rec->description && PtWidgetIsClass( widget, PtWindow ) ) {
+		if( pWidget->mEventCallback ) {
 
-  if( !widget->parent || PtIsFocused(widget) != 2 ) return Pt_CONTINUE;
+			/* the WM_ACTIVATE code */
 
-  pWidget->DispatchStandardEvent(NS_GOTFOCUS);
+			sJustGotActivated = PR_TRUE;
+		
+			nsMouseEvent event;
+			event.eventStructType = NS_GUI_EVENT;
+			pWidget->InitEvent(event, NS_MOUSE_ACTIVATE);
+			event.acceptActivation = PR_TRUE;
 
-  if( !sJustGotActivated )
-  {
-		sJustGotActivated = PR_TRUE;
-    sJustGotDeactivated = PR_FALSE;
-    pWidget->DispatchStandardEvent(NS_ACTIVATE);
-  }
-	else sJustGotActivated = PR_FALSE;
+			pWidget->DispatchWindowEvent(&event);
+			}
+	}
+	else {
+
+
+  		if( sJustGotActivated ) {
+			sJustGotActivated = PR_FALSE;
+  	  		pWidget->DispatchStandardEvent(NS_ACTIVATE);
+  		}
+	}
+
+  		pWidget->DispatchStandardEvent(NS_GOTFOCUS);
 
   return Pt_CONTINUE;
 }
 
 int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) 
 {
-//  nsWidget *pWidget = (nsWidget *) data;
+  nsWidget *pWidget = (nsWidget *) data;
 
-  if(!widget->parent)
-  {
-    if(sFocusWidget)
-    {
-      if(!sJustGotDeactivated)
-      {
-        sFocusWidget->DispatchStandardEvent(NS_DEACTIVATE);
-        sJustGotDeactivated = PR_TRUE;
-      }
-    }
- }
+#if 0
+	if( widget->class_rec->description && PtWidgetIsClass( widget, PtWindow ) ) {
+		if( pWidget->mEventCallback ) {
 
-  if (!widget->parent || PtIsFocused(widget) != 2) return Pt_CONTINUE;
-
-//  pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
-
-	sJustGotActivated = PR_FALSE;
+			/* the WM_ACTIVATE code */
+			sJustGotDeactivated = PR_TRUE;
+			}
+		}
+	else
+#endif
+		{
+  	if( sJustGotDeactivated ) {
+			sJustGotDeactivated = PR_FALSE;
+			pWidget->DispatchStandardEvent(NS_DEACTIVATE);
+			}
+  	pWidget->DispatchStandardEvent(NS_LOSTFOCUS);
+		}
 
   return Pt_CONTINUE;
 }
@@ -1956,6 +2000,104 @@ void nsWidget::EnableDamage( PtWidget_t *widget, PRBool enable ) {
       PtStartFlux( top );
   	}
 	}
+
+
+void nsWidget::ProcessDrag( PhEvent_t *event, PRUint32 aEventType, PhPoint_t *pos ) {
+	nsCOMPtr<nsIDragSession> currSession;
+	sDragService->GetCurrentSession ( getter_AddRefs(currSession) );
+	if( !currSession ) return;
+
+	currSession->SetDragAction( 2 );
+
+	DispatchDragDropEvent( aEventType, pos );
+
+	event->subtype = Ph_EV_DND_ENTER;
+
+	PRBool canDrop;
+	currSession->GetCanDrop(&canDrop);
+	if(!canDrop) {
+		static PhCharacterCursorDescription_t nodrop_cursor = {  { Ph_CURSOR_NOINPUT, sizeof(PhCharacterCursorDescription_t) }, PgRGB( 255, 255, 224 ) };
+		PhAckDnd( event, Ph_EV_DND_MOTION, ( PhCursorDescription_t * ) &nodrop_cursor );
+		}
+	else {
+		static PhCharacterCursorDescription_t drop_cursor = { { Ph_CURSOR_PASTE, sizeof(PhCharacterCursorDescription_t) }, PgRGB( 255, 255, 224 ) };
+		PhAckDnd( event, Ph_EV_DND_MOTION, ( PhCursorDescription_t * ) &drop_cursor );
+		}
+
+	// Clear the cached value
+	currSession->SetCanDrop(PR_FALSE);
+	}
+
+void nsWidget::DispatchDragDropEvent( PRUint32 aEventType, PhPoint_t *pos ) {
+  nsEventStatus status;
+  nsMouseEvent event;
+
+  InitEvent( event, aEventType );
+
+  event.point.x = pos->x;
+  event.point.y = pos->y;
+
+  event.isShift   = 0;
+  event.isControl = 0;
+  event.isMeta    = PR_FALSE;
+  event.isAlt     = 0;
+
+	event.widget = this;
+
+///* ATENTIE */ printf("DispatchDragDropEvent pos=%d %d widget=%p\n", event.point.x, event.point.y, this );
+
+  DispatchEvent( &event, status );
+	}
+
+
+int nsWidget::DndCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
+	nsWidget *pWidget = (nsWidget *) data;
+	 PtDndCallbackInfo_t *cbdnd = (  PtDndCallbackInfo_t * ) cbinfo->cbdata;
+
+	static PtDndFetch_t dnd_data_template = { "Mozilla", "dnddata", Ph_TRANSPORT_INLINE, Pt_DND_SELECT_MOTION,
+                        NULL, NULL, NULL, NULL, NULL };
+
+///* ATENTIE */ printf( "In nsWidget::DndCallback subtype=%d\n", cbinfo->reason_subtype );
+
+			PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( cbinfo->event );
+//printf("Enter pos=%d %d\n", ptrev->pos.x, ptrev->pos.y );
+			pWidget->ScreenToWidget( ptrev->pos );
+//printf("After trans pos=%d %d pWidget=%p\n", ptrev->pos.x, ptrev->pos.y, pWidget );
+
+
+	switch( cbinfo->reason_subtype ) {
+		case Ph_EV_DND_ENTER: {
+			sDragService->StartDragSession();
+			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_ENTER, &ptrev->pos );
+
+			PtDndSelect( widget, &dnd_data_template, 1, NULL, NULL, cbinfo );
+			}
+			break;
+
+		case Ph_EV_DND_MOTION: {
+			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_OVER, &ptrev->pos );
+			}
+			break;
+		case Ph_EV_DND_DROP:
+			nsDragService *d;
+			d = ( nsDragService * )sDragService;
+			d->SetDropData( (char*)cbdnd->data+4+100, (PRUint32) *(int*)cbdnd->data, (char*) cbdnd->data + 4 );
+/* ATENTIE */ printf("SetDropData with data=%s\n", (char*) cbdnd->data );
+
+			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_DROP, &ptrev->pos );
+			sDragService->EndDragSession();
+			break;
+		case Ph_EV_DND_LEAVE:
+		case Ph_EV_DND_CANCEL:
+			pWidget->ProcessDrag( cbinfo->event, NS_DRAGDROP_EXIT, &ptrev->pos );
+			sDragService->EndDragSession();
+			break;
+		}
+
+	return Pt_CONTINUE;
+	}
+
+
 
 //#if defined(DEBUG)
 /**************************************************************/

@@ -38,8 +38,10 @@
 #ifndef nsDragService_h__
 #define nsDragService_h__
 
-#include "nsBaseDragService.h"
 #include <Pt.h>
+
+#include "nsBaseDragService.h"
+
 
 
 /**
@@ -55,6 +57,10 @@ public:
   
   NS_DECL_ISUPPORTS_INHERITED
 
+	/* photon dependent stuff */
+  NS_IMETHOD SetNativeDndData( PtWidget_t * widget, PhEvent_t *event );
+
+
   // nsIDragService
   NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables,
                                 nsIScriptableRegion * aRegion, PRUint32 aActionType);
@@ -63,61 +69,17 @@ public:
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 anItem);
   NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
-
-  NS_IMETHOD StartDragSession();
-  NS_IMETHOD EndDragSession();
-    
-
-  //GtkTargetList *RegisterDragItemsAndFlavors(nsISupportsArray *inArray);
-
-protected:
-
-  //PRBool DoConvert(GdkAtom type);
-
-  static PRBool gHaveDrag;
-
-  //static void DragLeave(PtWidget_t      *widget,
-  //                      GdkDragContext *context,
-  //                      guint           time);
-
-  //static PRBool DragMotion(PtWidget_t      *widget,
-  //                         GdkDragContext *context,
-  //                         gint            x,
-  //                         gint            y,
-  //                         guint           time);
-
-  //static PRBool DragDrop(PtWidget_t   *widget,
-  //                       GdkDragContext *context,
-  //                       gint            x,
-  //                       gint            y,
-  //                       guint            time);
-
-  //static void DragDataReceived(PtWidget_t        *widget,
-  //    		                         GdkDragContext   *context,
-  //			                         gint              x,
-  //			                         gint              y,
-  //			                         GtkSelectionData *data,
-  //			                         guint             info,
-  //			                         guint             time);
-
-  //static void DragDataGet(PtWidget_t          *widget,
-//		                      GdkDragContext     *context,
-//		                      GtkSelectionData   *selection_data,
-//		                      guint               info,
-//		                      guint               time,
-//		                      gpointer            data);
-
-//  static void  DragDataDelete(PtWidget_t          *widget,
-//			                        GdkDragContext     *context,
-//			                        gpointer            data);
+	NS_IMETHOD SetDropData( char *data, PRUint32 tmpDataLen, char *flavorStr );
+	NS_IMETHOD GetRawData( nsISupportsArray* aArrayTransferables, nsISupports **data, PRUint32 *tmpDataLen, char *aflavorStr );
 
 private:
-//  GdkDragAction mActionType;
-  PRUint32 mNumFlavors;
-  PtWidget_t *mWidget;
-//  GdkDragContext *mDragContext;
-//  GtkSelectionData mSelectionData;
-  PRBool mBlocking;
+  PtWidget_t *mDndWidget;
+	PhEvent_t *mDndEvent;
+
+	PtTransportCtrl_t *mNativeCtrl;
+	char *mData;
+	PRUint32 mtmpDataLen;
+	char *mflavorStr;
 };
 
 #endif // nsDragService_h__
