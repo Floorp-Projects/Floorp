@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.1 $ $Date: 2001/09/13 22:06:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -59,30 +59,6 @@ static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.1 $ $Date:
 #include "base.h"
 #endif /* BASE_H */
 
-/* If the token cannot manage threads, we have to.  The following detect
- * a non-threadsafe token and lock/unlock its session handle.
- */
-#define NSSTOKEN_ENTER_MONITOR(token) \
-    if ((token)->session.lock) PZ_Lock((token)->session.lock)
-
-#define NSSTOKEN_EXIT_MONITOR(token)  \
-    if ((token)->session.lock) PZ_Unlock((token)->session.lock)
-
-/* The flags needed to open a read-only session. */
-static const CK_FLAGS s_ck_readonly_flags = CKF_SERIAL_SESSION;
-
-/* In pk11slot.c, this was a no-op.  So it is here also. */
-CK_RV PR_CALLBACK
-nss_ck_slot_notify
-(
-  CK_SESSION_HANDLE session,
-  CK_NOTIFICATION event,
-  CK_VOID_PTR pData
-)
-{
-    return CKR_OK;
-}
-
 /* maybe this should really inherit completely from the module...  I dunno,
  * any uses of slots where independence is needed?
  */
@@ -97,12 +73,12 @@ NSSToken_Create
     NSSArena *arena;
     nssArenaMark *mark;
     NSSToken *rvToken;
+    nssSession *session;
     NSSUTF8 *tokenName = NULL;
     PRUint32 length;
     PRBool newArena;
     PRStatus nssrv;
     CK_TOKEN_INFO tokenInfo;
-    CK_SESSION_HANDLE session;
     CK_RV ckrv;
     if (arenaOpt) {
 	arena = arenaOpt;
@@ -124,16 +100,8 @@ NSSToken_Create
     if (!rvToken) {
 	goto loser;
     }
-    if (parent->module->flags & NSSMODULE_FLAGS_NOT_THREADSAFE) {
-	/* If the parent module is not threadsafe, create lock to manage 
-	 * session within threads.
-	 */
-	rvToken->session.lock = PZ_NewLock(nssILockOther);
-    }
     /* Get token information */
-    NSSTOKEN_ENTER_MONITOR(rvToken);
     ckrv = CKAPI(parent)->C_GetTokenInfo(slotID, &tokenInfo);
-    NSSTOKEN_EXIT_MONITOR(rvToken);
     if (ckrv != CKR_OK) {
 	/* set an error here, eh? */
 	goto loser;
@@ -147,13 +115,9 @@ NSSToken_Create
 	    goto loser;
 	}
     }
-    /* Open a session handle for the token. */
-    NSSTOKEN_ENTER_MONITOR(rvToken);
-    ckrv = CKAPI(parent)->C_OpenSession(slotID, s_ck_readonly_flags,
-                                        parent, nss_ck_slot_notify, &session);
-    NSSTOKEN_EXIT_MONITOR(rvToken);
-    if (ckrv != CKR_OK) {
-	/* set an error here, eh? */
+    /* Open a default session handle for the token. */
+    session = NSSSlot_CreateSession(parent, arena, PR_TRUE);
+    if (session == NULL) {
 	goto loser;
     }
     /* TODO: seed the RNG here */
@@ -167,7 +131,7 @@ NSSToken_Create
     rvToken->slot = parent;
     rvToken->name = tokenName;
     rvToken->ckFlags = tokenInfo.flags;
-    rvToken->session.handle = session;
+    rvToken->defaultSession = session;
 #ifdef arena_mark_bug_fixed
     nssrv = nssArena_Unmark(arena, mark);
     if (nssrv != PR_SUCCESS) {
@@ -176,6 +140,9 @@ NSSToken_Create
 #endif
     return rvToken;
 loser:
+    if (session) {
+	nssSession_Destroy(session);
+    }
     if (newArena) {
 	nssArena_Destroy(arena);
     } else {
@@ -184,9 +151,6 @@ loser:
 	    nssArena_Release(arena, mark);
 	}
 #endif
-    }
-    if (rvToken && rvToken->session.lock) {
-	PZ_DestroyLock(rvToken->session.lock);
     }
     return (NSSToken *)NULL;
 }
@@ -198,63 +162,164 @@ NSSToken_Destroy
 )
 {
     if (--tok->refCount == 0) {
+	if (tok->defaultSession) {
+	    nssSession_Destroy(tok->defaultSession);
+	}
 	return NSSArena_Destroy(tok->arena);
     }
     return PR_SUCCESS;
 }
 
-NSS_IMPLEMENT PRStatus *
-NSSToken_TraverseCertificates
+/* This is only used by the Traverse function.  If we ditch traversal,
+ * ditch this.
+ */
+struct certCallbackStr {
+    PRStatus (*callback)(NSSCertificate *c, void *arg);
+    void *arg;
+};
+
+/* also symmKeyCallbackStr, pubKeyCallbackStr, etc. */
+
+/*
+ * This callback examines each matching certificate by passing it to
+ * a higher-level callback function.
+ */
+static PRStatus
+examine_cert_callback(NSSToken *t, nssSession *session,
+                      CK_OBJECT_HANDLE h, void *arg)
+{
+    PRStatus cbrv;
+    NSSCertificate *cert;
+    struct certCallbackStr *ccb = (struct certCallbackStr *)arg;
+    /* maybe it should be NSSToken_CreateCertificate(token, handle); */
+    cert = NSSCertificate_CreateFromHandle(h, session, t->slot);
+    if (!cert) {
+	goto loser;
+    }
+    cbrv = (*ccb->callback)(cert, ccb->arg);
+    if (cbrv != PR_SUCCESS) {
+	goto loser;
+    }
+    return PR_SUCCESS;
+loser:
+    return PR_FAILURE;
+}
+
+static PRStatus
+collect_certs_callback(NSSToken *t, nssSession *session,
+                       CK_OBJECT_HANDLE h, void *arg)
+{
+    NSSCertificate *cert;
+    void *certList; /* nssList soon */
+    certList = (void *)arg;
+    cert = NSSCertificate_CreateFromHandle(h, session, t->slot);
+    if (!cert) {
+	goto loser;
+    }
+    /* XXX add cert to list */
+    return PR_SUCCESS;
+loser:
+    return PR_FAILURE;
+}
+
+static PRStatus *
+nsstoken_TraverseObjects
 (
   NSSToken *tok,
-  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  nssSession *session,
+  CK_ATTRIBUTE_PTR obj_template,
+  CK_ULONG otsize,
+  PRStatus (*callback)(NSSToken *t, nssSession *session,
+                       CK_OBJECT_HANDLE h, void *arg),
   void *arg
 )
 {
     NSSSlot *slot;
-    NSSCertificate *cert;
-    CK_OBJECT_HANDLE object;
-    CK_ATTRIBUTE cert_template[1];
-    CK_SESSION_HANDLE session;
-    CK_ULONG count;
-    CK_RV ckrv;
     PRStatus cbrv;
+    CK_RV ckrv;
+    CK_ULONG count;
+    CK_OBJECT_HANDLE object;
+    CK_SESSION_HANDLE hSession;
     slot = tok->slot;
-    session = tok->session.handle;
-    NSS_CK_CERTIFICATE_SEARCH(cert_template);
-    NSSTOKEN_ENTER_MONITOR(tok);
-    ckrv = CKAPI(slot)->C_FindObjectsInit(session, cert_template, 1);
+    hSession = session->handle;
+    ckrv = CKAPI(slot)->C_FindObjectsInit(hSession, obj_template, otsize);
     if (ckrv != CKR_OK) {
 	goto loser;
     }
     while (PR_TRUE) {
-	ckrv = CKAPI(slot)->C_FindObjects(session, &object, 1, &count);
+	/* this could be sped up by getting 5-10 at a time? */
+	ckrv = CKAPI(slot)->C_FindObjects(hSession, &object, 1, &count);
 	if (ckrv != CKR_OK) {
 	    goto loser;
 	}
 	if (count == 0) {
 	    break;
 	}
-	/* it would be better if the next two were done outside of the
-	 * monitor.  but we don't want this function anyway, right?
-	 */
-	cert = NSSCertificate_CreateFromHandle(object, slot);
-	if (!cert) {
-	    goto loser;
-	}
-	cbrv = (*callback)(cert, arg);
+	cbrv = (*callback)(tok, session, object, arg);
 	if (cbrv != PR_SUCCESS) {
 	    goto loser;
 	}
     }
-    ckrv = CKAPI(slot)->C_FindObjectsFinal(session);
+    ckrv = CKAPI(slot)->C_FindObjectsFinal(hSession);
     if (ckrv != CKR_OK) {
 	goto loser;
     }
-    NSSTOKEN_EXIT_MONITOR(tok);
-    return NULL; /* for now... */
 loser:
-    NSSTOKEN_EXIT_MONITOR(tok);
     return NULL; /* for now... */
+}
+
+NSS_IMPLEMENT PRStatus *
+NSSToken_TraverseCertificates
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+)
+{
+    PRStatus *rvstack;
+    nssSession *session;
+    struct certCallbackStr ccb;
+    CK_ATTRIBUTE cert_template[] = {
+	{ CKA_CLASS, g_ck_class_cert.data, g_ck_class_cert.size }
+    };
+    CK_ULONG ctsize = sizeof(cert_template) / sizeof(cert_template[0]);
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    ccb.callback = callback;
+    ccb.arg = arg;
+    nssSession_EnterMonitor(session);
+    rvstack = nsstoken_TraverseObjects(tok, session, cert_template, ctsize,
+                                       examine_cert_callback, (void *)&ccb);
+    nssSession_ExitMonitor(session);
+    return rvstack;
+}
+
+NSS_IMPLEMENT NSSCertificate **
+NSSToken_FindCertificatesByTemplate
+(
+  NSSToken *tok,
+  nssSession *sessionOpt,
+  CK_ATTRIBUTE_PTR cktemplate,
+  CK_ULONG ctsize
+)
+{
+    PRStatus *rvstack;
+    nssSession *session;
+    void *certList; /* nssList soon */
+    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    nssSession_EnterMonitor(session);
+    rvstack = nsstoken_TraverseObjects(tok, session, cktemplate, ctsize,
+                                       collect_certs_callback,
+                                       (void *)certList);
+    nssSession_ExitMonitor(session);
+    if (rvstack) {
+	/* examine the errors */
+	goto loser;
+    }
+    /* XXX get an array from the list, return it */
+    return (NSSCertificate **)NULL;
+loser:
+    /* clean out the list */
+    return (NSSCertificate **)NULL;
 }
 

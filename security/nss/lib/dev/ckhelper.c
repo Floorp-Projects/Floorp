@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.1 $ $Date: 2001/09/13 22:06:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -55,20 +55,25 @@ static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.1 $ $Da
 #include "base.h"
 #endif /* BASE_H */
 
-NSS_IMPLEMENT_DATA const CK_BBOOL 
-g_ck_true = CK_TRUE;
+static const CK_BBOOL s_true = CK_TRUE;
+NSS_IMPLEMENT_DATA const NSSItem
+g_ck_true = { (CK_VOID_PTR)&s_true, sizeof(s_true) };
 
-NSS_IMPLEMENT_DATA const CK_BBOOL 
-g_ck_false = CK_FALSE;
+static const CK_BBOOL s_false = CK_FALSE;
+NSS_IMPLEMENT_DATA const NSSItem
+g_ck_false = { (CK_VOID_PTR)&s_false, sizeof(s_false) };
 
-NSS_IMPLEMENT_DATA const CK_OBJECT_CLASS 
-g_ck_obj_class_cert = CKO_CERTIFICATE;
+static const CK_OBJECT_CLASS s_class_cert = CKO_CERTIFICATE;
+NSS_IMPLEMENT_DATA const NSSItem
+g_ck_class_cert = { (CK_VOID_PTR)&s_class_cert, sizeof(s_class_cert) };
 
-NSS_IMPLEMENT_DATA const CK_OBJECT_CLASS 
-g_ck_obj_class_pubkey = CKO_PUBLIC_KEY;
+static const CK_OBJECT_CLASS s_class_pubkey = CKO_PUBLIC_KEY;
+NSS_IMPLEMENT_DATA const NSSItem
+g_ck_class_pubkey = { (CK_VOID_PTR)&s_class_pubkey, sizeof(s_class_pubkey) };
 
-NSS_IMPLEMENT_DATA const CK_OBJECT_CLASS 
-g_ck_obj_class_privkey = CKO_PRIVATE_KEY;
+static const CK_OBJECT_CLASS s_class_privkey = CKO_PRIVATE_KEY;
+NSS_IMPLEMENT_DATA const NSSItem
+g_ck_class_privkey = { (CK_VOID_PTR)&s_class_privkey, sizeof(s_class_privkey) };
 
 NSS_IMPLEMENT PRStatus 
 NSSCKObject_GetAttributes
@@ -77,16 +82,16 @@ NSSCKObject_GetAttributes
   CK_ATTRIBUTE_PTR obj_template,
   CK_ULONG count,
   NSSArena *arenaOpt,
+  nssSession *session,
   NSSSlot  *slot
 )
 {
    nssArenaMark *mark;
-   CK_SESSION_HANDLE session;
+   CK_SESSION_HANDLE hSession;
    CK_ULONG i;
    CK_RV ckrv;
    PRStatus nssrv;
-   /* use the default session */
-   session = slot->token->session.handle; 
+   hSession = session->handle; 
 #ifdef arena_mark_bug_fixed
    if (arenaOpt) {
 	mark = nssArenaMark(arenaOpt);
@@ -96,7 +101,7 @@ NSSCKObject_GetAttributes
    }
 #endif
    /* Get the storage size needed for each attribute */
-   ckrv = CKAPI(slot)->C_GetAttributeValue(session,
+   ckrv = CKAPI(slot)->C_GetAttributeValue(hSession,
                                            object, obj_template, count);
    if (ckrv != CKR_OK) {
 	/* set an error here */
@@ -111,7 +116,7 @@ NSSCKObject_GetAttributes
 	}
    }
    /* Obtain the actual attribute values. */
-   ckrv = CKAPI(slot)->C_GetAttributeValue(session,
+   ckrv = CKAPI(slot)->C_GetAttributeValue(hSession,
                                            object, obj_template, count);
    if (ckrv != CKR_OK) {
 	/* set an error here */

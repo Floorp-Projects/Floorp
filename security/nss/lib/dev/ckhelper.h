@@ -41,7 +41,7 @@
 #define CKHELPER_H
 
 #ifdef DEBUG
-static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.1 $ $Date: 2001/09/13 22:06:08 $ $Name:  $";
+static const char CKHELPER_CVS_ID[] = "@(#) $RCSfile: ckhelper.h,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -59,120 +59,21 @@ PR_BEGIN_EXTERN_C
  */
 
 /* Boolean values */
-NSS_EXTERN_DATA const CK_BBOOL g_ck_true;
-NSS_EXTERN_DATA const CK_BBOOL g_ck_false;
+NSS_EXTERN_DATA const NSSItem g_ck_true;
+NSS_EXTERN_DATA const NSSItem g_ck_false;
 
 /* Object classes */
-NSS_EXTERN_DATA const CK_OBJECT_CLASS g_ck_obj_class_cert;
-NSS_EXTERN_DATA const CK_OBJECT_CLASS g_ck_obj_class_pubkey;
-NSS_EXTERN_DATA const CK_OBJECT_CLASS g_ck_obj_class_privkey;
-
-/*
- * Helpers for building templates.
- */
-
-/*
- * NSS_SET_CK_ATTRIB_GLOBAL(cktmpl, i, ckattr, global_value)
- *
- * used to set one of the global attributes defined above.
- */
-#define NSS_SET_CK_ATTRIB_GLOBAL(cktmpl, i, ckattr, global_value)      \
-    (cktmpl)[i].type       = ckattr;                                   \
-    (cktmpl)[i].pValue     = (CK_VOID_PTR)&(global_value);             \
-    (cktmpl)[i].ulValueLen = (CK_ULONG)sizeof(global_value);
-
-/*
- * NSS_SET_CK_ATTRIB_TRUE(cktmpl, i, ckattr)
- *
- * Set an attribute to CK_TRUE in a template
- */
-#define NSS_SET_CK_ATTRIB_TRUE(cktmpl, i, ckattr)                      \
-    NSS_SET_CK_ATTRIB_GLOBAL(cktmpl, i, ckattr, g_ck_true)
-
-/*
- * NSS_SET_CK_ATTRIB_FALSE(cktmpl, i, ckattr)
- *
- * Set an attribute to CK_FALSE in a template
- */
-#define NSS_SET_CK_ATTRIB_FALSE(cktmpl, i, ckattr)                     \
-    NSS_SET_CK_ATTRIB_GLOBAL(cktmpl, i, ckattr, g_ck_false)
-
-/*
- * NSS_SET_CK_ATTRIB_ITEM(cktmpl, i, ckattr, item)
- *
- * Set an attribute in a template to use data from an item 
- */
-#define NSS_SET_CK_ATTRIB_ITEM(cktmpl, i, ckattr, item)                \
-    (cktmpl)[i].type       = ckattr;                                   \
-    (cktmpl)[i].pValue     = (CK_VOID_PTR)(item)->data;                \
-    (cktmpl)[i].ulValueLen = (CK_ULONG)(item)->len;
-
-/* Create Templates */
-
-/* Certificate template 
- *
- * NSS_CK_CERTIFICATE_CREATE4(cktmpl, subject, id, der)
- *
- *  CKA_CLASS   = CKO_CERTIFICATE
- *  CKA_SUBJECT = subject->data
- *  CKA_ID      = id->data
- *  CKA_VALUE   = der->data
- */
-
-#define NSS_CK_CERTIFICATE_CREATE4(cktmpl, subject, id, der)            \
-    NSS_SET_CK_ATTRIB_GLOBAL(cktmpl, 0, CKA_CLASS, g_ck_obj_class_cert) \
-    NSS_SET_CK_ATTRIB_ITEM(cktmpl, 1, CKA_SUBJECT, subject)             \
-    NSS_SET_CK_ATTRIB_ITEM(cktmpl, 2, CKA_ID, id)                       \
-    NSS_SET_CK_ATTRIB_ITEM(cktmpl, 3, CKA_VALUE, der)   
-
-/* Search Templates */
-
-/* NSS_CK_CERTIFICATE_SEARCH(cktmpl)
- *
- * Set up a search template for any cert object
- */
-#define NSS_CK_CERTIFICATE_SEARCH(cktmpl)                               \
-    NSS_SET_CK_ATTRIB_GLOBAL(cktmpl, 0, CKA_CLASS, g_ck_obj_class_cert)
-
-/* NSS_CK_CERTIFICATE_SEARCH_LABEL2(cktmpl, label)
- *
- * Set up a search template for a cert using label->data
- */
-#define NSS_CK_CERTIFICATE_SEARCH_LABEL2(cktmpl, label)                \
-    NSS_CK_CERTIFICATE_SEARCH(cktmpl)                                  \
-    NSS_SET_CK_ATTRIB_ITEM(cktmpl, 1, CKA_LABEL, label)
-
-/* NSS_CK_CERTIFICATE_SEARCH_SUBJECT2(cktmpl, subject)
- *
- * Set up a search template for a cert using subject->data
- */
-#define NSS_CK_CERTIFICATE_SEARCH_SUBJECT2(cktmpl, subject)            \
-    NSS_CK_CERTIFICATE_SEARCH(cktmpl)                                  \
-    NSS_SET_CK_ATTRIB_ITEM(cktmpl, 1, CKA_SUBJECT, subject)
-
-/* NSS_CK_CERTIFICATE_SEARCH_ID2(cktmpl, id)
- *
- * Set up a search template for a cert using id->data
- */
-#define NSS_CK_CERTIFICATE_SEARCH_ID2(cktmpl, id)                      \
-    NSS_CK_CERTIFICATE_SEARCH(cktmpl)                                  \
-    NSS_SET_CK_ATTRIB_ITEM(cktmpl, 1, CKA_ID, id)
-
-/* NSS_CK_CERTIFICATE_SEARCH_DER2(cktmpl, der)
- *
- * Set up a search template for a cert using der->data
- */
-#define NSS_CK_CERTIFICATE_SEARCH_DER2(cktmpl, der)                    \
-    NSS_CK_CERTIFICATE_SEARCH(cktmpl)                                  \
-    NSS_SET_CK_ATTRIB_ITEM(cktmpl, 1, CKA_VALUE, der)
+NSS_EXTERN_DATA const NSSItem g_ck_class_cert;
+NSS_EXTERN_DATA const NSSItem g_ck_class_pubkey;
+NSS_EXTERN_DATA const NSSItem g_ck_class_privkey;
 
 /* NSS_CK_ATTRIBUTE_TO_ITEM(attrib, item)
  *
  * Convert a CK_ATTRIBUTE to an NSSItem.
  */
-#define NSS_CK_ATTRIBUTE_TO_ITEM(attrib, item)                         \
-    (item)->data = (void *)(attrib)->pValue;                           \
-    (item)->size = (PRUint32)(attrib)->ulValueLen;                     \
+#define NSS_CK_ATTRIBUTE_TO_ITEM(attrib, item)     \
+    (item)->data = (void *)(attrib)->pValue;       \
+    (item)->size = (PRUint32)(attrib)->ulValueLen; \
 
 /* Get an array of attributes from an object. */
 NSS_EXTERN PRStatus 
@@ -182,6 +83,7 @@ NSSCKObject_GetAttributes
   CK_ATTRIBUTE_PTR obj_template,
   CK_ULONG count,
   NSSArena *arenaOpt,
+  nssSession *session,
   NSSSlot  *slot
 );
 
