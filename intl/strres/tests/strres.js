@@ -100,7 +100,13 @@ function localeSwitching(winType, baseDirectory, providerName)
   // Get the new targets 
   // file:/u/tao/gila/mozilla-org/html/projects/intl/chrome/
   // da-DK
-  var newBaseTarget = rdf.GetLiteral(baseDirectory);
+  var finalBase = baseDirectory;
+  if (baseDirectory != "") {
+	finalBase += winType + "/locale/" + providerName + "/";
+  }
+  dump("\n** finalBase=" + finalBase + "**\n");
+
+  var newBaseTarget = rdf.GetLiteral(finalBase);
   var newNameTarget = rdf.GetLiteral(providerName);
   
   // Unassert the old relationships
