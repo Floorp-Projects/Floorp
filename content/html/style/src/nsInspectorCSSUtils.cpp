@@ -75,7 +75,8 @@ nsInspectorCSSUtils::GetRuleNodeParent(nsRuleNode *aNode, nsRuleNode **aParent)
 NS_IMETHODIMP
 nsInspectorCSSUtils::GetRuleNodeRule(nsRuleNode *aNode, nsIStyleRule **aRule)
 {
-    return aNode->GetRule(aRule);
+    *aRule = aNode->GetRule();
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -181,6 +182,6 @@ nsInspectorCSSUtils::GetRuleNodeForContent(nsIContent* aContent,
     NS_ENSURE_TRUE(presShell, NS_ERROR_UNEXPECTED);
 
     nsRefPtr<nsStyleContext> sContext = GetStyleContextForContent(aContent, presShell);
-    sContext->GetRuleNode(aRuleNode);
+    *aRuleNode = sContext->GetRuleNode();
     return NS_OK;
 }

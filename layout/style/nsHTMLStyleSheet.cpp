@@ -808,7 +808,9 @@ HTMLStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
       else if (tag == nsHTMLAtoms::table) {
         if (aData->mCompatMode == eCompatibility_NavQuirks) {
           nscolor bodyColor;
-          nsresult rv = GetBodyColor(ruleWalker->GetCurrentNode()->PresContext(), &bodyColor);
+          nsresult rv =
+            GetBodyColor(ruleWalker->GetCurrentNode()->GetPresContext(),
+                         &bodyColor);
           if (NS_SUCCEEDED(rv) &&
               (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
             if (mDocumentColorRule) {
