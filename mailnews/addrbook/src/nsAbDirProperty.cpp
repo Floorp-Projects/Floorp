@@ -29,9 +29,6 @@
 #include "nsIAbListener.h"
 #include "nsIAddrBookSession.h"
 
-#include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "mdb.h"
 #include "prlog.h"
 #include "prprf.h"
@@ -40,8 +37,7 @@
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID);
-static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 
 nsAbDirProperty::nsAbDirProperty(void)
@@ -77,75 +73,20 @@ NS_IMETHODIMP nsAbDirProperty::QueryInterface(REFNSIID aIID, void** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsAbDirProperty::GetChildNodes(nsIEnumerator* *result)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::GetChildCards(nsIEnumerator* *result)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::GetMailingList(nsIEnumerator **mailingList)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::CreateNewDirectory(const char *dirName)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::AddChildCards(const char *uriName, nsIAbCard **childCard)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::AddDirectory(const char *uriName, nsIAbDirectory **childDir)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::DeleteDirectories(nsISupportsArray *directories)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::DeleteCards(nsISupportsArray *cards)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::HasCard(nsIAbCard *cards, PRBool *hasCard)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsAbDirProperty::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
-{
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsAbDirProperty::GetDirFilePath(char **dbPath)
 {
 	char* path = nsnull;
 	if (m_Server && m_Server->fileName)
 	{
-		nsresult rv = NS_ERROR_FAILURE;
-		NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-		if (NS_FAILED(rv))
-			return rv;
+		nsresult rv = NS_OK;
+		nsFileSpec* dbFile = nsnull;
 
-		nsIFileSpec* userdir;
-		rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &userdir);
-		if (NS_FAILED(rv))
-			return rv;
+		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			abSession->GetUserProfileDirectory(&dbFile);
 		
-		nsFileSpec dbFile;
-		userdir->GetFileSpec(&dbFile);
-		dbFile += m_Server->fileName;
-		char* file = PL_strdup(dbFile.GetCString());
+		(*dbFile) += m_Server->fileName;
+		char* file = PL_strdup(dbFile->GetCString());
 		*dbPath = file;
 		
 		return NS_OK;

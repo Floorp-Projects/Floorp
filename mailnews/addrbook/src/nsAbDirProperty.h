@@ -53,16 +53,16 @@ public:
 	NS_IMETHOD SetServer(DIR_Server * aServer);
 	NS_IMETHOD GetDirFilePath(char **dbPath);
 
-	NS_IMETHOD GetChildNodes(nsIEnumerator* *result);
-	NS_IMETHOD GetChildCards(nsIEnumerator* *result);
-	NS_IMETHOD AddChildCards(const char *uriName, nsIAbCard **childCard);
-	NS_IMETHOD AddDirectory(const char *uriName, nsIAbDirectory **childDir);
-  	NS_IMETHOD DeleteDirectories(nsISupportsArray *directories);
-	NS_IMETHOD DeleteCards(nsISupportsArray *cards);
- 	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard);
-	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir);
-	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList);
-	NS_IMETHOD CreateNewDirectory(const char *dirName);
+	NS_IMETHOD GetChildNodes(nsIEnumerator **childList) { return NS_OK; }
+	NS_IMETHOD GetChildCards(nsIEnumerator **childCards) { return NS_OK; }
+	NS_IMETHOD AddChildCards(const char *uriName, nsIAbCard **childCard) { return NS_OK; }
+	NS_IMETHOD AddDirectory(const char *uriName, nsIAbDirectory **childDir) { return NS_OK; }
+	NS_IMETHOD DeleteDirectories(nsISupportsArray *dierctories) { return NS_OK; }
+	NS_IMETHOD DeleteCards(nsISupportsArray *cards) { return NS_OK; }
+	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard) { return NS_OK; }
+	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir) { return NS_OK; }
+	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList) { return NS_OK; }
+	NS_IMETHOD CreateNewDirectory(const char *dirName) { return NS_OK; }
 
 protected:
 
