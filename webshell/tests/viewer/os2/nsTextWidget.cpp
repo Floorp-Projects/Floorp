@@ -207,7 +207,7 @@ ULONG nsTextWidget::WindowStyle()
 
 ULONG nsTextWidget::WindowExStyle()
 {
-    return;
+    return 0;
 }
 
 
