@@ -153,6 +153,7 @@ Rights Reserved.
 	<key id="key_reply" key="&replyMsgCmd.key;"   observes="cmd_reply" modifiers="accel"/>
 	<key id="key_replyall" key="&replyToAllMsgCmd.key;"   observes="cmd_replyall" modifiers="accel, shift"/>
 	<key id="key_forward" key="&forwardMsgCmd.key;"   observes="cmd_forward" modifiers="accel"/>
+    <key id="key_editAsNew" key="&editMsgAsNewCmd.key;"   observes="cmd_editAsNew" modifiers="accel"/>
 	<key id="key_openMessage" key="&openMessageWindowCmd.key;"   observes="cmd_openMessage" modifiers="accel"/>
 	<key id="key_print" key="&printCmd.key;"   observes="cmd_print" modifiers="accel"/>
 	<key id="key_saveAsFile" key="&saveAsFileCmd.key;"   observes="cmd_saveAsFile" modifiers="accel"/>
@@ -425,7 +426,7 @@ Rights Reserved.
 		<menuitem id="messagePaneContext-replySender"
 			  value="&contextReplySender.label;"
 			  accesskey="&contextReplySender.accesskey;"
-			  oncommand="MsgReplyMessage(event);"/>
+			  oncommand="MsgReplySender(event);"/>
 		<menuitem id="messagePaneContext-replyNewsgroup"
 			  value="&contextReplyNewsgroup.label;"
 			  accesskey="&contextReplyNewsgroup.accesskey;"
@@ -867,7 +868,10 @@ Rights Reserved.
 				<menuitem value="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
 			</menupopup>
 		</menu>
-		<menuitem value="&editMsgAsNewCmd.label;" accesskey="&editMsgAsNewCmd.accesskey;" observes="cmd_editAsNew"/>
+        <menuitem value="&editMsgAsNewCmd.label;"
+            accesskey="&editMsgAsNewCmd.accesskey;"
+            key="key_editAsNew"
+            observes="cmd_editAsNew"/>
 		<menuseparator/>
 		<menu value="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
 		 ignore="http://home.netscape.com/NC-rdf#MessageChild">

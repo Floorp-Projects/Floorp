@@ -317,7 +317,8 @@ Rights Reserved.
 <!ENTITY forwardAsAttachmentCmd.label "Attachment">  
 <!ENTITY forwardAsAttachmentCmd.accesskey "a">  
 <!ENTITY editMsgAsNewCmd.label "Edit Message As New">  
-<!ENTITY editMsgAsNewCmd.accesskey "e">  
+<!ENTITY editMsgAsNewCmd.accesskey "e">
+<!ENTITY editMsgAsNewCmd.key "e">
 <!ENTITY moveMsgMenu.label "Move Message">  
 <!ENTITY moveMsgMenu.accesskey "m">  
 <!ENTITY copyMsgMenu.label "Copy Message">  
