@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.32 2002/05/10 20:21:38 jpierre%netscape.com Exp $
+ * $Id: certdb.c,v 1.33 2002/06/20 18:53:16 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -781,7 +781,8 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     }
 
     /* generate and save the database key for the cert */
-    rv = CERT_KeyFromDERCert(arena, &cert->derCert, &cert->certKey);
+    rv = CERT_KeyFromIssuerAndSN(arena, &cert->derIssuer, &cert->serialNumber,
+			&cert->certKey);
     if ( rv ) {
 	goto loser;
     }
