@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.13 $ ';
+$::UtilsVersion = '$Revision: 1.14 $ ';
 
 package TinderUtils;
 
@@ -639,14 +639,15 @@ sub run_tests {
     if ($Settings::MailNewsTest and $test_result eq 'success') {
         print_log "Running MailNewsTest ...\n";
 
-        my $cmd = "$binary_basename "
-                  ."http://www.mozilla.org/quality/mailnews/popTest.html";
+		my $mail_url = "http://www.mozilla.org/quality/mailnews/popTest.html";
+
+        my $cmd = "$binary_basename $mail_url";
 
         # Stuff prefs in here.
         if (system("grep -s signed.applets.codebase_principal_support $pref_file > /dev/null")) {
           open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
           print PREFS "user_pref(\"signed.applets.codebase_principal_support\", true);\n";
-          print PREFS "user_pref(\"security.principal.X0\", \"[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=1 UniversalXPConnect=1\");";
+          print PREFS "user_pref(\"security.principal.X0\", \"[Codebase $mail_url] UniversalBrowserRead=4 UniversalXPConnect=4\");";
           close PREFS;
         }
 
@@ -662,7 +663,7 @@ sub run_tests {
         print_log "Running  DomToTextConversionTest ...\n";
         $test_result =
           FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
-                        "TestOutSinks", 45,
+                        "perl TestOutSinks.pl", 45,
                         "FAILED", 0,
                         0);  # Timeout means failure.
     }
