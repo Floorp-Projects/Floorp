@@ -145,13 +145,10 @@ function()
   }
 }
 
-/* called whenever something on the toolbar is clicked */
-LinkToolbarUI.prototype.clicked =
+/* called whenever something on the toolbar gets an oncommand event */
+LinkToolbarUI.prototype.commanded =
 function(event)
 {
-  // Only handle primary click.  Change this if we get a context menu
-  if (0 != event.button) return;  
-
   // Return if this is one of the menubuttons.
   if (event.target.getAttribute("type") == "menu") return;
   
