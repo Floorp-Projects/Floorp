@@ -20,6 +20,7 @@
 
 var toolbar;
 var documentModified;
+var EditorDisplayStyle = true;
 
 function EditorStartup(editorType)
 {
@@ -443,6 +444,26 @@ function EditorAlign(align)
   dump("aligning\n");
   editorShell.Align(align);
   contentWindow.focus();
+}
+
+function EditorToggleDisplayStyle()
+{
+  if (EditorDisplayStyle) {
+    EditorDisplayStyle = false;
+    styleSheet = "resource:/res/ua.css";
+    //TODO: Where do we store localizable JS strings?
+    buttonText = "Preview";
+  }
+  else {
+    EditorDisplayStyle = true;
+    styleSheet = "chrome://editor/content/EditorContent.css"
+    buttonText = "Edit Mode";
+  }
+  EditorApplyStyleSheet(styleSheet);
+  
+  button = document.getElementById("DisplayStyleButton");
+  if (button)
+    button.setAttribute("value",buttonText);
 }
 
 function EditorPrintPreview()

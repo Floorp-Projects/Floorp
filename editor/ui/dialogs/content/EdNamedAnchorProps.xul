@@ -6,10 +6,10 @@
 
 <!-- These entity declarations will go into a separate, locale file at some point -->
 <!ENTITY windowTitle.label "Named Anchor Properties">
-<!ENTITY anchorNameEditField.label "Anchor Name">
+<!ENTITY anchorNameEditField.label "Anchor Name:">
 <!ENTITY OKButton.label "OK">
 <!ENTITY CancelButton.label "Cancel">
-<!ENTITY advancedEditingButton.label "More Attributes...">
+<!ENTITY moreButton.label "More Attributes...">
 
 ]>
 
@@ -29,22 +29,14 @@
   <table>
     <tr>
       <td>
-        <label class="spacedtext" for="name"> &anchorNameEditField.label; </label>
-        <input type="text" id="name" size="30" maxlength="255" />
+        <label class="spacedtext" for="nameInput"> &anchorNameEditField.label; </label><br/>
+        <input type="text" id="nameInput" size="30" maxlength="255" />
       </td>
     </tr>
   </table>
-<!-- A classic case of box layout fighting what I want to do!
-  <xul:box>
-    <div class="spacedtext">
-    Enter a name for this target:
-    </div>
-    <input type="text" id="name" size="30"/>
-  </xul:box>
--->
   <hr width="100%"/>
   <xul:box>
-    <xul:titledbutton class="spaced" id="Advanced" onclick="onAdvanced()" value="&advancedEditingButton.label;"/>
+    <xul:titledbutton class="spaced" id="MoreAttributes" onclick="onMoreAttributes()" value="&moreButton.label;"/>
     <xul:spring flex="100%"/>    
     <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>
     <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>

@@ -105,7 +105,7 @@ function initDialog()
   } else if (!insertNew && !imageElement) {
 
     // Replace the link message with the link source string
-    selectedText = editorShell.selectionAsText;
+    selectedText = GetSelectionAsText();
     if (selectedText.length > 0) {
       // Use just the first 50 characters and add "..."
       selectedText = TruncateStringAtWordEnd(selectedText, 50, true);
@@ -143,29 +143,36 @@ function onOK()
 {
   // TODO: VALIDATE FIELDS BEFORE COMMITING CHANGES
 
-  // Coalesce into one undo transaction
-  editorShell.BeginBatchChanges();
+  href = TrimString(dialog.hrefInput.value);
+  if (href.length > 0) {
+    // Coalesce into one undo transaction
+    editorShell.BeginBatchChanges();
 
-  // Set the HREF directly on the editor document's anchor node
-  //  or on the newly-created node if insertNew is true
-  anchorElement.setAttribute("href",dialog.hrefInput.value);
+    // Set the HREF directly on the editor document's anchor node
+    //  or on the newly-created node if insertNew is true
+    anchorElement.setAttribute("href",href);
 
-  // Get text to use for a new link
-  if (insertNew) {
-    // Append the link text as the last child node 
-    //   of the anchor node
-    dump("Creating text node\n");
-    textNode = editorShell.editorDocument.createTextNode(dialog.linkTextInput.value);
-    if (textNode) {
-      anchorElement.appendChild(textNode);
+    // Get text to use for a new link
+    if (insertNew) {
+      // Append the link text as the last child node 
+      //   of the anchor node
+      dump("Creating text node\n");
+      textNode = editorShell.editorDocument.createTextNode(dialog.linkTextInput.value);
+      if (textNode) {
+        anchorElement.appendChild(textNode);
+      }
+      dump("Inserting\n");
+      editorShell.InsertElement(anchorElement, false);
+    } else if (insertLinkAroundSelection) {
+      dump("Setting link around selected text\n");
+      editorShell.InsertLinkAroundSelection(anchorElement);
     }
-    dump("Inserting\n");
-    editorShell.InsertElement(anchorElement, false);
-  } else if (insertLinkAroundSelection) {
-    dump("Setting link around selected text\n");
-    editorShell.InsertLinkAroundSelection(anchorElement);
+    editorShell.EndBatchChanges();
+  } else if (!insertNew) {
+    // We already had a link, but empty HREF means remove it
+    // TODO: IMPLEMENT REMOVE LINK
+    
   }
-  editorShell.EndBatchChanges();
 
   window.close();
 }

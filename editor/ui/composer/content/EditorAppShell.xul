@@ -207,6 +207,7 @@
 <!ENTITY saveToolbarCmd.label "Save">
 <!ENTITY publishToolbarCmd.label "Publish">
 <!ENTITY previewToolbarCmd.label "Preview">
+<!ENTITY editmodeToolbarCmd.label "Edit Mode">
 <!ENTITY printToolbarCmd.label "Print">
 <!ENTITY findToolbarCmd.label "Find">
 <!ENTITY linkToolbarCmd.label "Link">
@@ -451,6 +452,9 @@
       </menu>
       <separator />
       <menu name="&stylesheetMenu.label;">
+        <menuitem name="EditorContent Sheet"     onclick="EditorApplyStyleSheet('chrome://editor/content/EditorContent.css')"/>
+        <menuitem name="EditorContent Sheet"     onclick="EditorApplyStyleSheet('resource:/res/ua.css')"/>
+        <separator />
         <menuitem name="&stylesheetEditorOneCmd.label;"     onclick="EditorApplyStyleSheet('chrome://editor/content/EditorStyles1.css')"/>
         <separator />
         <menuitem name="&stylesheetOldstyleCmd.label;"      onclick="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
@@ -499,8 +503,8 @@
 	      <titledbutton src="&newEditorIcon.url;" align="bottom" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
 	      <titledbutton src="&openEditorIcon.url;" align="bottom" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
 	      <titledbutton id="saveButton" src="&saveIcon.url;" align="bottom" value="&saveCmd.label;" class="popup" onclick="EditorSave()"/>
-	      <titledbutton src="&publishIcon.url;" align="bottom" value="&publishToolbarCmd.label;" class="popup"/>
-	      <titledbutton src="&previewIcon.url;" align="bottom" value="&previewToolbarCmd.label;" class="popup"/>
+<!-- Not supporting publishing (yet?) -->
+<!--      <titledbutton src="&publishIcon.url;" align="bottom" value="&publishToolbarCmd.label;" class="popup"/> -->
 	      <titledbutton src="&printIcon.url;" align="bottom" value="&printToolbarCmd.label;" class="popup"/>
 	      <titledbutton src="&findIcon.url;" align="bottom" value="&findToolbarCmd.label;" onclick="EditorFind()"/>
 	      <titledbutton src="&linkIcon.url;" align="bottom" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
@@ -509,7 +513,8 @@
 	      <titledbutton src="&hlineIcon.url;" align="bottom" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
 	      <titledbutton src="&tableIcon.url;" align="bottom" value="&tableToolbarCmd.label;" onclick="EditorInsertTable()"/>
 	      <titledbutton src="&spellingIcon.url;" align="bottom" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
-		  <spring flex="100%"/>
+  		  <spring flex="100%"/>
+	      <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" align="bottom" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
 	  </toolbar>
       <toolbar id="FormatToolbar">
 		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft"/>

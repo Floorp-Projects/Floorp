@@ -1,0 +1,23 @@
+/* Styles to alter look of things in the Editor content window */
+
+a[name] {
+  display: inline; /*-block;*/    /* the new feature */ 
+  min-width: 10px; 
+  width: 10px; 
+  height: 10px; 
+  background-image: url(chrome://editor/skin/images/ED_Left.gif); 
+  border: 1px solid blue; 
+}
+
+table {
+  empty-cells: show;
+}
+
+table[empty-cells=show] {
+  border: 1px dotted red;
+}
+
+td, tr {
+  min-height: 10px;
+  min-line-height: 10px;
+}
