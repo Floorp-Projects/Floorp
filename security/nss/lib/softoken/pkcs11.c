@@ -3488,6 +3488,16 @@ pk11_key_collect(DBT *key, DBT *data, void *arg)
 
 	if (keyData->id->len == 0) {
 	    haveMatch = PR_TRUE; /* taking any key */
+	    /* Make sure this isn't a NSC_KEY */
+	    privKey = nsslowkey_FindKeyByPublicKey(keyData->slot->keyDB, 
+					&tmpDBKey, keyData->slot->password);
+	    if (privKey) {
+		haveMatch = isSecretKey(privKey) ?
+				(PRBool)(keyData->classFlags & NSC_KEY) != 0:
+				(PRBool)(keyData->classFlags & 
+					      (NSC_PRIVATE|NSC_PUBLIC)) != 0;
+		nsslowkey_DestroyPrivateKey(privKey);
+	    }
 	} else {
 	    SHA1_HashBuf( hashKey, key->data, key->size ); /* match id */
 	    haveMatch = SECITEM_ItemsAreEqual(keyData->id,&result);
@@ -3571,15 +3581,15 @@ pk11_searchKeys(PK11Slot *slot, SECItem *key_id, PRBool isLoggedIn,
     if (key_id->data) {
 	privKey = nsslowkey_FindKeyByPublicKey(keyHandle, key_id, slot->password);
 	if (privKey) {
-	    if (classFlags & NSC_KEY) {
+	    if ((classFlags & NSC_KEY) && isSecretKey(privKey)) {
     	        pk11_addHandle(search,
 			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_KEY));
 	    }
-	    if (classFlags & NSC_PRIVATE) {
+	    if ((classFlags & NSC_PRIVATE) && !isSecretKey(privKey)) {
     	        pk11_addHandle(search,
 			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_PRIV));
 	    }
-	    if (classFlags & NSC_PUBLIC) {
+	    if ((classFlags & NSC_PUBLIC) && !isSecretKey(privKey)) {
     	        pk11_addHandle(search,
 			pk11_mkHandle(slot,key_id,PK11_TOKEN_TYPE_PUB));
 	    }
