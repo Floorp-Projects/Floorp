@@ -54,10 +54,10 @@
 }
 
 #if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-#define GFXFORMAT gfxIFormats::BGR
+#define GFXFORMAT gfxIFormats::BGR_A1
 #else
 #define USE_RGB
-#define GFXFORMAT gfxIFormats::RGB
+#define GFXFORMAT gfxIFormats::RGB_A1
 #endif
 
 class nsXBMDecoder : public imgIDecoder
@@ -91,6 +91,7 @@ private:
     PRInt32 mHeight;
 
     PRUint8* mRow; // Hold the decoded row
+    PRUint8* mAlphaRow; // alpha data for the row
 
     enum {
         RECV_HEADER,
