@@ -110,6 +110,10 @@ HRESULT STDMETHODCALLTYPE CControlEventSink:: Invoke(
 		break;
 	case 0x103:
 		szEvent = _T("DocumentComplete");
+        if (m_pBrowseDlg)
+        {
+            m_pBrowseDlg->UpdateURL();
+        }
 		break;
 	case 0xfd:
 		szEvent = _T("OnQuit");
