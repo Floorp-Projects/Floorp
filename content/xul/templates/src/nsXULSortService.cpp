@@ -112,7 +112,6 @@ static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 
 static NS_DEFINE_CID(kXULContentUtilsCID,     NS_XULCONTENTUTILS_CID);
-
 static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
 
 static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
@@ -141,6 +140,7 @@ typedef	struct	_sortStruct	{
 	nsCOMPtr<nsISupportsArray>		resCache;
 	nsCOMPtr<nsIAtom>			kTreeCellAtom;
 	PRInt32					colIndex;
+	nsCOMPtr<nsIContent>			parentContainer;
 	PRInt32					kNameSpaceID_XUL;
 	PRBool					descendingSort;
 	PRBool					naturalOrderSort;
@@ -187,11 +187,10 @@ private:
     static nsIRDFResource	*kRDF_instanceOf;
     static nsIRDFResource	*kRDF_Seq;
 
-    static PRInt32	kNameSpaceID_XUL;
-    static PRInt32	kNameSpaceID_RDF;
+    static PRInt32		kNameSpaceID_XUL;
+    static PRInt32		kNameSpaceID_RDF;
 
     static nsIRDFService	*gRDFService;
-
     static nsIXULContentUtils   *gXULUtils;
 
 PRBool		IsTreeElement(nsIContent *element);
@@ -283,10 +282,9 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 			NS_ERROR("couldn't create rdf service");
 		}
 
-
 		rv = nsServiceManager::GetService(kXULContentUtilsCID,
-						  nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
-						  (nsISupports**) &gXULUtils);
+						nsCOMTypeInfo<nsIXULContentUtils>::GetIID(),
+						(nsISupports**) &gXULUtils);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
 
 		// get a locale factory 
@@ -384,14 +382,16 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 		NS_IF_RELEASE(collationService);
 		collationService = nsnull;
 
-		if (gRDFService) {
-		    nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-		    gRDFService = nsnull;
+		if (gRDFService)
+		{
+			nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+			gRDFService = nsnull;
 		}
 
-		if (gXULUtils) {
-		    nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
-		    gXULUtils = nsnull;
+		if (gXULUtils)
+		{
+			nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
+			gXULUtils = nsnull;
 		}
 	}
 }
@@ -1037,7 +1037,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 			}
 		}
 	}
-	else if (sortInfo->naturalOrderSort == PR_TRUE)
+	else if ((sortInfo->naturalOrderSort == PR_TRUE) && (sortInfo->parentContainer))
 	{
 		nsAutoString		cellPosVal1;
 
@@ -1045,8 +1045,18 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 		// Note: this code doesn't handle the aggregated Seq case especially well
 		if ((res1) && (sortInfo->db))
 		{
+			nsCOMPtr<nsIRDFResource>	parentResource;
+			nsCOMPtr<nsIDOMXULElement>	parentDOMNode = do_QueryInterface(sortInfo->parentContainer);
+			if (parentDOMNode)
+			{
+				if (NS_FAILED(rv = parentDOMNode->GetResource(getter_AddRefs(parentResource))))
+				{
+					parentResource = nsnull;
+				}
+			}
+
 			nsCOMPtr<nsISimpleEnumerator>	arcs;
-			if (NS_SUCCEEDED(rv = sortInfo->db->ArcLabelsIn(res1, getter_AddRefs(arcs))))
+			if ((parentResource) && (NS_SUCCEEDED(rv = sortInfo->db->ArcLabelsIn(res1, getter_AddRefs(arcs)))))
 			{
 				PRBool		hasMore = PR_TRUE;
 				while(hasMore)
@@ -1067,18 +1077,36 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 					if (nsCRT::strncasecmp(uri, kRDFNameSpace_Seq_Prefix, sizeof(kRDFNameSpace_Seq_Prefix)-1))
 						continue;
 
-					cellPosVal1 = uri;
-					cellPosVal1.Cut(0, sizeof(kRDFNameSpace_Seq_Prefix)-1);
+					nsCOMPtr<nsISimpleEnumerator>	srcs;
+					if (NS_FAILED(rv = sortInfo->db->GetSources(property, res1, PR_TRUE, getter_AddRefs(srcs))))
+						continue;
+					PRBool	hasMoreSrcs = PR_TRUE;
+					while(hasMoreSrcs)
+					{
+						if (NS_FAILED(rv = srcs->HasMoreElements(&hasMoreSrcs)))	break;
+						if (hasMoreSrcs == PR_FALSE)	break;
 
-					// hack: assume that its a number, so pad out a bit
-			                nsAutoString	zero("000000");
-			                if (cellPosVal1.Length() < zero.Length())
-			                {
-						cellPosVal1.Insert(zero, 0, zero.Length() - cellPosVal1.Length());
-			                }
+						nsCOMPtr<nsISupports>	isupports2;
+						if (NS_FAILED(rv = srcs->GetNext(getter_AddRefs(isupports2))))	break;
+						nsCOMPtr<nsIRDFResource> src = do_QueryInterface(isupports2);
+						if (!src)			continue;
+						
+						if (src == parentResource)
+						{
+							cellPosVal1 = uri;
+							cellPosVal1.Cut(0, sizeof(kRDFNameSpace_Seq_Prefix)-1);
 
-					hasMore = PR_FALSE;
-					break;
+							// hack: assume that its a number, so pad out a bit
+					                nsAutoString	zero("000000");
+					                if (cellPosVal1.Length() < zero.Length())
+					                {
+								cellPosVal1.Insert(zero, 0, zero.Length() - cellPosVal1.Length());
+					                }
+							hasMore = PR_FALSE;
+							hasMoreSrcs = PR_FALSE;
+							break;
+						}
+					}
 				}
 			}
 		}
@@ -1308,7 +1336,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 
 
 NS_IMETHODIMP
-XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIContent *root,
+XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIContent *root, nsIContent *trueParent,
 					nsIContent *container, nsIContent *node, PRBool aNotify)
 {
 	nsresult	rv;
@@ -1321,6 +1349,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIConten
 	sortInfo.resCache = nsnull;
 	sortInfo.mInner = nsnull;
 	sortInfo.colIndex = -1;
+	sortInfo.parentContainer = trueParent;
 	sortInfo.kTreeCellAtom = kTreeCellAtom;
 	sortInfo.kNameSpaceID_XUL = kNameSpaceID_XUL;
 	sortInfo.sortProperty = nsnull;
@@ -1335,6 +1364,10 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIConten
 		if (NS_SUCCEEDED(rv = GetSortColumnInfo(root, sortResource, sortDirection, sortResource2)))
 		{
 			sortInfoAvailable = PR_TRUE;
+		}
+		else
+		{
+			sortDirection = "natural";
 		}
 	}
 	else
@@ -1382,7 +1415,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIConten
 	}
 
 	PRBool			isContainerRDFSeq = PR_FALSE;
-
+	
 	if ((sortInfo.db) && (sortInfo.naturalOrderSort == PR_TRUE))
 	{
 		// walk up the content model to find the REAL
@@ -1473,9 +1506,8 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsIConten
 					}
 					else
 					{
-						container->InsertChildAt(node,
-							((direction > 0) ? current + 1: (current >= 0) ? current : 0),
-							aNotify);
+						PRInt32		thePos = ((direction > 0) ? current + 1: (current >= 0) ? current : 0);
+						container->InsertChildAt(node, thePos, aNotify);
 					}
 					childAdded = PR_TRUE;
 					break;
@@ -1524,6 +1556,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.db = nsnull;
 	sortInfo.resCache = nsnull;
 	sortInfo.mInner = nsnull;
+	sortInfo.parentContainer = nsnull;
 
 	nsCOMPtr<nsIDOMXULElement>	domXulTree = do_QueryInterface(treeNode);
 	if (!domXulTree)	return(NS_ERROR_FAILURE);

@@ -185,6 +185,7 @@ public:
 
     nsresult
     BuildContentFromTemplate(nsIContent *aTemplateNode,
+                             nsIContent *trueParent,
                              nsIContent *aRealNode,
                              PRBool aIsUnique,
                              nsIRDFResource* aChild,
@@ -1673,6 +1674,7 @@ RDFGenericBuilderImpl::SubstituteText(nsIRDFResource* aResource,
 
 nsresult
 RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
+                                                nsIContent *trueParent,
                                                 nsIContent *aRealNode,
                                                 PRBool aIsUnique,
                                                 nsIRDFResource* aChild,
@@ -1777,7 +1779,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             // Recurse until we get to the resource element.
-            rv = BuildContentFromTemplate(tmplKid, realKid, PR_TRUE, aChild, aNotify);
+            rv = BuildContentFromTemplate(tmplKid, trueParent, realKid, PR_TRUE, aChild, aNotify);
             if (NS_FAILED(rv)) return rv;
         }
         else if (isResourceElement) {
@@ -1911,7 +1913,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // hand" because HTML won't build itself up
                 // lazily. Note that we _don't_ need to notify: we'll
                 // add the entire subtree in a single whack.
-                rv = BuildContentFromTemplate(tmplKid, realKid, isUnique, aChild, PR_FALSE);
+                rv = BuildContentFromTemplate(tmplKid, trueParent, realKid, isUnique, aChild, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 if (isResourceElement) {
@@ -1937,7 +1939,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = NS_ERROR_UNEXPECTED;
                 if ((nsnull != gXULSortService) && (isResourceElement))
                 {
-                    rv = gXULSortService->InsertContainerNode(mDB, mRoot, aRealNode, realKid, aNotify);
+                    rv = gXULSortService->InsertContainerNode(mDB, mRoot,
+                    		trueParent, aRealNode, realKid, aNotify);
                 }
                 if (NS_FAILED(rv))
                 {
@@ -2030,7 +2033,7 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
         return NS_OK;
     }
 
-    rv = BuildContentFromTemplate(tmpl, aElement, PR_TRUE, aChild, aNotify);
+    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_TRUE, aChild, aNotify);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to build content from template");
 	return rv;
 }
@@ -2397,7 +2400,7 @@ RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement, const nsStri
         element = parent;
     }
 
-    rv = BuildContentFromTemplate(tmpl, aElement, PR_FALSE, resource, PR_FALSE);
+    rv = BuildContentFromTemplate(tmpl, aElement, aElement, PR_FALSE, resource, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
