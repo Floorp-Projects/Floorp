@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -31,21 +31,19 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_WINEMBED            ICON    DISCARDABLE     "winEmbed.ICO"
-IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+IDI_WINEMBED            ICON                    "winEmbed.ICO"
+IDI_SMALL               ICON                    "SMALL.ICO"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
 //
 
-IDC_WINEMBED MENU DISCARDABLE 
+IDC_WINEMBED MENU 
 BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "New Browser...",              MOZ_NewBrowser
-        MENUITEM SEPARATOR
-        MENUITEM "Switch Profile...",           MOZ_SwitchProfile
         MENUITEM SEPARATOR
         MENUITEM "&Save As...",                 MOZ_Save
         MENUITEM "Print Page",                  MOZ_Print
@@ -83,7 +81,7 @@ END
 // TEXTINCLUDE
 //
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -92,13 +90,13 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
 END
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
@@ -111,7 +109,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_APP_TITLE           "winEmbed"
     IDS_HELLO               "Embedding Mozilla is so much fun!!"
@@ -122,7 +120,7 @@ BEGIN
     IDS_HIST_RELOAD_NORMAL  "Reloading url, (normal) :"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_HIST_RELOAD_BYPASSPROXY "Reloading url, (bypassing Proxy) :"
     IDS_HIST_RELOAD_BYPASSCACHE "Reloading url, (bypassing cache) :"
@@ -152,8 +150,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // Dialog
 //
 
-IDD_BROWSER DIALOG DISCARDABLE  0, 0, 400, 217
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
+IDD_BROWSER DIALOG  0, 0, 400, 217
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | 
     WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "winEmbed sample - UNSUPPORTED"
 MENU IDC_WINEMBED
@@ -175,8 +173,8 @@ BEGIN
                     316,208,84,9
 END
 
-IDD_BROWSER_NC DIALOG DISCARDABLE  0, 0, 400, 217
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
+IDD_BROWSER_NC DIALOG  0, 0, 400, 217
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | 
     WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 CAPTION "winEmbed chromeless sample"
 MENU IDC_WINEMBED
@@ -193,7 +191,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_BROWSER, DIALOG
     BEGIN
@@ -221,8 +219,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_EIRE
 // Dialog
 //
 
-IDD_CHOOSEPROFILE DIALOG DISCARDABLE  0, 0, 186, 154
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_CHOOSEPROFILE DIALOG  0, 0, 186, 154
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
 CAPTION "Choose Profile"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -240,7 +239,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_CHOOSEPROFILE, DIALOG
     BEGIN
