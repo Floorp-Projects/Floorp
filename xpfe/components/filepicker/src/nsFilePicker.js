@@ -93,6 +93,7 @@ nsFilePicker.prototype = {
       url.file = this.mFile;
       return url;
     }
+    return null;
   },
 
   /* attribute wstring defaultString; */
@@ -182,6 +183,8 @@ nsFilePicker.prototype = {
       lastDirectory = o.retvals.directory;
       return o.retvals.buttonStatus;
     } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }
+
+    return null;
   }
 }
 
@@ -222,7 +225,7 @@ function(compMgr)
 }
     
 /* factory object */
-filePickerFactory = new Object();
+var filePickerFactory = new Object();
 
 filePickerFactory.createInstance =
 function (outer, iid) {
