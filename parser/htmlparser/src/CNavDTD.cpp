@@ -59,7 +59,8 @@ static nsAutoString gEmpty;
 static eHTMLTags gFormElementTags[]= {  
     eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
     eHTMLTag_isindex, eHTMLTag_label,     eHTMLTag_legend,
-    eHTMLTag_option,  eHTMLTag_select,    eHTMLTag_textarea};
+    eHTMLTag_option,  eHTMLTag_optgroup,  eHTMLTag_select,
+    eHTMLTag_textarea};
 
 static eHTMLTags gHeadingTags[]={
   eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
@@ -1309,7 +1310,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     /***************************************************************************
      * Handle form elements here. Why? Because as long as a form is open, 
      * almost any form element is allowed. (Except <option> which must have a 
-     * <select> as a parent.) Handling forms here means I don't have to do 
+     * <select> or <optgroup> as a parent. and <optgroup> which must have a
+     * <select> as a parent) Handling forms here means I don't have to do 
      * special case form handling in every case statement below.
      *
      * Note: ANYONE can contain a form element so long as a form is open.
@@ -1318,8 +1320,11 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     if(HasOpenContainer(eHTMLTag_form)) {
       switch((eHTMLTags)aParent) {
         case eHTMLTag_select:
-          result=PRBool(eHTMLTag_option==aChild);
+          result=PRBool(eHTMLTag_option==aChild || eHTMLTag_optgroup==aChild);
           break;
+	case eHTMLTag_optgroup:
+	  result=PRBool(eHTMLTag_option==aChild);
+	  break;
         case eHTMLTag_option:
           result=PR_FALSE;
           break;
@@ -1484,13 +1489,13 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
         break;
 
       case eHTMLTag_option:
-        //for now, allow an option to contain anything but another option...
-        result=PRBool(eHTMLTag_option!=aChild);
+        //for now, allow an option to contain anything but another option/group
+        result=PRBool((eHTMLTag_option!=aChild) && (eHTMLTag_optgroup!=aChild));
         break;
 
       case eHTMLTag_optgroup:
-        //for now, allow an optgroup to hold itself and options...
-        result=PRBool((eHTMLTag_option==aChild) || (aParent==aChild));
+        //for now, allow an optgroup to hold any child tag
+        result=FindTagInSet(aChild,gBlockAndInlineChildTags,sizeof(gBlockAndInlineChildTags)/sizeof(eHTMLTag_unknown));
         break;
 
       case eHTMLTag_applet:
