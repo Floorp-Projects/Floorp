@@ -13,41 +13,40 @@
 *
 * The Initial Developer of the Original Code is Netscape
 * Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation. All
-* Rights Reserved.
+* Copyright (C) 1998 Netscape Communications Corporation.
+* All Rights Reserved.
 *
 * Contributor(s): pschwartau@netscape.com  
-* Date: 12 MAR 2001
+* Date: 12 Mar 2001
 *
 *
 * SUMMARY: Testing Array.prototype.toLocaleString()
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=56883
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=58031
-*  
+*
+* By ECMA3 15.4.4.3, myArray.toLocaleString() means that toLocaleString()
+* should be applied to each element of the array, and the results should be
+* concatenated with an implementation-specific delimiter. For example:
+*
+*  myArray[0].toLocaleString()  +  ','  +  myArray[1].toLocaleString()  +  etc.
+*
+* In this testcase, toLocaleString() is defined locally as a property of each array
+* element, thus is the function that gets invoked. This function increments a
+* global variable by one. The end-value of this variable should be myArray.length.
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 56883;
 var summary = 'Testing Array.prototype.toLocaleString() -';
 var actual = '';
 var expect = '';
+var n = 0;
+var obj = {toLocaleString: function() {n++}};
+var myArray = [obj, obj, obj];
 
 
-/* According to ECMA3 15.4.4.3, a.toLocaleString() means toLocaleString()
- * should be applied to each element of the array, and the results should be
- * concatenated with an implementation-specific delimiter. For example: 
- *
- *              a[0].toLocaleString()  +    ','  +   a[1].toLocaleString()   +  etc.
- *
- * Below, toLocaleString() is found as a property of each element of the array,
- * and is the function to be invoked. Since it increments the global count 
- * variable by one each time, the end-value of count should be a.length.
- */
-var count =0;
-var x = {toLocaleString: function() {count++}};
-var a = [x,x,x];
-a.toLocaleString();
-actual=count;
-expect=a.length; // see explanation above
+myArray.toLocaleString();
+actual = n;
+expect = myArray.length;
 
 
 //-------------------------------------------------------------------------------------------------
@@ -55,7 +54,7 @@ test();
 //-------------------------------------------------------------------------------------------------
 
 
-function test() 
+function test()
 {
   enterFunc ('test');
   printBugNumber (bug);
