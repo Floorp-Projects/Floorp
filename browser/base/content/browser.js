@@ -466,7 +466,7 @@ function ctrlNumberTabSelection(event)
   } 
 
   if (!event.ctrlKey)
-    return;
+    return false;
 
   var index = event.charCode - 49;
   if (index == -1)
