@@ -152,7 +152,7 @@ insert into components (value, program, initialowner, initialqacontact) values (
 
 
 insert into components (value, program, initialowner, initialqacontact) values ("Bonsai", "Webtools", "terry@mozilla.org", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Bugzilla", "Webtools", "terry@mozilla.org", "terry@mozilla.org");
+insert into components (value, program, initialowner, initialqacontact) values ("Bugzilla", "Webtools", "terry@mozilla.org", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Despot", "Webtools", "terry@mozilla.org", "");
 insert into components (value, program, initialowner, initialqacontact) values ("LXR", "Webtools", "endico@mozilla.org", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Mozbot", "Webtools", "terry@netscape.com", "");
