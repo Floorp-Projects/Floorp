@@ -119,9 +119,8 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
   nsCOMPtr<nsIStringBundle> stringBundle;
-  nsILocale   *locale = nsnull;
 
-  rv = stringService->CreateBundle(FILEPICKER_PROPERTIES, locale, getter_AddRefs(stringBundle));
+  rv = stringService->CreateBundle(FILEPICKER_PROPERTIES, getter_AddRefs(stringBundle));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 

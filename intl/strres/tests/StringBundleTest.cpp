@@ -27,7 +27,6 @@
 #include "nsIStringBundle.h"
 #include "nsIAcceptLang.h"
 #include "nsIEventQueueService.h"
-#include "nsILocale.h"
 #include <iostream.h>
 
 #include "nsIIOService.h"
@@ -78,53 +77,8 @@ static NS_DEFINE_IID(kIAcceptLangIID, NS_IACCEPTLANG_IID);
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-#include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsLocaleCID.h"
-
-//
-//
-//
-nsILocale*
-get_applocale(void)
-{
-	nsresult			result;
-	nsILocale*			locale;
-	nsString*			category;
-	nsString*			value;
-	PRUnichar *lc_name_unichar;
-
-	// get a locale service 
-	nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &result);
-	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: get locale service failed");
-
-	//
-	// test GetApplicationLocale
-	//
-	result = localeService->GetApplicationLocale(&locale);
-	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
-	NS_ASSERTION(locale!=NULL,"nsLocaleTest: factory_get_locale failed");
-
-	//
-	// test and make sure the locale is a valid Interface
-	//
-	locale->AddRef();
-
-	category = new nsString();
-	category->AssignWithConversion("NSILOCALE_MESSAGES");
-	value = new nsString();
-
-	result = locale->GetCategory(category->GetUnicode(),&lc_name_unichar);
-	value->Assign(lc_name_unichar);
-	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: factory_get_locale failed");
-	NS_ASSERTION(value->Length()>0,"nsLocaleTest: factory_get_locale failed");
-
-	locale->Release();
-	delete category;
-	delete value;
-
-    return locale;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,15 +143,9 @@ main(int argc, char *argv[])
   }
     printf("\n ** created AcceptLang service\n");
 
-  nsILocale* locale = get_applocale();
-
   nsIStringBundle* bundle = nsnull;
 
-  ret = service->CreateBundle(TEST_URL, locale, &bundle);
-
-  /* free it
-  */
-  locale->Release();
+  ret = service->CreateBundle(TEST_URL, &bundle);
 
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");

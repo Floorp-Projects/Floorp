@@ -181,8 +181,7 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
 
     if (NS_SUCCEEDED(rv) && service)
     {
-        nsILocale* locale = nsnull;
-        rv = service->CreateBundle( XPINSTALL_BUNDLE_URL, locale,
+        rv = service->CreateBundle( XPINSTALL_BUNDLE_URL,
                                     getter_AddRefs(mStringBundle) );
     }
 }
@@ -1167,7 +1166,6 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     nsCOMPtr<nsIFile> resFile;
     nsCOMPtr<nsIFileURL> resFileURL = nsnull;
     nsIURI *url = nsnull;
-    nsILocale* locale = nsnull;
     nsIStringBundleService* service = nsnull;
     nsIEventQueueService* pEventQueueService = nsnull;
     nsIStringBundle* bundle = nsnull;
@@ -1231,11 +1229,11 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         nsCRT::free(spec);
         return ret;
       }
-      ret = service->CreateBundle(spec, locale, &bundle);
+      ret = service->CreateBundle(spec, &bundle);
       nsCRT::free(spec);
     }
 #else
-    ret = service->CreateBundle(url, locale, &bundle);
+    ret = service->CreateBundle(url, &bundle);
 #endif
     if (NS_FAILED(ret)) 
         goto cleanup;
@@ -2487,10 +2485,9 @@ PRUnichar *GetTranslatedString(const PRUnichar* aString)
 {
     nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
     nsCOMPtr<nsIStringBundle> stringBundle;
-    nsILocale* locale = nsnull;
     PRUnichar* translatedString;
 
-    nsresult rv = stringService->CreateBundle(kInstallLocaleProperties, locale, getter_AddRefs(stringBundle));
+    nsresult rv = stringService->CreateBundle(kInstallLocaleProperties, getter_AddRefs(stringBundle));
     if (NS_FAILED(rv)) return nsnull;
 
     rv = stringBundle->GetStringFromName(aString, &translatedString);

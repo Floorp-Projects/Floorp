@@ -41,7 +41,6 @@ const FILEPICKER_CONTRACTID     = "@mozilla.org/filepicker;1";
 const FILEPICKER_CID        = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
 const LOCAL_FILE_CONTRACTID = "@mozilla.org/file/local;1";
 const APPSHELL_SERV_CONTRACTID  = "@mozilla.org/appshell/appShellService;1";
-const LOCALE_SERV_CONTRACTID = "@mozilla.org/intl/nslocaleservice;1";
 const STRBUNDLE_SERV_CONTRACTID = "@mozilla.org/intl/stringbundle;1";
 
 const nsIAppShellService    = Components.interfaces.nsIAppShellService;
@@ -52,7 +51,6 @@ const nsIFactory            = Components.interfaces.nsIFactory;
 const nsIFilePicker         = Components.interfaces.nsIFilePicker;
 const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor
 const nsIDOMWindow          = Components.interfaces.nsIDOMWindow;
-const nsILocaleService      = Components.interfaces.nsILocaleService;
 const nsIStringBundleService = Components.interfaces.nsIStringBundleService;
 
 var   bundle                = null;
@@ -247,29 +245,8 @@ function NSGetModule(compMgr, fileSpec) {
 /* crap from strres.js that I want to use for string bundles since I can't include another .js file.... */
 
 var strBundleService = null;
-var localeService = null;
 
-function srGetAppLocale()
-{
-  var applicationLocale = null;
-
-  if (!localeService) {
-    try {
-      localeService = Components.classes[LOCALE_SERV_CONTRACTID].getService(nsILocaleService);
-    } catch (ex) {
-      dump("\n--** localeService failed: " + ex + "\n");
-      return null;
-    }
-  }
-
-  applicationLocale = localeService.GetApplicationLocale();
-  if (!applicationLocale) {
-    dump("\n--** localeService.GetApplicationLocale failed **--\n");
-  }
-  return applicationLocale;
-}
-
-function srGetStrBundleWithLocale(path, locale)
+function srGetStrBundle(path)
 {
   var strBundle = null;
 
@@ -282,16 +259,10 @@ function srGetStrBundleWithLocale(path, locale)
     }
   }
 
-  strBundle = strBundleService.CreateBundle(path, locale); 
+  strBundle = strBundleService.CreateBundle(path); 
   if (!strBundle) {
 	dump("\n--** strBundle createInstance failed **--\n");
   }
   return strBundle;
-}
-
-function srGetStrBundle(path)
-{
-  var appLocale = srGetAppLocale();
-  return srGetStrBundleWithLocale(path, appLocale);
 }
 

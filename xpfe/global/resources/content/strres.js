@@ -1,29 +1,6 @@
 var strBundleService = null;
-var localeService = null;
 
-function srGetAppLocale()
-{
-  var applicationLocale = null;
-
-  if (!localeService) {
-      try {
-          localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"].getService();
-      
-          localeService = localeService.QueryInterface(Components.interfaces.nsILocaleService);
-      } catch (ex) {
-          dump("\n--** localeService failed: " + ex + "\n");
-          return null;
-      }
-  }
-  
-  applicationLocale = localeService.GetApplicationLocale();
-  if (!applicationLocale) {
-    dump("\n--** localeService.GetApplicationLocale failed **--\n");
-  }
-  return applicationLocale;
-}
-
-function srGetStrBundleWithLocale(path, locale)
+function srGetStrBundle(path)
 {
   var strBundle = null;
 
@@ -39,17 +16,11 @@ function srGetStrBundleWithLocale(path, locale)
       }
   }
 
-  strBundle = strBundleService.CreateBundle(path, locale); 
+  strBundle = strBundleService.createBundle(path); 
   if (!strBundle) {
 	dump("\n--** strBundle createInstance failed **--\n");
   }
   return strBundle;
-}
-
-function srGetStrBundle(path)
-{
-  var appLocale = srGetAppLocale();
-  return srGetStrBundleWithLocale(path, appLocale);
 }
 
 function selectLocale(event)

@@ -279,10 +279,8 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
 
                 if ( promptService && bundleService ) {
                     // Next, get bundle that provides text for dialog.
-                    nsILocale *locale = 0;
                     nsIStringBundle *bundle;
                     rv = bundleService->CreateBundle( "chrome://global/locale/nsWindowsHooks.properties",
-                                                      locale, 
                                                       getter_AddRefs( &bundle ) );
                     if ( NS_SUCCEEDED( rv ) && bundle ) {
                         // Get text for dialog and checkbox label.
