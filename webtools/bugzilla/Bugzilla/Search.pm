@@ -845,7 +845,7 @@ sub GetByWordListSubstr {
 
     foreach my $word (split(/[\s,]+/, $strs)) {
         if ($word ne "") {
-            push(@list, "INSTR(LOWER($field), " . lc(SqlQuote($word)) . ")");
+            push(@list, "INSTR(LOWER($field), " . lc(&::SqlQuote($word)) . ")");
         }
     }
 
