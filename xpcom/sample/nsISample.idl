@@ -20,14 +20,25 @@
  * Contributor(s): 
  */
 
-/*
-
-  A sample of XPConnect. This file contains a sample interface.
-
+/**
+ * A sample of XPConnect. This file contains a sample interface.
+ *
  */
 
 #include "nsISupports.idl"
 
+/**
+ * The uuid is a unique number identifying the interface normally
+ * called IID. It can be generated as follows:
+ *
+ * Windows: guidgen.exe
+ * Unix: uuidgen which comes with e2fsprogs package
+ * Mac: ???
+ * All platform: Using irc, connect to irc.mozilla.org and type in
+ *				/join #mozilla
+ *				/msg mozbot uuid
+ *
+ */
 [scriptable, uuid(7CB5B7A1-07D7-11d3-BDE2-000064657374)]
 interface nsISample : nsISupports
 {
@@ -38,10 +49,15 @@ interface nsISample : nsISupports
 
 
 %{ C++
-// {7CB5B7A0-07D7-11d3-BDE2-000064657374}
+/**
+ * {7CB5B7A0-07D7-11d3-BDE2-000064657374}
+ * The CID is also a unique number that look just like the IID
+ * and identifies uniquely an implementation
+ */
 #define NS_SAMPLE_CID \
 { 0x7cb5b7a0, 0x7d7, 0x11d3, { 0xbd, 0xe2, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
-extern nsresult
-NS_NewSample(nsISample** aSample);
+#define NS_SAMPLE_PROGID "component://netscape/sample"
 %}
+
+
