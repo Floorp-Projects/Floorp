@@ -406,6 +406,9 @@ sub packit_l10n {
         system("mkdir -p $package_location");
         system("mkdir -p $stagedir");
         run_locale_shell_command "cp $package_location/../*$locale*.dmg.gz $stagedir/";
+        if ($tinderstatus eq 'success') {
+          run_locale_shell_command "cp $package_location/*$locale.langpack.xpi $stagedir/";
+        }
       } else {
         my $archive_loc = "$package_location/..";
         if ($Settings::package_creation_path eq "/xpinstall/packager") {
@@ -433,6 +436,9 @@ sub packit_l10n {
     TinderUtils::print_log "$tinderstatus.\n";
 
   } # foreach
+
+  # remove en-US since we're building that on a different system
+  run_locale_shell_command "rm -f $stagedir/*en-US*";
 
   TinderUtils::print_log "locales completed.\n";
 
