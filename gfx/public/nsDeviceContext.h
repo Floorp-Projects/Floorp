@@ -41,9 +41,9 @@ public:
   nsFontCache();
   ~nsFontCache();
 
-  nsresult   Init(nsIDeviceContext* aContext);
-  nsresult   GetDeviceContext(nsIDeviceContext *&aContext) const;
-  nsresult   GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+  NS_IMETHOD Init(nsIDeviceContext* aContext);
+  NS_IMETHOD GetDeviceContext(nsIDeviceContext *&aContext) const;
+  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
                            nsIFontMetrics *&aMetrics);
   nsresult   Flush();
   /* printer device context classes may create their own
