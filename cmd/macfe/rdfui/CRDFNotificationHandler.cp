@@ -40,6 +40,28 @@ CRDFNotificationHandler::CreateHTPane()
 		return NULL;
 }
 
+HT_Pane
+CRDFNotificationHandler::CreateHTPane ( HT_Resource inResource )
+{
+	HT_Notification notifyStruct = CreateNotificationStruct();
+	if (notifyStruct)
+		return HT_PaneFromResource(HT_GetRDFResource(inResource), notifyStruct, false, false, false);
+	else
+		return NULL;
+}
+
+HT_Pane
+CRDFNotificationHandler::CreateHTPane ( const char* inURL, unsigned int inCount, 
+										char** inParamNames, char** inParamValues )
+{
+	HT_Notification notifyStruct = CreateNotificationStruct();
+	if (notifyStruct)
+		return HT_PaneFromURL ( const_cast<char*>(inURL), notifyStruct, false, inCount,
+									inParamNames, inParamValues );
+	else
+		return NULL;
+}
+
 void
 CRDFNotificationHandler::rdfNotifyProc(
 	HT_Notification	notifyStruct,
