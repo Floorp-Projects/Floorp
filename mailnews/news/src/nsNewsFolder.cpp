@@ -183,6 +183,8 @@ NS_IMETHODIMP
 nsMsgNewsFolder::GetReadSetStr(char **setStr)
 {
     nsresult rv;
+    if (!mDatabase) return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(mDatabase, &rv));
     NS_ENSURE_SUCCESS(rv,rv);
 
