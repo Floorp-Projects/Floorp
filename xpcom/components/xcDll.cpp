@@ -68,18 +68,12 @@
 
 extern nsresult NS_GetComponentLoaderManager(nsIComponentLoaderManager* *result);
 
-nsDll::nsDll(nsIFile *dllSpec, 
-             const char *registryLocation)
-  : 
-    m_dllSpec(do_QueryInterface(dllSpec)),
-    m_instance(NULL), 
-    m_status(DLL_OK), 
-    m_moduleObject(NULL),
-    m_markForUnload(PR_FALSE)
+nsDll::nsDll(nsIFile *dllSpec)
+    : m_dllSpec(do_QueryInterface(dllSpec)),
+      m_instance(NULL), 
+      m_moduleObject(NULL),
+      m_markForUnload(PR_FALSE)
 {
-    NS_ASSERTION(registryLocation, "registryLocation is null");
-
-    m_registryLocation = nsCRT::strdup(registryLocation);
 }
 
 nsDll::~nsDll(void)
@@ -93,16 +87,15 @@ nsDll::~nsDll(void)
     // Hence turn it back on after all the above have been removed.
     Unload();
 #endif
-    if (m_registryLocation)
-        nsCRT::free(m_registryLocation);
 }
 
-const char *
-nsDll::GetDisplayPath()
+void
+nsDll::GetDisplayPath(nsACString& aLeafName)
 {
-    if (m_registryLocation)
-        return m_registryLocation;    
-    return "unknown!";
+    m_dllSpec->GetNativeLeafName(aLeafName);
+    
+    if (aLeafName.IsEmpty())
+        aLeafName.Assign(NS_LITERAL_CSTRING("unknown!"));
 }
 
 PRBool
@@ -125,10 +118,6 @@ nsDll::HasChanged()
 
 PRBool nsDll::Load(void)
 {
-	if (m_status != DLL_OK)
-	{
-		return (PR_FALSE);
-	}
 	if (m_instance != NULL)
 	{
 		// Already loaded
@@ -158,7 +147,7 @@ PRBool nsDll::Load(void)
 
 #if defined(XP_UNIX) && !defined(MACOSX) 
     nsXPIDLCString extraData;
-    manager->GetOptionalData(m_dllSpec, m_registryLocation, getter_Copies(extraData));
+    manager->GetOptionalData(m_dllSpec, nsnull, getter_Copies(extraData));
     
     nsVoidArray dependentLibArray;
 
@@ -249,8 +238,8 @@ PRBool nsDll::Load(void)
         if (m_instance) {
             // Inform refcnt tracer of new library so that calls through the
             // new library can be traced.
-            nsCAutoString displayPath;
-            m_dllSpec->GetNativePath(displayPath);
+            nsXPIDLCString displayPath;
+            GetDisplayPath(displayPath);
             nsTraceRefcnt::LoadLibrarySymbols(displayPath.get(), m_instance);
         }
 #endif
@@ -260,7 +249,9 @@ PRBool nsDll::Load(void)
     // Debugging help for components. Component dlls need to have their
     // symbols loaded before we can put a breakpoint in the debugger.
     // This will help figureing out the point when the dll was loaded.
-    BreakAfterLoad(GetDisplayPath());
+    nsXPIDLCString displayPath;
+    GetDisplayPath(displayPath);
+    BreakAfterLoad(displayPath.get());
 #endif
 
     return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
@@ -268,7 +259,7 @@ PRBool nsDll::Load(void)
 
 PRBool nsDll::Unload(void)
 {
-	if (m_status != DLL_OK || m_instance == NULL)
+	if (m_instance == NULL)
 		return (PR_FALSE);
 
     // Shutdown the dll
