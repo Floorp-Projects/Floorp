@@ -1853,7 +1853,8 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
 
     nsIDOMEvent* domEvent = nsnull;
     if (NS_EVENT_FLAG_INIT & aFlags) {
-        if (aEvent->message == NS_XUL_COMMAND && Tag() != nsXULAtoms::command) {
+        nsIAtom* tag = Tag();
+        if (aEvent->message == NS_XUL_COMMAND && tag != nsXULAtoms::command) {
             // See if we have a command elt.  If so, we execute on the command instead
             // of on our content element.
             nsAutoString command;
@@ -1896,17 +1897,15 @@ nsXULElement::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
             // frame between the initial mouseDown and the generation of the drag gesture.
             // Obviously, the target should be the content/frame where the mouse was depressed,
             // not one computed by the current mouse location.
-            nsAutoString tagName;
-            mNodeInfo->GetName(tagName); // Local name only
             if (aEvent->message == NS_XUL_COMMAND || aEvent->message == NS_XUL_POPUP_SHOWING ||
                 aEvent->message == NS_XUL_POPUP_SHOWN || aEvent->message == NS_XUL_POPUP_HIDING ||
                 aEvent->message == NS_XUL_POPUP_HIDDEN || aEvent->message == NS_FORM_SELECTED ||
                 aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
                 aEvent->message == NS_XUL_CLICK || aEvent->message == NS_DRAGDROP_GESTURE ||
-                tagName.EqualsLiteral("menu") || tagName.EqualsLiteral("menuitem") ||
-                tagName.EqualsLiteral("menulist") || tagName.EqualsLiteral("menubar") ||
-                tagName.EqualsLiteral("menupopup") || tagName.EqualsLiteral("key") ||
-                tagName.EqualsLiteral("keyset")) {
+                tag == nsXULAtoms::menu || tag == nsXULAtoms::menuitem ||
+                tag == nsXULAtoms::menulist || tag == nsXULAtoms::menubar ||
+                tag == nsXULAtoms::menupopup || tag == nsXULAtoms::key ||
+                tag == nsXULAtoms::keyset) {
 
                 nsCOMPtr<nsIEventListenerManager> listenerManager;
                 if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
