@@ -27,20 +27,21 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= phembedmoz
-EXPORT_LIBRARY = 1
 
 
 CPPSRCS		= \
-		PhMozEmbedChrome.cpp \
 		PhMozEmbedStream.cpp \
-		PtMozilla.cpp
+		PtMozilla.cpp \
+		WebBrowserContainer.cpp \
+		nsUnknownContentTypeHandler.cpp
 
 SHARED_LIBRARY_LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libmpfilelocprovider_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXPORTS		= \
-		PtMozilla.h PhMozEmbedChrome.h nsIPhEmbed.h
+		PtMozilla.h PhMozEmbedStream.h stdhdrs.h
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
