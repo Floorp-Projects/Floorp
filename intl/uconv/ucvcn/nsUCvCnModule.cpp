@@ -40,6 +40,7 @@
 #include "nsUnicodeToHZ.h"
 #include "nsGBKToUnicode.h"
 #include "nsUnicodeToGBK.h"
+#include "nsUnicodeToGBKNoAscii.h"
 #include "nsCP936ToUnicode.h"
 #include "nsUnicodeToCP936.h"
 #include "nsGB2312ToUnicodeV2.h"
@@ -79,6 +80,7 @@ NS_UCONV_REG_UNREG(nsCP936ToUnicode, "windows-936", "Unicode" , NS_CP936TOUNICOD
 NS_UCONV_REG_UNREG(nsUnicodeToCP936, "Unicode", "windows-936",  NS_UNICODETOCP936_CID);
 NS_UCONV_REG_UNREG(nsGBKToUnicode, "x-gbk", "Unicode" , NS_GBKTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToGBK, "Unicode", "x-gbk",  NS_UNICODETOGBK_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToGBKNoAscii, "Unicode", "x-gbk-noascii",  NS_UNICODETOGBKNOASCII_CID);
 NS_UCONV_REG_UNREG(nsHZToUnicode, "HZ-GB-2312", "Unicode" , NS_HZTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToHZ, "Unicode", "HZ-GB-2312",  NS_UNICODETOHZ_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToGB2312GL, "Unicode", "gb_2312-80",  NS_UNICODETOGB2312GL_CID);
@@ -89,6 +91,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP936ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP936);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGBKToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGBK);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGBKNoAscii);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHZToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToHZ);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGB2312GL);
@@ -131,6 +134,12 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-gbk",
     nsUnicodeToGBKConstructor, 
     nsUnicodeToGBKRegSelf, nsUnicodeToGBKUnRegSelf
+  },  
+  { 
+    ENCODER_NAME_BASE "x-gbk-noascii" , NS_UNICODETOGBKNOASCII_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "x-gbk-noascii",
+    nsUnicodeToGBKNoAsciiConstructor, 
+    nsUnicodeToGBKNoAsciiRegSelf, nsUnicodeToGBKNoAsciiUnRegSelf
   },  
   { 
     DECODER_NAME_BASE "HZ-GB-2312" , NS_HZTOUNICODE_CID, 
