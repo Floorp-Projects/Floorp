@@ -594,9 +594,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	        return rv;
 
 #ifndef NECKO
-        nsIURLGroup* group = nsnull;
+        nsILoadGroup* group = nsnull;
         if (nsnull != baseURL)
-          baseURL->GetURLGroup(&group);
+          baseURL->GetLoadGroup(&group);
 #endif
 
         nsAutoString codeBase;
@@ -675,9 +675,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 	          return rv;
 
 #ifndef NECKO
-	        nsIURLGroup* group = nsnull;
+	        nsILoadGroup* group = nsnull;
           if(nsnull != baseURL)
-            baseURL->GetURLGroup(&group);
+            baseURL->GetLoadGroup(&group);
 #endif
 
 	        // if we have a codebase, add it to the fullURL
@@ -786,9 +786,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) 
 	    {
 #ifndef NECKO
-        nsIURLGroup* group = nsnull;
+        nsILoadGroup* group = nsnull;
         if (nsnull != baseURL)
-          baseURL->GetURLGroup(&group);
+          baseURL->GetLoadGroup(&group);
 #endif
 
         nsAutoString codeBase;
@@ -838,9 +838,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         // Create an absolute URL
         rv = NS_NewURI(&fullURL, src, baseURL);
 #else
-        nsIURLGroup* group = nsnull;
+        nsILoadGroup* group = nsnull;
         if (nsnull != baseURL)
-          baseURL->GetURLGroup(&group);
+          baseURL->GetLoadGroup(&group);
 
         // Create an absolute URL
         rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);
@@ -853,9 +853,9 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
         // Create an absolute URL
         rv = NS_NewURI(&fullURL, src, baseURL);
 #else
-        nsIURLGroup* group = nsnull;
+        nsILoadGroup* group = nsnull;
         if (nsnull != baseURL)
-          baseURL->GetURLGroup(&group);
+          baseURL->GetLoadGroup(&group);
 
         // Create an absolute URL
         rv = NS_NewURL(&fullURL, src, baseURL, nsnull, group);

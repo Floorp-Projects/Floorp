@@ -995,11 +995,11 @@ nsGenericHTMLElement::GetBaseURL(nsIHTMLAttributes* aAttributes,
 
         nsIURI* url = nsnull;
 #ifndef NECKO
-        nsIURLGroup* urlGroup = nsnull;
-        docBaseURL->GetURLGroup(&urlGroup);
-        if (urlGroup) {
-          result = urlGroup->CreateURL(&url, docBaseURL, baseHref, nsnull);
-          NS_RELEASE(urlGroup);
+        nsILoadGroup* LoadGroup = nsnull;
+        docBaseURL->GetLoadGroup(&LoadGroup);
+        if (LoadGroup) {
+          result = LoadGroup->CreateURL(&url, docBaseURL, baseHref, nsnull);
+          NS_RELEASE(LoadGroup);
         }
         else
 #endif

@@ -573,11 +573,11 @@ nsHTMLDocument:: SetBaseURL(const nsString& aURLSpec)
   NS_IF_RELEASE(mBaseURL);
   if (0 < aURLSpec.Length()) {
 #ifndef NECKO
-    nsIURLGroup* urlGroup = nsnull;
-    (void)mDocumentURL->GetURLGroup(&urlGroup);
-    if (urlGroup) {
-      result = urlGroup->CreateURL(&mBaseURL, mDocumentURL, aURLSpec, nsnull);
-      NS_RELEASE(urlGroup);
+    nsILoadGroup* LoadGroup = nsnull;
+    (void)mDocumentURL->GetLoadGroup(&LoadGroup);
+    if (LoadGroup) {
+      result = LoadGroup->CreateURL(&mBaseURL, mDocumentURL, aURLSpec, nsnull);
+      NS_RELEASE(LoadGroup);
     }
     else
 #endif

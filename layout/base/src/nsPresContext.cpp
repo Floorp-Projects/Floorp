@@ -703,10 +703,10 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
 
 #ifndef NECKO
     // Initialize the image group
-    nsCOMPtr<nsIURLGroup> urlGroup;
-    rv = mBaseURL->GetURLGroup(getter_AddRefs(urlGroup));
+    nsCOMPtr<nsILoadGroup> LoadGroup;
+    rv = mBaseURL->GetLoadGroup(getter_AddRefs(LoadGroup));
     if (rv == NS_OK)
-      rv = mImageGroup->Init(mDeviceContext, urlGroup);
+      rv = mImageGroup->Init(mDeviceContext, LoadGroup);
     if (NS_OK != rv) {
       return rv;
     }

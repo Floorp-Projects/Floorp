@@ -51,8 +51,8 @@ public:
     NS_IMETHOD SetContainer(nsISupports* container);
     NS_IMETHOD GetLoadAttribs(nsILoadAttribs* *result) const;
     NS_IMETHOD SetLoadAttribs(nsILoadAttribs* loadAttribs);
-    NS_IMETHOD GetURLGroup(nsIURLGroup* *result) const;
-    NS_IMETHOD SetURLGroup(nsIURLGroup* group);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup* *result) const;
+    NS_IMETHOD SetLoadGroup(nsILoadGroup* group);
     NS_IMETHOD SetPostHeader(const char* name, const char* value);
     NS_IMETHOD SetPostData(nsIInputStream* input);
     NS_IMETHOD GetContentLength(PRInt32 *len);
@@ -73,7 +73,7 @@ public:
         Send_DataFromFile
     } SendType;
 
-    nsHttpUrlImpl(nsISupports* aContainer, nsIURLGroup* aGroup);
+    nsHttpUrlImpl(nsISupports* aContainer, nsILoadGroup* aGroup);
 
     NS_DECL_ISUPPORTS
 
@@ -113,7 +113,7 @@ protected:
     nsCOMPtr<nsIInputStream> mPostData;
     nsISupports*             mContainer;    // explicitly changed to no longer own its container
     nsCOMPtr<nsILoadAttribs> mLoadAttribs;
-    nsIURLGroup*             mURLGroup;     // explicitly changed to no longer own its group
+    nsILoadGroup*             mLoadGroup;     // explicitly changed to no longer own its group
 };
 
 #endif // nsHttpUrl_h__

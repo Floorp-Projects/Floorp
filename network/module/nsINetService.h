@@ -227,7 +227,7 @@ struct nsINetService : public nsISupports
                          const nsString& aSpec, 
                          const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
-                         nsIURLGroup* aGroup = nsnull) = 0;
+                         nsILoadGroup* aGroup = nsnull) = 0;
 
 	/**
 	 * Protocol connection pools should use this call into the service manager to 

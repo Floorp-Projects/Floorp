@@ -48,7 +48,7 @@ public:
 #ifdef NECKO
   nsresult Init(const char *aURL);
 #else
-  nsresult Init(const char *aURL, nsIURLGroup* aURLGroup);
+  nsresult Init(const char *aURL, nsILoadGroup* aLoadGroup);
 #endif
 
   virtual void SetReader(ilINetReader *aReader);
@@ -90,13 +90,13 @@ nsresult
 #ifdef NECKO
 ImageURLImpl::Init(const char *aURL)
 #else
-ImageURLImpl::Init(const char *aURL, nsIURLGroup* aURLGroup)
+ImageURLImpl::Init(const char *aURL, nsILoadGroup* aLoadGroup)
 #endif
 {
   nsresult rv;
 #ifndef NECKO
-  if (nsnull != aURLGroup) {
-    rv = aURLGroup->CreateURL(&mURL, nsnull, aURL, nsnull);
+  if (nsnull != aLoadGroup) {
+    rv = aLoadGroup->CreateURL(&mURL, nsnull, aURL, nsnull);
   }
   else
 #endif
@@ -245,7 +245,7 @@ ImageURLImpl::SetOwnerId(int aOwnerId)
 extern "C" NS_GFX_(nsresult)
 NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL 
 #ifndef NECKO
-               , nsIURLGroup* aURLGroup
+               , nsILoadGroup* aLoadGroup
 #endif
   )
 {
@@ -261,7 +261,7 @@ NS_NewImageURL(ilIURL **aInstancePtrResult, const char *aURL
 #ifdef NECKO
   nsresult rv = url->Init(aURL);
 #else
-  nsresult rv = url->Init(aURL, aURLGroup);
+  nsresult rv = url->Init(aURL, aLoadGroup);
 #endif
   if (rv != NS_OK) {
     delete url;

@@ -997,11 +997,11 @@ static nsIURI* CloneURL(nsIURI* aURL)
   if (urlStr) {
     nsAutoString buffer(urlStr);
     delete [] urlStr;
-    nsIURLGroup* urlGroup = nsnull;
-    aURL->GetURLGroup(&urlGroup);
-    if (urlGroup) {
-      urlGroup->CreateURL(&result, aURL, buffer, nsnull);
-      NS_RELEASE(urlGroup);
+    nsILoadGroup* LoadGroup = nsnull;
+    aURL->GetLoadGroup(&LoadGroup);
+    if (LoadGroup) {
+      LoadGroup->CreateURL(&result, aURL, buffer, nsnull);
+      NS_RELEASE(LoadGroup);
     }
     else {
 #ifndef NECKO

@@ -137,9 +137,9 @@ public:
   NS_IMETHOD_(nsILoadGroup*) GetDocumentLoadGroup() const;
 #else
   /**
-   * Return the URLGroup for the document. May return null.
+   * Return the LoadGroup for the document. May return null.
    */
-  virtual nsIURLGroup* GetDocumentLoadGroup() const;
+  virtual nsILoadGroup* GetDocumentLoadGroup() const;
 #endif
 
   /**
@@ -452,7 +452,7 @@ protected:
 #ifdef NECKO
   nsILoadGroup* mDocumentLoadGroup;
 #else
-  nsIURLGroup* mDocumentLoadGroup;
+  nsILoadGroup* mDocumentLoadGroup;
 #endif
   nsString mCharacterSet;
   nsIDocument* mParentDocument;

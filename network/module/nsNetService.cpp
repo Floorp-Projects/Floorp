@@ -1044,7 +1044,7 @@ nsNetlibService::CreateURL(nsIURI* *aURL,
                            const nsString& aSpec,
                            const nsIURI* aContextURL,
                            nsISupports* aContainer,
-                           nsIURLGroup* aGroup)
+                           nsILoadGroup* aGroup)
 {
     nsAutoString protoName;
     PRInt32 pos = aSpec.Find(':');
@@ -1117,7 +1117,7 @@ NS_NET nsresult NS_NewURL(nsIURI** aInstancePtrResult,
                           const nsString& aSpec,
                           const nsIURI* aURL,
                           nsISupports* aContainer,
-                          nsIURLGroup* aGroup)
+                          nsILoadGroup* aGroup)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
     if (nsnull == aInstancePtrResult) {
@@ -1172,9 +1172,9 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURI* aURL,
 NS_NET nsresult NS_OpenURL(nsIURI* aURL, nsIStreamListener* aConsumer)
 {
   nsresult rv;
-  nsIURLGroup* group = nsnull;
+  nsILoadGroup* group = nsnull;
 
-  rv = aURL->GetURLGroup(&group);
+  rv = aURL->GetLoadGroup(&group);
   if (NS_SUCCEEDED(rv)) {
     if (nsnull != group) {
       rv = group->OpenStream(aURL, aConsumer);

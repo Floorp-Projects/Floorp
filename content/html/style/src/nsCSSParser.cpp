@@ -826,11 +826,11 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
     // XXX probably need a way to encode unicode junk for the part of
     // the url that follows a "?"
     nsIURI* url;
-    nsIURLGroup* urlGroup = nsnull;
-    mURL->GetURLGroup(&urlGroup);
-    if (urlGroup) {
-      aErrorCode = urlGroup->CreateURL(&url, mURL, aURLSpec, nsnull);
-      NS_RELEASE(urlGroup);
+    nsILoadGroup* LoadGroup = nsnull;
+    mURL->GetLoadGroup(&LoadGroup);
+    if (LoadGroup) {
+      aErrorCode = LoadGroup->CreateURL(&url, mURL, aURLSpec, nsnull);
+      NS_RELEASE(LoadGroup);
     }
     else {
 #ifndef NECKO

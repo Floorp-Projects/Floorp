@@ -24,7 +24,7 @@
 
 class nsString;
 class nsIURI;
-class nsIURLGroup;
+class nsILoadGroup;
 
 #define NS_IPROTOCOLURLFACTORY_IID                   \
 { /* aed57ad0-705e-11d2-8166-006008119d7a */         \
@@ -51,7 +51,7 @@ public:
                          const nsString& aSpec,
                          const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
-                         nsIURLGroup* aGroup = nsnull) = 0;
+                         nsILoadGroup* aGroup = nsnull) = 0;
 };
 
 #endif /* nsIIProtocolURLFactory_h___ */

@@ -36,7 +36,7 @@ public:
                          const nsString& aSpec,
                          const nsIURI* aContextURL = nsnull,
                          nsISupports* aContainer = nsnull,
-                         nsIURLGroup* aGroup = nsnull);
+                         nsILoadGroup* aGroup = nsnull);
 
     ////////////////////////////////////////////////////////////////////////////
     // nsHttpURLFactory:
@@ -65,7 +65,7 @@ nsHttpURLFactory::CreateURL(nsIURI* *aResult,
                           const nsString& aSpec,
                           const nsIURI* aContextURL,
                           nsISupports* aContainer,
-                          nsIURLGroup* aGroup)
+                          nsILoadGroup* aGroup)
 {
     nsHttpUrlImpl* url = new nsHttpUrlImpl(aContainer, aGroup);
     if (url == NULL)
