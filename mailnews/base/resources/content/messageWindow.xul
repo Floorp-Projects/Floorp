@@ -80,9 +80,11 @@ Rights Reserved.
 	</popupset>
 	<popupset id="aTooltipSet"/>
 
-    <menubar id="mailMenubar"/>
 
-	<toolbox id="mailToolbarToolbox"/>	
+	<toolbox id="mailToolbarToolbox">
+    <menubar id="mailMenubar"/>
+  </toolbox>
+  
 	<!-- msg header view -->
 	<box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
 		<toolbox id="msgHeaderView"/>
