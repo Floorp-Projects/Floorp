@@ -16,6 +16,9 @@ TEXTAREA#textarea1 {
 SELECT#select1 {
 	font-size: large;
 }
+BUTTON {
+  background-image: url(rock_gra.gif);
+}
 </style>
 </head>
 <body>
@@ -31,7 +34,19 @@ SELECT#select1 {
 <INPUT TYPE="HIDDEN" NAME="a" VALUE="n">
 </FIELDSET>
 &nbsp;&nbsp<INPUT type=image src=raptor.jpg width=50 height=50 name=imageSubmit> 
+<BR><BR>
+
+<BUTTON type=submit style="border: 5px outset gray; padding: 3px;">
+<font size=4><B>This big button contains a table
+<table border=3><TR border=1><TD>CELL 1</TD><TD>CELL 2<TD></TR>
+       <TR><TD>CELL 3</TD><TD>CELL 4</TD></TR></table> 
+and a background image. It will also submit the form.
+</B></font>
+</BUTTON>
+<BR>
+
 </FORM>
+
 <BR><BR>
 <FORM METHOD="POST" ACTION="http://www.mcp.com/cgi-bin/post-query" NAME="echo">
 <textarea name=a rows=4 cols=10 value="a textarea">a textarea</textarea>

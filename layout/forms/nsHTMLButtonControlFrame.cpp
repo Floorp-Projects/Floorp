@@ -43,13 +43,14 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsViewsCID.h"
+#include "nsColor.h"
 
 //Enumeration of possible mouse states used to detect mouse clicks
 enum nsMouseState {
   eMouseNone,
   eMouseEnter,
   eMouseDown,
-  eMouseUp
+  eMouseExit
 };
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -93,16 +94,27 @@ public:
 
   void GetDefaultLabel(nsString& aLabel);
 
+  NS_IMETHOD  GetCursorAndContentAt(nsIPresContext& aPresContext,
+                          const nsPoint&  aPoint,
+                          nsIFrame**      aFrame,
+                          nsIContent**    aContent,
+                          PRInt32&        aCursor);
 protected:
   virtual  ~nsHTMLButtonControlFrame();
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
+  void AddToPadding(nsIPresContext& aPresContext, nsStyleUnit aStyleUnit,
+                    nscoord aValue, nscoord aLength, nsStyleCoord& aStyleCoord);
+  void ShiftContents(nsIPresContext& aPresContext, PRBool aDown);
+  void GetTranslatedRect(nsRect& aRect);
 
   PRIntn GetSkipSides() const;
   PRBool mInline;
   nsFormFrame* mFormFrame;
   nsMouseState mLastMouseState;
   nsCursor mPreviousCursor;
+  PRBool mGotFocus;
+  nsRect mTranslatedRect;
 };
 
 nsresult
@@ -124,6 +136,8 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsIContent* aContent,
   mInline = PR_TRUE;
   mLastMouseState = eMouseNone;
   mPreviousCursor = eCursor_standard;
+  mGotFocus = PR_FALSE;
+  mTranslatedRect = nsRect(0,0,0,0);
 }
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
@@ -276,10 +290,6 @@ nsHTMLButtonControlFrame::IsSuccessful()
 void
 nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  if (!mFormFrame) {
-    return;
-  }
-
   PRInt32 type;
   GetType(&type);
   if (nsnull != mFormFrame) {
@@ -292,8 +302,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
       mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
 
       mFormFrame->OnReset();
-    } 
-    else if (NS_FORM_BUTTON_SUBMIT == type) {
+    } else if (NS_FORM_BUTTON_SUBMIT == type) {
       //Send DOM event
       nsEventStatus mStatus;
       nsEvent mEvent;
@@ -306,12 +315,113 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
   } 
 }
 
+// XXX temporary hack code until new style rules are added
+void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, nsRect& aRect)
+{  
+  nsHTMLReflowMetrics metrics(nsnull);
+  nsSize size;
+  aFrame->GetSize(size);
+  nsIPresShell        *shell;
+  nsIRenderingContext *acx;
+  shell = aPresContext.GetShell();
+  shell->CreateRenderingContext(aFrame, acx);
+  NS_RELEASE(shell);
+  nsIReflowCommand* cmd;
+  nsresult result = NS_NewHTMLReflowCommand(&cmd, aFrame, nsIReflowCommand::ContentChanged);
+  nsHTMLReflowState state(aPresContext, aFrame, *cmd, size, acx);
+  //nsHTMLReflowState state(aPresContext, aFrame, eReflowReason_Initial,
+  //                        size, acx);
+  state.reason = eReflowReason_Incremental;
+  nsReflowStatus status;
+  nsDidReflowStatus didStatus;
+  aFrame->WillReflow(aPresContext);
+  aFrame->Reflow(aPresContext, metrics, state, status);
+  aFrame->DidReflow(aPresContext, didStatus);
+  NS_IF_RELEASE(acx);
+  aFrame->Invalidate(aRect, PR_TRUE);
+}
+
+// XXX temporary hack code until new style rules are added
+void
+nsHTMLButtonControlFrame::AddToPadding(nsIPresContext& aPresContext,
+                                       nsStyleUnit aStyleUnit,
+                                       nscoord aValue, 
+                                       nscoord aLength,
+                                       nsStyleCoord& aStyleCoord)
+{
+  if (eStyleUnit_Coord == aStyleUnit) {
+    nscoord coord;
+    coord = aStyleCoord.GetCoordValue();
+    coord += aValue;
+    aStyleCoord.SetCoordValue(coord);
+  } else if (eStyleUnit_Percent == aStyleUnit) {
+    float increment = ((float)aValue) / ((float)aLength);
+    float percent = aStyleCoord.GetPercentValue();
+    percent += increment;
+    aStyleCoord.SetPercentValue(percent);
+  }
+}
+
+// XXX temporary hack code until new style rules are added
+void 
+nsHTMLButtonControlFrame::ShiftContents(nsIPresContext& aPresContext, PRBool aDown)
+{
+  nsStyleSpacing* spacing =
+    (nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing); // cast deliberate
+
+  float p2t = aPresContext.GetPixelsToTwips();
+  nscoord shift = (aDown) ? NSIntPixelsToTwips(1, p2t) : -NSIntPixelsToTwips(1, p2t);
+  nsStyleCoord styleCoord;
+
+  // alter the padding so the content shifts down and to the right one pixel
+  AddToPadding(aPresContext, spacing->mPadding.GetLeftUnit(), shift, mRect.width,
+               spacing->mPadding.GetLeft(styleCoord));
+  spacing->mPadding.SetLeft(styleCoord);
+  AddToPadding(aPresContext, spacing->mPadding.GetTopUnit(), shift, mRect.height,
+               spacing->mPadding.GetTop(styleCoord));
+  spacing->mPadding.SetTop(styleCoord);
+  AddToPadding(aPresContext, spacing->mPadding.GetRightUnit(), -shift, mRect.width,
+               spacing->mPadding.GetRight(styleCoord));
+  spacing->mPadding.SetRight(styleCoord);
+  AddToPadding(aPresContext, spacing->mPadding.GetBottomUnit(), -shift, mRect.height,
+               spacing->mPadding.GetBottom(styleCoord));
+  spacing->mPadding.SetBottom(styleCoord);
+
+  // XXX change the border, border-left, border-right, etc are not working. Instead change inset to outset, vice versa
+  for (PRInt32 i = 0; i < 4; i++) {
+    spacing->mBorderStyle[i] = (spacing->mBorderStyle[i] == NS_STYLE_BORDER_STYLE_INSET) ? NS_STYLE_BORDER_STYLE_OUTSET : NS_STYLE_BORDER_STYLE_INSET;
+  }
+
+  mStyleContext->RecalcAutomaticData(&aPresContext);
+
+  nsRect rect(0, 0, mRect.width, mRect.height);
+  ReflowTemp(aPresContext, this, rect);
+}
+
+void
+nsHTMLButtonControlFrame::GetTranslatedRect(nsRect& aRect)
+{
+  nsIView* view;
+  nsPoint viewOffset(0,0);
+  GetOffsetFromView(viewOffset, view);
+  while (nsnull != view) {
+    nsPoint tempOffset;
+    view->GetPosition(&tempOffset.x, &tempOffset.y);
+    viewOffset += tempOffset;
+    view->GetParent(view);
+  }
+  aRect = nsRect(viewOffset.x, viewOffset.y, mRect.width, mRect.height);
+}
+
+            
 NS_METHOD 
 nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus& aEventStatus)
 {
-  static int foo = 0;
+  if (nsFormFrame::GetDisabled(this)) { // XXX cache disabled
+    return NS_OK;
+  }
 
   aEventStatus = nsEventStatus_eIgnore;
   nsresult result = NS_OK;
@@ -329,39 +439,47 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
         PRBool ignore;
 
         switch (aEvent->message) {
-        case NS_MOUSE_ENTER: // not implemented yet on frames
+        case NS_MOUSE_ENTER: // not implemented yet on frames, 1st mouse move simulates it
 	        mLastMouseState = eMouseEnter;
 	        break;
         case NS_MOUSE_LEFT_BUTTON_DOWN:
+          mGotFocus = PR_TRUE;
+          ShiftContents(aPresContext, PR_TRUE);
 	        mLastMouseState = eMouseDown;
-	        //mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
 	        break;
         case NS_MOUSE_MOVE:
-printf ("%d mRect=(%d,%d,%d,%d), x=%d, y=%d \n", foo, mRect.x, mRect.y, mRect.width, mRect.height, aEvent->point.x, aEvent->point.y);
-          if ((aEvent->point.x <= mRect.width) && (aEvent->point.y <= mRect.height)) { // mouse enter, frames don't support enter yet
-            if (nsnull == grabber) { 
-printf("%d enter\n", foo);
-              viewMan->GrabMouseEvents(view, ignore);
-              GetWindow(window);
-              if (window) {
-                mPreviousCursor = window->GetCursor();
-                window->SetCursor(eCursor_standard); 
-                //window->SetCursor(eCursor_sizeWE); //eCursor_arrow_west_plus); 
-                NS_RELEASE(window);
-              }
-            }
-          } else { // mouse exit, frames don't support exit yet 
-            viewMan->GrabMouseEvents(nsnull, ignore); 
-printf("%d exit\n", foo);
+          //printf ("%d mRect=(%d,%d,%d,%d), x=%d, y=%d \n", foo++, mRect.x, mRect.y, mRect.width, mRect.height, aEvent->point.x, aEvent->point.y);
+          
+          if (nsnull == grabber) { // simulated mouse enter
+            GetTranslatedRect(mTranslatedRect);
+            //printf("%d enter\n", foo++);
+            viewMan->GrabMouseEvents(view, ignore);
             GetWindow(window);
             if (window) {
-              window->SetCursor(mPreviousCursor);  // eCursor_sizeWE 
+              mPreviousCursor = window->GetCursor(); 
+              window->SetCursor(eCursor_select); // set it to something else to work around bug 
+              window->SetCursor(eCursor_standard); 
               NS_RELEASE(window);
             }
+            mLastMouseState = eMouseEnter;
+          // simulated mouse exit
+          } else if (!mTranslatedRect.Contains(aEvent->point)) {
+            //printf("%d exit\n", foo++);
+            if (mLastMouseState == eMouseDown) { // 
+              ShiftContents(aPresContext, PR_FALSE);
+            }
+            viewMan->GrabMouseEvents(nsnull, ignore); 
+            GetWindow(window);
+            if (window) {
+              window->SetCursor(mPreviousCursor);  
+              NS_RELEASE(window);
+            }
+            mLastMouseState = eMouseExit;
           }
           break;
         case NS_MOUSE_LEFT_BUTTON_UP:
 	        if (eMouseDown == mLastMouseState) {
+            ShiftContents(aPresContext, PR_FALSE);
             nsEventStatus status = nsEventStatus_eIgnore;
             nsMouseEvent event;
             event.eventStructType = NS_MOUSE_EVENT;
@@ -371,8 +489,8 @@ printf("%d exit\n", foo);
             if (nsEventStatus_eConsumeNoDefault != status) {
               MouseClicked(&aPresContext);
             }
+	          mLastMouseState = eMouseEnter;
 	        } 
-	        mLastMouseState = eMouseEnter;
 	        break;
         case NS_MOUSE_EXIT: // doesn't work for frames, yet
 	        break;
@@ -424,7 +542,36 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect)
 {
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  nsresult result = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  if (NS_OK == result) {
+    if (mGotFocus) { // draw dashed line to indicate selection, XXX don't calc rect every time
+      const nsStyleSpacing* spacing =
+        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      nsMargin border;
+      spacing->CalcBorderFor(this, border);
+
+      float p2t = aPresContext.GetPixelsToTwips();
+      nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+      nsRect outside(0, 0, mRect.width, mRect.height);
+      outside.Deflate(border);
+      outside.Deflate(onePixel, onePixel);
+
+      nsRect inside(outside);
+      inside.Deflate(onePixel, onePixel);
+
+      PRUint8 borderStyles[4];
+      nscolor borderColors[4];
+      nscolor black = NS_RGB(0,0,0);
+      for (PRInt32 i = 0; i < 4; i++) {
+        borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED;
+        borderColors[i] = black;
+      }
+      nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside,
+                                      inside, PR_FALSE, nsnull);
+    }
+  }
+  return result;
 }
 
 NS_IMETHODIMP 
@@ -461,7 +608,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-  // create our view, we need a view to grab the mouse away from children frames
+  // create our view, we need a view to grab the mouse 
   nsIView* view;
   GetView(view);
   if (!view) {
@@ -484,6 +631,18 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
+                                                const nsPoint&  aPoint,
+                                                nsIFrame**      aFrame,
+                                                nsIContent**    aContent,
+                                                PRInt32&        aCursor)
+{
+  nsresult result = nsHTMLContainerFrame::GetCursorAndContentAt(aPresContext, aPoint, aFrame, aContent, aCursor);
+  aCursor = eCursor_standard;
+  return result;
 }
 
 PRIntn
