@@ -1519,7 +1519,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
      http://bugzilla.mozilla.org/show_bug.cgi?id=78445 for more
      explanation.
   */
-  NS_ADDREF_THIS();
+  nsCOMPtr<nsIDocumentViewer> kungFuDeathGrip(this);
 
   // Now, fire either an OnLoad or OnError event to the document...
   if(NS_SUCCEEDED(aStatus)) {
@@ -1559,8 +1559,6 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   if (mPresShell && !mStopped) {
     mPresShell->UnsuppressPainting();
   }
-
-  NS_RELEASE_THIS();
 
   // Check to see if someone tried to print during the load
   if (mPrintIsPending) {
