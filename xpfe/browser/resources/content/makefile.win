@@ -31,6 +31,7 @@ CHROME_CONTENT = \
 	.\viewSource.xul \
 	.\navigator.xul \
 	.\navigatorOverlay.xul \
+	.\navExtraOverlay.xul \
 	.\navigator.js \
 	.\navigatorDD.js \
 	.\NetSupportConfirmYN.xul \
