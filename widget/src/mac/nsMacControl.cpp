@@ -223,10 +223,8 @@ NS_IMETHODIMP nsMacControl::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacControl::SetFont(const nsFont &aFont)
 {
-	NS_IF_RELEASE(mFontMetrics);
-	if (mContext)
-		mContext->GetMetricsFor(aFont, mFontMetrics);
-	
+	Inherited::SetFont(aFont);	
+
 	TextStyle		theStyle;
 	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
 	
