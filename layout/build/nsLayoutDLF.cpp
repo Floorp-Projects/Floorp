@@ -538,15 +538,16 @@ nsLayoutDLF::InitUAStyleSheet()
 static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 
 static nsresult
-RegisterTypes(nsIComponentManager* cm, const char* aPath, char** aTypes)
+RegisterTypes(nsIComponentManager* cm, const char* aCommand,
+              const char* aPath, char** aTypes)
 {
   nsresult rv = NS_OK;
   while (*aTypes) {
     char progid[500];
     char* contentType = *aTypes++;
     PR_snprintf(progid, sizeof(progid),
-                NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "view/%s",
-                contentType);
+                NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+                aCommand, contentType);
 #ifdef NOISY_REGISTRY
     printf("Register %s => %s\n", progid, aPath);
 #endif
@@ -565,19 +566,28 @@ NS_RegisterDocumentFactories(nsIComponentManager* cm, const char* aPath)
   nsresult rv;
 
   do {
-    rv = RegisterTypes(cm, aPath, gHTMLTypes);
+    rv = RegisterTypes(cm, "view", aPath, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, aPath, gXMLTypes);
+    rv = RegisterTypes(cm, "view-source", aPath, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, aPath, gImageTypes);
+    rv = RegisterTypes(cm, "view", aPath, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, aPath, gPluginTypes);
+    rv = RegisterTypes(cm, "view-source", aPath, gXMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(cm, aPath, gRDFTypes);
+    rv = RegisterTypes(cm, "view", aPath, gImageTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(cm, "view", aPath, gPluginTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(cm, "view", aPath, gRDFTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = RegisterTypes(cm, "view-source", aPath, gRDFTypes);
     if (NS_FAILED(rv))
       break;
   } while (PR_FALSE);

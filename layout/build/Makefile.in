@@ -27,12 +27,16 @@ include $(topsrcdir)/config/config.mk
 DEFINES += -D_IMPL_NS_HTML
 
 LIBRARY_NAME = raptorhtml
+IS_COMPONENT = 1
 
 MODULE=layout
 
 REQUIRES=xpcom raptor dom js
 
-CPPSRCS=nsLayoutFactory.cpp
+CPPSRCS =			\
+	nsLayoutDLF.cpp		\
+	nsLayoutFactory.cpp	\
+	$(NULL)
 
 ifndef MKSHLIB_FORCE_ALL
 CPPSRCS += dlldeps.cpp

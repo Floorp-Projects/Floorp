@@ -24,6 +24,7 @@
 #include "nsIHTMLContent.h"
 #include "nsITextContent.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIDOMSelection.h"
 #include "nsIFrameUtil.h"
 
@@ -41,35 +42,50 @@
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
 #include "nsIEventListenerManager.h"
+#include "nsILayoutDebugger.h"
+#include "nsIHTMLElementFactory.h"
+#include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
-static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
-static NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
-static NS_DEFINE_IID(kCCSSParserCID,     NS_CSSPARSER_CID);
+class nsIDocumentLoaderFactory;
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
+static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
+static NS_DEFINE_IID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
+static NS_DEFINE_IID(kImageDocumentCID, NS_IMAGEDOCUMENT_CID);
+static NS_DEFINE_IID(kCSSParserCID,     NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kHTMLCSSStyleSheetCID, NS_HTML_CSS_STYLESHEET_CID);
-static NS_DEFINE_IID(kCHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
-static NS_DEFINE_IID(kCHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
-static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
-static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
-static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
+static NS_DEFINE_IID(kHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
+static NS_DEFINE_IID(kHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
+
+static NS_DEFINE_CID(kSelectionCID, NS_SELECTION_CID);
+static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
+static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
+
 static NS_DEFINE_CID(kPresShellCID,  NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kFrameUtilCID,  NS_FRAME_UTIL_CID);
 static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
 
+static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
+static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
+static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
 
-extern nsresult NS_NewRangeList(nsIDOMSelection **);
-extern nsresult NS_NewRange(nsIDOMRange **);
-extern nsresult NS_NewContentIterator(nsIContentIterator **);
-extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator **);
+extern nsresult NS_NewRangeList(nsIDOMSelection** aResult);
+extern nsresult NS_NewRange(nsIDOMRange** aResult);
+extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
+extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
+extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
+extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
+extern nsresult NS_NewHTMLElementFactory(nsIHTMLElementFactory** aResult);
 
-////////////////////////////////////////////////////////////
-//
 ////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -77,28 +93,28 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 class nsLayoutFactory : public nsIFactory
 {   
-  public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                              void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
+public:   
+  // nsISupports methods   
+  NS_IMETHOD QueryInterface(const nsIID &aIID,    
+                            void **aResult);   
+  NS_IMETHOD_(nsrefcnt) AddRef(void);   
+  NS_IMETHOD_(nsrefcnt) Release(void);   
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
+  // nsIFactory methods   
+  NS_IMETHOD CreateInstance(nsISupports *aOuter,   
+                            const nsIID &aIID,   
+                            void **aResult);   
 
-    NS_IMETHOD LockFactory(PRBool aLock);   
+  NS_IMETHOD LockFactory(PRBool aLock);   
 
-    nsLayoutFactory(const nsCID &aClass);   
+  nsLayoutFactory(const nsCID &aClass);   
 
-  protected:
-    virtual ~nsLayoutFactory();   
+protected:
+  virtual ~nsLayoutFactory();   
 
-  private:   
-    nsrefcnt  mRefCnt;   
-    nsCID     mClassID;
+private:   
+  nsrefcnt  mRefCnt;   
+  nsCID     mClassID;
 };   
 
 nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)   
@@ -112,8 +128,8 @@ nsLayoutFactory::~nsLayoutFactory()
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
-nsresult nsLayoutFactory::QueryInterface(const nsIID &aIID,   
-                                      void **aResult)   
+nsresult
+nsLayoutFactory::QueryInterface(const nsIID &aIID, void **aResult)   
 {   
   if (aResult == NULL) {   
     return NS_ERROR_NULL_POINTER;   
@@ -136,12 +152,14 @@ nsresult nsLayoutFactory::QueryInterface(const nsIID &aIID,
   return NS_OK;   
 }   
 
-nsrefcnt nsLayoutFactory::AddRef()   
+nsrefcnt
+nsLayoutFactory::AddRef()   
 {   
   return ++mRefCnt;   
 }   
 
-nsrefcnt nsLayoutFactory::Release()   
+nsrefcnt
+nsLayoutFactory::Release()   
 {   
   if (--mRefCnt == 0) {   
     delete this;   
@@ -150,9 +168,18 @@ nsrefcnt nsLayoutFactory::Release()
   return mRefCnt;   
 }  
 
-nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,  
-                                         const nsIID &aIID,  
-                                         void **aResult)  
+#ifdef DEBUG
+#define LOG_NEW_FAILURE(_msg,_ec)                                           \
+  printf("nsLayoutFactory::CreateInstance failed for %s: error=%d(0x%x)\n", \
+         _msg, _ec, _ec)
+#else
+#define LOG_NEW_FAILURE(_msg,_ec)
+#endif
+
+nsresult
+nsLayoutFactory::CreateInstance(nsISupports *aOuter,  
+                                const nsIID &aIID,  
+                                void **aResult)  
 {  
   nsresult res;
   PRBool refCounted = PR_TRUE;
@@ -166,122 +193,182 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   nsISupports *inst = nsnull;
 
   // XXX ClassID check happens here
-  if (mClassID.Equals(kCHTMLDocumentCID)) {
+  if (mClassID.Equals(kHTMLDocumentCID)) {
     res = NS_NewHTMLDocument((nsIDocument **)&inst);
-    if (!NS_SUCCEEDED(res)) {
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLDocument", res);
       return res;
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kCXMLDocumentCID)) {
+  else if (mClassID.Equals(kXMLDocumentCID)) {
     res = NS_NewXMLDocument((nsIDocument **)&inst);
-    if (!NS_SUCCEEDED(res)) {
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXMLDocument", res);
       return res;
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kCImageDocumentCID)) {
+  else if (mClassID.Equals(kImageDocumentCID)) {
     res = NS_NewImageDocument((nsIDocument **)&inst);
-    if (!NS_SUCCEEDED(res)) {
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewImageDocument", res);
       return res;
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kCHTMLImageElementCID)) {
+#if 1
+// XXX replace these with nsIHTMLElementFactory calls
+  else if (mClassID.Equals(kHTMLImageElementCID)) {
     res = NS_NewHTMLImageElement((nsIHTMLContent**)&inst, nsHTMLAtoms::img);
     if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLImageElement", res);
       return res;
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kCHTMLOptionElementCID)) {
+  else if (mClassID.Equals(kHTMLOptionElementCID)) {
     res = NS_NewHTMLOptionElement((nsIHTMLContent**)&inst, nsHTMLAtoms::option);
     if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLOptionElement", res);
       return res;
     }
     refCounted = PR_TRUE;
   }
+// XXX why the heck is this exported???? bad bad bad bad
   else if (mClassID.Equals(kPresShellCID)) {
     res = NS_NewPresShell((nsIPresShell**) &inst);
     if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewPresShell", res);
       return res;
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kCRangeListCID)) {
+#endif
+  else if (mClassID.Equals(kRangeListCID)) {
     res = NS_NewRangeList((nsIDOMSelection**)&inst);
-    if (!NS_SUCCEEDED(res)) {
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewRangeList", res);
       return res;
     }
     refCounted = PR_TRUE;
   }
-  else if (mClassID.Equals(kCRangeCID)) {
+  else if (mClassID.Equals(kRangeCID)) {
     res = NS_NewRange((nsIDOMRange **)&inst);
-    if (!NS_SUCCEEDED(res)) {
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewRange", res);
       return res;
     }
     refCounted = PR_TRUE;
   } 
-  else if (mClassID.Equals(kCContentIteratorCID)) {
+  else if (mClassID.Equals(kContentIteratorCID)) {
     res = NS_NewContentIterator((nsIContentIterator **)&inst);
-    if (!NS_SUCCEEDED(res)) {
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewContentIterator", res);
       return res;
     }
     refCounted = PR_TRUE;
   } 
-  else if (mClassID.Equals(kCSubtreeIteratorCID)) {
+  else if (mClassID.Equals(kSubtreeIteratorCID)) {
     res = NS_NewContentSubtreeIterator((nsIContentIterator **)&inst);
-    if (!NS_SUCCEEDED(res)) {
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewContentSubtreeIterator", res);
       return res;
     }
     refCounted = PR_TRUE;
   } 
-  else if (mClassID.Equals(kCCSSParserCID)) {
-    // XXX this should really be factored into a style-specific DLL so
-    // that all the HTML, generic layout, and style stuff isn't munged
-    // together.
-    if (NS_FAILED(res = NS_NewCSSParser((nsICSSParser**)&inst)))
+  else if (mClassID.Equals(kCSSParserCID)) {
+    res = NS_NewCSSParser((nsICSSParser**)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewCSSParser", res);
       return res;
+    }
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kHTMLStyleSheetCID)) {
-    // XXX ibid
-    if (NS_FAILED(res = NS_NewHTMLStyleSheet((nsIHTMLStyleSheet**)&inst)))
+    res = NS_NewHTMLStyleSheet((nsIHTMLStyleSheet**)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLStyleSheet", res);
       return res;
+    }
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kHTMLCSSStyleSheetCID)) {
-    // XXX ibid
-    if (NS_FAILED(res = NS_NewHTMLCSSStyleSheet((nsIHTMLCSSStyleSheet**)&inst)))
+    res = NS_NewHTMLCSSStyleSheet((nsIHTMLCSSStyleSheet**)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLCSSStyleSheet", res);
       return res;
+    }
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kTextNodeCID)) {
-    // XXX ibid
-    if (NS_FAILED(res = NS_NewTextNode((nsIContent**) &inst)))
+    res = NS_NewTextNode((nsIContent**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewTextNode", res);
       return res;
+    }
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kNameSpaceManagerCID)) {
-    if (NS_FAILED(res = NS_NewNameSpaceManager((nsINameSpaceManager**)&inst)))
+    res = NS_NewNameSpaceManager((nsINameSpaceManager**)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewNameSpaceManager", res);
       return res;
+    }
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kFrameUtilCID)) {
-    // XXX ibid
-    if (NS_FAILED(res = NS_NewFrameUtil((nsIFrameUtil**) &inst)))
+    res = NS_NewFrameUtil((nsIFrameUtil**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewFrameUtil", res);
       return res;
+    }
     refCounted = PR_TRUE;
   }
   else if (mClassID.Equals(kEventListenerManagerCID)) {
-    if (NS_FAILED(res = NS_NewEventListenerManager((nsIEventListenerManager**) &inst)))
+    res = NS_NewEventListenerManager((nsIEventListenerManager**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewEventListenerManager", res);
       return res;
+    }
     refCounted = PR_TRUE;
   }
-  else 
-  {
+  else if (mClassID.Equals(kPrintPreviewContextCID)) {
+    res = NS_NewPrintPreviewContext((nsIPresContext**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewPrintPreviewContext", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kLayoutDocumentLoaderFactoryCID)) {
+    res = NS_NewLayoutDocumentLoaderFactory((nsIDocumentLoaderFactory**)&inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewLayoutDocumentLoaderFactory", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kLayoutDebuggerCID)) {
+    res = NS_NewLayoutDebugger((nsILayoutDebugger**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewLayoutDebugger", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kHTMLElementFactoryCID)) {
+    res = NS_NewHTMLElementFactory((nsIHTMLElementFactory**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewHTMLElementFactory", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else {
     return NS_NOINTERFACE;
   }
+
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
@@ -293,6 +380,7 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (res != NS_OK) {  
     // We didn't get the right interface, so clean up  
+    LOG_NEW_FAILURE("final QueryInterface", res);
     delete inst;  
   }  
 
@@ -318,7 +406,7 @@ static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 class LayoutScriptNameSet : public nsIScriptExternalNameSet {
 public:
   LayoutScriptNameSet();
-  ~LayoutScriptNameSet();
+  virtual ~LayoutScriptNameSet();
 
   NS_DECL_ISUPPORTS
   
@@ -351,16 +439,16 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
 
   result = aScriptContext->GetNameSpaceManager(&manager);
   if (NS_OK == result) {
-    result = manager->RegisterGlobalName("HTMLImageElement", 
-                                         kCHTMLImageElementCID, 
+    result = manager->RegisterGlobalName("HTMLImageElement",
+                                         kHTMLImageElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {
       NS_RELEASE(manager);
       return result;
     }
-      
-    result = manager->RegisterGlobalName("HTMLOptionElement", 
-                                         kCHTMLOptionElementCID, 
+
+    result = manager->RegisterGlobalName("HTMLOptionElement",
+                                         kHTMLOptionElementCID,
                                          PR_TRUE);
     if (NS_FAILED(result)) {
       NS_RELEASE(manager);
@@ -417,4 +505,227 @@ NSGetFactory(nsISupports* serviceMgr,
   }
 
   return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+}
+
+extern nsresult NS_RegisterDocumentFactories(nsIComponentManager* aCM,
+                                             const char* aPath);
+extern nsresult NS_UnregisterDocumentFactories(nsIComponentManager* aCM,
+                                               const char* aPath);
+
+#ifdef DEBUG
+#define LOG_REGISTER_FAILURE(_msg,_ec) \
+  printf("RegisterComponent failed for %s: error=%d(0x%x)\n", _msg, _ec, _ec)
+#else
+#define LOG_REGISTER_FAILURE(_msg,_ec)
+#endif
+
+extern "C" PR_IMPLEMENT(nsresult)
+NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
+{
+  printf("*** Registering html library\n");
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsIComponentManager* cm;
+  rv = servMgr->GetService(kComponentManagerCID,
+                           nsIComponentManager::GetIID(),
+                           (nsISupports**)&cm);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  do {
+    rv = NS_RegisterDocumentFactories(cm, aPath);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("document factories", rv);
+      break;
+    }
+// XXX duh: replace this with an array and a loop!
+    rv = cm->RegisterComponent(kHTMLDocumentCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kHTMLDocumentCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kXMLDocumentCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kXMLDocumentCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kImageDocumentCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kImageDocumentCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kNameSpaceManagerCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kNameSpaceManagerCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kEventListenerManagerCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kEventListenerManagerCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kCSSParserCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kCSSParserCID", rv);
+      break;
+    }
+#if 1
+    rv = cm->RegisterComponent(kHTMLImageElementCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kHTMLImageElementCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kHTMLOptionElementCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kHTMLImageElementCID", rv);
+      break;
+    }
+// XXX why the heck is this exported???? bad bad bad bad
+    rv = cm->RegisterComponent(kPresShellCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kPresShellCID", rv);
+      break;
+    }
+#endif
+    rv = cm->RegisterComponent(kHTMLStyleSheetCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kHTMLStyleSheetCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kHTMLCSSStyleSheetCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kHTMLCSSStyleSheetCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kTextNodeCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kTextNodeCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kSelectionCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kSelectionCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kRangeCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kRangeCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kRangeListCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kRangeListCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kContentIteratorCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kContentIteratorCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kSubtreeIteratorCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kSubtreeIteratorCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kFrameUtilCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kFrameUtilCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kPrintPreviewContextCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kPrintPreviewContextCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kLayoutDebuggerCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kLayoutDebuggerCID", rv);
+      break;
+    }
+    rv = cm->RegisterComponent(kHTMLElementFactoryCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kHTMLElementFactoryCID", rv);
+      break;
+    }
+    break;
+  } while (PR_FALSE);
+
+  servMgr->ReleaseService(kComponentManagerCID, cm);
+  return rv;
+}
+
+extern "C" PR_IMPLEMENT(nsresult)
+NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
+{
+  printf("*** Unregistering html library\n");
+
+  nsresult rv;
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsIComponentManager* cm;
+  rv = servMgr->GetService(kComponentManagerCID,
+                           nsIComponentManager::GetIID(),
+                           (nsISupports**)&cm);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Save return value during debugging, both otherwise discard it
+  // because there is no good reason for an unregister to fail!
+  rv = NS_UnregisterDocumentFactories(cm, aPath);
+  rv = cm->UnregisterComponent(kHTMLDocumentCID, aPath);
+  rv = cm->UnregisterComponent(kXMLDocumentCID, aPath);
+  rv = cm->UnregisterComponent(kImageDocumentCID, aPath);
+  rv = cm->UnregisterComponent(kNameSpaceManagerCID, aPath);
+  rv = cm->UnregisterComponent(kEventListenerManagerCID, aPath);
+  rv = cm->UnregisterComponent(kCSSParserCID, aPath);
+  rv = cm->UnregisterComponent(kHTMLStyleSheetCID, aPath);
+  rv = cm->UnregisterComponent(kHTMLCSSStyleSheetCID, aPath);
+  rv = cm->UnregisterComponent(kTextNodeCID, aPath);
+  rv = cm->UnregisterComponent(kSelectionCID, aPath);
+  rv = cm->UnregisterComponent(kRangeCID, aPath);
+  rv = cm->UnregisterComponent(kRangeListCID, aPath);
+  rv = cm->UnregisterComponent(kContentIteratorCID, aPath);
+  rv = cm->UnregisterComponent(kSubtreeIteratorCID, aPath);
+  rv = cm->UnregisterComponent(kFrameUtilCID, aPath);
+  rv = cm->UnregisterComponent(kLayoutDebuggerCID, aPath);
+  rv = cm->UnregisterComponent(kHTMLElementFactoryCID, aPath);
+
+// XXX why the heck are these exported???? bad bad bad bad
+#if 1
+  rv = cm->UnregisterComponent(kPresShellCID, aPath);
+  rv = cm->UnregisterComponent(kHTMLImageElementCID, aPath);
+  rv = cm->UnregisterComponent(kHTMLOptionElementCID, aPath);
+#endif
+
+  servMgr->ReleaseService(kComponentManagerCID, cm);
+
+  return NS_OK;
 }
