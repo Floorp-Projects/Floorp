@@ -76,10 +76,20 @@ function hideShowControls(serverType)
 
         // hide unsupported server type
 
+        // adding support for hiding multiple server types using hideFor="server1,server2"
+        var hideForBool = false;
+        var hideForTokens = hideFor.split(",");
+        for (j = 0; j < hideForTokens.length; j++) {
+            if (hideForTokens[j] == serverType) {
+                hideForBool = true;
+                break;
+            }
+        }
+
         if ((controlType != "server" &&
              controlType != "identity" &&
              controlType != serverType) ||
-            hideFor == serverType) {
+            hideForBool) {
             box.setAttribute("hidden", "true");
         }
         else {

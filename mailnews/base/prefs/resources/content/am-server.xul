@@ -59,7 +59,7 @@
     <textfield wsm_persist="true" id="server.biffMinutes" size="3"/>
     <text class="label" for="server.biffMinutes" value="&biffEnd.label;"/>
   </box>
-  <checkbox style="margin-left: 2em" hidefor="nntp"
+  <checkbox style="margin-left: 2em" hidefor="imap,nntp"
             wsm_persist="true" id="server.downloadOnBiff"
             value="&downloadOnBiff.label;"/>
   <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
