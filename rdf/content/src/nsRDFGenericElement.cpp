@@ -1029,7 +1029,7 @@ RDFGenericElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBo
 			aName->ToString(aString);
 			if (xulListener->mAttribute.EqualsIgnoreCase(aString))
 			{
-				// Set the attribute in the broadcast listener.
+				// Unset the attribute in the broadcast listener.
 				nsCOMPtr<nsIContent> contentNode(xulListener->mListener);
 				if (contentNode)
 				{
@@ -1233,7 +1233,32 @@ RDFGenericElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMNode* aN
 	NS_ADDREF(aNode);
 	mBroadcastListeners.AppendElement(new XULBroadcastListener(attr, aNode));
 
-	// XXX: Sync up the initial attribute value.
+	// We need to sync up the initial attribute value.
+  nsCOMPtr<nsIContent> pListener(aNode);
+
+  // Retrieve our namespace
+  PRInt32 namespaceID;
+  GetNameSpaceID(namespaceID);
+
+  // Find out if the attribute is even present at all.
+  nsString attrValue;
+  nsIAtom* kAtom = NS_NewAtom(attr);
+	nsresult result = GetAttribute(namespaceID, kAtom, attrValue);
+	PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
+                        result == NS_CONTENT_ATTR_HAS_VALUE);
+
+	if (attrPresent)
+  {
+    // Set the attribute 
+    pListener->SetAttribute(namespaceID, kAtom, attrValue, PR_TRUE);
+  }
+  else
+  {
+    // Unset the attribute
+    pListener->UnsetAttribute(namespaceID, kAtom, PR_TRUE);
+  }
+
+  NS_RELEASE(kAtom);
 
 	return NS_OK; 
 }
