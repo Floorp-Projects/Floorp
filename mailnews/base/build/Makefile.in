@@ -50,7 +50,6 @@ EXTRA_DSO_LDOPTS = \
 		-lxpcom			\
 		-lreg			\
 		-lappcores		\
-		-lnntp			\
 		$(NSPR_LIBS)		\
 		-L$(DIST)/bin		\
 		-L$(DIST)/lib		\
