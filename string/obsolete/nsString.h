@@ -171,6 +171,9 @@ PRUnichar& First() const;
  */
 PRUnichar& Last() const;
 
+PRBool SetCharAt(PRUnichar aChar,PRInt32 anIndex);
+
+
 /**********************************************************************
   String creation methods...
  *********************************************************************/

@@ -983,12 +983,12 @@ rdf_EscapeAngleBrackets(nsString& s)
 {
     PRInt32 index;
     while ((index = s.Find('<')) != -1) {
-        s[index] = '&';
+        s.SetCharAt('&',index);
         s.Insert(nsAutoString("lt;"), index + 1);
     }
 
     while ((index = s.Find('>')) != -1) {
-        s[index] = '&';
+        s.SetCharAt('&',index);
         s.Insert(nsAutoString("gt;"), index + 1);
     }
 }
@@ -998,7 +998,7 @@ rdf_EscapeAmpersands(nsString& s)
 {
     PRInt32 index = 0;
     while ((index = s.Find('&', index)) != -1) {
-        s[index] = '&';
+        s.SetCharAt('&',index);
         s.Insert(nsAutoString("amp;"), index + 1);
         index += 4;
     }

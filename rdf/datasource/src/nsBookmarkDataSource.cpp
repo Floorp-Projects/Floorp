@@ -277,7 +277,7 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsIRDFResource* aContainer)
         static const char kEscape22[] = "%22";
         PRInt32 offset;
         while ((offset = url.Find(kEscape22)) >= 0) {
-            url[offset] = PRUnichar(' ');
+            url.SetCharAt(' ',offset);
             url.Cut(offset + 1, sizeof(kEscape22) - 2);
         }
     }
