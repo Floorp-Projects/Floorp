@@ -79,33 +79,35 @@ NS_IMETHODIMP
 nsInternetCiter::GetCiteString(const nsAReadableString& aInString, nsAWritableString& aOutString)
 {
   PRInt32 i = 0;
-  PRInt32 length = aInString.Length();
   aOutString.SetLength(0);
   PRUnichar uch = nl;
 
   // Strip trailing new lines which will otherwise turn up
   // as ugly quoted empty lines.
-  nsString tString(aInString); //CRAPCRAP
-  while(length > 0 &&
-        (tString[length-1] == cr ||
-         tString[length-1] == nl))
+  nsReadingIterator <PRUnichar> beginIter,endIter;
+  aInString.BeginReading(beginIter);
+  aInString.EndReading(endIter);
+  while(beginIter!= endIter &&
+        (*endIter == cr ||
+         *endIter == nl))
   {
-    --length;
+    --endIter;
   }
 
   // Loop over the string:
-  while (i < length)
+  while (beginIter != endIter)
   {
     if (uch == nl)
     {
       aOutString.Append(gt);
       // No space between >: this is ">>> " style quoting, for
       // compatability with RFC 2646 and format=flowed.
-      if (tString[i] != gt)
+      if (*beginIter != gt)
         aOutString.Append(space);
     }
 
-    uch = tString[i++];
+    uch = *beginIter;
+    ++beginIter;
 
     aOutString += uch;
   }
