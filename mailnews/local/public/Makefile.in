@@ -38,11 +38,15 @@ XPIDLSRCS	= \
 		nsIMsgParseMailMsgState.idl \
 		nsINoIncomingServer.idl \
 		nsINoneService.idl	\
-		nsIMovemailService.idl  \
-		nsIMovemailIncomingServer.idl \
 		nsIMsgLocalMailFolder.idl \
 		nsILocalMailIncomingServer.idl \
 		$(NULL)
+
+ifdef HAVE_MOVEMAIL
+XPIDLSRC	+= \
+		nsIMovemailService.idl \
+		nsIMovemailIncomingServer.idl
+endif
 
 include $(topsrcdir)/config/rules.mk
 

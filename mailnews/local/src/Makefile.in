@@ -45,9 +45,7 @@ CPPSRCS		= \
 		nsLocalUndoTxn.cpp \
 		nsLocalStringBundle.cpp \
 		nsNoIncomingServer.cpp \
-		nsMovemailIncomingServer.cpp \
 		nsNoneService.cpp       \
-		nsMovemailService.cpp   \
 		$(NULL)
 
 EXPORTS		= \
@@ -65,9 +63,19 @@ EXPORTS		= \
 		nsLocalStringBundle.h \
 		nsNoneService.h	\
 		nsNoIncomingServer.h \
-		nsMovemailIncomingServer.h \
-		nsMovemailService.h \
 		$(NULL)
+
+ifdef HAVE_MOVEMAIL
+CPPSRCS		+= \
+		nsMovemailService.cpp \
+		nsMovemailIncomingServer.cpp
+endif
+
+ifdef HAVE_MOVEMAIL
+EXPORTS		+= \
+		nsMovemailService.h \
+		nsMovemailIncomingServer.h
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
