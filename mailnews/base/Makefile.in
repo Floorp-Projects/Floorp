@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public src util search build
 
-ifeq ($(OS_ARCH),Darwin)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS		+= resources/content/mac
 endif
 
