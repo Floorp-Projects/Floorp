@@ -156,18 +156,20 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(mTextContent));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIDOMHTMLInputElement> fileContent(do_QueryInterface(mContent, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 tabIndex = -1;
   if (mTextContent) {
     mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
     nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
     if (textControl) {
       // Initialize value when we create the content in case the value was set
       // before we got here
-      nsCOMPtr<nsIDOMHTMLInputElement> fileContent = do_QueryInterface(mContent);
-      if (fileContent) {
-        nsAutoString value;
-        fileContent->GetValue(value);
-        textControl->SetValue(value);
-      }
+      nsAutoString value;
+      fileContent->GetValue(value);
+      textControl->SetValue(value);
+      fileContent->GetTabIndex(&tabIndex);
+      textControl->SetTabIndex(tabIndex);
     }
     aChildList.AppendElement(mTextContent);
   }
@@ -178,6 +180,11 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   if (mBrowse) {
     mBrowse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
+    nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
+    if (browseControl) {
+      fileContent->GetTabIndex(&tabIndex);
+      browseControl->SetTabIndex(tabIndex);
+    }
 
     aChildList.AppendElement(mBrowse);
 
