@@ -280,7 +280,7 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
       char *uri = PR_smprintf("%s#%s",
                               (const char*)sourceval,
                               attr_name);
-      delete[] attr_name;
+      nsCRT::free(attr_name);
       if (uri) {
         nsCOMPtr<nsIRDFResource> resource;
         getRDFService()->GetResource(uri,
@@ -661,7 +661,7 @@ nsRDFDOMDataSource::getURIForNode(nsIDOMNode *node, char **uri)
     // leaks
     char *textval = textValue.ToNewCString();
     *uri = PR_smprintf("text://%s", textval);
-    delete[] textval;
+    nsCRT::free(textval);
   }
   
   return NS_OK;
