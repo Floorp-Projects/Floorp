@@ -362,7 +362,7 @@ PRBool xptiWorkingSet::DirectoryAtMatchesPersistentDescriptor(PRUint32 i,
         return PR_FALSE;
 
     nsCOMPtr<nsILocalFile> descDir;
-    nsresult rv = NS_NewLocalFile(nsnull, false, getter_AddRefs(descDir));
+    nsresult rv = NS_NewLocalFile(nsnull, PR_FALSE, getter_AddRefs(descDir));
     if (NS_FAILED(rv))
         return PR_FALSE;
 
