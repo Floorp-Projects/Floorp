@@ -711,7 +711,11 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("CreateDestYes");
     int err = 0; 
-    err = mkdir(gCtx->opt->mDestination, 0755);
+
+    mode_t oldPerms = umask(022);
+    err = mkdir(gCtx->opt->mDestination, (0777 & ~oldPerms));
+    umask(oldPerms); // restore original umask
+
     gtk_widget_destroy(sCreateDestDlg);
     sConfirmCreateUp = FALSE;
 

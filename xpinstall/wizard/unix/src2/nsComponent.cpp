@@ -33,7 +33,8 @@ nsComponent::nsComponent() :
     mNext(NULL),
     mIndex(-1),
     mRefCount(0),
-    mDepRefCount(0)
+    mDepRefCount(0),
+    mNextDependeeIdx(0)
 {
     int i;
 
