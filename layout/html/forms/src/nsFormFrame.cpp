@@ -724,6 +724,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsCOMPtr<nsIURI> docURL;
     document->GetBaseURL(*getter_AddRefs(docURL));
     NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
+    if (!docURL) return NS_OK; // No base URL -> exit early, see Bug 30721
 
       // If an action is not specified and we are inside 
       // a HTML document then reload the URL. This makes us
@@ -1048,8 +1049,8 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
   PRBool firstTime = PR_TRUE;
   PRUint32 numChildren = mFormControls.Count();
 
-  nsIUnicodeEncoder *encoder = nsnull;
-  if(NS_FAILED(GetEncoder(&encoder)))  // Non-fatal error
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  if(NS_FAILED(GetEncoder(getter_AddRefs(encoder))))  // Non-fatal error
      encoder = nsnull;
 
   // collect and encode the data from the children controls
@@ -1118,7 +1119,6 @@ nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBo
   if (isPost) {
     aData.AppendWithConversion(CRLF);
   }
-  NS_IF_RELEASE(encoder);
   return rv;
 }
 
@@ -1199,12 +1199,12 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
   rv = postDataFile->Write(buffer, wantbytes = PL_strlen(buffer), &gotbytes);
   if (NS_FAILED(rv) || (wantbytes != gotbytes)) return rv;
 
-  nsIUnicodeEncoder *encoder=nsnull;
-  if(NS_FAILED( GetEncoder(&encoder) ) )
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  if(NS_FAILED( GetEncoder(getter_AddRefs(encoder))))  // Non-fatal error
      encoder = nsnull;
 
-  nsIUnicodeEncoder *platformencoder = nsnull;
-  if(NS_FAILED(GetPlatformEncoder(&platformencoder)))  // Non-fatal error
+  nsCOMPtr<nsIUnicodeEncoder> platformencoder;
+  if(NS_FAILED(GetPlatformEncoder(getter_AddRefs(platformencoder))))  // Non-fatal error
      platformencoder = nsnull;
 
 
@@ -1499,8 +1499,6 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
   }
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Generating the form post temp file failed.\n");
-  NS_IF_RELEASE(encoder);
-  NS_IF_RELEASE(platformencoder);
   return rv;
 }
 
