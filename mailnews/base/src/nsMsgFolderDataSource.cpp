@@ -1594,6 +1594,8 @@ nsMsgFolderDataSource::createFolderSizeNode(nsIMsgFolder *folder, nsIRDFNode **t
     folderSize = kDisplayBlankCount;
   else
   {
+    // XXX todo, we are asserting here for news
+    // for offline news, we'd know the size on disk, right?
     rv = folder->GetSizeOnDisk((PRUint32 *) &folderSize);
     NS_ENSURE_SUCCESS(rv, rv);
   }
