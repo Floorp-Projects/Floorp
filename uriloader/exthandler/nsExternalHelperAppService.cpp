@@ -1269,17 +1269,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
         // Don't need to ask after all.
         alwaysAsk = PR_FALSE;
       }
-      else
-      {
-        // This mime type isn't in our mimeTypes.rdf data source nor has
-        // the user told us not to ask.  In this case we set the "always ask"
-        // attribute in the mime info object to false so the corresponding
-        // checkbox in the helper app dialog is unchecked.  That way, when
-        // the user selects an action on that dialog and presses Ok, then
-        // that action will be used in the future without prompting (unless
-        // they explicitly check that checkbox).
-        mMimeInfo->SetAlwaysAskBeforeHandling(PR_FALSE);
-      }
     }
   }
 
@@ -1690,7 +1679,8 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, con
   // we want to explicitly unescape aDefaultFile b4 passing into the dialog. we can't unescape
   // it because the dialog is implemented by a JS component which doesn't have a window so no unescape routine is defined...
   
-  rv = mDialog->PromptForSaveToFile(mWindowContext,
+  rv = mDialog->PromptForSaveToFile(this, 
+                                    mWindowContext,
                                     aDefaultFile.get(),
                                     aFileExtension.get(),
                                     aNewFile);
