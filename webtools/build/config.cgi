@@ -123,7 +123,7 @@ sub print_script_preview {
     Configurator Script Preview</b></font>
     </td></tr><tr></tr><tr><td>
     Check the script to make sure the options are correct.
-    Then, save this script as <code><b>~/.mozconfig</b></code>.
+    Then, save this script as <code><b>$HOME/.mozconfig</b></code>.
     </td></tr></table>
 
     <form action='.mozconfig' method='get'>
