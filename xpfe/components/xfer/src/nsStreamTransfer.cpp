@@ -21,6 +21,9 @@
 #include "nsDownloadProgressDialog.h"
 #include "nsIFileWidget.h"
 #include "nsWidgetsCID.h"
+#ifdef NECKO
+#include "nsNeckoUtil.h"
+#endif
 
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
