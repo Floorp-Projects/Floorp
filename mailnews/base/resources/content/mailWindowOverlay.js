@@ -44,7 +44,7 @@ function InitViewMessagesMenu()
 		allMenuItem.setAttribute("checked", messageView.viewType == viewShowAll);
 
 	var unreadMenuItem = document.getElementById("viewUnreadMessagesMenuItem");
-	var hidden = unreadMenuItem.getAttribute("hidden") == "true";
+	hidden = unreadMenuItem.getAttribute("hidden") == "true";
 	if(unreadMenuItem && !hidden)
 		unreadMenuItem.setAttribute("checked", messageView.viewType == viewShowUnread);
 
@@ -332,7 +332,7 @@ function MsgForwardMessage(event)
   dump("\nMsgForwardMessage from XUL\n");
   var forwardType = 0;
   try {
-  	var forwardType = pref.GetIntPref("mail.forward_message_mode");
+  	forwardType = pref.GetIntPref("mail.forward_message_mode");
   } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
   
   if (forwardType == 0)
@@ -441,16 +441,18 @@ function MsgOpenNewWindowForFolder(folderUri)
 
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
 {
+	var message;
+
 	if(!messageUri)
 	{
-		var message = GetLoadedMessage();
+		message = GetLoadedMessage();
 		var messageResource = message.QueryInterface(Components.interfaces.nsIRDFResource);
 		messageUri = messageResource.Value;
 	}
 
 	if(!folderUri)
 	{
-        var message = RDF.GetResource(messageUri);
+        message = RDF.GetResource(messageUri);
         message = message.QueryInterface(Components.interfaces.nsIMessage);
         var folder = message.msgFolder;
 		var folderResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);

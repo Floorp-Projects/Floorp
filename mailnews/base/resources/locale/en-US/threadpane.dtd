@@ -28,6 +28,8 @@ Rights Reserved.
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">
 <!ENTITY orderReceivedColumn.label "Order Received">
+<!ENTITY readColumn.label "Read">
+<!ENTITY flagColumn.label "Flag">
 
 <!--Tooltips-->
 <!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 

@@ -590,6 +590,8 @@ function FolderPaneOnClick(event)
 	debug("in FolderPaneClick()\n");
 
   var t = event.originalTarget;
+  var item;
+  var uri;
 
     if (t.getAttribute('twisty') == 'true') {
         // The twisty is nested three below the treeitem:
@@ -602,11 +604,11 @@ function FolderPaneOnClick(event)
 		if(open == "true") {
 			//dump("twisty open\n");
 
-			var item = t.parentNode.parentNode.parentNode;
+			item = t.parentNode.parentNode.parentNode;
 			if (item.localName == "treeitem") {
 				var isServer = (treeitem.getAttribute('IsServer') == "true");
 				if (isServer) {
-	    			var uri = treeitem.getAttribute("id");
+	    			uri = treeitem.getAttribute("id");
 					var server = GetServer(uri);
 					if (server) {
 						server.PerformExpand(msgWindow);
@@ -615,7 +617,7 @@ function FolderPaneOnClick(event)
 				else {
 					var isImap = (treeitem.getAttribute('ServerType') == "imap");
 					if (isImap) {
-		    			var uri = treeitem.getAttribute("id");
+		    			uri = treeitem.getAttribute("id");
 						var folder = GetMsgFolderFromUri(uri);
 						if (folder) {
 							var imapFolder = folder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
@@ -630,7 +632,7 @@ function FolderPaneOnClick(event)
     }
 	else if(event.detail == 2)
 	{
-		var item = t.parentNode.parentNode;
+		item = t.parentNode.parentNode;
 		if (item.localName == "treeitem")
 			FolderPaneDoubleClick(item);
 	}
@@ -876,7 +878,7 @@ function SetBusyCursor(window, enable)
 	else
 		window.setCursor("auto");
 
-	numFrames = window.frames.length;
+	var numFrames = window.frames.length;
 	for(var i = 0; i < numFrames; i++)
 	{
 		SetBusyCursor(window.frames[i], enable);

@@ -867,11 +867,14 @@ function SetTemplateTreeItemOpen(open)
 
 function SwitchPaneFocus(event)
 {
+	var focusedElement;
+	var focusedElementId;
+
 	if (event && (event.shiftKey))
 	{
 		dump("Inside the SwitchPaneFocus \n");
-		var focusedElement = document.commandDispatcher.focusedElement;
-		var focusedElementId="";
+		focusedElement = document.commandDispatcher.focusedElement;
+		focusedElementId="";
 
 		if ( MessagePaneHasFocus() )
 			SetFocusThreadPane();
@@ -894,8 +897,8 @@ function SwitchPaneFocus(event)
 	else
 	{
 		dump("Inside the SwitchPaneFocus \n");
-		var focusedElement = document.commandDispatcher.focusedElement;
-		var focusedElementId="";
+		focusedElement = document.commandDispatcher.focusedElement;
+		focusedElementId="";
 
 		if ( MessagePaneHasFocus() )
 			SetFocusFolderPane();

@@ -109,13 +109,13 @@ Rights Reserved.
 
   <treehead>
     <treerow id="headRow">
-		<treecell display="Thread" onclick="return top.ChangeThreadView();" class="treecell-header treecell-inset-header treecell-header-image threadColumnHeader" tooltip="aTooltip" tooltiptext="&threadColumnHeader.tooltip;" id="ThreadColumnHeader"/> 
+		<treecell display="&threadColumn.label;" onclick="return top.ChangeThreadView();" class="treecell-header treecell-inset-header treecell-header-image threadColumnHeader" tooltip="aTooltip" tooltiptext="&threadColumnHeader.tooltip;" id="ThreadColumnHeader"/> 
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&subjectColumn.label;" onclick="return top.MsgSortBySubject();" id="SubjectColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" onclick="return top.MsgSortBySender();" value="&senderColumn.label;" id="SenderColumnHeader"/>
-		<treecell class="treecell-header treecell-header-image treecell-inset-header readColumnHeader" display="Read" onclick="return top.MsgSortByRead();" id="UnreadButtonColumnHeader"/> 
+		<treecell class="treecell-header treecell-header-image treecell-inset-header readColumnHeader" display="&readColumn.label;" onclick="return top.MsgSortByRead();" id="UnreadButtonColumnHeader"/> 
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&dateColumn.label;" onclick="return top.MsgSortByDate();" id="DateColumnHeader"/> 
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&priorityColumn.label;" onclick="return top.MsgSortByPriority();" id="PriorityColumnHeader"/>
-		<treecell class="treecell-header treecell-header-image treecell-inset-header flagColumnHeader" display="Flag" onclick="return top.MsgSortByFlagged();" id="FlaggedButtonColumnHeader"/>
+		<treecell class="treecell-header treecell-header-image treecell-inset-header flagColumnHeader" display="&flagColumn.label;" onclick="return top.MsgSortByFlagged();" id="FlaggedButtonColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&statusColumn.label;" onclick="return top.MsgSortByStatus();" id="StatusColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&sizeColumn.label;" onclick="return top.MsgSortBySize();" id="SizeColumnHeader"/>
 		<treecell class="treecell-header treecell-inset-header sortDirectionIndicator" value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();" id="UnreadColumnHeader"/>
