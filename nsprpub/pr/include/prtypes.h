@@ -280,6 +280,18 @@ typedef signed char PRInt8;
 #endif
 
 /************************************************************************
+ * MACROS:      PR_INT8_MAX
+ *              PR_INT8_MIN
+ *              PR_UINT8_MAX
+ * DESCRIPTION:
+ *  The maximum and minimum values of a PRInt8 or PRUint8.
+************************************************************************/
+
+#define PR_INT8_MAX 127
+#define PR_INT8_MIN (-128)
+#define PR_UINT8_MAX 255U
+
+/************************************************************************
 ** TYPES:       PRUint16
 **              PRInt16
 ** DESCRIPTION:
@@ -291,6 +303,18 @@ typedef short PRInt16;
 #else
 #error No suitable type for PRInt16/PRUint16
 #endif
+
+/************************************************************************
+ * MACROS:      PR_INT16_MAX
+ *              PR_INT16_MIN
+ *              PR_UINT16_MAX
+ * DESCRIPTION:
+ *  The maximum and minimum values of a PRInt16 or PRUint16.
+************************************************************************/
+
+#define PR_INT16_MAX 32767
+#define PR_INT16_MIN (-32768)
+#define PR_UINT16_MAX 65535U
 
 /************************************************************************
 ** TYPES:       PRUint32
@@ -311,6 +335,18 @@ typedef long PRInt32;
 #else
 #error No suitable type for PRInt32/PRUint32
 #endif
+
+/************************************************************************
+ * MACROS:      PR_INT32_MAX
+ *              PR_INT32_MIN
+ *              PR_UINT32_MAX
+ * DESCRIPTION:
+ *  The maximum and minimum values of a PRInt32 or PRUint32.
+************************************************************************/
+
+#define PR_INT32_MAX PR_INT32(2147483647)
+#define PR_INT32_MIN (-PR_INT32_MAX - 1)
+#define PR_UINT32_MAX PR_UINT32(4294967295)
 
 /************************************************************************
 ** TYPES:       PRUint64
