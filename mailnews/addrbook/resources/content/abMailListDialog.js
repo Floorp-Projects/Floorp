@@ -153,10 +153,8 @@ function GetListValue(mailList, doAdd)
     i++;
   }
 
-  // if the last field was empty, don't count it
-  if (fieldValue == "")
-    --i;
-    
+  --i;
+  
   if (doAdd == false && i < oldTotal)
   {
     for (var j = i; j < oldTotal; j++)
@@ -328,6 +326,15 @@ function OnLoadEditList()
     }
   }
 
+  // workaround for bug 118337 - for mailing lists that have more rows than fits inside
+  // the display, the value of the textbox inside the new row isn't inherited into the input -
+  // the first row then appears to be duplicated at the end although it is actually empty.
+  // see awAppendNewRow which copies first row and clears it
+  setTimeout(AppendLastRow, 0);
+}
+
+function AppendLastRow()
+{ 
   AppendNewRowAndSetFocus();
   awFitDummyRows(1);
 
