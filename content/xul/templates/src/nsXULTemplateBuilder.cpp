@@ -88,6 +88,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISecurityCheckedComponent.h"
+#include "nsISimpleEnumerator.h"
 #include "nsISupportsArray.h"
 #include "nsITimer.h"
 #include "nsIURL.h"
@@ -244,11 +245,47 @@ nsXULTemplateBuilder::Rebuild()
 }
 
 NS_IMETHODIMP
+nsXULTemplateBuilder::Refresh()
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISimpleEnumerator> dslist;
+    rv = mDB->GetDataSources(getter_AddRefs(dslist));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore;
+    nsCOMPtr<nsISupports> next;
+    nsCOMPtr<nsIRDFRemoteDataSource> rds;
+
+    while(NS_SUCCEEDED(dslist->HasMoreElements(&hasMore)) && hasMore) {
+        dslist->GetNext(getter_AddRefs(next));
+        if (next && (rds = do_QueryInterface(next))) {
+            rds->Refresh(PR_FALSE);
+        }
+    }
+
+    return Rebuild();
+}   
+
+NS_IMETHODIMP
 nsXULTemplateBuilder::Init(nsIContent* aElement)
 {
     NS_PRECONDITION(aElement, "null ptr");
     mRoot = aElement;
-    return LoadDataSources();
+
+    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
+    NS_ASSERTION(doc, "element has no document");
+    if (! doc)
+        return NS_ERROR_UNEXPECTED;
+
+    nsresult rv = LoadDataSources(doc);
+
+    if (NS_SUCCEEDED(rv)) {
+        // Add ourselves as a document observer
+        doc->AddObserver(this);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -289,11 +326,20 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
                                        nsIAtom*     aAttribute,
                                        PRInt32      aModType)
 {
-    // Check for a change to the 'ref' attribute on an atom, in which
-    // case we may need to nuke and rebuild the entire content model
-    // beneath the element.
-    if ((aAttribute == nsXULAtoms::ref) && (aContent == mRoot))
-        Rebuild();
+    if (aContent == mRoot) {
+        // Check for a change to the 'ref' attribute on an atom, in which
+        // case we may need to nuke and rebuild the entire content model
+        // beneath the element.
+        if (aAttribute == nsXULAtoms::ref)
+            Rebuild();
+
+        // Check for a change to the 'datasources' attribute. If so, setup
+        // mDB by parsing the vew value and rebuild.
+        else if (aAttribute == nsXULAtoms::datasources) {
+            LoadDataSources(aDocument);
+            Rebuild();
+        }
+    }        
 }
 
 void
@@ -609,17 +655,19 @@ nsXULTemplateBuilder::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 //
 
 nsresult
-nsXULTemplateBuilder::LoadDataSources()
+nsXULTemplateBuilder::LoadDataSources(nsIDocument* doc)
 {
     NS_PRECONDITION(mRoot != nsnull, "not initialized");
-    if (! mRoot)
-        return NS_ERROR_NOT_INITIALIZED;
 
     nsresult rv;
 
     // flush (delete) the cache when re-rerooting the generated content
     if (mCache)
     	mCache = nsnull;
+
+    if (mDB) {
+        mDB->RemoveObserver(this);
+    }
 
     // create a database for the builder
     mDB = do_CreateInstance(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "composite-datasource");
@@ -639,11 +687,6 @@ nsXULTemplateBuilder::LoadDataSources()
     mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::allownegativeassertions, allowneg);
     if (allowneg == NS_LITERAL_STRING("false"))
 		mDB->SetAllowNegativeAssertions(PR_FALSE);
-
-    nsCOMPtr<nsIDocument> doc = mRoot->GetDocument();
-    NS_ASSERTION(doc, "element has no document");
-    if (! doc)
-        return NS_ERROR_UNEXPECTED;
 
     // Grab the doc's principal...
     nsIPrincipal *docPrincipal = doc->GetPrincipal();
@@ -767,9 +810,6 @@ nsXULTemplateBuilder::LoadDataSources()
 
     // Add ourselves as a datasource observer
     mDB->AddObserver(this);
-
-    // Add ourselves as a document observer
-    doc->AddObserver(this);
 
     return NS_OK;
 }
