@@ -1,9 +1,9 @@
-#!#perl# --
+#!#perl# -T --
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:23:50 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/09/18 19:28:32 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/gunzip.cgi,v $ 
 # $Name:  $ 
@@ -45,6 +45,43 @@ use Utils;
 
 
 
+
+
+sub usage {
+
+
+    my $usage =<<EOF;
+
+$0	[--version] [--help]  
+$0	tree=treename [brief-log=fileid][full-log=fileid]
+
+
+Informational Arguments
+
+
+--version	Print version information for this program
+
+--help		Show this usage page
+
+
+Synopsis
+
+
+This cgi script will gunzip a file and send the result to standard out
+in a form that a webserver can display.  Filenames are passed in via
+an abreviated form.  It is assumed that all files are either brief or
+full log files which are stored in known Tinderbox directories.  The
+file id is the basename of the file without the '.gz.html' extension.
+
+
+EOF
+
+    print $usage;
+    exit 0;
+
+} # usage
+
+
 sub parse_args {
   my (%form) = HTMLPopUp::split_cgi_args();
 
@@ -64,6 +101,10 @@ sub parse_args {
   (TreeData::tree_exists($tree)) ||
     die("tree: $tree does not exist\n");    
 
+  # tree is safe, untaint it.
+  $tree =~ m/(.*)/;
+  $tree = $1;
+
   my ($log_type);
   my ($log_file);
   if ($log_file = $form{'brief-log'}) {
@@ -71,7 +112,13 @@ sub parse_args {
   }  elsif ($log_file = $form{'full-log'}) {
     $log_type = "full-log";
   }
-  
+
+  # untaint the log_file, we do not use letters in the file name yet
+  # but it does us no harm to allow for future expansion.
+
+  $log_file =~ m/([0-9a-zA-Z\.]*)/;
+  $log_file = $1;
+
   ($log_type) ||
     die("Must specify either 'full-log' or 'brief-log'\n");
   
@@ -94,9 +141,17 @@ sub parse_args {
 
   print "Content-type: text/html\n\n";
 
-  my (@cmd) = (@GUNZIP, $ZIPPED_FILE);
-  system(@cmd);
-  ($?) && die("Could not run: '@cmd'\n");
-  
+  # To ensure that we do not have security problems:
+  # 1) we ensure that the log file exists 
+  # 2) we run system with a list argument.
+
+  if (-f $ZIPPED_FILE) {
+    my (@cmd) = (@GUNZIP, $ZIPPED_FILE);
+    system(@cmd);
+    ($?) && die("Could not run: '@cmd'\n");
+  } else {
+    print "Could not find file: $ZIPPED_FILE\n";
+  }
+
   exit 0;
 }
