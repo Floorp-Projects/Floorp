@@ -54,6 +54,17 @@ public:
     mPlacedFrames.Clear();
     ForgetWordFrames();
     mFirstLetterStyleOK = PR_FALSE;
+    mPass2VAlignCount = 0;
+  }
+
+  // Record the prescence of a frame that needs pass2 vertical-align
+  // handling.
+  void RecordPass2VAlignFrame() {
+    mPass2VAlignCount++;
+  }
+
+  PRBool NeedPass2VAlign() const {
+    return 0 != mPass2VAlignCount;
   }
 
   // Add to the placed-frame count
@@ -199,6 +210,7 @@ protected:
   PRBool mEndsInWhiteSpace;
   PRBool mUnderstandsWhiteSpace;
   PRBool mFirstLetterStyleOK;
+  PRInt32 mPass2VAlignCount;
 
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mPlacedFrames;
