@@ -1118,7 +1118,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIChannel* channel,
   {
     char* urlString;
     nsCOMPtr<nsIFile> localFile;
-    nsresult rv = channel->GetLocalFile(getter_AddRefs(localFile));
+    rv = channel->GetLocalFile(getter_AddRefs(localFile));
     if (NS_SUCCEEDED(rv) && localFile)
     {
       char* pathAndFilename;
