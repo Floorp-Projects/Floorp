@@ -207,17 +207,28 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 {
-	Boolean isActive = ((aOSEvent.modifiers & activeFlag) != 0);
-	if (isActive)
+	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
+	if (toolkit)
 	{
-		// get focused widget
-		nsWindow*	focusedWidget = mTopLevelWidget;
-		nsIMenuBar* menuBar = focusedWidget->GetMenuBar();
-					//¥TODO:	should get the focus from the toolkit and
+		Boolean isActive = ((aOSEvent.modifiers & activeFlag) != 0);
+		if (isActive)
+		{
+			//¥TODO: retrieve the focused widget for that window
+			nsWindow*	focusedWidget = mTopLevelWidget;
+			toolkit->SetFocus(focusedWidget);
+			nsIMenuBar* menuBar = focusedWidget->GetMenuBar();
+
+					//¥TODO:	if the focusedWidget doesn't have a menubar,
 					//				look all the way up to the window
 					//				until one of the parents has a menubar
 
-		//¥TODO: set the menu bar here
+			//¥TODO: set the menu bar here
+		}
+		else
+		{
+			//¥TODO: save the focused widget for that window
+			toolkit->SetFocus(nsnull);
+		}
 	}
 	return PR_TRUE;
 }
@@ -387,7 +398,11 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 		&& (abs(aOSEvent.where.v - lastWhere.v) < 5)) 
 	{
 		if (aOSEvent.what == mouseDown)
+		{
 			lastClickCount ++;
+			if (lastClickCount == 2)
+				aMessage = NS_MOUSE_LEFT_DOUBLECLICK;
+		}
 	}
 	else
 	{
