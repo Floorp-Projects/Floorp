@@ -1140,7 +1140,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
         *colon = '\0';
       }
       domain_length   = PL_strlen(domain_from_header);
-      cur_host_length = cur_host.Length();
+      cur_host_length = PL_strlen(cur_host.get());
 
       /* check to see if the host is in the domain */
       if (!cookie_IsInDomain(domain_from_header, (char*)cur_host.get(), cur_host_length)) {
