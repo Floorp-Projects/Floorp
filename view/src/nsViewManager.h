@@ -60,6 +60,7 @@ class nsIPresContext;
 class nsISupportsArray;
 struct DisplayListElement2;
 struct DisplayZTreeNode;
+class BlendingBuffers;
 
 //Uncomment the following line to enable generation of viewmanager performance data.
 #ifdef MOZ_PERF_METRICS
@@ -255,16 +256,19 @@ private:
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
                    PRBool &aResult);
 
-  void RenderDisplayListElement(DisplayListElement2* element, nsIRenderingContext &aRC);
+  void RenderDisplayListElement(DisplayListElement2* element,
+                                nsIRenderingContext &aRC,
+                                BlendingBuffers* aBuffers);
 
   void PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
-                const nsRect &aDamageRect);
+                 const nsRect &aDamageRect);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut, PRUint32 aUpdateFlags);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
-  nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
+  BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC,
+                                         PRBool aTranslucentWindow);
   
   void ReparentViews(DisplayZTreeNode* aNode);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing, PRBool aCaptured);
@@ -391,23 +395,13 @@ private:
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers
 
-  //blending buffers
-  static nsDrawingSurface  gOffScreen;
-  static nsDrawingSurface  gBlack;
-  static nsDrawingSurface  gWhite;
-  static nsSize            gOffScreenSize;
-
   //Rendering context used to cleanup the blending buffers
   static nsIRenderingContext* gCleanupContext;
 
   //list of view managers
   static nsVoidArray       *gViewManagers;
 
-  nsIBlender        *mBlender;
-
-  nsIRenderingContext *mOffScreenCX;
-  nsIRenderingContext *mBlackCX;
-  nsIRenderingContext *mWhiteCX;
+  nsCOMPtr<nsIBlender> mBlender;
 
   nsISupportsArray  *mCompositeListeners;
   void DestroyZTreeNode(DisplayZTreeNode* aNode);
