@@ -39,6 +39,7 @@ CSRCS		= jsapi.c \
 		  jsdate.c \
 		  jsdbgapi.c \
 		  jsemit.c \
+		  jsfile.c \
 		  jsfun.c \
 		  jsgc.c \
 		  jsinterp.c \
