@@ -297,8 +297,12 @@ nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  // Stabilize the refcount before copying the inner element.
+  NS_ADDREF(it);
   mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  nsresult rv = it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  NS_RELEASE(it);
+  return rv;
 }
 
 // nsIContent
