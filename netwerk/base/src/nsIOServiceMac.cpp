@@ -113,7 +113,7 @@ NS_IMETHODIMP
 nsIOService::GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 {
     nsresult rv;
-    NS_ENSURE_ARG(aFile);
+    NS_ENSURE_ARG(result);
        
     nsCOMPtr<nsILocalFile> localFile(
             do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
