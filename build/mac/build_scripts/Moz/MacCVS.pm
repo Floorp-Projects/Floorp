@@ -10,120 +10,51 @@ require Exporter;
 use strict;
 use Exporter;
 
-use vars qw($VERSION @ISA @EXPORT $MacCVSLib);
+use vars qw($VERSION @ISA @EXPORT);
 
 use Cwd;
 
-use Mac::StandardFile;
 use File::Basename;
 
-@ISA				= qw(Exporter);
-@EXPORT			= qw( new print checkout);
+use Mac::StandardFile;
+use Mac::AppleEvents;
+use Mac::AppleEvents::Simple;
+
+@ISA        = qw(Exporter);
+@EXPORT     = qw(new describe checkout update);
 $VERSION = "1.00";
 
-my($last_error) = 0;
+# If you want to understand the gobbldeygook that's used to build Apple Events,
+# you should start by reading the AEGizmos documentation.
+
 
 # Architecture:
 # cvs session object:
 # name - session name
 # session_file - session file
 # 
-# globals
-# $MacCVSLib - location of MacCVS applescript library
-#
 # 
+
+my($last_error) = 0;
+my($gAppSig)    = 'Mcvs';   # MacCVS Pro
 
 #
 # utility routines
 #
 
-# just like Mac::DoAppleScript, 1 is success, 0 is failure
-sub _myDoAppleScript($) 
+
+sub _checkForEventError($)
 {
-	my($script) = @_;
-	my $asresult = MacPerl::DoAppleScript($script);
+  my($evt) = @_;
 
-	if ($asresult eq "0")
-	{
-		return 1;
-	}
-	else
-	{
-		my($error_string) = "Unknown error";
-		my($error_code) = 0;
-
-		if ($asresult =~ /^\"(.*)\.([0-9]+)\"$/)
-		{
-			$error_string = $1;
-			$error_code = $2;
-		}
-
-		print STDERR "Error. Script returned '$error_string (error $error_code)\n";
-		# print STDERR "AppleScript was: \n $script \n";
-		$last_error = $error_code;
-		return 0;
-	}
-}
-
-# get the full path to this module
-sub _getPathToMe()
-{
-	# this can be a relative or absolute path. If relative, is relative
-	# to the running script ($0)
-	my($my_path) = $INC{"Moz/MacCVS.pm"};
-	
-	if (substr($my_path, 0, 1) eq ":")	# relative path
-	{
-		$my_path = dirname($0).$my_path;
-	}
-	
-	return $my_path;
-}
-
-# _useMacCVSLib
-# returns 1 on success
-# Search the include path for the file called MacCVSLib
-sub _useMacCVSLib() 
-{
-	unless (defined($MacCVSLib) && ($MacCVSLib ne ""))
-	{
-		my($libname) = "MacCVSLib";
-		
-		my($my_path) = _getPathToMe();
-		
-		# try in the same directory as this module
-		my($c) = dirname($my_path).":".$libname;
-		if ( -e $c)
-		{
-			$MacCVSLib = $c;
-			return 1;
-		}
-		
-		# try the directory we were run from
-		$c = dirname($0) . ":" . $libname;
-		if ( -e $c)
-		{
-			$MacCVSLib = $c;
-			return 1;
-		}
-
-		# now search the include directories
-		foreach (@INC)
-		{
-			unless ( m/^Dev:Pseudo/ ) # This is some bizarre MacPerl special-case directory
-			{
-				$c = $_ . $libname;
-				if (-e $c)
-				{
-					$MacCVSLib = $c;
-					return 1;
-				}
-			}
-		}
-
-		die "Error: MacCVSLib could not be found!";
-	}
-	return 1;
+  if ($evt->{ERRNO} != 0)
+  {
+    print STDERR "Error. Script returned '$evt->{ERROR} (error $evt->{ERRNO})\n";
+    $last_error = $evt->{ERRNO};
+    return 0;
+  }
+  
+  return 1; # success
 }
 
 
@@ -133,22 +64,22 @@ sub _useMacCVSLib()
 
 sub new
 {
-	my ( $proto, $session_file) = @_;
-	my $class = ref($proto) || $proto;
-	my $self = {};
+  my ( $proto, $session_file) = @_;
+  my $class = ref($proto) || $proto;
+  my $self = {};
 
-	if ( defined($session_file) && ( -e $session_file) )
-	{
-		$self->{"name"} = basename( $session_file );
-		$self->{"session_file"} = $session_file;
-		bless $self, $class;
-		return $self;
-	}
-	else
-	{
-		print STDERR "MacCVS->new cvs file < $session_file > does not exist\n";
-		return;
-	}
+  if ( defined($session_file) && ( -e $session_file) )
+  {
+    $self->{"name"} = basename( $session_file );
+    $self->{"session_file"} = $session_file;
+    bless $self, $class;
+    return $self;
+  }
+  else
+  {
+    print STDERR "MacCVS->new cvs file < $session_file > does not exist\n";
+    return;
+  }
 }
 
 # makes sure that the session is open
@@ -156,23 +87,23 @@ sub new
 # returns 1 on success
 sub assertSessionOpen()
 {
-	my ($self) = shift;
-	
-	_useMacCVSLib() || die "Error: Could not load MacCVSLib\n";
-	$last_error = 0;
+  my ($self) = shift;
 
-	my $script = <<END_OF_APPLESCRIPT;
-	tell (load script file "$MacCVSLib") to OpenSession("$self->{session_file}")
-END_OF_APPLESCRIPT
-	return _myDoAppleScript($script);
+  $last_error = 0;
+
+  my($prm) =
+    q"'----':obj {form:name, want:type(alis), seld:TEXT(@), from:'null'()}";
+
+  my($evt) = do_event(qw/aevt odoc/, $gAppSig, $prm, $self->{session_file});
+  return _checkForEventError($evt);
 }
 
 # prints the cvs object, used mostly for debugging
-sub print
+sub describe
 {
-	my($self) = shift;
-		$last_error = 0;
-	print "MacCVS:: name: ", $self->{name}, " session file: ", $self->{session_file}, "\n";
+  my($self) = shift;
+  $last_error = 0;
+  print "MacCVS:: name: ", $self->{name}, " session file: ", $self->{session_file}, "\n";
 }
 
 # checkout( self, module, revision, date)
@@ -180,29 +111,71 @@ sub print
 # returns 1 on success.
 sub checkout()
 {
-	my($self, $module, $revision, $date ) = @_;
-	unless( defined ($module) ) { $module = ""; } # get rid of the pesky undefined warnings
-	unless( defined ($revision) ) { $revision = ""; }
-	unless( defined ($date) ) { $date = ""; }
+  my($self, $module, $revision, $date ) = @_;
+  unless( defined ($module) ) { $module = ""; } # get rid of the pesky undefined warnings
+  unless( defined ($revision) ) { $revision = ""; }
+  unless( defined ($date) ) { $date = ""; }
 
-	$last_error = 0;
-		
-	$self->assertSessionOpen() || die "Error: failed to open MacCVS session file at $self->{session_file}\n";
-	
-	my($revstring) = ($revision ne "") ? $revision : "(none)";
-	my($datestring) = ($date ne "") ? $date : "(none)";
-	
-	print "Checking out $module with revision $revstring, date $datestring\n";
-	
-	my $script = <<END_OF_APPLESCRIPT;
-	tell (load script file "$MacCVSLib") to Checkout given sessionName:"$self->{name}", module:"$module", revision:"$revision", date:"$date"
-END_OF_APPLESCRIPT
-	return _myDoAppleScript($script);
+  $last_error = 0;
+    
+  $self->assertSessionOpen() || die "Error: failed to open MacCVS session file at $self->{session_file}\n";
+  
+  my($revstring) = ($revision ne "") ? $revision : "(none)";
+  my($datestring) = ($date ne "") ? $date : "(none)";
+  
+  print "Checking out $module with revision $revstring, date $datestring\n";
+
+  my($prm) =
+    q"'----':obj {form:name, want:type(docu), seld:TEXT(@), from:'null'()}, ".
+    q"modl:'TEXT'(@), tagr:'TEXT'(@), tagd:'TEXT'(@) ";
+  
+  my($evt) = do_event(qw/MCvs cout/, $gAppSig, $prm, $self->{name}, $module, $revision, $date);
+  return _checkForEventError($evt);
 }
+
+
+# update( self, branch tag, list of paths)
+# MacCVS udate command
+# returns 1 on success.
+# NOTE: MacCVS Pro does not correctly support this stuff yet (as of version 2.7d5).
+sub update()
+{
+  my($self, $branch, $paths ) = @_;
+
+  $last_error = 0;
+    
+  $self->assertSessionOpen() || die "Error: failed to open MacCVS session file at $self->{session_file}\n";
+
+  if ($branch eq "HEAD") {
+    $branch = "";
+  }
+  
+  my($paths_list) = "";
+  
+  my($path);
+  foreach $path (@$paths)
+  {
+    if ($paths_list ne "") {
+      $paths_list = $paths_list.", ";
+    }
+    
+    $paths_list = $paths_list."Ò".$path."Ó";
+  }
+    
+  my($prm) =
+    q"'----':obj {form:name, want:type(docu), seld:TEXT(@), from:'null'()}, ".
+    q"tagr:'TEXT'(@), tFls:[";
+
+  $prm = $prm.$paths_list."]";
+    
+  my($evt) = do_event(qw/MCvs updt/, $gAppSig, $prm, $self->{name}, $branch);
+  return _checkForEventError($evt);
+};
+
 
 sub getLastError()
 {
-	return $last_error;
+  return $last_error;
 }
 
 1;
@@ -214,25 +187,25 @@ MacCVS - Interface to MacCVS
 
 =head1 SYNOPSIS
 
-	use MacCVS;
-	$session = MacCVS->new( <session_file_path>) || die "cannot create session";
-	$session->checkout([module] [revision] [date]) || die "Could not check out";
-		
+  use MacCVS;
+  $session = MacCVS->new( <session_file_path>) || die "cannot create session";
+  $session->checkout([module] [revision] [date]) || die "Could not check out";
+    
 =head1 DESCRIPTION
 
 This is a MacCVS interface for talking to MacCVS Pro client.
 MacCVSSession is the class used to manipulate the session
 
 =item new
-	MacCVS->new( <cvs session file path>);
-	
-	Creates a new session. Returns undef on failure.
+  MacCVS->new( <cvs session file path>);
+  
+  Creates a new session. Returns undef on failure.
 
 =item checkout( <module> [revision] [date] )
 
-	cvs checkout command. Revision and date are optional
-	returns 0 on failure
-	
+  cvs checkout command. Revision and date are optional
+  returns 0 on failure
+  
 =cut
 
 =head1 SEE ALSO
@@ -248,6 +221,7 @@ http://www.maccvs.org/
 =head1 AUTHORS
 
 Aleks Totic atotic@netscape.com
+Simon Fraser sfraser@netscape.com
 
 =cut
 
