@@ -331,7 +331,7 @@ BrowserAppCoreWalletSafeFillin(JSContext *cx, JSObject *obj, uintN argc, jsval *
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function walletSafeFillin requires 0 parameters");
+    JS_ReportError(cx, "Function walletSafeFillin requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -373,7 +373,7 @@ BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function walletQuickFillin requires 0 parameters");
+    JS_ReportError(cx, "Function walletQuickFillin requires 1 parameters");
     return JS_FALSE;
   }
 
