@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.cpp,v 1.5 2000/02/17 20:57:16 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.cpp,v 1.6 2000/02/22 11:16:39 kvisco%ziplink.net Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * This code was ported from XSL:P
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/02/17 20:57:16 $
+ * @version $Revision: 1.6 $ $Date: 2000/02/22 11:16:39 $
 **/
 
 #include "ProcessorState.h"
@@ -471,28 +471,6 @@ void ProcessorState::stripSpace(String& names) {
  //- Virtual Methods from derived from ContextState -/
 //--------------------------------------------------/
 
-/**
- * Returns the parent of the given Node. This method is needed
- * beacuse with the DOM some nodes such as Attr do not have parents
- * @param node the Node to find the parent of
- * @return the parent of the given Node, or null if not found
-**/
-Node* ProcessorState::findParent(Node* node) {
-    if (!node) return node;
-
-    Node* parent = 0;
-    switch(node->getNodeType()) {
-
-        //-- we need to index/hash nodes to save attr parents
-        case Node::ATTRIBUTE_NODE:
-	  //-- add later
-            break;
-        default:
-	    parent = node->getParentNode();
-            break;
-    }
-    return parent;
-} //-- findParent
 
 /**
  * Returns the Stack of context NodeSets
@@ -501,6 +479,18 @@ Node* ProcessorState::findParent(Node* node) {
 Stack* ProcessorState::getNodeSetStack() {
     return &nodeSetStack;
 } //-- getNodeSetStack
+
+/**
+ * Returns the parent of the given Node. This method is needed
+ * beacuse with the DOM some nodes such as Attr do not have parents
+ * @param node the Node to find the parent of
+ * @return the parent of the given Node, or null if not found
+**/
+Node* ProcessorState::getParentNode(Node* node) {
+
+    return domHelper.getParentNode(node);
+
+} //-- getParentNode
 
 /**
  * Returns the value of a given variable binding within the current scope
@@ -557,6 +547,7 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
 
 } //--isStripSpaceAllowed
 
+
 /**
  *  Notifies this Error observer of a new error, with default
  *  level of NORMAL
@@ -576,6 +567,43 @@ void ProcessorState::recieveError(String& errorMessage, ErrorLevel level) {
     }
     delete iter;
 } //-- recieveError
+
+
+/**
+ * Sorts the given NodeSet by DocumentOrder. 
+ * @param nodes the NodeSet to sort
+ * <BR />
+ * <B>Note:</B> I will be moving this functionality elsewhere soon
+**/
+void ProcessorState::sortByDocumentOrder(NodeSet* nodes) {
+    if ((!nodes) || (nodes->size() < 2)) return;
+
+    NodeSet sorted(nodes->size());
+    sorted.add(nodes->get(0));
+
+    int i = 1;
+    for ( ; i < nodes->size(); i++) {
+	    Node* node = nodes->get(i);
+        for (int k = 0; k < sorted.size(); k++) {
+		    Node* tmpNode = sorted.get(k);
+            if (domHelper.appearsFirst(node, tmpNode) == node) {
+			    sorted.add(k, node);
+                break;
+            }
+            else if (k == sorted.size()-1) {
+			    sorted.add(node);
+                break;
+			}
+		}
+    }
+
+    nodes->clear();
+    for (i = 0; i < sorted.size(); i++) 
+	  nodes->add(sorted.get(i));
+
+    sorted.clear();
+
+} //-- sortByDocumentOrder
 
   //-------------------/
  //- Private Methods -/

@@ -1,18 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
     "http://www.w3.org/TR/REC-html40/loose.dtd">
-<?foo this is a test processing ? > instruction?>
-<!-- MITRE TransforMiiX Test cases, written by Keith Visco. -->
+<?foo this is a test processing instruction?>
+<!-- TransforMiiX Test cases, written by Keith Visco. -->
 <HTML>
   <HEAD>
-    <TITLE>MII TransforMiiX Test Cases</TITLE>
+    <TITLE>TransforMiiX Test Cases</TITLE>
+    <SCRIPT Language="JavaScript">
+
+      // This is a test for properly printing SCRIPT elements
+      // currently there is a bug, so use xsl:text as a wrapper as I
+      // have done here
+      function foo() {
+          var x = 1;
+          var y = 2;
+          return (x < y);
+      }
+     //
+     
+    </SCRIPT>
   </HEAD>
-  <BODY>
+  <BODY BGColor="#FFFFFF" Text="#000000">
     <CENTER>
-      <FONT COLOR="BLUE" FACE="Arial">
-        <B>MITRE</B>
+      <FONT COLOR="BLUE" FACE="Arial" SIZE="+1">
+        <B>Mozilla XSLT</B>
       </FONT>
       <BR>
-      <B>MII Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
+      <B>Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
     </CENTER>
     <P>This document serves to test basic XSL expressions.</P>
     <P>
@@ -102,13 +115,11 @@
       <P>
         <B>Test:</B>&lt;xsl:call-template name="named-template-test"/&gt;<BR>
         <B>Desired Result:</B>named template processed with default value!<BR>
-        <B>Result:</B>
-        <xsl:param name="my-param" select="'default value'"></xsl:param>named template processed with default value!</P>
+        <B>Result:</B>named template processed with default value!</P>
       <P>
         <B>Test:</B>- passing arguments to named templates (see xsl source)<BR>
         <B>Desired Result:</B>named template processed with passed value!<BR>
-        <B>Result:</B>
-        <xsl:param name="my-param" select="'default value'"></xsl:param>named template processed with passed value!</P>
+        <B>Result:</B>named template processed with passed value!</P>
     </P>
     <P>
       <B>Attribute Value Templates and variables</B>

@@ -5,6 +5,7 @@ CC := $(CC) -g
 
 ROOT_PATH         = ..
 XML_PATH          = $(ROOT_PATH)/xml
+XMLUTIL_PATH      = $(XML_PATH)/util
 XSL_PATH          = $(ROOT_PATH)/xsl
 BASE_PATH         = $(ROOT_PATH)/base
 DOM_PATH          = $(XML_PATH)/dom
@@ -24,6 +25,7 @@ INCLUDE_PATHS = -I$(BASE_PATH) \
                 -I$(XSL_PATH) \
                 -I$(XSLUTIL_PATH) \
                 -I$(XML_PATH) \
+                -I$(XMLUTIL_PATH) \
                 -I$(XMLPARSER_PATH) \
                 -I$(XMLPRINTER_PATH) \
                 -I$(EXPAT_PARSER_PATH) -I-
