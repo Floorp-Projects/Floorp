@@ -69,6 +69,7 @@
 #include "nsIFile.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
+#include "nsDirectoryServiceDefs.h"
 
 #ifdef  XP_WIN
 #include "nsIUnicodeDecoder.h"
@@ -77,7 +78,6 @@
 #include "nsICharsetAlias.h"
 #include "windef.h"
 #include "winbase.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsILineInputStream.h"
 #endif
 
