@@ -816,7 +816,7 @@ sub GetCommandMenu {
         my %substs;
         $substs{'userid'} = $::COOKIE{"Bugzilla_login"};
         my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
-        $html = $html . " | <a href='$mybugsurl'>My Bugs</a>";
+        $html = $html . " | <a href='$mybugsurl'>My bugs</a>";
     }
                 
     $html = $html . " | <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
@@ -833,6 +833,7 @@ sub GetCommandMenu {
         $html .= "| <NOBR>Edit <a href='changepassword.cgi'>prefs</a></NOBR>";
         if (UserInGroup("tweakparams")) {
             $html .= ", <a href=editparams.cgi>parameters</a>";
+            $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
         }
         if (UserInGroup("editcomponents")) {
             $html .= ", <a href=editproducts.cgi>components</a>\n";
