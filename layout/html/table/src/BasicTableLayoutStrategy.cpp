@@ -212,8 +212,10 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   nscoord maxWidth = mTableFrame->CalcBorderBoxWidth(aReflowState);
   if (NS_UNCONSTRAINEDSIZE == maxWidth) {
     maxWidth = PR_MIN(maxWidth, aReflowState.availableWidth);
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != maxWidth, "cannot balance with an unconstrained width");
-    return PR_FALSE;
+    if (NS_UNCONSTRAINEDSIZE == maxWidth) {
+      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != maxWidth, "cannot balance with an unconstrained width");
+      return PR_FALSE;
+    }
   }
   // initialize the col percent and cell percent values to 0.
   ResetPctValues(mTableFrame, numCols);
@@ -366,7 +368,7 @@ nscoord GetColWidth(nsTableColFrame* aColFrame,
   }
 }
 
-// Allocate aWidthType values to all cols available in aIsAllocated 
+// Allocate aWidthType values to all cols available in aAllocTypes 
 void BasicTableLayoutStrategy::AllocateFully(nscoord&        aTotalAllocated,
                                              PRInt32*        aAllocTypes,
                                              PRInt32         aWidthType)
@@ -500,6 +502,7 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
   nsTableFrame::DebugTimeMethod(nsTableFrame::eNonPctColspans, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
 #endif
   PRInt32 numCols = mTableFrame->GetColCount();
+  PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   // zero out prior ADJ values 
 
   PRInt32 colX;
@@ -515,8 +518,8 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
   // Adjust the cols that each cell spans if necessary. Iterate backwards 
   // so that nested and/or overlaping col spans handle the inner ones first, 
   // ensuring more accurated calculations.
-  //if more than one  colspan originate in one column, resort the access to 
-  //the rows so that the inner colspans are handled first
+  // if more than one  colspan originate in one column, resort the access to 
+  // the rows so that the inner colspans are handled first
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32* numColSpans = new PRInt32[numRows];
   if(!numColSpans)
@@ -526,41 +529,34 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
     delete [] numColSpans;
     return;
   }
-  for (colX = numCols - 1; colX >= 0; colX--) { 
+  for (colX = numEffCols - 1; colX >= 0; colX--) { //loop only over effective columns 
     PRInt32 rowX;
     for (rowX = 0; rowX < numRows; rowX++) {
       numColSpans[rowX] = 0;
       rowIndices[rowX] = 0;
     } 
-    PRInt32 biggestColspan=0;
+    PRInt32 index = 0;
     for (rowX = 0; rowX < numRows; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
+      mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
       if (!originates || (1 == colSpan)) {
         continue;
       }
-      numColSpans[rowX]=colSpan;
-      if(colSpan > biggestColspan)
-        biggestColspan = colSpan;
+      numColSpans[index] = colSpan;
+      rowIndices[index] = rowX;
+      index++;
     }
-    PRInt32 index = 0;
-    for( PRInt32 j=2;j <= biggestColspan;j++) {
-      for( PRInt32 k = 0; k < numRows; k++) {
-        if( numColSpans[k] == j) {
-          rowIndices[index]=k;
-          index++;
-        }
-      }
-    }   
+    RowSort(rowIndices, numColSpans, index); // do the row sorting 
     for (PRInt32 i = 0; i < index; i++) {
       PRBool originates;
       PRInt32 colSpan;
-      PRInt32 rowX= rowIndices[i];
+      rowX = rowIndices[i];
       nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-      if (!originates || (1 == colSpan)) {
+      if (!cellFrame || !originates || (1 == colSpan)) {
         continue;
       }
+      colSpan = PR_MIN(colSpan, numEffCols - colX);
       // set MIN_ADJ, DES_ADJ, FIX_ADJ
       for (PRInt32 widthX = 0; widthX < NUM_MAJOR_WIDTHS; widthX++) {
         nscoord cellWidth = 0;
@@ -1516,16 +1512,45 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
 
   // For each col, consider the cells originating in it with colspans > 1.
   // Adjust the cols that each cell spans if necessary.
-  for (colX = 0; colX < numEffCols; colX++) { 
+  // if more than one  colspan originate in one column, resort the access to 
+  // the rows so that the inner colspans are handled first
+  PRInt32* numColSpans = new PRInt32[numRows];
+  if(!numColSpans)
+    return basis;
+  PRInt32* rowIndices = new PRInt32[numRows];
+  if(!rowIndices) {
+    delete numColSpans;
+    return basis;
+  }
+  for (colX = numEffCols - 1; colX >= 0; colX--) { // loop only over effective columns
+    PRInt32 rowX;
+    for (rowX = 0; rowX < numRows; rowX++) {
+      numColSpans[rowX] = 0;
+      rowIndices[rowX] = 0;
+    } 
+    PRInt32 index = 0;  
     for (rowX = 0; rowX < numRows; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
+      mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
       if (!originates || (1 == colSpan)) {
         continue;
       }
+      numColSpans[index] = colSpan;
+      rowIndices[index] = rowX;
+      index++;
+    }
+    RowSort(rowIndices, numColSpans, index); // do the sorting
+    for (PRInt32 i = 0; i < index; i++) {
+      PRBool originates;
+      PRInt32 colSpan;
+      rowX = rowIndices[i];
+      nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
+      if (!cellFrame || !originates || (1 == colSpan)) {
+        continue;
+      }
       colSpan = PR_MIN(colSpan,numEffCols-colX);
-	  nscoord cellPctWidth = WIDTH_NOT_SET;
+      nscoord cellPctWidth = WIDTH_NOT_SET;
       // see if the cell has a style percentage width specified
       const nsStylePosition* cellPosition;
       cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
@@ -1544,7 +1569,11 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
       if (cellPctWidth > 0) {
         nscoord spanCellSpacing = 0;
         nscoord spanTotal = 0;
-        nscoord colPctWidthTotal = 0;
+        nscoord spanTotalNoPctAdj = 0;
+        nscoord colPctWidthTotal = 0; // accumulate the PCT width 
+        nscoord colPctAdjTotal = 0;   // accumulate the PCT_ADJ width or  the max of PCT_ADJ and PCT width if a 
+                                      // PCT width is specified
+        PRBool canSkipPctAdj = PR_FALSE;
         // accumulate the spanTotal as the max of MIN, DES, FIX, PCT
         PRInt32 spanX;
         for (spanX = 0; spanX < colSpan; spanX++) {
@@ -1553,12 +1582,19 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
           nscoord colPctWidth = colFrame->GetWidth(PCT);
           if (colPctWidth > 0) { // skip pct cols
             colPctWidthTotal += colPctWidth;
+            colPctAdjTotal += PR_MAX(colFrame->GetWidth(PCT_ADJ), colPctWidth);
             continue;
           }
+          colPctAdjTotal += PR_MAX(colFrame->GetWidth(PCT_ADJ), 0);
           nscoord colWidth = PR_MAX(colFrame->GetMinWidth(), colFrame->GetFixWidth());
           colWidth = PR_MAX(colWidth, colFrame->GetDesWidth()); // XXX check this
           //colWidth = PR_MAX(colWidth, colFrame->GetPctWidth());
           spanTotal += colWidth;
+          if (colFrame->GetWidth(PCT_ADJ) <= 0) { // if we have a cell that is neither PCT or PCT_ADJ we have
+                                                  // other places where we can drop the width
+            canSkipPctAdj = PR_TRUE; 
+            spanTotalNoPctAdj += colWidth;
+          }
           if ((spanX > 0) && (mTableFrame->GetNumCellsOriginatingInCol(colX + spanX) > 0)) {
             spanCellSpacing += spacingX;
           }
@@ -1567,20 +1603,30 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
         if (cellPctWidth <= 0) {
           continue;
         }
-        if (colPctWidthTotal < cellPctWidth) { 
+        spanTotal = canSkipPctAdj ? spanTotalNoPctAdj: spanTotal; // if we can skip the PCT_ADJ ignore theire width
+      
+        colPctWidthTotal = canSkipPctAdj ? colPctAdjTotal: colPctWidthTotal; 
+        
+        if ((PR_MAX(colPctWidthTotal, colPctAdjTotal)+ spanCellSpacing) < cellPctWidth) { 
+          // we have something to distribute ...
           // record the percent contributions for the spanned cols
-          for (spanX = 0; spanX < colSpan; spanX++) {
+          PRInt32 usedColumns = colSpan;
+          for (spanX = colSpan-1; spanX >= 0; spanX--) {
             nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
             if (!colFrame) continue;
-            if (colFrame->GetWidth(PCT) > 0) { // skip pct cols
+            if ((colFrame->GetWidth(PCT) > 0) || (canSkipPctAdj && (colFrame->GetWidth(PCT_ADJ) > 0))) {
+              // dont use pct cols or if we can skip the pct adj event do not take the PCT_ADJ cols
+              usedColumns--;
               continue;
-            }
+            } // count the pieces 
+            if (usedColumns == 0)
+              usedColumns = 1; // avoid division by 0 later
             nscoord minWidth = colFrame->GetMinWidth();
             nscoord colWidth = PR_MAX(minWidth, colFrame->GetFixWidth());
             colWidth = PR_MAX(colWidth, colFrame->GetDesWidth()); // XXX check this
             float avail = (float)PR_MAX(cellPctWidth - colPctWidthTotal, 0);
             float colPctAdj = (0 == spanTotal) 
-                              ? avail / ((float) colSpan) / ((float)basis)
+                              ? avail / ((float) usedColumns) / ((float)basis)
                               : (avail / (float)basis) * (((float)colWidth) / (float)spanTotal);
             if (colPctAdj > 0) {
               nscoord colPctAdjWidth = colFrame->GetWidth(PCT_ADJ);
@@ -1590,18 +1636,24 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
                 if (newColPctAdjWidth > colFrame->GetWidth(PCT)) {
                   colFrame->SetWidth(PCT_ADJ, newColPctAdjWidth);
                   colFrame->SetConstrainingCell(cellFrame);
+                  if(0 != basis) { // I am paranoid
+                    colPctTotal += NSToCoordRound(100.0f *(newColPctAdjWidth-colPctAdjWidth) / (float)basis); 
+                    // accumulate the new distributed percents
+                  }
                 }
+              }
+              else {
+                usedColumns--;
+                colPctWidthTotal += colPctAdjWidth; // accumulate the already distributed percents
               }
             }
           }
         }
       }
     } // end for (rowX ..
-    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    if (!colFrame) continue;
-    colPctTotal += NSToCoordRound(100.0f * (float)colFrame->GetWidth(PCT_ADJ) / (float)basis);
   } // end for (colX ..
-
+  delete [] numColSpans;
+  delete [] rowIndices;
   // if the percent total went over 100%, adjustments need to be made to right most cols
   if (colPctTotal > 100) {
     ReduceOverSpecifiedPctCols(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis));
@@ -1632,10 +1684,10 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32* aTotalCounts,
   a0ProportionalCount = 0;
 
   nscoord spacingX = mTableFrame->GetCellSpacingX();
-  PRInt32 numCols = mTableFrame->GetColCount();
+  PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   PRInt32 colX;
 
-  for (colX = 0; colX < numCols; colX++) { 
+  for (colX = 0; colX < numEffCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     if (!colFrame) continue;
     nscoord minCol = colFrame->GetMinWidth();
@@ -1797,7 +1849,25 @@ AC_Sort(nsColInfo** aColInfo, PRInt32 aNumCols)
   }
 }
 
-
+void 
+BasicTableLayoutStrategy::RowSort(PRInt32* aRowIndices, PRInt32* aColSpans,
+                                  PRInt32 aIndex)
+{
+  PRInt32 swapCol, swapRow;
+  // sort the rows based on the colspan size 
+  for (PRInt32 j = aIndex - 1; j > 0; j--) {
+    for (PRInt32 i = 0; i < j; i++) { 
+      if (aColSpans[i] > aColSpans[i+1]) { // swap them
+        swapCol = aColSpans[i];
+        swapRow = aRowIndices[i];
+        aColSpans[i]   = aColSpans[i+1];
+        aRowIndices[i] = aRowIndices[i+1];
+        aColSpans[i+1]   = swapCol;
+        aRowIndices[i+1] = swapRow; 
+      }
+    }
+  }
+}
 // this assumes that the table has set the width for each col to be its min
 void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
                                                    PRInt32  aWidthType,
@@ -1922,57 +1992,6 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
   AC_Wrapup(mTableFrame, numConstrainedCols, colInfo);
 }
 
-  
-PRBool BasicTableLayoutStrategy::IsColumnInList(const PRInt32 colIndex, 
-                                                PRInt32*      colIndexes, 
-                                                PRInt32       aNumFixedColumns)
-{
-  PRBool result = PR_FALSE;
-  for (PRInt32 i = 0; i < aNumFixedColumns; i++) {
-    if (colIndex == colIndexes[i]) {
-      result = PR_TRUE;
-      break;
-    }
-    else if (colIndex<colIndexes[i]) {
-      break;
-    }
-  }
-  return result;
-}
-
-PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
-{
-  PRBool result = PR_FALSE;
-  nsTableColFrame* colFrame = mTableFrame->GetColFrame(aColIndex);
-  nsStyleCoord colStyleWidth = colFrame->GetStyleWidth();
-  switch (colStyleWidth.GetUnit()) {
-  case eStyleUnit_Coord:
-    if (0 == colStyleWidth.GetCoordValue()) {
-      result = PR_TRUE;
-    }
-    break;
-  case eStyleUnit_Percent:
-    {
-      // total hack for now for 0% and 1% specifications
-      // should compare percent to available parent width and see that it is below minimum
-      // for this column
-      float percent = colStyleWidth.GetPercentValue();
-      if (0.0f == percent || 0.01f == percent) {  
-        result = PR_TRUE;
-      }
-      break;
-    }
-  case eStyleUnit_Proportional:
-    if (0 == colStyleWidth.GetIntValue()) {
-      result = PR_TRUE;
-    }
-
-  default:
-    break;
-  }
-
-  return result;
-}
 #ifdef DEBUG_TABLE_STRATEGY
 void BasicTableLayoutStrategy::Dump(PRInt32 aIndent)
 {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * buster@netscape.com
  */
 
 #ifndef BasicTableLayoutStrategy_h__
@@ -46,7 +47,8 @@ class BasicTableLayoutStrategy : public nsITableLayoutStrategy
 public:
 
   /** Public constructor.
-    * @paran aFrame           the table frame for which this delegate will do layout
+    * @paran aFrame           - the table frame for which this delegate will do layout
+    * @param aIsNavQuirksMode - honor NN4x table quirks
     */
   BasicTableLayoutStrategy(nsTableFrame *aFrame,
                            PRBool        aIsNavQuirksMode = PR_TRUE);
@@ -56,20 +58,19 @@ public:
 
   /** call every time any table thing changes that might effect the width of any column
     * in the table (content, structure, or style) 
-    * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
+    * @param aPresContext - the presentation context
+	   * @param aReflowState - the reflow state for mTableFrame
     */
   virtual PRBool Initialize(nsIPresContext*          aPresContext,
                             const nsHTMLReflowState& aReflowState);
 
   /** Called during resize reflow to determine the new column widths
-    * @param aTableStyle - the resolved style for mTableFrame
-	  * @param aReflowState - the reflow state for mTableFrame
- 	  * @param aMaxWidth - the computed max width for columns to fit into
-	  */
+    * @param aPresContext - the presentation context
+	   * @param aReflowState - the reflow state for mTableFrame
+	   */
   virtual PRBool BalanceColumnWidths(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState);
-
-  nscoord GetCOLSAttribute() const;
+ 
   void Dump(PRInt32 aIndent);
 
 protected:
@@ -83,8 +84,7 @@ protected:
     *
     * @param aMaxWidth - the computed width of the table or 
     *  UNCONSTRAINED_SIZE if an auto width table
-    * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
-    *
+    * @return PR_TRUE has  a pct cell or col, PR_FALSE otherwise
     */
   virtual PRBool AssignNonPctColumnWidths(nsIPresContext*          aPresContext,
                                           nscoord                  aComputedWidth,
@@ -126,32 +126,95 @@ protected:
                                     PRInt32&          aLimitType,
                                     float             aPixelToTwips);
 
+  /**
+    * Determine percentage col widths for each col frame
+    * @param aReflowState      - the reflow state of the table
+    * @param aBasis            - the basis for percent width as computed by CalcPctAdjTableWidth
+    * @param aTableIsAutoWidth - true if no width specification for the table is available
+    * @param aPixelToTwips     - the number of twips in a pixel.
+    * @return                  - the adjusted basis including table border, padding and cell spacing
+    */
   nscoord AssignPctColumnWidths(const nsHTMLReflowState& aReflowState,
                                 nscoord                  aBasis,
                                 PRBool                   aTableIsAutoWidth,
                                 float                    aPixelToTwips);
 
+  /**
+    * Calculate the basis for percent width calculations of the table elements
+    * @param aReflowState   - the reflow state of the table
+    * @param aAvailWidth    - the available width for the table
+    * @param aPixelToTwips  - the number of twips in a pixel.
+    * @return               - the basis for percent calculations
+    */
   nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
                                nscoord                  aAvailWidth,
                                float                    aPixelToTwips);
 
+  /**
+    * Reduce the percent columns by the amount specified in aExcess as the percent width's
+    * can accumulate to be over 100%
+    * @param aExcess - reduction amount
+    */
   void ReduceOverSpecifiedPctCols(nscoord aExcess);
 
+  /** 
+    * Sort rows by rising colspans, in order to treat the inner colspans first
+    * the result will be returned in the aRowIndices array.
+    * @param aRowIndices - array with indices of those rows which have colspans starting in the corresponding column
+    * @param aColSpans   - array with the correspong colspan values
+    * @param aIndex      - number of valid entries in the arrays
+    */
+  void RowSort(PRInt32* aRowIndices, 
+               PRInt32* aColSpans,
+               PRInt32 aIndex);
+
+  /**
+    * calculate totals by width type. The logic here is kept in synch with 
+    * that in CanAllocate
+    * @param aTotalCounts - array with counts for each width type that has determined the aTotalWidths sum
+    * @param aTotalWidths - array with accumulated widths for each width type
+    * @param aDupedWidths - (duplicatd) are widths that will be allocated in BalanceColumnWidths before aTotalsWidths
+    * @param a0ProportionalCount -  number of columns with col="0*" constraint
+    */   
   void CalculateTotals(PRInt32* aTotalCounts,
                        PRInt32* aTotalWidths,
-                       PRInt32* aMinWidths,
+                       PRInt32* aDupedWidths,
                        PRInt32& a0ProportionalCount);
 
+  /**
+    * Allocate aWidthType values to the corresponding columns
+    * @param aTotalAllocated - width that has been allocated in this routine
+    * @param aAllocTypes - width type that has determined col width
+    * @param aWidthType - width type selecting the columns for full width allocation
+    */
   void AllocateFully(nscoord& aTotalAllocated,
                      PRInt32* aAllocTypes,
                      PRInt32  aWidthType);
 
+  /**
+    * Allocate aWidthType values to the corresponding columns up to the aAvailWidth
+    * @param aAvailWidth    - width that can distributed to the selected columns
+    * @param aWidthType     - width type selecting the columns for width allocation
+    * @param aStartAtMin    - allocation should start at min. content width
+    * @param aAllocTypes    - width type that has determined col width
+    * @param aPixelToTwips  - the number of twips in a pixel.
+    */
   void AllocateConstrained(PRInt32  aAvailWidth,
                            PRInt32  aWidthType,
                            PRBool   aStartAtMin,        
                            PRInt32* aAllocTypes,
                            float    aPixelToTwips);
 
+  /**
+    * Give the remaining space and exclude the selected columns
+    * @param aAllocAmount   - space that can be distributed
+    * @param aAllocTypes    - width type that has determined col width
+    * @param aExcludePct    - dont give space to percent columns
+    * @param aExcludeFix    - dont give space to fixed width columns
+    * @param aExcludePro    - dont give space to proportional columns
+    * @param aExclude0Pro   - dont give space to proportional columns with 0*
+    * @param aPixelToTwips  - the number of twips in a pixel.
+    */
   void AllocateUnconstrained(PRInt32  aAllocAmount,
                              PRInt32* aAllocTypes,
                              PRBool   aExcludePct,
@@ -160,28 +223,9 @@ protected:
                              PRBool   aExclude0Pro,
                              float    aPixelToTwips);
 
-  /** return true if the colIndex is in the list of colIndexes */
-  virtual PRBool IsColumnInList(const PRInt32 colIndex, 
-                                PRInt32 *colIndexes, 
-                                PRInt32 aNumFixedColumns);
-
-  /** returns true if the column is specified to have its min width */
-  virtual PRBool ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex);
-
-  /** eturns a list and count of all columns that behave like they have width=auto
-    * this includes columns with no width specified (the normal definition of "auto"), 
-    * columns explicitly set to auto width, 
-    * and columns whose fixed width comes from a span (meaning the real width is indeterminate.)
-    *
-    * @param aOutNumColumns -- out param, the number of columns matching aType
-    * @param aOutColumnIndexes -- out param, the indexes of the columns matching aType
-    *                             
-    * @return       aOutNumColumns set to the number of auto columns, may be 0
-    *               allocates and fills aOutColumnIndexes
-    *               caller must "delete [] aOutColumnIndexes" if it is not null
+  /**
+    * Check in debug mode whether the routine is called on a continuing frame
     */
-  void GetColumnsThatActLikeAutoWidth(PRInt32&  aOutNumColumns,
-                                      PRInt32*& aOutColumnIndexes);
   void ContinuingFrameCheck();
 
 #ifdef DEBUG
@@ -198,10 +242,5 @@ protected:
   float          mMinToDesProportionRatio;
   PRPackedBool   mIsNavQuirksMode;
 };
-
-inline nscoord BasicTableLayoutStrategy::GetCOLSAttribute() const
-{ return mCols; };
-
-
 #endif
 
