@@ -97,9 +97,6 @@ RAPTOR_LAYOUT_DIR       = $(MOZ_TOP)/layout
 TREX_GCONFIG_BRANCH     = 
 TREX_GCONFIG_DIR        = $(MOZ_TOP)/gconfig
 
-TREX_SHELL_BRANCH       = 
-TREX_SHELL_DIR          = $(MOZ_TOP)/shell
-
 TREX_TREX_BRANCH        = 
 TREX_TREX_DIR           = ns/trex
 
@@ -213,7 +210,6 @@ pull_trex::
     @echo +++ trex.mak: checking out trex with "$(CVTREX)"
     cd $(MOZ_SRC)\.
     -$(CVS)  $(TREX_GCONFIG_BRANCH)  $(TREX_GCONFIG_DIR)
-    -$(CVS)  $(TREX_SHELL_BRANCH)    $(TREX_SHELL_DIR)
     cd $(MOZ_SRC)\$(MOZ_TOP)
     -$(CVST) $(TREX_TREX_BRANCH)  -d trex  $(TREX_TREX_DIR)
     cd $(MOZ_SRC)\.
@@ -242,10 +238,8 @@ build_julian::
     cd $(MOZ_SRC)\.
 
 build_trex:: 
-    cd $(MOZ_SRC)\$(MOZ_TOP)\.
-    @$(MMAKE) export  $(MAKEDIR) shell trex
-    @$(MMAKE) libs    $(MAKEDIR) shell trex
-    @$(MMAKE) install $(MAKEDIR) shell trex
+    cd $(MOZ_SRC)\$(MOZ_TOP)\trex
+    nmake -f makefile.win
     cd $(MOZ_SRC)\.
 
 
