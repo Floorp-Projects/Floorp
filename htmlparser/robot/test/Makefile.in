@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= htmlrobot$(BIN_SUFFIX)
 
-
 CPPSRCS		= RobotMain.cpp
 
 ifeq ($(USE_SHORT_LIBNAME),1)
@@ -41,6 +40,7 @@ LIBS		= \
 		$(EXTRA_DSO_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		-L$(DIST)/bin/components -lhtmlpars \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -57,3 +57,5 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG
 
+test:
+	@echo MOZ_COMPONENT_LIBS = $(MOZ_COMPONENT_LIBS)
