@@ -242,16 +242,9 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     ComputeDesiredSize(desiredRect, rsp->maxSize, borderPadding, aDesiredSize);
 
     // Decide how much to repaint based on the reflow type.
-    // Note: we don't have to handle the initial reflow case, because that's
-    // handled by the root content frame
-    switch (rsp->reason) {
-    case eReflowReason_Resize:
-      // For a resize just repaint the entire frame
-      damageArea.width = aDesiredSize.width;
-      damageArea.height = aDesiredSize.height;
-      break;
-
-    case eReflowReason_Incremental:
+    // Note: we don't have to handle the initial reflow case and the resize reflow
+    // case, because they're handled by the root content frame
+    if (eReflowReason_Incremental == rsp->reason) {
       // For append reflow commands that target the body just repaint the newly
       // added part of the frame.
       if ((nsIReflowCommand::FrameAppended == reflowCmdType) &&
@@ -260,7 +253,7 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
         damageArea.y = kidOldRect.YMost();
         damageArea.width = aDesiredSize.width;
         damageArea.height = aDesiredSize.height - kidOldRect.height;
-
+  
       } else {
         // Ideally the frame that is the target of the reflow command (or its parent
         // frame) would generate a damage rect, but since none of the frame classes
