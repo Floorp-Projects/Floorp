@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,13 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
-#
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Dantifer Dang <dantifer.dang@sun.com>.
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
-#
+# 
 # Contributor(s):
+#   Roland Mainz <roland.mainz@nrubsig.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,62 +33,59 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= plugin
+MODULE       = plugin
+LIBRARY_NAME = unixprintplugin
+GRE_MODULE   = 1
 
-DIRS		= base/public base/src 
+PACKAGE_FILE = npprint.pkg
 
-ifneq (,$(filter gtk gtk2 xlib ,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		+= samples/unixprinting
-endif
+REQUIRES	= java \
+		  plugin \
+		  $(NULL)
 
-# These subdirs rely on GTK libraries and header files, it is not
-#  buildable on other non-GTK unix builds
+CSRCS		= \
+		npshell.c \
+		printplugin.c \
+		npunix.c \
+		$(NULL)
 
-ifdef MOZ_ENABLE_GTK
-DIRS		+= samples/default/unix
+# plugins should always be shared, even in the "static" build
+FORCE_SHARED_LIB = 1
 
-ifdef ENABLE_TESTS
-DIRS		+= samples/simple
-endif
+# Force use of PIC
+FORCE_USE_PIC	= 1
 
-endif
-
-ifdef MOZ_ENABLE_GTK2
-DIRS		+= samples/default/unix
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-DIRS		+= samples/default/windows
-endif
-
-ifeq ($(OS_ARCH),OS2)
-DIRS		+= samples/default/os2
-ifdef ENABLE_TESTS
-DIRS		+= tools/tester/common tools/tester/os2
-endif
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		+= samples/default/mac
-endif
-
-ifdef ENABLE_TESTS
-ifneq (,$(filter WINNT Darwin Linux,$(OS_ARCH)))
-DIRS		+= tools/sdk
-endif
-endif
+NO_DIST_INSTALL = 1
+NO_INSTALL = 1
 
 include $(topsrcdir)/config/rules.mk
 
-$(DIST)/bin/plugins:
-	$(NSINSTALL) -D $@
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(XT_LIBS) \
+		$(NULL)
 
-export:: $(DIST)/bin/plugins
+EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
+
+ifeq ($(OS_ARCH), OpenVMS)
+DEFINES		+= -DGENERIC_MOTIF_REDEFINES
+OS_CXXFLAGS	+= -Wc,warn=disa=NOSIMPINT
+endif
+
+install-plugin: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
+endif
+
+libs:: install-plugin
+
+ifdef SHARED_LIBRARY
+install:: $(SHARED_LIBRARY)
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/plugins 
+endif
 
