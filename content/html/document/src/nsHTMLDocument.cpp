@@ -1854,42 +1854,49 @@ nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 NS_IMETHODIMP    
 nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
 {
-  nsresult result = NS_OK;
-  nsIDOMElement * root = nsnull;
-  result = GetDocumentElement(&root);
-  if (NS_OK != result) {  
-    return result;
+  nsCOMPtr<nsIDOMHTMLBodyElement> bodyElement(do_QueryInterface(aBody));
+
+  // The body element must be of type nsIDOMHTMLBodyElement.
+  if (!bodyElement) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsAutoString bodyStr; bodyStr.AssignWithConversion("BODY");
-  nsIDOMNode * child;
-  root->GetFirstChild(&child);
+  nsCOMPtr<nsIDOMElement> root;
+  GetDocumentElement(getter_AddRefs(root));
 
-  while (child != nsnull) {
-    nsIDOMElement* domElement;
-    result = child->QueryInterface(NS_GET_IID(nsIDOMElement),(void **)&domElement);
-    if (NS_OK == result) {
-      nsString tagName;
+  if (!root) {  
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  nsAutoString bodyStr;
+  bodyStr.AssignWithConversion("BODY");
+
+  nsCOMPtr<nsIDOMNode> child;
+  root->GetFirstChild(getter_AddRefs(child));
+
+  while (child) {
+    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(child));
+
+    if (domElement) {
+      nsAutoString tagName;
+
       domElement->GetTagName(tagName);
+
       if (bodyStr.EqualsIgnoreCase(tagName)) {
-        nsIDOMNode* ret;
-       
-        result = root->ReplaceChild(aBody, child, &ret);
-        NS_IF_RELEASE(ret);
+        nsCOMPtr<nsIDOMNode> ret;
+
+        nsresult rv = root->ReplaceChild(aBody, child, getter_AddRefs(ret));
+
         NS_IF_RELEASE(mBodyContent);
 
-        NS_RELEASE(child);
-        NS_RELEASE(root);
-        NS_RELEASE(domElement);
-        return result;
+        return rv;
       }
-      NS_RELEASE(domElement);
     }
-    nsIDOMNode * node = child;
-    NS_RELEASE(child);
-    node->GetNextSibling(&child);
+
+    nsIDOMNode *tmpNode = child;
+    tmpNode->GetNextSibling(getter_AddRefs(child));
   }
-  NS_RELEASE(root);
+
   return PR_FALSE;
 }
 
@@ -4090,34 +4097,34 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsAReadableString &aSearchStr,
 PRBool
 nsHTMLDocument::GetBodyContent()
 {
-  nsIDOMElement * root = nsnull;
-  if (NS_OK != GetDocumentElement(&root)) {  
+  nsCOMPtr<nsIDOMElement> root;
+
+  GetDocumentElement(getter_AddRefs(root));
+
+  if (!root) {  
     return PR_FALSE;
   }
 
   nsAutoString bodyStr; bodyStr.AssignWithConversion("BODY");
-  nsIDOMNode * child;
-  root->GetFirstChild(&child);
+  nsCOMPtr<nsIDOMNode> child;
+  root->GetFirstChild(getter_AddRefs(child));
 
-  while (child != nsnull) {
-    nsIDOMElement* domElement;
-    nsresult rv = child->QueryInterface(NS_GET_IID(nsIDOMElement),(void **)&domElement);
-    if (NS_OK == rv) {
-      nsString tagName;
+  while (child) {
+    nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(child));
+
+    if (domElement) {
+      nsAutoString tagName;
       domElement->GetTagName(tagName);
+
       if (bodyStr.EqualsIgnoreCase(tagName)) {
         mBodyContent = child;
-        NS_RELEASE(root);
-        NS_RELEASE(domElement);
         return PR_TRUE;
       }
-      NS_RELEASE(domElement);
     }
-    nsIDOMNode * node = child;
-    NS_RELEASE(child);
-    node->GetNextSibling(&child);
+    nsIDOMNode *tmpNode = child;
+    tmpNode->GetNextSibling(getter_AddRefs(child));
   }
-  NS_RELEASE(root);
+
   return PR_FALSE;
 }
 
