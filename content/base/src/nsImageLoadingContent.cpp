@@ -239,13 +239,6 @@ nsImageLoadingContent::GetImageBlocked(PRBool* aBlocked)
 }
 
 NS_IMETHODIMP
-nsImageLoadingContent::GetImageURI(nsIURI** aURI)
-{
-  NS_NOTREACHED("Subclasses need to implement this");
-  return NS_ERROR_NOT_AVAILABLE;  
-}
-                                      
-NS_IMETHODIMP
 nsImageLoadingContent::AddObserver(imgIDecoderObserver* aObserver)
 {
   NS_ENSURE_ARG_POINTER(aObserver);
