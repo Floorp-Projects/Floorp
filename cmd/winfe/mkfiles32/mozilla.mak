@@ -380,6 +380,7 @@ LINK_LIBS= \
 !endif
     $(DIST)\lib\font.lib \
     $(DIST)\lib\rdf32.lib \
+    $(DIST)\lib\xml.lib \
     $(OUTDIR)\appicon.res \
     $(DIST)\lib\winfont.lib \
 !ifdef MOZ_LDAP
@@ -565,6 +566,7 @@ CDISTINCLUDES= \
     /I$(XPDIST)\public\ldap \
 #!endif
     /I$(XPDIST)\public\rdf \
+    /I$(XPDIST)\public\xml \
     /I$(DIST)\include \
     /I$(XPDIST)\public\img \
     /I$(XPDIST)\public\jtools \
