@@ -181,23 +181,15 @@ XFE_ToolbarButton::docStringObtain(XmString *	stringReturn,
 /* virtual */ void
 XFE_ToolbarButton::docStringSet(XmString /* string */)
 {
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-	XP_ASSERT( frame != NULL );
-
-	frame->notifyInterested(Command::commandArmedCallback,
-							(void *) getCommand());
+	getAncestorFrame()->notifyInterested(Command::commandArmedCallback,
+										 (void *) getCommand());
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
 XFE_ToolbarButton::docStringClear(XmString /* string */)
 {
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-	XP_ASSERT( frame != NULL );
-
-	frame->notifyInterested(Command::commandDisarmedCallback,
-							(void *) getCommand());
+	getAncestorFrame()->notifyInterested(Command::commandDisarmedCallback,
+										 (void *) getCommand());
 }
 //////////////////////////////////////////////////////////////////////////
 

@@ -46,6 +46,9 @@ public:
 	const String	getName();
 	Widget			getParent();
 
+	XFE_Frame *		getAncestorFrame();
+	MWContext *		getAncestorContext();
+
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
 	// Initialize                                                       //
@@ -97,8 +100,9 @@ private:
 	// Private data                                                     //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-	String		m_name;
-	Widget		m_parent;
+	String			m_name;
+	Widget			m_parent;
+	XFE_Frame *		m_ancestorFrame;
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //

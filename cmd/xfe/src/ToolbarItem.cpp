@@ -37,7 +37,8 @@ XFE_ToolbarItem::XFE_ToolbarItem(XFE_Frame *	frame,
 								 const String	name) :
 	XFE_Component(frame),
 	m_name(NULL),
-	m_parent(NULL)
+	m_parent(NULL),
+    m_ancestorFrame(frame)
 {
 	XP_ASSERT( XfeIsAlive(parent) );
 	XP_ASSERT( frame != NULL );
@@ -61,6 +62,22 @@ Widget
 XFE_ToolbarItem::getParent()
 {
 	return m_parent;
+}
+//////////////////////////////////////////////////////////////////////////
+XFE_Frame *
+XFE_ToolbarItem::getAncestorFrame()
+{
+	XP_ASSERT( m_ancestorFrame != NULL );
+
+	return m_ancestorFrame;
+}
+//////////////////////////////////////////////////////////////////////////
+MWContext *
+XFE_ToolbarItem::getAncestorContext()
+{
+	XP_ASSERT( getAncestorFrame()->getContext() != NULL );
+
+	return getAncestorFrame()->getContext();
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void

@@ -140,9 +140,9 @@ XFE_ToolbarUrlBar::docStringObtain(XmString *	stringReturn,
 /* virtual */ void
 XFE_ToolbarUrlBar::docStringSet(XmString /* string */)
 {
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
+// 	XFE_Frame * frame = (XFE_Frame *) getToplevel();
 
-	XP_ASSERT( frame != NULL );
+// 	XP_ASSERT( frame != NULL );
 
 // 	frame->notifyInterested(Command::commandArmedCallback,
 // 							(void *) getCommand());
@@ -151,9 +151,9 @@ XFE_ToolbarUrlBar::docStringSet(XmString /* string */)
 /* virtual */ void
 XFE_ToolbarUrlBar::docStringClear(XmString /* string */)
 {
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
+// 	XFE_Frame * frame = (XFE_Frame *) getToplevel();
 
-	XP_ASSERT( frame != NULL );
+// 	XP_ASSERT( frame != NULL );
 
 // 	frame->notifyInterested(Command::commandDisarmedCallback,
 // 							(void *) getCommand());
@@ -175,13 +175,10 @@ XFE_ToolbarUrlBar::textActivate()
 		notifyInterested(XFE_ToolbarUrlBar::navigateToUrlNotice,
 						 (void *) url);
 		
-		
 		XtFree(text);
 	}
 
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-	fe_NeutralizeFocus(frame->getContext());
+	fe_NeutralizeFocus(getAncestorContext());
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -197,19 +194,16 @@ XFE_ToolbarUrlBar::createProxyIcon(Widget			parent,
 	XP_ASSERT( XfeIsAlive(parent) );
 	XP_ASSERT( name != NULL );
 
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-	XP_ASSERT( frame != NULL );
-
 	// Proxy icon
-	m_proxyIcon = new XFE_Button(frame,
+	m_proxyIcon = new XFE_Button(getAncestorFrame(),
 								 parent,
 								 name,
 								 &LocationProxy_group);
 	
-	m_proxyIcon->show();
 
 	m_proxyIconDragSite = new XFE_LocationDrag(m_proxyIcon->getBaseWidget());
+
+	m_proxyIcon->show();
 }
 //////////////////////////////////////////////////////////////////////////
 
