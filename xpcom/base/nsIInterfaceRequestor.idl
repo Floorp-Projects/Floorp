@@ -46,3 +46,38 @@ interface nsIInterfaceRequestor : nsISupports
 	void getInterface(in nsIIDRef uuid, 
                       [iid_is(uuid),retval] out nsQIResult result);
 };
+
+
+%{C++
+
+#if 0
+#ifndef nsCOMPtr_h___
+#include "nsCOMPtr.h"
+#endif
+
+class nsGetInterface : public nsCOMPtr_helper
+  {
+    public:
+      nsGetInterface( nsISupports* aSource, nsresult* error )
+          : mSource(aSource),
+            mErrorPtr(error)
+        {
+          // nothing else to do here
+        }
+
+      virtual nsresult operator()( const nsIID&, void** ) const;
+
+    private:
+      nsCOMPtr<nsISupports> mSource;
+      nsresult*             mErrorPtr;
+  };
+
+inline
+const nsGetInterface
+do_GetInterface( nsISupports* aSource, nsresult* error = 0 )
+  {
+    return nsGetInterface(aSource, error);
+  }
+#endif
+
+%}
