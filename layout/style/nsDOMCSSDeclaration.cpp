@@ -18,7 +18,6 @@
  */
 
 #include "nsDOMCSSDeclaration.h"
-#include "nsICSSStyleRule.h"
 #include "nsICSSParser.h"
 #include "nsIStyleRule.h"
 #include "nsICSSDeclaration.h"
@@ -40,7 +39,6 @@ NS_IMPL_RELEASE(nsDOMCSSDeclaration);
 
 static NS_DEFINE_IID(kIDOMCSS2PropertiesIID, NS_IDOMCSS2PROPERTIES_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
