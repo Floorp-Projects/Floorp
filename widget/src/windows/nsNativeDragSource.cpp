@@ -20,7 +20,6 @@
 #include "nsNativeDragSource.h"
 #include <stdio.h>
 
-#include "nsIDragSource.h"
 
 /*
  * class nsNativeDragSource
@@ -70,18 +69,18 @@ STDMETHODIMP_(ULONG) nsNativeDragSource::Release(void)
 
 STDMETHODIMP nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 {
-  printf("QueryContinueDrag\n");
+  //printf("QueryContinueDrag\n");
   if (fEsc) {
     //printf("QueryContinueDrag: fEsc\n");
     return ResultFromScode(DRAGDROP_S_CANCEL);
   }
 
   if (!(grfKeyState & MK_LBUTTON)) {
-    printf("QueryContinueDrag: grfKeyState & MK_LBUTTON\n");
+    //printf("QueryContinueDrag: grfKeyState & MK_LBUTTON\n");
     return ResultFromScode(DRAGDROP_S_DROP);
   }
 
-  printf("QueryContinueDrag: NOERROR\n");
+  //printf("QueryContinueDrag: NOERROR\n");
 	return NOERROR;
 }
 

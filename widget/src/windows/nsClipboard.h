@@ -20,6 +20,7 @@
 #define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
+#include <windows.h>
 
 class nsITransferable;
 //class nsDataObj;
@@ -46,7 +47,19 @@ public:
   NS_IMETHOD ForceDataToClipboard();
 
   // Internal Native Routines
-  NS_IMETHODIMP CreateNativeDataObject(nsITransferable * aTransferable, IDataObject ** aDataObj);
+  static nsresult CreateNativeDataObject(nsITransferable * aTransferable, 
+                                         IDataObject ** aDataObj);
+
+  static nsresult GetDataFromDataObject(IDataObject     * aDataObject, 
+                                        nsIWidget       * aWindow,
+                                        nsITransferable * aTransferable);
+
+  static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, void ** aData, PRUint32 * aLen);
+
+  static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen);
+
+  static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen);
+
 
 
 protected:

@@ -69,11 +69,12 @@ class nsNativeDragTarget : public IDropTarget
 									    POINTL point, DWORD* pEffect);
 
 	 protected:
-      void DispatchDragDropEvent(PRUint32 aType);
+      void DispatchDragDropEvent(PRUint32 aType, POINTL pt);
 
 		  ULONG            m_cRef;      // reference count
 		  nsIDragService*  mDragService;  // adapter
       nsIWidget *      mWindow;
+      HWND             mHWnd;
 };
 
 #endif // _nsNativeDragTarget_h_

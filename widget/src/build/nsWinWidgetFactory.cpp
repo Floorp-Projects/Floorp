@@ -54,9 +54,6 @@
 #include "nsXIFFormatConverter.h"
 #include "nsDataFlavor.h"
 #include "nsDragService.h"
-#include "nsDragSource.h"
-#include "nsDragTarget.h"
-#include "nsDraggedObject.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -87,13 +84,10 @@ static NS_DEFINE_IID(kCMenuButton,    NS_MENUBUTTON_CID);
 // Drag & Drop, Clipboard
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kCGenericTransferable,  NS_GENERICTRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
-static NS_DEFINE_IID(kCDragSource,    NS_DRAGSOURCE_CID);
-static NS_DEFINE_IID(kCDragTarget,    NS_DRAGTARGET_CID);
-static NS_DEFINE_IID(kCDraggedObject, NS_DRAGGEDOBJECT_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -249,8 +243,8 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCDataFlavor)) {
         inst = (nsISupports*)new nsDataFlavor();
     }
-    else if (mClassID.Equals(kCTransferable)) {
-        inst = (nsISupports*)new nsTransferable();
+    else if (mClassID.Equals(kCGenericTransferable)) {
+        inst = (nsISupports*)(nsIGenericTransferable *)new nsTransferable();
     }
     else if (mClassID.Equals(kCXIFFormatConverter)) {
         inst = (nsISupports*)new nsXIFFormatConverter();
@@ -261,20 +255,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCDragService)) {
         inst = (nsISupports*)new nsDragService();
     }
-    else if (mClassID.Equals(kCDragSource)) {
-        inst = (nsISupports*)new nsDragSource();
-    }
-    else if (mClassID.Equals(kCDragTarget)) {
-        inst = (nsISupports*)new nsDragTarget();
-    }
-    else if (mClassID.Equals(kCDraggedObject)) {
-        inst = (nsISupports*)new nsDraggedObject();
-    }
-#ifdef DRAG_DROP
-    //else if (mClassID.Equals(kCDataObj)) {
-        //inst = (nsISupports*)new CfDataObj();
-    //}
-#endif
 	/* */
   
     if (inst == NULL) {  

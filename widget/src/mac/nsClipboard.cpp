@@ -34,6 +34,7 @@
 #include "nsIClipboardOwner.h"
 #include "nsIDataFlavor.h"
 #include "nsIFormatConverter.h"
+#include "nsIGenericTransferable.h"
 
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
@@ -202,10 +203,15 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   if ( !aTransferable )
     return NS_ERROR_INVALID_ARG;
 
+  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
+  if (!genericTrans) {
+    return NS_ERROR_FAILURE;
+  }
+
   // get flavor list that includes all acceptable flavors (including ones obtained through
   // conversion)
   nsCOMPtr<nsISupportsArray> flavorList;
-  errCode = aTransferable->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
+  errCode = genericTrans->FlavorsTransferableCanImport ( getter_AddRefs(flavorList) );
   if ( errCode != NS_OK )
     return NS_ERROR_FAILURE;
 
@@ -240,7 +246,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
           ::HUnlock(dataHand);
           
           // put it into the transferable
-          errCode = aTransferable->SetTransferData ( currentFlavor, dataBuff, dataSize );
+          errCode = genericTrans->SetTransferData ( currentFlavor, dataBuff, dataSize );
           #ifdef NS_DEBUG
             if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
           #endif
