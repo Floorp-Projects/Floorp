@@ -4,6 +4,8 @@
 <!ENTITY dialogOk.label "Install">
 <!ENTITY items.label "Items to Install">
 <!ENTITY dialog.title "Software Installation">
-<!ENTITY componentList.label "The following packages will be installed:">
-<!ENTITY moduleName.label "Module name">
+<!ENTITY warningText.label "A web site is requesting permission to install software on your machine.">
+<!ENTITY warningText2.label "Software that contains malicious programming instructions could damage or otherwise compromise the contents of your computer.  You should only install software from sites that you trust.">
+<!ENTITY componentList.label "Would you like to install the following packages?">
+<!ENTITY moduleName.label "Package name">
 <!ENTITY moduleSource.label "Location">
