@@ -503,7 +503,7 @@
       <toolbarseparator class="toolbarseparator-standard"/>
       <menubutton id="AlignPopupButton"/>
       <menubutton id="InsertPopupButton"/>
-      <menubutton id="smileButtonMenu"/>
+      <menubutton id="smileButtonMenu" padwithspace="true"/>
       <spring flex="1"/>
     </toolbar>
   </toolbox>
