@@ -5382,7 +5382,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
   if (!creator)
     return NS_OK;
 
-#ifdef MOZ_XTF
+#ifdef MOZ_XTF_disabled
   PRBool forceBindingParent = PR_FALSE;
   nsCOMPtr<nsIXTFVisualWrapperPrivate> xtfElem = do_QueryInterface(aParent);
   if (xtfElem) {
@@ -5453,7 +5453,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
       }
       else
 #endif
-#ifdef MOZ_XTF
+#ifdef MOZ_XTF_disabled
       if (forceBindingParent)
         rv = content->SetBindingParent(aParent);
       else
