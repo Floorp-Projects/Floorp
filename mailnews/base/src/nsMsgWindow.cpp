@@ -367,7 +367,8 @@ NS_IMETHODIMP nsMsgWindow::StopUrls()
   GetRootDocShell(getter_AddRefs(docShell));
   if (docShell)
   {
-    return docShell->StopLoad();
+    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(docShell));
+    return webnav->Stop(nsIWebNavigation::STOP_NETWORK);
   }
   
   nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));

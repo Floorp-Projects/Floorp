@@ -2070,7 +2070,8 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
 
     if (docshell) {
-      docshell->StopLoad();
+      nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(docshell));
+      webnav->Stop(nsIWebNavigation::STOP_NETWORK);
     }
   }
 

@@ -734,7 +734,7 @@ gtk_moz_embed_stop_load(GtkMozEmbed *embed)
   embedPrivate = (EmbedPrivate *)embed->data;
 
   if (embedPrivate->mNavigation)
-    embedPrivate->mNavigation->Stop();
+    embedPrivate->mNavigation->Stop(nsIWebNavigation::STOP_ALL);
 }
 
 gboolean

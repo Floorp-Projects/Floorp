@@ -288,7 +288,7 @@ public:
 
           nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
           if(webNav)
-            webNav->Stop();
+            webNav->Stop(nsIWebNavigation::STOP_ALL);
         }
 
         // We need to enqueue an event to load the next page,

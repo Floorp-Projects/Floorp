@@ -114,7 +114,8 @@ nsDSURIContentListener::DoContent(const char* aContentType,
 
     if(loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
     {
-        mDocShell->StopLoad();
+        // XXX: Why does this not stop the content too?
+        mDocShell->Stop(nsIWebNavigation::STOP_NETWORK);
     }
 
     rv = mDocShell->CreateContentViewer(aContentType, request, aContentHandler);

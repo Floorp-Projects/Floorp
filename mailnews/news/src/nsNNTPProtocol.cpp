@@ -2266,7 +2266,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
 
             // note, this will cause us to close the connection.
             // this will call nsDocShell::LoadURI(), which will
-            // call nsDocShell::StopLoad(), which will eventually
+            // call nsDocShell::Stop(STOP_NETWORK), which will eventually
             // call nsNNTPProtocol::Cancel(), which will close the socket.
             // we need to fix this, since the connection is still valid.
             rv = m_msgWindow->DisplayHTMLInMessagePane((const PRUnichar *)titleStr, errorHtml.get());

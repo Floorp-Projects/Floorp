@@ -577,11 +577,11 @@ NS_IMETHODIMP nsWebBrowser::GotoIndex(PRInt32 aIndex)
    return mDocShellAsNav->GotoIndex(aIndex);
 }
 
-NS_IMETHODIMP nsWebBrowser::Stop()
+NS_IMETHODIMP nsWebBrowser::Stop(PRUint32 aStopFlags)
 {
    NS_ENSURE_STATE(mDocShell);
 
-   return mDocShellAsNav->Stop();
+   return mDocShellAsNav->Stop(aStopFlags);
 }
 
 NS_IMETHODIMP nsWebBrowser::GetCurrentURI(nsIURI** aURI)

@@ -623,7 +623,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
 
         case IDC_STOP:
-            webNavigation->Stop();
+            webNavigation->Stop(nsIWebNavigation::STOP_ALL);
             UpdateUI(chrome);
             break;
 
@@ -1064,7 +1064,7 @@ void WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
   chrome->GetWebBrowser(getter_AddRefs(webBrowser));
   webNavigation = do_QueryInterface(webBrowser);
   if (webNavigation)
-    webNavigation->Stop();
+    webNavigation->Stop(nsIWebNavigation::STOP_ALL);
 
   chrome->ExitModalEventLoop(NS_OK);
 

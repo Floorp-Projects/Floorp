@@ -1848,7 +1848,7 @@ NS_IMETHODIMP GlobalWindowImpl::Home()
 NS_IMETHODIMP GlobalWindowImpl::Stop()
 {
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-  return webNav->Stop();
+  return webNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Print()

@@ -597,7 +597,7 @@ nsWebShell::StopDocumentLoad(void)
 {
   if(eCharsetReloadRequested != mCharsetReloadState) 
   {
-     Stop();
+     Stop(nsIWebNavigation::STOP_ALL);
   }
   return NS_OK;
 }
@@ -777,7 +777,6 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                           mCurrentURI,        // Referer URI
                           nsnull,             // No onwer
                           PR_TRUE,            // Inherit owner from document
-                          PR_FALSE,           // Do not stop active document
                           target.get(),       // Window target
                           aPostDataStream,    // Post data stream
                           aHeadersDataStream, // Headers stream
@@ -1123,7 +1122,6 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                        referrer,                          // Refering URI
                        nsnull,                            // Owner
                        PR_TRUE,                           // Inherit owner
-                       PR_FALSE,                          // Do not stop active Doc
                        nsnull,                            // No window target
                        inputStream,                       // Post data stream
                        nsnull,                            // No headers stream

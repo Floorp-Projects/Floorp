@@ -436,9 +436,9 @@ void CBrowserView::OnNavReload()
 }
 
 void CBrowserView::OnNavStop() 
-{	
-	if(mWebNav)
-		mWebNav->Stop();
+{
+  if(mWebNav)
+    mWebNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
 void CBrowserView::OnUpdateNavStop(CCmdUI* pCmdUI)
