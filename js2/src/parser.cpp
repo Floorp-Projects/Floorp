@@ -31,11 +31,9 @@
 * file under either the NPL or the GPL.
 */
 
-#include <vector>
-
 #include "systemtypes.h"
+#include <vector>
 #include "js2value.h"
-
 #include "numerics.h"
 #include "parser.h"
 

@@ -503,7 +503,7 @@ namespace MetaData {
                 break;
             case StmtNode::Return:
                 {
-                    ParameterFrame *pFrame = env->getEnclosingParameterFrame();
+                    ParameterFrame *pFrame = env->getEnclosingParameterFrame(NULL);
                     // If there isn't a parameter frame, or the parameter frame is
                     // only a runtime frame (for eval), then it's an orphan return
                     if (!pFrame || pFrame->pluralFrame)
@@ -1826,8 +1826,9 @@ namespace MetaData {
             break;
         case ExprNode::This:
             {
-                ParameterFrame *pFrame = env->getEnclosingParameterFrame();
-                if ((pFrame == NULL) || (pFrame->thisObject == JS2VAL_VOID))
+				js2val thisVal;
+                ParameterFrame *pFrame = env->getEnclosingParameterFrame(&thisVal);
+                if ((pFrame == NULL) || (thisVal == JS2VAL_VOID))
 					if (!cxt->E3compatibility)
 						reportError(Exception::syntaxError, "No 'this' available", p->pos);
             }
@@ -1842,7 +1843,7 @@ namespace MetaData {
                     ValidateExpression(cxt, env, s->op);
                 }
                 else {
-                    ParameterFrame *pFrame = env->getEnclosingParameterFrame();
+                    ParameterFrame *pFrame = env->getEnclosingParameterFrame(NULL);
                     if ((c == NULL) || (pFrame == NULL) || !(pFrame->isConstructor || pFrame->isInstance))
                         reportError(Exception::syntaxError, "No 'super' available", p->pos);
                     if (c->super == NULL)
@@ -2014,7 +2015,7 @@ namespace MetaData {
             break;
         case ExprNode::superStmt:
             {
-                ParameterFrame *pFrame = env->getEnclosingParameterFrame();
+                ParameterFrame *pFrame = env->getEnclosingParameterFrame(NULL);
                 if ((pFrame == NULL) || !pFrame->isConstructor) 
                     reportError(Exception::syntaxError, "A super statement is meaningful only inside a constructor", p->pos);
 
@@ -2848,7 +2849,7 @@ doUnary:
 
     // If env is from with a function's body, return the innermost ParameterFrame for
     // the innermost such function, otherwise return NULL
-    ParameterFrame *Environment::getEnclosingParameterFrame()
+    ParameterFrame *Environment::getEnclosingParameterFrame(js2val *thisP)
     {
         FrameListIterator fi = getBegin(), end = getEnd();
         while (fi != end) {
@@ -2858,6 +2859,7 @@ doUnary:
             case SystemKind:
                 return NULL;
             case ParameterFrameKind:
+				if (thisP) *thisP = fi->second;
                 return checked_cast<ParameterFrame *>(fi->first);
             case BlockFrameKind:
             case WithFrameKind:
@@ -2907,10 +2909,11 @@ doUnary:
 
     js2val Environment::readImplicitThis(JS2Metadata *meta)
     {
-        ParameterFrame *pFrame = getEnclosingParameterFrame();
+		js2val thisVal;
+        ParameterFrame *pFrame = getEnclosingParameterFrame(&thisVal);
         if (pFrame == NULL)
             meta->reportError(Exception::referenceError, "Can't access instance members outside an instance method without supplying an instance object", meta->engine->errorPos());
-        js2val thisVal = pFrame->thisObject;
+//        js2val thisVal = pFrame->thisObject;
         if ((!JS2VAL_IS_OBJECT(thisVal) || JS2VAL_IS_NULL(thisVal)) || !pFrame->isInstance || !pFrame->isConstructor)
             meta->reportError(Exception::referenceError, "Can't access instance members inside a non-instance method without supplying an instance object", meta->engine->errorPos());
         if (!pFrame->superConstructorCalled)

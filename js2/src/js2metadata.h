@@ -731,7 +731,7 @@ public:
     Environment(Environment *e) : JS2Object(EnvironmentKind), frameList(e->frameList) { }
     
     JS2Class *getEnclosingClass();
-    ParameterFrame *Environment::getEnclosingParameterFrame();
+    ParameterFrame *Environment::getEnclosingParameterFrame(js2val *thisP);
     FrameListIterator getRegionalFrame();
     FrameListIterator getRegionalEnvironment();
     Frame *getTopFrame()                    { return frameList.front().first; }

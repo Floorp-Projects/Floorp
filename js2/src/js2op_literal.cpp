@@ -133,12 +133,12 @@
 
     case eThis: // XXX literal?
         {
-            pFrame = meta->env->getEnclosingParameterFrame();
-            if ((pFrame == NULL) || JS2VAL_IS_INACCESSIBLE(pFrame->thisObject) || JS2VAL_IS_NULL(pFrame->thisObject))
+            pFrame = meta->env->getEnclosingParameterFrame(&a);
+            if ((pFrame == NULL) || JS2VAL_IS_INACCESSIBLE(a) || JS2VAL_IS_NULL(a))
                 a = OBJECT_TO_JS2VAL(meta->env->getPackageFrame());
 //                meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
-            else
-                a = pFrame->thisObject;
+//            else
+//                a = pFrame->thisObject;
             push(a);
             pFrame = NULL;
         }
@@ -146,9 +146,9 @@
 
     case eSuper: // XXX literal?
         {
-            pFrame = meta->env->getEnclosingParameterFrame();
+            pFrame = meta->env->getEnclosingParameterFrame(&a);
             ASSERT(pFrame);
-            a = pFrame->thisObject;
+//            a = pFrame->thisObject;
             if (JS2VAL_IS_INACCESSIBLE(a))
                 meta->reportError(Exception::compileExpressionError, "'this' not available for 'super'", errorPos());
 makeLimitedInstance:

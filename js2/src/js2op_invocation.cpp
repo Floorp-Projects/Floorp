@@ -88,7 +88,7 @@
                         pFrame->assignArguments(meta, obj, base(argCount), argCount, length);
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);
                         parameterSlots = pFrame->frameSlots;
-                        meta->env->addFrame(pFrame);
+                        meta->env->addFrame(pFrame, baseVal);
                         parameterFrame = pFrame;
                         pFrame = NULL;
                     }
@@ -152,7 +152,7 @@ doCall:
                         parameterSlots = pFrame->frameSlots;
                         if (fInst->isMethodClosure)
                             meta->env->addFrame(meta->objectType(a));
-                        meta->env->addFrame(pFrame);
+                        meta->env->addFrame(pFrame, a);
                         parameterFrame = pFrame;
                         pFrame = NULL;
                     }
@@ -164,7 +164,7 @@ doCall:
                         // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
                         pFrame = new (meta) ParameterFrame(a, fWrap->compileFrame->prototype);
                         pFrame->pluralFrame = fWrap->compileFrame;
-                        meta->env->addFrame(pFrame);
+                        meta->env->addFrame(pFrame, a);
                     }
                 }
             }
@@ -199,14 +199,14 @@ doCall:
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            ParameterFrame *pFrame = meta->env->getEnclosingParameterFrame();
+            ParameterFrame *pFrame = meta->env->getEnclosingParameterFrame(&a);
             ASSERT(pFrame && (pFrame->isConstructor));
             if (pFrame->superConstructorCalled)
                 meta->reportError(Exception::referenceError, "The superconstructor cannot be called twice", errorPos());
             JS2Class *c = meta->env->getEnclosingClass();
             ASSERT(c);
-            ASSERT(!JS2VAL_IS_VOID(pFrame->thisObject));
-            meta->invokeInit(c->super, pFrame->thisObject, base(argCount), argCount);
+            ASSERT(!JS2VAL_IS_VOID(a));
+            meta->invokeInit(c->super, a, base(argCount), argCount);
             pFrame->superConstructorCalled = true;
         }
         break;
