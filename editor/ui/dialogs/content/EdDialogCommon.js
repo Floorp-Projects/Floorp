@@ -81,6 +81,26 @@ function SetLabelEnabledByID( labelID, doEnable )
   }
 }
 
+// Input string is "" for pixel, or "%" for percent
+function SetPixelOrPercentByID(elementID, percentString)
+{
+  percentChar = percentString;
+  dump("SetPixelOrPercent. PercentChar="+percentChar+"\n");
+
+  btn = document.getElementById( elementID );
+  if ( btn )
+  {
+    if ( percentChar == "%" )
+    {
+      btn.setAttribute( "value", "percent" );
+    }
+    else
+    {
+      btn.setAttribute( "value", "pixels" );
+    }
+  }
+}
+
 // All dialogs share this simple method
 function onCancel()
 {
