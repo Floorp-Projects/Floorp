@@ -38,48 +38,33 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIFile.idl"
+#include "nsIURI.idl"
 
 // {dd038282-d5a2-11d4-aedb-e1c4b1c8b9fc}
 [scriptable, uuid(dd038282-d5a2-11d4-aedb-e1c4b1c8b9fc)]
 interface nsIDiskDocument : nsISupports
 {
-  /** An nsIFile pointing to the location of the file on disk. May be null if
-    *  this document has not been saved yet
-    */
-  readonly attribute nsIFile  fileSpec;
-  
   /** The modification count for the document. A +ve mod count indicates
     * that the document is dirty, and needs saving.
     */
   readonly attribute long     modificationCount;
 
-  /** Initialize the document output. This may be called on document
-    * creation, or lazily before the first save. For a document read
-    * in from disk, it should be called on document instantiation.
-    *
-    * @param aFile			    nsIFile for the file, if a disk version
-    *												of the file exists already. Otherwise nsnull.
-    */
-  void InitDiskDocument(in nsIFile aFile);
-  
-  
   /** Save the file to disk. This will be called after the caller has
     * displayed a put file dialog, which the user confirmed. The internal
     * fileSpec of the document is only updated with the given fileSpec if inSaveCopy == PR_FALSE.
     *    
-    * @param aFile					    File to which to stream the document.
-    * @param aReplaceExisting	  true if replacing an existing file, otherwise false.
-    *    												If false and aFile exists, SaveFile returns an error.
-    * @param aSaveCopy					True to save a copy of the file, without changing the file
-    *														referenced internally.
-    * @param aFileType			    Mime type to save (text/plain or text/html)
-    * @param aFileCharset			  Charset to save the document in. If this is an empty
-    *    												string, or "UCS2", then the doc will be saved as Unicode.
-    * @param aSaveFlags         Flags used by the document encoder (see nsIDocumentEncoder).
-    * @param inWrapColumn       Wrap column, assuming that flags specify wrapping.
+    * @param aURI                location to which to stream the document.
+    * @param aReplaceExisting    true if replacing an existing file, otherwise false.
+    *                            If false and aURI exists, SaveFile returns an error.
+    * @param aSaveCopy           True to save a copy of the file, without changing the file
+    *                            referenced internally.
+    * @param aFileType           Mime type to save (text/plain or text/html)
+    * @param aFileCharset        Charset to save the document in. If this is an empty
+    *                            string, or "UCS2", then the doc will be saved as Unicode.
+    * @param aSaveFlags          Flags used by the document encoder (see nsIDocumentEncoder).
+    * @param inWrapColumn        Wrap column, assuming that flags specify wrapping.
     */
-  void SaveFile(in nsIFile aFile, in boolean aReplaceExisting, in boolean aSaveCopy,
+  void SaveFile(in nsIURI aFile, in boolean aReplaceExisting, in boolean aSaveCopy,
             in wstring aFileType, in wstring aFileCharset, in unsigned long aSaveFlags,
             in unsigned long aWrapColumn);
   
