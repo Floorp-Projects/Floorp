@@ -24,22 +24,22 @@ MOZ_TOP=mozilla
 !endif
 
 #//------------------------------------------------------------------------
-#// Defines specific to MOZ_RAPTOR
+#// Defines specific to MOZ_NGLAYOUT
 #//------------------------------------------------------------------------
-!if defined(MOZ_RAPTOR)
-RAPTOR_MAKEFILE=raptor.mak
+!if defined(MOZ_NGLAYOUT)
+NGLAYOUT_MAKEFILE=nglayout.mak
 
 CVSCO = cvs -q co -P
 
 # Branch tags we use
 NETLIB_BRANCH = MODULAR_NETLIB_BRANCH
-MOZRAPTOR_BRANCH = RAPTOR_INTEGRATION0_BRANCH
+MOZNGLAYOUT_BRANCH = RAPTOR_INTEGRATION0_BRANCH
 
 # CVS commands to pull the appropriate branch versions
 CVSCO_NETLIB = $(CVSCO) -r $(NETLIB_BRANCH)
-CVSCO_CONFIG = $(CVSCO) -r $(MOZRAPTOR_BRANCH)
 
-MOZ_BRANCH=$(MOZRAPTOR_BRANCH)
+# If MOZ_BRANCH is set from the user's environment, it will be ignored.
+MOZ_BRANCH=$(MOZNGLAYOUT_BRANCH)
 !endif
 
 
@@ -88,18 +88,19 @@ pull_clobber_build_all:: pull_all \
 clobber_build_all:: 	clobber_all \
 			build_all
 
-!if defined(MOZ_RAPTOR)
+!if defined(MOZ_NGLAYOUT)
+# Not very efficient, pull_raptor and pull_netlib will repull 
 pull_all:: pull_client_source_product pull_raptor pull_netlib
 !else
 pull_all:: pull_client_source_product 
 !endif
 
-!if defined(MOZ_RAPTOR)
+!if defined(MOZ_NGLAYOUT)
 pull_raptor:
 	@cd $(MOZ_SRC)
 	$(CVSCO) $(MOZ_TOP)/raptor.mak
 	@cd $(MOZ_SRC)/$(MOZ_TOP)
-	$(NMAKE) -f $(RAPTOR_MAKEFILE) pull_xpcom pull_imglib pull_raptor
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) pull_xpcom pull_imglib pull_raptor
 
 pull_netlib:
 	@cd $(MOZ_SRC)\.
@@ -114,19 +115,20 @@ pull_client_source_product:
     -cvs -q co $(CVS_BRANCH)      MozillaSourceWin
 
 
-!if defined(MOZ_RAPTOR)
+!if defined(MOZ_NGLAYOUT)
+# Build Raptor first.
 build_all:  build_raptor \
 			build_dist  \
 			build_client
 !else
-build_all:              build_dist  \
+build_all:  build_dist  \
 			build_client
 !endif
 
-!if defined(MOZ_RAPTOR)
+!if defined(MOZ_NGLAYOUT)
 build_raptor: 
 	cd $(MOZ_SRC)\$(MOZ_TOP)
-	$(NMAKE) -f $(RAPTOR_MAKEFILE) STANDALONE_IMAGE_LIB=1 RAPTOR=1
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) STANDALONE_IMAGE_LIB=1 MODULAR_NETLIB=1 NGLAYOUT_BUILD_PREFIX=1
 !endif
 
 build_dist:
@@ -148,7 +150,7 @@ build_client:
 #
 # remove all source files from the tree and print a report of what was missed
 #
-!if defined(MOZ_RAPTOR)
+!if defined(MOZ_NGLAYOUT)
 clobber_all:: clobber_moz clobber_raptor
 !else
 clobber_all:: clobber_moz
@@ -164,10 +166,10 @@ clobber_moz:
     $(NMAKE) -f nsldap.mak clobber_all
 !endif
 
-!if defined(MOZ_RAPTOR)
+!if defined(MOZ_NGLAYOUT)
 clobber_raptor:
 	cd $(MOZ_SRC)\$(MOZ_TOP)
-	$(NMAKE) -f $(RAPTOR_MAKEFILE) STANDALONE_IMAGE_LIB=1 RAPTOR=1 clobber	
+	$(NMAKE) -f $(NGLAYOUT_MAKEFILE) STANDALONE_IMAGE_LIB=1 NGLAYOUT=1 clobber	
 !endif
 
 depend:
