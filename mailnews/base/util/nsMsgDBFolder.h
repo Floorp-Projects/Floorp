@@ -68,7 +68,7 @@ public:
 
 	NS_DECL_NSIURLLISTENER
 
-	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
+	NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache, PRBool deep);
 	NS_IMETHOD WriteToFolderCacheElem(nsIMsgFolderCacheElement *element);
 	NS_IMETHOD ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element);
 	NS_IMETHOD ManyHeadersToDownload(PRBool *_retval);
@@ -81,9 +81,12 @@ public:
   NS_IMETHOD ForceDBClosed();
 	NS_IMETHOD GetHasNewMessages(PRBool *hasNewMessages);
 	NS_IMETHOD SetHasNewMessages(PRBool hasNewMessages);
+  NS_IMETHOD GetGettingNewMessages(PRBool *gettingNewMessages);
+  NS_IMETHOD SetGettingNewMessages(PRBool gettingNewMessages);
 
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
+  virtual nsresult FlushToFolderCache();
 	virtual nsresult GetDatabase(nsIMsgWindow *aMsgWindow) = 0;
 	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
 	nsresult CheckWithNewMessagesStatus(PRBool messageAdded);
@@ -98,6 +101,7 @@ protected:
 	nsString mCharset;
 	PRBool mAddListener;
 	PRBool mNewMessages;
+  PRBool mGettingNewMessages;
 
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;

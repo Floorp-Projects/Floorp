@@ -62,7 +62,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMsgDBFolder,
 
 
 nsMsgDBFolder::nsMsgDBFolder(void)
-: mAddListener(PR_TRUE), mNewMessages(PR_FALSE)
+: mAddListener(PR_TRUE), mNewMessages(PR_FALSE), mGettingNewMessages(PR_FALSE)
 {
   if (mInstanceCount++ <=0) {
     mFolderLoadedAtom = NS_NewAtom("FolderLoaded");
@@ -326,6 +326,22 @@ NS_IMETHODIMP nsMsgDBFolder::SetHasNewMessages(PRBool curNewMessages)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::GetGettingNewMessages(PRBool *gettingNewMessages)
+{
+	if(!gettingNewMessages)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_OK;
+	*gettingNewMessages = mGettingNewMessages;
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::SetGettingNewMessages(PRBool gettingNewMessages)
+{
+	mGettingNewMessages = gettingNewMessages;
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
 {
@@ -522,17 +538,10 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	// then we simply return nsCRT::strdup(userLeafName)
 	// Otherwise we mangle it
 
-	// leafLength is the length of mangledLeaf which we will return
-	// if userLeafName is greater than the maximum allowed for this
-	// platform, then we truncate and mangle it.  Otherwise leave it alone.
-	PRInt32 leafLength;
-
 	// mangledPath is the entire path to the newly mangled leaf name
 	nsCAutoString mangledLeaf = userLeafName;
-	
-	PRInt32 illegalCharacterIndex = mangledLeaf.FindCharInSet(illegalChars);
 
-	PRBool exists;
+	PRInt32 illegalCharacterIndex = mangledLeaf.FindCharInSet(illegalChars);
 
 	if (illegalCharacterIndex == kNotFound)
 	{
@@ -565,39 +574,8 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 	nsXPIDLCString leafName;
 	
 	path.SetLeafName(mangledLeaf.GetBuffer());
-	exists = path.Exists();
-	leafLength = mangledLeaf.Length();
-
-	if (exists)
-	{
-		if (leafLength >= 2) 
-			mangledLeaf.SetCharAt('A', leafLength - 2);
-		mangledLeaf.SetCharAt('A', leafLength - 1);	// leafLength must be at least 1
-	}
-
-	while (!nameSpaceExhausted && path.Exists())
-	{
-		if (leafLength >= 2)
-		{
-			PRUnichar lastChar = mangledLeaf.CharAt(leafLength - 1);
-			mangledLeaf.SetCharAt(++lastChar,leafLength - 1);
-			if (lastChar > 'Z')
-			{
-				mangledLeaf.SetCharAt('A',leafLength - 1);
-				PRUnichar nextToLastChar = mangledLeaf.CharAt(leafLength - 2);
-				mangledLeaf.SetCharAt(nextToLastChar + 1, leafLength - 2);
-				nameSpaceExhausted = (nextToLastChar == 'Z');
-			}
-		}
-		else
-		{
-			PRUnichar lastChar = mangledLeaf.CharAt(leafLength - 1);
-			mangledLeaf.SetCharAt(++lastChar, leafLength - 1);
-			nameSpaceExhausted = (lastChar == 'Z');
-		}
-	}
-	*resultName = mangledLeaf.ToNewCString();
-	
+  path.MakeUnique();
+  *resultName = path.GetLeafName();
 	return NS_OK;
 }
 
@@ -827,6 +805,8 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	element->GetInt32Property("flags", (PRInt32 *) &mFlags);
 	element->GetInt32Property("totalMsgs", &mNumTotalMessages);
 	element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
+  element->GetInt32Property("pendingUnreadMsgs", &mNumPendingUnreadMessages);
+  element->GetInt32Property("pendingMsgs", &mNumPendingTotalMessages);
   element->GetInt32Property("expungedBytes", (PRInt32 *) &mExpungedBytes);
 
 	element->GetStringProperty("charset", &charset);
@@ -875,13 +855,26 @@ nsresult nsMsgDBFolder::GetFolderCacheKey(nsIFileSpec **aFileSpec)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
+nsresult nsMsgDBFolder::FlushToFolderCache()
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && accountManager)
+  {
+    nsCOMPtr<nsIMsgFolderCache> folderCache;
+
+    rv = accountManager->GetFolderCache(getter_AddRefs(folderCache));
+    if (NS_SUCCEEDED(rv) && folderCache)
+      rv = WriteToFolderCache(folderCache, PR_FALSE);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache, PRBool deep)
 {
 	nsCOMPtr <nsIEnumerator> aEnumerator;
-
-	nsresult rv = GetSubFolders(getter_AddRefs(aEnumerator));
-	if(NS_FAILED(rv)) 
-		return rv;
+  nsresult rv;
 
 	if (folderCache)
 	{
@@ -903,6 +896,13 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 		}
 	}
 
+  if (!deep)
+    return rv;
+
+	rv = GetSubFolders(getter_AddRefs(aEnumerator));
+	if(NS_FAILED(rv)) 
+		return rv;
+
 	nsCOMPtr<nsISupports> aItem;
 
 	rv = aEnumerator->First();
@@ -918,7 +918,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 		{
 			if (folderCache)
 			{
-				rv = aMsgFolder->WriteToFolderCache(folderCache);
+				rv = aMsgFolder->WriteToFolderCache(folderCache, PR_TRUE);
 				if (!NS_SUCCEEDED(rv))
 					break;
 			}
@@ -940,6 +940,10 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 	element->SetInt32Property("flags", (PRInt32) mFlags);
 	element->SetInt32Property("totalMsgs", mNumTotalMessages);
 	element->SetInt32Property("totalUnreadMsgs", mNumUnreadMessages);
+  element->SetInt32Property("pendingUnreadMsgs", mNumPendingUnreadMessages);
+  element->SetInt32Property("pendingMsgs", mNumPendingTotalMessages);
+  element->SetInt32Property("expungedBytes", mExpungedBytes);
+
   nsCAutoString mcharsetC;
   mcharsetC.AssignWithConversion(mCharset);
 	element->SetStringProperty("charset", (const char *) mcharsetC);
