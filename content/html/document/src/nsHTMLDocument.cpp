@@ -240,8 +240,6 @@ nsHTMLDocument::nsHTMLDocument()
 
 nsHTMLDocument::~nsHTMLDocument()
 {
-  PRInt32 i;
-
   NS_IF_RELEASE(mImages);
   NS_IF_RELEASE(mApplets);
   NS_IF_RELEASE(mEmbeds);
@@ -270,10 +268,7 @@ nsHTMLDocument::~nsHTMLDocument()
     mReferrer = nsnull;
   }
   NS_IF_RELEASE(mParser);
-  for (i = 0; i < mImageMaps.Count(); i++) {
-    nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
-    NS_RELEASE(map);
-  }
+  mImageMaps.Clear();
   NS_IF_RELEASE(mForms);
   if (mCSSLoader) {
     mCSSLoader->DropDocumentReference();  // release weak ref
@@ -329,8 +324,6 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
         return result;
   }
 
-  PRInt32 i;
-
   InvalidateHashTables();
   PrePopulateHashTables();
 
@@ -341,10 +334,7 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   NS_IF_RELEASE(mAnchors);
   NS_IF_RELEASE(mLayers);
 
-  for (i = 0; i < mImageMaps.Count(); i++) {
-    nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
-    NS_RELEASE(map);
-  }
+  mImageMaps.Clear();
   NS_IF_RELEASE(mForms);
 
   if (aURL) {
@@ -927,7 +917,6 @@ nsHTMLDocument::AddImageMap(nsIDOMHTMLMapElement* aMap)
     return NS_ERROR_NULL_POINTER;
   }
   if (mImageMaps.AppendElement(aMap)) {
-    NS_ADDREF(aMap);
     return NS_OK;
   }
   return NS_ERROR_OUT_OF_MEMORY;
@@ -940,9 +929,7 @@ nsHTMLDocument::RemoveImageMap(nsIDOMHTMLMapElement* aMap)
   if (nsnull == aMap) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (mImageMaps.RemoveElement((void*)aMap)) {
-    NS_RELEASE(aMap);
-  }
+  mImageMaps.RemoveElement(aMap, 0);
   return NS_OK;
 }
 
@@ -956,13 +943,15 @@ nsHTMLDocument::GetImageMap(const nsString& aMapName,
   }
 
   nsAutoString name;
-  PRInt32 i, n = mImageMaps.Count();
+  PRUint32 i, n;
+  mImageMaps.Count(&n);
   for (i = 0; i < n; i++) {
-    nsIDOMHTMLMapElement* map = (nsIDOMHTMLMapElement*)mImageMaps.ElementAt(i);
-    if (NS_OK == map->GetName(name)) {
+    nsCOMPtr<nsIDOMHTMLMapElement> map;
+    mImageMaps.QueryElementAt(i, NS_GET_IID(nsIDOMHTMLMapElement), getter_AddRefs(map));
+    if (map && NS_SUCCEEDED(map->GetName(name))) {
       if (name.EqualsIgnoreCase(aMapName)) {
         *aResult = map;
-        NS_ADDREF(map);
+        NS_ADDREF(*aResult);
         return NS_OK;
       }
     }
