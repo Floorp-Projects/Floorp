@@ -134,6 +134,8 @@ DEFINE_RDF_VOCAB(CHROME_URI, CHROME, name);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, image);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, locType);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, allowScripts);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, hasOverlays);
+DEFINE_RDF_VOCAB(CHROME_URI, CHROME, hasStylesheets);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, skinVersion);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, localeVersion);
 DEFINE_RDF_VOCAB(CHROME_URI, CHROME, packageVersion);
@@ -341,6 +343,12 @@ nsChromeRegistry::Init()
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   rv = mRDFService->GetResource(kURICHROME_allowScripts, getter_AddRefs(mAllowScripts));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_hasOverlays, getter_AddRefs(mHasOverlays));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
+
+  rv = mRDFService->GetResource(kURICHROME_hasStylesheets, getter_AddRefs(mHasStylesheets));
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   rv = mRDFService->GetResource(kURICHROME_skinVersion, getter_AddRefs(mSkinVersion));
@@ -807,7 +815,7 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
 }
 
 NS_IMETHODIMP nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile,
-                                                     nsIRDFDataSource **aResult)
+                                                     PRBool aCreateDS, nsIRDFDataSource **aResult)
 {
   *aResult = nsnull;
 
@@ -821,6 +829,39 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL, PRBool 
 
   rv = SplitURL(aChromeURL, package, provider, remaining);
   if (NS_FAILED(rv)) return rv;
+
+  if (!aCreateDS) {
+    // We are not supposed to create the data source, which means
+    // we should first check our chrome.rdf file to see if this
+    // package even has dynamic data.  Only if it claims to have
+    // dynamic data are we willing to hand back a datasource.
+    nsDependentCString dataSourceStr(kChromeFileName);
+    nsCOMPtr<nsIRDFDataSource> mainDataSource;
+    rv = LoadDataSource(dataSourceStr, getter_AddRefs(mainDataSource), aUseProfile, nsnull);
+    if (NS_FAILED(rv)) return rv;
+    
+    // Now that we have the appropriate chrome.rdf file, we
+    // must check the package resource for stylesheets or overlays.
+    nsCOMPtr<nsIRDFResource> hasDynamicDataArc;
+    if (aIsOverlay)
+      hasDynamicDataArc = mHasOverlays;
+    else
+      hasDynamicDataArc = mHasStylesheets;
+    
+    // Obtain the resource for the package.
+    nsCAutoString packageResourceStr("urn:mozilla:package:");
+    packageResourceStr += package;
+    nsCOMPtr<nsIRDFResource> packageResource;
+    GetResource(packageResourceStr, getter_AddRefs(packageResource));
+    
+    // Follow the dynamic data arc to see if we should continue.
+    // Only if it claims to have dynamic data do we even bother.
+    nsCAutoString hasDynamicDS;
+    nsChromeRegistry::FollowArc(mainDataSource, hasDynamicDS, 
+                                packageResource, hasDynamicDataArc);
+    if (hasDynamicDS.IsEmpty())
+      return NS_OK; // No data source exists.
+  }
 
   // Retrieve the mInner data source.
   nsCAutoString overlayFile( "overlayinfo/" );
@@ -840,7 +881,7 @@ NS_IMETHODIMP nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsAr
 
   nsCOMPtr<nsISimpleEnumerator> sheets;
   nsresult rv = GetDynamicInfo(aChromeURL, PR_FALSE, getter_AddRefs(sheets));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv) || !sheets) return rv;
   PRBool hasMore;
   rv = sheets->HasMoreElements(&hasMore);
   if (NS_FAILED(rv)) return rv;
@@ -884,12 +925,12 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
     return NS_OK;
 
   nsCOMPtr<nsIRDFDataSource> installSource;
-  rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_FALSE, getter_AddRefs(installSource));
-  if (NS_FAILED(rv)) return rv;
+  rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_FALSE, PR_FALSE, getter_AddRefs(installSource));
+  if (NS_FAILED(rv) || !installSource) return rv;
   nsCOMPtr<nsIRDFDataSource> profileSource;
   if (mProfileInitialized) {
-    rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_TRUE, getter_AddRefs(profileSource));
-    if (NS_FAILED(rv)) return rv;
+    rv = GetDynamicDataSource(aChromeURL, aIsOverlay, PR_TRUE, PR_FALSE, getter_AddRefs(profileSource));
+    if (NS_FAILED(rv) || !profileSource) return rv;
   }
 
   nsCAutoString lookup;
@@ -1346,8 +1387,47 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
   rv = NS_NewURI(getter_AddRefs(uri), str);
   if (NS_FAILED(rv)) return rv;
 
+  if (!aRemove) {
+    // We are installing a dynamic overlay or package.  
+    // We must split the doc URI and obtain our package or skin.
+    // We then annotate the chrome.rdf datasource in the appropriate
+    // install/profile dir (based off aUseProfile) with the knowledge
+    // that we have overlays or stylesheets.
+    nsCAutoString package, provider, file;
+    rv = SplitURL(uri, package, provider, file);
+    if (NS_FAILED(rv)) return NS_OK;
+    
+    // Obtain our chrome data source.
+    nsDependentCString dataSourceStr(kChromeFileName);
+    nsCOMPtr<nsIRDFDataSource> mainDataSource;
+    rv = LoadDataSource(dataSourceStr, getter_AddRefs(mainDataSource), aUseProfile, nsnull);
+    if (NS_FAILED(rv)) return rv;
+    
+    // Now that we have the appropriate chrome.rdf file, we 
+    // must annotate the package resource with the knowledge of
+    // whether or not we have stylesheets or overlays.
+    nsCOMPtr<nsIRDFResource> hasDynamicDataArc;
+    if (aIsOverlay)
+      hasDynamicDataArc = mHasOverlays;
+    else
+      hasDynamicDataArc = mHasStylesheets;
+    
+    // Obtain the resource for the package.
+    nsCAutoString packageResourceStr("urn:mozilla:package:");
+    packageResourceStr += package;
+    nsCOMPtr<nsIRDFResource> packageResource;
+    GetResource(packageResourceStr, getter_AddRefs(packageResource));
+    
+    // Now add the arc to the package.
+    nsCOMPtr<nsIRDFLiteral> trueLiteral;
+    mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(), getter_AddRefs(trueLiteral));
+    nsChromeRegistry::UpdateArc(mainDataSource, packageResource, 
+                                hasDynamicDataArc, 
+                                trueLiteral, PR_FALSE);
+  }
+
   nsCOMPtr<nsIRDFDataSource> dataSource;
-  rv = GetDynamicDataSource(uri, aIsOverlay, aUseProfile, getter_AddRefs(dataSource));
+  rv = GetDynamicDataSource(uri, aIsOverlay, aUseProfile, PR_TRUE, getter_AddRefs(dataSource));
   if (NS_FAILED(rv)) return rv;
 
   if (!dataSource)
