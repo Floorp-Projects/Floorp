@@ -409,6 +409,9 @@ NS_IMETHODIMP nsPop3Protocol::OnStopBinding(nsIURL* aURL, nsresult aStatus,
                                          const PRUnichar* aMsg)
 {
     m_isRunning = PR_FALSE;
+	// change the state on the url...
+	if (m_nsIPop3URL)
+		m_nsIPop3URL->SetUrlState(PR_FALSE, aStatus);
     return NS_OK; // for now
 }
 
