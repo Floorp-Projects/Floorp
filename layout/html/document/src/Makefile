@@ -28,7 +28,8 @@ INCLUDES += \
 	-I../../forms/src		\
 	-I../../style/src		\
 	-I../../table/src		\
-        -I../../dom		        \
+	-I../../dom		        \
+	-I../../../../htmlparser/src  \
 	$(NULL)
 
 # Note the sophisticated alphabetical ordering :-|
