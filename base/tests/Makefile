@@ -44,6 +44,11 @@ TARGETS = $(PROGS)
 
 include $(DEPTH)/config/rules.mk
 
+# needed for mac linux
+ifeq (linux,$(ARCH))
+OS_LIBS += /usr/lib/libdl.so
+endif
+
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
