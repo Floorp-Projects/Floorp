@@ -40,6 +40,15 @@ function LoadMessage(messageNode)
 
 }
 
+function ChangeFolder(folderNode)
+{
+	var uri = folderNode.getAttribute('id');
+	dump(uri);
+	var tree = frames[0].document.getElementById('threadTree');
+	tree.childNodes[4].setAttribute('id', uri);
+}
+
+
 function ReplyMessage(messageHdr)
 {
 	var appCore = new ComposeAppCore();
