@@ -3,8 +3,8 @@ You'll find these directories and files here:
 
 README.docs	# This README file
 html/		# The compiled HTML docs from SGML sources (do not edit)
-xml/		# The original XML doc sources (edit these)
 txt/		# The compiled text docs from SGML sources
+xml/		# The original XML doc sources (edit these)
 
 A note about the XML:
   The documentation is written in DocBook 4.1.2, and attempts to adhere
