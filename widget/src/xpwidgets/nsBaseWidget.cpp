@@ -558,6 +558,15 @@ void nsBaseWidget::OnDestroy()
   mAppShell = nsnull;     // clear out nsCOMPtr
 }
 
+NS_METHOD nsBaseWidget::GetWindowClass(char *aClass)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_METHOD nsBaseWidget::SetWindowClass(char *aClass)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_METHOD nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle)
 {

@@ -468,6 +468,58 @@ NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWidget::GetWindowClass(char *aClass)
+{
+//nsWidget's base impl will throw a failure
+//to find out that this toolkit supports this function pass null.
+  if (!aClass)
+    return NS_OK;
+
+  *aClass = nsnull;
+
+  if (mWindowType != eWindowType_toplevel)
+    return NS_OK;
+
+  GtkWindow *topWindow;
+  topWindow = GetTopLevelWindow();
+
+  if (!topWindow)
+    return NS_ERROR_FAILURE;
+
+  XClassHint *class_hint = XAllocClassHint();
+
+  if (XGetClassHint(GDK_DISPLAY(),
+                    GDK_WINDOW_XWINDOW(GTK_WIDGET(topWindow)->window),
+                    class_hint))
+    aClass = strdup(class_hint->res_class);
+
+  XFree(class_hint);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::SetWindowClass(char *aClass)
+{
+  if (mWindowType != eWindowType_toplevel)
+    return NS_OK;
+
+  GtkWindow *topWindow;
+  topWindow = GetTopLevelWindow();
+
+  if (!topWindow)
+    return NS_ERROR_FAILURE;
+
+  XClassHint *class_hint = XAllocClassHint();
+
+  class_hint->res_name = "Mozilla";
+  class_hint->res_class = aClass;
+
+  XSetClassHint(GDK_DISPLAY(),
+                GDK_WINDOW_XWINDOW(GTK_WIDGET(topWindow)->window),
+                class_hint);
+  XFree(class_hint);
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Move this component
