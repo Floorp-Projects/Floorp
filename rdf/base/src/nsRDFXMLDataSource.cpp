@@ -1137,12 +1137,12 @@ static void
 rdf_EscapeAngleBrackets(nsString& s)
 {
     PRInt32 i;
-    while ((i = s.Find('<')) != -1) {
+    while ((i = s.FindChar('<')) != -1) {
         s.SetCharAt('&', i);
         s.Insert(nsAutoString("lt;"), i + 1);
     }
 
-    while ((i = s.Find('>')) != -1) {
+    while ((i = s.FindChar('>')) != -1) {
         s.SetCharAt('&', i);
         s.Insert(nsAutoString("gt;"), i + 1);
     }
@@ -1152,7 +1152,7 @@ static void
 rdf_EscapeAmpersands(nsString& s)
 {
     PRInt32 i = 0;
-    while ((i = s.Find('&', i)) != -1) {
+    while ((i = s.FindChar('&', PR_FALSE,i)) != -1) {
         s.SetCharAt('&', i);
         s.Insert(nsAutoString("amp;"), i + 1);
         i += 4;
