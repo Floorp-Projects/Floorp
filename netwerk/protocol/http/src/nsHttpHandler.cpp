@@ -206,11 +206,11 @@ nsHttpHandler::Init()
     if (prefBranch) {
         nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
         if (pbi) {
-            pbi->AddObserver(HTTP_PREF_PREFIX, this);
-            pbi->AddObserver(UA_PREF_PREFIX, this);
-            pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this); 
-            pbi->AddObserver(INTL_ACCEPT_CHARSET, this);
-            pbi->AddObserver(NETWORK_ENABLEIDN, this);
+            pbi->AddObserver(HTTP_PREF_PREFIX, this, PR_TRUE);
+            pbi->AddObserver(UA_PREF_PREFIX, this, PR_TRUE);
+            pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this, PR_TRUE); 
+            pbi->AddObserver(INTL_ACCEPT_CHARSET, this, PR_TRUE);
+            pbi->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
         }
         PrefsChanged(prefBranch);
     }
@@ -252,7 +252,6 @@ nsHttpHandler::Init()
     if (observerSvc) {
         observerSvc->AddObserver(this, "profile-before-change", PR_TRUE);
         observerSvc->AddObserver(this, "session-logout", PR_TRUE);
-        observerSvc->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }
     return NS_OK;
 }
@@ -1811,7 +1810,7 @@ nsHttpHandler::Observe(nsISupports *subject,
                        const char *topic,
                        const PRUnichar *data)
 {
-    if (!nsCRT::strcmp(topic, "nsPref:changed")) {
+    if (!nsCRT::strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
@@ -1825,20 +1824,6 @@ nsHttpHandler::Observe(nsISupports *subject,
         // need to reset the session start time since cache validation may
         // depend on this value.
         mSessionStartTime = NowInSeconds();
-    }
-    else if (!nsCRT::strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        GetPrefBranch(getter_AddRefs(prefBranch));
-        if (prefBranch) {
-            nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-            if (pbi) {
-                pbi->RemoveObserver(HTTP_PREF_PREFIX, this);
-                pbi->RemoveObserver(UA_PREF_PREFIX, this);
-                pbi->RemoveObserver(INTL_ACCEPT_LANGUAGES, this); 
-                pbi->RemoveObserver(INTL_ACCEPT_CHARSET, this);
-                pbi->RemoveObserver(NETWORK_ENABLEIDN, this);
-            }
-        }
     }
     return NS_OK;
 }

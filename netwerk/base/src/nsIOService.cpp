@@ -217,15 +217,9 @@ nsIOService::Init()
     if (prefBranch) {
         nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
         if (pbi)
-            pbi->AddObserver(PORT_PREF_PREFIX, this);
+            pbi->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
         PrefsChanged(prefBranch);
     }
-
-    // Listen for xpcom-shutdown to break the reference cycle with prefs
-    nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (observerService)
-        observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
     return NS_OK;
 }
@@ -998,20 +992,10 @@ nsIOService::Observe(nsISupports *subject,
                      const char *topic,
                      const PRUnichar *data)
 {
-    if (!nsCRT::strcmp(topic, "nsPref:changed")) {
+    if (!nsCRT::strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
-    }
-    else if (!nsCRT::strcmp(topic,NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-        // Clean up the prefs observer to break the reference cycle
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        GetPrefBranch(getter_AddRefs(prefBranch));
-        if (prefBranch) {
-            nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
-            if (pbi)
-                pbi->RemoveObserver(PORT_PREF_PREFIX, this);
-        }
     }
     return NS_OK;
 }

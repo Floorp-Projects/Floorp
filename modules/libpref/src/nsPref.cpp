@@ -346,13 +346,13 @@ NS_IMETHODIMP nsPref::GetChildList(const char *aStartingAt, PRUint32 *aCount, ch
   return rv;
 }
 
-NS_IMETHODIMP nsPref::AddObserver(const char *aDomain, nsIObserver *aObserver)
+NS_IMETHODIMP nsPref::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
 {
   nsresult rv;
 
   nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_QueryInterface(mPrefService, &rv);
   if (NS_SUCCEEDED(rv))
-    rv = prefBranch->AddObserver(aDomain, aObserver);
+    rv = prefBranch->AddObserver(aDomain, aObserver, aHoldWeak);
   return rv;
 }
 

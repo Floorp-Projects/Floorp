@@ -28,7 +28,6 @@ const kObserverServiceIID  = "@mozilla.org/observer-service;1";
 const kDirServiceCID       = "@mozilla.org/file/directory_service;1"
 
 var gNavigator = window._content;
-const nsIPref = Components.interfaces.nsIPref;
 
 //////////////////////////////////////////////////
 
@@ -75,7 +74,7 @@ InspectorSidebar.prototype =
     this.loadViewerRegistry();
     this.installNavObserver();
 
-    this.initPrefs();
+    PrefUtils.addObserver("inspector", PrefChangeObserver);
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
   },
 
@@ -166,6 +165,7 @@ InspectorSidebar.prototype =
   exit: function()
   {
     window.close()
+    PrefUtils.removeObserver("inspector", PrefChangeObserver);
   },
 
   ////////////////////////////////////////////////////////////////////////////
@@ -227,44 +227,6 @@ InspectorSidebar.prototype =
 
   ////////////////////////////////////////////////////////////////////////////
   //// Preferences
-
-  initPrefs: function()
-  {
-    this.mPrefs = XPCU.getService("@mozilla.org/preferences;1", "nsIPref");
-    this.mPrefs.addObserver("inspector", PrefChangeObserver);
-  },
-  
-  setPref: function(aName, aValue)
-  {
-    var type = this.mPrefs.GetPrefType(aName);
-    try {
-      if (type == nsIPref.ePrefString) {
-        this.mPrefs.SetUnicharPref(aName, aValue);
-      } else if (type == nsIPref.ePrefBool) {
-        this.mPrefs.SetBoolPref(aName, aValue);
-      } else if (type == nsIPref.ePrefInt) {
-        this.mPrefs.SetIntPref(aName, aValue);
-      }
-    } catch(ex) {
-      debug("ERROR: Unable to write pref \"" + aName + "\".\n");
-    }
-  },
-
-  getPref: function(aName)
-  {
-    var type = this.mPrefs.GetPrefType(aName);
-    try {
-      if (type == nsIPref.ePrefString) {
-        return this.mPrefs.CopyUnicharPref(aName);
-      } else if (type == nsIPref.ePrefBool) {
-        return this.mPrefs.GetBoolPref(aName);
-      } else if (type == nsIPref.ePrefInt) {
-        return this.mPrefs.GetIntPref(aName);
-      }
-    } catch(ex) {
-      debug("ERROR: Unable to read pref \"" + aName + "\".\n");
-    }
-  },
 
   onPrefChanged: function(aName)
   {

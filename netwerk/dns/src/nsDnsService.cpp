@@ -1076,7 +1076,7 @@ nsDNSService::~nsDNSService()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsDNSService, nsIDNSService, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsDNSService, nsIDNSService, nsIRunnable, nsIObserver);
 
 NS_METHOD
 nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -1139,13 +1139,13 @@ nsDNSService::InstallPrefObserver()
     nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefs, &rv);
     if (NS_FAILED(rv))  return rv;
     
-    rv  = prefInternal->AddObserver(NETWORK_DNS_CACHE_ENTRIES, this);
+    rv  = prefInternal->AddObserver(NETWORK_DNS_CACHE_ENTRIES, this, PR_FALSE);
     if (NS_FAILED(rv))  return rv;
     
-    rv = prefInternal->AddObserver(NETWORK_DNS_CACHE_EXPIRATION, this);
+    rv = prefInternal->AddObserver(NETWORK_DNS_CACHE_EXPIRATION, this, PR_FALSE);
     if (NS_FAILED(rv))  return rv;
     
-    rv = prefInternal->AddObserver(NETWORK_ENABLEIDN, this);
+    rv = prefInternal->AddObserver(NETWORK_ENABLEIDN, this, PR_FALSE);
     if (NS_FAILED(rv))  return rv;
     
     // get initial values (if any)
@@ -1198,7 +1198,7 @@ nsDNSService::Observe(nsISupports *      subject,
 {
     nsresult rv = NS_OK;
     
-    if (nsCRT::strcmp("nsPref:changed", topic))  
+    if (nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic))  
         return NS_OK;
     
     nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(subject, &rv);

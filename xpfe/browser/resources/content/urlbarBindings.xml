@@ -8,19 +8,25 @@
   <binding id="urlbar" extends="chrome://global/content/autocomplete.xml#autocomplete">
     <implementation>
       <constructor><![CDATA[
-        this.mPrefs.addObserver("browser.urlbar", this.mPrefObserver);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        if (pbi)
+          pbi.addObserver("browser.urlbar", this.mPrefObserver, false);
         
         this.updatePref("browser.urlbar.showPopup");
         this.updatePref("browser.urlbar.autoFill");
       ]]></constructor>
 
       <destructor><![CDATA[
-        this.mPrefs.removeObserver("browser.urlbar", this.mPrefObserver);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        if (pbi)
+          pbi.removeObserver("browser.urlbar", this.mPrefObserver);
       ]]></destructor>
 
-      <property name="mPrefs">
-        Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-      </property>
+      <field name="mPrefs">
+        var svc = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+        svc.getBranch(null);
+      </field>
 
       <property name="mPrefObserver"><![CDATA[
         ({
@@ -37,9 +43,9 @@
         <parameter name="aPref"/>
         <body><![CDATA[
           if (!aPref.indexOf("browser.urlbar.showPopup")) {
-            this.showPopup = this.mPrefs.GetBoolPref("browser.urlbar.showPopup");
+            this.showPopup = this.mPrefs.getBoolPref("browser.urlbar.showPopup");
           } else if (!aPref.indexOf("browser.urlbar.autoFill")) {
-            this.autoFill = this.mPrefs.GetBoolPref("browser.urlbar.autoFill");
+            this.autoFill = this.mPrefs.getBoolPref("browser.urlbar.autoFill");
           } 
         ]]></body>
       </method>
@@ -60,13 +66,19 @@
     <implementation>
       <constructor><![CDATA[
         // listen for changes to default search engine
-        this.mPrefs.addObserver("browser.search", this.mPrefObserver);
-        this.mPrefs.addObserver("browser.urlbar", this.mPrefObserver);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        if (pbi) {
+          pbi.addObserver("browser.search", this.mPrefObserver, false);
+          pbi.addObserver("browser.urlbar", this.mPrefObserver, false);
+        }
       ]]></constructor>
 
       <destructor><![CDATA[
-        this.mPrefs.removeObserver("browser.search", this.mPrefObserver);
-        this.mPrefs.removeObserver("browser.urlbar", this.mPrefObserver);
+        var pbi = this.mPrefs.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+        if (pbi) {
+          pbi.removeObserver("browser.search", this.mPrefObserver);
+          pbi.removeObserver("browser.urlbar", this.mPrefObserver);
+        }
       ]]></destructor>
 
       <property name="selectedIndex"
@@ -108,9 +120,11 @@
          document.getAnonymousElementByAttribute(this, "role", "search-box");
       </property>
 
-      <property name="mPrefs">
-        Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-      </property>
+      <field name="mPrefs">
+        var svc = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+        svc.getBranch(null);
+      </field>
 
       <property name="mPrefObserver"><![CDATA[
         ({
@@ -155,7 +169,7 @@
         <parameter name="aPref"/>
         <body><![CDATA[
           if (!aPref.indexOf("browser.urlbar.showSearch"))
-            this.showSearch = this.mPrefs.GetBoolPref("browser.urlbar.showSearch");
+            this.showSearch = this.mPrefs.getBoolPref("browser.urlbar.showSearch");
         ]]></body>
       </method>
       
@@ -196,10 +210,12 @@
         
           var defaultEngine = null;
           try {
-            defaultEngine = this.mPrefs.CopyUnicharPref("browser.search.defaultengine");
+            defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
+                                                        Components.interfaces.nsISupportsWString);
           } catch(ex) {
             this.ensureDefaultEnginePrefs(rdf, ds);
-            defaultEngine = this.mPrefs.CopyUnicharPref("browser.search.defaultengine");
+            defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
+                                                        Components.interfaces.nsISupportsWString);
           }
           
           if (defaultEngine) {
@@ -227,7 +243,8 @@
         <parameter name="aRDF"/>
         <parameter name="aDS"/>
         <body><![CDATA[
-          var defaultName = this.mPrefs.getLocalizedUnicharPref("browser.search.defaultenginename");
+          var defaultName = this.mPrefs.getComplexValue("browser.search.defaultenginename",
+                                                        Components.interfaces.nsIPrefLocalizedString);
           const kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
           const kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
           const kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
@@ -237,7 +254,9 @@
             var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
             var name = this.readRDFString(aDS, engineRes, kNC_Name);
             if (name == defaultName)
-              this.mPrefs.SetUnicharPref("browser.search.defaultengine", engineRes.Value);
+              this.mPrefs.setComplexValue("browser.search.defaultengine",
+                                          Components.interfaces.nsISupportsWString,
+                                          engineRes.Value);
           }
         ]]></body>
       </method>
