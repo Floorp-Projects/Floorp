@@ -3197,6 +3197,8 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
           if(theChildStyleStack) {
             if(theStyleDoesntLeakOut) {
               RecycleNodes(theChildStyleStack);
+              delete theChildStyleStack; // XXX try to recycle this...
+              theChildStyleStack=0;
             }
             else mBodyContext->PushStyles(theChildStyleStack);
           }
