@@ -817,30 +817,33 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 	PUSH_STRING ("Content-Type: ");
 	PUSH_STRING (type);
 
-	if (mime_type_needs_charset (type)) {
-
-	  char charset_label[65];   // Content-Type: charset
+  if (mime_type_needs_charset (type)) 
+  {
+    
+    char charset_label[65] = "";   // Content-Type: charset
     PL_strcpy(charset_label, charset);
-
-		/* If the characters are all 7bit, then it's better (and true) to
-		claim the charset to be US-  rather than Latin1.  Should we
-		do this all the time, for all charsets?  I'm not sure.  But we
-		should definitely do it for Latin1. */
-		if (encoding &&
-				!PL_strcasecmp (encoding, "7bit") &&
-				!PL_strcasecmp (charset, "iso-8859-1"))
-			PL_strcpy (charset_label, "us-ascii");
-
-		// If charset is JIS and and type is HTML
-		// then no charset to be specified (apply base64 instead)
-		// in order to avoid mismatch META_TAG (bug#104255).
-		if ((PL_strcasecmp(charset, "iso-2022-jp") != 0) ||
-				(PL_strcasecmp(type, TEXT_HTML) != 0) ||
-				(PL_strcasecmp(encoding, ENCODING_BASE64) != 0)) {
-			PUSH_STRING ("; charset=");
-			PUSH_STRING (charset_label);
-		}
-	}
+    
+    /* If the characters are all 7bit, then it's better (and true) to
+    claim the charset to be US-  rather than Latin1.  Should we
+    do this all the time, for all charsets?  I'm not sure.  But we
+    should definitely do it for Latin1. */
+    if (encoding &&
+                  !PL_strcasecmp (encoding, "7bit") &&
+                  !PL_strcasecmp (charset, "iso-8859-1"))
+      PL_strcpy (charset_label, "us-ascii");
+    
+    // If charset is JIS and and type is HTML
+    // then no charset to be specified (apply base64 instead)
+    // in order to avoid mismatch META_TAG (bug#104255).
+    if ( ((PL_strcasecmp(charset, "iso-2022-jp") != 0) ||
+                (PL_strcasecmp(type, TEXT_HTML) != 0) ||
+                (PL_strcasecmp(encoding, ENCODING_BASE64) != 0)) &&
+                (*charset_label))
+    {
+      PUSH_STRING ("; charset=");
+      PUSH_STRING (charset_label);
+    }
+  }
 
 	if (x_mac_type && *x_mac_type) {
 		PUSH_STRING ("; x-mac-type=\"");

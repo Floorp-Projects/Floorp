@@ -1494,6 +1494,21 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         if ((!m_attachments[newLoc].m_type) || (!*m_attachments[newLoc].m_type))
           m_attachments[newLoc].m_type = PL_strdup(APPLICATION_OCTET_STREAM);
 
+        // For local files, if they are HTML docs and we don't have a charset, we should
+        // sniff the file and see if we can figure it out.
+        if ( (m_attachments[newLoc].m_type) &&  (*m_attachments[newLoc].m_type) ) 
+        {
+          if (PL_strcasecmp(m_attachments[newLoc].m_type, TEXT_HTML) == 0)
+          {
+            char *tmpCharset = (char *)nsMsgI18NParseMetaCharset(m_attachments[newLoc].mFileSpec);
+            if (tmpCharset[0] != '\0')
+            {
+              PR_FREEIF(m_attachments[newLoc].m_charset);
+              m_attachments[newLoc].m_charset = PL_strdup(tmpCharset);
+            }
+          }
+        }
+
         ++newLoc;
       }
 
