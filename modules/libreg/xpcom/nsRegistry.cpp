@@ -489,50 +489,70 @@ NS_IMETHODIMP nsRegistry::Close() {
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistry::GetString( Key baseKey, const char *path, char **result ) {
     nsresult rv = NS_OK;
-    REGERR err = REGERR_OK;
-    
-    // Make sure caller gave us place for result.
-    if( result ) {
-        *result = 0; // Clear result.
+    REGERR   err = REGERR_OK;
 
-        // Get info about the requested entry.
-        uint32 type, length;
-        rv = GetValueType( baseKey, path, &type );
-        if ( rv == NS_OK ) {
-            rv = GetValueLength( baseKey, path, &length );
-        }
+    // Make sure caller gave us place for result.
+    if ( !result )
+        return NS_ERROR_NULL_POINTER;
+
+    char   regStr[MAXREGPATHLEN];
+
+    // initialize the return value
+    *result = 0;
+
+    // Attempt to get string into our fixed buffer
+    PR_Lock(mregLock);
+    err = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, regStr, sizeof regStr );
+    PR_Unlock(mregLock);
+
+    if ( err == REGERR_OK )
+    {
+        // Allocate buffer for return value
+        uint32 vallen = PL_strlen(regStr);
+        *result = (char*)PR_Malloc( vallen + 1 );
+        if (*result)
+            PL_strcpy(*result, regStr);
+        else
+            rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else if ( err == REGERR_BUFTOOSMALL ) 
+    {
+        // find the real size and malloc it
+        uint32 length;
+        rv = GetValueLength( baseKey, path, &length );
         // See if that worked.
-        if( rv == NS_OK ) {
-            // Make sure the entry is a string.
-            if( type == String ) {
-                // Allocate space for result.
-                *result =(char*)PR_Malloc( length + 1 );
-                if( *result ) {
-                    // Get string from registry into result buffer.
-                    PR_Lock(mregLock);
-                    err = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, *result, length+1 );
-                    PR_Unlock(mregLock);
-                    // Convert status.
-                    rv = regerr2nsresult( err );
-                    // Test result.
-                    if( rv != NS_OK ) {
-                        // Didn't get result, free buffer.
-                        PR_Free( *result );
-                        *result = 0;
-                    }
-                } else {
-                    // Couldn't allocate buffer.
-                    rv = NS_ERROR_OUT_OF_MEMORY;
+        if( rv == NS_OK ) 
+        {
+            *result =(char*)PR_Malloc( length + 1 );
+            if( *result ) 
+            {
+                // Get string from registry into result buffer.
+                PR_Lock(mregLock);
+                err = NR_RegGetEntryString( mReg,(RKEY)baseKey,(char*)path, *result, length+1 );
+                PR_Unlock(mregLock);
+
+                // Convert status.
+                rv = regerr2nsresult( err );
+                if ( rv != NS_OK )
+                {
+                    // Didn't get result, free buffer
+                    PR_Free( *result );
+                    *result = 0;
                 }
-            } else {
-                // They asked for the wrong type of value.
-                rv = regerr2nsresult( REGERR_BADTYPE );
+            }
+            else
+            {
+                rv = NS_ERROR_OUT_OF_MEMORY;
             }
         }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
     }
-    return rv;
+    else
+    {
+        // Convert status.
+        rv = regerr2nsresult( err );
+    }
+
+   return rv;
 }
 
 /*--------------------------- nsRegistry::SetString ----------------------------
