@@ -1232,15 +1232,9 @@ public class TokenStream {
                 return getToken();
             }
             if (in.match('*')) {
-                while ((c = in.read()) != -1
-                       && !(c == '*' && in.match('/'))) {
-                    if (c == '\n') {
-                    } else if (c == '/' && in.match('*')) {
-                        if (in.match('/'))
-                            return getToken();
-                        reportSyntaxError("msg.nested.comment", null);
-                        return ERROR;
-                    }
+                while ((c = in.read()) != -1 && 
+                       !(c == '*' && in.match('/'))) {
+                    ; // empty loop body
                 }
                 if (c == EOF_CHAR) {
                     reportSyntaxError("msg.unterminated.comment", null);
