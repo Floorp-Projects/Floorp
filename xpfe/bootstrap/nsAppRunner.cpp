@@ -577,13 +577,18 @@ int main(int argc, char* argv[])
 
   nsresult result = main1( argc, argv );
 	
-  // this is supposed to happen automatically when XPCOM shuts down, but
-  // that doesn't always occur!
-  NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
-  if (NS_SUCCEEDED(rv))
-    profileMgr->Shutdown();
-  // calling this explicitly will cut down on a large number of leaks we're
-  // seeing:
+  {
+    // Scoping this in a block to force the profile service to be
+    // released.
+
+    // this is supposed to happen automatically when XPCOM shuts down, but
+    // that doesn't always occur!
+    NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
+    if (NS_SUCCEEDED(rv))
+      profileMgr->Shutdown();
+    // calling this explicitly will cut down on a large number of leaks we're
+    // seeing:
+  }
     
 #if 0
   if ( unsigned long count = NS_TotalWebShellsInExistence() )
