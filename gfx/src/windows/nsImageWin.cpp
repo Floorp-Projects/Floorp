@@ -30,6 +30,7 @@ nsImageWin :: nsImageWin()
 
   mImageBits = nsnull;
 	mHBitmap = nsnull;
+	mAlphaHBitmap = nsnull;
 	mHPalette = nsnull;
   mAlphaBits = nsnull;
   mColorMap = nsnull;
@@ -52,6 +53,7 @@ NS_IMPL_ISUPPORTS(nsImageWin, kIImageIID);
 nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
 	mHBitmap = nsnull;
+	mAlphaHBitmap = nsnull;
 	mHPalette = nsnull;
 	CleanUp(PR_TRUE);
 	ComputePaletteSize(aDepth);
@@ -97,7 +99,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 
       mAlphaBits = new unsigned char[mARowBytes * aHeight];
       mAlphaWidth = aWidth;
-      mAlphaWidth = aHeight;
+      mAlphaHeight = aHeight;
     }
     else
     {
@@ -753,6 +755,7 @@ nsImageWin  *theimage;
   theimage->MakePalette();
 
   theimage->mHBitmap = nsnull;    
+  theimage->mAlphaHBitmap = nsnull;    
 
   return (theimage);
 }
@@ -824,6 +827,29 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 
 //------------------------------------------------------------
 
+struct MONOBITMAPINFO {
+  BITMAPINFOHEADER  bmiHeader;
+  RGBQUAD           bmiColors[2];
+
+  MONOBITMAPINFO(LONG aWidth, LONG aHeight)
+  {
+    memset(&bmiHeader, 0, sizeof(bmiHeader));
+    bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmiHeader.biWidth = aWidth;
+    bmiHeader.biHeight = aHeight;
+    bmiHeader.biPlanes = 1;
+    bmiHeader.biBitCount = 1;
+    bmiColors[0].rgbBlue = 0;
+    bmiColors[0].rgbGreen = 0;
+    bmiColors[0].rgbRed = 0;
+    bmiColors[0].rgbReserved = 0;
+    bmiColors[1].rgbBlue = 255;
+    bmiColors[1].rgbGreen = 255;
+    bmiColors[1].rgbRed = 255;
+    bmiColors[1].rgbReserved = 0;
+  }
+};
+
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 {
@@ -831,7 +857,19 @@ nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 
   if ((the_hdc != NULL) && !IsOptimized() && (mSizeImage > 0))
   {
-    mHBitmap = ::CreateDIBitmap(the_hdc, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead, DIB_RGB_COLORS);
+    mHBitmap = ::CreateDIBitmap(the_hdc, mBHead, CBM_INIT, mImageBits, (LPBITMAPINFO)mBHead,
+                                DIB_RGB_COLORS);
+
+    if (nsnull != mAlphaBits)
+    {
+      // Create a monochrome bitmap
+      // XXX Handle the case of 8-bit alpha bits...
+      mAlphaHBitmap = ::CreateBitmap(mAlphaWidth, mAlphaHeight, 1, 1, NULL);
+
+      MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+      ::SetDIBits(NULL /* ignored */, mAlphaHBitmap, 0, mAlphaHeight, mAlphaBits,
+                  (LPBITMAPINFO)&bmi, DIB_RGB_COLORS);
+    }
 
     mIsOptimized = PR_TRUE;
     CleanUp(PR_FALSE);
@@ -905,29 +943,28 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
 	// this only happens when we need to clean up everything
   if (aCleanUpAll == PR_TRUE)
   {
-    if (mAlphaBits != nsnull)
-      delete [] mAlphaBits;
-
 	  if (mHBitmap != nsnull) 
       ::DeleteObject(mHBitmap);
+	  if (mAlphaHBitmap != nsnull) 
+      ::DeleteObject(mAlphaHBitmap);
 
     if(mBHead)
-      {
+    {
       delete[] mBHead;
       mBHead = nsnull;
-      }
+    }
 
     mHBitmap = nsnull;
+    mAlphaHBitmap = nsnull;
 
     mAlphaBits = nsnull;
     mIsOptimized = PR_FALSE;
-
-	  if (mImageBits != nsnull) 
-    {
-      delete [] mImageBits;
-      mImageBits = nsnull;
-    }
   }
+
+  if (mImageBits != nsnull) 
+    delete [] mImageBits;
+  if (mAlphaBits != nsnull)
+    delete [] mAlphaBits;
 
 	if (mHPalette != nsnull) 
     ::DeleteObject(mHPalette);
@@ -946,6 +983,7 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
 	mSizeImage = 0;
 	mHPalette = nsnull;
   mImageBits = nsnull;
+  mAlphaBits = nsnull;
   mColorMap = nsnull;
 }
 
