@@ -180,6 +180,18 @@ GiveSystemInfo(void)
 
 #define getdtablesize() sysconf(_SC_OPEN_MAX)
 
+#if defined(__ia64)
+#include <ia64/sys/inline.h>
+
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    PRUint64 t;
+
+    t = _Asm_mov_from_ar(_AREG44);
+    return CopyLowBits(buf, maxbytes, &t, sizeof(t));
+}
+#else
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {
@@ -189,6 +201,7 @@ GetHighResClock(void *buf, size_t maxbytes)
     cr16val = ret_cr16();
     return CopyLowBits(buf, maxbytes, &cr16val, sizeof(cr16val));
 }
+#endif
 
 static void
 GiveSystemInfo(void)

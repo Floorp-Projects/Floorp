@@ -37,7 +37,9 @@ ifndef FREEBL_RECURSIVE_BUILD
 ifndef USE_64
 
 ifeq ($(OS_TARGET), HP-UX)
-  FREEBL_EXTENDED_BUILD = 1
+  ifneq ($(OS_TEST), ia64)
+    FREEBL_EXTENDED_BUILD = 1
+  endif
 endif
 
 ifeq ($(OS_TARGET),SunOS)

@@ -41,14 +41,22 @@ endif
 ifndef NS_USE_GCC
     CCC                 = /opt/aCC/bin/aCC -ext
     ifeq ($(USE_64), 1)
-	OS_CFLAGS       +=  -Aa +e +DA2.0W +DS2.0 +DChpux
+	ifeq ($(OS_TEST), ia64)
+	    OS_CFLAGS	+= -Aa +e +p +DD64
+	else
+	    OS_CFLAGS	+= -Aa +e +DA2.0W +DS2.0 +DChpux
+	endif
 # Next line replaced by generic name handling in arch.mk
 #	COMPILER_TAG    = _64
     else
-	ifdef USE_HYBRID
-	    OS_CFLAGS 	+= -Aa +e +DA2.0 +DS2.0 
+	ifeq ($(OS_TEST), ia64)
+	    OS_CFLAGS	+= -Aa +e +p +DD32
 	else
-	    OS_CFLAGS   += +DAportable +DS2.0
+	    ifdef USE_HYBRID
+		OS_CFLAGS += -Aa +e +DA2.0 +DS2.0 
+	    else
+		OS_CFLAGS += +DAportable +DS2.0
+	    endif
 	endif
     endif
 else
