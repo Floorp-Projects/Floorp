@@ -47,13 +47,13 @@ if($UseViewer==0){
   $cmdLineArg[$arg++] = "$profID ";
 }
 
-if(!$UseViewer){
+if($UseViewer==0){
   if(!$ID || !$bldRoot || !$profID || !$clockTimeArg){
     die "ID, Build Root, Profile Name, and clock OR CPU must be provided. \n - Example: 'perl perf.pl Daily_021400 s:\\moz\\daily\\0214  clock|cpu Attinasi' \n";
   }
 } else {
   if(!$ID || !$bldRoot || !$clockTimeArg){
-    die "ID, Build Root, Profile Name, and clock OR CPU must be provided. \n - Example: 'perl perf.pl Daily_021400 s:\\moz\\daily\\0214 clock|CPU' \n";
+    die "ID, Build Root, and clock OR CPU must be provided. \n - Example: 'perl perf.pl Daily_021400 s:\\moz\\daily\\0214 clock|CPU' \n";
   }
 }
 
@@ -69,9 +69,10 @@ $logName="Logs\\".$ID."-combined.dat";
 
 -e $mozPath or die "$mozPath could not be found\n";
 
-if($clockTimeArg=="clock"){
+if($clockTimeArg eq "clock"){
   $UseClockTime=1;
   print( "Charting Clock time...\n");
+  die "Clock Time Does Not Yet Work! <sorry>";
 } else {
   print( "Charting CPU time...\n");
 }
