@@ -25,7 +25,6 @@
 /*
  * Dialog services for PIP.
  */
-#include <stdarg.h>
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
