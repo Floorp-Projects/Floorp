@@ -560,7 +560,9 @@ function delayedStartup()
     }
   } else {
     // We couldn't get the shell service; go hide the mail toolbar button.
-    document.getElementById("mail-button").hidden = true;
+    var mailbutton = document.getElementById("mail-button");
+    if (mailbutton)
+      mailbutton.hidden = true;
   }
 #endif
 
