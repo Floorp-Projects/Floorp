@@ -158,7 +158,7 @@ function hideMessage() {
     border-color: #F0A000;
     background-color: #FFFFFF;
     padding: 5;
-    position: absolute;
+    position: fixed;
 }
 </style>
 --endquote--
