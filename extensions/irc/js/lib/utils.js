@@ -47,8 +47,7 @@ else
 var jsenv = new Object();
 jsenv.HAS_SECURITYMANAGER = ((typeof netscape == "object") &&
                              (typeof netscape.security == "object"));
-jsenv.HAS_XPCOM = ((getPriv("UniversalXPConnect")) &&
-                   (typeof Components == "function") &&
+jsenv.HAS_XPCOM = ((typeof Components == "function") &&
                    (typeof Components.classes == "function"));
 jsenv.HAS_JAVA = (typeof java == "object");
 jsenv.HAS_RHINO = (typeof defineClass == "function");
@@ -239,7 +238,7 @@ function renameProperty (obj, oldname, newname)
 
 function newObject(progID, iface)
 {
-    if ((!jsenv.HAS_XPCOM) || (!getPriv("UniversalXPConnect")))
+    if (!jsenv.HAS_XPCOM)
         return null;
 
     var obj = Components.classes[progID].createInstance();

@@ -19,7 +19,7 @@
 # 
 # Contributor(s):
 #    leaf (daniel nunes) <leaf@mozilla.org>
-#    Robert Ginda, rginda@ndcico.com, test3 updates
+#    Robert Ginda <rginda@ndcico.com>
 #
 # Large LED icons (green-*, red-*, yellow-*) and Marble background (xtal.jpg)
 # Copyright (C) 1996, 1997 Jim Evins.
@@ -44,6 +44,42 @@ XULLIBFILES = \
     .\xul\lib\EntryHistory.js \
     .\xul\lib\listbox.js \
     .\xul\lib\munger.js \
+    $(NULL)
+
+CONTENTFILES = \
+    .\xul\content\chatzilla.xul \
+    .\xul\content\commands.js \
+    .\xul\content\handlers.js \
+    .\xul\content\readprefs.js \
+    .\xul\content\static.js \
+    $(NULL)
+
+SKINFILES = \
+    .\xul\skin\chatzilla.css \
+    .\xul\skin\output-default.css \
+    .\xul\skin\output-loud.css \
+    .\xul\skin\output-marble.css \
+    $(NULL)
+
+IMAGEFILES = \
+    .\xul\skin\images\xtal.jpg \
+    .\xul\skin\images\blue_rock.gif \
+    .\xul\skin\images\face-frown.gif \
+    .\xul\skin\images\face-tongue.gif \
+    .\xul\skin\images\face-angry.gif \
+    .\xul\skin\images\face-screw.gif \
+    .\xul\skin\images\face-wink.gif \
+    .\xul\skin\images\face-cry.gif \
+    .\xul\skin\images\face-smile.gif \
+    .\xul\skin\images\face-dunno.gif \
+    .\xul\skin\images\face-surprise.gif \
+    .\xul\skin\images\is-op.gif \
+    .\xul\skin\images\isnt-op.gif \
+    .\xul\skin\images\is-voice.gif \
+    .\xul\skin\images\isnt-voice.gif \
+    .\xul\skin\images\view-activity.gif \
+    .\xul\skin\images\view-current.gif \
+    .\xul\skin\images\view-normal.gif \
     $(NULL)
 
 TESTFILES = \
@@ -80,8 +116,12 @@ TESTFILES = \
 
 include <$(DEPTH)\config\rules.mak>
 
+INSTALLROOT = $(DIST)\bin\chrome\chatzilla
+
 install::
-    $(MAKE_INSTALL) $(JSLIBFILES) $(DIST)\bin\irc\js\lib
-    $(MAKE_INSTALL) $(XULLIBFILES) $(DIST)\bin\irc\xul\lib
-    $(MAKE_INSTALL) $(TESTFILES) $(DIST)\bin\irc\tests
+    $(MAKE_INSTALL) $(JSLIBFILES) $(INSTALLROOT)\content\default\lib\js
+    $(MAKE_INSTALL) $(XULLIBFILES) $(INSTALLROOT)\content\default\lib\xul
+    $(MAKE_INSTALL) $(CONTENTFILES) $(INSTALLROOT)\content\default
+    $(MAKE_INSTALL) $(SKINFILES) $(INSTALLROOT)\skin\default
+    $(MAKE_INSTALL) $(IMAGEFILES) $(INSTALLROOT)\skin\default\images
 

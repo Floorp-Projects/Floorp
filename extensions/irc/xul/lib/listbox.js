@@ -27,7 +27,7 @@
 function CListBox ()
 {
 
-    this.listContainer = document.createElement ("html:a");
+    this.listContainer = document.createElement ("html:span");
     this.listContainer.setAttribute ("class", "list");
 
 }
