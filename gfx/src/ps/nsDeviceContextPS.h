@@ -26,6 +26,7 @@
 #include "nsIRenderingContext.h"
 #include "nsPrintManager.h"
 
+class nsDeviceContextWin;
 
 class nsDeviceContextPS : public DeviceContextImpl
 {
@@ -82,6 +83,8 @@ protected:
 public:
   static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
   MWContext*    GetPrintContext() { return mPrintContext; }
+
+friend nsDeviceContextWin;
 };
 
 #endif /* nsDeviceContextMac_h___ */

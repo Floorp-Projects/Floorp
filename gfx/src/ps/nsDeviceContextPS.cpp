@@ -18,7 +18,7 @@
 
 #include "nsDeviceContextPS.h"
 #include "nsRenderingContextPS.h"
-#include "nsDeviceContextSpecPS.h"
+//#include "nsDeviceContextSpecPS.h"
 #include "nsString.h"
 
 #include "prprf.h"
@@ -58,7 +58,7 @@ NS_IMPL_RELEASE(nsDeviceContextPS)
  */
 NS_IMETHODIMP nsDeviceContextPS :: Init(nsNativeWidget aNativeWidget)
 {
-  return NS_OK;
+  return  NS_OK;
 }
 
 
