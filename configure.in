@@ -759,9 +759,6 @@ case "$target" in
     ;;
 
 *-darwin*) 
-    AC_DEFINE(DARWIN)
-    AC_DEFINE(TARGET_CARBON)
-    AC_DEFINE(TARGET_API_MAC_CARBON)
     _PEDANTIC=
     CFLAGS="$CFLAGS -fpascal-strings -traditional-cpp -fno-common"
     CXXFLAGS="$CXXFLAGS -fpascal-strings -traditional-cpp -fno-common"
@@ -770,7 +767,6 @@ case "$target" in
     STRIP="$STRIP -x -S"
     case "${target_cpu}" in
     powerpc*)
-        AC_DEFINE(NO_X11)
         AC_DEFINE(XP_MACOSX)
         AC_DEFINE(TARGET_CARBON)
         AC_DEFINE(TARGET_API_MAC_CARBON)
