@@ -81,6 +81,7 @@ private:
 
   NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+  nsICharsetAlias *mAlias;
 
 };
 
@@ -89,10 +90,16 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(& g_InstanceCount);
+  nsresult res;
+  mAlias = nsnull;
+  NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
+  if(NS_SUCCEEDED(res))
+     mAlias = calias;
 }
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::~nsMetaCharsetObserver()
 {
+  // should we release mAlias
   PR_AtomicDecrement(& g_InstanceCount);
 }
 
@@ -177,6 +184,123 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* nameArray[], 
                      const PRUnichar* valueArray[])
 {
+#if 1 // perfor rewrite fix bug 17409
+    nsresult res=NS_OK;
+#ifdef DEBUG
+    PRUnichar Uxcommand[]={'X','_','C','O','M','M','A','N','D','\0'};
+    PRUnichar UcharsetSource[]=
+         {'c','h','a','r','s','e','t','S','o','u','r','c','e','\0'};
+    PRUnichar Ucharset[]={'c','h','a','r','s','e','t','\0'};
+    NS_ASSERTION(numOfAttributes >= 3, "should have at least 3 private attribute");
+    NS_ASSERTION(0==nsCRT::strcmp(Uxcommand,nameArray[numOfAttributes-1]),
+                 "last name should be 'X_COMMAND'" );
+    NS_ASSERTION(0==nsCRT::strcmp(UcharsetSource,nameArray[numOfAttributes-2]),
+                 "2nd last name should be 'charsetSource'" );
+    NS_ASSERTION(0==nsCRT::strcmp(Ucharset,nameArray[numOfAttributes-3]),
+                 "3rd last name should be 'charset'" );
+#endif
+    NS_ASSERTION(mAlias, "Didn't get nsICharsetAlias in constructor");
+
+    if(nsnull == mAlias)
+      return NS_ERROR_ABORT;
+
+    // we need at least 5 - HTTP-EQUIV, CONTENT and 3 private
+    if(numOfAttributes >= 5 ) 
+    {
+      const PRUnichar *charset = valueArray[numOfAttributes-3];
+      const PRUnichar *source =  valueArray[numOfAttributes-2];
+      const PRUnichar *command = valueArray[numOfAttributes-1];
+      PRInt32 err;
+      nsAutoString srcStr(source);
+      nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
+      // if we cannot convert the string into nsCharsetSource, return error
+      NS_ASSERTION(NS_SUCCEEDED(err), "cannot get charset source");
+      if(NS_FAILED(err))
+          return NS_ERROR_ILLEGAL_VALUE;
+
+      if(kCharsetFromMetaTag <= src)
+          return NS_OK; // current charset have higher priority. do bother to do the following
+
+      PRUint32 i;
+      const PRUnichar *httpEquivValue=nsnull;
+      const PRUnichar *contentValue=nsnull;
+      for(i=0;i<(numOfAttributes-3);i++)
+      {
+        if(0 == nsCRT::strcasecmp(nameArray[i], "HTTP-EQUIV"))
+              httpEquivValue=valueArray[i];
+        else if(0 == nsCRT::strcasecmp(nameArray[i], "content"))
+              contentValue=valueArray[i];
+      }
+      static nsAutoString contenttype("Content-Type");
+      static nsAutoString texthtml("text/html;");
+      if((nsnull != httpEquivValue) && 
+         (nsnull != contentValue) && 
+         ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.GetUnicode())) ||
+          ((((httpEquivValue[0]=='\'') &&
+             (httpEquivValue[contenttype.Length()+1]=='\'')) ||
+            ((httpEquivValue[0]=='\"') &&
+             (httpEquivValue[contenttype.Length()+1]=='\"'))) && 
+           (0==nsCRT::strncasecmp(httpEquivValue+1,
+                      contenttype.GetUnicode(),
+                      contenttype.Length()))
+          )) &&
+         ((0==nsCRT::strcasecmp(contentValue,texthtml.GetUnicode())) ||
+          (((contentValue[0]=='\'') ||
+            (contentValue[0]=='\"'))&&
+           (0==nsCRT::strncasecmp(contentValue+1,
+                      texthtml.GetUnicode(),
+                      texthtml.Length()))
+          ))
+        )
+      {
+         nsAutoString contentPart1(contentValue+10); // after "text/html;"
+         PRInt32 start = contentPart1.RFind("charset=", PR_TRUE ) ;
+         if(kNotFound != start) 
+         {	
+             start += 8; // 8 = "charset=".length 
+             PRInt32 end = contentPart1.FindCharInSet("\'\";", start  );
+             if(kNotFound == end ) 
+                end = contentPart1.Length();
+             nsAutoString newCharset;
+             NS_ASSERTION(end>=start, "wrong index");
+             contentPart1.Mid(newCharset, start, end - start);
+             if(! newCharset.EqualsIgnoreCase(charset)) 
+             {
+                 PRBool same = PR_FALSE;
+                 res = mAlias->Equals( newCharset, charset , &same);
+                 if(NS_SUCCEEDED(res) && (! same))
+                 {
+                     nsAutoString preferred;
+                     nsAutoString commandString(command);
+                     res = mAlias->GetPreferred(newCharset, preferred);
+                     if(NS_SUCCEEDED(res))
+                     {
+                        const char* newCharsetStr = preferred.ToNewCString();
+                        const char* newCommandStr = commandString.ToNewCString();
+                        NS_ASSERTION(newCharsetStr, "out of memory");
+                        NS_ASSERTION(newCommandStr, "out of memory");
+                        if((nsnull != newCommandStr) &&
+                           (nsnull != newCharsetStr)) 
+                        {
+                           res = NotifyWebShell(aDocumentID, newCharsetStr, 
+                                      kCharsetFromMetaTag , 
+                                      newCommandStr);
+                           delete [] (char*)newCharsetStr;
+                           delete [] (char*)newCommandStr;
+                           return res;
+                        } // if(nsnull...)
+                        if(newCharsetStr)
+                           delete [] (char*)newCharsetStr;
+                        if(newCommandStr)
+                           delete [] (char*)newCommandStr;
+                     } // if(NS_SUCCEEDED(res)
+                 }
+             } // if EqualIgnoreCase 
+         } // if (kNotFound != start)	
+      } // if
+    }
+    return NS_OK;
+#else // old code
 
     nsresult res = NS_OK;
     PRUint32 i;
@@ -292,13 +416,14 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       } // if check nsCharsetSource
     } // if 
     return NS_OK;
+#endif
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
+NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
-}
+}                                                  
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Start() 
 {
