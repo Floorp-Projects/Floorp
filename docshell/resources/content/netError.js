@@ -3,24 +3,24 @@
 
 function getErrorCode()
 {
-  url = document.location.href;
-  error = url.search(/e\=/);
-  duffUrl = url.search(/\&u\=/);
+  var url = document.location.href;
+  var error = url.search(/e\=/);
+  var duffUrl = url.search(/\&u\=/);
   return decodeURIComponent(url.slice(error + 2, duffUrl));
 }
 
 function getDuffUrl()
 {
-  url = document.location.href;
-  duffUrl = url.search(/u\=/);
-  desc = url.search(/\&d\=/);
+  var url = document.location.href;
+  var duffUrl = url.search(/u\=/);
+  var desc = url.search(/\&d\=/);
   return decodeURIComponent(url.slice(duffUrl + 2, desc));
 }
 
 function getDescription()
 {
-  url = document.location.href;
-  desc = url.search(/d\=/);
+  var url = document.location.href;
+  var desc = url.search(/d\=/);
   return decodeURIComponent(url.slice(desc + 2));
 }
 
