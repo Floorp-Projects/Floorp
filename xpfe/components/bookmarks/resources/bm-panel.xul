@@ -49,7 +49,7 @@
   <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 
 <popupset>
-  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'bookmarksTree');" >
+  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'bookmarksTree');" context="">
 	  <menu />
   </popup>
 </popupset>
