@@ -67,7 +67,10 @@ do
       ;;
     -*)
 	case $1 in
-		-ProfileManager | -ProfileWizard | -installer | -edit | -mail | -news | -pref | -compose | -editor | -addressbook | -chrome )
+		# keep this in synch with 
+		# mozilla/xpfe/bootstrap/nsAppRunner.cpp  
+		# and mozilla/profile/src/nsProfile.cpp
+		-P | -CreateProfile | -ProfileManager | -ProfileWizard | -installer | -edit | -mail | -news | -pref | -compose | -editor | -addressbook | -chrome )
 		if [ "x$moreargs" != "x" ]
 		then
 			echo "You can't have $1 and $moreargs"
