@@ -885,7 +885,7 @@ HG29784
           }
 
 		/* Separate the headers from the data with a CR and LF. */
-#if defined(B1M)
+#if defined(MODULAR_NETLIB)
 		if(URL_s->post_headers && !data_obj->CRSent) {
 #else
 		if(!data_obj->CRSent) {
@@ -912,7 +912,7 @@ HG29784
 				data_obj->LFSent = TRUE;
 		}
 
-#if defined(B1M)
+#if defined(MODULAR_NETLIB)
 		if(URL_s->post_headers && !data_obj->LFSent) {
 #else
 		if(!data_obj->LFSent) {
