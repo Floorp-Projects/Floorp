@@ -58,6 +58,7 @@ public:
   NS_IMETHOD  UpdateView(nsIView *aView, nsIRegion *aRegion,
                          PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
+  NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
 
   NS_IMETHOD  DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
 
@@ -129,6 +130,7 @@ private:
   void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
   void ProcessPendingUpdates(nsIView *aView);
+  void UpdateViews(nsIView *aView, PRUint32 aUpdateFlags);
 
   void Refresh(nsIView *aView, nsIRenderingContext *aContext,
                nsIRegion *region, PRUint32 aUpdateFlags);
