@@ -15,6 +15,7 @@
 @import url(chrome://communicator/skin/menu.css);
 @import url(chrome://communicator/skin/menubutton.css);
 @import url(chrome://communicator/skin/splitter.css);
+@import url(chrome://communicator/skin/formatting.css);
 
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
