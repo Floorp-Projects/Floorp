@@ -46,10 +46,8 @@ final class InterpretedFunction extends NativeFunction
     InterpretedFunction(Context cx, InterpreterData theData)
     {
         itsData = theData;
-        functionName = itsData.itsName;
-        version = (short)cx.getLanguageVersion();
-        argNames = itsData.argNames;
-        argCount = (short)itsData.argCount;
+        initScriptFunction(cx, itsData.itsName,
+                           itsData.argNames, itsData.argCount);
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,

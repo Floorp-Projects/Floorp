@@ -38,8 +38,6 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.Method;
-
 /**
  * This class implements the Function native object.
  * See ECMA 15.3.
@@ -47,6 +45,27 @@ import java.lang.reflect.Method;
  */
 public class NativeFunction extends BaseFunction
 {
+    
+    public void initScriptFunction(Context cx, String functionName,
+                                   String[] argNames, int argCount)
+    {
+        if (!(argNames != null 
+              && 0 <= argCount && argCount <= argNames.length))
+        {
+            throw new IllegalArgumentException();
+        }
+        
+        if (!(this.argNames == null)) {
+            // Initialization can only be done once
+            throw new IllegalStateException();
+        }
+        
+        this.functionName = functionName;
+        this.argNames = argNames;
+        this.argCount = (short)argCount;
+        this.version = (short)cx.getLanguageVersion();
+    }
+
     /**
      * @param cx Current context
      *

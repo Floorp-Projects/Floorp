@@ -43,10 +43,7 @@ final class InterpretedScript extends NativeScript
     InterpretedScript(Context cx, InterpreterData theData)
     {
         itsData = theData;
-        functionName = "";
-        version = (short)cx.getLanguageVersion();
-        argNames = itsData.argNames;
-        argCount = (short)itsData.argCount;
+        initScriptFunction(cx, "", itsData.argNames, itsData.argCount);
     }
 
     public Object exec(Context cx, Scriptable scope)
