@@ -5781,7 +5781,6 @@ PresShell::HandleEvent(nsIView         *aView,
 
       NS_IF_RELEASE(mCurrentEventContent);
       esm->GetFocusedContent(&mCurrentEventContent);
-      NS_IF_ADDREF(mCurrentEventContent);
 
       esm->GetFocusedFrame(&mCurrentEventFrame);
       if (!mCurrentEventFrame) {
