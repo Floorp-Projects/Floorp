@@ -341,7 +341,7 @@ if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
         } else {                                                         \
             jdouble dval = *JSVAL_TO_DOUBLE(jsvalue);                    \
             if (JSDOUBLE_IS_NaN(dval))                                   \
-                member_name = 0;                                         \
+                member_name = jsint_to_jlong(0);                         \
             else                                                         \
                 member_name = jdouble_to_jlong(dval);                    \
                                                                          \
