@@ -2574,9 +2574,56 @@ nsresult nsMsgDatabase::DumpContents()
 	{
         key = threads[i];
 		printf("thread key = %ld\n", key);
+//		DumpThread(key);
     }
 
 
     return NS_OK;
 }
+
+nsresult nsMsgDatabase::DumpMsgChildren(nsIMessage *msgHdr)
+{
+	return NS_OK;
+}
+
+nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
+{
+	nsresult ret = NS_OK;
+	nsIMsgThread	*thread = nsnull;
+
+	thread = GetThreadForThreadId(threadId);
+	if (thread)
+	{
+		nsIEnumerator *enumerator = nsnull;
+
+		ret = thread->EnumerateMessages(nsMsgKey_None, &enumerator);
+		if (NS_SUCCEEDED(ret) && enumerator)
+		{
+			for (enumerator->First(); enumerator->IsDone() != NS_OK; enumerator->Next()) 
+			{
+				nsIMessage *pMessage = nsnull;
+				ret = enumerator->CurrentItem((nsISupports**)&pMessage);
+				NS_ASSERTION(NS_SUCCEEDED(ret), "nsMsgDBEnumerator broken");
+				if (NS_FAILED(ret)) 
+					break;
+
+				if (pMessage)
+				{
+					nsMsgKey key;
+					nsString subject;
+					(void)pMessage->GetMessageKey(&key);
+					pMessage->GetSubject(subject);
+
+					printf("message in thread %ld %s\n", key, (const char *) &nsAutoString(subject));
+				}
+		//		NS_RELEASE(pMessage);
+				pMessage = nsnull;
+			}
+			NS_RELEASE(enumerator);
+
+		}
+	}
+	return ret;
+}
+
 #endif

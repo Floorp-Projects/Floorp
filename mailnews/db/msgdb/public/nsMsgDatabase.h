@@ -206,6 +206,8 @@ public:
 	static int		GetNumInCache(void) {return(GetDBCache()->Count());}
 	static void		DumpCache();
     virtual nsresult DumpContents();
+			nsresult DumpThread(nsMsgKey threadId);
+	nsresult DumpMsgChildren(nsIMessage *msgHdr);
 #endif
 
 	friend class nsMsgHdr;	// use this to get access to cached tokens for hdr fields

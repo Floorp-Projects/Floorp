@@ -191,14 +191,18 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMessage **result)
 {
 	nsresult ret = NS_OK;
 	nsIMdbRow* resultRow;
-	mdb_pos pos = index;
+	mdb_pos pos = index - 1;
 
+	if (!result)
+		return NS_ERROR_NULL_POINTER;
+
+	*result = nsnull;
 	nsIMdbTableRowCursor *rowCursor;
 	ret = m_mdbTable->GetTableRowCursor(m_mdbDB->GetEnv(), pos, &rowCursor);
 
 	ret = rowCursor->NextRow(m_mdbDB->GetEnv(), &resultRow, &pos);
 	NS_RELEASE(rowCursor);
-	if (NS_FAILED(ret)) 
+	if (NS_FAILED(ret) || !resultRow) 
 		return ret;
 
 	//Get key from row
