@@ -1410,6 +1410,11 @@ Wallet_KeySize() {
   }
 }
 
+PRIVATE void
+wallet_UnsetKey() {
+  keySet = PR_FALSE;
+}
+
 PUBLIC PRBool
 Wallet_SetKey(PRBool isNewkey) {
   nsresult res;
@@ -2501,6 +2506,7 @@ void WLLT_ChangePassword() {
 
   /* read in user data using old key */
 
+  wallet_UnsetKey(); /* force user to reenter old key again, for security */
   wallet_Initialize(PR_TRUE);
 #ifdef SingleSignon
   SI_LoadSignonData(PR_TRUE);
