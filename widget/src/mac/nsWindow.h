@@ -35,6 +35,7 @@
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
+struct nsPluginPort;
 
 //-------------------------------------------------------------------------
 //
@@ -146,7 +147,7 @@ public:
     char gInstanceClassName[256];
 
   virtual PRBool		DispatchWindowEvent(nsGUIEvent& event);
-  virtual nsresult	HandleUpdateEvent();
+  virtual nsresult		HandleUpdateEvent();
 
 protected:
 
@@ -158,21 +159,23 @@ protected:
 
 
 protected:
-  nsIWidget*			mParent;
-  PRBool     	 		mVisible;
-  PRBool     	 		mEnabled;
-  PRInt32					mPreferredWidth;
-  PRInt32					mPreferredHeight;
-  nsIFontMetrics*	mFontMetrics;
-  nsIMenuBar* 		mMenuBar;
+	nsIWidget*				mParent;
+	PRBool     	 			mVisible;
+	PRBool     	 			mEnabled;
+	PRInt32					mPreferredWidth;
+	PRInt32					mPreferredHeight;
+	nsIFontMetrics*			mFontMetrics;
+	nsIMenuBar* 			mMenuBar;
 	RgnHandle				mWindowRegion;				// the region defining this window
 	WindowPtr				mWindowPtr;
 	PRBool					mDestroyCalled;
 	PRBool					mDestructorCalled;
 
-	PRBool								mDrawing;
-  nsIRenderingContext*  mTempRenderingContext;
-  PRBool							  mTempRenderingContextMadeHere;
+	PRBool					mDrawing;
+	nsIRenderingContext*  	mTempRenderingContext;
+  	PRBool					mTempRenderingContextMadeHere;
+  	
+  	nsPluginPort*			mPluginPort;
 };
 
 // =============================================================================
