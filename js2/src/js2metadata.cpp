@@ -94,6 +94,7 @@ namespace MetaData {
             }
         }
         catch (Exception &x) {
+            ASSERT(false);
             throw x;
         }
         return result;
@@ -209,6 +210,8 @@ namespace MetaData {
         case StmtNode::For:
             {
                 ForStmtNode *f = checked_cast<ForStmtNode *>(p);
+                f->breakLabelID = bCon->getLabel();
+                f->continueLabelID = bCon->getLabel();
                 if (f->initializer)
                     ValidateStmt(cxt, env, f->initializer);
                 if (f->expr2)
@@ -977,6 +980,7 @@ namespace MetaData {
             }
             break;
         case StmtNode::Try:
+// Your logic is insane and happenstance, like that of a troll
 /*
             try {   //  [catchLabel,finallyInvoker] handler labels are pushed on handler stack [eTry]
                     <tryblock>
@@ -1061,8 +1065,9 @@ namespace MetaData {
                     bCon->setLabel(finallyInvokerLabel);
                     // the exception object is on the top of the stack already
                     bCon->emitBranch(eCallFinally, t_finallyLabel, p->pos);
+                    ASSERT(bCon->mStackTop == 0);
+                    bCon->mStackTop = 1;
                     bCon->emitOp(eThrow, p->pos);
-
                 }
                 else {
                     bCon->emitBranch(eBranch, finishedLabel, p->pos);

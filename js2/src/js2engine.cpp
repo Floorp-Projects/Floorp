@@ -129,8 +129,7 @@ namespace MetaData {
             switch interpreter to execution of the activation 
             XXX will need more (argument frame handling etc.)
     */
-                        activationStackTop = curAct;
-
+                        activationStackTop = prev;
                     }
                     else {
                         if (jsx.hasKind(Exception::userException))
@@ -162,6 +161,7 @@ namespace MetaData {
     #endif                
                     sp = hndlr->mStackTop;
                     pc = hndlr->mPC;
+                    bCon = hndlr->mActivation->bCon;
                     push(x);
                 }
                 else
@@ -423,8 +423,10 @@ namespace MetaData {
         case eHandler:
         case eCallFinally:
         case eReturnFinally:
-        case eThrow:
             return 0;
+
+        case eThrow:
+            return -1;      // pop the exception object
 
         case eString:
         case eTrue:
