@@ -285,6 +285,10 @@ NS_IMETHODIMP nsTreeSelection::GetTree(nsITreeBoxObject * *aTree)
 
 NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
 {
+  if (mSelectTimer) {
+    mSelectTimer->Cancel();
+    mSelectTimer = nsnull;
+  }
   mTree = aTree; // WEAK
   return NS_OK;
 }
