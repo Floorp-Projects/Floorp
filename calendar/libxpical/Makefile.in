@@ -66,4 +66,7 @@ CPPSRCS		= \
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -lical -licalss
 
+OS_COMPILE_CXXFLAGS += -DICAL_DEBUG 
+#-DICAL_DEBUG_ALL
+
 include $(topsrcdir)/config/rules.mk
