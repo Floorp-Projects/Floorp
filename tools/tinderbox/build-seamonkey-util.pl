@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.63 $ ';
+$::UtilsVersion = '$Revision: 1.64 $ ';
 
 package TinderUtils;
 
@@ -828,6 +828,8 @@ sub run_all_tests {
 	# to start up.  Some help from John Morrison to get this going.
 	#
 	# Needs user_pref("browser.dom.window.dump.enabled", 1);
+	# (or CPPFLAGS=-DMOZ_ENABLE_JS_DUMP in mozconfig since we
+	# don't have profiles for tbox right now.)
 	#
     if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
 	  # Settle OS.
