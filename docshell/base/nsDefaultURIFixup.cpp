@@ -46,6 +46,52 @@ nsDefaultURIFixup::~nsDefaultURIFixup()
   /* destructor code */
 }
 
+/* nsIURI createExposableURI (in nsIRUI aURI); */
+NS_IMETHODIMP
+nsDefaultURIFixup::CreateExposableURI(nsIURI *aURI, nsIURI **aReturn)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+    NS_ENSURE_ARG_POINTER(aReturn);
+
+    PRBool isWyciwyg = PR_FALSE;
+    aURI->SchemeIs("wyciwyg", &isWyciwyg);
+
+    if (!isWyciwyg)
+    {
+        *aReturn = aURI;
+        NS_ADDREF(*aReturn);
+        return NS_OK;
+    }
+
+    nsCAutoString path;
+    nsresult rv = aURI->GetPath(path);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 pathLength = path.Length();
+    if (pathLength <= 2)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Path is of the form "//123/http://foo/bar", with a variable number of digits.
+    // To figure out where the "real" URL starts, search path for a '/', starting at 
+    // the third character.
+    PRInt32 slashIndex = path.FindChar('/', 2);
+    if (slashIndex == kNotFound)
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    // Get the charset of the original URI so we can pass it to our fixed up URI.
+    nsCAutoString charset;
+    aURI->GetOriginCharset(charset);
+
+    rv = NS_NewURI(aReturn,
+                   Substring(path, slashIndex + 1, pathLength - slashIndex - 1),
+                   charset.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+}
 
 /* nsIURI createFixupURI (in wstring aURIText, in unsigned long aFixupFlags); */
 NS_IMETHODIMP
@@ -68,6 +114,8 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
 
     // Eliminate embedded newlines, which single-line text fields now allow:
     uriString.StripChars("\r\n");
+
+    NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
     // View-source is a pseudo scheme. We're interested in fixing up the stuff
     // after it. The easiest way to do that is to call this method again with the

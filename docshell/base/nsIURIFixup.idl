@@ -47,6 +47,18 @@ interface nsIURIFixup : nsISupports
     const unsigned long FIXUP_FLAGS_MAKE_ALTERNATE_URI = 2;
 
     /**
+     * Converts an internal URI (e.g. a wyciwyg URI) into one which we can
+     * expose to the user, for example on the URL bar.
+     *
+     * @param  aURI       The URI to be converted
+     * @return nsIURI     The converted, exposable URI
+     * @throws NS_ERROR_MALFORMED_URI when the exposable portion of aURI is malformed
+     * @throws NS_ERROR_UNKNOWN_PROTOCOL when we can't get a protocol handler service
+     *         for the URI scheme.
+     */
+    nsIURI createExposableURI(in nsIURI aURI);
+
+    /**
      * Converts the specified string into a URI, first attempting
      * to correct any errors in the syntax or other vagaries. Returns
      * a wellformed URI or nsnull if it can't.
