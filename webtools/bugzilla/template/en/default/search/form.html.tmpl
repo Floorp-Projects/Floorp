@@ -595,14 +595,16 @@ function selectProduct(f) {
     <td></td>
     <td>(comma-separated list)</td>
   </tr>
-  <tr>
-    <td align="right">
-      Only bugs with at least:
-    </td>
-    <td>
-      <input name="votes" size="3" value="[% default.votes.0 FILTER html %]"> votes
-    </td>
-  </tr>
+  [% IF Param('usevotes') %]
+    <tr>
+      <td align="right">
+        Only bugs with at least:
+      </td>
+      <td>
+        <input name="votes" size="3" value="[% default.votes.0 FILTER html %]"> votes
+      </td>
+    </tr>
+  [% END %]
 </table>
 
 
