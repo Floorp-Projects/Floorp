@@ -37,7 +37,7 @@ class XFE_RDFChromeTreeView : public XFE_RDFTreeView
 public:
 
   XFE_RDFChromeTreeView(XFE_Component *toplevel, Widget parent,
-              XFE_View *parent_view, MWContext *context);
+              XFE_View *parent_view, ERDFPaneMode mode, MWContext *context);
 
   ~XFE_RDFChromeTreeView();
 
@@ -57,14 +57,18 @@ public:
 	void notify(HT_Resource n, HT_Event whatHappened);
 	
 	// RDF Specific calls
-	void setHTTitlebarProperties(HT_View view, Widget titleBar);
-	
+	void setHTTitlebarProperties(HT_View view);
+    void setHTControlbarProperties(HT_View view);
+
 	// Set the HTML pane height (as a percentage of the view)
-	void setHtmlPaneHeightPercent(PRUint32 heightPercent);
+	void createHtmlPanePercent(PRUint32 heightPercent, char * htmlUrl);
 
 	// Set the HTML pane height (as a fixed pixel height)
-	void setHtmlPaneHeightFixed(PRUint32 heightPercent);
-	
+	void createHtmlPaneFixed(PRUint32 heightPercent, char * htmlUrl);
+
+    // return the pane mode
+    ERDFPaneMode getPaneMode();
+
 protected:
 
     // Override RDFBase methods
@@ -87,7 +91,7 @@ private:
 	Widget				_closeControl;
 
 	// Toggle tree operating mode
-	Widget				_modeControl;
+	Widget				_manageControl;
 
 	// The HTML pane form
 	Widget				_htmlPaneForm;
@@ -98,13 +102,20 @@ private:
 	// The HTML pane
 	XFE_HTMLView *		_htmlPane;
 
+    //  The RDF pane mode
+    ERDFPaneMode        _paneMode;
+
+
+
 	static void closeRdfView_cb(Widget, XtPointer, XtPointer);
 
     // Create widgets
     void createControlToolbar();
     void createViewLabel();
     void createDivider();
-    void createHtmlPane();
+    void createHtmlPane(char * htmlUrl);
+    void createHtmlPaneFromResources();
+
 };
 
 #endif /* _xfe_rdfchrometreeview_h */

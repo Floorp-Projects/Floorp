@@ -32,6 +32,14 @@
 #include "xp_core.h"
 #include "Command.h"
 
+typedef enum ERDFPaneMode {
+   RDF_PANE_POPUP,
+   RDF_PANE_DOCKED,
+   RDF_PANE_STANDALONE,
+   RDF_PANE_EMBEDDED
+} ERDFPaneMode;
+
+
 class XFE_RDFBase
 {
 
