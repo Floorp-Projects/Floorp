@@ -26,7 +26,7 @@ use lib ".";
 
 require "CGI.pl";
 
-use vars qw($template $vars);
+use vars qw($template $vars @legal_opsys @legal_platform @legal_severity);
 
 use Bugzilla;
 use Bugzilla::Constants;
@@ -178,29 +178,9 @@ while (MoreSQLData()) {
     $tbl_isnumeric &&= ($tbl =~ /^-?\d+(\.\d+)?$/o);
 }
 
-my @col_names;
-my @row_names;
-my @tbl_names;
-sub numerically { $a <=> $b }
-
-# Use the appropriate sort for each dimension
-if ($col_isnumeric) {
-    @col_names = sort numerically keys(%{$names{"col"}});
-} else {
-    @col_names = sort(keys(%{$names{"col"}}));
-}
-
-if ($row_isnumeric) {
-    @row_names = sort numerically keys(%{$names{"row"}});
-} else {
-    @row_names = sort(keys(%{$names{"row"}}));
-}
-
-if ($tbl_isnumeric) {
-    @tbl_names = sort numerically keys(%{$names{"tbl"}});
-} else {
-    @tbl_names = sort(keys(%{$names{"tbl"}}));
-}
+my @col_names = @{get_names($names{"col"}, $col_isnumeric, $col_field)};
+my @row_names = @{get_names($names{"row"}, $row_isnumeric, $row_field)};
+my @tbl_names = @{get_names($names{"tbl"}, $tbl_isnumeric, $tbl_field)};
 
 # The GD::Graph package requires a particular format of data, so once we've
 # gathered everything into the hashes and made sure we know the size of the
@@ -325,3 +305,43 @@ if ($cgi->param('debug')) {
 
 $template->process("$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());
+
+exit;
+
+
+sub get_names {
+    my ($names, $isnumeric, $field) = @_;
+  
+    # These are all the fields we want to preserve the order of in reports.
+    my %fields = ('priority'     => \@::legal_priority,
+                  'bug_severity' => \@::legal_severity,
+                  'rep_platform' => \@::legal_platform,
+                  'op_sys'       => \@::legal_opsys,
+                  'bug_status'   => \@::legal_bug_status,
+                  'resolution'   => \@::legal_resolution);
+    
+    my $field_list = $fields{$field};
+    my @sorted;
+    
+    if ($field_list) {
+        my @unsorted = keys %{$names};
+        
+        # Extract the used fields from the field_list, in the order they 
+        # appear in the field_list. This lets us keep e.g. severities in
+        # the normal order.
+        #
+        # This is O(n^2) but it shouldn't matter for short lists.
+        @sorted = map {lsearch(\@unsorted, $_) == -1 ? () : $_} @{$field_list};
+    }  
+    elsif ($isnumeric) {
+        # It's not a field we are preserving the order of, so sort it 
+        # numerically...
+        sub numerically { $a <=> $b }
+        @sorted = sort numerically keys(%{$names});
+    } else {
+        # ...or alphabetically, as appropriate.
+        @sorted = sort(keys(%{$names}));
+    }
+  
+    return \@sorted;
+}
