@@ -39,6 +39,7 @@
         onunload="ComposeUnload()"
         onload="ComposeLoad()"
         onclose="return ComposeCanClose()"
+        onfocus="UpdateOfflineState()"
         title="&msgComposeWindow.title;"
         windowtype="msgcompose"
         orient="vertical"
@@ -91,6 +92,7 @@
 	<broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')"/>
 	<broadcaster id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
 	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
+	<broadcaster id="cmd_sendButton" oncommand="goDoCommand('cmd_sendButton')"/>
 	<broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
 	<broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
 	<broadcaster id="cmd_quit"/>
@@ -400,9 +402,14 @@
     <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
       <box id="toolbar_button_box">
        <button class="button-toolbar-2 top" 
-               id="button-send" value="&sendButton.label;" 
+               id="button-send" value="&sendButton.label;"
                tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
-               observes="cmd_sendNow"/>
+               observes="cmd_sendButton"
+               now_value="&sendButton.label;"
+               now_tooltiptext="&sendButton.tooltip;"
+               later_value="&sendLaterCmd.label;"
+               later_tooltiptext=""
+               />
        <toolbarseparator class="toolbarseparator-primary"/>
        <button class="button-toolbar-2 top" 
                id="button-address" value="&addressButton.label;" 
@@ -505,7 +512,7 @@
   </box>
 
   <statusbar id="status-bar">
-    <statusbarpanel id="offline-status"/> 
+    <statusbarpanel id="offline-status" onclick="setTimeout('UpdateOfflineState()', 0)"/> 
     <progressmeter class="progressmeter-statusbar" mode="normal" value="0"/>
     <statusbarpanel id="statusText" flex="1" value="&defaultStatusText.label;"/>
   </statusbar>

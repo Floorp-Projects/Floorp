@@ -37,6 +37,9 @@ msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMs
 var commonDialogsService = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
 commonDialogsService = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
+var ioService = Components.classesByID["{9ac9e770-18bc-11d3-9337-00104ba0fd40}"].getService();
+ioService = ioService.QueryInterface(Components.interfaces.nsIIOService);
+
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
@@ -102,6 +105,7 @@ var defaultController =
       case "cmd_saveAsFile":
       case "cmd_saveAsDraft":
       case "cmd_saveAsTemplate":
+      case "cmd_sendButton":
       case "cmd_sendNow":
       case "cmd_sendLater":
       case "cmd_quit":
@@ -207,9 +211,11 @@ var defaultController =
       case "cmd_saveAsFile":
       case "cmd_saveAsDraft":
       case "cmd_saveAsTemplate":
-      case "cmd_sendNow":
+      case "cmd_sendButton":
       case "cmd_sendLater":
         return !windowLocked;
+      case "cmd_sendNow":
+        return !(windowLocked || (ioService && ioService.offline))
       case "cmd_quit":
         return true;
 
@@ -323,6 +329,15 @@ var defaultController =
       case "cmd_saveAsFile"         : SaveAsFile(true);       break;
       case "cmd_saveAsDraft"        : SaveAsDraft();          break;
       case "cmd_saveAsTemplate"     : SaveAsTemplate();       break;
+      case "cmd_sendButton"         :
+        if (defaultController.isCommandEnabled(command))
+        {
+          if (ioService && ioService.offline)
+            SendMessageLater();
+          else
+            SendMessage();
+        }
+        break;
       case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
       case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
       case "cmd_account"            : MsgAccountManager();    break;
@@ -368,6 +383,7 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_saveAsFile");
   goUpdateCommand("cmd_saveAsDraft");
   goUpdateCommand("cmd_saveAsTemplate");
+  goUpdateCommand("cmd_sendButton");
   goUpdateCommand("cmd_sendNow");
   goUpdateCommand("cmd_sendLater");
   goUpdateCommand("cmd_quit");
@@ -456,6 +472,27 @@ function CommandUpdate_MsgCompose()
 //  goUpdateCommand("cmd_quoteMessage");
   goUpdateCommand("cmd_rewrap");
   
+  } catch(e) {}
+}
+
+function UpdateOfflineState()
+{
+  dump("UpdateOfflineState\n");
+  try {
+    var sendButton = document.getElementById("button-send");
+
+    if (ioService && ioService.offline)
+    {
+      sendButton.value = sendButton.getAttribute('later_value');
+      sendButton.setAttribute('tooltiptext', sendButton.getAttribute('later_tooltiptext'));
+    }
+    else
+    {
+      sendButton.value = sendButton.getAttribute('now_value');
+      sendButton.setAttribute('tooltiptext', sendButton.getAttribute('now_tooltiptext'));
+    }
+      
+     goUpdateCommand('cmd_sendNow');
   } catch(e) {}
 }
 
