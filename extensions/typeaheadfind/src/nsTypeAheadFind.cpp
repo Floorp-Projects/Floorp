@@ -2015,7 +2015,6 @@ nsTypeAheadFind::CancelFind()
 
   // These will be initialized to their true values after
   // the first character is typed
-  mCaretBrowsingOn = PR_FALSE;
   mLiteralTextSearchOnly = PR_FALSE;
   mDontTryExactMatch = PR_FALSE;
   mStartFindRange = nsnull;
