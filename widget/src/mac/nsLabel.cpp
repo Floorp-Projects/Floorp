@@ -101,5 +101,7 @@ NS_METHOD nsLabel::SetAlignment(nsLabelAlignment aAlignment)
 	fontStyleRec.flags = (kControlUseJustMask);
 	fontStyleRec.just = just;
 	::SetControlFontStyle(mControl, &fontStyleRec);
+	
+	return NS_OK;
 }
 
