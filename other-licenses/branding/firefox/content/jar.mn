@@ -1,0 +1,9 @@
+browser.jar:
++ content/browser/about.png                     (about.png)
++ content/browser/aboutCredits.png              (aboutCredits.png)
++ content/browser/aboutFooter.png               (aboutFooter.png)
+  
+classic.jar:  
++ skin/classic/global/icons/alert-exclam.png    (alert-exclam.png)
++ skin/classic/mozapps/update/icon32.png        (icon32.png)
+  
