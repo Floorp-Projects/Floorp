@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_trace.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.4                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (implementation)                           * */
 /* *                                                                        * */
@@ -87,6 +87,13 @@
 /* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
 /* *             - added "new" MAGN methods 3, 4 & 5                        * */
 /* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn (code by G.Kelly)              * */
+/* *             - added BGRA8 canvas with premultiplied alpha              * */
+/* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
+/* *             - added "default" sRGB generation (Thanks Marti!)          * */
+/* *                                                                        * */
 /* ************************************************************************** */
 
 #include "libmng.h"
@@ -152,6 +159,7 @@
     {MNG_FN_SETCB_PROCESSSEEK,         "setcb_processseek"},
     {MNG_FN_SETCB_PROCESSNEED,         "setcb_processneed"},
     {MNG_FN_SETCB_PROCESSUNKNOWN,      "setcb_processunknown"},
+    {MNG_FN_SETCB_PROCESSMEND,         "setcb_processmend"},
 
     {MNG_FN_GETCB_MEMALLOC,            "getcb_memalloc"},
     {MNG_FN_GETCB_MEMFREE,             "getcb_memfree"},
@@ -178,6 +186,7 @@
     {MNG_FN_GETCB_PROCESSSEEK,         "getcb_processseek"},
     {MNG_FN_GETCB_PROCESSNEED,         "getcb_processneed"},
     {MNG_FN_GETCB_PROCESSUNKNOWN,      "getcb_processunknown"},
+    {MNG_FN_GETCB_PROCESSMEND,         "getcb_processmend"},
 
     {MNG_FN_SET_USERDATA,              "set_userdata"},
     {MNG_FN_SET_CANVASSTYLE,           "set_canvasstyle"},
@@ -209,6 +218,10 @@
     {MNG_FN_SET_SUSPENSIONMODE,        "set_suspensionmode"},
     {MNG_FN_SET_SECTIONBREAKS,         "set_sectionbreaks"},
     {MNG_FN_SET_USEBKGD,               "set_usebkgd"},
+    {MNG_FN_SET_OUTPUTPROFILE2,        "set_outputprofile2"},
+    {MNG_FN_SET_SRGBPROFILE2,          "set_srgbprofile2"},
+    {MNG_FN_SET_OUTPUTSRGB,            "set_outputsrgb"},
+    {MNG_FN_SET_SRGBIMPLICIT,          "set_srgbimplicit"},
 
     {MNG_FN_GET_USERDATA,              "get_userdata"},
     {MNG_FN_GET_SIGTYPE,               "get_sigtype"},
@@ -457,6 +470,7 @@
     {MNG_FN_DISPLAY_DX15,              "display_dx15"},
     {MNG_FN_DISPLAY_DX16,              "display_dx16"},
     {MNG_FN_DISPLAY_RGB8_A8,           "display_rgb8_a8"},
+    {MNG_FN_DISPLAY_BGRA8PM,           "display_bgra8_pm"},
 
     {MNG_FN_INIT_FULL_CMS,             "init_full_cms"},
     {MNG_FN_CORRECT_FULL_CMS,          "correct_full_cms"},

@@ -2,7 +2,7 @@
 /* *                                                                        * */
 /* * COPYRIGHT NOTICE:                                                      * */
 /* *                                                                        * */
-/* * Copyright (c) 2000 Gerard Juyn (gerard@libmng.com)                     * */
+/* * Copyright (c) 2000,2001 Gerard Juyn (gerard@libmng.com)                * */
 /* * [You may insert additional notices after this sentence if you modify   * */
 /* *  this source]                                                          * */
 /* *                                                                        * */
@@ -100,7 +100,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng.h                  copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.5                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : main application interface                                 * */
 /* *                                                                        * */
@@ -205,9 +205,19 @@
 /* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
 /* *             - added get function for interlace/progressive display     * */
 /* *                                                                        * */
-/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             0.9.4 - 01/18/2001 - G.Juyn                                * */
 /* *             - added errorcode for MAGN methods                         * */
 /* *             - removed test filter-methods 1 & 65                       * */
+/* *                                                                        * */
+/* *             1.0.0 - 02/05/2001 - G.Juyn                                * */
+/* *             - version numbers (obviously)                              * */
+/* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn (code by G.Kelly)              * */
+/* *             - added BGRA8 canvas with premultiplied alpha              * */
+/* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
+/* *             - added "default" sRGB generation (Thanks Marti!)          * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -347,12 +357,12 @@ extern "C" {
 /* *                                                                        * */
 /* ************************************************************************** */
 
-#define MNG_VERSION_TEXT    "0.9.5"
-#define MNG_VERSION_SO      0          /* eg. libmng.so.0 (while in test/beta) */
-#define MNG_VERSION_DLL     0          /* eg. libmng.dll (nb. same for version 1) */
-#define MNG_VERSION_MAJOR   0
-#define MNG_VERSION_MINOR   9
-#define MNG_VERSION_RELEASE 5
+#define MNG_VERSION_TEXT    "1.0.1"
+#define MNG_VERSION_SO      1          /* eg. libmng.so.1  */
+#define MNG_VERSION_DLL     1          /* but: libmng.dll (!) */
+#define MNG_VERSION_MAJOR   1
+#define MNG_VERSION_MINOR   0
+#define MNG_VERSION_RELEASE 1
 
 MNG_EXT mng_pchar MNG_DECL mng_version_text    (void);
 MNG_EXT mng_uint8 MNG_DECL mng_version_so      (void);
@@ -374,7 +384,7 @@ MNG_EXT mng_uint8 MNG_DECL mng_version_release (void);
 #define MNG_MNG_VERSION     "1.0"
 #define MNG_MNG_VERSION_MAJ 1
 #define MNG_MNG_VERSION_MIN 0
-#define MNG_MNG_DRAFT       99
+#define MNG_MNG_DRAFT       99         /* deprecated */
 
 /* ************************************************************************** */
 /* *                                                                        * */
@@ -536,6 +546,8 @@ MNG_EXT mng_retcode MNG_DECL mng_setcb_processseek   (mng_handle        hHandle,
                                                       mng_processseek   fProc);
 MNG_EXT mng_retcode MNG_DECL mng_setcb_processneed   (mng_handle        hHandle,
                                                       mng_processneed   fProc);
+MNG_EXT mng_retcode MNG_DECL mng_setcb_processmend   (mng_handle        hHandle,
+                                                      mng_processmend   fProc);
 MNG_EXT mng_retcode MNG_DECL mng_setcb_processunknown(mng_handle        hHandle,
                                                       mng_processunknown fProc);
 #endif
@@ -706,31 +718,69 @@ MNG_EXT mng_retcode MNG_DECL mng_set_storechunks     (mng_handle        hHandle,
 MNG_EXT mng_retcode MNG_DECL mng_set_sectionbreaks   (mng_handle        hHandle,
                                                       mng_bool          bSectionbreaks);
 
-/* Color-management necessaties */
-/* if you've defined MNG_FULL_CMS, you must specify the profile of the
-   output-device and the sRGB conditions */
-/* if you're on a sRGB system (Linux (intel), Windows, etc.), you can
-   tell the CMS with mng_set_srgb and specify a default sRGB profile for
-   the output-device; otherwise you'll need to specify the correct profile
-   for your output-device and a default sRGB profile for input-images tagged
-   with the sRGB chunk only */
-/* NOTE: either call set_srgb with MNG_TRUE & call set_outputprofile(2)
-         or call set_srgb with MNG_FALSE & call set_outputprofile(2) &
-         set_srgbprofile(2) */
-/* BTW: the default for set_srgb is MNG_TRUE */
+/* Color-management necessaries */
+/*
+    *************************************************************************
+                  !!!!!!!! THIS BIT IS IMPORTANT !!!!!!!!!
+    *************************************************************************
+
+    If you have defined MNG_FULL_CMS (and are using lcms), you will have to
+    think hard about the following routines.
+
+    lcms requires 2 profiles to work off the differences in the input-image
+    and the output-device. The ICC profile for the input-image will be
+    embedded within it to reflect its color-characteristics, but the output
+    profile depends on the output-device, which is something only *YOU* know
+    about. sRGB (standard RGB) is common for x86 compatible environments
+    (eg. Windows, Linux and some others)
+
+    If you are compiling for a sRGB compliant system you probably won't have
+    to do anything special. (unless you want to ofcourse)
+
+    If you are compiling for a non-sRGB compliant system
+    (eg. SGI, Mac, Next, others...)
+    you *MUST* define a proper ICC profile for the generic output-device
+    associated with that platform.
+
+    In either event, you may also want to offer an option to your users to
+    set the profile manually, or, if you know how, set it from a
+    system-defined default.
+
+    TO RECAP: for sRGB systems (Windows, Linux) no action required!
+              for non-sRGB systems (SGI, Mac, Next) ACTION REQUIRED!
+
+    Please visit http://www.srgb.com, http://www.color.org and
+    http://www.littlecms.com for more info.
+
+    *************************************************************************
+                  !!!!!!!! THIS BIT IS IMPORTANT !!!!!!!!!
+    *************************************************************************
+*/
+/* mng_set_srgb tells libmng if it's running on a sRGB compliant system or not
+   the default is already set to MNG_TRUE */
+/* mng_set_outputprofile, mng_set_outputprofile2, mng_set_outputsrgb
+   are used to set the default profile describing the output-device
+   by default it is already initialized with an sRGB profile */
+/* mng_set_srgbprofile, mng_set_srgbprofile2, mng_set_srgbimplicit
+   are used to set the default profile describing a standard sRGB device
+   this is used when the input-image is tagged only as being sRGB, but the
+   output-device is defined as not being sRGB compliant
+   by default it is already initialized with a standard sRGB profile */
 #if defined(MNG_SUPPORT_DISPLAY)
 MNG_EXT mng_retcode MNG_DECL mng_set_srgb            (mng_handle        hHandle,
                                                       mng_bool          bIssRGB);
 MNG_EXT mng_retcode MNG_DECL mng_set_outputprofile   (mng_handle        hHandle,
                                                       mng_pchar         zFilename);
-MNG_EXT mng_retcode MNG_DECL mng_set_srgbprofile     (mng_handle        hHandle,
-                                                      mng_pchar         zFilename);
 MNG_EXT mng_retcode MNG_DECL mng_set_outputprofile2  (mng_handle        hHandle,
                                                       mng_uint32        iProfilesize,
                                                       mng_ptr           pProfile);
+MNG_EXT mng_retcode MNG_DECL mng_set_outputsrgb      (mng_handle        hHandle);
+MNG_EXT mng_retcode MNG_DECL mng_set_srgbprofile     (mng_handle        hHandle,
+                                                      mng_pchar         zFilename);
 MNG_EXT mng_retcode MNG_DECL mng_set_srgbprofile2    (mng_handle        hHandle,
                                                       mng_uint32        iProfilesize,
                                                       mng_ptr           pProfile);
+MNG_EXT mng_retcode MNG_DECL mng_set_srgbimplicit    (mng_handle        hHandle);
 #endif
 
 /* Gamma settings */
@@ -2071,6 +2121,7 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
 #define MNG_CANVAS_RGB8_A8   0x00005000L
 #define MNG_CANVAS_BGR8      0x00000001L
 #define MNG_CANVAS_BGRA8     0x00001001L
+#define MNG_CANVAS_BGRA8PM   0x00009001L
 #define MNG_CANVAS_ABGR8     0x00003001L
 #define MNG_CANVAS_RGB16     0x00000100L         /* not supported yet */
 #define MNG_CANVAS_RGBA16    0x00001100L         /* not supported yet */
@@ -2092,6 +2143,7 @@ MNG_EXT mng_retcode MNG_DECL mng_updatemngsimplicity (mng_handle        hHandle,
 #define MNG_CANVAS_HASALPHA(C)   (C & 0x00001000L)
 #define MNG_CANVAS_ALPHAFIRST(C) (C & 0x00002000L)
 #define MNG_CANVAS_ALPHASEPD(C)  (C & 0x00004000L)
+#define MNG_CANVAS_ALPHAPM(C)    (C & 0x00008000L)
 
 #define MNG_CANVAS_RGB(C)        (MNG_CANVAS_PIXELTYPE (C) == 0)
 #define MNG_CANVAS_BGR(C)        (MNG_CANVAS_PIXELTYPE (C) == 1)

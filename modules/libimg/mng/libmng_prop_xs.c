@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_prop_xs.c          copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : property get/set interface (implementation)                * */
 /* *                                                                        * */
@@ -59,6 +59,11 @@
 /* *             - added get/set for bKGD preference setting                * */
 /* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
 /* *             - added get function for interlace/progressive display     * */
+/* *                                                                        * */
+/* *             1.0.1 - 04/21/2001 - G.Juyn (code by G.Kelly)              * */
+/* *             - added BGRA8 canvas with premultiplied alpha              * */
+/* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
+/* *             - added "default" sRGB generation (Thanks Marti!)          * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -117,6 +122,7 @@ mng_retcode MNG_DECL mng_set_canvasstyle (mng_handle hHandle,
     case MNG_CANVAS_RGB8_A8 : break;
     case MNG_CANVAS_BGR8    : break;
     case MNG_CANVAS_BGRA8   : break;
+    case MNG_CANVAS_BGRA8PM : break;
     case MNG_CANVAS_ABGR8   : break;
 /*    case MNG_CANVAS_RGB16   : break; */
 /*    case MNG_CANVAS_RGBA16  : break; */
@@ -331,7 +337,7 @@ mng_retcode MNG_DECL mng_set_outputprofile2 (mng_handle hHandle,
 #endif
 
 #ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_OUTPUTPROFILE, MNG_LC_START)
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_OUTPUTPROFILE2, MNG_LC_START)
 #endif
 
 #ifdef MNG_INCLUDE_LCMS
@@ -349,12 +355,45 @@ mng_retcode MNG_DECL mng_set_outputprofile2 (mng_handle hHandle,
 #endif /* MNG_INCLUDE_LCMS */
 
 #ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_OUTPUTPROFILE, MNG_LC_END)
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_OUTPUTPROFILE2, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
 }
 #endif /* MNG_SUPPORT_DISPLAY */
+
+/* ************************************************************************** */
+
+mng_retcode MNG_DECL mng_set_outputsrgb (mng_handle hHandle)
+{
+#ifdef MNG_INCLUDE_LCMS
+  mng_datap pData;
+#endif
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_OUTPUTSRGB, MNG_LC_START)
+#endif
+
+#ifdef MNG_INCLUDE_LCMS
+  MNG_VALIDHANDLE (hHandle)
+
+  pData = (mng_datap)hHandle;          /* address the structure */
+
+  if (pData->hProf2)                   /* previously defined ? */
+    mnglcms_freeprofile (pData->hProf2);
+                                       /* allocate new CMS profile handle */
+  pData->hProf2 = mnglcms_createsrgbprofile ();
+
+  if (!pData->hProf2)                  /* handle error ? */
+    MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+#endif /* MNG_INCLUDE_LCMS */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_OUTPUTSRGB, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
 
 /* ************************************************************************** */
 
@@ -367,7 +406,7 @@ mng_retcode MNG_DECL mng_set_srgbprofile (mng_handle hHandle,
 #endif
 
 #ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SRGBPROFILE, MNG_LC_START)
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SRGBPROFILE2, MNG_LC_START)
 #endif
 
 #ifdef MNG_INCLUDE_LCMS
@@ -385,7 +424,7 @@ mng_retcode MNG_DECL mng_set_srgbprofile (mng_handle hHandle,
 #endif /* MNG_INCLUDE_LCMS */
 
 #ifdef MNG_SUPPORT_TRACE
-  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SRGBPROFILE, MNG_LC_END)
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SRGBPROFILE2, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
@@ -428,6 +467,39 @@ mng_retcode MNG_DECL mng_set_srgbprofile2 (mng_handle hHandle,
   return MNG_NOERROR;
 }
 #endif /* MNG_SUPPORT_DISPLAY */
+
+/* ************************************************************************** */
+
+mng_retcode MNG_DECL mng_set_srgbimplicit (mng_handle hHandle)
+{
+#ifdef MNG_INCLUDE_LCMS
+  mng_datap pData;
+#endif
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SRGBIMPLICIT, MNG_LC_START)
+#endif
+
+#ifdef MNG_INCLUDE_LCMS
+  MNG_VALIDHANDLE (hHandle)
+
+  pData = (mng_datap)hHandle;          /* address the structure */
+
+  if (pData->hProf3)                   /* previously defined ? */
+    mnglcms_freeprofile (pData->hProf3);
+                                       /* allocate new CMS profile handle */
+  pData->hProf3 = mnglcms_createsrgbprofile ();
+
+  if (!pData->hProf3)                  /* handle error ? */
+    MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+#endif /* MNG_INCLUDE_LCMS */
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SET_SRGBIMPLICIT, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
 
 /* ************************************************************************** */
 

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_callback_xs.c      copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : callback get/set interface (implementation)                * */
 /* *                                                                        * */
@@ -36,6 +36,9 @@
 /* *             - added support for nEED                                   * */
 /* *             0.9.3 - 10/17/2000 - G.Juyn                                * */
 /* *             - added callback to process non-critical unknown chunks    * */
+/* *                                                                        * */
+/* *             1.0.1 - 02/08/2001 - G.Juyn                                * */
+/* *             - added MEND processing callback                           * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -320,6 +323,27 @@ mng_retcode MNG_DECL mng_setcb_processneed (mng_handle      hHandle,
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (((mng_datap)hHandle), MNG_FN_SETCB_PROCESSNEED, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
+}
+#endif /* MNG_SUPPORT_READ */
+
+/* ************************************************************************** */
+
+#ifdef MNG_SUPPORT_READ
+mng_retcode MNG_DECL mng_setcb_processmend (mng_handle      hHandle,
+                                            mng_processmend fProc)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SETCB_PROCESSMEND, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLE (hHandle)
+  ((mng_datap)hHandle)->fProcessmend = fProc;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (((mng_datap)hHandle), MNG_FN_SETCB_PROCESSMEND, MNG_LC_END)
 #endif
 
   return MNG_NOERROR;
@@ -824,6 +848,25 @@ mng_processneed MNG_DECL mng_getcb_processneed (mng_handle hHandle)
 #endif
 
   return ((mng_datap)hHandle)->fProcessneed;
+}
+#endif /* MNG_SUPPORT_READ */
+
+/* ************************************************************************** */
+
+#ifdef MNG_SUPPORT_READ
+mng_processmend MNG_DECL mng_getcb_processmend (mng_handle hHandle)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GETCB_PROCESSMEND, MNG_LC_START)
+#endif
+
+  MNG_VALIDHANDLEX (hHandle)
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACEX (((mng_datap)hHandle), MNG_FN_GETCB_PROCESSMEND, MNG_LC_END)
+#endif
+
+  return ((mng_datap)hHandle)->fProcessmend;
 }
 #endif /* MNG_SUPPORT_READ */
 

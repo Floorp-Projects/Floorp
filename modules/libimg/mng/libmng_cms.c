@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_cms.c              copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.4                                                      * */
+/* * version   : 1.0.1                                                      * */
 /* *                                                                        * */
 /* * purpose   : color management routines (implementation)                 * */
 /* *                                                                        * */
@@ -44,6 +44,16 @@
 /* *                                                                        * */
 /* *             0.9.4 - 12/16/2000 - G.Juyn                                * */
 /* *             - fixed mixup of data- & function-pointers (thanks Dimitri)* */
+/* *                                                                        * */
+/* *             1.0.1 - 03/31/2001 - G.Juyn                                * */
+/* *             - ignore gamma=0 (see png-list for more info)              * */
+/* *             1.0.1 - 04/25/2001 - G.Juyn (reported by Gregg Kelly)      * */
+/* *             - fixed problem with cms profile being created multiple    * */
+/* *               times when both iCCP & cHRM/gAMA are present             * */
+/* *             1.0.1 - 04/25/2001 - G.Juyn                                * */
+/* *             - moved mng_clear_cms to libmng_cms                        * */
+/* *             1.0.1 - 05/02/2001 - G.Juyn                                * */
+/* *             - added "default" sRGB generation (Thanks Marti!)          * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -99,6 +109,27 @@ mng_cmsprof mnglcms_creatememprofile (mng_uint32 iProfilesize,
 
 /* ************************************************************************** */
 
+mng_cmsprof mnglcms_createsrgbprofile (void)
+{
+  cmsCIExyY       D65;
+  cmsCIExyYTRIPLE Rec709Primaries = {
+                                      {0.6400, 0.3300, 1.0},
+                                      {0.3000, 0.6000, 1.0},
+                                      {0.1500, 0.0600, 1.0}
+                                    };
+  LPGAMMATABLE    Gamma24[3];
+  mng_cmsprof     hsRGB;
+
+  cmsWhitePointFromTemp(6504, &D65);
+  Gamma24[0] = Gamma24[1] = Gamma24[2] = cmsBuildGamma(256, 2.4);
+  hsRGB = cmsCreateRGBProfile(&D65, &Rec709Primaries, Gamma24);
+  cmsFreeGamma(Gamma24[0]);
+
+  return hsRGB;
+}
+
+/* ************************************************************************** */
+
 void mnglcms_freeprofile (mng_cmsprof hProf)
 {
   cmsCloseProfile (hProf);
@@ -113,6 +144,31 @@ void mnglcms_freetransform (mng_cmstrans hTrans)
   cmsDeleteTransform (hTrans);
 /* B001 end */
   return;
+}
+
+/* ************************************************************************** */
+
+mng_retcode mng_clear_cms (mng_datap pData)
+{
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CLEAR_CMS, MNG_LC_START)
+#endif
+
+  if (pData->hTrans)                   /* transformation still active ? */
+    mnglcms_freetransform (pData->hTrans);
+
+  pData->hTrans = 0;
+
+  if (pData->hProf1)                   /* file profile still active ? */
+    mnglcms_freeprofile (pData->hProf1);
+
+  pData->hProf1 = 0;
+
+#ifdef MNG_SUPPORT_TRACE
+  MNG_TRACE (pData, MNG_FN_CLEAR_CMS, MNG_LC_END)
+#endif
+
+  return MNG_NOERROR;
 }
 
 /* ************************************************************************** */
@@ -145,8 +201,13 @@ mng_retcode init_full_cms (mng_datap pData)
 
   if ((pBuf->bHasICCP) || (pData->bHasglobalICCP))
   {
-    if (!pData->hProf2)                /* output profile defined ? */
-      MNG_ERROR (pData, MNG_NOOUTPUTPROFILE);
+    if (!pData->hProf2)                /* output profile not defined ? */
+    {                                  /* then assume sRGB !! */
+      pData->hProf2 = mnglcms_createsrgbprofile ();
+
+      if (!pData->hProf2)              /* handle error ? */
+        MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+    }
 
     if (pBuf->bHasICCP)                /* generate a profile handle */
       hProf = cmsOpenProfileFromMem (pBuf->pProfile, pBuf->iProfilesize);
@@ -176,7 +237,7 @@ mng_retcode init_full_cms (mng_datap pData)
 
     return MNG_NOERROR;                /* and done */
   }
-
+  else
   if ((pBuf->bHasSRGB) || (pData->bHasglobalSRGB))
   {
     mng_uint8 iIntent;
@@ -184,8 +245,13 @@ mng_retcode init_full_cms (mng_datap pData)
     if (pData->bIssRGB)                /* sRGB system ? */
       return MNG_NOERROR;              /* no conversion required */
 
-    if (!pData->hProf3)                /* sRGB profile defined ? */
-      MNG_ERROR (pData, MNG_NOSRGBPROFILE)
+    if (!pData->hProf3)                /* sRGB profile not defined ? */
+    {                                  /* then create it implicitly !! */
+      pData->hProf3 = mnglcms_createsrgbprofile ();
+
+      if (!pData->hProf3)              /* handle error ? */
+        MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+    }
 
     hProf = pData->hProf3;             /* convert from sRGB profile */
 
@@ -212,14 +278,23 @@ mng_retcode init_full_cms (mng_datap pData)
 
     return MNG_NOERROR;                /* and done */
   }
-
+  else
   if ( ((pBuf->bHasCHRM) || (pData->bHasglobalCHRM)) &&
-       ((pBuf->bHasGAMA) || (pData->bHasglobalGAMA))    )
+       ( ((pBuf->bHasGAMA)        && (pBuf->iGamma        > 0)) ||
+         ((pData->bHasglobalGAMA) && (pData->iGlobalGamma > 0))    ))
   {
     mng_CIExyY       sWhitepoint;
     mng_CIExyYTRIPLE sPrimaries;
     mng_gammatabp    pGammatable[3];
     mng_float        dGamma;
+
+    if (!pData->hProf2)                /* output profile not defined ? */
+    {                                  /* then assume sRGB !! */
+      pData->hProf2 = mnglcms_createsrgbprofile ();
+
+      if (!pData->hProf2)              /* handle error ? */
+        MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+    }
 
     if (pBuf->bHasCHRM)                /* local cHRM ? */
     {
@@ -323,9 +398,13 @@ mng_retcode init_full_cms_object (mng_datap pData)
 
   if (pBuf->bHasICCP)
   {
-    if (!pData->hProf2)                /* output profile defined ? */
-      MNG_ERROR (pData, MNG_NOOUTPUTPROFILE);
+    if (!pData->hProf2)                /* output profile not defined ? */
+    {                                  /* then assume sRGB !! */
+      pData->hProf2 = mnglcms_createsrgbprofile ();
 
+      if (!pData->hProf2)              /* handle error ? */
+        MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+    }
                                        /* generate a profile handle */
     hProf = cmsOpenProfileFromMem (pBuf->pProfile, pBuf->iProfilesize);
 
@@ -352,14 +431,19 @@ mng_retcode init_full_cms_object (mng_datap pData)
 
     return MNG_NOERROR;                /* and done */
   }
-
+  else
   if (pBuf->bHasSRGB)
   {
     if (pData->bIssRGB)                /* sRGB system ? */
       return MNG_NOERROR;              /* no conversion required */
 
-    if (!pData->hProf3)                /* sRGB profile defined ? */
-      MNG_ERROR (pData, MNG_NOSRGBPROFILE)
+    if (!pData->hProf3)                /* sRGB profile not defined ? */
+    {                                  /* then create it implicitly !! */
+      pData->hProf3 = mnglcms_createsrgbprofile ();
+
+      if (!pData->hProf3)              /* handle error ? */
+        MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+    }
 
     hProf = pData->hProf3;             /* convert from sRGB profile */
 
@@ -381,13 +465,21 @@ mng_retcode init_full_cms_object (mng_datap pData)
 
     return MNG_NOERROR;                /* and done */
   }
-
-  if ((pBuf->bHasCHRM) && (pBuf->bHasGAMA))
+  else
+  if ((pBuf->bHasCHRM) && (pBuf->bHasGAMA) && (pBuf->iGamma > 0))
   {
     mng_CIExyY       sWhitepoint;
     mng_CIExyYTRIPLE sPrimaries;
     mng_gammatabp    pGammatable[3];
     mng_float        dGamma;
+
+    if (!pData->hProf2)                /* output profile not defined ? */
+    {                                  /* then assume sRGB !! */
+      pData->hProf2 = mnglcms_createsrgbprofile ();
+
+      if (!pData->hProf2)              /* handle error ? */
+        MNG_ERRORL (pData, MNG_LCMS_NOHANDLE)
+    }
 
     sWhitepoint.x      = (mng_float)pBuf->iWhitepointx   / 100000;
     sWhitepoint.y      = (mng_float)pBuf->iWhitepointy   / 100000;
@@ -508,22 +600,24 @@ mng_retcode init_gamma_only (mng_datap pData)
   else
     dGamma = pData->dDfltimggamma;
 
-  if (dGamma)                          /* lets not divide by zero, shall we... */
+  if (dGamma > 0)                      /* ignore gamma=0 */
+  {
     dGamma = pData->dViewgamma / (dGamma * pData->dDisplaygamma);
 
-  if (dGamma != pData->dLastgamma)     /* lookup table needs to be computed ? */
-  {
-    mng_int32 iX;
+    if (dGamma != pData->dLastgamma)   /* lookup table needs to be computed ? */
+    {
+      mng_int32 iX;
 
-    pData->aGammatab [0] = 0;
+      pData->aGammatab [0] = 0;
 
-    for (iX = 1; iX <= 255; iX++)
-      pData->aGammatab [iX] = (mng_uint8)(pow (iX / 255.0, dGamma) * 255 + 0.5);
+      for (iX = 1; iX <= 255; iX++)
+        pData->aGammatab [iX] = (mng_uint8)(pow (iX / 255.0, dGamma) * 255 + 0.5);
 
-    pData->dLastgamma = dGamma;        /* keep for next time */
-  }
+      pData->dLastgamma = dGamma;      /* keep for next time */
+    }
                                        /* load color-correction routine */
-  pData->fCorrectrow = (mng_fptr)correct_gamma_only;
+    pData->fCorrectrow = (mng_fptr)correct_gamma_only;
+  }
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_GAMMA_ONLY, MNG_LC_END)

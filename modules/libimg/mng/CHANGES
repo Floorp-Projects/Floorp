@@ -1,21 +1,36 @@
 -----------------------------------------------------------
 
-0.9.5 (... ..th 2001)
-----------------------
+1.0.1 (May 2nd 2001)
+--------------------
 
 in short:
 
-intermediate
+Maintenance release.
+Fixed several memory-leaks with the help of Gregg Kelly, added/fixed some CMS
+handling, exported JPEG functions from standard DLL, and some other minor fixes.
+
+The CMS fix now makes libmng automagically work in MNG_FULL_CMS mode as a 
+sRGB compliant system. YOU WILL NEED TO CHANGE THIS IF YOU ARE NOT ON AN sRGB
+COMPLIANT SYSTEM AND WANT TO USE CMS!!!!
+(look in libmng.h for the proper function-calls)
 
 -------------------
 
 bugfixes:
-B129681 - fixed compiler warnings SGI/Irix (thanks Dimitri)               
 
 core:
-- fixed compiler-warnings Mozilla (thanks Tim)
-- fixed timing-problem with switching framing_modes       
-- fixed some small compiler warnings (thanks Nikki)        
+- added MEND processing callback                           
+- fixed first FRAM_MODE=4 timing problem                  
+- added handle status-copy function (use with care)
+- exported JPEG functions from standard DLL
+- added BGRA8 canvas with premultiplied alpha (contrib by Gregg Kelly)
+- fixed problem with display_reset/display_resume (Thanks Gregg!)
+- fixed several memory-leaks (Thanks Gregg!)
+- fixed reset_rundata to drop all objects (Thanks again, Gregg!)
+- fixed problem with cms profile being created multiple times when both
+  iCCP & cHRM/gAMA are present (And again... Gregg)
+- moved mng_clear_cms to libmng_cms                   
+- added "default" sRGB generation (Thanks Marti!)
 
 samples:
 
@@ -24,6 +39,63 @@ contrib:
 doc:
 
 makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
+1.0.0 (Feb 6th 2001)
+--------------------
+
+in short:
+
+First public release. Finally(!)
+
+This is the 0.9.5 CVS version, which will never be released, because I feel it
+is now ready for a public release. So apart from the version-numbers here and
+there, all other changes are listed under 0.9.5.
+
+This library will work with every MNG/JNG known and available to me. Note that
+there are still parts that need to be coded, and that MNG support is around
+90-95% (JNG at 100%). It is however compliant with the latest and greatest
+MNG 1.0 specification.
+
+I hope to dedicate a bit more time this year to finish up full support and fill
+in the remaining blanks. But this is coming out of my spare time. And extra
+help is always appreciated.
+
+Please enjoy!
+
+Gerard
+
+-----------------------------------------------------------
+
+0.9.5 (no release)
+------------------
+
+in short:
+
+intermediate CVS
+
+-------------------
+
+bugfixes:
+B129681 - fixed compiler warnings SGI/Irix (thanks Dimitri)
+
+core:
+- fixed compiler-warnings Mozilla (thanks Tim)
+- fixed timing-problem with switching framing_modes
+- fixed some small compiler warnings (thanks Nikki)
+
+samples:
+
+contrib:
+- fixed library-paths for MSVC DLL project (thanks Chad)
+
+doc:
+
+makefiles:
+- added makefile for DJGPP (thanks Silvio)
 
 autoconf:
 
