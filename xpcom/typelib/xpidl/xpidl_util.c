@@ -410,6 +410,34 @@ verify_method_declaration(IDL_tree method_tree)
             return FALSE;
         }
 
+        /*
+         * Confirm that [shared] attributes are only used with string, wstring,
+         * or native (but not nsid) and can't be used with [array].
+         */
+        if (IDL_tree_property_get(simple_decl, "shared") != NULL) {
+            IDL_tree real_type;
+            real_type = find_underlying_type(param_type);
+            real_type = real_type ? real_type : param_type;
+
+            if (IDL_tree_property_get(simple_decl, "array") != NULL) {
+                IDL_tree_error(method_tree,
+                               "[shared] parameter \"%s\" cannot "
+                               "be of array type", param_name);
+                return FALSE;
+            }                
+
+            if (!(IDL_NODE_TYPE(real_type) == IDLN_TYPE_STRING ||
+                  IDL_NODE_TYPE(real_type) == IDLN_TYPE_WIDE_STRING ||
+                  (UP_IS_NATIVE(real_type) &&
+                   !IDL_tree_property_get(real_type, "nsid"))))
+            {
+                IDL_tree_error(method_tree,
+                               "[shared] parameter \"%s\" must be of type "
+                               "string, wstring or native", param_name);
+                return FALSE;
+            }
+        }
+
         if (!check_param_attribute(method_tree, param, IID_IS) ||
             !check_param_attribute(method_tree, param, LENGTH_IS) ||
             !check_param_attribute(method_tree, param, SIZE_IS))
