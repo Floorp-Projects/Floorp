@@ -21,10 +21,13 @@
    -   Scott Collins <scc@mozilla.org> (original author)
   --> 
 <body>
-  <h1><span class="LXRSHORTDESC">original string implementations soon to be replaced</span></h1>
+  <h1><span class="LXRSHORTDESC">original string implementations soon to be replaced (the names you are using will still be good)</span></h1>
 <p>
   <span class="LXRLONGDESC">These are the original string implementations by rickg and others.
   Most of the code here will be made obsolete by the new shared-buffer string (see bug <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=53065">#53065</a>).
+  For the most part, this change is intended to be transparent to clients.
+  The type names you are using for strings now, e.g., nsString, nsAutoString, nsXPIDLString, will still be good,
+    they will just refer to better, but compatible, implementations.
   If you're interested in learning how strings work, you probably want to start with
     <a href="http://lxr.mozilla.org/seamonkey/source/string/public/nsAReadableString.h">nsAReadableString</a>.</span>
 </p>
