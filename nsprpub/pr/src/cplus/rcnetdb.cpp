@@ -36,9 +36,7 @@ RCNetAddr::RCNetAddr(const RCNetAddr& his, PRUint16 port): RCBase()
     switch (address.raw.family)
     {
         case PR_AF_INET: address.inet.port = port; break;
-#if defined(_PR_INET6)
         case PR_AF_INET6: address.ipv6.port = port; break;
-#endif
         default: break;
     }
 }  /* RCNetAddr::RCNetAddr */
@@ -73,10 +71,8 @@ PRBool RCNetAddr::operator==(const RCNetAddr& his) const
         {
             case PR_AF_INET:
                 rv = (address.inet.port == his.address.inet.port); break;
-#if defined(_PR_INET6)
             case PR_AF_INET6:
                 rv = (address.ipv6.port == his.address.ipv6.port); break;
-#endif
             case PR_AF_LOCAL:
             default: break;
         }
@@ -91,17 +87,18 @@ PRBool RCNetAddr::EqualHost(const RCNetAddr& his) const
     {
         case PR_AF_INET:
             rv = (address.inet.ip == his.address.inet.ip); break;
-#if defined(_PR_INET6)
         case PR_AF_INET6:
-            rv = (address.ipv6.ip == his.address.ipv6.ip); break;
-#endif
+            rv = (0 == memcmp(
+                &address.ipv6.ip, &his.address.ipv6.ip,
+                sizeof(address.ipv6.ip)));
+            break;
 #if defined(XP_UNIX)
         case PR_AF_LOCAL:
             rv = (0 == strncmp(
                 address.local.path, his.address.local.path,
                 sizeof(address.local.path)));
- #endif
             break;
+#endif
         default: break;
     }
     return rv;
