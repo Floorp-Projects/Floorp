@@ -364,12 +364,10 @@ nsStorageStream::NewInputStream(PRInt32 aStartingOffset, nsIInputStream* *aInput
 
     NS_ADDREF(inputStream);
 
-    if (aStartingOffset) {
-        nsresult rv = inputStream->Seek(aStartingOffset);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(inputStream);
-            return rv;
-        }
+    nsresult rv = inputStream->Seek(aStartingOffset);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(inputStream);
+        return rv;
     }
 
     *aInputStream = inputStream;
@@ -404,7 +402,7 @@ nsStorageInputStream::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead)
             if (!available)
                 goto out;
 	    
-            mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum++);
+            mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(++mSegmentNum);
             mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
         }
 	
@@ -442,7 +440,7 @@ nsStorageInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRU
             if (!available)
                 goto out;
 
-            mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(mSegmentNum++);
+            mReadCursor = mStorageStream->mSegmentedBuffer->GetSegment(++mSegmentNum);
             mSegmentEnd = mReadCursor + PR_MIN(mSegmentSize, available);
             availableInSegment = mSegmentEnd - mReadCursor;
         }
