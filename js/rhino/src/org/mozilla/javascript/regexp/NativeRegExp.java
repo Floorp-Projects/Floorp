@@ -1340,9 +1340,9 @@ if (regexp.anchorCh >= 0) {
     }
 
     private static void
-    pushBackTrackState(REGlobalData gData, byte op, int target, REMatchState x)
+    pushBackTrackState(REGlobalData gData, byte op, int target)
     {
-        REBackTrackData backTrack = new REBackTrackData(gData, op, target, x);
+        REBackTrackData backTrack = new REBackTrackData(gData, op, target);
         backTrack.previous = gData.backTrackLast;
         gData.backTrackLast = backTrack;
     }
@@ -1350,37 +1350,37 @@ if (regexp.anchorCh >= 0) {
     /*
      *   Consecutive literal characters.
      */
-    private static REMatchState
-    flatNMatcher(REGlobalData gData, REMatchState x, int matchChars,
+    private static boolean
+    flatNMatcher(REGlobalData gData, int matchChars,
                  int length, char[] chars, int end)
     {
-        if ((x.cp + length) > end)
-            return null;
+        if ((gData.cp + length) > end)
+            return false;
 
         for (int i = 0; i < length; i++) {
-            if (gData.regexp.source[matchChars + i] != chars[x.cp + i]) {
-                return null;
+            if (gData.regexp.source[matchChars + i] != chars[gData.cp + i]) {
+                return false;
             }
         }
-        x.cp += length;
-        return x;
+        gData.cp += length;
+        return true;
     }
 
-    private static REMatchState
-    flatNIMatcher(REGlobalData gData, REMatchState x, int matchChars,
+    private static boolean
+    flatNIMatcher(REGlobalData gData, int matchChars,
                   int length, char[] chars, int end)
     {
-        if ((x.cp + length) > end)
-            return null;
+        if ((gData.cp + length) > end)
+            return false;
         for (int i = 0; i < length; i++) {
             if (upcase(gData.regexp.source[matchChars + i])
-                != upcase(chars[x.cp + i]))
+                != upcase(chars[gData.cp + i]))
             {
-                return null;
+                return false;
             }
         }
-        x.cp += length;
-        return x;
+        gData.cp += length;
+        return true;
     }
 
     /*
@@ -1406,34 +1406,34 @@ if (regexp.anchorCh >= 0) {
         9. Let y be the State (f, cap).
         10. Call c(y) and return its result.
     */
-    private static REMatchState
-    backrefMatcher(REGlobalData gData, REMatchState x, int parenIndex,
+    private static boolean
+    backrefMatcher(REGlobalData gData, int parenIndex,
                    char[] chars, int end)
     {
         int len;
         int i;
-        int parenContent = x.parens_index(parenIndex);
+        int parenContent = gData.parens_index(parenIndex);
         if (parenContent == -1)
-            return x;
+            return true;
 
-        len = x.parens_length(parenIndex);
-        if ((x.cp + len) > end)
-            return null;
+        len = gData.parens_length(parenIndex);
+        if ((gData.cp + len) > end)
+            return false;
 
         if ((gData.regexp.flags & JSREG_FOLD) != 0) {
             for (i = 0; i < len; i++) {
-                if (upcase(chars[parenContent + i]) != upcase(chars[x.cp + i]))
-                    return null;
+                if (upcase(chars[parenContent + i]) != upcase(chars[gData.cp + i]))
+                    return false;
             }
         }
         else {
             for (i = 0; i < len; i++) {
-                if (chars[parenContent + i] != chars[x.cp + i])
-                    return null;
+                if (chars[parenContent + i] != chars[gData.cp + i])
+                    return false;
             }
         }
-        x.cp += len;
-        return x;
+        gData.cp += len;
+        return true;
     }
 
 
@@ -1685,134 +1685,109 @@ if (regexp.anchorCh >= 0) {
         return true;
     }
 
-    private static REMatchState
-    executeREBytecode(REGlobalData gData, REMatchState x,
-                      char[] chars, int end)
+    private static boolean
+    executeREBytecode(REGlobalData gData, char[] chars, int end)
     {
         int pc = 0;
         byte program[] = gData.regexp.program;
         int op = program[pc++];
         int currentContinuation_op;
         int currentContinuation_pc;
-        REMatchState result = null;
+        boolean result = false;
 
         currentContinuation_pc = 0;
         currentContinuation_op = REOP_END;
 if (debug) {
-System.out.println("Input = \"" + new String(chars) + "\", start at " + x.cp);
+System.out.println("Input = \"" + new String(chars) + "\", start at " + gData.cp);
 }
         for (;;) {
 if (debug) {
-System.out.println("Testing at " + x.cp + ", op = " + op);
+System.out.println("Testing at " + gData.cp + ", op = " + op);
 }
             switch (op) {
             case REOP_EMPTY:
-                result = x;
+                result = true;
                 break;
             case REOP_BOL:
-                if (x.cp != 0) {
+                if (gData.cp != 0) {
                     if (gData.multiline ||
                             ((gData.regexp.flags & JSREG_MULTILINE) != 0)) {
-                        if (!isLineTerm(chars[x.cp - 1])) {
-                            result = null;
+                        if (!isLineTerm(chars[gData.cp - 1])) {
+                            result = false;
                             break;
                         }
                     }
                     else {
-                        result = null;
+                        result = false;
                         break;
                     }
                 }
-                result = x;
+                result = true;
                 break;
             case REOP_EOL:
-                if (x.cp != end) {
+                if (gData.cp != end) {
                     if (gData.multiline ||
                             ((gData.regexp.flags & JSREG_MULTILINE) != 0)) {
-                        if (!isLineTerm(chars[x.cp])) {
-                            result = null;
+                        if (!isLineTerm(chars[gData.cp])) {
+                            result = false;
                             break;
                         }
                     }
                     else {
-                        result = null;
+                        result = false;
                         break;
                     }
                 }
-                result = x;
+                result = true;
                 break;
             case REOP_WBDRY:
-                if ((x.cp == 0 || !isWord(chars[x.cp - 1]))
-                    ^ !((x.cp < end) && isWord(chars[x.cp])))
-                {
-                    result = x;
-                } else {
-                    result = null;
-                }
+                result = ((gData.cp == 0 || !isWord(chars[gData.cp - 1]))
+                          ^ !((gData.cp < end) && isWord(chars[gData.cp])));
                 break;
             case REOP_WNONBDRY:
-                if ((x.cp == 0 || !isWord(chars[x.cp - 1]))
-                    ^ ((x.cp < end) && isWord(chars[x.cp])))
-                {
-                    result = x;
-                } else {
-                    result = null;
-                }
+                result = ((gData.cp == 0 || !isWord(chars[gData.cp - 1]))
+                          ^ ((gData.cp < end) && isWord(chars[gData.cp])));
                 break;
             case REOP_DOT:
-                if (x.cp != end && !isLineTerm(chars[x.cp])) {
-                    result = x;
-                    result.cp++;
-                } else {
-                    result = null;
+                result = (gData.cp != end && !isLineTerm(chars[gData.cp]));
+                if (result) {
+                    gData.cp++;
                 }
                 break;
             case REOP_DIGIT:
-                if (x.cp != end && isDigit(chars[x.cp])) {
-                    result = x;
-                    result.cp++;
-                } else {
-                    result = null;
+                result = (gData.cp != end && isDigit(chars[gData.cp]));
+                if (result) {
+                    gData.cp++;
                 }
                 break;
             case REOP_NONDIGIT:
-                if (x.cp != end && !isDigit(chars[x.cp])) {
-                    result = x;
-                    result.cp++;
-                } else {
-                    result = null;
+                result = (gData.cp != end && !isDigit(chars[gData.cp]));
+                if (result) {
+                    gData.cp++;
                 }
                 break;
             case REOP_SPACE:
-                if (x.cp != end && isREWhiteSpace(chars[x.cp])) {
-                    result = x;
-                    result.cp++;
-                } else {
-                    result = null;
+                result = (gData.cp != end && isREWhiteSpace(chars[gData.cp]));
+                if (result) {
+                    gData.cp++;
                 }
                 break;
             case REOP_NONSPACE:
-                if (x.cp != end && !isREWhiteSpace(chars[x.cp])) {
-                    result = x;
-                    result.cp++;
-                } else {
-                    result = null;
+                result = (gData.cp != end && !isREWhiteSpace(chars[gData.cp]));
+                if (result) {
+                    gData.cp++;
                 }
                 break;
             case REOP_ALNUM:
-                if (x.cp != end && isWord(chars[x.cp])) {
-                    result = x;
-                    result.cp++;
-                } else {
-                    result = null;
+                result = (gData.cp != end && isWord(chars[gData.cp]));
+                if (result) {
+                    gData.cp++;
                 }
                 break;
             case REOP_NONALNUM:
-                if (x.cp != end && !isWord(chars[x.cp])) {
-                    result = x;
-                    result.cp++;
-                } else {
-                    result = null;
+                result = (gData.cp != end && !isWord(chars[gData.cp]));
+                if (result) {
+                    gData.cp++;
                 }
                 break;
             case REOP_FLAT:
@@ -1821,8 +1796,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     pc += ARG_LEN;
                     int length = GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    result = flatNMatcher(gData, x, offset, length, chars,
-                                          end);
+                    result = flatNMatcher(gData, offset, length, chars, end);
                 }
                 break;
             case REOP_FLATi:
@@ -1831,29 +1805,25 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     pc += ARG_LEN;
                     int length = GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    result = flatNIMatcher(gData, x, offset, length, chars,
-                                           end);
+                    result = flatNIMatcher(gData, offset, length, chars, end);
                 }
                 break;
             case REOP_FLAT1:
                 {
                     char matchCh = (char)(program[pc++] & 0xFF);
-                    if (x.cp != end && chars[x.cp] == matchCh) {
-                        x.cp++;
-                        result = x;
-                    } else {
-                        result = null;
+                    result = (gData.cp != end && chars[gData.cp] == matchCh);
+                    if (result) {
+                        gData.cp++;
                     }
                 }
                 break;
             case REOP_FLAT1i:
                 {
                     char matchCh = (char)(program[pc++] & 0xFF);
-                    if (x.cp != end && upcase(chars[x.cp]) == upcase(matchCh)) {
-                        x.cp++;
-                        result = x;
-                    } else {
-                        result = null;
+                    result = (gData.cp != end
+                              && upcase(chars[gData.cp]) == upcase(matchCh));
+                    if (result) {
+                        gData.cp++;
                     }
                 }
                 break;
@@ -1861,11 +1831,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 {
                     char matchCh = (char)GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    if (x.cp != end && chars[x.cp] == matchCh) {
-                        x.cp++;
-                        result = x;
-                    } else {
-                        result = null;
+                    result = (gData.cp != end && chars[gData.cp] == matchCh);
+                    if (result) {
+                        gData.cp++;
                     }
                 }
                 break;
@@ -1873,11 +1841,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 {
                     char matchCh = (char)GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    if (x.cp != end && upcase(chars[x.cp]) == upcase(matchCh)) {
-                        x.cp++;
-                        result = x;
-                    } else {
-                        result = null;
+                    result = (gData.cp != end
+                              && upcase(chars[gData.cp]) == upcase(matchCh));
+                    if (result) {
+                        gData.cp++;
                     }
                 }
                 break;
@@ -1892,7 +1859,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     ++gData.stateStackTop;
                     nextpc = pc + GET_OFFSET(program, pc);
                     nextop = program[nextpc++];
-                    pushBackTrackState(gData, nextop, nextpc, x);
+                    pushBackTrackState(gData, nextop, nextpc);
                     pc += ARG_LEN;
                     op = program[pc++];
                 }
@@ -1917,7 +1884,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 {
                     int parenIndex = GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    x.set_parens(parenIndex, x.cp, 0);
+                    gData.set_parens(parenIndex, gData.cp, 0);
                     op = program[pc++];
                 }
                 continue;
@@ -1926,8 +1893,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     int cap_index;
                     int parenIndex = GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    cap_index = x.parens_index(parenIndex);
-                    x.set_parens(parenIndex, cap_index, x.cp - cap_index);
+                    cap_index = gData.parens_index(parenIndex);
+                    gData.set_parens(parenIndex, cap_index,
+                                     gData.cp - cap_index);
                     if (parenIndex > gData.lastParen)
                         gData.lastParen = parenIndex;
                     op = program[pc++];
@@ -1937,7 +1905,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 {
                     int parenIndex = GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    result = backrefMatcher(gData, x, parenIndex, chars, end);
+                    result = backrefMatcher(gData, parenIndex, chars, end);
                 }
                 break;
 
@@ -1945,16 +1913,16 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 {
                     int index = GET_ARG(program, pc);
                     pc += ARG_LEN;
-                    if (x.cp != end) {
+                    if (gData.cp != end) {
                         if (classMatcher(gData, gData.regexp.classList[index],
-                                         chars[x.cp]))
+                                         chars[gData.cp]))
                         {
-                            x.cp++;
-                            result = x;
+                            gData.cp++;
+                            result = true;
                             break;
                         }
                     }
-                    result = null;
+                    result = false;
                 }
                 break;
 
@@ -1972,10 +1940,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     state.continuation_pc = currentContinuation_pc;
                     state.continuation_op = currentContinuation_op;
                     state.savedBackTrackLast = gData.backTrackLast;
-                    state.index = x.cp;
+                    state.index = gData.cp;
                     ++gData.stateStackTop;
                     pushBackTrackState(gData, testOp,
-                                       pc + GET_OFFSET(program, pc), x);
+                                       pc + GET_OFFSET(program, pc));
                     pc += ARG_LEN;
                     op = program[pc++];
                 }
@@ -1987,21 +1955,21 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     REProgState state;
                     --gData.stateStackTop;
                     state = gData.stateStack[gData.stateStackTop];
-                    x.cp = state.index;
+                    gData.cp = state.index;
                     gData.backTrackLast = state.savedBackTrackLast;
                     currentContinuation_pc = state.continuation_pc;
                     currentContinuation_op = state.continuation_op;
-                    if (result != null) {
+                    if (result) {
                         if (op == REOP_ASSERTTEST) {
-                            result = x;
+                            result = true;
                         } else {
-                            result = null;
+                            result = false;
                         }
                     } else {
                         if (op == REOP_ASSERTTEST) {
                             // Do nothing
                         } else {
-                            result = x;
+                            result = true;
                         }
                     }
                 }
@@ -2056,14 +2024,14 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     state = gData.stateStack[gData.stateStackTop];
                     state.min = min;
                     state.max = max;
-                    state.index = x.cp;
+                    state.index = gData.cp;
                     state.continuation_pc = currentContinuation_pc;
                     state.continuation_op = currentContinuation_op;
                     ++gData.stateStackTop;
                     if (greedy) {
                         currentContinuation_op = REOP_REPEAT;
                         currentContinuation_pc = pc;
-                        pushBackTrackState(gData, REOP_REPEAT, pc, x);
+                        pushBackTrackState(gData, REOP_REPEAT, pc);
                         /* Step over <parencount>, <parenindex> & <next> */
                         pc += 3 * ARG_LEN;
                         op = program[pc++];
@@ -2075,8 +2043,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                             pc += 3 * ARG_LEN;
                             op = program[pc++];
                         } else {
-                            pushBackTrackState(gData, REOP_MINIMALREPEAT,
-                                               pc, x);
+                            pushBackTrackState(gData, REOP_MINIMALREPEAT, pc);
                             --gData.stateStackTop;
                             pc += 2 * ARG_LEN;  // <parencount> & <parenindex>
                             pc = pc + GET_OFFSET(program, pc);
@@ -2096,13 +2063,13 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     REProgState state;
                     --gData.stateStackTop;
                     state = gData.stateStack[gData.stateStackTop];
-                    if (result == null) {
+                    if (!result) {
                         //
                         // There's been a failure, see if we have enough
                         // children.
                         //
                         if (state.min == 0)
-                            result = x;
+                            result = true;
                         currentContinuation_pc = state.continuation_pc;
                         currentContinuation_op = state.continuation_op;
                         pc += 2 * ARG_LEN;  /* <parencount> & <parenindex> */
@@ -2110,9 +2077,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                         break;
                     }
                     else {
-                        if (state.min == 0 && x.cp == state.index) {
+                        if (state.min == 0 && gData.cp == state.index) {
                             // matched an empty string, that'll get us nowhere
-                            result = null;
+                            result = false;
                             currentContinuation_pc = state.continuation_pc;
                             currentContinuation_op = state.continuation_op;
                             pc += 2 * ARG_LEN;
@@ -2122,25 +2089,25 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                         if (state.min != 0) state.min--;
                         if (state.max != -1) state.max--;
                         if (state.max == 0) {
-                            result = x;
+                            result = true;
                             currentContinuation_pc = state.continuation_pc;
                             currentContinuation_op = state.continuation_op;
                             pc += 2 * ARG_LEN;
                             pc = pc + GET_OFFSET(program, pc);
                             break;
                         }
-                        state.index = x.cp;
+                        state.index = gData.cp;
                         ++gData.stateStackTop;
                         currentContinuation_op = REOP_REPEAT;
                         currentContinuation_pc = pc;
-                        pushBackTrackState(gData, REOP_REPEAT, pc, x);
+                        pushBackTrackState(gData, REOP_REPEAT, pc);
                         int parenCount = GET_ARG(program, pc);
                         pc += ARG_LEN;
                         int parenIndex = GET_ARG(program, pc);
                         pc += 2 * ARG_LEN;
                         op = program[pc++];
                         for (int k = 0; k < parenCount; k++) {
-                            x.set_parens(parenIndex + k, -1, 0);
+                            gData.set_parens(parenIndex + k, -1, 0);
                         }
                     }
                 }
@@ -2152,12 +2119,12 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     --gData.stateStackTop;
                     state = gData.stateStack[gData.stateStackTop];
 
-                    if (result == null) {
+                    if (!result) {
                         //
                         // Non-greedy failure - try to consume another child.
                         //
                         if (state.max == -1 || state.max > 0) {
-                            state.index = x.cp;
+                            state.index = gData.cp;
                             currentContinuation_op = REOP_MINIMALREPEAT;
                             currentContinuation_pc = pc;
                             int parenCount = GET_ARG(program, pc);
@@ -2165,7 +2132,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                             int parenIndex = GET_ARG(program, pc);
                             pc += 2 * ARG_LEN;
                             for (int k = 0; k < parenCount; k++) {
-                                x.set_parens(parenIndex + k, -1, 0);
+                                gData.set_parens(parenIndex + k, -1, 0);
                             }
                             ++gData.stateStackTop;
                             op = program[pc++];
@@ -2177,9 +2144,9 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                             break;
                         }
                     } else {
-                        if (state.min == 0 && x.cp == state.index) {
+                        if (state.min == 0 && gData.cp == state.index) {
                             // Matched an empty string, that'll get us nowhere.
-                            result = null;
+                            result = false;
                             currentContinuation_pc = state.continuation_pc;
                             currentContinuation_op = state.continuation_op;
                             break;
@@ -2194,18 +2161,17 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                             int parenIndex = GET_ARG(program, pc);
                             pc += 2 * ARG_LEN;
                             for (int k = 0; k < parenCount; k++) {
-                                x.set_parens(parenIndex + k, -1, 0);
+                                gData.set_parens(parenIndex + k, -1, 0);
                             }
-                            state.index = x.cp;
+                            state.index = gData.cp;
                             ++gData.stateStackTop;
                             op = program[pc++];
                         } else {
                             currentContinuation_pc = state.continuation_pc;
                             currentContinuation_op = state.continuation_op;
-                            state.index = x.cp;
+                            state.index = gData.cp;
                             ++gData.stateStackTop;
-                            pushBackTrackState(gData, REOP_MINIMALREPEAT,
-                                               pc, x);
+                            pushBackTrackState(gData, REOP_MINIMALREPEAT, pc);
                             --gData.stateStackTop;
                             pc += 2 * ARG_LEN;
                             pc = pc + GET_OFFSET(program, pc);
@@ -2216,9 +2182,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 }
 
             case REOP_END:
-                if (x != null)
-                    return x;
-                break;
+                return true;
 
             default:
                 throw Kit.codeBug();
@@ -2228,14 +2192,20 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
              *  If the match failed and there's a backtrack option, take it.
              *  Otherwise this is a complete and utter failure.
              */
-            if (result == null) {
+            if (!result) {
                 REBackTrackData backTrackData = gData.backTrackLast;
                 if (backTrackData != null) {
                     gData.backTrackLast = backTrackData.previous;
 
                     gData.lastParen = backTrackData.lastParen;
 
-                    x = new REMatchState(backTrackData.state);
+                    // XXX: If backTrackData will no longer be used, then
+                    // there is no need to clone backTrackData.parens
+                    if (backTrackData.parens != null) {
+                        gData.parens = (long[])backTrackData.parens.clone();
+                    }
+
+                    gData.cp = backTrackData.cp;
 
                     for (int k = 0; k < backTrackData.precedingStateTop; k++)
                         gData.stateStack[k] = backTrackData.precedingState[k];
@@ -2252,10 +2222,8 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     continue;
                 }
                 else
-                    return null;
+                    return false;
             }
-            else
-                x = result;
 
             /*
              *  Continue with the expression. If this the end of the child, use
@@ -2269,14 +2237,17 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         }
     }
 
-    private static REMatchState
+    private static boolean
     matchRegExp(REGlobalData gData, RECompiled re,
                 char[] chars, int start, int end, boolean multiline)
     {
         final int INITIAL_STATESTACK = 20;
-        final int INITIAL_BACKTRACK = 20;
 
-        REMatchState x = new REMatchState(re.parenCount);
+        if (re.parenCount != 0) {
+            gData.parens = new long[re.parenCount];
+        } else {
+            gData.parens = null;
+        }
 
         gData.backTrackLast = null;
 
@@ -2295,7 +2266,6 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         //  in order to detect end-of-input/line condition
         //
         for (int i = start; i <= end; ++i) {
-            REMatchState result;
             //
             // If the first node is a literal match, step the index into
             // the string until that match is made, or fail if it can't be
@@ -2304,7 +2274,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             if (anchorCh >= 0) {
                 for (;;) {
                     if (i == end) {
-                        return null;
+                        return false;
                     }
                     char matchCh = chars[i];
                     if (matchCh == anchorCh ||
@@ -2316,20 +2286,20 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                     ++i;
                 }
             }
-            x.cp = i;
-            for (int j = 0; j < x.parenCount; j++) {
-                x.set_parens(j, -1, 0);
+            gData.cp = i;
+            for (int j = 0; j < re.parenCount; j++) {
+                gData.set_parens(j, -1, 0);
             }
-            result = executeREBytecode(gData, x, chars, end);
+            boolean result = executeREBytecode(gData, chars, end);
 
             gData.backTrackLast = null;
             gData.stateStackTop = 0;
-            if (result != null) {
+            if (result) {
                 gData.skipped = i - start;
-                return result;
+                return true;
             }
         }
-        return null;
+        return false;
     }
 
     /*
@@ -2347,16 +2317,14 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             start = end;
         //
         // Call the recursive matcher to do the real work.
-        // Return null on mismatch whether testing or not.
-        // On match, return an extended Array object.
         //
-        REMatchState state = matchRegExp(gData, re, charArray, start, end,
-                                         res.multiline);
-        if (state == null) {
+        boolean matches = matchRegExp(gData, re, charArray, start, end,
+                                      res.multiline);
+        if (!matches) {
             if (matchType != PREFIX) return null;
             return Undefined.instance;
         }
-        int index = state.cp;
+        int index = gData.cp;
         int i = index;
         indexp[0] = i;
         int matchlen = i - (start + gData.skipped);
@@ -2376,7 +2344,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         else {
             /*
              * The array returned on match has element 0 bound to the matched
-             * string, elements 1 through state.parenCount bound to the paren
+             * string, elements 1 through re.parenCount bound to the paren
              * matches, an index property telling the length of the left context,
              * and an input property referring to the input string.
              */
@@ -2388,9 +2356,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             obj.put(0, obj, matchstr);
         }
 
-        if (state.parenCount > re.parenCount)
-            throw new RuntimeException();
-        if (state.parenCount == 0) {
+        if (re.parenCount == 0) {
             res.parens = null;
             res.lastParen = SubString.emptySubString;
         } else {
@@ -2398,10 +2364,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
             int num;
             res.parens = new SubString[re.parenCount];
             for (num = 0; num < re.parenCount; num++) {
-                int cap_index = state.parens_index(num);
+                int cap_index = gData.parens_index(num);
                 String parstr;
                 if (cap_index != -1) {
-                    int cap_length = state.parens_length(num);
+                    int cap_length = gData.parens_length(num);
                     parsub = new SubString(charArray, cap_index, cap_length);
                     res.parens[num] = parsub;
                     if (matchType == TEST) continue;
@@ -2714,7 +2680,7 @@ class RENode {
     int             length;     /* or many (via the index) */
     int             flatIndex;  /* which is -1 if not sourced */
 
-};
+}
 
 class CompilerState {
 
@@ -2739,49 +2705,7 @@ class CompilerState {
     int         classCount;   /* number of [] encountered */
     int         progLength;   /* estimated bytecode length */
     RENode      result;
-};
-
-final class REMatchState {
-
-    REMatchState(int count)
-    {
-        parenCount = count;
-        if (count != 0) {
-            parens = new long[count];
-        }
-    }
-
-    REMatchState(REMatchState other)
-    {
-        cp = other.cp;
-        parenCount = other.parenCount;
-        if (parenCount > 0) {
-            parens = new long[parenCount];
-            System.arraycopy(other.parens, 0, parens, 0, parenCount);
-        }
-    }
-
-/* start of capture contents, -1 for empty  */
-    int parens_index(int i)
-    {
-        return (int)(parens[i]);
-    }
-
-/* length of capture contents  */
-    int parens_length(int i)
-    {
-        return (int)(parens[i] >>> 32);
-    }
-
-    void set_parens(int i, int index, int length)
-    {
-        parens[i] = ((long)index & 0xffffffffL) | ((long)length << 32);
-    }
-
-    int cp;
-    int parenCount;
-    private long[] parens;       /* 'parenCount' captures */
-};
+}
 
 class REProgState {
 
@@ -2809,12 +2733,15 @@ class REProgState {
 
 class REBackTrackData {
 
-    REBackTrackData(REGlobalData gData, int op, int pc, REMatchState x)
+    REBackTrackData(REGlobalData gData, int op, int pc)
     {
-        state = new REMatchState(x);
         continuation_op = op;
         continuation_pc = pc;
         lastParen = gData.lastParen;
+        if (gData.parens != null) {
+            parens = (long[])gData.parens.clone();
+        }
+        cp = gData.cp;
         currentState = new REProgState(gData.stateStack[gData.stateStackTop - 1]);
         if (gData.stateStackTop > 1) {
             precedingStateTop = gData.stateStackTop - 1;
@@ -2830,13 +2757,13 @@ class REBackTrackData {
 
     int continuation_op;                /* where to backtrack to */
     int continuation_pc;
-    REMatchState state;                 /* the state of the match */
     int lastParen;
+    long[] parens;                      /* parenthesis captures */
+    int cp;                             /* char buffer index */
     REProgState currentState;           /* state of op that backtracked */
     REProgState[] precedingState;
     int precedingStateTop;
     REBackTrackData previous;
-    int stackDepth;
 }
 
 class REGlobalData {
@@ -2845,11 +2772,37 @@ class REGlobalData {
     int lastParen;                  /* highest paren set so far */
     int skipped;                    /* chars skipped anchoring this r.e. */
 
-    REProgState[] stateStack;         /* stack of state of current ancestors */
+    int cp;                         /* char buffer index */
+    long[] parens;                  /* parens captures */
+
+    REProgState[] stateStack;       /* stack of state of current ancestors */
     int stateStackTop;
 
-    REBackTrackData backTrackLast; /* last matched-so-far position */
-};
+    REBackTrackData backTrackLast;  /* last matched-so-far position */
+
+
+    /**
+     * Get start of parenthesis capture contents, -1 for empty.
+     */
+    int parens_index(int i)
+    {
+        return (int)(parens[i]);
+    }
+
+    /**
+     * Get length of parenthesis capture contents.
+     */
+    int parens_length(int i)
+    {
+        return (int)(parens[i] >>> 32);
+    }
+
+    void set_parens(int i, int index, int length)
+    {
+        parens[i] = ((long)index & 0xffffffffL) | ((long)length << 32);
+    }
+
+}
 
 /*
  * This struct holds a bitmap representation of a class from a regexp.
@@ -2866,6 +2819,6 @@ class RECharSet {
     byte[] bits;
     int startIndex;
     int strlength;
-};
+}
 
 
