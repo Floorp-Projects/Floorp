@@ -50,6 +50,7 @@ Contributor(s):
   <keyset>
     <key keycode="VK_ESCAPE" oncommand="close();"/>
     <key keycode="VK_ENTER" oncommand="onAccept();"/>
+    <key keycode="VK_RETURN" oncommand="onAccept();"/>
   </keyset>
 
   <hbox flex="1">
