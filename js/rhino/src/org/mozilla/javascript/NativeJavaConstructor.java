@@ -53,11 +53,13 @@ import java.lang.reflect.*;
  * @see NativeJavaClass
  */
 
-public class NativeJavaConstructor extends NativeFunction implements Function {
-
-    public NativeJavaConstructor(Constructor ctor) {
+public class NativeJavaConstructor extends BaseFunction
+{
+    public NativeJavaConstructor(Constructor ctor)
+    {
         this.constructor = ctor;
-        this.functionName = "<init>" + NativeJavaMethod.signature(ctor);
+        String sig = NativeJavaMethod.memberSignature(ctor);
+        this.functionName = "<init>".concat(sig);
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -73,11 +75,13 @@ public class NativeJavaConstructor extends NativeFunction implements Function {
                                                  this, constructor, args);
     }
 
-    public String toString() {
+    public String toString()
+    {
         return "[JavaConstructor " + constructor.getName() + "]";
     }
 
-    Constructor getConstructor() {
+    Constructor getConstructor()
+    {
         return constructor;
     }
 

@@ -136,16 +136,16 @@ class JavaMembers {
             }
             if (obj != null && obj instanceof NativeJavaMethod) {
                 method = (NativeJavaMethod)obj;
-                methodsOrCtors = method.getMethods();
+                methodsOrCtors = method.methods;
             }
         }
 
         if (methodsOrCtors != null) {
             for (int i = 0; i < methodsOrCtors.length; i++) {
-                String nameWithSig =
-                    NativeJavaMethod.signature(methodsOrCtors[i]);
+                Member member = methodsOrCtors[i];
+                String nameWithSig = NativeJavaMethod.memberSignature(member);
                 if (name.equals(nameWithSig)) {
-                    return methodsOrCtors[i];
+                    return member;
                 }
             }
         }
@@ -175,7 +175,7 @@ class JavaMembers {
                 member = ht.get(trueName);
 
                 if (member instanceof NativeJavaMethod &&
-                    ((NativeJavaMethod)member).getMethods().length > 1 ) {
+                    ((NativeJavaMethod)member).methods.length > 1 ) {
                     NativeJavaMethod fun =
                         new NativeJavaMethod((Method)methodOrCtor, name);
                     fun.setPrototype(prototype);
@@ -267,7 +267,7 @@ class JavaMembers {
         if (member != null) {
             if (member instanceof NativeJavaMethod) {
                 NativeJavaMethod method = (NativeJavaMethod) member;
-                FieldAndMethods fam = new FieldAndMethods(method.getMethods(),
+                FieldAndMethods fam = new FieldAndMethods(method.methods,
                                                           field,
                                                           null);
                 fam.setPrototype(ScriptableObject.getFunctionPrototype(scope));
@@ -384,7 +384,7 @@ class JavaMembers {
                 // Grab and inspect the getter method; does it have an empty parameter list,
                 // with a return value (eg. a getSomething() or isSomething())?
                 Class[] params;
-                Method[] getMethods = getJavaMethod.getMethods();
+                Method[] getMethods = getJavaMethod.methods;
                 Class type;
                 if (getMethods != null &&
                     getMethods.length == 1 &&
@@ -415,7 +415,7 @@ class JavaMembers {
                             // Make two passes: one to find a method with direct type assignment,
                             // and one to find a widening conversion.
                             NativeJavaMethod setJavaMethod = (NativeJavaMethod) method;
-                            Method[] setMethods = setJavaMethod.getMethods();
+                            Method[] setMethods = setJavaMethod.methods;
                             for (int pass = 1; pass <= 2 && setMethod == null; ++pass) {
                                 for (int i = 0; i < setMethods.length; ++i) {
                                     if (setMethods[i].getReturnType() == Void.TYPE &&

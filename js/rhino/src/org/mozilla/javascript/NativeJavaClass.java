@@ -173,9 +173,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                Modifier.isAbstract(modifiers)))
         {
             Constructor[] ctors = members.getConstructors();
-            Member member = NativeJavaMethod.findFunction(ctors, args);
-            Constructor ctor = (Constructor) member;
-            if (ctor == null) {
+            int index = NativeJavaMethod.findFunction(ctors, args);
+            if (index < 0) {
                 String sig = NativeJavaMethod.scriptSignature(args);
                 throw Context.reportRuntimeError2(
                     "msg.no.java.ctor", classObject.getName(), sig);
@@ -183,7 +182,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
             // Found the constructor, so try invoking it.
             return NativeJavaClass.constructSpecific(cx, scope,
-                                                     this, ctor, args);
+                                                     this, ctors[index], args);
         } else {
             Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
             String msg = "";
