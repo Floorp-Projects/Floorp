@@ -805,6 +805,7 @@ function GetOutputFlags(aMimeType, aWrapColumn)
 // returns number of column where to wrap
 const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
 const nsIHTMLEditor = Components.interfaces.nsIHTMLEditor;
+const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
 function GetWrapColumn()
 {
   var wrapCol = 72;
@@ -960,10 +961,45 @@ var gEditorOutputProgressListener =
         return;
       }
 
+      //XXX HACK: "file://" protocol is not supported in network code
+      //    (bug 151867 filed to add this support, bug 151869 filed
+      //     to remove this and other code in nsIWebBrowserPersist)
+      //    nsIWebBrowserPersist *does* copy the file(s), but we don't 
+      //    get normal onStateChange messages.
+
+      // Case 1: If images are included, we get fairly normal
+      //    STATE_START/STATE_STOP & STATE_IS_NETWORK messages associated with the image files,
+      //    thus we must finish HTML file progress below
+
+      // Case 2: If just HTML file is uploaded, we get STATE_START and STATE_STOP
+      //    notification with a null "requestSpec", and 
+      //    the gPersistObj is destroyed before we get here!
+      //    So create an new object so we can flow through normal processing below
+      if (!requestSpec && GetScheme(gPublishData.publishUrl) == "file"
+          && (!gPersistObj || gPersistObj.currentState == nsIWebBrowserPersist.PERSIST_STATE_FINISHED))
+      {
+        aStateFlags |= nsIWebProgressListener.STATE_IS_NETWORK;
+        if (!gPersistObj)
+        {          
+          gPersistObj =
+          {
+            result : aStatus,
+            currentState : nsIWebBrowserPersist.PERSIST_STATE_FINISHED
+          }
+        }
+      }
+
       // STATE_IS_NETWORK signals end of publishing, as does the gPersistObj.currentState
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK
-          && gPersistObj.currentState == gPersistObj.PERSIST_STATE_FINISHED)
+          && gPersistObj.currentState == nsIWebBrowserPersist.PERSIST_STATE_FINISHED)
       {
+        if (GetScheme(gPublishData.publishUrl) == "file")
+        {
+          //XXX "file://" hack: We don't get notified about the HTML file, so end progress for it
+          // (This covers both "Case 1 and 2" described above)
+          gProgressDialog.SetProgressFinished(gPublishData.filename, gPersistObj.result);
+        }
+
         if (gPersistObj.result == 0)
         {
           // All files are finished and publishing succeeded (some images may have failed)
