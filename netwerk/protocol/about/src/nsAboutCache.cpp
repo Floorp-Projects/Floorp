@@ -103,6 +103,8 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
 
 #ifdef MOZ_NEW_CACHE
     mStream = outputStream;
+    rv = cacheService->VisitEntries(this);
+    if (NS_FAILED(rv)) return rv;
 #else
     nsCOMPtr<nsISimpleEnumerator> moduleIterator;
     nsCOMPtr<nsISimpleEnumerator> entryIterator;
@@ -211,13 +213,13 @@ nsAboutCache::VisitDevice(const char *deviceID,
 
     mBuffer.Assign("<h2>");
     mBuffer.Append(str);
-    mBuffer.Append("</h2>\n");
+    mBuffer.Append("</h2><br>\n");
 
     // Write out cache info
     
     mBuffer.Append("<table>\n<tr><td><b>Usage report:</b></td>\n");
     deviceInfo->GetUsageReport(getter_Copies(str));
-    mBuffer.Assign("<td>");
+    mBuffer.Append("<td>");
     mBuffer.Append(str);
     mBuffer.Append("</td>\n</tr>\n");
 
@@ -240,7 +242,7 @@ nsAboutCache::VisitDevice(const char *deviceID,
     value = 0;
     deviceInfo->GetTotalSize(&value);
     mBuffer.AppendInt(value);
-    mBuffer.Append(" KB</td>\n</tr>\n");
+    mBuffer.Append(" Bytes</td>\n</tr>\n");
 
     mBuffer.Append("</table>\n<hr>\n");
 
@@ -285,7 +287,7 @@ nsAboutCache::VisitEntry(const char *deviceID,
 
     mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Data size: </tt>");
     mBuffer.AppendInt(length);
-    mBuffer.Append("<br>\n");
+    mBuffer.Append(" Bytes<br>\n");
 
     // Number of accesses
     PRInt32 fetchCount = 0;
