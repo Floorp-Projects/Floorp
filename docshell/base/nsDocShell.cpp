@@ -2984,15 +2984,10 @@ NS_IMETHODIMP
 nsDocShell::GetSessionHistory(nsISHistory ** aSessionHistory)
 {
     NS_ENSURE_ARG_POINTER(aSessionHistory);
-    if (mSessionHistory) {
         *aSessionHistory = mSessionHistory;
         NS_IF_ADDREF(*aSessionHistory);
         return NS_OK;
     }
-
-    return NS_ERROR_FAILURE;
-
-}
 
 //*****************************************************************************
 // nsDocShell::nsIWebPageDescriptor

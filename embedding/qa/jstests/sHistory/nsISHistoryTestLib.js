@@ -61,28 +61,28 @@ function sHistoryInit(theWindow)
     }
     catch(e){
        alert("Unable to get interface requestor object: " + e);
-       return false;
+       return null;
     }
     try {
        webNav = ifaceReq.getInterface(Components.interfaces.nsIWebNavigation);
     }
     catch(e) {
       alert("Unable to get WebNavigation: " + e);
-      return false;
+      return null;
     }               
     try {
        sHistory = webNav.sessionHistory;
     }
     catch(e) {
       alert("Didn't get SessionHistory object: " + e);
-      return false;
+      return null;
     } 
     return sHistory;
   }
   catch(e) 
   {
     alert("Could not find Session History component: " + e);
-    return false;
+    return null;
   }
 }
 
@@ -93,7 +93,7 @@ function testHistoryCount(sHistory)
 {
   if (!sHistory) {
     alert("Didn't get SessionHistory object");
-    return false;  
+    return 0;
   }
   var cnt = sHistory.count;     // GetCount() 
   return cnt; 
@@ -101,13 +101,14 @@ function testHistoryCount(sHistory)
 
 // *************************************************************************
 // testHistoryIndex() returns the current session history index.
+// returns negative one if the history object is null.
 // It accepts the session history object as the input parameter.
 // In your test script, 
 function testHistoryIndex(sHistory)
 {
   if (!sHistory) {
     alert("Didn't get SessionHistory object");
-    return false;  
+    return -1;
   }
   var shIndex = sHistory.index;   // GetIndex()
   return shIndex;
@@ -120,7 +121,7 @@ function testMaxLength(sHistory)
 {
   if (!sHistory) {
     alert("Didn't get SessionHistory object");
-    return false;  
+    return 0;
   }
   var maxLen = sHistory.maxLength;  // GetMaxLength
   return maxLen;
@@ -136,7 +137,7 @@ function testGetEntryAtIndex(sHistory, cnt, modIndex)
 {
   if (!sHistory) {
     alert("Didn't get SessionHistory object");
-    return false;  
+    return null;
   }
   var entry = sHistory.getEntryAtIndex(cnt, modIndex);
 
@@ -150,7 +151,7 @@ function  testSimpleEnum(sHistory)
 {
   if (!sHistory) {
     alert("Didn't get SessionHistory object");
-    return false;  
+    return null;
   }
    var simpleEnum = sHistory.SHistoryEnumerator;
    
@@ -189,7 +190,7 @@ function  testHistoryEntryUri(nextHE, index)
 {
   if (!nextHE) {
     alert("Didn't get history entry object");
-    return false;  
+    return null;
   }
    // Get URI for the  next Entry
    Uri = entry.URI;
@@ -206,7 +207,7 @@ function  testHistoryEntryTitle(nextHE, index)
 {
   if (!nextHE) {
     alert("Didn't get history entry object");
-    return false;  
+    return null;
   }
    // Get Title for the nextEntry
    title = entry.title;
@@ -222,7 +223,7 @@ function  testHistoryEntryFrame(nextHE, index)
 {
   if (!nextHE) {
     alert("Didn't get history entry object");
-    return false;  
+    return null;
   }
   // Get SubFrame Status for the nextEntry
    frameStatus = entry.isSubFrame;
