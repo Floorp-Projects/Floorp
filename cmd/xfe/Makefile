@@ -976,6 +976,14 @@ EXPORT_LDFLAGS	+= -lresolv -lsocket -lc /usr/ucblib/libucb.a
 
 endif
 
+########################################
+# Data General DG/UX
+ifeq ($(OS_ARCH),dgux)
+
+OTHER_LIBS	= $(MOTIFLIB) $(OS_LIBS)
+
+endif
+
 #######################################################################
 
 $(MICROLINE_LIB):

@@ -57,7 +57,7 @@ extern "C" char * _XmStringGetTextConcat(XmString);
 
 #include "xpgetstr.h"
 
-#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC)
+#if defined(IRIX) || defined(OSF1) || defined(SOLARIS) || defined(UNIXWARE) || defined(SNI) || defined(NCR) || defined(NEC) || defined(DGUX)
 #include <sys/statvfs.h> /* for statvfs() */
 #define STATFS statvfs
 #elif defined(SCO_SV)

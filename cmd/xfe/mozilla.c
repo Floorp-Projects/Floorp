@@ -1944,6 +1944,8 @@ build_user_agent_string(char *versionLocale)
 	strcat (buf, "NEC/EWS-UX/V");
 #elif defined(SNI)
 	strcat (buf, "SINIX-N");
+#elif defined(DGUX)
+	strcat (buf, "DG/UX");
 #else
 	ERROR!! run "uname -s" and put the result here.
 #endif
