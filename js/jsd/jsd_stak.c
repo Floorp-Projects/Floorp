@@ -70,7 +70,7 @@ _addNewFrame(JSDContext*        jsdc,
         JSD_LOCK_SCRIPTS(jsdc);
         jsdscript = jsd_FindJSDScript(jsdc, script);
         JSD_UNLOCK_SCRIPTS(jsdc);
-        if( ! jsdscript )
+        if (!jsdscript || !JSD_IS_DEBUG_ENABLED(jsdc, jsdscript))
             return NULL;
     }
     
@@ -128,7 +128,16 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
             ((jsdc->flags & JSD_INCLUDE_NATIVE_FRAMES) ||
              !JS_IsNativeFrame(cx, fp)))
         {
-            _addNewFrame( jsdc, jsdthreadstate, script, pc, fp );
+            
+            if (!_addNewFrame( jsdc, jsdthreadstate, script, pc, fp ) &&
+                jsdthreadstate->stackDepth == 0) 
+            {
+                /*
+                 * if we failed to create the first frame, fail the entire
+                 * thread state.
+                 */
+                break;
+            }
         }
     }
     

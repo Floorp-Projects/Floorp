@@ -80,7 +80,6 @@ interface jsdIDebuggerService : nsISupports
     /** Internal use only. */
     [noscript] readonly attribute JSDContext        JSDContext;
 
-
     /**
      * Called when an error or warning occurs.
      */
@@ -118,10 +117,49 @@ interface jsdIDebuggerService : nsISupports
      */
     attribute jsdICallHook functionHook;
 
+
+    /**
+     * VERSION_* values must be kept in sync with the JSVersion enumeration in
+     * jspubtd.h.
+     */
+
+    /**
+     * Possible values for jsdIScript::version and jsdIContext::version.
+     */
+    const long VERSION_1_0     = 100;
+    const long VERSION_1_1     = 110;
+    const long VERSION_1_2     = 120;
+    const long VERSION_1_3     = 130;
+    const long VERSION_1_4     = 140;
+    const long VERSION_1_5     = 150;
+    const long VERSION_DEFAULT = 0;
+    const long VERSION_UNKNOWN = -1;
+
+    /**
+     * These flags need to be kept in sync with the context flags defined in
+     * jsdebug.h
+     */
+
     /**
      * Link native frames in call stacks.
      */
-    const unsigned long ENABLE_NATIVE_FRAMES = 0x01;
+    const unsigned long ENABLE_NATIVE_FRAMES     = 0x01;
+    /**
+     * Normally, if a script has a 0 in JSD_SCRIPT_PROFILE_BIT it is included in
+     * profile data, otherwise it is not profiled.  Setting the
+     * PROFILE_WHEN_SET flag reverses this convention.
+     */
+    const unsigned long PROFILE_WHEN_SET         = 0x02;
+    /**
+     * Normally, when the script in the top frame of a thread state has a 1 in
+     * JSD_SCRIPT_DEBUG_BIT, the execution hook is ignored.  Setting the
+     * DEBUG_WHEN_SET flag reverses this convention.
+     */
+    const unsigned long DEBUG_WHEN_SET           = 0x04;
+    /**
+     * When this flag is set the internal call hook will collect profile data.
+     */
+    const unsigned long COLLECT_PROFILE_DATA     = 0x08;
     
     /**
      * Debugger service flags.
@@ -189,7 +227,12 @@ interface jsdIDebuggerService : nsISupports
      * Force the engine to perform garbage collection.
      */
     void GC();
-
+    
+    /**
+     * Clear profile data for all scripts.
+     */
+    void clearProfileData();
+    
     /**
      * Adds an execution hook filter.  These filters are consulted each time one
      * of the jsdIExecutionHooks is about to be called.  Filters are matched in
@@ -621,29 +664,6 @@ interface jsdIContext : jsdIEphemeral
     [noscript] readonly attribute JSContext   JSContext;
 
     /**
-     * VERSION_* values must be kept in sync with the JSVersion enumeration in
-     * jspubtd.h.
-     */
-
-    /**
-     * Possible values for |version|.
-     */
-    const long VERSION_1_0     = 100;
-    const long VERSION_1_1     = 110;
-    const long VERSION_1_2     = 120;
-    const long VERSION_1_3     = 130;
-    const long VERSION_1_4     = 140;
-    const long VERSION_1_5     = 150;
-    const long VERSION_DEFAULT = 0;
-    const long VERSION_UNKNOWN = -1;
-    
-    /**
-     * Last version set on this context.
-     * Scripts typically select this with the "language" attribute.
-     */
-    attribute long                   version;
-
-    /**
      * OPT_* values must be kept in sync with JSOPTION_* #defines in jsapi.h.
      */
 
@@ -669,7 +689,14 @@ interface jsdIContext : jsdIEphemeral
      * OPT_* values above, OR'd together.
      */
     attribute unsigned long          options;
-    
+
+    /**
+     * Last version set on this context.
+     * Scripts typically select this with the "language" attribute.
+     * See the VERSION_* consts on jsdIDebuggerService.
+     */
+    attribute long                   version;
+
     /**
      * Unique tag among all valid jsdIContext objects, useful as a hash key.
      */
@@ -790,13 +817,41 @@ interface jsdIScript : jsdIEphemeral
     [noscript] readonly attribute JSDContext JSDContext;
     /** Internal use only. */
     [noscript] readonly attribute JSDScript  JSDScript;
+    
+    /**
+     * Last version set on this context.
+     * Scripts typically select this with the "language" attribute.
+     * See the VERSION_* consts on jsdIDebuggerService.
+     */
+    readonly attribute long          version;
 
     /**
      * Tag value guaranteed unique among jsdIScript objects.  Useful as a
      * hash key in script.
      */
     readonly attribute unsigned long tag;
+
+    /**
+     * FLAG_* values need to be kept in sync with JSD_SCRIPT_* #defines in
+     * jsdebug.h.
+     */
+
+    /**
+     * Determines whether or not to collect profile information for this
+     * script.  The context flag FLAG_PROFILE_WHEN_SET decides the logic.
+     */
+    const unsigned long FLAG_PROFILE = 0x01;
+    /**
+     * Determines whether or not to ignore breakpoints, etc. in this script.
+     * The context flag JSD_DEBUG_WHEN_SET decides the logic.
+     */
+    const unsigned long FLAG_DEBUG   = 0x02;
     
+    /**
+     * FLAG_* attributes from above, OR'd together.
+     */
+    attribute unsigned long flags;
+
     /**
      * Filename given for this script when it was compiled.
      * This data is copied from the underlying structure when the jsdIScript
@@ -831,6 +886,32 @@ interface jsdIScript : jsdIEphemeral
      */
     readonly attribute unsigned long lineExtent;
 
+    /**
+     * Number of times this script has been called.
+     */
+    readonly attribute unsigned long callCount;
+    /**
+     * Number of times this script called itself, directly or indirectly.
+     */
+    readonly attribute unsigned long maxRecurseDepth;
+    /**
+     * Shortest execution time recorded, in milliseconds.
+     */
+    readonly attribute double minExecutionTime;
+    /**
+     * Longest execution time recorded, in milliseconds.
+     */
+    readonly attribute double maxExecutionTime;
+    /**
+     * Total time spent in this function, in milliseconds.
+     */
+    readonly attribute double totalExecutionTime;
+    
+    /**
+     * Clear profile data for this script.
+     */
+    void clearProfileData();
+    
     const unsigned long PCMAP_SOURCETEXT  = 1; /* map to actual source text    */
     const unsigned long PCMAP_PRETTYPRINT = 2; /* map to pretty printed source */
 

@@ -180,9 +180,33 @@ extern JSD_PUBLIC_API(void *)
 JSD_GetContextPrivate(JSDContext *jsdc);
 
 /*
+* Clear profile data for all scripts
+*/
+extern JSD_PUBLIC_API(void)
+JSD_ClearAllProfileData(JSDContext* jsdc);
+
+/*
 * Context flags.
 */
-#define JSD_INCLUDE_NATIVE_FRAMES 0x1
+
+/* Include native frames in JSDThreadStates. */
+#define JSD_INCLUDE_NATIVE_FRAMES 0x01
+/*
+* Normally, if a script has a 0 in JSD_SCRIPT_PROFILE_BIT it is included in
+* profile data, otherwise it is not profiled.  Setting the JSD_PROFILE_WHEN_SET
+* flag reverses this convention.
+*/
+#define JSD_PROFILE_WHEN_SET      0x02
+/*
+* Normally, when the script in the top frame of a thread state has a 1 in
+* JSD_SCRIPT_DEBUG_BIT, the execution hook is ignored.  Setting the
+* JSD_DEBUG_WHEN_SET flag reverses this convention.
+*/
+#define JSD_DEBUG_WHEN_SET        0x04
+/*
+* When this flag is set the internal call hook will collect profile data.
+*/
+#define JSD_COLLECT_PROFILE_DATA  0x08
 
 extern JSD_PUBLIC_API(void)
 JSD_SetContextFlags (JSDContext* jsdc, uint32 flags);
@@ -246,6 +270,42 @@ extern JSD_PUBLIC_API(JSDScript*)
 JSD_IterateScripts(JSDContext* jsdc, JSDScript **iterp);
 
 /*
+* Get the number of times this script has been called.
+*/
+extern JSD_PUBLIC_API(uintN)
+JSD_GetScriptCallCount(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Get the max number of times this script called itself, directly or indirectly.
+*/
+extern JSD_PUBLIC_API(uintN)
+JSD_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Get the shortest execution time recorded.
+*/
+extern JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Get the longest execution time recorded.
+*/
+extern JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Get the total amount of time spent in this script.
+*/
+extern JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+/*
+* Clear profile data for this script.
+*/
+extern JSD_PUBLIC_API(void)
+JSD_ClearScriptProfileData(JSDContext* jsdc, JSDScript *script);
+
+/*
 * Get the JSScript for a JSDScript
 */
 extern JSD_PUBLIC_API(JSScript*)
@@ -256,18 +316,35 @@ JSD_GetJSScript(JSDContext* jsdc, JSDScript *script);
 */
 extern JSD_PUBLIC_API(JSFunction*)
 JSD_GetJSFunction(JSDContext* jsdc, JSDScript *script);
-     
+
+/*
+* Determines whether or not to collect profile information for this
+* script.  The context flag JSD_PROFILE_WHEN_SET decides the logic.
+*/
+#define JSD_SCRIPT_PROFILE_BIT 0x01
+/*
+* Determines whether or not to ignore breakpoints, etc. in this script.
+* The context flag JSD_DEBUG_WHEN_SET decides the logic.
+*/
+#define JSD_SCRIPT_DEBUG_BIT   0x02
+
+extern JSD_PUBLIC_API(uint32)
+JSD_GetScriptFlags(JSDContext *jsdc, JSDScript* jsdscript);
+
+extern JSD_PUBLIC_API(void)
+JSD_SetScriptFlags(JSDContext *jsdc, JSDScript* jsdscript, uint32 flags);
+
 /*
 * Set the private data for this script, returns previous value
 */
 extern JSD_PUBLIC_API(void *)
-JSD_SetScriptPrivate(JSDScript *jsdscript, void *data);
+JSD_SetScriptPrivate(JSDScript* jsdscript, void *data);
 
 /*
 * Get the private data for this script
 */
 extern JSD_PUBLIC_API(void *)
-JSD_GetScriptPrivate(JSDScript *jsdscript);
+JSD_GetScriptPrivate(JSDScript* jsdscript);
 
 /*
 * Determine if this script is still loaded in the interpreter

@@ -109,7 +109,8 @@ _newJSDScript(JSDContext*  jsdc,
         return NULL;
 
     raw_filename = JS_GetScriptFilename(cx,script);
-    
+
+    JS_HashTableAdd(jsdc->scriptsTable, (void *)script, (void *)jsdscript);
     JS_APPEND_LINK(&jsdscript->links, &jsdc->scripts);
     jsdscript->jsdc         = jsdc;
     jsdscript->script       = script;        
@@ -162,6 +163,9 @@ _destroyJSDScript(JSDContext*  jsdc,
     if(jsdscript->url)
         free(jsdscript->url);
 
+    if (jsdscript->profileData)
+        free(jsdscript->profileData);
+    
     if(jsdscript)
         free(jsdscript);
 }
@@ -213,40 +217,151 @@ _dumpJSDScriptList( JSDContext* jsdc )
 #endif /* JSD_DUMP */
 
 /***************************************************************************/
-void 
-jsd_DestroyAllJSDScripts( JSDContext* jsdc )
+JS_STATIC_DLL_CALLBACK(JSHashNumber)
+jsd_hash_script(const void *key)
 {
-    JSDScript *jsdscript;
-    JSDScript *next;
+    return ((JSHashNumber) key) >> 2; /* help lame MSVC1.5 on Win16 */
+}
 
-    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+JS_STATIC_DLL_CALLBACK(void *)
+jsd_alloc_script_table(void *priv, size_t size)
+{
+    return malloc(size);
+}
 
-    for( jsdscript = (JSDScript*)jsdc->scripts.next;
-         jsdscript != (JSDScript*)&jsdc->scripts;
-         jsdscript = next )
+JS_STATIC_DLL_CALLBACK(void)
+jsd_free_script_table(void *priv, void *item)
+{
+    free(item);
+}
+
+JS_STATIC_DLL_CALLBACK(JSHashEntry *)
+jsd_alloc_script_entry(void *priv, const void *item)
+{
+    return (JSHashEntry*) malloc(sizeof(JSHashEntry));
+}
+
+JS_STATIC_DLL_CALLBACK(void)
+jsd_free_script_entry(void *priv, JSHashEntry *he, uintN flag)
+{
+    if (flag == HT_FREE_ENTRY)
     {
-        next = (JSDScript*)jsdscript->links.next;
-        _destroyJSDScript( jsdc, jsdscript );
+        _destroyJSDScript((JSDContext*) priv, (JSDScript*) he->value);
+        free(he);
     }
+}
+
+static JSHashAllocOps script_alloc_ops = {
+    jsd_alloc_script_table, jsd_free_script_table,
+    jsd_alloc_script_entry, jsd_free_script_entry
+};
+
+#ifndef JSD_SCRIPT_HASH_SIZE
+#define JSD_SCRIPT_HASH_SIZE 1024
+#endif
+
+JSBool
+jsd_InitScriptManager(JSDContext* jsdc)
+{
+    JS_INIT_CLIST(&jsdc->scripts);
+    jsdc->scriptsTable = JS_NewHashTable(JSD_SCRIPT_HASH_SIZE, jsd_hash_script,
+                                         JS_CompareValues, JS_CompareValues,
+                                         &script_alloc_ops, (void*) jsdc);
+    return (JSBool) jsdc->scriptsTable;
+}
+
+void
+jsd_DestroyScriptManager(JSDContext* jsdc)
+{
+    JSD_LOCK_SCRIPTS(jsdc);
+    if (jsdc->scriptsTable)
+        JS_HashTableDestroy(jsdc->scriptsTable);
+    JSD_UNLOCK_SCRIPTS(jsdc);
 }
 
 JSDScript*
 jsd_FindJSDScript( JSDContext*  jsdc,
                    JSScript     *script )
 {
-    JSDScript *jsdscript;
-
     JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
-
-    for( jsdscript = (JSDScript *)jsdc->scripts.next;
-         jsdscript != (JSDScript *)&jsdc->scripts;
-         jsdscript = (JSDScript *)jsdscript->links.next )
-    {
-        if (jsdscript->script == script)
-            return jsdscript;
-    }
-    return NULL;
+    return (JSDScript*) JS_HashTableLookup(jsdc->scriptsTable, (void *)script);
 }               
+
+JSDProfileData*
+jsd_GetScriptProfileData(JSDContext* jsdc, JSDScript *script)
+{
+    if (!script->profileData)
+        script->profileData = (JSDProfileData*)calloc(1, sizeof(JSDProfileData));
+
+    return script->profileData;
+}
+
+uint32
+jsd_GetScriptFlags(JSDContext *jsdc, JSDScript *script)
+{
+    return script->flags;
+}
+
+void
+jsd_SetScriptFlags(JSDContext *jsdc, JSDScript *script, uint32 flags)
+{
+    script->flags = flags;
+}
+
+uintN
+jsd_GetScriptCallCount(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->callCount;
+
+    return 0;
+}
+
+uintN
+jsd_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->maxRecurseDepth;
+
+    return 0;
+}
+
+jsdouble
+jsd_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->minExecutionTime;
+
+    return 0.0;
+}
+
+jsdouble
+jsd_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->maxExecutionTime;
+
+    return 0.0;
+}
+
+jsdouble
+jsd_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+        return script->profileData->totalExecutionTime;
+
+    return 0.0;
+}
+
+void
+jsd_ClearScriptProfileData(JSDContext* jsdc, JSDScript *script)
+{
+    if (script->profileData)
+    {
+        free(script->profileData);
+        script->profileData = NULL;
+    }
+}    
 
 JSScript *
 jsd_GetJSScript (JSDContext *jsdc, JSDScript *script)
@@ -486,7 +601,7 @@ jsd_DestroyScriptHookProc(
         hook(jsdc, jsdscript, JS_FALSE, hookData);
 
     JSD_LOCK_SCRIPTS(jsdc);
-    _destroyJSDScript(jsdc, jsdscript);
+    JS_HashTableRemove(jsdc->scriptsTable, (void *)script);
     JSD_UNLOCK_SCRIPTS(jsdc);
 
 #ifdef JSD_DUMP

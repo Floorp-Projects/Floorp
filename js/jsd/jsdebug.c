@@ -113,6 +113,13 @@ JSD_GetContextPrivate(JSDContext *jsdc)
 }
 
 JSD_PUBLIC_API(void)
+JSD_ClearAllProfileData(JSDContext *jsdc)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    jsd_ClearAllProfileData(jsdc);    
+}
+
+JSD_PUBLIC_API(void)
 JSD_SetContextFlags(JSDContext *jsdc, uint32 flags)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
@@ -154,6 +161,63 @@ JSD_IterateScripts(JSDContext* jsdc, JSDScript **iterp)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     return jsd_IterateScripts(jsdc, iterp);
+}
+
+JSD_PUBLIC_API(uint32)
+JSD_GetScriptFlags(JSDContext *jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptFlags(jsdc, script);
+}
+    
+JSD_PUBLIC_API(void)
+JSD_SetScriptFlags(JSDContext *jsdc, JSDScript *script, uint32 flags)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    jsd_SetScriptFlags(jsdc, script, flags);
+}
+
+JSD_PUBLIC_API(uintN)
+JSD_GetScriptCallCount(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptCallCount(jsdc, script);
+}
+
+JSD_PUBLIC_API(uintN)
+JSD_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptMaxRecurseDepth(jsdc, script);
+}
+    
+
+JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptMinExecutionTime(jsdc, script);
+}
+    
+JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptMaxExecutionTime(jsdc, script);
+}
+
+JSD_PUBLIC_API(jsdouble)
+JSD_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetScriptTotalExecutionTime(jsdc, script);
+}
+
+JSD_PUBLIC_API(void)
+JSD_ClearScriptProfileData(JSDContext* jsdc, JSDScript *script)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    jsd_ClearScriptProfileData(jsdc, script);
 }
 
 JSD_PUBLIC_API(JSScript*)

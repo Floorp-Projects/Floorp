@@ -122,23 +122,67 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
     if (before && JS_IsConstructorFrame(cx, fp))
         jsd_Constructing(jsdc, cx, JS_GetFrameThis(cx, fp), fp);
 
-    if (hook)
+    jsscript = JS_GetFrameScript(cx, fp);
+    if (jsscript)
     {
-        jsscript = JS_GetFrameScript(cx, fp);
-        if (jsscript) {
-            JSD_LOCK_SCRIPTS(jsdc);
-            jsdscript = jsd_FindJSDScript(jsdc, jsscript);
-            JSD_UNLOCK_SCRIPTS(jsdc);
-            if (jsdscript) {
-                hookresult = jsd_CallCallHook (jsdc, cx, type, hook, hookData);
+        JSD_LOCK_SCRIPTS(jsdc);
+        jsdscript = jsd_FindJSDScript(jsdc, jsscript);
+        JSD_UNLOCK_SCRIPTS(jsdc);
+    
+        if (jsdscript)
+        {
+            if (JSD_IS_PROFILE_ENABLED(jsdc, jsdscript))
+            {
+                JSDProfileData *pdata;
+                pdata = jsd_GetScriptProfileData (jsdc, jsdscript);
+                if (pdata)
+                {
+                    if (before)
+                    {
+                        if (JSLL_IS_ZERO(pdata->lastCallStart))
+                        {
+                            pdata->lastCallStart = JS_Now();
+                        } else {
+                            if (++pdata->recurseDepth > pdata->maxRecurseDepth)
+                                pdata->maxRecurseDepth = pdata->recurseDepth;
+                        }   
+                        /* make sure we're called for the return too. */
+                        hookresult = JS_TRUE;
+                    } else if (!pdata->recurseDepth &&
+                               !JSLL_IS_ZERO(pdata->lastCallStart)) {
+                        int64 now, ll_delta;
+                        jsdouble delta;
+                        now = JS_Now();
+                        JSLL_SUB(ll_delta, now, pdata->lastCallStart);
+                        JSLL_L2D(delta, ll_delta);
+                        delta /= 1000.0;
+                        pdata->totalExecutionTime += delta;
+                        if (!pdata->minExecutionTime ||
+                            delta < pdata->minExecutionTime)
+                        {
+                            pdata->minExecutionTime = delta;
+                        }
+                        if (delta > pdata->maxExecutionTime)
+                            pdata->maxExecutionTime = delta;
+                        pdata->lastCallStart = JSLL_ZERO;
+                        ++pdata->callCount;
+                    } else if (pdata->recurseDepth) {
+                        --pdata->recurseDepth;
+                        ++pdata->callCount;
+                    }
+                }
+                if (hook)
+                    jsd_CallCallHook (jsdc, cx, type, hook, hookData);
+            } else {
+                if (hook)
+                    hookresult = 
+                        jsd_CallCallHook (jsdc, cx, type, hook, hookData);
+                else
+                    hookresult = JS_TRUE;
             }
         }
     }
-    else
-    {
-        hookresult = JS_TRUE;
-    }
-    
+
 #ifdef JSD_TRACE
     _interpreterTrace(jsdc, cx, fp, before);
     return JS_TRUE;

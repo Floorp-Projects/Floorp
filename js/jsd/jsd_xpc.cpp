@@ -378,10 +378,6 @@ jsds_FilterHook (JSDContext *jsdc, JSDThreadState *state)
         return PR_TRUE;
 
     jsuint pc = JSD_GetPCForStackFrame (jsdc, state, frame);
-    if (!pc) {
-        NS_WARNING("No pc in threadstate");
-        return PR_TRUE;
-    }
 
     const char *url = JSD_GetScriptFilename (jsdc, script);
     if (!url) {
@@ -795,9 +791,14 @@ jsdObject::GetJSDObject(JSDObject **_rval)
 NS_IMETHODIMP
 jsdObject::GetCreatorURL(char **_rval)
 {
-    *_rval = ToNewCString(nsDependentCString(JSD_GetObjectNewURL(mCx, mObject)));
-    if (!*_rval)
-        return NS_ERROR_OUT_OF_MEMORY;
+    const char *url = JSD_GetObjectNewURL(mCx, mObject);
+    if (url) {
+        *_rval = PL_strdup(url);
+        if (!*_rval)
+            return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        *_rval = nsnull;
+    }
     return NS_OK;
 }
 
@@ -811,9 +812,14 @@ jsdObject::GetCreatorLine(PRUint32 *_rval)
 NS_IMETHODIMP
 jsdObject::GetConstructorURL(char **_rval)
 {
-    *_rval = ToNewCString(nsDependentCString(JSD_GetObjectConstructorURL(mCx, mObject)));
-    if (!*_rval)
-        return NS_ERROR_OUT_OF_MEMORY;
+    const char *url = JSD_GetObjectConstructorURL(mCx, mObject);
+    if (url) {
+        *_rval = PL_strdup(url);
+        if (!*_rval)
+            return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        *_rval = nsnull;
+    }
     return NS_OK;
 }
 
@@ -1106,6 +1112,16 @@ jsdScript::GetJSDScript(JSDScript **_rval)
 }
 
 NS_IMETHODIMP
+jsdScript::GetVersion (PRInt32 *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    JSContext *cx = JSD_GetDefaultJSContext (mCx);
+    JSScript *script = JSD_GetJSScript(mCx, mScript);
+    *_rval = NS_STATIC_CAST (PRInt32, JS_GetScriptVersion(cx, script));
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 jsdScript::GetTag(PRUint32 *_rval)
 {
     if (!mTag)
@@ -1154,7 +1170,23 @@ jsdScript::GetIsValid(PRBool *_rval)
     *_rval = mValid;
     return NS_OK;
 }
-    
+
+NS_IMETHODIMP
+jsdScript::SetFlags(PRUint32 flags)
+{
+    ASSERT_VALID_EPHEMERAL;
+    JSD_SetScriptFlags(mCx, mScript, flags);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetFlags(PRUint32 *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptFlags(mCx, mScript);
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 jsdScript::GetFileName(char **_rval)
 {
@@ -1210,6 +1242,54 @@ NS_IMETHODIMP
 jsdScript::GetLineExtent(PRUint32 *_rval)
 {
     *_rval = mLineExtent;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetCallCount(PRUint32 *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptCallCount (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetMaxRecurseDepth(PRUint32 *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptMaxRecurseDepth (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetMinExecutionTime(double *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptMinExecutionTime (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetMaxExecutionTime(double *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptMaxExecutionTime (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::GetTotalExecutionTime(double *_rval)
+{
+    ASSERT_VALID_EPHEMERAL;
+    *_rval = JSD_GetScriptTotalExecutionTime (mCx, mScript);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+jsdScript::ClearProfileData()
+{
+    ASSERT_VALID_EPHEMERAL;
+    JSD_ClearScriptProfileData(mCx, mScript);
     return NS_OK;
 }
 
@@ -1565,15 +1645,15 @@ jsdStackFrame::GetFunctionName(char **_rval)
     ASSERT_VALID_EPHEMERAL;
     const char *name = JSD_GetNameForStackFrame(mCx, mThreadState,
                                                 mStackFrameInfo);
-    if (!name)
-    {
+    if (name) {
+        *_rval = PL_strdup(name);
+        if (!*_rval)
+            return NS_ERROR_OUT_OF_MEMORY;
+    } else {
         /* top level scripts have no function name */
         *_rval = nsnull;
         return NS_OK;
     }
-    *_rval = ToNewCString(nsDependentCString(name));
-    if (!*_rval)
-        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
@@ -1622,7 +1702,10 @@ jsdStackFrame::GetPc(PRUint32 *_rval)
     jsuword pcbase = JSD_GetClosestPC(mCx, script, 0);
     
     jsuword pc = JSD_GetPCForStackFrame (mCx, mThreadState, mStackFrameInfo);
-    *_rval = pc - pcbase;
+    if (pc)
+        *_rval = pc - pcbase;
+    else
+        *_rval = pcbase;
     return NS_OK;
 }
 
@@ -1876,9 +1959,15 @@ NS_IMETHODIMP
 jsdValue::GetJsClassName(char **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
-    *_rval = ToNewCString(nsDependentCString(JSD_GetValueClassName(mCx, mValue)));
-    if (!*_rval)
-        return NS_ERROR_OUT_OF_MEMORY;
+    const char *name = JSD_GetValueClassName(mCx, mValue);
+    if (name) {
+        *_rval = PL_strdup(name);
+        if (!*_rval)
+            return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        *_rval = nsnull;
+    }
+    
     return NS_OK;
 }
 
@@ -1896,16 +1985,16 @@ jsdValue::GetJsFunctionName(char **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     const char *name = JSD_GetValueFunctionName(mCx, mValue);
-    if (!name)
-    {
+    if (name) {
+        *_rval = PL_strdup(name);
+        if (!*_rval)
+            return NS_ERROR_OUT_OF_MEMORY;
+    } else {
         /* top level scripts have no function name */
         *_rval = nsnull;
         return NS_OK;
     }
 
-    *_rval = ToNewCString(nsDependentCString(*_rval));
-    if (!*_rval)
-        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
@@ -1953,9 +2042,14 @@ jsdValue::GetStringValue(char **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     JSString *jstr_val = JSD_GetValueString(mCx, mValue);
-    *_rval = ToNewCString(nsDependentCString(JS_GetStringBytes(jstr_val)));
-    if (!*_rval)
-        return NS_ERROR_OUT_OF_MEMORY;
+    char *bytes = JS_GetStringBytes(jstr_val);
+    if (bytes) {
+        *_rval = PL_strdup(bytes);
+        if (!*_rval)
+            return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        *_rval = nsnull;
+    }
     return NS_OK;
 }
 
@@ -2430,13 +2524,20 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
     return rv;
 }
 
-
 NS_IMETHODIMP
 jsdService::GC (void)
 {
     ASSERT_VALID_CONTEXT;
     JSContext *cx = JSD_GetDefaultJSContext (mCx);
     JS_GC(cx);
+    return NS_OK;
+}
+    
+NS_IMETHODIMP
+jsdService::ClearProfileData ()
+{
+    ASSERT_VALID_CONTEXT;
+    JSD_ClearAllProfileData (mCx);
     return NS_OK;
 }
 

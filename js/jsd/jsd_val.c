@@ -215,7 +215,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
             JS_RestoreExceptionState(cx, exceptionState);
             if(jsdval->string)
             {
-                if(!JS_AddRoot(cx, &jsdval->string))
+                if(!JS_AddNamedRoot(cx, &jsdval->string, "ValueString"))
                     jsdval->string = NULL;
             }
         }
@@ -255,7 +255,7 @@ jsd_NewValue(JSDContext* jsdc, jsval val)
 
     if(JSVAL_IS_GCTHING(val))
     {
-        if(!JS_AddRoot(jsdc->dumbContext, &jsdval->val))
+        if(!JS_AddNamedRoot(jsdc->dumbContext, &jsdval->val, "JSDValue"))
         {
             free(jsdval);
             return NULL;
