@@ -63,7 +63,6 @@ PAGE {
 
 UL, OL, DL { display: block; }
 DT, DD { display: block; }
-LI { display: list-item; }
 IMG { display: inline; }
 SPACER { display: inline; }
 WBR { display: inline; }
@@ -93,7 +92,13 @@ OL {
   list-style-type: decimal;
 }
 
-UL, OL {
+LI {
+  display: list-item;
+  list-style-position: inside;
+}
+
+UL LI, OL LI {
+  list-style-position: inside;
   padding-left: 40px;		/* nav4's value */
 }
 
