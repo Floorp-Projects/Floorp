@@ -80,6 +80,7 @@
 #ifndef nsXPIDLString_h__
 #define nsXPIDLString_h__
 
+#include "nscore.h"
 #include "nsCom.h"
 #include "prtypes.h"
 
