@@ -170,9 +170,14 @@ public:
                          char* aBuffer, PRInt32 aBufSize,
                          PRInt32& aStrLen);
 
+  void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
+                            PRUint8 aDecorations, 
+                            nscoord aX, nscoord aY, nscoord aWidth);
+
   void PaintUnicodeText(nsIPresContext& aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nscolor aTextColor,
+                        PRUint8 aDecorations,
                         nscolor aSelectionTextColor,
                         nscolor aSelectionBGColor,
                         nscoord dx, nscoord dy);
@@ -180,6 +185,7 @@ public:
   void PaintAsciiText(nsIPresContext& aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nscolor aTextColor,
+                      PRUint8 aDecorations,
                       nscolor aSelectionTextColor,
                       nscolor aSelectionBGColor,
                       nscoord dx, nscoord dy);
@@ -420,7 +426,9 @@ TextFrame::Paint(nsIPresContext& aPresContext,
 
     // Set font and color
     aRenderingContext.SetColor(color->mColor);
-    aRenderingContext.SetFont(font->mFont);
+    nsFont  plainFont(font->mFont);
+    plainFont.decorations = NS_FONT_DECORATION_NONE;
+    aRenderingContext.SetFont(plainFont); // don't let the system paint decorations
 
     // XXX Get these from style
     nscolor selbg = NS_RGB(0, 0, 0);
@@ -433,12 +441,12 @@ TextFrame::Paint(nsIPresContext& aPresContext,
         (0 == (hints & NS_RENDERING_HINT_FAST_8BIT_TEXT))) {
       // Use PRUnichar rendering routine
       PaintUnicodeText(aPresContext, aRenderingContext,
-                       color->mColor, selfg, selbg, 0, 0);
+                       color->mColor, font->mFont.decorations, selfg, selbg, 0, 0);
     }
     else {
       // Use char rendering routine
       PaintAsciiText(aPresContext, aRenderingContext,
-                       color->mColor, selfg, selbg, 0, 0);
+                       color->mColor, font->mFont.decorations, selfg, selbg, 0, 0);
     }
   }
 
@@ -902,10 +910,76 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 // XXX letter-spacing
 // XXX word-spacing
 
+void 
+TextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
+                                PRUint8 aDecorations, 
+                                nscoord aX, nscoord aY, nscoord aWidth)
+{
+  nsIFontMetrics* fontMetrics = aRenderingContext.GetFontMetrics();
+  if (nsnull != fontMetrics) {
+    nscolor overColor;
+    nscolor underColor;
+    nscolor strikeColor;
+    nsIStyleContext*  context = mStyleContext;
+    PRUint8 decorMask = aDecorations;
+
+    NS_ADDREF(context);
+    do {  // find decoration colors
+      const nsStyleText* styleText = 
+                (const nsStyleText*)context->GetStyleData(eStyleStruct_Text);
+      if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
+        const nsStyleColor* styleColor =
+                (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
+        if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
+          underColor = styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        }
+        if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
+          overColor = styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
+        }
+        if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
+          strikeColor = styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+        }
+      }
+      if (0 != decorMask) {
+        nsIStyleContext*  lastContext = context;
+        context = context->GetParent();
+        NS_RELEASE(lastContext);
+      }
+    } while ((nsnull != context) && (0 != decorMask));
+    NS_IF_RELEASE(context);
+
+    nscoord offset;
+    nscoord size;
+    nscoord baseline;
+    fontMetrics->GetMaxAscent(baseline);
+    if (aDecorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
+      fontMetrics->GetUnderline(offset, size);
+      if (aDecorations & NS_FONT_DECORATION_OVERLINE) {
+        aRenderingContext.SetColor(overColor);
+        aRenderingContext.FillRect(aX, aY, aWidth, size);
+      }
+      if (aDecorations & NS_FONT_DECORATION_UNDERLINE) {
+        aRenderingContext.SetColor(underColor);
+        aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
+      }
+    }
+    if (aDecorations & NS_FONT_DECORATION_LINE_THROUGH) {
+      fontMetrics->GetStrikeout(offset, size);
+      aRenderingContext.SetColor(strikeColor);
+      aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
+    }
+    NS_RELEASE(fontMetrics);
+  }
+}
+
 void
 TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             nscolor aTextColor,
+                            PRUint8 aDecorations,
                             nscolor aSelectionTextColor,
                             nscolor aSelectionBGColor,
                             nscoord dx, nscoord dy)
@@ -929,6 +1003,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
+      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
     }
     else {
       SelectionInfo si;
@@ -938,6 +1013,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
       nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
       if (si.mEmptySelection) {
         aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
+        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
         fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
@@ -951,6 +1027,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
           fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
           x += textWidth;
         }
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
@@ -964,6 +1041,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
           aRenderingContext.SetColor(aSelectionTextColor);
           aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
                                        x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
           aRenderingContext.SetColor(aTextColor);
           x += textWidth;
         }
@@ -974,6 +1052,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
           fm->GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
         }
       }
       NS_RELEASE(fm);
@@ -995,6 +1074,7 @@ void
 TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nscolor aTextColor,
+                          PRUint8 aDecorations,
                           nscolor aSelectionTextColor,
                           nscolor aSelectionBGColor,
                           nscoord dx, nscoord dy)
@@ -1018,6 +1098,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
+      PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
     }
     else {
       SelectionInfo si;
@@ -1027,6 +1108,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
       nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
       if (si.mEmptySelection) {
         aRenderingContext.DrawString(text, textLength, dx, dy, mRect.width);
+        PaintTextDecorations(aRenderingContext, aDecorations, dx, dy, mRect.width);
         fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
                               dx + textWidth, dy, mRect.height,
@@ -1040,6 +1122,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
           fm->GetWidth(text, PRUint32(si.mStartOffset), textWidth);
           aRenderingContext.DrawString(text, si.mStartOffset,
                                        x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
           x += textWidth;
         }
         PRInt32 secondLen = si.mEndOffset - si.mStartOffset;
@@ -1053,6 +1136,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
           aRenderingContext.SetColor(aSelectionTextColor);
           aRenderingContext.DrawString(text + si.mStartOffset, secondLen,
                                        x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
           aRenderingContext.SetColor(aTextColor);
           x += textWidth;
         }
@@ -1063,6 +1147,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
           fm->GetWidth(text + si.mEndOffset, PRUint32(thirdLen), textWidth);
           aRenderingContext.DrawString(text + si.mEndOffset,
                                        thirdLen, x, dy, textWidth);
+          PaintTextDecorations(aRenderingContext, aDecorations, x, dy, textWidth);
         }
       }
       NS_RELEASE(fm);
