@@ -94,7 +94,6 @@ public:
                                 nsIDOMHTMLInputElement** aRadio) = 0;
 
   /**
-  /**
    * Add radio button to radio group
    *
    * Note that forms do not do anything for this method since they already
