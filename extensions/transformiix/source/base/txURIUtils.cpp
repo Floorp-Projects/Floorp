@@ -229,6 +229,16 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
         return PR_TRUE;
     }
 
+    // Ask the securitymanager if we have "UniversalBrowserRead"
+    PRBool caps = PR_FALSE;
+    nsresult rv =
+        gTxSecurityManager->IsCapabilityEnabled("UniversalBrowserRead",
+                                                &caps);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    if (caps) {
+        return PR_TRUE;
+    }
+
     // Make sure that this is a real node. We do this by first QI'ing to
     // nsIContent (which is important performance wise) and if that QI
     // fails we QI to nsIDocument. If both those QI's fail we won't let
@@ -299,8 +309,8 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
         return PR_TRUE;
     }
 
-    nsresult rv = gTxSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
-                                                               principal);
+    rv = gTxSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
+                                                      principal);
 
     return NS_SUCCEEDED(rv);
 }
