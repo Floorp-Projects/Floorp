@@ -110,7 +110,7 @@ struct XULBroadcastListener
 	nsCOMPtr<nsIDOMNode> mListener;
 
 	XULBroadcastListener(const nsString& attr, nsIDOMNode* listen)
-		: mAttribute(attr), mListener(listen)
+		: mAttribute(attr), mListener( dont_QueryInterface(listen) )
 	{ // Nothing else to do 
 	}
 };
@@ -1804,7 +1804,7 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode)
 	mBroadcastListeners.AppendElement(new XULBroadcastListener(attr, aNode));
 
 	// We need to sync up the initial attribute value.
-  nsCOMPtr<nsIContent> pListener(aNode);
+  nsCOMPtr<nsIContent> pListener( do_QueryInterface(aNode) );
 
   // Retrieve our namespace
   PRInt32 namespaceID;
@@ -1844,7 +1844,7 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMNode* aNode)
 		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
 		
 		if (xulListener->mAttribute == attr &&
-			xulListener->mListener == nsCOMPtr<nsIDOMNode>(aNode))
+			xulListener->mListener == nsCOMPtr<nsIDOMNode>( dont_QueryInterface(aNode) ))
 		{
 			// Do the removal.
 			mBroadcastListeners.RemoveElementAt(i);

@@ -577,7 +577,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSubject,
     }
 
     for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
-        nsCOMPtr<nsIContent> element(elements->ElementAt(i));
+        nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
         
         // XXX somehow figure out if building XUL kids on this
         // particular element makes any sense whatsoever.
@@ -659,7 +659,7 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
     }
 
     for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
-        nsCOMPtr<nsIContent> element(elements->ElementAt(i));
+        nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
         
         // XXX somehow figure out if removing XUL kids from this
         // particular element makes any sense whatsoever.

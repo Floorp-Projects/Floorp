@@ -1891,8 +1891,8 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
             // We have a DOM node to bind to.  Add a broadcast
             // listener to that node, but only if it's a XUL node.
             // XXX: Handle context nodes.
-            nsCOMPtr<nsIDOMNode> pListener(aElement);
-            nsCOMPtr<nsIDOMXULElement> pBroadcaster(pDOMNode);
+            nsCOMPtr<nsIDOMNode> pListener( do_QueryInterface(aElement) );
+            nsCOMPtr<nsIDOMXULElement> pBroadcaster( do_QueryInterface(pDOMNode) );
             if (pListener)
             {
                 pBroadcaster->AddBroadcastListener(attributeValue,
@@ -2134,7 +2134,7 @@ XULDocumentImpl::SearchForNodeByID(const nsString& anID,
 
     if (idValue == anID)
     {
-      nsCOMPtr<nsIDOMNode> pDomNode(anElement);
+      nsCOMPtr<nsIDOMNode> pDomNode( do_QueryInterface(anElement) );
       if (pDomNode)
       {
         *aReturn = pDomNode;
