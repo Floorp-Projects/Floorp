@@ -149,11 +149,12 @@
           filePicker.appendFilter(programsFilter, "*.exe; *.com");
         else
           filePicker.appendFilters(FP.filterAll);
-        filePicker.show();
-        var file = filePicker.file.QueryInterface(Components.interfaces.nsILocalFile);
-        gAppPath.value = file.path;
-        gAppPath.select();
-        selectAppRadio();
+        if ( filePicker.show() == FP.returnOK ) {
+          var file = filePicker.file.QueryInterface(Components.interfaces.nsILocalFile);
+          gAppPath.value = file.path;
+          gAppPath.select();
+          selectAppRadio();
+        }
       }
     }
     
