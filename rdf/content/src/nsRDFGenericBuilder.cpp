@@ -738,12 +738,14 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
             if (NS_FAILED(rv)) return rv;
 
-		PRInt32	numKids;
-		if (NS_SUCCEEDED(element->ChildCount(numKids)) && (numKids == 0))
-		{
-			nsAutoString		emptyVal("true");
-			element->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
-		}
+            PRInt32	numKids;
+            rv = element->ChildCount(numKids);
+            if (NS_FAILED(rv)) return rv;
+
+            if (numKids == 0) {
+                rv = element->SetAttribute(kNameSpaceID_None, kEmptyAtom, "true", PR_TRUE);
+                if (NS_FAILED(rv)) return rv;
+            }
             
         }
         else {
@@ -1432,7 +1434,7 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 		else if ((attribNameSpaceID == kNameSpaceID_None) && (attribAtom.get() == kIsContainerAtom))
 		{
 			// check and see if aNode is a container
-			PRBool	containerFlag = IsContainer(aRule, aNode, PR_FALSE);
+			PRBool	containerFlag = IsContainer(aRule, aNode);
 			if (containerFlag && (!attribValue.EqualsIgnoreCase("true")))
 			{
 				*matchingRuleFound = PR_FALSE;
@@ -1696,6 +1698,11 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (IsContainer(realKid, aResource)) {
                 rv = realKid->SetAttribute(kNameSpaceID_None, kContainerAtom, "true", PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
+
+                // test to see if the container has contents
+                char* isEmpty = IsEmpty(realKid, aResource) ? "true" : "false";
+                rv = realKid->SetAttribute(kNameSpaceID_None, kEmptyAtom, isEmpty, PR_FALSE);
+                if (NS_FAILED(rv)) return rv;
             }
         }
         else if ((tag.get() == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL)) {
@@ -1951,12 +1958,6 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
                                   aValue,
                                   aNaturalOrderPos);
 
-	if (NS_SUCCEEDED(rv))
-	{
-		nsAutoString		emptyVal("false");
-		aElement->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
-	}
-
 	return rv;
 }
 
@@ -2081,10 +2082,6 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     // Create the contents of a container by iterating over all of the
     // "containment" arcs out of the element's resource.
     nsresult rv;
-
-	// set the empty attribute to false even if the container is closed
-	nsAutoString		emptyVal("false");
-	aElement->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
 
     // See if the item is even "open". If not, then just pretend it
     // doesn't have _any_ contents. We check this _before_ checking
@@ -2499,7 +2496,7 @@ RDFGenericBuilderImpl::IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* a
 }
 
 PRBool
-RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResource, PRBool trackEmptyFlag)
+RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResource)
 {
     // Look at all of the arcs extending _out_ of the resource: if any
     // of them are that "containment" property, then we know we'll
@@ -2533,25 +2530,61 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
         if (! IsContainmentProperty(aElement, property))
             continue;
 
-	if (trackEmptyFlag == PR_TRUE)
-	{
-		// now that we know its a container, set its "empty" attribute
-		nsAutoString		emptyVal("true");
-		nsCOMPtr<nsIRDFNode>	value;
-		if (NS_SUCCEEDED(rv = mDB->GetTarget(aResource, property, PR_TRUE,
-			getter_AddRefs(value))) && (rv != NS_RDF_NO_VALUE) && (value))
-		{
-			emptyVal = "false";
-		}
-		aElement->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
-		if(emptyVal.Equals("false"))
-	        return PR_TRUE;
-	}
-        return PR_FALSE;
+        return PR_TRUE;
     }
 
     return PR_FALSE;
 }
+
+
+PRBool
+RDFGenericBuilderImpl::IsEmpty(nsIContent* aElement, nsIRDFResource* aContainer)
+{
+    // Look at all of the arcs extending _out_ of the resource: if any
+    // of them are that "containment" property, then we know we'll
+    // have children.
+
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    nsresult rv;
+
+    rv = mDB->ArcLabelsOut(aContainer, getter_AddRefs(arcs));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
+    if (NS_FAILED(rv))
+        return PR_TRUE;
+
+    while (1) {
+        PRBool hasMore;
+        rv = arcs->HasMoreElements(&hasMore);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error advancing cursor");
+        if (NS_FAILED(rv))
+            return PR_TRUE;
+
+        if (! hasMore)
+            break;
+
+        nsCOMPtr<nsISupports> isupports;
+        rv = arcs->GetNext(getter_AddRefs(isupports));
+        if (NS_FAILED(rv))
+            return PR_TRUE;
+
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
+
+        if (! IsContainmentProperty(aElement, property))
+            continue;
+
+        // now that we know its a container, check to see if it's "empty"
+        // by testing to see if the property has a target.
+        nsCOMPtr<nsIRDFNode> dummy;
+        rv = mDB->GetTarget(aContainer, property, PR_TRUE, getter_AddRefs(dummy));
+        if (NS_FAILED(rv)) return rv;
+
+        if (dummy)
+            return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
 
 PRBool
 RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
