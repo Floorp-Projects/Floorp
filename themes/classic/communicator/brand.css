@@ -1,24 +1,38 @@
 
 #navigator-throbber
   {
-    background-image      : url("chrome://communicator/skin/navbar-endbox.gif");
-    background-repeat     : no-repeat;
+    behavior              : url("resource:/chrome/xulBindings.xml#buttontop");
+    border                : 1px solid threedface;
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
-    width                 : 68px;
-    max-width             : 68px;
-    padding               : 11px 3px 1px 23px;
     margin                : 0px;
     cursor                : pointer;
   }  
+  
+#navigator-throbber:hover
+  {
+    border                : 1px solid threeddarkshadow;
+  }
+  
+#navigator-throbber > .button-internal-box
+  {
+    border-left           : 1px solid threedhighlight;
+    border-top            : 1px solid threedhighlight;
+    border-right          : 1px solid threedshadow;
+    border-bottom         : 1px solid threedshadow;
+    padding               : 1px;
+  }  
 
+#navigator-throbber:hover:active > .button-internal-box
+  {
+    border-left           : 1px solid threedshadow;
+    border-top            : 1px solid threedshadow;
+    border-right          : 1px solid threedhighlight;
+    border-bottom         : 1px solid threedhighlight;
+    padding               : 2px 0xp 0xp 2px;
+  }  
+  
 #navigator-throbber[busy="true"]
   {
     list-style-image      : url("chrome://global/skin/animthrob.gif");
   }
   
-#navigator-throbber:hover:active
-  {
-    padding               : 12px 2px 0px 24px;
-    margin                : 0px;
-  }
-

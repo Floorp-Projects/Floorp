@@ -63,6 +63,7 @@
   /* outer frame */
   .button-toolbar-1
     {
+      behavior            : url("resource:/chrome/xulBindings.xml#buttontop");
       background-repeat   : no-repeat;
       background-color    : transparent;
       background-position : 0px 0px;
