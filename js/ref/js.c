@@ -64,7 +64,7 @@
 #define isatty(f) 1
 
 #include <SIOUX.h>
-#include <MacTypes.h>
+#include <Types.h>
 
 static char* mac_argv[] = { "js", NULL };
 
