@@ -30,7 +30,7 @@ CFLAGS       += $(OPTIMIZER) $(OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
 RANLIB        = echo
 JAR           = /bin/jar
 TAR           = /bin/tar
-
+CFLAGS       +=-DDEBUG_$(USERNAME)
 ifdef NSPR20
 DEFINES     += -DNSPR20
 endif
