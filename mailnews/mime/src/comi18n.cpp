@@ -1438,9 +1438,9 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
                             PRInt32* numUnConverted)
 {
   if (!autoDetection && from_charset && to_charset &&
-      (!strcasecmp(from_charset,to_charset) ||
-       (!strcasecmp(from_charset,"us-ascii") && !strcasecmp(to_charset,"UTF-8")) ||
-       (!strcasecmp(from_charset,"UTF-8")    && !strcasecmp(to_charset,"us-ascii")))) {
+      (!nsCRT::strcasecmp(from_charset,to_charset) ||
+       (!nsCRT::strcasecmp(from_charset,"us-ascii") && !nsCRT::strcasecmp(to_charset,"UTF-8")) ||
+       (!nsCRT::strcasecmp(from_charset,"UTF-8")    && !nsCRT::strcasecmp(to_charset,"us-ascii")))) {
     if (NULL != numUnConverted) 
       *numUnConverted = 0;
 
