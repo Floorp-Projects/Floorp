@@ -111,7 +111,7 @@ if test "$echo_cflags" = "yes"; then
 fi
 
 if test "$echo_idlflags" = "yes"; then
-    echo "-I%{idldir}"
+    echo "-I%idldir%"
 fi
 
 _nspr_libs="%FULL_NSPR_LIBS%"
