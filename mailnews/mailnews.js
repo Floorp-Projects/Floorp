@@ -331,6 +331,10 @@ pref("mail.server.default.allows_specialfolders_usage", true);
 pref("mail.server.default.canCreateFolders", true);
 pref("mail.server.default.canFileMessages", true);
 
+// special enhancements for IMAP servers
+pref("mail.server.default.store_read_mail_in_pfc", false);  
+pref("mail.server.default.store_sent_mail_in_pfc", false);  
+
 // for spam
 pref("mail.server.default.spamLevel",60);  // 0 - 100, 0 off, 20, lowest, 40 low, 60 medium, 80 high, 100 highest
 pref("mail.server.default.moveOnSpam",false);
