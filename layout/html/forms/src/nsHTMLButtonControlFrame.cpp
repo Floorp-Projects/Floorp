@@ -102,7 +102,7 @@ protected:
   PRBool mInline;
   nsFormFrame* mFormFrame;
   nsMouseState mLastMouseState;
-  PRBool mGrabbingTheMouse;
+  nsCursor mPreviousCursor;
 };
 
 nsresult
@@ -123,7 +123,7 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame(nsIContent* aContent,
 {
   mInline = PR_TRUE;
   mLastMouseState = eMouseNone;
-  mGrabbingTheMouse = PR_FALSE;
+  mPreviousCursor = eCursor_standard;
 }
 
 nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
@@ -311,72 +311,86 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus& aEventStatus)
 {
-  nsIWidget* window;
-  nsIView* view;
-  nsIViewManager* viewMan;
-  PRBool ignore;
+  static int foo = 0;
 
-  switch (aEvent->message) {
-    case NS_MOUSE_ENTER: // not implemented yet on frames
-	    mLastMouseState = eMouseEnter;
-	    break;
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-	    mLastMouseState = eMouseDown;
-	    //mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
-	    break;
-    case NS_MOUSE_MOVE:
-      GetWindow(window);
-      if (window) {
-        window->SetCursor(eCursor_arrow_west_plus); // XXX don't do this every time
-        NS_RELEASE(window);
-      }
-      if (!mGrabbingTheMouse) {
-        GetView(view);
-        if (view) {
-          view->GetViewManager(viewMan);
-          if (viewMan) {
-            viewMan->GrabMouseEvents(view, ignore);
-            NS_RELEASE(viewMan);
-            mGrabbingTheMouse = PR_TRUE;
+  aEventStatus = nsEventStatus_eIgnore;
+  nsresult result = NS_OK;
+
+  nsIView* view;
+  GetView(view);
+  if (view) {
+    nsIViewManager* viewMan;
+    view->GetViewManager(viewMan);
+    if (viewMan) {
+      nsIView* grabber;
+      viewMan->GetMouseEventGrabber(grabber);
+      if ((grabber == view) || (nsnull == grabber)) {
+        nsIWidget* window;
+        PRBool ignore;
+
+        switch (aEvent->message) {
+        case NS_MOUSE_ENTER: // not implemented yet on frames
+	        mLastMouseState = eMouseEnter;
+	        break;
+        case NS_MOUSE_LEFT_BUTTON_DOWN:
+	        mLastMouseState = eMouseDown;
+	        //mLastMouseState = (eMouseEnter == mLastMouseState) ? eMouseDown : eMouseNone;
+	        break;
+        case NS_MOUSE_MOVE:
+printf ("%d mRect=(%d,%d,%d,%d), x=%d, y=%d \n", foo, mRect.x, mRect.y, mRect.width, mRect.height, aEvent->point.x, aEvent->point.y);
+          if ((aEvent->point.x <= mRect.width) && (aEvent->point.y <= mRect.height)) { // mouse enter, frames don't support enter yet
+            if (nsnull == grabber) { 
+printf("%d enter\n", foo);
+              viewMan->GrabMouseEvents(view, ignore);
+              GetWindow(window);
+              if (window) {
+                mPreviousCursor = window->GetCursor();
+                window->SetCursor(eCursor_standard); 
+                //window->SetCursor(eCursor_sizeWE); //eCursor_arrow_west_plus); 
+                NS_RELEASE(window);
+              }
+            }
+          } else { // mouse exit, frames don't support exit yet 
+            viewMan->GrabMouseEvents(nsnull, ignore); 
+printf("%d exit\n", foo);
+            GetWindow(window);
+            if (window) {
+              window->SetCursor(mPreviousCursor);  // eCursor_sizeWE 
+              NS_RELEASE(window);
+            }
           }
-        }
-      }
-      break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-	    if (eMouseDown == mLastMouseState) {
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsMouseEvent event;
-        event.eventStructType = NS_MOUSE_EVENT;
-        event.message = NS_MOUSE_LEFT_CLICK;
-        mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+          break;
+        case NS_MOUSE_LEFT_BUTTON_UP:
+	        if (eMouseDown == mLastMouseState) {
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsMouseEvent event;
+            event.eventStructType = NS_MOUSE_EVENT;
+            event.message = NS_MOUSE_LEFT_CLICK;
+            mContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
         
-        if (nsEventStatus_eConsumeNoDefault != status) {
-          MouseClicked(&aPresContext);
+            if (nsEventStatus_eConsumeNoDefault != status) {
+              MouseClicked(&aPresContext);
+            }
+	        } 
+	        mLastMouseState = eMouseEnter;
+	        break;
+        case NS_MOUSE_EXIT: // doesn't work for frames, yet
+	        break;
         }
-	    } 
-	    mLastMouseState = eMouseEnter;
-	    break;
-    case NS_MOUSE_EXIT:
-      GetWindow(window);
-      if (window) {
-        window->SetCursor(eCursor_standard);
-        NS_RELEASE(window);
+        aEventStatus = nsEventStatus_eConsumeNoDefault;
+        NS_RELEASE(viewMan);
+        return NS_OK;
       }
-      GetView(view);
-      if (view) {
-        view->GetViewManager(viewMan);
-        if (viewMan) {
-          viewMan->GrabMouseEvents(nsnull, ignore);
-          NS_RELEASE(viewMan);
-          mGrabbingTheMouse = PR_FALSE;
-        }
-      }
-	    mLastMouseState = eMouseNone;
-	    break;
+    }
   }
-  aEventStatus = nsEventStatus_eConsumeNoDefault;
-  return NS_OK;
+  if (nsnull == mFirstChild) { // XXX see corresponding hack in nsHTMLContainerFrame::DeleteFrame
+    aEventStatus = nsEventStatus_eConsumeNoDefault;
+    return NS_OK;
+  } else {
+    return nsHTMLContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  }
 }
+
 
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)

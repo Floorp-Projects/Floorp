@@ -36,7 +36,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  virtual void PostCreateWidget(nsIPresContext* aPresContext);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth,
+                                nscoord& aHeight);
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 

@@ -350,7 +350,7 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 
 void 
-nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
   PRInt32 type;
   GetType(&type);

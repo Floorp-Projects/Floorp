@@ -40,7 +40,9 @@ class nsCheckboxControlFrame : public nsFormControlFrame {
 public:
   nsCheckboxControlFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  virtual void PostCreateWidget(nsIPresContext* aPresContext);
+  virtual void PostCreateWidget(nsIPresContext* aPresContext,
+                                nscoord& aWidth,
+                                nscoord& aHeight);
 
   virtual const nsIID& GetCID();
 
@@ -142,7 +144,7 @@ nsCheckboxControlFrame::GetChecked(PRBool* aResult)
 }
 
 void 
-nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext)
+nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
   if (!mWidget) {
     return;
