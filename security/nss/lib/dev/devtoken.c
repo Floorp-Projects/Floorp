@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.13 $ $Date: 2002/04/18 17:29:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.14 $ $Date: 2002/04/18 17:54:30 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -223,6 +223,9 @@ nssToken_GetName
   NSSToken *tok
 )
 {
+    if (tok == NULL) {
+	return "";
+    }
     if (tok->base.name[0] == 0) {
 	(void) nssSlot_IsTokenPresent(tok->slot);
     } 
