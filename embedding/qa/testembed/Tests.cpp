@@ -87,60 +87,44 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TESTS_CREATEFILE, OnTestsCreateFile)
 	ON_COMMAND(ID_TESTS_CREATEPROFILE, OnTestsCreateprofile)
 	ON_COMMAND(ID_TESTS_ADDWEBPROGLISTENER, OnTestsAddWebProgListener)
-
 	ON_COMMAND(ID_TESTS_ADDHISTORYLISTENER, OnTestsAddHistoryListener)
+	ON_COMMAND(ID_TESTS_REMOVEHISTORYLISTENER, OnTestsRemovehistorylistener)
 
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD2, OnToolsTestYourMethod2)
-	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
-	ON_COMMAND(ID_INTERFACES_NSIREQUEST_CANCEL, OnInterfacesNsirequest)
 
-	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
+	ON_COMMAND(ID_VERIFYBUGS_90195, OnVerifybugs90195)
 
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_INIT, OnInterfacesNsidirectoryservice)
-
-	ON_COMMAND(ID_INTERFACES_NSISELECTION_RUNALLTESTS, OnInterfacesNsiselection)
-	ON_COMMAND(ID_VERIFYBUGS_90195, OnVerifybugs90195)
-	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RUNALLTESTS, OnInterfacesNsiprofile)
-	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETCOUNT, OnInterfacesNsishistory)
-
-	ON_COMMAND(ID_TESTS_REMOVEHISTORYLISTENER, OnTestsRemovehistorylistener)
-	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCANGOBACK, OnInterfacesNsiwebnav)
-
-	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCOPYSELECTION, OnInterfacesNsiclipboardcommands)
-
-	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS, OnInterfacesNsiobserverservice)
-
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_REGISTERPROVIDER, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS, OnInterfacesNsidirectoryservice)
 	ON_COMMAND(ID_INTERFACES_NSIDIRECTORYSERVICE_UNREGISTERPROVIDER, OnInterfacesNsidirectoryservice)
 
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETDOMDOCUMENT, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETFRAMES, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETNAME, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETPARENT, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCROLLBARS, OnInterfacesNsidomwindow)
-
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCROLLY, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSCSOLLX, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETSELECTION, OnInterfacesNsidomwindow)
-
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBY, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBYLINES, OnInterfacesNsidomwindow)
-
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLBYPAGES, OnInterfacesNsidomwindow)
-
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SCROLLTO, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SIZETOCONTENT, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETTEXTZOOM, OnInterfacesNsidomwindow)
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SETTEXTZOOM, OnInterfacesNsidomwindow)
 
+	ON_COMMAND(ID_INTERFACES_NSISELECTION_RUNALLTESTS, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETANCHORNODE, OnInterfacesNsiselection)
-
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_ADDRANGE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSETOEND, OnInterfacesNsiselection)
-
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_COLLAPSETOSTART, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_CONTAINSNODE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_DELETEFROMDOCUMENT, OnInterfacesNsiselection)
@@ -148,43 +132,41 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETANCHOROFFSET, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETFOCUSNODE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETFOCUSOFFSET, OnInterfacesNsiselection)
-
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETISCOLLAPSED, OnInterfacesNsiselection)
-
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETRANGEAT, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_GETRANGECOUNT, OnInterfacesNsiselection)
-
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_REMOVEALLRANGES, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_REMOVERANGE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_SELECTALLCHILDREN, OnInterfacesNsiselection)
-
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_SELECTIONLANGUAGECHANGE, OnInterfacesNsiselection)
 	ON_COMMAND(ID_INTERFACES_NSISELECTION_TOSTRING, OnInterfacesNsiselection)
+
+	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RUNALLTESTS, OnInterfacesNsiprofile)	
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_CLONEPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_CREATENEWPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_DELETEPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETCURRENTPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETPROFILECOUNT, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_GETPROFILELIST, OnInterfacesNsiprofile)
-
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_PROFILEEXISTS, OnInterfacesNsiprofile)
-
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_RENAMEPROFILE, OnInterfacesNsiprofile)
-
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SETCURRENTPROFILE, OnInterfacesNsiprofile)
 	ON_COMMAND(ID_INTERFACES_NSIPROFILE_SHUTDOWNCURRENTPROFILE, OnInterfacesNsiprofile)
+
+	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETCOUNT, OnInterfacesNsishistory)	
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETENTRYATINDEX, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETINDEX, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETMAXLENGTH, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_GETSHISTORYENUMERATOR, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_PURGEHISTORY, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_RUNALLTESTS, OnInterfacesNsishistory)
-
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_SETMAXLENGTH, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETISSUBFRAME, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETTITLE, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETURI, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_RUNALLTESTS, OnInterfacesNsishistory)
+
+	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCANGOBACK, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCANGOFORWARD, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETCURRENTURI, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GETDOCUMENT, OnInterfacesNsiwebnav)
@@ -194,55 +176,55 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_GOTOINDEX, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_LOADURI, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_RELOAD, OnInterfacesNsiwebnav)
-
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_RUNALLTESTS, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY, OnInterfacesNsiwebnav)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV_STOP, OnInterfacesNsiwebnav)
+
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETLOADFLAGS, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETLOADGROUP, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETNAME, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_GETSTATUS, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_ISPENDING, OnInterfacesNsirequest)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST_CANCEL, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_RESUME, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SETLOADFLAGS, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SETLOADGROUP, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_SUSPEND, OnInterfacesNsirequest)
 	ON_COMMAND(ID_INTERFACES_NSIREQUEST_RUNALLTESTS, OnInterfacesNsirequest)
 
-	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_GETTEXTZOOM, OnInterfacesNsidomwindow)
-	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_SETTEXTZOOM, OnInterfacesNsidomwindow)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCUTSELECTION, OnInterfacesNsiclipboardcommands)
-
+	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANCOPYSELECTION, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CANPASTE, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYLINKLOCATION, OnInterfacesNsiclipboardcommands)
-
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_COPYSELECTION, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_CUTSELECTION, OnInterfacesNsiclipboardcommands)
-
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_PASTE, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTALL, OnInterfacesNsiclipboardcommands)
 	ON_COMMAND(ID_INTERFACES_NSICLIPBOARDCOMMANDS_SELECTNONE, OnInterfacesNsiclipboardcommands)
+
+	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ADDOBSERVERS, OnInterfacesNsiobserverservice)
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_ENUMERATEOBSERVERS, OnInterfacesNsiobserverservice)
-
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_NOTIFYOBSERVERS, OnInterfacesNsiobserverservice)
-
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_REMOVEOBSERVERS, OnInterfacesNsiobserverservice)
-
 	ON_COMMAND(ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS, OnInterfacesNsiobserverservice)
 
 	ON_COMMAND(ID_INTERFACES_NSIFILE_APPENDRELATICEPATH, OnInterfacesNsifile)
-
 	ON_COMMAND(ID_INTERFACES_NSIFILE_COPYTO, OnInterfacesNsifile)
-
 	ON_COMMAND(ID_INTERFACES_NSIFILE_CREATE, OnInterfacesNsifile)
-
 	ON_COMMAND(ID_INTERFACES_NSIFILE_EXISTS, OnInterfacesNsifile)
-
 	ON_COMMAND(ID_INTERFACES_NSIFILE_INITWITHPATH, OnInterfacesNsifile)
-
 	ON_COMMAND(ID_INTERFACES_NSIFILE_MOVETO, OnInterfacesNsifile)
-
 	ON_COMMAND(ID_INTERFACES_NSIFILE_RUNALLTESTS, OnInterfacesNsifile)
+
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_RUNALLTESTS, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_ADDWEBBROWSERLISTENER, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_REMOVEWEBBROWSERLISTENER, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_GETCONTAINERWINDOW, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_SETCONTAINERWINDOW, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_GETPARENTURICONTENTLISTENER, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_SETPARENTURICONTENTLISTENER, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_GETCONTENTDOMWINDOW, OnInterfacesNsiwebbrowser)
+	ON_COMMAND(ID_INTERFACES_NSIWEBBROWSER_NSIWBSETUPSETPROPERTY, OnInterfacesNsiwebbrowser)
 
 	//}}AFX_MSG_MAP
 
@@ -576,122 +558,147 @@ void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
 
-	// nsIContextMenuListener, nsIStreamListener
-	// nsIURIContentListener
-
-	// test cases for nsIWebBrowser
-//	qaWebBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID, &rv);
-
-	RvTestResult(rv, "create qaWebBrowser object test", 2);
-	// AddWebBrowserListener
-	nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIContextMenuListener*, qaBrowserImpl))));
-    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));	
-	RvTestResult(rv, "AddWebBrowserListener(). nsIContextMenuListener test", 2);
-
-	// RemoveWebBrowserListener
-	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIContextMenuListener));
-	RvTestResult(rv, "RemoveWebBrowserListener(). nsIContextMenuListener test", 2);
-
-	// GetContainerWindow
-	nsCOMPtr<nsIWebBrowserChrome> qaWebBrowserChrome;
-	rv = qaWebBrowser->GetContainerWindow(getter_AddRefs(qaWebBrowserChrome));
-	RvTestResult(rv, "nsIWebBrowser::GetContainerWindow() test", 2);
-	if (!qaWebBrowserChrome)
-		QAOutput("Didn't get web browser chrome object.", 2);
-	else {
-		rv = qaWebBrowserChrome->ShowAsModal();
-		RvTestResult(rv, "nsIWebBrowserChrome::ShowAsModal() test", 2);
-	}
-
-	// SetContainerWindow
-	rv = qaWebBrowser->SetContainerWindow(qaWebBrowserChrome);
-	RvTestResult(rv, "nsIWebBrowser::SetContainerWindow() test", 2);
-
-	// GetParentURIContentListener
-	nsCOMPtr<nsIURIContentListener> qaURIContentListener;
-
-	rv = qaWebBrowser->GetParentURIContentListener(getter_AddRefs(qaURIContentListener));
-	RvTestResult(rv, "nsIWebBrowser::GetParentURIContentListener() test", 2);
-	if (!qaURIContentListener)
-		QAOutput("Didn't get uri content listener object.", 2);
-	else {
-		nsCOMPtr<nsISupports> qaSupports;
-		rv = qaURIContentListener->GetLoadCookie(getter_AddRefs(qaSupports));
-		RvTestResult(rv, "nsIURIContentListener::GetLoadCookie() test", 2);
-	}
-
-	// SetParentURIContentListener
-	rv = qaWebBrowser->SetParentURIContentListener(qaURIContentListener);
-	RvTestResult(rv, "nsIWebBrowser::SetParentURIContentListener() test", 2);
-
-	// GetContentDOMWindow
-	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
-	rv = qaWebBrowser->GetContentDOMWindow(getter_AddRefs(qaDOMWindow));
-	RvTestResult(rv, "nsIWebBrowser::GetContentDOMWindow() test", 2);
-	if (!qaDOMWindow)
-		QAOutput("Didn't get dom window object.", 2);
-	else {
-		rv = qaDOMWindow->ScrollTo(50,50);
-		RvTestResult(rv, "nsIDOMWindow::ScrollTo() test", 2);
-	}
-
-
-	// nsIWebBrowserSetup methods
-
-	nsCOMPtr <nsIWebBrowserSetup> qaWBSetup(do_QueryInterface(qaWebBrowser, &rv));
-	if (!qaWBSetup)
-		QAOutput("Didn't get WebBrowser Setup object.", 2);
+	// nsIWebBrowserFind methods
+	nsCOMPtr<nsIWebBrowserFind> qaWBFind(do_GetInterface(qaWebBrowser, &rv));
+	if (!qaWBFind)
+		QAOutput("Didn't get WebBrowserFind object.", 2);
 	else
-		RvTestResult(rv, "nsIWebBrowserSetup object test", 2);
+		RvTestResult(rv, "nsIWebBrowserFind object test", 2);
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_PLUGINS, PR_TRUE)", 2);
+	CUrlDialog myDialog;
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_PLUGINS, PR_FALSE)", 2);
+	nsString searchString;
+	PRBool didFind = PR_FALSE;
+	PRBool didFindBackwards = PR_FALSE;
+	PRBool didWrapFind = PR_FALSE;
+	PRBool didEntireWord = PR_FALSE;
+	PRBool didMatchCase = PR_FALSE;
+	PRBool didSearchFrames = PR_FALSE;
+	if (myDialog.DoModal() == IDOK) {
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_JAVASCRIPT, PR_TRUE)", 2);
+		// SetSearchString()
+		searchString.AssignWithConversion(myDialog.m_urlfield);
+		rv = qaWBFind->SetSearchString(searchString.get());
+		RvTestResult(rv, "nsIWebBrowserFind::SetSearchString() test", 2);
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_JAVASCRIPT, PR_FALSE)", 2);
+		// GetSearchString()
+		nsXPIDLString stringBuf;
+		CString csSearchStr;
+		rv = qaWBFind->GetSearchString(getter_Copies(stringBuf));
+		RvTestResult(rv, "nsIWebBrowserFind::GetSearchString() test", 2);
+		csSearchStr = stringBuf.get();
+		FormatAndPrintOutput("The searched string value = ", csSearchStr, 2); 
+	}
+	// FindNext()
+	didFind = PR_TRUE;
+	rv = qaWBFind->FindNext(&didFind);
+	RvTestResult(rv, "nsIWebBrowserFind::FindNext(PR_TRUE) object test", 2);
+	FormatAndPrintOutput("returned didFind = ", didFind, 2); 
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_META_REDIRECTS, PR_TRUE)", 2);
+	didFind = PR_FALSE;
+	rv = qaWBFind->FindNext(&didFind);
+	RvTestResult(rv, "nsIWebBrowserFind::FindNext(PR_FALSE) object test", 2);
+	FormatAndPrintOutput("returned didFind = ", didFind, 2); 
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_META_REDIRECTS, PR_FALSE)", 2);
+	// SetFindBackwards()
+	didFindBackwards = PR_TRUE;
+	rv = qaWBFind->SetFindBackwards(didFindBackwards);
+	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards(PR_TRUE) object test", 2); 
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_SUBFRAMES, PR_TRUE)", 2);
+	didFindBackwards = PR_FALSE;
+	rv = qaWBFind->SetFindBackwards(didFindBackwards);
+	RvTestResult(rv, "nsIWebBrowserFind::SetFindBackwards(PR_FALSE) object test", 2);
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_SUBFRAMES, PR_FALSE)", 2);
+	// GetFindBackwards()
+	didFindBackwards = PR_TRUE;
+	rv = qaWBFind->GetFindBackwards(&didFindBackwards);
+	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards(PR_TRUE) object test", 2);
+	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2); 
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_IMAGES, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_IMAGES, PR_TRUE)", 2);
+	didFindBackwards = PR_FALSE;
+	rv = qaWBFind->GetFindBackwards(&didFindBackwards);
+	RvTestResult(rv, "nsIWebBrowserFind::GetFindBackwards(PR_FALSE) object test", 2);
+	FormatAndPrintOutput("returned didFindBackwards = ", didFindBackwards, 2); 
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_IMAGES, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_ALLOW_IMAGES, PR_FALSE)", 2);
+	// SetWrapFind()
+	didWrapFind = PR_TRUE;
+	rv = qaWBFind->SetWrapFind(didWrapFind);
+	RvTestResult(rv, "nsIWebBrowserFind::SetWrapFind(PR_TRUE) object test", 2);
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_TRUE)", 2);
+	didWrapFind = PR_FALSE;
+	rv = qaWBFind->SetWrapFind(didWrapFind);
+	RvTestResult(rv, "nsIWebBrowserFind::SetWrapFind(PR_FALSE) object test", 2);
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_FOCUS_DOC_BEFORE_CONTENT, PR_FALSE)", 2);
+	// GetWrapFind()
+	didWrapFind = PR_TRUE;
+	rv = qaWBFind->GetWrapFind(&didWrapFind);
+	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind(PR_TRUE) object test", 2);
+	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2); 
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_USE_GLOBAL_HISTORY, PR_TRUE)", 2);
+	didWrapFind = PR_FALSE;
+	rv = qaWBFind->GetWrapFind(&didWrapFind);
+	RvTestResult(rv, "nsIWebBrowserFind::GetWrapFind(PR_FALSE) object test", 2);
+	FormatAndPrintOutput("returned didWrapFind = ", didWrapFind, 2); 
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_USE_GLOBAL_HISTORY, PR_FALSE)", 2);
+	// SetEntireWord()
+	didEntireWord = PR_TRUE;
+	rv = qaWBFind->SetEntireWord(didEntireWord);
+	RvTestResult(rv, "nsIWebBrowserFind::SetEntireWord(PR_TRUE) object test", 2);
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER, PR_TRUE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_IS_CHROME_WRAPPER, PR_TRUE)", 2);
+	didEntireWord = PR_FALSE;
+	rv = qaWBFind->SetEntireWord(didEntireWord);
+	RvTestResult(rv, "nsIWebBrowserFind::SetEntireWord(PR_FALSE) object test", 2);
 
-	rv = qaWBSetup->SetProperty(nsIWebBrowserSetup::SETUP_IS_CHROME_WRAPPER, PR_FALSE);
-	RvTestResult(rv, "nsIWebBrowserSetup:SetProperty(SETUP_IS_CHROME_WRAPPER, PR_FALSE)", 2);
+	// GetEntireWord()
+	didEntireWord = PR_TRUE;
+	rv = qaWBFind->GetEntireWord(&didEntireWord);
+	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord(PR_TRUE) object test", 2);
+	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2); 
+
+	didEntireWord = PR_FALSE;
+	rv = qaWBFind->GetEntireWord(&didEntireWord);
+	RvTestResult(rv, "nsIWebBrowserFind::GetEntireWord(PR_FALSE) object test", 2);
+	FormatAndPrintOutput("returned didEntireWord = ", didEntireWord, 2); 
+
+	// SetMatchCase()
+	didMatchCase = PR_TRUE;
+	rv = qaWBFind->SetMatchCase(didMatchCase);
+	RvTestResult(rv, "nsIWebBrowserFind::SetMatchCase(PR_TRUE) object test", 2);
+
+	didMatchCase = PR_FALSE;
+	rv = qaWBFind->SetMatchCase(didMatchCase);
+	RvTestResult(rv, "nsIWebBrowserFind::SetMatchCase(PR_FALSE) object test", 2);
+
+	// GetMatchCase()
+	didMatchCase = PR_TRUE;
+	rv = qaWBFind->GetMatchCase(&didMatchCase);
+	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase(PR_TRUE) object test", 2);
+	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2); 
+
+	didMatchCase = PR_FALSE;
+	rv = qaWBFind->GetMatchCase(&didMatchCase);
+	RvTestResult(rv, "nsIWebBrowserFind::GetMatchCase(PR_FALSE) object test", 2);
+	FormatAndPrintOutput("returned didMatchCase = ", didMatchCase, 2);
+	
+	// SetSearchFrames()
+	didSearchFrames = PR_TRUE;
+	rv = qaWBFind->SetSearchFrames(didSearchFrames);
+	RvTestResult(rv, "nsIWebBrowserFind::SetSearchFrames(PR_TRUE) object test", 2);
+
+	didSearchFrames = PR_FALSE;
+	rv = qaWBFind->SetSearchFrames(didSearchFrames);
+	RvTestResult(rv, "nsIWebBrowserFind::SetSearchFrames(PR_FALSE) object test", 2);
+
+	// GetSearchFrames()
+	didSearchFrames = PR_TRUE;
+	rv = qaWBFind->GetSearchFrames(&didSearchFrames);
+	RvTestResult(rv, "nsIWebBrowserFind::GetSearchFrames(PR_TRUE) object test", 2);
+	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 2); 
+
+	didSearchFrames = PR_FALSE;
+	rv = qaWBFind->GetSearchFrames(&didSearchFrames);
+	RvTestResult(rv, "nsIWebBrowserFind::GetSearchFrames(PR_FALSE) object test", 2);
+	FormatAndPrintOutput("returned didSearchFrames = ", didSearchFrames, 2);
 }
 
 // ***********************************************************************
@@ -823,7 +830,6 @@ void CTests::OnInterfacesNsiclipboardcommands()
 
 
 void CTests::OnInterfacesNsiobserverservice() 
-
 {
 	CnsIObserServ oObserv  ;
 	oObserv.OnStartTests(nCommandID);
@@ -831,8 +837,14 @@ void CTests::OnInterfacesNsiobserverservice()
 
 
 void CTests::OnInterfacesNsifile() 
-
 {
 	CNsIFile oFile ;
 	oFile.OnStartTests(nCommandID);
+}
+
+void CTests::OnInterfacesNsiwebbrowser()
+{
+
+	CNsIWebBrowser oWebBrowser;
+	oWebBrowser.OnStartTests(nCommandID);
 }
