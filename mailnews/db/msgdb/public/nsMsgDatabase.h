@@ -94,8 +94,12 @@ public:
 
 	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
 
-	// helper function to copy an nsString to a yarn.
+	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
+	static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
+	static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
+	static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
+
 	static void		CleanupCache();
 #ifdef DEBUG
 	static int		GetNumInCache(void) {return(GetDBCache()->GetSize());}

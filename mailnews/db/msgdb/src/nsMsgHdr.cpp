@@ -21,9 +21,16 @@
 
 nsMsgHdr::nsMsgHdr()
 {
-	mRefCnt = 0;
+	mRefCnt = 1;
 	m_mdb = NULL;
 	m_mdbRow = NULL;
+}
+
+nsMsgHdr::nsMsgHdr(mdbRow *dbRow)
+{
+	mRefCnt = 1;
+	m_mdb = NULL;
+	m_mdbRow = dbRow;
 }
 
 nsMsgHdr::~nsMsgHdr()

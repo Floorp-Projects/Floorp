@@ -33,6 +33,7 @@ class nsMsgHdr
 {
 public:
 				nsMsgHdr();
+				nsMsgHdr(mdbRow *dbRow);
 	virtual		~nsMsgHdr();
 	nsrefcnt	AddRef(void);                                       
     nsrefcnt	Release(void);   

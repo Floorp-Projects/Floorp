@@ -386,14 +386,43 @@ nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStr
 	if (NS_SUCCEEDED(err))
 	{
 		struct mdbYarn yarn;
+		char	int32StrBuf[20];
 
 		yarn.mYarn_Grow = NULL;
-		hdrRow->AddColumn(GetEnv(),  m_subjectColumnToken, nsStringToYarn(&yarn, &hdrStruct->m_author));
+		hdrRow->AddColumn(GetEnv(),  m_subjectColumnToken, nsStringToYarn(&yarn, &hdrStruct->m_subject));
 		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
 		
+		hdrRow->AddColumn(GetEnv(),  m_senderColumnToken, nsStringToYarn(&yarn, &hdrStruct->m_author));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+
+		hdrRow->AddColumn(GetEnv(),  m_messageIdColumnToken, nsStringToYarn(&yarn, &hdrStruct->m_messageId));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+
+		hdrRow->AddColumn(GetEnv(),  m_referencesColumnToken, nsStringToYarn(&yarn, &hdrStruct->m_references));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+
+		hdrRow->AddColumn(GetEnv(),  m_recipientsColumnToken, nsStringToYarn(&yarn, &hdrStruct->m_recipients));
+		delete[] yarn.mYarn_Buf;	// won't need this when we have nsCString
+
+		yarn.mYarn_Buf = int32StrBuf;
+		yarn.mYarn_Size = sizeof(int32StrBuf);
+		yarn.mYarn_Fill = sizeof(int32StrBuf);
+
+		hdrRow->AddColumn(GetEnv(),  m_dateColumnToken, UInt32ToYarn(&yarn, hdrStruct->m_date));
+
+		hdrRow->AddColumn(GetEnv(),  m_messageSizeColumnToken, UInt32ToYarn(&yarn, hdrStruct->m_messageSize));
+
+		hdrRow->AddColumn(GetEnv(),  m_flagsColumnToken, UInt32ToYarn(&yarn, hdrStruct->m_flags));
+
+		hdrRow->AddColumn(GetEnv(),  m_priorityColumnToken, UInt32ToYarn(&yarn, hdrStruct->m_priority));
+
 		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdrRow);
 	}
 
+	if (err == NS_OK)
+	{
+		*newHdr = new nsMsgHdr(hdrRow);
+	}
 	return err;
 }
 
@@ -404,5 +433,27 @@ nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStr
 	yarn->mYarn_Fill = yarn->mYarn_Size;
 	yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
 	return yarn;
+}
+
+/* static */struct mdbYarn *nsMsgDatabase::UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i)
+{
+	PR_snprintf((char *) yarn->mYarn_Buf, yarn->mYarn_Size, "%uld", i);
+	yarn->mYarn_Fill = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
+	yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
+	return yarn;
+}
+
+/* static */void nsMsgDatabase::YarnTonsString(struct mdbYarn *yarn, nsString *str)
+{
+	str->SetString((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
+}
+
+// convenient function for atol on int32's
+int32 atoint32(char *ascii);
+
+/* static */void nsMsgDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i)
+{
+	char *endPtr;
+	*i = XP_STRTOUL((char *) yarn->mYarn_Buf, &endPtr, yarn->mYarn_Fill); 
 }
 
