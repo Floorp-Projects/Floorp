@@ -30,9 +30,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = nkcache
 
 LIBRARY_NAME = nkfilecache_s
-
-
-EXTRA_DSO_LDOPTS  +=  -L$(DIST)/lib  -lmozdbm_s
+                                               
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
 
 EXPORTS=nsNetDiskCacheCID.h \
 	nsNetDiskCache.h \
