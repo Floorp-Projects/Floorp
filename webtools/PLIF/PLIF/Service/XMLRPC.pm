@@ -97,7 +97,7 @@ sub getOutputHook {
 sub reportFatalError {
     my $self = shift;
     my($error) = @_;
-    my $response = RPC::XML::response->new(RPC::XML::fault->new(0, $error));
+    my $response = RPC::XML::response->new(RPC::XML::fault->new(0, "$error"));
     $self->output->XMLRPC($response->as_string);
 }
 
