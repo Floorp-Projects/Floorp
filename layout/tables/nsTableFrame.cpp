@@ -2457,7 +2457,9 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
 // Table specific version that takes into account repeated header and footer
 // frames when continuing table frames
 void
-nsTableFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
+nsTableFrame::PushChildren(nsIPresContext* aPresContext,
+                           nsIFrame*       aFromChild,
+                           nsIFrame*       aPrevSibling)
 {
   NS_PRECONDITION(nsnull != aFromChild, "null pointer");
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
@@ -2488,8 +2490,7 @@ nsTableFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
   }
   else {
     // Add the frames to our overflow list
-    NS_ASSERTION(mOverflowFrames.IsEmpty(), "bad overflow list");
-    mOverflowFrames.SetFrames(aFromChild);
+    SetOverflowFrames(aPresContext, aFromChild);
   }
 }
 
@@ -2501,27 +2502,29 @@ nsTableFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
 // the child list is empty (it may not be empty, because there may be repeated
 // header/footer frames)
 PRBool
-nsTableFrame::MoveOverflowToChildList()
+nsTableFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
 {
   PRBool result = PR_FALSE;
 
   // Check for an overflow list with our prev-in-flow
   nsTableFrame* prevInFlow = (nsTableFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
-    if (prevInFlow->mOverflowFrames.NotEmpty()) {
+    nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
+    if (prevOverflowFrames) {
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      for (nsIFrame* f = prevInFlow->mOverflowFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+      for (nsIFrame* f = prevOverflowFrames; f; f->GetNextSibling(&f)) {
         nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
       }
-      mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
+      mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
       result = PR_TRUE;
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
-  if (mOverflowFrames.NotEmpty()) {
-    mFrames.AppendFrames(nsnull, mOverflowFrames);
+  nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
+  if (overflowFrames) {
+    mFrames.AppendFrames(nsnull, overflowFrames);
     result = PR_TRUE;
   }
   return result;
@@ -2559,7 +2562,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
 
   // Check for an overflow list, and append any row group frames being
   // pushed
-  MoveOverflowToChildList();
+  MoveOverflowToChildList(&aPresContext);
 
   // Reflow the existing frames
   if (mFrames.NotEmpty()) {
@@ -3581,7 +3584,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
         if (aReflowState.firstBodySection && (kidFrame != aReflowState.firstBodySection)) {
           // The child is too tall to fit at all in the available space, and it's
           // not a header/footer or our first row group frame
-          PushChildren(kidFrame, prevKidFrame);
+          PushChildren(&aPresContext, kidFrame, prevKidFrame);
           aStatus = NS_FRAME_NOT_COMPLETE;
           break;
         }
@@ -3635,7 +3638,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
          
         kidFrame->GetNextSibling(&nextSibling);
         if (nsnull != nextSibling) {
-          PushChildren(nextSibling, kidFrame);
+          PushChildren(&aPresContext, nextSibling, kidFrame);
         }
         break;
       }
@@ -3688,9 +3691,10 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
     // Any more child frames?
     if (nsnull == kidFrame) {
       // No. Any frames on its overflow list?
-      if (nextInFlow->mOverflowFrames.NotEmpty()) {
+      nsIFrame* nextOverflowFrames = nextInFlow->GetOverflowFrames(&aPresContext, PR_TRUE);
+      if (nextOverflowFrames) {
         // Move the overflow list to become the child list
-        nextInFlow->mFrames.AppendFrames(nsnull, nextInFlow->mOverflowFrames);
+        nextInFlow->mFrames.AppendFrames(nsnull, nextOverflowFrames);
         kidFrame = nextInFlow->mFrames.FirstChild();
       } else {
         // We've pulled up all the children, so move to the next-in-flow.
@@ -3777,7 +3781,7 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
         // we pass PR_TRUE into PushChidren
         kidFrame->SetNextSibling(continuingFrame);
 
-        PushChildren(continuingFrame, kidFrame);
+        PushChildren(&aPresContext, continuingFrame, kidFrame);
       }
       break;
     }

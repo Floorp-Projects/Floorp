@@ -247,14 +247,14 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
     // And then push it to our overflow list
     if (nextInFlow) {
       kid->SetNextSibling(nsnull);
-      mOverflowFrames.SetFrames(nextInFlow);
+      SetOverflowFrames(&aPresContext, nextInFlow);
     }
     else {
       nsIFrame* nextSib;
       kid->GetNextSibling(&nextSib);
       if (nextSib) {
         kid->SetNextSibling(nsnull);
-        mOverflowFrames.SetFrames(nextSib);
+        SetOverflowFrames(&aPresContext, nextSib);
       }
     }
   }
@@ -265,27 +265,31 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
 void
 nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
 {
+  nsIFrame* overflowFrames;
+
   // Check for an overflow list with our prev-in-flow
   nsFirstLetterFrame* prevInFlow = (nsFirstLetterFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
-    if (prevInFlow->mOverflowFrames.NotEmpty()) {
+    overflowFrames = prevInFlow->GetOverflowFrames(aPresContext, PR_TRUE);
+    if (overflowFrames) {
       NS_ASSERTION(mFrames.IsEmpty(), "bad overflow list");
 
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      nsIFrame* f = prevInFlow->mOverflowFrames.FirstChild();
+      nsIFrame* f = overflowFrames;
       while (f) {
         nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
         f->GetNextSibling(&f);
       }
-      mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
+      mFrames.InsertFrames(this, nsnull, overflowFrames);
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
-  if (mOverflowFrames.NotEmpty()) {
+  overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
+  if (overflowFrames) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    mFrames.AppendFrames(nsnull, mOverflowFrames);
+    mFrames.AppendFrames(nsnull, overflowFrames);
   }
 
   // Now repair our first frames style context XXX only first frame?

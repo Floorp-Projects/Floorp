@@ -38,13 +38,20 @@ class nsStyleChangeList;
 // Calback function used to destroy the value associated with a
 // given property. used by RemoveFrameProperty()
 typedef void 
-(*FMPropertyDtorFunc)(nsIPresContext* aPresContext,
-                      nsIFrame*       aFrame,
-                      nsIAtom*        aPropertyName,
-                      void*           aPropertyValue);
+(*NSFMPropertyDtorFunc)(nsIPresContext* aPresContext,
+                        nsIFrame*       aFrame,
+                        nsIAtom*        aPropertyName,
+                        void*           aPropertyValue);
 
 // Option flags for GetFrameProperty() member function
-#define NS_IFRAME_MGR_REMOVE_PROPERTY 0x0001
+#define NS_IFRAME_MGR_REMOVE_PROP   0x0001
+
+// nsresult error codes for frame property functions
+#define NS_IFRAME_MGR_PROP_NOT_THERE \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 1)
+
+#define NS_IFRAME_MGR_PROP_OVERWRITTEN \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 2)
 
 /**
  * Frame manager interface. The frame manager serves two purposes:
@@ -143,32 +150,58 @@ public:
   NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
   NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
 
-  // Gets a property value on a given frame. Returns 0 if the property is
-  // not set
+  /**
+   * Gets a property value for a given frame.
+   *
+   * @param   aFrame          the frame with the property
+   * @param   aPropertyName   property name as an atom
+   * @param   aOptions        optional flags
+   *                            NS_IFRAME_MGR_REMOVE_PROP removes the property
+   * @param   aPropertyValue  the property value or 0 if the property is not set
+   * @return  NS_OK if the property is set,
+   *          NS_IFRAME_MGR_PROP_NOT_THERE if the property is not set
+   */
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
                               nsIAtom*  aPropertyName,
                               PRUint32  aOptions,
                               void**    aPropertyValue) = 0;
   
-  // Sets the property value
-  //
-  // A frame may only have one property value at a time for a given property
-  // name. The current property value (if there is one) is replaced and the
-  // current value is destroyed
-  //
-  // When setting a property you may specify the dtor function (can be
-  // NULL) that will be used to destroy the property value. There can be
-  // only one dtor function for a given property atom, and the set call
-  // will fail with error NS_ERROR_INVALID_ARG if the dtor function does
-  // not match the existing dtor function
-  NS_IMETHOD SetFrameProperty(nsIFrame*          aFrame,
-                              nsIAtom*           aPropertyName,
-                              void*              aPropertyValue,
-                              FMPropertyDtorFunc aPropDtorFunc) = 0;
+  /**
+   * Sets the property value for a given frame.
+   *
+   * A frame may only have one property value at a time for a given property
+   * name. The existing property value (if there is one) is overwritten, and the
+   * old value destroyed
+   *
+   * @param   aFrame            the frame to set the property on
+   * @param   aPropertyName     property name as an atom
+   * @param   aPropertyValue    the property value
+   * @param   aPropertyDtorFunc when setting a property you can specify the
+   *                            dtor function (can be NULL) that will be used
+   *                            to destroy the property value. There can be only
+   *                            one dtor function for a given property name
+   * @return  NS_OK if successful,
+   *          NS_IFRAME_MGR_PROP_OVERWRITTEN if there is an existing property
+   *            value that was overwritten,
+   *          NS_ERROR_INVALID_ARG if the dtor function does not match the
+   *            existing dtor function
+   */
+  NS_IMETHOD SetFrameProperty(nsIFrame*            aFrame,
+                              nsIAtom*             aPropertyName,
+                              void*                aPropertyValue,
+                              NSFMPropertyDtorFunc aPropertyDtorFunc) = 0;
 
-  // Removes a property and destroys its property value by calling the dtor
-  // function associated with the property name. When a frame is destroyed any
-  // remaining properties are automatically removed
+  /**
+   * Removes a property and destroys its property value by calling the dtor
+   * function associated with the property name.
+   *
+   * When a frame is destroyed any remaining properties are automatically removed
+   *
+   * @param   aFrame          the frame to set the property on
+   * @param   aPropertyName   property name as an atom
+   * @return  NS_OK if the property is successfully removed,
+   *          NS_IFRAME_MGR_PROP_NOT_THERE if the property is not set
+   */
   NS_IMETHOD RemoveFrameProperty(nsIFrame* aFrame,
                                  nsIAtom*  aPropertyName) = 0;
 

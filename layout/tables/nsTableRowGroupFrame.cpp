@@ -523,9 +523,11 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
   
     while (nsnull != nextInFlow) {
       // Any frames on the next-in-flow's overflow list?
-      if (nextInFlow->mOverflowFrames.NotEmpty()) {
+      nsIFrame* nextOverflowFrames = nextInFlow->GetOverflowFrames(&aPresContext,
+                                                                   PR_TRUE);
+      if (nextOverflowFrames) {
         // Yes, append them to its child list
-        nextInFlow->mFrames.AppendFrames(nextInFlow, nextInFlow->mOverflowFrames);
+        nextInFlow->mFrames.AppendFrames(nextInFlow, nextOverflowFrames);
       }
 
       // Any row frames?
@@ -901,7 +903,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
           GetNextFrame(rowFrame, &contRowFrame);
           
           // Push the continuing row frame and the frames that follow
-          PushChildren(contRowFrame, rowFrame);
+          PushChildren(&aPresContext, contRowFrame, rowFrame);
           aStatus = NS_FRAME_NOT_COMPLETE;
 
         } else {
@@ -913,7 +915,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
           GetNextFrame(rowFrame, &nextRowFrame);
           
           if (nextRowFrame) {
-            PushChildren(nextRowFrame, rowFrame);
+            PushChildren(&aPresContext, nextRowFrame, rowFrame);
           }
           aStatus = nextRowFrame ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
         }
@@ -971,7 +973,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
         }
 
         // Push this row frame and those that follow to the next-in-flow
-        PushChildren(rowFrame, prevRowFrame);
+        PushChildren(&aPresContext, rowFrame, prevRowFrame);
         aStatus = NS_FRAME_NOT_COMPLETE;
         aDesiredSize.height = bounds.y;
       }
@@ -1019,7 +1021,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     aStatus = NS_FRAME_COMPLETE;
   
     // Check for an overflow list
-    MoveOverflowToChildList();
+    MoveOverflowToChildList(&aPresContext);
   
     // Reflow the existing frames. Before we do, pull-up any row frames from
     // our next-in-flow.

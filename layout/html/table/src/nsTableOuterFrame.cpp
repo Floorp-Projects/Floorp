@@ -855,7 +855,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
     if (eReflowReason_Initial == aReflowState.reason) {
       // Set up our kids.  They're already present, on an overflow list, 
       // or there are none so we'll create them now
-      MoveOverflowToChildList();
+      MoveOverflowToChildList(&aPresContext);
 
       // Lay out the caption and get its maximum element size
       if (nsnull != mCaptionFrame) {

@@ -94,6 +94,18 @@ protected:
                        nsReflowStatus&          aStatus);
 
   /**
+   * Get the frames on the overflow list
+   */
+  nsIFrame* GetOverflowFrames(nsIPresContext* aPresContext,
+                              PRBool          aRemoveProperty);
+
+  /**
+   * Set the overflow list
+   */
+  nsresult SetOverflowFrames(nsIPresContext* aPresContext,
+                             nsIFrame*       aOverflowFrames);
+
+  /**
    * Moves any frames on both the prev-in-flow's overflow list and the
    * receiver's overflow to the receiver's child list.
    *
@@ -102,7 +114,7 @@ protected:
    *
    * @return PR_TRUE if any frames were moved and PR_FALSE otherwise
    */
-  PRBool MoveOverflowToChildList();
+  PRBool MoveOverflowToChildList(nsIPresContext* aPresContext);
 
   /**
    * Push aFromChild and its next siblings to the next-in-flow. Change
@@ -118,10 +130,11 @@ protected:
    * @param   aPrevSibling aFromChild's previous sibling. Must not be null.
    *            It's an error to push a parent's first child frame
    */
-  void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
+  void PushChildren(nsIPresContext* aPresContext,
+                    nsIFrame*       aFromChild,
+                    nsIFrame*       aPrevSibling);
 
   nsFrameList mFrames;
-  nsFrameList mOverflowFrames;
 };
 
 #endif /* nsContainerFrame_h___ */

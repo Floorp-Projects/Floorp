@@ -18,7 +18,8 @@
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nslayout.h"
 #include "nsDST.h"
-#include "nsISupports.h"
+#include "plarena.h"
+#include "nsISupportsUtils.h"
 #ifdef NS_DEBUG
 #include <string.h>
 #endif
@@ -346,18 +347,20 @@ keepLooping:
 }
 
 // Removes all nodes from the tree
-void
+nsresult
 nsDST::Clear()
 {
   mArena->FreeArenaPool();
   mRoot = 0;
+  return NS_OK;
 }
 
 // Enumerate all the nodes in the tree
-void
+nsresult
 nsDST::Enumerate(nsDSTNodeFunctor& aFunctor) const
 {
   EnumTree(mRoot, aFunctor);
+  return NS_OK;
 }
 
 void
@@ -400,67 +403,46 @@ nsDST::ConvertToTwoNode(LeafNode** aLeafNode)
 
 // Searches the tree for a node with the specified key. Return the value
 // or NULL if the key is not in the tree
-void*
-nsDST::Search(void* aKey) const
+nsresult
+nsDST::Search(void* aKey, unsigned aOptions, void** aValue)
 {
-  NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
-                  "ignored low-order bits are not zero");
-
-  if (mRoot) {
-    LeafNode* node = mRoot;
-    PtrBits   bitMask = mLevelZeroBit;
-
-    while (1) {
-      // Check if the key matches
-      if (node->Key() == aKey) {
-        return node->mValue;
-      }
-
-      // See if this is a leaf node
-      if (node->IsLeaf()) {
-        // We didn't find a matching key
-        break;
-      }
-
-      // Check whether we search the left branch or the right branch
-      if (DST_BRANCHES_LEFT(aKey, bitMask)) {
-        node = ((TwoNode*)node)->mLeft;
-      } else {
-        node = ((TwoNode*)node)->mRight;
-      }
-
-      if (!node) {
-        break;  // we reached a null link
-      }
-
-      // Move to the next bit in the key
-      bitMask <<= 1;
-    }
+  NS_ENSURE_ARG_POINTER(aValue);
+  *aValue = 0;  // initialize OUT parameter
+  
+  nsresult  result = SearchTree(aKey, aOptions, aValue);
 
 #ifdef DEBUG_troy
-    // We didn't find a matching node. Use an alternative algorithm to verify
-    // that the key is not in the tree
-    NS_POSTCONDITION(!DepthFirstSearch(mRoot, aKey), "DST search failed");
-#endif
+  if (NS_DST_KEY_NOT_THERE == result) {
+    // Use an alternative algorithm to verify that there's really
+    // no node with a matching key
+    DepthFirstSearch(mRoot, aKey);
   }
-
-  return 0;
+#endif
+  return result;
 }
 
 // Adds a new key to the tree. If the specified key is already in the
 // tree, then the existing value is replaced by the new value. Returns
-// the old value, or NULL if this is a new key
-void*
-nsDST::Insert(void* aKey, void* aValue)
+// NS_DST_VALUE_OVERWRITTEN if there is an existing value that is
+// overwritten
+nsresult
+nsDST::Insert(void* aKey, void* aValue, void** aOldValue)
 {
   NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
                   "ignored low-order bits are not zero");
+  NS_ENSURE_ARG_POINTER(aValue);
 
+  // Initialize OUT parameter
+  if (aOldValue) {
+    *aOldValue = 0;
+  }
+  
+  // See if there's an existing node with a matching key
   LeafNode**  node = (LeafNode**)&mRoot;
   void*       previousValue = 0;
   TwoNode*    branchReduction = 0;
+  nsresult    result = NS_OK;
   
-  // See if there's an existing node with a matching key
   if (*node) {
     PtrBits   bitMask = mLevelZeroBit;
 
@@ -544,8 +526,11 @@ nsDST::Insert(void* aKey, void* aValue)
   } else if (*node) {
     // We found an existing node with a matching key. Replace the current
     // value with the new value
-    previousValue = (*node)->mValue;
+    if (aOldValue) {
+      *aOldValue = (*node)->mValue;
+    }
     (*node)->mValue = aValue;
+    result = NS_DST_VALUE_OVERWRITTEN;
 
   } else {
     // Allocate a new leaf node and insert it into the tree
@@ -555,7 +540,7 @@ nsDST::Insert(void* aKey, void* aValue)
 #ifdef DEBUG_troy
   VerifyTree(mRoot);
 #endif
-  return previousValue;
+  return result;
 }
 
 // Helper function that removes and returns the left most leaf node
@@ -619,13 +604,14 @@ keepLooking:
   goto keepLooking;
 }
 
-// Removes a key from the tree. Returns the current value, or NULL if
-// the key is not in the tree
-void*
-nsDST::Remove(void* aKey)
+// Returns NS_OK if there is a matching key and NS_DST_KEY_NOT_THERE
+// otherwise
+nsresult
+nsDST::SearchTree(void* aKey, unsigned aOptions, void** aValue)
 {
   NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
                   "ignored low-order bits are not zero");
+
   if (mRoot) {
     LeafNode**  node;
     TwoNode**   parentNode = 0;
@@ -635,7 +621,7 @@ nsDST::Remove(void* aKey)
       node = (LeafNode**)&mRoot;
 
     } else if (mRoot->IsLeaf()) {
-      return 0;  // no node with a matching key
+      return NS_DST_KEY_NOT_THERE;  // no node with a matching key
 
     } else {
       // Look for a node with a matching key
@@ -653,7 +639,7 @@ nsDST::Remove(void* aKey)
   
         if (!*node) {
           // We found a NULL link which means no node with a matching key
-          return 0;
+          return NS_DST_KEY_NOT_THERE;
         }
         
         // Check if the key matches
@@ -664,7 +650,7 @@ nsDST::Remove(void* aKey)
         // The key doesn't match. If this is a leaf node that means no
         // node with a matching key
         if ((*node)->IsLeaf()) {
-          return 0;
+          return NS_DST_KEY_NOT_THERE;
         }
 
         // Move to the next bit in the key
@@ -673,49 +659,61 @@ nsDST::Remove(void* aKey)
     }
 
     // We found a matching node
-    void* value = (*node)->mValue;
+    *aValue = (*node)->mValue;
 
-    if ((*node)->IsLeaf()) {
-      // Delete the leaf node
-      DestroyNode(*node);
-
-      // Disconnect the node from its parent node
-      *node = 0;
-
-      // If the parent now has no child nodes, then convert it to a
-      // leaf frame
-      if (parentNode && !(*parentNode)->mLeft && !(*parentNode)->mRight) {
-        ConvertToLeafNode(parentNode);
-      }
-
-    } else {
-      // We can't just move the left or right subtree up one level, because
-      // then we would have to re-sort the tree. Instead replace the node's
-      // key and value with that of its left most leaf node (any leaf frame
-      // would do)
-      LeafNode* leaf = RemoveLeftMostLeafNode((TwoNode**)node);
-
-      // Copy over the leaf's key and value
-      // Note: RemoveLeftMostLeafNode() may have converted "node" to a 
-      // leaf node so don't make any assumptions here
+    // Should we remove the key/value pair?
+    if (aOptions & NS_DST_REMOVE_KEY_VALUE) {
       if ((*node)->IsLeaf()) {
-        (*node)->mKey = DST_GET_LEAF_KEY(leaf);
+        // Delete the leaf node
+        DestroyNode(*node);
+  
+        // Disconnect the node from its parent node
+        *node = 0;
+  
+        // If the parent now has no child nodes, then convert it to a
+        // leaf frame
+        if (parentNode && !(*parentNode)->mLeft && !(*parentNode)->mRight) {
+          ConvertToLeafNode(parentNode);
+        }
+  
       } else {
-        (*node)->mKey = (void*)(PtrBits(DST_GET_LEAF_KEY(leaf)) | 0x01);
+        // We can't just move the left or right subtree up one level, because
+        // then we would have to re-sort the tree. Instead replace the node's
+        // key and value with that of its left most leaf node (any leaf frame
+        // would do)
+        LeafNode* leaf = RemoveLeftMostLeafNode((TwoNode**)node);
+  
+        // Copy over the leaf's key and value
+        // Note: RemoveLeftMostLeafNode() may have converted "node" to a 
+        // leaf node so don't make any assumptions here
+        if ((*node)->IsLeaf()) {
+          (*node)->mKey = DST_GET_LEAF_KEY(leaf);
+        } else {
+          (*node)->mKey = (void*)(PtrBits(DST_GET_LEAF_KEY(leaf)) | 0x01);
+        }
+        (*node)->mValue = leaf->mValue;
+  
+        // Delete the leaf node
+        DestroyNode(leaf);
       }
-      (*node)->mValue = leaf->mValue;
-
-      // Delete the leaf node
-      DestroyNode(leaf);
+#ifdef DEBUG_troy
+      VerifyTree(mRoot);
+#endif
     }
   
-#ifdef DEBUG_troy
-    VerifyTree(mRoot);
-#endif
-    return value;
+    return NS_OK;
   }
 
-  return 0;
+  return NS_DST_KEY_NOT_THERE;
+}
+
+// Removes a key from the tree. Returns NS_OK if successful and
+// NS_DST_KEY_NOT_THERE if there is no node with a matching key
+nsresult
+nsDST::Remove(void* aKey)
+{
+  void* value;
+  return SearchTree(aKey, NS_DST_REMOVE_KEY_VALUE, &value);
 }
 
 #ifdef NS_DEBUG

@@ -31,6 +31,10 @@
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsIFrameManager.h"
+#include "nsIPresShell.h"
+#include "nsCOMPtr.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -453,6 +457,72 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
 #endif
 }
 
+nsIFrame*
+nsContainerFrame::GetOverflowFrames(nsIPresContext* aPresContext,
+                                    PRBool          aRemoveProperty)
+{
+  nsCOMPtr<nsIPresShell>     presShell;
+  nsCOMPtr<nsIFrameManager>  frameManager;
+
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      PRUint32  options = 0;
+      void*     value;
+  
+      if (aRemoveProperty) {
+        options |= NS_IFRAME_MGR_REMOVE_PROP;
+      }
+      frameManager->GetFrameProperty(this, nsLayoutAtoms::overflowProperty,
+                                     options, &value);
+      return (nsIFrame*)value;
+    }
+  }
+
+  return nsnull;
+}
+
+// Destructor function for the overflow frame property
+static void
+DestroyOverflowFrames(nsIPresContext* aPresContext,
+                      nsIFrame*       aFrame,
+                      nsIAtom*        aPropertyName,
+                      void*           aPropertyValue)
+{
+  if (aPropertyValue) {
+    nsFrameList frames((nsIFrame*)aPropertyValue);
+
+    frames.DestroyFrames(*aPresContext);
+  }
+}
+
+nsresult
+nsContainerFrame::SetOverflowFrames(nsIPresContext* aPresContext,
+                                    nsIFrame*       aOverflowFrames)
+{
+  nsCOMPtr<nsIPresShell>     presShell;
+  nsCOMPtr<nsIFrameManager>  frameManager;
+  nsresult                   rv = NS_ERROR_FAILURE;
+
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      rv = frameManager->SetFrameProperty(this, nsLayoutAtoms::overflowProperty,
+                                          aOverflowFrames, DestroyOverflowFrames);
+
+      // Verify that we didn't overwrite an existing overflow list
+      NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN,
+                   "existing overflow list");
+    }
+  }
+
+  return rv;
+}
+
 /**
  * Push aFromChild and its next siblings to the next-in-flow. Change the
  * geometric parent of each frame that's pushed. If there is no next-in-flow
@@ -468,7 +538,9 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
  *            an error to push a parent's first child frame
  */
 void
-nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
+nsContainerFrame::PushChildren(nsIPresContext* aPresContext,
+                               nsIFrame*       aFromChild,
+                               nsIFrame*       aPrevSibling)
 {
   NS_PRECONDITION(nsnull != aFromChild, "null pointer");
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
@@ -495,8 +567,7 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
   }
   else {
     // Add the frames to our overflow list
-    NS_ASSERTION(mOverflowFrames.IsEmpty(), "bad overflow list");
-    mOverflowFrames.SetFrames(aFromChild);
+    SetOverflowFrames(aPresContext, aFromChild);
   }
 }
 
@@ -509,29 +580,32 @@ nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
  * @return  PR_TRUE if any frames were moved and PR_FALSE otherwise
  */
 PRBool
-nsContainerFrame::MoveOverflowToChildList()
+nsContainerFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
 {
   PRBool result = PR_FALSE;
 
   // Check for an overflow list with our prev-in-flow
   nsContainerFrame* prevInFlow = (nsContainerFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
-    if (prevInFlow->mOverflowFrames.NotEmpty()) {
+    nsIFrame* prevOverflowFrames = prevInFlow->GetOverflowFrames(aPresContext,
+                                                                 PR_TRUE);
+    if (prevOverflowFrames) {
       NS_ASSERTION(mFrames.IsEmpty(), "bad overflow list");
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      for (nsIFrame* f = prevInFlow->mOverflowFrames.FirstChild(); f; f->GetNextSibling(&f)) {
+      for (nsIFrame* f = prevOverflowFrames; f; f->GetNextSibling(&f)) {
         nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
       }
-      mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
+      mFrames.InsertFrames(this, nsnull, prevOverflowFrames);
       result = PR_TRUE;
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
-  if (mOverflowFrames.NotEmpty()) {
+  nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
+  if (overflowFrames) {
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-    mFrames.AppendFrames(nsnull, mOverflowFrames);
+    mFrames.AppendFrames(nsnull, overflowFrames);
     result = PR_TRUE;
   }
   return result;
