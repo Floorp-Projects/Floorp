@@ -100,7 +100,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\TextExpr.obj			\
 	.\$(OBJDIR)\UnionExpr.obj			\
 	.\$(OBJDIR)\VariableRefExpr.obj			\
-	.\$(OBJDIR)\WildCardExpr.obj			\
 	.\$(OBJDIR)\XPathNames.obj			\
 !if defined(MOZ_XSL)
 	.\$(OBJDIR)\nsNodeSet.obj			\
