@@ -45,6 +45,7 @@ nsplugin.h
 nsplugindefs.h
 nsICookieStorage.h
 nsIPluginStreamListener.h
+nsIPluginStreamListener2.h
 nsIPluginStreamInfo.h
 nsIPluginInputStream.h
 nsIPluginInputStream2.h
