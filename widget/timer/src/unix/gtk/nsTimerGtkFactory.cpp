@@ -25,18 +25,11 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerGtk)
 
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
-
-static components_t components[] =
+static nsModuleComponentInfo components[] =
 {
   { NS_TIMER_GTK_CID, &nsTimerGtkConstructor, "component://netscape/timer/unix/gtk", "GTK timer", },
 };
 
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsGtkTimerModule, components)
+NS_IMPL_NSGETMODULE(nsGtkTimerModule)
 

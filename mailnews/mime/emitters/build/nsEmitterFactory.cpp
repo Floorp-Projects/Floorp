@@ -44,14 +44,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXULEmitter);
 
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
 
-static components_t components[] =
+static nsModuleComponentInfo components[] =
 {
   { NS_HTML_MIME_EMITTER_CID, &nsMimeHtmlEmitterConstructor, NS_HTML_MIME_EMITTER_PROGID, },
   { NS_XML_MIME_EMITTER_CID, &nsMimeXmlEmitterConstructor, NS_XML_MIME_EMITTER_PROGID, },
@@ -59,5 +53,5 @@ static components_t components[] =
   { NS_XUL_MIME_EMITTER_CID, &nsMimeXULEmitterConstructor, NS_XUL_MIME_EMITTER_PROGID, },
 };
 
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsMimeEmitterModule, components)
+NS_IMPL_NSGETMODULE(nsMimeEmitterModule)

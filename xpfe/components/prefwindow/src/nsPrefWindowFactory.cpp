@@ -29,16 +29,9 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrefWindow)
 
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
-
-components_t components[] = {
+static nsModuleComponentInfo components[] = {
   { NS_PREFWINDOW_CID, &nsPrefWindowConstructor, NS_PREFWINDOW_PROGID, "Preferences window helper object", },
 };
 
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsPrefWindowModule, components)
+NS_IMPL_NSGETMODULE(nsPrefWindowModule)

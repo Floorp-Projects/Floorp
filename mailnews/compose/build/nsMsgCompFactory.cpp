@@ -67,14 +67,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpUrl);
 static PRInt32 g_InstanceCount = 0;
 static PRInt32 g_LockCount = 0;
 
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
-
-static components_t components[] =
+static nsModuleComponentInfo components[] =
 {
   { NS_MSGCOMPOSE_CID,        &nsMsgComposeConstructor,  NS_MSGCOMPOSE_PROGID,  },
   { NS_MSGCOMPOSESERVICE_CID, &nsMsgComposeServiceConstructor, NS_MSGCOMPOSESERVICE_PROGID, },
@@ -91,5 +84,5 @@ static components_t components[] =
 };
 
   
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsMsgComposeModule, components)
+NS_IMPL_NSGETMODULE(nsMsgComposeModule)

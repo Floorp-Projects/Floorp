@@ -54,14 +54,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsNNTPNewsgroupList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNewsMessage)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgNewsFolder)
 
-struct components_t {
-  nsCID cid;
-  nsIGenericFactory::ConstructorProcPtr constructor;
-  const char *progid;
-  const char *description;
-};
-
-static components_t components[] =
+static nsModuleComponentInfo components[] =
 {
   { NS_NNTPURL_CID,       &nsNntpUrlConstructor,     NS_NNTPURL_PROGID, },
   { NS_NNTPSERVICE_CID,   &nsNntpServiceConstructor, NS_NNTPSERVICE_PROGID, },
@@ -79,7 +72,7 @@ static components_t components[] =
   { NS_NNTPHOST_CID,            &nsNNTPHostConstructor,           NS_NNTPHOST_PROGID, },
 };
 
-NS_IMPL_MODULE(components)
-NS_IMPL_NSGETMODULE(nsModule)
+NS_IMPL_MODULE(nsMsgNewsModule, components)
+NS_IMPL_NSGETMODULE(nsMsgNewsModule)
 
 
