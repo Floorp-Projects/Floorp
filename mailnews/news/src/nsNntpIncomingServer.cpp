@@ -827,3 +827,4 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 
 	return NS_OK;
 }
+
