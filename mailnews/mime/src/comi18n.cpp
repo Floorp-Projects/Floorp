@@ -1505,9 +1505,17 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
 		  result = MIME_StripContinuations(result);
   }
   else if (*charset == '\0') {
-    // no charset name is specified then assume it's us-ascii and dup the input
-    // later change the caller to avoid the duplication
+    // no charset name is specified then assume it's us-ascii (or ISO-8859-1 if 8bit) 
+    // and dup the input (later change the caller to avoid the duplication)
+    unsigned char *cp = (unsigned char *) header;
     PL_strcpy(charset, "us-ascii");
+    while (*cp) {
+      if (*cp > 127) {
+        PL_strcpy(charset, "ISO-8859-1");
+        break;
+      }
+      cp++;
+    }
     return nsCRT::strdup(header); 
   }
 
