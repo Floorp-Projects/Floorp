@@ -15,3 +15,68 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+ /**
+ * A character set converter from Unicode to GBK.
+ * 
+ *
+ * @created         08/Sept/1999
+ * @author  Yueheng Xu, Yueheng.Xu@intel.com
+ */
+
+#ifndef nsUnicodeToHZ_h___
+#define nsUnicodeToHZ_h___
+
+#include "nsUCvCnSupport.h"
+
+//----------------------------------------------------------------------
+// Class nsUnicodeToHZ [declaration]
+
+class nsUnicodeToHZ: public nsEncoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUnicodeToHZ(){};
+  virtual ~nsUnicodeToHZ(){};
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
+
+
+protected:
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsEncoderSupport class [declaration]
+  NS_IMETHOD ConvertNoBuff(const PRUnichar * aSrc, 
+                            PRInt32 * aSrcLength, 
+                            char * aDest, 
+                            PRInt32 * aDestLength);
+
+  NS_IMETHOD ConvertNoBuffNoErr( const PRUnichar * aSrc, 
+                                 PRInt32 * aSrcLength, 
+                                 char * aDest, 
+                                 PRInt32 * aDestLength);
+
+  NS_IMETHOD FillInfo(PRUint32 *aInfo);
+
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+
+private:
+
+typedef struct
+{
+    char leftbyte;
+    char rightbyte;
+
+} DByte;
+  void UnicodeToHZ(PRUnichar SrcUnicode, DByte *pGBCode);
+
+};
+
+#endif /* nsUnicodeToHZ_h___ */
