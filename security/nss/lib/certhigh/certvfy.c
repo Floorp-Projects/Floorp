@@ -1016,6 +1016,7 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
     unsigned int caCertType;
     unsigned int requiredCAKeyUsage;
     unsigned int requiredFlags;
+    CERTCertificate *issuerCert;
 
 
     if (CERT_KeyUsageAndTypeForCertUsage(certUsage, PR_TRUE,
@@ -1100,6 +1101,18 @@ CERT_VerifyCACertForUsage(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    if ( ( flags & requiredFlags ) == requiredFlags ||
 		     certUsage == certUsageStatusResponder ) {
 		    /* we found a trusted one, so return */
+        //Check  the special case of certUsageStatusResponder
+        if(certUsage == certUsageStatusResponder) {
+           issuerCert = CERT_FindCertIssuer(cert, t, certUsage);
+	         if (issuerCert) {
+              if(SEC_CheckCRL(handle, cert, issuerCert, t, wincx) != SECSuccess) {
+                 PORT_SetError(SEC_ERROR_REVOKED_CERTIFICATE);
+                 CERT_DestroyCertificate(issuerCert);
+                 goto loser;
+              }
+              CERT_DestroyCertificate(issuerCert);
+           }
+        }
 		    rv = rvFinal; 
 		    goto done;
 	    }
