@@ -866,6 +866,10 @@ nsresult nsMsgSearchTerm::MatchInAddressBook(const char * aAddress, PRBool *pRes
   nsresult rv = InitializeAddressBook(); 
   *pResult = PR_FALSE;
 
+  // Some junkmails have empty From: fields.
+  if (aAddress == NULL || strlen(aAddress) == 0)
+    return rv;
+
   if (mDirectory)
   {
     PRBool cardExists = PR_FALSE;
