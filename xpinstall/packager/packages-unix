@@ -116,6 +116,7 @@ bin/components/necko_file.xpt
 bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
 bin/components/necko_socket.xpt
+bin/components/necko_res.xpt
 bin/components/necko_stream_converter.xpt
 bin/components/nsSidebar.js
 bin/components/nsxpi.xpt
