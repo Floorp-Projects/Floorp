@@ -2255,6 +2255,7 @@ nsDoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
 }
 
 const PRUnichar kSemiCh = PRUnichar(';');
+const PRUnichar kCommaCh = PRUnichar(',');
 const PRUnichar kEqualsCh = PRUnichar('=');
 const PRUnichar kLessThanCh = PRUnichar('<');
 const PRUnichar kGreaterThanCh = PRUnichar('>');
@@ -2271,7 +2272,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
   nsAutoString type;
   nsAutoString media;
   PRBool blockParser = PR_FALSE;
-  PRBool didBlock;
+  PRBool didBlock = PR_FALSE;
 
   nsAutoString  stringList(aLinkData); // copy to work buffer
   
@@ -2280,6 +2281,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
   PRUnichar* start = (PRUnichar*)stringList;
   PRUnichar* end   = start;
   PRUnichar* last  = start;
+  PRUnichar  endCh;
 
   while (kNullCh != *start) {
     while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
@@ -2289,7 +2291,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
     end = start;
     last = end - 1;
 
-    while ((kNullCh != *end) && (kSemiCh != *end)) { // look for semicolon
+    while ((kNullCh != *end) && (kSemiCh != *end) && (kCommaCh != *end)) { // look for semicolon or comma
       if ((kApostrophe == *end) || (kQuote == *end) || 
           (kLessThanCh == *end)) { // quoted string
         PRUnichar quote = *end;
@@ -2303,9 +2305,10 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
         if (quote == *closeQuote) { // found closer
           end = closeQuote; // skip to close quote
           last = end - 1;
-          if ((kSemiCh != *(end + 1)) && (kNullCh != *(end + 1))) {
+          if ((kSemiCh != *(end + 1)) && (kNullCh != *(end + 1)) && (kCommaCh != *(end + 1))) {
             *(++end) = kNullCh;     // end string here
-            while ((kNullCh != *(end + 1)) && (kSemiCh != *(end + 1))) { // keep going until semi
+            while ((kNullCh != *(end + 1)) && (kSemiCh != *(end + 1)) &&
+                   (kCommaCh != *(end + 1))) { // keep going until semi or comma
               end++;
             }
           }
@@ -2315,25 +2318,16 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
       last++;
     }
 
+    endCh = *end;
     *end = kNullCh; // end string here
 
     if (start < end) {
       if ((kLessThanCh == *start) && (kGreaterThanCh == *last)) {
         *last = kNullCh;
-        if (0 < href.Length()) {  // this is not the first href, process what we have and reset
-          result = ProcessStyleLink(aElement, href, rel, title, type, media, blockParser);
-          rel.Truncate();
-          title.Truncate();
-          type.Truncate();
-          media.Truncate();
-          if (blockParser) {
-            blockParser = PR_FALSE;
-            didBlock = PR_TRUE;
-          }
+        if (0 == href.Length()) { // first one wins
+          href = (start + 1);
+          href.StripWhitespace();
         }
-
-        href = (start + 1);
-        href.StripWhitespace();
       }
       else {
         PRUnichar* equals = start;
@@ -2356,25 +2350,47 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsString& aLinkData
           }
 
           if (attr.EqualsIgnoreCase("rel")) {
-            rel = value;
-            rel.CompressWhitespace();
+            if (0 == rel.Length()) {
+              rel = value;
+              rel.CompressWhitespace();
+            }
           }
           else if (attr.EqualsIgnoreCase("title")) {
-            title = value;
-            title.CompressWhitespace();
+            if (0 == title.Length()) {
+              title = value;
+              title.CompressWhitespace();
+            }
           }
           else if (attr.EqualsIgnoreCase("type")) {
-            type = value;
-            type.StripWhitespace();
+            if (0 == type.Length()) {
+              type = value;
+              type.StripWhitespace();
+            }
           }
           else if (attr.EqualsIgnoreCase("media")) {
-            media = value;
+            if (0 == media.Length()) {
+              media = value;
+            }
           }
           else if (attr.EqualsIgnoreCase("wait")) {
             blockParser = PR_TRUE;
           }
         }
       }
+    }
+    if (kCommaCh == endCh) {  // hit a comma, process what we've got so far
+      if (0 < href.Length()) {
+        result = ProcessStyleLink(aElement, href, rel, title, type, media, blockParser);
+        if (blockParser) {
+          didBlock = PR_TRUE;
+        }
+      }
+      href.Truncate();
+      rel.Truncate();
+      title.Truncate();
+      type.Truncate();
+      media.Truncate();
+      blockParser = PR_FALSE;
     }
 
     start = ++end;
@@ -2413,7 +2429,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
         result = NS_NewURL(&url, aHref, mDocumentBaseURL);
       }
       if (NS_OK != result) {
-        return result;
+        return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
       }
 
       PRBool isPersistent = PR_FALSE;
