@@ -147,6 +147,7 @@ MAKEFILES_htmlparser="
 htmlparser/Makefile
 htmlparser/robot/Makefile
 htmlparser/robot/test/Makefile
+htmlparser/public/Makefile
 htmlparser/src/Makefile
 htmlparser/tests/Makefile
 htmlparser/tests/grabpage/Makefile
