@@ -959,7 +959,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner,
   aScanner.SetPosition(end, PR_TRUE);
 
   if (NS_SUCCEEDED(mInternalState)) {
-    return aScanner.Eof();
+    return aScanner.FillBuffer();
   }
 
   return NS_OK;

@@ -1629,7 +1629,7 @@ nsParser::Parse(nsIInputStream* aStream,
     pc->mMultipart=PR_FALSE;
     pc->mContextType=CParserContext::eCTStream;
     pc->mDTDMode=aMode;
-    mParserContext->mScanner->Eof();
+    mParserContext->mScanner->FillBuffer();
     result=ResumeParse();
     pc=PopContext();
     delete pc;
