@@ -29,6 +29,7 @@
 #include "nsXPIDLString.h"
 #include "nsISocketTransportService.h"
 #include "nsIStringStream.h"
+#include "nsMimeTypes.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -263,7 +264,7 @@ nsFingerChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
-#define FINGER_TYPE "text/plain"
+#define FINGER_TYPE TEXT_PLAIN
 
 NS_IMETHODIMP
 nsFingerChannel::GetContentType(char* *aContentType) {
