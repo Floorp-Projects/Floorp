@@ -26,7 +26,7 @@ bug_id,
 [% END %]
 
 [% FOREACH bug = bugs %]
-  [% bug.id %],
+  [% bug.bug_id %],
     [% FOREACH column = displaycolumns %]
       [% bug.$column FILTER csv %],
     [% END %]
