@@ -180,7 +180,7 @@ nsRDFDOMDataSource::createFrameTarget(nsIFrame *frame,
 {
   nsAutoString str;
   if (aProperty == kNC_Name)
-    frame->GetFrameName(str);
+    //frame->GetFrameName(str);
   else if (aProperty == kNC_Type)
     str = "frame";
 
