@@ -22,6 +22,7 @@
  */
 
 #include "nsIMsgComposeParams.h"
+#include "nsString.h"
 
 class nsMsgComposeParams : public nsIMsgComposeParams
 {

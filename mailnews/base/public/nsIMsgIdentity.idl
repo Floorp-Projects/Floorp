@@ -22,7 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsIMsgSignature.idl"
-#include "nsIFileSpec.idl"
+#include "nsILocalFile.idl"
 #include "nsIMsgVCard.idl"
 
 /*
@@ -70,7 +70,7 @@ interface nsIMsgIdentity : nsISupports {
   /* the current signature */
   /*  after PR1, let's make this a real object */
   /*  attribute nsIMsgSignature signature; */
-  attribute nsIFileSpec signature;
+  attribute nsILocalFile signature;
   attribute long signatureDate;
 
   /* the current vcard */

@@ -233,10 +233,10 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define MIGRATE_SIMPLE_FILE_PREF_TO_FILE_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
   { \
     nsresult macro_rv; \
-    nsCOMPtr <nsIFileSpec>macro_spec;	\
-    macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
+    nsCOMPtr <nsILocalFile> macro_file; \
+    macro_rv = m_prefs->GetFileXPref(PREFNAME, getter_AddRefs(macro_file)); \
     if (NS_SUCCEEDED(macro_rv)) { \
-	MACRO_OBJECT->MACRO_METHOD(macro_spec); \
+      MACRO_OBJECT->MACRO_METHOD(macro_file); \
     } \
   }
 

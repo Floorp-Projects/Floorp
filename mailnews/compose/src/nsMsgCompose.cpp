@@ -508,15 +508,12 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     identity->GetFullName(getter_Copies(fullName));
     identity->GetOrganization(getter_Copies(organization));
     
-	char * sender = nsnull;
-	nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
-  if (parser) {
-    // convert to UTF8 before passing to MakeFullAddress
-    nsAutoString fullNameStr(fullName);
-    char *fullNameUTF8 = fullNameStr.ToNewUTF8String();
-		parser->MakeFullAddress(nsnull, fullNameUTF8, email, &sender);
-    nsCRT::free(fullNameUTF8);
-  }
+    char * sender = nsnull;
+    nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(kHeaderParserCID));
+    if (parser) {
+      // convert to UTF8 before passing to MakeFullAddress
+      parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(fullName), email, &sender);
+    }
   
 	if (!sender)
 		m_compFields->SetFrom(email);
@@ -1929,7 +1926,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // saying "Image Signature Omitted" or something.
   //
   nsAutoString  urlStr;
-  nsCOMPtr<nsIFileSpec> sigFileSpec;
+  nsXPIDLCString sigNativePath;
   PRBool        useSigFile = PR_FALSE;
   PRBool        htmlSig = PR_FALSE;
   PRBool        imageSig = PR_FALSE;
@@ -1941,18 +1938,20 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     rv = identity->GetAttachSignature(&useSigFile);
     if (NS_SUCCEEDED(rv) && useSigFile) 
     {
-      identity->GetSignature(getter_AddRefs(sigFileSpec));
+      nsCOMPtr<nsILocalFile> sigFile;
+      rv = identity->GetSignature(getter_AddRefs(sigFile));
+      if (NS_SUCCEEDED(rv))
+        rv = sigFile->GetPath(getter_Copies(sigNativePath));
     }
   }
   
   // Now, if they didn't even want to use a signature, we should
   // just return nicely.
   //
-  if ((!useSigFile) || (!sigFileSpec))
+  if ((!useSigFile) || NS_FAILED(rv))
     return NS_OK;
 
-  nsFileSpec    testSpec;
-  sigFileSpec->GetFileSpec(&testSpec);
+  nsFileSpec    testSpec(sigNativePath);
   
   // If this file doesn't really exist, just bail!
   if (!testSpec.Exists())

@@ -349,19 +349,19 @@ nsMsgIdentity::ToString(PRUnichar **aResult)
 // XXX - these are a COM objects, use NS_ADDREF
 //NS_IMPL_GETSET(nsMsgIdentity, Signature, nsIMsgSignature*, m_signature);
 NS_IMETHODIMP
-nsMsgIdentity::GetSignature(nsIFileSpec **sig) {
+nsMsgIdentity::GetSignature(nsILocalFile **sig) {
   nsresult rv = getPrefService();
   if (NS_FAILED(rv)) return rv;
   
   char *prefName = getPrefName(m_identityKey, "sig_file");
-  rv = m_prefs->GetFilePref(prefName, sig);
+  rv = m_prefs->GetFileXPref(prefName, sig);
   if (NS_FAILED(rv))
     *sig = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMsgIdentity::SetSignature(nsIFileSpec *sig)
+nsMsgIdentity::SetSignature(nsILocalFile *sig)
 {
 
   nsresult rv = getPrefService();
@@ -370,8 +370,7 @@ nsMsgIdentity::SetSignature(nsIFileSpec *sig)
   rv = NS_OK;
   char *prefName = getPrefName(m_identityKey, "sig_file");
   if (sig) 
-    rv = m_prefs->SetFilePref(NS_CONST_CAST(const char*,prefName), sig,
-                              PR_FALSE);
+      rv = m_prefs->SetFileXPref(prefName, sig);
   /*
   else
     m_prefs->ClearFilePref(prefName);
@@ -483,7 +482,7 @@ nsMsgIdentity::setFolderPref(const char *prefname, const char *value)
 #define COPY_IDENTITY_FILE_VALUE(SRC_ID,MACRO_GETTER,MACRO_SETTER) 	\
 	{	\
 		nsresult macro_rv;	\
-		nsCOMPtr <nsIFileSpec>macro_spec;   \
+		nsCOMPtr <nsILocalFile>macro_spec;   \
         	macro_rv = SRC_ID->MACRO_GETTER(getter_AddRefs(macro_spec)); \
         	if (NS_FAILED(macro_rv)) return macro_rv;	\
         	this->MACRO_SETTER(macro_spec);     \
