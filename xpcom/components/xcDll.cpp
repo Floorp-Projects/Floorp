@@ -169,7 +169,15 @@ nsDll::Init(const char *libPersistentDescriptor)
 
 nsDll::~nsDll(void)
 {
+#if defined(DEBUG_dp) || defined(DEBUG_ramiro) || defined(DEBUG_akkana)
+    // The dll gets deleted when the dllStore is destroyed. This happens on
+    // app shutdown. At that point, unloading dlls can cause crashes if we have
+    // - dll dependencies
+    // - callbacks
+    // - static dtors
+    // Hence turn it back on after all the above have been removed.
     Unload();
+#endif
     if (m_dllSpec)
         NS_RELEASE(m_dllSpec);
     if (m_dllName)
