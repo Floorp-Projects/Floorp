@@ -42,6 +42,7 @@ class nsString;
 class nsIFocusTracker; 
 class nsStyleChangeList;
 
+struct nsPeekOffsetStruct;
 struct nsPoint;
 struct nsRect;
 struct nsStyleStruct;
@@ -679,18 +680,9 @@ public:
    *  nsIFrame and the frame offset.  THIS DOES NOT CHANGE SELECTION STATE
    *  uses frame's begin selection state to start. if no selection on this frame will 
    *  return NS_ERROR_FAILURE
-   *  @param aTracker is used to get the PresContext usefull for measuring text ect.
-   *  @param aDesiredX is the "desired" location of the new caret
-   *  @param aAmount eWord, eCharacter, eLine
-   *  @param aDirection enum defined in this file to be eForward or eBackward
-   *  @param aStartOffset start offset to start the peek. 0 == beginning -1 = end
-   *  @param aResultContent content that actually is the next/previous
-   *  @param aResultOffset offset for result content
-   *  @param aResultFrame resulting frame for peeking
-   *  @param aEatingWS boolean to tell us the state of our search for Next/Prev
+   *  @param aPOS is defined in nsIFrameSelection
    */
-  NS_IMETHOD  PeekOffset(nsIFocusTracker *aTracker, PRInt32 aDesiredX, nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIContent **aResultContent, PRInt32 *aResultOffset, nsIFrame **aResultFrame, PRBool aEatingWS) = 0;
+  NS_IMETHOD  PeekOffset(nsPeekOffsetStruct *aPos) = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add

@@ -246,15 +246,7 @@ public:
 
   NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
-  NS_IMETHOD PeekOffset(nsIFocusTracker *aTracker, 
-                        nscoord aDesiredX,
-                        nsSelectionAmount aAmount,
-                        nsDirection aDirection,
-                        PRInt32 aStartOffset,
-                        nsIContent **aResultContent, 
-                        PRInt32 *aContentOffset,
-                        nsIFrame **aResultFrame,
-                        PRBool aEatingWS);
+  NS_IMETHOD PeekOffset(nsPeekOffsetStruct *aPos);
 
   NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
                          nsGUIEvent *    aEvent,
@@ -1962,39 +1954,30 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 
 
 NS_IMETHODIMP
-nsTextFrame::PeekOffset(nsIFocusTracker *aTracker, 
-                        nscoord aDesiredX,
-                        nsSelectionAmount aAmount,
-                        nsDirection aDirection,
-                        PRInt32 aStartOffset,
-                        nsIContent **aResultContent, 
-                        PRInt32 *aContentOffset,
-                        nsIFrame **aResultFrame,
-                        PRBool aEatingWS) 
+nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos) 
 {
 
-  if (!aResultContent || !aContentOffset || !mContent)
+  if (!aPos || !mContent)
     return NS_ERROR_NULL_POINTER;
-  if (aStartOffset < 0 )
-    aStartOffset = mContentLength + mContentOffset;
-  if (aStartOffset < mContentOffset){
-    aStartOffset = mContentOffset;
+  if (aPos->mStartOffset < 0 )
+    aPos->mStartOffset = mContentLength + mContentOffset;
+  if (aPos->mStartOffset < mContentOffset){
+    aPos->mStartOffset = mContentOffset;
   }
-  if (aStartOffset > (mContentOffset + mContentLength)){
+  if (aPos->mStartOffset > (mContentOffset + mContentLength)){
     nsIFrame *nextInFlow;
     nextInFlow = GetNextInFlow();
     if (!nextInFlow){
       NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more flow \n");
       return NS_ERROR_INVALID_ARG;
     }
-    return nextInFlow->PeekOffset(aTracker, aDesiredX, aAmount,aDirection,aStartOffset,
-                        aResultContent,aContentOffset,aResultFrame,aEatingWS);
+    return nextInFlow->PeekOffset(aPos);
   }
-
-  if (aAmount == eSelectLine || aAmount == eSelectBeginLine || aAmount == eSelectEndLine)
+ 
+  if (aPos->mAmount == eSelectLine || aPos->mAmount == eSelectBeginLine 
+      || aPos->mAmount == eSelectEndLine)
   {
-      return nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, aStartOffset,
-                        aResultContent, aContentOffset, aResultFrame,aEatingWS);
+      return nsFrame::PeekOffset(aPos);
   }
 
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -2010,12 +1993,10 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
   nsresult result(NS_OK);
 
 
-  switch (aAmount){
+  switch (aPos->mAmount){
   case eSelectNoAmount : {
-      *aResultContent = mContent;
-      if (*aResultContent)
-        (*aResultContent)->AddRef();
-      *aContentOffset = aStartOffset;
+      aPos->mResultContent = mContent;
+      aPos->mContentOffset = aPos->mStartOffset;
     }
     break;
   case eSelectCharacter : {
@@ -2039,11 +2020,11 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
     nsIFrame *frameUsed = nsnull;
     PRInt32 start;
     PRBool found = PR_TRUE;
-    if (aDirection == eDirPrevious){
+    if (aPos->mDirection == eDirPrevious){
       PRInt32 i;
-      for (i = aStartOffset -1 - mContentOffset; i >=0;  i--){
-        if (ip[i] < ip[aStartOffset - mContentOffset]){
-          *aContentOffset = i + mContentOffset;
+      for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
+        if (ip[i] < ip[aPos->mStartOffset - mContentOffset]){
+          aPos->mContentOffset = i + mContentOffset;
           break;
         }
       }
@@ -2053,11 +2034,11 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
         start = mContentOffset;
       }
     }
-    else if (aDirection == eDirNext){
+    else if (aPos->mDirection == eDirNext){
       PRInt32 i;
-      for (i = aStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
-        if (ip[i] > ip[aStartOffset - mContentOffset]){
-          *aContentOffset = i + mContentOffset;
+      for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
+        if (ip[i] > ip[aPos->mStartOffset - mContentOffset]){
+          aPos->mContentOffset = i + mContentOffset;
           break;
         }
       }
@@ -2072,18 +2053,14 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
     }
     if (!found){
       if (frameUsed){
-        result = frameUsed->PeekOffset(aTracker, aDesiredX, eSelectCharacter, aDirection,  start, aResultContent, 
-              aContentOffset, aResultFrame,aEatingWS);
+        result = frameUsed->PeekOffset(aPos);
       }
       else {//reached end ask the frame for help
-        result = nsFrame::PeekOffset(aTracker, aDesiredX, eSelectCharacter, aDirection, start, aResultContent,
-                  aContentOffset, aResultFrame,aEatingWS);
+        result = nsFrame::PeekOffset(aPos);
       }
     }
     else {
-      *aResultContent = mContent;
-      if (*aResultContent)
-        (*aResultContent)->AddRef();
+      aPos->mResultContent = mContent;
     }
   }
   break;
@@ -2108,41 +2085,41 @@ nsTextFrame::PeekOffset(nsIFocusTracker *aTracker,
     PRBool found = PR_FALSE;
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
-    if (aDirection == eDirPrevious){
+    if (aPos->mDirection == eDirPrevious){
       keepSearching = PR_TRUE;
-      tx.Init(this, aStartOffset);
+      tx.Init(this, aPos->mStartOffset);
       if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
-        if ((aEatingWS && !isWhitespace) || !aEatingWS){
-          *aContentOffset = aStartOffset - contentLen;
+        if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
+          aPos->mContentOffset = aPos->mStartOffset - contentLen;
           //check for whitespace next.
-          if (*aContentOffset > mContentOffset)
+          if (aPos->mContentOffset > mContentOffset)
             keepSearching = PR_FALSE;//reached the beginning of a word
-          aEatingWS = !isWhitespace;//nowhite space, just eat chars.
+          aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
           while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
-            *aContentOffset -= contentLen;
-            aEatingWS = PR_FALSE;
+            aPos->mContentOffset -= contentLen;
+            aPos->mEatingWS = PR_FALSE;
           }
-          keepSearching = *aContentOffset <= mContentOffset;
+          keepSearching = aPos->mContentOffset <= mContentOffset;
           if (!isWhitespace){
             if (!keepSearching)
               found = PR_TRUE;
             else
-              aEatingWS = PR_TRUE;
+              aPos->mEatingWS = PR_TRUE;
           }
         }
         else {
-          *aContentOffset = mContentLength + mContentOffset;
+          aPos->mContentOffset = mContentLength + mContentOffset;
           found = PR_TRUE;
         }
       }
       frameUsed = GetPrevInFlow();
       start = -1; //start at end
     }
-    else if (aDirection == eDirNext){
-      tx.Init(this, aStartOffset );
+    else if (aPos->mDirection == eDirNext){
+      tx.Init(this, aPos->mStartOffset );
 
 #ifdef DEBUGWORDJUMP
-printf("Next- Start=%d aEatingWS=%s\n", aStartOffset, aEatingWS ? "TRUE" : "FALSE");
+printf("Next- Start=%d aPos->mEatingWS=%s\n", aPos->mStartOffset, aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
 
       if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
@@ -2152,8 +2129,8 @@ printf("GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n",
        wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
 #endif
 
-        if ((aEatingWS && isWhitespace) || !aEatingWS){
-          *aContentOffset = aStartOffset + contentLen;
+        if ((aPos->mEatingWS && isWhitespace) || !aPos->mEatingWS){
+          aPos->mContentOffset = aPos->mStartOffset + contentLen;
           //check for whitespace next.
           keepSearching = PR_TRUE;
           isWhitespace = PR_TRUE;
@@ -2162,41 +2139,38 @@ printf("GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n",
 printf("2-GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
        wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
 #endif
-            *aContentOffset += contentLen;
+            aPos->mContentOffset += contentLen;
             keepSearching = PR_FALSE;
             isWhitespace = PR_FALSE;
           }
         }
-        else if (aEatingWS)
-          *aContentOffset = mContentOffset;
+        else if (aPos->mEatingWS)
+          aPos->mContentOffset = mContentOffset;
 
         if (!isWhitespace){
           found = PR_TRUE;
-          aEatingWS = PR_FALSE;
+          aPos->mEatingWS = PR_FALSE;
         }
         else if (!keepSearching) //we have found the "whole" word so just looking for WS
-          aEatingWS = PR_TRUE;
+          aPos->mEatingWS = PR_TRUE;
       }
       frameUsed = GetNextInFlow();
       start = 0;
     }
 #ifdef DEBUGWORDJUMP
-printf("aEatingWS = %s\n" , aEatingWS ? "TRUE" : "FALSE");
+printf("aEatingWS = %s\n" , aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
-    if (!found || (*aContentOffset > (mContentOffset + mContentLength)) || (*aContentOffset < mContentOffset)){ //gone too far
+    if (!found || (aPos->mContentOffset > (mContentOffset + mContentLength)) || (aPos->mContentOffset < mContentOffset)){ //gone too far
+      aPos->mStartOffset = start;
       if (frameUsed){
-        result = frameUsed->PeekOffset(aTracker, aDesiredX, aAmount, aDirection,  start, aResultContent, 
-              aContentOffset, aResultFrame,aEatingWS);
+        result = frameUsed->PeekOffset(aPos);
       }
       else {//reached end ask the frame for help
-        result = nsFrame::PeekOffset(aTracker, aDesiredX, aAmount, aDirection, start, aResultContent,
-                  aContentOffset, aResultFrame,aEatingWS);
+        result = nsFrame::PeekOffset(aPos);
       }
     }
     else {
-      *aResultContent = mContent;
-      if (*aResultContent)
-        (*aResultContent)->AddRef();
+      aPos->mResultContent = mContent;
     }
   }
     break;
@@ -2210,13 +2184,11 @@ printf("aEatingWS = %s\n" , aEatingWS ? "TRUE" : "FALSE");
     delete [] ip;
   }
   if (NS_FAILED(result)){
-    *aResultContent = mContent;
-    if (*aResultContent)
-      (*aResultContent)->AddRef();
-    *aContentOffset = aStartOffset;
+    aPos->mResultContent = mContent;
+    aPos->mContentOffset = aPos->mStartOffset;
     result = NS_OK;
   }
-  *aResultFrame = this;
+  aPos->mResultFrame = this;
   return result;
 }
 
@@ -2249,46 +2221,43 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
         nsCOMPtr<nsIDOMNode> startNode;
         nsCOMPtr<nsIContent> endContent;
         nsCOMPtr<nsIDOMNode> endNode;
-        PRInt32 startOffset;
-        PRInt32 endOffset;
-        nsIFrame *resultFrame;
         //peeks{}
-        rv = PeekOffset(tracker, 
+        nsPeekOffsetStruct startpos;
+        startpos.SetData(tracker, 
                         0, 
                         eSelectWord,
                         eDirPrevious,
                         startPos,
-                        getter_AddRefs(startContent), 
-                        &startOffset,
-                        &resultFrame,
-                        PR_FALSE);
+                        PR_FALSE,
+                        PR_TRUE);
+        rv = PeekOffset(&startpos);
         if (NS_FAILED(rv))
           return rv;
-        rv = PeekOffset(tracker, 
+        nsPeekOffsetStruct endpos;
+        endpos.SetData(tracker, 
                         0, 
                         eSelectWord,
                         eDirNext,
                         startPos,
-                        getter_AddRefs(endContent), 
-                        &endOffset,
-                        &resultFrame,
-                        PR_FALSE);
+                        PR_FALSE,
+                        PR_TRUE);
+        rv = PeekOffset(&endpos);
         if (NS_FAILED(rv))
           return rv;
 
-        endNode = do_QueryInterface(endContent,&rv);
+        endNode = do_QueryInterface(endpos.mResultContent,&rv);
         if (NS_FAILED(rv))
           return rv;
-        startNode = do_QueryInterface(startContent,&rv);
+        startNode = do_QueryInterface(startpos.mResultContent,&rv);
         if (NS_FAILED(rv))
           return rv;
 
         nsCOMPtr<nsIDOMSelection> selection;
         if (NS_SUCCEEDED(shell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection)))){
-          rv = selection->Collapse(startNode,startOffset);
+          rv = selection->Collapse(startNode,startpos.mContentOffset);
           if (NS_FAILED(rv))
             return rv;
-          rv = selection->Extend(endNode,endOffset);
+          rv = selection->Extend(endNode,endpos.mContentOffset);
           if (NS_FAILED(rv))
             return rv;
         }

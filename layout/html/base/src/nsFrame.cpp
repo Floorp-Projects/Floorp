@@ -848,7 +848,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
         frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-        frameselection->TakeFocus(newContent, startPos , contentOffsetEnd , inputEvent->isShift, inputEvent->isControl);
+        frameselection->HandleClick(newContent, startPos , contentOffsetEnd , inputEvent->isShift, inputEvent->isControl);
       }
       //no release 
     }
@@ -856,7 +856,7 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
   return NS_OK;
 
 }
-
+ 
 /**
   * Handles the Multiple Mouse Press Event for the frame
  */
@@ -886,7 +886,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
                                  startPos, contentOffsetEnd))){
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
-        frameselection->TakeFocus(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE); //TRUE IS THE DIFFERENCE for continue selection
+        frameselection->HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE); //TRUE IS THE DIFFERENCE for continue selection
       }
       //no release 
     }
@@ -1735,8 +1735,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
   else if (aOutSideLimit <0)//start at begining
     searchingLine = -1;//"next" will be 0
   else 
-  if ((aDirection == eDirPrevious && aLineStart == 0) || 
-      (aDirection == eDirNext && aLineStart >= (countLines -1) )){
+  if ((aDirection == eDirPrevious && searchingLine == 0) || 
+      (aDirection == eDirNext && searchingLine >= (countLines -1) )){
       //we need to jump to new block frame.
     return NS_ERROR_FAILURE;
   }
@@ -1755,7 +1755,15 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
       searchingLine --;
     else
       searchingLine ++;
+    if ((aDirection == eDirPrevious && searchingLine < 0) || 
+       (aDirection == eDirNext && searchingLine >= countLines ))
+    {
+        //we need to jump to new block frame.
+      return NS_ERROR_FAILURE;
+    }
     result = it->GetLine(searchingLine, &firstFrame, &lineFrameCount,nonUsedRect);
+    if (!lineFrameCount)
+      continue;
     if (NS_SUCCEEDED(result)){
       lastFrame = firstFrame;
       for (;lineFrameCount > 1;lineFrameCount --){
@@ -1775,8 +1783,11 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
         nearStoppingFrame = lastFrame;
         farStoppingFrame = firstFrame;
       }
-    
-      result = it->FindFrameAt(searchingLine, aDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
+      nsPoint offset;
+      nsIView * view; //used for call of get offset from view
+      aBlockFrame->GetOffsetFromView(offset,&view);
+      nscoord newDesiredX  = aDesiredX - offset.x;//get desired x into blockframe coordinates!
+      result = it->FindFrameAt(searchingLine, newDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
     }
 
     if (NS_SUCCEEDED(result) && resultFrame)
@@ -1854,12 +1865,11 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
     }
     else {
         //we need to jump to new block frame.
-      if (aDirection == eDirNext)
-        return aBlockFrame->PeekOffset(aTracker, aDesiredX, eSelectLine, aDirection, 0, aResultContent,
-                                aContentOffset, aResultFrame, PR_FALSE);
-      else
-        return aBlockFrame->PeekOffset(aTracker, aDesiredX, eSelectLine, aDirection, -1, aResultContent,
-                                aContentOffset, aResultFrame, PR_FALSE);
+      nsPeekOffsetStruct pos;
+      pos.SetData(aTracker, aDesiredX, eSelectLine, aDirection, 0, PR_FALSE,PR_TRUE);
+      if (aDirection == eDirPrevious)
+        pos.mStartOffset=-1;//start from end
+     return aBlockFrame->PeekOffset(&pos);
     }
   }
   return NS_OK;
@@ -1867,25 +1877,14 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
 
 
 NS_IMETHODIMP
-nsFrame::PeekOffset(nsIFocusTracker *aTracker,
-                        nscoord aDesiredX,
-                        nsSelectionAmount aAmount,
-                        nsDirection aDirection,
-                        PRInt32 aStartOffset,
-                        nsIContent **aResultContent, 
-                        PRInt32 *aContentOffset,
-                        nsIFrame **aResultFrame,
-                        PRBool aEatingWS)
+nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
 {
-  if (!aResultContent || !aContentOffset ||!aTracker || !aResultFrame)
+  if (!aPos || !aPos->mTracker )
     return NS_ERROR_NULL_POINTER;
   nsresult result = NS_ERROR_FAILURE; 
-  switch (aAmount){
+  switch (aPos->mAmount){
     case eSelectLine :
     {
-      if (!aTracker)
-        return NS_ERROR_NULL_POINTER;
-
       nsCOMPtr<nsILineIterator> it; 
       nsIFrame *blockFrame = this;
       nsIFrame *thisBlock = this;
@@ -1916,29 +1915,30 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
         //this part will find a frame or a block frame. if its a block frame
         //it will "drill down" to find a viable frame or it will return an error.
         do {
-          result = GetNextPrevLineFromeBlockFrame(aTracker,
-                                        aDirection, 
+
+          result = GetNextPrevLineFromeBlockFrame(aPos->mTracker,
+                                        aPos->mDirection, 
                                         blockFrame, 
                                         thisLine, 
-                                        aDesiredX,
-                                        aResultContent, 
-                                        aContentOffset,
+                                        aPos->mDesiredX,
+                                        getter_AddRefs(aPos->mResultContent), 
+                                        &(aPos->mContentOffset),
                                         edgeCase, //start from thisLine
-                                        aResultFrame
+                                        &(aPos->mResultFrame)
                                         );
           doneLooping = PR_TRUE; //do not continue with while loop
-          if (NS_SUCCEEDED(result) && *aResultFrame){
-            result = (*aResultFrame)->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
+          if (NS_SUCCEEDED(result) && aPos->mResultFrame){
+            result = aPos->mResultFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
             if (NS_SUCCEEDED(result) && it)//we have struck another block element!
             {
               doneLooping = PR_FALSE;
-              if (aDirection == eDirPrevious)
+              if (aPos->mDirection == eDirPrevious)
                 edgeCase = 1;//far edge, search from end backwards
               else
                 edgeCase = -1;//near edge search from beginning onwards
               thisLine=0;//this line means nothing now.
               //everything else means something so keep looking "inside" the block
-              blockFrame = *aResultFrame;
+              blockFrame = aPos->mResultFrame;
 
             }
             else
@@ -1975,19 +1975,19 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
       if (NS_FAILED(result) || thisLine < 0 )
         return result;
       nsCOMPtr<nsIPresContext> context;
-      result = aTracker->GetPresContext(getter_AddRefs(context));
+      result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
       if (NS_FAILED(result) || !context)
         return result;
       PRInt32 lineFrameCount;
       nsIFrame *firstFrame;
       nsRect  usedRect; 
       result = it->GetLine(thisLine, &firstFrame, &lineFrameCount,usedRect);
-      if (eSelectBeginLine == aAmount)
+      if (eSelectBeginLine == aPos->mAmount)
       {
         if (firstFrame)
         {
           result = firstFrame->GetPosition(*(context.get()),0,
-                      aResultContent,*aContentOffset, *aContentOffset);
+                      getter_AddRefs(aPos->mResultContent),aPos->mContentOffset, aPos->mContentOffset);
         }
       }
       else
@@ -2003,7 +2003,7 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
           usedRect.y = offsetPoint.y;
 
           result = firstFrame->GetPosition(*(context.get()),2*usedRect.width,//2* just to be sure we are off the edge
-                      aResultContent,*aContentOffset, *aContentOffset);
+                      getter_AddRefs(aPos->mResultContent),aPos->mContentOffset, aPos->mContentOffset);
         }
       }
     }break;
@@ -2017,7 +2017,7 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
       if (NS_FAILED(result))
         return result;
       nsISupports *isupports = nsnull;
-      if (aDirection == eDirNext)
+      if (aPos->mDirection == eDirNext)
         result = frameTraversal->Next();
       else 
         result = frameTraversal->Prev();
@@ -2032,12 +2032,11 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
       //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
       //for speed reasons
       nsIFrame *newFrame = (nsIFrame *)isupports;
-      if (aDirection == eDirNext)
-        return newFrame->PeekOffset(aTracker, aDesiredX, aAmount, aDirection, 0, aResultContent,
-                                aContentOffset,aResultFrame,  aEatingWS);
+      if (aPos->mDirection == eDirNext)
+        aPos->mStartOffset = 0;
       else
-        return newFrame->PeekOffset(aTracker, aDesiredX, aAmount, aDirection, -1, aResultContent,
-                                aContentOffset,aResultFrame,  aEatingWS);
+        aPos->mStartOffset = -1;
+      return newFrame->PeekOffset(aPos);
     }
   }                          
   return result;
