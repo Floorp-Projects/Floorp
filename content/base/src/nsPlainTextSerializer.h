@@ -70,7 +70,7 @@ public:
                         PRInt32 aEndOffset, nsAString& aStr);
   NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
                                 PRInt32 aStartOffset, PRInt32 aEndOffset,
-                                nsAString& aStr) { return NS_OK; }
+                                nsAString& aStr);
   NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset,

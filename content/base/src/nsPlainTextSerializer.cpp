@@ -46,6 +46,7 @@
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDOMText.h"
+#include "nsIDOMCDATASection.h"
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsITextContent.h"
@@ -363,7 +364,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   }
 
   // Consume the last bit of the string if there's any left
-  if (NS_SUCCEEDED(rv) & (start < length)) {
+  if (NS_SUCCEEDED(rv) && start < length) {
     if (start) {
       rv = DoAddLeaf(nsnull,
                      eHTMLTag_text,
@@ -379,7 +380,16 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
+nsPlainTextSerializer::AppendCDATASection(nsIDOMCDATASection* aCDATASection,
+                                          PRInt32 aStartOffset,
+                                          PRInt32 aEndOffset,
+                                          nsAString& aStr)
+{
+  return AppendText(aCDATASection, aStartOffset, aEndOffset, aStr);
+}
+
+NS_IMETHODIMP
 nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
                                           PRBool aHasChildren,
                                           nsAString& aStr)
