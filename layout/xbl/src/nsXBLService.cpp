@@ -438,8 +438,8 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
         if (!tag) {
           // We have a base class binding. Load it right now.
           nsCOMPtr<nsIXBLBinding> baseBinding;
-          nsCAutoString url; url.AssignWithConversion(value);
-          GetBinding(url, getter_AddRefs(baseBinding));
+          nsCAutoString urlCString; urlCString.AssignWithConversion(value);
+          GetBinding(urlCString, getter_AddRefs(baseBinding));
           if (!baseBinding)
             return NS_OK; // At least we got the derived class binding loaded.
           (*aResult)->SetBaseBinding(baseBinding);
