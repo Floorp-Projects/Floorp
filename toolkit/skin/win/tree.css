@@ -36,8 +36,8 @@ tree {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  background-color: Window;
-  color: WindowText;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
   -moz-appearance: listbox;
 }
 
