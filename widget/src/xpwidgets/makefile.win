@@ -27,6 +27,7 @@ CPPSRCS = \
     nsBaseDragService.cpp      \
     nsBaseWidget.cpp      \
 	nsFileChooser.cpp         \
+	nsFileSpecWithUIImpl.cpp         \
 	nsBaseClipboard.cpp         \
 	nsTransferable.cpp         \
 	nsXIFFormatConverter.cpp         \
@@ -39,6 +40,7 @@ OBJS= \
 	.\$(OBJDIR)\nsBaseDragService.obj  \
 	.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsFileChooser.obj  \
+	.\$(OBJDIR)\nsFileSpecWithUIImpl.obj  \
 	.\$(OBJDIR)\nsBaseClipboard.obj  \
 	.\$(OBJDIR)\nsTransferable.obj  \
 	.\$(OBJDIR)\nsXIFFormatConverter.obj  \
