@@ -254,24 +254,24 @@ NS_IMETHODIMP nsProfile::Startup(const char *filename)
 
 			if (NS_FAILED(rv))
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't add Profiles subtree.\n");
-				#endif
+#endif
 			}
 			m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 	}
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry Object is NULL.\n");
-		#endif
+#endif
 
 		return NS_ERROR_FAILURE;
 	}
@@ -504,12 +504,14 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
     if (NS_SUCCEEDED(rv))
         {		
             if (cmdResult) {
-#ifdef XP_PC
-                MigrateProfileInfo();
+#if defined(XP_PC) || defined(XP_UNIX)
+                rv = MigrateProfileInfo();
+                //if (NS_FAILED(rv)) return rv;
 
                 int num4xProfiles = 0;
-                Get4xProfileCount(&num4xProfiles);
-
+                rv = Get4xProfileCount(&num4xProfiles);
+                //if (NS_FAILED(rv)) return rv;
+                
 				int numProfiles = 0;
 				GetProfileCount(&numProfiles);
                 if (num4xProfiles == 0 && numProfiles == 0) {
@@ -607,9 +609,9 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 													
 							if (NS_FAILED(rv))
 							{
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("Profiles : Couldn't set CurrentProfile Name.\n");
-								#endif
+#endif
 					        }
 
 							nsFileSpec tmpFileSpec(orgProfileDir);
@@ -645,39 +647,39 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
 					}
 					else
 					{
-						#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 							printf("Profiles : Couldn't get Profile directory name.\n");
-						#endif
+#endif
 					}
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Profiles : Couldn't get profileName subtree.\n");
-					#endif
+#endif
 				}
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 			m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 		
     }
 	else
 	{
-		#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-		#endif
+#if defined(DEBUG_profile)
+        printf("Registry Object is NULL.\n");
+#endif
 
 		return NS_ERROR_FAILURE;
 	}
@@ -773,32 +775,32 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Profiles : Can't enumerate subtrees.\n" );
-					#endif
+#endif
 				}
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 			m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 		
     }
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry Object is NULL.\n");
-		#endif
+#endif
 
 		return NS_ERROR_FAILURE;
 
@@ -888,32 +890,32 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 											}
 											else
 											{
-												#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 													printf("RegistryNode : Can't set Current Profile name.\n" );
-												#endif											
+#endif											
 											}
 										}
 									}
 								}
 								else
 								{
-									#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 										printf("RegistryNode : Couldn't get the node name.\n");
-									#endif
+#endif
 								}
 							}
 							else
 							{
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("RegistryNode : Couldn't get the interface.\n");
-								#endif
+#endif
 							}
 						}
 						else
 						{
-							#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 								printf("Profiles : Couldn't get current enumerated item.\n");
-							#endif
+#endif
 						}
 						rv = enumKeys->Next();
 					} //end while loop
@@ -921,31 +923,31 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Profiles : Couldn't enumerate subtrees.\n");
-					#endif
+#endif
 				}
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 	        m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 	}
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry Object is NULL.\n");
-		#endif
+#endif
 
 		return NS_ERROR_FAILURE;
 	}
@@ -983,32 +985,32 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 				{
 		            profileName = '\0';
 
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Profiles:Can't get Current Profile value.\n" );
-					#endif
+#endif
 				}
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 			m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 		
     }
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry Object is NULL.\n");
-		#endif
+#endif
 
 		return NS_ERROR_FAILURE;
 	}
@@ -1031,9 +1033,9 @@ NS_IMETHODIMP nsProfile::GetFirstProfile(char **profileName)
 
     if (NS_FAILED(rv))
     {
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
             printf("Couldn't get the first profile.\n" );
-		#endif
+#endif
     }
 
     return rv;
@@ -1059,17 +1061,17 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 
 	    if (NS_FAILED(rv))
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 	            printf("Couldn't get the profile dir.\n" );
-			#endif
+#endif
 	    }
 
     }
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 		    printf("Couldn't get the current profile.\n" );
-		#endif
+#endif
 	}
 
 
@@ -1142,9 +1144,9 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 
 						if (NS_FAILED(rv))
 						{
-							#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 								printf("Couldn't set directory property.\n" );
-							#endif
+#endif
 						}
 						
 						// A 5.0 profile needs no migration.
@@ -1154,48 +1156,48 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, nsFileSpec& prof
 					}
 					else
 					{
-						#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 							printf("NULL value received for directory name.\n" );
-						#endif
+#endif
 					}
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Profiles : Could not add profile name subtree.\n" );
-					#endif
+#endif
 				}
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 
 			rv = m_reg->SetString(key, "CurrentProfile", profileName);
 
 			if (NS_FAILED(rv))
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Couldn't set CurrentProfile name.\n" );
-				#endif
+#endif
 			}
 		    m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 		
 	}
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry Object is NULL.\n");
-		#endif
+#endif
 
 		return NS_ERROR_FAILURE;
 	}
@@ -1471,9 +1473,9 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 		{
 			renameCurrProfile = PR_TRUE;
 	
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("ProfileManager : Renaming the current profile\n");
-			#endif
+#endif
 		}
 	}
 
@@ -1617,15 +1619,15 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 
         if (NS_FAILED(rv))
         {
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Error opening Registry.\n" );
-			#endif
+#endif
             return rv;
         }
 		
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry opened OK.\n" );
-		#endif
+#endif
 
         nsIRegistry::Key key;
 
@@ -1633,9 +1635,9 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 
         if (NS_FAILED(rv))
         {
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Can't obtain subtree Profiles.\n" );
-			#endif
+#endif
 
             return rv;
         }
@@ -1647,9 +1649,9 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
            return rv;
 		else
 		{
-			#if defined(DEBUG_profile) 
+#if defined(DEBUG_profile) 
 				printf("DeleteProfile : deleted profile -> %s <-\n", profileName);
-			#endif
+#endif
 		}
 
 		// May need to delete directories, but not so directly.
@@ -1668,18 +1670,18 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 			{
 				GetFirstProfile(&newCurrProfile);
 
-				#if defined(DEBUG_profile) 
+#if defined(DEBUG_profile) 
 					printf("DeleteProfile : Old Current profile -> %s <-\n", oldCurrProfile);
 					printf("DeleteProfile : New Current profile -> %s <-\n", newCurrProfile);
-				#endif
+#endif
 
 				rv = m_reg->SetString(key, "CurrentProfile", newCurrProfile);
 
 			    if (NS_FAILED(rv)) 
 				{
-				   #if defined(DEBUG_profile) 
+#if defined(DEBUG_profile) 
 					   printf("Did not take nsnull successfully\n");
-			       #endif
+#endif
 				}
 			}
 		}
@@ -1780,9 +1782,9 @@ void nsProfile::GetAllProfiles()
 												PL_strcpy(gProfiles[idx], profile);
 											}
 
-											#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 												printf("proflie%d = %s\n", idx, gProfiles[idx]);
-											#endif
+#endif
 										}
 									}
 								}
@@ -1794,9 +1796,9 @@ void nsProfile::GetAllProfiles()
 
 						if (NS_FAILED(rv))
 						{
-							#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 								printf( "Error advancing enumerator, rv=0x%08X\n", (int)rv );
-							#endif
+#endif
 						}
 						idx++;
 					}
@@ -2007,9 +2009,9 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		                        char *profile = nsnull;
 			                    rv = node->GetName( &profile );
 
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("oldProflie = %s\n", profile);
-								#endif
+#endif
 
 								nsIRegistry::Key key;								
 							
@@ -2024,9 +2026,9 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 								
 								rv = m_reg->GetString( key, "ProfileLocation", &profLoc);
 
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("oldProflie Location = %s\n", profLoc);
-								#endif
+#endif
 							
 								if (NS_SUCCEEDED(rv)) 
 								{
@@ -2051,8 +2053,8 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 			}
 		}
 	}
-
 #endif
+
 	return rv;
 }
 
@@ -2114,54 +2116,54 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 	
 								if (NS_FAILED(rv))
 								{
-									#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 										printf("Couldn't set directory property.\n" );
-									#endif
+#endif
 								}
 							
 								rv = m_reg->SetString(newKey, "migrated", "no");
 							
 								if (NS_FAILED(rv))
 								{
-									#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 										printf("Couldn't add migrate flag.\n" );
-									#endif
+#endif
 								}
 							}
 							else
 							{
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("NULL value received for directory name.\n" );
-								#endif
+#endif
 							}
 						}
 						else
 						{
-							#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 								printf("Profiles : Could not add profile subtree.\n" );
-							#endif
+#endif
 						}
 					}
 					else
 					{
-						#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 							printf("Profiles : Profile name subtree already exists.\n" );
-						#endif
+#endif
 					}
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Registry : Couldn't get Profiles subtree.\n");
-					#endif
+#endif
 				}
 			    m_reg->Close();
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Couldn't open registry.\n");
-				#endif
+#endif
 			}
 		}	
 	}
@@ -2261,39 +2263,39 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 													
 							if (NS_FAILED(rv))
 							{
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("Profiles : Couldn't set CurrentProfile Name.\n");
-								#endif
+#endif
 					        }
 						}
 						else
 						{
-							#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 								printf("Profiles : Couldn't set migrate flag.\n");
-							#endif
+#endif
 						}
 						SetProfileDir(profileName, newProfDir);
 					}
 					else
 					{
-						#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 							printf("Profiles : Couldn't get profileName subtree.\n");
-						#endif
+#endif
 					}
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Registry : Couldn't get Profiles subtree.\n");
-					#endif
+#endif
 				}
 				m_reg->Close();
 			}
 			else
 			{	
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Couldn't open registry.\n");
-				#endif
+#endif
 			}
 		}
 	}
@@ -2452,26 +2454,26 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 							}
 							else
 							{
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("Profiles : Could not set NetCenter properties.\n" );
-								#endif
+#endif
 							}
 							
 							rv = m_reg->SetString(key, "CurrentProfile", userProfileName.ToNewCString());
 
 							if (NS_FAILED(rv))
 							{
-								#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 									printf("Couldn't set CurrentProfile name.\n" );
-								#endif
+#endif
 							}
 						}
 					}
 					else
 					{
-						#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 							printf("Registry : Couldn't get Profiles subtree.\n");
-						#endif
+#endif
 					}
 
 					if (userServiceDenial.mLength > 0)
@@ -2481,25 +2483,25 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 
 					if (NS_FAILED(rv))
 					{
-						#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 							printf("Couldn't set Preg info flag.\n" );
-						#endif
+#endif
 					}
 
 					m_reg->Close();
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Couldn't open registry.\n");
-					#endif
+#endif
 				}
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry Object is NULL.\n");
-				#endif
+#endif
 
 				return NS_ERROR_FAILURE;
 			}
@@ -2532,24 +2534,24 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 			m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 	}
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry Object is NULL.\n");
-		#endif
+#endif
 
 		return NS_ERROR_FAILURE;
 	}
@@ -2583,24 +2585,24 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 			m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 				printf("Couldn't open registry.\n");
-			#endif
+#endif
 		}
 	}
 	else
 	{
-		#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 			printf("Registry Object is NULL.\n");
-		#endif
+#endif
 
 		return NS_ERROR_FAILURE;
 	}
@@ -2696,32 +2698,32 @@ NS_IMETHODIMP nsProfile::Get4xProfileCount(int *numProfiles)
 				}
 				else
 				{
-					#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 						printf("Profiles : Can't enumerate subtrees.\n" );
-					#endif
+#endif
 				}
 			}
 			else
 			{
-				#if defined(DEBUG_profile)
+#if defined(DEBUG_profile)
 					printf("Registry : Couldn't get Profiles subtree.\n");
-				#endif
+#endif
 			}
 			m_reg->Close();
 		}
 		else
 		{
-			#if defined(DEBUG_profile)
-				printf("Couldn't open registry.\n");
-			#endif
+#if defined(DEBUG_profile)
+            printf("Couldn't open registry.\n");
+#endif
 		}
 		
     }
 	else
 	{
-		#if defined(DEBUG_profile)
-			printf("Registry Object is NULL.\n");
-		#endif
+#if defined(DEBUG_profile)
+        printf("Registry Object is NULL.\n");
+#endif
 
 		return NS_ERROR_FAILURE;
 
