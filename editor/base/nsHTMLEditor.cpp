@@ -3231,16 +3231,16 @@ nsHTMLEditor::GetFontFaceState(PRBool &aMixed, nsString &outFace)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFontColorState(PRBool &aMixed, nsString &outColor)
+nsHTMLEditor::GetFontColorState(PRBool &aMixed, nsString &aOutColor)
 {
   aMixed = PR_TRUE;
-  outColor.AssignWithConversion("");
+  aOutColor.AssignWithConversion("");
   
   nsresult res;
   nsAutoString colorStr; colorStr.AssignWithConversion("color");
   PRBool first, any, all;
   
-  res = GetInlinePropertyWithAttrValue(nsIEditProperty::font, &colorStr, nsnull, first, any, all, &outColor);
+  res = GetInlinePropertyWithAttrValue(nsIEditProperty::font, &colorStr, nsnull, first, any, all, &aOutColor);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)
@@ -3252,18 +3252,18 @@ nsHTMLEditor::GetFontColorState(PRBool &aMixed, nsString &outColor)
   if (!any)
   {
     // there was no font color attrs of any kind..
-    outColor.AssignWithConversion("");
+    aOutColor.AssignWithConversion("");
     aMixed = PR_FALSE;
   }
   return res;
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetBackgroundColorState(PRBool &aMixed, nsString &outColor)
+nsHTMLEditor::GetBackgroundColorState(PRBool &aMixed, nsString &aOutColor)
 {
   //TODO: We don't handle "mixed" correctly!
   aMixed = PR_FALSE;
-  outColor.AssignWithConversion("");
+  aOutColor.AssignWithConversion("");
   
   nsCOMPtr<nsIDOMElement> element;
   PRInt32 selectedCount;
@@ -3271,17 +3271,35 @@ nsHTMLEditor::GetBackgroundColorState(PRBool &aMixed, nsString &outColor)
   nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(element), tagName, selectedCount);
   if (NS_FAILED(res)) return res;
 
-  // If not table or cell found, get page body
-  if (!element)
+  nsAutoString styleName; styleName.AssignWithConversion("bgcolor");
+
+  while (element)
   {
-    res = nsEditor::GetRootElement(getter_AddRefs(element));
+    // We are in a cell or selected table
+    res = element->GetAttribute(styleName, aOutColor);
     if (NS_FAILED(res)) return res;
+
+    // Done if we have a color explicitly set
+    if (aOutColor.Length() > 0)
+      return NS_OK;
+
+    // Once we hit the body, we're done
+    if(nsHTMLEditUtils::IsBody(element)) return NS_OK;
+
+    // No color is set, but we need to report visible color inherited 
+    // from nested cells/tables, so search up parent chain
+    nsCOMPtr<nsIDOMNode> parentNode;
+    res = element->GetParentNode(getter_AddRefs(parentNode));
+    if (NS_FAILED(res)) return res;
+    element = do_QueryInterface(parentNode);
   }
 
+  // If no table or cell found, get page body
+  res = nsEditor::GetRootElement(getter_AddRefs(element));
+  if (NS_FAILED(res)) return res;
   if (!element) return NS_ERROR_NULL_POINTER;
 
-  nsAutoString styleName; styleName.AssignWithConversion("bgcolor");
-  return element->GetAttribute(styleName, outColor);
+  return element->GetAttribute(styleName, aOutColor);
 }
 
 NS_IMETHODIMP 
