@@ -19,12 +19,7 @@
 #ifndef __MACMEMALLOCATOR__
 #define	__MACMEMALLOCATOR__
 
-#ifndef NSPR20
-#include "prmacros.h"
-#include "prmacos.h"
-#else
 #include "prtypes.h"
-#endif
 
 #include <stddef.h>
 
@@ -42,7 +37,6 @@ typedef void (*MallocHeapLowWarnProc)(void);
 
 NSPR_BEGIN_EXTERN_C
 
-#ifdef NSPR20
 typedef unsigned char (*MemoryCacheFlusherProc)(size_t size);
 typedef void (*PreAllocationHookProc)(void);
 
@@ -53,7 +47,6 @@ extern void InstallMemoryCacheFlusher(MemoryCacheFlusherProc newFlusher);
 extern UInt8 CallCacheFlushers(size_t blockSize);
 
 extern void* reallocSmaller(void* block, size_t newSize);
-#endif
 
 void				memtotal ( size_t blockSize, FreeMemoryStats * stats );
 

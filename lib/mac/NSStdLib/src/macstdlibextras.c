@@ -22,15 +22,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-/*
-
-#include "prtypes.h"
-#ifndef NSPR20
-#include "prglobal.h"
-#endif
-
-#include "xp_mem.h"
-*/
 #include "macstdlibextras.h"
 
 extern void* Flush_Allocate(size_t, Boolean);

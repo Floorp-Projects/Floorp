@@ -24,16 +24,7 @@
 #include "TypesAndSwitches.h"
 #include "MacMemAllocator.h"
 
-#ifndef NSPR20
-#include "prglobal.h"
-#include "prmacos.h"
-#include "prthread.h"
-#include "prgc.h"
-#include "swkern.h"
-#else
 #include "prlog.h"
-#endif
-
 
 #if STATS_MAC_MEMORY
 #include "prglobal.h"

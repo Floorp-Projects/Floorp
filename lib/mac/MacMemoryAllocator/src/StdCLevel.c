@@ -27,10 +27,6 @@
 
 #include "prlog.h"
 
-#ifndef NSPR20
-#include "prmacos.h"
-#include "prthread.h"
-#endif
 
 #include "TypesAndSwitches.h"
 #include "MacMemAllocator.h"
