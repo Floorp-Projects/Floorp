@@ -469,7 +469,7 @@ nsHTMLValue::ParseIntValue(const nsAString& aString,
 
   // Even if the integer could not be parsed, it might just be "*"
   tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-  if (tmp.Last() == '*' && tmp.Length() == 1) {
+  if (tmp.Length() == 1 && tmp.Last() == '*') {
     // special case: HTML spec says a value '*' == '1*'
     // see http://www.w3.org/TR/html4/types.html#type-multi-length
     // b=29061
