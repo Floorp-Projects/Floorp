@@ -16,7 +16,7 @@ if (!$win32) {
 #--------------------------------------------------------------------------
 
 if (!exists($ENV{PACKAGE_MSI}) or !defined($ENV{PACKAGE_MSI}) or ($ENV{PACKAGE_MSI} ne 1) ) {
-    printf("make-msi.pl: PACKAGE_MSI environment variable is not true.. exiting.\n");
+    Print("PACKAGE_MSI environment variable is not true.. exiting.\n");
     exit;
 }
 
@@ -38,7 +38,7 @@ if ($inSrcDir eq "") {
 }
 
 if ($inObjDir eq "") {
-    printf("Objdir not specified, using $inSrcDir\n");
+    Print("Objdir not specified, using $inSrcDir\n");
     $inObjDir = $inSrcDir;
 }
 
@@ -47,9 +47,9 @@ if ($inConfigFiles eq "") {
 }
 
 $DIST  = "$inObjDir/dist";
-$STAGE = "$inObjDir/stage";
 $MSRC  = "$inSrcDir/browser/installer/windows/msi";
 $MDIST = "$DIST/msi";
+$STAGE = "$DIST/install";
 
 $STAGE =~ s:/+:/:g;
 $DIST  =~ s:/+:/:g;
@@ -116,7 +116,9 @@ if ( ! -e "out/firefox.mm/MSI/firefox.msi" ) {
 #--------------------------------------------------------------------------
 
 Print("Copying MSI file to staging area...\n");
-system("cp out/firefox.mm/MSI/firefox.msi \"$STAGE/$output_filename\"");
+my $cmd = "cp out/firefox.mm/MSI/firefox.msi \"$STAGE/$output_filename\"";
+Print("$cmd\n");
+system($cmd);
 
 #--------------------------------------------------------------------------
 # Exit.
@@ -131,8 +133,9 @@ sub Print {
 
 sub PrintUsage {
     printf("$0: Usage\n\n");
-    printf("\t-srcDir [dir]\n\n\t\tThe main project source directory.\n\n");
+    printf("\t-config [dir]\n\n\t\tInstaller config directory.\n\n");
     printf("\t-objDir [dir]\n\n\t\tThe main project object directory.\n\n");
+    printf("\t-srcDir [dir]\n\n\t\tThe main project source directory.\n\n");
 }
 
 sub ParseArgv {
