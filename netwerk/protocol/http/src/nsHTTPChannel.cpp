@@ -1516,32 +1516,6 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
             Throw a modal dialog box asking for 
             username, password. Prefill (!?!)
         */
-        /* 
-            Currently this is being thrown from here itself. 
-            The correct way to do this is to push this on the 
-            HTTPEventSink and let that notify the window that
-            triggered this load to throw the userpass dialog.
-            This is dependent on the completion of the new 
-            design of the webshell. 
-        */
-#if 0
-      nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
-      NS_ENSURE_TRUE(appShellService, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIXULWindow> xulWindow;
-      appShellService->GetHiddenWindow(getter_AddRefs( xulWindow ) );
-      nsCOMPtr<nsINetPrompt> prompter( do_QueryInterface( xulWindow ) );
-      
-      NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, 
-              kProxyObjectManagerCID, &rv);
-      if(NS_FAILED(rv))
-        return rv;
-      nsINetPrompt* proxyprompter = NULL;
-      rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ,
-              NS_GET_IID(nsINetPrompt), 
-              prompter, PROXY_SYNC,
-              (void**)&proxyprompter);
-#endif
 
         if (!mPrompter)
             return rv;
@@ -1557,18 +1531,6 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
          nsXPIDLCString urlCString; 
         mURI->GetHost(getter_Copies(urlCString));
         
-        /*
-        rv = proxyprompter->PromptUsernameAndPassword(urlCString, 
-                PR_TRUE,
-                NULL, 
-                message.GetUnicode(), 
-                &user, 
-                &passwd, 
-                &retval);
-
-        // Must be done as not managed for you.
-        proxyprompter->Release();  
-        */
         rv = mPrompter->PromptUsernameAndPassword(
                 message.GetUnicode(),
                 &user,
