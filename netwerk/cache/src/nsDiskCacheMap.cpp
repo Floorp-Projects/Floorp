@@ -495,6 +495,7 @@ nsDiskCacheMap::EvictRecords( nsDiskCacheRecordVisitor * visitor)
             }
         }
         
+        if (rank == 0)  break;  // we've examined all the records
 NS_ASSERTION(mHeader.mEvictionRank[index] == mBuckets[index].EvictionRank(0),
              "header eviction rank out of sync");
             
