@@ -85,11 +85,13 @@ struct JSScript {
         JSTryNote *tn_ = (script)->trynotes;                                  \
         jsbytecode *catchpc_ = NULL;                                          \
         if (tn_) {                                                            \
-            ptrdiff_t offset_ = PTRDIFF(pc, (script)->main, jsbytecode);      \
-            while (JS_UPTRDIFF(offset_, tn_->start) >= (jsuword)tn_->length)  \
-                ++tn_;                                                        \
-            if (tn_->catchStart)                                              \
-                catchpc_ = (script)->main + tn_->catchStart;                  \
+            ptrdiff_t off_ = PTRDIFF(pc, (script)->main, jsbytecode);         \
+            if (off_ >= 0) {                                                  \
+                while ((jsuword)(off_ - tn_->start) >= (jsuword)tn_->length)  \
+                    ++tn_;                                                    \
+                if (tn_->catchStart)                                          \
+                    catchpc_ = (script)->main + tn_->catchStart;              \
+            }                                                                 \
         }                                                                     \
         catchpc = catchpc_;                                                   \
     JS_END_MACRO
