@@ -155,9 +155,9 @@ LIBS			= \
 			$(PROFILER_LIBS) \
 			$(NULL)
 
-QT_LIBS			= -lviewer_qt_s $(XP_LIBS) $(MOZ_QT_LDFLAGS)
-XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
-GTK_LIBS		= -lviewer_gtk_s -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
+QT_LIBS			= unix/qt/libviewer_qt_s.a $(XP_LIBS) $(MOZ_QT_LDFLAGS)
+XLIB_LIBS		= unix/xlib/libviewer_xlib_s.a $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
+GTK_LIBS		= unix/gtk/libviewer_gtk_s.a -lgtksuperwin $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 XP_DIST_DEP_LIBS    := $(patsubst -l%,$(DIST)/lib/%.lib,$(XP_DIST_LIBS))
