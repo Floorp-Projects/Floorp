@@ -162,6 +162,14 @@ treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
   list-style-image: none;
 }
 
+/* ::::: splitters ::::: */
+
+#dirTree-splitter,
+#results-splitter {
+  border: none;
+  min-height: 5px;
+}
+
 /* ::::: results pane ::::: */
 
 treechildren::-moz-tree-image(GeneratedName) {
@@ -177,19 +185,13 @@ treechildren::-moz-tree-image(GeneratedName, MailList) {
 /* ::::: card view pane ::::: */
 
 #CardViewOuterBox {
-  border-left: 1px solid ThreeDShadow;
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
+  border: 1px solid ThreeDShadow;
 }
 
 #CardViewBox {
   -moz-user-focus: ignore;
   overflow: auto;
   min-width: 150px;
-  border-left: 1px solid ThreeDDarkShadow;
-  border-top: 1px solid ThreeDDarkShadow;
-  border-bottom: 1px solid ThreeDLightShadow;
-  border-right: 1px solid ThreeDLightShadow;
   background-color: #FFFFFF;
 }
 
@@ -217,7 +219,6 @@ treechildren::-moz-tree-image(GeneratedName, MailList) {
 .CardViewHeading {
   padding: 1px;
   padding-left: 5px;
-  margin: 0px 0px 1px 0px;
   background-color: Highlight;
   color: HighlightText;
   font-weight: bold;
@@ -243,7 +244,6 @@ treechildren::-moz-tree-image(GeneratedName, MailList) {
   cursor: pointer;
 }
 
-
 #cvHomeMapIt, #cvWorkMapIt {
   margin-bottom: 0px;
 }
@@ -256,18 +256,6 @@ html|a {
 
 html|p {
   border: none !important;
-}
-
-/* ::::: border adjustments ::::: */
-
-#dirTree,
-#resultsTree { 
-  border: none;
-  margin: 0px 0px 0px 0px !important;
-}
-
-#resultsTree {
-  border-left: 1px solid ThreeDShadow;
 }
 
 /* ::::: Search Bar  ::::: */

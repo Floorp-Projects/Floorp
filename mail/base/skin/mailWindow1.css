@@ -870,32 +870,16 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 
 /* ..... splitter adjustments ..... */
 
-#gray_vertical_splitter {
-  border-right: none;
-  border-bottom: none;
-  border-left: none;
-  min-width: 5px;
-}
-
+#gray_vertical_splitter,
 #threadpane-splitter {
   border: none;
   min-height: 5px;
 }
 
-#threadpane-splitter[state="collapsed"] {
-  border-bottom: 2px solid;
-}
-
 /* ..... tree adjustments ..... */
- 
-#folderTree {
-  border-right: 1px solid;
-  -moz-border-right-colors: ThreeDShadow;
-}
 
 #accountCentralBox { 
-  border-left: 2px solid;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  border: 1px solid ThreeDShadow; 
 }
 
 #searchBox {
@@ -907,19 +891,11 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {
- border-top: 2px solid;
- border-left: 2px solid;
- -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
- -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-}
-
-#msgHeaderView {
-  border-left: none !important;
+  border: 1px solid ThreeDShadow;
 }
 
 #messagepane {
   border: 1px solid -moz-Field;
-  border-right: none;
 }
 
 #messagepanebox[focusring="true"] > #messagepane {
