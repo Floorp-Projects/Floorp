@@ -48,6 +48,7 @@
  */
 
 #include "nsBookmarksService.h"
+#include "nsArrayEnumerator.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIRDFContainer.h"
@@ -97,6 +98,9 @@ nsIRDFResource      *kNC_BookmarkSeparator;
 nsIRDFResource      *kNC_BookmarkAddDate;
 nsIRDFResource      *kNC_BookmarksTopRoot;
 nsIRDFResource      *kNC_BookmarksRoot;
+nsIRDFResource      *kNC_LastModifiedFoldersRoot;
+nsIRDFResource      *kNC_child;
+
 nsIRDFResource      *kNC_Description;
 nsIRDFResource      *kNC_Folder;
 nsIRDFResource      *kNC_IEFavorite;
@@ -133,6 +137,7 @@ nsIRDFResource      *kNC_BookmarkCommand_Export;
 
 #define BOOKMARK_TIMEOUT        15000       // fire every 15 seconds
 // #define  DEBUG_BOOKMARK_PING_OUTPUT  1
+#define MAX_LAST_MODIFIED_FOLDERS 5
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -201,6 +206,10 @@ bm_AddRefGlobals()
                           &kNC_IEFavoritesRoot);
         gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_SystemBookmarksStaticRoot),
                           &kNC_SystemBookmarksStaticRoot);
+        gRDF->GetResource(NS_LITERAL_CSTRING("NC:LastModifiedFoldersRoot"), 
+                          &kNC_LastModifiedFoldersRoot);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                          &kNC_child);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarksToolbarFolder"),
                           &kNC_BookmarksToolbarFolder);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Bookmark"),
@@ -310,6 +319,8 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarkAddDate);
         NS_IF_RELEASE(kNC_BookmarksTopRoot);
         NS_IF_RELEASE(kNC_BookmarksRoot);
+        NS_IF_RELEASE(kNC_LastModifiedFoldersRoot);
+        NS_IF_RELEASE(kNC_child);
         NS_IF_RELEASE(kNC_Description);
         NS_IF_RELEASE(kNC_Folder);
         NS_IF_RELEASE(kNC_IEFavorite);
@@ -3317,6 +3328,76 @@ nsBookmarksService::SetBookmarksToolbarFolder(nsIRDFResource* aNewBTF)
     return rv;
 }
 
+int
+CompareLastModifiedFolders(nsIRDFResource* aResource1, nsIRDFResource* aResource2, void* aOuter)
+{
+    
+    nsCOMPtr<nsIRDFNode> node1, node2;
+    nsIRDFDataSource* outer = NS_STATIC_CAST(nsIRDFDataSource*, aOuter);
+    outer->GetTarget(aResource1, kWEB_LastModifiedDate, PR_TRUE, getter_AddRefs(node1));
+    outer->GetTarget(aResource2, kWEB_LastModifiedDate, PR_TRUE, getter_AddRefs(node2));
+
+    nsCOMPtr<nsIRDFDate> date1 = do_QueryInterface(node1);
+    if (!date1)
+        return 1;
+    nsCOMPtr<nsIRDFDate> date2 = do_QueryInterface(node2);
+    if (!date2)
+        return -1;
+
+    PRTime value1, value2;
+    date1->GetValue(&value1);
+    date2->GetValue(&value2);
+
+    PRInt64 delta;
+    LL_SUB(delta, value1, value2);
+
+    return LL_GE_ZERO(delta)? -1 : 1;
+}
+
+nsresult
+nsBookmarksService::GetLastModifiedFolders(nsISimpleEnumerator **aResult)
+{
+    nsresult rv;
+    nsCOMArray<nsIRDFResource> folderArray;
+
+    nsCOMPtr<nsISimpleEnumerator> elements;
+    rv = mInner->GetAllResources(getter_AddRefs(elements));
+    if (NS_FAILED(rv))
+        return rv;
+
+    // fill the array with all the bookmark folder resources
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(rv = elements->HasMoreElements(&hasMore)) &&
+           hasMore) {
+        nsCOMPtr<nsISupports> supports;
+        rv = elements->GetNext(getter_AddRefs(supports));
+        if (NS_FAILED(rv))
+            return rv;
+
+        nsCOMPtr<nsIRDFResource> element = do_QueryInterface(supports, &rv);
+        if (NS_FAILED(rv))
+            return rv;
+
+        nsCOMPtr<nsIRDFNode> nodeType;
+        rv = GetSynthesizedType(element, getter_AddRefs(nodeType));
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (nodeType == kNC_Folder)
+            folderArray.AppendObject(element);
+    }
+
+    // sorting the array containing all the folders
+    folderArray.Sort(CompareLastModifiedFolders, NS_STATIC_CAST(void*, mInner));
+
+    // only keep the first elements
+    PRInt32 index;
+    for (index = folderArray.Count()-1; index >= MAX_LAST_MODIFIED_FOLDERS; index--)
+        folderArray.RemoveObjectAt(index);
+
+    return NS_NewArrayEnumerator(aResult, folderArray);
+}
+
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDataSource
 
@@ -3408,6 +3489,32 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 
     rv = mInner->GetTarget(aSource, aProperty, aTruthValue, aTarget);
     return rv;
+}
+
+NS_IMETHODIMP
+nsBookmarksService::GetTargets(nsIRDFResource* aSource,
+                               nsIRDFResource* aProperty,
+                               PRBool aTruthValue,
+                               nsISimpleEnumerator** aTargets)
+{
+
+  NS_PRECONDITION(aSource != nsnull, "null ptr");
+  if (! aSource)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(aProperty != nsnull, "null ptr");
+  if (! aProperty)
+    return NS_ERROR_NULL_POINTER;
+
+  if (!aTruthValue)
+    return NS_NewEmptyEnumerator(aTargets);
+
+  if (aSource == kNC_LastModifiedFoldersRoot && aProperty == kNC_child) {
+    return GetLastModifiedFolders(aTargets);
+  }
+
+  return mInner->GetTargets(aSource, aProperty, aTruthValue, aTargets);
+
 }
 
 nsresult

@@ -172,11 +172,12 @@ protected:
 
     nsresult getLocaleString(const char *key, nsString &str);
 
-    nsresult
-    GetURLFromResource(nsIRDFResource* aResource, nsAString& aURL);
+    nsresult GetURLFromResource(nsIRDFResource* aResource, nsAString& aURL);
 
     nsresult LoadBookmarks();
     nsresult InitDataSource();
+
+    nsresult GetLastModifiedFolders(nsISimpleEnumerator **aResult);
 
     // nsIStreamObserver methods:
     NS_DECL_NSIREQUESTOBSERVER
@@ -225,10 +226,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsISimpleEnumerator** targets)
-    {
-        return mInner->GetTargets(source, property, tv, targets);
-    }
+                          nsISimpleEnumerator** targets);
 
     NS_IMETHOD Assert(nsIRDFResource* aSource,
                       nsIRDFResource* aProperty,
