@@ -111,16 +111,17 @@ var progressHooks =
 
     QueryInterface: function( iid )
     {
-        if (!iid.equals(Components.interfaces.nsISupports) &&
-            !iid.equals(Components.interfaces.nsIXPIProgressDialog))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
+        if (iid.equals(Components.interfaces.nsISupports) ||
+            iid.equals(Components.interfaces.nsIXPIProgressDialog))
+            return this;
 
-        return this;
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     }
 }
 
 
-function onLoad() 
+function onLoad()
 {
     document.documentElement.getButton("accept").disabled = true;
     document.documentElement.getButton("cancel").focus();

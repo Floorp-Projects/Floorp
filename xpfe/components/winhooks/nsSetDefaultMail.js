@@ -66,11 +66,11 @@ nsSetDefaultMail.prototype = {
     get commandLineArgument() { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
     get prefNameForStartup()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
-    get chromeUrlForTask()    { 
+    get chromeUrlForTask()    {
 
       var mapiRegistry;
       try {
-          var mapiRegistryProgID = "@mozilla.org/mapiregistry;1" 
+          var mapiRegistryProgID = "@mozilla.org/mapiregistry;1"
           // make sure mail is installed
           if (mapiRegistryProgID in Components.classes) {
             mapiRegistry = Components.classes[mapiRegistryProgID].getService(Components.interfaces.nsIMapiRegistry);
@@ -79,7 +79,7 @@ nsSetDefaultMail.prototype = {
             mapiRegistry = null;
           }
       }
-      catch (ex) { 
+      catch (ex) {
           mapiRegistry = null;
       }
 
@@ -113,19 +113,20 @@ nsSetDefaultMail.prototype = {
     },
 
     get helpText()            { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
-    get handlesArgs()         { return false; }, 
-    get defaultArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
-    get openWindowWithArgs()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; }, 
+    get handlesArgs()         { return false; },
+    get defaultArgs()         { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
+    get openWindowWithArgs()  { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
 
     // nsISupports interface
 
     // This "class" supports nsICmdLineHandler and nsISupports.
     QueryInterface: function (iid) {
-        if (!iid.equals(Components.interfaces.nsICmdLineHandler) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsICmdLineHandler) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // This Component's module implementation.  All the code below is used to get this
@@ -141,35 +142,35 @@ nsSetDefaultMail.prototype = {
                                              location,
                                              type );
         },
-    
+
         // getClassObject: Return this component's factory object.
         getClassObject: function (compMgr, cid, iid) {
             if (!cid.equals(this.cid))
                 throw Components.results.NS_ERROR_NO_INTERFACE;
-    
+
             if (!iid.equals(Components.interfaces.nsIFactory))
                 throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    
+
             return this.factory;
         },
-    
+
         /* CID for this class */
         cid: Components.ID("{8b26281d-c3b2-4b57-9653-419fc705a02d}"),
-    
+
         /* Contract ID for this class */
         contractId: "@mozilla.org/commandlinehandler/general-startup;1?type=setDefaultMail",
-    
+
         /* factory object */
         factory: {
             // createInstance: Return a new nsSetDefaultMail object.
             createInstance: function (outer, iid) {
                 if (outer != null)
                     throw Components.results.NS_ERROR_NO_AGGREGATION;
-    
+
                 return (new nsSetDefaultMail()).QueryInterface(iid);
             }
         },
-    
+
         // canUnload: n/a (returns true)
         canUnload: function(compMgr) {
             return true;

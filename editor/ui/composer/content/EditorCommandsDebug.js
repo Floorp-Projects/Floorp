@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 /* Main Composer window debug menu functions */
 
 // --------------------------- Output ---------------------------
@@ -112,11 +112,11 @@ function EditorTestSelection()
 
   dump("====== Selection as HTML ======================\n");
   output = editor.outputToString("text/html", 1);
-  dump(output + "\n\n");  
+  dump(output + "\n\n");
 
   dump("====== Selection as prettyprinted HTML ========\n");
   output = editor.outputToString("text/html", 3);
-  dump(output + "\n\n");  
+  dump(output + "\n\n");
 
   dump("====== Length and status =====================\n");
   output = "Document is ";
@@ -149,7 +149,7 @@ function EditorTestTableLayout()
     dump("Enclosing Table not found: Place caret in a table cell to do this test\n\n");
     return;
   }
-    
+
   var cell;
   var startRowIndexObj = { value: null };
   var startColIndexObj = { value: null };
@@ -178,7 +178,7 @@ function EditorTestTableLayout()
   //   but this tests using out-of-bounds offsets to detect end of row or column
 
   while (!doneWithRow)  // Iterate through rows
-  {  
+  {
     dump("* Data for ROW="+row+":\n");
     while(!doneWithCol)  // Iterate through cells in the row
     {
@@ -196,7 +196,7 @@ function EditorTestTableLayout()
           actualRowSpan = actualRowSpanObj.value;
           actualColSpan = actualColSpanObj.value;
           isSelected = isSelectedObj.value;
-          
+
           dump(" Row="+row+", Col="+col+"  StartRow="+startRowIndexObj.value+", StartCol="+startColIndexObj.value+"\n");
           dump("  RowSpan="+rowSpan+", ColSpan="+colSpan+"  ActualRowSpan="+actualRowSpan+", ActualColSpan="+actualColSpan);
           if (isSelected)
@@ -239,7 +239,7 @@ function EditorTestTableLayout()
       col = 0;
       row++;
       doneWithCol = false;
-    }      
+    }
   }
   dump("Counted during scan: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n");
   rowCount = editor.getTableRowCount(table);
@@ -290,12 +290,12 @@ function EditorExecuteScript(theFile)
   inputStream = inputStream.QueryInterface(Components.interfaces.nsIFileInputStream);
 
   inputStream.init(theFile, 1, 0, false);    // open read only
-  
+
   var scriptableInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance();
   scriptableInputStream = scriptableInputStream.QueryInterface(Components.interfaces.nsIScriptableInputStream);
-  
+
   scriptableInputStream.init(inputStream);    // open read only
-  
+
   var buf         = { value:null };
   var tmpBuf      = { value:null };
   var didTruncate = { value:false };
@@ -334,9 +334,9 @@ function EditorExecuteScript(theFile)
     // suck in the entire file
     var fileSize = scriptableInputStream.available();
     var fileContents = scriptableInputStream.read(fileSize);
-    
+
     dump(fileContents);
-    
+
     try       { eval(fileContents); }
     catch(ex) { dump("Playback ERROR: Line " + lineNum + "  " + ex + "\n"); return; }
   }
@@ -506,13 +506,14 @@ sampleJSTransaction.prototype = {
     return false;
   },
 
-  QueryInterface: function(theUID, theResult)
+  QueryInterface: function(aUID, theResult)
   {
-    if (theUID == Components.interfaces.nsITransaction ||
-        theUID == Components.interfaces.nsISupports)
-     return this;
+    if (aUID.equals(Components.interfaces.nsITransaction) ||
+        aUID.equals(Components.interfaces.nsISupports))
+      return this;
 
-    return nsnull;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   },
 
   insert_node_at_point: function(node, container, offset)

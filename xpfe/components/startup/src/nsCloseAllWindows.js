@@ -52,18 +52,19 @@ nsCloseAllWindows.prototype = {
 
     // This "class" supports nsICloseAllWindows, and nsISupports.
     QueryInterface: function (iid) {
-        if (!iid.equals(Components.interfaces.nsICloseAllWindows) &&
-            !iid.equals(Components.interfaces.nsISupports)) {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
-        return this;
+        if (iid.equals(Components.interfaces.nsICloseAllWindows) ||
+            iid.equals(Components.interfaces.nsISupports))
+            return this;
+
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // ---------- nsICloseAllWindows methods ----------
 
     // closeAll: Close all open windows
     closeAll: function(aAskToSave)  {
-    
+
         var windowMediator = Components.classes['@mozilla.org/appshell/window-mediator;1'].
                                 getService(Components.interfaces.nsIWindowMediator);
         var enumerator = windowMediator.getEnumerator(null);
@@ -76,7 +77,7 @@ nsCloseAllWindows.prototype = {
            }
            domWindow.close();
         };
-    
+
         return true;
     }
 }

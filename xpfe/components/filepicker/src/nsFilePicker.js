@@ -110,7 +110,7 @@ nsFilePicker.prototype = {
 
   /* readonly attribute nsIFileURL fileURL; */
   set fileURL(a) { throw "readonly property"; },
-  get fileURL()  { 
+  get fileURL()  {
     if (this.mFilesEnumerator) {
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
@@ -127,7 +127,7 @@ nsFilePicker.prototype = {
   /* attribute wstring defaultExtension */
   set defaultExtension(ext) { },
   get defaultExtension() { return ""; },
-  
+
   /* attribute long filterIndex; */
   set filterIndex(a) { this.mFilterIndex = a; },
   get filterIndex() { return this.mFilterIndex; },
@@ -181,10 +181,12 @@ nsFilePicker.prototype = {
   },
 
   QueryInterface: function(iid) {
-    if (!iid.equals(nsIFilePicker) &&
-        !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
+    if (iid.equals(nsIFilePicker) ||
+        iid.equals(nsISupports))
+      return this;
+
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
   },
 
   show: function() {
@@ -260,10 +262,10 @@ function (compMgr, fileSpec, location, type)
     debug("registering (all right -- a JavaScript module!)");
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-    compMgr.registerFactoryLocation(FILEPICKER_CID, 
+    compMgr.registerFactoryLocation(FILEPICKER_CID,
                                     "FilePicker JS Component",
-                                    FILEPICKER_CONTRACTID, 
-                                    fileSpec, 
+                                    FILEPICKER_CONTRACTID,
+                                    fileSpec,
                                     location,
                                     type);
 }
@@ -272,10 +274,10 @@ filePickerModule.getClassObject =
 function (compMgr, cid, iid) {
     if (!cid.equals(FILEPICKER_CID))
         throw Components.results.NS_ERROR_NO_INTERFACE;
-    
+
     if (!iid.equals(Components.interfaces.nsIFactory))
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-    
+
     return filePickerFactory;
 }
 
@@ -285,7 +287,7 @@ function(compMgr)
     debug("Unloading component.");
     return true;
 }
-    
+
 /* factory object */
 var filePickerFactory = new Object();
 
@@ -323,7 +325,7 @@ function srGetStrBundle(path)
     }
   }
 
-  strBundle = strBundleService.createBundle(path); 
+  strBundle = strBundleService.createBundle(path);
   if (!strBundle) {
 	dump("\n--** strBundle createInstance failed **--\n");
   }
