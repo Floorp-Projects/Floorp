@@ -150,9 +150,10 @@ protected:
 	float             		mP2T; 				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
-	nsDrawingSurfaceMac*			mOriginalSurface;
-	nsDrawingSurfaceMac*			mFrontSurface;
+	GrafPtr						mSavePort;
+	Rect							mSavePortRect;
 
+	nsDrawingSurfaceMac*			mFrontSurface;
 	nsDrawingSurfaceMac*			mCurrentSurface;	// pointer to the current surface
 
 	GrafPtr						mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
