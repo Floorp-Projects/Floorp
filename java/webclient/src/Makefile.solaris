@@ -8,8 +8,8 @@ DLLNAMESTUB = libwebclientstub.so
 MOZILLA_TOP = ../../..
 DIST = ${MOZILLA_TOP}/dist
 LIBDIR = ${DIST}/lib
-CC = gcc -g -gstabs
-MKSHLIB = c++ -G
+CC = CC -g
+MKSHLIB = cc -G
 # WARNING: YOU NEED TO RUN 'gtk-config --cflags' and stick it in here
 GTKINCLUDES = -I/usr/openwin/include -I/opt/local/lib/glib/include -I/opt/local/include
 # WARNING: YOU NEED TO RUN 'gtk-config --libs' and stick it in here
@@ -18,16 +18,16 @@ JAVAINCLUDE = -I${JAVADIR}/include -I${JAVADIR}/include/solaris
 # For JDK1.2
 # For Solaris
 JAVALIBS = -L${JAVADIR}/jre/lib/sparc -ljava
-INCLUDE = ${JAVAINCLUDE} -I${DIST}/include ${GTKINCLUDES} ${GTKMOZILLAINCLUDE}
+INCLUDE = ${JAVAINCLUDE} -I${DIST}/include -I${MOZILLA_TOP}/widget/src/gtk ${GTKINCLUDES} ${GTKMOZILLAINCLUDE}
 DEFINES = -D_REENTRANT -DNECKO -DXP_UNIX -DDEBUG_RAPTOR_CANVAS -DMOZ_DLL_SUFFIX=\".so\"
 STUBDEFINES = -D_REENTRANT
 STUBINCLUDE = ${JAVAINCLUDE}
 STUBLIBS = ${JAVALIBS} /usr/lib/libC.so.5
 # For the latest mozilla build
 LIBS =  ${GTKLIBS} ${JAVALIBS} \
--L${DIST}/bin -L${LIBDIR} -lraptorgfx -lexpat_s -lxmltok_s -lmozjs -lmozutil_s -lnspr3 -ljpeg -lpng -lzlib -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg_s -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorplugin -lgtksuperwin -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_s /usr/lib/libC.so.5
+-L${DIST}/bin -L${LIBDIR} -lraptorgfx -lexpat_s -lxmltok_s -lmozjs -lmozutil_s -lnspr3 -ljpeg -lpng -lzlib -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg_s -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorplugin -lgtksuperwin -lwidget_gtk -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_s /usr/lib/libC.so.5
 
-#-L${DIST}/bin -L${LIBDIR} -lraptorgfx -lexpat_s -lxmltok_s -ljsurl -lmozdbm -lmozjs -lsecfree -lmozutil_s -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lgfx_gtk -lgkwebwidget -lgkhtmlpars -lgkplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_gtk_s /usr/lib/libC.so.5
+#-L${DIST}/bin -L${LIBDIR} -lraptorgfx -lexpat_s -lxmltok_s -ljsurl -lmozdbm -lmozjs -lmozutil_s -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lgfx_gtk -lgkwebwidget -lgkhtmlpars -lgkplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_gtk_s /usr/lib/libC.so.5
 LN = ln -f -s
 
 all: libwebclientstub.so libwebclient.so copy

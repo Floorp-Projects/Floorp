@@ -36,6 +36,8 @@
 #include "gtkmozarea.h"
 
 #include "nsIDOMDocument.h"
+#include "nsGtkEventHandler.h"
+
 #include <dlfcn.h>
 
 extern "C" void NS_SetupRegistry();
@@ -55,7 +57,9 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_motif_MotifBrowserControlCanva
     gtk_set_locale ();
     
     gtk_init (0, NULL);
-    
+
+    gdk_event_handler_set (handle_gdk_event, NULL, NULL);
+
     gdk_rgb_init();
     
     mShell = gtk_window_new (GTK_WINDOW_POPUP);
