@@ -54,8 +54,10 @@ nsresultForErrno(int err)
         return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
       case ENOTDIR:
         return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+#ifdef ENOLINK
       case ENOLINK:
         return NS_ERROR_FILE_UNRESOLVABLE_SYMLINK;
+#endif /* ENOLINK */
       case EEXIST:
         return NS_ERROR_FILE_ALREADY_EXISTS;
       case EACCES:
