@@ -300,19 +300,19 @@ Java_org_mozilla_webclient_impl_wrapper_1native_PreferencesImpl_nativeRegisterPr
     prefs = wcContext->sPrefs;
     PR_ASSERT(prefs);
 
-    // step one, set up our struct
+    // step one: create a const char * from the prefName
+    if (nsnull == (prefNameChars = ::util_GetStringUTFChars(env, prefName))) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeRegisterPrefChangedCallback: can't get string for prefName");
+        return;
+    }
+
+    // step two, set up our struct
     peStruct *pes = new peStruct();
     
     pes->cx = wcContext;
     pes->obj = ::util_NewGlobalRef(env, closure);
     pes->callback = ::util_NewGlobalRef(env, callback);
     closures.Put(nsDependentCString(prefNameChars), pes);
-
-    // step two: create a const char * from the prefName
-    if (nsnull == (prefNameChars = ::util_GetStringUTFChars(env, prefName))) {
-        ::util_ThrowExceptionToJava(env, "Exception: nativeRegisterPrefChangedCallback: can't get string for prefName");
-        return;
-    }
 
     rv = prefs->RegisterCallback(prefNameChars, prefChanged, pes);
 
