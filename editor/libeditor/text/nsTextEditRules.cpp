@@ -592,8 +592,18 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     else if (singleLineNewlineBehavior == ePasteFirstLine)
     {
       PRInt32 firstCRLF = tString.FindCharInSet(CRLF);
+
+      // we get first *non-empty* line.
+      PRInt32 offset = 0;
+      while (firstCRLF == offset)
+      {
+        offset++;
+        firstCRLF = tString.FindCharInSet(CRLF, offset);
+      }
       if (firstCRLF > 0)
         tString.Truncate(firstCRLF);
+      if (offset > 0)
+        tString.Cut(0, offset);
     }
     else if (singleLineNewlineBehavior == eReplaceWithCommas)
     {
