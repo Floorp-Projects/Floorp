@@ -297,13 +297,17 @@ nsBinaryInputStream::ReadStringZ(char* *aString)
     nsAutoString result;
     char c;
 
-    do {
+    for ( ; ; )
+    {
         PRUint32 actualBytesRead;
         rv = Read(&c, 1, &actualBytesRead);
         if (NS_FAILED(rv) || actualBytesRead != 1)
             return NS_ERROR_FAILURE;
-        result += c;
-    } while (c);
+        if (c)
+            result += c;
+        else
+            break;
+    }
 
     *aString = result.ToNewCString();
 
