@@ -28,7 +28,7 @@
 #include <errno.h>
 
 /* Platform-specific headers for socket functionality */
-#ifdef __unix
+#if defined(__unix) || defined(__unix__)
 #include <unistd.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -114,14 +114,14 @@ nsSocket::Open()
     rv = connect(mFd, (struct sockaddr *) &servaddr, sizeof(servaddr));
     if (rv < 0)
     {
-#if defined(DEBUG) && defined(__unix)
+#if defined(DEBUG) && (defined(__unix) || defined(__unix__))
         printf("ETIMEDOUT: %d\n", ETIMEDOUT);
         printf("ECONNREFUSED: %d\n", ECONNREFUSED);
         printf("EHOSTUNREACH: %d\n", EHOSTUNREACH);
         printf("ENETUNREACH: %d\n", ENETUNREACH);
 
         printf("connect error: %d\n", errno);
-#endif /* DEBUG && __unix */
+#endif /* DEBUG && (__unix || __unix__) */
         mFd = -1;
         rv = E_SOCK_OPEN;
     }
