@@ -75,13 +75,7 @@ public:
   NS_IMETHOD  RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame);
 
 protected:
-  PRUint32  mFlags;
   static nsIAtom* gAbsoluteAtom;
-
-  void SetFlags(PRUint32 aFlags) {
-    mFlags = aFlags;
-    nsBlockFrame::SetFlags(aFlags);
-  }
 
   nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
