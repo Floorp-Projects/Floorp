@@ -7,4 +7,4 @@ extern __declspec(dllimport) int 		GlobalArrayIndex;
 extern "C" __declspec(dllimport) char  * GetGlobal(CString theName);
 extern "C" __declspec(dllimport) WIDGET* SetGlobal(CString theName, CString theValue);
 extern "C" __declspec(dllimport) WIDGET* findWidget(CString theName);
-extern "C" __declspec(dllimport) void CopyDir(CString from, CString to);
+extern "C" __declspec(dllimport) void CopyDir(CString from, CString to, CString extension);

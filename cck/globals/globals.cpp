@@ -53,7 +53,7 @@ char *GetGlobal(CString theName)
 }
 
 extern "C" __declspec(dllexport)
-void CopyDir(CString from, CString to)
+void CopyDir(CString from, CString to, CString extension)
 {
 	WIN32_FIND_DATA data;
 	HANDLE d;
@@ -80,9 +80,16 @@ void CopyDir(CString from, CString to)
 			tchild = to + "\\" + data.cFileName;
 			tmp = data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 			if (tmp == FILE_ATTRIBUTE_DIRECTORY)
-				CopyDir(fchild, tchild);
+				CopyDir(fchild, tchild,"NULL");
 			else
-				CopyFile((const char *) fchild, (const char *) tchild, FALSE);
+			{
+				CString spot=fchild;
+				int loc = fchild.Find('.');
+				if (loc)
+					spot.Delete(0,loc+1);
+				if ((spot.CompareNoCase(extension)==0) || (extension.Compare("NULL") ==0))
+					CopyFile((const char *) fchild, (const char *) tchild, FALSE);
+			}									
 		}
 
 		found = FindNextFile(d, &data);

@@ -37,6 +37,7 @@ extern CString CachePath;
 extern char asePath[MAX_SIZE];
 extern char nciPath[MAX_SIZE];
 extern char tmpPath[MAX_SIZE];
+CString returnDir;
 
 extern _declspec (dllimport) WIDGET ptr_ga[1000];
 
@@ -77,12 +78,20 @@ BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName, CString Dialo
 		SetGlobal("DialogTitle", "CreateCopy");
 	newDlg.DoModal();
 	CString configField = newDlg.GetConfigName();
-	CString newDir = CString(customizationPath); 
-	newDir += configField;
 
+	CString newDir = CString(replaceVars("%Root%Configs\\",NULL)); 
+	
+	newDir += configField;
+	CString Template = CString(replaceVars("%Root%WS_Template",NULL));
+	CString FooCopy = CString(replaceVars("%Root%Configs\\%CustomizationList%",NULL));
 	d = FindFirstFile((const char *) newDir, &data);
 	if (d == INVALID_HANDLE_VALUE)
-		_mkdir(newDir);
+	{
+		if (!DialogTitle.IsEmpty())
+			CopyDir(FooCopy,newDir,"NULL");
+		else 
+			CopyDir(Template,newDir,"NULL");
+	}
 	else
 	{
 		CWnd myWnd;
@@ -130,7 +139,7 @@ BOOL CInterpret::BrowseDir(WIDGET *curWidget)
 {
 	// The following code is used to browse to a dir
 	// CFileDialog does not allow this
-	
+	returnDir = "";
 	BROWSEINFO bi;
 	char szPath[MAX_PATH];
 	char szTitle[] = "Select Directory";
@@ -146,8 +155,7 @@ BOOL CInterpret::BrowseDir(WIDGET *curWidget)
 	bi.lpfn = NULL;
 	bi.lParam = NULL;
 	LPITEMIDLIST pidl= SHBrowseForFolder(&bi);
-
-
+	
 	if(pidl != NULL)
 	{
 		SHGetPathFromIDList(pidl,szPath);
@@ -161,9 +169,10 @@ BOOL CInterpret::BrowseDir(WIDGET *curWidget)
 			WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
 			if (tmpWidget)
 				((CEdit*)tmpWidget->control)->SetWindowText(szPath);
+
 		}
 	 }
-	
+	returnDir = szPath;
 	free( bi.pszDisplayName );
 	return TRUE;
 }
@@ -668,7 +677,22 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (rv == IDNO)
 						return FALSE;
 				}
+				else if (strcmp(pcmd, "ImportFiles") == 0)
+				{
+					char *p2 = strchr(parms, ',');
 
+					if (p2)
+						*p2++ = '\0';
+					else
+					{
+						AfxMessageBox("You havent entered an extension - all files will be copied",MB_OK);
+					}
+
+					CString todir = replaceVars(parms, NULL);
+					CString ext = p2;
+					BrowseDir(curWidget);
+					CopyDir(returnDir,todir,ext);
+				}
 				else if (strcmp(pcmd, "DisplayImage") == 0)
 				{
 					// This is to dsiplay an image in a separate dialog
@@ -758,7 +782,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						*p2++ = '\0';
 						CString from = replaceVars(parms, NULL);
 						CString to = replaceVars(p2, NULL);
-						CopyDir(from, to);
+						CopyDir(from, to,"NULL");
 					}
 				}
 				else if (strcmp(pcmd, "SetGlobal") == 0)
