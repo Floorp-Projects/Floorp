@@ -432,12 +432,12 @@ void nsAppShell::RetrieveAllEvents(bool blockable)
   while(true)
   {
     EventItem *newitem = new EventItem;
+    if ( !newitem ) break;
+
     newitem->code = 0;
     newitem->ifdata.data = nsnull;
     newitem->ifdata.sync = 0;
 
-    if ( !newitem ) break;
-    
     // only block on read_port when 
     //   blockable == true
     //   and

@@ -148,33 +148,34 @@ nsSplashScreenBeOS::Observe(nsISupports *aSubject,
                             const char *aTopic,
                             const PRUnichar *someData)
 {
-	if (!bitmap) return NS_OK;
-	nsCAutoString statusString;
-	statusString.AssignWithConversion(someData);
-	if (textView == NULL) {
-		BRect textRect = bitmap->Bounds();
-		// Reduce the view size, and take into account the image frame
-		textRect.bottom -= 10;
-		textRect.left += 10;
-		textRect.right -= 10; 
-		textRect.top = textRect.bottom - 20;
-		textView = new BStringView(textRect,
-		                           "splash text",
-		                           statusString.get(), 
-		                           B_FOLLOW_LEFT | B_FOLLOW_V_CENTER);
-		textView->SetViewColor(B_TRANSPARENT_COLOR);
-		textView->SetHighColor(255,255,255,0);
-		textView->SetLowColor(0,0,0,0);
-		if (textView != NULL) {
-			window->AddChild(textView);
-		}
-	} else {
-		if (textView->LockLooper()) {
-			textView->SetText(statusString.get());
-			textView->UnlockLooper();
-		}
-	}
-	return NS_OK;
+  if (!bitmap) return NS_OK;
+  nsCAutoString statusString;
+  statusString.AssignWithConversion(someData);
+  if (textView == NULL) {
+    BRect textRect = bitmap->Bounds();
+    textView = new BStringView(textRect,
+                               "splash text",
+                               statusString.get(), 
+                               B_FOLLOW_LEFT | B_FOLLOW_V_CENTER);
+    if (textView) {
+      // Reduce the view size, and take into account the image frame
+      textRect.bottom -= 10;
+      textRect.left += 10;
+      textRect.right -= 10; 
+      textRect.top = textRect.bottom - 20;
+
+      textView->SetViewColor(B_TRANSPARENT_COLOR);
+      textView->SetHighColor(255,255,255,0);
+      textView->SetLowColor(0,0,0,0);
+      window->AddChild(textView);
+    }
+  } else {
+    if (textView->LockLooper()) {
+      textView->SetText(statusString.get());
+      textView->UnlockLooper();
+    }
+  }
+  return NS_OK;
 }
 
 nsresult

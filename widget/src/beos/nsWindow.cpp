@@ -1247,31 +1247,31 @@ nsIFontMetrics* nsWindow::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 {
-	// Cache Font for owner draw
-	if (mFont == nsnull) {
-		mFont = new nsFont(aFont);
-	} else {
-		*mFont  = aFont;
-	}
+  // Cache Font for owner draw
+  if (mFont == nsnull) {
+    if (!(mFont = new nsFont(aFont)))
+      return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+    *mFont = aFont;
+  }
 
-	// Bail out if there is no context
-	if (nsnull == mContext) {
-		return NS_ERROR_FAILURE;
-	}
+  // Bail out if there is no context
+  if (nsnull == mContext) {
+    return NS_ERROR_FAILURE;
+  }
 
-	nsIFontMetrics* metrics;
-	mContext->GetMetricsFor(aFont, metrics);
-	nsFontHandle  fontHandle;
-	metrics->GetFontHandle(fontHandle);
-	BFont *font = (BFont*)fontHandle;
-	if(font && mView && mView->LockLooper())
-	{
-		mView->SetFont(font, B_FONT_ALL);
-		mView->UnlockLooper();
-	}
-	NS_RELEASE(metrics);
+  nsCOMPtr<nsIFontMetrics> metrics;
+  mContext->GetMetricsFor(aFont, getter_AddRefs(metrics));
+  nsFontHandle fontHandle;
+  metrics->GetFontHandle(fontHandle);
+  BFont *font = (BFont*)fontHandle;
+  if(font && mView && mView->LockLooper())
+  {
+    mView->SetFont(font, B_FONT_ALL);
+    mView->UnlockLooper();
+  }
 
-	return NS_OK;
+  return NS_OK;
 }
 
 
