@@ -168,6 +168,7 @@ void *mystry)
     size_t milisec;
 
     if(first && !(first=0)) {
+        writeStrStdout("Jprof: received first timer signal\n");
         gettimeofday(&tFirst, 0);
         milisec = 0;
     } else {
