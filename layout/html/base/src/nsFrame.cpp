@@ -1775,7 +1775,10 @@ nsFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset,
 }
 
 NS_IMETHODIMP
-nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected)
+nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset,
+                                        PRInt32 aAnchorOffset, PRInt32 aFocusOffset, PRBool aForceRedraw, 
+                                        nsIFocusTracker *aTracker,
+                                        nsIFrame **aActualSelected)
 {
   if (!aActualSelected)
     return NS_ERROR_NULL_POINTER;
@@ -1783,13 +1786,19 @@ nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset
   nsresult result = FirstChild(nsnull, child);
   if (NS_FAILED(result)){
     *aActualSelected = this;
+    if (aAnchorOffset > 0)
+        aTracker->SetFocus(nsnull,this);
+    if (aFocusOffset > 0)
+        aTracker->SetFocus(this,nsnull);
     return SetSelected(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw);
   }
   *aActualSelected = nsnull;
   if (aBeginContentOffset) 
     SetSelected(PR_FALSE, 0, 0, aForceRedraw); //if all children are not selected, then neither is this
   while (child && NS_SUCCEEDED(result)){
-    result |= child->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw , aActualSelected);
+    result |= child->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, 
+                                               aAnchorOffset, aFocusOffset,
+                                               aForceRedraw , aTracker, aActualSelected);
     if (NS_SUCCEEDED(result) && aActualSelected)
       return result; //done.
     result |= child->GetNextSibling(child);
