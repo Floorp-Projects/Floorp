@@ -320,7 +320,10 @@ sub display_build_table_row {
 
 		# Build Log
 		# 
-                print "<A HREF='http:// Build Log' ".
+		
+                #print "<A HREF='http:// Build Log' ".
+		$buildname = &url_encode($buildname);
+		print "<A HREF='showlog.cgi?logfile=$logfile\&tree=$buildtree&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime' ".
                       "onClick=\"return log_popup(event,$bn,'$logfile','$buildtime');\">";
 
                 print "L</a>";
