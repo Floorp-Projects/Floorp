@@ -1101,6 +1101,8 @@ memcache_add_to_ld(LDAP *ld, int msgid, LDAPMessage *pMsg)
     if (nRes != LDAP_SUCCESS)
 	return nRes;
 
+    LDAP_MUTEX_LOCK( ld, LDAP_RESP_LOCK );
+
     for (r = &(ld->ld_responses); *r; r = &((*r)->lm_next))
 	if ((*r)->lm_msgid == msgid)
 	    break;
@@ -1111,6 +1113,8 @@ memcache_add_to_ld(LDAP *ld, int msgid, LDAPMessage *pMsg)
 	}
 
     *r = pCopy;
+
+    LDAP_MUTEX_UNLOCK( ld, LDAP_RESP_LOCK );
     
     return nRes;
 }
