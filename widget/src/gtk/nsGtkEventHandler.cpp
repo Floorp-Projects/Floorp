@@ -267,9 +267,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     anEvent.point.x = 0;
     anEvent.point.y = 0;
   }
-  if (anEvent.isShift || anEvent.isControl || anEvent.isAlt)
-    printf("contol/special key");
-  printf("%d\n",anEvent.charCode);
+
 }
 
 
@@ -684,7 +682,7 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  isModifier = event->state &(GDK_SHIFT_MASK|GDK_CONTROL_MASK|GDK_MOD1_MASK);
+  isModifier = event->state &(GDK_CONTROL_MASK|GDK_MOD1_MASK);
   if (isModifier) printf("isModifier\n");
   if (event->length && !isModifier) {
      InitKeyPressEvent(event,p,kevent);
