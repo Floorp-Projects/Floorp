@@ -72,7 +72,8 @@ public class Codegen extends Interpreter {
                           ClassNameHelper nameHelper)
         throws IOException
     {
-        Hashtable classFiles = new Hashtable(23);
+        Vector classFiles = new Vector();
+        Vector names = new Vector();
         String generatedName = null;
         
         Exception e = null;
@@ -82,12 +83,11 @@ public class Codegen extends Interpreter {
             if (cx.getOptimizationLevel() > 0) {
                 (new Optimizer()).optimize(tree, cx.getOptimizationLevel());
             }
-            generatedName = generateCode(tree, classFiles, nameHelper);
+            generatedName = generateCode(tree, names, classFiles, nameHelper);
 
-            Enumeration keys = classFiles.keys();
-            while (keys.hasMoreElements()) {
-                String name = (String) keys.nextElement();
-                byte[] classFile = (byte[]) classFiles.get(name);
+            for (int i=0; i < names.size(); i++) {
+                String name = (String) names.elementAt(i);
+                byte[] classFile = (byte[]) classFiles.elementAt(i);
                 if (nameHelper.getGeneratingDirectory() != null) {
                     try {
                         int lastDot = name.lastIndexOf('.');
@@ -367,11 +367,12 @@ public class Codegen extends Interpreter {
 
     }
     
-    public String generateCode(Node tree, Hashtable results, 
+    public String generateCode(Node tree, Vector names, Vector classFiles,
                                ClassNameHelper nameHelper) 
     {
         this.itsNameHelper = (OptClassNameHelper) nameHelper;
-        this.results = results;
+        this.namesVector = names;
+        this.classFilesVector = classFiles;
         Context cx = Context.getCurrentContext();
         itsSourceFile = null;
         if (cx.isGeneratingDebug())
@@ -523,7 +524,8 @@ public class Codegen extends Interpreter {
         }
         byte[] bytes = out.toByteArray();
 
-    	results.put(name, bytes);
+        namesVector.addElement(name);
+        classFilesVector.addElement(bytes);
     	classFile = null;
     	
     	return name;
@@ -1394,7 +1396,9 @@ public class Codegen extends Interpreter {
 
             Node def = (Node) fns.elementAt(i);
             Codegen codegen = new Codegen();
-            String fnClassName = codegen.generateCode(def, results, itsNameHelper);
+            String fnClassName = codegen.generateCode(def, namesVector, 
+                                                      classFilesVector, 
+                                                      itsNameHelper);
             
             addByteCode(ByteCode.NEW, fnClassName);
             addByteCode(ByteCode.DUP);
@@ -4089,7 +4093,8 @@ if (true) {
     boolean inFunction;
     boolean inDirectCallFunction;
     private ClassFileWriter classFile;
-    private Hashtable results;
+    private Vector namesVector;
+    private Vector classFilesVector;
     private short scriptRuntimeIndex;
     private int version;
     private OptClassNameHelper itsNameHelper;
