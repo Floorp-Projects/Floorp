@@ -40,6 +40,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIAllocator.h"
 #include "nsIURL.h"
+#include "nsMsgUtils.h" // for NS_MsgHashIfNecessary()
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -73,7 +74,8 @@ nsMsgFolder::nsMsgFolder(void)
 	mIsCachable = PR_TRUE;
 
 	mListeners = new nsVoidArray();
-
+	
+	mPath = null_nsCOMPtr();
 	m_server = nsnull;
 }
 
@@ -521,6 +523,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     nsCAutoString newPath("");
 
     char *newStr=nsnull;
+    nsCAutoString hashedToken;
     char *token =
       nsCRT::strtok(NS_CONST_CAST(char *,(const char*)urlPath), "/", &newStr);
 
@@ -536,10 +539,12 @@ nsMsgFolder::parseURI(PRBool needServer)
           newPath += "/";
         }
         
-        newPath += token;
-        haveFirst=PR_TRUE;
+		hashedToken = token;
+		NS_MsgHashIfNecessary(hashedToken);
+		newPath += hashedToken;
+		haveFirst=PR_TRUE;
       }
-
+      
       token = nsCRT::strtok(newStr, "/", &newStr);
     }
 
@@ -549,7 +554,12 @@ nsMsgFolder::parseURI(PRBool needServer)
     if (NS_FAILED(rv)) return rv;
 
     if (serverPath) {
-      serverPath->AppendRelativeUnixPath(newPath.GetBuffer());
+      rv = serverPath->AppendRelativeUnixPath(newPath.GetBuffer());
+      NS_ASSERTION(NS_SUCCEEDED(rv),"failed to append to the serverPath");
+      if (NS_FAILED(rv)) {
+      	mPath = null_nsCOMPtr();
+      	return rv;
+      }
       mPath = serverPath;
     }
   }
