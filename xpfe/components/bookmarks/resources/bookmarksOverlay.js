@@ -523,7 +523,15 @@ BookmarksUIElement.prototype = {
       if (rType && rType.Value == NC_NS + "Folder")
         rCurrent = BookmarksUtils.cloneFolder(rCurrent, krParent, krSource);
 
+      // If this item already exists in this container, don't paste, as 
+      // this will result in the creation of multiple copies in the datasource
+      // but will not result in an update of the UI. (In Short: we don't
+      // handle multiple bookmarks well)
       ksRDFC.Init(kBMDS, krParent);
+      ix = ksRDFC.IndexOf(rCurrent);
+      if (ix != -1)
+        continue;
+
       ix = ksRDFC.IndexOf(krSource);
       if (ix != -1) 
         ksRDFC.InsertElementAt(rCurrent, ix+1, true);
@@ -822,12 +830,6 @@ var BookmarksUtils = {
                 { property: NC_NS + "URL",    literal:  krAnonymous.Value}];
     this.doBookmarksCommand(aRelativeItem, NC_NS_CMD + "newfolder", args);
 
-    // Tidy up.
-    const krURL = this.RDF.GetResource(NC_NS + "URL");
-    const krCurrURL = krBMDS.GetTarget(krAnonymous, krURL, true);
-    const krEmpty = this.RDF.GetLiteral("");
-    krBMDS.Change(krAnonymous, krURL, krCurrURL, krEmpty);
-    
     return krAnonymous;
   },
 

@@ -329,6 +329,14 @@ var bookmarksDNDObserver = {
 
       RDFC.Init(kBMDS, rContainer);
       
+      // If this item already exists in this container, don't paste, as 
+      // this will result in the creation of multiple copies in the datasource
+      // but will not result in an update of the UI. (In Short: we don't
+      // handle multiple bookmarks well)
+      var ix = RDFC.IndexOf(rSource);
+      if (ix != -1)
+        continue;
+      
       var bmType = this.getTarget(bookmarksTree.database, sourceID[i], RDF_NS + "type");
       if (!bmType) 
         kBMDS.Assert(rSource, rType, rBookmark, true);
