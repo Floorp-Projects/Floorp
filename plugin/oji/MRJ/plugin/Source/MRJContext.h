@@ -85,6 +85,7 @@ public:
 	void releaseFrames();
 	
 	const char* getCodeBase();
+	const char* getDocumentBase();
 
 private:
 	void localToFrame(Point* pt);
@@ -126,5 +127,6 @@ private:
 	RgnHandle				mPluginClipping;
 	CGrafPtr				mPluginPort;
 	char*					mCodeBase;
+	char*					mDocumentBase;
 	MRJPage*				mPage;
 };

@@ -76,7 +76,7 @@ void LocalPort::Exit()
 MRJContext::MRJContext(MRJSession* session, MRJPluginInstance* instance)
 	:	mPluginInstance(instance), mSession(session), mSessionRef(session->getSessionRef()), mPeer(NULL),
 		mLocator(NULL), mContext(NULL), mViewer(NULL), mViewerFrame(NULL), mIsActive(false),
-		mPluginWindow(NULL), mPluginClipping(NULL),	mPluginPort(NULL), mCodeBase(NULL), mPage(NULL)
+		mPluginWindow(NULL), mPluginClipping(NULL),	mPluginPort(NULL), mCodeBase(NULL), mDocumentBase(NULL), mPage(NULL)
 {
 	instance->GetPeer(&mPeer);
 	
@@ -141,6 +141,11 @@ MRJContext::~MRJContext()
 		delete[] mCodeBase;
 		mCodeBase = NULL;
 	}
+	
+	if (mDocumentBase != NULL) {
+		delete[] mDocumentBase;
+		mDocumentBase = NULL;
+	}
 }
 
 static char* slashify(char* url)
@@ -188,6 +193,7 @@ void MRJContext::processAppletTag()
 			// get the URL of the HTML document	containing the applet.
 			const char* documentBase = NULL;
 			if (tagInfo2->GetDocumentBase(&documentBase) == NS_OK && documentBase != NULL) {
+				mDocumentBase = ::strdup(documentBase);
 				baseURL = new char[strlen(documentBase) + 1];
 				if (baseURL != NULL) {
 					::strcpy(baseURL, documentBase);
@@ -1123,8 +1129,10 @@ void MRJContext::releaseFrames()
 		for (UInt32 frameIndex = 0; frameIndex < frameCount; frameIndex++) {
 			JMFrameRef frameRef = NULL;
 			status = ::JMGetAWTContextFrame(mContext, frameIndex, &frameRef);
-			if (status == noErr)
+			if (status == noErr) {
+				frameShowHide(frameRef, false);
 				releaseFrame(mContext, frameRef);
+			}
 		}
 	}
 }
@@ -1132,6 +1140,11 @@ void MRJContext::releaseFrames()
 const char* MRJContext::getCodeBase()
 {
 	return mCodeBase;
+}
+
+const char* MRJContext::getDocumentBase()
+{
+	return mDocumentBase;
 }
 
 MRJPage* MRJContext::findPage(const MRJPageAttributes& attributes)
