@@ -1284,9 +1284,10 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
 
   // If mComputedWidth > availWidth and availWidth >= minWidth for a nested percent table 
   // then adjust mComputedWidth based on availableWidth if this isn't the intial reflow   
-  if ((childRS.mComputedWidth > childRS.availableWidth) && 
-      (NS_UNCONSTRAINEDSIZE != childRS.mComputedWidth)  &&
+  if ((NS_UNCONSTRAINEDSIZE != childRS.mComputedWidth)  &&
       (eReflowReason_Initial != aReflowReason)          &&
+      (childRS.mComputedWidth + childRS.mComputedBorderPadding.left +
+       childRS.mComputedBorderPadding.right > childRS.availableWidth) &&
       IsNested(aOuterRS)) {
     PRBool isPctWidth;
     IsAutoWidth(*aChildFrame, &isPctWidth);
