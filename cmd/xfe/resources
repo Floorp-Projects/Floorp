@@ -6117,7 +6117,7 @@ Remember my mail password.
 
 ! Preferences dialog - Mail News/News Server
 
-*prefs*mailnewsNServer*serverLabel.labelString: Newgroup Servers
+*prefs*mailnewsNServer*serverLabel.labelString: Newsgroup Servers
 *prefs*mailnewsNServer*serverAddButton.labelString: Add...
 *prefs*mailnewsNServer*serverEditButton.labelString: Edit...
 *prefs*mailnewsNServer*serverDeleteButton.labelString: Delete
@@ -6195,7 +6195,7 @@ these directories in the following order:
 ! Preferences dialog - HTML Formatting
 *prefs*mailnewsHTML*useHTML.labelString: Enable HTML message formatting
 *prefs*mailnewsHTML*useHTMLToggle.labelString: Use the HTML editor to compose messages
-*prefs*mailnewsHTML*noHTML.labelString: When sending HTML messages to recipients who are not\nlisted as being able to recieve them:
+*prefs*mailnewsHTML*noHTML.labelString: When sending HTML messages to recipients who are not\nlisted as being able to receive them:
 *prefs*mailnewsHTML*noHTMLoverride.labelString: You can override these settings in any message through the\noptions panel of the message composition window.
 *prefs*mailnewsHTML*noHTMLAsk.labelString: Ask me what to do if the message has HTML formatting,\notherwise send plain text.
 *prefs*mailnewsHTML*noHTMLText.labelString: Convert the message into plain text.\n(May loose some formatting)
@@ -6218,7 +6218,7 @@ these directories in the following order:
 ! Preferences dialog - Read Receipts
 *prefs*mailnewsReceipts*requestReceiptsLabel.labelString: If I request a receipt when sending a message, I want
 *prefs*mailnewsReceipts*dsn.labelString: A delivery receipt (DSN) from the receiving server
-*prefs*mailnewsReceipts*mdn.labelString: A read receipt (MDN) notify me when receipients display this message
+*prefs*mailnewsReceipts*mdn.labelString: A read receipt (MDN) notify me when recipients display this message
 *prefs*mailnewsReceipts*both.labelString: Both types of receipt
 *prefs*mailnewsReceipts*receiptsArriveLabel.labelString: When a receipt arrives
 *prefs*mailnewsReceipts*inbox.labelString: Leave it in my inbox
