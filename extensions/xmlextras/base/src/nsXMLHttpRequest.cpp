@@ -38,19 +38,31 @@
 #include "nsNetUtil.h"
 #include "nsIDOMSerializer.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventReceiver.h"
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsICodebasePrincipal.h"
+#include "nsWeakPtr.h"
+#ifdef IMPLEMENT_SYNC_LOAD
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIEventQueueService.h"
+#endif
 
 static const char* kLoadAsData = "loadAsData";
 static const char* kLoadStr = "load";
 static const char* kErrorStr = "error";
 
+// CIDs
 static NS_DEFINE_CID(kIDOMDOMImplementationCID, NS_DOM_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+#ifdef IMPLEMENT_SYNC_LOAD
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+#endif
 
 static JSContext*
 GetSafeContext()
@@ -141,22 +153,142 @@ nsXMLHttpRequestScriptListener::GetFunctionObj(JSObject** aObj)
 
 /////////////////////////////////////////////
 //
+// This class exists to prevent a circular reference between
+// the loaded document and the nsXMLHttpRequest instance. The
+// request owns the document. While the document is loading, 
+// the request is a load listener, held onto by the document.
+// The proxy class breaks the circularity by filling in as the
+// load listener and holding a weak reference to the request
+// object.
+//
+/////////////////////////////////////////////
+
+class nsLoadListenerProxy : public nsIDOMLoadListener {
+public:
+  nsLoadListenerProxy(nsWeakPtr aParent);
+  virtual ~nsLoadListenerProxy();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMEventListener
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+
+  // nsIDOMLoadListener
+  virtual nsresult Load(nsIDOMEvent* aEvent);
+  virtual nsresult Unload(nsIDOMEvent* aEvent);
+  virtual nsresult Abort(nsIDOMEvent* aEvent);
+  virtual nsresult Error(nsIDOMEvent* aEvent);
+
+protected:
+  nsWeakPtr  mParent;
+};
+
+nsLoadListenerProxy::nsLoadListenerProxy(nsWeakPtr aParent)
+{
+  NS_INIT_ISUPPORTS();
+  mParent = aParent;
+}
+
+nsLoadListenerProxy::~nsLoadListenerProxy()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsLoadListenerProxy, nsIDOMLoadListener)
+
+nsresult
+nsLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+
+  if (listener) {
+    return listener->HandleEvent(aEvent);
+  }
+  
+  return NS_OK;
+}
+
+nsresult 
+nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+
+  if (listener) {
+    return listener->Load(aEvent);
+  }
+
+  return NS_OK;
+}
+
+nsresult 
+nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+
+  if (listener) {
+    return listener->Unload(aEvent);
+  }
+  
+  return NS_OK;
+}
+
+nsresult 
+nsLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+
+  if (listener) {
+    return listener->Abort(aEvent);
+  }
+  
+  return NS_OK;
+}
+
+nsresult 
+nsLoadListenerProxy::Error(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+
+  if (listener) {
+    return listener->Error(aEvent);
+  }
+  
+  return NS_OK;
+}
+
+/////////////////////////////////////////////
+//
 //
 /////////////////////////////////////////////
 
 nsXMLHttpRequest::nsXMLHttpRequest()
 {
   NS_INIT_ISUPPORTS();
-  mComplete = PR_FALSE;
+  mStatus = XML_HTTP_REQUEST_INITIALIZED;
   mAsync = PR_TRUE;
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
 {
+  if (XML_HTTP_REQUEST_SENT == mStatus) {
+    Abort();
+  }    
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (mDocShellTreeOwner) {
+    mDocShellTreeOwner->ExitModalLoop(NS_OK);
+  }
+#endif
 }
 
-NS_IMPL_ISUPPORTS3(nsXMLHttpRequest, nsIXMLHttpRequest, nsIDOMLoadListener,
-                   nsISecurityCheckedComponent)
+NS_IMPL_ADDREF(nsXMLHttpRequest)
+NS_IMPL_RELEASE(nsXMLHttpRequest)
+
+NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequest)
+   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequest)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadListener)
+   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
   
 /* noscript void addEventListener (in string type, in nsIDOMEventListener listener); */
 NS_IMETHODIMP 
@@ -424,7 +556,7 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
 {
   NS_ENSURE_ARG_POINTER(aResponseXML);
   *aResponseXML = nsnull;
-  if (mComplete && mDocument) {
+  if ((XML_HTTP_REQUEST_COMPLETED == mStatus) && mDocument) {
     *aResponseXML = mDocument;
     NS_ADDREF(*aResponseXML);
   }
@@ -535,6 +667,11 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   nsCOMPtr<nsILoadGroup> loadGroup;
   PRBool authp = PR_FALSE;
 
+  // Return error if we're alreday processing a request
+  if (XML_HTTP_REQUEST_SENT == mStatus) {
+    return NS_ERROR_FAILURE;
+  }
+
   mAsync = async;
 
   // If we have a base document, use it for the base URL and loadgroup
@@ -580,7 +717,9 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   if (methodAtom) {
     rv = mChannel->SetRequestMethod(methodAtom);
   }
-  
+
+  mStatus = XML_HTTP_REQUEST_OPENED;
+
   return rv;
 }
 
@@ -730,6 +869,12 @@ nsXMLHttpRequest::Send(nsISupports *body)
   nsresult rv;
   nsCOMPtr<nsIInputStream> postDataStream;
 
+  // Return error if we're alreday processing a request
+  if (XML_HTTP_REQUEST_SENT == mStatus) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  // Make sure we've been opened
   if (!mChannel) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -795,13 +940,15 @@ nsXMLHttpRequest::Send(nsISupports *body)
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   // Register as a load listener on the document
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mDocument);
+  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(mDocument);
   if (target) {
-    nsAutoString loadStr;
-    loadStr.AssignWithConversion("load");
-    rv = target->AddEventListener(loadStr, 
-                                  NS_STATIC_CAST(nsIDOMEventListener*, this),  
-                                  PR_FALSE);
+    nsLoadListenerProxy* proxy = new nsLoadListenerProxy(NS_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this)));
+    if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
+
+    // This will addref the proxy
+    rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
+                                                      proxy), 
+                                       NS_GET_IID(nsIDOMLoadListener));
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   }
 
@@ -811,19 +958,97 @@ nsXMLHttpRequest::Send(nsISupports *body)
   if (!document) {
     return NS_ERROR_FAILURE;
   }
+
+#ifdef IMPLEMENT_SYNC_LOAD
+  nsCOMPtr<nsIEventQueue> modalEventQueue;
+  nsCOMPtr<nsIEventQueueService> eventQService;
+  
+  if (!mAsync) { 
+    nsCOMPtr<nsIXPCNativeCallContext> cc;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+    if(NS_SUCCEEDED(rv)) {
+      rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+    }
+
+    if (NS_SUCCEEDED(rv) && cc) {
+      JSContext* cx;
+      rv = cc->GetJSContext(&cx);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+      // We can only do this if we're called from a DOM script context
+      nsIScriptContext* scriptCX = (nsIScriptContext*)JS_GetContextPrivate(cx);
+      if (!scriptCX) return NS_OK;
+
+      // Get the nsIDocShellTreeOwner associated with the window
+      // containing this script context
+      // XXX Need to find a better way to do this rather than
+      // chaining through a bunch of getters and QIs
+      nsCOMPtr<nsIScriptGlobalObject> global;
+      global = dont_AddRef(scriptCX->GetGlobalObject());
+      if (!global) return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIDocShell> docshell;
+      rv = global->GetDocShell(getter_AddRefs(docshell));
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+      
+      nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
+      if (!item) return NS_ERROR_FAILURE;
+
+      rv = item->GetTreeOwner(getter_AddRefs(mDocShellTreeOwner));
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+      eventQService = do_GetService(kEventQueueServiceCID);
+      if(!eventQService || 
+         NS_FAILED(eventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue)))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+#endif
+
   rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
                                    nsnull, nsnull, 
                                    getter_AddRefs(listener),
                                    PR_FALSE);
+
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (NS_FAILED(rv)) {
+    if (modalEventQueue) {
+      eventQService->PopThreadEventQueue(modalEventQueue);
+    }
+    return NS_ERROR_FAILURE;
+  }
+#else
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+#endif
 
   // Start reading from the channel
+  mStatus = XML_HTTP_REQUEST_SENT;
   rv = mChannel->AsyncRead(listener, nsnull);
-  if (!mAsync) {
-    // XXX spin an event loop here and wait
+
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (NS_FAILED(rv)) {
+    if (modalEventQueue) {
+      eventQService->PopThreadEventQueue(modalEventQueue);
+    }
+    return NS_ERROR_FAILURE;
+  }  
+#else
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+#endif
+
+#ifdef IMPLEMENT_SYNC_LOAD
+  // If we're synchronous, spin an event loop here and wait
+  if (!mAsync && mDocShellTreeOwner) {
+    rv = mDocShellTreeOwner->ShowModal();
+    
+    eventQService->PopThreadEventQueue(modalEventQueue);
+    
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;      
   }
+#endif
   
-  return rv;
+  return NS_OK;
 }
 
 /* void setRequestHeader (in string header, in string value); */
@@ -850,7 +1075,13 @@ nsXMLHttpRequest::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Load(nsIDOMEvent* aEvent)
 {
-  mComplete = PR_TRUE;
+  mStatus = XML_HTTP_REQUEST_COMPLETED;
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (mDocShellTreeOwner) {
+    mDocShellTreeOwner->ExitModalLoop(NS_OK);
+    mDocShellTreeOwner = 0;
+  }
+#endif
   if (mLoadEventListeners) {
     PRUint32 index, count;
 
@@ -878,12 +1109,27 @@ nsXMLHttpRequest::Unload(nsIDOMEvent* aEvent)
 nsresult
 nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
+  mStatus = XML_HTTP_REQUEST_ABORTED;
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (mDocShellTreeOwner) {
+    mDocShellTreeOwner->ExitModalLoop(NS_OK);
+    mDocShellTreeOwner = 0;
+  }
+#endif
+
   return NS_OK;
 }
 
 nsresult
 nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
 {
+  mStatus = XML_HTTP_REQUEST_ABORTED;
+#ifdef IMPLEMENT_SYNC_LOAD
+  if (mDocShellTreeOwner) {
+    mDocShellTreeOwner->ExitModalLoop(NS_OK);
+    mDocShellTreeOwner = 0;
+  }
+#endif
   if (mErrorEventListeners) {
     PRUint32 index, count;
 
