@@ -108,7 +108,8 @@ menu.bookmark-item,
 menuitem.bookmark-item {
   border-top: 1px solid transparent !important;
   border-bottom: 1px solid transparent !important;
-  padding: 1px 2px;
+  padding: 1px 3px 1px 2px;
+  margin-top: -1px;
 }
   
 .bookmark-group {
