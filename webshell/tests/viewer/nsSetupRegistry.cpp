@@ -69,12 +69,15 @@
 #define RDF_DLL			"RDF_DLL"
 #else
 #define XPCOM_DLL  "libxpcom.so"
-/* let CFLAGS override these */
+/** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
+  * reason, the cflags value doesn't get defined, use gtk, 
+  * since that is the default.
+ **/
 #ifndef WIDGET_DLL
-#define WIDGET_DLL "libwidgetmotif.so"
+#define WIDGET_DLL "libwidgetgtk.so"
 #endif
 #ifndef GFXWIN_DLL
-#define GFXWIN_DLL "libgfxmotif.so"
+#define GFXWIN_DLL "libgfxgtk.so"
 #endif
 #define VIEW_DLL   "libraptorview.so"
 #define WEB_DLL    "libraptorwebwidget.so"
