@@ -603,6 +603,7 @@ export:: $(XPDIST)\public\$(MODULE)
 
 clobber::
     -for %g in ($(EXPORTS)) do $(RM) $(XPDIST:/=\)\public\$(MODULE:/=\)\%g
+clobber_all:: clobber
 !endif # EXPORTS
 
 #//------------------------------------------------------------------------
@@ -682,12 +683,12 @@ $(XPDIST)\idl:
 export:: $(XPDIST)\idl
         @echo +++ make: exporting IDL files
         @echo.
-        -for %i in ($(XPIDLSRCS:/=\)) do @$(MAKE_INSTALL) %i $(XPDIST)\idl
+        -for %i in ($(XPIDLSRCS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\idl
 
 export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(XPDIST)\public\$(MODULE)
         @echo +++ make: exporting generated XPIDL header files
         @echo.
-        -for %i in ($(XPIDL_HEADERS:/=\)) do @$(MAKE_INSTALL) %i $(XPDIST)\public\$(MODULE)
+        -for %i in ($(XPIDL_HEADERS:/=\)) do $(MAKE_INSTALL) %i $(XPDIST)\public\$(MODULE)
 
 install:: $(XPIDL_GEN_DIR) $(TYPELIB)
         @echo +++ make: installing typelib '$(TYPELIB)' to components directory
