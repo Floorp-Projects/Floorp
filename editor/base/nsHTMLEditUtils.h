@@ -50,6 +50,8 @@ public:
   static PRBool IsUnorderedList(nsIDOMNode *aNode);
   static PRBool IsOrderedList(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
+  static PRBool IsPre(nsIDOMNode *aNode);
+  static PRBool IsAddress(nsIDOMNode *aNode);
   static PRBool IsAnchor(nsIDOMNode *aNode);
   static PRBool IsImage(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);

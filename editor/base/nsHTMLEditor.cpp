@@ -812,7 +812,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode)
+NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPtr<nsIDOMNode> *outBRNode, EDirection aSelect)
 {
   if (!aNode || !outBRNode) return NS_ERROR_NULL_POINTER;
   *outBRNode = nsnull;
@@ -858,6 +858,28 @@ NS_IMETHODIMP nsHTMLEditor::CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, nsCOMPt
   }
 
   *outBRNode = brNode;
+  if (*outBRNode && (aSelect != eNone))
+  {
+    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset;
+    res = GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    res = GetNodeLocation(*outBRNode, &parent, &offset);
+    if (NS_FAILED(res)) return res;
+    if (aSelect == eNext)
+    {
+      // position selection after br
+      selection->SetHint(PR_TRUE);
+      res = selection->Collapse(parent, offset+1);
+    }
+    else if (aSelect == ePrevious)
+    {
+      // position selection before br
+      selection->SetHint(PR_TRUE);
+      res = selection->Collapse(parent, offset);
+    }
+  }
   return NS_OK;
 }
 
@@ -885,10 +907,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   res = CreateBR(selNode, selOffset, outBRNode);
   if (NS_FAILED(res)) return res;
     
-  // position selection in righthand text node
-// moose
-
-  return NS_OK;
+  // position selection after br
+  selection->SetHint(PR_TRUE);
+  res = selection->Collapse(selNode, selOffset+1);
+  
+  return res;
 }
 
 NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty, 
@@ -1715,6 +1738,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertBreak()
             nextNode->GetParentNode(getter_AddRefs(parent));
             res = GetChildOffset(nextNode, parent, offsetInParent);
             if (NS_SUCCEEDED(res)) {
+              // SetHint(PR_TRUE) means we want the caret to stick to the content on the "right".
+              // We want the caret to stick to whatever is past the break.  This is
+              // because the break is on the same line we were on, but the next content
+              // will be on the following line.
+              selection->SetHint(PR_TRUE);
               res = selection->Collapse(parent, offsetInParent+1);  // +1 to insert just after the break
             }
           }
@@ -2434,20 +2462,8 @@ nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
       res = CreateNode(aBlockType, parent, offset, getter_AddRefs(newBlock));
       if (NS_FAILED(res)) return res;
     
-      // xxx
-// i'm def'ing this out to see if auto br insertion is working for this case
-#if 0    
-      // put a space in it so layout will draw it
+      // reposition selection to inside the block
       res = selection->Collapse(newBlock,0);
-      if (NS_FAILED(res)) return res;
-      nsAutoString theText(nbsp);
-      res = InsertText(theText);
-      if (NS_FAILED(res)) return res;
-#endif
-      // reposition selection to before the space character
-      res = GetStartNodeAndOffset(selection, &node, &offset);
-      if (NS_FAILED(res)) return res;
-      res = selection->Collapse(node,0);
       if (NS_FAILED(res)) return res;  
     }
   }
@@ -4065,7 +4081,7 @@ NS_IMETHODIMP
 nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
                                          nsIDOMNode **aNodeInserted)
 {
-  // Now we have the text.  Cite it appropriately:
+  // We have the text.  Cite it appropriately:
   nsCOMPtr<nsICiter> citer;
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
@@ -4091,10 +4107,8 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
   if (!NS_SUCCEEDED(rv))
     return rv;
 
-  // Insert blank lines after the quoted text:
-  quotedStuff += "\n\n";
-
   nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
 
   // get selection
   nsCOMPtr<nsIDOMSelection> selection;
@@ -4108,10 +4122,10 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
   rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(rv)) return rv;
   if (cancel) return NS_OK; // rules canceled the operation
+  nsCOMPtr<nsIDOMNode> preNode;
   if (!handled)
   {
     // Wrap the inserted quote in a <pre> so it won't be wrapped:
-    nsCOMPtr<nsIDOMNode> preNode;
     nsAutoString tag("pre");
     rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
     
@@ -4121,17 +4135,22 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
     // but we'll fall through and try to insert the text anyway.
     if (NS_SUCCEEDED(rv) && preNode)
     {
+      // Add an attribute on the pre node so we'll know it's a quotation.
+      // Do this after the insertion, so that 
+      nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
+      if (preElement)
+        preElement->SetAttribute("_moz_quote", "true");
+
+      // and set the selection inside it:
       selection->Collapse(preNode, 0);
     }
 
     rv = InsertText(quotedStuff);
-    if (aNodeInserted)
+
+    if (aNodeInserted && NS_SUCCEEDED(rv))
     {
-      if (NS_SUCCEEDED(rv))
-      {
-        *aNodeInserted = preNode;
-        NS_IF_ADDREF(*aNodeInserted);
-      }
+      *aNodeInserted = preNode;
+      NS_IF_ADDREF(*aNodeInserted);
     }
 
     // Set the selection to just after the inserted node:
@@ -4154,7 +4173,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
 {
   nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoRules beginRulesSniffing(this, kOpInsertElement, nsIEditor::eNext);
+  nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
 
   // get selection
   nsCOMPtr<nsIDOMSelection> selection;
