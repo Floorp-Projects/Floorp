@@ -43,6 +43,10 @@ exts="rdf"                      type=text/rdf                   \
 desc="Resource Description Framework" icon=internal-gopher-text
 # XXX should this be text/xml?
 
+exts="xul"						type=text/xul					\
+desc="XML-Based User Interface Language" icon=internal-gopher-text
+# XXX whatever applies to RDF might apply to this as well
+
 exts="rtf"                      type=application/rtf            \
 desc="Rich Text Format"         icon=internal-gopher-text
 # note: text/richtext is *not the same format*

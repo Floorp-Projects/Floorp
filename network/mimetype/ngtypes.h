@@ -8,6 +8,8 @@ desc=\"Hypertext Markup Language\" icon=resource:/res/network/gopher-text.gif",
 desc=\"Extensible Markup Language\" icon=resource:/res/network/gopher-text.gif",
 "exts=\"rdf\"                     type=text/rdf                    \
 desc=\"Resource Description Framework\" icon=resource:/res/network/gopher-text.gif",
+"exts=\"xul\"					  type=text/xul						\
+desc=\"XML-Based User Interface Language\" icon=resource:/res/network/gopher-text.gif",
 "exts=\"rtf\"                      type=application/rtf            \
 desc=\"Rich Text Format\"         icon=resource:/res/network/gopher-text.gif",
 "exts=\"pdf\"                      type=application/pdf            \
