@@ -64,7 +64,7 @@ EXTRA_LIBS += \
 	$(NULL)
 endif
 
-include $(CORE_DEPTH)/security/cmd/platlibs.mk
+include ../../platlibs.mk
 
 
 #######################################################################
@@ -83,5 +83,5 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-include $(CORE_DEPTH)/security/cmd/platrules.mk
+include ../../platrules.mk
 

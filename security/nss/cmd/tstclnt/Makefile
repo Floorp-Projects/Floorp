@@ -52,7 +52,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include $(CORE_DEPTH)/security/cmd/platlibs.mk
+include ../platlibs.mk
 
 ifeq ($(OS_ARCH), WINNT)
 ifndef BUILD_OPT
@@ -72,11 +72,11 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (6) Execute "component" rules. (OPTIONAL)                           #
 #######################################################################
 
-#include $(CORE_DEPTH)/security/cmd/platlibs.mk
+#include ../platlibs.mk
 
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-include $(CORE_DEPTH)/security/cmd/platrules.mk
+include ../platrules.mk
 

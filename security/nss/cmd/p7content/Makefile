@@ -52,7 +52,7 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-include $(CORE_DEPTH)/security/cmd/platlibs.mk
+include ../platlibs.mk
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -71,5 +71,5 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 
-include $(CORE_DEPTH)/security/cmd/platrules.mk
+include ../platrules.mk
 
