@@ -54,7 +54,7 @@ CPPSRCS = \
 	nsPKIParamBlock.cpp \
 	$(NULL)
 
-REQUIRES = nspr security js xpcom string dom pref intl windowwatcher appshell necko pipnss
+REQUIRES = nspr security js xpcom string dom pref intl locale windowwatcher appshell necko pipnss
 
 include $(topsrcdir)/config/rules.mk
 
