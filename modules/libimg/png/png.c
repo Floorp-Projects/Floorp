@@ -272,6 +272,7 @@ png_destroy_info_struct(png_structp png_ptr, png_infopp info_ptr_ptr)
  * and applications using it are urged to use png_create_info_struct()
  * instead.
  */
+#if defined(PNG_1_0_X)
 #undef png_info_init
 void PNGAPI
 png_info_init(png_infop info_ptr)
@@ -279,6 +280,7 @@ png_info_init(png_infop info_ptr)
    /* We only come here via pre-1.0.12-compiled applications */
    png_info_init_3(&info_ptr, 0);
 }
+#endif
 
 void PNGAPI
 png_info_init_3(png_infopp ptr_ptr, png_size_t png_info_struct_size)
