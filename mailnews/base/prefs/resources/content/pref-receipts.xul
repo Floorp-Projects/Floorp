@@ -7,10 +7,8 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-		onload="StartUp('Mailnews-Return Receipts')"
+		onload="if (parent.handle) parent.handle.onpageload('pref-receipts'); else parent.queuedTag='pref-receipts';"
 		align="vertical">
-
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
 <html:script language="javascript">
 
@@ -36,18 +34,18 @@ function DoCustomize()
 		</html:legend>
 		
 		<html:div>
-			<html:input id="pref:1:int:mail.request.return_receipt" name="msgreceipt" type="radio"/>
-			<html:label for="pref:1:int:mail.request.return_receipt">&dsn.label;</html:label> 
+			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="1" id="mail.request.return_receipt1" name="msgreceipt" type="radio"/>
+			<html:label for="mail.request.return_receipt1">&dsn.label;</html:label> 
 		</html:div>
 		
 		<html:div>
-			<html:input id="pref:2:int:mail.request.return_receipt" name="msgreceipt" type="radio" checked="true"/>
-			<html:label for="pref:2:int:mail.request.return_receipt">&mdn.label;</html:label>
+			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="2" id="mail.request.return_receipt2" name="msgreceipt" type="radio" checked="true"/>
+			<html:label for="mail.request.return_receipt2">&mdn.label;</html:label>
 		</html:div>
 
 		<html:div>
-			<html:input id="pref:3:int:mail.request.return_receipt" name="msgreceipt" type="radio"/>
-			<html:label for="pref:3:int:mail.request.return_receipt">&both.label;</html:label>
+			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="3" id="mail.request.return_receipt3" name="msgreceipt" type="radio"/>
+			<html:label for="mail.request.return_receipt3">&both.label;</html:label>
 		</html:div>
 	</html:fieldset>
 
@@ -57,13 +55,13 @@ function DoCustomize()
 		</html:legend>
 		
 		<html:div>
-			<html:input id="pref:0:int:mail.incorporate.return_receipt" name="getreceipt" type="radio" checked="true"/>
-			<html:label for="pref:0:int:mail.incorporate.return_receipt">&leaveIt.label;</html:label>
+			<html:input pref="true" preftype="int" prefstring="mail.incorporate.return_receipt" prefindex="0" id="mail.incorporate.return_receipt0" name="getreceipt" type="radio" checked="true"/>
+			<html:label for="mail.incorporate.return_receipt0">&leaveIt.label;</html:label>
 		</html:div>
 		
 		<html:div>
-			<html:input id="pref:1:int:mail.incorporate.return_receipt" name="getreceipt" type="radio"/>
-			<html:label for="pref:1:int:mail.incorporate.return_receipt">&moveToSent.label;</html:label>
+			<html:input pref="true" preftype="int" prefstring="mail.incorporate.return_receipt" prefindex="1" id="mail.incorporate.return_receipt1" name="getreceipt" type="radio"/>
+			<html:label for="mail.incorporate.return_receipt1">&moveToSent.label;</html:label>
 		</html:div>
 	</html:fieldset>
 
@@ -73,13 +71,13 @@ function DoCustomize()
 		</html:legend>
 		
 		<html:div>
-			<html:input id="pref:0:int:mail.mdn.report.enabled" name="returnreceipt" type="radio"/>
-			<html:label for="pref:0:int:mail.mdn.report.enabled">&never.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.mdn.report.enabled" prefindex="false" id="mail.mdn.report.enabled0" name="returnreceipt" type="radio"/>
+			<html:label for="mail.mdn.report.enabled0">&never.label;</html:label>
 		</html:div>
 		
 		<html:div>
-			<html:input id="pref:1:int:mail.mdn.report.enabled" name="returnreceipt" type="radio" checked="true"/>
-			<html:label for="pref:1:int:mail.mdn.report.enabled">&returnSome.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.mdn.report.enabled" prefindex="true" id="mail.mdn.report.enabled1" name="returnreceipt" type="radio" checked="true"/>
+			<html:label for="mail.mdn.report.enabled1">&returnSome.label;</html:label>
 			<titledbutton class="push dialog" value="&custom.label;"/>
 		</html:div>
 	</html:fieldset>

@@ -6,10 +6,8 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-		onload="StartUp('Mailnews-Disk Space')"
+		onload="if (parent.handle) parent.handle.onpageload('pref-diskspace'); else parent.queuedTag='pref-diskspace';"
 		align="vertical">
-
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
 	<box class="header" align="horizontal">
 		<html:div class="left-header-text">&pane.title;</html:div>
@@ -23,16 +21,16 @@
 		</html:legend>
 		
 		<html:div>
-			<html:input id="pref:0:bool:mail.limit_message_size" type="checkbox"/>
-			<html:label for="pref:0:bool:mail.limit_message_size">&storeMsgLimit.label;</html:label>
-			<html:input name="maxsize" id="pref:string:mail.max_size" size="4" type="text"/>
+			<html:input pref="true" preftype="bool" prefstring="mail.limit_message_size" id="mail.limit_message_size" type="checkbox"/>
+			<html:label for="mail.limit_message_size">&storeMsgLimit.label;</html:label>
+			<html:input name="maxsize" pref="true" preftype="int" prefstring="mail.max_size" id="mail.max_size" size="4" type="text"/>
 			<html:label>&kb.label;</html:label>
 		</html:div>
 		
 		<html:div>
-			<html:input id="pref:0:bool:mail.prompt_purge_threshhold" type="checkbox"/>
-			<html:label for="pref:0:bool:mail.prompt_purge_threshhold">&autoCompact.label;</html:label>
-			<html:input name="purgesize" id="pref:string:mail.purge_threshhold" size="4" type="text"/>
+			<html:input pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" id="mail.prompt_purge_threshhold" type="checkbox"/>
+			<html:label for="mail.prompt_purge_threshhold">&autoCompact.label;</html:label>
+			<html:input name="purgesize" pref="true" preftype="int" prefstring="mail.purge_threshhold" id="mail.purge_threshhold" size="4" type="text"/>
 			<html:label>&kb.label;</html:label>
 		</html:div>
 	</html:fieldset>
@@ -45,33 +43,33 @@
 		<html:div class="vertical-gap">&whenToClean.label;</html:div>
 
 		<html:div>
-			<html:input id="pref:1:int:news.keep.method" class="indent" name="keepmsg" type="radio"/>
-			<html:label for="pref:1:int:news.keep.method">&keepMsgs.label;</html:label>
-			<html:input name="keepdays" id="pref:string:news.keep.days" size="4" type="text"/>
+			<html:input pref="true" preftype="int" prefstring="news.keep.method" prefindex="1" id="news.keep.method1" class="indent" name="keepmsg" type="radio"/>
+			<html:label for="news.keep.method1">&keepMsgs.label;</html:label>
+			<html:input name="keepdays" pref="true" preftype="int" prefstring="news.keep.days" id="news.keep.days" size="4" type="text"/>
 			<html:label>&days.label;</html:label>
 		</html:div>
 
 		<html:div>
-			<html:input id="pref:0:int:news.keep.method" class="indent" name="keepmsg" type="radio" checked="true"/>
+			<html:input pref="true" preftype="int" prefstring="news.keep.method" prefindex="0" id="news.keep.method0" class="indent" name="keepmsg" type="radio" checked="true"/>
 			<html:label for="pref:0:int:news.keep.method">&keepAllMsg.label;</html:label>
 		</html:div>
 
 		<html:div>
-			<html:input id="pref:2:int:news.keep.method" class="indent" name="keepmsg" type="radio"/>
-			<html:label for="pref:2:int:news.keep.method">&keepTheNewest.label;</html:label>
-			<html:input name="keepmsgcount" id="pref:string:news.keep.count" size="4" type="text"/>
+			<html:input pref="true" preftype="int" prefstring="news.keep.method" prefindex="2" id="news.keep.method2" class="indent" name="keepmsg" type="radio"/>
+			<html:label for="news.keep.method2">&keepTheNewest.label;</html:label>
+			<html:input name="keepmsgcount" pref="true" preftype="int" prefstring="news.keep.count" id="news.keep.count" size="4" type="text"/>
 			<html:label>&messages.label;</html:label>
 		</html:div>
 
 		<html:div class="vertical-gap">
-			<html:input id="pref:0:bool:news.keep.only_unread" type="checkbox"/>
-			<html:label for="pref:0:bool:news.keep.only_unread">&keepUnread.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="news.keep.only_unread" id="news.keep.only_unread" type="checkbox"/>
+			<html:label for="news.keep.only_unread">&keepUnread.label;</html:label>
 		</html:div>
 
 		<html:div>
-			<html:input id="pref:0:bool:news.remove_bodies.by_age" type="checkbox"/>
-			<html:label for="pref:0:bool:news.remove_bodies.by_age">&removeMsg.label;</html:label>
-			<html:input name="removedays" id="pref:string:news.remove_bodies.days" size="4" type="text"/>
+			<html:input pref="true" preftype="bool" prefstring="news.remove_bodies.by_age" id="news.remove_bodies.by_age" type="checkbox"/>
+			<html:label for="news.remove_bodies.by_age">&removeMsg.label;</html:label>
+			<html:input name="removedays" pref="true" preftype="int" prefstring="news.remove_bodies.days" id="news.remove_bodies.days" size="4" type="text"/>
 			<html:label>&days.label;</html:label>
 		</html:div>
 	</html:fieldset>

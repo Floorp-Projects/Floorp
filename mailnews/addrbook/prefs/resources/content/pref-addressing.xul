@@ -5,11 +5,9 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="StartUp('Mailnews-Main')"
+		onload="if (parent.handle) parent.handle.onpageload('pref-addressing'); else parent.queuedTag='pref-addressing';"
         class="dialog"
 		align="vertical">
-
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
 	<box class="header" align="horizontal">
 		<html:div class="left-header-text">&pane.title;</html:div>
@@ -90,25 +88,14 @@
 		</html:legend>
 
 		<html:div>
-			<html:input id="pref:0:int:mail.addr_book.lastnamefirst" name="displayname" type="radio" checked="true"/>
-			<html:label for="pref:0:int:mail.addr_book.lastnamefirst">&useDisplayName.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.addr_book.lastnamefirst" prefindex="false" id="mail.addr_book.lastnamefirst1" name="displayname" type="radio" checked="true"/>
+			<html:label for="mail.addr_book.lastnamefirst0">&useDisplayName.label;</html:label>
 		</html:div>
 		
 		<html:div>
-			<html:input id="pref:1:int:mail.addr_book.lastnamefirst" name="displayname" type="radio"/>
-			<html:label for="pref:1:int:mail.addr_book.lastnamefirst">&useLastFirst.label;</html:label>
+			<html:input pref="true" preftype="1" prefstring="mail.addr_book.lastnamefirst" prefindex="true" id="mail.addr_book.lastnamefirst" name="displayname" type="radio"/>
+			<html:label for="mail.addr_book.lastnamefirst1">&useLastFirst.label;</html:label>
 		</html:div>
-		
-		<!--html:table>
-			<html:tr><html:td>
-				<html:input name="displayname" type="radio" id="pref:0:int:mail.addr_book.lastnamefirst" checked="true"/>
-				<html:label>&useDisplayName.label;</html:label>
-			</html:td></html:tr>
-			<html:tr><html:td>
-				<html:input name="displayname" type="radio" id="pref:1:int:mail.addr_book.lastnamefirst"/>
-				<html:label>&useLastFirst.label;</html:label>
-			</html:td></html:tr>
-		</html:table-->
 		
 	</html:fieldset>
 

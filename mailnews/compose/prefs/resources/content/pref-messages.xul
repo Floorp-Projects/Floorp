@@ -5,11 +5,9 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="StartUp('Mailnews-Messages')"
+		onload="if (parent.handle) parent.handle.onpageload('pref-messages'); else parent.queuedTag='pref-messages';"
 		align="vertical"
 		class="dialog">
-
-<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
 
 	<box class="header" align="horizontal">
 		<html:div class="left-header-text">&pane.title;</html:div>
@@ -23,21 +21,21 @@
 		</html:legend>
 		
 		<html:div>
-			<html:label for="pref:int:mail.forward_message_mode">&forwardMsg.label;</html:label>
-			<html:select id="pref:int:mail.forward_message_mode">
+			<html:label for="mail.forward_message_mode">&forwardMsg.label;</html:label>
+			<html:select pref="true" preftype="int" prefstring="mail.forward_message_mode" id="mail.forward_message_mode">
 				<html:option value="0" label="&asAttachment.label;"/>
 				<html:option value="2" label="&inline.label;"/>
 			</html:select>
 		</html:div>
 		
 		<html:div>
-			<html:input id="pref:0:bool:mail.auto_quote" type="checkbox" checked="true"/>
-			<html:label for="pref:0:bool:mail.auto_quote">&autoQuote.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.auto_quote" id="mail.auto_quote" type="checkbox" checked="true"/>
+			<html:label for="mail.auto_quote">&autoQuote.label;</html:label>
 		</html:div>
 
 		<html:div>
-			<html:label for="pref:int:mailnews.reply_on_top">&then.label;</html:label>
-			<html:select id="pref:int:mailnews.reply_on_top">
+			<html:label for="mailnews.reply_on_top">&then.label;</html:label>
+			<html:select pref="true" preftype="int" prefstring="mailnews.reply_on_top" id="mailnews.reply_on_top">
 				<html:option value="1" label="&aboveQuote.label;"/>
 				<html:option value="0" label="&belowQuote.label;"/>
 				<html:option value="2" label="&selectAndAboveQuote.label;"/>
@@ -51,8 +49,8 @@
                         <html:div>&spellCheckHeader.label;</html:div>
                 </html:legend>
 
-		<html:input id="pref:0:bool:mail.SpellCheckBeforeSend" type="checkbox"/>
-		<html:label for="pref:0:bool:mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
+		<html:input pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend" id="mail.SpellCheckBeforeSend" type="checkbox"/>
+		<html:label for="bool:mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
 	</html:fieldset>
 
 	<html:fieldset>
@@ -61,13 +59,13 @@
 		</html:legend>
 		
 		<html:div>
-			<html:input id="pref:0:bool:mail.wrap_long_lines" type="checkbox"/>
-			<html:label for="pref:0:bool:mail.wrap_long_lines">&wrapInMsg.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.wrap_long_lines" id="mail.wrap_long_lines" type="checkbox"/>
+			<html:label for="mail.wrap_long_lines">&wrapInMsg.label;</html:label>
 		</html:div>
 		
 		<html:div>
 			&wrapOutMsg.label;
-			<html:input id="pref:string:mailnews.wraplength" name="wraplength" type="text" size="10"/>
+			<html:input pref="true" preftype="int" prefstring="mailnews.wraplength" id="mailnews.wraplength" name="wraplength" type="text" size="10"/>
 			&char.label;
 		</html:div>
 	</html:fieldset>
@@ -78,13 +76,13 @@
 		</html:legend>
 
 		<html:div>
-			<html:input id="pref:0:int:mail.strictly_mime" name="strictly_mime" type="radio"/>
-			<html:label for="pref:0:int:mail.strictly_mime">&asIs.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.strictly_mime" prefindex="false" id="int:mail.strictly_mime0" name="strictly_mime" type="radio"/>
+			<html:label for="mail.strictly_mime1">&asIs.label;</html:label>
 		</html:div>
 
 		<html:div>
-			<html:input id="pref:1:int:mail.strictly_mime" name="strictly_mime" type="radio"/>
-			<html:label for="pref:1:int:mail.strictly_mime">&useMIMEpart1.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.strictly_mime" prefindex="true" id="mail.strictly_mime1" name="strictly_mime" type="radio"/>
+			<html:label for="mail.strictly_mime1">&useMIMEpart1.label;</html:label>
 		</html:div>
 		<html:div class="indent">&useMIMEpart2.label;</html:div>
 
@@ -94,12 +92,12 @@
                         <html:div>&emoticonsAndStructs.label;</html:div>
                 </html:legend>
 		<html:div>
-			<html:input id="pref:0:bool:mail.convert_emoticons" type="checkbox"/>
-			<html:label for="pref:0:bool:mail.convert_emoticons">&convertEmoticons.label;&example1.label;&example2.label;&to.label;<html:img src="chrome://messenger/skin/smile.gif"/></html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.convert_emoticons" id="bool:mail.convert_emoticons" type="checkbox"/>
+			<html:label for="mail.convert_emoticons">&convertEmoticons.label;&example1.label;&example2.label;&to.label;<html:img src="chrome://messenger/skin/smile.gif"/></html:label>
 		</html:div>
 		<html:div>
-			<html:input id="pref:0:bool:mail.convert_structs" type="checkbox"/>
-			<html:label for="pref:0:bool:mail.convert_structs">&convertStructs.label;&example1.label;&example3.label;&example4.label;&example3.label;&to.label;<html:b>&example4.label;</html:b></html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.convert_structs" id="mail.convert_structs" type="checkbox"/>
+			<html:label for="mail.convert_structs">&convertStructs.label;&example1.label;&example3.label;&example4.label;&example3.label;&to.label;<html:b>&example4.label;</html:b></html:label>
 		</html:div>
 	</html:fieldset>
 
