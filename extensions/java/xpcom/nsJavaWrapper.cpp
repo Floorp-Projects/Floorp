@@ -50,13 +50,10 @@ static nsID nullID = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 
 nsresult
-SetupParams(JNIEnv *env, const jobject aParam,
-                const nsXPTParamInfo &aParamInfo,
-                const nsXPTMethodInfo* aMethodInfo,
-                nsIInterfaceInfo* aIInfo,
-                PRUint16 aMethodIndex,
-                nsXPTCVariant* aDispatchParams,
-                nsXPTCVariant &aVariant)
+SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
+            const nsXPTMethodInfo* aMethodInfo, nsIInterfaceInfo* aIInfo,
+            PRUint16 aMethodIndex, nsXPTCVariant* aDispatchParams,
+            nsXPTCVariant &aVariant)
 {
   nsresult rv = NS_OK;
   const nsXPTType &type = aParamInfo.GetType();
@@ -308,17 +305,17 @@ SetupParams(JNIEnv *env, const jobject aParam,
     case nsXPTType::T_INTERFACE_IS:
     {
       LOG("nsISupports\n");
-      jobject data = nsnull;
+      jobject java_obj = nsnull;
       if (!aParamInfo.IsOut()) {
-        data = (jobject) aParam;
+        java_obj = (jobject) aParam;
       } else {
         if (aParam)
-          data = (jobject) env->GetObjectArrayElement((jobjectArray) aParam, 0);
+          java_obj = (jobject) env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
-      if (data) {
+      if (java_obj) {
         // Check if we already have a corresponding XPCOM object
-        void* inst = GetMatchingXPCOMObject(env, data);
+        void* inst = GetMatchingXPCOMObject(env, java_obj);
 
         // Get IID for this param
         nsID iid;
@@ -342,15 +339,16 @@ SetupParams(JNIEnv *env, const jobject aParam,
           iim->GetInfoForIID(&iid, getter_AddRefs(iinfo));
 
           // Create XPCOM stub
-          nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(env, data, iinfo);
+          nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(env, java_obj, iinfo);
           inst = SetAsXPTCStub(xpcomStub);
-          AddJavaXPCOMBinding(env, data, inst);
+          AddJavaXPCOMBinding(env, java_obj, inst);
         }
 
         if (isWeakRef) {
           // If the function expects an weak reference, then we need to
           // create it here.
-          nsJavaXPTCStubWeakRef* weakref = new nsJavaXPTCStubWeakRef(env, data);
+          nsJavaXPTCStubWeakRef* weakref =
+                                      new nsJavaXPTCStubWeakRef(env, java_obj);
           NS_ADDREF(weakref);
           aVariant.val.p = aVariant.ptr = (void*) weakref;
         } else if (IsXPTCStub(inst)) {
@@ -711,14 +709,10 @@ FinalizeParams(JNIEnv *env, const jobject aParam,
 }
 
 nsresult
-SetRetval(JNIEnv *env,
-                const nsXPTParamInfo &aParamInfo,
-                const nsXPTMethodInfo* aMethodInfo,
-                nsIInterfaceInfo* aIInfo,
-                PRUint16 aMethodIndex,
-                nsXPTCVariant* aDispatchParams,
-                nsXPTCVariant &aVariant,
-                jvalue &aResult)
+SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
+          const nsXPTMethodInfo* aMethodInfo, nsIInterfaceInfo* aIInfo,
+          PRUint16 aMethodIndex, nsXPTCVariant* aDispatchParams,
+          nsXPTCVariant &aVariant, jvalue &aResult)
 {
   nsresult rv = NS_OK;
   const nsXPTType &type = aParamInfo.GetType();
@@ -951,7 +945,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
             rv = NS_ERROR_UNEXPECTED;
         }
       } else {
-        LOG("retval");
+        LOG("retval\n");
         params[i].ptr = &(params[i].val);
         params[i].type = paramInfo.GetType();
         params[i].flags = nsXPTCVariant::PTR_IS_DATA;
@@ -982,9 +976,8 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
                           paramInfo, methodInfo, iinfo, aMethodIndex,
                           params, params[i]);
     } else {
-      rv = SetRetval(env,
-                          paramInfo, methodInfo, iinfo, aMethodIndex,
-                          params, params[i], aResult);
+      rv = SetRetval(env, paramInfo, methodInfo, iinfo, aMethodIndex, params,
+                     params[i], aResult);
     }
   }
   if (NS_FAILED(rv)) {
