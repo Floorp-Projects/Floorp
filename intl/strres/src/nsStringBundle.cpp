@@ -327,7 +327,7 @@ nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& c
   nsresult	  result	 = aLocale->GetCategory(catagory.GetUnicode(), &lc_name_unichar);
   lc_name.SetString(lc_name_unichar);
 
-  NS_ASSERTION(result==NS_OK,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
+  NS_ASSERTION(NS_SUCCEEDED(result),"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
   NS_ASSERTION(lc_name.Length()>0,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
 
   PRInt32   dash = lc_name.FindCharInSet("-");
