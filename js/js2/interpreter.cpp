@@ -65,81 +65,6 @@ using namespace JSMathClass;
 // These classes are private to the JS interpreter.
 
 /**
-* 
-*/
-struct Handler: public gc_base {
-    Handler(Label *catchLabel, Label *finallyLabel)
-        : catchTarget(catchLabel), finallyTarget(finallyLabel) {}
-    Label *catchTarget;
-    Label *finallyTarget;
-};
-typedef std::vector<Handler *> CatchStack;
-
-
-/**
- * Represents the current function's invocation state.
- */
-struct Activation : public gc_base {
-    JSValues mRegisters;
-    ICodeModule* mICode;
-    CatchStack catchStack;
-        
-    Activation(ICodeModule* iCode, const JSValues& args)
-        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
-    {
-        // copy arg list to initial registers.
-        JSValues::iterator dest = mRegisters.begin();
-        for (JSValues::const_iterator src = args.begin(), 
-                 end = args.end(); src != end; ++src, ++dest) {
-            *dest = *src;
-        }
-    }
-
-    Activation(ICodeModule* iCode, Activation* caller, const JSValue thisArg,
-                 const ArgumentList* list)
-        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
-    {
-        // copy caller's parameter list to initial registers.
-        JSValues::iterator dest = mRegisters.begin();
-        *dest++ = thisArg;
-        const JSValues& params = caller->mRegisters;
-        for (ArgumentList::const_iterator src = list->begin(), 
-                 end = list->end(); src != end; ++src, ++dest) {
-            Register r = (*src).first.first;
-            if (r != NotARegister)
-                *dest = params[r];
-            else
-                *dest = JSValue(JSValue::uninitialized_tag);
-        }
-    }
-
-    // calling a binary operator, no 'this'
-    Activation(ICodeModule* iCode, const JSValue thisArg, const JSValue arg1, const JSValue arg2)
-        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
-    {
-        mRegisters[0] = thisArg;
-        mRegisters[1] = arg1;
-        mRegisters[2] = arg2;
-    }
-
-    // calling a getter function, no arguments
-    Activation(ICodeModule* iCode, const JSValue thisArg)
-        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
-    {
-        mRegisters[0] = thisArg;
-    }
-
-    // calling a setter function, 1 argument
-    Activation(ICodeModule* iCode, const JSValue thisArg, const JSValue arg)
-        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
-    {
-        mRegisters[0] = thisArg;
-        mRegisters[1] = arg;
-    }
-
-};
-
-/**
  * exception-safe class to save off values.
  */
 template <typename T>
@@ -244,7 +169,7 @@ void Context::loadClass(const char *fileName)
 }
 
 JSValues& Context::getRegisters()    { return mActivation->mRegisters; }
-ICodeModule* Context::getICode()     { return mActivation->mICode; }
+ICodeModule* Context::getICode()     { return mICode; }
 
 /**
  * Stores saved state from the *previous* activation, the current
@@ -256,11 +181,13 @@ struct Linkage : public Context::Frame, public gc_base {
     Activation*         mActivation;        // caller's activation.
     JSScope*            mScope;
     TypedRegister       mResult;            // the desired target register for the return value
+    ICodeModule*        mICode;             // the caller function
+    JSClosure*          mClosure;
 
     Linkage(Linkage* linkage, InstructionIterator returnPC,
-            Activation* activation, JSScope* scope, TypedRegister result) 
+            Activation* activation, JSScope* scope, TypedRegister result, ICodeModule* iCode, JSClosure *closure) 
         :   mNext(linkage), mReturnPC(returnPC),
-            mActivation(activation), mScope(scope), mResult(result)
+            mActivation(activation), mScope(scope), mResult(result), mICode(iCode), mClosure(closure)
     {
     }
     
@@ -270,7 +197,7 @@ struct Linkage : public Context::Frame, public gc_base {
     {
         pc = mReturnPC;
         registers = &mActivation->mRegisters;
-        iCode = mActivation->mICode;
+        iCode = mICode;
     }
 };
 
@@ -651,12 +578,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
     // when invoked with empty args, make sure that 'this' is 
     // going to be the global object.
 
-    mActivation = new Activation(iCode, args);
+    mICode = iCode;
+    mActivation = new Activation(mICode->itsMaxRegister, args);
     JSValues* registers = &mActivation->mRegisters;
     if (args.size() == 0) (*registers)[0] = mGlobal;
 
-    mPC = mActivation->mICode->its_iCode->begin();
-    InstructionIterator endPC = mActivation->mICode->its_iCode->end();
+    mPC = mICode->its_iCode->begin();
+    InstructionIterator endPC = mICode->its_iCode->end();
 
     // stack of all catch/finally handlers available for the current activation
     // to implement jsr/rts for finally code
@@ -727,7 +655,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (target->isNative()) {
                         ArgumentList *params = op3(call);
                         JSValues argv(params->size() + 1);
-                        argv[0] = target->getThis();        //(*registers)[op3(call).first];
+                        argv[0] = target->getThis();
                         JSValues::size_type i = 1;
                         for (ArgumentList::const_iterator src = params->begin(), end = params->end();
                                         src != end; ++src, ++i) {
@@ -786,9 +714,6 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                         else {  // shift the index value down by the number of positional parameters
                                             index = (int)d;
                                             index -= icm->itsParameters->mPositionalCount;
-//                                            StringFormatter s;
-//                                            s << ((int)d - icm->itsParameters->mPositionalCount);
-//                                            argName = &mWorld.identifiers[s];
                                         }
                                         
                                         TypedRegister argument = (*args)[i].first;   // this is the argument whose name didn't match
@@ -834,14 +759,40 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             }
                         }
 
-                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(icm, mActivation, target->getThis()/*(*registers)[op3(call).first]*/, callArgs);
+                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, op1(call), mICode, mCurrentClosure);
+                        mICode = icm;
+                        mActivation = new Activation(mICode->itsMaxRegister, mActivation, target->getThis(), callArgs);
                         registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
+                        mPC = mICode->its_iCode->begin();
+                        endPC = mICode->its_iCode->end();
+                        JSClosure *cl = dynamic_cast<JSClosure *>(target);
+                        if (cl)
+                            mCurrentClosure = cl;
                         continue;
                     }
                 }
+
+
+            case NEW_CLOSURE:
+                {
+                    NewClosure* nc = static_cast<NewClosure*>(instruction);
+                    JSClosure* cl = new JSClosure(src1(nc), mActivation, mCurrentClosure);
+                    (*registers)[dst(nc).first] = cl;
+                }
+                break;
+
+            case GET_CLOSURE:
+                {
+                    GetClosure* gc = static_cast<GetClosure*>(instruction);
+                    uint32 count = src1(gc);
+                    JSClosure* cl = mCurrentClosure;
+                    while (count-- > 0) {
+                        ASSERT(cl);
+                        cl = cl->getPrevious();
+                    }
+                    (*registers)[dst(gc).first] = cl->getActivation();
+                }
+                break;
 
             case DIRECT_CALL:
                 {
@@ -862,11 +813,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     }
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, op1(call));
-                        mActivation = new Activation(target->getICode(), mActivation, kNullValue, op3(call));
+                                               mActivation, mGlobal, op1(call), mICode, mCurrentClosure);
+                        mICode = target->getICode();
+                        mActivation = new Activation(mICode->itsMaxRegister, mActivation, kNullValue, op3(call));
                         registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
+                        mPC = mICode->its_iCode->begin();
+                        endPC = mICode->its_iCode->end();
                         continue;
                     }
                 }
@@ -887,7 +839,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (linkage->mResult.first != NotARegister)
                         (*registers)[linkage->mResult.first] = kUndefinedValue;
                     mPC = linkage->mReturnPC;
-                    endPC = mActivation->mICode->its_iCode->end();
+                    mICode = linkage->mICode;
+                    mCurrentClosure = linkage->mClosure;
+                    endPC = mICode->its_iCode->end();
                 }
                 continue;
 
@@ -911,7 +865,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (linkage->mResult.first != NotARegister)
                         (*registers)[linkage->mResult.first] = result;
                     mPC = linkage->mReturnPC;
-                    endPC = mActivation->mICode->its_iCode->end();
+                    mICode = linkage->mICode;
+                    mCurrentClosure = linkage->mClosure;
+                    endPC = mICode->its_iCode->end();
                 }
                 continue;
             case MOVE:
@@ -926,11 +882,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSFunction *getter = mGlobal->getter(*src1(ln));
                     if (getter) {
                         ASSERT(!getter->isNative());
-                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(ln));
-                        mActivation = new Activation(getter->getICode(), kNullValue);
+                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(ln), mICode, mCurrentClosure);
+                        mICode = getter->getICode();
+                        mActivation = new Activation(mICode->itsMaxRegister, kNullValue);
                         registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
+                        mPC = mICode->its_iCode->begin();
+                        endPC = mICode->its_iCode->end();
                         continue;
                     }
                     else
@@ -943,11 +900,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSFunction *setter = mGlobal->setter(*dst(sn));
                     if (setter) {
                         ASSERT(!setter->isNative());
-                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type));
-                        mActivation = new Activation(setter->getICode(), (*registers)[src1(sn).first], kNullValue);
+                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type), mICode, mCurrentClosure);
+                        mICode = setter->getICode();
+                        mActivation = new Activation(mICode->itsMaxRegister, (*registers)[src1(sn).first], kNullValue);
                         registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
+                        mPC = mICode->its_iCode->begin();
+                        endPC = mICode->its_iCode->end();
                         continue;
                     }
                     else
@@ -1093,21 +1051,33 @@ using JSString throughout.
                     GetSlot* gs = static_cast<GetSlot*>(instruction);
                     JSValue& value = (*registers)[src1(gs).first];
                     if (value.isObject()) {
-                        JSInstance* inst = static_cast<JSInstance *>(value.object);
-                        if (inst->hasGetter(src2(gs))) {
-                            JSFunction* getter = inst->getter(src2(gs));
-                            ASSERT(!getter->isNative());
-                            mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(gs));
-                            mActivation = new Activation(getter->getICode(), value);
-                            registers = &mActivation->mRegisters;
-                            mPC = mActivation->mICode->its_iCode->begin();
-                            endPC = mActivation->mICode->its_iCode->end();
-                            continue;
+                        JSInstance* inst = dynamic_cast<JSInstance *>(value.object);
+                        if (inst) {
+                            if (inst->hasGetter(src2(gs))) {
+                                JSFunction* getter = inst->getter(src2(gs));
+                                ASSERT(!getter->isNative());
+                                mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(gs), mICode, mCurrentClosure);
+                                mICode = getter->getICode();
+                                mActivation = new Activation(mICode->itsMaxRegister, value);
+                                registers = &mActivation->mRegisters;
+                                mPC = mICode->its_iCode->begin();
+                                endPC = mICode->its_iCode->end();
+                                continue;
+                            }
+                            else
+                                (*registers)[dst(gs).first] = (*inst)[src2(gs)];
                         }
-                        else
-                            (*registers)[dst(gs).first] = (*inst)[src2(gs)];
+                        else {
+                            Activation* act = dynamic_cast<Activation *>(value.object);
+                            if (act) {
+                                (*registers)[dst(gs).first] = act->mRegisters[src2(gs)];
+                            }
+                            else
+                                NOT_REACHED("runtime error");
+                        }
                     }
-                    // XXX runtime error
+                    else
+                        NOT_REACHED("runtime error");
                 }
                 break;
             case SET_SLOT:
@@ -1115,20 +1085,33 @@ using JSString throughout.
                     SetSlot* ss = static_cast<SetSlot*>(instruction);
                     JSValue& value = (*registers)[dst(ss).first];
                     if (value.isObject()) {
-                        JSInstance* inst = static_cast<JSInstance *>(value.object);
-                        if (inst->hasSetter(src1(ss))) {
-                            JSFunction* setter = inst->setter(src1(ss));
-                            ASSERT(!setter->isNative());
-                            mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type));
-                            mActivation = new Activation(setter->getICode(), value, (*registers)[src2(ss).first]);
-                            registers = &mActivation->mRegisters;
-                            mPC = mActivation->mICode->its_iCode->begin();
-                            endPC = mActivation->mICode->its_iCode->end();
-                            continue;
+                        JSInstance* inst = dynamic_cast<JSInstance *>(value.object);
+                        if (inst) {
+                            if (inst->hasSetter(src1(ss))) {
+                                JSFunction* setter = inst->setter(src1(ss));
+                                ASSERT(!setter->isNative());
+                                mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type), mICode, mCurrentClosure);
+                                mICode = setter->getICode();
+                                mActivation = new Activation(mICode->itsMaxRegister, value, (*registers)[src2(ss).first]);
+                                registers = &mActivation->mRegisters;
+                                mPC = mICode->its_iCode->begin();
+                                endPC = mICode->its_iCode->end();
+                                continue;
+                            }
+                            else
+                                (*inst)[src1(ss)] = (*registers)[src2(ss).first];
                         }
-                        else
-                            (*inst)[src1(ss)] = (*registers)[src2(ss).first];
+                        else {
+                            Activation* act = dynamic_cast<Activation *>(value.object);
+                            if (act) {
+                                act->mRegisters[src1(ss)] = (*registers)[src2(ss).first];
+                            }
+                            else
+                                NOT_REACHED("runtime error");
+                        }
                     }
+                    else
+                        NOT_REACHED("runtime error");
                 }
                 break;
 
@@ -1154,7 +1137,7 @@ using JSString throughout.
                 {
                     GenericBranch* bra =
                         static_cast<GenericBranch*>(instruction);
-                    mPC = mActivation->mICode->its_iCode->begin() + ofs(bra);
+                    mPC = mICode->its_iCode->begin() + ofs(bra);
                     continue;
                 }
                 break;
@@ -1164,7 +1147,7 @@ using JSString throughout.
                         static_cast<GenericBranch*>(instruction);
                     ASSERT((*registers)[src1(bc).first].isBoolean());
                     if ((*registers)[src1(bc).first].boolean) {
-                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
+                        mPC = mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -1175,7 +1158,7 @@ using JSString throughout.
                         static_cast<GenericBranch*>(instruction);
                     ASSERT((*registers)[src1(bc).first].isBoolean());
                     if (!(*registers)[src1(bc).first].boolean) {
-                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
+                        mPC = mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -1185,7 +1168,7 @@ using JSString throughout.
                     GenericBranch* bc =
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc).first].isInitialized()) {
-                        mPC = mActivation->mICode->its_iCode->begin() + ofs(bc);
+                        mPC = mICode->its_iCode->begin() + ofs(bc);
                         continue;
                     }
                 }
@@ -1207,11 +1190,12 @@ using JSString throughout.
                     }
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
-                                               mActivation, mGlobal, dst(gbo));
-                        mActivation = new Activation(target->getICode(), kNullValue, r1, r2);
+                                               mActivation, mGlobal, dst(gbo), mICode, mCurrentClosure);
+                        mICode = target->getICode();
+                        mActivation = new Activation(mICode->itsMaxRegister, kNullValue, r1, r2);
                         registers = &mActivation->mRegisters;
-                        mPC = mActivation->mICode->its_iCode->begin();
-                        endPC = mActivation->mICode->its_iCode->end();
+                        mPC = mICode->its_iCode->begin();
+                        endPC = mICode->its_iCode->end();
                         continue;
                     }
                 }
@@ -1513,7 +1497,7 @@ using JSString throughout.
                     subroutineStack.push(++mPC);
                     Jsr* jsr = static_cast<Jsr*>(instruction);
                     uint32 offset = ofs(jsr);
-                    mPC = mActivation->mICode->its_iCode->begin() + offset;
+                    mPC = mICode->its_iCode->begin() + offset;
                     continue;
                 }
             case RTS:
@@ -1561,11 +1545,11 @@ using JSString throughout.
                             Handler *h = mActivation->catchStack.back();
                             registers = &mActivation->mRegisters;
                             if (h->catchTarget) {
-                                mPC = mActivation->mICode->its_iCode->begin() + h->catchTarget->mOffset;
+                                mPC = mICode->its_iCode->begin() + h->catchTarget->mOffset;
                             }
                             else {
                                 ASSERT(h->finallyTarget);
-                                mPC = mActivation->mICode->its_iCode->begin() + h->finallyTarget->mOffset;
+                                mPC = mICode->its_iCode->begin() + h->finallyTarget->mOffset;
                             }
                             mLinkage = pLinkage;
                             break;
@@ -1577,11 +1561,11 @@ using JSString throughout.
                 else {
                     Handler *h = mActivation->catchStack.back();
                     if (h->catchTarget) {
-                        mPC = mActivation->mICode->its_iCode->begin() + h->catchTarget->mOffset;
+                        mPC = mICode->its_iCode->begin() + h->catchTarget->mOffset;
                     }
                     else {
                         ASSERT(h->finallyTarget);
-                        mPC = mActivation->mICode->its_iCode->begin() + h->finallyTarget->mOffset;
+                        mPC = mICode->its_iCode->begin() + h->finallyTarget->mOffset;
                     }
                     continue;
                 }

@@ -289,6 +289,18 @@ $ops{"SET_ELEMENT"} =
    rem    => "base, index, value",
    params => [ ("TypedRegister", "TypedRegister", "TypedRegister") ]
   };
+$ops{"NEW_CLOSURE"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, ICodeModule",
+   params => [ ("TypedRegister", "ICodeModule*") ]
+  };
+$ops{"GET_CLOSURE"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, closure depth",
+   params => [ ("TypedRegister", "uint32") ]
+  };
 $ops{"ADD"}        = $math_op;
 $ops{"SUBTRACT"}   = $math_op;
 $ops{"MULTIPLY"}   = $math_op;
