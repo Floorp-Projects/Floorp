@@ -1111,6 +1111,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
 {
   nsIPresShell* shell = aPresContext->GetShell();
   nsIContent* parentContainer = aContainer;
+  NS_IF_ADDREF(parentContainer);  // match release below
   while (nsnull != parentContainer) {
     nsIFrame* parentFrame = shell->FindFrameWithContent(parentContainer);
     if (nsnull != parentFrame) {
@@ -1148,6 +1149,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
         // parent frame can easily identify the newly added frames. Either that
         // or pass along in count in which case they must be contiguus...
         lastChildFrame = frame;
+        NS_RELEASE(child);
       }
 
       // Notify the parent frame with a reflow command, passing it the list of
@@ -1162,9 +1164,12 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
         shell->AppendReflowCommand(reflowCmd);
         NS_RELEASE(reflowCmd);
       }
+      NS_RELEASE(parentContainer);
       break;
     }
+    nsIContent* oldParent = parentContainer;
     parentContainer->GetParent(parentContainer);
+    NS_RELEASE(oldParent);
   }
 
   NS_RELEASE(shell);
