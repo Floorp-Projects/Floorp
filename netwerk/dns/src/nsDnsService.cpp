@@ -676,7 +676,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
         if (PR_SUCCESS == status) {
             // slam the IP in and move on.
             PRHostEnt *ent = &(hostentry->hostEnt);
-            PRIntn bufLen = PR_NETDB_BUF_SIZE;
+            PRIntn bufLen = hostentry->bufLen = PR_NETDB_BUF_SIZE;
             char *buffer = hostentry->buffer;
             ent->h_name = (char*)BufAlloc(PL_strlen(hostName) + 1,
                                        &buffer,
@@ -712,7 +712,9 @@ nsDNSService::Lookup(nsISupports*    clientContext,
             return listener->OnStopLookup(clientContext, hostName, NS_OK);
         }
     }
-#if defined(XP_MAC) || defined (XP_PC)
+#if defined(XP_MAC) || defined (XP_PC) /* ASYNC version of DNS Lookup */	
+        delete hostentry;		// not used by async case
+
     //    initateLookupNeeded = false;
     //    lock dns service
     //    search cache for existing nsDNSLookup with matching hostname
@@ -736,13 +738,10 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     //    if (iniateLookupNeeded) {
     //        initiate async lookup
     //    }
-    //    
-
 
     // create nsDNSLookup
     nsDNSLookup * lookup = new nsDNSLookup(clientContext, hostName, listener);
     if (!lookup) {
-        delete hostentry;
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -750,14 +749,12 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     // save on outstanding lookup queue
     mCompletionQueue.AppendElement(lookup);
 #endif
-    delete hostentry;
     (void)listener->OnStartLookup(clientContext, hostName);
 
     // initiate async lookup
     return lookup->InitiateDNSLookup(this);	
-#else
-    // temporary SYNC version
 
+#else /* SYNC version of DNS Lookup */
     status = PR_GetHostByName(hostName, 
                               hostentry->buffer, 
                               PR_NETDB_BUF_SIZE, 
