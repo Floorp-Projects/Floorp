@@ -28,6 +28,7 @@
 #include <LowMem.h>
 #include <TextServices.h>
 #include <UnicodeConverter.h>
+#include <Script.h>
 
 // from MacHeaders.c
 #ifndef topLeft
@@ -344,7 +345,16 @@ enum
 	kKeypadEqualsKeyCode		= 0x51,			// no correpsonding raptor key code
 	
 	kInsertKeyCode					= 0x72,				// also help key
-	kDeleteKeyCode					= 0x75				// also forward delete key
+	kDeleteKeyCode					= 0x75,				// also forward delete key
+	kTabKeyCode						= 0x30,
+	kHomeKeyCode					= 0x73,	
+	kEndKeyCode						= 0x77,
+	kPageUpKeyCode					= 0x74,
+	kPageDownKeyCode				= 0x79,
+	kLeftArrowKeyCode				= 0x7B,
+	kRightArrowKeyCode				= 0x7C,
+	kUpArrowKeyCode					= 0x7E,
+	kDownArrowKeyCode				= 0x7D
 	
 };
 
@@ -472,6 +482,185 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 // HandleKeyEvent
 //
 //-------------------------------------------------------------------------
+#ifdef tague_keyboard_patch
+void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message)
+{
+	//
+	// initalize the basic message parts
+	//
+	aKeyEvent.eventStructType = NS_KEY_EVENT;
+	aKeyEvent.message 		= message;
+	aKeyEvent.point.x		= 0;
+	aKeyEvent.point.y		= 0;
+	aKeyEvent.time			= PR_IntervalNow();
+	
+	//
+	// initalize the GUI event parts
+	//
+	aKeyEvent.widget		= focusedWidget;
+	aKeyEvent.nativeMsg		= (void*)&aOSEvent;
+	
+	//
+	// nsInputEvent parts
+	//
+	aKeyEvent.isShift		= ((aOSEvent.modifiers & shiftKey) != 0);
+	aKeyEvent.isControl		= ((aOSEvent.modifiers & controlKey) != 0);
+	aKeyEvent.isAlt			= ((aOSEvent.modifiers & optionKey) != 0);
+	aKeyEvent.isCommand		= ((aOSEvent.modifiers & cmdKey) != 0);
+	
+	//
+	// nsKeyEvent parts
+	//
+  	aKeyEvent.keyCode		= ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
+  	aKeyEvent.charCode		= 0;
+ }
+	
+PRBool nsMacEventHandler::IsSpecialRaptorKey(UInt32 macKeyCode)
+{
+	PRBool	isSpecial;
+
+	// 
+	// this table is used to make the macintosh virtual key generation behave the same
+	// as windows and linux
+	//	
+	switch (macKeyCode)
+	{
+// modifiers. We don't get separate events for these
+		case kEscapeKeyCode:				isSpecial = PR_TRUE; break;
+		case kShiftKeyCode:					isSpecial = PR_TRUE; break;
+		case kCapsLockKeyCode:				isSpecial = PR_TRUE; break;
+		case kControlKeyCode:				isSpecial = PR_TRUE; break;
+		case kOptionkeyCode:				isSpecial = PR_TRUE; break;
+		case kClearKeyCode:					isSpecial = PR_TRUE; break;
+
+// function keys
+		case kF1KeyCode:					isSpecial = PR_TRUE; break;
+		case kF2KeyCode:					isSpecial = PR_TRUE; break;
+		case kF3KeyCode:					isSpecial = PR_TRUE; break;
+		case kF4KeyCode:					isSpecial = PR_TRUE; break;
+		case kF5KeyCode:					isSpecial = PR_TRUE; break;
+		case kF6KeyCode:					isSpecial = PR_TRUE; break;
+		case kF7KeyCode:					isSpecial = PR_TRUE; break;
+		case kF8KeyCode:					isSpecial = PR_TRUE; break;
+		case kF9KeyCode:					isSpecial = PR_TRUE; break;
+		case kF10KeyCode:					isSpecial = PR_TRUE; break;
+		case kF11KeyCode:					isSpecial = PR_TRUE; break;
+		case kF12KeyCode:					isSpecial = PR_TRUE; break;
+		case kPauseKeyCode:					isSpecial = PR_TRUE; break;
+		case kScrollLockKeyCode:			isSpecial = PR_TRUE; break;
+		case kPrintScreenKeyCode:			isSpecial = PR_TRUE; break;
+	
+// keypad
+		case kKeypad0KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad1KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad2KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad3KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad4KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad5KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad6KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad7KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad8KeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypad9KeyCode:				isSpecial = PR_TRUE; break;
+
+		case kKeypadMultiplyKeyCode:		isSpecial = PR_TRUE; break;
+		case kKeypadAddKeyCode:				isSpecial = PR_TRUE; break;
+		case kKeypadSubtractKeyCode:		isSpecial = PR_TRUE; break;
+		case kKeypadDecimalKeyCode:			isSpecial = PR_TRUE; break;
+		case kKeypadDivideKeyCode:			isSpecial = PR_TRUE; break;	
+
+
+		case kDeleteKeyCode:				isSpecial = PR_TRUE; break;
+		case kTabKeyCode:					isSpecial = PR_TRUE; break;
+
+		case kHomeKeyCode:					isSpecial = PR_TRUE; break;	
+		case kEndKeyCode:					isSpecial = PR_TRUE; break;
+		case kPageUpKeyCode:				isSpecial = PR_TRUE; break;
+		case kPageDownKeyCode:				isSpecial = PR_TRUE; break;
+		case kLeftArrowKeyCode:			isSpecial = PR_TRUE; break;
+		case kRightArrowKeyCode:			isSpecial = PR_TRUE; break;
+		case kUpArrowKeyCode:				isSpecial = PR_TRUE; break;
+		case kDownArrowKeyCode:			isSpecial = PR_TRUE; break;
+		
+		default:							isSpecial = PR_FALSE; break;
+	}
+	return isSpecial;
+}
+		
+void nsMacEventHandler::ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent,EventRecord& aOSEvent)
+{
+	TextToUnicodeInfo	textToUnicodeInfo;
+	TextEncoding		textEncodingFromScript;
+	ByteCount			result_size, source_read;
+	OSErr				err;
+	PRUnichar			unicharResult;
+	char				charResult = aOSEvent.message & charCodeMask;
+	ScriptCode			textScript;
+	
+	//
+	// get the script of text for Unicode conversion
+	//
+	textScript = (ScriptCode)GetScriptManagerVariable(smKeyScript);
+
+	//
+	// convert our script code (smKeyScript) to a TextEncoding 
+	//
+	err = ::UpgradeScriptInfoToTextEncoding(textScript,kTextLanguageDontCare,kTextRegionDontCare,nsnull,
+											&textEncodingFromScript);
+	NS_ASSERTION(err==noErr,"nsMacEventHandler::ConvertKeyEventToUnicode: UpgradeScriptInfoToTextEncoding failed.");
+	if (err!=noErr) { aKeyEvent.charCode=0; return; }
+	
+	err = ::CreateTextToUnicodeInfoByEncoding(textEncodingFromScript,&textToUnicodeInfo);
+	NS_ASSERTION(err==noErr,"nsMacEventHandler::ConvertKeyEventToUnicode: CreateUnicodeToTextInfoByEncoding failed.");
+	if (err!=noErr) { aKeyEvent.charCode=0; return; }
+
+	//
+	// convert to Unicode
+	//
+	err = ::ConvertFromTextToUnicode(textToUnicodeInfo,
+									sizeof(char),&charResult,
+									kUnicodeLooseMappingsMask,
+									0,NULL,NULL,NULL,
+									sizeof(PRUnichar),&source_read,
+									&result_size,&unicharResult);
+	NS_ASSERTION(err==noErr,"nsMacEventHandler::ConvertKeyEventToUnicode: ConverFromTextToUnicode failed.");
+	if (err==noErr) aKeyEvent.charCode = unicharResult;
+	
+	::DisposeTextToUnicodeInfo(&textToUnicodeInfo);
+
+}
+	
+PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
+{
+	nsresult result;
+	// get the focused widget
+	nsWindow* focusedWidget = mTopLevelWidget;	
+	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
+	if (toolkit)
+		focusedWidget = toolkit->GetFocus();
+	
+	if (!focusedWidget) return PR_FALSE;
+
+	// nsEvent
+	nsKeyEvent	keyEvent;
+	switch (aOSEvent.what)
+	{
+		case keyUp:		InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_UP);
+						result = focusedWidget->DispatchWindowEvent(keyEvent);
+						break;
+		case keyDown:	
+		case autoKey:	InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_DOWN);
+						result = focusedWidget->DispatchWindowEvent(keyEvent);
+						if (PR_FALSE==IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8)) {
+							InitializeKeyEvent(keyEvent,aOSEvent,focusedWidget,NS_KEY_PRESS);
+							ConvertKeyEventToUnicode(keyEvent,aOSEvent);
+							result = focusedWidget->DispatchWindowEvent(keyEvent);
+						}
+						break;
+	}
+
+	return result;
+}
+#else
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
 	// get the focused widget
@@ -511,7 +700,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 
 	return(focusedWidget->DispatchWindowEvent(keyEvent));
 }
-
+#endif
 
 //-------------------------------------------------------------------------
 //
