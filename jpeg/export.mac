@@ -8,3 +8,4 @@ jinclude.h
 jmorecfg.h
 jpeglib.h
 jpegint.h
+jconfig-mac-cw.h
