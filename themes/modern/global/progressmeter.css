@@ -72,7 +72,7 @@ progressmeter[mode="undetermined"] {
 
 .progressmeter-statusbar {
   margin: 0;
-  border-bottom: 2px solid transparent;
+  -moz-border-bottom-colors: transparent transparent;
   -moz-border-top-colors: #E0ECF6 #C7D0D9;
   -moz-border-right-colors: #8997A1 #C7D0D9;
   -moz-border-left-colors: #E0ECF6 #C7D0D9;
