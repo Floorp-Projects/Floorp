@@ -40,6 +40,8 @@
 #include "nsIWebBrowser.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
+#include "nsIHistoryEntry.h"
+#include "nsIURI.h"
 
 #include "nsCRT.h"
 
@@ -176,6 +178,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 
 }
 
+#endif
+
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetCurrentURL
@@ -187,7 +191,9 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
     JNIEnv  *   pEnv = env;
     jobject     jobj = obj;
     char    *   charResult = nsnull;
+    PRInt32 currentIndex;
     jstring     urlString = nsnull;
+    nsresult rv = NS_ERROR_NULL_POINTER;
 
     NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
@@ -196,27 +202,54 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
         return nsnull;
     }
 
-    if (nativeBrowserControl->initComplete) {
-        wsGetURLEvent   * actionEvent = new wsGetURLEvent(nativeBrowserControl);
-        PLEvent         * event       = (PLEvent*) *actionEvent;
-
-        charResult = (char *) ::util_PostSynchronousEvent(nativeBrowserControl, event);
-
-        if (charResult != nsnull) {
-            urlString = ::util_NewStringUTF(env, (const char *) charResult);
-        }
-        else {
-            ::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned NULL");
-            return nsnull;
-        }
-
-        nsMemory::Free(charResult);
+    nsCOMPtr<nsISHistory> sHistory;
+    rv = nativeBrowserControl->mNavigation->GetSessionHistory(getter_AddRefs(sHistory));
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get SessionHistory");
+        return nsnull;
     }
-
+    
+    rv = sHistory->GetIndex(&currentIndex);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get current index from SessionHistory");
+        return nsnull;
+    }
+    
+    nsIHistoryEntry * Entry;
+    nsIURI *URI;
+    rv = sHistory->GetEntryAtIndex(currentIndex, PR_FALSE, &Entry);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get history entry for current index");
+        return nsnull;
+    }
+    
+    rv = Entry->GetURI(&URI);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get URI from History Entry");
+        return nsnull;
+    }
+    
+    nsCString urlSpecString;
+    
+    rv = URI->GetSpec(urlSpecString);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get url spec from URI");
+        return nsnull;
+    }
+    charResult = ToNewCString(urlSpecString);
+    
+    if (charResult != nsnull) {
+        urlString = ::util_NewStringUTF(env, (const char *) charResult);
+    }
+    else {
+        ::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned NULL");
+        return nsnull;
+    }
+    
+    nsMemory::Free(charResult);
+    
     return urlString;
 }
-
-#endif
 
 JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeGetDOM
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
