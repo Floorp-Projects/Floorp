@@ -53,15 +53,21 @@
     {
       var state = window.arguments[0].state;
       var brandShortName = document.getElementById("brandStrings").getString("brandShortName");
-      var str = document.getElementById("updateStrings").getFormattedString(state + "ErrorDescription", [brandShortName]);
+      var updateStrings = document.getElementById("updateStrings");
+      var str = updateStrings.getFormattedString(state + "ErrorDescription", [brandShortName]);
       document.getElementById("intro").appendChild(document.createTextNode(str));
+      
+      var xpinstallStrings = document.getElementById("xpinstallStrings");
       
       var items = window.arguments[0].errors;
       var listbox = document.getElementById("extensions");
       for (var i = 0; i < items.length; ++i) {
         if (items[i].error) {
           var listitem = document.createElement("listitem");
-          listitem.setAttribute("label", items[i].name);
+          var errorString = xpinstallStrings.getString("error" + items[i].error);
+          var label = updateStrings.getFormattedString("installErrorItemFormat", 
+                                                       [items[i].name, errorString]);
+          listitem.setAttribute("label", label);
           listbox.appendChild(listitem);
         }
       }
@@ -75,6 +81,7 @@
   
   <stringbundleset id="updateSet">
     <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="xpinstallStrings" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/update.properties"/>
   </stringbundleset>
 
