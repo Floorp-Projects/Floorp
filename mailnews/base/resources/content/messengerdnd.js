@@ -446,7 +446,7 @@ function DropOnFolderTree(event)
 	else if (dropFolder)
 	{
 
-	    var sourceNode = RDF.GetResource(sourceID, true);
+	    sourceNode = RDF.GetResource(sourceID, true);
            folder = sourceNode.QueryInterface(Components.interfaces.nsIFolder);
 	    sourceResource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
   	    sourcefolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
