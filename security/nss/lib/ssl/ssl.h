@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl.h,v 1.9 2001/06/12 20:27:10 nelsonb%netscape.com Exp $
+ * $Id: ssl.h,v 1.10 2001/09/18 01:59:18 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl_h_
@@ -45,11 +45,15 @@
 #include "cert.h"
 #include "keyt.h"
 
+#include "sslt.h"  /* public ssl data types */
+
 #if defined(_WIN32) && !defined(IN_LIBSSL) && !defined(NSS_USE_STATIC_LIBS)
 #define SSL_IMPORT extern __declspec(dllimport)
 #else
 #define SSL_IMPORT extern
 #endif
+
+SEC_BEGIN_PROTOS
 
 /* constant table enumerating all implemented SSL 2 and 3 cipher suites. */
 SSL_IMPORT const PRUint16 SSL_ImplementedCiphers[];
@@ -59,26 +63,6 @@ SSL_IMPORT const PRUint16 SSL_NumImplementedCiphers;
 
 /* Macro to tell which ciphers in table are SSL2 vs SSL3/TLS. */
 #define SSL_IS_SSL2_CIPHER(which) (((which) & 0xfff0) == 0xff00)
-
-typedef struct SSL3StatisticsStr {
-    /* statistics from ssl3_SendClientHello (sch) */
-    long sch_sid_cache_hits;
-    long sch_sid_cache_misses;
-    long sch_sid_cache_not_ok;
-
-    /* statistics from ssl3_HandleServerHello (hsh) */
-    long hsh_sid_cache_hits;
-    long hsh_sid_cache_misses;
-    long hsh_sid_cache_not_ok;
-
-    /* statistics from ssl3_HandleClientHello (hch) */
-    long hch_sid_cache_hits;
-    long hch_sid_cache_misses;
-    long hch_sid_cache_not_ok;
-} SSL3Statistics;
-
-SEC_BEGIN_PROTOS
-
 
 /*
 ** Imports fd into SSL, returning a new socket.  Copies SSL configuration
@@ -260,15 +244,6 @@ SSL_IMPORT SECStatus SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f,
 ** certificate for the server and the servers private key. The arguments
 ** are copied.
 */
-/* Key Exchange values */
-typedef enum {
-    kt_null = 0,
-    kt_rsa = 1,
-    kt_dh = 2,
-    kt_fortezza = 3,
-    kt_kea_size
-} SSLKEAType;
-
 SSL_IMPORT SECStatus SSL_ConfigSecureServer(
 				PRFileDesc *fd, CERTCertificate *cert,
 				SECKEYPrivateKey *key, SSLKEAType kea);
@@ -444,6 +419,12 @@ SSL_IMPORT SECStatus NSS_SetExportPolicy(void);
 SSL_IMPORT SECStatus NSS_SetFrancePolicy(void);
 
 SSL_IMPORT SSL3Statistics * SSL_GetStatistics(void);
+
+/* Report more information than SSL_SecurityStatus.
+** Caller supplies the info struct.  Function fills it in.
+*/
+SSL_IMPORT SECStatus SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info,
+                                        PRUintn len);
 
 SEC_END_PROTOS
 

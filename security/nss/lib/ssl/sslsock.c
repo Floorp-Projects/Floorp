@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.19 2001/06/23 00:01:17 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.20 2001/09/18 01:59:20 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -246,18 +246,24 @@ ssl_DupSocket(sslSocket *os)
 	     * during the for loop.
 	     */
 	    int i;
+	    sslServerCerts * oc = os->serverCerts;
+	    sslServerCerts * sc = ss->serverCerts;
 
-	    for (i=kt_null; i < kt_kea_size; i++) {
-		if (os->serverCert[i] && os->serverCertChain[i]) {
-		    ss->serverCert[i] = CERT_DupCertificate(os->serverCert[i]);
-		    ss->serverCertChain[i] = CERT_DupCertList(
-		                                       os->serverCertChain[i]);
+	    for (i=kt_null; i < kt_kea_size; i++, oc++, sc++) {
+		if (oc->serverCert && oc->serverCertChain) {
+		    sc->serverCert      = CERT_DupCertificate(oc->serverCert);
+		    sc->serverCertChain = CERT_DupCertList(oc->serverCertChain);
+		    if (!sc->serverCertChain) 
+		    	goto loser;
 		} else {
-		    ss->serverCert[i]      = NULL;
-		    ss->serverCertChain[i] = NULL;
+		    sc->serverCert      = NULL;
+		    sc->serverCertChain = NULL;
 		}
-		ss->serverKey[i] = os->serverKey[i] ?
-				SECKEY_CopyPrivateKey(os->serverKey[i]) : NULL;
+		sc->serverKey = oc->serverKey ?
+				SECKEY_CopyPrivateKey(oc->serverKey) : NULL;
+		if (oc->serverKey && !sc->serverKey)
+		    goto loser;
+	        sc->serverKeyBits = oc->serverKeyBits;
 	    }
 	    ss->stepDownKeyPair = !os->stepDownKeyPair ? NULL :
 		                  ssl3_GetKeyPairRef(os->stepDownKeyPair);
@@ -278,13 +284,14 @@ ssl_DupSocket(sslSocket *os)
 	    /* Create security data */
 	    rv = ssl_CopySecurityInfo(ss, os);
 	    if (rv != SECSuccess) {
-		goto losage;
+		goto loser;
 	    }
 	}
     }
     return ss;
 
-  losage:
+loser:
+    ssl_FreeSocket(ss);
     return NULL;
 }
 
@@ -336,12 +343,13 @@ ssl_FreeSocket(sslSocket *ss)
 
     /* Clean up server configuration */
     for (i=kt_null; i < kt_kea_size; i++) {
-	if (fs->serverCert[i] != NULL)
-	    CERT_DestroyCertificate(fs->serverCert[i]);
-	if (fs->serverCertChain[i] != NULL)
-	    CERT_DestroyCertificateList(fs->serverCertChain[i]);
-	if (fs->serverKey[i] != NULL)
-	    SECKEY_DestroyPrivateKey(fs->serverKey[i]);
+	sslServerCerts * sc = fs->serverCerts + i;
+	if (sc->serverCert != NULL)
+	    CERT_DestroyCertificate(sc->serverCert);
+	if (sc->serverCertChain != NULL)
+	    CERT_DestroyCertificateList(sc->serverCertChain);
+	if (sc->serverKey != NULL)
+	    SECKEY_DestroyPrivateKey(sc->serverKey);
     }
     if (fs->stepDownKeyPair) {
 	ssl3_FreeKeyPair(fs->stepDownKeyPair);
@@ -1835,9 +1843,11 @@ ssl_NewSocket(void)
         ss->url                = NULL;
 
 	for (i=kt_null; i < kt_kea_size; i++) {
-	    ss->serverCert[i]      = NULL;
-	    ss->serverCertChain[i] = NULL;
-	    ss->serverKey[i]       = NULL;
+	    sslServerCerts * sc = ss->serverCerts + i;
+	    sc->serverCert      = NULL;
+	    sc->serverCertChain = NULL;
+	    sc->serverKey       = NULL;
+	    sc->serverKeyBits   = 0;
 	}
 	ss->stepDownKeyPair    = NULL;
 	ss->dbHandle           = CERT_GetDefaultCertDB();

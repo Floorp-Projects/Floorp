@@ -1,4 +1,4 @@
-/*
+/* 
  * SSL v2 handshake functions, and functions common to SSL2 and SSL3.
  *
  * The contents of this file are subject to the Mozilla Public
@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.9 2001/06/09 03:18:06 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.10 2001/09/18 01:59:19 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1343,7 +1343,11 @@ ssl2_FillInSID(sslSessionID * sid,
 	  PRUint8       *ca, 
 	  int            caLen,
 	  int            keyBits, 
-	  int            secretKeyBits)
+	  int            secretKeyBits,
+	  SSLSignType    authAlgorithm,
+	  PRUint32       authKeyBits,
+	  SSLKEAType     keaType,
+	  PRUint32       keaKeyBits)
 {
     PORT_Assert(sid->references == 1);
     PORT_Assert(sid->cached == never_cached);
@@ -1359,8 +1363,12 @@ ssl2_FillInSID(sslSessionID * sid,
     }
     PORT_Memcpy(sid->u.ssl2.masterKey.data, keyData, keyLen);
     sid->u.ssl2.masterKey.len = keyLen;
-    sid->u.ssl2.keyBits = keyBits;
+    sid->u.ssl2.keyBits       = keyBits;
     sid->u.ssl2.secretKeyBits = secretKeyBits;
+    sid->authAlgorithm        = authAlgorithm;
+    sid->authKeyBits          = authKeyBits;
+    sid->keaType              = keaType;
+    sid->keaKeyBits           = keaKeyBits;
 
     if (caLen) {
 	sid->u.ssl2.cipherArg.data = (PRUint8*) PORT_Alloc(caLen);
@@ -1450,10 +1458,12 @@ loser:
     return rv;
 }
 
-/* Called from ssl2_ServerSetupSessionCypher() <- ssl2_HandleClientSessionKeyMessage()
-                                          <- ssl2_HandleClientHelloMessage()
- *             ssl2_ClientSetupSessionCypher() <- ssl2_HandleServerHelloMessage()
- */
+/* Called from ssl2_ServerSetupSessionCypher() 
+**                  <- ssl2_HandleClientSessionKeyMessage()
+**                          <- ssl2_HandleClientHelloMessage()
+** and from    ssl2_ClientSetupSessionCypher() 
+**                  <- ssl2_HandleServerHelloMessage()
+*/
 static SECStatus
 ssl2_CreateSessionCypher(sslSocket *ss, sslSessionID *sid, PRBool isClient)
 {
@@ -1618,13 +1628,14 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
     PRUint8       *   kbuf = 0;	/* buffer for RSA decrypted data. */
     unsigned int      el1;	/* length of RSA decrypted data in kbuf */
     unsigned int      keySize;
-    unsigned int      modulus;
+    unsigned int      modulusLen;
     SECStatus         rv;
     PRUint8           mkbuf[SSL_MAX_MASTER_KEY_BYTES];
+    sslServerCerts  * sc = ss->serverCerts + kt_rsa;
 
     PORT_Assert( ssl_Have1stHandshakeLock(ss) );
     PORT_Assert( ssl_HaveRecvBufLock(ss)   );
-    PORT_Assert((ss->sec != 0) && (ss->serverKey[kt_rsa] != 0));
+    PORT_Assert((ss->sec != 0) && (sc->serverKey != 0));
     sec = ss->sec;
     PORT_Assert((sec->ci.sid != 0));
     sid = sec->ci.sid;
@@ -1683,25 +1694,25 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
     ** NOTE: PK11_PubDecryptRaw will barf on a non-RSA key. This is
     ** desired behavior here.
     */
-    rv = PK11_PubDecryptRaw(ss->serverKey[kt_rsa], kbuf, &el1, ekLen, ek, ekLen);
+    rv = PK11_PubDecryptRaw(sc->serverKey, kbuf, &el1, ekLen, ek, ekLen);
     if (rv != SECSuccess) 
 	goto hide_loser;
 
-    modulus = PK11_GetPrivateModulusLen(ss->serverKey[kt_rsa]);
-    if (modulus == -1) {
+    modulusLen = PK11_GetPrivateModulusLen(sc->serverKey);
+    if (modulusLen == -1) {
 	/* If the key was really bad, then PK11_pubDecryptRaw
 	 * would have failed, therefore the we must assume that the card
 	 * is just being a pain and not giving us the modulus... but it
 	 * should be the same size as the encrypted key length, so use it
 	 * and keep cranking */
-	modulus = ekLen;
+	modulusLen = ekLen;
     }
     /* Is the length of the decrypted data (el1) the expected value? */
-    if (modulus != el1) 
+    if (modulusLen != el1) 
 	goto hide_loser;
 
     /* Cheaply verify that PKCS#1 was used to format the encryption block */
-    kk = kbuf + modulus - (keySize - ckLen);
+    kk = kbuf + modulusLen - (keySize - ckLen);
     if ((kbuf[0] != 0x00) || (kbuf[1] != 0x02) || (kk[-1] != 0x00)) {
 	/* Tsk tsk. */
 	SSL_DBG(("%d: SSL[%d]: strange encryption block",
@@ -1740,7 +1751,9 @@ hide_loser:
 
     /* Fill in session-id */
     rv = ssl2_FillInSID(sid, cipher, mkbuf, keySize, ca, caLen,
-		   keyBits, keyBits - (ckLen<<3));
+		   keyBits, keyBits - (ckLen<<3),
+		   sec->authAlgorithm, sec->authKeyBits,
+		   sec->keaType,       sec->keaKeyBits);
     if (rv != SECSuccess) {
 	goto loser;
     }
@@ -1996,6 +2009,7 @@ static SECStatus
 ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
 {
     sslSessionID *    sid;
+    sslSecurityInfo * sec;
     PRUint8 *         ca;	/* points to iv data, or NULL if none. */
     PRUint8 *         ekbuf 		= 0;
     CERTCertificate * cert 		= 0;
@@ -2020,10 +2034,11 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
     eblock.data = 0;
     eblock.len  = 0;
 
-    sid = ss->sec->ci.sid;
+    sec = ss->sec;
+    sid = sec->ci.sid;
     PORT_Assert(sid != 0);
 
-    cert = ss->sec->peerCert;
+    cert = sec->peerCert;
     
     serverKey = CERT_ExtractPublicKey(cert);
     if (!serverKey) {
@@ -2033,6 +2048,11 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
 	rv = SECFailure;
 	goto loser2;
     }
+
+    sec->authAlgorithm = ssl_sign_rsa;
+    sec->keaType       = ssl_kea_rsa;
+    sec->keaKeyBits    = \
+    sec->authKeyBits   = SECKEY_PublicKeyStrength(serverKey) * BPB;
 
     /* Choose a compatible cipher with the server */
     nc = csLen / 3;
@@ -2068,7 +2088,9 @@ ssl2_ClientSetupSessionCypher(sslSocket *ss, PRUint8 *cs, int csLen)
 
     /* Fill in session-id */
     rv = ssl2_FillInSID(sid, cipher, keyData, keyLen,
-		   ca, caLen, keyLen << 3, (keyLen - ckLen) << 3);
+		   ca, caLen, keyLen << 3, (keyLen - ckLen) << 3,
+		   sec->authAlgorithm, sec->authKeyBits,
+		   sec->keaType,       sec->keaKeyBits);
     if (rv != SECSuccess) {
 	goto loser;
     }
@@ -2387,6 +2409,7 @@ ssl2_HandleClientCertificate(sslSocket *    ss,
     CERTCertificate *cert	= NULL;
     SECKEYPublicKey *pubKey	= NULL;
     VFYContext *     vfy	= NULL;
+    SECItem *        derCert;
     SECStatus        rv		= SECFailure;
     SECItem          certItem;
     SECItem          rep;
@@ -2435,8 +2458,9 @@ ssl2_HandleClientCertificate(sslSocket *    ss,
     rv = VFY_Update(vfy, ci->serverChallenge, SSL_CHALLENGE_BYTES);
     if (rv) 
     	goto loser;
-    rv = VFY_Update(vfy, ss->serverCert[kt_rsa]->derCert.data,
-		    ss->serverCert[kt_rsa]->derCert.len);
+
+    derCert = &ss->serverCerts[kt_rsa].serverCert->derCert;
+    rv = VFY_Update(vfy, derCert->data, derCert->len);
     if (rv) 
     	goto loser;
     rv = VFY_End(vfy);
@@ -2746,6 +2770,7 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
     ci = &sec->ci;
     gs = ss->gather;
     PORT_Assert(ci->sid != 0);
+    sid = ci->sid;
 
     data = gs->buf.buf + gs->recordOffset;
     DUMP_MSG(29, (ss, data, gs->recordLen));
@@ -2807,8 +2832,12 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
 	SSL_TRC(1, ("%d: SSL[%d]: client, using nonce for peer=0x%08x "
 		    "port=0x%04x",
 		    SSL_GETPID(), ss->fd, ci->peer, ci->port));
-	sec->peerCert = CERT_DupCertificate(ci->sid->peerCert);
-	rv = ssl2_CreateSessionCypher(ss, ci->sid, PR_TRUE);
+	sec->peerCert = CERT_DupCertificate(sid->peerCert);
+        sec->authAlgorithm = sid->authAlgorithm;
+	sec->authKeyBits   = sid->authKeyBits;
+	sec->keaType       = sid->keaType;
+	sec->keaKeyBits    = sid->keaKeyBits;
+	rv = ssl2_CreateSessionCypher(ss, sid, PR_TRUE);
 	if (rv != SECSuccess) {
 	    goto loser;
 	}
@@ -2829,7 +2858,6 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
 	    goto bad_server;
 	}
 
-	sid = ci->sid;
 	if (sid->cached != never_cached) {
 	    /* Forget our session-id - server didn't like it */
 	    SSL_TRC(7, ("%d: SSL[%d]: server forgot me, uncaching session-id",
@@ -3531,11 +3559,18 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	hit = 1;
 	certLen = 0;
 	csLen = 0;
+
+        sec->authAlgorithm = sid->authAlgorithm;
+	sec->authKeyBits   = sid->authKeyBits;
+	sec->keaType       = sid->keaType;
+	sec->keaKeyBits    = sid->keaKeyBits;
+
 	rv = ssl2_CreateSessionCypher(ss, sid, PR_FALSE);
 	if (rv != SECSuccess) {
 	    goto loser;
 	}
     } else {
+	SECItem * derCert = &ss->serverCerts[kt_rsa].serverCert->derCert;
 	SSL_TRC(7, ("%d: SSL[%d]: server, lookup nonce missed",
 		    SSL_GETPID(), ss->fd));
 	hit = 0;
@@ -3554,8 +3589,13 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
 	pid = SSL_GETPID();
 	sid->u.ssl2.sessionID[0] = MSB(pid);
 	sid->u.ssl2.sessionID[1] = LSB(pid);
-	cert = ss->serverCert[kt_rsa]->derCert.data;
-	certLen = ss->serverCert[kt_rsa]->derCert.len;
+	cert    = derCert->data;
+	certLen = derCert->len;
+
+	sec->authAlgorithm = ssl_sign_rsa;
+	sec->keaType       = ssl_kea_rsa;
+	sec->keaKeyBits    = \
+	sec->authKeyBits   = ss->serverCerts[kt_rsa].serverKeyBits;
     }
 
     /* Build up final list of required elements */
@@ -3648,6 +3688,7 @@ ssl2_BeginServerHandshake(sslSocket *ss)
     sslSecurityInfo *sec;
     sslConnectInfo * ci;
     SECStatus        rv;
+    sslServerCerts * rsaAuth = ss->serverCerts + kt_rsa;
 
     PORT_Assert((ss->sec != 0));
     sec = ss->sec;
@@ -3658,7 +3699,7 @@ ssl2_BeginServerHandshake(sslSocket *ss)
     sec->rcvSequence = 0;
 
     /* don't turn on SSL2 if we don't have an RSA key and cert */
-    if (!ss->serverKey[kt_rsa] || !ss->serverCert[kt_rsa]) {
+    if (!rsaAuth->serverKey || !rsaAuth->serverCert) {
 	ss->enableSSL2 = PR_FALSE;
     }
 
@@ -3691,6 +3732,12 @@ loser:
     return SECFailure;
 }
 
+/* This function doesn't really belong in this file.
+** It's here to keep AIX compilers from optimizing it away, 
+** and not including it in the DSO.
+*/
+
+#include "nss.h"
 extern const char __nss_ssl_rcsid[];
 extern const char __nss_ssl_sccsid[];
 

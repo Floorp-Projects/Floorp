@@ -42,6 +42,7 @@ PRIVATE_EXPORTS = \
 
 EXPORTS = \
 	ssl.h \
+	sslt.h \
 	sslerr.h \
 	sslproto.h \
 	preenc.h \
@@ -71,7 +72,9 @@ CSRCS = \
 	authcert.c \
 	cmpcert.c \
 	nsskea.c \
+	sslinfo.c \
 	$(NULL)
+
 
 REQUIRES = security dbm
 
