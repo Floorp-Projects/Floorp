@@ -116,6 +116,11 @@
 #define ST_DEFAULT_OVERHEAD_SIZE 8
 
 /*
+** Numer of substring match specifications to allow.
+*/
+#define ST_SUBSTRING_MATCH_MAX 5
+
+/*
 ** Set the desired resolution of the timevals.
 ** The resolution is just mimicking what is recorded in the trace-malloc
 **  output, and that is currently milliseconds.
@@ -380,7 +385,7 @@ typedef struct __struct_STOptions
         /*
         ** Restrict callsite backtraces to those containing text.
         */
-        char* mRestrictText;
+        char* mRestrictText[ST_SUBSTRING_MATCH_MAX];
 } STOptions;
 
 /*
