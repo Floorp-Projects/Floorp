@@ -21,6 +21,12 @@
  */
 
 #include <iostream.h>
+
+#ifdef XP_MAC
+#include "macstdlibextras.h"
+#endif
+
+
 #include "plstr.h"
 #include "prlink.h"
 #include "nsIComponentManager.h"
@@ -128,6 +134,12 @@ int ProcessArgs(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     int ret = 0;
+
+#ifdef XP_MAC
+#if DEBUG
+    InitializeSIOUX(1);
+#endif
+#endif
 
     NS_InitXPCOM(NULL, NULL);
 
