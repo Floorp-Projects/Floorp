@@ -80,4 +80,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(LDAP_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
+CFLAGS		+= $(LDAP_CFLAGS)
+CXXFLAGS	+= $(LDAP_CFLAGS)
 
