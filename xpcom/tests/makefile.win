@@ -38,6 +38,7 @@ PROG13 = .\$(OBJDIR)\TestThreads.exe
 PROG14 = .\$(OBJDIR)\TestObserverService.exe
 PROG15 = .\$(OBJDIR)\TestBuffers.exe
 PROG16 = .\$(OBJDIR)\TestPipes.exe
+PROG17 = .\$(OBJDIR)\TestShutdown.exe
 
 RESFILE = timer.res
 
@@ -54,6 +55,7 @@ PROGRAMS = $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) \
         $(PROG14) \
         $(PROG15) \
         $(PROG16) \
+        $(PROG17) \
 	$(NULL)
 
 LCFLAGS=-DUSE_NSREG -GX
@@ -123,3 +125,5 @@ $(PROG14): $(OBJDIR) TestObserverService.cpp
 $(PROG15): $(OBJDIR) TestBuffers.cpp
 
 $(PROG16): $(OBJDIR) TestPipes.cpp
+
+$(PROG17): $(OBJDIR) TestShutdown.cpp
