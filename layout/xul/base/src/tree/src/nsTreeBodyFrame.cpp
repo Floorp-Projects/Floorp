@@ -811,6 +811,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetKeyColumnIndex(PRInt32 *_retval)
   nsAutoString attr;
   PRInt32 first, primary, sorted;
 
+  EnsureColumns();
   first = primary = sorted = -1;
   for (nsTreeColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
     // Skip hidden column
