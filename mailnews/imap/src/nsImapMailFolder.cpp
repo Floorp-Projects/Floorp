@@ -1896,7 +1896,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
   PRBool deleteImmediatelyNoTrash = PR_FALSE;
   nsCAutoString messageIds;
   nsMsgKeyArray srcKeyArray;
-  
+  PRBool deleteMsgs = PR_TRUE;  //used for toggling delete status - default is true
   nsMsgImapDeleteModel deleteModel = nsMsgImapDeleteModels::MoveToTrash;
   
   nsCOMPtr<nsIImapIncomingServer> imapServer;
@@ -1926,6 +1926,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
         1, &numFolders,
         getter_AddRefs(trashFolder));
+
       NS_ASSERTION(NS_SUCCEEDED(rv) && trashFolder != 0, "couldn't find trash");
       
       // if we can't find the trash, we'll just have to do an imap delete and pretend this is the trash
@@ -1953,14 +1954,37 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         txnMgr->DoTransaction(undoMsgTxn);
     }
     
-    rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray.GetArray(), srcKeyArray.GetSize());
+    if (deleteModel == nsMsgImapDeleteModels::IMAPDelete && !deleteStorage)
+    {
+      PRUint32 cnt, flags;
+      rv = messages->Count(&cnt);
+      NS_ENSURE_SUCCESS(rv, rv);
+      deleteMsgs = PR_FALSE;
+      for (PRUint32 i=0; i <cnt; i++)
+      {
+        nsCOMPtr <nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
+        nsCOMPtr <nsIMsgDBHdr> msgHdr = do_QueryInterface(msgSupports);
+        if (msgHdr)
+        {
+          msgHdr->GetFlags(&flags);
+          if (!(flags & MSG_FLAG_IMAP_DELETED))
+          {
+            deleteMsgs = PR_TRUE;
+            break;
+          }
+        }
+      }
+    }
+    rv = StoreImapFlags(kImapMsgDeletedFlag, deleteMsgs, srcKeyArray.GetArray(), srcKeyArray.GetSize());
+    
     if (NS_SUCCEEDED(rv))
     {
       if (mDatabase)
       {
         if (deleteModel == nsMsgImapDeleteModels::IMAPDelete)
         {
-          MarkMessagesImapDeleted(&srcKeyArray, PR_TRUE, mDatabase);
+
+          MarkMessagesImapDeleted(&srcKeyArray, deleteMsgs, mDatabase);
         }
         else
         {
@@ -1968,15 +1992,12 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
           mDatabase->DeleteMessages(&srcKeyArray,nsnull);
           EnableNotifications(allMessageCountNotifications, PR_TRUE);
           NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);            
-        }
-        
-      }
+        }    
+      }   
     }
     return rv;
   }
-  
-  // have to move the messages to the trash
-  else
+  else  // have to move the messages to the trash
   {
     if(trashFolder)
     {

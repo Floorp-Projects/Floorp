@@ -41,6 +41,7 @@
 #include "nsIMsgFolder.h"
 #include "nsImapCore.h"
 #include "nsIImapService.h"
+#include "nsIImapIncomingServer.h"
 #include "nsIUrlListener.h"
 #include "nsIEventQueue.h"
 #include "nsMsgTxn.h"
@@ -85,7 +86,6 @@ public:
                 PRBool idsAreUids, PRBool isMove, 
                 nsIEventQueue *eventQueue, 
                 nsIUrlListener *urlListener);
-  PRBool DeleteIsMoveToTrash(nsIMsgFolder* folder);
 
 protected:
 
@@ -103,6 +103,8 @@ protected:
   PRBool m_isMove;
   PRBool m_srcIsPop3;
   nsUInt32Array m_srcSizeArray;
+
+  nsresult GetImapDeleteModel(nsIMsgFolder* aFolder, nsMsgImapDeleteModel *aDeleteModel);
 };
 
 class nsImapOfflineTxn : public nsImapMoveCopyMsgTxn

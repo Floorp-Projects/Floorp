@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMsgTxn.h"
+#include "nsIMsgHdr.h"
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgTxn)
@@ -104,3 +105,17 @@ nsMsgTxn::SetTransactionType(PRUint32 txnType)
     return NS_OK;
 }
 
+//none of the callers pass null aFolder
+nsresult 
+nsMsgTxn::CheckForToggleDelete(nsIMsgFolder *aFolder, const nsMsgKey &aMsgKey, PRBool *aResult)
+{
+  nsCOMPtr<nsIMsgDBHdr> message;
+  nsresult rv = aFolder->GetMessageHeader(aMsgKey, getter_AddRefs(message));
+  PRUint32 flags;
+  if (NS_SUCCEEDED(rv) && message)
+  {
+    message->GetFlags(&flags);
+    *aResult = (flags & MSG_FLAG_IMAP_DELETED) != 0;
+  }
+  return rv;
+}

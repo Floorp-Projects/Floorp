@@ -81,7 +81,7 @@ public:
 				  PRBool isMove);
     nsresult UndoImapDeleteFlag(nsIMsgFolder* aFolder, 
                                 nsMsgKeyArray& aKeyArray,
-                                PRBool addFlag);
+                                PRBool deleteFlag);
   
 private:
     nsWeakPtr m_srcFolder;

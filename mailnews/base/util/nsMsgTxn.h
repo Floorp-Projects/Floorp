@@ -75,6 +75,7 @@ class NS_MSG_BASE nsMsgTxn : public nsITransaction
 protected:
     nsCOMPtr<nsIMsgWindow> m_msgWindow;
     PRUint32 m_txnType;
+    nsresult CheckForToggleDelete(nsIMsgFolder *aFolder, const nsMsgKey &aMsgKey, PRBool *aResult);
 };
 
 #endif

@@ -160,7 +160,7 @@ nsLocalMoveCopyMsgTxn::AddDstMsgSize(PRUint32 msgSize)
 nsresult
 nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder, 
                                           nsMsgKeyArray& keyArray,
-                                          PRBool addFlag)
+                                          PRBool deleteFlag)
 {
     nsresult rv = NS_ERROR_FAILURE;
     if (m_srcIsImap4)
@@ -195,7 +195,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                     // folder so use lite select to do the trick
                     rv = imapService->LiteSelectFolder(eventQueue, folder,
                                                        urlListener, nsnull);
-                    if (addFlag)
+                    if (!deleteFlag)
                         rv =imapService->AddMessageFlags(eventQueue, folder,
                                                         urlListener, nsnull,
                                                         msgIds.get(),
@@ -249,7 +249,9 @@ nsLocalMoveCopyMsgTxn::UndoTransaction()
     {
         if (m_srcIsImap4)
         {
-            rv = UndoImapDeleteFlag(srcFolder, m_srcKeyArray, PR_FALSE);
+            PRBool deleteFlag = PR_TRUE;  //message has been deleted -we are trying to undo it
+            CheckForToggleDelete(srcFolder, m_srcKeyArray.GetAt(0), &deleteFlag); //there could have been a toggle.
+            rv = UndoImapDeleteFlag(srcFolder, m_srcKeyArray, deleteFlag);
         }
         else
         {
@@ -332,7 +334,9 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
     {
         if (m_srcIsImap4)
         {
-            rv = UndoImapDeleteFlag(srcFolder, m_srcKeyArray, PR_TRUE);
+            PRBool deleteFlag = PR_FALSE; //message is un-deleted- we are trying to redo
+            CheckForToggleDelete(srcFolder, m_srcKeyArray.GetAt(0), &deleteFlag); // there could have been a toggle
+            rv = UndoImapDeleteFlag(srcFolder, m_srcKeyArray, deleteFlag);
         }
         else
         {
