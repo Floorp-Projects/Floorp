@@ -53,22 +53,25 @@ enum JS2Op {
     eTrue,
     eFalse,
     eNumber,
+    eString,            // <string pointer>
+    eObject,            // <named argument count>
     eLexicalRead,       // <multiname index>
     eLexicalWrite,      // <multiname index>
     eReturn,
-    eReturnVoid
+    eReturnVoid,
+    eNewObject          // <argCount:16>
 };
 
 
 class JS2Metadata;
-
+class BytecodeContainer;
 
 class JS2Engine {
 public:
 
     JS2Engine(World &world);
 
-    js2val interpret(JS2Metadata *metadata, Phase execPhase, uint8 *start);
+    js2val interpret(JS2Metadata *metadata, Phase execPhase, BytecodeContainer *targetbCon);
 
     js2val interpreterLoop();
 
@@ -91,8 +94,10 @@ public:
     float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
 
     uint8 *pc;
+    BytecodeContainer *bCon;
     JS2Metadata *meta;
     Phase phase;
+    World &world;
 
     float64 *nanValue;
     float64 *float64Table[256];
@@ -102,6 +107,7 @@ public:
     StringAtom &null_StringAtom;
     StringAtom &undefined_StringAtom;
     StringAtom &public_StringAtom;
+    StringAtom &object_StringAtom;
     
     js2val *execStack;
     js2val *sp;
@@ -113,6 +119,7 @@ public:
 };
 
 
+String *numberToString(float64 *number);
 
 
 

@@ -44,4 +44,19 @@
 	}
         break;
 
-
+        case eNewObject: {
+            uint16 argCount = BytecodeContainer::getShort(pc);
+            pc += sizeof(uint16);
+            PrototypeInstance *pInst = new PrototypeInstance(NULL); // XXX Object prototype object
+            for (uint16 i = 0; i < argCount; i++) {
+                js2val nameVal = pop();
+                ASSERT(JS2VAL_IS_STRING(nameVal));
+                String *name = JS2VAL_TO_STRING(nameVal);
+                const StringAtom &nameAtom = world.identifiers[*name];
+                js2val fieldVal = pop();
+                const DynamicPropertyMap::value_type e(nameAtom, fieldVal);
+                pInst->dynamicProperties.insert(e);
+            }
+            push(OBJECT_TO_JS2VAL(pInst));
+        }
+        break;

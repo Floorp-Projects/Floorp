@@ -60,20 +60,33 @@ public:
 
 
     void emitOp(JS2Op op)                   { adjustStack(op); addByte((uint8)op); }
-    void adjustStack(JS2Op op)              { mStackTop += JS2Engine::getStackEffect(op); if (mStackTop > mStackMax) mStackMax = mStackTop; ASSERT(mStackTop >= 0); }
+    void emitOp(JS2Op op, int32 effect)     { adjustStack(op, effect); addByte((uint8)op); }
+
+    void adjustStack(JS2Op op)              { adjustStack(op, JS2Engine::getStackEffect(op)); }
+    void adjustStack(JS2Op op, int32 effect){ mStackTop += effect; if (mStackTop > mStackMax) mStackMax = mStackTop; ASSERT(mStackTop >= 0); }
 
     void addByte(uint8 v)                   { mBuffer->push_back(v); }
     
-    void addPointer(void *v)                { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }
+    void addPointer(const void *v)          { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }
+    static void *getPointer(void *pc)       { return (void *)getLong(pc); }
     
     void addFloat64(float64 v)              { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
     static float64 getFloat64(void *pc)     { return *((float64 *)pc); }
    
-    void addLong(uint32 v)                  { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
+    void addLong(const uint32 v)            { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
     static uint32 getLong(void *pc)         { return *((uint32 *)pc); }
 
-    void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addPointer(mn); }
+    void addShort(uint16 v)                 { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint16)); }
+    static uint16 getShort(void *pc)        { return *((uint16 *)pc); }
+
+    void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort(mMultinameList.size() - 1); }
     static Multiname *getMultiname(void *pc){ return (Multiname *)getLong(pc); }
+
+    void addString(const StringAtom &x)     { emitOp(eString); addPointer(&x); }
+    void addString(String &x)               { emitOp(eString); addPointer(&x); }
+    void addString(String *x)               { emitOp(eString); addPointer(x); }
+    static String *getString(void *pc)      { return (String *)getPointer(pc); }
+    // XXX We lose StringAtom here - is there anyway of stashing these in a bytecodecontainer?
     
     typedef std::vector<uint8> CodeBuffer;
 

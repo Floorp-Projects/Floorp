@@ -54,14 +54,35 @@ typedef void (Invokable)();
 typedef Invokable Callor;
 typedef JS2Object *(Constructor)();
 
-
+enum ObjectKind { 
+    AttributeObjectKind, 
+    SystemKind,
+    GlobalObjectKind, 
+    PackageKind, 
+    FunctionKind, 
+    ClassKind, 
+    BlockKind, 
+    PrototypeInstanceKind, 
+    FixedInstanceKind, 
+    DynamicInstanceKind };
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
 // a number, a string, a namespace, a compound attribute, a class, a method closure, 
 // a prototype instance, a class instance, a package object, or the global object.
 public:
+
+    JS2Object(ObjectKind kind) : kind(kind) { }
+
+    ObjectKind kind;
+
+    
     void *operator new(size_t s);
+
+
+#ifdef DEBUG
+    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
+#endif
 };
 
 class Attribute : public JS2Object {
@@ -71,7 +92,7 @@ public:
     enum OverrideModifier { NoOverride, DoOverride, DontOverride, OverrideUndefined };
 
 
-    Attribute(AttributeKind kind) : kind(kind) { }
+    Attribute(AttributeKind kind) : JS2Object(AttributeObjectKind), kind(kind) { }
 
     static Attribute *combineAttributes(Attribute *a, Attribute *b);
     static CompoundAttribute *toCompoundAttribute(Attribute *a);
@@ -102,7 +123,9 @@ public:
 };
 
 // MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
-// We keep Multinames as a basename and a list of namespace qualifiers
+// We keep Multinames as a basename and a list of namespace qualifiers (XXX is that right - would the basename 
+// ever be different for the same multiname?)
+// Pointers to Multiname instances get embedded in the bytecode.
 typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
 class Multiname {
@@ -257,33 +280,28 @@ public:
 typedef std::multimap<String, StaticBinding *> StaticBindingMap;
 typedef StaticBindingMap::iterator StaticBindingIterator;
 
-class InstanceBindingMap {
-public:
-};
+typedef std::multimap<String, InstanceBinding *> InstanceBindingMap;
+typedef InstanceBindingMap::iterator InstanceBindingIterator;
+
 
 // A frame contains bindings defined at a particular scope in a program. A frame is either the top-level system frame, 
 // a global object, a package, a function frame, a class, or a block frame
-class Frame {
+class Frame : public JS2Object {
 public:
     enum Plurality { Singular, Plural };
-    enum FrameKind { System, GlobalObject, Package, Function, Class, Block };
 
-    Frame(FrameKind kind) : kind(kind), nextFrame(NULL) { }
+    Frame(ObjectKind kind) : JS2Object(kind), nextFrame(NULL) { }
 
     StaticBindingMap staticReadBindings;        // Map of qualified names to readable static members defined in this frame
     StaticBindingMap staticWriteBindings;       // Map of qualified names to writable static members defined in this frame
 
-    FrameKind kind;             // [rather than use RTTI (in general)]
     Frame *nextFrame;
-#ifdef DEBUG
-    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
-#endif
 };
 
 
 class JS2Class : public Frame {
 public:
-    JS2Class() : Frame(Class) { }
+    JS2Class() : Frame(ClassKind) { }
 
     StringAtom &getName();
         
@@ -310,7 +328,7 @@ public:
 
 class GlobalObject : public Frame {
 public:
-    GlobalObject(World &world) : Frame(Frame::GlobalObject), internalNamespace(new Namespace(world.identifiers["internal"])) { }
+    GlobalObject(World &world) : Frame(GlobalObjectKind), internalNamespace(new Namespace(world.identifiers["internal"])) { }
 
     Namespace *internalNamespace;               // This global object's internal namespace
     DynamicPropertyMap dynamicProperties;       // A set of this global object's dynamic properties
@@ -325,8 +343,10 @@ public:
 };
 
 // Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
-class FixedInstance {
+class FixedInstance : public JS2Object {
 public:
+    FixedInstance() : JS2Object(FixedInstanceKind), typeofString(type->getName()) { }
+
     JS2Class    *type;          // This instance's type
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
     Invokable   *construct;     // A procedure to call when this instance is used in a new expression
@@ -336,9 +356,9 @@ public:
 };
 
 // Instances of dynamic classes are represented as DYNAMICINSTANCE records. These instances can contain fixed and dynamic properties.
-class DynamicInstance {
+class DynamicInstance : public JS2Object {
 public:
-    DynamicInstance(JS2Class *type) : type(type), call(NULL), construct(NULL), env(NULL), typeofString(type->getName())  { }
+    DynamicInstance(JS2Class *type) : JS2Object(DynamicInstanceKind), type(type), call(NULL), construct(NULL), env(NULL), typeofString(type->getName())  { }
 
     JS2Class    *type;          // This instance's type
     Invokable   *call;          // A procedure to call when this instance is used in a call expression
@@ -349,7 +369,24 @@ public:
     DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
 };
 
+// Prototype instances are represented as PROTOTYPE records. Prototype instances
+// contain no fixed properties.
+class PrototypeInstance : public JS2Object {
+public:
+    PrototypeInstance(PrototypeInstance *parent) : JS2Object(PrototypeInstanceKind), parent(parent) { }
+
+
+    PrototypeInstance   *parent;        // If this instance was created by calling new on a prototype function,
+                                        // the value of the function’s prototype property at the time of the call;
+                                        // none otherwise.
+    DynamicPropertyMap dynamicProperties; // A set of this instance's dynamic properties
+};
+
+
+
+
 // Base class for all references (lvalues)
+// References are generated during the eval stage (bytecode generation)
 class Reference {
 public:
     virtual void emitReadBytecode(BytecodeContainer *bCon)              { ASSERT(false); }
@@ -363,6 +400,7 @@ class LexicalReference : public Reference {
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
 public:
+    LexicalReference(const StringAtom &name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
     LexicalReference(Multiname *vm, Environment *env, bool strict) : variableMultiname(vm), env(env), strict(strict) { }
     
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
@@ -419,13 +457,13 @@ public:
 // The top-level frame containing predefined constants, functions, and classes.
 class SystemFrame : public Frame {
 public:
-    SystemFrame() : Frame(System) { }
+    SystemFrame() : Frame(SystemKind) { }
 };
 
 // Frames holding bindings for invoked functions
 class FunctionFrame : public Frame {
 public:
-    FunctionFrame() : Frame(Function) { }
+    FunctionFrame() : Frame(FunctionKind) { }
 
     Plurality plurality;
     js2val thisObject;               // The value of this; none if this function doesn't define this;
@@ -439,7 +477,7 @@ public:
 
 class BlockFrame : public Frame {
 public:
-    BlockFrame() : Frame(Block) { }
+    BlockFrame() : Frame(BlockKind) { }
 
     Plurality plurality;
 };
@@ -448,6 +486,9 @@ public:
 class LookupKind {
 public:
     LookupKind(bool isLexical, js2val thisObject) : isLexical(isLexical), thisObject(thisObject) { }
+    
+    bool isPropertyLookup() { return !isLexical; }
+
     bool isLexical;         // if isLexical, use the 'this' below. Otherwise it's a propertyLookup
     js2val thisObject;
 };
@@ -547,11 +588,12 @@ public:
     JS2Class *objectType(js2val obj);
 
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
+    InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
 
     bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readProperty(Frame *pf, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
-    bool readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
+    bool readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
     bool readStaticMember(StaticMember *m, Phase phase, js2val *rval);
 
 
@@ -593,7 +635,6 @@ public:
 
 
 };
-
 
 }; // namespace MetaData
 }; // namespace Javascript

@@ -33,15 +33,17 @@
 
 
         case eLexicalRead: {
-            Multiname *mn = BytecodeContainer::getMultiname(pc);
-            pc += sizeof(Multiname *);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            mn->addNamespace(meta->cxt);
             meta->env.lexicalRead(meta, mn, phase);
 	}
         break;
 
         case eLexicalWrite: {
-            Multiname *mn = BytecodeContainer::getMultiname(pc);
-            pc += sizeof(Multiname *);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            mn->addNamespace(meta->cxt);
             retval = pop();
             meta->env.lexicalWrite(meta, mn, retval, true, phase);
 	}

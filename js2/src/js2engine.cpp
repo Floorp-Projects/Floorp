@@ -61,9 +61,10 @@
 namespace JavaScript {
 namespace MetaData {
 
-js2val JS2Engine::interpret(JS2Metadata *metadata, Phase execPhase, uint8 *start)
+js2val JS2Engine::interpret(JS2Metadata *metadata, Phase execPhase, BytecodeContainer *targetbCon)
 {
-    pc = start;
+    bCon = targetbCon;
+    pc = bCon->getCodeStart();
     meta = metadata;
     phase = execPhase;
     return interpreterLoop();
@@ -171,6 +172,9 @@ js2val JS2Engine::convertValueToPrimitive(js2val x)
     // return [[DefaultValue]] --> get property 'toString' and invoke it, 
     // if not available or result is not primitive then try property 'valueOf'
     // if that's not available or returns a non primitive, throw a TypeError
+
+    return STRING_TO_JS2VAL(&object_StringAtom);
+    
     ASSERT(false);
     return JS2VAL_VOID;
 }
@@ -196,11 +200,13 @@ float64 JS2Engine::convertValueToDouble(js2val x)
 #define INIT_STRINGATOM(n) n##_StringAtom(world.identifiers[#n])
 
 JS2Engine::JS2Engine(World &world)
-            : INIT_STRINGATOM(true),
+            : world(world),
+              INIT_STRINGATOM(true),
               INIT_STRINGATOM(false),
               INIT_STRINGATOM(null),
               INIT_STRINGATOM(undefined),
-              INIT_STRINGATOM(public)
+              INIT_STRINGATOM(public),
+              INIT_STRINGATOM(object)
 {
     nanValue = (float64 *)gc_alloc_8();
     *nanValue = nan;
@@ -218,6 +224,7 @@ int JS2Engine::getStackEffect(JS2Op op)
     case eReturn:
     case ePlus:
         return -1;
+    case eString:
     case eTrue:
     case eFalse:
     case eNumber:

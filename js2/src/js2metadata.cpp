@@ -120,8 +120,8 @@ namespace MetaData {
                 while (v)  {
                     ValidateTypeExpression(v->type);
 
-                    if (cxt->strict && ((regionalFrame->kind == Frame::GlobalObject)
-                                        || (regionalFrame->kind == Frame::Function))
+                    if (cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
+                                        || (regionalFrame->kind == FunctionKind))
                                     && (p->getKind() == StmtNode::Var)  // !immutable
                                     && (vs->attributes == NULL)
                                     && (v->type == NULL)) {
@@ -132,7 +132,7 @@ namespace MetaData {
                         if (a->dynamic || a->prototype)
                             reportError(Exception::definitionError, "Illegal attribute", p->pos);
                         Attribute::MemberModifier memberMod = a->memberMod;
-                        if ((env->getTopFrame()->kind == Frame::Class)
+                        if ((env->getTopFrame()->kind == ClassKind)
                                 && (memberMod == Attribute::NoModifier))
                             memberMod = Attribute::Final;
                         switch (memberMod) {
@@ -168,7 +168,7 @@ namespace MetaData {
             p = p->next;
         }
         bCon->emitOp(eReturnVoid);
-        return engine->interpret(this, phase, bCon->getCodeStart());
+        return engine->interpret(this, phase, bCon);
     }
 
     /*
@@ -458,6 +458,16 @@ namespace MetaData {
     void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
     {
         switch (p->getKind()) {
+        case ExprNode::number:
+        case ExprNode::boolean:
+            break;
+        case ExprNode::objectLiteral:
+            break;
+        case ExprNode::dot:
+            {
+            }
+            break;
+
         case ExprNode::assignment:
         case ExprNode::add:
             {
@@ -471,6 +481,8 @@ namespace MetaData {
 //                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
             }
             break;
+        default:
+            NOT_REACHED("Not Yet Implemented");
         } // switch (p->getKind())
     }
 
@@ -483,7 +495,7 @@ namespace MetaData {
     {
         EvalExprNode(env, phase, p);
         bCon->emitOp(eReturnVoid);
-        return engine->interpret(this, phase, bCon->getCodeStart());
+        return engine->interpret(this, phase, bCon);
     }
 
     /*
@@ -494,10 +506,6 @@ namespace MetaData {
         Reference *returnRef = NULL;
 
         switch (p->getKind()) {
-        case ExprNode::index:
-            {
-            }
-            break;
 
         case ExprNode::assignment:
             {
@@ -542,7 +550,7 @@ namespace MetaData {
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                returnRef = new LexicalReference(new Multiname(i->name, cxt), env, cxt.strict);
+                returnRef = new LexicalReference(i->name, cxt.strict);
             }
             break;
         case ExprNode::boolean:
@@ -552,6 +560,38 @@ namespace MetaData {
                 bCon->emitOp(eFalse);
             break;
         case ExprNode::objectLiteral:
+            {
+                uint32 argCount = 0;
+                PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
+                ExprPairList *e = plen->pairs;
+                while (e) {
+                    ASSERT(e->field && e->value);
+                    Reference *rVal = EvalExprNode(env, phase, e->value);
+                    if (rVal) rVal->emitReadBytecode(bCon);
+                    switch (e->field->getKind()) {
+                    case ExprNode::identifier:
+                        bCon->addString(checked_cast<IdentifierExprNode *>(e->field)->name);
+                        break;
+                    case ExprNode::string:
+                        bCon->addString(checked_cast<StringExprNode *>(e->field)->str);
+                        break;
+                    case ExprNode::number:
+                        bCon->addString(numberToString(&(checked_cast<NumberExprNode *>(e->field))->value));
+                        break;
+                    default:
+                        NOT_REACHED("bad field name");
+                    }
+                    argCount++;
+                    e = e->next;
+                }
+                bCon->emitOp(eNewObject, -argCount + 1);
+                bCon->addShort(argCount);
+            }
+            break;
+        case ExprNode::dot:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+            }
             break;
         default:
             NOT_REACHED("Not Yet Implemented");
@@ -574,7 +614,7 @@ namespace MetaData {
     JS2Class *Environment::getEnclosingClass()
     {
         Frame *pf = firstFrame;
-        while (pf && (pf->kind != Frame::Class))
+        while (pf && (pf->kind != ClassKind))
             pf = pf->nextFrame;
         return checked_cast<JS2Class *>(pf);
     }
@@ -584,11 +624,11 @@ namespace MetaData {
     {
         Frame *pf = firstFrame;
         Frame *prev = NULL;
-        while (pf->kind == Frame::Block) { 
+        while (pf->kind == BlockKind) { 
             prev = pf;
             pf = pf->nextFrame;
         }
-        if (pf->nextFrame && (pf->kind == Frame::Class))
+        if (pf->nextFrame && (pf->kind == ClassKind))
             pf = prev;
         return pf;
     }
@@ -610,7 +650,7 @@ namespace MetaData {
     {
         Frame *pf = firstFrame;
         while (pf) {
-            if ((pf->kind == Frame::Function)
+            if ((pf->kind == FunctionKind)
                     && !JS2VAL_IS_NULL(checked_cast<FunctionFrame *>(pf)->thisObject))
                 if (allowPrototypeThis || !checked_cast<FunctionFrame *>(pf)->prototype)
                     return checked_cast<FunctionFrame *>(pf)->thisObject;
@@ -651,7 +691,7 @@ namespace MetaData {
         }
         if (createIfMissing) {
             pf = getPackageOrGlobalFrame();
-            if (pf->kind == Frame::GlobalObject) {
+            if (pf->kind == GlobalObjectKind) {
                 if (meta->writeProperty(pf, multiname, &lookup, true, newValue, phase))
                     return;
             }
@@ -705,7 +745,7 @@ namespace MetaData {
     {
         QualifiedName qName(publicNamespace, id);
         Frame *regionalFrame = env->getRegionalFrame();
-        ASSERT((env->getTopFrame()->kind == Frame::GlobalObject) || (env->getTopFrame()->kind == Frame::Function));
+        ASSERT((env->getTopFrame()->kind == GlobalObjectKind) || (env->getTopFrame()->kind == FunctionKind));
     
         // run through all the existing bindings, both read and write, to see if this
         // variable already exists.
@@ -734,7 +774,7 @@ namespace MetaData {
             }
         }
         if (!existing) {
-            if (regionalFrame->kind == Frame::GlobalObject) {
+            if (regionalFrame->kind == GlobalObjectKind) {
                 GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
                 DynamicPropertyIterator dp = gObj->dynamicProperties.find(id);
                 if (dp != gObj->dynamicProperties.end())
@@ -791,14 +831,98 @@ namespace MetaData {
 */
     }
 
-    bool JS2Metadata::readDynamicProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
+    // Read the property from the container given by the public id in multiname - if that exists
+    // 
+    bool JS2Metadata::readDynamicProperty(JS2Object *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
-        return true;
+        ASSERT(container && ((container->kind == DynamicInstanceKind) 
+                                || (container->kind == GlobalObjectKind)
+                                || (container->kind == PrototypeInstanceKind)));
+        if (!multiname->onList(publicNamespace))
+            return false;
+        const StringAtom &name = multiname->name;
+        if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", errorPos);
+        DynamicPropertyMap *dMap = NULL;
+        bool isPrototypeInstance = false;
+        if (container->kind == DynamicInstanceKind)
+            dMap = &(checked_cast<DynamicInstance *>(container))->dynamicProperties;
+        else
+        if (container->kind == GlobalObjectKind)
+            dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
+        else {
+            isPrototypeInstance = true;
+            dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
+        }
+        for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
+            if (i->first == name) {
+                *rval = i->second;
+                return true;
+            }
+        }
+        if (isPrototypeInstance) {
+            PrototypeInstance *pInst = (checked_cast<PrototypeInstance *>(container))->parent;
+            while (pInst) {
+                for (DynamicPropertyIterator i = pInst->dynamicProperties.begin(), end = pInst->dynamicProperties.end(); (i != end); i++) {
+                    if (i->first == name) {
+                        *rval = i->second;
+                        return true;
+                    }
+                }
+                pInst = pInst->parent;
+            }
+        }
+        if (lookupKind->isPropertyLookup()) {
+            *rval = JS2VAL_UNDEFINED;
+            return true;
+        }
+        return false;   // 'None'
     }
 
     bool JS2Metadata::writeDynamicProperty(Frame *container, Multiname *multiname, bool createIfMissing, js2val newValue, Phase phase)
     {
-        return true;
+        ASSERT(container && ((container->kind == DynamicInstanceKind) 
+                                || (container->kind == GlobalObjectKind)
+                                || (container->kind == PrototypeInstanceKind)));
+        if (!multiname->onList(publicNamespace))
+            return false;
+        const StringAtom &name = multiname->name;
+        DynamicPropertyMap *dMap = NULL;
+        if (container->kind == DynamicInstanceKind)
+            dMap = &(checked_cast<DynamicInstance *>(container))->dynamicProperties;
+        else
+        if (container->kind == GlobalObjectKind)
+            dMap = &(checked_cast<GlobalObject *>(container))->dynamicProperties;
+        else 
+            dMap = &(checked_cast<PrototypeInstance *>(container))->dynamicProperties;
+        for (DynamicPropertyIterator i = dMap->begin(), end = dMap->end(); (i != end); i++) {
+            if (i->first == name) {
+                i->second = newValue;
+                return true;
+            }
+        }
+        if (!createIfMissing)
+            return false;
+        if (container->kind == DynamicInstanceKind) {
+            DynamicInstance *dynInst = checked_cast<DynamicInstance *>(container);
+            InstanceBinding *ib = resolveInstanceMemberName(dynInst->type, multiname, ReadAccess, phase);
+            if (ib == NULL) {
+                const DynamicPropertyMap::value_type e(name, newValue);
+                dynInst->dynamicProperties.insert(e);
+                return true;
+            }
+        }
+        else {
+            if (container->kind == GlobalObjectKind) {
+                GlobalObject *glob = checked_cast<GlobalObject *>(container);
+                StaticMember *m = findFlatMember(glob, multiname, ReadAccess, phase);
+                if (m == NULL) {
+                    const DynamicPropertyMap::value_type e(name, newValue);
+                    glob->dynamicProperties.insert(e);
+                    return true;
+                }
+            }
+        }
+        return false;   // 'None'
     }
 
     bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase, js2val *rval)
@@ -856,7 +980,7 @@ namespace MetaData {
     bool JS2Metadata::readProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         StaticMember *m = findFlatMember(container, multiname, ReadAccess, phase);
-        if (!m && (container->kind == Frame::GlobalObject))
+        if (!m && (container->kind == GlobalObjectKind))
             return readDynamicProperty(container, multiname, lookupKind, phase, rval);
         else
             return readStaticMember(m, phase, rval);
@@ -867,7 +991,7 @@ namespace MetaData {
     bool JS2Metadata::writeProperty(Frame *container, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue, Phase phase)
     {
         StaticMember *m = findFlatMember(container, multiname, WriteAccess, phase);
-        if (!m && (container->kind == Frame::GlobalObject))
+        if (!m && (container->kind == GlobalObjectKind))
             return writeDynamicProperty(container, multiname, createIfMissing, newValue, phase);
         else
             return writeStaticMember(m, newValue, phase);
@@ -898,7 +1022,7 @@ namespace MetaData {
                     break;
             }
             if (multiname->matches(b->second->qname)) {
-                if (found)
+                if (found && (b->second->content != found))
                     reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", errorPos, multiname->name);
                 else
                     found = b->second->content;
@@ -906,6 +1030,48 @@ namespace MetaData {
             b++;
         }
         return found;
+    }
+
+    /*
+    * Start from the root class (Object) and proceed through more specific classes that are ancestors of c.
+    * Find the binding that matches the given access and multiname, it's an error if more than one such exists.
+    *
+    */
+    InstanceBinding *JS2Metadata::resolveInstanceMemberName(JS2Class *c, Multiname *multiname, Access access, Phase phase)
+    {
+        InstanceBinding *result = NULL;
+        if (c->super) {
+            result = resolveInstanceMemberName(c->super, multiname, access, phase);
+            if (result) return result;
+        }
+        InstanceBindingIterator b, end;
+        if ((access == ReadAccess) || (access == ReadWriteAccess)) {
+            b = c->instanceReadBindings.lower_bound(multiname->name);
+            end = c->instanceReadBindings.upper_bound(multiname->name);
+        }
+        else {
+            b = c->instanceWriteBindings.lower_bound(multiname->name);
+            end = c->instanceWriteBindings.upper_bound(multiname->name);
+        }
+        while (true) {
+            if (b == end) {
+                if (access == ReadWriteAccess) {
+                    access = WriteAccess;
+                    b = c->instanceWriteBindings.lower_bound(multiname->name);
+                    end = c->instanceWriteBindings.upper_bound(multiname->name);
+                }
+                else
+                    break;
+            }
+            if (multiname->matches(b->second->qname)) {
+                if (result && (b->second->content != result->content))
+                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", errorPos, multiname->name);
+                else
+                    result = b->second;
+            }
+            b++;
+        }
+        return result;
     }
 
     /*

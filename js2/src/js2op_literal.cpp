@@ -48,3 +48,9 @@
 	    push(JS2VAL_TRUE);
 	}
 	break;
+
+        case eString: {
+            push(STRING_TO_JS2VAL(BytecodeContainer::getString(pc)));
+            pc += sizeof(String *);
+        }
+        break;
