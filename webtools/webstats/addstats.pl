@@ -79,6 +79,7 @@ sub Flush {
             Query("insert into stats (id, date, count) values ($id, '$date', $count)");
         }
     }
+    undef %counts;
 }
     
     
