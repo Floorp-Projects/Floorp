@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "nsCOMPtr.h"
-#include "nsHTMLImage.h"
+#include "nsImageFrame.h"
 #include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFormControl.h"
