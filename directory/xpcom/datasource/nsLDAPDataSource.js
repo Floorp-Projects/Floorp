@@ -1358,7 +1358,7 @@ var nsLDAPDataSourceModule = {
         debug("*** Registering LDAP datasource components" +
               " (all right -- a JavaScript module!)\n");
         
-        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponenRegistrar);
+        compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
         
         compMgr.registerFactoryLocation(
                 NS_LDAPDATASOURCE_CID, 
