@@ -19,6 +19,18 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #include "nsIPref.h"
@@ -890,7 +902,7 @@ typedef struct
   and entry is
   "a.b.c" or "a.b"
   then add "a.b" to the list. */
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 pref_addChild(PLHashEntry *he, int i, void *arg)
 {
 	PrefChildIter* pcs = (PrefChildIter*) arg;
