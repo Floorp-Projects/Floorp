@@ -1981,7 +1981,7 @@ comparePrefArrayMembers(const void* aElement1, const void* aElement2, void* aDat
 {
     const char* element1 = *NS_STATIC_CAST(const char* const *, aElement1);
     const char* element2 = *NS_STATIC_CAST(const char* const *, aElement2);
-    const PRUint32 offset = *NS_STATIC_CAST(const PRUint32*, aData);
+    const PRUint32 offset = *((const PRUint32*)aData);
 
     // begin the comparison at |offset| chars into the string -
     // this avoids comparing the "ldap_2.servers." portion of every element,
