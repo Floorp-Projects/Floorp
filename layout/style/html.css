@@ -1522,6 +1522,7 @@ viewsource|val  {color: blue; font-weight:normal;}
 viewsource|val:before {content: "="; color: black;} 
 
 viewsource|entity  {color: maroon; font-weight:normal;} 
+viewsource|entity:before {content: "&"; color: maroon;} 
 
 viewsource|comment {color: green; font-style:italic; } 
 viewsource|cdata   {color: #CC0066;} 

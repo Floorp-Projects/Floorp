@@ -1179,7 +1179,9 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   rv = mSink->AddAttributes(aNode, content);
 
   if (mPreAppend) {
-    NS_ASSERTION(mStackPos > 0, "container w/o parent");
+    if (mStackPos <= 0) {
+      return NS_ERROR_FAILURE;
+    }
     nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
     if (mStack[mStackPos-1].mInsertionPoint != -1) {
       parent->InsertChildAt(content, 
@@ -1252,7 +1254,9 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 
   // Add container to its parent if we haven't already done it
   if (0 == (mStack[mStackPos].mFlags & APPENDED)) {
-    NS_ASSERTION(mStackPos > 0, "container w/o parent");
+    if (mStackPos <= 0) {
+      return NS_ERROR_FAILURE;
+    }
     nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
     // If the parent has an insertion point, insert rather than
     // append.
@@ -1563,7 +1567,11 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 nsresult
 SinkContext::AddLeaf(nsIHTMLContent* aContent)
 {
-  NS_ASSERTION(mStackPos > 0, "leaf w/o container");
+
+  if (mStackPos <= 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
   // If the parent has an insertion point, insert rather than
   // append.
@@ -1865,7 +1873,10 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         NS_RELEASE(text);
 
         // Add text to its parent
-        NS_ASSERTION(mStackPos > 0, "leaf w/o container");
+        if (mStackPos<= 0) {
+          return NS_ERROR_FAILURE;
+        }
+
         nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
         if (mStack[mStackPos-1].mInsertionPoint != -1) {
           parent->InsertChildAt(content, 
@@ -2299,7 +2310,9 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
     return NS_ERROR_OUT_OF_MEMORY;
   }
    
-  NS_ASSERTION(mCurrentContext != nsnull," Non-existing context");
+  if (mCurrentContext == 0) {
+    return NS_ERROR_FAILURE;
+  }
   
   // Flush everything in the current context so that we don't have
   // to worry about insertions resulting in inconsistent frame creation.
@@ -3915,7 +3928,10 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   }
 
   // Create content object
-  NS_ASSERTION(mCurrentContext->mStackPos > 0, "leaf w/o container");
+  if (mCurrentContext->mStackPos <= 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsIHTMLContent* parent = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
   nsAutoString tag("SCRIPT");
   nsIHTMLContent* element = nsnull;
