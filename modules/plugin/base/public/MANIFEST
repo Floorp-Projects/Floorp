@@ -40,6 +40,7 @@ nsISeekablePluginStreamPeer.h
 nsIWindowlessPlugInstPeer.h
 nsplugin.h
 nsplugindefs.h
+nsICookieStorage.h
 nsIPluginStreamListener.h
 nsIPluginStreamInfo.h
 nsIPluginInputStream.h

@@ -33,10 +33,11 @@ EXPORTS	=				      \
 	nsIPluginTagInfo.h		      \
 	nsIPluginTagInfo2.h		      \
 	nsIWindowlessPlugInstPeer.h           \
-        nsIPluginStreamListener.h             \
-        nsIPluginStreamInfo.h                 \
+	nsIPluginStreamListener.h             \
+	nsIPluginStreamInfo.h                 \
 	nsplugin.h			      \
-	nsplugindefs.h
+	nsplugindefs.h		\
+	nsICookieStorage.h
 
 # DEPRECATED -- remove before we ship 5.0
 EXPORTS = $(EXPORTS)                          \
