@@ -244,7 +244,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
     if (!handle)
         return NULL;
     handle->js_obj = js_obj;
-    handle->cx = cx;
+    handle->rt = JS_GetRuntime(cx);
 
     /* Create a new Java object that wraps the JavaScript object by storing its
        address in a private integer field. */
@@ -366,7 +366,7 @@ capture_js_error_reports_for_java(JSContext *cx, const char *message,
     }
 
     /* Get the head of the list of pending JS errors */
-    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
+    jsj_env = jsj_EnterJava(cx, &jEnv);
     if (!jsj_env)
         goto abort;
 
@@ -383,6 +383,7 @@ capture_js_error_reports_for_java(JSContext *cx, const char *message,
     /* Push this error onto the list of pending JS errors */
     new_error->next = jsj_env->pending_js_errors;
     jsj_env->pending_js_errors = new_error;
+    jsj_ExitJava(jsj_env);
     return;
 
 abort:
@@ -682,10 +683,6 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
     if (!jsj_env)
         goto error;
 
-    /* If a JSContext was passed by caller, use it. */
-    if (jsj_env->cx == NULL)
-        jsj_env->cx = *cxp;
-
     /* Get the JSContext that we're supposed to use for this Java thread */
     cx = jsj_env->cx;
     if (!cx) {
@@ -693,7 +690,14 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
            Java and back into JS.  Invoke a callback to obtain/create a
            JSContext for us to use. */
         if (JSJ_callbacks->map_jsj_thread_to_js_context) {
-            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env, applet_obj, jEnv, &err_msg);
+#ifdef OJI
+            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env,
+                                                             applet_obj,
+                                                             jEnv, &err_msg);
+#else
+            cx = JSJ_callbacks->map_jsj_thread_to_js_context(jsj_env,
+                                                             jEnv, &err_msg);
+#endif
             if (!cx)
                 goto error;
         } else {
@@ -704,7 +708,6 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
         jsj_env->cx = cx;
     }
     *cxp = cx;
-    jsj_env->recursion_depth++;
 
     /*
      * Capture all JS error reports so that they can be thrown into the Java
@@ -712,6 +715,10 @@ jsj_enter_js(JNIEnv *jEnv, void* applet_obj, jobject java_wrapper_obj,
      */
     *old_error_reporterp =
         JS_SetErrorReporter(cx, capture_js_error_reports_for_java);
+
+#ifdef JSJ_THREADSAFE
+    JS_BeginRequest(cx);
+#endif
 
     return jsj_env;
 
@@ -740,6 +747,10 @@ jsj_exit_js(JSContext *cx, JSJavaThreadState *jsj_env, JSErrorReporter original_
 {
     JNIEnv *jEnv;
 
+#ifdef JSJ_THREADSAFE
+    JS_EndRequest(cx);
+#endif
+
     /* Restore the JS error reporter */
     JS_SetErrorReporter(cx, original_reporter);
 
@@ -765,9 +776,6 @@ jsj_exit_js(JSContext *cx, JSJavaThreadState *jsj_env, JSErrorReporter original_
     if (JSJ_callbacks->exit_js)
         JSJ_callbacks->exit_js(jEnv);
 
-    jsj_env->recursion_depth--;
-    if (!jsj_env->recursion_depth)
-	jsj_env->cx = NULL;
     return JS_TRUE;
 }
 
@@ -811,7 +819,7 @@ Java_netscape_javascript_JSObject_getMember(JNIEnv *jEnv,
                                             jobject java_wrapper_obj,
                                             jstring property_name_jstr)
 {
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     jsval js_val;
     int dummy_cost;
@@ -869,7 +877,7 @@ Java_netscape_javascript_JSObject_getSlot(JNIEnv *jEnv,
                                           jobject java_wrapper_obj,
                                           jint slot)
 {
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     jsval js_val;
     int dummy_cost;
@@ -907,7 +915,7 @@ Java_netscape_javascript_JSObject_setMember(JNIEnv *jEnv,
                                             jstring property_name_jstr,
                                             jobject java_obj)
 {
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     jsval js_val;
     const jchar *property_name_ucs2;
@@ -957,7 +965,7 @@ Java_netscape_javascript_JSObject_setSlot(JNIEnv *jEnv,
                                           jint slot,
                                           jobject java_obj)
 {
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     jsval js_val;
     JSErrorReporter saved_reporter;
@@ -985,7 +993,7 @@ Java_netscape_javascript_JSObject_removeMember(JNIEnv *jEnv,
                                                jobject java_wrapper_obj,
                                                jstring property_name_jstr)
 {
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     jsval js_val;
     const jchar *property_name_ucs2;
@@ -1031,7 +1039,7 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
 {
     int i, argc, arg_num;
     jsval *argv;
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     jsval js_val, function_val;
     int dummy_cost;
@@ -1119,7 +1127,7 @@ Java_netscape_javascript_JSObject_eval(JNIEnv *jEnv,
 {
     const char *codebase;
     JSPrincipals *principals;
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSBool eval_succeeded;
     JSObject *js_obj;
     jsval js_val;
@@ -1188,7 +1196,7 @@ Java_netscape_javascript_JSObject_toString(JNIEnv *jEnv,
                                            jobject java_wrapper_obj)
 {
     jstring result;
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     JSString *jsstr;
     JSErrorReporter saved_reporter;
@@ -1222,7 +1230,7 @@ Java_netscape_javascript_JSObject_getWindow(JNIEnv *jEnv,
                                             jobject java_applet_obj)
 {
     char *err_msg;
-    JSContext *cx;
+    JSContext *cx = NULL;
     JSObject *js_obj;
     jsval js_val;
     int dummy_cost;
@@ -1264,19 +1272,17 @@ JNIEXPORT void JNICALL
 Java_netscape_javascript_JSObject_finalize(JNIEnv *jEnv, jobject java_wrapper_obj)
 {
     JSBool success;
-    JSContext *cx;
     JSObjectHandle *handle;
 
     success = JS_FALSE;
- 
+
     handle = (JSObjectHandle *)((*jEnv)->GetIntField(jEnv, java_wrapper_obj, njJSObject_internal));
     JS_ASSERT(handle);
     if (!handle)
         return;
-    cx = handle->cx;
 
-    success = JS_RemoveRoot(cx, &handle->js_obj);
-    JS_free(cx, handle);
+    success = JS_RemoveRootRT(handle->rt, &handle->js_obj);
+    free(handle);
 
     JS_ASSERT(success);
 }

@@ -221,88 +221,97 @@ vreport_java_error(JSContext *cx, JNIEnv *jEnv, const char *format, va_list ap)
 
     /* Get the exception out of the java environment. */
     java_exception = (*jEnv)->ExceptionOccurred(jEnv);
+    if (!java_exception) {
+        JSString *err_jsstr;
+        char *err = JS_vsmprintf(format, ap);
+        if (!err)
+            return;
+        err_jsstr = JS_NewString(cx, err, strlen(err));
+        if (!err_jsstr)
+            return;
+        JS_SetPendingException(cx, STRING_TO_JSVAL(err_jsstr));
+        return;
+    }
 
-    if (java_exception) {
-
-        (*jEnv)->ExceptionClear(jEnv);
+    
+    (*jEnv)->ExceptionClear(jEnv);
+    
+    /* Check for JSException */
+    if (njJSException && 
+        (*jEnv)->IsInstanceOf(jEnv, java_exception, njJSException)) {
         
-        /* Check for JSException */
-        if (njJSException && 
-            (*jEnv)->IsInstanceOf(jEnv, java_exception, njJSException)) {
-
-            wrapped_exception_type = 
-                (*jEnv)->GetIntField(jEnv, java_exception,
-                                     njJSException_wrappedExceptionType);
+        wrapped_exception_type = 
+            (*jEnv)->GetIntField(jEnv, java_exception,
+            njJSException_wrappedExceptionType);
+        
+        if (wrapped_exception_type != JSTYPE_EMPTY) {
+            java_obj = 
+                (*jEnv)->GetObjectField(jEnv, java_exception, 
+                njJSException_wrappedException);
+            
+            if ((java_obj == NULL) && 
+                (wrapped_exception_type == JSTYPE_OBJECT)) {
+                js_exception = JSVAL_NULL;
+            } else { 
+                java_class = (*jEnv)->GetObjectClass(jEnv, java_obj); 
+                class_descriptor = jsj_GetJavaClassDescriptor(cx, jEnv, java_class);
+                /* OK to delete ref, since above call adds global ref */
+                (*jEnv)->DeleteLocalRef(jEnv, java_class);  
                 
-            if (wrapped_exception_type != JSTYPE_EMPTY) {
-                java_obj = 
-                    (*jEnv)->GetObjectField(jEnv, java_exception, 
-                                            njJSException_wrappedException);
-
-                if ((java_obj == NULL) && 
-                    (wrapped_exception_type == JSTYPE_OBJECT)) {
-                    js_exception = JSVAL_NULL;
-                } else { 
-                    java_class = (*jEnv)->GetObjectClass(jEnv, java_obj); 
-                    class_descriptor = jsj_GetJavaClassDescriptor(cx, jEnv, java_class);
-                    /* OK to delete ref, since above call adds global ref */
-                    (*jEnv)->DeleteLocalRef(jEnv, java_class);  
-                    
-                    /* Convert native JS values back to native types. */
-                    switch(wrapped_exception_type) {
-                    case JSTYPE_NUMBER:
-                        if (!jsj_ConvertJavaObjectToJSNumber(cx, jEnv,
-                                                             class_descriptor,
-                                                             java_obj, 
-                                                             &js_exception))
-                            goto do_report;
-                        break;
-                    case JSTYPE_BOOLEAN:
-                        if (!jsj_ConvertJavaObjectToJSBoolean(cx, jEnv,
-                                                              class_descriptor,
-                                                              java_obj, 
-                                                              &js_exception))
-                            goto do_report;
-                        break;
-                    case JSTYPE_STRING:
-                        if (!jsj_ConvertJavaObjectToJSString(cx, jEnv,
-                                                             class_descriptor,
-                                                             java_obj, 
-                                                             &js_exception))
-                            goto do_report;
-                        break;
-                    case JSTYPE_VOID:
-                        js_exception = JSVAL_VOID;
-                        break;
-                    case JSTYPE_OBJECT:
-                    case JSTYPE_FUNCTION:
-                    default:
-                        if ((*jEnv)->IsInstanceOf(jEnv, java_obj, njJSObject)) {
-                            js_exception = OBJECT_TO_JSVAL(jsj_UnwrapJSObjectWrapper(jEnv, java_obj));
-                            if (!js_exception)
-                                goto do_report;                        
-                        } else {
-                            if (!jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, 
-                                                                &js_exception)) 
-                                goto do_report;
-                        }
+                /* Convert native JS values back to native types. */
+                switch(wrapped_exception_type) {
+                case JSTYPE_NUMBER:
+                    if (!jsj_ConvertJavaObjectToJSNumber(cx, jEnv,
+                        class_descriptor,
+                        java_obj, 
+                        &js_exception))
+                        goto error;
+                    break;
+                case JSTYPE_BOOLEAN:
+                    if (!jsj_ConvertJavaObjectToJSBoolean(cx, jEnv,
+                        class_descriptor,
+                        java_obj, 
+                        &js_exception))
+                        goto error;
+                    break;
+                case JSTYPE_STRING:
+                    if (!jsj_ConvertJavaObjectToJSString(cx, jEnv,
+                        class_descriptor,
+                        java_obj, 
+                        &js_exception))
+                        goto error;
+                    break;
+                case JSTYPE_VOID:
+                    js_exception = JSVAL_VOID;
+                    break;
+                case JSTYPE_OBJECT:
+                case JSTYPE_FUNCTION:
+                default:
+                    if ((*jEnv)->IsInstanceOf(jEnv, java_obj, njJSObject)) {
+                        js_exception = OBJECT_TO_JSVAL(jsj_UnwrapJSObjectWrapper(jEnv, java_obj));
+                        if (!js_exception)
+                            goto error;                        
+                    } else {
+                        if (!jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_obj, 
+                            &js_exception)) 
+                            goto error;
                     }
                 }
             }
-        /* Check for internal exception */
-        } else {
-            if (!JSJ_ConvertJavaObjectToJSValue(cx, java_exception,
-                                                &js_exception)) {
-                goto do_report;
-            }
         }
-        
-        /* Set pending JS exception and clear the java exception. */
-        JS_SetPendingException(cx, js_exception);                        
-        goto done;
+        /* Check for internal exception */
+    } else {
+        if (!JSJ_ConvertJavaObjectToJSValue(cx, java_exception,
+            &js_exception)) {
+            goto error;
+        }
     }
+    
+    /* Set pending JS exception and clear the java exception. */
+    JS_SetPendingException(cx, js_exception);                        
+    goto done;
 
-do_report:
+error:
     
     JS_ASSERT(0);
     jsj_LogError("Out of memory while attempting to throw JSException\n");
@@ -411,7 +420,7 @@ jsj_GetJavaArrayLength(JSContext *cx, JNIEnv *jEnv, jarray java_array)
 static JSJavaThreadState *the_java_jsj_env = NULL;
 
 JSJavaThreadState *
-jsj_MapJSContextToJSJThread(JSContext *cx, JNIEnv **envp)
+jsj_EnterJava(JSContext *cx, JNIEnv **envp)
 {
     JSJavaThreadState *jsj_env;
     char *err_msg;
@@ -429,11 +438,22 @@ jsj_MapJSContextToJSJThread(JSContext *cx, JNIEnv **envp)
         }
         return NULL;
     }
-    /* need to assign the context field. */
+
+    JS_ASSERT((jsj_env->recursion_depth == 0) || (jsj_env->cx == cx));
+    jsj_env->recursion_depth++;
     jsj_env->cx = cx;
+
     if (envp)
         *envp = jsj_env->jEnv;
     return jsj_env;
+}
+
+extern void
+jsj_ExitJava(JSJavaThreadState *jsj_env)
+{
+    JS_ASSERT(jsj_env->recursion_depth > 0);
+    if (--jsj_env->recursion_depth == 0)
+	jsj_env->cx = NULL;
 }
 
 /**

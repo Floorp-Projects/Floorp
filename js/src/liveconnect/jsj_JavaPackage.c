@@ -118,6 +118,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     char *subPath, *newPath;
     const char *path;
     JNIEnv *jEnv;
+    JSJavaThreadState *jsj_env;
 
     /* Painful hack for pre_define_java_packages() */
     if (quiet_resolve_failure)
@@ -148,7 +149,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
         return JS_FALSE;
     }
 
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
+    jsj_env = jsj_EnterJava(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
 
@@ -235,6 +236,7 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     
 out:
     free(newPath);
+    jsj_ExitJava(jsj_env);
     return ok;
 }
 
