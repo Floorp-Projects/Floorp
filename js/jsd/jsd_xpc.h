@@ -29,7 +29,7 @@
  * file under either the MPL or the GPL.
  *
  * Contributor(s):
- *  
+ *   Robert Ginda, <rginda@netscape.com>
  *
  */
 
@@ -44,34 +44,6 @@
  * reflected jsd data structures
  *******************************************************************************/
 
-class jsdThreadState : public jsdIThreadState
-{
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_JSDITHREADSTATE
-
-    /* you'll normally use use FromPtr() instead of directly constructing one */
-    jsdThreadState (JSDThreadState *aThreadState) : mThreadState(aThreadState)
-    {
-        NS_INIT_ISUPPORTS();
-    }
-
-    /* XXX keep track of these somehow, so we don't create new wrapper if we've
-     * got one already */
-    static jsdIThreadState *FromPtr (JSDThreadState *aThreadState)
-    {
-        jsdIThreadState *rv = new jsdThreadState (aThreadState);
-        NS_IF_ADDREF(rv);
-        return rv;
-    }
-
-  private:
-    jsdThreadState(); /* no implementation */
-    jsdThreadState(const jsdThreadState&); /* no implementation */
-    
-    JSDThreadState *mThreadState;
-};
-
 class jsdContext : public jsdIContext
 {
   public:
@@ -82,24 +54,99 @@ class jsdContext : public jsdIContext
     jsdContext (JSDContext *aCx) : mCx(aCx)
     {
         NS_INIT_ISUPPORTS();
-        printf ("++++++ jsdContext: %i\n", mRefCnt);
+        printf ("++++++ jsdContext\n");
     }
 
-    /* XXX keep track of these somehow, so we don't create new wrapper if we've
-     * got one already */
     static jsdIContext *FromPtr (JSDContext *aCx)
     {
-        jsdIContext *rv = new jsdContext (aCx);
-        NS_IF_ADDREF(rv);
+        if (!aCx)
+            return 0;
+        
+        void *data = JSD_GetContextPrivate (aCx);
+        jsdIContext *rv;
+        
+        if (data) {
+            rv = NS_STATIC_CAST(jsdIContext *, data);
+        } else {
+            rv = new jsdContext (aCx);
+            NS_IF_ADDREF(rv);  // addref for the SetContextPrivate
+            JSD_SetContextPrivate (aCx, NS_STATIC_CAST(void *, rv));
+        }
+        
+        NS_IF_ADDREF(rv); // addref for the return value
         return rv;
     }
 
-    virtual ~jsdContext() { printf ("------ ~jsdContext: %i\n", mRefCnt); }
+    virtual ~jsdContext() { printf ("------ ~jsdContext\n"); }
   private:            
     jsdContext(); /* no implementation */
     jsdContext(const jsdContext&); /* no implementation */
     
     JSDContext *mCx;
+};
+
+class jsdObject : public jsdIObject
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDIOBJECT
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdObject (JSDContext *aCx, JSDObject *aObject) :
+        mCx(aCx), mObject(aObject)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    static jsdIObject *FromPtr (JSDContext *aCx,
+                                JSDObject *aObject)
+    {
+        if (!aObject)
+            return 0;
+        
+        jsdIObject *rv = new jsdObject (aCx, aObject);
+        NS_IF_ADDREF(rv);
+        return rv;
+    }
+
+  private:
+    jsdObject(); /* no implementation */
+    jsdObject(const jsdObject&); /* no implementation */
+
+    JSDContext  *mCx;
+    JSDObject   *mObject;
+};
+
+class jsdProperty : public jsdIProperty
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDIPROPERTY
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdProperty (JSDContext *aCx, JSDProperty *aProperty) :
+        mCx(aCx), mProperty(aProperty)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    static jsdIProperty *FromPtr (JSDContext *aCx,
+                                  JSDProperty *aProperty)
+    {
+        if (!aProperty)
+            return 0;
+        
+        jsdIProperty *rv = new jsdProperty (aCx, aProperty);
+        NS_IF_ADDREF(rv);
+        return rv;
+    }
+
+  private:
+    jsdProperty(); /* no implementation */
+    jsdProperty(const jsdProperty&); /* no implementation */
+
+    JSDContext  *mCx;
+    JSDProperty *mProperty;
 };
 
 class jsdScript : public jsdIScript
@@ -114,12 +161,23 @@ class jsdScript : public jsdIScript
         NS_INIT_ISUPPORTS();
     }
 
-    /* XXX keep track of these somehow, so we don't create new wrapper if we've
-     * got one already */
     static jsdIScript *FromPtr (JSDContext *aCx, JSDScript *aScript)
     {
-        jsdIScript *rv = new jsdScript (aCx, aScript);
-        NS_IF_ADDREF(rv);
+        if (!aScript)
+            return 0;
+
+        void *data = JSD_GetScriptPrivate (aScript);
+        jsdIScript *rv;
+        
+        if (data) {
+            rv = NS_STATIC_CAST(jsdIScript *, data);
+        } else {
+            rv = new jsdScript (aCx, aScript);
+            NS_IF_ADDREF(rv);  // addref for the SetScriptPrivate
+            JSD_SetScriptPrivate (aScript, NS_STATIC_CAST(void *, rv));
+        }
+        
+        NS_IF_ADDREF(rv); // addref for the return value
         return rv;
     }
 
@@ -129,6 +187,121 @@ class jsdScript : public jsdIScript
     
     JSDContext *mCx;
     JSDScript  *mScript;
+};
+
+class jsdStackFrame : public jsdIStackFrame
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDISTACKFRAME
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdStackFrame (JSDContext *aCx, JSDThreadState *aThreadState,
+                   JSDStackFrameInfo *aStackFrameInfo) :
+        mCx(aCx), mThreadState(aThreadState), mStackFrameInfo(aStackFrameInfo)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    /* XXX These things are only valid for a short period of time, they reflect
+     * state in the js engine that will go away after stepping past wherever
+     * we were stopped at when this was created.  We could keep a list of every
+     * instance of this we've created, and "invalidate" them before we let the
+     * engine continue.  The next time we need a threadstate, we can search the
+     * list to find an invalidated one, and just reuse it.
+     */
+    static jsdIStackFrame *FromPtr (JSDContext *aCx, 
+                                    JSDThreadState *aThreadState,
+                                    JSDStackFrameInfo *aStackFrameInfo)
+    {
+        if (!aStackFrameInfo)
+            return 0;
+        
+        jsdIStackFrame *rv = new jsdStackFrame (aCx, aThreadState,
+                                                aStackFrameInfo);
+        NS_IF_ADDREF(rv);
+        return rv;
+    }
+
+  private:
+    jsdStackFrame(); /* no implementation */
+    jsdStackFrame(const jsdStackFrame&); /* no implementation */
+
+    JSDContext     *mCx;
+    JSDThreadState *mThreadState;
+    JSDStackFrameInfo *mStackFrameInfo;
+};
+
+class jsdThreadState : public jsdIThreadState
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDITHREADSTATE
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdThreadState (JSDContext *aCx, JSDThreadState *aThreadState) :
+        mCx(aCx), mThreadState(aThreadState)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    /* XXX These things are only valid for a short period of time, they reflect
+     * state in the js engine that will go away after stepping past wherever
+     * we were stopped at when this was created.  We could keep a list of every
+     * instance of this we've created, and "invalidate" them before we let the
+     * engine continue.  The next time we need a threadstate, we can search the
+     * list to find an invalidated one, and just reuse it.
+     */
+    static jsdIThreadState *FromPtr (JSDContext *aCx,
+                                     JSDThreadState *aThreadState)
+    {
+        if (!aThreadState)
+            return 0;
+        
+        jsdIThreadState *rv = new jsdThreadState (aCx, aThreadState);
+        NS_IF_ADDREF(rv);
+        return rv;
+    }
+
+  private:
+    jsdThreadState(); /* no implementation */
+    jsdThreadState(const jsdThreadState&); /* no implementation */
+
+    JSDContext     *mCx;
+    JSDThreadState *mThreadState;
+};
+
+class jsdValue : public jsdIValue
+{
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_JSDIVALUE
+
+    /* you'll normally use use FromPtr() instead of directly constructing one */
+    jsdValue (JSDContext *aCx, JSDValue *aValue) : mCx(aCx), mValue(aValue)
+    {
+        NS_INIT_ISUPPORTS();
+    }
+
+    static jsdIValue *FromPtr (JSDContext *aCx, JSDValue *aValue)
+    {
+        if (!aValue)
+            return 0;
+
+        jsdIValue *rv;
+        rv = new jsdValue (aCx, aValue);
+        NS_IF_ADDREF(rv);
+        return rv;
+    }
+
+    virtual ~jsdValue() { JSD_DropValue (mCx, mValue); }
+    
+  private:
+    jsdValue(); /* no implementation */
+    jsdValue (const jsdScript&); /* no implementation */
+    
+    JSDContext *mCx;
+    JSDValue  *mValue;
 };
 
 /******************************************************************************
@@ -149,20 +322,21 @@ class jsdService : public jsdIDebuggerService
     NS_DECL_ISUPPORTS
     NS_DECL_JSDIDEBUGGERSERVICE
 
-    jsdService() : mJSrt(0), mJSDcx(0), mDebugBreakHook(0), mDebuggerHook(0),
-                   mInterruptHook(0), mScriptHook(0)
+    jsdService() : mNestedLoopLevel(0), mJSrt(0), mJSDcx(0), mDebugBreakHook(0),
+                   mDebuggerHook(0), mInterruptHook(0), mScriptHook(0)
     {
         NS_INIT_ISUPPORTS();
     }
     virtual ~jsdService() { }
     
   private:
-    JSRuntime *mJSrt;
+    PRUint32    mNestedLoopLevel;
+    JSRuntime  *mJSrt;
     JSDContext *mJSDcx;
     nsCOMPtr<jsdIExecutionHook> mDebugBreakHook;
     nsCOMPtr<jsdIExecutionHook> mDebuggerHook;
     nsCOMPtr<jsdIExecutionHook> mInterruptHook;
-    nsCOMPtr<jsdIScriptHook> mScriptHook;
+    nsCOMPtr<jsdIScriptHook>    mScriptHook;
 };
 
 #endif /* JSDSERVICE_H___ */
