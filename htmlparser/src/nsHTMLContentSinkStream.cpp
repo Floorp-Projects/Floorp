@@ -473,8 +473,6 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
   if (mUnicodeEncoder == nsnull)
     return;
 
-#define CH_NBSP 160
-
   PRInt32       length = htmlstr.Length();
   nsresult      result;
 
@@ -491,14 +489,20 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
     if (NS_SUCCEEDED(result))
       result = mUnicodeEncoder->Finish(mBuffer,&temp);
 
-
+#if 0
+    // Do some conversions to make up for the unicode encoder's foibles:
+    PRInt32 nbsp = nsHTMLEntities::EntityToUnicode(nsCAutoString("nbsp"));
+    PRInt32 quot = nsHTMLEntities::EntityToUnicode(nsCAutoString("quot"));
     for (PRInt32 i = 0; i < mBufferLength; i++)
     {
-      if (mBuffer[i] == char(CH_NBSP))
+      if (mBuffer[i] == quot)
+        mBuffer[i] = '"';
+      // I don't know why this nbsp mapping was here ...
+      else if (mBuffer[i] == nbsp)
         mBuffer[i] = ' ';
     }
   }
-  
+#endif
 }
 
 
@@ -535,7 +539,6 @@ void nsHTMLContentSinkStream::Write(const nsString& aString)
   }
 }
 
-
 void nsHTMLContentSinkStream::Write(const char* aData)
 {
   if (mStream)
@@ -561,10 +564,6 @@ void nsHTMLContentSinkStream::Write(char aData)
     mString->Append(aData);
   }
 }
-
-
-
-
 
 
 /**
@@ -1007,9 +1006,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   if (mHTMLStackPos > 0)
     tag = mHTMLTagStack[mHTMLStackPos-1];
   
-  PRBool    preformatted = PR_FALSE;
-
-
+  PRBool preformatted = PR_FALSE;
 
   for (PRInt32 i = mHTMLStackPos-1; i >= 0; i--)
   {

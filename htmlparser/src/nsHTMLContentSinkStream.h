@@ -70,8 +70,8 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   nsHTMLContentSinkStream(nsIOutputStream* aOutStream, 
                           nsString* aOutString,
                           const nsString* aCharsetOverride,
-                          PRBool aDoFormat = PR_TRUE, 
-                          PRBool aDoHeader = PR_TRUE); 
+                          PRBool aDoFormat, 
+                          PRBool aDoHeader);
 
   /**
    * virtual destructor

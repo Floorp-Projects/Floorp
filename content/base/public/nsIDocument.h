@@ -285,8 +285,6 @@ public:
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode) = 0;
 
   /* Helper methods to help determine the logical positioning of content */
-  virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const = 0;
-  virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const = 0;
   virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const = 0;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const = 0;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const = 0;
