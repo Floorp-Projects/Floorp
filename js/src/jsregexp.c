@@ -137,7 +137,7 @@ struct RENode {
     union {
         void        *kid2;      /* second operand */
         jsint       num;        /* could be a number */
-        jsint       parenIndex; /* or a parenthesis index */
+        uint16      parenIndex; /* or a parenthesis index */
         struct {                /* or a quantifier range */
             uint16  min;
             uint16  max;
@@ -224,7 +224,7 @@ typedef struct REBackTrackData {
     jsbytecode *backtrack_pc;       /* where to backtrack to */
     jsbytecode backtrack_op;
     const jschar *cp;               /* index in text of match at backtrack */
-    intN parenIndex;                /* start index of saved paren contents */
+    uint16 parenIndex;              /* start index of saved paren contents */
     uint16 parenCount;              /* # of saved paren contents */
     uint16 precedingStateTop;       /* number of parent states */
     /* saved parent states follow */
@@ -667,21 +667,76 @@ out:
 }
 
 /*
- * Extract and return a decimal value at state->cp, the
- * initial character 'c' has already been read.
+ * Hack two bits in CompilerState.flags, for use within FindParenCount to flag
+ * its being on the stack, and to propagate errors to its callers.
  */
-static intN
-GetDecimalValue(jschar c, CompilerState *state)
+#define JSREG_FIND_PAREN_COUNT  0x8000
+#define JSREG_FIND_PAREN_ERROR  0x4000
+
+/*
+ * Magic return value from FindParenCount and GetDecimalValue, to indicate
+ * overflow beyond GetDecimalValue's max parameter, or a computed maximum if
+ * its findMax parameter is non-null.
+ */
+#define OVERFLOW_VALUE          ((uintN)-1)
+
+static uintN
+FindParenCount(CompilerState *state)
 {
-    intN value = JS7_UNDEC(c);
+    CompilerState temp;
+    int i;
+
+    if (state->flags & JSREG_FIND_PAREN_COUNT)
+        return OVERFLOW_VALUE;
+
+    /*
+     * Copy state into temp, flag it so we never report an invalid backref,
+     * and reset its state to parse the entire regexp.  This is obviously
+     * suboptimal, but GetDecimalValue calls us only if a backref appears to
+     * refer to a forward parenthetical, which is rare.
+     */
+    temp = *state;
+    temp.flags |= JSREG_FIND_PAREN_COUNT;
+    temp.cp = temp.cpbegin;
+    temp.parenCount = 0;
+    temp.classCount = 0;
+    temp.progLength = 0;
+    temp.treeDepth = 0;
+    for (i = 0; i < CLASS_CACHE_SIZE; i++)
+        temp.classCache[i].start = NULL;
+
+    if (!ParseRegExp(&temp)) {
+        state->flags |= JSREG_FIND_PAREN_ERROR;
+        return OVERFLOW_VALUE;
+    }
+    return temp.parenCount;
+}
+
+/*
+ * Extract and return a decimal value at state->cp.  The initial character c
+ * has already been read.  Return OVERFLOW_VALUE if the result exceeds max.
+ * Callers who pass a non-null findMax should test JSREG_FIND_PAREN_ERROR in
+ * state->flags to discover whether an error occurred under findMax.
+ */
+static uintN
+GetDecimalValue(jschar c, uintN max, uintN (*findMax)(CompilerState *state),
+                CompilerState *state)
+{
+    uintN value = JS7_UNDEC(c);
+    JSBool overflow = (value > max && (!findMax || value > findMax(state)));
+
+    /* The following restriction allows simpler overflow checks. */
+    JS_ASSERT(max <= ((uintN)-1 - 9) / 10);
     while (state->cp < state->cpend) {
         c = *state->cp;
         if (!JS7_ISDEC(c))
             break;
-        value = (10 * value) + JS7_UNDEC(c);
+        value = 10 * value + JS7_UNDEC(c);
+        if (!overflow && value > max && (!findMax || value > findMax(state)))
+            overflow = JS_TRUE;
         ++state->cp;
     }
-    return value;
+    return overflow ? OVERFLOW_VALUE : value;
 }
 
 /*
@@ -954,7 +1009,15 @@ ParseTerm(CompilerState *state)
             return JS_TRUE;
         /* Decimal escape */
         case '0':
-            if (JS_HAS_STRICT_OPTION(state->context)){
+            if (JS_HAS_STRICT_OPTION(state->context)) {
+                if (!js_ReportCompileErrorNumber(state->context,
+                                                 state->tokenStream,
+                                                 NULL,
+                                                 JSREPORT_WARNING |
+                                                 JSREPORT_STRICT,
+                                                 JSMSG_INVALID_BACKREF)) {
+                    return JS_FALSE;
+                }
                 c = 0;
             } else {
      doOctal:
@@ -989,13 +1052,27 @@ ParseTerm(CompilerState *state)
         case '8':
         case '9':
             termStart = state->cp - 1;
-            num = (uintN)GetDecimalValue(c, state);
-            if (num > 9 &&
-                num > state->parenCount &&
-                !JS_HAS_STRICT_OPTION(state->context)) {
-                state->cp = termStart;
-                goto doOctal;
+            num = GetDecimalValue(c, state->parenCount, FindParenCount, state);
+            if (state->flags & JSREG_FIND_PAREN_ERROR)
+                return JS_FALSE;
+            if (num == OVERFLOW_VALUE) {
+                if (!JS_HAS_STRICT_OPTION(state->context)) {
+                    state->cp = termStart;
+                    goto doOctal;
+                }
+                if (!js_ReportCompileErrorNumber(state->context,
+                                                 state->tokenStream,
+                                                 NULL,
+                                                 JSREPORT_WARNING |
+                                                 JSREPORT_STRICT,
+                                                 (c >= '8')
+                                                 ? JSMSG_INVALID_BACKREF
+                                                 : JSMSG_BAD_BACKREF)) {
+                    return JS_FALSE;
+                }
+                num = 0x10000;
             }
+            JS_ASSERT(1 <= num && num <= 0x10000);
             state->result = NewRENode(state, REOP_BACKREF);
             if (!state->result)
                 return JS_FALSE;
@@ -1177,7 +1254,7 @@ ParseQuantifier(CompilerState *state)
             if (!state->result)
                 return JS_FALSE;
             state->result->u.range.min = 1;
-            state->result->u.range.max = -1;
+            state->result->u.range.max = (uint16)-1;
             /* <PLUS>, <next> ... <ENDCHILD> */
             state->progLength += 4;
             goto quantifier;
@@ -1186,7 +1263,7 @@ ParseQuantifier(CompilerState *state)
             if (!state->result)
                 return JS_FALSE;
             state->result->u.range.min = 0;
-            state->result->u.range.max = -1;
+            state->result->u.range.max = (uint16)-1;
             /* <STAR>, <next> ... <ENDCHILD> */
             state->progLength += 4;
             goto quantifier;
@@ -1202,18 +1279,17 @@ ParseQuantifier(CompilerState *state)
         case '{':       /* balance '}' */
             {
                 intN err;
-                intN min = 0;
-                intN max = -1;
+                uintN min, max;
                 jschar c;
                 const jschar *errp = state->cp++;
 
                 c = *state->cp;
                 if (JS7_ISDEC(c)) {
                     ++state->cp;
-                    min = GetDecimalValue(c, state);
+                    min = GetDecimalValue(c, 0xFFFF, NULL, state);
                     c = *state->cp;
 
-                    if ((min + 1) >> 16) {
+                    if (min == OVERFLOW_VALUE) {
                         err = JSMSG_MIN_TOO_BIG;
                         goto quantError;
                     }
@@ -1221,9 +1297,9 @@ ParseQuantifier(CompilerState *state)
                         c = *++state->cp;
                         if (JS7_ISDEC(c)) {
                             ++state->cp;
-                            max = GetDecimalValue(c, state);
+                            max = GetDecimalValue(c, 0xFFFF, NULL, state);
                             c = *state->cp;
-                            if ((max + 1) >> 16) {
+                            if (max == OVERFLOW_VALUE) {
                                 err = JSMSG_MAX_TOO_BIG;
                                 goto quantError;
                             }
@@ -1231,6 +1307,8 @@ ParseQuantifier(CompilerState *state)
                                 err = JSMSG_OUT_OF_ORDER;
                                 goto quantError;
                             }
+                        } else {
+                            max = (uintN)-1;
                         }
                     } else {
                         max = min;
@@ -1648,7 +1726,7 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
 static REBackTrackData *
 PushBackTrackState(REGlobalData *gData, REOp op,
                    jsbytecode *target, REMatchState *x, const jschar *cp,
-                   intN parenIndex, intN parenCount)
+                   uintN parenIndex, intN parenCount)
 {
     intN i;
     REBackTrackData *result =
@@ -2065,7 +2143,7 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
 {
     REMatchState *result = NULL;
     jschar matchCh;
-    intN parenIndex;
+    uintN parenIndex;
     intN offset, length, index;
     jsbytecode *pc = *startpc;  /* pc has already been incremented past op */
     jschar *source;
@@ -2476,11 +2554,11 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
             case REOP_STAR:
                 curState->u.quantifier.min = 0;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = (uint16)-1;
                 goto quantcommon;
             case REOP_PLUS:
                 curState->u.quantifier.min = 1;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = (uint16)-1;
                 goto quantcommon;
             case REOP_OPT:
                 curState->u.quantifier.min = 0;
@@ -2590,11 +2668,11 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
             case REOP_MINIMALSTAR:
                 curState->u.quantifier.min = 0;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = (uint16)-1;
                 goto minimalquantcommon;
             case REOP_MINIMALPLUS:
                 curState->u.quantifier.min = 1;
-                curState->u.quantifier.max = -1;
+                curState->u.quantifier.max = (uint16)-1;
                 goto minimalquantcommon;
             case REOP_MINIMALOPT:
                 curState->u.quantifier.min = 0;
