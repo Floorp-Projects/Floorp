@@ -70,11 +70,7 @@ CPPSRCS		= \
 		nsTreeRowFrame.cpp \
 		nsTreeTwistyListener.cpp \
 		nsTreeItemDragCapturer.cpp \
-    nsXULTreeFrame.cpp \
-    nsXULTreeGroupFrame.cpp \
-    nsXULTreeSliceFrame.cpp \
-    nsXULTreeCellFrame.cpp \
-		nsSpinnerFrame.cpp \
+                nsSpinnerFrame.cpp \
 		nsScrollbarFrame.cpp \
 		nsScrollbarButtonFrame.cpp \
 		nsSliderFrame.cpp \
