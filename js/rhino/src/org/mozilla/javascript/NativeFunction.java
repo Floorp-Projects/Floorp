@@ -747,17 +747,6 @@ public class NativeFunction extends BaseFunction {
         return argCount;
     }
 
-    public String getFunctionName() {
-        if (functionName == null)
-            return "";
-        if (functionName.equals("anonymous")) {
-            Context cx = Context.getCurrentContext();
-            if (cx != null && cx.getLanguageVersion() == Context.VERSION_1_2)
-                return "";
-        }
-        return functionName;
-    }
-
     /**
      * For backwards compatibility keep an old method name used by
      * Batik and possibly others.
