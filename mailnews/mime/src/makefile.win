@@ -109,7 +109,6 @@ OBJS=											\
 # EXTERNAL (OLD) DEPENDENCIES - SHOULD EVENTUALLY BE REMOVED 
 # WHEN NEW WORLD FUNCTIONS ARE FOUND 
 		.\$(OBJDIR)\nsMimeTransition.obj	\
-		.\$(OBJDIR)\oldi18n.obj				\
 		$(NULL)
 
 

@@ -52,10 +52,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 // BEGIN EXTERNAL DEPENDANCY
 
 extern "C"  char * MIME_StripContinuations(char *original);
-/* These are needed by other libmime functions */
-extern "C" PRInt16 INTL_DefaultWinCharSetID(char a) { return a; }
-extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "ISO-8859-1"; }
-extern "C" PRInt16 INTL_CharSetNameToID(char *charset) { return 0; }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,37 +310,9 @@ static char *   intlmime_encode_qp_buf(char *subject);
 
 
 static PRBool intlmime_is_mime_part2_header(const char *header);
-#if 0
-static  char *  intl_decode_mime_part2_str(const char *, int , char* );
-#endif
-
-#if 0
-/*      We probably should change these into private instead of PUBLIC */
-static char *DecodeBase64Buffer(char *subject);
-static char *EncodeBase64Buffer(char *subject, size_t size);
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-/* 4.0: Made Encode & Decode public for use by libpref; added size param.
- */
-static char *EncodeBase64Buffer(char *subject, size_t size)
-{
-  /* This function should be obsolete */
-  /* We should not make this public in libi18n */
-  /* We should use the new Base64 Encoder wrote by jwz in libmime */
-  return intlmime_encode_base64_buf(subject, size);
-}
-
-static char *DecodeBase64Buffer(char *subject)
-{
-  /* This function should be obsolete */
-  /* We should not make this public in libi18n */
-  /* We should use the new Base64 Decoder wrote by jwz in libmime */
-  return intlmime_decode_base64_buf(subject);
-}
-#endif
 
 static char basis_64[] =
    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -1456,25 +1424,6 @@ PRBool MimeCharsetConverterClass::NeedCharsetConversion(const nsString& from_cha
 // BEGIN PUBLIC INTERFACE
 extern "C" {
 #define PUBLIC
-PUBLIC char *INTL_DecodeMimePartIIStr(const char *header, PRInt16 wincsid, PRBool dontConvert)
-{
-// Obsolescent
-  return nsCRT::strdup(header);
-}
-PUBLIC char *INTL_EncodeMimePartIIStr(char *subject, PRInt16 wincsid, PRBool bUseMime)
-{
-// Obsolescent
-  return nsCRT::strdup(subject);
-}
-/*  This is a routine used to re-encode subject lines for use in the summary file.
-    The reason why we specify a different length here is because we are not encoding
-    the string for use in a mail message, but rather want to stuff as much content
-    into the subject string as possible. */
-PUBLIC char *INTL_EncodeMimePartIIStr_VarLen(char *subject, PRInt16 wincsid, PRBool bUseMime, int encodedWordSize)
-{
-// Obsolescent
-  return nsCRT::strdup(subject);
-}
 
 PRInt32 MIME_ConvertString(const char* from_charset, const char* to_charset,
                            const char* inCstring, char** outCstring)

@@ -74,7 +74,6 @@ nsMsgSendPart::nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charse
   
   m_firstBlock = PR_FALSE;
   m_needIntlConversion = PR_FALSE;
-  m_intlDocToMailConverter = NULL;
   
   m_mainpart = PR_FALSE;
   m_just_hit_CR = PR_FALSE;
@@ -631,7 +630,6 @@ nsMsgSendPart::Write()
   m_firstBlock = PR_TRUE;
   /* only convert if we need to tag charset */
   m_needIntlConversion = mime_type_needs_charset(m_type);
-  m_intlDocToMailConverter = NULL;
   
   if (m_buffer) 
   {

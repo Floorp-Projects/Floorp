@@ -27,7 +27,6 @@
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "xp_core.h"
 #include "xp_file.h"
-#include "intl_csi.h"
 #include "nsMsgZapIt.h"
 #include "nsMsgSend.h"
 
@@ -106,7 +105,6 @@ protected:
 	// Data used while actually writing.
   PRBool              m_firstBlock;
   PRBool              m_needIntlConversion;
-  CCCDataObject       m_intlDocToMailConverter;
 
 	PRBool              m_mainpart;
 

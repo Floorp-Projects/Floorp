@@ -28,7 +28,6 @@
  */
 #include "nsCOMPtr.h"
 #include "modmimee.h"
-#include "libi18n.h"
 #include "mimeobj.h"
 #include "modlmime.h"
 #include "mimei.h"

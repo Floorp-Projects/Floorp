@@ -23,7 +23,6 @@
 #include "nsCOMPtr.h"
 #include "msgCore.h"
 #include "mimei.h"
-#include "libi18n.h"
 #include "modmime.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -901,7 +900,6 @@ mime_decode_filename(char *name)
 {
 	char *s = name, *d = name;
 	char *cvt, *returnVal = NULL;
-	PRInt16 mail_csid = CS_DEFAULT, win_csid = CS_DEFAULT;
   char charsetName[128];
   charsetName[0] = 0;
   
@@ -922,12 +920,6 @@ mime_decode_filename(char *name)
 	s = PL_strstr(returnVal, "=?");
 	if (s)
 	{
-		s += 2;
-		d = PL_strchr(s, '?');
-		if (d) *d = '\0';
-		mail_csid = INTL_CharSetNameToID(s);
-		if (d) *d = '?';
-		win_csid = INTL_DocToWinCharSetID(mail_csid);
 
     cvt = MIME_DecodeMimePartIIStr(returnVal, charsetName, PR_TRUE);
 
@@ -947,24 +939,6 @@ mime_decode_filename(char *name)
     }
 	}
 
-//TODO: naoki - We now have a charset name returned and no need for the hack.
-// Check if charset is JIS then apply the conversion.
-	/* Seriously ugly hack. If the first three characters of the filename 
-	   are <ESC>$B, then we know the filename is in JIS and should be 
-	   converted to either SJIS or EUC-JP. */ 
-	if ((nsCRT::strlen(returnVal) > 3) && 
-		(returnVal[0] == 0x1B) && (returnVal[1] == '$') && (returnVal[2] == 'B')) 
-	  { 
-		PRInt16 dest_csid = INTL_DocToWinCharSetID(CS_JIS); 
-		
-		cvt = (char *) INTL_ConvertLineWithoutAutoDetect(CS_JIS, dest_csid, (unsigned char *)returnVal, nsCRT::strlen(returnVal)); 
-		if (cvt && cvt != returnVal) 
-		  { 
-			if (returnVal != name) PR_Free(returnVal); 
-			returnVal = cvt; 
-		  } 
-	  } 
-	
 	return returnVal;
 }
 

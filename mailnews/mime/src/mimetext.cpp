@@ -26,7 +26,6 @@
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "mimetext.h"
-#include "libi18n.h"
 #include "mimebuf.h"
 #include "mimethtm.h"
 

@@ -50,8 +50,6 @@ DEPTH = ..
 #INSTALL_DIR=$(XPDIST)\include
 EXPORTS = \
 		csid.h \
-		intl_csi.h \
-		libi18n.h \
 		merrors.h \
 		minicom.h \
 		msgtypes.h \

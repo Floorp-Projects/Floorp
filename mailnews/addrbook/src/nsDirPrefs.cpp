@@ -36,7 +36,7 @@
 
 #include "plstr.h"
 #include "prmem.h"
-#include "libi18n.h"
+#include "csid.h"
 #include "xp_str.h"
 #include "xp_file.h"
 #include "prprf.h"
@@ -4375,26 +4375,6 @@ PRBool DIR_IsUriAttribute (DIR_Server *s, const char *attrib)
 	return PR_FALSE;
 }
 
-#if 0
-static void dir_PushStringToPrefs (DIR_Server *server, char **curVal, const char *newVal, const char *name)
-{
-	char buf[256];
-
-	/* Don't do anything if we already have a value and it's the same as the new one */
-	if (   !curVal
-		|| (*curVal && !PL_strcmp(*curVal, newVal)))
-		return;
-
-	if (server->prefName == nsnull)
-		server->prefName = DIR_CreateServerPrefName(server, nsnull);
-
-
-	PR_FREEIF(*curVal);
-	*curVal = PL_strdup(newVal);
-	DIR_SetStringPref (server->prefName, name, buf, *curVal, "");
-}
-#endif 
-
 void DIR_SetAuthDN (DIR_Server *s, const char *dn)
 {
 	char *tmp = nsnull;
@@ -4605,25 +4585,5 @@ char *DIR_ConvertFromServerCharSet(DIR_Server *server, char *src, PRInt16 dstCSI
 
 char *DIR_ConvertString(PRInt16 srcCSID, PRInt16 dstCSID, const char *string)
 {
-	if (srcCSID == CS_DEFAULT || dstCSID == CS_DEFAULT)
-	{
-		PRInt16 defaultCSID = CS_UTF8;
-//		PRInt16 defaultCSID = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
-
-		if (srcCSID == CS_DEFAULT)
-			srcCSID = defaultCSID;
-		if (dstCSID == CS_DEFAULT)
-			dstCSID = defaultCSID;
-	}
-
-	if (srcCSID == dstCSID)
-		return PL_strdup(string);
-	else
-	{
-//		char *cvt = (char *)INTL_ConvertLineWithoutAutoDetect(srcCSID, dstCSID, (unsigned char *)string, PL_strlen(string));
-		char *cvt = nsnull;
-		if (!cvt || cvt == string) /* did we fail or was no conversion necessary (cvs == string */
-			cvt = PL_strdup(string);
-		return cvt;
-	}
+	return PL_strdup(string);
 }

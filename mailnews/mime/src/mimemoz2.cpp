@@ -22,7 +22,7 @@
  */
 #include "nsCOMPtr.h"
 #include "modlmime.h"
-#include "libi18n.h"
+#include "xp_core.h"
 #include "nsCRT.h"
 #include "mimeobj.h"
 #include "mimemsg.h"
@@ -34,7 +34,6 @@
 #include "mimebuf.h"
 #include "mimemapl.h"
 #include "prprf.h"
-#include "intl_csi.h"
 #include "mimei.h"      /* for moved MimeDisplayData struct */
 #include "mimebuf.h"
 #include "prmem.h"
@@ -1165,38 +1164,6 @@ mime_get_main_object(MimeObject* obj)
   return NULL;
 }
 
-#if 0
-int
-MimeGetAttachmentCount(MWContext* context)
-{
-  MimeObject* obj;
-  MimeContainer* cobj;
-  PRBool isMsgBody = PR_FALSE, isAlternativeOrRelated = PR_FALSE;
-
-  PR_ASSERT(context);
-  if (!context ||
-      !context->mime_data ||
-      !context->mime_data->last_parsed_object) {
-    return 0;
-  }
-  obj = mime_get_main_object(context->mime_data->last_parsed_object);
-  if (!mime_subclass_p(obj->clazz, (MimeObjectClass*) &mimeContainerClass))
-    return 0;
-
-  cobj = (MimeContainer*) obj;
-
-  isMsgBody = MimeObjectChildIsMessageBody(obj,
-										   &isAlternativeOrRelated);
-
-  if (isAlternativeOrRelated)
-	  return 0;
-  else if (isMsgBody)
-	  return cobj->nchildren - 1;
-  else
-	  return cobj->nchildren;
-}
-#endif
-
 PRBool MimeObjectChildIsMessageBody(MimeObject *obj, 
 									 PRBool *isAlternativeOrRelated)
 {
@@ -1257,12 +1224,6 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 	return bRet;
 }
 
-#if 0
-extern int MIME_HasAttachments(MWContext *context)
-{
-	return (context->mime_data && context->mime_data->last_parsed_object->showAttachmentIcon);
-}
-#endif
 //
 // New Stream Converter Interface
 //

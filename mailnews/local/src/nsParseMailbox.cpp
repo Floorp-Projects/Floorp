@@ -33,7 +33,6 @@
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgDBCID.h"
-#include "libi18n.h"
 #include "nsIMailboxUrl.h"
 #include "nsCRT.h"
 #include "nsFileStream.h"
@@ -952,61 +951,14 @@ int nsParseMailMessageState::ParseEnvelope (const char *line, PRUint32 line_size
 }
 
 #ifdef WE_CONDENSE_MIME_STRINGS
-
-extern "C" 
-{
-	int16 INTL_DefaultMailToWinCharSetID(int16 csid);
-	char *INTL_EncodeMimePartIIStr_VarLen(char *subject, int16 wincsid, PRBool bUseMime,
-											int encodedWordLen);
-}
-
 static char *
 msg_condense_mime2_string(char *sourceStr)
 {
-	int16 string_csid = CS_DEFAULT;
-	int16 win_csid = CS_DEFAULT;
-
 	char *returnVal = nsCRT::strdup(sourceStr);
 	if (!returnVal) 
 		return nsnull;
 	
-	// If sourceStr has a MIME-2 encoded word in it, get the charset
-	// name/ID from the first encoded word. (No, we're not multilingual.)
-	char *p = PL_strstr(returnVal, "=?");
-	if (p)
-	{
-		p += 2;
-		char *q = PL_strchr(p, '?');
-		if (q) *q = '\0';
-		string_csid = INTL_CharSetNameToID(p);
-		win_csid = INTL_DocToWinCharSetID(string_csid);
-		if (q) *q = '?';
-
-		// Decode any MIME-2 encoded strings, to save the overhead.
-		char *cvt = (CS_UTF8 != win_csid) ? INTL_DecodeMimePartIIStr(returnVal, win_csid, PR_FALSE) : nsnull;
-		if (cvt)
-		{
-			if (cvt != returnVal)
-			{
-				PR_FREEIF(returnVal);
-				returnVal = cvt;
-			}
-			// MIME-2 decoding occurred, so re-encode into large encoded words
-			cvt = INTL_EncodeMimePartIIStr_VarLen(returnVal, win_csid, PR_TRUE,
-												MSG_MAXSUBJECTLENGTH - 2);
-			if (cvt && (cvt != returnVal))
-			{
-				XP_FREE(returnVal);		// encoding happened, deallocate decoded text
-				returnVal = MIME_StripContinuations(cvt); // and remove CR+LF+spaces that occur
-			}
-			// else returnVal == cvt, in which case nothing needs to be done
-		}
-		else
-			// no MIME-2 decoding occurred, so strip CR+LF+spaces ourselves
-			MIME_StripContinuations(returnVal);
-	}
-	else if (returnVal)
-		MIME_StripContinuations(returnVal);
+	MIME_StripContinuations(returnVal);
 	
 	return returnVal;
 }

@@ -30,7 +30,6 @@
 #include "prtypes.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "libi18n.h"
 #include "nsVCardObj.h"
 #include "nsVCard.h"
 #include "mimecth.h"
