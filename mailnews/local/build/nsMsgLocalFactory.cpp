@@ -28,8 +28,10 @@
 #include "nsMSGFolderDataSource.h"
 #include "nsMailboxService.h"
 #include "nsLocalMailFolder.h"
+#include "nsParseMailbox.h"
 
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
+static NS_DEFINE_CID(kCMailboxParser, NS_MAILBOXPARSER_CID);
 static NS_DEFINE_CID(kCMailboxService, NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kMailNewsDatasourceCID, NS_MAILNEWSDATASOURCE_CID);
 static NS_DEFINE_CID(kMailNewsResourceCID, NS_MAILNEWSRESOURCE_CID);
@@ -115,6 +117,9 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 	if (mClassID.Equals(kCMailboxUrl)) {
 		inst = NS_STATIC_CAST(nsIMailboxUrl*, new nsMailboxUrl(nsnull, nsnull));
 	}
+	else if (mClassID.Equals(kCMailboxParser)) {
+		inst = new nsMsgMailboxParser();
+	}
 	else if (mClassID.Equals(kCMailboxService)) {
 		inst = new nsMailboxService();
 	}
@@ -181,6 +186,11 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* path)
 
   rv = nsRepository::RegisterComponent(kCMailboxService, nsnull, nsnull, 
                                        path, PR_TRUE, PR_TRUE);
+
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsRepository::RegisterComponent(kCMailboxParser, nsnull, nsnull,
+										path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   // register our RDF datasources:
@@ -209,6 +219,9 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
   if (NS_FAILED(rv)) return rv;
 
   rv = nsRepository::UnregisterFactory(kCMailboxService, path);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsRepository::UnregisterFactory(kCMailboxParser, path);
   if (NS_FAILED(rv)) return rv;
 
   rv = nsRepository::UnregisterComponent(kMailNewsDatasourceCID, path);
