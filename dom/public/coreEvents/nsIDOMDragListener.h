@@ -37,14 +37,28 @@ class nsIDOMDragListener : public nsIDOMEventListener {
 public:
 
   /**
-  * Processes a drag started event
+  * Processes a drag enter event
   * @param aMouseEvent @see nsIDOMEvent.h 
   * @returns whether the event was consumed or ignored. @see nsresult
   */
-  virtual nsresult DragStart(nsIDOMEvent* aMouseEvent) = 0;
+  virtual nsresult DragEnter(nsIDOMEvent* aMouseEvent) = 0;
 
   /**
-   * Processes a drag ending event
+  * Processes a drag over event
+  * @param aMouseEvent @see nsIDOMEvent.h 
+  * @returns whether the event was consumed or ignored. @see nsresult
+  */
+  virtual nsresult DragOver(nsIDOMEvent* aMouseEvent) = 0;
+
+  /**
+  * Processes a drag Exit event
+  * @param aMouseEvent @see nsIDOMEvent.h 
+  * @returns whether the event was consumed or ignored. @see nsresult
+  */
+  virtual nsresult DragExit(nsIDOMEvent* aMouseEvent) = 0;
+
+  /**
+   * Processes a drag drop event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult
    */
