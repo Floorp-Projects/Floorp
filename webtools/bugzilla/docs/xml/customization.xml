@@ -342,6 +342,15 @@
   <section id="cust-hooks">
     <title>Template Hooks</title>
         
+    <warning>
+      <para>
+        Template Hooks require Template Toolkit version 2.12 or
+        above, or the application of a patch.  See <ulink
+        url="http://bugzilla.mozilla.org/show_bug.cgi?id=239112">bug
+        239112</ulink> for details.
+      </para>
+    </warning>
+       
     <para>
       Template hooks are a way for extensions to Bugzilla to insert code
       into the standard Bugzilla templates without modifying the template files
