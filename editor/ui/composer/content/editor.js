@@ -398,7 +398,9 @@ var gEditorDocumentObserver =
 
       case "cmd_bold":
         // Update all style items
+        // cmd_bold is a proxy; see EditorSharedStartup (above) for details
         window.updateCommands("style");
+        window.updateCommands("undo");
         break;
     }
   }
