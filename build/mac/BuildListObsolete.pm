@@ -60,7 +60,7 @@ sub BuildMozilla()
 
 		BuildProjectClean(":lib:mac:NSStdLib:NSStdLib.mcp",										"Stub Library");
 		BuildProjectClean(":lib:mac:MacMemoryAllocator:MemAllocator.mcp",			"Stub Library");
-		BuildProjectClean(":cmd:macfe:projects:client:NavigatorStubs.mcp",		"Stub Library");
+		BuildProjectClean(":cmd:macfe:projects:client:Navigator.mcp",					"Stub Library");
 		
 		BuildProject(":lib:mac:NSRuntime:NSRuntime.mcp");
 		MakeAlias(":lib:mac:NSRuntime:NSRuntimePPCLib", "$dist_dir");
@@ -93,7 +93,7 @@ sub BuildMozilla()
 		MakeAlias(":lib:mac:PowerPlant:PowerPlantPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":modules:zlib:macbuild:zlib.mcp",												"PPC Shared Library$D");
-		MakeAlias(":modules:zlib:macbuild:zlib".$LibD."Lib", "$dist_dir");
+		MakeAlias(":modules:zlib:macbuild:zlibPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":jpeg:macbuild:JPEG.mcp",																"PPC Shared Library$D");
 		MakeAlias(":jpeg:macbuild:JPEGPPC".$LibD."Lib", "$dist_dir");
@@ -107,7 +107,7 @@ sub BuildMozilla()
 		MakeAlias(":js:macbuild:JavaScriptPPC".$LibD."Lib", "$dist_dir");
 		
 		BuildProject(":nav-java:stubs:macbuild:NavJavaStubs.mcp",							"PPC Shared Library$D");
-		MakeAlias(":nav-java:stubs:macbuild:NavJavaDebug".$LibD."Lib", "$dist_dir");
+		MakeAlias(":nav-java:stubs:macbuild:NavJavaPPC".$LibD."Lib", "$dist_dir");
 
 		if ( $main::DEBUG )
 			{
@@ -126,7 +126,7 @@ sub BuildMozilla()
 		BuildProject(":modules:libfont:macbuild:FontBroker.mcp",							"PPC Library$D");
 				
 		BuildProject(":modules:schedulr:macbuild:Schedulr.mcp",								"PPC Shared Library$D");
-		MakeAlias(":modules:schedulr:macbuild:SchedulerPPC".$LibD."Lib", "$dist_dir");
+		MakeAlias(":modules:schedulr:macbuild:Schedulr".$LibD."PPCLib", "$dist_dir");
 		
 		BuildProject(":network:macbuild:network.mcp",													"PPC Library (Debug Moz)");
 		
