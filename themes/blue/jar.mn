@@ -268,6 +268,7 @@ skins/blue.jar:
     navigator/skin/reload.gif                                  (navigator/reload.gif)
     navigator/skin/search.gif                                  (navigator/search.gif)
     navigator/skin/stop.gif                                    (navigator/stop.gif)
+    navigator/skin/navigatorBindings.xml                       (navigator/navigatorBindings.xml)
     communicator/skin/bookmarks/bookmark-folder-closed-sel.gif (communicator/bookmarks/bookmark-folder-closed-sel.gif)
     communicator/skin/bookmarks/bookmark-folder-closed.gif     (communicator/bookmarks/bookmark-folder-closed.gif)
     communicator/skin/bookmarks/bookmark-folder-open-sel.gif   (communicator/bookmarks/bookmark-folder-open-sel.gif)

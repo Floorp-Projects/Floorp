@@ -1,4 +1,9 @@
 
+/**
+ * XXX - The style rules in this file are very old and very bad.
+ *       They need to be given a similar upgrade as classic-win has had.
+ **/
+ 
 /* NEW WIDGET LANDING: <menulist> popup */
 
 /* outer frame */
@@ -139,7 +144,7 @@
       padding             : 0px;
     }
     
-  menulist > menupopup > .internal-box
+  menulist > menupopup > .popup-internal-box
     {
       border-left         : 1px inset #CCCCCC;
       border-right        : 1px inset #CCCCCC;
@@ -155,22 +160,17 @@
 
   menulist > menupopup > menuitem 
     {
-      padding             : 0px;
-      min-width: 0px;
-      max-width: none;
+      padding             : 0px 5px 0px 0px;
+      min-width           : 0px;
+      max-width           : none;
     }
 
-  menulist > menupopup > menuitem > .menu-left 
-    {
-      width               : 13px;
-    }
-
-  menulist > menupopup > menuitem[selected="true"] > .menu-left
+  menulist > menupopup > menuitem[selected="true"] > .menu-iconic-left
     {
       list-style-image    : url(chrome://global/skin/menu-check.gif);
     }
   
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-left
+  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-iconic-left
     {
       list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
     }

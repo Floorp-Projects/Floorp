@@ -46,3 +46,4 @@ install::
 	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
+	$(MAKE_INSTALL) navigatorBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin

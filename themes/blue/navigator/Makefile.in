@@ -48,6 +48,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	search.gif \
 	stop.gif \
 	pageInfo.css \
+	navigatorBindings.xml \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
