@@ -546,7 +546,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     if ( status == PR_SUCCESS )
 		mDirty = PR_FALSE;
     else
-        result = NS_ERROR_FAILURE;
+        result = NS_ERROR_FILE_NOT_FOUND;
 
 	return result;
 }
