@@ -470,15 +470,15 @@ nsFrameUtil::Tag::ToString(nsString& aResult)
   if (type == close) {
     aResult.Append(PRUnichar('/'));
   }
-  aResult.AppendWithConversion(name);
+  aResult.AppendASCII(name);
   if (0 != num) {
     PRInt32 i, n = num;
     for (i = 0; i < n; i++) {
       aResult.Append(PRUnichar(' '));
-      aResult.AppendWithConversion(attributes[i]);
+      aResult.AppendASCII(attributes[i]);
       if (values[i]) {
         aResult.AppendLiteral("=\"");
-        aResult.AppendWithConversion(values[i]);
+        aResult.AppendASCII(values[i]);
         aResult.Append(PRUnichar('\"'));
       }
     }

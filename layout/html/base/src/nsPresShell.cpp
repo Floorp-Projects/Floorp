@@ -7505,7 +7505,7 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
       counter = new IndiReflowCounter(this);
       NS_ASSERTION(counter != nsnull, "null ptr");
       counter->mFrame = aFrame;
-      counter->mName.AssignWithConversion(aName);
+      counter->mName.AssignASCII(aName);
       PL_HashTableAdd(mIndiFrameCounts, key, counter);
     }
     // this eliminates extra counts from super classes

@@ -2258,7 +2258,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
 
-  nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
+  nsAutoString  unitarget; unitarget.AssignASCII(aTarget); // XXX could this be nonascii?
 
   nsCOMPtr<nsIURI> baseURL;
   nsCOMPtr<nsIDocument> doc;

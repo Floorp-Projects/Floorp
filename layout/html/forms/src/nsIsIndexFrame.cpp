@@ -566,7 +566,7 @@ nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, n
   delete [] inBuf;
   
   char* outBuf = nsEscape(convertedBuf, url_XPAlphas);
-  oString.AssignWithConversion(outBuf);
+  oString.AssignASCII(outBuf);
   nsCRT::free(outBuf);
   nsMemory::Free(convertedBuf);
 }

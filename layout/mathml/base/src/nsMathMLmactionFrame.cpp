@@ -429,7 +429,7 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
       PRInt32 selection = (mSelection == mChildCount)? 1 : mSelection + 1;
       char cbuf[10];
       PR_snprintf(cbuf, sizeof(cbuf), "%d", selection);
-      value.AssignWithConversion(cbuf);
+      value.AssignASCII(cbuf);
       PRBool notify = PR_FALSE; // don't yet notify the document
       mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::selection_, value, notify);
 
