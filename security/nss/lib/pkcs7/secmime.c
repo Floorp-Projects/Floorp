@@ -38,7 +38,7 @@
  * Stuff specific to S/MIME policy and interoperability.
  * Depends on PKCS7, but there should be no dependency the other way around.
  *
- * $Id: secmime.c,v 1.3 2004/04/25 15:03:13 gerv%gerv.net Exp $
+ * $Id: secmime.c,v 1.4 2004/06/18 00:38:45 jpierre%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -459,7 +459,7 @@ smime_choose_cipher (CERTCertificate *scert, CERTCertificate **rcerts)
 	profile = CERT_FindSMimeProfile (rcerts[rcount]);
 	if (profile != NULL && profile->data != NULL && profile->len > 0) {
 	    caps = NULL;
-	    dstat = SEC_ASN1DecodeItem (poolp, &caps,
+	    dstat = SEC_QuickDERDecodeItem (poolp, &caps,
 					smime_capabilities_template,
 					profile);
 	    if (dstat == SECSuccess && caps != NULL) {

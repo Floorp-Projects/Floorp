@@ -118,7 +118,7 @@ SEC_ReadCertSequence(SECItem *certsItem, CERTImportCertificateFunc f, void *arg)
     }
 
 
-    rv = SEC_ASN1DecodeItem(arena, &rawCerts, SEC_CertSequenceTemplate,
+    rv = SEC_QuickDERDecodeItem(arena, &rawCerts, SEC_CertSequenceTemplate,
 		    contentInfo->content.data);
 
     if (rv != SECSuccess) {

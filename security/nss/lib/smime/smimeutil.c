@@ -37,7 +37,7 @@
 /*
  * Stuff specific to S/MIME policy and interoperability.
  *
- * $Id: smimeutil.c,v 1.14 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: smimeutil.c,v 1.15 2004/06/18 00:38:44 jpierre%netscape.com Exp $
  */
 
 #include "secmime.h"
@@ -424,7 +424,7 @@ smime_choose_cipher(CERTCertificate *scert, CERTCertificate **rcerts)
 	    /* we have a profile (still DER-encoded) */
 	    caps = NULL;
 	    /* decode it */
-	    if (SEC_ASN1DecodeItem(poolp, &caps, NSSSMIMECapabilitiesTemplate, profile) == SECSuccess &&
+	    if (SEC_QuickDERDecodeItem(poolp, &caps, NSSSMIMECapabilitiesTemplate, profile) == SECSuccess &&
 		    caps != NULL)
 	    {
 		/* walk the SMIME capabilities for this recipient */
@@ -737,7 +737,7 @@ NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference(CERTCertDBHandle *certdb, SECIt
 	return NULL;
 
     /* decode DERekp */
-    if (SEC_ASN1DecodeItem(tmppoolp, &ekp, smime_encryptionkeypref_template, DERekp) != SECSuccess)
+    if (SEC_QuickDERDecodeItem(tmppoolp, &ekp, smime_encryptionkeypref_template, DERekp) != SECSuccess)
 	goto loser;
 
     /* find cert */
