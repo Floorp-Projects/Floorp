@@ -45,9 +45,11 @@
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include <stdio.h>
 
 #include "xpctest.h"
+#include "jsapi.h"
 
 // {ED132C20-EED1-11d2-BAA4-00805F8A5DD7}
 #define NS_ECHO_CID \

@@ -482,6 +482,20 @@ MyEcho::DebugDumpJSStack()
     return rv;
 }        
 
+/* void printArgTypes (); */
+NS_IMETHODIMP
+MyEcho::PrintArgTypes(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void throwArg (); */
+NS_IMETHODIMP
+MyEcho::ThrowArg(void)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /***************************************************************************/
 // security manager test class
 

@@ -32,6 +32,116 @@
  * file under either the NPL or the GPL.
  */
 
-/* placeholder file while makefiles and Mac project is stabilized. */
+/* Call Context class for calls into native code. */
 
 #include "xpcprivate.h"
+
+
+nsXPCNativeCallContext::nsXPCNativeCallContext()
+    :   mData(nsnull)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsXPCNativeCallContext::~nsXPCNativeCallContext()
+{
+    // empty...
+}        
+
+NS_IMPL_QUERY_INTERFACE1(nsXPCNativeCallContext, nsIXPCNativeCallContext)
+
+// This is not a refcounted object. We keep one alive per XPCContext
+
+NS_IMETHODIMP_(nsrefcnt)
+nsXPCNativeCallContext::AddRef(void)
+{
+    return 1;
+}        
+
+NS_IMETHODIMP_(nsrefcnt)
+nsXPCNativeCallContext::Release(void)
+{
+    return 1;
+}        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetCallee(nsISupports** calleep)
+{
+    NS_ENSURE_ARG_POINTER(calleep);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    NS_IF_ADDREF(mData->callee);
+    *calleep = mData->callee;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetCalleeMethodIndex(uint16* indexp)
+{
+    NS_ENSURE_ARG_POINTER(indexp);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    *indexp = mData->index;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP
+nsXPCNativeCallContext::GetCalleeWrapper(nsIXPConnectWrappedNative** wrapperp)
+{
+    NS_ENSURE_ARG_POINTER(wrapperp);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    NS_IF_ADDREF(mData->wrapper);
+    *wrapperp = mData->wrapper;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetJSContext(JSContext** cxp)
+{
+    NS_ENSURE_ARG_POINTER(cxp);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    *cxp = mData->cx;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetArgc(PRUint32* argcp)
+{
+    NS_ENSURE_ARG_POINTER(argcp);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    *argcp = mData->argc;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetArgv(jsval** argvp)
+{
+    NS_ENSURE_ARG_POINTER(argvp);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    *argvp = mData->argv;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::GetRetValPtr(jsval** retvalp)
+{
+    NS_ENSURE_ARG_POINTER(retvalp);
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    *retvalp = mData->retvalp;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP 
+nsXPCNativeCallContext::SetExceptionWasThrown(JSBool threw)
+{
+    if(NS_WARN_IF_FALSE(mData,"no active native call")) 
+        return NS_ERROR_FAILURE;
+    mData->threw = threw;
+    return NS_OK;
+}        
+

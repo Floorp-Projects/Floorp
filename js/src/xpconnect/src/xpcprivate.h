@@ -158,6 +158,8 @@ class nsXPConnect : public nsIXPConnect
     /* pass nsnull to clear pending exception */
     NS_IMETHOD SetPendingException(nsIXPCException* aException);
 
+    NS_IMETHOD GetCurrentNativeCallContext(nsIXPCNativeCallContext** aCC);
+
     // non-interface implementation
 public:
     static nsXPConnect* GetXPConnect();
@@ -186,6 +188,64 @@ private:
     nsIInterfaceInfoManager* mInterfaceInfoManager;
     XPCJSThrower* mThrower;
     nsIJSContextStack* mContextStack;
+};
+
+/***************************************************************************/
+
+struct NativeCallContextData
+{
+    // no ctor or dtor so we have random state at creation.
+
+    void init(nsISupports*               Acallee,
+              uint16                     Aindex,
+              nsIXPConnectWrappedNative* Awrapper,
+              JSContext*                 Acx,
+              PRUint32                   Aargc,
+              jsval*                     Aargv,
+              jsval*                     Aretvalp)
+    {
+        callee = Acallee;
+        index = Aindex;
+        wrapper = Awrapper;
+        cx = Acx;
+        argc = Aargc;
+        argv = Aargv;
+        retvalp = Aretvalp;
+        threw = JS_FALSE;
+    }
+
+    nsISupports*               callee;
+    nsIInterfaceInfo*          info;
+    uint16                     index;
+    nsIXPConnectWrappedNative* wrapper;
+    JSContext*                 cx;
+    PRUint32                   argc;
+    jsval*                     argv;
+    jsval*                     retvalp;
+    JSBool                     threw;
+};
+
+class nsXPCNativeCallContext : public nsIXPCNativeCallContext
+{
+public:
+    NS_DECL_ISUPPORTS
+    
+    NS_IMETHOD GetCallee(nsISupports** calleep);
+    NS_IMETHOD GetCalleeMethodIndex(uint16* indexp);
+    NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative** wrapperp);
+    NS_IMETHOD GetJSContext(JSContext** cxp);
+    NS_IMETHOD GetArgc(PRUint32* argcp);
+    NS_IMETHOD GetArgv(jsval** argvp);
+    NS_IMETHOD GetRetValPtr(jsval** retvalp);
+    NS_IMETHOD SetExceptionWasThrown(JSBool threw);
+
+    nsXPCNativeCallContext();
+    virtual ~nsXPCNativeCallContext();
+
+    NativeCallContextData* SetData(NativeCallContextData* aData) 
+        {NativeCallContextData* temp = mData; mData = aData; return temp;}
+private:
+    NativeCallContextData* mData;
 };
 
 /***************************************************************************/
@@ -266,6 +326,9 @@ public:
     void SetSecurityManagerFlags(PRUint16 f)
         {mSecurityManagerFlags = f;}
 
+    nsXPCNativeCallContext* GetNativeCallContext()
+        {return &mNativeCallContext;}
+
     JSBool Init(JSObject* aGlobalObj = nsnull);
     void DebugDump(int depth);
 
@@ -293,6 +356,7 @@ private:
     nsIXPCSecurityManager* mSecurityManager;
     PRUint16 mSecurityManagerFlags;
     nsIXPCException* mException;
+    nsXPCNativeCallContext mNativeCallContext;
 };
 
 /***************************************************************************/
