@@ -92,20 +92,6 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
     DuplicateUserConfirm();
 }
 
-# If the user has a bug list and is processing one bug, then after
-# we process the bug we are going to show them the next bug on their
-# list.  Thus we have to make sure this bug ID is also valid,
-# since a malicious cracker might alter their cookies for the purpose
-# gaining access to bugs they are not authorized to access.
-if ( defined $::COOKIE{"BUGLIST"} && defined $::FORM{'id'} ) {
-    my @buglist = split( /:/ , $::COOKIE{"BUGLIST"} );
-    my $idx = lsearch( \@buglist , $::FORM{"id"} );
-    if ($idx < $#buglist) {
-        my $nextbugid = $buglist[$idx + 1];
-        ValidateBugID($nextbugid);
-    }
-}
-
 ######################################################################
 # End Data/Security Validation
 ######################################################################
@@ -484,6 +470,18 @@ if ($action eq Param("move-button-text")) {
 print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
 if (defined $::FORM{'id'}) {
     navigation_header();
+    if (defined $::next_bug) {
+        # If there is another bug, then we're going to display it,
+        # so check that its a legal bug
+        # We need to check that its a number first
+        if (!(detaint_natural($::next_bug) && CanSeeBug($::next_bug))) {
+            # This isn't OK
+            # Rather than error out (which could validly happen if there
+            # was a bug in the list whose group was changed in the meantime)
+            # just remove references to it
+            undef $::next_bug;
+        }
+    }
 }
 print "<HR>\n";
 $::query = "update bugs\nset";

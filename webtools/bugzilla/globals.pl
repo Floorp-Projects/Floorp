@@ -213,7 +213,7 @@ sub SendSQL {
     # b) We want to know who called SendSQL...
     # Is there a better way to do b?
     if (is_tainted($str)) {
-        die "Attempted to send tainted string to the database";
+        die "Attempted to send tainted string '$str' to the database";
     }
 
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
