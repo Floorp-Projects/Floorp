@@ -1078,7 +1078,7 @@ fi
 
 dnl note that this one is reversed - if the test fails, then
 dnl we require implementations of unused methods
-AC_CACHE_CHECK(if C++ requires implementation of unused methods,
+AC_CACHE_CHECK(whether C++ requires implementation of unused methods,
                ac_cv_cpp_unused_required,
                [AC_TRY_COMPILE(class X {private: void never_called();};,
                                X x;,
