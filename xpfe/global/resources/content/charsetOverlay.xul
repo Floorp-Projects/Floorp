@@ -14,11 +14,21 @@
 <html:script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
 
 	<!-- Charset Menu -->
-	<menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot">
+	<menu id="charsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"  oncommand="MultiplexHandler(event)" oncreate="UpdateMenus(event)">
         <template>
+            <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
+	            <menupopup>
+                <menuitem type="radio" name="detectorGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+	            </menupopup>
+            </rule>
+            <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+	            <menupopup>
+                <menuseparator uri="..." />
+	            </menupopup>
+            </rule>
             <rule>
 	            <menupopup>
-                <menuitem type="radio" name="charsetGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                <menuitem type="radio" name="charsetGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 	            </menupopup>
             </rule>
         </template>
@@ -28,7 +38,7 @@
             <template>
                 <rule>
 		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			        </menupopup>
                 </rule>
             </template>
@@ -39,7 +49,7 @@
             <template>
                 <rule>
 		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			        </menupopup>
                 </rule>
             </template>
@@ -50,7 +60,7 @@
             <template>
                 <rule>
 		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			        </menupopup>
                 </rule>
             </template>
@@ -61,7 +71,7 @@
             <template>
                 <rule>
 		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			        </menupopup>
                 </rule>
             </template>
@@ -72,7 +82,7 @@
             <template>
                 <rule>
 		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			        </menupopup>
                 </rule>
             </template>
@@ -83,7 +93,7 @@
             <template>
                 <rule>
 		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			        </menupopup>
                 </rule>
             </template>
@@ -94,7 +104,7 @@
             <template>
                 <rule>
 		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 			        </menupopup>
                 </rule>
             </template>
@@ -103,41 +113,4 @@
         </menu>
         </menupopup>
 	</menu>
-
-	<menu id="charsetMenu2" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot">
-        <template>
-            <rule>
-	            <menupopup>
-                <menuitem type="checkbox" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
-	            </menupopup>
-            </rule>
-        </template>
-
-        <menupopup>
-  	    <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
-            <template>
-                <rule>
-		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
-			        </menupopup>
-                </rule>
-            </template>
-            <menupopup>
-            </menupopup>
-        </menu>
-
-  	    <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
-            <template>
-                <rule>
-		            <menupopup>
-                    <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
-			        </menupopup>
-                </rule>
-            </template>
-            <menupopup>
-            </menupopup>
-        </menu>
-        </menupopup>
-	</menu>
-
 </overlay>		
