@@ -57,6 +57,10 @@
 #include "nsIStreamListener.h"
 #include "nsIRDFSearch.h"
 
+#ifdef	XP_MAC
+#include "Files.h"
+#endif
+
 #ifdef	XP_WIN
 #include "windef.h"
 #include "winbase.h"
@@ -996,7 +1000,7 @@ SearchDataSource::GetSearchEngineList()
 #ifdef	XP_MAC
 	// on Mac, use system's search files
 	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::Mac_InternetSearchDirectory);
-	nsNativeFileSpec 		nativeDir(searchSitesDir);
+	nsFileSpec 			nativeDir(searchSitesDir);
 #else
 	// on other platforms, use our search files
 	nsSpecialSystemDirectory	searchSitesDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
@@ -1004,27 +1008,41 @@ SearchDataSource::GetSearchEngineList()
 	searchSitesDir += "res";
 	searchSitesDir += "rdf";
 	searchSitesDir += "search";
-	nsNativeFileSpec 		nativeDir(searchSitesDir);
+	nsFileSpec 			nativeDir(searchSitesDir);
 #endif
 	for (nsDirectoryIterator i(nativeDir); i.Exists(); i++)
 	{
-		const nsNativeFileSpec	nativeSpec = (const nsNativeFileSpec &)i;
-		if (!isVisible(nativeSpec))	continue;
-		nsFileURL		fileURL(nativeSpec);
-		const char		*childURL = fileURL.GetAsString();
+		const nsFileSpec	fileSpec = (const nsFileSpec &)i;
+		const char		*childURL = fileSpec;
+		if (!isVisible(fileSpec))	continue;
 		if (childURL != nsnull)
 		{
 			nsAutoString	uri(childURL);
 			PRInt32		len = uri.Length();
 			if (len > 4)
 			{
+#ifdef	XP_MAC
+				// be sure to resolve aliases in case we encounter one
+				CInfoPBRec	cInfo;
+				OSErr		err;
+				PRBool		wasAliased = PR_FALSE;
+				fileSpec.ResolveAlias(wasAliased);
+				err = fileSpec.GetCatInfo(cInfo);
+				if ((!err) && (cInfo.hFileInfo.ioFlFndrInfo.fdType == 'issp') &&
+					(cInfo.hFileInfo.ioFlFndrInfo.fdCreator == 'fndf'))
+#else
 				nsAutoString	extension;
 				if ((uri.Right(extension, 4) == 4) && (extension.EqualsIgnoreCase(".src")))
+#endif
 				{
-					PRInt32	slashOffset = uri.RFind("/");
-					if (slashOffset > 0)
+#ifdef	XP_MAC
+					PRInt32	separatorOffset = uri.RFind(":");
+#else
+					PRInt32	separatorOffset = uri.RFind("/");
+#endif
+					if (separatorOffset > 0)
 					{
-						uri.Cut(0, slashOffset+1);
+						uri.Cut(0, separatorOffset+1);
 						
 						nsAutoString	searchURL("engine://");
 						searchURL += uri;
@@ -1142,18 +1160,20 @@ SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
 #endif	XP_MAC
 
 	nsInputFileStream		searchFile(searchEngine);
-	if (! searchFile.is_open())
+	if (searchFile.is_open())
 	{
-		NS_ERROR("unable to open file");
-		return(NS_ERROR_FAILURE);
+		nsRandomAccessInputStream	stream(searchFile);
+		char				buffer[1024];
+		while (!stream.eof())
+		{
+			stream.readline(buffer, sizeof(buffer)-1 );
+			sourceContents += buffer;
+			sourceContents += "\n";
+		}
 	}
-	nsRandomAccessInputStream	stream(searchFile);
-	char				buffer[1024];
-	while (!stream.eof())
+	else
 	{
-		stream.readline(buffer, sizeof(buffer)-1 );
-		sourceContents += buffer;
-		sourceContents += "\n";
+		rv = NS_ERROR_FAILURE;
 	}
 	return(rv);
 }
