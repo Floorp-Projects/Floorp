@@ -2932,7 +2932,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
         nsCAutoString undoIds;
       
       GetCurrentUrl()->CreateListOfMessageIdsString(getter_Copies(undoIdsStr));
-      undoIds = undoIdsStr;
+      undoIds.Assign(undoIdsStr);
       if (undoIds.Length() > 0)
       {
         char firstChar = (char) undoIds.CharAt(0);

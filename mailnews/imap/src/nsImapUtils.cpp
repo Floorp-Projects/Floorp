@@ -143,7 +143,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
           parentName.Right(leafName, parentName.Length() - dirEnd -1);
           parentName.Truncate(dirEnd);
           NS_MsgHashIfNecessary(parentName);
-          parentName += sbdSep;
+          parentName.Append(sbdSep);
           pathResult += (const char *) parentName;
 		  // this fixes a strange purify warning.
           parentName = (const char *) leafName;
@@ -172,7 +172,7 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
     PRInt32 hostEnd = uri.FindChar('/');
     if (hostEnd <= 0) return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostEnd - 1);
-    if (fullName == "") return NS_ERROR_FAILURE;
+    if (fullName.IsEmpty()) return NS_ERROR_FAILURE;
     *name = fullName.ToNewCString();
     return NS_OK;
 }

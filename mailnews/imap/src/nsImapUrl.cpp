@@ -998,7 +998,7 @@ nsImapUrl::GetURI(char** aURI)
     fullFolderPath += '@';
     fullFolderPath += hostName;
     fullFolderPath += '/';
-    fullFolderPath += theFile;
+    fullFolderPath.Append(theFile);
 
 	PR_FREEIF(hostName);
 	char * baseMessageURI;

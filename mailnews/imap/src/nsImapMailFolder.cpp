@@ -353,13 +353,13 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 
 
           // take the full unicode folder name and find the unicode leaf name.
-          currentFolderNameStr = unicodeName;
+          currentFolderNameStr.Assign(unicodeName);
           PRInt32 leafPos = currentFolderNameStr.RFindChar('/');
           if (leafPos > 0)
             currentFolderNameStr.Cut(0, leafPos + 1);
 
           // take the utf7 full online name, and determine the utf7 leaf name
-          utf7LeafName = onlineFullUtf7Name;
+          utf7LeafName.Assign(onlineFullUtf7Name);
           leafPos = utf7LeafName.RFindChar('/');
           if (leafPos > 0)
             utf7LeafName.Cut(0, leafPos + 1);
@@ -658,7 +658,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         nsCAutoString onlineName = m_onlineFolderName; 
         if (onlineName.Length() > 0)
           onlineName += hierarchyDelimiter;
-        onlineName += folderNameStr;
+        onlineName.Append(folderNameStr);
         imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
         imapFolder->SetOnlineName(onlineName.GetBuffer());
                 imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
@@ -1155,7 +1155,7 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
     m_hierarchyDelimiter = (PRUnichar) hierarchyDelimiter;
   rv = element->GetStringProperty("onlineName", getter_Copies(onlineName));
   if (NS_SUCCEEDED(rv) && (const char *) onlineName && nsCRT::strlen((const char *) onlineName))
-    m_onlineFolderName = onlineName;
+    m_onlineFolderName.Assign(onlineName);
   return rv;
 }
 
@@ -1263,7 +1263,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
       if (NS_SUCCEEDED((*folderInfo)->GetCharPtrProperty("onlineName", getter_Copies(onlineName))))
       {
         if ((const char*) onlineName && nsCRT::strlen((const char *) onlineName) > 0)
-          m_onlineFolderName = onlineName;
+          m_onlineFolderName.Assign(onlineName);
         else
         {
           char *uri = nsnull;
@@ -1274,7 +1274,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
           if (NS_FAILED(rv)) return rv;
           nsXPIDLCString name;
           rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
-          m_onlineFolderName = name;
+          m_onlineFolderName.Assign(name);
           nsAutoString autoOnlineName(name);
           rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
           PR_FREEIF(uri);

@@ -629,7 +629,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
 	GetServerURI(getter_Copies(serverUri));
 
-    uri = serverUri;
+    uri.Assign(serverUri);
 
     PRInt32 leafPos = folderName.RFindChar('/');
 

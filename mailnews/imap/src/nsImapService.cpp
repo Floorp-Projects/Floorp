@@ -268,7 +268,7 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
       nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl);
       nsXPIDLCString currentSpec;
       url->GetSpec(getter_Copies(currentSpec));
-      urlSpec = currentSpec;
+      urlSpec.Assign(currentSpec);
 
 		  urlSpec.Append("fetch>");
 		  urlSpec.Append(uidString);
@@ -561,7 +561,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
       nsXPIDLCString currentSpec;
       nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
       url->GetSpec(getter_Copies(currentSpec));
-      urlSpec = currentSpec;
+      urlSpec.Assign(currentSpec);
 
       PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder); 
 
