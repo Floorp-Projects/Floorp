@@ -191,8 +191,6 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        PRInt32         aHint)
 {
   nsresult result = NS_OK;
-  PRInt32 type;
-  GetType(&type);
   if (mWidget) {
     if (nsHTMLAtoms::value == aAttribute) {
       nsIButton* button = nsnull;
@@ -206,6 +204,11 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       }
     } else if (nsHTMLAtoms::size == aAttribute) {
       nsFormFrame::StyleChangeReflow(aPresContext, this);
+    }
+    // Allow the base class to handle common attributes supported
+    // by all form elements... 
+    else {
+      result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
     }
   }
   return result;
@@ -338,9 +341,6 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 void 
 nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
-  PRInt32 type;
-  GetType(&type);
-
  	nsIButton* button = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(kIButtonIID,(void**)&button))) {
     nsFont font(aPresContext->GetDefaultFixedFont()); 
@@ -348,20 +348,16 @@ nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aW
     mWidget->SetFont(font);
     SetColors(*aPresContext);
 
-    nsString value;
+    nsAutoString value;
     nsresult result = GetValue(&value);
-  
-    if (button != nsnull) {
-	    if (NS_CONTENT_ATTR_HAS_VALUE == result) {  
-	      button->SetLabel(value);
-	    } else {
-	      nsAutoString label;
-	      GetDefaultLabel(label);
-	      button->SetLabel(label);
-	    }
-	  }
-    mWidget->Enable(!nsFormFrame::GetDisabled(this));
+
+    if (NS_CONTENT_ATTR_HAS_VALUE != result) {  
+      GetDefaultLabel(value);
+    }
+    button->SetLabel(value);
     NS_RELEASE(button);
+
+    mWidget->Enable(!nsFormFrame::GetDisabled(this));
   }
 }
 
