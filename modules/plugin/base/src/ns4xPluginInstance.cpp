@@ -886,6 +886,10 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
   NPError error;
   
 #ifdef MOZ_WIDGET_GTK
+  // bug 108337, flash plugin on linux doesn't like window->width <= 0
+  if ((PRInt32) window->width <= 0 || (PRInt32) window->height <= 0)
+    return NS_OK;
+
   // Allocate and fill out the ws_info data
   if (!window->ws_info) {
 #ifdef NS_DEBUG
