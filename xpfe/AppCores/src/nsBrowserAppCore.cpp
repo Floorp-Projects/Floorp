@@ -152,8 +152,12 @@ nsBrowserAppCore::~nsBrowserAppCore()
   NS_IF_RELEASE(mWebShellWin);
   NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mContentAreaWebShell);
-  NS_IF_RELEASE(mGHistory);
   NS_IF_RELEASE(mSearchContext);
+
+  if (nsnull != mGHistory) {
+    nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
+  }
+
   DecInstanceCount();  
 }
 
@@ -259,13 +263,14 @@ nsBrowserAppCore::Init(const nsString& aId)
                                              (nsISupports**)&appCoreManager);
   if (NS_OK == rv) {
 	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
+    nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
   }
 
   // Get the Global history service  
-   nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
+  nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
 					(nsISupports **)&mGHistory);
 
-   return rv;
+  return rv;
 
 }
 
@@ -382,7 +387,7 @@ nsBrowserAppCore::WalletEditor()
     nsIURL * url;
     if (!NS_FAILED(NS_NewURL(&url, WALLET_EDITOR_URL))) {
       res = walletservice->WALLET_PreEdit(url);
-      NS_RELEASE(walletservice);
+      nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
     }
   }
 
@@ -408,7 +413,7 @@ nsBrowserAppCore::WalletSafeFillin()
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     res = walletservice->WALLET_Prefill(shell, PR_FALSE);
-    NS_RELEASE(walletservice);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
 
 #ifndef HTMLDialogs 
@@ -438,7 +443,7 @@ nsBrowserAppCore::WalletQuickFillin()
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     res = walletservice->WALLET_Prefill(shell, PR_TRUE);
-    NS_RELEASE(walletservice);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
 
   return NS_OK;
@@ -482,7 +487,7 @@ nsBrowserAppCore::SignonViewer()
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
     res = walletservice->SI_DisplaySignonInfoAsHTML();
-    NS_RELEASE(walletservice);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
 #ifndef HTMLDialogs 
   return newWind("file:///y|/htmldlgs.htm");
@@ -508,7 +513,7 @@ nsBrowserAppCore::CookieViewer()
                                      (nsISupports **)&netservice);
   if ((NS_OK == res) && (nsnull != netservice)) {
     res = netservice->NET_DisplayCookieInfoAsHTML();
-    NS_RELEASE(netservice);
+    nsServiceManager::ReleaseService(kNetServiceCID, netservice);
   }
 #ifndef HTMLDialogs 
   return newWind("file:///y|/htmldlgs.htm");
@@ -566,6 +571,8 @@ nsBrowserAppCore::LoadInitialPage(void)
 
   // Get the URL to load
   rv = cmdLineArgs->GetURLToLoad(&urlstr);
+  nsServiceManager::ReleaseService(kCmdLineServiceCID, cmdLineArgs);
+
   if (urlstr != nsnull) {
   // A url was provided. Load it
      if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
@@ -1269,6 +1276,7 @@ nsBrowserAppCore::HandleUnknownContentType( nsIURL *aURL,
 
             NS_RELEASE(url);
         }
+        nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
     }
 
     return rv;

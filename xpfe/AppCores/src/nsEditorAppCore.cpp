@@ -1343,7 +1343,7 @@ nsEditorAppCore::ShowClipboard()
       }
       NS_RELEASE(trans);
     }
-    NS_RELEASE(clipboard);
+     nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
   }
   fprintf(fd, "	  </toolbar>\n");
   fprintf(fd, "  </toolbox>\n");
@@ -1356,6 +1356,7 @@ nsEditorAppCore::ShowClipboard()
   fclose(fd);
 
   MakeNewWindow("resource:/res/samples/ClipboardViewer.xul");
+
 
   return NS_OK;
 }
