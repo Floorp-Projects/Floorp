@@ -22,7 +22,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 3.8 2000/07/10 07:13:26 cls%seawood.org Exp $
+ *  $Id: libimg.h,v 3.9 2000/09/14 23:09:18 pnunn%netscape.com Exp $
  */
 
 
@@ -296,7 +296,7 @@ IL_ShrinkCache(void);
 /* Remove as many images as possible from the image cache. The only
    images not removed are those that are in use. */
 IL_EXTERN(void)
-IL_FlushCache(void);
+IL_FlushCache(PRUint8 img_catagory);
 
 /* Return the approximate storage consumed by the imagelib cache, in bytes */
 IL_EXTERN(PRUint32)
