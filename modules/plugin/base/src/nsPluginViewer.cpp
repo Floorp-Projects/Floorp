@@ -323,6 +323,7 @@ PluginViewerImpl::Init(nsIWidget* aParentWidget,
                        nsIDeviceContext* aDeviceContext,
                        const nsRect& aBounds)
 {
+  NS_ENSURE_TRUE(aParentWidget, NS_ERROR_NULL_POINTER);
   nsresult rv = MakeWindow(aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
    aDeviceContext, aBounds);
   if (NS_OK == rv) {
