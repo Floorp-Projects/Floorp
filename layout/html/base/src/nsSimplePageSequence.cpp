@@ -51,6 +51,7 @@
 #include "nsIPrintOptions.h"
 #include "nsPageFrame.h"
 #include "nsIPrintPreviewContext.h"
+#include "nsStyleConsts.h"
 #include "nsIRegion.h"
 
 #include "nsIPref.h" // for header/footer gap & ExtraMargin for Print Preview
@@ -80,6 +81,8 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 //
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
+
+
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
 #define DEBUG_PRINTING
@@ -235,6 +238,10 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   NS_FRAME_TRACE_REFLOW_IN("nsSimplePageSequenceFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;  // we're always complete
+
+  if (aReflowState.reason == eReflowReason_Initial) {
+    CacheBackground(aPresContext);
+  }
 
 
   nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
@@ -1086,3 +1093,25 @@ nsSimplePageSequenceFrame::SetPageSizes(const nsRect& aRect, const nsMargin& aMa
   mPageData->mReflowRect   = aRect;
   mPageData->mReflowMargin = aMarginRect;
 }
+
+//------------------------------------------------------------------------------
+
+// Get the Style Data from the first child of this frame, the nsPageFrame
+// uses this to paint the background for printing
+// No return code, there not much we can do if this fails
+void
+nsSimplePageSequenceFrame::CacheBackground(nsIPresContext* aPresContext)
+{
+  nsIFrame* pageFrame = mFrames.FirstChild();
+  if (pageFrame == nsnull) {
+    return;
+  }
+
+  nsCOMPtr<nsIStyleContext> parentContext;
+  pageFrame->GetStyleContext(getter_AddRefs(parentContext));
+  mPageData->mBackground = (nsStyleBackground*)parentContext->GetStyleData(eStyleStruct_Background);
+}
+
+
+
+

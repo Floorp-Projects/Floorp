@@ -139,6 +139,10 @@ protected:
 
   nsSharedPageData* mPD;
 
+private:
+  void DrawBackground(nsIPresContext* aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsRect&  aDirtyRect);
 };
 
 #endif /* nsPageFrame_h___ */
