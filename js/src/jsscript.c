@@ -510,11 +510,11 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
             if (ntrynotes)
                 nsrcnotes += JSTRYNOTE_ALIGNMASK;
-            newscript = JS_realloc(cx, script,
-                                   sizeof(JSScript) +
-                                   length * sizeof(jsbytecode) +
-                                   nsrcnotes * sizeof(jssrcnote) +
-                                   ntrynotes * sizeof(JSTryNote));
+            newscript = (JSScript *) JS_realloc(cx, script,
+                                                sizeof(JSScript) +
+                                                length * sizeof(jsbytecode) +
+                                                nsrcnotes * sizeof(jssrcnote) +
+                                                ntrynotes * sizeof(JSTryNote));
             if (!newscript)
                 goto error;
 
@@ -989,8 +989,8 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
     JSScript *script;
 
     /* Round up source note count to align script->trynotes for its type. */
-    /* XXX only if ntrynotes != 0, but then tinderbox tests crash */
-    nsrcnotes += JSTRYNOTE_ALIGNMASK;
+    if (ntrynotes)
+        nsrcnotes += JSTRYNOTE_ALIGNMASK;
     script = (JSScript *) JS_malloc(cx,
                                     sizeof(JSScript) +
                                     length * sizeof(jsbytecode) +
@@ -1013,16 +1013,15 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
 JS_FRIEND_API(JSScript *)
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
 {
-    uint32 mainLength, prologLength;
+    uint32 mainLength, prologLength, nsrcnotes, ntrynotes;
     JSScript *script;
     const char *filename;
 
     mainLength = CG_OFFSET(cg);
     prologLength = CG_PROLOG_OFFSET(cg);
-    script = js_NewScript(cx,
-                          prologLength + mainLength,
-                          CG_COUNT_FINAL_SRCNOTES(cg),
-                          CG_COUNT_FINAL_TRYNOTES(cg));
+    CG_COUNT_FINAL_SRCNOTES(cg, nsrcnotes);
+    CG_COUNT_FINAL_TRYNOTES(cg, ntrynotes);
+    script = js_NewScript(cx, prologLength + mainLength, nsrcnotes, ntrynotes);
     if (!script)
         return NULL;
 

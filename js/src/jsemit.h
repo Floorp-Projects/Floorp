@@ -478,12 +478,20 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
  * the CG_COUNT_FINAL_SRCNOTES macro.  This macro knows a lot about details of
  * js_FinishTakingSrcNotes.
  */
-#define CG_COUNT_FINAL_SRCNOTES(cg)                                           \
-    ((cg)->prolog.noteCount +                                                 \
-     (((cg)->prolog.noteCount && (cg)->prolog.currentLine != (cg)->firstLine) \
-      ? 2 + (((cg)->firstLine > SN_3BYTE_OFFSET_MASK) << 1)                   \
-      : 0) +                                                                  \
-     (cg)->main.noteCount + 1)
+#define CG_COUNT_FINAL_SRCNOTES(cg, cnt)                                      \
+    JS_BEGIN_MACRO                                                            \
+        cnt = (cg)->main.noteCount + 1;                                       \
+        if ((cg)->prolog.noteCount) {                                         \
+            cnt += (cg)->prolog.noteCount;                                    \
+            if ((cg)->prolog.currentLine != (cg)->firstLine) {                \
+                ptrdiff_t diff_ = CG_PROLOG_OFFSET(cg) -                      \
+                                  (cg)->prolog.lastNoteOffset;                \
+                if (diff_ > SN_DELTA_MASK)                                    \
+                    cnt += JS_HOWMANY(diff_ - SN_DELTA_MASK, SN_XDELTA_MASK); \
+                cnt += 2 + (((cg)->firstLine > SN_3BYTE_OFFSET_MASK) << 1);   \
+            }                                                                 \
+        }                                                                     \
+    JS_END_MACRO
 
 extern JSBool
 js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes);
@@ -509,10 +517,12 @@ js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
  * preallocate enough space in a JSTryNote[] to pass as the notes parameter of
  * js_FinishTakingTryNotes.
  */
-#define CG_COUNT_FINAL_TRYNOTES(cg)                                           \
-    (((cg)->tryNext > (cg)->tryBase)                                          \
-     ? PTRDIFF(cg->tryNext, cg->tryBase, JSTryNote) + 1                       \
-     : 0)
+#define CG_COUNT_FINAL_TRYNOTES(cg, cnt)                                      \
+    JS_BEGIN_MACRO                                                            \
+        cnt = ((cg)->tryNext > (cg)->tryBase)                                 \
+              ? PTRDIFF(cg->tryNext, cg->tryBase, JSTryNote) + 1              \
+              : 0;                                                            \
+    JS_END_MACRO
 
 extern void
 js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote *notes);
