@@ -193,7 +193,7 @@ TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LI
 endif
 
 ifndef OBJS
-OBJS			= $(strip $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.s=.o))
+OBJS			= $(strip $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.$(ASM_SUFFIX)=.o))
 endif
 
 ifndef HOST_OBJS
@@ -875,8 +875,12 @@ moc_%.cpp: %.h Makefile.in
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-%.o: %.s Makefile.in
+%.o: %.$(ASM_SUFFIX) Makefile.in
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+	$(AS) -Fdo:./$(OBJDIR) -Feo:.o $(ASFLAGS) $(AS_DASH_C_FLAG) $<
+else
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
+endif
 
 %.o: %.S Makefile.in
 	$(AS) -o $@ $(ASFLAGS) -c $<
