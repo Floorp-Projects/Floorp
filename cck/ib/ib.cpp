@@ -1113,7 +1113,7 @@ void EraseDirectory(CString sPath)
      }
 }
 
-void CopyDirectory(CString source, CString dest, int subdir)
+void CopyDirectory(CString source, CString dest, BOOL subdir)
 // Copy files in subdirectories if the subdir flag is set (equal to 1).
 {
 	CFileFind finder;
@@ -1130,8 +1130,8 @@ void CopyDirectory(CString source, CString dest, int subdir)
 			CString dirPath = finder.GetFilePath();
 			newPath += finder.GetFileName();
 			_mkdir(newPath);
-			if (subdir == 1)
-				CopyDirectory(dirPath, newPath, 1);
+			if (subdir == TRUE)
+				CopyDirectory(dirPath, newPath, TRUE);
 			if (!CopyFile(dirPath,newPath,0))
 				DWORD e = GetLastError();
 			continue; 
@@ -1148,7 +1148,7 @@ void CreateLinuxInstaller()
 {
 	char currentdir[_MAX_PATH];
 	_getcwd(currentdir,_MAX_PATH);
-	CopyDirectory(xpiDstPath, templinuxPath + xpiDir, 1);
+	CopyDirectory(xpiDstPath, templinuxPath + xpiDir, TRUE);
 	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
 	DeleteFile(templinuxPath + xpiDir + "\\Config.ini");
 
@@ -1291,7 +1291,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 		CString tPath = nscpxpiPath;
 		tPath.Replace(xpiDir,"");
-		CopyDirectory(tPath, templinuxPath, 0);
+		CopyDirectory(tPath, templinuxPath, FALSE);
 		
 		// get rid of this ugly code when bugzilla bug 105351 is fixed
 		CopyFile(nscpxpiPath+"\\full.start", 
