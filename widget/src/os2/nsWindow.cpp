@@ -2608,7 +2608,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
               printf("[%x] NS_GOTFOCUS (%d)\n", this, mWindowIdentifier);
 #endif
               result = DispatchFocus(NS_GOTFOCUS, isMozWindowTakingFocus);
-              if (gJustGotActivate) {
+              /* If mp1 is 0, this is the special WM_FOCUSCHANGED we got */
+              /* from the frame activate, so act like we just got activated */
+              if (gJustGotActivate || mp1 == 0) {
                 gJustGotActivate = PR_FALSE;
                 gJustGotDeactivate = PR_FALSE;
 #ifdef DEBUG_FOCUS

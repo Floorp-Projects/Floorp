@@ -441,6 +441,12 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             }
          }
          break;
+      /* To simulate Windows better, we need to send a focus message to the */
+      /* client when the frame is activated */
+      case WM_ACTIVATE:
+         if (SHORT1FROMMP(mp1))
+           WinPostMsg(mWnd, WM_FOCUSCHANGED, 0, MPFROM2SHORT(1,0));
+         break;
    }
 
    if( !bDone)
