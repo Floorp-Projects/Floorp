@@ -801,6 +801,8 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
       nsIView *pKid;
 
       GetChild(cnt, pKid);
+      if (!pKid) break;
+
       pKid->GetBounds(trect);
 
       if (trect.Contains(x, y))
