@@ -22,7 +22,8 @@
 
 #if defined(DEBUG_ftang)
 //#define KE_DEBUG
-//#define DEBUG_IME
+#define DEBUG_IME
+//#define DEBUG_IME2
 //#define DEBUG_KBSTATE
 #endif
 
@@ -3893,7 +3894,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 	candForm.dwStyle = CFS_CANDIDATEPOS;
 	candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
 	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
-#ifdef DEBUG_IME
+#ifdef DEBUG_IME2
 	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 #endif
 	::ImmSetCandidateWindow(hIMEContext,&candForm);
@@ -3925,10 +3926,12 @@ nsWindow::HandleEndComposition(void)
 	mIMEIsComposing = PR_FALSE;
 }
 
-static PRUint32 PlatformToNSAttr(PRUint32 aAttr)
+static PRUint32 PlatformToNSAttr(PRUint8 aAttr)
 {
  switch(aAttr)
  {
+    case ATTR_INPUT_ERROR:
+    // case ATTR_FIXEDCONVERTED:
     case ATTR_INPUT:
          return NS_TEXTRANGE_RAWINPUT;
     case ATTR_CONVERTED:
@@ -3952,27 +3955,28 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
   NS_ASSERTION( mIMECompUnicode, "mIMECompUnicode is null");
   if((nsnull == mIMECompString) || (nsnull == mIMECompUnicode))
 	return;
-	PRUint32	rangePointer;
-	PRInt32		ictr;
+	PRInt32	rangePointer;
 	size_t		lastUnicodeOffset, substringLength, lastMBCSOffset;
 	
+  long maxlen = mIMECompString->Length();
+  long cursor = mIMECursorPosition;
+  NS_ASSERTION(cursor <= maxlen, "wrong cursor positoin");
+  if(cursor > maxlen)
+    cursor = maxlen;
+
 	//
 	// figure out the ranges from the compclause string
 	//
 	if (mIMECompClauseStringLength==0) {
-    // xxx Fix me....
-    NS_ASSERTION(mIMECursorPosition <= mIMECompString->Length(), "wrong cursor positoin");
-    if(mIMECursorPosition > mIMECompString->Length())
-        mIMECursorPosition = mIMECompString->Length();
 		*textRangeListLengthResult = 2;
 		*textRangeListResult = new nsTextRange[2];
 		(*textRangeListResult)[0].mStartOffset=0;
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),
-								mIMECompString->Length(),NULL,0);
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,
+			mIMECompString->GetBuffer(), maxlen,NULL,0);
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
 		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),
-								mIMECursorPosition,NULL,0);
+								cursor,NULL,0);
 		(*textRangeListResult)[1].mStartOffset=substringLength;
 		(*textRangeListResult)[1].mEndOffset = substringLength;
 		(*textRangeListResult)[1].mRangeType = NS_TEXTRANGE_CARETPOSITION;
@@ -3980,11 +3984,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		
 	} else {
 		
-		*textRangeListLengthResult = 1;
-		for(ictr=0;ictr<mIMECompClauseStringLength;ictr++) {
-			if (mIMECompClauseString[ictr]!=0x00) 
-				(*textRangeListLengthResult)++;
-		}
+		*textRangeListLengthResult =  mIMECompClauseStringLength;
 
 		//
 		//  allocate the offset array
@@ -3995,32 +3995,37 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		// figure out the cursor position
 		//
 		
-		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer(),mIMECursorPosition,NULL,0);
+		substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,
+          MB_PRECOMPOSED,mIMECompString->GetBuffer(),cursor,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
 		(*textRangeListResult)[0].mEndOffset = substringLength;
 		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_CARETPOSITION;
 
-
 	
 		//
 		// iterate over the attributes and convert them into unicode 
-		lastUnicodeOffset = 0;
-		lastMBCSOffset = 0;
-		rangePointer = 1;
-		for(ictr=0;ictr<mIMECompClauseStringLength;ictr++) {
-			if (mIMECompClauseString[ictr]!=0) {
-				(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
-				substringLength = ::MultiByteToWideChar(mCurrentKeyboardCP,MB_PRECOMPOSED,mIMECompString->GetBuffer()+lastMBCSOffset,
-										mIMECompClauseString[ictr]-lastMBCSOffset,NULL,0);
-				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength;
-				(*textRangeListResult)[rangePointer].mRangeType = 
-                   PlatformToNSAttr(mIMEAttributeString[mIMECompClauseString[ictr]-1]);
-				lastUnicodeOffset+= substringLength;
-				lastMBCSOffset = mIMECompClauseString[ictr];
-				rangePointer++;
-			}
-		}
-	}
+		for(rangePointer=1, lastUnicodeOffset= lastMBCSOffset = 0;
+			rangePointer<mIMECompClauseStringLength;
+				rangePointer++) 
+		{
+      long current = mIMECompClauseString[rangePointer];
+  		NS_ASSERTION(current <= maxlen, "wrong offset");
+  		if(current > maxlen)
+				current = maxlen;
+
+			(*textRangeListResult)[rangePointer].mRangeType = 
+        PlatformToNSAttr(mIMEAttributeString[lastMBCSOffset]);
+			(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
+
+			lastUnicodeOffset += ::MultiByteToWideChar(mCurrentKeyboardCP,
+				MB_PRECOMPOSED,mIMECompString->GetBuffer()+lastMBCSOffset,
+				current-lastMBCSOffset,NULL,0);
+
+			(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset;
+
+			lastMBCSOffset = current;
+		} // for
+	} // if else
 
 
 }
@@ -4031,7 +4036,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 //==========================================================================
 BOOL nsWindow::OnInputLangChange(WORD aLangID, LRESULT *oRetValue)			
 {
-#ifdef DEBUG_IME
+#ifdef DEBUG_IME2
 	printf("OnInputLanguageChange\n");
 #endif
 
@@ -4051,6 +4056,7 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
 #ifdef DEBUG_IME
 	printf("OnIMEChar\n");
 #endif
+	NS_ASSERTION(PR_TRUE, "should not got an WM_IME_CHAR");
 
 	// not implement yet
 	return PR_FALSE;
@@ -4073,61 +4079,6 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 	hIMEContext = ::ImmGetContext(mWnd);
 	if (hIMEContext==NULL) 
 		return PR_TRUE;
-
-	//
-	// This provides us with the attribute string necessary for doing hiliting
-	//
-	if (aGCS & GCS_COMPATTR) {
-#ifdef DEBUG_IME
-		fprintf(stderr,"Handling GCS_COMPATTR\n");
-#endif
-		long attrStrLen = ::ImmGetCompositionString(hIMEContext,
-								GCS_COMPATTR,NULL,0);
-		if (attrStrLen+1>mIMEAttributeStringSize) {
-			if (mIMEAttributeString!=NULL) 
-				delete [] mIMEAttributeString;
-			mIMEAttributeString = new char[attrStrLen+32];
-			mIMEAttributeStringSize = attrStrLen+32;
-		}
-
-		::ImmGetCompositionString(hIMEContext,
-				GCS_COMPATTR,
-				mIMEAttributeString,
-				mIMEAttributeStringSize);
-		mIMEAttributeStringLength = attrStrLen;
-		mIMEAttributeString[attrStrLen]='\0';
-	}
-
-	if (aGCS & GCS_COMPCLAUSE) {
-#ifdef DEBUG_IME
-		fprintf(stderr,"Handling GCS_COMPCLAUSE\n");
-#endif
-		long compClauseLen = ::ImmGetCompositionString(hIMEContext,
-				GCS_COMPCLAUSE,NULL,0);
-		if (compClauseLen+1>mIMECompClauseStringSize) {
-			if (mIMECompClauseString!=NULL) 
-				delete [] mIMECompClauseString;
-			mIMECompClauseString = new char [compClauseLen+32];
-			mIMECompClauseStringSize = compClauseLen+32;
-		}
-
-		::ImmGetCompositionString(hIMEContext,
-				GCS_COMPCLAUSE,
-				mIMECompClauseString,
-				mIMECompClauseStringSize);
-		mIMECompClauseStringLength = compClauseLen;
-		mIMECompClauseString[compClauseLen]='\0';
-	} else {
-		mIMECompClauseStringLength = 0;
-	}
-
-	if (aGCS & GCS_CURSORPOS) {
-#ifdef DEBUG_IME
-		fprintf(stderr,"Handling GCS_CURSORPOS\n");
-#endif
-		mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,
-				GCS_CURSORPOS,NULL,0);
-	}
 
 	//
 	// This catches a fixed result
@@ -4157,16 +4108,69 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		HandleTextEvent(hIMEContext, PR_FALSE);
 		HandleEndComposition();
 	}
+
+
 	//
 	// This provides us with a composition string
 	//
-	if (aGCS & GCS_COMPSTR) {
+	if (aGCS & 
+			(GCS_COMPSTR | GCS_COMPATTR | GCS_COMPCLAUSE | GCS_CURSORPOS ))
+	{
 #ifdef DEBUG_IME
 		fprintf(stderr,"Handling GCS_COMPSTR\n");
 #endif
+
 		if(! mIMEIsComposing) 
 			HandleStartComposition(hIMEContext);
 
+		//--------------------------------------------------------
+		// 1. Get GCS_COMPATTR
+		//--------------------------------------------------------
+		// This provides us with the attribute string necessary 
+		// for doing hiliting
+		long attrStrLen = ::ImmGetCompositionString(hIMEContext,
+									GCS_COMPATTR,NULL,0);
+		if (attrStrLen>mIMEAttributeStringSize) {
+			if (mIMEAttributeString!=NULL) 
+				delete [] mIMEAttributeString;
+			mIMEAttributeString = new PRUint8[attrStrLen+32];
+			mIMEAttributeStringSize = attrStrLen+32;
+		}
+
+		attrStrLen = ::ImmGetCompositionString(hIMEContext,
+				GCS_COMPATTR,
+				mIMEAttributeString,
+				mIMEAttributeStringSize);
+		mIMEAttributeStringLength = attrStrLen;
+
+		//--------------------------------------------------------
+		// 2. Get GCS_COMPCLAUSE
+		//--------------------------------------------------------
+		long compClauseLen = ::ImmGetCompositionString(hIMEContext,
+				GCS_COMPCLAUSE,NULL,0) / sizeof(PRUint32);
+		if (compClauseLen>mIMECompClauseStringSize) {
+			if (mIMECompClauseString!=NULL) 
+				delete [] mIMECompClauseString;
+			mIMECompClauseString = new PRUint32 [compClauseLen+32];
+			mIMECompClauseStringSize = compClauseLen+32;
+		}
+
+		compClauseLen = ::ImmGetCompositionString(hIMEContext,
+				GCS_COMPCLAUSE,
+				mIMECompClauseString,
+				mIMECompClauseStringSize * sizeof(PRUint32)) 
+                                      / sizeof(PRUint32);
+		mIMECompClauseStringLength = compClauseLen;
+
+		//--------------------------------------------------------
+		// 3. Get GCS_CURSOPOS
+		//--------------------------------------------------------
+		mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,
+				GCS_CURSORPOS,NULL,0);
+
+		//--------------------------------------------------------
+		// 4. Get GCS_COMPSTR
+		//--------------------------------------------------------
 		long compStrLen = ::ImmGetCompositionString(hIMEContext,
 					GCS_COMPSTR,NULL,0);
 		mIMECompString->SetCapacity(compStrLen+1);
@@ -4181,6 +4185,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 #ifdef DEBUG_IME
 		fprintf(stderr,"GCS_COMPSTR compStrLen = %d\n", compStrLen);
 #endif
+		//--------------------------------------------------------
+		// 5. Sent the text event
+		//--------------------------------------------------------
 		HandleTextEvent(hIMEContext);
 		result = PR_TRUE;
 	}
@@ -4204,7 +4211,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 //==========================================================================
 BOOL nsWindow::OnIMECompositionFull()			
 {
-#ifdef DEBUG_IME
+#ifdef DEBUG_IME2
 	printf("OnIMECompositionFull\n");
 #endif
 
@@ -4245,7 +4252,7 @@ BOOL nsWindow::OnIMEEndComposition()
 //==========================================================================
 BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)	
 {
-#ifdef DEBUG_IME
+#ifdef DEBUG_IME2
 	printf("OnIMENotify ");
 	switch(aIMN) {
 		case IMN_CHANGECANDIDATE:
@@ -4296,7 +4303,7 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
 //==========================================================================
 BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult)
 {
-#ifdef DEBUG_IME
+#ifdef DEBUG_IME2
 	printf("OnIMERequest\n");
 #endif
 
@@ -4306,7 +4313,7 @@ BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult)
 //==========================================================================
 BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)			
 {
-#ifdef DEBUG_IME
+#ifdef DEBUG_IME2
 	printf("OnIMESelect\n");
 #endif
 
@@ -4316,7 +4323,7 @@ BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)
 //==========================================================================
 BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM& aISC)			
 {
-#ifdef DEBUG_IME
+#ifdef DEBUG_IME2
 	printf("OnIMESetContext %x %s %s %s Candidate[%s%s%s%s]\n", this, 
 		(aActive ? "Active" : "Deactiv"),
 		((aISC & ISC_SHOWUICOMPOSITIONWINDOW) ? "[Comp]" : ""),
