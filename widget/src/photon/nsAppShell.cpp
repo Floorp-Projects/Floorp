@@ -40,6 +40,10 @@
 /* Global Definitions */
 PRBool nsAppShell::gExitMainLoop = PR_FALSE;
 
+static PRBool sInitialized = PR_FALSE;
+static PLHashTable *sQueueHashTable = nsnull;
+static PLHashTable *sCountHashTable = nsnull;
+
 //-------------------------------------------------------------------------
 //
 // XPCOM CIDs
@@ -54,16 +58,14 @@ our_photon_input_add (int               fd,
                       PtFdProc_t        event_processor_callback,
                       void		         *data)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::our_photon_input_add fd=<%d>\n", fd));
-
   int err = PtAppAddFd(NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL), 
                        event_processor_callback,data);
   if (err != 0)
   {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::our_photon_input_add Error calling PtAppAddFD errno=<%d>\n", errno));
     NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD\n");
-    abort();
   }
+
+  return (err);
 }
 
 //-------------------------------------------------------------------------
@@ -73,8 +75,6 @@ our_photon_input_add (int               fd,
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()  
 { 
-//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::nsAppShell Constructor this=<%p>\n", this));
-
   mEventQueue  = nsnull;
   mFD          = -1;
   NS_INIT_REFCNT();
@@ -87,18 +87,13 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::~nsAppShell this=<%p> mFD=<%d>\n", this, mFD));
-
   if (mFD != -1)
   {
     int err=PtAppRemoveFd(NULL,mFD);
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::~nsAppShell Calling PtAppRemoveFd for mFD=<%d> err=<%d>\n", mFD, err));
 
     if (err==-1)
     {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsAppShell::~nsAppShell Error calling PtAppRemoveFd mFD=<%d> errno=<%d>\n", mFD, errno));
 	  printf("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd mFD=<%d> errno=<%d>\n", mFD, errno);
-	  //abort();
     }  
     mFD = -1;
   }
@@ -115,7 +110,6 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::SetDispatchListener. this=<%p>\n", this));
   return NS_OK;
 }
 
@@ -131,8 +125,6 @@ static int event_processor_callback(int fd, void *data, unsigned mode)
   nsIEventQueue *eventQueue = (nsIEventQueue*)data;
   if (eventQueue)
     eventQueue->ProcessPendingEvents();
-  else
-    NS_WARNING("nsAppShell::event_processor_callback eventQueue is NULL\n");
 
   return Pt_CONTINUE;
 }
@@ -183,33 +175,38 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Spinup()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spinup  this=<%p>\n", this));
-
   nsresult   rv = NS_OK;
-  
-  // Get the event queue service 
-  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+
+  // Get the event queue service
+  nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID, &rv);
+
   if (NS_FAILED(rv)) {
     NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
     return rv;
   }
 
   //Get the event queue for the thread.
+  //rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
-  
-  // If a queue already present use it.
-  if (mEventQueue)
-    return rv;
 
-  // Create the event queue for the thread
+  // If we got an event queue, use it.
+  if (mEventQueue)
+    goto done;
+
+  // otherwise create a new event queue for the thread
   rv = eventQService->CreateThreadEventQueue();
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     NS_ASSERTION("Could not create the thread event queue", PR_FALSE);
     return rv;
   }
 
-  //Get the event queue for the thread
+  // Ask again nicely for the event queue now that we have created one.
+  //rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
+
+  // XXX shouldn't this be automatic?
+ done:
+  ListenToEventQueue(mEventQueue, PR_TRUE);
 
   return rv;
 }
@@ -221,12 +218,10 @@ NS_METHOD nsAppShell::Spinup()
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::Spindown()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Spindown this=<%p>\n", this));
-
-  if (mEventQueue)
-  { 
+  if (mEventQueue) {
+    ListenToEventQueue(mEventQueue, PR_FALSE);
     mEventQueue->ProcessPendingEvents();
-    NS_RELEASE(mEventQueue);
+    mEventQueue = nsnull;
   }
 
   return NS_OK;
@@ -254,26 +249,13 @@ void MyMainLoop( void )
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::Run()
 {
-  int temp_fd;
-  
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Run this=<%p>\n", this));
-
   if (!mEventQueue)
     Spinup();
-  
+
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;
 
-  temp_fd = mEventQueue->GetEventQueueSelectFD();
-
-  /* Don't re-add the fd if its already been added */
-  /* this occurs when the user creates a new profile. */
-  if (mFD != temp_fd)
-  {
-    mFD = temp_fd;
-    our_photon_input_add(mFD, event_processor_callback, mEventQueue);
-  }
-  
+  // kick up gtk_main.  this won't return until gtk_main_quit is called
   MyMainLoop();
 
   Spindown();
@@ -289,8 +271,6 @@ NS_IMETHODIMP nsAppShell::Run()
 
 NS_METHOD nsAppShell::Exit()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Exit.\n"));
-  NS_WARNING("nsAppShell::Exit Called...\n");
   gExitMainLoop = PR_TRUE;
 
   return NS_OK;
@@ -299,10 +279,8 @@ NS_METHOD nsAppShell::Exit()
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::GetNativeEvent this=<%p>\n", this));
-      
-  aEvent = NULL;
   aRealEvent = PR_FALSE;
+  aEvent = 0;
 
   return NS_OK;
 }
@@ -318,12 +296,61 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
 
   PtProcessEvent();
 
-  return mEventQueue->ProcessPendingEvents();
+  return NS_OK;
+}
+
+#define NUMBER_HASH_KEY(_num) ((PLHashNumber) _num)
+
+static PLHashNumber
+IntHashKey(PRInt32 key)
+{
+  return NUMBER_HASH_KEY(key);
 }
 
 NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                              PRBool aListen)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::ListenToEventQueue aQueue=<%p> aListen=<%d>\n", aQueue, aListen));
+  if (!sQueueHashTable) {
+    sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                      PL_CompareValues, PL_CompareValues, 0, 0);
+  }
+  if (!sCountHashTable) {
+    sCountHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
+                                      PL_CompareValues, PL_CompareValues, 0, 0);
+  }
+
+  if (aListen) {
+    /* add listener */
+    PRInt32 key = aQueue->GetEventQueueSelectFD();
+
+    /* only add if we arn't already in the table */
+    if (!PL_HashTableLookup(sQueueHashTable, (void *)(key))) {
+      int tag;
+      tag = our_photon_input_add(aQueue->GetEventQueueSelectFD(),
+                              event_processor_callback,
+                              aQueue);
+      if (tag >= 0) {
+        PL_HashTableAdd(sQueueHashTable, (void *)(key), (void *)(tag));
+      }
+    }
+    /* bump up the count */
+    int count = (int)(PL_HashTableLookup(sCountHashTable, (void *)(key)));
+    PL_HashTableAdd(sCountHashTable, (void *)(key), (void *)(count+1));
+  } else {
+    /* remove listener */
+    PRInt32 key = aQueue->GetEventQueueSelectFD();
+
+    int count = (int)(PL_HashTableLookup(sCountHashTable, (void *)(key)));
+    if (count - 1 == 0) {
+      int tag = (int)(PL_HashTableLookup(sQueueHashTable, (void *)(key)));
+      if (tag > 0) {
+      	PtAppRemoveFd(NULL, key);
+        PL_HashTableRemove(sQueueHashTable, (void *)(key));
+      }
+    }
+    PL_HashTableAdd(sCountHashTable, (void *)(key), (void *)(count-1));
+
+  }
+
   return NS_OK;
 }
