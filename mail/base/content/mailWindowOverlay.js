@@ -613,21 +613,11 @@ function InitMessageMark()
 
 function UpdateJunkToolbarButton()
 {
-  try 
-  {
-    var junkButton = document.getElementById("button-junk");
-    if (SelectedMessagesAreJunk())
-    {
-      junkButton.label = junkButton.getAttribute('notjunk_label');
-      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('notjunk_tooltiptext'));
-    }
-    else
-    {
-      junkButton.label = junkButton.getAttribute('junk_label');
-      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('junk_tooltiptext'));
-    }
-  } 
-  catch(e) {}
+  var junkButtonDeck = document.getElementById("junk-deck");
+  if (SelectedMessagesAreJunk())
+    junkButtonDeck.selectedIndex = 1;
+  else
+    junkButtonDeck.selectedIndex = 0;
 }
 
 function UpdateDeleteCommand()

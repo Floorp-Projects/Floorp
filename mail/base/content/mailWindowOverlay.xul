@@ -1692,6 +1692,22 @@
       <toolbarbutton class="toolbarbutton-1" id="button-previous" label="&previousButton.label;" oncommand="goDoCommand('button_previous')" tooltiptext="&previousButton.tooltip;" observes="button_previous"/>      
       <toolbarbutton class="toolbarbutton-1" id="button-next"     label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
 
+      <toolbaritem id="button-junk">       
+        <deck id="junk-deck">
+          <toolbarbutton class="toolbarbutton-1"
+                   label="&junkButton.label;"
+                   tooltiptext="&junkButton.tooltip;" 
+                   observes="button_junk"
+                   oncommand="goDoCommand('button_junk')"/>
+          <toolbarbutton class="toolbarbutton-1"
+                   label="&notJunkButton.label;"
+                   tooltiptext="&notJunkButton.tooltip;" 
+                   observes="button_junk"
+                   oncommand="goDoCommand('button_junk')"/>
+        </deck>
+      </toolbaritem>
+
+
       <toolbarbutton class="toolbarbutton-1"
                id="button-junk" label="&junkButton.label;"
                tooltiptext="&junkButton.tooltip;" 
