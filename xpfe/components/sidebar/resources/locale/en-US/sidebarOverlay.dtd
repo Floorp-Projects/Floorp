@@ -1,4 +1,4 @@
+<!ENTITY sidebar.panels.label        "My Panels">
 <!ENTITY sidebar.reload.label        "reload">
 <!ENTITY sidebar.customize.label     "customize...">
-<!-- LOCALIZATION NOTE  sidebar.flash.label: Do NOT localize the term "Flash"  -->
-<!ENTITY sidebar.flash.label         "Flash">
+<!ENTITY sidebar.alerts.label        "Alerts">
