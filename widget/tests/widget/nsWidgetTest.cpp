@@ -95,7 +95,7 @@ char * gFailedMsg = NULL;
 #ifdef XP_PC
 #define XPCOM_DLL "xpcom32.dll"
 #define WIDGET_DLL "raptorwidget.dll"
-#define GFX_DLL "raptorgfxwin.dll"
+#define GFXWIN_DLL "raptorgfxwin.dll"
 #define TEXT_HEIGHT 25
 #endif
 
@@ -104,8 +104,8 @@ char * gFailedMsg = NULL;
 #ifndef WIDGET_DLL
 #define WIDGET_DLL "libwidgetgtk"MOZ_DLL_SUFFIX
 #endif
-#ifndef GFX_DLL
-#define GFX_DLL "libgfxgtk"MOZ_DLL_SUFFIX
+#ifndef GFXWIN_DLL
+#define GFXWIN_DLL "libgfxgtk"MOZ_DLL_SUFFIX
 #endif
 #define TEXT_HEIGHT 30
 #endif
@@ -113,7 +113,7 @@ char * gFailedMsg = NULL;
 #ifdef XP_MAC
 #define XPCOM_DLL "XPCOM_DLL"
 #define WIDGET_DLL "WIDGET_DLL"
-#define GFX_DLL "GFXWIN_DLL"
+#define GFXWIN_DLL "GFXWIN_DLL"
 #define TEXT_HEIGHT 30
 #endif
 
@@ -1237,10 +1237,10 @@ nsresult WidgetTest(int *argc, char **argv)
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID); 
 
 
-    nsComponentManager::RegisterComponentLib(kCRenderingContextIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
-    nsComponentManager::RegisterComponentLib(kCDeviceContextIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
-    nsComponentManager::RegisterComponentLib(kCFontMetricsIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
-    nsComponentManager::RegisterComponentLib(kCImageIID, NULL, NULL, GFX_DLL, PR_FALSE, PR_FALSE); 
+    nsComponentManager::RegisterComponentLib(kCRenderingContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
+    nsComponentManager::RegisterComponentLib(kCDeviceContextIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
+    nsComponentManager::RegisterComponentLib(kCFontMetricsIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
+    nsComponentManager::RegisterComponentLib(kCImageIID, NULL, NULL, GFXWIN_DLL, PR_FALSE, PR_FALSE); 
 
     nsresult  res;
 
