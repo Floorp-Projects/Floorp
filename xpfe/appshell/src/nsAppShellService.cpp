@@ -27,6 +27,8 @@
 #endif // NECKO
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIObserverService.h"
+#include "nsIObserver.h"
 #include "nsXPComFactory.h"    /* template implementation of a XPCOM factory */
 
 #include "nsIAppShell.h"
@@ -87,7 +89,6 @@ static NS_DEFINE_IID(kXMLEncodingCID, NS_XML_ENCODING_CID);
 
 static NS_DEFINE_IID(kIFactoryIID,           NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,    NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
@@ -95,18 +96,28 @@ static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 
-class nsAppShellService : public nsIAppShellService
+// copied from nsEventQueue.cpp
+static char *gEQActivatedNotification = "nsIEventQueueActivated";
+static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
+
+class nsAppShellService : public nsIAppShellService,
+                          public nsIObserver,
+                          public nsIShutdownListener
 {
 public:
   nsAppShellService(void);
 
   NS_DECL_ISUPPORTS
-
   NS_DECL_NSIAPPSHELLSERVICE
+  NS_DECL_NSIOBSERVER
+
+  // nsIShutdownListener interface
+  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports* service);
 
 protected:
   virtual ~nsAppShellService();
 
+  void RegisterObserver(PRBool aRegister);
   NS_IMETHOD JustCreateTopWindow(nsIWebShellWindow *aParent,
                                  nsIURI *aUrl, 
                                  PRBool aShowWindow, PRBool aLoadDefaultPage,
@@ -126,6 +137,7 @@ protected:
   nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
   PRBool mDeleteCalled;
   PRBool mQuiting;
+  PRBool mObservingEventQueues;
 };
 
 nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
@@ -137,11 +149,13 @@ nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
   mCmdLineService = nsnull;
   mDeleteCalled		= PR_FALSE;
   mQuiting	= PR_FALSE;
+  mObservingEventQueues = PR_FALSE;
 }
 
 nsAppShellService::~nsAppShellService()
 {
   mDeleteCalled = PR_TRUE;
+  RegisterObserver(PR_FALSE);
   NS_IF_RELEASE(mAppShell);
   NS_IF_RELEASE(mWindowList);
   NS_IF_RELEASE(mCmdLineService);
@@ -155,7 +169,7 @@ nsAppShellService::~nsAppShellService()
 /*
  * Implement the nsISupports methods...
  */
-NS_IMPL_ISUPPORTS(nsAppShellService, kIAppShellServiceIID);
+NS_IMPL_ISUPPORTS3(nsAppShellService, nsIAppShellService, nsIObserver, nsIShutdownListener);
 
 
 NS_IMETHODIMP
@@ -251,10 +265,13 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
       goto done;
   }
 
+  // listen to EventQueues' comings and goings. do this after the appshell
+  // has been created, but after the event queue has been created. that
+  // latter bit is unfortunate, but we deal with it.
+  RegisterObserver(PR_TRUE);
  
-	
 // enable window mediation
-	rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
+  rv = nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID,
                                    (nsISupports**) &mWindowMediator);
 
 //  CreateHiddenWindow();	// rjc: now require this to be explicitly called
@@ -869,3 +886,77 @@ nsresult NS_NewAppShellServiceFactory(nsIFactory** aResult)
   *aResult = inst;
   return rv;
 }
+
+//-------------------------------------------------------------------------
+// nsIObserver interface and friends
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
+                                         const PRUnichar *aTopic,
+                                         const PRUnichar *)
+{
+  nsAutoString topic(aTopic);
+
+  NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
+  if (topic.Equals(gEQActivatedNotification)) {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq)
+      mAppShell->ListenToEventQueue(eq, PR_TRUE);
+  } else if (topic.Equals(gEQDestroyedNotification)) {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq)
+      mAppShell->ListenToEventQueue(eq, PR_TRUE);
+  }
+  return NS_OK;
+}
+
+/* ask nsIObserverService to tell us about nsEventQueue notifications */
+void nsAppShellService::RegisterObserver(PRBool aRegister)
+{
+  nsresult           rv;
+  nsISupports        *glop;
+
+  // if we're not going to do anything anyway, skip impending initialization.
+  // (normally, we'll unregister during app shutdown, and the nsObserverService
+  // has already been spun down. no need to bring it back up.)
+  if ((!aRegister || mObservingEventQueues) && (aRegister || !mObservingEventQueues))
+    return;
+
+  nsAutoString topicA(gEQActivatedNotification);
+  nsAutoString topicB(gEQDestroyedNotification);
+
+  // here's a silly dance. seems better to do it than not, though...
+  nsCOMPtr<nsIObserver> weObserve(do_QueryInterface(NS_STATIC_CAST(nsIObserver *, this)));
+  nsCOMPtr<nsIShutdownListener> weListen(do_QueryInterface(NS_STATIC_CAST(nsIShutdownListener *, this)));
+
+  NS_ASSERTION(weObserve && weListen, "who's been chopping bits off nsAppShellService?");
+
+  rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID,
+                           nsIObserverService::GetIID(), &glop,
+                           weListen);
+  if (NS_SUCCEEDED(rv)) {
+    nsIObserverService *os = NS_STATIC_CAST(nsIObserverService*,glop);
+    if (aRegister && !mObservingEventQueues) {
+      mObservingEventQueues = PR_TRUE;
+      os->AddObserver(weObserve, topicA.GetUnicode());
+      os->AddObserver(weObserve, topicB.GetUnicode());
+    } else if (!aRegister && mObservingEventQueues) {
+      mObservingEventQueues = PR_FALSE;
+      os->RemoveObserver(weObserve, topicA.GetUnicode());
+      os->RemoveObserver(weObserve, topicB.GetUnicode());
+    }
+    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_PROGID, os);
+  }
+}
+
+//-------------------------------------------------------------------------
+// nsIShutdownListener
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsAppShellService::OnShutdown(const nsCID& aClass, nsISupports* service)
+{
+  mObservingEventQueues = PR_FALSE;
+  return NS_OK;
+}
+
