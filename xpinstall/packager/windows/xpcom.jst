@@ -82,6 +82,7 @@ function updateWinReg()
 function upgradeCleanup()
 {
   deleteThisFile("Program",    "component.reg");
+  deleteThisFile("Components", "compreg.dat");
   deleteThisFile("Components", "xpti.dat");
   deleteThisFile("Components", "xptitemp.dat");
 }
@@ -92,7 +93,6 @@ var err;
 var szUninstall;
 var fProgram;
 var fWindowsSystem;
-var fileTemp;
 var fileComponentReg;
 var fileComponentRegStr;
 var fileMsvcrt;
@@ -132,14 +132,13 @@ if(verifyDiskSpace(fProgram, srDest))
     // install msvcrt.dll *only* if it does not exist
     // we don't care if addFile() fails (if the file does not exist in the archive)
     // bacause it will still install
-    fileTemp   = fWindowsSystem + "msvcrt.dll";
-    fileMsvcrt = getFolder("file:///", fileTemp);
+    fileMsvcrt = getFolder(fWindowsSystem, "msvcrt.dll");
     rv         = File.exists(fileMsvcrt);
     logComment("fileExists() returned: " + rv);
     if(rv == false)
     {
       logComment("File not found: " + fileMsvcrt);
-      addFile("/Microsoft/Shared",
+      addFile("/Microsoft/Shared/msvcrt.dll",
               "$Version$",
               "msvcrt.dll",         // dir name in jar to extract 
               fWindowsSystem,       // Where to put this file (Returned from getFolder) 
@@ -155,14 +154,13 @@ if(verifyDiskSpace(fProgram, srDest))
     // install msvcirt.dll *only* if it does not exist
     // we don't care if addFile() fails (if the file does not exist in the archive)
     // bacause it will still install
-    fileTemp    = fWindowsSystem + "msvcirt.dll";
-    fileMsvcirt = getFolder("file:///", fileTemp);
+    fileMsvcirt = getFolder(fWindowsSystem, "msvcirt.dll");
     rv          = File.exists(fileMsvcirt);
     logComment("fileExists() returned: " + rv);
     if(rv == false)
     {
       logComment("File not found: " + fileMsvcirt);
-      addFile("/Microsoft/Shared",
+      addFile("/Microsoft/Shared/msvcirt.dll",
               "$Version$",
               "msvcirt.dll",        // dir name in jar to extract 
               fWindowsSystem,       // Where to put this file (Returned from getFolder) 
