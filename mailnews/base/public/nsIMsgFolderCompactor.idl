@@ -49,6 +49,6 @@ interface nsIMsgWindow;
 
 interface nsIMsgFolderCompactor :  nsISupports
 {
-  void compact(in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow);
+  void compact(in nsIMsgFolder aFolder, in boolean aOfflineStore, in nsIMsgWindow aMsgWindow);
   void compactAll(in nsISupportsArray aArrayOfFoldersToCompact, in nsIMsgWindow aMsgWindow, in boolean compactOfflineAlso, in nsISupportsArray aOfflineFolderArray);
 };

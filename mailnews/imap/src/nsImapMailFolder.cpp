@@ -101,6 +101,7 @@
 #include "nsNetUtil.h"
 #include "nsIMAPNamespace.h"
 #include "nsHashtable.h"
+#include "nsIMsgFolderCompactor.h"
 #include "nsMsgMessageFlags.h"
 #include "nsIMimeHeaders.h"
 #include "nsIMsgMdnGenerator.h"
@@ -1123,24 +1124,56 @@ NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
 NS_IMETHODIMP nsImapMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
-  // compact offline part purely for testing purposes
-  if (WeAreOffline() && (mFlags & MSG_FOLDER_FLAG_OFFLINE))
-  {
-    rv = CompactOfflineStore(aMsgWindow);
-  }
-  else
-  {
+  // compact offline store, if folder configured for offline use.
+ if (mFlags & MSG_FOLDER_FLAG_OFFLINE)
+    CompactOfflineStore(aMsgWindow);
+
     nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
  
-    rv = imapService->Expunge(m_eventQueue, this, aListener, nsnull);
-  }
-  return rv;
+  return  imapService->Expunge(m_eventQueue, this, aListener, nsnull);
 }
 
 NS_IMETHODIMP nsImapMailFolder::CompactAll(nsIUrlListener *aListener,  nsIMsgWindow *aMsgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray)
 {
-  return Compact(aListener, aMsgWindow);  //for now
+  NS_ASSERTION(!aOfflineFolderArray, "compacting automatically compacts offline stores");
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISupportsArray> folderArray; 
+
+  if (!aFolderArray)
+  {
+    nsCOMPtr<nsIMsgFolder> rootFolder;
+    nsCOMPtr<nsISupportsArray> allDescendents;
+    rv = GetRootFolder(getter_AddRefs(rootFolder));  
+    if (NS_SUCCEEDED(rv) && rootFolder)
+    {
+      NS_NewISupportsArray(getter_AddRefs(allDescendents));
+      rootFolder->ListDescendents(allDescendents);
+      PRUint32 cnt =0;
+      rv = allDescendents->Count(&cnt);
+      NS_ENSURE_SUCCESS(rv,rv);
+      NS_NewISupportsArray(getter_AddRefs(folderArray));
+      for (PRUint32 i=0; i< cnt;i++)
+      {
+        nsCOMPtr<nsISupports> supports = getter_AddRefs(allDescendents->ElementAt(i));
+        nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        rv = folderArray->AppendElement(supports);
+
+      }
+      rv = folderArray->Count(&cnt);
+      NS_ENSURE_SUCCESS(rv,rv);
+      if (cnt == 0 )
+        return NotifyCompactCompleted();
+    }
+  }
+  nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && folderCompactor)
+    if (aFolderArray)
+       rv = folderCompactor->CompactAll(aFolderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
+    else if (folderArray)
+       rv = folderCompactor->CompactAll(folderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::UpdateStatus(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)

@@ -1442,7 +1442,7 @@ nsresult nsMsgDBFolder::CompactOfflineStore(nsIMsgWindow *inWindow)
   nsresult rv;
   nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGOFFLINESTORECOMPACTOR_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && folderCompactor)
-      rv = folderCompactor->Compact(this, inWindow);
+      rv = folderCompactor->Compact(this, PR_TRUE, inWindow);
   return rv;
 }
 
@@ -1573,7 +1573,7 @@ nsMsgDBFolder::CompactAllOfflineStores(nsIMsgWindow *aWindow, nsISupportsArray *
   folderCompactor = do_CreateInstance(NS_MSGOFFLINESTORECOMPACTOR_CONTRACTID, &rv);
 
   if (NS_SUCCEEDED(rv) && folderCompactor)
-    rv = folderCompactor->CompactAll(aOfflineFolderArray, aWindow, PR_FALSE, nsnull);
+    rv = folderCompactor->CompactAll(nsnull, aWindow, PR_TRUE, aOfflineFolderArray);
   return rv;
 }
 

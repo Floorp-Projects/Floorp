@@ -787,7 +787,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if ((aCommand == kNC_CompactAll))
       {
-        rv = folder->CompactAll(nsnull, mWindow, nsnull, PR_FALSE, nsnull);
+        rv = folder->CompactAll(nsnull, mWindow, nsnull, PR_TRUE, nsnull);
       }
       else if ((aCommand == kNC_EmptyTrash))
       {

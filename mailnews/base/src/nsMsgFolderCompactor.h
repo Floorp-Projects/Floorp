@@ -80,7 +80,7 @@ protected:
   nsresult CompactNextFolder();
   
 
-  char *m_baseMessageUri; // base message uri
+  nsCString m_baseMessageUri; // base message uri
   nsCString m_messageUri; // current message uri being copy
   nsCOMPtr<nsIMsgFolder> m_folder; // current folder being compact
   nsCOMPtr<nsIMsgDatabase> m_db; // new database for the compact folder
@@ -99,6 +99,7 @@ protected:
   PRUint32 m_folderIndex; // tells which folder to compact in case of compact all
   PRBool m_compactAll;  //flag for compact all
   PRBool m_compactOfflineAlso; //whether to compact offline also
+  PRBool m_compactingOfflineFolders; // are we in the offline folder compact phase
   PRBool m_parsingFolder; //flag for parsing local folders;
   // these members are used to add missing status lines to compacted messages.
   PRBool m_needStatusLine;
