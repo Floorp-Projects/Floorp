@@ -160,6 +160,7 @@ typedef struct _Pop3ConData {
     PRInt32 size_limit;         /* Leave messages bigger than this on the
                                    server and only download a partial
                                    message. */
+    PRUint32 capability_flags; /* What capability this server has? */
     
     Pop3StatesEnum next_state;  /* the next state or action to be taken */
     Pop3StatesEnum next_state_after_response;  
@@ -243,7 +244,6 @@ public:
 
 private:
 
-    PRUint32 m_pop3CapabilityFlags;
     nsCString m_username;
     Pop3ConData* m_pop3ConData;
 	nsCString m_senderInfo;
@@ -268,8 +268,9 @@ private:
 	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 	void Initialize(nsIURI * aURL);
 
-    nsCOMPtr<nsIPop3URL> m_nsIPop3URL;
+    nsCOMPtr<nsIURI> m_url;
     nsCOMPtr<nsIPop3Sink> m_nsIPop3Sink;
+    nsCOMPtr<nsIPop3IncomingServer> m_pop3Server;
 	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
     void FreeMsgInfo();

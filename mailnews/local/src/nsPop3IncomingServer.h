@@ -39,9 +39,7 @@ public:
     NS_IMETHOD PerformBiff();
     
 private:
-    PRBool m_leaveOnServer;
-    PRBool m_deleteMailLeftOnServer;
-
+    PRUint32 m_capabilityFlags;
 };
 
 #endif

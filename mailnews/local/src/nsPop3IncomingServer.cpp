@@ -32,6 +32,7 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIFileSpec.h"
+#include "nsPop3Protocol.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
@@ -39,11 +40,16 @@ static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 NS_IMPL_ISUPPORTS_INHERITED(nsPop3IncomingServer,nsMsgIncomingServer,
                             nsIPop3IncomingServer)
 
-nsPop3IncomingServer::nsPop3IncomingServer() :
-    m_leaveOnServer(PR_FALSE),
-    m_deleteMailLeftOnServer(PR_FALSE)
+nsPop3IncomingServer::nsPop3IncomingServer()
 {    
     NS_INIT_REFCNT();
+    m_capabilityFlags = 
+        POP3_AUTH_LOGIN_UNDEFINED |
+        POP3_XSENDER_UNDEFINED |
+        POP3_GURL_UNDEFINED |
+        POP3_UIDL_UNDEFINED |
+        POP3_TOP_UNDEFINED |
+        POP3_XTND_XLST_UNDEFINED;
 }
 
 nsPop3IncomingServer::~nsPop3IncomingServer()
@@ -57,9 +63,38 @@ NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                         LeaveMessagesOnServer,
                         "leave_on_server")
 
+NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
+                        DeleteMailLeftOnServer,
+                        "delete_mail_left_on_server")
+
+NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
+                        AuthLogin,
+                        "auth_login")
+
+NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
+                        DotFix,
+                        "dot_fix")
+
+NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
+                        LimitMessageSize,
+                        "limit_message_size")
+
 NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
-                       DeleteMailLeftOnServer,
-                       "delete_mail_left_on_server")
+                       MaxMessageSize,
+                       "max_size")
+nsresult 
+nsPop3IncomingServer::GetPop3CapabilityFlags(PRUint32 *flags)
+{
+    *flags = m_capabilityFlags;
+    return NS_OK;
+}
+
+nsresult
+nsPop3IncomingServer::SetPop3CapabilityFlags(PRUint32 flags)
+{
+    m_capabilityFlags = flags;
+    return NS_OK;
+}
 
 nsresult
 nsPop3IncomingServer::GetServerURI(char **uri)
