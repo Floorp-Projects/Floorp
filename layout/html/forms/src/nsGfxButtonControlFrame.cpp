@@ -211,8 +211,8 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext&          aPresContext
         PRUint32 count = content->ContentCount();
         // XXX not sure if I need to get more than the first index?
         if (count > 0) {
-          nsStyleContentType type = eStyleContentType_String;
-          content->GetContentAt(0, type, value);
+          nsStyleContentType contentType = eStyleContentType_String;
+          content->GetContentAt(0, contentType, value);
         }
       }
     }
@@ -344,8 +344,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
 
     nsCompatibility mode;
     aPresContext.GetCompatibilityMode(&mode);
-
-    nsIFrame* firstKid = mFrames.FirstChild();
 
     if (mode == eCompatibility_NavQuirks) {
       // Do NavQuirks Sizing and layout
