@@ -534,7 +534,7 @@ atomToName(nsIAtom* aAtom)
 {
   const PRUnichar *namePRU;
   aAtom->GetUnicode(&namePRU);
-  return ToNewUTF8String(nsLocalString(namePRU));
+  return ToNewUTF8String(nsDependentString(namePRU));
 }
 
 static PRUint32 gUserDefinedMap[2048];
