@@ -868,6 +868,21 @@ sub confirm_login {
          exit;
        }
 
+       # if no password was provided, then fail the authentication
+       # while it may be valid to not have an LDAP password, when you
+       # bind without a password (regardless of the binddn value), you
+       # will get an anonymous bind.  I do not know of a way to determine
+       # whether a bind is anonymous or not without making changes to the
+       # LDAP access control settings
+       if ( ! $::FORM{"LDAP_password"} ) {
+         print "Content-type: text/html\n\n";
+         PutHeader("Login Failed");
+         print "You did not provide a password.\n";
+         print "Please click <b>Back</b> and try again.\n";
+         PutFooter();
+         exit;
+       }
+
        # We've got our anonymous bind;  let's look up this user.
        my $dnEntry = $LDAPconn->search(Param("LDAPBaseDN"),"subtree","uid=".$::FORM{"LDAP_login"});
        if(!$dnEntry) {
