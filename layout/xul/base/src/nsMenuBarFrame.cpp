@@ -30,6 +30,14 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsXULAtoms.h"
 
+// XXX Notes to self
+// 1. The menu bar should get its own view, and it should capture all events when the ALT key
+// goes down.
+//
+// 2. Collapsing the menu bar will destroy the frame. The menu bar will need to unregister its
+// listeners when this happens.
+//
+
 //
 // NS_NewMenuBarFrame
 //
@@ -139,15 +147,7 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
         GetNextMenuItem(mCurrentMenu, getter_AddRefs(nextItem));
       else GetPreviousMenuItem(mCurrentMenu, getter_AddRefs(nextItem));
 
-      if (mCurrentMenu == nextItem.get())
-        return;
-
-      // Unset the current child.
-      mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
-      
-      // Set the new child.
-      nextItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
-      mCurrentMenu = nextItem;
+      SetCurrentMenuItem(nextItem);
     }
   }
 }
@@ -249,5 +249,18 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult)
   // No luck. Just return our start value.
   *aResult = aStart;
   NS_IF_ADDREF(aStart);
+}
+
+void nsMenuBarFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
+{
+  if (mCurrentMenu == aMenuItem)
+    return;
+
+  // Unset the current child.
+  mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+  
+  // Set the new child.
+  aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+  mCurrentMenu = aMenuItem;
 }
 
