@@ -37,6 +37,11 @@ public:
   NS_IMETHOD DestroyThreadEventQueue(void) = 0;
 
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, PLEventQueue** aResult) = 0;
+  
+#ifdef XP_MAC
+// This is ment to be temporary until something better is worked out
+ NS_IMETHOD ProcessEvents() = 0;
+#endif
 };
 
 #endif /* nsIEventQueueService_h___ */

@@ -109,6 +109,9 @@ public:
   NS_IMETHOD DestroyThreadEventQueue(void);
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, PLEventQueue** aResult);
 
+#ifdef XP_MAC
+  NS_IMETHOD ProcessEvents();
+#endif // XP_MAC
 protected:
   ~nsEventQueueServiceImpl();
 
@@ -240,7 +243,24 @@ done:
   PR_ExitMonitor(mEventQMonitor);
   return rv;
 }
+#ifdef XP_MAC
+// Callback from the enumeration of the HashTable.
+static  PRBool EventDispatchingFunc(nsHashKey *aKey, void *aData, void* closure)
+{
+	EventQueueEntry* entry = (EventQueueEntry*) aData;
+	PL_ProcessPendingEvents( entry->GetEventQueue() );
+	return true;
+}
 
+// MAC specific. Will go away someday
+NS_IMETHODIMP nsEventQueueServiceImpl::ProcessEvents() 
+{
+	if ( mEventQTable )
+		mEventQTable->Enumerate( EventDispatchingFunc, NULL  );
+	return NS_OK;
+}
+
+#endif 
 //----------------------------------------------------------------------
 
 static nsEventQueueServiceImpl* gServiceInstance = NULL;
