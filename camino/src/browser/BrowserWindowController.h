@@ -184,6 +184,7 @@ class nsIDOMNode;
 
 - (void)startThrobber;
 - (void)stopThrobber;
+- (void)clickThrobber:(id)aSender;
 
 -(void) biggerTextSize;
 -(void) smallerTextSize;
@@ -249,6 +250,9 @@ class nsIDOMNode;
 + (NSImage*) insecureIcon;
 + (NSImage*) secureIcon;
 + (NSImage*) brokenIcon;
+
+// cache the toolbar defaults we parse from a plist
++ (NSArray*) toolbarDefaults;
 
 @end
 
