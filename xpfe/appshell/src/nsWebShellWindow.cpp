@@ -812,7 +812,7 @@ PRInt32 nsWebShellWindow::GetDocHeight(nsIDocument * aDoc)
   if (presShell) {
     nsCOMPtr<nsIPresContext> presContext;
     presShell->GetPresContext(getter_AddRefs(presContext));
-    if (nsnull != presContext) {
+    if (presContext) {
       nsRect rect;
       presContext->GetVisibleArea(rect);
       nsIFrame * rootFrame;
