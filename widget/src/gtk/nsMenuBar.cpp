@@ -136,12 +136,27 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
   nsISupports * supports = nsnull;
   aMenu->QueryInterface(kISupportsIID, (void**)&supports);
-  if(supports){
+  if (supports) {
     mMenusVoidArray.AppendElement(aMenu);
     mNumMenus++;
   }
   
   aMenu->GetLabel(Label);
+
+  // get access key
+  nsString accessKey = " ";
+  aMenu->GetAccessKey(accessKey);
+  if(accessKey != " ")
+  {
+    // munge acess key into name
+    PRInt32 offset = Label.Find(accessKey);
+    if(offset != -1)
+      Label.Insert("_", offset);
+  }
+
+  char *foo = Label.ToNewCString();
+  g_print("%s\n", foo);
+  delete [] foo;
 
   widget = nsMenuItem::CreateLocalized(Label);
   gtk_widget_show(widget);
@@ -277,9 +292,11 @@ nsEventStatus nsMenuBar::MenuConstruct(
         if (menuElement) {
           nsString menuNodeType;
           nsString menuName;
+          nsString menuAccessKey = " ";
           menuElement->GetNodeName(menuNodeType);
           if (menuNodeType.Equals("menu")) {
             menuElement->GetAttribute(nsAutoString("name"), menuName);
+            menuElement->GetAttribute(nsAutoString("accesskey"), menuAccessKey);
             // Don't create the menu yet, just add in the top level names
 
             // Create nsMenu
@@ -292,7 +309,8 @@ nsEventStatus nsMenuBar::MenuConstruct(
               pnsMenu->Create(supports, menuName);
               NS_RELEASE(supports);
 
-              pnsMenu->SetLabel(menuName); 
+              pnsMenu->SetLabel(menuName);
+              pnsMenu->SetAccessKey(menuAccessKey);
               pnsMenu->SetDOMNode(menuNode);
               pnsMenu->SetDOMElement(menuElement);
               pnsMenu->SetWebShell(mWebShell);
