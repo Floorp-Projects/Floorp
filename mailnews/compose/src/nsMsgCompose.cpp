@@ -113,19 +113,7 @@ nsresult
 ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
 {
   // Now, insert it into the editor...
-  //
-  // Akkana: There is a problem inserting converted unicode text into
-  //         the plain text editor with the InsertAsQuotation() method.
-  //         InsertText works fine, but InsertAsQuotation() seems to give
-  //         us a blank window. To see the bug, change the conditional below
-  //         from:
-  //                    "if ( (aQuoted) && (aHTMLEditor) )" 
-  //         to:
-  //                    "if (aQuoted)" 
-  //
-  // RICHIE SHERRY  if (aQuoted)
-  //
-  if ( (aQuoted) && (aHTMLEditor) )
+  if ( (aQuoted) )
     aEditor->InsertAsQuotation(aBuf.GetUnicode());
   else
   {
