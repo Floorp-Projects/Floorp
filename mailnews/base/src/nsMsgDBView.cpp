@@ -1858,7 +1858,7 @@ NS_IMETHODIMP nsMsgDBView::GetIndicesForSelection(nsMsgViewIndex **indices,  PRU
   if (!numIndicies) return NS_OK;
 
   *indices = (nsMsgViewIndex *)nsMemory::Alloc(numIndicies * sizeof(nsMsgViewIndex));
-  if (!indices) return NS_ERROR_OUT_OF_MEMORY;
+  if (!*indices) return NS_ERROR_OUT_OF_MEMORY;
   for (PRUint32 i=0;i<numIndicies;i++) {
     (*indices)[i] = selection.GetAt(i);
   }
