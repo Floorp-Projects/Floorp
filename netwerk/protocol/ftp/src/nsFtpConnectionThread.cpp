@@ -2381,6 +2381,8 @@ nsFtpState::StopProcessing() {
     if ( NS_SUCCEEDED(broadcastErrorCode))
         broadcastErrorCode = mInternalError;
 
+    mInternalError = broadcastErrorCode;
+
     if (mDPipeRequest && NS_FAILED(broadcastErrorCode))
         mDPipeRequest->Cancel(broadcastErrorCode);
     
