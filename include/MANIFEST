@@ -70,6 +70,7 @@ shistele.h
 shr_str.h
 spellchk.h
 structs.h
+timing.h
 undo.h
 unix-dns.h
 vcc.h
