@@ -21,7 +21,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 
-#ifndef NSCAP_NO_NEW_CASTS
+#ifdef HAVE_CPP_NEW_CASTS
   #define STATIC_CAST(T,x)  static_cast<T>(x)
   #define REINTERPRET_CAST(T,x) reinterpret_cast<T>(x)
 #else
