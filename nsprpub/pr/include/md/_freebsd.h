@@ -26,7 +26,11 @@
 #define PR_LINKER_ARCH	"freebsd"
 #define _PR_SI_SYSNAME  "FREEBSD"
 #define _PR_SI_ARCHITECTURE "x86"
-#define PR_DLL_SUFFIX		".so.1.0"
+#if defined(__ELF__)
+#define PR_DLL_SUFFIX          ".so"
+#else
+#define PR_DLL_SUFFIX          ".so.1.0"
+#endif
 
 #define _PR_VMBASE              0x30000000
 #define _PR_STACK_VMBASE	0x50000000
@@ -39,6 +43,10 @@
 #define _PR_HAVE_SOCKADDR_LEN
 #define _PR_STAT_HAS_ST_ATIMESPEC
 #define _PR_NO_LARGE_FILES
+#if ( __FreeBSD__ > 2 )
+#define _PR_POLL_AVAILABLE
+#define _PR_USE_POLL
+#endif
 
 #define USE_SETJMP
 
@@ -194,6 +202,10 @@ extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
  * unwrapped version.
  */
 #define _MD_SELECT(nfds,r,w,e,tv) syscall(SYS_select,nfds,r,w,e,tv)
+
+#if defined(_PR_POLL_AVAILABLE)
+#define _MD_POLL(fds,nfds,timeout) syscall(SYS_poll,fds,nfds,timeout)
+#endif
 
 /* freebsd has INADDR_LOOPBACK defined, but in /usr/include/rpc/types.h, and I didn't
    want to be including that.. */
