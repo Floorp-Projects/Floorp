@@ -335,9 +335,11 @@ C<InstallFromManifest()>
 
 =cut
 
-sub InstallFromManifest($;$)
+sub InstallFromManifest($;$$)
 	{
-		my ($manifest_file, $dest_dir) = @_;
+		my ($manifest_file, $dest_dir, $flat) = @_;
+		
+		$flat = 0 unless defined($flat); # if $flat, all rel. paths in MANIFEST get aliased to the root of $dest_dir
 
 		$dest_dir ||= ":";
 
@@ -348,7 +350,14 @@ sub InstallFromManifest($;$)
 
 		#Mac::Events->import();
 		WaitNextEvent();
-		print "Doing manifest on \"$manifest_file\"\n" unless $QUIET;
+		if ($flat)
+		{
+			print "Doing manifest on \"$manifest_file\" FLAT\n" unless $QUIET;
+		}
+		else
+		{
+			print "Doing manifest on \"$manifest_file\"\n" unless $QUIET;
+		}
 		
 		my $read = maniread(full_path_to($manifest_file));
 		foreach $file (keys %$read)
@@ -356,7 +365,7 @@ sub InstallFromManifest($;$)
 				next unless $file;
 
 				$subdir = ":";
-				if ( $file =~ /:.+:/ )
+				if (!$flat && ($file =~ /:.+:/ ))
 					{
 						$subdir = $&;
 					}
