@@ -42,6 +42,7 @@ REQUIRES = \
     content \
     widget \
     gfx \
+    js \
     $(NULL)
 XPIFILE         = mozactivex.xpi
 
