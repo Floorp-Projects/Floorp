@@ -485,7 +485,7 @@ protected:
                                   nsIStyleContext*         aStyleContext,
                                   nsIFrame*&               aNewFrame);
 
-  nsresult ConstructFrameByTag(nsIPresShell*        aPresShell, 
+  nsresult ConstructFrameByTag(nsIPresShell*            aPresShell, 
                                nsIPresContext*          aPresContext,
                                nsFrameConstructorState& aState,
                                nsIContent*              aContent,
@@ -493,7 +493,8 @@ protected:
                                nsIAtom*                 aTag,
                                PRInt32                  aNameSpaceID,
                                nsIStyleContext*         aStyleContext,
-                               nsFrameItems&            aFrameItems);
+                               nsFrameItems&            aFrameItems,
+                               PRBool*                  aWhiteSpaceContent = nsnull);
 
   nsresult ConstructFrameInternal( nsIPresShell*            aPresShell, 
                                    nsIPresContext*          aPresContext,
