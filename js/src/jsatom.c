@@ -217,8 +217,6 @@ static JSHashAllocOps atom_alloc_ops = {
 JSBool
 js_InitAtomState(JSContext *cx, JSAtomState *state)
 {
-    uintN i;
-
     state->runtime = cx->runtime;
     state->table = JS_NewHashTable(JS_ATOM_HASH_SIZE, js_hash_atom_key,
                                    js_compare_atom_keys, js_compare_stub,
@@ -232,10 +230,22 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     state->tablegen = 0;
 #endif
 
+    if (!js_InitPinnedAtoms(cx, state)) {
+        js_FreeAtomState(cx, state);
+        return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+JSBool
+js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
+{
+    uintN i;
+
 #define FROB(lval,str)                                                        \
     JS_BEGIN_MACRO                                                            \
         if (!(state->lval = js_Atomize(cx, str, strlen(str), ATOM_PINNED)))   \
-            goto bad;                                                         \
+            return JS_FALSE;                                                  \
     JS_END_MACRO
 
     JS_ASSERT(sizeof js_type_str / sizeof js_type_str[0] == JSTYPE_LIMIT);
@@ -286,10 +296,6 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
 #undef FROB
 
     return JS_TRUE;
-
-bad:
-    js_FreeAtomState(cx, state);
-    return JS_FALSE;
 }
 
 /* NB: cx unused; js_FinishAtomState calls us with null cx. */
