@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Thunderbird RSS Integration code.
+#
+# Contributor(s):
+#   David Bienvenu <bienvenu@nventure.com>
+#   Scott MacGregor <mscott@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** -->
+
+
+<?xml-stylesheet href="chrome://messenger/skin/virtualFolderListDialog.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/virtualFolderListDialog.dtd">
+
+<dialog id="searchFolderWindow"
+        xmlns:NC="http://home.netscape.com/NC-rdf#" 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&virtualFolderListTitle.title;"
+        style="width: 25em; height: 25em;"
+        persist="width height screenX screenY"
+        onload="onLoad();"
+        onunload="onUnLoad();"
+        ondialogaccept="return onOK();"
+        ondialogcancel="return onCancel();">   
+
+<script type="application/x-javascript" src="chrome://messenger/content/virtualFolderListDialog.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+
+  <description>&virtualFolderDesc.label;</description>
+    <tree id="folderPickerTree"
+          flex="1"
+          hidecolumnpicker="true"
+          seltype="multiple"
+          disableKeyNavigation="true"
+          datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+          flags="dont-build-content"
+          ref="msgaccounts:/"
+          onkeypress="onSelectFolderTreeKeyPress(event);"
+          onclick="selectFolderTreeOnClick(event);"> 
+      <template>
+        <rule nc:CanSearchMessages="true">
+          <conditions>
+            <content uri="?container"/> 
+            <member container="?container" child="?member"/>
+          </conditions>
+          
+          <bindings>
+            <binding subject="?member"
+                    predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
+                    object="?folderTreeName"/>
+            <binding subject="?member"
+                    predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                    object="?folderTreeNameSort"/>
+            <binding subject="?member"
+                    predicate="http://home.netscape.com/NC-rdf#ServerType"
+                    object="?serverType"/>
+            <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
+                     object="?specialFolder"/>
+            <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#HasUnreadMessages"
+                     object="?hasUnreadMessages"/>
+            <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#InVFEditSearchScope"
+                     object="?inVFEditSearchScope"/>
+          </bindings>
+
+          <action>
+            <treechildren>
+              <treeitem uri="?member">
+                <treerow>
+                  <treecell label="?folderTreeName" properties="ServerType-?ServerType specialFolder-?specialFolder hasUnreadMessages-?hasUnreadMessages"/>
+                  <treecell properties="inVFEditSearchScope-?inVFEditSearchScope"/>/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </action>
+        </rule>
+      </template>
+
+      <treecols>
+        <treecol id="folderNameCol" sort="?folderTreeNameSort" sortactive="true" 
+                 flex="10" primary="true" hideheader="true" crop="center"/>
+        <splitter class="tree-splitter"/>
+        <treecol id="selectedColumn" hideheader="true" flex="1"/>
+      </treecols>
+    </tree>
+</dialog>

@@ -15,6 +15,6 @@
   -   David Bienvenu <bienvenu@nventure.com>
   -->
 
-<!ENTITY createVFDialog.title              "Create Virtual Folder">
-<!ENTITY virtualFolder.label               "Enter the name for your virtual folder:">
+<!ENTITY createVFDialog.title              "Save Search">
+<!ENTITY virtualFolder.label               "Enter the name for your saved search folder: ">
 <!ENTITY virtualFolder.accesskey           "E">

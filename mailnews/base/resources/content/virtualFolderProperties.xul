@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Thunderbird RSS Integration code.
+#
+# Contributor(s):
+#   David Bienvenu <bienvenu@nventure.com>
+#   Scott MacGregor <mscott@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/searchDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/virtualFolderProperties.dtd">
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        id="virtualFolderPropertiesDialog"
+        title="&virtualFolderProperties.title;"
+        onload="onLoad();"
+        buttons="accept,cancel"
+        style="width: 50em; height: 26em;"
+	      ondialogaccept="return onOK();">
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_search"    src="chrome://messenger/locale/search.properties"/>
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  </stringbundleset>
+
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/virtualFolderProperties.js"/>
+
+  <keyset id="dialogKeys"/>
+   
+  <grid>
+    <columns>
+      <column/>
+      <column flex="1"/>
+      <column flex="2"/>
+    </columns>
+
+    <rows>
+      <row>
+        <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
+        <textbox tabindex="0" id="name" oninput="doEnabling();"/>
+        <spring/>
+      </row>
+
+      <row align="center"  id="chooseFolderLocationRow">
+        <label value="&description.label;" accesskey="&description.accesskey;" control="msgNewFolderPicker"/>
+        <menulist id="msgNewFolderPicker" flex="1" oncommand="doEnabling();"/>
+        <spring/>
+      </row>
+
+      <row align="center">
+        <label value="&folderSelectionCaption.label;"/>
+        <hbox>
+          <spacer flex="1"/>
+          <button label="&chooseFoldersButton.label;" oncommand="chooseFoldersToSearch();" 
+                  accesskey="&chooseFoldersButton.accesskey;"/>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+
+  <separator/>
+
+  <vbox flex="2">
+    <label value="&searchTermCaption.label;"/>
+    <hbox flex="1">
+      <vbox id="searchTermListBox" flex="2"/>
+    </hbox>
+  </vbox>
+
+</dialog>
