@@ -52,8 +52,6 @@
 
 static NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
 
-static NS_DEFINE_CID(kThisImplCID, NS_THIS_JARURI_IMPL_CID);
-
 ////////////////////////////////////////////////////////////////////////////////
  
 nsJARURI::nsJARURI()
@@ -75,8 +73,8 @@ NS_INTERFACE_MAP_BEGIN(nsJARURI)
   NS_INTERFACE_MAP_ENTRY(nsISerializable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
   // see nsJARURI::Equals
-  if (aIID.Equals(kThisImplCID))
-      foundInterface = NS_STATIC_CAST(nsIJARURI *, this);
+  if (aIID.Equals(NS_GET_IID(nsJARURI)))
+      foundInterface = NS_REINTERPRET_CAST(nsISupports*, this);
   else
 NS_INTERFACE_MAP_END
 
@@ -248,38 +246,75 @@ nsJARURI::GetSpec(nsACString &aSpec)
 }
 
 NS_IMETHODIMP
-nsJARURI::SetSpec(const nsACString &aSpec)
+nsJARURI::SetSpec(const nsACString& aSpec)
+{
+    return SetSpecWithBase(aSpec, nsnull);
+}
+
+nsresult
+nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
 {
     nsresult rv;
+
     nsCOMPtr<nsIIOService> ioServ(do_GetIOService(&rv));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString scheme;
     rv = ioServ->ExtractScheme(aSpec, scheme);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        // not an absolute URI
+        if (!aBaseURL)
+            return NS_ERROR_MALFORMED_URI;
 
-    if (strcmp("jar", scheme.get()) != 0)
-        return NS_ERROR_MALFORMED_URI;
+        nsRefPtr<nsJARURI> otherJAR;
+        aBaseURL->QueryInterface(NS_GET_IID(nsJARURI), getter_AddRefs(otherJAR));
+        NS_ENSURE_TRUE(otherJAR, NS_NOINTERFACE);
+
+        mJARFile = otherJAR->mJARFile;
+
+        nsCOMPtr<nsIStandardURL> entry(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
+        if (!entry)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = entry->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
+                         aSpec, mCharsetHint.get(), otherJAR->mJAREntry);
+        if (NS_FAILED(rv))
+            return rv;
+
+        mJAREntry = do_QueryInterface(entry);
+        if (!mJAREntry)
+            return NS_NOINTERFACE;
+
+        return NS_OK;
+    }
+
+    NS_ENSURE_TRUE(scheme.EqualsLiteral("jar"), NS_ERROR_MALFORMED_URI);
+
+    nsACString::const_iterator begin, end;
+    aSpec.BeginReading(begin);
+    aSpec.EndReading(end);
+
+    while (begin != end && *begin != ':')
+        ++begin;
+
+    ++begin; // now we're past the "jar:"
 
     // Search backward from the end for the "!/" delimiter. Remember, jar URLs
     // can nest, e.g.:
     //    jar:jar:http://www.foo.com/bar.jar!/a.jar!/b.html
     // This gets the b.html document from out of the a.jar file, that's 
     // contained within the bar.jar file.
+    // Also, the outermost "inner" URI may be a relative URI:
+    //   jar:../relative.jar!/a.html
 
-    nsACString::const_iterator begin, end, delim_begin, delim_end;
-    aSpec.BeginReading(begin);
-    aSpec.EndReading(end);
-
-    delim_begin = begin;
-    delim_end = end;
+    nsACString::const_iterator delim_begin (begin),
+                               delim_end   (end);
 
     if (!RFindInReadable(NS_JAR_DELIMITER, delim_begin, delim_end))
         return NS_ERROR_MALFORMED_URI;
 
-    begin.advance(4);
-
-    rv = ioServ->NewURI(Substring(begin, delim_begin), mCharsetHint.get(), nsnull, getter_AddRefs(mJARFile));
+    rv = ioServ->NewURI(Substring(begin, delim_begin), mCharsetHint.get(),
+                        aBaseURL, getter_AddRefs(mJARFile));
     if (NS_FAILED(rv)) return rv;
 
     // skip over any extra '/' chars
@@ -419,14 +454,16 @@ nsJARURI::GetOriginCharset(nsACString &aOriginCharset)
 NS_IMETHODIMP
 nsJARURI::Equals(nsIURI *other, PRBool *result)
 {
+    nsresult rv;
+
     *result = PR_FALSE;
 
     if (other == nsnull)
         return NS_OK;	// not equal
 
     nsRefPtr<nsJARURI> otherJAR;
-    nsresult rv = other->QueryInterface(kThisImplCID, getter_AddRefs(otherJAR));
-    if (NS_FAILED(rv))
+    other->QueryInterface(NS_GET_IID(nsJARURI), getter_AddRefs(otherJAR));
+    if (!otherJAR)
         return NS_OK;   // not equal
 
     PRBool equal;

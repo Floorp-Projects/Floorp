@@ -74,6 +74,8 @@ public:
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
 
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_THIS_JARURI_IMPL_CID);
+
     // nsJARURI
     nsJARURI();
     virtual ~nsJARURI();
@@ -84,6 +86,7 @@ public:
     nsresult CreateEntryURL(const nsACString& entryFilename,
                             const char* charset,
                             nsIURL** url);
+    nsresult SetSpecWithBase(const nsACString& aSpec, nsIURI* aBaseURL);
 
 protected:
     nsCOMPtr<nsIURI> mJARFile;
