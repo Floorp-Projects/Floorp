@@ -30,18 +30,18 @@
 }
 
 .sidebar-splitter-topright-cap {
-    min-height: 8px; 
-    background-repeat: no-repeat;
-    background-position: 100% 0%;
-    background-image:
+    margin-left: 1px;
+    height: 7px; 
+    width: 7px;
+    list-style-image:
         url("chrome://communicator/skin/sidebar/sidebar-topright-cap.gif"); 
 }
 
 .sidebar-splitter-bottomright-cap {
-    min-height: 8px; 
-    background-repeat: no-repeat;
-    background-position: 100% 100%;
-    background-image:
+    margin-left: 1px;
+    height: 7px; 
+    width: 7px;
+    list-style-image:
         url("chrome://communicator/skin/sidebar/sidebar-bottomright-cap.gif"); 
 }
 

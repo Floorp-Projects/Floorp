@@ -18,11 +18,11 @@
 	  list-style-image      : url("chrome://global/skin/taskbar-composer.gif");
   }
 
-#taskbar 
+#taskbar > toolbar
   {
-	  margin-top            : 2px;
-	  min-height            : 1em;
-  	user-focus            : ignore;
+    margin-top            : 2px;
+    min-height            : 1em;
+    user-focus            : ignore;
   }
 
 .taskbutton 

@@ -6,16 +6,16 @@
 
   <binding id="sidebar-splitter" extends="xul:splitter">
     <content excludes="observes,template">
-      <xul:box class="sidebar-splitter-topright-cap" orient="vertical">
-        <xul:spring flex="1"/>
+      <xul:box autostretch="never" halign="right">
+        <xul:image class="sidebar-splitter-topright-cap"/>
       </xul:box>
       <xul:spring flex="1"/>
       <xul:box>
         <children/>
       </xul:box>
       <xul:spring flex="1"/>
-      <xul:box class="sidebar-splitter-bottomright-cap" orient="vertical">
-        <xul:spring flex="100%"/>
+      <xul:box autostretch="never" halign="right">
+        <xul:image class="sidebar-splitter-bottomright-cap"/>
       </xul:box>
     </content>
   </binding>
