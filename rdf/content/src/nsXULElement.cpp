@@ -2243,7 +2243,8 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     }
   
     //Capturing stage
-    //XXX Nees impl.  Talk to joki@netscape.com for help.
+    // XXX Needs to be implemented.  Copy from nsGenericElement at some point.
+    // Talk to joki@netscape.com for help.
   
     //Local handling stage
     if (nsnull != mListenerManager) {
@@ -2252,8 +2253,15 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
 
     //Bubbling stage
     if ((NS_EVENT_FLAG_CAPTURE != aFlags) && (mParent != nsnull)) {
+        // We have a parent. Let them field the event.
         ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                       NS_EVENT_FLAG_BUBBLE, aEventStatus);
+    }
+    else if ((NS_EVENT_FLAG_CAPTURE != aFlags) && (mDocument != nsnull)) {
+        // We must be the document root. The event should bubble to the
+        // document.
+        ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                        NS_EVENT_FLAG_BUBBLE, aEventStatus);
     }
 
     if (NS_EVENT_FLAG_INIT == aFlags) {
