@@ -926,14 +926,12 @@ nsSVGAttributes::RemoveNamedItem(const nsAString& aName,
                                  nsIDOMNode** aReturn)
 {
   nsCOMPtr<nsIDOMElement> element( do_QueryInterface(mContent) );
+  *aReturn = nsnull;
   if (element) {
+    // XXX should set aReturn to the element we are about to remove
     return element->RemoveAttribute(aName);
-    *aReturn = nsnull; // XXX should be the element we just removed
-    return NS_OK;
   }
-  else {
-    return NS_ERROR_FAILURE;
-  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
