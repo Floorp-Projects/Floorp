@@ -7695,11 +7695,11 @@ document.writeln('<select NAME="selectCert" onChange="setDefaultServiceURL(true)
 
 ocsp_list_wrapper:
 value="%1$s";
-location = "%2$s";
+ocspLocation = "%2$s";
 value = value.replace(/'/g, "&#39;");
-location = location.replace(/'/g, "&#39;");
+ocspLocation = ocspLocation.replace(/'/g, "&#39;");
 document.writeln('<option value="'+value+'">'+value);
-addNewServiceURL(value, location);
+addNewServiceURL(value, ocspLocation);
 :ocsp_list_wrapper
 
 ocsp_list_suffix:
@@ -7735,7 +7735,7 @@ verification_config_main_content:
 <script language=javascript>
 <!---
 var locations = new Object();
-var location;
+var ocspLocation;
 var value;
 
 function addNewServiceURL(caNickName, serviceURL)
