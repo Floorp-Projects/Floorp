@@ -81,4 +81,9 @@ CPPSRCS =\
     nsJSRenderingContext.cpp \
 	$(NULL)
 
+EXTRA_DSO_LDOPTS =\
+				-L$(DIST)/lib \
+				-lneckoutil_s \
+				$(NULL)
+
 include $(topsrcdir)/config/rules.mk
