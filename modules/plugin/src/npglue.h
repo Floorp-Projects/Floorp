@@ -202,10 +202,10 @@ void NP_EXPORT
 npn_status(NPP npp, const char *message);
 
 void NP_EXPORT
-npn_registerwindow(struct nsIEventHandler* handler, nsPluginPlatformWindowRef window);
+npn_registerwindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
 
 void NP_EXPORT
-npn_unregisterwindow(struct nsIEventHandler* handler, nsPluginPlatformWindowRef window);
+npn_unregisterwindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
 
 #if 0
 int16 NP_EXPORT
