@@ -763,9 +763,6 @@ Contributor(s): ______________________________________. -->
             <spring flex="100%"/>
           </box>
 
-        <titledbutton id="translate-button" popup="translationlist" popupanchor="bottomleft" value="&translateButton.label;" align="top">
-        </titledbutton>
-
           <titledbutton id="print-button" align="top" value="&printButton.label;"  
                 onclick="BrowserPrint()">
             <observes element="canPrint" attribute="disabled"/>
@@ -808,7 +805,7 @@ Contributor(s): ______________________________________. -->
     <box id="security-box" class="insecure" align="horizontal" flex="100%">
         <box align="vertical" style="width:100px">
             <spring flex="100%"/>
-            <progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
+            <progressmeter id="statusbar-icon" mode="normal" align="horizontal" value="0" onclick="dumpProgress()">
                 <observes element="Browser:LoadingProgress" attribute="mode"/>
                 <observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
             </progressmeter>
