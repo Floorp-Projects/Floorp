@@ -68,7 +68,7 @@ function editDocument(aDocument)
 {
   if (!aDocument)
     aDocument = window._content.document;
-  
+
   editPage(aDocument.URL, window, false); 
 }
 
@@ -119,6 +119,8 @@ function editPage(url, launchWindow, delay)
     charsetArg = "charset=" + launchWindow._content.document.characterSet;
 
   try {
+    var uri = createURI(url, null, null);
+
     var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
     var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
     var enumerator = windowManagerInterface.getEnumerator( "composer:html" );
@@ -128,7 +130,7 @@ function editPage(url, launchWindow, delay)
       var win = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
       if ( win && win.editorShell)
       {
-        if (win.editorShell.checkOpenWindowForURLMatch(url, win))
+        if (CheckOpenWindowForURIMatch(uri, win))
         {
           // We found an editor with our url
           win.focus();
@@ -162,6 +164,30 @@ function editPage(url, launchWindow, delay)
       launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url, charsetArg);
 
   } catch(e) {}
+}
+
+function createURI(urlstring)
+{
+  try {
+    ioserv = Components.classes["@mozilla.org/network/io-service;1"]
+               .getService(Components.interfaces.nsIIOService);
+    return ioserv.newURI(urlstring, null, null);
+  } catch (e) {}
+
+  return null;
+}
+
+function CheckOpenWindowForURIMatch(uri, win)
+{
+  try {
+    var contentWindow = win.content;  // need to QI win to nsIDOMWindowInternal?
+    var contentDoc = contentWindow.document;
+    var htmlDoc = contentDoc.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
+    var winuri = createURI(htmlDoc.URL);
+    return winuri.equals(uri);
+  } catch (e) {}
+  
+  return false;
 }
 
 function NewEditorFromTemplate()
