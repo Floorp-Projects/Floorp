@@ -47,7 +47,7 @@ CFLAGS += $(TOOLKIT_CFLAGS)
 # nsMotifWidgetFactory actually has no Motif/Xt/Xlib code in it -- surprise!
 
 ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
-CPPSRCS=GTKdlldeps.cpp nsWidgetSupport.cpp
+CPPSRCS=GTKdlldeps.cpp nsWidgetSupport.cpp nsGTKWidgetFactory.cpp
 else
 ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
 CPPSRCS=Motifdlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp

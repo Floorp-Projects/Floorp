@@ -183,6 +183,31 @@ void nsWindow::InitToolkit(nsIToolkit *aToolkit,
   }
 }
 
+void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
+                                 GtkWidget *aParentWidget)
+{
+  // keep a reference to the toolkit object
+  if (aContext) {
+    mContext = aContext;
+    mContext->AddRef();
+  }
+  else {
+    nsresult  res;
+
+    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+    //res = !NS_OK;
+    res = nsRepository::CreateInstance(kDeviceContextCID,
+                                       nsnull,
+                                       kDeviceContextIID,
+                                       (void **)&mContext);
+    if (NS_OK == res) {
+      mContext->Init(aParentWidget);
+    }
+  }
+}
+
 void nsWindow::CreateGC()
 {
   if (nsnull == mGC) {
