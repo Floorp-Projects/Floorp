@@ -21,6 +21,7 @@
 var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
+var MAX_RECIPIENTS = 0;
 
 function GetArgs()
 {
@@ -53,6 +54,15 @@ function ComposeStartup()
 	dump("[type=" + args.type + "]\n");
 	dump("[format=" + args.format + "]\n");
 	dump("[originalMsg=" + args.originalMsg + "]\n");
+
+    // fill in Identity combobox
+    var identitySelect = document.getElementById("msgIdentity");
+    if (identitySelect) {
+        fillIdentitySelect(identitySelect);
+    }
+    
+    // fill in Recipient type combobox
+    FillRecipientTypeCombobox();
 
 	if (msgComposeService)
 	{
@@ -105,16 +115,19 @@ function ComposeStartup()
 			
 			//Now we are ready to load all the fields (to, cc, subject, body, etc...)
 			msgCompose.LoadFields();
-			document.getElementById("msgTo").focus();
+			
+	    	var msgCompFields = msgCompose.compFields;
+	    	if (msgCompFields)
+	    	{
+				CompFields2Recipients(msgCompFields);
+				var subjectValue = msgCompFields.GetSubject();
+				if (subjectValue != "")
+					document.getElementById("msgSubject").value = subjectValue;
+			}
+			
+			document.getElementById("msgRecipient#1").focus();
 		}
 	}
-
-    // fill in Identity combobox
-    var identitySelect = document.getElementById("msgIdentity");
-    if (identitySelect) {
-        fillIdentitySelect(identitySelect);
-    }
-    
 }
 
 
@@ -153,7 +166,16 @@ function SendMessage()
     dump("Identity = " + getCurrentIdentity() + "\n");
     
 	if (msgCompose != null)
-		msgCompose.SendMsg(0, getCurrentIdentity(), null);
+	{
+	    var msgCompFields = msgCompose.compFields;
+	    if (msgCompFields)
+	    {
+			Recipients2CompFields(msgCompFields);
+			msgCompFields.SetSubject(document.getElementById("msgSubject").value);
+		
+			msgCompose.SendMsg(0, getCurrentIdentity(), null);
+		}
+	}
 	else
 		dump("###SendMessage Error: composeAppCore is null!\n");
 }
@@ -187,22 +209,22 @@ function GetIdentities()
     return identities;
 }
 
-function fillIdentitySelect(selectElement) {
+function fillIdentitySelect(selectElement)
+{
     var identities = GetIdentities();
 
-    for (var i=0; i<identities.length; i++) {
-      var identity = identities[i];
-      var opt = new Option(identity.identityName, identity.key);
+    for (var i=0; i<identities.length; i++)
+    {
+		var identity = identities[i];
+		var opt = new Option(identity.identityName, identity.key);
 
-      selectElement.add(opt, null);
+		selectElement.add(opt, null);
     }
 }
 
-function getCurrentIdentity() {
-
-
+function getCurrentIdentity()
+{
     var msgService = Components.classes['component://netscape/messenger/services/session'].getService(Components.interfaces.nsIMsgMailSession);
-
     var accountManager = msgService.accountManager;
 
     // fill in Identity combobox
@@ -212,4 +234,97 @@ function getCurrentIdentity() {
     var identity = accountManager.GetIdentityByKey(identityKey);
     
     return identity;
+}
+
+function FillRecipientTypeCombobox()
+{
+	originalCombo = document.getElementById("msgRecipientType#1");
+	if (originalCombo)
+	{
+		MAX_RECIPIENTS = 2;
+	    while ((combo = document.getElementById("msgRecipientType#" + MAX_RECIPIENTS)))
+	    {
+	    	for (var j = 0; j < originalCombo.length; j ++)
+				combo.add(new Option(originalCombo.options[j].text,
+									 originalCombo.options[j].value), null);
+			MAX_RECIPIENTS ++;
+		}
+	}
+}
+
+function Recipients2CompFields(msgCompFields)
+{
+	if (msgCompFields)
+	{
+		var i = 1;
+		var addrTo = "";
+		var addrCc = "";
+		var addrBcc = "";
+		var addrNg = "";
+		var to_Sep = "";
+		var cc_Sep = "";
+		var bcc_Sep = "";
+		var ng_Sep = "";
+
+	    while ((inputField = document.getElementById("msgRecipient#" + i)))
+	    {
+	    	fieldValue = inputField.value;
+	    	if (fieldValue != "")
+	    	{
+	    		switch (document.getElementById("msgRecipientType#" + i).value)
+	    		{
+	    			case "addr_to"			: addrTo += to_Sep + fieldValue; to_Sep = ",";		break;
+	    			case "addr_cc"			: addrCc += cc_Sep + fieldValue; cc_Sep = ",";		break;
+	    			case "addr_bcc"			: addrBcc += bcc_Sep + fieldValue; bcc_Sep = ",";	break;
+	    			case "addr_newsgroups"	: addrNg += ng_Sep + fieldValue; ng_Sep = ",";		break;
+	    		}
+	    	}
+	    	i ++;
+	    }
+    	msgCompFields.SetTo(addrTo);
+    	msgCompFields.SetCc(addrCc);
+    	msgCompFields.SetBcc(addrBcc);
+    	msgCompFields.SetNewsgroups(addrNg);
+	}
+	else
+		dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
+}
+
+function CompFields2Recipients(msgCompFields)
+{
+	if (msgCompFields)
+	{
+		var i = 1;
+		var fieldValue = msgCompFields.GetTo();
+		if (fieldValue != "" && i <= MAX_RECIPIENTS)
+		{
+			document.getElementById("msgRecipient#" + i).value = fieldValue;
+			document.getElementById("msgRecipientType#" + i).value = "addr_to";
+			i ++;
+		}
+
+		fieldValue = msgCompFields.GetCc();
+		if (fieldValue != "" && i <= MAX_RECIPIENTS)
+		{
+			document.getElementById("msgRecipient#" + i).value = fieldValue;
+			document.getElementById("msgRecipientType#" + i).value = "addr_cc";
+			i ++;
+		}
+
+		fieldValue = msgCompFields.GetBcc();
+		if (fieldValue != "" && i <= MAX_RECIPIENTS)
+		{
+			document.getElementById("msgRecipient#" + i).value = fieldValue;
+			document.getElementById("msgRecipientType#" + i).value = "addr_bcc";
+			i ++;
+		}		
+
+		fieldValue = msgCompFields.GetNewsgroups();
+		if (fieldValue != "" && i <= MAX_RECIPIENTS)
+		{
+			document.getElementById("msgRecipient#" + i).value = fieldValue;
+			document.getElementById("msgRecipientType#" + i).value = "addr_newsgroup";
+			i ++;
+		}
+	}
 }
