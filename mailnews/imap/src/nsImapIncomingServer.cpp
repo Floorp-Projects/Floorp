@@ -688,9 +688,9 @@ nsImapIncomingServer::GetImapConnection(nsIEventQueue *aEventQueue,
       maxConnections = 5;
       rv = SetMaximumConnectionsNumber(maxConnections);
   }
-  else if (maxConnections < 2)
-  {   // forced to use at least 2
-      maxConnections = 2;
+  else if (maxConnections < 1)
+  {   // forced to use at least 1
+      maxConnections = 1;
       rv = SetMaximumConnectionsNumber(maxConnections);
   }
 
@@ -756,7 +756,8 @@ nsImapIncomingServer::GetImapConnection(nsIEventQueue *aEventQueue,
         rv = connection->IsBusy(&isBusy, &isInboxConnection);
         if (NS_FAILED(rv)) 
           continue;
-        if (!isBusy && !isInboxConnection)
+        // if max connections is <= 1, we have to re-use the inbox connection.
+        if (!isBusy && (!isInboxConnection || maxConnections <= 1))
         {
           if (!freeConnection)
             freeConnection = connection;
