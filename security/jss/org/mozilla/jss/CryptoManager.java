@@ -52,10 +52,43 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.5 $ $Date: 2002/05/07 20:31:14 $ 
+ * @version $Revision: 1.6 $ $Date: 2002/05/23 17:51:30 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
+    /**
+     * CertUsage options for validation 
+     */
+    public final static class CertUsage {
+	private int usage;
+	private String name;
+	private CertUsage() {};
+	private CertUsage(int usage, String name) {
+	    this.usage = usage;
+	    this.name =  name;
+	}
+        int getUsage() {
+	    return usage;
+	}
+
+	public String toString() {
+	    return name;
+	}
+	
+	// certUsage, these must be kept in sync with nss/lib/certdb/certt.h
+        public static final CertUsage SSLClient = new CertUsage(0, "SSLClient");
+        public static final CertUsage SSLServer = new CertUsage(1, "SSLServer");
+        public static final CertUsage SSLServerWithStepUp = new CertUsage(2, "SSLServerWithStepUp");
+        public static final CertUsage SSLCA = new CertUsage(3, "SSLCA");
+        public static final CertUsage EmailSigner = new CertUsage(4, "EmailSigner");
+        public static final CertUsage EmailRecipient = new CertUsage(5, "EmailRecipient");
+        public static final CertUsage ObjectSigner = new CertUsage(6, "ObjectSigner");
+        public static final CertUsage UserCertImport = new CertUsage(7, "UserCertImport");
+        public static final CertUsage VerifyCA = new CertUsage(8, "VerifyCA");
+        public static final CertUsage ProtectedObjectSigner = new CertUsage(9, "ProtectedObjectSigner");
+        public static final CertUsage StatusResponder = new CertUsage(10, "StatusResponder");
+        public static final CertUsage AnyCA = new CertUsage(11, "AnyCA");
+    }
 
     public final static class NotInitializedException extends Exception {}
     public final static class NicknameConflictException extends Exception {}
@@ -1344,5 +1377,33 @@ public final class CryptoManager implements TokenSupplier
         }
         return tok;
     }
+    /////////////////////////////////////////////////////////////
+    // isCertValid
+    /////////////////////////////////////////////////////////////
+    /**
+     * Verify a certificate that exists in the given cert database, 
+     * check if is valid and that we trust the issuer. Verify time
+     * against Now.  
+     * @param nickname The nickname of the certificate to verify.
+     * @param checkSig verify the signature of the certificate
+     * @param certUsage see exposed certUsage defines to verify Certificate 
+     * @return true for success; false otherwise 
+     *      
+     * @exception InvalidNicknameException If the nickname is null 
+     * @exception ObjectNotFoundException If no certificate could be found
+     *      with the given nickname.
+     */
+
+    public boolean isCertValid(String nickname, boolean checkSig, CertUsage certUsage) 
+         throws ObjectNotFoundException,
+		InvalidNicknameException
+    {
+	if (nickname==null) {
+           throw new InvalidNicknameException("Nickname must be non-null");
+	}
+	return verifyCertNowNative(nickname, checkSig, certUsage.getUsage());
+    }
+
+    private native boolean verifyCertNowNative(String nickname, boolean checkSig, int cUsage) throws ObjectNotFoundException; 
 
 }

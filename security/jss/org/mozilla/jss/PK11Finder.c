@@ -1568,4 +1568,45 @@ finish:
     }
 }
 
+/***********************************************************************
+ * CryptoManager.verifyCertNowNative
+ *
+ * Returns JNI_TRUE if success, JNI_FALSE otherwise
+ */
+JNIEXPORT jboolean JNICALL
+Java_org_mozilla_jss_CryptoManager_verifyCertNowNative(JNIEnv *env, jobject self, jstring nickString, jboolean checkSig, jint cUsage) {
+    SECStatus         rv    = SECFailure;
+    SECCertUsage      certUsage;
+    CERTCertificate   *cert=NULL;
+    char *nickname=NULL;
+
+    nickname = (char *) (*env)->GetStringUTFChars(env, nickString, NULL);
+    if( nickname == NULL ) {
+         goto finish;
+    }
+    certUsage = cUsage; 
+    cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), nickname);
+    
+    if (cert == NULL) {
+	JSS_throw(env, OBJECT_NOT_FOUND_EXCEPTION);
+	goto finish;
+
+    } else {
+	rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), cert, 
+	       checkSig, certUsage, NULL );
+    }
+
+finish: 
+    if(nickname != NULL) {
+      (*env)->ReleaseStringUTFChars(env, nickString, nickname);
+    }
+    if(cert != NULL) {
+       CERT_DestroyCertificate(cert);
+    }
+    if( rv == SECSuccess) {
+        return JNI_TRUE;
+    } else {
+        return JNI_FALSE;
+    }
+}
 
