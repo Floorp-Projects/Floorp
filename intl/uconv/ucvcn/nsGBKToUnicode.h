@@ -30,15 +30,15 @@
  * @created         07/Sept/1999
  * @author  Yueheng Xu, Yueheng.Xu@intel.com
  */
-class nsGBKToUnicode : public nsMultiTableDecoderSupport
+class nsGBKToUnicode : public nsBufferDecoderSupport
 {
 public:
 		  
   /**
    * Class constructor.
    */
-  nsGBKToUnicode();
-
+  nsGBKToUnicode(){};
+  virtual ~nsGBKToUnicode(){};
   /**
    * Static class constructor.
    */
@@ -57,7 +57,18 @@ protected:
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
 
-  };
+
+private:
+
+  typedef struct
+  {
+    char leftbyte;
+    char rightbyte;
+
+  } DByte;
+    void GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
+
+};
 
 #endif /* nsGBKToUnicode_h___ */
 

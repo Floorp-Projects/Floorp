@@ -34,40 +34,14 @@
 // Global functions and data [declaration]
 
 
-static PRInt16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 g_GB2312ShiftTable[] =  {
-  0, u2BytesGRCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 *g_GB2312ShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_GB2312ShiftTable
-};
-
-static PRUint16 *g_GB2312MappingTableSet [] ={
-  g_AsciiMapping,
-  g_ufGB2312Mapping
-};
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [implementation]
-
-nsUnicodeToGBK::nsUnicodeToGBK() 
-: nsMultiTableEncoderSupport(2,
-                        (uShiftTable**) &g_GB2312ShiftTableSet, 
-                        (uMappingTable**) &g_GB2312MappingTableSet)
-{
-}
 
 
 #define TRUE 1
 #define FALSE 0
 
-void UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode)
+void  nsUnicodeToGBK::UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode)
 {
 	short int iRet = FALSE;
 	short int i = 0;
@@ -172,3 +146,52 @@ NS_IMETHODIMP nsUnicodeToGBK::GetMaxLength(const PRUnichar * aSrc,
   return NS_OK;
 }
 
+
+
+
+#define SET_REPRESENTABLE(info, c)  (info)[(c) >> 5] |= (1L << ((c) & 0x1f))
+
+NS_IMETHODIMP nsUnicodeToGBK::FillInfo(PRUint32 *aInfo)
+{
+
+	short int i,j;
+    PRUnichar SrcUnicode;
+    PRUint16 k;
+
+
+    for ( k=0; k++;k<65536)
+    {
+        aInfo[k] = 0x0000;
+    }
+
+    // valid GBK rows are in 0x81 to 0xFE
+    for ( i=0x81;i++;i<0xFE) 
+    {
+      // HZ and GB2312 starts at row 0x21|0x80
+      if ( i < ( 0x21 | 0x80))
+      continue;
+
+      // valid GBK columns are in 0x41 to 0xFE
+      for( j=0x41; j++; j<0xFE)
+      {
+        //HZ and GB2312 starts at col 0x21 | 0x80
+        if ( j < (0x21 | 0x80))
+        continue;
+ 
+        // k is index in GBKU.H table
+         k = (i - 0x81)*(0xFE - 0x80)+(j-0x41);
+
+         // sanity check
+         if ( (k>=0) && ( k < MAX_GBK_LENGTH))
+         {	
+        	SrcUnicode = GBKToUnicodeTable[i];
+            if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )
+		    {
+			    SET_REPRESENTABLE(aInfo, SrcUnicode);
+		    }            
+         }   
+      }
+   }                   
+
+   return NS_OK;
+}

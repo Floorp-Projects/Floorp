@@ -31,14 +31,15 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsGB2312ToUnicodeV2 : public nsMultiTableDecoderSupport
+class nsGB2312ToUnicodeV2 : public nsBufferDecoderSupport
 {
 public:
 		  
   /**
    * Class constructor.
    */
-  nsGB2312ToUnicodeV2();
+  nsGB2312ToUnicodeV2(){};
+  virtual ~nsGB2312ToUnicodeV2(){};
 
   /**
    * Static class constructor.
@@ -58,6 +59,18 @@ protected:
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
 
-  };
+private:
+
+  typedef struct
+  {
+    char leftbyte;
+    char rightbyte;
+
+  } DByte;
+
+  void GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
+
+};
+  
 
 #endif /* nsGB2312ToUnicodeV2_h___ */

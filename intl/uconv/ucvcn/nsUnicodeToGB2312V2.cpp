@@ -21,58 +21,32 @@
 #include "nsUCvCnDll.h"
 
 
-#define _GBU_TABLE_		// make the table in the include file to be extern
-#include "gbu.h"
+#define _GBKU_TABLE_		// make the table in the include file to be extern
+#include "gbku.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
 
-static PRInt16 g_ASCIIShiftTable[] =  {
-  0, u1ByteCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 g_GB2312ShiftTable[] =  {
-  0, u2BytesGRCharset,
-  ShiftCell(0,0,0,0,0,0,0,0)
-};
-
-static PRInt16 *g_GB2312ShiftTableSet [] = {
-  g_ASCIIShiftTable,
-  g_GB2312ShiftTable
-};
-
-static PRUint16 *g_GB2312MappingTableSet [] ={
-  g_AsciiMapping,
-  g_ufGB2312Mapping
-};
 //----------------------------------------------------------------------
 // Class nsUnicodeToGB2312V2 [implementation]
-
-nsUnicodeToGB2312V2::nsUnicodeToGB2312V2() 
-: nsMultiTableEncoderSupport(2,
-                        (uShiftTable**) &g_GB2312ShiftTableSet, 
-                        (uMappingTable**) &g_GB2312MappingTableSet)
-{
-}
 
 
 #define TRUE 1
 #define FALSE 0
 
-void UnicodeToGB(PRUnichar SrcUnicode, DByte *pGBCode)
+void  nsUnicodeToGB2312V2::UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode)
 {
 	short int iRet = FALSE;
 	short int i = 0;
-	short int iGBToUnicodeIndex = 0;
+	short int iGBKToUnicodeIndex = 0;
 
 
-	for ( i=0; i<MAX_GB_LENGTH; i++)
+	for ( i=0; i<MAX_GBK_LENGTH; i++)
 	{
-		if ( SrcUnicode == GBToUnicodeTable[i] )
+		if ( SrcUnicode == GBKToUnicodeTable[i] )
 		{
-			iGBToUnicodeIndex = i;
+			iGBKToUnicodeIndex = i;
 			iRet = TRUE;
 			break;
 		}
@@ -83,15 +57,16 @@ void UnicodeToGB(PRUnichar SrcUnicode, DByte *pGBCode)
 		//convert from one dimensional index to (left, right) pair
 		if(pGBCode)
 		{
-		pGBCode->leftbyte =  (char) ( iGBToUnicodeIndex / (0x007e - 0x0020) + 0x0021)  ;
+		pGBCode->leftbyte =  (char) ( iGBKToUnicodeIndex / 0x00BF + 0x0081)  ;
 		pGBCode->leftbyte |= 0x80;
-		pGBCode->rightbyte = (char) ( iGBToUnicodeIndex % (0x007e - 0x0020)+ 0x0021);
+		pGBCode->rightbyte = (char) ( iGBKToUnicodeIndex % 0x00BF+ 0x0040);
 		pGBCode->rightbyte |= 0x80;
 		}
 	}
 
 
 }
+
 
 
 NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc, 
@@ -117,7 +92,7 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
 		{
 		// hi byte has something, it is not ASCII, must be a GB
 
-			UnicodeToGB( *pSrc, pDestDBCode);
+			UnicodeToGBK( *pSrc, pDestDBCode);
 			aDest += 2;	// increment 2 bytes
 			pDestDBCode = (DByte *)aDest;
 			iDestLength +=2;
@@ -164,4 +139,52 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::GetMaxLength(const PRUnichar * aSrc,
 {
   *aDestLength = 2 * aSrcLength;
   return NS_OK;
+}
+
+
+
+#define SET_REPRESENTABLE(info, c)  (info)[(c) >> 5] |= (1L << ((c) & 0x1f))
+
+NS_IMETHODIMP nsUnicodeToGB2312V2::FillInfo(PRUint32 *aInfo)
+{
+	short int i,j;
+  PRUnichar SrcUnicode; 
+  PRUint16 k;
+
+
+    for ( k=0; k++;k<65536)
+    {
+        aInfo[k] = 0x0000;
+    }
+
+    // valid GBK rows are in 0x81 to 0xFE
+    for ( i=0x81;i++;i<0xFE) 
+    {
+      // HZ and GB2312 starts at row 0x21|0x80
+      if ( i < ( 0x21 | 0x80))
+      continue;
+
+      // valid GBK columns are in 0x41 to 0xFE
+      for( j=0x41; j++; j<0xFE)
+      {
+        //HZ and GB2312 starts at col 0x21 | 0x80
+        if ( j < (0x21 | 0x80))
+        continue;
+ 
+        // k is index in GBKU.H table
+         k = (i - 0x81)*(0xFE - 0x80)+(j-0x41);
+
+         // sanity check
+         if ( (k>=0) && ( k < MAX_GBK_LENGTH))
+         {	
+          	SrcUnicode = GBKToUnicodeTable[i];
+            if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )
+              {
+                SET_REPRESENTABLE(aInfo, SrcUnicode);
+              }            
+         }   
+      }
+   }                   
+
+   return NS_OK;
 }

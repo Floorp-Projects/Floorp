@@ -40,6 +40,42 @@
 #define TRUE 1
 #define FALSE 0
 
+void  nsUnicodeToHZ::UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode)
+{
+	short int iRet = FALSE;
+	short int i = 0;
+	short int iGBKToUnicodeIndex = 0;
+
+
+	for ( i=0; i<MAX_GBK_LENGTH; i++)
+	{
+		if ( SrcUnicode == GBKToUnicodeTable[i] )
+		{
+			iGBKToUnicodeIndex = i;
+			iRet = TRUE;
+			break;
+		}
+	}
+
+	if ( iRet )
+	{
+		//convert from one dimensional index to (left, right) pair
+		if(pGBCode)
+		{
+		pGBCode->leftbyte =  (char) ( iGBKToUnicodeIndex / 0x00BF + 0x0081)  ;
+		pGBCode->leftbyte |= 0x80;
+		pGBCode->rightbyte = (char) ( iGBKToUnicodeIndex % 0x00BF+ 0x0040);
+		pGBCode->rightbyte |= 0x80;
+		}
+	}
+
+
+}
+
+
+#define TRUE 1
+#define FALSE 0
+
 void nsUnicodeToHZ::UnicodeToHZ(PRUnichar SrcUnicode, DByte *pGBCode)
 {
 	short int iRet = FALSE;
@@ -168,9 +204,51 @@ NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuff(const PRUnichar * aSrc,
     return NS_OK;
 }
 
+#define SET_REPRESENTABLE(info, c)  (info)[(c) >> 5] |= (1L << ((c) & 0x1f))
 
 NS_IMETHODIMP nsUnicodeToHZ::FillInfo(PRUint32 *aInfo)
 {
+	short int i,j;
+    PRUnichar SrcUnicode;
+    PRUint16 k;
+
+
+    for ( k=0; k++;k<65536)
+    {
+        aInfo[k] = 0x0000;
+    }
+
+    // valid GBK rows are in 0x81 to 0xFE
+    for ( i=0x81;i++;i<0xFE) 
+    {
+      // HZ and GB2312 starts at row 0x21|0x80
+      if ( i < ( 0x21 | 0x80))
+      continue;
+
+      // valid GBK columns are in 0x41 to 0xFE
+      for( j=0x41; j++; j<0xFE)
+      {
+        //HZ and GB2312 starts at col 0x21 | 0x80
+        if ( j < (0x21 | 0x80))
+        continue;
+ 
+        // k is index in GBKU.H table
+         k = (i - 0x81)*(0xFE - 0x80)+(j-0x41);
+
+         // sanity check
+         if ( (k>=0) && ( k < MAX_GBK_LENGTH))
+         {	
+        	SrcUnicode = GBKToUnicodeTable[i];
+            if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )
+		    {
+			    SET_REPRESENTABLE(aInfo, SrcUnicode);
+		    }            
+         }   
+      }
+   }                   
+
+
+
    return NS_OK;
 }
 
@@ -192,14 +270,5 @@ NS_IMETHODIMP nsUnicodeToHZ::GetMaxLength(const PRUnichar * aSrc,
                                               PRInt32 * aDestLength)
 {
   *aDestLength = 6 * aSrcLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuffNoErr(
-                                     const PRUnichar * aSrc, 
-                                     PRInt32 * aSrcLength, 
-                                     char * aDest, 
-                                     PRInt32 * aDestLength)
-{
   return NS_OK;
 }

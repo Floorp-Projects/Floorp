@@ -38,8 +38,8 @@ public:
   /**
    * Class constructor.
    */
-  nsHZToUnicode() {};
-  virtual ~nsHZToUnicode() {};
+  nsHZToUnicode(){};
+  virtual ~nsHZToUnicode(){};
 
   /**
    * Static class constructor.

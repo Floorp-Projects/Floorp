@@ -31,14 +31,15 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToGB2312V2 : public nsMultiTableEncoderSupport
+class nsUnicodeToGB2312V2 : public nsEncoderSupport
 {
 public:
 
   /**
    * Class constructor.
    */
-  nsUnicodeToGB2312V2();
+  nsUnicodeToGB2312V2(){};
+  virtual ~nsUnicodeToGB2312V2(){};
 
   /**
    * Static class constructor.
@@ -57,6 +58,26 @@ protected:
 
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
+
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+                                char * aDest, PRInt32 * aDestLength)
+  {
+    return NS_OK;
+  };  // just make it not abstract;
+
+  NS_IMETHOD FillInfo(PRUint32 *aInfo);
+
+ private:
+
+  typedef struct
+  {
+    char leftbyte;
+    char rightbyte;
+
+  } DByte;
+
+  void UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode);
+
 };
 
 #endif /* nsUnicodeToGB2312V2_h___ */
