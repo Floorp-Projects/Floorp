@@ -12,14 +12,15 @@
 # TODO: use RDF output to pick up valid options, as in
 #   http://www.async.com.br/~kiko/mybugzilla/config.cgi?ctype=rdf
 
-import sys
+import sys, string
 
 def error(m):
     sys.stderr.write("bugzilla-submit: %s\n" % m)
     sys.stderr.flush()
     sys.exit(1)
 
-if sys.version[:6] < '2.3.0':
+version = string.split(string.split(sys.version)[0], ".")[:2]
+if map(int, version) < [2, 3]:
     error("you must upgrade to Python 2.3 or higher to use this script.")
 
 import urllib, re, os, netrc, email.Parser, optparse
