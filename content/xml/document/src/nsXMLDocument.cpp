@@ -456,10 +456,8 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   if (stack) {
     JSContext *cx;
     if (NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
-      nsISupports *priv = (nsISupports *)::JS_GetContextPrivate(cx);
-      if (priv) {
-        mScriptContext = do_QueryInterface(priv);
-      }
+      nsContentUtils::GetDynamicScriptContext(cx,
+                                              getter_AddRefs(mScriptContext));
     }
   }
 
