@@ -36,7 +36,7 @@ function registerKeys()
   createRootRegKey(winreg);
 
   subkey = regRootKey + "\\$UserAgent$";
-  err    = winreg.setValueString(subkey, "Version", "1.0");
+  err    = winreg.setValueString(subkey, "Version", "$UserAgent$");
   tmpstr = new String(fProgram);
   err    = winreg.setValueString(subkey, "GreHome", tmpstr.substring(0, tmpstr.length-1));
   err    = winreg.setValueString(subkey, "GreComponentsDir", fProgram + "Components");
