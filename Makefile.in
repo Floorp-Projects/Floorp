@@ -266,8 +266,9 @@ tier_50_dirs	+= toolkit
 endif
 
 ifdef MOZ_PHOENIX
-# xpfe/components/search depends on nsIBookmarksService.idl
-tier_50_dirs    += browser/components/bookmarks/public
+#xpfe/components/search depends on nsIBookmarksService.idl
+#XXXBlake this winhooks path is a temp hack; toolkit shouldn't depend on browser
+tier_50_dirs    += browser/components/bookmarks/public browser/components/winhooks/public
 endif
 
 # toolkit/xre/ depends on xpinstall, so it must be in tier 50

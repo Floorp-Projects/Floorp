@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Bill Law     <law@netscape.com>
  *  Dean Tessman <dean_tessman@hotmail.com>
+ *  Blake Ross   <blake@blakeross.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -258,17 +259,6 @@ struct FileTypeRegistryEntry : public ProtocolRegistryEntry {
     }
     nsresult set();
     nsresult reset();
-};
-
-// EditableFileTypeRegistryEntry
-//
-// Extends FileTypeRegistryEntry by setting an additional handler for an "edit" command.
-struct EditableFileTypeRegistryEntry : public FileTypeRegistryEntry {
-    EditableFileTypeRegistryEntry( const char **ext, const char *fileType,
-        const char *desc, const char *defDescKey, const char *iconFile )
-        : FileTypeRegistryEntry( ext, fileType, desc, defDescKey, iconFile ) {
-    }
-    nsresult set();
 };
 
 // Generate the "full" name of this registry entry.
@@ -796,30 +786,6 @@ nsresult FileTypeRegistryEntry::reset() {
         (void)SavedRegistryEntry( HKEY_LOCAL_MACHINE, thisExt.get(), "", fileType.get() ).reset();
     }
 
-    return rv;
-}
-
-// Do inherited set() and also set key for edit (with -edit option).
-//
-// Note: We make the rash assumption that we "own" this filetype (aka "protocol").
-// If we ever start commandeering some other file type then this may have to be
-// rethought.  The solution is to override reset() and undo this (and make the
-// "edit" entry a SavedRegistryEntry).
-nsresult EditableFileTypeRegistryEntry::set() {
-    nsresult rv = FileTypeRegistryEntry::set();
-    if ( NS_SUCCEEDED( rv ) ) {
-        // only set this if we support "-edit" on the command-line
-        nsCOMPtr<nsICmdLineHandler> editorService =
-            do_GetService( "@mozilla.org/commandlinehandler/general-startup;1?type=edit", &rv );
-        if ( NS_SUCCEEDED( rv) ) {
-            nsCAutoString editKey( "Software\\Classes\\" );
-            editKey += protocol;
-            editKey += "\\shell\\edit\\command";
-            nsCAutoString editor( thisApplication() );
-            editor += " -edit \"%1\"";
-            rv = RegistryEntry( HKEY_LOCAL_MACHINE, editKey.get(), "", editor.get() ).set();
-        }
-    }
     return rv;
 }
 
