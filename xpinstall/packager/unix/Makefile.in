@@ -46,7 +46,20 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
 
-B_NAME = mozilla-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)
+PKG_NAME_EXTRAS =
+ifeq ($(MOZ_ENABLE_XFT)$(MOZ_WIDGET_TOOLKIT),1gtk2)
+PKG_NAME_EXTRAS := $(PKG_NAME_EXTRAS)-gtk2+xft
+else
+ifeq ($(MOZ_ENABLE_XFT),1)
+PKG_NAME_EXTRAS := $(PKG_NAME_EXTRAS)-xft
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+PKG_NAME_EXTRAS := $(PKG_NAME_EXTRAS)-gtk2
+endif
+endif
+endif
+
+B_NAME = mozilla-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)$(PKG_NAME_EXTRAS)
 STUB_NAME = $(B_NAME)-installer
 SEA_NAME  = $(B_NAME)-full-installer
 
