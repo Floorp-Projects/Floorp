@@ -30,7 +30,8 @@ use bugs;
 create table products (
 product tinytext,
 description mediumtext,
-milestoneurl tinytext not null
+milestoneurl tinytext not null,
+disallownew tinyint not null
 );
 
 

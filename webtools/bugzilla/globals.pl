@@ -235,10 +235,16 @@ sub GenerateVersionTable {
     my $dotargetmilestone = Param("usetargetmilestone");
 
     my $mpart = $dotargetmilestone ? ", milestoneurl" : "";
-    SendSQL("select product, description$mpart from products");
+    SendSQL("select product, description, disallownew$mpart from products");
     while (@line = FetchSQLData()) {
-        my ($p, $d, $u) = (@line);
+        my ($p, $d, $dis, $u) = (@line);
         $::proddesc{$p} = $d;
+        if ($dis) {
+            # Special hack.  Stomp on the description and make it "0" if we're
+            # not supposed to allow new bugs against this product.  This is
+            # checked for in enter_bug.cgi.
+            $::proddesc{$p} = "0";
+        }
         if ($dotargetmilestone) {
             $::milestoneurl{$p} = $u;
         }

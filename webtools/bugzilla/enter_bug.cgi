@@ -43,6 +43,12 @@ if (!defined $::FORM{'product'}) {
         print "a bug.</H2>\n";
         print "<table>";
         foreach my $p (sort (@prodlist)) {
+            if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
+                # Special hack.  If we stuffed a "0" into proddesc, that means
+                # that disallownew was set for this bug, and so we don't want
+                # to allow people to specify that product here.
+                next;
+            }
             print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a>:</th>\n";
             if (defined $::proddesc{$p}) {
                 print "<td valign=top>$::proddesc{$p}</td>\n";
