@@ -78,15 +78,6 @@ public:
     // returns primary client name (the one specified in the "client hello" message)
     const char *PrimaryName() const { return mNames.First() ? mNames.First()->Value() : NULL; }
 
-    //
-    // returns TRUE if successfully enqueued.  will return FALSE if client
-    // does not have a registered message handler for this message's target.
-    //
-    // on success or failure, this function takes ownership of |msg| and will
-    // delete it when appropriate.
-    //
-    PRBool EnqueueOutboundMsg(ipcMessage *msg);
-
 #ifdef XP_WIN
     PRUint32 PID() const { return mPID; }
     void SetPID(PRUint32 pid) { mPID = pid; }
@@ -109,6 +100,12 @@ public:
     // the socket is non-blocking.
     // 
     int Process(PRFileDesc *sockFD, int pollFlags);
+
+    //
+    // on success or failure, this function takes ownership of |msg| and will
+    // delete it when appropriate.
+    //
+    void EnqueueOutboundMsg(ipcMessage *msg) { mOutMsgQ.Append(msg); }
 #endif
 
 private:

@@ -15,4 +15,9 @@ class ipcClient;
 extern ipcClient *ipcClients;
 extern int        ipcClientCount;
 
+//
+// platform specific send message function.
+//
+PRStatus IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg);
+
 #endif // !ipcdPrivate_h__

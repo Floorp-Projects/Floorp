@@ -54,4 +54,9 @@ void IPC_InitModuleReg(const char *exePath);
 //
 void IPC_ShutdownModuleReg();
 
+//
+// returns the ipcModuleMethods for the given target.
+//
+ipcModuleMethods *IPC_GetModuleByTarget(const nsID &target);
+
 #endif // !ipcModuleReg_h__

@@ -40,28 +40,42 @@
 
 #include "nsID.h"
 
+#define IPC_EXPORT extern "C" NS_EXPORT
+
 class ipcMessage;
-class ipcClient;
+
+//
+// a client handle is used to efficiently reference a client instance object
+// used by the daemon to represent a connection with a particular client app.
+//
+// modules should treat it as an opaque type.
+//
+typedef class ipcClient *ipcClientHandle;
 
 //-----------------------------------------------------------------------------
-// abstract module class
+// interface implemented by the module:
 //-----------------------------------------------------------------------------
 
-class ipcModule
+//
+// the version of ipcModuleMethods data structure.
+//
+#define IPC_MODULE_METHODS_VERSION (1<<16) // 1.0
+
+//
+// each module defines the following structure:
+//
+struct ipcModuleMethods
 {
-public:
     //
-    // called when this module will no longer be accessed.  if this module was
-    // allocated on the heap, then it can be free'd.
+    // this field holds the version of the data structure, which is always the
+    // value of IPC_MODULE_METHODS_VERSION against which the module was built.
     //
-    virtual void Shutdown() = 0;
+    PRUint32 version;
 
     //
-    // called to determine the ID of this module.  the ID of a module
-    // indicates the "message target" for which it will be registered
-    // as a handler.
+    // called when this module will no longer be accessed.
     //
-    virtual const nsID &ID() = 0;
+    void (* shutdown) (void);
 
     //
     // called when a new message arrives for this module.
@@ -78,18 +92,125 @@ public:
     //   msg    - the message sent from the client.  the target of this message
     //            matches the ID of this module.
     //
-    virtual void HandleMsg(ipcClient *client, const ipcMessage *msg) = 0;
+    void (* handleMsg) (ipcClientHandle client, const ipcMessage *msg);
+};
+
+//-----------------------------------------------------------------------------
+// interface implemented by the daemon:
+//-----------------------------------------------------------------------------
+
+//
+// the version of ipcDaemonMethods data structure.
+//
+#define IPC_DAEMON_METHODS_VERSION (1<<16) // 1.0
+
+typedef PRBool (* ipcClientEnumFunc)       (void *closure, ipcClientHandle client, PRUint32 clientID);
+typedef PRBool (* ipcClientNameEnumFunc)   (void *closure, ipcClientHandle client, const char *name);
+typedef PRBool (* ipcClientTargetEnumFunc) (void *closure, ipcClientHandle client, const nsID &target);
+
+//
+// the daemon provides the following structure:
+//
+struct ipcDaemonMethods
+{
+    PRUint32 version;
+
+    //
+    // called to send a message to another module.
+    //
+    // params:
+    //   client - identifies the client from which this message originated.
+    //   msg    - the message to dispatch.
+    //
+    // returns:
+    //   PR_SUCCESS if message was dispatched.
+    //   PR_FAILURE if message could not be dispatched (possibly because
+    //              no module is registered for the given message target).
+    //
+    PRStatus (* dispatchMsg) (ipcClientHandle client, const ipcMessage *msg);
+
+    //
+    // called to send a message to a particular client or to broadcast a
+    // message to all clients.
+    //
+    // params:
+    //   client - if null, then broadcast message to all clients.  otherwise,
+    //            send message to the client specified.
+    //   msg    - the message to send.
+    //
+    // returns:
+    //   PR_SUCCESS if message was sent (or queued up to be sent later).
+    //   PR_FAILURE if message could not be sent (possibly because the client
+    //              does not have a registered observer for the msg's target).
+    //
+    PRStatus (* sendMsg) (ipcClientHandle client, const ipcMessage *msg);
+
+    //
+    // called to lookup a client handle given its client ID.  each client has
+    // a unique ID.
+    //
+    ipcClientHandle (* getClientByID) (PRUint32 clientID);
+
+    //
+    // called to lookup a client by name or alias.  names are not necessary
+    // unique to individual clients.  this function returns the client first
+    // registered under the given name.
+    //
+    ipcClientHandle (* getClientByName) (const char *name);
+
+    //
+    // called to enumerate all clients.
+    //
+    void (* enumClients) (ipcClientEnumFunc func, void *closure);
+
+    //
+    // returns the client ID of the specified client.
+    //
+    PRUint32 (* getClientID) (ipcClientHandle client);
+
+    //
+    // returns the primary client name (NULL if the client did not specify a name).
+    // this is the name specified by the client in its "client hello" message.
+    //
+    const char * (* getPrimaryClientName) (ipcClientHandle client);
+
+    //
+    // functions for inspecting the names and targets defined for a particular
+    // client instance.
+    //
+    PRBool (* clientHasName)     (ipcClientHandle client, const char *name);
+    PRBool (* clientHasTarget)   (ipcClientHandle client, const nsID &target);
+    void   (* enumClientNames)   (ipcClientHandle client, ipcClientNameEnumFunc func, void *closure);
+    void   (* enumClientTargets) (ipcClientHandle client, ipcClientTargetEnumFunc func, void *closure);
+};
+
+//-----------------------------------------------------------------------------
+// interface exported by a DSO implementing one or more modules:
+//-----------------------------------------------------------------------------
+
+struct ipcModuleEntry
+{
+    //
+    // identifies the message target of this module.
+    //
+    nsID target;
+
+    //
+    // module methods
+    //
+    ipcModuleMethods *methods;
 };
 
 //
-// factory method signature for DLLs, which may define more than one ipcModule
-// implementation.  the DLL must export the following symbol:
+// IPC_EXPORT int IPC_GetModules(ipcDaemonMethods *, ipcModuleEntry **);
 //
-// extern "C" ipcModule **IPC_GetModuleList();
+// params:
+//   methods - the daemon's methods
+//   entries - the module entries defined by the DSO
 //
-// return:
-//   null terminated array of modules.
+// returns:
+//   length of the |entries| array.
 //
-typedef ipcModule ** (*ipcGetModuleListFunc)(void);
+typedef int (* ipcGetModulesFunc) (ipcDaemonMethods *methods, ipcModuleEntry **entries);
 
 #endif // !ipcModule_h__

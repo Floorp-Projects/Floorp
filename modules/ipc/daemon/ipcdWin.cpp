@@ -178,7 +178,7 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
 //-----------------------------------------------------------------------------
 
 void
-IPC_SendMessageNow(ipcClient *client, const ipcMessage *msg)
+IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg)
 {
     LOG(("IPC_SendMessageNow [clientID=%u clientPID=%u]\n",
         client->ID(), client->PID()));
@@ -188,11 +188,12 @@ IPC_SendMessageNow(ipcClient *client, const ipcMessage *msg)
     cd.cbData = (DWORD) msg->MsgLen();
     cd.lpData = (PVOID) msg->MsgBuf();
 
-
     LOG(("calling SendMessage...\n"));
     SendMessageA(client->Hwnd(), WM_COPYDATA, 0, (LPARAM) &cd);
    // SendMessageA(hwnd, WM_COPYDATA, (WPARAM) ipcHwnd, (LPARAM) &cd);
     LOG(("  done.\n"));
+
+    return PR_SUCCESS;
 }
 
 //-----------------------------------------------------------------------------

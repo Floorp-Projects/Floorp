@@ -339,11 +339,24 @@ static void PollLoop(PRFileDesc *listenFD)
 
 //-----------------------------------------------------------------------------
 
-void
-IPC_ClientWritePending(ipcClient *client)
+PRStatus
+IPC_PlatformSendMsg(ipcClient *client, const ipcMessage *msg)
 {
+    LOG(("IPC_PlatformSendMsg\n"));
+
+    //
+    // must copy message onto send queue.
+    //
+    client->EnqueueOutboundMsg(msg->Clone());
+
+    //
+    // since our Process method may have already been called, we must ensure
+    // that the PR_POLL_WRITE flag is set.
+    //
     int clientIndex = client - ipcClientArray;
     ipcPollList[clientIndex].in_flags |= PR_POLL_WRITE;
+
+    return PR_SUCCESS;
 }
 
 //-----------------------------------------------------------------------------

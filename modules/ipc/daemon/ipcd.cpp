@@ -52,9 +52,9 @@ PRStatus
 IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 {
     // lookup handler for this message's topic and forward message to it.
-    ipcModule *module = IPC_GetModuleByID(msg->Target());
-    if (module) {
-        module->HandleMsg(client, msg);
+    ipcModuleMethods *methods = IPC_GetModuleByTarget(msg->Target());
+    if (methods) {
+        methods->handleMsg(client, msg);
         return PR_SUCCESS;
     }
     LOG(("no registered module; ignoring message\n"));
@@ -62,34 +62,23 @@ IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 }
 
 PRStatus
-IPC_SendMsg(ipcClient *client, ipcMessage *msg)
+IPC_SendMsg(ipcClient *client, const ipcMessage *msg)
 {
     if (client == NULL) {
-        int i;
         //
-        // walk clients array 
+        // broadcast
         //
-        for (i = 0; i < ipcClientCount; ++i)
-            IPC_SendMsg(&ipcClients[i], msg->Clone());
-
-        // send to last client w/o cloning to avoid extra malloc
-        IPC_SendMsg(&ipcClients[i], msg);
+        for (int i=0; i<ipcClientCount; ++i) {
+            if (client->HasTarget(msg->Target()))
+                IPC_PlatformSendMsg(&ipcClients[i], msg);
+        }
+        return PR_SUCCESS;
     }
-    else
-        client->EnqueueOutboundMsg(msg);
-    return PR_SUCCESS;
-}
-
-PRUint32
-IPC_GetClientID(ipcClient *client)
-{
-    return client->ID();
-}
-
-const char *
-IPC_GetPrimaryClientName(ipcClient *client)
-{
-    return client->PrimaryName();
+    if (!client->HasTarget(msg->Target())) {
+        LOG(("no registered message handler\n"));
+        return PR_FAILURE;
+    }
+    return IPC_PlatformSendMsg(client, msg);
 }
 
 ipcClient *
@@ -114,6 +103,25 @@ IPC_GetClientByName(const char *name)
     return NULL;
 }
 
+void
+IPC_EnumClients(ipcClientEnumFunc func, void *closure)
+{
+    for (int i = 0; i < ipcClientCount; ++i)
+        func(closure, &ipcClients[i], ipcClients[i].ID());
+}
+
+PRUint32
+IPC_GetClientID(ipcClient *client)
+{
+    return client->ID();
+}
+
+const char *
+IPC_GetPrimaryClientName(ipcClient *client)
+{
+    return client->PrimaryName();
+}
+
 PRBool
 IPC_ClientHasName(ipcClient *client, const char *name)
 {
@@ -127,7 +135,7 @@ IPC_ClientHasTarget(ipcClient *client, const nsID &target)
 }
 
 void
-IPC_EnumerateClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *closure)
+IPC_EnumClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *closure)
 {
     const ipcStringNode *node = client->Names();
     while (node) {
@@ -138,7 +146,7 @@ IPC_EnumerateClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *cl
 }
 
 void
-IPC_EnumerateClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void *closure)
+IPC_EnumClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void *closure)
 {
     const ipcIDNode *node = client->Targets();
     while (node) {

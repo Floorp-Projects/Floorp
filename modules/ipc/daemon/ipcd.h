@@ -40,84 +40,24 @@
 
 #include "ipcModule.h"
 
-#define IPC_EXPORT extern "C" NS_EXPORT
-#define IPC_IMPORT extern "C" NS_IMPORT
-
-#ifdef IPC_DAEMON
-#define IPC_API IPC_EXPORT
-#else
-#define IPC_API IPC_IMPORT
-#endif
-
-class ipcClient;
-class ipcMessage;
-
 //-----------------------------------------------------------------------------
-// IPC daemon API
+// IPC daemon methods (see struct ipcDaemonMethods)
+//
+// these functions may only be called directly from within the daemon.  plug-in
+// modules must access these through the ipcDaemonMethods structure.
 //-----------------------------------------------------------------------------
 
-//
-// IPC_DispatchMsg
-//
-// params:
-//   client - identifies the client from which this message originated.
-//   msg    - the message received.  this function does not modify |msg|,
-//            and ownership stays with the caller.
-//
-IPC_API PRStatus IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg);
-
-//
-// IPC_SendMsg
-//
-// params:
-//   client - identifies the client that should receive the message.
-//            if null, then the message is broadcast to all clients.
-//   msg    - the message to be sent.  this function subsumes
-//            ownership of the message.  the caller must not attempt
-//            to access |msg| after this function returns.
-//
-IPC_API PRStatus IPC_SendMsg(ipcClient *client, ipcMessage *msg);
-
-//
-// returns the client ID dynamically generated for the given client.
-//
-IPC_API PRUint32 IPC_GetClientID(ipcClient *client);
-
-//
-// returns the primary client name (NULL if the client did not specify a name).
-// this is the name specified by the client in its "client hello" message.
-//
-IPC_API const char *IPC_GetPrimaryClientName(ipcClient *client);
-
-//
-// client lookup functions
-//
-IPC_API ipcClient *IPC_GetClientByID(PRUint32 id);
-IPC_API ipcClient *IPC_GetClientByName(const char *name);
-
-//
-// functions for inspecting the names and targets defined for a particular
-// client instance.
-//
-IPC_API PRBool IPC_ClientHasName(ipcClient *client, const char *name);
-IPC_API PRBool IPC_ClientHasTarget(ipcClient *client, const nsID &target);
-
-// return PR_FALSE to end enumeration
-typedef PRBool (* ipcClientNameEnumFunc)(void *closure, ipcClient *client, const char *name);
-typedef PRBool (* ipcClientTargetEnumFunc)(void *closure, ipcClient *client, const nsID &target);
-
-IPC_API void IPC_EnumerateClientNames(ipcClient *client, ipcClientNameEnumFunc func, void *closure);
-IPC_API void IPC_EnumerateClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void *closure);
-
-//
-// return array of all clients, length equal to |count|.
-//
-IPC_API ipcClient *IPC_GetClients(PRUintn *count);
-
-//
-// returns the ipcModule object registered under the given module ID.
-//
-IPC_API ipcModule *IPC_GetModuleByID(const nsID &moduleID);
+PRStatus        IPC_DispatchMsg          (ipcClientHandle client, const ipcMessage *msg);
+PRStatus        IPC_SendMsg              (ipcClientHandle client, const ipcMessage *msg);
+ipcClientHandle IPC_GetClientByID        (PRUint32 id);
+ipcClientHandle IPC_GetClientByName      (const char *name);
+void            IPC_EnumClients          (ipcClientEnumFunc func, void *closure);
+PRUint32        IPC_GetClientID          (ipcClientHandle client);
+const char     *IPC_GetPrimaryClientName (ipcClientHandle client);
+PRBool          IPC_ClientHasName        (ipcClientHandle client, const char *name);
+PRBool          IPC_ClientHasTarget      (ipcClientHandle client, const nsID &target);
+void            IPC_EnumClientNames      (ipcClientHandle client, ipcClientNameEnumFunc func, void *closure);
+void            IPC_EnumClientTargets    (ipcClientHandle client, ipcClientTargetEnumFunc func, void *closure);
 
 //-----------------------------------------------------------------------------
 // inline helpers
