@@ -1539,6 +1539,47 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         return obj;
     }
 
+    /**
+     * Get arbitrary application-specific value associated with this object.
+     * @param key key object to select particular value.
+     * @see #associateValue(Object key, Object value)
+     */
+    public final Object getAssociatedValue(Object key)
+    {
+        Hashtable h = associatedValues;
+        if (h == null)
+            return null;
+        return h.get(key);
+    }
+
+    /**
+     * Associate arbitrary application-specific value with this object.
+     * Value can only be associated with the given object and key only once.
+     * The method ignores any subsequent attempts to change the already
+     * associated value.
+     * <p> The associated values are not serilized.
+     * @param key key object to select particular value.
+     * @param value the value to associate
+     * @return the passed value if the method is called first time for the
+     * given key or old value for any subsequent calls.
+     * @see #getAssociatedValue(Object key)
+     */
+    public final Object associateValue(Object key, Object value)
+    {
+        if (value == null) throw new IllegalArgumentException();
+        Hashtable h = associatedValues;
+        if (h == null) {
+            synchronized (this) {
+                h = associatedValues;
+                if (h == null) {
+                    h = new Hashtable();
+                    associatedValues = h;
+                }
+            }
+        }
+        return Kit.initHash(h, key, value);
+    }
+
     private Slot getSlot(String id, int index) {
         Slot[] slots = this.slots; // Get local copy
         int i = getSlotPosition(slots, id, index);
@@ -1801,6 +1842,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
     // cache; may be removed for smaller memory footprint
     private transient Slot lastAccess = REMOVED;
+
+    // associated values are not serialized
+    private transient volatile Hashtable associatedValues;
 
     private static class Slot implements Serializable {
         static final int HAS_GETTER  = 0x01;
