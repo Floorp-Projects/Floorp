@@ -879,15 +879,11 @@ nsProtocolProxyService::GetFailoverForProxy(nsIProxyInfo  *aProxy,
         return NS_ERROR_NOT_AVAILABLE;
 
     // Verify that |aProxy| is one of our nsProxyInfo objects.
-    nsProxyInfo *pi = nsnull;
-    aProxy->QueryInterface(kProxyInfoID, (void **) &pi);
+    nsRefPtr<nsProxyInfo> pi;
+    aProxy->QueryInterface(kProxyInfoID, getter_AddRefs(pi));
     if (!pi)
         return NS_ERROR_INVALID_ARG;
-    // OK, the QI checked out.  We can proceed.  Release the extra reference
-    // acquired by the call to QI now so we don't have to worry about it later.
-    // Moreover, call Release on |aProxy| instead of |pi| since we are going to
-    // use |pi| directly from now on.
-    aProxy->Release();
+    // OK, the QI checked out.  We can proceed.
 
     // Remember that this proxy is down.
     DisableProxy(pi);
