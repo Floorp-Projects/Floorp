@@ -413,6 +413,13 @@ else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
+$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
+ifdef USE_NT_C_SYNTAX
+	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$<)
+else
+	$(CC) -o $@ -c $(CFLAGS) $<
+endif
+
 ifneq ($(OS_ARCH), WINNT)
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
