@@ -175,7 +175,7 @@ NS_IMETHODIMP nsOSHelperAppService::DoContent(const char *aMimeContentType, nsIU
   if (NS_SUCCEEDED(rv) && mimeInfo)
   {
     // this code is incomplete and just here to get things started..
-    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension);
+    nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
     handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
   }
 

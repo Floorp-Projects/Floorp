@@ -142,7 +142,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     // even if this fails, return NS_OK...
     nsXPIDLCString fileExtension;
     mimeInfo->FirstExtension(getter_Copies(fileExtension));
-    nsExternalAppHandler * app = CreateNewExternalHandler(mimeInfo, fileExtension);
+    nsExternalAppHandler * app = CreateNewExternalHandler(mimeInfo, fileExtension, aWindowContext);
     if (app)
       app->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
     return NS_OK;
@@ -160,14 +160,15 @@ NS_IMETHODIMP nsExternalHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aM
 }
 
 nsExternalAppHandler * nsExternalHelperAppService::CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, 
-                                                                            const char * aTempFileExtension)
+                                                                            const char * aTempFileExtension,
+                                                                            nsISupports * aWindowContext)
 {
   nsExternalAppHandler* handler = nsnull;
   NS_NEWXPCOM(handler, nsExternalAppHandler);
   // add any XP intialization code for an external handler that we may need here...
   // right now we don't have any but i bet we will before we are done.
 
-  handler->Init(aMIMEInfo, aTempFileExtension);
+  handler->Init(aMIMEInfo, aTempFileExtension, aWindowContext);
   return handler;
 }
 
@@ -460,17 +461,24 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   // they want us to do with this content...
 
   nsMIMEInfoHandleAction action = nsIMIMEInfo::alwaysAsk;
-  mMimeInfo->GetPreferredAction(&action);
+  mMimeInfo->GetPreferredAction(&action);  // commented out for testing purposes only!
   if (action ==  nsIMIMEInfo::alwaysAsk)
   {
     // do this first! make sure we don't try to take an action until the user tells us what they want to do
     // with it...
     mReceivedDispostionInfo = PR_FALSE; 
 
-    // invoke the dialog!!!!!
+    // invoke the dialog!!!!! use mWindowContext as the window context parameter for the dialog service
+
+
+
   }
   else
     mReceivedDispostionInfo = PR_TRUE; // no need to wait for a response from the user
+
+  // be sure to release our reference on the context now that we are done with it to avoid any circular reference
+  // chains...
+  mWindowContext = nsnull;
 
   return NS_OK;
 }
@@ -535,8 +543,9 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
   return rv;
 }
 
-nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo, const char * aTempFileExtension)
+nsresult nsExternalAppHandler::Init(nsIMIMEInfo * aMIMEInfo, const char * aTempFileExtension, nsISupports * aWindowContext)
 {
+  mWindowContext = aWindowContext;
   mMimeInfo = aMIMEInfo;
   
   // make sure the extention includes the '.'
@@ -584,6 +593,8 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
 NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication, PRBool aRememberThisPreference)
 {
   mReceivedDispostionInfo = PR_TRUE; 
+  if (mMimeInfo && aApplication)
+    mMimeInfo->SetPreferredApplicationHandler(aApplication);
 
   // if a stop request was already issued then proceed with launching the application.
   nsresult rv = NS_OK;
@@ -595,12 +606,7 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mTempFile);
     }
   }
-  // o.t. remember the application we should use to launch the app and when the on stop request is issued, launch it.
-  else
-  {
-    if (mMimeInfo)
-      mMimeInfo->SetPreferredApplicationHandler(aApplication);
-  }
+
   return NS_OK;
 }
 
