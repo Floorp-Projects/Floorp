@@ -4,7 +4,7 @@
 <!ENTITY  title.label                   "Proxies Panel">
 <!ENTITY  lHeader                       "Proxies">
 <!ENTITY  proxyTitle.label              "Configure proxies to access the Internet">
-<!ENTITY  networkHeader.label           "A network proxy provides additional security between your computer and the Intenet. Proxies can also increase performance between multiple networks, by using caches to reduce traffic.">
+<!ENTITY  networkHeader.label           "A network proxy provides additional security between your computer and the Internet. Proxies can also increase performance between multiple networks, by using caches to reduce traffic.">
 <!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
 <!ENTITY  directTypeRadio.accesskey     "d">
 <!ENTITY  manualTypeRadio.label         "Manual proxy configuration">
