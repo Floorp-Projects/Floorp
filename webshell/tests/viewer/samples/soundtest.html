@@ -5,16 +5,16 @@
 
 <body>
 <script>
-var filespec = Components.classes["component://netscape/filespec"].createInstance();
-filespec = filespec.QueryInterface(Components.interfaces.nsIFileSpec);
-filespec.URLString = "file://res/samples/test.wav";
+var uri = Components.classes["component://netscape/uri"].createInstance();
+uri = uri.QueryInterface(Components.interfaces.nsIURI);
+uri = "resource:/res/samples/test.wav";
 
 var sample = Components.classes["component://netscape/sound"].createInstance();
 sample = sample.QueryInterface(Components.interfaces.nsISound);
 </script>
 
 <form name="form">
-<input type="button" value="Play Sound" onclick="sample.Play(filespec);">
+<input type="button" value="Play Sound" onclick="sample.play(uri);">
 <form>
 </body>
 </html>
