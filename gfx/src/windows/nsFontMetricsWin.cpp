@@ -265,7 +265,7 @@ nsFontMetricsWin::RealizeFont()
 
   ::SelectObject(dc, oldfont);
 
-  if (NULL != mDeviceContext->mDC)
+  if (NULL == mDeviceContext->mDC)
     ::ReleaseDC(win, dc);
 }
 
