@@ -1662,6 +1662,7 @@ Wallet_SetKey(PRBool isNewkey) {
     if (wallet_IsOldKeyFormat()) {
       return wallet_WriteKeyFile(useDefaultKey);
     }
+    return PR_TRUE;
   }
 }
 
