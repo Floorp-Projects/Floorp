@@ -36,6 +36,7 @@ package Bugzilla::Search;
 use Bugzilla::Config;
 use Bugzilla::Error;
 use Bugzilla::Util;
+use Bugzilla::Constants;
 
 use Date::Format;
 use Date::Parse;
@@ -330,6 +331,26 @@ sub init {
     my %funcsbykey;
     my @funcdefs =
         (
+         "^(?:assigned_to|reporter|qa_contact),(?:notequals|equals|anyexact),%group\\.(\\w+)%" => sub {
+             my $group = $1;
+             my $groupid = ValidateGroupName( $group, ($user));
+             $groupid || ThrowUserError('invalid_group_name',{name => $group});
+             my @childgroups = @{$user->flatten_group_membership($groupid)};
+             my $table = "user_group_map_$chartid";
+             push (@supptables, "LEFT JOIN user_group_map $table " .
+                                "ON $table.user_id = bugs.$f " .
+                                "AND $table.group_id IN(" .
+                                join(',', @childgroups) . ") " .
+                                "AND $table.isbless = 0 " .
+                                "AND $table.grant_type IN(" .
+                                GRANT_DIRECT . "," . GRANT_REGEXP . ")"
+                  );
+             if ($t =~ /^not/) {
+                 $term = "$table.group_id IS NULL";
+             } else {
+                 $term = "$table.group_id IS NOT NULL";
+             }
+          },
          "^(?:assigned_to|reporter|qa_contact),(?:equals|anyexact),(%\\w+%)" => sub {
              $term = "bugs.$f = " . pronoun($1, $user);
           },
@@ -346,6 +367,34 @@ sub init {
                   "LEFT JOIN profiles map_qa_contact ON bugs.qa_contact = map_qa_contact.userid");
              $f = "COALESCE(map_$f.login_name,'')";
          },
+
+         "^(?:cc),(?:notequals|equals|anyexact),%group\\.(\\w+)%" => sub {
+             my $group = $1;
+             my $groupid = ValidateGroupName( $group, ($user));
+             $groupid || ThrowUserError('invalid_group_name',{name => $group});
+             my @childgroups = @{$user->flatten_group_membership($groupid)};
+             my $chartseq = $chartid;
+             if ($chartid eq "") {
+                 $chartseq = "CC$sequence";
+                 $sequence++;
+             }
+             my $table = "user_group_map_$chartseq";
+             push(@supptables, "LEFT JOIN cc cc_$chartseq " .
+                               "ON bugs.bug_id = cc_$chartseq.bug_id");
+             push(@supptables, "LEFT JOIN user_group_map $table " .
+                                "ON $table.user_id = cc_$chartseq.who " .
+                                "AND $table.group_id IN(" .
+                                join(',', @childgroups) . ") " .
+                                "AND $table.isbless = 0 " .
+                                "AND $table.grant_type IN(" .
+                                GRANT_DIRECT . "," . GRANT_REGEXP . ")"
+                  );
+             if ($t =~ /^not/) {
+                 $term = "$table.group_id IS NULL";
+             } else {
+                 $term = "$table.group_id IS NOT NULL";
+             }
+          },
 
          "^cc,(?:equals|anyexact),(%\\w+%)" => sub {
              my $match = pronoun($1, $user);
@@ -1355,4 +1404,23 @@ sub pronoun {
     }
     return 0;
 }
+
+# ValidateGroupName checks to see if ANY of the users in the provided list 
+# of user objects can see the named group.  It returns the group id if
+# successful and undef otherwise.
+sub ValidateGroupName {
+    my ($name, @users) = (@_);
+    my @visible = (-1);
+    foreach my $user (@users) {
+        $user && push @visible, @{$user->visible_groups_direct};
+    }
+    my $visible = join(', ', @visible);
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare("SELECT id FROM groups " .
+                            "WHERE name = ? AND id IN($visible)");
+    $sth->execute($name);
+    my ($ret) = $sth->fetchrow_array();
+    return $ret;
+}
+
 1;

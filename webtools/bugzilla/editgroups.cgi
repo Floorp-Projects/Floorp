@@ -153,7 +153,7 @@ if ($action eq 'changeform') {
              " ON C.member_id = groups.id" .
              " AND C.grantor_id = $group_id" .
              " AND C.grant_type = " . GROUP_VISIBLE .
-             " WHERE groups.id != $group_id ORDER by name");
+             " ORDER by name");
 
     while (MoreSQLData()) {
         my ($grpid, $grpnam, $grpdesc, $grpmember, $blessmember, $membercansee) 
@@ -531,7 +531,7 @@ sub doGroupChanges {
             $b =~ /^oldgrp-(\d+)$/;
             my $v = $1;
             my $grp = $cgi->param("grp-$v") || 0;
-            if ($cgi->param("oldgrp-$v") != $grp) {
+            if (($cgi->param("oldgrp-$v") != $grp) && ($v != $gid)) {
                 $chgs = 1;
                 if ($grp != 0) {
                     SendSQL("INSERT INTO group_group_map 

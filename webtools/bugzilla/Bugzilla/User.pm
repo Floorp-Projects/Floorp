@@ -340,7 +340,7 @@ sub visible_groups_inherited {
     return $self->{visible_groups_inherited} if defined $self->{visible_groups_inherited};
     return [] unless $self->id;
     my @visgroups = @{$self->visible_groups_direct};
-    @visgroups = flatten_group_membership(@visgroups);
+    @visgroups = @{$self->flatten_group_membership(@visgroups)};
     $self->{visible_groups_inherited} = \@visgroups;
     return $self->{visible_groups_inherited};
 }
@@ -489,7 +489,7 @@ sub can_bless {
 }
 
 sub flatten_group_membership {
-    my (@groups) = @_;
+    my ($self, @groups) = @_;
 
     my $dbh = Bugzilla->dbh;
     my $sth;
@@ -509,7 +509,7 @@ sub flatten_group_membership {
             }
         }
     }
-    return @groups;
+    return \@groups;
 }
 
 sub match {
@@ -1091,6 +1091,14 @@ product names.
 Returns a reference to an array of users.  The array is populated with hashrefs
 containing the login, identity and visibility.  Users that are not visible to this
 user will have 'visible' set to zero.
+
+=item C<flatten_group_membership>
+
+Accepts a list of groups and returns a list of all the groups whose members 
+inherit membership in any group on the list.  So, we can determine if a user
+is in any of the groups input to flatten_group_membership by querying the
+user_group_map for any user with DIRECT or REGEXP membership IN() the list
+of groups returned.
 
 =item C<visible_groups_inherited>
 

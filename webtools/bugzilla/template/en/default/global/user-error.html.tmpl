@@ -459,6 +459,10 @@
     [% title = "Invalid group ID" %]
     The group you specified doesn't exist.
 
+  [% ELSIF error == "invalid_group_name" %]
+    [% title = "Invalid group name" %]
+    The group you specified, [% name FILTER html %], is not valid here.
+
   [% ELSIF error == "invalid_maxrows" %]
     [% title = "Invalid Max Rows" %]
     The maximum number of rows, '[% maxrows FILTER html %]', must be
