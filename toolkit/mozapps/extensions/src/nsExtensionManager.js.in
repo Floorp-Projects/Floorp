@@ -190,25 +190,18 @@ nsExtensionManager.prototype = {
         var items = this._ds.getIncompatibleItemList(currAppID, currAppVersion);
 
         if (items.length > 0) {
-          var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                             .getService(Components.interfaces.nsIWindowWatcher);
-          var ary = Components.classes["@mozilla.org/supports-array;1"]
-                              .createInstance(Components.interfaces.nsISupportsArray);
           for (var i = 0; i < items.length; ++i) {
-            ary.AppendElement(items[i]);
-            
             // Now disable the extension so it won't hurt anything. 
             this.disableExtension(items[i].id);
           }
-          ww.openWindow(null, "chrome://mozapps/content/update/update.xul", 
-                        "", "chrome,centerscreen,modal", ary);
-          // 
+          this.update(items, items.length, 
+                      Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH);
         }
       }
       
       // Now update the last app version so we don't do this checking 
       // again.
-      // pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
+      pref.setCharPref(PREF_EM_LAST_APP_VERSION, currAppVersion);
     }
   },
   
@@ -251,7 +244,7 @@ nsExtensionManager.prototype = {
     this._ds.disableExtension(aExtensionID);
   },
   
-  update: function (aItems, aItemCount, aShowUI)
+  update: function (aItems, aItemCount, aUpdateType)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
@@ -259,7 +252,26 @@ nsExtensionManager.prototype = {
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
 
     var updater = new nsItemUpdater(aItems, appID, appVersion);
-    updater.checkForUpdates();
+    
+    switch (aUpdateType) {
+    case Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH:
+    case Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED:
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                        .getService(Components.interfaces.nsIWindowWatcher);
+      var ary = Components.classes["@mozilla.org/supports-array;1"]
+                          .createInstance(Components.interfaces.nsISupportsArray);
+      ary.AppendElement(updater);
+      for (var i = 0; i < aItems.length; ++i)
+        ary.AppendElement(aItems[i]);
+      ww.openWindow(null, "chrome://mozapps/content/update/update.xul", 
+                    "", "chrome,modal,centerscreen", ary);
+      break;
+    case Components.interfaces.nsIExtensionManager.UPDATE_TYPE_BACKGROUND:
+      // The Background Updater Service adds itself as a listener for
+      // the various kinds of messages that the updater sends out.
+      updater.checkForUpdates();
+      break;
+    }
   },
   
   // Themes

@@ -115,7 +115,7 @@ nsBackgroundUpdateService.prototype = {
     if (extUpdatesEnabled) {
       var em = Components.classes["@mozilla.org/extensions/manager;1"]
                          .getService(Components.interfaces.nsIExtensionManager);
-      em.update([], 0);      
+      em.update([], 0, Components.interfaces.nsIExtensionManager.UPDATE_TYPE_BACKGROUND);      
     }                             
                          
     this._makeTimer(pref.getIntPref(PREF_UPDATE_INTERVAL));

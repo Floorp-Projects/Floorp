@@ -1,6 +1,8 @@
 //
-// window.arguments is an array of nsIExtensionItem implementing objects that 
-// are to be updated. 
+// window.arguments[0] is the nsIExtensionItemUpdater object
+//
+// window.arguments[1...] is an array of nsIExtensionItem implementing objects 
+// that are to be updated. 
 //  * if the array is empty, all items are updated (like a background update
 //    check)
 //  * if the array contains one or two ExtensionItems, with null id fields, 
@@ -40,12 +42,18 @@
 //
 
 const nsIExtensionItem = Components.interfaces.nsIExtensionItem;
-var gExtensionItems = window.arguments;
+var gExtensionItems = [];
+var gUpdater = null;
 
 var gUpdateWizard = {
+  _items: [],
 
   init: function ()
   {
+    gUpdater = window.arguments[0];
+    for (var i = 1; i < window.argments.length; ++i)
+      this._items.push(window.arguments[i].QueryInterface(Components.interfaces.nsIExtensionItem));
+
     gMismatchPage.init();
   },
   
@@ -57,17 +65,12 @@ var gUpdateWizard = {
 
 
 var gMismatchPage = {
-  _items: [],
-  
   init: function ()
   {
-    for (var i = 0; i < gExtensionItems.length; ++i)
-      this._items.push(gExtensionItems[i].QueryInterface(Components.interfaces.nsIExtensionItem));
-      
     var incompatible = document.getElementById("mismatch.incompatible");
     
-    for (var i = 0; i < this._items.length; ++i) {
-      var item = this._items[i];
+    for (var i = 0; i < gUpdateWizard._items.length; ++i) {
+      var item = gUpdateWizard._items[i];
       var listitem = document.createElement("listitem");
       listitem.setAttribute("label", item.name + " " + item.version);
       incompatible.appendChild(listitem);

@@ -74,9 +74,16 @@ interface nsIExtensionManager : nsISupports
   void installTheme(in string aThemeID);
   void uninstallTheme(in string aThemeID);
 
-  void update([array, size_is(aItemCount)] in nsIExtensionItem aItems,
-              in unsigned long aItemCount,
-              in boolean aShowUI);
+  const unsigned short UPDATE_TYPE_MISMATCH = 0x01;
+  const unsigned short UPDATE_TYPE_USERINVOKED = 0x02;
+  const unsigned short UPDATE_TYPE_BACKGROUND = 0x04;
+
+  const unsigned short UPDATE_RESULT_OK = 0x00;
+  const unsigned short UPDATE_RESULT_RESTART = 0x01;
+
+  unsigned short update([array, size_is(aItemCount)] in nsIExtensionItem aItems,
+                        in unsigned long aItemCount,
+                        in unsigned short aUpdateType);
 
   readonly attribute nsIRDFDataSource datasource;
 };

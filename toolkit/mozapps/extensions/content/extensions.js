@@ -366,7 +366,8 @@ var gExtensionsViewController = {
     cmd_update: function ()
     {
       var items = this._getItemList(null);
-      gExtensionManager.update(items, item.length, false);
+      gExtensionManager.update(items, item.length, 
+                               Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED);
     },
 
     _getItemList: function (aItemID) 
