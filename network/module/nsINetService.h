@@ -180,6 +180,14 @@ struct nsINetService : public nsISupports
     NS_IMETHOD GetPlatform(nsString& aPlatform)=0;
 
     /**
+     * Get the HTTP advertised user agent string.
+     *
+     * @param aUA The current user agent string being sent out in HTTP requests.
+     * @retrun Returns NS_OK if successful, or NS_FALSE if an error occurred.
+     */
+    NS_IMETHOD GetUserAgent(nsString& aUA)=0;
+
+    /**
      * Add a string to the user agent AppVersion.
      *
      * @param aCustom   The string to be inserted into the AppVersion portion

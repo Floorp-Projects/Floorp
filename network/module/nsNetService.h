@@ -57,6 +57,7 @@ public:
     NS_IMETHOD GetAppName(nsString& aAppName);
     NS_IMETHOD GetLanguage(nsString& aLanguage);
     NS_IMETHOD GetPlatform(nsString& aPlatform);
+    NS_IMETHOD GetUserAgent(nsString& aUA);
     NS_IMETHOD SetCustomUserAgent(nsString aCustom);
 
 protected:

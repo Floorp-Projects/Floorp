@@ -152,12 +152,17 @@ nsNetlibService::nsNetlibService()
     XP_AppPlatform = PL_strdup("Unix");
 #endif
 
-    /* Build up the appversion. */
+    /* XXXXX TEMPORARY TESTING HACK XXXXX */
     char buf[64];
-    sprintf(buf, "%s/4.05 [%s] (%s; I)", 
-        XP_AppCodeName, 
+    char *ver = PR_GetEnv("NG_REQUEST_VER");
+    if (!ver)
+        ver = PL_strdup("4.05");
+    /* Build up the appversion. */
+    sprintf(buf, "%s [%s] (%s; I)",
+        ver, 
         XP_AppLanguage, 
         XP_AppPlatform);
+    FREEIF(ver);
     if (XP_AppVersion)
         PR_Free((char *)XP_AppVersion);
     XP_AppVersion = PL_strdup(buf);
@@ -652,38 +657,45 @@ nsNetlibService::SetHTTPOneOne(PRBool aSendOneOne) {
 NS_IMETHODIMP    
 nsNetlibService::GetAppCodeName(nsString& aAppCodeName)
 {
-  aAppCodeName.SetString("Mozilla");
+  aAppCodeName.SetString(XP_AppCodeName);
   return NS_OK;
 }
  
 NS_IMETHODIMP
 nsNetlibService::GetAppVersion(nsString& aAppVersion)
 {
-  //This seems kinda wrong in x-platform code
-  aAppVersion.SetString("4.05 [en] (WinNT;I)");
+  aAppVersion.SetString(XP_AppVersion);
   return NS_OK;
 }
  
 NS_IMETHODIMP
 nsNetlibService::GetAppName(nsString& aAppName)
 {
-  aAppName.SetString("Netscape");
+  aAppName.SetString(XP_AppName);
   return NS_OK;
 }
  
 NS_IMETHODIMP
 nsNetlibService::GetLanguage(nsString& aLanguage)
 {
-  aLanguage.SetString("en");
+  aLanguage.SetString(XP_AppLanguage);
   return NS_OK;
 }
  
 NS_IMETHODIMP    
 nsNetlibService::GetPlatform(nsString& aPlatform)
 {
-  //This seems kinda wrong in x-platform code
-  aPlatform.SetString("Win32");
+  aPlatform.SetString(XP_AppPlatform);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::GetUserAgent(nsString& aUA)
+{
+    char buf[64];
+    PR_snprintf(buf, 64, "%.100s/%.90s", XP_AppCodeName, XP_AppVersion);
+    aUA.SetString(buf);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
