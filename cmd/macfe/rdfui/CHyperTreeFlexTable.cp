@@ -72,6 +72,7 @@ CHyperTreeFlexTable::CHyperTreeFlexTable(LStream* inStream)
 
 	// turn on spring-loading of folders during d&d
 	mAllowAutoExpand = true;
+	mTextDrawingStuff.encoding = TextDrawingStuff::eUTF8;
 }
 
 
