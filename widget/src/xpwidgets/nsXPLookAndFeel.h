@@ -28,11 +28,11 @@
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 
-typedef enum nsLookAndFeelType {
+typedef enum {
   nsLookAndFeelTypeInt,
   nsLookAndFeelTypeFloat,
   nsLookAndFeelTypeColor
-};
+} nsLookAndFeelType;
 
 struct nsLookAndFeelIntPref
 {
