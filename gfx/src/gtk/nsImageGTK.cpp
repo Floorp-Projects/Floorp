@@ -434,7 +434,7 @@ void nsImageGTK::UpdateCachedImage()
       if (mIsSpacer && (leftindex <= rightindex)) {
         for (unsigned y=rect->y; (y<bottom) && mIsSpacer; y++) {
           unsigned char *alpha = mAlphaBits + mAlphaRowBytes*y + leftindex;
-          for (unsigned x=leftindex; x<rightindex; x++) {
+          for (unsigned x=leftindex; x<=rightindex; x++) {
             if (*(alpha++)!=0) {
               mIsSpacer = PR_FALSE;
               break;
