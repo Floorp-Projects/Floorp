@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -114,6 +114,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
 
 
 typedef	struct	_sortStruct	{
+    class XULSortServiceImpl	*xulSortClass;
     nsIRDFService		*rdfService;
     nsIRDFCompositeDataSource	*db;
     nsIRDFResource		*sortProperty;
@@ -127,11 +128,8 @@ typedef	struct	_sortStruct	{
 
 
 
-int		openSortCallback(const void *data1, const void *data2, void *sortData);
-int		inplaceSortCallback(const void *data1, const void *data2, void *sortData);
-nsresult	getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsString &cellVal1);
-nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell);
-nsresult	GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val);
+int		openSortCallback(const void *data1, const void *data2, void *privateData);
+int		inplaceSortCallback(const void *data1, const void *data2, void *privateData);
 
 
 
@@ -182,9 +180,16 @@ nsresult	RemoveAllChildren(nsIContent *node);
 nsresult	SortTreeChildren(nsIContent *container, PRInt32 colIndex, sortPtr sortInfo, PRInt32 indentLevel);
 nsresult	PrintTreeChildren(nsIContent *container, PRInt32 colIndex, PRInt32 indentLevel);
 
+nsresult	GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsString &cellVal1, PRBool &isCollationKey);
+nsresult	GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell);
+nsresult	GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val);
+
 public:
 
     static nsresult GetSortService(nsIXULSortService** result);
+
+    nsresult	ImplaceSort(nsIContent *node1, nsIContent *node2, sortPtr sortInfo, PRInt32 *sortOrder);
+    nsresult	OpenSort(nsIRDFNode *node1, nsIRDFNode *node2, sortPtr sortInfo, PRInt32 *theSortOrder);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -336,6 +341,9 @@ XULSortServiceImpl::GetSortService(nsIXULSortService** mgr)
 
 
 
+NS_IMPL_ISUPPORTS(XULSortServiceImpl, nsIXULSortService::GetIID());
+
+/*
 NS_IMETHODIMP_(nsrefcnt)
 XULSortServiceImpl::AddRef(void)
 {
@@ -353,7 +361,7 @@ XULSortServiceImpl::Release(void)
 
 
 NS_IMPL_QUERY_INTERFACE(XULSortServiceImpl, kIXULSortServiceIID);
-
+*/
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -516,7 +524,7 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree, nsString &sortResource, 
 
 
 nsresult
-GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell)
+XULSortServiceImpl::GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **cell)
 {
 	PRBool			found = PR_FALSE;
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
@@ -552,7 +560,7 @@ GetTreeCell(sortPtr sortInfo, nsIContent *node, PRInt32 cellIndex, nsIContent **
 
 
 nsresult
-GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val)
+XULSortServiceImpl::GetTreeCellValue(sortPtr sortInfo, nsIContent *node, nsString & val)
 {
 	PRBool			found = PR_FALSE;
 	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
@@ -605,55 +613,48 @@ XULSortServiceImpl::RemoveAllChildren(nsIContent *container)
 
 
 
-int
-openSortCallback(const void *data1, const void *data2, void *sortData)
+nsresult
+XULSortServiceImpl::OpenSort(nsIRDFNode *node1, nsIRDFNode *node2, sortPtr sortInfo, PRInt32 *theSortOrder)
 {
+	nsXPIDLString	uniStr1;
+	nsXPIDLString	uniStr2;
 	int		sortOrder = 0;
 	nsresult	rv;
 
-	nsIRDFNode	*node1, *node2;
-	node1 = *(nsIRDFNode **)data1;
-	node2 = *(nsIRDFNode **)data2;
-	_sortStruct	*sortPtr = (_sortStruct *)sortData;
-
-	nsIRDFResource	*res1;
-	nsIRDFResource	*res2;
-	nsXPIDLString	uniStr1;
-	nsXPIDLString	uniStr2;
-
-	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) &res1)))
+	nsCOMPtr<nsIRDFResource>	res1 = do_QueryInterface(node1);
+	if (res1)
 	{
-		nsIRDFNode	*nodeVal1;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, &nodeVal1)))
+		nsCOMPtr<nsIRDFNode>	nodeVal1;
+		if (NS_SUCCEEDED(rv = sortInfo->db->GetTarget(res1, sortInfo->sortProperty, PR_TRUE,
+			getter_AddRefs(nodeVal1))) && (nodeVal1))
 		{
-			nsIRDFLiteral *literal1;
-			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
+			nsCOMPtr<nsIRDFLiteral>	literal1 = do_QueryInterface(nodeVal1);
+			if (literal1)
 			{
 				literal1->GetValue( getter_Copies(uniStr1) );
-				NS_RELEASE(literal1);
 			}
 		}
-		NS_RELEASE(res1);
 	}
-	if (NS_SUCCEEDED(node2->QueryInterface(kIRDFResourceIID, (void **) &res2)))
+	nsCOMPtr<nsIRDFResource>	res2 = do_QueryInterface(node2);
+	if (res2)
 	{
-		nsIRDFNode	*nodeVal2;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, &nodeVal2)))
+		nsCOMPtr<nsIRDFNode>	nodeVal2;
+		if (NS_SUCCEEDED(rv = sortInfo->db->GetTarget(res2, sortInfo->sortProperty, PR_TRUE,
+			getter_AddRefs(nodeVal2))) && (nodeVal2))
 		{
-			nsIRDFLiteral	*literal2;
-			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
+			nsCOMPtr<nsIRDFLiteral>	literal2 = do_QueryInterface(nodeVal2);
+			if (nodeVal2)
 			{
 				literal2->GetValue( getter_Copies(uniStr2) );
-				NS_RELEASE(literal2);
 			}
 		}
-		NS_RELEASE(res2);
 	}
+
 	if ((uniStr1 != nsnull) && (uniStr2 != nsnull))
 	{
 		nsAutoString	str1(uniStr1), str2(uniStr2);
 		sortOrder = (int)str1.Compare(str2, PR_TRUE);
-		if (sortPtr->descendingSort == PR_TRUE)
+		if (sortInfo->descendingSort == PR_TRUE)
 		{
 			sortOrder = -sortOrder;
 		}
@@ -666,148 +667,229 @@ openSortCallback(const void *data1, const void *data2, void *sortData)
 	{
 		sortOrder = 1;
 	}
+
+	*theSortOrder = sortOrder;
+	return(sortOrder);
+}
+
+
+
+int
+openSortCallback(const void *data1, const void *data2, void *privateData)
+{
+	/// Note: openSortCallback is a small C callback stub for NS_QuickSort
+
+	_sortStruct		*sortInfo = (_sortStruct *)privateData;
+	nsIRDFNode		*node1 = *(nsIRDFNode **)data1;
+	nsIRDFNode		*node2 = *(nsIRDFNode **)data2;
+	PRInt32			sortOrder = 0;
+	nsresult		rv;
+
+	if (nsnull != sortInfo)
+	{
+		if (nsnull != sortInfo->xulSortClass)
+		{
+			rv = (sortInfo->xulSortClass->OpenSort)(node1, node2, sortInfo, &sortOrder);
+		}
+	}
 	return(sortOrder);
 }
 
 
 
 nsresult
-getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, nsString &cellVal1)
+XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo,
+				nsString &cellVal1, PRBool &isCollationKey)
 {
-	nsIDOMXULElement	*dom1;
-	nsIRDFResource		*res1;
 	nsresult		rv;
 
 	cellVal1 = "";
-	if (NS_SUCCEEDED(rv = node1->QueryInterface(kIDomXulElementIID, (void **)&dom1)) && (nsnull != dom1))
+	isCollationKey = PR_FALSE;
+
+	nsCOMPtr<nsIDOMXULElement>	dom1 = do_QueryInterface(node1);
+	if (!dom1)	return(NS_ERROR_FAILURE);
+
+	nsCOMPtr<nsIRDFResource>	res1 = do_QueryInterface(dom1);
+	// Note: don't check for res1 QI failure here.  It only succeeds for RDF nodes,
+	// but for XUL nodes it will failure; in the failure case, the code below gets
+	// the cell's text value straight from the DOM
+	
+	if ((sortInfo->naturalOrderSort == PR_FALSE) && (sortInfo->sortProperty))
 	{
-		if (NS_SUCCEEDED(rv = dom1->GetResource(&res1)) && (nsnull != res1))
+		nsCOMPtr<nsIRDFNode>	target1;
+		nsXPIDLCString		sortPropertyURI;
+		sortInfo->sortProperty->GetValue( getter_Copies(sortPropertyURI) );
+		if ((nsnull != sortPropertyURI) && (nsnull != res1))
 		{
-			if ((sortInfo->naturalOrderSort == PR_FALSE) && (sortInfo->sortProperty))
+			// for any given property, first ask the graph for its value with "?collation=true" appended
+			// to indicate that if there is a collation key available for this value, we want it
+
+			nsAutoString	modSortProperty(sortPropertyURI);
+			modSortProperty += "?collation=true";
+			char	*collationSortProp = modSortProperty.ToNewCString();
+			if (collationSortProp)
 			{
-				nsIRDFNode	*target1 = nsnull;
-
-				// for any given property, first ask the graph for its value with "?sort=true" appended
-				// to indicate that if there is any distinction between its display value and sorting
-				// value, we want the sorting value (so that, for example, a mail datasource could strip
-				// off a "Re:" on a mail message subject)
-
-				nsXPIDLCString	sortPropertyURI;
-				sortInfo->sortProperty->GetValue( getter_Copies(sortPropertyURI) );
-				if (sortPropertyURI)
+				nsCOMPtr<nsIRDFResource>	modSortRes;
+				if (NS_SUCCEEDED(sortInfo->rdfService->GetResource(collationSortProp, 
+					getter_AddRefs(modSortRes))) && (modSortRes))
 				{
-					nsAutoString	modSortProperty(sortPropertyURI);
-					modSortProperty += "?sort=true";
-					char	*sortProp = modSortProperty.ToNewCString();
-					if (sortProp)
+					if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes,
+						PR_TRUE, getter_AddRefs(target1))) && (rv != NS_RDF_NO_VALUE))
 					{
-						nsIRDFResource	*modSortRes = nsnull;
-						if (NS_SUCCEEDED(sortInfo->rdfService->GetResource(sortProp, &modSortRes)))
-						{
-							if (modSortRes)
-							{
-								if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes, PR_TRUE, &target1)) &&
-									(rv != NS_RDF_NO_VALUE))
-								{
-									nsIRDFLiteral *literal1;
-									if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
-									{
-										nsXPIDLString uniStr1;
-										literal1->GetValue( getter_Copies(uniStr1) );
-										cellVal1 = uniStr1;
-										NS_RELEASE(literal1);
-									}
-									NS_RELEASE(target1);
-								}
-								NS_RELEASE(modSortRes);
-							}
-						}
-						delete []sortProp;
-					}
-				}
-
-				if (cellVal1.Length() == 0)
-				{
-					if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty, PR_TRUE, &target1)) &&
-						(rv != NS_RDF_NO_VALUE))
-					{
-						nsIRDFLiteral *literal1;
-						if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
+						nsCOMPtr<nsIRDFLiteral>	literal1 = do_QueryInterface(target1);
+						if (literal1)
 						{
 							nsXPIDLString uniStr1;
 							literal1->GetValue( getter_Copies(uniStr1) );
 							cellVal1 = uniStr1;
-							NS_RELEASE(literal1);
-						}
-						NS_RELEASE(target1);
-					}
-					else
-					{
-					        nsCOMPtr<nsIContent>	cell1;
-						if (NS_SUCCEEDED(rv = GetTreeCell(sortInfo, node1, sortInfo->colIndex, getter_AddRefs(cell1))))
-						{
-							if (cell1)
+							if (cellVal1.Length() > 0)
 							{
-								if (NS_SUCCEEDED(rv = GetTreeCellValue(sortInfo, cell1, cellVal1)))
-								{
-								}
+								isCollationKey = PR_TRUE;
 							}
 						}
 					}
 				}
+				delete []collationSortProp;
 			}
-			else if (sortInfo->naturalOrderSort == PR_TRUE)
+			if (cellVal1.Length() == 0)
 			{
-				if (NS_OK == node1->GetAttribute(kNameSpaceID_None, sortInfo->kNaturalOrderPosAtom, cellVal1))
+				// if no collation key, ask the graph for its value with "?sort=true" appended
+				// to indicate that if there is any distinction between its display value and sorting
+				// value, we want the sorting value (so that, for example, a mail datasource could strip
+				// off a "Re:" on a mail message subject)
+				modSortProperty = sortPropertyURI;
+				modSortProperty += "?sort=true";
+				char	*sortProp = modSortProperty.ToNewCString();
+				if (sortProp)
 				{
+					nsCOMPtr<nsIRDFResource>	modSortRes;
+					if (NS_SUCCEEDED(sortInfo->rdfService->GetResource(sortProp, 
+						getter_AddRefs(modSortRes))) && (modSortRes))
+					{
+						if (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, modSortRes,
+							PR_TRUE, getter_AddRefs(target1))) && (rv != NS_RDF_NO_VALUE))
+						{
+							nsCOMPtr<nsIRDFLiteral>	literal1 = do_QueryInterface(target1);
+							if (literal1)
+							{
+								nsXPIDLString uniStr1;
+								literal1->GetValue( getter_Copies(uniStr1) );
+								cellVal1 = uniStr1;
+							}
+						}
+					}
+					delete []sortProp;
 				}
 			}
-			NS_RELEASE(res1);
 		}
-		NS_RELEASE(dom1);
+		if (cellVal1.Length() == 0)
+		{
+			// if no collation key and no special sorting value, just get the property value
+			if ((nsnull != res1) && (NS_SUCCEEDED(rv = (sortInfo->db)->GetTarget(res1, sortProperty,
+				PR_TRUE, getter_AddRefs(target1))) && (rv != NS_RDF_NO_VALUE)))
+			{
+				nsIRDFLiteral *literal1;
+				if (NS_SUCCEEDED(target1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
+				{
+					nsXPIDLString uniStr1;
+					literal1->GetValue( getter_Copies(uniStr1) );
+					cellVal1 = uniStr1;
+					NS_RELEASE(literal1);
+				}
+			}
+			else
+			{
+			        nsCOMPtr<nsIContent>	cell1;
+				if (NS_SUCCEEDED(rv = GetTreeCell(sortInfo, node1, sortInfo->colIndex,
+					getter_AddRefs(cell1))) && (cell1))
+				{
+					rv = GetTreeCellValue(sortInfo, cell1, cellVal1);
+				}
+			}
+		}
+	}
+	else if (sortInfo->naturalOrderSort == PR_TRUE)
+	{
+		rv = node1->GetAttribute(kNameSpaceID_None, sortInfo->kNaturalOrderPosAtom, cellVal1);
 	}
 	return(rv);
 }
 
 
 
-int
-inplaceSortCallback(const void *data1, const void *data2, void *sortData)
+nsresult
+XULSortServiceImpl::ImplaceSort(nsIContent *node1, nsIContent *node2, sortPtr sortInfo, PRInt32 *theSortOrder)
 {
-	_sortStruct		*sortInfo = (_sortStruct *)sortData;
-	PRInt32			sortOrder = 0;
-	nsIContent		*node1 = *(nsIContent **)data1;
-	nsIContent		*node2 = *(nsIContent **)data2;
-	nsIDOMXULElement	*dom1 = nsnull, *dom2 = nsnull;
-	nsIRDFResource		*res1 = nsnull, *res2 = nsnull;
 	nsAutoString		cellVal1(""), cellVal2("");
+	PRBool			isCollationKey1 = PR_FALSE, isCollationKey2 = PR_FALSE;
+	PRInt32			sortOrder = 0;
 	nsresult		rv;
-	PRBool			sortOnName = PR_FALSE;
 
-	if (NS_FAILED(rv = getNodeValue(node1, sortInfo->sortProperty, sortInfo, cellVal1)))
+	GetNodeValue(node1, sortInfo->sortProperty, sortInfo, cellVal1, isCollationKey1);
+	if (cellVal1.Length() == 0)
 	{
-		nsIRDFResource	*name;
-		sortInfo->rdfService->GetResource(kURINC_Name, &name);
-		if (name)
+		nsCOMPtr<nsIRDFResource>	name1;
+		sortInfo->rdfService->GetResource(kURINC_Name, getter_AddRefs(name1));
+		if (name1)
 		{
-			rv = getNodeValue(node1, name, sortInfo, cellVal1);
-			NS_RELEASE(name);
+			rv = GetNodeValue(node1, name1, sortInfo, cellVal1, isCollationKey1);
 		}
 	}
-	if (NS_FAILED(rv = getNodeValue(node2, sortInfo->sortProperty, sortInfo, cellVal2)))
+	GetNodeValue(node2, sortInfo->sortProperty, sortInfo, cellVal2, isCollationKey2);
+	if (cellVal2.Length() == 0)
 	{
-		nsIRDFResource	*name;
-		sortInfo->rdfService->GetResource(kURINC_Name, &name);
-		if (name)
+		nsCOMPtr<nsIRDFResource>	name2;
+		sortInfo->rdfService->GetResource(kURINC_Name, getter_AddRefs(name2));
+		if (name2)
 		{
-			rv = getNodeValue(node2, sortInfo->sortProperty, sortInfo, cellVal2);
-			NS_RELEASE(name);
+			rv = GetNodeValue(node2, name2, sortInfo, cellVal2, isCollationKey2);
 		}
 	}
-	sortOrder = (int)cellVal1.Compare(cellVal2, PR_TRUE);
+
+	if ((isCollationKey1 == PR_TRUE) && (isCollationKey2 == PR_FALSE))
+		sortOrder = -1;
+	else if ((isCollationKey1 == PR_FALSE) && (isCollationKey2 == PR_TRUE))
+		sortOrder = 1;
+	else if (isCollationKey1 == PR_TRUE && isCollationKey2 == PR_TRUE)
+	{
+		// XXX to do: sort collation keys
+		// sortOrder = ... ?
+	}
+	else
+	{
+		// neither is a collation key, fallback to a string comparison
+		sortOrder = (PRInt32)cellVal1.Compare(cellVal2, PR_TRUE);
+	}
+
 	if (sortInfo->descendingSort == PR_TRUE)
 	{
+		// descending sort is being imposed, so reverse the sort order
 		sortOrder = -sortOrder;
+	}
+
+	*theSortOrder = sortOrder;
+	return(NS_OK);
+}
+
+
+
+int
+inplaceSortCallback(const void *data1, const void *data2, void *privateData)
+{
+	/// Note: inplaceSortCallback is a small C callback stub for NS_QuickSort
+
+	_sortStruct		*sortInfo = (_sortStruct *)privateData;
+	nsIContent		*node1 = *(nsIContent **)data1;
+	nsIContent		*node2 = *(nsIContent **)data2;
+	PRInt32			sortOrder = 0;
+	nsresult		rv;
+
+	if (nsnull != sortInfo)
+	{
+		if (nsnull != sortInfo->xulSortClass)
+		{
+			rv = (sortInfo->xulSortClass->ImplaceSort)(node1, node2, sortInfo, &sortOrder);
+		}
 	}
 	return(sortOrder);
 }
@@ -856,9 +938,9 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 		}
 	}
 	PRUint32 cnt = 0;
-    rv = childArray->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    unsigned long numElements = cnt;
+	rv = childArray->Count(&cnt);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+	unsigned long numElements = cnt;
 	if (numElements > 0)
 	{
 		nsIContent ** flatArray = new nsIContent*[numElements];
@@ -946,12 +1028,12 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 			flatArray = nsnull;
 		}
 	}
-    rv = childArray->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-    for (int i = cnt - 1; i >= 0; i--)
-    {
-        childArray->RemoveElementAt(i);
-    }
+	rv = childArray->Count(&cnt);
+	if (NS_FAILED(rv)) return rv;
+	for (int i = cnt - 1; i >= 0; i--)
+	{
+		childArray->RemoveElementAt(i);
+	}
 	return(NS_OK);
 }
 
@@ -985,6 +1067,9 @@ XULSortServiceImpl::OpenContainer(nsIRDFCompositeDataSource *db, nsIContent *con
 		delete [] uri;
 		if (NS_FAILED(rv))	return(rv);
 	}
+
+	sortInfo.xulSortClass = this;
+
 	if (sortDirection.EqualsIgnoreCase("natural"))
 	{
 		sortInfo.naturalOrderSort = PR_TRUE;
@@ -1022,10 +1107,10 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
 
-    // Maintain an nsCOMPtr to _here_ to the composite datasource so
-    // that we're sure that we'll hold a reference to it (and actually
-    // release that reference when the stack frame goes away).
-    nsCOMPtr<nsIRDFCompositeDataSource> cds;
+	// Maintain an nsCOMPtr to _here_ to the composite datasource so
+	// that we're sure that we'll hold a reference to it (and actually
+	// release that reference when the stack frame goes away).
+	nsCOMPtr<nsIRDFCompositeDataSource> cds;
 	if (NS_SUCCEEDED(rv = treeNode->QueryInterface(kIDomXulTreeElementIID, (void**)&domXulTree)))
 	{
 		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
@@ -1150,19 +1235,20 @@ XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, P
 		{
 			for (PRInt32 loop=0; loop<indentLevel; loop++) printf("    ");
 			printf("(Non-XUL node)  ");
-            nsCOMPtr<nsIDOMText> text;
-            rv = child->QueryInterface(kIDOMTextIID, getter_AddRefs(text));
+			nsCOMPtr<nsIDOMText> text;
+			rv = child->QueryInterface(kIDOMTextIID, getter_AddRefs(text));
 			if (NS_SUCCEEDED(rv))
 			{
 				for (PRInt32 indentLoop=0; indentLoop<indentLevel; indentLoop++) printf("    ");
 				printf("(kIDOMTextIID)  ");
 
-                nsAutoString val;
-                text->GetData(val);
-                if (val.Length()) {
-                    printf("value='");
-                    fputs(val, stdout);
-                    printf("'");
+				nsAutoString val;
+				text->GetData(val);
+				if (val.Length())
+				{
+					printf("value='");
+					fputs(val, stdout);
+					printf("'");
 				}
 			}
 			printf("\n");
@@ -1223,9 +1309,10 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 		else if (sortDirection.EqualsIgnoreCase("descending"))	sortInfo.descendingSort = PR_TRUE;
 	}
 
+	sortInfo.xulSortClass = this;
+
 	// get index of sort column, find tree body, and sort. The sort
-	// _won't_ send any notifications, so we won't trigger any
-	// reflows...
+	// _won't_ send any notifications, so we won't trigger any reflows...
 	if (NS_FAILED(rv = GetSortColumnIndex(treeNode, sortResource, sortDirection, &colIndex)))	return(rv);
 	sortInfo.colIndex = colIndex;
 	nsCOMPtr<nsIContent>	treeBody;
@@ -1234,13 +1321,13 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	{
 	}
 
-    // Now remove the treebody and re-insert it to force the frames to be rebuilt.
+	// Now remove the treebody and re-insert it to force the frames to be rebuilt.
     	nsCOMPtr<nsIContent>	treeParent;
 	if (NS_FAILED(rv = treeBody->GetParent(*getter_AddRefs(treeParent))))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
 
-    if (NS_SUCCEEDED(rv = treeBody->UnsetAttribute(kNameSpaceID_None,
+	if (NS_SUCCEEDED(rv = treeBody->UnsetAttribute(kNameSpaceID_None,
 		kTreeContentsGeneratedAtom,PR_FALSE)))
 	{
 	}
