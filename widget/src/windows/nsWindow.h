@@ -65,6 +65,8 @@ class nsIRollupListener;
 class nsIMenuBar;
 class nsIFile;
 
+class imgIContainer;
+
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"
 #include "nsIAccessible.h"
@@ -342,6 +344,7 @@ public:
   virtual nsIFontMetrics* GetFont(void);
   NS_IMETHOD              SetFont(const nsFont &aFont);
   NS_IMETHOD              SetCursor(nsCursor aCursor);
+  NS_IMETHOD              SetCursor(imgIContainer* aCursor);
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              Validate();
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
@@ -641,6 +644,45 @@ protected:
 
   // Heap dump
   static UINT   uWM_HEAP_DUMP;       // Dump heap to a file
+
+  /**
+   * Combine the given image data with a separate alpha channel to image data
+   * with the alpha channel interleaved with the image data (BGRA).
+   *
+   * @return BGRA data. Must be delete[]d. On failure, NULL will be returned.
+   */
+  static PRUint8* DataToAData(PRUint8* aImageData, PRUint32 aImageBytesPerRow,
+                              PRUint8* aAlphaData, PRUint32 aAlphaBytesPerRow,
+                              PRUint32 aWidth, PRUint32 aHeight);
+  /**
+   * Convert the given image data to a HBITMAP. If the requested depth is
+   * 32 bit and the OS supports translucency, a bitmap with an alpha channel
+   * will be returned.
+   *
+   * @param aImageData The image data to convert. Must use the format accepted
+   *                   by CreateDIBitmap.
+   * @param aWidth     With of the bitmap, in pixels.
+   * @param aHeight    Height of the image, in pixels.
+   * @param aDepth     Image depth, in bits. Should be one of 1, 24 and 32.
+   *
+   * @return The HBITMAP representing the image. Caller should call
+   *         DeleteObject when done with the bitmap.
+   *         On failure, NULL will be returned.
+   */
+  static HBITMAP DataToBitmap(PRUint8* aImageData,
+                              PRUint32 aWidth,
+                              PRUint32 aHeight,
+                              PRUint32 aDepth);
+
+  /**
+   * Create a bitmap representing an opaque alpha channel (filled with 0xff).
+   * @param aWidth  Desired with of the bitmap
+   * @param aHeight Desired height of the bitmap
+   * @return        The bitmap. Caller should call DeleteObject when done with
+   *                the bitmap. On failure, NULL will be returned.
+   */
+  static HBITMAP CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight);
+
 
 #ifdef ACCESSIBILITY
   nsIAccessible* mRootAccessible;

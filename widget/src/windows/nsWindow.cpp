@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sts=2 sw=2 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -31,6 +32,7 @@
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *   Masayuki Nakano <masayuki@d-toybox.com>
  *   Dainis Jonitis <Dainis_Jonitis@swh-t.lv>
+ *   Christian Biesinger <cbiesinger@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -70,6 +72,10 @@
 #include "nsColor.h"
 #include "nsTransform2D.h"
 #include "nsIEventQueue.h"
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIProperties.h"
+#include "nsISupportsPrimitives.h"
 #include "nsNativeCharsetUtils.h"
 #include <windows.h>
 
@@ -127,7 +133,7 @@
 #include "prprf.h"
 #include "prmem.h"
 
-static const char *kMozHeapDumpMessageString = "MOZ_HeapDump";
+static const char kMozHeapDumpMessageString[] = "MOZ_HeapDump";
 
 #define kWindowPositionSlop 20
 
@@ -170,6 +176,24 @@ static UpdateLayeredWindowProc* pUpdateLayeredWindow = GetUpdateLayeredWindowPro
 static inline PRBool IsAlphaTranslucencySupported() { return pUpdateLayeredWindow != nsnull; }
 
 #endif
+
+static PRBool IsCursorTranslucencySupported() {
+  static didCheck = PR_FALSE;
+  static isSupported = PR_FALSE;
+  if (!didCheck) {
+    didCheck = PR_TRUE;
+    // Cursor translucency is supported on Windows XP and newer
+    OSVERSIONINFO osversion;
+    memset(&osversion, 0, sizeof(OSVERSIONINFO));
+    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    if (GetVersionEx(&osversion))
+      isSupported = osversion.dwMajorVersion > 5 || // Newer Windows versions
+                    osversion.dwMajorVersion == 5 &&
+                       osversion.dwMinorVersion >= 1; // WinXP, Server 2003
+  }
+
+  return isSupported;
+}
 
 
 // Pick some random timer ID.  Is there a better way?
@@ -582,7 +606,7 @@ static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
     oCP = atoi(cp_name);
     if (cp_name != cp_on_stack)
       delete [] cp_name;
-        return PR_TRUE;
+    return PR_TRUE;
   } else {
     oCP = CP_ACP;
     return PR_FALSE;
@@ -2588,7 +2612,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       break;
 
     default:
-      NS_ASSERTION(0, "Invalid cursor type");
+      NS_ERROR("Invalid cursor type");
       break;
   }
 
@@ -2597,6 +2621,256 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     HCURSOR oldCursor = ::SetCursor(newCursor);
   }
   //}
+  return NS_OK;
+}
+
+// static
+PRUint8* nsWindow::DataToAData(PRUint8* aImageData, PRUint32 aImageBytesPerRow,
+                               PRUint8* aAlphaData, PRUint32 aAlphaBytesPerRow,
+                               PRUint32 aWidth, PRUint32 aHeight)
+{
+  // We will have 32 bpp, so bytes per row will be 4 * w
+  PRUint32 outBpr = aWidth * 4;
+
+  // Avoid overflows
+  if (aWidth > 0xfff || aHeight > 0xfff)
+    return NULL;
+
+  PRUint8* outData = new PRUint8[outBpr * aHeight];
+  if (!outData)
+    return NULL;
+
+  PRUint8 *outRow = outData,
+          *imageRow = aImageData,
+          *alphaRow = aAlphaData;
+  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
+    PRUint8 *irow = imageRow, *arow = alphaRow;
+    for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
+      *outRow++ = *imageRow++; // B
+      *outRow++ = *imageRow++; // G
+      *outRow++ = *imageRow++; // R
+      *outRow++ = *alphaRow++; // A
+    }
+    imageRow = irow + aImageBytesPerRow;
+    alphaRow = arow + aAlphaBytesPerRow;
+  }
+  return outData;
+}
+
+// static
+HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
+                               PRUint32 aWidth,
+                               PRUint32 aHeight,
+                               PRUint32 aDepth)
+{
+  HDC dc = ::GetDC(NULL);
+  if (aDepth == 32 && IsCursorTranslucencySupported()) {
+    // Alpha channel. We need the new header.
+    BITMAPV4HEADER head = { 0 };
+    head.bV4Size = sizeof(head);
+    head.bV4Width = aWidth;
+    head.bV4Height = aHeight;
+    head.bV4Planes = 1;
+    head.bV4BitCount = aDepth;
+    head.bV4V4Compression = BI_BITFIELDS;
+    head.bV4SizeImage = 0; // Uncompressed
+    head.bV4XPelsPerMeter = 0;
+    head.bV4YPelsPerMeter = 0;
+    head.bV4ClrUsed = 0;
+    head.bV4ClrImportant = 0;
+
+    head.bV4RedMask   = 0x00FF0000;
+    head.bV4GreenMask = 0x0000FF00;
+    head.bV4BlueMask  = 0x000000FF;
+    head.bV4AlphaMask = 0xFF000000;
+
+    HBITMAP bmp = ::CreateDIBitmap(dc,
+                                   NS_REINTERPRET_CAST(CONST BITMAPINFOHEADER*, &head),
+                                   CBM_INIT,
+                                   aImageData,
+                                   NS_REINTERPRET_CAST(CONST BITMAPINFO*, &head),
+                                   DIB_RGB_COLORS);
+    ::ReleaseDC(NULL, dc);
+    return bmp;
+  }
+   
+
+  BITMAPINFOHEADER head = { 0 };
+
+  head.biSize = sizeof(head);
+  head.biWidth = aWidth;
+  head.biHeight = aHeight;
+  head.biPlanes = 1;
+  head.biBitCount = aDepth;
+  head.biCompression = BI_RGB;
+  head.biSizeImage = 0; // Uncompressed
+  head.biXPelsPerMeter = 0;
+  head.biYPelsPerMeter = 0;
+  head.biClrUsed = (aDepth == 1) ? 2 : 0;
+  head.biClrImportant = 0;
+  
+  char reserved_space[sizeof(BITMAPINFO) + sizeof(RGBQUAD) * 256];
+  BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
+
+  bi.bmiHeader = head;
+
+  if (aDepth == 1) {
+    RGBQUAD black = { 0, 0, 0, 0 };
+    RGBQUAD white = { 255, 255, 255, 0 };
+
+    bi.bmiColors[0] = white;
+    bi.bmiColors[1] = black;
+  } else {
+    for (int i = 0; i < 256; i++) {
+      RGBQUAD cur = { i, i, i, 0 };
+      bi.bmiColors[255 - i] = cur;
+    }
+  }
+
+  HBITMAP bmp = ::CreateDIBitmap(dc, &head, CBM_INIT, aImageData, &bi, DIB_RGB_COLORS);
+  ::ReleaseDC(NULL, dc);
+  return bmp;
+}
+
+// static
+HBITMAP nsWindow::CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight)
+{
+  // Make up an opaque alpha channel
+  PRUint32 abpr = ((aWidth / 8) + 3) & ~3;
+  PRUint8* opaque = (PRUint8*)malloc(abpr * aHeight);
+  if (!opaque)
+    return NULL;
+
+  memset(opaque, 0xff, abpr * aHeight);
+
+  HBITMAP hAlpha = DataToBitmap(opaque, aWidth, aHeight, 1);
+  free(opaque);
+  return hAlpha;
+}
+
+NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor)
+{
+  // Get the image data
+  nsCOMPtr<gfxIImageFrame> frame;
+  aCursor->GetFrameAt(0, getter_AddRefs(frame));
+  if (!frame)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRInt32 width, height;
+  frame->GetWidth(&width);
+  frame->GetHeight(&height);
+
+  PRUint32 hotspotX = 0, hotspotY = 0;
+
+  nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor));
+  if (props) {
+    nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
+
+    props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotXWrap));
+    props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hotspotYWrap));
+
+    if (hotspotXWrap)
+      hotspotXWrap->GetData(&hotspotX);
+    if (hotspotYWrap)
+      hotspotYWrap->GetData(&hotspotY);
+  }
+
+  gfx_format format;
+  nsresult rv = frame->GetFormat(&format);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::BGR_A8 &&
+      format != gfxIFormats::BGR)
+    return NS_ERROR_UNEXPECTED;
+
+  PRUint32 bpr;
+  rv = frame->GetImageBytesPerRow(&bpr);
+  if (NS_FAILED(rv))
+    return rv;
+
+  frame->LockImageData();
+  PRUint32 dataLen;
+  PRUint8* data;
+  rv = frame->GetImageData(&data, &dataLen);
+  if (NS_FAILED(rv)) {
+    frame->UnlockImageData();
+    return rv;
+  }
+
+  HBITMAP hBMP = NULL;
+  if (format != gfxIFormats::BGR_A8) {
+    hBMP = DataToBitmap(data, width, height, 24);
+    if (hBMP == NULL) {
+      frame->UnlockImageData();
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  HBITMAP hAlpha = NULL;
+  if (format == gfxIFormats::BGR) {
+    hAlpha = CreateOpaqueAlphaChannel(width, height);
+  } else {
+    PRUint32 abpr;
+    rv = frame->GetAlphaBytesPerRow(&abpr);
+    if (NS_FAILED(rv)) {
+      frame->UnlockImageData();
+      if (hBMP != NULL)
+        ::DeleteObject(hBMP);
+      return rv;
+    }
+
+    PRUint8* adata;
+    frame->LockAlphaData();
+    rv = frame->GetAlphaData(&adata, &dataLen);
+    if (NS_FAILED(rv)) {
+      if (hBMP != NULL)
+        ::DeleteObject(hBMP);
+      frame->UnlockImageData();
+      frame->UnlockAlphaData();
+      return rv;
+    }
+
+    if (format == gfxIFormats::BGR_A8) {
+      PRUint8* bgra8data = DataToAData(data, bpr, adata, abpr, width, height);
+      if (bgra8data) {
+        hBMP = DataToBitmap(bgra8data, width, height, 32);
+        if (hBMP != NULL) {
+          hAlpha = CreateOpaqueAlphaChannel(width, height);
+        }
+      }
+    } else {
+      hAlpha = DataToBitmap(adata, width, height, 1);
+    }
+
+    frame->UnlockAlphaData();
+  }
+  frame->UnlockImageData();
+  if (hBMP == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+  if (hAlpha == NULL) {
+    ::DeleteObject(hBMP);
+    return NS_ERROR_FAILURE;
+  }
+
+  ICONINFO info = {0};
+  info.fIcon = FALSE;
+  info.xHotspot = hotspotX;
+  info.yHotspot = hotspotY;
+  info.hbmMask = hAlpha;
+  info.hbmColor = hBMP;
+  
+  HCURSOR cursor = ::CreateIconIndirect(&info);
+  ::DeleteObject(hBMP);
+  ::DeleteObject(hAlpha);
+  if (cursor == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mCursor = nsCursor(-1);
+  ::SetCursor(cursor);
+  ::DestroyIcon(cursor);
   return NS_OK;
 }
 
