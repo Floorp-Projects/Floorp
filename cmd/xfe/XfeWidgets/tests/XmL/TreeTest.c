@@ -25,6 +25,12 @@ static foo_create_t funcs[NUM_TREES] =
 	create_tree4
 };
 
+static void enter_grid_cb(Widget,XtPointer,XtPointer);
+static void leave_grid_cb(Widget,XtPointer,XtPointer);
+
+static void enter_cell_cb(Widget,XtPointer,XtPointer);
+static void leave_cell_cb(Widget,XtPointer,XtPointer);
+
 /*----------------------------------------------------------------------*/
 int
 main(int argc,char *argv[])
@@ -105,6 +111,11 @@ create_tree1(Widget pw,String name)
 	XtVaSetValues(tree,
 		XmNlayoutFrozen, False,
 		NULL);
+
+	XtAddCallback(tree,XmNenterGridCallback,enter_grid_cb,NULL);
+	XtAddCallback(tree,XmNleaveGridCallback,leave_grid_cb,NULL);
+	XtAddCallback(tree,XmNenterCellCallback,enter_cell_cb,NULL);
+	XtAddCallback(tree,XmNleaveCellCallback,leave_cell_cb,NULL);
 
 	return tree;
 }
@@ -537,3 +548,29 @@ void cellSelect(Widget w,XtPointer clientData,XtPointer callData)
 		NULL);
 }
 
+
+/*----------------------------------------------------------------------*/
+static void
+enter_grid_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	printf("enter_grid_cb(%s)\n",XtName(w));
+}
+/*----------------------------------------------------------------------*/
+static void
+leave_grid_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	printf("leave_grid_cb(%s)\n",XtName(w));
+}
+/*----------------------------------------------------------------------*/
+static void
+enter_cell_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	printf("enter_cell_cb(%s)\n",XtName(w));
+}
+/*----------------------------------------------------------------------*/
+static void
+leave_cell_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	printf("leave_cell_cb(%s)\n",XtName(w));
+}
+/*----------------------------------------------------------------------*/
