@@ -110,7 +110,8 @@
 
 
 (defparameter *special-char-code-map*
-  '((#x00AB . :left-angle-quote)
+  '((#x0097 . endash)
+    (#x00AB . :left-angle-quote)
     (#x00BB . :right-angle-quote)
     (#x2018 . :left-single-quote)
     (#x2019 . :right-single-quote)
@@ -138,6 +139,7 @@
     ("type-expression" . :type-expression)
     ("type-name" . :type-name)
     ("field-name" . :field-name)
+    ("id-name" . :id-name)
     ("global-variable" . :global-variable)
     ("local-variable" . :local-variable)
     ("action-name" . :action-name)
@@ -200,7 +202,9 @@
     ("U_omega" . :omega)
     ("U_xi" . :xi)
     ("U_psi" . :psi)
-    ("U_zeta" . :zeta)))
+    ("U_zeta" . :zeta)
+    
+    ("U_Omega" . :capital-omega)))
 
 (defun emit-script-element (markup-stream element)
   (let* ((children (parts element))
@@ -258,42 +262,72 @@
     (emit-script-element markup-stream element))
    ((or
      (match-element element '#t"A" nil '(#t"CLASS" #t"HREF" #t"NAME"))
-     (match-element element '#t"SPAN" nil '(#t"CLASS")))
+     (match-element element '#t"SPAN" nil '(#t"CLASS"))
+     (match-element element '#t"VAR" '(#t"CLASS") nil))
     (depict-char-style (markup-stream (class-to-character-style element))
-      (emit-inline-elements markup-stream element)))
+      (emit-inline-parts markup-stream element)))
    ((match-element element '#t"CODE" nil '(#t"CLASS"))
     (let ((class (attribute-value element '#t"CLASS")))
       (if (equal class "terminal-keyword")
         (depict-char-style (markup-stream (class-to-character-style element))
-          (emit-inline-elements markup-stream element))
+          (emit-inline-parts markup-stream element))
         (progn
           (when class
             (format *terminal-io* "Ignoring CODE character style ~S~%" class))
           (depict-char-style (markup-stream :character-literal)
-            (emit-inline-elements markup-stream element))))))
+            (emit-inline-parts markup-stream element))))))
    ((match-element element '#t"SUP" nil '(#t"CLASS"))
     (depict-char-style (markup-stream 'super)
       (depict-char-style (markup-stream (class-to-character-style element))
-        (emit-inline-elements markup-stream element))))
+        (emit-inline-parts markup-stream element))))
+   ((match-element element '#t"BR" nil nil)
+    (depict markup-stream :new-line))
    (t (let ((inline-style (cdr (assoc (tag-name element) *inline-element-map*))))
         (if (and inline-style (endp (attr-values element)))
           (depict-char-style (markup-stream inline-style)
-            (emit-inline-elements markup-stream element))
+            (emit-inline-parts markup-stream element))
           (progn
             (depict markup-stream *missing-marker*)
             (format *terminal-io* "Ignoring inline element ~S~%" element)))))))
 
 
 ; Emit the children of the given element as inline elements.
-(defun emit-inline-elements (markup-stream element)
+(defun emit-inline-parts (markup-stream element)
   (dolist (child (parts element))
     (emit-inline-element markup-stream child)))
 
 
+; Emit the children of the given element as inline elements in a paragraph of the given style.
+; However, if some children are paragraph-level elements, emit them as separate paragraphs.
+(defun emit-inline-or-paragraph-parts (markup-stream element paragraph-style)
+  (emit-inline-or-paragraph-elements markup-stream (parts element) paragraph-style ))
+
+(defparameter *paragraph-elements*
+  '(#t"P" #t"TH" #t"TD" #t"PRE" #t"UL" #t"OL" #t"DIV" #t"HR" #t"TABLE" #t"H1" #t"H2" #t"H3" #t"H4"))
+
+(defun paragraph-element? (element)
+  (and (typep element 'html-tag-instance)
+       (member (tag-name element) *paragraph-elements*)))
+
+(defun emit-inline-or-paragraph-elements (markup-stream elements paragraph-style)
+  (let* ((paragraph-element (member-if #'paragraph-element? elements))
+         (inline-parts (ldiff elements paragraph-element)))
+    (when inline-parts
+      (depict-paragraph (markup-stream paragraph-style)
+        (dolist (child inline-parts)
+          (emit-inline-element markup-stream child))))
+    (when paragraph-element
+      (emit-paragraph-element markup-stream (car paragraph-element))
+      (emit-inline-or-paragraph-elements markup-stream (cdr paragraph-element) paragraph-style))))
+
 
 (defparameter *class-paragraph-styles*
   '(("mod-date" . :mod-date)
-    ("grammar-argument" . :grammar-argument)))
+    ("grammar-argument" . :grammar-argument)
+    ("indent" . :body-text)
+    ("operator-heading" . :heading4)
+    ("semantics" . :semantics)
+    ("semantics-next" . :semantics-next)))
 
 
 (defun class-to-paragraph-style (element)
@@ -334,15 +368,14 @@
             (format *terminal-io* "Bad grammar-rule child ~S~%" child)
             (setq style :body-text))
           (depict-paragraph (markup-stream style)
-            (emit-inline-elements markup-stream child))))))
+            (emit-inline-parts markup-stream child))))))
    ((member class *divs-containing-divs* :test #'equal)
     (depict-paragraph (markup-stream :body-text)
       (depict markup-stream "***** BEGIN DIV" class))
     (emit-paragraph-elements markup-stream element)
     (depict-paragraph (markup-stream :body-text)
       (depict markup-stream "***** END DIV" class)))
-   (t (depict-paragraph (markup-stream (class-to-paragraph-style element))
-        (emit-inline-elements markup-stream element)))))
+   (t (emit-inline-or-paragraph-parts markup-stream element (class-to-paragraph-style element)))))
 
 
 (defparameter *paragraph-element-map*
@@ -357,23 +390,22 @@
   (cond
    ((or
      (match-element element '#t"P" nil '(#t"CLASS"))
-     (match-element element '#t"TH" nil '(#t"CLASS" #t"COLSPAN" #t"NOWRAP" #t"VALIGN" #t"ALIGN"))
-     (match-element element '#t"TD" nil '(#t"CLASS" #t"COLSPAN" #t"NOWRAP" #t"VALIGN" #t"ALIGN")))
-    (depict-paragraph (markup-stream (class-to-paragraph-style element))
-      (emit-inline-elements markup-stream element)))
+     (match-element element '#t"TH" nil '(#t"CLASS" #t"COLSPAN" #t"ROWSPAN" #t"NOWRAP" #t"VALIGN" #t"ALIGN"))
+     (match-element element '#t"TD" nil '(#t"CLASS" #t"COLSPAN" #t"ROWSPAN" #t"NOWRAP" #t"VALIGN" #t"ALIGN")))
+    (emit-inline-or-paragraph-parts markup-stream element (class-to-paragraph-style element)))
    ((match-element element '#t"PRE" nil nil)
     (depict-paragraph (markup-stream :sample-code)
       (let ((*preformatted* t))
-        (emit-inline-elements markup-stream element))))
-   ((match-element element '#t"UL" nil nil)
+        (emit-inline-parts markup-stream element))))
+   ((or (match-element element '#t"UL" nil nil)
+        (match-element element '#t"OL" nil nil))
     (depict-paragraph (markup-stream :body-text)
-      (depict markup-stream "***** BEGIN UL"))
+      (depict markup-stream "***** BEGIN LIST"))
     (dolist (child (parts element))
       (ensure-element child '#t"LI" nil nil)
-      (depict-paragraph (markup-stream :body-text)
-        (emit-inline-elements markup-stream child)))
+      (emit-inline-or-paragraph-parts markup-stream child :body-text))
     (depict-paragraph (markup-stream :body-text)
-      (depict markup-stream "***** END UL")))
+      (depict markup-stream "***** END LIST")))
    ((match-element element '#t"DIV" nil '(#t"CLASS"))
     (let ((class (attribute-value element '#t"CLASS")))
       (if class
@@ -392,8 +424,7 @@
     (emit-paragraph-elements markup-stream element))
    (t (let ((paragraph-style (cdr (assoc (tag-name element) *paragraph-element-map*))))
         (if (and paragraph-style (endp (attr-values element)))
-          (depict-paragraph (markup-stream paragraph-style)
-            (emit-inline-elements markup-stream element))
+          (emit-inline-or-paragraph-parts markup-stream element paragraph-style)
           (progn
             (depict-paragraph (markup-stream :body-text)
               (depict markup-stream *missing-marker*))
@@ -446,4 +477,9 @@
                        "HTML-To-RTF/Expressions.rtf" "Expressions")
 (translate-html-to-rtf "Huit:Mozilla:Moz:mozilla:js2:semantics:HTML-To-RTF:Expressions.html"
                        "HTML-To-RTF/Expressions.rtf" "Expressions")
+
+(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:stages.html"
+                       "HTML-To-RTF/Stages.rtf" "Stages")
+(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:notation.html"
+                       "HTML-To-RTF/FormalNotation.rtf" "Formal Notation")
 |#

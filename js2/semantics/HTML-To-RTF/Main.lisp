@@ -90,6 +90,7 @@
           html-parser:parts
           html-parser:part-of
           html-parser:attr-values
-          html-parser:html-entity-token))
+          html-parser:html-entity-token
+          html-parser:html-tag-instance))
 
 (load-html-to-rtf)
