@@ -13,7 +13,7 @@
 
   <box id="taskbarMenuBox" datasources="chrome://communicator/locale/taskbar.rdf"
        ref="chrome://communicator/locale/taskbar.rdf#root" 
-       rdf:containment="http://home.netscape.com/NC-rdf#entry http://home.netscape.com/NC-rdf#child">
+       containment="http://home.netscape.com/NC-rdf#entry http://home.netscape.com/NC-rdf#child">
        
    <spring flex="1"/>
    
