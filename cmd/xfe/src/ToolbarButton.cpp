@@ -131,8 +131,8 @@ XFE_ToolbarButton::getCallData()
 //
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ Widget
-XFE_ToolbarButton::createBaseWidget(Widget 	parent,
-									String	name)
+XFE_ToolbarButton::createBaseWidget(Widget			parent,
+									const String	name)
 {
 	XP_ASSERT( XfeIsAlive(parent) );
 	XP_ASSERT( name != NULL );
