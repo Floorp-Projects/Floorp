@@ -83,7 +83,6 @@
 #include "nsIScrollableView.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
-#include "nsHTMLContentSinkStream.h"
 #include "nsIFrameSelection.h"
 #include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
 #include "nsIDOMNSHTMLTextAreaElement.h"
@@ -1042,6 +1041,11 @@ protected:
 
   nsresult ReflowCommandAdded(nsIReflowCommand* aRC);
   nsresult ReflowCommandRemoved(nsIReflowCommand* aRC);
+
+  // This method should be called after a reflow commands have been
+  // removed from the queue, but after the state in the presshell is
+  // such that it's safe to flush (i.e. mIsReflowing == PR_FALSE)
+  void DoneRemovingReflowCommands();
 
   nsresult AddDummyLayoutRequest(void);
   nsresult RemoveDummyLayoutRequest(void);
@@ -3262,9 +3266,9 @@ PresShell :: IsDragInProgress ( ) const
 
 
 NS_IMETHODIMP
-PresShell::CancelReflowCommandInternal(nsIFrame*                     aTargetFrame, 
+PresShell::CancelReflowCommandInternal(nsIFrame* aTargetFrame, 
                                        nsIReflowCommand::ReflowType* aCmdType,
-                                       nsVoidArray&                  aQueue)
+                                       nsVoidArray& aQueue)
 {
   PRInt32 i, n = aQueue.Count();
   for (i = 0; i < n; i++) {
@@ -3274,7 +3278,8 @@ PresShell::CancelReflowCommandInternal(nsIFrame*                     aTargetFram
       if (NS_SUCCEEDED(rc->GetTarget(target))) {
         if (target == aTargetFrame) {
           if (aCmdType != NULL) {
-            // If aCmdType is specified, only remove reflow commands of that type
+            // If aCmdType is specified, only remove reflow commands
+            // of that type
             nsIReflowCommand::ReflowType type;
             if (NS_SUCCEEDED(rc->GetType(type))) {
               if (type != *aCmdType)
@@ -3299,6 +3304,9 @@ PresShell::CancelReflowCommandInternal(nsIFrame*                     aTargetFram
       }
     }
   }
+
+  DoneRemovingReflowCommands();
+
   return NS_OK;
 }
 
@@ -3322,6 +3330,7 @@ PresShell::CancelAllReflowCommands()
     ReflowCommandRemoved(rc);
     NS_RELEASE(rc);
   }
+
   n = mTimeoutReflowCommands.Count();
   for (i = 0; i < n; i++) {
     rc = NS_STATIC_CAST(nsIReflowCommand*, mTimeoutReflowCommands.ElementAt(0));
@@ -3329,6 +3338,9 @@ PresShell::CancelAllReflowCommands()
     ReflowCommandRemoved(rc);
     NS_RELEASE(rc);
   }
+
+  DoneRemovingReflowCommands();
+
   return NS_OK;
 }
 
@@ -5310,6 +5322,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     }
     mIsReflowing = PR_FALSE;
 
+    DoneRemovingReflowCommands();
+
     if (aInterruptible) {
       // process the timeout reflow commands completely
       // printf("timeout reflows=%d \n", mTimeoutReflowCommands.Count());
@@ -5500,13 +5514,17 @@ PresShell::ReflowCommandRemoved(nsIReflowCommand* aRC)
       printf("presshell=%p, mRCCreatedDuringLoad=%d\n", this, mRCCreatedDuringLoad);
   #endif
     }
-
-    if (mRCCreatedDuringLoad == 0 && !mDocumentLoading && mDummyLayoutRequest)
-      RemoveDummyLayoutRequest();
   }
   return NS_OK;
 }
 
+void
+PresShell::DoneRemovingReflowCommands()
+{
+  if (mRCCreatedDuringLoad == 0 && !mDocumentLoading && mDummyLayoutRequest) {
+    RemoveDummyLayoutRequest();
+  }
+}
 
 nsresult
 PresShell::AddDummyLayoutRequest(void)
