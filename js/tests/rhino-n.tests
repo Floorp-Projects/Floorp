@@ -22,6 +22,8 @@ ecma_3/RegExp/regress-105972.js
 js1_5/Regress/regress-104077.js
 #See bug number 120194
 ecma/TypeConversion/9.5-2.js
+#Verify error for bad branch 
+js1_5/Regress/regress-96526.js
 #
 # Unfixable bugs:
 #
