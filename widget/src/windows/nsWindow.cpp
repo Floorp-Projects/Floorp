@@ -2171,6 +2171,9 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
   } 
+  else if (mIsControlDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
+    DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode-64, 0);
+  }
   else if (mIsControlDown && 
            ((( NS_VK_0 <= aVirtualKeyCode) && (aVirtualKeyCode <= NS_VK_9)) ||
             (aVirtualKeyCode == NS_VK_SEMICOLON) ||
@@ -2184,7 +2187,12 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
     // put the 0 - 9 in charcode instead of keycode.
     DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode, 0);
   }
-  else if (NO_WM_CHAR_LATER(aVirtualKeyCode)) 
+  else if (NO_WM_CHAR_LATER(aVirtualKeyCode) &&  
+            (aVirtualKeyCode != NS_VK_SEMICOLON)  &&
+            (aVirtualKeyCode != NS_VK_EQUALS)  &&
+            (aVirtualKeyCode != NS_VK_COMMA)  &&
+            (aVirtualKeyCode != NS_VK_PERIOD)  &&
+            (aVirtualKeyCode != NS_VK_SLASH))
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode);
   } 
