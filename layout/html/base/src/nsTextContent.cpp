@@ -46,7 +46,7 @@
 #include "nsSelectionRange.h"
 
 #define CALC_DEBUG 0
-//#define DO_SELECTION 0
+//#define DO_SELECTION 1
 
 
 
@@ -667,8 +667,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
                             nscoord dx, nscoord dy)
 {
   // Get Selection Object
-  nsIPresShell     * shell     = aPresContext.GetShell();
-  nsIDocument      * doc       = shell->GetDocument();
+  nsIPresShell * shell = aPresContext.GetShell();
+  nsIDocument  * doc   = shell->GetDocument();
   
 
   if (doc->GetDisplaySelection() == PR_FALSE)
@@ -840,12 +840,14 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
   nsSelectionPoint * startPnt  = range->GetStartPoint();
   nsSelectionPoint * endPnt    = range->GetEndPoint();
 
+  nsIContent       * startContent = startPnt->GetContent();
+  nsIContent       * endContent   = endPnt->GetContent();
+
   PRBool startEndInSameContent;
 
   // This is a little more optimized, 
   // Check to see if the start and end points are in the same content 
-  if (mContent == startPnt->GetContent() &&
-		  mContent == endPnt->GetContent()) {
+  if (mContent == startContent && mContent == endContent) {
     startEndInSameContent = PR_TRUE;  // If this gets set to TRUE then we get to skip the IsInRange check
 
     // The Start & End contents are the same 
@@ -870,6 +872,11 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 		    aRenderingContext.DrawLine(textLen, 0, textLen, mRect.height);
         NS_RELEASE(fm);
       }
+      NS_IF_RELEASE(startContent);
+      NS_IF_RELEASE(endContent);
+      NS_IF_RELEASE(selection);
+      NS_RELEASE(doc);
+      NS_RELEASE(shell);
       return;
     } 
   } else {
@@ -877,7 +884,7 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
   }
 
 
-  if (startEndInSameContent || doc->IsInRange(range->GetStartContent(), range->GetEndContent(), mContent)) {
+  if (startEndInSameContent || doc->IsInRange(startContent, endContent, mContent)) {
     nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
 
     PRInt32 startOffset = startPnt->GetOffset() - mContentOffset;
@@ -896,7 +903,15 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       strncpy(buf, compressedStr, compressedStrLen);
       buf[compressedStrLen] = 0;
       printf("2 - Drawing [%s] at [%d,%d,%d,%d]\n", buf, rect.x, rect.y, rect.width, rect.height);
-      if (strstr(buf, "size=4")) {
+      if (strstr(buf, "Example")) {
+        int xx = 0;
+        xx++;
+      }
+      if (strstr(buf, "basic4")) {
+        int xx = 0;
+        xx++;
+      }
+      if (strstr(buf, "font5")) {
         int xx = 0;
         xx++;
       }
@@ -917,52 +932,75 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       // and draw from the beginning to where the selection starts
       //---------------------------------------------------
       nsString textStr;
-      nscoord  startTwipLen   = 0;
-      PRUint32 selTextCharLen = endPnt->GetOffset()-startPnt->GetOffset();
+      nscoord  startTwipLen = 0;
+      nscoord  endCoord; 
+      nscoord  startCoord;
 
-      if (startPnt->GetOffset() > mContentOffset) {
-        textStr.Append(compressedStr, startPnt->GetOffset());
-        startTwipLen = fm->GetWidth(textStr);
-        aRenderingContext.DrawString(compressedStr, startPnt->GetOffset(), dx, dy, startTwipLen);
+      PRBool skip = PR_FALSE;
+      if (startPnt->GetOffset() > mContentOffset+mContentLength) {
+        startCoord = 0;
+        skip = PR_TRUE;
+      } else if (startPnt->GetOffset() <= mContentOffset) {
+        startCoord = 0;
+      } else {
+        startCoord = startPnt->GetOffset() - mContentOffset;
       }
 
+      if (endPnt->GetOffset() > mContentOffset+mContentLength) {
+        endCoord = mContentLength;
+      } else if (endPnt->GetOffset() <= mContentOffset) {
+        endCoord = mContentLength;
+        skip = PR_TRUE;
+      } else {
+        endCoord = endPnt->GetOffset() - mContentOffset;
+      }
+
+      PRUint32 selTextCharLen = endCoord - startCoord;
+
+      if (startCoord > 0) {
+        textStr.Append(compressedStr, startCoord);
+        startTwipLen = fm->GetWidth(textStr);
+        aRenderingContext.DrawString(compressedStr, startCoord, dx, dy, startTwipLen);
+      }
       //---------------------------------------------------
       // Calc the starting point of the Selection and
       // and draw the selected text 
       //---------------------------------------------------
       textStr.SetLength(0);
-      textStr.Append(compressedStr+startPnt->GetOffset(), selTextCharLen);
+      textStr.Append(compressedStr+startCoord, selTextCharLen);
 
       nscoord selTextTwipLen = fm->GetWidth(textStr);
 
       rect.x     = startTwipLen;
       rect.width = selTextTwipLen;
 
-      // Render Selected Text
-      aRenderingContext.SetColor(NS_RGB(0,0,0));
-      aRenderingContext.FillRect(rect);
+      if (!skip) {
+        // Render Selected Text
+        aRenderingContext.SetColor(NS_RGB(0,0,0));
+        aRenderingContext.FillRect(rect);
 
-      aRenderingContext.SetColor(NS_RGB(255,255,255));
-      // Render the text in White
-      aRenderingContext.DrawString(compressedStr+startPnt->GetOffset(), selTextCharLen, 
+        // Render the text in White
+        aRenderingContext.SetColor(NS_RGB(255,255,255));
+      }
+      aRenderingContext.DrawString(compressedStr+startCoord, selTextCharLen, 
                                   dx+startTwipLen, dy, selTextTwipLen);
 
       //---------------------------------------------------
       // Calc the end point of the Selection and
       // and draw the remaining text 
       //---------------------------------------------------
-      if (endPnt->GetOffset() < (PRInt32)compressedStrLen) {
+      if (endCoord < (PRInt32)compressedStrLen && !skip) {
         textStr.SetLength(0);
-        textStr.Append(compressedStr+endPnt->GetOffset(), compressedStrLen-selTextCharLen);
+        textStr.Append(compressedStr+endCoord, compressedStrLen-selTextCharLen);
 
         PRUint32 endTextTwipLen = fm->GetWidth(textStr);
 
         aRenderingContext.SetColor(color->mColor);
-        aRenderingContext.DrawString(compressedStr+endPnt->GetOffset(), compressedStrLen-endPnt->GetOffset(), 
+        aRenderingContext.DrawString(compressedStr+endCoord, compressedStrLen-endCoord, 
                                      dx+startTwipLen+selTextTwipLen, dy, mRect.width-endTextTwipLen);
       }
 
-    } else if (mContent == startPnt->GetContent()) {
+    } else if (mContent == startContent) {
 
       if (startPnt->GetOffset() > mContentOffset && 
           startPnt->GetOffset() < mContentOffset+mContentLength) {
@@ -1007,12 +1045,19 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.DrawString(compressedStr+startOffset, selTextCharLen, 
                                     dx+startTwipLen, dy, selTextTwipLen);
       } else {
-        // Render the text Normal
-        const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-        aRenderingContext.SetColor(color->mColor);
+        aRenderingContext.SetColor(NS_RGB(0,0,0));
+        aRenderingContext.FillRect(rect);
+
+        aRenderingContext.SetColor(NS_RGB(255,255,255));
+        // Render the text in White
         aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
+
+        // Render the text Normal
+        //const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+        //aRenderingContext.SetColor(color->mColor);
+        //aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
       }
-    } else if (mContent == endPnt->GetContent()) {
+    } else if (mContent == endContent) {
 
       if (endPnt->GetOffset() > mContentOffset && 
           endPnt->GetOffset() < mContentOffset+mContentLength) {
@@ -1073,6 +1118,10 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
       aRenderingContext.SetColor(NS_RGB(0,0,0));
       aRenderingContext.FillRect(rect);
 
+      if (strstr(compressedStr, "size=4")) {
+        int xx = 0;
+      }
+
       aRenderingContext.SetColor(NS_RGB(255,255,255));
       // Render the text
       aRenderingContext.DrawString(compressedStr, compressedStrLen, dx, dy, mRect.width);
@@ -1091,6 +1140,9 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
     */
     NS_RELEASE(fm);
   } else {
+    if (strstr(compressedStr, "size=4")) {
+      int xx = 0;
+    }
     // Render the text
     const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(color->mColor);
@@ -1100,6 +1152,10 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
   if (delCompressedStr) {
     delete compressedStr;
   }
+  //printf("startContent %d\n", startContent?startContent->Release():-1);
+  //printf("endContent %d\n", endContent?endContent->Release():-1);
+  NS_IF_RELEASE(startContent);
+  NS_IF_RELEASE(endContent);
   NS_RELEASE(shell);
   NS_RELEASE(doc);
   NS_RELEASE(selection);
@@ -1457,8 +1513,8 @@ PRInt32 TextFrame::GetPosition(nsIPresContext& aCX,
   PRInt32 offset; 
   PRInt32 width;
   CalcCursorPosition(aCX, aEvent, (TextFrame *)aNewFrame, offset, width);
-  aAcutalContentOffset = ((TextFrame *)aNewFrame)->GetContentOffset();;
-  offset += aAcutalContentOffset;
+  aAcutalContentOffset = ((TextFrame *)aNewFrame)->GetContentOffset();
+  //offset += aAcutalContentOffset;
   return offset;
 }
 
@@ -1661,12 +1717,29 @@ nsresult Text::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 nsrefcnt Text::AddRef(void)
 {
-  return nsHTMLContent::AddRef();
+  /*nsAutoString tmp;
+  ToCString(tmp, 0, mLength);
+  char * str = tmp.ToNewCString();
+  if (strlen(str) > 10) {
+    str[10] = 0;
+  }
+  if (strstr(str, "Example")) {
+    int x = 0;
+  }
+  printf("%-8s AddRef  RefCnt=%d<\n", str, mRefCnt);*/
+  nsrefcnt count = nsHTMLContent::AddRef();
+  /*printf("%-8s Current RefCnt=%d<\n", str, mRefCnt);
+
+  if (str) {
+    delete str;
+  }*/
+  return count;
 }
 
 nsrefcnt Text::Release(void)
 {
-  return nsHTMLContent::Release();
+  nsrefcnt count = nsHTMLContent::Release();
+  return count;
 }
 
 void Text::List(FILE* out, PRInt32 aIndent) const
@@ -1738,7 +1811,7 @@ void Text::ConvertContentToXIF(nsXIFConverter& aConverter) const
         nsSelectionPoint* endPoint = range->GetEndPoint();
 
         nsIContent* startContent = startPoint->GetContent();
-        nsIContent* endContent = endPoint->GetContent();
+        nsIContent* endContent   = endPoint->GetContent();
 
         PRInt32 startOffset = startPoint->GetOffset();
         PRInt32 endOffset = endPoint->GetOffset();
@@ -1757,8 +1830,11 @@ void Text::ConvertContentToXIF(nsXIFConverter& aConverter) const
            buffer.Cut(0,startOffset); 
         }
         aConverter.AddContent(buffer);
+        NS_IF_RELEASE(startContent);
+        NS_IF_RELEASE(endContent);
       }
     }
+    NS_RELEASE(sel);
   }
   else  
   {
