@@ -578,8 +578,9 @@ PRInt32 nsZipArchive::ReadInit(const char* zipEntry, nsZipRead* aRead)
   if (!item)
     return ZIP_ERR_FNF;
 
-  //-- Initialize nsZipRead object
-  aRead->Init(this, item);
+  //-- verify we can handle the compression type
+  if (item->compression != DEFLATED && item->compression != STORED)
+    return ZIP_ERR_UNSUPPORTED;
 
   //-- Read the item into memory
   //   Inflate if necessary and save in mInflatedFileBuffer
@@ -587,20 +588,20 @@ PRInt32 nsZipArchive::ReadInit(const char* zipEntry, nsZipRead* aRead)
   //   (nsJAR needs the whole file in memory before passing it on)
   char* buf = (char*)PR_Malloc(item->realsize);
   if (!buf) return ZIP_ERR_MEMORY;
-  switch(item->compression)
-  {
-    case DEFLATED:
-      result = InflateItem(item, 0, buf);
-      break;
-    case STORED:
-      result = CopyItemToBuffer(item, buf);
-      break;
-    default:
-      return ZIP_ERR_UNSUPPORTED;
-  }
+
+  if (item->compression == DEFLATED)
+    result = InflateItem(item, 0, buf);
+  else
+    result = CopyItemToBuffer(item, buf);
 
   if (result == ZIP_OK)
+  {
+    aRead->Init(this, item);
     aRead->mFileBuffer = buf;
+  }
+  else
+    PR_Free(buf);
+
   return result;
 }
 
@@ -1281,7 +1282,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
 {
   PRInt32     status = ZIP_OK;
   PRUint32    chunk, inpos, outpos, size, crc;
-  PRUint32    bigBufSize;
+  PRUint32    bigBufSize=0;
   z_stream    zs;
   int         zerr;
   PRBool      bInflating = PR_FALSE;
