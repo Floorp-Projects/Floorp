@@ -20,26 +20,29 @@
 
 
 typedef enum {
-	PNG_ERROR,
-	PNG_INIT,
+    PNG_ERROR,
+    PNG_INIT,
     PNG_CONTINUE,
     PNG_DELAY,
-	PNG_FINISH,
-	PNG_DONE           
+    PNG_FINISH,
+    PNG_DONE           
 } png_state;
 
 
 typedef struct ipng_str {
-	png_state state;				/* Decoder FSM state */
+    png_state state;		/* Decoder FSM state */
  
-    int rows_per_chunk;
+/*  int rows_per_chunk;		NOT USED (similar variable in jpeg_struct) */
     void *delay_timeout;
     uint32 delay_time;
-    png_struct *pngs_p;
-    png_infop  info_p;
 
-	/* One scanline's worth of post-processed sample data */
+    png_structp pngs_p;
+    png_infop info_p;
+    jmp_buf jmpbuf;		/* use ours, not libpng's, for consistency */
 
-	il_container *ic;
+    /* One scanline's worth of post-processed sample data */
+
+    il_container *ic;
+
 } ipng_struct, *ipng_structp;
 
