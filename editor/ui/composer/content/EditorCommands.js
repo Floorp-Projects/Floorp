@@ -314,6 +314,11 @@ function EditorOpenRemote()
   window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal", 0);
 }
 
+// used by openLocation. see navigator.js for additional notes.
+function delayedOpenWindow(chrome,flags,url) {
+  setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
+}
+
 function EditorNewPlaintext()
 {
   window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
