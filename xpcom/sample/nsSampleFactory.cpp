@@ -119,7 +119,6 @@ SampleFactoryImpl::SampleFactoryImpl(const nsCID &aClass,
 
 SampleFactoryImpl::~SampleFactoryImpl()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 /**

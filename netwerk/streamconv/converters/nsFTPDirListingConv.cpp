@@ -1017,7 +1017,6 @@ FTPDirListingFactory::FTPDirListingFactory(const nsCID &aClass,
 
 FTPDirListingFactory::~FTPDirListingFactory()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(FTPDirListingFactory, NS_GET_IID(nsIFactory));

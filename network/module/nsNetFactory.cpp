@@ -73,7 +73,6 @@ nsNetFactory::nsNetFactory(const nsCID &aClass)
 
 nsNetFactory::~nsNetFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsNetFactory::QueryInterface(const nsIID &aIID,   

@@ -116,7 +116,6 @@ TestConverterFactory::TestConverterFactory(const nsCID &aClass,
 
 TestConverterFactory::~TestConverterFactory()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(TestConverterFactory, NS_GET_IID(nsIFactory));

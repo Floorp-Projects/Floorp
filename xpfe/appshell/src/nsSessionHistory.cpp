@@ -1508,7 +1508,6 @@ nsSessionHistoryFactory::LockFactory(PRBool aLock)
 
 nsSessionHistoryFactory::~nsSessionHistoryFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(nsSessionHistoryFactory, kIFactoryIID);

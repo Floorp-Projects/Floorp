@@ -200,6 +200,15 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                \
 /**
  * Use this macro to implement the Release method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
+ *
+ * A note on the 'stabilization' of the refcnt to one. At that point,
+ * the object's refcount will have gone to zero. The object's
+ * destructor may trigger code that attempts to QueryInterface() and
+ * Release() 'this' again. Doing so will temporarily increment and
+ * decrement the refcount. (Only a logic error would make one try to
+ * keep a permanent hold on 'this'.)  To prevent re-entering the
+ * destructor, we make sure that no balanced refcounting can return
+ * the refcount to |0|.
  */
 #define NS_IMPL_RELEASE(_class)                              \
 NS_IMETHODIMP_(nsrefcnt) _class::Release(void)               \
@@ -208,6 +217,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)               \
   --mRefCnt;                                                 \
   NS_LOG_RELEASE(this, mRefCnt, #_class);                    \
   if (mRefCnt == 0) {                                        \
+    mRefCnt = 1; /* stabilize */                             \
     NS_DELETEXPCOM(this);                                    \
     return 0;                                                \
   }                                                          \

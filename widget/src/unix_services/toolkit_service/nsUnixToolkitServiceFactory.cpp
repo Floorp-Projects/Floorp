@@ -53,7 +53,6 @@ nsUnixToolkitServiceFactory::nsUnixToolkitServiceFactory(const nsCID &aClass) :
 
 nsUnixToolkitServiceFactory::~nsUnixToolkitServiceFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(nsUnixToolkitServiceFactory, nsIFactory::GetIID())

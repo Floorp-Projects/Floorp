@@ -56,7 +56,6 @@ nsTimerMotifFactory::nsTimerMotifFactory(const nsCID &aClass) :
 
 nsTimerMotifFactory::~nsTimerMotifFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 NS_IMPL_ISUPPORTS(nsTimerMotifFactory, nsIFactory::GetIID())

@@ -334,7 +334,6 @@ nsMIMEServiceFactory::nsMIMEServiceFactory(const nsCID &aClass,
 
 nsMIMEServiceFactory::~nsMIMEServiceFactory()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP

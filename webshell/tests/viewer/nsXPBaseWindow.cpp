@@ -782,7 +782,6 @@ nsXPBaseWindowFactory::nsXPBaseWindowFactory()
 //----------------------------------------------------------------------
 nsXPBaseWindowFactory::~nsXPBaseWindowFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 //----------------------------------------------------------------------

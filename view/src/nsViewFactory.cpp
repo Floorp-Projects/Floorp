@@ -63,7 +63,6 @@ nsViewFactory::nsViewFactory(const nsCID &aClass)
 
 nsViewFactory::~nsViewFactory()   
 {   
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 NS_IMPL_ISUPPORTS1(nsViewFactory, nsIFactory)
