@@ -936,14 +936,14 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
                      &rescResults, achProgram);
           rc = 0; // Assume it worked
 
-          /* moving the file is supposed to act like a rename, so delete the
-           * original file if we got this far without error  IBM-AKR
-           */
-          if( move && (rc == NO_ERROR) )
-          {
-             DosDelete( filePath );
-          }
         } /* rc == 65 */
+        /* moving the file is supposed to act like a rename, so delete the
+         * original file if we got this far without error
+         */
+        if( move && (rc == NO_ERROR) )
+        {
+          DosDelete( filePath );
+        }
     } /* !move or ERROR */
     
     if (rc)
