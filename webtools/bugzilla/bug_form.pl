@@ -161,7 +161,7 @@ if (scalar(@ccList) > 0) {
         "<INPUT TYPE=CHECKBOX NAME=removecc>Remove selected CCs<br>\n";
 }
 
-my $URL = $bug{'bug_file_loc'};
+my $URL = value_quote($bug{'bug_file_loc'});
 
 if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
     $URL = "<B><A HREF=\"$URL\">URL:</A></B>";
@@ -265,7 +265,7 @@ print "
   <TR>
     <TD ALIGN=\"RIGHT\">$URL
     <TD COLSPAN=7>
-      <INPUT NAME=bug_file_loc VALUE=\"$bug{'bug_file_loc'}\" SIZE=60></TD>
+      <INPUT NAME=bug_file_loc VALUE=\"" . value_quote($bug{'bug_file_loc'}) . "\" SIZE=60></TD>
   </TR><TR>
     <TD ALIGN=\"RIGHT\"><B>Summary:</B>
     <TD COLSPAN=7>
