@@ -22,7 +22,7 @@
 
 <!-- Window title -->
 <!ENTITY windowTitle.label "Page Colors and Background">
-<!ENTITY pageColors.label "Page Colors: ">
+<!ENTITY pageColors.label "Page Colors">
 <!ENTITY defaultColorsRadio.label "Reader's default colors (Don't set colors in page)">
 <!ENTITY defaultColorsRadio.tooltip "Use the color settings from the viewer (reader's) browser only">
 <!ENTITY customColorsRadio.label "Use custom colors:">
@@ -33,6 +33,5 @@
 <!ENTITY visitedLinkText.label "Visited link text">
 <!ENTITY background.label "Background:">
 <!ENTITY colon.character ":">
-<!ENTITY backgroundImage.label "Background Image (Uncheck to edit page without image): ">
+<!ENTITY backgroundImage.label "Background Image:">
 <!ENTITY backgroundImage.tooltip "Use an image file as the background for your document">
-<!ENTITY saveImageMsg.label "Filename and location will be saved for future use.">
