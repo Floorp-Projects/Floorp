@@ -508,8 +508,8 @@ void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 	             mRenderingSurface->gc,
 	             mCurrFontHandle);
       
-    ::XFlushGC(mRenderingSurface->display,
-	             mRenderingSurface->gc);
+//    ::XFlushGC(mRenderingSurface->display,
+//	             mRenderingSurface->gc);
   }
 }
 
