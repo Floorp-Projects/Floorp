@@ -25,11 +25,10 @@
 #include "nsFormFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsFormFrame.h"
-#include "nsIStatefulFrame.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIComponentManager.h"
+
 
 static NS_DEFINE_IID(kIRadioControlFrameIID,  NS_IRADIOCONTROLFRAME_IID);
+
 
 nsresult
 nsRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -40,11 +39,6 @@ nsRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIRadioControlFrameIID)) {
     *aInstancePtr = (void*) ((nsIRadioControlFrame*) this);
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void*) ((nsIStatefulFrame*) this);
-    NS_ADDREF_THIS();
     return NS_OK;
   }
  
@@ -257,49 +251,4 @@ nsresult nsRadioControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 {
   aRequiresWidget = PR_FALSE;
   return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// nsIStatefulFrame
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsRadioControlFrame::GetStateType(StateType* aStateType)
-{
-  *aStateType = eRadioType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRadioControlFrame::SaveState(nsISupports** aState)
-{
-  nsISupportsString* value = nsnull;
-  nsresult res = NS_OK;
-  nsAutoString string;
-  GetRadioControlFrameState(string);
-  char* chars = string.ToNewCString();
-  if (chars) {
-    res = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                         NS_GET_IID(nsISupportsString), (void**)&value);
-    if (NS_SUCCEEDED(res) && value) {
-      value->SetData(chars);
-    }
-    nsCRT::free(chars);
-  } else {
-    res = NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aState = (nsISupports*)value;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRadioControlFrame::RestoreState(nsISupports* aState)
-{
-  char* chars = nsnull;
-  nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
-  if (NS_SUCCEEDED(res) && chars) {
-    nsAutoString string(chars);
-    SetRadioControlFrameState(string);
-    nsCRT::free(chars);
-  }
-  return res;
 }

@@ -37,13 +37,10 @@
 #include "nsIReflowCommand.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
+
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMUIEvent.h"
-#include "nsIStatefulFrame.h"
-#include "nsISupportsArray.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIComponentManager.h"
 
 static NS_DEFINE_IID(kIDOMMouseListenerIID,       NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
@@ -152,11 +149,6 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsIDOMKeyListener*) this;                                        
     NS_ADDREF_THIS();
     return NS_OK;                                                        
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
-    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
   }
   return nsScrollFrame::QueryInterface(aIID, aInstancePtr);
 }
@@ -1645,15 +1637,6 @@ nsListControlFrame::SetOptionSelected(PRInt32 aIndex, PRBool aValue)
   return NS_OK;
 }
 
-//---------------------------------------------------------
-// Determine if the specified item in the listbox is selected.
-NS_IMETHODIMP
-nsListControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
-{
-  *aValue = IsContentSelectedByIndex(aIndex);
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // End nsISelectControlFrame
 //----------------------------------------------------------------------
@@ -2162,78 +2145,3 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }
 
-//----------------------------------------------------------------------
-// nsIStatefulFrame
-//----------------------------------------------------------------------
-NS_IMETHODIMP
-nsListControlFrame::GetStateType(StateType* aStateType)
-{
-  *aStateType = eSelectType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsListControlFrame::SaveState(nsISupports** aState)
-{
-  nsISupportsArray* value = nsnull;
-  nsresult res = NS_NewISupportsArray(&value);
-  if (NS_SUCCEEDED(res) && value) {
-    PRInt32 j=0;
-    PRInt32 length = 0;
-    GetNumberOfOptions(&length);
-    PRInt32 i;
-    for (i=0; i<length; i++) {
-      PRBool selected = PR_FALSE;
-      res = GetOptionSelected(i, &selected);
-      if (NS_SUCCEEDED(res) && selected) {
-        nsISupportsPRInt32* thisVal = nsnull;
-        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_PROGID,
-	                       nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)&thisVal);
-        if (NS_SUCCEEDED(res) && thisVal) {
-          res = thisVal->SetData(i);
-	  if (NS_SUCCEEDED(res)) {
-            PRBool okay = value->InsertElementAt((nsISupports *)thisVal, j++);
-	    if (!okay) res = NS_ERROR_OUT_OF_MEMORY; // Most likely cause;
-	  }
-	  if (!NS_SUCCEEDED(res)) NS_RELEASE(thisVal);
-	}
-      }
-      if (!NS_SUCCEEDED(res)) break;
-    }
-    if (i<length)
-      NS_RELEASE(value);
-  }
-  *aState = (nsISupports*)value;  // Set to null if not successful
-  return res;
-}
-
-NS_IMETHODIMP
-nsListControlFrame::RestoreState(nsISupports* aState)
-{
-  nsISupportsArray* value = (nsISupportsArray *)aState;
-  nsresult res = NS_ERROR_NULL_POINTER;
-  if (value) {
-    res = Deselect();
-    if (NS_SUCCEEDED(res)) {
-      PRUint32 count = 0;
-      res = value->Count(&count);
-      if (NS_SUCCEEDED(res)) {
-        nsISupportsPRInt32* thisVal = nsnull;
-        PRInt32 j=0;
-        for (PRUint32 i=0; i<count; i++) {
-          thisVal = (nsISupportsPRInt32*) value->ElementAt(i);
-          if (thisVal) {
-            res = thisVal->GetData(&j);
-            if (NS_SUCCEEDED(res)) {
-              res = SetOptionSelected(j, PR_TRUE);
-            }
-          } else {
-            res = NS_ERROR_UNEXPECTED;
-          }
-          if (!NS_SUCCEEDED(res)) break;
-        }
-      }
-    }
-  }
-  return res;
-}

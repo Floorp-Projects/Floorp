@@ -30,10 +30,7 @@ private:
 	typedef nsNativeFormControlFrame Inherited;
 
 public:
-  nsNativeTextControlFrame();
-  virtual ~nsNativeTextControlFrame();
-  
-  // nsIFormControlFrame
+       // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
@@ -78,8 +75,6 @@ public:
   
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
-protected:
-  nsString* mCachedState;
 };
 
 #endif

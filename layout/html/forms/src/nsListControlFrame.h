@@ -26,7 +26,6 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMKeyListener.h"
-#include "nsIStatefulFrame.h"
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
@@ -45,8 +44,7 @@ class nsListControlFrame : public nsScrollFrame,
                            public nsIDOMMouseListener,
                            public nsIDOMMouseMotionListener,
                            public nsIDOMKeyListener,
-                           public nsISelectControlFrame,
-			   public nsIStatefulFrame
+                           public nsISelectControlFrame
 {
 public:
   friend nsresult NS_NewListControlFrame(nsIFrame** aNewFrame);
@@ -122,12 +120,6 @@ public:
   NS_IMETHOD AddOption(PRInt32 index);
   NS_IMETHOD RemoveOption(PRInt32 index);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
-  NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
-
-  //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
 
   //nsIDOMEventListener
   virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);

@@ -23,14 +23,11 @@
 #include "nsNativeFormControlFrame.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
-#include "nsIStatefulFrame.h"
 class nsIAtom;
 
 // nsRadioControlFrame
 
-class nsRadioControlFrame : public nsNativeFormControlFrame,
-                            public nsIRadioControlFrame,
-			    public nsIStatefulFrame
+class nsRadioControlFrame : public nsNativeFormControlFrame, public nsIRadioControlFrame
 {
 private:
 	typedef nsNativeFormControlFrame Inherited;
@@ -74,16 +71,12 @@ public:
   // Expect this code to repackaged and moved to a new location in the future.
   //
 
+
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
   ///XXX: End o the temporary methods
-
-  //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
 
 protected:
 
