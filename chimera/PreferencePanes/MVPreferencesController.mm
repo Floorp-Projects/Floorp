@@ -7,6 +7,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "nsCocoaBrowserService.h"
 
 // #import "Defines.h"
 
@@ -70,6 +71,7 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   loadedPanes = nil;
   panes = nil;
   paneInfo = nil;
+  
   [super dealloc];
 }
 
@@ -107,6 +109,13 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
 
 - (IBAction) showPreferences:(id) sender
 {
+  if ( ![window isVisible] ) {
+    // on being shown, register as a window that cares about XPCOM being active until we're done
+    // with it in |windowDidClose()|. Need to ensure this is exactly balanced with |BrowserClosed()|
+    // calls as it increments a refcount. As a result, we can only call it when we're making
+    // the window visible. Too bad cocoa doesn't give us any notifications of this.
+    nsCocoaBrowserService::InitEmbedding();
+  }
   [self showAll:nil];
   [window makeKeyAndOrderFront:nil];
 }
@@ -225,6 +234,9 @@ NSString *MVPreferencesWindowNotification = @"MVPreferencesWindowNotification";
   if ( prefService )
     prefService->SavePrefFile(nsnull);			// nsnull means write to prefs.js
   [[NSUserDefaults standardUserDefaults] synchronize];
+
+  // tell gecko that this window no longer needs it around.
+  nsCocoaBrowserService::BrowserClosed();
 }
 
 - (NSToolbarItem *) toolbar:(NSToolbar *) toolbar
