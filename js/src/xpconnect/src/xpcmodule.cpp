@@ -22,11 +22,14 @@
 
 /***************************************************************************/
 
-class nsJSIIDFactory : public nsIFactory
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kJSIID_CID, NS_JS_IID_CID);
+static NS_DEFINE_CID(kJSCID_CID, NS_JS_CID_CID);
+static NS_DEFINE_CID(kXPConnect_CID, NS_XPCONNECT_CID);
+
+class nsXPCFactory : public nsIFactory
 {
 public:
-    static REFNSCID GetCID() {static nsID cid = NS_JS_IID_CID; return cid;}
-
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD CreateInstance(nsISupports *aOuter,
@@ -35,109 +38,101 @@ public:
 
     NS_IMETHOD LockFactory(PRBool aLock);
 
-  nsJSIIDFactory();
-  virtual ~nsJSIIDFactory();
+    nsXPCFactory(const nsCID &aCID);
+    virtual ~nsXPCFactory();
+private:
+    nsCID      mCID;
 };
 
-/********************************************/
-
-static NS_DEFINE_IID(kJSIIDFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsJSIIDFactory, kJSIIDFactoryIID);
-
-NS_IMETHODIMP
-nsJSIIDFactory::CreateInstance(nsISupports *aOuter,
-                                 REFNSIID aIID,
-                                 void **aResult)
-{
-    if(!aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    *aResult = NULL;
-
-    if(aOuter)
-        return NS_ERROR_NO_INTERFACE;
-
-    if(aIID.Equals(nsISupports::GetIID()) ||
-       aIID.Equals(nsJSIID::GetIID()))
-    {
-        *aResult = new nsJSIID;
-    }
-
-    return *aResult ? NS_OK : NS_ERROR_NO_INTERFACE;
-}
-
-NS_IMETHODIMP
-nsJSIIDFactory::LockFactory(PRBool aLock)
-{
-    return NS_OK;
-}
-
-nsJSIIDFactory::nsJSIIDFactory()
+nsXPCFactory::nsXPCFactory(const nsCID &aCID)
+    : mCID(aCID)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 }
 
-nsJSIIDFactory::~nsJSIIDFactory() {}
-
-/***************************************************************************/
-class nsJSCIDFactory : public nsIFactory
+nsXPCFactory::~nsXPCFactory()
 {
-public:
-    static REFNSCID GetCID() {static nsID cid = NS_JS_CID_CID; return cid;}
-
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-  nsJSCIDFactory();
-  virtual ~nsJSCIDFactory();
-};
-
-/********************************************/
-
-static NS_DEFINE_IID(kJSCIDFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsJSCIDFactory, kJSCIDFactoryIID);
+//    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+}
 
 NS_IMETHODIMP
-nsJSCIDFactory::CreateInstance(nsISupports *aOuter,
-                                 REFNSIID aIID,
-                                 void **aResult)
+nsXPCFactory::QueryInterface(const nsIID &aIID, void **aResult)
 {
-    if(!aResult)
+    if(aResult == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    if(aIID.Equals(nsISupports::GetIID()) ||
+       aIID.Equals(nsIFactory::GetIID())  ||
+       aIID.Equals(nsXPCFactory::GetIID()))
+    {
+        *aResult = (void*)this;
+    }
+    else
+    {
+        *aResult = NULL;
+        return NS_NOINTERFACE;
+    }
+
+    NS_ADDREF_THIS();
+    return NS_OK;
+}
+
+NS_IMPL_ADDREF(nsXPCFactory)
+NS_IMPL_RELEASE(nsXPCFactory)
+
+NS_IMETHODIMP
+nsXPCFactory::CreateInstance(nsISupports *aOuter,
+                             const nsIID &aIID,
+                             void **aResult)
+{
+    nsresult res = NS_OK;
+
+    if(aResult == NULL)
         return NS_ERROR_NULL_POINTER;
 
     *aResult = NULL;
 
     if(aOuter)
-        return NS_ERROR_NO_INTERFACE;
+        return NS_NOINTERFACE;
 
-    if(aIID.Equals(nsISupports::GetIID()) ||
-       aIID.Equals(nsJSCID::GetIID()))
+    nsISupports *inst = nsnull;
+
+    // ClassID check happens here
+    // Whenever you add a new class that supports an interface, plug it in here
+
+    // ADD NEW CLASSES HERE
+    if (mCID.Equals(kJSIID_CID))
     {
-        *aResult = new nsJSCID;
+        inst = new nsJSIID;
     }
+    else if (mCID.Equals(kJSCID_CID))
+    {
+        inst = new nsJSCID;
+    }
+    else if (mCID.Equals(kXPConnect_CID))
+    {
+        inst = nsXPConnect::GetXPConnect();    
+    }
+    else
+        return NS_NOINTERFACE;
 
-    return *aResult ? NS_OK : NS_ERROR_NO_INTERFACE;
+    if(inst)
+    {
+        res = inst->QueryInterface(aIID, aResult);
+        NS_RELEASE(inst);
+    }
+    else
+        res = NS_ERROR_OUT_OF_MEMORY;
+
+    return res;
 }
 
 NS_IMETHODIMP
-nsJSCIDFactory::LockFactory(PRBool aLock)
+nsXPCFactory::LockFactory(PRBool aLock)
 {
     return NS_OK;
 }
-
-nsJSCIDFactory::nsJSCIDFactory()
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-nsJSCIDFactory::~nsJSCIDFactory() {}
 
 /***************************************************************************/
 
@@ -157,50 +152,81 @@ NSGetFactory(nsISupports* servMgr,
              nsIFactory **aFactory)
 #endif
 {
-    static nsJSIIDFactory iid_factory;
-    static nsJSCIDFactory cid_factory;
+    static nsXPCFactory iid_factory(kJSIID_CID);
+    static nsXPCFactory cid_factory(kJSCID_CID);
+    static nsXPCFactory xpc_factory(kXPConnect_CID);
 
     if(!aFactory)
         return NS_ERROR_NULL_POINTER;
 
-    if(aClass.Equals(nsJSIIDFactory::GetCID()))
+    if(aClass.Equals(kJSIID_CID))
     {
         iid_factory.AddRef();
         *aFactory = &iid_factory;
         return NS_OK;
     }
-    if(aClass.Equals(nsJSCIDFactory::GetCID()))
+    if(aClass.Equals(kJSCID_CID))
     {
         cid_factory.AddRef();
         *aFactory = &cid_factory;
+        return NS_OK;
+    }
+    if(aClass.Equals(kXPConnect_CID))
+    {
+        xpc_factory.AddRef();
+        *aFactory = &xpc_factory;
         return NS_OK;
     }
 
     return NS_ERROR_NO_INTERFACE;
 }
 
-#ifdef XP_PC
-#define XPCONNECT_DLL  "xpc3250.dll"
-#else
-#ifdef XP_MAC
-#define XPCONNECT_DLL  "XPCONNECT_DLL"
-#else
-#define XPCONNECT_DLL  "libxpconnect.so"
-#endif
-#endif
 
-void
-xpc_RegisterSelf()
+extern "C" XPC_PUBLIC_API(PRBool)
+NSCanUnload(nsISupports* aServMgr)
 {
-    nsComponentManager::RegisterComponent(nsJSIIDFactory::GetCID(),
-                                          "nsIJSIID",
-                                          "nsIID",
-                                          XPCONNECT_DLL,
-                                          PR_FALSE, PR_TRUE);
-
-    nsComponentManager::RegisterComponent(nsJSCIDFactory::GetCID(),
-                                          "nsIJSCID",
-                                          "nsCID",
-                                          XPCONNECT_DLL,
-                                          PR_FALSE, PR_TRUE);
+  return PR_FALSE;
 }
+
+extern "C" XPC_PUBLIC_API(nsresult)
+NSRegisterSelf(nsISupports* aServMgr, const char *aPath)
+{
+    nsresult rv;
+#ifdef DEBUG
+    printf("*** Register XPConnect\n");
+#endif
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
+                     aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->RegisterComponent(kJSIID_CID,
+                                    "nsIJSIID","nsIID",
+                                    aPath, PR_TRUE, PR_TRUE);
+
+    rv = compMgr->RegisterComponent(kJSCID_CID,
+                                    "nsIJSCID","nsCID",
+                                    aPath, PR_TRUE, PR_TRUE);
+
+    rv = compMgr->RegisterComponent(kXPConnect_CID,
+                                    "nsIXPConnect","nsIXPConnect",
+                                    aPath, PR_TRUE, PR_TRUE);
+    return rv;
+}
+
+extern "C" XPC_PUBLIC_API(nsresult)
+NSUnregisterSelf(nsISupports* aServMgr, const char *aPath)
+{
+    nsresult rv;
+#ifdef DEBUG
+    printf("*** Unregister XPConnect\n");
+#endif
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
+                     aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->UnregisterComponent(kJSIID_CID, aPath);
+    rv = compMgr->UnregisterComponent(kJSCID_CID, aPath);
+    rv = compMgr->UnregisterComponent(kXPConnect_CID, aPath);
+
+    return rv;
+}        

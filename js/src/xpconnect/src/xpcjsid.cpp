@@ -334,9 +334,15 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
-    nsIXPConnectWrappedNative* instWrapper;
-    rv = XPC_GetXPConnect()->WrapNative(cx, inst, nsISupports::GetIID(),
-                                        &instWrapper);
+    nsIXPConnectWrappedNative* instWrapper = NULL;
+
+    nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if(xpc)
+    {
+        rv = xpc->WrapNative(cx, inst, nsISupports::GetIID(), &instWrapper);
+        NS_RELEASE(xpc);
+    }
+
     NS_RELEASE(inst);
     if(NS_FAILED(rv) || !instWrapper)
         return NS_ERROR_FAILURE;
@@ -516,9 +522,15 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
     if(NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
-    nsIXPConnectWrappedNative* srvcWrapper;
-    rv = XPC_GetXPConnect()->WrapNative(cx, srvc, nsISupports::GetIID(),
-                                        &srvcWrapper);
+    nsIXPConnectWrappedNative* srvcWrapper = NULL;
+
+    nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
+    if(xpc)
+    {
+        rv = xpc->WrapNative(cx, srvc, nsISupports::GetIID(), &srvcWrapper);
+        NS_RELEASE(xpc);
+    }
+
     if(NS_FAILED(rv) || !srvcWrapper)
     {
         nsServiceManager::ReleaseService(*cid, srvc, NULL);

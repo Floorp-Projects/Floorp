@@ -34,7 +34,6 @@ LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\
  $(LIBNSPR)				\
  $(DIST)\lib\js3250.lib \
- $(DIST)\lib\xpc3250.lib \
  $(DIST)\lib\raptorbase.lib \
  $(NULL)
 

@@ -420,11 +420,4 @@ nsXPCComponents::GetClasses(nsIXPCClasses * *aClasses)
     return NS_ERROR_UNEXPECTED;
 }
 
-/***************************************************************************/
-
-XPC_PUBLIC_API(nsIXPCComponents*)
-XPC_GetXPConnectComponentsObject()
-{
-    return new nsXPCComponents();
-}
 

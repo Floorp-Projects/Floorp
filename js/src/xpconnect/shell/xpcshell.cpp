@@ -85,7 +85,7 @@ static void SetupRegistry()
        * for all this to work with NSPR.	  
        */
 #endif /* XP_PC */
-      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
+//      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
 
 #ifdef XP_MAC
       nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
@@ -105,6 +105,18 @@ static void SetupRegistry()
     nsComponentManager::RegisterComponent(kGenericFactoryCID, NULL, NULL, 
                                           XPCOM_DLL, PR_FALSE, PR_FALSE);
 }
+
+static nsIXPConnect* GetXPConnect()
+{
+    nsIXPConnect* result;
+
+    if(NS_SUCCEEDED(nsServiceManager::GetService(
+                        nsIXPConnect::GetCID(), nsIXPConnect::GetIID(),
+                        (nsISupports**) &result, NULL)))
+        return result;
+    return NULL;
+}        
+
 /***************************************************************************/
 
 FILE *gOutFile = NULL;
@@ -199,7 +211,13 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!JS_ValueToInt32(cx, argv[0], &depth))
             return JS_FALSE;
     }
-    XPC_DUMP(XPC_GetXPConnect(), depth);
+
+    nsIXPConnect* xpc = GetXPConnect();
+    if(xpc)
+    {
+        xpc->DebugDump(depth);
+        NS_RELEASE(xpc);
+    }
     return JS_TRUE;
 }
 
@@ -480,10 +498,10 @@ main(int argc, char **argv)
 
     JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
-    nsIXPConnect* xpc = XPC_GetXPConnect();
+    nsIXPConnect* xpc = GetXPConnect();
     if(!xpc)
     {
-        printf("XPC_GetXPConnect() returned NULL!\n");
+        printf("GetXPConnect() returned NULL!\n");
         return 1;
     }
 
@@ -549,7 +567,7 @@ DumpSymbol(JSHashEntry *he, int i, void *arg)
 JS_BEGIN_EXTERN_C
 void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
 void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
-void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
-void Dxpc(int depth) {Dobj(XPC_GetXPConnect(), depth);}
+//void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
+//void Dxpc(int depth) {Dobj(GetXPConnect(), depth);}
 JS_END_EXTERN_C
 #endif
