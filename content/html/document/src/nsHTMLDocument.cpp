@@ -631,9 +631,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       PRUnichar* forceCharsetFromWebShell = NULL;
       if (muCV) {
 		    rv = muCV->GetForceCharacterSet(&forceCharsetFromWebShell);
-            if ((NULL != forceCharsetFromWebShell) && (0 != forceCharsetFromWebShell[0])) {
-                muCV->SetForceCharacterSet(NULL);
-            }
       }
 		  if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
       {
