@@ -430,7 +430,7 @@ nsXBLPrototypeBinding::LoadResources()
 
           // Now kick off the image load
           nsCOMPtr<imgIRequest> req;
-          il->LoadImage(uri, nsnull, nsnull, getter_AddRefs(req));
+          il->LoadImage(uri, nsnull, nsnull, nsnull, getter_AddRefs(req));
         }
       }
     }
