@@ -1451,8 +1451,11 @@ nsPath2URI(const char* rootURI, nsFileSpec& spec, char* *uri)
   rv = nsGetMailboxRoot(root);
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString pathStr = spec;
-  nsAutoString rootStr = root;
+  const char *path = spec;
+  nsAutoString pathStr(path);
+  path = root;
+  nsAutoString rootStr(path);
+  
   PRInt32 pos = pathStr.Find(rootStr);
   if (pos != 0)     // if doesn't start with root path
     return NS_ERROR_FAILURE;
