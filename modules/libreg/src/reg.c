@@ -357,7 +357,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 #else
         case EACCES:    /* file in use */
 #endif
-            /* DVNOTE: should we try read only? */
+            /* try read only */
             (*fh) = vr_fileOpen(path, XP_FILE_READ_BIN);
             if ( VALID_FILEHANDLE(*fh) )
                 return REGERR_READONLY;
