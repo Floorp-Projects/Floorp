@@ -383,8 +383,7 @@ RDFContainerImpl::RemoveElementAt(PRInt32 aIndex, PRBool aRenumber, nsIRDFNode**
         }
     }
 
-    *_retval = old;
-    NS_ADDREF(*_retval);
+    old.swap(*_retval);
 
     return NS_OK;
 }
