@@ -25,14 +25,12 @@ REQUIRES	= xpcom netlib
 
 CPPSRCS		= TestAtoms.cpp TestCRT.cpp FilesTest.cpp
 
-EX_LIBS		= \
-		  $(DIST)/lib/libraptorbase.a \
-		  $(DIST)/lib/libxpcom.a \
-		  $(NULL)
+LIBS		= \
+	-lraptorbase \
+	-lxpcom \
+	$(NULL)
 
-PROGS		= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
-
-TARGETS		= $(PROGS)
+SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -44,11 +42,4 @@ ifneq ($(OS_RELEASE),1.2)
 OS_LIBS		+= /usr/lib/libdl.so
 endif
 endif
-
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
-	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(LDFLAGS) $^ $(NSPR_LIBS) $(OS_LIBS)
-
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
 
