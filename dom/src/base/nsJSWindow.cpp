@@ -2473,6 +2473,54 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 //
+// Native method UpdateCommands
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowUpdateCommands(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+  *rval = JSVAL_NULL;
+
+  {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_UPDATECOMMANDS, PR_FALSE);
+    }
+    if (NS_FAILED(rv)) {
+      return nsJSUtils::nsReportError(cx, obj, rv);
+    }
+  }
+
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    result = nativeThis->UpdateCommands(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Escape
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2797,6 +2845,7 @@ static JSFunctionSpec WindowMethods[] =
   {"open",          WindowOpen,     0},
   {"openDialog",          WindowOpenDialog,     0},
   {"close",          WindowClose,     0},
+  {"updateCommands",          WindowUpdateCommands,     1},
   {"escape",          WindowEscape,     1},
   {"unescape",          WindowUnescape,     1},
   {"addEventListener",          EventTargetAddEventListener,     3},

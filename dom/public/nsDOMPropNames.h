@@ -867,6 +867,7 @@
     "window.toolbar", \
     "window.top", \
     "window.unescape", \
+    "window.updatecommands", \
     "window.window", \
     "windowcollection.item", \
     "windowcollection.length", \
@@ -877,6 +878,7 @@
     "xulcommanddispatcher.getcontrollerforcommand", \
     "xulcommanddispatcher.getcontrollers", \
     "xulcommanddispatcher.removecommandupdater", \
+    "xulcommanddispatcher.suppressfocus", \
     "xulcommanddispatcher.updatecommands", \
     "xuldocument.commanddispatcher", \
     "xuldocument.controls", \
