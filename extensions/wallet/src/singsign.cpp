@@ -2110,7 +2110,7 @@ si_SaveSignonDataLocked(char * state, PRBool notify) {
     return 0;
   }
 
-  nsOutputFileStream strm(dirSpec + signonFileName);
+  nsOutputFileStream strm(dirSpec + signonFileName, nsOutputFileStream::kDefaultMode, 0600);
   if (!strm.is_open()) {
     return 0;
   }

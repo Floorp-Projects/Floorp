@@ -1438,7 +1438,7 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list) {
     return;
   }
 
-  nsOutputFileStream strm(dirSpec + filename);
+  nsOutputFileStream strm(dirSpec + filename, nsOutputFileStream::kDefaultMode, 0600);
   if (!strm.is_open()) {
     NS_ERROR("unable to open file");
     return;
@@ -3081,7 +3081,7 @@ WLLT_PostEdit(const nsString& walletList)
   }
 
   /* open SchemaValue file */
-  nsOutputFileStream strm(dirSpec + schemaValueFileName);
+  nsOutputFileStream strm(dirSpec + schemaValueFileName, nsOutputFileStream::kDefaultMode, 0600);
   if (!strm.is_open()) {
     NS_ERROR("unable to open file");
     return;
