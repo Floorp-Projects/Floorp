@@ -211,7 +211,7 @@ nsresult Register(const char *path)
   rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
   if (NS_FAILED(rv)) {
     printf("Can not aquire component registrar\n");
-    return -1;
+    return rv;
   }
 
   if (gUnreg)
@@ -395,8 +395,8 @@ int main(int argc, char *argv[])
     ret = (NS_FAILED(rv)) ? -1 : 0;
     registrar = 0;
     shutdown_xpcom();
-    return ret;
-  }
-  
-  return ProcessArgs(argc, argv);
+  } else
+    ret = ProcessArgs(argc, argv);
+
+  return ret;
 }
