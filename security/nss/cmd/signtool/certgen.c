@@ -63,7 +63,7 @@ static void output_ca_cert (CERTCertificate *cert, CERTCertDBHandle *db);
  * Runs the whole process of creating a new cert, getting info from the
  * user, etc.
  */
-void
+int
 GenerateCert(char *nickname, int keysize, char *token)
 {
 	CERTCertDBHandle *db;
@@ -83,7 +83,7 @@ GenerateCert(char *nickname, int keysize, char *token)
 	if(tolower(stdinbuf[0]) != 'y') {
 		PR_fprintf(errorFD, "Operation aborted at user's request.\n");
 		errorCount++;
-		return;
+		return -1;
 	}
 
 	db = CERT_GetDefaultCertDB();
@@ -111,6 +111,7 @@ GenerateCert(char *nickname, int keysize, char *token)
 	}
 
 	PORT_Free(subject);
+	return 0;
 }
 
 #undef VERBOSE_PROMPTS
@@ -684,7 +685,7 @@ output_ca_cert (CERTCertificate *cert, CERTCertDBHandle *db)
     {
     PR_fprintf(errorFD, "%s: Can't open %s output file\n", PROGRAM_NAME, filename);
 	errorCount++;
-    return;
+	exit(ERRX);
     }
 
   certChain = SEC_PKCS7CreateCertsOnly (cert, PR_TRUE, db);
@@ -699,6 +700,7 @@ output_ca_cert (CERTCertificate *cert, CERTCertDBHandle *db)
   else {
     PR_fprintf(errorFD, "%s: Can't DER encode this certificate\n", PROGRAM_NAME);
 	errorCount++;
+	exit(ERRX);
   }
 
   fclose (out);

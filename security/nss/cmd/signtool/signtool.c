@@ -927,11 +927,21 @@ main(int argc, char *argv[])
 
   if (verify)
     {
-    VerifyJar(verify);
+    if (VerifyJar(verify))
+      {
+      errorCount++;
+      retval = -1;
+      goto cleanup;
+      }
     }
   else if (list_certs)
     {
-    ListCerts(keyName, list_certs);
+    if (ListCerts(keyName, list_certs))
+      {
+      errorCount++;
+      retval = -1;
+      goto cleanup;
+      }
     }
   else if (list_modules)
     {
@@ -939,11 +949,21 @@ main(int argc, char *argv[])
     }
   else if (genkey)
     {
-    GenerateCert(genkey, keySize, token);
+    if (GenerateCert(genkey, keySize, token))
+      {
+      errorCount++;
+      retval = -1;
+      goto cleanup;
+      }
     }
   else if (tell_who)
     {
-    JarWho(tell_who);
+    if (JarWho(tell_who))
+      {
+      errorCount++;
+      retval = -1;
+      goto cleanup;
+      }
     }
   else if (javascript && jartree)
     {
@@ -974,8 +994,11 @@ main(int argc, char *argv[])
 	}
 
     /* sign any resultant .arc directories created in above step */
-    SignAllArc(jartree, keyName, javascript, metafile, install_script,
-		optimize, !noRecurse);
+    if(SignAllArc(jartree, keyName, javascript, metafile, install_script,
+		optimize, !noRecurse)) {
+        retval = -1;
+        goto cleanup;
+    }
 
 	if(!leaveArc) {
 		RemoveAllArc(jartree);

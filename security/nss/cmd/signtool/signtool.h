@@ -58,7 +58,7 @@
  * General Defines
  */
 #define JAR_BASE_END JAR_BASE + 100
-#define ERRX (-1)	/* the exit code used on failure */
+#define ERRX (1)	/* the exit code used on failure */
 #define FNSIZE 256	/* the maximum length for filenames */
 #define MAX_RSA_KEY_SIZE 4096
 #define DEFAULT_RSA_KEY_SIZE 1024
@@ -81,7 +81,7 @@
 /***************************************************************
  * Main Task Functions
  */
-void GenerateCert(char *nickname, int keysize, char *token);
+int GenerateCert(char *nickname, int keysize, char *token);
 int ListCerts(char *key, int list_certs);
 int VerifyJar(char *filename);
 int SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
@@ -89,7 +89,7 @@ int SignArchive(char *tree, char *keyName, char *zip_file, int javascript,
 int SignAllArc(char *jartree, char *keyName, int javascript, char *metafile,
 	char *install_script, int optimize, PRBool recurse);
 int InlineJavaScript(char *dir, PRBool recurse);
-void JarWho(char *filename);
+int JarWho(char *filename);
 void JarListModules(void);
 
 /**************************************************************
