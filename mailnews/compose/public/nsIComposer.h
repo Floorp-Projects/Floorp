@@ -12,7 +12,7 @@
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIComposer */
+/* starting interface:    nsIComposer */
 
 /* {82041532-D73E-11d2-82A9-00805F2A0107} */
 #define NS_ICOMPOSER_IID_STR "82041532-D73E-11d2-82A9-00805F2A0107"
@@ -22,10 +22,7 @@
 
 class nsIComposer : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_ICOMPOSER_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMPOSER_IID)
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
