@@ -2237,11 +2237,14 @@ nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
 
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
-  /*if (mDisplayFrame) {
-    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
-    mDisplayFrame->Destroy(aPresContext);
-    mDisplayFrame=nsnull;
-  }*/
+
+  if (!kGoodToGo) {
+    if (mDisplayFrame) {
+      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
+      mDisplayFrame->Destroy(aPresContext);
+      mDisplayFrame=nsnull;
+    }
+  }
 
   /*if (mDisplayContent) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDisplayContent));
