@@ -18,7 +18,6 @@
 
 -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/flash.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://sidebar/locale/flash.dtd" >
@@ -38,7 +37,7 @@
         rdf:containment="http://home.netscape.com/NC-rdf#child" 
         onclick="OpenURL(event.target.parentNode.parentNode);">
 
-    <template>
+	<template>
       <treechildren>
         <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
           <treerow>
@@ -47,6 +46,7 @@
         </treeitem>
       </treechildren>
     </template>
+	
   </tree>
   </html:div>
 </window>

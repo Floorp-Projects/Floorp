@@ -25,7 +25,6 @@
    -    Sammy Ford
   -->
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
