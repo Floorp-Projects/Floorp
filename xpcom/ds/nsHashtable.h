@@ -87,7 +87,7 @@ class NS_COM nsHashKey {
 enum {
     kHashEnumerateStop      = PR_FALSE,
     kHashEnumerateNext      = PR_TRUE,
-    kHashEnumerateRemove    = 2,
+    kHashEnumerateRemove    = 2
 };
 
 typedef PRIntn
