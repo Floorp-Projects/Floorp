@@ -311,7 +311,7 @@ UnicodeString& UnicodeString::replace(TextOffset aOffset, t_int32 aLength, const
 {
   return (*this);
 }
-UnicodeString& UnicodeString::replace(TextOffset aOffset, t_int32 aLength, const UniChar* aString)
+UnicodeString& UnicodeString::replace(TextOffset aOffset, t_int32 aLength, const PRUnichar* aString)
 {
   return (*this);
 }

@@ -79,7 +79,7 @@ public:
   UnicodeString& replaceBetween(TextOffset aStart, TextOffset aLimit, const UnicodeString& aString);
 
   UnicodeString& replace(TextOffset aOffset, t_int32 aLength, const UnicodeString& aString);
-  UnicodeString& replace(TextOffset aOffset, t_int32 aLength, const UniChar* aString);
+  UnicodeString& replace(TextOffset aOffset, t_int32 aLength, const PRUnichar* aString);
   UnicodeString& replace(TextOffset aOffset, t_int32 aLength, const char* aString);
 
 
