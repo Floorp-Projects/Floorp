@@ -459,6 +459,18 @@ ifdef MOZ_PROFILE_USE
 DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
 endif
 
+# Force _all_ exported methods to be |_declspec(dllexport)| when we're
+# building them into the executable.
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_STATIC_COMPONENT_LIBS
+DEFINES += \
+        -D_IMPL_NS_GFX \
+        -D_IMPL_NS_MSG_BASE \
+        -D_IMPL_NS_WIDGET \
+        $(NULL)
+endif
+endif
+
 #
 # Personal makefile customizations go in these optional make include files.
 #
