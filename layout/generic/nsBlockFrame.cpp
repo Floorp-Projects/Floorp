@@ -674,7 +674,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
     // If the incremental reflow command was handled by the absolute
     // positioning code, then we're all done.
-    if (handled) {
+    if (handled && !aMetrics.mComputeMEW) {
       // Just return our current size as our desired size.
       aMetrics.width = mRect.width;
       aMetrics.height = mRect.height;
