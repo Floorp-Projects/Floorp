@@ -1246,11 +1246,6 @@ js_Interpret(JSContext *cx, jsval *result)
     JSPropertyOp getter, setter;
 #endif
 
-    if (cx->interpLevel == MAX_INTERP_LEVEL) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
-        return JS_FALSE;
-    }
-    cx->interpLevel++;
     *result = JSVAL_VOID;
     rt = cx->runtime;
 
@@ -1306,6 +1301,12 @@ js_Interpret(JSContext *cx, jsval *result)
     sp = newsp + depth;
     fp->spbase = sp;
     SAVE_SP(fp);
+
+    if (++cx->interpLevel == MAX_INTERP_LEVEL) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        ok = JS_FALSE;
+        goto out;
+    }
 
     while (pc < endpc) {
         fp->pc = pc;
@@ -2711,7 +2712,8 @@ js_Interpret(JSContext *cx, jsval *result)
                 if (inlineCallCount == MAX_INLINE_CALL_COUNT) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_OVER_RECURSED);
-                    return JS_FALSE;
+                    ok = JS_FALSE;
+                    goto out;
                 }
 
 #if JS_HAS_JIT
@@ -3613,8 +3615,9 @@ js_Interpret(JSContext *cx, jsval *result)
              * Getters and setters are just like watchpoints from an access
              * control point of view.
              */
-            if (!OBJ_CHECK_ACCESS(cx, obj, id, JSACC_WATCH, &rtmp, &attrs))
-                return JS_FALSE;
+            ok = OBJ_CHECK_ACCESS(cx, obj, id, JSACC_WATCH, &rtmp, &attrs);
+            if (!ok)
+                goto out;
 
             if (op == JSOP_GETTER) {
                 getter = (JSPropertyOp) JSVAL_TO_OBJECT(rval);
