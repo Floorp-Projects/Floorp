@@ -23,7 +23,6 @@
 #include "plstr.h"
 #include "nscore.h"
 #include "prtypes.h"
-#include "nsCppSharedAllocator.h"
 
 #define CR '\015'
 #define LF '\012'
@@ -197,15 +196,12 @@ public:
   static PRInt32 strncasecmp(const PRUnichar* s1, const char* s2,
                              PRUint32 aMaxLen);
 
-  // Note: uses the global shared allocator |nsAllocator| through the C++
-  //	|nsCppSharedAllocator| interface (matches C++ standard allocators).
-  //	So must the corresponding |free|, as below, must do the same.
+  // Note: uses new[] to allocate memory, so you must use delete[] to
+  // free the memory
   static PRUnichar* strdup(const PRUnichar* str);
 
   static void free(PRUnichar* str) {
-  	nsCppSharedAllocator<PRUnichar> shared_allocator;
-  	shared_allocator.deallocate(str, 0 /*we never new or kept the size*/);
-    // delete[] str;
+    delete[] str;
   }
 
   /// Compute a hashcode for a C string
