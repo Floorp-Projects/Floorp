@@ -106,6 +106,7 @@ public:
     PRUint32 m_dataBufferSize;
     PRUint32 m_leftOver;
     PRBool m_allowUndo;
+    PRBool m_eatLF;
 };
 
 // ACLs for this folder.

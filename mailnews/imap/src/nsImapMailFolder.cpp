@@ -2916,6 +2916,12 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
   m_copyState->m_dataBuffer[m_copyState->m_leftOver] = '\0';
 
   start = m_copyState->m_dataBuffer;
+  if (m_copyState->m_eatLF)
+  {
+    if (*start == nsCRT::LF)
+      start++;
+    m_copyState->m_eatLF = PR_FALSE;
+  }
   end = PL_strchr(start, '\r');
   if (!end)
     end = PL_strchr(start, '\n');
@@ -2947,6 +2953,8 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
       end = PL_strchr(start, '\n');
     else if (*(end+1) == nsCRT::LF)
       linebreak_len = 2;
+    else if (! *(end+1)) // block might have split CRLF so remember if
+      m_copyState->m_eatLF = PR_TRUE; // we should eat LF
 
     if (start && !end)
     {
@@ -6675,7 +6683,8 @@ nsImapMailCopyState::nsImapMailCopyState() :
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE),
     m_isCrossServerOp(PR_FALSE), m_curIndex(0),
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
-    m_dataBufferSize(0), m_leftOver(0), m_allowUndo(PR_FALSE)
+    m_dataBufferSize(0), m_leftOver(0), m_allowUndo(PR_FALSE), 
+    m_eatLF(PR_FALSE)
 {
 }
 
