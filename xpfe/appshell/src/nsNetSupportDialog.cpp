@@ -522,3 +522,4 @@ nsresult NS_NewNetSupportDialogFactory(nsIFactory** aFactory)
   *aFactory = inst;
   return rv;
 }
+
