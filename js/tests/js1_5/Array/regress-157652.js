@@ -35,13 +35,28 @@
 *
 *
 * Date:    16 July 2002
-* SUMMARY: Testing that we don't crash on Array.sort()
+* SUMMARY: Testing that Array.sort() doesn't crash on very large arrays
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=157652
+*
+* How big can a JavaScript array be?
+* ECMA-262 Ed.3 Final, Section 15.4.2.2 : new Array(len)
+*
+* This states that |len| must be a a uint32 (unsigned 32-bit integer).
+* Note the UBound for uint32's is 2^32 -1 = 0xFFFFFFFF = 4,294,967,295.
+*
+* Check:
+*
+*   js> var arr = new Array(0xFFFFFFFF)
+*   js> arr.length
+*   4294967295
+*
+*   js> var arr = new Array(0x100000000)
+*   RangeError: invalid array length
 *
 */
 //-----------------------------------------------------------------------------
 var bug = 157652;
-var summary = "Testing that we don't crash on Array.sort()";
+var summary = "Testing that Array.sort() doesn't crash on very large arrays";
 
 printBugNumber(bug);
 printStatus(summary);
@@ -62,8 +77,8 @@ printStatus(summary);
  * terminate with the normal exit code 0 and fail.
  *
  * Right now, I can't see any other way to do this, because
- * "out of memory" is not a catchable error, i.e. it cannot
- * be caught with try...catch.
+ * "out of memory" is not a catchable error: it cannot be
+ * caught with try...catch.
  */
 if (inRhino())
   expectExitCode(1);
@@ -71,36 +86,14 @@ else
   expectExitCode(3);
 
 
-/*
- * ECMA-262 Ed.3 Final, Section 15.4.2.2 : new Array(len)
- *
- * This states that |len| must be a a uint32 (unsigned 32-bit integer).
- * Note the UBound for uint32's is 2^32 -1 = 0xFFFFFFFF = 4,294,967,295.
- *
- * js> var arr = new Array(0xFFFFFFFF)
- * js> arr.length
- * 4294967295
- *
- * js> var arr = new Array(0x100000000)
- * RangeError: invalid array length
- *
- */
 var a1 = Array(0x40000000);
 a1.sort();
 a1=null;
 
-
-/*
- * Let's try another one -
- */
 var a2=Array(0x10000000/4);
 a2.sort();
 a2=null;
 
-
-/*
- * Let's try the biggest possible one (see above)
- */
 var a3=Array(0xFFFFFFFF);
 a3.sort();
 a3 = null;
