@@ -26,6 +26,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "prenv.h"
+#include "nsSpecialSystemDirectory.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -260,7 +261,11 @@ MangleResourceIntoFileURL(const char* aResourceFileName)
 #endif
 
 #ifdef XP_MAC
-    resourceBase = nsCRT::strdup("usr/local/netscape/bin");
+   // resourceBase = nsCRT::strdup("usr/local/netscape/bin");
+    nsSpecialSystemDirectory netscapeDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    nsFilePath netscapePath(netscapeDir);
+    resourceBase = nsCRT::strdup(1+(const char *)netscapePath);
+
 #endif /* XP_MAC */
 
     // Join base path to resource name
