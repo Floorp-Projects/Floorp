@@ -21,6 +21,7 @@
 
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
+#include "prcmon.h"
 
 class nsThread : public nsIThread 
 {
