@@ -194,6 +194,7 @@ function SelectWidthUnits()
 
 function OnChangeSrc()
 {
+  dump("OnChangeSrc ****************\n");
   doOverallEnabling();
 }
 
