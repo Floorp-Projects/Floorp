@@ -1,0 +1,86 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+
+DEPTH = ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+LIBRARY_NAME = nsappshell
+
+MODULE=raptor
+
+DLL_SUUFIX= .so
+
+#REQUIRES=raptor xpcom base netlib pref js dom
+
+INCLUDES+= -I../public -I$(PUBLIC)/raptor	\
+	   -I$(PUBLIC)/xpcom	\
+	   -I$(PUBLIC)/base	\
+	   -I$(PUBLIC)/netlib	\
+	   -I$(PUBLIC)/pref	\
+	   -I$(PUBLIC)/js	\
+	   -I$(PUBLIC)/dom
+
+EX_LIBS=\
+	-L$(DIST)/bin	\
+	-lxpcom		\
+	-lraptorbase	\
+	-lraptorgfx	\
+	-labouturl	\
+	-lhttpurl	\
+	-lfileurl	\
+	-lgophurl	\
+	-lftpurl	\
+	-lremoturl	\
+	-lxp		\
+	-lnetutil	\
+	-lnetcache	\
+	-lnetcnvts	\
+	-lmimetype	\
+	-lnetwork	\
+	-lnetlib	\
+	$(LIBNSPR)	\
+	$(NULL)
+
+
+
+CPPSRCS= \
+	nsAppShellService.cpp	\
+	nsWebShellWindow.cpp	\
+	nsAppShellFactory.cpp	\
+	$(NULL)
+
+CPP_OBJS=				\
+ ./$(OBJDIR)/nsAppShellService.o	\
+ ./$(OBJDIR)/nsWebShellWindow.o		\
+ ./$(OBJDIR)/nsAppShellFactory.o		\
+ $(NULL)
+
+
+include $(topsrcdir)/config/rules.mk
+
+#install::
+#	$(INSTALL) $(LIBRARY)  $(DIST)/lib
+#clobber::
+#	rm -rf $(DIST)/bin/lib$(LIB_NAME).so
+#	rm -rf $(DIST)/lib/lib$(LIB_NAME).a
