@@ -10,11 +10,20 @@
 
 <html:script language="JavaScript" src="chrome://chatzilla/content/chatzillaOverlay.js"/>
 
+<keyset id="keyset">
+  <key id="key_irc" xulkey="true" key="&ircCmd.commandkey;" observes="Tasks:IRC"/>
+</keyset>
+
+<broadcasterset id="broadcasterset">
+  <broadcaster id="Tasks:IRC" value="&ircCmd.label;" oncommand="toIRC();"/>
+</broadcasterset>
+
 <menupopup id="taskPopup">
 	<menuitem
         position="7"
-        value="&ircCmd.label;"
-        oncommand="toIRC()"/>
+        accesskey="&ircCmd.accesskey;"
+        key="key_irc"
+        observes="Tasks:IRC"/>
 </menupopup>
 
 </overlay>
