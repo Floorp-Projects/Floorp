@@ -2387,18 +2387,22 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
     aWebShell->GetContentViewer(&mCViewer);
     if (nsnull != mCViewer) {
       nsIDocumentViewer* mDViewer;
-      if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) {
-	nsIDocument* mDoc;
-	mDViewer->GetDocument(mDoc);
-	if (nsnull != mDoc) {
-	  nsIDOMDocument* mDOMDoc;
-	  if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) {
-	    NS_InitEditorMode(mDOMDoc);
-	    NS_RELEASE(mDOMDoc);
-	  }
-	  NS_RELEASE(mDoc);
-	}
-	NS_RELEASE(mDViewer);
+      if (NS_OK == mCViewer->QueryInterface(kIDocumentViewerIID, (void**) &mDViewer)) 
+      {
+	      nsIDocument* mDoc;
+	      mDViewer->GetDocument(mDoc);
+	      if (nsnull != mDoc) {
+	        nsIDOMDocument* mDOMDoc;
+	        if (NS_OK == mDoc->QueryInterface(kIDOMDocumentIID, (void**) &mDOMDoc)) 
+          {
+            nsIPresShell* shell = GetPresShellFor(aWebShell);
+	          NS_InitEditorMode(mDOMDoc, shell);
+	          NS_RELEASE(mDOMDoc);
+            NS_IF_RELEASE(shell);
+	        }
+	        NS_RELEASE(mDoc);
+	      }
+	      NS_RELEASE(mDViewer);
       }
       NS_RELEASE(mCViewer);
     }

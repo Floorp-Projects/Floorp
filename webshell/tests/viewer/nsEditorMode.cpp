@@ -22,6 +22,7 @@
 #include "nsString.h"
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
 
 #include "nsIEditor.h"
 #include "nsEditorCID.h"
@@ -50,10 +51,16 @@ static NS_DEFINE_CID(kEditorCID, NS_EDITOR_CID);
 #endif
 
 
-nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument)
+nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShell)
 {
   nsresult result = NS_OK;
   static needsInit=PR_TRUE;
+
+  NS_ASSERTION(nsnull!=aDOMDocument, "null document");
+  NS_ASSERTION(nsnull!=aPresShell, "null presentation shell");
+
+  if ((nsnull==aDOMDocument) || (nsnull==aPresShell))
+    return NS_ERROR_NULL_POINTER;
 
   if (PR_TRUE==needsInit)
   {
@@ -92,7 +99,7 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument)
     printf("ERROR: QueryInterface() returned NULL pointer.\n");
     return NS_ERROR_NULL_POINTER;
   } 
-  gEditor->Init(aDOMDocument);
+  gEditor->Init(aDOMDocument, aPresShell);
 
   return result;
 }

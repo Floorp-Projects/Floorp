@@ -19,15 +19,11 @@
 #ifndef nsEditorMode_h__
 #define nsEditorMode_h__
 
-#include "nsIDOMDocument.h"
+#include "nsError.h"
 
-extern nsresult NS_InitEditorMode(nsIDOMDocument * aDOMDocument);
-extern nsresult nsAppendText(nsString *aStr);
-extern nsresult nsDeleteLast();
-extern nsresult nsSetCurrentNode(nsIDOMNode *aNode);
-extern nsresult nsGetCurrentNode(nsIDOMNode **aNode);
+class nsIDOMDocument;
+class nsIPresShell;
 
-nsresult RegisterEventListeners();
-nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
+extern nsresult NS_InitEditorMode(nsIDOMDocument * aDOMDocument, nsIPresShell* aPresShell);
 
 #endif //nsEditorMode_h__
