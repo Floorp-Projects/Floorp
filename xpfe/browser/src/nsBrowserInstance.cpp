@@ -637,8 +637,8 @@ nsBrowserInstance::Close()
 /////////////////////////////////////////////////////////////////////////
 
 
-NS_IMPL_ADDREF(nsBrowserContentHandler);
-NS_IMPL_RELEASE(nsBrowserContentHandler);
+NS_IMPL_ADDREF(nsBrowserContentHandler)
+NS_IMPL_RELEASE(nsBrowserContentHandler)
 
 NS_INTERFACE_MAP_BEGIN(nsBrowserContentHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentHandler)
@@ -655,7 +655,7 @@ nsBrowserContentHandler::~nsBrowserContentHandler()
 }
 
 CMDLINEHANDLER_OTHERS_IMPL(nsBrowserContentHandler,"-chrome","general.startup.browser","Load the specified chrome.", PR_TRUE, PR_FALSE)
-CMDLINEHANDLER_REGISTERPROC_IMPL(nsBrowserContentHandler, "Browser Startup Handler", NS_BROWSERSTARTUPHANDLER_CONTRACTID);
+CMDLINEHANDLER_REGISTERPROC_IMPL(nsBrowserContentHandler, "Browser Startup Handler", NS_BROWSERSTARTUPHANDLER_CONTRACTID)
 NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForTask) {
 
   if (!aChromeUrlForTask)

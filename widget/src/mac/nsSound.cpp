@@ -213,7 +213,7 @@ nsSound::~nsSound()
 #endif
 }
 
-NS_IMPL_ISUPPORTS1(nsSound, nsISound);
+NS_IMPL_ISUPPORTS1(nsSound, nsISound)
 
 NS_METHOD
 nsSound::Beep()
@@ -465,7 +465,7 @@ nsSoundRequest::~nsSoundRequest()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsSoundRequest, nsITimerCallback);
+NS_IMPL_ISUPPORTS1(nsSoundRequest, nsITimerCallback)
 
 nsSoundRequest*
 nsSoundRequest::GetFromISupports(nsISupports* inSupports)
@@ -542,7 +542,7 @@ nsSystemSoundRequest::~nsSystemSoundRequest()
 #endif
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsSystemSoundRequest, nsSoundRequest);
+NS_IMPL_ISUPPORTS_INHERITED0(nsSystemSoundRequest, nsSoundRequest)
 
 nsresult
 nsSystemSoundRequest::Init(nsISound* aSound, ConstStr255Param aSoundName)
@@ -695,7 +695,7 @@ GWorldPtr nsMoviePortOwner::GetSingletonMoviePort()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsMovieSoundRequest, nsSoundRequest, nsIStreamLoaderObserver);
+NS_IMPL_ISUPPORTS_INHERITED1(nsMovieSoundRequest, nsSoundRequest, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
 nsMovieSoundRequest::nsMovieSoundRequest()

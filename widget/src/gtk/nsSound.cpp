@@ -55,7 +55,7 @@ typedef int (PR_CALLBACK *EsdCloseType)(int);
 /* used to play the sounds from the find symbol call */
 typedef int (PR_CALLBACK *EsdPlayStreamFallbackType)(int, int, const char *, const char *);
 
-NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver);
+NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

@@ -110,7 +110,7 @@ nsXPINotifierImpl::~nsXPINotifierImpl()
 }
 
 
-NS_IMPL_ISUPPORTS2(nsXPINotifierImpl, nsIRDFXMLSinkObserver, nsIUpdateNotification);
+NS_IMPL_ISUPPORTS2(nsXPINotifierImpl, nsIRDFXMLSinkObserver, nsIUpdateNotification)
 
 
 nsresult

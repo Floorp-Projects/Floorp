@@ -75,7 +75,7 @@ nsProperties::~nsProperties()
     Enumerate(ReleaseValues);
 }
 
-NS_IMPL_AGGREGATED(nsProperties);
+NS_IMPL_AGGREGATED(nsProperties)
 
 NS_METHOD
 nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 

@@ -913,8 +913,8 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
 
 ////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ADDREF(InternetSearchDataSource);
-NS_IMPL_RELEASE(InternetSearchDataSource);
+NS_IMPL_ADDREF(InternetSearchDataSource)
+NS_IMPL_RELEASE(InternetSearchDataSource)
 
 NS_INTERFACE_MAP_BEGIN(InternetSearchDataSource)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInternetSearchService)

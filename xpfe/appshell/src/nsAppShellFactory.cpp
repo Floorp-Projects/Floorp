@@ -56,11 +56,11 @@
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimingService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimingService)
 
 static const nsModuleComponentInfo gAppShellModuleInfo[] =
 {

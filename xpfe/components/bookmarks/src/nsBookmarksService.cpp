@@ -2589,7 +2589,7 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
 ////////////////////////////////////////////////////////////////////////
 // nsISupports methods
 
-NS_IMPL_ADDREF(nsBookmarksService);
+NS_IMPL_ADDREF(nsBookmarksService)
 
 NS_IMETHODIMP_(nsrefcnt)
 nsBookmarksService::Release()

@@ -77,7 +77,7 @@ public:
     nsString mName;
 };
 
-NS_IMPL_ISUPPORTS2( TestObserver, nsIObserver, nsISupportsWeakReference );
+NS_IMPL_ISUPPORTS2( TestObserver, nsIObserver, nsISupportsWeakReference )
 
 NS_IMETHODIMP
 TestObserver::Observe( nsISupports     *aSubject,

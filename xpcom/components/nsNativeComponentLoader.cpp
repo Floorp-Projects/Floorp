@@ -74,7 +74,7 @@ nsNativeComponentLoader::~nsNativeComponentLoader()
     
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNativeComponentLoader, 
                               nsIComponentLoader,
-                              nsINativeComponentLoader);
+                              nsINativeComponentLoader)
 
 NS_IMETHODIMP
 nsNativeComponentLoader::GetFactory(const nsIID & aCID,

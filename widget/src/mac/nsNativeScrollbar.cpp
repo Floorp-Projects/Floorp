@@ -95,7 +95,7 @@ ScrollbarActionProc ( )
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsWindow, nsINativeScrollbar);
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsWindow, nsINativeScrollbar)
 
 nsNativeScrollbar::nsNativeScrollbar()
   : nsMacControl()

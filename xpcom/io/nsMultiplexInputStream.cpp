@@ -83,7 +83,7 @@ private:
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiplexInputStream,
                               nsIMultiplexInputStream,
                               nsIInputStream,
-                              nsISeekableStream);
+                              nsISeekableStream)
 
 nsMultiplexInputStream::nsMultiplexInputStream()
     : mCurrentStream(0),

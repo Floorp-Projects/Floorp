@@ -73,7 +73,7 @@ info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
     PL_DHashFinalizeStub,  info_InitEntry
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsStaticComponentLoader, nsIComponentLoader);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStaticComponentLoader, nsIComponentLoader)
 
 NS_COM NSGetStaticModuleInfoFunc NSGetStaticModuleInfo;
 

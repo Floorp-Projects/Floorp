@@ -479,7 +479,7 @@ PLDHashTableEnumeratorImpl::PLDHashTableEnumeratorImpl(PLDHashTable *table,
 NS_IMPL_ISUPPORTS3(PLDHashTableEnumeratorImpl,
                    nsIBidirectionalEnumerator,
                    nsIEnumerator,
-                   nsISimpleEnumerator);
+                   nsISimpleEnumerator)
 
 PLDHashTableEnumeratorImpl::~PLDHashTableEnumeratorImpl()
 {
@@ -2449,7 +2449,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                                      nsIShutdownListener* shutdownListener)
 {
     return GetService(aClass, aIID, (void**)result);
-};
+}
 
 NS_IMETHODIMP
 nsComponentManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
@@ -2457,7 +2457,7 @@ nsComponentManagerImpl::GetService(const char* aContractID, const nsIID& aIID,
                                      nsIShutdownListener* shutdownListener)
 {
     return GetServiceByContractID(aContractID, aIID, (void**)result);
-};
+}
 
 
 NS_IMETHODIMP
@@ -2466,7 +2466,7 @@ nsComponentManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service
 {
     NS_IF_RELEASE(service);
     return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 nsComponentManagerImpl::ReleaseService(const char* aContractID, nsISupports* service,
@@ -2474,7 +2474,7 @@ nsComponentManagerImpl::ReleaseService(const char* aContractID, nsISupports* ser
 {
     NS_IF_RELEASE(service);
     return NS_OK;
-};
+}
 
 /*
  * I want an efficient way to allocate a buffer to the right size

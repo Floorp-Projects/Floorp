@@ -40,8 +40,8 @@
 #include <ControlDefinitions.h>
 #endif
 
-NS_IMPL_ADDREF(nsButton);
-NS_IMPL_RELEASE(nsButton);
+NS_IMPL_ADDREF(nsButton)
+NS_IMPL_RELEASE(nsButton)
 
 //-------------------------------------------------------------------------
 //

@@ -122,7 +122,7 @@ protected:
     PRUint32            mCount;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsReceiver, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsReceiver, nsIRunnable)
 
 nsresult
 TestPipe(nsIInputStream* in, nsIOutputStream* out)
@@ -234,7 +234,7 @@ protected:
     PRUint32            mReceived;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsShortReader, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsShortReader, nsIRunnable)
 
 nsresult
 TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
@@ -315,7 +315,7 @@ public:
     virtual ~nsPipeObserver() {}
 };
 
-NS_IMPL_ISUPPORTS2(nsPipeObserver, nsIInputStreamObserver, nsIOutputStreamObserver);
+NS_IMPL_ISUPPORTS2(nsPipeObserver, nsIInputStreamObserver, nsIOutputStreamObserver)
 
 nsresult
 TestPipeObserver()

@@ -49,7 +49,7 @@
 
 NS_IMPL_ADDREF(nsBaseClipboard)
 NS_IMPL_RELEASE(nsBaseClipboard)
-NS_IMPL_QUERY_INTERFACE1(nsBaseClipboard, nsIClipboard);
+NS_IMPL_QUERY_INTERFACE1(nsBaseClipboard, nsIClipboard)
 
 
 //-------------------------------------------------------------------------

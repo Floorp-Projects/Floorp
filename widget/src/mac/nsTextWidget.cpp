@@ -49,8 +49,8 @@ using std::auto_ptr;
 #include <ControlDefinitions.h>
 #endif
 
-NS_IMPL_ADDREF(nsTextWidget);
-NS_IMPL_RELEASE(nsTextWidget);
+NS_IMPL_ADDREF(nsTextWidget)
+NS_IMPL_RELEASE(nsTextWidget)
 
 
 //-------------------------------------------------------------------------

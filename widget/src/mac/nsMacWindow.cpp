@@ -175,7 +175,7 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 
 
 NS_IMPL_ISUPPORTS_INHERITED4(nsMacWindow, Inherited, nsIEventSink, nsPIWidgetMac, nsPIEventSinkStandalone, 
-                                          nsIMacTextInputEventSink);
+                                          nsIMacTextInputEventSink)
 
 
 //-------------------------------------------------------------------------

@@ -59,7 +59,7 @@ nsFindService::~nsFindService()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsFindService, nsIFindService);
+NS_IMPL_ISUPPORTS1(nsFindService, nsIFindService)
 
 /* attribute AString searchString; */
 NS_IMETHODIMP nsFindService::GetSearchString(nsAString & aSearchString)

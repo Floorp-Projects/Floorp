@@ -111,7 +111,7 @@ static EditableFileTypeRegistryEntry
 
 // Implementation of the nsIWindowsHooksSettings interface.
 // Use standard implementation of nsISupports stuff.
-NS_IMPL_ISUPPORTS1( nsWindowsHooksSettings, nsIWindowsHooksSettings );
+NS_IMPL_ISUPPORTS1( nsWindowsHooksSettings, nsIWindowsHooksSettings )
 
 nsWindowsHooksSettings::nsWindowsHooksSettings() {
 }
@@ -170,7 +170,7 @@ DEFINE_GETTER_AND_SETTER( HaveBeenSet,      mHaveBeenSet  )
 
 // Implementation of the nsIWindowsHooks interface.
 // Use standard implementation of nsISupports stuff.
-NS_IMPL_ISUPPORTS2( nsWindowsHooks, nsIWindowsHooks, nsIWindowsRegistry );
+NS_IMPL_ISUPPORTS2( nsWindowsHooks, nsIWindowsHooks, nsIWindowsRegistry )
 
 nsWindowsHooks::nsWindowsHooks() {
 }

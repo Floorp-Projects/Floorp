@@ -93,7 +93,7 @@ nsSplashScreenCocoa::~nsSplashScreenCocoa()
 }
 
 
-NS_IMPL_ISUPPORTS2(nsSplashScreenCocoa, nsISplashScreen, nsIObserver);
+NS_IMPL_ISUPPORTS2(nsSplashScreenCocoa, nsISplashScreen, nsIObserver)
 
 NS_IMETHODIMP
 nsSplashScreenCocoa::Show()

@@ -53,7 +53,7 @@ class TestDynamicClassImpl: public ITestClass {
   void Test();
 };
 
-NS_IMPL_ISUPPORTS1(TestDynamicClassImpl, ITestClass);
+NS_IMPL_ISUPPORTS1(TestDynamicClassImpl, ITestClass)
 
 void TestDynamicClassImpl::Test() {
   printf("hello, dynamic world!\n");
@@ -63,7 +63,7 @@ void TestDynamicClassImpl::Test() {
  * Generic Module
  */
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(TestDynamicClassImpl);
+NS_GENERIC_FACTORY_CONSTRUCTOR(TestDynamicClassImpl)
 
 static const nsModuleComponentInfo components[] =
 {

@@ -117,7 +117,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS0(nsDummyMenuItem);
+NS_IMPL_ISUPPORTS0(nsDummyMenuItem)
 
 //-------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS4(nsMenu, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISupportsWeakReference)

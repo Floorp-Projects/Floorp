@@ -87,7 +87,7 @@ nsSplashScreenBeOS::~nsSplashScreenBeOS() {
 	Hide();
 }
 
-NS_IMPL_ISUPPORTS2(nsSplashScreenBeOS, nsISplashScreen, nsIObserver);
+NS_IMPL_ISUPPORTS2(nsSplashScreenBeOS, nsISplashScreen, nsIObserver)
 
 NS_IMETHODIMP
 nsSplashScreenBeOS::Show() {

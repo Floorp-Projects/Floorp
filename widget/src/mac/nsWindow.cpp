@@ -342,7 +342,7 @@ nsWindow::~nsWindow()
 	}
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsWindow, nsBaseWidget, nsIKBStateControl, nsIPluginWidget);
+NS_IMPL_ISUPPORTS_INHERITED2(nsWindow, nsBaseWidget, nsIKBStateControl, nsIPluginWidget)
 
 //-------------------------------------------------------------------------
 //

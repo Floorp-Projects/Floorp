@@ -187,7 +187,7 @@ void nsMacNSPREventQueueHandler::ProcessPLEventQueue()
 
 #pragma mark -
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit)
 
 
 // assume we begin as the fg app

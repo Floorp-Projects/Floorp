@@ -85,7 +85,7 @@ private:
 
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsConcurrentRunner, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsConcurrentRunner, nsIRunnable)
 
 
 class nsRunner : public nsIRunnable {
@@ -115,7 +115,7 @@ protected:
     int mNum;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsRunner, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsRunner, nsIRunnable)
 
 nsresult
 TestThreads()
@@ -249,7 +249,7 @@ protected:
 
 PRInt32 nsStressRunner::gNum = 0;
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsStressRunner, nsIRunnable);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsStressRunner, nsIRunnable)
 
 static int Stress(int loops, int threads)
 {

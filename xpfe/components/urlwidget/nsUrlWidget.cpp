@@ -132,7 +132,7 @@ nsUrlWidget::SetURLToHiddenControl( char const *aURL, nsIDOMWindowInternal *pare
 }
 
 // Use standard implementation of nsISupports stuff.
-NS_IMPL_ISUPPORTS1( nsUrlWidget, nsIUrlWidget );
+NS_IMPL_ISUPPORTS1( nsUrlWidget, nsIUrlWidget )
 
 nsUrlWidget::nsUrlWidget() {
 #ifdef DEBUG_URLWIDGET

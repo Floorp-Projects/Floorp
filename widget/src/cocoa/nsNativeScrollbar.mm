@@ -49,7 +49,7 @@
 #include "nsIDOMElement.h"
 #include "nsIScrollbarMediator.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsChildView, nsINativeScrollbar);
+NS_IMPL_ISUPPORTS_INHERITED1(nsNativeScrollbar, nsChildView, nsINativeScrollbar)
 
 inline void BoundsCheck(PRInt32 low, PRUint32& value, PRUint32 high)
 {

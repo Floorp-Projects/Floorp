@@ -631,9 +631,9 @@ nsWindowMediator::SetZPosition(
 }
 
 // COM
-NS_IMPL_ADDREF( nsWindowMediator );
-NS_IMPL_QUERY_INTERFACE1(nsWindowMediator, nsIWindowMediator);
-NS_IMPL_RELEASE(nsWindowMediator);
+NS_IMPL_ADDREF( nsWindowMediator )
+NS_IMPL_QUERY_INTERFACE1(nsWindowMediator, nsIWindowMediator)
+NS_IMPL_RELEASE(nsWindowMediator)
 
 nsresult
 nsWindowMediator::Init()

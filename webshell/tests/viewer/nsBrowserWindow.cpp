@@ -1357,7 +1357,7 @@ nsBrowserWindow::~nsBrowserWindow()
   }
 }
 
-NS_IMPL_ISUPPORTS4(nsBrowserWindow, nsIBaseWindow, nsIInterfaceRequestor, nsIProgressEventSink, nsIWebShellContainer);
+NS_IMPL_ISUPPORTS4(nsBrowserWindow, nsIBaseWindow, nsIInterfaceRequestor, nsIProgressEventSink, nsIWebShellContainer)
 
 nsresult
 nsBrowserWindow::GetInterface(const nsIID& aIID,

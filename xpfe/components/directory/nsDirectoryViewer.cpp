@@ -116,7 +116,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPIndex,
                               nsIDirIndexListener,
                               nsIRequestObserver,
                               nsIInterfaceRequestor,
-                              nsIFTPEventSink);
+                              nsIFTPEventSink)
 
 NS_IMETHODIMP
 nsHTTPIndex::GetInterface(const nsIID &anIID, void **aResult ) 
@@ -1355,7 +1355,7 @@ nsDirectoryViewerFactory::~nsDirectoryViewerFactory()
 }
 
 
-NS_IMPL_ISUPPORTS1(nsDirectoryViewerFactory, nsIDocumentLoaderFactory);
+NS_IMPL_ISUPPORTS1(nsDirectoryViewerFactory, nsIDocumentLoaderFactory)
 
 
 

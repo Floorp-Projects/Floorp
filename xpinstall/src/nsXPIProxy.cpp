@@ -41,7 +41,7 @@ nsXPIProxy::~nsXPIProxy()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPIProxy, nsPIXPIProxy);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPIProxy, nsPIXPIProxy)
 
 NS_IMETHODIMP
 nsXPIProxy::RefreshPlugins(PRBool aReloadPages)

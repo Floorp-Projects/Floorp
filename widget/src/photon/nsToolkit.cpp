@@ -49,7 +49,7 @@ PRBool             nsToolkit::mPtInited = PR_FALSE;
 //
 static PRUintn gToolkitTLSIndex = 0;
 
-NS_IMPL_ISUPPORTS1(nsToolkit,nsIToolkit);
+NS_IMPL_ISUPPORTS1(nsToolkit,nsIToolkit)
 
 //-------------------------------------------------------------------------
 //

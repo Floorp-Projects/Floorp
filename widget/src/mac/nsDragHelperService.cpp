@@ -47,7 +47,7 @@
 
 NS_IMPL_ADDREF(nsDragHelperService)
 NS_IMPL_RELEASE(nsDragHelperService)
-NS_IMPL_QUERY_INTERFACE1(nsDragHelperService, nsIDragHelperService);
+NS_IMPL_QUERY_INTERFACE1(nsDragHelperService, nsIDragHelperService)
 
 
 //

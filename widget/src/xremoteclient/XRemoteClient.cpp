@@ -70,7 +70,7 @@ XRemoteClient::~XRemoteClient()
 }
 
 #ifndef XREMOTE_STANDALONE
-NS_IMPL_ISUPPORTS1(XRemoteClient, nsIXRemoteClient);
+NS_IMPL_ISUPPORTS1(XRemoteClient, nsIXRemoteClient)
 #endif
 
 NS_IMETHODIMP

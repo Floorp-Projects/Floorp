@@ -58,7 +58,7 @@ nsTopProgressListener::~nsTopProgressListener()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsTopProgressListener, nsIXPIListener);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsTopProgressListener, nsIXPIListener)
 
 
 long
