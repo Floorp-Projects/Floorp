@@ -4315,7 +4315,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                                  (void**)getter_AddRefs(selectElement));
     if (NS_SUCCEEDED(res) && selectElement) {
       nsCOMPtr<nsIContent> childContent;
-      aContainer->ChildAt(i, *getter_AddRefs(childContent));
+      aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(childContent));
       if (childContent) {
         RemoveDummyFrameFromSelect(aPresContext, shell, aContainer, childContent, selectElement);
       }
