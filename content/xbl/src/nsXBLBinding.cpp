@@ -475,7 +475,7 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
   PRUint32 j = 0;
   nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(j));
   nsCOMPtr<nsIContent> parent;
-  PRUint32 currIndex;
+  PRInt32 currIndex;
   currPoint->GetInsertionParent(getter_AddRefs(parent));
   currPoint->GetInsertionIndex(&currIndex);
 
@@ -497,7 +497,7 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
     nsCOMPtr<nsIDOMNode> node;
     nodeList->Item(i, getter_AddRefs(node));
     nsCOMPtr<nsIContent> child(do_QueryInterface(node));
-    if (i == currIndex) {
+    if (((PRInt32)i) == currIndex) {
       // Add the currPoint to the supports array.
       contentList->AppendElement(currPoint);
 
@@ -513,7 +513,7 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
     }
     
     if (!pseudoPoint) {
-      NS_NewXBLInsertionPoint(parent, 0, getter_AddRefs(pseudoPoint));
+      NS_NewXBLInsertionPoint(parent, -1, getter_AddRefs(pseudoPoint));
       contentList->AppendElement(pseudoPoint);
     }
 

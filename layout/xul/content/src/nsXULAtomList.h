@@ -75,6 +75,14 @@ XUL_ATOM(sizemode, "sizemode") // when set, measure strings to determine preferr
 
 XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 
+XUL_ATOM(outliner, "outliner")
+XUL_ATOM(outlinerbody, "outlinerbody")
+XUL_ATOM(outlinercol, "outlinercol")
+XUL_ATOM(mozoutlinerrow, ":moz-outliner-row")
+XUL_ATOM(mozoutlinercell, ":moz-outliner-cell")
+XUL_ATOM(mozoutlinertwisty, ":moz-outliner-twisty")
+XUL_ATOM(mozoutlinerindentation, ":moz-outliner-indentation")
+
 XUL_ATOM(menubar, "menubar") // An XP menu bar.
 XUL_ATOM(menu, "menu") // Represents an XP menu
 XUL_ATOM(menuitem, "menuitem") // Represents an XP menu item

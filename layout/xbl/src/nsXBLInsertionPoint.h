@@ -37,7 +37,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetInsertionParent(nsIContent** aParentElement);
-  NS_IMETHOD GetInsertionIndex(PRUint32* aIndex);
+  NS_IMETHOD GetInsertionIndex(PRInt32* aIndex);
 
   NS_IMETHOD AddChild(nsIContent* aChildElement);
   NS_IMETHOD RemoveChild(nsIContent* aChildElement);
@@ -50,7 +50,7 @@ public:
 
 protected:
   nsIContent* mParentElement;            // This ref is weak.  The parent of the <children> element.
-  PRUint32 mIndex;                       // The index of this insertion point.
+  PRInt32 mIndex;                        // The index of this insertion point. -1 is a pseudo-point.
   nsCOMPtr<nsISupportsArray> mElements;  // An array of elements present at the insertion point.
 };
 

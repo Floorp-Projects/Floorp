@@ -37,7 +37,7 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXBLINSERTIONPOINT_IID; return iid; }
 
   NS_IMETHOD GetInsertionParent(nsIContent** aParentElement)=0;
-  NS_IMETHOD GetInsertionIndex(PRUint32* aResult)=0;
+  NS_IMETHOD GetInsertionIndex(PRInt32* aResult)=0;
   NS_IMETHOD AddChild(nsIContent* aChildElement)=0;
   NS_IMETHOD RemoveChild(nsIContent* aChildElement)=0;
 
