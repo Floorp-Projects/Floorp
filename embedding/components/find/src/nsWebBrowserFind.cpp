@@ -54,6 +54,7 @@
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
+#include "nsITimelineService.h"
 
 #if DEBUG
 #include "nsIWebNavigation.h"
@@ -97,6 +98,9 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);
     NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
 
+    nsCOMPtr<nsIDOMWindow> rootFrame = do_QueryReferent(mRootSearchFrame);
+    NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
+    
     // first, if there's a "cmd_findagain" observer around, check to see if it
     // wants to perform the find again command . If it performs the find again
     // it will return true, in which case we exit ::FindNext() early.
@@ -110,7 +114,7 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
           do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         nsCOMPtr<nsISupports> searchWindowSupports =
-          do_QueryInterface(searchFrame);
+          do_QueryInterface(rootFrame);
         windowSupportsData->SetData(searchWindowSupports);
         NS_NAMED_LITERAL_STRING(dnStr, "down");
         NS_NAMED_LITERAL_STRING(upStr, "up");
@@ -134,9 +138,6 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
     if (!mSearchSubFrames && !mSearchParentFrames)
         return NS_OK;
 
-    nsCOMPtr<nsIDOMWindow> rootFrame = do_QueryReferent(mRootSearchFrame);
-    NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
-    
     nsCOMPtr<nsIDocShell>  rootDocShell;
     rv = GetDocShellFromWindow(rootFrame, getter_AddRefs(rootDocShell));
     if (NS_FAILED(rv)) return rv;
