@@ -46,7 +46,8 @@ ifdef MOZILLA_SECURITY_BUILD
 CRYPTO_LIB = $(DIST)/lib/crypto.lib
 endif
 ifdef MOZILLA_BSAFE_BUILD
-CRYPTO_LIB = $(DIST)/lib/bsafe41.lib
+CRYPTO_LIB += $(DIST)/lib/bsafe$(BSAFEVER).lib
+CRYPTO_LIB += $(DIST)/lib/freebl.lib 
 endif
 
 #	$(DIST)/lib/dbm.lib 
@@ -77,7 +78,8 @@ ifdef MOZILLA_SECURITY_BUILD
 CRYPTO_LIB = $(DIST)/lib/libcrypto.$(LIB_SUFFIX)
 endif
 ifdef MOZILLA_BSAFE_BUILD
-CRYPTO_LIB = $(DIST)/lib/libbsafe.$(LIB_SUFFIX)
+CRYPTO_LIB += $(DIST)/lib/libbsafe.a
+CRYPTO_LIB += $(DIST)/lib/libfreebl.a 
 endif
 
 EXTRA_LIBS += \
