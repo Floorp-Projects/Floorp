@@ -83,7 +83,9 @@ DownloadListenerFactory::CreateInstance(nsISupports *aOuter, const nsIID& aIID, 
 {
   nsresult rv;
   
-  if (aIID.Equals(NS_GET_IID(nsIDownload)))
+  if (aIID.Equals(NS_GET_IID(nsIDownload)) || 
+      aIID.Equals(NS_GET_IID(nsITransfer)) ||
+      aIID.Equals(NS_GET_IID(nsISupports)))
   {
     nsDownloadListener* downloadListener = new nsDownloadListener(mControllerFactory);
     if (!downloadListener) return NS_ERROR_OUT_OF_MEMORY;
