@@ -26,6 +26,7 @@
 #include "nsDeviceContextSpecMac.h"
 #include "nsString.h"
 #include "nsHashtable.h"
+#include "nsFont.h"
 #include <TextEncodingConverter.h>
 #include <TextCommon.h>
 #include <StringCompare.h>
@@ -246,19 +247,38 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemAttribute(nsSystemAttrID anID, Syst
     //---------
     // Fonts
     //---------
-    case eSystemAttr_Font_Caption : 
-    case eSystemAttr_Font_Icon : 
-    case eSystemAttr_Font_Menu : 
-    case eSystemAttr_Font_MessageBox : 
-    case eSystemAttr_Font_SmallCaption : 
-    case eSystemAttr_Font_StatusBar : 
-    case eSystemAttr_Font_Tooltips : 
-      status = NS_ERROR_FAILURE;
+    case eSystemAttr_Font_Caption: 		// css2
+    case eSystemAttr_Font_Icon: 
+    case eSystemAttr_Font_Menu: 
+    case eSystemAttr_Font_MessageBox: 
+    case eSystemAttr_Font_SmallCaption: 
+    case eSystemAttr_Font_StatusBar: 
+		case eSystemAttr_Font_Window:			// css3
+		case eSystemAttr_Font_Document:
+		case eSystemAttr_Font_Workspace:
+		case eSystemAttr_Font_Desktop:
+		case eSystemAttr_Font_Info:
+		case eSystemAttr_Font_Dialog:
+		case eSystemAttr_Font_Button:
+		case eSystemAttr_Font_PullDownMenu:
+		case eSystemAttr_Font_List:
+		case eSystemAttr_Font_Field:
+    case eSystemAttr_Font_Tooltips:		// moz
+		case eSystemAttr_Font_Widget:
+			//¥TODO: we should get these from the Appearance Manager
+      aInfo->mFont->name = "geneva";
+      aInfo->mFont->size = 9;
+			float  dev2app;
+			GetDevUnitsToAppUnits(dev2app);
+      aInfo->mFont->size        = NSToCoordRound(float(aInfo->mFont->size) * dev2app);
+      aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
+      aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
+      aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;
       break;
 
   } // switch 
 
-  return NS_OK;
+  return status;
 }
 
 /** ---------------------------------------------------

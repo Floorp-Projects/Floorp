@@ -367,6 +367,18 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont * aFont)
 
     case eSystemAttr_Font_Widget:
       break;
+
+		case eSystemAttr_Font_Window:			// css3
+		case eSystemAttr_Font_Document:
+		case eSystemAttr_Font_Workspace:
+		case eSystemAttr_Font_Desktop:
+		case eSystemAttr_Font_Info:
+		case eSystemAttr_Font_Dialog:
+		case eSystemAttr_Font_Button:
+		case eSystemAttr_Font_PullDownMenu:
+		case eSystemAttr_Font_List:
+		case eSystemAttr_Font_Field:
+			break;
   } // switch 
 
   if (nsnull == logFont) {

@@ -325,21 +325,31 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     //---------
     // Fonts
     //---------
-    case eSystemAttr_Font_Caption:
-    case eSystemAttr_Font_Icon:
-    case eSystemAttr_Font_Menu:
-    case eSystemAttr_Font_MessageBox:
-    case eSystemAttr_Font_SmallCaption:
-    case eSystemAttr_Font_StatusBar:
-    case eSystemAttr_Font_Tooltips:
-    case eSystemAttr_Font_Widget:
+    case eSystemAttr_Font_Caption: 		// css2
+    case eSystemAttr_Font_Icon: 
+    case eSystemAttr_Font_Menu: 
+    case eSystemAttr_Font_MessageBox: 
+    case eSystemAttr_Font_SmallCaption: 
+    case eSystemAttr_Font_StatusBar: 
+		case eSystemAttr_Font_Window:			// css3
+		case eSystemAttr_Font_Document:
+		case eSystemAttr_Font_Workspace:
+		case eSystemAttr_Font_Desktop:
+		case eSystemAttr_Font_Info:
+		case eSystemAttr_Font_Dialog:
+		case eSystemAttr_Font_Button:
+		case eSystemAttr_Font_PullDownMenu:
+		case eSystemAttr_Font_List:
+		case eSystemAttr_Font_Field:
+    case eSystemAttr_Font_Tooltips:		// moz
+		case eSystemAttr_Font_Widget:
       status = NS_ERROR_FAILURE;
       break;
   } // switch
 
   gtk_style_unref(style);
 
-  return NS_OK;
+  return status;
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDrawingSurface(nsIRenderingContext &aContext, 
