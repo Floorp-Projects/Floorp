@@ -517,7 +517,10 @@ nsHttpResponseHead::GetExpiresValue(PRUint32 *result)
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    *result = PRTimeToSeconds(time); 
+    if (LL_CMP(time, <, LL_Zero()))
+        *result = 0;
+    else
+        *result = PRTimeToSeconds(time); 
     return NS_OK;
 }
 
