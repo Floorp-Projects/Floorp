@@ -250,8 +250,6 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::MarkValid()
 {
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-
     if (mCacheEntry) {
         mCacheEntry->MarkValid();
         return NS_OK;
