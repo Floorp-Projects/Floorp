@@ -55,6 +55,7 @@
   clientCommand	mailclient		# CLIENT command to run
   monitorCommand	vmstat %f	# MONITOR command to run
   makeUsersArgs	-4			# args to makeusers
+  imageType	png			# gnuplot image type: png, gif, ...
 </CONFIG>
 
 # Each <Client> section defines one or more client machines

@@ -1,4 +1,8 @@
-Mstone - version 4.x
+2000-04-27  Dan Christian  <robodan@wankel>
+
+	* bin/genplot.pl: Support gnuplot generating images other than gif
+
+	* src/smtp.c (sendSMTPStart): Send domain name with HELO
 
 2000-04-05  Dan Christian <robodan@netscape.com>
 	* Fix bug in WMAP where the login field was reporting banner data.

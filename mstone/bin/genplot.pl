@@ -34,6 +34,71 @@
 # This file deals with the graphs data only
 # Interfaces to gnuplot to generate gifs for HTML inclusion.
 
+# Type of images to hold plots (e.g. png, gif, jpeg, tiff, etc)
+unless ($params{IMAGETYPE}) {
+    # Should probe gnuplot and see if it can generate one of:
+    #	png, gif, jpeg, tiff, or pbm.
+    # Not all the programs that use args.pl need this (or have gnuplot, yet)
+    my $outfile = "$tmpbase/termtypes.out";
+    my %types = ();		# hash of interesting types that we spot
+
+    unless (open(NEW, "<$outfile")) { # re-use old file if present
+	($params{DEBUG}) &&
+	    print "Asking gnuplot what output types it supports\n";
+
+	my $infile = "$tmpbase/setterm.gpt";
+	open (NEW, ">$infile") ||
+	    die "genPlot: Could not open output $infile: $!";
+	print NEW "set terminal";
+	close (NEW);
+	# Redirect STDIN, and STDERR
+	open SAVEIN, "<STDIN";
+	open STDIN, "<$infile"
+	    || die "Coundn't open $infile for input\n";
+	open SAVEERR, ">&STDERR";
+	open STDERR, ">$outfile"
+	    || die "Couldnt open $outfile for output\n";
+	system $params{GNUPLOT};	# gnuplot < $infile 2> $outfile
+	# Restore STDERR and STDIN
+	close STDERR;
+	open STDERR, ">&SAVEERR";
+	open STDIN, "<SAVEIN";
+
+	open(NEW, "<$outfile") ||
+	    die ": Could not open gnuplot output for parsing ($outfile): $!";
+
+	unlink ($infile);	# clean up
+    }
+
+    # now check through the output for terminal types we can use.
+    # I havent verified the jpeg or tiff types.  e-mail me success or failure
+    while (<NEW>) {
+	(/\sgif\s/) && ++$types{"gif"} && next;
+	(/\spng\s/) && ++$types{"png"} && next;
+	(/\sjpeg\s/) && ++$types{"jpeg"} && next;
+	(/\stiff\s/) && ++$types{"tiff"} && next;
+	(/\spbm\s/) && ++$types{"pbm"} && next;
+    }
+    close (NEW);
+
+    ($params{DEBUG}) &&
+	print "Found these gnuplot types: " . (join " ", (keys %types)) . "\n";
+
+    # The ordering here determines our preferences
+    # This list is by likely browser compatibility and image compactness
+    # png is about 10x smaller than gif
+    # jpeg will probably look bad, but will be directly supported
+    if ($types{"png"}) { $params{IMAGETYPE}="png"; }
+    elsif ($types{"gif"}) { $params{IMAGETYPE}="gif"; }
+    elsif ($types{"jpeg"}) { $params{IMAGETYPE}="jpeg"; }
+    elsif ($types{"tiff"}) { $params{IMAGETYPE}="tiff"; }
+    elsif ($types{"pbm"}) { $params{IMAGETYPE}="pbm"; }
+    else {
+	die "Gnuplot doesn't support any good image types.  Check $outfile.\n";
+    }
+    # leave the output file around to speed up repeat runs
+}
+
 # sub function to write data files, fire off gnuscript, and clean up
 # Uses global startTime and endTime figured above
 # genPlot counterName title label \@protocols \@variables
@@ -204,9 +269,20 @@ sub genPlot {
 	$varstring .= ", " if ($varstring);
 	$varstring .= ($timerNames{$t}) ? $timerNames{$t} : $t;
     }
+
+    # Setup output "terminal type"
+    if ($params{IMAGETYPE} eq "gif") { # gif type has different arguments
+	print SCRIPT "set terminal $params{IMAGETYPE} small size $params{CHARTWIDTH},$params{CHARTHEIGHT}\n";
+    } else {			# most types work like this
+	print SCRIPT "set terminal $params{IMAGETYPE} small color\n";
+	if (($params{CHARTWIDTH} != 640) || ($params{CHARTHEIGHT} != 480)) {
+	    my $xscale = $params{CHARTWIDTH} / 640;
+	    my $yscale = $params{CHARTHEIGHT} / 480;
+	    print SCRIPT "set size $xscale,$yscale\n";
+	}
+    }
     print SCRIPT<<"!GROK!THIS!";
-set terminal gif small size $params{CHARTWIDTH},$params{CHARTHEIGHT}
-set output "../../$resultdir/$name.gif" # ASSUME $tmpbase is single dir
+set output "../../$resultdir/$name.$params{IMAGETYPE}" # ASSUME $tmpbase is single dir
 set autoscale
 set xlabel "Test time (seconds)"
 set ylabel "$label"

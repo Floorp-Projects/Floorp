@@ -479,7 +479,7 @@ sub genHTMLReportGraph {
     if (genPlot ($name, $title, $label, $protos, $field, $vars) > 0) {
 	print RESULTSHTML <<END;
 <P><H3>$title</H3>
-<IMG SRC=$name.gif ALT="$label"></P>
+<IMG SRC=$name.$params{IMAGETYPE} ALT="$label"></P>
 END
     } else {
 	print RESULTSHTML "<BR>Graph \"$name\" contained no data (@{$vars}).<BR>\n";
