@@ -22,42 +22,39 @@
   An implementation for an NGLayout-style content sink that knows how
   to build an RDF content model from XUL.
 
-  For more information on RDF, see http://www.w3.org/TR/WDf-rdf-syntax.
+  For each container tag, an RDF Sequence object is created that
+  contains the order set of children of that container.
+
   For more information on XUL, see http://www.mozilla.org/xpfe
-
-  This code is based on the working draft "last call", which was
-  published on Oct 8, 1998.
-
-  Open Issues ------------------
-
-  1) factoring code with nsXMLContentSink - There's some amount of
-     common code between this and the HTML content sink. This will
-     increase as we support more and more HTML elements. How can code
-     from XML/HTML be factored?
-
-  TO DO ------------------------
-
-  1) Make sure all shortcut syntax works right.
-
-  2) Implement default namespaces. Take a look at how nsIXMLDocument
-     does namespaces: should we storing tag/namespace pairs instead of
-     the entire URI in the elements?
 
 */
 
 #include "nsCOMPtr.h"
+#include "nsIContent.h"
 #include "nsIContentSink.h"
+#include "nsICSSParser.h"
+#include "nsICSSStyleSheet.h"
+#include "nsIDOMNode.h"
+#include "nsIDocument.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
-#include "nsIRDFContentSink.h"
+#include "nsIParser.h"
+#include "nsIPresShell.h"
+#include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIRDFXMLDataSource.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptContextOwner.h"
 #include "nsIServiceManager.h"
+#include "nsIUnicharStreamLoader.h"
 #include "nsIURL.h"
-#include "nsIXMLContentSink.h"
+#include "nsIURLGroup.h"
+#include "nsIViewManager.h"
+#include "nsIXULContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsRDFCID.h"
+#include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"
 #include "prlog.h"
 #include "prmem.h"
@@ -74,19 +71,29 @@ static const char kXULID[] = "id";
 
 #include "rdf.h"
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, child); // Used to indicate the containment relationship.
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type); 
+
+
+// XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
+#define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
+
+#define XUL_NAMESPACE_URI_PREFIX XUL_NAMESPACE_URI "#"
+DEFINE_RDF_VOCAB(XUL_NAMESPACE_URI_PREFIX, XUL, element);
 
 ////////////////////////////////////////////////////////////////////////
 // XPCOM IIDs
 
 static NS_DEFINE_IID(kIContentSinkIID,         NS_ICONTENT_SINK_IID); // XXX grr...
 static NS_DEFINE_IID(kINameSpaceManagerIID,    NS_INAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,       NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,          NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
+static NS_DEFINE_IID(kIXULContentSinkIID,      NS_IXULCONTENTSINK_IID);
 
+static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
@@ -94,218 +101,17 @@ static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
 
-// XXX This totally sucks. I wish that mozilla/base had this code.
-static PRUnichar
-rdf_EntityToUnicode(const char* buf)
-{
-    if ((buf[0] == 'g' || buf[0] == 'G') &&
-        (buf[1] == 't' || buf[1] == 'T'))
-        return PRUnichar('>');
-
-    if ((buf[0] == 'l' || buf[0] == 'L') &&
-        (buf[1] == 't' || buf[1] == 'T'))
-        return PRUnichar('<');
-
-    if ((buf[0] == 'a' || buf[0] == 'A') &&
-        (buf[1] == 'm' || buf[1] == 'M') &&
-        (buf[2] == 'p' || buf[2] == 'P'))
-        return PRUnichar('&');
-
-    NS_NOTYETIMPLEMENTED("this is a named entity that I can't handle...");
-    return PRUnichar('?');
-}
-
-// XXX Code copied from nsHTMLContentSink. It should be shared.
-static void
-rdf_StripAndConvert(nsString& aResult)
-{
-    // Strip quotes if present
-    PRUnichar first = aResult.First();
-    if ((first == '"') || (first == '\'')) {
-        if (aResult.Last() == first) {
-            aResult.Cut(0, 1);
-            PRInt32 pos = aResult.Length() - 1;
-            if (pos >= 0) {
-                aResult.Cut(pos, 1);
-            }
-        } else {
-            // Mismatched quotes - leave them in
-        }
-    }
-
-    // Reduce any entities
-    // XXX Note: as coded today, this will only convert well formed
-    // entities.  This may not be compatible enough.
-    // XXX there is a table in navigator that translates some numeric entities
-    // should we be doing that? If so then it needs to live in two places (bad)
-    // so we should add a translate numeric entity method from the parser...
-    char cbuf[100];
-    PRInt32 index = 0;
-    while (index < aResult.Length()) {
-        // If we have the start of an entity (and it's not at the end of
-        // our string) then translate the entity into it's unicode value.
-        if ((aResult.CharAt(index++) == '&') && (index < aResult.Length())) {
-            PRInt32 start = index - 1;
-            PRUnichar e = aResult.CharAt(index);
-            if (e == '#') {
-                // Convert a numeric character reference
-                index++;
-                char* cp = cbuf;
-                char* limit = cp + sizeof(cbuf) - 1;
-                PRBool ok = PR_FALSE;
-                PRInt32 slen = aResult.Length();
-                while ((index < slen) && (cp < limit)) {
-                    PRUnichar e = aResult.CharAt(index);
-                    if (e == ';') {
-                        index++;
-                        ok = PR_TRUE;
-                        break;
-                    }
-                    if ((e >= '0') && (e <= '9')) {
-                        *cp++ = char(e);
-                        index++;
-                        continue;
-                    }
-                    break;
-                }
-                if (!ok || (cp == cbuf)) {
-                    continue;
-                }
-                *cp = '\0';
-                if (cp - cbuf > 5) {
-                    continue;
-                }
-                PRInt32 ch = PRInt32( ::atoi(cbuf) );
-                if (ch > 65535) {
-                    continue;
-                }
-
-                // Remove entity from string and replace it with the integer
-                // value.
-                aResult.Cut(start, index - start);
-                aResult.Insert(PRUnichar(ch), start);
-                index = start + 1;
-            }
-            else if (((e >= 'A') && (e <= 'Z')) ||
-                     ((e >= 'a') && (e <= 'z'))) {
-                // Convert a named entity
-                index++;
-                char* cp = cbuf;
-                char* limit = cp + sizeof(cbuf) - 1;
-                *cp++ = char(e);
-                PRBool ok = PR_FALSE;
-                PRInt32 slen = aResult.Length();
-                while ((index < slen) && (cp < limit)) {
-                    PRUnichar e = aResult.CharAt(index);
-                    if (e == ';') {
-                        index++;
-                        ok = PR_TRUE;
-                        break;
-                    }
-                    if (((e >= '0') && (e <= '9')) ||
-                        ((e >= 'A') && (e <= 'Z')) ||
-                        ((e >= 'a') && (e <= 'z'))) {
-                        *cp++ = char(e);
-                        index++;
-                        continue;
-                    }
-                    break;
-                }
-                if (!ok || (cp == cbuf)) {
-                    continue;
-                }
-                *cp = '\0';
-                PRInt32 ch;
-
-                // XXX Um, here's where we should be converting a
-                // named entity. I removed this to avoid a link-time
-                // dependency on core raptor.
-                ch = rdf_EntityToUnicode(cbuf);
-
-                if (ch < 0) {
-                    continue;
-                }
-
-                // Remove entity from string and replace it with the integer
-                // value.
-                aResult.Cut(start, index - start);
-                aResult.Insert(PRUnichar(ch), start);
-                index = start + 1;
-            }
-            else if (e == '{') {
-                // Convert a script entity
-                // XXX write me!
-                NS_NOTYETIMPLEMENTED("convert a script entity");
-            }
-        }
-    }
-}
-
-static nsresult
-rdf_GetQuotedAttributeValue(const nsString& aSource, 
-                            const nsString& aAttribute,
-                            nsString& aValue)
-{
-static const char kQuote = '\"';
-static const char kApostrophe = '\'';
-
-    PRInt32 offset;
-    PRInt32 endOffset = -1;
-    nsresult result = NS_OK;
-
-    offset = aSource.Find(aAttribute);
-    if (-1 != offset) {
-        offset = aSource.Find('=', offset);
-
-        PRUnichar next = aSource.CharAt(++offset);
-        if (kQuote == next) {
-            endOffset = aSource.Find(kQuote, ++offset);
-        }
-        else if (kApostrophe == next) {
-            endOffset = aSource.Find(kApostrophe, ++offset);	  
-        }
-  
-        if (-1 != endOffset) {
-            aSource.Mid(aValue, offset, endOffset-offset);
-        }
-        else {
-            // Mismatched quotes - return an error
-            result = NS_ERROR_FAILURE;
-        }
-    }
-    else {
-        aValue.Truncate();
-    }
-
-    return result;
-}
-
-
-static void
-rdf_FullyQualifyURI(const nsIURL* base, nsString& spec)
-{
-    // This is a fairly heavy-handed way to do this, but...I don't
-    // like typing.
-    nsIURL* url;
-    if (NS_SUCCEEDED(NS_NewURL(&url, spec, base))) {
-        PRUnichar* str;
-        url->ToString(&str);
-        spec = str;
-        delete str;
-        url->Release();
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////
 
 typedef enum {
     eXULContentSinkState_InProlog,
     eXULContentSinkState_InDocumentElement,
+    eXULContentSinkState_InScript,
     eXULContentSinkState_InEpilog
-} RDFContentSinkState;
+} XULContentSinkState;
 
 
-class XULContentSinkImpl : public nsIRDFContentSink
+class XULContentSinkImpl : public nsIXULContentSink
 {
 public:
     XULContentSinkImpl();
@@ -335,18 +141,20 @@ public:
     NS_IMETHOD AddNotation(const nsIParserNode& aNode);
     NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
-    // nsIRDFContentSink
-    NS_IMETHOD Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager);
-    NS_IMETHOD SetDataSource(nsIRDFXMLDataSource* ds);
-    NS_IMETHOD GetDataSource(nsIRDFXMLDataSource*& ds);
+    // nsIXULContentSink
+    NS_IMETHOD Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFDataSource* aDataSource);
 
 protected:
     static nsrefcnt             gRefCnt;
     static nsIRDFService*       gRDFService;
 
     // pseudo-constants
+    PRInt32 kNameSpaceID_XUL; // XXX per-instance member variable
+
     static nsIRDFResource* kRDF_child; // XXX needs to be NC:child (or something else)
+    static nsIRDFResource* kRDF_instanceOf;
     static nsIRDFResource* kRDF_type;
+    static nsIRDFResource* kXUL_element;
 
     nsresult
     MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
@@ -366,7 +174,7 @@ protected:
     void      PushNameSpacesFrom(const nsIParserNode& aNode);
     nsIAtom*  CutNameSpacePrefix(nsString& aString);
     PRInt32   GetNameSpaceID(nsIAtom* aPrefix);
-    void      PopNameSpaces();
+    void      PopNameSpaces(void);
 
     nsINameSpaceManager* mNameSpaceManager;
     nsVoidArray* mNameSpaceStack;
@@ -379,29 +187,65 @@ protected:
     nsresult GetXULIDAttribute(const nsIParserNode& aNode, nsIRDFResource** aResource);
     nsresult AddAttributes(const nsIParserNode& aNode, nsIRDFResource* aSubject);
 
-    virtual nsresult OpenTag(const nsIParserNode& aNode);
+    nsresult OpenTag(const nsIParserNode& aNode);
+
+    // Script tag handling
+    nsresult OpenScript(const nsIParserNode& aNode);
+
+    static void DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
+                                  nsString& aData,
+                                  void* aRef,
+                                  nsresult aStatus);
+
+    nsresult EvaluateScript(nsString& aScript, PRUint32 aLineNo);
+
+    nsresult CloseScript(const nsIParserNode& aNode);
+
+    PRBool mInScript;
+    PRUint32 mScriptLineNo;
+
+
+    // Style sheets
+    nsresult
+    LoadStyleSheet(nsIURL* aURL,
+                   nsIUnicharInputStream* aUIN,
+                   PRBool aActive,
+                   const nsString& aTitle,
+                   const nsString& aMedia,
+                   nsIContent* aOwner); 
+
+    static void
+    DoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
+                     nsString& aData,
+                     void* aRef,
+                     nsresult aStatus);
     
     // Miscellaneous RDF junk
-    nsIRDFXMLDataSource*   mDataSource;
-    RDFContentSinkState    mState;
+    nsIRDFDataSource*      mDataSource;
+    XULContentSinkState    mState;
 
     // content stack management
-    PRInt32         PushContext(nsIRDFResource *aContext, RDFContentSinkState aState);
-    nsresult        PopContext(nsIRDFResource*& rContext, RDFContentSinkState& rState);
-    nsIRDFResource* GetContextElement(PRInt32 ancestor = 0);
+    PRInt32         PushResourceAndState(nsIRDFResource *aContext, XULContentSinkState aState);
+    nsresult        PopResourceAndState(nsIRDFResource*& rContext, XULContentSinkState& rState);
+    nsIRDFResource* GetTopResource(void);
 
     nsVoidArray* mContextStack;
 
     nsIURL*      mDocumentURL;
 
     PRBool       mHaveSetRootResource;
+
+    nsIDocument* mDocument;
+    nsIParser*   mParser;
 };
 
 nsrefcnt             XULContentSinkImpl::gRefCnt = 0;
 nsIRDFService*       XULContentSinkImpl::gRDFService = nsnull;
 
-nsIRDFResource*      XULContentSinkImpl::kRDF_child  = nsnull;
-nsIRDFResource*      XULContentSinkImpl::kRDF_type   = nsnull;
+nsIRDFResource*      XULContentSinkImpl::kRDF_child;
+nsIRDFResource*      XULContentSinkImpl::kRDF_instanceOf;
+nsIRDFResource*      XULContentSinkImpl::kRDF_type;
+nsIRDFResource*      XULContentSinkImpl::kXUL_element;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -414,7 +258,9 @@ XULContentSinkImpl::XULContentSinkImpl()
       mTextLength(0),
       mTextSize(0),
       mConstrainSize(PR_TRUE),
-      mHaveSetRootResource(PR_FALSE)
+      mHaveSetRootResource(PR_FALSE),
+      mDocument(nsnull),
+      mParser(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -430,7 +276,13 @@ XULContentSinkImpl::XULContentSinkImpl()
         NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_child, &kRDF_child)),
                   "unalbe to get resource");
 
-        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_type,  &kRDF_type)),
+        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_instanceOf)),
+                  "unalbe to get resource");
+
+        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIRDF_type, &kRDF_type)),
+                  "unalbe to get resource");
+
+        NS_VERIFY(NS_SUCCEEDED(rv = gRDFService->GetResource(kURIXUL_element, &kXUL_element)),
                   "unalbe to get resource");
     }
 }
@@ -441,6 +293,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
     NS_IF_RELEASE(mNameSpaceManager);
     NS_IF_RELEASE(mDocumentURL);
     NS_IF_RELEASE(mDataSource);
+    NS_IF_RELEASE(mDocument);
+    NS_IF_RELEASE(mParser);
 
     if (mNameSpaceStack) {
         NS_PRECONDITION(0 == mNameSpaceStack->Count(), "namespace stack not empty");
@@ -463,8 +317,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
         PRInt32 index = mContextStack->Count();
         while (0 < index--) {
             nsIRDFResource* resource;
-            RDFContentSinkState state;
-            PopContext(resource, state);
+            XULContentSinkState state;
+            PopResourceAndState(resource, state);
             NS_IF_RELEASE(resource);
         }
 
@@ -475,7 +329,9 @@ XULContentSinkImpl::~XULContentSinkImpl()
     if (--gRefCnt == 0) {
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
         NS_IF_RELEASE(kRDF_child);
+        NS_IF_RELEASE(kRDF_instanceOf);
         NS_IF_RELEASE(kRDF_type);
+        NS_IF_RELEASE(kXUL_element);
     }
 }
 
@@ -493,7 +349,7 @@ XULContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
 
     *result = nsnull;
-    if (iid.Equals(kIRDFContentSinkIID) ||
+    if (iid.Equals(kIXULContentSinkIID) ||
         iid.Equals(kIXMLContentSinkIID) ||
         iid.Equals(kIContentSinkIID) ||
         iid.Equals(kISupportsIID)) {
@@ -539,30 +395,56 @@ XULContentSinkImpl::MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
 NS_IMETHODIMP 
 XULContentSinkImpl::WillBuildModel(void)
 {
-    return (mDataSource != nsnull) ? mDataSource->BeginLoad() : NS_OK;
+    mDocument->BeginLoad();
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
 {
-    return (mDataSource != nsnull) ? mDataSource->EndLoad() : NS_OK;
+    // XXX this is silly; who cares?
+    PRInt32 i, ns = mDocument->GetNumberOfShells();
+    for (i = 0; i < ns; i++) {
+        nsIPresShell* shell = mDocument->GetShellAt(i);
+        if (nsnull != shell) {
+            nsIViewManager* vm;
+            shell->GetViewManager(&vm);
+            if(vm) {
+                vm->SetQuality(nsContentQuality(aQualityLevel));
+            }
+            NS_RELEASE(vm);
+            NS_RELEASE(shell);
+        }
+    }
+
+    mDocument->EndLoad();
+
+    // Drop our reference to the parser to get rid of a circular
+    // reference.
+    NS_IF_RELEASE(mParser);
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::WillInterrupt(void)
 {
-    return (mDataSource != nsnull) ? mDataSource->Interrupt() : NS_OK;
+    // XXX Notify the webshell, if necessary
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::WillResume(void)
 {
-    return (mDataSource != nsnull) ? mDataSource->Resume() : NS_OK;
+    // XXX Notify the webshell, if necessary
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::SetParser(nsIParser* aParser)
 {
+    NS_IF_RELEASE(mParser);
+    mParser = aParser;
+    NS_IF_ADDREF(aParser);
     return NS_OK;
 }
 
@@ -577,7 +459,9 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
     const nsString& text = aNode.GetText();
 #endif
 
-    FlushText();
+    if (mState != eXULContentSinkState_InScript) {
+        FlushText();
+    }
 
     // We must register namespace declarations found in the attribute
     // list of an element before creating the element. This is because
@@ -599,23 +483,30 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
         break;
     }
 
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected content");
+	//NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected content");
     return rv;
 }
 
 NS_IMETHODIMP 
 XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 {
+    nsresult rv;
+
 #ifdef DEBUG
     const nsString& text = aNode.GetText();
 #endif
 
-    FlushText();
+    if (mState == eXULContentSinkState_InScript) {
+        if (NS_FAILED(rv = CloseScript(aNode)))
+            return rv;
+    }
+    else {
+        FlushText();
+    }
 
     nsIRDFResource* resource;
-    if (NS_FAILED(PopContext(resource, mState))) {
-        // XXX parser didn't catch unmatched tags?
-        PR_ASSERT(0);
+    if (NS_FAILED(PopResourceAndState(resource, mState))) {
+        NS_ERROR("parser didn't catch unmatched tags?");
         return NS_ERROR_UNEXPECTED; // XXX
     }
 
@@ -669,13 +560,100 @@ XULContentSinkImpl::AddComment(const nsIParserNode& aNode)
     return result;
 }
 
+nsresult
+XULContentSinkImpl::LoadStyleSheet(nsIURL* aURL,
+                                   nsIUnicharInputStream* aUIN,
+                                   PRBool aActive,
+                                   const nsString& aTitle,
+                                   const nsString& aMedia,
+                                   nsIContent* aOwner)
+{
+    nsresult rv;
+    nsCOMPtr<nsICSSParser> parser;
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kCSSParserCID,
+                                                    nsnull,
+                                                    nsICSSParser::IID(),
+                                                    (void**) getter_AddRefs(parser)))) {
+        NS_ERROR("unable to create CSS parser");
+        return rv;
+    }
+
+    nsCOMPtr<nsICSSStyleSheet> sheet;
+
+    // XXX note: we are ignoring rv until the error code stuff in the
+    // input routines is converted to use nsresult's
+    parser->SetCaseSensitive(PR_TRUE);
+    parser->Parse(aUIN, aURL, *getter_AddRefs(sheet));
+
+    if (! sheet)
+        return NS_ERROR_OUT_OF_MEMORY; // XXX
+
+    sheet->SetTitle(aTitle);
+    sheet->SetEnabled(aActive);
+    mDocument->AddStyleSheet(sheet);
+
+    if (nsnull != aOwner) {
+        nsIDOMNode* domNode;
+        if (NS_SUCCEEDED(aOwner->QueryInterface(nsIDOMNode::IID(), (void**)&domNode))) {
+            sheet->SetOwningNode(domNode);
+            NS_RELEASE(domNode);
+        }
+    }
+
+    return NS_OK;
+}
+
+struct AsyncStyleProcessingData {
+    nsString            mTitle;
+    nsString            mMedia;
+    PRBool              mIsActive;
+    nsIURL*             mURL;
+    nsIContent*         mElement;
+    XULContentSinkImpl* mSink;
+};
+
+void
+XULContentSinkImpl::DoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
+                                     nsString& aData,
+                                     void* aRef,
+                                     nsresult aStatus)
+{
+    nsresult rv = NS_OK;
+    AsyncStyleProcessingData* d = (AsyncStyleProcessingData*)aRef;
+    nsIUnicharInputStream* uin = nsnull;
+
+    if ((NS_OK == aStatus) && (0 < aData.Length())) {
+        // wrap the string with the CSS data up in a unicode
+        // input stream.
+        rv = NS_NewStringUnicharInputStream(&uin, new nsString(aData));
+        if (NS_OK == rv) {
+            // XXX We have no way of indicating failure. Silently fail?
+            rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
+                                          d->mTitle, d->mMedia, d->mElement);
+        }
+    }
+    
+    if (d->mSink->mParser) {
+        d->mSink->mParser->EnableParser(PR_TRUE);
+    }
+
+    NS_RELEASE(d->mURL);
+    NS_IF_RELEASE(d->mElement);
+    NS_RELEASE(d->mSink);
+    delete d;
+
+    // We added a reference when the loader was created. This
+    // release should destroy it.
+    NS_RELEASE(aLoader);
+}
+
 
 NS_IMETHODIMP 
 XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 {
 
-static const char kStyleSheetPI[] = "<?xml-stylesheet";
-static const char kCSSType[] = "text/css";
+    static const char kStyleSheetPI[] = "<?xml-stylesheet";
+    static const char kCSSType[] = "text/css";
 
     nsresult rv;
     FlushText();
@@ -690,36 +668,79 @@ static const char kCSSType[] = "text/css";
     // If it's a stylesheet PI...
     if (0 == text.Find(kStyleSheetPI)) {
         nsAutoString href;
-        if (NS_FAILED(rv = rdf_GetQuotedAttributeValue(text, "href", href)))
+        if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href)))
             return rv;
 
         // If there was an error or there's no href, we can't do
         // anything with this PI
-        if (! href.Length())
+        if (0 == href.Length())
             return NS_OK;
-    
+
         nsAutoString type;
-        if (NS_FAILED(rv = rdf_GetQuotedAttributeValue(text, "type", type)))
-            return rv;
-    
-        if (! type.Equals(kCSSType))
-            return NS_OK;
-
-        nsIURL* url = nsnull;
-        nsAutoString absURL;
-        nsAutoString emptyURL;
-        emptyURL.Truncate();
-        if (NS_FAILED(rv = NS_MakeAbsoluteURL(mDocumentURL, emptyURL, href, absURL)))
+        if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "type", type)))
             return rv;
 
-        if (NS_FAILED(rv = NS_NewURL(&url, absURL)))
+        nsAutoString title;
+        if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "title", title)))
             return rv;
 
-        rv = mDataSource->AddCSSStyleSheetURL(url);
-        NS_RELEASE(url);
+        title.CompressWhitespace();
+
+        nsAutoString media;
+        if (NS_FAILED(rv =  nsRDFParserUtils::GetQuotedAttributeValue(text, "media", media)))
+            return rv;
+
+        media.ToUpperCase();
+
+        if (type.Equals(kCSSType)) {
+            // Use the SRC attribute value to load the URL
+            nsCOMPtr<nsIURL> url;
+            nsAutoString absURL;
+
+            nsCOMPtr<nsIURLGroup> urlGroup; 
+            if (NS_SUCCEEDED(rv = mDocumentURL->GetURLGroup(getter_AddRefs(urlGroup)))) {
+                if (NS_FAILED(rv = urlGroup->CreateURL(getter_AddRefs(url),
+                                                       mDocumentURL,
+                                                       href,
+                                                       nsnull))) {
+                    NS_ERROR("unable to create URL for style sheet");
+                    return rv;
+                }
+            }
+            else {
+                if (NS_FAILED(rv = NS_NewURL(getter_AddRefs(url), absURL))) {
+                    NS_ERROR("unable to create URL for style sheet");
+                    return rv;
+                }
+            }
+
+            AsyncStyleProcessingData* d = new AsyncStyleProcessingData;
+            if (! d)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            d->mTitle.SetString(title);
+            d->mMedia.SetString(media);
+            d->mIsActive = PR_TRUE;
+            d->mURL      = url;
+            NS_ADDREF(d->mURL);
+            // XXX Need to create PI node
+            d->mElement  = nsnull;
+            d->mSink     = this;
+            NS_ADDREF(this);
+
+            nsIUnicharStreamLoader* loader;
+            if (NS_FAILED(rv = NS_NewUnicharStreamLoader(&loader,
+                                                         url, 
+                                                         (nsStreamCompleteFunc)DoneLoadingStyle, 
+                                                         (void *)d))) {
+                return rv;
+            }
+
+            return NS_ERROR_HTMLPARSER_BLOCK;
+        }
     }
 
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -739,7 +760,7 @@ XULContentSinkImpl::AddCharacterData(const nsIParserNode& aNode)
         char buf[12];
         text.ToCString(buf, sizeof(buf));
         text.Truncate();
-        text.Append(rdf_EntityToUnicode(buf));
+        text.Append(nsRDFParserUtils::EntityToUnicode(buf));
     }
 
     PRInt32 addLen = text.Length();
@@ -812,56 +833,42 @@ XULContentSinkImpl::AddEntityReference(const nsIParserNode& aNode)
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFContentSink interface
 
-static PRInt32 kNameSpaceID_XUL;
-
 NS_IMETHODIMP
-XULContentSinkImpl::Init(nsIURL* aURL, nsINameSpaceManager* aNameSpaceManager)
+XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFDataSource* aDataSource)
 {
-    NS_PRECONDITION((nsnull != aURL) && (nsnull != aNameSpaceManager), "null ptr");
-    if ((! aURL) || (! aNameSpaceManager))
+    NS_PRECONDITION(aDocument != nsnull, "null ptr");
+    if (! aDocument)
         return NS_ERROR_NULL_POINTER;
 
-    mDocumentURL = aURL;
-    NS_ADDREF(aURL);
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
 
-    mNameSpaceManager = aNameSpaceManager;
-    NS_ADDREF(aNameSpaceManager);
+    NS_IF_RELEASE(mDocument);
+    mDocument = aDocument;
+    NS_ADDREF(mDocument);
+
+    NS_IF_RELEASE(mDocumentURL);
+    mDocumentURL = mDocument->GetDocumentURL();
+
+    NS_IF_RELEASE(mDataSource);
+    mDataSource = aDataSource;
+    NS_ADDREF(aDataSource);
 
 	nsresult rv;
 
-// XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
-static const char kXULNameSpaceURI[]
-    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    if (NS_FAILED(rv = mDocument->GetNameSpaceManager(mNameSpaceManager))) {
+        NS_ERROR("unable to get document namespace manager");
+        return rv;
+    }
 
     rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
     
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                    kIRDFServiceIID,
-                                                    (nsISupports**) &gRDFService)))
-        return rv;
-
     mState = eXULContentSinkState_InProlog;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-XULContentSinkImpl::SetDataSource(nsIRDFXMLDataSource* ds)
-{
-    NS_IF_RELEASE(mDataSource);
-    mDataSource = ds;
-    NS_IF_ADDREF(mDataSource);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-XULContentSinkImpl::GetDataSource(nsIRDFXMLDataSource*& ds)
-{
-    ds = mDataSource;
-    NS_IF_ADDREF(mDataSource);
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////
 // Text buffering
@@ -918,8 +925,8 @@ XULContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
         return rv;
     }
 
-    if (NS_FAILED(rv = mDataSource->Assert(GetContextElement(0), kRDF_child, literal, PR_TRUE))) {
-        NS_ERROR("unable to make assertion");
+    if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource, GetTopResource(), literal))) {
+        NS_ERROR("unable to add text to container");
         return rv;
     }
 
@@ -970,12 +977,12 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
 
         if (attr.EqualsIgnoreCase(kXULID)) {
             nsAutoString uri = aNode.GetValueAt(i);
-            rdf_StripAndConvert(uri);
+            nsRDFParserUtils::StripAndConvert(uri);
 
             // XXX Take the URI and make it fully qualified by
             // sticking it into the document's URL. This may not be
             // appropriate...
-            rdf_FullyQualifyURI(mDocumentURL, uri);
+            nsRDFParserUtils::FullyQualifyURI(mDocumentURL, uri);
 
             return gRDFService->GetUnicodeResource(uri, aResource);
         }
@@ -1015,7 +1022,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode,
             continue;
 
         v = aNode.GetValueAt(i);
-        rdf_StripAndConvert(v);
+        nsRDFParserUtils::StripAndConvert(v);
 
         // Get the URI for the namespace, so we can construct a
         // fully-qualified property name.
@@ -1049,12 +1056,31 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 
     SplitQualifiedName(aNode.GetText(), nameSpaceID, tag);
 
+    // HTML tags all need to be upper-cased
+    if (nameSpaceID == kNameSpaceID_HTML) {
+        if (tag.Equals("script")) {
+            return OpenScript(aNode);
+        }
+    }
+
     // Figure out the URI of this object, and create an RDF node for it.
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> rdfResource;
-    if (NS_FAILED(rv = GetXULIDAttribute(aNode, getter_AddRefs(rdfResource))))
+    if (NS_FAILED(rv = GetXULIDAttribute(aNode, getter_AddRefs(rdfResource)))) {
+        NS_ERROR("unable to parser XUL ID from tag");
         return rv;
+    }
+
+    if (NS_FAILED(rv = rdf_MakeSeq(mDataSource, rdfResource))) {
+        NS_ERROR("unable to create sequence for tag");
+        return rv;
+    }
+
+    if (NS_FAILED(rv = rdf_Assert(mDataSource, rdfResource, kRDF_instanceOf, kXUL_element))) {
+        NS_ERROR("unable to mark resource as XUL element");
+        return rv;
+    }
 
     // Convert the container's namespace/tag pair to a fully qualified
     // URI so that we can specify it as an RDF resource.
@@ -1064,7 +1090,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         return rv;
     }
 
-    if (NS_FAILED(rv = mDataSource->Assert(rdfResource, kRDF_type, tagResource, PR_TRUE))) {
+    if (NS_FAILED(rv = rdf_Assert(mDataSource, rdfResource, kRDF_type, tagResource))) {
         NS_ERROR("unable to assert tag type");
         return rv;
     }
@@ -1080,31 +1106,195 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         // This code sets the root (happens if we're the first open
         // container).
         mHaveSetRootResource = PR_TRUE;
-        if (NS_FAILED(rv = mDataSource->SetRootResource(rdfResource))) {
-            NS_ERROR("couldn't set root resource");
-            return rv;
+
+        nsCOMPtr<nsIRDFDocument> rdfDoc;
+        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::IID(),
+                                                   (void**) getter_AddRefs(rdfDoc)))) {
+            if (NS_FAILED(rv = rdfDoc->SetRootResource(rdfResource))) {
+                NS_ERROR("couldn't set root resource");
+                return rv;
+            }
         }
     }
     else {
         // We now have an RDF node for the container.  Hook it up to
         // its parent container with a "child" relationship.
-		if (NS_FAILED(rv = mDataSource->Assert(GetContextElement(0),
-                                               kRDF_child,
-                                               rdfResource,
-                                               PR_TRUE))) {
-            NS_ERROR("unable to assert child");
+        if (NS_FAILED(rv = rdf_ContainerAppendElement(mDataSource,
+                                                   GetTopResource(),
+                                                   rdfResource))) {
+            NS_ERROR("unable to add child to container");
             return rv;
         }
     }
 
     // Push the element onto the context stack, so that child
     // containers will hook up to us as their parent.
-    PushContext(rdfResource, mState);
+    PushResourceAndState(rdfResource, mState);
     mState = eXULContentSinkState_InDocumentElement;
     return NS_OK;
 }
 
 
+
+nsresult
+XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
+{
+    nsresult rv = NS_OK;
+    PRBool   isJavaScript = PR_TRUE;
+    PRInt32 i, ac = aNode.GetAttributeCount();
+
+    // Look for SRC attribute and look for a LANGUAGE attribute
+    nsAutoString src;
+    for (i = 0; i < ac; i++) {
+        const nsString& key = aNode.GetKeyAt(i);
+        if (key.EqualsIgnoreCase("src")) {
+            src = aNode.GetValueAt(i);
+            nsRDFParserUtils::StripAndConvert(src);
+        }
+        else if (key.EqualsIgnoreCase("type")) {
+            nsAutoString  type(aNode.GetValueAt(i));
+            nsRDFParserUtils::StripAndConvert(type);
+            isJavaScript = type.EqualsIgnoreCase("text/javascript");
+        }
+        else if (key.EqualsIgnoreCase("language")) {
+            nsAutoString  lang(aNode.GetValueAt(i));
+            nsRDFParserUtils::StripAndConvert(lang);
+            isJavaScript = nsRDFParserUtils::IsJavaScriptLanguage(lang);
+        }
+    }
+  
+    // Don't process scripts that aren't JavaScript
+    if (isJavaScript) {
+        nsAutoString script;
+
+        // If there is a SRC attribute...
+        if (src.Length() > 0) {
+            // Use the SRC attribute value to load the URL
+            nsIURL* url = nsnull;
+            nsAutoString absURL;
+            nsIURLGroup* urlGroup;
+
+            rv = mDocumentURL->GetURLGroup(&urlGroup);
+      
+            if ((NS_OK == rv) && urlGroup) {
+                rv = urlGroup->CreateURL(&url, mDocumentURL, src, nsnull);
+                NS_RELEASE(urlGroup);
+            }
+            else {
+                rv = NS_NewURL(&url, absURL);
+            }
+            if (NS_OK != rv) {
+                return rv;
+            }
+
+            // Add a reference to this since the url loader is holding
+            // onto it as opaque data.
+            NS_ADDREF(this);
+
+            nsIUnicharStreamLoader* loader;
+            rv = NS_NewUnicharStreamLoader(&loader,
+                                           url, 
+                                           (nsStreamCompleteFunc)DoneLoadingScript, 
+                                           (void *)this);
+            NS_RELEASE(url);
+            if (NS_OK == rv) {
+                rv = NS_ERROR_HTMLPARSER_BLOCK;
+            }
+        }
+
+        mInScript = PR_TRUE;
+        mConstrainSize = PR_FALSE;
+        mScriptLineNo = (PRUint32)aNode.GetSourceLineNumber();
+
+        PushResourceAndState(nsnull, mState);
+        mState = eXULContentSinkState_InScript;
+    }
+
+    return rv;
+}
+
+void
+XULContentSinkImpl::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
+                                      nsString& aData,
+                                      void* aRef,
+                                      nsresult aStatus)
+{
+    XULContentSinkImpl* sink = (XULContentSinkImpl*)aRef;
+
+    if (NS_OK == aStatus) {
+        // XXX We have no way of indicating failure. Silently fail?
+        sink->EvaluateScript(aData, 0);
+    }
+    else {
+        NS_ERROR("error loading script");
+    }
+
+    if (sink->mParser) {
+        sink->mParser->EnableParser(PR_TRUE);
+    }
+
+    // The url loader held a reference to the sink
+    NS_RELEASE(sink);
+
+    // We added a reference when the loader was created. This
+    // release should destroy it.
+    NS_RELEASE(aLoader);
+}
+
+
+nsresult
+XULContentSinkImpl::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
+{
+    nsresult rv = NS_OK;
+
+    if (0 < aScript.Length()) {
+        nsIScriptContextOwner *owner;
+        nsIScriptContext *context;
+        owner = mDocument->GetScriptContextOwner();
+        if (nsnull != owner) {
+      
+            rv = owner->GetScriptContext(&context);
+            if (rv != NS_OK) {
+                NS_RELEASE(owner);
+                return rv;
+            }
+        
+            nsIURL* docURL = mDocument->GetDocumentURL();
+            const char* url;
+            if (docURL) {
+                (void)docURL->GetSpec(&url);
+            }
+
+            nsAutoString val;
+            PRBool isUndefined;
+
+            PRBool result = context->EvaluateString(aScript, url, aLineNo, 
+                                                    val, &isUndefined);
+      
+            NS_IF_RELEASE(docURL);
+      
+            NS_RELEASE(context);
+            NS_RELEASE(owner);
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+XULContentSinkImpl::CloseScript(const nsIParserNode& aNode)
+{
+    nsresult result = NS_OK;
+    if (mInScript) {
+        nsAutoString script;
+        script.SetString(mText, mTextLength);
+        result = EvaluateScript(script, mScriptLineNo);
+        FlushText(PR_FALSE);
+        mInScript = PR_FALSE;
+    }
+
+    return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -1112,25 +1302,28 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 
 struct RDFContextStackElement {
     nsIRDFResource*     mResource;
-    RDFContentSinkState mState;
+    XULContentSinkState mState;
 };
 
 nsIRDFResource* 
-XULContentSinkImpl::GetContextElement(PRInt32 ancestor /* = 0 */)
+XULContentSinkImpl::GetTopResource(void)
 {
     if ((nsnull == mContextStack) ||
-        (ancestor >= mContextStack->Count())) {
+        (0 >= mContextStack->Count())) {
+        NS_ERROR("no context element");
         return nsnull;
     }
 
     RDFContextStackElement* e =
-        NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(mContextStack->Count()-ancestor-1));
+        NS_STATIC_CAST(RDFContextStackElement*,
+                       mContextStack->ElementAt(mContextStack->Count() - 1));
 
     return e->mResource;
 }
 
 PRInt32 
-XULContentSinkImpl::PushContext(nsIRDFResource *aResource, RDFContentSinkState aState)
+XULContentSinkImpl::PushResourceAndState(nsIRDFResource* aResource,
+                                         XULContentSinkState aState)
 {
     if (! mContextStack) {
         mContextStack = new nsVoidArray();
@@ -1151,7 +1344,8 @@ XULContentSinkImpl::PushContext(nsIRDFResource *aResource, RDFContentSinkState a
 }
  
 nsresult
-XULContentSinkImpl::PopContext(nsIRDFResource*& rResource, RDFContentSinkState& rState)
+XULContentSinkImpl::PopResourceAndState(nsIRDFResource*& rResource,
+                                        XULContentSinkState& rState)
 {
     RDFContextStackElement* e;
     if ((nsnull == mContextStack) ||
@@ -1210,7 +1404,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
 
                 // Get the attribute value (the URI for the namespace)
                 uri = aNode.GetValueAt(i);
-                rdf_StripAndConvert(uri);
+                nsRDFParserUtils::StripAndConvert(uri);
 
                 // Open a local namespace
                 nsIAtom* prefixAtom = ((0 < prefix.Length()) ? NS_NewAtom(prefix) : nsnull);
@@ -1221,8 +1415,12 @@ XULContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
                     nameSpace = child;
                 }
 
-                // Add it to the set of namespaces used in the RDF/XML document.
-                mDataSource->AddNameSpace(prefixAtom, uri);
+                // XXX I don't think that this is important for XUL,
+                // since we won't be streaming it back out.
+                // 
+                // Add it to the set of namespaces used in the RDF/XML
+                // document.
+                //mDataSource->AddNameSpace(prefixAtom, uri);
       
                 NS_IF_RELEASE(prefixAtom);
             }
@@ -1266,7 +1464,7 @@ XULContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix)
 }
 
 void
-XULContentSinkImpl::PopNameSpaces()
+XULContentSinkImpl::PopNameSpaces(void)
 {
     if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
         PRInt32 index = mNameSpaceStack->Count() - 1;
@@ -1283,7 +1481,7 @@ XULContentSinkImpl::PopNameSpaces()
 ////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXULContentSink(nsIRDFContentSink** aResult)
+NS_NewXULContentSink(nsIXULContentSink** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)

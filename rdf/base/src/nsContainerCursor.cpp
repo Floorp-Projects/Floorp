@@ -71,11 +71,15 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal); // ad hoc way to make contain
 
 class ContainerCursorImpl : public nsIRDFAssertionCursor {
 private:
-    nsIRDFService* mRDFService;
+    // pseudo-constants
+    static nsrefcnt        gRefCnt;
+    static nsIRDFResource* kRDF_nextVal;
+
     nsIRDFDataSource* mDataSource;
-    nsIRDFResource* mContainer;
-    nsIRDFNode* mNext;
-    PRInt32 mCounter;
+    nsIRDFResource*   mContainer;
+    nsIRDFNode*       mCurrent;
+    nsIRDFResource*   mOrdinalProperty;
+    PRInt32           mNextIndex;
 
 public:
     ContainerCursorImpl(nsIRDFDataSource* ds, nsIRDFResource* container);
@@ -93,34 +97,50 @@ public:
     NS_IMETHOD GetValue(nsIRDFNode** aValue);
 };
 
+nsrefcnt        ContainerCursorImpl::gRefCnt;
+nsIRDFResource* ContainerCursorImpl::kRDF_nextVal;
+
 ContainerCursorImpl::ContainerCursorImpl(nsIRDFDataSource* ds,
                                          nsIRDFResource* container)
-    : mDataSource(ds), mContainer(container), mNext(nsnull), mCounter(1)
+    : mDataSource(ds),
+      mContainer(container),
+      mCurrent(nsnull),
+      mOrdinalProperty(nsnull),
+      mNextIndex(1)
 {
     NS_INIT_REFCNT();
     NS_IF_ADDREF(mDataSource);
     NS_IF_ADDREF(mContainer);
 
-    nsresult rv;
-    rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      kIRDFServiceIID,
-                                      (nsISupports**) &mRDFService);
+    if (gRefCnt++ == 0) {
+        nsresult rv;
+        nsIRDFService* service;
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          kIRDFServiceIID,
+                                          (nsISupports**) &service);
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to acquire resource manager");
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to acquire resource manager");
+        if (! service)
+            return;
 
-    NS_ASSERTION(rdf_IsContainer(mDataSource, container), "not a container");
+        NS_VERIFY(NS_SUCCEEDED(rv = service->GetResource(kURIRDF_nextVal, &kRDF_nextVal)),
+                  "unable to get resource");
+
+    }
 }
 
 
 ContainerCursorImpl::~ContainerCursorImpl(void)
 {
-    NS_IF_RELEASE(mNext);
-
-    if (mRDFService)
-        nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
+    NS_IF_RELEASE(mCurrent);
+    NS_IF_RELEASE(mOrdinalProperty);
 
     NS_IF_RELEASE(mContainer);
     NS_IF_RELEASE(mDataSource);
+
+    if (--gRefCnt == 0) {
+        NS_IF_RELEASE(kRDF_nextVal);
+    }
 }
 
 NS_IMPL_ADDREF(ContainerCursorImpl);
@@ -148,9 +168,8 @@ ContainerCursorImpl::Advance(void)
     nsresult rv;
 
     // release the last value that we were holding
-    NS_IF_RELEASE(mNext);
+    NS_IF_RELEASE(mCurrent);
 
-    nsIRDFResource* RDF_nextVal = nsnull;
     nsIRDFNode* nextNode        = nsnull;
     nsIRDFLiteral* nextVal      = nsnull;
     const PRUnichar* p;
@@ -158,11 +177,10 @@ ContainerCursorImpl::Advance(void)
     PRInt32 last;
     PRInt32 err;
 
-    // XXX we could cache all this crap when the cursor gets created.
-    if (NS_FAILED(rv = mRDFService->GetResource(kURIRDF_nextVal, &RDF_nextVal)))
-        goto done;
+    // Figure out the upper bound so we'll know when we're done.
 
-    if (NS_FAILED(rv = mDataSource->GetTarget(mContainer, RDF_nextVal, PR_TRUE, &nextNode)))
+    // XXX we could cache all this crap when the cursor gets created.
+    if (NS_FAILED(rv = mDataSource->GetTarget(mContainer, kRDF_nextVal, PR_TRUE, &nextNode)))
         goto done;
 
     if (NS_FAILED(rv = nextNode->QueryInterface(kIRDFLiteralIID, (void**) &nextVal)))
@@ -176,22 +194,21 @@ ContainerCursorImpl::Advance(void)
     if (NS_FAILED(err))
         goto done;
 
-    // initialize rv to the case where mCounter has advanced past the
+    // initialize rv to the case where mNextIndex has advanced past the
     // last element
     rv = NS_ERROR_RDF_CURSOR_EMPTY;
 
-    while (mCounter < last) {
-        nsIRDFResource* ordinalProperty = nsnull;
-        if (NS_FAILED(rv = GetPredicate(&ordinalProperty)))
+    while (mNextIndex < last) {
+        NS_IF_RELEASE(mOrdinalProperty);
+        if (NS_FAILED(rv = rdf_IndexToOrdinalResource(mNextIndex, &mOrdinalProperty)))
             break;
 
-        rv = mDataSource->GetTarget(mContainer, ordinalProperty, PR_TRUE, &mNext);
-        NS_IF_RELEASE(ordinalProperty);
+        rv = mDataSource->GetTarget(mContainer, mOrdinalProperty, PR_TRUE, &mCurrent);
 
-        ++mCounter;
+        ++mNextIndex;
 
         if (NS_SUCCEEDED(rv)) {
-            // Don't bother releasing mNext; we'll let the AddRef
+            // Don't bother releasing mCurrent; we'll let the AddRef
             // serve as the implicit addref that GetNext() should
             // perform.
             break;
@@ -201,7 +218,6 @@ ContainerCursorImpl::Advance(void)
 done:
     NS_IF_RELEASE(nextNode);
     NS_IF_RELEASE(nextVal);
-    NS_IF_RELEASE(RDF_nextVal);
     return rv;
 }
 
@@ -237,13 +253,16 @@ NS_IMETHODIMP
 ContainerCursorImpl::GetPredicate(nsIRDFResource** aPredicate)
 {
     NS_PRECONDITION(aPredicate != nsnull, "null ptr");
+    if (! aPredicate)
+        return NS_ERROR_NULL_POINTER;
 
-    nsAutoString s(kRDFNameSpaceURI);
-    s.Append("_");
-    s.Append(mCounter, 10);
+    NS_PRECONDITION(mOrdinalProperty, "unexpected");
+    if (! mOrdinalProperty)
+        return NS_ERROR_UNEXPECTED;
 
-    // this'll AddRef(), null check, etc.
-    return mRDFService->GetUnicodeResource(s, aPredicate);
+    NS_ADDREF(mOrdinalProperty);
+    *aPredicate = mOrdinalProperty;
+    return NS_OK;
 }
 
 
@@ -254,11 +273,12 @@ ContainerCursorImpl::GetObject(nsIRDFNode** aObject)
     if (! aObject)
         return NS_ERROR_NULL_POINTER;
 
-    if (! mNext)
+    NS_PRECONDITION(mCurrent, "unexpected");
+    if (! mCurrent)
         return NS_ERROR_UNEXPECTED;
 
-    NS_ADDREF(mNext);
-    *aObject = mNext;
+    NS_ADDREF(mCurrent);
+    *aObject = mCurrent;
     return NS_OK;
 }
 
@@ -270,11 +290,11 @@ ContainerCursorImpl::GetValue(nsIRDFNode** aObject)
     if (! aObject)
         return NS_ERROR_NULL_POINTER;
 
-    if (! mNext)
+    if (! mCurrent)
         return NS_ERROR_UNEXPECTED;
 
-    NS_ADDREF(mNext);
-    *aObject = mNext;
+    NS_ADDREF(mCurrent);
+    *aObject = mCurrent;
     return NS_OK;
 }
 
@@ -305,6 +325,10 @@ NS_NewContainerCursor(nsIRDFDataSource* ds,
     if (!ds || !container || !cursor)
         return NS_ERROR_NULL_POINTER;
 
+    NS_ASSERTION(rdf_IsContainer(ds, container), "not a container");
+    if (! rdf_IsContainer(ds, container))
+        return NS_ERROR_ILLEGAL_VALUE;
+    
     ContainerCursorImpl* result = new ContainerCursorImpl(ds, container);
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;

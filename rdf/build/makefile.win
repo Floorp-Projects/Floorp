@@ -44,6 +44,8 @@ LLIBS=\
  $(DIST)\lib\netlib.lib          \
  $(DIST)\lib\libplc21.lib        \
  $(DIST)\lib\raptorhtml.lib      \
+ $(DIST)\lib\jsdom.lib           \
+ $(DIST)\lib\js3250.lib          \
  $(LIBNSPR)  
 
 MISCDEP=$(LLIBS)

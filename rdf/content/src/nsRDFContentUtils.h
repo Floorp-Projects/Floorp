@@ -40,11 +40,8 @@ public:
 
     static nsresult
     AttachTextNode(nsIContent* parent, nsIRDFNode* value);
-};
 
-// In nsRDFDOMNodeList.cpp
-extern nsresult
-NS_NewRDFDOMNodeList(nsIDOMNodeList** aChildNodes, nsIContent* aElement);
+};
 
 #endif // nsRDFContentUtils_h__
 

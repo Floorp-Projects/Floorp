@@ -69,8 +69,4 @@ public:
 nsresult
 NS_NewRDFContentSink(nsIRDFContentSink** aResult);
 
-nsresult
-NS_NewXULContentSink(nsIRDFContentSink** aResult);
-
-
 #endif // nsIRDFContentSink_h___
