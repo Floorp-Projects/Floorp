@@ -1491,9 +1491,13 @@ new_explode(jsdouble timeval, PRMJTime *split, JSBool findEquivalent)
     split->tm_isdst = (DaylightSavingTA(timeval) != 0);
 }
 
+typedef enum formatspec {
+    FORMATSPEC_FULL, FORMATSPEC_DATE, FORMATSPEC_TIME
+} formatspec;
+
 /* helper function */
 static JSBool
-date_format(JSContext *cx, jsdouble date, jsval *rval)
+date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
 {
     char buf[100];
     JSString *str;
@@ -1527,7 +1531,7 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
 	/* get a timezone string from the OS to include as a
 	   comment. */
 	new_explode(date, &split, JS_TRUE);
-	PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z) ", &split);
+	PRMJ_FormatTime(tzbuf, sizeof tzbuf, "(%Z)", &split);
 
         /* Decide whether to use the resulting timezone string.
          *
@@ -1552,19 +1556,45 @@ date_format(JSContext *cx, jsdouble date, jsval *rval)
         if (tzbuf[0] != '(' || tzbuf[1] == ')')
             usetz = JS_FALSE;
 
-	/* Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
-	 * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
-	 */
-	JS_snprintf(buf, sizeof buf, "%s %s %.2d %.2d:%.2d:%.2d GMT%+.4d %s%.4d",
-		    days[WeekDay(local)],
-		    months[MonthFromTime(local)],
-		    DateFromTime(local),
-		    HourFromTime(local),
-		    MinFromTime(local),
-		    SecFromTime(local),
-		    offset,
-                    usetz ? tzbuf : "",
-		    YearFromTime(local));
+        if (format == FORMATSPEC_FULL) {
+            /*
+             * Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
+             * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
+             */
+            /* Tue Oct 31 09:41:40 GMT-0800 (PST) 2000 */
+            JS_snprintf(buf, sizeof buf,
+                        "%s %s %.2d %.2d:%.2d:%.2d GMT%+.4d %s%s%.4d",
+                        days[WeekDay(local)],
+                        months[MonthFromTime(local)],
+                        DateFromTime(local),
+                        HourFromTime(local),
+                        MinFromTime(local),
+                        SecFromTime(local),
+                        offset,
+                        usetz ? tzbuf : "",
+                        usetz ? " " : "",
+                        YearFromTime(local));
+        } else if (format == FORMATSPEC_DATE) {
+            /* Tue Oct 31 2000 */
+            JS_snprintf(buf, sizeof buf,
+                        "%s %s %.2d %.4d",
+                        days[WeekDay(local)],
+                        months[MonthFromTime(local)],
+                        DateFromTime(local),
+                        YearFromTime(local));
+        } else if (format == FORMATSPEC_TIME) {
+            /* 09:41:40 GMT-0800 (PST) */
+            JS_snprintf(buf, sizeof buf,
+                        "%.2d:%.2d:%.2d GMT%+.4d%s%s",
+                        HourFromTime(local),
+                        MinFromTime(local),
+                        SecFromTime(local),
+                        offset,
+                        usetz ? " " : "",
+                        usetz ? tzbuf : "");
+        } else {
+            return JS_FALSE;
+        }
     }
 
     str = JS_NewStringCopyZ(cx, buf);
@@ -1597,7 +1627,7 @@ date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
 
 	/* If it failed, default to toString. */
 	if (result_len == 0)
-	    return date_format(cx, *date, rval);
+	    return date_format(cx, *date, FORMATSPEC_FULL, rval);
     }
 
     str = JS_NewStringCopyZ(cx, buf);
@@ -1648,6 +1678,26 @@ date_toLocaleTimeString(JSContext *cx, JSObject *obj, uintN argc,
     return date_toLocaleHelper(cx, obj, argc, argv, rval, "%X");
 }
 
+static JSBool
+date_toTimeString(JSContext *cx, JSObject *obj, uintN argc,
+		    jsval *argv, jsval *rval)
+{
+    jsdouble *date = date_getProlog(cx, obj, argv);
+    if (!date)
+	return JS_FALSE;
+    return date_format(cx, *date, FORMATSPEC_TIME, rval);
+}
+
+static JSBool
+date_toDateString(JSContext *cx, JSObject *obj, uintN argc,
+		    jsval *argv, jsval *rval)
+{
+    jsdouble *date = date_getProlog(cx, obj, argv);
+    if (!date)
+	return JS_FALSE;
+    return date_format(cx, *date, FORMATSPEC_DATE, rval);
+}
+
 #if JS_HAS_TOSOURCE
 #include <string.h>
 #include "jsdtoa.h"
@@ -1693,7 +1743,7 @@ date_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsdouble *date = date_getProlog(cx, obj, argv);
     if (!date)
 	return JS_FALSE;
-    return date_format(cx, *date, rval);
+    return date_format(cx, *date, FORMATSPEC_FULL, rval);
 }
 
 #if JS_HAS_VALUEOF_HINT
@@ -1779,6 +1829,8 @@ static JSFunctionSpec date_methods[] = {
     {js_toLocaleString_str, date_toLocaleString,    0,0,0 },
     {"toLocaleDateString",  date_toLocaleDateString,0,0,0 },
     {"toLocaleTimeString",  date_toLocaleTimeString,0,0,0 },
+    {"toDateString",        date_toDateString,      0,0,0 },
+    {"toTimeString",        date_toTimeString,      0,0,0 },
 #if JS_HAS_TOSOURCE
     {js_toSource_str,       date_toSource,          0,0,0 },
 #endif
@@ -1819,7 +1871,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	JSLL_DIV(ms, us, us2ms);
 	JSLL_L2D(msec_time, ms);
 
-	return date_format(cx, msec_time, rval);
+	return date_format(cx, msec_time, FORMATSPEC_FULL, rval);
     }
 
     /* Date called as constructor */
