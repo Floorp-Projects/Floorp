@@ -39,8 +39,12 @@ private:
     nsBrowserWindow * mWindow;
 };
 
-
-void CreateViewerMenus(QWidget *aParent, void * data);
-void InsertMenuItem(QPopupMenu * popup, const char * string, QObject * receiver, int id);
+void CreateViewerMenus(QWidget *aParent, 
+                       void * data, 
+                       PRInt32 * aMenuBarHeight);
+void InsertMenuItem(QPopupMenu * popup, 
+                    const char * string, 
+                    QObject * receiver, 
+                    int id);
 
 #endif // _nsMotifMenu_h_
