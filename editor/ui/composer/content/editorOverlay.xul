@@ -38,79 +38,79 @@
 	  <key id="key_newMessage"/>
     <key id="key_newBlankPage"/>
 
-    <key id="openeditorkb"  disabled="false" xulkey="true" key="o" observes="Editor:Open" />
-    <key id="savekb"        disabled="false" xulkey="true" key="s" observes="Editor:Save"/>
-    <key id="closekb"       disabled="false" xulkey="true" key="w" observes="Editor:Close" />
-    <key id="printkb"       disabled="false" xulkey="true" key="p" observes="Editor:Print" />
-    <key id="exitkb"        disabled="false" xulkey="true" key="q" observes="Editor:Exit" />
+    <key id="openeditorkb"  xulkey="true" key="o" observes="Editor:Open" />
+    <key id="savekb"        xulkey="true" key="s" observes="Editor:Save"/>
+    <key id="closekb"       xulkey="true" key="w" observes="Editor:Close" />
+    <key id="printkb"       xulkey="true" key="p" observes="Editor:Print" />
+    <key id="exitkb"        xulkey="true" key="q" observes="Editor:Exit" />
 
-    <key id="undokb"        disabled="false" xulkey="true" key="z" observes="Editor:Undo" />
-    <key id="redokb"        disabled="false" xulkey="true" key="y" observes="Editor:Redo" />
-    <key id="cutkb"         disabled="false" xulkey="true" key="x" observes="Editor:Cut" />
-    <key id="copykb"        disabled="false" xulkey="true" key="c" observes="Editor:Copy" />
-    <key id="pastekb"       disabled="false" xulkey="true" key="v" observes="Editor:Paste" />
-    <key id="pastequotationkb" disabled="false" xulkey="true" shift="true" key="v" observes="Editor:PasteQuote" />
-    <key id="selectallkb"   disabled="false" xulkey="true" key="a" observes="Editor:SelectAll" />
-    <key id="findkb"        disabled="false" xulkey="true" key="f" observes="Editor:Find" />
-    <key id="findnextkb"    disabled="false" xulkey="true" key="g" observes="Editor:FindNext" />
-    <key id="checkspellingkb" disabled="false" xulkey="true" key="k" observes="Editor:CheckSpelling" />
+    <key id="undokb"        xulkey="true" key="z" observes="Editor:Undo" />
+    <key id="redokb"        xulkey="true" key="y" observes="Editor:Redo" />
+    <key id="cutkb"         xulkey="true" key="x" observes="Editor:Cut" />
+    <key id="copykb"        xulkey="true" key="c" observes="Editor:Copy" />
+    <key id="pastekb"       xulkey="true" key="v" observes="Editor:Paste" />
+    <key id="pastequotationkb" xulkey="true" shift="true" key="v" observes="Editor:PasteQuote" />
+    <key id="selectallkb"   xulkey="true" key="a" observes="Editor:SelectAll" />
+    <key id="findkb"        xulkey="true" key="f" observes="Editor:Find" />
+    <key id="findnextkb"    xulkey="true" key="g" observes="Editor:FindNext" />
+    <key id="checkspellingkb" xulkey="true" key="k" observes="Editor:CheckSpelling" />
 
-    <key id="boldkb"        disabled="false" xulkey="true" key="b" observes="Editor:Bold"/>
-    <key id="italickb"      disabled="false" xulkey="true" key="i" observes="Editor:Italic"/>
+    <key id="boldkb"        xulkey="true" key="b" observes="Editor:Bold"/>
+    <key id="italickb"      xulkey="true" key="i" observes="Editor:Italic"/>
     
     
-    <key id="underlinekb"   disabled="false" xulkey="true" key="u" onkeypress="EditorToggleStyle('underline')"/>
-    <key id="navigatorkb"   disabled="false" xulkey="true" shift="true" key="n" onkeypress="Navigator()" />
-    <key id="navvigatorkb"   disabled="false" xulkey="true" key="1" onkeypress="Navigator()" />
-    <key id="messengerkb"   disabled="false" xulkey="true" key="2" onkeypress="Messenger()" />
-    <key id="composerkb"    disabled="false" xulkey="true" key="3" onkeypress="Composer()" />
-    <key id="calendarkb"    disabled="false" xulkey="true" key="4" onkeypress="Calendar()" />
-    <key id="indentkb"      disabled="false" xulkey="true" key="=" onkeypress="EditorIndent('indent')" />
-    <key id="outdentkb"     disabled="false" xulkey="true" key="-" onkeypress="EditorIndent('outdent')" />
+    <key id="underlinekb"   xulkey="true" key="u" onkeypress="EditorToggleStyle('underline')"/>
+    <key id="navigatorkb"   xulkey="true" shift="true" key="n" onkeypress="Navigator()" />
+    <key id="navvigatorkb"   xulkey="true" key="1" onkeypress="Navigator()" />
+    <key id="messengerkb"   xulkey="true" key="2" onkeypress="Messenger()" />
+    <key id="composerkb"    xulkey="true" key="3" onkeypress="Composer()" />
+    <key id="calendarkb"    xulkey="true" key="4" onkeypress="Calendar()" />
+    <key id="indentkb"      xulkey="true" key="=" onkeypress="EditorIndent('indent')" />
+    <key id="outdentkb"     xulkey="true" key="-" onkeypress="EditorIndent('outdent')" />
 
-    <key id="removestyleskb" disabled="false" shift="true" xulkey="true" key="k" onkeypress="EditorRemoveStyle('all')" />
-    <key id="decreasefontsizekb" disabled="false" shift="true" xulkey="true" key="[" onkeypress="DecreaseFontSize()" />
-    <key id="increasefontsizekb" disabled="false" shift="true" xulkey="true" key="]" onkeypress="IncreaseFontSize()" />
+    <key id="removestyleskb" shift="true" xulkey="true" key="k" onkeypress="EditorRemoveStyle('all')" />
+    <key id="decreasefontsizekb" shift="true" xulkey="true" key="[" onkeypress="DecreaseFontSize()" />
+    <key id="increasefontsizekb" shift="true" xulkey="true" key="]" onkeypress="IncreaseFontSize()" />
 
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
         <!-- scroll document/page/line and move caret -->
-    <key id="homekb"      disabled="false" keycode="VK_HOME" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="endkb"       disabled="false" keycode="VK_END" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
-    <key id="pageupkb"    disabled="false" keycode="VK_PAGE_UP" onkeypress="EditorMoveUpPage( true, false )" />
-    <key id="pagedownkb"  disabled="false" keycode="VK_PAGE_DOWN" onkeypress="EditorMoveDownPage( true, false )" />
-    <key id="beginoflinekb" disabled="false" keycode="VK_LEFT" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
-    <key id="endoflinekb" disabled="false" keycode="VK_RIGHT" xulkey="true" onkeypress="EditorEndOfLine( false )" />
-    <key id="uphomekb"    disabled="false" keycode="VK_UP" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="downendkb"   disabled="false" keycode="VK_DOWN" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+    <key id="homekb"      keycode="VK_HOME" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="endkb"       keycode="VK_END" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+    <key id="pageupkb"    keycode="VK_PAGE_UP" onkeypress="EditorMoveUpPage( true, false )" />
+    <key id="pagedownkb"  keycode="VK_PAGE_DOWN" onkeypress="EditorMoveDownPage( true, false )" />
+    <key id="beginoflinekb" keycode="VK_LEFT" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
+    <key id="endoflinekb" keycode="VK_RIGHT" xulkey="true" onkeypress="EditorEndOfLine( false )" />
+    <key id="uphomekb"    keycode="VK_UP" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="downendkb"   keycode="VK_DOWN" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
         <!-- scroll document/page/line and extend selection -->
-    <key id="homeextendkb"      disabled="false" keycode="VK_HOME"  shift="true" onkeypress="EditorMoveToTopOfWindow( true, true )" />
-    <key id="endextendkb"       disabled="false" keycode="VK_END"   shift="true" onkeypress="EditorMoveToBottomOfWindow( true, true )" />
-    <key id="pageupextendkb"    disabled="false" keycode="VK_PAGE_UP" shift="true" onkeypress="EditorMoveUpPage( true, true )" />
-    <key id="pagedownextendkb"  disabled="false" keycode="VK_PAGE_DOWN" shift="true" onkeypress="EditorMoveDownPage( true, true )" />
-    <key id="beginoflineextendkb" disabled="false" keycode="VK_LEFT" shift="true" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
-    <key id="endoflineextendkb" disabled="false" keycode="VK_RIGHT" shift="true" xulkey="true" onkeypress="EditorEndOfLine( false )" />
-    <key id="uphomeextendkb"    disabled="false" keycode="VK_UP"    shift="true" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
-    <key id="downendextendkb"   disabled="false" keycode="VK_DOWN"  shift="true" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
+    <key id="homeextendkb"      keycode="VK_HOME"  shift="true" onkeypress="EditorMoveToTopOfWindow( true, true )" />
+    <key id="endextendkb"       keycode="VK_END"   shift="true" onkeypress="EditorMoveToBottomOfWindow( true, true )" />
+    <key id="pageupextendkb"    keycode="VK_PAGE_UP" shift="true" onkeypress="EditorMoveUpPage( true, true )" />
+    <key id="pagedownextendkb"  keycode="VK_PAGE_DOWN" shift="true" onkeypress="EditorMoveDownPage( true, true )" />
+    <key id="beginoflineextendkb" keycode="VK_LEFT" shift="true" xulkey="true" onkeypress="EditorBeginningOfLine( false )" />
+    <key id="endoflineextendkb" keycode="VK_RIGHT" shift="true" xulkey="true" onkeypress="EditorEndOfLine( false )" />
+    <key id="uphomeextendkb"    keycode="VK_UP"    shift="true" xulkey="true" onkeypress="EditorMoveToTopOfWindow( true, false )" />
+    <key id="downendextendkb"   keycode="VK_DOWN"  shift="true" xulkey="true" onkeypress="EditorMoveToBottomOfWindow( true, false )" />
        <!-- move caret by one character -->
-    <key id="leftkb" disabled="false" keycode="VK_LEFT" onkeypress="EditorPreviousCharacter( false )" />
-    <key id="rightkb" disabled="false" keycode="VK_RIGHT" onkeypress="EditorNextCharacter( false )" />
-    <key id="upkb"   disabled="false" keycode="VK_UP" onkeypress="EditorPreviousRow( false )" />
-    <key id="downkb" disabled="false" keycode="VK_DOWN" onkeypress="EditorNextRow( false )" />
+    <key id="leftkb" keycode="VK_LEFT" onkeypress="EditorPreviousCharacter( false )" />
+    <key id="rightkb" keycode="VK_RIGHT" onkeypress="EditorNextCharacter( false )" />
+    <key id="upkb"   keycode="VK_UP" onkeypress="EditorPreviousRow( false )" />
+    <key id="downkb" keycode="VK_DOWN" onkeypress="EditorNextRow( false )" />
         <!-- move caret by one character/row and extend selection -->
-    <key id="prevcharextendkb" disabled="false" keycode="VK_LEFT" shift="true" onkeypress="EditorPreviousCharacter( true )" />
-    <key id="nextcharextendkb" disabled="false" keycode="VK_RIGHT" shift="true" onkeypress="EditorNextCharacter( true )" />
-    <key id="prevrowextendkb" disabled="false" keycode="VK_UP"    shift="true" onkeypress="EditorPreviousRow( true )" />
-    <key id="nextrowextendkb" disabled="false" keycode="VK_DOWN"  shift="true" onkeypress="EditorNextRow( true )" />
+    <key id="prevcharextendkb" keycode="VK_LEFT" shift="true" onkeypress="EditorPreviousCharacter( true )" />
+    <key id="nextcharextendkb" keycode="VK_RIGHT" shift="true" onkeypress="EditorNextCharacter( true )" />
+    <key id="prevrowextendkb" keycode="VK_UP"    shift="true" onkeypress="EditorPreviousRow( true )" />
+    <key id="nextrowextendkb" keycode="VK_DOWN"  shift="true" onkeypress="EditorNextRow( true )" />
         <!-- move caret by one word/paragraph -->
-    <key id="prevwordkb" disabled="false" keycode="VK_LEFT" alt="true" onkeypress="EditorPreviousWord( false )" />
-    <key id="nextwordkb" disabled="false" keycode="VK_RIGHT" alt="true" onkeypress="EditorNextWord( false )" />
-    <key id="prevparakb" disabled="false" keycode="VK_UP"   alt="true" onkeypress="EditorBeginningOfParagraph( false )" />
-    <key id="nextparakb" disabled="false" keycode="VK_DOWN" alt="true" onkeypress="EditorEndOfParagraph( false )" />
+    <key id="prevwordkb" keycode="VK_LEFT" alt="true" onkeypress="EditorPreviousWord( false )" />
+    <key id="nextwordkb" keycode="VK_RIGHT" alt="true" onkeypress="EditorNextWord( false )" />
+    <key id="prevparakb" keycode="VK_UP"   alt="true" onkeypress="EditorBeginningOfParagraph( false )" />
+    <key id="nextparakb" keycode="VK_DOWN" alt="true" onkeypress="EditorEndOfParagraph( false )" />
         <!-- move caret by one word and extend selection -->
-    <key id="prevwordextendkb" disabled="false" keycode="VK_LEFT" shift="true" alt="true" onkeypress="EditorPreviousWord( true )" />
-    <key id="nextwordextendkb" disabled="false" keycode="VK_RIGHT" shift="true" alt="true" onkeypress="EditorNextWord( true )" />
-    <key id="prevparaextendkb" disabled="false" keycode="VK_UP"   shift="true" alt="true" onkeypress="EditorBeginningOfParagraph( true )" />
-    <key id="nextparaextendkb" disabled="false" keycode="VK_DOWN" shift="true" alt="true" onkeypress="EditorEndOfParagraph( true )" />
+    <key id="prevwordextendkb" keycode="VK_LEFT" shift="true" alt="true" onkeypress="EditorPreviousWord( true )" />
+    <key id="nextwordextendkb" keycode="VK_RIGHT" shift="true" alt="true" onkeypress="EditorNextWord( true )" />
+    <key id="prevparaextendkb" keycode="VK_UP"   shift="true" alt="true" onkeypress="EditorBeginningOfParagraph( true )" />
+    <key id="nextparaextendkb" keycode="VK_DOWN" shift="true" alt="true" onkeypress="EditorEndOfParagraph( true )" />
   </keyset>
 
   <broadcasterset id="broadcasterset">
@@ -123,9 +123,9 @@
     <broadcaster id="cmd_newEditorDraft"/>
 
     <!-- Formatting-related commands -->
-    <broadcaster id="Editor:Bold"         bold="false"      disabled="false"  oncommand="EditorToggleStyle('bold')"/>
-    <broadcaster id="Editor:Italic"       italic="false"    disabled="false"  oncommand="EditorToggleStyle('italic')"/>
-    <broadcaster id="Editor:Underline"    underline="false" disabled="false"  oncommand="EditorToggleStyle('underline')"/>
+    <broadcaster id="Editor:Bold"         bold="false"       oncommand="EditorToggleStyle('bold')"/>
+    <broadcaster id="Editor:Italic"       italic="false"     oncommand="EditorToggleStyle('italic')"/>
+    <broadcaster id="Editor:Underline"    underline="false"  oncommand="EditorToggleStyle('underline')"/>
   
     <broadcaster id="Editor:Paragraph:Format" format=""/>
     <broadcaster id="Editor:Paragraph:ListType" format=""/>
@@ -135,37 +135,37 @@
     <!-- Command Broadcaster nodes -->
     <broadcaster id="Editor:Open"         value="&openCmd.label;"                           oncommand="EditorOpen()"/>
     <broadcaster id="Editor:Save"         value="&saveCmd.label;"         disabled="true"   oncommand="EditorSave()"/>
-    <broadcaster id="Editor:SaveAs"       value="&saveAsCmd.label;"       disabled="false"  oncommand="EditorSaveAs()"/>
-    <broadcaster id="Editor:Close"        value="&closeCmd.label;"        disabled="false"  oncommand="EditorClose()"/>
-    <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
-    <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;" disabled="false"  oncommand="EditorPrintPreview()"/>
-    <broadcaster id="Editor:Print"        value="&printCmd.label;"        disabled="false"  oncommand="EditorPrint()"/>
-    <broadcaster id="Editor:Exit"         value="&exitCmd.label;"         disabled="false"  oncommand="EditorExit()"/>
+    <broadcaster id="Editor:SaveAs"       value="&saveAsCmd.label;"        oncommand="EditorSaveAs()"/>
+    <broadcaster id="Editor:Close"        value="&closeCmd.label;"         oncommand="EditorClose()"/>
+    <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"    oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;"  oncommand="EditorPrintPreview()"/>
+    <broadcaster id="Editor:Print"        value="&printCmd.label;"         oncommand="EditorPrint()"/>
+    <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="EditorExit()"/>
   
-    <broadcaster id="Editor:Undo"         value="&undoCmd.label;"         disabled="false"  oncommand="EditorUndo()"/>
-    <broadcaster id="Editor:Redo"         value="&redoCmd.label;"         disabled="false"  oncommand="EditorRedo()"/>
-    <broadcaster id="Editor:Cut"          value="&cutCmd.label;"          disabled="false"  oncommand="EditorCut()"/>
-    <broadcaster id="Editor:Copy"         value="&copyCmd.label;"         disabled="false"  oncommand="EditorCopy()"/>
-    <broadcaster id="Editor:Paste"        value="&pasteCmd.label;"        disabled="false"  oncommand="EditorPaste()"/>
-    <broadcaster id="Editor:PasteQuote"   value="&pasteAsQuotationCmd.label;" disabled="false"  oncommand="EditorPasteAsQuotation()"/>
-    <broadcaster id="Editor:Clear"        value="&clearCmd.label;"        disabled="false"  oncommand="_EditorNotImplemented()"/>
-    <broadcaster id="Editor:SelectAll"    value="&selectAllCmd.label;"    disabled="false"  oncommand="EditorSelectAll()"/>
+    <broadcaster id="Editor:Undo"         value="&undoCmd.label;"          oncommand="EditorUndo()"/>
+    <broadcaster id="Editor:Redo"         value="&redoCmd.label;"          oncommand="EditorRedo()"/>
+    <broadcaster id="Editor:Cut"          value="&cutCmd.label;"           oncommand="EditorCut()"/>
+    <broadcaster id="Editor:Copy"         value="&copyCmd.label;"          oncommand="EditorCopy()"/>
+    <broadcaster id="Editor:Paste"        value="&pasteCmd.label;"         oncommand="EditorPaste()"/>
+    <broadcaster id="Editor:PasteQuote"   value="&pasteAsQuotationCmd.label;"  oncommand="EditorPasteAsQuotation()"/>
+    <broadcaster id="Editor:Clear"        value="&clearCmd.label;"         oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:SelectAll"    value="&selectAllCmd.label;"     oncommand="EditorSelectAll()"/>
     <broadcaster id="Editor:Find"         value="&findCmd.label;"                           oncommand="EditorFind()"/>
-    <broadcaster id="Editor:FindNext"     value="&findAgainCmd.label;"    disabled="false"  oncommand="EditorFindNext()"/>
-    <broadcaster id="Editor:CheckSpelling" value="&checkSpellingCmd.label;" disabled="false"  oncommand="CheckSpelling()"/>
+    <broadcaster id="Editor:FindNext"     value="&findAgainCmd.label;"     oncommand="EditorFindNext()"/>
+    <broadcaster id="Editor:CheckSpelling" value="&checkSpellingCmd.label;"  oncommand="CheckSpelling()"/>
   
     <!-- need to toggle the menu item text through style -->
     <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()"/>
     <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()"/>
   
-    <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"   disabled="false"  oncommand="EditorInsertLink()"/>
-    <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;" disabled="false"  oncommand="EditorInsertNamedAnchor()"/>
-    <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"  disabled="false"  oncommand="EditorInsertImage()"/>
-    <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"  disabled="false"  oncommand="EditorInsertHLine()"/>
-    <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"  disabled="false"  oncommand="EditorInsertTable()"/>
-    <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"  disabled="false"  oncommand="EditorInsertHTML()"/>
-    <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
-    <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertLink()"/>
+    <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertNamedAnchor()"/>
+    <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"   oncommand="EditorInsertImage()"/>
+    <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"   oncommand="EditorInsertHLine()"/>
+    <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"   oncommand="EditorInsertTable()"/>
+    <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"   oncommand="EditorInsertHTML()"/>
+    <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"    oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"    oncommand="_EditorNotImplemented()"/>
   	<broadcaster id="cmd_preferences"/>
   </broadcasterset>
 
