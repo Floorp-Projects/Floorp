@@ -23,7 +23,8 @@
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
  *
  * Date             Modified by     Description of modification
- * 04/20/2000       IBM Corp.      Make more like Windows.
+ * 04/20/2000       IBM Corp.       Make more like Windows.
+ * 06/21/2000       IBM Corp.       Add SubmenuDelay case in GetMetric
  */
 
 #include "nsLookAndFeel.h"
@@ -268,6 +269,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_ListVerticalInsidePadding:
         aMetric = 0;
+        break;
+    case eMetric_SubmenuDelay:
+        aMetric = 300;
         break;
     case eMetric_CaretBlinkTime:
         svalue = SV_CURSORRATE;
