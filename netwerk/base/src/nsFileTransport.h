@@ -24,6 +24,8 @@
 #include "nsIEventQueue.h"
 #include "prmon.h"
 #include "nsIEventQueueService.h"
+#include "nsIBuffer.h"
+
 
 class nsFileTransportService;
 class nsIBaseStream;
@@ -31,7 +33,7 @@ class nsIString;
 class nsIBuffer;
 class nsIBufferInputStream;
 
-class nsFileTransport : public nsIChannel, public nsIRunnable
+class nsFileTransport : public nsIChannel, public nsIRunnable, nsIBufferObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -62,6 +64,10 @@ public:
 
     // nsIRunnable methods:
     NS_IMETHOD Run(void);
+
+    // nsIBufferObserver methods:
+    NS_IMETHOD OnFull(nsIBuffer* buffer);
+    NS_IMETHOD OnEmpty(nsIBuffer* buffer);
 
     // nsFileTransport methods:
     nsFileTransport();

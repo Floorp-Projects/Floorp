@@ -116,6 +116,11 @@ nsFileTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
         NS_ADDREF_THIS(); 
         return NS_OK; 
     } 
+    if (aIID.Equals(nsCOMTypeInfo<nsIBufferObserver>::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIBufferObserver*, this); 
+        NS_ADDREF_THIS(); 
+        return NS_OK; 
+    } 
     return NS_NOINTERFACE; 
 }
 
@@ -303,7 +308,7 @@ nsFileTransport::Process(void)
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBuffer(&mBuffer, NS_FILE_TRANSPORT_BUFFER_SIZE,
-                                 NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
+                                 NS_FILE_TRANSPORT_BUFFER_SIZE, this);
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBufferInputStream(&mBufferStream, mBuffer, PR_FALSE);
@@ -323,7 +328,14 @@ nsFileTransport::Process(void)
 
           mStatus = mBuffer->WriteFrom(inStr, inLen, &amt);
           if (mStatus == NS_BASE_STREAM_EOF) goto error; 
-          if (NS_FAILED(mStatus)) goto error;
+
+          // XXX we could be catching a legit error code here that we should spit back
+          // XXX not just the one we're expecting to come from the buffer.
+          if (NS_FAILED(mStatus)) {
+              PR_Wait(mMonitor, PR_INTERVAL_NO_TIMEOUT);
+              mStatus = NS_OK;
+              break;
+          }
 
           // and feed the buffer to the application via the byte buffer stream:
           // XXX maybe amt should be mBufferStream->GetLength():
@@ -350,7 +362,7 @@ nsFileTransport::Process(void)
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBuffer(&mBuffer, NS_FILE_TRANSPORT_BUFFER_SIZE,
-                                 NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
+                                 NS_FILE_TRANSPORT_BUFFER_SIZE, this);
           if (NS_FAILED(mStatus)) goto error;
 
           mStatus = NS_NewBufferInputStream(&mBufferStream, mBuffer, PR_FALSE);
@@ -383,6 +395,8 @@ nsFileTransport::Process(void)
     return;
 
   error:
+    // we'll map EOF to NS_OK, otherwise external users are going to choke on NS_FAILED(NS_BASE_STREAM_EOF)
+    if (mStatus = NS_BASE_STREAM_EOF) mStatus = NS_OK;
     mState = ENDING;
     PR_ExitMonitor(mMonitor);
     return;
@@ -400,3 +414,16 @@ nsFileTransport::Run(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileTransport::OnFull(nsIBuffer *buffer) {
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::OnEmpty(nsIBuffer *buffer) {
+    PR_EnterMonitor(mMonitor);
+    PR_Notify(mMonitor);
+    PR_ExitMonitor(mMonitor);
+    return NS_OK;
+}
