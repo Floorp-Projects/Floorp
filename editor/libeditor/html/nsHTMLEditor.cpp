@@ -2510,7 +2510,7 @@ nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &aOutColor)
   //TODO: We don't handle "mixed" correctly!
   if (!aMixed) return NS_ERROR_NULL_POINTER;
   *aMixed = PR_FALSE;
-  aOutColor.Assign(NS_LITERAL_STRING(""));
+  aOutColor.Truncate();
   
   nsCOMPtr<nsIDOMElement> element;
   PRInt32 selectedCount;
@@ -3312,7 +3312,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
     return NS_ERROR_FAILURE;
 
   // Mark the new element dirty, so it will be formatted
-  newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), nsAutoString());
+  newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString());
 
   // Set default values for new elements
   if (TagName.Equals(NS_LITERAL_STRING("hr")))
@@ -6030,7 +6030,7 @@ nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
 
       nsCOMPtr<nsIDOMElement> focusElement;
       if (startContainer == endContainer && startOffset + 1 == endOffset) {
-        res = GetSelectedElement(NS_LITERAL_STRING(""), getter_AddRefs(focusElement));
+        res = GetSelectedElement(EmptyString(), getter_AddRefs(focusElement));
         if (NS_FAILED(res)) return res;
         if (focusElement)
           focusNode = do_QueryInterface(focusElement);

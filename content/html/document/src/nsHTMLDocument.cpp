@@ -2380,7 +2380,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
   }
 
   // No arguments...
-  return WriteCommon(nsString(), aNewlineTerminate);
+  return WriteCommon(EmptyString(), aNewlineTerminate);
 }
 
 NS_IMETHODIMP

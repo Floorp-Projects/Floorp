@@ -459,7 +459,7 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& _retval)
       legends->Item(0, getter_AddRefs(legendNode));
       nsCOMPtr<nsIContent> legendContent(do_QueryInterface(legendNode));
       if (legendContent) {
-        _retval.Assign(NS_LITERAL_STRING(""));  // Default name is blank 
+        _retval.Truncate();  // Default name is blank 
         return AppendFlatStringFromSubtree(legendContent, &_retval);
       }
     }

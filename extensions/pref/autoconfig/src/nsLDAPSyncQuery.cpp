@@ -164,7 +164,7 @@ nsLDAPSyncQuery::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus)
 
     // kick off a bind operation 
     // 
-    rv = mOperation->SimpleBind(nsCString()); 
+    rv = mOperation->SimpleBind(EmptyCString()); 
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();
         return NS_ERROR_FAILURE;
@@ -423,7 +423,7 @@ nsresult nsLDAPSyncQuery::InitConnection()
 
     rv = mConnection->Init(host.get(), port, 
                            (options & nsILDAPURL::OPT_SECURE) 
-                           ? PR_TRUE : PR_FALSE, nsCString(), selfProxy,
+                           ? PR_TRUE : PR_FALSE, EmptyCString(), selfProxy,
                            nsnull, mProtocolVersion);
     if (NS_FAILED(rv)) {
         FinishLDAPQuery();

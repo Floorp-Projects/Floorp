@@ -404,7 +404,7 @@ NS_IMETHODIMP nsXULGroupboxAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULGroupboxAccessible::GetName(nsAString& _retval)
 {
-  _retval.Assign(NS_LITERAL_STRING(""));  // Default name is blank 
+  _retval.Truncate();  // Default name is blank 
 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {
