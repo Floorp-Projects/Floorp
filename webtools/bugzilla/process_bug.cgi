@@ -38,10 +38,13 @@ GetVersionTable();
 
 if ($::FORM{'product'} ne $::dontchange) {
     my $prod = url_decode($::FORM{'product'});
-    my $vok = lsearch($::versions{$prod}, $::FORM{'version'}) >= 0;
-    my $cok = lsearch($::components{$prod}, $::FORM{'component'}) >= 0;
+    my $version = url_decode($::FORM{'version'});
+    my $component = url_decode($::FORM{'component'});
+    my $vok = lsearch($::versions{$prod}, $version) >= 0;
+    my $cok = lsearch($::components{$prod}, $component) >= 0;
     if (!$vok || !$cok) {
         print "<H1>Changing product means changing version and component.</H1>\n";
+
         print "You have chosen a new product, and now the version and/or\n";
         print "component fields are not correct.  (Or, possibly, the bug did\n";
         print "not have a valid component or version field in the first place.)\n";
@@ -53,10 +56,10 @@ if ($::FORM{'product'} ne $::dontchange) {
         print "<td>$prod</td>\n";
         print "</tr><tr>\n";
         print "<td align=\"right\"><b>Version:</b></td>\n";
-        print "<td>" . Version_element($::FORM{'version'}, $prod) . "</td>\n";
+        print "<td>" . Version_element($version, $prod) . "</td>\n";
         print "</tr><tr>\n";
         print "<td align=\"right\"><b>Component:</b></td>\n";
-        print "<td>" . Component_element($::FORM{'component'}, $prod) . "</td>\n";
+        print "<td>" . Component_element($component, $prod) . "</td>\n";
         print "</tr>\n";
         print "</table>\n";
         foreach my $i (keys %::FORM) {
@@ -159,8 +162,8 @@ SWITCH: for ($::FORM{'knob'}) {
         }
         ChangeStatus('NEW');
         SendSQL("select initialowner from components where program=" .
-                SqlQuote($::FORM{'product'}) . " and value=" .
-                SqlQuote($::FORM{'component'}));
+                SqlQuote(url_decode($::FORM{'product'})) . " and value=" .
+                SqlQuote(url_decode($::FORM{'component'})));
         my $newname = FetchOneColumn();
         my $newid = DBNameToIdAndCheck($newname, 1);
         DoComma();
