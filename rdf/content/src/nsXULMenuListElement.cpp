@@ -163,6 +163,48 @@ GetMenuChildrenElement(nsIContent* aParent, nsIContent** aResult)
   }
 }
 
+NS_IMETHODIMP
+nsXULMenuListElement::GetSelectedIndex(PRInt32* aResult)
+{
+  // XXX Quick and dirty.  Doesn't work with hierarchies, or
+  // when other things are put in the <menupopup>.
+  *aResult = -1;
+  if (mSelectedItem) {
+    nsCOMPtr<nsIContent> parent;
+    nsCOMPtr<nsIContent> child(do_QueryInterface(mSelectedItem));
+    child->GetParent(*getter_AddRefs(parent));
+    parent->IndexOf(child, *aResult);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULMenuListElement::SetSelectedIndex(PRInt32 anIndex)
+{
+  // XXX Quick and dirty.  Doesn't work with hierarchies, or
+  // when other things are put in the <menupopup>.
+  if (anIndex == -1)
+    SetSelectedItem(nsnull);
+
+  if (anIndex < 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> child;
+  nsCOMPtr<nsIContent> parent(do_QueryInterface(mOuter));
+  GetMenuChildrenElement(parent, getter_AddRefs(child));
+  if (child) {
+    PRInt32 count;
+    child->ChildCount(count);
+    if (anIndex >= count)
+      return NS_OK;
+
+    nsCOMPtr<nsIContent> item;
+    child->ChildAt(anIndex, *getter_AddRefs(item));
+    nsCOMPtr<nsIDOMElement> element(do_QueryInterface(item));
+    SetSelectedItem(element);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULMenuListElement::GetSelectedItem(nsIDOMElement** aResult)

@@ -48,6 +48,9 @@ public:
   NS_IMETHOD    GetSelectedItem(nsIDOMElement** aSelectedItem)=0;
   NS_IMETHOD    SetSelectedItem(nsIDOMElement* aSelectedItem)=0;
 
+  NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex)=0;
+  NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex)=0;
+
   NS_IMETHOD    GetCrop(nsString& aCrop)=0;
   NS_IMETHOD    SetCrop(const nsString& aCrop)=0;
 
@@ -66,6 +69,8 @@ public:
   NS_IMETHOD    SetData(const nsString& aData);  \
   NS_IMETHOD    GetSelectedItem(nsIDOMElement** aSelectedItem);  \
   NS_IMETHOD    SetSelectedItem(nsIDOMElement* aSelectedItem);  \
+  NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex);  \
+  NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex);  \
   NS_IMETHOD    GetCrop(nsString& aCrop);  \
   NS_IMETHOD    SetCrop(const nsString& aCrop);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
@@ -82,6 +87,8 @@ public:
   NS_IMETHOD    SetData(const nsString& aData) { return _to SetData(aData); } \
   NS_IMETHOD    GetSelectedItem(nsIDOMElement** aSelectedItem) { return _to GetSelectedItem(aSelectedItem); } \
   NS_IMETHOD    SetSelectedItem(nsIDOMElement* aSelectedItem) { return _to SetSelectedItem(aSelectedItem); } \
+  NS_IMETHOD    GetSelectedIndex(PRInt32* aSelectedIndex) { return _to GetSelectedIndex(aSelectedIndex); } \
+  NS_IMETHOD    SetSelectedIndex(PRInt32 aSelectedIndex) { return _to SetSelectedIndex(aSelectedIndex); } \
   NS_IMETHOD    GetCrop(nsString& aCrop) { return _to GetCrop(aCrop); } \
   NS_IMETHOD    SetCrop(const nsString& aCrop) { return _to SetCrop(aCrop); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \

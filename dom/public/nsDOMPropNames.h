@@ -944,6 +944,7 @@
     "xulmenulistelement.crop", \
     "xulmenulistelement.data", \
     "xulmenulistelement.disabled", \
+    "xulmenulistelement.selectedindex", \
     "xulmenulistelement.selecteditem", \
     "xulmenulistelement.src", \
     "xulmenulistelement.value", \

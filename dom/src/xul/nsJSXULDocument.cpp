@@ -76,7 +76,7 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
@@ -161,7 +161,7 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (JSVAL_IS_INT(id)) {
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
