@@ -263,7 +263,6 @@ void TestCaseConversion()
      int i;
      PRUnichar ch;
      PRUnichar buf[256];
-     nsresult res;
 
     cout << "Test 2 - ToUpper(PRUnichar, PRUnichar*):\n";
     for(i=0;i < T2LEN ; i++)
