@@ -320,19 +320,19 @@ nsGfxTextControlFrame::CreateEditor()
 }
 
 nsGfxTextControlFrame::nsGfxTextControlFrame()
-: mCreatingViewer(PR_FALSE),
-  mTempObserver(0), mDocObserver(0),
+: mTempObserver(0), mDocObserver(0),
+  mCreatingViewer(PR_FALSE),
   mNotifyOnInput(PR_FALSE),
   mIsProcessing(PR_FALSE),
   mNeedsStyleInit(PR_TRUE),
+  mDidSetFocus(PR_FALSE),
+  mGotSelectionState(PR_FALSE),
+  mSelectionWasCollapsed(PR_FALSE),
   mFramePresContext(nsnull),
   mCachedState(nsnull),
   mWeakReferent(this),
   mFrameConstructor(nsnull),
   mDisplayFrame(nsnull),
-  mDidSetFocus(PR_FALSE),
-  mGotSelectionState(PR_FALSE),
-  mSelectionWasCollapsed(PR_FALSE),
   mPassThroughMouseEvents(eUninitialized)
 {
 #ifdef DEBUG
@@ -1345,6 +1345,10 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
     nsresult result = mEditor->OutputToString(currentValue, format, 0);
     if (PR_TRUE==IsSingleLineTextControl()) {
       RemoveNewlines(currentValue); 
+    }
+    else {
+      // \r is an illegal character in the dom, so get rid of them:
+      RemoveReturns(currentValue);
     }
     if (PR_FALSE==currentValue.Equals(aValue))  // this is necessary to avoid infinite recursion
     {
@@ -3160,6 +3164,12 @@ void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
   aString.StripChars(badChars);
 }
 
+void nsGfxTextControlFrame::RemoveReturns(nsString &aString)
+{
+  // strip just CR
+  aString.StripChar('\r');
+}
+
 
 NS_IMETHODIMP
 nsGfxTextControlFrame::GetAdditionalChildListName(PRInt32 aIndex,
@@ -4281,7 +4291,6 @@ NS_IMETHODIMP nsEnderEventListener::DidDo(nsITransactionManager *aManager,
 {
   // we only need to update if the undo count is now 1
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
-  PRBool mustUpdate = PR_FALSE;
   
   if (gfxFrame)
   {

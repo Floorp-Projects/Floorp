@@ -513,7 +513,10 @@ public:
   NS_IMETHOD InternalContentChanged();
   NS_IMETHOD DoesAttributeExist(nsIAtom *aAtt);
 
+  // Remove CR and LF:
   void RemoveNewlines(nsString &aString);
+  // Remove just CR:
+  void RemoveReturns(nsString &aString);
 
   nsCWeakReferent *WeakReferent()
     { return &mWeakReferent; }
