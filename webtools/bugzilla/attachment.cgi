@@ -692,8 +692,8 @@ sub update
            SET     description = $quoteddescription , 
                    mimetype = $quotedcontenttype , 
                    ispatch = $::FORM{'ispatch'} , 
-                   isobsolete = $::FORM{'isobsolete'}
-                   isprivate = $::FORM{'isprivate'} , 
+                   isobsolete = $::FORM{'isobsolete'} ,
+                   isprivate = $::FORM{'isprivate'} 
            WHERE   attach_id = $::FORM{'id'}
          ");
 
