@@ -44,11 +44,8 @@ CHROME_CONTENT = \
 	.\pref-themes.js \
 	.\pref-charset.js \
 	.\pref-charset.xul \
-	.\pref-composer.js \
-	.\pref-composer.xul \
 	.\pref-debug.xul \
 	.\pref-download.xul \
-	.\pref-editing.xul \
 	.\pref-fonts.xul \
 	.\pref-fonts.js \
 	.\pref-history.xul \
@@ -62,7 +59,6 @@ CHROME_CONTENT = \
 	.\pref-policies.xul \
 	.\pref-proxies.xul \
 	.\pref-proxy-manual.xul \
-	.\pref-publish.xul \
 	.\pref-search.js \
 	.\pref-search.xul \
 	.\pref-smart_browsing.xul \
