@@ -356,8 +356,19 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     }
 
     // Reflow the child into the available space
+#if 1
+    // XXX Give it as much room as it wants. We'll deal with splitting later
+    // after we've computed the row heights taking into account cells with
+    // row spans...
+    kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
+#endif
     nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
                                      kidAvailSize, aReason);
+    if (kidFrame != mFirstChild) {
+      // If this isn't the first row frame, then we can't be at the top of
+      // the page anymore...
+      kidReflowState.isTopOfPage = PR_FALSE;
+    }
 
     if ((PR_TRUE==gsDebug) || (PR_TRUE==gsDebugIR))
       printf("%p RG reflowing child %p with avail width = %d, reason = %d\n",
@@ -366,6 +377,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     if (gsDebug) printf("%p RG child %p returned desired width = %d\n",
                         this, kidFrame, desiredSize.width);
 
+#if 0
     // Did the child fit?
     if ((kidFrame != mFirstChild) &&
         ((kidAvailSize.height <= 0) ||
@@ -380,6 +392,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
       aStatus = NS_FRAME_NOT_COMPLETE;
       break;
     }
+#endif
 
     // Place the child after taking into account its margin
     nsRect kidRect (kidMargin.left, aReflowState.y, desiredSize.width, desiredSize.height);
@@ -394,6 +407,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
 		// Remember where we just were in case we end up pushing children
 		prevKidFrame = kidFrame;
 
+#if 0
     /* Row groups should not create continuing frames for rows 
      * unless they absolutely have to!
      * check to see if this is absolutely necessary (with new params from troy)
@@ -433,6 +447,7 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
       }
       break;
     }
+#endif
 
     // Add back in the left and right margins, because one row does not 
     // impact another row's width
@@ -828,6 +843,74 @@ nsresult nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aP
   return NS_OK;
 }
 
+nsresult
+nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
+                                    nsHTMLReflowMetrics&     aDesiredSize,
+                                    const nsHTMLReflowState& aReflowState,
+                                    nsReflowStatus&          aStatus)
+{
+  nsIFrame* prevKidFrame = nsnull;
+
+  // Walk each of the row frames looking for the first row frame that
+  // doesn't fit in the available space
+  for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+    nsRect  bounds;
+
+    kidFrame->GetRect(bounds);
+    if (bounds.YMost() > aReflowState.maxSize.height) {
+      // If this is the first row frame then we need to split it
+      if (nsnull == prevKidFrame) {
+        // Reflow the row in the available space and have it split
+        // XXX Account for horizontal margins...
+#if 0
+        nsSize  kidAvailSize(aReflowState.maxSize.width,
+                             aReflowState.maxSize.height - bounds.y);
+        nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+                                         kidAvailSize, eReflowReason_Resize);
+        nsReflowMetrics   desiredSize;
+
+        rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+        kidFrame->SizeTo(desiredSize.width, desiredSize.height);
+        NS_ASSERTION(NS_FRAME_IS_NOT_COMPLETE(aStatus), "unexpected status");
+
+        // Create a continuing frame, add it to the child list, and then push it
+        // and the frames that follow
+        // XXX Check whether it already has a next-in-flow
+        nsIFrame*        continuingFrame;
+        nsIStyleContext* kidSC;
+
+        kidFrame->GetStyleContext(kidSC);
+        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC, continuingFrame);
+        NS_RELEASE(kidSC);
+
+        // Add it to the child list
+        nsIFrame* nextSibling;
+
+        kidFrame->GetNextSibling(nextSibling);
+        continuingFrame->SetNextSibling(nextSibling);
+        kidFrame->SetNextSibling(continuingFrame);
+
+        // Push it and the frames that follow
+        PushChildren(continuingFrame, kidFrame);
+        aDesiredSize.height = bounds.y;
+#endif
+
+      } else {
+        // See whether the row frame has cells that span into it or across it
+        PushChildren(kidFrame, prevKidFrame);
+        aDesiredSize.height = bounds.y;
+      }
+
+      aStatus = NS_FRAME_NOT_COMPLETE;
+      break;
+    }
+
+    prevKidFrame = kidFrame;
+  }
+
+  return NS_OK;
+}
+
 /** Layout the entire row group.
   * This method stacks rows vertically according to HTML 4.0 rules.
   * Rows are responsible for layout of their children.
@@ -874,11 +957,14 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
                                 nsnull, aReflowState.reason, PR_TRUE);
     }
   
+    // XXX We need to figure out what to do about this...
+#if 0
     // Did we successfully reflow our mapped children?
     if (NS_FRAME_COMPLETE==aStatus) {
       // Try and pull-up some children from a next-in-flow
       rv = PullUpChildren(aPresContext, aDesiredSize, state, aStatus);
     }
+#endif
   
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
       // Don't forget to add in the bottom margin from our last child.
@@ -897,6 +983,12 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     // shrink wrap rows to height of tallest cell in that row
     if (eReflowReason_Initial != aReflowState.reason) {
       CalculateRowHeights(aPresContext, aDesiredSize, aReflowState);
+    }
+
+    // See if all the frames fit
+    if (aDesiredSize.height > aReflowState.maxSize.height) {
+      // Nope, find a place to split the row group
+      SplitRowGroup(aPresContext, aDesiredSize, aReflowState, aStatus);
     }
   }
 
