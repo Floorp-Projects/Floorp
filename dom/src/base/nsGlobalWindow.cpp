@@ -2763,6 +2763,22 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
    NS_ENSURE_SUCCESS(ReadyOpenedDocShellItem(newDocShellItem, aReturn),
       NS_ERROR_FAILURE);
 
+   if (windowIsNew) {
+     PRBool present = PR_FALSE;
+     PRInt32 temp;
+    
+     if (!((temp = WinHasOption(options, "outerWidth", &present)) || present) &&
+         !((temp = WinHasOption(options, "outerHeight", &present)) || present)) {
+         
+         nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
+         newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
+         NS_ENSURE_TRUE(newTreeOwner, NS_ERROR_FAILURE);
+         nsCOMPtr<nsIWebBrowserChrome> newChrome = do_GetInterface(newTreeOwner);
+         if (newChrome)
+             newChrome->SetPersistence(PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
+     }
+   }
+
    if(aDialog && argc > 3)
       AttachArguments(*aReturn, argv+3, argc-3);
 
