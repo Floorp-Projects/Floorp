@@ -53,16 +53,13 @@ NS_IMETHODIMP nsXPCToolsCompiler::GetBinDir(nsILocalFile * *aBinDir)
 {
     *aBinDir = nsnull;
     
-    nsCOMPtr<nsILocalFile> dir = do_CreateInstance(NS_LOCAL_FILE_PROGID);
-    if(!dir)
-        return NS_ERROR_FAILURE;
-
-    nsresult rv = dir->InitWithPath(
-            nsSpecialSystemDirectory(
-                nsSpecialSystemDirectory::OS_CurrentProcessDirectory));
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = NS_GetSpecialDirectory("xpcom.currentProcessDirectory", getter_AddRefs(file));
     if(NS_FAILED(rv))
         return rv;
-    NS_ADDREF(*aBinDir = dir);
+
+    nsCOMPtr<nsIFile> lfile = do_QueryInterface(file);
+    NS_ADDREF(*aBinDir = lfile);
     return NS_OK;
 }
 

@@ -236,7 +236,7 @@ PRInt32 nsInstallDelete::ProcessInstallDelete()
                 //    delete mFinalFile;
 
                 nsCOMPtr<nsILocalFile> tempLocalFile;
-                NS_NewLocalFile(tempRegistryString, getter_AddRefs(tempLocalFile));
+                NS_NewLocalFile(tempRegistryString, PR_TRUE, getter_AddRefs(tempLocalFile));
                 mFinalFile = tempLocalFile;
                 
                 if (mFinalFile == nsnull)

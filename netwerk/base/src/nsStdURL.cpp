@@ -1004,7 +1004,7 @@ nsStdURL::GetFile(nsIFile * *aFile)
         path.Cut(0, 1);
 #endif
     nsCOMPtr<nsILocalFile> localFile;
-    rv = NS_NewLocalFile(path, getter_AddRefs(localFile));
+    rv = NS_NewLocalFile(path, PR_FALSE, getter_AddRefs(localFile));
 
     mFile = localFile;
 	*aFile = mFile;

@@ -1188,6 +1188,7 @@ nsDocShell::GotoIndex(PRInt32 aIndex)
 	return NS_OK;
 }
 
+
 NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
 {
    nsCOMPtr<nsIURI> uri;

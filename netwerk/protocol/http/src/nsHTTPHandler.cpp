@@ -315,7 +315,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
     nsresult rv;
     if (isFile) {
         nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewLocalFile(data, getter_AddRefs(file));
+        rv = NS_NewLocalFile(data, PR_FALSE, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIInputStream> in;

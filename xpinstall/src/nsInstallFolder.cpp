@@ -168,7 +168,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
         // XXX the filespec creation will fail due to unix slashes on Mac
         nsAutoCString tempRelPath(aRelativePath);
         nsCOMPtr<nsILocalFile> temp;
-        NS_NewLocalFile(tempRelPath, getter_AddRefs(temp));
+        NS_NewLocalFile(tempRelPath, PR_TRUE, getter_AddRefs(temp));
         mFileSpec = temp;  // creates the directories to the relative path.
         return;
     }
@@ -269,7 +269,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 {
                     nsAutoCString tempRelPath(aRelativePath);
                     nsCOMPtr<nsILocalFile> temp;
-                    NS_NewLocalFile(tempRelPath, getter_AddRefs(temp));
+                    NS_NewLocalFile(tempRelPath, PR_TRUE, getter_AddRefs(temp));
                     mFileSpec = temp;
 
                     // file:// is a special case where it returns and does not

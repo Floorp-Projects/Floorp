@@ -134,6 +134,6 @@ void XXXNeverCalled()
     nsString foo;
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
-    NS_NewLocalFile(NULL, NULL);
+    NS_NewLocalFile(NULL, PR_FALSE, NULL);
     NS_NewByteArrayInputStream (NULL, NULL, 0);
 }

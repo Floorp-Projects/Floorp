@@ -221,7 +221,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindow *parent, nsIFileSpec **aResult, const
                         nsXPIDLCString nativeStartDir;
                         startDir->GetNativePath( getter_Copies( nativeStartDir ) );
                         nsCOMPtr<nsILocalFile> startLocalFile;
-                        if ( NS_SUCCEEDED( NS_NewLocalFile( nativeStartDir, getter_AddRefs( startLocalFile ) ) ) ) {
+                        if ( NS_SUCCEEDED( NS_NewLocalFile( nativeStartDir, PR_FALSE, getter_AddRefs( startLocalFile ) ) ) ) {
                             #ifdef DEBUG_law
                             printf( "\nSetting display directory to %s\n\n", (const char*)nativeStartDir );
                             #endif
@@ -310,7 +310,7 @@ nsCString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *su
         // this suggested name comes from a http response header and could
         // try to overwrite c:\config.sys or something.
         nsCOMPtr<nsILocalFile> localFile;
-        if ( NS_SUCCEEDED( NS_NewLocalFile( result, getter_AddRefs( localFile ) ) ) ) {
+        if ( NS_SUCCEEDED( NS_NewLocalFile( result, PR_FALSE, getter_AddRefs( localFile ) ) ) ) {
             // We want base part of name only.
             nsXPIDLCString baseName;
             if ( NS_SUCCEEDED( localFile->GetLeafName( getter_Copies( baseName ) ) ) ) {

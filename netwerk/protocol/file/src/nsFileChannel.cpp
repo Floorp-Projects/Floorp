@@ -76,6 +76,10 @@ nsFileChannel::Init(PRInt32 ioFlags,
     rv = fileURL->GetFile(getter_AddRefs(mFile));
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mFile);
+    if (localFile)
+        localFile->SetFollowLinks(PR_TRUE);
+
     return rv;
 }
 

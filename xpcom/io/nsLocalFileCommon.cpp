@@ -29,8 +29,7 @@
 #include "nsIUnicodeDecoder.h"
 #endif /* XPCOM_STANDALONE */
 
-/* nsFileSpec stuff. put here untill it got obsoleted */
-#include "nsFileSpec.h"
+#include "nsFileSpec.h"  // evil ftang hack
 
 #ifdef XP_PC
 #ifdef XP_OS2
@@ -111,12 +110,12 @@ private:
    }                                                            \
    return res;                                                  \
 }
-#define SET_UCS_2ARGS_1( func , arg1, arg2)                     \
+#define SET_UCS_2ARGS_1( func , path, followLinks, result)      \
  {                                                              \
    char* tmp;                                                   \
    nsresult res;                                                \
-   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((arg1), &tmp))){ \
-     res = (func)(tmp, arg2);                                   \
+   if(NS_SUCCEEDED(res = gConverter.UCSToNewFS((path), &tmp))){ \
+     res = (func)(tmp, followLinks, result);                    \
      nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
@@ -305,10 +304,78 @@ nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
    GET_UCS(GetTarget, _retval);
 }
 nsresult 
-NS_NewUnicodeLocalFile(const PRUnichar* path, nsILocalFile* *result)
+NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
 {
-   SET_UCS_2ARGS_1( NS_NewLocalFile , path, result)
+   SET_UCS_2ARGS_1( NS_NewLocalFile, path, followLinks, result)
 }
+// should work on Macintosh, Unix, and Win32.
+#define kMaxFilenameLength 31  
+
+
+NS_IMETHODIMP
+nsLocalFile::CreateUnique(const char* suggestedName, PRUint32 type, PRUint32 attributes)
+{
+    nsresult rv = Create(type, attributes);
+    
+    if (NS_SUCCEEDED(rv)) return NS_OK;
+    if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
+
+    char* leafName; 
+    rv = GetLeafName(&leafName);
+
+    if (NS_FAILED(rv)) return rv;
+
+    char* lastDot = strrchr(leafName, '.');
+    char suffix[kMaxFilenameLength + 1] = "";
+    if (lastDot)
+    {
+        strncpy(suffix, lastDot, kMaxFilenameLength); // include '.'
+        suffix[kMaxFilenameLength] = 0; // make sure it's null terminated
+        *lastDot = '\0'; // strip suffix and dot.
+    }
+
+    // 27 should work on Macintosh, Unix, and Win32. 
+    const int maxRootLength = 27 - nsCRT::strlen(suffix) - 1;
+
+    if ((int)nsCRT::strlen(leafName) > (int)maxRootLength)
+        leafName[maxRootLength] = '\0';
+
+    for (short indx = 1; indx < 10000; indx++)
+    {
+        // start with "Picture-1.jpg" after "Picture.jpg" exists
+        char newName[kMaxFilenameLength + 1];
+        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
+        SetLeafName(newName);
+
+        rv = Create(type, attributes);
+    
+        if (NS_SUCCEEDED(rv) || rv != NS_ERROR_FILE_ALREADY_EXISTS) 
+        {
+            nsMemory::Free(leafName);
+            return rv;
+        }
+    }
+ 
+    nsMemory::Free(leafName);
+    // The disk is full, sort of
+    return NS_ERROR_FILE_TOO_BIG;
+}
+
+
+
+
+
+
+
+
+
+
+
+// E_V_I_L Below! E_V_I_L Below! E_V_I_L Below! E_V_I_L Below!
+
+
+// FTANG need to move this crap out of here.  Mixing nsFileSpec here is
+// E_V_I_L
 
 // ==================================================================
 //  nsFileSpec stuff . put here untill nsFileSpec get obsoleted     
@@ -366,58 +433,3 @@ nsresult nsFileSpec::Execute(const nsString& args) const
 {
   SET_UCS( Execute , args.GetUnicode());
 }
-
-// should work on Macintosh, Unix, and Win32.
-#define kMaxFilenameLength 31  
-
-
-NS_IMETHODIMP
-nsLocalFile::CreateUnique(const char* suggestedName, PRUint32 type, PRUint32 attributes)
-{
-    nsresult rv = Create(type, attributes);
-    
-    if (NS_SUCCEEDED(rv)) return NS_OK;
-    if (rv != NS_ERROR_FILE_ALREADY_EXISTS) return rv;
-
-    char* leafName; 
-    rv = GetLeafName(&leafName);
-
-    if (NS_FAILED(rv)) return rv;
-
-    char* lastDot = strrchr(leafName, '.');
-    char suffix[kMaxFilenameLength + 1] = "";
-    if (lastDot)
-    {
-        strncpy(suffix, lastDot, kMaxFilenameLength); // include '.'
-        suffix[kMaxFilenameLength] = 0; // make sure it's null terminated
-        *lastDot = '\0'; // strip suffix and dot.
-    }
-
-    // 27 should work on Macintosh, Unix, and Win32. 
-    const int maxRootLength = 27 - nsCRT::strlen(suffix) - 1;
-
-    if ((int)nsCRT::strlen(leafName) > (int)maxRootLength)
-        leafName[maxRootLength] = '\0';
-
-    for (short indx = 1; indx < 10000; indx++)
-    {
-        // start with "Picture-1.jpg" after "Picture.jpg" exists
-        char newName[kMaxFilenameLength + 1];
-        sprintf(newName, "%s-%d%s", leafName, indx, suffix);
-        SetLeafName(newName);
-
-        rv = Create(type, attributes);
-    
-        if (NS_SUCCEEDED(rv) || rv != NS_ERROR_FILE_ALREADY_EXISTS) 
-        {
-            nsMemory::Free(leafName);
-            return rv;
-        }
-    }
- 
-    nsMemory::Free(leafName);
-    // The disk is full, sort of
-    return NS_ERROR_FILE_TOO_BIG;
-}
-
-

@@ -463,7 +463,7 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   // create mFile if Init() isn't called 
   if(!mFile.get() ) {
   	nsCOMPtr< nsILocalFile> file;
-    NS_NewLocalFile( file_url ,getter_AddRefs(file));
+    NS_NewLocalFile( file_url, PR_FALSE ,getter_AddRefs(file));
     
     mFile = file;
     if(!mFile.get())

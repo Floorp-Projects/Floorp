@@ -468,7 +468,7 @@ printf("looking for data in type %s, mac flavor %ld\n", NS_STATIC_CAST(const cha
 	      HFSFlavor* fileData = NS_REINTERPRET_CAST(HFSFlavor*, dataBuff);
 	      NS_ASSERTION ( sizeof(HFSFlavor) == dataSize, "Ooops, we realy don't have a HFSFlavor" );
 	      nsCOMPtr<nsILocalFileMac> file;
-	      if ( NS_SUCCEEDED(NS_NewLocalFileWithFSSpec(&fileData->fileSpec, getter_AddRefs(file))) )
+	      if ( NS_SUCCEEDED(NS_NewLocalFileWithFSSpec(&fileData->fileSpec, PR_TRUE, getter_AddRefs(file))) )
 	        genericDataWrapper = do_QueryInterface(file);
 	    }
 	    else {

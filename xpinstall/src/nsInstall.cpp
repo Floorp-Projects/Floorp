@@ -726,7 +726,7 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
     }
     nsAutoCString temp(aFolder);
     nsCOMPtr<nsILocalFile> folder;
-    NS_NewLocalFile(temp, getter_AddRefs(folder));
+    NS_NewLocalFile(temp, PR_TRUE, getter_AddRefs(folder));
 
     result = folder->GetDiskSpaceAvailable(aReturn);
     return NS_OK;
@@ -2477,7 +2477,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
     extractHereSpec->Delete(PR_FALSE);
 
     //nsCOMPtr<nsILocalFile> file;
-    //rv = NS_NewLocalFile(*extractHereSpec, getter_AddRefs(file));
+    //rv = NS_NewLocalFile(*extractHereSpec, PR_TRUE, getter_AddRefs(file));
     //if (NS_SUCCEEDED(rv))
     rv = mJarFileData->Extract(nsAutoCString(aJarfile), extractHereSpec);
     if (NS_FAILED(rv)) 

@@ -87,7 +87,7 @@ public:
     nsresult Init(const char* origFile) {
         nsresult rv;
         nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewLocalFile(origFile, getter_AddRefs(file));
+        rv = NS_NewLocalFile(origFile, PR_FALSE, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
         char* name;
         rv = file->GetLeafName(&name);
@@ -129,7 +129,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
 
     nsIChannel* fileTrans;
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(fileName, getter_AddRefs(file));
+    rv = NS_NewLocalFile(fileName, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file, PR_RDONLY, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
@@ -176,7 +176,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     outFile.Append(".out");
     nsIChannel* fileTrans;
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(outFile, getter_AddRefs(file));
+    rv = NS_NewLocalFile(outFile, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file,
                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
@@ -191,7 +191,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILocalFile> f;
-    rv = NS_NewLocalFile(fileName, getter_AddRefs(f));
+    rv = NS_NewLocalFile(fileName, PR_FALSE, getter_AddRefs(f));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIInputStream> inStr;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), f);

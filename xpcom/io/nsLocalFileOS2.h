@@ -109,8 +109,9 @@ public:
 private:
 
     // this is the flag which indicates if I can used cached information about the file
-    PRBool mDirty;
-    PRBool mLastResolution;
+    PRPackedBool mDirty;
+    PRPackedBool mLastResolution;
+    PRPackedBool mFollowSymlinks;
 
     // this string will alway be in native format!
     nsCString mWorkingPath;

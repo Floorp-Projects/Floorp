@@ -243,6 +243,7 @@ nsLocalFile::nsLocalFile()
     mPersistFile = nsnull;
     mShellLink   = nsnull;
     mLastResolution = PR_FALSE;
+    mFollowSymlinks = PR_FALSE;
     MakeDirty();
 }
 
@@ -291,7 +292,7 @@ nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void*
 void
 nsLocalFile::MakeDirty()
 {
-    mDirty       = PR_TRUE;
+    mDirty = PR_TRUE;
 }
 
 
@@ -307,6 +308,10 @@ nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char**
 {
     nsresult rv = NS_OK;
     
+
+    if (strstr(workingPath, ".lnk") == nsnull)
+        return NS_ERROR_FILE_INVALID_PATH;
+
     if (mPersistFile == nsnull || mShellLink == nsnull)
     {
         CoInitialize(NULL);  // FIX: we should probably move somewhere higher up during startup
@@ -507,6 +512,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         return NS_OK;
     }
     mLastResolution = resolveTerminal;
+    mResolvedPath.Assign(mWorkingPath);  //until we know better.
 
     // First we will see if the workingPath exists.  If it does, then we
     // can simply use that as the resolved path.  This simplification can
@@ -528,10 +534,26 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     PRStatus status = PR_GetFileInfo64(nsprPath, &mFileInfo64);
     if ( status == PR_SUCCESS )
     {
-        mResolvedPath.Assign(workingFilePath);
-		mDirty = PR_FALSE;
-		return NS_OK;
+        if (!resolveTerminal)
+        {
+		    mDirty = PR_FALSE;
+            return NS_OK;
+        }
+       
+        // check to see that this is shortcut.
+            
+        int pathLen = strlen(workingFilePath);
+        const char* leaf = workingFilePath + pathLen - 4;
+    
+        if ( (strcmp(leaf, ".lnk") != 0))
+        {
+		    mDirty = PR_FALSE;
+            return NS_OK;
+        }
     }
+
+    if (!mFollowSymlinks)
+        return NS_ERROR_FILE_NOT_FOUND;  // if we are not resolving, we just give up here.
 
     nsresult result;
 
@@ -541,22 +563,12 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     
 	result = ResolvePath(workingFilePath, resolveTerminal, &resolvePath);
     if (NS_FAILED(result))
-       return result;
+       return NS_ERROR_FILE_NOT_FOUND;
     
 	mResolvedPath.Assign(resolvePath);
     nsMemory::Free(resolvePath);
 
-    // if we are not resolving the terminal node, we have to "fake" windows
-    // out and append the ".lnk" file extension before getting any information
-    // about the shortcut.  If resoveTerminal was TRUE, than it the shortcut was
-    // resolved by the call to ResolvePath above.
-
-    
-    char linkStr[MAX_PATH];
-    strcpy(linkStr, mResolvedPath.GetBuffer());
-    strcat(linkStr, ".lnk");
-    
-    status = PR_GetFileInfo64(linkStr, &mFileInfo64);
+    status = PR_GetFileInfo64(mResolvedPath, &mFileInfo64);
     
     if ( status == PR_SUCCESS )
 		mDirty = PR_FALSE;
@@ -575,7 +587,7 @@ nsLocalFile::Clone(nsIFile **file)
 
     nsCOMPtr<nsILocalFile> localFile;
 
-    rv = NS_NewLocalFile(aFilePath, getter_AddRefs(localFile));
+    rv = NS_NewLocalFile(aFilePath, mFollowSymlinks, getter_AddRefs(localFile));
     nsMemory::Free(aFilePath);
     
     if (NS_SUCCEEDED(rv) && localFile)
@@ -625,6 +637,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     
     mWorkingPath.Assign(nativeFilePath);
     nsMemory::Free( nativeFilePath );
+    
     return NS_OK;
 }
 
@@ -1505,7 +1518,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     parentPath.Truncate(offset);
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), getter_AddRefs(localFile));
+    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), mFollowSymlinks, getter_AddRefs(localFile));
     
     if(NS_SUCCEEDED(rv) && localFile)
     {
@@ -1777,6 +1790,22 @@ nsLocalFile::GetTarget(char **_retval)
 }
 
 
+/* attribute PRBool followLinks; */
+NS_IMETHODIMP 
+nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
+{
+    *aFollowLinks = mFollowSymlinks;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
+{
+    MakeDirty();
+    mFollowSymlinks = aFollowLinks;
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 {
@@ -1808,18 +1837,21 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 
 
 nsresult 
-NS_NewLocalFile(const char* path, nsILocalFile* *result)
+NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();
     if (file == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(file);
 
+    file->SetFollowLinks(followLinks);
+    
     nsresult rv = file->InitWithPath(path);
     if (NS_FAILED(rv)) {
         NS_RELEASE(file);
         return rv;
     }
+    
     *result = file;
     return NS_OK;
 }

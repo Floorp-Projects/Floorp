@@ -155,7 +155,8 @@ static void event_processor_callback(gpointer data,
 {
   nsIEventQueue *eventQueue = (nsIEventQueue*)data;
   if (eventQueue)
-    eventQueue->ProcessPendingEvents();
+      eventQueue->ProcessPendingEvents();
+  
 }
 
 #define PREF_NCOLS "browser.ncols"

@@ -707,7 +707,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
 				
 				// Make a new nsILocalFile for the new element
 				nsCOMPtr<nsILocalFile> file;
-				rv =  NS_NewLocalFile("dummy:path", getter_AddRefs(file));
+				rv =  NS_NewLocalFile("dummy:path", PR_TRUE, getter_AddRefs(file));
 				if (NS_FAILED(rv)) 
 					return rv;
 				
@@ -768,6 +768,7 @@ nsLocalFile::nsLocalFile()
 :	mInitType(eNotInitialized)
 ,	mLastResolveFlag(PR_FALSE)
 ,	mHaveFileInfo(PR_FALSE)
+,   mFollowSymlinks(PR_FALSE)
 ,   mType('????')
 ,   mCreator('MOSS')
 {
@@ -819,6 +820,21 @@ nsLocalFile::MakeDirty()
 	mHaveFileInfo = PR_FALSE;
 }
 
+
+/* attribute PRBool followLinks; */
+NS_IMETHODIMP 
+nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
+{
+    *aFollowLinks = mFollowSymlinks;
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
+{
+    MakeDirty();
+    mFollowSymlinks = aFollowLinks;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
@@ -1698,7 +1714,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 			parentPath.Truncate(offset);
 
 			nsCOMPtr<nsILocalFile> localFile;
-			rv =  NS_NewLocalFile(parentPath.GetBuffer(), getter_AddRefs(localFile));
+			rv =  NS_NewLocalFile(parentPath.GetBuffer(), mFollowSymlinks, getter_AddRefs(localFile));
 			if (NS_SUCCEEDED(rv) && localFile)
 			{
 				rv = localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
@@ -1739,7 +1755,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 				parentFolderSpec.parID = pBlock.dirInfo.ioDrParID;
 
 				nsCOMPtr<nsILocalFile> file;
-				rv =  NS_NewLocalFile("dummy:path", getter_AddRefs(file));
+				rv =  NS_NewLocalFile("dummy:path", mFollowSymlinks, getter_AddRefs(file));
 				if (NS_FAILED(rv)) 
 					goto bail;
 
@@ -2046,7 +2062,6 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 	*entries = dirEnum;
 	return NS_OK;
 }
-
 
 #pragma mark -
 
@@ -2625,12 +2640,14 @@ nsLocalFile::OpenDocWithApp(nsILocalFile* aAppToOpenWith, PRBool aLaunchInBackgr
 
 // Handy dandy utility create routine for something or the other
 nsresult 
-NS_NewLocalFile(const char* path, nsILocalFile* *result)
+NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
 {
 	nsLocalFile* file = new nsLocalFile();
 	if (file == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 	NS_ADDREF(file);
+
+    file->SetFollowLinks(followLinks);
 
 	nsresult rv = file->InitWithPath(path);
 	if (NS_FAILED(rv)) {
@@ -2642,12 +2659,14 @@ NS_NewLocalFile(const char* path, nsILocalFile* *result)
 }
 
 nsresult 
-NS_NewLocalFileWithFSSpec(FSSpec* inSpec, nsILocalFileMac* *result)
+NS_NewLocalFileWithFSSpec(FSSpec* inSpec, PRBool followLinks, nsILocalFileMac* *result)
 {
 	nsLocalFile* file = new nsLocalFile();
 	if (file == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 	NS_ADDREF(file);
+
+    file->SetFollowLinks(followLinks);
 
 	nsresult rv = file->InitWithFSSpec(inSpec);
 	if (NS_FAILED(rv)) {

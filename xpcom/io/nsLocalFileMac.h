@@ -96,10 +96,12 @@ private:
 
     // It's important we keep track of how we were initialized
     nsLocalFileMacInitType	mInitType;
-
+        
     // this is the flag which indicates if I can used cached information about the file
-    PRPackedBool		mStatDirty;
+    PRPackedBool	mStatDirty;
     PRPackedBool    mLastResolveFlag;
+    
+    PRPackedBool    mFollowSymlinks;
 
     // Is the mResolvedSpec member valid?  Only after we resolve the mSpec or mWorkingPath
     // PRPackedBool		mHaveValidSpec;
