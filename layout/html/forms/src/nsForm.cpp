@@ -926,8 +926,7 @@ void nsForm::Init(PRBool aReinit)
   // determine which radio buttons belong to which radio groups, unnamed radio buttons
   // don't go into any group since they can't be submitted. Determine which controls
   // are capable of form submission.
-  PRInt32 submitCount = 0;
-  PRInt32 nonSubmitCount = 0;
+  PRInt32 textCount = 0;
   nsIFormControl* textControl = nsnull;
   int numControls = GetFormControlCount();
 
@@ -938,14 +937,14 @@ void nsForm::Init(PRBool aReinit)
     PRBool hasName = name.Length() > 0;
     nsString type;
     control->GetType(type);
-    if (type.EqualsIgnoreCase("submit")) { // XXX make constant
-      submitCount++;
-    } else if (!type.EqualsIgnoreCase("hidden")) { // hidden doesn't count, XXX make constant
-      nonSubmitCount++;
-    }
-    if (type.EqualsIgnoreCase("text")) { // XXX make constants
+
+    // count text for determining "return" submission 
+    if (type.EqualsIgnoreCase("text")) { 
+      textCount++;
       textControl = control;
     }
+
+    // radio group processing
     if (hasName && (type.Equals(*nsInputRadio::kTYPE))) { // XXX make constant consisten with above
       int numGroups = mRadioGroups.Count();
       PRBool added = PR_FALSE;
@@ -976,8 +975,9 @@ void nsForm::Init(PRBool aReinit)
       }
     }
   }
-  if ( ((0 == submitCount) || (1 == submitCount)) && 
-       (1 == nonSubmitCount) && (nsnull != textControl) ) {
+
+  // if there is only one text field, it can submit on "return" 
+  if (1 == textCount) { 
     textControl->SetCanSubmit(PR_TRUE);
   }
 }
