@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.27 $ 
-# $Date: 2002/04/24 03:27:31 $ 
+# $Revision: 1.28 $ 
+# $Date: 2002/04/24 04:00:40 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -404,7 +404,6 @@ sub fatal_error {
   # we have trouble removing the file we we will be exiting anyway.
 
   unlink ($LOCK_FILE);
-  unlink ($PID_FILE);
 
 
   print "Content-type: text/html\n\n";
