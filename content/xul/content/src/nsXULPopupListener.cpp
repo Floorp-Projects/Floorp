@@ -116,6 +116,8 @@ public:
 
 protected:
 
+    virtual void KillTooltipTimer ( ) ;
+    
     virtual nsresult LaunchPopup(nsIDOMEvent* anEvent);
     virtual nsresult LaunchPopup(PRInt32 aClientX, PRInt32 aClientY) ;
     virtual void ClosePopup ( ) ;
@@ -424,6 +426,8 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
   }
   return rv;
 }
+
+
 //
 // MouseMove
 //
@@ -455,32 +459,32 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   mMouseClientX = newMouseX; mMouseClientY = newMouseY;
 
-  // We want to close the tip if it is being displayed and the mouse moves. Recall 
-  // that |mPopupContent| is set when the popup is showing. Furthermore, as the mouse
-  // moves, we want to make sure we reset the timer to show it, so that the delay
-  // is from when the mouse stops moving, not when it enters the element.
-  if ( mPopupContent ) {
-    ClosePopup();
-    return NS_OK;
-  }
-  if ( mTooltipTimer )
-    mTooltipTimer->Cancel();
-
-  mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if ( mTooltipTimer ) {
-    nsCOMPtr<nsIDOMEventTarget> eventTarget;
-    aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-    if ( eventTarget )
-      mPossibleTooltipNode = do_QueryInterface(eventTarget);
-    if ( mPossibleTooltipNode ) {
-      nsresult rv = mTooltipTimer->Init(sTooltipCallback, this, kTooltipShowTime, NS_PRIORITY_HIGH);
-      if (NS_FAILED(rv))
-        mPossibleTooltipNode = nsnull;
-    }
-  }
-  else
-    NS_WARNING ( "Could not create a timer for tooltip tracking" );
+  // as the mouse moves, we want to make sure we reset the timer to show it, 
+  // so that the delay is from when the mouse stops moving, not when it enters
+  // the node.
+  KillTooltipTimer();
     
+  // If the mouse moves while the popup is up, don't do anything. We make it
+  // go away only if it times out or leaves the tooltip node. If nothing is
+  // showing, though, we have to do the work. We can tell if we have a popup
+  // showing because |mPopupContent| will be non-null.
+  if ( !mPopupContent ) {
+    mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if ( mTooltipTimer ) {
+      nsCOMPtr<nsIDOMEventTarget> eventTarget;
+      aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+      if ( eventTarget )
+        mPossibleTooltipNode = do_QueryInterface(eventTarget);
+      if ( mPossibleTooltipNode ) {
+        nsresult rv = mTooltipTimer->Init(sTooltipCallback, this, kTooltipShowTime, NS_PRIORITY_HIGH);
+        if (NS_FAILED(rv))
+          mPossibleTooltipNode = nsnull;
+      }
+    }
+    else
+      NS_WARNING ( "Could not create a timer for tooltip tracking" );
+  }
+   
   return NS_OK;
   
 } // MouseMove
@@ -499,7 +503,26 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
   if ( popupType != eXULPopupType_tooltip )
     return NS_OK;
   
-  ClosePopup();
+  // mouse is leaving something which means it is in motion. Kill
+  // our timer, but don't close anything just yet. We need to wait
+  // and see if we're leaving the right node.
+  KillTooltipTimer();
+  
+  // which node did the mouse leave?
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+  nsCOMPtr<nsIDOMNode> eventNode ( do_QueryInterface(eventTarget) );
+  
+  // which node is our tooltip on?
+  nsCOMPtr<nsIDOMXULDocument> doc;
+  FindDocumentForNode ( mElement, getter_AddRefs(doc) );
+  nsCOMPtr<nsIDOMNode> tooltipNode;
+  doc->GetTooltipNode ( getter_AddRefs(tooltipNode) );
+  
+  // if they're the same, the mouse left the node the tooltip appeared on,
+  // close the popup.
+  if ( tooltipNode == eventNode )
+    ClosePopup();
   return NS_OK;
     
 } // MouseOut
@@ -546,6 +569,22 @@ XULPopupListenerImpl::KeyPress(nsIDOMEvent* aMouseEvent)
 
 
 //
+// KillTooltipTimer
+//
+// Stop the timer that would show a tooltip dead in its tracks
+//
+void
+XULPopupListenerImpl :: KillTooltipTimer ( )
+{
+  if ( mTooltipTimer ) {
+    mTooltipTimer->Cancel();
+    mTooltipTimer = nsnull;
+    mPossibleTooltipNode = nsnull;      // release tooltip target
+  }
+} // KillTooltipTimer
+
+
+//
 // ClosePopup
 //
 // Do everything needed to shut down the popup, including killing off all
@@ -556,12 +595,7 @@ XULPopupListenerImpl::KeyPress(nsIDOMEvent* aMouseEvent)
 void
 XULPopupListenerImpl :: ClosePopup ( )
 {
-  if ( mTooltipTimer ) {
-    mTooltipTimer->Cancel();
-    mTooltipTimer = nsnull;
-    // release tooltip target
-    mPossibleTooltipNode = nsnull;
-  }
+  KillTooltipTimer();
   if ( mAutoHideTimer ) {
     mAutoHideTimer->Cancel();
     mAutoHideTimer = nsnull;
@@ -831,8 +865,18 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aPopupListener
       if ( targetDoc ) {
         doc->SetTooltipNode ( self->mPossibleTooltipNode );        
         doc->SetPopupNode ( self->mPossibleTooltipNode );
-        self->CreateAutoHideTimer();  
         self->LaunchPopup ( self->mMouseClientX, self->mMouseClientY+21);
+        
+        // at this point, |mPopupContent| holds the content node of
+        // the popup. If there is an attribute on the popup telling us
+        // not to create the auto-hide timer, don't.
+        if ( self->mPopupContent ) {
+          nsAutoString noAutoHide;
+          self->mPopupContent->GetAttribute ( NS_LITERAL_STRING("noautohide"), noAutoHide );
+          if ( noAutoHide != NS_LITERAL_STRING("true") )
+            self->CreateAutoHideTimer();          
+        }
+
       } // if tooltip target's document exists
      } // if document
 
