@@ -383,9 +383,17 @@
             if (this.mCurrentBrowser)
               this.mCurrentBrowser.setAttribute("type", "content");
             
+            var updatePageReport = false;
+            if ((this.mCurrentBrowser.pageReport && !newBrowser.pageReport) ||
+                (!this.mCurrentBrowser.pageReport && newBrowser.pageReport))
+              updatePageReport = true;
+
             newBrowser.setAttribute("type", "content-primary");
             this.mCurrentBrowser = newBrowser;
             this.mCurrentTab = this.selectedTab;
+
+            if (updatePageReport)
+              this.mCurrentBrowser.updatePageReport();
 
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;

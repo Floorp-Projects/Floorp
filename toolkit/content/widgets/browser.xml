@@ -318,6 +318,52 @@
         </body>
       </method>
 
+      <method name="onUnload">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            if (this.pageReport) {
+              this.pageReport = null;
+              this.updatePageReport();
+            }
+         ]]>
+        </body>
+      </method>
+
+      <method name="updatePageReport">
+        <body>
+          <![CDATA[
+            var n = this.parentNode;
+            while (n && n.localName != "tabbrowser")
+              n = n.parentNode;
+
+            if (!n || n.mCurrentBrowser != this) return;
+           
+            var event = document.createEvent("Events");
+            event.initEvent("DOMUpdatePageReport", true, true);
+            n.dispatchEvent(event);
+          ]]>
+        </body>
+      </method>
+
+      <method name="onPopupBlocked">
+        <parameter name="evt"/>
+        <body>
+          <![CDATA[
+            alert("GOT HERE!");
+            if (!this.pageReport) {
+              this.pageReport = new Array();
+              this.updatePageReport(); 
+            }
+
+            this.pageReport.push(evt.location);
+            alert(evt.location);
+          ]]> 
+        </body>
+      </method>
+
+      <field name="pageReport">null</field>
+
       <field name="mDragDropHandler">
         null
       </field>
@@ -364,6 +410,8 @@
 
           // Listen for first load for lazy attachment to form fill controller
           this.addEventListener("load", this.onLoad, true);
+          this.addEventListener("unload", this.onUnload, true);
+          this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, false);
         ]]>
       </constructor>
       
@@ -385,6 +433,8 @@
           
           this.securityUI = null;
           this.mDragDropHandler = null;
+
+          this.removeEventListener("unload", this.onUnload, true);
           ]]>
         </body>
       </method>
