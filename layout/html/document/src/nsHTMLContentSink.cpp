@@ -95,6 +95,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 #define SINK_TRACE_CALLS        0x1
 #define SINK_TRACE_REFLOW       0x2
+#define SINK_ALWAYS_REFLOW      0x4
 
 #define SINK_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
@@ -259,6 +260,14 @@ public:
   nsresult ResumeParsing();
   nsresult EvaluateScript(nsString& aScript,
                           PRInt32 aLineNo);
+
+#ifdef DEBUG
+  void ForceReflow() {
+    mDocument->ContentAppended(mBody, mBodyChildCount);
+    mBody->ChildCount(mBodyChildCount);
+    mDirty = PR_FALSE;
+  }
+#endif
 };
 
 class SinkContext {
@@ -1039,6 +1048,13 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   // Mark sink dirty if it can safely reflow something
   MaybeMarkSinkDirty();
 
+#ifdef DEBUG
+  if (mPreAppend && mSink->mDirty &&
+      SINK_LOG_TEST(gSinkLogModuleInfo,SINK_ALWAYS_REFLOW)) {
+    mSink->ForceReflow();
+  }
+#endif
+
   return NS_OK;
 }
 
@@ -1094,21 +1110,26 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
   case eToken_text:
   case eToken_whitespace:
   case eToken_newline:
-    return AddText(aNode.GetText());
+    rv = AddText(aNode.GetText());
+    break;
 
   case eToken_entity:
     {
       nsAutoString tmp;
       PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
       if (unicode < 0) {
-        return AddText(aNode.GetText());
+        rv = AddText(aNode.GetText());
       }
-      return AddText(tmp);
+      else {
+        rv = AddText(tmp);
+      }
     }
+    break;
 
   case eToken_skippedcontent:
     break;
   }
+
   return rv;
 }
 
@@ -1121,6 +1142,13 @@ SinkContext::AddLeaf(nsIHTMLContent* aContent)
 
   // Mark sink dirty if it can safely reflow something
   MaybeMarkSinkDirty();
+
+#ifdef DEBUG
+  if (mPreAppend && mSink->mDirty &&
+      SINK_LOG_TEST(gSinkLogModuleInfo,SINK_ALWAYS_REFLOW)) {
+    mSink->ForceReflow();
+  }
+#endif
 
   return NS_OK;
 }
@@ -1155,6 +1183,13 @@ SinkContext::AddComment(const nsIParserNode& aNode)
       
       // Mark sink dirty if it can safely reflow something
       MaybeMarkSinkDirty();
+
+#ifdef DEBUG
+      if (mPreAppend && mSink->mDirty &&
+          SINK_LOG_TEST(gSinkLogModuleInfo,SINK_ALWAYS_REFLOW)) {
+        mSink->ForceReflow();
+      }
+#endif
     }
     NS_RELEASE(comment);
   }
@@ -1308,6 +1343,13 @@ SinkContext::FlushText(PRBool* aDidFlush)
   if (nsnull != aDidFlush) {
     *aDidFlush = didFlush;
   }
+
+#ifdef DEBUG
+  if (mPreAppend && mSink->mDirty && didFlush &&
+      SINK_LOG_TEST(gSinkLogModuleInfo,SINK_ALWAYS_REFLOW)) {
+    mSink->ForceReflow();
+  }
+#endif
   return rv;
 }
 
@@ -1486,11 +1528,11 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
-  SINK_TRACE(SINK_TRACE_REFLOW,
-             ("HTMLContentSink::DidBuildModel: layout final content"));
 
   // Reflow the last batch of content
   if (nsnull != mBody) {
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("HTMLContentSink::DidBuildModel: layout final content"));
     mDocument->ContentAppended(mBody, mBodyChildCount);
     mBody->ChildCount(mBodyChildCount);
   }
@@ -1510,6 +1552,8 @@ HTMLContentSink::WillInterrupt()
              ("HTMLContentSink::WillInterrupt: this=%p", this));
   if (mDirty) {
     if (nsnull != mBody) {
+      SINK_TRACE(SINK_TRACE_REFLOW,
+                 ("HTMLContentSink::WillInterrupt: reflow content"));
       mDocument->ContentAppended(mBody, mBodyChildCount);
       mBody->ChildCount(mBodyChildCount);
     }
