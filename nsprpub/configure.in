@@ -954,7 +954,7 @@ case "$target" in
         ;;
     esac
     if test "$GNU_CC"; then
-	    AS='$(CC) -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
+	    AS='$(CC) -Wp,-P -x assembler-with-cpp -D_ASM -mips2 $(INCLUDES)'
 	    CFLAGS="$CFLAGS -Wall -Wno-format"
 	    _OPTIMIZE_FLAGS="-O6"
     else
