@@ -152,9 +152,9 @@ print q(
 
 foreach $path (split('/',$rcs_path)) {
     $link_path .= url_encode2($path).'/' if $path ne 'mozilla';
-    print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path'>$path</a>/ ";
+    print "<A HREF='$lxr_base/$link_path'>$path</a>/ ";
 }
-print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path$file_tail'>$file_tail</a> ";
+print "<A HREF='$lxr_base/$link_path$file_tail'>$file_tail</a> ";
 
 print " (";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
@@ -172,7 +172,7 @@ print qq(
       <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
        <TR>
         <TD>
-         <A HREF="http://lxr.mozilla.org/mozilla/source/$link_path$file_tail">lxr</A>
+         <A HREF="$lxr_base/$link_path$file_tail">lxr</A>
         </TD><TD NOWRAP>
          Browse the source code as hypertext.
         </TD>
