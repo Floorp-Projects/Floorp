@@ -559,7 +559,8 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 #endif
     if (NS_FAILED(rv))
     {
-        NS_ERROR("unable to open blocking stream");
+        // file doesn't exist -- just exit
+        // NS_ERROR("unable to open blocking stream");
         return rv;
     }
 
