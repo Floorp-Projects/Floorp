@@ -91,7 +91,6 @@ get_applocale(void)
 
 	// get a locale service 
 	nsCOMPtr<nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_PROGID, &result);
-	NS_ASSERTION(localeService!=NULL,"nsLocaleTest: get locale service failed.");
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: get locale service failed");
 
 	//
