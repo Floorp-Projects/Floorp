@@ -277,6 +277,8 @@ public:
   NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
                                    nsIStyleContext* aParentContext);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
+  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom*& aListName) const;
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
@@ -355,8 +357,6 @@ public:
 
   PRIntn GetSkipSides() const;
 
-  PRBool IsPseudoFrame() const;
-
   nsresult InitialReflow(nsBlockReflowState& aState);
 
   nsresult FrameAppendedReflow(nsBlockReflowState& aState);
@@ -379,6 +379,8 @@ public:
 
   void ComputeFinalSize(nsBlockReflowState&  aState,
                         nsHTMLReflowMetrics& aMetrics);
+
+  void BuildFloaterList();
 
   nsresult ReflowLinesAt(nsBlockReflowState& aState, LineData* aLine);
 
@@ -454,9 +456,15 @@ public:
   // For list-item frames, this is the bullet frame.
   BulletFrame* mBullet;
 
+  // List of all floaters in this block
+  nsIFrame* mFloaters;
+
   // Body configuration flags passed into this block when this block
   // is used by the body.
   PRUint32 mFlags;
+
+  static nsIAtom* gFloaterAtom;
+  static nsIAtom* gBulletAtom;
 };
 
 //----------------------------------------------------------------------
@@ -1099,18 +1107,18 @@ LineData::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter,
   if (aOutputMe) {
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
     char cbuf[100];
-    fprintf(out, "line %p: count=%d state=%s",
+    fprintf(out, "line %p: count=%d state=%s ",
             this, ChildCount(), StateToString(cbuf, sizeof(cbuf)));
     if (0 != mCarriedOutTopMargin) {
-      fprintf(out, " tm=%d", mCarriedOutTopMargin);
+      fprintf(out, "tm=%d ", mCarriedOutTopMargin);
     }
     if (0 != mCarriedOutBottomMargin) {
-      fprintf(out, " bm=%d", mCarriedOutBottomMargin);
+      fprintf(out, "bm=%d ", mCarriedOutBottomMargin);
     }
     out << mBounds;
-    fprintf(out, ",ca=");
+    fprintf(out, " ca=");
     out << mCombinedArea;
-    fprintf(out, "<\n");
+    fprintf(out, " <\n");
   }
 
   nsIFrame* frame = mFirstChild;
@@ -1122,9 +1130,8 @@ LineData::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter,
 
   if (aOutputMe) {
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
-
     if (nsnull != mFloaters) {
-      fputs("> floaters=<\n", out);
+      fputs("> floaters <\n", out);
       ListFloaters(out, aIndent + 1, mFloaters);
       for (i = aIndent; --i >= 0; ) fputs("  ", out);
     }
@@ -1479,6 +1486,9 @@ nsBlockReflowState::GetAvailableSpace()
 
 //----------------------------------------------------------------------
 
+nsIAtom* nsBlockFrame::gFloaterAtom;
+nsIAtom* nsBlockFrame::gBulletAtom;
+
 nsresult
 NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                  nsIFrame*& aNewFrame, PRUint32 aFlags)
@@ -1495,6 +1505,13 @@ NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 nsBlockFrame::nsBlockFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsBlockFrameSuper(aContent, aParent)
 {
+  // XXX for now these are a memory leak
+  if (nsnull == gFloaterAtom) {
+    gFloaterAtom = NS_NewAtom("Floater-list");
+  }
+  if (nsnull == gBulletAtom) {
+    gBulletAtom = NS_NewAtom("Bullet-list");
+  }
 }
 
 nsBlockFrame::~nsBlockFrame()
@@ -1667,33 +1684,14 @@ nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
   if ((nsnull != mBullet) &&
       ((nsnull == mLines) || (mBullet != mLines->mFirstChild))) {
     mBullet->DeleteFrame(aPresContext);
+    mBullet = nsnull;
   }
 
   DeleteLineList(aPresContext, mLines);
   DeleteLineList(aPresContext, mOverflowLines);
+  DeleteFrameList(aPresContext, &mFloaters);
 
-  nsBlockFrameSuper::DeleteFrame(aPresContext);
-
-  return NS_OK;
-}
-
-// XXX Get rid of this...
-PRBool
-nsBlockFrame::IsPseudoFrame() const
-{
-  PRBool  result = PR_FALSE;
-
-  if (nsnull != mGeometricParent) {
-    nsIContent* parentContent;
-     
-    mGeometricParent->GetContent(parentContent);
-    if (parentContent == mContent) {
-      result = PR_TRUE;
-    }
-    NS_IF_RELEASE(parentContent);
-  }
-
-  return result;
+  return nsBlockFrameSuper::DeleteFrame(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -1723,9 +1721,6 @@ nsBlockFrame::CreateContinuingFrame(nsIPresContext&  aCX,
 NS_IMETHODIMP
 nsBlockFrame::ListTag(FILE* out) const
 {
-  if ((nsnull != mGeometricParent) && IsPseudoFrame()) {
-    fprintf(out, "*");
-  }
   fprintf(out, "Block<");
   if (nsnull != mContent) {
     nsIAtom* atom;
@@ -1743,7 +1738,10 @@ nsBlockFrame::ListTag(FILE* out) const
 NS_METHOD
 nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
-  // if a filter is present, only output this frame if the filter says we should
+  PRInt32 i;
+
+  // if a filter is present, only output this frame if the filter says
+  // we should
   nsAutoString tagString;
   if (nsnull != mContent) {
     nsIAtom* tag;
@@ -1753,11 +1751,8 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
       NS_RELEASE(tag);
     }
   }
-
-  PRInt32 i;
-  PRBool outputMe = (PRBool)((nsnull==aFilter) || ((PR_TRUE==aFilter->OutputTag(&tagString)) && (!IsPseudoFrame())));
-  if (PR_TRUE==outputMe)
-  {
+  PRBool outputMe = (nsnull == aFilter) || aFilter->OutputTag(&tagString);
+  if (outputMe) {
     // Indent
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
 
@@ -1782,44 +1777,64 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
     if (0 != mState) {
       fprintf(out, " [state=%08x]", mState);
     }
+    fputs("<\n", out);
+    aIndent++;
   }
 
-
-  // Output the children, one line at a time
-  if (nsnull != mLines) {
-    if (PR_TRUE==outputMe)
-      fputs("<\n", out);
-    aIndent++;
-    if (nsnull != mBullet) {
-      mBullet->List(out, aIndent, aFilter);
+  // Output bullet first
+  if (nsnull != mBullet) {
+    if (outputMe) {
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fprintf(out, "bullet <\n");
     }
+    mBullet->List(out, aIndent+1, aFilter);
+    if (outputMe) {
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs(">\n", out);
+    }
+  }
+
+  // Output the lines
+  if (nsnull != mLines) {
     LineData* line = mLines;
     while (nsnull != line) {
       line->List(out, aIndent, aFilter, outputMe);
       line = line->mNext;
     }
-    aIndent--;
-    if (PR_TRUE==outputMe)
-    {
-      for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fputs(">", out);
-    }
-  }
-  else {
-    if (PR_TRUE==outputMe)
-      fputs("<>", out);
   }
 
-  if (PR_TRUE==outputMe)
-  {
-    // Output the text-runs
-    if (nsnull != mTextRuns) {
-      fputs(" text-runs=<\n", out);
-      ListTextRuns(out, aIndent + 1, mTextRuns);
+  // Output floaters next
+  if (nsnull != mFloaters) {
+    if (outputMe) {
       for (i = aIndent; --i >= 0; ) fputs("  ", out);
-      fputs(">", out);
+      fprintf(out, "all-floaters <\n");
     }
-    fputs("\n", out);
+    nsIFrame* floater = mFloaters;
+    while (nsnull != floater) {
+      floater->List(out, aIndent+1, aFilter);
+      floater->GetNextSibling(floater);
+    }
+    if (outputMe) {
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs(">\n", out);
+    }
+  }
+
+  // Output the text-runs
+  if (outputMe) {
+    if (nsnull != mTextRuns) {
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs("text-runs <\n", out);
+
+      ListTextRuns(out, aIndent + 1, mTextRuns);
+
+      for (i = aIndent; --i >= 0; ) fputs("  ", out);
+      fputs(">\n", out);
+    }
+
+    aIndent--;
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs(">\n", out);
   }
 
   return NS_OK;
@@ -1834,10 +1849,39 @@ nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
   if (nsnull == aListName) {
     aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
     return NS_OK;
-  } else {
-    aFirstChild = nsnull;
+  }
+  else if (aListName == gFloaterAtom) {
+    aFirstChild = nsnull;/* XXX temporary */
+    return NS_OK;
+  }
+  else if (aListName == gBulletAtom) {
+    aFirstChild = mBullet;
+    return NS_OK;
+  }
+  aFirstChild = nsnull;
+  return NS_ERROR_INVALID_ARG;
+}
+
+NS_IMETHODIMP
+nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
+                                         nsIAtom*& aListName) const
+{
+  if (aIndex < 0) {
     return NS_ERROR_INVALID_ARG;
   }
+  nsIAtom* atom = nsnull;
+  switch (aIndex) {
+  case 0:
+    atom = gFloaterAtom;
+    NS_ADDREF(atom);
+    break;
+  case 1:
+    atom = gBulletAtom;
+    NS_ADDREF(atom);
+    break;
+  }
+  aListName = atom;
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1993,6 +2037,8 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute our final size
   ComputeFinalSize(state, aMetrics);
 
+  BuildFloaterList();
+
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
     VerifyChildCount(mLines);
@@ -2004,6 +2050,33 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
                  ("exit nsBlockFrame::Reflow: size=%d,%d rv=%x",
                   aMetrics.width, aMetrics.height, rv));
   return NS_OK;
+}
+
+void
+nsBlockFrame::BuildFloaterList()
+{
+  nsIFrame* head = nsnull;
+  nsIFrame* current = nsnull;
+  LineData* line = mLines;
+  while (nsnull != line) {
+    if (nsnull != line->mFloaters) {
+      nsVoidArray& array = *line->mFloaters;
+      PRInt32 i, n = array.Count();
+      for (i = 0; i < n; i++) {
+        nsPlaceholderFrame* ph = (nsPlaceholderFrame*) array[i];
+        nsIFrame* floater = ph->GetAnchoredItem();
+        if (nsnull == head) {
+          current = head = floater;
+        }
+        else {
+          current->SetNextSibling(floater);
+          current = floater;
+        }
+      }
+    }
+    line = line->mNext;
+  }
+  mFloaters = head;
 }
 
 void
@@ -4754,6 +4827,7 @@ void
 nsBlockReflowState::InitFloater(nsPlaceholderFrame* aPlaceholder)
 {
   nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+
   floater->SetGeometricParent(mBlock);
   mBlock->ReflowFloater(mPresContext, *this, floater);
 
