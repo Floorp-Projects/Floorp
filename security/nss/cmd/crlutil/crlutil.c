@@ -86,7 +86,7 @@ static void DisplayCRL (CERTCertDBHandle *certHandle, char *nickName, int crlTyp
     }
 }
 
-static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType)
+static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType, PRBool deletecrls)
 {
     CERTCrlHeadNode *crlList = NULL;
     CERTCrlNode *crlNode = NULL;
@@ -124,15 +124,29 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType)
         fprintf (stdout, "\n");
 	fprintf (stdout, "\n%-40s %-5s\n\n", "CRL names", "CRL Type");
 	while (crlNode) {
+	   char* asciiname = NULL;
 	   name = &crlNode->crl->crl.name;
 	   if (!name){
 		fprintf(stderr, "%s: fail to get the CRL issuer name (%s)\n", progName,
 		SECU_Strerror(PORT_GetError()));
 		break;
 	    }
-		
-	    fprintf (stdout, "\n%-40s %-5s\n", CERT_NameToAscii(name), "CRL");
-	    crlNode = crlNode->next;
+
+	    asciiname = CERT_NameToAscii(name);
+	    fprintf (stdout, "\n%-40s %-5s\n", asciiname, "CRL");
+	    if (asciiname) {
+		PORT_Free(asciiname);
+	    }
+            if ( PR_TRUE == deletecrls) {
+                CERTSignedCrl* acrl = NULL;
+                SECItem* issuer = &crlNode->crl->crl.derName;
+                acrl = SEC_FindCrlByName(certHandle, issuer, crlType);
+                if (acrl)
+                {
+                    SEC_DeletePermCRL(acrl);
+                }
+            }
+            crlNode = crlNode->next;
 	} 
 	
     } while (0);
@@ -144,7 +158,7 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType)
 static void ListCRL (CERTCertDBHandle *certHandle, char *nickName, int crlType)
 {
     if (nickName == NULL)
-	ListCRLNames (certHandle, crlType);
+	ListCRLNames (certHandle, crlType, PR_FALSE);
     else
 	DisplayCRL (certHandle, nickName, crlType);
 }
@@ -165,7 +179,7 @@ static SECStatus DeleteCRL (CERTCertDBHandle *certHandle, char *name, int type)
     rv = SEC_DeletePermCRL (crl);
     if (rv != SECSuccess) {
 	SECU_PrintError
-		(progName, "fail to delete the issuer %s's CRL from the perm dbase (reason: %s)",
+		(progName, "fail to delete the issuer %s's CRL from the perm database (reason: %s)",
 		 name, SECU_Strerror(PORT_GetError()));
 	return SECFailure;
     }
@@ -230,8 +244,9 @@ static void Usage(char *progName)
     fprintf(stderr,
 	    "Usage:  %s -L [-n nickname] [-d keydir] [-P dbprefix] [-t crlType]\n"
 	    "        %s -D -n nickname [-d keydir] [-P dbprefix]\n"
-	    "        %s -I -i crl -t crlType [-u url] [-d keydir] [-P dbprefix] [-B]\n",
-	    progName, progName, progName);
+	    "        %s -I -i crl -t crlType [-u url] [-d keydir] [-P dbprefix] [-B]\n"
+	    "        %s -E -t crlType [-d keydir] [-P dbprefix]\n"
+	    "        %s -T\n", progName, progName, progName, progName, progName);
 
     fprintf (stderr, "%-15s List CRL\n", "-L");
     fprintf(stderr, "%-20s Specify the nickname of the CA certificate\n",
@@ -241,17 +256,34 @@ static void Usage(char *progName)
     fprintf(stderr, "%-20s Cert & Key database prefix (default is \"\")\n",
 	    "-P dbprefix");
    
-    fprintf (stderr, "%-15s Delete a CRL from the cert dbase\n", "-D");    
+    fprintf (stderr, "%-15s Delete a CRL from the cert database\n", "-D");    
     fprintf(stderr, "%-20s Specify the nickname for the CA certificate\n",
 	    "-n nickname");
     fprintf(stderr, "%-20s Specify the crl type.\n", "-t crlType");
+    fprintf(stderr, "%-20s Key database directory (default is ~/.netscape)\n",
+	    "-d keydir");
+    fprintf(stderr, "%-20s Cert & Key database prefix (default is \"\")\n",
+	    "-P dbprefix");
 
-    fprintf (stderr, "%-15s Import a CRL to the cert dbase\n", "-I");    
+    fprintf (stderr, "%-15s Erase all CRLs of specified type from hte cert database\n", "-E");
+    fprintf(stderr, "%-20s Specify the crl type.\n", "-t crlType");
+    fprintf(stderr, "%-20s Key database directory (default is ~/.netscape)\n",
+	    "-d keydir");
+    fprintf(stderr, "%-20s Cert & Key database prefix (default is \"\")\n",
+	    "-P dbprefix");
+
+    fprintf (stderr, "%-15s Import a CRL to the cert database\n", "-I");    
     fprintf(stderr, "%-20s Specify the file which contains the CRL to import\n",
 	    "-i crl");
     fprintf(stderr, "%-20s Specify the url.\n", "-u url");
     fprintf(stderr, "%-20s Specify the crl type.\n", "-t crlType");
-
+    fprintf(stderr, "%-20s Key database directory (default is ~/.netscape)\n",
+	    "-d keydir");
+    fprintf(stderr, "%-20s Cert & Key database prefix (default is \"\")\n",
+	    "-P dbprefix");
+#ifdef DEBUG
+    fprintf (stderr, "%-15s Test . Only for debugging purposes. See source code\n", "-T");
+#endif
     fprintf(stderr, "%-20s CRL Types (default is SEC_CRL_TYPE):\n", " ");
     fprintf(stderr, "%-20s \t 0 - SEC_KRL_TYPE\n", " ");
     fprintf(stderr, "%-20s \t 1 - SEC_CRL_TYPE\n", " ");        
@@ -281,6 +313,8 @@ int main(int argc, char **argv)
     PRBool bypassChecks = PR_FALSE;
     PRInt32 decodeOptions = CRL_DECODE_DEFAULT_OPTIONS;
     PRInt32 importOptions = CRL_IMPORT_DEFAULT_OPTIONS;
+    PRBool test = PR_FALSE;
+    PRBool erase = PR_FALSE;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -296,12 +330,20 @@ int main(int argc, char **argv)
     /*
      * Parse command line arguments
      */
-    optstate = PL_CreateOptState(argc, argv, "BCDILP:d:i:n:pt:u:");
+    optstate = PL_CreateOptState(argc, argv, "BCDILP:d:i:n:pt:u:TE");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
 	    Usage(progName);
 	    break;
+
+          case 'T':
+            test = PR_TRUE;
+            break;
+
+          case 'E':
+            erase = PR_TRUE;
+            break;
 
 	  case 'B':
             importOptions |= CRL_IMPORT_BYPASS_CHECKS;
@@ -336,6 +378,7 @@ int main(int argc, char **argv)
 	    if (!inFile) {
 		fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
 			progName, optstate->value);
+		PL_DestroyOptState(optstate);
 		return -1;
 	    }
 	    break;
@@ -355,6 +398,7 @@ int main(int argc, char **argv)
 	    crlType = atoi (type);
 	    if (crlType != SEC_CRL_TYPE && crlType != SEC_KRL_TYPE) {
 		fprintf(stderr, "%s: invalid crl type\n", progName);
+		PL_DestroyOptState(optstate);
 		return -1;
 	    }
 	    break;
@@ -365,9 +409,10 @@ int main(int argc, char **argv)
           }
 	}
     }
+    PL_DestroyOptState(optstate);
 
     if (deleteCRL && !nickName) Usage (progName);
-    if (!(listCRL || deleteCRL || importCRL)) Usage (progName);
+    if (!(listCRL || deleteCRL || importCRL || test || erase)) Usage (progName);
     if (importCRL && !inFile) Usage (progName);
     
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
@@ -387,11 +432,31 @@ int main(int argc, char **argv)
     /* Read in the private key info */
     if (deleteCRL) 
 	DeleteCRL (certHandle, nickName, crlType);
-    else if (listCRL)
-	ListCRL (certHandle, nickName, crlType);
-    else if (importCRL) 
+    else if (listCRL) {
+	int i = 0;
+	for (i=0; i<10; i++)
+	    ListCRL (certHandle, nickName, crlType);
+    }
+    else if (importCRL) {
 	rv = ImportCRL (certHandle, url, crlType, inFile, importOptions,
                         decodeOptions);
-    
+    }
+    else if (erase) {
+        /* list and delete all CRLs */
+        ListCRLNames (certHandle, crlType, PR_TRUE);
+    }
+#ifdef DEBUG
+    else if (test) {
+        /* list and delete all CRLs */
+        ListCRLNames (certHandle, crlType, PR_TRUE);
+        /* list CRLs */
+        ListCRLNames (certHandle, crlType, PR_FALSE);
+        /* import CRL as a blob */
+	rv = ImportCRL (certHandle, url, crlType, inFile, importOptions,
+                        decodeOptions);
+        /* list CRLs */
+        ListCRLNames (certHandle, crlType, PR_FALSE);
+    }
+#endif    
     return (rv);
 }
