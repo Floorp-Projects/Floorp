@@ -22,7 +22,10 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE = EXE
 PROG1 = .\$(OBJDIR)\LocaleSelfTest.exe
 PROG2 = .\$(OBJDIR)\nsLocaleTest.exe
+SRPT1 = .\nsLocaleTest.html
 PROGRAMS = $(PROG1) $(PROG2)
+SRPTS = $(SRPT1)
+
 
 LCFLAGS=-DUSE_NSREG
 
@@ -41,10 +44,11 @@ LLFLAGS= /NODEFAULTLIB msvcirt.lib msvcrt.lib
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
-  -for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
+  -for %p in ($(PROGRAMS) $(SRPTS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
-  -for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
+	for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
+	for %p in ($(SRPTS)) do $(RM) $(DIST)\bin\%p
 
 $(PROG1): $(OBJDIR) LocaleSelfTest.cpp
 

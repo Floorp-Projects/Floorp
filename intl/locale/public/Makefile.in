@@ -23,10 +23,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = locale
 
-XPIDLSRCS       = nsILocale.idl  \
-                  nsIScriptableDateFormat.idl  \
-                  $(NULL)
-
 EXPORTS = \
 	nsCollationCID.h 	\
 	nsDateTimeFormatCID.h 	\

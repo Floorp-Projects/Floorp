@@ -94,7 +94,7 @@ get_applocale(void)
 	nsILocale*			locale;
 	nsString*			catagory;
 	nsString*			value;
-  const PRUnichar *lc_name_unichar;
+	PRUnichar *lc_name_unichar;
 
 	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
 										(nsIFactory**)&localeFactory);

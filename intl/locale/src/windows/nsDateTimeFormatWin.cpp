@@ -118,7 +118,7 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   mCharset.SetString("ISO-8859-1"); //TODO: need to get this from locale
   // Get LCID
   if (locale != nsnull) {
-    const PRUnichar *aLocaleUnichar;
+    PRUnichar *aLocaleUnichar;
     nsString aLocale;
     nsString aCategory("NSILOCALE_TIME");
     nsresult res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);

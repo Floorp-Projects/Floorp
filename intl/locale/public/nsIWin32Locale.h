@@ -39,5 +39,7 @@ public:
 	NS_IMETHOD GetXPLocale(LCID winLCID,nsString* locale) = 0;
 };
 
+nsresult GetPlatformLocale(const PRUnichar* localeValue, LCID* winLCID);
+nsresult GetXPLocale(LCID winLCID, PRUnichar* localeValue);
 
 #endif

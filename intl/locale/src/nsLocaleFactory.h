@@ -32,6 +32,18 @@
 #include "nsIPosixLocale.h"
 #endif
 
+class nsLocaleServiceFactory : public nsIFactory
+{
+public:
+  nsLocaleServiceFactory();
+  virtual ~nsLocaleServiceFactory();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  NS_IMETHOD LockFactory(PRBool aLock);
+};
+
 class nsLocaleFactory : public nsILocaleFactory
 {
   NS_DECL_ISUPPORTS
