@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.3 1998/09/09 19:08:32 pnunn%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.4 1998/10/01 00:23:05 norris%netscape.com Exp $
  */
 
 
@@ -964,12 +964,14 @@ IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out, URL_Struct *urls,
 
             /* Emit DocInfo link to URL */
             address = ic->url_address;
-            PL_strcpy(buffer, "<A TARGET=Internal_URL_Info HREF=about:");
-            PL_strcat(buffer, address);
-            PL_strcat(buffer, ">");
+            PL_strcpy(buffer, "<A TARGET=Internal_URL_Info HREF=\"about:");
+            escaped = NET_EscapeDoubleQuote(address);
+            PL_strcat(buffer, escaped);
+            PR_Free(escaped);
+            PL_strcat(buffer, "\">");
             escaped = NET_EscapeHTML(address);
             PL_strcat(buffer, escaped);
-            PR_FREEIF(escaped);
+            PR_Free(escaped);
             PL_strcat(buffer, "</A>");
             ADD_CELL("URL:", buffer);
             

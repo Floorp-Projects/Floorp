@@ -1857,10 +1857,12 @@ PUT_PART(buffer);
 
 		/* put the URL out there */
 		TABLE_TOP("URL:");
-		PL_strcpy(buffer, "<A TARGET=Internal_URL_Info HREF=about:");
+		PL_strcpy(buffer, "<A TARGET=Internal_URL_Info HREF=\"about:");
 		PUT_PART(buffer);
-		PUT_PART(address);
-		PL_strcpy(buffer, ">");
+		escaped = NET_EscapeDoubleQuote(address);
+		PUT_PART(escaped);
+		PR_Free(escaped);
+		XP_STRCPY(buffer, "\">");
 		PUT_PART(buffer);
 		escaped = NET_EscapeHTML(address);
 		PUT_PART(escaped);

@@ -451,6 +451,7 @@ LO_DocumentInfo(MWContext *context, NET_StreamClass *stream)
 	char *backdrop_image_url;
 	char *url;
 	char *base_url;
+	char *escaped;
 	lo_FormData *form_list;
 
 	if (context == NULL)
@@ -488,12 +489,16 @@ LO_DocumentInfo(MWContext *context, NET_StreamClass *stream)
 		char buf[1024];
 
 		url = XP_STRDUP(top_state->url);
-		XP_STRCPY(buf, "<A TARGET=Internal_URL_Info HREF=about:");
+		XP_STRCPY(buf, "<A TARGET=Internal_URL_Info HREF=\"about:");
 		STREAM_WRITE(buf);
-		STREAM_WRITE(url);
-		XP_STRCPY(buf,">");
+		escaped = NET_EscapeDoubleQuote(url);
+		STREAM_WRITE(escaped);
+		PR_Free(escaped);
+		XP_STRCPY(buf,"\">");
 		STREAM_WRITE(buf);
-		STREAM_WRITE(url);
+		escaped = NET_EscapeHTML(url);
+		STREAM_WRITE(escaped);
+		PR_Free(escaped);
 		XP_STRCPY(buf,"</A><UL>");
 		STREAM_WRITE(buf);
 		XP_FREE(url);

@@ -902,6 +902,7 @@ NET_DisplayGlobalHistoryInfoAsHTML(MWContext *context,
 	time_t entry_date;
 	int status = MK_NO_DATA;
 	int32 count=0;
+	char *escaped;
 	static char LINK_START[] = "<A href=\"";
 	static char LINK_END[] = "\">";
 	static char END_LINK[] = "</A>";
@@ -983,9 +984,9 @@ PUT_PART(buffer);
 		if(status < 0)
   			goto END;
 
-		/* push the key special since we know the size */
-		status = (*stream->put_block)(stream,
-									  (char*)key.data, key.size);
+		escaped = NET_EscapeDoubleQuote((char*)key.data);
+		PUT_PART(escaped);
+		XP_FREE(escaped);
 		if(status < 0)
   			goto END;
 
@@ -993,9 +994,9 @@ PUT_PART(buffer);
 		if(status < 0)
   			goto END;
 
-		/* push the key special since we know the size */
-		status = (*stream->put_block)(stream,
-									  (char*)key.data, key.size);
+		escaped = NET_EscapeHTML((char*)key.data);
+		PUT_PART(escaped);
+		XP_FREE(escaped);
 		if(status < 0)
   			goto END;
 

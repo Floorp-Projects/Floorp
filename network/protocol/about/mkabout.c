@@ -64,6 +64,7 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 	struct tm *tm_struct_p;
 	char buf[64];
 	char *tmp=0;
+	char *escaped;
 	char *sec_msg, *il_msg;
 
 	NET_FindURLInCache(URL_s, ctxt);
@@ -92,9 +93,13 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 	StrAllocCopy(output, "<TABLE>");
 
 	StrAllocCopy(tmp, "<A HREF=\"");
-	StrAllocCat(tmp, URL_s->address);
+	escaped = NET_EscapeDoubleQuote(URL_s->address);
+	StrAllocCat(tmp, escaped);
+	PR_Free(escaped);
 	StrAllocCat(tmp, "\">");
-	StrAllocCat(tmp, URL_s->address);
+	escaped = NET_EscapeHTML(URL_s->address);
+	StrAllocCat(tmp, escaped);
+	PR_Free(escaped);
 	StrAllocCat(tmp, "</a>");
 	if(URL_s->is_netsite)
 	  {
