@@ -110,6 +110,11 @@
 #include <sys/byteorder.h>
 #endif
 
+#ifdef DGUX
+#include <sys/types.h>
+#include <sys/byteorder.h>
+#endif
+
 #ifdef NCR
 #include <sys/types.h>
 #include <sys/byteorder.h>
