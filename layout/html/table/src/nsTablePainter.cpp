@@ -432,7 +432,6 @@ TableBackgroundPainter::PaintTable(nsTableFrame* aTableFrame,
               nsresult rv = mCols[colIndex].mCol.SetBCBorder(border, this);
               if (NS_FAILED(rv)) return rv;
             }
-            mCols[colIndex].mCol.mBorder->GetBorder(border);
           }
         }
       }
