@@ -60,7 +60,7 @@ OBJS=   \
 	.\$(OBJDIR)\prefetch.obj	\
 	.\$(OBJDIR)\mkgeturl.obj	\
 	$(NULL)
-	
+
 
 CSRCS =	\
 	jsautocf.c	\
@@ -112,27 +112,28 @@ EXPORTS= mkstream.h \
 
 C_OBJS = \
 	$(NULL)
-	
+
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\jtools	\
-    -I$(XPDIST)\public\zlib 	\
-    -I$(XPDIST)\public\nspr2 	\
-    -I$(XPDIST)\public\dbm 	\
-    -I$(XPDIST)\public\util	\
-    -I$(XPDIST)\public\js 	\
-    -I$(XPDIST)\public\parse 	\
-    -I$(XPDIST)\public\lay 	\
-    -I$(XPDIST)\public\style 	\
-    -I$(XPDIST)\public\pref 	\
-    -I$(XPDIST)\public\htmldlgs	\
-    -I$(XPDIST)\public\java	\
-    -I$(XPDIST)\public\libfont	\
-    -I$(XPDIST)\public\netcache	\
-    -I$(XPDIST)\public\httpurl	\
-    -I$(XPDIST)\public\cnetinit	\
-    -I$(XPDIST)\public\security 
+LINCS=-I$(PUBLIC)\jtools	\
+    -I$(PUBLIC)\zlib 		\
+    -I$(PUBLIC)\nspr2 		\
+    -I$(PUBLIC)\dbm 		\
+    -I$(PUBLIC)\util		\
+    -I$(PUBLIC)\js 		\
+    -I$(PUBLIC)\parse 		\
+    -I$(PUBLIC)\lay 		\
+    -I$(PUBLIC)\style 		\
+    -I$(PUBLIC)\pref 		\
+    -I$(PUBLIC)\htmldlgs	\
+    -I$(PUBLIC)\java		\
+    -I$(PUBLIC)\libfont		\
+    -I$(PUBLIC)\netcache	\
+    -I$(PUBLIC)\netcnvts	\
+    -I$(PUBLIC)\httpurl		\
+    -I$(PUBLIC)\cnetinit	\
+    -I$(PUBLIC)\security 
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 

@@ -30,12 +30,12 @@ MODULE_PRIVATE SortStruct *
 NET_SortInit (void)
 {
 
-    SortStruct * sort_struct = XP_NEW(SortStruct);
+    SortStruct * sort_struct = PR_NEW(SortStruct);
 
     if(!sort_struct)
 	return(0);
 
-    sort_struct->list = (void **) XP_ALLOC((sizeof(void *) * CHUNK_SIZE));
+    sort_struct->list = (void **) PR_Malloc((sizeof(void *) * CHUNK_SIZE));
 
     if(!sort_struct->list)
 	return(0);
@@ -59,7 +59,7 @@ NET_SortAdd (SortStruct * sort_struct, void * add_object)
       {  /* whoops the list was too small, expand it */
 
         sort_struct->cur_size += CHUNK_SIZE;
-		sort_struct->list = (void **) XP_REALLOC(sort_struct->list, 
+		sort_struct->list = (void **) PR_Realloc(sort_struct->list, 
 								(sizeof(void *) * sort_struct->cur_size));
 
 		if(!sort_struct->list)
@@ -81,7 +81,7 @@ NET_SortInsert(SortStruct * sort_struct, void * insert_before, void * new_object
       {  /* whoops the list was too small, expand it */
 
         sort_struct->cur_size += CHUNK_SIZE;
-        sort_struct->list = (void **) XP_REALLOC(sort_struct->list,
+        sort_struct->list = (void **) PR_Realloc(sort_struct->list,
                     			(sizeof(void *) * sort_struct->cur_size));
 
     	if(!sort_struct->list)
@@ -156,8 +156,8 @@ NET_SortCount(SortStruct * sort_struct)
 MODULE_PRIVATE void 
 NET_SortFree(SortStruct * sort_struct)
 {
-    XP_FREE(sort_struct->list);
-    XP_FREE(sort_struct);
+    PR_Free(sort_struct->list);
+    PR_Free(sort_struct);
 }
 
 #ifdef PROFILE

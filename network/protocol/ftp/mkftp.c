@@ -97,7 +97,7 @@ extern int XP_UPTO_HIGHER_LEVEL_DIRECTORY ;
 
 
 #define PUTSTRING(s)           (*cd->stream->put_block) \
-                                 (cd->stream, s, XP_STRLEN(s))
+                                 (cd->stream, s, PL_strlen(s))
 #define PUTBLOCK(b,l)         (*cd->stream->put_block) \
                                 (cd->stream, b, l)
 #define COMPLETE_STREAM   (*cd->stream->complete) \
@@ -351,7 +351,7 @@ net_ftp_make_stream(FO_Present_Types format_out,
 	if(URL_s->files_to_post && EDT_IS_EDITOR(window_id))
 	  {
 		Chrome chrome_struct;
-		XP_MEMSET(&chrome_struct, 0, sizeof(Chrome));
+		memset(&chrome_struct, 0, sizeof(Chrome));
 		chrome_struct.is_modal = TRUE;
 		chrome_struct.allow_close = TRUE;
 		chrome_struct.allow_resize = TRUE;
@@ -398,12 +398,12 @@ net_ftp_show_error(ActiveEntry *ce, char *line)
 
 	if(cd->stream)
 	  {
-		XP_STRCPY(cd->output_buffer, XP_GetString(XP_HTML_FTPERROR_TRANSFER));
+		PL_strcpy(cd->output_buffer, XP_GetString(XP_HTML_FTPERROR_TRANSFER));
 		if(ce->status > -1)
 			ce->status = PUTSTRING(cd->output_buffer);
 		if(line && ce->status > -1)
 			ce->status = PUTSTRING(cd->return_msg);
-		XP_STRCPY(cd->output_buffer, "</PRE>");
+		PL_strcpy(cd->output_buffer, "</PRE>");
 		if(ce->status > -1)
 			ce->status = PUTSTRING(cd->output_buffer);
 	  }
@@ -460,12 +460,12 @@ net_ftp_response (ActiveEntry *ce)
 	/* Login messages or CWD messages 
      * Their so handy, those help messages are :)
      */
-    if(cd->cc->server_type == FTP_UNIX_TYPE && !XP_STRNCMP(line, "250-",4))
+    if(cd->cc->server_type == FTP_UNIX_TYPE && !PL_strncmp(line, "250-",4))
       {
         StrAllocCat(cd->cwd_message_buffer, line+4);
         StrAllocCat(cd->cwd_message_buffer, "\n");  /* nasty */
       }
-    else if(!XP_STRNCMP(line,"230-",4) || !XP_STRNCMP(line,"220-",4))
+    else if(!PL_strncmp(line,"230-",4) || !PL_strncmp(line,"220-",4))
       {
         StrAllocCat(cd->login_message_buffer, line+4);
         StrAllocCat(cd->login_message_buffer, "\n");  /* nasty */
@@ -476,7 +476,7 @@ net_ftp_response (ActiveEntry *ce)
 		 * but it checks for 230 response code instead
 	  	 * this is to fix buggy ftp servers that don't follow specs
 		 */
-		if(XP_STRNCMP(line, "230", 3))
+		if(PL_strncmp(line, "230", 3))
 		  {
 			/* make sure it's not  "230 Guest login ok...
 			 */
@@ -502,7 +502,7 @@ net_ftp_response (ActiveEntry *ce)
              cd->cont_response = -1;    /* ended */
 
          StrAllocCat(cd->return_msg, "\n");
-		 if(XP_STRLEN(line) > 3)
+		 if(PL_strlen(line) > 3)
 		   {
 			 if(isdigit(line[0]))
                  StrAllocCat(cd->return_msg, line+4);
@@ -538,7 +538,7 @@ net_send_username(FTPConData * cd)
 	 * if it is there assume a unix server that can
 	 * use the LIST command
 	 */	
-	if(cd->return_msg && strcasestr(cd->return_msg, "UNIX"))
+	if(cd->return_msg && PL_strcasestr(cd->return_msg, "UNIX"))
 	  {
         cd->cc->server_type = FTP_UNIX_TYPE;
 		cd->cc->use_list = TRUE;
@@ -561,7 +561,7 @@ net_send_username(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -607,14 +607,14 @@ net_send_username_response(ActiveEntry * ce)
 			else
                 ABORT_STREAM(ce->status);
 
-			XP_FREE(cd->stream);
+			PR_Free(cd->stream);
 			cd->stream = NULL;
 		  }
 		
         cd->next_state = FTP_ERROR_DONE;
 
 		/* make sure error_msg is empty */
-		XP_FREEIF(ce->URL_s->error_msg);
+		PR_FREEIF(ce->URL_s->error_msg);
 		ce->URL_s->error_msg = NULL;
 
         return MK_UNABLE_TO_LOGIN;
@@ -642,7 +642,7 @@ net_send_password(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE char *
@@ -684,7 +684,7 @@ net_send_password_response(ActiveEntry * ce)
 				
 				PC_StorePasswordNameValueArray(PC_FTP_MODULE_KEY, key, array);
 
-				XP_FREE(key);
+				PR_Free(key);
 
 				PC_FreeNameValueArray(array);
 			}
@@ -697,8 +697,8 @@ net_send_password_response(ActiveEntry * ce)
       }
     else
       {
-		XP_FREEIF(ftp_last_password_host);
-		XP_FREEIF(ftp_last_password);
+		PR_FREEIF(ftp_last_password_host);
+		PR_FREEIF(ftp_last_password);
 
         cd->next_state = FTP_ERROR_DONE;
         FE_Alert(ce->window_id, cd->return_msg ? cd->return_msg :
@@ -726,7 +726,7 @@ net_send_acct(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -769,7 +769,7 @@ net_send_rest_zero(ActiveEntry * ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -809,7 +809,7 @@ net_send_syst(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 
@@ -831,41 +831,41 @@ net_send_syst_response(FTPConData * cd)
         	cd->next_state = FTP_FIGURE_OUT_WHAT_TO_DO;
 
                 /* we got a line -- what kind of server are we talking to? */
-        if (!XP_STRNCMP(cd->return_msg, "UNIX Type: L8 MAC-OS MachTen", 28))
+        if (!PL_strncmp(cd->return_msg, "UNIX Type: L8 MAC-OS MachTen", 28))
           {
             cd->cc->server_type = FTP_MACHTEN_TYPE;
             cd->cc->use_list = TRUE;
           }
-        else if (XP_STRSTR(cd->return_msg, "UNIX") != NULL)
+        else if (PL_strstr(cd->return_msg, "UNIX") != NULL)
           {
              cd->cc->server_type = FTP_UNIX_TYPE;
              cd->cc->use_list = TRUE;
           }
-        else if (XP_STRSTR(cd->return_msg, "Windows_NT") != NULL)
+        else if (PL_strstr(cd->return_msg, "Windows_NT") != NULL)
           {
              cd->cc->server_type = FTP_NT_TYPE;
              cd->cc->use_list = TRUE;
           }
-        else if (XP_STRNCMP(cd->return_msg, "VMS", 3) == 0)
+        else if (PL_strncmp(cd->return_msg, "VMS", 3) == 0)
           {
              cd->cc->server_type = FTP_VMS_TYPE;
              cd->cc->use_list = TRUE;
           }
-        else if ((XP_STRNCMP(cd->return_msg, "VM/CMS", 6) == 0)
-                                 || (XP_STRNCMP(cd->return_msg, "VM ", 3) == 0))
+        else if ((PL_strncmp(cd->return_msg, "VM/CMS", 6) == 0)
+                                 || (PL_strncmp(cd->return_msg, "VM ", 3) == 0))
           {
              cd->cc->server_type = FTP_CMS_TYPE;
           }
-        else if (XP_STRNCMP(cd->return_msg, "DCTS", 4) == 0)
+        else if (PL_strncmp(cd->return_msg, "DCTS", 4) == 0)
           {
              cd->cc->server_type = FTP_DCTS_TYPE;
           }
-        else if (XP_STRSTR(cd->return_msg, "MAC-OS TCP/Connect II") != NULL)
+        else if (PL_strstr(cd->return_msg, "MAC-OS TCP/Connect II") != NULL)
           {
              cd->cc->server_type = FTP_TCPC_TYPE;
          	 cd->next_state = FTP_SEND_PWD;
           }
-        else if (XP_STRNCMP(cd->return_msg, "MACOS Peter's Server", 20) == 0)
+        else if (PL_strncmp(cd->return_msg, "MACOS Peter's Server", 20) == 0)
           {
              cd->cc->server_type = FTP_PETER_LEWIS_TYPE;
              cd->cc->use_list = TRUE;
@@ -901,7 +901,7 @@ net_send_mac_bin(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 
@@ -938,7 +938,7 @@ net_figure_out_what_to_do(ActiveEntry *ce)
 		case URL_PUT_METHOD:
 			/* trim the path to the last slash */
 			{
-				char * slash = XP_STRRCHR(cd->path, '/');
+				char * slash = PL_strrchr(cd->path, '/');
 				if(slash)
 					*slash = '\0';
 			}
@@ -949,7 +949,7 @@ net_figure_out_what_to_do(ActiveEntry *ce)
 			/* we support POST if files_to_post
 			 * is filed in
 			 */
-			XP_ASSERT(ce->URL_s->files_to_post);
+			PR_ASSERT(ce->URL_s->files_to_post);
 			/* fall through */
 
 		case URL_GET_METHOD:
@@ -963,7 +963,7 @@ get_method_case:  /* ack! goto alert */
 			break;
 
 		default:
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 	  }
 
 	return(0);
@@ -987,7 +987,7 @@ net_send_mkdir(ActiveEntry *ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock,
                              cd->output_buffer,
-                             XP_STRLEN(cd->output_buffer)));
+                             PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -1030,7 +1030,7 @@ net_send_delete_file(ActiveEntry *ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock,
                              cd->output_buffer,
-                             XP_STRLEN(cd->output_buffer)));
+                             PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -1071,7 +1071,7 @@ net_send_delete_dir(ActiveEntry *ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock,
                              cd->output_buffer,
-                             XP_STRLEN(cd->output_buffer)));
+                             PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -1108,14 +1108,14 @@ net_send_pwd(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
 net_send_pwd_response(ActiveEntry *ce)
 {
     FTPConData * cd = (FTPConData *)ce->con_data;
-    char *cp = XP_STRCHR(cd->return_msg+5,'"');
+    char *cp = PL_strchr(cd->return_msg+5,'"');
 
     if(cp) 
         *cp = '\0';
@@ -1140,7 +1140,7 @@ net_send_pwd_response(ActiveEntry *ce)
               cd->cc->use_list = TRUE;
               cd->next_state = FTP_SEND_MAC_BIN;  /* see if it's a mac */
            }
-         else if (cd->return_msg[XP_STRLEN(cd->return_msg)-1] == ']')
+         else if (cd->return_msg[PL_strlen(cd->return_msg)-1] == ']')
            {
              /* path names ending with ] imply VMS, right? */
              cd->cc->server_type = FTP_VMS_TYPE;
@@ -1153,7 +1153,7 @@ net_send_pwd_response(ActiveEntry *ce)
 	 */
 	if(cd->use_default_path && cd->cc->server_type != FTP_VMS_TYPE)
 	  {
-		char *path = XP_STRTOK(&cd->return_msg[1], "\"");
+		char *path = strtok(&cd->return_msg[1], "\"");
 		char *ptr;
 		char *existing_path = cd->path;
 
@@ -1162,10 +1162,10 @@ net_send_pwd_response(ActiveEntry *ce)
 		 * so we need to just strip the drive letter
 		 */
 		if(*path != '/') {
-		  ptr = XP_STRCHR(path, '/');
+		  ptr = PL_strchr(path, '/');
           /* If that didn't work, look for a backslash (e.g., OS/2) */
           if( ptr == (char *)0 ) {
-              ptr = XP_STRCHR(path, '\\');
+              ptr = PL_strchr(path, '\\');
               /* If that worked, then go flip the slashes so the URL is legal */
               if( ptr != (char *)0 ) {
                   char *p;
@@ -1196,7 +1196,7 @@ net_send_pwd_response(ActiveEntry *ce)
 				 */
 				if(cd->path[0] != '\0')
 				  {
-					char *end = &cd->path[XP_STRLEN(cd->path)-1];
+					char *end = &cd->path[PL_strlen(cd->path)-1];
 					if(*end == '/')
 						*end = '\0';
 				  }
@@ -1211,7 +1211,7 @@ net_send_pwd_response(ActiveEntry *ce)
 
 			StrAllocCat(new_url, cd->path);
 			
-			XP_FREE(ce->URL_s->address);
+			PR_Free(ce->URL_s->address);
 
 			ce->URL_s->address = new_url;
 		  }
@@ -1243,7 +1243,7 @@ net_send_pasv(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 
@@ -1411,7 +1411,7 @@ HG31456
      */
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 
 } /* get_listen */
 
@@ -1515,13 +1515,13 @@ net_get_ftp_file_type(ActiveEntry *ce)
 			return(0);
 		  }
 
-		XP_FREEIF(cd->file_to_post);
+		PR_FREEIF(cd->file_to_post);
 		cd->file_to_post = array[i-1];
 		array[i-1] = 0;
 
     /* Use post_to data if specified in the URL struct. */
     if (ce->URL_s->post_to && ce->URL_s->post_to[i-1]) {
-      XP_FREEIF(cd->post_file_to);
+      PR_FREEIF(cd->post_file_to);
       cd->post_file_to = ce->URL_s->post_to[i-1];
       ce->URL_s->post_to[i-1] = 0;
     }
@@ -1533,7 +1533,7 @@ net_get_ftp_file_type(ActiveEntry *ce)
 		 * don't use ASCII for default types
          */
         if(!cinfo_struct->is_default 
-			&& !strncasecomp(cinfo_struct->type, "text",4))
+			&& !PL_strncasecmp(cinfo_struct->type, "text",4))
           {
             if(cd->cc->cur_mode != FTP_MODE_ASCII)
                 cd->next_state = FTP_SEND_ASCII;
@@ -1573,7 +1573,7 @@ net_get_ftp_file_type(ActiveEntry *ce)
 		 * if it has an encoding value, transfer as binary
          */
         if(!cinfo_struct->is_default 
-			&& !strncasecomp(cinfo_struct->type, "text",4)
+			&& !PL_strncasecmp(cinfo_struct->type, "text",4)
 			&& (!enc || !enc->encoding))
           {
             if(cd->cc->cur_mode != FTP_MODE_ASCII)
@@ -1623,7 +1623,7 @@ net_send_bin(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 
@@ -1642,7 +1642,7 @@ net_send_ascii(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -1688,7 +1688,7 @@ net_get_ftp_file_size(ActiveEntry * ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock,
                              cd->output_buffer,
-                             XP_STRLEN(cd->output_buffer)));
+                             PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -1761,7 +1761,7 @@ net_get_ftp_file_mdtm(ActiveEntry * ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock,
                              cd->output_buffer,
-                             XP_STRLEN(cd->output_buffer)));
+                             PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -1900,7 +1900,7 @@ net_get_ftp_file(FTPConData * cd)
         	cd->is_directory = YES;
         	cd->next_state = FTP_SEND_LIST_OR_NLST;
           }
-		else if(!XP_STRCHR(cd->path, '/'))
+		else if(!PL_strchr(cd->path, '/'))
 		  {
 			/* if we want a file out of the top directory skip the PWD
 			 */
@@ -1918,7 +1918,7 @@ net_get_ftp_file(FTPConData * cd)
 		 * if the path ends with a slash
 		 */
 		if(cd->retr_already_failed ||
-			'/' == cd->path[XP_STRLEN(cd->path)-1])
+			'/' == cd->path[PL_strlen(cd->path)-1])
         	cd->next_state = FTP_SEND_CWD;
 		else
         {
@@ -1938,7 +1938,7 @@ net_send_cwd(FTPConData * cd)
       {
         char *cp, *cp1;
         /** Try to go to the appropriate directory and doctor filename **/
-        if ((cp=XP_STRRCHR(cd->path, '/'))!=NULL) 
+        if ((cp=PL_strrchr(cd->path, '/'))!=NULL) 
           {
 			*cp = '\0';
         	PR_snprintf(cd->output_buffer, 
@@ -1948,7 +1948,7 @@ net_send_cwd(FTPConData * cd)
 			*cp = '/';  /* set it back so it is left unmodified */
 
 			/* turn slashes into '.' */
-        	while ((cp1=XP_STRCHR(cd->output_buffer, '/')) != NULL)
+        	while ((cp1=PL_strchr(cd->output_buffer, '/')) != NULL)
             	*cp1 = '.';
           }
         else
@@ -1972,7 +1972,7 @@ net_send_cwd(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -2034,19 +2034,19 @@ net_begin_put(ActiveEntry * ce)
        /* All path info in post_file_to is thrown away.  Assumed to
           be in same directory. */
        if (cd->post_file_to) {
-      	  path = XP_STRDUP(cd->post_file_to);
+      	  path = PL_strdup(cd->post_file_to);
  		      if(!path)
 			      return(MK_OUT_OF_MEMORY);
-       	  filename = XP_STRRCHR(path, '/');
+       	  filename = PL_strrchr(path, '/');
        }
        else {
-		    path = XP_STRDUP(cd->file_to_post);
+		    path = PL_strdup(cd->file_to_post);
 		    if(!path)
 			    return(MK_OUT_OF_MEMORY);
 #if defined(XP_WIN) || defined(XP_OS2)               /* IBM - SAH */
-		    filename = XP_STRRCHR(path, '\\');
+		    filename = PL_strrchr(path, '\\');
 #else
-		    filename = XP_STRRCHR(path, '/');
+		    filename = PL_strrchr(path, '/');
 #endif
        }
 	  }
@@ -2055,7 +2055,7 @@ net_begin_put(ActiveEntry * ce)
 		path = NET_ParseURL(ce->URL_s->address, GET_PATH_PART);
 		if(!path)
 			return(MK_OUT_OF_MEMORY);
-		filename = XP_STRRCHR(path, '/');
+		filename = PL_strrchr(path, '/');
 	  }
 
 	if(!filename)
@@ -2073,7 +2073,7 @@ net_begin_put(ActiveEntry * ce)
     	FE_SaveDialogSetFilename(ce->window_id, filename);
 #endif /* EDITOR */
 
-	XP_FREE(path);
+	PR_Free(path);
 
     cd->next_state = FTP_WAIT_FOR_RESPONSE;
     cd->next_state_after_response = FTP_BEGIN_PUT_RESPONSE;
@@ -2083,7 +2083,7 @@ net_begin_put(ActiveEntry * ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 
@@ -2241,13 +2241,13 @@ net_do_put(ActiveEntry * ce)
 		  {
 			ce->URL_s->post_data = 0;
 			ce->URL_s->post_data_is_file = FALSE;
-			XP_FREEIF(cd->file_to_post);
+			PR_FREEIF(cd->file_to_post);
 			cd->file_to_post = NULL;
 		  }
 
     if (cd->post_file_to)
       {
-      XP_FREEIF(cd->post_file_to);
+      PR_FREEIF(cd->post_file_to);
       cd->post_file_to = NULL;
       }
 
@@ -2283,7 +2283,7 @@ net_do_put(ActiveEntry * ce)
             	History_entry * his = NULL;
 #endif /* MOZILLA_CLIENT */
 
-				if(his && !strncasecomp(his->address, "ftp:", 4))
+				if(his && !PL_strncasecmp(his->address, "ftp:", 4))
 			  	  {
 					/* go get the index of the directory */
 					cd->next_state_after_response = FTP_FIGURE_OUT_WHAT_TO_DO;
@@ -2322,7 +2322,7 @@ net_send_rest(ActiveEntry *ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock,
                              cd->output_buffer,
-                             XP_STRLEN(cd->output_buffer)));
+                             PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -2369,7 +2369,7 @@ net_send_retr(FTPConData * cd)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 
@@ -2424,9 +2424,9 @@ net_send_list_or_nlst(ActiveEntry * ce)
     FTPConData * cd = (FTPConData *)ce->con_data;
 
     if(cd->cc->use_list)
-        XP_STRCPY(cd->output_buffer, "LIST" CRLF);
+        PL_strcpy(cd->output_buffer, "LIST" CRLF);
     else
-        XP_STRCPY(cd->output_buffer, "NLST" CRLF);
+        PL_strcpy(cd->output_buffer, "NLST" CRLF);
 
     cd->next_state = FTP_WAIT_FOR_RESPONSE;
     cd->next_state_after_response = FTP_SEND_LIST_OR_NLST_RESPONSE;
@@ -2436,7 +2436,7 @@ net_send_list_or_nlst(ActiveEntry * ce)
 
     return((int) NET_BlockingWrite(cd->cc->csock, 
 							 cd->output_buffer, 
-							 XP_STRLEN(cd->output_buffer)));
+							 PL_strlen(cd->output_buffer)));
 }
 
 PRIVATE int
@@ -2452,7 +2452,7 @@ net_send_list_or_nlst_response(ActiveEntry * ce)
 
 		/* add a slash to the end of the uRL if it doesnt' have one now
 		 */
-		if(ce->URL_s->address[XP_STRLEN(ce->URL_s->address)-1] != '/')
+		if(ce->URL_s->address[PL_strlen(ce->URL_s->address)-1] != '/')
 		  {
 			/* update the global history before modification
 			 */
@@ -2488,7 +2488,7 @@ net_setup_ftp_stream(ActiveEntry * ce)
  
  		if (status >= 0 && pUrl) {
  			StrAllocCopy(ce->URL_s->content_type, pUrl);
- 			XP_FREE(pUrl);
+ 			PR_Free(pUrl);
  		} else {
  	 		StrAllocCopy(ce->URL_s->content_type, APPLICATION_HTTP_INDEX);
  		}
@@ -2781,7 +2781,7 @@ net_start_ftp_read_dir(ActiveEntry * ce)
       {
         int end;
 
-        end = XP_STRLEN(cd->path)-1;
+        end = PL_strlen(cd->path)-1;
         /* if the path ends with a slash kill it.
          * that includes the path "/"
          */
@@ -2801,22 +2801,22 @@ net_start_ftp_read_dir(ActiveEntry * ce)
 		/* print it out like so:  101: message line 1
 		 *                        101: message line 2, etc...
 	 	 */
-		line = XP_STRTOK(cd->login_message_buffer, "\n");
+		line = strtok(cd->login_message_buffer, "\n");
 		while(ce->status >= 0 && line)
 		{
-			XP_STRCPY(buf, "101: ");
-			XP_STRNCAT_SAFE (buf, line, sizeof(buf)-8);
-			XP_STRCAT (buf, CRLF);
+			PL_strcpy(buf, "101: ");
+			PL_strcatn (buf, sizeof(buf)-8, line);
+			PL_strcat (buf, CRLF);
 
 			ce->status = PUTSTRING(buf);
 
-			line = XP_STRTOK(NULL, "\n");
+			line = strtok(NULL, "\n");
 		}
 
 		/* if there is also a cwd message add a blank line */
     	if(ce->status >= 0 && cd->cwd_message_buffer)
 		{
-			XP_STRCPY(buf, "101: "CRLF);
+			PL_strcpy(buf, "101: "CRLF);
 			ce->status = PUTSTRING(buf);
 		}
 	}
@@ -2826,23 +2826,23 @@ net_start_ftp_read_dir(ActiveEntry * ce)
 		/* print it out like so:  101: message line 1
 		 *                        101: message line 2, etc...
 	 	 */
-		char *end_line = XP_STRCHR(cd->cwd_message_buffer, '\n');
+		char *end_line = PL_strchr(cd->cwd_message_buffer, '\n');
 		if(end_line)
 			*end_line = '\0';
 		line = cd->cwd_message_buffer;
 
 		while(ce->status >= 0 && line)
 		{
-			XP_STRCPY(buf, "101: ");
-			XP_STRNCAT_SAFE (buf, line, sizeof(buf)-8);
-			XP_STRCAT (buf, CRLF);
+			PL_strcpy(buf, "101: ");
+			PL_strcatn (buf, sizeof(buf)-8, line);
+			PL_strcat (buf, CRLF);
 
 			ce->status = PUTSTRING(buf);
 
 			if(end_line)
 			{
 				line = end_line+1;
-				end_line = XP_STRCHR(line, '\n');
+				end_line = PL_strchr(line, '\n');
 				if(end_line)
 					*end_line = '\0';
 			}
@@ -2854,7 +2854,7 @@ net_start_ftp_read_dir(ActiveEntry * ce)
     }
 
     /* clear the buffer so we can use it on the data sock */
-    XP_FREEIF(cd->data_buf);
+    PR_FREEIF(cd->data_buf);
     cd->data_buf = NULL;
     cd->data_buf_size = 0;
 
@@ -3081,7 +3081,7 @@ PRIVATE time_t net_convert_unix_date (char * datestr)
     time_info->tm_wday = 0;
     time_info->tm_yday = 0;
     bcol = ++ecol;                                   /* Year */
-    if ((ecol = XP_STRCHR(bcol, ':')) == NULL) 
+    if ((ecol = PL_strchr(bcol, ':')) == NULL) 
       {
     	time_info->tm_year = atoi(bcol)-1900;
     	time_info->tm_sec = 0;
@@ -3157,27 +3157,27 @@ PRIVATE time_t net_convert_vms_date (char * datestr)
 
     time_info->tm_isdst = -1;                 /* Disable summer time */
 
-    if ((col = XP_STRTOK(datestr, "-")) == NULL)
+    if ((col = strtok(datestr, "-")) == NULL)
     	return (time_t) 0;
 
     time_info->tm_mday = atoi(col);                   /* Day */
     time_info->tm_wday = 0;
     time_info->tm_yday = 0;
 
-    if ((col = XP_STRTOK(NULL, "-")) == NULL || (time_info->tm_mon = NET_MonthNo(col)) < 0)
+    if ((col = strtok(NULL, "-")) == NULL || (time_info->tm_mon = NET_MonthNo(col)) < 0)
     	return (time_t) 0;
 
-    if ((col = XP_STRTOK(NULL, " ")) == NULL)               /* Year */
+    if ((col = strtok(NULL, " ")) == NULL)               /* Year */
     	return (time_t) 0;
 
     time_info->tm_year = atoi(col)-1900;
 
-    if ((col = XP_STRTOK(NULL, ":")) == NULL)               /* Hour */
+    if ((col = strtok(NULL, ":")) == NULL)               /* Hour */
     	return (time_t) 0;
 
     time_info->tm_hour = atoi(col);
 
-    if ((col = XP_STRTOK(NULL, " ")) == NULL)               /* Mins */
+    if ((col = strtok(NULL, " ")) == NULL)               /* Mins */
     	return (time_t) 0;
 
     time_info->tm_min = atoi(col);
@@ -3212,7 +3212,7 @@ net_parse_ls_line (char *line, NET_FileEntryInfo *entry_info)
 	char    save_char;
 	char   *ptr;
 
-    for (ptr = &line[XP_STRLEN(line) - 1];
+    for (ptr = &line[PL_strlen(line) - 1];
             (ptr > line+13) && (!XP_IS_SPACE(*ptr) || !net_is_ls_date(ptr-12)); ptr--)
                 ; /* null body */
 	save_char = *ptr;
@@ -3278,7 +3278,7 @@ net_parse_vms_dir_entry (char *line, NET_FileEntryInfo *entry_info)
 
         /**  Get rid of blank lines, and information lines.  **/
         /**  Valid lines have the ';' version number token.  **/
-        if (!XP_STRLEN(line) || (cp=XP_STRCHR(line, ';')) == NULL) 
+        if (!PL_strlen(line) || (cp=PL_strchr(line, ';')) == NULL) 
 		  {
             entry_info->display = FALSE;
             return;
@@ -3301,7 +3301,7 @@ net_parse_vms_dir_entry (char *line, NET_FileEntryInfo *entry_info)
 
         /** Convert any tabs in rest of line to spaces. **/
     	cps = cp-1;
-        while ((cps=XP_STRCHR(cps+1, '\t')) != NULL)
+        while ((cps=PL_strchr(cps+1, '\t')) != NULL)
             *cps = ' ';
 
         /** Collapse serial spaces. **/
@@ -3322,15 +3322,15 @@ net_parse_vms_dir_entry (char *line, NET_FileEntryInfo *entry_info)
     	if (!HaveYear) 
 	 	  {
         	NowTime = time(NULL);
-        	XP_STRCPY(ThisYear, (char *)ctime(&NowTime)+20);
+        	PL_strcpy(ThisYear, (char *)ctime(&NowTime)+20);
         	ThisYear[4] = '\0';
         	HaveYear = TRUE;
     	  }
 
         /* get the date. 
 		 */
-        if ((cpd=XP_STRCHR(cp, '-')) != NULL &&
-                XP_STRLEN(cpd) > 9 && isdigit(*(cpd-1)) &&
+        if ((cpd=PL_strchr(cp, '-')) != NULL &&
+                PL_strlen(cpd) > 9 && isdigit(*(cpd-1)) &&
                 isalpha(*(cpd+1)) && *(cpd+4) == '-') 
 		  {
 
@@ -3339,28 +3339,28 @@ net_parse_vms_dir_entry (char *line, NET_FileEntryInfo *entry_info)
             *(cpd+4) = '\0';
             *(cpd+2) = tolower(*(cpd+2));
             *(cpd+3) = tolower(*(cpd+3));
-            XP_SPRINTF(date, "%.32s ", cpd+1);
+            sprintf(date, "%.32s ", cpd+1);
             *(cpd+4) = '-';
 
             /** Day **/
             *cpd = '\0';
             if (isdigit(*(cpd-2)))
-                XP_SPRINTF(date+4, "%.32s ", cpd-2);
+                sprintf(date+4, "%.32s ", cpd-2);
             else
-                XP_SPRINTF(date+4, " %.32s ", cpd-1);
+                sprintf(date+4, " %.32s ", cpd-1);
             *cpd = '-';
 
             /** Time or Year **/
-            if (!XP_STRNCMP(ThisYear, cpd+5, 4) && XP_STRLEN(cpd) > 15 && *(cpd+12) == ':')
+            if (!PL_strncmp(ThisYear, cpd+5, 4) && PL_strlen(cpd) > 15 && *(cpd+12) == ':')
 			  {
                 *(cpd+15) = '\0';
-                XP_SPRINTF(date+7, "%.32s", cpd+10);
+                sprintf(date+7, "%.32s", cpd+10);
                 *(cpd+15) = ' ';
               } 
 			else 
 			  {
                 *(cpd+9) = '\0';
-                XP_SPRINTF(date+7, " %.32s", cpd+5);
+                sprintf(date+7, " %.32s", cpd+5);
                 *(cpd+9) = ' ';
               }
 
@@ -3369,7 +3369,7 @@ net_parse_vms_dir_entry (char *line, NET_FileEntryInfo *entry_info)
 
         /* get the size 
 		 */
-        if ((cpd=XP_STRCHR(cp, '/')) != NULL) 
+        if ((cpd=PL_strchr(cp, '/')) != NULL) 
 		  {
             /* Appears be in used/allocated format */
             cps = cpd;
@@ -3387,12 +3387,12 @@ net_parse_vms_dir_entry (char *line, NET_FileEntryInfo *entry_info)
             if (entry_info->size <= ialloc)
                 entry_info->size *= 512;
           }
-        else if ((cps=XP_STRTOK(cp, sp)) != NULL) 
+        else if ((cps=strtok(cp, sp)) != NULL) 
 		  {
             /* We just initialized on the version number 
              * Now let's find a lone, size number   
 			 */
-            while ((cps=XP_STRTOK(NULL, sp)) != NULL) 
+            while ((cps=strtok(NULL, sp)) != NULL) 
 			  {
                  cpd = cps;
                  while (isdigit(*cpd))
@@ -3449,15 +3449,15 @@ net_parse_dir_entry (char *entry, int server_type)
             case FTP_MACHTEN_TYPE:
 				/* interpret and edit LIST output from Unix server */
 
-                if(!XP_STRNCMP(entry, "total ", 6)  
-						|| (XP_STRSTR(entry, "Permission denied") != NULL)
-						    || 	(XP_STRSTR(entry, "not available") != NULL))
+                if(!PL_strncmp(entry, "total ", 6)  
+						|| (PL_strstr(entry, "Permission denied") != NULL)
+						    || 	(PL_strstr(entry, "not available") != NULL))
                   {
                     entry_info->display=FALSE;
                     return(entry_info);
                   }
  
-                len = XP_STRLEN(entry);
+                len = PL_strlen(entry);
 
                 if( '+' == entry[0] )
                 {
@@ -3471,13 +3471,13 @@ net_parse_dir_entry (char *entry, int server_type)
                      * seconds since the Unix epoch), s for size, r for
                      * (readable) file, and / for (listable) directory.
                      */
-                    char *tab = XP_STRCHR(entry, '\t');
+                    char *tab = PL_strchr(entry, '\t');
                     char *begin, *end;
                     remove_size = TRUE; /* It'll be put back if we have data */
                     if( (char *)0 == tab ) break;
                     for( begin = &entry[1]; begin < tab; begin = &end[1])
                     {
-                        end = XP_STRCHR(begin, ',');
+                        end = PL_strchr(begin, ',');
                         if( (char *)0 == end ) break;
                         switch( *begin )
                         {
@@ -3538,7 +3538,7 @@ net_parse_dir_entry (char *entry, int server_type)
 
                 net_parse_ls_line(entry, entry_info); 
 
-                if(!XP_STRCMP(entry_info->filename,"..") || !XP_STRCMP(entry_info->filename,"."))
+                if(!PL_strcmp(entry_info->filename,"..") || !PL_strcmp(entry_info->filename,"."))
             		entry_info->display=FALSE;
 
 				/* add a trailing slash to all directories */
@@ -3558,8 +3558,8 @@ net_parse_dir_entry (char *entry, int server_type)
                     return(entry_info);
 
                 /** Trim off VMS directory extensions **/
-                len = XP_STRLEN(entry_info->filename);
-                if ((len > 4) && !XP_STRCMP(&entry_info->filename[len-4], ".dir"))
+                len = PL_strlen(entry_info->filename);
+                if ((len > 4) && !PL_strcmp(&entry_info->filename[len-4], ".dir"))
                   {
                     entry_info->filename[len-4] = '\0';
 				    entry_info->special_type = NET_DIRECTORY;
@@ -3588,7 +3588,7 @@ net_parse_dir_entry (char *entry, int server_type)
 		        /* escape and copy
 	 	         */
 		        entry_info->filename = NET_Escape(entry, URL_PATH);
-                len = XP_STRLEN(entry);
+                len = PL_strlen(entry);
                 if (entry[len-1] == '/')
                   {
 				    entry_info->special_type = NET_DIRECTORY;
@@ -3612,7 +3612,7 @@ net_parse_dir_entry (char *entry, int server_type)
 				  {
 					char *date, *size_s, *name;
 		
-					if(XP_STRLEN(entry) > 37)
+					if(PL_strlen(entry) > 37)
 					  {
 					    date = entry;
 					    entry[17] = '\0';
@@ -3620,7 +3620,7 @@ net_parse_dir_entry (char *entry, int server_type)
 					    entry[38] = '\0';
 					    name = &entry[39];
     
-					    if(XP_STRSTR(size_s, "<DIR>"))
+					    if(PL_strstr(size_s, "<DIR>"))
 						    entry_info->special_type = NET_DIRECTORY;
 					    else
 						    entry_info->size = atol(XP_StripLine(size_s));
@@ -3676,7 +3676,7 @@ net_get_ftp_password(ActiveEntry *ce)
 #ifndef MCC_PROXY
 		if(ftp_last_password 
 				&& ftp_last_password_host 
-					&& !XP_STRCMP(ftp_last_password_host, host_string)) 
+					&& !PL_strcmp(ftp_last_password_host, host_string)) 
 		  {
 			StrAllocCopy(cd->password, ftp_last_password);
 		  }
@@ -3695,7 +3695,7 @@ net_get_ftp_password(ActiveEntry *ce)
 
 				PC_FreeNameValueArray(array);
 
-				XP_FREE(key);
+				PR_Free(key);
 			}
 
 			if(!cd->password)
@@ -3710,7 +3710,7 @@ net_get_ftp_password(ActiveEntry *ce)
 
             	if(!cd->password)
 			  	{
-					XP_FREE(host_string);
+					PR_Free(host_string);
                 	return(MK_INTERRUPTED);  /* user canceled */
 			  	}
 			}
@@ -3719,7 +3719,7 @@ net_get_ftp_password(ActiveEntry *ce)
 			StrAllocCopy(ftp_last_password, cd->password);
 		  }
 
-		XP_FREE(host_string);
+		PR_Free(host_string);
 	  }
 
 	cd->next_state = FTP_SEND_PASSWORD;
@@ -3748,7 +3748,7 @@ net_FTPLoad (ActiveEntry * ce)
 	char *username,*colon,*password=NULL;
     char * filename;
     char * semi_colon;
-    FTPConData * cd = XP_NEW(FTPConData);
+    FTPConData * cd = PR_NEW(FTPConData);
 
     if(!cd)
 	  {
@@ -3758,12 +3758,12 @@ net_FTPLoad (ActiveEntry * ce)
 	  }
 
 	/* get the username & password out of the combo string */
-	if( (colon = XP_STRCHR(unamePwd, ':')) != NULL ) {
+	if( (colon = PL_strchr(unamePwd, ':')) != NULL ) {
 		*colon='\0';
-		username=XP_STRDUP(unamePwd);
-		password=XP_STRDUP(colon+1);
+		username=PL_strdup(unamePwd);
+		password=PL_strdup(colon+1);
 		*colon=':';
-		XP_FREE(unamePwd);
+		PR_Free(unamePwd);
 	} else {
 		username=unamePwd;
 	}
@@ -3772,7 +3772,7 @@ net_FTPLoad (ActiveEntry * ce)
 
     /* init the connection data struct 
      */
-    XP_MEMSET(cd, 0, sizeof(FTPConData));
+    memset(cd, 0, sizeof(FTPConData));
     cd->dsock         = NULL;
     cd->listen_sock   = NULL;
     cd->pasv_mode     = TRUE;
@@ -3782,10 +3782,10 @@ net_FTPLoad (ActiveEntry * ce)
 
 	/* @@@@ hope we never need a buffer larger than this 
 	 */
-	cd->output_buffer = (char *) XP_ALLOC(OUTPUT_BUFFER_SIZE);
+	cd->output_buffer = (char *) PR_Malloc(OUTPUT_BUFFER_SIZE);
 	if(!cd->output_buffer)
 	  {
-		XP_FREE(cd);
+		PR_Free(cd);
 	    ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY); 
 		ce->status = MK_OUT_OF_MEMORY;
         return(MK_OUT_OF_MEMORY);  
@@ -3797,9 +3797,9 @@ net_FTPLoad (ActiveEntry * ce)
 			StrAllocCopy(cd->password, password);
 	} else {
 		const char * user = NULL;
-		XP_FREEIF(username);
+		PR_FREEIF(username);
 		username = NULL;
-		XP_FREEIF(password);
+		PR_FREEIF(password);
 		password = NULL;
 		
 #ifdef MOZ_MAIL_NEWS
@@ -3816,7 +3816,7 @@ net_FTPLoad (ActiveEntry * ce)
 			/* make sure it has an @ sign in it or else the ftp
 			 * server won't like it
 			 */
-			if(!XP_STRCHR(cd->password, '@'))
+			if(!PL_strchr(cd->password, '@'))
 				StrAllocCat(cd->password, "@");
 		  }
 		else
@@ -3830,8 +3830,8 @@ net_FTPLoad (ActiveEntry * ce)
 
     if(!cd->path)
       {
-        XP_FREE(ce->con_data);
-        XP_FREE(cd->output_buffer);
+        PR_Free(ce->con_data);
+        PR_Free(cd->output_buffer);
 	    ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY); 
 		ce->status = MK_OUT_OF_MEMORY;
         return(MK_OUT_OF_MEMORY);
@@ -3850,28 +3850,28 @@ net_FTPLoad (ActiveEntry * ce)
 		/* terminate at an "\r" or "\n" in the string
 		 * this prevents URL's of the form "foo\nDELE foo"
 		 */
-		XP_STRTOK(cd->path, "\r");
-		XP_STRTOK(cd->path, "\n");
+		strtok(cd->path, "\r");
+		strtok(cd->path, "\n");
 	  }
 
 	/* if the path begins with /./ 
 	 * use pwd to get the sub path
 	 * and append the end to it
 	 */
-	if(!XP_STRNCMP(cd->path, "/./", 3) || !XP_STRCMP(cd->path, "/."))
+	if(!PL_strncmp(cd->path, "/./", 3) || !PL_strcmp(cd->path, "/."))
 	  {
 		char * tmp = cd->path;
 
 		cd->use_default_path = TRUE;
 
 		/* skip the "/." and leave a slash at the beginning */
-		cd->path = XP_STRDUP(cd->path+2);
-		XP_FREE(tmp);
+		cd->path = PL_strdup(cd->path+2);
+		PR_Free(tmp);
 
 		if(!cd->path)
 		  {
-			XP_FREE(ce->con_data);
-        	XP_FREE(cd->output_buffer);
+			PR_Free(ce->con_data);
+        	PR_Free(cd->output_buffer);
 	    	ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY); 
 			ce->status = MK_OUT_OF_MEMORY;
 			return(MK_OUT_OF_MEMORY);
@@ -3894,12 +3894,12 @@ net_FTPLoad (ActiveEntry * ce)
     /* look for the extra type information at the end per
      * the RFC 1630.  It will be delimited by a ';'
      */
-    if((semi_colon = XP_STRRCHR(cd->path, ';')) != NULL)
+    if((semi_colon = PL_strrchr(cd->path, ';')) != NULL)
       {
         /* just switch on the character at the end of this whole
          * thing since it must be the type to use
          */
-        switch(semi_colon[XP_STRLEN(semi_colon)-1])
+        switch(semi_colon[PL_strlen(semi_colon)-1])
           {
             case 'a':
             case 'A':
@@ -3919,11 +3919,11 @@ net_FTPLoad (ActiveEntry * ce)
         *semi_colon = '\0';
 
 		/* also chop of the semi colon from the real URL */
-		XP_STRTOK(ce->URL_s->address, ";");
+		strtok(ce->URL_s->address, ";");
       }
 
     /* find the filename in the path */
-    filename = XP_STRRCHR(cd->path, '/');
+    filename = PL_strrchr(cd->path, '/');
     if(!filename)
         filename = cd->path;
 	else
@@ -3945,7 +3945,7 @@ net_FTPLoad (ActiveEntry * ce)
             /* if the hostnames match up exactly and the connection
              * is not busy at the moment then reuse this connection.
              */
-            if(!tmp_con->busy && !XP_STRCMP(tmp_con->hostname, host))
+            if(!tmp_con->busy && !PL_strcmp(tmp_con->hostname, host))
               {
                 cd->cc = tmp_con;
                 ce->socket = cd->cc->csock;  /* set select on the control socket */
@@ -3970,12 +3970,12 @@ net_FTPLoad (ActiveEntry * ce)
         /* build a control connection structure so we
          * can store the data as we go along
          */
-        cd->cc = XP_NEW(FTPConnection);
+        cd->cc = PR_NEW(FTPConnection);
         if(!cd->cc)
           {
-            XP_FREE(host);  /* free from way up above */
-			XP_FREEIF(username);
-			XP_FREEIF(password);
+            PR_Free(host);  /* free from way up above */
+			PR_FREEIF(username);
+			PR_FREEIF(password);
 	        ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY); 
             return(MK_OUT_OF_MEMORY);
           }
@@ -4026,8 +4026,8 @@ net_FTPLoad (ActiveEntry * ce)
 					 * open connections since cached ones
 					 * dont count as active
 					 */
-                    XP_FREEIF(con->hostname);
-                    XP_FREE(con);
+                    PR_FREEIF(con->hostname);
+                    PR_Free(con);
                     break;
                   }
               }
@@ -4059,9 +4059,9 @@ net_FTPLoad (ActiveEntry * ce)
 		NET_TotalNumberOfOpenConnections++;
       }
 
-    XP_FREE(host);  /* free from way up above */
-	XP_FREEIF(username);
-	XP_FREEIF(password);
+    PR_Free(host);  /* free from way up above */
+	PR_FREEIF(username);
+	PR_FREEIF(password);
     TRACEMSG(("Server can do restarts: %s", ce->URL_s->server_can_do_restart ? 
               "TRUE" : "FALSE"));
     return(net_ProcessFTP(ce));
@@ -4476,14 +4476,14 @@ net_ProcessFTP(ActiveEntry * ce)
                  * and free the data
                  */
                 XP_ListRemoveObject(connection_list, cd->cc);
-                XP_FREEIF(cd->cc->hostname);
+                PR_FREEIF(cd->cc->hostname);
                 if(cd->cc->csock != NULL)
                   {
 				    TRACEMSG(("Closing and clearing sock cd->cc->csock: %d", cd->cc->csock));
                     PR_Close(cd->cc->csock);
 					cd->cc->csock = NULL;
                   }
-                XP_FREE(cd->cc);
+                PR_Free(cd->cc);
                 cd->cc = 0;
 			  }
 
@@ -4587,8 +4587,8 @@ net_ProcessFTP(ActiveEntry * ce)
                  * and free the data
                  */
                 XP_ListRemoveObject(connection_list, cd->cc);
-                XP_FREEIF(cd->cc->hostname);
-                XP_FREE(cd->cc);
+                PR_FREEIF(cd->cc->hostname);
+                PR_Free(cd->cc);
               }
     
             break;
@@ -4615,22 +4615,22 @@ net_ProcessFTP(ActiveEntry * ce)
                     /*  FE_SaveDialogDestroy(ce->window_id, ce->status, cd->file_to_post); */
                 }
 #endif /* EDITOR */
-                XP_FREEIF(cd->cwd_message_buffer);
-                XP_FREEIF(cd->login_message_buffer);
-                XP_FREEIF(cd->data_buf);
-                XP_FREEIF(cd->return_msg);
-                XP_FREEIF(cd->data_con_address);
-                XP_FREEIF(cd->filename);
-                XP_FREEIF(cd->path);
-                XP_FREEIF(cd->username);
-                XP_FREEIF(cd->password);
-                XP_FREEIF(cd->stream);  /* don't forget the stream */
-				XP_FREEIF(cd->output_buffer);
+                PR_FREEIF(cd->cwd_message_buffer);
+                PR_FREEIF(cd->login_message_buffer);
+                PR_FREEIF(cd->data_buf);
+                PR_FREEIF(cd->return_msg);
+                PR_FREEIF(cd->data_con_address);
+                PR_FREEIF(cd->filename);
+                PR_FREEIF(cd->path);
+                PR_FREEIF(cd->username);
+                PR_FREEIF(cd->password);
+                PR_FREEIF(cd->stream);  /* don't forget the stream */
+				PR_FREEIF(cd->output_buffer);
             	if(cd->tcp_con_data)
                 	NET_FreeTCPConData(cd->tcp_con_data);
 				
 
-                XP_FREE(cd);
+                PR_Free(cd);
 
                 /* gate the maximum number of cached connections
 			 	 * to one
@@ -4656,8 +4656,8 @@ net_ProcessFTP(ActiveEntry * ce)
 							 	 * dont count as active
 								 */
 							  }
-                            XP_FREEIF(con->hostname);
-                            XP_FREE(con);
+                            PR_FREEIF(con->hostname);
+                            PR_Free(con);
                             break;
                           }
                       }
@@ -4707,7 +4707,7 @@ net_CleanupFTP(void)
           {
 			if(!tmp_con->busy)
 			  {
-            	XP_FREE(tmp_con->hostname);       /* hostname string */
+            	PR_Free(tmp_con->hostname);       /* hostname string */
 				if(tmp_con->csock != NULL)
 			      {
             	    PR_Close(tmp_con->csock);      /* control socket */
@@ -4715,7 +4715,7 @@ net_CleanupFTP(void)
 					/* don't count cached connections as open ones
 					 */
 			      }
-		        XP_FREE(tmp_con);
+		        PR_Free(tmp_con);
               }
 		  }
       }

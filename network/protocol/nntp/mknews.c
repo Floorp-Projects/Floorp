@@ -180,7 +180,7 @@ PRIVATE XP_Bool net_news_last_username_probably_valid=FALSE;
 PRIVATE int32 net_NewsChunkSize=-1;  /* default */
 
 #define PUTSTRING(s)      (*cd->stream->put_block) \
-                    (cd->stream, s, XP_STRLEN(s))
+                    (cd->stream, s, PL_strlen(s))
 #define COMPLETE_STREAM   (*cd->stream->complete)  \
                     (cd->stream)
 #define ABORT_STREAM(s)   (*cd->stream->abort) \
@@ -497,7 +497,7 @@ static void net_nntp_close (PRFileDesc *sock, int status)
 	if (status != MK_INTERRUPTED)
 	{
 		const char *command = "QUIT" CRLF;
-		NET_BlockingWrite (sock, command, XP_STRLEN(command));
+		NET_BlockingWrite (sock, command, PL_strlen(command));
 		NNTP_LOG_WRITE (command);
 	}
 	PR_Close(sock);
@@ -516,7 +516,7 @@ PUBLIC void NET_OnNewsHostDeleted (const char *hostName)
 
 	while ((conn = (NNTPConnection*) XP_ListNextObject(list)) != NULL)
 	{
-		if (!(XP_STRCASECMP(conn->hostname, hostName)))
+		if (!(PL_strcasecmp(conn->hostname, hostName)))
 			net_nntp_close (conn->csock, conn->busy ? MK_INTERRUPTED : 0);
 
 		list = list->prev ? list->prev : nntp_connection_list;
@@ -575,7 +575,7 @@ net_display_html_error_state (ActiveEntry *ce)
 		if(cd->type_wanted == ARTICLE_WANTED ||
 		   cd->type_wanted == CANCEL_WANTED)
 		  {
-			XP_STRCPY(cd->output_buffer,
+			PL_strcpy(cd->output_buffer,
 					   XP_GetString(XP_HTML_ARTICLE_EXPIRED));
 			if(ce->status > -1)
 			  PUTSTRING(cd->output_buffer);
@@ -587,8 +587,8 @@ net_display_html_error_state (ActiveEntry *ce)
 							"<P>&lt;%.512s&gt;", cd->path);
 				if (cd->article_num > 0)
 				{
-				  PR_snprintf(cd->output_buffer+XP_STRLEN(cd->output_buffer),
-							 OUTPUT_BUFFER_SIZE-XP_STRLEN(cd->output_buffer),
+				  PR_snprintf(cd->output_buffer+PL_strlen(cd->output_buffer),
+							 OUTPUT_BUFFER_SIZE-PL_strlen(cd->output_buffer),
 							 " (%lu)\n", (unsigned long) cd->article_num);
 				  if (ce->URL_s->msg_pane)
 					MSG_MarkMessageKeyRead(ce->URL_s->msg_pane, cd->article_num, "");
@@ -622,7 +622,7 @@ net_display_html_error_state (ActiveEntry *ce)
 				   OUTPUT_BUFFER_SIZE,
 				   XP_GetString(MK_NEWS_ERROR_FMT),
 				   cd->response_txt);
-		ce->URL_s->error_msg = XP_STRDUP (cd->output_buffer);
+		ce->URL_s->error_msg = PL_strdup (cd->output_buffer);
 	  }
 
 	/* if the server returned a 400 error then it is an expected
@@ -800,9 +800,9 @@ net_nntp_send_mode_reader (ActiveEntry * ce)
 {
     NewsConData * cd = (NewsConData *)ce->con_data;
 
-    XP_STRCPY(cd->output_buffer, "MODE READER" CRLF);
+    PL_strcpy(cd->output_buffer, "MODE READER" CRLF);
 
-    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
     cd->next_state = NNTP_RESPONSE;
@@ -836,8 +836,8 @@ net_nntp_send_mode_reader_response (ActiveEntry * ce)
 PRIVATE int net_nntp_send_list_extensions (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
-    XP_STRCPY(cd->output_buffer, "LIST EXTENSIONS" CRLF);
-    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+    PL_strcpy(cd->output_buffer, "LIST EXTENSIONS" CRLF);
+    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
 	cd->next_state = NNTP_RESPONSE;
@@ -905,8 +905,8 @@ PRIVATE int net_nntp_send_list_searches (ActiveEntry *ce)
 
 	if (MSG_QueryNewsExtension (cd->host, "SEARCH"))
 	{
-		XP_STRCPY(cd->output_buffer, "LIST SEARCHES" CRLF);
-		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+		PL_strcpy(cd->output_buffer, "LIST SEARCHES" CRLF);
+		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 		NNTP_LOG_WRITE(cd->output_buffer);
 
 		cd->next_state = NNTP_RESPONSE;
@@ -966,8 +966,8 @@ PRIVATE int net_nntp_send_list_searches_response (ActiveEntry *ce)
 PRIVATE int net_send_list_search_headers (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
-    XP_STRCPY(cd->output_buffer, "LIST SRCHFIELDS" CRLF);
-    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+    PL_strcpy(cd->output_buffer, "LIST SRCHFIELDS" CRLF);
+    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
 	cd->next_state = NNTP_RESPONSE;
@@ -1019,8 +1019,8 @@ PRIVATE int nntp_get_properties (ActiveEntry *ce)
 
 	if (MSG_QueryNewsExtension (cd->host, "SETGET"))
 	{
-		XP_STRCPY(cd->output_buffer, "GET" CRLF);
-		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+		PL_strcpy(cd->output_buffer, "GET" CRLF);
+		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 		NNTP_LOG_WRITE(cd->output_buffer);
 
 		cd->next_state = NNTP_RESPONSE;
@@ -1062,10 +1062,10 @@ PRIVATE int nntp_get_properties_response (ActiveEntry *ce)
 
 	if ('.' != line[0])
 	{
-		char *propertyName = XP_STRDUP(line);
+		char *propertyName = PL_strdup(line);
 		if (propertyName)
 		{
-			char *space = XP_STRCHR(propertyName, ' ');
+			char *space = PL_strchr(propertyName, ' ');
 			if (space)
 			{
 				char *propertyValue = space + 1;
@@ -1073,7 +1073,7 @@ PRIVATE int nntp_get_properties_response (ActiveEntry *ce)
 				MSG_AddPropertyForGet (cd->host, 
 					propertyName, propertyValue);
 			}
-			XP_FREE(propertyName);
+			PR_Free(propertyName);
 		}
 	}
 	else
@@ -1096,8 +1096,8 @@ PRIVATE int net_send_list_subscriptions (ActiveEntry *ce)
 	if (0)
 #endif
 	{
-		XP_STRCPY(cd->output_buffer, "LIST SUBSCRIPTIONS" CRLF);
-		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+		PL_strcpy(cd->output_buffer, "LIST SUBSCRIPTIONS" CRLF);
+		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 		NNTP_LOG_WRITE(cd->output_buffer);
 
 		cd->next_state = NNTP_RESPONSE;
@@ -1179,7 +1179,7 @@ net_send_first_nntp_command (ActiveEntry *ce)
 			cd->article_num = number;
 			StrAllocCopy (cd->group_name, group);
 
-			if (cd->control_con->current_group && !XP_STRCMP (cd->control_con->current_group, group))
+			if (cd->control_con->current_group && !PL_strcmp (cd->control_con->current_group, group))
 			  cd->next_state = NNTP_SEND_ARTICLE_NUMBER;
 			else
 			  cd->next_state = NNTP_SEND_GROUP_FOR_ARTICLE;
@@ -1191,7 +1191,7 @@ net_send_first_nntp_command (ActiveEntry *ce)
 
     if(cd->type_wanted == NEWS_POST && !ce->URL_s->post_data)
       {
-		XP_ASSERT(0);
+		PR_ASSERT(0);
         return(-1);
       }
     else if(cd->type_wanted == NEWS_POST)
@@ -1201,7 +1201,7 @@ net_send_first_nntp_command (ActiveEntry *ce)
     else if(cd->type_wanted == READ_NEWS_RC)
       {
 		if(ce->URL_s->method == URL_POST_METHOD ||
-								XP_STRCHR(ce->URL_s->address, '?'))
+								PL_strchr(ce->URL_s->address, '?'))
         	cd->next_state = NEWS_NEWS_RC_POST;
 		else
         	cd->next_state = NEWS_DISPLAY_NEWS_RC;
@@ -1286,7 +1286,7 @@ net_send_first_nntp_command (ActiveEntry *ce)
 
         StrAllocCopy(command, "GROUP ");
 
-        slash = XP_STRCHR(cd->group_name, '/');  /* look for a slash */
+        slash = PL_strchr(cd->group_name, '/');  /* look for a slash */
         cd->first_art = 0;
         cd->last_art = 0;
         if (slash)
@@ -1307,14 +1307,14 @@ net_send_first_nntp_command (ActiveEntry *ce)
 		if (MSG_QueryNewsExtension(cd->host, "SEARCH"))
 		{
 			/* use the SEARCH extension */
-			char *slash = XP_STRCHR (cd->command_specific_data, '/');
+			char *slash = PL_strchr (cd->command_specific_data, '/');
 			if (slash)
 			{
 				char *allocatedCommand = MSG_UnEscapeSearchUrl (slash + 1);
 				if (allocatedCommand)
 				{
 					StrAllocCopy (command, allocatedCommand);
-					XP_FREE(allocatedCommand);
+					PR_Free(allocatedCommand);
 				}
 			}
 			cd->next_state = NNTP_RESPONSE;
@@ -1338,31 +1338,31 @@ net_send_first_nntp_command (ActiveEntry *ce)
 		}
 		else
 		{
-			XP_ASSERT(FALSE);
+			PR_ASSERT(FALSE);
 			cd->next_state = NNTP_ERROR;
 		}
 	}
 	else if (cd->type_wanted == PROFILE_WANTED)
 	{
-		char *slash = XP_STRCHR (cd->command_specific_data, '/');
+		char *slash = PL_strchr (cd->command_specific_data, '/');
 		if (slash)
 		{
 			char *allocatedCommand = MSG_UnEscapeSearchUrl (slash + 1);
 			if (allocatedCommand)
 			{
 				StrAllocCopy (command, allocatedCommand);
-				XP_FREE(allocatedCommand);
+				PR_Free(allocatedCommand);
 			}
 		}
 		cd->next_state = NNTP_RESPONSE;
-		if (XP_STRSTR(ce->URL_s->address, "PROFILE NEW"))
+		if (PL_strstr(ce->URL_s->address, "PROFILE NEW"))
 			cd->next_state_after_response = NNTP_PROFILE_ADD_RESPONSE;
 		else
 			cd->next_state_after_response = NNTP_PROFILE_DELETE_RESPONSE;
 	}
 	else if (cd->type_wanted == IDS_WANTED)
 	{
-        char *slash = XP_STRCHR(cd->group_name, '/');  /* look for a slash */
+        char *slash = PL_strchr(cd->group_name, '/');  /* look for a slash */
         if (slash)
             *slash = '\0';
 
@@ -1378,14 +1378,14 @@ net_send_first_nntp_command (ActiveEntry *ce)
 		if (*cd->path != '<')
 			StrAllocCat(command,"<");
 		StrAllocCat(command, cd->path);
-		if (XP_STRCHR(command+8, '>')==0) 
+		if (PL_strchr(command+8, '>')==0) 
 			StrAllocCat(command,">");
 	}
 
     StrAllocCat(command, CRLF);
-    ce->status = (int) NET_BlockingWrite(ce->socket, command, XP_STRLEN(command));
+    ce->status = (int) NET_BlockingWrite(ce->socket, command, PL_strlen(command));
 	NNTP_LOG_WRITE(command);
-    XP_FREE(command);
+    PR_Free(command);
 
 	cd->next_state = NNTP_RESPONSE;
 	if (cd->type_wanted != SEARCH_WANTED && cd->type_wanted != PROFILE_WANTED)
@@ -1445,7 +1445,7 @@ net_send_group_for_article (ActiveEntry * ce)
 			cd->control_con->current_group);
 
    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,
-									  XP_STRLEN(cd->output_buffer));
+									  PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
     cd->next_state = NNTP_RESPONSE;
@@ -1479,7 +1479,7 @@ net_send_article_number (ActiveEntry * ce)
 			cd->article_num);
 
   ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,
-									  XP_STRLEN(cd->output_buffer));
+									  PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
     cd->next_state = NNTP_RESPONSE;
@@ -1502,16 +1502,16 @@ news_generate_news_url_fn (const char *dest, void *closure,
   char *prefix = NET_ParseURL(ce->URL_s->address,
 							  (GET_PROTOCOL_PART | GET_HOST_PART));
   char *new_dest = NET_Escape (dest, URL_XALPHAS);
-  char *result = (char *) XP_ALLOC (XP_STRLEN (prefix) +
-									(new_dest ? XP_STRLEN (new_dest) : 0)
+  char *result = (char *) PR_Malloc (PL_strlen (prefix) +
+									(new_dest ? PL_strlen (new_dest) : 0)
 									+ 40);
   if (result && prefix)
 	{
-	  XP_STRCPY (result, prefix);
-	  if (prefix[XP_STRLEN(prefix) - 1] != ':')
+	  PL_strcpy (result, prefix);
+	  if (prefix[PL_strlen(prefix) - 1] != ':')
 		/* If there is a host, it must be terminated with a slash. */
-		XP_STRCAT (result, "/");
-	  XP_STRCAT (result, new_dest);
+		PL_strcat (result, "/");
+	  PL_strcat (result, new_dest);
 	}
   FREEIF (prefix);
   FREEIF (new_dest);
@@ -1570,14 +1570,14 @@ net_setup_news_stream (ActiveEntry * ce)
 		cd->next_state = NNTP_LIST_PRETTY_NAMES;
 	else if (cd->type_wanted == PROFILE_WANTED)
 	{
-		if (XP_STRSTR(ce->URL_s->address, "PROFILE NEW"))
+		if (PL_strstr(ce->URL_s->address, "PROFILE NEW"))
 			cd->next_state = NNTP_PROFILE_ADD;
 		else
 			cd->next_state = NNTP_PROFILE_DELETE;
 	}
 	else
 	  {
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		return -1;
 	  }
 
@@ -1597,7 +1597,7 @@ news_generate_html_header_fn (const char *dest, void *closure,
 	 refer to a file in the disk cache rather than an NNTP connection. */
   NewsConData *cd = 0;
 
-  XP_ASSERT(ce->protocol == NEWS_TYPE_URL ||
+  PR_ASSERT(ce->protocol == NEWS_TYPE_URL ||
 			ce->protocol == FILE_CACHE_TYPE_URL ||
 			ce->protocol == MEMORY_CACHE_TYPE_URL);
   if (ce->protocol == NEWS_TYPE_URL)
@@ -1623,7 +1623,7 @@ news_generate_html_header_fn (const char *dest, void *closure,
 		NNTP_LOG_NOTE(("news_generate_html_header_fn: url->msg_pane NULL for URL: %s", ce->URL_s->address));
 	    messagepane = MSG_FindPane(ce->window_id, MSG_MESSAGEPANE);
 	  }
-      XP_ASSERT (!cd || cd->type_wanted == ARTICLE_WANTED);
+      PR_ASSERT (!cd || cd->type_wanted == ARTICLE_WANTED);
 
 	  if (messagepane)
 		MSG_ActivateReplyOptions (messagepane, headers);
@@ -1642,19 +1642,19 @@ net_InitializeNewsFeData (ActiveEntry * ce)
 
   if (!NET_IsNewsMessageURL (ce->URL_s->address))
 	{
-	  XP_ASSERT(0);
+	  PR_ASSERT(0);
 	  return -1;
 	}
 
   if (ce->URL_s->fe_data)
 	{
-	  XP_ASSERT(0);
+	  PR_ASSERT(0);
 	  return -1;
 	}
 
-  opt = XP_NEW (MimeDisplayOptions);
+  opt = PR_NEW (MimeDisplayOptions);
   if (!opt) return MK_OUT_OF_MEMORY;
-  XP_MEMSET (opt, 0, sizeof(*opt));
+  memset (opt, 0, sizeof(*opt));
 
   opt->generate_reference_url_fn      = news_generate_reference_url_fn;
   opt->generate_news_url_fn           = news_generate_news_url_fn;
@@ -1678,7 +1678,7 @@ net_begin_article(ActiveEntry * ce)
   /*  Set up the HTML stream
    */ 
   FREEIF (ce->URL_s->content_type);
-  ce->URL_s->content_type = XP_STRDUP (MESSAGE_RFC822);
+  ce->URL_s->content_type = PL_strdup (MESSAGE_RFC822);
 
 #ifdef NO_ARTICLE_CACHEING
   ce->format_out = CLEAR_CACHE_BIT (ce->format_out);
@@ -1686,7 +1686,7 @@ net_begin_article(ActiveEntry * ce)
 
   if (cd->type_wanted == CANCEL_WANTED)
 	{
-	  XP_ASSERT(ce->format_out == FO_PRESENT);
+	  PR_ASSERT(ce->format_out == FO_PRESENT);
 	  ce->format_out = FO_PRESENT;
 	}
 
@@ -1704,7 +1704,7 @@ net_begin_article(ActiveEntry * ce)
 	}
 
   cd->stream = NET_StreamBuilder(ce->format_out, ce->URL_s, ce->window_id);
-  XP_ASSERT (cd->stream);
+  PR_ASSERT (cd->stream);
   if (!cd->stream) return -1;
 
   cd->next_state = NNTP_READ_ARTICLE;
@@ -1728,10 +1728,10 @@ net_news_begin_authorize(ActiveEntry * ce)
 	if (cd->pane && 
 		(!net_news_last_username_probably_valid ||
 		 (last_username_hostname && 
-		  strcasecomp(last_username_hostname, cd->control_con->hostname)))) {
+		  PL_strcasecmp(last_username_hostname, cd->control_con->hostname)))) {
 	  username = SECNAV_UnMungeString(MSG_GetNewsgroupUsername(cd->pane));
 	  if (username && last_username &&
-		  !XP_STRCMP (username, last_username) &&
+		  !PL_strcmp (username, last_username) &&
 		  (cd->previous_response_code == 281 || 
 		   cd->previous_response_code == 250 ||
 		   cd->previous_response_code == 211)) {
@@ -1767,7 +1767,7 @@ net_news_begin_authorize(ActiveEntry * ce)
 	/* If the URL/cd->control_con->hostname contains @ this must be triggered
 	 * from the bookmark. Use the embed username if we could.
 	 */
-	if ((cp = XP_STRCHR(cd->control_con->hostname, '@')) != NULL)
+	if ((cp = PL_strchr(cd->control_con->hostname, '@')) != NULL)
 	  {
 		/* in this case the username and possibly
 		 * the password are in the URL
@@ -1775,7 +1775,7 @@ net_news_begin_authorize(ActiveEntry * ce)
 		char * colon;
 		*cp = '\0';
 
-		colon = XP_STRCHR(cd->control_con->hostname, ':');
+		colon = PL_strchr(cd->control_con->hostname, ':');
 		if(colon)
 			*colon = '\0';
 
@@ -1794,7 +1794,7 @@ net_news_begin_authorize(ActiveEntry * ce)
     if (!username && net_news_last_username_probably_valid)
 	  {
 		if( last_username_hostname &&
-			!strcasecomp(last_username_hostname, cd->control_con->hostname) )
+			!PL_strcasecmp(last_username_hostname, cd->control_con->hostname) )
 			StrAllocCopy(username, last_username);
 		else
 			net_news_last_username_probably_valid = FALSE;
@@ -1823,7 +1823,7 @@ net_news_begin_authorize(ActiveEntry * ce)
 	if (cd->pane && !MSG_GetNewsgroupUsername(cd->pane)) {
 	  munged_username = SECNAV_MungeString(username);
 	  MSG_SetNewsgroupUsername(cd->pane, munged_username);
-	  XP_FREEIF(munged_username);
+	  PR_FREEIF(munged_username);
 	}
 #endif
 
@@ -1831,7 +1831,7 @@ net_news_begin_authorize(ActiveEntry * ce)
 	StrAllocCat(command, username);
 	StrAllocCat(command, CRLF);
 
-	ce->status = (int) NET_BlockingWrite(ce->socket, command, XP_STRLEN(command));
+	ce->status = (int) NET_BlockingWrite(ce->socket, command, PL_strlen(command));
 	NNTP_LOG_WRITE(command);
 
 	FREE(command);
@@ -1891,7 +1891,7 @@ net_news_authorize_response(ActiveEntry * ce)
         if (net_news_last_username_probably_valid 
 			&& last_password
 			&& last_password_hostname
-			&& !strcasecomp(last_password_hostname, cd->control_con->hostname))
+			&& !PL_strcasecmp(last_password_hostname, cd->control_con->hostname))
           {
 #ifdef CACHE_NEWSGRP_PASSWORD
 			if (cd->pane)
@@ -1900,7 +1900,7 @@ net_news_authorize_response(ActiveEntry * ce)
             StrAllocCopy(password, last_password);
 #endif
           }
-        else if ((cp = XP_STRCHR(cd->control_con->hostname, '@')) != NULL)
+        else if ((cp = PL_strchr(cd->control_con->hostname, '@')) != NULL)
           {
             /* in this case the username and possibly
              * the password are in the URL
@@ -1908,7 +1908,7 @@ net_news_authorize_response(ActiveEntry * ce)
             char * colon;
             *cp = '\0';
     
-            colon = XP_STRCHR(cd->control_con->hostname, ':');
+            colon = PL_strchr(cd->control_con->hostname, ':');
             if(colon)
 			  {
                 *colon = '\0';
@@ -1944,7 +1944,7 @@ net_news_authorize_response(ActiveEntry * ce)
 		if (cd->pane && !MSG_GetNewsgroupPassword(cd->pane)) {
 		  munged_password = SECNAV_MungeString(password);
 		  MSG_SetNewsgroupPassword(cd->pane, munged_password);
-		  XP_FREEIF(munged_password);
+		  PR_FREEIF(munged_password);
 		}
 #endif
 
@@ -1952,7 +1952,7 @@ net_news_authorize_response(ActiveEntry * ce)
 		StrAllocCat(command, password);
 		StrAllocCat(command, CRLF);
 	
-		ce->status = (int) NET_BlockingWrite(ce->socket, command, XP_STRLEN(command));
+		ce->status = (int) NET_BlockingWrite(ce->socket, command, PL_strlen(command));
 		NNTP_LOG_WRITE(command);
 
 		FREE(command);
@@ -1978,7 +1978,7 @@ net_news_authorize_response(ActiveEntry * ce)
         return(MK_NNTP_AUTH_FAILED);
 	  }
 		
-	XP_ASSERT(0); /* should never get here */
+	PR_ASSERT(0); /* should never get here */
 	return(-1);
 
 }
@@ -2022,7 +2022,7 @@ net_news_password_response(ActiveEntry * ce)
         return(MK_NNTP_AUTH_FAILED);
 	  }
 		
-	XP_ASSERT(0); /* should never get here */
+	PR_ASSERT(0); /* should never get here */
 	return(-1);
 }
 
@@ -2105,7 +2105,7 @@ net_process_newgroups (ActiveEntry *ce)
 			{
 				cd->next_state = NNTP_LIST_XACTIVE;
 #ifdef DEBUG_bienvenu
-				XP_Trace("listing xactive for %s\n", cd->group_name);
+				PR_LogPrint("listing xactive for %s\n", cd->group_name);
 #endif
 				return 0;
 			}
@@ -2138,17 +2138,17 @@ net_process_newgroups (ActiveEntry *ce)
 
     /* format is "rec.arts.movies.past-films 7302 7119 y"
 	 */
-	s = XP_STRCHR (line, ' ');
+	s = PL_strchr (line, ' ');
 	if (s)
 	  {
 		*s = 0;
 		s1 = s+1;
-		s = XP_STRCHR (s1, ' ');
+		s = PL_strchr (s1, ' ');
 		if (s)
 		  {
 			*s = 0;
 			s2 = s+1;
-			s = XP_STRCHR (s2, ' ');
+			s = PL_strchr (s2, ' ');
 			if (s)
 			{
 			  *s = 0;
@@ -2422,7 +2422,7 @@ net_xover_send (ActiveEntry *ce)
 
     return((int) NET_BlockingWrite(ce->socket, 
 								   cd->output_buffer, 
-								   XP_STRLEN(cd->output_buffer)));
+								   PL_strlen(cd->output_buffer)));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
 }
@@ -2452,7 +2452,7 @@ net_read_xover_response (ActiveEntry *ce)
 		   something went very wrong, since our servers do XOVER.  Thus
 		   the assert.
          */
-		/*XP_ASSERT (0);*/
+		/*PR_ASSERT (0);*/
 		cd->next_state = NNTP_READ_GROUP;
 		cd->control_con->no_xover = TRUE;
       }
@@ -2539,7 +2539,7 @@ net_process_xover (ActiveEntry *ce)
 
 	/*	if (cd->xover_parse_state) { ### dmb - we need a different check */
 	  ce->status = MSG_FinishXOVER (cd->pane, &cd->xover_parse_state, 0);
-	  XP_ASSERT (!cd->xover_parse_state);
+	  PR_ASSERT (!cd->xover_parse_state);
 	  if (ce->status < 0) return ce->status;
 
 	cd->next_state = NEWS_DONE;
@@ -2552,12 +2552,12 @@ PRIVATE int net_profile_add (ActiveEntry *ce)
 {
 #if 0
 	NewsConData *cd = (NewsConData*) ce->con_data;
-	char *slash = XP_STRRCHR(ce->URL_s->address, '/');
+	char *slash = PL_strrchr(ce->URL_s->address, '/');
 	if (slash)
 	{
-		XP_STRCPY (cd->output_buffer, slash + 1);
-		XP_STRCAT (cd->output_buffer, CRLF);
-		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+		PL_strcpy (cd->output_buffer, slash + 1);
+		PL_strcat (cd->output_buffer, CRLF);
+		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 		NNTP_LOG_WRITE(cd->output_buffer);
 
 		cd->next_state = NNTP_RESPONSE;
@@ -2572,7 +2572,7 @@ PRIVATE int net_profile_add (ActiveEntry *ce)
 
 	return ce->status;
 #else
-	XP_ASSERT(FALSE);
+	PR_ASSERT(FALSE);
 	return -1;
 #endif
 }
@@ -2601,12 +2601,12 @@ PRIVATE int net_profile_delete (ActiveEntry *ce)
 {
 #if 0
 	NewsConData *cd = (NewsConData*) ce->con_data;
-	char *slash = XP_STRRCHR(ce->URL_s->address, '/');
+	char *slash = PL_strrchr(ce->URL_s->address, '/');
 	if (slash)
 	{
-		XP_STRCPY (cd->output_buffer, slash + 1);
-		XP_STRCAT (cd->output_buffer, CRLF);
-		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+		PL_strcpy (cd->output_buffer, slash + 1);
+		PL_strcat (cd->output_buffer, CRLF);
+		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 		NNTP_LOG_WRITE(cd->output_buffer);
 
 		cd->next_state = NNTP_RESPONSE;
@@ -2621,7 +2621,7 @@ PRIVATE int net_profile_delete (ActiveEntry *ce)
 
 	return ce->status;
 #else
-	XP_ASSERT(FALSE);
+	PR_ASSERT(FALSE);
 	return -1;
 #endif
 }
@@ -2668,7 +2668,7 @@ net_read_news_group (ActiveEntry *ce)
         cd->pause_for_read = TRUE;
 
 		NNTP_LOG_WRITE(cd->output_buffer);
-        return((int) NET_BlockingWrite(ce->socket, cd->output_buffer, XP_STRLEN(cd->output_buffer)));
+        return((int) NET_BlockingWrite(ce->socket, cd->output_buffer, PL_strlen(cd->output_buffer)));
       }
 }
 
@@ -2766,11 +2766,11 @@ net_send_news_post_data(ActiveEntry * ce)
       {
         /* normal done
          */
-        XP_STRCPY(cd->output_buffer, CRLF "." CRLF);
+        PL_strcpy(cd->output_buffer, CRLF "." CRLF);
         NNTP_LOG_WRITE(cd->output_buffer);
         ce->status = (int) NET_BlockingWrite(ce->socket,
                                             cd->output_buffer,
-                                            XP_STRLEN(cd->output_buffer));
+                                            PL_strlen(cd->output_buffer));
 		NNTP_LOG_WRITE(cd->output_buffer);
 
 		NET_Progress(ce->window_id,
@@ -2824,7 +2824,7 @@ net_send_news_post_data_response(ActiveEntry * ce)
 		cd->next_state_after_response = NNTP_CHECK_FOR_MESSAGE;
 		NNTP_LOG_WRITE(cd->output_buffer);
 		return (int) NET_BlockingWrite(ce->socket, cd->output_buffer,
-									   XP_STRLEN(cd->output_buffer));
+									   PL_strlen(cd->output_buffer));
 	  }
 
 	  MSG_ClearCompositionMessageID(cd->pane); /* So that if the user tries
@@ -2888,7 +2888,7 @@ net_DisplayNewsRC(ActiveEntry * ce)
 		PR_snprintf(NET_Socket_Buffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF,
 					cd->control_con->current_group);
     	ce->status = (int) NET_BlockingWrite(ce->socket, NET_Socket_Buffer,
-											XP_STRLEN(NET_Socket_Buffer));
+											PL_strlen(NET_Socket_Buffer));
 		NNTP_LOG_WRITE(NET_Socket_Buffer);
 
 		percent = (int32) (100 * (((double) cd->newsrc_list_index) /
@@ -2899,7 +2899,7 @@ net_DisplayNewsRC(ActiveEntry * ce)
 		if (statusText)
 		{
 			FE_Progress (ce->window_id, statusText);
-			XP_FREE(statusText);
+			PR_Free(statusText);
 		}
 
 		cd->newsrc_list_index++;
@@ -2954,18 +2954,18 @@ net_DisplayNewsRCResponse(ActiveEntry * ce)
 		 */
 
 		num_arts = cd->response_txt;
-		low = XP_STRCHR(num_arts, ' ');
+		low = PL_strchr(num_arts, ' ');
 
 		if(low)
 		  {
 			first_art = atol(low);
 			*low++ = '\0';
-			high= XP_STRCHR(low, ' ');
+			high= PL_strchr(low, ' ');
 		  }
 		if(high)
 		  {
 			*high++ = '\0';
-			group = XP_STRCHR(high, ' ');
+			group = PL_strchr(high, ' ');
 		  }
 		if(group)
 		  {
@@ -2974,7 +2974,7 @@ net_DisplayNewsRCResponse(ActiveEntry * ce)
 			   the end.  This will be space separated from the group name.
 			   If a space is found in the group name terminate at that
 			   point. */
-			XP_STRTOK(group, " ");
+			strtok(group, " ");
 			last_art = atol(high);
 		  }
     
@@ -3026,8 +3026,8 @@ net_cancel_done_cb (MWContext *context, void *data, int status,
   ActiveEntry *ce = (ActiveEntry *) data;
   NewsConData *cd = (NewsConData *) ce->con_data;
   cd->cancel_status = status;
-  XP_ASSERT(status < 0 || file_name);
-  cd->cancel_msg_file = (status < 0 ? 0 : XP_STRDUP(file_name));
+  PR_ASSERT(status < 0 || file_name);
+  cd->cancel_msg_file = (status < 0 ? 0 : PL_strdup(file_name));
 }
 
 
@@ -3037,7 +3037,7 @@ net_start_cancel (ActiveEntry *ce)
   NewsConData *cd = (NewsConData *) ce->con_data;
   char *command = "POST" CRLF;
 
-  ce->status = (int) NET_BlockingWrite(ce->socket, command, XP_STRLEN(command));
+  ce->status = (int) NET_BlockingWrite(ce->socket, command, PL_strlen(command));
 	NNTP_LOG_WRITE(command);
 
   cd->next_state = NNTP_RESPONSE;
@@ -3063,10 +3063,10 @@ net_do_cancel (ActiveEntry *ce)
 	 message at it...   But the normal posting code doesn't do this check.
 	 Why?
    */
-  XP_ASSERT (cd->response_code == 340);
+  PR_ASSERT (cd->response_code == 340);
 
   /* These shouldn't be set yet, since the headers haven't been "flushed" */
-  XP_ASSERT (!cd->cancel_id &&
+  PR_ASSERT (!cd->cancel_id &&
 			 !cd->cancel_from &&
 			 !cd->cancel_newsgroups &&
 			 !cd->cancel_distribution);
@@ -3075,7 +3075,7 @@ net_do_cancel (ActiveEntry *ce)
 	 are done, and it will call news_generate_html_header_fn which will
 	 notice the fields we're interested in.
    */
-  XP_STRCPY (cd->output_buffer, CRLF); /* CRLF used to be LINEBREAK. 
+  PL_strcpy (cd->output_buffer, CRLF); /* CRLF used to be LINEBREAK. 
   										 LINEBREAK is platform dependent
   										 and is only <CR> on a mac. This
 										 CRLF is the protocol delimiter 
@@ -3090,7 +3090,7 @@ net_do_cancel (ActiveEntry *ce)
   newsgroups = cd->cancel_newsgroups;
   distribution = cd->cancel_distribution;
 
-  XP_ASSERT (id && newsgroups);
+  PR_ASSERT (id && newsgroups);
   if (!id || !newsgroups) return -1; /* "unknown error"... */
 
   cd->cancel_newsgroups = 0;
@@ -3098,12 +3098,12 @@ net_do_cancel (ActiveEntry *ce)
   cd->cancel_from = 0;
   cd->cancel_id = 0;
 
-  L = XP_STRLEN (id);
+  L = PL_strlen (id);
 
   from = MIME_MakeFromField ();
-  subject = (char *) XP_ALLOC (L + 20);
-  other_random_headers = (char *) XP_ALLOC (L + 20);
-  body = (char *) XP_ALLOC (XP_STRLEN (XP_AppCodeName) + 100);
+  subject = (char *) PR_Malloc (L + 20);
+  other_random_headers = (char *) PR_Malloc (L + 20);
+  body = (char *) PR_Malloc (PL_strlen (XP_AppCodeName) + 100);
 
   /* Make sure that this loser isn't cancelling someone else's posting.
 	 Yes, there are occasionally good reasons to do so.  Those people
@@ -3115,13 +3115,13 @@ net_do_cancel (ActiveEntry *ce)
   {
 	char *us = MSG_ExtractRFC822AddressMailboxes (from);
 	char *them = MSG_ExtractRFC822AddressMailboxes (old_from);
-	XP_Bool ok = (us && them && !strcasecomp (us, them));
+	XP_Bool ok = (us && them && !PL_strcasecmp (us, them));
 	FREEIF(us);
 	FREEIF(them);
 	if (!ok)
 	  {
 		status = MK_NNTP_CANCEL_DISALLOWED;
-		ce->URL_s->error_msg = XP_STRDUP (XP_GetString(status));
+		ce->URL_s->error_msg = PL_strdup (XP_GetString(status));
 		cd->next_state = NEWS_ERROR; /* even though it worked */
 		cd->pause_for_read = FALSE;
 		goto FAIL;
@@ -3144,22 +3144,22 @@ net_do_cancel (ActiveEntry *ce)
 	  goto FAIL;
 	}
 
-  XP_STRCPY (subject, "cancel ");
-  XP_STRCAT (subject, id);
+  PL_strcpy (subject, "cancel ");
+  PL_strcat (subject, id);
 
-  XP_STRCPY (other_random_headers, "Control: cancel ");
-  XP_STRCAT (other_random_headers, id);
-  XP_STRCAT (other_random_headers, CRLF);
+  PL_strcpy (other_random_headers, "Control: cancel ");
+  PL_strcat (other_random_headers, id);
+  PL_strcat (other_random_headers, CRLF);
   if (distribution)
 	{
-	  XP_STRCAT (other_random_headers, "Distribution: ");
-	  XP_STRCAT (other_random_headers, distribution);
-	  XP_STRCAT (other_random_headers, CRLF);
+	  PL_strcat (other_random_headers, "Distribution: ");
+	  PL_strcat (other_random_headers, distribution);
+	  PL_strcat (other_random_headers, CRLF);
 	}
 
-  XP_STRCPY (body, "This message was cancelled from within ");
-  XP_STRCAT (body, XP_AppCodeName);
-  XP_STRCAT (body, "." CRLF);
+  PL_strcpy (body, "This message was cancelled from within ");
+  PL_strcat (body, XP_AppCodeName);
+  PL_strcat (body, "." CRLF);
 
   /* #### Would it be a good idea to S/MIME-sign all "cancel" messages? */
 
@@ -3182,7 +3182,7 @@ net_do_cancel (ActiveEntry *ce)
 							fields,
 							FALSE, /* digest_p */
 							TRUE,  /* dont_deliver_p */
-							TEXT_PLAIN, body, XP_STRLEN (body),
+							TEXT_PLAIN, body, PL_strlen (body),
 							0, /* other attachments */
 							NULL, /* multipart/related chunk */
 							net_cancel_done_cb);
@@ -3193,7 +3193,7 @@ net_do_cancel (ActiveEntry *ce)
   if (!cd->cancel_msg_file)
 	{
 	  status = cd->cancel_status;
-	  XP_ASSERT (status < 0);
+	  PR_ASSERT (status < 0);
 	  if (status >= 0) status = -1;
 	  goto FAIL;
 	}
@@ -3216,7 +3216,7 @@ net_do_cancel (ActiveEntry *ce)
 
 	data_fp = 0;
 	data_size = st.st_size + 20;
-	data = (char *) XP_ALLOC (data_size);
+	data = (char *) PR_Malloc (data_size);
 	if (! data)
 	  {
 		status = MK_OUT_OF_MEMORY;
@@ -3230,10 +3230,10 @@ net_do_cancel (ActiveEntry *ce)
 	XP_FileClose (file);
 	XP_FileRemove (cd->cancel_msg_file, xpFileToPost);
 
-	XP_STRCAT (data, CRLF "." CRLF CRLF);
-	status = NET_BlockingWrite(ce->socket, data, XP_STRLEN(data));
+	PL_strcat (data, CRLF "." CRLF CRLF);
+	status = NET_BlockingWrite(ce->socket, data, PL_strlen(data));
 	NNTP_LOG_WRITE(data);
-	XP_FREE (data);
+	PR_Free (data);
     if (status < 0)
 	  {
 		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR,
@@ -3270,7 +3270,7 @@ static int net_xpat_send (ActiveEntry *ce)
 	char *thisTerm = NULL;
 
 	if (cd->current_search &&
-		(thisTerm = XP_STRCHR(cd->current_search, '/')) != NULL)
+		(thisTerm = PL_strchr(cd->current_search, '/')) != NULL)
 	{
 		/* extract the XPAT encoding for one query term */
 /*		char *next_search = NULL; */
@@ -3278,7 +3278,7 @@ static int net_xpat_send (ActiveEntry *ce)
 		char *unescapedCommand = NULL;
 		char *endOfTerm = NULL;
 		StrAllocCopy (command, ++thisTerm);
-		endOfTerm = XP_STRCHR(command, '/');
+		endOfTerm = PL_strchr(command, '/');
 		if (endOfTerm)
 			*endOfTerm = '\0';
 		StrAllocCat (command, CRLF);
@@ -3287,15 +3287,15 @@ static int net_xpat_send (ActiveEntry *ce)
 
 		/* send one term off to the server */
 		NNTP_LOG_WRITE(command);
-		status = NET_BlockingWrite(ce->socket, unescapedCommand, XP_STRLEN(unescapedCommand));
+		status = NET_BlockingWrite(ce->socket, unescapedCommand, PL_strlen(unescapedCommand));
 		NNTP_LOG_WRITE(unescapedCommand);
 
 		cd->next_state = NNTP_RESPONSE;
 		cd->next_state_after_response = NNTP_XPAT_RESPONSE;
 	    cd->pause_for_read = TRUE;
 
-		XP_FREE(command);
-		XP_FREE(unescapedCommand);
+		PR_Free(command);
+		PR_Free(unescapedCommand);
 	}
 	else
 	{
@@ -3312,10 +3312,10 @@ static int net_list_pretty_names(ActiveEntry *ce)
 			OUTPUT_BUFFER_SIZE, 
 			"LIST PRETTYNAMES %.512s" CRLF, 
 			cd->group_name ? cd->group_name : "");
-    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 #ifdef DEBUG_bienvenu
-	XP_Trace(cd->output_buffer);
+	PR_LogPrint(cd->output_buffer);
 #endif
 	cd->next_state = NNTP_RESPONSE;
 	cd->next_state_after_response = NNTP_LIST_PRETTY_NAMES_RESPONSE;
@@ -3370,7 +3370,7 @@ static int net_list_pretty_names_response(ActiveEntry *ce)
 			if (i > 0)
 				MSG_AddPrettyName(cd->host, line, prettyName);
 #ifdef DEBUG_bienvenu
-			XP_Trace("adding pretty name %s\n", prettyName);
+			PR_LogPrint("adding pretty name %s\n", prettyName);
 #endif
 		}
 		else
@@ -3391,7 +3391,7 @@ static int net_list_xactive(ActiveEntry *ce)
 			OUTPUT_BUFFER_SIZE, 
 			"LIST XACTIVE %.512s" CRLF, 
 			cd->group_name);
-    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
 	cd->next_state = NNTP_RESPONSE;
@@ -3407,7 +3407,7 @@ static int net_list_xactive_response(ActiveEntry *ce)
 
 	NewsConData * cd = (NewsConData *)ce->con_data;
 
-	XP_ASSERT(cd->response_code == 215);
+	PR_ASSERT(cd->response_code == 215);
 	if (cd->response_code != 215)
 	{
 		cd->next_state = DISPLAY_NEWSGROUPS;
@@ -3466,7 +3466,7 @@ static int net_list_xactive_response(ActiveEntry *ce)
 				/* we're either going to list prettynames first, or list all prettynames 
 				   every time, so we won't care so much if it gets interrupted. */
 #ifdef DEBUG_bienvenu
-				XP_Trace("got xactive for %s of %s\n", line, flags);
+				PR_LogPrint("got xactive for %s of %s\n", line, flags);
 #endif
 				MSG_SetGroupNeedsExtraInfo(cd->host, line, FALSE);
 			}
@@ -3478,11 +3478,11 @@ static int net_list_xactive_response(ActiveEntry *ce)
 				char *old_group_name = cd->group_name;
 				cd->group_name = MSG_GetFirstGroupNeedingExtraInfo(cd->host);
 				/* make sure we're not stuck on the same group... */
-				if (old_group_name && cd->group_name && XP_STRCMP(old_group_name, cd->group_name))
+				if (old_group_name && cd->group_name && PL_strcmp(old_group_name, cd->group_name))
 				{
-					XP_FREE(old_group_name);
+					PR_Free(old_group_name);
 #ifdef DEBUG_bienvenu
-					XP_Trace("listing xactive for %s\n", cd->group_name);
+					PR_LogPrint("listing xactive for %s\n", cd->group_name);
 #endif
 					cd->next_state = NNTP_LIST_XACTIVE;
 			        cd->pause_for_read = FALSE;
@@ -3515,7 +3515,7 @@ static int net_list_group(ActiveEntry *ce)
 			cd->group_name);
 	MSG_InitAddArticleKeyToGroup(cd->pane, cd->host, cd->group_name,
 							   &cd->newsgroup_parse_state);
-    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,XP_STRLEN(cd->output_buffer));
+    ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
 	NNTP_LOG_WRITE(cd->output_buffer);
 
 	cd->next_state = NNTP_RESPONSE;
@@ -3530,7 +3530,7 @@ static int net_list_group_response(ActiveEntry *ce)
 
 	NewsConData * cd = (NewsConData *)ce->con_data;
 
-	XP_ASSERT(cd->response_code == 211);
+	PR_ASSERT(cd->response_code == 211);
 	if (cd->response_code != 211)
 	{
 		cd->next_state = NEWS_DONE; 
@@ -3608,7 +3608,7 @@ static int net_xpat_response (ActiveEntry *ce)
 		else
 		{
 			/* set up the next term for next time around */
-			char *nextTerm = XP_STRCHR(cd->current_search, '/');
+			char *nextTerm = PL_strchr(cd->current_search, '/');
 			if (nextTerm)
 				cd->current_search = ++nextTerm;
 			else
@@ -3625,7 +3625,7 @@ static int net_xpat_response (ActiveEntry *ce)
 
 PRIVATE int net_nntp_search(ActiveEntry *ce)
 {
-	XP_ASSERT(FALSE);
+	PR_ASSERT(FALSE);
 	return 0;
 }
 
@@ -3751,7 +3751,7 @@ NET_parse_news_url (const char *url,
 	  FREEIF(host_and_port);
 	  PREF_CopyCharPref("network.hosts.nntp_server", &defhost);
 	  if (defhost && *defhost == '\0') {
-		XP_FREE(defhost);
+		PR_Free(defhost);
 		defhost = NULL;
 	  }
 	  if (defhost) {
@@ -3761,7 +3761,7 @@ NET_parse_news_url (const char *url,
 		}
 		if (defport) {
 		  host_and_port = PR_smprintf("%s:%ld", defhost, (long) defport);
-		  XP_FREE(defhost);
+		  PR_Free(defhost);
 		} else {
 		  host_and_port = defhost;
 		}
@@ -3781,12 +3781,12 @@ NET_parse_news_url (const char *url,
   /* If a port was specified, but it was the default port, pretend
 	 it wasn't specified.
    */
-  s = XP_STRCHR (host_and_port, ':');
+  s = PL_strchr (host_and_port, ':');
   if (s && sscanf (s+1, " %lu ", &port) == 1 && port == (secure_p ? SECURE_NEWS_PORT : NEWS_PORT))
 	*s = 0;
 
-  path_part = XP_STRCHR (url, ':');
-  XP_ASSERT (path_part);
+  path_part = PL_strchr (url, ':');
+  PR_ASSERT (path_part);
   if (!path_part)
 	{
 	  status = -1;
@@ -3796,14 +3796,14 @@ NET_parse_news_url (const char *url,
   if (path_part[0] == '/' && path_part[1] == '/')
 	{
 	  /* Skip over host name. */
-	  path_part = XP_STRCHR (path_part + 2, '/');
+	  path_part = PL_strchr (path_part + 2, '/');
 	  if (path_part)
 		path_part++;
 	}
   if (!path_part)
 	path_part = "";
 
-  group = XP_STRDUP (path_part);
+  group = PL_strdup (path_part);
   if (!group)
 	{
 	  status = MK_OUT_OF_MEMORY;
@@ -3819,7 +3819,7 @@ NET_parse_news_url (const char *url,
 	 Either way, there may be search data at the end.
    */
 
-  s = XP_STRCHR (group, '@');
+  s = PL_strchr (group, '@');
   if (s)
 	{
 	  message_id = group;
@@ -3827,7 +3827,7 @@ NET_parse_news_url (const char *url,
 	}
   else if (!*group)
 	{
-	  XP_FREE (group);
+	  PR_Free (group);
 	  group = 0;
 	}
 
@@ -3845,7 +3845,7 @@ NET_parse_news_url (const char *url,
 	  if (message_id)
 		{
 		  /* Move past the @. */
-		  XP_ASSERT (s && *s == '@');
+		  PR_ASSERT (s && *s == '@');
 		  start = s;
 		}
 	  else
@@ -3859,7 +3859,7 @@ NET_parse_news_url (const char *url,
 		  break;
 	  if (*s)
 		{
-		  command_specific_data = XP_STRDUP (s);
+		  command_specific_data = PL_strdup (s);
 		  *s = 0;
 		  if (!command_specific_data)
 			{
@@ -3871,18 +3871,18 @@ NET_parse_news_url (const char *url,
 	  /* Discard any now-empty strings. */
 	  if (message_id && !*message_id)
 		{
-		  XP_FREE (message_id);
+		  PR_Free (message_id);
 		  message_id = 0;
 		}
 	  else if (group && !*group)
 		{
-		  XP_FREE (group);
+		  PR_Free (group);
 		  group = 0;
 		}
 	}
 
   FAIL:
-  XP_ASSERT (!message_id || message_id != group);
+  PR_ASSERT (!message_id || message_id != group);
   if (status >= 0)
 	{
 	  *host_and_portP = host_and_port;
@@ -4075,7 +4075,7 @@ static XP_Bool nntp_are_connections_available (NNTPConnection *conn)
 	{
 		NNTP_LOG_NOTE(("nntp_are_connections_available: comparing %08lX %s", tmpConn, tmpConn->busy ? "busy" : "available"));
 
-		if (conn != tmpConn && tmpConn->busy && !strcasecomp(tmpConn->hostname, conn->hostname))
+		if (conn != tmpConn && tmpConn->busy && !PL_strcasecmp(tmpConn->hostname, conn->hostname))
 			connCount++;
 	}
 
@@ -4096,7 +4096,7 @@ MODULE_PRIVATE int PR_CALLBACK NET_OnlinePrefChangedFunc(const char *pref, void 
 	char * socksHost = NULL;
 	char text[MAXHOSTNAMELEN + 8];
 
-	if (!XP_STRCASECMP(pref,"network.online")) 
+	if (!PL_strcasecmp(pref,"network.online")) 
 		status = PREF_GetBoolPref("network.online", &isOnline);
 
 	if ( isOnline ) {
@@ -4129,7 +4129,7 @@ NET_NewsMaxArticlesChangedFunc(const char *pref, void *data);
 MODULE_PRIVATE int PR_CALLBACK NET_NewsMaxArticlesChangedFunc(const char *pref, void *data) 
 {
 	int status;
-	if (!XP_STRCASECMP(pref,"news.max_articles")) 
+	if (!PL_strcasecmp(pref,"news.max_articles")) 
 	{
 		int32 maxArticles;
 
@@ -4160,7 +4160,7 @@ PRIVATE int32
 net_NewsLoad (ActiveEntry *ce)
 {
   int status = 0;
-  NewsConData *cd = XP_NEW(NewsConData);
+  NewsConData *cd = PR_NEW(NewsConData);
   XP_Bool secure_p = FALSE;
   XP_Bool default_host = FALSE;
   char *url = ce->URL_s->address;
@@ -4206,7 +4206,7 @@ net_NewsLoad (ActiveEntry *ce)
 	  goto FAIL;
 	}
 
-  XP_MEMSET(cd, 0, sizeof(NewsConData));
+  memset(cd, 0, sizeof(NewsConData));
   ce->URL_s->content_length = 0;
 
   if(!ce->proxy_addr)
@@ -4229,7 +4229,7 @@ net_NewsLoad (ActiveEntry *ce)
     NNTP_LOG_NOTE(("NET_NewsLoad: url->msg_pane NULL for URL: %s\n", ce->URL_s->address));
     cd->pane = MSG_FindPane(ce->window_id, MSG_ANYPANE);
   }
-  XP_ASSERT(cd->pane && MSG_GetContext(cd->pane) == ce->window_id);
+  PR_ASSERT(cd->pane && MSG_GetContext(cd->pane) == ce->window_id);
   if (!cd->pane) {
 	status = -1;				/* ### */
 	goto FAIL;
@@ -4239,7 +4239,7 @@ net_NewsLoad (ActiveEntry *ce)
 
   NNTP_LOG_NOTE (("NET_NewsLoad: %s", ce->URL_s->address));
 
-  cd->output_buffer = (char *) XP_ALLOC(OUTPUT_BUFFER_SIZE);
+  cd->output_buffer = (char *) PR_Malloc(OUTPUT_BUFFER_SIZE);
   if(!cd->output_buffer)
 	{
 	  status = MK_OUT_OF_MEMORY;
@@ -4250,7 +4250,7 @@ net_NewsLoad (ActiveEntry *ce)
   ce->socket = NULL;
   cd->article_num = -1;
 
-  XP_ASSERT (url);
+  PR_ASSERT (url);
   if (!url)
 	{
 	  status = -1;
@@ -4263,7 +4263,7 @@ net_NewsLoad (ActiveEntry *ce)
   if (status < 0)
 	goto FAIL;
 
-  colon = XP_STRCHR (host_and_port, ':');
+  colon = PL_strchr (host_and_port, ':');
   if (colon) {
     unsigned long naturalLong;
 	*colon = '\0';
@@ -4274,13 +4274,13 @@ net_NewsLoad (ActiveEntry *ce)
 								secure_p, port);
   if (colon) *colon = ':';
 
-  XP_ASSERT(cd->host);
+  PR_ASSERT(cd->host);
   if (!cd->host) {
 	status = -1;
 	goto FAIL;
   }
 
-  if (message_id && command_specific_data && !XP_STRCMP (command_specific_data, "?cancel"))
+  if (message_id && command_specific_data && !PL_strcmp (command_specific_data, "?cancel"))
 	cancel_p = TRUE;
 
   StrAllocCopy(cd->path, message_id);
@@ -4322,7 +4322,7 @@ net_NewsLoad (ActiveEntry *ce)
 		  status = -1;
 		  goto FAIL;
 		}
-	  XP_ASSERT (!group && !message_id && !command_specific_data);
+	  PR_ASSERT (!group && !message_id && !command_specific_data);
 	  cd->type_wanted = NEWS_POST;
 	  StrAllocCopy(cd->path, "");
 	}
@@ -4340,7 +4340,7 @@ net_NewsLoad (ActiveEntry *ce)
 	}
   else if (command_specific_data)
 	{
-	  if (XP_STRSTR (command_specific_data, "?newgroups"))
+	  if (PL_strstr (command_specific_data, "?newgroups"))
 	    /* news://HOST/?newsgroups
 	        news:/GROUP/?newsgroups (useless)
 	        news:?newsgroups (default host)
@@ -4348,25 +4348,25 @@ net_NewsLoad (ActiveEntry *ce)
 	    cd->type_wanted = NEW_GROUPS;
       else
 	  {
-		if (XP_STRSTR(command_specific_data, "?list-pretty"))
+		if (PL_strstr(command_specific_data, "?list-pretty"))
 		{
 			cd->type_wanted = PRETTY_NAMES_WANTED;
-			cd->command_specific_data = XP_STRDUP(command_specific_data);
+			cd->command_specific_data = PL_strdup(command_specific_data);
 		}
-		else if (XP_STRSTR(command_specific_data, "?profile"))
+		else if (PL_strstr(command_specific_data, "?profile"))
 		{
 			cd->type_wanted = PROFILE_WANTED;
-			cd->command_specific_data = XP_STRDUP(command_specific_data);
+			cd->command_specific_data = PL_strdup(command_specific_data);
 		}
-		else if (XP_STRSTR(command_specific_data, "?list-ids"))
+		else if (PL_strstr(command_specific_data, "?list-ids"))
 		{
 			cd->type_wanted = IDS_WANTED;
-			cd->command_specific_data = XP_STRDUP(command_specific_data);
+			cd->command_specific_data = PL_strdup(command_specific_data);
 		}
 		else
 		{
 			cd->type_wanted = SEARCH_WANTED;
-			cd->command_specific_data = XP_STRDUP(command_specific_data);
+			cd->command_specific_data = PL_strdup(command_specific_data);
 			cd->current_search = cd->command_specific_data;
 		}
 	  }
@@ -4383,7 +4383,7 @@ net_NewsLoad (ActiveEntry *ce)
 		  status = -1;
 		  goto FAIL;
 		}
-	  if (XP_STRCHR (group, '*'))
+	  if (PL_strchr (group, '*'))
 		cd->type_wanted = LIST_WANTED;
 	  else
 		cd->type_wanted = GROUP_WANTED;
@@ -4445,7 +4445,7 @@ net_NewsLoad (ActiveEntry *ce)
 		  /* if the hostnames match up exactly and the connection
 		   * is not busy at the moment then reuse this connection.
 		   */
-		  if(!XP_STRCMP(tmp_con->hostname, host_and_port)
+		  if(!PL_strcmp(tmp_con->hostname, host_and_port)
 			 && secure_p == tmp_con->secure
 			 &&!tmp_con->busy)
 			{
@@ -4482,14 +4482,14 @@ net_NewsLoad (ActiveEntry *ce)
 	  /* build a control connection structure so we
 	   * can store the data as we go along
 	   */
-	  cd->control_con = XP_NEW(NNTPConnection);
+	  cd->control_con = PR_NEW(NNTPConnection);
 	  if(!cd->control_con)
 		{
 		  status = MK_OUT_OF_MEMORY;
 		  goto FAIL;
 		}
 	  NNTP_LOG_NOTE(("Created control_con %08lX for %s", cd->control_con, ce->URL_s->address));
-	  XP_MEMSET(cd->control_con, 0, sizeof(NNTPConnection));
+	  memset(cd->control_con, 0, sizeof(NNTPConnection));
 
 	  cd->control_con->default_host = default_host;
 	  StrAllocCopy(cd->control_con->hostname, host_and_port);
@@ -4539,7 +4539,7 @@ net_NewsLoad (ActiveEntry *ce)
 				  net_nntp_close (con->csock, status);
 				  FREEIF(con->current_group);
 				  FREEIF(con->hostname);
-				  XP_FREE(con);
+				  PR_Free(con);
 				  break;
 				}
 			}
@@ -4921,9 +4921,9 @@ HG68092
 				else
 				  {
 					if (line[0] == '.')
-					  XP_STRCPY (cd->output_buffer, line + 1);
+					  PL_strcpy (cd->output_buffer, line + 1);
 					else
-					  XP_STRCPY (cd->output_buffer, line);
+					  PL_strcpy (cd->output_buffer, line);
 
 					/* When we're sending this line to a converter (ie,
 					   it's a message/rfc822) use the local line termination
@@ -4933,11 +4933,11 @@ HG68092
 					   the local system will convert that to the local line
 					   terminator as it is read.
 					 */
-					XP_STRCAT (cd->output_buffer, LINEBREAK);
+					PL_strcat (cd->output_buffer, LINEBREAK);
 					/* Don't send content-type to mime parser if we're doing a cancel
 					  because it confuses mime parser into not parsing.
 					  */
-					if (cd->type_wanted != CANCEL_WANTED || XP_STRNCMP(cd->output_buffer, "Content-Type:", 13))
+					if (cd->type_wanted != CANCEL_WANTED || PL_strncmp(cd->output_buffer, "Content-Type:", 13))
 						ce->status = PUTSTRING(cd->output_buffer);
 				  }
 				break;
@@ -4966,7 +4966,7 @@ HG68092
 
             case NEWS_PROCESS_XOVER:
 		    case NEWS_PROCESS_BODIES:
-			    if (cd->group_name && XP_STRSTR (cd->group_name, ".emacs"))
+			    if (cd->group_name && PL_strstr (cd->group_name, ".emacs"))
 				  /* This is a joke!  Don't internationalize it... */
 			      NET_Progress(ce->window_id, "Garbage collecting...");
 			    else
@@ -5163,11 +5163,11 @@ HG68092
 /*				if (cd->xover_parse_state != NULL)*/
 				{
 					int status;
-/*					XP_ASSERT (ce->status < 0);*/
+/*					PR_ASSERT (ce->status < 0);*/
 					status = MSG_FinishXOVER (cd->pane,
 											  &cd->xover_parse_state,
 											  ce->status);
-					XP_ASSERT (!cd->xover_parse_state);
+					PR_ASSERT (!cd->xover_parse_state);
 					if (ce->status >= 0 && status < 0)
 					  ce->status = status;
 				}
@@ -5196,7 +5196,7 @@ HG68092
                                             ce->URL_s, 
                                             cd->original_content_length,
 											ce->bytes_received);
-                XP_FREE(cd);
+                PR_Free(cd);
 
         		/* gate the maximum number of cached connections
 				 * but don't delete busy ones.
@@ -5218,7 +5218,7 @@ HG68092
                             net_nntp_close(con->csock, ce->status);
 							FREEIF(con->current_group);
                             FREEIF(con->hostname);
-                            XP_FREE(con);
+                            PR_Free(con);
                             break;
                           }
                       }

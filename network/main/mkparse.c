@@ -58,7 +58,7 @@ NET_AddExternalURLType(char * type)
 
 	while((reg_type = (char *)XP_ListNextObject(list_ptr)) != NULL)
 	  {
-		if(!strcasecomp(reg_type, type))
+		if(!PL_strcasecmp(reg_type, type))
 			return;  /* ignore duplicates */
 	  }
 
@@ -81,7 +81,7 @@ NET_DelExternalURLType(char * type)
 
     while((reg_type = (char *)XP_ListNextObject(list_ptr)) != NULL)
       {
-        if(!strcasecomp(reg_type, type))
+        if(!PL_strcasecmp(reg_type, type))
 		  {
 			/* found it */
 			XP_ListRemoveObject(ExternalURLTypeList, reg_type);
@@ -102,8 +102,8 @@ net_CheckForExternalURLType(char * url)
 
     while((reg_type = (char *)XP_ListNextObject(list_ptr)) != NULL)
       {
-		len = XP_STRLEN(reg_type);
-        if(!strncasecomp(reg_type, url, len) && url[len] == ':')
+		len = PL_strlen(reg_type);
+        if(!PL_strncasecmp(reg_type, url, len) && url[len] == ':')
           { 
             /* found it */
             return EXTERNAL_TYPE_URL; /* done */ 
@@ -139,13 +139,13 @@ net_ReduceURL (char *url)
 
 		/* find the path so we only change that and not the host
 		 */
-		path_ptr = XP_STRCHR(url, '/');
+		path_ptr = PL_strchr(url, '/');
 
 		if(!path_ptr)
 		    return(url);
 
 		if(*(path_ptr+1) == '/')
-		    path_ptr = XP_STRCHR(path_ptr+2, '/');
+		    path_ptr = PL_strchr(path_ptr+2, '/');
 			
 		if(!path_ptr)
 		    return(url);
@@ -227,28 +227,28 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
        switch(*relative_url) 
 	    {
 		  case 'i':
-			if(!XP_STRNCMP(relative_url,"internal-icon-", 14)
-		   		|| !XP_STRNCMP(relative_url,"internal-external-reconnect:", 28)
-			 		|| !XP_STRCMP(relative_url,"internal-external-plugin"))
+			if(!PL_strncmp(relative_url,"internal-icon-", 14)
+		   		|| !PL_strncmp(relative_url,"internal-external-reconnect:", 28)
+			 		|| !PL_strcmp(relative_url,"internal-external-plugin"))
             url_type = INTERNAL_IMAGE_TYPE_URL;
             break;
     	  case '/':
-        	if(!strncasecomp(relative_url, "/mc-icons/", 10) ||
-               !strncasecomp(relative_url, "/ns-icons/", 10))
+        	if(!PL_strncasecmp(relative_url, "/mc-icons/", 10) ||
+               !PL_strncasecmp(relative_url, "/ns-icons/", 10))
           	  {
-            	if(!XP_STRCMP(relative_url+10, "menu.gif"))
+            	if(!PL_strcmp(relative_url+10, "menu.gif"))
                 	url_type = INTERNAL_IMAGE_TYPE_URL;
-            	else if(!XP_STRCMP(relative_url+10, "unknown.gif"))
+            	else if(!PL_strcmp(relative_url+10, "unknown.gif"))
                 	url_type = INTERNAL_IMAGE_TYPE_URL;
-            	else if(!XP_STRCMP(relative_url+10, "text.gif"))
+            	else if(!PL_strcmp(relative_url+10, "text.gif"))
                 	url_type = INTERNAL_IMAGE_TYPE_URL;
-            	else if(!XP_STRCMP(relative_url+10, "image.gif"))
+            	else if(!PL_strcmp(relative_url+10, "image.gif"))
                 	url_type = INTERNAL_IMAGE_TYPE_URL;
-            	else if(!XP_STRCMP(relative_url+10, "sound.gif"))
+            	else if(!PL_strcmp(relative_url+10, "sound.gif"))
                 	url_type = INTERNAL_IMAGE_TYPE_URL;
-            	else if(!XP_STRCMP(relative_url+10, "binary.gif"))
+            	else if(!PL_strcmp(relative_url+10, "binary.gif"))
                 	url_type = INTERNAL_IMAGE_TYPE_URL;
-            	else if(!XP_STRCMP(relative_url+10, "movie.gif"))
+            	else if(!PL_strcmp(relative_url+10, "movie.gif"))
                 	url_type = INTERNAL_IMAGE_TYPE_URL;
           	  }
         	break;
@@ -257,12 +257,12 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 	else if(url_type == ABOUT_TYPE_URL)
 	  {
 		/* don't allow about:cache in a document */
-		if(!strncasecomp(relative_url, "about:cache", 11)
-		   || !strncasecomp(relative_url, "about:global", 12)
-		   || !strncasecomp(relative_url, "about:image-cache", 17)
-		   || !strncasecomp(relative_url, "about:memory-cache", 18))
+		if(!PL_strncasecmp(relative_url, "about:cache", 11)
+		   || !PL_strncasecmp(relative_url, "about:global", 12)
+		   || !PL_strncasecmp(relative_url, "about:image-cache", 17)
+		   || !PL_strncasecmp(relative_url, "about:memory-cache", 18))
 		  {
-			return XP_STRDUP("");
+			return PL_strdup("");
 		  }
 	  }
 
@@ -275,7 +275,7 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
          * or a messed up one of the type proto:/path
          * but notice the missing host.
          */
-		char * colon = XP_STRCHR(relative_url, ':'); /* must be there */
+		char * colon = PL_strchr(relative_url, ':'); /* must be there */
 
 		if( (colon && *(colon+1) == '/' && *(colon+2) == '/') || 
 			(url_type != GOPHER_TYPE_URL
@@ -299,7 +299,7 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 			 * remove the stuff before and at the colon and treat it as a normal
 			 * relative url
 			 */
-			char * colon = XP_STRCHR(relative_url, ':');
+			char * colon = PL_strchr(relative_url, ':');
 
 			relative_url = colon+1;
 		  }
@@ -354,7 +354,7 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 		*relative_url != '#' &&
 		*relative_url != '?')
 	  {
-		return XP_STRDUP("");
+		return PL_strdup("");
 	  }
 
 	if(relative_url[0] == '/' && relative_url[1] == '/')
@@ -364,9 +364,9 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 
 		/* find the colon after the protocol
 		 */
-		cat_point = XP_STRCHR(absolute_url, ':');
+		cat_point = PL_strchr(absolute_url, ':');
 		if (cat_point && base_type == WYSIWYG_TYPE_URL)
-			cat_point = XP_STRCHR(cat_point + 1, ':');
+			cat_point = PL_strchr(cat_point + 1, ':');
 
 		/* append after the colon
 		 */
@@ -382,9 +382,9 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 
 		/* find the colon after the protocol 
          */
-        char *colon = XP_STRCHR(absolute_url, ':');
+        char *colon = PL_strchr(absolute_url, ':');
 		if (colon && base_type == WYSIWYG_TYPE_URL)
-			colon = XP_STRCHR(colon + 1, ':');
+			colon = PL_strchr(colon + 1, ':');
 
 		if(colon)
 		  {
@@ -392,13 +392,13 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 			  {
 				/* find the next slash 
 				 */
-				cat_point = XP_STRCHR(colon+3, '/');
+				cat_point = PL_strchr(colon+3, '/');
 
 				if(!cat_point)
 				  {
 				    /* if there isn't another slash then the cat point is the very end
 				     */
-					cat_point = &absolute_url[XP_STRLEN(absolute_url)];
+					cat_point = &absolute_url[PL_strlen(absolute_url)];
 				  }
 			  }
 			else
@@ -425,11 +425,11 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 		 * any # punctuation the url might have
 	 	 *
 		 */
-		char * hash = XP_STRCHR(absolute_url, '#');
+		char * hash = PL_strchr(absolute_url, '#');
 	
 		if(hash)
 		  {
-			char * ques_mark = XP_STRCHR(absolute_url, '?');
+			char * ques_mark = PL_strchr(absolute_url, '?');
    
 			if(ques_mark)
 			  {
@@ -451,7 +451,7 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 		  }
 		else
 		  {
-			cat_point = &absolute_url[XP_STRLEN(absolute_url)]; /* the end of the URL */
+			cat_point = &absolute_url[PL_strlen(absolute_url)]; /* the end of the URL */
 		  }
 	  }
 	else
@@ -460,8 +460,8 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 		 *
 		 * append after the last slash
 		 */
-		char * ques = XP_STRCHR(absolute_url, '?');
-		char * hash = XP_STRCHR(absolute_url, '#');
+		char * ques = PL_strchr(absolute_url, '?');
+		char * hash = PL_strchr(absolute_url, '#');
 
 		if(ques)
 			*ques = '\0';
@@ -469,12 +469,12 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 		if(hash)
 			*hash = '\0';
 
-		cat_point = XP_STRRCHR(absolute_url, '/');
+		cat_point = PL_strrchr(absolute_url, '/');
 
 		/* if there are no slashes then append right after the colon after the protocol
 		 */
 		if(!cat_point)
-		    cat_point = XP_STRCHR(absolute_url, ':');
+		    cat_point = PL_strchr(absolute_url, ':');
 
 		/* set the value back 
 		 */
@@ -492,13 +492,13 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
       {
 		cat_point_char = *cat_point;  /* save the value */
         *cat_point = '\0';
-        new_length = XP_STRLEN(absolute_url) + XP_STRLEN(relative_url) + 1;
-        ret_url = (char *) XP_ALLOC(new_length);
+        new_length = PL_strlen(absolute_url) + PL_strlen(relative_url) + 1;
+        ret_url = (char *) PR_Malloc(new_length);
 		if(!ret_url)
 			return(NULL);  /* out of memory */
 
-        XP_STRCPY(ret_url, absolute_url);
-        XP_STRCAT(ret_url, relative_url);
+        PL_strcpy(ret_url, absolute_url);
+        PL_strcat(ret_url, relative_url);
         *cat_point = cat_point_char;  /* set the absolute url back to its original state */
       } 
 	else
@@ -517,29 +517,29 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 MODULE_PRIVATE int NET_MonthNo (char * month)
 {
     int ret;
-    if (!strncasecomp(month, "JAN", 3))
+    if (!PL_strncasecmp(month, "JAN", 3))
         ret = 0;
-    else if (!strncasecomp(month, "FEB", 3))
+    else if (!PL_strncasecmp(month, "FEB", 3))
         ret = 1;
-    else if (!strncasecomp(month, "MAR", 3))
+    else if (!PL_strncasecmp(month, "MAR", 3))
         ret = 2;
-    else if (!strncasecomp(month, "APR", 3))
+    else if (!PL_strncasecmp(month, "APR", 3))
         ret = 3;
-    else if (!strncasecomp(month, "MAY", 3))
+    else if (!PL_strncasecmp(month, "MAY", 3))
         ret = 4;
-    else if (!strncasecomp(month, "JUN", 3))
+    else if (!PL_strncasecmp(month, "JUN", 3))
         ret = 5;
-    else if (!strncasecomp(month, "JUL", 3))
+    else if (!PL_strncasecmp(month, "JUL", 3))
         ret = 6;
-    else if (!strncasecomp(month, "AUG", 3))
+    else if (!PL_strncasecmp(month, "AUG", 3))
         ret = 7;
-    else if (!strncasecomp(month, "SEP", 3))
+    else if (!PL_strncasecmp(month, "SEP", 3))
         ret = 8;
-    else if (!strncasecomp(month, "OCT", 3))
+    else if (!PL_strncasecmp(month, "OCT", 3))
         ret = 9;
-    else if (!strncasecomp(month, "NOV", 3))
+    else if (!PL_strncasecmp(month, "NOV", 3))
         ret = 10;
-    else if (!strncasecomp(month, "DEC", 3))
+    else if (!PL_strncasecmp(month, "DEC", 3))
         ret = 11;
     else 
 	  {
@@ -589,7 +589,7 @@ NET_ParseDate(char *date_string)
 
     /* Whatever format we're looking at, it will start with weekday. */
     /* Skip to first space. */
-    if(!(ip = XP_STRCHR(date_string,' ')))
+    if(!(ip = PL_strchr(date_string,' ')))
         return 0;
     else
         while(XP_IS_SPACE(*ip))
@@ -598,7 +598,7 @@ NET_ParseDate(char *date_string)
 	/* make sure that the date is less than 256 
 	 * That will keep mname from ever overflowing 
 	 */
-	if(255 < XP_STRLEN(ip))
+	if(255 < PL_strlen(ip))
 		return(0);
 
     if(isalpha(*ip)) 
@@ -625,7 +625,7 @@ NET_ParseDate(char *date_string)
         t[2] = '\0';
         time_info.tm_mday = atoi(t);
         t[6] = '\0';
-        XP_STRCPY(mname,&t[3]);
+        PL_strcpy(mname,&t[3]);
         time_info.tm_year = atoi(&t[7]);
         /* Prevent wraparound from ambiguity */
         if(time_info.tm_year < 70)
@@ -683,7 +683,7 @@ NET_ParseURL (const char *url, int parts_requested)
 
 	if(!url)
 		return(StrAllocCat(rv, ""));
-	colon = XP_STRCHR(url, ':'); /* returns a const char */
+	colon = PL_strchr(url, ':'); /* returns a const char */
 
 	/* Get the protocol part, not including anything beyond the colon */
 	if (parts_requested & GET_PROTOCOL_PART) {
@@ -716,11 +716,11 @@ NET_ParseURL (const char *url, int parts_requested)
 			&& (*(colon+2) == '/')
 			&& (*(colon+3) != '\0')) {
 
-			if ( (slash = XP_STRCHR(colon+3, '/')) != NULL)
+			if ( (slash = PL_strchr(colon+3, '/')) != NULL)
 				*slash = '\0';
-			if ( (atSign = XP_STRCHR(colon+3, '@')) != NULL) {
+			if ( (atSign = PL_strchr(colon+3, '@')) != NULL) {
 				*atSign = '\0';
-				if ( (passwordColon = XP_STRCHR(colon+3, ':')) != NULL)
+				if ( (passwordColon = PL_strchr(colon+3, ':')) != NULL)
 					*passwordColon = '\0';
 				StrAllocCat(rv, colon+3);
 
@@ -747,17 +747,17 @@ NET_ParseURL (const char *url, int parts_requested)
         if(colon) {
 			if(*(colon+1) == '/' && *(colon+2) == '/')
 			  {
-				slash = XP_STRCHR(colon+3, '/');
+				slash = PL_strchr(colon+3, '/');
 
 				if(slash)
 					*slash = '\0';
 
-				if( (atSign = XP_STRCHR(colon+3, '@')) != NULL)
+				if( (atSign = PL_strchr(colon+3, '@')) != NULL)
 					host = atSign+1;
 				else
 					host = colon+3;
 				
-				ques_mark = XP_STRCHR(host, '?');
+				ques_mark = PL_strchr(host, '?');
 
 				if(ques_mark)
 					*ques_mark = '\0';
@@ -774,7 +774,7 @@ NET_ParseURL (const char *url, int parts_requested)
                 /* limit hostnames to within MAXHOSTNAMELEN characters to keep
                  * from crashing
                  */
-                if(XP_STRLEN(host) > MAXHOSTNAMELEN)
+                if(PL_strlen(host) > MAXHOSTNAMELEN)
                   {
                     char * cp;
                     char old_char;
@@ -808,7 +808,7 @@ NET_ParseURL (const char *url, int parts_requested)
             if(*(colon+1) == '/' && *(colon+2) == '/')
               {
 				/* skip host part */
-                slash = XP_STRCHR(colon+3, '/');
+                slash = PL_strchr(colon+3, '/');
 			  }
 			else 
               {
@@ -819,8 +819,8 @@ NET_ParseURL (const char *url, int parts_requested)
                 
 			if(slash)
 			  {
-			    ques_mark = XP_STRCHR(slash, '?');
-			    hash_mark = XP_STRCHR(slash, '#');
+			    ques_mark = PL_strchr(slash, '?');
+			    hash_mark = PL_strchr(slash, '#');
 
 			    if(ques_mark)
 				    *ques_mark = '\0';
@@ -840,11 +840,11 @@ NET_ParseURL (const char *url, int parts_requested)
       }
 		
     if(parts_requested & GET_HASH_PART) {
-		hash_mark = XP_STRCHR(url, '#'); /* returns a const char * */
+		hash_mark = PL_strchr(url, '#'); /* returns a const char * */
 
 		if(hash_mark)
 		  {
-			ques_mark = XP_STRCHR(hash_mark, '?');
+			ques_mark = PL_strchr(hash_mark, '?');
 
 			if(ques_mark)
 				*ques_mark = '\0';
@@ -857,11 +857,11 @@ NET_ParseURL (const char *url, int parts_requested)
 	  }
 
     if(parts_requested & GET_SEARCH_PART) {
-        ques_mark = XP_STRCHR(url, '?'); /* returns a const char * */
+        ques_mark = PL_strchr(url, '?'); /* returns a const char * */
 
         if(ques_mark)
           {
-            hash_mark = XP_STRCHR(ques_mark, '#');
+            hash_mark = PL_strchr(ques_mark, '#');
 
             if(hash_mark)
                 *hash_mark = '\0';
@@ -934,7 +934,7 @@ NET_Escape (const char * str, int mask)
 {
     if(!str)
         return NULL;
-    return NET_EscapeBytes (str, (int32)XP_STRLEN(str), mask, NULL);
+    return NET_EscapeBytes (str, (int32)PL_strlen(str), mask, NULL);
 }
 
 PUBLIC char *
@@ -956,7 +956,7 @@ NET_EscapeBytes (const char * str, int32 len, int mask, int32 * out_len)
             extra+=2; /* the escape, plus an extra byte for each nibble */
 	  }
 
-    if(!(result = (char *) XP_ALLOC(len + extra + 1)))
+    if(!(result = (char *) PR_Malloc(len + extra + 1)))
         return(0);
 
     dst = (unsigned char *) result;
@@ -1012,7 +1012,7 @@ NET_EscapedSize (const char * str, int mask)
      ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
 
 /* In-place rewrite of str, code copied from NET_UnEscapeCnt to avoid imposing
- * an XP_STRLEN and making that function call this one.
+ * an PL_strlen and making that function call this one.
  */
 PUBLIC int32
 NET_UnEscapeBytes (char * str, int32 len)
@@ -1092,7 +1092,7 @@ NET_IsHTTP_URL(const char *URL)
  *  but we pass it through NET_MakeAbsoluteURL so we can use
  *  relative input - ASSUMES SAME TYPE!
  * Return values defined in \include\net.h
- * Caller must XP_FREE the string
+ * Caller must PR_Free the string
 */
 int NET_MakeRelativeURL( char *base_url,
                          char *input_url,
@@ -1115,8 +1115,8 @@ int NET_MakeRelativeURL( char *base_url,
     char *slash;
 
     if( base_url == NULL || input_url == NULL ||
-        XP_STRLEN(base_url) == 0 || 
-        XP_STRLEN(input_url) == 0  ){
+        PL_strlen(base_url) == 0 || 
+        PL_strlen(input_url) == 0  ){
         return NET_URL_FAIL;
     }
     
@@ -1169,13 +1169,13 @@ int NET_MakeRelativeURL( char *base_url,
      */
     if (url_type == FILE_TYPE_URL) {  /* already checked that types are the same. */
       /* Looking for "file:////" */
-      if (XP_STRLEN(base_url) >= 9 &&
-          !XP_STRNCMP(base_url + 5,"////",4)) {
+      if (PL_strlen(base_url) >= 9 &&
+          !PL_strncmp(base_url + 5,"////",4)) {
         Result = NET_URL_NOT_ON_SAME_DEVICE;
         goto CLEAN_UP;
       }  
-      if (XP_STRLEN(absolute_url) >= 9 &&
-          !XP_STRNCMP(absolute_url + 5,"////",4)) {
+      if (PL_strlen(absolute_url) >= 9 &&
+          !PL_strncmp(absolute_url + 5,"////",4)) {
         Result = NET_URL_NOT_ON_SAME_DEVICE;
         goto CLEAN_UP;
       }  
@@ -1186,7 +1186,7 @@ int NET_MakeRelativeURL( char *base_url,
     /*  Different hosts are also = different devices */
     base_host = NET_ParseURL(base_url, GET_HOST_PART);
     url_host = NET_ParseURL(absolute_url, GET_HOST_PART);
-    if (XP_STRCMP(base_host,url_host)){
+    if (PL_strcmp(base_host,url_host)){
         Result = NET_URL_NOT_ON_SAME_DEVICE;
         goto CLEAN_UP;
     }
@@ -1194,25 +1194,25 @@ int NET_MakeRelativeURL( char *base_url,
     /* Similar to NET_ParseURL(GET_PATH_PART),
      *  but we don't strip named anchors and search strings
      */
-    colon = (char*) XP_STRCHR(base_url, ':'); /* returns a const char * */
+    colon = (char*) PL_strchr(base_url, ':'); /* returns a const char * */
 
     if(colon) {
         if(*(colon+1) == '/' && *(colon+2) == '/') {
 			/* skip host part */
-            slash = XP_STRCHR(colon+3, '/');
+            slash = PL_strchr(colon+3, '/');
         } else {
 		    /* path is right after the colon */
             slash = colon+1;
         }
         if ( slash ) {
-            base_path = XP_STRDUP(slash);
+            base_path = PL_strdup(slash);
         }
 	}
     if ( base_path == NULL ){
         goto CLEAN_UP;
     }
 
-    colon = (char*) XP_STRCHR(absolute_url, ':');
+    colon = (char*) PL_strchr(absolute_url, ':');
 
     /* For url_path, find beginning of path in our 
      * already-allocated "absolute_url" string
@@ -1220,7 +1220,7 @@ int NET_MakeRelativeURL( char *base_url,
     */
     if(colon) {
         if(*(colon+1) == '/' && *(colon+2) == '/') {
-            url_path = XP_STRCHR(colon+3, '/');
+            url_path = PL_strchr(colon+3, '/');
         } else {
             url_path = colon+1;
         }
@@ -1232,8 +1232,8 @@ int NET_MakeRelativeURL( char *base_url,
     /* TODO: MODIFY FOR NETWORK FILENAMES: //netname//blah */
 
     /* Find location of drive separator */
-    base_ptr = (char*) XP_STRCHR(base_path, '|');
-    url_ptr = (char*) XP_STRCHR(url_path, '|');
+    base_ptr = (char*) PL_strchr(base_path, '|');
+    url_ptr = (char*) PL_strchr(url_path, '|');
 
     /* Test if drive is different */
     if ( base_ptr && url_ptr &&
@@ -1299,7 +1299,7 @@ int NET_MakeRelativeURL( char *base_url,
         /* We are in the same directory if there are no slashes
          *  in the final relative path
          */
-        if ( subdir_count == 0 && NULL == XP_STRCHR(url_ptr, '/') ){
+        if ( subdir_count == 0 && NULL == PL_strchr(url_ptr, '/') ){
             Result = NET_URL_SAME_DIRECTORY;
         } else {
             Result = NET_URL_SAME_DEVICE;
@@ -1312,8 +1312,8 @@ int NET_MakeRelativeURL( char *base_url,
     }
 
     /* We can now figure out length of relative URL */
-    new_length = XP_STRLEN(url_ptr) + (subdir_count*3) + 1;
-    relative = (char *) XP_ALLOC(new_length);
+    new_length = PL_strlen(url_ptr) + (subdir_count*3) + 1;
+    relative = (char *) PR_Malloc(new_length);
     if ( !relative ){
         /* out of memory */
         Result = NET_URL_FAIL;
@@ -1324,11 +1324,11 @@ int NET_MakeRelativeURL( char *base_url,
 
     /* Add "../" for each subdir left in the base */
     for ( i = 0; i < subdir_count; i++ ){
-        XP_STRCAT(relative, "../");
+        PL_strcat(relative, "../");
     }
 
     /* Append the relative path that doesn't match */
-    XP_STRCAT(relative, url_ptr);
+    PL_strcat(relative, url_ptr);
 
 CLEAN_UP:
     if ( relative_url ){
@@ -1337,19 +1337,19 @@ CLEAN_UP:
             *relative_url = relative;
         } else {
             /* For all other cases, return absolute URL */
-            *relative_url = XP_STRDUP(absolute_url);
+            *relative_url = PL_strdup(absolute_url);
         }
     }
-    XP_FREE(absolute_url);
+    PR_Free(absolute_url);
 
     if( base_path ){
-        XP_FREE(base_path);
+        PR_Free(base_path);
     }
     if( base_host ){
-        XP_FREE(base_host);
+        PR_Free(base_host);
     }
     if( url_host ){
-        XP_FREE(url_host);
+        PR_Free(url_host);
     }
     return Result;
 }
@@ -1365,7 +1365,7 @@ CLEAN_UP:
  *  (just the "file" portion of src_url)
  * Note: relative_url can be &src_url,
  *  thus replacing the source
- * Caller must XP_FREE the string(s)
+ * Caller must PR_Free the string(s)
 */
 char * NET_MakeTargetURL( char *base_url,
                           char *src_url,
@@ -1384,15 +1384,15 @@ char * NET_MakeTargetURL( char *base_url,
     int   i;
 
     if( base_url == NULL || src_url == NULL ||
-        XP_STRLEN(base_url) == 0 || 
-        XP_STRLEN(src_url) == 0  ){
+        PL_strlen(base_url) == 0 || 
+        PL_strlen(src_url) == 0  ){
         return NULL;
     }
 
     /* Find where to concatenate the source
      *  we must have a slash or our base isn't valid!
     */
-    base_end = XP_STRRCHR(base_url, '/');
+    base_end = PL_strrchr(base_url, '/');
     if ( !base_end ){
         return NULL;
     } 
@@ -1400,7 +1400,7 @@ char * NET_MakeTargetURL( char *base_url,
 
 
     /* Find start of source (usually filename) right after the last slash */
-    src_start = XP_STRRCHR(src_url, '/');
+    src_start = PL_strrchr(src_url, '/');
     if (src_start){
         src_start++;
     } else {
@@ -1409,8 +1409,8 @@ char * NET_MakeTargetURL( char *base_url,
     }
 
     /* Find end at neareast '#' or '?'  */
-    src_end = XP_STRCHR(src_start, '#');
-    question = XP_STRCHR(src_start, '?');
+    src_end = PL_strchr(src_start, '#');
+    question = PL_strchr(src_start, '?');
 
     if ( question &&
         ( !src_end || question < src_end ) ){
@@ -1421,11 +1421,11 @@ char * NET_MakeTargetURL( char *base_url,
     if ( src_end ){
         src_length = src_end - src_start;
     } else {
-        src_length = XP_STRLEN(src_start);
+        src_length = PL_strlen(src_start);
     }
     base_length = base_end - base_url;
 
-    target = (char *) XP_ALLOC(base_length + src_length + 1);
+    target = (char *) PR_Malloc(base_length + src_length + 1);
     if ( target ){
         targ_ptr = target;
         src_ptr = base_url;
@@ -1448,9 +1448,9 @@ char * NET_MakeTargetURL( char *base_url,
         if ( relative_url ) {
             /* Free existing string */
             if ( *relative_url ){
-                XP_FREE(*relative_url);
+                PR_Free(*relative_url);
             }
-            *relative_url = XP_STRDUP(relative_start);
+            *relative_url = PL_strdup(relative_start);
         }
     }
 
@@ -1496,12 +1496,12 @@ PUBLIC HTTPIndexParserData *
 NET_HTTPIndexParserInit()
 {
 	/* create and init parser data */
-	HTTPIndexParserData * rv = XP_NEW(HTTPIndexParserData);
+	HTTPIndexParserData * rv = PR_NEW(HTTPIndexParserData);
 
 	if(!rv)
 		return(NULL);
 
-	XP_MEMSET(rv, 0, sizeof(HTTPIndexParserData));
+	memset(rv, 0, sizeof(HTTPIndexParserData));
 	
 	return(rv);
 }
@@ -1573,27 +1573,27 @@ net_parse_http_index_200_line(HTTPIndexParserData *obj, char *data_line)
 
 	while(token)
 	  {
-		if(!strcasecomp("FILENAME", token))
+		if(!PL_strcasecmp("FILENAME", token))
 		  {
 			obj->mapping_array[position] = FILENAME_TOKEN;
 		  }
-		else if(!strcasecomp("CONTENT-LENGTH", token))
+		else if(!PL_strcasecmp("CONTENT-LENGTH", token))
 		  {
 			obj->mapping_array[position] = CONTENT_LENGTH_TOKEN;
 		  }
-		else if(!strcasecomp("LAST-MODIFIED", token))
+		else if(!PL_strcasecmp("LAST-MODIFIED", token))
 		  {
 			obj->mapping_array[position] = LAST_MODIFIED_TOKEN;
 		  }
-		else if(!strcasecomp("CONTENT-TYPE", token))
+		else if(!PL_strcasecmp("CONTENT-TYPE", token))
 		  {
 			obj->mapping_array[position] = CONTENT_TYPE_TOKEN;
 		  }
-		else if(!strcasecomp("FILE-TYPE", token))
+		else if(!PL_strcasecmp("FILE-TYPE", token))
 		  {
 			obj->mapping_array[position] = FILE_TYPE_TOKEN;
 		  }
-		else if(!strcasecomp("PERMISSIONS", token))
+		else if(!PL_strcasecmp("PERMISSIONS", token))
 		  {
 			obj->mapping_array[position] = PERMISSIONS_TOKEN;
 		  }
@@ -1626,12 +1626,12 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
 		/* malloc some more space for the array
 		 */
 		if(obj->data_list)
-			obj->data_list = (NET_FileEntryInfo **) XP_REALLOC(obj->data_list, 
+			obj->data_list = (NET_FileEntryInfo **) PR_Realloc(obj->data_list, 
 													(obj->data_list_length 
 													+ ARRAY_GROWTH_RATE)
 													* sizeof(NET_FileEntryInfo*));
 		else
-			obj->data_list = (NET_FileEntryInfo **) XP_ALLOC(ARRAY_GROWTH_RATE 
+			obj->data_list = (NET_FileEntryInfo **) PR_Malloc(ARRAY_GROWTH_RATE 
 													* sizeof(NET_FileEntryInfo*));
 		obj->data_list_length += ARRAY_GROWTH_RATE;
 	  }
@@ -1653,7 +1653,7 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
 				break;
 
 			case FILENAME_TOKEN:
-				file_struct->filename = XP_STRDUP(token);
+				file_struct->filename = PL_strdup(token);
 				break;
 
 			case CONTENT_LENGTH_TOKEN:
@@ -1665,34 +1665,34 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
 				break;
 
 			case CONTENT_TYPE_TOKEN:
-				file_struct->content_type = XP_STRDUP(token);
+				file_struct->content_type = PL_strdup(token);
 				break;
 
 			case FILE_TYPE_TOKEN:
-				if(!strcasecomp(token, "FILE"))
+				if(!PL_strcasecmp(token, "FILE"))
 				  {
 					file_struct->special_type = NET_FILE_TYPE;
 				  }
-				else if(!strcasecomp(token, "DIRECTORY"))
+				else if(!PL_strcasecmp(token, "DIRECTORY"))
 				  {
 					file_struct->special_type = NET_DIRECTORY;
 				  }
-				else if(!strcasecomp(token, "SYMBOLIC-LINK"))
+				else if(!PL_strcasecmp(token, "SYMBOLIC-LINK"))
 				  {
 					file_struct->special_type = NET_SYM_LINK;
 				  }
-				else if(!strcasecomp(token, "SYM-FILE"))
+				else if(!PL_strcasecmp(token, "SYM-FILE"))
 				  {
 					file_struct->special_type = NET_SYM_LINK_TO_FILE;
 				  }
-				else if(!strcasecomp(token, "SYM-DIRECTORY"))
+				else if(!PL_strcasecmp(token, "SYM-DIRECTORY"))
 				  {
 					file_struct->special_type = NET_SYM_LINK_TO_DIR;
 				  }
 				break;
 
 			case PERMISSIONS_TOKEN:
-				if(XP_STRLEN(token) == 3)
+				if(PL_strlen(token) == 3)
 				  {
 					file_struct->permissions = 0;
 					if(token[0] == 'R')
@@ -1705,7 +1705,7 @@ net_parse_http_index_201_line(HTTPIndexParserData *obj, char *data_line)
 				break;
 
 			default:
-				XP_ASSERT(0);
+				PR_ASSERT(0);
 				break;
 		  }
 		
@@ -1762,7 +1762,7 @@ NET_HTTPIndexParserPut(HTTPIndexParserData *obj, char *data, int32 len)
 		data_line = XP_StripLine(obj->line_buffer);
 
 		/* get the line code */
-		colon = XP_STRCHR(data_line, ':');
+		colon = PL_strchr(data_line, ':');
 
 		if(!colon)
 			goto end_of_line;
@@ -1815,7 +1815,7 @@ NET_HTTPIndexParserPut(HTTPIndexParserData *obj, char *data, int32 len)
 end_of_line:
 		/* remove the parsed line from obj->line_buffer */
 		string_len = (new_line - obj->line_buffer) + 1;
-		XP_MEMCPY(obj->line_buffer, 
+		memcpy(obj->line_buffer, 
 				  new_line+1, 
 				  obj->line_buffer_size-string_len);
 		obj->line_buffer_size -= string_len;

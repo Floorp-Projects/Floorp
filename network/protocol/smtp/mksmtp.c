@@ -194,7 +194,7 @@ NET_SetMailRelayHost(char * host)
 	** @ signs in their host names will be hosed.  They also can't possibly
 	** be current happy internet users.
 	*/
-	if (host) at = XP_STRCHR(host, '@');
+	if (host) at = PL_strchr(host, '@');
 	if (at != NULL) host = at + 1;
 	StrAllocCopy(net_smtp_relay_host, host);
 }
@@ -207,7 +207,7 @@ net_smtp_get_user_domain_name()
 {
 	const char *mail_addr, *at_sign = NULL;
 	mail_addr = FE_UsersMailAddress();
-	at_sign = XP_STRCHR(mail_addr, '@');
+	at_sign = PL_strchr(mail_addr, '@');
 	return (at_sign ? at_sign+1 : mail_addr);
 }
 
@@ -253,7 +253,7 @@ net_smtp_get_user_domain_name()
 PRIVATE char *
 esmtp_value_encode(char *addr)
 {
-	char *buffer = XP_ALLOC(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
+	char *buffer = PR_Malloc(512); /* esmpt ORCPT allow up to 500 chars encoded addresses */
 	char *bp = buffer, *bpEnd = buffer+500;
 	int len, i;
 
@@ -263,7 +263,7 @@ esmtp_value_encode(char *addr)
 	if (! addr || *addr == 0) /* this will never happen */
 		return buffer;
 
-	for (i=0, len=XP_STRLEN(addr); i < len && bp < bpEnd; i++)
+	for (i=0, len=PL_strlen(addr); i < len && bp < bpEnd; i++)
 	{
 		if (*addr >= 0x21 && 
 			*addr <= 0x7E &&
@@ -275,7 +275,7 @@ esmtp_value_encode(char *addr)
 		else
 		{
 			PR_snprintf(bp, bpEnd-bp, "+%.2X", ((int)*addr++));
-			bp += XP_STRLEN(bp);
+			bp += PL_strlen(bp);
 		}
 	}
 	*bp=0;
@@ -334,7 +334,7 @@ net_smtp_response (ActiveEntry * cur_entry)
          if (cont_char == '-')  /* begin continuation */
              CD_CONTINUATION_RESPONSE = CD_RESPONSE_CODE;
 
-         if(XP_STRLEN(line) > 3)
+         if(PL_strlen(line) > 3)
          	StrAllocCopy(CD_RESPONSE_TXT, line+4);
        }
      else
@@ -343,7 +343,7 @@ net_smtp_response (ActiveEntry * cur_entry)
              CD_CONTINUATION_RESPONSE = -1;    /* ended */
 
          StrAllocCat(CD_RESPONSE_TXT, "\n");
-         if(XP_STRLEN(line) > 3)
+         if(PL_strlen(line) > 3)
              StrAllocCat(CD_RESPONSE_TXT, line+4);
        }
 
@@ -374,7 +374,7 @@ net_smtp_login_response(ActiveEntry *cur_entry)
 	 
 	TRACEMSG(("Tx: %s", buffer));
 
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));
 
     CD_NEXT_STATE = SMTP_RESPONSE;
     CD_NEXT_STATE_AFTER_RESPONSE = SMTP_SEND_HELO_RESPONSE;
@@ -401,7 +401,7 @@ net_smtp_extension_login_response(ActiveEntry *cur_entry)
 
 	TRACEMSG(("Tx: %s", buffer));
 
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));
 
     CD_NEXT_STATE = SMTP_RESPONSE;
     CD_NEXT_STATE_AFTER_RESPONSE = SMTP_SEND_EHLO_RESPONSE;
@@ -463,11 +463,11 @@ net_smtp_send_helo_response(ActiveEntry *cur_entry)
 		else {
 			PR_snprintf(buffer, sizeof(buffer), "MAIL FROM:<%.256s>" CRLF, s);
 		}
-		XP_FREE (s);
+		PR_Free (s);
 	  }
 
 	TRACEMSG(("Tx: %s", buffer));
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));
 
     CD_NEXT_STATE = SMTP_RESPONSE;
 
@@ -497,7 +497,7 @@ HG85890
 
 	TRACEMSG(("Tx: %s", buffer));
 
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));
 
     CD_NEXT_STATE = SMTP_RESPONSE;
     CD_NEXT_STATE_AFTER_RESPONSE = SMTP_SEND_HELO_RESPONSE;
@@ -508,14 +508,14 @@ HG85890
 	char *ptr = NULL;
 HG09714
 
-	ptr = strcasestr(CD_RESPONSE_TXT, "DSN");
+	ptr = PL_strcasestr(CD_RESPONSE_TXT, "DSN");
 	CD_EHLO_DSN_ENABLED = (ptr && XP_TO_UPPER(*(ptr-1)) != 'X');
 	/* should we use auth login */
 	PREF_GetBoolPref("mail.auth_login", &(CD_AUTH_LOGIN_ENABLED));
 	if (CD_AUTH_LOGIN_ENABLED) {
 	  /* okay user has set to use skey
 		 let's see does the server have the capability */
-	  CD_AUTH_LOGIN_ENABLED = (NULL != strcasestr(CD_RESPONSE_TXT, "AUTH=LOGIN"));
+	  CD_AUTH_LOGIN_ENABLED = (NULL != PL_strcasestr(CD_RESPONSE_TXT, "AUTH=LOGIN"));
 	}
 
 
@@ -544,7 +544,7 @@ net_smtp_auth_login_response(ActiveEntry *cur_entry)
 		  if ( IMAP_GetPassword() == NULL )
 			  IMAP_SetPassword(net_smtp_password);
 #endif /* MOZ_MAIL_NEWS */
-		  XP_FREEIF(pop_password);
+		  PR_FREEIF(pop_password);
 	  }
 	break;
   case 3:
@@ -557,14 +557,14 @@ net_smtp_auth_login_response(ActiveEntry *cur_entry)
 		/* NET_GetPopUsername () returns pointer to the cached
 		 * username. It did *NOT* alloc a new string
 		 */
-		XP_FREEIF(net_smtp_password);
+		PR_FREEIF(net_smtp_password);
         if (FE_PromptUsernameAndPassword(cur_entry->window_id,
                         NULL, &pop_username, &net_smtp_password)) {
             CD_NEXT_STATE = SMTP_SEND_AUTH_LOGIN_USERNAME;
 			/* FE_PromptUsernameAndPassword() always alloc a new string
 			 * for pop_username. The caller has to free it.
 			 */
-			XP_FREEIF(pop_username);
+			PR_FREEIF(pop_username);
         }
         else {
 			/* User hit cancel, but since the client and server both say 
@@ -593,16 +593,16 @@ net_smtp_auth_login_username(ActiveEntry *cur_entry)
 
 #ifdef MOZ_MAIL_NEWS
   base64Str = NET_Base64Encode(pop_username,
-							   XP_STRLEN(pop_username));
+							   PL_strlen(pop_username));
   if (base64Str) {
 	PR_snprintf(buffer, sizeof(buffer), "AUTH LOGIN %.256s" CRLF, base64Str);
 	TRACEMSG(("Tx: %s", buffer));
 
-	CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));
+	CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));
 	CD_NEXT_STATE = SMTP_RESPONSE;
 	CD_NEXT_STATE_AFTER_RESPONSE = SMTP_AUTH_LOGIN_RESPONSE;
 	CD_PAUSE_FOR_READ = TRUE;
-	XP_FREEIF(base64Str);
+	PR_FREEIF(base64Str);
 	
 	return (CE_STATUS);
   }
@@ -624,7 +624,7 @@ net_smtp_auth_login_password(ActiveEntry *cur_entry)
    */
   
   if (!net_smtp_password || !*net_smtp_password) {
-	  XP_FREEIF(net_smtp_password); /* in case its an empty string */
+	  PR_FREEIF(net_smtp_password); /* in case its an empty string */
 	  net_smtp_password = (char *) NET_GetPopPassword();
   }
 
@@ -633,35 +633,35 @@ net_smtp_auth_login_password(ActiveEntry *cur_entry)
 	char host[256];
 	int len = 256;
 	
-	XP_MEMSET(host, 0, 256);
+	memset(host, 0, 256);
 	PREF_GetCharPref("network.hosts.smtp_server", host, &len);
 	
 	PR_snprintf(buffer, sizeof (buffer), 
 				fmt, NET_GetPopUsername(), host);
-	XP_FREEIF(net_smtp_password);
+	PR_FREEIF(net_smtp_password);
 	net_smtp_password = FE_PromptPassword(cur_entry->window_id, buffer);
 	if (!net_smtp_password)
 	  return MK_POP3_PASSWORD_UNDEFINED;
   }
 
-  XP_ASSERT(net_smtp_password);
+  PR_ASSERT(net_smtp_password);
   
   if (net_smtp_password) {
 	char *base64Str = NULL;
 	
 #ifdef MOZ_MAIL_NEWS
-	base64Str = NET_Base64Encode(net_smtp_password, XP_STRLEN(net_smtp_password));
+	base64Str = NET_Base64Encode(net_smtp_password, PL_strlen(net_smtp_password));
 #endif /* MOZ_MAIL_NEWS */
 
 	if (base64Str) {
 	  PR_snprintf(buffer, sizeof(buffer), "%.256s" CRLF, base64Str);
 	  TRACEMSG(("Tx: %s", buffer));
 
-	  CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));
+	  CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));
 	  CD_NEXT_STATE = SMTP_RESPONSE;
 	  CD_NEXT_STATE_AFTER_RESPONSE = SMTP_AUTH_LOGIN_RESPONSE;
 	  CD_PAUSE_FOR_READ = TRUE;
-	  XP_FREEIF(base64Str);
+	  PR_FREEIF(base64Str);
 
 	  return (CE_STATUS);
 	}
@@ -682,7 +682,7 @@ net_smtp_send_vrfy_response(ActiveEntry *cur_entry)
 	else
 		return(MK_USER_NOT_VERIFIED_BY_SMTP);
 #else	
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return(-1);
 #endif
 }
@@ -712,7 +712,7 @@ net_smtp_send_mail_response(ActiveEntry *cur_entry)
 			PR_snprintf(buffer, sizeof(buffer), 
 			"RCPT TO:<%.256s> NOTIFY=SUCCESS,FAILURE ORCPT=rfc822;%.500s" CRLF, 
 			CD_MAIL_TO_ADDRESS_PTR, encodedAddress);
-			XP_FREEIF(encodedAddress);
+			PR_FREEIF(encodedAddress);
 		}
 		else {
 			CE_STATUS = MK_OUT_OF_MEMORY;
@@ -725,12 +725,12 @@ net_smtp_send_mail_response(ActiveEntry *cur_entry)
 	}
 	/* take the address we sent off the list (move the pointer to just
 	   past the terminating null.) */
-	CD_MAIL_TO_ADDRESS_PTR += XP_STRLEN (CD_MAIL_TO_ADDRESS_PTR) + 1;
+	CD_MAIL_TO_ADDRESS_PTR += PL_strlen (CD_MAIL_TO_ADDRESS_PTR) + 1;
 	CD_MAIL_TO_ADDRESSES_LEFT--;
 
 	TRACEMSG(("Tx: %s", buffer));
     
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));
 
     CD_NEXT_STATE = SMTP_RESPONSE;
     CD_NEXT_STATE_AFTER_RESPONSE = SMTP_SEND_RCPT_RESPONSE;
@@ -762,11 +762,11 @@ net_smtp_send_rcpt_response(ActiveEntry *cur_entry)
 	  }
 
     /* else send the RCPT TO: command */
-    XP_STRCPY(buffer, "DATA" CRLF);
+    PL_strcpy(buffer, "DATA" CRLF);
 
 	TRACEMSG(("Tx: %s", buffer));
         
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, XP_STRLEN(buffer));   
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, buffer, PL_strlen(buffer));   
 
     CD_NEXT_STATE = SMTP_RESPONSE;  
     CD_NEXT_STATE_AFTER_RESPONSE = SMTP_SEND_DATA_RESPONSE; 
@@ -814,7 +814,7 @@ net_smtp_send_data_response(ActiveEntry *cur_entry)
 
     TRACEMSG(("sending extra unix header: %s", command));
 
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, command, XP_STRLEN(command));   
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, command, PL_strlen(command));   
 	if(CE_STATUS < 0)
 	{
 		TRACEMSG(("Error sending message"));
@@ -878,11 +878,11 @@ net_smtp_send_post_data(ActiveEntry *cur_entry)
 	  {
 		/* normal done
 		 */
-        XP_STRCPY(cd->data_buffer, CRLF "." CRLF);
+        PL_strcpy(cd->data_buffer, CRLF "." CRLF);
         TRACEMSG(("sending %s", cd->data_buffer));
         CE_STATUS = (int) NET_BlockingWrite(CE_SOCK,
                                             cd->data_buffer,
-                                            XP_STRLEN(cd->data_buffer));
+                                            PL_strlen(cd->data_buffer));
 
 		NET_Progress(CE_WINDOW_ID,
 					XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
@@ -953,7 +953,7 @@ PRIVATE int32
 net_MailtoLoad (ActiveEntry * cur_entry)
 {
     /* get memory for Connection Data */
-    SMTPConData * cd = XP_NEW(SMTPConData);
+    SMTPConData * cd = PR_NEW(SMTPConData);
 	int32 pref = 0;
 
     cur_entry->con_data = cd;
@@ -967,7 +967,7 @@ net_MailtoLoad (ActiveEntry * cur_entry)
 /*	GH_UpdateGlobalHistory(cur_entry->URL_s); */
 
     /* init */
-    XP_MEMSET(cd, 0, sizeof(SMTPConData));
+    memset(cd, 0, sizeof(SMTPConData));
 
 	CD_CONTINUATION_RESPONSE = -1;  /* init */
   
@@ -1070,12 +1070,12 @@ HG61365
 		  {
  			/* start past the '?' */
 			rest++;
-			rest = XP_STRTOK (rest, "&");
+			rest = strtok (rest, "&");
 			while (rest && *rest)
 			  {
 				char *token = rest;
 				char *value = 0;
-				char *eq = XP_STRCHR (token, '=');
+				char *eq = PL_strchr (token, '=');
 				if (eq)
 				  {
 					value = eq+1;
@@ -1084,12 +1084,12 @@ HG61365
 				switch (*token)
 				  {
 				  case 'A': case 'a':
-					if (!strcasecomp (token, "attachment") &&
+					if (!PL_strcasecmp (token, "attachment") &&
 						CE_URL_S->internal_url)
 					  StrAllocCopy (attachment, value);
 					break;
 				  case 'B': case 'b':
-					if (!strcasecomp (token, "bcc"))
+					if (!PL_strcasecmp (token, "bcc"))
 					  {
 						if (bcc && *bcc)
 						  {
@@ -1101,7 +1101,7 @@ HG61365
 							StrAllocCopy (bcc, value);
 						  }
 					  }
-					else if (!strcasecomp (token, "body"))
+					else if (!PL_strcasecmp (token, "body"))
 					  {
 						if (body && *body)
 						  {
@@ -1115,7 +1115,7 @@ HG61365
 					  }
 					break;
 				  case 'C': case 'c':
-					if (!strcasecomp (token, "cc"))
+					if (!PL_strcasecmp (token, "cc"))
 					  {
 						if (cc && *cc)
 						  {
@@ -1129,60 +1129,60 @@ HG61365
 					  }
 					break;
 				  case 'E': case 'e':
-					if (!strcasecomp (token, "encrypt") ||
-						!strcasecomp (token, "encrypted"))
-					  encrypt_p = (!strcasecomp(value, "true") ||
-								   !strcasecomp(value, "yes"));
+					if (!PL_strcasecmp (token, "encrypt") ||
+						!PL_strcasecmp (token, "encrypted"))
+					  encrypt_p = (!PL_strcasecmp(value, "true") ||
+								   !PL_strcasecmp(value, "yes"));
 					break;
 				  case 'F': case 'f':
-					if (!strcasecomp (token, "followup-to"))
+					if (!PL_strcasecmp (token, "followup-to"))
 					  StrAllocCopy (followup_to, value);
-					else if (!strcasecomp (token, "from") &&
+					else if (!PL_strcasecmp (token, "from") &&
 							 CE_URL_S->internal_url)
 					  StrAllocCopy (from, value);
-					else if (!strcasecomp (token, "force-plain-text") &&
+					else if (!PL_strcasecmp (token, "force-plain-text") &&
 							 CE_URL_S->internal_url)
 						force_plain_text = TRUE;
 					break;
 				  case 'H': case 'h':
-					  if (!strcasecomp(token, "html-part") &&
+					  if (!PL_strcasecmp(token, "html-part") &&
 						  CE_URL_S->internal_url) {
 						StrAllocCopy(html_part, value);
 					  }
 				  case 'N': case 'n':
-					if (!strcasecomp (token, "newsgroups"))
+					if (!PL_strcasecmp (token, "newsgroups"))
 					  StrAllocCopy (newsgroups, value);
-					else if (!strcasecomp (token, "newshost") &&
+					else if (!PL_strcasecmp (token, "newshost") &&
 							 CE_URL_S->internal_url)
 					  StrAllocCopy (newshost, value);
 					break;
 				  case 'O': case 'o':
-					if (!strcasecomp (token, "organization") &&
+					if (!PL_strcasecmp (token, "organization") &&
 						CE_URL_S->internal_url)
 					  StrAllocCopy (organization, value);
 					break;
 				  case 'R': case 'r':
-					if (!strcasecomp (token, "references"))
+					if (!PL_strcasecmp (token, "references"))
 					  StrAllocCopy (references, value);
-					else if (!strcasecomp (token, "reply-to") &&
+					else if (!PL_strcasecmp (token, "reply-to") &&
 							 CE_URL_S->internal_url)
 					  StrAllocCopy (reply_to, value);
 					break;
 				  case 'S': case 's':
-					if(!strcasecomp (token, "subject"))
+					if(!PL_strcasecmp (token, "subject"))
 					  StrAllocCopy (subject, value);
-					else if ((!strcasecomp (token, "sign") ||
-							  !strcasecomp (token, "signed")) &&
+					else if ((!PL_strcasecmp (token, "sign") ||
+							  !PL_strcasecmp (token, "signed")) &&
 							 CE_URL_S->internal_url)
-					  sign_p = (!strcasecomp(value, "true") ||
-								!strcasecomp(value, "yes"));
+					  sign_p = (!PL_strcasecmp(value, "true") ||
+								!PL_strcasecmp(value, "yes"));
 					break;
 				  case 'P': case 'p':
-					if (!strcasecomp (token, "priority"))
+					if (!PL_strcasecmp (token, "priority"))
 					  StrAllocCopy (priority, value);
 					break;
 				  case 'T': case 't':
-					if (!strcasecomp (token, "to"))
+					if (!PL_strcasecmp (token, "to"))
 					  {
 						if (to && *to)
 						  {
@@ -1198,7 +1198,7 @@ HG61365
 				  }
 				if (eq)
 				  *eq = '='; /* put it back */
-				rest = XP_STRTOK (0, "&");
+				rest = strtok (0, "&");
 			  }
 		  }
 
@@ -1223,19 +1223,19 @@ HG61365
 		if(newshost)
 		  {
 			char *prefix = "news://";
-			char *slash = XP_STRRCHR (newshost, '/');
-			if (slash && !strcasecomp (slash, "/secure"))
+			char *slash = PL_strrchr (newshost, '/');
+			if (slash && !PL_strcasecmp (slash, "/secure"))
 			  {
 				*slash = 0;
 				prefix = "snews://";
 			  }
-			newspost_url = (char *) XP_ALLOC (XP_STRLEN (prefix) +
-											  XP_STRLEN (newshost) + 10);
+			newspost_url = (char *) PR_Malloc (PL_strlen (prefix) +
+											  PL_strlen (newshost) + 10);
 			if (newspost_url)
 			  {
-				XP_STRCPY (newspost_url, prefix);
-				XP_STRCAT (newspost_url, newshost);
-				XP_STRCAT (newspost_url, "/");
+				PL_strcpy (newspost_url, prefix);
+				PL_strcat (newspost_url, newshost);
+				PL_strcat (newspost_url, "/");
 			  }
 		  }
 		else
@@ -1244,9 +1244,9 @@ HG61365
 			PREF_GetBoolPref("news.server_is_secure", &newsServerIsSecure);
 
 			if (newsServerIsSecure)
-				newspost_url = XP_STRDUP("snews:");
+				newspost_url = PL_strdup("snews:");
 			else
-				newspost_url = XP_STRDUP ("news:");
+				newspost_url = PL_strdup ("news:");
 		  }
 
 		/* Tell the message library and front end to pop up an edit window.
@@ -1284,7 +1284,7 @@ HG61365
 		FREEIF(newspost_url);
 
 		CE_STATUS = MK_NO_DATA;
-		XP_FREE(cd);	/* no one else is gonna do it! */
+		PR_Free(cd);	/* no one else is gonna do it! */
 		return(-1);
 	  }
 }
@@ -1347,7 +1347,7 @@ net_ProcessMailto (ActiveEntry *cur_entry)
 
         case SMTP_START_CONNECT:
 			mail_relay_host = NET_MailRelayHost(CE_WINDOW_ID);
-			if (XP_STRLEN(mail_relay_host) == 0)
+			if (PL_strlen(mail_relay_host) == 0)
 			{
 				CE_STATUS = MK_MSG_NO_SMTP_HOST;
 				break;

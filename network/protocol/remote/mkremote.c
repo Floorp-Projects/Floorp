@@ -23,6 +23,8 @@
 /* Please leave outside of ifdef for windows precompiled headers */
 
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -60,8 +62,8 @@ NET_RemoteHostLoad (ActiveEntry  * cur_entry)
         url_type = NET_URL_Type(cur_entry->URL_s->address);
         host_string = NET_ParseURL(cur_entry->URL_s->address, GET_USERNAME_PART | GET_PASSWORD_PART | GET_HOST_PART);
 
-    	hostname = XP_STRCHR(host_string, '@');
-    	port_string = XP_STRCHR(host_string, ':');
+    	hostname = PL_strchr(host_string, '@');
+    	port_string = PL_strchr(host_string, ':');
 
     	if (hostname)
       	  {
@@ -136,7 +138,7 @@ NET_RemoteHostLoad (ActiveEntry  * cur_entry)
 		  }
 		/* fall through if it wasn't any of the above url types */
 
-        XP_FREE(host_string);
+        PR_Free(host_string);
       }
 
 	cur_entry->status = MK_NO_DATA;
@@ -146,14 +148,14 @@ NET_RemoteHostLoad (ActiveEntry  * cur_entry)
 PRIVATE int32
 net_ProcessRemote(ActiveEntry *ce)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return -1;
 }
 
 PRIVATE int32
 net_InterruptRemote(ActiveEntry *ce)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return -1;
 }
 

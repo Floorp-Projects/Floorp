@@ -101,7 +101,7 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 #define	INITIAL_ARRAY_SIZE 10
 #define EXPAND_ARRAY_BY 5
 
-	XP_ASSERT(local_dir_name);
+	PR_ASSERT(local_dir_name);
 
 #ifdef XP_MAC
 	local_dir_name += 7;	// chop-off "file://"
@@ -114,10 +114,10 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 	  }
 
     /* make sure local_dir_name doesn't have a slash at the end */
-    end = XP_STRLEN(local_dir_name)-1;
+    end = PL_strlen(local_dir_name)-1;
     have_slash = (local_dir_name[end] == '/') || (local_dir_name[end] == '\\');
 
-	files_to_post = (char**) XP_ALLOC(INITIAL_ARRAY_SIZE * sizeof(char*));
+	files_to_post = (char**) PR_Malloc(INITIAL_ARRAY_SIZE * sizeof(char*));
 	if(!files_to_post)
 		return NULL;
 	cur_array_size = INITIAL_ARRAY_SIZE;
@@ -126,11 +126,11 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 	while((dir_entry = XP_ReadDir(dir_ptr)) != NULL)
 	  {
 	  	/* skip . and .. */
-		if(!XP_STRCMP(dir_entry->d_name, ".") || !XP_STRCMP(dir_entry->d_name, ".."))
+		if(!PL_strcmp(dir_entry->d_name, ".") || !PL_strcmp(dir_entry->d_name, ".."))
 			continue;
         
         /* assemble full pathname first so we can test if its a directory */
-        file_to_post = XP_STRDUP(local_dir_name);
+        file_to_post = PL_strdup(local_dir_name);
         if ( ! file_to_post ){
     		return NULL;
         }
@@ -158,7 +158,7 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
         /* skip over subdirectory names */
         if(-1 != XP_Stat(file_to_post, &stat_entry, xpFileToPost) && S_ISDIR(stat_entry.st_mode) )
           {
-            XP_FREE(file_to_post);
+            PR_Free(file_to_post);
             continue;
           }
 
@@ -166,15 +166,15 @@ NET_AssembleAllFilesInDirectory(MWContext *context, char * local_dir_name)
 		 * always leave room for the NULL terminator */
 		if(i >= cur_array_size-1)
 		  {
-		  	files_to_post = (char**) XP_REALLOC(files_to_post, (cur_array_size + EXPAND_ARRAY_BY) * sizeof(char*)); 
+		  	files_to_post = (char**) PR_Realloc(files_to_post, (cur_array_size + EXPAND_ARRAY_BY) * sizeof(char*)); 
 			if(!files_to_post)
 				return NULL;
 			cur_array_size += EXPAND_ARRAY_BY;
 		  }
 
-        files_to_post[i++] = XP_STRDUP(file_to_post);
+        files_to_post[i++] = PL_strdup(file_to_post);
 
-        XP_FREE(file_to_post);
+        PR_Free(file_to_post);
        }
 
 	/* NULL terminate the array, space is guarenteed above */
@@ -197,7 +197,7 @@ NET_PublishFiles(MWContext *context,
 {
 	URL_Struct *URL_s;	   
 
-	XP_ASSERT(context && files_to_publish && remote_directory);
+	PR_ASSERT(context && files_to_publish && remote_directory);
 	if(!context || !files_to_publish || !*files_to_publish || !remote_directory)
 		return;
 
@@ -245,7 +245,7 @@ NET_PublishFilesTo(MWContext *context,
   URL_Struct *URL_s;	   
 
   if(!context || !files_to_publish || !*files_to_publish || !base_url) {
-    XP_ASSERT(0);
+    PR_ASSERT(0);
     return;
   }
     
@@ -258,9 +258,9 @@ NET_PublishFilesTo(MWContext *context,
   }
 
   if (username)
-    URL_s->username = XP_STRDUP(username);
+    URL_s->username = PL_strdup(username);
   if (password)
-    URL_s->password = XP_STRDUP(password);
+    URL_s->password = PL_strdup(password);
 
   FREE_AND_CLEAR(URL_s->content_type);
 
@@ -290,13 +290,13 @@ NET_MakeUploadURL( char **full_location, char *location,
     int iSize;
 
     if( !full_location || !location ) return FALSE;
-    if( *full_location ) XP_FREE(*full_location);
+    if( *full_location ) PR_Free(*full_location);
 
     iSize = strlen(location) + 4;
     if( user_name ) iSize += strlen(user_name);
     if( password ) iSize += strlen(password);
 
-    *full_location = (char*)XP_ALLOC(iSize);
+    *full_location = (char*)PR_Malloc(iSize);
     if( !*full_location ){
         /* Return an empty string */
         *full_location = strdup("");
@@ -305,7 +305,7 @@ NET_MakeUploadURL( char **full_location, char *location,
     **full_location = '\0';
 
     /* Find start just past http:// or ftp:// */
-    start = XP_STRSTR(location, "//");
+    start = PL_strstr(location, "//");
     if( !start ) return FALSE;
 
     /* Point to just past the host part */
@@ -317,23 +317,23 @@ NET_MakeUploadURL( char **full_location, char *location,
     *destination = '\0';
 
     /* Skip over any user:password in supplied location */
-    at_ptr = XP_STRCHR(start, '@');
+    at_ptr = PL_strchr(start, '@');
     if( at_ptr ){
         start = at_ptr + 1;
     }
     /* Append supplied "user:password@"
      * (This can be used without password)
     */
-    if( user_name && XP_STRLEN(user_name) > 0 ){
-        XP_STRCAT(*full_location, user_name);
-        if ( password  && XP_STRLEN(password) > 0 ){
-            XP_STRCAT(*full_location,":");
-            XP_STRCAT(*full_location, password);
+    if( user_name && PL_strlen(user_name) > 0 ){
+        PL_strcat(*full_location, user_name);
+        if ( password  && PL_strlen(password) > 0 ){
+            PL_strcat(*full_location,":");
+            PL_strcat(*full_location, password);
         }
-        XP_STRCAT(*full_location, "@");
+        PL_strcat(*full_location, "@");
     }
     /* Append the rest of location */
-    XP_STRCAT(*full_location, start);
+    PL_strcat(*full_location, start);
 
     return TRUE;
 }
@@ -355,12 +355,12 @@ NET_ParseUploadURL( char *full_location, char **location,
     if( !full_location || !location ) return FALSE;
 
     /* Empty exitisting strings... */   
-    if(*location) XP_FREE(*location);
-    if( user_name && *user_name) XP_FREE(*user_name);
-    if( password && *password) XP_FREE(*password);
+    if(*location) PR_Free(*location);
+    if( user_name && *user_name) PR_Free(*user_name);
+    if( password && *password) PR_Free(*password);
 
     /* Find start just past http:// or ftp://  */
-    start = XP_STRSTR(full_location, "//");
+    start = PL_strstr(full_location, "//");
     if( !start ) return FALSE;
 
     /* Point to just past the host part */
@@ -369,7 +369,7 @@ NET_ParseUploadURL( char *full_location, char **location,
     /* Start by simply copying full location
      * (may waste some bytes, but much simpler!)
     */
-    *location = XP_STRDUP(full_location);
+    *location = PL_strdup(full_location);
     if( !*location ) return FALSE;
 
     /* Destination to append location without
@@ -380,15 +380,15 @@ NET_ParseUploadURL( char *full_location, char **location,
     /* Skip over any user:password in supplied location
      *  while copying those to other strings
     */
-    at_ptr = XP_STRCHR(start, '@');
-    colon_ptr = XP_STRCHR(start, ':');
+    at_ptr = PL_strchr(start, '@');
+    colon_ptr = PL_strchr(start, ':');
 
     if( at_ptr ){
         /* save character */
         at = *at_ptr;
 
         /* Copy part past the @ over previously-copied full string */
-        XP_STRCPY(skip_dest, (at_ptr + 1));
+        PL_strcpy(skip_dest, (at_ptr + 1));
         
         /* Terminate for the password (or user) string */
         *at_ptr = '\0';
@@ -397,15 +397,15 @@ NET_ParseUploadURL( char *full_location, char **location,
             colon = *colon_ptr;
 
             if( password ){
-                *password = XP_STRDUP((colon_ptr+1));
+                *password = PL_strdup((colon_ptr+1));
             }
             /* terminate for the user string */
             *colon_ptr = '\0';
         } else if( password ) {
-            *password = XP_STRDUP("");
+            *password = PL_strdup("");
         }
         if( user_name ){
-            *user_name = XP_STRDUP(start);
+            *user_name = PL_strdup(start);
         }
         /* restore characters */
         *at_ptr = at;
@@ -414,10 +414,10 @@ NET_ParseUploadURL( char *full_location, char **location,
     } else {
         /* Supply empty strings for these */
         if( user_name ){
-            *user_name = XP_STRDUP("");
+            *user_name = PL_strdup("");
         }
         if( password ){
-            *password = XP_STRDUP("");
+            *password = PL_strdup("");
         }
     }
     return TRUE;
@@ -438,7 +438,7 @@ NET_GetUniqueIdString(void)
 	RNG_GenerateGlobalRandomBytes(rand_buf, BYTES_OF_RANDOMNESS);
 
 	/* now uuencode it so it goes across the wire right */
-	rv = (char *) XP_ALLOC((BYTES_OF_RANDOMNESS * (4/3)) + 10);
+	rv = (char *) PR_Malloc((BYTES_OF_RANDOMNESS * (4/3)) + 10);
  	
 	if(rv)
 		NET_UUEncode((unsigned char *)rand_buf, (unsigned char *)rv, BYTES_OF_RANDOMNESS);
@@ -520,7 +520,7 @@ NET_RemoveQuotes(char * string)
 	if(*rv == '"' || *rv == '\'') 
 		rv++;
 
-	end = &rv[XP_STRLEN(rv)-1];
+	end = &rv[PL_strlen(rv)-1];
 
 	if(*end == '"' || *end == '\'')
 		*end = '\0';
@@ -546,7 +546,7 @@ struct WritePostDataData {
 PUBLIC void
 NET_free_write_post_data_object(struct WritePostDataData *obj)
 {
-	XP_ASSERT(obj);
+	PR_ASSERT(obj);
 
 	if(!obj)
 		return;
@@ -584,7 +584,7 @@ NET_WritePostData(MWContext  *context,
 				  URL_Struct *URL_s,
 				  PRFileDesc   *sock,
 				  void      **write_post_data_data,
-				  XP_Bool     add_crlf_to_line_endings)
+				  PRBool     add_crlf_to_line_endings)
 {
 	struct WritePostDataData *data_obj = (struct WritePostDataData *) 
 														*write_post_data_data;
@@ -592,16 +592,16 @@ NET_WritePostData(MWContext  *context,
 	/* init the data object */
 	if(!data_obj)
 	  {
-		data_obj = XP_NEW(struct WritePostDataData);
+		data_obj = PR_NEW(struct WritePostDataData);
 		*write_post_data_data = data_obj;
 
 		if(!data_obj)
 			return(MK_OUT_OF_MEMORY);
 
-		XP_MEMSET(data_obj, 0, sizeof(struct WritePostDataData));
+		memset(data_obj, 0, sizeof(struct WritePostDataData));
 
 		data_obj->last_line_was_complete = TRUE;
-		data_obj->buffer = (char *) XP_ALLOC(POST_DATA_BUFFER_SIZE);
+		data_obj->buffer = (char *) PR_Malloc(POST_DATA_BUFFER_SIZE);
 
 		if(!data_obj->buffer)
 		{
@@ -611,7 +611,7 @@ NET_WritePostData(MWContext  *context,
 		}
 
 		if(URL_s->post_headers)
-			data_obj->headerSize = XP_STRLEN(URL_s->post_headers);
+			data_obj->headerSize = PL_strlen(URL_s->post_headers);
 		else
 			data_obj->headerSize = 0;
 
@@ -708,7 +708,7 @@ NET_WritePostData(MWContext  *context,
 				  if (!line)
 					break;
 
-				  L = XP_STRLEN(line);
+				  L = PL_strlen(line);
 
 				  /* escape periods only if quote_lines_p is set
 				   */
@@ -776,7 +776,7 @@ HG29784
 				 *
 				XP_FileClose(data_obj->fp);
 				*/
-				XP_ASSERT(data_obj->total_amt_sent >= data_obj->file_size);
+				PR_ASSERT(data_obj->total_amt_sent >= data_obj->file_size);
 				NET_free_write_post_data_object(data_obj);
 				*write_post_data_data = NULL;
                 return(0);
@@ -890,7 +890,7 @@ HG29784
 			data_obj->buffer[0] = CR;
 			data_obj->buffer[1] = LF;
 			data_obj->buffer[2] = '\0';
-			amtWritten = PR_Write(sock, data_obj->buffer, XP_STRLEN(data_obj->buffer));
+			amtWritten = PR_Write(sock, data_obj->buffer, PL_strlen(data_obj->buffer));
 
 			if(amtWritten < 0) {
 				/* determine whether it was expected */
@@ -912,7 +912,7 @@ HG29784
 		if(!data_obj->LFSent) {
 			data_obj->buffer[0] = LF;
 			data_obj->buffer[1] = '\0';
-			amtWritten = PR_Write(sock, data_obj->buffer, XP_STRLEN(data_obj->buffer));
+			amtWritten = PR_Write(sock, data_obj->buffer, PL_strlen(data_obj->buffer));
 
 			if(amtWritten < 0) {
 				/* determine whether it was expected */
@@ -980,7 +980,7 @@ HG29784
       }
 
 	/* By this time all headers and data should have been sent, shouldn't get here */
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	NET_free_write_post_data_object(data_obj);
 	*write_post_data_data = NULL;
 	return(-1); /* shouldn't ever get here */
@@ -988,14 +988,14 @@ HG29784
 }
 
 void
-NET_ParseContentTypeHeader(MWContext *context, char *value, URL_Struct *URL_s, XP_Bool is_http)
+NET_ParseContentTypeHeader(MWContext *context, char *value, URL_Struct *URL_s, PRBool is_http)
 {
 	char *first_arg, *next_arg;
 
 	if(URL_s->preset_content_type)
 		return;
 
-	first_arg = XP_STRTOK(value, ";");
+	first_arg = strtok(value, ";");
 
 	StrAllocCopy(URL_s->content_type, XP_StripLine(value));
 	TRACEMSG(("Found content_type: %s",URL_s->content_type));
@@ -1005,11 +1005,11 @@ NET_ParseContentTypeHeader(MWContext *context, char *value, URL_Struct *URL_s, X
 	 * search for charset
 	 * and boundry
 	 */
-	while((next_arg = XP_STRTOK(NULL, ";")) != NULL)
+	while((next_arg = strtok(NULL, ";")) != NULL)
 	  {
 		next_arg = XP_StripLine(next_arg);
 
-		if(!strncasecomp(next_arg,"CHARSET=", 8))
+		if(!PL_strncasecmp(next_arg,"CHARSET=", 8))
           {
 #ifdef MOZILLA_CLIENT
 			char *charset_tag = NET_RemoveQuotes(next_arg+8);
@@ -1034,15 +1034,15 @@ NET_ParseContentTypeHeader(MWContext *context, char *value, URL_Struct *URL_s, X
 				TRACEMSG(("Found Meta charset: %s", charset_tag));
 			}
 #else
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
 		  }
-		else if(!strncasecomp(next_arg,"BOUNDARY=", 9))
+		else if(!PL_strncasecmp(next_arg,"BOUNDARY=", 9))
 		  {
 			StrAllocCopy(URL_s->boundary, NET_RemoveQuotes(next_arg+9));
 			TRACEMSG(("Found boundary: %s", URL_s->boundary));
 		  }
-		else if(!strncasecomp(next_arg,"AUTOSCROLL", 10))
+		else if(!PL_strncasecmp(next_arg,"AUTOSCROLL", 10))
 		  {
 
 #define DEFAULT_AUTO_SCROLL_BUFFER 100
@@ -1097,7 +1097,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 		value = empty_string;
 	  }
 
-    colon_ptr = XP_STRCHR(name, ':');
+    colon_ptr = PL_strchr(name, ':');
     if (colon_ptr) {
         *colon_ptr = '\0';
         }
@@ -1112,10 +1112,10 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 	switch(toupper(*name))
 	  {
         case 'A':
-            if(!strncasecomp(name,"ACCEPT-RANGES:",14)
-				|| !strncasecomp(name, "ALLOW-RANGES:",13))
+            if(!PL_strncasecmp(name,"ACCEPT-RANGES:",14)
+				|| !PL_strncasecmp(name, "ALLOW-RANGES:",13))
               {
-                char * next_arg = XP_STRTOK(value, ";");
+                char * next_arg = strtok(value, ";");
 
                 found_one = TRUE;
 
@@ -1123,20 +1123,20 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
                   {
                     next_arg = XP_StripLine(next_arg);
 
-                    if(!strncasecomp(next_arg,"BYTES", 5))
+                    if(!PL_strncasecmp(next_arg,"BYTES", 5))
                       {
                         TRACEMSG(("Document Allows for BYTERANGES!"));
 						URL_s->server_can_do_byteranges = TRUE;
                       }
 
-                    next_arg = XP_STRTOK(NULL, ";");
+                    next_arg = strtok(NULL, ";");
                   }
               }
-			else if(!strncasecomp(name, "AGE:",4)) 
+			else if(!PL_strncasecmp(name, "AGE:",4)) 
 			{
 				long age;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
 				age = atol(value);
 				/* Small deviation from the spec. Assumption being made-
@@ -1150,7 +1150,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				}
 			}
         case 'C':
-			if (!strncasecomp(name,"CACHE-CONTROL:",14))
+			if (!PL_strncasecmp(name,"CACHE-CONTROL:",14))
 			{
 			/* Potential values include */
 				/* public */
@@ -1167,47 +1167,47 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 
 				char * control = NET_RemoveQuotes(value);
 
-				if (!strncasecomp(control, "NO-CACHE", 8))
+				if (!PL_strncasecmp(control, "NO-CACHE", 8))
 				{
 					/* same as pragma=no-cache */
 					URL_s->dont_cache = TRUE;
 				}
-				else if (!strncasecomp(control, "MAX-AGE=", 8))
+				else if (!PL_strncasecmp(control, "MAX-AGE=", 8))
 				{
 					/* Takes precedence over the Expires header. 
 					   Corrected Expires is Max-age + Server Date */
 					if (URL_s->server_date)
 					{
-						URL_s->expires = URL_s->server_date + atol(XP_STRTOK(control+8,";")); 
+						URL_s->expires = URL_s->server_date + atol(strtok(control+8,";")); 
 					}
 				}
 #if 0	/* Unimplemented */
-				else if (!strncasecomp(control, "PUBLIC", 6))
+				else if (!PL_strncasecmp(control, "PUBLIC", 6))
 				{
 					/* Place holder for shared cache concepts */
 				}
-				else if (!strncasecomp(control, "PRIVATE", 7)) 
+				else if (!PL_strncasecmp(control, "PRIVATE", 7)) 
 				{
 					/* Place holder for shared cache concepts */
 				}
-				else if (!strncasecomp(control, "NO-STORE", 8))
+				else if (!PL_strncasecmp(control, "NO-STORE", 8))
 				{
 					/* According to the spec this "should" disable explicit saving 
 					   of the document outside the caching system, eg. in "Save As..."
 					   dialogs. Since this idea sucks, this is a place holder. */
 				}
-				else if (!strncasecomp(control, "MUST-REVALIDATE", 15))
+				else if (!PL_strncasecmp(control, "MUST-REVALIDATE", 15))
 				{
 					/* The cache must do an end-to-end revalidation every time, if
 					   the response headers suggest an entity is stale. We do this
 					   anyway. */
 				}
-				else if (!strncasecomp(control, "PROXY-REVALIDATE", 16))
+				else if (!PL_strncasecmp(control, "PROXY-REVALIDATE", 16))
 				{
 					/* Same as must-revalidate except that it does not apply to 
 					   non-shared user agents (like us) */
 				}
-				else if (!strncasecomp(control, "S-MAXAGE", 8))
+				else if (!PL_strncasecmp(control, "S-MAXAGE", 8))
 				{
 					/* Applicable for shared caches. Place holder. */
 				}
@@ -1217,37 +1217,37 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				}
 #endif /* Unimplemented */
 			}
-			else if(!strncasecomp(name,"CONTENT-DISPOSITION:",20))
+			else if(!PL_strncasecmp(name,"CONTENT-DISPOSITION:",20))
 			  {
 			    char *next_arg;
 
                 found_one = TRUE;
 
-                next_arg = XP_STRTOK(value, ";");
+                next_arg = strtok(value, ";");
 
 				while(next_arg)
 				  {  
                     next_arg = XP_StripLine(next_arg);
 				
-                    if(!strncasecomp(next_arg,"filename=", 9))
+                    if(!PL_strncasecmp(next_arg,"filename=", 9))
 					  {
 						StrAllocCopy(URL_s->content_name,
                                      NET_RemoveQuotes(next_arg+9));
 					  }
-                    next_arg = XP_STRTOK(NULL, ";");
+                    next_arg = strtok(NULL, ";");
                   }
 	
 			  }
-            else if(!strncasecomp(name,"CONTENT-TYPE:",13))
+            else if(!PL_strncasecmp(name,"CONTENT-TYPE:",13))
               {
 				found_one = TRUE;
 				NET_ParseContentTypeHeader(context, value, URL_s, is_http);
               }
-            else if(!strncasecomp(name,"CONTENT-LENGTH:",15))
+            else if(!PL_strncasecmp(name,"CONTENT-LENGTH:",15))
               {
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 				
 				/* don't reset the content-length if
 				 * we have already set it from the content-range
@@ -1257,17 +1257,17 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				if(!URL_s->high_range)
                 	URL_s->content_length = atol(value);
               }
-            else if(!strncasecomp(name,"CONTENT-ENCODING:",17))
+            else if(!PL_strncasecmp(name,"CONTENT-ENCODING:",17))
               {
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
                 StrAllocCopy(URL_s->content_encoding, value);
               }
-            else if(!strncasecomp(name,"CONTENT-RANGE:",14))
+            else if(!PL_strncasecmp(name,"CONTENT-RANGE:",14))
               {
 				unsigned long low, high, length;
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
                 /* range header looks like:
                  * Range: bytes x-y/z
@@ -1295,33 +1295,33 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
                  */
                 URL_s->server_can_do_byteranges = TRUE;
               }
-            else if(!strncasecomp(name,"CONNECTION:",11))
+            else if(!PL_strncasecmp(name,"CONNECTION:",11))
               {
-                XP_STRTOK(value, ";"); /* terminate at ';' */
-                XP_STRTOK(value, ","); /* terminate at ',' */
-				if(!strcasecomp("KEEP-ALIVE", XP_StripLine(value)))
+                strtok(value, ";"); /* terminate at ';' */
+                strtok(value, ","); /* terminate at ',' */
+				if(!PL_strcasecmp("KEEP-ALIVE", XP_StripLine(value)))
 					URL_s->can_reuse_connection = TRUE;
-				if(!strcasecomp("CLOSE", XP_StripLine(value)))
+				if(!PL_strcasecmp("CLOSE", XP_StripLine(value)))
 					URL_s->can_reuse_connection = FALSE;
               }
             break;
 
 		case 'D':
-            if(!strncasecomp(name,"DATE:",5))
+            if(!PL_strncasecmp(name,"DATE:",5))
               {
 				found_one = TRUE;
                 URL_s->server_date = NET_ParseDate(value);
 			  }
 #if 0
-			else if(!strncasecomp(name,"DEST-IP:",8))
+			else if(!PL_strncasecmp(name,"DEST-IP:",8))
               {
 				found_one = TRUE;
-                URL_s->destIP = XP_STRDUP(value);
+                URL_s->destIP = PL_strdup(value);
 			  }
 #endif
 			break;
         case 'E':
-            if(!strncasecomp(name,"EXPIRES:",8))
+            if(!PL_strncasecmp(name,"EXPIRES:",8))
               {
 				char *cp, *expires = NET_RemoveQuotes(value);
 				Bool is_number=TRUE;
@@ -1330,7 +1330,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				 * Expires: date  - absolute date
 				 */
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
 				/* check to see if the expires date is just a
 				 * value in seconds
@@ -1355,10 +1355,10 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 
 				found_one = TRUE;
               }
-			else if(!strncasecomp(name,"EXT-CACHE:",10))
+			else if(!PL_strncasecmp(name,"EXT-CACHE:",10))
 			  {
 #ifdef MOZILLA_CLIENT
-                char * next_arg = XP_STRTOK(value, ";");
+                char * next_arg = strtok(value, ";");
 				char * name=0;
 				char * instructions=0;
 
@@ -1368,32 +1368,32 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
                   {
                     next_arg = XP_StripLine(next_arg);
 
-                    if(!strncasecomp(next_arg,"name=", 5))
+                    if(!PL_strncasecmp(next_arg,"name=", 5))
                       {
                         TRACEMSG(("Found external cache name: %s", next_arg+5));
 						name = NET_RemoveQuotes(next_arg+5);
                       }
-                    else if(!strncasecomp(next_arg,"instructions=", 13))
+                    else if(!PL_strncasecmp(next_arg,"instructions=", 13))
                       {
                         TRACEMSG(("Found external cache instructions: %s", 
 								  next_arg+13));
 						instructions = NET_RemoveQuotes(next_arg+13);
                       }
 
-                	next_arg = XP_STRTOK(NULL, ";");
+                	next_arg = strtok(NULL, ";");
                   }
 	
 				if(name)
 					NET_OpenExtCacheFAT(context, name, instructions);
 #else
-				XP_ASSERT(0);
+				PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
               }
-			else if (!strncasecomp(name, "ETAG:",5))
+			else if (!PL_strncasecmp(name, "ETAG:",5))
 			{
 				/* Weak Validators are skipped for now*/
 				char* etag;
-				if (!strncasecomp(value, "W/", 2))
+				if (!PL_strncasecmp(value, "W/", 2))
 					etag = NET_RemoveQuotes(value+2);
 				else
 					etag = NET_RemoveQuotes(value);
@@ -1403,13 +1403,13 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
             break;
 
         case 'L':
-            if(!strncasecomp(name,"LOCATION:",9))
+            if(!PL_strncasecmp(name,"LOCATION:",9))
               {
 				found_one = TRUE;
 
 				/* don't do this here because a url can
 				 * contain a ';'
-                 * XP_STRTOK(value, ";"); 
+                 * strtok(value, ";"); 
 				 */
 
 				URL_s->redirecting_url = NET_MakeAbsoluteURL(
@@ -1425,17 +1425,17 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 					FREE_AND_CLEAR(URL_s->redirecting_url);
 				  }
               }
-            else if(!strncasecomp(name,"LAST-MODIFIED:",14))
+            else if(!PL_strncasecmp(name,"LAST-MODIFIED:",14))
               {
 				found_one = TRUE;
 
                 URL_s->last_modified = NET_ParseDate(value);
                 TRACEMSG(("Found last modified date: %d\n",URL_s->last_modified));
               }
-            else if(!strncasecomp(name,"LINK:",5))
+            else if(!PL_strncasecmp(name,"LINK:",5))
               {
 #define PAGE_SERVICES_REL "pageServices"
-                char * next_arg = XP_STRTOK(value, ";");
+                char * next_arg = strtok(value, ";");
 				char * link_val;
 				enum { UNKNOWN_REL_TYPE, PAGE_SERVICES_REL_TYPE } rel_type;
 
@@ -1448,7 +1448,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
                 {
                    value++;
                    /* strip the end one too */
-                   value[XP_STRLEN(value)-1] = '\0';
+                   value[PL_strlen(value)-1] = '\0';
                 }
 
 				/* ok if malloc fails */
@@ -1458,62 +1458,62 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
                   {
                     next_arg = XP_StripLine(next_arg);
 
-                    if(!strncasecomp(next_arg,"rel=", 4))
+                    if(!PL_strncasecmp(next_arg,"rel=", 4))
                       {
 						char * rel = NET_RemoveQuotes(next_arg+4);
 
-						if(!strcasecomp(rel, PAGE_SERVICES_REL))
+						if(!PL_strcasecmp(rel, PAGE_SERVICES_REL))
 							rel_type = PAGE_SERVICES_REL_TYPE;
                       }
 
-                	next_arg = XP_STRTOK(NULL, ";");
+                	next_arg = strtok(NULL, ";");
                   }
 
 				/* if we fount a rel for page services assign it */
 				if(rel_type == PAGE_SERVICES_REL_TYPE)
 					URL_s->page_services_url = link_val;
 				else
-					XP_FREEIF(link_val);
+					PR_FREEIF(link_val);
 	
               }
             break;
 
         case 'P':
-            if(!strncasecomp(name,"PROXY-AUTHENTICATE:",19))
+            if(!PL_strncasecmp(name,"PROXY-AUTHENTICATE:",19))
               {
                 char *auth = value;
 
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
                 if (net_IsBetterAuth(auth, URL_s->proxy_authenticate))
                   StrAllocCopy(URL_s->proxy_authenticate, auth);
               }
-            else if(!strncasecomp(name,"PROXY-CONNECTION:",17))
+            else if(!PL_strncasecmp(name,"PROXY-CONNECTION:",17))
               {
-                XP_STRTOK(value, ";"); /* terminate at ';' */
-                XP_STRTOK(value, ","); /* terminate at ',' */
-				if(!strcasecomp("KEEP-ALIVE", XP_StripLine(value)))
+                strtok(value, ";"); /* terminate at ';' */
+                strtok(value, ","); /* terminate at ',' */
+				if(!PL_strcasecmp("KEEP-ALIVE", XP_StripLine(value)))
 					URL_s->can_reuse_connection = TRUE;
               }
-            else if(!strncasecomp(name,"PRAGMA:",7))
+            else if(!PL_strncasecmp(name,"PRAGMA:",7))
               {
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
-				if(!strcasecomp(value, "NO-CACHE"))
+				if(!PL_strcasecmp(value, "NO-CACHE"))
 					URL_s->dont_cache = TRUE;
               }
             break;
 
         case 'R':
 			
-            if(!strncasecomp(name,"RANGE:",6))
+            if(!PL_strncasecmp(name,"RANGE:",6))
 			  {
 				unsigned long low, high, length;
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
 				/* range header looks like:
 				 * Range: bytes x-y/z
@@ -1541,7 +1541,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				 */
 				URL_s->server_can_do_byteranges = TRUE;
 			  }
-            else if(!strncasecomp(name,"REFRESH:",8) && !EDT_IS_EDITOR(context))
+            else if(!PL_strncasecmp(name,"REFRESH:",8) && !EDT_IS_EDITOR(context))
               {
                 char *first_arg, *next_arg;
 
@@ -1554,19 +1554,19 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
                     URL_s->refresh_url=0;
                   }
 
-                first_arg = XP_STRTOK(value, ";");
+                first_arg = strtok(value, ";");
 
                 URL_s->refresh = atol(value);
                 TRACEMSG(("Found refresh header: %d",URL_s->refresh));
 
                 /* assign and compare
                  */
-                while((next_arg = XP_STRTOK(NULL, ";")) != NULL)
+                while((next_arg = strtok(NULL, ";")) != NULL)
                   {
                     next_arg = XP_StripLine(next_arg);
 
 
-                    if(!strncasecomp(next_arg,"URL=", 4))
+                    if(!PL_strncasecmp(next_arg,"URL=", 4))
                       {
 						URL_s->refresh_url = NET_MakeAbsoluteURL(
 												URL_s->address,
@@ -1589,53 +1589,53 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
             break;
 
         case 'S':
-            if(!strncasecomp(name,"SET-COOKIE:",11))
+            if(!PL_strncasecmp(name,"SET-COOKIE:",11))
               {
 				found_one = TRUE;
                 NET_SetCookieStringFromHttp(outputFormat, URL_s, context, URL_s->address, value);
               }
-            else if(!strncasecomp(name, "SERVER:", 7))
+            else if(!PL_strncasecmp(name, "SERVER:", 7))
               {
 				found_one = TRUE;
 
-                if(strcasestr(value, "NETSITE"))
+                if(PL_strcasestr(value, "NETSITE"))
                     URL_s->is_netsite = TRUE;
-                else if(strcasestr(value, "NETSCAPE"))
+                else if(PL_strcasestr(value, "NETSCAPE"))
                     URL_s->is_netsite = TRUE;
               }
             break;
 
         case 'T':
-            if(!strncasecomp(name,"TRANSFER-ENCODING:",18))
+            if(!PL_strncasecmp(name,"TRANSFER-ENCODING:",18))
               {
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
                 StrAllocCopy(URL_s->transfer_encoding, value);
 			  }
 
         case 'W':
-            if(!strncasecomp(name,"WWW-AUTHENTICATE:",17))
+            if(!PL_strncasecmp(name,"WWW-AUTHENTICATE:",17))
               {
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
                 StrAllocCopy(URL_s->authenticate, value);
               }
-            else if(!strncasecomp(name, "WWW-PROTECTION-TEMPLATE:", 24))
+            else if(!PL_strncasecmp(name, "WWW-PROTECTION-TEMPLATE:", 24))
               {
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
                 StrAllocCopy(URL_s->protection_template, value);
                }
-            else if(!strncasecomp(name, "WINDOW-TARGET:", 14))
+            else if(!PL_strncasecmp(name, "WINDOW-TARGET:", 14))
               {
 				found_one = TRUE;
 
-                XP_STRTOK(value, ";"); /* terminate at ';' */
+                strtok(value, ";"); /* terminate at ';' */
 
                 if (URL_s->window_target == NULL)
 		  {
@@ -1763,7 +1763,7 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 		  cite_open1 = "<B><I>", cite_close1 = "</I></B>";
 		  break;
 		default:
-		  XP_ASSERT(0);
+		  PR_ASSERT(0);
 		  cite_open1 = cite_close1 = "";
 		  break;
 		}
@@ -1779,13 +1779,13 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 		  cite_open2 = "<FONT SIZE=-1>", cite_close2 = "</FONT>";
 		  break;
 	  default:
-		  XP_ASSERT(0);
+		  PR_ASSERT(0);
 		  cite_open2 = cite_close2 = "";
 		  break;
 	  }
 
 #else
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
 	}
 
@@ -1810,23 +1810,23 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 	  if (s >= end)
 		;
 	  else if (input_size >= 6 && *s == '>' &&
-			   !XP_STRNCMP (input, ">From ", 6))	/* sendmail... */
+			   !PL_strncmp (input, ">From ", 6))	/* sendmail... */
 		;
 	  else if (*s == '>' || *s == ']')
 		{
 		  line_is_citation = TRUE;
-		  XP_STRCPY(output_ptr, cite_open1);
-		  output_ptr += XP_STRLEN(cite_open1);
-		  XP_STRCPY(output_ptr, cite_open2);
-		  output_ptr += XP_STRLEN(cite_open2);
+		  PL_strcpy(output_ptr, cite_open1);
+		  output_ptr += PL_strlen(cite_open1);
+		  PL_strcpy(output_ptr, cite_open2);
+		  output_ptr += PL_strlen(cite_open2);
 		  if (CitationColor &&
-			  output_ptr + XP_STRLEN(CitationColor) + 20 < end_of_buffer) {
-			XP_STRCPY(output_ptr, "<FONT COLOR=");
-			output_ptr += XP_STRLEN(output_ptr);
-			XP_STRCPY(output_ptr, CitationColor);
-			output_ptr += XP_STRLEN(output_ptr);
-			XP_STRCPY(output_ptr, ">");
-			output_ptr += XP_STRLEN(output_ptr);
+			  output_ptr + PL_strlen(CitationColor) + 20 < end_of_buffer) {
+			PL_strcpy(output_ptr, "<FONT COLOR=");
+			output_ptr += PL_strlen(output_ptr);
+			PL_strcpy(output_ptr, CitationColor);
+			output_ptr += PL_strlen(output_ptr);
+			PL_strcpy(output_ptr, ">");
+			output_ptr += PL_strlen(output_ptr);
 		  }
 		}
 	}
@@ -1881,9 +1881,9 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 		   */
 		  if (cp2-cp < 7 ||
 			  (cp2 > cp && cp2[-1] == ':') ||
-			  !XP_STRNCMP(cp, "internal-", 9))
+			  !PL_strncmp(cp, "internal-", 9))
 			{
-			  XP_MEMCPY(output_ptr, cp, cp2-cp);
+			  memcpy(output_ptr, cp, cp2-cp);
 			  output_ptr += (cp2-cp);
 			  *output_ptr = 0;
 			}
@@ -1895,7 +1895,7 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 			  if(cp2-cp > size_left)
 				return MK_OUT_OF_MEMORY;
 
-			  XP_MEMCPY(output_ptr, cp, cp2-cp);
+			  memcpy(output_ptr, cp, cp2-cp);
 			  output_ptr[cp2-cp] = 0;
 			  quoted_url = NET_EscapeHTML(output_ptr);
 			  if (!quoted_url) return MK_OUT_OF_MEMORY;
@@ -1903,8 +1903,8 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 						  "<A HREF=\"%s\">%s</A>",
 						  quoted_url,
 						  quoted_url);
-			  output_ptr += XP_STRLEN(output_ptr);
-			  XP_FREE(quoted_url);
+			  output_ptr += PL_strlen(output_ptr);
+			  PR_Free(quoted_url);
 			}
 
 		  cp = cp2-1;  /* go to next word */
@@ -1915,19 +1915,19 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 		   */
 		  if(*cp == '<')
 			{
-			  XP_STRCPY(output_ptr, "&lt;");
+			  PL_strcpy(output_ptr, "&lt;");
 			  output_ptr += 4;
 			  col++;
 			}
 		  else if(*cp == '>')
 			{
-			  XP_STRCPY(output_ptr, "&gt;");
+			  PL_strcpy(output_ptr, "&gt;");
 			  output_ptr += 4;
 			  col++;
 			}
 		  else if(*cp == '&')
 			{
-			  XP_STRCPY(output_ptr, "&amp;");
+			  PL_strcpy(output_ptr, "&amp;");
 			  output_ptr += 5;
 			  col++;
 			}
@@ -1944,14 +1944,14 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
   if (line_is_citation)	/* Close off the highlighting */
 	{
 	  if (CitationColor) {
-		XP_STRCPY(output_ptr, "</FONT>");
-		output_ptr += XP_STRLEN(output_ptr);
+		PL_strcpy(output_ptr, "</FONT>");
+		output_ptr += PL_strlen(output_ptr);
 	  }
 
-	  XP_STRCPY(output_ptr, cite_close2);
-	  output_ptr += XP_STRLEN (cite_close2);
-	  XP_STRCPY(output_ptr, cite_close1);
-	  output_ptr += XP_STRLEN (cite_close1);
+	  PL_strcpy(output_ptr, cite_close2);
+	  output_ptr += PL_strlen (cite_close2);
+	  PL_strcpy(output_ptr, cite_close1);
+	  output_ptr += PL_strlen (cite_close1);
 	}
 
   return 0;
@@ -1967,11 +1967,11 @@ Append(char** output, int32* output_max, char** curoutput, const char* buf,
 		do {
 			(*output_max) += 1024;
 		} while (length + (*curoutput) - (*output) >= *output_max);
-		*output = XP_REALLOC(*output, *output_max);
+		*output = PR_Realloc(*output, *output_max);
 		if (!*output) return;
 		*curoutput = *output + offset;
 	}
-	XP_MEMCPY(*curoutput, buf, length);
+	memcpy(*curoutput, buf, length);
 	*curoutput += length;
 }
 
@@ -1989,18 +1989,18 @@ NET_ScanHTMLForURLs(const char* input)
 	const char* linestart;
 	const char* lineend;
 
-	XP_ASSERT(input);
+	PR_ASSERT(input);
 	if (!input) return NULL;
-	inputlength = XP_STRLEN(input);
+	inputlength = PL_strlen(input);
 
 	output_max = inputlength + 1024; /* 1024 bytes ought to be enough to quote
 										several URLs, which ought to be as many
 										as most docs use. */
-	output = XP_ALLOC(output_max);
+	output = PR_Malloc(output_max);
 	if (!output) goto FAIL;
 
 	tmpbuf_max = 1024;
-	tmpbuf = XP_ALLOC(tmpbuf_max);
+	tmpbuf = PR_Malloc(tmpbuf_max);
 	if (!tmpbuf) goto FAIL;
 
 	inputend = input + inputlength;
@@ -2031,15 +2031,15 @@ NET_ScanHTMLForURLs(const char* input)
 				int length = lineend - linestart;
 				if (length * 3 > tmpbuf_max) {
 					tmpbuf_max = length * 3 + 512;
-					XP_FREE(tmpbuf);
-					tmpbuf = XP_ALLOC(tmpbuf_max);
+					PR_Free(tmpbuf);
+					tmpbuf = PR_Malloc(tmpbuf_max);
 					if (!tmpbuf) goto FAIL;
 				}
 				if (NET_ScanForURLs(NULL, linestart, length,
 									tmpbuf, tmpbuf_max, TRUE) < 0) {
 					goto FAIL;
 				}
-				length = XP_STRLEN(tmpbuf);
+				length = PL_strlen(tmpbuf);
 				Append(&output, &output_max, &curoutput, tmpbuf, length);
 				if (!output) goto FAIL;
 
@@ -2054,18 +2054,18 @@ NET_ScanHTMLForURLs(const char* input)
 				case '<':
 					if ((linestart[1] == 'a' || linestart[1] == 'A') &&
 						linestart[2] == ' ') {
-						lineend = strcasestr(linestart, "</a");
+						lineend = PL_strcasestr(linestart, "</a");
 						if (lineend) {
-							lineend = XP_STRCHR(lineend, '>');
+							lineend = PL_strchr(lineend, '>');
 							if (lineend) lineend++;
 						}
 					} else {
-						lineend = XP_STRCHR(linestart, '>');
+						lineend = PL_strchr(linestart, '>');
 						if (lineend) lineend++;
 					}
 					break;
 				case '&':
-					lineend = XP_STRCHR(linestart, ';');
+					lineend = PL_strchr(linestart, ';');
 					if (lineend) lineend++;
 					break;
 				default:
@@ -2083,13 +2083,13 @@ NET_ScanHTMLForURLs(const char* input)
 			lineend++;
 		}
 	}
-	XP_FREE(tmpbuf);
+	PR_Free(tmpbuf);
 	*curoutput = '\0';
 	return output;
 
 FAIL:
-	if (tmpbuf) XP_FREE(tmpbuf);
-	if (output) XP_FREE(output);
+	if (tmpbuf) PR_Free(tmpbuf);
+	if (output) PR_Free(output);
 	return NULL;
 }
 
@@ -2102,13 +2102,13 @@ NET_IsFQDNMailAddress(const char * string)
 {
 	/* first make sure that an @ exists
 	 */
-	char * at_sign = XP_STRCHR(string, '@');
+	char * at_sign = PL_strchr(string, '@');
 
 	if(at_sign)
 	  {
 		/* make sure it has at least one period 
 		 */
-		if(XP_STRCHR(at_sign, '.'))
+		if(PL_strchr(at_sign, '.'))
 			return(TRUE);
 	  }
 
@@ -2126,7 +2126,7 @@ MODULE_PRIVATE int PR_CALLBACK net_use_ssl_for_imap4_changed_func(const char *pr
 {
 	int status = PREF_NOERROR;
 
-	if (!XP_STRCASECMP(pref,"mail.imap.server_ssl")) {
+	if (!PL_strcasecmp(pref,"mail.imap.server_ssl")) {
 		XP_Bool	new_val;
 
 		status = PREF_GetBoolPref("mail.imap.server_ssl", &new_val);
@@ -2150,24 +2150,24 @@ NET_IsURLSecure(char * address)
 		|| type == SECURE_LDAP_TYPE_URL)
 		return(TRUE);
 
-    if(!strncasecomp(address, "/mc-icons/", 10) ||
-       !strncasecomp(address, "/ns-icons/", 10))
+    if(!PL_strncasecmp(address, "/mc-icons/", 10) ||
+       !PL_strncasecmp(address, "/ns-icons/", 10))
         return(TRUE);
 
-    if(!strncasecomp(address, "internal-external-reconnect:", 28))
+    if(!PL_strncasecmp(address, "internal-external-reconnect:", 28))
         return(TRUE);
 
-    if(!strcasecomp(address, "internal-external-plugin"))
+    if(!PL_strcasecmp(address, "internal-external-plugin"))
         return(TRUE);
 
-    if(!strncasecomp(address, "snews:", 6))
+    if(!PL_strncasecmp(address, "snews:", 6))
 		return TRUE;
 
 		/*
 		 * IMAP URLs begin with "mailbox://" unlike POP URLs which begin
 		 * with "mailbox:".
 		 */
-	if(!strncasecomp(address, "mailbox://", 10)) {
+	if(!PL_strncasecmp(address, "mailbox://", 10)) {
 		if (use_ssl_for_imap4 < 0) { /* If uninitialized. */
 			XP_Bool new_val;
 			int status = PREF_GetBoolPref("mail.imap.server_ssl", &new_val);
@@ -2196,7 +2196,7 @@ NET_IsURLSecure(char * address)
 PUBLIC char *
 NET_EscapeHTML(const char * string)
 {
-    char *rv = (char *) XP_ALLOC(XP_STRLEN(string)*4 + 1); /* The +1 is for
+    char *rv = (char *) PR_Malloc(PL_strlen(string)*4 + 1); /* The +1 is for
 															  the trailing
 															  null! */
 	char *ptr = rv;
@@ -2259,7 +2259,7 @@ NET_SpaceToPlus(char * string)
 /* returns true if the functions thinks the string contains
  * HTML
  */
-PUBLIC Bool
+PUBLIC PRBool
 NET_ContainsHTML(char * string, int32 length)
 {
 	char * ptr = string;
@@ -2280,20 +2280,20 @@ NET_ContainsHTML(char * string, int32 length)
 
 	/* If it begins with a mailbox delimiter, it's not HTML. */
 	if (count > 5 &&
-		(!XP_STRNCMP(string, "From ", 5) ||
-		 !XP_STRNCMP(string, ">From ", 6)))
+		(!PL_strncmp(string, "From ", 5) ||
+		 !PL_strncmp(string, ">From ", 6)))
 	  return FALSE;
 
 	for(; count > 0; ptr++, count--)
 		if(*ptr == '<')
 		  {
-			if(count > 3 && !strncasecomp(ptr+1, "HTML", 4))
+			if(count > 3 && !PL_strncasecmp(ptr+1, "HTML", 4))
 				return(TRUE);
 
-			if(count > 4 && !strncasecomp(ptr+1, "TITLE", 5))
+			if(count > 4 && !PL_strncasecmp(ptr+1, "TITLE", 5))
 				return(TRUE);
 		
-			if(count > 3 && !strncasecomp(ptr+1, "FRAMESET", 8))
+			if(count > 3 && !PL_strncasecmp(ptr+1, "FRAMESET", 8))
 				return(TRUE);
 
 			if(count > 2 && 
@@ -2339,7 +2339,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		url_struct->method = URL_GET_METHOD;
 	else
 		url_struct->method = URL_POST_METHOD;
-	if (!strncasecomp(url_struct->address, "mailto:", 7)) {
+	if (!PL_strncasecmp(url_struct->address, "mailto:", 7)) {
 		url_struct->mailto_post = TRUE;
 	}
 
@@ -2360,7 +2360,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 	if (target == NULL)
 		url_struct->window_target = NULL;
 	else
-		url_struct->window_target = XP_STRDUP (target);
+		url_struct->window_target = PL_strdup (target);
 
 	FREEIF (url_struct->post_headers);
 
@@ -2368,7 +2368,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 	   of mail headers; and allow the url to specify additional headers
 	   as well. */
 #ifdef MOZ_MAIL_NEWS    
-	if (!strncasecomp(url_struct->address, "mailto:", 7))
+	if (!PL_strncasecmp(url_struct->address, "mailto:", 7))
 	  {
 #ifdef MOZILLA_CLIENT
 		int status;
@@ -2384,19 +2384,19 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			FREEIF (headers);
 			return status;
 		  }
-		XP_ASSERT (new_url);
-		XP_ASSERT (headers);
+		PR_ASSERT (new_url);
+		PR_ASSERT (headers);
 		url_struct->address_modified = TRUE;
-		XP_FREE (url_struct->address);
+		PR_Free (url_struct->address);
 		url_struct->address = new_url;
 		url_struct->post_headers = headers;
 #else
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
 	  }
 #endif /* MOZ_MAIL_NEWS */
 
-	if(encoding && !strcasecomp(encoding, "text/plain"))
+	if(encoding && !PL_strcasecmp(encoding, "text/plain"))
 	  {
 		char *tmpfilename;
 		char buffer[512];
@@ -2419,16 +2419,16 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
   		fp = XP_FileOpen (tmpfilename, xpTemporary, XP_FILE_WRITE_BIN);
 #endif
   		if (!fp) {
-			XP_FREE(tmpfilename);
+			PR_Free(tmpfilename);
 			return 0;
 		}
 
 		if (url_struct->post_headers)
 		  {
 			len = XP_FileWrite(url_struct->post_headers,
-						 XP_STRLEN (url_struct->post_headers),
+						 PL_strlen (url_struct->post_headers),
 						 fp);
-			XP_FREE (url_struct->post_headers);
+			PR_Free (url_struct->post_headers);
 			url_struct->post_headers = 0;
 			if (len < 0)
 			{
@@ -2437,29 +2437,29 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			}
 		  }
 
-		XP_STRCPY (buffer,
+		PL_strcpy (buffer,
 				   "Content-type: text/plain" CRLF
 				   "Content-Disposition: inline; form-data" CRLF CRLF);
-		len = XP_FileWrite(buffer, XP_STRLEN(buffer), fp);
+		len = XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
 		for(i=0; (len >= 0) && (i < sub_data->value_cnt); i++)
 		  {
 			if(name_array[i])
-				XP_FileWrite(name_array[i], XP_STRLEN(name_array[i]), fp);
+				XP_FileWrite(name_array[i], PL_strlen(name_array[i]), fp);
 			XP_FileWrite("=", 1, fp);
 			if(value_array[i])
-				XP_FileWrite(value_array[i], XP_STRLEN(value_array[i]), fp);
+				XP_FileWrite(value_array[i], PL_strlen(value_array[i]), fp);
 			len = XP_FileWrite(CRLF, 2, fp);
 		  }
 		XP_FileClose(fp);
 	
 		StrAllocCopy(url_struct->post_data, tmpfilename);
-		XP_FREE(tmpfilename);
+		PR_Free(tmpfilename);
 		if (len < 0)
 			return 0;
 		url_struct->post_data_is_file = TRUE;
 	  }
-	else if(encoding && !strcasecomp(encoding, "multipart/form-data"))
+	else if(encoding && !PL_strcasecmp(encoding, "multipart/form-data"))
 	  {
 		/* encoding using a variant of multipart/mixed
  	 	 * and add files to it as well
@@ -2484,7 +2484,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		if (!tmpfilename) return 0;
   		fp = XP_FileOpen (tmpfilename, xpFileToPost, XP_FILE_WRITE_BIN);
   		if (!fp) {
-			XP_FREE(tmpfilename);
+			PR_Free(tmpfilename);
     		return 0;
 		}
 
@@ -2494,9 +2494,9 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		if(url_struct->post_headers)
 		  {
 			len = XP_FileWrite(url_struct->post_headers,
-					 	XP_STRLEN (url_struct->post_headers),
+					 	PL_strlen (url_struct->post_headers),
 					 	fp);
-			XP_FREE (url_struct->post_headers);
+			PR_Free (url_struct->post_headers);
 			url_struct->post_headers = 0;
 			if (len < 0)
 				return 0;
@@ -2506,7 +2506,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 				"Content-type: multipart/form-data;"
 				" boundary=%s" CRLF,
 			    separator);
-		len = XP_FileWrite(buffer, XP_STRLEN(buffer), fp);
+		len = XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
 #define CONTENT_DISPOSITION "Content-Disposition: form-data; name=\""
 #define PLUS_FILENAME "\"; filename=\""
@@ -2517,8 +2517,8 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		total_size = -2; /* start at negative 2 to disregard the
 						  * CRLF that act as a header separator 
 						  */
-		boundary_len = XP_STRLEN(separator) + 6;
-		cont_disp_len = XP_STRLEN(CONTENT_DISPOSITION);
+		boundary_len = PL_strlen(separator) + 6;
+		cont_disp_len = PL_strlen(CONTENT_DISPOSITION);
 
         for(i=0; (len >= 0) && (i < sub_data->value_cnt); i++)
           {
@@ -2530,7 +2530,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			 */
 			total_size += cont_disp_len;
 			if(name_array[i])
-				total_size += XP_STRLEN(name_array[i]);
+				total_size += PL_strlen(name_array[i]);
 			total_size += 5;  /* quote plus two CRLF's */
 
 			if(type_array[i] == FORM_TYPE_FILE)
@@ -2540,16 +2540,16 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 				/* in this case we are going to send an extra
 				 * ; filename="value_array[i]"
 				 */
-			    total_size += XP_STRLEN(PLUS_FILENAME);
+			    total_size += PL_strlen(PLUS_FILENAME);
 				if(value_array[i])
 				{
                     /* only write the filename, not the whole path */
-                    char * slash = XP_STRRCHR(value_array[i], '/');
+                    char * slash = PL_strrchr(value_array[i], '/');
                     if(slash)
                         slash++;
                     else
                         slash = value_array[i];
-			    	total_size += XP_STRLEN(slash);
+			    	total_size += PL_strlen(slash);
 
 #ifdef XP_MAC
 					if(encoding_array[i] == INPUT_TYPE_ENCODING_MACBIN)
@@ -2577,7 +2577,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 							 * space for it
 							 */
 							total_size += sizeof(CONTENT_TYPE_HEADER)-1;
-							total_size += XP_STRLEN(ctype->type);
+							total_size += PL_strlen(ctype->type);
 							total_size += 2;  /* for the CRLF terminator */
 						}
 					}
@@ -2608,7 +2608,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			else
 			  {
 				if(value_array[i])
-					total_size += XP_STRLEN(value_array[i]);
+					total_size += PL_strlen(value_array[i]);
 			  }
           }
 		/* add the size of the last separator plus
@@ -2617,12 +2617,12 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 		total_size += boundary_len+2;
 
 		sprintf(buffer, "Content-Length: %ld%s", total_size, CRLF);
-		len = XP_FileWrite(buffer, XP_STRLEN(buffer), fp);
+		len = XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
 		for(i=0; (len >= 0) && (i < sub_data->value_cnt); i++)
 		  {
 			sprintf(buffer, "%s--%s%s", CRLF, separator, CRLF);
-			XP_FileWrite(buffer, XP_STRLEN(buffer), fp);
+			XP_FileWrite(buffer, PL_strlen(buffer), fp);
 			
 			/* WARNING!!! If you change the size of any of the
 			 * sprintf's here you must change the size
@@ -2630,25 +2630,25 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			 */
 			XP_FileWrite(CONTENT_DISPOSITION, cont_disp_len, fp);
 			if(name_array[i])
-				XP_FileWrite(name_array[i], XP_STRLEN(name_array[i]), fp);
+				XP_FileWrite(name_array[i], PL_strlen(name_array[i]), fp);
 
 			if(type_array[i] == FORM_TYPE_FILE)
 			  {
-				XP_FileWrite(PLUS_FILENAME, XP_STRLEN(PLUS_FILENAME), fp);
+				XP_FileWrite(PLUS_FILENAME, PL_strlen(PLUS_FILENAME), fp);
 				if(value_array[i])
 				  {
 					/* only write the filename, not the whole path */
-					char * slash = XP_STRRCHR(value_array[i], '/');
+					char * slash = PL_strrchr(value_array[i], '/');
 					if(slash)
 						slash++;
 					else
 						slash = value_array[i];
-					XP_FileWrite(slash, XP_STRLEN(slash), fp);
+					XP_FileWrite(slash, PL_strlen(slash), fp);
 
 				  }
 			  }
   			/* end the content disposition line */
-			len = XP_FileWrite("\"" CRLF, XP_STRLEN("\"" CRLF), fp);
+			len = XP_FileWrite("\"" CRLF, PL_strlen("\"" CRLF), fp);
 
 			if(type_array[i] == FORM_TYPE_FILE && value_array[i])
 			{
@@ -2657,12 +2657,12 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 				{
 					/* add the content_type header */
                 	XP_FileWrite(CONTENT_TYPE_HEADER, 
-									 	XP_STRLEN(CONTENT_TYPE_HEADER),
+									 	PL_strlen(CONTENT_TYPE_HEADER),
 									 	fp);
                 	XP_FileWrite(APPLICATION_MACBINARY, 
-									 	XP_STRLEN(APPLICATION_MACBINARY),
+									 	PL_strlen(APPLICATION_MACBINARY),
 									 	fp);
-					len = XP_FileWrite(CRLF, XP_STRLEN(CRLF), fp);
+					len = XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
 				}
 				else
 #endif /* XP_MAC */
@@ -2677,18 +2677,18 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 	                 	* content-type
 	                 	*/
 	                	XP_FileWrite(CONTENT_TYPE_HEADER, 
-										 	XP_STRLEN(CONTENT_TYPE_HEADER),
+										 	PL_strlen(CONTENT_TYPE_HEADER),
 										 	fp);
 	                	XP_FileWrite(ctype->type,
-	                        			 	XP_STRLEN(ctype->type),
+	                        			 	PL_strlen(ctype->type),
 										 	fp);
-						len = XP_FileWrite(CRLF, XP_STRLEN(CRLF), fp);
+						len = XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
 					}
 	            }
 			}
 
 			/* end the header */
-			len = XP_FileWrite(CRLF, XP_STRLEN(CRLF), fp);
+			len = XP_FileWrite(CRLF, PL_strlen(CRLF), fp);
 
 			/* send the value of the form field */
 
@@ -2747,17 +2747,17 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			else
 			  {
 				if(value_array[i])
-					XP_FileWrite(value_array[i], XP_STRLEN(value_array[i]), fp);
+					XP_FileWrite(value_array[i], PL_strlen(value_array[i]), fp);
 			  }
 		  }
 
 		sprintf(buffer, "%s--%s--%s", CRLF, separator, CRLF);
-		XP_FileWrite(buffer, XP_STRLEN(buffer), fp);
+		XP_FileWrite(buffer, PL_strlen(buffer), fp);
 
 		XP_FileClose(fp);
 	
 		StrAllocCopy(url_struct->post_data, tmpfilename);
-		XP_FREE(tmpfilename);
+		PR_Free(tmpfilename);
 		url_struct->post_data_is_file = TRUE;
 
 	  }
@@ -2785,19 +2785,19 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 
 			/* get rid of ? or # in the url string since we are adding it
 			 */
-			punc = XP_STRCHR(url_struct->address, '?');
+			punc = PL_strchr(url_struct->address, '?');
 			if(punc)
 			   *punc = '\0';  /* terminate here */
-			punc = XP_STRCHR(url_struct->address, '#');
+			punc = PL_strchr(url_struct->address, '#');
 			if(punc)
 			   *punc = '\0';  /* terminate here */
 
 			/* add the size of the url plus one for the '?'
 			 */
-			total_size += XP_STRLEN(url_struct->address)+1;
+			total_size += PL_strlen(url_struct->address)+1;
 		  }
 
-		url_struct->post_data = (char *) XP_ALLOC(total_size);
+		url_struct->post_data = (char *) PR_Malloc(total_size);
 
 		if(!url_struct->post_data)
 		  {
@@ -2834,10 +2834,10 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			 *
 			 * URL?value instead of URL?name=value
 			 */
-			if(sub_data->value_cnt == 1 && !strcasecomp(name_array[0], "isindex"))
+			if(sub_data->value_cnt == 1 && !PL_strcasecmp(name_array[0], "isindex"))
 			  {
 			    if(value_array && value_array[0])
-					XP_STRCPY(end, NET_Escape(value_array[0], URL_XPALPHAS));
+					PL_strcpy(end, NET_Escape(value_array[0], URL_XPALPHAS));
 				else
 					*end = '\0';
 				PA_UNLOCK(sub_data->name_array);
@@ -2881,7 +2881,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			  {
 			    for(tmp_ptr = esc_string; *tmp_ptr != '\0'; tmp_ptr++)
 				    *end++ = *tmp_ptr;
-			    XP_FREE(esc_string);
+			    PR_Free(esc_string);
 			  }
 
 			/* join the name and value with a '='
@@ -2895,7 +2895,7 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 			  {
 			    for(tmp_ptr = esc_string; *tmp_ptr != '\0'; tmp_ptr++)
 				    *end++ = *tmp_ptr;
-			    XP_FREE(esc_string);
+			    PR_Free(esc_string);
 			  }
 
 			/* join pairs with a '&' 
@@ -2912,8 +2912,8 @@ NET_AddLOSubmitDataToURLStruct(LO_FormSubmitData * sub_data,
 	    if(sub_data->method == FORM_METHOD_POST)
 	      {
 			char buffer[64];
-	        url_struct->post_data_size = XP_STRLEN(url_struct->post_data);
-			XP_SPRINTF(buffer, 
+	        url_struct->post_data_size = PL_strlen(url_struct->post_data);
+			sprintf(buffer, 
 					   "Content-length: %ld" CRLF, 
 					   url_struct->post_data_size);
             StrAllocCat(url_struct->post_headers, buffer);
@@ -2949,7 +2949,7 @@ NET_AddCoordinatesToURLStruct(URL_Struct * url_struct, int32 x_coord, int32 y_co
 	  {
 		char buffer[32];
 
-		XP_SPRINTF(buffer, "?%ld,%ld", x_coord, y_coord);
+		sprintf(buffer, "?%ld,%ld", x_coord, y_coord);
 
         /* get rid of ? or # in the url string since we are adding it
          */
@@ -2957,10 +2957,10 @@ NET_AddCoordinatesToURLStruct(URL_Struct * url_struct, int32 x_coord, int32 y_co
 #ifdef STRIP_SEARCH_DATA_FROM_ISMAP_URLS
 	  {
 		char *punc;
-        punc = XP_STRCHR(url_struct->address, '?');
+        punc = PL_strchr(url_struct->address, '?');
         if(punc)
             *punc = '\0';  /* terminate here */
-        punc = XP_STRCHR(url_struct->address, '#');
+        punc = PL_strchr(url_struct->address, '#');
         if(punc)
             *punc = '\0';  /* terminate here */
 	  }
@@ -2979,7 +2979,7 @@ MODULE_PRIVATE void
 NET_f_a_c (char **pointer)
 {
     if(*pointer) {
-	XP_FREE(*pointer);
+	PR_Free(*pointer);
         *pointer = 0;
     }
 }
@@ -2997,143 +2997,143 @@ NET_URL_Type (CONST char *URL)
     switch(*URL) {
     case 'a':
     case 'A':
-		if(!strncasecomp(URL,"about:security", 14))
+		if(!PL_strncasecmp(URL,"about:security", 14))
 		    return(SECURITY_TYPE_URL);
-		else if(!strncasecomp(URL,"about:",6))
+		else if(!PL_strncasecmp(URL,"about:",6))
 		    return(ABOUT_TYPE_URL);
-		else if(!strncasecomp(URL,"addbook:",8))
+		else if(!PL_strncasecmp(URL,"addbook:",8))
 		    return(ADDRESS_BOOK_TYPE_URL);
-		else if (!strncasecomp(URL, "addbook-ldap", 12)) /*no colon includes addbook-ldaps:*/
+		else if (!PL_strncasecmp(URL, "addbook-ldap", 12)) /*no colon includes addbook-ldaps:*/
 			return(ADDRESS_BOOK_LDAP_TYPE_URL);
 		break;
 
 	case 'd':
 	case 'D':
-		if(!strncasecomp(URL,"data:",5))
+		if(!PL_strncasecmp(URL,"data:",5))
 		    return(DATA_TYPE_URL);
 		break;
 
 	case 'c':
 	case 'C':
-		if(!strncasecomp(URL,"castanet:",9))
+		if(!PL_strncasecmp(URL,"castanet:",9))
 		    return(0);
 		break;
 
 	case 'f':
 	case 'F':
-		if(!strncasecomp(URL,"ftp:",4))
+		if(!PL_strncasecmp(URL,"ftp:",4))
 		    return(FTP_TYPE_URL);
-		else if(!strncasecomp(URL,"file:",5))
+		else if(!PL_strncasecmp(URL,"file:",5))
 		    return(FILE_TYPE_URL);
 		break;
 	case 'g':
 	case 'G':
-    	if(!strncasecomp(URL,"gopher:",7)) 
+    	if(!PL_strncasecmp(URL,"gopher:",7)) 
 	        return(GOPHER_TYPE_URL);
 		break;
 	case 'h':
 	case 'H':
-		if(!strncasecomp(URL,"http:",5))
+		if(!PL_strncasecmp(URL,"http:",5))
 		    return(HTTP_TYPE_URL);
-		else if(!strncasecomp(URL,"https:",6))
+		else if(!PL_strncasecmp(URL,"https:",6))
 		    return(SECURE_HTTP_TYPE_URL);
 		break;
 	case 'i':
 	case 'I':
-		if(!strncasecomp(URL,"internal-gopher-",16))
+		if(!PL_strncasecmp(URL,"internal-gopher-",16))
 			return(INTERNAL_IMAGE_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-news-",14))
+		else if(!PL_strncasecmp(URL,"internal-news-",14))
 			return(INTERNAL_IMAGE_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-edit-",14))
+		else if(!PL_strncasecmp(URL,"internal-edit-",14))
 			return(INTERNAL_IMAGE_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-attachment-",20))
+		else if(!PL_strncasecmp(URL,"internal-attachment-",20))
 			return(INTERNAL_IMAGE_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-sa-",12))
+		else if(!PL_strncasecmp(URL,"internal-sa-",12))
 			return(INTERNAL_IMAGE_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-smime-",15))
+		else if(!PL_strncasecmp(URL,"internal-smime-",15))
 			return(INTERNAL_IMAGE_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-dialog-handler",23))
+		else if(!PL_strncasecmp(URL,"internal-dialog-handler",23))
 			return(HTML_DIALOG_HANDLER_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-panel-handler",22))
+		else if(!PL_strncasecmp(URL,"internal-panel-handler",22))
 			return(HTML_PANEL_HANDLER_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-security-",18))
+		else if(!PL_strncasecmp(URL,"internal-security-",18))
 			return(INTERNAL_SECLIB_TYPE_URL);
-		else if(!strncasecomp(URL,"internal-certldap",17))
+		else if(!PL_strncasecmp(URL,"internal-certldap",17))
 			return(INTERNAL_CERTLDAP_TYPE_URL);
-		else if(!strncasecomp(URL,"IMAP:",5))
+		else if(!PL_strncasecmp(URL,"IMAP:",5))
 			return(IMAP_TYPE_URL);
 		break;
 	case 'j':
 	case 'J':
-		if(!strncasecomp(URL, "javascript:",11))
+		if(!PL_strncasecmp(URL, "javascript:",11))
 		    return(MOCHA_TYPE_URL);
 		break;
 	case 'l':
 	case 'L':
-		if(!strncasecomp(URL, "livescript:",11))
+		if(!PL_strncasecmp(URL, "livescript:",11))
 		    return(MOCHA_TYPE_URL);
-		else if (!strncasecomp(URL, "ldap:",5))
+		else if (!PL_strncasecmp(URL, "ldap:",5))
 			return(LDAP_TYPE_URL);
-		else if (!strncasecomp(URL, "ldaps:",6))
+		else if (!PL_strncasecmp(URL, "ldaps:",6))
 			return(SECURE_LDAP_TYPE_URL);
 		break;
 	case 'm':
 	case 'M':
-    	if(!strncasecomp(URL,"mailto:",7)) 
+    	if(!PL_strncasecmp(URL,"mailto:",7)) 
 		    return(MAILTO_TYPE_URL);
-		else if(!strncasecomp(URL,"mailbox:",8))
+		else if(!PL_strncasecmp(URL,"mailbox:",8))
 		    return(MAILBOX_TYPE_URL);
-		else if(!strncasecomp(URL, "mocha:",6))
+		else if(!PL_strncasecmp(URL, "mocha:",6))
 		    return(MOCHA_TYPE_URL);
 		break;
 	case 'n':
 	case 'N':
-		if(!strncasecomp(URL,"news:",5))
+		if(!PL_strncasecmp(URL,"news:",5))
 		    return(NEWS_TYPE_URL);
-		else if(!strncasecomp(URL,"nfs:",4))
+		else if(!PL_strncasecmp(URL,"nfs:",4))
 		    return(NFS_TYPE_URL);
-		else if(!strncasecomp(URL, NETHELP_URL_PREFIX, sizeof(NETHELP_URL_PREFIX)-1))
+		else if(!PL_strncasecmp(URL, NETHELP_URL_PREFIX, sizeof(NETHELP_URL_PREFIX)-1))
 		    return(NETHELP_TYPE_URL);
 		break;
 	case 'p':
 	case 'P':
-		if(!strncasecomp(URL,"pop3:",5))
+		if(!PL_strncasecmp(URL,"pop3:",5))
 		    return(POP3_TYPE_URL);
 		break;
 	case 'r':
 	case 'R':
-		if(!strncasecomp(URL,"rlogin:",7))
+		if(!PL_strncasecmp(URL,"rlogin:",7))
 		    return(RLOGIN_TYPE_URL);
 		break;
 	case 's':
 	case 'S':
-		if(!strncasecomp(URL,"snews:",6))
+		if(!PL_strncasecmp(URL,"snews:",6))
 		    return(NEWS_TYPE_URL);
-		else if (!strncasecomp(URL,"search-libmsg:",14))
+		else if (!PL_strncasecmp(URL,"search-libmsg:",14))
 			return(MSG_SEARCH_TYPE_URL);
 	case 't':
 	case 'T':
-		if(!strncasecomp(URL,"telnet:",7))
+		if(!PL_strncasecmp(URL,"telnet:",7))
 		    return(TELNET_TYPE_URL);
-		else if(!strncasecomp(URL,"tn3270:",7))
+		else if(!PL_strncasecmp(URL,"tn3270:",7))
 		    return(TN3270_TYPE_URL);
 		break;
 	case 'u':
 	case 'U':
-		if(!strncasecomp(URL,"URN:",4))
+		if(!PL_strncasecmp(URL,"URN:",4))
 		    return(URN_TYPE_URL);
 		break;
 	case 'v':
 	case 'V':
-		if(!strncasecomp(URL, VIEW_SOURCE_URL_PREFIX, 
+		if(!PL_strncasecmp(URL, VIEW_SOURCE_URL_PREFIX, 
 							  sizeof(VIEW_SOURCE_URL_PREFIX)-1))
 		    return(VIEW_SOURCE_TYPE_URL);
 		break;
 	case 'w':
 	case 'W':
-		if(!strncasecomp(URL,"wais:",5))
+		if(!PL_strncasecmp(URL,"wais:",5))
 		    return(WAIS_TYPE_URL);
-		if(!strncasecomp(URL,"wysiwyg:",8))
+		if(!PL_strncasecmp(URL,"wysiwyg:",8))
 		    return(WYSIWYG_TYPE_URL);
 		break;
     }
@@ -3169,26 +3169,26 @@ net_return_local_file_part_from_url(char *address)
 		return NULL;
 
 	/* imap urls are never local */
-	if (!strncasecomp(address,"mailbox://",10))
+	if (!PL_strncasecmp(address,"mailbox://",10))
 		return NULL;
 
 	/* mailbox url's are always local, but don't always point to a file */
-	if(!strncasecomp(address, "mailbox:", 8))
+	if(!PL_strncasecmp(address, "mailbox:", 8))
 	{
 		char *filename = NET_ParseURL(address, GET_PATH_PART);
 		if (!filename)
-			filename = XP_STRDUP("");
+			filename = PL_strdup("");
 		return filename;
 	}
 
-	if(strncasecomp(address, "file:", 5))
+	if(PL_strncasecmp(address, "file:", 5))
 		return(NULL);
 	
 	host = NET_ParseURL(address, GET_HOST_PART);
 
-    if(!host || *host == '\0' || !strcasecomp(host, "LOCALHOST"))
+    if(!host || *host == '\0' || !PL_strcasecmp(host, "LOCALHOST"))
 	  {
-		XP_FREEIF(host);
+		PR_FREEIF(host);
 		return(NET_UnEscape(NET_ParseURL(address, GET_PATH_PART)));
 	  }
 
@@ -3200,14 +3200,14 @@ net_return_local_file_part_from_url(char *address)
 
 	/* check for local drives as hostnames
 	 */
-	if(XP_STRLEN(host) == 2
+	if(PL_strlen(host) == 2
 		&& isalpha(host[0]) 
 		&& (host[1] == '|' || host[1] == ':'))
 	  {
-		XP_FREE(host);
+		PR_Free(host);
 		/* skip "file:/" */
-		rv = XP_STRDUP(new_address+6);
-		XP_FREE(new_address);
+		rv = PL_strdup(new_address+6);
+		PR_Free(new_address);
 		return(rv);
 	  }
 
@@ -3220,16 +3220,16 @@ net_return_local_file_part_from_url(char *address)
 		 */
 		if(-1 != XP_Stat(address+5, &stat_entry, xpURL))
 		  {
-			XP_FREE(host);
+			PR_Free(host);
 			/* skip "file:" */
-			rv = XP_STRDUP(address+5);
-			XP_FREE(new_address);
+			rv = PL_strdup(address+5);
+			PR_Free(new_address);
 			return(rv);
 		  }
 	  }
 #endif /* XP_WIN */
 
-	XP_FREE(host);
+	PR_Free(host);
 
 	return(NULL);
 }
@@ -3244,7 +3244,7 @@ NET_IsLocalFileURL(char *address)
 
 	if(cp)
 	  {
-		XP_FREE(cp);
+		PR_Free(cp);
 		return(TRUE);
 	  }
 	else
@@ -3260,7 +3260,7 @@ net_buffer_output_fn ( const char *buf, int32 size, void *closure)
   /* if the size greater or equal to the available buffer size
    * reallocate the buffer
    */
-  XP_ASSERT (buf && bs && size > 0);
+  PR_ASSERT (buf && bs && size > 0);
   if ( !buf || !bs || size <= 0 )
 	return -1;
 
@@ -3271,16 +3271,16 @@ net_buffer_output_fn ( const char *buf, int32 size, void *closure)
 	  
 	  len = (bs->size << 1) - bs->pos + size + 1; /* null terminated */
 	  if (bs->buffer)
-		newBuffer = XP_REALLOC (bs->buffer, len);
+		newBuffer = PR_Realloc (bs->buffer, len);
 	  else
-		newBuffer = XP_ALLOC(len);
+		newBuffer = PR_Malloc(len);
 	  if (!newBuffer)
 		return MK_OUT_OF_MEMORY;
-	  XP_MEMSET(newBuffer+bs->pos, 0, len-bs->pos);
+	  memset(newBuffer+bs->pos, 0, len-bs->pos);
 	  bs->size = len;
 	  bs->buffer = newBuffer;
 	}
-  XP_MEMCPY (bs->buffer+bs->pos, buf, size);
+  memcpy (bs->buffer+bs->pos, buf, size);
   bs->pos += size;
   return 0;
 }
@@ -3290,8 +3290,8 @@ net_URNProtoLoad(ActiveEntry *ce)
 {
 	char buffer[256];
 
-	XP_STRCPY(buffer, XP_GetString(XP_ALERT_URN_USEHTTP));
-	XP_STRNCAT(buffer, ce->URL_s->address, 150);
+	PL_strcpy(buffer, XP_GetString(XP_ALERT_URN_USEHTTP));
+	PL_strncat(buffer, ce->URL_s->address, 150);
 	buffer[255] = '\0'; /* in case strncat doesn't add one */
 	FE_Alert(ce->window_id, buffer);
 
@@ -3301,7 +3301,7 @@ net_URNProtoLoad(ActiveEntry *ce)
 PRIVATE int32
 net_URNProtoStub(ActiveEntry *ce)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return -1;
 }
 
@@ -3332,8 +3332,8 @@ net_NFSProtoLoad(ActiveEntry *ce)
 {
         char buffer[256];
 
-        XP_STRCPY(buffer, XP_GetString(XP_ALERT_NFS_USEHTTP));
-        XP_STRNCAT(buffer, ce->URL_s->address, 150);
+        PL_strcpy(buffer, XP_GetString(XP_ALERT_NFS_USEHTTP));
+        PL_strncat(buffer, ce->URL_s->address, 150);
         buffer[255] = '\0'; /* in case strncat doesn't add one */
         FE_Alert(ce->window_id, buffer);
 
@@ -3343,7 +3343,7 @@ net_NFSProtoLoad(ActiveEntry *ce)
 PRIVATE int32
 net_NFSProtoStub(ActiveEntry *ce)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return -1;
 }
 
@@ -3383,7 +3383,7 @@ net_WAISProtoLoad(ActiveEntry *ce)
 PRIVATE int32
 net_WAISProtoStub(ActiveEntry *ce)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return -1;
 }
 
@@ -3416,13 +3416,13 @@ NET_Base64Encode (char *src, int32 srclen)
   BufferStruct bs;
   MimeEncoderData *encoder_data = NULL;
 
-  XP_ASSERT (src);
+  PR_ASSERT (src);
   if (!src)
 	return NULL;
   else if (srclen == 0)
-	return XP_STRDUP("");
+	return PL_strdup("");
 
-  XP_MEMSET (&bs, 0, sizeof (BufferStruct));
+  memset (&bs, 0, sizeof (BufferStruct));
   encoder_data = MimeB64EncoderInit(net_buffer_output_fn, (void *) &bs);
   if (!encoder_data)
 	return NULL;
@@ -3430,7 +3430,7 @@ NET_Base64Encode (char *src, int32 srclen)
   if (MimeEncoderWrite(encoder_data, src, srclen) < 0)
 	{
 	  MimeEncoderDestroy(encoder_data, FALSE);
-	  XP_FREEIF(bs.buffer);
+	  PR_FREEIF(bs.buffer);
 	  return NULL;
 	}
   
@@ -3448,13 +3448,13 @@ NET_Base64Decode (char *src,
   BufferStruct bs;
   MimeDecoderData *decoder_data = NULL;
 
-  XP_ASSERT (src);
+  PR_ASSERT (src);
   if (!src)
 	return NULL;
   else if (srclen == 0)
-	return XP_STRDUP("");
+	return PL_strdup("");
 
-  XP_MEMSET (&bs, 0, sizeof (BufferStruct));
+  memset (&bs, 0, sizeof (BufferStruct));
   decoder_data = MimeB64DecoderInit(net_buffer_output_fn, (void *) &bs);
   if (!decoder_data)
 	return NULL;
@@ -3462,7 +3462,7 @@ NET_Base64Decode (char *src,
   if (MimeDecoderWrite(decoder_data, src, srclen) < 0)
 	{
 	  MimeDecoderDestroy(decoder_data, FALSE);
-	  XP_FREEIF(bs.buffer);
+	  PR_FREEIF(bs.buffer);
 	  return NULL;
 	}
   

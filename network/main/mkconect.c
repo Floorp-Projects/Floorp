@@ -200,12 +200,12 @@ int NET_SetSocksHost(char * host)
 	if(host && *host)
 	  {
 		char *cp;
-		XP_LTRACE(MKLib_trace_flag,1,("Trying to set Socks host: %s\n", host));
+		TRACEMSG(("Trying to set Socks host: %s\n", host));
 
 		/* If there's no port or it's zero, fail out so user gets
 		 * an error and checks his configuration.
 		 */
-		if ( ((cp = XP_STRRCHR(host, ':')) != NULL) 
+		if ( ((cp = PL_strrchr(host, ':')) != NULL) 
 			&& (*(cp+1) != '\0') 
 			&& (*(cp+1) != '0') ) {
 			*cp = 0;
@@ -213,9 +213,9 @@ int NET_SetSocksHost(char * host)
 		} else {
 			NET_SocksHost = 0;
 			NET_SocksPort = 0;
-			XP_FREEIF(NET_SocksHostName);
+			PR_FREEIF(NET_SocksHostName);
 			NET_SocksHostName = 0;
-		    XP_LTRACE(MKLib_trace_flag,1,("Couldn't find a socks port. :(\n"));
+		    TRACEMSG(("Couldn't find a socks port. :(\n"));
 			socksFailure=TRUE;
             return 0;  /* Fail? */
 		}
@@ -235,8 +235,8 @@ int NET_SetSocksHost(char * host)
             /* some systems return a number instead of a struct
              */
             NET_SocksHost = inet_addr(host);
-			if (NET_SocksHostName) XP_FREE (NET_SocksHostName);
-            NET_SocksHostName = XP_STRDUP(host);
+			if (NET_SocksHostName) PR_Free (NET_SocksHostName);
+            NET_SocksHostName = PL_strdup(host);
           }
         else      /* name not number */
           {
@@ -252,18 +252,18 @@ int NET_SetSocksHost(char * host)
 
             if (!hp)
               {
-                XP_LTRACE(MKLib_trace_flag,1,("mktcp.c: Can't find Socks host name `%s'\n", host));
+                TRACEMSG(("mktcp.c: Can't find Socks host name `%s'\n", host));
                 NET_SocksHost = 0;
-				if (NET_SocksHostName) XP_FREE (NET_SocksHostName);
+				if (NET_SocksHostName) PR_Free (NET_SocksHostName);
 				NET_SocksHostName = 0;
-		        XP_LTRACE(MKLib_trace_flag,1,("Socks host is bad. :(\n"));
+		        TRACEMSG(("Socks host is bad. :(\n"));
 				if (cp) {
 				  *cp = ':';
 				}
 				socksFailure=TRUE;
                 return 0;  /* Fail? */
               }
-			XP_MEMCPY(&NET_SocksHost, hp->h_addr, hp->h_length);
+			memcpy(&NET_SocksHost, hp->h_addr, hp->h_length);
           }
 		if (cp) {
 			*cp = ':';
@@ -272,10 +272,10 @@ int NET_SetSocksHost(char * host)
 	else
 	  {
         NET_SocksHost = 0;
-		if (NET_SocksHostName) XP_FREE (NET_SocksHostName);
+		if (NET_SocksHostName) PR_Free (NET_SocksHostName);
 		NET_SocksHostName = NULL;
 		NET_SocksPort = 0;
-		XP_LTRACE(MKLib_trace_flag,1,("Clearing Socks Host\n"));
+		TRACEMSG(("Clearing Socks Host\n"));
 	  }
 	socksFailure=FALSE;
     return(1);
@@ -368,7 +368,7 @@ net_CacheDNSEntry(char * hostname,
 		return;
 
 	/* Create our DNSEntry object for caching. */
-    if(!(new_entry = XP_NEW(DNSEntry)))
+    if(!(new_entry = PR_NEW(DNSEntry)))
 		return;
 
 	/* Copy the host name. */
@@ -377,22 +377,22 @@ net_CacheDNSEntry(char * hostname,
 
 	if(!new_entry->hostname)
 	{
-		XP_FREE(new_entry);
+		PR_Free(new_entry);
 		return;
 	}
 
 	/* Copy all the ip addresses. */
-	if( !(new_entry->ips = (PRUint32 *) XP_ALLOC(sizeof(PRUint32) * addrCount)) )
+	if( !(new_entry->ips = (PRUint32 *) PR_Malloc(sizeof(PRUint32) * addrCount)) )
 	{
-		XP_FREE(new_entry->hostname);
-		XP_FREE(new_entry);
+		PR_Free(new_entry->hostname);
+		PR_Free(new_entry);
 		return;
 	}
 
-	XP_ASSERT(host_pointer->h_length == 4);
+	PR_ASSERT(host_pointer->h_length == 4);
     for(i=0; i < addrCount; i++)
     {
-		XP_MEMCPY(&new_entry->ips[i], host_pointer->h_addr_list[i], 4);
+		memcpy(&new_entry->ips[i], host_pointer->h_addr_list[i], 4);
     }
 
 	/* Copy all the other data. */
@@ -433,7 +433,7 @@ net_CheckDNSCache(CONST char * hostname)
     while((dns_entry = (DNSEntry *)XP_ListNextObject(list_obj)) != 0)
       {
 		TRACEMSG(("net_CheckDNSCache: comparing %s and %s", hostname, dns_entry->hostname));
-		if(dns_entry->hostname && !strcasecomp(hostname, dns_entry->hostname))
+		if(dns_entry->hostname && !PL_strcasecmp(hostname, dns_entry->hostname))
 		  {
 			/* See if the dns entry has expired, if so, get rid of it */
 			if(dns_entry->expirationTime < time(NULL))
@@ -509,11 +509,11 @@ net_dns_lookup(MWContext *windowID,
 {
 	int status;
 	NET_InGetHostByName++;
-	XP_ASSERT(host);
-	XP_ASSERT(hostEnt);
+	PR_ASSERT(host);
+	PR_ASSERT(hostEnt);
 #ifndef ASYNC_DNS
-	XP_ASSERT(dbbuf);
-	XP_ASSERT(hpbuf);
+	PR_ASSERT(dbbuf);
+	PR_ASSERT(hpbuf);
 
 	/* Not asyncronus, completes a full lookup before returing. */
 	status = PR_GetHostByName(host, dbbuf, PR_NETDB_BUF_SIZE, hpbuf);
@@ -525,8 +525,8 @@ net_dns_lookup(MWContext *windowID,
 		return status;
 	}
 #else  /* ASYNC_DNS */
-	XP_ASSERT(windowID);
-	XP_ASSERT(socket);
+	PR_ASSERT(windowID);
+	PR_ASSERT(socket);
 	/* FE_StartAsyncDNSLookup  should fill in the hoststruct
 	 * or leave zero the pointer if not found
 	 * it can also return MK_WAITING_FOR_LOOKUP
@@ -583,7 +583,7 @@ net_FindAddress (const char *host_ptr,
 	if(tryPAD && MK_PadEnabled && MK_padPacURL && *MK_padPacURL) {
 		PRHostEnt *hostEnt=NULL;
 		static PRFileDesc *socket=NULL;
-		if(!strncasecomp(MK_padPacURL, "file:", 5)) {
+		if(!PL_strncasecmp(MK_padPacURL, "file:", 5)) {
 			/* Don't allow file urls because they're hard to figure out in an xp way. */
 			tryPAD=FALSE;
 			foundPADPAC=FALSE;
@@ -593,7 +593,7 @@ net_FindAddress (const char *host_ptr,
 			if(socket != NULL) {
 				char *padHost=NET_ParseURL(MK_padPacURL, GET_HOST_PART);
 				if(padHost && *padHost) {
-					char *colon=XP_STRCHR(padHost, ':');
+					char *colon=PL_strchr(padHost, ':');
 					int status;
 #ifndef ASYNC_DNS
 					char dbbuf[PR_NETDB_BUF_SIZE];
@@ -621,7 +621,7 @@ net_FindAddress (const char *host_ptr,
 					socket=NULL;
 					tryPAD=FALSE;
 				}
-				XP_FREEIF(padHost);
+				PR_FREEIF(padHost);
 			} /* End socket not null */
 		} 
 	} /* End tryPAD */
@@ -631,7 +631,7 @@ net_FindAddress (const char *host_ptr,
 		return -1;
 
     /* Parse port number if present */  
-	port = XP_STRCHR(host_port, ':');  
+	port = PL_strchr(host_port, ':');  
     if (port) {
         *port++ = 0;       
         if (XP_IS_DIGIT(*port)) {
@@ -646,17 +646,17 @@ net_FindAddress (const char *host_ptr,
             	/* disallow well known ports */
             	for(i=0; net_bad_ports_table[i]; i++)
                 	if(port_num == net_bad_ports_table[i]) {
-                    	char *error_msg = XP_STRDUP(XP_GetString(MK_PORT_ACCESS_NOT_ALLOWED));
+                    	char *error_msg = PL_strdup(XP_GetString(MK_PORT_ACCESS_NOT_ALLOWED));
                     	if(error_msg) {
                         	FE_Alert(window_id, error_msg);
-							XP_FREE(error_msg);
+							PR_Free(error_msg);
 					  	  }
 
 						/* return special error code
 						 * that NET_BeginConnect knows
 						 * about.
 						 */
-						XP_FREE(host_port);
+						PR_Free(host_port);
                     	return(MK_UNABLE_TO_CONNECT);
                   	  }
 
@@ -678,7 +678,7 @@ net_FindAddress (const char *host_ptr,
 		
 	    net_addr->inet.ip = cache_pointer->ips[0];
 
-	    XP_FREE(host_port);
+	    PR_Free(host_port);
 	    return(0);  /* FOUND OK */
     }
 
@@ -694,8 +694,8 @@ net_FindAddress (const char *host_ptr,
     if (is_numeric_ip) {
 		PRUint16 port = net_addr->inet.port;  /* save a copy */
 		if(PR_SUCCESS != PR_StringToNetAddr(host_port, net_addr)) {
-			XP_ASSERT(0);
-			XP_FREE(host_port);
+			PR_ASSERT(0);
+			PR_Free(host_port);
 			return(-1); /* fail */
 		}
 		net_addr->inet.port = port;  /* StringToNetAddr overites the port num */
@@ -708,17 +708,17 @@ net_FindAddress (const char *host_ptr,
 		 * home32.netscape.com
 		 * cache the original name not the new one.
 		 */
-		if((!strncasecomp(host_port, "home.", 5)
-		    || !strncasecomp(host_port, "rl.", 3))
-			&& (strcasestr(host_port+2, ".netscape.com")
-				|| strcasestr(host_port+2, ".mcom.com"))) {
+		if((!PL_strncasecmp(host_port, "home.", 5)
+		    || !PL_strncasecmp(host_port, "rl.", 3))
+			&& (PL_strcasestr(host_port+2, ".netscape.com")
+				|| PL_strcasestr(host_port+2, ".mcom.com"))) {
 			time_t cur_time = time(NULL);
 			char temp_string[32];
 			XP_Bool is_rl_host;
 
 			*temp_string = '\0';
 
-			is_rl_host = !strncasecomp(host_port, "rl.", 3);
+			is_rl_host = !PL_strncasecmp(host_port, "rl.", 3);
 
 			if(random_host_number == -1 || random_host_expiration < cur_time) {
 				/* pick a new random number */
@@ -769,7 +769,7 @@ net_FindAddress (const char *host_ptr,
 
 			if(msg) {
         		NET_Progress(window_id, msg);
-				XP_FREE(msg);
+				PR_Free(msg);
 			  }
 
 #ifndef ASYNC_DNS
@@ -790,7 +790,7 @@ net_FindAddress (const char *host_ptr,
 #endif /* ASYNC_DNS */            
 			/* sucess if hoststruct_pointer is not null */
 			if(status == MK_WAITING_FOR_LOOKUP) {
-				XP_FREE(host_port);
+				PR_Free(host_port);
 				return status;
 			}
 		}
@@ -802,10 +802,10 @@ net_FindAddress (const char *host_ptr,
 				 * This function is only implemented on for XP_UNIX. */
 				NET_SanityCheckDNS(window_id);
 			  }
-            XP_LTRACE(MKLib_trace_flag,1,("mktcp.c: Can't find host name `%s'.  Errno #%d\n",
+            TRACEMSG(("mktcp.c: Can't find host name `%s'.  Errno #%d\n",
 									host_port, PR_GetError()));
-			XP_FREE(host_port);
-			XP_LTRACE(MKLib_trace_flag,1,("gethostbyname failed with error: %d\n", PR_GetError()));
+			PR_Free(host_port);
+			TRACEMSG(("gethostbyname failed with error: %d\n", PR_GetError()));
             return -1;  /* Fail? */
         }
 
@@ -814,14 +814,14 @@ net_FindAddress (const char *host_ptr,
 
 		/* If the addressCount is zero we've got a problem */
 		if (addressCount == 0) {
-			XP_ASSERT(0);
-			XP_FREE(host_port);
+			PR_ASSERT(0);
+			PR_Free(host_port);
 			return -1;
 		}
 
 		/* Copy the first address in the list to the sin. char ** h_addr_list */
-		XP_ASSERT(hoststruct_pointer->h_length == 4);
-		XP_MEMCPY(&net_addr->inet.ip, hoststruct_pointer->h_addr_list[0], 4);
+		PR_ASSERT(hoststruct_pointer->h_length == 4);
+		memcpy(&net_addr->inet.ip, hoststruct_pointer->h_addr_list[0], 4);
 	
     	/* if NET_GetDNSExpiration() returns 0 we are considering the cache disabled */
 		if(net_GetDNSExpiration() > 0)
@@ -836,7 +836,7 @@ net_FindAddress (const char *host_ptr,
 	}
 #endif
 
-	XP_FREE(host_port);
+	PR_Free(host_port);
     return(0);   /* OK, we found an address */
 }
 
@@ -880,12 +880,12 @@ net_start_first_connect(const char   *host,
 
     /* malloc the string to prevent overflow
      */
-    int32 len = XP_STRLEN(XP_GetString(XP_PROGRESS_CONTACTHOST));
+    int32 len = PL_strlen(XP_GetString(XP_PROGRESS_CONTACTHOST));
     char * buf;
 
-    len += XP_STRLEN(host);
+    len += PL_strlen(host);
 
-    buf = (char *)XP_ALLOC((len+10)*sizeof(char));
+    buf = (char *)PR_Malloc((len+10)*sizeof(char));
     if(buf)
       {
         PR_snprintf(buf, (len+10)*sizeof(char),
@@ -914,7 +914,7 @@ net_start_first_connect(const char   *host,
         int rv = PR_GetError();
 
 #if !defined(XP_MAC) && !defined(XP_WIN16)
-		XP_ASSERT(rv != PR_WOULD_BLOCK_ERROR); /* should never happen */
+		PR_ASSERT(rv != PR_WOULD_BLOCK_ERROR); /* should never happen */
 #endif
         if (rv == PR_IN_PROGRESS_ERROR || rv == PR_WOULD_BLOCK_ERROR)
           {
@@ -932,7 +932,7 @@ net_start_first_connect(const char   *host,
               {
 	    		*error_msg = NET_ExplainErrorDetails(MK_CONNECTION_REFUSED, host);
 
-                XP_LTRACE(MKLib_trace_flag,1,("connect: refused\n"));
+                TRACEMSG(("connect: refused\n"));
 
                 return(MK_CONNECTION_REFUSED);
               }
@@ -940,7 +940,7 @@ net_start_first_connect(const char   *host,
               {
 	    		*error_msg = NET_ExplainErrorDetails(MK_CONNECTION_TIMED_OUT);
 
-                XP_LTRACE(MKLib_trace_flag,1,("connect: timed out\n"));
+                TRACEMSG(("connect: timed out\n"));
 
                 return(MK_CONNECTION_TIMED_OUT);
               }
@@ -948,7 +948,7 @@ net_start_first_connect(const char   *host,
               {
 			    *error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONNECT, rv);
 
-                XP_LTRACE(MKLib_trace_flag,1,("connect: unable to connect %i\n", rv));
+                TRACEMSG(("connect: unable to connect %i\n", rv));
 
                 return (MK_UNABLE_TO_CONNECT);
               }
@@ -976,7 +976,7 @@ net_connection_failed(CONST char *hostname)
 		return FALSE;
 
 	/* Look for a port */
-	if( (port = XP_STRCHR(hostCopy, ':')) != NULL )
+	if( (port = PL_strchr(hostCopy, ':')) != NULL )
 		*port = '\0';
 
 	dns_entry = net_CheckDNSCache(hostCopy);
@@ -997,7 +997,7 @@ net_connection_failed(CONST char *hostname)
 		{
 			dns_entry->addressCount--;
 			/* Shift addresses up one, overwriting the first one */
-			XP_MEMMOVE(dns_entry->ips,
+			memmove(dns_entry->ips,
 						&dns_entry->ips[1],
 						sizeof(PRUint32) * dns_entry->addressCount );
 			/* Null terminate the array */
@@ -1075,7 +1075,7 @@ NET_BeginConnect (CONST char   *url,
 	
 	/* construct state table data
 	 */	
-	*tcp_con_data = XP_NEW(TCP_ConData);
+	*tcp_con_data = PR_NEW(TCP_ConData);
 	
 	if(!*tcp_con_data)
 	  {
@@ -1083,7 +1083,7 @@ NET_BeginConnect (CONST char   *url,
 		return(MK_OUT_OF_MEMORY);
 	  }
 
-	XP_MEMSET(*tcp_con_data, 0, sizeof(TCP_ConData));
+	memset(*tcp_con_data, 0, sizeof(TCP_ConData));
 
     /* Set up Internet defaults and port*/
 	PR_InitializeNetAddr(PR_IpAddrNull, (PRUint16) def_port, &(*tcp_con_data)->net_addr);
@@ -1143,14 +1143,14 @@ HG28879
 		{
 			char * prefSocksHost = NULL;
 			/* Tell the FE about the failure */
-            int32 len = XP_STRLEN(XP_GetString(XP_PROGRESS_UNABLELOCATE));
+            int32 len = PL_strlen(XP_GetString(XP_PROGRESS_UNABLELOCATE));
 			char * buf;
 			PREF_CopyCharPref("network.hosts.socks_server",&prefSocksHost);
 			if(prefSocksHost)
 			{
-				len += XP_STRLEN(prefSocksHost);
+				len += PL_strlen(prefSocksHost);
 
-				buf = (char *)XP_ALLOC((len+10)*sizeof(char));
+				buf = (char *)PR_Malloc((len+10)*sizeof(char));
 				if(buf)
 				  {
 					PR_snprintf(buf, (len+10)*sizeof(char),
@@ -1168,7 +1168,7 @@ HG28879
 				PR_Close(*sock);
 				*sock = NULL;
 				FREE_AND_CLEAR(host_string);
-				XP_FREEIF(prefSocksHost);
+				PR_FREEIF(prefSocksHost);
 			}
 			return MK_UNABLE_TO_LOCATE_HOST;
 		}
@@ -1184,7 +1184,7 @@ HG71089
 
 		StrAllocCopy(althost, ip_address_string);
 
-		port = XP_STRCHR(host, ':');
+		port = PL_strchr(host, ':');
 		if ( port ) {
 			StrAllocCat(althost, port);
 		}
@@ -1196,7 +1196,7 @@ HG71089
 				 *sock);
 
 	if (althost) {
-		XP_FREE(althost);
+		PR_Free(althost);
 	}
 	
 	if(status == MK_WAITING_FOR_LOOKUP)
@@ -1210,12 +1210,12 @@ HG71089
         {
             /* malloc the string to prevent overflow
              */
-            int32 len = XP_STRLEN(XP_GetString(XP_PROGRESS_UNABLELOCATE));
+            int32 len = PL_strlen(XP_GetString(XP_PROGRESS_UNABLELOCATE));
             char * buf;
 
-            len += XP_STRLEN(host);
+            len += PL_strlen(host);
 
-            buf = (char *)XP_ALLOC((len+10)*sizeof(char));
+            buf = (char *)PR_Malloc((len+10)*sizeof(char));
             if(buf)
               {
                 PR_snprintf(buf, (len+10)*sizeof(char),
@@ -1335,12 +1335,12 @@ NET_FinishConnect (CONST char   *url,
         	{
             	/* malloc the string to prevent overflow
              	 */
-            	int32 len = XP_STRLEN(XP_GetString(XP_PROGRESS_UNABLELOCATE));
+            	int32 len = PL_strlen(XP_GetString(XP_PROGRESS_UNABLELOCATE));
             	char * buf;
 	
-            	len += XP_STRLEN(host);
+            	len += PL_strlen(host);
 	
-            	buf = (char *)XP_ALLOC((len+10)*sizeof(char));
+            	buf = (char *)PR_Malloc((len+10)*sizeof(char));
             	if(buf)
               	  {
                 	PR_snprintf(buf, (len+10)*sizeof(char),
@@ -1373,7 +1373,7 @@ NET_FinishConnect (CONST char   *url,
         if(status < 0)
           {
 			net_connection_failed(host);
-			XP_LTRACE(MKLib_trace_flag,1,("mktcp.c: Error during connect %d\n", PR_GetError()));
+			TRACEMSG(("mktcp.c: Error during connect %d\n", PR_GetError()));
             PR_Close(*sock);
             *sock = NULL;
           }  
@@ -1397,7 +1397,7 @@ NET_FinishConnect (CONST char   *url,
          */
 		if(PR_Poll(&pd, 1, PR_INTERVAL_NO_TIMEOUT) < 1)
 		{
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 	        return MK_WAITING_FOR_CONNECTION;  /* perhaps we should error here */
 		}
 
@@ -1414,7 +1414,7 @@ NET_FinishConnect (CONST char   *url,
 		    error = PR_GetError();
 		
 #if !defined(XP_MAC) && !defined(XP_WIN16)
-			XP_ASSERT(error != PR_WOULD_BLOCK_ERROR); /* should never happen */
+			PR_ASSERT(error != PR_WOULD_BLOCK_ERROR); /* should never happen */
 #endif
 			if (error == PR_IN_PROGRESS_ERROR || error == PR_WOULD_BLOCK_ERROR)
 		      {
@@ -1441,7 +1441,7 @@ error_out:
 		         */
 
 				/* At this point we know there was a problem with the ip address we tried. */
-			    XP_LTRACE(MKLib_trace_flag,1,("mktcp.c: Error during connect: %d\n", error));
+			    TRACEMSG(("mktcp.c: Error during connect: %d\n", error));
 
 				host = NET_ParseURL(url, GET_HOST_PART);
 				if(!host)
@@ -1465,7 +1465,7 @@ error_out:
 					  {
 						/* the url is a hostname */
 						FREE(host);
-						if( !(host = XP_STRDUP(url)) )
+						if( !(host = PL_strdup(url)) )
 							return -1;
 					  }
 
@@ -1539,7 +1539,7 @@ error_out:
 
 	} /* end switch on next_state */
 
-	XP_ASSERT(0);  /* should never get here */
+	PR_ASSERT(0);  /* should never get here */
 
 	*error_msg = NET_ExplainErrorDetails(MK_UNABLE_TO_CONNECT, 0);
 	return(MK_UNABLE_TO_CONNECT);

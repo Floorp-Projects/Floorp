@@ -21,8 +21,8 @@
 
  /********************************************************************
 
-  $Revision: 1.1 $
-  $Date: 1998/04/30 20:53:33 $
+  $Revision: 1.2 $
+  $Date: 1998/05/19 00:53:36 $
 
  *********************************************************************/
 
@@ -197,7 +197,7 @@ void crawl_stringToLower(char *str) {
 PR_IMPLEMENT(CRAWL_RobotControl) CRAWL_MakeRobotControl(MWContext *context, char *siteURL) {
 	CRAWL_RobotControl control = PR_NEWZAP(CRAWL_RobotControlStruct);
 	if (control == NULL) return(NULL);
-	control->siteURL = XP_STRDUP(siteURL);
+	control->siteURL = PL_strdup(siteURL);
 	if (siteURL == NULL) return(NULL);
 	control->status = ROBOT_CONTROL_NOT_YET_QUERIED;
 	control->context = context;
@@ -278,7 +278,7 @@ crawl_parseRobotControlInfo(CRAWL_RobotControl control, CRAWL_RobotParse parse, 
 				PRBool mozillaRecordRead = PR_FALSE;
 				if (crawl_appendString(&parse->token, &parse->lenToken, &parse->sizeToken, '\0') != 0) /* null terminate */
 					return PARSE_NO_MEMORY;
-				if (XP_STRCASECMP(parse->token, USER_AGENT) == 0) {
+				if (PL_strcasecmp(parse->token, USER_AGENT) == 0) {
 					if ((parse->state == PARSE_STATE_DISALLOW) || (parse->state == PARSE_STATE_ALLOW)) {
 						/* already read a disallow or allow directive so the previous record is done */
 						if (parse->isProcessing) {
@@ -288,9 +288,9 @@ crawl_parseRobotControlInfo(CRAWL_RobotControl control, CRAWL_RobotParse parse, 
 						}
 					}
 					parse->state = PARSE_STATE_AGENT;
-				} else if (XP_STRCASECMP(parse->token, DISALLOW) == 0) {
+				} else if (PL_strcasecmp(parse->token, DISALLOW) == 0) {
 					parse->state = PARSE_STATE_DISALLOW;
-				} else if (XP_STRCASECMP(parse->token, ALLOW) == 0)
+				} else if (PL_strcasecmp(parse->token, ALLOW) == 0)
 					parse->state = PARSE_STATE_ALLOW;
 				/* else it is an unknown directive */
 				PR_Free(parse->token);
@@ -304,11 +304,11 @@ crawl_parseRobotControlInfo(CRAWL_RobotControl control, CRAWL_RobotParse parse, 
 					return PARSE_NO_MEMORY;
 				switch (parse->state) {
 				case PARSE_STATE_AGENT:
-					if (XP_STRCASESTR(parse->token, MOZILLA) != NULL) {
+					if (PL_strcasestr(parse->token, MOZILLA) != NULL) {
 						parse->mozillaSeen = PR_TRUE;
 						crawl_destroyLines(control); /* destroy previous default data */
 						parse->isProcessing = PR_TRUE; /* start processing */
-					} else if ((XP_STRCMP(parse->token, ASTERISK) == 0) && (!parse->mozillaSeen)) {
+					} else if ((PL_strcmp(parse->token, ASTERISK) == 0) && (!parse->mozillaSeen)) {
 						parse->defaultSeen = PR_TRUE;
 						parse->isProcessing = PR_TRUE; /* start processing */
 					}
@@ -487,16 +487,16 @@ CRAWL_RobotsTxtConverter(int format_out,
     TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
 	if (URL_s->server_status < 400) {
-		stream = XP_NEW(NET_StreamClass);
+		stream = PR_NEW(NET_StreamClass);
 		if(stream == NULL) {
 			control->status = ROBOT_CONTROL_NOT_AVAILABLE;
 			return(NULL);
 		}
 
-		obj = XP_NEW(crawl_robots_txt_stream);
+		obj = PR_NEW(crawl_robots_txt_stream);
 		if (obj == NULL)
 		  {
-			XP_FREE(stream);
+			PR_Free(stream);
 			control->status = ROBOT_CONTROL_NOT_AVAILABLE;
 			return(NULL);
 		  }

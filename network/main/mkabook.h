@@ -18,10 +18,10 @@
 #ifndef MKABOOK_H
 #define MKABOOK_H
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 void NET_InitAddressBookProtocol(void);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif 

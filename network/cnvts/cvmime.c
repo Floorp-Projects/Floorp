@@ -89,7 +89,7 @@ NET_PrintRawToDisk(int format_out,
 typedef struct MIME_DataObject {
   MimeDecoderData *decoder;		/* State used by the decoder */  
   NET_StreamClass *next_stream;	/* Where the output goes */
-  XP_Bool partial_p;			/* Whether we should close that stream */
+  PRBool partial_p;			    /* Whether we should close that stream */
 } MIME_DataObject;
 
 
@@ -136,7 +136,7 @@ PRIVATE void net_MimeEncodingConverterComplete (NET_StreamClass *stream)
 
   if (data->decoder)
 	{
-	  MimeDecoderDestroy(data->decoder, FALSE);
+	  MimeDecoderDestroy(data->decoder, PR_FALSE);
 	  data->decoder = 0;
 	}
 
@@ -144,9 +144,9 @@ PRIVATE void net_MimeEncodingConverterComplete (NET_StreamClass *stream)
   if (!data->partial_p && data->next_stream)
     {
       (*data->next_stream->complete) (data->next_stream);
-      XP_FREE (data->next_stream);
+      PR_Free (data->next_stream);
     }
-  XP_FREE (data);
+  PR_Free (data);
 }
 
 PRIVATE void net_MimeEncodingConverterAbort (NET_StreamClass *stream, int status)
@@ -155,7 +155,7 @@ PRIVATE void net_MimeEncodingConverterAbort (NET_StreamClass *stream, int status
 
   if (data->decoder)
 	{
-	  MimeDecoderDestroy(data->decoder, TRUE);
+	  MimeDecoderDestroy(data->decoder, PR_TRUE);
 	  data->decoder = 0;
 	}
 
@@ -163,9 +163,9 @@ PRIVATE void net_MimeEncodingConverterAbort (NET_StreamClass *stream, int status
   if (!data->partial_p && data->next_stream)
     {
       (*data->next_stream->abort) (data->next_stream, status);
-      XP_FREE (data->next_stream);
+      PR_Free (data->next_stream);
     }
-  XP_FREE (data);
+  PR_Free (data);
 }
 #endif /* MOZ_MAIL_NEWS */
 
@@ -174,7 +174,7 @@ NET_MimeEncodingConverter_1 (int          format_out,
 							 void        *data_obj,
 							 URL_Struct  *URL_s,
 							 MWContext   *window_id,
-							 XP_Bool partial_p,
+							 PRBool partial_p,
 							 NET_StreamClass *next_stream)
 {
 #ifdef MOZ_MAIL_NEWS
@@ -186,32 +186,32 @@ NET_MimeEncodingConverter_1 (int          format_out,
 
     TRACEMSG(("Setting up encoding stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
 	  return(NULL);
 
-	XP_MEMSET(stream, 0, sizeof(NET_StreamClass));
+	memset(stream, 0, sizeof(NET_StreamClass));
 
-    obj = XP_NEW(MIME_DataObject);
+    obj = PR_NEW(MIME_DataObject);
     if (obj == NULL) 
 	  return(NULL);
 	memset(obj, 0, sizeof(MIME_DataObject));
 
-	if (!strcasecomp (type, ENCODING_QUOTED_PRINTABLE))
+	if (!PL_strcasecmp (type, ENCODING_QUOTED_PRINTABLE))
 	  fn = &MimeQPDecoderInit;
-	else if (!strcasecomp (type, ENCODING_BASE64))
+	else if (!PL_strcasecmp (type, ENCODING_BASE64))
 	  fn = &MimeB64DecoderInit;
-	else if (!strcasecomp (type, ENCODING_UUENCODE) ||
-			 !strcasecomp (type, ENCODING_UUENCODE2) ||
-			 !strcasecomp (type, ENCODING_UUENCODE3) ||
-			 !strcasecomp (type, ENCODING_UUENCODE4))
+	else if (!PL_strcasecmp (type, ENCODING_UUENCODE) ||
+			 !PL_strcasecmp (type, ENCODING_UUENCODE2) ||
+			 !PL_strcasecmp (type, ENCODING_UUENCODE3) ||
+			 !PL_strcasecmp (type, ENCODING_UUENCODE4))
 	  fn = &MimeUUDecoderInit;
 	else
 	  abort ();
 	obj->decoder = fn (net_mime_decoder_cb, obj);
 	if (!obj->decoder)
 	  {
-		XP_FREE(obj);
+		PR_Free(obj);
 		return 0;
 	  }
 
@@ -226,17 +226,17 @@ NET_MimeEncodingConverter_1 (int          format_out,
 
 	if (partial_p)
 	  {
-		XP_ASSERT (next_stream);
+		PR_ASSERT (next_stream);
 		obj->next_stream = next_stream;
 		TRACEMSG(("Using existing stream in NET_MimeEncodingConverter\n"));
 	  }
 	else
 	  {
-		XP_ASSERT (!next_stream);
+		PR_ASSERT (!next_stream);
 
 		/* open next stream
 		 */
-		XP_FREEIF (URL_s->content_encoding);
+		PR_FREEIF (URL_s->content_encoding);
 		obj->next_stream = NET_StreamBuilder (format_out, URL_s, window_id);
 
 		if (!obj->next_stream)
@@ -258,7 +258,7 @@ NET_MimeEncodingConverter_1 (int          format_out,
 
     return stream;
 #else
-   XP_ASSERT(0);
+   PR_ASSERT(0);
    return(NULL);
 #endif /* MOZ_MAIL_NEWS */
 }
@@ -271,7 +271,7 @@ NET_MimeEncodingConverter (int          format_out,
 						   MWContext   *window_id)
 {
   return NET_MimeEncodingConverter_1 (format_out, data_obj, URL_s, window_id,
-									  FALSE, 0);
+									  PR_FALSE, 0);
 }
 
 NET_StreamClass * 
@@ -282,7 +282,7 @@ NET_MimeMakePartialEncodingConverterStream (int          format_out,
 											NET_StreamClass *next_stream)
 {
   return NET_MimeEncodingConverter_1 (format_out, data_obj, URL_s, window_id,
-									  TRUE, next_stream);
+									  PR_TRUE, next_stream);
 }
 
 /* Registers the default things that should be registered cross-platform.
@@ -438,7 +438,7 @@ net_RegisterDefaultDecoders (void)
   NET_RegisterContentTypeConverter (APPLICATION_APPLEFILE, FO_SAVE_AS,
 								    NULL, fe_MakeAppleSingleDecodeStream_1);
 #endif
-#if defined(XP_MAC) || defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_MAC) || defined(XP_UNIX) || defined(XP_PC)
   /* the new apple single/double and binhex decode.	20oct95 	*/
   NET_RegisterContentTypeConverter (APPLICATION_BINHEX, FO_PRESENT,
 								    NULL, fe_MakeBinHexDecodeStream);
@@ -881,7 +881,7 @@ typedef struct _NET_PrintRawToDiskStruct {
 	int16	   mail_csid;
 	int16	   win_csid;
 	CCCDataObject conv;
-	XP_Bool	   doConvert;
+	PRBool	   doConvert;
 } NET_PrintRawToDiskStruct;
 
 /* this converter uses the
@@ -900,11 +900,11 @@ net_PrintRawToDiskWrite (NET_StreamClass *stream, CONST char *str, int32 len)
 
   if (obj->doConvert)
   {
-	  char *dupStr = (char *) XP_ALLOC(len+1);
+	  char *dupStr = (char *) PR_Malloc(len+1);
 
 	  if (dupStr)
 	  {
-		  XP_MEMCPY(dupStr, str, len);
+		  memcpy(dupStr, str, len);
 		  *(dupStr + len) = 0;
 		  newStr = (char *) INTL_CallCharCodeConverter(obj->conv,
 											  (unsigned char *)dupStr,
@@ -912,7 +912,7 @@ net_PrintRawToDiskWrite (NET_StreamClass *stream, CONST char *str, int32 len)
 		  if (!newStr)
 			  newStr = dupStr;
 		  else if (newStr != dupStr)
-			  XP_FREE(dupStr);
+			  PR_Free(dupStr);
 
 		  if (newStr)
 		  {
@@ -926,7 +926,7 @@ net_PrintRawToDiskWrite (NET_StreamClass *stream, CONST char *str, int32 len)
   rv = XP_FileWrite(str, len, obj->fp);
 
   if (newStr)
-	  XP_FREE(newStr);
+	  PR_Free(newStr);
 
   obj->bytes_read += origLen;
 
@@ -983,7 +983,7 @@ NET_PrintRawToDisk(int format_out,
                    URL_Struct *url_struct, 
 				   MWContext *context)
 {
-  NET_PrintRawToDiskStruct *obj = XP_NEW(NET_PrintRawToDiskStruct);
+  NET_PrintRawToDiskStruct *obj = PR_NEW(NET_PrintRawToDiskStruct);
   NET_StreamClass * stream;
   INTL_CharSetInfo csi = NULL;
   char *mime_charset = NULL;
@@ -991,11 +991,11 @@ NET_PrintRawToDisk(int format_out,
   if(!obj)
 	return(NULL);
 
-  XP_MEMSET(obj, 0, sizeof(NET_PrintRawToDiskStruct));
+  memset(obj, 0, sizeof(NET_PrintRawToDiskStruct));
 
   if(!context->prSetup || !context->prSetup->out)
 	{
-	  XP_FREE(obj);
+	  PR_Free(obj);
 	  return NULL;
 	}
 
@@ -1004,7 +1004,7 @@ NET_PrintRawToDisk(int format_out,
 						xpTemporary, 
 						XP_FILE_WRITE_BIN)))
 	{
-	  XP_FREE(obj);
+	  PR_Free(obj);
 	  return NULL;
 	}
 #endif
@@ -1014,14 +1014,14 @@ NET_PrintRawToDisk(int format_out,
   obj->context = context;
   obj->content_length = url_struct->content_length;
 
-  stream = (NET_StreamClass *) XP_NEW(NET_StreamClass);
+  stream = (NET_StreamClass *) PR_NEW(NET_StreamClass);
   if (!stream) 
 	{
-	  XP_FREE(obj);
+	  PR_Free(obj);
 	  return NULL;
 	}
 
-  XP_MEMSET(stream, 0, sizeof(NET_StreamClass));
+  memset(stream, 0, sizeof(NET_StreamClass));
 
   stream->name           = "PrintRawToDisk";
   stream->complete       = net_PrintRawToDiskComplete;

@@ -49,15 +49,15 @@
 #define pref_enablePad "network.enablePad"
 
 /* Global pad variables */
-extern XP_Bool foundPADPAC;
+extern PRBool foundPADPAC;
 extern char *MK_padPacURL;
-extern XP_Bool MK_PadEnabled;
+extern PRBool MK_PadEnabled;
 
 /* ***** FUNCTION PROTOTYPES */
 
 /* Setup internal variables to use or not use the proxy 
  * autodiscovery feature. Actually not that simple. */
-MODULE_PRIVATE void net_UsePadPac(XP_Bool useIt);
+MODULE_PRIVATE void net_UsePadPac(PRBool useIt);
 
 /* Return whether we're currently using a pac file via proxy autodiscovery. 
  * This function takes three items into consideration:
@@ -68,16 +68,16 @@ MODULE_PRIVATE void net_UsePadPac(XP_Bool useIt);
  * 
  * If all these are true, then we're using a padpac file.
  */
-PUBLIC XP_Bool NET_UsingPadPac(void);
+PUBLIC PRBool NET_UsingPadPac(void);
 
 /* Return whether or not we are currently in the process of loading
  * a proxy autoconfig url. */
-PUBLIC XP_Bool NET_LoadingPac(void);
+PUBLIC PRBool NET_LoadingPac(void);
 
 /* Set the MK_padPacURL varialbe to point to the url passed in,
  * after checking the url for size limits. 
  * Returns TRUE if successful, FALSE otherwise. */
-PUBLIC XP_Bool NET_SetPadPacURL(char * url);
+PUBLIC PRBool NET_SetPadPacURL(char * url);
 
 /* Called by js prefs when the padpac url changes. */
 MODULE_PRIVATE int PR_CALLBACK net_PadPacURLPrefChanged(const char *pref, void *data);

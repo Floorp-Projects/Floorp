@@ -24,20 +24,20 @@
 #endif
 
 #ifdef EXT_DB_ROUTINES
-#define XP_Bool char
+#define PRBool char
 #define uint32 unsigned int
 #define int32  int
-#define XP_NEW(structure)  ((structure *) malloc(sizeof(structure)))
-#define XP_ALLOC   (void *) malloc
-#define XP_MEMCPY  memcpy
-#define XP_MEMSET  memset
+#define PR_NEW(structure)  ((structure *) malloc(sizeof(structure)))
+#define PR_Malloc   (void *) malloc
+#define memcpy  memcpy
+#define memset  memset
 #define TRACEMSG(x) printf x
 #define FREEIF(x)  do { if(x) free(x); } while(0)
 #define FREE free
-#define XP_STRLEN  strlen
-#define XP_STRCHR  strchr
-#define XP_STRCMP  strcmp
-#define XP_ASSERT  assert
+#define PL_strlen  strlen
+#define PL_strchr  strchr
+#define PL_strcmp  strcmp
+#define PR_ASSERT  assert
 #define MODULE_PRIVATE
 #define PRIVATE static
 #define TRUE  !0
@@ -63,7 +63,7 @@ ERROR! Must have a byte order
 #endif
 
 #ifdef IS_LITTLE_ENDIAN
-#define COPY_INT32(_a,_b)  XP_MEMCPY(_a, _b, sizeof(int32));
+#define COPY_INT32(_a,_b)  memcpy(_a, _b, sizeof(int32));
 #else
 #define COPY_INT32(_a,_b)  /* swap */                   \
     do {                                                \
@@ -85,12 +85,12 @@ typedef struct _net_CacheObject {
     time_t  last_modified;
     time_t  last_accessed;
     time_t  expires;
-    XP_Bool    is_netsite;
+    PRBool    is_netsite;
     uint32  content_length;
 
     char    * filename;                 /* cache file name */
     int32     filename_len;             /* optimization */
-    XP_Bool      is_relative_path;         /* is the path relative? */
+    PRBool      is_relative_path;         /* is the path relative? */
 
     /* Security information */
     int32   security_on;                /* is security on? */
@@ -113,7 +113,7 @@ typedef struct _net_CacheObject {
     char    * content_encoding;
     char    * charset;
 
-    XP_Bool      incomplete_file;          /* means that the whole
+    PRBool      incomplete_file;          /* means that the whole
                                          * file is not there.
                                          * This can only be true
                                          * if the server supports byteranges
@@ -267,6 +267,6 @@ extern net_CacheObject * net_Fast_DBDataToCacheStruct(DBT *obj);
  * entry.  It looks at the checksum and the
  * version number to see if it's valid
  */
-extern XP_Bool net_IsValidCacheDBT(DBT *obj);
+extern PRBool net_IsValidCacheDBT(DBT *obj);
 
 #endif /* EXT_CACHE_H */

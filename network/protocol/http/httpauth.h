@@ -33,7 +33,7 @@ NET_RemoveAllAuthorizations(void);
  * enum values.
  *
  */
-extern XP_Bool
+extern PRBool
 net_IsBetterAuth(char *new_auth, char *old_auth);
 
 #endif /* HTTPAUTH_H */

@@ -25,6 +25,9 @@
 
 #include "net.h"
 #include "xp.h"                 /* The cross-platform API */
+#include "plstr.h"
+#include "prlog.h"
+#include "prmem.h"
 #include "mktrace.h"
 #include "mkselect.h"           /* needed by all files in netlib */
 
@@ -47,7 +50,7 @@
 
 #define FREE_AND_CLEAR(x) NET_f_a_c(&x) 
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 PUBLIC void 
 NET_SetDNSExpirationPref(int32 n);
@@ -127,12 +130,12 @@ extern void NET_InitNFSProtocol(void);
  */
 extern void NET_InitWAISProtocol(void);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 #ifndef FREE
-#define FREE(obj)    XP_FREE(obj)
+#define FREE(obj)    PR_Free(obj)
 #endif
 #ifndef FREEIF
-#define FREEIF(obj)  {if(obj) {XP_FREE(obj); obj=0;}}
+#define FREEIF(obj)  {if(obj) {PR_Free(obj); obj=0;}}
 #endif
 
 /* A utility function to fetch a file from cache right away, 

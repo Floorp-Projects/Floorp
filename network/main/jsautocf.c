@@ -20,7 +20,7 @@
 #include <time.h>
 
 #include "jsautocf.h"
-#include "xp_mem.h"	/* XP_NEW_ZAP() */
+#include "xp_mem.h"	/* PR_NEWZAP() */
 #ifndef XP_MAC
 #include <sys/types.h>
 #endif
@@ -126,7 +126,7 @@ PRIVATE int jsacf_read_config(void)
 	return -1;
 
     jsacf_src_len = st.st_size;
-    jsacf_src_buf = (char *)XP_ALLOC(jsacf_src_len + 1);
+    jsacf_src_buf = (char *)PR_Malloc(jsacf_src_len + 1);
     if (!jsacf_src_buf) {
 	XP_FileClose(fp);
 	jsacf_src_len = 0;
@@ -139,7 +139,7 @@ PRIVATE int jsacf_read_config(void)
       }
     else
       {
-	  XP_FREE(jsacf_src_buf);
+	  PR_Free(jsacf_src_buf);
 	  jsacf_src_buf = NULL;
 	  jsacf_src_len = 0;
       }
@@ -162,9 +162,9 @@ PRIVATE int jsacf_write(NET_StreamClass *stream, CONST char *buf, int32 len)
 	JSACF_Object *obj=stream->data_object;	
     if (len > 0) {
 	if (!jsacf_src_buf)
-	    jsacf_src_buf = (char*)XP_ALLOC(len + 1);
+	    jsacf_src_buf = (char*)PR_Malloc(len + 1);
 	else
-	    jsacf_src_buf = (char*)XP_REALLOC(jsacf_src_buf,
+	    jsacf_src_buf = (char*)PR_Realloc(jsacf_src_buf,
 					     jsacf_src_len + len + 1);
 
 	if (!jsacf_src_buf) {	/* Out of memory */
@@ -172,7 +172,7 @@ PRIVATE int jsacf_write(NET_StreamClass *stream, CONST char *buf, int32 len)
 	    return MK_DATA_LOADED;
 	}
 
-	XP_MEMCPY(jsacf_src_buf + jsacf_src_len, buf, len);
+	memcpy(jsacf_src_buf + jsacf_src_len, buf, len);
 	jsacf_src_len += len;
 	jsacf_src_buf[jsacf_src_len] = '\0';
     }
@@ -191,7 +191,7 @@ PRIVATE void jsacf_complete(NET_StreamClass *stream)
 {
 	JSACF_Object *obj=stream->data_object;
 	int err = PREF_EvaluateJSBuffer(jsacf_src_buf,jsacf_src_len);	
-	if (jsacf_src_buf) XP_FREE(jsacf_src_buf);
+	if (jsacf_src_buf) PR_Free(jsacf_src_buf);
 }
 
 
@@ -200,7 +200,7 @@ PRIVATE void jsacf_abort(NET_StreamClass *stream, int status)
 	JSACF_Object *obj=stream->data_object;	
     jsacf_loading = FALSE;
 //    FE_Alert(obj->context, CONFIG_LOAD_ABORTED);
-    XP_FREE(obj);
+    PR_Free(obj);
 }
 
 /*
@@ -230,16 +230,16 @@ NET_JavaScriptAutoConfig(int fmt, void *data_obj, URL_Struct *URL_s, MWContext *
 #endif
 
     if (jsacf_src_buf) {
-	XP_FREE(jsacf_src_buf);
+	PR_Free(jsacf_src_buf);
 	jsacf_src_buf = NULL;
 	jsacf_src_len = 0;
     }
 
-    if (!(stream = XP_NEW_ZAP(NET_StreamClass)))
+    if (!(stream = PR_NEWZAP(NET_StreamClass)))
 	return NULL;
 
-    if (!(obj = XP_NEW_ZAP(JSACF_Object))) {
-	XP_FREE(stream);
+    if (!(obj = PR_NEWZAP(JSACF_Object))) {
+	PR_Free(stream);
 	return NULL;
     }
 

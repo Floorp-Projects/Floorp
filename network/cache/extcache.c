@@ -20,6 +20,7 @@
 #include "mkcache.h"
 
 #ifdef MOZILLA_CLIENT
+#include "mktrace.h"
 
 /* Publicly released Netscape cache access routines.
  *
@@ -65,21 +66,21 @@ typedef struct {
 MODULE_PRIVATE DBT *
 net_CacheDBTDup(DBT *obj)
 {
-	DBT * rv = XP_NEW(DBT);
+	DBT * rv = PR_NEW(DBT);
 
 	if(!rv)
 		return(NULL);
 
 	rv->size = obj->size;
-	rv->data = XP_ALLOC(rv->size);
+	rv->data = PR_Malloc(rv->size);
 
 	if(!rv->data)
 	  {
-		XP_FREE(rv);
+		PR_Free(rv);
 		return(NULL);
 	  }
 
-	XP_MEMCPY(rv->data, obj->data, rv->size);
+	memcpy(rv->data, obj->data, rv->size);
 
 	return(rv);
 
@@ -90,20 +91,20 @@ net_CacheDBTDup(DBT *obj)
 MODULE_PRIVATE void net_freeCacheObj (net_CacheObject * cache_obj)
 {
 
-    XP_FREEIF(cache_obj->address);
-    XP_FREEIF(cache_obj->post_data);
-    XP_FREEIF(cache_obj->post_headers);
-    XP_FREEIF(cache_obj->content_type);
-    XP_FREEIF(cache_obj->charset);
-    XP_FREEIF(cache_obj->content_encoding);
-    XP_FREEIF(cache_obj->page_services_url);
-    XP_FREEIF(cache_obj->filename);
+    PR_FREEIF(cache_obj->address);
+    PR_FREEIF(cache_obj->post_data);
+    PR_FREEIF(cache_obj->post_headers);
+    PR_FREEIF(cache_obj->content_type);
+    PR_FREEIF(cache_obj->charset);
+    PR_FREEIF(cache_obj->content_encoding);
+    PR_FREEIF(cache_obj->page_services_url);
+    PR_FREEIF(cache_obj->filename);
 	
 #ifndef EXT_DB_ROUTINES
-    XP_FREEIF(cache_obj->sec_info);
+    PR_FREEIF(cache_obj->sec_info);
 #endif
 	
-    XP_FREE(cache_obj);
+    PR_Free(cache_obj);
 }
 
 /* returns true if this DBT looks like a valid
@@ -112,7 +113,7 @@ MODULE_PRIVATE void net_freeCacheObj (net_CacheObject * cache_obj)
  */
 #define MAX_VALID_DBT_SIZE 10000
 
-MODULE_PRIVATE XP_Bool
+MODULE_PRIVATE PRBool
 net_IsValidCacheDBT(DBT *obj)
 {
     char *cur_ptr, *max_ptr;
@@ -167,7 +168,7 @@ net_CacheStructToDBData(net_CacheObject * old_obj)
 	int32 total_size;
 	DBT *rv;
 
-	rv = XP_NEW(DBT);
+	rv = PR_NEW(DBT);
 
 	if(!rv)
 		return(NULL);
@@ -175,7 +176,7 @@ net_CacheStructToDBData(net_CacheObject * old_obj)
 	total_size = sizeof(net_CacheObject);
 
 #define ADD_STRING_SIZE(string) \
-total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
+total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
 
 	ADD_STRING_SIZE(address);
 	total_size += old_obj->post_data_size+1;
@@ -190,15 +191,15 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 
 #undef ADD_STRING_SIZE
 	
-	new_obj = XP_ALLOC(total_size * sizeof(char));
+	new_obj = PR_Malloc(total_size * sizeof(char));
 
 	if(!new_obj)
 	  {
-		XP_FREE(rv);
+		PR_Free(rv);
 		return NULL;
 	  }
 
-	XP_MEMSET(new_obj, 0, total_size * sizeof(char));
+	memset(new_obj, 0, total_size * sizeof(char));
 
 	/*
 	 * order is:
@@ -250,11 +251,11 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 
 #define STUFF_STRING(string) 									\
 {	 															\
-  len = (old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0);	\
+  len = (old_obj->string ? PL_strlen(old_obj->string)+1 : 0);	\
   COPY_INT32((void *)cur_ptr, &len);							\
   cur_ptr = cur_ptr + sizeof(int32);							\
   if(len)														\
-      XP_MEMCPY((void *)cur_ptr, old_obj->string, len);			\
+      memcpy((void *)cur_ptr, old_obj->string, len);			\
   cur_ptr += len;												\
 }
 
@@ -321,7 +322,7 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 		COPY_INT32((void *)cur_ptr, &len);
 		cur_ptr = cur_ptr + sizeof(int32);
 
-		XP_MEMCPY((void *)cur_ptr, old_obj->sec_info, len);
+		memcpy((void *)cur_ptr, old_obj->sec_info, len);
 		cur_ptr += len;
 	} else
 #endif
@@ -343,7 +344,7 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 	 */
 	if(old_obj->post_data_size)
 	  {
-	    XP_MEMCPY(cur_ptr, old_obj->post_data, old_obj->post_data_size+1);
+	    memcpy(cur_ptr, old_obj->post_data, old_obj->post_data_size+1);
 	    cur_ptr += old_obj->post_data_size+1;
 	  }
 
@@ -380,7 +381,7 @@ total_size += old_obj->string ? XP_STRLEN(old_obj->string)+1 : 0
 MODULE_PRIVATE net_CacheObject *
 net_DBDataToCacheStruct(DBT * db_obj)
 {
-	net_CacheObject * rv = XP_NEW(net_CacheObject);
+	net_CacheObject * rv = PR_NEW(net_CacheObject);
 	char * cur_ptr;
 	char * max_ptr;
 	uint32 len;
@@ -389,7 +390,7 @@ net_DBDataToCacheStruct(DBT * db_obj)
 	if(!rv)
 		return NULL;
 
-	XP_MEMSET(rv, 0, sizeof(net_CacheObject));
+	memset(rv, 0, sizeof(net_CacheObject));
 
 /* if any strings are larger than this then
  * there was a serious database error
@@ -412,13 +413,13 @@ net_DBDataToCacheStruct(DBT * db_obj)
 		    net_freeCacheObj(rv);				\
 			return(NULL);						\
 	      }										\
-	    rv->string = (char*)XP_ALLOC(len);		\
+	    rv->string = (char*)PR_Malloc(len);		\
 		if(!rv->string)							\
 	      {				 						\
 		    net_freeCacheObj(rv);				\
 			return(NULL);						\
 	      }										\
-	    XP_MEMCPY(rv->string, cur_ptr, len);	\
+	    memcpy(rv->string, cur_ptr, len);	\
 	    cur_ptr += len;							\
 	  }											\
 }											
@@ -463,7 +464,7 @@ net_DBDataToCacheStruct(DBT * db_obj)
 	if(len != db_obj->size)
 	  {
 		TRACEMSG(("Size going in is not the same as size coming out"));
-		XP_FREE(rv);
+		PR_Free(rv);
 		return(NULL);
 	  }
 
@@ -477,7 +478,7 @@ net_DBDataToCacheStruct(DBT * db_obj)
 	if(version != CACHE_FORMAT_VERSION)
 	  {
 		TRACEMSG(("Version of cache structure is wrong!: %d", version));
-		XP_FREE(rv);
+		PR_Free(rv);
 		return(NULL);
 	  }
 
@@ -505,12 +506,12 @@ net_DBDataToCacheStruct(DBT * db_obj)
     if ( len == 0 ) {
         rv->sec_info = NULL;
     } else {
-        rv->sec_info = XP_ALLOC(len);
+        rv->sec_info = PR_Malloc(len);
         if ( rv->sec_info == NULL ) {
             return(rv);
         }
 
-        XP_MEMCPY(rv->sec_info, cur_ptr, len);
+        memcpy(rv->sec_info, cur_ptr, len);
         cur_ptr += len;
     }
 
@@ -527,9 +528,9 @@ net_DBDataToCacheStruct(DBT * db_obj)
 	 */
 	if(rv->post_data_size)
 	  {
-		rv->post_data = XP_ALLOC(rv->post_data_size+1);
+		rv->post_data = PR_Malloc(rv->post_data_size+1);
 		if(rv->post_data)
-			XP_MEMCPY(rv->post_data, cur_ptr, rv->post_data_size+1);
+			memcpy(rv->post_data, cur_ptr, rv->post_data_size+1);
 		cur_ptr += rv->post_data_size+1;
 	  }
 
@@ -562,20 +563,20 @@ cache_test_me()
 	int32 total_size;
 	DBT *db_obj;
 
-	XP_MEMSET(&test, 0, sizeof(net_CacheObject));
+	memset(&test, 0, sizeof(net_CacheObject));
 	StrAllocCopy(test.address, "test1");
 	db_obj = net_CacheStructToDBData(&test);
 	rv = net_DBDataToCacheStruct(db_obj);
 	printf("test1: %s\n", rv->address);
 
-	XP_MEMSET(&test, 0, sizeof(net_CacheObject));
+	memset(&test, 0, sizeof(net_CacheObject));
 	StrAllocCopy(test.address, "test2");
 	StrAllocCopy(test.charset, "test2");
 	db_obj = net_CacheStructToDBData(&test);
 	rv = net_DBDataToCacheStruct(db_obj);
 	printf("test2: %s	%s\n", rv->address, rv->charset);
 
-	XP_MEMSET(&test, 0, sizeof(net_CacheObject));
+	memset(&test, 0, sizeof(net_CacheObject));
 	StrAllocCopy(test.address, "test3");
 	StrAllocCopy(test.charset, "test3");
 	test.content_length = 3 ;
@@ -602,7 +603,7 @@ cache_test_me()
 MODULE_PRIVATE DBT *
 net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 {
-	DBT *rv = XP_NEW(DBT);
+	DBT *rv = PR_NEW(DBT);
 	char *hash;
 	char *data_ptr;
 	int32 str_len;
@@ -615,18 +616,18 @@ net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 	
 	if(!address)
 	  {
-		XP_ASSERT(0);
+		PR_ASSERT(0);
 		rv->size = 0;
 		return(rv);
 	  } 
 
-	hash = XP_STRCHR(address, '#');
+	hash = PL_strchr(address, '#');
 
 	/* don't include '#' in a key */
 	if(hash)
 		*hash = '\0';
 
-	str_len = XP_STRLEN(address)+1;
+	str_len = PL_strlen(address)+1;
 
 	size  = sizeof(int32);  /* for check sum */
 	size += sizeof(int32);  /* for size of address */
@@ -637,11 +638,11 @@ net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 		size += MD5_HASH_SIZE;
 
 	rv->size = size;
-	rv->data = XP_ALLOC(size);
+	rv->data = PR_Malloc(size);
 
 	if(!rv->data)
 	  {
-		XP_FREE(rv);
+		PR_Free(rv);
 		return NULL;
 	  }
 
@@ -656,7 +657,7 @@ net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 	data_ptr = data_ptr + sizeof(int32);
 
 	/* put in the address string data */
-	XP_MEMCPY(data_ptr, address, str_len);
+	memcpy(data_ptr, address, str_len);
 	data_ptr = data_ptr + str_len;
 
 	/* set the address back to it's original form */
@@ -675,7 +676,7 @@ net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 		data_ptr = data_ptr + sizeof(int32);
 
 		/* put in the post data if there is any */
-		XP_MEMCPY(data_ptr, post_data_hash, sizeof(post_data_hash));
+		memcpy(data_ptr, post_data_hash, sizeof(post_data_hash));
 	  }
 	else
 	  {
@@ -806,10 +807,10 @@ net_GetFilenameInCacheDBT(DBT *data)
 		|| size > MAX_FILE_SIZE)
         return(NULL);
 
-	rv = (char *)XP_ALLOC(size);
+	rv = (char *)PR_Malloc(size);
 	if(!rv)
 		return(NULL);
-    XP_MEMCPY(rv, ptr+FILENAME_BYTE_POSITION, size);
+    memcpy(rv, ptr+FILENAME_BYTE_POSITION, size);
 
 	TRACEMSG(("Got filename: %s from DBT", rv));
 
@@ -850,8 +851,8 @@ net_FreeCacheDBTdata(DBT *stuff)
 {
 	if(stuff)
 	  {
-		XP_FREE(stuff->data);
-		XP_FREE(stuff);
+		PR_Free(stuff->data);
+		PR_Free(stuff);
 	  }
 }
 

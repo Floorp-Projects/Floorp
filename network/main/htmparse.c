@@ -21,8 +21,8 @@
 
  /********************************************************************
 
-  $Revision: 1.1 $
-  $Date: 1998/04/30 20:53:21 $
+  $Revision: 1.2 $
+  $Date: 1998/05/19 00:53:23 $
 
  *********************************************************************/
 
@@ -135,7 +135,7 @@ PR_IMPLEMENT(char*) CRAWL_GetNthAttributeValue(CRAWL_Tag tag, uint16 n) {
 PR_IMPLEMENT(char*) CRAWL_GetAttributeValue(CRAWL_Tag tag, char *attributeName) {
 	int count = 0;
 	while (count < tag->numNames) {
-		if (XP_STRCASECMP(attributeName, *(tag->attributeNames + count)) == 0)
+		if (PL_strcasecmp(attributeName, *(tag->attributeNames + count)) == 0)
 			return *(tag->attributeValues + count);
 		count++;
 	}
@@ -212,7 +212,7 @@ int crawl_appendString(char **str, uint16 *len, uint16 *size, char c) {
 		char *newName = (char*)PR_MALLOC(*size + STRING_EXPANSION_INCREMENT);
 		char *old = *str;
 		if (newName == NULL) return -1;
-		XP_MEMCPY(newName, *str, *size);
+		memcpy(newName, *str, *size);
 		*str = newName;
 		if (old != NULL) PR_Free(old);
 		*size += STRING_EXPANSION_INCREMENT;
@@ -231,7 +231,7 @@ int crawl_appendStringList(char ***list_p, uint16 *len, uint16 *size, char *str)
 		char **newList = (char**)PR_MALLOC(sizeof(char*) * (*size + STRINGLIST_EXPANSION_INCREMENT));
 		char **old = list;
 		if (newList == NULL) return -1;
-		XP_MEMCPY(newList, list, (sizeof(char*) * (*size)));
+		memcpy(newList, list, (sizeof(char*) * (*size)));
 		list = newList;
 		if (old != NULL) PR_Free(old);
 		*size += STRINGLIST_EXPANSION_INCREMENT;

@@ -18,6 +18,7 @@
 
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "xp.h"
+#include "plstr.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -112,7 +113,7 @@ build_viewer_cmd(char *template, ...)
 	  ret = (char*) realloc(ret, len + 1);
 	  if (ret == NULL)
 	    return NULL;
-	  XP_STRCPY(ret + off, argv);
+	  PL_strcpy(ret + off, argv);
 	  to = ret + off + arglen;
 	  break;
 	}
@@ -155,7 +156,7 @@ PRIVATE int net_ExtViewWriteReady (NET_StreamClass * stream)
     timeout.tv_sec = 0;
     timeout.tv_usec = 1;  /* minimum hopefully */
 
-    XP_MEMSET(&write_fds, 0, sizeof(fd_set));
+    memset(&write_fds, 0, sizeof(fd_set));
 
     FD_SET(fileno(obj->fp), &write_fds);
 
@@ -215,16 +216,16 @@ PRIVATE void net_ExtViewComplete (NET_StreamClass *stream)
 		TRACEMSG(("Invoking: %s", command));
 
         system(command);
-	    XP_FREEIF(obj->command);
+	    PR_FREEIF(obj->command);
       }
 	else
       {
         pclose(obj->fp);
       }
 
-    XP_FREEIF(obj->filename);
-	XP_FREEIF(obj->url);
-    XP_FREE(obj);
+    PR_FREEIF(obj->filename);
+	PR_FREEIF(obj->url);
+    PR_Free(obj);
     return;
 }
 
@@ -238,13 +239,13 @@ PRIVATE void net_ExtViewAbort (NET_StreamClass *stream, int status)
     if(obj->filename)
       {
 	    remove(obj->filename);
-        XP_FREE(obj->filename);
+        PR_Free(obj->filename);
       }
 
-	XP_FREEIF(obj->url);
-    XP_FREEIF(obj->command);
+	PR_FREEIF(obj->url);
+    PR_FREEIF(obj->command);
 
-    XP_FREE(obj);
+    PR_Free(obj);
     
     return;
 }
@@ -282,13 +283,13 @@ NET_ExtViewerConverter   (int         format_out,
 
     TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
             return(NULL);
 
 	memset(stream, 0, sizeof(NET_StreamClass));
 
-    obj = XP_NEW(CV_DataObject);
+    obj = PR_NEW(CV_DataObject);
     if (obj == NULL) 
             return(NULL);
 	memset(obj, 0, sizeof(CV_DataObject));
@@ -325,7 +326,7 @@ NET_ExtViewerConverter   (int         format_out,
 	   we're about to execute a shell, pop up a dialog box first.
 	 */
 	{
-	  char *prog = XP_STRDUP (view_struct->system_command);
+	  char *prog = PL_strdup (view_struct->system_command);
 	  char *s, *start, *end;
 	  int danger = 0;
 
@@ -337,7 +338,7 @@ NET_ExtViewerConverter   (int         format_out,
 		;
 	  *end = 0;
 
-	  if ((start = XP_STRRCHR (prog, '/')))
+	  if ((start = PL_strrchr (prog, '/')))
 		start++;
 	  else
 	    start = XP_StripLine(prog); /* start at first non-white space */
@@ -351,18 +352,18 @@ NET_ExtViewerConverter   (int         format_out,
 		  *s = 0;
 
 	  /* These are things known to be shells - very bad. */
-	  if (!XP_STRCMP (start, "ash") ||
-		  !XP_STRCMP (start, "bash") ||
-		  !XP_STRCMP (start, "csh") ||
-		  !XP_STRCMP (start, "jsh") ||
-		  !XP_STRCMP (start, "ksh") ||
-		  !XP_STRCMP (start, "pdksh") ||
-		  !XP_STRCMP (start, "sh") ||
-		  !XP_STRCMP (start, "tclsh") ||
-		  !XP_STRCMP (start, "tcsh") ||
-		  !XP_STRCMP (start, "wish") ||		/* a tcl thing */
-		  !XP_STRCMP (start, "wksh") ||
-		  !XP_STRCMP (start, "zsh"))
+	  if (!PL_strcmp (start, "ash") ||
+		  !PL_strcmp (start, "bash") ||
+		  !PL_strcmp (start, "csh") ||
+		  !PL_strcmp (start, "jsh") ||
+		  !PL_strcmp (start, "ksh") ||
+		  !PL_strcmp (start, "pdksh") ||
+		  !PL_strcmp (start, "sh") ||
+		  !PL_strcmp (start, "tclsh") ||
+		  !PL_strcmp (start, "tcsh") ||
+		  !PL_strcmp (start, "wish") ||		/* a tcl thing */
+		  !PL_strcmp (start, "wksh") ||
+		  !PL_strcmp (start, "zsh"))
 		danger = 2;
 
 	  /* Remote shells are potentially dangerous, in the case of
@@ -372,41 +373,41 @@ NET_ExtViewerConverter   (int         format_out,
 		 And we don't want to squawk about "rsh somehost playulaw -".
 		 So... allow rsh to possibly be a security hole.
 	   */
-	  else if (!XP_STRCMP (start, "remsh") ||	/* remote shell */
-			   !XP_STRCMP (start, "rksh") ||
-			   !XP_STRCMP (start, "rsh")		/* remote- or restricted- */
+	  else if (!PL_strcmp (start, "remsh") ||	/* remote shell */
+			   !PL_strcmp (start, "rksh") ||
+			   !PL_strcmp (start, "rsh")		/* remote- or restricted- */
 			   )
 		danger = 0;
 
 	  /* These are things which aren't really shells, but can do the
 		 same damage anyway since they can write files and/or execute
 		 other programs. */
-	  else if (!XP_STRCMP (start, "awk") ||
-			   !XP_STRCMP (start, "e") ||
-			   !XP_STRCMP (start, "ed") ||
-			   !XP_STRCMP (start, "ex") ||
-			   !XP_STRCMP (start, "gawk") ||
-			   !XP_STRCMP (start, "m4") ||
-			   !XP_STRCMP (start, "sed") ||
-			   !XP_STRCMP (start, "vi") ||
-			   !XP_STRCMP (start, "emacs") ||
-			   !XP_STRCMP (start, "lemacs") ||
-			   !XP_STRCMP (start, "xemacs") ||
-			   !XP_STRCMP (start, "temacs") ||
+	  else if (!PL_strcmp (start, "awk") ||
+			   !PL_strcmp (start, "e") ||
+			   !PL_strcmp (start, "ed") ||
+			   !PL_strcmp (start, "ex") ||
+			   !PL_strcmp (start, "gawk") ||
+			   !PL_strcmp (start, "m4") ||
+			   !PL_strcmp (start, "sed") ||
+			   !PL_strcmp (start, "vi") ||
+			   !PL_strcmp (start, "emacs") ||
+			   !PL_strcmp (start, "lemacs") ||
+			   !PL_strcmp (start, "xemacs") ||
+			   !PL_strcmp (start, "temacs") ||
 
 			   /* Other dangerous interpreters */
-			   !XP_STRCMP (start, "basic") ||
-			   !XP_STRCMP (start, "expect") ||
-			   !XP_STRCMP (start, "expectk") ||
-			   !XP_STRCMP (start, "perl") ||
-			   !XP_STRCMP (start, "python") ||
-			   !XP_STRCMP (start, "rexx")
+			   !PL_strcmp (start, "basic") ||
+			   !PL_strcmp (start, "expect") ||
+			   !PL_strcmp (start, "expectk") ||
+			   !PL_strcmp (start, "perl") ||
+			   !PL_strcmp (start, "python") ||
+			   !PL_strcmp (start, "rexx")
 			   )
 		danger = 1;
 
 	  /* Be suspicious of anything ending in "sh". */
-	  else if (XP_STRLEN (start) > 2 &&
-			   !XP_STRCMP (start + XP_STRLEN (start) - 2, "sh"))
+	  else if (PL_strlen (start) > 2 &&
+			   !PL_strcmp (start + PL_strlen (start) - 2, "sh"))
 		danger = 1;
 
 	  if (danger)
@@ -419,14 +420,14 @@ NET_ExtViewerConverter   (int         format_out,
 				   );
 		  if (!FE_Confirm (window_id, msg))
 			{
-			  XP_FREE (stream);
-			  XP_FREE (obj);
-			  XP_FREE (path);
-			  XP_FREE (prog);
+			  PR_Free (stream);
+			  PR_Free (obj);
+			  PR_Free (path);
+			  PR_Free (prog);
 			  return(NULL);
 			}
 		}
-	  XP_FREE (prog);
+	  PR_Free (prog);
 	}
 #endif /* XP_UNIX */
 
@@ -446,9 +447,9 @@ NET_ExtViewerConverter   (int         format_out,
 
 		if(yes_stream == -1)
 		  {
-			XP_FREE(stream);
-			XP_FREE(obj);
-        	XP_FREE(path);
+			PR_Free(stream);
+			PR_Free(obj);
+        	PR_Free(path);
 			return(NULL);
 		  }
 	  }
@@ -472,7 +473,7 @@ NET_ExtViewerConverter   (int         format_out,
 	else
       {
 		
-		dot = XP_STRRCHR(path, '.');
+		dot = PL_strrchr(path, '.');
 
 #ifdef XP_UNIX
 		/* Gag.  foo.ps.gz --> tmpXXXXX.ps, not tmpXXXXX.gz. */
@@ -481,7 +482,7 @@ NET_ExtViewerConverter   (int         format_out,
 			int i = 0;
 			while (fe_encoding_extensions [i])
 			  {
-				if (!XP_STRCMP (dot, fe_encoding_extensions [i]))
+				if (!PL_strcmp (dot, fe_encoding_extensions [i]))
 				  {
 					*dot = 0;
 					dot--;
@@ -498,8 +499,8 @@ NET_ExtViewerConverter   (int         format_out,
 
 		tmp_filename = WH_TempName(xpTemporary, "MO");
 		if (!tmp_filename) {
-			XP_FREEIF(stream);
-			XP_FREEIF(obj);
+			PR_FREEIF(stream);
+			PR_FREEIF(obj);
 			return NULL;
 		}
 		if (dot)
@@ -536,8 +537,8 @@ NET_ExtViewerConverter   (int         format_out,
 			  StrAllocCopy(obj->filename, tmp_filename);
 		  }
 		
-        XP_FREE(path);
-		XP_FREE(tmp_filename);
+        PR_Free(path);
+		PR_Free(tmp_filename);
 
 		obj->fp = XP_FileOpen(obj->filename, xpTemporary, XP_FILE_WRITE);
 			
@@ -550,7 +551,7 @@ NET_ExtViewerConverter   (int         format_out,
 			if (s)
 			  {
 				FE_Alert (window_id, s);
-				XP_FREE (s);
+				PR_Free (s);
 			  }
 	        return(NULL);
 		  }

@@ -25,7 +25,7 @@
  */
 typedef struct net_MemCacheConverterObject {
     NET_StreamClass *next_stream;
-	XP_Bool         dont_hold_URL_s;
+	PRBool         dont_hold_URL_s;
 } net_MemCacheConverterObject;
 
 extern NET_StreamClass * 
@@ -42,7 +42,7 @@ NET_RemoveURLFromMemCache(URL_Struct *URL_s);
 /* set or unset a lock on a memory cache object
  */
 extern void
-NET_ChangeMemCacheLock(URL_Struct *URL_s, XP_Bool set);
+NET_ChangeMemCacheLock(URL_Struct *URL_s, PRBool set);
 
 /* Create a wysiwyg cache converter to a copy of the current entry for URL_s.
  */

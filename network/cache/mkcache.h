@@ -26,13 +26,13 @@
 #endif
 
 /* trace variable for cache testing */
-extern XP_Bool NET_CacheTraceOn;
+extern PRBool NET_CacheTraceOn;
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 /* public accessor function for netcaster */
-extern XP_Bool NET_CacheStore(net_CacheObject *cacheObject, URL_Struct *url_s, XP_Bool accept_partial_files);
+extern PRBool NET_CacheStore(net_CacheObject *cacheObject, URL_Struct *url_s, PRBool accept_partial_files);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif /* MKCACHE_H */

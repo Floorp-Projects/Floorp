@@ -87,7 +87,7 @@ char *GetPageAlignedBuffer(int size)
 	net_real_socket_buffer_ptr = 0;
 
     /* Allocate too much memory */
-    rv = (char *) XP_ALLOC(size + pageSize - 1);
+    rv = (char *) PR_Malloc(size + pageSize - 1);
     if (rv) 
 	  {
 	    intptr_t r = (intptr_t) rv;
@@ -132,7 +132,7 @@ NET_ChangeSocketBufferSize (int size)
     NET_Socket_Buffer = GetPageAlignedBuffer(size);
 #else
     FREEIF(NET_Socket_Buffer);
-    NET_Socket_Buffer = (char *) XP_ALLOC(size);
+    NET_Socket_Buffer = (char *) PR_Malloc(size);
 #endif /* XP_UNIX */
 
    if(!NET_Socket_Buffer)
@@ -422,28 +422,28 @@ NET_BufferedReadLine   (PRFileDesc *  sock,
 
 	        if(line_length > LINE_BUFFER_SIZE)
 	          {
-	            XP_MEMMOVE(line_buffer, *buffer, LINE_BUFFER_SIZE);
+	            memmove(line_buffer, *buffer, LINE_BUFFER_SIZE);
         	    *buffer_size -= LINE_BUFFER_SIZE;
 			    line_length -= LINE_BUFFER_SIZE;
 				/* move everything over includeing the parts 
 				 * of the buffer already moved 
 			 	 */
-                XP_MEMMOVE(*buffer, 
+                memmove(*buffer, 
 						(*buffer)+LINE_BUFFER_SIZE, 
 						tot_buf_size-LINE_BUFFER_SIZE);
-			    XP_MEMMOVE(far_end-LINE_BUFFER_SIZE, line_buffer, LINE_BUFFER_SIZE);
+			    memmove(far_end-LINE_BUFFER_SIZE, line_buffer, LINE_BUFFER_SIZE);
 	          }
 	        else
 	          {
-			    XP_MEMMOVE(line_buffer, *buffer, line_length);
+			    memmove(line_buffer, *buffer, line_length);
         	    *buffer_size -= line_length;
 				/* move everything over includeing the parts 
 				 * of the buffer already moved 
 			 	 */
-                XP_MEMMOVE(*buffer, 
+                memmove(*buffer, 
 						(*buffer)+line_length, 
 						tot_buf_size-line_length);
-			    XP_MEMMOVE(far_end-line_length, line_buffer, line_length);
+			    memmove(far_end-line_length, line_buffer, line_length);
 			    line_length = 0;
 	          }
     	  }

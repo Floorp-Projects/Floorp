@@ -4,6 +4,8 @@
  * and finish
  */
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -37,7 +39,7 @@ typedef struct _DataObject {
     char tag[MAXTAGLEN+1];
     uint tag_index;
     int  tag_type;
-    XP_Bool in_broken_html;
+    PRBool in_broken_html;
     char *tag_data;   /* the contents of the current tag */
 } DataObject;
 
@@ -60,7 +62,7 @@ PRIVATE void net_EndPICSLabelFinderTag (DataObject *obj)
 {
 	if(obj->in_broken_html)
 	  {
-		obj->in_broken_html = FALSE;
+		obj->in_broken_html = PR_FALSE;
 	  }
 
 	if (obj->tag_type == P_SCRIPT)
@@ -73,32 +75,32 @@ PRIVATE void net_EndPICSLabelFinderTag (DataObject *obj)
 	  }
 
     /* check tag_data for a META tag */
-	if(obj->tag_data && !strncasecomp(obj->tag_data, "META", 4))
+	if(obj->tag_data && !PL_strncasecmp(obj->tag_data, "META", 4))
 	{
         PA_Tag tmp_tag;
 		char *name;
         
         tmp_tag.type = P_META;
         tmp_tag.data = (void*)obj->tag_data;
-        tmp_tag.data_len = XP_STRLEN((char*)tmp_tag.data);
+        tmp_tag.data_len = PL_strlen((char*)tmp_tag.data);
 
         name = (char *)lo_FetchParamValue(obj->context, &tmp_tag, PARAM_HTTP_EQUIV);
 
 #define PICS_HEADER "PICS-Label"
-        if(name && !strcasecomp(name, PICS_HEADER))
+        if(name && !PL_strcasecmp(name, PICS_HEADER))
         {
     		char *label = (char *)lo_FetchParamValue(obj->context, &tmp_tag, PARAM_CONTENT);
 
             if(label)
             {
                 PICS_RatingsStruct * rs = PICS_ParsePICSLable(label);
-                XP_FREE(label);
+                PR_Free(label);
                 PICS_CompareToUserSettings(rs, obj->URL_s->address);
                 PICS_FreeRatingsStruct(rs); /* handles NULL */
             }
         }
 
-        XP_FREEIF(name);
+        PR_FREEIF(name);
 	}
 
 	return;
@@ -120,7 +122,7 @@ PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, in
 				if(*cp == '<')
 				  {
 					/* XXX we can miss a comment spanning a block boundary */
-					if(i+4 <= l && !XP_STRNCMP(cp, "<!--", 4))
+					if(i+4 <= l && !PL_strncmp(cp, "<!--", 4))
 					  {
 						obj->state = IN_COMMENT;
 					  }
@@ -139,7 +141,7 @@ PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, in
 				if(*cp == '<')
 				  {
 					/* XXX we can miss a </SCRIPT> spanning a block boundary */
-					if(i+8 <= l && !XP_STRNCASECMP(cp, "</SCRIPT", 8))
+					if(i+8 <= l && !PL_strncasecmp(cp, "</SCRIPT", 8))
 					  {
 						net_BeginPICSLabelFinderTag(obj);
 					  }
@@ -192,7 +194,7 @@ PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, in
 					/* protect ourselves from markup */
 					if(!obj->in_broken_html)
 					  {
-						obj->in_broken_html = TRUE;
+						obj->in_broken_html = PR_TRUE;
 					  }
 				  }
 				else
@@ -278,7 +280,7 @@ unquoted_attribute_jump_point:
 				  {
 					if(obj->in_broken_html)
 					  {
-						obj->in_broken_html = FALSE;
+						obj->in_broken_html = PR_FALSE;
 					  }
 					obj->state = IN_TAG;
 				  }
@@ -287,13 +289,13 @@ unquoted_attribute_jump_point:
 					/* probably a broken attribute value */
 					if(!obj->in_broken_html)
 					  {
-						obj->in_broken_html = TRUE;
+						obj->in_broken_html = PR_TRUE;
 					  }
 				  }
 			    break;
 			case IN_COMMENT:
 			    /* do nothing until you find a closing '-->' */
-				if(!XP_STRNCMP(cp, "-->", 3))
+				if(!PL_strncmp(cp, "-->", 3))
 				  {
 					cp += 2;
 					i += 2;
@@ -304,12 +306,12 @@ unquoted_attribute_jump_point:
 			    /* do nothing until you find a ';' or space */
 				if(*cp == ';' || XP_IS_SPACE(*cp))
 				  {
-					XP_SPRINTF(tiny_buf, "%c", *cp);
+					sprintf(tiny_buf, "%c", *cp);
 					obj->state = IN_CONTENT;
 				  }
 			    break;
 		    default:
-			    XP_ASSERT(0);
+			    PR_ASSERT(0);
 			    break;
 		  }
 
@@ -342,24 +344,24 @@ net_PICSLabelFinderStream (int         format_out,
 {
     DataObject* obj;
 	NET_StreamClass *new_stream;
-	Bool is_html_stream = FALSE;
+	PRBool is_html_stream = PR_FALSE;
 
     TRACEMSG(("Setting up PICSLabelFinder stream. Have URL: %s\n", URL_s->address));
 
-    new_stream = XP_NEW_ZAP(NET_StreamClass);
+    new_stream = PR_NEWZAP(NET_StreamClass);
 
     if(!new_stream)
         return NULL;
 
-    obj = XP_NEW(DataObject);
+    obj = PR_NEW(DataObject);
 
     if (obj == NULL)
 	{
-        XP_FREE(new_stream);
+        PR_Free(new_stream);
         return(NULL);
 	}
 
-	XP_MEMSET(obj, 0, sizeof(DataObject));
+	memset(obj, 0, sizeof(DataObject));
 
 	obj->state = IN_CONTENT;
 
@@ -378,7 +380,7 @@ net_PICSLabelFinderStream (int         format_out,
     new_stream->window_id      = window_id;
 
     /* don't cache this URL, since the content type is wrong */
-    URL_s->dont_cache = TRUE;
+    URL_s->dont_cache = PR_TRUE;
 
     return new_stream;
 }

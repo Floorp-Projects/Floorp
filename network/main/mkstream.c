@@ -94,19 +94,19 @@ net_compare_mime_types(char * absolute, char * partial)
 
    TRACEMSG(("StreamBuilder: Comparing %s and %s\n",absolute, partial));
 
-   if(!strcasecomp(absolute, partial))
+   if(!PL_strcasecmp(absolute, partial))
 	  return(NET_MIME_EXACT_MATCH);
 
-   if(!XP_STRCMP(partial, "*"))
+   if(!PL_strcmp(partial, "*"))
 	  return(NET_WILDCARD_MATCH);
 
-   if((star = XP_STRCHR(partial, '*')) == 0)
+   if((star = PL_strchr(partial, '*')) == 0)
 	  return(0);  /* not a wildcard mime type */
 
    /* compare just the part before the slash star
     *
     */
-   if(!strncasecomp(absolute, partial, (star-1)-partial))
+   if(!PL_strncasecmp(absolute, partial, (star-1)-partial))
 	  return(NET_MIME_PARTIAL_MATCH);
 
    return(0); /* no match */
@@ -212,7 +212,7 @@ NET_StreamBuilder  (FO_Present_Types format_out,
 										cs_ptr->encoding_in))
 			  {
                   net_ConverterElement *elem = XP_ListPeekTopObject(cs_ptr->converter_stack);
-                  XP_ASSERT(elem != (net_ConverterElement *)0);
+                  PR_ASSERT(elem != (net_ConverterElement *)0);
 				return ((NET_StreamClass *)
 						((*elem->converter)
 						 (format_out, elem->data_obj, URL_s, context)));
@@ -234,7 +234,7 @@ NET_StreamBuilder  (FO_Present_Types format_out,
             if(net_compare_mime_types(URL_s->content_type, cs_ptr->format_in))
               {
                   net_ConverterElement *elem = XP_ListPeekTopObject(cs_ptr->converter_stack);
-                  XP_ASSERT(elem != (net_ConverterElement *)0);
+                  PR_ASSERT(elem != (net_ConverterElement *)0);
 				return( (NET_StreamClass *) (*elem->converter) (format_out, 
                                              	elem->data_obj, URL_s, context));
 	          }
@@ -354,16 +354,16 @@ net_RegisterGenericConverterOrDecoder(XP_List        ** conv_list,
                     /* Rewritten to logic equivalent but should-be-faster version:*/
 		    if (((!encoding_in && !converter_struct_ptr->encoding_in) ||
                          (encoding_in && converter_struct_ptr->encoding_in &&
-                          !XP_STRCMP (encoding_in,
+                          !PL_strcmp (encoding_in,
                                       converter_struct_ptr->encoding_in)))
-                        && !strcasecomp(format_in, converter_struct_ptr->format_in)
+                        && !PL_strcasecmp(format_in, converter_struct_ptr->format_in)
 #ifdef XP_WIN
 				 && (converter_struct_ptr->bAutomated == autoFlag)
 #endif
 				)
                   {
                   /* Add a new converter element to the list */
-                  net_ConverterElement *elem = XP_NEW_ZAP(net_ConverterElement);
+                  net_ConverterElement *elem = PR_NEWZAP(net_ConverterElement);
                   if( elem == (net_ConverterElement *)0 ) return;
                   elem->converter = converter_func;
                   elem->data_obj  = data_obj;
@@ -374,9 +374,9 @@ net_RegisterGenericConverterOrDecoder(XP_List        ** conv_list,
     /* find out the type of entry format_in is
      */
     f_in_type = NET_MIME_EXACT_MATCH;
-    if(XP_STRCHR(format_in, '*'))
+    if(PL_strchr(format_in, '*'))
       {
-	    if(!XP_STRCMP(format_in, "*"))
+	    if(!PL_strcmp(format_in, "*"))
 	        f_in_type = NET_WILDCARD_MATCH;
 	    else
 	        f_in_type = NET_MIME_PARTIAL_MATCH;
@@ -387,7 +387,7 @@ net_RegisterGenericConverterOrDecoder(XP_List        ** conv_list,
      * its order of importance so that we can
      * take the first exact or partial fit
      */ 
-    new_converter_struct = XP_NEW(net_ConverterStruct);
+    new_converter_struct = PR_NEW(net_ConverterStruct);
     if(!new_converter_struct) {
 	    return;
 	}
@@ -395,15 +395,15 @@ net_RegisterGenericConverterOrDecoder(XP_List        ** conv_list,
     new_converter_struct->converter_stack = XP_ListNew();
     if( new_converter_struct->converter_stack == (XP_List *)0 )
     {
-        XP_FREE(new_converter_struct);
+        PR_Free(new_converter_struct);
         return;
     }
 
-    elem = XP_NEW_ZAP(net_ConverterElement);
+    elem = PR_NEWZAP(net_ConverterElement);
     if( elem == (net_ConverterElement *)0 )
     {
         XP_ListDestroy(new_converter_struct->converter_stack);
-        XP_FREE(new_converter_struct);
+        PR_Free(new_converter_struct);
         return;
     }
 
@@ -412,7 +412,7 @@ net_RegisterGenericConverterOrDecoder(XP_List        ** conv_list,
     new_converter_struct->format_in = 0;
     StrAllocCopy(new_converter_struct->format_in, format_in);
     new_converter_struct->encoding_in = (encoding_in
-										 ? XP_STRDUP (encoding_in) : 0);
+										 ? PL_strdup (encoding_in) : 0);
     new_converter_struct->format_out = format_out;
     XP_ListAddObject(new_converter_struct->converter_stack, elem);
 	new_converter_struct->bAutomated = autoFlag;
@@ -451,17 +451,17 @@ net_RegisterGenericConverterOrDecoder(XP_List        ** conv_list,
 			* then we can just add it to the beginning
 			* of the list
 			*/
-			if (!XP_STRCASECMP(pRegistered->format_in, new_converter_struct->format_in)
+			if (!PL_strcasecmp(pRegistered->format_in, new_converter_struct->format_in)
                 && ((!pRegistered->encoding_in && !new_converter_struct->format_in)
-                    || !XP_STRCASECMP(pRegistered->encoding_in, new_converter_struct->encoding_in))) {
+                    || !PL_strcasecmp(pRegistered->encoding_in, new_converter_struct->encoding_in))) {
 				if(new_converter_struct->bAutomated == TRUE)	{
-					XP_DELETE( new_converter_struct);
+					PR_Free( new_converter_struct);
 					return;
 				}
 			
 				//	Overwrite
-				XP_MEMCPY(pRegistered, new_converter_struct, sizeof(net_ConverterStruct));
-				XP_DELETE( new_converter_struct);
+				memcpy(pRegistered, new_converter_struct, sizeof(net_ConverterStruct));
+				PR_Free( new_converter_struct);
 				return;
 			}
 		}
@@ -486,7 +486,7 @@ net_RegisterGenericConverterOrDecoder(XP_List        ** conv_list,
         list_ptr = pList;
         while((converter_struct_ptr = (net_ConverterStruct *) XP_ListNextObject(list_ptr)) != 0)
           {
-            if(XP_STRCHR(converter_struct_ptr->format_in, '*'))
+            if(PL_strchr(converter_struct_ptr->format_in, '*'))
 	          {
 		        XP_ListInsertObject (pList, 
 									 converter_struct_ptr, 
@@ -529,7 +529,7 @@ PUBLIC void* NET_GETDataObject(XP_List* list, char* mineType, void** obj)
 
 	while((converter_struct_ptr = (net_ConverterStruct *)XP_ListNextObject(list)) != NULL)    {
         if(converter_struct_ptr->bAutomated)    {
-	        if(!XP_STRCMP(converter_struct_ptr->format_in, mineType)) {
+	        if(!PL_strcmp(converter_struct_ptr->format_in, mineType)) {
                 net_ConverterElement *elem = XP_ListPeekTopObject(converter_struct_ptr->converter_stack);
 		        *obj = (void*)converter_struct_ptr;
 		        return elem->data_obj;
@@ -563,12 +563,12 @@ NET_RegisterEncodingConverter(char *encoding_in,
 	  net_encoding_converter_size += 10;
 	  if (net_all_encoding_converters)
 		net_all_encoding_converters = (struct net_encoding_converter *)
-		  XP_REALLOC (net_all_encoding_converters,
+		  PR_Realloc (net_all_encoding_converters,
 					  net_encoding_converter_size
 					  * sizeof (*net_all_encoding_converters));
 	  else
 		net_all_encoding_converters = (struct net_encoding_converter *)
-		  XP_CALLOC (net_encoding_converter_size,
+		  PR_Calloc (net_encoding_converter_size,
 					 sizeof (*net_all_encoding_converters));
 	}
 
@@ -586,7 +586,7 @@ NET_RegisterEncodingConverter(char *encoding_in,
   }
   
   net_all_encoding_converters [net_encoding_converter_fp].encoding_in
-	= XP_STRDUP (encoding_in);
+	= PL_strdup (encoding_in);
   net_all_encoding_converters [net_encoding_converter_fp].data_obj
 	= data_obj;
   net_all_encoding_converters [net_encoding_converter_fp].converter_func
@@ -609,7 +609,7 @@ NET_DumpDecoders()
     {
         char *msg = PR_smprintf("in: %s  out: %d\n",cs_ptr->encoding_in, cs_ptr->format_out);
 
-        FE_Trace(msg);
+        TRACEMSG(("%s", msg));
         FREE(msg);
     }
 #endif /* DEBUG */
@@ -748,12 +748,12 @@ NET_RegisterExternalViewerCommand(char * format_in,
 								  char * system_command, 
 								  unsigned int stream_block_size) 
 {
-    CV_ExtViewStruct * new_obj = XP_NEW(CV_ExtViewStruct);
+    CV_ExtViewStruct * new_obj = PR_NEW(CV_ExtViewStruct);
 
     if(!new_obj)
 	   return;
 
-    XP_MEMSET(new_obj, 0, sizeof(CV_ExtViewStruct));
+    memset(new_obj, 0, sizeof(CV_ExtViewStruct));
 
     /* make a new copy of the command so it can be passed
      * as the data object
@@ -798,8 +798,8 @@ NET_ClearExternalViewerConverters(void)
           {
               if( elem->converter == NET_ExtViewerConverter )
               {
-                  XP_FREEIF(elem->data_obj);
-                  XP_FREE(elem);
+                  PR_FREEIF(elem->data_obj);
+                  PR_Free(elem);
                   continue;
               }
               else
@@ -818,9 +818,9 @@ NET_ClearExternalViewerConverters(void)
           {
               XP_ListDestroy(new);
               XP_ListRemoveObject(temp_list, converter_struct_ptr);
-              XP_FREE(converter_struct_ptr->format_in);
-              XP_FREE(converter_struct_ptr->encoding_in);
-              XP_FREE(converter_struct_ptr);
+              PR_Free(converter_struct_ptr->format_in);
+              PR_Free(converter_struct_ptr->encoding_in);
+              PR_Free(converter_struct_ptr);
           }
 	  }
 	}
@@ -848,9 +848,9 @@ NET_ClearAllConverters(void)
 			{
 #ifdef XP_UNIX
 				if(aConverterStackElement->converter == NET_ExtViewerConverter)
-					XP_FREEIF(aConverterStackElement->data_obj);
+					PR_FREEIF(aConverterStackElement->data_obj);
 #endif /* XP_UNIX */
-				XP_FREE(aConverterStackElement);
+				PR_Free(aConverterStackElement);
 			}
 			XP_ListDestroy(aConverter->converter_stack);
 			FREE(aConverter);
@@ -871,9 +871,9 @@ NET_ClearAllConverters(void)
 			{
 #ifdef XP_UNIX
 				if(aConverterStackElement->converter == NET_ExtViewerConverter)
-					XP_FREEIF(aConverterStackElement->data_obj);
+					PR_FREEIF(aConverterStackElement->data_obj);
 #endif /* XP_UNIX */
-				XP_FREE(aConverterStackElement);
+				PR_Free(aConverterStackElement);
 			}
 			XP_ListDestroy(aConverter->converter_stack);
 			FREE(aConverter);
@@ -892,7 +892,7 @@ NET_RegisterExternalConverterCommand(char * format_in,
                                      char * system_command,
                                      char * new_format)
 {
-    CV_ExtConverterStruct * new_obj = XP_NEW(CV_ExtConverterStruct);
+    CV_ExtConverterStruct * new_obj = PR_NEW(CV_ExtConverterStruct);
 
     if(!new_obj)
        return;
@@ -919,7 +919,7 @@ NET_RegisterExternalDecoderCommand (char * format_in,
 									char * format_out,
 									char * system_command)
 {
-    CV_ExtConverterStruct * new_obj = XP_NEW(CV_ExtConverterStruct);
+    CV_ExtConverterStruct * new_obj = PR_NEW(CV_ExtConverterStruct);
 
     if(!new_obj)
        return;
@@ -955,7 +955,7 @@ NET_NewStream          (char                 *name,
                         void                 *streamData,
                         MWContext            *windowID)
 {
-    NET_StreamClass *stream = XP_NEW (NET_StreamClass);
+    NET_StreamClass *stream = PR_NEW (NET_StreamClass);
     if (!stream)
         return nil;
         
@@ -981,10 +981,10 @@ net_GetConverterOrDecoderList(XP_List        ** conv_list,
 
     while((converter_struct_ptr = (net_ConverterStruct *) XP_ListNextObject(list_ptr)) != 0)
 	    if(format_out == converter_struct_ptr->format_out)
-	        if(!strcasecomp(format_in, converter_struct_ptr->format_in)
+	        if(!PL_strcasecmp(format_in, converter_struct_ptr->format_in)
 			   && ((!encoding_in && !converter_struct_ptr->encoding_in) ||
 				   (encoding_in && converter_struct_ptr->encoding_in &&
-					!XP_STRCMP (encoding_in,
+					!PL_strcmp (encoding_in,
 								converter_struct_ptr->encoding_in)))
 			   )
 	          {
@@ -1007,9 +1007,9 @@ NET_DeregisterContentTypeConverter(char *format_in, FO_Present_Types format_out)
 # ifdef XP_UNIX
     /* total kludge!! */
     if( elem->converter == NET_ExtViewerConverter )
-        XP_FREEIF(elem->data_obj);
+        PR_FREEIF(elem->data_obj);
 # endif
-    XP_FREE(elem);
+    PR_Free(elem);
 
     return;
 }
@@ -1018,7 +1018,7 @@ NET_DeregisterContentTypeConverter(char *format_in, FO_Present_Types format_out)
 MODULE_PRIVATE void
 NET_DisplayStreamInfoAsHTML(ActiveEntry *cur_entry)
 {
-	char *buffer = (char*)XP_ALLOC(2048);
+	char *buffer = (char*)PR_Malloc(2048);
    	NET_StreamClass * stream;
 	int i;
 
@@ -1075,18 +1075,18 @@ NET_DisplayStreamInfoAsHTML(ActiveEntry *cur_entry)
 #define PUT_PART(part)													\
 cur_entry->status = (*stream->put_block)(stream,			\
 										part ? part : "Unknown",		\
-										part ? XP_STRLEN(part) : 7);	\
+										part ? PL_strlen(part) : 7);	\
 if(cur_entry->status < 0)												\
   goto END;
 
-    XP_SPRINTF(buffer, 
+    sprintf(buffer, 
 "<html><head><title>Information about the Netscape streams configuration</title></head>\n"
 "<body><h1>Information about the Netscape streams configuration</h1>\n"
 );
 
     PUT_PART(buffer);
 
-    XP_SPRINTF(buffer, "<h2>Converter List</h2>\n<ul>");
+    sprintf(buffer, "<h2>Converter List</h2>\n<ul>");
     PUT_PART(buffer);
 
     for( i = 0; i < MAX_FORMATS_OUT; i++ )
@@ -1095,23 +1095,23 @@ if(cur_entry->status < 0)												\
         XP_List *list_ptr = net_converter_list[i];
         net_ConverterStruct *csp;
 
-        XP_SPRINTF(buffer, "<li><ul><p>%s", j < sizeof(fo_names)/sizeof(fo_names[0]) ? 
+        sprintf(buffer, "<li><ul><p>%s", j < sizeof(fo_names)/sizeof(fo_names[0]) ? 
                    fo_names[j] : fo_names[0]);
         PUT_PART(buffer);
 
         if( i & FO_CACHE_ONLY )
         {
-            XP_SPRINTF(buffer, " | Cache Only");
+            sprintf(buffer, " | Cache Only");
             PUT_PART(buffer);
         }
 
         if( i & FO_ONLY_FROM_CACHE )
         {
-            XP_SPRINTF(buffer, " | Only From Cache");
+            sprintf(buffer, " | Only From Cache");
             PUT_PART(buffer);
         }
 
-        XP_SPRINTF(buffer, " [%d]</p>", i);
+        sprintf(buffer, " [%d]</p>", i);
         PUT_PART(buffer);
 
         while( (csp = (net_ConverterStruct *)XP_ListNextObject(list_ptr)) != (net_ConverterStruct *)0 )
@@ -1119,7 +1119,7 @@ if(cur_entry->status < 0)												\
             XP_List *stack = csp->converter_stack;
             int stack_count = XP_ListCount(stack);
             net_ConverterElement *elem;
-            XP_SPRINTF(buffer, 
+            sprintf(buffer, 
                        "<li>Format In: %s<br>\n"
                        "Encoding In: %s<br>\n"
                        "Present Type: %d<br>\n"
@@ -1134,27 +1134,27 @@ if(cur_entry->status < 0)												\
             while( (elem = (net_ConverterElement *)XP_ListNextObject(stack)) != (net_ConverterElement *)0 )
             {
 #if defined(__sun) && !defined(SVR4)
-                XP_SPRINTF(buffer, "<li>Converter: %lu<br>Object: %lu<br>\n",
+                sprintf(buffer, "<li>Converter: %lu<br>Object: %lu<br>\n",
                            elem->converter, elem->data_obj);
 #else
-                XP_SPRINTF(buffer, "<li>Converter: %p<br>Object: %p<br>\n",
+                sprintf(buffer, "<li>Converter: %p<br>Object: %p<br>\n",
                            elem->converter, elem->data_obj);
 #endif
                 PUT_PART(buffer);
             }
 
-            XP_SPRINTF(buffer, "<br></ol>\n");
+            sprintf(buffer, "<br></ol>\n");
             PUT_PART(buffer);
         }
 
-        XP_SPRINTF(buffer, "</ul>\n");
+        sprintf(buffer, "</ul>\n");
         PUT_PART(buffer);
     }
 
-    XP_SPRINTF(buffer, "</ul>\n");
+    sprintf(buffer, "</ul>\n");
     PUT_PART(buffer);
 
-    XP_SPRINTF(buffer, "<h2>Decoder List</h2>\n<ul>");
+    sprintf(buffer, "<h2>Decoder List</h2>\n<ul>");
     PUT_PART(buffer);
 
     for( i = 0; i < MAX_FORMATS_OUT; i++ )
@@ -1163,23 +1163,23 @@ if(cur_entry->status < 0)												\
         XP_List *list_ptr = net_decoder_list[i];
         net_ConverterStruct *csp;
 
-        XP_SPRINTF(buffer, "<li><ul><p>%s", j < sizeof(fo_names)/sizeof(fo_names[0]) ? 
+        sprintf(buffer, "<li><ul><p>%s", j < sizeof(fo_names)/sizeof(fo_names[0]) ? 
                    fo_names[j] : fo_names[0]);
         PUT_PART(buffer);
 
         if( i & FO_CACHE_ONLY )
         {
-            XP_SPRINTF(buffer, " | Cache Only");
+            sprintf(buffer, " | Cache Only");
             PUT_PART(buffer);
         }
 
         if( i & FO_ONLY_FROM_CACHE )
         {
-            XP_SPRINTF(buffer, " | Only From Cache");
+            sprintf(buffer, " | Only From Cache");
             PUT_PART(buffer);
         }
 
-        XP_SPRINTF(buffer, " [%d]</p>", i);
+        sprintf(buffer, " [%d]</p>", i);
         PUT_PART(buffer);
 
         while( (csp = (net_ConverterStruct *)XP_ListNextObject(list_ptr)) != (net_ConverterStruct *)0 )
@@ -1187,7 +1187,7 @@ if(cur_entry->status < 0)												\
             XP_List *stack = csp->converter_stack;
             int stack_count = XP_ListCount(stack);
             net_ConverterElement *elem;
-            XP_SPRINTF(buffer, 
+            sprintf(buffer, 
                        "<li>Format In: %s<br>\n"
                        "Encoding In: %s<br>\n"
                        "Present Type: %d<br>\n"
@@ -1202,28 +1202,28 @@ if(cur_entry->status < 0)												\
             while( (elem = (net_ConverterElement *)XP_ListNextObject(stack)) != (net_ConverterElement *)0 )
             {
 #if defined(__sun) && !defined(SVR4)
-                XP_SPRINTF(buffer, "<li>Converter: %lu<br>Object: %lu<br>\n",
+                sprintf(buffer, "<li>Converter: %lu<br>Object: %lu<br>\n",
                            elem->converter, elem->data_obj);
 #else
-                XP_SPRINTF(buffer, "<li>Converter: %p<br>Object: %p<br>\n",
+                sprintf(buffer, "<li>Converter: %p<br>Object: %p<br>\n",
                            elem->converter, elem->data_obj);
 #endif
                 PUT_PART(buffer);
             }
 
-            XP_SPRINTF(buffer, "<br></ol>\n");
+            sprintf(buffer, "<br></ol>\n");
             PUT_PART(buffer);
         }
 
-        XP_SPRINTF(buffer, "</ul>\n");
+        sprintf(buffer, "</ul>\n");
         PUT_PART(buffer);
     }
 
-    XP_SPRINTF(buffer, "</ul>\n");
+    sprintf(buffer, "</ul>\n");
     PUT_PART(buffer);
 
   END:
-    XP_FREE(buffer);
+    PR_Free(buffer);
     if( cur_entry->status < 0 )
         (*stream->abort)(stream, cur_entry->status);
     else

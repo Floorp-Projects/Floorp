@@ -18,6 +18,7 @@
 
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "xp.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -37,11 +38,11 @@ typedef struct _DataObject {
 	z_stream d_stream;  /* decompression stream */
 	unsigned char *dcomp_buf;
 	uint32 dcomp_buf_size;
-	XP_Bool is_done;
-	XP_Bool checking_crc_footer;
+	PRBool is_done;
+	PRBool checking_crc_footer;
     unsigned char *incoming_buf;
     uint32 incoming_buf_size;
-    XP_Bool header_skipped;
+    PRBool header_skipped;
     URL_Struct *URL_s;
 	uint32 crc_check;
 } DataObject;
@@ -197,8 +198,8 @@ do_end_crc_check(DataObject *obj)
 		uint32 crc_int;
 		uint32 size_int;
 
-        obj->checking_crc_footer = FALSE;
-        obj->is_done = TRUE;
+        obj->checking_crc_footer = PR_FALSE;
+        obj->is_done = PR_TRUE;
 
 		crc_int = (uint32)obj->incoming_buf[0];
 		crc_int += (uint32)obj->incoming_buf[1]<<8;
@@ -235,7 +236,7 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
     if(obj->is_done) 
     {
 		/* multipart gzip? */
-        XP_ASSERT(0);
+        PR_ASSERT(0);
 		return (1);
     }
 	
@@ -258,11 +259,11 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
         {
             /* squash the header */
 			obj->incoming_buf_size -= actual_header_size;
-            XP_MEMMOVE(obj->incoming_buf, 
+            memmove(obj->incoming_buf, 
                        obj->incoming_buf+actual_header_size, 
                        obj->incoming_buf_size);
 
-            obj->header_skipped = TRUE;
+            obj->header_skipped = PR_TRUE;
         }
         else if(status == BAD_HEADER)
         {
@@ -275,7 +276,7 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
         }
         else
         {
-            XP_ASSERT(0);
+            PR_ASSERT(0);
             return 1;
         }
     }
@@ -321,7 +322,7 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
 
         if(err == Z_STREAM_END)
         {
-    	    obj->checking_crc_footer = TRUE;
+    	    obj->checking_crc_footer = PR_TRUE;
             break;
         }
         else if(err != Z_OK)
@@ -345,7 +346,7 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
     if(input_left_over > 0)
     {
         input_used_up = obj->incoming_buf_size - input_left_over; 
-        XP_MEMMOVE(obj->incoming_buf, obj->incoming_buf+input_used_up, input_left_over);
+        memmove(obj->incoming_buf, obj->incoming_buf+input_used_up, input_left_over);
         obj->incoming_buf_size = input_left_over;
     }
     else
@@ -353,7 +354,7 @@ PRIVATE int net_UnZipWrite (NET_StreamClass *stream, CONST char* s, int32 l)
         obj->incoming_buf_size = 0;
     }
 
-    if(obj->checking_crc_footer == TRUE)
+    if(obj->checking_crc_footer == PR_TRUE)
     {
         return do_end_crc_check(obj);
     }
@@ -378,17 +379,17 @@ PRIVATE void net_UnZipComplete (NET_StreamClass *stream)
     (*obj->next_stream->complete)(obj->next_stream);
 
     err = inflateEnd(&(obj->d_stream));
-    XP_ASSERT(err == Z_OK);
+    PR_ASSERT(err == Z_OK);
 
     if(!obj->is_done)
     {
         /* we didn't complete the crc and size checks */
         /* @@@ not sure what to do here yet */
-        XP_ASSERT(0);
+        PR_ASSERT(0);
     }
 
-    XP_FREE(obj->dcomp_buf);
-    XP_FREE(obj);
+    PR_Free(obj->dcomp_buf);
+    PR_Free(obj);
     return;
 }
 
@@ -400,10 +401,10 @@ PRIVATE void net_UnZipAbort (NET_StreamClass *stream, int status)
     (*obj->next_stream->abort)(obj->next_stream, status);
 
     err = inflateEnd(&(obj->d_stream));
-    XP_ASSERT(err == Z_OK);
+    PR_ASSERT(err == Z_OK);
 
-    XP_FREE(obj->dcomp_buf);
-    XP_FREE(obj);
+    PR_Free(obj->dcomp_buf);
+    PR_Free(obj);
     return;
 }
 
@@ -420,14 +421,14 @@ NET_UnZipConverter (int         format_out,
     
     TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
         return(NULL);
 
-    obj = XP_NEW_ZAP(DataObject);
+    obj = PR_NEWZAP(DataObject);
     if (obj == NULL) 
     {
-        XP_FREE(stream);
+        PR_Free(stream);
         return(NULL);
     }
     
@@ -439,13 +440,13 @@ NET_UnZipConverter (int         format_out,
     stream->data_object    = obj;  /* document info object */
     stream->window_id      = window_id;
 
-    obj->dcomp_buf = XP_ALLOC(DECOMP_BUF_SIZE);
+    obj->dcomp_buf = PR_Malloc(DECOMP_BUF_SIZE);
     obj->dcomp_buf_size = DECOMP_BUF_SIZE;
 
     if(!obj->dcomp_buf)
     {
-	XP_FREE(stream);
-	XP_FREE(obj);
+	PR_Free(stream);
+	PR_Free(obj);
 	return NULL;
     }
 
@@ -459,21 +460,21 @@ NET_UnZipConverter (int         format_out,
 
     if(err != Z_OK)
     {
-	XP_FREE(stream);
-	XP_FREE(obj);
+	PR_Free(stream);
+	PR_Free(obj);
 	return NULL;
     }
 
     /* create the next stream, but strip the compressed encoding */
-    XP_FREEIF(URL_s->content_encoding);
+    PR_FREEIF(URL_s->content_encoding);
     URL_s->content_encoding = NULL;
     obj->next_stream = NET_StreamBuilder(format_out, URL_s, window_id);
 
     if(!obj->next_stream)
     {
 	inflateEnd(&obj->d_stream);
-	XP_FREE(stream);
-	XP_FREE(obj);
+	PR_Free(stream);
+	PR_Free(obj);
 	return NULL;
     }
 

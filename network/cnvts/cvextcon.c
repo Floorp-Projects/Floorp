@@ -19,6 +19,7 @@
  */
 
 #include "xp.h"
+#include "plstr.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -44,7 +45,7 @@ typedef struct _CVG_DataObject {
 } CVG_DataObject;
 
 
-PRIVATE int net_ExtConverterRead (CVG_DataObject *data, Bool block_p)
+PRIVATE int net_ExtConverterRead (CVG_DataObject *data, PRBool block_p)
 {
   char input_buffer [1024];
   int bytes_read;
@@ -122,7 +123,7 @@ PRIVATE int net_ExtConverterWrite (NET_StreamClass *stream,
 	  /* Now read as much as possible (until done, or the pipe is drained.)
 	   */
 	  {
-		int status = net_ExtConverterRead (data, FALSE);
+		int status = net_ExtConverterRead (data, PR_FALSE);
 		/* abort */
 		if (status < 0)
 		  return status;
@@ -187,7 +188,7 @@ PRIVATE void net_ExtConverterComplete (NET_StreamClass *stream)
 	 of its output to show up on its stdout; then close stdout, and kill
 	 the process. */
   close (data->outfd);
-  net_ExtConverterRead (data, TRUE);
+  net_ExtConverterRead (data, PR_TRUE);
   close (data->infd);
   net_KillConverterProcess (data);
 
@@ -233,13 +234,13 @@ NET_ExtConverterConverter (int          format_out,
     
     TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL) 
             return(NULL);
 
-	XP_MEMSET(stream, 0, sizeof(NET_StreamClass));
+	memset(stream, 0, sizeof(NET_StreamClass));
 
-    obj = XP_NEW(CVG_DataObject);
+    obj = PR_NEW(CVG_DataObject);
     if (obj == NULL) 
             return(NULL);
 	memset(obj, 0, sizeof(CVG_DataObject));
@@ -265,14 +266,14 @@ NET_ExtConverterConverter (int          format_out,
 	  if (ext_con_obj->is_encoding_converter)
 		{
 		  old = URL_s->content_encoding;
-		  new = XP_STRDUP (ext_con_obj->new_format);
+		  new = PL_strdup (ext_con_obj->new_format);
 		  if (!new) return (NULL);
 		  URL_s->content_encoding = new;
 		}
 	  else
 		{
 		  old = URL_s->content_type;
-		  new = XP_STRDUP (ext_con_obj->new_format);
+		  new = PL_strdup (ext_con_obj->new_format);
 		  if (!new) return (NULL);
 		  URL_s->content_type = new;
 		}
@@ -281,12 +282,12 @@ NET_ExtConverterConverter (int          format_out,
 
 	  if (ext_con_obj->is_encoding_converter)
 		{
-		  XP_FREE (URL_s->content_encoding);
+		  PR_Free (URL_s->content_encoding);
 		  URL_s->content_encoding = old;
 		}
 	  else
 		{
-		  XP_FREE (URL_s->content_type);
+		  PR_Free (URL_s->content_type);
 		  URL_s->content_type = old;
 		}
 	}

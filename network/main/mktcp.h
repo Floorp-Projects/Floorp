@@ -20,7 +20,7 @@
 
 #include "xp_sock.h"
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 
 /* state machine data for host connect */
 typedef struct _TCP_ConData TCP_ConData;  
@@ -153,5 +153,5 @@ extern int NET_BufferedReadLine(PRFileDesc *sock,
 
 extern void NET_SanityCheckDNS (MWContext *context);
 
-XP_END_PROTOS
+PR_END_EXTERN_C
 #endif   /* MKTCP_H */

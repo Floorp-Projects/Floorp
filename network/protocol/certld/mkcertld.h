@@ -20,12 +20,12 @@
 /*
  * mkcertld.h - api to cert ldap protocol code
  *
- * $Id: mkcertld.h,v 1.1 1998/04/30 20:53:39 montulli Exp $
+ * $Id: mkcertld.h,v 1.2 1998/05/19 00:53:44 scullin Exp $
  */
 
-XP_BEGIN_PROTOS
+PR_BEGIN_EXTERN_C
 void NET_InitCertLdapProtocol(void);
-XP_END_PROTOS
+PR_END_EXTERN_C
 
 #endif /* _MKCERTLD_H_ */
 

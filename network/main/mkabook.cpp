@@ -22,10 +22,8 @@
 //
 //
 
-#include "mkutils.h" 
-
 #include "xp.h"
-#include "xp_str.h"
+#include "mkutils.h" 
 
 #include "mkgeturl.h"
 #include "mkabook.h"
@@ -40,8 +38,8 @@ extern "C" int32 net_AddressBookLoad (ActiveEntry *ce)
 	char * url = ce->URL_s->address;
 	char * path = NET_ParseURL(url, GET_PATH_PART);
 	char * search = NET_ParseURL(url, GET_SEARCH_PART);
-	if (!XP_STRNCASECMP(path,"add",3)) {
-		if (!XP_STRNCASECMP (search, "?vcard=", 7)) {
+	if (!PL_strncasecmp(path,"add",3)) {
+		if (!PL_strncasecmp (search, "?vcard=", 7)) {
 			ABook* addressbook = FE_GetAddressBook(NULL);
 			if (addressbook)
 				AB_ImportFromVcardURL(addressbook, ce->window_id, NET_UnEscape(search+7));
@@ -54,14 +52,14 @@ extern "C" int32 net_AddressBookLoad (ActiveEntry *ce)
 
 extern "C" int32 net_ProcessAddressBook (ActiveEntry *ce)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return -1;
 }
 
 
 extern "C" int32 net_InterruptAddressBook (ActiveEntry * ce)
 {
-	XP_ASSERT(0);
+	PR_ASSERT(0);
 	return -1;
 }
 

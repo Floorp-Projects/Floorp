@@ -101,14 +101,14 @@ XP_NetHelp(MWContext *pContext, const char *topic)
 	/* Prepend the vendor name "netscape/" to all of our own topics */
 
 	if (topic == NULL) {
-		pHelpURLString = XP_STRDUP("netscape/home");
+		pHelpURLString = PL_strdup("netscape/home");
 	} else {
-		pHelpURLString = (char *) XP_ALLOC(strlen(topic) + strlen("netscape/")+1);
+		pHelpURLString = (char *) PR_Malloc(strlen(topic) + strlen("netscape/")+1);
 		if (!pHelpURLString) {
 			return;
 		}
-		XP_STRCPY(pHelpURLString, "netscape/");
-		XP_STRCPY(&(pHelpURLString[9]), topic);
+		PL_strcpy(pHelpURLString, "netscape/");
+		PL_strcpy(&(pHelpURLString[9]), topic);
 	}
 
 	/* Now get the right context to load it from */
@@ -121,7 +121,7 @@ XP_NetHelp(MWContext *pContext, const char *topic)
 
 	NET_LoadNetHelpTopic(pActiveContext, pHelpURLString);	
 
-	XP_FREEIF(pHelpURLString);
+	PR_FREEIF(pHelpURLString);
 }
 
 
@@ -137,13 +137,13 @@ NET_LoadNetHelpTopic(MWContext *pContext, const char *topic)
 	
 	/* Convert the fully-specified topic into a nethelp URL: */
 	
-	pNetHelpURLString = (char *) XP_ALLOC(strlen(topic) + strlen(NETHELP_URL_PREFIX)+1);
+	pNetHelpURLString = (char *) PR_Malloc(strlen(topic) + strlen(NETHELP_URL_PREFIX)+1);
 	if (!pNetHelpURLString) {
 		return;
 	}
 	
-	XP_STRCPY(pNetHelpURLString, NETHELP_URL_PREFIX);
-	XP_STRCPY(&(pNetHelpURLString[strlen(NETHELP_URL_PREFIX)]), topic);
+	PL_strcpy(pNetHelpURLString, NETHELP_URL_PREFIX);
+	PL_strcpy(&(pNetHelpURLString[strlen(NETHELP_URL_PREFIX)]), topic);
 	
 	pHelpURL = NET_CreateURLStruct(pNetHelpURLString, NET_NORMAL_RELOAD);
 
@@ -153,14 +153,14 @@ NET_LoadNetHelpTopic(MWContext *pContext, const char *topic)
 
 	NET_GetURL(pHelpURL, FO_PRESENT, pContext, simple_exit);
 
-	XP_FREEIF(pNetHelpURLString);
+	PR_FREEIF(pNetHelpURLString);
 		
 }
 	
 PRIVATE void
 net_help_free_frame_group_struct(frame_set_struct *obj)
 {
-	XP_ASSERT(obj);
+	PR_ASSERT(obj);
 	if(!obj)
 		return;
 	FREEIF(obj->address);
@@ -179,7 +179,7 @@ NET_GetHTMLHelpFileFromMapFile(MWContext *context,
 {
 	URL_Struct *URL_s;
 
-	XP_ASSERT(map_file_url && id);
+	PR_ASSERT(map_file_url && id);
 
 	if(!map_file_url || !id)
 		return;
@@ -189,7 +189,7 @@ NET_GetHTMLHelpFileFromMapFile(MWContext *context,
 	if(!URL_s)
 		return;
 
-	URL_s->fe_data = XP_STRDUP(id);
+	URL_s->fe_data = PL_strdup(id);
 
 	NET_GetURL(URL_s, FO_CACHE_AND_LOAD_HTML_HELP_MAP_FILE, context, simple_exit);
 }
@@ -218,7 +218,7 @@ net_get_default_help_URL(char **pHelpBase)
 				success = PREF_ERROR;
 		}
 		/* ...any of the above might accidentally _not_ end with a '/'*/
-		if ((*pHelpBase) && ((*pHelpBase)[XP_STRLEN(*pHelpBase)-1]) != '/') {
+		if ((*pHelpBase) && ((*pHelpBase)[PL_strlen(*pHelpBase)-1]) != '/') {
 			StrAllocCat(*pHelpBase, "/");
 		}
 	}
@@ -281,7 +281,7 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 
 	XP_Bool appendProjFile = FALSE;
 	
-	remote_addr_ptr = XP_STRCHR(URL_s->address, '@');
+	remote_addr_ptr = PL_strchr(URL_s->address, '@');
 	
 	if (!remote_addr_ptr) {
 		char *default_URL = 0;
@@ -291,7 +291,7 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 		
 		if (default_URL) {
 			StrAllocCopy(remote_addr, default_URL);
-			XP_FREE(default_URL);
+			PR_Free(default_URL);
 		}
 		
 		appendProjFile = TRUE;
@@ -301,7 +301,7 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 		
 		StrAllocCopy(remote_addr, remote_addr_ptr+1);
 
-		if (remote_addr && (remote_addr[XP_STRLEN(remote_addr)] == '/')) {
+		if (remote_addr && (remote_addr[PL_strlen(remote_addr)] == '/')) {
 		/* Check to see if the remote_addr ends in a slash.  If so, we
 		   have some appending to do */
 
@@ -318,9 +318,9 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 	/* By now, the URL_s->address has been stripped of any location information */
 	/* First, remove the scheme, which is guaranteed to be there. */
 	
-	scheme_specific = XP_STRCHR(URL_s->address, ':') + 1;
+	scheme_specific = PL_strchr(URL_s->address, ':') + 1;
 	
-	topic_ptr = XP_STRCHR(scheme_specific, ':');
+	topic_ptr = PL_strchr(scheme_specific, ':');
 	
 	if (!topic_ptr) {
 		/* This is an error case, but we'll handle it anyway by defaulting to
@@ -368,7 +368,7 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 	   
 	if (topic) {
 		NET_UnEscape(topic);
-		URL_s->fe_data = XP_STRDUP(topic);
+		URL_s->fe_data = PL_strdup(topic);
 	} else {
 		URL_s->fe_data = NULL;
 	}
@@ -385,20 +385,20 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 PRIVATE HTMLHelpParseObj *
 net_ParseHTMLHelpInit(char *url_to_map_file, char *id)
 {
-	HTMLHelpParseObj *rv = XP_NEW(HTMLHelpParseObj);
+	HTMLHelpParseObj *rv = PR_NEW(HTMLHelpParseObj);
 
 	if(!rv)
 		return(NULL);
 
-	XP_ASSERT(url_to_map_file && id);
+	PR_ASSERT(url_to_map_file && id);
 
 	if(!url_to_map_file || !id)
 		return(NULL);
 
-	XP_MEMSET(rv, 0, sizeof(HTMLHelpParseObj));
+	memset(rv, 0, sizeof(HTMLHelpParseObj));
 
-	rv->url_to_map_file = XP_STRDUP(url_to_map_file);
-	rv->id              = XP_STRDUP(id);
+	rv->url_to_map_file = PL_strdup(url_to_map_file);
+	rv->id              = PL_strdup(id);
 	rv->helpVersion     = 1;
 
 	rv->window_height = DEFAULT_HELP_WINDOW_HEIGHT;
@@ -412,7 +412,7 @@ net_ParseHTMLHelpInit(char *url_to_map_file, char *id)
 PRIVATE void
 net_ParseHTMLHelpFree(HTMLHelpParseObj * obj)
 {
-	XP_ASSERT(obj);
+	PR_ASSERT(obj);
 
 	if(!obj)
 		return;
@@ -496,47 +496,47 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 	if(*line == '<')
 	  {
 		/* find and terminate the end '>' */
-		XP_STRTOK(line, ">");
+		strtok(line, ">");
 
 		token = XP_StripLine(line+1);
 
-		if(!strncasecomp(token, 
+		if(!PL_strncasecmp(token, 
 						 ID_MAP_TOKEN, 
 						 sizeof(ID_MAP_TOKEN)-1))
 		  {
 			obj->in_id_mapping = TRUE;
 		  }
-		else if(!strncasecomp(token, 
+		else if(!PL_strncasecmp(token, 
 						 END_ID_MAP_TOKEN, 
 						 sizeof(END_ID_MAP_TOKEN)-1))
 		  {
 			obj->in_id_mapping = FALSE;
 		  }
-		else if(!strncasecomp(token, 
+		else if(!PL_strncasecmp(token, 
 						 FRAME_GROUP_TOKEN, 
 						 sizeof(FRAME_GROUP_TOKEN)-1))
 		  {
 			char *cp = token + sizeof(FRAME_GROUP_TOKEN)-1;
-			frame_set_struct * fgs = XP_NEW(frame_set_struct);
+			frame_set_struct * fgs = PR_NEW(frame_set_struct);
 
 			while(isspace(*cp)) cp++;
 
 			if(fgs)
 			  {
-				XP_MEMSET(fgs, 0, sizeof(frame_set_struct));
+				memset(fgs, 0, sizeof(frame_set_struct));
 
 				next_word=NULL; /* init */
 
 				do {
-					if(!strncasecomp(cp, SRC_TOKEN, sizeof(SRC_TOKEN)-1))
+					if(!PL_strncasecmp(cp, SRC_TOKEN, sizeof(SRC_TOKEN)-1))
 				  	  {
 						char *address = net_get_html_help_token(
 														cp+sizeof(SRC_TOKEN)-1,
 														&next_word);
 						cp = next_word;
-						fgs->address = XP_STRDUP(address);
+						fgs->address = PL_strdup(address);
 				  	  }
-					else if(!strncasecomp(cp, 
+					else if(!PL_strncasecmp(cp, 
 									  WINDOW_TOKEN, 
 									  sizeof(WINDOW_TOKEN)-1))
 				      {
@@ -544,7 +544,7 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 													cp+sizeof(WINDOW_TOKEN)-1, 
 													&next_word);
 					    cp = next_word;
-					    fgs->target = XP_STRDUP(window);
+					    fgs->target = PL_strdup(window);
 				      }
 					else
 					  {
@@ -570,7 +570,7 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 				XP_ListAddObject(obj->frame_group_stack, fgs);
 			  }
 		  }
-		else if(!strncasecomp(token, 
+		else if(!PL_strncasecmp(token, 
 						 END_FRAME_GROUP_TOKEN, 
 						 sizeof(END_FRAME_GROUP_TOKEN)-1))
 		  {
@@ -584,7 +584,7 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 	  }
 	else if(!obj->in_id_mapping)
 	  {
-		if(!strncasecomp(line, 
+		if(!PL_strncasecmp(line, 
 					 	WINDOW_SIZE_TOKEN, 
 					 	sizeof(WINDOW_SIZE_TOKEN)-1))
 		  {
@@ -595,7 +595,7 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 												NULL);
 
 			if(window_size)
-				comma = XP_STRCHR(window_size, ',');
+				comma = PL_strchr(window_size, ',');
 
 			if(comma)
 			  {
@@ -604,7 +604,7 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 				obj->window_height = XP_ATOI(comma+1);
 			  }
 		  }
-		else if(!strncasecomp(line, 
+		else if(!PL_strncasecmp(line, 
 						 	WINDOW_NAME_TOKEN, 
 						 	sizeof(WINDOW_NAME_TOKEN)-1))
 		  {
@@ -615,10 +615,10 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 			if(window_name)
 			  {
 				FREEIF(obj->window_name);
-				obj->window_name = XP_STRDUP(window_name);
+				obj->window_name = PL_strdup(window_name);
 			  }
 		  }
-		else if(!strncasecomp(line, 
+		else if(!PL_strncasecmp(line, 
 					 	HELP_VERSION_TOKEN, 
 					 	sizeof(HELP_VERSION_TOKEN)-1))
 		  {
@@ -636,20 +636,20 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 	else
 	  {
 		/* id mapping pair */
-		if(!strncasecomp(line, obj->id, XP_STRLEN(obj->id)))
+		if(!PL_strncasecmp(line, obj->id, PL_strlen(obj->id)))
 		  {
-			char *id_value = net_get_html_help_token(line+XP_STRLEN(obj->id),
+			char *id_value = net_get_html_help_token(line+PL_strlen(obj->id),
 													 &next_word);
 
 			if(id_value)
 			  {
-			  	obj->id_value = XP_STRDUP(id_value);
+			  	obj->id_value = PL_strdup(id_value);
 
 				while(next_word)
 				  {
 					char *cp = next_word;
 
-                    if(!strncasecomp(cp,
+                    if(!PL_strncasecmp(cp,
                                      TARGET_TOKEN,
                                       sizeof(TARGET_TOKEN)-1))
                       {
@@ -657,7 +657,7 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
                                                     cp+sizeof(TARGET_TOKEN)-1,
                                                     &next_word);
                         cp = next_word;
-                        obj->content_target = XP_STRDUP(target);
+                        obj->content_target = PL_strdup(target);
                       }
 					else
 					  {
@@ -681,14 +681,14 @@ net_ParseHTMLHelpLine(HTMLHelpParseObj *obj, char *line_data)
 		
 			return(HTML_HELP_ID_FOUND);
 		  }
-		if(!strncasecomp(line, DEFAULT_HELP_ID, sizeof(DEFAULT_HELP_ID)-1))
+		if(!PL_strncasecmp(line, DEFAULT_HELP_ID, sizeof(DEFAULT_HELP_ID)-1))
 		  {
 			char *default_id_value = net_get_html_help_token(
 												line+sizeof(DEFAULT_HELP_ID)-1,
 												NULL);
 
             if(default_id_value)
-                obj->default_id_value = XP_STRDUP(default_id_value);
+                obj->default_id_value = PL_strdup(default_id_value);
 		  }
 		
 	  }
@@ -726,7 +726,7 @@ NET_ParseHTMLHelpPut(HTMLHelpParseObj *obj, char *str, int32 len)
 
         /* remove the parsed line from obj->line_buffer */
         string_len = (new_line - obj->line_buffer) + 1;
-        XP_MEMCPY(obj->line_buffer,
+        memcpy(obj->line_buffer,
                   new_line+1,
                   obj->line_buffer_size-string_len);
         obj->line_buffer_size -= string_len;
@@ -822,17 +822,17 @@ net_ParseHTMLHelpLoadHelpDoc(HTMLHelpParseObj *obj, MWContext *context)
 	if(!URL_s)
 		goto cleanup;
 
-	URL_s->window_chrome = XP_NEW(Chrome);	
+	URL_s->window_chrome = PR_NEW(Chrome);	
 
 	if(!URL_s->window_chrome)
 		goto cleanup;
 
-	XP_MEMSET(URL_s->window_chrome, 0, sizeof(Chrome));
+	memset(URL_s->window_chrome, 0, sizeof(Chrome));
 
 	if(obj->window_name)
-		URL_s->window_target = XP_STRDUP(obj->window_name);
+		URL_s->window_target = PL_strdup(obj->window_name);
 	else
-		URL_s->window_target = XP_STRDUP(DEFAULT_HELP_WINDOW_NAME);
+		URL_s->window_target = PL_strdup(DEFAULT_HELP_WINDOW_NAME);
 
 	net_help_init_chrome(URL_s->window_chrome, 
 						 obj->window_width, 
@@ -856,9 +856,9 @@ net_ParseHTMLHelpLoadHelpDoc(HTMLHelpParseObj *obj, MWContext *context)
 		content_URL_s = NET_CreateURLStruct(content_address, NET_DONT_RELOAD);
 
 		if(obj->content_target)
-			content_URL_s->window_target = XP_STRDUP(obj->content_target);
+			content_URL_s->window_target = PL_strdup(obj->content_target);
 		else if(fgs->target)
-			content_URL_s->window_target = XP_STRDUP(fgs->target);
+			content_URL_s->window_target = PL_strdup(fgs->target);
 
 		/* doesn't work: URL_s->fe_data = (void *) content_URL_s; */
 
@@ -883,11 +883,11 @@ net_ParseHTMLHelpLoadHelpDoc(HTMLHelpParseObj *obj, MWContext *context)
 						 URL_s->window_chrome);
 
 		if (HELP_INFO_PTR(*new_context) == NULL) {
-			new_context->pHelpInfo = XP_NEW_ZAP(HelpInfoStruct);
+			new_context->pHelpInfo = PR_NEWZAP(HelpInfoStruct);
 		}
 		
 		if (HELP_INFO_PTR(*new_context)->topicURL != NULL) {
-			XP_FREE(HELP_INFO_PTR(*new_context)->topicURL);
+			PR_Free(HELP_INFO_PTR(*new_context)->topicURL);
 			HELP_INFO_PTR(*new_context)->topicURL = NULL;
 		}
 		
@@ -898,11 +898,11 @@ net_ParseHTMLHelpLoadHelpDoc(HTMLHelpParseObj *obj, MWContext *context)
 	  {
 	
 		if (HELP_INFO_PTR(*new_context) == NULL) {
-			new_context->pHelpInfo = XP_NEW_ZAP(HelpInfoStruct);
+			new_context->pHelpInfo = PR_NEWZAP(HelpInfoStruct);
 		}
 		
 		if (HELP_INFO_PTR(*new_context)->topicURL != NULL) {
-			XP_FREE(HELP_INFO_PTR(*new_context)->topicURL);
+			PR_Free(HELP_INFO_PTR(*new_context)->topicURL);
 			HELP_INFO_PTR(*new_context)->topicURL = NULL;
 		}
 		
@@ -981,18 +981,18 @@ NET_HTMLHelpMapToURL(int         format_out,
 
     TRACEMSG(("Setting up display stream. Have URL: %s\n", URL_s->address));
 
-    stream = XP_NEW(NET_StreamClass);
+    stream = PR_NEW(NET_StreamClass);
     if(stream == NULL)
         return(NULL);
 
-    obj = XP_NEW(html_help_map_stream);
+    obj = PR_NEW(html_help_map_stream);
     if (obj == NULL)
       {
         FREE(stream);
         return(NULL);
       }
 
-    XP_MEMSET(obj, 0, sizeof(html_help_map_stream));
+    memset(obj, 0, sizeof(html_help_map_stream));
 
 	if(URL_s->cache_file || URL_s->memory_copy)
 		obj->file_is_local = TRUE;

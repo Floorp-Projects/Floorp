@@ -20,6 +20,8 @@
  */
 
 #include "xp.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "netutils.h"
 #include "mkselect.h"
 #include "mktcp.h"
@@ -95,7 +97,7 @@ typedef struct _GopherConData {
 } GopherConData;
 
 #define PUTSTRING(s)     (*connection_data->stream->put_block) \
-               					(connection_data->stream, s, XP_STRLEN(s))
+               					(connection_data->stream, s, PL_strlen(s))
 #define PUTBLOCK(b, l)   (*connection_data->stream->put_block) \
                					(connection_data->stream, b, l)
 #define COMPLETE_STREAM  (*connection_data->stream->complete) \
@@ -154,7 +156,7 @@ net_begin_gopher_menu(GopherConData * connection_data)
 
     CD_NEXT_STATE = GOPHER_TRANSFER_MENU;
 
-    XP_STRCPY(CD_OUTPUT_BUF, "<H1>Gopher Menu</H1>\n<PRE>");
+    PL_strcpy(CD_OUTPUT_BUF, "<H1>Gopher Menu</H1>\n<PRE>");
    	return(PUTSTRING(CD_OUTPUT_BUF));
 
 }
@@ -182,7 +184,7 @@ net_parse_menu (ActiveEntry * cur_entry)
         CD_PAUSE_FOR_READ = FALSE;
 		if(CE_BYTES_RECEIVED < 4)
 		  {
-			XP_STRCPY(CD_OUTPUT_BUF, XP_GetString( XP_SERVER_RETURNED_NO_DATA ) );
+			PL_strcpy(CD_OUTPUT_BUF, XP_GetString( XP_SERVER_RETURNED_NO_DATA ) );
         	PUTSTRING(CD_OUTPUT_BUF);
 		  }
 
@@ -224,14 +226,14 @@ net_parse_menu (ActiveEntry * cur_entry)
 
     /* quit when just a dot is found on a line by itself
 	 */
-    if(!XP_STRCMP(line,"."))
+    if(!PL_strcmp(line,"."))
       {
         CD_NEXT_STATE = GOPHER_DONE;
         CD_PAUSE_FOR_READ = FALSE;
 
 		if(CE_BYTES_RECEIVED < 4)
 		  {
-			XP_STRCPY(CD_OUTPUT_BUF, XP_GetString( XP_SERVER_RETURNED_NO_DATA ) );
+			PL_strcpy(CD_OUTPUT_BUF, XP_GetString( XP_SERVER_RETURNED_NO_DATA ) );
         	PUTSTRING(CD_OUTPUT_BUF);
 		  }
 			
@@ -241,21 +243,21 @@ net_parse_menu (ActiveEntry * cur_entry)
     if (gopher_type && *ptr) 
 	  {
         name = ptr;
-        gopher_path = XP_STRCHR(name, '\t');
+        gopher_path = PL_strchr(name, '\t');
         if (gopher_path) 
 		  {
             *gopher_path++ = 0;
-            host = XP_STRCHR(gopher_path, '\t');
+            host = PL_strchr(gopher_path, '\t');
             if (host) 
 			  {
                 *host++ = 0;    
-                port = XP_STRCHR(host, '\t');
+                port = PL_strchr(host, '\t');
                 if (port) 
 				  {
                     char *tab;
 
                     port[0] = ':';    /* fake the port no */
-                    tab = XP_STRCHR(port, '\t');
+                    tab = PL_strchr(port, '\t');
                     if (tab) 
 						*tab++ = '\0';  
 
@@ -276,7 +278,7 @@ net_parse_menu (ActiveEntry * cur_entry)
       {
         int i=0;
         while(XP_IS_SPACE(name[i])) i++;
-        if(!XP_STRLEN(name))
+        if(!PL_strlen(name))
         gopher_type = GTYPE_INFO;
       }
 
@@ -291,7 +293,7 @@ net_parse_menu (ActiveEntry * cur_entry)
     else if(gopher_type == GTYPE_WWW)
       {
         /* points to URL */
-		XP_STRCPY(CD_OUTPUT_BUF, "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-text\">");
+		PL_strcpy(CD_OUTPUT_BUF, "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-text\">");
         CE_STATUS = PUTSTRING(CD_OUTPUT_BUF);
 
 		if(CE_STATUS < 0)
@@ -313,7 +315,7 @@ net_parse_menu (ActiveEntry * cur_entry)
 		  {
 			char * temp = NET_Escape(gopher_path, URL_XALPHAS);
 		    PR_snprintf(CD_OUTPUT_BUF, CD_OUTPUT_BUFFER_SIZE, "<A HREF=\"telnet://%s@%s/\"><IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-telnet\"> %s</A>\n", temp, host, name);
-			XP_FREE(temp);
+			PR_Free(temp);
 		  }
         else 
 		  {
@@ -333,7 +335,7 @@ net_parse_menu (ActiveEntry * cur_entry)
       {
         if(host && gopher_path) 
 	 	  {
-			if(!XP_STRCMP(host, "error.host:70"))
+			if(!PL_strcmp(host, "error.host:70"))
 			  {
 				
                 PR_snprintf(CD_OUTPUT_BUF, CD_OUTPUT_BUFFER_SIZE, "Error: %s", name);
@@ -350,68 +352,68 @@ net_parse_menu (ActiveEntry * cur_entry)
                     case GTYPE_TEXT:
         		    case GTYPE_HTML:
         		    case GTYPE_HTMLCAPS:
-            		  PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            		  PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 									    "<IMG ALIGN=absbottom BORDER=0 "
 										"SRC=\"internal-gopher-text\">");
                             break;
                     case GTYPE_MENU:
-            			    PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            			    PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 											    "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-menu\">");
                             break;
                     case GTYPE_CSO:
                     case GTYPE_INDEX:
-            			    PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            			    PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 											    "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-index\">");
                             break;
                     case GTYPE_PCBINARY:
                     case GTYPE_UUENCODED:
                     case GTYPE_BINARY:
                     case GTYPE_MACBINHEX:
-            			    PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            			    PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 											    "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-binary\">");
                             break;
                     case GTYPE_IMAGE:
                     case GTYPE_GIF:
-            			    PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            			    PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 											    "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-image\">");
                             break;
                     case GTYPE_SOUND:
-            			    PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            			    PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 											    "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-sound\">");
                             break;
         		    case GTYPE_MPEG:
-            			    PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            			    PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 											    "<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-movie\">");
                 		    break;
     
                     case GTYPE_MIME:
                     default:
-            			    PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+            			    PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 											"<IMG ALIGN=absbottom BORDER=0 SRC=\"internal-gopher-unknown\">");
                             break;
             	}
 
-                PR_snprintf(&CD_OUTPUT_BUF[XP_STRLEN(CD_OUTPUT_BUF)], 
+                PR_snprintf(&CD_OUTPUT_BUF[PL_strlen(CD_OUTPUT_BUF)], 
 										CD_OUTPUT_BUFFER_SIZE 
-												- XP_STRLEN(CD_OUTPUT_BUF),
+												- PL_strlen(CD_OUTPUT_BUF),
 										" %s</A>\n", name);
-			    XP_FREE(newpath);
+			    PR_Free(newpath);
 
                 CE_STATUS = PUTSTRING(CD_OUTPUT_BUF);
 			  }	
@@ -430,7 +432,7 @@ net_parse_menu (ActiveEntry * cur_entry)
 PRIVATE int
 net_begin_gopher_cso(GopherConData * connection_data)
 {
-    XP_STRCPY(CD_OUTPUT_BUF, "<H1>CSO Search Results</H1>\n<PRE>");
+    PL_strcpy(CD_OUTPUT_BUF, "<H1>CSO Search Results</H1>\n<PRE>");
 
     CD_NEXT_STATE = GOPHER_TRANSFER_CSO;
 
@@ -500,9 +502,9 @@ net_parse_cso (ActiveEntry * cur_entry)
             
     if(*line == '-') 
       {
-		colon1 = XP_STRCHR(line,':');
+		colon1 = PL_strchr(line,':');
 		if(colon1)
-            colon2 = XP_STRCHR(colon1+1, ':'); 
+            colon2 = PL_strchr(colon1+1, ':'); 
 		else
 			colon2 = NULL;
     
@@ -510,20 +512,20 @@ net_parse_cso (ActiveEntry * cur_entry)
           {
             if (*(colon2-1) != CD_CSO_LAST_CHAR)   
               { /* print seperator */
-    			XP_STRCPY(CD_OUTPUT_BUF, "</PRE><H2>");
+    			PL_strcpy(CD_OUTPUT_BUF, "</PRE><H2>");
     			CE_STATUS = PUTSTRING(CD_OUTPUT_BUF);
               }
                     
 			if(CE_STATUS > -1)
             	CE_STATUS = PUTSTRING(colon2+1);
-			XP_STRCPY(CD_OUTPUT_BUF, "\n");
+			PL_strcpy(CD_OUTPUT_BUF, "\n");
 			if(CE_STATUS > -1)
 				CE_STATUS = PUTSTRING(CD_OUTPUT_BUF);
                 
             if (*(colon2-1) != CD_CSO_LAST_CHAR)   
               {
                 /* end seperator */
-    			XP_STRCPY(CD_OUTPUT_BUF, "</H2><PRE>");
+    			PL_strcpy(CD_OUTPUT_BUF, "</H2><PRE>");
 				if(CE_STATUS > -1)
     				CE_STATUS = PUTSTRING(CD_OUTPUT_BUF);
               }
@@ -556,7 +558,7 @@ net_display_index_splash_screen (ActiveEntry * cur_entry)
 
     COMPLETE_STREAM;
 
-	XP_FREE(address_copy);
+	PR_Free(address_copy);
 
     return(0);
 }
@@ -579,7 +581,7 @@ net_display_cso_splash_screen (ActiveEntry * cur_entry)
 
     COMPLETE_STREAM;
 
-	XP_FREE(address_copy);
+	PR_Free(address_copy);
 
     return(0);
 }
@@ -595,7 +597,7 @@ net_send_gopher_request (ActiveEntry * cur_entry)
     TRACEMSG(("MKGopher: Connected, writing command `%s' to socket %d\n", 
                             CD_COMMAND, CE_SOCK));
 
-    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, CD_COMMAND, XP_STRLEN(CD_COMMAND));
+    CE_STATUS = (int) NET_BlockingWrite(CE_SOCK, CD_COMMAND, PL_strlen(CD_COMMAND));
 
     NET_Progress (CE_WINDOW_ID, XP_GetString(XP_PROGRESS_WAITREPLY_GOTHER));
 
@@ -708,7 +710,7 @@ net_GopherLoad (ActiveEntry * cur_entry)
 	  {
 		int port_number;
 		int i;
-		char *colon = XP_STRCHR(gopher_host, ':');
+		char *colon = PL_strchr(gopher_host, ':');
 
 		if(colon)
 		  {
@@ -725,29 +727,29 @@ net_GopherLoad (ActiveEntry * cur_entry)
 														CE_URL_S->address);
 					if(error_msg)
 						FE_Alert(CE_WINDOW_ID, error_msg);
-					XP_FREE(gopher_host);
+					PR_Free(gopher_host);
 					return(MK_MALFORMED_URL_ERROR);
 			  	  }
 		  }
-		XP_FREE(gopher_host);
+		PR_Free(gopher_host);
 	  }
 		
 
     /* malloc space for connection data 
      */
-    connection_data = XP_NEW(GopherConData);
+    connection_data = PR_NEW(GopherConData);
     if(!connection_data)
 	  {
         CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
         return(MK_OUT_OF_MEMORY);
 	  }
-    XP_MEMSET(connection_data, 0, sizeof(GopherConData));  /* zero it */
+    memset(connection_data, 0, sizeof(GopherConData));  /* zero it */
 
     CE_SOCK = NULL;
 
     cur_entry->con_data = connection_data;
 
-	CD_OUTPUT_BUF = (char*) XP_ALLOC(CD_OUTPUT_BUFFER_SIZE);
+	CD_OUTPUT_BUF = (char*) PR_Malloc(CD_OUTPUT_BUFFER_SIZE);
 	if(!CD_OUTPUT_BUF)
 	  {
         CE_URL_S->error_msg = NET_ExplainErrorDetails(MK_OUT_OF_MEMORY);
@@ -776,7 +778,7 @@ net_GopherLoad (ActiveEntry * cur_entry)
 		 * if the URL looks like gopher://host/?search term
 		 * treat it as a text file and append the search term
 		 */
-		if(XP_STRCHR(CE_URL_S->address, '?'))
+		if(PL_strchr(CE_URL_S->address, '?'))
 		  {
 			gopher_type = '0';
 		  }
@@ -827,7 +829,7 @@ net_GopherLoad (ActiveEntry * cur_entry)
             /* do the telnet and return */
             return(NET_RemoteHostLoad(cur_entry));
 #else
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 			break;
 #endif /* MOZILLA_CLIENT */
         case GTYPE_GIF:
@@ -861,7 +863,7 @@ net_GopherLoad (ActiveEntry * cur_entry)
     switch(gopher_type) {
         case GTYPE_INDEX:
             /* Search is allowed */
-            query = XP_STRCHR(CE_URL_S->address, '?');  /* Look for search string */
+            query = PL_strchr(CE_URL_S->address, '?');  /* Look for search string */
 
             if (!query || !query[1]) {      /* No search defined */
                 /* Display "cover page" */
@@ -888,7 +890,7 @@ net_GopherLoad (ActiveEntry * cur_entry)
 
         case GTYPE_CSO:
             /* Search is allowed */
-            query = XP_STRCHR(CE_URL_S->address, '?');      /* Look for search string */
+            query = PL_strchr(CE_URL_S->address, '?');      /* Look for search string */
 
             if (!query || !query[1])           /* No search required */
 			  {
@@ -914,7 +916,7 @@ net_GopherLoad (ActiveEntry * cur_entry)
 
 	    case GTYPE_TEXT:
 		   /* Look for search string */
-		    query = XP_STRCHR(CE_URL_S->address, '?');     
+		    query = PL_strchr(CE_URL_S->address, '?');     
 
 			/* special case!!!
 			 * if a query exist treat it special, send 
@@ -950,14 +952,14 @@ net_GopherLoad (ActiveEntry * cur_entry)
                 StrAllocCopy(CD_COMMAND, (char*)NET_UnEscape(gopher_path));
     }
 
-    XP_FREEIF(path);  /* NET_Parse malloc'd the path string */
+    PR_FREEIF(path);  /* NET_Parse malloc'd the path string */
     path = NULL;
 
     /* protect against other protocol attacks by limiting
      * the command to a single line.  Terminate the command
      * at any \n or \r
      */
-    if(XP_STRCHR(CD_COMMAND, '\n') || XP_STRCHR(CD_COMMAND, '\r'))
+    if(PL_strchr(CD_COMMAND, '\n') || PL_strchr(CD_COMMAND, '\r'))
       {
    		char *error_msg = NET_ExplainErrorDetails(MK_MALFORMED_URL_ERROR, 
 												  CE_URL_S->address);
@@ -1112,14 +1114,14 @@ net_ProcessGopher(ActiveEntry * cur_entry)
                                         CE_URL_S,
                                         CD_ORIGINAL_CONTENT_LENGTH,
 										CE_BYTES_RECEIVED);
-            XP_FREEIF(CD_COMMAND);
-            XP_FREEIF(CD_STREAM);  	/* don't forget the stream */
-			XP_FREEIF(CD_OUTPUT_BUF);
-            XP_FREEIF(CD_DATA_BUF);
+            PR_FREEIF(CD_COMMAND);
+            PR_FREEIF(CD_STREAM);  	/* don't forget the stream */
+			PR_FREEIF(CD_OUTPUT_BUF);
+            PR_FREEIF(CD_DATA_BUF);
             if(CD_TCP_CON_DATA)
                 NET_FreeTCPConData(CD_TCP_CON_DATA);
 
-            XP_FREE(connection_data);
+            PR_Free(connection_data);
             return(-1);  /* all done */
 
     } /* end switch(NEXT_STATE) */
