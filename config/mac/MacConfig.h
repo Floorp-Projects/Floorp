@@ -18,4 +18,4 @@
 
 #define MOZ_MEDIUM
 
-#define MOZ_FULLCIRCLE   /* Turn on/off the Full Circle Stuff   */
+/* #define MOZ_FULLCIRCLE   Turn on/off the Full Circle Stuff   */
