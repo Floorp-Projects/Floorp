@@ -260,12 +260,9 @@ nsXPCInterfaces::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                     }
                     NS_RELEASE(nsid_wrapper);
                 }
-                else
-                {
-                    NS_RELEASE(nsid);
-                }
                 NS_RELEASE(xpc);
             }
+            NS_RELEASE(nsid);
         }
     }
 }
@@ -499,12 +496,9 @@ nsXPCClasses::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                     }
                     NS_RELEASE(nsid_wrapper);
                 }
-                else
-                {
-                    NS_RELEASE(nsid);
-                }
                 NS_RELEASE(xpc);
             }
+            NS_RELEASE(nsid);
         }
     }
 }
@@ -777,12 +771,9 @@ nsXPCClassesByID::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                     }
                     NS_RELEASE(nsid_wrapper);
                 }
-                else
-                {
-                    NS_RELEASE(nsid);
-                }
                 NS_RELEASE(xpc);
             }
+            NS_RELEASE(nsid);
         }
     }
 }
