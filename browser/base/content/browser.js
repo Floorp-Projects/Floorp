@@ -2916,6 +2916,9 @@ nsBrowserStatusHandler.prototype =
           this.throbberElement.setAttribute("busy", "true");
         }
 
+        // Turn the status meter on.
+        this.statusMeter.parentNode.collapsed = false;
+
         // XXX: This needs to be based on window activity...
         this.stopCommand.removeAttribute("disabled");
     }
@@ -2974,6 +2977,8 @@ nsBrowserStatusHandler.prototype =
 
         // Turn the progress meter and throbber off.
         this.statusMeter.value = 0;  // be sure to clear the progress bar
+        this.statusMeter.parentNode.collapsed = true;
+
         if (this.throbberElement)
           this.throbberElement.removeAttribute("busy");
 

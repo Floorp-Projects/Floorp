@@ -948,7 +948,7 @@ Contributor(s):
     <statusbarpanel id="page-report-button" class="statusbarpanel-iconic"
                   onclick="displayPageReport();"/>     
     <statusbarpanel id="statusbar-display" flex="1"/>
-    <statusbarpanel class="statusbarpanel-progress">
+    <statusbarpanel class="statusbarpanel-progress" collapsed="true">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
   </statusbar>
