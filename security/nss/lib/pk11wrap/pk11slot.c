@@ -575,6 +575,7 @@ PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
     int i;
     PK11SlotList* slotList = NULL;
     PRUint32 slotcount = 0;
+    SECStatus rv = SECSuccess;
 
     slotList = PK11_NewSlotList();
     if (!slotList) {
@@ -594,11 +595,21 @@ PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
     SECMOD_GetReadLock(moduleLock);
     for (mlp = modules; mlp != NULL; mlp = mlp->next) {
         PORT_Assert(mlp->module);
+        if (!mlp->module) {
+            rv = SECFailure;
+        }
+        if (SECFailure == rv) {
+            break;
+        }
         if (mlp->module && ((!dllName) || (mlp->module->dllName &&
             (0 == PORT_Strcmp(mlp->module->dllName, dllName))))) {
             for (i=0; i < mlp->module->slotCount; i++) {
                 PK11SlotInfo *tmpSlot = (mlp->module->slots?mlp->module->slots[i]:NULL);
                 PORT_Assert(tmpSlot);
+                if (!tmpSlot) {
+                    rv = SECFailure;
+                    break;
+                }
                 if (tmpSlot && (PR_FALSE == presentOnly || PK11_IsPresent(tmpSlot)) &&
                     ( (!tokenName) || (tmpSlot->token_name &&
                     (0==PORT_Strcmp(tmpSlot->token_name, tokenName)))) &&
@@ -619,6 +630,10 @@ PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
         PORT_SetError(SEC_ERROR_NO_TOKEN);
         PK11_FreeSlotList(slotList);
         slotList = NULL;
+    }
+
+    if (SECFailure == rv) {
+        PORT_SetError(SEC_ERROR_BAD_DATA);
     }
 
     return slotList;
