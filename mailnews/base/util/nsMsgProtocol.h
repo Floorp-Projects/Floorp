@@ -92,6 +92,8 @@ protected:
 
     virtual nsresult PostMessage(nsIURI* url, nsIFileSpec * fileSpec);
 
+  virtual nsresult InitFromURI(nsIURI *aUrl);
+
 	// Ouput stream for writing commands to the socket
 	nsCOMPtr<nsIChannel>		m_channel; 
 	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface

@@ -48,12 +48,17 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 		
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 	m_tempMsgFileSpec += "tempMessage.eml";
-    m_url = aURL;
+  InitFromURI(aURL);
+}
 
-	nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aURL);
-	if (mailUrl) {
+nsresult nsMsgProtocol::InitFromURI(nsIURI *aUrl)
+{
+  m_url = aUrl;
+
+	nsCOMPtr <nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
+	if (mailUrl)
 		mailUrl->GetLoadGroup(getter_AddRefs(m_loadGroup));
-	}
+  return NS_OK;
 }
 
 nsMsgProtocol::~nsMsgProtocol()
