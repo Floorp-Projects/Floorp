@@ -599,7 +599,7 @@ loser:
 		PORT_Free(newpw);
 	}
 	if(newpw2) {
-		memset(newpw2, 0, strlen(newpw));
+		memset(newpw2, 0, strlen(newpw2));
 		PORT_Free(newpw2);
 	}
 	return ret;
