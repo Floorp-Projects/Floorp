@@ -30,8 +30,8 @@ extern "C" {
 }
 
 
-NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-NS_DEFINE_IID(kIConnectionInfoIID, NS_ICONNECTIONINFO_IID);
+static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
+static NS_DEFINE_IID(kIConnectionInfoIID, NS_ICONNECTIONINFO_IID);
 
 #define BUFFER_BLOCK_SIZE   8192
 
@@ -146,7 +146,6 @@ nsresult nsNetlibStream::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
     static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
-    static NS_DEFINE_IID(kIInputStreamIID,  NS_IINPUTSTREAM_IID);
     static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
     if (aIID.Equals(kIInputStreamIID)) {
         *aInstancePtr = (void*) ((nsIInputStream*)this);
