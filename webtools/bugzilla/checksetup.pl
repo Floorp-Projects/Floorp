@@ -88,7 +88,27 @@
 # example, --LOCAL-- is at least 3 times in this code!  --TABLE--
 # also is used more than once. So search for every occurence!
 #
-
+# To operate checksetup non-interactively, run it with a single argument
+# specifying a filename with the information usually obtained by
+# prompting the user or by editing localconfig. Only information
+# superceding defaults from LocalVar() function calls needs to be
+# specified.
+#
+# The format of that file is....
+#
+# $answer{'db_host'} = '$db_host = "localhost";
+# $db_port = 3306;
+# $db_name = "mydbname";
+# $db_user = "mydbuser";';
+#
+# $answer{'db_pass'} = q[$db_pass = 'mydbpass';];
+#
+# $answer{'ADMIN_OK'} = 'Y';
+# $answer{'ADMIN_EMAIL'} = 'myadmin@mydomain.net';
+# $answer{'ADMIN_PASSWORD'} = 'fooey';
+# $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
+#
+#
 
 ###########################################################################
 # Global definitions
@@ -104,7 +124,7 @@ use Bugzilla::Config qw(:DEFAULT :admin);
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
 
-use vars qw( $db_name );
+use vars qw( $db_name %answer );
 
 ###########################################################################
 # Check required module
@@ -300,6 +320,11 @@ if (%missing) {
 
 print "Checking user setup ...\n";
 $@ = undef;
+if ($ARGV[0]) {
+    do $ARGV[0] 
+        or eval die("Error $! processing $ARGV[0]")
+        or die("Error $@ processing $ARGV[0]");
+}
 do 'localconfig';
 if ($@) { # capture errors in localconfig, bug 97290
    print STDERR <<EOT;
@@ -326,7 +351,7 @@ sub LocalVar ($$)
     return if ($main::{$name}); # if localconfig declared it, we're done.
     $newstuff .= " " . $name;
     open FILE, '>>localconfig';
-    print FILE $definition, "\n\n";
+    print FILE ($answer{$name} or $definition), "\n\n";
     close FILE;
 }
 
@@ -1953,7 +1978,7 @@ if ($sth->rows == 0) {
   while(! $admin_ok ) {
     while( $login eq "" ) {
       print "Enter the e-mail address of the administrator: ";
-      $login = <STDIN>;
+      $login = $answer{'ADMIN_EMAIL'} or <STDIN>;
       chomp $login;
       if(! $login ) {
         print "\nYou DO want an administrator, don't you?\n";
@@ -1977,7 +2002,7 @@ _End_Of_SQL_
     if ($sth->rows > 0) {
       print "$login already has an account.\n";
       print "Make this user the administrator? [Y/n] ";
-      my $ok = <STDIN>;
+      my $ok = $answer{'ADMIN_OK'} or <STDIN>;
       chomp $ok;
       if ($ok !~ /^n/i) {
         $admin_ok = 1;
@@ -1988,7 +2013,7 @@ _End_Of_SQL_
       }
     } else {
       print "You entered $login.  Is this correct? [Y/n] ";
-      my $ok = <STDIN>;
+      my $ok = $answer{'ADMIN_OK'} or <STDIN>;
       chomp $ok;
       if ($ok !~ /^n/i) {
         $admin_ok = 1;
@@ -2003,7 +2028,7 @@ _End_Of_SQL_
 
     while( $realname eq "" ) {
       print "Enter the real name of the administrator: ";
-      $realname = <STDIN>;
+      $realname = $answer{'ADMIN_REALNAME'} or <STDIN>;
       chomp $realname;
       if(! $realname ) {
         print "\nReally.  We need a full name.\n";
@@ -2021,7 +2046,7 @@ _End_Of_SQL_
     while( $pass1 ne $pass2 ) {
       while( $pass1 eq "" || $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
         print "Enter a password for the administrator account: ";
-        $pass1 = <STDIN>;
+        $pass1 = $answer{'ADMIN_PASSWORD'} or <STDIN>;
         chomp $pass1;
         if(! $pass1 ) {
           print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
@@ -2030,7 +2055,7 @@ _End_Of_SQL_
         }
       }
       print "\nPlease retype the password to verify: ";
-      $pass2 = <STDIN>;
+      $pass2 = $answer{'ADMIN_PASSWORD'} or <STDIN>;
       chomp $pass2;
       if ($pass1 ne $pass2) {
         print "\n\nPasswords don't match.  Try again!\n";
