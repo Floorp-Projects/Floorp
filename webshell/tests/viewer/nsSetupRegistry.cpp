@@ -23,6 +23,7 @@
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
 #include "nsPluginsCID.h"
+#include "nsRDFCID.h"
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -50,6 +51,7 @@
 #define LAYOUT_DLL "raptorhtml.dll"
 #define NETLIB_DLL "netlib.dll"
 #define EDITOR_DLL "ender.dll"
+#define RDF_DLL    "rdf.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -70,6 +72,7 @@
 #define LAYOUT_DLL "libraptorhtml.so"
 #define NETLIB_DLL "libnetlib.so"
 #define EDITOR_DLL "libender.so"
+#define RDF_DLL    "librdf.so"
 #endif
 #endif
 
@@ -118,6 +121,15 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #ifdef NGEDITOR
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 #endif
+
+static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
+static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
+static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFRegistryCID,           NS_RDFREGISTRY_CID);
+static NS_DEFINE_CID(kRDFDocumentCID,           NS_RDFDOCUMENT_CID);
+
+static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -168,4 +180,13 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 #endif
 #endif	//XP_MAC
+
+  nsRepository::RegisterFactory(kRDFDocumentCID,           RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFSimpleDataBaseCID,     RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFRegistryCID,           RDF_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kCSSParserCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 }

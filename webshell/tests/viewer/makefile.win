@@ -54,6 +54,7 @@ LINCS=  \
   -I$(PUBLIC)\plugin \
   -I$(PUBLIC)\pref \
   -I$(PUBLIC)\editor \
+  -I$(PUBLIC)\rdf \
 !if defined(NGPREFS)
   -I$(PUBLIC)\ngprefs \
 !endif
