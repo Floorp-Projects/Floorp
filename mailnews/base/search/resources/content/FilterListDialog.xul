@@ -101,9 +101,12 @@ Rights Reserved.
       <button id="deleteButton" value="&deleteButton.label;" onclick="onDeleteFilter();"/>
     </box>
   </box>
+<!--
+  take out for PR2
   <box orient="horizontal">
     <button value="&runFiltersNow.label;" width="0em"/>
   </box>
+-->
 <!--  <button onclick="DumpDOM(document.getElementById('filterTree'));" value="dump"/> -->
   <separator class="groove"/>
   <box id="okCancelButtons"/>

@@ -37,6 +37,7 @@ CHROME_L10N = \
 		search-attributes.properties \
 		search-operators.properties \
 		search.properties \
+		filter.properties \
 		searchTermOverlay.dtd \
 		$(NULL)
 

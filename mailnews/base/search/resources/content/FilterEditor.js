@@ -28,7 +28,8 @@ var gFilter;
 var gFilterNameElement;
 var gActionElement;
 var gActionTargetElement;
-
+var gActionPriority;
+var Bundle;
 
 var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
 
@@ -38,6 +39,9 @@ function filterEditorOnLoad()
 {
     initializeSearchWidgets();
     initializeFilterWidgets();
+
+    Bundle = srGetStrBundle("chrome://messenger/locale/filter.properties");
+    
     if (window.arguments && window.arguments[0]) {
         var args = window.arguments[0];
         if (args.filter) {
@@ -48,15 +52,18 @@ function filterEditorOnLoad()
             gFilterList = args.filterList;
             if (gFilterList)
                 setSearchScope(getScopeFromFilterList(gFilterList));
+            // fake the first more button press
+            onMore(null);
         }
     }
 
+    gFilterNameElement.focus();
     doSetOKCancel(onOk, null);
 }
 
 function onOk()
 {
-    saveFilter();
+    if (!saveFilter()) return;
 
     // parent should refresh filter list..
     // this should REALLY only happen when some criteria changes that
@@ -82,6 +89,8 @@ function initializeFilterWidgets()
     gFilterNameElement = document.getElementById("filterName");
     gActionElement = document.getElementById("actionMenu");
     gActionTargetElement = document.getElementById("actionTargetFolder");
+    gActionValueDeck = document.getElementById("actionValueDeck");
+    gActionPriority = document.getElementById("actionValuePriority");
 }
 
 function initializeDialog(filter)
@@ -89,16 +98,24 @@ function initializeDialog(filter)
     gFilterNameElement.value = filter.filterName;
 
     gActionElement.selectedItem=gActionElement.getElementsByAttribute("data", filter.action)[0];
-
+    showActionElementFor(gActionElement.selectedItem);
 
     if (filter.action == nsMsgFilterAction.MoveToFolder) {
         // there are multiple sub-items that have given attribute
         var targets = gActionTargetElement.getElementsByAttribute("data", filter.actionTargetFolderUri);
 
-        if (targets && targets.length) {
+        if (targets && targets.length > 0) {
             var target = targets[0];
             if (target.tagName == "menuitem")
                 gActionTargetElement.selectedItem = target;
+        }
+    } else if (filter.action == nsMsgFilterAction.ChangePriority) {
+        dump("initializing priority..\n");
+        var selectedPriority = gActionPriority.getElementsByAttribute("data", filter.actionPriority);
+
+        if (selectedPriority && selectedPriority.length > 0) {
+            var selectedPriority = selectedPriority[0];
+            gActionPriority.selectedItem = selectedPriority;
         }
     }
         
@@ -114,6 +131,15 @@ function initializeDialog(filter)
 function saveFilter() {
 
     var isNewFilter;
+
+    var filterName= gFilterNameElement.value;
+    if (!filterName || filterName == "") {
+        var str = Bundle.GetStringFromName("mustEnterName");
+        window.alert(str);
+        gFilterNameElement.focus();
+        return false;
+    }
+
     if (!gFilter) {
         gFilter = gFilterList.createFilter(gFilterNameElement.value);
         isNewFilter = true;
@@ -125,15 +151,46 @@ function saveFilter() {
     saveSearchTerms(gFilter.searchTerms, gFilter);
 
     var action = gActionElement.selectedItem.getAttribute("data");
+    dump("Action = " + action + "\n");
     gFilter.action = action;
-    if (action == nsMsgFilterAction.MoveToFolder &&
-        gActionElement.selectedItem)
-        gFilter.actionTargetFolderUri =
-            gActionTargetElement.selectedItem.getAttribute("data");
-    else if (action == nsMsgFilterAction.ChangePriority)
-        gFilter.actionPriority = 0; // whatever, fix this
-
+    if (action == nsMsgFilterAction.MoveToFolder) {
+        var targetUri;
+        if (gActionTargetElement)
+            targetUri = gActionTargetElement.selectedItem.getAttribute("data");
+        dump("folder target = " + gActionTargetElement.selectedItem + "\n");
+        if (!targetUri || targetUri == "") {
+            var str = Bundle.GetStringFromName("mustSelectFolder");
+            window.alert(str);
+            return false;
+        }
+        gFilter.actionTargetFolderUri = targetUri;
+    }
+    
+    else if (action == nsMsgFilterAction.ChangePriority) {
+        if (!gActionPriority.selectedItem) {
+            var str = Bundle.GetStringFromName("mustSelectPriority");
+            window.alert(str);
+            return false;
+        }
+        gFilter.actionPriority = gActionPriority.selectedItem.getAttribute("data");
+    }
+    
     if (isNewFilter)
         gFilterList.insertFilterAt(0, gFilter);
+
+    // success!
+    return true;
 }
 
+function onActionChanged(event)
+{
+    var menuitem = event.target;
+    showActionElementFor(menuitem);
+}
+
+function showActionElementFor(menuitem)
+{
+    if (!menuitem) return;
+    dump("showActionElementFor(" + menuitem.getAttribute("actionvalueindex") + ")\n");
+    gActionValueDeck.setAttribute("index", menuitem.getAttribute("actionvalueindex"));
+}

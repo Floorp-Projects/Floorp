@@ -1,4 +1,4 @@
-<!ENTITY window.title "Edit Filter">
+<!ENTITY window.title "Filter Rules">
 <!ENTITY subject.label "subject">
 <!ENTITY sender.label "sender">
 <!ENTITY date.label "date">
@@ -21,3 +21,9 @@
 <!ENTITY ignoreThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY filterName.label "Filter Name:">
+
+<!ENTITY lowestPriorityCmd.label "Lowest">
+<!ENTITY lowPriorityCmd.label "Low">
+<!ENTITY normalPriorityCmd.label "Normal">
+<!ENTITY highPriorityCmd.label "High">
+<!ENTITY highestPriorityCmd.label "Highest">

@@ -37,48 +37,61 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <keyset id="keyset"/>
-  <titledbox id="searchTermListBox"/>
   <box orient="horizontal" class="padded">
     <text value="&filterName.label;"/>
     <textfield flex="1" id="filterName"/>
   </box>
+  <titledbox id="searchTermListBox"/>
   <titledbox>
     <title>
       <text value="&filterAction.label;"/>
     </title>
-    <menulist id="actionMenu" flex="1">
+    <menulist id="actionMenu" flex="1" oncommand="onActionChanged(event)">
       <menupopup>
-        <menuitem data="1" value="&moveToFolder.label;"/>
-        <menuitem data="2" value="&changePriority.label;"/>
-        <menuitem data="3" value="&delete.label;"/>
-        <menuitem data="4" value="&markRead.label;"/>
-        <menuitem data="5" value="&ignoreThread.label;"/>
-        <menuitem data="6" value="&watchThread.label;"/>
+        <menuitem data="1" actionvalueindex="0" value="&moveToFolder.label;"/>
+        <menuitem data="2" actionvalueindex="1" value="&changePriority.label;"/>
+        <menuitem data="3" actionvalueindex="2" value="&delete.label;"/>
+        <menuitem data="4" actionvalueindex="2" value="&markRead.label;"/>
+        <menuitem data="5" actionvalueindex="2" value="&ignoreThread.label;"/>
+        <menuitem data="6" actionvalueindex="2" value="&watchThread.label;"/>
       </menupopup>
     </menulist>
-    <menulist id="actionTargetFolder" flex="1"
-              containment="http://home.netscape.com/NC-rdf#child"
-              datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
-              ref="msgaccounts:/">
-      <template>
-        <rule iscontainer="true" isempty="false">
-          <menupopup>
-              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
-                <menupopup>
-                  <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                  <menuseparator/>
-                </menupopup>
-              </menu>
-          </menupopup>
-        </rule>
-        <rule>
-          <menupopup>
-             <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </menupopup>
-        </rule>
-      </template>
-      <menupopup/>
-    </menulist>
+    <deck id="actionValueDeck" flex="1">
+      <menulist id="actionTargetFolder" flex="1"
+                containment="http://home.netscape.com/NC-rdf#child"
+                datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                ref="msgaccounts:/">
+        <template>
+          <rule iscontainer="true" isempty="false">
+            <menupopup>
+                <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+                  <menupopup>
+                    <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                    <menuseparator/>
+                  </menupopup>
+                </menu>
+            </menupopup>
+          </rule>
+          <rule>
+            <menupopup>
+               <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            </menupopup>
+          </rule>
+        </template>
+        <menupopup/>
+      </menulist>
+      <menulist id="actionValuePriority">
+        <menupopup>
+          <!-- see MailNewsTypes2.idl -->
+          <menuitem data="6" value="&highestPriorityCmd.label;"/>
+          <menuitem data="5" value="&highPriorityCmd.label;"/>
+          <menuitem data="4" value="&normalPriorityCmd.label;"/>
+          <menuitem data="3" value="&lowPriorityCmd.label;"/>
+          <menuitem data="2" value="&lowestPriorityCmd.label;"/>
+        </menupopup>
+      </menulist>
+      <text id="actionValueNone"/>
+    </deck>
   </titledbox>
   <separator class="groove"/>
   <box id="okCancelButtons"/>
