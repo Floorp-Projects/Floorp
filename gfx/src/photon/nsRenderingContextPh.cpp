@@ -561,6 +561,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
   PhRect_t  *rgn;
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect this=<%p>  mTMatrix=<%p> mClipRegion=<%p> aCombine=<%d> mGC=<%p>\n", this, mTMatrix, mClipRegion, aCombine, mGC ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetClipRect this=<%p>  aRect=<%d,%d,%d,%d>\n", this, aRect.x, aRect.y, aRect.width, aRect.height));
 
   if ((mTMatrix) && (mClipRegion))
   {
@@ -851,7 +852,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetCurrentTransform(nsTransform2D *&aTrans
 
 NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface this=<%p>\n", this));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface this=<%p> aBounds=<%d,%d,%d,%d>\n", this, aBounds->x, aBounds->y, aBounds->width, aBounds->height));
 
   if (nsnull==mSurface)
   {
