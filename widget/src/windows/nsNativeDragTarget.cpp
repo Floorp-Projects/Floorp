@@ -81,9 +81,9 @@ nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
   /*
    * Create/Get the DragService that we have implemented
    */
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             kIDragServiceIID,
-                                             (nsISupports**)&mDragService);
+  nsServiceManager::GetService(kCDragServiceCID,
+                               kIDragServiceIID,
+                               (nsISupports**)&mDragService);
 }
 
 
