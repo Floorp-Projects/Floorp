@@ -39,7 +39,6 @@ REQUIRES=wallet
 EXPORTS= $(NULL)
 
 LLIBS=$(LLIBS)  $(LIBNSPR)		\
-	$(DIST)\lib\xppref32.lib	\
 	$(DIST)\lib\xpcom.lib		\
 !ifndef NECKO
 	$(DIST)\lib\netlib.lib \
