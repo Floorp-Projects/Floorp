@@ -27,7 +27,7 @@
 #include "nsXULAtoms.h"
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
-#include "nsINamespaceManager.h" 
+#include "nsINameSpaceManager.h" 
 
 //
 // NS_NewXULTreeCellFrame

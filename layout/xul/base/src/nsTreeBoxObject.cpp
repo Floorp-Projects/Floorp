@@ -33,7 +33,7 @@
 #include "nsIPresContext.h"
 #include "nsIFrame.h"
 
-//#define XULTREE
+#define XULTREE
 
 // XXX Hack
 #include "nsTreeOuterFrame.h"
