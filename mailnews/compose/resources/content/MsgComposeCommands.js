@@ -45,6 +45,10 @@ var sPrefs = null;
 var sPrefBranchInternal = null;
 var sOther_headers = "";
 
+var sAccountManagerDataSource = null;
+var sRDF = null;
+var sNameProperty = null;
+
 /* Create message window object. This is use by mail-offline.js and therefore should not be renamed. We need to avoid doing 
    this kind of cross file global stuff in the future and instead pass this object as parameter when needed by function
    in the other js file.
@@ -1354,23 +1358,12 @@ function ComposeStartup(recycled, aParams)
   if (!params.identity) {
     // no pre selected identity, so use the default account
     var identities = gAccountManager.defaultAccount.identities;
-    if (identities.Count() >= 1)
-      params.identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
-    else
-    {
-      identities = GetIdentities();
-      params.identity = identities[0];
-    }
+    if (identities.Count() == 0)
+      identities = gAccountManager.allIdentities;
+    params.identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
   }
 
-  for (i = 0; i < identityListPopup.childNodes.length;i++) {
-    var item = identityListPopup.childNodes[i];
-    var id = item.getAttribute('id');
-    if (id == params.identity.key) {
-        identityList.selectedItem = item;
-        break;
-    }
-  }
+  identityList.value = params.identity.key;
   LoadIdentity(true);
   if (sMsgComposeService)
   {
@@ -1526,6 +1519,15 @@ function ComposeLoad()
   }
   catch (ex) {
     dump("failed to get the mail.compose.other.header pref\n");
+  }
+
+  try {
+    sAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=msgaccountmanager"].createInstance(Components.interfaces.nsIRDFDataSource);
+    sRDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(Components.interfaces.nsIRDFService);
+    sNameProperty = sRDF.GetResource("http://home.netscape.com/NC-rdf#Name?sort=true");
+  }
+  catch (ex) {
+    dump("failed to get RDF\n");
   }
 
   AddMessageComposeOfflineObserver();
@@ -2025,19 +2027,9 @@ function queryISupportsArray(supportsArray, iid) {
     var result = new Array;
     for (var i=0; i<supportsArray.Count(); i++) {
       // dump(i + "," + result[i] + "\n");
-      result[i] = supportsArray.GetElementAt(i).QueryInterface(iid);
+      result[i] = supportsArray.QueryElementAt(i, iid);
     }
     return result;
-}
-
-function GetIdentities()
-{
-    var idSupports = gAccountManager.allIdentities;
-    var identities = queryISupportsArray(idSupports,
-                                         Components.interfaces.nsIMsgIdentity);
-
-    dump(identities + "\n");
-    return identities;
 }
 
 function ClearIdentityListPopup(popup)
@@ -2047,38 +2039,52 @@ function ClearIdentityListPopup(popup)
       popup.removeChild(popup.childNodes[i]);
 }
 
+function compareAccountSortOrder(account1, account2)
+{
+  var sortValue1, sortValue2;
+
+  try {
+    var res1 = sRDF.GetResource(account1.incomingServer.serverURI);
+    sortValue1 = sAccountManagerDataSource.GetTarget(res1, sNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  }
+  catch (ex) {
+    dump("XXX ex " + account1.incomingServer.serverURI + "," + ex + "\n");
+    sortValue1 = "";
+  }
+
+  try {
+    var res2 = sRDF.GetResource(account2.incomingServer.serverURI);
+    sortValue2 = sAccountManagerDataSource.GetTarget(res2, sNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+  }
+  catch (ex) {
+    dump("XXX ex " + account1.incomingServer.serverURI + "," + ex + "\n");
+    sortValue2 = "";
+  }
+
+  if (sortValue1 < sortValue2)
+    return -1;
+  else if (sortValue1 > sortValue2)
+    return 1;
+  else 
+    return 0;
+}
+
 function FillIdentityListPopup(popup)
 {
-  // XXX TODO
-  // fix me to get the list of identities for the servers 
-  // in the same order as the folder pane
-  // see bug #191011
+  var accounts = queryISupportsArray(gAccountManager.accounts, Components.interfaces.nsIMsgAccount);
+  accounts.sort(compareAccountSortOrder);
 
-  var identities = GetIdentities();
-
-  for (var i=0; i<identities.length; i++)
-  {
-    var identity = identities[i];
-
-    // Get server prettyName for each identity
-    try {
-      var serverSupports = gAccountManager.GetServersForIdentity(identity);
-    
-      if(serverSupports.GetElementAt(0))
-        var result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-
-      var accountName = " - "+result.prettyName;
-      var item=document.createElement('menuitem');
-      item.setAttribute('label', identity.identityName);
-      item.setAttribute('class', 'identity-popup-item');
-      item.setAttribute('accountname', accountName);
-      item.setAttribute('id', identity.key);
+  for (var i in accounts) {
+    var server = accounts[i].incomingServer;
+    var identites = queryISupportsArray(accounts[i].identities, Components.interfaces.nsIMsgIdentity);
+    for (var j in identites) {
+      var identity = identites[j];
+      var item = document.createElement("menuitem");
+      item.className = "identity-popup-item";
+      item.setAttribute("label", identity.identityName);
+      item.setAttribute("value", identity.key);
+      item.setAttribute("accountname", " - " + server.prettyName);
       popup.appendChild(item);
-    }
-    catch (ex) {
-      // if we fail to get a server for the identity, handle it gracefully.
-      // see bug #131384
-      dump("did you get here after removing all accounts?  ex = " + ex + "\n");
     }
   }
 }
@@ -2088,8 +2094,7 @@ function getCurrentIdentity()
     // fill in Identity combobox
     var identityList = document.getElementById("msgIdentity");
 
-    var item = identityList.selectedItem;
-    var identityKey = item.getAttribute('id');
+    var identityKey = identityList.value;
 
     //dump("Looking for identity " + identityKey + "\n");
     var identity = gAccountManager.getIdentity(identityKey);
@@ -2551,8 +2556,7 @@ function LoadIdentity(startup)
     var prevIdentity = gCurrentIdentity;
     
     if (identityElement) {
-        var item = identityElement.selectedItem;
-        var idKey = item.getAttribute('id');
+        var idKey = identityElement.value;
         gCurrentIdentity = gAccountManager.getIdentity(idKey);
 
         if (!startup && prevIdentity && idKey != prevIdentity.key)
