@@ -22,11 +22,8 @@
 #include "nsEditorCID.h"
 #include "nsIComponentManager.h"
 
-static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIEditorIID,      NS_IEDITOR_IID);
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
-static NS_DEFINE_IID(kEditorCID,       NS_EDITOR_CID);
+static NS_DEFINE_CID(kEditorCID,       NS_EDITOR_CID);
 
 
 
@@ -43,7 +40,7 @@ GetEditFactory(nsIFactory **aFactory, const nsCID & aClass)
     if (factory)
       result = NS_OK;
   }
-  result = g_pNSIFactory->QueryInterface(kIFactoryIID, (void **)aFactory);
+  result = g_pNSIFactory->QueryInterface(nsIFactory::GetIID(), (void **)aFactory);
   PR_ExitMonitor(getEditorMonitor());
   return result;
 }
@@ -58,8 +55,8 @@ nsEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_NOTREACHED("!nsEditor");
     return NS_ERROR_NULL_POINTER; 
   } 
-  if (aIID.Equals(kIFactoryIID) ||
-    aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsIFactory::GetIID()) ||
+    aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*) this; 
     AddRef();  
     return NS_OK; 
@@ -81,7 +78,7 @@ nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult
   nsISupports *obj = nsnull;
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
-  if (aOuter && !aIID.Equals(kISupportsIID))
+  if (aOuter && !aIID.Equals(nsISupports::GetIID()))
     return NS_NOINTERFACE;   // XXX right error?
 
 

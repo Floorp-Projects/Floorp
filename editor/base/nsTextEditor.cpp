@@ -91,32 +91,15 @@ static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
 
-
-static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMTextListenerIID,  NS_IDOMTEXTLISTENER_IID);
-static NS_DEFINE_IID(kIDOMCompositionListenerIID, NS_IDOMCOMPOSITIONLISTENER_IID);
-static NS_DEFINE_IID(kIDOMDragListenerIID,  NS_IDOMDRAGLISTENER_IID);
-static NS_DEFINE_IID(kIDOMSelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
-
-static NS_DEFINE_IID(kIEditPropertyIID, NS_IEDITPROPERTY_IID);
 static NS_DEFINE_CID(kEditorCID,        NS_EDITOR_CID);
-static NS_DEFINE_IID(kIEditorIID,       NS_IEDITOR_IID);
-static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kITextEditorIID,   NS_ITEXTEDITOR_IID);
 static NS_DEFINE_CID(kTextEditorCID,    NS_TEXTEDITOR_CID);
-
-static NS_DEFINE_IID(kIContentIteratorIID,   NS_ICONTENTITERTOR_IID);
 static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
-
-static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_CID(kCRangeCID,    NS_RANGE_CID);
-
-static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
-static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
-
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+//static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
+//static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
+
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -137,12 +120,12 @@ TypeInState::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMSelectionListenerIID)) {
+  if (aIID.Equals(nsIDOMSelectionListener::GetIID())) {
     *aInstancePtr = (void*)(nsIDOMSelectionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -164,6 +147,9 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged()
 /* ---------- nsTextEditor implementation ---------- */
 
 nsTextEditor::nsTextEditor()
+:  mTypeInState(nsnull)
+,  mRules(nsnull)
+,  mIsComposing(PR_FALSE)
 {
 // Done in nsEditor
 //  NS_INIT_REFCNT();
@@ -180,35 +166,36 @@ nsTextEditor::~nsTextEditor()
   if (doc)
   {
     nsCOMPtr<nsIDOMEventReceiver> erP;
-    nsresult result = doc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
+    nsresult result = doc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
     if (NS_SUCCEEDED(result) && erP) 
     {
       if (mKeyListenerP) {
-        erP->RemoveEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
+        erP->RemoveEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
       }
       if (mMouseListenerP) {
-        erP->RemoveEventListenerByIID(mMouseListenerP, kIDOMMouseListenerIID);
+        erP->RemoveEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
       }
 
 	  if (mTextListenerP) {
-		  erP->RemoveEventListenerByIID(mTextListenerP, kIDOMTextListenerIID);
+		  erP->RemoveEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
 	  }
 
  	  if (mCompositionListenerP) {
-		  erP->RemoveEventListenerByIID(mCompositionListenerP, kIDOMCompositionListenerIID);
+		  erP->RemoveEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
 	  }
 
 	  if (mDragListenerP) {
-        erP->RemoveEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
+        erP->RemoveEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
       }
 
     }
     else
       NS_NOTREACHED("~nsTextEditor");
   }
-  if (mRules) {
-    delete mRules;
-  }
+
+  // deleting a null pointer is safe
+  delete mRules;
+
   NS_IF_RELEASE(mTypeInState);
   nsEditProperty::InstanceShutdown();
 }
@@ -318,7 +305,7 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     }
 
     nsCOMPtr<nsIDOMEventReceiver> erP;
-    result = aDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
+    result = aDoc->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(erP));
     if (NS_OK != result) 
     {
       mKeyListenerP = do_QueryInterface(0);
@@ -329,7 +316,7 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
       return result;
     }
     //cmanske: Shouldn't we check result from this?
-    result = erP->AddEventListenerByIID(mKeyListenerP, kIDOMKeyListenerIID);
+    result = erP->AddEventListenerByIID(mKeyListenerP, nsIDOMKeyListener::GetIID());
     if (!NS_SUCCEEDED(result))
     {
       printf("nsTextEditor::Init -- faile to add mKeyListenerP\n");
@@ -337,12 +324,12 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     }
 
 #ifdef NEW_DRAG_AND_DROP
-    erP->AddEventListenerByIID(mDragListenerP, kIDOMDragListenerIID);
+    erP->AddEventListenerByIID(mDragListenerP, nsIDOMDragListener::GetIID());
 #endif
-    erP->AddEventListenerByIID(mMouseListenerP, kIDOMMouseListenerIID);
+    erP->AddEventListenerByIID(mMouseListenerP, nsIDOMMouseListener::GetIID());
 	
-    erP->AddEventListenerByIID(mTextListenerP,kIDOMTextListenerIID);
-    erP->AddEventListenerByIID(mCompositionListenerP,kIDOMCompositionListenerIID);
+    erP->AddEventListenerByIID(mTextListenerP, nsIDOMTextListener::GetIID());
+    erP->AddEventListenerByIID(mCompositionListenerP, nsIDOMCompositionListener::GetIID());
 
     result = NS_OK;
 
@@ -523,7 +510,7 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty,
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         nsCOMPtr<nsIContentIterator> iter;
         result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                    kIContentIteratorIID, 
+                                                    nsIContentIterator::GetIID(), 
                                                     getter_AddRefs(iter));
         if ((NS_SUCCEEDED(result)) && iter)
         {
@@ -1761,7 +1748,7 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   // create new parent nodes for all the content between the start and end nodes
   nsCOMPtr<nsIContentIterator>iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              kIContentIteratorIID, getter_AddRefs(iter));
+                                              nsIContentIterator::GetIID(), getter_AddRefs(iter));
   if ((NS_SUCCEEDED(result)) && iter)
   {
     nsCOMPtr<nsIContent>startContent;
@@ -2224,7 +2211,7 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     nsCOMPtr<nsIDOMRange> range;
     result = nsComponentManager::CreateInstance(kCRangeCID, 
                                                 nsnull, 
-                                                kIDOMRangeIID, 
+                                                nsIDOMRange::GetIID(), 
                                                 getter_AddRefs(range));
     if (NS_FAILED(result)) { return result; }
     if (!range) { return NS_ERROR_NULL_POINTER; }
@@ -2245,7 +2232,7 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     nsVoidArray nodeList;
     nsCOMPtr<nsIContentIterator>iter;
     result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                kIContentIteratorIID, getter_AddRefs(iter));
+                                                nsIContentIterator::GetIID(), getter_AddRefs(iter));
     if ((NS_SUCCEEDED(result)) && iter)
     {
       nsCOMPtr<nsIContent>startContent;

@@ -89,30 +89,14 @@ static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
-static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID,          NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMSelectionIID,     NS_IDOMSELECTION_IID);
-static NS_DEFINE_IID(kIDOMRangeIID,         NS_IDOMRANGE_IID);
 static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
-static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIPresShellIID,        NS_IPRESSHELL_IID);
-static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
-static NS_DEFINE_IID(kITextEditFactoryIID,  NS_ITEXTEDITORFACTORY_IID);
-static NS_DEFINE_IID(kIHTMLEditFactoryIID,  NS_IHTMLEDITORFACTORY_IID);
-static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
-static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
+static NS_DEFINE_CID(kEditorCID,            NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,        NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,        NS_HTMLEDITOR_CID);
-static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 // transaction manager
-static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
+
 // transactions
 static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
@@ -127,6 +111,12 @@ static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
 
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
+
+// factory classes
+static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
+static NS_DEFINE_IID(kIHTMLEditFactoryIID, NS_IHTMLEDITORFACTORY_IID);
+static NS_DEFINE_IID(kITextEditFactoryIID, NS_ITEXTEDITORFACTORY_IID);
+
 
 #ifdef XP_PC
 #define TRANSACTION_MANAGER_DLL "txmgr.dll"
@@ -291,6 +281,11 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 //class implementations are in order they are declared in nsEditor.h
 
 nsEditor::nsEditor()
+:  mPresShell(nsnull)
+,  mViewManager(nsnull)
+,  mUpdateCount(0)
+,  mActionListeners(nsnull)
+,  mDoc(nsnull)
 {
   //initialize member variables here
   NS_INIT_REFCNT();
@@ -339,14 +334,14 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsISupports::GetIID())) {
     nsIEditor *tmp = this;
     nsISupports *tmp2 = tmp;
     *aInstancePtr = (void*)tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIEditorIID)) {
+  if (aIID.Equals(nsIEditor::GetIID())) {
     *aInstancePtr = (void*)(nsIEditor*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -363,7 +358,7 @@ nsEditor::GetDocument(nsIDOMDocument **aDoc)
   NS_PRECONDITION(mDoc, "bad state, null mDoc");
   if (!mDoc)
     return NS_ERROR_NOT_INITIALIZED;
-  return mDoc->QueryInterface(kIDOMDocumentIID, (void **)aDoc);
+  return mDoc->QueryInterface(nsIDOMDocument::GetIID(), (void **)aDoc);
 }
 
 // This seems like too much work! There should be a "nsDOMDocument::GetBody()"
@@ -405,7 +400,7 @@ nsEditor::GetBodyElement(nsIDOMElement **aBodyElement)
   result = nodeList->Item(0, getter_AddRefs(node)); 
   if (NS_SUCCEEDED(result) && node)
   {
-    //return node->QueryInterface(kIDOMElementIID, (void **)aBodyElement);
+    //return node->QueryInterface(nsIDOMElement::GetIID(), (void **)aBodyElement);
     // Is above equivalent to this:
     nsCOMPtr<nsIDOMElement> bodyElement = do_QueryInterface(node);
     if (bodyElement)
@@ -423,7 +418,7 @@ nsEditor::GetPresShell(nsIPresShell **aPS)
   NS_PRECONDITION(mPresShell, "bad state, null mPresShell");
   if (!mPresShell)
     return NS_ERROR_NOT_INITIALIZED;
-  return mPresShell->QueryInterface(kIPresShellIID, (void **)aPS);
+  return mPresShell->QueryInterface(nsIPresShell::GetIID(), (void **)aPS);
 }
 
 
@@ -486,7 +481,7 @@ nsEditor::EnableUndo(PRBool aEnable)
     {
       result = gCompMgr->CreateInstance(kCTransactionManagerCID,
                                         nsnull,
-                                        kITransactionManagerIID, (void **)&txnMgr);
+                                        nsITransactionManager::GetIID(), (void **)&txnMgr);
       if (NS_FAILED(result) || !txnMgr) {
         printf("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;
@@ -2319,7 +2314,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
   nsresult result;
   nsCOMPtr<nsIContentIterator>iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              kIContentIteratorIID, getter_AddRefs(iter));
+                                              nsIContentIterator::GetIID(), getter_AddRefs(iter));
   if ((NS_SUCCEEDED(result)) && iter)
   {
     nsCOMPtr<nsIDOMRange> lastRange;
@@ -2387,7 +2382,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
                 if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", leftNode.get());}
                 nsCOMPtr<nsIDOMRange> range;
                 result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
-                                                            kIDOMRangeIID, getter_AddRefs(range));
+                                                            nsIDOMRange::GetIID(), getter_AddRefs(range));
                 if ((NS_SUCCEEDED(result)) && range)
                 { // initialize the range
                   range->SetStart(leftNode, 0);
@@ -2424,7 +2419,7 @@ nsEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
   nsCOMPtr<nsIContentIterator>iter;
   nsresult result;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                              kIContentIteratorIID, getter_AddRefs(iter));
+                                              nsIContentIterator::GetIID(), getter_AddRefs(iter));
   //XXX: maybe CreateInstance is expensive, and I should keep around a static iter?  
   //     as long as this method can't be called recursively or re-entrantly!
 
@@ -2917,14 +2912,14 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode     *aStartNode,
   result = aStartNode->GetFirstChild(getter_AddRefs(childNode));
   while (childNode)
   {
-    result = childNode->QueryInterface(kIDOMNodeIID,getter_AddRefs(element));
+    result = childNode->QueryInterface(nsIDOMNode::GetIID(),getter_AddRefs(element));
     nsAutoString tag;
     if (NS_SUCCEEDED(result) && (element))
     {    
       element->GetTagName(tag);
       if (PR_TRUE==aTag.Equals(tag))
       {
-        return (childNode->QueryInterface(kIDOMNodeIID,(void **) aResult)); // does the addref
+        return (childNode->QueryInterface(nsIDOMNode::GetIID(),(void **) aResult)); // does the addref
       }
       else
       {
