@@ -213,15 +213,18 @@ public class BaseFunction extends IdScriptable implements Function {
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
-        Scriptable newInstance = new NativeObject();
-
-        newInstance.setPrototype(getClassPrototype());
-        newInstance.setParentScope(getParentScope());
-
+        Scriptable newInstance = createObject(cx, scope);
         Object val = call(cx, scope, newInstance, args);
         if (val instanceof Scriptable && val != Undefined.instance) {
             return (Scriptable) val;
         }
+        return newInstance;
+    }
+
+    public Scriptable createObject(Context cx, Scriptable scope) {
+        Scriptable newInstance = new NativeObject();
+        newInstance.setPrototype(getClassPrototype());
+        newInstance.setParentScope(getParentScope());
         return newInstance;
     }
 
