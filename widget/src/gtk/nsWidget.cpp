@@ -98,7 +98,9 @@ NS_METHOD nsWidget::GetAbsoluteBounds(nsRect &aRect)
   gint x;
   gint y;
 
+#ifdef DEBUG_pavlov
   g_print("nsWidget::GetAbsoluteBounds\n");
+#endif
   if (mWidget)
   {
     if (mWidget->window)
@@ -106,7 +108,9 @@ NS_METHOD nsWidget::GetAbsoluteBounds(nsRect &aRect)
       gdk_window_get_origin(mWidget->window, &x, &y);
       aRect.x = x;
       aRect.y = y;
+#ifdef DEBUG_pavlov
       g_print("  x = %i, y = %i\n", x, y);
+#endif
     }
     else
       return NS_ERROR_FAILURE;
@@ -120,7 +124,10 @@ NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   gint x;
   gint y;
 
+#ifdef DEBUG_pavlov
   g_print("nsWidget::WidgetToScreen\n");
+#endif
+
   if (mWidget)
   {
     if (mWidget->window)
@@ -128,7 +135,9 @@ NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
       gdk_window_get_origin(mWidget->window, &x, &y);
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
+#ifdef DEBUG_pavlov
       g_print("  x = %i, y = %i\n", x, y);
+#endif
     }
     else
       return NS_ERROR_FAILURE;
@@ -139,7 +148,9 @@ NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
+#ifdef DEBUG_pavlov
     g_print("nsWidget::ScreenToWidget\n");
+#endif
     NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
     return NS_OK;
 }
