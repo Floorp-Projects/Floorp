@@ -74,6 +74,8 @@ private:
   PRBool      mCharsetInitialized;
   void        InitializeDisplayCharset();
   nsCOMPtr<nsISupports>  mSearchContext;
+  nsCString   mLastDisplayURI; // this used when the user attempts to force a charset reload of a message...we need to get the last displayed
+                               // uri so we can re-display it..
 };
 
 #define NS_MESSENGER_CID \

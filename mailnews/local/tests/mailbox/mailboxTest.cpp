@@ -506,7 +506,7 @@ nsresult nsMailboxTestDriver::OnDisplayMessage(PRBool copyMessage)
 			{
 				nsISupports * asupport = nsnull;
 				QueryInterface(NS_GET_IID(nsISupports), (void **) asupport);
-				messageService->DisplayMessage(uri, asupport, nsnull, nsnull, nsnull);
+				messageService->DisplayMessage(uri, asupport, nsnull, nsnull, nsnull, nsnull);
 				ReleaseMessageServiceFromURI(uri, messageService);
 			}
 		}

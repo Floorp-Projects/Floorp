@@ -450,14 +450,14 @@ nsMessenger::OpenURL(const char * url)
       nsUnescape(unescapedUrl);
       
       nsIMsgMessageService * messageService = nsnull;
-      nsresult rv = GetMessageServiceFromURI(url,
-        &messageService);
+      nsresult rv = GetMessageServiceFromURI(url, &messageService);
       
       if (NS_SUCCEEDED(rv) && messageService)
       {
         nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-        messageService->DisplayMessage(url, webShell, mMsgWindow, nsnull, nsnull);
+        messageService->DisplayMessage(url, webShell, mMsgWindow, nsnull, nsnull, nsnull);
         ReleaseMessageServiceFromURI(url, messageService);
+        mLastDisplayURI = url; // remember the last uri we displayed....
       }
       //If it's not something we know about, then just load the url.
       else
@@ -563,7 +563,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
     else
       rv = messageService->DisplayMessage(messageUri,
                                         convertedListener,mMsgWindow,
-                                        nsnull, nsnull); 
+                                        nsnull, nsnull, nsnull); 
   }
 
 done:
@@ -929,7 +929,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             if (NS_FAILED(rv)) goto done;
 
             rv = messageService->DisplayMessage(url, convertedListener,mMsgWindow,
-                                                nsnull, nsnull);
+                                                nsnull, nsnull, nsnull);
             break;
         }
     }

@@ -619,7 +619,7 @@ nsMsgSendLater::StartNextMailFileSend()
   if (convertedListener)
   {
     // Now, just plug the two together and get the hell out of the way!
-    rv = messageService->DisplayMessage(aMessageURI, convertedListener, nsnull, nsnull, nsnull);
+    rv = messageService->DisplayMessage(aMessageURI, convertedListener, nsnull, nsnull, nsnull, nsnull);
   }
   else
     rv = NS_ERROR_FAILURE;
