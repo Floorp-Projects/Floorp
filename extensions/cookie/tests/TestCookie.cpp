@@ -22,14 +22,106 @@
 
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
+#include "stdio.h"
+#include "nsNetUtil.h"
+#include "nsXPIDLString.h"
+#include "nsIEventQueueService.h"
+#include "nsIStringBundle.h"
+
+
+static nsIEventQueue* gEventQ = nsnull;
+
+
+static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
+
+void SetACookie(nsICookieService *cookieService, const char* aSpec, const char* aCookieString) {
+    nsCOMPtr<nsIURI> uri;
+    (void)NS_NewURI(getter_AddRefs(uri), aSpec);
+    NS_ASSERTION(uri, "malformed uri");   
+    
+    nsString cookie;
+    cookie.AssignWithConversion(aCookieString);
+    printf("setting cookie for \"%s\" : ", aSpec);
+    nsresult rv = cookieService->SetCookieString(uri, cookie);
+    if (NS_FAILED(rv)) {
+        printf("NOT-SET\n");
+    } else {
+        printf("\"%s\" was set.\n", aCookieString);
+    }
+    return;
+}
+
+void GetACookie(nsICookieService *cookieService, const char* aSpec, char* *aCookie) {
+    nsCOMPtr<nsIURI> uri;
+    (void)NS_NewURI(getter_AddRefs(uri), aSpec);
+    NS_ASSERTION(uri, "malformed uri");   
+
+    nsString cookie;
+    printf("retrieving cookie(s) for \"%s\" : ", aSpec);
+    nsresult rv = cookieService->GetCookieString(uri, cookie);
+    if (NS_FAILED(rv)) printf("XXX GetCookieString() failed!\n");
+
+    if (cookie.IsEmpty()) {
+        printf("NOT-FOUND\n");
+    } else {
+        printf("FOUND: ");
+        char *cookieString = cookie.ToNewCString();
+        printf("%s\n", cookieString);
+        nsCRT::free(cookieString);
+    }
+    return;
+}
+
 
 int main(PRInt32 argc, char *argv[])
 {
+    nsresult rv = NS_InitXPCOM(nsnull, nsnull);
+    if (NS_FAILED(rv)) return -1;
 
-    nsresult rv;
-    nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
-	if (NS_FAILED(rv))
-        return -1;
+    // Create the Event Queue for this thread...
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return -1;
+
+    rv = eventQService->CreateThreadEventQueue();
+    if (NS_FAILED(rv)) return -1;
+
+    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+
+    NS_WITH_SERVICE(nsIStringBundleService, bundleService, NS_STRINGBUNDLE_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCOMPtr<nsIStringBundle> stringBundle;
+        char*  propertyURL = "chrome://necko/locale/necko.properties";
+        nsILocale *locale = nsnull;
+        rv = bundleService->CreateBundle(propertyURL, locale,
+                                          getter_AddRefs(stringBundle));
+    }
+
+    NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+	if (NS_FAILED(rv)) return -1;
+ 
+    SetACookie(cookieService, "http://www.blah.com", "myCookie=yup; path=/");
+    nsXPIDLCString cookie;
+    GetACookie(cookieService, "http://www.blah.com", getter_Copies(cookie));
+    GetACookie(cookieService, "http://www.blah.com/testPath/testfile.txt", getter_Copies(cookie));
+
+    SetACookie(cookieService, "http://blah/path/file", "aaa=bbb; path=/path");
+    GetACookie(cookieService, "http://blah/path", getter_Copies(cookie));
+    GetACookie(cookieService, "http://blah/2path2", getter_Copies(cookie));
+
+    SetACookie(cookieService, "http://www.netscape.com/", "cookie=true; domain=bull.com;");
+    GetACookie(cookieService, "http://www.bull.com/", getter_Copies(cookie));
+
+    SetACookie(cookieService, "http://www.netscape.com/", "cookie=true; domain=netscape.com;");
+    GetACookie(cookieService, "http://www.netscape.com/", getter_Copies(cookie));
+
+    SetACookie(cookieService, "http://www.netscape.com/", "cookie=true; domain=.netscape.com;");
+    GetACookie(cookieService, "http://bla.netscape.com/", getter_Copies(cookie));
+
+
+    NS_ShutdownXPCOM(nsnull);
+    
     return 0;
 }
 

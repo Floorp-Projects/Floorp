@@ -49,6 +49,7 @@ nsCookieService::nsCookieService()
 
 nsCookieService::~nsCookieService(void)
 {
+    COOKIE_RemoveAllCookies();
 }
 
 nsresult nsCookieService::Init()

@@ -32,29 +32,19 @@
 #include "nsIFileSpec.h"
 #include "nsFileLocations.h"
 #include "nsINetSupportDialogService.h"
-#include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsVoidArray.h"
+#include "prprf.h"
+#include "xp_core.h" // for time_t
+#include "nsXPIDLString.h"
 
 #include "nsIPref.h"
 #include "nsTextFormatter.h"
-#include "xp_core.h"
-
-extern "C" {
-#include "prmon.h"
-#ifdef XP_MAC
-#include "prpriv.h"             /* for NewNamedMonitor */
-#else
-#include "private/prpriv.h"
-#endif
-}
 
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -123,9 +113,6 @@ typedef struct _cookie_DeferStruct {
   time_t timeToExpire;
 } cookie_DeferStruct;
 
-#include "prthread.h"
-#include "prmon.h"
-
 typedef enum {
   COOKIE_Normal,
   COOKIE_Discard,
@@ -148,14 +135,6 @@ PRIVATE time_t cookie_lifetimeLimit = 90*24*60*60;
 PRIVATE nsVoidArray * cookie_cookieList=0;
 PRIVATE nsVoidArray * cookie_permissionList=0;
 PRIVATE nsVoidArray * cookie_deferList=0;
-
-static PRMonitor * cookie_cookieLockMonitor = NULL;
-static PRThread * cookie_cookieLockOwner = NULL;
-static int cookie_cookieLockCount = 0;
-
-static PRMonitor * cookie_deferLockMonitor = NULL;
-static PRThread  * cookie_deferLockOwner = NULL;
-static int cookie_deferLockCount = 0;
 
 #define REAL_DIALOG 1
 
@@ -225,75 +204,30 @@ cookie_Localize(char* genericString) {
   nsresult ret;
   nsAutoString v;
 
-  /* create a URL for the string resource file */
-  nsIIOService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
-    (nsISupports**) &pNetService);
-
-  if (NS_FAILED(ret)) {
-    printf("cannot get net service\n");
-    return v.ToNewUnicode();
-  }
-  nsIURI *url = nsnull;
-
-  nsIURI *uri = nsnull;
-  ret = pNetService->NewURI(cookie_localization, nsnull, &uri);
-  if (NS_FAILED(ret)) {
-    printf("cannot create URI\n");
-    nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-    return v.ToNewUnicode();
-  }
-
-  ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
-  NS_RELEASE(uri);
-  nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-
-  if (NS_FAILED(ret)) {
-    printf("cannot create URL\n");
-    return v.ToNewUnicode();
-  }
-
   /* create a bundle for the localization */
-  nsIStringBundleService* pStringService = nsnull;
-  ret = nsServiceManager::GetService(kStringBundleServiceCID,
-    kIStringBundleServiceIID, (nsISupports**) &pStringService);
+  NS_WITH_SERVICE(nsIStringBundleService, pStringService, kStringBundleServiceCID, &ret);
   if (NS_FAILED(ret)) {
     printf("cannot get string service\n");
-    NS_RELEASE(url);
     return v.ToNewUnicode();
   }
-  nsILocale* locale = nsnull;
-  nsIStringBundle* bundle = nsnull;
-  char* spec = nsnull;
-  ret = url->GetSpec(&spec);
-  NS_RELEASE(url);
-  if (NS_FAILED(ret)) {
-    printf("cannot get url spec\n");
-    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-    nsCRT::free(spec);
-    return v.ToNewUnicode();
-  }
-  ret = pStringService->CreateBundle(spec, locale, &bundle);
-  nsCRT::free(spec);
+  nsCOMPtr<nsILocale> locale;
+  nsCOMPtr<nsIStringBundle> bundle;
+  ret = pStringService->CreateBundle(cookie_localization, locale, getter_AddRefs(bundle));
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");
-    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     return v.ToNewUnicode();
   }
-  nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
   /* localize the given string */
   nsString   strtmp; strtmp.AssignWithConversion(genericString);
   const PRUnichar *ptrtmp = strtmp.GetUnicode();
-  PRUnichar *ptrv = nsnull;
-  ret = bundle->GetStringFromName(ptrtmp, &ptrv);
+  nsXPIDLString ptrv;
+  ret = bundle->GetStringFromName(ptrtmp, getter_Copies(ptrv));
   v = ptrv;
-  NS_RELEASE(bundle);
   if (NS_FAILED(ret)) {
     printf("cannot get string from name\n");
     return v.ToNewUnicode();
   }
-  nsCRT::free(ptrv);
   return v.ToNewUnicode();
 }
 
@@ -390,43 +324,6 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   return res;
 }
 
-/*
- * Write a line to a file
- * return NS_OK if no error occurs
- */
-nsresult
-cookie_Put(nsOutputFileStream strm, const nsString& aLine)
-{
-  /* allocate a buffer from the heap */
-  char * cp = aLine.ToNewCString();
-  if (! cp) {
-    return NS_ERROR_FAILURE;
-  }
-
-  /* output entire line */
-  strm.write(cp, aLine.Length());
-  nsCRT::free(cp);
-  return NS_OK;
-}
-
-/*
- * Write an integer to a file
- * return NS_OK if no error occurs
- */
-nsresult
-cookie_PutInt(nsOutputFileStream strm, PRInt32 i)
-{
-  char c[2];
-  c[1] = '\0';
-  if (i == 0) {
-    return NS_OK;
-  }
-  cookie_PutInt (strm, i/10);
-  c[0] = '0' + i%10;
-  nsString tempStr; tempStr.AssignWithConversion(c);
-  return cookie_Put(strm, tempStr);
-}
-
 nsresult cookie_Get(nsInputFileStream strm, char& c) {
 #define BUFSIZE 128
   static char buffer[BUFSIZE];
@@ -478,137 +375,12 @@ cookie_GetLine(nsInputFileStream strm, nsAutoString& aLine) {
 
 
 PRIVATE void
-cookie_LockList(void) {
-  if(!cookie_cookieLockMonitor) {
-    cookie_cookieLockMonitor = PR_NewNamedMonitor("cookie-lock");
-  }
-  PR_EnterMonitor(cookie_cookieLockMonitor);
-  while(PR_TRUE) {
-
-    /* no current owner or owned by this thread */
-    PRThread * t = PR_CurrentThread();
-    if(cookie_cookieLockOwner == NULL || cookie_cookieLockOwner == t) {
-      cookie_cookieLockOwner = t;
-      cookie_cookieLockCount++;
-      PR_ExitMonitor(cookie_cookieLockMonitor);
-      return;
-    }
-
-    /* owned by someone else -- wait till we can get it */
-    PR_Wait(cookie_cookieLockMonitor, PR_INTERVAL_NO_TIMEOUT);
-  }
-}
-
-PRIVATE void
-cookie_UnlockList(void) {
-   PR_EnterMonitor(cookie_cookieLockMonitor);
-
-#ifdef DEBUG
-  /* make sure someone doesn't try to free a lock they don't own */
-  PR_ASSERT(cookie_cookieLockOwner == PR_CurrentThread());
-#endif
-
-  cookie_cookieLockCount--;
-  if(cookie_cookieLockCount == 0) {
-    cookie_cookieLockOwner = NULL;
-    PR_Notify(cookie_cookieLockMonitor);
-  }
-  PR_ExitMonitor(cookie_cookieLockMonitor);
-}
-
-PRIVATE void
-cookie_LockDeferList(void) {
-  if(!cookie_deferLockMonitor) {
-    cookie_deferLockMonitor = PR_NewNamedMonitor("defer_cookie-lock");
-  }
-  PR_EnterMonitor(cookie_deferLockMonitor);
-  while(PR_TRUE) {
-
-    /* no current owner or owned by this thread */
-    PRThread * t = PR_CurrentThread();
-    if(cookie_deferLockOwner == NULL || cookie_deferLockOwner == t) {
-      cookie_deferLockOwner = t;
-      cookie_deferLockCount++;
-      PR_ExitMonitor(cookie_deferLockMonitor);
-      return;
-    }
-
-    /* owned by someone else -- wait till we can get it */
-    PR_Wait(cookie_deferLockMonitor, PR_INTERVAL_NO_TIMEOUT);
-  }
-}
-
-PRIVATE void
-cookie_UnlockDeferList(void) {
-  PR_EnterMonitor(cookie_deferLockMonitor);
-
-#ifdef DEBUG
-  /* make sure someone doesn't try to free a lock they don't own */
-  PR_ASSERT(cookie_deferLockOwner == PR_CurrentThread());
-#endif
-
-  cookie_deferLockCount--;
-  if(cookie_deferLockCount == 0) {
-    cookie_deferLockOwner = NULL;
-    PR_Notify(cookie_deferLockMonitor);
-  }
-  PR_ExitMonitor(cookie_deferLockMonitor);
-}
-
-static PRMonitor * cookie_permission_lock_monitor = NULL;
-static PRThread  * cookie_permission_lock_owner = NULL;
-static int cookie_permission_lock_count = 0;
-
-PRIVATE void
-permission_LockList(void) {
-  if(!cookie_permission_lock_monitor)
-  cookie_permission_lock_monitor = PR_NewNamedMonitor("cookie_permission-lock");
-  PR_EnterMonitor(cookie_permission_lock_monitor);
-  while(PR_TRUE) {
-
-    /* no current owner or owned by this thread */
-    PRThread * t = PR_CurrentThread();
-    if(cookie_permission_lock_owner == NULL || cookie_permission_lock_owner == t) {
-      cookie_permission_lock_owner = t;
-      cookie_permission_lock_count++;
-      PR_ExitMonitor(cookie_permission_lock_monitor);
-      return;
-    }
-
-    /* owned by someone else -- wait till we can get it */
-    PR_Wait(cookie_permission_lock_monitor, PR_INTERVAL_NO_TIMEOUT);
-  }
-}
-
-PRIVATE void
-permission_UnlockList(void) {
-  PR_EnterMonitor(cookie_permission_lock_monitor);
-
-#ifdef DEBUG
-  /* make sure someone doesn't try to free a lock they don't own */
-  PR_ASSERT(cookie_permission_lock_owner == PR_CurrentThread());
-#endif
-
-  cookie_permission_lock_count--;
-  if(cookie_permission_lock_count == 0) {
-    cookie_permission_lock_owner = NULL;
-    PR_Notify(cookie_permission_lock_monitor);
-  }
-  PR_ExitMonitor(cookie_permission_lock_monitor);
-}
-
-PRIVATE void
 permission_Save();
 PRIVATE void
 cookie_Save();
 
 PRIVATE void
 permission_Free(PRInt32 hostNumber, PRInt32 type, PRBool save) {
-  /*
-   * This routine should only be called while holding the
-   * cookie permission list lock
-   */
-
   /* get the indicated host in the list */
   if (cookie_permissionList == nsnull) {
     return;
@@ -676,9 +448,7 @@ cookie_RemoveAllPermissions() {
   permission_TypeStruct * typeStruct;
  
   /* check for NULL or empty list */
-  permission_LockList();
   if (cookie_permissionList == nsnull) {
-    permission_UnlockList();
     return;
   }
   PRInt32 count = cookie_permissionList->Count();
@@ -697,10 +467,8 @@ cookie_RemoveAllPermissions() {
   }
   delete cookie_permissionList;
   cookie_permissionList = NULL;
-  permission_UnlockList();
 }
 
-/* This should only get called while holding the cookie-lock */
 PRIVATE void
 cookie_FreeCookie(cookie_CookieStruct * cookie) {
   if(!cookie) {
@@ -726,9 +494,7 @@ cookie_RemoveAllCookies() {
   cookie_CookieStruct * victim;
 
   /* check for NULL or empty list */
-  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockList();
     return;
   }
   PRInt32 count = cookie_cookieList->Count();
@@ -740,7 +506,6 @@ cookie_RemoveAllCookies() {
   }
   delete cookie_cookieList;
   cookie_cookieList = NULL;
-  cookie_UnlockList();
 }
 
 PUBLIC void
@@ -754,16 +519,13 @@ PRIVATE void
 cookie_RemoveOldestCookie(void) {
   cookie_CookieStruct * cookie_s;
   cookie_CookieStruct * oldest_cookie;
-  cookie_LockList();
 
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockList();
     return;
   }
    
   PRInt32 count = cookie_cookieList->Count();
   if (count == 0) {
-    cookie_UnlockList();
     return;
   }
   oldest_cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(0));
@@ -780,12 +542,9 @@ cookie_RemoveOldestCookie(void) {
     cookie_FreeCookie(oldest_cookie);
   }
 
-  cookie_UnlockList();
 }
 
-/* Remove any expired cookies from memory 
-** This routine should only be called while holding the cookie list lock
-*/
+/* Remove any expired cookies from memory */
 PRIVATE void
 cookie_RemoveExpiredCookies() {
   cookie_CookieStruct * cookie_s;
@@ -819,7 +578,6 @@ cookie_RemoveExpiredCookies() {
 /* checks to see if the maximum number of cookies per host
  * is being exceeded and deletes the oldest one in that
  * case
- * This routine should only be called while holding the cookie lock
  */
 PRIVATE void
 cookie_CheckForMaxCookiesFromHo(const char * cur_host) {
@@ -850,9 +608,7 @@ cookie_CheckForMaxCookiesFromHo(const char * cur_host) {
 }
 
 
-/* search for previous exact match
-** This routine should only be called while holding the cookie lock
-*/
+/* search for previous exact match */
 PRIVATE cookie_CookieStruct *
 cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
   cookie_CookieStruct * cookie_s;
@@ -1046,11 +802,8 @@ permission_CheckFromList(char * hostname, PRBool &permission, PRInt32 type) {
     hostname++;
   }
 
-  permission_LockList();
-
   /* return if cookie_permission list does not exist */
   if (cookie_permissionList == nsnull) {
-    permission_UnlockList();
     return NS_ERROR_FAILURE;
   }
 
@@ -1070,20 +823,17 @@ permission_CheckFromList(char * hostname, PRBool &permission, PRInt32 type) {
 
             /* type found.  Obtain the corresponding permission */
             permission = typeStruct->permission;
-            permission_UnlockList();
             return NS_OK;
           }
         }
 
         /* type not found, return failure */
-        permission_UnlockList();
         return NS_ERROR_FAILURE;
       }
     }
   }
 
   /* not found, return failure */
-  permission_UnlockList();
   return NS_ERROR_FAILURE;
 }
 
@@ -1138,14 +888,12 @@ permission_Check(
   /* see if we need to remember this decision */
   if (rememberChecked) {
     char * hostname2 = NULL;
-    permission_LockList();
     /* ignore leading periods in host name */
     while (hostname && (*hostname == '.')) {
       hostname++;
     }
     StrAllocCopy(hostname2, hostname);
     permission_Add(hostname2, permission, type, PR_TRUE);
-    permission_UnlockList();
   }
   if (rememberChecked != permission_GetRememberChecked(type)) {
     permission_SetRememberChecked(type, rememberChecked);
@@ -1326,9 +1074,7 @@ COOKIE_GetCookie(char * address) {
   }
 
   /* search for all cookies */
-  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockList();
     return NULL;
   }
   char *host = cookie_ParseURL(address, GET_HOST_PART);
@@ -1408,7 +1154,6 @@ COOKIE_GetCookie(char * address) {
     }
   }
 
-  cookie_UnlockList();
   PR_FREEIF(name);
   PR_FREEIF(path);
   PR_FREEIF(host);
@@ -1520,11 +1265,6 @@ COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
 
 nsresult
 permission_Add(char * host, PRBool permission, PRInt32 type, PRBool save) {
-  /*
-   * This routine should only be called while holding the
-   * cookie permission list lock
-   */
-
   /* create permission list if it does not yet exist */
   if(!cookie_permissionList) {
     cookie_permissionList = new nsVoidArray();
@@ -1644,9 +1384,7 @@ PRIVATE int
 cookie_Count(char * host) {
   int count = 0;
   cookie_CookieStruct * cookie;
-  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockList();
     return count;
   }
   PRInt32 cookie_count = cookie_cookieList->Count();
@@ -1658,7 +1396,6 @@ cookie_Count(char * host) {
       }
     }
   }
-  cookie_UnlockList();
   return count;
 }
 
@@ -1670,19 +1407,16 @@ cookie_Defer(char * curURL, char * setCookieHeader, time_t timeToExpire) {
   defer_cookie->setCookieHeader = NULL;
   StrAllocCopy(defer_cookie->setCookieHeader, setCookieHeader);
   defer_cookie->timeToExpire = timeToExpire;
-  cookie_LockDeferList();
   if (!cookie_deferList) {
     cookie_deferList = new nsVoidArray();
     if (!cookie_deferList) {
       PR_FREEIF(defer_cookie->curURL);
       PR_FREEIF(defer_cookie->setCookieHeader);
       PR_Free(defer_cookie);
-      cookie_UnlockDeferList();
       return;
     }
   }
   cookie_deferList->InsertElementAt(defer_cookie, 0);
-  cookie_UnlockDeferList();
 }
            
 PRIVATE void
@@ -1691,20 +1425,16 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
 PRIVATE void
 cookie_Undefer() {
   cookie_DeferStruct * defer_cookie;
-  cookie_LockDeferList();
   if(cookie_deferList == nsnull) {
-    cookie_UnlockDeferList();
     return;
   }
   PRInt32 count = cookie_deferList->Count();
   if (count == 0) {
-    cookie_UnlockDeferList();
     return;
   }
 
   defer_cookie = NS_STATIC_CAST(cookie_DeferStruct*, cookie_deferList->ElementAt(count-1));
   cookie_deferList->RemoveElementAt(count-1);
-  cookie_UnlockDeferList();
   if (defer_cookie) {
     cookie_SetCookieString
       (defer_cookie->curURL, 0, defer_cookie->setCookieHeader, defer_cookie->timeToExpire);
@@ -1973,10 +1703,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
   /* generate the message for the nag box */
   PRUnichar * new_string=0;
   int count = cookie_Count(host_from_header);
-  cookie_LockList();
   prev_cookie = cookie_CheckForPrevCookie
     (path_from_header, host_from_header, name_from_header);
-  cookie_UnlockList();
   PRUnichar * message;
   if (prev_cookie) {
     message = cookie_Localize("PermissionToModifyCookie");
@@ -2015,12 +1743,6 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
     return;
   }
 
-  /* 
-   * We have decided we are going to insert a cookie into the list
-   *   Get the cookie lock so that we can munge on the list
-   */
-  cookie_LockList();
-
   /* limit the number of cookies from a specific host or domain */
   cookie_CheckForMaxCookiesFromHo(host_from_header);
 
@@ -2054,7 +1776,6 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
       PR_FREEIF(host_from_header);
       PR_FREEIF(name_from_header);
       PR_FREEIF(cookie_from_header);
-      cookie_UnlockList();
       cookie_SetCookieStringInUse = PR_FALSE;
       cookie_Undefer();
       return;
@@ -2077,7 +1798,6 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
         PR_FREEIF(host_from_header);
         PR_FREEIF(cookie_from_header);
         PR_Free(prev_cookie);
-        cookie_UnlockList();
         cookie_SetCookieStringInUse = PR_FALSE;
         cookie_Undefer();
         return;
@@ -2107,7 +1827,6 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
   /* At this point we know a cookie has changed. Write the cookies to file. */
   cookie_cookiesChanged = PR_TRUE;
   cookie_Save();
-  cookie_UnlockList();
   cookie_SetCookieStringInUse = PR_FALSE;
   cookie_Undefer();
   return;
@@ -2207,37 +1926,22 @@ permission_Save() {
   if (!cookie_permissionsChanged) {
     return;
   }
-  permission_LockList();
   if (cookie_permissionList == nsnull) {
-    permission_UnlockList();
     return;
   }
   nsFileSpec dirSpec;
   nsresult rval = cookie_ProfileDirectory(dirSpec);
   if (NS_FAILED(rval)) {
-    permission_UnlockList();
     return;
   }
   nsOutputFileStream strm(dirSpec + "cookperm.txt");
   if (!strm.is_open()) {
-    permission_UnlockList();
     return;
   }
 
-  {
-    nsAutoString temp1; temp1.AssignWithConversion("# HTTP Cookie Permission File\n");
-    cookie_Put(strm, temp1);
-  }
-
-  {
-    nsAutoString temp2; temp2.AssignWithConversion("# http://www.netscape.com/newsref/std/cookie_spec.html\n");
-    cookie_Put(strm, temp2);
-  }
-
-  {
-    nsAutoString temp3; temp3.AssignWithConversion("# This is a generated file!  Do not edit.\n\n");
-    cookie_Put(strm, temp3);
-  }
+  strm.write("# HTTP Cookie Permission File\n", 30); 
+  strm.write("# http://www.netscape.com/newsref/std/cookie_spec.html\n", 55);
+  strm.write("# This is a generated file!  Do not edit.\n\n", 43);
 
   /* format shall be:
    * host \t permission \t permission ... \n
@@ -2248,63 +1952,43 @@ permission_Save() {
   for (PRInt32 i = 0; i < count; ++i) {
     hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(i));
     if (hostStruct) {
-      {
-        nsAutoString temp4; temp4.AssignWithConversion(hostStruct->host);
-        cookie_Put(strm, temp4);
-      }
+      strm.write(hostStruct->host, nsCRT::strlen(hostStruct->host));
 
       PRInt32 count2 = hostStruct->permissionList->Count();
       for (PRInt32 typeIndex=0; typeIndex<count2; typeIndex++) {
         typeStruct = NS_STATIC_CAST
           (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
-        {
-          nsAutoString temp5; temp5.AssignWithConversion("\t");
-          cookie_Put(strm, temp5);
-        }
-        cookie_PutInt(strm, typeStruct->type);
+        strm.write("\t", 1);
+        nsCAutoString tmp; tmp.AppendInt(typeStruct->type);
+        strm.write(tmp.GetBuffer(), tmp.Length());
         if (typeStruct->permission) {
-          nsAutoString temp6; temp6.AssignWithConversion("T");
-          cookie_Put(strm, temp6);
+          strm.write("T", 1);
         } else {
-          nsAutoString temp7; temp7.AssignWithConversion("F");
-          cookie_Put(strm, temp7);
+          strm.write("F", 1);
         }
       }
-
-      nsAutoString temp8; temp8.AssignWithConversion("\n");
-      cookie_Put(strm, temp8);
+      strm.write("\n", 1);
     }
   }
 
   /* save current state of nag boxs' checkmarks */
-  {
-    nsAutoString temp9; temp9.AssignWithConversion("@@@@");
-    cookie_Put(strm, temp9);
-  }
+  strm.write("@@@@", 4);
   for (PRInt32 type = 0; type < NUMBER_OF_PERMISSIONS; type++) {
-    {
-      nsAutoString temp10; temp10.AssignWithConversion("\t");
-      cookie_Put(strm, temp10);
-    }
-    cookie_PutInt(strm, type);
+    strm.write("\t", 1);
+    nsCAutoString tmp; tmp.AppendInt(type);
+    strm.write(tmp.GetBuffer(), tmp.Length());
     if (permission_GetRememberChecked(type)) {
-      nsAutoString temp11; temp11.AssignWithConversion("T");
-      cookie_Put(strm, temp11);
+      strm.write("T", 1);
     } else {
-      nsAutoString temp12; temp12.AssignWithConversion("F");
-      cookie_Put(strm, temp12);
+      strm.write("F", 1);
     }
   }
 
-  {
-    nsAutoString temp13; temp13.AssignWithConversion("\n");
-    cookie_Put(strm, temp13);
-  }
+  strm.write("\n", 1);
 
   cookie_permissionsChanged = PR_FALSE;
   strm.flush();
   strm.close();
-  permission_UnlockList();
 }
 
 /* reads the HTTP cookies permission from disk */
@@ -2329,7 +2013,6 @@ permission_Load() {
    * host \t number permission \t number permission ... \n
    * if this format isn't respected we move onto the next line in the file.
    */
-  permission_LockList();
   while(cookie_GetLine(strm,buffer) != -1) {
     if ( !buffer.IsEmpty() ) {
       PRUnichar firstChar = buffer.CharAt(0);
@@ -2339,7 +2022,8 @@ permission_Load() {
       }
     }
 
-    int hostIndex, permissionIndex, nextPermissionIndex;
+    int hostIndex, permissionIndex;
+    PRUint32 nextPermissionIndex = 0;
     hostIndex = 0;
 
     if ((permissionIndex=buffer.FindChar('\t', PR_FALSE, hostIndex)+1) == 0) {
@@ -2355,7 +2039,6 @@ permission_Load() {
     buffer.Mid(host, hostIndex, permissionIndex-hostIndex-1);
 
     nsString permissionString;
-    nextPermissionIndex = 0;
     for (;;) {
       if (nextPermissionIndex == buffer.Length()+1) {
         break;
@@ -2394,7 +2077,6 @@ permission_Load() {
         if (!permissionString.IsEmpty()) {
           rv = permission_Add(host.ToNewCString(), permission, type, PR_FALSE);
           if (NS_FAILED(rv)) {
-            permission_UnlockList();
             strm.close();
             return;
           }
@@ -2404,7 +2086,6 @@ permission_Load() {
   }
 
   strm.close();
-  permission_UnlockList();
   cookie_permissionsChanged = PR_FALSE;
   return;
 }
@@ -2421,38 +2102,23 @@ cookie_Save() {
   if (!cookie_cookiesChanged) {
     return;
   }
-  cookie_LockList();
   if (cookie_cookieList == nsnull) {
-    cookie_UnlockList();
     return;
   }
   nsFileSpec dirSpec;
   nsresult rv = cookie_ProfileDirectory(dirSpec);
   if (NS_FAILED(rv)) {
-    cookie_UnlockList();
     return;
   }
   nsOutputFileStream strm(dirSpec + "cookies.txt");
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
-    cookie_UnlockList();
     return;
   }
 
-  {
-    nsAutoString temp1; temp1.AssignWithConversion("# HTTP Cookie File\n");
-    cookie_Put(strm, temp1);
-  }
-
-  {
-    nsAutoString temp2; temp2.AssignWithConversion("# http://www.netscape.com/newsref/std/cookie_spec.html\n");
-    cookie_Put(strm, temp2);
-  }
-
-  {
-    nsAutoString temp3; temp3.AssignWithConversion("# This is a generated file!  Do not edit.\n\n");
-    cookie_Put(strm, temp3);
-  }
+  strm.write("# HTTP Cookie File\n", 19);
+  strm.write("# http://www.netscape.com/newsref/std/cookie_spec.html\n", 55);
+  strm.write("# This is a generated file!  Do not edit.\n\n", 43);
 
   /* format shall be:
    *
@@ -2472,66 +2138,36 @@ cookie_Save() {
         continue;
       }
 
-      {
-        nsAutoString temp4; temp4.AssignWithConversion(cookie_s->host);
-        cookie_Put(strm, temp4);
-      }
+      strm.write(cookie_s->host, nsCRT::strlen(cookie_s->host));
+
       if (cookie_s->isDomain) {
-        nsAutoString temp5; temp5.AssignWithConversion("\tTRUE\t");
-        cookie_Put(strm, temp5);
+        strm.write("\tTRUE\t", 6);
       } else {
-        nsAutoString temp6; temp6.AssignWithConversion("\tFALSE\t");
-        cookie_Put(strm, temp6);
+        strm.write("\tFALSE\t", 7);
       }
 
-      {
-        nsAutoString temp7; temp7.AssignWithConversion(cookie_s->path);
-        cookie_Put(strm, temp7);
-      }
+      strm.write(cookie_s->path, nsCRT::strlen(cookie_s->path));
 
       if (cookie_s->xxx) {
-        nsAutoString temp8; temp8.AssignWithConversion("\tTRUE\t");
-        cookie_Put(strm, temp8);
+        strm.write("\tTRUE\t", 6);
       } else {
-        nsAutoString temp9; temp9.AssignWithConversion("\tFALSE\t");
-        cookie_Put(strm, temp9);
+        strm.write("\tFALSE\t", 7);
       }
 
       PR_snprintf(date_string, sizeof(date_string), "%lu", cookie_s->expires);
 
-        // STRING USE WARNING: might want to hoist TRUE and FALSE strings et al, above and elsewhere in this file,
-        //  as with tab here or better yet, just use |nsLiteralString| directly when that becomes possible
-        //  |cookie_Put| would have to be fixed to take a |nsAReadableString|, but the end result would be a win.
-      nsAutoString tempTabString; tempTabString.AssignWithConversion("\t");
-
-      {
-        nsAutoString temp10; temp10.AssignWithConversion(date_string);
-        cookie_Put(strm, temp10);
-      }
-
-      cookie_Put(strm, tempTabString);
-
-      {
-        nsAutoString temp10; temp10.AssignWithConversion(cookie_s->name);
-        cookie_Put(strm, temp10);
-      }
-
-      cookie_Put(strm, tempTabString);
-
-      {
-        nsAutoString temp11; temp11.AssignWithConversion(cookie_s->cookie);
-        cookie_Put(strm, temp11);
-      }
-
-      nsAutoString temp12; temp12.AssignWithConversion("\n");
-      cookie_Put(strm, temp12);
+      strm.write(date_string, nsCRT::strlen(date_string));
+      strm.write("\t", 1);
+      strm.write(cookie_s->name, nsCRT::strlen(cookie_s->name));
+      strm.write("\t", 1);
+      strm.write(cookie_s->cookie, nsCRT::strlen(cookie_s->cookie));
+      strm.write("\n", 1);
     }
   }
 
   cookie_cookiesChanged = PR_FALSE;
   strm.flush();
   strm.close();
-  cookie_UnlockList();
 }
 
 /* reads HTTP cookies from disk */
@@ -2551,7 +2187,6 @@ cookie_Load() {
     /* file doesn't exist -- that's not an error */
     return;
   }
-  cookie_LockList();
 
   /* format is:
    *
@@ -2595,7 +2230,6 @@ cookie_Load() {
     /* create a new cookie_struct and fill it in */
     new_cookie = PR_NEW(cookie_CookieStruct);
     if (!new_cookie) {
-      cookie_UnlockList();
       strm.close();
       return;
     }
@@ -2622,7 +2256,6 @@ cookie_Load() {
     if (!cookie_cookieList) {
       cookie_cookieList = new nsVoidArray();
       if (!cookie_cookieList) {
-        cookie_UnlockList();
         strm.close();
         return;
       }
@@ -2649,7 +2282,6 @@ cookie_Load() {
   }
 
   strm.close();
-  cookie_UnlockList();
   cookie_cookiesChanged = PR_FALSE;
   return;
 }
@@ -2837,7 +2469,6 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
   /* step through all cookies and delete those that are in the sequence */
   char * gone = cookie_FindValueInArgs(results, "|goneC|");
   char * block = cookie_FindValueInArgs(results, "|block|");
-  cookie_LockList();
   if (cookie_cookieList) {
     count = cookie_cookieList->Count();
     while (count>0) {
@@ -2855,7 +2486,6 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
     }
   }
   cookie_Save();
-  cookie_UnlockList();
   nsCRT::free(gone);
   nsCRT::free(block);
 
@@ -2869,7 +2499,6 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
         gone = cookie_FindValueInArgs(results, "|goneI|");
         break;
     }
-    permission_LockList();
     if (cookie_permissionList) {
       count = cookie_permissionList->Count();
       while (count>0) {
@@ -2881,7 +2510,6 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
       }
     }
     permission_Save();
-    permission_UnlockList();
     nsCRT::free(gone);
   }
 }
@@ -2895,7 +2523,6 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
   int g, cookieNum;
   cookie_CookieStruct * cookie;
 
-  cookie_LockList();
 
   /* Get rid of any expired cookies now so user doesn't
    * think/see that we're keeping cookies in memory.
@@ -2942,7 +2569,6 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     aCookieList += buffer;
   }
   PR_FREEIF(buffer);
-  cookie_UnlockList();
 }
 
 PUBLIC void
@@ -2952,12 +2578,10 @@ COOKIE_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type) {
   permission_HostStruct * hostStruct;
   permission_TypeStruct * typeStruct;
 
-  permission_LockList();
   buffer[0] = '\0';
   permissionNum = 0;
 
   if (cookie_permissionList == nsnull) {
-    permission_UnlockList();
     return;
   }
 
@@ -2985,7 +2609,6 @@ COOKIE_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type) {
   }
   aPermissionList.AssignWithConversion(buffer);
   PR_FREEIF(buffer);
-  permission_UnlockList();
 }
 
 PUBLIC void

@@ -44,7 +44,7 @@ LINCS = -I$(DEPTH)\include \
 LLIBS=				\
  $(DIST)\lib\cookie.lib	\
  $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\netwerk.lib	\
+ $(DIST)\lib\necko.lib	\
  $(LIBNSPR) \
 
 include <$(DEPTH)\config\rules.mak>
