@@ -31,6 +31,7 @@
 #include "nsBidi.h"
 #include "nsBidiUtils.h"
 #include "nsCOMPtr.h"
+#include "nsDataHashtable.h"
 
 class nsBidiPresUtils {
 public:
@@ -39,7 +40,17 @@ public:
   PRBool IsSuccessful(void) const;
   
   /**
-   *  Make Bidi engine calculate embedding levels of the frames.
+   * Make Bidi engine calculate the embedding levels of the frames that are
+   * descendants of a given block frame.
+   *
+   * @param aPresContext         The presContext
+   * @param aBlockFrame          The block frame
+   * @param aFirstChild          The first child frame of aBlockFrame
+   * @param aForceReflow         [OUT] Set if we delete frames and will need to
+   *                                   reflow the block frame
+   * @param aIsVisualFormControl [IN]  Set if we are in a form control on a
+   *                                   visual page.
+   *                                   @see nsHTMLReflowState::IsBidiFormControl
    *
    *  @lina 06/18/2000
    */
@@ -155,17 +166,51 @@ private:
                                 nsIFrame*       aContainer,
                                 PRInt32&        aMinX,
                                 PRInt32&        aMaxX) const;
+  /**
+   * Helper method for Resolve()
+   * Truncate a text frame and possibly create a continuation frame with the
+   * remainder of its content.
+   *
+   * @param aPresContext the pres context
+   * @param aContent     the content of the frame
+   * @param aFrame       the original frame
+   * @param aNewFrame    [OUT] the new frame that was created
+   * @param aFrameIndex  [IN/OUT] index of aFrame in mLogicalFrames
+   *
+   * If there is already a bidi continuation for this frame in mLogicalFrames,
+   * no new frame will be created. On exit aNewFrame will point to the existing
+   * bidi continuation and aFrameIndex will contain its index.
+   * @see Resolve()
+   * @see RemoveBidiContinuation()
+   */
   PRBool EnsureBidiContinuation(nsIPresContext* aPresContext,
                                 nsIContent*     aContent,
                                 nsIFrame*       aFrame,
                                 nsIFrame**      aNewFrame,
                                 PRInt32&        aFrameIndex);
-  PRBool RemoveBidiContinuation(nsIPresContext* aPresContext,
-                                nsIFrame*       aFrame,
-                                nsIFrame*       aNextFrame,
-                                nsIContent*     aContent,
-                                PRInt32&        aFrameIndex,
-                                PRInt32&        aOffset) const;
+
+  /**
+   * Helper method for Resolve()
+   * Delete one or more bidi continuation frames created in a previous reflow by
+   * EnsureBidiContinuation().
+   * @param aPresContext the pres context
+   * @param aFrame       the frame whose continuations are to be removed
+   * @param aFirstIndex  index of aFrame in mLogicalFrames
+   * @param aLastIndex   index of the last frame to be removed
+   * @param aOffset      [OUT] count of directional frames removed. Since
+   *                     directional frames have control characters
+   *                     corresponding to them in mBuffer, the pointers to
+   *                     mBuffer in Resolve() will need to be updated after
+   *                     deleting the frames.
+   *
+   * @see Resolve()
+   * @see EnsureBidiContinuation()
+   */
+  void RemoveBidiContinuation(nsIPresContext* aPresContext,
+                              nsIFrame*       aFrame,
+                              PRInt32         aFirstIndex,
+                              PRInt32         aLastIndex,
+                              PRInt32&        aOffset) const;
   void CalculateCharType(PRInt32& aOffset,
                          PRInt32  aCharTypeLimit,
                          PRInt32& aRunLimit,
@@ -179,6 +224,7 @@ private:
   nsAutoString    mBuffer;
   nsVoidArray     mLogicalFrames;
   nsVoidArray     mVisualFrames;
+  nsDataHashtable<nsISupportsHashKey, PRInt32> mContentToFrameIndex;
   PRInt32         mArraySize;
   PRInt32*        mIndexMap;
   PRUint8*        mLevels;
