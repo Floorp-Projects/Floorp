@@ -61,8 +61,6 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DB1M
-
 GARBAGE		+= $(addprefix $(DIST)/bin/components/, \
 			initpref.js all.js mailnews.js editor.js config.js beos.js unix.js winpref.js os2prefs.js)
 
