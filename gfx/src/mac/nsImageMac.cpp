@@ -49,10 +49,10 @@ nsImageMac::nsImageMac()
 ,	mAlphaWidth(0)
 ,	mAlphaHeight(0)
 ,	mARowBytes(0)
-,	mIsTopToBottom(PR_TRUE)
-,	mPixelDataSize(0)
 , mNaturalWidth(0)
 , mNaturalHeight(0)
+,	mPixelDataSize(0)
+,	mIsTopToBottom(PR_TRUE)
 
 {
 	NS_INIT_REFCNT();
@@ -177,7 +177,6 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
 	if (aMaskRequirements != nsMaskRequirements_kNoMask)
 	{
   	CTabHandle	grayRamp = nsnull;
-		PRInt16     mAlphaDepth = 0;
 
 		switch (aMaskRequirements)
 		{
@@ -269,8 +268,9 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 	NS_ASSERTION(destPixels, "No dest pixels!");
 	
 	// can only do this if we are NOT printing
-	nsCOMPtr<nsDeviceContextMac> theDevContext;
-	aContext.GetDeviceContext(*getter_AddRefs(theDevContext));
+	nsCOMPtr<nsIDeviceContext> dc;                   // (this screams for a private interface, sigh!
+	aContext.GetDeviceContext(*getter_AddRefs(dc));
+  nsDeviceContextMac* theDevContext = NS_REINTERPRET_CAST(nsDeviceContextMac*, dc.get());
 	if (theDevContext->IsPrinter())		// we are printing
 	{
 		if (!mMaskBitsHandle)
@@ -648,7 +648,6 @@ void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
 	PixMapHandle	thePixels;
 	GWorldPtr			curPort;
 	GDHandle			curDev;
-	OSErr					err = noErr;
 
 	thePixels = ::GetGWorldPixMap(theGWorld);
 	::GetGWorld(&curPort, &curDev);
