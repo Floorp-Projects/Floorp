@@ -87,7 +87,6 @@ nsTreeColFrame::Release(void)
 // QueryInterface
 //
 NS_INTERFACE_MAP_BEGIN(nsTreeColFrame)
-  NS_INTERFACE_MAP_ENTRY(nsITreeColFrame)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 // Constructor
 nsTreeColFrame::nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
