@@ -180,7 +180,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
         mParser->SetContentSink(sink);
         mParser->Parse(aUrl);
       }
-      NS_RELEASE(sink);
+      NS_RELEASE(sink); 
     }
   }
 
