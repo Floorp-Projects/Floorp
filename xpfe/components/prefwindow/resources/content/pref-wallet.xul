@@ -77,9 +77,6 @@
     <checkbox id="walletCaptureForms" value="&walletEnabled.label;" accesskey="&walletEnabled.accesskey;"
               pref="true" preftype="bool" prefstring="wallet.captureForms"
               prefattribute="checked"/>
-    
-    <separator/>
-
     <box autostretch="never" halign="right">
       <button class="dialog" value="&viewWallet.label;" accesskey="&viewWallet.accesskey;" 
               oncommand="viewWallet();"/>
@@ -92,9 +89,6 @@
     <checkbox id="signonRememberSignons" value="&signonEnabled.label;" accesskey="&signonEnabled.accesskey;"
               pref="true" preftype="bool" prefstring="signon.rememberSignons"
               prefattribute="checked"/>
-
-    <separator/>
-
     <box autostretch="never" halign="right">
       <button class="dialog" value="&viewSignons.label;" accesskey="&viewSignons.accesskey;"
               oncommand="viewSignons();"/>
