@@ -773,7 +773,10 @@ _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
         } 
         len = GetFullPathName(fn, sizeof(pathbuf), pathbuf,
                 &filePart);
-        PR_ASSERT(0 != len);
+        if (0 == len) {
+            _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
+            return -1;
+        }
         if (len > sizeof(pathbuf)) {
             PR_SetError(PR_NAME_TOO_LONG_ERROR, 0);
             return -1;
