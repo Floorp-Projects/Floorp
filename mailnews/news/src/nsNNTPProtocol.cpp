@@ -135,45 +135,6 @@
 // and "pushed" authentication (if necessary),
 //#define HAVE_NNTP_EXTENSIONS
 
-// ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
-// which is not currently in the build system
-class nsDummyBufferStream : public nsIInputStream
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIBaseStream methods:
-    NS_IMETHOD Close(void) {
-        NS_NOTREACHED("nsDummyBufferStream::Close");
-        return NS_ERROR_FAILURE;
-    }
-
-    // nsIInputStream methods:
-    NS_IMETHOD Available(PRUint32 *aLength) { 
-        *aLength = mLength;
-        return NS_OK;
-    }
-    NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
-        PRUint32 amt = PR_MIN(aCount, mLength);
-        if (amt > 0) {
-            memcpy(aBuf, mBuffer, amt);
-            mBuffer += amt;
-            mLength -= amt;
-        }
-        *aReadCount = amt;
-        return NS_OK;
-    } 
-
-    // nsDummyBufferStream methods:
-    nsDummyBufferStream(const char* buffer, PRUint32 length)
-        : mBuffer(buffer), mLength(length) {}
-    virtual ~nsDummyBufferStream() {}
-
-protected:
-    const char* mBuffer;
-    PRUint32    mLength;
-};
-
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
 typedef struct _cancelInfoEntry {
@@ -348,23 +309,6 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 // END OF TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ADDREF(nsDummyBufferStream)
-NS_IMPL_RELEASE(nsDummyBufferStream)
-NS_IMETHODIMP 
-nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
-{
-    if (!result) return NS_ERROR_NULL_POINTER;
-    *result = nsnull;
-    if (aIID.Equals(NS_GET_IID(nsIInputStream)))
-        *result = NS_STATIC_CAST(nsIInputStream*, this);
-    if (*result)
-    {
-        AddRef();
-        return NS_OK;
-    }
-    return NS_ERROR_NO_INTERFACE;
-}
-
 NS_IMPL_ADDREF_INHERITED(nsNNTPProtocol, nsMsgProtocol)
 NS_IMPL_RELEASE_INHERITED(nsNNTPProtocol, nsMsgProtocol)
 
@@ -410,7 +354,7 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
   m_fromCache = PR_FALSE;
     PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) creating",this));
     PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) initializing, so unset m_currentGroup",this));
-	m_currentGroup = "";
+	m_currentGroup.Truncate();
   LL_I2L(m_lastActiveTimeStamp, 0);
 }
 
@@ -905,7 +849,7 @@ PRBool nsNNTPProtocol::ReadFromLocalCache()
 
         if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
         {
-          m_ContentType = "";
+          m_ContentType.Truncate();
           m_channelListener = nsnull;
           return PR_TRUE;
         }
@@ -1021,7 +965,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsXPIDLCString group;
   nsXPIDLCString commandSpecificData;
   PRBool cancel = PR_FALSE;
-  m_ContentType = "";
+  m_ContentType.Truncate();
   nsresult rv = NS_OK;
 
   m_runningURL = do_QueryInterface(aURL, &rv);
@@ -1387,7 +1331,7 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
     else {
         // clear this, we'll set it later.
         m_newsFolder = nsnull;
-        m_currentGroup = "";
+        m_currentGroup.Truncate();
     }
 
 	// get the file path part and store it as the group...
@@ -1513,7 +1457,7 @@ nsNNTPProtocol::ParseURL(nsIURI * aURL, char ** aGroup, char ** aMessageID,
     rv = m_newsFolder->GetNntpServer(getter_AddRefs(m_nntpServer));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    m_currentGroup = "";
+    m_currentGroup.Truncate();
   }
 
   // mscott - this function might need to be re-written to use nsresults
@@ -2169,7 +2113,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
             NS_MsgSACat (&command, group_name);
 
             // force a GROUP next time
-            m_currentGroup = "";
+            m_currentGroup.Truncate();
 			m_nextState = NNTP_RESPONSE;
 			m_nextStateAfterResponse = NNTP_XPAT_SEND;
 		}
@@ -2284,7 +2228,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommandResponse()
     if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
       m_typeWanted == GROUP_WANTED) {
       PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) group (%s) not found, so unset m_currentGroup",this,(const char *)group_name));
-      m_currentGroup = "";
+      m_currentGroup.Truncate();
       
       m_nntpServer->GroupNotFound(m_msgWindow, group_name.get(), PR_TRUE /* opening */);
     }
@@ -2428,14 +2372,14 @@ nsNNTPProtocol::SetCurrentGroup()
   nsXPIDLCString groupname;
   NS_ASSERTION(m_newsFolder, "no news folder");
   if (!m_newsFolder) {
-    m_currentGroup = "";
+    m_currentGroup.Truncate();
     return NS_ERROR_UNEXPECTED;
   }
 
   rv = m_newsFolder->GetAsciiName(getter_Copies(groupname));
   NS_ASSERTION(NS_SUCCEEDED(rv) && groupname.get()[0], "no group name");
   PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) SetCurrentGroup to %s",this,(const char *)groupname));
-  m_currentGroup = (const char *)groupname;
+  m_currentGroup = groupname;
   return NS_OK;
 }
 
@@ -3938,7 +3882,7 @@ nsNNTPProtocol::SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total)
     totalGroupStr.AppendInt(total);
 
     nsAutoString hostNameStr;
-    hostNameStr.AssignWithConversion(hostName.get());
+    hostNameStr.AssignWithConversion(hostName);
     
     const PRUnichar *formatStrings[] = { thisGroupStr.get(), totalGroupStr.get(), hostNameStr.get() };
 
@@ -4124,7 +4068,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
     }
     
     PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) NO_GROUP, so unset m_currentGroup", this));
-    m_currentGroup = "";
+    m_currentGroup.Truncate();
   }
   /* it turns out subscribe ui depends on getting this displaysubscribedgroup call,
   even if there was an error.
@@ -4139,7 +4083,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
     rv = m_nntpServer->DisplaySubscribedGroup(m_newsFolder, 0, 0, 0);
     NS_ASSERTION(NS_SUCCEEDED(rv),"DisplaySubscribedGroup() failed");
     PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) error, so unset m_currentGroup", this));
-    m_currentGroup = "";
+    m_currentGroup.Truncate();
   }
   
   m_nextState = NEWS_DISPLAY_NEWS_RC;
@@ -5454,7 +5398,7 @@ nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
 	alertText.Append(str);
 
 	if (text) {
-	    alertText.Append(NS_LITERAL_STRING(" ").get());
+	    alertText.Append(' ');
 		alertText.AppendWithConversion(text);
     }
 
