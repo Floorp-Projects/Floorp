@@ -45,16 +45,6 @@
 #include "secnav.h"
 #endif /* MOZILLA_CLIENT */
 #include "merrors.h"
-#ifndef NSPR20
-#if defined(XP_UNIX) || defined(XP_WIN32)
-#include "prnetdb.h"
-#else
-#define PRHostEnt struct hostent
-#define PR_NETDB_BUF_SIZE 5
-#endif
-#else
-#include "prnetdb.h"
-#endif
 
 #include "ssl.h"
 #include "xp_error.h"
