@@ -234,6 +234,7 @@ nsMsgSearchSession::AddAllScopes(nsMsgSearchScopeValue attrib)
 NS_IMETHODIMP nsMsgSearchSession::Search(nsIMsgWindow *aWindow)
 {
 	nsresult err = Initialize ();
+    NS_ENSURE_SUCCESS(err,err);
     if (m_listenerList) {
         PRUint32 count;
         m_listenerList->Count(&count);

@@ -335,19 +335,26 @@ function onSearch()
 
     gSearchSession.clearScopes();
     // tell the search session what the new scope is
-    if (!gCurrentFolder.isServer)
+    if (!gCurrentFolder.isServer && !gCurrentFolder.noSelect)
         gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
                                     gCurrentFolder);
 
     var searchSubfolders = document.getElementById("checkSearchSubFolders").checked;
-    if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer))
+    if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer || gCurrentFolder.noSelect))
     {
         AddSubFolders(gCurrentFolder);
     }
     // reflect the search widgets back into the search session
     saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
 
-    gSearchSession.search(msgWindow);
+    try
+    {
+      gSearchSession.search(msgWindow);
+    }
+    catch(ex)
+    {
+       dump("Search Exception\n");
+    }
     // refresh the tree after the search starts, because initiating the
     // search will cause the datasource to clear itself
 }
@@ -365,7 +372,8 @@ function AddSubFolders(folder) {
         var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (nextFolder)
         {
-          gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
+          if (!nextFolder.noSelect)
+            gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
           AddSubFolders(nextFolder);
         }
       }
