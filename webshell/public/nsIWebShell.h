@@ -147,44 +147,10 @@ public:
    */
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
 
-  /**
-   * Load the document associated with the specified URL into the WebShell.
-   */
-  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     nsIInputStream* aPostDataStream=nsnull,
-                     PRBool aModifyHistory=PR_TRUE,
-                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                     const PRUint32 aLocalIP=0,
-                     nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull) = 0;
-
-  /**
-   * Load the document associated with the specified URL into the WebShell.
-   */
-  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     const char* aCommand, 
-                     nsIInputStream* aPostDataStream=nsnull,
-                     PRBool aModifyHistory=PR_TRUE,
-                     nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                     const PRUint32 aLocalIP=0,
-                     nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull,
-                     const char * aWindowTarget = nsnull) = 0;
-
-  /**
-   * Load the document with the specified URI into the WebShell. Assuming you have
-   * an nsIURI instead of a PRUnichar string, this is the preferred way to load a url.
-   */
-   NS_IMETHOD LoadURI(nsIURI * aUri,
-                      const char * aCommand,
-                      nsIInputStream* aPostDataStream=nsnull,
-                      PRBool aModifyHistory=PR_TRUE,
-                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-                      const PRUint32 aLocalIP=0,
-                      nsISupports * aHistoryState=nsnull,
-                      const PRUnichar* aReferrer=nsnull,
-                      const char * aWindowTarget = nsnull) = 0;
-
+  NS_IMETHOD SessionHistoryInternalLoadURL(const PRUnichar *aURLSpec,
+                     nsLoadFlags aType,
+                     nsISupports * aHistoryState,
+                     const PRUnichar* aReferrer) = 0;
   //
   // History api's
   //
