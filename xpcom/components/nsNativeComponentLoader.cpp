@@ -53,12 +53,12 @@
 extern PRLogModuleInfo *nsComponentManagerLog;
 
 nsNativeComponentLoader::nsNativeComponentLoader() :
-    mCompMgr(nsnull), mDllStore(nsnull)
+    mCompMgr(nsnull), mDllStore(nsnull), mLoadedDependentLibs(nsnull)
 {
 }
 
 static PRBool PR_CALLBACK
-nsDll_Destroy(nsHashKey *aKey, void *aData, void* closure)
+DLLStore_Destroy(nsHashKey *aKey, void *aData, void* closure)
 {
     nsDll* entry = NS_STATIC_CAST(nsDll*, aData);
     delete entry;
@@ -68,8 +68,8 @@ nsDll_Destroy(nsHashKey *aKey, void *aData, void* closure)
 nsNativeComponentLoader::~nsNativeComponentLoader()
 {
     mCompMgr = nsnull;
-
     delete mDllStore;
+    delete mLoadedDependentLibs;
 }
     
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsNativeComponentLoader, 
@@ -156,11 +156,20 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
     if (!mCompMgr)
         return NS_ERROR_INVALID_ARG;
 
-    mDllStore = new nsObjectHashtable(nsnull, nsnull, // never copy
-                                      nsDll_Destroy, nsnull,
-                                      256, /* Thead Safe */ PR_TRUE);
+    mDllStore = new nsObjectHashtable(nsnull, 
+                                      nsnull,
+                                      DLLStore_Destroy, 
+                                      nsnull,
+                                      256, 
+                                      PR_TRUE);
     if (!mDllStore)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    mLoadedDependentLibs = new nsHashtable(16, PR_TRUE);
+
+    if (!mLoadedDependentLibs)
+        return NS_ERROR_OUT_OF_MEMORY;
+
     return NS_OK;
 }
 
@@ -411,6 +420,10 @@ nsNativeComponentLoader::SelfRegisterDll(nsDll *dll,
          *************************************************************/
         nsresult res2 = dll->GetDllSpec(getter_AddRefs(fs));    // don't change 'res2' -- see warning, above
         if (NS_SUCCEEDED(res2)) {
+            // in the case of re-registering a component, we want to remove 
+            // any optional data that this file may have had.
+            AddDependentLibrary(fs, nsnull);
+
             res = mobj->RegisterSelf(mCompMgr, fs, registryLocation,
                                      nativeComponentType);
         }
@@ -854,7 +867,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // It is ok to do this even if the creation of nsDll
         // didnt succeed. That way we wont do this again
         // when we encounter the same dll.
-        dll = new nsDll(component);
+        dll = new nsDll(component, this);
         if (dll == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         mDllStore->Put(&key, (void *) dll);
@@ -1018,7 +1031,7 @@ nsNativeComponentLoader::CreateDll(nsIFile *aSpec,
 
     if (!dll)
     {
-        dll = new nsDll(spec);
+        dll = new nsDll(spec, this);
         if (!dll)
             return NS_ERROR_OUT_OF_MEMORY;
     }

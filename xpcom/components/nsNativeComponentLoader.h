@@ -39,14 +39,16 @@ class nsNativeComponentLoader : public nsIComponentLoader, public nsINativeCompo
 
     nsNativeComponentLoader();
     virtual ~nsNativeComponentLoader();
- protected:
+ 
     nsIComponentManager* mCompMgr;      // weak reference -- backpointer
+    nsHashtable*         mLoadedDependentLibs;
+
+ private:
     nsObjectHashtable*  mDllStore;
     nsVoidArray mDeferredComponents;
 
     NS_IMETHOD RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
 
- private:
     nsresult CreateDll(nsIFile *aSpec, const char *aLocation, nsDll **aDll);
     nsresult SelfRegisterDll(nsDll *dll, const char *registryLocation,
                              PRBool deferred);

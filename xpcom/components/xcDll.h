@@ -53,6 +53,8 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
+class nsNativeComponentLoader;
+
 #if defined(DEBUG) && !defined(XP_BEOS)
 #define SHOULD_IMPLEMENT_BREAKAFTERLOAD
 #endif
@@ -72,11 +74,12 @@ typedef enum nsDllStatus
 class nsDll
 {
 private:
-    nsCOMPtr<nsIFile> m_dllSpec; 
-    PRLibrary  *m_instance;	// Load instance
-    nsIModule  *m_moduleObject;
+    nsCOMPtr<nsIFile>         m_dllSpec; 
+    PRLibrary                *m_instance;	
+    nsIModule                *m_moduleObject;
+    nsNativeComponentLoader  *m_loader;
+    PRBool                    m_markForUnload;
 
-    PRBool      m_markForUnload;
     void Init(nsIFile *dllSpec);
 
 #ifdef SHOULD_IMPLEMENT_BREAKAFTERLOAD
@@ -85,7 +88,7 @@ private:
 
 public:
  
-	nsDll(nsIFile *dllSpec);
+	nsDll(nsIFile *dllSpec, nsNativeComponentLoader* loader);
 	~nsDll(void);
 
 	// Dll Loading
