@@ -57,6 +57,7 @@ nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* aContainer, nsIURLGroup* aGroup)
     mSearch = nsnull;
     mPostData = nsnull;
     mContainer = nsnull;
+    mLoadAttribs = nsnull;
     mURLGroup = aGroup;
   
     NS_NewLoadAttribs(&mLoadAttribs);
