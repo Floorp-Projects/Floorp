@@ -160,7 +160,7 @@ END_COM_MAP()
 
     HRESULT Init(PluginInstanceData *pData)
     {
-	    NS_PRECONDITION(pData != nsnull, "null ptr");
+        NS_PRECONDITION(pData != nsnull, "null ptr");
 
         mData = pData;
 
@@ -1890,10 +1890,10 @@ END_COM_MAP()
         /* [out] */ IMoniker **ppmk,
         /* [in] */ DWORD dwReserved)
     {
-    	if (!szName || !ppmk) return E_POINTER;
-		if (!*szName) return E_INVALIDARG;
+        if (!szName || !ppmk) return E_POINTER;
+        if (!*szName) return E_INVALIDARG;
 
-		*ppmk = NULL;
+        *ppmk = NULL;
 
         // Get the BASE url
         CComPtr<IMoniker> baseURLMoniker;
@@ -1913,10 +1913,10 @@ END_COM_MAP()
         }
 
         // Make the moniker
-		HRESULT hr = CreateURLMoniker(baseURLMoniker, szName, ppmk);
-		if (SUCCEEDED(hr) && !*ppmk)
-			hr = E_FAIL;
-		return hr;
+        HRESULT hr = CreateURLMoniker(baseURLMoniker, szName, ppmk);
+        if (SUCCEEDED(hr) && !*ppmk)
+            hr = E_FAIL;
+        return hr;
     }
     
     virtual /* [local] */ HRESULT STDMETHODCALLTYPE MonikerBindToStorage( 
@@ -1926,33 +1926,33 @@ END_COM_MAP()
         /* [in] */ REFIID riid,
         /* [out] */ void **ppvObj)
     {
-		if (!pMk || !ppvObj) return E_POINTER;
+        if (!pMk || !ppvObj) return E_POINTER;
 
-		*ppvObj = NULL;
-		HRESULT hr = S_OK;
+        *ppvObj = NULL;
+        HRESULT hr = S_OK;
         CComPtr<IBindCtx> spBindCtx;
-		if (pBC)
-		{
-			spBindCtx = pBC;
-			if (pBSC)
-			{
-				hr = RegisterBindStatusCallback(spBindCtx, pBSC, NULL, 0);
-				if (FAILED(hr))
-					return hr;
-			}
-		}
-		else
-		{
-			if (pBSC)
-				hr = CreateAsyncBindCtx(0, pBSC, NULL, &spBindCtx);
-			else
-				hr = CreateBindCtx(0, &spBindCtx);
-			if (SUCCEEDED(hr) && !spBindCtx)
-				hr = E_FAIL;
-			if (FAILED(hr))
-				return hr;
-		}
-		return pMk->BindToStorage(spBindCtx, NULL, riid, ppvObj);
+        if (pBC)
+        {
+            spBindCtx = pBC;
+            if (pBSC)
+            {
+                hr = RegisterBindStatusCallback(spBindCtx, pBSC, NULL, 0);
+                if (FAILED(hr))
+                    return hr;
+            }
+        }
+        else
+        {
+            if (pBSC)
+                hr = CreateAsyncBindCtx(0, pBSC, NULL, &spBindCtx);
+            else
+                hr = CreateBindCtx(0, &spBindCtx);
+            if (SUCCEEDED(hr) && !spBindCtx)
+                hr = E_FAIL;
+            if (FAILED(hr))
+                return hr;
+        }
+        return pMk->BindToStorage(spBindCtx, NULL, riid, ppvObj);
     }
     
     virtual /* [local] */ HRESULT STDMETHODCALLTYPE MonikerBindToObject( 
