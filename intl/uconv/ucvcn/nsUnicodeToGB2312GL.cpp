@@ -40,23 +40,27 @@ nsUnicodeToGB2312GL::nsUnicodeToGB2312GL()
   PRUnichar unicode;
   PRUint16 i;
 
-  for ( i=0; i<MAX_GBK_LENGTH; i++ )
+  if ( !gUnicodeToGBKTableInitialized )
     {
-      
-      left =  ( i / 0x00BF + 0x0081);
-      right = ( i % 0x00BF+ 0x0040);
-      unicode = GBKToUnicodeTable[i];
-      
-      // to reduce size of UnicodeToGBKTable, we only do direct unicode to GB 
-      // table mapping between unicode 0x4E00 and 0xA000. Others by searching
-      // GBKToUnicodeTable. There is a trade off between memory usage and speed.
-      if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ))
+      for ( i=0; i<MAX_GBK_LENGTH; i++ )
         {
-          unicode -= 0x4E00; 
-          UnicodeToGBKTable[unicode].leftbyte = left;
-          UnicodeToGBKTable[unicode].rightbyte = right;
+          
+          left =  ( i / 0x00BF + 0x0081);
+          right = ( i % 0x00BF+ 0x0040);
+          unicode = GBKToUnicodeTable[i];
+      
+          // to reduce size of UnicodeToGBKTable, we only do direct unicode to GB 
+          // table mapping between unicode 0x4E00 and 0xA000. Others by searching
+          // GBKToUnicodeTable. There is a trade off between memory usage and speed.
+          if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ))
+            {
+              unicode -= 0x4E00; 
+              UnicodeToGBKTable[unicode].leftbyte = left;
+              UnicodeToGBKTable[unicode].rightbyte = right;
+            }
         }
-    } 
+      gUnicodeToGBKTableInitialized = PR_TRUE; 
+    }
 }
 
 NS_IMETHODIMP nsUnicodeToGB2312GL::ConvertNoBuff(const PRUnichar * aSrc, 
@@ -67,15 +71,16 @@ NS_IMETHODIMP nsUnicodeToGB2312GL::ConvertNoBuff(const PRUnichar * aSrc,
 	PRInt32 i=0;
 	PRInt32 iSrcLength = 0;
   DByte *pDestDBCode;
+  DByte *pSrcDBCode; 
 	PRInt32 iDestLength = 0;
   PRUnichar unicode;
   PRUint8 left, right;
   nsresult res = NS_OK;
 	PRUnichar *pSrc = (PRUnichar *)aSrc;
 	pDestDBCode = (DByte *)aDest;
-
     
-  while( iSrcLength < *aSrcLength )
+  
+  while( iSrcLength < *aSrcLength)
 	{
 		pDestDBCode = (DByte *)aDest;
     
@@ -110,8 +115,8 @@ NS_IMETHODIMP nsUnicodeToGB2312GL::ConvertNoBuff(const PRUnichar * aSrc,
         //	UnicodeToGBK( *pSrc, pDestDBCode);
         aDest += 2;	// increment 2 bytes
         pDestDBCode = (DByte *)aDest;
-        iDestLength +=2;
-        iSrcLength +=2;  
+        iDestLength +=2; // Dest Length in units of chars, each GB char counts as two in string length
+        iSrcLength++ ; // Each unicode char just count as one in PRUnichar string;  
 		    pSrc++;	 // increment 2 bytes    
     }
 		else
@@ -121,7 +126,7 @@ NS_IMETHODIMP nsUnicodeToGB2312GL::ConvertNoBuff(const PRUnichar * aSrc,
       }
 
     // if dest buffer not big enough, handles it here. 
-		if ( (iDestLength >= *aDestLength) && (iSrcLength > 0) )
+		if ( (iDestLength >= *aDestLength) && ( iSrcLength < *aSrcLength) )
       {
         res = NS_OK_UENC_MOREOUTPUT;
         break;
@@ -172,18 +177,18 @@ NS_IMETHODIMP nsUnicodeToGB2312GL::FillInfo(PRUint32 *aInfo)
   for ( i=0x0081;i<0x00FF;i++) 
     {
       // HZ and GB2312 starts at row 0x21|0x80 = 0xA1
-      if ( i < 0xA1 )
+        if ( i < 0xA1 )
         continue;
 
       // valid GBK columns are in 0x41 to 0xFE
-      for( j=0x0041;j<0x00FF;j++)
+      for( j=0x0040;j<0x00FF;j++)
         {
           //HZ and GB2312 starts at col 0x21 | 0x80 = 0xA1
           if ( j < 0xA1 )
             continue;
           
           // k is index in GBKU.H table
-          k = (i - 0x0081)*(0x00FE - 0x0080)+(j-0x0041);
+          k = (i - 0x0081)*0x00BF +(j-0x0040);
           
           SrcUnicode = GBKToUnicodeTable[k];
           if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )

@@ -33,6 +33,7 @@
 // 04/10/1999 - changed leftbyte. rightbyte to PRUint8 in struct DByte;
 //              added table UnicodeToGBKTable[0x5200]
 //            
+// 05/16/2000 - added gUnicodeToGBKTableInitialized flag for optimization
 // ======================================================================================
 // Table GBKToUnicode[] maps the GBK code to its unicode.
 // The mapping data of this GBK table is obtained from 
@@ -68,9 +69,11 @@ typedef struct
 extern PRUnichar GBKToUnicodeTable[MAX_GBK_LENGTH];
 
 #ifdef _UNICODE_TO_GBK_ENCODER_
-DByte UnicodeToGBKTable[0x5200];
+ DByte UnicodeToGBKTable[0x5200];
+ PRUint16 gUnicodeToGBKTableInitialized = PR_FALSE;  // default to not initialized yet
 #else
-extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
+ extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
+ extern PRUint16 gUnicodeToGBKTableInitialized;
 #endif
 
 #else
@@ -97,11 +100,12 @@ PRUnichar GBKToUnicodeTable[MAX_GBK_LENGTH] =
 
 
 #ifdef _UNICODE_TO_GBK_ENCODER_
-DByte UnicodeToGBKTable[0x5200];
+ DByte UnicodeToGBKTable[0x5200];
+ PRUint16 gUnicodeToGBKTableInitialized = PR_FALSE;  // default to not initialized yet
 #else
-extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
+ extern DByte UnicodeToGBKTable[0x5200]; // 0xA000 - 0x4E00 = 0x5200
+ extern PRUint16 gUnicodeToGBKTableInitialized;
 #endif
-
 
 #endif /* ifdef _GBKU_TABLE_ */
 

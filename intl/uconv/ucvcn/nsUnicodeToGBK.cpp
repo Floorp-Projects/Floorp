@@ -49,23 +49,27 @@ nsUnicodeToGBK::nsUnicodeToGBK()
     PRUnichar unicode;
     PRUnichar i;
 
-    for ( i=0; i<MAX_GBK_LENGTH; i++ )
-    {
-   
-      left =  ( i / 0x00BF + 0x0081);
-      right = ( i % 0x00BF+ 0x0040);
-      unicode = GBKToUnicodeTable[i];
-
-      // to reduce size of UnicodeToGBKTable, we only do direct unicode to GB 
-      // table mapping between unicode 0x4E00 and 0xA000. Others by searching
-      // GBKToUnicodeTable. There is a trade off between memory usage and speed.
-      if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ))
+    if ( !gUnicodeToGBKTableInitialized )
+      {
+      for ( i=0; i<MAX_GBK_LENGTH; i++ )
         {
-          unicode -= 0x4E00; 
-          UnicodeToGBKTable[unicode].leftbyte = left;
-          UnicodeToGBKTable[unicode].rightbyte = right; 
+   
+          left =  ( i / 0x00BF + 0x0081);
+          right = ( i % 0x00BF+ 0x0040);
+          unicode = GBKToUnicodeTable[i];
+
+          // to reduce size of UnicodeToGBKTable, we only do direct unicode to GB 
+          // table mapping between unicode 0x4E00 and 0xA000. Others by searching
+          // GBKToUnicodeTable. There is a trade off between memory usage and speed.
+          if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ))
+            {
+              unicode -= 0x4E00; 
+              UnicodeToGBKTable[unicode].leftbyte = left;
+              UnicodeToGBKTable[unicode].rightbyte = right; 
+            }
         }
-    } 
+      gUnicodeToGBKTableInitialized = PR_TRUE;
+      } 
 }
 
 
@@ -76,17 +80,17 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(const PRUnichar * aSrc,
 {
 
 	PRInt32 i=0;
-	PRInt32 iSrcLength = *aSrcLength;
+	PRInt32 iSrcLength = 0;
     DByte *pDestDBCode;
     DByte *pSrcDBCode; 
 	PRInt32 iDestLength = 0;
     PRUnichar unicode;
     PRUint8 left, right;
-
+    nsresult res = NS_OK;
 	PRUnichar *pSrc = (PRUnichar *)aSrc;
 	pDestDBCode = (DByte *)aDest;
 
-    for (i=0;i< iSrcLength;i++)
+    while (iSrcLength < *aSrcLength )
 	{
 	   pDestDBCode = (DByte *)aDest;
    
@@ -132,18 +136,21 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(const PRUnichar * aSrc,
            aDest++; // increment 1 byte
            iDestLength +=1;
          }
+
+       iSrcLength++ ; // Each unicode char just count as one in PRUnichar string;  	  
        pSrc++;	 // increment 2 bytes
        
-       if ( iDestLength >= (*aDestLength) )
+       if ( iDestLength >= (*aDestLength) && (iSrcLength < *aSrcLength) )
          {
+           res = NS_OK_UENC_MOREOUTPUT;
            break;
          }
 	}
     
 	*aDestLength = iDestLength;
-	*aSrcLength = i;
+	*aSrcLength = iSrcLength;
     
-    return NS_OK;
+    return res;
 
 }
 
@@ -188,7 +195,7 @@ NS_IMETHODIMP nsUnicodeToGBK::FillInfo(PRUint32 *aInfo)
       for( j=0x0040; j<0x00FF; j++)
         {
           // k is index in GBKU.H table
-          k = (i - 0x0081)*(0xFE - 0x0080)+(j-0x0040);    
+          k = (i - 0x0081)*0x00BF +(j-0x0040);    
           SrcUnicode = GBKToUnicodeTable[k];
           if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )
             {
@@ -196,7 +203,12 @@ NS_IMETHODIMP nsUnicodeToGBK::FillInfo(PRUint32 *aInfo)
             }               
         }
     }                   
-  
+
+  //GBK font lib also have single byte ASCII characters, set them here
+  for ( SrcUnicode = 0x0000; SrcUnicode <= 0x00FF; SrcUnicode++);
+  {
+    SET_REPRESENTABLE(aInfo, SrcUnicode);
+  }   
   return NS_OK;
 }
 
