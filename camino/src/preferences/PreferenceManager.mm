@@ -386,23 +386,27 @@ static BOOL gMadePrefManager;
       NSMutableArray* acceptableLanguages = [NSMutableArray array];
 
       // Build the list of languages the user understands (from System Preferences | International).
-      for (unsigned long i = 0; i < [languages count]; ++i) {
+      BOOL languagesOkaySoFar = YES;
+      for (unsigned long i = 0; languagesOkaySoFar && i < [languages count]; ++i) {
         NSString* language = [PreferenceManager convertLocaleToHTTPLanguage:[languages objectAtIndex:i]];
         if (language)
           [acceptableLanguages addObject:language];
+        else {
+          // If we don't understand a language don't set any, rather than risk leaving the user with
+          // their n'th choice (which may be one Apple made and they don't actually read)
+          // Mainly occurs on systems upgraded from 10.1, see convertLocaleToHTTPLanguage(). 
+          NSLog( @"Unable to set languages - language '%@' not a valid ISO language identifier", [languages objectAtIndex:i] );
+          languagesOkaySoFar = NO;
+        }
       }
 
-      // Create the accept-language header itself from the language list. Note that
-      // necko will determine quality factors itself.
-      NSMutableString* acceptLangHeader = [NSMutableString string];
-      for (unsigned long i = 0; i < [acceptableLanguages count]; ++i) {
-        if (i > 0)
-          [acceptLangHeader appendString:@","];
-        [acceptLangHeader appendString:[acceptableLanguages objectAtIndex:i]];
-      }
-
-      if ([acceptLangHeader length] > 0)
+      // If we understood all the languages in the list set the accept-language header.
+      // Note that necko will determine quality factors itself.
+      // If we don't set this we'll fall back to the "en-us, en" default from all-camino.js
+      if (languagesOkaySoFar && [acceptableLanguages count] > 0) {
+        NSString* acceptLangHeader = [acceptableLanguages componentsJoinedByString:@","];
         [self setPref:"intl.accept_languages" toString:acceptLangHeader];
+      }
     }
 }
 

@@ -84,6 +84,10 @@ pref("accessibility.typeaheadfind.autostart", false);
 // image resizing
 pref("browser.enable_automatic_image_resizing", true);
 
+// Languages (note we try to override this with the data from System Preferences,
+// this is just the emergency fall-back)
+pref("intl.accept_languages", "en-us, en" );
+
 // enable horizontal scroll by shift+wheel
 pref("mousewheel.horizscroll.withshiftkey.action", 0);
 pref("mousewheel.horizscroll.withshiftkey.numlines", 1);
