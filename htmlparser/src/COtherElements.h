@@ -674,6 +674,9 @@ public:
         break;
 
       case eHTMLTag_col:
+        result=aSink->AddLeaf(*aNode); 
+        break;
+
       case eHTMLTag_colgroup:
         if(aContext->mTableStates && aContext->mTableStates->CanOpenCols()) {
           result=OpenContainerInContext(aNode,aTag,aContext,aSink);  //force the title onto the stack
@@ -1038,7 +1041,6 @@ public:
 class CHeadElement: public CElement {
 public:
 
-
   static CGroupMembers& GetGroup(void) {
     static CGroupMembers theHeadGroup={0};
     theHeadGroup.mBits.mTopLevel=1;
@@ -1074,58 +1076,6 @@ public:
 
   CHeadElement(eHTMLTags aTag) : CElement(aTag) {
     CHeadElement::Initialize(*this,aTag);
-  }
-
-  /**********************************************************
-    Head handles the opening of it's own children
-   **********************************************************/
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-
-    switch(aTag) {
-
-      case eHTMLTag_script:
-      case eHTMLTag_style:
-      case eHTMLTag_title:
-        result=OpenContext(aNode,aTag,aContext,aSink);  //force the title onto the context stack
-        break;
-
-      case eHTMLTag_base: //nothing to do for these empty tags...      
-      case eHTMLTag_isindex:
-      case eHTMLTag_link:
-      case eHTMLTag_meta:
-        aSink->OpenHead(*aNode);
-        result=aSink->AddLeaf(*aNode);
-        aSink->CloseHead(*aNode);
-      default:
-        break;
-    }
-    return result;
-  }
-
-  /**********************************************************
-    Head handles the closing of it's own children
-   **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
-    nsresult result=NS_OK;
-
-    switch(aTag) {
-
-      case eHTMLTag_script:
-      case eHTMLTag_style:
-      case eHTMLTag_title:
-        result=CloseContext(aNode,aTag,aContext,aSink);
-        break;
-
-      case eHTMLTag_base:     //nothing to do for these empty tags...
-      case eHTMLTag_isindex:
-      case eHTMLTag_link:
-      case eHTMLTag_meta:
-      default:
-        break;
-    }
-
-    return result;
   }
 
 
@@ -1334,7 +1284,7 @@ public:
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
-    if(aContext->HasOpenContainer(eHTMLTag_head)) {
+    if(aContext->HasOpenContainer(eHTMLTag_html)) {
       aSink->OpenHead(*aNode);
       result=CTextContainer::NotifyClose(aNode,aTag,aContext,aSink);
       aSink->CloseHead(*aNode);
@@ -1701,8 +1651,24 @@ public:
         aContext->mHadFrameset=PR_TRUE;
         break;
 
-      case eHTMLTag_head:
-        result=OpenContext(aNode,aTag,aContext,aSink);
+      case eHTMLTag_base: //nothing to do for these empty tags...      
+      case eHTMLTag_isindex:
+      case eHTMLTag_link:
+      case eHTMLTag_meta:
+        aSink->OpenHead(*aNode);
+        result=aSink->AddLeaf(*aNode);
+        aSink->CloseHead(*aNode);
+        break;
+
+      case eHTMLTag_object:
+        aSink->OpenHead(*aNode);
+        result=OpenContainerInContext(aNode,aTag,aContext,aSink);
+        break;
+
+      case eHTMLTag_script:
+      case eHTMLTag_style:
+      case eHTMLTag_title:
+        result=OpenContext(aNode,aTag,aContext,aSink);  //force the title onto the context stack
         break;
 
       case eHTMLTag_newline:
@@ -1754,8 +1720,15 @@ public:
         result=CloseContext(aNode,aTag,aContext,aSink);
         break;
 
-      case eHTMLTag_head:
-        result=CloseContext(aNode,aTag,aContext,aSink);
+      case eHTMLTag_object:
+        result=CloseContainerInContext(aNode,aTag,aContext,aSink);
+        aSink->CloseHead(*aNode);
+        break;
+
+      case eHTMLTag_script:
+      case eHTMLTag_style:
+      case eHTMLTag_title:
+        result=CloseContext(aNode,aTag,aContext,aSink);  //close the title
         break;
 
       case eHTMLTag_unknown:
@@ -1872,7 +1845,6 @@ public:
 
     mBodyElement(eHTMLTag_body),
     mFramesetElement(eHTMLTag_frameset),
-    mHeadElement(eHTMLTag_head),
     mHTMLElement(eHTMLTag_html),
     mScriptElement(),
     mStyleElement(),
@@ -1901,7 +1873,6 @@ public:
 
   CBodyElement      mBodyElement;
   CFrameElement     mFramesetElement;
-  CHeadElement      mHeadElement;
   CHTMLElement      mHTMLElement;
   CScriptElement    mScriptElement;
   CStyleElement     mStyleElement;
@@ -2195,7 +2166,6 @@ void CElementTable::InitializeElements() {
   mElements[eHTMLTag_body]=&mBodyElement;
   mElements[eHTMLTag_frameset]=&mFramesetElement;
   mElements[eHTMLTag_html]=&mHTMLElement;
-  mElements[eHTMLTag_head]=&mHeadElement;
   mElements[eHTMLTag_script]=&mScriptElement;
   mElements[eHTMLTag_style]=&mStyleElement;
   mElements[eHTMLTag_title]=&mTitleElement;
