@@ -53,6 +53,7 @@ REQUIRES =
 EXPORTS = \
 	blapi.h \
 	blapit.h \
+	secrng.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

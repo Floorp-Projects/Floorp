@@ -37,7 +37,7 @@
  * secrng.h - public data structures and prototypes for the secure random
  *	      number generator
  *
- * $Id: secrng.h,v 1.2 2001/11/15 02:41:20 nelsonb%netscape.com Exp $
+ * $Id: secrng.h,v 1.1 2001/11/15 04:29:23 nelsonb%netscape.com Exp $
  */
 
 /******************************************/

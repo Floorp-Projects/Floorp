@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: cryptohi.h,v 1.3 2001/05/01 23:59:27 relyea%netscape.com Exp $
+ * $Id: cryptohi.h,v 1.4 2001/11/15 04:29:19 nelsonb%netscape.com Exp $
  */
 
 #ifndef _CRYPTOHI_H_
@@ -41,7 +41,6 @@
 #include "blapi.h"
 
 #include "seccomon.h"
-#include "secrngt.h"
 #include "secoidt.h"
 #include "secdert.h"
 #include "cryptoht.h"
