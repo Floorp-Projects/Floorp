@@ -93,9 +93,10 @@ public class NativeJavaPackage extends ScriptableObject {
 
         NativeJavaObject.initJSObject();
         
-        String[] methods = { "getClass" };
-        global.defineFunctionProperties(methods, NativeJavaPackage.class, 
-                                        ScriptableObject.DONTENUM);
+        Method[] m = FunctionObject.findMethods(NativeJavaPackage.class, 
+                                                "jsFunction_getClass");
+        FunctionObject f = new FunctionObject("getClass", m[0], global);
+        global.defineProperty("getClass", f, ScriptableObject.DONTENUM);
 
         // I think I'm supposed to return the prototype, but I don't have one.
         return packages;
@@ -201,8 +202,10 @@ public class NativeJavaPackage extends ScriptableObject {
         return "[JavaPackage " + packageName + "]";
     }
     
-    public static Scriptable getClass(Context cx, Scriptable thisObj,
-                                      Object[] args, Function funObj)
+    public static Scriptable jsFunction_getClass(Context cx, 
+                                                 Scriptable thisObj,
+                                                 Object[] args, 
+                                                 Function funObj)
     {
         if (args.length > 0  && args[0] instanceof NativeJavaObject) {
             NativeJavaObject nativeJavaObj = (NativeJavaObject) args[0];

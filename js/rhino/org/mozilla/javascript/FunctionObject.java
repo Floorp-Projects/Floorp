@@ -335,21 +335,24 @@ public class FunctionObject extends NativeFunction {
         Method[] cached = methodsCache; // get once to avoid synchronization
         if (cached != null && cached[0].getDeclaringClass() == clazz)
             return cached;
-        boolean getMethodsCalled = false;
-        Method[] methods;
+        Method[] methods = null;
         try {
             // getDeclaredMethods may be rejected by the security manager
-            methods = clazz.getDeclaredMethods();
-        } catch (SecurityException e) {
             // but getMethods is more expensive
-            getMethodsCalled = true;
+            if (!sawSecurityException) 
+                methods = clazz.getDeclaredMethods();
+        } catch (SecurityException e) {
+            // If we get an exception once, give up on getDeclaredMethods
+            sawSecurityException = true;
+        }
+        if (methods == null) {
             methods = clazz.getMethods();
         }
         int count = 0;
         for (int i=0; i < methods.length; i++) {
-            if (getMethodsCalled 
-                    ? !Modifier.isPublic(methods[i].getModifiers())
-                    : methods[i].getDeclaringClass() != clazz) 
+            if (sawSecurityException 
+                ? methods[i].getDeclaringClass() != clazz
+                : !Modifier.isPublic(methods[i].getModifiers()))
             {
                 methods[i] = null;
             } else {
@@ -617,6 +620,8 @@ public class FunctionObject extends NativeFunction {
 
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
+    
+    private static boolean sawSecurityException;
 
     static Method[] methodsCache;
 
