@@ -98,6 +98,7 @@
 #include "nsMsgOfflineManager.h"
 #include "nsMsgProgress.h"
 #include "nsSpamSettings.h"
+#include "nsMsgContentPolicy.h"
 #include "nsCidProtocolHandler.h"
 
 #ifdef XP_WIN
@@ -326,6 +327,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerOS2Integration, Init);
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMessengerContentHandler);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgContentPolicy);
 
 ////////////////////////////////////////////////////////////////////////////////
 // addrbook factories
@@ -539,6 +541,31 @@ static NS_IMETHODIMP nsVCardMimeContentTypeHandlerConstructor(nsISupports *aOute
   return rv;
 }
 
+static NS_METHOD RegisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                                       const char *registryLocation, const char *componentType,
+                                       const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsXPIDLCString previous;
+  return catman->AddCategoryEntry("content-policy",
+                                  NS_MSGCONTENTPOLICY_CONTRACTID,
+                                  NS_MSGCONTENTPOLICY_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static NS_METHOD UnregisterContentPolicy(nsIComponentManager *aCompMgr, nsIFile *aPath,
+                                         const char *registryLocation,
+                                         const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  return catman->DeleteCategoryEntry("content-policy", NS_MSGCONTENTPOLICY_CONTRACTID, PR_TRUE);
+}
+
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
     ////////////////////////////////////////////////////////////////////////////////
@@ -742,6 +769,11 @@ static const nsModuleComponentInfo gComponents[] = {
        NS_MESSENGERCONTENTHANDLER_CONTRACTID,
        nsMessengerContentHandlerConstructor
     },
+    { "mail content policy enforcer", 
+       NS_MSGCONTENTPOLICY_CID,
+       NS_MSGCONTENTPOLICY_CONTRACTID,
+       nsMsgContentPolicyConstructor,
+       RegisterContentPolicy, UnregisterContentPolicy },
     
     ////////////////////////////////////////////////////////////////////////////////
     // addrbook components
