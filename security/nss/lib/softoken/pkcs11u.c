@@ -40,6 +40,7 @@
 #include "pcert.h"
 #include "secasn1.h"
 #include "blapi.h"
+#include "secerr.h"
 
 /*
  * ******************** Attribute Utilities *******************************
@@ -989,9 +990,13 @@ pk11_FindCrlAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     case CKA_VALUE:
 	break;
     default:
-	return NULL;
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    	return NULL;
     }
     crl =  pk11_getCrl(object);
+    if (!crl) {
+	return NULL;
+    }
     switch (type) {
     case CKA_NETSCAPE_URL:
 	if (crl->url == NULL) {
