@@ -175,6 +175,9 @@ static bool processArgs(int argc, char **argv, int *result)
                 stdOut << "unrecognized command line switch\n";
                 i = argc;
                 break;
+            case 'i':
+                doInteractive = true;
+                break;
             case 'f':
                 {
                     try {

@@ -168,7 +168,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
             else
                 lastIndex = match->endIndex;
             js2val matchStr = meta->engine->allocString(JS2VAL_TO_STRING(S)->substr(toUInt32(match->startIndex), toUInt32(match->endIndex) - match->startIndex));
-            Multiname mname(&meta->world.identifiers[*meta->toString(index)], meta->publicNamespace);
+            Multiname mname(&meta->world.identifiers[*meta->engine->numberToString(index)], meta->publicNamespace);
             index++;
             meta->writeDynamicProperty(A, &mname, true, matchStr, RunPhase);
         }
@@ -232,7 +232,7 @@ static const String interpretDollar(JS2Metadata *meta, const String *replaceStr,
  * in the same manner as in String.prototype.match, including the update of searchValue.lastIndex. Let m
  * be the number of left capturing parentheses in searchValue (NCapturingParens as specified in section 15.10.2.1).
  * 
- * If searchValue is not a regular expression, let searchString be meta->toString(searchValue) and search string for the first
+ * If searchValue is not a regular expression, let searchString be toString(searchValue) and search string for the first
  * occurrence of searchString. Let m be 0.
  * 
  * If replaceValue is a function, then for each matched substring, call the function with the following m + 3 arguments.
@@ -432,9 +432,8 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
             strSplitMatch(S, 0, R, z);
         if (!z.failure)
             return result;
-        mn.name = meta->toString((int32)0);
+        mn.name = meta->engine->numberToString((int32)0);       // XXX
         meta->writeDynamicProperty(A, &mn, true, STRING_TO_JS2VAL(S), RunPhase);
-        delete mn.name;
         return result;
     }
 
@@ -443,9 +442,8 @@ static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *ar
 step11:
         if (q == s) {
             js2val v = meta->engine->allocString(new String(*S, p, (s - p)));
-            mn.name = meta->toString(getLength(meta, A));
+            mn.name = meta->engine->numberToString(getLength(meta, A));
             meta->writeDynamicProperty(A, &mn, true, v, RunPhase);
-            delete mn.name;
             return result;
         }
         MatchResult z;
@@ -464,17 +462,15 @@ step11:
         }
         String *T = meta->engine->allocStringPtr(new String(*S, p, (q - p)));   // XXX
         js2val v = STRING_TO_JS2VAL(T);
-        mn.name = meta->toString(getLength(meta, A));
+        mn.name = meta->engine->numberToString(getLength(meta, A));
         meta->writeDynamicProperty(A, &mn, true, v, RunPhase);
-        delete mn.name;
         if (getLength(meta, A) == lim)
             return result;
         p = e;
 
         for (uint32 i = 0; i < z.capturesCount; i++) {
-            mn.name = meta->toString(getLength(meta, A));
+            mn.name = meta->engine->numberToString(getLength(meta, A));
             meta->writeDynamicProperty(A, &mn, true, z.captures[i], RunPhase);
-            delete mn.name;
             if (getLength(meta, A) == lim)
                 return result;
         }

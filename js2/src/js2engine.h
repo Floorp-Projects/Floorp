@@ -187,6 +187,9 @@ public:
     String *allocStringPtr(const String *s);
     String *allocStringPtr(const char *s);
 
+    String *numberToString(float64 *number);
+    String *numberToString(int32 i);
+
     js2val allocFloat(float32 x); 
     js2val pushFloat(float32 x)         { js2val retval = allocFloat(x); push(retval); return retval; }
 
@@ -291,11 +294,6 @@ public:
 
 
 };
-
-
-String *numberToString(float64 *number);
-String *numberToString(int32 i);
-
 
 
 }

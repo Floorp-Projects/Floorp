@@ -2166,7 +2166,7 @@ doUnary:
                         bCon->addString(checked_cast<StringExprNode *>(e->field)->str, p->pos);
                         break;
                     case ExprNode::number:
-                        bCon->addString(numberToString(&(checked_cast<NumberExprNode *>(e->field))->value), p->pos);
+                        bCon->addString(engine->numberToString(&(checked_cast<NumberExprNode *>(e->field))->value), p->pos);
                         break;
                     default:
                         NOT_REACHED("bad field name");
@@ -3702,23 +3702,23 @@ deleteClassProperty:
         if (JS2VAL_IS_BOOLEAN(x))
             return (JS2VAL_TO_BOOLEAN(x)) ? engine->true_StringAtom : engine->false_StringAtom;
         if (JS2VAL_IS_INT(x))
-            return numberToString(JS2VAL_TO_INT(x));
+            return engine->numberToString(JS2VAL_TO_INT(x));
         if (JS2VAL_IS_LONG(x)) {
             float64 d;
             JSLL_L2D(d, *JS2VAL_TO_LONG(x));
-            return numberToString(&d);
+            return engine->numberToString(&d);
         }
         if (JS2VAL_IS_ULONG(x)) {
             float64 d;
             JSLL_UL2D(d, *JS2VAL_TO_ULONG(x));
-            return numberToString(&d);
+            return engine->numberToString(&d);
         }
         if (JS2VAL_IS_FLOAT(x)) {
             float64 d = *JS2VAL_TO_FLOAT(x);
-            return numberToString(&d);
+            return engine->numberToString(&d);
         }
         if (JS2VAL_IS_DOUBLE(x))
-            return numberToString(JS2VAL_TO_DOUBLE(x));
+            return engine->numberToString(JS2VAL_TO_DOUBLE(x));
         return toString(toPrimitive(x));
     }
 

@@ -72,7 +72,7 @@ namespace MetaData {
         if (meta->objectType(thisValue) != meta->numberClass)
             meta->reportError(Exception::typeError, "Number.toString called on something other than a number thing", meta->engine->errorPos());
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
-        return meta->engine->allocString(numberToString(&numInst->mValue));
+        return STRING_TO_JS2VAL(meta->engine->numberToString(&numInst->mValue));
     }
 
 #define MAKE_INSTANCE_VARIABLE(name, type) \

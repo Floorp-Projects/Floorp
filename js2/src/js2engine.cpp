@@ -124,11 +124,9 @@ namespace MetaData {
                         } while (hndlr->mActivation != curAct);
                         if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
                             x = pop();
-    /*
-            switch interpreter to execution of the activation 
-            XXX will need more (argument frame handling etc.)
-    */
-                        activationStackTop = prev;
+                        activationStackTop = prev;      // need the one before the target function to 
+                                                        // be at the top, because of postincrement
+                        bCon = curAct->bCon;
                     }
                     else {
                         if (jsx.hasKind(Exception::userException))
@@ -160,7 +158,6 @@ namespace MetaData {
     #endif                
                     sp = hndlr->mStackTop;
                     pc = hndlr->mPC;
-                    bCon = hndlr->mActivation->bCon;
                     push(x);
                 }
                 else
@@ -251,19 +248,19 @@ namespace MetaData {
     }
 
     // Convert an integer to a string
-    String *numberToString(int32 i)
+    String *JS2Engine::numberToString(int32 i)
     {
         char buf[dtosStandardBufferSize];
         const char *chrp = doubleToStr(buf, dtosStandardBufferSize, i, dtosStandard, 0);
-        return new JavaScript::String(widenCString(chrp));
+        return allocStringPtr(&meta->world.identifiers[chrp]);
     }
 
     // Convert a double to a string
-    String *numberToString(float64 *number)
+    String *JS2Engine::numberToString(float64 *number)
     {
         char buf[dtosStandardBufferSize];
         const char *chrp = doubleToStr(buf, dtosStandardBufferSize, *number, dtosStandard, 0);
-        return new JavaScript::String(widenCString(chrp));
+        return allocStringPtr(&meta->world.identifiers[chrp]);
     }
 
     // x is a Number, validate that it has no fractional component

@@ -1075,7 +1075,7 @@ static js2val Date_toSource(JS2Metadata *meta, const js2val thisValue, js2val * 
 {
     StringFormatter buf;
     float64 *date = Date_getProlog(meta, thisValue);
-    buf << "(new Date(" << *numberToString(date) << "))";
+    buf << "(new Date(" << *meta->engine->numberToString(date) << "))";
     return meta->engine->allocString(buf.getString());
 }
 
