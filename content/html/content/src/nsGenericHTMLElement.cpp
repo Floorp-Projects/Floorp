@@ -919,6 +919,8 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     return NS_OK;
   }
 
+  doc->FlushPendingNotifications(PR_TRUE, PR_FALSE);
+
   // Get the presentation shell
   nsCOMPtr<nsIPresShell> presShell;
   doc->GetShellAt(0, getter_AddRefs(presShell));
@@ -1063,14 +1065,7 @@ nsGenericHTMLElement::GetScrollHeight(PRInt32* aScrollHeight)
     nscoord xMax, yMax;
     rv = scrollView->GetContainerSize(&xMax, &yMax);
 
-    const nsIView *view = nsnull;
-    nscoord xClip, yClip;
-
-    scrollView->GetClipView(&view);
-
-    view->GetDimensions(&xClip, &yClip);
-
-    *aScrollHeight = NSTwipsToIntPixels(yMax - yClip, t2p);
+    *aScrollHeight = NSTwipsToIntPixels(yMax, t2p);
   }
 
   return rv;
@@ -1092,14 +1087,7 @@ nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
     nscoord xMax, yMax;
     rv = scrollView->GetContainerSize(&xMax, &yMax);
 
-    const nsIView *view = nsnull;
-    nscoord xClip, yClip;
-
-    scrollView->GetClipView(&view);
-
-    view->GetDimensions(&xClip, &yClip);
-
-    *aScrollWidth = NSTwipsToIntPixels(xMax - xClip, t2p);
+    *aScrollWidth = NSTwipsToIntPixels(xMax, t2p);
   }
 
   return rv;
