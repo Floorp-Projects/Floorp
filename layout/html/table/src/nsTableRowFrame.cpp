@@ -231,7 +231,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
   }
 
   // Let our base class do the usual work
-  if (gsDebug) printf("Row DidResize: returning NS_OK.\n");
+  if (gsDebug) printf("Row DidResize: returning NS_OK---------------------------\n");
 }
 
 void nsTableRowFrame::ResetMaxChildHeight()
@@ -439,7 +439,12 @@ void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
     }
   }
 
-  if (mMinRowSpan == rowSpan)
+  // this accounts for cases where all cells in a row have a rowspan>1
+  // XXX  "numColsInThisRow==numColsInTable" probably isn't the right metric to use here
+  //      the point is to skip a cell who's span effects another row, maybe use cellmap?
+  PRInt32 numColsInThisRow = GetMaxColumns();
+  PRInt32 numColsInTable = aReflowState.tableFrame->GetColCount();
+  if ((1==rowSpan) || (mMinRowSpan == rowSpan && numColsInThisRow==numColsInTable))
   {
     // Update maxCellHeight
     if (aKidRect.height > aReflowState.maxCellHeight)
