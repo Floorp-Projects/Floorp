@@ -52,6 +52,7 @@
 // Interfaces Needed
 #include "nsDOMWindowList.h"
 #include "nsIBaseWindow.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIControllers.h"
 #include "nsIObserver.h"
@@ -195,6 +196,7 @@ public:
   virtual NS_HIDDEN_(PopupControlState) PushPopupControlState(PopupControlState state) const;
   virtual NS_HIDDEN_(void) PopPopupControlState(PopupControlState state) const;
   virtual NS_HIDDEN_(PopupControlState) GetPopupControlState() const;
+  virtual NS_HIDDEN_(OpenAllowValue) GetOpenAllow(const nsAString &aName);
 
   // nsIDOMViewCSS
   NS_DECL_NSIDOMVIEWCSS
@@ -250,9 +252,12 @@ protected:
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
                          float* aT2P);
   nsresult SecurityCheckURL(const char *aURL);
+  nsresult BuildURIfromBase(const char *aURL,
+                            nsIURI **aBuiltURI,
+                            PRBool *aFreeSecurityPass, JSContext **aCXused);
   PopupControlState CheckForAbusePoint();
-  PRUint32 CheckOpenAllow(PopupControlState aAbuseLevel,
-                          const nsAString &aName);
+  OpenAllowValue CheckOpenAllow(PopupControlState aAbuseLevel,
+                                const nsAString &aName);
   void     FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
                            const nsAString &aPopupURL,
                            const nsAString &aPopupWindowFeatures);
@@ -300,6 +305,7 @@ protected:
   PRPackedBool                  mIsScopeClear;
   PRPackedBool                  mFullScreen;
   PRPackedBool                  mIsClosed;
+  PRPackedBool                  mInClose;
   PRPackedBool                  mOpenerWasCleared;
   PRPackedBool                  mIsPopupSpam;
   nsCOMPtr<nsIScriptContext>    mContext;
@@ -363,6 +369,8 @@ public:
   NS_DECL_NSIDOMCHROMEWINDOW
 
 protected:
+  nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
+
   nsresult GetMainWidget(nsIWidget** aMainWidget);
 };
 
