@@ -27,7 +27,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 #include "prlog.h"
 
