@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.224 $ ';
+$::UtilsVersion = '$Revision: 1.225 $ ';
 
 package TinderUtils;
 
@@ -896,6 +896,8 @@ sub create_profile {
     return $result;
 }
 
+
+# Find mozilla profile.
 sub get_profile_dir {
     my $build_dir = shift;
     my $profile_dir;
@@ -1381,56 +1383,81 @@ sub run_all_tests {
                   $Settings::RegxpcomTestTimeout);
     }
 
-    # Profile directory.  This lives in way-different places
-    # depending on the OS.
-    #
-    my $profiledir = get_profile_dir($build_dir);
 
+    my ($pref_file, $profile_dir);
 
-    #
-    # Make sure we have a profile to run tests.  This is assumed to be called
-    # $Settings::MozProfileName and will live in $build_dir/.mozilla.
-    # Also assuming only one profile here.
-    #
-    my $cp_result = 0;
+    if ($Settings::UseMozillaProfile) {
+      # Profile directory.  This lives in way-different places
+      # depending on the OS.
+      #
+      my $profiledir = get_profile_dir($build_dir);
 
-    unless (-d "$profiledir") {
+      #
+      # Make sure we have a profile to run tests.  This is assumed to be called
+      # $Settings::MozProfileName and will live in $build_dir/.mozilla.
+      # Also assuming only one profile here.
+      #
+      my $cp_result = 0;
+
+      unless (-d "$profiledir") {
         print_log "No profile found, creating profile.\n";
         $cp_result = create_profile($build_dir, $binary_dir, $binary);
-    } else {
+      } else {
         print_log "Found profile.\n";
 
         # Recreate profile if we have $Settings::CleanProfile set.
         if ($Settings::CleanProfile) {
-            my $deletedir = $profiledir;
+          my $deletedir = $profiledir;
 
-            print_log "Creating clean profile ...\n";
-            print_log "Deleting $deletedir ...\n";
-            File::Path::rmtree([$deletedir], 0, 0);
-            if (-e "$deletedir") {
-                print_log "Error: rmtree([$deletedir], 0, 0) failed.\n";
-            }
-            $cp_result = create_profile($build_dir, $binary_dir, $binary);
+          print_log "Creating clean profile ...\n";
+          print_log "Deleting $deletedir ...\n";
+          File::Path::rmtree([$deletedir], 0, 0);
+          if (-e "$deletedir") {
+            print_log "Error: rmtree([$deletedir], 0, 0) failed.\n";
+          }
+          $cp_result = create_profile($build_dir, $binary_dir, $binary);
         }
-    }
+      }
 
-    # Set status, in case create profile failed.
-    if($cp_result) {
-        if(not $cp_result->{timed_out} and $cp_result->{exit_value} != 0) {
-            $test_result = "success";
+      # Set status, in case create profile failed.
+      if ($cp_result) {
+        if (not $cp_result->{timed_out} and $cp_result->{exit_value} != 0) {
+          $test_result = "success";
         } else {
-            $test_result = "testfailed";
+          $test_result = "testfailed";
         }
-    }
+      }
 
-    #
-    # Find the prefs file, remember we have that random string now
-    # e.g. <build-dir>/.mozilla/default/uldx6pyb.slt/prefs.js
-    # so File::Path::find will find the prefs.js file.
-    #
-    my ($pref_file, $profile_dir) = find_pref_file($profiledir);
-    #XXX this is ugly and hacky 
-    $test_result = 'testfailed' unless $pref_file;;
+      #
+      # Find the prefs file, remember we have that random string now
+      # e.g. <build-dir>/.mozilla/default/uldx6pyb.slt/prefs.js
+      # so File::Path::find will find the prefs.js file.
+      #
+      ($pref_file, $profile_dir) = find_pref_file($profiledir);
+
+      #XXX this is ugly and hacky 
+      $test_result = 'testfailed' unless $pref_file;;
+
+    } elsif($Settings::BinaryName eq "TestGtkEmbed") {
+      print_log "Using TestGtkEmbed profile\n";
+      
+      $pref_file   = "$build_dir/.TestGtkEmbed/TestGtkEmbed/prefs.js";
+      $profile_dir = "$build_dir";
+
+      # Create empty prefs file if needed
+      #unless (-e $pref_file) {
+      #  system("mkdir -p $build_dir/.TestGtkEmbed/TestGtkEmbed");
+      #  system("touch $pref_file");
+      #}
+
+      # Run TestGtkEmbed to generate proper pref file.
+      # This should only need to be run the first time for a given tree.
+      unless (-e $pref_file) {
+        $test_result = AliveTest("EmbedAliveTest_profile", $build_dir,
+                                 ["$embed_binary_dir/$embed_binary_basename"],
+                                 $Settings::EmbedTestTimeout);
+      }
+    }
 
 
     #
@@ -1477,7 +1504,7 @@ sub run_all_tests {
     #
     # Assume that we want to test modern skin for all tests.
     #
-    if ($pref_file) { #XXX lame
+    if ($pref_file and $Settings::UseMozillaProfile) { #XXX lame
         if (system("\\grep -s general.skins.selectedSkin $pref_file > /dev/null")) {
             print_log "Setting general.skins.selectedSkin to modern/1.0\n";
             open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
@@ -1528,9 +1555,15 @@ sub run_all_tests {
 
     # Bloat test (based on nsTraceRefcnt)
     if ($Settings::BloatTest and $test_result eq 'success') {
-        $test_result = BloatTest($binary, $build_dir,
-                                 ["-f", "bloaturls.txt"], "",
-                                 $Settings::BloatTestTimeout);
+      my @app_args;
+      if($Settings::BinaryName eq "TestGtkEmbed") {
+        @app_args = ["resource:///res/bloatcycle.html"];
+      } else {
+        @app_args = ["-f", "bloaturls.txt"];
+      }      
+      $test_result = BloatTest($binary, $build_dir,
+                               @app_args, "",
+                               $Settings::BloatTestTimeout);
     }
 
     # New and improved bloat/leak test (based on trace-malloc)
@@ -1551,7 +1584,8 @@ sub run_all_tests {
     # 4) If mail send fails, sometimes nsmail-2 flakes, may need
     #    an occasional machine reboot.
     #
-    if ($Settings::MailBloatTest and $test_result eq 'success') {
+    if ($Settings::MailBloatTest and $test_result eq 'success'
+       and $Settings::UseMozillaProfile) {
 
         print_log "______________MailBloatTest______________\n";
 
@@ -1615,9 +1649,16 @@ sub run_all_tests {
 
     # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
-        $test_result = LayoutPerformanceTest("LayoutPerformanceTest",
-                                             $build_dir,
-                                             [$binary, "-P", $Settings::MozProfileName]);
+      my @app_args;
+      if($Settings::BinaryName eq "TestGtkEmbed") {
+        @app_args = [$binary];        
+      } else {
+        @app_args = [$binary, "-P", $Settings::MozProfileName];
+      }
+
+      $test_result = LayoutPerformanceTest("LayoutPerformanceTest",
+                                           $build_dir,
+                                           @app_args);
     }
 
     # QA test: Client-side JS, DOM/HTML/Views, form submission.
@@ -1673,16 +1714,23 @@ sub run_all_tests {
 
     if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
 
-        # Win32 needs to do some url magic for file: urls.
-        my $startup_build_dir = $build_dir;
-        if ($Settings::OS =~ /^WIN/) {
-            $startup_build_dir = $win32_build_dir;
-        }
+      # Win32 needs to do some url magic for file: urls.
+      my $startup_build_dir = $build_dir;
+      if ($Settings::OS =~ /^WIN/) {
+        $startup_build_dir = $win32_build_dir;
+      }
+
+      my @app_args;
+      if($Settings::BinaryName eq "TestGtkEmbed") {
+        @app_args = [];        
+      } else {
+        @app_args = ["-P", $Settings::MozProfileName];
+      }
 
       $test_result = StartupPerformanceTest("StartupPerformanceTest",
                                             $binary,
                                             $startup_build_dir,
-                                            ["-P", $Settings::MozProfileName],
+                                            @app_args,
                                             "file:$startup_build_dir/../startup-test.html");
     }
 
@@ -1875,10 +1923,15 @@ sub LayoutPerformanceTest {
     
     if($layout_test_result eq 'success') {
       my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+
+      my $tp_prefix = "";
+      if($Settings::BinaryName eq "TestGtkEmbed") {
+        $tp_prefix = "m";
+      }
       
       print_log "TinderboxPrint:" .
         "<a title=\"Avg of the median per url pageload time\" href=\"http://$Settings::results_server/graph/query.cgi?testname=pageload&tbox=" .
-          ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">Tp:$layout_time" . "ms</a>\n";
+          ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$layout_time\">" . $tp_prefix . "Tp:$layout_time" . "ms</a>\n";
       
       # Pull out detail data from log.
       my $raw_data = extract_token_from_file($binary_log, "_x_x_mozilla_page_load_details", ",");
@@ -2145,9 +2198,14 @@ sub StartupPerformanceTest {
     my $min_startuptime = min(@times);
     print_log "Minimum startup time: $min_startuptime\n";
     
+    my $ts_prefix = "";
+    if($Settings::BinaryName eq "TestGtkEmbed") {
+      $ts_prefix = "m";
+    }
+
     my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
     my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox="
-      . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">Ts:" . $min_startuptime . "ms</a>\n\n";
+      . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">" . $ts_prefix . "Ts:" . $min_startuptime . "ms</a>\n\n";
     print_log "$print_string";
     
     # Report data back to server
@@ -2186,7 +2244,8 @@ sub BloatTest {
 
     # Build up binary command, look for profile.
     my @args = ($binary_basename);
-    unless ($Settings::MozProfileName eq "") {
+    unless (($Settings::MozProfileName eq "") or 
+            ($Settings::BinaryName eq "TestGtkEmbed")) {
         @args = (@args, "-P", $Settings::MozProfileName);
     }
     @args = (@args, @$bloat_args);
@@ -2260,13 +2319,17 @@ sub BloatTest {
         $bloat_testname_label = $label_prefix . $bloat_testname_label;
     }
 
+    my $embed_prefix = "";
+    if($Settings::BinaryName eq "TestGtkEmbed") {
+      $embed_prefix = "m";
+    }
 
     if($Settings::TestsPhoneHome) {
         # Generate and print tbox output strings for leak, bloat.
-        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Lk:" . PrintSize($leaks,3) . "B</a>\n\n";
+        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . $embed_prefix . "Lk:" . PrintSize($leaks,3) . "B</a>\n\n";
         print_log $leaks_string;
 
-        my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . "Bl:" . PrintSize($bloat,3) . "B</a>\n\n";
+        my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $label_prefix . $embed_prefix . "Bl:" . PrintSize($bloat,3) . "B</a>\n\n";
         print_log $bloat_string;
 
         # Report numbers to server.
@@ -2274,8 +2337,8 @@ sub BloatTest {
         send_results_to_server($bloat, "--", $bloat_testname, ::hostname() );
 
     } else {
-        print_log "TinderboxPrint:" . $label_prefix . "Lk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks,3) . "B</a>\n\n";
-        print_log "TinderboxPrint:" . $label_prefix . "Bl:<a title=\"" . $bloat_testname_label . "\">" . PrintSize($bloat,3) . "B</a>\n\n";
+        print_log "TinderboxPrint:" . $label_prefix . $embed_prefix . "Lk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks,3) . "B</a>\n\n";
+        print_log "TinderboxPrint:" . $label_prefix . $embed_prefix . "Bl:<a title=\"" . $bloat_testname_label . "\">" . PrintSize($bloat,3) . "B</a>\n\n";
     }
 
     return 'success';
@@ -2409,8 +2472,14 @@ sub BloatTest2 {
 
     rename($sdleak_log, $old_sdleak_log);
 
-    my @args = ($binary_basename, "-P", $Settings::MozProfileName,
-                "-f", "bloaturls.txt", "--trace-malloc", $malloc_log);
+    my @args;
+    if($Settings::BinaryName eq "TestGtkEmbed") {
+      @args = ($binary_basename, "resource:///res/bloatcycle.html", "--trace-malloc", $malloc_log);
+    } else {
+      @args = ($binary_basename, "-P", $Settings::MozProfileName,
+         "-f", "bloaturls.txt", "--trace-malloc", $malloc_log);
+    }
+
     # win32 builds crash on multiple runs when --shutdown-leaks is used
     @args = (@args, "--shutdown-leaks", $sdleak_log) unless $Settings::OS =~ /^WIN/;
     my $result = run_cmd($build_dir, $binary_dir, \@args, $binary_log,
@@ -2452,17 +2521,22 @@ sub BloatTest2 {
     my $maxheap_testname_label = "Maximum Heap: max (bytes 'malloc'ed - bytes 'free'd) over run";
     my $allocs_testname_label  = "Allocations: number of calls to 'malloc' and friends";
 
+    my $embed_prefix = "";
+    if($Settings::BinaryName eq "TestGtkEmbed") {
+      $embed_prefix = "m";
+    }
+
     if($Settings::TestsPhoneHome) {
         my $leaks_testname       = "trace_malloc_leaks";
-        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">Lk:" . PrintSize($newstats->{'leaks'},3) . "B</a>\n\n";
+        my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $embed_prefix . "Lk:" . PrintSize($newstats->{'leaks'},3) . "B</a>\n\n";
         print_log $leaks_string;
 
         my $maxheap_testname       = "trace_malloc_maxheap";
-        my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">MH:" . PrintSize($newstats->{'mhs'},3) . "B</a>\n\n";
+        my $maxheap_string = "\n\nTinderboxPrint:<a title=\"" . $maxheap_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $maxheap_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $embed_prefix . "MH:" . PrintSize($newstats->{'mhs'},3) . "B</a>\n\n";
         print_log $maxheap_string;
 
         my $allocs_testname       = "trace_malloc_allocs";
-        my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">A:" . PrintSize($newstats->{'allocs'},3) . "</a>\n\n";
+        my $allocs_string = "\n\nTinderboxPrint:<a title=\"" . $allocs_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $allocs_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7&avg=1\">" . $embed_prefix . "A:" . PrintSize($newstats->{'allocs'},3) . "</a>\n\n";
         print_log $allocs_string;
 
         # Send results to server.

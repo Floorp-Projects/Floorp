@@ -68,6 +68,8 @@ $XULWindowOpenTestTimeout	      = 150;   # seconds
 
 
 $MozConfigFileName = 'mozconfig';
+
+$UseMozillaProfile = 1;
 $MozProfileName = 'default';
 
 #- Set these to what makes sense for your system
