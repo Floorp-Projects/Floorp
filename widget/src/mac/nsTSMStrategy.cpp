@@ -61,7 +61,10 @@ void nsTSMStrategy::Init()
     if ((err == noErr) && (version >=  gestaltTSMgr15))
     {
       gUseUnicodeForInputMethod = PR_TRUE;
-      gUseUnicodeForKeyboard = PR_TRUE;
+      // only enable if OS 9.0 or greater; there is a bug
+      // (in at least OS 8.6) that causes double input (Bug #106022)
+      err = Gestalt(gestaltSystemVersion, &version);
+      gUseUnicodeForKeyboard = (err == noErr) && (version >= 0x900);
     } 
 #ifdef FORCE_USE_UNICODE_API
     gUseUnicodeForInputMethod = PR_TRUE;
