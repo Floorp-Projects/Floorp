@@ -4115,109 +4115,119 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       nsIFrame *frameUsed = nsnull;
       PRInt32 start;
       PRBool found = PR_TRUE;
-#ifdef IBMBIDI // Simon - RTL frames reverse meaning of previous and next
-      // so that right arrow always moves to the right on screen
-      // and left arrow always moves left
-      if ( ((aPos->mDirection == eDirPrevious) && !isOddLevel) ||
-           ((aPos->mDirection == eDirNext) && isOddLevel) ){
-#else
-      if (aPos->mDirection == eDirPrevious){
-#endif
-        aPos->mContentOffset = 0;
-        PRInt32 i;
-#ifdef SUNCTL
-        static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 
-        nsCOMPtr<nsILE> mCtlObj;
-        mCtlObj = do_CreateInstance(kLECID, &rv);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Cell based cursor movement will not be supported\n");
-          mCtlObj = nsnull;
-#endif /* SUNCTL */
-        for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
-          if ((ip[i] < ip[aPos->mStartOffset - mContentOffset]) &&
-              (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
-          {
-            aPos->mContentOffset = i + mContentOffset;
-            break;
+      PRBool selectable;
+      PRUint8 selectStyle;
+
+      IsSelectable(&selectable, &selectStyle);
+      if ( selectStyle == NS_STYLE_USER_SELECT_ALL )
+        found = PR_FALSE;
+      else
+      {
+
+  #ifdef IBMBIDI // Simon - RTL frames reverse meaning of previous and next
+        // so that right arrow always moves to the right on screen
+        // and left arrow always moves left
+        if ( ((aPos->mDirection == eDirPrevious) && !isOddLevel) ||
+             ((aPos->mDirection == eDirNext) && isOddLevel) ){
+  #else
+        if (aPos->mDirection == eDirPrevious){
+  #endif
+          aPos->mContentOffset = 0;
+          PRInt32 i;
+  #ifdef SUNCTL
+          static NS_DEFINE_CID(kLECID, NS_ULE_CID);
+
+          nsCOMPtr<nsILE> mCtlObj;
+          mCtlObj = do_CreateInstance(kLECID, &rv);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("Cell based cursor movement will not be supported\n");
+            mCtlObj = nsnull;
+  #endif /* SUNCTL */
+          for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
+            if ((ip[i] < ip[aPos->mStartOffset - mContentOffset]) &&
+                (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
+            {
+              aPos->mContentOffset = i + mContentOffset;
+              break;
+            }
+          }
+  #ifdef SUNCTL
+          }
+          else {
+            if (aPos->mStartOffset < 1) {
+              // go to prev
+              i = -1;
+            } else {
+              PRInt32 mPreviousOffset;
+              mCtlObj->PrevCluster(NS_REINTERPRET_CAST(const PRUnichar*, paintBuffer.mBuffer),
+                                 textLength,aPos->mStartOffset, 
+                                 &mPreviousOffset);
+              aPos->mContentOffset = i = mPreviousOffset;
+            }
+          }
+  #endif /* SUNCTL */
+
+          if (i <0){
+            found = PR_FALSE;
+            GetPrevInFlow(&frameUsed);
+            start = mContentOffset;
+            aPos->mContentOffset = start;//in case next call fails we stop at this offset
           }
         }
-#ifdef SUNCTL
-        }
-        else {
-          if (aPos->mStartOffset < 1) {
-            // go to prev
-            i = -1;
-          } else {
-            PRInt32 mPreviousOffset;
-            mCtlObj->PrevCluster(NS_REINTERPRET_CAST(const PRUnichar*, paintBuffer.mBuffer),
-                               textLength,aPos->mStartOffset, 
-                               &mPreviousOffset);
-            aPos->mContentOffset = i = mPreviousOffset;
-          }
-        }
-#endif /* SUNCTL */
+  #ifdef IBMBIDI // Simon, as above 
+        else if ( ((aPos->mDirection == eDirNext) && !isOddLevel) ||
+                  ((aPos->mDirection == eDirPrevious) && isOddLevel) ){
+  #else
+        else if (aPos->mDirection == eDirNext){
+  #endif
+          PRInt32 i;
+          aPos->mContentOffset = mContentLength;
+  #ifdef SUNCTL
+          static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 
-        if (i <0){
-          found = PR_FALSE;
-          GetPrevInFlow(&frameUsed);
-          start = mContentOffset;
-          aPos->mContentOffset = start;//in case next call fails we stop at this offset
+          nsCOMPtr<nsILE> mCtlObj;
+          mCtlObj = do_CreateInstance(kLECID, &rv);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("Cell based cursor movement will not be supported\n");
+            mCtlObj = nsnull;
+  #endif /* SUNCTL */
+
+          for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
+            if ((ip[i] > ip[aPos->mStartOffset - mContentOffset]) &&
+                (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
+            {
+              aPos->mContentOffset = i + mContentOffset;
+              break;
+            }
+          }
+  #ifdef SUNCTL
+          }
+          else {
+            if (aPos->mStartOffset >= textLength) {
+              // go to next
+              i = mContentLength + 1;
+            } else {
+              PRInt32 mNextOffset;
+              mCtlObj->NextCluster(NS_REINTERPRET_CAST(const PRUnichar*, paintBuffer.mBuffer),
+                                 textLength, aPos->mStartOffset,
+                                 &mNextOffset);
+              aPos->mContentOffset = i = mNextOffset;
+            }
+          }
+  #endif /* SUNCTL */
+
+  /*      if (aStartOffset == 0 && (mState & TEXT_SKIP_LEADING_WS))
+          i--; //back up because we just skipped over some white space. why skip over the char also?
+  */
+          if (i > mContentLength){
+            found = PR_FALSE;
+            GetNextInFlow(&frameUsed);
+            start = mContentOffset + mContentLength;
+            aPos->mContentOffset = start;//in case next call fails we stop at this offset
+          }
         }
       }
-#ifdef IBMBIDI // Simon, as above 
-      else if ( ((aPos->mDirection == eDirNext) && !isOddLevel) ||
-                ((aPos->mDirection == eDirPrevious) && isOddLevel) ){
-#else
-      else if (aPos->mDirection == eDirNext){
-#endif
-        PRInt32 i;
-        aPos->mContentOffset = mContentLength;
-#ifdef SUNCTL
-        static NS_DEFINE_CID(kLECID, NS_ULE_CID);
-
-        nsCOMPtr<nsILE> mCtlObj;
-        mCtlObj = do_CreateInstance(kLECID, &rv);
-        if (NS_FAILED(rv)) {
-          NS_WARNING("Cell based cursor movement will not be supported\n");
-          mCtlObj = nsnull;
-#endif /* SUNCTL */
-
-        for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
-          if ((ip[i] > ip[aPos->mStartOffset - mContentOffset]) &&
-              (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
-          {
-            aPos->mContentOffset = i + mContentOffset;
-            break;
-          }
-        }
-#ifdef SUNCTL
-        }
-        else {
-          if (aPos->mStartOffset >= textLength) {
-            // go to next
-            i = mContentLength + 1;
-          } else {
-            PRInt32 mNextOffset;
-            mCtlObj->NextCluster(NS_REINTERPRET_CAST(const PRUnichar*, paintBuffer.mBuffer),
-                               textLength, aPos->mStartOffset,
-                               &mNextOffset);
-            aPos->mContentOffset = i = mNextOffset;
-          }
-        }
-#endif /* SUNCTL */
-
-/*      if (aStartOffset == 0 && (mState & TEXT_SKIP_LEADING_WS))
-        i--; //back up because we just skipped over some white space. why skip over the char also?
-*/
-        if (i > mContentLength){
-          found = PR_FALSE;
-          GetNextInFlow(&frameUsed);
-          start = mContentOffset + mContentLength;
-          aPos->mContentOffset = start;//in case next call fails we stop at this offset
-        }
-      }
-
       if (!found)
       {
         result = GetFrameFromDirection(aPresContext, aPos);
@@ -4257,148 +4267,158 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       PRBool found = PR_FALSE;
       PRBool isWhitespace, wasTransformed;
       PRInt32 wordLen, contentLen;
+
+      
+      PRBool selectable;
+      PRUint8 selectStyle;
+      IsSelectable(&selectable, &selectStyle);
+      if ( selectStyle == NS_STYLE_USER_SELECT_ALL )
+        found = PR_FALSE;
+      else
+      {
+      
 #ifdef IBMBIDI // Simon - RTL frames reverse meaning of previous and next
-      // so that right arrow always moves to the right on screen
-      // and left arrow always moves left
-      if ( ((aPos->mDirection == eDirPrevious) && !isOddLevel) ||
-           ((aPos->mDirection == eDirNext) && isOddLevel) ) {
+        // so that right arrow always moves to the right on screen
+        // and left arrow always moves left
+        if ( ((aPos->mDirection == eDirPrevious) && !isOddLevel) ||
+             ((aPos->mDirection == eDirNext) && isOddLevel) ) {
 #else
-      if (aPos->mDirection == eDirPrevious){
+        if (aPos->mDirection == eDirPrevious){
 #endif
-        keepSearching = PR_TRUE;
-        tx.Init(this, mContent, aPos->mStartOffset);
-        aPos->mContentOffset = mContentOffset;//initialize
+          keepSearching = PR_TRUE;
+          tx.Init(this, mContent, aPos->mStartOffset);
+          aPos->mContentOffset = mContentOffset;//initialize
 #ifdef IBMBIDI
-        wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
+          wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
 #endif // IBMBIDI
-        if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
-                           PR_FALSE) &&
-          (aPos->mStartOffset - contentLen >= mContentOffset) ){
-          if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
-            aPos->mContentOffset = aPos->mStartOffset - contentLen;
-            //check for whitespace next.
-            if (isWhitespace && aPos->mContentOffset <= mContentOffset)
-            {
-              keepSearching = PR_FALSE;//reached the beginning of a word
-              aPos->mEatingWS = PR_FALSE;//if no real word then
-            }
-            else{
-#ifdef IBMBIDI
-              wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
-#endif // IBMBIDI
-              while (isWhitespace &&
-                     tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
-                                    &isWhitespace, PR_FALSE)){
-                aPos->mContentOffset -= contentLen;
-                aPos->mEatingWS = PR_TRUE;
+          if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
+                             PR_FALSE) &&
+            (aPos->mStartOffset - contentLen >= mContentOffset) ){
+            if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
+              aPos->mContentOffset = aPos->mStartOffset - contentLen;
+              //check for whitespace next.
+              if (isWhitespace && aPos->mContentOffset <= mContentOffset)
+              {
+                keepSearching = PR_FALSE;//reached the beginning of a word
+                aPos->mEatingWS = PR_FALSE;//if no real word then
+              }
+              else{
 #ifdef IBMBIDI
                 wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
 #endif // IBMBIDI
-              }
-              aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
-              keepSearching = aPos->mContentOffset <= mContentOffset;
-              if (!isWhitespace){
-                if (!keepSearching)
-                  found = PR_TRUE;
-              else
-                aPos->mEatingWS = PR_TRUE;
+                while (isWhitespace &&
+                       tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
+                                      &isWhitespace, PR_FALSE)){
+                  aPos->mContentOffset -= contentLen;
+                  aPos->mEatingWS = PR_TRUE;
+#ifdef IBMBIDI
+                  wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset : -1;
+#endif // IBMBIDI
+                }
+                aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
+                keepSearching = aPos->mContentOffset <= mContentOffset;
+                if (!isWhitespace){
+                  if (!keepSearching)
+                    found = PR_TRUE;
+                else
+                  aPos->mEatingWS = PR_TRUE;
+                }
               }
             }
-          }
-          else {
-            aPos->mContentOffset = mContentLength + mContentOffset;
-            found = PR_TRUE;
+            else {
+              aPos->mContentOffset = mContentLength + mContentOffset;
+              found = PR_TRUE;
+            }
           }
         }
-      }
 #ifdef IBMBIDI // Simon, as above 
-      else if ( ((aPos->mDirection == eDirNext) && !isOddLevel) ||
-                ((aPos->mDirection == eDirPrevious) && isOddLevel) ) {
+        else if ( ((aPos->mDirection == eDirNext) && !isOddLevel) ||
+                  ((aPos->mDirection == eDirPrevious) && isOddLevel) ) {
 #else
-      else if (aPos->mDirection == eDirNext) {
+        else if (aPos->mDirection == eDirNext) {
 #endif
-        tx.Init(this, mContent, aPos->mStartOffset );
-        aPos->mContentOffset = mContentOffset + mContentLength;//initialize
+          tx.Init(this, mContent, aPos->mStartOffset );
+          aPos->mContentOffset = mContentOffset + mContentLength;//initialize
 
 #ifdef IBMBIDI
-        wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+          wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
-        if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE) &&
-          (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
+          if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE) &&
+            (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
 
-          if ((aPos->mEatingWS && isWhitespace) || !aPos->mEatingWS){
-            aPos->mContentOffset = aPos->mStartOffset + contentLen;
-            // check for whitespace next. On some platforms (mac), we want the selection to end
-            // at the end of the word (not the beginning of the next one), so don't slurp up any extra whitespace.
-            if ( sWordSelectEatSpaceAfter ) {
-              keepSearching = PR_TRUE;
-              aPos->mEatingWS = PR_TRUE;
-            if (!isWhitespace){
-#ifdef IBMBIDI
-              wordLen = (mState & NS_FRAME_IS_BIDI)
-                      ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
-                while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
-                {
-                  if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
-                    goto TryNextFrame;
-                  if (isWhitespace)
-                    aPos->mContentOffset += contentLen;
-                  else
-                    break;
+            if ((aPos->mEatingWS && isWhitespace) || !aPos->mEatingWS){
+              aPos->mContentOffset = aPos->mStartOffset + contentLen;
+              // check for whitespace next. On some platforms (mac), we want the selection to end
+              // at the end of the word (not the beginning of the next one), so don't slurp up any extra whitespace.
+              if ( sWordSelectEatSpaceAfter ) {
+                keepSearching = PR_TRUE;
+                aPos->mEatingWS = PR_TRUE;
+              if (!isWhitespace){
 #ifdef IBMBIDI
                 wordLen = (mState & NS_FRAME_IS_BIDI)
                         ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
-                }
-                keepSearching = PR_FALSE;
-                found = PR_TRUE;
-              }
-              else  //we just need to jump the space, done here
-              {
+                  while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
+                  {
+                    if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
+                      goto TryNextFrame;
+                    if (isWhitespace)
+                      aPos->mContentOffset += contentLen;
+                    else
+                      break;
 #ifdef IBMBIDI
-              wordLen = (mState & NS_FRAME_IS_BIDI)
-                      ? mContentOffset + mContentLength : -1;
+                  wordLen = (mState & NS_FRAME_IS_BIDI)
+                          ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
-                while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
+                  }
+                  keepSearching = PR_FALSE;
+                  found = PR_TRUE;
+                }
+                else  //we just need to jump the space, done here
                 {
-                  if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
-                    goto TryNextFrame;
-
-                  if (isWhitespace)
-                    aPos->mContentOffset += contentLen;		
-                  else
-                    break;
 #ifdef IBMBIDI
-            wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+                wordLen = (mState & NS_FRAME_IS_BIDI)
+                        ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
+                  while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE))
+                  {
+                    if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
+                      goto TryNextFrame;
+
+                    if (isWhitespace)
+                      aPos->mContentOffset += contentLen;		
+                    else
+                      break;
+#ifdef IBMBIDI
+              wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
+                  }
+                  keepSearching = PR_FALSE;
+                  found = PR_TRUE;
                 }
+              } // if we should eat space to the next word
+              else {
                 keepSearching = PR_FALSE;
                 found = PR_TRUE;
               }
-            } // if we should eat space to the next word
-            else {
-              keepSearching = PR_FALSE;
-              found = PR_TRUE;
             }
-          }
-          else if (aPos->mEatingWS)
-			 {
-            aPos->mContentOffset = mContentOffset;
-				found = PR_TRUE;
-			 }
-          if (!isWhitespace){
-            aPos->mEatingWS = PR_FALSE;
-          }
-          else if (!keepSearching) //we have found the "whole" word so just looking for WS
-            aPos->mEatingWS = PR_TRUE;
-        } 
+            else if (aPos->mEatingWS)
+			   {
+              aPos->mContentOffset = mContentOffset;
+				  found = PR_TRUE;
+			   }
+            if (!isWhitespace){
+              aPos->mEatingWS = PR_FALSE;
+            }
+            else if (!keepSearching) //we have found the "whole" word so just looking for WS
+              aPos->mEatingWS = PR_TRUE;
+          } 
 
-TryNextFrame:        
-		  GetNextInFlow(&frameUsed);
-        start = 0;
+  TryNextFrame:        
+		    GetNextInFlow(&frameUsed);
+          start = 0;
+        }
       }
-
       if (!found || (aPos->mContentOffset > (mContentOffset + mContentLength)) || (aPos->mContentOffset < mContentOffset))
       {
         aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);

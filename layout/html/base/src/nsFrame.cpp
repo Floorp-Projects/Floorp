@@ -1221,7 +1221,7 @@ nsFrame::FrameOrParentHasSpecialSelectionStyle(PRUint8 aSelectionStyle, nsIFrame
 NS_IMETHODIMP
 nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
 {
-  if (!aSelectable && !aSelectStyle)
+  if (!aSelectable) //its ok if aSelectStyle is null
     return NS_ERROR_NULL_POINTER;
 
   // Like 'visibility', we must check all the parents: if a parent
@@ -1250,12 +1250,12 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
     frame->GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)userinterface);
     if (userinterface) {
       switch (userinterface->mUserSelect) {
+        case NS_STYLE_USER_SELECT_ALL:
         case NS_STYLE_USER_SELECT_NONE:
         case NS_STYLE_USER_SELECT_MOZ_ALL:
           // override the previous values
           selectStyle = userinterface->mUserSelect;
           break;
-
         default:
           // otherwise return the first value which is not 'auto'
           if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
