@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Frank Yung-Fong Tang <ftang@netscape.com>
  */
 
 #include "nscore.h"
@@ -30,6 +31,7 @@
 #include "nsIScriptableDateFormat.h"
 #include "nsLocalefactoryWin.h"
 #include "nsLanguageAtomService.h"
+#include "nsFontPackageService.h"
 
 
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -39,7 +41,7 @@ NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
 NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
-
+static NS_DEFINE_CID(kFontPackageServiceCID, NS_FONTPACKAGESERVICE_CID);
 
 nsLocaleWinFactory::nsLocaleWinFactory(const nsCID &aClass)   
 {   
@@ -82,6 +84,11 @@ nsresult nsLocaleWinFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kLanguageAtomServiceCID)) {
      NS_NEWXPCOM(inst, nsLanguageAtomService);
+  }
+  else if (mClassID.Equals(kFontPackageServiceCID)) {
+     nsIFontPackageService * pt = nsnull;
+     NS_NEWXPCOM(pt, nsFontPackageService);
+     inst = pt;
   }
   else 
   {
