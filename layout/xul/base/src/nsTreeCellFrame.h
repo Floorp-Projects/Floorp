@@ -53,14 +53,19 @@ protected:
   virtual ~nsTreeCellFrame();
 
   nsresult HandleMouseDownEvent(nsIPresContext& aPresContext, 
-								nsGUIEvent*     aEvent,
-							    nsEventStatus&  aEventStatus);
+								                nsGUIEvent*     aEvent,
+							                  nsEventStatus&  aEventStatus);
 
   nsresult HandleDoubleClickEvent(nsIPresContext& aPresContext, 
-								  nsGUIEvent*     aEvent,
-							      nsEventStatus&  aEventStatus);
+								                  nsGUIEvent*     aEvent,
+							                    nsEventStatus&  aEventStatus);
 
-  
+  nsresult HandleClickEvent(nsIPresContext& aPresContext, 
+								            nsGUIEvent*     aEvent,
+							              nsEventStatus&  aEventStatus);
+
+  void ExecuteDefaultJSEventHandler(const nsString& eventName, nsIDOMEvent* aDOMEvent);
+
 protected:
   // Data members
   PRBool mIsHeader; // Whether or not we're a column header
