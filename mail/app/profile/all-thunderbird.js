@@ -109,7 +109,18 @@ pref("update.severity", 0);
 pref("xpinstall.whitelist.add", "update.mozilla.org,addons.mozilla.org");
 
 pref("mail.phishing.detection.enabled", true); // enable / disable phishing detection for link clicks
-pref("mail.spellcheck.inline", false);
+pref("mail.spellcheck.inline", true);
+
+#ifdef XP_WIN
+pref("browser.preferences.instantApply", false);
+#else
+pref("browser.preferences.instantApply", true);
+#endif
+#ifdef XP_MACOSX
+pref("browser.preferences.animateFadeIn", true);
+#else
+pref("browser.preferences.animateFadeIn", false);
+#endif
 
 /////////////////////////////////////////////////////////////////
 // Overrides of the seamonkey suite mailnews.js prefs
