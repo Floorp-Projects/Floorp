@@ -71,7 +71,7 @@ nsSaveAsCharset::Init(const char *charset, PRUint32 attr, PRUint32 entityVersion
 {
   nsresult rv = NS_OK;
 
-  nsString aCharset(charset);
+  nsString aCharset; aCharset.AssignWithConversion(charset);
   mAttribute = attr;
   mEntityVersion = entityVersion;
 

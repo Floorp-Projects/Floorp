@@ -52,7 +52,7 @@ nsEntityConverter::~nsEntityConverter()
 NS_IMETHODIMP 
 nsEntityConverter::LoadVersionPropertyFile()
 {
-	nsString	aUrl("resource:/res/entityTables/htmlEntityVersions.properties");
+	nsString	aUrl; aUrl.AssignWithConversion("resource:/res/entityTables/htmlEntityVersions.properties");
 	nsIPersistentProperties* entityProperties = NULL;
 	nsIURI* url = NULL;
 	nsIInputStream* in = NULL;
@@ -71,7 +71,7 @@ nsEntityConverter::LoadVersionPropertyFile()
 	if(NS_SUCCEEDED(rv) && in) {
 		rv = entityProperties->Load(in);
     if (NS_SUCCEEDED(rv)) {
-	    nsAutoString key("length"), value;
+	    nsAutoString key, value; key.AssignWithConversion("length");
     	PRInt32	result;
 
 	    rv = entityProperties->GetStringProperty(key,value);
@@ -84,8 +84,8 @@ nsEntityConverter::LoadVersionPropertyFile()
       if (NULL == mVersionList) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
 
       for (PRUint32 i = 0; i < mVersionListLength && NS_SUCCEEDED(rv); i++) {
-        key.Assign("");
-        key.Append(i+1, 10);
+        key.SetLength(0);
+        key.AppendWithConversion(i+1, 10);
 	      rv = entityProperties->GetStringProperty(key, value);
         PRUint32 len = value.Length();
         if (kVERSION_STRING_LEN < len) {rv = NS_ERROR_OUT_OF_MEMORY; goto done;}
@@ -105,7 +105,7 @@ done:
 nsIPersistentProperties* 
 nsEntityConverter::LoadEntityPropertyFile(PRInt32 version)
 {
-  nsString aUrl("resource:/res/entityTables/");
+  nsString aUrl; aUrl.AssignWithConversion("resource:/res/entityTables/");
 	nsIPersistentProperties* entityProperties = NULL;
 	nsIURI* url = NULL;
 	nsIInputStream* in = NULL;
@@ -116,7 +116,7 @@ nsEntityConverter::LoadEntityPropertyFile(PRInt32 version)
   if (NULL == versionName) return NULL;
 
   aUrl.Append(versionName);
-  aUrl.Append(".properties");
+  aUrl.AppendWithConversion(".properties");
 
   rv = NS_NewURI(&url,aUrl,NULL);
 	if (NS_FAILED(rv)) return NULL;
@@ -205,8 +205,8 @@ nsEntityConverter::ConvertToEntity(PRUnichar character, PRUint32 entityVersion, 
     if (NULL == entityProperties) 
       continue;
 
-    nsAutoString key("entity."), value;
-		key.Append(character,10);
+    nsAutoString key, value; key.AssignWithConversion("entity.");
+		key.AppendWithConversion(character,10);
     nsresult rv = entityProperties->GetStringProperty(key, value);
     if (NS_SUCCEEDED(rv)) {
       *_retval = value.ToNewCString();
@@ -229,13 +229,13 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
   *_retval = NULL;
 
   const PRUnichar *entity = NULL;
-  nsString outString("");
+  nsString outString;
 
   // per character look for the entity
   PRUint32 len = nsCRT::strlen(inString);
   for (PRUint32 i = 0; i < len; i++) {
-    nsAutoString key("entity."), value;
-		key.Append(inString[i],10);
+    nsAutoString value, key; key.AssignWithConversion("entity.");
+		key.AppendWithConversion(inString[i],10);
     entity = NULL;
     for (PRUint32 mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
       if (0 == (entityVersion & mask)) 
