@@ -1545,8 +1545,10 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
 
   nsCOMPtr<nsIWidget> widget;
   GetWidgetForView(aWidgetView, getter_AddRefs(widget));
-  NS_ASSERTION(nsnull != widget, "aWidgetView must have a widget");
   if (!widget) {
+    // The root view or a scrolling view might not have a widget
+    // (for example, during printing). We get here when we scroll
+    // during printing to show selected options in a listbox, for example.
     return PR_FALSE;
   }
 
