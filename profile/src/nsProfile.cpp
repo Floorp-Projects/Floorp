@@ -523,7 +523,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 #endif /* DEBUG_profile */
 
             nsAutoString currProfileDir; currProfileDir.AssignWithConversion(currProfileDirSpec.GetNativePathCString());
-            rv = CreateNewProfile(currProfileName.GetUnicode(), currProfileDir.GetUnicode(), PR_TRUE);
+            rv = CreateNewProfile(currProfileName.GetUnicode(), currProfileDir.GetUnicode(), nsnull, PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
                 mCurrentProfileAvailable = PR_TRUE;
@@ -674,7 +674,7 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
                 return NS_ERROR_FAILURE;
                                         
             nsCOMPtr <nsIFileSpec> profDefaultsDir;
-            
+
             rv = locator->GetFileLocation(
                              nsSpecialFileSpec::App_ProfileDefaultsFolder50, 
                              getter_AddRefs(profDefaultsDir));
@@ -830,7 +830,8 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsFileSpec&
 // Creates a new profile
 NS_IMETHODIMP 
 nsProfile::CreateNewProfile(const PRUnichar* profileName, 
-                            const PRUnichar* nativeProfileDir, 
+                            const PRUnichar* nativeProfileDir,
+                            const PRUnichar* langcode,
                             PRBool useExistingDir)
 {
     NS_ENSURE_ARG_POINTER(profileName);   
@@ -916,7 +917,7 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
     // Get profile defaults folder..
     nsCOMPtr <nsIFileSpec> profDefaultsDir;
     rv = locator->GetFileLocation(
-                     nsSpecialFileSpec::App_ProfileDefaultsFolder50, 
+                     nsSpecialFileSpec::App_ProfileDefaultsFolder50_nloc, 
                      getter_AddRefs(profDefaultsDir));
         
     if (NS_FAILED(rv) || !profDefaultsDir)
@@ -928,6 +929,16 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
 
     profDefaultsDir->GetFileSpec(&defaultsDirSpec);
 
+    if (langcode) {
+        // caller prefers locale subdir
+        nsFileSpec tmpdir; 
+        tmpdir = defaultsDirSpec;
+        tmpdir += langcode;
+
+        if (tmpdir.Exists())
+            defaultsDirSpec = tmpdir;
+
+    }
     // Copy contents from defaults folder.
     if (defaultsDirSpec.Exists() && (!useExistingDir))
     {
@@ -1522,7 +1533,7 @@ nsProfile::CreateDefaultProfile(void)
     nsAutoString dirSpecStr; dirSpecStr.AssignWithConversion(profileDirSpec.GetNativePathCString());
 
     nsAutoString defaultProfileName; defaultProfileName.AssignWithConversion(DEFAULT_PROFILE_NAME);
-    rv = CreateNewProfile(defaultProfileName.GetUnicode(), dirSpecStr.GetUnicode(), PR_TRUE);
+    rv = CreateNewProfile(defaultProfileName.GetUnicode(), dirSpecStr.GetUnicode(), nsnull, PR_TRUE);
 
     return rv;
 }

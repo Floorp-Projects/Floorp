@@ -78,6 +78,23 @@ function onCancel()
   }
 }
 
+function selectLocale(langcode)
+{
+  try {
+    var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
+    if ( chromeRegistry ) {
+      chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
+    }
+    var old_lang = chromeRegistry.getSelectedLocale("navigator");
+    chromeRegistry.selectLocale(langcode, false);
+  }
+  catch(e) {
+    dump("\n--> createPrifleWizard.js: selectLocale() failed!\n");
+	return false;
+  }
+  return true;	
+}
+
 function onFinish()
 {
   dump("*** IN ONFINISH\n");
@@ -92,19 +109,25 @@ function onFinish()
   var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
   dump("**** profName: "+ profName + "\n");
   var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.rootFolder;
-  proceed = processCreateProfileData( profName, profDir );
-	if( proceed ) {
-		if( window.opener ) {
-			window.opener.CreateProfile( profName, profDir );
-			window.close();
-		} 
+
+  // Get langcode
+  var langcode = window.frames["content"].document.getElementById("langList").selectedItem.getAttribute("data");
+  proceed = processCreateProfileData( profName, profDir, langcode); 
+  if( proceed ) {
+    if( window.opener ) {
+      window.opener.CreateProfile( profName, profDir );
+      window.close();
+
+      // select locale
+      selectLocale(langcode);
+    }
     else {
       profile.startApprunner( profName );
       ExitApp();
     }
-	}
-	else
-		return;
+  }
+  else
+    return;
 }
 
 /** void processCreateProfileData( void ) ;
@@ -112,7 +135,7 @@ function onFinish()
  *  - in:  nothing
  *  - out: nothing
  **/               
-function processCreateProfileData( aProfName, aProfDir )
+function processCreateProfileData( aProfName, aProfDir, langcode)
 {
   try {
     // note: deleted check for empty profName string here as this should be
@@ -165,8 +188,9 @@ function processCreateProfileData( aProfName, aProfDir )
     }
 
     dump("*** going to create a new profile called " + aProfName + " in folder: " + aProfDir + "\n");
-		profile.createNewProfile( aProfName, aProfDir, useExistingDir );
-		return true;
+    profile.createNewProfile( aProfName, aProfDir, langcode, useExistingDir );
+
+    return true;
   }
   catch(e) {
     dump("*** Failed to create a profile\n");
