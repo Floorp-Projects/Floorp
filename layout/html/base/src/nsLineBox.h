@@ -26,9 +26,6 @@
 
 class nsISpaceManager;
 class nsLineBox;
-
-//----------------------------------------------------------------------
-
 class nsFloaterCache;
 class nsFloaterCacheList;
 class nsFloaterCacheFreeList;
@@ -135,6 +132,13 @@ protected:
 
 //----------------------------------------------------------------------
 
+#define LINE_MAX_BREAK_TYPE  ((1 << 4) - 1)
+#define LINE_MAX_CHILD_COUNT ((1 << 24) - 1)
+
+#if NS_STYLE_CLEAR_LAST_VALUE > 15
+need to rearrange the mBits bitfield;
+#endif
+
 /**
  * The nsLineBox class represents a horizontal line of frames. It contains
  * enough state to support incremental reflow of the frames, event handling
@@ -145,44 +149,96 @@ public:
   nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
   ~nsLineBox();
 
+  // mBlock bit
   PRBool IsBlock() const {
     return mFlags.mBlock;
   }
-
   PRBool IsInline() const {
     return 0 == mFlags.mBlock;
   }
 
-  // XXX Turn into a bit-field to simplify this code
+  // mDirty bit
+  void MarkDirty() {
+    mFlags.mDirty = 1;
+  }
+  void ClearDirty() {
+    mFlags.mDirty = 0;
+  }
+  PRBool IsDirty() const {
+    return mFlags.mDirty;
+  }
+
+  // mImpactedByFloater bit
+  void SetLineIsImpactedByFloater(PRBool aValue) {
+    mFlags.mImpactedByFloater = aValue;
+  }
+  PRBool IsImpactedByFloater() const {
+    return mFlags.mImpactedByFloater;
+  }
+
+  // mTrimmed bit
   void SetTrimmed(PRBool aOn) {
     mFlags.mTrimmed = aOn;
   }
-
   PRBool IsTrimmed() const {
     return mFlags.mTrimmed;
   }
 
+  // mChildCount value
+  PRInt32 GetChildCount() const {
+    return (PRInt32) mFlags.mChildCount;
+  }
+  void SetChildCount(PRInt32 aNewCount) {
+    if (NS_WARN_IF_FALSE(aNewCount >= 0, "negative child count")) {
+      aNewCount = 0;
+    }
+    if (aNewCount > LINE_MAX_CHILD_COUNT) {
+      aNewCount = LINE_MAX_CHILD_COUNT;
+    }
+    mFlags.mChildCount = aNewCount;
+  }
+
+  // mBreakType value
   PRBool HasBreak() const {
     return NS_STYLE_CLEAR_NONE != mFlags.mBreakType;
   }
-
   void SetBreakType(PRUint8 aBreakType) {
+    NS_WARN_IF_FALSE(aBreakType <= LINE_MAX_BREAK_TYPE, "bad break type");
     mFlags.mBreakType = aBreakType;
   }
-
   PRUint8 GetBreakType() const {
     return mFlags.mBreakType;
   }
 
-  nscoord GetCarriedOutBottomMargin() const {
-    return mCarriedOutBottomMargin;
+  // mCarriedOutBottomMargin value
+  nscoord GetCarriedOutBottomMargin() const;
+  void SetCarriedOutBottomMargin(nscoord aValue);
+
+  // mFloaters
+  PRBool HasFloaters() const {
+    return (IsInline() && mInlineData) && mInlineData->mFloaters.NotEmpty();
+  }
+  nsFloaterCache* GetFirstFloater();
+  void FreeFloaters(nsFloaterCacheFreeList& aFreeList);
+  void AppendFloaters(nsFloaterCacheFreeList& aFreeList);
+  PRBool RemoveFloater(nsIFrame* aFrame);
+
+  void SetCombinedArea(const nsRect& aCombinedArea);
+
+  void GetCombinedArea(nsRect* aResult);
+
+  void SlideBy(nscoord aDY) {
+    mBounds.y += aDY;
+    if (mData) {
+      mData->mCombinedArea.y += aDY;
+    }
   }
 
-  nscoord GetHeight() const { return mBounds.height; }
+  //----------------------------------------
 
-  //----------------------------------------------------------------------
-  // XXX old junk
-
+  nscoord GetHeight() const {
+    return mBounds.height;
+  }
 
   static void DeleteLineList(nsIPresContext& aPresContext, nsLineBox* aLine);
 
@@ -193,37 +249,9 @@ public:
 
   void List(FILE* out, PRInt32 aIndent) const;
 
-  PRInt32 ChildCount() const {
-    return PRInt32(mChildCount);
-  }
-
   nsIFrame* LastChild() const;
 
   PRBool IsLastChild(nsIFrame* aFrame) const;
-
-  void SetIsBlock(PRBool aValue) {
-    mFlags.mBlock = aValue;
-  }
-
-  void SetLineIsImpactedByFloater(PRBool aValue) {
-    mFlags.mImpactedByFloater = aValue;
-  }
-
-  PRBool IsImpactedByFloater() const {
-    return mFlags.mImpactedByFloater;
-  }
-
-  void MarkDirty() {
-    mFlags.mDirty = 1;
-  }
-
-  void ClearDirty() {
-    mFlags.mDirty = 0;
-  }
-
-  PRBool IsDirty() const {
-    return mFlags.mDirty;
-  }
 
   char* StateToString(char* aBuf, PRInt32 aBufSize) const;
 
@@ -233,21 +261,14 @@ public:
     return IndexOf(aFrame) >= 0;
   }
 
-#ifdef NS_DEBUG
-  PRBool CheckIsBlock() const;
-#endif
-
 #ifdef DEBUG
-  PRBool SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  nsIAtom* SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
   nsIFrame* mFirstChild;
-  PRUint16 mChildCount;
-  nsRect mBounds;
-  nsRect mCombinedArea;
-  nscoord mCarriedOutBottomMargin;/* XXX switch to 16 bits */
-  nsFloaterCacheList mFloaters;
   nsLineBox* mNext;
+
+  nsRect mBounds;
   nscoord mMaxElementWidth;  // width part of max-element-size
 
   struct FlagBits {
@@ -256,9 +277,28 @@ public:
     PRUint32 mImpactedByFloater : 1;
     PRUint32 mTrimmed : 1;
 
-    PRUint32 reserved : 20;
+    PRUint32 mBreakType : 4;
 
-    PRUint32 mBreakType : 8;
+    PRUint32 mChildCount : 24;
+  };
+
+  struct ExtraData {
+    ExtraData(const nsRect& aBounds) : mCombinedArea(aBounds) {
+    }
+    nsRect mCombinedArea;
+  };
+
+  struct ExtraBlockData : public ExtraData {
+    ExtraBlockData(const nsRect& aBounds) : ExtraData(aBounds) {
+      mCarriedOutBottomMargin = 0;
+    }
+    nscoord mCarriedOutBottomMargin;
+  };
+
+  struct ExtraInlineData : public ExtraData {
+    ExtraInlineData(const nsRect& aBounds) : ExtraData(aBounds) {
+    }
+    nsFloaterCacheList mFloaters;
   };
 
 protected:
@@ -266,6 +306,14 @@ protected:
     PRUint32 mAllFlags;
     FlagBits mFlags;
   };
+
+  union {
+    ExtraData* mData;
+    ExtraBlockData* mBlockData;
+    ExtraInlineData* mInlineData;
+  };
+
+  void MaybeFreeData();
 };
 
 //----------------------------------------------------------------------

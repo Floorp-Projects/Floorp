@@ -30,25 +30,37 @@
 MOZ_DECL_CTOR_COUNTER(nsLineBox);
 
 nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock)
+  : mFirstChild(aFrame),
+    mNext(nsnull),
+    mBounds(0, 0, 0, 0),
+    mMaxElementWidth(0),
+    mData(nsnull)
 {
   MOZ_COUNT_CTOR(nsLineBox);
-  mFirstChild = aFrame;
-  mChildCount = aCount;
+
   mAllFlags = 0;
-  MarkDirty();
-  SetIsBlock(aIsBlock);
-  mNext = nsnull;
-  mBounds.SetRect(0,0,0,0);
-  mCombinedArea.SetRect(0,0,0,0);
-//XXX  mCarriedOutTopMargin = 0;
-  mCarriedOutBottomMargin = 0;
+#if NS_STYLE_CLEAR_NONE > 0
   mFlags.mBreakType = NS_STYLE_CLEAR_NONE;
-  mMaxElementWidth = 0;
+#endif
+  SetChildCount(aCount);
+  MarkDirty();
+  mFlags.mBlock = aIsBlock;
 }
 
 nsLineBox::~nsLineBox()
 {
   MOZ_COUNT_DTOR(nsLineBox);
+
+  if (IsBlock()) {
+    if (mBlockData) {
+      delete mBlockData;
+    }
+  }
+  else {
+    if (mInlineData) {
+      delete mInlineData;
+    }
+  }
 }
 
 static void
@@ -82,9 +94,11 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
 char*
 nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
-  PR_snprintf(aBuf, aBufSize, "%s,%s[0x%x]",
-              IsDirty() ? "dirty" : "clean",
+  PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s[0x%x]",
               IsBlock() ? "block" : "inline",
+              IsDirty() ? "dirty" : "",
+              IsImpactedByFloater() ? "impacted" : "",
+              IsTrimmed() ? "trimmed" : "",
               mAllFlags);
   return aBuf;
 }
@@ -97,30 +111,33 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   char cbuf[100];
   fprintf(out, "line %p: count=%d state=%s ",
-          this, ChildCount(), StateToString(cbuf, sizeof(cbuf)));
-  if (0 != mCarriedOutBottomMargin) {
-    fprintf(out, "bm=%d ", mCarriedOutBottomMargin);
+          this, GetChildCount(), StateToString(cbuf, sizeof(cbuf)));
+  if (0 != GetCarriedOutBottomMargin()) {
+    fprintf(out, "bm=%d ", GetCarriedOutBottomMargin());
   }
   if (0 != mMaxElementWidth) {
     fprintf(out, "mew=%d ", mMaxElementWidth);
   }
-  fprintf(out, "{%d,%d,%d,%d} ca={%d,%d,%d,%d}",
-          mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-          mCombinedArea.x, mCombinedArea.y,
-          mCombinedArea.width, mCombinedArea.height);
-  fprintf(out, " <\n");
+  fprintf(out, "{%d,%d,%d,%d} ",
+          mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+  if (mData) {
+    fprintf(out, "ca={%d,%d,%d,%d} ",
+            mData->mCombinedArea.x, mData->mCombinedArea.y,
+            mData->mCombinedArea.width, mData->mCombinedArea.height);
+  }
+  fprintf(out, "<\n");
 
   nsIFrame* frame = mFirstChild;
-  PRInt32 n = ChildCount();
+  PRInt32 n = GetChildCount();
   while (--n >= 0) {
     frame->List(out, aIndent + 1);
     frame->GetNextSibling(&frame);
   }
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  if (mFloaters.NotEmpty()) {
+  if (HasFloaters()) {
     fputs("> floaters <\n", out);
-    ListFloaters(out, aIndent + 1, mFloaters);
+    ListFloaters(out, aIndent + 1, mInlineData->mFloaters);
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
   }
   fputs(">\n", out);
@@ -130,7 +147,7 @@ nsIFrame*
 nsLineBox::LastChild() const
 {
   nsIFrame* frame = mFirstChild;
-  PRInt32 n = ChildCount() - 1;
+  PRInt32 n = GetChildCount() - 1;
   while (--n >= 0) {
     frame->GetNextSibling(&frame);
   }
@@ -147,7 +164,7 @@ nsLineBox::IsLastChild(nsIFrame* aFrame) const
 PRInt32
 nsLineBox::IndexOf(nsIFrame* aFrame) const
 {
-  PRInt32 i, n = ChildCount();
+  PRInt32 i, n = GetChildCount();
   nsIFrame* frame = mFirstChild;
   for (i = 0; i < n; i++) {
     if (frame == aFrame) {
@@ -208,39 +225,172 @@ nsLineBox::FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame,
   return nsnull;
 }
 
-#ifdef NS_DEBUG
-PRBool
-nsLineBox::CheckIsBlock() const
+nscoord
+nsLineBox::GetCarriedOutBottomMargin() const
 {
-  PRBool isBlock = nsLineLayout::TreatFrameAsBlock(mFirstChild);
-  return isBlock == IsBlock();
+  return (IsBlock() && mBlockData) ? mBlockData->mCarriedOutBottomMargin : 0;
 }
-#endif
+
+void
+nsLineBox::SetCarriedOutBottomMargin(nscoord aValue)
+{
+  if (IsBlock()) {
+    if (aValue) {
+      if (!mBlockData) {
+        mBlockData = new ExtraBlockData(mBounds);
+      }
+      if (mBlockData) {
+        mBlockData->mCarriedOutBottomMargin = aValue;
+      }
+    }
+    else if (mBlockData) {
+      mBlockData->mCarriedOutBottomMargin = aValue;
+      MaybeFreeData();
+    }
+  }
+}
+
+void
+nsLineBox::MaybeFreeData()
+{
+  if (mData && (mData->mCombinedArea == mBounds)) {
+    if (IsInline()) {
+      if (mInlineData->mFloaters.IsEmpty()) {
+        delete mInlineData;
+        mInlineData = nsnull;
+      }
+    }
+    else if (0 == mBlockData->mCarriedOutBottomMargin) {
+      delete mBlockData;
+      mBlockData = nsnull;
+    }
+  }
+}
+
+// XXX get rid of this???
+nsFloaterCache*
+nsLineBox::GetFirstFloater()
+{
+  if (NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters")) {
+    return nsnull;
+  }
+  return mInlineData ? mInlineData->mFloaters.Head() : nsnull;
+}
+
+// XXX this might be too eager to free memory
+void
+nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
+{
+  NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters");
+  if (IsInline()) {
+    if (mInlineData) {
+      aFreeList.Append(mInlineData->mFloaters);
+      MaybeFreeData();
+    }
+  }
+}
+
+void
+nsLineBox::AppendFloaters(nsFloaterCacheFreeList& aFreeList)
+{
+  NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters");
+  if (IsInline()) {
+    if (aFreeList.NotEmpty()) {
+      if (!mInlineData) {
+        mInlineData = new ExtraInlineData(mBounds);
+      }
+      if (mInlineData) {
+        mInlineData->mFloaters.Append(aFreeList);
+      }
+    }
+  }
+}
+
+PRBool
+nsLineBox::RemoveFloater(nsIFrame* aFrame)
+{
+  NS_WARN_IF_FALSE(IsInline(), "block line can't have floaters");
+  if (IsInline() && mInlineData) {
+    nsFloaterCache* fc = mInlineData->mFloaters.Find(aFrame);
+    if (fc) {
+      // Note: the placeholder is part of the line's child list
+      // and will be removed later.
+      fc->mPlaceholder->SetOutOfFlowFrame(nsnull);
+      mInlineData->mFloaters.Remove(fc);
+      MaybeFreeData();
+    }
+  }
+  return PR_FALSE;
+}
+
+void
+nsLineBox::SetCombinedArea(const nsRect& aCombinedArea)
+{
+  if (aCombinedArea != mBounds) {
+    if (mData) {
+      mData->mCombinedArea = aCombinedArea;
+    }
+    else {
+      if (IsInline()) {
+        mInlineData = new ExtraInlineData(aCombinedArea);
+      }
+      else {
+        mBlockData = new ExtraBlockData(aCombinedArea);
+      }
+    }
+  }
+  else {
+    if (mData) {
+      // Store away new value so that MaybeFreeData compares against
+      // the right value.
+      mData->mCombinedArea = aCombinedArea;
+    }
+    MaybeFreeData();
+  }
+}
+
+void
+nsLineBox::GetCombinedArea(nsRect* aResult)
+{
+  if (aResult) {
+    *aResult = mData ? mData->mCombinedArea : mBounds;
+  }
+}
 
 #ifdef DEBUG
-PRBool
+nsIAtom*
 nsLineBox::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
   NS_PRECONDITION(aResult, "null OUT parameter pointer");
   *aResult = sizeof(*this);
 
-  PRBool big = PR_TRUE;
-  if ((IsBlock() || mFloaters.IsEmpty()) &&
-      (mBounds == mCombinedArea)) {
-    big = PR_FALSE;
+  nsIAtom* atom;
+  if (IsBlock()) {
+    atom = nsLayoutAtoms::lineBoxBlockSmall;
+    if (mBlockData) {
+      atom = nsLayoutAtoms::lineBoxBlockBig;
+      *aResult += sizeof(*mBlockData);
+    }
+  }
+  else {
+    atom = nsLayoutAtoms::lineBoxSmall;
+    if (mInlineData) {
+      atom = nsLayoutAtoms::lineBoxBig;
+      *aResult += sizeof(*mInlineData);
+
+      // Add in the size needed for floaters associated with this line
+      if (HasFloaters()) {
+        PRUint32  floatersSize;
+        mInlineData->mFloaters.SizeOf(aHandler, &floatersSize);
+
+        // Base size of embedded object was included in sizeof(*this) above
+        floatersSize -= sizeof(mInlineData->mFloaters);
+        aHandler->AddSize(nsLayoutAtoms::lineBoxFloaters, floatersSize);
+      }
+    }
   }
 
-  // Add in the size needed for floaters associated with this line
-  if (mFloaters.NotEmpty()) {
-    PRUint32  floatersSize;
-
-    mFloaters.SizeOf(aHandler, &floatersSize);
-    // Base size of embedded object was included in sizeof(*this) above
-    floatersSize -= sizeof(mFloaters);
-    aHandler->AddSize(nsLayoutAtoms::lineBoxFloaters, floatersSize);
-  }
-
-  return big;
+  return atom;
 }
 #endif
 
@@ -346,7 +496,7 @@ nsLineIterator::GetLine(PRInt32 aLineNumber,
   }
   nsLineBox* line = mLines[aLineNumber];
   *aFirstFrameOnLine = line->mFirstChild;
-  *aNumFramesOnLine = line->mChildCount;
+  *aNumFramesOnLine = line->GetChildCount();
   aLineBounds = line->mBounds;
 
   PRUint32 flags = 0;
@@ -462,7 +612,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   *aXIsAfterLastFrame = PR_FALSE;
   nsRect r1, r2;
   nsIFrame* frame = line->mFirstChild;
-  PRInt32 n = line->mChildCount;
+  PRInt32 n = line->GetChildCount();
   if (mRightToLeft) {
     while (--n >= 0) {
       nsIFrame* nextFrame;
@@ -528,6 +678,7 @@ nsFloaterCacheList::~nsFloaterCacheList()
     delete floater;
     floater = next;
   }
+  mHead = nsnull;
 }
 
 nsFloaterCache*
