@@ -81,23 +81,38 @@ EXPORTS = CLASSDIR=$(CLASSDIR) JAVAC=$(JAVAC) JFLAGS=$(JFLAGS) SHELL=$(SHELL) \
 
 helpmessage : FORCE
 	@echo 'Targets include:'
-	@echo '\tall - make jars, examples'
-	@echo '\tjars - make js.jar, jstools.jar'
-	@echo '\tfast - quick-and-dirty "make jars", for development'
-	@echo '\texamples - build the .class files in the examples directory'
-	@echo '\tcheck - perform checks on the source.'
-	@echo '\tclean - remove intermediate files'
-	@echo '\tclobber - make clean, and remove .jar files'
-	@echo '\tzip - make a distribution .zip file'
-	@echo '\tzip-source - make a distribution .zip file, with source'
-	@echo '\ttar - make a distribution .tar.gz file'
-	@echo '\ttar-source - make a distribution .tar.gz, with source'
+	@echo '  all - make jars, examples'
+	@echo '  jars - make js.jar, jstools.jar'
+	@echo '  fast - quick-and-dirty "make jars", for development'
+	@echo '  examples - build the .class files in the examples directory'
+	@echo '  check - perform checks on the source.'
+	@echo '  clean - remove intermediate files'
+	@echo '  clobber - make clean, and remove .jar files'
+	@echo '  zip - make a distribution .zip file'
+	@echo '  zip-source - make a distribution .zip file, with source'
+	@echo '  tar - make a distribution .tar.gz file'
+	@echo '  tar-source - make a distribution .tar.gz, with source'
 	@echo
 	@echo 'Define OS_TARGET to "WINNT" to build on Windows NT with GNU make.'
 	@echo
 
 all : jars examples
 
+	$(PATH_PREFIX)/optimizer/Block.java		\
+	$(PATH_PREFIX)/optimizer/Codegen.java		\
+	$(PATH_PREFIX)/optimizer/DataFlowBitSet.java	\
+	$(PATH_PREFIX)/optimizer/FatBlock.java		\
+	$(PATH_PREFIX)/optimizer/JavaScriptClassLoader.java\
+	$(PATH_PREFIX)/optimizer/OptClassNameHelper.java\
+	$(PATH_PREFIX)/optimizer/OptFunctionNode.java	\
+	$(PATH_PREFIX)/optimizer/OptIRFactory.java	\
+	$(PATH_PREFIX)/optimizer/OptLocalVariable.java	\
+	$(PATH_PREFIX)/optimizer/OptRuntime.java	\
+	$(PATH_PREFIX)/optimizer/OptTransformer.java	\
+	$(PATH_PREFIX)/optimizer/OptVariableTable.java	\
+	$(PATH_PREFIX)/optimizer/Optimizer.java		\
+	$(PATH_PREFIX)/optimizer/StmtNodeIterator.java	\
+	$(PATH_PREFIX)/optimizer/TypeEvent.java		\
 jars : $(JARS)
 
 fast : fast_$(JS_JAR) $(JSTOOLS_JAR)
