@@ -194,48 +194,19 @@ sub GetVersion
   # calculate year
   # localtime() returns year 2000 as 100, we mod 100 to get at the last 2 digits
   $yy = $year % 100;
-  if($yy < 10)
-  {
-    $yy = "200$yy";
-  }
-  else
-  {
-    $yy = "20$yy";
-  }
+  $yy = "20" . sprintf("%.2d", $yy);
 
   # calculate month
   $monAdjusted = $mon + 1;
-  if(($monAdjusted) < 10)
-  {
-    $mm = "0$monAdjusted";
-  }
-  else
-  {
-    $mm = "$mon";
-  }
+  $mm = sprintf("%.2d", $monAdjusted);
 
   # calculate month day
-  if(($mday) < 10)
-  {
-    $dd = "0$mday";
-  }
-  else
-  {
-    $dd = "$mday";
-  }
+  $dd = sprintf("%.2d", $mday);
 
   # calculate day hour
-  if(($hour) < 10)
-  {
-    $hh = "0$hour";
-  }
-  else
-  {
-    $hh = "$hour";
-  }
+  $hh = sprintf("%.2d", $hour);
 
   $fileMozillaVer = "$yy$mm$dd$hh";
   print "y2k compliant version string for $fileMozilla: $fileMozillaVer\n";
   return($fileMozillaVer);
 }
-
