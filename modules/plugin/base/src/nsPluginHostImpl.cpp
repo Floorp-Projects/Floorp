@@ -45,7 +45,6 @@
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
-#include "nsIStringStream.h" // for NS_NewByteInputStream
 #include "nsIFileStream.h" // for nsIRandomAccessStore
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
@@ -3394,7 +3393,9 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   nsCOMPtr<nsIURI> url;
   nsAutoString  absUrl;
   nsresult rv;
-  
+  void *newPostData = nsnull;
+  PRUint32 newPostDataLen = 0;
+
   if (aURL.Length() <= 0)
     return NS_OK;
 
@@ -3476,14 +3477,19 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
           // channels.....
           if(aPostData)
             {
-              nsCOMPtr<nsISupports> result = nsnull;
+              //Make sure there is "r\n\r\n" before the post data
+              if (!PL_strstr((const char *) aPostData, "\r\n\r\n")) {
+                if (NS_SUCCEEDED(FixPostData(aPostData, aPostDataLen,
+                                             &newPostData, &newPostDataLen))) {
+                  aPostData = newPostData;
+                  aPostDataLen = newPostDataLen;
+                }   
+              }
               nsCOMPtr<nsIInputStream> postDataStream = nsnull;
               if (aPostData) {
-                NS_NewByteInputStream(getter_AddRefs(result),
-                                      (const char *) aPostData, aPostDataLen);
-                if (result) {
-                  postDataStream = do_QueryInterface(result, &rv);
-                }
+                NS_NewPostDataStream(getter_AddRefs(postDataStream),
+                                     PR_FALSE,
+                                     (const char *) aPostData, 0);
               }
               
               // XXX it's a bit of a hack to rewind the postdata stream
@@ -3500,6 +3506,12 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
               nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
               httpChannel->SetRequestMethod(method);
               httpChannel->SetUploadStream(postDataStream);
+
+              if (newPostData)
+                {
+                  delete [] newPostData;
+                  newPostData = nsnull;
+                }
             }
 
           if (aHeadersData) 
@@ -3516,6 +3528,57 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
     NS_RELEASE(listenerPeer);
   }
   return rv;
+}
+
+nsresult
+nsPluginHostImpl::FixPostData(void *inPostData, PRUint32 inPostDataLen,
+                              void **outPostData, PRUint32 *outPostDataLen)
+{
+  if ((!inPostData) || (inPostDataLen <= 0) ||
+      (!outPostData) || (!outPostDataLen)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  const char *postData = (const char *)inPostData;
+  const char *crlf = nsnull;
+  const char *crlfcrlf = "\r\n\r\n";
+  const char *t;
+  char *newBuf;
+  PRInt32 headersLen = 0, dataLen = 0;
+
+  if (!(newBuf = new char[inPostDataLen + 4])) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsCRT::memset(newBuf, 0, inPostDataLen + 4);
+
+  if (!(crlf = PL_strstr(postData, "\r\n\n"))) {
+    delete [] newBuf;
+    return NS_ERROR_NULL_POINTER;
+  }
+  headersLen = crlf - postData;
+
+  // find the next non-whitespace char
+  t = crlf + 3;
+  while (*t == '\r' || *t == '\n' || *t == '\t' || *t == ' ' && *t) {
+    t++;
+  }
+  if (*t) {
+    // copy the headers
+    nsCRT::memcpy(newBuf, postData, headersLen);
+    // copy the correct crlfcrlf
+    nsCRT::memcpy(newBuf + headersLen, crlfcrlf, 4);
+    // copy the rest of the postData
+    dataLen = inPostDataLen - (t - postData);
+    nsCRT::memcpy(newBuf + headersLen + 4, t, dataLen);
+    *outPostDataLen = headersLen + 4 + dataLen;
+    *outPostData = newBuf;
+  }
+  else {
+    delete [] newBuf;
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
