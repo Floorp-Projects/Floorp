@@ -150,11 +150,15 @@ protected:
   /** creates a bogus text node if the document has no editable content */
   nsresult CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection);
 
+  /** enforce selection must be inside PRE node */
+  nsresult PinSelectionInPRE(nsIDOMSelection *aSelection);
+  
   // data
   nsTextEditor *mEditor;  // note that we do not refcount the editor
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
   PRUint32 mFlags;
+  PRBool mPINSelection;  // whether to try to pin the selection inside a PRE tag
 };
 
 

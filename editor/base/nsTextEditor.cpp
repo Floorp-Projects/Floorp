@@ -1407,35 +1407,6 @@ NS_IMETHODIMP nsTextEditor::InsertAsQuotation(const nsString& aQuotedText)
   return InsertText(quotedStuff);
 }
 
-// Useful helper method for Get/SetBodyWrapWidth:
-static nsCOMPtr<nsIDOMElement>
-findPreElement(nsIDOMDocument* domdoc)
-{
-  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-  if (!doc)
-    return 0;
-
-  nsIContent* rootContent = doc->GetRootContent();
-  if (!rootContent)
-    return 0;
-
-  nsCOMPtr<nsIDOMNode> rootNode (do_QueryInterface(rootContent));
-  if (!rootNode)
-    return 0;
-
-  nsString prestr ("PRE");  // GetFirstNodeOfType requires capitals
-  nsCOMPtr<nsIDOMNode> preNode;
-  if (!NS_SUCCEEDED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
-                                                 getter_AddRefs(preNode))))
-  {
-#ifdef DEBUG_akkana
-    printf("No PRE tag\n");
-#endif
-    return 0;
-  }
-  return do_QueryInterface(preNode);
-}
-
 //
 // Get the wrap width for the first PRE tag in the document.
 // If no PRE tag, throw an error.
@@ -1447,12 +1418,7 @@ NS_IMETHODIMP nsTextEditor::GetBodyWrapWidth(PRUint32 *aWrapColumn)
   if (! aWrapColumn)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsEditor::GetDocument(getter_AddRefs(domdoc));
-  if (!domdoc)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIDOMElement> preElement = findPreElement(domdoc);
+  nsCOMPtr<nsIDOMElement> preElement = FindPreElement();
   if (!preElement)
     return NS_ERROR_UNEXPECTED;
   nsString colsStr ("cols");
@@ -1506,12 +1472,7 @@ NS_IMETHODIMP nsTextEditor::SetBodyWrapWidth(PRUint32 aWrapColumn)
 
   mWrapColumn = aWrapColumn;
 
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsEditor::GetDocument(getter_AddRefs(domdoc));
-  if (!domdoc)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIDOMElement> preElement = findPreElement(domdoc);
+  nsCOMPtr<nsIDOMElement> preElement = FindPreElement();
   if (!preElement)
     return NS_ERROR_UNEXPECTED;
 
@@ -1732,6 +1693,42 @@ NS_IMETHODIMP nsTextEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,ns
 
   return encoder->EncodeToStream(aOutputStream);
 }
+
+
+nsCOMPtr<nsIDOMElement>
+nsTextEditor::FindPreElement()
+{
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsEditor::GetDocument(getter_AddRefs(domdoc));
+  if (!domdoc)
+    return 0;
+
+  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
+  if (!doc)
+    return 0;
+
+  nsIContent* rootContent = doc->GetRootContent();
+  if (!rootContent)
+    return 0;
+
+  nsCOMPtr<nsIDOMNode> rootNode (do_QueryInterface(rootContent));
+  if (!rootNode)
+    return 0;
+
+  nsString prestr ("PRE");  // GetFirstNodeOfType requires capitals
+  nsCOMPtr<nsIDOMNode> preNode;
+  if (!NS_SUCCEEDED(nsEditor::GetFirstNodeOfType(rootNode, prestr,
+                                                 getter_AddRefs(preNode))))
+  {
+#ifdef DEBUG_akkana
+    printf("No PRE tag\n");
+#endif
+    return 0;
+  }
+  return do_QueryInterface(preNode);
+}
+
+
 
 NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode  *aNode, 
                                                      nsIDOMNode  *aParent,

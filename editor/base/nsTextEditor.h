@@ -129,6 +129,8 @@ public:
 // End of methods implemented in nsEditor
 //=============================================================
 
+  
+
 protected:
 
 // file handling utils
@@ -140,6 +142,11 @@ protected:
   virtual void  InitRules();
   
 // Utility Methods
+
+  /** returns the PRE elements that bounds the content of the text document
+    * @param domdoc      The text document
+    */
+  nsCOMPtr<nsIDOMElement> FindPreElement();
 
   /** content-based query returns PR_TRUE if <aProperty aAttribute=aValue> effects aNode
     * If <aProperty aAttribute=aValue> contains aNode, 
