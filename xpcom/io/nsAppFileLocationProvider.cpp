@@ -29,8 +29,10 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "nsIChromeRegistry.h"
 
+#ifndef XPCOM_STANDALONE
+#include "nsIChromeRegistry.h"
+#endif
 
 #if defined(XP_MAC)
 #include <Folders.h>
@@ -112,7 +114,9 @@ nsAppFileLocationProvider::~nsAppFileLocationProvider()
 }
 
 // Chrome reg service
+#ifndef XPCOM_STANDALONE
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+#endif
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsISupports
@@ -372,6 +376,7 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
 //----------------------------------------------------------------------------------------
 NS_METHOD nsAppFileLocationProvider::GetSelectedLocaleDataDir(nsILocalFile *defaultsDataDir)
 {
+#ifndef XPCOM_STANDALONE
     NS_ENSURE_ARG_POINTER(defaultsDataDir);
 
     nsresult rv;
@@ -402,4 +407,7 @@ NS_METHOD nsAppFileLocationProvider::GetSelectedLocaleDataDir(nsILocalFile *defa
         }
     }
     return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
