@@ -3153,26 +3153,6 @@ nsXULElement::List(FILE* out, PRInt32 aIndent) const
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULElement::BeginConvertToXIF(nsIXIFConverter* aConverter) const
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXULElement::ConvertContentToXIF(nsIXIFConverter* aConverter) const
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXULElement::FinishConvertToXIF(nsIXIFConverter* aConverter) const
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 nsXULElement::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const

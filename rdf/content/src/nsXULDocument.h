@@ -266,10 +266,6 @@ public:
 
     NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
-    NS_IMETHOD CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection);
-
-    NS_IMETHOD ToXIF(nsIXIFConverter *aConverter, nsIDOMNode* aNode);
-
     NS_IMETHOD FlushPendingNotifications();
 
     NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
@@ -277,22 +273,6 @@ public:
     NS_IMETHOD GetBindingManager(nsIBindingManager** aResult);
 
     NS_IMETHOD GetNodeInfoManager(class nsINodeInfoManager *&aNodeInfoManager);
-
-    virtual void BeginConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
-
-    virtual void ConvertChildrenToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
-
-    virtual void FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
-
-    virtual PRBool IsInRange(const nsIContent *aStartContent, const nsIContent* aEndContent, const nsIContent* aContent) const;
-
-    virtual PRBool IsBefore(const nsIContent *aNewContent, const nsIContent* aCurrentContent) const;
-
-    virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const;
-
-    virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
-
-    virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
 
     virtual void SetDisplaySelection(PRInt8 aToggle);
 

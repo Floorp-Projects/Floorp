@@ -368,9 +368,6 @@ public:
     NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
     NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
     NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const { return NS_OK; }
-    NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const;
-    NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const;
-    NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const;
     NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
     NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
