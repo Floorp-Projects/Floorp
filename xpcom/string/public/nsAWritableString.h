@@ -450,10 +450,14 @@ basic_nsAWritableString<CharT>::do_AppendFromElementPtrLength( const CharT* aCha
   }
 
 template <class CharT>
+inline
 void
 basic_nsAWritableString<CharT>::do_AppendFromElement( CharT aChar )
   {
-    do_AppendFromReadable(basic_nsLiteralChar<CharT>(aChar));
+    PRUint32 oldLength = Length();
+    SetLength(oldLength+1);
+    nsWritableFragment<CharT> fragment;
+    *GetWritableFragment(fragment, kFragmentAt, oldLength) = aChar;
   }
 
 
