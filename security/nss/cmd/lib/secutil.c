@@ -85,8 +85,6 @@ static char consoleName[] =  {
 #endif
 };
 
-static int OIDsAdded;
-
 
 char *
 SECU_GetString(int16 error_number)
