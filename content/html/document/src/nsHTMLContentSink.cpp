@@ -753,7 +753,7 @@ CreateContentObject(const nsIParserNode& aNode,
   case eHTMLTag_textarea:
     {
       const nsString& content = aNode.GetSkippedContent();
-      nsresult rv = NS_NewHTMLTextArea(aResult, atom, aForm);
+      rv = NS_NewHTMLTextArea(aResult, atom, aForm);
       if (NS_OK == rv) {
         // If the text area has some content, give it to it now
         if (content.Length() > 0) {
