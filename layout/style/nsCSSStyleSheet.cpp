@@ -3249,7 +3249,7 @@ RuleProcessorData::RuleProcessorData(nsIPresContext* aPresContext,
     // see if there are attributes for the content
     PRInt32 attrCount = 0;
     aContent->GetAttrCount(attrCount);
-    mHasAttributes = PRBool(attrCount > 0);
+    mHasAttributes = attrCount > 0;
 
     // check for HTMLContent and Link status
     if (aContent->IsContentOfType(nsIContent::eHTML)) 
@@ -3548,9 +3548,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
 {
   // if we are dealing with negations, reverse the values of PR_TRUE and PR_FALSE
-  PRBool  localFalse = PRBool(0 < aNegationIndex);
-  PRBool  localTrue = PRBool(0 == aNegationIndex);
-  PRBool  result = localTrue;
+  PRBool localFalse = 0 < aNegationIndex;
+  PRBool localTrue = 0 == aNegationIndex;
+  PRBool result = localTrue;
 
   // Do not perform the test if aNegationIndex==1
   // because it then contains only negated IDs, classes, attributes and pseudo-
@@ -3585,41 +3585,35 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         nsCOMPtr<nsIContent> firstChild;
         nsCOMPtr<nsIContent> parent = data.mParentContent;
         if (parent) {
+          PRBool acceptNonWhitespace =
+            nsCSSPseudoClasses::firstNode == pseudoClass->mAtom;
           PRInt32 index = -1;
           do {
             parent->ChildAt(++index, getter_AddRefs(firstChild));
-            if (firstChild) { // stop at first non-comment and non-whitespace node (and non-text node for firstChild)
-              if (IsSignificantChild(firstChild, (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom))) {
-                break;
-              }
-            }
-            else {
-              break;
-            }
-          } while (1 == 1);
+            // stop at first non-comment and non-whitespace node (and
+            // non-text node for firstChild)
+          } while (firstChild &&
+                   !IsSignificantChild(firstChild, acceptNonWhitespace));
         }
-        result = PRBool(localTrue == (data.mContent == firstChild));
+        result = localTrue == (data.mContent == firstChild);
       }
       else if ((nsCSSPseudoClasses::lastChild == pseudoClass->mAtom) ||
                (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom)) {
         nsCOMPtr<nsIContent> lastChild;
         nsCOMPtr<nsIContent> parent = data.mParentContent;
         if (parent) {
+          PRBool acceptNonWhitespace =
+            nsCSSPseudoClasses::lastNode == pseudoClass->mAtom;
           PRInt32 index;
           parent->ChildCount(index);
           do {
             parent->ChildAt(--index, getter_AddRefs(lastChild));
-            if (lastChild) { // stop at first non-comment and non-whitespace node (and non-text node for lastChild)
-              if (IsSignificantChild(lastChild, (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom))) {
-                break;
-              }
-            }
-            else {
-              break;
-            }
-          } while (1 == 1);
+            // stop at first non-comment and non-whitespace node (and
+            // non-text node for lastChild)
+          } while (lastChild &&
+                   !IsSignificantChild(lastChild, acceptNonWhitespace));
         }
-        result = PRBool(localTrue == (data.mContent == lastChild));
+        result = localTrue == (data.mContent == lastChild);
       }
       else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
         nsCOMPtr<nsIContent> child;
@@ -3627,16 +3621,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         PRInt32 index = -1;
         do {
           element->ChildAt(++index, getter_AddRefs(child));
-          if (child) { // stop at first non-comment and non-whitespace node
-            if (IsSignificantChild(child, PR_TRUE)) {
-              break;
-            }
-          }
-          else {
-            break;
-          }
-        } while (1 == 1);
-        result = PRBool(localTrue == (child == nsnull));
+          // stop at first non-comment and non-whitespace node
+        } while (child && !IsSignificantChild(child, PR_TRUE));
+        result = localTrue == (child == nsnull);
       }
       else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
         if (data.mParentContent) {
@@ -3647,6 +3634,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         }
       }
       else if (nsCSSPseudoClasses::mozBoundElement == pseudoClass->mAtom) {
+        // XXXldb How do we know where the selector came from?  And what
+        // if there are multiple bindings, and we should be matching the
+        // outer one?
         result = (data.mScopedRoot && data.mScopedRoot == data.mContent)
                    ? localTrue : localFalse;
       }
@@ -3746,10 +3736,10 @@ static PRBool SelectorMatches(RuleProcessorData &data,
               result = localTrue;
             }
             else if (nsCSSPseudoClasses::link == pseudoClass->mAtom) {
-              result = PRBool(localTrue == (eLinkState_Unvisited == data.mLinkState));
+              result = localTrue == (eLinkState_Unvisited == data.mLinkState);
             }
             else if (nsCSSPseudoClasses::visited == pseudoClass->mAtom) {
-              result = PRBool(localTrue == (eLinkState_Visited == data.mLinkState));
+              result = localTrue == (eLinkState_Visited == data.mLinkState);
             }
           }
         }
@@ -4024,7 +4014,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
     }
     NS_IF_RELEASE(lastContent);
   }
-  return PRBool(nsnull == selector);  // matches if ran out of selectors
+  return nsnull == selector;  // matches if ran out of selectors
 }
 
 static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
