@@ -55,7 +55,7 @@
 #include "nsMsgDBCID.h"
 
 #include "nsMsgDatabase.h"
-
+#include "nsLocalFolderSummarySpec.h"
 #include "nsImapFlagAndUidState.h"
 #include "nsParseMailbox.h"
 
@@ -425,8 +425,9 @@ nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
 			m_mailDB->ForceClosed();
 			m_mailDB = NULL;
 				
+			nsLocalFolderSummarySpec	summarySpec(dbName);
 			// Remove summary file.
-			dbName.Delete(PR_FALSE);
+			summarySpec.Delete(PR_FALSE);
 			
 			// Create a new summary file, update the folder message counts, and
 			// Close the summary file db.

@@ -179,8 +179,6 @@ NS_IMETHODIMP nsImapService::FetchMessage(PLEventQueue * aClientEventQueue,
 			nsString2 urlSpec(eOneByte);
 			char hierarchySeparator = '/'; // ### fixme - should get from folder
 
-			rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
-			rv = imapUrl->SetImapMailFolderSink(aImapMailFolder);
 			rv = CreateStartOfImapUrl(*imapUrl, urlSpec);
 			if (NS_SUCCEEDED(rv))
 			{

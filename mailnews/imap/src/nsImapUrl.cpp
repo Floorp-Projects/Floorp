@@ -1515,6 +1515,7 @@ void nsImapUrl::ParseListofMessageIds()
 		m_validUrl = PR_FALSE;
 	else
 	{
+		m_listOfMessageIds = PL_strdup(m_listOfMessageIds);
 		m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0;
 	}
 }
