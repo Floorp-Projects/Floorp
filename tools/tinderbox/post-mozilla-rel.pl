@@ -145,7 +145,7 @@ sub pushit {
 
   my $ssh_opts = "";
   my $scp_opts = "";
-  if ($Settings::ssh_version ne '') {
+  if (defined($Settings::ssh_version) && $Settings::ssh_version ne '') {
     $ssh_opts = "-".$Settings::ssh_version;
     $scp_opts = "-oProtocol=".$Settings::ssh_version;
   }
