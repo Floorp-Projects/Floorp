@@ -77,6 +77,7 @@ REQUIRES	=\
 			XfeWidgets \
 			XfeBm \
 			XfeToolBar \
+			XfeToolTip \
 			Microline \
 		  addr \
 		  applet \

@@ -37,7 +37,6 @@ ifdef XFE_WIDGETS_BUILD_UNUSED
 UNUSED_DIRS		= \
 				XfeCaption \
 				XfeComboBox \
-				XfeToolTip \
 				$(NULL)
 endif
 
@@ -45,6 +44,7 @@ DIRS			= \
 				Xfe \
 				XfeBm \
 				XfeToolBar \
+				XfeToolTip \
 				$(UNUSED_DIRS) \
 				$(TEST_DIRS)
 
