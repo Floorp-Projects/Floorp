@@ -95,6 +95,8 @@ const kRepeatDay_4 = 1<<4;//Thursday
 const kRepeatDay_5 = 1<<5;//Friday
 const kRepeatDay_6 = 1<<6;//Saturday
 
+const kNODATE = -62171262000000;   // ms value for -0001/11/30 00:00:00, libical value for no date.
+// (Note: javascript Date interprets kNODATE ms as -0001/11/15 00:00:00.)
 
 var gStartDate = new Date( );
 var gDueDate = new Date( );
@@ -132,12 +134,22 @@ function loadCalendarEventDialog()
    document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
 
    // fill in fields from the event
-   gStartDate.setTime( gEvent.start.getTime() );
-   document.getElementById( "start-datetime" ).value = gStartDate;
-   
-   gDueDate.setTime(gEvent.due.getTime() );
-   document.getElementById( "due-datetime" ).value = gDueDate;
-   
+   var hasStart = (gEvent.start.getTime() != kNODATE);
+   if (hasStart) 
+     gStartDate.setTime( gEvent.start.getTime() );
+   var startPicker = document.getElementById( "start-datetime" );
+   startPicker.value = gStartDate;
+   startPicker.disabled = !hasStart;
+   document.getElementById("start-checkbox").checked = hasStart;
+
+   var hasDue = (gEvent.due.getTime() != kNODATE)
+   if (hasDue)
+     gDueDate.setTime(gEvent.due.getTime() );
+   var duePicker = document.getElementById( "due-datetime" );
+   duePicker.value = gDueDate;
+   duePicker.disabled = !hasDue;
+   document.getElementById("due-checkbox").checked = hasDue;
+
    gDuration = gDueDate.getTime() - gStartDate.getTime(); //in ms
    
    if ( gEvent.recurForever ) 
@@ -341,8 +353,16 @@ function onOKCommand()
    gEvent.title       = getFieldValue( "title-field" );
    gEvent.description = getFieldValue( "description-field" );
    gEvent.location    = getFieldValue( "location-field" );
-   gEvent.start.setTime( gStartDate.getTime() );
-   gEvent.due.setTime( gDueDate.getTime() );
+
+   if ( getFieldValue("start-checkbox", "checked") )
+     gEvent.start.setTime( gStartDate.getTime() );
+   else
+     gEvent.start.setTime( kNODATE );;
+
+   if ( getFieldValue("due-checkbox", "checked") )
+     gEvent.due.setTime( gDueDate.getTime() );
+   else
+     gEvent.due.setTime( kNODATE );
 
    gEvent.url = getFieldValue( "uri-field" );
 
@@ -553,32 +573,48 @@ function checkDueDate()
       return 1;
 }
 
+/** Check that start datetime <= due datetime if both exist.
+    Provide separate error message for startDate > dueDate or
+    startDate == dueDate && startTime > dueTime. **/
 function checkSetTimeDate()
 {
-   var CheckDueDate = checkDueDate();
-   var CheckDueTime = checkDueTime();
+  var startCheckBox = document.getElementById( "start-checkbox" );
+  var dueCheckBox = document.getElementById( "due-checkbox" );
+  if (startCheckBox.checked && dueCheckBox.checked)
+  {
+    var CheckDueDate = checkDueDate();
 
-   if ( CheckDueDate < 0 )
-   {
+    if ( CheckDueDate < 0 )
+    {
       // due before start
       setDateError(true);
       setTimeError(false);
       return false;
-   }
-   else if ( CheckDueDate == 0 )
-   {
+    }
+    else if ( CheckDueDate == 0 )
+    {
       setDateError(false);
       // start & due same
+      var CheckDueTime = checkDueTime();
       setTimeError(CheckDueTime);
       return !CheckDueTime;
-   }
-   else
-   {
-      setDateError(false);
-      setTimeError(false);
-      return true;
-   }
+    }
+  }
+  setDateError(false);
+  setTimeError(false);
+  return true;
+}
 
+/**
+*   Called when the start or due datetime checkbox is clicked.
+*   Enables/disables corresponding datetime picker.
+*/
+function onDateTimeCheckbox(checkbox, pickerId)
+{
+   var picker = document.getElementById( pickerId );
+   picker.disabled = !checkbox.checked;
+
+   updateOKButton();
 }
 
 /*

@@ -153,8 +153,13 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.startdate.label;"/>
                         </hbox>
-                        <datetimepicker id="start-datetime" value=""
-                         onchange="onDateTimePick( this );"/>
+                        <hbox>
+                            <checkbox id="start-checkbox"
+                                      oncommand="onDateTimeCheckbox(this, 'start-datetime')"
+                                      persist="checked"/>
+                            <datetimepicker id="start-datetime" value=""
+                             onchange="onDateTimePick( this );"/>
+                        </hbox>
                      </row>
                      
                      <!--  Due Date -->    
@@ -162,11 +167,16 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newtodo.duedate.label;"/>
                         </hbox>
-                        <datetimepicker id="due-datetime" value="" 
-                         onchange="onDateTimePick( this );"/>
+                        <hbox>
+                            <checkbox id="due-checkbox"
+                                      oncommand="onDateTimeCheckbox(this, 'due-datetime')"
+                                      persist="checked"/>
+                            <datetimepicker id="due-datetime" value="" 
+                             onchange="onDateTimePick( this );"/>
+                        </hbox>
                      </row>
               
-                     <!-- End Time Warning -->    
+                     <!-- Due Time Warning -->    
                      <row align="center">
                         <spacer />
                         <label id="due-time-warning"
@@ -175,7 +185,7 @@
                                collapsed="true"/>
                      </row>
               
-                     <!-- End Date Warning -->    
+                     <!-- Due Date Warning -->    
                      <row align="center">
                         <spacer />
                         <label id="due-date-warning"

@@ -106,6 +106,8 @@ var kDaysInWeek = 7;
 
 const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that fit in the month view
 
+const k_NO_DATE = -62171262000000; // ms value for -0001/11/30 00:00:00, libical value for no date.
+// (Note: javascript Date interprets kNODATE ms as -0001/11/15 00:00:00.)
 
 var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
@@ -650,24 +652,9 @@ function newToDoCommand()
 {
     var calendarToDo = createToDo();
 
-    var startDate = gCalendarWindow.currentView.getNewEventDate();
-   
-    var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
-   
-    startDate = new Date( startDate.getFullYear(),
-                       startDate.getMonth(),
-                       startDate.getDate(),
-                       startDate.getHours(),
-                       Minutes,
-                       0);
-
-    calendarToDo.start.setTime( startDate );
-   
-    var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
-
-    var dueDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
-
-    calendarToDo.due.setTime( dueDateTime );
+    // created todo has no start or due date unless user wants one
+    calendarToDo.start.setTime( k_NO_DATE );
+    calendarToDo.due.setTime( k_NO_DATE );
 
     var args = new Object();
     args.mode = "new";

@@ -52,6 +52,10 @@ const ToDoUnifinderTreeName = "unifinder-todo-tree";
 
 var gTaskArray = new Array();
 
+const kNODATE = -62171262000000;   // ms value for -0001/11/30 00:00:00, libical value for no date.
+// (Note: javascript Date interprets kNODATE ms as -0001/11/15 00:00:00.)
+
+
 /**
 *   Observer for the calendar event data source. This keeps the unifinder
 *   display up to date when the calendar event data is changed
@@ -242,6 +246,18 @@ function checkboxClick( ThisToDo, completed )
    gICalLib.modifyTodo( ThisToDo );
 }
 
+/**
+*   Helper function to display todo datetimes in the unifinder
+*/
+
+function formatUnifinderToDoDateTime( datetime )
+{
+  // datetime is from todo object, it is not a javascript date
+  if (datetime != null && datetime.getTime() != kNODATE)
+    return gCalendarWindow.dateFormater.formatDateTime( new Date(datetime.getTime()), true );
+  else 
+    return "";
+}
 
 /*
 This function return the progress state of a ToDo task :
@@ -249,40 +265,32 @@ completed, overdue, duetoday, inprogress, future
  */
 function ToDoProgressAtom( calendarToDo )
 {
-      var now = new Date();
+  var now = new Date();
    
-      var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
+  var completed = calendarToDo.completed.getTime();
       
-      var completed = calendarToDo.completed.getTime();
+  if( completed > 0 ) {
+    return("completed");
+  }
       
-      if( completed > 0 )
-      {
-         return("completed");
-      }
+  var startDate     = new Date( calendarToDo.start.getTime() );
+  var dueDate       = new Date( calendarToDo.due.getTime() );
       
-      var startDate     = new Date( calendarToDo.start.getTime() );
-      var dueDate       = new Date( calendarToDo.due.getTime() );
-      var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 00 );
-      
-      if( thisMorning.getTime() > dueDate.getTime() )
-      {
-         return("overdue");
-      } else 
-	if ( dueDate.getFullYear() == now.getFullYear() &&
-                  dueDate.getMonth() == now.getMonth() &&
-                  dueDate.getDate() == now.getDate() )
-      {
-	    return("duetoday");
-      } else
-	if( tonightMidnight.getTime() < startDate.getTime() )
-	{
-	    return("future");
-      }
-
-      else
-      {
-	    return("inprogress");
-      }
+  if (dueDate.getTime() != kNODATE) {
+    if (dueDate.getTime() < now.getTime()) {
+      return "overdue";
+    } else if (dueDate.getFullYear() == now.getFullYear() &&
+               dueDate.getMonth() == now.getMonth() &&
+               dueDate.getDate() == now.getDate()) {
+      return "duetoday";
+    }
+  }
+  if (startDate.getTime() != kNODATE) { 
+    if (startDate.getTime() < now.getTime()) {
+      return "inprogress";
+    }
+  }
+  return "future";
 }
 
 var toDoTreeView =
@@ -404,18 +412,14 @@ var toDoTreeView =
             return( "" );
 
          case "unifinder-todo-tree-col-title":
-            var titleText;
-            if( calendarToDo.title == "" )
-               titleText = gCalendarBundle.getString( "eventUntitled" );
-            else  
-               titleText = calendarToDo.title;
-            return( titleText );
+           // return title, or "Untitled" if empty/null
+           return calendarToDo.title || gCalendarBundle.getString( "eventUntitled" );
          case "unifinder-todo-tree-col-startdate":
-            return( formatUnifinderToDoDateTime( new Date( calendarToDo.start.getTime() ) ) );
+            return( formatUnifinderToDoDateTime( calendarToDo.start ) );
          case "unifinder-todo-tree-col-duedate":
-            return( formatUnifinderToDoDateTime( new Date( calendarToDo.due.getTime() ) ) );
+            return( formatUnifinderToDoDateTime( calendarToDo.due ) );
          case "unifinder-todo-tree-col-completeddate":
-            return( formatUnifinderToDoDateTime( new Date( calendarToDo.completed.getTime() ) ) );
+            return( formatUnifinderToDoDateTime( calendarToDo.completed ) );
          case "unifinder-todo-tree-col-percentcomplete":
             return( calendarToDo.percent+"%" );
          case "unifinder-todo-tree-col-categories":
@@ -493,7 +497,7 @@ function dateToMilliseconds(date) {
   if (date == null)
     return treeView.sortStartedTime;
   var ms = date.getTime();   // note: date is not a javascript date.
-  if (ms == -62171262000000) // ms value for (0000/00/00 00:00:00)
+  if (ms == kNODATE) 
     return treeView.sortStartedTime;
   return ms;
 }
