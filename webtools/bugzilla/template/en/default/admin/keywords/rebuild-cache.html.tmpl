@@ -21,8 +21,8 @@
   #%]
 
 [%# INTERFACE:
-  # action: string. Contains the current action (either "update" or "delete").
-  # name: string. Contains the name of the current keyword.
+  # action: string; the current action (either "update" or "delete").
+  # name: string; the name of the current keyword.
   #%]
   
 [% IF action == "update" %]
@@ -50,7 +50,6 @@ Keyword [% name FILTER html %] [%+status FILTER html %].
   keyword cache</a></b>
 </p>
 
-<p>Go back to the <a href="query.cgi">query page</a> or
-<a href="editkeywords.cgi">edit more keywords</a>.</p>
+<p><a href="editkeywords.cgi">Edit more keywords</a>.</p>
 
 [% PROCESS global/footer.html.tmpl %] 

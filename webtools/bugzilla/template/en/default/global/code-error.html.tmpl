@@ -171,6 +171,10 @@
   
   [% ELSIF error == "invalid_field_name" %]
     Can't use [% field FILTER html %] as a field name.
+
+  [% ELSIF error == "invalid_keyword_id" %]
+    The keyword ID <em>[% id FILTER html %]</em> couldn't be
+    found.
     
   [% ELSIF error == "missing_bug_id" %]
     No [% terms.bug %] ID was given.

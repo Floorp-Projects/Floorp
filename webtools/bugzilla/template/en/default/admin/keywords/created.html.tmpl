@@ -21,34 +21,16 @@
   #%]
 
 [%# INTERFACE:
-  # none
+  # name: string; the name of the current keyword.
   #%]
   
 [% PROCESS global/header.html.tmpl
-  title = "Add keyword"
-  h2 = "This page allows you to add a new keyword."
+  title = "Adding new keyword"
 %]
 
-<form method="post" action="editkeywords.cgi">
-  <table border="0" cellpadding="4" cellspacing="0">
-    <input type="hidden" name="id" value="-1">
-    <tr>
-      <th align="right">Name:</th>
-      <td><input size="64" maxlength="64" name="name" value=""></td>
-    </tr>
-    <tr>
-      <th align="right">Description:</th>
-      <td>
-        <textarea rows="4" cols="64" wrap="virtual"
-        name="description"></textarea>
-      </td>
-    </tr>
-  </table>
-  <hr>
-  <input type="submit" value="Add">
-  <input type="hidden" name="action" value="new">
-</form>
+<p>The keyword [% name FILTER html %] has been added.</p>
 
-<p><a href="editkeywords.cgi">Edit other keywords</a>.</p>
+<p><a href="editkeywords.cgi">Edit existing keywords</a> or
+<a href="editkeywords.cgi?action=add">add another keyword</a>.</p>
 
 [% PROCESS global/footer.html.tmpl %]

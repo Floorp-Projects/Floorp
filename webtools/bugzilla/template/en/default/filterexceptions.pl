@@ -492,6 +492,16 @@
   'const.CONTROLMAPMANDATORY', 
 ],
 
+'admin/keywords/list.html.tmpl' => [
+  'keyword.id',
+  'keyword.bug_count',
+],
+
+'admin/keywords/edit.html.tmpl' => [
+  'keyword_id',
+  'bug_count',
+],
+
 'admin/keywords/confirm-delete.html.tmpl' => [
   'keyword_id',
   'bug_count',

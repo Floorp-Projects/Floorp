@@ -387,6 +387,27 @@
   [% ELSIF error == "invalid_username_or_password" %]
     [% title = "Invalid Username Or Password" %]
     The username or password you entered is not valid.
+
+  [% ELSIF error == "keyword_access_denied" %]
+    [% title = "Access Denied" %]
+    Sorry, you aren't a member of the 'editkeywords' group, and so
+    you aren't allowed to add, modify or delete keywords.
+
+  [% ELSIF error == "keyword_already_exists" %]
+    [% title = "Keyword Already Exists" %]
+    A keyword with the name [% name FILTER html %] already exists.
+
+  [% ELSIF error == "keyword_blank_description" %]
+    [% title = "Blank Keyword Description Not Allowed" %]
+    You must enter a non-blank description for the keyword.
+     
+  [% ELSIF error == "keyword_blank_name" %]
+    [% title = "Blank Keyword Name Not Allowed" %]
+    You must enter a non-blank name for the keyword.
+     
+  [% ELSIF error == "keyword_invalid_name" %]
+    [% title = "Invalid Keyword Name" %]
+    You may not use commas or whitespace in a keyword name.
      
   [% ELSIF error == "login_needed_for_password_change" %]
     [% title = "Login Name Required" %]
