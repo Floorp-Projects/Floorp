@@ -4200,7 +4200,8 @@ if test "$GNU_CC"; then
     # Warnings slamm took out for now (these were giving more noise than help):
     # -Wbad-function-cast - warns when casting a function to a new return type
     # -Wconversion - complained when char's or short's were used a function args
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wshadow -Wpointer-arith -Wcast-align"
+    # -Wshadow - removed because it generates more noise than help --pete
+    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -W -Wno-unused -Wpointer-arith -Wcast-align"
 
         _PEDANTIC=1
     _IGNORE_LONG_LONG_WARNINGS=1
@@ -4221,7 +4222,7 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth"
 
 		if test ! "$QTDIR"; then
-    	_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wshadow"
+    	_WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS}"
 	fi
 
     _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/config-defs.h'
