@@ -43,6 +43,24 @@ public:
                           nsRect* aGap = 0);
 
   /**
+   * Render the outline for an element using css rendering rules
+   * for borders. aSkipSides is a bitmask of the sides to skip
+   * when rendering. If 0 then no sides are skipped.
+   *
+   * Both aDirtyRect and aBorderArea are in the local coordinate space
+   * of aForFrame
+   */
+  static void PaintOutline(nsIPresContext& aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          nsIFrame* aForFrame,
+                          const nsRect& aDirtyRect,
+                          const nsRect& aBorderArea,
+                          const nsStyleSpacing& aBorderStyle,
+                          nsIStyleContext* aStyleContext,
+                          PRIntn aSkipSides,
+                          nsRect* aGap = 0);
+
+  /**
    * Just like PaintBorder, but takes as input a list of border segments
    * rather than a single border style.  Useful for any object that needs to
    * draw a border where an edge is not necessarily homogenous.
@@ -93,6 +111,7 @@ public:
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
                               const nsStyleSpacing& aSpacing,  
+                              PRBool aDoOutline,
                               const nsRect& borderOutside,
                               const nsRect& borderInside,
                               PRIntn aSkipSides,
