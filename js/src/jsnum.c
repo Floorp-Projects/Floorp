@@ -704,7 +704,7 @@ js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
     d = floor(neg ? -d : d);
     d = neg ? -d : d;
     m = JS_BIT(16);
-    d = fmod(d, m);
+    d = fmod(d, (double)m);
     if (d < 0)
 	d += m;
     *ip = (uint16) d;

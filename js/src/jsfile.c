@@ -111,7 +111,7 @@
 #define STDOUTPUT_NAME          "Standard output stream"
 #define STDERROR_NAME           "Standard error stream"
 
-#define RESOLVE_PATH            js_canonicalPath	//js_absolutePath
+#define RESOLVE_PATH            js_canonicalPath	/* js_absolutePath */
 
 /* Error handling */
 typedef enum JSFileErrNum {
