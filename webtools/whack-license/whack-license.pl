@@ -140,7 +140,7 @@ foreach my $filename ( @ARGV ) {
 	#
 	foreach ( 0 .. $#INFILE ) {
 	  
-	  if ( $INFILE[$_] =~ /Netscape Public License *$/ &&
+	  if ( $INFILE[$_] =~ /Netscape Public License *\r?$/ &&
 	       $INFILE[$_ + 1] =~ 
 	       /^(.{0,10})Version 1\.0 *\(the ["'](License|NPL)['"]\)/ )
 	    {
@@ -148,13 +148,13 @@ foreach my $filename ( @ARGV ) {
 	      $foundUnique = "NPL 1.0";
 	      last SCANFILE;
 	      
-	    } elsif ( $INFILE[$_] =~ /Netscape Public *$/ &&
+	    } elsif ( $INFILE[$_] =~ /Netscape Public *\r?$/ &&
 		      $INFILE[$_ + 1] =~ 
 	    /^(.{0,10})License Version 1\.1 *\(the ["'](License|NPL)['"]\)/ 
 
                	      ||
 
-		      $INFILE[$_] =~ /Netscape Public License *$/ &&
+		      $INFILE[$_] =~ /Netscape Public License *\r?$/ &&
                       $INFILE[$_ + 1] =~ 
 	              /^(.{0,10})Version 1\.1 *\(the ["'](License|NPL)['"]\)/ 
 
@@ -378,8 +378,8 @@ s{(^.{0,10}?) ?The contents of this (file|directory) ar(?:handle)?e subject to t
 \4 ?(?:NPL|License)\.) {0,5})(?:
 (?:.{0,10}) {0,4})?(?:
 \4 ?The [Oo]riginal [Cc]ode is (.+) {0,5}
-(?:(\4)( ?)(.+)
-)?(?:.{0,10}))?(?:
+(?:(\4)( ?)(.+
+))?(?:.{0,10}))?(?:
 \4 ?The Initial Developers? of (?:the Original Code|this code under the [MN]PL) (?:is|are) ?(.*) {0,5}
 \4 ?(.*(?:\. )?) {0,2}Portions created by (.*) are Copyright \(C\) (199[6-9]|1998-1999|(?:1997, )?1998, ?1999|1997-1999)(?: (\b.*?)\.?)? {0,5}
 \4 ?(.*?)\.? {0,2}All Rights Reserved\.|
