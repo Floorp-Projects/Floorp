@@ -346,13 +346,20 @@ void nsForm::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame,
     NS_IF_RELEASE(docURL);
 
     // Now pass on absolute url to the click handler
+    nsIPostData* postData = nsnull;
     if (isPost) {
-      nsPostData postData(!isURLEncoded, data.ToNewCString()); 
-      handler->OnLinkClick(aFrame, absURLSpec, target, &postData);
+      nsresult rv;
+      char* postBuffer = data.ToNewCString();
+
+      rv = NS_NewPostData(!isURLEncoded, postBuffer, &postData);
+      if (NS_OK != rv) {
+        delete [] postBuffer;
+      }
+
+      /* The postBuffer is now owned by the IPostData instance */
     }
-    else {
-      handler->OnLinkClick(aFrame, absURLSpec, target, nsnull);
-    }
+    handler->OnLinkClick(aFrame, absURLSpec, target, postData);
+    NS_IF_RELEASE(postData);
 
 DebugPrint("url", absURLSpec);
 DebugPrint("data", data);
