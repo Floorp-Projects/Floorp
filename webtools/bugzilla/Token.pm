@@ -122,7 +122,8 @@ sub IssuePasswordToken {
     $vars->{'emailaddress'} = $loginname . &::Param('emailsuffix');
 
     my $message = "";
-    $template->process("account/email/password.txt.tmpl", $vars, \$message)
+    $template->process("account/password/forgotten-password.txt.tmpl", 
+                                                               $vars, \$message)
       || &::ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
