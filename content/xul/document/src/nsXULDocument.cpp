@@ -1012,7 +1012,6 @@ nsXULDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   mStyleSheets.RemoveElement(aSheet);
-  NS_RELEASE(aSheet);
   
   PRBool enabled = PR_TRUE;
   aSheet->GetEnabled(enabled);
@@ -1039,6 +1038,9 @@ nsXULDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
       }
     }
   }
+
+  aSheet->SetOwningDocument(nsnull);
+  NS_RELEASE(aSheet);
 }
 
 NS_IMETHODIMP
