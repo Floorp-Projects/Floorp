@@ -721,16 +721,28 @@ public class ClassFileWriter {
         }
     }
 
+    /**
+     * @deprecated Use {@link #addInvoke} instead
+     */
     public void add(byte theOpCode, String className, String methodName,
                     String parametersType, String returnType)
+    {
+        addInvoke(theOpCode, className, methodName, parametersType+returnType);
+    }
+
+    public void addInvoke(byte theOpCode, String className, String methodName,
+                          String methodType)
     {
         if (DEBUGCODE) {
             System.out.println("Add "+Integer.toHexString(theOpCode & 0xFF)
                                +", "+className+", "+methodName+", "
-                               +parametersType+", "+returnType);
+                               +methodType);
         }
-        int parameterInfo = sizeOfParameters(parametersType);
-        int newStack = itsStackTop - (parameterInfo & 0xFFFF);
+        int parameterInfo = sizeOfParameters(methodType);
+        int parameterCount = parameterInfo >>> 16;
+        int stackDiff = (short)parameterInfo;
+
+        int newStack = itsStackTop + stackDiff;
         newStack += ByteCode.stackChange(theOpCode);     // adjusts for 'this'
         if (newStack < 0 || Short.MAX_VALUE < newStack) badStack(newStack);
 
@@ -739,26 +751,20 @@ public class ClassFileWriter {
             case ByteCode.INVOKESPECIAL :
             case ByteCode.INVOKESTATIC :
             case ByteCode.INVOKEINTERFACE : {
-                    char returnTypeChar = returnType.charAt(0);
-                    if (returnTypeChar != 'V')
-                        if ((returnTypeChar == 'J') || (returnTypeChar == 'D'))
-                            newStack += 2;
-                        else
-                            newStack++;
                     addToCodeBuffer(theOpCode);
                     if (theOpCode == ByteCode.INVOKEINTERFACE) {
                         short ifMethodRefIndex
                                     = itsConstantPool.addInterfaceMethodRef(
                                                className, methodName,
-                                               parametersType+returnType);
+                                               methodType);
                         addToCodeInt16(ifMethodRefIndex);
-                        addToCodeBuffer((byte)((parameterInfo >> 16) + 1));
+                        addToCodeBuffer((byte)(parameterCount + 1));
                         addToCodeBuffer((byte)0);
                     }
                     else {
                         short methodRefIndex = itsConstantPool.addMethodRef(
                                                className, methodName,
-                                               parametersType+returnType);
+                                               methodType);
                         addToCodeInt16(methodRefIndex);
                     }
                 }
@@ -824,7 +830,7 @@ public class ClassFileWriter {
         }
     }
 
-    public final void addToCodeBuffer(byte b) {
+    private void addToCodeBuffer(byte b) {
         if (itsCurrentMethod == null)
             throw new IllegalArgumentException("No method to add to");
         int N = itsCodeBufferTop;
@@ -1007,29 +1013,33 @@ public class ClassFileWriter {
 
     /*
         Really weird. Returns an int with # parameters in hi 16 bits, and
-        # slots occupied by parameters in the low 16 bits. If Java really
-        supported references we wouldn't have to be this perverted.
+        stack difference removal of parameters from stack and pushing the
+        result (it does not take into account removal of this in case of
+        non-static methods).
+        If Java really supported references we wouldn't have to be this
+        perverted.
     */
     private static int sizeOfParameters(String pString)
     {
         int length = pString.length();
-        if (2 <= length
+        int rightParenthesis = pString.lastIndexOf(')');
+        if (3 <= length /* minimal signature takes at least 3 chars: ()V */
             && pString.charAt(0) == '('
-            && pString.charAt(length - 1) == ')')
+            && 1 <= rightParenthesis && rightParenthesis + 1 < length)
         {
             boolean ok = true;
             int index = 1;
-            int size = 0;
+            int stackDiff = 0;
             int count = 0;
         stringLoop:
-            while (index != length - 1) {
+            while (index != rightParenthesis) {
                 switch (pString.charAt(index)) {
                     default:
                         ok = false;
                         break stringLoop;
                     case 'J' :
                     case 'D' :
-                        ++size;
+                        --stackDiff;
                         // fall thru
                     case 'B' :
                     case 'S' :
@@ -1037,7 +1047,7 @@ public class ClassFileWriter {
                     case 'I' :
                     case 'Z' :
                     case 'F' :
-                        ++size;
+                        --stackDiff;
                         ++count;
                         ++index;
                         continue;
@@ -1060,7 +1070,7 @@ public class ClassFileWriter {
                             case 'I' :
                             case 'Z' :
                             case 'F' :
-                                ++size;
+                                --stackDiff;
                                 ++count;
                                 ++index;
                                 continue;
@@ -1069,11 +1079,13 @@ public class ClassFileWriter {
                         }
                           // fall thru
                     case 'L' : {
-                        ++size;
+                        --stackDiff;
                         ++count;
                         ++index;
                         int semicolon = pString.indexOf(';',  index);
-                        if (semicolon == index) {
+                        if (!(index + 1 <= semicolon
+                            && semicolon < rightParenthesis))
+                        {
                             ok = false;
                             break stringLoop;
                         }
@@ -1083,7 +1095,30 @@ public class ClassFileWriter {
                 }
             }
             if (ok) {
-                return ((count << 16) | size);
+                switch (pString.charAt(rightParenthesis + 1)) {
+                    default:
+                        ok = false;
+                        break;
+                    case 'J' :
+                    case 'D' :
+                        ++stackDiff;
+                        // fall thru
+                    case 'B' :
+                    case 'S' :
+                    case 'C' :
+                    case 'I' :
+                    case 'Z' :
+                    case 'F' :
+                    case 'L' :
+                    case '[' :
+                        ++stackDiff;
+                        // fall thru
+                    case 'V' :
+                        break;
+                }
+                if (ok) {
+                    return ((count << 16) | (0xFFFF & stackDiff));
+                }
             }
         }
         throw new IllegalArgumentException(
