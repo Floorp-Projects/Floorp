@@ -70,12 +70,8 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > .treecell-p
  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open-sel.gif");
 }
 
-box#header {
+#header {
   list-style-image: url("chrome://communicator/skin/sidebar/sidebar-icon.gif");
-}
-
-box#header > toolbar > .circle {
-  padding-top: 2px;
 }
 
 box#reorder {
