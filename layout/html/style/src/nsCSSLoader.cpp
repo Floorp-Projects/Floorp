@@ -291,7 +291,7 @@ public:
                       PRBool& aCompleted, nsICSSStyleSheet*& aSheet);
 
   void DidLoadStyle(nsIStreamLoader* aLoader,
-                    nsString& aStyleData,
+                    nsString* aStyleData,     // takes ownership, will delete when done
                     SheetLoadData* aLoadData,
                     nsresult aStatus);
 
@@ -629,7 +629,7 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
   nsresult result = NS_OK;
 
   if (string && stringLen>0) {
-    nsString strUnicodeBuffer;
+    nsString *strUnicodeBuffer = nsnull;
 
     // First determine the charset (if one is indicated) and set the data member
     // XXX use the HTTP header data too
@@ -649,14 +649,19 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
           PRInt32 unicodeLength=0;
           if (NS_SUCCEEDED(decoder->GetMaxLength(string,stringLen,&unicodeLength))) {
             PRUnichar *unicodeString = nsnull;
-            // make space for the decoding
-            strUnicodeBuffer.SetCapacity(unicodeLength);
-            unicodeString = (PRUnichar *) strUnicodeBuffer.GetUnicode();
-            result = decoder->Convert(string, (PRInt32 *) &stringLen, unicodeString, &unicodeLength);
-            if (NS_SUCCEEDED(result)) {
-              strUnicodeBuffer.SetLength(unicodeLength);
+            strUnicodeBuffer = new nsString;
+            if (nsnull == strUnicodeBuffer) {
+              result = NS_ERROR_OUT_OF_MEMORY;
             } else {
-              strUnicodeBuffer.SetLength(0);
+              // make space for the decoding
+              strUnicodeBuffer->SetCapacity(unicodeLength);
+              unicodeString = (PRUnichar *) strUnicodeBuffer->GetUnicode();
+              result = decoder->Convert(string, (PRInt32 *) &stringLen, unicodeString, &unicodeLength);
+              if (NS_SUCCEEDED(result)) {
+                strUnicodeBuffer->SetLength(unicodeLength);
+              } else {
+                strUnicodeBuffer->SetLength(0);
+              }
             }
           }
           NS_RELEASE(decoder);
@@ -664,6 +669,9 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
       }
     }
     mLoader->DidLoadStyle(aLoader, strUnicodeBuffer, this, aStatus);
+    // NOTE: passed ownership of strUnicodeBuffer to mLoader in the call, 
+    //       so nulling it out for clarity / safety
+    strUnicodeBuffer = nsnull;
   }
 
   // We added a reference when the loader was created. This
@@ -851,7 +859,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aIn,
 
 void
 CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
-                            nsString& aStyleData,
+                            nsString* aStyleData,
                             SheetLoadData* aLoadData,
                             nsresult aStatus)
 {
@@ -859,12 +867,12 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
   NS_ASSERTION(! mSyncCallback, "getting synchronous callback from netlib");
 #endif
 
-  if (NS_SUCCEEDED(aStatus) && (0 < aStyleData.Length()) && (mDocument)) {
+  if (NS_SUCCEEDED(aStatus) && (aStyleData) && (0 < aStyleData->Length()) && (mDocument)) {
     nsresult result;
     nsIUnicharInputStream* uin = nsnull;
 
     // wrap the string with the CSS data up in a unicode input stream.
-    result = NS_NewStringUnicharInputStream(&uin, new nsString(aStyleData));
+    result = NS_NewStringUnicharInputStream(&uin, aStyleData);
 
     if (NS_SUCCEEDED(result)) {
       // XXX We have no way of indicating failure. Silently fail?
