@@ -205,6 +205,9 @@ js_FlushPropertyCache(JSContext *cx);
 extern void
 js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop);
 
+extern void
+js_FlushPropertyCacheNotFounds(JSContext *cx);
+
 extern JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp);
 

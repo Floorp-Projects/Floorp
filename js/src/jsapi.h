@@ -113,6 +113,7 @@ JS_BEGIN_EXTERN_C
 #define JSPROP_EXPORTED         0x08    /* property is exported from object */
 #define JSPROP_GETTER           0x10    /* property holds getter function */
 #define JSPROP_SETTER           0x20    /* property holds setter function */
+#define JSPROP_SHARED           0x40    /* don't copy proto-property on set */
 #define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
@@ -567,7 +568,12 @@ struct JSObjectOps {
     JSNative            construct;
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
-    jsword              spare[2];
+    JSSetObjectSlotOp   setProto;
+    JSSetObjectSlotOp   setParent;
+    jsword              spare1;
+    jsword              spare2;
+    jsword              spare3;
+    jsword              spare4;
 };
 
 /*

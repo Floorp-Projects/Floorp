@@ -183,6 +183,10 @@ typedef JSBool
 (* CRT_CALL JSHasInstanceOp)(JSContext *cx, JSObject *obj, jsval v,
 			     JSBool *bp);
 
+typedef JSBool
+(* CRT_CALL JSSetObjectSlotOp)(JSContext *cx, JSObject *obj, uint32 slot,
+                               JSObject *pobj);
+
 /* JSObjectOps function pointer typedefs. */
 
 typedef JSObjectMap *

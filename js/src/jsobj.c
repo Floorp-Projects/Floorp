@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -77,20 +77,21 @@ js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop);
 #endif
 
 JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
-    js_NewObjectMap,    js_DestroyObjectMap,
+    js_NewObjectMap,        js_DestroyObjectMap,
 #if defined JS_THREADSAFE && defined DEBUG
-    _js_LookupProperty, js_DefineProperty,
+    _js_LookupProperty,     js_DefineProperty,
 #else
-    js_LookupProperty,  js_DefineProperty,
+    js_LookupProperty,      js_DefineProperty,
 #endif
-    js_GetProperty,     js_SetProperty,
-    js_GetAttributes,   js_SetAttributes,
-    js_DeleteProperty,  js_DefaultValue,
-    js_Enumerate,       js_CheckAccess,
-    NULL,               NATIVE_DROP_PROPERTY,
-    js_Call,            js_Construct,
-    NULL,               js_HasInstance,
-    {0,0}
+    js_GetProperty,         js_SetProperty,
+    js_GetAttributes,       js_SetAttributes,
+    js_DeleteProperty,      js_DefaultValue,
+    js_Enumerate,           js_CheckAccess,
+    NULL,                   NATIVE_DROP_PROPERTY,
+    js_Call,                js_Construct,
+    NULL,                   js_HasInstance,
+    js_SetProtoOrParent,    js_SetProtoOrParent,
+    0,0,0,0
 };
 
 #ifdef XP_MAC
@@ -110,7 +111,7 @@ JSClass js_ObjectClass = {
 static JSBool
 obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 static JSBool
@@ -118,10 +119,11 @@ obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 static JSPropertySpec object_props[] = {
     /* These two must come first; see object_props[slot].name usage below. */
-    {js_proto_str, JSSLOT_PROTO,  JSPROP_PERMANENT, obj_getSlot,  obj_setSlot},
-    {js_parent_str,JSSLOT_PARENT, JSPROP_READONLY|JSPROP_PERMANENT,
-                                                    obj_getSlot,  obj_setSlot},
-    {js_count_str, 0,             JSPROP_PERMANENT, obj_getCount, obj_getCount},
+    {js_proto_str, JSSLOT_PROTO, JSPROP_PERMANENT|JSPROP_SHARED,
+                                                  obj_getSlot,  obj_setSlot},
+    {js_parent_str,JSSLOT_PARENT,JSPROP_READONLY|JSPROP_PERMANENT|JSPROP_SHARED,
+                                                  obj_getSlot,  obj_setSlot},
+    {js_count_str, 0,            JSPROP_PERMANENT,obj_getCount, obj_getCount},
     {0,0,0,0,0}
 };
 
@@ -161,28 +163,19 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-JS_STATIC_DLL_CALLBACK(JSBool)
+static JSBool
 obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSObject *obj2;
+    JSObject *pobj;
     uint32 slot;
 
     if (!JSVAL_IS_OBJECT(*vp))
 	return JS_TRUE;
-    obj2 = JSVAL_TO_OBJECT(*vp);
+    pobj = JSVAL_TO_OBJECT(*vp);
     slot = (uint32) JSVAL_TO_INT(id);
     if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
         return JS_FALSE;
-    while (obj2) {
-	if (obj2 == obj) {
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-				 JSMSG_CYCLIC_VALUE, object_props[slot].name);
-	    return JS_FALSE;
-	}
-	obj2 = JSVAL_TO_OBJECT(OBJ_GET_SLOT(cx, obj2, slot));
-    }
-    OBJ_SET_SLOT(cx, obj, slot, *vp);
-    return JS_TRUE;
+    return js_SetProtoOrParent(cx, obj, slot, pobj);
 }
 
 static JSBool
@@ -219,6 +212,76 @@ out:
 #define object_props NULL
 
 #endif /* !JS_HAS_OBJ_PROTO_PROP */
+
+JSBool
+js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj)
+{
+    JSRuntime *rt;
+    JSObject *obj2, *oldproto;
+    JSScope *scope, *newscope;
+
+    /*
+     * Serialize all proto and parent setting in order to detect cycles.
+     * We nest locks in this function, and only here, in the following orders:
+     *
+     * (1)  rt->setSlotLock < pobj's scope lock;
+     *      rt->setSlotLock < pobj's proto-or-parent's scope lock;
+     *      rt->setSlotLock < pobj's grand-proto-or-parent's scope lock;
+     *      etc...
+     * (2)  rt->setSlotLock < obj's scope lock < pobj's scope lock.
+     *
+     * We avoid AB-BA deadlock by restricting obj from being on pobj's parent
+     * or proto chain (pobj may already be on obj's parent or proto chain; it
+     * could be moving up or down).  We finally order obj with respect to pobj
+     * at the bottom of this routine (just before releasing rt->setSlotLock),
+     * by making pobj be obj's prototype or parent.
+     *
+     * After we have set the slot and released rt->setSlotLock, another call
+     * to js_SetProtoOrParent could nest locks according to the first order
+     * list above, but it cannot deadlock with any other thread.  For there
+     * to be a deadlock, other parts of the engine would have to nest scope
+     * locks in the opposite order.  XXXbe ensure they don't!
+     */
+    rt = cx->runtime;
+    JS_ACQUIRE_LOCK(rt->setSlotLock);
+    obj2 = pobj;
+    while (obj2) {
+        if (obj2 == obj) {
+            JS_RELEASE_LOCK(rt->setSlotLock);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_CYCLIC_VALUE, object_props[slot].name);
+            return JS_FALSE;
+        }
+        obj2 = JSVAL_TO_OBJECT(OBJ_GET_SLOT(cx, obj2, slot));
+    }
+
+    if (slot == JSSLOT_PROTO && OBJ_IS_NATIVE(obj) && pobj) {
+        JS_LOCK_OBJ(cx, obj);
+        scope = OBJ_SCOPE(obj);
+        oldproto = JSVAL_TO_OBJECT(LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO));
+        if (oldproto &&
+            OBJ_SCOPE(oldproto) == scope &&
+            OBJ_IS_NATIVE(pobj) &&
+            OBJ_SCOPE(pobj) != scope)
+        {
+            /* We can't deadlock because we checked for cycles above (2). */
+            JS_LOCK_OBJ(cx, pobj);
+            newscope = (JSScope *) js_HoldObjectMap(cx, pobj->map);
+            obj->map = &newscope->map;
+            js_DropObjectMap(cx, &scope->map, obj);
+            JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
+            scope = newscope;
+        }
+        LOCKED_OBJ_SET_SLOT(obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(pobj));
+        JS_UNLOCK_SCOPE(cx, scope);
+        js_FlushPropertyCacheNotFounds(cx);
+    } else {
+        OBJ_SET_SLOT(cx, obj, slot, OBJECT_TO_JSVAL(pobj));
+    }
+
+    JS_RELEASE_LOCK(rt->setSlotLock);
+    return JS_TRUE;
+}
 
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
 js_hash_object(const void *key)
@@ -1174,7 +1237,10 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_DeleteProperty,    with_DefaultValue,
     with_Enumerate,         with_CheckAccess,
     with_ThisObject,        NATIVE_DROP_PROPERTY,
-    0,0,0,0,{0,0}
+    NULL,                   NULL,
+    NULL,                   NULL,
+    js_SetProtoOrParent,    js_SetProtoOrParent,
+    0,0,0,0
 };
 
 static JSObjectOps *
@@ -1251,7 +1317,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 	return NULL;
     }
 #endif
-    
+
     /* ECMA (15.1.2.1) says 'eval' is also a property of the global object. */
     if (!OBJ_GET_PROPERTY(cx, proto, (jsid)cx->runtime->atomState.evalAtom,
                           &fval)) {
@@ -1261,7 +1327,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
                              fval, NULL, NULL, 0, NULL)) {
 	return NULL;
     }
-    
+
     return proto;
 }
 
@@ -1614,8 +1680,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSScopeProperty *sprop;
 
     /*
-     * Handle old bug that treated empty string as zero index.
-     * Also convert string indices to numbers if applicable.
+     * Handle old bug that took empty string as zero index.  Also convert
+     * string indices to integers if appropriate.
      */
     CHECK_FOR_FUNNY_INDEX(id);
 
@@ -1726,8 +1792,8 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSScopeProperty *sprop;
 
     /*
-     * Handle old bug that treated empty string as zero index.
-     * Also convert string indices to numbers if applicable.
+     * Handle old bug that took empty string as zero index.  Also convert
+     * string indices to integers if appropriate.
      */
     CHECK_FOR_FUNNY_INDEX(id);
 
@@ -1910,8 +1976,8 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return JS_FALSE;
     if (!sprop) {
         /*
-         * Handle old bug that treated empty string as zero index.
-         * Also convert string indices to numbers if applicable.
+         * Handle old bug that took empty string as zero index.  Also convert
+         * string indices to integers if appropriate.
          */
         CHECK_FOR_FUNNY_INDEX(id);
 
@@ -1960,42 +2026,37 @@ JSBool
 js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSRuntime *rt;
-    JSScope *scope, *protoscope;
-    JSScopeProperty *sprop, *protosprop;
+    JSClass *clasp;
+    JSScope *scope;
     JSHashNumber hash;
     JSSymbol *sym, *protosym;
+    JSScopeProperty *sprop;
+    jsval userid;
     JSObject *proto, *tmp;
-    jsval protoid;
-    JSPropertyOp protogetter, protosetter;
-    uintN protoattrs;
-    JSClass *clasp;
+    JSPropertyOp getter, setter;
+    uintN attrs;
+    JSBool ok;
     jsval pval;
     uint32 slot;
     JSString *str;
 
-    rt = cx->runtime;
-    JS_LOCK_OBJ(cx, obj);
-    protoid = protoattrs = 0;   /* Suppress use-before-set gcc warning */
-    protogetter = protosetter = NULL; /* Suppress use-before-set gcc warning */
-
-    scope = js_GetMutableScope(cx, obj);
-    if (!scope) {
-	JS_UNLOCK_OBJ(cx, obj);
-	return JS_FALSE;
-    }
-
     /*
-     * Handle old bug that treated empty string as zero index.
-     * Also convert string indices to numbers if applicable.
+     * Handle old bug that took empty string as zero index.  Also convert
+     * string indices to integers if appropriate.
      */
     CHECK_FOR_FUNNY_INDEX(id);
 
+    rt = cx->runtime;
+    JS_LOCK_OBJ(cx, obj);
+    clasp = LOCKED_OBJ_GET_CLASS(obj);
+    scope = OBJ_SCOPE(obj);
     hash = js_HashValue(id);
+
     sym = scope->ops->lookup(cx, scope, id, hash);
     if (sym) {
 	sprop = sym_property(sym);
 #if JS_HAS_OBJ_WATCHPOINT
-	if (!sprop) {
+	if (!sprop && scope->object == obj) {
 	    uint32 nslots;
 	    jsval *slots;
 
@@ -2026,69 +2087,102 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	sprop = NULL;
     }
 
-    if (!sprop) {
+    if (!sprop || scope->object != obj) {
 	/* Find a prototype property with the same id. */
-	proto = LOCKED_OBJ_GET_PROTO(obj);
-	protosprop = NULL;
+        if (sprop) {
+            /* Already found, check for a readonly prototype property. */
+            attrs = sprop->attrs;
+            if (attrs & JSPROP_READONLY)
+                goto read_only;
 
-	JS_UNLOCK_OBJ(cx, obj);
-	while (proto) {
-	    JS_LOCK_OBJ(cx, proto);
-	    protoscope = OBJ_SCOPE(proto);
-	    if (MAP_IS_NATIVE(&protoscope->map)) {
-		protosym = protoscope->ops->lookup(cx, protoscope, id, hash);
-		if (protosym) {
-		    protosprop = sym_property(protosym);
-		    if (protosprop) {
-			protoattrs = protosprop->attrs;
-#if JS_HAS_GETTER_SETTER
-                        if (protoattrs & JSPROP_SETTER) {
-                            JSBool ok;
+            /* Don't clone a setter or shared prototype property. */
+            if (attrs & (JSPROP_SETTER | JSPROP_SHARED)) {
+                JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
+                proto = scope->object;
+                scope = OBJ_SCOPE(proto);
+                JS_UNLOCK_SCOPE(cx, scope);
 
-                            JS_ATOMIC_ADDREF(&protosprop->nrefs, 1);
+                ok = SPROP_SET(cx, sprop, obj, obj, vp);
+                JS_LOCK_OBJ_VOID(cx, proto,
+                                 js_DropScopeProperty(cx, scope, sprop));
+                return ok;
+            }
+
+            /* XXXbe ECMA violation: inherit attrs, etc. */
+            userid = sprop->id;
+            getter = SPROP_GETTER_SCOPE(sprop, scope);
+            setter = SPROP_SETTER_SCOPE(sprop, scope);
+            sym = NULL;
+        } else {
+            /* Not found via a shared scope: we must follow the proto chain. */
+            proto = LOCKED_OBJ_GET_PROTO(obj);
+            sprop = NULL;
+            attrs = JSPROP_ENUMERATE;
+            userid = JSVAL_NULL;
+            getter = clasp->getProperty;
+            setter = clasp->setProperty;
+
+            JS_UNLOCK_OBJ(cx, obj);
+            while (proto) {
+                JS_LOCK_OBJ(cx, proto);
+                if (OBJ_IS_NATIVE(proto)) {
+                    scope = OBJ_SCOPE(proto);
+                    protosym = scope->ops->lookup(cx, scope, id, hash);
+                    if (protosym) {
+                        sprop = sym_property(protosym);
+                        if (sprop) {
+                            /*
+                             * Repeat the readonly and setter/shared code here.
+                             * It's tricky to fuse with the code above because
+                             * we must hold proto's scope-lock while loading
+                             * from sprop, and finally release that lock and
+                             * reacquire obj's scope-lock in this case (where
+                             * obj and proto are not sharing a scope).
+                             */
+                            attrs = sprop->attrs;
+                            if (attrs & JSPROP_READONLY)
+                                goto read_only;
+                            if (attrs & (JSPROP_SETTER | JSPROP_SHARED)) {
+                                JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
+                                JS_UNLOCK_SCOPE(cx, scope);
+
+                                ok = SPROP_SET(cx, sprop, obj, obj, vp);
+                                JS_LOCK_OBJ_VOID(cx, proto,
+                                    js_DropScopeProperty(cx, scope, sprop));
+                                return ok;
+                            }
+
+                            /* XXXbe ECMA violation: inherit attrs, etc. */
+                            userid = sprop->id;
+                            getter = SPROP_GETTER_SCOPE(sprop, scope);
+                            setter = SPROP_SETTER_SCOPE(sprop, scope);
                             JS_UNLOCK_OBJ(cx, proto);
-
-                            ok = SPROP_SET(cx, protosprop, obj, obj, vp);
-                            JS_LOCK_OBJ_VOID(cx, proto,
-                                             js_DropScopeProperty(cx,
-                                                                  protoscope,
-                                                                  protosprop));
-                            return ok;
+                            break;
                         }
-#endif /* JS_HAS_GETTER_SETTER */
+                    }
+                }
+                tmp = LOCKED_OBJ_GET_PROTO(proto);
+                JS_UNLOCK_OBJ(cx, proto);
+                proto = tmp;
+            }
+            JS_LOCK_OBJ(cx, obj);
+        }
 
-			protoid = protosprop->id;
-			protogetter = SPROP_GETTER_SCOPE(protosprop,protoscope);
-			protosetter = SPROP_SETTER_SCOPE(protosprop,protoscope);
-			JS_UNLOCK_OBJ(cx, proto);
-			break;
-		    }
-		}
-	    }
-	    tmp = LOCKED_OBJ_GET_PROTO(proto);
-	    JS_UNLOCK_OBJ(cx, proto);
-	    proto = tmp;
-	}
-	JS_LOCK_OBJ(cx, obj);
-
-	/* Make a new property descriptor with the right heritage. */
-	clasp = LOCKED_OBJ_GET_CLASS(obj);
-	if (protosprop) {
-	    if (protoattrs & JSPROP_READONLY)
-		goto read_only;
-	    sprop = js_NewScopeProperty(cx, scope, id,
-					protogetter, protosetter,
-					protoattrs);
-	    sprop->id = protoid;
-	} else {
-	    sprop = js_NewScopeProperty(cx, scope, id,
-					clasp->getProperty, clasp->setProperty,
-					JSPROP_ENUMERATE);
-	}
-	if (!sprop) {
+	/* Find or make a property descriptor with the right heritage. */
+        scope = js_MutateScope(cx, obj, id, getter, setter, attrs, &sprop);
+        if (!scope) {
 	    JS_UNLOCK_OBJ(cx, obj);
 	    return JS_FALSE;
-	}
+        }
+        if (!sprop) {
+            sprop = js_NewScopeProperty(cx, scope, id, getter, setter, attrs);
+            if (!sprop) {
+                JS_UNLOCK_OBJ(cx, obj);
+                return JS_FALSE;
+            }
+            if (!JSVAL_IS_NULL(userid))
+                sprop->id = userid;
+        }
 
 	/* XXXbe called with obj locked */
 	if (!clasp->addProperty(cx, obj, sprop->id, vp)) {
@@ -2252,8 +2346,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     *rval = JSVERSION_IS_ECMA(cx->version) ? JSVAL_TRUE : JSVAL_VOID;
 
     /*
-     * Handle old bug that treated empty string as zero index.
-     * Also convert string indices to numbers if applicable.
+     * Handle old bug that took empty string as zero index.  Also convert
+     * string indices to integers if appropriate.
      */
     CHECK_FOR_FUNNY_INDEX(id);
 
@@ -2605,7 +2699,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[-2]));
     if (!clasp->call) {
-        /* 
+        /*
          * The decompiler may need to access the args of the function in
          * progress, so we switch the function pointer in the frame to the
          * function below us, rather than the one we had hoped to call.

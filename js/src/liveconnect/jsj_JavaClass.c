@@ -559,7 +559,9 @@ JSObjectOps JavaClass_ops = {
     jsj_JavaConstructorWrapper, /* construct */
     NULL,                       /* xdrObject */
     JavaClass_hasInstance,      /* hasInstance */
-    {0, 0},
+    NULL,                       /* setProto */
+    NULL,                       /* setParent */
+    0,0,0,0                     /* spare */
 };
 
 static JSObjectOps *

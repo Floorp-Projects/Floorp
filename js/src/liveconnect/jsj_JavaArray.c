@@ -422,7 +422,9 @@ JSObjectOps JavaArray_ops = {
     NULL,                       /* construct */
     NULL,                       /* xdrObject */
     NULL,                       /* hasInstance */
-    {0, 0},                     /* spare */
+    NULL,                       /* setProto */
+    NULL,                       /* setParent */
+    0,0,0,0                     /* spare */
 };
 
 static JSObjectOps *

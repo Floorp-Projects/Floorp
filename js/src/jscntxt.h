@@ -153,6 +153,9 @@ struct JSRuntime {
 
     /* Used to synchronize down/up state change; uses rtLock. */
     PRCondVar           *stateChange;
+
+    /* Used to serialize cycle checks when setting __proto__ or __parent__. */
+    PRLock              *setSlotLock;
 #endif
 };
 

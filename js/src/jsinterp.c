@@ -104,6 +104,36 @@ js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
     cache->empty = empty;
 }
 
+void
+js_FlushPropertyCacheNotFounds(JSContext *cx)
+{
+    JSPropertyCache *cache;
+    JSBool empty;
+    JSPropertyCacheEntry *end, *pce, entry;
+    JSProperty *pce_prop;
+
+    cache = &cx->runtime->propertyCache;
+    if (cache->empty)
+        return;
+
+    empty = JS_TRUE;
+    end = &cache->table[PROPERTY_CACHE_SIZE];
+    for (pce = &cache->table[0]; pce < end; pce++) {
+        PCE_LOAD(cache, pce, entry);
+        pce_prop = PCE_PROPERTY(entry);
+        if (pce_prop) {
+            if (!PROP_FOUND(pce_prop)) {
+                PCE_OBJECT(entry) = NULL;
+                PCE_PROPERTY(entry) = NULL;
+                PCE_STORE(cache, pce, entry);
+            } else {
+                empty = JS_FALSE;
+            }
+        }
+    }
+    cache->empty = empty;
+}
+
 /*
  * Class for for/in loop property iterator objects.
  */
