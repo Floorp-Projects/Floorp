@@ -1349,14 +1349,16 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext& aPresContext,
 }
 
 
-NS_IMETHODIMP
-FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+static nsresult
+CaptureFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
 
   // See if the frame is stateful.
-  nsCOMPtr<nsIStatefulFrame> statefulFrame = do_QueryInterface(aFrame);
+  // Frames are not ref-counted so no addref/release is required on statefulFrame.
+  nsIStatefulFrame* statefulFrame = nsnull;
+  aFrame->QueryInterface(nsIStatefulFrame::GetIID(), (void**) &statefulFrame);
   if (nsnull != statefulFrame) {
     // If so, get the content ID, state type and the state and
     // add an association between (ID, type) and (state) to the
@@ -1380,36 +1382,45 @@ FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
     }
   }
 
-  // XXX We are only going through the principal child list right now.
-  // Need to talk to Troy to find out about other kinds of
-  // child lists and whether they will contain stateful frames.
-  // (psl) YES, you need to iterate ALL child lists
-
-  // Capture frame state for the first child 
-  nsIFrame* child = nsnull;
-  rv = aFrame->FirstChild(nsnull, &child);
-  if (NS_SUCCEEDED(rv) && nsnull != child) {
-    rv = CaptureFrameState(child, aState);
-  }
-
-  // Capture frame state for the next sibling
-  nsIFrame* sibling = nsnull;
-  rv = aFrame->GetNextSibling(&sibling);
-  if (NS_SUCCEEDED(rv) && nsnull != sibling) {
-    rv = CaptureFrameState(sibling, aState);    
-  }
-
   return rv;
 }
 
 NS_IMETHODIMP
-FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+FrameManager::CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+{
+  nsresult rv = NS_OK;
+  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
+
+  rv = CaptureFrameStateFor(aFrame, aState);
+
+  // Now capture state recursively for the frame hierarchy rooted at aFrame
+  nsIAtom*  childListName = nsnull;
+  PRInt32   childListIndex = 0;
+  do {    
+    nsIFrame* childFrame;
+    aFrame->FirstChild(childListName, &childFrame);
+    while (childFrame) {             
+      rv = CaptureFrameState(childFrame, aState);
+      // Get the next sibling child frame
+      childFrame->GetNextSibling(&childFrame);
+    }
+    NS_IF_RELEASE(childListName);
+    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+  } while (childListName);
+
+  return rv;
+}
+
+static nsresult
+RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState)
 {
   nsresult rv = NS_OK;
   NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
 
   // See if the frame is stateful.
-  nsCOMPtr<nsIStatefulFrame> statefulFrame = do_QueryInterface(aFrame);
+  // Frames are not ref-counted so no addref/release is required on statefulFrame.
+  nsIStatefulFrame* statefulFrame = nsnull;
+  aFrame->QueryInterface(nsIStatefulFrame::GetIID(), (void**) &statefulFrame);
   if (nsnull != statefulFrame) {
     // If so, get the content ID, state type and the frame state and
     // ask the frame object to restore its state.    
@@ -1430,26 +1441,33 @@ FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
         }
       }
     }
-  }
+  }  
 
-  // XXX We are only going through the principal child list right now.
-  // Need to talk to Troy to find out about other kinds of
-  // child lists and whether they will contain stateful frames.
-  // (psl) YES, you need to iterate ALL child lists
+  return rv;
+}
 
-  // Capture frame state for the first child 
-  nsIFrame* child = nsnull;
-  rv = aFrame->FirstChild(nsnull, &child);
-  if (NS_SUCCEEDED(rv) && nsnull != child) {
-    rv = RestoreFrameState(child, aState);
-  }
+NS_IMETHODIMP
+FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
+{
+  nsresult rv = NS_OK;
+  NS_PRECONDITION(nsnull != aFrame && nsnull != aState, "null parameters passed in");
+  
+  rv = RestoreFrameStateFor(aFrame, aState);
 
-  // Capture frame state for the next sibling
-  nsIFrame* sibling = nsnull;
-  rv = aFrame->GetNextSibling(&sibling);
-  if (NS_SUCCEEDED(rv) && nsnull != sibling) {
-    rv = RestoreFrameState(sibling, aState);    
-  }
+  // Now restore state recursively for the frame hierarchy rooted at aFrame
+  nsIAtom*  childListName = nsnull;
+  PRInt32   childListIndex = 0;
+  do {    
+    nsIFrame* childFrame;
+    aFrame->FirstChild(childListName, &childFrame);
+    while (childFrame) {             
+      rv = RestoreFrameState(childFrame, aState);
+      // Get the next sibling child frame
+      childFrame->GetNextSibling(&childFrame);
+    }
+    NS_IF_RELEASE(childListName);
+    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+  } while (childListName);
 
   return rv;
 }
