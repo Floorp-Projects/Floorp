@@ -908,9 +908,12 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
 
   if (TRUE == result) {
     if (mPrintSettings && prntdlg.hDevMode != NULL) {
-      LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
-      SetPrintSettingsFromDevMode(mPrintSettings, devMode);
-      ::GlobalUnlock(prntdlg.hDevMode);
+      // when it is quite use the printsettings passed 
+      if (!aQuiet) {
+        LPDEVMODE devMode = (LPDEVMODE)::GlobalLock(prntdlg.hDevMode);
+        SetPrintSettingsFromDevMode(mPrintSettings, devMode);
+        ::GlobalUnlock(prntdlg.hDevMode);
+      }
     }
     DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
     if ( NULL != devnames ) {
@@ -996,7 +999,9 @@ nsDeviceContextSpecWin :: ShowNativePrintDialog(nsIWidget *aWidget, PRBool aQuie
       // remove comment if you want to override the values from
       // the native setup with those specified in the Page Setup
       // mainly Paper Size, Orientation
-      // SetupPaperInfoFromSettings();
+      if (aQuiet) {
+       SetupPaperInfoFromSettings();
+      }
 
     }
   } else {
