@@ -64,7 +64,7 @@ public:
     NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
     NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
                                        const nsRect& aDirtyRect);
-	NS_IMETHOD_(void) HandleDataModelEvent(int event, nsHierarchicalDataItem* pItem) ;
+	virtual void HandleDataModelEvent(int event, nsHierarchicalDataItem* pItem) ;
 
     // nsIToolbarItem
     NS_IMETHOD Repaint(PRBool aIsSynchronous);
