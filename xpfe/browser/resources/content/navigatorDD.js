@@ -95,6 +95,7 @@ var personalToolbarObserver = {
       var uri = aEvent.target.id;
       //if (!isBookmark(uri)) 
       //  return;
+
       
       var title = aEvent.target.value;
       var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
@@ -107,7 +108,7 @@ var personalToolbarObserver = {
       return flavourList;
     },
   
-  onDrop: function (aEvent, aData) 
+  onDrop: function (aEvent, aData, aDragSession) 
     {
       // temporary
       if (!isPToolbarDNDEnabled())
@@ -147,7 +148,7 @@ var personalToolbarObserver = {
       rdfContainer.InsertElementAt(elementRes, newIndex, true);
     },
   
-  onDragOver: function (aEvent, aFlavour)
+  onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       // temporary
       if (!isPToolbarDNDEnabled())
@@ -175,6 +176,7 @@ var contentAreaDNDObserver = {
     {  
       var htmlstring = null;
       var textstring = null;
+      var isLink = false;
       var domselection = window._content.getSelection();
       if (domselection && !domselection.isCollapsed && 
           domselection.containsNode(aEvent.target,false))
@@ -197,6 +199,7 @@ var contentAreaDNDObserver = {
                 htmlstring = "<img src=\"" + textstring + "\">";
                 break;
               case 'A':
+                isLink = true;
                 if (aEvent.target.href)
                   {
                     textstring = aEvent.target.getAttribute("href");
@@ -224,12 +227,13 @@ var contentAreaDNDObserver = {
   
       var flavourList = { };
       flavourList["text/html"] = { width: 2, data: htmlstring };
-      flavourList["text/x-moz-url"] = { width: 2, data: textstring + " " + "( TEMP TITLE )" };
+      if (isLink) 
+        flavourList["text/x-moz-url"] = { width: 2, data: textstring + " " + "( TEMP TITLE )" };
       flavourList["text/unicode"] = { width: 2, data: textstring };
       return flavourList;
     },
 
-  onDrop: function (aEvent, aData)
+  onDrop: function (aEvent, aData, aDragSession)
     {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
@@ -282,7 +286,7 @@ var proxyIconDNDObserver = {
 };
 
 var homeButtonObserver = {
-  onDrop: function (aEvent, aData)
+  onDrop: function (aEvent, aData, aDragSession)
     {
       var aData = aData.length ? aData[0] : aData;
       var url = retrieveURLFromData(aData);
@@ -301,16 +305,7 @@ var homeButtonObserver = {
           var checkMsg    = bundle.GetStringFromName("dontremindme");
           var okButton    = bundle.GetStringFromName("droponhomeokbutton");
           var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil! 
-/*
-          block.SetInt(2, 2);
-          block.SetString(0, bundle.GetStringFromName("droponhomemsg"));
-          block.SetString(3, bundle.GetStringFromName("droponhometitle"));
-          block.SetString(2, "chrome://navigator/skin/home.gif");
-          block.SetString(1, bundle.GetStringFromName("dontremindme"));
-          block.SetInt(1, 1); // checkbox is checked
-          block.SetString(8, bundle.GetStringFromName("droponhomeokbutton"));
-          
-*/
+
           commonDialogService.UniversalDialog(window, null, promptTitle, promptMsg, checkMsg, 
                                               okButton, null, null, null, null, null, { }, { },
                                               iconURL, checkValue, 2, 0, null, pressedVal);
@@ -327,7 +322,7 @@ var homeButtonObserver = {
         }
     },
     
-  onDragOver: function (aEvent, aFlavour)
+  onDragOver: function (aEvent, aFlavour, aDragSession)
     {
       var homeButton = aEvent.target;
       // preliminary attribute name for now
@@ -337,7 +332,7 @@ var homeButtonObserver = {
       statusTextFld.setAttribute("value", bundle.GetStringFromName("droponhomebutton"));
     },
     
-  onDragExit: function ()
+  onDragExit: function (aEvent, aDragSession)
     {
       var homeButton = document.getElementById("homebutton");
       homeButton.removeAttribute("home-dragover");
