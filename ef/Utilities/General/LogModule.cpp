@@ -125,7 +125,9 @@ setLogFile(const char* inFileName)
 void LogModuleObject::
 flushLogFile()
 {
-    if (file)
+    FILE *f;
+    f = getFile();
+    if (f)
 	fflush(file);
 }
 #endif
