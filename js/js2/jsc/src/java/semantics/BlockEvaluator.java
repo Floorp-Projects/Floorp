@@ -876,9 +876,11 @@ public class BlockEvaluator extends Evaluator {
             Debugger.trace( "defining ProgramNode: " + node );
         }
 
-        node.statements.first().markLeader();
-        node.statements.evaluate(context,this);
-        context.exitBlock(node.statements.last());
+        if( node.statements != null ) {
+    		node.statements.first().markLeader();
+            node.statements.evaluate(context,this);
+            context.exitBlock(node.statements.last());
+		}
         return UndefinedValue.undefinedValue;
 
     }

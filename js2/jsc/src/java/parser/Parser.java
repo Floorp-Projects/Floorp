@@ -31,7 +31,7 @@ import java.lang.reflect.*;
 
 public class Parser implements Tokens, Errors {
 
-    private static final boolean debug = false;
+    private static final boolean debug = true;
     private static final boolean debug_lookahead = false;
     private static final boolean debug_match = false;
 
@@ -42,6 +42,7 @@ public class Parser implements Tokens, Errors {
     private   boolean isNewLine   = false;
     protected Vector  statements  = null;
     protected Vector  functions   = null;
+	private   int     errors      = 0;
 
     public static PrintStream out;
     public static void setOut(String filename) throws Exception {
@@ -213,15 +214,12 @@ public class Parser implements Tokens, Errors {
 
         int result = error_token;
 
-        if( !lookahead( expectedTokenClass ) )
-            scanner.error(scanner.syntax_error,"Expecting \'" + Token.getTokenClassName(expectedTokenClass) +
-	                      "\' before '" + scanner.getTokenSource(nexttoken),error_token);
-            /*
-            throw new Exception( "\nExpecting \'" + Token.getTokenClassName(expectedTokenClass) +
-	                      "\' before '" + scanner.getTokenSource(nexttoken) +
-                          "' in the text '" + scanner.getLineText() + "'" );
-            */
-        else
+        if( !lookahead( expectedTokenClass ) ) {
+            scanner.error(scanner.syntax_error,"Expecting " + Token.getTokenClassName(expectedTokenClass) +
+	                      " before " + scanner.getTokenSource(nexttoken),error_token);
+            nexttoken = empty_token;
+			throw new Exception("syntax error");
+        } else
         if( expectedTokenClass != scanner.getTokenClass( nexttoken ) ) {
 	        result    = thistoken;
 	    } else {
@@ -379,6 +377,10 @@ public class Parser implements Tokens, Errors {
 	    }
     }
 
+	public int errorCount() {
+	    return scanner.errorCount;
+	}
+
     /**
      * Start grammar.
      */
@@ -408,6 +410,7 @@ public class Parser implements Tokens, Errors {
             $$ = NodeFactory.Identifier(scanner.getTokenText(match(identifier_token)));
         } else {
             scanner.error(scanner.syntax_error,"Expecting an Identifier.");
+			throw new Exception();
         }
 
         if( debug ) {
@@ -690,7 +693,7 @@ public class Parser implements Tokens, Errors {
         } else {
             scanner.error(scanner.syntax_error,"Expecting <primary expression> before '" + 
                           scanner.getTokenSource(nexttoken),error_token);
-            $$ = null; // Make the compiler happy.
+			throw new Exception();
         }
 
         if( debug ) {
@@ -757,8 +760,11 @@ public class Parser implements Tokens, Errors {
         Node $$;
     
         match( leftparen_token ); 
+		int mark = scanner.input.positionOfMark();
 
         $$ = NodeFactory.ParenthesizedExpression(parseAssignmentExpression(allowIn_mode));
+
+        $$.position = mark;
 
         match( rightparen_token );
          
@@ -2114,7 +2120,9 @@ public class Parser implements Tokens, Errors {
             match(class_token);
             $$ = NodeFactory.ClassofExpression($1);
         } else {
+		    int mark = scanner.input.positionOfMark();
             $2 = parseQualifiedIdentifier();
+			$2.position = mark;
             $$ = NodeFactory.MemberExpression($1,$2);
         }
 
@@ -3348,9 +3356,11 @@ public class Parser implements Tokens, Errors {
             Debugger.trace( "begin parseTopStatement" );
         }
 
-        Node $$;
+        Node $$ = null;
     
-        if( lookahead(use_token) ) {
+        try {
+		
+		if( lookahead(use_token) ) {
             $$ = parseLanguageDeclaration();
             matchNoninsertableSemicolon(mode);
         } else if( lookahead(package_token) ) {
@@ -3358,6 +3368,11 @@ public class Parser implements Tokens, Errors {
         } else {
             $$ = parseStatement(mode);
         }
+
+		} catch ( Exception x ) {
+		    // Do nothing. We are simply recovering from an error in the
+			// current statement.
+		}
 
         if( debug ) {
             Debugger.trace( "finish parseTopStatement" );
@@ -4717,6 +4732,7 @@ public class Parser implements Tokens, Errors {
 
             if( newline() ) {
                 scanner.error(scanner.syntax_error,"No line break in attributes list.");
+			    throw new Exception();
             }
 
             $2 = parseAttributes();
@@ -5366,6 +5382,7 @@ public class Parser implements Tokens, Errors {
         
         if( newline() ) {
             scanner.error(scanner.syntax_error,"No line break in multiple attributes definition.");
+			throw new Exception();
         }
             
         $1 = NodeFactory.List($1,parseAttribute());
@@ -6648,12 +6665,17 @@ public class Parser implements Tokens, Errors {
 
         Node $$;
         
-        $$ = NodeFactory.Program(parseTopStatements());
+		$$ = parseTopStatements();
             
         if( debug ) {
             Debugger.trace( "finish parseProgram" );
         }
 
+		if( scanner.errorCount == 0 ) {
+		    $$ = NodeFactory.Program($$);
+		} else {
+            $$ = NodeFactory.Program(null);
+        }
         return $$;
     }
 

@@ -31,7 +31,7 @@ public class Node {
     private static final boolean debug = false;
 
     Block block;
-    private int position;
+    int position;
 
     public Node() {
     }

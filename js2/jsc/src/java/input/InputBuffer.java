@@ -30,7 +30,7 @@ import java.io.*;
 public class InputBuffer implements CharacterClasses {
 
     private static final boolean debug = false;
-    private static final boolean debug_nextchar = false;
+    private static final boolean debug_nextchar = true;
     private static final boolean debug_retract = false;
 
     StringBuffer lineA = new StringBuffer();

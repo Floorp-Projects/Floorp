@@ -933,11 +933,13 @@ public class JSILGenerator extends Evaluator implements Tokens {
     }
 
     Value evaluate( Context context, ProgramNode node ) throws Exception { 
-        String tag = "Program"; 
-        emit(context.getIndent()+tag);
-        context.indent++;
-        node.statements.evaluate(context,this); 
-        context.indent--;
+        if( node.statements != null ) {
+            String tag = "Program"; 
+            emit(context.getIndent()+tag);
+            context.indent++;
+            node.statements.evaluate(context,this); 
+            context.indent--;
+        }
         return null;
     }
 }
