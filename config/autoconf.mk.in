@@ -148,6 +148,7 @@ OBJ_SUFFIX	= @OBJ_SUFFIX@
 LIB_SUFFIX	= @LIB_SUFFIX@
 DLL_SUFFIX	= @DLL_SUFFIX@
 BIN_SUFFIX	= @BIN_SUFFIX@
+USE_N32		= @USE_N32@
 
 # Temp hack.  It is not my intention to leave this crap in here for ever.
 # Im talking to fur right now to solve the problem without introducing 

@@ -221,8 +221,7 @@ ifeq ($(OS_ARCH),FreeBSD)
 LDFLAGS		+= -pthread
 endif
 ifeq ($(OS_ARCH),IRIX)
-ifneq ($(basename $(OS_RELEASE)),5)
-LDFLAGS		+= -n32
+ifdef USE_N32
 DASH_R		+= -n32
 endif
 endif
