@@ -149,7 +149,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
     if ( parent ) {
       nsAutoString localName;
       parent->GetLocalName ( localName );
-      if ( ! localName.Equals(NS_LITERAL_STRING("A")) )
+      if ( ! localName.EqualsLiteral("A") )
         return PR_FALSE;
     }
     else

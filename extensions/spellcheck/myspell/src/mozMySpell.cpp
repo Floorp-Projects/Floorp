@@ -238,7 +238,7 @@ NS_IMETHODIMP mozMySpell::GetDictionaryList(PRUnichar ***dictionaries, PRUint32 
       nsString fileName;
       theFile->GetLeafName(fileName);
       PRInt32 dotLocation = fileName.FindChar('.');
-      if((dotLocation != -1) && Substring(fileName,dotLocation,4).Equals(NS_LITERAL_STRING(".dic"))){
+      if((dotLocation != -1) && Substring(fileName,dotLocation,4).EqualsLiteral(".dic")){
         if(tempCount >= arraySize){
           arraySize = 2 * tempCount;
           newPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * arraySize);

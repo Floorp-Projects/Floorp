@@ -319,7 +319,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
         mEditorType = NS_LITERAL_CSTRING("text");
         mimeCType = "text/plain";
       }
-      else if (!mimeCType.Equals(NS_LITERAL_CSTRING("text/html")))
+      else if (!mimeCType.EqualsLiteral("text/html"))
       {
         // Neither an acceptable text or html type.
         mEditorStatus = eEditorErrorCantEditMimeType;
@@ -333,20 +333,20 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   PRBool needHTMLController = PR_FALSE;
 
   const char *classString = "@mozilla.org/editor/htmleditor;1";
-  if (mEditorType.Equals(NS_LITERAL_CSTRING("textmail")))
+  if (mEditorType.EqualsLiteral("textmail"))
   {
     mEditorFlags = nsIPlaintextEditor::eEditorPlaintextMask | 
                    nsIPlaintextEditor::eEditorEnableWrapHackMask | 
                    nsIPlaintextEditor::eEditorMailMask;
   }
-  else if (mEditorType.Equals(NS_LITERAL_CSTRING("text")))
+  else if (mEditorType.EqualsLiteral("text"))
   {
     mEditorFlags = nsIPlaintextEditor::eEditorPlaintextMask | 
                    nsIPlaintextEditor::eEditorEnableWrapHackMask;
   }
-  else if (mEditorType.Equals(NS_LITERAL_CSTRING("htmlmail")))
+  else if (mEditorType.EqualsLiteral("htmlmail"))
   {
-    if (mimeCType.Equals(NS_LITERAL_CSTRING("text/html")))
+    if (mimeCType.EqualsLiteral("text/html"))
     {
       needHTMLController = PR_TRUE;
       mEditorFlags = nsIPlaintextEditor::eEditorMailMask;

@@ -300,11 +300,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      if(NS_SUCCEEDED(res2))
                      {
                         // following charset should have been detected by parser
-                        if (!preferred.Equals(NS_LITERAL_CSTRING("UTF-16")) &&
-                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16BE")) &&
-                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16LE")) &&
-                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32BE")) &&
-                            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32LE"))) {
+                        if (!preferred.EqualsLiteral("UTF-16") &&
+                            !preferred.EqualsLiteral("UTF-16BE") &&
+                            !preferred.EqualsLiteral("UTF-16LE") &&
+                            !preferred.EqualsLiteral("UTF-32BE") &&
+                            !preferred.EqualsLiteral("UTF-32LE")) {
                           // Propagate the error message so that the parser can
                           // shutdown correctly. - Ref. Bug 96440
                           res = NotifyWebShell(aWebShell,
@@ -377,11 +377,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
               // the BOM detection.
               nsString* currentCharset = values->StringAt(numOfAttributes-3);
               if (!preferred.Equals(NS_LossyConvertUCS2toASCII(*currentCharset)) &&
-                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-16")) &&
-                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-16BE")) &&
-                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-16LE")) &&
-                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-32BE")) &&
-                  !preferred.Equals(NS_LITERAL_CSTRING("UTF-32LE")))
+                  !preferred.EqualsLiteral("UTF-16") &&
+                  !preferred.EqualsLiteral("UTF-16BE") &&
+                  !preferred.EqualsLiteral("UTF-16LE") &&
+                  !preferred.EqualsLiteral("UTF-32BE") &&
+                  !preferred.EqualsLiteral("UTF-32LE"))
                   AppendASCIItoUTF16(preferred, aCharset);
           }
       }

@@ -489,7 +489,7 @@ nsFrameLoader::EnsureDocShell()
 
       nsAutoString::const_char_iterator iter(start + 7);
 
-      isContent = Substring(start, iter) == NS_LITERAL_STRING("content") &&
+      isContent = Substring(start, iter).EqualsLiteral("content") &&
                   (iter == end || *iter == '-');
     }
 
@@ -513,7 +513,7 @@ nsFrameLoader::EnsureDocShell()
 
       if (parentTreeOwner) {
         PRBool is_primary = parentType == nsIDocShellTreeItem::typeChrome &&
-                            value == NS_LITERAL_STRING("content-primary");
+                            value.EqualsLiteral("content-primary");
 
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
                                            value.get());

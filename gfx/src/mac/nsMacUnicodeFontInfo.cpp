@@ -484,15 +484,15 @@ GetEncoding(const nsCString& aFontName, nsACString& aValue)
   // see if we should init the property
   if (! gFontEncodingProperties) {
     // but bail out for common fonts used at startup...
-    if (aFontName.Equals(NS_LITERAL_CSTRING("Lucida Grande")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Charcoal")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Chicago")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Capitals")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Gadget")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Sand")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Techno")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Textile")) ||
-        aFontName.Equals(NS_LITERAL_CSTRING("Geneva")) )
+    if (aFontName.EqualsLiteral("Lucida Grande") ||
+        aFontName.EqualsLiteral("Charcoal") ||
+        aFontName.EqualsLiteral("Chicago") ||
+        aFontName.EqualsLiteral("Capitals") ||
+        aFontName.EqualsLiteral("Gadget") ||
+        aFontName.EqualsLiteral("Sand") ||
+        aFontName.EqualsLiteral("Techno") ||
+        aFontName.EqualsLiteral("Textile") ||
+        aFontName.EqualsLiteral("Geneva") )
       return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
     // init the property now

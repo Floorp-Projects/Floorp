@@ -1336,7 +1336,7 @@ nsFormSubmission::GetEncoder(nsIHTMLContent* aForm,
   nsresult rv = NS_OK;
 
   nsCAutoString charset(aCharset);
-  if(charset.Equals(NS_LITERAL_CSTRING("ISO-8859-1")))
+  if(charset.EqualsLiteral("ISO-8859-1"))
     charset.Assign(NS_LITERAL_CSTRING("windows-1252"));
 
   rv = CallCreateInstance( NS_SAVEASCHARSET_CONTRACTID, aEncoder);
@@ -1458,7 +1458,7 @@ nsFormSubmission::ProcessValue(nsIDOMHTMLElement* aSource,
                                const nsAString& aName, const nsAString& aValue)
 {
   // Hijack _charset_ (hidden inputs only) for internationalization (bug 18643)
-  if (aName == NS_LITERAL_STRING("_charset_")) {
+  if (aName.EqualsLiteral("_charset_")) {
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
     if (formControl) {
       if (formControl->GetType() == NS_FORM_INPUT_HIDDEN) {

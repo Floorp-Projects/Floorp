@@ -149,8 +149,8 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
   }
 #else /* USE_SERIALIZER */
   nsCOMPtr<nsIContentSink> sink;
-  if (inType != NS_LITERAL_STRING("text/html")
-      || outType != NS_LITERAL_STRING("text/plain"))
+  if (!inType.EqualsLiteral("text/html")
+      || !outType.EqualsLiteral("text/plain"))
   {
     char* in = ToNewCString(inType);
     char* out = ToNewCString(outType);
@@ -171,7 +171,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
   parser->SetContentSink(sink);
    nsCOMPtr<nsIDTD> dtd;
-  if (inType.Equals(NS_LITERAL_STRING("text/html"))) {
+  if (inType.EqualsLiteral("text/html")) {
     static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
     rv=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(dtd));
   }

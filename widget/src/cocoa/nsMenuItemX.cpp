@@ -366,7 +366,7 @@ nsMenuItemX :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, 
     if ( mMenuType == eRadio ) {
       nsAutoString checked;
       mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
-      if (checked == NS_LITERAL_STRING("true") ) 
+      if (checked.EqualsLiteral("true") ) 
         UncheckRadioSiblings(mContent);
     }
     

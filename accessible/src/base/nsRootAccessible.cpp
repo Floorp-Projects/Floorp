@@ -130,7 +130,7 @@ NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole)
     if (rootElement) {
       nsAutoString name;
       rootElement->GetLocalName(name);
-      if (name.Equals(NS_LITERAL_STRING("dialog"))) 
+      if (name.EqualsLiteral("dialog")) 
         *aRole = ROLE_DIALOG;
     }
   }

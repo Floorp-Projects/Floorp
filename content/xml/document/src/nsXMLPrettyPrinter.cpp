@@ -106,7 +106,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
             nsAutoString visibility;
             computedStyle->GetPropertyValue(NS_LITERAL_STRING("visibility"),
                                             visibility);
-            if (!visibility.Equals(NS_LITERAL_STRING("visible"))) {
+            if (!visibility.EqualsLiteral("visible")) {
 
                 return NS_OK;
             }

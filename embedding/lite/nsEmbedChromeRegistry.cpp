@@ -276,18 +276,18 @@ nsEmbedChromeRegistry::RegisterChrome(const nsACString& aChromeType,
                                       const nsACString& aChromeLocation)
 {
     PRInt32 chromeType;
-    if (aChromeType.Equals(NS_LITERAL_CSTRING("skin")))
+    if (aChromeType.EqualsLiteral("skin"))
         chromeType = CHROME_TYPE_SKIN;
-    else if (aChromeType.Equals(NS_LITERAL_CSTRING("locale")))
+    else if (aChromeType.EqualsLiteral("locale"))
         chromeType = CHROME_TYPE_LOCALE;
     else
         chromeType = CHROME_TYPE_CONTENT;
 
     PRBool chromeIsProfile =
-        aChromeProfile.Equals(NS_LITERAL_CSTRING("profile"));
+        aChromeProfile.EqualsLiteral("profile");
 
     PRBool chromeIsURL =
-        aChromeProfile.Equals(NS_LITERAL_CSTRING("url"));
+        aChromeProfile.EqualsLiteral("url");
 
     return RegisterChrome(chromeType, chromeIsProfile, chromeIsURL,
                           aChromeLocation);

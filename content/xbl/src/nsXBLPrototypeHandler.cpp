@@ -298,7 +298,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     nsAutoString type;
     mEventName->ToString(type);
 
-    if (type == NS_LITERAL_STRING("keypress") &&
+    if (type.EqualsLiteral("keypress") &&
         mDetail == nsIDOMKeyEvent::DOM_VK_SPACE &&
         mMisc == 1) {
       // get the focused element so that we can pageDown only at
@@ -324,7 +324,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
             nsAutoString type;
             content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, type);
 
-            isLink = type.Equals(NS_LITERAL_STRING("simple"));
+            isLink = type.EqualsLiteral("simple");
 
             if (isLink) {
               break;
@@ -859,9 +859,9 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 
   if (aPhase) {
     const nsDependentString phase(aPhase);
-    if (phase.Equals(NS_LITERAL_STRING("capturing")))
+    if (phase.EqualsLiteral("capturing"))
       mPhase = NS_PHASE_CAPTURING;
-    else if (phase.Equals(NS_LITERAL_STRING("target")))
+    else if (phase.EqualsLiteral("target"))
       mPhase = NS_PHASE_TARGET;
   }
 
@@ -941,7 +941,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   }
 
   nsAutoString preventDefault(aPreventDefault);
-  if (preventDefault.Equals(NS_LITERAL_STRING("true")))
+  if (preventDefault.EqualsLiteral("true"))
     mType |= NS_HANDLER_TYPE_PREVENTDEFAULT;
 }
 

@@ -202,7 +202,7 @@ nsXMLStylesheetPI::GetStyleSheetInfo(nsAString& aTitle,
   GetAttrValue(NS_LITERAL_STRING("alternate"), alternate);
 
   // if alternate, does it have title?
-  if (alternate.Equals(NS_LITERAL_STRING("yes"))) {
+  if (alternate.EqualsLiteral("yes")) {
     if (aTitle.IsEmpty()) { // alternates must have title
       return;
     } else {

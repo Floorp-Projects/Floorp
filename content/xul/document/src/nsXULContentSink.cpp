@@ -1049,7 +1049,7 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
         nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
 
         nsresult result =  ProcessStyleLink(nsnull /* XXX need a node here */,
-                                            href, alternate.Equals(NS_LITERAL_STRING("yes")),  /* XXX ignore case? */
+                                            href, alternate.EqualsLiteral("yes"),  /* XXX ignore case? */
                                             title, type, media);
         if (NS_FAILED(result)) {
           if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
@@ -1387,10 +1387,10 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
   nsAutoString src;
   while (*aAttributes) {
       const nsDependentString key(aAttributes[0]);
-      if (key.Equals(NS_LITERAL_STRING("src"))) {
+      if (key.EqualsLiteral("src")) {
           src.Assign(aAttributes[1]);
       }
-      else if (key.Equals(NS_LITERAL_STRING("type"))) {
+      else if (key.EqualsLiteral("type")) {
           nsAutoString  type(aAttributes[1]);
           nsAutoString  mimeType;
           nsAutoString  params;
@@ -1416,7 +1416,7 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
               jsVersionString = JS_VersionToString(jsVersion);
           }
       }
-      else if (key.Equals(NS_LITERAL_STRING("language"))) {
+      else if (key.EqualsLiteral("language")) {
         nsAutoString  lang(aAttributes[1]);
         isJavaScript = nsParserUtils::IsJavaScriptLanguage(lang, &jsVersionString);
       }

@@ -200,7 +200,7 @@ NS_IMETHODIMP CBrowserShellProgressListener::OnStateChange(nsIWebProgress *aWebP
             NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
             nsCAutoString contentType;
             channel->GetContentType(contentType);
-            if (contentType.Equals(NS_LITERAL_CSTRING("text/html")))
+            if (contentType.EqualsLiteral("text/html"))
                 mUseRealProgFlag = true;
         }
         

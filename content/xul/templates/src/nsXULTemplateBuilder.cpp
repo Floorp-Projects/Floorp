@@ -678,12 +678,12 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* doc)
 	// check for magical attributes. XXX move to ``flags''?
 	nsAutoString coalesce;
 	mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::coalesceduplicatearcs, coalesce);
-    if (coalesce == NS_LITERAL_STRING("false"))
+    if (coalesce.EqualsLiteral("false"))
 		mDB->SetCoalesceDuplicateArcs(PR_FALSE);
 
     nsAutoString allowneg;
     mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::allownegativeassertions, allowneg);
-    if (allowneg == NS_LITERAL_STRING("false"))
+    if (allowneg.EqualsLiteral("false"))
 		mDB->SetAllowNegativeAssertions(PR_FALSE);
 
     // Grab the doc's principal...
@@ -737,7 +737,7 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* doc)
         first = last + 1;
 
         // A special 'dummy' datasource
-        if (uriStr == NS_LITERAL_STRING("rdf:null"))
+        if (uriStr.EqualsLiteral("rdf:null"))
             continue;
 
         // N.B. that `failure' (e.g., because it's an unknown
@@ -997,7 +997,7 @@ nsXULTemplateBuilder::SubstituteText(nsTemplateMatch& aMatch,
                                      nsAString& aResult)
 {
     // See if it's the special value "..."
-    if (aAttributeValue == NS_LITERAL_STRING("...")) {
+    if (aAttributeValue.EqualsLiteral("...")) {
         Value memberval;
         aMatch.GetAssignmentFor(mConflictSet, mMemberVar, &memberval);
 
@@ -1048,7 +1048,7 @@ nsXULTemplateBuilder::SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis,
 
     // The symbol "rdf:*" is special, and means "this guy's URI"
     PRInt32 var = 0;
-    if (aVariable == NS_LITERAL_STRING("rdf:*"))
+    if (aVariable.EqualsLiteral("rdf:*"))
         var = c->match.mRule->GetMemberVariable();
     else
         var = aThis->mRules.LookupSymbol(PromiseFlatString(aVariable).get());
@@ -2074,10 +2074,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.Equals(NS_LITERAL_STRING("true"))) {
+                if (value.EqualsLiteral("true")) {
                     iscontainer = nsRDFConInstanceTestNode::eTrue;
                 }
-                else if (value.Equals(NS_LITERAL_STRING("false"))) {
+                else if (value.EqualsLiteral("false")) {
                     iscontainer = nsRDFConInstanceTestNode::eFalse;
                 }
             }
@@ -2089,10 +2089,10 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.Equals(NS_LITERAL_STRING("true"))) {
+                if (value.EqualsLiteral("true")) {
                     isempty = nsRDFConInstanceTestNode::eTrue;
                 }
-                else if (value.Equals(NS_LITERAL_STRING("false"))) {
+                else if (value.EqualsLiteral("false")) {
                     isempty = nsRDFConInstanceTestNode::eFalse;
                 }
             }
@@ -2129,7 +2129,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
                 if (aRuleElement->HasAttr(kNameSpaceID_None, nsXULAtoms::parsetype)) {
                    nsAutoString parseType;
                    aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::parsetype, parseType);
-                   if (parseType.Equals(NS_LITERAL_STRING("Integer"))) {                     
+                   if (parseType.EqualsLiteral("Integer")) {                     
                      nsCOMPtr<nsIRDFInt> intLiteral;
                      PRInt32 errorCode = nsnull;                     
                      rv = gRDFService->GetIntLiteral(value.ToInteger(&errorCode), getter_AddRefs(intLiteral));

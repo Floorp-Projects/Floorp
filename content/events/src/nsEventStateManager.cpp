@@ -382,36 +382,36 @@ nsEventStateManager::Observe(nsISupports *aSubject,
       return NS_OK;
 
     nsDependentString data(someData);
-    if (data.Equals(NS_LITERAL_STRING("accessibility.accesskeycausesactivation"))) {
+    if (data.EqualsLiteral("accessibility.accesskeycausesactivation")) {
       sKeyCausesActivation =
         nsContentUtils::GetBoolPref("accessibility.accesskeycausesactivation",
                                     sKeyCausesActivation);
-    } else if (data.Equals(NS_LITERAL_STRING("accessibility.browsewithcaret"))) {
+    } else if (data.EqualsLiteral("accessibility.browsewithcaret")) {
       ResetBrowseWithCaret();
-    } else if (data.Equals(NS_LITERAL_STRING("accessibility.tabfocus"))) {
+    } else if (data.EqualsLiteral("accessibility.tabfocus")) {
       sTabFocusModel = nsContentUtils::GetIntPref("accessibility.tabfocus",
                                                   sTabFocusModel);
-    } else if (data.Equals(NS_LITERAL_STRING("nglayout.events.dispatchLeftClickOnly"))) {
+    } else if (data.EqualsLiteral("nglayout.events.dispatchLeftClickOnly")) {
       sLeftClickOnly =
         nsContentUtils::GetBoolPref("nglayout.events.dispatchLeftClickOnly",
                                     sLeftClickOnly);
-    } else if (data.Equals(NS_LITERAL_STRING("ui.key.generalAccessKey"))) {
+    } else if (data.EqualsLiteral("ui.key.generalAccessKey")) {
       sGeneralAccesskeyModifier =
         nsContentUtils::GetIntPref("ui.key.generalAccessKey",
                                    sGeneralAccesskeyModifier);
 #if 0
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.action"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.numlines"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withaltkey.sysnumlines"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withcontrolkey.action"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withcontrolkey.numlines"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withcontrolkey.sysnumlines"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withshiftkey.action"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withshiftkey.numlines"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withshiftkey.sysnumlines"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withnokey.action"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withnokey.numlines"))) {
-    } else if (data.Equals(NS_LITERAL_STRING("mousewheel.withnokey.sysnumlines"))) {
+    } else if (data.EqualsLiteral("mousewheel.withaltkey.action")) {
+    } else if (data.EqualsLiteral("mousewheel.withaltkey.numlines")) {
+    } else if (data.EqualsLiteral("mousewheel.withaltkey.sysnumlines")) {
+    } else if (data.EqualsLiteral("mousewheel.withcontrolkey.action")) {
+    } else if (data.EqualsLiteral("mousewheel.withcontrolkey.numlines")) {
+    } else if (data.EqualsLiteral("mousewheel.withcontrolkey.sysnumlines")) {
+    } else if (data.EqualsLiteral("mousewheel.withshiftkey.action")) {
+    } else if (data.EqualsLiteral("mousewheel.withshiftkey.numlines")) {
+    } else if (data.EqualsLiteral("mousewheel.withshiftkey.sysnumlines")) {
+    } else if (data.EqualsLiteral("mousewheel.withnokey.action")) {
+    } else if (data.EqualsLiteral("mousewheel.withnokey.numlines")) {
+    } else if (data.EqualsLiteral("mousewheel.withnokey.sysnumlines")) {
 #endif
     }
   }
@@ -3710,7 +3710,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           PRInt32 errorCode;
           tabIndex = tabStr.ToInteger(&errorCode);
         }
-        if (!value.Equals(NS_LITERAL_STRING("true"))) {
+        if (!value.EqualsLiteral("true")) {
           nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(child));
           if (control)
             control->GetDisabled(&disabled);
@@ -4871,7 +4871,7 @@ nsEventStateManager::MoveFocusToCaret(PRBool aCanFocusDoc,
       if (*aIsSelectionWithFocus) {
         nsAutoString xlinkType;
         testContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, xlinkType);
-        if (!xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
+        if (!xlinkType.EqualsLiteral("simple")) {
           *aIsSelectionWithFocus = PR_FALSE;  // Xlink must be type="simple"
         }
       }

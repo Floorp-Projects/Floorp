@@ -183,11 +183,11 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
     NS_ENSURE_TRUE(language, NS_ERROR_OUT_OF_MEMORY);
     nsXPIDLString langGroupStr;
 
-    if (lowered.Equals(NS_LITERAL_STRING("en-us"))) {
+    if (lowered.EqualsLiteral("en-us")) {
       langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
-    } else if (lowered.Equals(NS_LITERAL_STRING("de-de"))) {
+    } else if (lowered.EqualsLiteral("de-de")) {
       langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
-    } else if (lowered.Equals(NS_LITERAL_STRING("ja-jp"))) {
+    } else if (lowered.EqualsLiteral("ja-jp")) {
       langGroupStr.Assign(NS_LITERAL_STRING("ja"));
     } else {
       if (!mLangGroups) {

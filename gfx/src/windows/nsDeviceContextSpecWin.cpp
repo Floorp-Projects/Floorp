@@ -384,7 +384,7 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPTSTR aPrinterName, PRUnichar* aUPri
     aPS->GetToFileName(getter_Copies(toFileName));
     if (toFileName) {
       if (*toFileName) {
-        if (toFileName.Equals(NS_LITERAL_STRING("FILE:"))) {
+        if (toFileName.EqualsLiteral("FILE:")) {
           // this skips the setting of the "print to file" info below
           // which we don't want to do.
           return NS_OK; 

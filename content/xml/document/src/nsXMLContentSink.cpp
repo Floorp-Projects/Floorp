@@ -199,7 +199,7 @@ nsXMLContentSink::WillBuildModel(void)
   if (mPrettyPrintXML) {
     nsAutoString command;
     mParser->GetCommand(command);
-    if (!command.Equals(NS_LITERAL_STRING("view"))) {
+    if (!command.EqualsLiteral("view")) {
       mPrettyPrintXML = PR_FALSE;
     }
   }
@@ -1328,7 +1328,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     nsAutoString type;
     nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("type"), type);
     if (mState == eXMLContentSinkState_InProlog && 
-        target.Equals(NS_LITERAL_STRING("xml-stylesheet")) && 
+        target.EqualsLiteral("xml-stylesheet") && 
         !type.EqualsIgnoreCase("text/css")) {
       nsAutoString href, title, media, alternate;
 
@@ -1346,7 +1346,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
       nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("alternate"), alternate);
 
-      result = ProcessStyleLink(node, href, alternate.Equals(NS_LITERAL_STRING("yes")),
+      result = ProcessStyleLink(node, href, alternate.EqualsLiteral("yes"),
                                 title, type, media);
     }
   }

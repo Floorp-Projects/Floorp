@@ -316,7 +316,7 @@ nsJVMConfigManagerUnix::ParseLine(nsAString& aLine)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString testPathStr(pathStr);
-    if (type.Equals(NS_LITERAL_STRING("jdk")))
+    if (type.EqualsLiteral("jdk"))
         testPathStr.Append(NS_LITERAL_STRING("/jre"));
 
     testPathStr.Append(mozillaPluginPath);

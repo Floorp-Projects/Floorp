@@ -489,7 +489,7 @@ nsMenuBarX::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWin
                   
           nsAutoString menuIDstring;
           menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
-          if ( menuIDstring == NS_LITERAL_STRING("menu_Help") ) {
+          if ( menuIDstring.EqualsLiteral("menu_Help") ) {
             nsMenuEvent event;
             MenuHandle handle = nsnull;
 #if !TARGET_CARBON
@@ -579,7 +579,7 @@ NS_METHOD nsMenuBarX::AddMenu(nsIMenu * aMenu)
     aMenu->GetMenuContent(getter_AddRefs(menu));
     nsAutoString menuHidden;
     menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
-    if( menuHidden != NS_LITERAL_STRING("true")) {
+    if( !menuHidden.EqualsLiteral("true")) {
     	// make sure we only increment |mNumMenus| if the menu is visible, since
     	// we use it as an index of where to insert the next menu.
       mNumMenus++;

@@ -530,13 +530,13 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
   mFilterList.Append(aTitle);
   mFilterList.Append(PRUnichar('\0'));
 
-  if (aFilter.Equals(NS_LITERAL_STRING("..apps")))
+  if (aFilter.EqualsLiteral("..apps"))
     mFilterList.Append(NS_LITERAL_STRING("*.exe;*.com"));
   else
   {
     nsAutoString filter(aFilter);
     filter.StripWhitespace();
-    if (filter.Equals(NS_LITERAL_STRING("*")))
+    if (filter.EqualsLiteral("*"))
       filter.Append(NS_LITERAL_STRING(".*"));
     mFilterList.Append(filter);
   }

@@ -259,8 +259,8 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   // they are used to remove named anchor/link and shouldn't be used for insertion
   nsAutoString tagName; tagName.AssignWithConversion(aTagName);
   PRBool doTagRemoval;
-  if (tagName.Equals(NS_LITERAL_STRING("href")) ||
-      tagName.Equals(NS_LITERAL_STRING("name")))
+  if (tagName.EqualsLiteral("href") ||
+      tagName.EqualsLiteral("name"))
     doTagRemoval = PR_TRUE;
   else
   {
@@ -281,12 +281,12 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
     nsAutoString removeName; 
     aEditor->BeginTransaction();
 
-    if (tagName.Equals(NS_LITERAL_STRING("sub")))
+    if (tagName.EqualsLiteral("sub"))
     {
       removeName.AssignWithConversion("sup");
       rv = RemoveTextProperty(aEditor,tagName.get(), nsnull);
     } 
-    else if (tagName.Equals(NS_LITERAL_STRING("sup")))
+    else if (tagName.EqualsLiteral("sup"))
     {
       removeName.AssignWithConversion("sub");
       rv = RemoveTextProperty(aEditor, tagName.get(), nsnull);
@@ -765,7 +765,7 @@ nsFontFaceStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
   nsCOMPtr<nsIAtom> ttAtom = do_GetAtom("tt");
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
 
-  if (newState.Equals(NS_LITERAL_STRING("tt")))
+  if (newState.EqualsLiteral("tt"))
   {
     // The old "teletype" attribute  
     rv = htmlEditor->SetInlineProperty(ttAtom, EmptyString(), 
@@ -778,7 +778,7 @@ nsFontFaceStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
     // Remove any existing TT nodes
     rv = htmlEditor->RemoveInlineProperty(ttAtom, EmptyString());  
 
-    if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+    if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
       rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("face"));
     } else {
       rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("face"),
@@ -847,8 +847,8 @@ nsFontSizeStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
   nsresult rv;
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
   if (newState.IsEmpty() || 
-      newState.Equals(NS_LITERAL_STRING("normal")) ||
-      newState.Equals(NS_LITERAL_STRING("medium"))) {
+      newState.EqualsLiteral("normal") ||
+      newState.EqualsLiteral("medium")) {
     // remove any existing font size, big or small
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("size"));  
     if (NS_FAILED(rv)) return rv;
@@ -909,7 +909,7 @@ nsFontColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
   nsresult rv;
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
 
-  if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+  if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("color"));
   } else {
     rv = htmlEditor->SetInlineProperty(fontAtom, NS_LITERAL_STRING("color"), 
@@ -959,7 +959,7 @@ nsHighlightColorStateCommand::SetState(nsIEditor *aEditor, nsString& newState)
   nsresult rv;
   nsCOMPtr<nsIAtom> fontAtom = do_GetAtom("font");
 
-  if (newState.IsEmpty() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+  if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
 //    rv = RemoveOneProperty(htmlEditor, NS_LITERAL_STRING("font"), NS_LITERAL_STRING("bgcolor"));
     rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"));
   } else {
@@ -1676,7 +1676,7 @@ RemoveTextProperty(nsIEditor *aEditor, const PRUnichar *prop,
   nsAutoString  allStr(prop);
   
   ToLowerCase(allStr);
-  PRBool    doingAll = (allStr.Equals(NS_LITERAL_STRING("all")));
+  PRBool    doingAll = (allStr.EqualsLiteral("all"));
   nsresult  err = NS_OK;
 
   if (doingAll)

@@ -79,18 +79,18 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    // function *while loading* charsetalias.properties (see bug 190951),
    // so we might have an |mDelegate| already that isn't valid yet, but
    // the load is guaranteed to be "UTF-8" so things will be OK.
-   if(aKey.Equals(NS_LITERAL_CSTRING("utf-8"))) {
+   if(aKey.EqualsLiteral("utf-8")) {
      oResult = NS_LITERAL_CSTRING("UTF-8");
      NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
      return NS_OK;
    } 
-   if(aKey.Equals(NS_LITERAL_CSTRING("iso-8859-1"))) {
+   if(aKey.EqualsLiteral("iso-8859-1")) {
      oResult = NS_LITERAL_CSTRING("ISO-8859-1");
      NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
      return NS_OK;
    } 
-   if(aKey.Equals(NS_LITERAL_CSTRING("x-sjis")) ||
-      aKey.Equals(NS_LITERAL_CSTRING("shift_jis"))) {
+   if(aKey.EqualsLiteral("x-sjis") ||
+      aKey.EqualsLiteral("shift_jis")) {
      oResult = NS_LITERAL_CSTRING("Shift_JIS");
      NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
      return NS_OK;

@@ -524,7 +524,7 @@ nsresult ProtocolRegistryEntry::set() {
     // We must take care of this first because setting the "protocol entry"
     // for http will cause WindowsXP to do stuff automatically for us,
     // thereby making it impossible for us to propertly reset.
-    if ( protocol == NS_LITERAL_CSTRING( "http" ) ) {
+    if ( protocol.EqualsLiteral( "http" ) ) {
         setWindowsXP();
     }
 
@@ -634,7 +634,7 @@ nsresult ProtocolRegistryEntry::reset() {
     ProtocolIconRegistryEntry( protocol.get() ).reset();
 
     // For http:, on WindowsXP, we need to do some extra cleanup.
-    if ( protocol == NS_LITERAL_CSTRING( "http" ) ) {
+    if ( protocol.EqualsLiteral( "http" ) ) {
         resetWindowsXP();
     }
 

@@ -95,15 +95,15 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      // Geez this is ugly. temporary hack to only process html files
      str.Truncate();
      nsString(aURLSpec).Right(str,1);
-     if (!str.Equals(NS_LITERAL_STRING("/")))
+     if (!str.EqualsLiteral("/"))
      {
         str.Truncate();
         nsString(aURLSpec).Right(str,4);
-        if (!str.Equals(NS_LITERAL_STRING("html")))
+        if (!str.EqualsLiteral("html"))
         {
            str.Truncate();
            nsString(aURLSpec).Right(str,3);
-           if (!str.Equals(NS_LITERAL_STRING("htm")))
+           if (!str.EqualsLiteral("htm"))
               return NS_OK;
         }
      }
@@ -124,7 +124,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      g_duplicateList->AppendElement(new nsString(aURLSpec));
      str.Truncate();
      nsString(aURLSpec).Left(str,5);
-     if (str.Equals(NS_LITERAL_STRING("http:"))) {
+     if (str.EqualsLiteral("http:")) {
         ++g_iProcessed;
         if (g_iProcessed == (g_iMaxProcess > 0 ? g_iMaxProcess-1 : 0))
            g_bHitTop = PR_TRUE;

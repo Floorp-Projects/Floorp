@@ -2116,7 +2116,7 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
     nsresult rv;
 
     *entries = nsnull;
-    if (mWorkingPath.Equals(NS_LITERAL_CSTRING("\\\\."))) {
+    if (mWorkingPath.EqualsLiteral("\\\\.")) {
         nsDriveEnumerator *drives = new nsDriveEnumerator;
         if (!drives)
             return NS_ERROR_OUT_OF_MEMORY;

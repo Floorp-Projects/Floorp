@@ -370,8 +370,8 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
 
     if (colon &&
         (DOMStringIsNull(aNamespaceURI) ||
-         (Substring(qName.get(), colon).Equals(NS_LITERAL_STRING("xml")) &&
-          !aNamespaceURI.Equals(NS_LITERAL_STRING("http://www.w3.org/XML/1998/namespace"))))) {
+         (Substring(qName.get(), colon).EqualsLiteral("xml") &&
+          !aNamespaceURI.EqualsLiteral("http://www.w3.org/XML/1998/namespace")))) {
       return NS_ERROR_DOM_NAMESPACE_ERR;
     }
   }
@@ -1121,7 +1121,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
     for (index = 0; index < count; index++) {
       nsIStyleSheet* sheet = mStyleSheets[index];
       sheet->GetType(type);
-      if (!type.Equals(NS_LITERAL_STRING("text/html"))) {
+      if (!type.EqualsLiteral("text/html")) {
         sheet->GetTitle(title);
         if (!title.IsEmpty()) {  // if sheet has title
           PRBool enabled =
@@ -2354,7 +2354,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIContentList> list;
 
-  if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
+  if (!aNamespaceURI.EqualsLiteral("*")) {
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
                                                           &nameSpaceId);
 
@@ -2590,7 +2590,7 @@ nsDocument::GetAnonymousElementByAttribute(nsIDOMElement* aElement,
   PRUint32 length;
   nodeList->GetLength(&length);
 
-  PRBool universalMatch = aAttrValue.Equals(NS_LITERAL_STRING("*"));
+  PRBool universalMatch = aAttrValue.EqualsLiteral("*");
 
   for (PRUint32 i = 0; i < length; ++i) {
     nsCOMPtr<nsIDOMNode> current;
@@ -4000,10 +4000,10 @@ nsDocument::SetXMLDeclaration(const nsAString& aVersion,
     mXMLDeclarationBits |= XML_DECLARATION_BITS_ENCODING_EXISTS;
   }
 
-  if (aStandalone.Equals(NS_LITERAL_STRING("yes"))) {
+  if (aStandalone.EqualsLiteral("yes")) {
     mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS |
                            XML_DECLARATION_BITS_STANDALONE_YES;
-  } else if (aStandalone.Equals(NS_LITERAL_STRING("no"))) {
+  } else if (aStandalone.EqualsLiteral("no")) {
     mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS;
   }
 }

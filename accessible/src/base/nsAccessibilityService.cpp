@@ -1551,7 +1551,7 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aNode));
   if (element) {
     element->GetAttribute(NS_LITERAL_STRING("type"), attrib);
-    if (attrib.Equals(NS_LITERAL_STRING("checkbox")))
+    if (attrib.EqualsLiteral("checkbox"))
       printf("## aaronl debugging attribute\n");
   }
 #endif

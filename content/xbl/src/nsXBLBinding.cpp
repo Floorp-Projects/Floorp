@@ -1272,7 +1272,7 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
   nsAutoString element;
   aTag->ToString(element);
 
-  if (aList == NS_LITERAL_STRING("*"))
+  if (aList.EqualsLiteral("*"))
       return PR_TRUE; // match _everything_!
 
   PRInt32 indx = aList.Find(element, 0);

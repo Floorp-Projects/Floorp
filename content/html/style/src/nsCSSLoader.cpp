@@ -769,8 +769,8 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
       channel->GetContentType(contentType);
     }
     
-    PRBool validType = contentType.Equals(NS_LITERAL_CSTRING("text/css")) ||
-      contentType.Equals(NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE)) ||
+    PRBool validType = contentType.EqualsLiteral("text/css") ||
+      contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
       contentType.IsEmpty();
                                           
     if (mLoader->mCompatMode == eCompatibility_NavQuirks || validType) {

@@ -851,21 +851,21 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
                                                      &typeAttrName,
                                                      value,
                                                      COMPUTED_STYLE_TYPE);
-      if (value.Equals(NS_LITERAL_STRING("center")) ||
-          value.Equals(NS_LITERAL_STRING("-moz-center")) ||
-          value.Equals(NS_LITERAL_STRING("auto auto")))
+      if (value.EqualsLiteral("center") ||
+          value.EqualsLiteral("-moz-center") ||
+          value.EqualsLiteral("auto auto"))
       {
         *aAlign = nsIHTMLEditor::eCenter;
         return NS_OK;
       }
-      if (value.Equals(NS_LITERAL_STRING("right")) ||
-          value.Equals(NS_LITERAL_STRING("-moz-right")) ||
-          value.Equals(NS_LITERAL_STRING("auto 0px")))
+      if (value.EqualsLiteral("right") ||
+          value.EqualsLiteral("-moz-right") ||
+          value.EqualsLiteral("auto 0px"))
       {
         *aAlign = nsIHTMLEditor::eRight;
         return NS_OK;
       }
-      if (value.Equals(NS_LITERAL_STRING("justify")))
+      if (value.EqualsLiteral("justify"))
       {
         *aAlign = nsIHTMLEditor::eJustify;
         return NS_OK;
@@ -898,11 +898,11 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
         ToLowerCase(typeAttrVal);
         if (NS_SUCCEEDED(res) && typeAttrVal.Length())
         {
-          if (typeAttrVal.Equals(NS_LITERAL_STRING("center")))
+          if (typeAttrVal.EqualsLiteral("center"))
             *aAlign = nsIHTMLEditor::eCenter;
-          else if (typeAttrVal.Equals(NS_LITERAL_STRING("right")))
+          else if (typeAttrVal.EqualsLiteral("right"))
             *aAlign = nsIHTMLEditor::eRight;
-          else if (typeAttrVal.Equals(NS_LITERAL_STRING("justify")))
+          else if (typeAttrVal.EqualsLiteral("justify"))
             *aAlign = nsIHTMLEditor::eJustify;
           else
             *aAlign = nsIHTMLEditor::eLeft;
@@ -1122,7 +1122,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
     }
     
     // if this is the first node, we've found, remember it as the format
-    if (formatStr.Equals(NS_LITERAL_STRING("x")))
+    if (formatStr.EqualsLiteral("x"))
       formatStr = format;
     // else make sure it matches previously found format
     else if (format != formatStr) 
@@ -3293,7 +3293,7 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
     // get selection location
     res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
     if (NS_FAILED(res)) return res;
-    if (tString.Equals(NS_LITERAL_STRING("normal")) ||
+    if (tString.EqualsLiteral("normal") ||
              tString.IsEmpty() ) // we are removing blocks (going to "body text")
     {
       nsCOMPtr<nsIDOMNode> curBlock = parent;
@@ -3367,9 +3367,9 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
     // Ok, now go through all the nodes and make the right kind of blocks, 
     // or whatever is approriate.  Wohoo! 
     // Note: blockquote is handled a little differently
-    if (tString.Equals(NS_LITERAL_STRING("blockquote")))
+    if (tString.EqualsLiteral("blockquote"))
       res = MakeBlockquote(arrayOfNodes);
-    else if (tString.Equals(NS_LITERAL_STRING("normal")) ||
+    else if (tString.EqualsLiteral("normal") ||
              tString.IsEmpty() )
       res = RemoveBlockStyle(arrayOfNodes);
     else
@@ -6705,10 +6705,10 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
     }
     else if (nsHTMLEditUtils::IsTable(curNode)                    || 
              nsHTMLEditUtils::IsTableRow(curNode)                 ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("tbody")))      ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("td")))         ||
+             (curNodeTag.EqualsLiteral("tbody"))      ||
+             (curNodeTag.EqualsLiteral("td"))         ||
              nsHTMLEditUtils::IsList(curNode)                     ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("li")))         ||
+             (curNodeTag.EqualsLiteral("li"))         ||
              nsHTMLEditUtils::IsBlockquote(curNode)               ||
              nsHTMLEditUtils::IsDiv(curNode))
     {
@@ -6839,11 +6839,11 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
       if (NS_FAILED(res)) return res;
     }
     else if (nsHTMLEditUtils::IsTable(curNode)                    || 
-             (curNodeTag.Equals(NS_LITERAL_STRING("tbody")))      ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("tr")))         ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("td")))         ||
+             (curNodeTag.EqualsLiteral("tbody"))      ||
+             (curNodeTag.EqualsLiteral("tr"))         ||
+             (curNodeTag.EqualsLiteral("td"))         ||
              nsHTMLEditUtils::IsList(curNode)                     ||
-             (curNodeTag.Equals(NS_LITERAL_STRING("li")))         ||
+             (curNodeTag.EqualsLiteral("li"))         ||
              nsHTMLEditUtils::IsBlockquote(curNode)               ||
              nsHTMLEditUtils::IsDiv(curNode))
     {
@@ -6872,7 +6872,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
     }
     
     // if the node is a break, we honor it by putting further nodes in a new parent
-    else if (curNodeTag.Equals(NS_LITERAL_STRING("br")))
+    else if (curNodeTag.EqualsLiteral("br"))
     {
       if (curBlock)
       {

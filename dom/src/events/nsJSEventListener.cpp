@@ -99,8 +99,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return NS_OK;
     }
     //if (mReturnResult == nsReturnResult_eNotSet) {
-      if (eventString.Equals(NS_LITERAL_STRING("error")) ||
-          eventString.Equals(NS_LITERAL_STRING("mouseover"))) {
+      if (eventString.EqualsLiteral("error") ||
+          eventString.EqualsLiteral("mouseover")) {
         mReturnResult = nsReturnResult_eReverseReturnResult;
       }
       else {
@@ -138,7 +138,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   PRBool handledScriptError = PR_FALSE;
-  if (eventString.Equals(NS_LITERAL_STRING("onerror"))) {
+  if (eventString.EqualsLiteral("onerror")) {
     nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
     NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 
@@ -178,7 +178,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   if (NS_SUCCEEDED(rv)) {
-    if (eventString.Equals(NS_LITERAL_STRING("onbeforeunload"))) {
+    if (eventString.EqualsLiteral("onbeforeunload")) {
       nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
       NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 

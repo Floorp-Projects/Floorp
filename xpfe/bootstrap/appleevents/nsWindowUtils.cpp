@@ -172,22 +172,22 @@ static TWindowKind WindowKindFromTypeString(const nsString& inWindowType)
 	if (inWindowType.IsEmpty())
 		return kAnyWindowKind;
 		
-	if (inWindowType.Equals(NS_LITERAL_STRING("navigator:browser")))
+	if (inWindowType.EqualsLiteral("navigator:browser"))
 		return kBrowserWindowKind;
 
-	if (inWindowType.Equals(NS_LITERAL_STRING("mail:3pane")))
+	if (inWindowType.EqualsLiteral("mail:3pane"))
 		return kMailWindowKind;
 
-	if (inWindowType.Equals(NS_LITERAL_STRING("msgcompose")))
+	if (inWindowType.EqualsLiteral("msgcompose"))
 		return kMailComposeWindowKind;
 
-	if (inWindowType.Equals(NS_LITERAL_STRING("mail:addressbook")))
+	if (inWindowType.EqualsLiteral("mail:addressbook"))
 		return kAddressBookWindowKind;
 
-	if (inWindowType.Equals(NS_LITERAL_STRING("composer:html")))
+	if (inWindowType.EqualsLiteral("composer:html"))
 		return kComposerWindowKind;
 
-	if (inWindowType.Equals(NS_LITERAL_STRING("composer:text")))
+	if (inWindowType.EqualsLiteral("composer:text"))
 		return kComposerWindowKind;
 
 	return kOtherWindowKind;

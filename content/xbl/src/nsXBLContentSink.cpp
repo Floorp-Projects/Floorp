@@ -658,7 +658,7 @@ nsXBLContentSink::ConstructResource(const PRUnichar **aAtts,
     }
 
     // Is this attribute one of the ones we care about?
-    if (key.Equals(NS_LITERAL_STRING("src"))) {
+    if (key.EqualsLiteral("src")) {
       mBinding->AddResource(aResourceType, nsDependentString(aAtts[1]));
       break;
     }

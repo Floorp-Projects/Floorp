@@ -1667,7 +1667,7 @@ nsCookieService::CheckPrefs(nsIURI         *aHostURI,
   }
 
   // don't let ftp sites get/set cookies (could be a security issue)
-  if (currentURIScheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
+  if (currentURIScheme.EqualsLiteral("ftp")) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "ftp sites cannot read cookies");
     return STATUS_REJECTED_WITH_ERROR;
   }

@@ -2358,7 +2358,7 @@ nsInstall::GetQualifiedPackageName( const nsString& name, nsString& qualifiedNam
     nsString startOfName;
     name.Left(startOfName, 7);
 
-    if ( startOfName.Equals(NS_LITERAL_STRING("=USER=/")) )
+    if ( startOfName.EqualsLiteral("=USER=/") )
     {
         CurrentUserNode(qualifiedName);
         qualifiedName += name;
@@ -2398,7 +2398,7 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
     nsString startOfName;
     name.Left(startOfName, 7);
 
-    if ( startOfName.Equals(NS_LITERAL_STRING("=COMM=/")) || startOfName.Equals(NS_LITERAL_STRING("=USER=/")))
+    if ( startOfName.EqualsLiteral("=COMM=/") || startOfName.EqualsLiteral("=USER=/"))
     {
         qualifiedRegName = startOfName;
     }

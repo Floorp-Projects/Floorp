@@ -1133,11 +1133,11 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
               nsDependentSubstring optionName(start_option_iter, end_optionname_iter);
               if (equalSignFound) {
                 // This is an option that has a name and value
-                if (optionName.Equals(NS_LITERAL_STRING("description"))) {
+                if (optionName.EqualsLiteral("description")) {
                   aDescription = Substring(++equal_sign_iter, semicolon_iter);
-                } else if (optionName.Equals(NS_LITERAL_STRING("x-mozilla-flags"))) {
+                } else if (optionName.EqualsLiteral("x-mozilla-flags")) {
                   aMozillaFlags = Substring(++equal_sign_iter, semicolon_iter);
-                } else if (optionName.Equals(NS_LITERAL_STRING("test"))) {
+                } else if (optionName.EqualsLiteral("test")) {
                   nsCAutoString testCommand;
                   rv = UnescapeCommand(Substring(++equal_sign_iter, semicolon_iter),
                                        aMajorType,

@@ -401,7 +401,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   ToLowerCase(attrVal);
   if (NS_SUCCEEDED(res))
   {
-    if (attrVal.Equals(NS_LITERAL_STRING("cite")))
+    if (attrVal.EqualsLiteral("cite"))
       return PR_TRUE;
   }
 
@@ -411,7 +411,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   if (NS_SUCCEEDED(res))
   {
     ToLowerCase(attrVal);
-    if (attrVal.Equals(NS_LITERAL_STRING("true")))
+    if (attrVal.EqualsLiteral("true"))
       return PR_TRUE;
   }
 

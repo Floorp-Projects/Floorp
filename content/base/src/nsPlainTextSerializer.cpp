@@ -1152,7 +1152,7 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
     // ignore the bogus br tags that the editor sticks here and there.
     nsAutoString typeAttr;
     if (NS_FAILED(GetAttributeValue(aNode, nsHTMLAtoms::type, typeAttr))
-        || !typeAttr.Equals(NS_LITERAL_STRING("_moz"))) {
+        || !typeAttr.EqualsLiteral("_moz")) {
       EnsureVerticalSpace(mEmptyLines+1);
     }
   }
@@ -1507,7 +1507,7 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
   // (see RFC 2646). We only check for "-- " when it's a hard line
   // break for obvious reasons.
   if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) &&
-     (aSoftlinebreak || !mCurrentLine.Equals(NS_LITERAL_STRING("-- ")))) {
+     (aSoftlinebreak || !mCurrentLine.EqualsLiteral("-- "))) {
     // Remove SPACE:s from the end of the line.
     while(currentlinelength > 0 &&
           mCurrentLine[currentlinelength-1] == ' ') {

@@ -395,7 +395,7 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
                   
           nsAutoString menuIDstring;
           menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
-          if ( menuIDstring == NS_LITERAL_STRING("menu_Help") ) {
+          if ( menuIDstring.EqualsLiteral("menu_Help") ) {
             nsMenuEvent event;
             MenuHandle handle = nsnull;
             ::HMGetHelpMenuHandle(&handle);
@@ -506,7 +506,7 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
     aMenu->GetMenuContent(getter_AddRefs(menu));
     nsAutoString menuHidden;
     menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
-    if( menuHidden != NS_LITERAL_STRING("true"))
+    if( !menuHidden.EqualsLiteral("true"))
       ::InsertMenu(menuHandle, 0);
   }
   

@@ -111,7 +111,7 @@ nsHTMLEditor::GetAbsolutelyPositionedSelectionContainer(nsIDOMElement **_retval)
     res = mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssPosition,
                                              positionStr);
     if (NS_FAILED(res)) return res;
-    if (positionStr.Equals(NS_LITERAL_STRING("absolute")))
+    if (positionStr.EqualsLiteral("absolute"))
       resultNode = node;
     else {
       nsCOMPtr<nsIDOMNode> parentNode;
@@ -222,7 +222,7 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
                                                      nsEditProperty::cssZIndex,
                                                      zIndexStr);
   if (NS_FAILED(res)) return res;
-  if (zIndexStr.Equals(NS_LITERAL_STRING("auto"))) {
+  if (zIndexStr.EqualsLiteral("auto")) {
     // we have to look at the positioned ancestors
     // cf. CSS 2 spec section 9.9.1
     nsCOMPtr<nsIDOMNode> parentNode;
@@ -231,13 +231,13 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
     nsCOMPtr<nsIDOMNode> node = parentNode;
     nsAutoString positionStr;
     while (node && 
-           zIndexStr.Equals(NS_LITERAL_STRING("auto")) &&
+           zIndexStr.EqualsLiteral("auto") &&
            !nsTextEditUtils::IsBody(node)) {
       res = mHTMLCSSUtils->GetComputedProperty(node,
                                                nsEditProperty::cssPosition,
                                                positionStr);
       if (NS_FAILED(res)) return res;
-      if (positionStr.Equals(NS_LITERAL_STRING("absolute"))) {
+      if (positionStr.EqualsLiteral("absolute")) {
         // ah, we found one, what's its z-index ? If its z-index is auto,
         // we have to continue climbing the document's tree
         res = mHTMLCSSUtils->GetComputedProperty(node,
@@ -251,7 +251,7 @@ nsHTMLEditor::GetElementZIndex(nsIDOMElement * aElement,
     }
   }
 
-  if (!zIndexStr.Equals(NS_LITERAL_STRING("auto"))) {
+  if (!zIndexStr.EqualsLiteral("auto")) {
     PRInt32 errorCode;
     *aZindex = zIndexStr.ToInteger(&errorCode);
   }
@@ -524,7 +524,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
   nsAutoString positionStr;
   mHTMLCSSUtils->GetComputedProperty(aElement, nsEditProperty::cssPosition,
                                      positionStr);
-  PRBool isPositioned = (positionStr.Equals(NS_LITERAL_STRING("absolute")));
+  PRBool isPositioned = (positionStr.EqualsLiteral("absolute"));
 
   // nothing to do if the element is already in the state we want
   if (isPositioned == aEnabled)
@@ -681,14 +681,14 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
                                        nsEditProperty::cssBackgroundImage,
                                        bgImageStr);
   if (NS_FAILED(res)) return res;
-  if (bgImageStr.Equals(NS_LITERAL_STRING("none"))) {
+  if (bgImageStr.EqualsLiteral("none")) {
     nsAutoString bgColorStr;
     res =
       mHTMLCSSUtils->GetComputedProperty(aElement,
                                          nsEditProperty::cssBackgroundColor,
                                          bgColorStr);
     if (NS_FAILED(res)) return res;
-    if (bgColorStr.Equals(NS_LITERAL_STRING("transparent"))) {
+    if (bgColorStr.EqualsLiteral("transparent")) {
 
       nsCOMPtr<nsIDOMViewCSS> viewCSS;
       res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(viewCSS));

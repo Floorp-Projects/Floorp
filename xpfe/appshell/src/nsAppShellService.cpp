@@ -1454,7 +1454,7 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
     }
     ExitLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, gProfileInitialStateTopic) &&
-             nsDependentString(aData).Equals(NS_LITERAL_STRING("switch"))) {
+             nsDependentString(aData).EqualsLiteral("switch")) {
     // Now, establish the startup state according to the new prefs.
     PRBool openedWindow;
     CreateStartupState(SIZE_TO_CONTENT, SIZE_TO_CONTENT, &openedWindow);

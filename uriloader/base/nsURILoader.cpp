@@ -297,7 +297,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
     // be different, sends text/plain with iso-8859-1 charset.  Don't do
     // general case-insensitive comparison, since we really want to apply this
     // crap as rarely as we can.
-    if (contentType.Equals(NS_LITERAL_CSTRING("text/plain")) ||
+    if (contentType.EqualsLiteral("text/plain") ||
         contentType.Equals(
              NS_LITERAL_CSTRING("text/plain; charset=ISO-8859-1")) ||
         contentType.Equals(

@@ -382,7 +382,7 @@ PRBool
 nsXULCommandDispatcher::Matches(const nsString& aList, 
                                 const nsAString& aElement)
 {
-  if (aList.Equals(NS_LITERAL_STRING("*")))
+  if (aList.EqualsLiteral("*"))
     return PR_TRUE; // match _everything_!
 
   PRInt32 indx = aList.Find(PromiseFlatString(aElement));

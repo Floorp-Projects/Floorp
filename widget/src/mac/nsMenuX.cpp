@@ -183,7 +183,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   nsAutoString hiddenValue, collapsedValue;
   mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
   mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
-  if ( hiddenValue == NS_LITERAL_STRING("true") || collapsedValue == NS_LITERAL_STRING("true") )
+  if ( hiddenValue.EqualsLiteral("true") || collapsedValue.EqualsLiteral("true") )
     mVisible = PR_FALSE;
 
   return NS_OK;
@@ -267,7 +267,7 @@ NS_METHOD nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   // I want to be internationalized too!
   nsAutoString keyEquivalent(NS_LITERAL_STRING(" "));
   aMenuItem->GetShortcutChar(keyEquivalent);
-  if (keyEquivalent != NS_LITERAL_STRING(" ")) {
+  if (!keyEquivalent.EqualsLiteral(" ")) {
     ToUpperCase(keyEquivalent);
     char keyStr[2];
     keyEquivalent.ToCString(keyStr, sizeof(keyStr));
@@ -822,7 +822,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
   // if menu should be hidden, bail
   nsAutoString hidden;
   inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
-  if ( hidden == NS_LITERAL_STRING("true") )
+  if ( hidden.EqualsLiteral("true") )
     return;
 
   // Create nsMenuItem
@@ -842,12 +842,12 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
 
     //printf("menuitem %s \n", NS_LossyConvertUCS2toASCII(menuitemName).get());
               
-    PRBool enabled = ! (disabled == NS_LITERAL_STRING("true"));
+    PRBool enabled = ! (disabled.EqualsLiteral("true"));
     
     nsIMenuItem::EMenuItemType itemType = nsIMenuItem::eRegular;
-    if ( type == NS_LITERAL_STRING("checkbox") )
+    if ( type.EqualsLiteral("checkbox") )
       itemType = nsIMenuItem::eCheckbox;
-    else if ( type == NS_LITERAL_STRING("radio") )
+    else if ( type.EqualsLiteral("radio") )
       itemType = nsIMenuItem::eRadio;
       
     nsCOMPtr<nsIWebShell>  webShell = do_QueryReferent(mWebShellWeakRef);
@@ -878,7 +878,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
       nsCOMPtr<nsIContent> keyContent ( do_QueryInterface(keyElement) );
       nsAutoString keyChar(NS_LITERAL_STRING(" "));
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
-	    if(keyChar != NS_LITERAL_STRING(" ")) 
+	    if(!keyChar.EqualsLiteral(" ")) 
         pnsMenuItem->SetShortcutChar(keyChar);
         
       PRUint8 modifiers = knsMenuItemNoModifier;
@@ -906,7 +906,7 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
 	    pnsMenuItem->SetModifiers ( modifiers );
     }
 
-    if ( checked == NS_LITERAL_STRING("true") )
+    if ( checked.EqualsLiteral("true") )
       pnsMenuItem->SetChecked(PR_TRUE);
     else
       pnsMenuItem->SetChecked(PR_FALSE);
@@ -923,7 +923,7 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
   // if menu should be hidden, bail
   nsAutoString hidden; 
   inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
-  if ( hidden == NS_LITERAL_STRING("true") )
+  if ( hidden.EqualsLiteral("true") )
     return;
   
   nsAutoString menuName; 
@@ -943,7 +943,7 @@ nsMenuX::LoadSubMenu( nsIMenu * pParentMenu, nsIContent* inMenuItemContent )
     // set if it's enabled or disabled
     nsAutoString disabled;
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, disabled);
-    if ( disabled == NS_LITERAL_STRING("true") )
+    if ( disabled.EqualsLiteral("true") )
       pnsMenu->SetEnabled ( PR_FALSE );
     else
       pnsMenu->SetEnabled ( PR_TRUE );
@@ -961,7 +961,7 @@ nsMenuX::LoadSeparator ( nsIContent* inMenuItemContent )
   // if item should be hidden, bail
   nsAutoString hidden;
   inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hidden);
-  if ( hidden == NS_LITERAL_STRING("true") )
+  if ( hidden.EqualsLiteral("true") )
     return;
 
   AddSeparator();
@@ -1229,7 +1229,7 @@ nsMenuX :: CountVisibleBefore ( PRUint32* outVisibleBefore )
         nsAutoString hiddenValue, collapsedValue;
         menuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
         menuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
-        if ( hiddenValue != NS_LITERAL_STRING("true") && collapsedValue != NS_LITERAL_STRING("true"))
+        if ( !hiddenValue.EqualsLiteral("true") && !collapsedValue.EqualsLiteral("true"))
           ++(*outVisibleBefore);
       }
     }
@@ -1265,7 +1265,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
    
     nsAutoString valueString;
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, valueString);
-    if(valueString == NS_LITERAL_STRING("true"))
+    if(valueString.EqualsLiteral("true"))
       SetEnabled(PR_FALSE);
     else
       SetEnabled(PR_TRUE);
@@ -1303,7 +1303,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
       mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
       mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
         
-      if (hiddenValue == NS_LITERAL_STRING("true") || collapsedValue == NS_LITERAL_STRING("true")) {
+      if (hiddenValue.EqualsLiteral("true") || collapsedValue.EqualsLiteral("true")) {
         if ( mVisible ) {
           if ( menubarParent ) {
             PRUint32 indexToRemove = 0;

@@ -1245,7 +1245,7 @@ nsXULElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
     nsCOMPtr<nsIContentList> list;
 
-    if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
+    if (!aNamespaceURI.EqualsLiteral("*")) {
         nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
                                                               &nameSpaceId);
 
@@ -2653,10 +2653,10 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                 aEvent->message == NS_XUL_POPUP_HIDDEN || aEvent->message == NS_FORM_SELECTED ||
                 aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
                 aEvent->message == NS_XUL_CLICK || aEvent->message == NS_DRAGDROP_GESTURE ||
-                tagName == NS_LITERAL_STRING("menu") || tagName == NS_LITERAL_STRING("menuitem") ||
-                tagName == NS_LITERAL_STRING("menulist") || tagName == NS_LITERAL_STRING("menubar") ||
-                tagName == NS_LITERAL_STRING("menupopup") || tagName == NS_LITERAL_STRING("key") ||
-                tagName == NS_LITERAL_STRING("keyset")) {
+                tagName.EqualsLiteral("menu") || tagName.EqualsLiteral("menuitem") ||
+                tagName.EqualsLiteral("menulist") || tagName.EqualsLiteral("menubar") ||
+                tagName.EqualsLiteral("menupopup") || tagName.EqualsLiteral("key") ||
+                tagName.EqualsLiteral("keyset")) {
 
                 nsCOMPtr<nsIEventListenerManager> listenerManager;
                 if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
@@ -3318,7 +3318,7 @@ nsXULElement::GetHidden(PRBool* aResult)
   *aResult = PR_FALSE;
   nsAutoString val;
   GetAttribute(NS_LITERAL_STRING("hidden"), val);
-  if (val.Equals(NS_LITERAL_STRING("true")))
+  if (val.EqualsLiteral("true"))
     *aResult = PR_TRUE;
   return NS_OK;
 }
@@ -3339,7 +3339,7 @@ nsXULElement::GetCollapsed(PRBool* aResult)
   *aResult = PR_FALSE;
   nsAutoString val;
   GetAttribute(NS_LITERAL_STRING("collapsed"), val);
-  if (val.Equals(NS_LITERAL_STRING("true")))
+  if (val.EqualsLiteral("true"))
     *aResult = PR_TRUE;
   return NS_OK;
 }
@@ -3360,7 +3360,7 @@ nsXULElement::GetAllowEvents(PRBool* aResult)
   *aResult = PR_FALSE;
   nsAutoString val;
   GetAttribute(NS_LITERAL_STRING("allowevents"), val);
-  if (val.Equals(NS_LITERAL_STRING("true")))
+  if (val.EqualsLiteral("true"))
     *aResult = PR_TRUE;
   return NS_OK;
 }
@@ -3719,7 +3719,7 @@ nsXULElement::Click()
 {
     nsAutoString disabled;
     GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
-    if (disabled == NS_LITERAL_STRING("true"))
+    if (disabled.EqualsLiteral("true"))
         return NS_OK;
 
     nsCOMPtr<nsIDocument> doc = mDocument; // Strong just in case
@@ -3785,7 +3785,7 @@ nsXULElement::SetFocus(nsIPresContext* aPresContext)
 {
     nsAutoString disabled;
     GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
-    if (disabled == NS_LITERAL_STRING("true"))
+    if (disabled.EqualsLiteral("true"))
         return;
 
     aPresContext->EventStateManager()->SetContentState(this,

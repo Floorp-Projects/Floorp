@@ -964,7 +964,7 @@ nsTransferableFactory::GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL)
       nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
       nsAutoString value;
       content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
-      if (value.Equals(NS_LITERAL_STRING("simple"))) {
+      if (value.EqualsLiteral("simple")) {
         content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value);
         if (!value.IsEmpty()) {
           nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();

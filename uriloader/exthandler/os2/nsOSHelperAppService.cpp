@@ -1090,11 +1090,11 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
               nsDependentSubstring optionName(start_option_iter, end_optionname_iter);
               if (equalSignFound) {
                 // This is an option that has a name and value
-                if (optionName.Equals(NS_LITERAL_STRING("description"))) {
+                if (optionName.EqualsLiteral("description")) {
                   aDescription = Substring(++equal_sign_iter, semicolon_iter);
-                } else if (optionName.Equals(NS_LITERAL_STRING("x-mozilla-flags"))) {
+                } else if (optionName.EqualsLiteral("x-mozilla-flags")) {
                   aMozillaFlags = Substring(++equal_sign_iter, semicolon_iter);
-                } else if (optionName.Equals(NS_LITERAL_STRING("test"))) {
+                } else if (optionName.EqualsLiteral("test")) {
                   nsCAutoString testCommand;
                   rv = UnescapeCommand(Substring(++equal_sign_iter, semicolon_iter),
                                        aMajorType,
@@ -1192,10 +1192,10 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
     char szAppFromINI[CCHMAXPATH] = "\0";
     char szParamsFromINI[CCHMAXPATH];
     /* Special case http, https, and ftp - if we get here, pass them to the shell */
-    if ((uProtocol == NS_LITERAL_CSTRING("http")) ||
-        (uProtocol == NS_LITERAL_CSTRING("https")) ||
-        (uProtocol == NS_LITERAL_CSTRING("ftp"))) {
-      if (uProtocol == NS_LITERAL_CSTRING("ftp")) {
+    if ((uProtocol.EqualsLiteral("http")) ||
+        (uProtocol.EqualsLiteral("https")) ||
+        (uProtocol.EqualsLiteral("ftp"))) {
+      if (uProtocol.EqualsLiteral("ftp")) {
         PrfQueryProfileString(HINI_USER,
                               "WPURLDEFAULTSETTINGS",
                               "DefaultFTPExe",
@@ -1210,8 +1210,8 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
                               sizeof(szParamsFromINI)) ;
       }
       /* If we didn't get a default ftp or it's http or https */
-      if ((uProtocol == NS_LITERAL_CSTRING("http")) ||
-          (uProtocol == NS_LITERAL_CSTRING("https")) ||
+      if ((uProtocol.EqualsLiteral("http")) ||
+          (uProtocol.EqualsLiteral("https")) ||
           (szAppFromINI[0] == '\0')) {
         PrfQueryProfileString(HINI_USER,
                               "WPURLDEFAULTSETTINGS",
@@ -1238,9 +1238,9 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
                                 sizeof(szParamsFromINI));
         }
       }
-    } else if ((uProtocol == NS_LITERAL_CSTRING("mailto")) ||
-               (uProtocol == NS_LITERAL_CSTRING("news"))) {
-      if (uProtocol == NS_LITERAL_CSTRING("news")) {
+    } else if ((uProtocol.EqualsLiteral("mailto")) ||
+               (uProtocol.EqualsLiteral("news"))) {
+      if (uProtocol.EqualsLiteral("news")) {
         PrfQueryProfileString(HINI_USER,
                               "WPURLDEFAULTSETTINGS",
                               "DefaultNewsExe",
@@ -1255,7 +1255,7 @@ NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
                               sizeof(szParamsFromINI)) ;
       }
       /* If we didn't get a default news or it's mailto */
-      if ((uProtocol == NS_LITERAL_CSTRING("mailto")) ||
+      if ((uProtocol.EqualsLiteral("mailto")) ||
           (szAppFromINI[0] == '\0')) {
         PrfQueryProfileString(HINI_USER,
                               "WPURLDEFAULTSETTINGS",

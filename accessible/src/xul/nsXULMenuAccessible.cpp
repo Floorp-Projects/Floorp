@@ -67,7 +67,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
   // Has Popup?
   nsAutoString tagName;
   element->GetLocalName(tagName);
-  if (tagName.Equals(NS_LITERAL_STRING("menu")))
+  if (tagName.EqualsLiteral("menu"))
     *_retval |= STATE_HASPOPUP;
 
   nsAutoString menuItemType;
@@ -75,7 +75,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
 
   if (!menuItemType.IsEmpty()) {
     // Selectable?
-    if (menuItemType.Equals(NS_LITERAL_STRING("radio")))
+    if (menuItemType.EqualsLiteral("radio"))
       *_retval |= STATE_SELECTABLE;
 
     // Checked?
@@ -189,7 +189,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
       nodeList->Item(childIndex, getter_AddRefs(childNode));
       nsAutoString nodeName;
       childNode->GetNodeName(nodeName);
-      if (nodeName.Equals(NS_LITERAL_STRING("menupopup"))) {
+      if (nodeName.EqualsLiteral("menupopup")) {
         break;
       }
     }
@@ -199,7 +199,7 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
       if (element) {
         nsAutoString attr;
         element->GetAttribute(NS_LITERAL_STRING("menugenerated"), attr);
-        if (!attr.Equals(NS_LITERAL_STRING("true"))) {
+        if (!attr.EqualsLiteral("true")) {
           element->SetAttribute(NS_LITERAL_STRING("menugenerated"), NS_LITERAL_STRING("true"));
         }
       }

@@ -1606,7 +1606,7 @@ nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
       nsAutoString typeAttrVal;
       nsresult rv = elem->GetAttribute(typeAttrName, typeAttrVal);
       ToLowerCase(typeAttrVal);
-      if (NS_SUCCEEDED(rv) && (typeAttrVal.Equals(NS_LITERAL_STRING("_moz"))))
+      if (NS_SUCCEEDED(rv) && (typeAttrVal.EqualsLiteral("_moz")))
         return PR_TRUE;
     }
     return PR_FALSE;

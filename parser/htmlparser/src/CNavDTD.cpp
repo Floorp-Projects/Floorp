@@ -701,11 +701,11 @@ PRBool DoesRequireBody(CToken* aToken,nsITokenizer* aTokenizer) {
           const nsAString& name=attr->GetKey();
           const nsAString& value=attr->GetValue();
 
-          if((name.Equals(NS_LITERAL_STRING("type")) || 
-              name.Equals(NS_LITERAL_STRING("TYPE")))    
+          if((name.EqualsLiteral("type") || 
+              name.EqualsLiteral("TYPE"))    
              && 
-             !(value.Equals(NS_LITERAL_STRING("hidden")) || 
-             value.Equals(NS_LITERAL_STRING("HIDDEN")))) {
+             !(value.EqualsLiteral("hidden") || 
+             value.EqualsLiteral("HIDDEN"))) {
             result=PR_TRUE; 
             break;
           }

@@ -1041,7 +1041,7 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
     }
     // _main is an IE target which should be case-insensitive but isn't
     // see bug 217886 for details
-    else if(name.EqualsIgnoreCase("_content") || name.Equals(NS_LITERAL_STRING("_main")))
+    else if(name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main"))
     {
         if (mTreeOwner) {
             mTreeOwner->FindItemWithName(name.get(), nsnull, 
@@ -5052,7 +5052,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // _main is an IE target which should be case-insensitive but isn't
             // see bug 217886 for details            
             if (!bIsJavascript &&
-                (name.EqualsIgnoreCase("_content") || name.Equals(NS_LITERAL_STRING("_main")) ||
+                (name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main") ||
                  name.EqualsIgnoreCase("_blank"))) 
             {
                 nsCOMPtr<nsIExternalProtocolService> extProtService;
@@ -5098,7 +5098,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 else if (!name.EqualsIgnoreCase("_parent") &&
                          !name.EqualsIgnoreCase("_self") &&
                          !name.EqualsIgnoreCase("_content") &&
-                         !name.Equals(NS_LITERAL_STRING("_main"))) {
+                         !name.EqualsLiteral("_main")) {
                     nsCOMPtr<nsIDocShellTreeItem> targetTreeItem;
                     FindItemWithName(name.get(),
                                      NS_STATIC_CAST(nsIInterfaceRequestor *, this),

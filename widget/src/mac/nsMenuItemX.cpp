@@ -262,7 +262,7 @@ NS_METHOD nsMenuItemX::DoCommand()
     if (mMenuType == nsIMenuItem::eCheckbox || (mMenuType == nsIMenuItem::eRadio && !mIsChecked)) {
         nsAutoString value;
         mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::autocheck, value);
-        if (!value.Equals(NS_LITERAL_STRING("false")))
+        if (!value.EqualsLiteral("false"))
             SetChecked(!mIsChecked);
             /* the AttributeChanged code will update all the internal state */
     }
@@ -355,7 +355,7 @@ nsMenuItemX :: AttributeChanged ( nsIDocument *aDocument, PRInt32 aNameSpaceID, 
     if ( mMenuType == eRadio ) {
       nsAutoString checked;
       mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, checked);
-      if (checked == NS_LITERAL_STRING("true") ) 
+      if (checked.EqualsLiteral("true") ) 
         UncheckRadioSiblings(mContent);
     }
     

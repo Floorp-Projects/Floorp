@@ -87,11 +87,11 @@ static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
       // numeric values
       nsAutoString str;
       res = val->GetStringValue(str);
-      if (str.Equals(NS_LITERAL_STRING("thin")))
+      if (str.EqualsLiteral("thin"))
         f = 1;
-      if (str.Equals(NS_LITERAL_STRING("medium")))
+      if (str.EqualsLiteral("medium"))
         f = 3;
-      if (str.Equals(NS_LITERAL_STRING("thick")))
+      if (str.EqualsLiteral("thick"))
         f = 5;
       break;
     }
@@ -332,7 +332,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
     nsAutoString positionStr;
     mHTMLCSSUtils->GetComputedProperty(aElement, nsEditProperty::cssPosition,
                                        positionStr);
-    isPositioned = positionStr.Equals(NS_LITERAL_STRING("absolute"));
+    isPositioned = positionStr.EqualsLiteral("absolute");
   }
 
   if (isPositioned) {

@@ -558,7 +558,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
       nsCAutoString url;
       docURL->GetSpec(url);
-      PRBool isAboutBlank = url.Equals(NS_LITERAL_CSTRING("about:blank"));
+      PRBool isAboutBlank = url.EqualsLiteral("about:blank");
 
       PRBool isSameOrigin = PR_FALSE;
       if (isAboutBlank && mOpenerScriptURL) {
@@ -3105,7 +3105,7 @@ PRBool GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
       if (name.EqualsIgnoreCase("_top") ||
           name.EqualsIgnoreCase("_self") ||
           name.EqualsIgnoreCase("_content") ||
-          name.Equals(NS_LITERAL_STRING("_main")))
+          name.EqualsLiteral("_main"))
         allowWindow = PR_TRUE;
       else {
         nsCOMPtr<nsIWindowWatcher> wwatch =

@@ -1122,15 +1122,15 @@ RDFContentSinkImpl::SetParseMode(const PRUnichar **aAttributes)
             nsRDFParserUtils::StripAndConvert(v);
 
             if (!nameSpaceURI || 0 == PL_strcmp(nameSpaceURI, kRDFNameSpaceURI)) {
-                if (v == NS_LITERAL_STRING("Resource"))
+                if (v.EqualsLiteral("Resource"))
                     mParseMode = eRDFContentSinkParseMode_Resource;
 
                 break;
             }
             else if (0 == PL_strcmp(nameSpaceURI, kNCNameSpaceURI)) {
-                if (v == NS_LITERAL_STRING("Date"))
+                if (v.EqualsLiteral("Date"))
                     mParseMode = eRDFContentSinkParseMode_Date;
-                else if (v == NS_LITERAL_STRING("Integer"))
+                else if (v.EqualsLiteral("Integer"))
                     mParseMode = eRDFContentSinkParseMode_Int;
 
                 break;

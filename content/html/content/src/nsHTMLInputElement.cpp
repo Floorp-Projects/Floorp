@@ -2432,7 +2432,7 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
         nsAutoString checked;
         rv = aState->GetStateProperty(NS_LITERAL_STRING("checked"), checked);
         if (rv == NS_STATE_PROPERTY_EXISTS) {
-          DoSetChecked(checked.Equals(NS_LITERAL_STRING("t")), PR_FALSE);
+          DoSetChecked(checked.EqualsLiteral("t"), PR_FALSE);
         }
         break;
       }
@@ -2455,7 +2455,7 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
   nsresult rv2 = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
   NS_ASSERTION(NS_SUCCEEDED(rv2), "disabled restore failed!");
   if (rv2 == NS_STATE_PROPERTY_EXISTS) {
-    SetDisabled(disabled.Equals(NS_LITERAL_STRING("t")));
+    SetDisabled(disabled.EqualsLiteral("t"));
   }
 
   if (NS_FAILED(rv|rv2)) {

@@ -1107,7 +1107,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         goto out;
 
     // VersionLiteral
-    if (!nsDependentCString(values[0], lengths[0]).Equals(NS_LITERAL_CSTRING("Version")))
+    if (!nsDependentCString(values[0], lengths[0]).EqualsLiteral("Version"))
         goto out;
 
     // major

@@ -840,15 +840,15 @@ posixlocale_reverse_conversion_test()
 	//
 	result = posix_locale->GetXPLocale("en_US",locale);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetXPLocale failed.\n");
-	NS_ASSERTION(locale.Equals(NS_LITERAL_STRING("en-US")),"nsLocaleTest: GetXPLocale failed.\n");
+	NS_ASSERTION(locale.EqualsLiteral("en-US"),"nsLocaleTest: GetXPLocale failed.\n");
 
 	result = posix_locale->GetXPLocale("C",locale);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetXPLocale failed.\n");
-	NS_ASSERTION(locale.Equals(NS_LITERAL_STRING("en")),"nsLocaleTest: GetXPLocale failed.\n");
+	NS_ASSERTION(locale.EqualsLiteral("en"),"nsLocaleTest: GetXPLocale failed.\n");
 
 	result = posix_locale->GetXPLocale("en",locale);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetXPLocale failed.\n");
-  NS_ASSERTION(locale.Equals(NS_LITERAL_STRING("en")),"nsLocaleTest: GetXPLocale failed.\n");
+  NS_ASSERTION(locale.EqualsLiteral("en"),"nsLocaleTest: GetXPLocale failed.\n");
 
   posix_locale->Release();
 

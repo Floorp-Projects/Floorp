@@ -449,43 +449,43 @@ static void ConvertPosition(nsIDOMElement* aPopupElt, nsString& aAnchor, nsStrin
   if (position.IsEmpty())
     return;
 
-  if (position.Equals(NS_LITERAL_STRING("before_start"))) {
+  if (position.EqualsLiteral("before_start")) {
     aAnchor.Assign(NS_LITERAL_STRING("topleft"));
     aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("before_end"))) {
+  else if (position.EqualsLiteral("before_end")) {
     aAnchor.Assign(NS_LITERAL_STRING("topright"));
     aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("after_start"))) {
+  else if (position.EqualsLiteral("after_start")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
     aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("after_end"))) {
+  else if (position.EqualsLiteral("after_end")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
     aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("start_before"))) {
+  else if (position.EqualsLiteral("start_before")) {
     aAnchor.Assign(NS_LITERAL_STRING("topleft"));
     aAlign.Assign(NS_LITERAL_STRING("topright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("start_after"))) {
+  else if (position.EqualsLiteral("start_after")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomleft"));
     aAlign.Assign(NS_LITERAL_STRING("bottomright"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("end_before"))) {
+  else if (position.EqualsLiteral("end_before")) {
     aAnchor.Assign(NS_LITERAL_STRING("topright"));
     aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("end_after"))) {
+  else if (position.EqualsLiteral("end_after")) {
     aAnchor.Assign(NS_LITERAL_STRING("bottomright"));
     aAlign.Assign(NS_LITERAL_STRING("bottomleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("overlap"))) {
+  else if (position.EqualsLiteral("overlap")) {
     aAnchor.Assign(NS_LITERAL_STRING("topleft"));
     aAlign.Assign(NS_LITERAL_STRING("topleft"));
   }
-  else if (position.Equals(NS_LITERAL_STRING("after_pointer")))
+  else if (position.EqualsLiteral("after_pointer"))
     aY += 21;
 }
 
@@ -520,9 +520,9 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   mElement->GetAttribute(type, identifier);
 
   if (identifier.IsEmpty()) {
-    if (type.Equals(NS_LITERAL_STRING("popup")))
+    if (type.EqualsLiteral("popup"))
       mElement->GetAttribute(NS_LITERAL_STRING("menu"), identifier);
-    else if (type.Equals(NS_LITERAL_STRING("context")))
+    else if (type.EqualsLiteral("context"))
       mElement->GetAttribute(NS_LITERAL_STRING("contextmenu"), identifier);
     if (identifier.IsEmpty())
       return rv;
@@ -542,7 +542,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   // Handle the _child case for popups and context menus
   nsCOMPtr<nsIDOMElement> popupContent;
 
-  if (identifier == NS_LITERAL_STRING("_child")) {
+  if (identifier.EqualsLiteral("_child")) {
     nsCOMPtr<nsIContent> popup;
 
     GetImmediateChild(content, nsXULAtoms::menupopup, getter_AddRefs(popup));

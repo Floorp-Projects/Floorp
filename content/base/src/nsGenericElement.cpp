@@ -1533,7 +1533,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
   nsCOMPtr<nsIContentList> list;
 
-  if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
+  if (!aNamespaceURI.EqualsLiteral("*")) {
     nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
                                                           &nameSpaceId);
 

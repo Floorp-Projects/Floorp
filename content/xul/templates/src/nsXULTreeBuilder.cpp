@@ -418,7 +418,7 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
 
     nsAutoString sortLocked;
     header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortLocked, sortLocked);
-    if (sortLocked.Equals(NS_LITERAL_STRING("true")))
+    if (sortLocked.EqualsLiteral("true"))
         return NS_OK;
 
     nsAutoString sort;
@@ -434,11 +434,11 @@ nsXULTreeBuilder::Sort(nsIDOMElement* aElement)
     nsAutoString dir;
     header->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, dir);
 
-    if (dir == NS_LITERAL_STRING("ascending")) {
+    if (dir.EqualsLiteral("ascending")) {
         dir = NS_LITERAL_STRING("descending");
         mSortDirection = eDirection_Descending;
     }
-    else if (dir == NS_LITERAL_STRING("descending")) {
+    else if (dir.EqualsLiteral("descending")) {
         dir = NS_LITERAL_STRING("natural");
         mSortDirection = eDirection_Natural;
     }
@@ -720,9 +720,9 @@ nsXULTreeBuilder::GetProgressMode(PRInt32 aRow, nsITreeColumn* aCol, PRInt32* aR
         nsAutoString mode;
         SubstituteText(*(mRows[aRow]->mMatch), raw, mode);
 
-        if (mode.Equals(NS_LITERAL_STRING("normal")))
+        if (mode.EqualsLiteral("normal"))
             *aResult = nsITreeView::PROGRESS_NORMAL;
-        else if (mode.Equals(NS_LITERAL_STRING("undetermined")))
+        else if (mode.EqualsLiteral("undetermined"))
             *aResult = nsITreeView::PROGRESS_UNDETERMINED;
     }
 
@@ -967,7 +967,7 @@ nsXULTreeBuilder::IsEditable(PRInt32 aRow, nsITreeColumn* aCol, PRBool* _retval)
         nsAutoString editable;
         SubstituteText(*(mRows[aRow]->mMatch), raw, editable);
 
-        if (editable.Equals(NS_LITERAL_STRING("false")))
+        if (editable.EqualsLiteral("false"))
             *_retval = PR_FALSE;
     }
 
@@ -1253,7 +1253,7 @@ nsXULTreeBuilder::EnsureSortVariables()
         if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) {
             nsAutoString sortActive;
             child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, sortActive);
-            if (sortActive == NS_LITERAL_STRING("true")) {
+            if (sortActive.EqualsLiteral("true")) {
                 nsAutoString sort;
                 child->GetAttr(kNameSpaceID_None, nsXULAtoms::sort, sort);
                 if (!sort.IsEmpty()) {
@@ -1261,9 +1261,9 @@ nsXULTreeBuilder::EnsureSortVariables()
 
                     nsAutoString sortDirection;
                     child->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection);
-                    if (sortDirection == NS_LITERAL_STRING("ascending"))
+                    if (sortDirection.EqualsLiteral("ascending"))
                         mSortDirection = eDirection_Ascending;
-                    else if (sortDirection == NS_LITERAL_STRING("descending"))
+                    else if (sortDirection.EqualsLiteral("descending"))
                         mSortDirection = eDirection_Descending;
                     else
                         mSortDirection = eDirection_Natural;
