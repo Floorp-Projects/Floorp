@@ -1546,7 +1546,7 @@ AddNscpCertType (void *extHandle)
 static SECStatus 
 AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
 {
-    SECItem item = { NULL, 0 };
+    SECItem item = { 0, NULL, 0 };
     void *value;
     CERTGeneralName *emailList = NULL;
     CERTGeneralName *current;
