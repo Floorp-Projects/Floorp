@@ -128,8 +128,8 @@
 
 // HTMLEmbed/ObjectElement helper includes
 #include "nsIPluginInstance.h"
+#include "nsIPluginInstanceInternal.h"
 #include "nsIObjectFrame.h"
-#include "nsINPRuntimePlugin.h"
 #include "nsIScriptablePlugin.h"
 #include "nsIPluginHost.h"
 #include "nsPIPluginHost.h"
@@ -7340,11 +7340,11 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   *plugin_obj = nsnull;
   *plugin_proto = nsnull;
 
-  nsCOMPtr<nsINPRuntimePlugin> npruntime_plugin =
+  nsCOMPtr<nsIPluginInstanceInternal> plugin_internal =
     do_QueryInterface(plugin_inst);
 
-  if (npruntime_plugin) {
-    *plugin_obj = npruntime_plugin->GetJSObject(cx);
+  if (plugin_internal) {
+    *plugin_obj = plugin_internal->GetJSObject(cx);
 
     if (*plugin_obj) {
       *plugin_proto = ::JS_GetPrototype(cx, *plugin_obj);

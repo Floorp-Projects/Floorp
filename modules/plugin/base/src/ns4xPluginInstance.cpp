@@ -764,7 +764,7 @@ nsInstanceStream::~nsInstanceStream()
 ///////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_ISUPPORTS3(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin,
-                   nsINPRuntimePlugin)
+                   nsIPluginInstanceInternal)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1544,4 +1544,23 @@ ns4xPluginInstance::GetJSObject(JSContext *cx)
   }
 
   return obj;
+}
+
+nsresult
+ns4xPluginInstance::GetFormValue(nsAString& aValue)
+{
+  aValue.Truncate();
+
+  char *value = nsnull;
+  nsresult rv = GetValueInternal(NPPVformValue, &value);
+
+  if (NS_SUCCEEDED(rv) && value) {
+    CopyUTF8toUTF16(value, aValue);
+
+    // NPPVformValue allocates with NPN_MemAlloc(), which uses
+    // nsMemory.
+    nsMemory::Free(value);
+  }
+
+  return NS_OK;
 }

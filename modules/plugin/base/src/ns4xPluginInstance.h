@@ -54,7 +54,7 @@
 #include "nsIPluginInstancePeer.h"
 #include "nsIPluginTagInfo2.h"
 #include "nsIScriptablePlugin.h"
-#include "nsINPRuntimePlugin.h"
+#include "nsIPluginInstanceInternal.h"
 
 #include "npupp.h"
 #ifdef OJI
@@ -83,7 +83,7 @@ struct nsInstanceStream
 
 class ns4xPluginInstance : public nsIPluginInstance,
                            public nsIScriptablePlugin,
-                           public nsINPRuntimePlugin
+                           public nsIPluginInstanceInternal
 {
 public:
 
@@ -126,6 +126,13 @@ public:
     NS_IMETHOD GetScriptableInterface(nsIID * *aScriptableInterface);
 
     ////////////////////////////////////////////////////////////////////////
+    // nsIPluginInstanceInternal methods
+
+    virtual JSObject *GetJSObject(JSContext *cx);
+
+    virtual nsresult GetFormValue(nsAString& aValue);
+
+    ////////////////////////////////////////////////////////////////////////
     // ns4xPluginInstance-specific methods
 
     /**
@@ -161,8 +168,6 @@ public:
 
     // cache this 4.x plugin like an XPCOM plugin
     nsresult SetCached(PRBool aCache) { mCached = aCache; return NS_OK; };
-
-    virtual JSObject *GetJSObject(JSContext *cx);
 
     // Non-refcounting accessor for faster access to the peer.
     nsIPluginInstancePeer *Peer()

@@ -57,7 +57,7 @@ EXPORTS		= \
 		npupp.h \
 		npruntime.h \
 		nptypes.h \
-		nsINPRuntimePlugin.h \
+		nsIPluginInstanceInternal.h \
 		$(NULL)
 
 SDK_HEADERS	 = \
