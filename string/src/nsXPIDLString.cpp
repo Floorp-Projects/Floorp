@@ -156,6 +156,7 @@ nsXPIDLString::GetSharedEmptyBufferHandle()
                                          // race to set the refcount, in
                                          // which case we'll pull the
                                          // same trick in |Destroy|.
+      sBufferHandle->SetImplementationFlags(sBufferHandle->GetImplementationFlags() & shared_buffer_handle_type::kIsNULL);
     }
     return sBufferHandle;
   }
@@ -238,6 +239,7 @@ nsXPIDLCString::GetSharedEmptyBufferHandle()
                                          // race to set the refcount, in
                                          // which case we'll pull the
                                          // same trick in |Destroy|.
+      sBufferHandle->SetImplementationFlags(sBufferHandle->GetImplementationFlags() & shared_buffer_handle_type::kIsNULL);
     }
     return sBufferHandle;
   }
