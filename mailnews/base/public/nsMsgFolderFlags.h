@@ -148,4 +148,6 @@
 
 #define MSG_FOLDER_FLAG_CHECK_NEW 0x20000000 /* this folder is checked for new messages */
 
+#define MSG_FOLDER_FLAG_JUNK 0x40000000 /* this folder is for spam messages */
+
 #endif
