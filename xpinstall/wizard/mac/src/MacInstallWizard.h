@@ -571,6 +571,7 @@ void		InitControlsObject(void);
 OSErr		GetCWD(long *outDirID, short *outVRefNum);
 void		InitOptObject(void);
 void		InitManagers(void);
+void        CleanTemp(void);
 void		MakeMenus(void);
 void 		MainEventLoop(void);
 void		ErrorHandler(short);

@@ -28,7 +28,8 @@
 #include "zipstub.h"
 #include "zipfile.h"
 #include "nsAppleSingleDecoder.h"
-#include "TextUtils.h"
+
+#include <TextUtils.h>
 
 static FSSpec 	coreFileList[kMaxCoreFiles];
 static short	currCoreFile = 0;
@@ -54,6 +55,7 @@ ExtractCoreFile(short srcVRefNum, long srcDirID, short tgtVRefNum, long tgtDirID
 {
 	OSErr 			err = noErr;
 	StringPtr 		coreFile = 0;
+	UInt32          endTicks;
 	short			fullPathLen = 0;
 	Handle			fullPathH = 0;
 	Ptr				fullPathStr = 0;
@@ -124,6 +126,13 @@ cleanup:
 	if (fullPathStr)
 		DisposePtr(fullPathStr);
 
+    /* pause till frag registry is updated */
+    endTicks = TickCount() + 60;
+    while (TickCount() < endTicks)
+    {
+        YieldToAnyThread();
+    }
+    
 	return err;
 }
 
@@ -186,6 +195,8 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 	
 	while (!bFoundAll)
 	{
+	    YieldToAnyThread();
+	    
 		/* find next item if one exists */
 		rv = ZIP_FindNext( hFind, filename, 255 );
 		if (rv==ZIP_ERR_FNF)
@@ -276,7 +287,7 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		if (fullPathStr)
 			DisposePtr(fullPathStr);
 	}
-
+        
 	return err;
 }
 

@@ -158,11 +158,11 @@ void HandleKeyDown(EventRecord* evt)
 					return;
 				case kTerminalID:
 					if (!gInstallStarted)
-					{		    
+					{	
 					    DisableNavButtons();
 					    ClearSiteSelector();
+					    gInstallStarted = true;
 						SpawnSDThread(Install, &tid);
-						gInstallStarted = true;
 					}
 					return;
 				default:

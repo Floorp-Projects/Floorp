@@ -98,6 +98,7 @@ void Init(void)
 	gDone = false;
 	InitManagers();
 	InitControlsObject();	
+	CleanTemp();
 
 #if (SDINST_IS_DLL == 1) && (MOZILLA == 0)
 	if (!InitSDLib())
@@ -197,6 +198,7 @@ InitOptObject(void)
 	err = FSMakeFSSpec(gControls->opt->vRefNum, 0, "\p", &tmp);
 	pstrcpy( gControls->opt->folder, tmp.name );
 	err = FSpGetDirectoryID( &tmp, &gControls->opt->dirID, &isDir );
+
 }
 
 void
@@ -239,6 +241,39 @@ void InitManagers(void)
 	
 	InitCursor();		
 	FlushEvents(everyEvent, 0);	
+}
+
+void CleanTemp(void)
+{
+    OSErr   err = noErr;
+    short   vRefNum;
+    long    dirID;
+    FSSpec  viewerFSp;
+#ifdef MIW_DEBUG
+    Boolean isDir = false;
+#endif
+    
+#ifndef MIW_DEBUG
+    /* get "viewer" in "Temporary Items" folder */
+    ERR_CHECK(FindFolder(kOnSystemDisk, kTemporaryFolderType, kCreateFolder, &vRefNum, &dirID));
+    err = FSMakeFSSpec(vRefNum, dirID, kViewerFolder, &viewerFSp);
+#else
+    /* for DEBUG builds temp is "<currProcessVolume>:Temp NSInstall:" */
+    ERR_CHECK(GetCWD(&dirID, &vRefNum));
+ 	err = FSMakeFSSpec(vRefNum, 0, kTempFolder, &viewerFSp);
+	if (err == fnfErr)
+	    return; /* no debug temp exists */
+	err = FSpGetDirectoryID(&viewerFSp, &dirID, &isDir);
+	if (err != noErr || !isDir)
+	    return;
+    err = FSMakeFSSpec(vRefNum, dirID, kViewerFolder, &viewerFSp);
+#endif
+    
+    /* whack the viewer folder if it exists */
+    if (err == noErr)
+    {
+        ERR_CHECK(DeleteDirectory(viewerFSp.vRefNum, viewerFSp.parID, viewerFSp.name));
+    }
 }
 
 void MakeMenus(void)
@@ -284,8 +319,7 @@ void MainEventLoop(void)
 	
 	while (!gDone) 
 	{		
-		if (gSDDlg)			
-			YieldToAnyThread();  /* SmartDownload dialog thread */
+		YieldToAnyThread();  /* SmartDownload dialog thread */
 		
 		if (!gDone)	 /* after cx switch back ensure not done */
 		{
@@ -402,7 +436,7 @@ void Shutdown(void)
 	
 	if (gControls)
 		DisposePtr( (char*) gControls);
-		
+			
 	frontWin = FrontWindow();
 	MIWMagic = GetWRefCon(frontWin);
 	if (MIWMagic != kMIWMagic)

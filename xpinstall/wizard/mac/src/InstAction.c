@@ -153,7 +153,7 @@ pascal void* Install(void* unused)
 		}
 		SetZone(ourHZ);
 		gSDDlg = false;
-		
+	
 		FSpDelete(&idiSpec);
 	}
 	else
@@ -463,14 +463,13 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	Str255	pkeybuf;
 	FSSpec	fsExists;
 	StringPtr	pcurrArchive = 0;
-		
+	
 	err = FSMakeFSSpec(vRefNum, dirID, idiName, idiSpec);
 	if ((err != noErr) && (err != fnfErr))
 	{
 		ErrorHandler(err);
 		return false;
 	}
-
 	err = FSpCreate(idiSpec, 'NSCP', 'TEXT', smSystemScript);
 	if ( (err != noErr) && (err != dupFNErr))
 	{
@@ -517,7 +516,7 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
                         
 					// get file number 
 					fnum = ltoa(compsDone);
-				    
+				
 					// construct through concatenation [File<num>]\r
 					GetIndString(pkeybuf, rIDIKeys, sFile);
 					keybuf = PascalToC(pkeybuf);
@@ -627,7 +626,6 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 					}
 					if (fnum)
 						free(fnum);
-						
 					compsDone++;
 // XXX shouldn't this be #if MOZILLA == 1
 				}
