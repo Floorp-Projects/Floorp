@@ -181,7 +181,7 @@ getStringArgument(JSContext *cx, JSObject *obj, PRUint16 argNum, uintN argc, jsv
     return JS_GetStringBytes(str);
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
                                      jsval *argv, jsval *rval)
 {
@@ -203,7 +203,7 @@ netscape_security_isPrivilegeEnabled(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                   jsval *argv, jsval *rval)
 {
@@ -221,7 +221,7 @@ netscape_security_enablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                    jsval *argv, jsval *rval)
 {
@@ -239,7 +239,7 @@ netscape_security_disablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                   jsval *argv, jsval *rval)
 {
@@ -257,7 +257,7 @@ netscape_security_revertPrivilege(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc,
                                         jsval *argv, jsval *rval)
 {
@@ -278,7 +278,7 @@ netscape_security_setCanEnablePrivilege(JSContext *cx, JSObject *obj, uintN argc
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 netscape_security_invalidate(JSContext *cx, JSObject *obj, uintN argc,
                              jsval *argv, jsval *rval)
 {

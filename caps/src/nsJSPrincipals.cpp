@@ -24,19 +24,19 @@
 #include "plstr.h"
 #include "nsXPIDLString.h"
 
-PR_STATIC_CALLBACK(void *) 
+JS_STATIC_DLL_CALLBACK(void *) 
 nsGetPrincipalArray(JSContext *cx, struct JSPrincipals *prin) 
 {
     return nsnull;
 }
 
-PR_STATIC_CALLBACK(JSBool) 
+JS_STATIC_DLL_CALLBACK(JSBool) 
 nsGlobalPrivilegesEnabled(JSContext *cx , struct JSPrincipals *jsprin) 
 {
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(void)
+JS_STATIC_DLL_CALLBACK(void)
 nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin) {
     nsJSPrincipals *nsjsprin = (nsJSPrincipals *)jsprin;
     // We need to destroy the nsIPrincipal. We'll do this by adding
