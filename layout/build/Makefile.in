@@ -64,7 +64,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(NSPR_LIBS) \
 		-lxpcom \
-		-lraptorhtmlpars \
 		-lraptorgfx \
 		-ljsdom \
 		-lmozjs \
