@@ -2513,7 +2513,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   else {
     nsISupportsKey key(aElement);
     nsCOMPtr<nsISupports> supports = 
-      getter_AddRefs(NS_STATIC_CAST(nsIBoxObject*, mBoxObjectTable->Get(&key))); 
+      getter_AddRefs(NS_STATIC_CAST(nsISupports*, mBoxObjectTable->Get(&key))); 
     nsCOMPtr<nsIBoxObject> boxObject(do_QueryInterface(supports));
     if (boxObject) {
       *aResult = boxObject;
