@@ -83,6 +83,8 @@ class nsIAtom;
 
 -(void)addBookmark:(id)aSender useSelection:(BOOL)aSel isFolder:(BOOL)aIsFolder;
 
+-(NSString*)resolveKeyword:(NSString*)aKeyword;
+
 -(IBAction)beginRenameBookmark:(id)sender;
 -(IBAction)cancelRenameBookmarkSheet:(id)sender;
 -(IBAction)doRenameBookmarkSheet:(id)sender;
@@ -156,6 +158,8 @@ public:
   
   static void GetTitleAndHrefForBrowserView(id aBrowserView, nsString& aTitle, nsString& aHref);
   static void OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder);
+  
+  static NSString* ResolveKeyword(NSString* aKeyword);
 
   static NSImage* CreateIconForBookmark(nsIDOMElement* aElement);
   

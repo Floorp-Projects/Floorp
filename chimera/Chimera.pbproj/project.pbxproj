@@ -416,6 +416,7 @@
 				2EEC3E63028138724B000102,
 				2E748B74029A448D4B000102,
 				F5383FCE02AC8F8E01A80164,
+				F538C86C02AE2E6701A80166,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -1053,6 +1054,7 @@
 				F52F87CC027D75C301A80165,
 				2E748B72029A448D4B000102,
 				F5383FCC02AC8F8E01A80164,
+				F538C86B02AE2E6701A80166,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -1888,6 +1890,17 @@
 		};
 		F5388AC202ACBC9001A80164 = {
 			fileRef = F5388AC102ACBC8F01A80164;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F538C86B02AE2E6701A80166 = {
+			isa = PBXFileReference;
+			path = StringUtils.h;
+			refType = 4;
+		};
+		F538C86C02AE2E6701A80166 = {
+			fileRef = F538C86B02AE2E6701A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
