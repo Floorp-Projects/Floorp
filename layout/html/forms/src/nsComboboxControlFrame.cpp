@@ -63,7 +63,6 @@
 #include "nsListControlFrame.h"
 #include "nsIElementFactory.h"
 #include "nsContentCID.h"
-#include "nsIMutableAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"

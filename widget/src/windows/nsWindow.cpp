@@ -44,6 +44,7 @@
 #include "nsTransform2D.h"
 #include "nsStringUtil.h"
 #include <windows.h>
+
 //#include <winuser.h>
 #include <zmouse.h>
 //#include "sysmets.h"
@@ -53,11 +54,8 @@
 #include "prtime.h"
 #include "nsIRenderingContextWin.h"
 
-// accessibility only on Windows2000 and Windows98
-#if(WINVER >= 0x0400)
 #include "nsIAccessible.h"
 #include "Accessible.h"
-#endif
 
 #include <imm.h>
 #ifdef MOZ_AIMM
@@ -3367,9 +3365,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
       } break;
 
-#ifdef IS_ACCESSIBLE
-        // accessibility only on Windows2000 and Windows98
-#ifdef WM_GETOBJECT
       case WM_GETOBJECT: 
       {
         if (lParam == OBJID_CLIENT) {
@@ -3391,8 +3386,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         }
       }
       break;
-#endif
-#endif
 
       default: {
         // Handle both flavors of mouse wheel events.

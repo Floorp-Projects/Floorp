@@ -66,7 +66,7 @@
     </content>
   </binding>
 
-  <binding id="thumb" extends="xul:button">
+  <binding id="thumb" extends="chrome://global/content/scrollbarBindings.xml#thumb">
     <content>
       <xul:box class="thumb-box" autostretch="never" orient="vertical" flex="1">
         <xul:spring class="thumb-spring" flex="1"/>
@@ -84,12 +84,7 @@
     </content>
   </binding>
   
-  <binding id="scrollbarbutton">
-    <content>
-      <xul:box class="scrollbarbutton-box" flex="1">
-        <xul:image class="scrollbarbutton-icon" inherits="src"/>
-      </xul:box>
-    </content>
+  <binding id="scrollbarbutton" extends="chrome://global/content/scrollbarBindings.xml#scrollbarbutton">
   </binding>
 
   <binding id="slider">

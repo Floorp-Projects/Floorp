@@ -102,7 +102,6 @@
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#include "nsIMutableAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -412,16 +411,12 @@ nsGfxTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     nsresult rv = NS_OK;
     NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
     if (accService) {
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-     nsIMutableAccessible* acc = nsnull;
-     accService->CreateMutableAccessible(node,&acc);
-     acc->SetName(NS_LITERAL_STRING("Text Field").get());
-     acc->SetRole(NS_LITERAL_STRING("text").get());
-     acc->SetIsLeaf(PR_TRUE);
-     *aInstancePtr = acc;
-     return NS_OK;
+      nsIAccessible* acc = nsnull;
+      accService->CreateHTMLTextFieldAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
+      *aInstancePtr = acc;
+      return NS_OK;
     }
-     return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
   } 
   
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);

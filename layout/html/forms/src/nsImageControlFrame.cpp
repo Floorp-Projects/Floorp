@@ -44,6 +44,7 @@
 #include "nsStyleConsts.h"
 #include "nsFormFrame.h"
 #include "nsFormControlFrame.h"
+#include "nsIAccessibilityService.h"
 
 //Enumeration of possible mouse states used to detect mouse clicks
 /*enum nsMouseState {
@@ -198,7 +199,18 @@ nsImageControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
-  }
+  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+      nsIAccessible* acc = nsnull;
+      accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this),&acc);
+      *aInstancePtr = acc;
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  } 
+
   return nsImageControlFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 

@@ -22,30 +22,62 @@
  */
 
 #include "nsHTMLTextAccessible.h"
-#include "nsICheckboxControlFrame.h"
 #include "nsWeakReference.h"
 #include "nsIFrame.h"
+#include "nsILink.h"
+#include "nsILinkHandler.h"
+#include "nsISelection.h"
+#include "nsISelectionController.h"
+#include "nsIPresContext.h"
+#include "nsReadableUtils.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode):
-nsLeafDOMAccessible(aShell, aDomNode)
+nsLinkableAccessible(aShell, aDomNode)
 { 
 }
 
 /* wstring getAccName (); */
 NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(PRUnichar **_retval)
+{ 
+
+  nsAutoString nameString;
+  nsresult rv = NS_OK;
+  //if (IsALink()) {
+  //  rv = AppendFlatStringFromSubtree(mLinkContent, &nameString);
+  //}
+  //else 
+  mNode->GetNodeValue(nameString);
+  nameString.CompressWhitespace();
+  *_retval = nameString.ToNewUnicode();
+  return rv;
+}
+
+/* unsigned long getAccRole (); */
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccRole(PRUint32 *_retval)
 {
-  nsAutoString value;
-  mNode->GetNodeValue(value);
-  value.CompressWhitespace();
-  *_retval = value.ToNewUnicode();
+  *_retval = ROLE_STATICTEXT;
+
   return NS_OK;
 }
 
-/* wstring getAccRole (); */
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccRole(PRUnichar **_retval)
-{
-    nsAutoString role(NS_LITERAL_STRING("text"));
-    *_retval = role.ToNewUnicode();
 
-    return NS_OK;
+/* nsIAccessible getAccFirstChild (); */
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+/* nsIAccessible getAccLastChild (); */
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccLastChild(nsIAccessible **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+/* long getAccChildCount (); */
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccChildCount(PRInt32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
 }

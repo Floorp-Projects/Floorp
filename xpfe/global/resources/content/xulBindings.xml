@@ -10,14 +10,6 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding id="thumb" extends="xul:box">
-    <content>
-      <xul:spring flex="1"/>
-      <xul:image inherits="src"/>
-      <xul:spring flex="1"/>
-    </content>
-  </binding>
-
   <binding id="slider">
     <content>
       <xul:thumb inherits="align,src" flex="1"/>
@@ -163,6 +155,73 @@
       </xul:box>
       <children includes="menupopup"/>
     </content>
+	<implementation implements="nsIAccessible">
+	  <method name="getAccDefaultAction">
+        <body>
+          <![CDATA[
+		    return 'Click';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccDescription">
+        <body>
+          <![CDATA[
+		    return 'This is a button that can be clicked to perform an action';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccValue">
+        <body>
+          <![CDATA[
+		    return this.getAttribute('value');
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccName">
+        <body>
+          <![CDATA[
+		    return 'Left Button';
+          ]]>
+        </body>
+      </method>
+
+  	  <method name="getAccRole">
+        <body>
+          <![CDATA[
+		    return 'push button';
+          ]]>
+        </body>
+      </method>
+
+      <method name="accDoDefaultAction">
+        <body>
+          <![CDATA[
+		    this.click();
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccChildCount">
+        <body>
+          <![CDATA[
+		    return 0;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccFirstChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccLastChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+ 	</implementation>
   </binding>
 
   <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
@@ -175,6 +234,73 @@
       </xul:box>
       <children includes="menupopup"/>
     </content>
+	<implementation implements="nsIAccessible">
+	  <method name="getAccDefaultAction">
+        <body>
+          <![CDATA[
+		    return 'Click';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccDescription">
+        <body>
+          <![CDATA[
+		    return 'This is a button that can be clicked to perform an action';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccValue">
+        <body>
+          <![CDATA[
+		    return this.getAttribute('value');
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccName">
+        <body>
+          <![CDATA[
+		    return 'Top Button';
+          ]]>
+        </body>
+      </method>
+
+  	  <method name="getAccRole">
+        <body>
+          <![CDATA[
+		    return 'push button';
+          ]]>
+        </body>
+      </method>
+
+      <method name="accDoDefaultAction">
+        <body>
+          <![CDATA[
+		    this.click();
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccChildCount">
+        <body>
+          <![CDATA[
+		    return 0;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccFirstChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccLastChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+ 	</implementation>
   </binding>
   
   <binding id="buttonright" extends="chrome://global/content/xulBindings.xml#basetext">
@@ -187,6 +313,73 @@
       </xul:box>
       <children includes="menupopup"/>
     </content>
+	<implementation implements="nsIAccessible">
+	  <method name="getAccDefaultAction">
+        <body>
+          <![CDATA[
+		    return 'Click';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccDescription">
+        <body>
+          <![CDATA[
+		    return 'This is a button that can be clicked to perform an action';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccValue">
+        <body>
+          <![CDATA[
+		    return this.getAttribute('value');
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccName">
+        <body>
+          <![CDATA[
+		    return 'Right Button';
+          ]]>
+        </body>
+      </method>
+
+   	  <method name="getAccRole">
+        <body>
+          <![CDATA[
+		    return 'push button';
+          ]]>
+        </body>
+      </method>
+
+      <method name="accDoDefaultAction">
+        <body>
+          <![CDATA[
+		    this.click();
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccChildCount">
+        <body>
+          <![CDATA[
+		    return 0;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccFirstChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccLastChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+ 	</implementation>
   </binding>
 
   <binding id="buttonbottom" extends="chrome://global/content/xulBindings.xml#basetext">
@@ -199,6 +392,73 @@
       </xul:box>
       <children includes="menupopup"/>
     </content>
+	<implementation implements="nsIAccessible">
+	  <method name="getAccDefaultAction">
+        <body>
+          <![CDATA[
+		    return 'Click';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccDescription">
+        <body>
+          <![CDATA[
+		    return 'This is a button that can be clicked to perform an action';
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccValue">
+        <body>
+          <![CDATA[
+		    return this.getAttribute('value');
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccName">
+        <body>
+          <![CDATA[
+		    return 'Bottom Button';
+          ]]>
+        </body>
+      </method>
+
+  	  <method name="getAccRole">
+        <body>
+          <![CDATA[
+		    return 'push button';
+          ]]>
+        </body>
+      </method>
+
+      <method name="accDoDefaultAction">
+        <body>
+          <![CDATA[
+		    this.click();
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccChildCount">
+        <body>
+          <![CDATA[
+		    return 0;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccFirstChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+	  <method name="getAccLastChild">
+        <body>
+          <![CDATA[
+		    return null;
+          ]]>
+        </body>
+      </method>
+ 	</implementation>
   </binding>
   
   <binding id="separator" extends="xul:spring"/>

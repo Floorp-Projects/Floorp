@@ -62,7 +62,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsImageMapUtils.h"
 #include "nsIFrameManager.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIMutableAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
@@ -146,16 +145,13 @@ nsImageFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIImageFrame*,this);
     return NS_OK;
   } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
-    nsresult rv = NS_OK;
+    nsresult rv;
     NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
     if (accService) {
-     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-     nsIMutableAccessible* acc = nsnull;
-     accService->CreateMutableAccessible(node,&acc);
-     acc->SetName(NS_LITERAL_STRING("Image").get()); 
-     acc->SetRole(NS_LITERAL_STRING("graphic").get());
-     *aInstancePtr = acc;
-     return NS_OK;
+      nsIAccessible* acc = nsnull;
+      accService->CreateHTMLImageAccessible(NS_STATIC_CAST(nsIFrame*, this),&acc);
+      *aInstancePtr = acc;
+      return NS_OK;
     }
     return NS_ERROR_FAILURE;
   } 

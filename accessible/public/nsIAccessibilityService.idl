@@ -24,20 +24,26 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsIMutableAccessible.idl"
 #include "nsIAtom.idl"
+#include "domstubs.idl"
+#include "nsIAccessible.idl"
 
 [scriptable, uuid(68D9720A-0984-42b6-A3F5-8237ED925727)]
 interface nsIAccessibilityService : nsISupports
 {
-  nsIAccessible createRootAccessible(in nsISupports aPresShell, in nsISupports aFrame);
-  nsIMutableAccessible createMutableAccessible(in nsISupports aNode);
-  nsIAccessible createHTMLBlockAccessible(in nsIAccessible aAccessible, in nsIDOMNode aNode, in nsISupports aPresShell);
+  nsIAccessible createRootAccessible(in nsISupports aPresContext, in nsISupports aFrame);
   nsIAccessible createHTMLSelectAccessible(in nsIAtom aAccessible, in nsIDOMNode aNode, in nsISupports aPresShell);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLAreaAccessible(in nsISupports aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
+  nsIAccessible createHTMLTableAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTableCellAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLIFrameAccessible(in nsIDOMNode aNode, in nsISupports aPresContext);
 };
 
 

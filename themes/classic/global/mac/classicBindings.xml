@@ -98,14 +98,6 @@
     </content>
   </binding>
   
-  <binding id="scrollbarbutton">
-    <content>
-      <xul:box class="scrollbarbutton-box" flex="1">
-        <xul:image class="scrollbarbutton-icon" inherits="src"/>
-      </xul:box>
-    </content>
-  </binding>
-  
   <binding id="slider">
     <content>
       <xul:button class="slider-button"/>

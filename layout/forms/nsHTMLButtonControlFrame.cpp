@@ -54,6 +54,7 @@
 #include "nsFormControlFrame.h"
 #include "nsIFrameManager.h"
 #include "nsINameSpaceManager.h"
+#include "nsIAccessibilityService.h"
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
@@ -161,7 +162,17 @@ nsHTMLButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (aIID.Equals(NS_GET_IID(nsIFormControlFrame))) {
     *aInstancePtr = (void*) ((nsIFormControlFrame*) this);
     return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+      nsIAccessible* acc = nsnull;
+      accService->CreateHTML4ButtonAccessible(NS_STATIC_CAST(nsIFrame*, this), &acc);
+      *aInstancePtr = acc;
+      return NS_OK;
+    }
   }
+
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
 }
 

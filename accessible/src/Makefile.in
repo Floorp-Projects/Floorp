@@ -19,27 +19,31 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH   = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= accessibility
-LIBRARY_NAME	= accessibility_s
-REQUIRES	= xpcom string layout widget dom view locale gfx2
+MODULE    = accessibility
+LIBRARY_NAME  = accessibility_s
+REQUIRES  = xpcom string layout widget dom view locale gfx2
 
-CPPSRCS		= \
-		nsAccessible.cpp \
-		nsAccessibilityService.cpp \
-		nsMutableAccessible.cpp \
-		nsRootAccessible.cpp \
-		nsHTMLFormControlAccessible.cpp \
-		nsHTMLTextAccessible.cpp \
-		nsSelectAccessible.cpp \
-		nsGenericAccessible.cpp \
-		$(NULL)
+CPPSRCS   = \
+    nsAccessible.cpp \
+    nsAccessibilityService.cpp \
+    nsRootAccessible.cpp \
+    nsHTMLIFrameRootAccessible.cpp \
+    nsHTMLFormControlAccessible.cpp \
+    nsHTMLTextAccessible.cpp \
+    nsHTMLTableAccessible.cpp \
+    nsHTMLImageAccessible.cpp \
+    nsHTMLAreaAccessible.cpp \
+    nsHTMLLinkAccessible.cpp \
+    nsSelectAccessible.cpp \
+    nsGenericAccessible.cpp \
+    $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1

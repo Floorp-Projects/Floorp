@@ -18,34 +18,24 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Author: Aaron Leventhal (aaronl@netscape.com)
  */
 
-#ifndef _nsMutableAccessible_H_
-#define _nsMutableAccessible_H_
+#ifndef _nsHTMLLinkAccessible_H_
+#define _nsHTMLLinkAccessible_H_
 
-#include "nsIMutableAccessible.h"
-#include "nsAccessible.h"
-#include "nsString.h"
+#include "nsGenericAccessible.h"
 
-class nsMutableAccessible : public nsIMutableAccessible
+class nsHTMLLinkAccessible : public nsLinkableAccessible
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIACCESSIBLE
-  NS_DECL_NSIMUTABLEACCESSIBLE
 
-  nsMutableAccessible(nsISupports* aNode);
-  virtual ~nsMutableAccessible();
+public:
+  nsHTMLLinkAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode);
+  NS_IMETHOD GetAccName(PRUnichar **_retval); 
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccValue(PRUnichar **_retval); 
 
 private:
-  nsCOMPtr<nsISupports> mNode;
-  nsString mName;
-  nsString mRole;
-  nsCOMPtr<nsIAtom> mNameAttribute;
-  PRPackedBool mNameNodeValue;
-  PRPackedBool mNameStringSet;
-  PRPackedBool mIsLeaf;
 };
 
-#endif
-
+#endif  

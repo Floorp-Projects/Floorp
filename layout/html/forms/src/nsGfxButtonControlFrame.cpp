@@ -28,7 +28,6 @@
 #include "nsISupportsArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentCID.h"
-#include "nsIMutableAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"

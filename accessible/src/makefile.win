@@ -26,19 +26,24 @@ LIBRARY_NAME=accessibility_s
 CPP_OBJS=\
         .\$(OBJDIR)\nsAccessible.obj    \
         .\$(OBJDIR)\nsRootAccessible.obj    \
-        .\$(OBJDIR)\nsMutableAccessible.obj    \
+        .\$(OBJDIR)\nsHTMLIFrameRootAccessible.obj    \
         .\$(OBJDIR)\nsAccessibilityService.obj    \
         .\$(OBJDIR)\nsSelectAccessible.obj    \
         .\$(OBJDIR)\nsGenericAccessible.obj    \
         .\$(OBJDIR)\nsHTMLFormControlAccessible.obj    \
         .\$(OBJDIR)\nsHTMLTextAccessible.obj    \
-	$(NULL)
+        .\$(OBJDIR)\nsHTMLImageAccessible.obj    \
+        .\$(OBJDIR)\nsHTMLAreaAccessible.obj    \
+        .\$(OBJDIR)\nsHTMLTableAccessible.obj    \
+        .\$(OBJDIR)\nsHTMLLinkAccessible.obj    \
+  $(NULL)
 
 LINCS=                                  \
-	-I..\..\layout\html\forms\public \
-	-I..\..\layout\html\forms\src \
-	-I..\..\layout\html\base\src \
-	$(NULL)
+  -I..\..\layout\html\forms\public \
+  -I..\..\layout\html\forms\src \
+  -I..\..\layout\html\base\src \
+  $(NULL)
+
 
 include <$(DEPTH)\config\rules.mak>
 
