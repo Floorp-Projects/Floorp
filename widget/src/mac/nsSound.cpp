@@ -429,7 +429,7 @@ nsSound::GetSoundResourceName(const char* inSoundName, StringPtr outResourceName
   outResourceName[0] = 0;
   
   // if it's the special mail beep sound, get the real sound name from IC
-  if (nsCRT::strcmp("Mailbeep", inSoundName) == 0)
+  if (nsCRT::strcmp("_moz_mailbeep", inSoundName) == 0)
   {
     nsCOMPtr <nsIInternetConfigService> icService = do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv))

@@ -161,7 +161,12 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
   PurgeLastSound();
 
-  ::PlaySound(aSoundAlias, nsnull, SND_ALIAS | SND_ASYNC);
+  if (nsCRT::strcmp("_moz_mailbeep", aSoundAlias) == 0) {
+    ::PlaySound("MailBeep", nsnull, SND_ALIAS | SND_ASYNC);
+  }
+  else {
+    ::PlaySound(aSoundAlias, nsnull, SND_ALIAS | SND_ASYNC);
+  }
 
   return NS_OK;
 }
