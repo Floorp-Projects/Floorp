@@ -272,13 +272,8 @@ struct StyleTextImpl: public nsStyleText {
     mTextAlign = NS_STYLE_TEXT_ALIGN_LEFT;
     mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
     mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
-    mVerticalAlignFlags = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+    mVerticalAlign.Set(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
     mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
-    mLetterSpacing.coord = 0;
-    mLineHeight.coord = 0;
-    mTextIndent.coord = 0;
-    mWordSpacing.coord = 0;
-    mVerticalAlign.coord = 0;
   }
   ~StyleTextImpl() {
   }
@@ -359,7 +354,7 @@ public:
   virtual nsStyleStruct* GetData(const nsIID& aSID);
 
   virtual void InheritFrom(const StyleContextImpl& aParent);
-  virtual void PostProcessData(void);
+  virtual void RecalcAutomaticData(void);
 
   nsIStyleContext*  mParent;
   PRUint32          mHashValid: 1;
@@ -522,23 +517,32 @@ void StyleContextImpl::InheritFrom(const StyleContextImpl& aParent)
   mDisplay.InheritFrom(aParent.mDisplay);
 }
 
-static void CalcBorderSize(nscoord& aSize, PRUint8 aFlag)
+static void CalcBorderSize(nscoord& aSize, const nsStyleBorder& aBorder, PRUint8 aSide)
 {
   static const nscoord kBorderSize[3] = // XXX need real numbers here (this is probably wrong anyway)
       { NS_POINTS_TO_TWIPS_INT(1), 
         NS_POINTS_TO_TWIPS_INT(3), 
         NS_POINTS_TO_TWIPS_INT(5) };
-  if (aFlag < NS_STYLE_BORDER_WIDTH_LENGTH_VALUE) {
-    aSize = kBorderSize[aFlag];
+  PRUint8 style = aBorder.mStyle[aSide];
+  if (NS_STYLE_BORDER_STYLE_NONE == style) {
+    aSize = 0;
+  }
+  else {
+    PRUint8 flag = aBorder.mSizeFlag[aSide];
+    if (flag < NS_STYLE_BORDER_WIDTH_LENGTH_VALUE) {
+      aSize = kBorderSize[flag];
+    }
   }
 }
 
-void StyleContextImpl::PostProcessData(void)
+void StyleContextImpl::RecalcAutomaticData(void)
 {
-  CalcBorderSize(mBorder.mSize.top, mBorder.mSizeFlag[NS_SIDE_TOP]);
-  CalcBorderSize(mBorder.mSize.right, mBorder.mSizeFlag[NS_SIDE_RIGHT]);
-  CalcBorderSize(mBorder.mSize.bottom, mBorder.mSizeFlag[NS_SIDE_BOTTOM]);
-  CalcBorderSize(mBorder.mSize.left, mBorder.mSizeFlag[NS_SIDE_LEFT]);
+  CalcBorderSize(mBorder.mSize.top, mBorder, NS_SIDE_TOP);
+  CalcBorderSize(mBorder.mSize.right, mBorder, NS_SIDE_RIGHT);
+  CalcBorderSize(mBorder.mSize.bottom, mBorder, NS_SIDE_BOTTOM);
+  CalcBorderSize(mBorder.mSize.left, mBorder, NS_SIDE_LEFT);
+
+  // XXX fixup missing border colors
 
   mSpacing.mBorder = mBorder.mSize;
   mSpacing.mBorderPadding = mSpacing.mPadding;
@@ -568,7 +572,7 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
   if (nsnull == context) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  context->PostProcessData();
+  context->RecalcAutomaticData();
 
   return context->QueryInterface(kIStyleContextIID, (void **) aInstancePtrResult);
 }
