@@ -188,6 +188,7 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     SetLastContentOffset(mFirstChild);
 
     // Return our desired size. Take into account the y-most floater
+#if 0
     aDesiredSize.width = desiredRect.XMost();
     aDesiredSize.height = PR_MAX(desiredRect.YMost(), mSpaceManager->YMost());
 
@@ -195,6 +196,17 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
       aDesiredSize.width += mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right;
       aDesiredSize.height += mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom;
     }
+#else
+    aDesiredSize.height = PR_MAX(desiredRect.YMost(), mSpaceManager->YMost());
+    if (isPseudoFrame) {
+      aDesiredSize.width = desiredRect.XMost();
+    }
+    else {
+      aDesiredSize.width = aMaxSize.width;
+      aDesiredSize.height += mySpacing->mBorderPadding.top +
+        mySpacing->mBorderPadding.bottom;
+    }
+#endif
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
   }
@@ -296,14 +308,26 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     SetLastContentOffset(mFirstChild);
 
     // Return our desired size
+#if 0
     aDesiredSize.width = aDesiredRect.XMost();
     aDesiredSize.height = aDesiredRect.YMost();
     if (!isPseudoFrame) {
       aDesiredSize.width += mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right;
       aDesiredSize.height += mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom;
     }
+#else
+    aDesiredSize.height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
+    if (isPseudoFrame) {
+      aDesiredSize.width = aDesiredRect.XMost();
+    }
+    else {
+      aDesiredSize.width = aMaxSize.width;
+      aDesiredSize.height += mySpacing->mBorderPadding.top +
+        mySpacing->mBorderPadding.bottom;
+    }
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
+#endif
   } else {
     NS_NOTYETIMPLEMENTED("unexpected reflow command");
     nsRect    desiredRect;
