@@ -104,6 +104,8 @@ public:
 
   void MoveAlphaMask(PRInt32 aX, PRInt32 aY){mLocation.x=aX;mLocation.y=aY;}
 
+  void* GetBitInfo() {return mBHead;}
+
 private:
 
   /** 
@@ -227,6 +229,7 @@ private:
   HPALETTE            mHPalette;
   HBITMAP             mHBitmap;           // the GDI bitmap
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
+
 };
 
 #endif

@@ -230,6 +230,12 @@ public:
    */
   virtual PRInt32 GetAlphaLevel() = 0;
 
+  /**
+   * Return information about the bits for this structure
+   @return a bitmap info structure for the Device Dependent Bits
+   */
+  virtual void* GetBitInfo() = 0;
+
   //get the color space metrics for this image
   //virtual NI_ColorSpec * GetColorSpec() = 0;                       fix
 

@@ -21,7 +21,6 @@
 #undef WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
-
 #include "prtypes.h"
 #include <stdio.h>
 #include "resources.h"
@@ -38,11 +37,9 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsFont.h"
-
-#include <windows.h>
-
 #include "nsWidgetsCID.h" 
 #include "nsITextWidget.h"
+#include "nsIBlender.h"
 
 // widget interface
 static NS_DEFINE_IID(kITextWidgetIID,     NS_ITEXTWIDGET_IID);
@@ -72,7 +69,12 @@ static nsITextWidget  *gBlendMessage;
 static nsITextWidget  *gQualMessage;
 
 
+#ifdef OLDWAY
 extern void    Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY);
+#else
+extern void    Compositetest(PRInt32 aTestNum,HDC aSrcDC,HDC aDestDC);
+#endif
+
 extern PRInt32 speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 extern PRInt32 drawtest(nsIRenderingContext *aSurface);
 extern PRInt32 filltest(nsIRenderingContext *aSurface);
@@ -145,7 +147,38 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           {
           nsColorMap *cmap = (*mImage)->GetColorMap();
           nsRect *rect = (nsRect *)aParam3;
+#ifdef OLDWAY
           Compositetest(gTestNum,gImage,gBlendImage,gMaskImage,gXOff,gYOff);
+#else
+          {
+          HBITMAP dobits,sobits,srcbits,destbits;
+          HDC     destdc,srcdc,screendc;
+          void    *bits1,*bits2;
+
+          screendc = ::GetDC(gHwnd);
+          // create everything we need from this DC
+          srcdc = ::CreateCompatibleDC(screendc);
+          destdc = ::CreateCompatibleDC(screendc);
+
+          bits1 = gBlendImage->GetBits();
+          bits2 = gImage->GetBits();
+          srcbits = ::CreateDIBitmap(screendc,(BITMAPINFOHEADER*)gBlendImage->GetBitInfo(), CBM_INIT, bits1, (LPBITMAPINFO)gBlendImage->GetBitInfo(), DIB_RGB_COLORS);
+          destbits = ::CreateDIBitmap(screendc,(BITMAPINFOHEADER*)gImage->GetBitInfo(), CBM_INIT, bits2, (LPBITMAPINFO)gImage->GetBitInfo(), DIB_RGB_COLORS);
+          
+          sobits = ::SelectObject(srcdc, srcbits);
+          dobits = ::SelectObject(destdc, destbits);
+
+          Compositetest(gTestNum,srcdc,destdc);
+
+          ::SelectObject(srcdc, sobits);
+          ::SelectObject(destdc,dobits);
+          DeleteDC(srcdc);
+          DeleteDC(destdc);
+          DeleteObject(srcbits);
+          DeleteObject(destbits);
+          }
+#endif
+
           }
        }
        break;
@@ -255,6 +288,7 @@ MyObserver::NotifyError(nsIImageRequest *aImageRequest,
 
 //------------------------------------------------------------
 
+#ifdef OLDWAY
 // This tests the compositing for the image
 void
 Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY)
@@ -422,8 +456,23 @@ nsString        str;
     }
 
 }
+#else
+void
+Compositetest(PRInt32 aTestNum,HDC aSrcHDC,HDC DestHDC)
+{
+nsIBlender   *imageblender;
+nsresult      rv;
 
 
+  static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
+  static NS_DEFINE_IID(kBlenderIID, NS_IBLENDER_IID);
+
+  rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&imageblender);
+  imageblender->Init();
+  imageblender->Blend(nsDrawingSurface (aSrcHDC),0,0,0,0,(DestHDC),0, 0,(float).5);
+
+}
+#endif
 //------------------------------------------------------------
 
 // This tests the speed for the bliting,
@@ -974,11 +1023,13 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
   static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
   static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
   static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
+  static NS_DEFINE_IID(kCBlenderIID, NS_BLENDER_CID);
 
   NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  NSRepository::RegisterFactory(kCBlenderIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
 
   if (!prevInstance) {
     WNDCLASS wndClass;

@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 #include "nsIRenderingContext.h"
 
-// IID for the nsIRenderingContext interface
+// IID for the nsIBlender interface
 #define NS_IBLENDER_IID    \
 { 0xbdb4b5b0, 0xf0db, 0x11d1, \
 { 0xa8, 0x2a, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
