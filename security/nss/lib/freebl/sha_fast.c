@@ -33,9 +33,22 @@
  * GPL.
  */
 #include <memory.h>
-#include "sha.h"
+#include "blapi.h"
 
-static void shaCompress(SHA_CTX *ctx);
+#ifdef TRACING_SSL
+#include "ssl.h"
+#include "ssltrace.h"
+#endif
+
+struct SHA1ContextStr {
+  PRUint32 H[5];		/* 5 state variables */
+  PRUint32 W[80];		/* input buffer, plus 64 words */
+  int      lenW;		/* bytes of data in input buffer */
+  PRUint32 sizeHi,sizeLo;
+};
+
+
+static void shaCompress(SHA1Context *ctx);
 
 #define SHA_ROTL(X,n) (((X) << (n)) | ((X) >> (32-(n))))
 #define SHA_F1(X,Y,Z) ((((Y)^(Z))&(X))^(Z))
@@ -47,10 +60,12 @@ static void shaCompress(SHA_CTX *ctx);
 /*
  *  SHA: Zeroize and initialize context
  */
-void shaInit(SHA_CTX *ctx) {
+void 
+SHA1_Begin(SHA1Context *ctx)
+{
   int i;
 
-  memset(ctx, 0, sizeof(SHA_CTX));
+  memset(ctx, 0, sizeof(SHA1Context));
   ctx->lenW = 0;
   ctx->sizeHi = ctx->sizeLo = 0;
 
@@ -71,7 +86,9 @@ void shaInit(SHA_CTX *ctx) {
 /*
  *  SHA: Add data to context.
  */
-void shaUpdate(SHA_CTX *ctx, unsigned char *dataIn, int len) {
+void 
+SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len) 
+{
   /*
    *  Read the data into W and process blocks as they get full
    *
@@ -96,60 +113,61 @@ void shaUpdate(SHA_CTX *ctx, unsigned char *dataIn, int len) {
 /*
  *  SHA: Generate hash value from context
  */
-void shaFinal(SHA_CTX *ctx, unsigned char hashout[20]) {
-  static unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
+void 
+SHA1_End(SHA1Context *ctx, unsigned char *hashout,
+         unsigned int *pDigestLen, unsigned int maxDigestLen)
+{
+  register unsigned long sizeHi, sizeLo;
+  int i;
+  static const unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0  };
   unsigned char length_pad[8];
-  int i;
+
+  PORT_Assert (maxDigestLen >= SHA1_LENGTH);
 
   /*
-   *  Pad with a binary 1 (e.g. 0x80), then zeroes, then length
+   *  Pad with a binary 1 (e.g. 0x80), then zeroes, then length in bits
    */
-  length_pad[0] = (unsigned char)((ctx->sizeHi >> 24) & 255);
-  length_pad[1] = (unsigned char)((ctx->sizeHi >> 16) & 255);
-  length_pad[2] = (unsigned char)((ctx->sizeHi >> 8) & 255);
-  length_pad[3] = (unsigned char)((ctx->sizeHi >> 0) & 255);
-  length_pad[4] = (unsigned char)((ctx->sizeLo >> 24) & 255);
-  length_pad[5] = (unsigned char)((ctx->sizeLo >> 16) & 255);
-  length_pad[6] = (unsigned char)((ctx->sizeLo >> 8) & 255);
-  length_pad[7] = (unsigned char)((ctx->sizeLo >> 0) & 255);
-  shaUpdate(ctx, bulk_pad, (((55+64) - ctx->lenW) & 63) + 1);
-  shaUpdate(ctx, length_pad, 8);
+  sizeHi = ctx->sizeHi;
+  sizeLo = ctx->sizeLo;
+  length_pad[0] = (unsigned char)(sizeHi >> 24);
+  length_pad[1] = (unsigned char)(sizeHi >> 16);
+  length_pad[2] = (unsigned char)(sizeHi >>  8);
+  length_pad[3] = (unsigned char)(sizeHi >>  0);
+  length_pad[4] = (unsigned char)(sizeLo >> 24);
+  length_pad[5] = (unsigned char)(sizeLo >> 16);
+  length_pad[6] = (unsigned char)(sizeLo >>  8);
+  length_pad[7] = (unsigned char)(sizeLo >>  0);
+
+  SHA1_Update(ctx, bulk_pad, (((55+64) - ctx->lenW) & 63) + 1);
+  SHA1_Update(ctx, length_pad, 8);
 
   /*
    *  Output hash
    */
-  for (i = 0; i < 5; i++) {
-    *(hashout++) = ((unsigned char)(ctx->H[i] >> 24)) & 255;
-    *(hashout++) = ((unsigned char)(ctx->H[i] >> 16)) & 255;
-    *(hashout++) = ((unsigned char)(ctx->H[i] >>  8)) & 255;
-    *(hashout++) = ((unsigned char)(ctx->H[i]      )) & 255;
+  for (i = 0; i < SHA1_LENGTH/4; i++) {
+    register unsigned long w   = ctx->H[i];
+    hashout[0] = ((unsigned char)(w >> 24));
+    hashout[1] = ((unsigned char)(w >> 16));
+    hashout[2] = ((unsigned char)(w >>  8));
+    hashout[3] = ((unsigned char)(w      ));
+    hashout += 4;
   }
+  *pDigestLen = SHA1_LENGTH;
 
   /*
    *  Re-initialize the context (also zeroizes contents)
    */
-  shaInit(ctx);
+  SHA1_Begin(ctx);
 }
-
-
-/*
- *  SHA: Hash a block in memory
- */
-void shaBlock(unsigned char *dataIn, int len, unsigned char hashout[20]) {
-  SHA_CTX ctx;
-
-  shaInit(&ctx);
-  shaUpdate(&ctx, dataIn, len);
-  shaFinal(&ctx, hashout);
-}
-
 
 /*
  *  SHA: Compression function, unrolled.
  */
-static void shaCompress(SHA_CTX *ctx) {
+static void 
+shaCompress(SHA1Context *ctx) 
+{
   int t;
   register unsigned long A,B,C,D,E;
 
@@ -259,3 +277,104 @@ static void shaCompress(SHA_CTX *ctx) {
   ctx->H[4] += E;
 }
 
+/*************************************************************************
+** Code below this line added to make SHA code support BLAPI interface
+*/
+
+SHA1Context *
+SHA1_NewContext(void)
+{
+    SHA1Context *cx;
+
+    cx = PORT_ZNew(SHA1Context);
+    return cx;
+}
+
+void
+SHA1_DestroyContext(SHA1Context *cx, PRBool freeit)
+{
+    if (freeit) {
+        PORT_ZFree(cx, sizeof(SHA1Context));
+    }
+}
+
+SECStatus
+SHA1_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+    SHA1Context ctx;
+    unsigned int outLen;
+
+    SHA1_Begin(&ctx);
+    SHA1_Update(&ctx, src, src_length);
+    SHA1_End(&ctx, dest, &outLen, SHA1_LENGTH);
+
+    return SECSuccess;
+}
+
+/* Hash a null-terminated character string. */
+SECStatus
+SHA1_Hash(unsigned char *dest, const char *src)
+{
+    return SHA1_HashBuf(dest, (const unsigned char *)src, PORT_Strlen (src));
+}
+
+/*
+ * need to support save/restore state in pkcs11. Stores all the info necessary
+ * for a structure into just a stream of bytes.
+ */
+unsigned int
+SHA1_FlattenSize(SHA1Context *cx)
+{
+    return sizeof(SHA1Context);
+}
+
+SECStatus
+SHA1_Flatten(SHA1Context *cx,unsigned char *space)
+{
+    PORT_Memcpy(space,cx, sizeof(SHA1Context));
+    return SECSuccess;
+}
+
+SHA1Context *
+SHA1_Resurrect(unsigned char *space,void *arg)
+{
+    SHA1Context *cx = SHA1_NewContext();
+    if (cx == NULL) return NULL;
+
+    PORT_Memcpy(cx,space, sizeof(SHA1Context));
+    return cx;
+}
+
+#ifdef TRACING_SSL
+void
+SHA1_TraceState(SHA1Context *ctx)
+{
+    uint32        W;
+    int           i;
+    int           len;
+    int           fixWord = -1;
+    int           remainder;	/* bytes in last word */
+    unsigned char buf[64 * 4];
+
+    SSL_TRC(99, ("%d: SSL: SHA1 state: %08x %08x %08x %08x %08x", SSL_GETPID(), 
+	         ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]));
+
+    len = (int)(ctx->lenW);
+    remainder = len % 4;
+    if (remainder) 
+    	fixWord = len - remainder;
+    for (i = 0; i < len; i++) {
+	if (0 == (i % 4)) {
+	    W = ctx->w[i / 4];
+	    if (i == fixWord) {
+	        W <<= 8 * (4 - remainder);
+	    }
+	}
+	buf[i] = (unsigned char)(W >> 24);
+	W <<= 8;
+    }
+
+    PRINT_BUF(99, (0, "SHA1_TraceState: buffered input", buf, len));
+
+}
+#endif
