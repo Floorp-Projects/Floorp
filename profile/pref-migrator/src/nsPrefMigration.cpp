@@ -535,9 +535,9 @@ nsresult
 nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpace)
 {
 //  nsFileSpec drive(newProfilePath);
-
-  if (LL_CMP(newProfilePath.GetDiskSpaceAvailable(), <, requiredSpace))
-    return NS_ERROR_FAILURE;
+// EVIL!  the mac does not like this, but it needs to!
+//  if (LL_CMP(newProfilePath.GetDiskSpaceAvailable(), <, requiredSpace))
+//    return NS_ERROR_FAILURE;
   return NS_OK;
 }
 
