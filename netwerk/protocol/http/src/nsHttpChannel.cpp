@@ -68,6 +68,7 @@ nsHttpChannel::nsHttpChannel()
     , mFromCacheOnly(PR_FALSE)
     , mCachedContentIsValid(PR_FALSE)
     , mResponseHeadersModified(PR_FALSE)
+    , mCanceled(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
@@ -1751,6 +1752,7 @@ NS_IMETHODIMP
 nsHttpChannel::Cancel(nsresult status)
 {
     LOG(("nsHttpChannel::Cancel [this=%x status=%x]\n", this, status));
+    mCanceled = PR_TRUE;
     mStatus = status;
     if (mTransaction)
         mTransaction->Cancel(status);
@@ -2387,8 +2389,14 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mListenerContext = 0;
     }
 
-    if (mCacheEntry)
-        CloseCacheEntry(status);
+    if (mCacheEntry) {
+        // we don't want to discard the cache entry if canceled and
+        // reading from the cache.
+        if (mCanceled && (request == mCacheReadRequest))
+            CloseCacheEntry(NS_OK);
+        else
+            CloseCacheEntry(status);
+    }
 
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, status);
@@ -2569,6 +2577,13 @@ nsHttpChannel::GetCacheFile(nsIFile **cacheFile)
     if (!mCacheEntry)
         return NS_ERROR_NOT_AVAILABLE;
     return mCacheEntry->GetFile(cacheFile);
+}
+
+NS_IMETHODIMP
+nsHttpChannel::IsFromCache(PRBool *value)
+{
+    *value = (mCacheReadRequest != nsnull);
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
