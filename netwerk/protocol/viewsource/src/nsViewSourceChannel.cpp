@@ -1,6 +1,6 @@
- /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et: */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Chak Nanga <chak@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -48,25 +49,11 @@
 #include "nsNetUtil.h"
 #include "nsIHttpHeaderVisitor.h"
 
-// nsViewSourceChannel methods
-nsViewSourceChannel::nsViewSourceChannel() :
-    mIsDocument(PR_FALSE),
-    mOpened(PR_FALSE)
-{
-}
-
-nsViewSourceChannel::~nsViewSourceChannel()
-{
-}
-
-
-NS_IMPL_THREADSAFE_ADDREF(nsViewSourceChannel)
-NS_IMPL_THREADSAFE_RELEASE(nsViewSourceChannel)
+NS_IMPL_ADDREF(nsViewSourceChannel)
+NS_IMPL_RELEASE(nsViewSourceChannel)
 /*
-  This QI uses hand-expansions of NS_INTERFACE_MAP_ENTRY to check for
+  This QI uses NS_INTERFACE_MAP_ENTRY_CONDITIONAL to check for
   non-nullness of mHttpChannel, mCachingChannel, and mUploadChannel.
-
-  This seems like a better approach than writing out the whole QI by hand.
 */
 NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
     NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
@@ -87,7 +74,8 @@ nsViewSourceChannel::Init(nsIURI* uri)
 
     nsCAutoString path;
     nsresult rv = uri->GetPath(path);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+      return rv;
 
     nsCOMPtr<nsIIOService> pService(do_GetIOService(&rv));
     if (NS_FAILED(rv)) return rv;
@@ -102,18 +90,6 @@ nsViewSourceChannel::Init(nsIURI* uri)
     mUploadChannel = do_QueryInterface(mChannel);
     
     return NS_OK;
-}
-
-NS_METHOD
-nsViewSourceChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
-{
-    nsViewSourceChannel* fc = new nsViewSourceChannel();
-    if (fc == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(fc);
-    nsresult rv = fc->QueryInterface(aIID, aResult);
-    NS_RELEASE(fc);
-    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -684,4 +660,3 @@ nsViewSourceChannel::IsNoCacheResponse(PRBool *_retval)
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->IsNoCacheResponse(_retval);
 } 
-

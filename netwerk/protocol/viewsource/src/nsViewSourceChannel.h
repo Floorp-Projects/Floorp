@@ -70,14 +70,11 @@ public:
     NS_FORWARD_SAFE_NSIUPLOADCHANNEL(mUploadChannel)
 
     // nsViewSourceChannel methods:
-    nsViewSourceChannel();
-    virtual ~nsViewSourceChannel();
+    nsViewSourceChannel()
+        : mIsDocument(PR_FALSE)
+        , mOpened(PR_FALSE) {}
 
-    // Define a Create method to be used with a factory:
-    static NS_METHOD 
-        Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-    
-    nsresult Init(nsIURI* uri);
+    NS_HIDDEN_(nsresult) Init(nsIURI* uri);
 
 protected:
     nsCOMPtr<nsIChannel>        mChannel;

@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "necko-config.h"
+#include "nsNetCID.h"
 #include "nsIGenericFactory.h"
 
 #ifdef NECKO_PROTOCOL_gopher
@@ -44,6 +45,7 @@
 
 #ifdef NECKO_PROTOCOL_viewsource
 #include "nsViewSourceHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
 #endif
 
 #ifdef NECKO_PROTOCOL_data
@@ -91,7 +93,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { "The ViewSource Protocol Handler", 
       NS_VIEWSOURCEHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source",
-      nsViewSourceHandler::Create
+      nsViewSourceHandlerConstructor
     }
 #endif
 };

@@ -567,7 +567,7 @@
 }
 
 /******************************************************************************
- * netwerk/protocol/data/ classes
+ * netwerk/protocol/jar/ classes
  */
 
 #define NS_JARPROTOCOLHANDLER_CLASSNAME \
@@ -580,6 +580,18 @@
     {0x9f, 0x63, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9} \
 }
 
+/******************************************************************************
+ * netwerk/protocol/viewsource/ classes
+ */
+
+// service implementing nsIProtocolHandler
+#define NS_VIEWSOURCEHANDLER_CID                     \
+{ /* {0x9c7ec5d1-23f9-11d5-aea8-8fcc0793e97f} */     \
+    0x9c7ec5d1,                                      \
+    0x23f9,                                          \
+    0x11d5,                                          \
+    {0xae, 0xa8, 0x8f, 0xcc, 0x07, 0x93, 0xe9, 0x7f} \
+}
 
 /******************************************************************************
  * netwerk/dns/ classes

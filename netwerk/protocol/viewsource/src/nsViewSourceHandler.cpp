@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=4 sw=4 sts=4 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +22,7 @@
  *
  * Contributor(s):
  *   Chak Nanga <chak@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,90 +40,87 @@
 
 #include "nsViewSourceHandler.h"
 #include "nsViewSourceChannel.h"
-#include "nsIURL.h"
-#include "nsCRT.h"
-#include "nsIComponentManager.h"
-#include "nsXPIDLString.h"
-
-static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
+#include "nsNetUtil.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsViewSourceHandler::nsViewSourceHandler() {
-}
-
-nsViewSourceHandler::~nsViewSourceHandler() {
-}
-
 NS_IMPL_ISUPPORTS1(nsViewSourceHandler, nsIProtocolHandler)
-
-NS_METHOD
-nsViewSourceHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    nsViewSourceHandler* ph = new nsViewSourceHandler();
-    if (ph == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(ph);
-
-    nsresult rv = ph->QueryInterface(aIID, aResult);
-
-    NS_RELEASE(ph);
-    return rv;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
-nsViewSourceHandler::GetScheme(nsACString &result) {
-    result = "view-source";
+nsViewSourceHandler::GetScheme(nsACString &result)
+{
+    result.AssignLiteral("view-source");
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsViewSourceHandler::GetDefaultPort(PRInt32 *result) {
+nsViewSourceHandler::GetDefaultPort(PRInt32 *result)
+{
     *result = -1;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsViewSourceHandler::GetProtocolFlags(PRUint32 *result) {
+nsViewSourceHandler::GetProtocolFlags(PRUint32 *result)
+{
     *result = URI_NORELATIVE | URI_NOAUTH;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsViewSourceHandler::NewURI(const nsACString &aSpec,
-                            const char *aCharset, // ignore charset info
+                            const char *aCharset,
                             nsIURI *aBaseURI,
-                            nsIURI **result) {
+                            nsIURI **aResult)
+{
     nsresult rv;
-    nsIURI* uri;
 
-    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull, NS_GET_IID(nsIURI), (void**)&uri);
-    if (NS_FAILED(rv)) return rv;
-    rv = uri->SetSpec(aSpec);
-    if (NS_FAILED(rv)) {
-      NS_RELEASE(uri);
-      return rv;
-    }
+    // Extract inner URL and normalize to ASCII.  This is done to properly
+    // support IDN in cases like "view-source:http://www.szalagavató.hu/"
 
-    *result = uri;
+    PRInt32 colon = aSpec.FindChar(':');
+    if (colon == kNotFound)
+        return NS_ERROR_MALFORMED_URI;
+
+    nsCOMPtr<nsIURI> innerURI;
+    rv = NS_NewURI(getter_AddRefs(innerURI), Substring(aSpec, colon + 1), aCharset);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsCAutoString asciiSpec;
+    rv = innerURI->GetAsciiSpec(asciiSpec);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // put back our scheme and construct a simple-uri wrapper
+
+    asciiSpec.Insert("view-source:", 0);
+
+    nsIURI *uri;
+    rv = CallCreateInstance(NS_SIMPLEURI_CONTRACTID, nsnull, &uri);
+    if (NS_FAILED(rv))
+        return rv;
+    
+    rv = uri->SetSpec(asciiSpec);
+    if (NS_FAILED(rv))
+        NS_RELEASE(uri);
+    else
+        *aResult = uri;
     return rv;
 }
 
 NS_IMETHODIMP
 nsViewSourceHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
-    nsresult rv;
-    
-    nsViewSourceChannel* channel;
-    rv = nsViewSourceChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
-    if (NS_FAILED(rv)) return rv;
+    nsViewSourceChannel *channel = new nsViewSourceChannel();
+    if (!channel)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(channel);
 
-    rv = channel->Init(uri);
+    nsresult rv = channel->Init(uri);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;
@@ -138,5 +137,3 @@ nsViewSourceHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval
     *_retval = PR_FALSE;
     return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////////////
