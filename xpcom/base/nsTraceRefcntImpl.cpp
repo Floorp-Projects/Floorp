@@ -327,6 +327,7 @@ nsresult
 nsTraceRefcnt::DumpStatistics(StatisticsType type,
                               nsIOutputStream* out)
 {
+  nsresult rv = NS_OK;
 #ifdef NS_BUILD_REFCNT_LOGGING
   if (!gTrackBloat || !gBloatView) {
     return NS_OK;
@@ -340,7 +341,6 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type,
   PRBool wasLogging = gLogging;
   gLogging = PR_FALSE;  // turn off logging for this method
   
-  nsresult rv;
   nsCOMPtr<nsIOutputStream> outStr = dont_QueryInterface(out);
   if (out == nsnull) {
     nsCOMPtr<nsISupports> outSupports;
@@ -367,8 +367,8 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type,
 done:
   gLogging = wasLogging;
   UNLOCK_TRACELOG();
-  return rv;
 #endif
+  return rv;
 }
 
 void
