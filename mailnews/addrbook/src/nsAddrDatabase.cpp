@@ -71,12 +71,12 @@
 
 const PRInt32 kAddressBookDBVersion = 1;
 
-const char *kPabTableKind = "ns:addrbk:db:table:kind:pab";
-const char *kDeletedCardsTableKind = "ns:addrbk:db:table:kind:deleted"; // this table is used to keep the deleted cards
+static const char kPabTableKind[] = "ns:addrbk:db:table:kind:pab";
+static const char kDeletedCardsTableKind[] = "ns:addrbk:db:table:kind:deleted"; // this table is used to keep the deleted cards
 
-const char *kCardRowScope = "ns:addrbk:db:row:scope:card:all";
-const char *kListRowScope = "ns:addrbk:db:row:scope:list:all";
-const char *kDataRowScope = "ns:addrbk:db:row:scope:data:all";
+static const char kCardRowScope[] = "ns:addrbk:db:row:scope:card:all";
+static const char kListRowScope[] = "ns:addrbk:db:row:scope:list:all";
+static const char kDataRowScope[] = "ns:addrbk:db:row:scope:data:all";
 
 #define DATAROW_ROWID 1
 
@@ -84,15 +84,15 @@ const char *kDataRowScope = "ns:addrbk:db:row:scope:data:all";
 
 #define PURGE_CUTOFF_COUNT 50
 
-const char *kRecordKeyColumn = "RecordKey";
-const char *kLastRecordKeyColumn = "LastRecordKey";
+static const char kRecordKeyColumn[] = "RecordKey";
+static const char kLastRecordKeyColumn[] = "LastRecordKey";
 
-const char *kMailListTotalLists = "ListTotalLists";    // total number of mail list in a mailing list
-const char *kLowerListNameColumn = "LowercaseListName";
+static const char kMailListTotalLists[] = "ListTotalLists";    // total number of mail list in a mailing list
+static const char kLowerListNameColumn[] = "LowercaseListName";
 
 struct mdbOid gAddressBookTableOID;
 
-static const char *kMailListAddressFormat = "Address%d";
+static const char kMailListAddressFormat[] = "Address%d";
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 
