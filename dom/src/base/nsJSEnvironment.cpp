@@ -759,7 +759,7 @@ nsJSContext::ScriptEvaluated(void)
 
   if (mNumEvaluations > 20) {
     mNumEvaluations = 0;
-    GC();
+    ::JS_MaybeGC(mContext);
   }
 
   return NS_OK;
