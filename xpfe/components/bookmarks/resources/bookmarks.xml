@@ -649,11 +649,7 @@
                   RDFC.Init(kBMDS, rParent);
                   ix = RDFC.IndexOf(rSource);
                   if (ix >= 1) {
-                    var index = this.mOuter.outlinerBuilder.getIndexOfResource(rSource);
                     RDFC.RemoveElementAt(ix, true);
-                    // only need to decrement the target row if the index of the resource
-                    // we're removing is before it 
-                    if (index < row)
                       --row;
                   }
                 }
