@@ -198,7 +198,7 @@ public:
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    CollapseToStart();
   NS_IMETHOD    CollapseToEnd();
-	NS_IMETHOD    SelectAllChildren(nsIDOMNode* parentNode);
+  NS_IMETHOD    SelectAllChildren(nsIDOMNode* parentNode);
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aAYes);
   NS_IMETHOD    DeleteFromDocument();
@@ -236,7 +236,7 @@ public:
   nsresult      RemoveItem(nsIDOMRange *aRange);
 
   nsresult      Clear(nsIPresContext* aPresContext);
-	// methods for convenience. Note, these don't addref
+  // methods for convenience. Note, these don't addref
   nsIDOMNode*  FetchAnchorNode();  //where did the selection begin
   PRInt32      FetchAnchorOffset();
 
@@ -471,7 +471,7 @@ private:
   PRBool       GetNotifyFrames(){return mNotifyFrames;}
   void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
 
-  nsresult     NotifySelectionListeners(SelectionType aType);			// add parameters to say collapsed etc?
+  nsresult     NotifySelectionListeners(SelectionType aType);     // add parameters to say collapsed etc?
 
   // utility method to lookup frame style
   nsresult      FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSelectionStyle, nsIFrame* *foundFrame);
@@ -1475,18 +1475,18 @@ nsSelection::ShutDown()
 NS_IMETHODIMP
 nsSelection::HandleTextEvent(nsGUIEvent *aGUIEvent)
 {
-	if (!aGUIEvent)
-		return NS_ERROR_NULL_POINTER;
+  if (!aGUIEvent)
+    return NS_ERROR_NULL_POINTER;
 
 #ifdef DEBUG_TAGUE
-	printf("nsSelection: HandleTextEvent\n");
+  printf("nsSelection: HandleTextEvent\n");
 #endif
   nsresult result(NS_OK);
-	if (NS_TEXT_EVENT == aGUIEvent->message) {
+  if (NS_TEXT_EVENT == aGUIEvent->message) {
     PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     result = mDomSelections[index]->ScrollIntoView();
-	}
-	return result;
+  }
+  return result;
 }
 
 
@@ -2714,7 +2714,7 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
       result = VisualSelectFrames(aPresContext, newFrame, pos);
       if (NS_FAILED(result))
         result = HandleClick(newContent, startPos, contentOffsetEnd, PR_TRUE,
-	                     PR_FALSE, beginOfContent);
+                             PR_FALSE, beginOfContent);
       mHint = saveHint;
     }
     else
@@ -3098,10 +3098,10 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
   result = mTracker->GetPrimaryFrameFor(theNode, aReturnFrame);
   if (NS_FAILED(result))
     return result;
-	
+
   if (!*aReturnFrame)
     return NS_ERROR_UNEXPECTED;
-		
+
   // find the child frame containing the offset we want
   result = (*aReturnFrame)->GetChildFrameContainingOffset(*aReturnOffset, aHint, &aOffset, aReturnFrame);
   return result;
@@ -3225,7 +3225,7 @@ nsSelection::CommonPageMove(PRBool aForward,
 
   // scroll one page
 
-  aScrollableView->ScrollByPages(aForward ? 1 : -1);
+  aScrollableView->ScrollByPages(0, aForward ? 1 : -1);
   
   // place the caret
   result = aFrameSel->HandleClick(content, startOffset, startOffset, aExtend, PR_FALSE, PR_TRUE);
@@ -3343,8 +3343,8 @@ nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSe
   
   while (thisFrame)
   {
-	  const nsStyleUIReset* userinterface;
-	  thisFrame->GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)userinterface);
+    const nsStyleUIReset* userinterface;
+    thisFrame->GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)userinterface);
   
     if (userinterface->mUserSelect == aSelectionStyle)
     {
@@ -4257,7 +4257,7 @@ nsTypedSelection::addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange)
     // Insert range at appropriate location
     for (index = 0; index < count; index++)
     {
-	    nsIDOMRange* range = mRangeArray[index];
+      nsIDOMRange* range = mRangeArray[index];
       if (!range) return NS_ERROR_FAILURE;
 
       PRInt32 selectionMode;
@@ -4697,11 +4697,11 @@ nsTypedSelection::SetPresShell(nsIPresShell *aPresShell)
 NS_IMETHODIMP
 nsTypedSelection::GetAnchorNode(nsIDOMNode** aAnchorNode)
 {
- 	if (!aAnchorNode)
- 		return NS_ERROR_NULL_POINTER;
+  if (!aAnchorNode)
+    return NS_ERROR_NULL_POINTER;
   *aAnchorNode = nsnull;
   if(!mAnchorFocusRange)
-     return NS_OK;
+    return NS_OK;
    
   nsresult result;
   if (GetDirection() == eDirNext){
@@ -4710,14 +4710,14 @@ nsTypedSelection::GetAnchorNode(nsIDOMNode** aAnchorNode)
   else{
     result = mAnchorFocusRange->GetEndContainer(aAnchorNode);
   }
-	return result;
+  return result;
 }
 
 NS_IMETHODIMP
 nsTypedSelection::GetAnchorOffset(PRInt32* aAnchorOffset)
 {
-	if (!aAnchorOffset)
-		return NS_ERROR_NULL_POINTER;
+  if (!aAnchorOffset)
+    return NS_ERROR_NULL_POINTER;
   *aAnchorOffset = nsnull;
   if(!mAnchorFocusRange)
     return NS_OK;
@@ -4729,15 +4729,15 @@ nsTypedSelection::GetAnchorOffset(PRInt32* aAnchorOffset)
   else{
     result = mAnchorFocusRange->GetEndOffset(aAnchorOffset);
   }
-	return result;
+  return result;
 }
 
 // note: this can return a nil focus node
 NS_IMETHODIMP
 nsTypedSelection::GetFocusNode(nsIDOMNode** aFocusNode)
 {
-	if (!aFocusNode)
-		return NS_ERROR_NULL_POINTER;
+  if (!aFocusNode)
+    return NS_ERROR_NULL_POINTER;
   *aFocusNode = nsnull;
   if(!mAnchorFocusRange)
     return NS_OK;
@@ -4750,13 +4750,13 @@ nsTypedSelection::GetFocusNode(nsIDOMNode** aFocusNode)
     result = mAnchorFocusRange->GetStartContainer(aFocusNode);
   }
 
-	return result;
+  return result;
 }
 
 NS_IMETHODIMP nsTypedSelection::GetFocusOffset(PRInt32* aFocusOffset)
 {
-	if (!aFocusOffset)
-		return NS_ERROR_NULL_POINTER;
+  if (!aFocusOffset)
+    return NS_ERROR_NULL_POINTER;
   *aFocusOffset = nsnull;
   if(!mAnchorFocusRange)
     return NS_OK;
@@ -4768,7 +4768,7 @@ NS_IMETHODIMP nsTypedSelection::GetFocusOffset(PRInt32* aFocusOffset)
   else{
     result = mAnchorFocusRange->GetStartOffset(aFocusOffset);
   }
-	return result;
+  return result;
 }
 
 
@@ -4954,7 +4954,7 @@ nsTypedSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOf
 
   *aReturnFrame = 0;
   
-  nsresult	result = NS_OK;
+  nsresult  result = NS_OK;
   
   nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(aNode);
 
@@ -5905,7 +5905,7 @@ nsTypedSelection::GetEnumerator(nsIEnumerator **aIterator)
   nsresult status = NS_ERROR_OUT_OF_MEMORY;
   nsSelectionIterator *iterator =  new nsSelectionIterator(this);
   if ( iterator && NS_FAILED(status = CallQueryInterface(iterator, aIterator)) )
-  	delete iterator;
+    delete iterator;
   return status;
 }
 
@@ -5922,11 +5922,11 @@ nsTypedSelection::RemoveAllRanges()
   GetPresContext(getter_AddRefs(presContext));
 
 
-  nsresult	result = Clear(presContext);
+  nsresult  result = Clear(presContext);
   if (NS_FAILED(result))
-  	return result;
+    return result;
   
-  // Turn off signal for table selection  	
+  // Turn off signal for table selection
   mFrameSelection->ClearTableCellSelection();
 
   return mFrameSelection->NotifySelectionListeners(GetType());
@@ -6021,7 +6021,7 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   GetPresContext(getter_AddRefs(presContext));
   Clear(presContext);
 
-  // Turn off signal for table selection  	
+  // Turn off signal for table selection
   if (mFrameSelection)
     mFrameSelection->ClearTableCellSelection();
 
@@ -6049,11 +6049,11 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     content->GetTag(*getter_AddRefs(tag));
     if (tag)
     {
-	    nsAutoString tagString;
-	    tag->ToString(tagString);
-	    char * tagCString = ToNewCString(tagString);
-	    printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
-	    delete [] tagCString;
+      nsAutoString tagString;
+      tag->ToString(tagString);
+      char * tagCString = ToNewCString(tagString);
+      printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
+      delete [] tagCString;
     }
   }
   else {
@@ -6068,8 +6068,8 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   if (NS_FAILED(result))
     return result;
   if (!mFrameSelection)
-   return NS_OK;//nothing to do
-	return mFrameSelection->NotifySelectionListeners(GetType());
+    return NS_OK;//nothing to do
+  return mFrameSelection->NotifySelectionListeners(GetType());
 }
 
 /*
@@ -6082,7 +6082,7 @@ nsTypedSelection::CollapseToStart()
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
   if (NS_FAILED(rv) || cnt <= 0)
-		return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 
   // Get the first range
   nsIDOMRange* firstRange = mRangeArray[0];
@@ -6116,7 +6116,7 @@ nsTypedSelection::CollapseToEnd()
   PRInt32 cnt;
   nsresult rv = GetRangeCount(&cnt);
   if (NS_FAILED(rv) || cnt <= 0)
-		return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 
   // Get the last range
   nsIDOMRange* lastRange = mRangeArray[cnt-1];
@@ -6146,9 +6146,9 @@ nsTypedSelection::CollapseToEnd()
 NS_IMETHODIMP
 nsTypedSelection::GetIsCollapsed(PRBool* aIsCollapsed)
 {
-	if (!aIsCollapsed)
-		return NS_ERROR_NULL_POINTER;
-		
+  if (!aIsCollapsed)
+    return NS_ERROR_NULL_POINTER;
+
   PRInt32 cnt = mRangeArray.Count();;
   if (cnt == 0)
   {
@@ -6169,27 +6169,27 @@ NS_IMETHODIMP
 nsTypedSelection::GetRangeCount(PRInt32* aRangeCount)
 {
   if (!aRangeCount) 
-		return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;
 
-	*aRangeCount = mRangeArray.Count();
-	
-	return NS_OK;
+  *aRangeCount = mRangeArray.Count();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsTypedSelection::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
 {
-	if (!aReturn)
-		return NS_ERROR_NULL_POINTER;
+  if (!aReturn)
+    return NS_ERROR_NULL_POINTER;
 
-	PRInt32 cnt = mRangeArray.Count();
-	if (aIndex < 0 || aIndex >= cnt)
-		return NS_ERROR_INVALID_ARG;
+  PRInt32 cnt = mRangeArray.Count();
+  if (aIndex < 0 || aIndex >= cnt)
+    return NS_ERROR_INVALID_ARG;
 
-	*aReturn = mRangeArray[aIndex];
+  *aReturn = mRangeArray[aIndex];
   NS_IF_ADDREF(*aReturn);
-	
-	return NS_OK;
+
+  return NS_OK;
 }
 
 #ifdef OLD_SELECTION
@@ -6839,11 +6839,11 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     content->GetTag(*getter_AddRefs(tag));
     if (tag)
     {
-	    nsAutoString tagString;
-	    tag->ToString(tagString);
-	    char * tagCString = ToNewCString(tagString);
-	    printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
-	    delete [] tagCString;
+      nsAutoString tagString;
+      tag->ToString(tagString);
+      char * tagCString = ToNewCString(tagString);
+      printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);
+      delete [] tagCString;
     }
   }
   else {
@@ -6996,7 +6996,7 @@ nsTypedSelection::GetPresShell(nsIPresShell **aPresShell)
   
   nsCOMPtr<nsIPresShell> shell;
   rv = presContext->GetShell(getter_AddRefs(shell));
-	mPresShellWeak = getter_AddRefs(NS_GetWeakReference(shell));		// the presshell owns us, so no addref
+  mPresShellWeak = getter_AddRefs(NS_GetWeakReference(shell));    // the presshell owns us, so no addref
   if (mPresShellWeak)
     NS_ADDREF(*aPresShell = shell);
   return rv;
@@ -7139,13 +7139,13 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
   
   nsCOMPtr<nsIDeviceContext> deviceContext;
 
-	rv = presContext->GetDeviceContext(getter_AddRefs(deviceContext));
+  rv = presContext->GetDeviceContext(getter_AddRefs(deviceContext));
 
-	if (NS_FAILED(rv))
-		return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   if (!deviceContext)
-		return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;
 
   //
   // Now get the closest view with a widget so we can create
@@ -7183,21 +7183,21 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
   // in the frame.
   //
 
-	nsCOMPtr<nsIRenderingContext> rendContext;
+  nsCOMPtr<nsIRenderingContext> rendContext;
 
-	rv = deviceContext->CreateRenderingContext(closestView, *getter_AddRefs(rendContext));		
+  rv = deviceContext->CreateRenderingContext(closestView, *getter_AddRefs(rendContext));
   
-	if (NS_FAILED(rv))
-		return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   if (!rendContext)
-		return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NULL_POINTER;
 
   //
   // Now get the point and return!
   //
 
-	rv = aFrame->GetPointFromOffset(presContext, rendContext, aContentOffset, aPoint);
+  rv = aFrame->GetPointFromOffset(presContext, rendContext, aContentOffset, aPoint);
 
   return rv;
 }
@@ -7720,7 +7720,7 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous)
   presShell->GetCaret(getter_AddRefs(caret));
   if (caret)
   {
-    StCaretHider  caretHider(caret);			// stack-based class hides and shows the caret
+    StCaretHider  caretHider(caret);      // stack-based class hides and shows the caret
 
     //
     // Scroll the selection region into view.
@@ -7752,7 +7752,7 @@ nsTypedSelection::AddSelectionListener(nsISelectionListener* aNewListener)
 {
   if (!aNewListener)
     return NS_ERROR_NULL_POINTER;
-  return mSelectionListeners.AppendObject(aNewListener) ? NS_OK : NS_ERROR_FAILURE;		// addrefs
+  return mSelectionListeners.AppendObject(aNewListener) ? NS_OK : NS_ERROR_FAILURE;      // addrefs
 }
 
 
@@ -7762,7 +7762,7 @@ nsTypedSelection::RemoveSelectionListener(nsISelectionListener* aListenerToRemov
 {
   if (!aListenerToRemove )
     return NS_ERROR_NULL_POINTER;
-  return mSelectionListeners.RemoveObject(aListenerToRemove) ? NS_OK : NS_ERROR_FAILURE;		// releases
+  return mSelectionListeners.RemoveObject(aListenerToRemove) ? NS_OK : NS_ERROR_FAILURE; // releases
 }
 
 
@@ -7794,9 +7794,9 @@ nsTypedSelection::NotifySelectionListeners()
   {
     nsISelectionListener* thisListener = mSelectionListeners[i];
     if (thisListener)
-    	thisListener->NotifySelectionChanged(domdoc, this, reason);
+      thisListener->NotifySelectionChanged(domdoc, this, reason);
   }
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

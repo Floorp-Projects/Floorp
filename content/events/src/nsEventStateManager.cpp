@@ -1491,8 +1491,8 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 nsresult
 nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
                                    nsIFrame* aTargetFrame,
-                                   nsMouseScrollEvent* msEvent,
-                                   PRInt32 numLines, PRBool scrollPage,
+                                   nsMouseScrollEvent* aMSEvent,
+                                   PRInt32 aNumLines, PRBool aScrollHorizontal, PRBool aScrollPage,
                                    PRBool aUseTargetFrame)
 {
   nsCOMPtr<nsIContent> targetContent;
@@ -1510,23 +1510,23 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   if (event) {
     nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(event));
     nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(targetDoc);
-    if (!docView) return nsnull;
+    if (!docView) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIDOMAbstractView> view;
     docView->GetDefaultView(getter_AddRefs(view));
     
-    if (scrollPage) {
-      if (numLines > 0) {
-        numLines = nsIDOMNSUIEvent::SCROLL_PAGE_DOWN;
+    if (aScrollPage) {
+      if (aNumLines > 0) {
+        aNumLines = nsIDOMNSUIEvent::SCROLL_PAGE_DOWN;
       } else {
-        numLines = nsIDOMNSUIEvent::SCROLL_PAGE_UP;
+        aNumLines = nsIDOMNSUIEvent::SCROLL_PAGE_UP;
       }
     }
 
     mouseEvent->InitMouseEvent(NS_LITERAL_STRING("DOMMouseScroll"), PR_TRUE, PR_TRUE, 
-                               view, numLines,
-                               msEvent->refPoint.x, msEvent->refPoint.y,
-                               msEvent->point.x, msEvent->point.y,
-                               msEvent->isControl, msEvent->isAlt, msEvent->isShift, msEvent->isMeta,
+                               view, aNumLines,
+                               aMSEvent->refPoint.x, aMSEvent->refPoint.y,
+                               aMSEvent->point.x, aMSEvent->point.y,
+                               aMSEvent->isControl, aMSEvent->isAlt, aMSEvent->isShift, aMSEvent->isMeta,
                                0, nsnull);
     PRBool allowDefault;
     nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(targetContent));
@@ -1535,11 +1535,6 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
       if (!allowDefault)
         return NS_OK;
     }
-  }
-
-  targetDOMDoc->CreateEvent(NS_LITERAL_STRING("MouseScrollEvents"), getter_AddRefs(event));
-  if (event) {
-    nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(event));
   }
 
   nsIView* focusView = nsnull;
@@ -1552,7 +1547,7 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   nsMouseEvent mouseOutEvent;
   mouseOutEvent.eventStructType = NS_MOUSE_EVENT;
   mouseOutEvent.message = NS_MOUSE_EXIT;
-  mouseOutEvent.widget = msEvent->widget;
+  mouseOutEvent.widget = aMSEvent->widget;
   mouseOutEvent.clickCount = 0;
   mouseOutEvent.point = nsPoint(0,0);
   mouseOutEvent.refPoint = nsPoint(0,0);
@@ -1623,24 +1618,27 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     nscoord xPos, yPos;
     sv->GetScrollPosition(xPos, yPos);
 
-    if (scrollPage)
-      sv->ScrollByPages((numLines > 0) ? 1 : -1);
-    else {
-      PRInt32 vertLines = 0, horizLines = 0;
-      
-      if (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal)
-        horizLines = numLines;
+    PRInt32 scrollX = 0;
+    PRInt32 scrollY = aNumLines;
 
-      if (msEvent->scrollFlags & nsMouseScrollEvent::kIsVertical)
-        vertLines = numLines;
-        
-      sv->ScrollByLines(horizLines, vertLines);
+    if (aScrollPage)
+      scrollY = (scrollY > 0) ? 1 : -1;
+
+    if (aScrollHorizontal)
+    {
+      scrollX = scrollY;
+      scrollY = 0;
     }
+
+    if (aScrollPage)
+      sv->ScrollByPages(scrollX, scrollY);
+    else
+      sv->ScrollByLines(scrollX, scrollY);
 
     nscoord newXPos, newYPos;
     sv->GetScrollPosition(newXPos, newYPos);
 
-    if (newYPos != yPos) {
+    if (newXPos != xPos || newYPos != yPos) {
       if (focusView)
         ForceViewUpdate(focusView);
     } else
@@ -1653,11 +1651,11 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
     nsIFrame* newFrame = nsnull;
     nsCOMPtr<nsIPresContext> newPresContext;
 
-    rv = GetParentScrollingView(msEvent, aPresContext, newFrame,
+    rv = GetParentScrollingView(aMSEvent, aPresContext, newFrame,
                                 *getter_AddRefs(newPresContext));
     if (NS_SUCCEEDED(rv) && newFrame)
-      return DoWheelScroll(newPresContext, newFrame, msEvent, numLines,
-                           scrollPage, PR_TRUE);
+      return DoWheelScroll(newPresContext, newFrame, aMSEvent, aNumLines,
+                           aScrollHorizontal, aScrollPage, PR_TRUE);
     else
       return NS_ERROR_FAILURE;
   }
@@ -1921,6 +1919,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       case MOUSE_SCROLL_PAGE:
         {
           DoWheelScroll(aPresContext, aTargetFrame, msEvent, numLines,
+                        (msEvent->scrollFlags & nsMouseScrollEvent::kIsHorizontal),
                         (action == MOUSE_SCROLL_PAGE), PR_FALSE);
 
         }
@@ -2011,7 +2010,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
               nsIScrollableView* sv = GetNearestScrollingView(aView);
               if (sv) {
                 nsKeyEvent * keyEvent = (nsKeyEvent *)aEvent;
-                sv->ScrollByPages((keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
+                sv->ScrollByPages(0, (keyEvent->keyCode != NS_VK_PAGE_UP) ? 1 : -1);
               }
             }
             break;
@@ -2036,7 +2035,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
                 // force the update to happen now, otherwise multiple scrolls can
                 // occur before the update is processed. (bug #7354)
                 nsIViewManager* vm = nsnull;
-                if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
+                if (NS_SUCCEEDED (aView->GetViewManager(vm)) && nsnull != vm) {
                   // I'd use Composite here, but it doesn't always work.
                   // vm->Composite();
                   vm->ForceUpdate();
@@ -2056,7 +2055,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
                 // force the update to happen now, otherwise multiple scrolls can
                 // occur before the update is processed. (bug #7354)
                 nsIViewManager* vm = nsnull;
-                if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
+                if (NS_SUCCEEDED (aView->GetViewManager(vm)) && nsnull != vm) {
                   // I'd use Composite here, but it doesn't always work.
                   // vm->Composite();
                   vm->ForceUpdate();
@@ -2073,7 +2072,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
               if (!mCurrentFocus) {
                 nsIScrollableView* sv = GetNearestScrollingView(aView);
                 if (sv) {
-                  sv->ScrollByPages(1);
+                  sv->ScrollByPages(0, 1);
                 }
               }
             }
@@ -3637,7 +3636,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       nsAutoString tabIndexStr;
       child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
-      if (NS_OK == ec && val > mCurrentTabIndex && val != tabIndex) {
+      if (NS_SUCCEEDED (ec) && val > mCurrentTabIndex && val != tabIndex) {
         tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex; 
       }
     }
@@ -3655,7 +3654,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       nsAutoString tabIndexStr;
       child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
-      if (NS_OK == ec) {
+      if (NS_SUCCEEDED (ec)) {
         if ((mCurrentTabIndex==0 && val > tabIndex) ||
             (val < mCurrentTabIndex && val > tabIndex) ) {
           tabIndex = val;
@@ -4229,13 +4228,13 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     nsAutoString tabIndex;
     aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabIndex);
     PRInt32 ec, val = tabIndex.ToInteger(&ec);
-    if (NS_OK == ec) {
+    if (NS_SUCCEEDED (ec)) {
       mCurrentTabIndex = val;
     }
 
     if (clearFirstFocusEvent) {
       mFirstFocusEvent = nsnull;
-	  }
+    }
   } else if (!aContent) {
     //fire focus on document even if the content isn't focusable (ie. text)
     //see bugzilla bug 93521
@@ -4368,7 +4367,7 @@ void nsEventStateManager::ForceViewUpdate(nsIView* aView)
   // occur before the update is processed. (bug #7354)
 
   nsIViewManager* vm = nsnull;
-  if (NS_OK == aView->GetViewManager(vm) && nsnull != vm) {
+  if (NS_SUCCEEDED (aView->GetViewManager(vm)) && nsnull != vm) {
     // I'd use Composite here, but it doesn't always work.
     // vm->Composite();
     vm->ForceUpdate();

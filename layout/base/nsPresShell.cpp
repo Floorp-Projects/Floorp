@@ -703,25 +703,25 @@ public:
   NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
 
   // nsICompositeListener methods
-	NS_IMETHOD WillRefreshRegion(nsIViewManager *aViewManager,
+  NS_IMETHOD WillRefreshRegion(nsIViewManager *aViewManager,
                                nsIView *aView,
                                nsIRenderingContext *aContext,
                                nsIRegion *aRegion,
                                PRUint32 aUpdateFlags);
 
-	NS_IMETHOD DidRefreshRegion(nsIViewManager *aViewManager,
+  NS_IMETHOD DidRefreshRegion(nsIViewManager *aViewManager,
                               nsIView *aView,
                               nsIRenderingContext *aContext,
                               nsIRegion *aRegion,
                               PRUint32 aUpdateFlags);
 
-	NS_IMETHOD WillRefreshRect(nsIViewManager *aViewManager,
+  NS_IMETHOD WillRefreshRect(nsIViewManager *aViewManager,
                              nsIView *aView,
                              nsIRenderingContext *aContext,
                              const nsRect *aRect,
                              PRUint32 aUpdateFlags);
 
-	NS_IMETHOD DidRefreshRect(nsIViewManager *aViewManager,
+  NS_IMETHOD DidRefreshRect(nsIViewManager *aViewManager,
                             nsIView *aView,
                             nsIRenderingContext *aContext,
                             const nsRect *aRect,
@@ -1172,7 +1172,7 @@ public:
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus,
-  											 PRBool          aForceHandle,
+                         PRBool          aForceHandle,
                          PRBool&         aHandled);
   NS_IMETHOD HandleDOMEventWithTarget(nsIContent* aTargetContent,
                             nsEvent* aEvent,
@@ -1265,7 +1265,7 @@ protected:
     // utility to determine if we're in the middle of a drag
   PRBool IsDragInProgress ( ) const ;
 
-  PRBool	mCaretEnabled;
+  PRBool mCaretEnabled;
 #ifdef IBMBIDI
   PRUint8   mBidiLevel; // The Bidi level of the cursor
   nsCOMPtr<nsIBidiKeyboard> mBidiKeyboard;
@@ -1682,7 +1682,7 @@ PresShell::Init(nsIDocument* aDocument,
     mCaret->Init(this);
   }
 
-  //SetCaretEnabled(PR_TRUE);			// make it show in browser windows
+  //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
 #endif  
 //set up selection to be displayed in document
   nsCOMPtr<nsISupports> container;
@@ -2111,7 +2111,7 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
   }
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj;
-	mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
 
   // If the document doesn't have a global object there's no need to
   // notify its presshell about changes to preferences since the
@@ -2804,7 +2804,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     nsIRenderingContext*  rcx = nsnull;
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     mIsReflowing = PR_TRUE;
 
@@ -2905,7 +2905,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
   PRBool firstReflow = PR_FALSE;
 
-    // notice that we ignore the result
+  // notice that we ignore the result
   NotifyReflowObservers(NS_PRESSHELL_RESIZE_REFLOW);
   mViewManager->CacheWidgetChanges(PR_TRUE);
 
@@ -3060,7 +3060,7 @@ PresShell::FireResizeEvent()
   event.time = 0;
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj;
-	mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
   if (globalObj) {
     globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
@@ -3123,9 +3123,9 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 {
   nsresult result = NS_OK;
   PRBool   oldEnabled = mCaretEnabled;
-	
+
   mCaretEnabled = aInEnable;
-	
+
   if (mCaret && (mCaretEnabled != oldEnabled))
   {
 /*  Don't change the caret's selection here! This was an evil side-effect of SetCaretEnabled()
@@ -3135,7 +3135,7 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 */
     result = mCaret->SetCaretVisible(mCaretEnabled);
   }
-	
+
   return result;
 }
 
@@ -3243,7 +3243,7 @@ PresShell::ScrollPage(PRBool aForward)
     result = viewManager->GetRootScrollableView(&scrollView);
     if (NS_SUCCEEDED(result) && scrollView)
     {
-      scrollView->ScrollByPages(aForward ? 1 : -1);
+      scrollView->ScrollByPages(0, aForward ? 1 : -1);
     }
   }
   return result;
@@ -3390,7 +3390,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
                                 );
     if (NS_POSITION_BEFORE_TABLE == result) //NS_POSITION_BEFORE_TABLE should ALSO break
       break;
-    if (NS_OK != result || !pos.mResultFrame ) 
+    if (NS_FAILED (result) || !pos.mResultFrame ) 
       return result?result:NS_ERROR_FAILURE;
     nsCOMPtr<nsILineIteratorNavigator> newIt; 
     //check to see if this is ANOTHER blockframe inside the other one if so then call into its lines
@@ -3492,7 +3492,7 @@ PresShell::StyleChangeReflow()
     nsIRenderingContext*  rcx = nsnull;
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_StyleChange, rcx, maxSize);
@@ -3877,13 +3877,13 @@ NS_IMETHODIMP
 PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
   nsIEventStateManager *manager;
-  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+  if (NS_SUCCEEDED (mPresContext->GetEventStateManager(&manager))) {
     manager->ClearFrameRefs(aFrame);
     NS_RELEASE(manager);
   }
   
   if (mCaret) {
-  	mCaret->ClearFrameRefs(aFrame);
+    mCaret->ClearFrameRefs(aFrame);
   }
   
   if (aFrame == mCurrentEventFrame) {
@@ -4274,8 +4274,8 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     content->GetDocument(*getter_AddRefs(document));
     if(document){
       nsCOMPtr<nsIFocusController> focusController;
-	    nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-	    document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
+      nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+      document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
       if(ourWindow) {
         ourWindow->GetRootFocusController(getter_AddRefs(focusController));
@@ -4696,10 +4696,6 @@ PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnony
   if (! aContent)
     return NS_ERROR_NULL_POINTER;
 
-  NS_PRECONDITION(aAnonymousElements != nsnull, "null ptr");
-  if (! aAnonymousElements)
-    return NS_ERROR_NULL_POINTER;
-
   if (! mAnonymousContentTable) {
     mAnonymousContentTable = new nsSupportsHashtable;
     if (! mAnonymousContentTable)
@@ -4711,26 +4707,33 @@ PresShell::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnony
   nsCOMPtr<nsISupportsArray> oldAnonymousElements =
     getter_AddRefs(NS_STATIC_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)));
 
-  if (oldAnonymousElements) {
-    // If we're trying to set anonymous content for an element that
-    // already had anonymous content, then we need to be sure to clean
-    // up after the old content. (This can happen, for example, when a
-    // reframe occurs.)
-    PRUint32 count;
-    oldAnonymousElements->Count(&count);
-
-    while (PRInt32(--count) >= 0) {
-      nsCOMPtr<nsISupports> isupports( getter_AddRefs(oldAnonymousElements->ElementAt(count)) );
-      nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
-      NS_ASSERTION(content != nsnull, "not an nsIContent");
-      if (! content)
-        continue;
-
-      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+  if (!oldAnonymousElements) {
+    if (aAnonymousElements) {
+      mAnonymousContentTable->Put(&key, aAnonymousElements);
+    }
+  } else {
+    if (aAnonymousElements) {
+      oldAnonymousElements->AppendElements(aAnonymousElements);
+    } else {
+      // If we're trying to clear anonymous content for an element that
+      // already had anonymous content, then we need to be sure to clean
+      // up after the old content. (This can happen, for example, when a
+      // reframe occurs.)
+      PRUint32 count;
+      oldAnonymousElements->Count(&count);
+      
+      while (PRInt32(--count) >= 0) {
+        nsCOMPtr<nsISupports> isupports( getter_AddRefs(oldAnonymousElements->ElementAt(count)) );
+        nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
+        NS_ASSERTION(content != nsnull, "not an nsIContent");
+        if (! content)
+          continue;
+        
+        content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+      }
     }
   }
 
-  mAnonymousContentTable->Put(&key, aAnonymousElements);
   return NS_OK;
 }
 
@@ -5018,7 +5021,7 @@ PresShell::HandlePostedReflowCallbacks()
       node = node->next;
       mFirstCallbackEventRequest = node;
       FreeFrame(sizeof(nsCallbackEventRequest), toFree);
-	  if (callback)
+      if (callback)
         callback->ReflowFinished(this, &shouldFlush);
       NS_IF_RELEASE(callback);
    }
@@ -5830,8 +5833,8 @@ PresShell::GetCurrentEventFrame()
 NS_IMETHODIMP
 PresShell::GetEventTargetFrame(nsIFrame** aFrame)
 {
-	*aFrame = GetCurrentEventFrame();
-	return NS_OK;
+  *aFrame = GetCurrentEventFrame();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5848,7 +5851,7 @@ PresShell::GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent)
       *aContent = nsnull;
     }
   }
-	return NS_OK;
+  return NS_OK;
 }
 
 void
@@ -5961,7 +5964,7 @@ NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
                        nsEventStatus*  aEventStatus,
-											 PRBool          aForceHandle,
+                       PRBool          aForceHandle,
                        PRBool&         aHandled)
 {
   void*     clientData;
@@ -6042,7 +6045,7 @@ PresShell::HandleEvent(nsIView         *aView,
     PushCurrentEventInfo(nsnull, nsnull);
 
     nsCOMPtr<nsIEventStateManager> manager;
-    if (NS_OK == mPresContext->GetEventStateManager(getter_AddRefs(manager))) {
+    if (NS_SUCCEEDED (mPresContext->GetEventStateManager(getter_AddRefs(manager)))) {
       //change 6-01-00 mjudge,ftang adding ime as an event that needs focused element
       if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent) || aEvent->message == NS_CONTEXTMENU_KEY) { 
         //Key events go to the focused frame, not point based.
@@ -6129,17 +6132,17 @@ PresShell::HandleEvent(nsIView         *aView,
           eventPoint -= originOffset;
 
         rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, &mCurrentEventFrame);
-        if (rv != NS_OK) {
+        if (NS_FAILED (rv)) {
           rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FLOATERS, &mCurrentEventFrame);
-          if (rv != NS_OK) {
+          if (NS_FAILED (rv)) {
             rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
-            if (rv != NS_OK) {
-							if (aForceHandle) {
-								mCurrentEventFrame = frame;
-							}
-							else {
-								mCurrentEventFrame = nsnull;
-							}
+            if (NS_FAILED (rv)) {
+              if (aForceHandle) {
+                 mCurrentEventFrame = frame;
+              }
+              else {
+                 mCurrentEventFrame = nsnull;
+              }
               aHandled = PR_FALSE;
               rv = NS_OK;
             }
@@ -6202,7 +6205,7 @@ PresShell::HandleEvent(nsIView         *aView,
         // use aView or mCurrentTargetView??
         if ( (mCurrentTargetRect != oldTargetRect) || (mCurrentTargetView != oldView)) {
           nsIViewManager *vm;
-          if ((NS_OK == GetViewManager(&vm)) && vm) {
+          if ((NS_SUCCEEDED (GetViewManager(&vm))) && vm) {
             vm->UpdateView(mCurrentTargetView,mCurrentTargetRect,0);
             if (oldView)
               vm->UpdateView(oldView,oldTargetRect,0);
@@ -6251,19 +6254,19 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags,
   nsresult rv = NS_OK;
 
   nsIEventStateManager *manager;
-  if (NS_OK == mPresContext->GetEventStateManager(&manager) && GetCurrentEventFrame()) {
+  if (NS_SUCCEEDED (mPresContext->GetEventStateManager(&manager)) && GetCurrentEventFrame()) {
     //1. Give event to event manager for pre event state changes and generation of synthetic events.
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aStatus, aView);
 
     //2. Give event to the DOM for third party and JS use.
-    if ((GetCurrentEventFrame()) && NS_OK == rv) {
+    if ((GetCurrentEventFrame()) && NS_SUCCEEDED (rv)) {
       if (mCurrentEventContent) {
         rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
                                            aFlags, aStatus);
       }
       else {
         nsIContent* targetContent;
-        if (NS_OK == mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent) && nsnull != targetContent) {
+        if (NS_SUCCEEDED (mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent)) && nsnull != targetContent) {
           rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
                                              aFlags, aStatus);
           NS_RELEASE(targetContent);
@@ -6279,7 +6282,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags,
       }
       else if (mCurrentEventFrame) {
         nsIContent* targetContent;
-        if (NS_OK == mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent) && nsnull != targetContent) {
+        if (NS_SUCCEEDED (mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent)) && nsnull != targetContent) {
           rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
                                              aFlags | NS_EVENT_FLAG_SYSTEM_EVENT, aStatus);
           NS_RELEASE(targetContent);
@@ -6289,12 +6292,12 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags,
       //3. Give event to the Frames for browser default processing.
       // XXX The event isn't translated into the local coordinate space
       // of the frame...
-      if (GetCurrentEventFrame() && NS_OK == rv && aEvent->eventStructType != NS_EVENT) {
+      if (GetCurrentEventFrame() && NS_SUCCEEDED (rv) && aEvent->eventStructType != NS_EVENT) {
         rv = mCurrentEventFrame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent, aStatus);
       }
 
       //4. Give event to event manager for post event state changes and generation of synthetic events.
-      if ((GetCurrentEventFrame()) && NS_OK == rv) {
+      if ((GetCurrentEventFrame()) && NS_SUCCEEDED (rv)) {
         rv = manager->PostHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aStatus, aView);
       }
     }
@@ -6484,7 +6487,7 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
     rootFrame->GetSize(maxSize);
 
     nsresult rv=CreateRenderingContext(rootFrame, &rcx);
-	  if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
     if (GetVerifyReflowEnable()) {
@@ -7204,7 +7207,7 @@ PresShell::VerifyIncrementalReflow()
     NS_RELEASE(container);
   }
 
-  NS_ASSERTION(NS_OK == rv, "failed to create presentation context");
+  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create presentation context");
   nsCOMPtr<nsIDeviceContext> dc;
   mPresContext->GetDeviceContext(getter_AddRefs(dc));
   cx->Init(dc);
@@ -7216,7 +7219,7 @@ PresShell::VerifyIncrementalReflow()
   nsIScrollableView* scrollView;
   rv = rootView->QueryInterface(NS_GET_IID(nsIScrollableView),
                                 (void**)&scrollView);
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED (rv)) {
     scrollView->GetScrollPreference(scrolling);
   }
   nsCOMPtr<nsIWidget> rootWidget;
@@ -7227,13 +7230,9 @@ PresShell::VerifyIncrementalReflow()
   rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull,
                                           NS_GET_IID(nsIViewManager),
                                           (void**) &vm);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(NS_OK == rv, "failed to create view manager");
-  }
+  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create view manager");
   rv = vm->Init(dc);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(NS_OK == rv, "failed to init view manager");
-  }
+  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to init view manager");
 
   // Create a child window of the parent that is our "root view/window"
   // Create a view
@@ -7243,21 +7242,15 @@ PresShell::VerifyIncrementalReflow()
   rv = nsComponentManager::CreateInstance(kViewCID, nsnull,
                                           NS_GET_IID(nsIView),
                                           (void **) &view);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(NS_OK == rv, "failed to create scroll view");
-  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view");
   rv = view->Init(vm, tbounds, nsnull);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(NS_OK == rv, "failed to init scroll view");
-  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to init scroll view");
 
   //now create the widget for the view
   nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mDocument));
   rv = view->CreateWidget(kWidgetCID, nsnull, nativeParentWidget, PR_TRUE, 
                           PR_TRUE, xulDoc? eContentTypeUI: eContentTypeContent);
-  if (NS_OK != rv) {
-    NS_ASSERTION(NS_OK == rv, "failed to create scroll view widget");
-  }
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create scroll view widget");
 
   // Setup hierarchical relationship in view manager
   vm->SetRootView(view);
@@ -7275,7 +7268,7 @@ PresShell::VerifyIncrementalReflow()
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clone style set");
   rv = mDocument->CreateShell(cx, vm, newSet, &sh);
   sh->SetVerifyReflowEnable(PR_FALSE); // turn off verify reflow while we're reflowing the test frame tree
-  NS_ASSERTION(NS_OK == rv, "failed to create presentation shell");
+  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create presentation shell");
   vm->SetViewObserver((nsIViewObserver *)((PresShell*)sh));
   sh->InitialReflow(r.width, r.height);
   sh->SetVerifyReflowEnable(PR_TRUE);  // turn on verify reflow again now that we're done reflowing the test frame tree
@@ -7734,7 +7727,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
     if (counter != nsnull && counter->mName.EqualsWithConversion(aName)) {
       aRenderingContext->PushState();
       nsFont font("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
-						       NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(8));
+                  NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(8));
 
       nsCOMPtr<nsIFontMetrics> fm;
       aPresContext->GetMetricsFor(font, getter_AddRefs(fm));

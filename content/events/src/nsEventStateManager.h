@@ -213,8 +213,8 @@ protected:
                                   nsIPresContext* &presCtxOuter);
   nsresult DoWheelScroll(nsIPresContext* aPresContext,
                          nsIFrame* aTargetFrame,
-                         nsMouseScrollEvent* msEvent, PRInt32 numLines,
-                         PRBool scrollPage, PRBool aUseTargetFrame);
+                         nsMouseScrollEvent* aMSEvent, PRInt32 aNumLines,
+                         PRBool aScrollHorizontal, PRBool aScrollPage, PRBool aUseTargetFrame);
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefBranch();
   nsresult ChangeTextSize(PRInt32 change);

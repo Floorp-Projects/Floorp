@@ -211,23 +211,25 @@ public:
   NS_IMETHOD GetLineHeight(nscoord *aHeight) = 0;
 
   /**
-   * Scroll the view up or down by aNumLines lines. positive
-   * values move down in the view. Prevents scrolling off the
-   * end of the view.
-   * @param aNumLines number of lines to scroll the view by
+   * Scroll the view left or right by aNumLinesX columns. Positive values move right. 
+   * Scroll the view up or down by aNumLinesY lines. Positive values move down. 
+   * Prevents scrolling off the end of the view.
+   * @param aNumLinesX number of lines to scroll the view horizontally
+   * @param aNumLinesY number of lines to scroll the view vertically
    * @return error status
    */
   NS_IMETHOD ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinexY) = 0;
 
   /**
-   * Scroll the view up or down by aNumPages pages. a page
-   * is considered to be the amount displayed by the clip view.
-   * positive values move down in the view. Prevents scrolling
-   * off the end of the view.
-   * @param aNumPage number of pages to scroll the view by
+   * Scroll the view left or right by aNumPagesX pages. Positive values move right. 
+   * Scroll the view up or down by aNumPagesY pages. Positive values move down. 
+   * A page is considered to be the amount displayed by the clip view.
+   * Prevents scrolling off the end of the view.
+   * @param aNumPagesX number of pages to scroll the view horizontally
+   * @param aNumPagesY number of pages to scroll the view vertically
    * @return error status
    */
-  NS_IMETHOD ScrollByPages(PRInt32 aNumPages) = 0;
+  NS_IMETHOD ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY) = 0;
 
   /**
    * Scroll the view to the top or bottom of the document depending
