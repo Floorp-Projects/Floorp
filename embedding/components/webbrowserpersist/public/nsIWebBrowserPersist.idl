@@ -79,10 +79,13 @@ interface nsIWebBrowserPersist : nsISupports
   readonly attribute unsigned long result;
 
   /**
-   * Callback listener for progress notifications. The object
-   * may also implement nsIInterfaceRequestor and be prepared to
-   * return nsIAuthPrompt or other interfaces required to download
-   * data.
+   * Callback listener for progress notifications. The object that the
+   * embbedder supplies may also implement nsIInterfaceRequestor and be
+   * prepared to return nsIAuthPrompt or other interfaces that may be required
+   * to download data.
+   *
+   * @see nsIAuthPrompt
+   * @see nsIInterfaceRequestor
    */
   attribute nsIWebProgressListener progressListener;
 
@@ -93,7 +96,11 @@ interface nsIWebBrowserPersist : nsISupports
    *                   may also support <CODE>nsnull</CODE> to imply the currently
    *                   loaded URI.
    * @param aPostData  Data to pass with in an HTTP request or nsnull.
-   * @param aFile      Target local file.
+   * @param aFile      Target local file. This may be a nsILocalFile object or an
+   *                   nsIURI object with a file scheme.
+   *
+   * @see nsILocalFile
+   * @see nsIURI
    *
    * @return NS_OK Operation has been started.
    * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
@@ -155,9 +162,12 @@ interface nsIWebBrowserPersist : nsISupports
    * @param aDocument          Document to save to file. Some implementations of
    *                           this interface may also support <CODE>nsnull</CODE>
    *                           to imply the currently loaded document.
-   * @param aFileURI           Target local file.
-   * @param aDataPathURI       Path to directory where URIs linked to the document
+   * @param aFile              Target local file. This may be a nsILocalFile object or an
+   *                           nsIURI object with a file scheme.
+   * @param aDataPath          Path to directory where URIs linked to the document
    *                           are saved or nsnull if no linked URIs should be saved.
+   *                           This may be a nsILocalFile object or an nsIURI object
+   *                           with a file scheme.
    * @param aOutputContentType The desired MIME type format to save the 
    *                           document and all subdocuments into or nsnull to use
    *                           the default behaviour.
@@ -166,7 +176,8 @@ interface nsIWebBrowserPersist : nsISupports
    *                           wrap text at. Parameter is ignored if wrapping is not
    *                           specified by the encoding flags.
    *
-   * @see nsIDocumentEncoder
+   * @see nsILocalFile
+   * @see nsIURI
    *
    * @return NS_OK Operation has been started.
    * @return NS_ERROR_INVALID_ARG One or more arguments was invalid.
