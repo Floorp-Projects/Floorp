@@ -347,8 +347,7 @@
 ! None of the key *semantics* of globalTranslations are changed here,
 ! only the actions bound.  (And inapplicable actions are not present.)
 !
-*bmGlobalTranslations:                  #override                             \
-             <Btn3Down>:        xfeDoPopup()                                \n\
+*navcenterGlobalTranslations            #override                             \
     ~m ~a ~c <Key>space:        PageDown()                                  \n\
      m    ~c <Key>D:            xfeDoCommand(delete)                        \n\
         a ~c <Key>D:            xfeDoCommand(delete)                        \n\
@@ -358,10 +357,6 @@
         a ~c <Key>G:            xfeDoCommand(findAgain)                     \n\
      m    ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
         a ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
-  s ~m ~a ~c <Key>Up:           xfeDoCommand(moveBookmarkUp)                \n\
-  s ~m ~a ~c <Key>Down:         xfeDoCommand(moveBookmarkDown)              \n\
-  s ~m ~a ~c <Key>osfUp:        xfeDoCommand(moveBookmarkUp)                \n\
-  s ~m ~a ~c <Key>osfDown:      xfeDoCommand(moveBookmarkDown)              \n\
  ~s ~m ~a ~c <Key>Up:           LineUp()                                    \n\
  ~s ~m ~a ~c <Key>Down:         LineDown()                                  \n\
  ~s ~m ~a ~c <Key>osfUp:        LineUp()                                    \n\
@@ -370,6 +365,13 @@
     ~m ~a ~c <Key>Next:         PageDown()                                  \n\
     ~m ~a ~c <Key>osfPageUp:    PageUp()                                    \n\
     ~m ~a ~c <Key>osfPageDown:  PageDown()                                  \n
+
+! These used to be in the bookmark translations.  navcenter probably
+! should have equivalents
+! s ~m ~a ~c <Key>Up:           xfeDoCommand(moveBookmarkUp)                \n\
+! s ~m ~a ~c <Key>Down:         xfeDoCommand(moveBookmarkDown)              \n\
+! s ~m ~a ~c <Key>osfUp:        xfeDoCommand(moveBookmarkUp)                \n\
+! s ~m ~a ~c <Key>osfDown:      xfeDoCommand(moveBookmarkDown)              \n\
 
 *abGlobalTranslations:                  #override                             \
              <Btn3Down>:        xfeDoPopup()                                \n\
@@ -388,31 +390,9 @@
  ~s       ~c <Key>Tab:          TableTraverse(NEXT)                         \n\
   s       ~c <Key>Tab:          TableTraverse(PREVIOUS)                     \n
 
-! Translations in the History window.
-! These translations are used instead of globalTranslations.
-! None of the key *semantics* of globalTranslations are changed here,
-! only the actions bound.  (And inapplicable actions are not present.)
-!
-!    <Btn3Down>:            xfeDoPopup()            \n\
-*ghGlobalTranslations:                  #override                             \
-     m    ~c <Key>D:            xfeDoCommand(delete)                        \n\
-        a ~c <Key>D:            xfeDoCommand(delete)                        \n\
-     m    ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
-        a ~c <Key>O:            xfeDoCommand(openSelected)                  \n\
-    ~m ~a ~c <Key>space:        PageDown()                                  \n\
- ~s ~m ~a ~c <Key>Up:           LineUp()                                    \n\
- ~s ~m ~a ~c <Key>Down:         LineDown()                                  \n\
- ~s ~m ~a ~c <Key>osfUp:        LineUp()                                    \n\
- ~s ~m ~a ~c <Key>osfDown:      LineDown()                                  \n\
-    ~m ~a ~c <Key>Prior:        PageUp()                                    \n\
-    ~m ~a ~c <Key>Next:         PageDown()                                  \n\
-    ~m ~a ~c <Key>osfPageUp:    PageUp()                                    \n\
-    ~m ~a ~c <Key>osfPageDown:  PageDown()                                  \n
-
 !
 ! Translations for document source window
 *dialogGlobalTranslations:              #override                             \
-                                                                              \
      m    ~c <Key>W:            xfeDoCommand(close)                         \n\
         a ~c <Key>W:            xfeDoCommand(close)                         \n
 

@@ -1358,9 +1358,7 @@ typedef struct
   XtTranslations form_elem_editing_translations;
 
   XtTranslations browser_global_translations;
-  XtTranslations bm_global_translations;
   XtTranslations ab_global_translations;
-  XtTranslations gh_global_translations;
   XtTranslations mailnews_global_translations;
   XtTranslations mnsearch_global_translations;
   XtTranslations messagewin_global_translations;
@@ -1369,6 +1367,7 @@ typedef struct
   XtTranslations address_outliner_key_translations;
   XtTranslations dialog_global_translations;
   XtTranslations editor_global_translations;
+  XtTranslations navcenter_global_translations;
 
   /* Random error messages and things.
    */
