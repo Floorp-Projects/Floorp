@@ -103,7 +103,7 @@ static int nslberi_extwrite_compat( int s, const void *buf, int len,
 static unsigned long get_tag( Sockbuf *sb, BerElement *ber);
 static unsigned long get_ber_len( BerElement *ber);
 static unsigned long read_len_in_ber( Sockbuf *sb, BerElement *ber);
-static unsigned long get_and_check_length( BerElement *ber,
+static int get_and_check_length( BerElement *ber,
 		unsigned long length, Sockbuf *sock );
 
 /*
@@ -667,6 +667,11 @@ read_len_in_ber( Sockbuf *sb, BerElement *ber)
 }
 
 
+/*
+ * Returns the tag of the message or LBER_DEFAULT if an error occurs.
+ * To check for EWOULDBLOCK or other temporary errors, the system error
+ * number (errno) should be consulted.
+ */
 unsigned long
 LDAP_CALL
 ber_get_next( Sockbuf *sb, unsigned long *len, BerElement *ber )
@@ -738,14 +743,14 @@ ber_get_next( Sockbuf *sb, unsigned long *len, BerElement *ber )
 
 	/* OK, we've malloc-ed the buffer; now read the rest of the expected length */
 	toread = (unsigned long)ber->ber_end - (unsigned long)ber->ber_rwptr;
-	do {
+	while ( toread > 0 ) {
 	  if ( (rc = BerRead( sb, ber->ber_rwptr, (long)toread )) <= 0 ) {
 	    return( LBER_DEFAULT );
 	  }
 	  
 	  toread -= rc;
 	  ber->ber_rwptr += rc;
-	} while ( toread > 0 );
+	}
 	
 #ifdef LDAP_DEBUG
 	if ( lber_debug ) {
@@ -1171,6 +1176,25 @@ ber_get_next_buffer( void *buffer, size_t buffer_size, unsigned long *len,
 		Bytes_Scanned, NULL));
 }
 
+/*
+ * Returns the tag of the message or LBER_DEFAULT if an error occurs. There
+ * are two cases where LBER_DEFAULT is returned:
+ *
+ * 1) There was not enough data in the buffer to complete the message; this
+ *    is a "soft" error. In this case, *Bytes_Scanned is set to a positive
+ *    number.
+ *
+ * 2) A "fatal" error occurs. In this case, *Bytes_Scanned is set to zero.
+ *    To check for specific errors, the system error number (errno) must
+ *    be consulted.  These errno values are explicitly set by this
+ *    function; other errno values may be set by underlying OS functions:
+ *
+ *    EINVAL   - LBER_SOCKBUF_OPT_VALID_TAG option set but tag does not match.
+ *    EMSGSIZE - length was not represented as <= sizeof(long) bytes or the
+ *                  LBER_SOCKBUF_OPT_MAX_INCOMING_SIZE option was set and the
+ *                  message is longer than the maximum. *len will be set in
+ *                  the latter situation.
+ */
 unsigned long
 LDAP_CALL
 ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
@@ -1223,8 +1247,10 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 
 		if((sock->sb_options & LBER_SOCKBUF_OPT_VALID_TAG) &&
 		  (tag != sock->sb_valid_tag)) {
-			*Bytes_Scanned=0;
-			return( LBER_DEFAULT);
+#if !defined( macintosh ) && !defined( DOS )
+			errno = EINVAL;
+#endif
+			goto error_exit;
 		}
 
 		/*
@@ -1240,15 +1266,20 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 		}
 		if ( lc & 0x80 ) {
 			noctets = (lc & 0x7f);
-			if ( noctets > sizeof(unsigned long) )
-				goto premature_exit;
+			if ( noctets > sizeof(unsigned long) ) {
+#if !defined( macintosh ) && !defined( DOS )
+				errno = EMSGSIZE;
+#endif
+				goto error_exit;
+			}
 			diff = sizeof(unsigned long) - noctets;
 			rcnt = read_bytes( &sb, (unsigned char *)&netlen + diff, noctets );
 			if ( rcnt != noctets ) {
 				/* keep the read bytes in buffer for the next round */
 				if ( ber->ber_end - ber->ber_buf < rcnt + 1 ) {
 					if ( nslberi_ber_realloc( ber, rcnt + 1 ) != 0 )
-						goto premature_exit;
+						/* errno set by realloc() */
+						goto error_exit;
 					ber->ber_end = ber->ber_buf + rcnt + 1;
 				}
 				ber->ber_ptr = ber->ber_buf;
@@ -1272,8 +1303,9 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 			*len = lc;
 		}
 
-		if ( LBER_DEFAULT == get_and_check_length(ber, *len, sock)) {
-			goto premature_exit;
+		if ( 0 != get_and_check_length(ber, *len, sock)) {
+			/* errno set by get_and_check_length() */
+			goto error_exit;
 		}
 	} else if (0 == ber->ber_len) {
 		/* Still waiting to receive the length */
@@ -1284,7 +1316,10 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 			if ( prevcnt < 0 ) { /* This is unexpected */
 				ber_reset( ber, 0 );
 				ber->ber_tag = LBER_DEFAULT;
-				goto premature_exit;
+#if !defined( macintosh ) && !defined( DOS )
+				errno = EMSGSIZE;	/* kind of a guess */
+#endif
+				goto error_exit;
 			}
 
 			noctets = (lc & 0x7f);
@@ -1296,7 +1331,8 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 				/* keep the read bytes in buffer for the next round */
 				if ( ber->ber_end - ber->ber_rwptr < rcnt ) {
 					if ( nslberi_ber_realloc( ber, prevcnt + rcnt + 1 ) != 0 )
-						goto premature_exit;
+						/* errno set by realloc() */
+						goto error_exit;
 					ber->ber_end = ber->ber_rwptr + rcnt;
 				}
 				SAFEMEMCPY( ber->ber_rwptr,
@@ -1310,13 +1346,14 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 			*len = lc;	/* should not come here */
 		}
 
-		if ( LBER_DEFAULT == get_and_check_length(ber, *len, sock)) {
-			goto premature_exit;
+		if ( 0 != get_and_check_length(ber, *len, sock)) {
+			/* errno set by get_and_check_length() */
+			goto error_exit;
 		}
 	}
 
 	toread = (unsigned long)ber->ber_end - (unsigned long)ber->ber_rwptr;
-	do {
+	while ( toread > 0 ) {
 		if ( (rc = read_bytes( &sb, (unsigned char *)ber->ber_rwptr,
 		    (long)toread )) <= 0 ) {
 			goto premature_exit;
@@ -1324,23 +1361,32 @@ ber_get_next_buffer_ext( void *buffer, size_t buffer_size, unsigned long *len,
 
 		toread -= rc;
 		ber->ber_rwptr += rc;
-	} while ( toread > 0 );
+	}
 
 	*len = ber->ber_len;
 	*Bytes_Scanned = sb.offset;
 	return( ber->ber_tag );
 
+error_exit:
+	*Bytes_Scanned = 0;
+	return(LBER_DEFAULT);
+
 premature_exit:
 	/*
 	 * we're here because we hit the end of the buffer before seeing
-	 * all of the PDU
+	 * all of the PDU (but no error occurred; we just need more data).
 	 */
 	*Bytes_Scanned = sb.offset;
 	return(LBER_DEFAULT);
 }
 
 
-static unsigned long
+/*
+ * Returns 0 if successful and -1 if not.
+ * Sets errno if not successful; see the comment above ber_get_next_buffer_ext()
+ * Always sets ber->ber_len = length.
+ */
+static int
 get_and_check_length( BerElement *ber, unsigned long length, Sockbuf *sock )
 {
 	/*
@@ -1351,19 +1397,25 @@ get_and_check_length( BerElement *ber, unsigned long length, Sockbuf *sock )
 
 #if defined( DOS ) && !defined( _WIN32 )
 	if ( length > 65535 ) {	/* DOS can't allocate > 64K */
-		return( LBER_DEFAULT );
+		/* no errno on Win16 */
+		return( -1 );
 	}
 #endif /* DOS && !_WIN32 */
 
 	if ( (sock != NULL)  &&
 		( sock->sb_options & LBER_SOCKBUF_OPT_MAX_INCOMING_SIZE )
 		&& (length > sock->sb_max_incoming) ) {
-		return( LBER_DEFAULT );
+#if !defined( macintosh ) && !defined( DOS )
+		errno = EMSGSIZE;
+#endif
+		return( -1 );
 	}
 
 	if ( ber->ber_buf + length > ber->ber_end ) {
-		if ( nslberi_ber_realloc( ber, length ) != 0 )
-			return( LBER_DEFAULT );
+		if ( nslberi_ber_realloc( ber, length ) != 0 ) {
+			/* errno is set by realloc() */
+			return( -1 );
+		}
 	}
 	ber->ber_ptr = ber->ber_buf;
 	ber->ber_end = ber->ber_buf + length;
