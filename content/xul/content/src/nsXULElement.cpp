@@ -686,6 +686,16 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
       // If attribute not set, will use default value passed in
       xulControl->GetTabIndex(&tabIndex);
     }
+    if (tabIndex != -1 && sTabFocusModelAppliesToXUL &&
+        !(sTabFocusModel & eTabFocus_formElementsMask)) {
+      // By default, the tab focus model doesn't apply to xul element on any system but OS X.
+      // on OS X we're following it for UI elements (XUL) as sTabFocusModel is based on
+      // "Full Keyboard Access" system setting (see mac/nsILookAndFeel).
+      // both textboxes and list elements (i.e. trees and list) should always be focusable
+      // (textboxes are handled as html:input)
+      if (!mNodeInfo->Equals(nsXULAtoms::tree) && !mNodeInfo->Equals(nsXULAtoms::listbox))
+        tabIndex = -1; 
+    }
   }
 
   if (aTabIndex) {

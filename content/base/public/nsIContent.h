@@ -665,6 +665,9 @@ public:
   // Tab focus model bit field:
   static PRInt32 sTabFocusModel;
 
+  // accessibility.tabfocus_applies_to_xul pref - if it is set to true,
+  // the tabfocus bit field applies to xul elements.
+  static PRBool sTabFocusModelAppliesToXUL;
 
 protected:
   typedef PRWord PtrBits;

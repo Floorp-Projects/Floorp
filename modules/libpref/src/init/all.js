@@ -107,6 +107,10 @@ pref("accessibility.warn_on_browsewithcaret", true);
 // On OS X, we use Full Keyboard Access system preference,
 // unless accessibility.tabfocus is set by the user.
 pref("accessibility.tabfocus", 7);
+pref("accessibility.tabfocus_applies_to_xul", false);
+#else
+// Only on mac tabfocus is expected to handle UI widgets as well as web content
+pref("accessibility.tabfocus_applies_to_xul", true);
 #endif
 
 pref("accessibility.usetexttospeech", "");
