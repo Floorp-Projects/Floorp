@@ -129,14 +129,14 @@
       switch( which ) {
         case "signon":
           window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                            "_blank","modal=yes,chrome,resizable=yes","S"); 
+                            "_blank","chrome,resizable=yes","S"); 
           break;
         case "samples":
           window._content.location.href = 'chrome://communicator/locale/wallet/index.html';
           break;
         case "walletsites":
           window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul",
-                            "_blank","modal=yes,chrome,resizable=no","W"); 
+                            "_blank","chrome,resizable=no","W"); 
           break;
         case "wallet":
         default:
