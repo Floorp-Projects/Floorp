@@ -68,7 +68,7 @@ MICROLINE_LIB	= $(DIST)/lib/libXmL.a
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/cmd/unixfe/config/unixfe.mk
-include $(topsrcdir)/cmd/unixfe/config/motif.mk
+#include $(topsrcdir)/cmd/unixfe/config/motif.mk
 
 DIRS		= \
 		  $(XFE2_DIR) \
