@@ -322,7 +322,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner) {
       break; 
   } //switch
 
-  return NS_OK;
+  return result;
 }
 
 
@@ -692,8 +692,11 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
   PRInt32 theIndex=theBufCopy.Find("DOCTYPE");
   CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
   
-  if(theIndex==kNotFound)
-    aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
+  if(theIndex==kNotFound) {
+    if('['==theBufCopy.CharAt(0)) 
+      aToken = theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_comment);  
+    else aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
+  }
   else
     aToken = theRecycler->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_markupDecl);
   

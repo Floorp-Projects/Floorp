@@ -608,6 +608,7 @@ nsresult nsScanner::SkipPast(nsString& aValidSet){
   return NS_OK;
 }
 
+
 /**
  *  Consume characters until you find the terminal char
  *  
@@ -652,7 +653,8 @@ nsresult nsScanner::ReadIdentifier(nsString& aString) {
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
       theOrigin=mOffset;
@@ -698,7 +700,8 @@ nsresult nsScanner::ReadNumber(nsString& aString) {
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
       theOrigin=mOffset;
@@ -747,7 +750,8 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
       theOrigin=mOffset;
@@ -794,7 +798,8 @@ nsresult nsScanner::ReadWhile(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
       theOrigin=mOffset;
@@ -842,7 +847,8 @@ nsresult nsScanner::ReadWhile(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
       theOrigin=mOffset;
@@ -921,7 +927,8 @@ nsresult nsScanner::ReadUntil(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
       theOrigin=mOffset;
@@ -970,7 +977,8 @@ nsresult nsScanner::ReadUntil(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],mOffset-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
       theOrigin=mOffset;
@@ -1042,7 +1050,8 @@ nsresult nsScanner::ReadUntil(nsString& aString,
       }
     }
     else {
-      aString.Append(&theBuf[theOrigin],theLen-theOrigin-1);
+      mOffset -= 1;
+      aString.Append(&theBuf[theOrigin],theLen-theOrigin);
       mOffset=theLen;
       result=Peek(theChar);
       theLen=mBuffer.Length();

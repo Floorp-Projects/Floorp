@@ -956,7 +956,7 @@ void InitializeElementTable(void) {
     Initialize( 
       /*tag*/                             eHTMLTag_p,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
-	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,&gDontAutoClose,
       /*parent,incl,exclgroups*/          kBlock, kInlineEntity, kNone,	  //this used to contain FLOW. But it's really an inline container.
       /*special props, prop-range*/       0,kDefaultPropRange,                      //otherwise it tries to contain things like H1..H6

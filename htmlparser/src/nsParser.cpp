@@ -798,6 +798,12 @@ nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!  
 
+
+#if 0
+    //this is only for debug purposes
+  aSourceBuffer.DebugDump();
+#endif 
+
   nsresult result=NS_OK;
   nsParser* me = this;
   // Maintain a reference to ourselves so we don't go away

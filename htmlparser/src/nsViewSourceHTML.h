@@ -273,6 +273,7 @@ protected:
     nsAutoString        mStartTag;
     nsAutoString        mEndTag;
     nsAutoString        mCommentTag;
+    nsAutoString        mCDATATag;
     nsAutoString        mDocTypeTag;
     nsAutoString        mPITag;
     nsAutoString        mEntityTag;

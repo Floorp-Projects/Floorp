@@ -71,13 +71,6 @@ static char*        kVerificationDir = "c:/temp";
 static char gShowCRC;
 #endif
 
-static eHTMLTags gFormElementTags[]= {  
-    eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
-    eHTMLTag_isindex, eHTMLTag_label,     eHTMLTag_legend,
-    eHTMLTag_option,  eHTMLTag_optgroup,  eHTMLTag_select,
-    eHTMLTag_textarea};
-
-
 #include "nsElementTable.h"
 
 
@@ -519,7 +512,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
-          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html);
+          CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,"html");
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
         }
 
@@ -556,7 +549,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
     if((NS_OK==anErrorCode) && (!mHadBody) && (!mHadFrameset)) { 
 
-      CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body);
+      CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,"body");
       mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
       mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content 
       result=BuildModel(aParser,mTokenizer,0,aSink);
@@ -635,7 +628,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
  *  What's wrong with it? This table, and the dispatch methods themselves need to be 
  *  moved over to the delegate. Ah, so much to do...
  *  
- *  @update  gess 5/21/98
+ *  @update  gess 12/1/99
  *  @param   aToken 
  *  @param   aParser 
  *  @return  
@@ -706,7 +699,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
               if(gHTMLElements[eHTMLTag_body].SectionContains(theTag,PR_TRUE)){
                 mTokenizer->PushTokenFront(aToken); //put this token back...
                 mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content
-                theToken=(CHTMLToken*)mTokenRecycler->CreateTokenOfType(eToken_start,theTag=eHTMLTag_body);
+                theToken=(CHTMLToken*)mTokenRecycler->CreateTokenOfType(eToken_start,theTag=eHTMLTag_body,"body");
                 theType=eToken_start;
                 //now open a body...
               }
@@ -735,20 +728,29 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           case eToken_whitespace: 
           case eToken_newline:
             result=HandleStartToken(theToken); break;
+
           case eToken_end:
             result=HandleEndToken(theToken); break;
+          
+          case eToken_cdatasection:
           case eToken_comment:
             result=HandleCommentToken(theToken); break;
+
           case eToken_entity:
             result=HandleEntityToken(theToken); break;
+
           case eToken_attribute:
             result=HandleAttributeToken(theToken); break;
+
           case eToken_style:
             result=HandleStyleToken(theToken); break;
+
           case eToken_instruction:
             result=HandleProcessingInstructionToken(theToken); break;
+
           case eToken_doctypeDecl:
             result=HandleDocTypeDeclToken(theToken); break;
+
           default:
             break;
         }//switch
@@ -1244,7 +1246,6 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
 nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-
   #ifdef  RICKG_DEBUG
     WriteTokenToLog(aToken);
   #endif
@@ -1253,7 +1254,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
   nsCParserNode* theNode=CreateNode();
   theNode->Init(aToken,mLineNumber,mTokenRecycler);
-
+  
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
   PRInt16       attrCount=aToken->GetAttributeCount();
   eHTMLTags     theParent=mBodyContext->Last();
