@@ -58,8 +58,6 @@ PRBool	nsMacEventHandler::sMouseInWidgetHit = PR_FALSE;
 
 nsMacEventDispatchHandler	gEventDispatchHandler;
 
-static pascal void ScrollActionProc (ControlHandle ctrl, ControlPartCode part) ;
-
 //
 // ScrollActionProc
 //
@@ -75,7 +73,8 @@ static pascal void ScrollActionProc(ControlHandle ctrl, ControlPartCode partCode
 		case kControlDownButtonPart:
 		case kControlPageUpPart:
 		case kControlPageDownPart:
-		  if ( gEventDispatchHandler.GetActive() ) {
+		  PhantomScrollbarData* data = NS_REINTERPRET_CAST(PhantomScrollbarData*, ::GetControlReference(ctrl));
+		  if ( data && (data->mWidgetToGetEvent || gEventDispatchHandler.GetActive()) ) {
         nsMouseScrollEvent scrollEvent;
         scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
         if ( partCode == kControlPageUpPart || partCode == kControlPageDownPart )
@@ -93,7 +92,8 @@ static pascal void ScrollActionProc(ControlHandle ctrl, ControlPartCode partCode
       	scrollEvent.point.x			= 100;
       	scrollEvent.point.y			= 100;
       	scrollEvent.time				= PR_IntervalNow();
-      	scrollEvent.widget			= gEventDispatchHandler.GetActive();
+      	scrollEvent.widget			= data->mWidgetToGetEvent ? 
+      	                            data->mWidgetToGetEvent : gEventDispatchHandler.GetActive();
       	scrollEvent.nativeMsg		= nsnull;
 
         // dispatch scroll event
@@ -1255,6 +1255,12 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 		  // don't allow clicks that rolled up a popup through to the content area.
       if ( ignoreClickInContent )
         break;
+						
+			nsMouseEvent mouseEvent;
+			PRUint32 mouseButton = NS_MOUSE_LEFT_BUTTON_DOWN;
+			if ( aOSEvent.modifiers & controlKey )
+			  mouseButton = NS_MOUSE_RIGHT_BUTTON_DOWN;
+			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
 
       // Check if the mousedown is in our window's phantom scrollbar. If so, track
       // the movement of the mouse. The scrolling code is in the action proc.
@@ -1262,18 +1268,25 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
       ::GlobalToLocal ( &local );
       ControlHandle scrollbar;
       ControlPartCode partCode = ::FindControl(local, whichWindow, &scrollbar);
-      if ( partCode >= kControlUpButtonPart && partCode <= kControlPageDownPart &&
-            scrollbar &&
-            GetControlReference(scrollbar) == 'mozz' ) {
-    	  ::TrackControl(scrollbar, local, mControlActionProc);
-        break;
+      if ( partCode >= kControlUpButtonPart && partCode <= kControlPageDownPart && scrollbar ) {
+        PhantomScrollbarData* data = NS_REINTERPRET_CAST(PhantomScrollbarData*, ::GetControlReference(scrollbar));
+        if ( data && data->mTag == PhantomScrollbarData::kUniqueTag ) {
+
+#if USEMOUSEPOSITIONFORSCROLLWHEEL
+// Uncomment this in order to set the widget to scroll the widget the mouse is over. However,
+// we end up getting an idle event while scrolling quickly with the wheel, and the end result
+// is that our idle-time mouseMove event kicks in a moves where we think the mouse is to where
+// the scrollwheel driver has convinced the OS the mouse really is. Net result: we lose track
+// of the widget and scrolling stops until you stop the wheel and move it again :(
+       	  data->mWidgetToGetEvent = gEventDispatchHandler.GetWidgetPointed();            // tell action proc which widget to use
+#endif
+
+    	    ::TrackControl(scrollbar, local, mControlActionProc);
+    	    data->mWidgetToGetEvent = nsnull;
+          break;
+        }
       }
 
-			nsMouseEvent mouseEvent;
-			PRUint32 mouseButton = NS_MOUSE_LEFT_BUTTON_DOWN;
-			if ( aOSEvent.modifiers & controlKey )
-			  mouseButton = NS_MOUSE_RIGHT_BUTTON_DOWN;
-			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, mouseButton);
 			nsCOMPtr<nsIWidget> kungFuDeathGrip ( mouseEvent.widget );            // ensure widget doesn't go away
 			nsWindow* widgetHit = NS_STATIC_CAST(nsWindow*, mouseEvent.widget);   //   while we're processing event
 			if (widgetHit)
@@ -1357,7 +1370,7 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent( EventRecord& aOSEvent )
 {
 	nsWindow* lastWidgetHit = gEventDispatchHandler.GetWidgetHit();
 	nsWindow* lastWidgetPointed = gEventDispatchHandler.GetWidgetPointed();
-
+  
 	PRBool retVal = PR_FALSE;
 
 	nsMouseEvent mouseEvent;

@@ -37,6 +37,27 @@ class nsWindow;
 class nsMacWindow;
 
 
+//
+// struct PhantomScrollbarData
+//
+// When creating the phantom scrollbar for a Gecko instance, create
+// one of these structures and stick it in the control's refCon. It 
+// is used not only to identify our scrollbar from any others, but
+// also to pass data to the scrollbar's action proc about which
+// widget is the one the mouse is over.
+//
+struct PhantomScrollbarData
+{
+  PhantomScrollbarData ( ) 
+    : mTag(kUniqueTag), mWidgetToGetEvent(nsnull) { }
+  
+  enum ResType { kUniqueTag = 'mozz' };
+  
+  ResType mTag;                     // should always be kUniqueTag
+  nsIWidget* mWidgetToGetEvent;     // for the action proc, the widget to get the event
+}; 
+
+
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
@@ -131,7 +152,7 @@ protected:
   static PRBool	sInBackground;
 
   ControlActionUPP mControlActionProc;
-
+  
 	nsMacWindow*	mTopLevelWidget;
 	RgnHandle			mUpdateRgn;
 	TSMDocumentID	mTSMDocument;
