@@ -3825,16 +3825,23 @@ char *GetTrustLabelString(char *CookieName)
     char *szBy = NULL;
     int i, j;
 
+/*
+ * here's how we would like to write the code but it doesn't compile on the mac 
+ *
+ *   int PurposeIds[] = {MK_ACCESS_TL_PPH0, MK_ACCESS_TL_PPH1,
+ *                       MK_ACCESS_TL_PPH2, MK_ACCESS_TL_PPH3,
+ *                       MK_ACCESS_TL_PPH4, MK_ACCESS_TL_PPH5};
+ *   int RecpIds[] = { 0, /* for special case of bit 0 */ MK_ACCESS_TL_RPH1, 
+ *                     MK_ACCESS_TL_RPH2, MK_ACCESS_TL_RPH3};
+*/
+
 #define NumPurposeBits 6 /* number of bits in the recipient value */
     /* array of msg Ids for the purpose values */
-    int PurposeIds[] = {MK_ACCESS_TL_PPH0, MK_ACCESS_TL_PPH1,
-                        MK_ACCESS_TL_PPH2, MK_ACCESS_TL_PPH3,
-                        MK_ACCESS_TL_PPH4, MK_ACCESS_TL_PPH5};
+    int PurposeIds[NumPurposeBits];
 
 #define NumRecpBits 4 /* number of bits in the recipient value */
     /* the list of msg Ids for the recipient value. */
-    int RecpIds[] = { 0, /* for special case of bit 0 */ MK_ACCESS_TL_RPH1, 
-                      MK_ACCESS_TL_RPH2, MK_ACCESS_TL_RPH3};
+    int RecpIds[NumRecpBit];
 
 #if NumPurposeBits > NumRecpBits
 #define NumStrs  NumPurposeBits
@@ -3843,6 +3850,20 @@ char *GetTrustLabelString(char *CookieName)
 #endif
     /* this array holds strings used in formatting the message */
     char *szTempStrs[ NumStrs ];
+
+    PurposeIds[0] = MK_ACCESS_TL_PPH0;
+    PurposeIds[1] = MK_ACCESS_TL_PPH1;
+    PurposeIds[2] = MK_ACCESS_TL_PPH2;
+    PurposeIds[3] = MK_ACCESS_TL_PPH3;
+    PurposeIds[4] = MK_ACCESS_TL_PPH4;
+    PurposeIds[5] = MK_ACCESS_TL_PPH5;
+
+    RecpIds[0] = 0;
+    RecpIds[1] = MK_ACCESS_TL_RPH1;
+    RecpIds[2] = MK_ACCESS_TL_RPH2;
+    RecpIds[3] = MK_ACCESS_TL_RPH3;
+
+
 
     if( CookieName ) {
         /* look thru the cookie permission list for a matching trust label */
