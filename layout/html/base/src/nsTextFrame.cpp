@@ -1867,7 +1867,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   // Setup metrics for caller; store final max-element-size information
   aMetrics.width = x;
   mComputedWidth = x;
-  if (0 == x) {
+  if ((0 == x) && (NS_STYLE_WHITESPACE_PRE != ts.mText->mWhiteSpace)) {
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
