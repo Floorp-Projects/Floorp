@@ -65,6 +65,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPresContext.h"
+#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -150,13 +151,6 @@ NS_ScriptErrorReporter(JSContext *cx,
     context->GetGlobalObject(getter_AddRefs(globalObject));
 
     if (globalObject) {
-      nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
-      if(NS_FAILED(globalObject->GetGlobalObjectOwner(getter_AddRefs(owner))) ||
-         !owner) {
-        NS_WARNING("Failed to get a global Object Owner");
-        return;
-      }
-
       nsAutoString fileName, msg;
 
       if (report) {
@@ -174,40 +168,43 @@ NS_ScriptErrorReporter(JSContext *cx,
         msg.AssignWithConversion(message);
       }
 
-      //send error event first, then proceed
       nsCOMPtr<nsIDocShell> docShell;
-      globalObject->GetDocShell(getter_AddRefs(docShell));
-      if (docShell && !JSREPORT_IS_WARNING(report->flags)) {
-        static PRInt32 errorDepth; // Recursion prevention
-        errorDepth++;
+      nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+      globalObject->GetGlobalObjectOwner(getter_AddRefs(owner));
+      if (owner) {
+        // First, notify the DOM that we have a script error.
+        globalObject->GetDocShell(getter_AddRefs(docShell));
+        if (docShell && !JSREPORT_IS_WARNING(report->flags)) {
+          static PRInt32 errorDepth; // Recursion prevention
+          ++errorDepth;
 
-        nsCOMPtr<nsIPresContext> presContext;
-        docShell->GetPresContext(getter_AddRefs(presContext));
+          nsCOMPtr<nsIPresContext> presContext;
+          docShell->GetPresContext(getter_AddRefs(presContext));
 
-        if(presContext && errorDepth < 2) {
-          nsScriptErrorEvent errorevent;
-          errorevent.eventStructType = NS_EVENT;
-          errorevent.message = NS_SCRIPT_ERROR;
+          if (presContext && errorDepth < 2) {
+            nsScriptErrorEvent errorevent;
+            errorevent.eventStructType = NS_EVENT;
+            errorevent.message = NS_SCRIPT_ERROR;
 
-          errorevent.fileName = fileName.get();
-          errorevent.errorMsg = msg.get();
-          errorevent.lineNr = report ? report->lineno : 0;
+            errorevent.fileName = fileName.get();
+            errorevent.errorMsg = msg.get();
+            errorevent.lineNr = report ? report->lineno : 0;
 
-          // HandleDOMEvent() must be synchronous for the recursion block
-          // (errorDepth) to work.
-          globalObject->HandleDOMEvent(presContext, &errorevent, nsnull,
-                                       NS_EVENT_FLAG_INIT, &status);
+            // HandleDOMEvent() must be synchronous for the recursion block
+            // (errorDepth) to work.
+            globalObject->HandleDOMEvent(presContext, &errorevent, nsnull,
+                                         NS_EVENT_FLAG_INIT, &status);
+          }
+
+          --errorDepth;
         }
-
-        errorDepth--;
       }
 
       if (status != nsEventStatus_eConsumeNoDefault) {
-
         // Make an nsIScriptError and populate it with information from
         // this error.
-        nsCOMPtr<nsIScriptError>
-          errorObject(do_CreateInstance("@mozilla.org/scripterror;1"));
+        nsCOMPtr<nsIScriptError> errorObject =
+          do_CreateInstance("@mozilla.org/scripterror;1");
 
         if (errorObject != nsnull) {
           nsresult rv;
@@ -240,8 +237,19 @@ NS_ScriptErrorReporter(JSContext *cx,
                                    category);
           }
 
-          if (NS_SUCCEEDED(rv))
-            owner->ReportScriptError(errorObject);
+          if (NS_SUCCEEDED(rv)) {
+            if (owner) {
+                owner->ReportScriptError(errorObject);
+            } else {
+              // We lack an owner to report this error to, so let's just
+              // report it to the console service so as to not lose it.
+              nsCOMPtr<nsIConsoleService> consoleService =
+                do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+              if (NS_SUCCEEDED(rv)) {
+                consoleService->LogMessage(errorObject);
+              }
+            }
+          }
         }
       }
     }
