@@ -65,7 +65,9 @@ enum HTMLImageElement_slots {
   IMAGE_HEIGHT = -11,
   IMAGE_HSPACE = -12,
   IMAGE_VSPACE = -13,
-  IMAGE_WIDTH = -14
+  IMAGE_WIDTH = -14,
+  IMAGE_NATURALHEIGHT = -15,
+  IMAGE_NATURALWIDTH = -16
 };
 
 /***********************************************************************/
@@ -294,6 +296,44 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsIDOMImage* b;
           if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
             rv = b->GetWidth(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case IMAGE_NATURALHEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_NATURALHEIGHT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMImage* b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            rv = b->GetNaturalHeight(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case IMAGE_NATURALWIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_NATURALWIDTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMImage* b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            rv = b->GetNaturalWidth(&prop);
             if(NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
             }
@@ -663,6 +703,8 @@ static JSPropertySpec HTMLImageElementProperties[] =
   {"hspace",    IMAGE_HSPACE,    JSPROP_ENUMERATE},
   {"vspace",    IMAGE_VSPACE,    JSPROP_ENUMERATE},
   {"width",    IMAGE_WIDTH,    JSPROP_ENUMERATE},
+  {"naturalHeight",    IMAGE_NATURALHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"naturalWidth",    IMAGE_NATURALWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
