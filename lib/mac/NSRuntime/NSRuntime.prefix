@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "DefinesMac.h"
 #include "IDE_Options.h"
 #include "ansi_prefix.mac.h"
 
