@@ -41,6 +41,10 @@
 		ondragdrop="return DropOnFolderTree(event);"
 		onclick="FolderPaneOnClick(event);"> 
 
+    <treecols>
+	    <treecol persist="width" width="1*" flex="1" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
+    </treecols>
+
 	  <template>
 	  	<rule>
 	      <treechildren>
@@ -62,7 +66,7 @@
                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
 			             HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
 			             NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect">
-					<treecell tooltip="folderTooltip" indent="true" class="treecell-indent tree-cell-folderpane-icon" 
+					<treecell indent="true" class="treecell-indent tree-cell-folderpane-icon" 
                     value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"
                     SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 			              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -81,12 +85,7 @@
 	       </treechildren>
 		</rule>
 	  </template>
-
-	  <treecol persist="width" width="3*" id="FolderColumn" rdf:resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
-          <treehead>
-            <treerow>
-            </treerow>
-          </treehead>
+    <treechildren flex="1"/>
 	</tree>
 
 </overlay>
