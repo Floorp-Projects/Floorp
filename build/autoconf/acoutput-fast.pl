@@ -99,7 +99,7 @@ if ($ARGV[0] =~ /^--srcdir=/) {
 #   from files listed on the command-line.
 #
 @makefiles=();
-push @makefiles, split while (<>);
+push @makefiles, split while (<STDIN>);
 
 # Create all the directories at once.
 #   This can be much faster than calling mkdir() for each one.
