@@ -1150,6 +1150,11 @@ PK11_InitSlotLists(void)
 PK11SlotList *
 PK11_GetSlotList(CK_MECHANISM_TYPE type)
 {
+/* XXX a workaround for Bugzilla bug #55267 */
+#if defined(HPUX) && defined(__LP64__)
+    if (CKM_INVALID_MECHANISM == type)
+        return NULL;
+#endif
     switch (type) {
     case CKM_DES_CBC:
     case CKM_DES_ECB:
