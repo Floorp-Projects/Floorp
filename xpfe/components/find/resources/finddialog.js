@@ -122,7 +122,15 @@ function onAccept()
   {
     if (!dialog.bundle)
       dialog.bundle = document.getElementById("findBundle");
-    window.alert(dialog.bundle.getString("notFoundWarning"));
+
+    try {
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+      promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+      promptService.alert(window, null,
+                          dialog.bundle.getString("notFoundWarning"));
+    }
+    catch (e) { dump("The text you entered was not found."); }
+
     dialog.findKey.select();
     dialog.findKey.focus();
   } 
