@@ -562,10 +562,8 @@ nsLog::Printf(const char* format, ...)
     
     va_list args;
     va_start(args, format);
-    char* msg = PR_vsmprintf(format, args);
+    nsresult rv = Vprintf(format, args);
     va_end(args);
-    nsresult rv = mSink->Print(this, msg);
-    PR_smprintf_free(msg);
     return rv;
 }
 
@@ -575,6 +573,7 @@ nsLog::Vprintf(const char* format, va_list args)
     nsAutoMonitor monitor(gLogMonitor);
     
     char* msg = PR_vsmprintf(format, args);
+    if (!msg) return NS_ERROR_OUT_OF_MEMORY;
     nsresult rv = mSink->Print(this, msg);
     PR_smprintf_free(msg);
     return rv;
