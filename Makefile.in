@@ -252,7 +252,9 @@ endif
 tier_99_dirs	+= xpfe/bootstrap
 
 ifdef ENABLE_TESTS
+ifdef MOZ_ENABLE_GTK
 tier_99_dirs	+= embedding/browser/gtk/tests
+endif
 endif
 
 endif # BUILD_MODULES == all
