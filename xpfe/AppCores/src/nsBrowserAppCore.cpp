@@ -124,8 +124,8 @@ nsBrowserAppCore::~nsBrowserAppCore()
 }
 
 
-NS_IMPL_ADDREF(nsBrowserAppCore)
-NS_IMPL_RELEASE(nsBrowserAppCore)
+NS_IMPL_ADDREF_INHERITED(nsBrowserAppCore, nsBaseAppCore)
+NS_IMPL_RELEASE_INHERITED(nsBrowserAppCore, nsBaseAppCore)
 
 
 NS_IMETHODIMP 
