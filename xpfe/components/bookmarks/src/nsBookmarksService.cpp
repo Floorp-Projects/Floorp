@@ -762,27 +762,37 @@ BookmarkParser::Unescape(nsString &text)
 {
 	// convert some HTML-escaped (such as "&lt;") values back
 
-	PRInt32		offset;
+	PRInt32		offset=0;
 
-	while ((offset = text.Find("&lt;", PR_TRUE)) > 0)
+	while((offset = text.FindChar((PRUnichar('&')), PR_FALSE, offset)) >= 0)
 	{
-		text.Cut(offset, 4);
-		text.Insert(PRUnichar('<'), offset);
-	}
-	while ((offset = text.Find("&gt;", PR_TRUE)) > 0)
-	{
-		text.Cut(offset, 4);
-		text.Insert(PRUnichar('>'), offset);
-	}
-	while ((offset = text.Find("&amp;", PR_TRUE)) > 0)
-	{
-		text.Cut(offset, 5);
-		text.Insert(PRUnichar('&'), offset);
-	}
-	while ((offset = text.Find("&quot;", PR_TRUE)) > 0)
-	{
-		text.Cut(offset, 6);
-		text.Insert(PRUnichar('\"'), offset);
+		// XXX get max of 6 chars; change the value below if
+		// we ever start looking for longer HTML-escaped values
+		nsAutoString	temp;
+		text.Mid(temp, offset, 6);
+
+		if (temp.Compare("&lt;", PR_TRUE, 4) == 0)
+		{
+			text.Cut(offset, 4);
+			text.Insert(PRUnichar('<'), offset);
+		}
+		else if (temp.Compare("&gt;", PR_TRUE, 4) == 0)
+		{
+			text.Cut(offset, 4);
+			text.Insert(PRUnichar('>'), offset);
+		}
+		else if (temp.Compare("&amp;", PR_TRUE, 5) == 0)
+		{
+			text.Cut(offset, 5);
+			text.Insert(PRUnichar('&'), offset);
+		}
+		else if (temp.Compare("&quot;", PR_TRUE, 6) == 0)
+		{
+			text.Cut(offset, 6);
+			text.Insert(PRUnichar('\"'), offset);
+		}
+
+		++offset;
 	}
 	return(NS_OK);
 }
