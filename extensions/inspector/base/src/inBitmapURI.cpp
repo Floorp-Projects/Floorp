@@ -93,8 +93,9 @@ inBitmapURI::SetSpec(const nsACString &aSpec)
 
   if (!FindCharInReadable(':', colon, end))
     return NS_ERROR_MALFORMED_URI;
-
-  if (!FindCharInReadable(NS_BITMAP_DELIMITER, delim = ++colon, end))
+  
+  delim = ++colon;
+  if (!FindCharInReadable(NS_BITMAP_DELIMITER, delim, end))
     delim = end;
 
   mBitmapName = Substring(colon, delim);
