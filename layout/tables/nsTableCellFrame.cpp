@@ -542,18 +542,6 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   
 }
 
-void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
-{
-  nsHTMLValue value;
-
-  ((nsHTMLTagContent*)mContent)->GetAttribute(nsHTMLAtoms::align, value);
-  if (value.GetUnit() == eHTMLUnit_Enumerated) 
-  {
-    nsStyleText* text = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
-    text->mTextAlign = value.GetIntValue();
-  }
-}
-
 
 // Subclass hook for style post processing
 NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
@@ -562,7 +550,6 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   printf("nsTableCellFrame::DidSetStyleContext \n");
 #endif
 
-  MapTextAttributes(aPresContext);
   MapBorderMarginPadding(aPresContext);
   mStyleContext->RecalcAutomaticData(aPresContext);
   return NS_OK;
