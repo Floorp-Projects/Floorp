@@ -2822,9 +2822,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
   nsSize maxElementSize;
   lineLayout->VerticalAlignFrames(aLine->mBounds, maxElementSize);
-  if (addedBullet) {
-    lineLayout->RemoveBulletFrame(mBullet);
-  }
 #ifdef DEBUG_kipp
   NS_ASSERTION((aLine->mBounds.YMost()) < 200000 && (aLine->mBounds.y > -200000), "oy");
 #endif
@@ -2843,6 +2840,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   lineLayout->TrimTrailingWhiteSpace(aLine->mBounds);
   lineLayout->HorizontalAlignFrames(aLine->mBounds, allowJustify);
   lineLayout->RelativePositionFrames(aLine->mCombinedArea);
+  if (addedBullet) {
+    lineLayout->RemoveBulletFrame(mBullet);
+  }
 
   // Calculate the bottom margin for the line.
   nscoord lineBottomMargin = 0;
