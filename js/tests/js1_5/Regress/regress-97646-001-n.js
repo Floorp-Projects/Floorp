@@ -17,16 +17,17 @@
 * All Rights Reserved.
 *
 * Contributor(s): pschwartau@netscape.com
-* Date: 2001-07-12
+* Date: 08 August 2001
 *
-* SUMMARY: Regression test for bug 89443
+* SUMMARY: Regression test for bug 97646
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=97646
+*
+* (This script originally arose from bug 89443)
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=89443
-* 
-* Just seeing if this script will compile without stack overflow.
 */
-//-------------------------------------------------------------------------------------------------
-var bug = 89443;
-var summary = 'Testing this script will compile without stack overflow';
+//-----------------------------------------------------------------------------
+var bug = 97646;
+var summary = 'We should get a non-0 exit code if else statement is too large';
 
 printBugNumber (bug);
 printStatus (summary);
