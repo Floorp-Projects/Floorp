@@ -92,6 +92,11 @@ EXPORTS		+= \
 		$(NULL)
 endif
 
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_COMPONENT_LIBS) \
+		-lmozjs \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 #
