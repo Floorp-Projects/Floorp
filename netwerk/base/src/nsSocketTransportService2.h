@@ -41,6 +41,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
+#include "nsCOMPtr.h"
 #include "pldhash.h"
 #include "prinrval.h"
 #include "prlog.h"
@@ -117,6 +118,24 @@ public:
     nsSocketTransportService();
 
     //
+    // the number of sockets that can be attached at any given time is
+    // limited.  this is done because some operating systems (e.g., Win9x)
+    // limit the number of sockets that can be created by an application.
+    // AttachSocket will fail if the limit is exceeded.  consumers should
+    // call CanAttachSocket and check the result before creating a socket.
+    //
+    PRBool CanAttachSocket() { return mActiveCount + mIdleCount < NS_SOCKET_MAX_COUNT; }
+
+    //
+    // if the number of sockets is at the limit, then consumers can be notified
+    // when the number of sockets becomes less than the limit.  the notification
+    // is asynchronous, delivered via the nsISocketEventHandler interface.  the
+    // consumer can specify the message parameter passed to its OnSocketEvent
+    // method.  the uparam and vparam args will be zero and null respectively.
+    //
+    nsresult NotifyWhenCanAttachSocket(nsISocketEventHandler *, PRUint32 msg);
+
+    //
     // add a new socket to the list of controlled sockets.  returns a socket
     // reference for the newly attached socket that can be used with other
     // methods to control the socket.
@@ -163,33 +182,21 @@ private:
     {
         SocketEvent(nsISocketEventHandler *handler,
                     PRUint32 type, PRUint32 uparam, void *vparam)
-            : mType(type)
+            : mHandler(handler)
+            , mType(type)
             , mUparam(uparam)
             , mVparam(vparam)
             , mNext(nsnull)
-            { NS_ADDREF(mHandler = handler); }
+            { }
 
-       ~SocketEvent() { NS_RELEASE(mHandler); }
-
-        nsISocketEventHandler *mHandler;
-        PRUint32               mType;
-        PRUint32               mUparam;
-        void                  *mVparam;
-
-        struct SocketEvent    *mNext;
+        nsCOMPtr<nsISocketEventHandler> mHandler;
+        PRUint32                        mType;
+        PRUint32                        mUparam;
+        void                           *mVparam;
+        struct SocketEvent             *mNext;
     };
-
-    struct SocketEventQ;
-    friend struct SocketEventQ;
-    struct SocketEventQ
-    {
-        SocketEventQ() : mHead(nsnull), mTail(nsnull) {}
-
-        SocketEvent *mHead;
-        SocketEvent *mTail;
-    };
-
-    SocketEventQ  mEventQ;
+    SocketEvent  *mEventQHead;
+    SocketEvent  *mEventQTail;
     PRLock       *mEventQLock;
 
     //-------------------------------------------------------------------------
@@ -236,6 +243,25 @@ private:
     PRPollDesc mPollList[ NS_SOCKET_MAX_COUNT + 1 ];
 
     PRInt32 Poll(); // calls PR_Poll
+
+    //-------------------------------------------------------------------------
+    // pending socket handler queue - see NotifyWhenCanAttachSocket
+    //-------------------------------------------------------------------------
+
+    struct PendingSocket
+    {
+        PendingSocket(nsISocketEventHandler *handler, PRUint32 msg)
+            : mHandler(handler)
+            , mMsg(msg)
+            , mNext(nsnull)
+            { }
+
+        nsCOMPtr<nsISocketEventHandler> mHandler;
+        PRUint32                        mMsg;
+        struct PendingSocket           *mNext;
+    };
+    PendingSocket *mPendingQHead;
+    PendingSocket *mPendingQTail;
 
     //-------------------------------------------------------------------------
     // mHostDB maps host:port -> nsHostEntry

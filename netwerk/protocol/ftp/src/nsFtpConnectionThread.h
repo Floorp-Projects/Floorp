@@ -132,8 +132,10 @@ public:
 
     nsresult Connect();
 
-    // lets the data forwarder tell us when the the data pipe has been created. 
-    nsresult DataConnectionEstablished();    
+    // lets the data forwarder tell us when the the data pipe has been created
+    // and when the data pipe has finished.
+    void DataConnectionEstablished();    
+    void DataConnectionComplete();
 private:
     ///////////////////////////////////
     // BEGIN: STATE METHODS

@@ -145,18 +145,6 @@ nsFTPChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo, nsICacheSession* sessio
 }
 
 
-NS_METHOD
-nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
-{
-    nsFTPChannel* fc;
-    NS_NEWXPCOM(fc, nsFTPChannel);
-    if (!fc) return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(fc);
-    nsresult rv = fc->QueryInterface(aIID, aResult);
-    NS_RELEASE(fc);
-    return rv;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
 
@@ -588,7 +576,7 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
         // was successfully started so that it can issue data commands
         // securely.
         if (mFTPState)
-            (void) mFTPState->DataConnectionEstablished();
+            mFTPState->DataConnectionEstablished();
         else
             NS_ERROR("ftp state is null.");
     }
@@ -649,7 +637,10 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     if (mUploadStream)
         mUploadStream->Close();
 
-    NS_IF_RELEASE(mFTPState);
+    if (mFTPState) {
+        mFTPState->DataConnectionComplete();
+        NS_RELEASE(mFTPState);
+    }
     mIsPending = PR_FALSE;
     return rv;
 }

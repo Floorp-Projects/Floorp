@@ -50,6 +50,8 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsIObserverService.h"
 
+//-----------------------------------------------------------------------------
+
 #if defined(PR_LOGGING)
 //
 // Log module for FTP Protocol logging...
@@ -63,29 +65,41 @@
 // the file nspr.log
 //
 PRLogModuleInfo* gFTPLog = nsnull;
+#endif
+#define LOG(args) PR_LOG(gFTPLog, PR_LOG_DEBUG, args)
 
-#endif /* PR_LOGGING */
+//-----------------------------------------------------------------------------
 
-#define IDLE_TIMEOUT_PREF "network.ftp.idleConnectionTimeout"
+#define IDLE_TIMEOUT_PREF     "network.ftp.idleConnectionTimeout"
+#define IDLE_CONNECTION_LIMIT 8 /* XXX pref me */
 
 static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kStandardURLCID,       NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 
-nsVoidArray* nsFtpProtocolHandler::mRootConnectionList = nsnull;
-PRInt32 nsFtpProtocolHandler::mIdleTimeout = -1;
-////////////////////////////////////////////////////////////////////////////////
-nsFtpProtocolHandler::nsFtpProtocolHandler() {
+nsFtpProtocolHandler *gFtpHandler = nsnull;
+
+//-----------------------------------------------------------------------------
+
+nsFtpProtocolHandler::nsFtpProtocolHandler()
+    : mIdleTimeout(-1)
+{
+#if defined(PR_LOGGING)
+    if (!gFTPLog) gFTPLog = PR_NewLogModule("nsFTPProtocol");
+#endif
+    LOG(("Creating nsFtpProtocolHandler @%x\n", this));
+
+    gFtpHandler = this;
 }
 
-nsFtpProtocolHandler::~nsFtpProtocolHandler() {
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpProtocolHandler() called"));
+nsFtpProtocolHandler::~nsFtpProtocolHandler()
+{
+    LOG(("Destroying nsFtpProtocolHandler @%x\n", this));
 
-    NS_ASSERTION(!mRootConnectionList, "why wasn't Observe called?");
+    NS_ASSERTION(mRootConnectionList.Count() == 0, "why wasn't Observe called?");
 
-    mIdleTimeout = -1;
-    mIOSvc = 0;
+    gFtpHandler = nsnull;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsFtpProtocolHandler,
@@ -95,19 +109,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsFtpProtocolHandler,
                               nsISupportsWeakReference);
 
 nsresult
-nsFtpProtocolHandler::Init() {
-    nsresult rv = NS_OK;
-
-#if defined(PR_LOGGING)
-    if (!gFTPLog) gFTPLog = PR_NewLogModule("nsFTPProtocol");
-#endif /* PR_LOGGING */
-
-    mIOSvc = do_GetService(kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    mRootConnectionList = new nsVoidArray(8);
-    if (!mRootConnectionList) return NS_ERROR_OUT_OF_MEMORY;
-    NS_LOG_NEW_XPCOM(mRootConnectionList, "nsVoidArray", sizeof(nsVoidArray), __FILE__, __LINE__);
+nsFtpProtocolHandler::Init()
+{
+    nsresult rv;
 
     // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
@@ -144,15 +148,14 @@ nsFtpProtocolHandler::Init() {
     return NS_OK;
 }
 
-
     
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // nsIProtocolHandler methods:
 
 NS_IMETHODIMP
 nsFtpProtocolHandler::GetScheme(nsACString &result)
 {
-    result = "ftp";
+    result = NS_LITERAL_CSTRING("ftp");
     return NS_OK;
 }
 
@@ -183,12 +186,10 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
     if (aSpec.FindChar('\r') >= 0 || aSpec.FindChar('\n') >= 0)
         return NS_ERROR_MALFORMED_URI;
 
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIStandardURL> url;
-    rv = nsComponentManager::CreateInstance(kStandardURLCID, 
-                                            nsnull, NS_GET_IID(nsIStandardURL),
-                                            getter_AddRefs(url));
+    nsresult rv;
+    nsCOMPtr<nsIStandardURL> url = do_CreateInstance(kStandardURLCID, &rv);
     if (NS_FAILED(rv)) return rv;
+
     rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 21, aSpec, aCharset, aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
@@ -204,25 +205,25 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo, nsIChannel* *result)
 {
-    nsresult rv = NS_OK;
+    nsFTPChannel *channel = new nsFTPChannel();
+    if (!channel)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(channel);
 
-    nsFTPChannel* channel = nsnull;
-    rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsICacheService> cache = do_GetService(kCacheServiceCID);
+    if (cache) {
+        cache->CreateSession("FTP",
+                             nsICache::STORE_ANYWHERE,
+                             nsICache::STREAM_BASED,
+                             getter_AddRefs(mCacheSession));
+        if (mCacheSession)
+            mCacheSession->SetDoomEntriesIfExpired(PR_FALSE);
+    }
 
-    nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
-    if (serv)
-        serv->CreateSession("FTP",
-                            nsICache::STORE_ANYWHERE,
-                            nsICache::STREAM_BASED,
-                            getter_AddRefs(mCacheSession));
-    
-    if (mCacheSession)
-        rv = mCacheSession->SetDoomEntriesIfExpired(PR_FALSE);
-
-    rv = channel->Init(url, proxyInfo, mCacheSession);
+    nsresult rv = channel->Init(url, proxyInfo, mCacheSession);
     if (NS_FAILED(rv)) {
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
+        LOG(("nsFtpProtocolHandler::NewChannel() FAILED\n"));
+        NS_RELEASE(channel);
         return rv;
     }
     
@@ -233,10 +234,7 @@ nsFtpProtocolHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo, ns
 NS_IMETHODIMP 
 nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 {
-    if (port == 21 || port == 22)
-        *_retval = PR_TRUE;
-    else
-        *_retval = PR_FALSE;
+    *_retval = (port == 21 || port == 22);
     return NS_OK;
 }
 
@@ -245,14 +243,13 @@ nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retva
 void
 nsFtpProtocolHandler::Timeout(nsITimer *aTimer, void *aClosure)
 {
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Timeout reached for %0x\n", aClosure));
+    LOG(("Timeout reached for %0x\n", aClosure));
 
-    NS_ASSERTION(mRootConnectionList, "Timeout called without a connection list!");
-    
-    PRBool found = mRootConnectionList->RemoveElement(aClosure);
-    NS_ASSERTION(found, "Timeout without entry!");
-    if (!found)
+    PRBool found = gFtpHandler->mRootConnectionList.RemoveElement(aClosure);
+    if (!found) {
+        NS_ERROR("timerStruct not found");
         return;
+    }
 
     timerStruct* s = (timerStruct*)aClosure;
     delete s;
@@ -266,23 +263,20 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
     
     *_retval = nsnull;
 
-    if (!mRootConnectionList)
-        return NS_ERROR_NULL_POINTER;
-
     nsCAutoString spec;
     aKey->GetPrePath(spec);
     
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Removing connection for %s\n", spec.get()));
+    LOG(("Removing connection for %s\n", spec.get()));
    
     timerStruct* ts = nsnull;
     PRInt32 i;
     PRBool found = PR_FALSE;
     
-    for (i=0;i<mRootConnectionList->Count();++i) {
-        ts = (timerStruct*)mRootConnectionList->ElementAt(i);
-        if (!nsCRT::strcmp(spec.get(), ts->key)) {
+    for (i=0;i<mRootConnectionList.Count();++i) {
+        ts = (timerStruct*)mRootConnectionList[i];
+        if (strcmp(spec.get(), ts->key) == 0) {
             found = PR_TRUE;
-            mRootConnectionList->RemoveElementAt(i);
+            mRootConnectionList.RemoveElementAt(i);
             break;
         }
     }
@@ -290,7 +284,9 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsFtpControlConnection* *_r
     if (!found)
         return NS_ERROR_FAILURE;
 
-    NS_ADDREF(*_retval = ts->conn);
+    // swap connection ownership
+    *_retval = ts->conn;
+    ts->conn = nsnull;
     delete ts;
 
     return NS_OK;
@@ -302,16 +298,11 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
     NS_ASSERTION(aConn, "null pointer");
     NS_ASSERTION(aKey, "null pointer");
     
-    if (!mRootConnectionList)
-        return NS_ERROR_NULL_POINTER;
-
     nsCAutoString spec;
     aKey->GetPrePath(spec);
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Inserting connection for %s\n", spec.get()));
 
-    if (!mRootConnectionList)
-        return NS_ERROR_FAILURE;
-    
+    LOG(("Inserting connection for %s\n", spec.get()));
+
     nsresult rv;
     nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1", &rv);
     if (NS_FAILED(rv)) return rv;
@@ -329,7 +320,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
         return rv;
     }
     
-    ts->key = nsCRT::strdup(spec.get());
+    ts->key = ToNewCString(spec);
     if (!ts->key) {
         delete ts;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -339,41 +330,61 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
     ts->conn = aConn;
     ts->timer = timer;
 
-    mRootConnectionList->AppendElement(ts);
-    
+    //
+    // limit number of idle connections.  if limit is reached, then prune
+    // eldest connection with matching key.  if none matching, then prune
+    // eldest connection.
+    //
+    if (mRootConnectionList.Count() == IDLE_CONNECTION_LIMIT) {
+        PRInt32 i;
+        for (i=0;i<mRootConnectionList.Count();++i) {
+            timerStruct *candidate = (timerStruct *) mRootConnectionList[i];
+            if (strcmp(candidate->key, ts->key) == 0) {
+                mRootConnectionList.RemoveElementAt(i);
+                delete candidate;
+                break;
+            }
+        }
+        if (mRootConnectionList.Count() == IDLE_CONNECTION_LIMIT) {
+            timerStruct *eldest = (timerStruct *) mRootConnectionList[0];
+            mRootConnectionList.RemoveElementAt(0);
+            delete eldest;
+        }
+    }
+
+    mRootConnectionList.AppendElement(ts);
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
 // nsIObserver
 
 NS_IMETHODIMP
-nsFtpProtocolHandler::Observe(nsISupports* aSubject,
-                              const char* aTopic,
-                              const PRUnichar* aData)
+nsFtpProtocolHandler::Observe(nsISupports *aSubject,
+                              const char *aTopic,
+                              const PRUnichar *aData)
 {
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::Observe\n"));
+    LOG(("nsFtpProtocolHandler::Observe [topic=%s]\n", aTopic));
 
     if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
-        NS_ASSERTION(branch, "Didn't get a prefBranch in Observe");
-        if (!branch)
+        if (!branch) {
+            NS_ERROR("no prefbranch");
             return NS_ERROR_UNEXPECTED;
-
+        }
         PRInt32 timeout;
         nsresult rv = branch->GetIntPref(IDLE_TIMEOUT_PREF, &timeout);
         if (NS_SUCCEEDED(rv))
             mIdleTimeout = timeout;
-    } else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
-        if (mRootConnectionList) {
-            PRInt32 i;
-            for (i=0;i<mRootConnectionList->Count();++i)
-                delete (timerStruct*)mRootConnectionList->ElementAt(i);
-            delete mRootConnectionList;
-            mRootConnectionList = nsnull;
-        }
-    } else {
-        NS_NOTREACHED("wrong topic in nsFtpProtocolHandler::Observe");
+    }
+    else if (!strcmp(aTopic, "network:offline-about-to-go-offline")) {
+        PRInt32 i;
+        for (i=0;i<mRootConnectionList.Count();++i)
+            delete (timerStruct*)mRootConnectionList[i];
+        mRootConnectionList.Clear();
+    }
+    else {
+        NS_NOTREACHED("unexpected topic");
     }
 
     return NS_OK;

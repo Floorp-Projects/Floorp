@@ -389,6 +389,9 @@ nsFtpState::nsFtpState()
     mDRequestForwarder = nsnull;
     mFileSize          = PRUint32(-1);
     mModTime           = -1;
+
+    // make sure handler stays around
+    NS_ADDREF(gFtpHandler);
 }
 
 nsFtpState::~nsFtpState() 
@@ -397,6 +400,10 @@ nsFtpState::~nsFtpState()
     
     if (mIPv6ServerAddress) nsMemory::Free(mIPv6ServerAddress);
     NS_IF_RELEASE(mDRequestForwarder);
+
+    // release reference to handler
+    nsFtpProtocolHandler *handler = gFtpHandler;
+    NS_RELEASE(handler);
 }
 
 nsresult
@@ -572,7 +579,7 @@ nsFtpState::EstablishControlConnection()
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) trying cached control\n", this));
         
     nsFtpControlConnection* connection;
-    (void) nsFtpProtocolHandler::RemoveConnection(mURL, &connection);
+    (void) gFtpHandler->RemoveConnection(mURL, &connection);
     
     if (connection) {
         mControlConnection = connection;
@@ -2311,11 +2318,7 @@ void
 nsFtpState::KillControlConnection() {
     mControlReadCarryOverBuf.Truncate(0);
 
-    if (mDPipe) {
-        mDPipe->SetSecurityCallbacks(nsnull);
-        mDPipe->SetEventSink(nsnull, nsnull);
-        mDPipe = 0;
-    }
+    DataConnectionComplete();
     
     NS_IF_RELEASE(mDRequestForwarder);
 
@@ -2346,7 +2349,7 @@ nsFtpState::KillControlConnection() {
         mControlConnection->mServerType = mServerType;           
         mControlConnection->mPassword = mPassword;
         mControlConnection->mPwd = mPwd;
-        nsresult rv = nsFtpProtocolHandler::InsertConnection(mURL, mControlConnection);
+        nsresult rv = gFtpHandler->InsertConnection(mURL, mControlConnection);
         // Can't cache it?  Kill it then.  
         mControlConnection->Disconnect(rv);
     } 
@@ -2488,7 +2491,7 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     return rv;
 }
 
-nsresult
+void
 nsFtpState::DataConnectionEstablished()
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Data Connection established.", this));
@@ -2499,8 +2502,19 @@ nsFtpState::DataConnectionEstablished()
     // control socket to write out its buffer.
     nsCString a("");
     SendFTPCommand(a);
-    
-    return NS_OK;
+}
+
+void
+nsFtpState::DataConnectionComplete()
+{
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Data Connection complete.", this));
+
+    if (mDPipe) {
+        mDPipe->SetSecurityCallbacks(nsnull);
+        mDPipe->SetEventSink(nsnull, nsnull);
+        mDPipe->Close(NS_ERROR_ABORT);
+        mDPipe = 0;
+    }
 }
 
 nsresult 
