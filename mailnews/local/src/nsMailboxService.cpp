@@ -19,10 +19,6 @@
 #include "msgCore.h"    // precompiled header...
 #include "nsCOMPtr.h"
 
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
 #include "nsMailboxService.h"
 #include "nsIMsgMailSession.h"
 #include "nsMailboxUrl.h"
@@ -35,10 +31,6 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgBaseCID.h"
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -59,19 +51,19 @@ nsresult nsMailboxService::QueryInterface(const nsIID &aIID, void** aInstancePtr
     if (nsnull == aInstancePtr)
         return NS_ERROR_NULL_POINTER;
  
-    if (aIID.Equals(nsIMailboxService::GetIID()) || aIID.Equals(kISupportsIID)) 
+    if (aIID.Equals(NS_GET_IID(nsIMailboxService)) || aIID.Equals(NS_GET_IID(nsISupports))) 
 	{
         *aInstancePtr = (void*) ((nsIMailboxService*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIMsgMessageService::GetIID())) 
+    if (aIID.Equals(NS_GET_IID(nsIMsgMessageService))) 
 	{
         *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-	if (aIID.Equals(nsIProtocolHandler::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIProtocolHandler)))
 	{
         *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
         NS_ADDREF_THIS();
@@ -252,12 +244,12 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 	{
 		// okay now generate the url string
 		char * urlSpec;
-		nsAutoString folderURI (eOneByte);
+		nsCAutoString folderURI;
 		nsFileSpec folderPath;
 		nsMsgKey msgKey;
 		
 		rv = nsParseLocalMessageURI(aSrcMsgMailboxURI, folderURI, &msgKey);
-		rv = nsLocalURI2Path(kMailboxMessageRootURI, folderURI.GetBuffer(), folderPath);
+		rv = nsLocalURI2Path(kMailboxMessageRootURI, folderURI, folderPath);
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -312,15 +304,13 @@ NS_IMETHODIMP nsMailboxService::GetDefaultPort(PRInt32 *aDefaultPort)
 NS_IMETHODIMP nsMailboxService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
 {
 	// no such thing as relative urls for smtp.....
-	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
 	// i just haven't implemented this yet...I will be though....
-	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
@@ -328,6 +318,5 @@ NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsIEv
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
 	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
 	// the necko team in more detail later on.
-	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
