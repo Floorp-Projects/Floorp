@@ -987,8 +987,27 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   // Get the scrollable frame
   nsIScrollableFrame *scrollFrame = nsnull;
   CallQueryInterface(frame, &scrollFrame);
+
   if (!scrollFrame) {
-    return NS_OK;
+    if (mNodeInfo->Equals(nsHTMLAtoms::body)) {
+      // The scroll info for the body element should map to the scroll
+      // info for the nearest scrollable frame above the body element
+      // (i.e. the root scrollable frame).
+
+      do {
+        frame->GetParent(&frame);
+
+        if (!frame) {
+          break;
+        }
+
+        CallQueryInterface(frame, &scrollFrame);
+      } while (!scrollFrame);
+    }
+
+    if (!scrollFrame) {
+      return NS_OK;
+    }
   }
 
   // Get the scrollable view
