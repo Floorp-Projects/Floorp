@@ -861,7 +861,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, LRESULT* outResult )
       }
 
       // if we've still determined that we should still rollup everything, do it.
-      if ( rollup ) {
+      else if ( rollup ) {
         gRollupListener->Rollup();
 
         // return TRUE tells Windows that the event is consumed, 
