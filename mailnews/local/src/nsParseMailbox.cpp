@@ -50,7 +50,7 @@
 #include "nsIRDFService.h"
 #include "nsMsgI18N.h"
 #include "nsAppDirectoryServiceDefs.h"
-
+#include "nsIMsgLocalMailFolder.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -1876,15 +1876,13 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	destFile->seek(PR_SEEK_END, 0);
 	newMsgPos = destFile->tell();
 
-	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-	nsCOMPtr<nsIMsgDatabase> destMailDB;
-	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
-	if (NS_SUCCEEDED(rv) && mailDBFactory)
-	{
-		nsCOMPtr <nsIFileSpec> dbFileSpec;
-		NS_NewFileSpecWithSpec(destFolderSpec, getter_AddRefs(dbFileSpec));
-		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB));
-	}
+  nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(destIFolder);
+  nsCOMPtr<nsIMsgDatabase> destMailDB;
+
+  if (!localFolder)
+    return NS_MSG_POP_FILTER_TARGET_ERROR;
+
+  nsresult rv = localFolder->GetDatabaseWOReparse(getter_AddRefs(destMailDB));
 	NS_ASSERTION(destMailDB, "failed to open mail db parsing folder");
 	// don't force upgrade in place - open the db here before we start writing to the 
 	// destination file because XP_Stat can return file size including bytes written...
@@ -1949,10 +1947,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	else
 	{
 		if (destMailDB)
-		{
-			destMailDB->Close(PR_TRUE);
 			destMailDB = nsnull;
-		}
 	}
 
 	destFile->close();
@@ -1983,7 +1978,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 		if (destIFolder != nsnull)
 			destIFolder->SummaryChanged();
 
-		destMailDB->Close(PR_TRUE);
+    destMailDB->Commit(nsMsgDBCommitType::kLargeCommit);
 	}
 	// We are logging the hit with the old mailHdr, which should work, as long
 	// as LogRuleHit doesn't assume the new hdr.

@@ -341,6 +341,31 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWOReparse(nsIMsgDatabase **aDatabase)
+{
+  nsresult rv;
+  NS_ENSURE_ARG(aDatabase);
+  if (!mDatabase)
+  {
+    nsCOMPtr <nsIFileSpec> destIFolderSpec;
+    rv = GetPath(getter_AddRefs(destIFolderSpec));
+
+    NS_ENSURE_SUCCESS(rv, rv);
+
+	  nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+	  nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
+	  if (NS_SUCCEEDED(rv) && mailDBFactory)
+	  {
+		  rv = mailDBFactory->Open(destIFolderSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(mDatabase));
+      if (mDatabase && NS_SUCCEEDED(rv))
+        mDatabase->AddListener(this);
+	  }
+  }
+  *aDatabase = mDatabase;
+  NS_IF_ADDREF(*aDatabase);
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
 {
@@ -415,11 +440,11 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
           nsCOMPtr<nsIMsgIncomingServer> server;
           rv = GetServer(getter_AddRefs(server));
           if (NS_FAILED(rv)) return rv;
-          if (!server) return NS_ERROR_FAILURE;
+          if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
           localMailServer = do_QueryInterface(server, &rv);
           if (NS_FAILED(rv)) return rv;
-          if (!localMailServer) return NS_ERROR_FAILURE;
+          if (!localMailServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
           
           nsCOMPtr<nsIFileSpec> spec;
           rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
@@ -2027,11 +2052,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = GetServer(getter_AddRefs(server)); 
     if (NS_FAILED(rv)) return rv;
-    if (!server) return NS_ERROR_FAILURE;
+    if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
     nsCOMPtr<nsILocalMailIncomingServer> localMailServer = do_QueryInterface(server, &rv);
     if (NS_FAILED(rv)) return rv;
-    if (!localMailServer) return NS_ERROR_FAILURE;
+    if (!localMailServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
 	//GGGGGGG
 	nsCOMPtr<nsIMsgFolder> inbox;
@@ -2648,14 +2673,14 @@ nsresult nsMsgLocalMailFolder::DeleteMsgsOnPop3Server(nsISupportsArray *messages
   if (NS_FAILED(rv)) 
     return rv;
   if (!server) 
-    return NS_ERROR_FAILURE;
+    return NS_MSG_INVALID_OR_MISSING_SERVER;
 
   server->GetLocalPath(getter_AddRefs(localPath));
   pop3MailServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) 
     return rv;
   if (!pop3MailServer) 
-    return NS_ERROR_FAILURE;
+    return NS_MSG_INVALID_OR_MISSING_SERVER;
 	
   pop3MailServer->GetDeleteMailLeftOnServer(&deleteMailLeftOnServer);
 	if (!deleteMailLeftOnServer)

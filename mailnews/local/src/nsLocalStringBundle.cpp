@@ -80,11 +80,12 @@ nsLocalStringService::GetBundle(nsIStringBundle **aResult)
 nsresult
 nsLocalStringService::InitializeStringBundle()
 {
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(stringService->CreateBundle(LOCAL_MSGS_URL, nsnull, getter_AddRefs(mLocalStringBundle)), 
-                    NS_ERROR_FAILURE);
-  return NS_OK;
+  rv = stringService->CreateBundle(LOCAL_MSGS_URL, nsnull, getter_AddRefs(mLocalStringBundle));
+  return rv;
 }
 

@@ -416,7 +416,7 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
         nsCOMPtr<nsIMsgIncomingServer> server;
       mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
       mailnewsUrl->GetServer(getter_AddRefs(server));
-      NS_ENSURE_TRUE(server, NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(server, NS_MSG_INVALID_OR_MISSING_SERVER);
       m_pop3Server = do_QueryInterface(server);
       if (m_pop3Server)
         m_pop3Server->GetPop3CapabilityFlags(&m_pop3ConData->capability_flags);
@@ -561,7 +561,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
             m_pop3ConData->next_state = POP3_ERROR_DONE;
     } // if we have a server
 	else
-		rv = NS_ERROR_FAILURE;
+		rv = NS_MSG_INVALID_OR_MISSING_SERVER;
 
 	return rv;
 }

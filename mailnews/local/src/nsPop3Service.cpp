@@ -84,18 +84,18 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 
 	server = do_QueryInterface(popServer);
 
-	if (!server) return NS_ERROR_FAILURE;
+	if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
 	rv = server->GetHostName(getter_Copies(popHost));
 	if (NS_FAILED(rv)) return rv;
-	if (!((const char *)popHost)) return NS_ERROR_FAILURE;
+	if (!((const char *)popHost)) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
     rv = server->GetPort(&popPort);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = server->GetUsername(getter_Copies(popUser));
 	if (NS_FAILED(rv)) return rv;
-	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
+	if (!((const char *)popUser)) return NS_MSG_SERVER_USERNAME_MISSING;
     
     nsXPIDLCString escapedUsername;
     *((char**)getter_Copies(escapedUsername)) =
@@ -139,11 +139,11 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	server = do_QueryInterface(popServer);    
 
-    if (!server) return NS_ERROR_FAILURE;
+    if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
 	rv = server->GetHostName(getter_Copies(popHost));
 	if (NS_FAILED(rv)) return rv;
-	if (!((const char *)popHost)) return NS_ERROR_FAILURE;
+	if (!((const char *)popHost)) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
     rv = server->GetPort(&popPort);
 	if (NS_FAILED(rv)) return rv;
@@ -156,7 +156,7 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
         nsEscape(popUser, url_XAlphas);
     if (NS_FAILED(rv)) return rv;
     
-	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
+	if (!((const char *)popUser)) return NS_MSG_SERVER_USERNAME_MISSING;
     
 	if (NS_SUCCEEDED(rv) && popServer )
 	{

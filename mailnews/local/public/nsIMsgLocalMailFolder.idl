@@ -23,6 +23,7 @@
 #include "nsISupports.idl"
 interface nsIMsgWindow;
 interface nsIUrlListener;
+interface nsIMsgDatabase;
 
 [scriptable, uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
 interface nsIMsgLocalMailFolder : nsISupports {
@@ -34,5 +35,6 @@ interface nsIMsgLocalMailFolder : nsISupports {
    * like MSG_FOLDER_FLAG_INBOX | MSG_FOLDER_FLAG_DRAFTS | etc
    */
   void setFlagsOnDefaultMailboxes(in unsigned long flags);
-  void ParseFolder(in nsIMsgWindow aMsgWindow, in nsIUrlListener listener);
+  nsIMsgDatabase getDatabaseWOReparse();
+  void parseFolder(in nsIMsgWindow aMsgWindow, in nsIUrlListener listener);
 };
