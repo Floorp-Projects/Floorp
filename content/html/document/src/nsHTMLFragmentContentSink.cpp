@@ -99,6 +99,7 @@ public:
   nsresult FlushText();
 
   PRBool mHitSentinel;
+  PRBool mSeenBody;
 
   nsIContent* mRoot;
   nsIParser* mParser;
@@ -132,6 +133,7 @@ nsHTMLFragmentContentSink::nsHTMLFragmentContentSink()
 {
   NS_INIT_REFCNT();
   mHitSentinel = PR_FALSE;
+  mSeenBody = PR_TRUE;
   mRoot = nsnull;
   mParser = nsnull;
   mCurrentForm = nsnull;
@@ -292,7 +294,15 @@ nsHTMLFragmentContentSink::CloseHead(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::OpenBody(const nsIParserNode& aNode)
 {
-  return OpenContainer(aNode);
+  // Ignore repeated BODY elements. The DTD is just sending them
+  // to us for compatibility reasons that don't apply here.
+  if (!mSeenBody) {
+    mSeenBody = PR_TRUE;
+    return OpenContainer(aNode);
+  }
+  else {
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP 
