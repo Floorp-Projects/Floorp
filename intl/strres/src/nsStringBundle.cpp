@@ -768,6 +768,10 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 
     // hasn't been cached, so insert it into the hash table
     nsStringBundle* bundle = new nsStringBundle(aURLSpec, nsnull, &ret);
+    if (NS_FAILED(ret)) {
+      delete bundle;
+      return NS_ERROR_FAILURE;
+    }
     if (!bundle) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
