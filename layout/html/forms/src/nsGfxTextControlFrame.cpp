@@ -1012,7 +1012,6 @@ nsIWidget * GetDeepestWidget(nsIView * aView)
       if (widget) {
         return widget;
       } else {
-        nsIWidget * widget;
         aView->GetWidget(widget);
         if (widget) {
           nsCOMPtr<nsIScrollbar> scrollbar(do_QueryInterface(widget));
