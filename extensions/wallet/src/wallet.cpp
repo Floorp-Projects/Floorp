@@ -72,7 +72,6 @@
 #include "prmem.h"
 #include "prprf.h"  
 #include "nsIContent.h"
-#include "nsISecurityManagerComponent.h"
 #include "nsIObserverService.h"
 
 #include "nsIWalletService.h"
@@ -3871,33 +3870,6 @@ public:
   PRBool isPassword;
 };
 
-PRIVATE PRBool
-wallet_IsFromCartman(nsIURI* aURL) {
-  PRBool retval = PR_FALSE;
-  nsCAutoString host;
-  if (NS_SUCCEEDED(aURL->GetHost(host))) {
-    if (PL_strncasecmp(host.get(), "127.0.0.1", 9) == 0) {
-      /* submit is to server on local machine */
-      nsresult res;
-      nsCOMPtr<nsISecurityManagerComponent> psm = 
-               do_GetService(PSM_COMPONENT_CONTRACTID, &res);
-      if (NS_SUCCEEDED(res)) { 
-        nsCAutoString password;
-        if (NS_SUCCEEDED(aURL->GetPassword(password))) {
-          nsXPIDLCString secmanPassword;
-          if (NS_SUCCEEDED(psm->GetPassword(getter_Copies(secmanPassword))) && secmanPassword) {
-            if (PL_strncasecmp(password.get(), secmanPassword,  9) == 0) {
-              /* password for submit is cartman's password */
-              retval = PR_TRUE;
-            }
-          }
-        }
-      }
-    }
-  }
-  return retval;
-}
-
 #ifdef AutoCapture
 PRIVATE PRBool
 wallet_IsNewValue(nsIDOMNode* elementNode, nsString valueOnForm) {
@@ -3934,7 +3906,7 @@ WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindowInternal* window) {
   }
   nsCOMPtr<nsIURI> docURL;
   doc->GetDocumentURL(getter_AddRefs(docURL));
-  if (!docURL || wallet_IsFromCartman(docURL)) {
+  if (!docURL) {
     return;
   }
   wallet_GetHostFile(docURL, strippedURLNameUCS2);
