@@ -338,6 +338,9 @@ nsPersistentProperties::Subclass(nsIPersistentProperties* aSubclass)
 NS_IMETHODIMP
 nsPersistentProperties::GetProperty(const nsString& aKey, nsString& aValue)
 {
+  if (!mTable)
+     return NS_ERROR_FAILURE;
+
   const PRUnichar *key = aKey.GetUnicode();
 
   if (!mTable) {
