@@ -44,6 +44,12 @@ IS_COMPONENT =  1
 endif
 endif
 
+# NetBSD/m68k
+ifneq (,$(filter NetBSD,$(OS_ARCH)))
+ifneq (,$(filter amiga atari hp300 mac68k mvme68k next68k sun3 sun3x x68k,$(OS_TEST)))
+IS_COMPONENT =  1
+endif
+endif
 
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 

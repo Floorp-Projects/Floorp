@@ -69,6 +69,16 @@ ASFILES		= \
 		$(NULL)
 endif
 
+# NetBSD/m68k
+ifneq (,$(filter NetBSD,$(OS_ARCH)))
+ifneq (,$(filter amiga atari hp300 mac68k mvme68k next68k sun3 sun3x x68k,$(OS_TEST)))
+CPPSRCS                = \
+		xptcinvoke_netbsd_m68k.cpp \
+		xptcstubs_netbsd_m68k.cpp \
+		$(NULL)
+endif
+endif
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
