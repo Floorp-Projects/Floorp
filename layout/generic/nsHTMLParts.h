@@ -139,7 +139,7 @@ NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
 // This type of AreaFrame shrink wraps
 inline nsresult
 NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_SHRINK_WRAP);
+  return NS_NewAreaFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_SHRINK_WRAP|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame doesn't use its own space manager and
