@@ -500,7 +500,7 @@ Rights Reserved.
 </menubar>
 
 <toolbox id="mailToolbarToolbox">
-	<toolbar id="msgToolbar" class="standard" persist="collapsed">
+	<toolbar id="msgToolbar" class="decorated main-bar chromeclass-toolbar" persist="collapsed">
 		<box id="toolbar_button_box">
 			<button class="key-toolbar left" orient="vertical" id="button_getmsg" value="&getMsgButton.label;" onclick="MsgGetMessage()"/>
 			<button class="key-toolbar left" orient="vertical" id="button_newmsg" value="&newMsgButton.label;" onclick="MsgNewMessage(event)"/>
