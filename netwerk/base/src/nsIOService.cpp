@@ -222,7 +222,14 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 
     rv = nsServiceManager::GetService(buf, NS_GET_IID(nsIProtocolHandler), (nsISupports **)result);
     if (NS_FAILED(rv)) 
-        return NS_ERROR_UNKNOWN_PROTOCOL;
+    {
+      // okay we don't have a protocol handler to handle this url type, so use the default protocol handler.
+      // this will cause urls to get dispatched out to the OS ('cause we can't do anything with them) when 
+      // we try to read from a channel created by the default protocol handler.
+
+      rv = nsServiceManager::GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default", NS_GET_IID(nsIProtocolHandler), (nsISupports **)result);
+      if (NS_FAILED(rv)) return NS_ERROR_UNKNOWN_PROTOCOL;
+    }
 
     CacheProtocolHandler(scheme, *result);
 
