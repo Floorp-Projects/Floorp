@@ -808,31 +808,26 @@ function newEvent( startDate, endDate, allDay )
    // create a new event to be edited and added
    var calendarEvent = createEvent();
 
-   /*   
    if (!startDate) {
        startDate = gCalendarWindow.currentView.getNewEventDate();
    }
 
    calendarEvent.startDate.jsDate = startDate;
 
-
-   if (!endDate)
-   {
+   if (!endDate) {
        var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
        
-       var endDateTime = startDate.clone();
-       endDateTime.minute += MinutesToAddOn; // XXX this could overflow
-       endDateTime.normalize();
+       var endDate = new Date(startDate);
+       endDate.setMinutes(endDate.getMinutes() + MinutesToAddOn);
    }
 
    calendarEvent.endDate.jsDate = endDate
-   */
-   
+
    if (allDay)
        calendarEvent.isAllDay = true;
-   
+
    var server = getSelectedCalendarPathOrNull();
-   
+
    editNewEvent( calendarEvent, server );
 }
 
