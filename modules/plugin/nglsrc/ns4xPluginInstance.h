@@ -43,6 +43,17 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+class ns4xPluginStreamListener;
+
+struct nsInstanceStream
+{
+  nsInstanceStream *mNext;
+  ns4xPluginStreamListener *mPluginStreamListener;
+
+  nsInstanceStream();
+  ~nsInstanceStream();
+};
+
 class ns4xPluginInstance : public nsIPluginInstance,
                            public nsIScriptablePlugin
 {
@@ -156,6 +167,7 @@ protected:
 
 public:
     PRLibrary* fLibrary;
+    nsInstanceStream *mStreams;
 };
 
 #endif // ns4xPluginInstance_h__
