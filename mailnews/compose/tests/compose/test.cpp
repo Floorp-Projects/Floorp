@@ -45,7 +45,6 @@
 #include "nsAppShellCIDs.h"
 #include "nsIMemory.h"
 #include "nsIGenericFactory.h"
-#include "nsIWebShellWindow.h"
 
 #include "nsIComponentManager.h"
 #include "nsString.h"

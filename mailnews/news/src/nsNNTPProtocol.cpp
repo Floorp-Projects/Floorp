@@ -84,8 +84,6 @@
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
 #include "nntpCore.h"
 
 #undef GetPort  // XXX Windows!

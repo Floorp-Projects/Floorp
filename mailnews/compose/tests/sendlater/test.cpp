@@ -56,8 +56,6 @@
 #include "prmem.h"
 
 #include "nsIMsgSendLater.h"
-#include "nsIWebShellWindow.h"
-
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
