@@ -3396,6 +3396,12 @@ MOZ_ARG_WITH_STRING(extensions,
       fi
     done ],
   [ MOZ_EXTENSIONS="$MOZ_EXTENSIONS_DEFAULT" ] )
+
+if test -z "$MOZ_ENABLE_GTK" && test `echo "$MOZ_EXTENSIONS" | grep -c xmlterm`; then
+    AC_MSG_WARN([Cannot build xmlterm without gtk toolkit. Removing xmlterm from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xmlterm||'`
+fi
+
 dnl ========================================================
 
 _cpp_md_flag=
