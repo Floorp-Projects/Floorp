@@ -3863,11 +3863,17 @@ if ($sth->rows == 0) {
 # Support for quips approval
 AddField('quips', 'approved', 'tinyint(1) NOT NULL  DEFAULT 1');
  
-# 2002-11-XX Bug 180870 - remove manual shadowdb replication code
+# 2002-12-20 Bug 180870 - remove manual shadowdb replication code
 if (TableExists('shadowlog')) {
     print "Removing shadowlog table\n";
     $dbh->do("DROP TABLE shadowlog");
 }
+
+# 2003-04-24 - myk@mozilla.org/bbaetz@acm.org, bug 201018
+# Force all cached groups to be updated at login, due to security
+# At the next schema change, this should be moved inside that block so that the
+# update doesn't happen on every run
+$dbh->do("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00'");
 
 #
 # Final checks...

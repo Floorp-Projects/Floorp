@@ -785,6 +785,8 @@ if ($action eq 'update') {
                 "VALUES " .  "($thisuserid, $::userid, now(), $fieldid, " .  
                 SqlQuote(join(", ",@grpdel)) . ", " .
                 SqlQuote(join(", ",@grpadd)) . ")");
+        SendSQL("UPDATE profiles SET refreshed_when='1900-01-01 00:00:00' " .
+                "WHERE userid = $thisuserid");
     }
 
 
@@ -842,6 +844,7 @@ if ($action eq 'update') {
 
         print "Updated user's name.<BR>\n";
     }
+    DeriveGroup($thisuserid);
 
     PutTrailer($localtrailer);
     exit;
