@@ -531,7 +531,7 @@ nsAppStartup::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width, PRBo
 #endif
   }
   else {
-    rv = OpenWindow(chromeUrlForTask, nsString(), width, height);
+    rv = OpenWindow(chromeUrlForTask, EmptyString(), width, height);
   }
   
   // If we get here without an error, then a window was opened OK.

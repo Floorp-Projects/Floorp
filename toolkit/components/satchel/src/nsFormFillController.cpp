@@ -732,7 +732,7 @@ nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
   input->GetTextValue(value);
   if (value.Length() > 0) {
     // Show the popup with a filtered result set
-    mController->SetSearchString(NS_LITERAL_STRING(""));
+    mController->SetSearchString(EmptyString());
     mController->HandleText(PR_TRUE);
   } else {
     // Show the popup with the complete result set.  Can't use HandleText()

@@ -147,8 +147,8 @@ void XXXNeverCalled()
     nsPrintfCString bar("");
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
-    NS_NewLocalFile(nsString(), PR_FALSE, nsnull);
-    NS_NewNativeLocalFile(nsCString(), PR_FALSE, nsnull);
+    NS_NewLocalFile(EmptyString(), PR_FALSE, nsnull);
+    NS_NewNativeLocalFile(EmptyCString(), PR_FALSE, nsnull);
     new nsProcess();
     nsStaticCaseInsensitiveNameTable();
     nsAutoString str1;

@@ -420,7 +420,7 @@ GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode,
                   PRInt32 aRow, nsITreeColumn* aCol, PRInt32* aX, PRInt32* aY)
 {
   PRInt32 junk;
-  aTreeBox->GetCoordsForCellItem(aRow, aCol, NS_LITERAL_CSTRING(""), aX, aY, &junk, &junk);
+  aTreeBox->GetCoordsForCellItem(aRow, aCol, EmptyCString(), aX, aY, &junk, &junk);
   nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aSourceNode));
   nsCOMPtr<nsIBoxObject> bx;
   xulEl->GetBoxObject(getter_AddRefs(bx));

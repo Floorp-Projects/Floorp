@@ -2845,7 +2845,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
  		nsAutoString	userVar, inputUnused, engineNameStr;
   	GetData(dataUni, "search", 0, "name", engineNameStr);
 
-    if (NS_FAILED(rv = GetInputs(dataUni, engineNameStr, userVar, nsAutoString(), inputUnused, 0, 0, 0)))  return(rv);
+    if (NS_FAILED(rv = GetInputs(dataUni, engineNameStr, userVar, EmptyString(), inputUnused, 0, 0, 0)))  return(rv);
 		if (userVar.IsEmpty())	return(NS_RDF_NO_VALUE);
 
 		nsAutoString	queryStr;

@@ -1471,7 +1471,7 @@ nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
     if (NS_SUCCEEDED(rv))
     {
 #if defined(XP_MAC) || defined(XP_MACOSX)
-        rv = NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv))
         {
             // The persistent desc on Mac is base64 encoded so plain ASCII
