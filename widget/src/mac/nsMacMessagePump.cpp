@@ -365,24 +365,20 @@ PRBool nsMacMessagePump::BrowserIsBusy()
  *  @param   NONE
  *  @return  A boolean which states whether we have a real event
  */
-#define kEventAvailMask     (mDownMask | mUpMask | keyDownMask | keyUpMask | autoKeyMask | updateMask | activMask | osMask)
-
 PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 {
-  // Make sure we call WNE if we have user events, or the mouse is down
-  EventRecord tempEvent;
-  // When checking btnState make sure to test if we're in the background
-  PRBool havePendingEvent =
-    ::EventAvail(kEventAvailMask, &tempEvent) ||
-    (!(tempEvent.modifiers & btnState) && nsToolkit::IsAppInForeground());
+  PRBool inForeground = nsToolkit::IsAppInForeground();
+  PRBool buttonDown   = ::Button();
   
   // when in the background, we don't want to chew up time processing mouse move
   // events, so set the mouse region to null. If we're in the fg, however,
   // we want every mouseMove event we can get our grubby little hands on, so set
   // it to a 1x1 rect.
-  RgnHandle mouseRgn = nsToolkit::IsAppInForeground() ? mMouseRgn : nsnull;
+  RgnHandle mouseRgn = inForeground ? mMouseRgn : nsnull;
 
-  SInt32  sleepTime = (havePendingEvent) ? 0 : 5;
+  // if the mouse is down, and we're in the foreground, then eat
+  // CPU so we respond quickly when scrolling etc.
+  SInt32  sleepTime = (buttonDown && inForeground) ? 0 : 5;
   
   ::SetEventMask(everyEvent); // we need keyUp events
   PRBool haveEvent = ::WaitNextEvent(everyEvent, &theEvent, sleepTime, mouseRgn);
