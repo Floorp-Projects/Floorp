@@ -557,104 +557,8 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                          PRBool *aForWindow)
 {
-#if TARGET_CARBON
-    if (nsToolkit::OnMacOSX())
-    {
-        // Mac OS X sheet support
-        *aForWindow = PR_TRUE;
-        return NS_OK;
-    }
-#endif
-
-	*aForWindow = PR_FALSE;
-	EventRecord *theEvent = (EventRecord *) aEvent;
-
-	if (aRealEvent && theEvent->what != nullEvent ) {
-
-		WindowPtr window = (WindowPtr) GetNativeData(NS_NATIVE_DISPLAY);
-		WindowPtr rollupWindow = gRollupWidget ? (WindowPtr) gRollupWidget->GetNativeData(NS_NATIVE_DISPLAY) : nsnull;
-		WindowPtr eventWindow = nsnull;
-		
-		PRInt16 where = ::FindWindow ( theEvent->where, &eventWindow );
-		PRBool inWindow = eventWindow && (eventWindow == window || eventWindow == rollupWindow);
-
-		switch ( theEvent->what ) {
-			// is it a mouse event?
-			case mouseUp:
-					*aForWindow = PR_TRUE;
-				break;
-			case mouseDown:
-				// is it in the given window?
-				// (note we also let some events questionable for modal dialogs pass through.
-				// but it makes sense that the draggability et.al. of a modal window should
-				// be controlled by whether the window has a drag bar).
-				if (inWindow) {
-				     if ( where == inContent || where == inDrag   || where == inGrow ||
-				          where == inGoAway  || where == inZoomIn || where == inZoomOut )
-					*aForWindow = PR_TRUE;
-				}
-				else      // we're in another window.
-				{
-				  // let's handle dragging of background windows here
-				  if (eventWindow && (where == inDrag) && (theEvent->modifiers & cmdKey))
-				  {
-    				Rect screenRect;
-    				::GetRegionBounds(::GetGrayRgn(), &screenRect);
-				    ::DragWindow(eventWindow, theEvent->where, &screenRect);
-				  }
-				  
-  				*aForWindow = PR_FALSE;
-				}
-				break;
-			case keyDown:
-			case keyUp:
-			case autoKey:
-				*aForWindow = PR_TRUE;
-				break;
-
-			case diskEvt:
-			    // I think dialogs might want to support floppy insertion, and it doesn't
-			    // interfere with modality...
-			case updateEvt:
-				// always let update events through, because if we don't handle them, we're
-				// doomed!
-			case activateEvt:
-				// activate events aren't so much a request as simply informative. might
-				// as well acknowledge them.
-				*aForWindow = PR_TRUE;
-				break;
-
-			case osEvt:
-				// check for mouseMoved or suspend/resume events. We especially need to
-				// let suspend/resume events through in order to make sure the clipboard is
-				// converted correctly.
-				unsigned char eventType = (theEvent->message >> 24) & 0x00ff;
-				if (eventType == mouseMovedMessage) {
-					// I'm guessing we don't want to let these through unless the mouse is
-					// in the modal dialog so we don't see rollover feedback in windows behind
-					// the dialog.
-					if ( where == inContent && inWindow )
-						*aForWindow = PR_TRUE;
-				}
-				if ( eventType == suspendResumeMessage ) {
-					*aForWindow = PR_TRUE;
-					if (theEvent->message & resumeFlag) {
-						// divert it to our window if it isn't naturally
-						if (!inWindow) {
-							StPortSetter portSetter(window);
-							theEvent->where.v = 0;
-							theEvent->where.h = 0;
-							::LocalToGlobal(&theEvent->where);
-						}
-				  	}
-				}
-
-				break;
-		} // case of which event type
-	} else
-		*aForWindow = PR_TRUE;
-
-	return NS_OK;
+  *aForWindow = PR_TRUE;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -676,7 +580,6 @@ NS_IMETHODIMP nsWindow::IsEnabled(PRBool *aState)
 	return NS_OK;
 }
 
-    
 static Boolean we_are_front_process()
 {
 	ProcessSerialNumber	thisPSN;
@@ -2045,7 +1948,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
-	if (! mDestructorCalled)
+	if (mEnabled && !mDestructorCalled)
 	{
 		nsIWidget* aWidget = event->widget;
 		NS_IF_ADDREF(aWidget);
@@ -2095,11 +1998,10 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
   }
 
   // call the event callback 
-  if (nsnull != mEventCallback) 
-  	{
+  if (mEventCallback && (mEnabled || aEvent.message == NS_MOUSE_EXIT)) {
     result = (DispatchWindowEvent(aEvent));
     return result;
-  	}
+  }
 
   if (nsnull != mMouseListener) {
     switch (aEvent.message) {
