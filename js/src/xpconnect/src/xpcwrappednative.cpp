@@ -343,12 +343,11 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
         DEBUG_ReportShadowedMembers(set, wrapper, nsnull);
     }
 
+    NS_ADDREF(wrapper);
+
     if(!wrapper->Init(ccx, parent, &sciWrapper))
     {
-        // If the JSObject got created then it owns one of the references
-        if(!wrapper->GetFlatJSObject())
-            wrapper->Release();
-        wrapper->Release();
+        NS_RELEASE(wrapper);
         return NS_ERROR_FAILURE;
     }
 
@@ -650,17 +649,6 @@ JSBool
 XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
                        const XPCNativeScriptableCreateInfo* sci)
 {
-    // Do double addref first. So failure here means object can be deleted
-    // by double release.
-
-    // Hacky double initial addrefs to get the JSObject rooted w/o creating
-    // another call context (as would happen in AddRef)
-    mRefCnt++;
-    NS_LOG_ADDREF(this, mRefCnt, "XPCWrappedNative", sizeof(*this));
-    mRefCnt++;
-    NS_LOG_ADDREF(this, mRefCnt, "XPCWrappedNative", sizeof(*this));
-    JS_AddNamedRoot(ccx, &mFlatJSObject, "XPCWrappedNative::mFlatJSObject");
-
     // setup our scriptable info...
 
     if(sci->GetCallback())
@@ -710,8 +698,25 @@ XPCWrappedNative::Init(XPCCallContext& ccx, JSObject* parent,
                                 GetScope()->GetPrototypeJSObject();
 
     mFlatJSObject = JS_NewObject(ccx, jsclazz, protoJSObject, parent);
-    if(!mFlatJSObject || !JS_SetPrivate(ccx, mFlatJSObject, this))
+
+    if(!mFlatJSObject)
         return JS_FALSE;
+
+    // In the current JS engine JS_SetPrivate can't fail. But if it *did*
+    // fail then we would not receive our finalizer call and would not be
+    // able to properly cleanup. So, if it fails we null out mFlatJSObject
+    // to indicate the invalid state of this object and return false. 
+    if(!JS_SetPrivate(ccx, mFlatJSObject, this))
+    {
+        mFlatJSObject = nsnull;
+        return JS_FALSE;
+    }
+
+    // This reference will be released when mFlatJSObject is finalized.
+    // Since this reference will push the refcount to 2 it will also root
+    // mFlatJSObject;
+    NS_ASSERTION(1 == mRefCnt, "unexpected refcount value");
+    NS_ADDREF(this);
 
     if(si && si->GetFlags().WantCreate() &&
        NS_FAILED(si->GetCallback()->Create(this, ccx, mFlatJSObject)))
@@ -1315,8 +1320,8 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
         // Guard against trying to build a tearoff for an interface that is
         // aggregated and is implemented as a nsIXPConnectWrappedJS using this
         // self-same JSObject. The XBL system does this. If we mutate the set
-        // of this wrapper then we will shadow the method that XBL as added to
-        // The JSObject that it has inserted in the JS proto chain between our 
+        // of this wrapper then we will shadow the method that XBL has added to
+        // the JSObject that it has inserted in the JS proto chain between our
         // JSObject and our XPCWrappedNativeProto's JSObject. If we let this
         // set mutation happen then the interface's methods will be added to 
         // our JSObject, but calls on those methods will get routed up to
