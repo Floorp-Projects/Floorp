@@ -34,6 +34,11 @@ public class RegExpImpl implements RegExpProxy {
         return obj instanceof NativeRegExp;
     }
 
+    public Object newRegExp(Scriptable scope, String source, String global)
+    {
+        return new NativeRegExp(scope, source, global);
+    }
+    
     public Object executeRegExp(Object regExp, Scriptable scopeObj, 
                                 String str, int indexp[], boolean test)
     {
