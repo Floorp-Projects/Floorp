@@ -223,6 +223,10 @@ struct nsHTMLReflowState : nsReflowState {
     return eHTMLFrameConstraint_FixedContent == heightConstraint;
   }
 
+  nscoord GetContainingBlockContentWidth() const;
+
+  const nsHTMLReflowState* GetContainingBlockReflowState() const;
+
 protected:
   // This method initializes the widthConstraint, heightConstraint and
   // minSize values appropriately. It also initializes the frameType
