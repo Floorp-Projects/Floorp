@@ -28,6 +28,7 @@
 
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsICachingChannel.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIProxyObjectManager.h"
@@ -93,8 +94,8 @@ imgLoader::~imgLoader()
 
 #define SHOULD_RELOAD(flags) (flags & nsIRequest::LOAD_BYPASS_CACHE || flags & nsIRequest::VALIDATE_ALWAYS)
 
-/* imgIRequest loadImage (in nsIURI aURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags); */
-NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *aCX, nsLoadFlags aLoadFlags, imgIRequest **_retval)
+/* imgIRequest loadImage (in nsIURI aURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports aCacheKey); */
+NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *aCX, nsLoadFlags aLoadFlags, nsISupports* aCacheKey, imgIRequest **_retval)
 {
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
@@ -109,8 +110,12 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   imgRequest *request = nsnull;
 
+  // XXX For now ignore the cache key. We will need it in the future
+  // for correctly dealing with image load requests that are a result
+  // of post data.
   nsCOMPtr<nsICacheEntryDescriptor> entry;
-  imgCache::Get(aURI, &request, getter_AddRefs(entry)); // addrefs request
+  imgCache::Get(aURI, !(aLoadFlags & nsIRequest::LOAD_FROM_CACHE), 
+                &request, getter_AddRefs(entry)); // addrefs request
 
   if (request && entry) {
     /* this isn't exactly what I want here.  This code will re-doom every
@@ -122,7 +127,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
     if (SHOULD_RELOAD(aLoadFlags)) {
       doomRequest = PR_TRUE;
-    } else if (aLoadGroup) {
+    } else if (!(aLoadFlags & nsIRequest::LOAD_FROM_CACHE) &&
+               aLoadGroup) {
       nsLoadFlags flags = 0;
       aLoadGroup->GetLoadFlags(&flags);
       if (SHOULD_RELOAD(flags)) {
@@ -264,7 +270,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   channel->GetOriginalURI(getter_AddRefs(uri));
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
-  imgCache::Get(uri, &request, getter_AddRefs(entry)); // addrefs request
+  imgCache::Get(uri, PR_TRUE, &request, getter_AddRefs(entry)); // addrefs request
 
   if (request) {
     // we have this in our cache already.. cancel the current (document) load

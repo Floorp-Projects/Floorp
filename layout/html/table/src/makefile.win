@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  accessibility \
 		  gfx \
 		  content \
+		  necko \
 		  $(NULL)
 
 

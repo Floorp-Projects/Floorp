@@ -2167,6 +2167,11 @@ FrameManager::RestoreFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFram
   nsresult rv = NS_OK;
   nsCOMPtr<nsIContent> content;
   rv = aFrame->GetContent(getter_AddRefs(content));
+  // If we don't have content, we can't generate a hash
+  // key and there's probably no state information for us.
+  if (!content) {
+    return rv;
+  }
 
   nsCAutoString stateKey;
   rv = GenerateStateKey(content, aID, stateKey);

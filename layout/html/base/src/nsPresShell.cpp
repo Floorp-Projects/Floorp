@@ -2630,6 +2630,11 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (rootFrame) {
+    nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
+    if (historyState) {
+      mFrameManager->RestoreFrameState(mPresContext, rootFrame, historyState);
+    }
+
     MOZ_TIMER_DEBUGLOG(("Reset and start: Reflow: PresShell::InitialReflow(), this=%p\n", this));
     MOZ_TIMER_RESET(mReflowWatch);
     MOZ_TIMER_START(mReflowWatch);

@@ -535,7 +535,7 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
 
         // Now kick off the image load
         nsCOMPtr<imgIRequest> req;
-        il->LoadImage(url, nsnull, nsnull, nsnull, nsIRequest::LOAD_BACKGROUND, getter_AddRefs(req));
+        il->LoadImage(url, nsnull, nsnull, nsnull, nsIRequest::LOAD_BACKGROUND, nsnull, getter_AddRefs(req));
       }
       else 
 #endif

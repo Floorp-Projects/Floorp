@@ -1547,6 +1547,11 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
   nsCOMPtr<nsILoadGroup> loadGroup;
   GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+  if (aPresContext) {
+    aPresContext->GetImageLoadFlags(loadFlags);
+  }
+
   /* get the URI, convert internal-gopher-stuff if needed */
   nsCOMPtr<nsIURI> uri;
   GetURI(aSpec, getter_AddRefs(uri));
@@ -1556,7 +1561,7 @@ nsImageFrame::LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresCon
   /* set this back to FALSE before we do the real load */
   mInitialLoadCompleted = PR_FALSE;
 
-  return il->LoadImage(uri, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, aRequest);
+  return il->LoadImage(uri, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest);
 }
 
 #define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */

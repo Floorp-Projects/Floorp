@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
 		  timer \
 		  pref \
 		  content \
+		  necko \
 		  $(NULL)
 
 DEFINES =-D_IMPL_NS_VIEW -DWIN32_LEAN_AND_MEAN

@@ -42,6 +42,7 @@
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsAWritableString.h"
+#include "nsIRequest.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -164,6 +165,11 @@ public:
    */
   NS_IMETHOD GetImageAnimationMode(nsImageAnimation* aModeResult) = 0;
   NS_IMETHOD SetImageAnimationMode(nsImageAnimation aMode) = 0;
+
+  /**
+   * Get an special load flags for images for this context
+   */
+  NS_IMETHOD GetImageLoadFlags(nsLoadFlags& aLoadFlags) = 0;
 
   /**
    * Get look and feel object

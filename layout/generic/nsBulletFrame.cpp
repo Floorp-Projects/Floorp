@@ -145,7 +145,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
       NS_RELEASE(listener);
     }
 
-    il->LoadImage(imgURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, getter_AddRefs(mImageRequest));
+    il->LoadImage(imgURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, getter_AddRefs(mImageRequest));
   }
 
   return NS_OK;
@@ -1383,7 +1383,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
           nsCOMPtr<nsILoadGroup> loadGroup;
           GetLoadGroup(aPresContext, getter_AddRefs(loadGroup));
 
-          il->LoadImage(newURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, getter_AddRefs(mImageRequest));
+          il->LoadImage(newURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, getter_AddRefs(mImageRequest));
         }
       }
     }
