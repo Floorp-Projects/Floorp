@@ -39,3 +39,23 @@
     margin: 5px 5px 0px 5px;
     border: thin silver inset;
 }
+
+#source-outliner {
+    font-family: monospace;
+}
+
+outlinerbody:-moz-outliner-row(current-line) {
+    background: yellow;
+}
+
+outlinerbody:-moz-outliner-row(current, current-line) {
+    background: brown;
+}
+
+outlinerbody:-moz-outliner-image(breakpoint) {
+    list-style-image: url("chrome://venkman/skin/images/breakpoint-line.gif");
+}
+
+outlinerbody:-moz-outliner-image(current-frame-flag){
+    list-style-image: url("chrome://venkman/skin/images/current-frame.gif");
+}
