@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.25 $ 
-# $Date: 2001/10/18 16:19:55 $ 
+# $Revision: 1.26 $ 
+# $Date: 2001/12/14 20:13:01 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -342,7 +342,7 @@ sub cache_cmd {
   my ($join_char) = ',';
 
   ("@cmd" =~ m/$join_char/) &&
-    die("cmd '@cmd' can not containt character '$join_char'\n");
+    die("cmd '@cmd' can not contain character '$join_char'\n");
 
   my ($key) = join ($join_char, @cmd);
 
