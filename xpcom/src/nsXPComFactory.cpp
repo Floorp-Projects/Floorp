@@ -19,9 +19,9 @@
 #include "nsXPComFactory.h"
 #include "nsXPComCIID.h"
 #include "nsAllocator.h"
+#include "nsGenericFactory.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 
 nsresult NS_NewEventQueueServiceFactory(nsIFactory** aResult);
 
@@ -34,23 +34,28 @@ extern "C" NS_EXPORT nsresult NSGetFactory_XPCOM_DLL(const nsCID& aClass, nsISup
 extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
 #endif
 {
-  nsresult rv = NS_OK;
+	if (NULL == aFactory) {
+		return NS_ERROR_NULL_POINTER;
+	}
 
-  if (NULL == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aClass.Equals(kEventQueueServiceCID)) {
-    rv = NS_NewEventQueueServiceFactory(aFactory);
-  } else
-  if (aClass.Equals(kAllocatorCID)) {
-    nsIFactory* factory = new nsAllocatorFactory;
-    if (factory != NULL) {
-    	factory->AddRef();
-    	*aFactory = factory;
-    } else
-      rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return rv;
+	nsresult rv = NS_OK;
+	if (aClass.Equals(kEventQueueServiceCID)) {
+		rv = NS_NewEventQueueServiceFactory(aFactory);
+	} else {
+		// Use generic factories for the rest.
+		nsGenericFactory* factory = NULL;
+		if (aClass.Equals(nsAllocator::CID())) {
+			factory = new nsGenericFactory(&nsAllocator::Create);
+		} else if (aClass.Equals(nsGenericFactory::CID())) {
+			// whoa, create a generic factory that creates generic factories!
+			factory = new nsGenericFactory(&nsGenericFactory::Create);
+		}
+		if (factory != NULL) {
+			factory->AddRef();
+			*aFactory = factory;
+		} else {
+			rv = NS_ERROR_OUT_OF_MEMORY;
+		}
+	}
+	return rv;
 }
