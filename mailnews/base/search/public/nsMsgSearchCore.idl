@@ -213,7 +213,7 @@ class nsMsgDIRServer;
    _a == nsMsgSearchAttrib::FolderInfo))
 %}
 
-[ptr] native nsSearchMenuItem;
+[ptr] native nsSearchMenuItem(nsSearchMenuItem);
 
 %{C++
 /* Use this to help build menus in the search dialog. See APIs below */
