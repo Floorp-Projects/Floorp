@@ -149,4 +149,13 @@
         }
         break;
 
+    case eThis:
+        {
+            js2val rval = meta->env.findThis(true);
+            if (JS2VAL_IS_INACCESSIBLE(rval))
+                meta->reportError(Exception::compileExpressionError, "'this' not available", errorPos());
+            push(rval);
+        }
+        break;
+
 

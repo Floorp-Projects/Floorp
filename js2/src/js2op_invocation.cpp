@@ -50,16 +50,15 @@
             push(OBJECT_TO_JS2VAL(pInst));
         }
         break;
-/*
+
     case eToBoolean:
         {
             js2val v = pop();
             bool b = toBoolean(v);
-            retval = BOOLEAN_TO_JS2VAL(b);
-            push(retval);
+            push(BOOLEAN_TO_JS2VAL(b));
         }
         break;
-*/
+
     case eNew:
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
@@ -101,12 +100,16 @@
                 runtimeFrame->instantiate(&meta->env);
                 runtimeFrame->thisObject = runtimeThis;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                jsr(fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                if (!fWrap->code)
+                    jsr(fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
-
+                if (fWrap->code) {
+                    fWrap->code(this);
+                    meta->env.removeTopFrame();
+                }
             }
             else
-            if (fObj->kind == MethodClosureKind) {
+            if (fObj->kind == MethodClosureKind) {  // XXX I made this up (particularly the push of the objectType)
                 MethodClosure *mc = checked_cast<MethodClosure *>(fObj);
                 FixedInstance *fInst = mc->method->fInst;
                 FunctionWrapper *fWrap = fInst->fWrap;
@@ -129,7 +132,6 @@
 
     case eReturn: 
         {
-//            retval = pop();
             if (activationStackEmpty()) 
                 return pop();
             else
@@ -161,3 +163,50 @@
         }
         break;
 
+    case eTypeof:
+        {
+            js2val a = pop();
+            js2val rval;
+            if (JS2VAL_IS_UNDEFINED(a))
+                rval = STRING_TO_JS2VAL(&undefined_StringAtom);
+            else
+            if (JS2VAL_IS_BOOLEAN(a))
+                rval = STRING_TO_JS2VAL(&world.identifiers["boolean"]);
+            else
+            if (JS2VAL_IS_NUMBER(a))
+                rval = STRING_TO_JS2VAL(&world.identifiers["number"]);
+            else
+            if (JS2VAL_IS_STRING(a))
+                rval = STRING_TO_JS2VAL(&world.identifiers["string"]);
+            else {
+                ASSERT(JS2VAL_IS_OBJECT(a));
+                if (JS2VAL_IS_NULL(a))
+                    rval = STRING_TO_JS2VAL(&object_StringAtom);
+                JS2Object *obj = JS2VAL_TO_OBJECT(a);
+                switch (obj->kind) {
+                case MultinameKind:
+                    rval = STRING_TO_JS2VAL(&world.identifiers["namespace"]); 
+                    break;
+                case AttributeObjectKind:
+                    rval = STRING_TO_JS2VAL(&world.identifiers["attribute"]); 
+                    break;
+                case ClassKind:
+                case MethodClosureKind:
+                    rval = STRING_TO_JS2VAL(&function_StringAtom); 
+                    break;
+                case PrototypeInstanceKind:
+                case PackageKind:
+                case GlobalObjectKind:
+                    rval = STRING_TO_JS2VAL(&object_StringAtom);
+                    break;
+                case FixedInstanceKind:
+                    rval = STRING_TO_JS2VAL(&checked_cast<FixedInstance *>(obj)->typeofString);
+                    break;
+                case DynamicInstanceKind:
+                    rval = STRING_TO_JS2VAL(&checked_cast<DynamicInstance *>(obj)->typeofString);
+                    break;
+                }
+            }
+            push(rval);
+        }
+        break;

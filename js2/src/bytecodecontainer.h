@@ -115,7 +115,7 @@ public:
     void addPointer(const void *v)          { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }
     static void *getPointer(void *pc)       { return (void *)getLong(pc); }
     
-    void addFloat64(float64 v)              { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
+    void addFloat64(float64 v, size_t pos)  { emitOp(eNumber, pos); mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
     static float64 getFloat64(void *pc)     { return *((float64 *)pc); }
    
     void addLong(const uint32 v)            { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }

@@ -46,6 +46,7 @@
 #include "world.h"
 #include "utilities.h"
 #include "js2value.h"
+#include "numerics.h"
 
 #include <map>
 #include <algorithm>
@@ -1035,6 +1036,8 @@ namespace MetaData {
     { 
     }
 
+    // Convert an attribute to a compoundAttribute. If the attribute
+    // is NULL, return a default compoundAttribute
     CompoundAttribute *Attribute::toCompoundAttribute(Attribute *a)
     { 
         if (a) 
@@ -1043,6 +1046,7 @@ namespace MetaData {
             return new CompoundAttribute();
     }
 
+    // Convert a simple namespace to a compoundAttribute with that namespace
     CompoundAttribute *Namespace::toCompoundAttribute()    
     { 
         CompoundAttribute *t = new CompoundAttribute(); 
@@ -1050,11 +1054,13 @@ namespace MetaData {
         return t; 
     }
 
+    // Convert a 'true' attribute to a default compoundAttribute
     CompoundAttribute *TrueAttribute::toCompoundAttribute()    
     { 
         return new CompoundAttribute(); 
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void CompoundAttribute::markChildren()
     {
         if (namespaces) {
@@ -1074,10 +1080,11 @@ namespace MetaData {
     // Validate the entire expression rooted at p
     void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
     {
-        JS2Object::gc(this);
+        JS2Object::gc(this);            // XXX testing stability
         switch (p->getKind()) {
         case ExprNode::Null:
         case ExprNode::number:
+        case ExprNode::string:
         case ExprNode::boolean:
             break;
         case ExprNode::This:
@@ -1124,6 +1131,17 @@ namespace MetaData {
         case ExprNode::assignment:
         case ExprNode::add:
         case ExprNode::subtract:
+        case ExprNode::multiply:
+        case ExprNode::divide:
+        case ExprNode::modulo:
+        case ExprNode::addEquals:
+        case ExprNode::subtractEquals:
+        case ExprNode::multiplyEquals:
+        case ExprNode::divideEquals:
+        case ExprNode::moduloEquals:
+        case ExprNode::logicalAnd:
+        case ExprNode::logicalXor:
+        case ExprNode::logicalOr:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 ValidateExpression(cxt, env, b->op1);
@@ -1131,10 +1149,15 @@ namespace MetaData {
             }
             break;
 
+        case ExprNode::minus:
+        case ExprNode::plus:
+        case ExprNode::complement:
         case ExprNode::postIncrement:
         case ExprNode::postDecrement:
         case ExprNode::preIncrement:
         case ExprNode::preDecrement:
+        case ExprNode::parentheses:
+        case ExprNode::Typeof:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
                 ValidateExpression(cxt, env, u->op);
@@ -1177,7 +1200,7 @@ namespace MetaData {
 
 
     /*
-     * Evaluate an expression 'p' and execute the associated bytecode
+     * Evaluate an expression 'p' AND execute the associated bytecode
      */
     js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
@@ -1192,15 +1215,21 @@ namespace MetaData {
     }
 
     /*
-     * Evaluate the expression rooted at p.
+     * Evaluate the expression (i.e. generate bytecode, but don't execute) rooted at p.
      */
     Reference *JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p)
     {
         Reference *returnRef = NULL;
-        JS2Op binaryOp;
+        JS2Op op;
 
         switch (p->getKind()) {
 
+        case ExprNode::parentheses:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                EvalExprNode(env, phase, u->op);
+            }
+            break;
         case ExprNode::assignment:
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
@@ -1215,30 +1244,68 @@ namespace MetaData {
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
             }
             break;
+        case ExprNode::addEquals:
+            op = eAdd;
+            goto doAssignBinary;
+        case ExprNode::subtractEquals:
+            op = eSubtract;
+            goto doAssignBinary;
+        case ExprNode::multiplyEquals:
+            op = eMultiply;
+            goto doAssignBinary;
+        case ExprNode::divideEquals:
+            op = eDivide;
+            goto doAssignBinary;
+        case ExprNode::moduloEquals:
+            op = eModulo;
+            goto doAssignBinary;
+doAssignBinary:
+            {
+                if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) {
+                    Reference *rVal = EvalExprNode(env, phase, b->op2);
+                    if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                    lVal->emitAssignOpBytecode(bCon, op, p->pos);
+                }
+                else
+                    reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
+            }
+            break;
         case ExprNode::lessThan:
-            binaryOp = eLess;
+            op = eLess;
             goto doBinary;
         case ExprNode::lessThanOrEqual:
-            binaryOp = eLessEqual;
+            op = eLessEqual;
             goto doBinary;
         case ExprNode::greaterThan:
-            binaryOp = eGreater;
+            op = eGreater;
             goto doBinary;
         case ExprNode::greaterThanOrEqual:
-            binaryOp = eGreaterEqual;
+            op = eGreaterEqual;
             goto doBinary;
         case ExprNode::equal:
-            binaryOp = eEqual;
+            op = eEqual;
             goto doBinary;
         case ExprNode::notEqual:
-            binaryOp = eNotEqual;
+            op = eNotEqual;
             goto doBinary;
 
         case ExprNode::add:
-            binaryOp = eAdd;
+            op = eAdd;
             goto doBinary;
         case ExprNode::subtract:
-            binaryOp = eSubtract;
+            op = eSubtract;
+            goto doBinary;
+        case ExprNode::multiply:
+            op = eMultiply;
+            goto doBinary;
+        case ExprNode::divide:
+            op = eDivide;
+            goto doBinary;
+        case ExprNode::modulo:
+            op = eModulo;
             goto doBinary;
 doBinary:
             {
@@ -1247,12 +1314,74 @@ doBinary:
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
                 Reference *rVal = EvalExprNode(env, phase, b->op2);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
-                bCon->emitOp(binaryOp, p->pos);
+                bCon->emitOp(op, p->pos);
             }
             break;
+        case ExprNode::minus:
+            op = eMinus;
+            goto doUnary;
+        case ExprNode::plus:
+            op = ePlus;
+            goto doUnary;
+        case ExprNode::complement:
+            op = eComplement;
+            goto doUnary;
+doUnary:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *rVal = EvalExprNode(env, phase, u->op);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(op, p->pos);
+            }
+            break;
+
+        case ExprNode::logicalAnd:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eDup, p->pos);
+                bCon->emitBranch(eBranchFalse, skipOverSecondHalf, p->pos);
+                bCon->emitOp(ePop, p->pos);
+                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->setLabel(skipOverSecondHalf);
+            }
+            break;
+
+        case ExprNode::logicalXor:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eToBoolean, p->pos);
+                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eToBoolean, p->pos);
+                bCon->emitOp(eLogicalXor, p->pos);
+            }
+            break;
+
+        case ExprNode::logicalOr:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                BytecodeContainer::LabelID skipOverSecondHalf = bCon->getLabel();
+                Reference *lVal = EvalExprNode(env, phase, b->op1);
+                if (lVal) lVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eDup, p->pos);
+                bCon->emitBranch(eBranchTrue, skipOverSecondHalf, p->pos);
+                bCon->emitOp(ePop, p->pos);
+                Reference *rVal = EvalExprNode(env, phase, b->op2);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->setLabel(skipOverSecondHalf);
+            }
+            break;
+
+
         case ExprNode::This:
             {
-
+                bCon->emitOp(eThis, p->pos);
             }
             break;
         case ExprNode::Null:
@@ -1262,8 +1391,12 @@ doBinary:
             break;
         case ExprNode::number:
             {
-                bCon->emitOp(eNumber, p->pos);
-                bCon->addFloat64(checked_cast<NumberExprNode *>(p)->value);
+                bCon->addFloat64(checked_cast<NumberExprNode *>(p)->value, p->pos);
+            }
+            break;
+        case ExprNode::string:
+            {  
+                bCon->addString(checked_cast<StringExprNode *>(p)->str, p->pos);
             }
             break;
         case ExprNode::qualify:
@@ -1398,6 +1531,14 @@ doBinary:
                 bCon->addShort(argCount);
             }
             break;
+        case ExprNode::Typeof:
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *rVal = EvalExprNode(env, phase, u->op);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eTypeof, p->pos);
+            }
+            break;
         case ExprNode::call:
             {
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
@@ -1436,6 +1577,7 @@ doBinary:
         return returnRef;
     }
 
+    // Execute an expression and return the result, which must be a type
     JS2Class *JS2Metadata::EvalTypeExpression(Environment *env, Phase phase, ExprNode *p)
     {
         js2val retval = EvalExpression(env, phase, p);
@@ -1608,6 +1750,7 @@ doBinary:
         return false;
     }
 
+    // add all the open namespaces from the given context
     void Multiname::addNamespace(Context &cxt)    
     { 
         addNamespace(&cxt.openNamespaces); 
@@ -1622,6 +1765,7 @@ doBinary:
             nsList.push_back(*nli);
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void Multiname::markChildren()
     {
         for (NamespaceListIterator n = nsList.begin(), end = nsList.end(); (n != end); n++) {
@@ -1920,6 +2064,9 @@ doBinary:
         //else A hoisted binding of the same var already exists, so there is no need to create another one
     }
 
+    void t(JS2Engine *engine)
+    {
+    }
 
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, new JS2Object(PrototypeInstanceKind), new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
 
@@ -1950,6 +2097,20 @@ doBinary:
         MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, world.identifiers["package"]);
         
         forbiddenMember = new StaticMember(Member::Forbidden);
+
+        writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
+        writeDynamicProperty(glob, new Multiname(world.identifiers["NaN"], publicNamespace), true, engine->allocNumber(nan), RunPhase);
+        writeDynamicProperty(glob, new Multiname(world.identifiers["Infinity"], publicNamespace), true, engine->allocNumber(positiveInfinity), RunPhase);
+
+        FixedInstance *fInst = new FixedInstance(functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), t);
+        env.addFrame(objectClass);
+        NamespaceList publicNamespaceList;
+        publicNamespaceList.push_back(publicNamespace);
+        Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
+        defineStaticMember(&env, world.identifiers["toString"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        env.removeTopFrame();
+
     }
 
     // objectType(o) returns an OBJECT o's most specific type.
@@ -2098,7 +2259,7 @@ doBinary:
         return false;   // 'None'
     }
 
-    // Read the static member
+    // Read a value from the static member
     bool JS2Metadata::readStaticMember(StaticMember *m, Phase phase, js2val *rval)
     {
         if (m == NULL)
@@ -2122,7 +2283,7 @@ doBinary:
         return false;
     }
 
-    // Write the static member
+    // Write a value to the static member
     bool JS2Metadata::writeStaticMember(StaticMember *m, js2val newValue, Phase phase)
     {
         if (m == NULL)
@@ -2316,7 +2477,9 @@ readClassProperty:
         }
 
     }
-
+    
+    // Write the value of an instance member into a container instance.
+    // Only instanceVariables are writable.
     bool JS2Metadata::writeInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, js2val newValue, Phase phase)
     {
         if (phase == CompilePhase)
@@ -2380,7 +2543,7 @@ readClassProperty:
         }
     }
 
-    // Find a binding in the frame that matches the multiname and access
+    // Find a binding that matches the multiname and access.
     // It's an error if more than one such binding exists.
     StaticMember *JS2Metadata::findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase)
     {
@@ -2416,7 +2579,8 @@ readClassProperty:
         return found;
     }
 
-
+    // Find the multiname in the class - either in the static bindings (first) or
+    // in the instance bindings. If not there, look in the super class.
     bool JS2Metadata::findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result)
     {
         JS2Class *s = c;
@@ -2522,6 +2686,8 @@ readClassProperty:
     // and then invoke mark on all other structures that contain JS2Objects
     void JS2Metadata::mark()
     {        
+        // XXX - maybe have a separate pool to allocate chunks
+        // that are meant to be never collected?
         GCMARKOBJECT(publicNamespace);
         GCMARKOBJECT(forbiddenMember);
         GCMARKOBJECT(undefinedClass);
@@ -2574,6 +2740,7 @@ readClassProperty:
     }
 
     inline char narrow(char16 ch) { return char(ch); }
+
     // Accepts a String as the error argument and converts to char *
     void JS2Metadata::reportError(Exception::Kind kind, const char *message, size_t pos, const String& name)
     {
@@ -2700,6 +2867,7 @@ readClassProperty:
 
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void JS2Class::markChildren()
     {
         GCMARKOBJECT(super)
@@ -2720,7 +2888,8 @@ readClassProperty:
  *
  ************************************************************************************/
 
-
+    // Construct a dynamic instance of a class. Set the
+    // initial value of all slots to uninitialized.
     DynamicInstance::DynamicInstance(JS2Class *type) 
         : JS2Object(DynamicInstanceKind), 
             type(type), 
@@ -2735,6 +2904,7 @@ readClassProperty:
         }
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void DynamicInstance::markChildren()
     {
         GCMARKOBJECT(type)
@@ -2764,6 +2934,8 @@ readClassProperty:
  ************************************************************************************/
 
 
+    // Construct a fixed instance of a class. Set the
+    // initial value of all slots to uninitialized.
     FixedInstance::FixedInstance(JS2Class *type) 
         : JS2Object(FixedInstanceKind), 
             type(type), 
@@ -2779,12 +2951,14 @@ readClassProperty:
         }
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void FixedInstance::markChildren()
     {
         GCMARKOBJECT(type)
         if (fWrap) {
             GCMARKOBJECT(fWrap->compileFrame);
-            fWrap->bCon->mark();
+            if (fWrap->bCon)
+                fWrap->bCon->mark();
         }
         if (slots) {
             ASSERT(type);
@@ -2804,7 +2978,7 @@ readClassProperty:
  *
  ************************************************************************************/
 
-
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void PrototypeInstance::markChildren()
     {
         GCMARKOBJECT(parent)
@@ -2823,6 +2997,7 @@ readClassProperty:
  *
  ************************************************************************************/
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void MethodClosure::markChildren()     
     { 
         if (JS2VAL_IS_OBJECT(thisObject))  {
@@ -2838,6 +3013,7 @@ readClassProperty:
  *
  ************************************************************************************/
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void Frame::markChildren()
     {
         GCMARKOBJECT(nextFrame)
@@ -2858,6 +3034,7 @@ readClassProperty:
  *
  ************************************************************************************/
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void GlobalObject::markChildren()
     {
         Frame::markChildren();
@@ -2882,6 +3059,7 @@ readClassProperty:
         env->instantiateFrame(pluralFrame, this);
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void ParameterFrame::markChildren()
     {
         Frame::markChildren();
@@ -2921,6 +3099,7 @@ readClassProperty:
         type->mark(); 
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void InstanceMember::markChildren()         
     { 
         type->markChildren(); 
@@ -2933,6 +3112,8 @@ readClassProperty:
  *
  ************************************************************************************/
 
+    // An instance variable type could be future'd when a gc runs (i.e. validate
+    // has executed, but the pre-eval stage has yet to determine the actual type)
     bool InstanceVariable::isMarked()
     { 
         if (type != FUTURE_TYPE)
@@ -2947,6 +3128,7 @@ readClassProperty:
             type->mark(); 
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void InstanceVariable::markChildren()         
     { 
         if (type != FUTURE_TYPE)
@@ -2970,6 +3152,7 @@ readClassProperty:
         fInst->mark(); 
     }
 
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void InstanceMethod::markChildren()         
     { 
         fInst->markChildren(); 
@@ -2985,6 +3168,9 @@ readClassProperty:
     Pond JS2Object::pond(POND_SIZE, NULL);
     std::list<PondScum **> JS2Object::rootList;
 
+    // Add a pointer to a gc-allocated object to the root list
+    // (Note - we hand out an iterator, so it's essential to
+    // use something like std::list that doesn't mess with locations)
     JS2Object::RootIterator JS2Object::addRoot(void *t)
     {
         PondScum **p = (PondScum **)t;
@@ -2992,11 +3178,13 @@ readClassProperty:
         return rootList.insert(rootList.end(), p);
     }
 
+    // Remove a root pointer
     void JS2Object::removeRoot(RootIterator ri)
     {
         rootList.erase(ri);
     }
 
+    // Mark all reachable objects and put the rest back on the freelist
     void JS2Object::gc(JS2Metadata *meta)
     {
         pond.resetMarks();
@@ -3016,6 +3204,7 @@ readClassProperty:
         pond.moveUnmarkedToFreeList();
     }
 
+    // Allocate a chink of size s and mark whether it's a JS2Object or not
     void *JS2Object::alloc(size_t s, bool isJS2Object)
     {
         s += sizeof(PondScum);
@@ -3025,6 +3214,7 @@ readClassProperty:
         return pond.allocFromPond((int32)s, isJS2Object);
     }
 
+    // Release a chunk back to it's pond
     void JS2Object::unalloc(void *t)
     {
         PondScum *p = (PondScum *)t - 1;

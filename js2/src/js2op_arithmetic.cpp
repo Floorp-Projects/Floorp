@@ -32,12 +32,31 @@
 * file under either the NPL or the GPL.
 */
 
+    case eMinus:
+        {
+	    js2val a = pop();
+            pushNumber(-toNumber(a));
+        }
+        break;
 
+    case ePlus:
+        {
+	    js2val a = pop();
+            pushNumber(toNumber(a));
+        }
+        break;
+
+    case eComplement:
+        {
+	    js2val a = pop();
+            pushNumber(~toInt32(toNumber(a)));
+        }
+        break;
 
     case eAdd: 
         {
-	    js2val a = pop();
 	    js2val b = pop();
+	    js2val a = pop();
 	    a = toPrimitive(a);
 	    b = toPrimitive(b);
 	    if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
@@ -54,20 +73,76 @@
 	    } 
         }
         break;
+
     case eSubtract: 
         {
-	    js2val a = pop();
 	    js2val b = pop();
+	    js2val a = pop();
             float64 anum = toNumber(a);
             float64 bnum = toNumber(b);
             pushNumber(anum - bnum);
         }
         break;
 
+    case eMultiply:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            float64 anum = toNumber(a);
+            float64 bnum = toNumber(b);
+            pushNumber(anum * bnum);
+        }
+        break;
+
+    case eDivide:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            float64 anum = toNumber(a);
+            float64 bnum = toNumber(b);
+            pushNumber(anum / bnum);
+        }
+        break;
+
+    case eModulo:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            float64 anum = toNumber(a);
+            float64 bnum = toNumber(b);
+#ifdef XP_PC
+    /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+            if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
+                pushNumber(anum);
+            else
+#endif
+            pushNumber(fd::fmod(anum, bnum));
+        }
+        break;
+
+    case eXor: 
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            float64 anum = toNumber(a);
+            float64 bnum = toNumber(b);
+            pushNumber(toInt32(anum) ^ toInt32(bnum));
+        }
+        break;
+
+    case eLogicalXor: 
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            ASSERT(JS2VAL_IS_BOOLEAN(a) && JS2VAL_IS_BOOLEAN(b));
+            push(BOOLEAN_TO_JS2VAL(JS2VAL_TO_BOOLEAN(a) ^ JS2VAL_TO_BOOLEAN(b)));
+        }
+        break;
+
     case eLess:
         {
-	    js2val a = pop();
 	    js2val b = pop();
+	    js2val a = pop();
             js2val ap = toPrimitive(a);
             js2val bp = toPrimitive(b);
             bool rval;
@@ -81,8 +156,8 @@
 
     case eLessEqual:
         {
-	    js2val a = pop();
 	    js2val b = pop();
+	    js2val a = pop();
             js2val ap = toPrimitive(a);
             js2val bp = toPrimitive(b);
             bool rval;
@@ -96,8 +171,8 @@
 
     case eGreater:
         {
-	    js2val a = pop();
 	    js2val b = pop();
+	    js2val a = pop();
             js2val ap = toPrimitive(a);
             js2val bp = toPrimitive(b);
             bool rval;
@@ -111,8 +186,8 @@
     
     case eGreaterEqual:
         {
-	    js2val a = pop();
 	    js2val b = pop();
+	    js2val a = pop();
             js2val ap = toPrimitive(a);
             js2val bp = toPrimitive(b);
             bool rval;
@@ -128,8 +203,8 @@
     case eEqual:
         {
             bool rval;
-	    js2val a = pop();
 	    js2val b = pop();
+	    js2val a = pop();
             if (JS2VAL_IS_NULL(a) || JS2VAL_IS_UNDEFINED(a))
                 rval = (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b));
             else
@@ -203,6 +278,76 @@
                 push(BOOLEAN_TO_JS2VAL(rval));
             else
                 push(BOOLEAN_TO_JS2VAL(!rval));
+        }
+        break;
+
+    case eLexicalAssignOp:
+        {
+            op = (JS2Op)*pc++;
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            js2val a = meta->env.lexicalRead(meta, mn, phase);
+	    js2val b = pop();
+            js2val rval;
+            switch (op) {
+            case eAdd:
+                {
+	            a = toPrimitive(a);
+	            b = toPrimitive(b);
+	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
+	                String *astr = toString(a);
+	                String *bstr = toString(b);
+                        String *c = new String(*astr);
+                        *c += *bstr;
+	                rval = STRING_TO_JS2VAL(c);
+	            }
+	            else {
+                        float64 anum = toNumber(a);
+                        float64 bnum = toNumber(b);
+                        rval = allocNumber(anum + bnum);
+	            }
+                }
+                break;
+            case eSubtract:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum - bnum);
+                }
+                break;
+            case eMultiply:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum * bnum);
+                }
+                break;
+
+            case eDivide:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum / bnum);
+                }
+                break;
+
+            case eModulo:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+#ifdef XP_PC
+            /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+                    if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
+                        rval = anum;
+                    else
+#endif
+                    rval = allocNumber(fd::fmod(anum, bnum));
+                }
+                break;
+
+            }
+            meta->env.lexicalWrite(meta, mn, rval, true, phase);
+            push(rval);
         }
         break;
 

@@ -49,6 +49,7 @@
 #include "utilities.h"
 #include "js2value.h"
 #include "numerics.h"
+#include "fdlibm_ns.h"
 
 #include <map>
 #include <algorithm>
@@ -62,6 +63,7 @@
 namespace JavaScript {
 namespace MetaData {
 
+    // Begin execution of a bytecodeContainer
     js2val JS2Engine::interpret(JS2Metadata *metadata, Phase execPhase, BytecodeContainer *targetbCon)
     {
         bCon = targetbCon;
@@ -71,6 +73,7 @@ namespace MetaData {
         return interpreterLoop();
     }
 
+    // Execute the opcode sequence at pc.
     js2val JS2Engine::interpreterLoop()
     {
         js2val retval = JS2VAL_VOID;
@@ -83,7 +86,7 @@ namespace MetaData {
     #include "js2op_literal.cpp"
     #include "js2op_flowcontrol.cpp"
             }
-            JS2Object::gc(meta);
+            JS2Object::gc(meta);        // XXX temporarily, for testing
         }
         return retval;
     }
@@ -249,6 +252,9 @@ namespace MetaData {
         activationStackTop = activationStack = new ActivationFrame[MAX_ACTIVATION_STACK];
     }
 
+    // Return the effect of an opcode on the execution stack.
+    // Some ops (e.g. eCall) have a variable effect, those are handled separately
+    // (see emitOp)
     int getStackEffect(JS2Op op)
     {
         switch (op) {
@@ -257,19 +263,31 @@ namespace MetaData {
 
         case eAdd:          // pop two, push one
         case eSubtract:
+        case eMultiply:
+        case eDivide:
+        case eModulo:
         case eEqual:
         case eNotEqual:
         case eLess:
         case eGreater:
         case eLessEqual:
         case eGreaterEqual:
+        case eXor:
+        case eLogicalXor:
             return -1;  
+
+        case eMinus:        // pop one, push one
+        case ePlus:
+        case eComplement:
+        case eTypeof:
+            return 0;
 
         case eString:
         case eTrue:
         case eFalse:
         case eNumber:
         case eNull:
+        case eThis:
             return 1;       // push literal value
 
         case eLexicalRead:
@@ -297,11 +315,17 @@ namespace MetaData {
         case eBranch:
             return 0;
 
+        case eDup:          // duplicate top item
+            return 1;      
+
+        case ePop:          // remove top item
+            return -1;      
+
         case ePopv:         // pop a statement result value
             return -1;      
 
-    //    case eToBoolean:    // pop object, push boolean
-    //        return 0;
+        case eToBoolean:    // pop object, push boolean
+            return 0;
 
         case ePushFrame:    // affect the frame stack...
         case ePopFrame:     // ...not the exec stack
@@ -320,11 +344,17 @@ namespace MetaData {
         case eLexicalPreDec:
             return 1;       // push the new/old value
 
+        case eLexicalAssignOp:  // pop value, push result
+            return 0;
+
         case eDotPostInc:
         case eDotPostDec:
         case eDotPreInc:
         case eDotPreDec:
             return 0;       // pop the base, push the new/old value
+
+        case eDotAssignOp:  // pop base, pop value, push result
+            return -1;
 
         case eBracketPostInc:
         case eBracketPostDec:
@@ -332,17 +362,23 @@ namespace MetaData {
         case eBracketPreDec:
             return -1;       // pop the base, pop the index, push the new/old value
 
+        case eBracketAssignOp:  // pop base, pop index, push result
+            return 0;
+
         default:
             ASSERT(false);
         }
         return 0;
     }
-
+    
+    // Return the mapped source location for the current pc
     size_t JS2Engine::errorPos()
     {
         return bCon->getPosition(pc - bCon->getCodeStart()); 
     }
 
+    // XXX Default construction of an instance of the class
+    // that is the value at the top of the execution stack
     JS2Object *JS2Engine::defaultConstructor(JS2Engine *engine)
     {
         js2val v = engine->pop();
@@ -359,6 +395,8 @@ namespace MetaData {
                 return new FixedInstance(c);
     }
 
+    // Save current engine state (pc, environment top) and
+    // jump to start of new bytecodeContainer
     void JS2Engine::jsr(BytecodeContainer *new_bCon)
     {
         ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
@@ -372,6 +410,7 @@ namespace MetaData {
 
     }
 
+    // Return to previously saved execution state
     void JS2Engine::rts()
     {
         ASSERT(activationStackTop > activationStack);
@@ -384,6 +423,8 @@ namespace MetaData {
 
     }
 
+    // GC-mark any JS2Objects in the activation frame stack, the execution stack
+    // and in structures contained in those locations.
     void JS2Engine::mark()
     {
         if (bCon)
@@ -404,6 +445,17 @@ namespace MetaData {
         }
     }
 
+    int32 JS2Engine::toInt32(float64 d)
+    {
+        if ((d == 0.0) || !JSDOUBLE_IS_FINITE(d) )
+            return 0;
+        d = fd::fmod(d, two32);
+        d = (d >= 0) ? d : d + two32;
+        if (d >= two31)
+            return (int32)(d - two32);
+        else
+            return (int32)(d);    
+    }
 
 }
 }

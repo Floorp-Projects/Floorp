@@ -63,3 +63,15 @@
             pc += offset;
         }
         break;
+
+    case ePop:
+        {
+            pop();
+        }
+        break;
+
+    case eDup:
+        {
+            push(top());
+        }
+        break;

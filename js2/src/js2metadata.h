@@ -57,16 +57,25 @@ typedef void (Invokable)();
 typedef Invokable Callor;
 typedef JS2Object *(Constructor)(JS2Engine *engine);
 
+
+// OBJECT is the semantic domain of all possible objects and is defined as:
+// OBJECT = UNDEFINED | NULL | BOOLEAN | FLOAT64 | LONG | ULONG | CHARACTER | STRING | NAMESPACE |
+// COMPOUNDATTRIBUTE | CLASS | METHODCLOSURE | PROTOTYPE | INSTANCE | PACKAGE | GLOBAL
+//
+//  In this implementation, the primitive types are distinguished by the tag value
+// of a JS2Value (see js2value.h). Non-primitive types are distinguished by calling
+// 'kind()' on the object to recover one of the values below:
+//
 enum ObjectKind { 
-    AttributeObjectKind, 
-    SystemKind,
+    AttributeObjectKind,
+    SystemKind,                 
     GlobalObjectKind, 
     PackageKind, 
     ParameterKind, 
     ClassKind, 
     BlockKind, 
-    PrototypeInstanceKind, 
-    FixedInstanceKind, 
+    PrototypeInstanceKind,
+    FixedInstanceKind,
     DynamicInstanceKind,
     MultinameKind,
     MethodClosureKind
@@ -147,10 +156,6 @@ public:
 
     static void mark(void *p)       { ((PondScum *)p)[-1].mark(); }
 
-
-#ifdef DEBUG
-    virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
-#endif
 };
 
 class Attribute : public JS2Object {
@@ -191,10 +196,9 @@ public:
     const StringAtom &id;    // The name
 };
 
-// MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
+// A MULTINAME is the semantic domain of sets of qualified names. Multinames are used internally in property lookup.
 // We keep Multinames as a basename and a list of namespace qualifiers (XXX is that right - would the basename 
 // ever be different for the same multiname?)
-// Pointers to Multiname instances get embedded in the bytecode.
 typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;
 class Multiname : public JS2Object {
@@ -215,12 +219,6 @@ public:
     virtual void markChildren();
 };
 
-
-class Object_Uninit_Future {
-public:
-    enum { Object, Uninitialized, Future } state;
-    js2val value;
-};
 
 class NamedParameter {
 public:
@@ -259,7 +257,7 @@ public:
     StaticMember(MemberKind kind) : Member(kind) { }
 
     StaticMember *cloneContent; // Used during cloning operation to prevent cloning of duplicates (i.e. once
-                                // a clone exists for this member it's stored here and used for any other
+                                // a clone exists for this member it's recorded here and used for any other
                                 // bindings that refer to this member.)
 
     virtual StaticMember *clone()       { ASSERT(false); return NULL; }
@@ -312,19 +310,8 @@ public:
     Invokable *code;        // calling this object does the read or write
 };
 
-/*
-class StaticMethod : public StaticMember {
-public:
-    StaticMethod() : StaticMember(
 
-    Signature type;         // This function's signature
-    Invokable *code;        // This function itself (a callable object)
-    enum { Static, Constructor }
-        modifier;           // static if this is a function or a static method; constructor if this is a constructor for a class
-};
-*/
-
-// DYNAMICPROPERTY record describes one dynamic property of one (prototype or class) instance.
+// A DYNAMICPROPERTY record describes one dynamic property of one (prototype or class) instance.
 typedef std::map<String, js2val> DynamicPropertyMap;
 typedef DynamicPropertyMap::iterator DynamicPropertyIterator;
 
@@ -559,6 +546,9 @@ public:
     virtual void emitPostDecBytecode(BytecodeContainer *bCon, size_t pos)           { ASSERT(false); }
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
+
+    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ ASSERT(false); }
+    
 };
 
 class LexicalReference : public Reference {
@@ -584,6 +574,7 @@ public:
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreInc, pos); bCon->addMultiname(variableMultiname); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(variableMultiname); }
 
+    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eLexicalAssignOp, pos); bCon->addByte((uint8)op); bCon->addMultiname(variableMultiname); }
 };
 
 class DotReference : public Reference {
@@ -610,6 +601,7 @@ public:
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreInc, pos); bCon->addMultiname(propertyMultiname); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(propertyMultiname); }
 
+    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eDotAssignOp, pos); bCon->addByte((uint8)op); bCon->addMultiname(propertyMultiname); }
 };
 
 
@@ -647,6 +639,7 @@ public:
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreInc, pos); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreDec, pos); }
 
+    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eBracketAssignOp, pos); bCon->addByte((uint8)op); }
 };
 
 
@@ -723,12 +716,17 @@ private:
 };
 
 
+typedef void (NativeCode)(JS2Engine *engine);
+
 class FunctionWrapper {
 public:
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame) 
-        : bCon(new BytecodeContainer), unchecked(unchecked), compileFrame(compileFrame) { }
+        : bCon(new BytecodeContainer), code(NULL), unchecked(unchecked), compileFrame(compileFrame) { }
+    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code) 
+        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame) { }
 
     BytecodeContainer   *bCon;
+    NativeCode          *code;
     bool                unchecked;      // true if the function is untyped, non-method, normal
     ParameterFrame      *compileFrame;
 };

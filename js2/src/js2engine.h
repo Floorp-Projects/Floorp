@@ -51,17 +51,26 @@ namespace MetaData {
 enum JS2Op {
     eAdd,
     eSubtract,
+    eMultiply,
+    eDivide,
+    eModulo,
     eEqual,
     eNotEqual,
     eLess,
     eGreater,
     eLessEqual,
     eGreaterEqual,
+    eXor,
+    eLogicalXor,
+    eMinus,
+    ePlus,
+    eComplement,
     eTrue,
     eFalse,
     eNull,
     eNumber,
     eString,            // <string pointer:u32>
+    eThis,
     eNewObject,         // <argCount:u16>
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
@@ -76,27 +85,33 @@ enum JS2Op {
     eReturnVoid,
     ePushFrame,         // <frame index:u16>
     ePopFrame,
-//    eToBoolean,
+    eToBoolean,
     eBranchFalse,       // <branch displacement:s32> XXX save space with short and long versions instead ?
     eBranchTrue,        // <branch displacement:s32>
     eBranch,            // <branch displacement:s32>
     eNew,               // <argCount:u16>
     eCall,              // <argCount:u16>
+    eTypeof,
 
     ePopv,
+    ePop,
+    eDup,
 
     eLexicalPostInc,    // <multiname index:u16>
     eLexicalPostDec,    // <multiname index:u16>
     eLexicalPreInc,     // <multiname index:u16>
     eLexicalPreDec,     // <multiname index:u16>
+    eLexicalAssignOp,   // <op:u8> <multiname index:u16>
     eDotPostInc,        // <multiname index:u16>
     eDotPostDec,        // <multiname index:u16>
     eDotPreInc,         // <multiname index:u16>
     eDotPreDec,         // <multiname index:u16>
+    eDotAssignOp,       // <op:u8> <multiname index:u16>
     eBracketPostInc,
     eBracketPostDec,
     eBracketPreInc,
     eBracketPreDec,
+    eBracketAssignOp,   // <op:u8>
 
 };
 
@@ -129,7 +144,7 @@ public:
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
     float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
     bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
-
+    int32 toInt32(float64 f);
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 

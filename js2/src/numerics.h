@@ -69,6 +69,10 @@ namespace JavaScript {
     extern double minValue;
     extern double maxValue;
 
+    static const double two32minus1 = 4294967295.0;
+    static const double two32 = 4294967296.0;
+    static const double two16 = 65536.0;
+    static const double two31 = 2147483648.0;
 //
 // Portable double-precision floating point to string and back conversions
 //
