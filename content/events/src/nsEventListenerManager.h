@@ -46,6 +46,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsHashtable.h"
 #include "nsIJSContextStack.h"
+#include "nsIScriptContext.h"
 
 class nsIDOMEvent;
 class nsIAtom;
@@ -119,7 +120,7 @@ public:
   NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                        const nsAString& type,
                                        PRInt32 aFlags) ;
-  NS_IMETHOD AddScriptEventListener(nsIScriptContext*aContext,
+  NS_IMETHOD AddScriptEventListener(nsIScriptContext *aContext,
                                     nsISupports *aObject,
                                     nsIAtom *aName,
                                     const nsAString& aFunc,
@@ -326,7 +327,7 @@ class nsCxPusher
 {
 public:
   nsCxPusher(nsISupports *aCurrentTarget)
-    : mCx(nsnull), mPreviousCx(nsnull)
+    : mScriptIsRunning(PR_FALSE)
   {
     Push(aCurrentTarget);
   }
@@ -341,8 +342,8 @@ public:
 
 private:
   nsCOMPtr<nsIJSContextStack> mStack;
-  JSContext *mCx;
-  JSContext *mPreviousCx;
+  nsCOMPtr<nsIScriptContext> mScx;
+  PRBool mScriptIsRunning;
 };
 
 
