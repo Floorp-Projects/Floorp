@@ -46,6 +46,9 @@ static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 #include "nsCollationCID.h"
 #include "nsIPref.h"
 
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#define DEBUG_MSGKEYSET 1
+#endif
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -330,6 +333,20 @@ nsMsgDatabase::~nsMsgDatabase()
         // better not be any listeners, because we're going away.
         NS_ASSERTION(m_ChangeListeners->Count() == 0, "shouldn't have any listeners");
         delete m_ChangeListeners;
+    }
+
+    if (m_newSet) {
+#ifdef DEBUG_MSGKEYSET
+        char *str = nsnull;
+        str = m_newSet->Output();
+        if (str) {
+            printf("setStr = %s on destroy\n",str);
+            delete [] str;
+            str = nsnull;
+        }
+#endif
+        delete m_newSet;
+        m_newSet = nsnull;
     }
 }
 
@@ -1404,6 +1421,9 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgKeySet(nsMsgKeySet **pSet)
 
 NS_IMETHODIMP nsMsgDatabase::SetMsgKeySet(char * setStr)
 {
+    NS_ASSERTION(setStr, "no setStr!");
+    if (!setStr) return NS_ERROR_NULL_POINTER;
+
     NS_ASSERTION(!m_newSet, "set already exists!");
     if (m_newSet) {
         delete m_newSet;
@@ -1413,7 +1433,7 @@ NS_IMETHODIMP nsMsgDatabase::SetMsgKeySet(char * setStr)
     m_newSet = nsMsgKeySet::Create(setStr /* , this */);
     if (!m_newSet) return NS_ERROR_OUT_OF_MEMORY;
     
-#ifdef DEBUG_seth
+#ifdef DEBUG_MSGKEYSET
     char *str = nsnull;
     str = m_newSet->Output();
     if (str) {
@@ -1430,8 +1450,18 @@ NS_IMETHODIMP nsMsgDatabase::AddToNewList(nsMsgKey key)
 {
     nsresult rv;
 
-    NS_ASSERTION(m_newSet,"set doesn't exist yet!");
-    if (!m_newSet) return NS_ERROR_FAILURE;
+#ifdef DEBUG_MSGKEYSET
+    NS_ASSERTION(m_newSet, "set doesn't exist yet.  talk to bienvenu about how IMAP uses the msgkeyset");
+#endif
+
+    // sspitzer:
+    // for news, this should never happen.  but for imap, this does happen
+    // I need to talk to bienvenu about how imap plans on using 
+    // the msg key set.
+    if (!m_newSet) {
+        m_newSet = nsMsgKeySet::Create("" /* , this */);
+        if (!m_newSet) return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     rv = m_newSet->Add(key);
     
