@@ -131,7 +131,9 @@ foreach (@data) {
 
     print qq|
 <tr><td colspan=$cols><hr></td></tr>
-<tr><td rowspan=2>$component</td>
+<tr><td rowspan=2><a name="|
+.value_quote($component).
+qq|">$component</a></td>
 <td><a href="mailto:$initialowner$emailsuffix">$initialowner</a></td>
 |;
     if ($useqacontact) {

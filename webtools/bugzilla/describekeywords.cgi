@@ -70,7 +70,9 @@ while (MoreSQLData()) {
     $line_count++;
     print qq{
 <TR>
-<TH>$name</TH>
+<TH><a name="}
+.value_quote($name).
+qq{">$name</A></TH>
 <TD>$description</TD>
 <TD ALIGN="right">$bugs</TD>
 </TR>
