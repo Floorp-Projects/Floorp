@@ -440,8 +440,7 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
-   BuildOneProject(":mozilla:dom:macbuild:domIDL.mcp", 								"headers", "", 0, 0, 0);
-   BuildOneProject(":mozilla:dom:macbuild:domIDL.mcp", 								"dom.xpt", "", 1, 0, 1);
+   BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp", 								"dom");
 
 	#HTMLPARSER
    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
@@ -457,7 +456,6 @@ sub BuildClientDist()
 
     #RDF
     InstallFromManifest(":mozilla:rdf:base:idl:MANIFEST",							"$distdirectory:idl:");
-	#EmptyTree("$distdirectory:rdf:");#// XXX temporary - needed during changeover only.
     InstallFromManifest(":mozilla:rdf:base:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:util:public:MANIFEST",						"$distdirectory:rdf:");
     InstallFromManifest(":mozilla:rdf:content:public:MANIFEST",						"$distdirectory:rdf:");
@@ -518,8 +516,8 @@ sub BuildClientDist()
    BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 
    # prefwindow
-#   InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST",		"$distdirectory:idl:");
-#   BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
+   InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST_IDL",	"$distdirectory:idl:");
+   BuildIDLProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindowIDL.mcp","prefwindow");
 
    # sample
    InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST",			"$distdirectory:xpfe:components");
@@ -944,7 +942,7 @@ sub MakeResourceAliases()
 	my($toolbar_dir) = "$resource_dir" . "toolbar:";
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
 	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
-	
+		
 	if ($main::build{editor})
 	{
 		my($editor_chrome_dir) = "$chrome_dir" . "Editor";
@@ -987,19 +985,23 @@ sub MakeResourceAliases()
 	
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
 	# don't accidentally get checked into the tree. (pinkerton, bug#5296).
-	copy ( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
-	print ( "copying mozilla:rdf:chrome:build:registry.rdf to $chrome_dir\n" );
+	copy( ":mozilla:rdf:chrome:build:registry.rdf", "$chrome_dir" . "registry.rdf" );
+	print( "copying mozilla:rdf:chrome:build:registry.rdf to $chrome_dir\n" );
 		
 	# Install XPFE component resources
-	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",					"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",					"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",					"$samples_dir");
-	InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",			"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",			"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",			"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$samples_dir");
+	{
+		my($pref_chrome_dir) = "$chrome_dir" . "pref";
+		InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
+		InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",		"$pref_chrome_dir:skin:default:", 0);
+	}
 
 	print("--- Resource copying complete ----\n")
 }
-
 
 #//--------------------------------------------------------------------------------------------------
 #// Make library aliases
@@ -1143,6 +1145,7 @@ sub BuildXPAppProjects()
 	# Components
 	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp",	"FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:prefwindow:macbuild:prefwindow.mcp", "prefwindow$D.shlb", "prefwindowComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	# Applications
