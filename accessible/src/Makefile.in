@@ -34,6 +34,9 @@ DIRS += msaa
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
 DIRS += mac
+else
+DIRS += other
+endif
 endif
 endif
 endif
