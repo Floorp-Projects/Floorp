@@ -4,7 +4,7 @@
 
 #clientBox {
   background-color: #FFFFFF;
-  background-image: url("chrome://messenger/content/about-thunderbird.png");
+  background-image: url("chrome://branding/content/about-thunderbird.png");
   background-repeat: no-repeat;
   padding-top: 216px;
   color: #000000;

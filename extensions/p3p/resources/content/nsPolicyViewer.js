@@ -620,7 +620,7 @@ function getBundle ()
 function getBrandName ()
 {
   if (!gBrandName) {
-    var brandBundle = getStrBundleService().createBundle("chrome://global/locale/brand.properties");
+    var brandBundle = getStrBundleService().createBundle("chrome://branding/locale/brand.properties");
     gBrandName = brandBundle.GetStringFromName("brandShortName")
   }
   return gBrandName;

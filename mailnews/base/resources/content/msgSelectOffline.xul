@@ -61,7 +61,7 @@
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-<stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+<stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>

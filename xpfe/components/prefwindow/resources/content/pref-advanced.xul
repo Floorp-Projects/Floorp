@@ -337,7 +337,7 @@
   <stringbundle id="navBundle"
                 src="chrome://navigator/locale/navigator.properties"/>
   <stringbundle id="brandBundle"
-                src="chrome://global/locale/brand.properties"/>
+                src="chrome://branding/locale/brand.properties"/>
   <groupbox id="javaPluginSettings" align="start">
     <caption label="&jvm.configuration;"/>
     <tree id="jvmConfigListObj" style="width: 60em; height: 10em"

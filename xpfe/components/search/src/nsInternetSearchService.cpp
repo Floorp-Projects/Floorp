@@ -104,8 +104,8 @@
 #define POSTHEADER_PREFIX "Content-type: application/x-www-form-urlencoded\r\nContent-Length: "
 #define POSTHEADER_SUFFIX "\r\n\r\n"
 #define SEARCH_PROPERTIES "chrome://communicator/locale/search/search-panel.properties"
-#ifdef MOZ_PHOENIX
-#define SEARCHCONFIG_PROPERTIES "chrome://browser/content/searchconfig.properties"
+#ifdef MOZ_XUL_APP
+#define SEARCHCONFIG_PROPERTIES "chrome://branding/content/searchconfig.properties"
 #define INTL_PROPERTIES "chrome://global/locale/intl.properties"
 #else
 #define SEARCHCONFIG_PROPERTIES "chrome://navigator/content/searchconfig.properties"

@@ -47,7 +47,7 @@
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
-    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
 
   <commands id="commands">

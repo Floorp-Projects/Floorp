@@ -42,6 +42,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_USE_OFFICIAL_BRANDING
+DEFINES += -DMOZ_USE_OFFICIAL_BRANDING
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	DIRS  += skin/mac
 else
@@ -49,4 +53,3 @@ else
 endif
 
 include $(topsrcdir)/config/rules.mk
-

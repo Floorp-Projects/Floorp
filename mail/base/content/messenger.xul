@@ -67,7 +67,7 @@
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
 </stringbundleset>
 

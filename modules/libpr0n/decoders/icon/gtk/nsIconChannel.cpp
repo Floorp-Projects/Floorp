@@ -197,7 +197,7 @@ nsIconChannel::InitWithGnome()
     NS_ASSERTION(bundleService, "String bundle service must be present!");
 
     nsCOMPtr<nsIStringBundle> bundle;
-    bundleService->CreateBundle("chrome://global/locale/brand.properties",
+    bundleService->CreateBundle("chrome://branding/locale/brand.properties",
                                 getter_AddRefs(bundle));
     nsXPIDLString appName;
 

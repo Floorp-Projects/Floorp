@@ -1,0 +1,4 @@
+#expand <!ENTITY  lang.version          "__MOZILLA_LOCALE_VERSION__">
+<!ENTITY  brandShortName        "Mozilla">
+<!ENTITY  vendorShortName       "Mozilla">
+<!ENTITY  sidebarName           "Sidebar">

@@ -54,7 +54,7 @@
     <observes element="securityStatus" attribute="crypto" />
     <observes element="securityStatus" attribute="signing" />
     <stringbundle id="bundle_comp_smime" src="chrome://messenger-smime/locale/msgCompSMIMEOverlay.properties"/>
-    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   </window>
 
   <menupopup id="optionsMenuPopup">

@@ -52,7 +52,7 @@
 
     <stringbundle id="bundle_prefApplications"
                   src="chrome://communicator/locale/pref/pref-applications.properties"/>
-    <stringbundle id="bundle_Brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_Brand" src="chrome://branding/locale/brand.properties"/>
 
 <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>

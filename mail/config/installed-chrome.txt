@@ -25,6 +25,7 @@ content,install,url,jar:resource:/chrome/mail.jar!/content/messenger-views/
 content,install,url,jar:resource:/chrome/mail.jar!/content/messenger-smime/
 content,install,url,jar:resource:/chrome/mail.jar!/content/messenger-mapi/
 content,install,url,jar:resource:/chrome/mail.jar!/content/messenger-region/
+content,install,url,jar:resource:/chrome/mail.jar!/content/branding/
 skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/global/
 skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/communicator/
 skin,install,url,jar:resource:/chrome/qute.jar!/skin/classic/editor/
@@ -36,6 +37,7 @@ locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/pipnss/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/pippki/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/autoconfig/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger/
+locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/branding/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-mdn/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-views/
 locale,install,url,jar:resource:/chrome/en-US-mail.jar!/locale/en-US/messenger-smime/

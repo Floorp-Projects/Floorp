@@ -211,7 +211,7 @@ nsUpdateService.prototype = {
         var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                             .getService(Components.interfaces.nsIStringBundleService);
         var bundle = sbs.createBundle("chrome://mozapps/locale/update/update.properties");
-        var brandBundle = sbs.createBundle("chrome://global/locale/brand.properties");
+        var brandBundle = sbs.createBundle("chrome://branding/locale/brand.properties");
         var brandShortName = brandBundle.GetStringFromName("brandShortName");        
         var message = bundle.formatStringFromName("appupdateperformedmessage",
                                                   [brandShortName, brandShortName], 2);

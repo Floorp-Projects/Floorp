@@ -53,6 +53,10 @@ APP_VERSION := $(shell cat $(srcdir)/../config/version.txt)
 
 DEFINES += -DAB_CD=$(AB_CD) -DAPP_VERSION=$(MOZ_APP_VERSION)
 
+ifdef MOZ_USE_OFFICIAL_BRANDING
+DEFINES += -DMOZ_USE_OFFICIAL_BRANDING
+endif
+
 ifeq (,$(filter-out pref,$(MOZ_EXTENSIONS)))
 DEFINES += -DEXTENSION_PREF
 endif

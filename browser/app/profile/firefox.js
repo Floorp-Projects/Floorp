@@ -180,11 +180,11 @@ pref("browser.search.defaulturl",             "chrome://browser-region/locale/re
 pref("browser.search.order.1",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
  
-pref("browser.search.param.Google.1.default", "chrome://browser/content/searchconfig.properties");
-pref("browser.search.param.Google.1.custom",  "chrome://browser/content/searchconfig.properties");
-pref("browser.search.order.Yahoo.1",          "chrome://browser/content/searchconfig.properties");
-pref("browser.search.order.Yahoo.2",          "chrome://browser/content/searchconfig.properties");
-pref("browser.search.order.Yahoo",            "chrome://browser/content/searchconfig.properties");
+pref("browser.search.param.Google.1.default", "chrome://branding/content/searchconfig.properties");
+pref("browser.search.param.Google.1.custom",  "chrome://branding/content/searchconfig.properties");
+pref("browser.search.order.Yahoo.1",          "chrome://branding/content/searchconfig.properties");
+pref("browser.search.order.Yahoo.2",          "chrome://branding/content/searchconfig.properties");
+pref("browser.search.order.Yahoo",            "chrome://branding/content/searchconfig.properties");
 
 // basic search popup constraint: minimum sherlock plugin version displayed
 // (note: must be a string representation of a float or it'll default to 0.0)

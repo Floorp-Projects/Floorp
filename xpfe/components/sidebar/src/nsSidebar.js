@@ -156,7 +156,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     {
         try {
             stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-            brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+            brandStringBundle = srGetStrBundle("chrome://branding/locale/brand.properties");
             if (stringBundle) {
                 sidebarName = brandStringBundle.GetStringFromName("sidebarName");
                 titleMessage = stringBundle.GetStringFromName("dupePanelAlertTitle");
@@ -177,7 +177,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
 
     try {
         stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-        brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+        brandStringBundle = srGetStrBundle("chrome://branding/locale/brand.properties");
         if (stringBundle) {
             sidebarName = brandStringBundle.GetStringFromName("sidebarName");
             titleMessage = stringBundle.GetStringFromName("addPanelConfirmTitle");
@@ -287,7 +287,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     var titleMessage, dialogMessage;
     try {
         var stringBundle = srGetStrBundle("chrome://communicator/locale/sidebar/sidebar.properties");
-        var brandStringBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+        var brandStringBundle = srGetStrBundle("chrome://branding/locale/brand.properties");
         if (stringBundle) {
             sidebarName = brandStringBundle.GetStringFromName("sidebarName");
             titleMessage = stringBundle.GetStringFromName("addEngineConfirmTitle");

@@ -57,7 +57,7 @@
 
 // chrome URL's
 #define HELPERAPPLAUNCHER_BUNDLE_URL "chrome://global/locale/helperAppLauncher.properties"
-#define BRAND_BUNDLE_URL "chrome://global/locale/brand.properties"
+#define BRAND_BUNDLE_URL "chrome://branding/locale/brand.properties"
 
 nsOSHelperAppService::nsOSHelperAppService() : nsExternalHelperAppService()
 {

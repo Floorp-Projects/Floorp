@@ -91,7 +91,7 @@ void nsMapiRegistryUtils::getVarValue(const PRUnichar * varName, nsAutoString & 
     if (NS_SUCCEEDED(rv) && bundleService) {
         nsCOMPtr<nsIStringBundle> brandBundle;
         rv = bundleService->CreateBundle(
-                    "chrome://global/locale/brand.properties",
+                    "chrome://branding/locale/brand.properties",
                     getter_AddRefs(brandBundle));
         if (NS_SUCCEEDED(rv)) {
             nsXPIDLString value;

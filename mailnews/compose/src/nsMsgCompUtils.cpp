@@ -483,7 +483,7 @@ RRT_HEADER:
     if (NS_SUCCEEDED(rv)) 
 	{
       nsCOMPtr<nsIStringBundle> brandSringBundle;
-      rv = stringService->CreateBundle("chrome://global/locale/brand.properties", getter_AddRefs(brandSringBundle));
+      rv = stringService->CreateBundle("chrome://branding/locale/brand.properties", getter_AddRefs(brandSringBundle));
       if (NS_SUCCEEDED(rv)) 
 	  {
         nsXPIDLString brandName;

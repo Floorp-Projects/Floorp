@@ -23,6 +23,7 @@ locale/en-US/messenger-mdn,                                     en-US/locale/en-
 locale/en-US/messenger-offline,                                 en-US/locale/en-US/messenger-offline
 locale/en-US/messenger-newsblog,                                en-US/locale/en-US/messenger-newsblog
 locale/en-US/messenger-region,                                  en-US/locale/en-US/messenger-region
+locale/en-US/branding,                                          en-US/locale/en-US/branding
 
 #################################################################################################
 # xpfe extensions (ldap, etc)

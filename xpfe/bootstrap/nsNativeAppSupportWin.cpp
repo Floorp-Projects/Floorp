@@ -917,7 +917,7 @@ struct MessageWindow {
              nsCOMPtr<nsIStringBundle> turboMenuBundle;
              nsCOMPtr<nsIStringBundle> brandBundle;
              if ( stringBundleService ) {
-                 stringBundleService->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( brandBundle ) );
+                 stringBundleService->CreateBundle( "chrome://branding/locale/brand.properties", getter_AddRefs( brandBundle ) );
                  stringBundleService->CreateBundle( "chrome://navigator/locale/turboMenu.properties",
                                                     getter_AddRefs( turboMenuBundle ) );
              }
@@ -2364,7 +2364,7 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
     if ( svc ) {
         nsCOMPtr<nsIStringBundle> brandBundle;
         nsXPIDLString tooltip;
-        svc->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( brandBundle ) );
+        svc->CreateBundle( "chrome://branding/locale/brand.properties", getter_AddRefs( brandBundle ) );
         if ( brandBundle ) {
             brandBundle->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
                                             getter_Copies( tooltip ) );

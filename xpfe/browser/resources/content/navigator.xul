@@ -104,7 +104,7 @@
   <!-- hook for stringbundle overlays -->
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_navigator" src="chrome://navigator/locale/navigator.properties"/>
-    <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>

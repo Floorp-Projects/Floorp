@@ -30,6 +30,9 @@ comm.jar:
     content/communicator/popupManager.js                 (resources/content/popupManager.js)
     content/communicator/popupManager.xul                (resources/content/popupManager.xul)
     content/communicator/aboutPopups.xul                 (resources/content/aboutPopups.xul)
+#ifndef MOZ_XUL_APP
+*   content/branding/contents.rdf                        (resources/content/contents-branding.rdf)
+#endif
 
 en-US.jar:
 *   locale/en-US/communicator/contents.rdf                      (resources/locale/en-US/contents.rdf)
@@ -47,6 +50,11 @@ en-US.jar:
     locale/en-US/communicator/popupManager.dtd                  (resources/locale/en-US/popupManager.dtd)
     locale/en-US/communicator/popupManager.properties           (resources/locale/en-US/popupManager.properties)
     locale/en-US/communicator/aboutPopups.dtd                   (resources/locale/en-US/aboutPopups.dtd)
+#ifndef MOZ_XUL_APP
+*   locale/en-US/branding/contents.rdf                          (resources/locale/en-US/contents-branding.rdf)
+*   locale/en-US/branding/brand.dtd                             (resources/locale/en-US/brand.dtd)
+*   locale/en-US/branding/brand.properties                      (resources/locale/en-US/brand.properties)
+#endif
 
 US.jar:
 *   locale/US/communicator-region/contents.rdf   	      (resources/locale/en-US/contents-region.rdf)

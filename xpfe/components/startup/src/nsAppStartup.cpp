@@ -514,7 +514,7 @@ nsAppStartup::CheckAndRemigrateDefunctProfile()
   rv = stringBundleService->CreateBundle("chrome://communicator/locale/profile/migration.properties", getter_AddRefs(migrationBundle));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = stringBundleService->CreateBundle("chrome://global/locale/brand.properties", getter_AddRefs(brandBundle));
+  rv = stringBundleService->CreateBundle("chrome://branding/locale/brand.properties", getter_AddRefs(brandBundle));
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsXPIDLString brandName;

@@ -37,5 +37,5 @@
 # ***** END LICENSE BLOCK *****
 
 .wizard-header {
-  background: url("chrome://messenger/content/thunderbird-wizard-badge.png") no-repeat right center Window;
+  background: url("chrome://branding/content/thunderbird-wizard-badge.png") no-repeat right center Window;
 }

@@ -35,12 +35,16 @@ messenger.jar:
 *+  content/messenger/searchBar.js                  (content/searchBar.js)
 *   content/messenger/phishingDetector.js           (content/phishingDetector.js)
 *+  content/messenger-views/contents.rdf            (content/messenger-views.rdf)
-    content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
-    content/messenger/about-credits.png             (content/about-credits.png)
     content/messenger/about-footer.png              (content/about-footer.png)
     content/messenger/aboutDialog.css               (content/aboutDialog.css)
 +   content/messenger/messenger.css                 (content/messenger.css)
 *   content/messenger/search.xml                    (content/search.xml)
+#ifndef MOZ_USE_OFFICIAL_BRANDING
+    content/branding/contents.rdf                   (content/contents-branding.rdf)
+    content/branding/about-credits.png              (content/about-credits.png)
+    content/branding/about-thunderbird.png          (content/about-thunderbird.png)
+    content/branding/thunderbird-watermark.png      (content/thunderbird-watermark.png)
+#endif
 
 comm.jar:
 *   content/help/contents.rdf                       (content/help.rdf)

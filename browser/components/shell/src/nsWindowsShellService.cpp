@@ -744,7 +744,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
   if (bundleService) {
     nsCOMPtr<nsIStringBundle> brandBundle;
-    rv = bundleService->CreateBundle("chrome://global/locale/brand.properties",
+    rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
                                      getter_AddRefs(brandBundle));
     if (NS_SUCCEEDED(rv) && brandBundle) {
       if (NS_FAILED(rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),

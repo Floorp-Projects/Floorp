@@ -1518,7 +1518,7 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
     if (!gStoppingDownloads) {
       nsCOMPtr<nsIStringBundleService> sbs(do_GetService("@mozilla.org/intl/stringbundle;1"));
       nsCOMPtr<nsIStringBundle> brandBundle, xpinstallBundle;
-      sbs->CreateBundle("chrome://global/locale/brand.properties", getter_AddRefs(brandBundle));
+      sbs->CreateBundle("chrome://branding/locale/brand.properties", getter_AddRefs(brandBundle));
       sbs->CreateBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties", getter_AddRefs(xpinstallBundle));
 
       nsXPIDLString brandShortName, message, title;

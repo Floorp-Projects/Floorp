@@ -205,7 +205,7 @@ PRBool nsMapiHook::DisplayLoginDialog(PRBool aLogin, PRUnichar **aUsername,
 
         nsCOMPtr<nsIStringBundle> brandBundle;
         rv = bundleService->CreateBundle(
-                        "chrome://global/locale/brand.properties",
+                        "chrome://branding/locale/brand.properties",
                         getter_AddRefs(brandBundle));
         if (NS_FAILED(rv)) return PR_FALSE;
 

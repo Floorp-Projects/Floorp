@@ -59,7 +59,7 @@
   <script type="application/x-javascript" src="chrome://mozapps/content/plugins/pluginInstallerService.js"/>
 
   <stringbundleset id="pluginSet">
-    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="xpinstallStrings" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
     <stringbundle id="pluginWizardString" src="chrome://mozapps/locale/plugins/plugins.properties"/>
   </stringbundleset>

@@ -249,7 +249,7 @@ nsMailGNOMEIntegration::ShowMailIntegrationDialog(nsIDOMWindow* aParentWindow)
   NS_ENSURE_TRUE(bundleService, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIStringBundle> brandBundle;
-  bundleService->CreateBundle("chrome://global/locale/brand.properties",
+  bundleService->CreateBundle("chrome://branding/locale/brand.properties",
                               getter_AddRefs(brandBundle));
   NS_ENSURE_TRUE(brandBundle, NS_ERROR_FAILURE);
 

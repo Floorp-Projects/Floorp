@@ -60,7 +60,7 @@
 
   <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
   <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/mailWindow.js"/>

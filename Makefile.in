@@ -334,9 +334,6 @@ ifdef MOZ_USE_OFFICIAL_BRANDING
 tier_99_dirs  += other-licenses/branding/firefox
 endif
 tier_99_dirs	+= browser xpfe/bootstrap/init.d
-ifdef MOZ_USE_OFFICIAL_BRANDING
-tier_99_dirs  += other-licenses/branding/firefox/content
-endif
 endif
 
 ifdef MOZ_XULRUNNER
@@ -352,9 +349,6 @@ ifdef MOZ_USE_OFFICIAL_BRANDING
 tier_99_dirs  += other-licenses/branding/thunderbird
 endif
 tier_99_dirs	+= mail xpfe/bootstrap/init.d
-ifdef MOZ_USE_OFFICIAL_BRANDING
-tier_99_dirs  += other-licenses/branding/thunderbird/content
-endif
 endif
 
 ifdef MOZ_STANDALONE_COMPOSER

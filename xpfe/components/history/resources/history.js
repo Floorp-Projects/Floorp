@@ -291,7 +291,7 @@ function OpenURL(aTarget)
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                     .getService(Components.interfaces.nsIPromptService);
       var historyBundle = strBundleService.createBundle("chrome://communicator/locale/history/history.properties");
-      var brandBundle = strBundleService.createBundle("chrome://global/locale/brand.properties");      
+      var brandBundle = strBundleService.createBundle("chrome://branding/locale/brand.properties");      
       var brandStr = brandBundle.GetStringFromName("brandShortName");
       var errorStr = historyBundle.GetStringFromName("load-js-data-url-error");
       promptService.alert(window, brandStr, errorStr);

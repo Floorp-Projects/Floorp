@@ -17,7 +17,7 @@
         onload="onLoad(event);"
         ondialogaccept="return onAccept();"
         ondialoghelp="return doHelpButton();">
-<stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+<stringbundle id="bundle_brand" src="chrome://branding/locale/brand.properties"/>
 <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/amUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
