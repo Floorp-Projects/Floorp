@@ -89,7 +89,9 @@
         <xul:hbox align="center">
           <xul:image class="quick-search-button-image" xbl:inherits="src"/>
         </xul:hbox>
+        <xul:hbox align="center">
         <xul:image class="quick-search-button-dropmarker"/>
+        </xul:hbox>
       </xul:stack>
     </content>  
   </binding>

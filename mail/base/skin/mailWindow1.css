@@ -975,7 +975,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 
 .textbox-input-box
 {
-  padding-top: 1px;
+  padding-top: 3px;
 }
 
 #accountCentralBox { 
