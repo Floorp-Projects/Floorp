@@ -601,7 +601,7 @@ XXX ...couldn't get this to work...
 
         virtual void defineTempVariable(Context *cx, Reference *&readRef, Reference *&writeRef, JSType *type);
 
-        virtual JSValue getSlotValue(Context *cx, uint32 slotIndex)    { ASSERT(false); return kUndefinedValue; }
+        virtual JSValue getSlotValue(Context * /*cx*/, uint32 /*slotIndex*/)    { ASSERT(false); return kUndefinedValue; }
 
         // debug only        
         void printProperties(Formatter &f) const

@@ -423,7 +423,6 @@ uint32 ByteCodeGen::getLabel(LabelStmtNode *lbl)
 uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind, const StringAtom *name, StmtNode *p)
 {
     uint32 result = uint32(-1);
-    bool foundName = false;
     bool foundLabel = false;
     for (std::vector<uint32>::reverse_iterator i = mLabelStack.rbegin(),
                         end = mLabelStack.rend();

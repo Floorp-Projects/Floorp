@@ -2044,7 +2044,7 @@ static JSValue objectEqual(Context *cx, const JSValue& /*thisValue*/, JSValue *a
     return compareEqual(cx, r1, r2);
 }
 
-static JSValue objectSpittingImage(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static JSValue objectSpittingImage(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
     JSValue r1 = argv[0];
     JSValue r2 = argv[1];
