@@ -314,7 +314,7 @@ PRBool 	result;
 			nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
-			DrawWidget(PR_TRUE);
+			DrawWidget(PR_FALSE);
 			nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_ENTER:
