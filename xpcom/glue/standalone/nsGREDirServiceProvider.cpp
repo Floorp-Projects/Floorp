@@ -409,9 +409,9 @@ GRE_GetPathFromConfigDir(const char* dirname, char* buffer)
       continue;
 
     nsEmbedCString fullPath;
-    fullPath += dirname;
-    fullPath += XPCOM_FILE_PATH_SEPARATOR;
-    fullPath += entry->name;
+    NS_CStringAppendData(fullPath, dirname);
+    NS_CStringAppendData(fullPath, XPCOM_FILE_PATH_SEPARATOR);
+    NS_CStringAppendData(fullPath, entry->name);
 
     found = GRE_GetPathFromConfigFile(fullPath.get(), buffer);
   }
@@ -476,7 +476,7 @@ GRE_GetGREDirectory(nsILocalFile* *_retval)
   if(pGREDir) {
     nsCOMPtr<nsILocalFile> tempLocal;
     nsEmbedCString leaf;
-    leaf.Assign(pGREDir);
+    NS_CStringSetData(leaf, pGREDir);
     rv = NS_NewNativeLocalFile(leaf, PR_TRUE, getter_AddRefs(tempLocal));
 
     if (NS_SUCCEEDED(rv)) {
