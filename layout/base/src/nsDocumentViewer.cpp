@@ -74,6 +74,10 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShell.h"
 #include "nsIFrameDebug.h"
+#include "nsLayoutAtoms.h"
+#include "nsIDOMHTMLFrameSetElement.h"
+#include "nsIFrameManager.h"
+
 
 #include "nsIChromeRegistry.h"
 
@@ -242,6 +246,7 @@ private:
                       const nsRect& aBounds);
 
   nsresult GetDocumentSelection(nsISelection **aSelection);
+  nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID);
 
   //
   // The following three methods are used for printing...
@@ -851,8 +856,30 @@ DocumentViewerImpl::Hide(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext)
+nsresult
+DocumentViewerImpl::FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID)
+{
+  PRInt32 numChildren;
+  aParentContent->ChildCount(numChildren);
+
+  // do a breadth search across all siblings
+  PRInt32 inx;
+  for (inx=0;inx<numChildren;inx++) {
+    nsCOMPtr<nsIContent> child;
+    if (NS_SUCCEEDED(aParentContent->ChildAt(inx, *getter_AddRefs(child))) && child) {
+      nsCOMPtr<nsISupports> temp;
+      if (NS_SUCCEEDED(child->QueryInterface(aIID, (void**)getter_AddRefs(temp)))) {
+        return NS_OK;
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
+                                 nsIDeviceContext * aDContext)
 {
   NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aDContext);
@@ -866,6 +893,45 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
   nsCOMPtr<nsIContentViewer>  viewer;
   nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(aParent));
 
+  // See if if the incoming doc is the root document
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(aParent));
+  nsCOMPtr<nsIDocShellTreeItem> parentsParentDoc;
+  parentAsItem->GetParent(getter_AddRefs(parentsParentDoc));
+
+  // When it is the top level document we need to check 
+  // to see if it contains a frameset. If it does, then 
+  // we only want to print the doc's children and not the document itself
+  // For anything else we always print all the children and the document
+  // for example, if the doc contains an IFRAME we eant to print the child
+  // document (the IFRAME) and then the rest of the document.
+  //
+  // XXX we really need to search the frame tree, and not the content
+  // but there is no way to distinguish between IFRAMEs and FRAMEs
+  // with the GetFrameType call.
+  // Bug 53459 has been files so we can eventually distinguish 
+  // between IFRAME frames and FRAME frames
+  PRBool doesContainFrameSet = PR_FALSE;
+  // only check to see if there is a frameset if there is 
+  // NO parent doc for this doc. meaning this parent is the root doc
+  if (!parentsParentDoc) {
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    if (shell) {
+      nsCOMPtr<nsIDocument> doc;
+      shell->GetDocument(getter_AddRefs(doc));
+      if (doc) {
+        nsCOMPtr<nsIContent> rootContent = getter_AddRefs(mDocument->GetRootContent());
+        if (rootContent) {
+          if (NS_SUCCEEDED(FindFrameSetWithIID(rootContent, NS_GET_IID(nsIDOMHTMLFrameSetElement)))) {
+            doesContainFrameSet = PR_TRUE;
+          }
+        }
+      }
+    }
+  }
+
+  // print any child documents
+  // like frameset frames or iframes
   parentAsNode->GetChildCount(&count);
   if(count> 0) { 
     for(i=0;i<count;i++) {
@@ -879,7 +945,11 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
         NS_ENSURE_SUCCESS(viewerFile->PrintContent(childWebShell,aDContext), NS_ERROR_FAILURE);
       }
     }
-  } else {
+  }
+  
+  // now complete printing the rest of the document
+  // if it doesn't contain any framesets
+  if (!doesContainFrameSet) {
     aDContext->BeginDocument();
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
