@@ -184,6 +184,9 @@ sub print_page_head {
     
     do "$::tree/status.pl";
     print "<a NAME=\"status\"></a>$status_message<br>";  # from $::tree/status.pl
+
+    # keeps the main table from clearing the IFRAME
+    print "<br clear=\"all\">\n";
   }
 
   # Quote and Legend
