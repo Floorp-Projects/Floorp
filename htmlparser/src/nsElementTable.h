@@ -360,6 +360,8 @@ public:
       gHTMLElements[gStyleTags[index]].mSelfContained=PR_TRUE;
     }
     gHTMLElements[eHTMLTag_frameset].mSelfContained=PR_TRUE;
+    gHTMLElements[eHTMLTag_ol].mSelfContained=PR_TRUE;
+    gHTMLElements[eHTMLTag_ul].mSelfContained=PR_TRUE;
   }
 };
 CTableInitializer gTableInitializer;

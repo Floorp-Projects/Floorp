@@ -4,7 +4,7 @@
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
- *                   
+ *                    
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
@@ -669,8 +669,8 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
   eHTMLTags aPrevTag=aTagStack.mTags[theTopIndex-1];
  
   if(nsHTMLElement::IsContainer(aCurrentTag)){
-    if((aPrevTag==aCurrentTag) && (!gHTMLElements[aCurrentTag].CanSelfContain())){
-      return aCurrentTag;
+    if(aPrevTag==aCurrentTag) {
+      return (gHTMLElements[aCurrentTag].CanSelfContain()) ? eHTMLTag_unknown: aCurrentTag;
     }
     if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
 
@@ -740,8 +740,8 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   if(eHTMLTag_unknown!=theTarget){
     result=CloseContainersTo(theTarget,PR_TRUE);
     theParentTag=mBodyContext->Last();
+    theCanContainResult=CanContain(theParentTag,aChildTag);
   }
-
 
   if(PR_FALSE==theCanContainResult){
     if(CanPropagate(theParentTag,aChildTag))
