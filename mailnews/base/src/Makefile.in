@@ -57,7 +57,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  msglocal \
 		  msgimap \
-		  timer \
 		  mork \
 		  msgnews \
 		  addrbook \

@@ -34,7 +34,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  gfx2 \
 		  imglib2 \
-		  timer \
 		  $(MNG_REQUIRES) \
 		  $(JPEG_REQUIRES) \
 		  $(ZLIB_REQUIRES) \

@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  sidebar \
 		  xuldoc \
-		  timer \
 		  webshell \
 		  view \
 		  uconv \

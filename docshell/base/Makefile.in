@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  webbrwsr \
 		  xpconnect \
-		  timer \
 		  widget \
 		  shistory \
 		  intl \

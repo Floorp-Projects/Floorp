@@ -37,7 +37,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  content \
-		  timer \
 		  gfx \
 		  dom \
 		  intl \
@@ -80,5 +79,4 @@ CXXFLAGS	+= $(TK_CFLAGS)
 INCLUDES += \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
-		-I$(srcdir)/../../timer/src/beos \
 		$(NULL)

@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  widget \
 		  view \
-		  timer \
 		  docshell \
 		  necko \
 		  editor \

@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  htmlparser \
 		  view \
-		  timer \
 		  pref \
 		  intl \
 		  editor \

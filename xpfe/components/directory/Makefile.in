@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  necko2 \
 		  rdf \
 		  content \
-		  timer \
 		  js \
 		  xpconnect \
 		  docshell \

@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  cookie \
 		  caps \
 		  util \
-		  timer \
 		  uconv \
 		  pref \
 		  uriloader \

@@ -42,7 +42,6 @@ REQUIRES        = xpcom \
                   necko \
                   pref \
                   webshell \
-                  timer \
                   intl \
                   docshell \
                   gfx \

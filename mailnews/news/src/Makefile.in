@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  appshell \
 		  mime \
 		  intl \
-		  timer \
 		  webshell \
 		  wallet \
 		  rdfutil \

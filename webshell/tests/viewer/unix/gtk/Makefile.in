@@ -32,7 +32,6 @@ REQUIRES	= xpcom \
 		  string \
 		  webbrwsr \
 		  widget \
-		  timer \
 		  dom \
 		  gfx \
 		  docshell \

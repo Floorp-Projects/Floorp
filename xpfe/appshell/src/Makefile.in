@@ -49,7 +49,6 @@ REQUIRES	= xpcom \
 		  rdf \
 		  pref \
 		  xpconnect \
-		  timer \
 		  intl \
 		  xul \
 		  windowwatcher \

@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  exthandler \
 		  caps \
-		  timer \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  uriloader \
 		  shistory \
-		  timer \
 		  windowwatcher \
 		  webbrowserpersist \
 		  $(NULL)

@@ -42,7 +42,6 @@ REQUIRES = \
   locale \
   necko \
   string \
-  timer \
   uriloader \
   view \
   webshell \

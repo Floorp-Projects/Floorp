@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  shistory \
 		  webshell \
-		  timer \
 		  windowwatcher \
 		  wallet \
 		  appcomps \

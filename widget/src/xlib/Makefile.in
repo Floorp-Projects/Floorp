@@ -41,7 +41,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  js \
 		  xlibrgb \
-		  timer \
 		  uconv \
 		  pref \
 		  webshell \

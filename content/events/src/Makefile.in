@@ -36,7 +36,6 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  widget \
-		  timer \
 		  caps \
 		  xpconnect \
 		  docshell \
