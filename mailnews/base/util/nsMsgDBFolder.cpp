@@ -655,12 +655,13 @@ nsresult nsMsgDBFolder::CheckWithNewMessagesStatus(PRBool messageAdded)
 NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
-	if(aFlags & MSG_FLAG_NEW) {
-		CheckWithNewMessagesStatus(PR_FALSE);
-	}
+    // check to see if a new message is being deleted
+    // as in this case, if there is only one new message and it's being deleted
+    // the folder newness has to be cleared.
+    CheckWithNewMessagesStatus(PR_FALSE);
 
-	//Do both flat and thread notifications
-	return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_FALSE, PR_TRUE, PR_TRUE);
+    //Do both flat and thread notifications
+    return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_FALSE, PR_TRUE, PR_TRUE);
 }
 
 // 2.  When a new messages gets added, we need to see if it's new.
