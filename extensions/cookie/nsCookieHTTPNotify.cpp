@@ -264,7 +264,7 @@ nsCookieHTTPNotify::OnExamineResponse(nsIHttpChannel *aHttpChannel)
     if (NS_FAILED(rv)) return rv;
 
     // Save the cookie
-    rv = mCookieService->SetCookieStringFromHttp(pURL, pFirstURL, pPrompter, cookieHeader, dateHeader);
+    rv = mCookieService->SetCookieStringFromHttp(pURL, pFirstURL, pPrompter, cookieHeader, dateHeader, aHttpChannel);
 
     return rv;
 }

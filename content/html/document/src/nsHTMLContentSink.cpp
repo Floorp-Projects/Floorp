@@ -4725,7 +4725,16 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aVa
         window->GetPrompter(getter_AddRefs(prompt));
       }
     }
-    rv = cookieServ->SetCookieString(baseURI, prompt, cookie);
+    
+    nsCOMPtr<nsIHttpChannel> httpChannel;
+    if (mParser) {
+      nsCOMPtr<nsIChannel> channel;
+      if (NS_SUCCEEDED(mParser->GetChannel(getter_AddRefs(channel)))) {
+        httpChannel = do_QueryInterface(channel);
+      }
+    }
+
+    rv = cookieServ->SetCookieString(baseURI, prompt, cookie, httpChannel);
     nsCRT::free(cookie);
     if (NS_FAILED(rv)) return rv;
   } // END set-cookie

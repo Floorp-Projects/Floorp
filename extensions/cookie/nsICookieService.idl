@@ -46,6 +46,8 @@
 #include "nsIURI.idl"
 #include "nsIPrompt.idl"
 
+interface nsIHttpChannel;
+
 [scriptable, uuid(AB397774-12D3-11d3-8AD1-00105A1B8860)]
 interface nsICookieService : nsISupports
 {
@@ -75,7 +77,7 @@ interface nsICookieService : nsISupports
    * @param aCookie The string to set
    * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
    */
-  void setCookieString(in nsIURI aURL, in nsIPrompt aPrompt, in string aCookie);
+  void setCookieString(in nsIURI aURL, in nsIPrompt aPrompt, in string aCookie, in nsIHttpChannel aHttpChannel);
 
   /*
    * Set the cookie string and expires associated with the URL
@@ -88,7 +90,7 @@ interface nsICookieService : nsISupports
    * @param aExpires The expiry information of the cookie
    * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
    */
-  void setCookieStringFromHttp(in nsIURI aURL, in nsIURI aFirstURL, in nsIPrompt aPrompter, in string aCookie, in string aExpires);
+  void setCookieStringFromHttp(in nsIURI aURL, in nsIURI aFirstURL, in nsIPrompt aPrompter, in string aCookie, in string aExpires, in nsIHttpChannel aHttpChannel);
 
 };
 
