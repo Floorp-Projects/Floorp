@@ -1646,17 +1646,19 @@ function calendarDefaultTimezone() {
 
 function doCreateWizardFinish()
 {
-    var name = document.getElementById("calendar-name").value;
+    var cal_name = document.getElementById("calendar-name").value;
     var uri = document.getElementById("calendar-uri").value;
-    var type = document.getElementById("initial-radiogroup").value;
+    var sel_item=document.getElementById("initial-radiogroup").selectedItem;
+    var type = sel_item.value;
 
-    dump(name + "\n");
+    dump(cal_name + "\n");
     dump(uri + "\n");
     dump(type + "\n");
+    
 
     var calManager = getCalendarManager();
     try {
-        var newCalendar = calManager.createCalendar(name, type, makeURL(uri));
+        var newCalendar = calManager.createCalendar(cal_name, type, makeURL(uri));
     } catch (ex) {
         dump(ex);
         return false;

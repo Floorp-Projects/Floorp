@@ -20,7 +20,7 @@
       <hbox><label value="name:"/><textbox id="calendar-name"/></hbox>
       <hbox><label value="uri:"/><textbox id="calendar-uri"/></hbox>
       <radiogroup id="initial-radiogroup">
-         <radio value="local"
+         <radio value="storage"
                 label="Local Calendar"
                 selected="true"/>
          <radio value="ics"
