@@ -357,7 +357,13 @@ LRESULT CALLBACK DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       // Wizard dialog title
       PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diLicense.szTitle); 
 
-      PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
+      SetFocus(GetDlgItem(hDlg, IDC_RADIO_ACCEPT));
+
+      if (IsDlgButtonChecked(hDlg, IDC_RADIO_DECLINE) == BST_CHECKED) 
+        PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_BACK);  
+      else
+        PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
+      
       break;
     }
     break;
@@ -494,13 +500,13 @@ void BrowseForDirectory(HWND hParent)
   if (itemIDList) {
     if (SHGetPathFromIDList(itemIDList, currDir)) {
       // Update the displayed path
-      hDestinationPath = GetDlgItem(hParent, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+      hDestinationPath = GetDlgItem(hParent, IDC_EDIT_DESTINATION);
       TruncateString(hDestinationPath, currDir, szBuf, sizeof(szBuf));
       SetDlgItemText(hParent, IDC_EDIT_DESTINATION, szBuf);
 
       SetCurrentDirectory(currDir);
 
-      lstrcpy(sgProduct.szPath, currDir);
+      lstrcpy(szTempSetupPath, currDir);
     }
 
 #if 0
@@ -508,6 +514,7 @@ void BrowseForDirectory(HWND hParent)
     // "Free is not a member of IMalloc, see objidl.h for details"
     // but that's a bald-faced lie!
 		// The shell allocated an ITEMIDLIST, we need to free it. 
+    // I guess we'll just leak shell objects for now :-D
     LPMALLOC shellMalloc;
     if (SUCCEEDED(SHGetMalloc(&shellMalloc))) {
       shellMalloc->Free(itemIDList);
@@ -516,6 +523,25 @@ void BrowseForDirectory(HWND hParent)
 #endif
 	}
 }
+
+void RecoverFromPathError(HWND aPanel)
+{
+  HWND destinationPath;
+  char buf[MAX_BUF];
+
+  // Reset the displayed path to the previous, valid value. 
+  destinationPath = GetDlgItem(aPanel, IDC_EDIT_DESTINATION); 
+  TruncateString(destinationPath, sgProduct.szPath, buf, sizeof(buf));
+  SetDlgItemText(aPanel, IDC_EDIT_DESTINATION, buf);
+
+  // Reset the temporary path string so we don't get stuck receiving 
+  // the error message.
+  lstrcpy(szTempSetupPath, sgProduct.szPath);
+
+  // Prevent the Wizard from advancing because of this error. 
+  SetWindowLong(aPanel, DWL_MSGRESULT, -1);
+}
+
 
 LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
@@ -537,7 +563,7 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
     
     SetCurrentDirectory(szTempSetupPath);
 
-    hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION); /* handle to the static destination path text window */
+    hDestinationPath = GetDlgItem(hDlg, IDC_EDIT_DESTINATION);
     TruncateString(hDestinationPath, szTempSetupPath, szBuf, sizeof(szBuf));
     SetDlgItemText(hDlg, IDC_EDIT_DESTINATION, szBuf);
 
@@ -565,15 +591,8 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
       break;
 
     case PSN_WIZNEXT:
-      lstrcpy(sgProduct.szPath, szTempSetupPath);
-
-      /* append a backslash to the path because CreateDirectoriesAll()
-         uses a backslash to determine directories */
-      lstrcpy(szBuf, sgProduct.szPath);
-      AppendBackSlash(szBuf, sizeof(szBuf));
-
       /* Make sure that the path is not within the windows dir */
-      if(IsPathWithinWindir(szBuf)) {
+      if(IsPathWithinWindir(szTempSetupPath)) {
         char errorMsg[MAX_BUF];
         char errorMsgTitle[MAX_BUF];
 
@@ -582,8 +601,17 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
         GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "",
             errorMsgTitle, sizeof(errorMsgTitle), szFileIniInstall);
         MessageBox(hDlg, errorMsg, errorMsgTitle, MB_OK | MB_ICONERROR);
-        break;
+
+        RecoverFromPathError(hDlg);
+
+        return TRUE;
       }
+
+      lstrcpy(sgProduct.szPath, szTempSetupPath);
+      /* append a backslash to the path because CreateDirectoriesAll()
+         uses a backslash to determine directories */
+      lstrcpy(szBuf, sgProduct.szPath);
+      AppendBackSlash(szBuf, sizeof(szBuf));
 
       /* Create the path if it does not exist */
       if(FileExists(szBuf) == FALSE) {
@@ -604,7 +632,10 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
           GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
 
           MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
-          break;
+          
+          RecoverFromPathError(hDlg);
+
+          return TRUE;
         }
 
         if(*sgProduct.szSubPath != '\0') {
@@ -1015,7 +1046,9 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
 
     SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szComponents_);
     SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
-    SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, sgInstallGui.szTotalDownloadSize);
+
+    // XXXben We don't support net stub installs yet. 
+    // SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, sgInstallGui.szTotalDownloadSize);
 
     gdwACFlag = AC_COMPONENTS;
     OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
@@ -1051,7 +1084,8 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
         _ui64toa(ullDSBuf, tchBuffer, 10);
         wsprintf(szBuf, sgInstallGui.szDownloadSize, tchBuffer);
    
-        SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, szBuf);
+        // XXXben We don't support net stub installs yet. 
+        // SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, szBuf);
       }
 
       break;
@@ -1087,32 +1121,78 @@ BOOL IsSelectableComponent(siC* aComponent)
          !(aComponent->dwAttributes & SIC_ADDITIONAL);
 }
 
+BOOL IsComponentSelected(siC* aComponent)
+{
+  return aComponent->dwAttributes & SIC_SELECTED;
+}
+
+void GetRelativeRect(HWND aWindow, int aResourceID, RECT* aRect)
+{
+  HWND ctrl;
+  POINT pt;
+
+  ctrl = GetDlgItem(aWindow, aResourceID);
+
+  GetWindowRect(ctrl, aRect);
+
+  pt.x = aRect->left;
+  pt.y = aRect->top;
+  ScreenToClient(aWindow, &pt);
+  aRect->left = pt.x;
+  aRect->top = pt.y;
+
+  pt.x = aRect->right;
+  pt.y = aRect->bottom;
+  ScreenToClient(aWindow, &pt);
+  aRect->right = pt.x;
+  aRect->bottom = pt.y;
+}
+
+void PositionControl(HWND aWindow, int aResourceIDRelative, int aResourceIDControl, int aOffset)
+{
+  HWND ctrl;
+  RECT r1, r2;
+
+  GetRelativeRect(aWindow, aResourceIDRelative, &r1);
+  GetRelativeRect(aWindow, aResourceIDControl, &r2);
+
+  ctrl = GetDlgItem(aWindow, aResourceIDControl);
+  SetWindowPos(ctrl, NULL, r2.left, r1.bottom + aOffset, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+
 LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  HWND hInstallFolder;
+  HWND ctrl;
   LPSTR szMessage = NULL;
   LPNMHDR notifyMessage;
   char szAddtlComps[MAX_BUF];
   char szTemp[MAX_BUF];
   char szFormat[MAX_BUF_TINY];
-  BOOL hasAddtlComps;
+  BOOL hasAddtlComps = FALSE;
   BOOL skipNext = FALSE;
   siC *currComponent, *mainComponent;
+  HICON largeIcon, smallIcon;
 
   switch(msg) {
   case WM_INITDIALOG:
-    DisableSystemMenuItems(hDlg, FALSE);
-    SetWindowText(hDlg, diStartInstall.szTitle);
-
     SetDlgItemText(hDlg, IDC_MESSAGE1, diStartInstall.szMessage0);
     SetDlgItemText(hDlg, IDC_MESSAGE2, sgInstallGui.szProxyMessage);
     SetDlgItemText(hDlg, IDC_CONNECTION_SETTINGS, sgInstallGui.szProxyButton);
     SetDlgItemText(hDlg, IDC_INSTALL_FOLDER_LABEL, sgInstallGui.szInstallFolder);
 
-    if ((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageInstall);
-    else
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageDownload);
+    // This is a bit of a hack for now, not parameterizable as I'd like it to be. 
+    // Unfortunately pressed for time. Revisit. 
+    // -Ben
+#if defined(MOZ_PHOENIX)
+    ExtractIconEx("setuprsc.dll", 1, &largeIcon, &smallIcon, 1);
+#elif defined(MOZ_THUNDERBIRD)
+    ExtractIconEx("setuprsc.dll", 2, &largeIcon, &smallIcon, 1);
+#endif
+    SendMessage(GetDlgItem(hDlg, IDC_APP_ICON), STM_SETICON, (LPARAM)smallIcon, 0);
+
+    ExtractIconEx("shell32.dll", 3, &largeIcon, &smallIcon, 1);
+    SendMessage(GetDlgItem(hDlg, IDC_FOLDER_ICON), STM_SETICON, (LPARAM)smallIcon, 0);
 
     break;
   
@@ -1128,8 +1208,20 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       // options - WM_INITDIALOG only gets called once, not every time the
       // panel is displayed.
 
-      *szAddtlComps = '\0';
+      // Update strings that relate to whether or not files will be downloaded. 
+      // The user may have selected additional components that require a download.
+      if ((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0)) {
+        SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageInstall);
 
+        // Hide Download-related UI:
+        ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE2), SW_HIDE);
+        ShowWindow(GetDlgItem(hDlg, IDC_CONNECTION_SETTINGS), SW_HIDE);
+      }
+      else
+        SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageDownload);
+
+      // Show the components we're going to install
+      szAddtlComps[0] = '\0';
       currComponent = siComponents;
       do {
         if (!currComponent)
@@ -1137,7 +1229,8 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
         if (currComponent->dwAttributes & SIC_MAIN_COMPONENT)
           mainComponent = currComponent;
-        else if (IsSelectableComponent(currComponent)) {
+        else if (IsSelectableComponent(currComponent) && 
+                 IsComponentSelected(currComponent)) {
           wsprintf(szFormat, "%s\r\n", sgInstallGui.szAddtlCompWrapper);
           wsprintf(szTemp, szFormat, currComponent->szDescriptionShort);
           lstrcat(szAddtlComps, szTemp);
@@ -1149,17 +1242,35 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       }
       while (currComponent && currComponent != siComponents);
 
-      if (hasAddtlComps)
+      // Update the display to reflect whether or not additional components are going to 
+      // be installed. If none are, we shift the install folder detail up so that it's
+      // neatly under the Primary Component name. 
+      if (hasAddtlComps) {
         wsprintf(szTemp, sgInstallGui.szPrimCompOthers, mainComponent->szDescriptionShort);
-      else
+
+        ShowWindow(GetDlgItem(hDlg, IDC_OPTIONAL_COMPONENTS), SW_SHOW);
+
+        SetDlgItemText(hDlg, IDC_OPTIONAL_COMPONENTS, szAddtlComps);
+
+        PositionControl(hDlg, IDC_OPTIONAL_COMPONENTS, IDC_INSTALL_FOLDER_LABEL, 10);
+      }
+      else {
         wsprintf(szTemp, sgInstallGui.szPrimCompNoOthers, mainComponent->szDescriptionShort);
+
+        ShowWindow(GetDlgItem(hDlg, IDC_OPTIONAL_COMPONENTS), SW_HIDE);
+
+        // Shift the "Install Folder" text up in the "No Components" case
+        PositionControl(hDlg, IDC_PRIMARY_COMPONENT, IDC_INSTALL_FOLDER_LABEL, 10);
+      }
+      PositionControl(hDlg, IDC_INSTALL_FOLDER_LABEL, IDC_INSTALL_FOLDER, 10);
+      PositionControl(hDlg, IDC_INSTALL_FOLDER_LABEL, IDC_FOLDER_ICON, 7);
+
       SetDlgItemText(hDlg, IDC_PRIMARY_COMPONENT, szTemp);
 
-      SetDlgItemText(hDlg, IDC_OPTIONAL_COMPONENTS, szAddtlComps);
-
-      SetDlgItemText(hDlg, IDC_INSTALL_FOLDER, sgProduct.szPath);
-      hInstallFolder = GetDlgItem(hDlg, IDC_INSTALL_FOLDER);
-      TruncateString(hInstallFolder, sgProduct.szPath, szTemp, sizeof(szTemp));
+      // Update the install folder. 
+      ctrl = GetDlgItem(hDlg, IDC_INSTALL_FOLDER);
+      TruncateString(ctrl, sgProduct.szPath, szTemp, sizeof(szTemp));
+      SetDlgItemText(hDlg, IDC_INSTALL_FOLDER, szTemp);
       
       PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
 
@@ -1522,11 +1633,33 @@ LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
 // DIALOG: INSTALLING FILES
 //
 
+#define BTN_CLSNAME_LEN 7
+#define BTN_CANCEL_OFFSET 4
+BOOL CALLBACK DisableCancelButton(HWND aWindow, LPARAM aData)
+{
+  static int offset = 0;
+  char className[BTN_CLSNAME_LEN];
+  char text[MAX_BUF];
+
+  GetClassName(aWindow, className, BTN_CLSNAME_LEN);
+  if (!strcmp(className, "Button") && 
+      GetParent(aWindow) == (HWND)aData) {
+    GetWindowText(aWindow, text, MAX_BUF-1);
+    if (++offset == BTN_CANCEL_OFFSET) {
+      offset = 0;
+      EnableWindow(aWindow, FALSE);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
 LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   LPNMHDR notifyMessage;
   static BOOL initialized = FALSE; 
-  static int count = 0;
+  HWND parent = GetParent(hDlg);
   
   switch(msg) {
   case WM_INITDIALOG:
@@ -1535,11 +1668,6 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
 
     SetDlgItemText(hDlg, IDC_STATUS0, diInstalling.szStatusFile);
     SetDlgItemText(hDlg, IDC_STATUS3, diInstalling.szStatusComponent);
-
-    break;
-
-  case PBM_SETPOS:
-    ++count;
 
     break;
 
@@ -1552,10 +1680,10 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
     if (InstallFiles(hDlg)) {
 #if WINTEGRATION_PAGE
       if (dwSetupType == ST_RADIO0) 
-        PropSheet_SetCurSelByID(GetParent(hDlg), DLG_INSTALL_SUCCESSFUL);
+        PropSheet_SetCurSelByID(parent, DLG_INSTALL_SUCCESSFUL);
       else
 #endif
-        PropSheet_SetCurSelByID(GetParent(hDlg), DLG_INSTALL_SUCCESSFUL);
+        PropSheet_SetCurSelByID(parent, DLG_INSTALL_SUCCESSFUL);
 
       break;
     }
@@ -1571,9 +1699,16 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
     switch (notifyMessage->code) {
     case PSN_SETACTIVE:
       // Wizard dialog title
-      PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diInstalling.szTitle); 
+      PropSheet_SetTitle(parent, 0, (LPTSTR)diInstalling.szTitle); 
 
-      PropSheet_SetWizButtons(GetParent(hDlg), 0);
+      // Disable the Cancel button. This leaves the button disabled for
+      // this page (Installing) and the final page (Finish) because it 
+      // is meaningless and potentially damaging in both places. If we 
+      // ever bring back the Wintegration page we're going to have to 
+      // do something about it. 
+      EnumChildWindows(parent, DisableCancelButton, (LPARAM)parent);
+
+      PropSheet_SetWizButtons(parent, 0);
 
       break;
     }
@@ -1646,8 +1781,6 @@ BOOL InstallFiles(HWND hDlg)
   else
     err = WIZ_OK;
 
-  //XXXben TODO: shift this until after the FINISH step in DlgProcInstallSuccess
-  
   CleanupXpcomFile();
 
   gbProcessingXpnstallFiles = FALSE;
@@ -2348,3 +2481,4 @@ void CommitInstall(void)
   gbProcessingXpnstallFiles = FALSE;
 }
 #endif
+

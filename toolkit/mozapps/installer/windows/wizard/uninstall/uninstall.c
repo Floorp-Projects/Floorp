@@ -40,7 +40,6 @@ LPSTR           szEGlobalAlloc;
 LPSTR           szEStringLoad;
 LPSTR           szEDllLoad;
 LPSTR           szEStringNull;
-LPSTR           szTempSetupPath;
 
 LPSTR           szClassName;
 LPSTR           szUninstallDir;

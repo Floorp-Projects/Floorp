@@ -193,7 +193,6 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
   DWORD     i = 0;
   siC       *siCObject = NULL;
   HRESULT   hrResult;
-  HWND      ctrl;
   char      szBuf[MAX_BUF];
   char      szEXpiInstall[MAX_BUF];
   char      szArchive[MAX_BUF];
@@ -254,8 +253,8 @@ HRESULT SmartUpdateJars(HWND aWizardPanel)
 
     GetTotalArchivesToInstall();
 
-    ctrl = GetDlgItem(dlgInfo.hWndDlg, IDC_PROGRESS_ARCHIVE);
-    SendMessage(ctrl, PBM_SETRANGE, 0, dwTotalFiles); 
+    SendDlgItemMessage(dlgInfo.hWndDlg, IDC_PROGRESS_ARCHIVE, PBM_SETRANGE, 
+                       0, MAKELPARAM(0, dwTotalFiles));
 
     dwCurrentFile = 0;
     siCObject = SiCNodeGetObject(i, TRUE, AC_ALL);
@@ -383,26 +382,24 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
   char szFilename[MAX_BUF];
   char szStrProcessingFileBuf[MAX_BUF];
   char szStrCopyingFileBuf[MAX_BUF];
-  char szMsg[MAX_BUF];
 
   if(sgProduct.mode != SILENT)
   {
     ParsePath((char *)msg, szFilename, sizeof(szFilename), FALSE, PP_FILENAME_ONLY);
-    ParsePath((char *)msg, szMsg, sizeof(szMsg), FALSE, PP_ROOT_ONLY);
 
     dlgInfo.nFileBars = 0;
     
-    // Holy jesus, I hate the motherfucking installer. 
     if ((!strncmp(msg, "Installing: ", 12) ||
          !strncmp(msg, "Replacing: ", 11)) 
-         && (max != 0 && val <= max))
+         && (max != 0 && val <= max)) {
       ++dwCurrentFile;
 
-    UpdateArchiveInstallProgress((int)dwCurrentFile);
-    UpdateGREInstallProgress((int)dwCurrentFile);
-  }
+      UpdateArchiveInstallProgress((int)dwCurrentFile);
+      UpdateGREInstallProgress((int)dwCurrentFile);
+    }
 
-  ProcessWindowsMessages();
+    ProcessWindowsMessages();
+  }
 }
 
 void cbXPIFinal(const char *URL, PRInt32 finalStatus)
@@ -414,9 +411,10 @@ void cbXPIFinal(const char *URL, PRInt32 finalStatus)
 // Update the Archive Progress Bar to the specified percentage. 
 static void UpdateArchiveInstallProgress(int aValue)
 {
-  HWND progressBar;
-
-  if (sgProduct.mode != SILENT) 
-    SendMessage(dlgInfo.hWndDlg, PBM_SETPOS, aValue, 0);
+  if (sgProduct.mode != SILENT) {
+    SendDlgItemMessage(dlgInfo.hWndDlg, IDC_PROGRESS_ARCHIVE, PBM_SETPOS, 
+                       (WPARAM)aValue, 0);
+    Sleep(5);
+  }
 }
 

@@ -215,13 +215,9 @@ CLASS "MozillaSetupDlg"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "",IDC_STATUS0,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
-                    WS_GROUP,11,64,295,8
-    CONTROL         "",IDC_STATUS3,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX | 
-                    WS_GROUP,11,98,295,8
+                    WS_GROUP,11,72,295,8
     CONTROL         "Progress1",IDC_PROGRESS_ARCHIVE,"msctls_progress32",
-                    WS_BORDER,11,77,295,11
-    CONTROL         "Progress1",IDC_PROGRESS_FILE,"msctls_progress32",
-                    WS_BORDER,11,110,295,11
+                    WS_BORDER,11,85,295,11
 END
 
 DLG_ADVANCED_SETTINGS DIALOG DISCARDABLE  51, 56, 315, 205
@@ -347,10 +343,12 @@ BEGIN
     LTEXT           "",IDC_MESSAGE1,11,130,295,8
     PUSHBUTTON      "",IDC_CONNECTION_SETTINGS,250,103,56,14
     LTEXT           "",IDC_MESSAGE2,11,103,232,19
-    LTEXT           "",IDC_PRIMARY_COMPONENT,11,16,295,8,NOT WS_GROUP
-    LTEXT           "",IDC_OPTIONAL_COMPONENTS,21,31,285,28,NOT WS_GROUP
-    LTEXT           "",IDC_INSTALL_FOLDER,21,81,285,8,NOT WS_GROUP
+    LTEXT           "",IDC_PRIMARY_COMPONENT,36,16,270,8,NOT WS_GROUP
+    LTEXT           "",IDC_OPTIONAL_COMPONENTS,41,31,265,28,NOT WS_GROUP
+    LTEXT           "",IDC_INSTALL_FOLDER,36,81,270,8,NOT WS_GROUP
     LTEXT           "",IDC_INSTALL_FOLDER_LABEL,11,66,295,8,NOT WS_GROUP
+    ICON            "",IDC_APP_ICON,21,14,20,20
+    ICON            "",IDC_FOLDER_ICON,21,77,20,20
 END
 
 DLG_SELECT_INSTALL_PATH DIALOG DISCARDABLE  0, 0, 315, 143
@@ -364,15 +362,15 @@ BEGIN
     ICON            "",IDC_FOLDER_ICON,28,22,20,20
 END
 
-DLG_INSTALL_SUCCESSFUL DIALOG DISCARDABLE  0, 0, 317, 193
+DLG_INSTALL_SUCCESSFUL DIALOGEX 0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "",IDC_STATIC_TITLE,130,8,180,18,NOT WS_GROUP
     LTEXT           "",IDC_STATIC1,130,169,180,15
     LTEXT           "",IDC_STATIC0,130,34,180,16,NOT WS_GROUP
-    CONTROL         "",IDC_START_APP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    130,58,180,10
+    CONTROL         "",IDC_START_APP,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | 
+                    WS_TABSTOP,130,139,180,10,WS_EX_TRANSPARENT
 END
 
 
@@ -384,6 +382,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SETUP               ICON    DISCARDABLE     "setup.ico"
+IDI_BROWSER             ICON    DISCARDABLE     "browser.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -446,7 +445,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 310
         TOPMARGIN, 7
-        BOTTOMMARGIN, 186
+        BOTTOMMARGIN, 184
     END
 END
 #endif    // APSTUDIO_INVOKED
