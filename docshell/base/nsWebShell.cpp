@@ -282,7 +282,8 @@ public:
                           const char* aCharset= nsnull ,
                           nsCharsetSource aSource = kCharsetUninitialized);
   NS_IMETHOD ReloadDocument(const char* aCharset= nsnull ,
-                            nsCharsetSource aSource = kCharsetUninitialized);
+                            nsCharsetSource aSource = kCharsetUninitialized,
+                            const char* aCmd=nsnull);
   NS_IMETHOD StopDocumentLoad(void);
   NS_IMETHOD SetRendering(PRBool aRender);
 
@@ -465,6 +466,7 @@ protected:
   // XXX store mHintCharset and mHintCharsetSource here untill we find out a good cood path
   nsString mHintCharset;
   nsCharsetSource mHintCharsetSource;
+  PRBool mViewSource;
   nsString mForceCharacterSet;
 
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
@@ -614,6 +616,7 @@ nsWebShell::nsWebShell()
   mProcessedEndDocumentLoad = PR_FALSE;
   mHintCharset = "";
   mHintCharsetSource = kCharsetUninitialized;
+  mViewSource=PR_FALSE;
   mForceCharacterSet = "";
   mHistoryService = nsnull;
   mPrompter = nsnull;
@@ -1905,8 +1908,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // Initialize margnwidth, marginheight. Put scrolling back the way it was
   // before the last document was loaded.
   InitFrameData(PR_FALSE);
-
-  return LoadURL(aURLSpec, "view", aPostDataStream,
+  const char *cmd = mViewSource ? "view-source" : "view" ;
+  mViewSource = PR_FALSE; // reset it
+  return LoadURL(aURLSpec, cmd , aPostDataStream,
                  aModifyHistory,aType, aLocalIP, aHistoryState);
 }
 
@@ -2777,13 +2781,14 @@ nsWebShell::LoadDocument(const char* aURL,
 
 NS_IMETHODIMP
 nsWebShell::ReloadDocument(const char* aCharset,
-                           nsCharsetSource aSource)
+                           nsCharsetSource aSource,
+                           const char* aCmd)
 {
 
   // XXX hack. kee the aCharset and aSource wait to pick it up
   mHintCharset = aCharset;
   mHintCharsetSource= aSource;
-
+  mViewSource = (0==PL_strcmp("view-source", aCmd));
   return Reload(nsIChannel::LOAD_NORMAL);
 }
 
