@@ -491,7 +491,7 @@ public class NativeGlobal implements IdFunctionMaster {
                 filename = "";
             }
         }
-        filename += "(eval)";
+        String sourceName = filename+'#'+lineNumber+"(eval)";
 
         try {
             StringReader in = new StringReader((String) x);
@@ -501,7 +501,7 @@ public class NativeGlobal implements IdFunctionMaster {
             // mode.
             int oldOptLevel = cx.getOptimizationLevel();
             cx.setOptimizationLevel(-1);
-            Script script = cx.compileReader(scope, in, filename, lineNumber,
+            Script script = cx.compileReader(scope, in, sourceName, 1,
                                              securityDomain);
             cx.setOptimizationLevel(oldOptLevel);
 

@@ -349,6 +349,8 @@ public class BaseFunction extends IdScriptable implements Function {
             filename = "<eval'ed string>";
             linep[0] = 1;
         }
+        String sourceName = filename+'#'+linep[0]+"(Function)";
+
         Object securityDomain = cx.getSecurityDomainForStackDepth(4);
         Scriptable global = ScriptableObject.getTopLevelScope(scope);
 
@@ -359,7 +361,7 @@ public class BaseFunction extends IdScriptable implements Function {
         NativeFunction fn;
         try {
             fn = (NativeFunction) cx.compileFunction(global, source,
-                                                     filename, linep[0],
+                                                     sourceName, 1,
                                                      securityDomain);
         }
         finally { cx.setOptimizationLevel(oldOptLevel); }

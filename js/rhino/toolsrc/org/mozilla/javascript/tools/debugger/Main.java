@@ -643,9 +643,6 @@ class FindFunction extends JDialog implements ActionListener {
             if (item != null) {
                 SourceInfo si = item.getSourceInfo();
                 String url = si.getUrl();
-                if (url.endsWith("(eval)")) {
-                    return;
-                }
                 int lineNumber = item.getFirstLine();
                 FileWindow w = db.getFileWindow(url);
                 if (w == null) {
@@ -1705,27 +1702,15 @@ class UpdateContext implements Runnable {
         toolTips.removeAllElements();
         for (int i = 0; i < frameCount; i++) {
             FrameHelper frame = contextData.getFrame(i);
-            String sourceName = frame.getUrl();
-            if (sourceName != null && sourceName.endsWith("(eval)")) {
-                sourceName = sourceName.substring(0, sourceName.length() - 6);
-            }
-            String location;
-            String shortName = sourceName;
+            String url = frame.getUrl();
             int lineNumber = frame.getLineNumber();
-            if (sourceName == null) {
-                if (lineNumber == -1) {
-                    shortName = sourceName = "<eval>";
-                } else {
-                    shortName = sourceName = "<stdin>";
-                }
-            } else {
-                if (sourceName.length() > 20) {
-                    shortName = SourceInfo.getShortName(sourceName);
-                }
+            String shortName = url;
+            if (url.length() > 20) {
+                shortName = "..." + url.substring(url.length() - 17);
             }
-            location = "\"" + shortName + "\", line " + lineNumber;
+            String location = "\"" + shortName + "\", line " + lineNumber;
             ctx.insertItemAt(location, i);
-            location = "\"" + sourceName + "\", line " + lineNumber;
+            location = "\"" + url + "\", line " + lineNumber;
             toolTips.addElement(location);
         }
         db.context.enableUpdate();
@@ -2149,7 +2134,10 @@ class FrameHelper implements DebugFrame {
     }
 
     String getUrl() {
-        return fnOrScript.getSourceName();
+        if (sourceInfo != null) {
+            return sourceInfo.getUrl();
+        }
+        return db.getNormilizedUrl(fnOrScript);
     }
 
     int getLineNumber() {
@@ -2447,8 +2435,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
     public void handleCompilationDone(Context cx, DebuggableScript fnOrScript,
                                       String source)
     {
-        String sourceName = fnOrScript.getSourceName();
-        if (sourceName == null) { sourceName = "<stdin>"; }
+        String sourceName = getNormilizedUrl(fnOrScript);
+
         SourceInfo si;
         synchronized (sourceNames) {
             si = (SourceInfo)sourceNames.get(sourceName);
@@ -2473,6 +2461,58 @@ public class Main extends JFrame implements Debugger, ContextListener {
             }
         }
         loadedFile(si);
+    }
+
+    String getNormilizedUrl(DebuggableScript fnOrScript) {
+        String url = fnOrScript.getSourceName();
+        if (url == null) { url = "<stdin>"; }
+        else {
+            // Not to produce window for eval from different lines,
+            // strip line numbers, i.e. replace all #[0-9]+\(eval\) by (eval)
+            // Option: similar teatment for Function?
+            char evalSeparator = '#';
+            StringBuffer sb = null;
+            int urlLength = url.length();
+            int cursor = 0;
+            for (;;) {
+                int searchStart = url.indexOf(evalSeparator, cursor);
+                if (searchStart < 0) {
+                    break;
+                }
+                String replace = null;
+                int i = searchStart + 1;
+                boolean hasDigits = false;
+                while (i != urlLength) {
+                    int c = url.charAt(i);
+                    if (!('0' <= c && c <= '9')) {
+                        break;
+                    }
+                    ++i;
+                }
+                if (i != searchStart + 1) {
+                    // i points after #[0-9]+
+                    if ("(eval)".regionMatches(0, url, i, 6)) {
+                        cursor = i + 6;
+                        replace = "(eval)";
+                    }
+                }
+                if (replace == null) {
+                    break;
+                }
+                if (sb == null) {
+                    sb = new StringBuffer();
+                    sb.append(url.substring(0, searchStart));
+                }
+                sb.append(replace);
+            }
+            if (sb != null) {
+                if (cursor != urlLength) {
+                    sb.append(url.substring(cursor));
+                }
+                url = sb.toString();
+            }
+        }
+        return url;
     }
 
     void handleBreakpointHit(Context cx) {
@@ -2507,20 +2547,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
     void handleExceptionThrown(Context cx, Throwable ex, FrameHelper frame) {
         if (breakOnExceptions) {
             String url = frame.getUrl();
-            if (url != null && url.endsWith("(eval)")) {
-                url = url.substring(0, url.length() - 6);
-            }
             int lineNumber = frame.getLineNumber();
-            FileWindow w = null;
-            if (url == null) {
-                if (lineNumber == -1) {
-                    url = "<eval>";
-                } else {
-                    url = "<stdin>";
-                }
-            } else {
-                w = getFileWindow(url);
-            }
+            FileWindow w = getFileWindow(url);
             Object e = unwrapException(ex);
             String msg = e.toString();
             if (msg == null || msg.length() == 0) {
@@ -2688,11 +2716,11 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return (scopeProvider != null) ? scopeProvider.getScope() : null;
     }
 
-    FileWindow getFileWindow(String fileName) {
-        if (fileName == null || fileName.equals("<stdin>") || fileName.equals("<eval>")) {
+    FileWindow getFileWindow(String url) {
+        if (url == null || url.equals("<stdin>")) {
             return null;
         }
-        return (FileWindow)fileWindows.get(fileName);
+        return (FileWindow)fileWindows.get(url);
     }
 
     void loadedFile(SourceInfo si) {
@@ -2701,9 +2729,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         if (w != null) {
             swingInvoke(UpdateFileText.action(w));
             w.show();
-        } else if (!fileName.equals("<stdin>")
-                   && !fileName.endsWith("(eval)"))
-        {
+        } else if (!fileName.equals("<stdin>")) {
             swingInvoke(CreateFileWindow.action(this, si, -1));
         }
     }
@@ -2748,13 +2774,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 console.show();
                 helper.reset();
                 return;
-            }
-            if (sourceName == "<eval>") {
-                helper.reset();
-                return;
-            }
-            if (sourceName.endsWith("(eval)")) {
-                sourceName = sourceName.substring(0, sourceName.length() - 6);
             }
             int lineNumber = frame.getLineNumber();
             this.frameIndex = frameIndex;
@@ -2847,9 +2866,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
                     FrameHelper frame = contextData.getFrame(0);
                     String url = frame.getUrl();
                     if (url != null) {
-                        if (url.endsWith("(eval)")) {
-                            url = url.substring(0, url.length() - 6);
-                        }
                         if (url.equals(runToCursorFile)) {
                             int lineNumber = frame.getLineNumber();
                             if (lineNumber == runToCursorLine) {
@@ -2886,9 +2902,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
             }
             FrameHelper frame = contextData.getFrame(0);
             String url = frame.getUrl();
-            if (url.endsWith("(eval)")) {
-                url = url.substring(0, url.length() - 6);
-            }
             contextData.breakNextLine = false;
             line = frame.getLineNumber();
             int enterCount = 0;
