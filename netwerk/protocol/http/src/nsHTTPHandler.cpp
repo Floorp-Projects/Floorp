@@ -159,7 +159,7 @@ CategoryCreateService( const char *category )
 
 #ifdef DEBUG_HTTP_STARTUP_CATEGORY
         printf("HTTP Handler: Instantiating progid %s \
-                in http startup category.\n", (const char *)cidString);
+                in http startup category.\n", (const char *)progID);
 #endif /* DEBUG_HTTP_STARTUP_CATEGORY */
         nsCOMPtr<nsISupports> instance = do_GetService(progID, &rv);
         if (NS_FAILED(rv))
