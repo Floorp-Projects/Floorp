@@ -1152,7 +1152,7 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
                              view,
                              nsnull,
                              flags);
-
+    nsHTMLContainerFrame::SyncFrameViewProperties(presContext, frame, nsnull, view);
   } 
 
 
