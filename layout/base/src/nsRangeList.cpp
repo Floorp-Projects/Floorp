@@ -47,6 +47,10 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 
+// included for view scrolling
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
+#include "nsIDeviceContext.h"
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
@@ -109,6 +113,13 @@ public:
   NS_IMETHOD 		SetScriptObject(void *aScriptObject);
 /*END nsIScriptObjectOwner interface implementations*/
 
+  // utility methods for scrolling the selection into view
+  nsresult      GetPresShell(nsIPresShell **aPresShell);
+  nsresult      GetRootScrollableView(nsIScrollableView **aScrollableView);
+  nsresult      GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aXOffset, nscoord *aYOffset);
+  nsresult      GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsPoint *aPoint);
+  nsresult      GetFocusNodeRect(nsRect *aRect);
+  nsresult      ScrollRectIntoView(nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent);
 
   NS_IMETHOD    ScrollIntoView();
   nsresult      AddItem(nsIDOMRange *aRange);
@@ -1523,7 +1534,7 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
     PRInt32 offset = FetchFocusOffset();
     if (GetDirection() == eDirNext)
       offset--;
-    if (offset >0)
+    if (offset >= 0)
     {
       nsCOMPtr<nsIContent> child;
       result = content->ChildAt(offset, *getter_AddRefs(child));
@@ -2539,16 +2550,497 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
   return NS_OK;
 }
 
+nsresult
+nsDOMSelection::GetPresShell(nsIPresShell **aPresShell)
+{
+  nsresult rv = NS_OK;
+
+  nsIFocusTracker *tracker = mRangeList->GetTracker();
+
+  if (!tracker)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIPresContext> presContext;
+
+  rv = tracker->GetPresContext(getter_AddRefs(presContext));
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!presContext)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIPresShell> presShell;
+
+  rv = presContext->GetShell(aPresShell);
+
+  return rv;
+}
+
+nsresult
+nsDOMSelection::GetRootScrollableView(nsIScrollableView **aScrollableView)
+{
+  //
+  // NOTE: This method returns a NON-AddRef'd pointer
+  //       to the scrollable view!
+  //
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIPresShell> presShell;
+
+  rv = GetPresShell(getter_AddRefs(presShell));
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!presShell)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIViewManager> viewManager;
+
+  rv = presShell->GetViewManager(getter_AddRefs(viewManager));
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!viewManager)
+    return NS_ERROR_NULL_POINTER;
+
+  //
+  // nsIViewManager::GetRootScrollableView() does not
+  // AddRef the pointer it returns.
+  //
+  return viewManager->GetRootScrollableView(aScrollableView);
+}
+
+nsresult
+nsDOMSelection::GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aX, nscoord *aY)
+{
+  nsresult rv = NS_OK;
+
+  if (!aFrame || !aX || !aY) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aX = 0;
+  *aY = 0;
+
+  nsIScrollableView* scrollingView = 0;
+
+  rv = GetRootScrollableView(&scrollingView);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!scrollingView)
+    return NS_ERROR_NULL_POINTER;
+
+  nsIView*  scrolledView;
+  nsPoint   offset;
+  nsIView*  closestView;
+          
+  // Determine the offset from aFrame to the scrolled view. We do that by
+  // getting the offset from its closest view and then walking up
+  scrollingView->GetScrolledView(scrolledView);
+  aFrame->GetOffsetFromView(offset, &closestView);
+
+  // XXX Deal with the case where there is a scrolled element, e.g., a
+  // DIV in the middle...
+  while ((closestView != nsnull) && (closestView != scrolledView)) {
+    nscoord dx, dy;
+
+    // Update the offset
+    closestView->GetPosition(&dx, &dy);
+    offset.MoveBy(dx, dy);
+
+    // Get its parent view
+    closestView->GetParent(closestView);
+  }
+
+  *aX = offset.x;
+  *aY = offset.y;
+
+  return rv;
+}
+
+nsresult
+nsDOMSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsPoint *aPoint)
+{
+  nsresult rv = NS_OK;
+  if (!aFrame || !aPoint)
+    return NS_ERROR_NULL_POINTER;
+
+  aPoint->x = 0;
+  aPoint->y = 0;
+
+  //
+  // Retrieve the device context. We need one to create
+  // a rendering context.
+  //
+
+  nsIFocusTracker *tracker = mRangeList->GetTracker();
+
+  if (!tracker)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIPresContext> presContext;
+
+  rv = tracker->GetPresContext(getter_AddRefs(presContext));
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!presContext)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDeviceContext> deviceContext;
+
+	rv = presContext->GetDeviceContext(getter_AddRefs(deviceContext));
+
+	if (NS_FAILED(rv))
+		return rv;
+
+  if (!deviceContext)
+		return NS_ERROR_NULL_POINTER;
+
+  //
+  // Now get the closest view with a widget so we can create
+  // a rendering context.
+  //
+
+  nsCOMPtr<nsIWidget> widget;
+  nsIView *closestView = 0;
+  nsPoint offset(0, 0);
+
+  rv = aFrame->GetOffsetFromView(offset, &closestView);
+
+  while (!widget && closestView)
+  {
+    rv = closestView->GetWidget(*getter_AddRefs(widget));
+
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!widget)
+    {
+      rv = closestView->GetParent(closestView);
+
+      if (NS_FAILED(rv))
+        return rv;
+    }
+  }
+
+  if (!closestView)
+    return NS_ERROR_FAILURE;
+
+  //
+  // Create a rendering context. This context is used by text frames
+  // to calculate text widths so it can figure out where the point is
+  // in the frame.
+  //
+
+	nsCOMPtr<nsIRenderingContext> rendContext;
+
+	rv = deviceContext->CreateRenderingContext(closestView, *getter_AddRefs(rendContext));		
+  
+	if (NS_FAILED(rv))
+		return rv;
+
+  if (!rendContext)
+		return NS_ERROR_NULL_POINTER;
+
+  //
+  // Now get the point and return!
+  //
+
+	rv = aFrame->GetPointFromOffset(presContext, rendContext, aContentOffset, aPoint);
+
+  return rv;
+}
+
+nsresult
+nsDOMSelection::GetFocusNodeRect(nsRect *aRect)
+{
+  nsresult result = NS_OK;
+
+  if (!aRect)
+    return NS_ERROR_NULL_POINTER;
+
+  // Init aRect:
+
+  aRect->x = 0;
+  aRect->y = 0;
+  aRect->width  = 0;
+  aRect->height = 0;
+
+  nsIDOMNode *focusNode = FetchFocusNode();
+
+  if (!focusNode)
+    return NS_ERROR_NULL_POINTER;
+
+  PRInt32 focusOffset = FetchFocusOffset();
+
+  PRUint16 focusNodeType = nsIDOMNode::ELEMENT_NODE;
+
+  result = focusNode->GetNodeType(&focusNodeType);
+
+  if (NS_FAILED(result))
+    return NS_ERROR_NULL_POINTER;
+
+  nsIFrame *frame = 0;
+
+  result = GetPrimaryFrameForFocusNode(&frame);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (focusNodeType == nsIDOMNode::TEXT_NODE)
+  {
+    nsIFrame *childFrame = 0;
+    PRInt32 frameOffset  = 0;
+
+    result = frame->GetChildFrameContainingOffset(focusOffset, &frameOffset, &childFrame);
+
+    if (NS_FAILED(result))
+      return result;
+
+    if (!childFrame)
+      return NS_ERROR_NULL_POINTER;
+
+    frame = childFrame;
+
+    //
+    // Get the x coordinate of the offset into the text frame.
+    // The x coordinate will be relative to the frame's origin,
+    // so we'll have to translate it into the root view's coordinate
+    // system.
+    //
+    nsPoint pt;
+
+    result = GetPointFromOffset(frame, focusOffset, &pt);
+
+    if (NS_FAILED(result))
+      return result;
+    
+    //
+    // Get the frame's rect.
+    //
+    result = frame->GetRect(*aRect);
+
+    if (NS_FAILED(result))
+      return result;
+
+    //
+    // Translate the frame's rect into root view coordinates.
+    //
+    result = GetFrameToRootViewOffset(frame, &aRect->x, &aRect->y);
+
+    if (NS_FAILED(result))
+      return result;
+
+    //
+    // Now add the offset's x coordinate.
+    //
+    aRect->x += pt.x;
+
+    //
+    // Adjust the width of the rect to account for any neccessary
+    // padding!
+    //
+
+    nsIScrollableView *scrollingView = 0;
+
+    result = GetRootScrollableView(&scrollingView);
+
+    if (NS_FAILED(result))
+      return result;
+
+    const nsIView* clipView = 0;
+    nsRect clipRect;
+
+    result = scrollingView->GetScrollPosition(clipRect.x, clipRect.y);
+
+    if (NS_FAILED(result))
+      return result;
+
+    result = scrollingView->GetClipView(&clipView);
+
+    if (NS_FAILED(result))
+      return result;
+
+    result = clipView->GetDimensions(&clipRect.width, &clipRect.height);
+
+    if (NS_FAILED(result))
+      return result;
+
+    // If the point we are interested is outside the clip
+    // region, we will scroll it into view with a padding
+    // equal to a quarter of the clip's width.
+
+    PRInt32 pad = clipRect.width >> 2;
+
+    if (pad <= 0)
+      pad = 3; // Arbitrary
+
+    if (aRect->x >= clipRect.XMost())
+      aRect->width = pad;
+    else if (aRect->x <= clipRect.x)
+    {
+      aRect->x -= pad;
+      aRect->width = pad;
+    }
+    else
+      aRect->width = 60; // Arbitrary
+  }
+  else
+  {
+    //
+    // Must be a non-text frame, just scroll the frame
+    // into view.
+    //
+    result = frame->GetRect(*aRect);
+
+    if (NS_FAILED(result))
+      return result;
+
+    result = GetFrameToRootViewOffset(frame, &aRect->x, &aRect->y);
+  }
+
+  return result;
+}
+
+nsresult
+nsDOMSelection::ScrollRectIntoView(nsRect& aRect,
+                              PRIntn  aVPercent, 
+                              PRIntn  aHPercent)
+{
+  nsresult rv = NS_OK;
+
+  nsIScrollableView *scrollingView = 0;
+
+  rv = GetRootScrollableView(&scrollingView);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (! scrollingView)
+    return NS_ERROR_NULL_POINTER;
+
+  // Determine the visible rect in the scrolled view's coordinate space.
+  // The size of the visible area is the clip view size
+  const nsIView*  clipView;
+  nsRect          visibleRect;
+
+  scrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
+  scrollingView->GetClipView(&clipView);
+  clipView->GetDimensions(&visibleRect.width, &visibleRect.height);
+
+  // The actual scroll offsets
+  nscoord scrollOffsetX = visibleRect.x;
+  nscoord scrollOffsetY = visibleRect.y;
+
+  // See how aRect should be positioned vertically
+  if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent) {
+    // The caller doesn't care where aRect is positioned vertically,
+    // so long as it's fully visible
+    if (aRect.y < visibleRect.y) {
+      // Scroll up so aRect's top edge is visible
+      scrollOffsetY = aRect.y;
+    } else if (aRect.YMost() > visibleRect.YMost()) {
+      // Scroll down so aRect's bottom edge is visible. Make sure
+      // aRect's top edge is still visible
+      scrollOffsetY += aRect.YMost() - visibleRect.YMost();
+      if (scrollOffsetY > aRect.y) {
+        scrollOffsetY = aRect.y;
+      }
+    }
+  } else {
+    // Align the aRect edge according to the specified percentage
+    nscoord frameAlignY = aRect.y + (aRect.height * aVPercent) / 100;
+    scrollOffsetY = frameAlignY - (visibleRect.height * aVPercent) / 100;
+  }
+
+  // See how the aRect should be positioned horizontally
+  if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent) {
+    // The caller doesn't care where the aRect is positioned horizontally,
+    // so long as it's fully visible
+    if (aRect.x < visibleRect.x) {
+      // Scroll left so the aRect's left edge is visible
+      scrollOffsetX = aRect.x;
+    } else if (aRect.XMost() > visibleRect.XMost()) {
+      // Scroll right so the aRect's right edge is visible. Make sure the
+      // aRect's left edge is still visible
+      scrollOffsetX += aRect.XMost() - visibleRect.XMost();
+      if (scrollOffsetX > aRect.x) {
+        scrollOffsetX = aRect.x;
+      }
+    }
+      
+  } else {
+    // Align the aRect edge according to the specified percentage
+    nscoord frameAlignX = aRect.x + (aRect.width * aHPercent) / 100;
+    scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
+  }
+      
+  scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY, NS_VMREFRESH_IMMEDIATE);
+
+  return rv;
+}
 
 NS_IMETHODIMP
 nsDOMSelection::ScrollIntoView()
 {
   nsresult result;
-  nsIFrame *frame;
-  result = GetPrimaryFrameForFocusNode(&frame);
+
+  //
+  // Shut the caret off before scrolling to avoid
+  // leaving caret turds on the screen!
+  //
+  nsCOMPtr<nsIPresShell> presShell;
+
+  result = GetPresShell(getter_AddRefs(presShell));
+
   if (NS_FAILED(result))
     return result;
-  result = mRangeList->GetTracker()->ScrollFrameIntoView(frame);
+
+  PRBool caretEnabled = PR_FALSE;
+
+  result = presShell->GetCaretEnabled(&caretEnabled);
+
+  if (NS_FAILED(result))
+    return result;
+
+  if (caretEnabled)
+  {
+    result = presShell->SetCaretEnabled(PR_FALSE);
+
+    if (NS_FAILED(result))
+      return result;
+  }
+
+  //
+  // Scroll the anchor focus node into view.
+  //
+  nsRect rect;
+  result = GetFocusNodeRect(&rect);
+
+  if (NS_FAILED(result))
+    return result;
+
+  result = ScrollRectIntoView(rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  //
+  // Turn the caret back on.
+  //
+  if (caretEnabled)
+  {
+    result = presShell->SetCaretEnabled(PR_TRUE);
+
+    if (NS_FAILED(result))
+      return result;
+  }
+
   return result;
 }
 
