@@ -21,6 +21,8 @@
 <!ENTITY cmd.cancel.accesskey             "c">
 <!ENTITY cmd.openfile.label               "Launch File">
 <!ENTITY cmd.openfile.accesskey           "L">
+<!ENTITY cmd.showinshell.label            "Show File Location">
+<!ENTITY cmd.showinshell.accesskey        "F">
 <!ENTITY dm.tooltip                       "Toolbar">
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
 <!ENTITY progressMsgNoRate "#1KB of #2KB">
