@@ -158,7 +158,7 @@ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(nsIURI *aURI)
 
 	// we need to use the "mailnews.reuse_thread_window2" pref
 	// to determine if we should open a new window, or use an existing one.
-	rv = openWindow(nsString(chromeurl).GetUnicode(),nsString(args).GetUnicode());
+	rv = openWindow(NS_ConvertASCIItoUCS2(chromeurl).GetUnicode(),NS_ConvertASCIItoUCS2(args).GetUnicode());
 	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
