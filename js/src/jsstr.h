@@ -355,7 +355,7 @@ js_StringToObject(JSContext *cx, JSString *str);
 /*
  * Convert a value to a printable C string.
  */
-extern const char *
+extern JS_FRIEND_API(const char *)
 js_ValueToPrintableString(JSContext *cx, jsval v);
 
 /*

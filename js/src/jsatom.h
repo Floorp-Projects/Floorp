@@ -102,7 +102,7 @@ struct JSAtomListElement {
 
 #define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
 #define ALE_SET_INDEX(ale,index)((ale)->entry.value = (void *)(index))
-#define ALE_SET_JSOP(ale,op)    ((ale)->entry.value = (void *)(op))
+#define ALE_SET_JSOP(ale,op)    ((ale)->entry.value = (void *)(jsuword)(op))
 #define ALE_SET_VALUE(ale,val)  ((ale)->entry.value = (JSHashEntry *)(val))
 #define ALE_SET_NEXT(ale,link)  ((ale)->entry.next = (JSHashEntry *)(link))
 
@@ -181,6 +181,7 @@ struct JSAtomState {
     JSAtom              *constructorAtom;
     JSAtom              *countAtom;
     JSAtom              *etagoAtom;
+    JSAtom              *eachAtom;
     JSAtom              *evalAtom;
     JSAtom              *getAtom;
     JSAtom              *getterAtom;
@@ -230,6 +231,8 @@ struct JSAtomState {
         JSAtom          *encodeURIAtom;
         JSAtom          *encodeURIComponentAtom;
         JSAtom          *escapeAtom;
+        JSAtom          *functionNamespaceAtom;
+        JSAtom          *functionNamespaceURIAtom;
         JSAtom          *hasOwnPropertyAtom;
         JSAtom          *isFiniteAtom;
         JSAtom          *isNaNAtom;
@@ -284,6 +287,7 @@ extern const char   js_class_prototype_str[];
 extern const char   js_constructor_str[];
 extern const char   js_count_str[];
 extern const char   js_etago_str[];
+extern const char   js_each_str[];
 extern const char   js_eval_str[];
 extern const char   js_getter_str[];
 extern const char   js_get_str[];

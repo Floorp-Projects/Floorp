@@ -490,7 +490,7 @@ js_LeaveLocalRootScope(JSContext *cx)
     /* Pop the scope, restoring lrs->scopeMark. */
     lrc = lrs->topChunk;
     m = mark & JSLRS_CHUNK_MASK;
-    lrs->scopeMark = JSVAL_TO_INT(lrc->roots[m]);
+    lrs->scopeMark = (uint16) JSVAL_TO_INT(lrc->roots[m]);
     lrc->roots[m] = JSVAL_NULL;
     lrs->rootCount = (uint16) mark;
 

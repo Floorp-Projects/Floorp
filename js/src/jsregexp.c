@@ -409,7 +409,7 @@ ProcessOp(CompilerState *state, REOpData *opData, RENode **operandStack, intN op
     case REOP_LPAREN:
         /* These should have been processed by a close paren. */
         js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                    NULL, JSREPORT_ERROR,
+                                    JSREPORT_TS | JSREPORT_ERROR,
                                     JSMSG_MISSING_PAREN, opData->errPos);
         return JS_FALSE;
     default:;
@@ -509,7 +509,8 @@ ParseRegExp(CompilerState *state)
                     if (state->parenCount == 65535) {
                         js_ReportCompileErrorNumber(state->context,
                                                     state->tokenStream,
-                                                    NULL, JSREPORT_ERROR,
+                                                    JSREPORT_TS |
+                                                    JSREPORT_ERROR,
                                                     JSMSG_TOO_MANY_PARENS);
                         goto out;
                     }
@@ -523,7 +524,8 @@ ParseRegExp(CompilerState *state)
                     if (i < 0) {
                         js_ReportCompileErrorNumber(state->context,
                                                     state->tokenStream,
-                                                    NULL, JSREPORT_ERROR,
+                                                    JSREPORT_TS |
+                                                    JSREPORT_ERROR,
                                                     JSMSG_UNMATCHED_RIGHT_PAREN);
                         goto out;
                     }
@@ -596,7 +598,7 @@ restartOperator:
                 if (i < 0) {
                     js_ReportCompileErrorNumber(state->context,
                                                 state->tokenStream,
-                                                NULL, JSREPORT_ERROR,
+                                                JSREPORT_TS | JSREPORT_ERROR,
                                                 JSMSG_UNMATCHED_RIGHT_PAREN);
                     goto out;
                 }
@@ -646,7 +648,7 @@ restartOperator:
         case '?':
         case '{':
             js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        NULL, JSREPORT_ERROR,
+                                        JSREPORT_TS | JSREPORT_ERROR,
                                         JSMSG_BAD_QUANTIFIER, state->cp);
             result = JS_FALSE;
             goto out;
@@ -998,7 +1000,7 @@ ParseTerm(CompilerState *state)
         if (state->cp >= state->cpend) {
             /* a trailing '\' is an error */
             js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                        NULL, JSREPORT_ERROR,
+                                        JSREPORT_TS | JSREPORT_ERROR,
                                         JSMSG_TRAILING_SLASH);
             return JS_FALSE;
         }
@@ -1022,7 +1024,7 @@ ParseTerm(CompilerState *state)
             if (JS_HAS_STRICT_OPTION(state->context)) {
                 if (!js_ReportCompileErrorNumber(state->context,
                                                  state->tokenStream,
-                                                 NULL,
+                                                 JSREPORT_TS |
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_INVALID_BACKREF)) {
@@ -1072,7 +1074,7 @@ ParseTerm(CompilerState *state)
                 }
                 if (!js_ReportCompileErrorNumber(state->context,
                                                  state->tokenStream,
-                                                 NULL,
+                                                 JSREPORT_TS |
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  (c >= '8')
@@ -1184,7 +1186,7 @@ doSimple:
         while (JS_TRUE) {
             if (state->cp == state->cpend) {
                 js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                            NULL, JSREPORT_ERROR,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_UNTERM_CLASS, termStart);
                 return JS_FALSE;
             }
@@ -1236,7 +1238,7 @@ doSimple:
     case '+':
     case '?':
         js_ReportCompileErrorNumber(state->context, state->tokenStream,
-                                    NULL, JSREPORT_ERROR,
+                                    JSREPORT_TS | JSREPORT_ERROR,
                                     JSMSG_BAD_QUANTIFIER, state->cp - 1);
         return JS_FALSE;
     default:
@@ -1339,7 +1341,7 @@ ParseQuantifier(CompilerState *state)
 quantError:
                 js_ReportCompileErrorNumber(state->context,
                                             state->tokenStream,
-                                            NULL, JSREPORT_ERROR,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             err, errp);
                 return JS_FALSE;
             }
@@ -1714,7 +1716,8 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
             default:
                 charBuf[0] = (char)s[i];
                 charBuf[1] = '\0';
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_BAD_FLAG, charBuf);
                 return NULL;
             }

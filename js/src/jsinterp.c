@@ -496,12 +496,12 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
         scope = OBJ_SCOPE(obj);
         for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
             if (sprop->setter == setter) {
-                JS_ASSERT(!JSVAL_IS_INT(sprop->id) &&
-                          ATOM_IS_STRING((JSAtom *)sprop->id) &&
+                JS_ASSERT(JSID_IS_ATOM(sprop->id) &&
+                          ATOM_IS_STRING(JSID_TO_ATOM(sprop->id)) &&
                           (sprop->flags & SPROP_HAS_SHORTID));
 
                 if ((uintN) sprop->shortid == slot) {
-                    str = ATOM_TO_STRING((JSAtom *)sprop->id);
+                    str = ATOM_TO_STRING(JSID_TO_ATOM(sprop->id));
                     JS_UNLOCK_SCOPE(cx, scope);
 
                     return JS_DefineUCProperty(cx, origobj,
@@ -1353,45 +1353,14 @@ bad:
     goto out2;
 }
 
-#if JS_HAS_XML_SUPPORT
-static JSBool
-CallMethod(JSContext *cx, JSObject *obj, jsid id, uintN argc, jsval *vp)
-{
-    JSStackFrame *fp, frame;
-    JSXMLObjectOps *ops;
-    JSBool ok;
-
-    memset(&frame, 0, sizeof(JSStackFrame));
-    frame.argc = argc;
-    frame.argv = vp + 2;
-    frame.rval = JSVAL_VOID;
-    fp = cx->fp;
-    frame.varobj = fp->varobj;
-    frame.scopeChain = fp->scopeChain;
-    frame.down = fp;
-    frame.sp = fp->sp;
-    if (!ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &frame))
-        return JS_FALSE;
-    cx->fp = &frame;
-    ops = (JSXMLObjectOps *) obj->map->ops;
-    ok = ops->callMethod(cx, obj, id, argc, frame.argv, &frame.rval);
-    cx->fp = fp;
-    *vp = frame.rval;
-    fp->sp = vp + 1;
-    return ok;
-}
-#endif
-
 JSBool
 js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *oldfp, frame;
-    jsval *oldsp, *sp, *vp;
+    jsval *oldsp, *sp;
     void *mark;
     uintN i;
-    const char *name;
-    JSAtom *atom;
     JSBool ok;
 
     fp = oldfp = cx->fp;
@@ -1411,28 +1380,13 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     for (i = 0; i < argc; i++)
         PUSH(argv[i]);
     SAVE_SP(fp);
-
-#if JS_HAS_XML_SUPPORT
-    if (flags & JSINVOKE_CALL_METHOD) {
-        name = (const char *) fval;
-        atom = js_Atomize(cx, name, strlen(name), 0);
-        if (!atom) {
-            ok = JS_FALSE;
-        } else {
-            vp = sp - (2 + argc);
-            *vp = OBJECT_TO_JSVAL(obj);
-            ok = CallMethod(cx, obj, ATOM_TO_JSID(atom), argc, vp);
-        }
-    } else
-#endif
-        ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
-
+    ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
     if (ok) {
         RESTORE_SP(fp);
         *rval = POP_OPND();
     }
-    js_FreeStack(cx, mark);
 
+    js_FreeStack(cx, mark);
 out:
     fp->sp = oldsp;
     if (oldfp != fp)
@@ -1767,6 +1721,48 @@ bad:
     return JS_FALSE;
 }
 
+static JSBool
+InternStringElementId(JSContext *cx, jsval idval, jsid *idp)
+{
+    JSAtom *atom;
+
+    atom = js_ValueToStringAtom(cx, idval);
+    if (!atom)
+        return JS_FALSE;
+    *idp = ATOM_TO_JSID(atom);
+    return JS_TRUE;
+}
+
+static JSBool
+InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
+{
+    JS_ASSERT(!JSVAL_IS_INT(idval));
+
+#if JS_HAS_XML_SUPPORT
+    if (JSVAL_IS_OBJECT(idval)) {
+        *idp = OBJECT_JSVAL_TO_JSID(idval);
+        return JS_TRUE;
+    }
+#endif
+
+    return InternStringElementId(cx, idval, idp);
+}
+
+#if JS_HAS_XML_SUPPORT
+#define CHECK_ELEMENT_ID(obj, id)                                             \
+    JS_BEGIN_MACRO                                                            \
+        if (JSID_IS_OBJECT(id) && !OBJECT_IS_XML(cx, obj)) {                  \
+            SAVE_SP(fp);                                                      \
+            ok = InternStringElementId(cx, OBJECT_JSID_TO_JSVAL(id), &id);    \
+            if (!ok)                                                          \
+                goto out;                                                     \
+        }                                                                     \
+    JS_END_MACRO
+
+#else
+#define CHECK_ELEMENT_ID(obj, id)       JS_ASSERT(!JSID_IS_OBJECT(id))
+#endif
+
 #ifndef MAX_INTERP_LEVEL
 #if defined(XP_OS2)
 #define MAX_INTERP_LEVEL 250
@@ -1821,6 +1817,9 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif
 #if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
+#endif
+#if JS_HAS_XML_SUPPORT
+    JSBool foreach = JS_FALSE;
 #endif
     int stackDummy;
 
@@ -2174,51 +2173,23 @@ js_Interpret(JSContext *cx, jsval *result)
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
-#if 0
 /*
  * If the index value at sp[n] is not an int that fits in a jsval, it could
- * be an object (an XML QName, AttributeName, or AnyName).  Otherwise convert
- * it to a string atom it.
+ * be an object (an XML QName, AttributeName, or AnyName), but only if we are
+ * compiling with JS_HAS_XML_SUPPORT.  Otherwise convert the index value to a
+ * string atom id.
  */
 #define FETCH_ELEMENT_ID(n, id)                                               \
     JS_BEGIN_MACRO                                                            \
-        id = (jsid) FETCH_OPND(n);                                            \
-        if (JSVAL_IS_INT(id)) {                                               \
-            atom = NULL;                                                      \
-        } else if (JSVAL_IS_OBJECT(id)) {                                     \
-            id = OBJECT_TO_JSID(JSVAL_TO_OBJECT(id));                         \
+        jsval idval_ = FETCH_OPND(n);                                         \
+        if (JSVAL_IS_INT(idval_)) {                                           \
+            id = INT_JSVAL_TO_JSID(idval_);                                   \
         } else {                                                              \
             SAVE_SP(fp);                                                      \
-            atom = js_ValueToStringAtom(cx, (jsval)id);                       \
-            if (!atom) {                                                      \
-                ok = JS_FALSE;                                                \
+            ok = InternNonIntElementId(cx, idval_, &id);                      \
+            if (!ok)                                                          \
                 goto out;                                                     \
-            }                                                                 \
-            id = ATOM_TO_JSID(atom);                                          \
         }                                                                     \
-    JS_END_MACRO
-#else
-#define FETCH_ELEMENT_ID(n, id)                                               \
-    JS_BEGIN_MACRO                                                            \
-        id = (jsid) FETCH_OPND(n);                                            \
-        if (JSVAL_IS_INT(id)) {                                               \
-            atom = NULL;                                                      \
-        } else {                                                              \
-            SAVE_SP(fp);                                                      \
-            atom = js_ValueToStringAtom(cx, (jsval)id);                       \
-            if (!atom) {                                                      \
-                ok = JS_FALSE;                                                \
-                goto out;                                                     \
-            }                                                                 \
-            id = ATOM_TO_JSID(atom);                                          \
-        }                                                                     \
-    JS_END_MACRO
-#endif
-
-#define POP_ELEMENT_ID(id)                                                    \
-    JS_BEGIN_MACRO                                                            \
-        FETCH_ELEMENT_ID(-1, id);                                             \
-        sp--;                                                                 \
     JS_END_MACRO
 
 #if JS_HAS_IN_OPERATOR
@@ -2237,6 +2208,7 @@ js_Interpret(JSContext *cx, jsval *result)
             }
             obj = JSVAL_TO_OBJECT(rval);
             FETCH_ELEMENT_ID(-2, id);
+            CHECK_ELEMENT_ID(obj, id);
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -2359,20 +2331,27 @@ js_Interpret(JSContext *cx, jsval *result)
                  */
                 *vp = OBJECT_TO_JSVAL(propobj);
 
-                ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, 0);
+                ok =
+#if JS_HAS_XML_SUPPORT
+                     (foreach && OBJECT_IS_XML(cx, obj))
+                     ? ((JSXMLObjectOps *) obj->map->ops)->enumerateValues
+                                    (cx, obj, JSENUMERATE_INIT, &iter_state,
+                                     NULL, NULL)
+                     :
+#endif
+                       OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state,
+                                     NULL);
+                if (!ok)
+                    goto out;
 
                 /*
                  * Stash private iteration state into property iterator object.
-                 * We do this before checking 'ok' to ensure that propobj is
-                 * in a valid state even if OBJ_ENUMERATE returned JS_FALSE.
                  * NB: This code knows that the first slots are pre-allocated.
                  */
 #if JS_INITIAL_NSLOTS < 5
 #error JS_INITIAL_NSLOTS must be greater than or equal to 5.
 #endif
                 propobj->slots[JSSLOT_ITER_STATE] = iter_state;
-                if (!ok)
-                    goto out;
             } else {
                 /* This is not the first iteration. Recover iterator state. */
                 propobj = JSVAL_TO_OBJECT(rval);
@@ -2382,8 +2361,19 @@ js_Interpret(JSContext *cx, jsval *result)
             }
 
           enum_next_property:
-            /* Get the next jsid to be enumerated and store it in rval. */
-            OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &rval);
+          {
+            jsid fid;
+
+            /* Get the next jsid to be enumerated and store it in fid. */
+            ok =
+#if JS_HAS_XML_SUPPORT
+                 (foreach && OBJECT_IS_XML(cx, obj))
+                 ? ((JSXMLObjectOps *) obj->map->ops)->enumerateValues
+                                (cx, obj, JSENUMERATE_NEXT, &iter_state,
+                                 &fid, &rval)
+                 : 
+#endif
+                   OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &fid);
             propobj->slots[JSSLOT_ITER_STATE] = iter_state;
 
             /* No more jsids to iterate in obj? */
@@ -2396,7 +2386,16 @@ js_Interpret(JSContext *cx, jsval *result)
                     goto end_forinloop;
                 }
 
-                ok = OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, 0);
+                ok =
+#if JS_HAS_XML_SUPPORT
+                     (foreach && OBJECT_IS_XML(cx, obj))
+                     ? ((JSXMLObjectOps *) obj->map->ops)->enumerateValues
+                                    (cx, obj, JSENUMERATE_INIT, &iter_state,
+                                     NULL, NULL)
+                     :
+#endif
+                       OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state,
+                                     NULL);
 
                 /*
                  * Stash private iteration state into property iterator object.
@@ -2417,8 +2416,8 @@ js_Interpret(JSContext *cx, jsval *result)
                 goto enum_next_property;
             }
 
-            /* Skip properties not owned by obj, and leave next id in rval. */
-            ok = OBJ_LOOKUP_PROPERTY(cx, origobj, rval, &obj2, &prop);
+            /* Skip properties not owned by obj when looking from origobj. */
+            ok = OBJ_LOOKUP_PROPERTY(cx, origobj, fid, &obj2, &prop);
             if (!ok)
                 goto out;
             if (prop)
@@ -2428,17 +2427,46 @@ js_Interpret(JSContext *cx, jsval *result)
             if (!prop || obj2 != obj)
                 goto enum_next_property;
 
-            /* Make sure rval is a string for uniformity and compatibility. */
-            if (!JSVAL_IS_INT(rval)) {
-                rval = ATOM_KEY((JSAtom *)rval);
-            } else if (cx->version != JSVERSION_1_2) {
-                str = js_NumberToString(cx, (jsdouble) JSVAL_TO_INT(rval));
-                if (!str) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
+#if JS_HAS_XML_SUPPORT
+            if (foreach) {
+                /* Clear the local foreach flag set by our prefix bytecode. */
+                foreach = JS_FALSE;
 
-                rval = STRING_TO_JSVAL(str);
+                /* If obj is not XML, we must get rval given its fid. */
+                if (!OBJECT_IS_XML(cx, obj)) {
+                    ok = OBJ_GET_PROPERTY(cx, obj, fid, &rval);
+                    if (!ok)
+                        goto out;
+                }
+            } else
+#endif
+            {
+                /* Make rval a string for uniformity and compatibility. */
+                if (JSID_IS_ATOM(fid)) {
+                    rval = ATOM_KEY(JSID_TO_ATOM(fid));
+                }
+#if JS_HAS_XML_SUPPORT
+                else if (JSID_IS_OBJECT(fid)) {
+                    str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(fid));
+                    if (!str) {
+                        ok = JS_FALSE;
+                        goto out;
+                    }
+
+                    rval = STRING_TO_JSVAL(str);
+                }
+#endif
+                else if (cx->version != JSVERSION_1_2) {
+                    str = js_NumberToString(cx, (jsdouble) JSID_TO_INT(fid));
+                    if (!str) {
+                        ok = JS_FALSE;
+                        goto out;
+                    }
+
+                    rval = STRING_TO_JSVAL(str);
+                } else {
+                    rval = INT_JSID_TO_JSVAL(fid);
+                }
             }
 
             switch (op) {
@@ -2479,6 +2507,7 @@ js_Interpret(JSContext *cx, jsval *result)
             sp += i + 1;
             PUSH_OPND(rval);
             break;
+          }
 
           case JSOP_DUP:
             JS_ASSERT(sp > fp->spbase);
@@ -2496,7 +2525,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
 #define PROPERTY_OP(n, call)                                                  \
     JS_BEGIN_MACRO                                                            \
-        /* Pop the left part and resolve it to a non-null object. */          \
+        /* Fetch the left part and resolve it to a non-null object. */        \
         lval = FETCH_OPND(n);                                                 \
         VALUE_TO_OBJECT(cx, lval, obj);                                       \
                                                                               \
@@ -2507,26 +2536,23 @@ js_Interpret(JSContext *cx, jsval *result)
             goto out;                                                         \
     JS_END_MACRO
 
-#if JS_HAS_XML_SUPPORT
-#define CHECK_OBJECT_ID(n, id)                                                \
-    JS_BEGIN_MACRO                                                            \
-        if (op != JSOP_SETELEM && JSID_IS_OBJECT(id)) {                       \
-            SAVE_SP(fp);                                                      \
-            ok = js_BindXMLProperty(cx, FETCH_OPND(n-1),                      \
-                                    OBJECT_TO_JSVAL(JSID_TO_OBJECT(id)));     \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
-    JS_END_MACRO
-#else
-#define CHECK_OBJECT_ID(n, id)  /* nothing */
-#endif
-
 #define ELEMENT_OP(n, call)                                                   \
     JS_BEGIN_MACRO                                                            \
+        /* Fetch the right part and resolve it to an internal id. */          \
         FETCH_ELEMENT_ID(n, id);                                              \
-        CHECK_OBJECT_ID(n, id);                                               \
-        PROPERTY_OP(n-1, call);                                               \
+                                                                              \
+        /* Fetch the left part and resolve it to a non-null object. */        \
+        lval = FETCH_OPND(n-1);                                               \
+        VALUE_TO_OBJECT(cx, lval, obj);                                       \
+                                                                              \
+        /* Ensure that id has a type suitable for use with obj. */            \
+        CHECK_ELEMENT_ID(obj, id);                                            \
+                                                                              \
+        /* Get or set the element, set ok false if error, true if success. */ \
+        SAVE_SP(fp);                                                          \
+        call;                                                                 \
+        if (!ok)                                                              \
+            goto out;                                                         \
     JS_END_MACRO
 
 /*
@@ -2659,15 +2685,6 @@ js_Interpret(JSContext *cx, jsval *result)
             BITWISE_OP(&);
             break;
 
-#if defined(XP_WIN)
-#define COMPARE_DOUBLES(LVAL, OP, RVAL, IFNAN)                                \
-    ((JSDOUBLE_IS_NaN(LVAL) || JSDOUBLE_IS_NaN(RVAL))                         \
-     ? (IFNAN)                                                                \
-     : (LVAL) OP (RVAL))
-#else
-#define COMPARE_DOUBLES(LVAL, OP, RVAL, IFNAN) ((LVAL) OP (RVAL))
-#endif
-
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         rval = FETCH_OPND(-1);                                                \
@@ -2681,7 +2698,7 @@ js_Interpret(JSContext *cx, jsval *result)
             } else {                                                          \
                 d  = ltmp ? JSVAL_TO_INT(lval) : *rt->jsNaN;                  \
                 d2 = rtmp ? JSVAL_TO_INT(rval) : *rt->jsNaN;                  \
-                cond = COMPARE_DOUBLES(d, OP, d2, JS_FALSE);                  \
+                cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
             }                                                                 \
         } else {                                                              \
             VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_NUMBER, &lval);               \
@@ -2693,12 +2710,55 @@ js_Interpret(JSContext *cx, jsval *result)
             } else {                                                          \
                 VALUE_TO_NUMBER(cx, lval, d);                                 \
                 VALUE_TO_NUMBER(cx, rval, d2);                                \
-                cond = COMPARE_DOUBLES(d, OP, d2, JS_FALSE);                  \
+                cond = JSDOUBLE_COMPARE(d, OP, d2, JS_FALSE);                 \
             }                                                                 \
         }                                                                     \
         sp--;                                                                 \
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
+
+/*
+ * NB: These macros can't use JS_BEGIN_MACRO/JS_END_MACRO around their bodies
+ * because they begin if/else chains, so callers must not put semicolons after
+ * the call expressions!
+ */
+#if JS_HAS_XML_SUPPORT
+#define XML_EQUALITY_OP(OP)                                                   \
+    if ((ltmp == JSVAL_OBJECT &&                                              \
+         (obj2 = JSVAL_TO_OBJECT(lval)) &&                                    \
+         OBJECT_IS_XML(cx, obj2)) ||                                          \
+        (rtmp == JSVAL_OBJECT &&                                              \
+         (obj2 = JSVAL_TO_OBJECT(rval)) &&                                    \
+         OBJECT_IS_XML(cx, obj2))) {                                          \
+        JSXMLObjectOps *ops;                                                  \
+                                                                              \
+        ops = (JSXMLObjectOps *) obj2->map->ops;                              \
+        if (obj2 == JSVAL_TO_OBJECT(rval))                                    \
+            rval = lval;                                                      \
+        SAVE_SP(fp);                                                          \
+        ok = ops->equality(cx, obj2, rval, &cond);                            \
+        if (!ok)                                                              \
+            goto out;                                                         \
+        cond = cond OP JS_TRUE;                                               \
+    } else
+
+#define XML_NAME_EQUALITY_OP(OP)                                              \
+    if (ltmp == JSVAL_OBJECT &&                                               \
+        (obj2 = JSVAL_TO_OBJECT(lval)) &&                                     \
+        ((clasp = OBJ_GET_CLASS(cx, obj2))->flags & JSCLASS_IS_EXTENDED)) {   \
+        JSExtendedClass *xclasp;                                              \
+                                                                              \
+        xclasp = (JSExtendedClass *) clasp;                                   \
+        SAVE_SP(fp);                                                          \
+        ok = xclasp->equality(cx, obj2, rval, &cond);                         \
+        if (!ok)                                                              \
+            goto out;                                                         \
+        cond = cond OP JS_TRUE;                                               \
+    } else
+#else
+#define XML_EQUALITY_OP(OP)             /* nothing */
+#define XML_NAME_EQUALITY_OP(OP)        /* nothing */
+#endif
 
 #define EQUALITY_OP(OP, IFNAN)                                                \
     JS_BEGIN_MACRO                                                            \
@@ -2706,6 +2766,7 @@ js_Interpret(JSContext *cx, jsval *result)
         lval = FETCH_OPND(-2);                                                \
         ltmp = JSVAL_TAG(lval);                                               \
         rtmp = JSVAL_TAG(rval);                                               \
+        XML_EQUALITY_OP(OP)                                                   \
         if (ltmp == rtmp) {                                                   \
             if (ltmp == JSVAL_STRING) {                                       \
                 str  = JSVAL_TO_STRING(lval);                                 \
@@ -2714,8 +2775,9 @@ js_Interpret(JSContext *cx, jsval *result)
             } else if (ltmp == JSVAL_DOUBLE) {                                \
                 d  = *JSVAL_TO_DOUBLE(lval);                                  \
                 d2 = *JSVAL_TO_DOUBLE(rval);                                  \
-                cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
+                cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
             } else {                                                          \
+                XML_NAME_EQUALITY_OP(OP)                                      \
                 /* Handle all undefined (=>NaN) and int combinations. */      \
                 cond = lval OP rval;                                          \
             }                                                                 \
@@ -2739,7 +2801,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 } else {                                                      \
                     VALUE_TO_NUMBER(cx, lval, d);                             \
                     VALUE_TO_NUMBER(cx, rval, d2);                            \
-                    cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                 \
+                    cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                \
                 }                                                             \
             }                                                                 \
         }                                                                     \
@@ -2752,7 +2814,67 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_NE:
+#if 1
             EQUALITY_OP(!=, JS_TRUE);
+#else
+    {
+        rval = FETCH_OPND(-1);
+        lval = FETCH_OPND(-2);
+        ltmp = JSVAL_TAG(lval);
+        rtmp = JSVAL_TAG(rval);
+        if (ltmp == JSVAL_OBJECT &&
+            (obj2 = JSVAL_TO_OBJECT(lval)) &&
+            ((clasp = OBJ_GET_CLASS(cx, obj2)->flags & JSCLASS_IS_EXTENDED))) {
+            JSExtendedClass *xclasp;
+
+            xclasp = (JSExtendedClass *) clasp;
+            ok = xclasp->equality(cx, obj2, rval, &cond);
+            if (!ok)
+                goto out;
+            cond = cond != JS_TRUE;
+        }
+        if (ltmp == rtmp) {
+            if (ltmp == JSVAL_STRING) {
+                str  = JSVAL_TO_STRING(lval);
+                str2 = JSVAL_TO_STRING(rval);
+                cond = js_CompareStrings(str, str2) != 0;
+            } else if (ltmp == JSVAL_DOUBLE) {
+                d  = *JSVAL_TO_DOUBLE(lval);
+                d2 = *JSVAL_TO_DOUBLE(rval);
+                cond = JSDOUBLE_COMPARE(d, !=, d2, JS_TRUE);
+            } else {
+                XML_NAME_EQUALITY_OP(!=)
+                /* Handle all undefined (=>NaN) and int combinations. */
+                cond = lval != rval;
+            }
+        } else {
+            if (JSVAL_IS_NULL(lval) || JSVAL_IS_VOID(lval)) {
+                cond = (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) != 1;
+            } else if (JSVAL_IS_NULL(rval) || JSVAL_IS_VOID(rval)) {
+                cond = 1 != 0;
+            } else {
+                if (ltmp == JSVAL_OBJECT) {
+                    VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &lval);
+                    ltmp = JSVAL_TAG(lval);
+                } else if (rtmp == JSVAL_OBJECT) {
+                    VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rval);
+                    rtmp = JSVAL_TAG(rval);
+                }
+                if (ltmp == JSVAL_STRING && rtmp == JSVAL_STRING) {
+                    str  = JSVAL_TO_STRING(lval);
+                    str2 = JSVAL_TO_STRING(rval);
+                    cond = js_CompareStrings(str, str2) != 0;
+                } else {
+                    VALUE_TO_NUMBER(cx, lval, d);
+                    VALUE_TO_NUMBER(cx, rval, d2);
+                    cond = JSDOUBLE_COMPARE(d, !=, d2, JS_TRUE);
+                }
+            }
+        }
+        sp--;
+        STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));
+    }
+#endif
             break;
 
 #if !JS_BUG_FALLIBLE_EQOPS
@@ -2770,7 +2892,7 @@ js_Interpret(JSContext *cx, jsval *result)
             } else if (ltmp == JSVAL_DOUBLE) {                                \
                 d  = *JSVAL_TO_DOUBLE(lval);                                  \
                 d2 = *JSVAL_TO_DOUBLE(rval);                                  \
-                cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
+                cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
             } else {                                                          \
                 cond = lval OP rval;                                          \
             }                                                                 \
@@ -2778,11 +2900,11 @@ js_Interpret(JSContext *cx, jsval *result)
             if (ltmp == JSVAL_DOUBLE && JSVAL_IS_INT(rval)) {                 \
                 d  = *JSVAL_TO_DOUBLE(lval);                                  \
                 d2 = JSVAL_TO_INT(rval);                                      \
-                cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
+                cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
             } else if (JSVAL_IS_INT(lval) && rtmp == JSVAL_DOUBLE) {          \
                 d  = JSVAL_TO_INT(lval);                                      \
                 d2 = *JSVAL_TO_DOUBLE(rval);                                  \
-                cond = COMPARE_DOUBLES(d, OP, d2, IFNAN);                     \
+                cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
             } else {                                                          \
                 cond = lval OP rval;                                          \
             }                                                                 \
@@ -2872,6 +2994,22 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_ADD:
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
+#if JS_HAS_XML_SUPPORT
+            if (!JSVAL_IS_PRIMITIVE(lval) &&
+                (obj2 = JSVAL_TO_OBJECT(lval), OBJECT_IS_XML(cx, obj2)) &&
+                VALUE_IS_XML(cx, rval)) {
+                JSXMLObjectOps *ops;
+
+                ops = (JSXMLObjectOps *) obj2->map->ops;
+                SAVE_SP(fp);
+                ok = ops->concatenate(cx, obj2, rval, &rval);
+                if (!ok)
+                    goto out;
+                sp--;
+                STORE_OPND(-1, rval);
+                break;
+            }
+#endif
             VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &ltmp);
             VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rtmp);
             if ((cond = JSVAL_IS_STRING(ltmp)) || JSVAL_IS_STRING(rtmp)) {
@@ -3134,6 +3272,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
             OBJ_DROP_PROPERTY(cx, obj2, prop);
             lval = OBJECT_TO_JSVAL(obj);
+            i = 0;
             goto do_incop;
 
           case JSOP_INCPROP:
@@ -3142,19 +3281,21 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_PROPDEC:
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
-            lval = POP_OPND();
+            lval = FETCH_OPND(-1);
+            i = -1;
             goto do_incop;
 
           case JSOP_INCELEM:
           case JSOP_DECELEM:
           case JSOP_ELEMINC:
           case JSOP_ELEMDEC:
-            POP_ELEMENT_ID(id);
-            CHECK_OBJECT_ID(0, id);
-            lval = POP_OPND();
+            FETCH_ELEMENT_ID(-1, id);
+            lval = FETCH_OPND(-2);
+            i = -2;
 
           do_incop:
             VALUE_TO_OBJECT(cx, lval, obj);
+            CHECK_ELEMENT_ID(obj, id);
 
             /* The operand must contain a number. */
             SAVE_SP(fp);
@@ -3209,6 +3350,7 @@ js_Interpret(JSContext *cx, jsval *result)
             fp->flags &= ~JSFRAME_ASSIGNING;
             if (!ok)
                 goto out;
+            sp += i;
             PUSH_OPND(rtmp);
             break;
 
@@ -3332,9 +3474,9 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_ENUMELEM:
             /* Funky: the value to set is under the [obj, id] pair. */
             FETCH_ELEMENT_ID(-1, id);
-            CHECK_OBJECT_ID(-1, id);
             lval = FETCH_OPND(-2);
             VALUE_TO_OBJECT(cx, lval, obj);
+            CHECK_ELEMENT_ID(obj, id);
             rval = FETCH_OPND(-3);
             SAVE_SP(fp);
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
@@ -3361,43 +3503,13 @@ js_Interpret(JSContext *cx, jsval *result)
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
 
-#if JS_HAS_XML_SUPPORT
-          case JSOP_CALLMETHOD:
-            argc = GET_ARGC(pc);
-            vp = sp - (argc + 2);
-            lval = *vp;
-            VALUE_TO_OBJECT(cx, lval, obj);
-            pc2 = pc + ARGNO_LEN;
-            atom = GET_ATOM(cx, script, pc2);
-            id = ATOM_TO_JSID(atom);
-
-            SAVE_SP(fp);
-            if (OBJECT_IS_XML(cx, obj)) {
-                ok = CallMethod(cx, obj, id, argc, vp);
-                if (!ok)
-                    goto out;
-                RESTORE_SP(fp);
-                obj = NULL;
-                break;
-            }
-
-            CACHED_GET_VP(OBJ_GET_PROPERTY(cx, obj, id, vp), vp);
-            if (!ok)
-                goto out;
-            vp[1] = OBJECT_TO_JSVAL(obj);
-            goto try_inline_call;
-#endif
-
           case JSOP_CALL:
           case JSOP_EVAL:
             argc = GET_ARGC(pc);
             vp = sp - (argc + 2);
+            lval = *vp;
             SAVE_SP(fp);
 
-#if JS_HAS_XML_SUPPORT
-          try_inline_call:
-#endif
-            lval = *vp;
             if (JSVAL_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
                  fun = (JSFunction *) JS_GetPrivate(cx, obj),
@@ -4509,14 +4621,14 @@ js_Interpret(JSContext *cx, jsval *result)
               case JSOP_SETPROP:
                 atom = GET_ATOM(cx, script, pc);
                 id   = ATOM_TO_JSID(atom);
+                rval = FETCH_OPND(-1);
                 i = -1;
-                rval = FETCH_OPND(i);
                 goto gs_pop_lval;
 
               case JSOP_SETELEM:
                 rval = FETCH_OPND(-1);
+                FETCH_ELEMENT_ID(-2, id);
                 i = -2;
-                FETCH_ELEMENT_ID(i, id);
               gs_pop_lval:
                 lval = FETCH_OPND(i-1);
                 VALUE_TO_OBJECT(cx, lval, obj);
@@ -4525,8 +4637,8 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_HAS_INITIALIZERS
               case JSOP_INITPROP:
                 JS_ASSERT(sp - fp->spbase >= 2);
+                rval = FETCH_OPND(-1);
                 i = -1;
-                rval = FETCH_OPND(i);
                 atom = GET_ATOM(cx, script, pc);
                 id   = ATOM_TO_JSID(atom);
                 goto gs_get_lval;
@@ -4534,8 +4646,8 @@ js_Interpret(JSContext *cx, jsval *result)
               case JSOP_INITELEM:
                 JS_ASSERT(sp - fp->spbase >= 3);
                 rval = FETCH_OPND(-1);
+                FETCH_ELEMENT_ID(-2, id);
                 i = -2;
-                FETCH_ELEMENT_ID(i, id);
               gs_get_lval:
                 lval = FETCH_OPND(i-1);
                 JS_ASSERT(JSVAL_IS_OBJECT(lval));
@@ -4546,6 +4658,9 @@ js_Interpret(JSContext *cx, jsval *result)
               default:
                 JS_ASSERT(0);
             }
+
+            /* Ensure that id has a type suitable for use with obj. */
+            CHECK_ELEMENT_ID(obj, id);
 
             if (JS_TypeOfValue(cx, rval) != JSTYPE_FUNCTION) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -4635,6 +4750,9 @@ js_Interpret(JSContext *cx, jsval *result)
             lval = FETCH_OPND(i-1);
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
             obj = JSVAL_TO_OBJECT(lval);
+
+            /* Ensure that id has a type suitable for use with obj. */
+            CHECK_ELEMENT_ID(obj, id);
 
             /* Set the property named by obj[id] to rval. */
             SAVE_SP(fp);
@@ -4826,12 +4944,14 @@ js_Interpret(JSContext *cx, jsval *result)
 #if JS_HAS_XML_SUPPORT
           case JSOP_DEFXMLNS:
             rval = POP();
+            SAVE_SP(fp);
             ok = js_SetDefaultXMLNamespace(cx, rval);
             if (!ok)
                 goto out;
             break;
 
           case JSOP_ANYNAME:
+            SAVE_SP(fp);
             ok = js_GetAnyName(cx, &rval);
             if (!ok)
                 goto out;
@@ -4843,11 +4963,24 @@ js_Interpret(JSContext *cx, jsval *result)
             PUSH_OPND(ATOM_KEY(atom));
             break;
 
+          case JSOP_QNAMECONST:
+            atom = GET_ATOM(cx, script, pc);
+            rval = ATOM_KEY(atom);
+            lval = FETCH_OPND(-1);
+            SAVE_SP(fp);
+            obj = js_ConstructXMLQNameObject(cx, lval, rval);
+            if (!obj) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
+            break;
+
           case JSOP_QNAME:
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
             SAVE_SP(fp);
-            obj = js_ConstructQNameObject(cx, lval, rval);
+            obj = js_ConstructXMLQNameObject(cx, lval, rval);
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
@@ -4858,6 +4991,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_TOATTRNAME:
             rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             ok = js_ToAttributeName(cx, &rval);
             if (!ok)
                 goto out;
@@ -4867,6 +5001,7 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_TOATTRVAL:
             rval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_STRING(rval));
+            SAVE_SP(fp);
             str = js_EscapeAttributeValue(cx, JSVAL_TO_STRING(rval));
             if (!str) {
                 ok = JS_FALSE;
@@ -4881,6 +5016,7 @@ js_Interpret(JSContext *cx, jsval *result)
             lval = FETCH_OPND(-2);
             str = JSVAL_TO_STRING(lval);
             str2 = JSVAL_TO_STRING(rval);
+            SAVE_SP(fp);
             str = js_AddAttributePart(cx, op == JSOP_ADDATTRNAME, str, str2);
             if (!str) {
                 ok = JS_FALSE;
@@ -4890,17 +5026,9 @@ js_Interpret(JSContext *cx, jsval *result)
             STORE_OPND(-1, STRING_TO_JSVAL(str));
             break;
 
-          case JSOP_BINDXMLPROP:
-            rval = FETCH_OPND(-1);
-            lval = FETCH_OPND(-2);
-            SAVE_SP(fp);
-            ok = js_BindXMLProperty(cx, lval, rval);
-            if (!ok)
-                goto out;
-            break;
-
           case JSOP_BINDXMLNAME:
             lval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             ok = js_FindXMLProperty(cx, lval, &obj, &rval);
             if (!ok)
                 goto out;
@@ -4919,6 +5047,7 @@ js_Interpret(JSContext *cx, jsval *result)
             obj = JSVAL_TO_OBJECT(FETCH_OPND(-3));
             lval = FETCH_OPND(-2);
             rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             ok = js_SetXMLProperty(cx, obj, lval, &rval);
             if (!ok)
                 goto out;
@@ -4928,6 +5057,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_XMLNAME:
             lval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             ok = js_FindXMLProperty(cx, lval, &obj, &rval);
             if (!ok)
                 goto out;
@@ -4940,12 +5070,23 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_DESCENDANTS:
+          case JSOP_DELDESC:
             lval = FETCH_OPND(-2);
             VALUE_TO_OBJECT(cx, lval, obj);
             rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             ok = js_GetXMLDescendants(cx, obj, rval, &rval);
             if (!ok)
                 goto out;
+
+            if (op == JSOP_DELDESC) {
+                sp[-1] = rval;          /* set local root */
+                ok = js_DeleteXMLListElements(cx, JSVAL_TO_OBJECT(rval));
+                if (!ok)
+                    goto out;
+                rval = JSVAL_TRUE;      /* always succeed */
+            }
+
             sp--;
             STORE_OPND(-1, rval);
             break;
@@ -4964,6 +5105,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_TOXML:
             rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             obj = js_ValueToXMLObject(cx, rval);
             if (!obj) {
                 ok = JS_FALSE;
@@ -4974,6 +5116,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_TOXMLLIST:
             rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             obj = js_ValueToXMLListObject(cx, rval);
             if (!obj) {
                 ok = JS_FALSE;
@@ -4982,9 +5125,27 @@ js_Interpret(JSContext *cx, jsval *result)
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             break;
 
-          case JSOP_XMLEXPR:
+          case JSOP_XMLTAGEXPR:
             rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
             str = js_ValueToString(cx, rval);
+            if (!str) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            STORE_OPND(-1, STRING_TO_JSVAL(str));
+            break;
+
+          case JSOP_XMLELTEXPR:
+            rval = FETCH_OPND(-1);
+            SAVE_SP(fp);
+            if (VALUE_IS_XML(cx, rval)) {
+                str = js_ValueToXMLString(cx, rval);
+            } else {
+                str = js_ValueToString(cx, rval);
+                if (str)
+                    str = js_EscapeElementValue(cx, str);
+            }
             if (!str) {
                 ok = JS_FALSE;
                 goto out;
@@ -4994,6 +5155,7 @@ js_Interpret(JSContext *cx, jsval *result)
 
           case JSOP_XMLOBJECT:
             atom = GET_ATOM(cx, script, pc);
+            SAVE_SP(fp);
             obj = js_CloneXMLObject(cx, ATOM_TO_OBJECT(atom));
             if (!obj) {
                 ok = JS_FALSE;
@@ -5004,123 +5166,76 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_XMLCDATA:
-          {
-            jschar *buf;
-            size_t len, off;
-
-            /* XXXbe temporary: should construct an XML object */
             atom = GET_ATOM(cx, script, pc);
             str = ATOM_TO_STRING(atom);
-            len = JSSTRING_LENGTH(str);
-            buf = (jschar *) JS_malloc(cx, (9 + len + 3 + 1) * sizeof(jschar));
-            if (!buf) {
+            obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_TEXT, NULL, str);
+            if (!obj) {
                 ok = JS_FALSE;
                 goto out;
             }
-            buf[0] = (jschar) '<';
-            buf[1] = (jschar) '!';
-            buf[2] = (jschar) '[';
-            buf[3] = (jschar) 'C';
-            buf[4] = (jschar) 'D';
-            buf[5] = (jschar) 'A';
-            buf[6] = (jschar) 'T';
-            buf[7] = (jschar) 'A';
-            buf[8] = (jschar) '[';
-            off = 9;
-            js_strncpy(buf + off, JSSTRING_CHARS(str), len);
-            off += len;
-            buf[off++] = (jschar) ']';
-            buf[off++] = (jschar) ']';
-            buf[off++] = (jschar) '>';
-            buf[off] = 0;
-            str = js_NewString(cx, buf, off, 0);
-            if (!str) {
-                JS_free(cx, buf);
-                ok = JS_FALSE;
-                goto out;
-            }
-            rval = STRING_TO_JSVAL(str);
-            PUSH_OPND(rval);
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
-          }
 
           case JSOP_XMLCOMMENT:
-          {
-            jschar *buf;
-            size_t len, off;
-
-            /* XXXbe temporary: should construct an XML object */
             atom = GET_ATOM(cx, script, pc);
             str = ATOM_TO_STRING(atom);
-            len = JSSTRING_LENGTH(str);
-            buf = (jschar *) JS_malloc(cx, (4 + len + 3 + 1) * sizeof(jschar));
-            if (!buf) {
+            obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_COMMENT, NULL, str);
+            if (!obj) {
                 ok = JS_FALSE;
                 goto out;
             }
-            buf[0] = (jschar) '<';
-            buf[1] = (jschar) '!';
-            buf[2] = (jschar) '-';
-            buf[3] = (jschar) '-';
-            off = 4;
-            js_strncpy(buf + off, JSSTRING_CHARS(str), len);
-            off += len;
-            buf[off++] = (jschar) '-';
-            buf[off++] = (jschar) '-';
-            buf[off++] = (jschar) '>';
-            buf[off] = 0;
-            str = js_NewString(cx, buf, off, 0);
-            if (!str) {
-                JS_free(cx, buf);
-                ok = JS_FALSE;
-                goto out;
-            }
-            rval = STRING_TO_JSVAL(str);
-            PUSH_OPND(rval);
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
-          }
 
           case JSOP_XMLPI:
-          {
-            JSAtom *atom2;
-            jschar *buf;
-            size_t len, len2, off;
-
-            /* XXXbe temporary: should construct an XML object */
             atom = GET_ATOM(cx, script, pc);
             str = ATOM_TO_STRING(atom);
-            len = JSSTRING_LENGTH(str);
-            atom2 = GET_ATOM(cx, script, pc + ATOM_INDEX_LEN);
-            str2 = ATOM_TO_STRING(atom2);
-            len2 = JSSTRING_LENGTH(str2);
-            buf = (jschar *) JS_malloc(cx,
-                                       (2 + len + 1 + len2 + 2 + 1)
-                                       * sizeof(jschar));
-            if (!buf) {
+            atom = GET_ATOM(cx, script, pc + ATOM_INDEX_LEN);
+            str2 = ATOM_TO_STRING(atom);
+            obj = js_NewXMLSpecialObject(cx,
+                                         JSXML_CLASS_PROCESSING_INSTRUCTION,
+                                         str, str2);
+            if (!obj) {
                 ok = JS_FALSE;
                 goto out;
             }
-            buf[0] = (jschar) '<';
-            buf[1] = (jschar) '?';
-            off = 2;
-            js_strncpy(buf + off, JSSTRING_CHARS(str), len);
-            off += len;
-            buf[off++] = (jschar) ' ';
-            js_strncpy(buf + off, JSSTRING_CHARS(str2), len2);
-            off += len2;
-            buf[off++] = (jschar) '?';
-            buf[off++] = (jschar) '>';
-            buf[off] = 0;
-            str = js_NewString(cx, buf, off, 0);
-            if (!str) {
-                JS_free(cx, buf);
-                ok = JS_FALSE;
-                goto out;
+            PUSH_OPND(OBJECT_TO_JSVAL(obj));
+            break;
+
+          case JSOP_GETMETHOD:
+            /* Get an immediate atom naming the property. */
+            atom = GET_ATOM(cx, script, pc);
+            id   = ATOM_TO_JSID(atom);
+            lval = FETCH_OPND(-1);
+            VALUE_TO_OBJECT(cx, lval, obj);
+            SAVE_SP(fp);
+
+            /* Special-case XML object method lookup, per ECMA-357. */
+            if (OBJECT_IS_XML(cx, obj)) {
+                JSXMLObjectOps *ops;
+
+                ops = (JSXMLObjectOps *) obj->map->ops;
+                obj = ops->getMethod(cx, obj, id, &rval);
+                if (!obj)
+                    ok = JS_FALSE;
+            } else {
+                CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
             }
-            rval = STRING_TO_JSVAL(str);
+            if (!ok)
+                goto out;
+            STORE_OPND(-1, rval);
+            break;
+
+          case JSOP_GETFUNNS:
+            ok = js_GetFunctionNamespace(cx, &rval);
+            if (!ok)
+                goto out;
             PUSH_OPND(rval);
             break;
-          }
+
+          case JSOP_FOREACH:
+            foreach = JS_TRUE;
+            break;
 #endif /* JS_HAS_XML_SUPPORT */
 
           default: {
@@ -5166,47 +5281,53 @@ js_Interpret(JSContext *cx, jsval *result)
     }
 out:
 
+    if (!ok) {
 #if JS_HAS_EXCEPTIONS
-    /*
-     * Has an exception been raised?
-     */
-    if (!ok && cx->throwing) {
         /*
-         * Call debugger throw hook if set (XXX thread safety?).
+         * Has an exception been raised?
          */
-        JSTrapHandler handler = rt->throwHook;
-        if (handler) {
-            SAVE_SP(fp);
-            switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
-              case JSTRAP_ERROR:
-                cx->throwing = JS_FALSE;
-                goto no_catch;
-              case JSTRAP_RETURN:
-                ok = JS_TRUE;
-                cx->throwing = JS_FALSE;
-                fp->rval = rval;
-                goto no_catch;
-              case JSTRAP_THROW:
-                cx->exception = rval;
-              case JSTRAP_CONTINUE:
-              default:;
+        if (cx->throwing) {
+            /*
+             * Call debugger throw hook if set (XXX thread safety?).
+             */
+            JSTrapHandler handler = rt->throwHook;
+            if (handler) {
+                SAVE_SP(fp);
+                switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
+                  case JSTRAP_ERROR:
+                    cx->throwing = JS_FALSE;
+                    goto no_catch;
+                  case JSTRAP_RETURN:
+                    ok = JS_TRUE;
+                    cx->throwing = JS_FALSE;
+                    fp->rval = rval;
+                    goto no_catch;
+                  case JSTRAP_THROW:
+                    cx->exception = rval;
+                  case JSTRAP_CONTINUE:
+                  default:;
+                }
+                LOAD_INTERRUPT_HANDLER(rt);
             }
-            LOAD_INTERRUPT_HANDLER(rt);
-        }
 
-        /*
-         * Look for a try block within this frame that can catch the exception.
-         */
-        SCRIPT_FIND_CATCH_START(script, pc, pc);
-        if (pc) {
-            len = 0;
-            cx->throwing = JS_FALSE;    /* caught */
-            ok = JS_TRUE;
-            goto advance_pc;
+            /*
+             * Look for a try block in script that can catch this exception.
+             */
+            SCRIPT_FIND_CATCH_START(script, pc, pc);
+            if (pc) {
+                len = 0;
+                cx->throwing = JS_FALSE;    /* caught */
+                ok = JS_TRUE;
+                goto advance_pc;
+            }
         }
-    }
-no_catch:
+no_catch:;
 #endif
+
+#if JS_HAS_XML_SUPPORT
+        foreach = JS_FALSE;
+#endif
+    }
 
     /*
      * Check whether control fell off the end of a lightweight function, or an

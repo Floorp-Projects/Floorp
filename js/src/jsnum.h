@@ -136,6 +136,15 @@ typedef union jsdpun {
                                && !JSDOUBLE_IS_NEGZERO(d)                     \
 			       && ((d) == (i = (jsint)(d))))
 
+#if defined(XP_WIN)
+#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN)                               \
+    ((JSDOUBLE_IS_NaN(LVAL) || JSDOUBLE_IS_NaN(RVAL))                         \
+     ? (IFNAN)                                                                \
+     : (LVAL) OP (RVAL))
+#else
+#define JSDOUBLE_COMPARE(LVAL, OP, RVAL, IFNAN) ((LVAL) OP (RVAL))
+#endif
+
 /* Initialize number constants and runtime state for the first context. */
 extern JSBool
 js_InitRuntimeNumberState(JSContext *cx);

@@ -70,6 +70,25 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 */
 extern JS_PUBLIC_API(void) JS_Abort(void);
 
+#ifdef XP_UNIX
+
+typedef struct JSCallsite JSCallsite;
+
+struct JSCallsite {
+    uint32      pc;
+    char        *name;
+    const char  *library;
+    int         offset;
+    JSCallsite  *parent;
+    JSCallsite  *siblings;
+    JSCallsite  *kids;
+    void        *handy;
+};
+
+extern JSCallsite *JS_Backtrace(int skip);
+
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jsutil_h___ */

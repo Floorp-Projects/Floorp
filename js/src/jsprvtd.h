@@ -56,6 +56,32 @@
 
 #include "jspubtd.h"
 
+/* Internal identifier (jsid) macros. */
+#define JSID_ATOM                   0x0
+#define JSID_INT                    0x1
+#define JSID_OBJECT                 0x2
+#define JSID_TAGMASK                0x3
+#define JSID_TAG(id)                ((id) & JSID_TAGMASK)
+#define JSID_SETTAG(id,t)           ((id) | (t))
+#define JSID_CLRTAG(id)             ((id) & ~(jsid)JSID_TAGMASK)
+
+#define JSID_IS_ATOM(id)            (JSID_TAG(id) == JSID_ATOM)
+#define JSID_TO_ATOM(id)            ((JSAtom *)(id))
+#define ATOM_TO_JSID(atom)          ((jsid)(atom))
+#define ATOM_JSID_TO_JSVAL(id)      ATOM_KEY(JSID_TO_ATOM(id))
+
+#define JSID_IS_INT(id)             ((id) & JSID_INT)
+#define JSID_TO_INT(id)             ((jsint)(id) >> 1)
+#define INT_TO_JSID(i)              (((jsint)(i) << 1) | JSID_INT)
+#define INT_JSID_TO_JSVAL(id)       (id)
+#define INT_JSVAL_TO_JSID(v)        (v)
+
+#define JSID_IS_OBJECT(id)          (JSID_TAG(id) == JSID_OBJECT)
+#define JSID_TO_OBJECT(id)          ((JSObject *) JSID_CLRTAG(id))
+#define OBJECT_TO_JSID(obj)         ((jsid)(obj) | JSID_OBJECT)
+#define OBJECT_JSID_TO_JSVAL(id)    OBJECT_TO_JSVAL(JSID_CLRTAG(id))
+#define OBJECT_JSVAL_TO_JSID(v)     OBJECT_TO_JSID(JSVAL_TO_OBJECT(v))
+
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
 typedef uint8  jssrcnote;
@@ -94,6 +120,11 @@ typedef struct JSStackFrame         JSStackFrame;
 typedef struct JSStackHeader        JSStackHeader;
 typedef struct JSStringBuffer       JSStringBuffer;
 typedef struct JSSubString          JSSubString;
+typedef struct JSXML                JSXML;
+typedef struct JSXMLNamespace       JSXMLNamespace;
+typedef struct JSXMLQName           JSXMLQName;
+typedef struct JSXMLArray           JSXMLArray;
+typedef struct JSXMLArrayCursor     JSXMLArrayCursor;
 
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
 typedef enum JSTrapStatus {

@@ -446,7 +446,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     }
 
     if (JSVAL_IS_INT(id)) {
-        propid = INT_TO_JSID(JSVAL_TO_INT(id));
+        propid = INT_JSVAL_TO_JSID(id);
         atom = NULL;
     } else {
         atom = js_ValueToStringAtom(cx, id);

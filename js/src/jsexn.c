@@ -948,29 +948,10 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
      * Try to get an appropriate prototype by looking up the corresponding
      * exception constructor name in the scope chain of the current context's
      * top stack frame, or in the global object if no frame is active.
-     *
-     * XXXbe hack around JSCLASS_NEW_RESOLVE code in js_LookupProperty that
-     *       checks cx->fp, cx->fp->pc, and js_CodeSpec[*cx->fp->pc] in order
-     *       to compute resolve flags such as JSRESOLVE_ASSIGNING.  The bug
-     *       is that this "internal" js_GetClassPrototype call may trigger a
-     *       resolve of exceptions[exn].name if the global object uses a lazy
-     *       standard class resolver (see JS_ResolveStandardClass), but the
-     *       current frame and bytecode end up affecting the resolve flags.
      */
-    {
-        JSStackFrame *fp = cx->fp;
-        jsbytecode *pc = NULL;
-
-        if (fp) {
-            pc = fp->pc;
-            fp->pc = NULL;
-        }
-        ok = js_GetClassPrototype(cx, exceptions[exn].name, &errProto);
-        if (pc)
-            fp->pc = pc;
-        if (!ok)
-            goto out;
-    }
+    ok = js_GetClassPrototype(cx, exceptions[exn].name, &errProto);
+    if (!ok)
+        goto out;
 
     errObject = js_NewObject(cx, &ExceptionClass, errProto, NULL);
     if (!errObject) {

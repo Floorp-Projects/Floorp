@@ -155,3 +155,130 @@ JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
     abort();
 #endif
 }
+
+#if defined DEBUG_notme && defined XP_UNIX
+
+#define __USE_GNU 1
+#include <dlfcn.h>
+#include <setjmp.h>
+#include <string.h>
+#include "jshash.h"
+#include "jsprf.h"
+
+JSCallsite js_calltree_root = {0, NULL, NULL, 0, NULL, NULL, NULL, NULL};
+
+static JSCallsite *
+CallTree(uint32 *bp)
+{
+    uint32 *bpup, *bpdown, pc;
+    JSCallsite *parent, *site, **csp;
+    Dl_info info;
+    int ok, offset;
+    const char *symbol;
+    char *method;
+
+    /* Reverse the stack frame list to avoid recursion. */
+    bpup = NULL;
+    for (;;) {
+        bpdown = (uint32*) bp[0];
+        bp[0] = (uint32) bpup;
+        if ((uint32*) bpdown[0] < bpdown)
+            break;
+        bpup = bp;
+        bp = bpdown;
+    }
+
+    /* Reverse the stack again, finding and building a path in the tree. */
+    parent = &js_calltree_root;
+    do {
+        bpup = (uint32*) bp[0];
+        bp[0] = (uint32) bpdown;
+        pc = bp[1];
+
+        csp = &parent->kids;
+        while ((site = *csp) != NULL) {
+            if (site->pc == pc) {
+                /* Put the most recently used site at the front of siblings. */
+                *csp = site->siblings;
+                site->siblings = parent->kids;
+                parent->kids = site;
+
+                /* Site already built -- go up the stack. */
+                goto upward;
+            }
+            csp = &site->siblings;
+        }
+
+        /* Check for recursion: see if pc is on our ancestor line. */
+        for (site = parent; site; site = site->parent) {
+            if (site->pc == pc)
+                goto upward;
+        }
+
+        /*
+         * Not in tree at all: let's find our symbolic callsite info.
+         * XXX static syms are masked by nearest lower global
+         */
+        info.dli_fname = info.dli_sname = NULL;
+        ok = dladdr((void*) pc, &info);
+        if (ok < 0) {
+            fprintf(stderr, "dladdr failed!\n");
+            return NULL;
+        }
+
+/* XXXbe sub 0x08040000? or something, see dbaron bug with tenthumbs comment */
+        symbol = info.dli_sname;
+        offset = (char*)pc - (char*)info.dli_fbase;
+        method = symbol
+                 ? strdup(symbol)
+                 : JS_smprintf("%s+%X",
+                               info.dli_fname ? info.dli_fname : "main",
+                               offset);
+        if (!method)
+            return NULL;
+
+        /* Create a new callsite record. */
+        site = (JSCallsite *) malloc(sizeof(JSCallsite));
+        if (!site)
+            return NULL;
+
+        /* Insert the new site into the tree. */
+        site->pc = pc;
+        site->name = method;
+        site->library = info.dli_fname;
+        site->offset = offset;
+        site->parent = parent;
+        site->siblings = parent->kids;
+        parent->kids = site;
+        site->kids = NULL;
+
+      upward:
+        parent = site;
+        bpdown = bp;
+        bp = bpup;
+    } while (bp);
+
+    return site;
+}
+
+JSCallsite *
+JS_Backtrace(int skip)
+{
+    jmp_buf jb;
+    uint32 *bp, *bpdown;
+
+    setjmp(jb);
+
+    /* Stack walking code adapted from Kipp's "leaky". */
+    bp = (uint32*) jb[0].__jmpbuf[JB_BP];
+    while (--skip >= 0) {
+        bpdown = (uint32*) *bp++;
+        if (bpdown < bp)
+            break;
+        bp = bpdown;
+    }
+
+    return CallTree(bp);
+}
+
+#endif /* DEBUG_notme && XP_UNIX */

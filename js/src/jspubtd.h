@@ -114,6 +114,7 @@ typedef enum JSIterateOp {
 
 /* Struct typedefs. */
 typedef struct JSClass           JSClass;
+typedef struct JSExtendedClass   JSExtendedClass;
 typedef struct JSConstDoubleSpec JSConstDoubleSpec;
 typedef struct JSContext         JSContext;
 typedef struct JSErrorReport     JSErrorReport;
@@ -495,18 +496,18 @@ typedef JSBool
 (* JS_DLL_CALLBACK JSSetRequiredSlotOp)(JSContext *cx, JSObject *obj,
                                         uint32 slot, jsval v);
 
-typedef JSBool
-(* JS_DLL_CALLBACK JSCallMethodOp)(JSContext *cx, JSObject *obj, jsid id,
-                                   uintN argc, jsval *argv, jsval *rval);
+typedef JSObject *
+(* JS_DLL_CALLBACK JSGetMethodOp)(JSContext *cx, JSObject *obj, jsid id,
+                                  jsval *vp);
 
 typedef JSBool
 (* JS_DLL_CALLBACK JSEnumerateValuesOp)(JSContext *cx, JSObject *obj,
                                         JSIterateOp enum_op,
-                                        jsval *statep, jsval *vp);
+                                        jsval *statep, jsid *idp, jsval *vp);
 
 typedef JSBool
 (* JS_DLL_CALLBACK JSEqualityOp)(JSContext *cx, JSObject *obj, jsval v,
-                                 jsval *vp);
+                                 JSBool *bp);
 
 typedef JSBool
 (* JS_DLL_CALLBACK JSConcatenateOp)(JSContext *cx, JSObject *obj, jsval v,

@@ -1084,6 +1084,9 @@ JS_PUBLIC_API(void)
 JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 {
     cx->globalObject = obj;
+#if JS_HAS_XML_SUPPORT
+    cx->xmlSettingFlags = 0;
+#endif
 }
 
 static JSObject *
@@ -1098,7 +1101,7 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 
     /* If cx has no global object, use obj so prototypes can be found. */
     if (!cx->globalObject)
-        cx->globalObject = obj;
+        JS_SetGlobalObject(cx, obj);
 
     /* Record Function and Object in cx->resolvingTable, if we are resolving. */
     table = cx->resolvingTable;
@@ -3291,13 +3294,14 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
     ts = js_NewTokenStream(cx, chars, length, NULL, 0, NULL);
     if (ts) {
         older = JS_SetErrorReporter(cx, NULL);
-        if (!js_ParseTokenStream(cx, obj, ts)) {
+        if (!js_ParseTokenStream(cx, obj, ts) &&
+            (ts->flags & TSF_UNEXPECTED_EOF)) {
             /*
              * We ran into an error.  If it was because we ran out of source,
              * we return false, so our caller will know to try to collect more
              * buffered source.
              */
-            result = (ts->flags & TSF_EOF) == 0;
+            result = JS_FALSE;
         }
 
         JS_SetErrorReporter(cx, older);
@@ -3730,14 +3734,21 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
     CHECK_REQUEST(cx);
 #if JS_HAS_XML_SUPPORT
     if (OBJECT_IS_XML(cx, obj)) {
-        ok = js_InternalCallMethod(cx, obj, name, argc, argv, rval);
+        JSXMLObjectOps *ops;
+        JSAtom *atom;
+ 
+        ops = (JSXMLObjectOps *) obj->map->ops;
+        atom = js_Atomize(cx, name, strlen(name), 0);
+        if (!atom)
+            return JS_FALSE;
+        obj = ops->getMethod(cx, obj, ATOM_TO_JSID(atom), &fval);
+        if (!obj)
+            return JS_FALSE;
     } else
 #endif
-    {
-        if (!JS_GetProperty(cx, obj, name, &fval))
-            return JS_FALSE;
-        ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
-    }
+    if (!JS_GetProperty(cx, obj, name, &fval))
+        return JS_FALSE;
+    ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
     if (!ok) {
 #if JS_HAS_EXCEPTIONS
         if (!cx->fp)

@@ -345,8 +345,8 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
 
-#define ID_TO_VALUE(id) (JSID_IS_ATOM(id) ? ATOM_KEY(JSID_TO_ATOM(id)) :      \
-                         JSID_IS_OBJECT(id) ? (jsval)JSID_CLRTAG(id) :        \
+#define ID_TO_VALUE(id) (JSID_IS_ATOM(id) ? ATOM_JSID_TO_JSVAL(id) :          \
+                         JSID_IS_OBJECT(id) ? OBJECT_JSID_TO_JSVAL(id) :      \
                          (jsval)(id))
 #define HASH_ID(id)     (JSID_IS_ATOM(id) ? JSID_TO_ATOM(id)->number :        \
                          JSID_IS_OBJECT(id) ? (jsatomid) JSID_CLRTAG(id) :    \

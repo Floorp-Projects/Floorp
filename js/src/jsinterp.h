@@ -269,7 +269,6 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags);
 #define JSINVOKE_CONSTRUCT      JSFRAME_CONSTRUCTING
 #define JSINVOKE_INTERNAL       JSFRAME_INTERNAL
 #define JSINVOKE_SKIP_CALLER    JSFRAME_SKIP_CALLER
-#define JSINVOKE_CALL_METHOD    0x8
 
 /*
  * "Internal" calls may come from C or C++ code using a JSContext on which no
@@ -277,10 +276,6 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags);
  */
 #define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
     js_InternalInvoke(cx, obj, fval, 0, argc, argv, rval)
-
-#define js_InternalCallMethod(cx,obj,name,argc,argv,rval)                     \
-    js_InternalInvoke(cx, obj, (jsval) name, JSINVOKE_CALL_METHOD,            \
-                      argc, argv, rval)
 
 #define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
     js_InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval)

@@ -105,6 +105,7 @@ const char js_caller_str[]          = "caller";
 const char js_class_prototype_str[] = "prototype";
 const char js_constructor_str[]     = "constructor";
 const char js_count_str[]           = "__count__";
+const char js_each_str[]            = "each";
 const char js_eval_str[]            = "eval";
 const char js_getter_str[]          = "getter";
 const char js_get_str[]             = "get";
@@ -314,6 +315,7 @@ js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
     FROB(classPrototypeAtom,      js_class_prototype_str);
     FROB(constructorAtom,         js_constructor_str);
     FROB(countAtom,               js_count_str);
+    FROB(eachAtom,                js_each_str);
     FROB(evalAtom,                js_eval_str);
     FROB(getAtom,                 js_get_str);
     FROB(getterAtom,              js_getter_str);

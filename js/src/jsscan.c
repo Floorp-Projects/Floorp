@@ -68,6 +68,7 @@
 #include "jsscan.h"
 
 #if JS_HAS_XML_SUPPORT
+#include "jsparse.h"
 #include "jsxml.h"
 #endif
 
@@ -558,15 +559,20 @@ MatchChar(JSTokenStream *ts, int32 expect)
 }
 
 JSBool
-js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
-                            JSCodeGenerator *cg, uintN flags,
-                            const uintN errorNumber, ...)
+js_ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
+                            uintN errorNumber, ...)
 {
     va_list ap;
-    JSErrorReporter onError;
     JSErrorReport report;
-    jschar *tokenptr;
     JSString *linestr = NULL;
+    JSTokenStream *ts = NULL;
+    JSCodeGenerator *cg = NULL;
+#if JS_HAS_XML_SUPPORT
+    JSParseNode *pn = NULL;
+#endif
+    JSErrorReporter onError;
+    jschar *tokenptr;
+    ptrdiff_t tokenpos;
     char *message;
     JSBool warning;
 
@@ -588,6 +594,21 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
 
     js_AddRoot(cx, &linestr, "error line buffer");
 
+    switch (flags & JSREPORT_HANDLE) {
+      case JSREPORT_TS:
+        ts = handle;
+        break;
+      case JSREPORT_CG:
+        cg = handle;
+        break;
+#if JS_HAS_XML_SUPPORT
+      case JSREPORT_PN:
+        pn = handle;
+        ts = pn->pn_ts;
+        break;
+#endif
+    }
+
     JS_ASSERT(!ts || ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
     onError = cx->errorReporter;
     if (onError) {
@@ -596,30 +617,44 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
          * We can be called with null ts from the regexp compilation functions.
          * The code generator (jsemit.c) may pass null ts and non-null cg.
          */
-        if (ts) {
-            report.filename = ts->filename;
-            report.lineno = ts->lineno;
-            linestr = js_NewStringCopyN(cx, ts->linebuf.base,
-                                        ts->linebuf.limit - ts->linebuf.base,
-                                        0);
-            report.linebuf = linestr
-                ? JS_GetStringBytes(linestr)
-                : NULL;
-            tokenptr =
-                ts->tokens[(ts->cursor + ts->lookahead) & NTOKENS_MASK].ptr;
-            report.tokenptr = linestr
-                ? report.linebuf + (tokenptr - ts->linebuf.base)
-                : NULL;
-            report.uclinebuf = linestr
-                ? JS_GetStringChars(linestr)
-                : NULL;
-            report.uctokenptr = linestr
-                ? report.uclinebuf + (tokenptr - ts->linebuf.base)
-                : NULL;
-        } else if (cg) {
-            report.filename = cg->filename;
-            report.lineno = CG_CURRENT_LINE(cg);
-        }
+        do {
+            if (ts) {
+                report.filename = ts->filename;
+#if JS_HAS_XML_SUPPORT
+                if (pn) {
+                    report.lineno = pn->pn_pos.begin.lineno;
+                    if (report.lineno != ts->lineno)
+                        break;
+                }
+#endif
+                report.lineno = ts->lineno;
+                linestr = js_NewStringCopyN(cx, ts->linebuf.base,
+                                            PTRDIFF(ts->linebuf.limit,
+                                                    ts->linebuf.base,
+                                                    jschar),
+                                            0);
+                report.linebuf = linestr
+                    ? JS_GetStringBytes(linestr)
+                    : NULL;
+                tokenptr =
+                    ts->tokens[(ts->cursor + ts->lookahead) & NTOKENS_MASK].ptr;
+                tokenpos = PTRDIFF(tokenptr, ts->linebuf.base, jschar);
+#if JS_HAS_XML_SUPPORT
+                if (pn)
+                    tokenpos = pn->pn_pos.begin.index;
+#endif
+                report.tokenptr = linestr ? report.linebuf + tokenpos : NULL;
+                report.uclinebuf = linestr ? JS_GetStringChars(linestr) : NULL;
+                report.uctokenptr = linestr ? report.uclinebuf + tokenpos
+                                            : NULL;
+                break;
+            }
+
+            if (cg) {
+                report.filename = cg->filename;
+                report.lineno = CG_CURRENT_LINE(cg);
+            }
+        } while (0);
 
 #if JS_HAS_ERROR_EXCEPTIONS
         /*
@@ -644,12 +679,13 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
          * otherwise the exception will describe only the last compile error,
          * which is likely spurious.
          */
-        if (!(ts && (ts->flags & TSF_ERROR)))
+        if (!ts || !(ts->flags & TSF_ERROR)) {
             if (js_ErrorToException(cx, message, &report))
                 onError = NULL;
+        }
 
         /*
-         * Suppress any compiletime errors that don't occur at the top level.
+         * Suppress any compile-time errors that don't occur at the top level.
          * This may still fail, as interplevel may be zero in contexts where we
          * don't really want to call the error reporter, as when js is called
          * by other code which could catch the error.
@@ -733,6 +769,16 @@ js_FinishStringBuffer(JSStringBuffer *sb)
 #define ENSURE_STRING_BUFFER(sb,n) \
     ((sb)->ptr + (n) <= (sb)->limit || sb->grow(sb, n))
 
+static void
+FastAppendChar(JSStringBuffer *sb, jschar c)
+{
+    if (!STRING_BUFFER_OK(sb))
+        return;
+    if (!ENSURE_STRING_BUFFER(sb, 1))
+        return;
+    *sb->ptr++ = c;
+}
+
 void
 js_AppendChar(JSStringBuffer *sb, jschar c)
 {
@@ -771,7 +817,7 @@ js_AppendCString(JSStringBuffer *sb, const char *asciiz)
     size_t length;
     jschar *bp;
 
-    if (!STRING_BUFFER_OK(sb))
+    if (!STRING_BUFFER_OK(sb) || *asciiz == '\0')
         return;
     length = strlen(asciiz);
     if (!ENSURE_STRING_BUFFER(sb, length))
@@ -791,13 +837,73 @@ js_AppendJSString(JSStringBuffer *sb, JSString *str)
     if (!STRING_BUFFER_OK(sb))
         return;
     length = JSSTRING_LENGTH(str);
-    if (!ENSURE_STRING_BUFFER(sb, length))
+    if (length == 0 || !ENSURE_STRING_BUFFER(sb, length))
         return;
     bp = sb->ptr;
     js_strncpy(bp, JSSTRING_CHARS(str), length);
     bp += length;
     *bp = 0;
     sb->ptr = bp;
+}
+
+static JSBool
+GetXMLEntity(JSContext *cx, JSTokenStream *ts)
+{
+    ptrdiff_t offset, length;
+    int32 c;
+    jschar *bp;
+
+    /* Put the entity, including the '&' already scanned, in ts->tokenbuf. */
+    offset = PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar);
+    FastAppendChar(&ts->tokenbuf, '&');
+    while ((c = GetChar(ts)) != ';') {
+        if (c == EOF || c == '\n') {
+            js_ReportCompileErrorNumber(cx, ts,
+                                        JSREPORT_TS | JSREPORT_ERROR,
+                                        JSMSG_END_OF_XML_ENTITY);
+            return JS_FALSE;
+        }
+        FastAppendChar(&ts->tokenbuf, (jschar) c);
+    }
+
+    /* Now try to match one of the five XML 1.0 predefined entities. */
+    length = PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar) - offset;
+    bp = ts->tokenbuf.base + offset;
+    c = 0;
+    switch (length) {
+      case 3:
+        if (bp[2] == 't') {
+            if (bp[1] == 'l')
+                c = '<';
+            else if (bp[1] == 'g')
+                c = '>';
+        }
+        break;
+      case 4:
+        if (bp[1] == 'a' && bp[2] == 'm' && bp[3] == 'p')
+            c = '&';
+        break;
+      case 5:
+        if (bp[3] == 'o') {
+            if (bp[1] == 'a' && bp[2] == 'p' && bp[4] == 's')
+                c = '\'';
+            else if (bp[1] == 'q' && bp[2] == 'u' && bp[4] == 't')
+                c = '"';
+        }
+        break;
+    }
+
+    /* No match: return with the unconverted entity in ts->tokenbuf. */
+    if (c == 0) {
+        FastAppendChar(&ts->tokenbuf, ';');
+        return JS_TRUE;
+    }
+
+    /* If we matched, retract ts->tokenbuf and store the entity's value. */
+    *bp++ = (jschar) c;
+    *bp = 0;
+    ts->tokenbuf.ptr = bp;
+    return JS_TRUE;
 }
 
 #endif /* JS_HAS_XML_SUPPORT */
@@ -855,14 +961,15 @@ GetUnicodeEscape(JSTokenStream *ts)
 }
 
 static JSToken *
-NewToken(JSTokenStream *ts)
+NewToken(JSTokenStream *ts, ptrdiff_t adjust)
 {
     JSToken *tp;
 
     ts->cursor = (ts->cursor + 1) & NTOKENS_MASK;
     tp = &CURRENT_TOKEN(ts);
-    tp->ptr = ts->linebuf.ptr - 1;
-    tp->pos.begin.index = ts->linepos + (tp->ptr - ts->linebuf.base);
+    tp->ptr = ts->linebuf.ptr + adjust;
+    tp->pos.begin.index = ts->linepos +
+                          PTRDIFF(tp->ptr, ts->linebuf.base, jschar);
     tp->pos.begin.lineno = tp->pos.end.lineno = (uint16)ts->lineno;
     return tp;
 }
@@ -877,8 +984,9 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
     JSBool hadUnicodeEscape;
 
 #define INIT_TOKENBUF()     (ts->tokenbuf.ptr = ts->tokenbuf.base)
+#define NUL_TERM_TOKENBUF() (*ts->tokenbuf.ptr = 0)
 #define TRIM_TOKENBUF(i)    (ts->tokenbuf.ptr = ts->tokenbuf.base + i)
-#define TOKENBUF_LENGTH()   (ts->tokenbuf.ptr - ts->tokenbuf.base)
+#define TOKENBUF_LENGTH()   PTRDIFF(ts->tokenbuf.ptr, ts->tokenbuf.base, jschar)
 #define TOKENBUF_BASE()     (ts->tokenbuf.base)
 #define TOKENBUF_CHAR(i)    (ts->tokenbuf.base[i])
 #define TOKENBUF_TO_ATOM()  (js_AtomizeChars(cx,                              \
@@ -886,7 +994,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
                                              TOKENBUF_LENGTH(),               \
                                              0))
 
-#define ADD_TO_TOKENBUF(c)  js_AppendChar(&ts->tokenbuf, (jschar) (c))
+#define ADD_TO_TOKENBUF(c)  FastAppendChar(&ts->tokenbuf, (jschar) (c))
 
     /* If there was a fatal error, keep returning TOK_ERROR. */
     if (ts->flags & TSF_ERROR)
@@ -904,9 +1012,11 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
 
 #if JS_HAS_XML_SUPPORT
     if (ts->flags & TSF_XMLTEXTMODE) {
-        tp = NewToken(ts);
+        tt = TOK_XMLSPACE;      /* veto if non-space, return TOK_XMLTEXT */
+        tp = NewToken(ts, 0);
         INIT_TOKENBUF();
         qc = (ts->flags & TSF_XMLONLYMODE) ? '<' : '{';
+
         while ((c = GetChar(ts)) != qc && c != '<') {
             if (c == EOF) {
                 tt = TOK_EOF;
@@ -914,9 +1024,13 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
             }
 
             if (c == '&') {
-                /* XXXbe handle built-in XML 1.0 entities */
+                if (!GetXMLEntity(cx, ts))
+                    goto error;
+                continue;
             }
 
+            if (!JS_ISXMLSPACE(c))
+                tt = TOK_XMLTEXT;
             ADD_TO_TOKENBUF(c);
         }
         UngetChar(ts, c);
@@ -931,12 +1045,11 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
         tp->pos.end.lineno = (uint16)ts->lineno;
         tp->t_op = JSOP_STRING;
         tp->t_atom = atom;
-        tt = TOK_XMLTEXT;
         goto out;
     }
 
     if (ts->flags & TSF_XMLTAGMODE) {
-        tp = NewToken(ts);
+        tp = NewToken(ts, 0);
         c = GetChar(ts);
         if (JS_ISXMLSPACE(c)) {
             do {
@@ -953,10 +1066,24 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
         }
 
         INIT_TOKENBUF();
-        if (JS_ISXMLNAMESTART(c)) {
+        if (JS_ISXMLNSSTART(c)) {
+            JSBool sawColon = JS_FALSE;
+
             ADD_TO_TOKENBUF(c);
-            while ((c = GetChar(ts)) != EOF && JS_ISXMLNAME(c))
+            while ((c = GetChar(ts)) != EOF && JS_ISXMLNAME(c)) {
+                if (c == ':') {
+                    if (sawColon || !JS_ISXMLNAME(PeekChar(ts))) {
+                        js_ReportCompileErrorNumber(cx, ts,
+                                                    JSREPORT_TS |
+                                                    JSREPORT_ERROR,
+                                                    JSMSG_BAD_XML_QNAME);
+                        goto error;
+                    }
+                    sawColon = JS_TRUE;
+                }
+
                 ADD_TO_TOKENBUF(c);
+            }
 
             UngetChar(ts, c);
             atom = TOKENBUF_TO_ATOM();
@@ -984,7 +1111,8 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
             qc = c;
             while ((c = GetChar(ts)) != qc) {
                 if (c == EOF) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts,
+                                                JSREPORT_TS | JSREPORT_ERROR,
                                                 JSMSG_UNTERMINATED_STRING);
                     goto error;
                 }
@@ -1001,7 +1129,8 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
                 }
 
                 if (c == '&') {
-                    /* XXXbe handle built-in XML 1.0 entities */
+                    if (!GetXMLEntity(cx, ts))
+                        goto error;
                     continue;
                 }
 
@@ -1029,7 +1158,7 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
 
           bad_xml_char:
           default:
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                         JSMSG_BAD_XML_CHARACTER);
             goto error;
         }
@@ -1047,7 +1176,7 @@ retry:
         }
     } while (JS_ISSPACE(c));
 
-    tp = NewToken(ts);
+    tp = NewToken(ts, -1);
     if (c == EOF) {
         tt = TOK_EOF;
         goto out;
@@ -1084,8 +1213,8 @@ retry:
             struct keyword *kw = ATOM_KEYWORD(atom);
 
             if (JSVERSION_IS_ECMA(cx->version) || kw->version <= cx->version) {
-                tp->t_op = (JSOp) kw->op;
                 tt = kw->tokentype;
+                tp->t_op = (JSOp) kw->op;
                 goto out;
             }
         }
@@ -1126,7 +1255,8 @@ retry:
                  * not always be so permissive, so we warn about it.
                  */
                 if (radix == 8 && c >= '8') {
-                    if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+                    if (!js_ReportCompileErrorNumber(cx, ts,
+                                                     JSREPORT_TS |
                                                      JSREPORT_WARNING,
                                                      JSMSG_BAD_OCTAL,
                                                      c == '8' ? "08" : "09")) {
@@ -1154,7 +1284,8 @@ retry:
                     c = GetChar(ts);
                 }
                 if (!JS7_ISDEC(c)) {
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts,
+                                                JSREPORT_TS | JSREPORT_ERROR,
                                                 JSMSG_MISSING_EXPONENT);
                     goto error;
                 }
@@ -1171,13 +1302,15 @@ retry:
 
         if (radix == 10) {
             if (!js_strtod(cx, TOKENBUF_BASE(), &endptr, &dval)) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
                 goto error;
             }
         } else {
             if (!js_strtointeger(cx, TOKENBUF_BASE(), &endptr, radix, &dval)) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
                 goto error;
             }
@@ -1193,7 +1326,8 @@ retry:
         while ((c = GetChar(ts)) != qc) {
             if (c == '\n' || c == EOF) {
                 UngetChar(ts, c);
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_STRING);
                 goto error;
             }
@@ -1433,8 +1567,8 @@ retry:
                             inTarget = JS_FALSE;
                         } else {
                             if (!((TOKENBUF_LENGTH() == 0)
-                                  ? JS_ISXMLNAMESTART(c)
-                                  : JS_ISXMLNAME(c))) {
+                                  ? JS_ISXMLNSSTART(c)
+                                  : JS_ISXMLNS(c))) {
                                 goto bad_xml_markup;
                             }
                             ++targetLength;
@@ -1475,7 +1609,7 @@ retry:
             goto out;
 
         bad_xml_markup:
-            js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                         JSMSG_BAD_XML_MARKUP);
             goto error;
         }
@@ -1594,7 +1728,8 @@ skipline:
                 /* Ignore all characters until comment close. */
             }
             if (c == EOF) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_UNTERMINATED_COMMENT);
                 goto error;
             }
@@ -1610,7 +1745,8 @@ skipline:
             while ((c = GetChar(ts)) != '/') {
                 if (c == '\n' || c == EOF) {
                     UngetChar(ts, c);
-                    js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                    js_ReportCompileErrorNumber(cx, ts,
+                                                JSREPORT_TS | JSREPORT_ERROR,
                                                 JSMSG_UNTERMINATED_REGEXP);
                     goto error;
                 }
@@ -1633,11 +1769,14 @@ skipline:
             c = PeekChar(ts);
             if (JS7_ISLET(c)) {
                 tp->ptr = ts->linebuf.ptr - 1;
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_BAD_REGEXP_FLAG);
                 (void) GetChar(ts);
                 goto error;
             }
+            /* XXXbe fix jsregexp.c so it doesn't depend on NUL termination */
+            NUL_TERM_TOKENBUF();
             obj = js_NewRegExpObject(cx, ts,
                                      TOKENBUF_BASE(),
                                      TOKENBUF_LENGTH(),
@@ -1722,7 +1861,8 @@ skipline:
                 break;
             n = 10 * n + JS7_UNDEC(c);
             if (n >= ATOM_INDEX_LIMIT) {
-                js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+                js_ReportCompileErrorNumber(cx, ts,
+                                            JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_SHARPVAR_TOO_BIG);
                 goto error;
             }
@@ -1732,7 +1872,8 @@ skipline:
             (c == '=' || c == '#')) {
             char buf[20];
             JS_snprintf(buf, sizeof buf, "#%u%c", n, c);
-            if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+            if (!js_ReportCompileErrorNumber(cx, ts,
+                                             JSREPORT_TS |
                                              JSREPORT_WARNING |
                                              JSREPORT_STRICT,
                                              JSMSG_DEPRECATED_USAGE,
@@ -1755,7 +1896,7 @@ skipline:
 #endif
 
       default:
-        js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                     JSMSG_ILLEGAL_CHARACTER);
         goto error;
     }
@@ -1765,7 +1906,7 @@ out:
         tt = TOK_ERROR;
     JS_ASSERT(tt < TOK_LIMIT);
     tp->pos.end.index = ts->linepos +
-                        (ts->linebuf.ptr - ts->linebuf.base) -
+                        PTRDIFF(ts->linebuf.ptr, ts->linebuf.base, jschar) -
                         ts->ungetpos;
     tp->type = tt;
     return tt;
