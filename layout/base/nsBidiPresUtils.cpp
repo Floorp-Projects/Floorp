@@ -893,11 +893,9 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
 
   PRBool doReverse = PR_FALSE;
 
-printf("aCharType is %d\n", aCharType);
   if (aIsBidiSystem) {
     if (CHARTYPE_IS_RTL(aCharType) ^ aIsOddLevel) {
       doReverse = PR_TRUE;
-printf("doReverse set to TRUE\n");
     }
   }
   else if (aIsOddLevel) {
@@ -929,7 +927,6 @@ printf("doReverse set to TRUE\n");
                                    (PRUint32 *)&newLen);
     } // eCharType_RightToLeftArabic
     else {
-printf("reversing buffer\n");
       rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
                                      NSBIDI_REMOVE_BIDI_CONTROLS | NSBIDI_DO_MIRRORING,
                                      &newLen);
