@@ -50,7 +50,9 @@ ifeq ($(BUILD_MODULES),all)
 # Divide the default build into tiers. 
 # Tiers must be defined on module boundaries 
 #
-default: $(SUBMAKEFILES)
+SUPPRESS_DEFAULT_RULES = 1
+
+default alldep all:: $(SUBMAKEFILES)
 	$(RM) -rf $(DIST)/sdk
 	$(RM) -rf $(DIST)/include
 	$(MAKE) -C config export
@@ -418,7 +420,7 @@ SUBMAKEFILES	:= xpcom/typelib/Makefile
 endif
 endif
 
-default: $(SUBMAKEFILES)
+default:: $(SUBMAKEFILES)
 	$(MAKE) export
 	$(MAKE) libs
 
