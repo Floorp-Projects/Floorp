@@ -1079,7 +1079,7 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
 
    nsIBox* prevBox = GetBox(aPrevFrame);
    if (prevBox == nsnull && aPrevFrame != nsnull) {
-     printf("Warning prev sibling is not in our list!!!");
+     printf("Warning prev sibling is not in our list!!!\n");
      aPrevFrame = nsnull;
    }
 
