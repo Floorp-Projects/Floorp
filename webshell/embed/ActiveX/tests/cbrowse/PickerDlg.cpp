@@ -42,14 +42,16 @@ CPickerDlg::CPickerDlg(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CPickerDlg)
 	m_szTestURL = _T("");
 	m_szTestCGI = _T("");
+	m_bDebugging = FALSE;
+	m_sDebugFlags = _T("");
 	//}}AFX_DATA_INIT
 	m_clsid = CLSID_NULL;
 
 	CWinApp *pApp = AfxGetApp();
 	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
 	m_szTestCGI = pApp->GetProfileString(SECTION_TEST, KEY_TESTCGI, KEY_TESTCGI_DEFAULTVALUE);
+	m_sDebugFlags = _T("NSPR_LOG_MODULES=nsComponentManager:5");
 }
-
 
 void CPickerDlg::DoDataExchange(CDataExchange* pDX)
 {
@@ -58,6 +60,8 @@ void CPickerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LISTBROWSER, m_lbPicker);
 	DDX_Text(pDX, IDC_TESTURL, m_szTestURL);
 	DDX_Text(pDX, IDC_TESTCGI, m_szTestCGI);
+	DDX_Check(pDX, IDC_CHECK1, m_bDebugging);
+	DDX_Text(pDX, IDC_EDIT1, m_sDebugFlags);
 	//}}AFX_DATA_MAP
 }
 
@@ -103,6 +107,12 @@ void CPickerDlg::OnOk()
 	CWinApp *pApp = AfxGetApp();
 	pApp->WriteProfileString(SECTION_TEST, KEY_TESTURL, m_szTestURL);
 	pApp->WriteProfileString(SECTION_TEST, KEY_TESTCGI, m_szTestCGI);
+
+	if (m_bDebugging)
+	{
+		putenv("NSPR_LOG_FILE=.\\mozilla.log");
+		putenv(m_sDebugFlags);
+	}
 
 	EndDialog(IDOK);
 }
