@@ -56,10 +56,6 @@ public:
 
 private:
   int screen;
-#ifdef DEBUG
-  PRUint32 mID;
-#endif
-
 };
 
 #endif  // nsScreenQt_h___

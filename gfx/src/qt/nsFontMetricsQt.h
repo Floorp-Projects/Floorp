@@ -107,11 +107,6 @@ public:
     PRUint16         mWeight;
 
     void RealizeFont();
-
-#ifdef DEBUG
-private:
-    PRUint32 mID;
-#endif
 };
 
 class nsFontMetricsQt : public nsIFontMetrics
@@ -202,11 +197,6 @@ protected:
 
 
     static QFontDatabase    *mQFontDB;
-#endif
-
-#ifdef DEBUG
-private:
-    PRUint32 mID;
 #endif
 };
 

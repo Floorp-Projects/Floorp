@@ -45,28 +45,12 @@
 
 #include "qtlog.h"
 
-#ifdef DEBUG
-PRUint32 gRegionCount = 0;
-PRUint32 gRegionID = 0;
-#endif
-
 nsRegionQt::nsRegionQt() : mRegion()
 {
-#ifdef DEBUG
-  gRegionCount++;
-  mID = gRegionID++;
-  PR_LOG(gQtLogModule, QT_BASIC,
-      ("nsRegionQt CTOR (%p) ID: %d, Count: %d\n", this, mID, gRegionCount));
-#endif
 }
 
 nsRegionQt::~nsRegionQt()
 {
-#ifdef DEBUG
-  gRegionCount--;
-  PR_LOG(gQtLogModule, QT_BASIC,
-      ("nsRegionQt DTOR (%p) ID: %d, Count: %d\n", this, mID, gRegionCount));
-#endif
 }
 
 NS_IMPL_ISUPPORTS1(nsRegionQt, nsIRegion)

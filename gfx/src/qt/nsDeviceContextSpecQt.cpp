@@ -1022,11 +1022,9 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 //----------------------------------------------------------------------
 void GlobalPrinters::FreeGlobalPrinters()
 {
-  if (mGlobalPrinterList) {
-    delete mGlobalPrinterList;
-    mGlobalPrinterList = nsnull;
-    mGlobalNumPrinters = 0;
-  }
+  delete mGlobalPrinterList;
+  mGlobalPrinterList = nsnull;
+  mGlobalNumPrinters = 0;
 }
 
 void
