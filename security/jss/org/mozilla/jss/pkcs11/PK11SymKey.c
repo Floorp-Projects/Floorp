@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_SymKeyProxy.h"
+#include "_jni/org_mozilla_jss_pkcs11_SymKeyProxy.h"
 
 #include <nspr.h>
 #include <plarena.h>
@@ -99,7 +99,7 @@ finish:
  * PK11SymKey.getOwningToken
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11SymKey_getOwningToken
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getOwningToken
     (JNIEnv *env, jobject this)
 {
     PK11SymKey *key = NULL;
@@ -137,7 +137,7 @@ finish:
  * PK11SymKey.getSize
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_pkcs11_PK11SymKey_getStrength
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getStrength
     (JNIEnv *env, jobject this)
 {
     PK11SymKey *key=NULL;
@@ -159,7 +159,7 @@ finish:
  * PK11SymKey.getKeyData
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11SymKey_getKeyData
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getKeyData
     (JNIEnv *env, jobject this)
 {
     PK11SymKey *key=NULL;
@@ -198,7 +198,7 @@ finish:
  * PK11SymKey.getKeyType
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11SymKey_getKeyType
+Java_org_mozilla_jss_pkcs11_PK11SymKey_getKeyType
     (JNIEnv *env, jobject this)
 {
     PK11SymKey *key=NULL;
@@ -305,7 +305,7 @@ JSS_PK11_getSymKeyPtr(JNIEnv *env, jobject symKeyObject, PK11SymKey **ptr)
  * SymKeyProxy.releaseNativeResources
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_SymKeyProxy_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_SymKeyProxy_releaseNativeResources
     (JNIEnv *env, jobject this)
 {
     PK11SymKey *key=NULL;

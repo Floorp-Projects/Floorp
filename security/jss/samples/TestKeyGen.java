@@ -40,7 +40,7 @@
  * SET in the directory specified by the argument. The first time the
  * program is run, a key3.db file will be created, but it will not have
  * a password. This will result in the error:
- *  Token error: com.netscape.jss.crypto.TokenException: unable to login to token
+ *  Token error: org.mozilla.jss.crypto.TokenException: unable to login to token
  *
  * To create a database with a password, you can:
  *   use the modutil or keyutil tool,
@@ -50,11 +50,11 @@
  */
 
 
-import com.netscape.jss.pkcs11.*;
+import org.mozilla.jss.pkcs11.*;
 
-import com.netscape.jss.util.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.*;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.*;
 import java.io.*;
 import java.awt.*;
 import java.security.cert.*;
@@ -72,7 +72,7 @@ public class TestKeyGen {
 
         if(args.length != 1) {
             System.err.println(
-				"Usage: java com.netscape.jss.pkcs11.TestKeyGen <dbdir>");
+				"Usage: java org.mozilla.jss.pkcs11.TestKeyGen <dbdir>");
             return;
         }
 

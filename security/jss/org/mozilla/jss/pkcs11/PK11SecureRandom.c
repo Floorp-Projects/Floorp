@@ -42,7 +42,7 @@
  * JNI header files
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11SecureRandom.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11SecureRandom.h"
 
 /*
  * JSS header files
@@ -87,13 +87,13 @@
  *
  * JNI NOTES:
  *
- *    Class:     com_netscape_jss_pkcs11_PK11SecureRandom
+ *    Class:     org_mozilla_jss_pkcs11_PK11SecureRandom
  *    Method:    setSeed
  *    Signature: ([B)V
  */
 
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11SecureRandom_setSeed
+Java_org_mozilla_jss_pkcs11_PK11SecureRandom_setSeed
     ( JNIEnv* env, jobject this, jbyteArray jseed )
 {
     /*
@@ -237,13 +237,13 @@ loser:
  *
  * JNI NOTES:
  *
- *    Class:     com_netscape_jss_pkcs11_PK11SecureRandom
+ *    Class:     org_mozilla_jss_pkcs11_PK11SecureRandom
  *    Method:    nextBytes
  *    Signature: ([B)V
  */
 
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11SecureRandom_nextBytes
+Java_org_mozilla_jss_pkcs11_PK11SecureRandom_nextBytes
     ( JNIEnv* env, jobject this, jbyteArray jbytes )
 {
     /*

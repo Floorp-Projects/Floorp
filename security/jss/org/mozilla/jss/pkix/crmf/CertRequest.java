@@ -30,15 +30,15 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.crmf;
+package org.mozilla.jss.pkix.crmf;
 
 import java.util.Date;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.util.Assert;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import com.netscape.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.primitive.*;
 
 /**
  * A PKIX <i>CertRequest</i>.  Currently can only be decoded from its BER

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.crmf;
+package org.mozilla.jss.pkix.crmf;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,16 +39,16 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.util.Assert;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.security.SignatureException;
 import java.security.NoSuchAlgorithmException;
-import com.netscape.jss.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 import java.security.PublicKey;
 import java.io.FileOutputStream;
 
@@ -128,7 +128,7 @@ public class CertReqMsg implements ASN1Value {
 
 	public void verify() throws SignatureException,
 		InvalidKeyFormatException, NoSuchAlgorithmException,
-		com.netscape.jss.CryptoManager.NotInitializedException,
+		org.mozilla.jss.CryptoManager.NotInitializedException,
 		TokenException, java.security.InvalidKeyException, IOException{
 		ProofOfPossession.Type type = pop.getType();
 		if (type == ProofOfPossession.SIGNATURE) {

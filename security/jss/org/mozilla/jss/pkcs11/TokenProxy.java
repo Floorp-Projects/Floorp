@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.util.NativeProxy;
-import com.netscape.jss.util.Debug;
+import org.mozilla.jss.util.NativeProxy;
+import org.mozilla.jss.util.Debug;
 
 final class TokenProxy extends NativeProxy {
         public TokenProxy(byte[] pointer) {

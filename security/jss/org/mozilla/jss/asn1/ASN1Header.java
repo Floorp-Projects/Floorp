@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.asn1;
+package org.mozilla.jss.asn1;
 
 import java.math.BigInteger;
 import java.io.IOException;
@@ -38,7 +38,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Vector;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 /**
  * The portion of a BER encoding that precedes the contents octets.  Consists

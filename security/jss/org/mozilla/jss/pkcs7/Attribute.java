@@ -30,13 +30,13 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkcs7;
+package org.mozilla.jss.pkcs7;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 /**
  * An Attribute, which has the following ASN.1

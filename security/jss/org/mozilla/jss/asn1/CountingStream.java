@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.asn1;
+package org.mozilla.jss.asn1;
 
 import java.io.*;
 

@@ -31,14 +31,14 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cms;
+package org.mozilla.jss.pkix.cms;
 
 import java.io.*;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.util.Assert;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.pkix.cert.*;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.util.Assert;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.cert.*;
+import org.mozilla.jss.crypto.*;
 import java.util.Vector;
 import java.math.BigInteger;
 import java.io.ByteArrayInputStream;
@@ -46,8 +46,8 @@ import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.security.NoSuchAlgorithmException;
 import java.security.MessageDigest;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.*;
 import java.security.PublicKey;
 
 /*

@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs12;
+package org.mozilla.jss.pkcs12;
 
-import com.netscape.jss.crypto.KeyGenerator;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.crypto.KeyGenerator;
+import org.mozilla.jss.util.Assert;
 
 /**
  * Converts password chars to bytes.  The output format is big-endian Unicode,

@@ -42,7 +42,7 @@
 
 #include <jssutil.h>
 
-#include "_jni/com_netscape_jss_crypto_Algorithm.h"
+#include "_jni/org_mozilla_jss_crypto_Algorithm.h"
 #include "Algorithm.h"
 
 static PRStatus
@@ -105,7 +105,7 @@ JSS_AlgInfo JSS_AlgTable[NUM_ALGS] = {
  *          An object containing all algorithms supported by this object.
  */
 JNIEXPORT jlongArray JNICALL
-Java_com_netscape_jss_crypto_Algorithm_getAllAlgorithmIndices
+Java_org_mozilla_jss_crypto_Algorithm_getAllAlgorithmIndices
 ( JNIEnv *env, jclass this, jobject jUsage )
 {
     /* "JNI" data members */
@@ -199,7 +199,7 @@ loser:
  *          All unusable key sizes are stored as 0L.
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_crypto_Algorithm_getStrongestKeySize
+Java_org_mozilla_jss_crypto_Algorithm_getStrongestKeySize
 ( JNIEnv *env, jclass this, jobject jUsage, jint alg )
 {
     /* "JNI" data members */
@@ -288,7 +288,7 @@ loser:
  *          A boolean denoting whether or not the algorithm is allowed.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_crypto_Algorithm_isAllowed
+Java_org_mozilla_jss_crypto_Algorithm_isAllowed
 ( JNIEnv *env, jclass this, jobject jUsage, jint alg )
 {
     /* "JNI" data members */
@@ -371,7 +371,7 @@ loser:
  *
  * INPUTS
  *      alg
- *          An com.netscape.jss.Algorithm object. Must not be NULL.
+ *          An org.mozilla.jss.Algorithm object. Must not be NULL.
  * RETURNS
  *          CK_MECHANISM_TYPE corresponding to this algorithm, or
  *          CKM_INVALID_MECHANISM if none exists.
@@ -398,7 +398,7 @@ JSS_getPK11MechFromAlg(JNIEnv *env, jobject alg)
  *
  * INPUTS
  *      alg
- *          An com.netscape.jss.Algorithm object. Must not be NULL.
+ *          An org.mozilla.jss.Algorithm object. Must not be NULL.
  * RETURNS
  *      SECOidTag corresponding to this algorithm, or SEC_OID_UNKNOWN
  *      if none was found.
@@ -427,7 +427,7 @@ JSS_getOidTagFromAlg(JNIEnv *env, jobject alg)
  *
  * INPUTS
  *      alg
- *          An com.netscape.jss.Algorithm object. Must not be NULL.
+ *          An org.mozilla.jss.Algorithm object. Must not be NULL.
  * RETURNS
  *      The index obtained from the algorithm, or -1 if an exception was
  *      thrown.
@@ -474,7 +474,7 @@ finish:
  *
  * INPUTS
  *      alg
- *          An com.netscape.jss.Algorithm object. Must not be NULL.
+ *          An org.mozilla.jss.Algorithm object. Must not be NULL.
  * OUTPUTS
  *      info
  *          Pointer to a JSS_AlgInfo which will get the information about
@@ -507,7 +507,7 @@ finish:
  *
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_crypto_EncryptionAlgorithm_getIVLength
+Java_org_mozilla_jss_crypto_EncryptionAlgorithm_getIVLength
     (JNIEnv *env, jobject this)
 {
     CK_MECHANISM_TYPE mech;

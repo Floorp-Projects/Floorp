@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cmc;
+package org.mozilla.jss.pkix.cmc;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 /**
  * CMCStatusInfo <i>OtherInfo</i>:

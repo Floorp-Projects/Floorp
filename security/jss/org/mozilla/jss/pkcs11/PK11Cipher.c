@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11Cipher.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11Cipher.h"
 
 #include <nspr.h>
 #include <plarena.h>
@@ -51,7 +51,7 @@
  * PK11Cipher.initContext
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cipher_initContext
+Java_org_mozilla_jss_pkcs11_PK11Cipher_initContext
     (JNIEnv *env, jclass clazz, jboolean encrypt, jobject keyObj,
         jobject algObj, jbyteArray ivBA)
 {
@@ -137,7 +137,7 @@ finish:
  * PK11Cipher.updateContext
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cipher_updateContext
+Java_org_mozilla_jss_pkcs11_PK11Cipher_updateContext
     (JNIEnv *env, jclass clazz, jobject contextObj, jbyteArray inputBA,
     jint blockSize)
 {
@@ -204,7 +204,7 @@ finish:
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cipher_finalizeContext
+Java_org_mozilla_jss_pkcs11_PK11Cipher_finalizeContext
     (JNIEnv *env, jclass clazz, jobject contextObj, jint blockSize,
         jboolean padded)
 {
@@ -341,7 +341,7 @@ finish:
  * CipherContextProxy.releaseNativeResources
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_CipherContextProxy_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_CipherContextProxy_releaseNativeResources
     (JNIEnv *env, jobject this)
 {
     PK11Context *context;

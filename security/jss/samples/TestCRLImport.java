@@ -37,12 +37,12 @@
    - importfile is the DER encoded binary CRL
  */
 
-import com.netscape.jss.*;
+import org.mozilla.jss.*;
 
 import java.io.FileInputStream;
-import com.netscape.jss.util.ConsolePasswordCallback;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.ConsolePasswordCallback;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.Assert;
 
 public class TestCRLImport {
 

@@ -30,9 +30,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.asn1;
+package org.mozilla.jss.asn1;
 
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -85,7 +85,7 @@ public class ANY implements ASN1Value {
         ASN1Header head = new ASN1Header(bis);
         this.tag = head.getTag();
       } catch(IOException e) {
-            throw new com.netscape.jss.util.AssertionException(
+            throw new org.mozilla.jss.util.AssertionException(
                 "IOException while creating ANY: "+e);
       }
     }

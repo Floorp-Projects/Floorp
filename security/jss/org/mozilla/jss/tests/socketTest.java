@@ -31,8 +31,8 @@
  * GPL.
  */
 import java.io.*;
-import com.netscape.jss.ssl.*;
-import com.netscape.jss.*;
+import org.mozilla.jss.ssl.*;
+import org.mozilla.jss.*;
 
 public class socketTest {
 

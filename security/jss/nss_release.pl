@@ -66,21 +66,21 @@ chdir("../dist/classes");
 ###############################################################################
 
 $filelist = 
-     'com/netscape/jss/ssl/*.class '.
-     'com/netscape/jss/crypto/AlreadyInitializedException.class '.
-     'com/netscape/jss/pkcs11/TokenCallbackInfo.class '.
-     'com/netscape/jss/NSSInit.class '.
-     'com/netscape/jss/CertDatabaseException.class '.
-     'com/netscape/jss/KeyDatabaseException.class '.
-     'com/netscape/jss/util/Assert.class '.
-     'com/netscape/jss/util/AssertionException.class '.
-     'com/netscape/jss/util/ConsolePasswordCallback.class '.
-     'com/netscape/jss/util/Debug.class '.
-     'com/netscape/jss/util/Password.class '.
-     'com/netscape/jss/util/PasswordCallback.class '.
-     'com/netscape/jss/util/PasswordCallback?GiveUpException.class '.
-     'com/netscape/jss/util/PasswordCallbackInfo.class '.
-     'com/netscape/jss/util/UTF8Converter.class';
+     'org/mozilla/jss/ssl/*.class '.
+     'org/mozilla/jss/crypto/AlreadyInitializedException.class '.
+     'org/mozilla/jss/pkcs11/TokenCallbackInfo.class '.
+     'org/mozilla/jss/NSSInit.class '.
+     'org/mozilla/jss/CertDatabaseException.class '.
+     'org/mozilla/jss/KeyDatabaseException.class '.
+     'org/mozilla/jss/util/Assert.class '.
+     'org/mozilla/jss/util/AssertionException.class '.
+     'org/mozilla/jss/util/ConsolePasswordCallback.class '.
+     'org/mozilla/jss/util/Debug.class '.
+     'org/mozilla/jss/util/Password.class '.
+     'org/mozilla/jss/util/PasswordCallback.class '.
+     'org/mozilla/jss/util/PasswordCallback?GiveUpException.class '.
+     'org/mozilla/jss/util/PasswordCallbackInfo.class '.
+     'org/mozilla/jss/util/UTF8Converter.class';
 
 $load_library = "../$var{'PLATFORM'}/lib/";
 

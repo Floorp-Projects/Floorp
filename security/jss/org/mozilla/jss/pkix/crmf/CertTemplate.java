@@ -30,17 +30,17 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.crmf;
+package org.mozilla.jss.pkix.crmf;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.IOException;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.util.Date;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.pkix.cert.Extension;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.cert.Extension;
 import java.util.Calendar;
 import java.util.TimeZone;
 

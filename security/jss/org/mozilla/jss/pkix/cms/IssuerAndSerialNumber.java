@@ -31,14 +31,14 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cms;
+package org.mozilla.jss.pkix.cms;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.util.Assert;
 
 /**
  * An issuer name and serial number, used to uniquely identify a certificate.

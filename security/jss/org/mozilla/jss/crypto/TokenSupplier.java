@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 /**
  * An interface that allows providers to access CryptoManager without actually

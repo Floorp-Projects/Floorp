@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11KeyGenerator.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11KeyGenerator.h"
 
 #include <nspr.h>
 #include <plarena.h>
@@ -60,7 +60,7 @@
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyGenerator_generateNormal
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal
     (JNIEnv *env, jclass clazz, jobject token, jobject alg, jint strength)
 {
     PK11SlotInfo *slot=NULL;
@@ -280,7 +280,7 @@ finish:
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyGenerator_generatePBE
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generatePBE
     (JNIEnv *env, jclass clazz, jobject token, jobject alg, jbyteArray passBA,
     jbyteArray saltBA, jint iterationCount)
 {
@@ -378,7 +378,7 @@ finish:
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyGenerator_generatePBE_1IV
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generatePBE_1IV
     (JNIEnv *env, jclass clazz, jobject alg, jbyteArray passBA,
     jbyteArray saltBA, jint iterationCount)
 {
@@ -444,7 +444,7 @@ finish:
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyGenerator_nativeClone
+Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_nativeClone
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject toBeClonedObj)
 {
     PK11SlotInfo *slot=NULL;

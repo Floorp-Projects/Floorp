@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss;
+package org.mozilla.jss;
 
 /**
  * This exception is thrown if the certificate database does not exist,

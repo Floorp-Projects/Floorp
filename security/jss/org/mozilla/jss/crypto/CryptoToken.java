@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
-import com.netscape.jss.util.*;
+import org.mozilla.jss.util.*;
 import java.security.*;
 
 /**
@@ -41,7 +41,7 @@ import java.security.*;
  * cryptographic items, such as keys and certs.  It corresponds to a
  * Cryptographic Service Provider (CSP) in CDSA, and to a PKCS #11 token.
  * <p>Instances of CryptoToken are obtained from CryptoManager.
- * @see com.netscape.jss.CryptoManager
+ * @see org.mozilla.jss.CryptoManager
  */
 public interface CryptoToken {
 
@@ -58,7 +58,7 @@ public interface CryptoToken {
      * @exception java.security.NoSuchAlgorithmException If the given
      *      algorithm is not supported by this provider.
      */
-    public abstract com.netscape.jss.crypto.Signature
+    public abstract org.mozilla.jss.crypto.Signature
     getSignatureContext(SignatureAlgorithm algorithm)
         throws java.security.NoSuchAlgorithmException, TokenException;
 
@@ -96,7 +96,7 @@ public interface CryptoToken {
     /**
      * Returns a Random Number Generator implemented on this token.
      *
-     * @exception com.netscape.jss.crypto.ServiceNotProvidedException If this token
+     * @exception org.mozilla.jss.crypto.ServiceNotProvidedException If this token
      *      does not perform random number generation
      */
     /*
@@ -186,7 +186,7 @@ public interface CryptoToken {
      * @exception IncorrectPasswordException If the supplied password is
      *  incorrect.
      * @see #setLoginMode
-     * @see com.netscape.jss.CryptoManager#setPasswordCallback
+     * @see org.mozilla.jss.CryptoManager#setPasswordCallback
      */
     public abstract void login(PasswordCallback pwcb)
         throws IncorrectPasswordException, TokenException;
@@ -203,7 +203,7 @@ public interface CryptoToken {
     public static final int ONE_TIME=0;
     /**
      * Need to re-login after a period of time.
-     * @see com.netscape.jss.crypto.CryptoToken#setLoginTimeoutMinutes
+     * @see org.mozilla.jss.crypto.CryptoToken#setLoginTimeoutMinutes
      */
     public static final int TIMEOUT=1;
     /**

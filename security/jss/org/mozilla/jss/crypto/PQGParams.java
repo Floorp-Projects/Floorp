@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 import java.math.BigInteger;
 import java.security.spec.DSAParameterSpec;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 /**
  * PQG parameters for DSA key generation, along with the seed, counter,
@@ -93,9 +93,9 @@ public class PQGParams extends DSAParameterSpec {
      * @exception java.security.InvalidParameterException If the keySize
      *      is outside the bounds described by the DSA key pair
      *      generation algorithm.
-     * @exception com.netscape.jss.crypto.PQGParamGenException If an error
+     * @exception org.mozilla.jss.crypto.PQGParamGenException If an error
      *      occurs during the generation process.
-     * @see com.netscape.jss.CryptoManager#initialize
+     * @see org.mozilla.jss.CryptoManager#initialize
      */
     public static PQGParams
     generate(int keySize)
@@ -140,9 +140,9 @@ public class PQGParams extends DSAParameterSpec {
      * @exception java.security.InvalidParameterException If the keySize
      *      or number of seed bytes is outside the bounds described by the
      *      DSA key pair generation algorithm.
-     * @exception com.netscape.jss.crypto.PQGParamGenException If an error
+     * @exception org.mozilla.jss.crypto.PQGParamGenException If an error
      *      occurs during the generation process.
-     * @see com.netscape.jss.CryptoManager#initialize
+     * @see org.mozilla.jss.CryptoManager#initialize
      */
     public static PQGParams
     generate(int keySize, int seedBytes)

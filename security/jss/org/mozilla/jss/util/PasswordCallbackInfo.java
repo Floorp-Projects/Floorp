@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 /**
  * An object of this class is passed to a PasswordCallback to give it

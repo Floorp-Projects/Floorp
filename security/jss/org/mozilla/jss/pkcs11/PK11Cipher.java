@@ -31,17 +31,17 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.NativeProxy;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.NativeProxy;
 import java.security.InvalidKeyException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.spec.AlgorithmParameterSpec;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.security.NoSuchAlgorithmException;
 
-final class PK11Cipher extends com.netscape.jss.crypto.Cipher {
+final class PK11Cipher extends org.mozilla.jss.crypto.Cipher {
 
     // set once in the constructor
     private PK11Token token;

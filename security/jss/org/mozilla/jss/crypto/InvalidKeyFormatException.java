@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 /**
  * An exception of this type is thrown if an encoded private key

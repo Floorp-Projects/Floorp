@@ -31,16 +31,16 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.*;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.security.NoSuchAlgorithmException;
-import com.netscape.jss.crypto.SignatureAlgorithm;
+import org.mozilla.jss.crypto.SignatureAlgorithm;
 
 
 abstract class PK11Key {

@@ -31,14 +31,14 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.Algorithm;
-import com.netscape.jss.util.*;
-import com.netscape.jss.crypto.PrivateKey;
-import com.netscape.jss.crypto.InvalidKeyFormatException;
+import org.mozilla.jss.crypto.Algorithm;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.crypto.PrivateKey;
+import org.mozilla.jss.crypto.InvalidKeyFormatException;
 
-public class PK11PubKey extends com.netscape.jss.pkcs11.PK11Key
+public class PK11PubKey extends org.mozilla.jss.pkcs11.PK11Key
 	implements java.security.PublicKey {
 
     protected PK11PubKey(byte[] pointer) {
@@ -50,7 +50,7 @@ public class PK11PubKey extends com.netscape.jss.pkcs11.PK11Key
 	 * Make sure this key lives on the given token.
 	 */
 	public native void verifyKeyIsOnToken(PK11Token token)
-		throws com.netscape.jss.crypto.NoSuchItemOnTokenException;
+		throws org.mozilla.jss.crypto.NoSuchItemOnTokenException;
 
     public native KeyType getKeyType();
 

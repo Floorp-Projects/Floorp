@@ -30,14 +30,14 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.cms;
+package org.mozilla.jss.pkix.cms;
 
-import com.netscape.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.primitive.*;
 
 import java.io.*;
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.util.Vector;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.math.BigInteger;
 import java.io.ByteArrayInputStream;
 

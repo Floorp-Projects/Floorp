@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cmmf;
+package org.mozilla.jss.pkix.cmmf;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,7 +48,7 @@ import java.io.FileInputStream;
  *      caPubs      [1] SEQUENCE SIZE (1..MAX) OF Certificate OPTIONAL,
  *      response    SEQUENCE of CertResponse }
  * </pre>
- * @see com.netscape.jss.pkix.cmmf.CertResponse
+ * @see org.mozilla.jss.pkix.cmmf.CertResponse
  */
 public class CertRepContent implements ASN1Value {
 

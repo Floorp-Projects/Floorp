@@ -38,40 +38,40 @@
 
 include manifest.mn
 
-JNI_GEN +=	com.netscape.jss.ssl.SSLInputStream			\
-		com.netscape.jss.ssl.SSLOutputStream			\
-		com.netscape.jss.ssl.SSLSocketImpl			\
-		com.netscape.jss.pkcs11.PrivateKeyProxy		\
-		com.netscape.jss.pkcs11.PublicKeyProxy		\
-		com.netscape.jss.CryptoManager       			\
-		com.netscape.jss.NSSInit						\
-		com.netscape.jss.DatabaseCloser                 \
-        com.netscape.jss.crypto.Algorithm     \
-        com.netscape.jss.crypto.EncryptionAlgorithm     \
-		com.netscape.jss.crypto.PQGParams				\
-		com.netscape.jss.pkcs11.PK11Token				\
-		com.netscape.jss.pkcs11.CertProxy				\
-        com.netscape.jss.pkcs11.CipherContextProxy      \
-		com.netscape.jss.pkcs11.ModuleProxy				\
-		com.netscape.jss.pkcs11.PK11RSAPublicKey		\
-		com.netscape.jss.pkcs11.PK11DSAPublicKey		\
-		com.netscape.jss.pkcs11.PK11KeyPairGenerator	\
-		com.netscape.jss.pkcs11.PK11KeyGenerator		\
-		com.netscape.jss.pkcs11.PK11Cert				\
-		com.netscape.jss.pkcs11.PK11Cipher				\
-		com.netscape.jss.pkcs11.PK11MessageDigest		\
-		com.netscape.jss.pkcs11.PK11Module				\
-		com.netscape.jss.pkcs11.PK11PrivKey				\
-		com.netscape.jss.pkcs11.PK11PubKey				\
-		com.netscape.jss.pkcs11.PK11SymKey				\
-        com.netscape.jss.pkcs11.SymKeyProxy             \
-		com.netscape.jss.pkcs11.SigContextProxy			\
-		com.netscape.jss.pkcs11.PK11Signature			\
-		com.netscape.jss.pkcs11.PK11Store				\
-        com.netscape.jss.pkcs11.PK11KeyWrapper          \
-		com.netscape.jss.util.Password                  \
-        com.netscape.jss.util.Debug                     \
-        com.netscape.jss.pkcs11.PK11SecureRandom        \
+JNI_GEN +=	org.mozilla.jss.ssl.SSLInputStream			\
+		org.mozilla.jss.ssl.SSLOutputStream			\
+		org.mozilla.jss.ssl.SSLSocketImpl			\
+		org.mozilla.jss.pkcs11.PrivateKeyProxy		\
+		org.mozilla.jss.pkcs11.PublicKeyProxy		\
+		org.mozilla.jss.CryptoManager       			\
+		org.mozilla.jss.NSSInit						\
+		org.mozilla.jss.DatabaseCloser                 \
+        org.mozilla.jss.crypto.Algorithm     \
+        org.mozilla.jss.crypto.EncryptionAlgorithm     \
+		org.mozilla.jss.crypto.PQGParams				\
+		org.mozilla.jss.pkcs11.PK11Token				\
+		org.mozilla.jss.pkcs11.CertProxy				\
+        org.mozilla.jss.pkcs11.CipherContextProxy      \
+		org.mozilla.jss.pkcs11.ModuleProxy				\
+		org.mozilla.jss.pkcs11.PK11RSAPublicKey		\
+		org.mozilla.jss.pkcs11.PK11DSAPublicKey		\
+		org.mozilla.jss.pkcs11.PK11KeyPairGenerator	\
+		org.mozilla.jss.pkcs11.PK11KeyGenerator		\
+		org.mozilla.jss.pkcs11.PK11Cert				\
+		org.mozilla.jss.pkcs11.PK11Cipher				\
+		org.mozilla.jss.pkcs11.PK11MessageDigest		\
+		org.mozilla.jss.pkcs11.PK11Module				\
+		org.mozilla.jss.pkcs11.PK11PrivKey				\
+		org.mozilla.jss.pkcs11.PK11PubKey				\
+		org.mozilla.jss.pkcs11.PK11SymKey				\
+        org.mozilla.jss.pkcs11.SymKeyProxy             \
+		org.mozilla.jss.pkcs11.SigContextProxy			\
+		org.mozilla.jss.pkcs11.PK11Signature			\
+		org.mozilla.jss.pkcs11.PK11Store				\
+        org.mozilla.jss.pkcs11.PK11KeyWrapper          \
+		org.mozilla.jss.util.Password                  \
+        org.mozilla.jss.util.Debug                     \
+        org.mozilla.jss.pkcs11.PK11SecureRandom        \
 		$(NULL)
 
 #######################################################################

@@ -35,7 +35,7 @@
  * We would like to eventually use Sun's base64 encoder, but it is not
  * public yet.  It is in the sun.misc package in JDK1.2.
  */
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 import java.io.FilterOutputStream;
 import java.io.PrintStream;

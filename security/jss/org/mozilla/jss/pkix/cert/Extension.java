@@ -31,13 +31,13 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cert;
+package org.mozilla.jss.pkix.cert;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 public class Extension implements ASN1Value {
     public static final Tag TAG = SEQUENCE.TAG;

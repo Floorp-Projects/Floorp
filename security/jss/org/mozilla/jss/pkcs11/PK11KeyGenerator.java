@@ -31,14 +31,14 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 import java.security.InvalidKeyException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.spec.AlgorithmParameterSpec;
-import com.netscape.jss.util.Password;
-import com.netscape.jss.util.UTF8Converter;
+import org.mozilla.jss.util.Password;
+import org.mozilla.jss.util.UTF8Converter;
 import java.io.CharConversionException;
 
 public final class PK11KeyGenerator implements KeyGenerator {

@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.provider;
+package org.mozilla.jss.provider;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.Debug;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.Debug;
+import org.mozilla.jss.util.Assert;
 import java.security.DigestException;
 import java.security.NoSuchAlgorithmException;
 
@@ -47,7 +47,7 @@ import java.security.NoSuchAlgorithmException;
  */
 abstract class MessageDigest extends java.security.MessageDigest {
 
-    private com.netscape.jss.crypto.JSSMessageDigest md;
+    private org.mozilla.jss.crypto.JSSMessageDigest md;
 
     /**
      * Returns the particular algorithm that the subclass is implementing.

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.primitive;
+package org.mozilla.jss.pkix.primitive;
 
 
 public class TooFewElementsException extends Exception {

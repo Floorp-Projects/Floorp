@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 /**
  * A class to allow friendly functions access to other parts of JSS.

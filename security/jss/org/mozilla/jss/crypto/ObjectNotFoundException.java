@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 /**
  * This exception is thrown whenever something isn't implemented.

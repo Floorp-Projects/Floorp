@@ -36,8 +36,8 @@
 #include <secoidt.h>
 #include <secmodt.h>
 #include <pk11func.h>
-#include "_jni/com_netscape_jss_pkcs11_PK11Signature.h"
-#include "_jni/com_netscape_jss_pkcs11_SigContextProxy.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11Signature.h"
+#include "_jni/org_mozilla_jss_pkcs11_SigContextProxy.h"
 #include <Algorithm.h>
 #include <crypto.h>
 #include <secerr.h>
@@ -73,7 +73,7 @@ getSigContext(JNIEnv *env, jobject sig, void**pContext, SigContextType* pType);
  * PK11Signature.initSigContext
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Signature_initSigContext
+Java_org_mozilla_jss_pkcs11_PK11Signature_initSigContext
   (JNIEnv *env, jobject this)
 {
     SGNContext *ctxt=NULL;
@@ -116,7 +116,7 @@ finish:
 }
 
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Signature_initVfyContext
+Java_org_mozilla_jss_pkcs11_PK11Signature_initVfyContext
 	(JNIEnv *env, jobject this)
 {
 	VFYContext2 *ctxt=NULL;
@@ -164,7 +164,7 @@ finish:
  *
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Signature_engineUpdateNative
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineUpdateNative
     (JNIEnv *env, jobject this, jbyteArray bArray, jint offset, jint length)
 {
     SigContextType type;
@@ -222,7 +222,7 @@ finish:
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11Signature_engineSignNative
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineSignNative
     (JNIEnv *env, jobject this)
 {
     SGNContext *ctxt;
@@ -275,7 +275,7 @@ finish:
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_pkcs11_PK11Signature_engineVerifyNative
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineVerifyNative
 	(JNIEnv *env, jobject this, jbyteArray sigArray)
 {
 	jboolean verified = JNI_FALSE;
@@ -646,7 +646,7 @@ finish:
  * Deletes the SGNContext wrapped by this SigContextProxy object.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_SigContextProxy_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_SigContextProxy_releaseNativeResources
   (JNIEnv *env, jobject this)
 {
     SigContextProxy *proxy;
@@ -679,7 +679,7 @@ finish:
  * PK11Signature.engineRawSignNative
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11Signature_engineRawSignNative
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineRawSignNative
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject keyObj,
     jbyteArray hashBA)
 {
@@ -728,7 +728,7 @@ finish:
  * PK11Signature.engineRawVerifyNative
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_pkcs11_PK11Signature_engineRawVerifyNative
+Java_org_mozilla_jss_pkcs11_PK11Signature_engineRawVerifyNative
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject keyObj,
     jbyteArray hashBA, jbyteArray sigBA)
 {

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.provider;
+package org.mozilla.jss.provider;
 
 import java.security.PrivateKey;
 import java.security.SecureRandom;
@@ -38,7 +38,7 @@ import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.security.PublicKey;
 import java.security.InvalidParameterException;
-import com.netscape.jss.crypto.SignatureAlgorithm;
+import org.mozilla.jss.crypto.SignatureAlgorithm;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
 

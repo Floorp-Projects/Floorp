@@ -117,7 +117,7 @@ JSS_PK11_wrapSymKey(JNIEnv *env, PK11SymKey **symKey);
  *
  * INPUTS
  *      keyTypeObj
- *          A com.netscape.jss.crypto.PrivateKey.KeyType object.
+ *          A org.mozilla.jss.crypto.PrivateKey.KeyType object.
  * RETURNS
  *  The key type, or nullKey if an exception occurred.
  */

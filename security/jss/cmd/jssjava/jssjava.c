@@ -459,7 +459,7 @@ int main (int argc, char *argv[])
      * Make sure the registry is empty
      */
     nativeProxyClass = (*env)->FindClass(env,
-        "com/netscape/jss/util/NativeProxy");
+        "org/mozilla/jss/util/NativeProxy");
     /* If it's NULL, don't worry, maybe they just aren't using the class */
     (*env)->ExceptionClear(env);
 

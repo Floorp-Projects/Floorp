@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.primitive;
+package org.mozilla.jss.pkix.primitive;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.crypto.PrivateKey;
+import org.mozilla.jss.crypto.PrivateKey;
 import java.security.NoSuchAlgorithmException;
 
 public class PrivateKeyInfo
@@ -97,7 +97,7 @@ public class PrivateKeyInfo
      *
      * @param attributes May be null if there are no attributes, in which
      *      case the attributes field will be omitted from the DER encoding.
-     *      Each element must be a com.netscape.jss.pkix.primitive.Attribute.
+     *      Each element must be a org.mozilla.jss.pkix.primitive.Attribute.
      */
     public PrivateKeyInfo(INTEGER version,
                 AlgorithmIdentifier privateKeyAlgorithm,

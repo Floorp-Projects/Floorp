@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 
 /**
  * A user certificate that lives on a PKCS #11 token.

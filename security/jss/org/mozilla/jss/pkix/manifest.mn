@@ -39,7 +39,7 @@ NS_USE_JDK = 1
 
 REQUIRES =      nspr20 dbm security
 
-PACKAGE =       com/netscape/jss/pkix
+PACKAGE =       org/mozilla/jss/pkix
 
 # These are meant to be used within Ninja only.
 PRIVATE_EXPORTS =                                   \

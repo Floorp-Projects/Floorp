@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 import java.security.spec.AlgorithmParameterSpec;
-import com.netscape.jss.util.Password;
+import org.mozilla.jss.util.Password;
 
 public class PBEKeyGenParams implements AlgorithmParameterSpec {
 

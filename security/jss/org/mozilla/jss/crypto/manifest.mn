@@ -39,12 +39,12 @@ NS_USE_JDK = 1
 
 REQUIRES =      nspr20 dbm security
 
-PACKAGE =       com/netscape/jss/crypto
+PACKAGE =       org/mozilla/jss/crypto
 
 JNI_GEN =											\
-			com.netscape.jss.crypto.Algorithm		\
-			com.netscape.jss.crypto.EncryptionAlgorithm		\
-			com.netscape.jss.crypto.PQGParams       \
+			org.mozilla.jss.crypto.Algorithm		\
+			org.mozilla.jss.crypto.EncryptionAlgorithm		\
+			org.mozilla.jss.crypto.PQGParams       \
 			$(NULL)
 
 PRIVATE_EXPORTS =                                   \

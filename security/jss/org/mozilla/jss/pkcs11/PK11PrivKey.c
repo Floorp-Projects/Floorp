@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PrivateKeyProxy.h"
+#include "_jni/org_mozilla_jss_pkcs11_PrivateKeyProxy.h"
 
 #include <plarena.h>
 #include <secmodt.h>
@@ -98,7 +98,7 @@ finish:
  * PK11PrivKey.verifyKeyIsOnToken
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11PrivKey_verifyKeyIsOnToken
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_verifyKeyIsOnToken
   (JNIEnv *env, jobject this, jobject token)
 {
 	SECKEYPrivateKey *key = NULL;
@@ -141,7 +141,7 @@ finish:
  * Returns: The KeyType of this key.
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11PrivKey_getKeyType
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getKeyType
   (JNIEnv *env, jobject this)
 {
     PRThread *pThread;
@@ -221,7 +221,7 @@ finish:
  * PrivateKeyProxy.releaseNativeResources
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PrivateKeyProxy_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_PrivateKeyProxy_releaseNativeResources
   (JNIEnv *env, jobject this)
 {
     SECKEYPrivateKey *privk;
@@ -277,7 +277,7 @@ JSS_PK11_getPrivKeyPtr(JNIEnv *env, jobject privkObject,
  *      NULL if an exception occurred, otherwise a new PK11Token object.
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11PrivKey_getOwningToken
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getOwningToken
     (JNIEnv *env, jobject this)
 {
 	SECKEYPrivateKey *key = NULL;
@@ -314,7 +314,7 @@ finish:
  * PK11PrivKey.getUniqueID
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11PrivKey_getUniqueID
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getUniqueID
     (JNIEnv *env, jobject this)
 {
     SECKEYPrivateKey *key = NULL;
@@ -377,7 +377,7 @@ finish:
  * PK11PrivKey.getStrength
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_pkcs11_PK11PrivKey_getStrength
+Java_org_mozilla_jss_pkcs11_PK11PrivKey_getStrength
     (JNIEnv *env, jobject this)
 {
     SECKEYPrivateKey *key = NULL;
@@ -421,7 +421,7 @@ Java_com_netscape_jss_pkcs11_PK11PrivKey_getStrength
  *
  * INPUTS
  *      keyTypeObj
- *          A com.netscape.jss.crypto.PrivateKey.KeyType object.
+ *          A org.mozilla.jss.crypto.PrivateKey.KeyType object.
  * RETURNS
  *  The key type, or nullKey if an exception occurred.
  */

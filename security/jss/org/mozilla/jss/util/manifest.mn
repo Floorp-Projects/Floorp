@@ -39,7 +39,7 @@ NS_USE_JDK = 1
 
 REQUIRES =      nspr20 dbm security
 
-PACKAGE =       com/netscape/jss/util
+PACKAGE =       org/mozilla/jss/util
 
 PRIVATE_EXPORTS =   jssutil.h               \
 					jss_exceptions.h		\
@@ -48,8 +48,8 @@ PRIVATE_EXPORTS =   jssutil.h               \
                     $(NULL)
 
 JNI_GEN =   										\
-                com.netscape.jss.util.Debug         \
-				com.netscape.jss.util.Password		\
+                org.mozilla.jss.util.Debug         \
+				org.mozilla.jss.util.Password		\
 				$(NULL)
 
 JSRCS =	                                    \

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 /**
  * This is a private JSS class that allows the pkcs11 package access

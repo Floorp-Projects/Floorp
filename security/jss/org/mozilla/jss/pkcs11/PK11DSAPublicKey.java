@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.security.interfaces.DSAPublicKey;
 import java.security.interfaces.DSAParams;
 import java.security.spec.DSAParameterSpec;

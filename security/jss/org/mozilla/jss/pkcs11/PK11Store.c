@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11Store.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11Store.h"
 
 #include <plarena.h>
 #include <nspr.h>
@@ -268,7 +268,7 @@ certTraversalCallback(CERTCertificate *cert, void *arg)
  * PK11Store.putKeysInVector
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Store_putKeysInVector
+Java_org_mozilla_jss_pkcs11_PK11Store_putKeysInVector
     (JNIEnv *env, jobject this, jobject keyVector)
 {
     PK11SlotInfo *slot;
@@ -314,7 +314,7 @@ finish:
  * PK11Store.putCertsInVector
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Store_putCertsInVector
+Java_org_mozilla_jss_pkcs11_PK11Store_putCertsInVector
     (JNIEnv *env, jobject this, jobject certVector)
 {
     PK11SlotInfo *slot;
@@ -383,7 +383,7 @@ JSS_PK11_getStoreSlotPtr(JNIEnv *env, jobject store, PK11SlotInfo **slot)
  * PK11Store.deletePrivateKey
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Store_deletePrivateKey
+Java_org_mozilla_jss_pkcs11_PK11Store_deletePrivateKey
     (JNIEnv *env, jobject this, jobject key)
 {
     PK11SlotInfo *slot;
@@ -444,7 +444,7 @@ finish:
  * PK11Store.deleteCert
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Store_deleteCert
+Java_org_mozilla_jss_pkcs11_PK11Store_deleteCert
     (JNIEnv *env, jobject this, jobject certObject)
 {
     PK11SlotInfo *slot, *certSlot=NULL;
@@ -1087,7 +1087,7 @@ finish:
  * PK11Store.importEncryptedPrivateKey
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Store_importEncryptedPrivateKey
+Java_org_mozilla_jss_pkcs11_PK11Store_importEncryptedPrivateKey
     (   JNIEnv *env,
         jobject this,
         jbyteArray encodedKeyArray,
@@ -1203,7 +1203,7 @@ finish:
  * PK11Store.importdPrivateKey
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Store_importPrivateKey
+Java_org_mozilla_jss_pkcs11_PK11Store_importPrivateKey
     (   JNIEnv *env,
         jobject this,
         jbyteArray keyArray,
@@ -1217,7 +1217,7 @@ Java_com_netscape_jss_pkcs11_PK11Store_importPrivateKey
  * PK11Store.importTemporaryEncryptedPrivateKey
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Store_importTemporaryEncryptedPrivateKey
+Java_org_mozilla_jss_pkcs11_PK11Store_importTemporaryEncryptedPrivateKey
     (   JNIEnv *env,
         jobject this,
         jbyteArray encodedKeyArray,

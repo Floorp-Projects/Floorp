@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cms;
+package org.mozilla.jss.pkix.cms;
 
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkix.primitive.*;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkix.primitive.*;
 import java.io.*;
 
 public class SignedAndEnvelopedData implements ASN1Value {

@@ -75,5 +75,5 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 
 run:
-	$(DEBUG_CMD) /share/builds/components/jdk/1.2.2_05a/SunOS/jre/bin/java -classpath $(JAVA_HOME)/lib/classes.zip:$(SOURCE_CLASSES_DIR)_DBG com.netscape.jss.asn1.SEQUENCE /tmp/p10
+	$(DEBUG_CMD) /share/builds/components/jdk/1.2.2_05a/SunOS/jre/bin/java -classpath $(JAVA_HOME)/lib/classes.zip:$(SOURCE_CLASSES_DIR)_DBG org.mozilla.jss.asn1.SEQUENCE /tmp/p10
 

@@ -41,7 +41,7 @@
 #include <jss_exceptions.h>
 #include "java_ids.h"
 
-#include "_jni/com_netscape_jss_util_Password.h"
+#include "_jni/org_mozilla_jss_util_Password.h"
 
 /***********************************************************************
 **
@@ -555,11 +555,11 @@ static char* getPWFromConsole()
 
 
 /***********************************************************************
- * Class:     com_netscape_jss_util_Password
+ * Class:     org_mozilla_jss_util_Password
  * Method:    readPasswordFromConsole
- * Signature: ()Lcom/netscape/jss/util/Password;
+ * Signature: ()Lorg/mozilla/jss/util/Password;
  */
-JNIEXPORT jobject JNICALL Java_com_netscape_jss_util_Password_readPasswordFromConsole
+JNIEXPORT jobject JNICALL Java_org_mozilla_jss_util_Password_readPasswordFromConsole
   (JNIEnv *env, jclass clazz)
 {
     char *pw=NULL;
@@ -659,7 +659,7 @@ static int debugLevel = JSS_TRACE_ERROR;
  *
  * INPUTS
  *      level
- *          The trace level, from com.netscape.jss.util.Debug.
+ *          The trace level, from org.mozilla.jss.util.Debug.
  *      mesg
  *          The trace message.  Must not be NULL.
  */
@@ -715,7 +715,7 @@ JSS_assertOutOfMem(JNIEnv *env)
  * code as well.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_util_Debug_setNativeLevel
+Java_org_mozilla_jss_util_Debug_setNativeLevel
     (JNIEnv *env, jclass clazz, jint level)
 {
     debugLevel = level;

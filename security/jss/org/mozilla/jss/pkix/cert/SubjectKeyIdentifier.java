@@ -31,13 +31,13 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cert;
+package org.mozilla.jss.pkix.cert;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.util.Assert;
 
 /**
  * Represent the Subject Key Identifier Extension.

@@ -39,7 +39,7 @@ NS_USE_JDK = 1
 
 REQUIRES =      nspr20 dbm security
 
-PACKAGE =       com/netscape/jss/pkcs11
+PACKAGE =       org/mozilla/jss/pkcs11
 
 # These are meant to be used within Ninja only.
 PRIVATE_EXPORTS =   pk11util.h       \
@@ -49,32 +49,32 @@ PRIVATE_EXPORTS =   pk11util.h       \
                     $(NULL)
 
 JNI_GEN =   										\
-			com.netscape.jss.pkcs11.CertProxy		\
-			com.netscape.jss.pkcs11.CipherContextProxy \
-            com.netscape.jss.pkcs11.PK11Module    \
-            com.netscape.jss.pkcs11.ModuleProxy     \
-			com.netscape.jss.pkcs11.PK11Cert		\
-			com.netscape.jss.pkcs11.PK11Cipher		\
-            com.netscape.jss.pkcs11.PK11KeyWrapper  \
-			com.netscape.jss.pkcs11.PK11MessageDigest \
-            com.netscape.jss.pkcs11.PK11PrivKey     \
-            com.netscape.jss.pkcs11.PK11PubKey     \
-            com.netscape.jss.pkcs11.PK11SymKey      \
-			com.netscape.jss.pkcs11.PK11KeyPairGenerator	\
-            com.netscape.jss.pkcs11.PK11KeyGenerator    \
-            com.netscape.jss.pkcs11.PrivateKeyProxy    \
-            com.netscape.jss.pkcs11.PublicKeyProxy    \
-            com.netscape.jss.pkcs11.SymKeyProxy    \
-            com.netscape.jss.pkcs11.KeyProxy		\
-			com.netscape.jss.pkcs11.PK11Token		\
-			com.netscape.jss.pkcs11.TokenProxy		\
-            com.netscape.jss.pkcs11.PK11Signature   \
-            com.netscape.jss.pkcs11.PK11Store       \
-            com.netscape.jss.pkcs11.PK11KeyPairGenerator \
-            com.netscape.jss.pkcs11.SigContextProxy \
-            com.netscape.jss.pkcs11.PK11RSAPublicKey \
-            com.netscape.jss.pkcs11.PK11DSAPublicKey \
-            com.netscape.jss.pkcs11.PK11SecureRandom \
+			org.mozilla.jss.pkcs11.CertProxy		\
+			org.mozilla.jss.pkcs11.CipherContextProxy \
+            org.mozilla.jss.pkcs11.PK11Module    \
+            org.mozilla.jss.pkcs11.ModuleProxy     \
+			org.mozilla.jss.pkcs11.PK11Cert		\
+			org.mozilla.jss.pkcs11.PK11Cipher		\
+            org.mozilla.jss.pkcs11.PK11KeyWrapper  \
+			org.mozilla.jss.pkcs11.PK11MessageDigest \
+            org.mozilla.jss.pkcs11.PK11PrivKey     \
+            org.mozilla.jss.pkcs11.PK11PubKey     \
+            org.mozilla.jss.pkcs11.PK11SymKey      \
+			org.mozilla.jss.pkcs11.PK11KeyPairGenerator	\
+            org.mozilla.jss.pkcs11.PK11KeyGenerator    \
+            org.mozilla.jss.pkcs11.PrivateKeyProxy    \
+            org.mozilla.jss.pkcs11.PublicKeyProxy    \
+            org.mozilla.jss.pkcs11.SymKeyProxy    \
+            org.mozilla.jss.pkcs11.KeyProxy		\
+			org.mozilla.jss.pkcs11.PK11Token		\
+			org.mozilla.jss.pkcs11.TokenProxy		\
+            org.mozilla.jss.pkcs11.PK11Signature   \
+            org.mozilla.jss.pkcs11.PK11Store       \
+            org.mozilla.jss.pkcs11.PK11KeyPairGenerator \
+            org.mozilla.jss.pkcs11.SigContextProxy \
+            org.mozilla.jss.pkcs11.PK11RSAPublicKey \
+            org.mozilla.jss.pkcs11.PK11DSAPublicKey \
+            org.mozilla.jss.pkcs11.PK11SecureRandom \
             $(NULL)
 
 CLASSES =	                                        \

@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.provider;
+package org.mozilla.jss.provider;
 
-import com.netscape.jss.crypto.DigestAlgorithm;
+import org.mozilla.jss.crypto.DigestAlgorithm;
 
 /**
  * The JSS JCA MD5 provider.

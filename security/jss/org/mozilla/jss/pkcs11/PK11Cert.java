@@ -31,16 +31,16 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.*;
 import java.security.*;
 import java.security.cert.*;
 import java.util.*;
 import java.math.BigInteger;
 
-public class PK11Cert implements com.netscape.jss.crypto.X509Certificate {
+public class PK11Cert implements org.mozilla.jss.crypto.X509Certificate {
 
 	public native byte[] getEncoded() throws CertificateEncodingException;
 
@@ -149,7 +149,7 @@ public class PK11Cert implements com.netscape.jss.crypto.X509Certificate {
 	protected CertProxy certProxy;
 }
 
-class CertProxy extends com.netscape.jss.util.NativeProxy {
+class CertProxy extends org.mozilla.jss.util.NativeProxy {
 
     public CertProxy(byte[] pointer) {
         super(pointer);

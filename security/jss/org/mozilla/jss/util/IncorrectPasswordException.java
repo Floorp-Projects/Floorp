@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 public class IncorrectPasswordException extends Exception {
     public IncorrectPasswordException() { super(); }

@@ -31,19 +31,19 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs12;
+package org.mozilla.jss.pkcs12;
 
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkcs7.*;
-import com.netscape.jss.pkix.cert.*;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkcs7.*;
+import org.mozilla.jss.pkix.cert.*;
 import java.io.*;
-import com.netscape.jss.util.Password;
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.pkix.primitive.Attribute;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.util.Password;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.primitive.Attribute;
+import org.mozilla.jss.crypto.*;
 import java.security.*;
-import com.netscape.jss.pkix.cert.Certificate;
+import org.mozilla.jss.pkix.cert.Certificate;
 
 /**
  * The top level ASN.1 structure for a PKCS #12 blob.

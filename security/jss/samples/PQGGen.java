@@ -32,8 +32,8 @@
  */
 
 
-import com.netscape.jss.*;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.*;
+import org.mozilla.jss.crypto.*;
 
 /**
  * A command-line utility for generating PQG parameters for DSA

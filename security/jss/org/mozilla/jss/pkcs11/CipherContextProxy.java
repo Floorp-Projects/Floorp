@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.util.NativeProxy;
+import org.mozilla.jss.util.NativeProxy;
 
 final class CipherContextProxy extends NativeProxy {
     public CipherContextProxy(byte[] pointer) {

@@ -35,5 +35,5 @@ CORE_DEPTH = ../..
  
 MODULE = ninja
  
-DIRS =  netscape \
+DIRS =  mozilla \
         $(NULL)

@@ -38,12 +38,12 @@ NS_USE_JDK = 1
 
 REQUIRES =      nspr20 svrcore dbm security
 
-PACKAGE =       com/netscape/jss
+PACKAGE =       org/mozilla/jss
 
 JNI_GEN =                                           \
-            com.netscape.jss.DatabaseCloser         \
-            com.netscape.jss.CryptoManager			\
-            com.netscape.jss.NSSInit                \
+            org.mozilla.jss.DatabaseCloser         \
+            org.mozilla.jss.CryptoManager			\
+            org.mozilla.jss.NSSInit                \
             $(NULL)
 
 CLASSES = 											\

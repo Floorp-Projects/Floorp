@@ -31,12 +31,12 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs7;
+package org.mozilla.jss.pkcs7;
 
 import java.io.*;
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.util.Vector;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.math.BigInteger;
 import java.io.ByteArrayInputStream;
 

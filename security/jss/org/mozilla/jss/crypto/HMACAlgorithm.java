@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 import java.util.Hashtable;
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.security.NoSuchAlgorithmException;
 
 /**

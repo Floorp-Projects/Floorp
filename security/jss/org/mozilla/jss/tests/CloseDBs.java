@@ -31,13 +31,13 @@
  * GPL.
  */
 
-package com.netscape.jss;
+package org.mozilla.jss;
 
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 import java.util.Enumeration;
 import java.math.BigInteger;
 
-public final class CloseDBs extends com.netscape.jss.DatabaseCloser {
+public final class CloseDBs extends org.mozilla.jss.DatabaseCloser {
 
     public CloseDBs() throws Exception {
         super();

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#include "_jni/com_netscape_jss_CryptoManager.h"
+#include "_jni/org_mozilla_jss_CryptoManager.h"
 
 #include <plarena.h>
 #include <secmodt.h>
@@ -55,7 +55,7 @@
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_CryptoManager_findCertByNicknameNative
+Java_org_mozilla_jss_CryptoManager_findCertByNicknameNative
   (JNIEnv *env, jobject this, jstring nickname)
 {
 	char *nick=NULL;
@@ -123,7 +123,7 @@ CreateNicknameCertList(CERTCertList *certList, CERTCertDBHandle *handle,
  *
  */
 JNIEXPORT jobjectArray JNICALL
-Java_com_netscape_jss_CryptoManager_findCertsByNicknameNative
+Java_org_mozilla_jss_CryptoManager_findCertsByNicknameNative
   (JNIEnv *env, jobject this, jstring nickname)
 {
     CERTCertList *list =NULL;
@@ -213,7 +213,7 @@ finish:
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_CryptoManager_findCertByIssuerAndSerialNumberNative
+Java_org_mozilla_jss_CryptoManager_findCertByIssuerAndSerialNumberNative
   (JNIEnv *env, jobject this, jbyteArray issuerBA, jbyteArray serialNumBA)
 {
 	jobject certObject=NULL;
@@ -278,7 +278,7 @@ finish:
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_CryptoManager_findPrivKeyByCertNative
+Java_org_mozilla_jss_CryptoManager_findPrivKeyByCertNative
   (JNIEnv *env, jobject this, jobject Cert)
 {
 	PRThread *pThread;
@@ -463,7 +463,7 @@ finish:
  *      There will always be at least one element in the array (the leaf).
  */
 JNIEXPORT jobjectArray JNICALL
-Java_com_netscape_jss_CryptoManager_buildCertificateChainNative
+Java_org_mozilla_jss_CryptoManager_buildCertificateChainNative
     (JNIEnv *env, jobject this, jobject leafCert)
 {
     PRThread *pThread;
@@ -712,7 +712,7 @@ done:
  * throws TOKEN_EXCEPTION
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_CryptoManager_importCertToPermNative
+Java_org_mozilla_jss_CryptoManager_importCertToPermNative
     (JNIEnv *env, jobject this, jobject cert, jstring nickString)
 {
 	SECStatus rv;
@@ -880,7 +880,7 @@ finish:
  * CryptoManager.importCertPackage
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_CryptoManager_importCertPackageNative
+Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     (JNIEnv *env, jobject this, jbyteArray packageArray, jstring nickString,
      jboolean noUser, jboolean leafIsCA)
 {
@@ -1332,7 +1332,7 @@ finish:
  * CryptoManager.exportCertsToPKCS7
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_CryptoManager_exportCertsToPKCS7
+Java_org_mozilla_jss_CryptoManager_exportCertsToPKCS7
     (JNIEnv *env, jobject this, jobjectArray certArray)
 {
     int i, certcount;
@@ -1577,7 +1577,7 @@ collect_certs(CERTCertificate *cert, SECItem *key, void *arg)
  * CryptoManager.getCACerts
  */
 JNIEXPORT jobjectArray JNICALL
-Java_com_netscape_jss_CryptoManager_getCACerts
+Java_org_mozilla_jss_CryptoManager_getCACerts
     (JNIEnv *env, jobject this)
 {
     CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
@@ -1677,7 +1677,7 @@ finish:
  * CryptoManager.getPermCerts
  */
 JNIEXPORT jobjectArray JNICALL
-Java_com_netscape_jss_CryptoManager_getPermCerts
+Java_org_mozilla_jss_CryptoManager_getPermCerts
     (JNIEnv *env, jobject this)
 {
     CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
@@ -1777,7 +1777,7 @@ finish:
 
 
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_CryptoManager_importCRLNative
+Java_org_mozilla_jss_CryptoManager_importCRLNative
     (JNIEnv *env, jobject this,
 		jbyteArray der_crl, jstring url_jstr, jint rl_type)
 

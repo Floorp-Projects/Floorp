@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs12;
+package org.mozilla.jss.pkcs12;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 /**
  * A PKCS #12 cert bag.

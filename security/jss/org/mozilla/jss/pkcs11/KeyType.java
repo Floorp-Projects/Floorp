@@ -31,16 +31,16 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.Algorithm;
-import com.netscape.jss.crypto.HMACAlgorithm;
+import org.mozilla.jss.crypto.Algorithm;
+import org.mozilla.jss.crypto.HMACAlgorithm;
 import java.util.Hashtable;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.util.*;
 import java.security.NoSuchAlgorithmException;
-import com.netscape.jss.crypto.SignatureAlgorithm;
-import com.netscape.jss.crypto.KeyWrapAlgorithm;
-import com.netscape.jss.crypto.EncryptionAlgorithm;
+import org.mozilla.jss.crypto.SignatureAlgorithm;
+import org.mozilla.jss.crypto.KeyWrapAlgorithm;
+import org.mozilla.jss.crypto.EncryptionAlgorithm;
 
 /**
  * PKCS #11 Key Types

@@ -31,20 +31,20 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs12;
+package org.mozilla.jss.pkcs12;
 
 import java.io.*;
 import java.text.*;
 import java.util.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.util.*;
 
 /**
  * A PKCS #12 "virtual token".  Currently, these extend
  * tokens found in the PK11Token class.
  *
  * @author mharmsen
- * @version $Revision: 1.1 $ $Date: 2000/12/15 20:50:38 $ 
- * @see com.netscape.jss.pkcs11.PK11Token
+ * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:19 $ 
+ * @see org.mozilla.jss.pkcs11.PK11Token
  */
 public class SelfTest
 {

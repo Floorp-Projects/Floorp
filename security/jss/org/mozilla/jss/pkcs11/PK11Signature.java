@@ -31,17 +31,17 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.*;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.*;
 import java.security.SecureRandom;
 import java.io.ByteArrayOutputStream;
-import com.netscape.jss.crypto.PrivateKey;
+import org.mozilla.jss.crypto.PrivateKey;
 
-final class PK11Signature extends com.netscape.jss.crypto.SignatureSpi {
+final class PK11Signature extends org.mozilla.jss.crypto.SignatureSpi {
 
     /*************************************************************
     ** PK11Signature
@@ -73,7 +73,7 @@ final class PK11Signature extends com.netscape.jss.crypto.SignatureSpi {
     /*************************************************************
     ** engineInitSign
     */
-	public void engineInitSign(com.netscape.jss.crypto.PrivateKey privateKey)
+	public void engineInitSign(org.mozilla.jss.crypto.PrivateKey privateKey)
 		throws InvalidKeyException, TokenException
 	{
         PK11PrivKey privKey;
@@ -133,7 +133,7 @@ final class PK11Signature extends com.netscape.jss.crypto.SignatureSpi {
     ** This just here for JCA compliance(?), we don't take randoms this way.
     */
 	public void
-    engineInitSign(com.netscape.jss.crypto.PrivateKey privateKey,
+    engineInitSign(org.mozilla.jss.crypto.PrivateKey privateKey,
                     SecureRandom random)
 		throws InvalidKeyException, TokenException
 	{

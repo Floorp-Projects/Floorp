@@ -31,12 +31,12 @@
  * GPL.
  */
 
-package com.netscape.jss;
+package org.mozilla.jss;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.util.Assert;
-import com.netscape.jss.util.Password;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.util.Assert;
+import org.mozilla.jss.util.Password;
 import java.security.InvalidAlgorithmParameterException;
 
 public class SymKeyGen {

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.provider;
+package org.mozilla.jss.provider;
 
 public class Provider extends java.security.Provider {
 
@@ -42,7 +42,7 @@ public class Provider extends java.security.Provider {
         // Signature
         /////////////////////////////////////////////////////////////
 
-        put("Signature.SHA1withDSA", "com.netscape.jss.provider.DSASignature");
+        put("Signature.SHA1withDSA", "org.mozilla.jss.provider.DSASignature");
 
         put("Alg.Alias.Signature.DSA", "SHA1withDSA");
         put("Alg.Alias.Signature.DSS", "SHA1withDSA");
@@ -52,10 +52,10 @@ public class Provider extends java.security.Provider {
         put("Alg.Alias.Signature.DSAWithSHA1", "SHA1withDSA");
         put("Alg.Alias.Signature.SHAwithDSA", "SHA1withDSA");
 
-        put("Signature.MD5/RSA", "com.netscape.jss.provider.MD5RSASignature");
-        put("Signature.MD2/RSA", "com.netscape.jss.provider.MD2RSASignature");
+        put("Signature.MD5/RSA", "org.mozilla.jss.provider.MD5RSASignature");
+        put("Signature.MD2/RSA", "org.mozilla.jss.provider.MD2RSASignature");
         put("Signature.SHA-1/RSA",
-            "com.netscape.jss.provider.SHA1RSASignature");
+            "org.mozilla.jss.provider.SHA1RSASignature");
 
         put("Alg.Alias.Signature.SHA1/RSA", "SHA-1/RSA");
 
@@ -64,11 +64,11 @@ public class Provider extends java.security.Provider {
         /////////////////////////////////////////////////////////////
 
         put("MessageDigest.SHA-1",
-                "com.netscape.jss.provider.SHA1MessageDigest");
+                "org.mozilla.jss.provider.SHA1MessageDigest");
         put("MessageDigest.MD2",
-                "com.netscape.jss.provider.MD2MessageDigest");
+                "org.mozilla.jss.provider.MD2MessageDigest");
         put("MessageDigest.MD5",
-                "com.netscape.jss.provider.MD5MessageDigest");
+                "org.mozilla.jss.provider.MD5MessageDigest");
 
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.SHA", "SHA-1");

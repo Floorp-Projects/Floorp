@@ -30,11 +30,11 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.cmmf;
+package org.mozilla.jss.pkix.cmmf;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.pkix.crmf.CertId;
+import org.mozilla.jss.pkix.crmf.CertId;
 
 /**
  * CMMF <i>RevRepContent</i>.
@@ -62,7 +62,7 @@ public class RevRepContent implements ASN1Value {
      * The <code>status</code> field, which is a <code>SEQUENCE</code>
      * of <code>PKIStatusInfo</code>.
      *
-     * @see com.netscape.jss.pkix.cmmf.PKIStatusInfo
+     * @see org.mozilla.jss.pkix.cmmf.PKIStatusInfo
      */
     public SEQUENCE getStatus() {
         return status;
@@ -73,7 +73,7 @@ public class RevRepContent implements ASN1Value {
      *  of <code>CertId</code>.  Returns <code>null</code> if this
      *  field is not present.
      *
-     * @see com.netscape.jss.pkix.crmf.CertId
+     * @see org.mozilla.jss.pkix.crmf.CertId
      */
     public SEQUENCE getRevCerts() {
         return revCerts;
@@ -102,7 +102,7 @@ public class RevRepContent implements ASN1Value {
      *      field is optional, so <code>null</code> may be used.
      * @param crls A <code>SEQUENCE</code> of <code>ANY</code>.  This field
      *      is optional, so <code>null</code> may be used.
-     * @see com.netscape.jss.pkix.cmmf.PKIStatusInfo
+     * @see org.mozilla.jss.pkix.cmmf.PKIStatusInfo
      */
     public RevRepContent(SEQUENCE status, SEQUENCE revCerts, SEQUENCE crls) {
 

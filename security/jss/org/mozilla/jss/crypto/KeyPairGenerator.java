@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 import java.security.*;
 import java.security.SecureRandom;
@@ -45,7 +45,7 @@ import java.security.spec.AlgorithmParameterSpec;
  * generation, the Netscape internal token may do it instead. Call
  * <code>keygenOnInternalToken</code> to find out if this is happening.
  *
- * @see com.netscape.jss.crypto.CryptoToken#getKeyPairGenerator
+ * @see org.mozilla.jss.crypto.CryptoToken#getKeyPairGenerator
  */
 public class KeyPairGenerator {
 
@@ -93,7 +93,7 @@ public class KeyPairGenerator {
      * @exception InvalidAlgorithmParameterException If the parameters are
      *      inappropriate for the type of key pair that is being generated,
      *      or they are not supported by this generator.
-     * @see com.netscape.jss.crypto.RSAParameterSpec
+     * @see org.mozilla.jss.crypto.RSAParameterSpec
      * @see java.security.spec.DSAParameterSpec
      */
 	public void initialize(AlgorithmParameterSpec params, SecureRandom random)
@@ -109,7 +109,7 @@ public class KeyPairGenerator {
      * @exception InvalidAlgorithmParameterException If the parameters are
      *      inappropriate for the type of key pair that is being generated,
      *      or they are not supported by this generator.
-     * @see com.netscape.jss.crypto.RSAParameterSpec
+     * @see org.mozilla.jss.crypto.RSAParameterSpec
      * @see java.security.spec.DSAParameterSpec
      */
 	public void initialize(AlgorithmParameterSpec params)

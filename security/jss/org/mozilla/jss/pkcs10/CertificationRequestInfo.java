@@ -30,11 +30,11 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkcs10;
+package org.mozilla.jss.pkcs10;
 
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.util.*;
 import java.security.cert.CertificateException;
 import java.security.PublicKey;
 import java.util.Calendar;

@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cert;
+package org.mozilla.jss.pkix.cert;
 
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.util.*;
 import java.security.cert.CertificateException;
 import java.security.PublicKey;
 import java.util.Calendar;

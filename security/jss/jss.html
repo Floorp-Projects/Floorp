@@ -62,10 +62,10 @@ in your <code>PATH</code> (on Windows), and put
 
 <h2>Programming with JSS</h2>
 Before the SSL classes can be used,
-<a href="javadoc/com/netscape/jss/NSSInit.html#initialize(java.lang.String, java.lang.String, java.lang.String)">
+<a href="javadoc/org/mozilla/jss/NSSInit.html#initialize(java.lang.String, java.lang.String, java.lang.String)">
 <code>NSSInit.initialize</code></a> must be called to open the security
 databases and initialize the random number generator.
-<a href="javadoc/com/netscape/jss/NSSInit.html#setPasswordCallback(com.netscape.jss.util.PasswordCallback)"><code>
+<a href="javadoc/org/mozilla/jss/NSSInit.html#setPasswordCallback(org.mozilla.jss.util.PasswordCallback)"><code>
 NSSInit.setPasswordCallback</code></a> may be called to change the password
 callback; the default is to prompt for passwords on the command line.
 
@@ -85,9 +85,9 @@ it will ask for a password
 for the "Internal Key Storage Token", which is the key database.
 The password for the example <code>key3.db</code> file is "netscape".
 </dl>
-These classes are in the <code>com.netscape.jss.ssl</code> package.
+These classes are in the <code>org.mozilla.jss.ssl</code> package.
 The <code>.class</code> files must be put in the subdirectory
-<code>com/netscape/jss/ssl</code> of a <code>CLASSPATH</code> entry
+<code>org/mozilla/jss/ssl</code> of a <code>CLASSPATH</code> entry
 in order to be located by the Java virtual machine.
 
 <a href="javadoc/index.html"><h2>Javadoc for the JSS Classes</h2></a>

@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 import java.io.CharConversionException;
 
@@ -254,7 +254,7 @@ public class Password implements PasswordCallback, Cloneable,
      * The call is synchronized because it alters terminal settings in
      * a way that is not thread-safe.
 	 *
-     * @exception com.netscape.jss.util.PasswordCallback.GiveUpException
+     * @exception org.mozilla.jss.util.PasswordCallback.GiveUpException
      *      If the user enters no password (just hits
      *      <code>&lt;enter&gt;</code>).
 	 * @return The password the user entered at the command line.

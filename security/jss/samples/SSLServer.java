@@ -40,11 +40,11 @@
 
 // tabstops: 4
 
-import com.netscape.jss.ssl.*;
+import org.mozilla.jss.ssl.*;
 
 import java.io.*;
 import java.util.*;
-import com.netscape.jss.*;
+import org.mozilla.jss.*;
 
 /**
  * Parameters supported by this socket test:
@@ -342,7 +342,7 @@ public class SSLServer
 	  System.out.println("Couldn't open the certificate database");
 	  return;
 	}
-    catch (com.netscape.jss.crypto.AlreadyInitializedException aie) {
+    catch (org.mozilla.jss.crypto.AlreadyInitializedException aie) {
       System.out.println("CryptoManager already initialized???");
       return;
     }

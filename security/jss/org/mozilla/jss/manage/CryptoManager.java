@@ -30,20 +30,20 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss;
+package org.mozilla.jss;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.*;
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.asn1.*;
 import java.security.cert.CertificateException;
 import java.security.GeneralSecurityException;
-import com.netscape.jss.pkcs11.PK11Cert;
+import org.mozilla.jss.pkcs11.PK11Cert;
 import java.util.*;
-import com.netscape.jss.pkcs11.PK11Token;
-import com.netscape.jss.pkcs11.PK11Module;
-import com.netscape.jss.pkcs11.PK11SecureRandom;
+import org.mozilla.jss.pkcs11.PK11Token;
+import org.mozilla.jss.pkcs11.PK11Module;
+import org.mozilla.jss.pkcs11.PK11SecureRandom;
 import java.security.cert.CertificateEncodingException;
-import com.netscape.jss.CRLImportException;
+import org.mozilla.jss.CRLImportException;
 
 /**
  * This class is the starting poing for the crypto package.
@@ -51,7 +51,7 @@ import com.netscape.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.1 $ $Date: 2000/12/15 20:49:37 $ 
+ * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:01 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -463,7 +463,7 @@ public final class CryptoManager implements TokenSupplier
      * loaded cryptographic modules for the token.
      *
      * @param name The name of the token.
-     * @exception com.netscape.jss.crypto.NoSuchTokenException If no token
+     * @exception org.mozilla.jss.crypto.NoSuchTokenException If no token
      *  is found with the given name.
      */
     public synchronized CryptoToken getTokenByName(String name)
@@ -510,7 +510,7 @@ public final class CryptoManager implements TokenSupplier
      *
      * @return All tokens accessible from JSS. Each item of the enumeration
      *      is a <code>CryptoToken</code>
-     * @see com.netscape.jss.crypto.CryptoToken
+     * @see org.mozilla.jss.crypto.CryptoToken
      */
     public synchronized Enumeration getAllTokens() {
         Enumeration modules = getModules();
@@ -559,7 +559,7 @@ public final class CryptoManager implements TokenSupplier
      *
      * @return An enumeration of all installed PKCS #11 modules. Each
      *      item in the enumeration is a <code>PK11Module</code>.
-     * @see com.netscape.jss.pkcs11.PK11Module
+     * @see org.mozilla.jss.pkcs11.PK11Module
      */
     public synchronized Enumeration getModules() {
         return moduleVector.elements();
@@ -757,9 +757,9 @@ public final class CryptoManager implements TokenSupplier
      *      database.
      * @param certDBName The full path, relative or absolute, of the
      *      certificate database.
-     * @exception com.netscape.jss.util.KeyDatabaseException Unable to open
+     * @exception org.mozilla.jss.util.KeyDatabaseException Unable to open
      *  the key database, or it was currupted.
-     * @exception com.netscape.jss.util.CertDatabaseException Unable
+     * @exception org.mozilla.jss.util.CertDatabaseException Unable
      *  to open the certificate database, or it was currupted.
      **/
     public static synchronized void initialize( String modDBName,
@@ -784,9 +784,9 @@ public final class CryptoManager implements TokenSupplier
      * <code>initialize()</code>.
      *
      * @param values The options with which to initialize CryptoManager.
-     * @exception com.netscape.jss.util.KeyDatabaseException Unable to open
+     * @exception org.mozilla.jss.util.KeyDatabaseException Unable to open
      *  the key database, or it was currupted.
-     * @exception com.netscape.jss.util.CertDatabaseException Unable
+     * @exception org.mozilla.jss.util.CertDatabaseException Unable
      *  to open the certificate database, or it was currupted.
      **/
     public static synchronized void initialize( InitializationValues values )
@@ -834,7 +834,7 @@ public final class CryptoManager implements TokenSupplier
         }
 		java.security.Security.removeProvider("SUN");
 		int position = java.security.Security.insertProviderAt(
-							new com.netscape.jss.provider.Provider(),
+							new org.mozilla.jss.provider.Provider(),
 							1);
 		if(position==-11) {
 			Debug.trace(Debug.ERROR,
@@ -1116,7 +1116,7 @@ public final class CryptoManager implements TokenSupplier
      *      with the given nickname.
      * @exception TokenException If an error occurs in the security library.
      */
-    public com.netscape.jss.crypto.X509Certificate
+    public org.mozilla.jss.crypto.X509Certificate
 	findCertByNickname(String nickname)
         throws ObjectNotFoundException, TokenException
 	{
@@ -1132,7 +1132,7 @@ public final class CryptoManager implements TokenSupplier
      *      if no matching certs were found.
      * @exception TokenException If an error occurs in the security library.
      */
-    public com.netscape.jss.crypto.X509Certificate[]
+    public org.mozilla.jss.crypto.X509Certificate[]
     findCertsByNickname(String nickname)
         throws TokenException
 	{
@@ -1152,7 +1152,7 @@ public final class CryptoManager implements TokenSupplier
      *      in the internal certificate database or on any PKCS #11 token.
      * @exception TokenException If an error occurs in the security library.
      */
-    public com.netscape.jss.crypto.X509Certificate
+    public org.mozilla.jss.crypto.X509Certificate
     findCertByIssuerAndSerialNumber(byte[] derIssuer, INTEGER serialNumber)
         throws ObjectNotFoundException, TokenException
     {
@@ -1171,15 +1171,15 @@ public final class CryptoManager implements TokenSupplier
      * @param serialNumber The contents octets of a DER-encoding of the
      *  certificate serial number.
      */
-    private native com.netscape.jss.crypto.X509Certificate
+    private native org.mozilla.jss.crypto.X509Certificate
     findCertByIssuerAndSerialNumberNative(byte[] derIssuer, byte[] serialNumber)
         throws ObjectNotFoundException, TokenException;
 
-	protected native com.netscape.jss.crypto.X509Certificate
+	protected native org.mozilla.jss.crypto.X509Certificate
 	findCertByNicknameNative(String nickname)
 		throws ObjectNotFoundException, TokenException;
 
-    protected native com.netscape.jss.crypto.X509Certificate[]
+    protected native org.mozilla.jss.crypto.X509Certificate[]
     findCertsByNicknameNative(String nickname)
         throws TokenException;
 
@@ -1195,8 +1195,8 @@ public final class CryptoManager implements TokenSupplier
      * @throws CertificateException If the certificate is not recognized
      *      by the underlying provider.
      */
-    public com.netscape.jss.crypto.X509Certificate[]
-	buildCertificateChain(com.netscape.jss.crypto.X509Certificate leaf)
+    public org.mozilla.jss.crypto.X509Certificate[]
+	buildCertificateChain(org.mozilla.jss.crypto.X509Certificate leaf)
         throws java.security.cert.CertificateException, TokenException
 	{
 		if( ! (leaf instanceof PK11Cert) ) {
@@ -1206,7 +1206,7 @@ public final class CryptoManager implements TokenSupplier
 		return buildCertificateChainNative((PK11Cert)leaf);
 	}
 
-	native com.netscape.jss.crypto.X509Certificate[]
+	native org.mozilla.jss.crypto.X509Certificate[]
     buildCertificateChainNative(PK11Cert leaf)
 		throws CertificateException, TokenException;
 
@@ -1221,20 +1221,20 @@ public final class CryptoManager implements TokenSupplier
      *      found matching the given certificate.
      * @exception TokenException If an error occurs in the security library.
      */
-    public com.netscape.jss.crypto.PrivateKey
-	findPrivKeyByCert(com.netscape.jss.crypto.X509Certificate cert)
+    public org.mozilla.jss.crypto.PrivateKey
+	findPrivKeyByCert(org.mozilla.jss.crypto.X509Certificate cert)
         throws ObjectNotFoundException, TokenException
 	{
         Assert.assert(cert!=null);
-		if(! (cert instanceof com.netscape.jss.pkcs11.PK11Cert)) {
+		if(! (cert instanceof org.mozilla.jss.pkcs11.PK11Cert)) {
 			Assert.notReached("non-pkcs11 cert passed to PK11Finder");
 			throw new ObjectNotFoundException();
 		}
 		return findPrivKeyByCertNative(cert);
 	}
 
-    protected native com.netscape.jss.crypto.PrivateKey
-	findPrivKeyByCertNative(com.netscape.jss.crypto.X509Certificate cert)
+    protected native org.mozilla.jss.crypto.PrivateKey
+	findPrivKeyByCertNative(org.mozilla.jss.crypto.X509Certificate cert)
         throws ObjectNotFoundException, TokenException;
 
     /////////////////////////////////////////////////////////////
@@ -1247,7 +1247,7 @@ public final class CryptoManager implements TokenSupplier
      * @return A JSS SecureRandom implemented with the FIPS-validated
      *      Netscape security library.
      */
-    public com.netscape.jss.crypto.JSSSecureRandom 
+    public org.mozilla.jss.crypto.JSSSecureRandom 
     createPseudoRandomNumberGenerator()
     {
         return new PK11SecureRandom();
@@ -1259,7 +1259,7 @@ public final class CryptoManager implements TokenSupplier
      * @return A JSS SecureRandom implemented with the FIPS-validated
      *      Netscape security library.
      */
-    public com.netscape.jss.crypto.JSSSecureRandom
+    public org.mozilla.jss.crypto.JSSSecureRandom
     getSecureRNG() {
         return new PK11SecureRandom();
     }

@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.*;
 import java.math.BigInteger;
 import java.security.*;
 import java.security.SecureRandom;
@@ -44,10 +44,10 @@ import java.security.spec.DSAParameterSpec;
 /**
  * A Key Pair Generator implemented using PKCS #11.
  *
- * @see com.netscape.jss.crypto.PQGParams
+ * @see org.mozilla.jss.crypto.PQGParams
  */
 public final class PK11KeyPairGenerator
-    extends com.netscape.jss.crypto.KeyPairGeneratorSpi
+    extends org.mozilla.jss.crypto.KeyPairGeneratorSpi
 {
 
     ///////////////////////////////////////////////////////////////////////
@@ -250,7 +250,7 @@ public final class PK11KeyPairGenerator
     //////////////////////////////////////////////////////////////////////
     // 1024-bit PQG parameters
     // These were generated and verified using the
-    // com.netscape.jss.crypto.PQGParams class.
+    // org.mozilla.jss.crypto.PQGParams class.
     //////////////////////////////////////////////////////////////////////
     private static final String p1024= "135839652435190934085800139191680301864221874900900696919010316554114342871389066526982023513828891845682496590926522957486592076092819515303251959435284578074745022943475516750500021440278782993316814165831392449756706958779266394680687474113495272524355075654433600922751920548192539119568200162784715902571";
     private static final String q1024= "1289225024022202541601051225376429063716419728261";
@@ -276,7 +276,7 @@ public final class PK11KeyPairGenerator
     //////////////////////////////////////////////////////////////////////
     // 768-bit PQG parameters
     // These were generated and verified using the
-    // com.netscape.jss.crypto.PQGParams class.
+    // org.mozilla.jss.crypto.PQGParams class.
     //////////////////////////////////////////////////////////////////////
     private static final String p768 = "1334591549939035619289567230283054603122655003980178118026955029363553392594293499178687789871628588392413078786977899109276604404053531960657701920766542891720144660923735290663050045086516783083489369477138289683344192203747015183";
     private static final String q768 = "1356132865877303155992130272917916166541739006871";
@@ -302,7 +302,7 @@ public final class PK11KeyPairGenerator
     //////////////////////////////////////////////////////////////////////
     // 512-bit PQG parameters
     // These were generated and verified using the
-    // com.netscape.jss.crypto.PQGParams class.
+    // org.mozilla.jss.crypto.PQGParams class.
     //////////////////////////////////////////////////////////////////////
     private static final String p512 = "6966483207285155416780416172202915863379050665227482416115451434656043093992853756903066653962454938528584622842487778598918381346739078775480034378802841";
     private static final String q512 = "1310301134281640075932276656367326462518739803527";

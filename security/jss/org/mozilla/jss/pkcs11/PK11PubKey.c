@@ -31,9 +31,9 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PublicKeyProxy.h"
-#include "_jni/com_netscape_jss_pkcs11_PK11RSAPublicKey.h"
-#include "_jni/com_netscape_jss_pkcs11_PK11DSAPublicKey.h"
+#include "_jni/org_mozilla_jss_pkcs11_PublicKeyProxy.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11RSAPublicKey.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11DSAPublicKey.h"
 
 #include <plarena.h>
 #include <secmodt.h>
@@ -56,7 +56,7 @@
 /***********************************************************************
  * PublicKeyProxy.releaseNativeResources
  */
-JNIEXPORT void JNICALL Java_com_netscape_jss_pkcs11_PublicKeyProxy_releaseNativeResources
+JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PublicKeyProxy_releaseNativeResources
   (JNIEnv *env, jobject this)
 {
     SECKEYPublicKey *pubk;
@@ -171,7 +171,7 @@ JSS_PK11_getPubKeyPtr(JNIEnv *env, jobject pubkObject,
  * PK11PubKey.verifyKeyIsOnToken
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11PubKey_verifyKeyIsOnToken
+Java_org_mozilla_jss_pkcs11_PK11PubKey_verifyKeyIsOnToken
   (JNIEnv *env, jobject this, jobject token)
 {
 	PRThread *pThread;
@@ -223,7 +223,7 @@ finish:
  * Returns: The KeyType of this key.
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11PubKey_getKeyType
+Java_org_mozilla_jss_pkcs11_PK11PubKey_getKeyType
   (JNIEnv *env, jobject this)
 {
     PRThread *pThread;
@@ -319,7 +319,7 @@ get_public_key_info(JNIEnv *env, jobject this, PublicKeyField field);
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11RSAPublicKey_getModulusByteArray
+Java_org_mozilla_jss_pkcs11_PK11RSAPublicKey_getModulusByteArray
     (JNIEnv *env, jobject this)
 {
     return get_public_key_info(env, this, RSA_MODULUS);
@@ -334,7 +334,7 @@ Java_com_netscape_jss_pkcs11_PK11RSAPublicKey_getModulusByteArray
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11RSAPublicKey_getPublicExponentByteArray
+Java_org_mozilla_jss_pkcs11_PK11RSAPublicKey_getPublicExponentByteArray
     (JNIEnv *env, jobject this)
 {
     return get_public_key_info(env, this, RSA_PUBLIC_EXPONENT);
@@ -349,7 +349,7 @@ Java_com_netscape_jss_pkcs11_PK11RSAPublicKey_getPublicExponentByteArray
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11DSAPublicKey_getPByteArray
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getPByteArray
     (JNIEnv *env, jobject this)
 {
     return get_public_key_info(env, this, DSA_P);
@@ -364,7 +364,7 @@ Java_com_netscape_jss_pkcs11_PK11DSAPublicKey_getPByteArray
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11DSAPublicKey_getQByteArray
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getQByteArray
     (JNIEnv *env, jobject this)
 {
     return get_public_key_info(env, this, DSA_Q);
@@ -379,7 +379,7 @@ Java_com_netscape_jss_pkcs11_PK11DSAPublicKey_getQByteArray
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11DSAPublicKey_getGByteArray
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getGByteArray
     (JNIEnv *env, jobject this)
 {
     return get_public_key_info(env, this, DSA_G);
@@ -395,7 +395,7 @@ Java_com_netscape_jss_pkcs11_PK11DSAPublicKey_getGByteArray
  *
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11DSAPublicKey_getYByteArray
+Java_org_mozilla_jss_pkcs11_PK11DSAPublicKey_getYByteArray
     (JNIEnv *env, jobject this)
 {
     return get_public_key_info(env, this, DSA_PUBLIC);
@@ -540,7 +540,7 @@ finish:
  * PK11PubKey.RSAfromRaw
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11PubKey_RSAFromRaw
+Java_org_mozilla_jss_pkcs11_PK11PubKey_RSAFromRaw
     (JNIEnv *env, jclass clazz, jbyteArray rawBA)
 {
     return pubkFromRaw(env, rsaKey, rawBA);
@@ -551,7 +551,7 @@ Java_com_netscape_jss_pkcs11_PK11PubKey_RSAFromRaw
  * PK11PubKey.RSAfromRaw
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11PubKey_DSAFromRaw
+Java_org_mozilla_jss_pkcs11_PK11PubKey_DSAFromRaw
     (JNIEnv *env, jclass clazz, jbyteArray rawBA)
 {
     return pubkFromRaw(env, dsaKey, rawBA);
@@ -565,7 +565,7 @@ Java_com_netscape_jss_pkcs11_PK11PubKey_DSAFromRaw
  * DER-encoding.
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11PubKey_getEncoded
+Java_org_mozilla_jss_pkcs11_PK11PubKey_getEncoded
     (JNIEnv *env, jobject this)
 {
     SECKEYPublicKey *pubk;

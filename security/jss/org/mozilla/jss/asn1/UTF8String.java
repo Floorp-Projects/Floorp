@@ -30,11 +30,11 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.asn1;
+package org.mozilla.jss.asn1;
 
 import java.io.CharConversionException;
 import java.io.UnsupportedEncodingException;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 public class UTF8String extends CharacterString implements ASN1Value {
 

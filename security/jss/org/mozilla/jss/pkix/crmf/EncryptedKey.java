@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.crmf;
+package org.mozilla.jss.pkix.crmf;
 
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.util.Assert;
 import java.io.*;
 
 public class EncryptedKey implements ASN1Value {
@@ -74,8 +74,8 @@ public class EncryptedKey implements ASN1Value {
     /**
      * Should only be called if <code>getType</code> returns
      * <code>ENVELOPED_DATA</code>. ANY is returned to prevent a circular
-     * dependency between the com.netscape.jss.pkcs7 package and the
-     * com.netscape.jss.pkix hierarchy.
+     * dependency between the org.mozilla.jss.pkcs7 package and the
+     * org.mozilla.jss.pkix hierarchy.
      */
     public ANY getEnvelopedData() {
         return envelopedData;

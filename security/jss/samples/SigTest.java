@@ -40,23 +40,23 @@
  */
 
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.crypto.Signature;
-import com.netscape.jss.crypto.KeyPairGenerator;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.crypto.Signature;
+import org.mozilla.jss.crypto.KeyPairGenerator;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.io.*;
 import java.lang.*;
 import java.util.*;
-import com.netscape.jss.util.*;
-import com.netscape.jss.pkcs11.*;
-import com.netscape.jss.*;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.pkcs11.*;
+import org.mozilla.jss.*;
 
 public class SigTest {
 
 	public static void usage() {
 		System.out.println(
-			"Usage: java com.netscape.jss.crypto.SigTest <dbdir> <tokenname>");
+			"Usage: java org.mozilla.jss.crypto.SigTest <dbdir> <tokenname>");
 	}
 
 	public static void main(String args[]) {
@@ -105,7 +105,7 @@ public class SigTest {
 							SignatureAlgorithm.RSASignatureWithMD5Digest);
 			System.out.println("Created a signing context");
 			signer.initSign(
-				(com.netscape.jss.crypto.PrivateKey)keyPair.getPrivate());
+				(org.mozilla.jss.crypto.PrivateKey)keyPair.getPrivate());
 			System.out.println("initialized the signing operation");
 
 			signer.update(data);

@@ -34,13 +34,13 @@
 // This demonstrates the SSL client-side support
 //
 
-import com.netscape.jss.ssl.*;
+import org.mozilla.jss.ssl.*;
 
 import java.io.*;
 import java.util.*;
 import java.net.*;
-import com.netscape.jss.*;
-import com.netscape.jss.crypto.AlreadyInitializedException;
+import org.mozilla.jss.*;
+import org.mozilla.jss.crypto.AlreadyInitializedException;
 
 /**
  * Parameters supported by this socket test:
@@ -347,7 +347,7 @@ public class SSLClient implements
  */
 
 	public boolean approve(
-					com.netscape.jss.crypto.X509Certificate servercert,
+					org.mozilla.jss.crypto.X509Certificate servercert,
 					SSLCertificateApprovalCallback.ValidityStatus status) {
 
 		SSLCertificateApprovalCallback.ValidityItem item;
@@ -374,7 +374,7 @@ public class SSLClient implements
 			System.out.println("item "+i+
 					" reason="+item.getReason()+
 					" depth="+item.getDepth());
-			com.netscape.jss.crypto.X509Certificate cert = item.getCert();
+			org.mozilla.jss.crypto.X509Certificate cert = item.getCert();
 			if (item.getReason() == 
 				SSLCertificateApprovalCallback.ValidityStatus.UNTRUSTED_ISSUER) {
 				trust_the_server_cert = true;
@@ -393,7 +393,7 @@ public class SSLClient implements
 			System.out.println("importing certificate.");
 			try {
 				InternalCertificate newcert = 
-						com.netscape.jss.CryptoManager.getInstance().
+						org.mozilla.jss.CryptoManager.getInstance().
 							importCertToPerm(servercert,"testnick");
 				newcert.setSSLTrust(InternalCertificate.TRUSTED_PEER |
 									InternalCertificate.VALID_PEER);

@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11Token.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11Token.h"
 
 #include <plarena.h>
 #include <secmodt.h>
@@ -144,7 +144,7 @@ finish:
  * PK11Token.needsLogin
  * Returns true if this token needs to be logged in before it can be used.
  */
-JNIEXPORT jboolean JNICALL Java_com_netscape_jss_pkcs11_PK11Token_needsLogin
+JNIEXPORT jboolean JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_needsLogin
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -177,7 +177,7 @@ finish:
  *
  * Returns true if this token is logged in.
  */
-JNIEXPORT jboolean JNICALL Java_com_netscape_jss_pkcs11_PK11Token_isLoggedIn
+JNIEXPORT jboolean JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_isLoggedIn
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -211,7 +211,7 @@ finish:
  * Throws NotInitializedException if the token is not initialized.
  * Throws IncorrectPINException if the supplied PIN is incorrect.
  */
-JNIEXPORT void JNICALL Java_com_netscape_jss_pkcs11_PK11Token_nativeLogin
+JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_nativeLogin
   (JNIEnv *env, jobject this, jobject callback)
 {
     PK11SlotInfo *slot;
@@ -250,7 +250,7 @@ finish:
  *
  * P K 1 1 T o k e n . l o g o u t
  */
-JNIEXPORT void JNICALL Java_com_netscape_jss_pkcs11_PK11Token_logout
+JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_logout
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -294,7 +294,7 @@ finish:
  *
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_getLoginMode
+Java_org_mozilla_jss_pkcs11_PK11Token_getLoginMode
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -332,7 +332,7 @@ finish:
  * P K 1 1 T o k e n . g e t L o g i n T i m e o u t M i n u t e s
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_getLoginTimeoutMinutes
+Java_org_mozilla_jss_pkcs11_PK11Token_getLoginTimeoutMinutes
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -360,7 +360,7 @@ finish:
  *
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_setLoginMode
+Java_org_mozilla_jss_pkcs11_PK11Token_setLoginMode
   (JNIEnv *env, jobject this, jint mode)
 {
     PK11SlotInfo *slot;
@@ -399,7 +399,7 @@ finish:
  *
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_setLoginTimeoutMinutes
+Java_org_mozilla_jss_pkcs11_PK11Token_setLoginTimeoutMinutes
   (JNIEnv *env, jobject this, jint newTimeout)
 {
     PK11SlotInfo *slot;
@@ -424,7 +424,7 @@ Java_com_netscape_jss_pkcs11_PK11Token_setLoginTimeoutMinutes
  *
  * Returns true if this token is present in the slot
  */
-JNIEXPORT jboolean JNICALL Java_com_netscape_jss_pkcs11_PK11Token_isPresent
+JNIEXPORT jboolean JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_isPresent
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -459,7 +459,7 @@ finish:
  * Presumably most tokens can have their PINs initialized arbitrarily
  * many times.
  */
-JNIEXPORT jboolean JNICALL Java_com_netscape_jss_pkcs11_PK11Token_PWInitable
+JNIEXPORT jboolean JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_PWInitable
 	(JNIEnv *env, jobject this)
 {
 	PK11SlotInfo *slot=NULL;
@@ -499,7 +499,7 @@ finish:
  * P K 1 1 T o k e n . i n i t P a s s w o r d
  * 
  */
-JNIEXPORT void JNICALL Java_com_netscape_jss_pkcs11_PK11Token_initPassword
+JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_initPassword
   (JNIEnv *env, jobject this, jbyteArray ssopw, jbyteArray userpw)
 {
     PK11SlotInfo *slot=NULL;
@@ -588,7 +588,7 @@ finish:
  *
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_passwordIsInitialized
+Java_org_mozilla_jss_pkcs11_PK11Token_passwordIsInitialized
   (JNIEnv *env, jobject this)
 {
 	PK11SlotInfo *slot=NULL;
@@ -622,7 +622,7 @@ finish:
  * P K 1 1 T o k e n . c h a n g e P a s s w o r d
  *
  */
-JNIEXPORT void JNICALL Java_com_netscape_jss_pkcs11_PK11Token_changePassword
+JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_changePassword
   (JNIEnv *env, jobject this, jbyteArray oldPIN, jbyteArray newPIN)
 {
     PK11SlotInfo *slot=NULL;
@@ -769,7 +769,7 @@ finish:
  *
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_userPasswordIsCorrect
+Java_org_mozilla_jss_pkcs11_PK11Token_userPasswordIsCorrect
   (JNIEnv *env, jobject this, jbyteArray password)
 {
 	return passwordIsCorrect(env, this, password, USERPW);
@@ -781,7 +781,7 @@ Java_com_netscape_jss_pkcs11_PK11Token_userPasswordIsCorrect
  *
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_SSOPasswordIsCorrect
+Java_org_mozilla_jss_pkcs11_PK11Token_SSOPasswordIsCorrect
   (JNIEnv *env, jobject this, jbyteArray password)
 {
 	return  passwordIsCorrect(env, this, password, SSOPW);
@@ -793,7 +793,7 @@ Java_com_netscape_jss_pkcs11_PK11Token_SSOPasswordIsCorrect
  *
  * Returns the name of this token.
  */
-JNIEXPORT jstring JNICALL Java_com_netscape_jss_pkcs11_PK11Token_getName
+JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_getName
   (JNIEnv *env, jobject this)
 {
     char *szName;
@@ -841,7 +841,7 @@ finish:
  * Free the PK11SlotInfo structure that underlies my token.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_PK11Token_releaseNativeResources
   (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -893,7 +893,7 @@ JSS_PK11_getTokenSlotPtr(JNIEnv *env, jobject tokenObject, PK11SlotInfo **ptr)
  *
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_doesAlgorithm
+Java_org_mozilla_jss_pkcs11_PK11Token_doesAlgorithm
   (JNIEnv *env, jobject this, jobject alg)
 {
 	PK11SlotInfo *slot;
@@ -929,7 +929,7 @@ finish:
  *
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_pkcs11_PK11Token_isWritable
+Java_org_mozilla_jss_pkcs11_PK11Token_isWritable
     (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot;
@@ -948,7 +948,7 @@ int PK11_NumberObjectsFor(PK11SlotInfo*, CK_ATTRIBUTE*, int);
  *
  * P K 1 1 T o k e n . getCertRequest
  */
-JNIEXPORT jstring JNICALL Java_com_netscape_jss_pkcs11_PK11Token_generatePK10
+JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_generatePK10
   (JNIEnv *env, jobject this, jstring subject, jint keysize,
    jstring keyType, jbyteArray P, jbyteArray Q, jbyteArray G)
 {

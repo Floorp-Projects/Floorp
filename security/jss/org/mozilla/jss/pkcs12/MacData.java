@@ -31,16 +31,16 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs12;
+package org.mozilla.jss.pkcs12;
 
 import java.io.*;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.pkcs7.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.pkcs7.*;
+import org.mozilla.jss.util.*;
 import java.security.*;
-import com.netscape.jss.pkix.primitive.AlgorithmIdentifier;
+import org.mozilla.jss.pkix.primitive.AlgorithmIdentifier;
 
 public class MacData implements ASN1Value {
 

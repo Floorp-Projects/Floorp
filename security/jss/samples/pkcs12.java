@@ -43,14 +43,14 @@
 
 
 import java.io.*;
-import com.netscape.jss.*;
-import com.netscape.jss.pkcs12.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.util.*;
-import com.netscape.jss.pkix.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.pkix.cert.*;
+import org.mozilla.jss.*;
+import org.mozilla.jss.pkcs12.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.pkix.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.cert.*;
 
 
 public class pkcs12 {
@@ -196,7 +196,7 @@ public class pkcs12 {
                     // char-to-byte converted in a special way.  We have to
                     // use the special converter class instead of the default.
                     PrivateKeyInfo pki = epki.decrypt(pass,
-                        new com.netscape.jss.pkcs12.PasswordConverter() );
+                        new org.mozilla.jss.pkcs12.PasswordConverter() );
 
 					// import the key into the key3.db
 					CryptoToken tok = manager.getTokenByName("Internal Key Storage Token");

@@ -30,9 +30,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.util.Enumeration;
 import java.util.Vector;
 

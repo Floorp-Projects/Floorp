@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11Module.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11Module.h"
 
 #include <nspr.h>
 #include <plarena.h>
@@ -45,11 +45,11 @@
 #include "jss_exceptions.h"
 
 /***********************************************************************
- * Class:     com_netscape_jss_pkcs11_PK11Module
+ * Class:     org_mozilla_jss_pkcs11_PK11Module
  * Method:    getName
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_netscape_jss_pkcs11_PK11Module_getName
+JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Module_getName
   (JNIEnv *env, jobject this)
 {
     SECMODModule *module;
@@ -70,11 +70,11 @@ finish:
 }
 
 /***********************************************************************
- * Class:     com_netscape_jss_pkcs11_PK11Module
+ * Class:     org_mozilla_jss_pkcs11_PK11Module
  * Method:    getLibraryName
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_netscape_jss_pkcs11_PK11Module_getLibraryName
+JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Module_getLibraryName
   (JNIEnv *env, jobject this)
 {
     SECMODModule *module;
@@ -95,11 +95,11 @@ finish:
 }
 
 /***********************************************************************
- * Class:     com_netscape_jss_pkcs11_PK11Module
+ * Class:     org_mozilla_jss_pkcs11_PK11Module
  * Method:    putTokensInVector
  * Signature: (Ljava/util/Vector;)V
  */
-JNIEXPORT void JNICALL Java_com_netscape_jss_pkcs11_PK11Module_putTokensInVector
+JNIEXPORT void JNICALL Java_org_mozilla_jss_pkcs11_PK11Module_putTokensInVector
   (JNIEnv *env, jobject this, jobject vector)
 {
     SECMODModule *module;
@@ -247,7 +247,7 @@ JSS_PK11_getModulePtr(JNIEnv *env, jobject module, SECMODModule **ptr)
  * ModuleProxy.releaseNativeResources
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_ModuleProxy_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_ModuleProxy_releaseNativeResources
     (JNIEnv *env, jobject this)
 {
     SECMODModule *module;

@@ -31,7 +31,7 @@
  * GPL.
  */
 
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 /**
  * A PasswordCallback that immediately gives up.  This should be used
@@ -39,7 +39,7 @@ package com.netscape.jss.util;
  * that require a password will fail if this is used, unless the token
  * has already been logged in manually.
  *
- * @see com.netscape.jss.crypto.CryptoToken#login
+ * @see org.mozilla.jss.crypto.CryptoToken#login
  */
 public class NullPasswordCallback implements PasswordCallback {
 

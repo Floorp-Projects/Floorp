@@ -33,48 +33,48 @@
 
 ifeq ($(JAVADOC_NSS),1)
 JAVADOC_TARGETS=                                    				\
-					com.netscape.jss.NSSInit						\
-					com.netscape.jss.KeyDatabaseException			\
-					com.netscape.jss.CertDatabaseException			\
-					com.netscape.jss.crypto.AlreadyInitializedException \
-					com.netscape.jss.util.Password					\
-					com.netscape.jss.util.PasswordCallback 			\
-					com.netscape.jss.util.PasswordCallbackInfo		\
-					com.netscape.jss.util.ConsolePasswordCallback 	\
-					com.netscape.jss.ssl.PrintOutputStreamWriter	\
-					com.netscape.jss.ssl.SSLHandshakeCompletedEvent	\
-					com.netscape.jss.ssl.SSLHandshakeCompletedListener\
-					com.netscape.jss.ssl.SSLInputStream				\
-					com.netscape.jss.ssl.SSLOutputStream			\
-					com.netscape.jss.ssl.SSLSecurityStatus			\
-					com.netscape.jss.ssl.SSLServerSocket			\
-					com.netscape.jss.ssl.SSLSocket					\
-					com.netscape.jss.ssl.SSLSocketImpl				\
+					org.mozilla.jss.NSSInit						\
+					org.mozilla.jss.KeyDatabaseException			\
+					org.mozilla.jss.CertDatabaseException			\
+					org.mozilla.jss.crypto.AlreadyInitializedException \
+					org.mozilla.jss.util.Password					\
+					org.mozilla.jss.util.PasswordCallback 			\
+					org.mozilla.jss.util.PasswordCallbackInfo		\
+					org.mozilla.jss.util.ConsolePasswordCallback 	\
+					org.mozilla.jss.ssl.PrintOutputStreamWriter	\
+					org.mozilla.jss.ssl.SSLHandshakeCompletedEvent	\
+					org.mozilla.jss.ssl.SSLHandshakeCompletedListener\
+					org.mozilla.jss.ssl.SSLInputStream				\
+					org.mozilla.jss.ssl.SSLOutputStream			\
+					org.mozilla.jss.ssl.SSLSecurityStatus			\
+					org.mozilla.jss.ssl.SSLServerSocket			\
+					org.mozilla.jss.ssl.SSLSocket					\
+					org.mozilla.jss.ssl.SSLSocketImpl				\
 					$(NULL)
 else
 JAVADOC_TARGETS=                                    \
-					com.netscape.jss.util.Assert	\
-					com.netscape.jss.util.AssertionException	\
-					com.netscape.jss.util.Password	\
-					com.netscape.jss.util.PasswordCallback \
-					com.netscape.jss.util.IncorrectPasswordException \
-					com.netscape.jss.util.NotImplementedException \
-					com.netscape.jss.util.NullPasswordCallback\
-					com.netscape.jss.util.ConsolePasswordCallback\
-					com.netscape.jss.util.PasswordCallbackInfo\
-					com.netscape.jss.util.UTF8Converter \
+					org.mozilla.jss.util.Assert	\
+					org.mozilla.jss.util.AssertionException	\
+					org.mozilla.jss.util.Password	\
+					org.mozilla.jss.util.PasswordCallback \
+					org.mozilla.jss.util.IncorrectPasswordException \
+					org.mozilla.jss.util.NotImplementedException \
+					org.mozilla.jss.util.NullPasswordCallback\
+					org.mozilla.jss.util.ConsolePasswordCallback\
+					org.mozilla.jss.util.PasswordCallbackInfo\
+					org.mozilla.jss.util.UTF8Converter \
 					util/Debug.java					\
-                    com.netscape.jss.crypto         \
-					com.netscape.jss					\
-					com.netscape.jss.pkcs11.PK11Module	\
-                    com.netscape.jss.ssl            \
-                    com.netscape.jss.asn1                           \
-                    com.netscape.jss.pkix.primitive                 \
-                    com.netscape.jss.pkix.cert                      \
-                    com.netscape.jss.pkix.crmf                      \
-					com.netscape.jss.pkix.cmmf							\
-                    com.netscape.jss.pkcs7 							\
-                    com.netscape.jss.pkcs12 						\
+                    org.mozilla.jss.crypto         \
+					org.mozilla.jss					\
+					org.mozilla.jss.pkcs11.PK11Module	\
+                    org.mozilla.jss.ssl            \
+                    org.mozilla.jss.asn1                           \
+                    org.mozilla.jss.pkix.primitive                 \
+                    org.mozilla.jss.pkix.cert                      \
+                    org.mozilla.jss.pkix.crmf                      \
+					org.mozilla.jss.pkix.cmmf							\
+                    org.mozilla.jss.pkcs7 							\
+                    org.mozilla.jss.pkcs12 						\
                     $(NULL)
 endif
 
@@ -83,7 +83,7 @@ javadoc:
 	@echo \
 "Generating Javadoc will destroy any .java files in the top-level"
 	@echo \
-"ns/ninja/com/netscape/jss directory.  You must set the NUKE_JAVA_FILES"
+"ns/ninja/org/mozilla/jss directory.  You must set the NUKE_JAVA_FILES"
 	@echo \
 "environment variable to confirm that this is OK."
 else

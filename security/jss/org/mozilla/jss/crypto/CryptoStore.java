@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
-import com.netscape.jss.util.*;
+import org.mozilla.jss.util.*;
 import java.security.*;
 import java.security.cert.CertificateEncodingException;
 import java.io.Serializable;
@@ -161,7 +161,7 @@ public interface CryptoStore {
      * @exception TokenException If an error occurs on the token while
      *      deleting the key.
      */
-    public void deletePrivateKey(com.netscape.jss.crypto.PrivateKey key)
+    public void deletePrivateKey(org.mozilla.jss.crypto.PrivateKey key)
         throws NoSuchItemOnTokenException, TokenException;
 
     ////////////////////////////////////////////////////////////

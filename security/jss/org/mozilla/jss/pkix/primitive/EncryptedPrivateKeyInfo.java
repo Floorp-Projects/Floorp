@@ -31,15 +31,15 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.primitive;
+package org.mozilla.jss.pkix.primitive;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.Assert;
 import java.security.*;
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.util.Password;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.util.Password;
 import java.security.spec.AlgorithmParameterSpec;
 
 /**

@@ -30,10 +30,10 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 /**
- * The com.netscape.jss.provider package comes before CryptoManager in
+ * The org.mozilla.jss.provider package comes before CryptoManager in
  * the depency list, so this class is used to allow them to access
  * CryptoManager sneakily.  When CryptoManager initializes, it registers
  * itself as a token supplier with <code>setTokenSupplier</code>.  Then

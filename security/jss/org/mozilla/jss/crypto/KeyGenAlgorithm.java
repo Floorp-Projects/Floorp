@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
-import com.netscape.jss.asn1.OBJECT_IDENTIFIER;
+import org.mozilla.jss.asn1.OBJECT_IDENTIFIER;
 import java.util.Hashtable;
 import java.security.NoSuchAlgorithmException;
 

@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_NSSInit.h"
+#include "_jni/org_mozilla_jss_NSSInit.h"
 #include <nspr.h>
 #include "jssinit.h"
 
@@ -40,8 +40,8 @@
 /* files everytime a new release of JSS is generated:               */
 /*                                                                  */
 /*     jssjava:  ns/ninja/cmd/jssjava/jssjava.c                     */
-/*     jss.jar:  ns/ninja/com/netscape/jss/manage/NSSInit.java      */
-/*     jss.dll:  ns/ninja/com/netscape/jss/manage/NSSInit.c         */
+/*     jss.jar:  ns/ninja/org/mozilla/jss/manage/NSSInit.java      */
+/*     jss.dll:  ns/ninja/org/mozilla/jss/manage/NSSInit.c         */
 /*                                                                  */
 /********************************************************************/
 
@@ -58,7 +58,7 @@ static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = v3.5.1";
  * This just passes its arguments to CryptoManager.initializeAllNative.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_NSSInit_initializeNative
+Java_org_mozilla_jss_NSSInit_initializeNative
     (JNIEnv *env, jclass clazz,
         jstring modDBName,
         jstring keyDBName,
@@ -103,7 +103,7 @@ Java_com_netscape_jss_NSSInit_initializeNative
  * This just passes its arguments to CryptoManager.setNativePasswordCallback
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_NSSInit_setPasswordCallback
+Java_org_mozilla_jss_NSSInit_setPasswordCallback
     (JNIEnv *env, jclass clazz, jobject pwcb)
 {
     JSS_setPasswordCallback(env, pwcb);

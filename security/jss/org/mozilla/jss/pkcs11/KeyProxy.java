@@ -30,9 +30,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-abstract class KeyProxy extends com.netscape.jss.util.NativeProxy {
+abstract class KeyProxy extends org.mozilla.jss.util.NativeProxy {
 
     protected KeyProxy(byte[] pointer) {
         super(pointer);

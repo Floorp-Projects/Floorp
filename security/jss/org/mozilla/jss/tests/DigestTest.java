@@ -30,12 +30,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 import java.io.*;
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.util.Password;
-import com.netscape.jss.util.Debug;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.util.Password;
+import org.mozilla.jss.util.Debug;
 import java.security.MessageDigest;
 
 public class DigestTest {
@@ -113,7 +113,7 @@ public class DigestTest {
                                 PBEAlgorithm.PBE_SHA1_DES3_CBC );
         kg.initialize(pbe);
         SymmetricKey symkey = kg.generate();
-        com.netscape.jss.crypto.JSSMessageDigest digest =
+        org.mozilla.jss.crypto.JSSMessageDigest digest =
                 token.getDigestContext( HMACAlgorithm.SHA1 );
         digest.initHMAC(symkey);
         digest.update(toBeDigested);

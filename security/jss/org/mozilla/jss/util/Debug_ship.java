@@ -43,14 +43,14 @@
  **********************************************************************/
 
 
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 /**
  * Controls debug-mode operation of JSS classes, and allows for printing
  * trace statements to standard output.
  *
- * @see com.netscape.jss.util.Assert
- * @version $Revision: 1.1 $ $Date: 2000/12/15 20:52:39 $
+ * @see org.mozilla.jss.util.Assert
+ * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:56 $
  */
 public class Debug
 {
@@ -61,7 +61,7 @@ public class Debug
      * statements; their execution depends on the debug level, which can
      * be accessed through setLevel and getLevel.
      *
-     * @see com.netscape.jss.util.Assert
+     * @see org.mozilla.jss.util.Assert
      */
     public static final boolean DEBUG = false;
 

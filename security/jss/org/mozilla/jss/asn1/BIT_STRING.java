@@ -30,9 +30,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.asn1;
+package org.mozilla.jss.asn1;
 
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.math.BigInteger;
 import java.io.IOException;
 import java.io.InputStream;

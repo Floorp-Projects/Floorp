@@ -30,14 +30,14 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss;
+package org.mozilla.jss;
 
-import com.netscape.jss.util.Debug;
-import com.netscape.jss.util.PasswordCallback;
-import com.netscape.jss.util.ConsolePasswordCallback;
-import com.netscape.jss.KeyDatabaseException;
-import com.netscape.jss.CertDatabaseException;
-import com.netscape.jss.crypto.AlreadyInitializedException;
+import org.mozilla.jss.util.Debug;
+import org.mozilla.jss.util.PasswordCallback;
+import org.mozilla.jss.util.ConsolePasswordCallback;
+import org.mozilla.jss.KeyDatabaseException;
+import org.mozilla.jss.CertDatabaseException;
+import org.mozilla.jss.crypto.AlreadyInitializedException;
 
 /**
  * This class initializes Java NSS and sets up the password callback.
@@ -49,8 +49,8 @@ public final class NSSInit {
     /* files everytime a new release of JSS is generated:               */
     /*                                                                  */
     /*     jssjava:  ns/ninja/cmd/jssjava/jssjava.c                     */
-    /*     jss.jar:  ns/ninja/com/netscape/jss/manage/NSSInit.java      */
-    /*     jss.dll:  ns/ninja/com/netscape/jss/manage/NSSInit.c         */
+    /*     jss.jar:  ns/ninja/org/mozilla/jss/manage/NSSInit.java      */
+    /*     jss.dll:  ns/ninja/org/mozilla/jss/manage/NSSInit.c         */
     /*                                                                  */
     /********************************************************************/
 
@@ -192,8 +192,8 @@ public final class NSSInit {
      * <p>This method may be called multiple times to alter the password
      * callback.
      * 
-     * @see com.netscape.jss.util.PasswordCallback
-     * @see com.netscape.jss.util.ConsolePasswordCallback
+     * @see org.mozilla.jss.util.PasswordCallback
+     * @see org.mozilla.jss.util.ConsolePasswordCallback
      */
     public static synchronized native void
     setPasswordCallback(PasswordCallback cb);

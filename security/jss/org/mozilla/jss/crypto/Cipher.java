@@ -31,12 +31,12 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 import java.security.InvalidKeyException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 /**
  * A context for performing symmetric encryption and decryption.

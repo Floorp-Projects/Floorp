@@ -154,7 +154,7 @@ JSS_isAllowedFromKRAPKCS12( jint alg );
  *
  * INPUTS
  *      alg
- *          An com.netscape.jss.Algorithm object. Must not be NULL.
+ *          An org.mozilla.jss.Algorithm object. Must not be NULL.
  * RETURNS
  *      SECOidTag corresponding to this algorithm, or SEC_OID_UNKNOWN
  *      if none was found.
@@ -168,7 +168,7 @@ JSS_getOidTagFromAlg(JNIEnv *env, jobject alg);
  *
  * INPUTS
  *      alg
- *          An com.netscape.jss.Algorithm object. Must not be NULL.
+ *          An org.mozilla.jss.Algorithm object. Must not be NULL.
  * RETURNS
  *          CK_MECHANISM_TYPE corresponding to this algorithm, or
  *          CKM_INVALID_MECHANISM if none was found.

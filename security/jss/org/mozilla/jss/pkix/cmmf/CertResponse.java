@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cmmf;
+package org.mozilla.jss.pkix.cmmf;
 
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.util.Assert;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

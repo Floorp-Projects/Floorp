@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_CertProxy.h"
+#include "_jni/org_mozilla_jss_pkcs11_CertProxy.h"
 
 #include <nspr.h>
 #include <plarena.h>
@@ -53,11 +53,11 @@
 
 
 /*
- * Class:     com_netscape_jss_pkcs11_PK11Cert
+ * Class:     org_mozilla_jss_pkcs11_PK11Cert
  * Method:    getEncoded
  * Signature: ()[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_netscape_jss_pkcs11_PK11Cert_getEncoded
+JNIEXPORT jbyteArray JNICALL Java_org_mozilla_jss_pkcs11_PK11Cert_getEncoded
   (JNIEnv *env, jobject this)
 {
 	PRThread *pThread;
@@ -109,11 +109,11 @@ finish:
 }
 
 /*
- * Class:     com_netscape_jss_pkcs11_PK11Cert
+ * Class:     org_mozilla_jss_pkcs11_PK11Cert
  * Method:    getVersion
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_com_netscape_jss_pkcs11_PK11Cert_getVersion
+JNIEXPORT jint JNICALL Java_org_mozilla_jss_pkcs11_PK11Cert_getVersion
   (JNIEnv *env, jobject this)
 {
 	PRThread *pThread;
@@ -158,7 +158,7 @@ finish:
  * in a Java wrapper, and returns it.
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getPublicKey
+Java_org_mozilla_jss_pkcs11_PK11Cert_getPublicKey
 	(JNIEnv *env, jobject this)
 {
 	CERTCertificate *cert;
@@ -204,7 +204,7 @@ finish:
  * Calls CERT_DestroyCertificate on the underlying CERTCertificate.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_CertProxy_releaseNativeResources
+Java_org_mozilla_jss_pkcs11_CertProxy_releaseNativeResources
   (JNIEnv *env, jobject this)
 {
 	CERTCertificate *cert;
@@ -338,7 +338,7 @@ finish:
  * PK11Cert.getOwningToken
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getOwningToken
+Java_org_mozilla_jss_pkcs11_PK11Cert_getOwningToken
     (JNIEnv *env, jobject this)
 {
     PK11SlotInfo *slot = NULL;
@@ -372,7 +372,7 @@ finish:
  * PK11Cert.getUniqueID
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getUniqueID
+Java_org_mozilla_jss_pkcs11_PK11Cert_getUniqueID
     (JNIEnv *env, jobject this)
 {
     CERTCertificate *cert;
@@ -426,7 +426,7 @@ finish:
  * PK11Cert.getNickname
  */
 JNIEXPORT jstring JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getNickname
+Java_org_mozilla_jss_pkcs11_PK11Cert_getNickname
     (JNIEnv *env, jobject this)
 {
     CERTCertificate *cert;
@@ -447,7 +447,7 @@ Java_com_netscape_jss_pkcs11_PK11Cert_getNickname
  * PK11Cert.setTrust
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_setTrust
+Java_org_mozilla_jss_pkcs11_PK11Cert_setTrust
     (JNIEnv *env, jobject this, jint type, jint newTrust)
 {
     CERTCertificate *cert;
@@ -492,7 +492,7 @@ Java_com_netscape_jss_pkcs11_PK11Cert_setTrust
  * PK11Cert.getTrust
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getTrust
+Java_org_mozilla_jss_pkcs11_PK11Cert_getTrust
     (JNIEnv *env, jobject this, jint type)
 {
     CERTCertificate *cert;
@@ -526,7 +526,7 @@ Java_com_netscape_jss_pkcs11_PK11Cert_getTrust
  * PK11Cert.getSerialNumberByteArray
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getSerialNumberByteArray
+Java_org_mozilla_jss_pkcs11_PK11Cert_getSerialNumberByteArray
     (JNIEnv *env, jobject this)
 {
     CERTCertificate *cert;
@@ -546,7 +546,7 @@ Java_com_netscape_jss_pkcs11_PK11Cert_getSerialNumberByteArray
  * PK11Cert.getSubjectDNString
  */
 JNIEXPORT jstring JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getSubjectDNString
+Java_org_mozilla_jss_pkcs11_PK11Cert_getSubjectDNString
     (JNIEnv *env, jobject this)
 {
     CERTCertificate *cert;
@@ -569,7 +569,7 @@ Java_com_netscape_jss_pkcs11_PK11Cert_getSubjectDNString
  * PK11Cert.getIssuerDNString
  */
 JNIEXPORT jstring JNICALL
-Java_com_netscape_jss_pkcs11_PK11Cert_getIssuerDNString
+Java_org_mozilla_jss_pkcs11_PK11Cert_getIssuerDNString
     (JNIEnv *env, jobject this)
 {
     CERTCertificate *cert;

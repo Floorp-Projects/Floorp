@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 import java.security.DigestException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;

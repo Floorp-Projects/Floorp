@@ -31,13 +31,13 @@
  * GPL.
  */
 
-package com.netscape.jss;
+package org.mozilla.jss;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.pkcs11.*;
-import com.netscape.jss.pkcs11.PK11Token;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.pkcs11.*;
+import org.mozilla.jss.pkcs11.PK11Token;
+import org.mozilla.jss.util.*;
 
 public class PK10Gen {
     public static void main(String args[]) {
@@ -47,7 +47,7 @@ public class PK10Gen {
 		char[] passchar2 = {'n', 'e', 't', 's', 'c', 'a', 'p', 'e'};
 
         if(args.length != 2) {
-            System.err.println("Usage: java com.netscape.jss.PK10Gen <dbdir> [rsa|dsa]");
+            System.err.println("Usage: java org.mozilla.jss.PK10Gen <dbdir> [rsa|dsa]");
             return;
         }
 

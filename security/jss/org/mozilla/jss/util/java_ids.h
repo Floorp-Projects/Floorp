@@ -49,7 +49,7 @@ PR_BEGIN_EXTERN_C
 /*
  * Algorithm
  */
-#define ALGORITHM_CLASS_NAME "com/netscape/jss/crypto/Algorithm"
+#define ALGORITHM_CLASS_NAME "org/mozilla/jss/crypto/Algorithm"
 #define OID_INDEX_FIELD_NAME "oidIndex"
 #define OID_INDEX_FIELD_SIG "I"
 
@@ -63,13 +63,13 @@ PR_BEGIN_EXTERN_C
 /*
  * CipherContextProxy
  */
-#define CIPHER_CONTEXT_PROXY_CLASS_NAME "com/netscape/jss/pkcs11/CipherContextProxy"
+#define CIPHER_CONTEXT_PROXY_CLASS_NAME "org/mozilla/jss/pkcs11/CipherContextProxy"
 #define CIPHER_CONTEXT_PROXY_CONSTRUCTOR_SIG "([B)V"
 
 /*
  * Debug
  */
-#define DEBUG_CLASS_NAME "com/netscape/jss/util/Debug"
+#define DEBUG_CLASS_NAME "org/mozilla/jss/util/Debug"
 #define DEBUG_TRACE_NAME "trace"
 #define DEBUG_TRACE_SIG "(ILjava/lang/String;)V"
 
@@ -84,19 +84,19 @@ PR_BEGIN_EXTERN_C
  * KeyProxy
  */
 #define KEY_PROXY_FIELD "keyProxy"
-#define KEY_PROXY_SIG "Lcom/netscape/jss/pkcs11/KeyProxy;"
+#define KEY_PROXY_SIG "Lorg/mozilla/jss/pkcs11/KeyProxy;"
 
 /*
  * KeyType
  */
-#define KEYTYPE_CLASS_NAME "com/netscape/jss/pkcs11/KeyType"
+#define KEYTYPE_CLASS_NAME "org/mozilla/jss/pkcs11/KeyType"
 #define NULL_KEYTYPE_FIELD "NULL"
 #define RSA_KEYTYPE_FIELD "RSA"
 #define DSA_KEYTYPE_FIELD "DSA"
 #define FORTEZZA_KEYTYPE_FIELD "FORTEZZA"
 #define DH_KEYTYPE_FIELD "DH"
 #define KEA_KEYTYPE_FIELD "KEA"
-#define KEYTYPE_FIELD_SIG "Lcom/netscape/jss/pkcs11/KeyType;"
+#define KEYTYPE_FIELD_SIG "Lorg/mozilla/jss/pkcs11/KeyType;"
 #define DES_KEYTYPE_FIELD "DES"
 #define DES3_KEYTYPE_FIELD "DES3"
 #define RC4_KEYTYPE_FIELD "RC4"
@@ -106,21 +106,21 @@ PR_BEGIN_EXTERN_C
 /*
  * NativeProxy
  */
-#define NATIVE_PROXY_CLASS_NAME  "com/netscape/jss/util/NativeProxy"
+#define NATIVE_PROXY_CLASS_NAME  "org/mozilla/jss/util/NativeProxy"
 #define NATIVE_PROXY_POINTER_FIELD "mPointer"
 #define NATIVE_PROXY_POINTER_SIG "[B"
 
 /*
  * NSSInit
  */
-#define NSSINIT_CLASS_NAME "com/netscape/jss/NSSInit"
+#define NSSINIT_CLASS_NAME "org/mozilla/jss/NSSInit"
 #define NSSINIT_ISINITIALIZED_NAME "isInitialized"
 #define NSSINIT_ISINITIALIZED_SIG "()Z"
 
 /*
  * Password
  */
-#define PASSWORD_CLASS_NAME "com/netscape/jss/util/Password"
+#define PASSWORD_CLASS_NAME "org/mozilla/jss/util/Password"
 #define PASSWORD_CONSTRUCTOR_SIG "([C)V"
 #define PW_GET_BYTE_COPY_NAME "getByteCopy"
 #define PW_GET_BYTE_COPY_SIG "()[B"
@@ -131,105 +131,105 @@ PR_BEGIN_EXTERN_C
  * PasswordCallback
  */
 #define PW_CALLBACK_GET_PW_FIRST_NAME "getPasswordFirstAttempt"
-#define PW_CALLBACK_GET_PW_FIRST_SIG "(Lcom/netscape/jss/util/PasswordCallbackInfo;)Lcom/netscape/jss/util/Password;"
+#define PW_CALLBACK_GET_PW_FIRST_SIG "(Lorg/mozilla/jss/util/PasswordCallbackInfo;)Lorg/mozilla/jss/util/Password;"
 #define PW_CALLBACK_GET_PW_AGAIN_NAME "getPasswordAgain"
-#define PW_CALLBACK_GET_PW_AGAIN_SIG "(Lcom/netscape/jss/util/PasswordCallbackInfo;)Lcom/netscape/jss/util/Password;"
+#define PW_CALLBACK_GET_PW_AGAIN_SIG "(Lorg/mozilla/jss/util/PasswordCallbackInfo;)Lorg/mozilla/jss/util/Password;"
 
 /*
  * PK11Cert
  */
-#define CERT_CLASS_NAME "com/netscape/jss/pkcs11/PK11Cert"
+#define CERT_CLASS_NAME "org/mozilla/jss/pkcs11/PK11Cert"
 #define CERT_CONSTRUCTOR_NAME "<init>"
 #define CERT_CONSTRUCTOR_SIG "([B)V"
 #define CERT_PROXY_FIELD "certProxy"
-#define CERT_PROXY_SIG "Lcom/netscape/jss/pkcs11/CertProxy;"
+#define CERT_PROXY_SIG "Lorg/mozilla/jss/pkcs11/CertProxy;"
 
 /*
  * PK11InternalCert
  */
-#define INTERNAL_CERT_CLASS_NAME "com/netscape/jss/pkcs11/PK11InternalCert"
+#define INTERNAL_CERT_CLASS_NAME "org/mozilla/jss/pkcs11/PK11InternalCert"
 
 /*
  * PK11TokenCert
  */
-#define TOKEN_CERT_CLASS_NAME "com/netscape/jss/pkcs11/PK11TokenCert"
+#define TOKEN_CERT_CLASS_NAME "org/mozilla/jss/pkcs11/PK11TokenCert"
 
 /*
  * PK11InternalTokenCert
  */
-#define INTERNAL_TOKEN_CERT_CLASS_NAME "com/netscape/jss/pkcs11/PK11InternalTokenCert"
+#define INTERNAL_TOKEN_CERT_CLASS_NAME "org/mozilla/jss/pkcs11/PK11InternalTokenCert"
 
 /*
  * PK11DSAPublicKey
  */
-#define PK11_DSA_PUBKEY_CLASS_NAME "com/netscape/jss/pkcs11/PK11DSAPublicKey"
+#define PK11_DSA_PUBKEY_CLASS_NAME "org/mozilla/jss/pkcs11/PK11DSAPublicKey"
 
 /*
  * PK11Module
  */
-#define PK11MODULE_CLASS_NAME "com/netscape/jss/pkcs11/PK11Module"
+#define PK11MODULE_CLASS_NAME "org/mozilla/jss/pkcs11/PK11Module"
 #define PK11MODULE_CONSTRUCTOR_SIG "([B)V"
 #define PK11MODULE_PROXY_FIELD "moduleProxy"
-#define PK11MODULE_PROXY_SIG "Lcom/netscape/jss/pkcs11/ModuleProxy;"
+#define PK11MODULE_PROXY_SIG "Lorg/mozilla/jss/pkcs11/ModuleProxy;"
 
 /*
  * PK11PrivKey
  */
-#define PK11PRIVKEY_CLASS_NAME "com/netscape/jss/pkcs11/PK11PrivKey"
+#define PK11PRIVKEY_CLASS_NAME "org/mozilla/jss/pkcs11/PK11PrivKey"
 #define PK11PRIVKEY_CONSTRUCTOR_NAME "<init>"
 #define PK11PRIVKEY_CONSTRUCTOR_SIG "([B)V"
 
 /*
  * PK11PubKey
  */
-#define PK11PUBKEY_CLASS_NAME "com/netscape/jss/pkcs11/PK11PubKey"
+#define PK11PUBKEY_CLASS_NAME "org/mozilla/jss/pkcs11/PK11PubKey"
 #define PK11PUBKEY_CONSTRUCTOR_NAME "<init>"
 #define PK11PUBKEY_CONSTRUCTOR_SIG "([B)V"
 
 /*
  * PK11RSAPublicKey
  */
-#define PK11_RSA_PUBKEY_CLASS_NAME "com/netscape/jss/pkcs11/PK11RSAPublicKey"
+#define PK11_RSA_PUBKEY_CLASS_NAME "org/mozilla/jss/pkcs11/PK11RSAPublicKey"
 
 /*
  * PK11Signature
  */
-#define PK11SIGNATURE_CLASS_NAME "com/netscape/jss/pkcs11/PK11Signature"
+#define PK11SIGNATURE_CLASS_NAME "org/mozilla/jss/pkcs11/PK11Signature"
 #define SIG_CONTEXT_PROXY_FIELD "sigContext"
-#define SIG_CONTEXT_PROXY_SIG "Lcom/netscape/jss/pkcs11/SigContextProxy;"
+#define SIG_CONTEXT_PROXY_SIG "Lorg/mozilla/jss/pkcs11/SigContextProxy;"
 #define SIG_ALGORITHM_FIELD "algorithm"
-#define SIG_ALGORITHM_SIG "Lcom/netscape/jss/crypto/Algorithm;"
+#define SIG_ALGORITHM_SIG "Lorg/mozilla/jss/crypto/Algorithm;"
 #define SIG_PW_FIELD "pwExtractor"
-#define SIG_PW_SIG "Lcom/netscape/jss/crypto/PasswordExtractor;"
+#define SIG_PW_SIG "Lorg/mozilla/jss/crypto/PasswordExtractor;"
 #define SIG_KEY_FIELD "key"
-#define SIG_KEY_SIG "Lcom/netscape/jss/pkcs11/PK11Key;"
+#define SIG_KEY_SIG "Lorg/mozilla/jss/pkcs11/PK11Key;"
 
 /*
  * PK11Store
  */
 #define PK11STORE_PROXY_FIELD "storeProxy"
-#define PK11STORE_PROXY_SIG "Lcom/netscape/jss/pkcs11/TokenProxy;"
+#define PK11STORE_PROXY_SIG "Lorg/mozilla/jss/pkcs11/TokenProxy;"
 
 /*
  * PK11SymKey
  */
-#define PK11SYMKEY_CLASS_NAME "com/netscape/jss/pkcs11/PK11SymKey"
+#define PK11SYMKEY_CLASS_NAME "org/mozilla/jss/pkcs11/PK11SymKey"
 #define PK11SYMKEY_CONSTRUCTOR_SIG "([B)V"
 
 /*
  * PK11Token
  */
 #define PK11TOKEN_PROXY_FIELD "tokenProxy"
-#define PK11TOKEN_PROXY_SIG "Lcom/netscape/jss/pkcs11/TokenProxy;"
-#define PK11TOKEN_CLASS_NAME "com/netscape/jss/pkcs11/PK11Token"
+#define PK11TOKEN_PROXY_SIG "Lorg/mozilla/jss/pkcs11/TokenProxy;"
+#define PK11TOKEN_CLASS_NAME "org/mozilla/jss/pkcs11/PK11Token"
 #define PK11TOKEN_CONSTRUCTOR_NAME "<init>"
 #define PK11TOKEN_CONSTRUCTOR_SIG "([BZZ)V"
 
 /*
  * PrivateKey.KeyType
  */
-#define PRIVKEYTYPE_CLASS_NAME "com/netscape/jss/crypto/PrivateKey$Type"
-#define PRIVKEYTYPE_SIG "Lcom/netscape/jss/crypto/PrivateKey$Type;"
+#define PRIVKEYTYPE_CLASS_NAME "org/mozilla/jss/crypto/PrivateKey$Type"
+#define PRIVKEYTYPE_SIG "Lorg/mozilla/jss/crypto/PrivateKey$Type;"
 #define RSA_PRIVKEYTYPE_FIELD "RSA"
 #define DSA_PRIVKEYTYPE_FIELD "DSA"
 
@@ -242,7 +242,7 @@ PR_BEGIN_EXTERN_C
 /*
  * SigContextProxy
  */
-#define SIG_CONTEXT_PROXY_CLASS_NAME "com/netscape/jss/pkcs11/SigContextProxy"
+#define SIG_CONTEXT_PROXY_CLASS_NAME "org/mozilla/jss/pkcs11/SigContextProxy"
 #define SIG_CONTEXT_PROXY_CONSTRUCTOR_NAME "<init>"
 #define SIG_CONTEXT_PROXY_CONSTRUCTOR_SIG "([B)V"
 
@@ -250,12 +250,12 @@ PR_BEGIN_EXTERN_C
  * SymKeyProxy
  */
 #define SYM_KEY_PROXY_FIELD "keyProxy"
-#define SYM_KEY_PROXY_SIG "Lcom/netscape/jss/pkcs11/SymKeyProxy;"
+#define SYM_KEY_PROXY_SIG "Lorg/mozilla/jss/pkcs11/SymKeyProxy;"
 
 /*
  * TokenCallbackInfo
  */
-#define TOKEN_CBINFO_CLASS_NAME "com/netscape/jss/pkcs11/TokenCallbackInfo"
+#define TOKEN_CBINFO_CLASS_NAME "org/mozilla/jss/pkcs11/TokenCallbackInfo"
 #define TOKEN_CBINFO_CONSTRUCTOR_NAME "<init>"
 #define TOKEN_CBINFO_CONSTRUCTOR_SIG "(Ljava/lang/String;)V"
 
@@ -269,7 +269,7 @@ PR_BEGIN_EXTERN_C
 /*
  * X509Certificate
  */
-#define X509_CERT_CLASS "com/netscape/jss/crypto/X509Certificate"
+#define X509_CERT_CLASS "org/mozilla/jss/crypto/X509Certificate"
 
 PR_END_EXTERN_C
 

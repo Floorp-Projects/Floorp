@@ -31,15 +31,15 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.Algorithm;
-import com.netscape.jss.crypto.PrivateKey;
-import com.netscape.jss.crypto.CryptoToken;
-import com.netscape.jss.crypto.TokenException;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.crypto.Algorithm;
+import org.mozilla.jss.crypto.PrivateKey;
+import org.mozilla.jss.crypto.CryptoToken;
+import org.mozilla.jss.crypto.TokenException;
+import org.mozilla.jss.util.*;
 
-final class PK11PrivKey extends com.netscape.jss.pkcs11.PK11Key
+final class PK11PrivKey extends org.mozilla.jss.pkcs11.PK11Key
 	implements PrivateKey {
 
     protected PK11PrivKey(byte[] pointer) {
@@ -51,7 +51,7 @@ final class PK11PrivKey extends com.netscape.jss.pkcs11.PK11Key
 	 * Make sure this key lives on the given token.
 	 */
 	public native void verifyKeyIsOnToken(PK11Token token)
-		throws com.netscape.jss.crypto.NoSuchItemOnTokenException;
+		throws org.mozilla.jss.crypto.NoSuchItemOnTokenException;
 
     /**
      * Returns a new CryptoToken where this key resides.

@@ -31,17 +31,17 @@
  * GPL.
  */
 
-package com.netscape.jss.util;
+package org.mozilla.jss.util;
 
 /**
  * Represents a password callback, which is called to login to the key
  * database and to PKCS #11 tokens.
  * <p>The simplest implementation of a PasswordCallback is a Password object.
  * 
- * @see com.netscape.jss.util.Password
- * @see com.netscape.jss.util.NullPasswordCallback
- * @see com.netscape.jss.util.ConsolePasswordCallback
- * @see com.netscape.jss.CryptoManager#setPasswordCallback
+ * @see org.mozilla.jss.util.Password
+ * @see org.mozilla.jss.util.NullPasswordCallback
+ * @see org.mozilla.jss.util.ConsolePasswordCallback
+ * @see org.mozilla.jss.CryptoManager#setPasswordCallback
  */
 public interface PasswordCallback {
 

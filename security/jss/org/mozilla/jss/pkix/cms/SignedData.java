@@ -30,16 +30,16 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.cms;
+package org.mozilla.jss.pkix.cms;
 
 import java.io.*;
 import java.util.Vector;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.math.BigInteger;
 import java.io.ByteArrayInputStream;
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.pkix.cert.Certificate;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.cert.Certificate;
 
 /*  CUT THIS???
  * <p>Although all the normal functionality of a <i>SignedData</i> is supported
@@ -144,7 +144,7 @@ public class SignedData implements ASN1Value {
 
     /**
      * Returns the certificates field, which is a SET of
-     * X.509 certificates (com.netscape.jss.pkix.cert.Certificate).
+     * X.509 certificates (org.mozilla.jss.pkix.cert.Certificate).
      * PKCS #6 Extended Certificates are not supported by this implementation.
      * Returns <code>null</code> if this optional field is not present.
      *
@@ -171,7 +171,7 @@ public class SignedData implements ASN1Value {
 
     /**
      * Returns the crls field, which contains a SET of certificate
-     * revocation lists represented by ANYs (com.netscape.jss.asn1.ANY).
+     * revocation lists represented by ANYs (org.mozilla.jss.asn1.ANY).
      *
      */
     public SET getCrls() {
@@ -196,7 +196,7 @@ public class SignedData implements ASN1Value {
 
     /**
      * Returns the signerInfos field, which is a SET of
-     *  com.netscape.jss.pkcs7.SignerInfo.
+     *  org.mozilla.jss.pkcs7.SignerInfo.
      */
     public SET getSignerInfos() {
         return signerInfos;
@@ -242,7 +242,7 @@ public class SignedData implements ASN1Value {
      *      field of the contentInfo may be omitted, in which case the
      *      signatures contained in the <code>SignerInfo</code> structures
      *      are presumed to be on externally-supplied data.
-     * @param certificates A SET of com.netscape.jss.pkix.cert.Certificate,
+     * @param certificates A SET of org.mozilla.jss.pkix.cert.Certificate,
      *      the certificates
      *      containing the public keys used to sign the content.  It may
      *      also contain elements of the CA chain extending from the leaf

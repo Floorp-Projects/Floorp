@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.crmf;
+package org.mozilla.jss.pkix.crmf;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.primitive.*;
 
 /**
  * The CRMF structure <i>EncryptedValue</i> for storing the encrypted

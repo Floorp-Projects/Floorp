@@ -31,14 +31,14 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.interfaces.DSAPublicKey;

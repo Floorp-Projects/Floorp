@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.util.Assert;
 
 public final class PK11SymKey implements SymmetricKey {
 

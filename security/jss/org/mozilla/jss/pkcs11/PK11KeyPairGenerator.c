@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11KeyPairGenerator.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11KeyPairGenerator.h"
 
 #include <pk11func.h>
 #include <nspr.h>
@@ -121,7 +121,7 @@ int PK11_NumberObjectsFor(PK11SlotInfo*, CK_ATTRIBUTE*, int);
  * PK11KeyPairGenerator.generateRSAKeyPair
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
+Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
   (JNIEnv *env, jobject this, jobject token, jint keySize, jlong publicExponent,
     jboolean temporary)
 {
@@ -235,7 +235,7 @@ finish:
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
+Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
   (JNIEnv *env, jobject this, jobject token, jbyteArray P, jbyteArray Q,
     jbyteArray G, jboolean temporary)
 {

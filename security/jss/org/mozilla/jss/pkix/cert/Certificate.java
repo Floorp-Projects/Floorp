@@ -31,12 +31,12 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cert;
+package org.mozilla.jss.pkix.cert;
 
-import com.netscape.jss.asn1.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.CryptoManager;
+import org.mozilla.jss.asn1.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
 import java.security.cert.CertificateException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 /**
  * An X509 Certificate that lives on a PKCS #11 token.
@@ -45,7 +45,7 @@ public interface TokenCertificate extends X509Certificate {
      * Returns the unique ID of this key.  Unique IDs can be used to match
      * certificates to keys.
      *
-     * @see com.netscape.jss.crypto.PrivateKey#getUniqueID
+     * @see org.mozilla.jss.crypto.PrivateKey#getUniqueID
      */
     public abstract byte[] getUniqueID();
 

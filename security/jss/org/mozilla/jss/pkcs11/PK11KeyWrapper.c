@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11KeyWrapper.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11KeyWrapper.h"
 
 #include <nspr.h>
 #include <plarena.h>
@@ -83,7 +83,7 @@ pk11_ExitKeyMonitor(PK11SymKey *symKey) {
  * PK11KeyWrapper.nativeWrapSymWithSym
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyWrapper_nativeWrapSymWithSym
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeWrapSymWithSym
     (JNIEnv *env, jobject this, jobject tokenObj, jobject toBeWrappedObj,
         jobject wrappingKeyObj, jobject algObj, jbyteArray ivBA)
 {
@@ -169,7 +169,7 @@ finish:
  * PK11KeyWrapper.nativeWrapSymWithPub
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyWrapper_nativeWrapSymWithPub
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeWrapSymWithPub
     (JNIEnv *env, jobject this, jobject tokenObj, jobject toBeWrappedObj,
         jobject wrappingKeyObj, jobject algObj, jbyteArray ivBA)
 {
@@ -235,7 +235,7 @@ finish:
  * PK11KeyWrapper.nativeWrapPrivWithSym
  */
 JNIEXPORT jbyteArray JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyWrapper_nativeWrapPrivWithSym
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeWrapPrivWithSym
     (JNIEnv *env, jobject this, jobject tokenObj, jobject toBeWrappedObj,
         jobject wrappingKeyObj, jobject algObj, jbyteArray ivBA)
 {
@@ -329,7 +329,7 @@ finish:
  * PK11KeyWrapper.nativeUnwrapPrivWithSym
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyWrapper_nativeUnwrapPrivWithSym
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapPrivWithSym
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject unwrapperObj,
         jbyteArray wrappedBA, jobject wrapAlgObj, jobject typeAlgObj,
         jbyteArray publicValueBA, jbyteArray ivBA, jboolean temporary)
@@ -462,7 +462,7 @@ finish:
  * PK11KeyWrapper.nativeUnwrapSymWithSym
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject unwrapperObj,
         jbyteArray wrappedBA, jobject wrapAlgObj, jobject typeAlgObj,
         jint keyLen, jbyteArray ivBA)
@@ -605,7 +605,7 @@ finish:
  * PK11KeyWrapper.nativeUnwrapSymWithPriv
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
+Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject unwrapperObj,
         jbyteArray wrappedBA, jobject wrapAlgObj, jobject typeAlgObj,
         jint keyLen, jbyteArray ivBA)

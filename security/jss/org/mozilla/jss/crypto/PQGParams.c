@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_crypto_PQGParams.h"
+#include "_jni/org_mozilla_jss_crypto_PQGParams.h"
 
 #include <nspr.h>
 
@@ -54,7 +54,7 @@ generate(JNIEnv *env, jclass PQGParamsClass, jint keySize, jint seedBytes);
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_crypto_PQGParams_generateNative__I
+Java_org_mozilla_jss_crypto_PQGParams_generateNative__I
   (JNIEnv *env, jclass PQGParamsClass, jint keySize)
 {
     return generate(env, PQGParamsClass, keySize, 0);
@@ -65,7 +65,7 @@ Java_com_netscape_jss_crypto_PQGParams_generateNative__I
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_crypto_PQGParams_generateNative__II
+Java_org_mozilla_jss_crypto_PQGParams_generateNative__II
   (JNIEnv *env, jclass PQGParamsClass, jint keySize, jint seedBytes)
 {
     if(seedBytes < 20 || seedBytes > 255) {
@@ -316,7 +316,7 @@ finish:
  *
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_crypto_PQGParams_paramsAreValidNative
+Java_org_mozilla_jss_crypto_PQGParams_paramsAreValidNative
   (JNIEnv *env, jobject this, jbyteArray jP, jbyteArray jQ, jbyteArray jG,
     jbyteArray jSeed, jint jCounter, jbyteArray jH)
 {

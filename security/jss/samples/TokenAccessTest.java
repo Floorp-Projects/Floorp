@@ -37,11 +37,11 @@
  * to change the password on a token
  */
 
-import com.netscape.jss.pkcs11.*;
+import org.mozilla.jss.pkcs11.*;
 
-import com.netscape.jss.util.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.*;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.*;
 import java.io.*;
 import java.awt.*;
 import java.security.cert.*;

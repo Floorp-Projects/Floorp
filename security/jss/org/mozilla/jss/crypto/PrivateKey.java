@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
-import com.netscape.jss.asn1.OBJECT_IDENTIFIER;
+import org.mozilla.jss.asn1.OBJECT_IDENTIFIER;
 import java.util.Hashtable;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.security.NoSuchAlgorithmException;
 
 /**
@@ -57,7 +57,7 @@ public interface PrivateKey extends java.security.PrivateKey
      * Returns the unique ID of this key.  Unique IDs can be used to match
      * certificates to keys.
      *
-     * @see com.netscape.jss.crypto.TokenCertificate#getUniqueID
+     * @see org.mozilla.jss.crypto.TokenCertificate#getUniqueID
      */
     public byte[] getUniqueID() throws TokenException;
 

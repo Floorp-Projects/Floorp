@@ -37,7 +37,7 @@ MODULE = ninja
 
 NS_USE_JDK = 1
 
-PACKAGE =       com/netscape/jss/pkix/cmmf
+PACKAGE =       org/mozilla/jss/pkix/cmmf
 
 # These are meant to be used within Ninja only.
 PRIVATE_EXPORTS =                                   \

@@ -30,9 +30,9 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
-import com.netscape.jss.util.*;
+import org.mozilla.jss.util.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
 
@@ -40,7 +40,7 @@ import java.security.spec.AlgorithmParameterSpec;
  * A class for producing and verifying digital signatures.
  * Instances of this class can be obtain from <code>CryptoToken</code>s.
  *
- * @see com.netscape.jss.crypto.CryptoToken#getSignatureContext
+ * @see org.mozilla.jss.crypto.CryptoToken#getSignatureContext
  */
 public class Signature { 
 

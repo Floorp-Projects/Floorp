@@ -31,16 +31,16 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.crypto.SignatureAlgorithm;
-import com.netscape.jss.crypto.SignatureSpi;
-import com.netscape.jss.crypto.Signature;
-import com.netscape.jss.util.Password;
+import org.mozilla.jss.crypto.SignatureAlgorithm;
+import org.mozilla.jss.crypto.SignatureSpi;
+import org.mozilla.jss.crypto.Signature;
+import org.mozilla.jss.util.Password;
 
 final class Tunnel {
 
-    private static class CryptoTunnel extends com.netscape.jss.crypto.Tunnel
+    private static class CryptoTunnel extends org.mozilla.jss.crypto.Tunnel
     {
         public static Signature
         constructSignature(SignatureAlgorithm alg, SignatureSpi engine) {
@@ -48,7 +48,7 @@ final class Tunnel {
         }
     }
 
-    private static class UtilTunnel extends com.netscape.jss.util.Tunnel
+    private static class UtilTunnel extends org.mozilla.jss.util.Tunnel
     {
         public static byte[]
         getPasswordByteCopy(Password pw) {

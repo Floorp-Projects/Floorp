@@ -30,22 +30,22 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkcs12;
+package org.mozilla.jss.pkcs12;
 
 import java.io.*;
 import java.text.*;
 import java.util.*;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.pkcs11.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.pkcs11.*;
+import org.mozilla.jss.util.*;
 
 /**
  * A PKCS #12 "virtual token".  Currently, these extend
  * tokens found in the PK11Token class.
  *
  * @author mharmsen
- * @version $Revision: 1.1 $ $Date: 2000/12/15 20:50:34 $ 
- * @see com.netscape.jss.pkcs12.PK12Token
+ * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:18 $ 
+ * @see org.mozilla.jss.pkcs12.PK12Token
  **/
 
 public
@@ -685,7 +685,7 @@ extends PK11Token
 
 
 class PK12TokenProxy
-extends com.netscape.jss.util.NativeProxy
+extends org.mozilla.jss.util.NativeProxy
 {
     //////////////////////////////////////////////////////////////////////////
     // Constructor

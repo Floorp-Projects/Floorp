@@ -31,11 +31,11 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.crmf;
+package org.mozilla.jss.pkix.crmf;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 
 public class PKIArchiveOptions implements ASN1Value {
 

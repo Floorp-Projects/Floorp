@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.primitive;
+package org.mozilla.jss.pkix.primitive;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,7 +39,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.CharConversionException;
 import java.io.ByteArrayInputStream;
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 
 /**
  * An X.500 Name.

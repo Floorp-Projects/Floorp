@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.pkix.crmf;
+package org.mozilla.jss.pkix.crmf;
 
 /**
  * An exception thrown when challenge response pop is requested.

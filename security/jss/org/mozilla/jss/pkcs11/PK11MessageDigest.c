@@ -31,7 +31,7 @@
  * GPL.
  */
 
-#include "_jni/com_netscape_jss_pkcs11_PK11MessageDigest.h"
+#include "_jni/org_mozilla_jss_pkcs11_PK11MessageDigest.h"
 
 #include <nspr.h>
 #include <plarena.h>
@@ -53,7 +53,7 @@
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11MessageDigest_initDigest
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_initDigest
     (JNIEnv *env, jclass clazz, jobject algObj)
 {
     SECOidTag alg;
@@ -77,7 +77,7 @@ Java_com_netscape_jss_pkcs11_PK11MessageDigest_initDigest
  *
  */
 JNIEXPORT jobject JNICALL
-Java_com_netscape_jss_pkcs11_PK11MessageDigest_initHMAC
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_initHMAC
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject algObj,
      jobject keyObj)
 {
@@ -133,7 +133,7 @@ finish:
  *
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_pkcs11_PK11MessageDigest_update
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_update
     (JNIEnv *env, jclass clazz, jobject proxyObj, jbyteArray inbufBA,
         jint offset, jint len)
 {
@@ -173,7 +173,7 @@ finish:
  *
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_pkcs11_PK11MessageDigest_digest
+Java_org_mozilla_jss_pkcs11_PK11MessageDigest_digest
     (JNIEnv *env, jclass clazz, jobject proxyObj, jbyteArray outbuf,
         jint offset, jint len)
 {

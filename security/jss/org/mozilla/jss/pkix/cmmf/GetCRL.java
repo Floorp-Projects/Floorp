@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cmmf;
+package org.mozilla.jss.pkix.cmmf;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
 
 /**

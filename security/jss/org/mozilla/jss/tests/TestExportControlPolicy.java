@@ -31,10 +31,10 @@
  * GPL.
  */
 
-package com.netscape.jss;
+package org.mozilla.jss;
 
-import com.netscape.jss.*;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.*;
+import org.mozilla.jss.crypto.*;
 
 /**
  * A command-line utility for testing Export Control Policies in "jssjava".

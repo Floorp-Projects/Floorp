@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.asn1;
+package org.mozilla.jss.asn1;
 
 /**
  * An enumerated type representing the forms of an ASN.1 value.

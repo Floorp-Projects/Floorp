@@ -31,9 +31,9 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
-import com.netscape.jss.util.*;
+import org.mozilla.jss.util.*;
 
 final class ModuleProxy extends NativeProxy {
     ModuleProxy(byte[] pointer) {

@@ -37,7 +37,7 @@ MODULE = ninja
  
 NS_USE_JDK = 1
 
-PACKAGE = com/netscape/jss/provider
+PACKAGE = org/mozilla/jss/provider
 
 REQUIRES =      nspr20 dbm security
 

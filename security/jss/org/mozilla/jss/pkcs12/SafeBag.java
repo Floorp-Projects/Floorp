@@ -31,16 +31,16 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs12;
+package org.mozilla.jss.pkcs12;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.*;
-import com.netscape.jss.pkix.primitive.*;
-import com.netscape.jss.util.*;
+import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.util.*;
 import java.security.*;
 import java.security.MessageDigest;
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.CryptoManager;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
 
 /**
  * A PKCS #12 <i>SafeBag</i> structure.
@@ -88,7 +88,7 @@ public final class SafeBag implements ASN1Value {
     /**
      * Returns the attributes of this bag. May return null if this bag
      * has no attributes.  Each element of the set is a
-     * <code>com.netscape.jss.pkix.primitive.Attribute</code>.
+     * <code>org.mozilla.jss.pkix.primitive.Attribute</code>.
      */
     public SET getBagAttributes() {
        return bagAttributes;

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.asn1;
+package org.mozilla.jss.asn1;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,7 +38,7 @@ import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.BufferedInputStream;
 import java.util.Vector;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.math.BigInteger;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

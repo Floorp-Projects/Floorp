@@ -31,12 +31,12 @@
  * GPL.
  */
 
-package com.netscape.jss;
+package org.mozilla.jss;
 
-import com.netscape.jss.crypto.*;
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.util.Assert;
-import com.netscape.jss.util.Password;
+import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.util.Assert;
+import org.mozilla.jss.util.Password;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 
@@ -106,7 +106,7 @@ public class KeyWrapping {
         kpg.temporaryPairs(true);
         KeyPair kp = kpg.genKeyPair();
         java.security.PublicKey pub = kp.getPublic();
-        PrivateKey privk = (com.netscape.jss.crypto.PrivateKey)kp.getPrivate();
+        PrivateKey privk = (org.mozilla.jss.crypto.PrivateKey)kp.getPrivate();
 
         wrappedKey = keyWrap.wrap(privk);
         System.out.println("Original key:");

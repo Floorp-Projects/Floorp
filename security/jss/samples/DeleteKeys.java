@@ -37,10 +37,10 @@
  *  before you run this.
  */
 
-import com.netscape.jss.CryptoManager;
-import com.netscape.jss.util.ConsolePasswordCallback;
-import com.netscape.jss.util.Debug;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.CryptoManager;
+import org.mozilla.jss.util.ConsolePasswordCallback;
+import org.mozilla.jss.util.Debug;
+import org.mozilla.jss.crypto.*;
 import java.math.BigInteger;
 
 public class DeleteKeys {

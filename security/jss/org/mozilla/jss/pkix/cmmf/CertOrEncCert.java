@@ -31,12 +31,12 @@
  * GPL.
  */
 
-package com.netscape.jss.pkix.cmmf;
+package org.mozilla.jss.pkix.cmmf;
 
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.io.OutputStream;
 import java.io.IOException;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.io.ByteArrayOutputStream;
 
 public class CertOrEncCert implements ASN1Value {

@@ -31,21 +31,21 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs7;
+package org.mozilla.jss.pkcs7;
 
-import com.netscape.jss.pkix.primitive.*;
+import org.mozilla.jss.pkix.primitive.*;
 
 import java.io.*;
-import com.netscape.jss.asn1.*;
+import org.mozilla.jss.asn1.*;
 import java.util.Vector;
-import com.netscape.jss.util.Assert;
+import org.mozilla.jss.util.Assert;
 import java.math.BigInteger;
 import java.io.ByteArrayInputStream;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 import java.security.*;
 import java.security.spec.AlgorithmParameterSpec;
-import com.netscape.jss.util.Password;
-import com.netscape.jss.CryptoManager;
+import org.mozilla.jss.util.Password;
+import org.mozilla.jss.CryptoManager;
 
 /**
  * The PKCS #7 type <i>EncryptedContentInfo</i>, which encapsulates

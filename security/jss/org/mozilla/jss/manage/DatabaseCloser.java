@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss;
+package org.mozilla.jss;
 
 /**
  * A class for closing databases. Since closing the databases is
@@ -41,8 +41,8 @@ package com.netscape.jss;
 public abstract class DatabaseCloser {
 
     private static final String authorizedClosers[] =
-        {   "com.netscape.certsetup.apps.CertSetup$DatabaseCloser",
-            "com.netscape.jss.CloseDBs"                                  };
+        {   "org.mozilla.certsetup.apps.CertSetup$DatabaseCloser",
+            "org.mozilla.jss.CloseDBs"                                  };
 
     /**
      * Creates a new DatabaseCloser.  This should only be called

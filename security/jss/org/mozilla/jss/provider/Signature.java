@@ -30,20 +30,20 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-package com.netscape.jss.provider;
+package org.mozilla.jss.provider;
 
 import java.security.SecureRandom;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.crypto.*;
 import java.security.SignatureException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.InvalidAlgorithmParameterException;
 
 public class Signature {
 
-    com.netscape.jss.crypto.Signature sig;
+    org.mozilla.jss.crypto.Signature sig;
 
     public void engineInitSign(java.security.PrivateKey privateKey,
         SecureRandom random, SignatureAlgorithm sigAlg)
@@ -66,7 +66,7 @@ public class Signature {
         }
     }
 
-    protected static com.netscape.jss.crypto.Signature
+    protected static org.mozilla.jss.crypto.Signature
     getSigContext(java.security.PrivateKey privateKey,
         SignatureAlgorithm sigAlg)
         throws NoSuchAlgorithmException, InvalidKeyException, TokenException

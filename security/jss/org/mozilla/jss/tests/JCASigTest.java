@@ -31,19 +31,19 @@
  * GPL.
  */
 
-package com.netscape.jss.crypto;
+package org.mozilla.jss.crypto;
 
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.io.*;
-import com.netscape.jss.util.*;
-import com.netscape.jss.*;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.*;
 
 public class JCASigTest {
 
 	public static void usage() {
 		System.out.println(
-			"Usage: java com.netscape.jss.crypto.JCASigTest <dbdir> <tokenname>");
+			"Usage: java org.mozilla.jss.crypto.JCASigTest <dbdir> <tokenname>");
 	}
 
 	public static void main(String args[]) {
@@ -90,7 +90,7 @@ public class JCASigTest {
             signer = java.security.Signature.getInstance("MD5/RSA");
 			System.out.println("Created a signing context");
 			signer.initSign(
-				(com.netscape.jss.crypto.PrivateKey)keyPair.getPrivate());
+				(org.mozilla.jss.crypto.PrivateKey)keyPair.getPrivate());
 			System.out.println("initialized the signing operation");
 
 			signer.update(data);

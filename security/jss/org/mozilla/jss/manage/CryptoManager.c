@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
-#include "_jni/com_netscape_jss_CryptoManager.h"
+#include "_jni/org_mozilla_jss_CryptoManager.h"
 
 #include <svrplcy.h>
 #include <secitem.h>
@@ -329,7 +329,7 @@ simpleInitialize(JNIEnv *env)
  * Initializes NSPR and the RNG only.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_CryptoManager_initializeNative
+Java_org_mozilla_jss_CryptoManager_initializeNative
   (JNIEnv *env, jclass clazz)
 {
     if(simpleInitialize(env) != PR_SUCCESS ) {
@@ -382,7 +382,7 @@ static JavaVM *javaVM = NULL;
  *
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_CryptoManager_initializeAllNative
+Java_org_mozilla_jss_CryptoManager_initializeAllNative
     (JNIEnv *env, jclass clazz,
         jstring modDBName,
         jstring keyDBName,
@@ -668,7 +668,7 @@ finish:
  *
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_CryptoManager_setNativePasswordCallback
+Java_org_mozilla_jss_CryptoManager_setNativePasswordCallback
     (JNIEnv *env, jclass clazz, jobject callback)
 {
     JSS_setPasswordCallback(env, callback);
@@ -954,7 +954,7 @@ finish:
  * these into a Vector.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_CryptoManager_putModulesInVector
+Java_org_mozilla_jss_CryptoManager_putModulesInVector
     (JNIEnv *env, jobject this, jobject vector)
 {
     SECMODListLock *listLock=NULL;
@@ -1033,7 +1033,7 @@ finish:
  *      the PKCS #11 library.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_CryptoManager_enableFIPS
+Java_org_mozilla_jss_CryptoManager_enableFIPS
     (JNIEnv *env, jclass clazz, jboolean fips)
 {
     char *name=NULL;
@@ -1064,7 +1064,7 @@ Java_com_netscape_jss_CryptoManager_enableFIPS
  * Returns true if FIPS mode is currently on, false if it ain't.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_CryptoManager_FIPSEnabled(JNIEnv *env, jobject this)
+Java_org_mozilla_jss_CryptoManager_FIPSEnabled(JNIEnv *env, jobject this)
 {
     if( PK11_IsFIPS() ) {
         return JNI_TRUE;
@@ -1079,7 +1079,7 @@ Java_com_netscape_jss_CryptoManager_FIPSEnabled(JNIEnv *env, jobject this)
  * Returns true if this build of jssjava is "domestic", false otherwise.
  */
 JNIEXPORT jboolean JNICALL
-Java_com_netscape_jss_CryptoManager_isDomestic(JNIEnv *env, jobject this)
+Java_org_mozilla_jss_CryptoManager_isDomestic(JNIEnv *env, jobject this)
 {
     /* "C" data members */
 	PRBool result;
@@ -1121,7 +1121,7 @@ getPolicyTypeIndex( SVRPLCYPolicyType thisPolicy )
  * Returns an integer related to the export control policy type
  */
 JNIEXPORT jint JNICALL
-Java_com_netscape_jss_CryptoManager_getExportControlPolicyType( JNIEnv *env,
+Java_org_mozilla_jss_CryptoManager_getExportControlPolicyType( JNIEnv *env,
 																jobject this )
 {
     /* "C" data members */
@@ -1141,7 +1141,7 @@ Java_com_netscape_jss_CryptoManager_getExportControlPolicyType( JNIEnv *env,
  * unusable.
  */
 JNIEXPORT void JNICALL
-Java_com_netscape_jss_DatabaseCloser_closeDatabases
+Java_org_mozilla_jss_DatabaseCloser_closeDatabases
     (JNIEnv *env, jobject this)
 {
     PR_ASSERT( CERT_GetDefaultCertDB() != NULL );

@@ -66,7 +66,7 @@ JSS_getPtrFromProxy(JNIEnv *env, jobject nativeProxy, void **ptr)
 
     PR_ASSERT(env!=NULL && nativeProxy != NULL && ptr != NULL);
 
-    nativeProxyClass = (*env)->FindClass(env, "com/netscape/jss/util/NativeProxy");
+    nativeProxyClass = (*env)->FindClass(env, "org/mozilla/jss/util/NativeProxy");
     if(nativeProxyClass == NULL) {
         ASSERT_OUTOFMEM(env);
         return PR_FAILURE;

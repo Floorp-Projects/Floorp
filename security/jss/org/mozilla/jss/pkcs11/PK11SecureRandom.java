@@ -31,19 +31,19 @@
  * GPL.
  */
 
-package com.netscape.jss.pkcs11;
+package org.mozilla.jss.pkcs11;
 
 import java.util.*;
-import com.netscape.jss.util.*;
-import com.netscape.jss.crypto.*;
+import org.mozilla.jss.util.*;
+import org.mozilla.jss.crypto.*;
 
 /**
  * A random number generator for PKCS #11.
  *
- * @see com.netscape.jss.CryptoManager
+ * @see org.mozilla.jss.CryptoManager
  */
 public final
-class PK11SecureRandom implements com.netscape.jss.crypto.JSSSecureRandom
+class PK11SecureRandom implements org.mozilla.jss.crypto.JSSSecureRandom
 {
     ////////////////////////////////////////////////////
     // construction and finalization
