@@ -377,7 +377,7 @@ nsXULPrototypeCache::PutScript(nsIURI* aURI, void* aScriptObject)
 }
 
 /* static */
-PRBool PR_CALLBACK
+PRBool
 nsXULPrototypeCache::UnlockJSObjectCallback(nsHashKey *aKey, void *aData, void* aClosure)
 {
     JS_UnlockGCThingRT((JSRuntime*) aClosure, aData);
