@@ -58,6 +58,8 @@ if($inRedirIniURL eq "")
 $DEPTH         = "$ENV{MOZ_SRC}\\mozilla";
 $cwdBuilder    = "$DEPTH\\xpinstall\\wizard\\windows\\builder";
 $cwdBuilder    =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
+$cwdMfcEmbedPkgr = "$DEPTH\\embedding\\config";
+$cwdMfcEmbedPkgr =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
 $cwdDist       = GetCwd("dist",     $DEPTH, $cwdBuilder);
 $cwdDistWin    = GetCwd("distwin",  $DEPTH, $cwdBuilder);
 $cwdInstall    = GetCwd("install",  $DEPTH, $cwdBuilder);
@@ -75,6 +77,8 @@ print "cwdDistWin: $cwdDistWin";
 
 mkdir("$cwdDist\\stage", 775);
 system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\pkgs-mfcembed-win -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdMfcEmbedPkgr\\basebrowser-win-supp -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdMrcEmbedPkgr\\gre-win-supp -o dos -v");
 
 
 chdir("$cwdPackager\\win_mfcembed");

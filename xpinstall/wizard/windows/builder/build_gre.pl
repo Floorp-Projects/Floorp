@@ -58,6 +58,8 @@ if($inRedirIniURL eq "")
 $DEPTH         = "$ENV{MOZ_SRC}\\mozilla";
 $cwdBuilder    = "$DEPTH\\xpinstall\\wizard\\windows\\builder";
 $cwdBuilder    =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
+$cwdGrePkgr    = "$DEPTH\\embedding\\config";
+$cwdGrePkgr    =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
 $cwdDist       = GetCwd("dist",     $DEPTH, $cwdBuilder);
 $cwdDistWin    = GetCwd("distwin",  $DEPTH, $cwdBuilder);
 $cwdInstall    = GetCwd("install",  $DEPTH, $cwdBuilder);
@@ -74,7 +76,8 @@ print "stage:  $cwdDist\\stage";
 print "cwdDistWin: $cwdDistWin";
 
 mkdir("$cwdDist\\stage", 775);
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\pkgs-gre-win -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdGrePkgr\\basebrowser-win -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdGrePkgr\\gre-win -o dos -v");
 
 
 chdir("$cwdPackager\\win_gre");
