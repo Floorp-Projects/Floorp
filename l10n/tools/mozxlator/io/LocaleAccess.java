@@ -257,7 +257,7 @@ public class LocaleAccess implements MozInstallAccess
             reader = MozIo.getFileReader(m_fil,fis);
             if (reader!= null)
             {
-                reader.readFile(localeName);
+                reader.readFile(localeName,null);
             }                    
         }
         catch (Exception e)

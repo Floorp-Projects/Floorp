@@ -48,15 +48,7 @@ public class SetupDialog extends javax.swing.JDialog {
     private void initComponents() {//GEN-BEGIN:initComponents
         tabbedPane = new javax.swing.JTabbedPane();
         generalTab = new javax.swing.JPanel();
-        localeLabel = new javax.swing.JLabel();
-        localeField = new javax.swing.JTextField();
-        packageTab = new javax.swing.JPanel();
-        authorLabel = new javax.swing.JLabel();
-        authorField = new javax.swing.JTextField();
-        displayLabel = new javax.swing.JLabel();
-        displayField = new javax.swing.JTextField();
-        previewLabel = new javax.swing.JLabel();
-        previewField = new javax.swing.JTextField();
+        kazuCheck = new javax.swing.JCheckBox();
         jPanel1 = new javax.swing.JPanel();
         okButton = new javax.swing.JButton();
         cancelButton = new javax.swing.JButton();
@@ -66,86 +58,11 @@ public class SetupDialog extends javax.swing.JDialog {
         generalTab.setLayout(new java.awt.GridBagLayout());
           java.awt.GridBagConstraints gridBagConstraints1;
           
-          localeLabel.setText("Default locale");
+          kazuCheck.setText("Enable Kazu's workaround for bug 51327");
             gridBagConstraints1 = new java.awt.GridBagConstraints();
-            gridBagConstraints1.insets = new java.awt.Insets(3, 0, 0, 0);
-            gridBagConstraints1.anchor = java.awt.GridBagConstraints.NORTHWEST;
-            generalTab.add(localeLabel, gridBagConstraints1);
-            
-            
-          localeField.setColumns(15);
-            localeField.setText("da-DK");
-            gridBagConstraints1 = new java.awt.GridBagConstraints();
-            gridBagConstraints1.gridwidth = 0;
-            gridBagConstraints1.insets = new java.awt.Insets(3, 3, 0, 0);
-            gridBagConstraints1.anchor = java.awt.GridBagConstraints.NORTHWEST;
-            generalTab.add(localeField, gridBagConstraints1);
+            generalTab.add(kazuCheck, gridBagConstraints1);
             
             tabbedPane.addTab("General", generalTab);
-          
-          
-        packageTab.setLayout(new java.awt.GridBagLayout());
-          java.awt.GridBagConstraints gridBagConstraints2;
-          
-          authorLabel.setText("Author");
-            gridBagConstraints2 = new java.awt.GridBagConstraints();
-            gridBagConstraints2.insets = new java.awt.Insets(3, 0, 0, 0);
-            gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
-            packageTab.add(authorLabel, gridBagConstraints2);
-            
-            
-          authorField.setColumns(20);
-            authorField.setText("Henrik Lynggaard");
-            gridBagConstraints2 = new java.awt.GridBagConstraints();
-            gridBagConstraints2.gridwidth = 0;
-            gridBagConstraints2.fill = java.awt.GridBagConstraints.HORIZONTAL;
-            gridBagConstraints2.insets = new java.awt.Insets(3, 3, 0, 0);
-            gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
-            packageTab.add(authorField, gridBagConstraints2);
-            
-            
-          displayLabel.setText("Display name");
-            gridBagConstraints2 = new java.awt.GridBagConstraints();
-            gridBagConstraints2.gridx = 0;
-            gridBagConstraints2.gridy = 1;
-            gridBagConstraints2.insets = new java.awt.Insets(3, 0, 0, 0);
-            gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
-            packageTab.add(displayLabel, gridBagConstraints2);
-            
-            
-          displayField.setColumns(20);
-            displayField.setText("Danish Localization");
-            gridBagConstraints2 = new java.awt.GridBagConstraints();
-            gridBagConstraints2.gridx = 1;
-            gridBagConstraints2.gridy = 1;
-            gridBagConstraints2.gridwidth = 0;
-            gridBagConstraints2.fill = java.awt.GridBagConstraints.HORIZONTAL;
-            gridBagConstraints2.insets = new java.awt.Insets(3, 3, 0, 0);
-            gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
-            packageTab.add(displayField, gridBagConstraints2);
-            
-            
-          previewLabel.setText("Preview URL");
-            gridBagConstraints2 = new java.awt.GridBagConstraints();
-            gridBagConstraints2.gridx = 0;
-            gridBagConstraints2.gridy = 2;
-            gridBagConstraints2.insets = new java.awt.Insets(3, 0, 0, 0);
-            gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
-            packageTab.add(previewLabel, gridBagConstraints2);
-            
-            
-          previewField.setColumns(30);
-            previewField.setText("http://www.mozilla.org/previews/da-DK.gif");
-            gridBagConstraints2 = new java.awt.GridBagConstraints();
-            gridBagConstraints2.gridx = 1;
-            gridBagConstraints2.gridy = 2;
-            gridBagConstraints2.gridwidth = 0;
-            gridBagConstraints2.fill = java.awt.GridBagConstraints.HORIZONTAL;
-            gridBagConstraints2.insets = new java.awt.Insets(3, 3, 0, 0);
-            gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
-            packageTab.add(previewField, gridBagConstraints2);
-            
-            tabbedPane.addTab("Package", packageTab);
           
           
         getContentPane().add(tabbedPane, java.awt.BorderLayout.CENTER);
@@ -192,21 +109,16 @@ public void visDialog()
     
     
     // setup the dialog
-    localeField.setText(Settings.getString("saved.localeName",""));
-    authorField.setText(Settings.getString("Package.Author",""));
-    displayField.setText(Settings.getString("Package.Display",""));
-    previewField.setText(Settings.getString("Package.Preview",""));
-    
+    kazuCheck.setSelected(Settings.getBoolean("mozbug.nobackslash",false));
+
+   
     // show dialog
     okay=false;
     setVisible(true);
     
     if (okay)
     {
-        Settings.setString("Locale.Defaultguess",localeField.getText());
-        Settings.setString("Package.Author",authorField.getText());
-        Settings.setString("Package.Display",displayField.getText());
-        Settings.setString("Package.Preview",previewField.getText());
+        Settings.setBoolean("mozbug.nobackslash",kazuCheck.isSelected());
         Settings.save();
     }
     dispose();
@@ -215,15 +127,7 @@ public void visDialog()
 // Variables declaration - do not modify//GEN-BEGIN:variables
 private javax.swing.JTabbedPane tabbedPane;
 private javax.swing.JPanel generalTab;
-private javax.swing.JLabel localeLabel;
-private javax.swing.JTextField localeField;
-private javax.swing.JPanel packageTab;
-private javax.swing.JLabel authorLabel;
-private javax.swing.JTextField authorField;
-private javax.swing.JLabel displayLabel;
-private javax.swing.JTextField displayField;
-private javax.swing.JLabel previewLabel;
-private javax.swing.JTextField previewField;
+private javax.swing.JCheckBox kazuCheck;
 private javax.swing.JPanel jPanel1;
 private javax.swing.JButton okButton;
 private javax.swing.JButton cancelButton;

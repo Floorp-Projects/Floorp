@@ -59,17 +59,13 @@ public class CopyWriter extends MozFileWriter
         boolean theEnd;
         int trans;
         
-        Log.write("going to copy : " + fil); 
+
         
         subcomponent = (MozComponent) fil.getParent();
-        Log.write("Got subcomponent " + subcomponent );
         
         component = (MozComponent) subcomponent.getParent();
-        Log.write("Got component " + component);
         
-        Log.write("parent is " + component.getParent().getName());
         install = (MozInstall) component.getParent();
-        Log.write("got Install " + install);
         
        baseName = install.getPath();
         

@@ -43,8 +43,8 @@ public class SetupAction extends AbstractAction {
   
   public void actionPerformed(ActionEvent evt)
   {
-    //SetupDialog sd = new SetupDialog();
+    SetupDialog sd = new SetupDialog();
     
-    //sd.visDialog();
+    sd.visDialog();
   }
 }

@@ -24,6 +24,7 @@
 package org.mozilla.translator.io;
 
 import java.io.*;
+import java.util.*;
 import org.mozilla.translator.datamodel.*;
 /**
  *
@@ -42,6 +43,6 @@ public abstract class MozFileReader
     }
     
     
-    public abstract void readFile(String localeName) throws IOException;
+    public abstract void readFile(String localeName,List changeList) throws IOException;
 }
 

@@ -41,7 +41,7 @@ public class PropertiesReader extends MozFileReader {
         super(f,i);
     }
 
-    public void readFile(String localeName) throws IOException
+    public void readFile(String localeName,List changeList) throws IOException
     {
         Properties prop;
         Enumeration enum;
@@ -68,10 +68,15 @@ public class PropertiesReader extends MozFileReader {
                 {
                     currentPhrase = new Phrase(key,fil,text,"",false);
                     fil.addChild(currentPhrase);
+                    changeList.add(currentPhrase);
                 }
                 else
                 {
-                    currentPhrase.setText(text);
+                    if (!currentPhrase.getText().equals(text))
+                    {
+                        currentPhrase.setText(text);
+                        changeList.add(currentPhrase);
+                    }                    
                 }
                 currentPhrase.setMarked(true);                
                 

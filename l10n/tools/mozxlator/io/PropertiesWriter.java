@@ -49,7 +49,17 @@ public class PropertiesWriter extends MozFileWriter
 
     public void writeFile(String localeName) throws IOException
     {
-        Properties prop = new Properties();
+        Properties prop;
+        
+        
+        if (Settings.getBoolean("mozbug.nobackslash",false))
+        {
+            prop= new MozProperties();
+        }
+        else
+        {       
+            prop = new Properties();
+        }
         
         Iterator phraseIterator;
         Phrase currentPhrase;

@@ -41,7 +41,7 @@ public class WriteXpiAction extends AbstractAction {
     public WriteXpiAction()
     {
         super("Write XPI",null);
-
+        //setEnabled(false);
     }
 
     public void actionPerformed(ActionEvent evt)

@@ -40,7 +40,7 @@ public class DefaultSettings extends Object {
     prop = new Properties();
     
     // system settings
-    prop.setProperty("System.Version","4.20");
+    prop.setProperty("System.Version","4.21");
     prop.setProperty("System.Groupware","false"); // to be used later
     prop.setProperty("System.Glossaryfile","glossary.zip");
     prop.setProperty("System.Filterfile","Filters.properties");

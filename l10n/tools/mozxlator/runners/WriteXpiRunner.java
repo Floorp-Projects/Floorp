@@ -116,7 +116,8 @@ public class WriteXpiRunner extends Thread {
                     {
                         currentFile =(MozFile) fileIterator.next();
 
-                        entryName = subcomponentPrefix + File.separator + currentFile.getName();
+                        entryName = "bin" + File.separator + "chrome" + File.separator + "locales" + File.separator;
+                        entryName = entryName + subcomponentPrefix + File.separator + currentFile.getName();
                         vindue.setStatus("files done: " + filesDone + ", currently packing: " + currentFile);
                         writeFile(currentFile);
                         filesDone++;
@@ -220,7 +221,8 @@ public class WriteXpiRunner extends Thread {
             pw.println("</RDF:RDF>");
 
             pw.close();
-            copyFile(fil,""+localeName + File.separator + "manifest.rdf");
+
+            copyFile(fil,"bin" + File.separator + "chrome" + File.separator + "locales" + File.separator + localeName + File.separator + "manifest.rdf");
             fil.delete();
         }
         catch (Exception e)
@@ -244,24 +246,70 @@ public class WriteXpiRunner extends Thread {
             PrintWriter pw = new PrintWriter(fw);
 
             // the text in the file
-
-            pw.println("initInstall(\""+ display + "\", \"locales/" + author + "/" + localeName + "\", \"" + version + "\");");
-            pw.println("var dest = getFolder(\"Chrome\", \"locales/" + localeName +"\");");
-            pw.println("var err = addDirectory(\"\", \"" + localeName + "\", dest, \"\");");
-            pw.println();
-            pw.println("if (!err)");
+            pw.println("// this function verifies disk space in kilobytes");
+            pw.println("function verifyDiskSpace(dirPath, spaceRequired)");
             pw.println("{");
-            pw.println("    err = registerChrome(LOCALE, dest);");
-            pw.println("    if (err == SUCCESS)");
-            pw.println("    {");
-            pw.println("        performInstall();");
-            pw.println("    }");
-            pw.println("    else");
-            pw.println("    {");
-            pw.println("    cancelInstall(err);");
-            pw.println("    }");
-            pw.println("}");
+            pw.println("\t var spaceAvailable;");
+            pw.println();
+            pw.println("\t // Get the available disk space on the given path");
+            pw.println("\t spaceAvailable = fileGetDiskSpaceAvailable(dirPath);");
+            
+            pw.println("\t // Convert the available disk space into kilobytes");
+            pw.println("\t spaceAvailable = parseInt(spaceAvailable / 1024);");
 
+            pw.println("\t // do the verification");
+            pw.println("\t if(spaceAvailable < spaceRequired)");
+            pw.println("\t {");
+            pw.println("\t\t logComment(\"Insufficient disk space: \" + dirPath);");
+            pw.println("\t\t logComment(\"  required : \" + spaceRequired + \" K\");");
+            pw.println("\t\t logComment(\"  available: \" + spaceAvailable + \" K\");");
+            pw.println("\t\t return(false);");
+            pw.println("\t }");
+            pw.println("\t return(true);");
+            pw.println("}");
+            pw.println("var srDest = 643;");
+            pw.println("var err;");
+            pw.println("var fProgram;");
+
+            pw.println("// --- LOCALIZATION NOTE: translate only these ---");
+            pw.println("var prettyName = \"" +display + "\";");
+            pw.println("var regName    = \"locales/mozilla/"+ localeName +"\";");
+            pw.println("var chromeName = \"locales/" + localeName +"\";");
+            pw.println("// --- END LOCALIZABLE RESOURCES ---");
+
+            pw.println("err = initInstall(prettyName, regName, \"5.0.0.0000000000\");");
+            pw.println("logComment(\"initInstall: \" + err);");
+
+            pw.println("fProgram = getFolder(\"Program\");");
+            pw.println("logComment(\"fProgram: \" + fProgram);");
+
+            pw.println("if (verifyDiskSpace(fProgram, srDest))");
+            pw.println("{");
+            pw.println("\t err = addDirectory(\"\",");
+            pw.println("\t\t \"5.0.0.0000000000\",");
+            pw.println("\t\t \"bin\",");
+            pw.println("\t\t fProgram,");
+            pw.println("\t\t \"\",");
+            pw.println("\t\t true);");
+            pw.println("\t logComment(\"addDirectory() returned: \" + err);");
+
+            pw.println("\t // register chrome");
+            pw.println("\t var cf = getFolder(\"Chrome\");");
+            pw.println("\t registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName));");
+
+            pw.println("\t if (err == SUCCESS)");
+            pw.println("\t {");
+            pw.println("\t err = performInstall(); ");
+            pw.println("\t logComment(\"performInstall() returned: \" + err);");
+            pw.println("\t }");
+            pw.println("\t else");
+            pw.println("\t {");
+            pw.println("\t cancelInstall(err);");
+            pw.println("\t logComment(\"cancelInstall due to error: \" + err);");
+            pw.println("\t }");
+            pw.println("}");
+            pw.println("else");
+            pw.println("\t cancelInstall(INSUFFICIENT_DISK_SPACE);");            
             // end of text
             pw.close();
             copyFile(fil,"install.js");

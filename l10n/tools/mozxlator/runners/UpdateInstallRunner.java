@@ -39,12 +39,13 @@ import org.mozilla.translator.gui.dialog.*;
 public class UpdateInstallRunner extends Thread
 {
     private MozInstall install;
-
+    private List collectedList;
 
     /** Creates new UpdateInstallRunner */
     public UpdateInstallRunner(MozInstall i)
     {
         this.install=i;
+        collectedList= new ArrayList();
     }
 
     public void run() 
@@ -159,11 +160,11 @@ public class UpdateInstallRunner extends Thread
         }
         
         MainWindow.getDefaultInstance().setStatus("Ready");
-        //ShowWhatDialog swd = new ShowWhatDialog();
-        // (swd.visDialog())
-        //
-            //mplexTableWindow ctw = new ComplexTableWindow("Changed Strings", collectedList,swd.getSelectedColumns(),swd.getSelectedLocale());
-       //
+        ShowWhatDialog swd = new ShowWhatDialog();
+        if  (swd.visDialog())
+        {
+            ComplexTableWindow ctw = new ComplexTableWindow("Changed Strings", collectedList,swd.getSelectedColumns(),swd.getSelectedLocale());
+        }
         
     }
         
@@ -412,7 +413,7 @@ public class UpdateInstallRunner extends Thread
             reader = MozIo.getFileReader(m_fil,fis);
             if (reader!= null)
             {
-                reader.readFile("en-US");
+                reader.readFile("en-US",collectedList);
             }
             else
             {

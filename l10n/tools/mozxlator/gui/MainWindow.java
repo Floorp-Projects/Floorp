@@ -74,8 +74,8 @@ public class MainWindow extends JFrame {
     fileMenu = new JMenu("File");
     addMenuItem(fileMenu,new InstallManagerAction(),"");
     fileMenu.addSeparator();
-  //  addMenuItem(fileMenu,new SetupAction(),"");
-    //fileMenu.addSeparator();
+    addMenuItem(fileMenu,new SetupAction(),"");
+    fileMenu.addSeparator();
     addMenuItem(fileMenu,new QuitAction(),"");
     
     menuBar.add(fileMenu);

@@ -24,6 +24,7 @@
 package org.mozilla.translator.io;
 
 import java.io.*;
+import java.util.*;
 import org.mozilla.translator.datamodel.*;
 import org.mozilla.translator.kernel.*;
 /**
@@ -65,7 +66,7 @@ public class DTDReader extends  MozFileReader {
     }
 
     
-    public void readFile(String localeName) throws IOException
+    public void readFile(String localeName,List changeList) throws IOException
     {
         boolean done;
         Phrase currentPhrase;
@@ -89,10 +90,16 @@ public class DTDReader extends  MozFileReader {
                     {
                         currentPhrase= new Phrase(key,fil,text,"",false);
                         fil.addChild(currentPhrase);
+                        changeList.add(currentPhrase);
                     }
                     else
                     {
-                        currentPhrase.setText(text);
+                        if (!currentPhrase.getText().equals(text))
+                        {
+                            currentPhrase.setText(text);
+                            changeList.add(currentPhrase);
+                        }
+                            
                     }
                     currentPhrase.setMarked(true);
                     

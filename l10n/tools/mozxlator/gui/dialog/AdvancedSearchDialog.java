@@ -465,14 +465,67 @@ public class AdvancedSearchDialog extends javax.swing.JDialog {
     }
     public boolean visDialog()
     {
-        // here should state remembering go
+      
+        // set enebled flags
+        firstEnable.setSelected(Settings.getBoolean("advanced.search.enable.1",false));
+        secondEnable.setSelected(Settings.getBoolean("advanced.search.enable.2",false));
+        thirdEnable.setSelected(Settings.getBoolean("advanced.search.enable.3",false));
+        
+        // set field combo
+        firstField.setSelectedIndex(Settings.getInteger("advanced.search.field.1",0));
+        secondField.setSelectedIndex(Settings.getInteger("advanced.search.field.2",0));
+        thirdField.setSelectedIndex(Settings.getInteger("advanced.search.field.3",0));
+        
+        // set rule combo
+        firstRule.setSelectedIndex(Settings.getInteger("advanced.search.rule.1",0));
+        secondRule.setSelectedIndex(Settings.getInteger("advanced.search.rule.2",0));
+        thirdRule.setSelectedIndex(Settings.getInteger("advanced.search.rule.3",0));
+        
+        // set the text field
+        firstText.setText(Settings.getString("advanced.search.text.1",""));
+        secondText.setText(Settings.getString("advanced.search.text.2",""));
+        thirdText.setText(Settings.getString("advanced.search.text.3",""));
+        
+        // set the locale field
+        firstLocale.setText(Settings.getString("advanced.search.locale.1",""));
+        secondLocale.setText(Settings.getString("advanced.search.locale.2",""));
+        thirdLocale.setText(Settings.getString("advanced.search.locale.3",""));
+        
+        // set case flags
+        firstCase.setSelected(Settings.getBoolean("advanced.search.case.1",false));
+        secondCase.setSelected(Settings.getBoolean("advanced.search.case.2",false));
+        thirdCase.setSelected(Settings.getBoolean("advanced.search.case.3",false));
+        
+        
         okay=false;
         setVisible(true);
         
-        //if (okay)
-        //{    
-        //  remember state
-        //}
+        if (okay)
+        {    
+              Settings.setBoolean("advanced.search.enable.1",firstEnable.isSelected());
+              Settings.setBoolean("advanced.search.enable.2",secondEnable.isSelected());
+              Settings.setBoolean("advanced.search.enable.3",thirdEnable.isSelected());
+              
+              Settings.setInteger("advanced.search.field.1",firstField.getSelectedIndex());
+              Settings.setInteger("advanced.search.field.2",secondField.getSelectedIndex());
+              Settings.setInteger("advanced.search.field.3",thirdField.getSelectedIndex());
+              
+              Settings.setInteger("advanced.search.rule.1",firstRule.getSelectedIndex());
+              Settings.setInteger("advanced.search.rule.2",secondRule.getSelectedIndex());
+              Settings.setInteger("advanced.search.rule.3",thirdRule.getSelectedIndex());
+              
+              Settings.setString("advanced.search.text.1",firstText.getText());
+              Settings.setString("advanced.search.text.2",secondText.getText());
+              Settings.setString("advanced.search.text.3",thirdText.getText());
+              
+              Settings.setString("advanced.search.locale.1",firstLocale.getText());
+              Settings.setString("advanced.search.locale.2",secondLocale.getText());
+              Settings.setString("advanced.search.locale.3",thirdLocale.getText());
+              
+              Settings.setBoolean("advanced.search.case.1",firstCase.isSelected());
+              Settings.setBoolean("advanced.search.case.2",secondCase.isSelected());
+              Settings.setBoolean("advanced.search.case.3",thirdCase.isSelected());
+        }
         return okay;
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
