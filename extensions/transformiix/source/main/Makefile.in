@@ -34,7 +34,8 @@ endif
 REQUIRES = string \
 	   xpcom \
 	   expat \
-           $(NULL)
+	   jprof \
+	   $(NULL)
 
 CPP_PROG_LINK          = 1
 
@@ -46,6 +47,10 @@ EXTRA_LIBS = \
              $(DIST)/lib/$(LIB_PREFIX)tx.$(LIB_SUFFIX) \
              $(MOZ_COMPONENT_LIBS) \
              $(NULL)
+
+ifdef MOZ_JPROF
+LIBS         += -ljprof
+endif
 
 include $(topsrcdir)/config/rules.mk
 
