@@ -325,8 +325,12 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 {
   mGC = gdk_gc_ref(aGC);
   mPixmap = aDrawable;
-// this is definatly going to be on the screen, as it will be the window of a
-// widget or something.
+
+  mWidth  = ((GdkWindowPrivate*)aDrawable)->width;
+  mHeight = ((GdkWindowPrivate*)aDrawable)->height;
+
+  // this is definatly going to be on the screen, as it will be the window of a
+  // widget or something.
   mIsOffscreen = PR_FALSE;
 
   /* remove the clip mask of the GC so that it has a "fresh" clip mask (i.e. 
@@ -345,15 +349,15 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-//  ::g_return_val_if_fail (aGC != nsnull, NS_ERROR_FAILURE);
-//  ::g_return_val_if_fail ((aWidth > 0) && (aHeight > 0), NS_ERROR_FAILURE);
+  //  ::g_return_val_if_fail (aGC != nsnull, NS_ERROR_FAILURE);
+  //  ::g_return_val_if_fail ((aWidth > 0) && (aHeight > 0), NS_ERROR_FAILURE);
 
   mGC = gdk_gc_ref(aGC);
   mWidth = aWidth;
   mHeight = aHeight;
   mFlags = aFlags;
 
-// we can draw on this offscreen because it has no parent
+  // we can draw on this offscreen because it has no parent
   mIsOffscreen = PR_TRUE;
 
   mPixmap = ::gdk_pixmap_new(nsnull, mWidth, mHeight, mDepth);

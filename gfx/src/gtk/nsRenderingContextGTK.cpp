@@ -161,7 +161,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
   PRUint32 w, h;
 
   mSurface->GetSize(&w, &h);
-  
+
   if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) )
   {
     mClipRegion->Init();
@@ -960,8 +960,6 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   // they're going to be converted from 32 bit to 16 bit.
   // It's all way off the screen anyway.
   ConditionRect(x,y,w,h);
-
-  UpdateGC();
 
   mFunction = GDK_XOR;
 
