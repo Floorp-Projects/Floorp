@@ -86,7 +86,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mPopUpParent = nsnull;
   mTarget      = nsnull;
   mXULCommandListener = nsnull;
-  mIsSeparator = false;
+  mIsSeparator = PR_FALSE;
   mWebShell    = nsnull;
   mDOMElement  = nsnull;
 }
@@ -107,10 +107,10 @@ nsMenuItem::~nsMenuItem()
 void nsMenuItem::Create(nsIWidget      *aMBParent, 
                         GtkWidget      *aParent, 
                         const nsString &aLabel, 
-                        PRUint32        aCommand)
+                        PRBool         aIsSeparator)
 {
   mTarget  = aMBParent;
-  mCommand = aCommand;
+  //mCommand = aCommand;
   mLabel   = aLabel;
 
   if (NULL == aParent || nsnull == aMBParent) {
@@ -119,11 +119,11 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
 
   mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
-  if(!strcmp(nameStr, "separator")) {
-    mIsSeparator = true;
+  if(aIsSeparator) {
+    mIsSeparator = PR_TRUE;
     mMenuItem = gtk_menu_item_new();
   }else{
-    mIsSeparator = false;
+    mIsSeparator = PR_FALSE;
     mMenuItem = gtk_menu_item_new_with_label(nameStr);
   }
   gtk_widget_show(mMenuItem);
@@ -208,9 +208,9 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::Create(nsIMenu        *aParent, 
-                             const nsString &aLabel, 
-                             PRUint32       aCommand)
+NS_METHOD nsMenuItem::Create(nsIMenu        * aParent, 
+                             const nsString & aLabel, 
+                             PRBool           aIsSeparator)
                             
 {
   if (nsnull == aParent) {
@@ -227,7 +227,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
     NS_RELEASE(sups);
   }
 
-  Create(widget, GetNativeParent(), aLabel, aCommand);
+  Create(widget, GetNativeParent(), aLabel, aIsSeparator);
 //  aParent->AddMenuItem(this);
 
   return NS_OK;
@@ -246,7 +246,7 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
     widget = nsnull;
   }
 
-  Create(widget, GetNativeParent(), aLabel, aCommand);
+  Create(widget, GetNativeParent(), aLabel, false);
 //  aParent->AddItem(this);
 
   return NS_OK;

@@ -19,6 +19,7 @@
 #ifndef nsMenuItem_h__
 #define nsMenuItem_h__
 
+#include "prtypes.h"
 #include "nsIMenuItem.h"
 #include "nsString.h"
 #include "nsIMenuListener.h"
@@ -46,7 +47,7 @@ public:
 
   NS_IMETHOD Create(nsIMenu        *aParent, 
                     const nsString &aLabel,  
-                    PRUint32        aCommand);
+                    PRBool        aIsSeparator);
 
   NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
                     const nsString &aLabel, 
@@ -87,7 +88,7 @@ public:
  
 protected:
   void Create(nsIWidget * aMBParent, GtkWidget *aParent,
-              const nsString &aLabel, PRUint32 aCommand);
+              const nsString &aLabel, PRBool aIsSeparator);
   nsIWidget    *GetMenuBarParent(nsISupports * aParentSupports);
   GtkWidget    *GetNativeParent();
 
@@ -99,7 +100,7 @@ protected:
   nsIWidget    *mTarget;
 
   GtkWidget    *mMenuItem; // native cascade widget
-  bool         mIsSeparator;
+  PRBool        mIsSeparator;
 
   nsIWebShell   * mWebShell;
   nsIDOMElement * mDOMElement;

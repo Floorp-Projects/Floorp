@@ -19,6 +19,7 @@
 #ifndef nsIMenuItem_h__
 #define nsIMenuItem_h__
 
+#include "prtypes.h"
 #include "nsISupports.h"
 #include "nsString.h"
 
@@ -49,7 +50,7 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD Create(nsIMenu        *aParent, 
                       const nsString &aLabel, 
-                      PRUint32       aCommand) = 0;
+                      PRBool         isSeparator) = 0;
     
    /**
     * Creates the MenuItem

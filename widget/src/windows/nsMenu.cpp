@@ -120,30 +120,29 @@ nsMenu::~nsMenu()
 NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
 
 {
-	if(aParent)
+  if(aParent)
+  {
+    nsIMenuBar * menubar = nsnull;
+    aParent->QueryInterface(kIMenuBarIID, (void**) &menubar);
+    if(menubar)
 	{
-		nsIMenuBar * menubar = nsnull;
-		aParent->QueryInterface(kIMenuBarIID, (void**) &menubar);
-		if(menubar)
-		{
-			mMenuBarParent = menubar;
-			//NS_ADDREF(mMenuBarParent);
+      mMenuBarParent = menubar;
+      //NS_ADDREF(mMenuBarParent);
 
-			NS_RELEASE(menubar); // Balance the QI
-		}
-		else
-		{
-			nsIMenu * menu = nsnull;
-			aParent->QueryInterface(kIMenuIID, (void**) &menu);
-			if(menu)
-			{
-				mMenuParent = menu;
-				//NS_ADDREF(mMenuParent);
+      NS_RELEASE(menubar); // Balance the QI
+	} else {
+      nsIMenu * menu = nsnull;
+      aParent->QueryInterface(kIMenuIID, (void**) &menu);
+      if(menu)
+	  {
+        mMenuParent = menu;
+        //NS_ADDREF(mMenuParent);
 
-				NS_RELEASE(menu); // Balance the QI
-			}
-		}
+		NS_RELEASE(menu); // Balance the QI
+	  }
 	}
+  }
+
   mLabel = aLabel;
   mMenu = CreateMenu();
   return NS_OK;
@@ -565,7 +564,6 @@ void nsMenu::LoadMenuItem(
     // the appropriate nsMenuDelegate object
     nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(menuitemNode));
     if (!domElement) {
-      //return NS_ERROR_FAILURE;
 		return;
     }
     

@@ -44,7 +44,7 @@ public:
 
   NS_IMETHOD Create(nsIMenu        *aParent, 
                     const nsString &aLabel,  
-                    PRUint32        aCommand);
+                    PRBool         aIsSeparator);
 
   NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
                     const nsString &aLabel, 

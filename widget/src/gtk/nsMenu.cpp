@@ -284,7 +284,7 @@ NS_METHOD nsMenu::AddSeparator()
   if (NS_OK == rv) {
     // This is gross and I'll make it go away ASAP -cps
     nsString tmp = "separator";
-    pnsMenuItem->Create(this, tmp, 0);                 
+    pnsMenuItem->Create(this, tmp, PR_TRUE);                 
     nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     AddItem(supports); // Parent should now own menu item
@@ -532,7 +532,7 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 
 //----------------------------------------
 void nsMenu::LoadMenuItem(
-  nsIMenu *    pParentMenu,
+  nsIMenu *       pParentMenu,
   nsIDOMElement * menuitemElement,
   nsIDOMNode *    menuitemNode,
   unsigned short  menuitemIndex,
@@ -546,11 +546,15 @@ void nsMenu::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("disabled"), disabled);
   menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
+ 
+  if(disabled == NS_STRING_TRUE ) {
+  }
+      
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    pnsMenuItem->Create(pParentMenu, menuitemName, 0);                 
+    pnsMenuItem->Create(pParentMenu, menuitemName, PR_FALSE);                 
     nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
     pParentMenu->AddItem(supports); // Parent should now own menu item
@@ -573,18 +577,14 @@ void nsMenu::LoadMenuItem(
     domElement->GetAttribute(cmdAtom, cmdName);
 
     pnsMenuItem->SetCommand(cmdName);
-	// DO NOT use passed in wehshell because of messed up windows dynamic loading
-	// code. 
+   // DO NOT use passed in webshell because of messed up windows dynamic loading
+   // code. 
     pnsMenuItem->SetWebShell(mWebShell);
     pnsMenuItem->SetDOMElement(domElement);
 
-	if(disabled == NS_STRING_TRUE )
-		//::EnableMenuItem(mMenu, menuitemIndex, MF_BYPOSITION | MF_GRAYED);
-
-	NS_RELEASE(pnsMenuItem);
+    NS_RELEASE(pnsMenuItem);
     
   } 
-  //return NS_OK;
   return;
 }
 
