@@ -963,7 +963,7 @@ sub BuildIDLProjects()
 
     # necko
     BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");
-    BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",                 "uriloader");
+    BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",                 "uriLoader");
 
     if ($main::options{cache})
     {
@@ -1013,8 +1013,8 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:extensions:wallet:macbuild:walletIDL.mcp","wallet");
     BuildIDLProject(":mozilla:extensions:xml-rpc:macbuild:xml-rpcIDL.mcp","xml-rpc");
     BuildIDLProject(":mozilla:xpfe:components:bookmarks:macbuild:BookmarksIDL.mcp", "bookmarks");
-    BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",          "directory");
-    BuildIDLProject(":mozilla:xpfe:components:regviewer:RegViewerIDL.mcp",          "regviewer");
+    BuildIDLProject(":mozilla:xpfe:components:directory:DirectoryIDL.mcp",          "Directory");
+    BuildIDLProject(":mozilla:xpfe:components:regviewer:RegViewerIDL.mcp",          "RegViewer");
     BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",     "history");
     BuildIDLProject(":mozilla:xpfe:components:shistory:macbuild:shistoryIDL.mcp",   "shistory");
     BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",     "related");
