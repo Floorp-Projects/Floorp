@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/02/16 20:04:08 $ 
+# $Revision: 1.7 $ 
+# $Date: 2001/02/27 15:26:29 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -38,6 +38,9 @@
 
 package TinderConfig;
 
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
+
 
 
 # How do we run the unzip command?
@@ -65,7 +68,7 @@ $URL_HTML = "http://tinderbox.mozilla.org/";
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the html will be written.
 
-$TINDERBOX_HTML_DIR = "/usr/apache/cgibin/webtools/tinderbox";
+$TINDERBOX_HTML_DIR = "/home/httpd/html/tinderbox";
 
 # The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the data will be written.  For
@@ -76,7 +79,7 @@ $TINDERBOX_HTML_DIR = "/usr/apache/cgibin/webtools/tinderbox";
 # outside of the HTML tree so that the webserver can not send the
 # internal data over the network.
 
-$TINDERBOX_DATA_DIR = "/usr/apache/cgibin/webtools/tinderbox";
+$TINDERBOX_DATA_DIR = "/home/httpd/html/tinderbox";
 
 # The top level tinderbox index file. Change this if you wish to
 # provide your own index file for tinderboxs web pages.
@@ -85,7 +88,7 @@ $GLOBAL_INDEX_FILE = "index.html";
 
 # Error log filename:
 
-$ERROR_LOG = "/var/log/tinderbox/log";
+$ERROR_LOG = "/var/log/tinderbox2/log";
   
 # Where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = $TINDERBOX_HTML_DIR."/tinderd.lock";
