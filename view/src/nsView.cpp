@@ -856,15 +856,20 @@ PRBool nsIView::ExternalIsRoot() const
   return nsIView::IsRoot();
 }
 
-// Returns PR_TRUE iff we found a placeholder parent edge on the way
-static PRBool ApplyClipRect(const nsView* aView, nsRect* aRect, PRBool aFollowPlaceholders)
+/**
+ * @param aStopAtView clipping from ancestors of this view will not be applied
+ * @return PR_TRUE iff we found a placeholder parent edge on the way up the view tree
+ * from aView to aStopAtView
+ */
+static PRBool ApplyClipRect(const nsView* aView, nsRect* aRect, PRBool aFollowPlaceholders,
+                            nsIView* aStopAtView)
 {
   // this records the offset from the origin of the current aView
   // to the origin of the initial aView
   nsPoint offset(0, 0);
   PRBool lastViewIsFloating = aView->GetFloating();
   PRBool foundPlaceholders = PR_FALSE;
-  while (PR_TRUE) {
+  while (aView != aStopAtView) {
     const nsView* parentView = aView->GetParent();
     nsPoint offsetFromParent = aView->GetPosition();
 
@@ -874,7 +879,7 @@ static PRBool ApplyClipRect(const nsView* aView, nsRect* aRect, PRBool aFollowPl
       if (aFollowPlaceholders) {
         // correct offsetFromParent to account for the fact that we're
         // switching parentView to ZParent
-        // Note tha the common case is that parentView is an ancestor of
+        // Note that the common case is that parentView is an ancestor of
         // ZParent.
         const nsView* zParentChain;
         for (zParentChain = zParent;
@@ -934,12 +939,12 @@ static PRBool ApplyClipRect(const nsView* aView, nsRect* aRect, PRBool aFollowPl
   return foundPlaceholders;
 }
 
-nsRect nsView::GetClippedRect()
+nsRect nsView::GetClippedRect(nsIView* aStopAtView)
 {
   nsRect clip = GetDimensions();
-  PRBool foundPlaceholders = ApplyClipRect(this, &clip, PR_FALSE);
+  PRBool foundPlaceholders = ApplyClipRect(this, &clip, PR_FALSE, aStopAtView);
   if (foundPlaceholders && !clip.IsEmpty()) {
-    ApplyClipRect(this, &clip, PR_TRUE);
+    ApplyClipRect(this, &clip, PR_TRUE, aStopAtView);
   }
   return clip;
 }

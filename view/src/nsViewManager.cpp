@@ -884,7 +884,8 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   PLArenaPool displayArena;
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
   PRBool anyTransparentPixels
-    = BuildRenderingDisplayList(aView, damageRegion, &displayList, displayArena);
+    = BuildRenderingDisplayList(aView, damageRegion, &displayList, displayArena,
+                                PR_FALSE, PR_FALSE);
   PRBool needBlending = PR_FALSE;
   for (PRInt32 i = 0; i < displayList.Count(); i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, displayList.ElementAt(i));
@@ -1288,14 +1289,18 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
 }
 
 PRBool nsViewManager::BuildRenderingDisplayList(nsIView* aRootView,
-  const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool)
+  const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool,
+  PRBool aIgnoreCoveringWidgets, PRBool aIgnoreOutsideClipping)
 {
   BuildDisplayList(NS_STATIC_CAST(nsView*, aRootView),
-                   aRegion.GetBounds(), PR_FALSE, PR_FALSE, aDisplayList, aPool);
+                   aRegion.GetBounds(), PR_FALSE, aIgnoreOutsideClipping,
+                   aDisplayList, aPool);
 
   nsRegion opaqueRgn;
-  AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext,
-                                   NS_STATIC_CAST(nsView*, aRootView));
+  if (!aIgnoreCoveringWidgets) {
+    AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext,
+                                     NS_STATIC_CAST(nsView*, aRootView));
+  }
 
   nsRect finalTransparentRect;
   OptimizeDisplayList(aDisplayList, aRegion, finalTransparentRect, opaqueRgn, PR_FALSE);
@@ -2332,9 +2337,11 @@ static PRBool ComputePlaceholderContainment(nsView* aView) {
 
   aRect is the area in aView which we want to build a display list for.
   Set aEventProcesing when the list is required for event processing.
-  Set aCaptured if the event is being captured by the given view.
+  Set aCaptured if the event or painting is being captured by the given view so
+  only views that are descended from the given view are considered.
 */
-void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
+void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect,
+                                     PRBool aEventProcessing,
                                      PRBool aCaptured, nsVoidArray* aDisplayList,
                                      PLArenaPool &aPool)
 {
@@ -3325,7 +3332,7 @@ nsViewManager::CreateRenderingContext(nsView &aView)
 
   if (nsnull != win)
     {
-      mContext->CreateRenderingContext(&aView, cx);
+      mContext->CreateRenderingContext(par, cx);
 
       if (nsnull != cx)
         cx->Translate(ax, ay);
@@ -3437,6 +3444,54 @@ NS_IMETHODIMP nsViewManager::GetRootScrollableView(nsIScrollableView **aScrollab
   return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager::RenderOffscreen(nsIView* aView, nsRect aRect,
+                                             PRBool aUntrusted,
+                                             nscolor aBackgroundColor,
+                                             nsIRenderingContext** aRenderedContext)
+{
+  nsView* view = NS_STATIC_CAST(nsView*, aView);
+
+  *aRenderedContext = nsnull;
+
+  NS_ASSERTION(!aUntrusted, "We don't support untrusted yet");
+  if (aUntrusted)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsCOMPtr<nsIRenderingContext> tmpContext
+    = CreateRenderingContext(*view);
+  if (!tmpContext)
+    return NS_ERROR_FAILURE;
+
+  nsRect bounds(nsPoint(0, 0), aRect.Size());
+  nsIDrawingSurface* surface;
+  nsresult rv
+    = tmpContext->CreateDrawingSurface(bounds, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS,
+                                       surface);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIRenderingContext> localcx;
+  rv = NewOffscreenContext(mContext, surface, aRect, getter_AddRefs(localcx));
+  if (NS_FAILED(rv)) {
+    tmpContext->DestroyDrawingSurface(surface);
+    return NS_ERROR_FAILURE;
+  }
+  // clipping and translation is set by NewOffscreenContext
+
+  localcx->SetColor(aBackgroundColor);
+  localcx->FillRect(aRect);
+
+  nsAutoVoidArray displayList;
+  PLArenaPool displayArena;
+  PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
+  BuildRenderingDisplayList(view, nsRegion(aRect), &displayList, displayArena,
+                            PR_TRUE, PR_TRUE);
+  RenderViews(view, *localcx, nsRegion(aRect), surface, displayList);
+  PL_FreeArenaPool(&displayArena);
+  PL_FinishArenaPool(&displayArena);
+
+  localcx.swap(*aRenderedContext);
+}
+
 NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, const nsRect& aClipRect)
 {
   nsView              *view = NS_STATIC_CAST(nsView*, aView);
@@ -3470,7 +3525,8 @@ NS_IMETHODIMP nsViewManager::Display(nsIView* aView, nscoord aX, nscoord aY, con
   nsAutoVoidArray displayList;
   PLArenaPool displayArena;
   PL_INIT_ARENA_POOL(&displayArena, "displayArena", 1024);
-  BuildRenderingDisplayList(view, nsRegion(trect), &displayList, displayArena);
+  BuildRenderingDisplayList(view, nsRegion(trect), &displayList, displayArena,
+                            PR_FALSE, PR_FALSE);
   RenderViews(view, *localcx, nsRegion(trect), PR_FALSE, displayList);
   PL_FreeArenaPool(&displayArena);
   PL_FinishArenaPool(&displayArena);
@@ -3650,7 +3706,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
     
     // Add POP first because the z-tree is in reverse order
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                              POP_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool);
+                              POP_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
+                              aTopView);
     if (retval)
       return retval;
     
@@ -3667,7 +3724,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
 
       // Add POP first because the z-tree is in reverse order
       retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                                POP_CLIP, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool);
+                                POP_CLIP, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
+                                aTopView);
 
       if (retval)
         return retval;
@@ -3710,7 +3768,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
           flags |= VIEW_TRANSPARENT;
         retval = AddToDisplayList(aView, aResult, bounds, irect, flags,
                                   aX - aOriginX, aY - aOriginY,
-                                  aEventProcessing && aTopView == aView, aPool);
+                                  aEventProcessing && aTopView == aView, aPool,
+                                  aTopView);
         // We're forcing AddToDisplayList to pick up the view only
         // during event processing, and only when aView is back at the
         // root of the tree of acceptable views (note that when event
@@ -3735,7 +3794,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
     bounds.y -= aOriginY;
 
     if (AddToDisplayList(aView, aResult, bounds, bounds, PUSH_CLIP,
-                         aX - aOriginX, aY - aOriginY, PR_TRUE, aPool)) {
+                         aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
+                         aTopView)) {
       retval = PR_TRUE;
     }
     
@@ -3750,7 +3810,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView,
     bounds.y -= aOriginY;
     
     retval = AddToDisplayList(aView, aResult, bounds, bounds,
-                              PUSH_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool);
+                              PUSH_FILTER, aX - aOriginX, aY - aOriginY, PR_TRUE, aPool,
+                              aTopView);
     if (retval)
       return retval;
     
@@ -3766,9 +3827,10 @@ PRBool nsViewManager::AddToDisplayList(nsView *aView,
                                        DisplayZTreeNode* &aParent, nsRect &aClipRect,
                                        nsRect& aDirtyRect, PRUint32 aFlags,
                                        nscoord aAbsX, nscoord aAbsY,
-                                       PRBool aAssumeIntersection, PLArenaPool &aPool)
+                                       PRBool aAssumeIntersection, PLArenaPool &aPool,
+                                       nsIView* aStopClippingAtView)
 {
-  nsRect clipRect = aView->GetClippedRect();
+  nsRect clipRect = aView->GetClippedRect(aStopClippingAtView);
   PRBool clipped = clipRect != aView->GetDimensions();
 
   // get clipRect into the coordinate system of aView's parent. aAbsX and
