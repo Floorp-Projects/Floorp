@@ -147,6 +147,7 @@ class nsInstall
             SOURCE_DOES_NOT_EXIST       = -232,
             SOURCE_IS_DIRECTORY         = -233,
             SOURCE_IS_FILE              = -234,
+            INSUFFICIENT_DISK_SPACE     = -235,
             
             OUT_OF_MEMORY               = -299,
 
