@@ -1183,7 +1183,13 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       // illegal)
       aAttributes->GetAttribute(nsHTMLAtoms::align, value);
       if (value.GetUnit() == eHTMLUnit_Enumerated) {
-        if (NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) {
+        if ((NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) ||
+            (NS_STYLE_TEXT_ALIGN_MOZ_CENTER == value.GetIntValue())) {
+          if (eCompatibility_Standard == mode) {
+            nsStyleText* text = (nsStyleText*)
+              aContext->GetMutableStyleData(eStyleStruct_Text);
+            text->mTextAlign = NS_STYLE_TEXT_ALIGN_CENTER;
+          }
           nsStyleCoord otto(eStyleUnit_Auto);
           spacing->mMargin.SetLeft(otto);
           spacing->mMargin.SetRight(otto);
@@ -1197,6 +1203,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
             break;
 
           case NS_STYLE_TEXT_ALIGN_RIGHT:
+          case NS_STYLE_TEXT_ALIGN_MOZ_RIGHT:
             display->mFloats = NS_STYLE_FLOAT_RIGHT;
             break;
           }

@@ -1954,7 +1954,7 @@ static nsGenericHTMLElement::EnumTable kCompatTableCellHAlignTable[] = {
   { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
 
   // The following are non-standard but necessary for Nav4 compatibility
-  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
+  { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "absmiddle", NS_STYLE_TEXT_ALIGN_CENTER },// XXX is this right???
 
   { 0 }
