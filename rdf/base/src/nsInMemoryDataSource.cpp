@@ -39,8 +39,10 @@
 #include "nscore.h"
 #include "nsIOutputStream.h"
 #include "nsIRDFDataSource.h"
+#include "nsIRDFLiteral.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
+#include "nsIRDFPurgeableDataSource.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsAutoLock.h"
@@ -69,15 +71,61 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // This struct is used as the slot value in the forward and reverse
 // arcs hash tables.
-struct Assertion 
+class Assertion 
 {
-    nsIRDFResource* mSource;
-    nsIRDFResource* mProperty;
-    nsIRDFNode*     mTarget;
-    PRBool          mTruthValue;
+public:
+    Assertion(nsIRDFResource* aSource,
+              nsIRDFResource* aProperty,
+              nsIRDFNode* aTarget,
+              PRBool aTruthValue);
+
+    ~Assertion();
+
+    // public for now, because I'm too lazy to go thru and clean this up.
+    nsIRDFResource* mSource;     // OWNER
+    nsIRDFResource* mProperty;   // OWNER
+    nsIRDFNode*     mTarget;     // OWNER
     Assertion*      mNext;
     Assertion*      mInvNext;
+    PRBool          mTruthValue;
+
+    // For nsIRDFPurgeableDataSource
+    void Mark() { mMarked = PR_TRUE; }
+    PRBool IsMarked() { return mMarked; }
+    void Unmark() { mMarked = PR_FALSE; }
+
+private:
+    PRBool          mMarked;
+    PRInt16         mRefCnt; // XXX not used yet: to be used for threadsafety
 };
+
+
+Assertion::Assertion(nsIRDFResource* aSource,
+                     nsIRDFResource* aProperty,
+                     nsIRDFNode* aTarget,
+                     PRBool aTruthValue)
+    : mSource(aSource),
+      mProperty(aProperty),
+      mTarget(aTarget),
+      mNext(nsnull),
+      mInvNext(nsnull),
+      mTruthValue(aTruthValue),
+      mMarked(PR_FALSE),
+      mRefCnt(0)
+{
+    NS_ADDREF(mSource);
+    NS_ADDREF(mProperty);
+    NS_ADDREF(mTarget);
+}
+
+Assertion::~Assertion()
+{
+    NS_RELEASE(mSource);
+    NS_RELEASE(mProperty);
+    NS_RELEASE(mTarget);
+}
+
+
     
 ////////////////////////////////////////////////////////////////////////
 // Utility routines
@@ -101,12 +149,12 @@ rdf_CompareNodes(const void* v1, const void* v2)
     return (PRIntn) result;
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 // InMemoryDataSource
 class InMemoryResourceEnumeratorImpl;
 
-class InMemoryDataSource : public nsIRDFDataSource
+class InMemoryDataSource : public nsIRDFDataSource,
+                           public nsIRDFPurgeableDataSource
 {
 protected:
     char*        mURL;
@@ -213,12 +261,33 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+    // nsIRDFPurgeableDataSource methods
+    NS_IMETHOD Mark(nsIRDFResource* aSource,
+                    nsIRDFResource* aProperty,
+                    nsIRDFNode* aTarget,
+                    PRBool aTruthValue,
+                    PRBool* aDidMark);
+
+    NS_IMETHOD Sweep();
+
+protected:
+    static PRIntn SweepForwardArcsEntries(PLHashEntry* he, PRIntn index, void* arg);
+
+public:
     // Implemenatation methods
     Assertion* GetForwardArcs(nsIRDFResource* u);
     Assertion* GetReverseArcs(nsIRDFNode* v);
     void       SetForwardArcs(nsIRDFResource* u, Assertion* as);
     void       SetReverseArcs(nsIRDFNode* v, Assertion* as);
 
+#ifdef PR_LOGGING
+    void
+    LogOperation(const char* aOperation,
+                 nsIRDFResource* asource,
+                 nsIRDFResource* aProperty,
+                 nsIRDFNode* aTarget,
+                 PRBool aTruthValue = PR_TRUE);
+#endif
 
     // This datasource's monitor object.
     PRLock* mLock;
@@ -510,19 +579,24 @@ NS_IMPL_RELEASE(InMemoryDataSource);
 NS_IMETHODIMP
 InMemoryDataSource::QueryInterface(REFNSIID iid, void** result)
 {
+    NS_PRECONDITION(result != nsnull, "null ptr");
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
     if (iid.Equals(kISupportsIID) ||
         iid.Equals(nsIRDFDataSource::GetIID())) {
         *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
-        NS_ADDREF(this);
-        return NS_OK;
+    }
+    else if (iid.Equals(nsIRDFPurgeableDataSource::GetIID())) {
+        *result = NS_STATIC_CAST(nsIRDFPurgeableDataSource*, this);
     }
     else {
         *result = nsnull;
         return NS_NOINTERFACE;
     }
+
+    NS_ADDREF(this);
+    return NS_OK;
 }
 
 InMemoryDataSource::InMemoryDataSource(void)
@@ -589,10 +663,6 @@ InMemoryDataSource::DeleteForwardArcsEntry(PLHashEntry* he, PRIntn index, void* 
     while (as) {
         Assertion* doomed = as;
         as = as->mNext;
-
-        NS_RELEASE(doomed->mSource);
-        NS_RELEASE(doomed->mProperty);
-        NS_RELEASE(doomed->mTarget);
         delete doomed;
     }
     return HT_ENUMERATE_NEXT;
@@ -636,6 +706,59 @@ InMemoryDataSource::SetReverseArcs(nsIRDFNode* v, Assertion* as)
         PL_HashTableRemove(mReverseArcs, v);
     }
 }
+
+
+#ifdef PR_LOGGING
+void
+InMemoryDataSource::LogOperation(const char* aOperation,
+                                 nsIRDFResource* aSource,
+                                 nsIRDFResource* aProperty,
+                                 nsIRDFNode* aTarget,
+                                 PRBool aTruthValue)
+{
+    if (! PR_LOG_TEST(gLog, PR_LOG_ALWAYS))
+        return;
+
+    nsXPIDLCString uri;
+    aSource->GetValue(getter_Copies(uri));
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("InMemoryDataSource(%s): %s", mURL, aOperation));
+
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("  [(%p)%s]--", aSource, (const char*) uri));
+
+    aProperty->GetValue(getter_Copies(uri));
+
+    char tv = (aTruthValue ? '-' : '!');
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("  --%c[(%p)%s]--", tv, aProperty, (const char*) uri));
+
+    nsCOMPtr<nsIRDFResource> resource;
+    nsCOMPtr<nsIRDFLiteral> literal;
+
+    if ((resource = do_QueryInterface(aTarget)) != nsnull) {
+        resource->GetValue(getter_Copies(uri));
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("  -->[(%p)%s]", aTarget, (const char*) uri));
+    }
+    else if ((literal = do_QueryInterface(aTarget)) != nsnull) {
+        nsXPIDLString value;
+        literal->GetValue(getter_Copies(value));
+        nsAutoString valueStr(value);
+        char* valueCStr = valueStr.ToNewCString();
+
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("  -->(\"%s\")\n", valueCStr));
+
+        delete[] valueCStr;
+    }
+    else {
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("  -->(unknown-type)\n"));
+    }
+}
+#endif
+
 
 NS_IMETHODIMP
 InMemoryDataSource::Init(const char* uri)
@@ -682,21 +805,12 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
 
     NS_AUTOLOCK(mLock);
 
-    nsresult rv;
     for (Assertion* as = GetReverseArcs(target); as != nsnull; as = as->mNext) {
-        PRBool eq;
-        if (NS_FAILED(rv = property->EqualsResource(as->mProperty, &eq)))
-            return rv;
-
-        if (! eq)
-            continue;
-
-        if (as->mTruthValue != tv)
-            continue;
-
-        *source = as->mSource;
-        NS_ADDREF(as->mSource);
-        return NS_OK;
+        if ((property == as->mProperty) && (as->mTruthValue == tv)) {
+            *source = as->mSource;
+            NS_ADDREF(as->mSource);
+            return NS_OK;
+        }
     }
     *source = nsnull;
     return NS_RDF_NO_VALUE;
@@ -722,21 +836,12 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
 
     NS_AUTOLOCK(mLock);
 
-    nsresult rv;
     for (Assertion* as = GetForwardArcs(source); as != nsnull; as = as->mNext) {
-        PRBool eq;
-        if (NS_FAILED(rv = property->EqualsResource(as->mProperty, &eq)))
-            return rv;
-
-        if (! eq)
-            continue;
-
-        if (as->mTruthValue != tv)
-            continue;
-
-        *target = as->mTarget;
-        NS_ADDREF(as->mTarget);
-        return NS_OK;
+        if ((property == as->mProperty) && (as->mTruthValue == tv)) {
+            *target = as->mTarget;
+            NS_ADDREF(as->mTarget);
+            return NS_OK;
+        }
     }
 
     // If we get here, then there was no target with for the specified
@@ -769,10 +874,7 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
     nsresult rv;
     for (Assertion* as = GetForwardArcs(source); as != nsnull; as = as->mNext) {
         PRBool eq;
-        if (NS_FAILED(rv = property->EqualsResource(as->mProperty, &eq)))
-            return rv;
-
-        if (! eq)
+        if (property != as->mProperty)
             continue;
 
         if (NS_FAILED(rv = target->EqualsNode(as->mTarget, &eq)))
@@ -868,43 +970,7 @@ InMemoryDataSource::SafeAssert(nsIRDFResource* source,
     NS_AUTOLOCK(mLock);
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-        nsXPIDLCString uri;
-        source->GetValue(getter_Copies(uri));
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("InMemoryDataSource(%s):", mURL));
-
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("ASSERT  [(%p)%s]--", source, (const char*) uri));
-
-        property->GetValue(getter_Copies(uri));
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("        --%c[(%p)%s]--", (tv ? '-' : '!'), property, (const char*) uri));
-
-        nsCOMPtr<nsIRDFResource> resource;
-        nsCOMPtr<nsIRDFLiteral> literal;
-
-        if ((resource = do_QueryInterface(target)) != nsnull) {
-            resource->GetValue(getter_Copies(uri));
-            PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("        -->[(%p)%s]", target, (const char*) uri));
-        }
-        else if ((literal = do_QueryInterface(target)) != nsnull) {
-            nsXPIDLString value;
-            literal->GetValue(getter_Copies(value));
-            nsAutoString valueStr(value);
-            char* valueCStr = valueStr.ToNewCString();
-
-            PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("        -->(\"%s\")\n", valueCStr));
-
-            delete[] valueCStr;
-        }
-        else {
-            PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("        -->(unknown-type)\n"));
-        }
-    }
+    LogOperation("ASSERT", source, property, target, tv);
 #endif
 
     nsresult rv;
@@ -915,12 +981,8 @@ InMemoryDataSource::SafeAssert(nsIRDFResource* source,
     // Walk to the end of the linked list.
     // XXX shouldn't we just keep a pointer to the end, or insert at the front???
     while (next) {
-        PRBool eq;
-
-        if (NS_FAILED(rv = property->EqualsResource(next->mProperty, &eq)))
-            return rv;
-
-        if (eq) {
+        if (property == next->mProperty) {
+            PRBool eq;
             if (NS_FAILED(rv = target->EqualsNode(next->mTarget, &eq)))
                 return rv;
 
@@ -936,22 +998,9 @@ InMemoryDataSource::SafeAssert(nsIRDFResource* source,
         next = next->mNext;
     }
 
-    as = new Assertion;
+    as = new Assertion(source, property, target, tv);
     if (! as)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(source);
-    as->mSource = source;
-
-    NS_ADDREF(property);
-    as->mProperty = property;
-
-    NS_ADDREF(target);
-    as->mTarget = target;
-
-    as->mTruthValue = tv;
-    as->mNext       = nsnull;
-    as->mInvNext    = nsnull;
 
     // Link it in to the "forward arcs" table
     if (!prev) {
@@ -1012,43 +1061,7 @@ InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
     NS_AUTOLOCK(mLock);
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
-        nsXPIDLCString uri;
-        source->GetValue(getter_Copies(uri));
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("InMemoryDataSource(%s):", mURL));
-
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("UNASSERT [(%p)%s]--", source, (const char*) uri));
-
-        property->GetValue(getter_Copies(uri));
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("         ---[(%p)%s]--", property, (const char*) uri));
-
-        nsCOMPtr<nsIRDFResource> resource;
-        nsCOMPtr<nsIRDFLiteral> literal;
-
-        if ((resource = do_QueryInterface(target)) != nsnull) {
-            resource->GetValue(getter_Copies(uri));
-            PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("         -->[(%p)%s]", target, (const char*) uri));
-        }
-        else if ((literal = do_QueryInterface(target)) != nsnull) {
-            nsXPIDLString value;
-            literal->GetValue(getter_Copies(value));
-            nsAutoString valueStr(value);
-            char* valueCStr = valueStr.ToNewCString();
-
-            PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("         -->(\"%s\")\n", valueCStr));
-
-            delete[] valueCStr;
-        }
-        else {
-            PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("         -->(unknown-type)\n"));
-        }
-    }
+    LogOperation("UNASSERT", source, property, target);
 #endif
 
     nsresult rv;
@@ -1057,12 +1070,8 @@ InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
     Assertion* as = nsnull;
 
     while (next) {
-        PRBool eq;
-
-        if (NS_FAILED(rv = property->EqualsResource(next->mProperty, &eq)))
-            return rv;
-
-        if (eq) {
+        if (property == next->mProperty) {
+            PRBool eq;
             if (NS_FAILED(rv = target->EqualsNode(next->mTarget, &eq)))
                 return rv;
 
@@ -1111,9 +1120,6 @@ InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
 #endif
 
     // Delete the assertion struct & release resources
-    NS_RELEASE(as->mSource);
-    NS_RELEASE(as->mProperty);
-    NS_RELEASE(as->mTarget);
     delete as;
 
     return NS_OK;
@@ -1296,6 +1302,174 @@ InMemoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFPurgeableDataSource methods
+
+NS_IMETHODIMP
+InMemoryDataSource::Mark(nsIRDFResource* aSource,
+                         nsIRDFResource* aProperty,
+                         nsIRDFNode* aTarget,
+                         PRBool aTruthValue,
+                         PRBool* aDidMark)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aProperty != nsnull, "null ptr");
+    if (! aProperty)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aTarget != nsnull, "null ptr");
+    if (! aTarget)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mLock);
+
+    nsresult rv;
+    for (Assertion* as = GetForwardArcs(aSource); as != nsnull; as = as->mNext) {
+        PRBool eq;
+        if (aProperty != as->mProperty)
+            continue;
+
+        if (NS_FAILED(rv = aTarget->EqualsNode(as->mTarget, &eq)))
+            return rv;
+
+        if (! eq)
+            continue;
+
+        if (as->mTruthValue != aTruthValue)
+            continue;
+
+        // found it! so mark it.
+        as->Mark();
+        *aDidMark = PR_TRUE;
+
+#ifdef PR_LOGGING
+        LogOperation("MARK", aSource, aProperty, aTarget, aTruthValue);
+#endif
+
+        return NS_OK;
+    }
+
+    // If we get here, we couldn't find the assertion
+    *aDidMark = PR_FALSE;
+    return NS_OK;
+}
+
+
+struct SweepInfo {
+    Assertion* mUnassertList;
+    PLHashTable* mReverseArcs;
+};
+
+NS_IMETHODIMP
+InMemoryDataSource::Sweep()
+{
+    SweepInfo info = { nsnull, mReverseArcs };
+
+    {
+        // Remove all the assertions while holding the lock, but don't notify anyone.
+        NS_AUTOLOCK(mLock);
+        PL_HashTableEnumerateEntries(mForwardArcs, SweepForwardArcsEntries, &info);
+    }
+
+    // Now we've left the autolock. Do the notification.
+    Assertion* as = info.mUnassertList;
+    while (as) {
+#ifdef PR_LOGGING
+        LogOperation("SWEEP", as->mSource, as->mProperty, as->mTarget, as->mTruthValue);
+#endif
+        
+        if (mObservers) {
+            for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
+                nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
+                obs->OnUnassert(as->mSource, as->mProperty, as->mTarget);
+                // XXX ignore return value?
+            }
+        }
+
+        Assertion* doomed = as;
+        as = as->mNext;
+        delete doomed;
+    }
+
+    return NS_OK;
+}
+
+
+PRIntn
+InMemoryDataSource::SweepForwardArcsEntries(PLHashEntry* he, PRIntn index, void* arg)
+{
+    SweepInfo* info = (SweepInfo*) arg;
+
+    Assertion* as = (Assertion*) he->value;
+    Assertion* prev = nsnull;
+    while (as) {
+        if (as->IsMarked()) {
+            prev = as;
+            as->Unmark();
+            as = as->mNext;
+        }
+        else {
+            // remove from the list of assertions in the datasource
+            Assertion* next = as->mNext;
+            if (prev) {
+                prev->mNext = next;
+            }
+            else {
+                // it's the first one. update the hashtable entry.
+                he->value = next;
+            }
+
+            // remove from the reverse arcs
+            PLHashEntry** hep =
+                PL_HashTableRawLookup(info->mReverseArcs,
+                                      (PLHashNumber) as->mTarget, // because we know we're using rdf_HashPointer()
+                                      as->mTarget);
+            
+            Assertion* ras = (Assertion*) ((*hep)->value);
+            NS_ASSERTION(ras != nsnull, "no assertion in reverse arcs");
+            Assertion* rprev = nsnull;
+            while (ras) {
+                if (ras == as) {
+                    if (rprev) {
+                        rprev->mInvNext = ras->mInvNext;
+                    }
+                    else {
+                        // it's the first one. update the hashtable entry.
+                        (*hep)->value = ras->mInvNext;
+                    }
+                    as->mInvNext = nsnull; // for my sanity.
+                    break;
+                }
+                rprev = ras;
+                ras = ras->mInvNext;
+            }
+
+            // Wow, it was the _only_ one. Unhash it.
+            if (! (*hep)->value)
+                PL_HashTableRawRemove(info->mReverseArcs, hep, *hep);
+
+            
+            // add to the list of assertions to unassert
+            as->mNext = info->mUnassertList;
+            info->mUnassertList = as;
+
+            // Advance to the next assertion
+            as = next;
+        }
+    }
+
+    PRIntn result = HT_ENUMERATE_NEXT;
+
+    // if no more assertions exist for this resource, then unhash it.
+    if (! he->value)
+        result |= HT_ENUMERATE_REMOVE;
+
+    return result;
 }
 
 ////////////////////////////////////////////////////////////////////////

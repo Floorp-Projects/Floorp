@@ -49,6 +49,7 @@
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFContentSink.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -243,8 +244,6 @@ protected:
 
     nsIURL*      mDocumentURL;
     PRUint32     mGenSym; // for generating anonymous resources
-
-    PRBool       mHaveSetRootResource;
 };
 
 PRInt32         RDFContentSinkImpl::gRefCnt = 0;
@@ -276,8 +275,7 @@ RDFContentSinkImpl::RDFContentSinkImpl()
       mText(nsnull),
       mTextLength(0),
       mTextSize(0),
-      mConstrainSize(PR_TRUE),
-      mHaveSetRootResource(PR_FALSE)
+      mConstrainSize(PR_TRUE)
 {
     NS_INIT_REFCNT();
 
@@ -591,67 +589,11 @@ RDFContentSinkImpl::AddComment(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 RDFContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
 {
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("rdfxml: ignoring processing instruction at line %d",
+            aNode.GetSourceLineNumber()));
 
-static const char kStyleSheetPI[] = "<?xml-stylesheet";
-static const char kCSSType[] = "text/css";
-
-static const char kDataSourcePI[] = "<?rdf-datasource";
-static const char kContentModelBuilderPI[] = "<?rdf-builder";
-
-    nsresult rv = NS_OK;
-    FlushText();
-
-    if (! mDataSource)
-        return NS_OK;
-
-    // XXX For now, we don't add the PI to the content model.
-    // We just check for a style sheet PI
-    const nsString& text = aNode.GetText();
-
-    // If it's a stylesheet PI...
-    if (0 == text.Find(kStyleSheetPI)) {
-        nsAutoString href;
-        if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href)))
-            return rv;
-
-        // If there was an error or there's no href, we can't do
-        // anything with this PI
-        if (! href.Length())
-            return NS_OK;
-    
-        nsAutoString type;
-        if (NS_FAILED(rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "type", type)))
-            return rv;
-    
-        if (! type.Equals(kCSSType))
-            return NS_OK;
-
-        nsIURL* url = nsnull;
-        nsAutoString absURL;
-        nsAutoString emptyURL;
-        emptyURL.Truncate();
-        if (NS_FAILED(rv = NS_MakeAbsoluteURL(mDocumentURL, emptyURL, href, absURL)))
-            return rv;
-
-        if (NS_FAILED(rv = NS_NewURL(&url, absURL)))
-            return rv;
-
-        rv = mDataSource->AddCSSStyleSheetURL(url);
-        NS_RELEASE(url);
-    }
-    else if (0 == text.Find(kDataSourcePI)) {
-        nsAutoString href;
-        rv = nsRDFParserUtils::GetQuotedAttributeValue(text, "href", href);
-        if (NS_FAILED(rv) || (0 == href.Length()))
-            return rv;
-
-        char uri[256];
-        href.ToCString(uri, sizeof(uri));
-
-        rv = mDataSource->AddNamedDataSourceURI(uri);
-    }
-
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1246,13 +1188,7 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
 
     AddProperties(aNode, rdfResource);
 
-    if (mDataSource && !mHaveSetRootResource) {
-        mHaveSetRootResource = PR_TRUE;
-        mDataSource->SetRootResource(rdfResource);
-    }
-
     NS_RELEASE(rdfResource);
-
     return NS_OK;
 }
 

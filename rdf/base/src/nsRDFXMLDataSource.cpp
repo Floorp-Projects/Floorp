@@ -44,6 +44,7 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIDTD.h"
+#include "nsIRDFPurgeableDataSource.h"
 #include "nsIInputStream.h"
 #include "nsINameSpaceManager.h"
 #include "nsIOutputStream.h"
@@ -124,7 +125,7 @@ public:
         *aLength = mSize - mIndex;
         return NS_OK;
     }
-    
+
     NS_IMETHOD Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount) {
         PRUint32 readCount = 0;
         while (mIndex < mSize && aCount > 0) {
@@ -161,18 +162,13 @@ protected:
         NameSpaceMap* Next;
     };
 
-    nsIRDFDataSource* mInner;
-    PRBool            mIsSynchronous; // true if the document should be loaded synchronously
+    nsIRDFDataSource* mInner;         // OWNER
     PRBool            mIsWritable;    // true if the document can be written back
     PRBool            mIsDirty;       // true if the document should be written back
-    nsVoidArray       mObservers;
-    char**            mNamedDataSourceURIs;
-    PRInt32           mNumNamedDataSourceURIs;
-    nsIURL**          mCSSStyleSheetURLs;
-    PRInt32           mNumCSSStyleSheetURLs;
-    nsIRDFResource*   mRootResource;
-    PRBool            mIsLoading; // true while the document is loading
+    nsVoidArray       mObservers;     // WEAK REFERENCES
+    PRBool            mIsLoading;     // true while the document is loading
     NameSpaceMap*     mNameSpaces;
+    nsCOMPtr<nsIURL>  mURL;
 
     // pseudo-constants
     static PRInt32 gRefCnt;
@@ -224,9 +220,9 @@ public:
         return mInner->GetTargets(source, property, tv, targets);
     }
 
-    NS_IMETHOD Assert(nsIRDFResource* source, 
-                      nsIRDFResource* property, 
-                      nsIRDFNode* target,
+    NS_IMETHOD Assert(nsIRDFResource* aSource,
+                      nsIRDFResource* aProperty,
+                      nsIRDFNode* aTarget,
                       PRBool tv);
 
     NS_IMETHOD Unassert(nsIRDFResource* source,
@@ -286,18 +282,13 @@ public:
     }
 
     // nsIRDFXMLDataSource interface
-    NS_IMETHOD SetSynchronous(PRBool aIsSynchronous);
+    NS_IMETHOD GetReadOnly(PRBool* aIsReadOnly);
     NS_IMETHOD SetReadOnly(PRBool aIsReadOnly);
+    NS_IMETHOD Open(PRBool aBlocking);
     NS_IMETHOD BeginLoad(void);
     NS_IMETHOD Interrupt(void);
     NS_IMETHOD Resume(void);
     NS_IMETHOD EndLoad(void);
-    NS_IMETHOD SetRootResource(nsIRDFResource* aResource);
-    NS_IMETHOD GetRootResource(nsIRDFResource** aResource);
-    NS_IMETHOD AddCSSStyleSheetURL(nsIURL* aStyleSheetURL);
-    NS_IMETHOD GetCSSStyleSheetURLs(nsIURL*** aStyleSheetURLs, PRInt32* aCount);
-    NS_IMETHOD AddNamedDataSourceURI(const char* aNamedDataSourceURI);
-    NS_IMETHOD GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount);
     NS_IMETHOD AddNameSpace(nsIAtom* aPrefix, const nsString& aURI);
     NS_IMETHOD AddXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
     NS_IMETHOD RemoveXMLStreamObserver(nsIRDFXMLDataSourceObserver* aObserver);
@@ -367,14 +358,8 @@ NS_NewRDFXMLDataSource(nsIRDFXMLDataSource** result)
 
 RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
     : mInner(nsnull),
-      mIsSynchronous(PR_FALSE),
       mIsWritable(PR_TRUE),
       mIsDirty(PR_FALSE),
-      mNamedDataSourceURIs(nsnull),
-      mNumNamedDataSourceURIs(0),
-      mCSSStyleSheetURLs(nsnull),
-      mNumCSSStyleSheetURLs(0),
-      mRootResource(nsnull),
       mIsLoading(PR_FALSE),
       mNameSpaces(nsnull)
 {
@@ -422,18 +407,6 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
 
     Flush();
 
-    while (mNumNamedDataSourceURIs-- > 0) {
-        delete mNamedDataSourceURIs[mNumNamedDataSourceURIs];
-	}
-
-    delete mNamedDataSourceURIs;
-
-    while (mNumCSSStyleSheetURLs-- > 0) {
-        NS_RELEASE(mCSSStyleSheetURLs[mNumCSSStyleSheetURLs]);
-	}
-
-    delete mCSSStyleSheetURLs;
-
     while (mNameSpaces) {
         NameSpaceMap* doomed = mNameSpaces;
         mNameSpaces = mNameSpaces->Next;
@@ -442,7 +415,6 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
         delete doomed;
     }
 
-    NS_IF_RELEASE(mRootResource);
     NS_RELEASE(mInner);
 
     if (--gRefCnt == 0) {
@@ -516,7 +488,7 @@ rdf_BlockingParse(nsIURL* aURL, nsIStreamListener* aConsumer)
             break; // eof
 
         proxy->SetBuffer(buf, readCount);
-                
+
         // XXX shouldn't netlib be doing this???
         if (NS_FAILED(rv = aConsumer->OnDataAvailable(aURL, proxy, readCount)))
             break;
@@ -538,7 +510,6 @@ RDFXMLDataSourceImpl::Init(const char* uri)
 {
 static const char kFileURIPrefix[] = "file:";
 static const char kResourceURIPrefix[] = "resource:";
-    nsAutoString utf8("UTF-8");
 
     NS_PRECONDITION(mInner != nsnull, "not initialized");
     if (! mInner)
@@ -546,134 +517,85 @@ static const char kResourceURIPrefix[] = "resource:";
 
     nsresult rv;
 
-    nsIRDFService* rdfService = nsnull;
-    nsINameSpaceManager* ns = nsnull;
-    nsIRDFContentSink* sink = nsnull;
-    nsIParser* parser       = nsnull;
-    nsIDTD* dtd             = nsnull;
-    nsIStreamListener* lsnr = nsnull;
-    nsIURL* url             = nsnull;
-    const char* realURL;
-
-    if (NS_FAILED(rv = NS_NewURL(&url, uri)))
-        goto done;
+    rv = NS_NewURL(getter_AddRefs(mURL), uri);
+    if (NS_FAILED(rv)) return rv;
 
     // XXX this is a hack: any "file:" URI is considered writable. All
     // others are considered read-only.
-    url->GetSpec(&realURL);
+    const char* realURL;
+    mURL->GetSpec(&realURL);
     if ((PL_strncmp(realURL, kFileURIPrefix, sizeof(kFileURIPrefix) - 1) != 0) &&
         (PL_strncmp(realURL, kResourceURIPrefix, sizeof(kResourceURIPrefix) - 1) != 0)) {
         mIsWritable = PR_FALSE;
     }
 
-    if (NS_FAILED(rv = mInner->Init(realURL)))
-        goto done;
+    rv = mInner->Init(realURL);
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                    kIRDFServiceIID,
-                                                    (nsISupports**) &rdfService)))
-        goto done;
+    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = rdfService->RegisterDataSource(this, PR_FALSE)))
-        goto done;
+    rv = rdf->RegisterDataSource(this, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                                    nsnull,
-                                                    kINameSpaceManagerIID,
-                                                    (void**) &ns)))
-        goto done;
-
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContentSinkCID,
-                                                    nsnull,
-                                                    kIRDFContentSinkIID,
-                                                    (void**) &sink)))
-        goto done;
-
-    if (NS_FAILED(sink->Init(url, ns)))
-        goto done;
-
-    // We set the content sink's data source directly to our in-memory
-    // store. This allows the initial content to be generated "directly".
-    if (NS_FAILED(rv = sink->SetDataSource(this)))
-        goto done;
-
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kParserCID,
-                                                    nsnull,
-                                                    kIParserIID,
-                                                    (void**) &parser)))
-        goto done;
-
-    parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
-
-    parser->SetContentSink(sink);
-
-    // XXX this should eventually be kRDFDTDCID (oh boy, that's a
-    // pretty identifier). The RDF DTD will be a much more
-    // RDF-resilient parser.
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
-                                                    nsnull,
-                                                    kIDTDIID,
-                                                    (void**) &dtd)))
-        goto done;
-
-    parser->RegisterDTD(dtd);
-
-    if (NS_FAILED(rv = parser->QueryInterface(kIStreamListenerIID, (void**) &lsnr)))
-        goto done;
-
-    if (NS_FAILED(parser->Parse(url)))
-        goto done;
-
-    // XXX Yet another hack to get the registry stuff
-    // bootstrapped. Force "file:" and "resource:" URIs to be loaded
-    // by a blocking read. Maybe there needs to be a distinct
-    // interface for stream data sources?
-    if (mIsSynchronous) {
-        rv = rdf_BlockingParse(url, lsnr);
-    }
-    else {
-        rv = NS_OpenURL(url, lsnr);
-    }
-
-done:
-    NS_IF_RELEASE(lsnr);
-    NS_IF_RELEASE(dtd);
-    NS_IF_RELEASE(parser);
-    NS_IF_RELEASE(sink);
-    if (rdfService) {
-        nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
-        rdfService = nsnull;
-    }
-    NS_IF_RELEASE(url);
-    return rv;
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::Assert(nsIRDFResource* source, 
-                             nsIRDFResource* property, 
-                             nsIRDFNode* target,
-                             PRBool tv)
+RDFXMLDataSourceImpl::Assert(nsIRDFResource* aSource,
+                             nsIRDFResource* aProperty,
+                             nsIRDFNode* aTarget,
+                             PRBool aTruthValue)
 {
     // We don't accept assertions unless we're writable (except in the
     // case that we're actually _reading_ the datasource in).
-    if (!mIsLoading && !mIsWritable)
-        return NS_RDF_ASSERTION_REJECTED;
+    nsresult rv;
 
-    nsresult rv = mInner->Assert(source, property, target, tv);
+    if (mIsLoading) {
+        PRBool hasAssertion = PR_FALSE;
 
-    if (rv == NS_RDF_ASSERTION_ACCEPTED) {
-        if (!mIsLoading)
-            mIsDirty = PR_TRUE;
+        nsCOMPtr<nsIRDFPurgeableDataSource> gcable = do_QueryInterface(mInner);
+        if (gcable) {
+            rv = gcable->Mark(aSource, aProperty, aTarget, aTruthValue, &hasAssertion);
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        rv = NS_RDF_ASSERTION_ACCEPTED;
+
+        if (! hasAssertion) {
+            rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
+
+            if (NS_SUCCEEDED(rv) && gcable) {
+                // Now mark the new assertion, so it doesn't get
+                // removed when we sweep. Ignore rv, because we want
+                // to return what mInner->Assert() gave us.
+                PRBool didMark;
+                (void) gcable->Mark(aSource, aProperty, aTarget, aTruthValue, &didMark);
+            }
+
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        return rv;
     }
+    else if (mIsWritable) {
+        rv = mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
 
-    return rv;
+        if (rv == NS_RDF_ASSERTION_ACCEPTED)
+            mIsDirty = PR_TRUE;
+
+        return rv;
+    }
+    else {
+        return NS_RDF_ASSERTION_REJECTED;
+    }
 }
 
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::Unassert(nsIRDFResource* source, 
-                               nsIRDFResource* property, 
+RDFXMLDataSourceImpl::Unassert(nsIRDFResource* source,
+                               nsIRDFResource* property,
                                nsIRDFNode* target)
 {
     // We don't accept assertions unless we're writable (except in the
@@ -724,11 +646,12 @@ done:
 // nsIRDFXMLDataSource methods
 
 NS_IMETHODIMP
-RDFXMLDataSourceImpl::SetSynchronous(PRBool aIsSynchronous)
+RDFXMLDataSourceImpl::GetReadOnly(PRBool* aIsReadOnly)
 {
-    mIsSynchronous = aIsSynchronous;
+    *aIsReadOnly = !mIsWritable;
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
@@ -737,6 +660,76 @@ RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
         mIsWritable = PR_FALSE;
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFXMLDataSourceImpl::Open(PRBool aBlocking)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsINameSpaceManager> nsmgr;
+    rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
+                                            nsnull,
+                                            kINameSpaceManagerIID,
+                                            getter_AddRefs(nsmgr));
+
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFContentSink> sink;
+    rv = nsComponentManager::CreateInstance(kRDFContentSinkCID,
+                                            nsnull,
+                                            kIRDFContentSinkIID,
+                                            getter_AddRefs(sink));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = sink->Init(mURL, nsmgr);
+    if (NS_FAILED(rv)) return rv;
+
+    // We set the content sink's data source directly to our in-memory
+    // store. This allows the initial content to be generated "directly".
+    rv = sink->SetDataSource(this);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIParser> parser;
+    rv = nsComponentManager::CreateInstance(kParserCID,
+                                            nsnull,
+                                            kIParserIID,
+                                            getter_AddRefs(parser));
+
+    nsAutoString utf8("UTF-8");
+    parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
+
+    parser->SetContentSink(sink);
+
+    // XXX this should eventually be kRDFDTDCID (oh boy, that's a
+    // pretty identifier). The RDF DTD will be a much more
+    // RDF-resilient parser.
+    nsCOMPtr<nsIDTD> dtd;
+    rv = nsComponentManager::CreateInstance(kWellFormedDTDCID,
+                                            nsnull,
+                                            kIDTDIID,
+                                            getter_AddRefs(dtd));
+
+    if (NS_FAILED(rv)) return rv;
+
+    parser->RegisterDTD(dtd);
+
+
+    nsCOMPtr<nsIStreamListener> lsnr;
+    rv = parser->QueryInterface(kIStreamListenerIID, getter_AddRefs(lsnr));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = parser->Parse(mURL);
+    if (NS_FAILED(rv)) return rv;
+
+    if (aBlocking) {
+        rv = rdf_BlockingParse(mURL, lsnr);
+    }
+    else {
+        rv = NS_OpenURL(mURL, lsnr);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -774,117 +767,15 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
     mIsLoading = PR_FALSE;
+    nsCOMPtr<nsIRDFPurgeableDataSource> gcable = do_QueryInterface(mInner);
+    if (gcable) {
+        gcable->Sweep();
+    }
+
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
         obs->OnEndLoad(this);
     }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::SetRootResource(nsIRDFResource* aResource)
-{
-    NS_PRECONDITION(aResource != nsnull, "null ptr");
-    if (! aResource)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_IF_RELEASE(mRootResource);
-    mRootResource = aResource;
-    NS_IF_ADDREF(mRootResource);
-
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
-        obs->OnRootResourceFound(this, mRootResource);
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::GetRootResource(nsIRDFResource** aResource)
-{
-    NS_IF_ADDREF(mRootResource);
-    *aResource = mRootResource;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::AddCSSStyleSheetURL(nsIURL* aCSSStyleSheetURL)
-{
-    NS_PRECONDITION(aCSSStyleSheetURL != nsnull, "null ptr");
-    if (! aCSSStyleSheetURL)
-        return NS_ERROR_NULL_POINTER;
-
-    nsIURL** p = new nsIURL*[mNumCSSStyleSheetURLs + 1];
-    if (! p)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PRInt32 i;
-    for (i = mNumCSSStyleSheetURLs - 1; i >= 0; --i)
-        p[i] = mCSSStyleSheetURLs[i];
-
-    NS_ADDREF(aCSSStyleSheetURL);
-    p[mNumCSSStyleSheetURLs] = aCSSStyleSheetURL;
-
-    ++mNumCSSStyleSheetURLs;
-    mCSSStyleSheetURLs = p;
-
-    for (i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
-        obs->OnCSSStyleSheetAdded(this, aCSSStyleSheetURL);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::GetCSSStyleSheetURLs(nsIURL*** aCSSStyleSheetURLs, PRInt32* aCount)
-{
-    *aCSSStyleSheetURLs = mCSSStyleSheetURLs;
-    *aCount = mNumCSSStyleSheetURLs;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::AddNamedDataSourceURI(const char* aNamedDataSourceURI)
-{
-    NS_PRECONDITION(aNamedDataSourceURI != nsnull, "null ptr");
-    if (! aNamedDataSourceURI)
-        return NS_ERROR_NULL_POINTER;
-
-    char** p = new char*[mNumNamedDataSourceURIs + 1];
-    if (! p)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PRInt32 i;
-    for (i = mNumNamedDataSourceURIs - 1; i >= 0; --i)
-        p[i] = mNamedDataSourceURIs[i];
-
-    PRInt32 len = PL_strlen(aNamedDataSourceURI);
-    char* buf = new char[len + 1];
-    if (! buf) {
-        delete p;
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    PL_strcpy(buf, aNamedDataSourceURI);
-    p[mNumNamedDataSourceURIs] = buf;
-
-    ++mNumNamedDataSourceURIs;
-    mNamedDataSourceURIs = p;
-
-    for (i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLDataSourceObserver* obs = (nsIRDFXMLDataSourceObserver*) mObservers[i];
-        obs->OnNamedDataSourceAdded(this, aNamedDataSourceURI);
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFXMLDataSourceImpl::GetNamedDataSourceURIs(const char* const** aNamedDataSourceURIs, PRInt32* aCount)
-{
-    *aNamedDataSourceURIs = mNamedDataSourceURIs;
-    *aCount = mNumNamedDataSourceURIs;
     return NS_OK;
 }
 
@@ -1384,7 +1275,7 @@ static const char kRDFAlt[] = "RDF:Alt";
         else if (property == kRDF_instanceOf) {
             // don't serialize instanceOf -- it's implicit in the tag
         }
-        else if (property == kRDF_nextVal) { 
+        else if (property == kRDF_nextVal) {
             // don't serialize nextVal -- it's internal state
         }
         else {
@@ -1413,30 +1304,6 @@ static const char kOpenRDF[]  = "<RDF:RDF";
 static const char kXMLNS[]    = "\n     xmlns";
 
     rdf_BlockingWrite(aStream, kXMLVersion, sizeof(kXMLVersion) - 1);
-
-    PRInt32 i;
-
-    // Write out style sheet processing instructions
-    for (i = 0; i < mNumCSSStyleSheetURLs; ++i) {
-static const char kCSSStyleSheet1[] = "<?xml-stylesheet href=\"";
-static const char kCSSStyleSheet2[] = "\" type=\"text/css\"?>\n";
-
-        const char* url;
-        mCSSStyleSheetURLs[i]->GetSpec(&url);
-        rdf_BlockingWrite(aStream, kCSSStyleSheet1, sizeof(kCSSStyleSheet1) - 1);
-        rdf_BlockingWrite(aStream, url);
-        rdf_BlockingWrite(aStream, kCSSStyleSheet2, sizeof(kCSSStyleSheet2) - 1);
-    }
-
-    // Write out named data source processing instructions
-    for (i = 0; i < mNumNamedDataSourceURIs; ++i) {
-static const char kNamedDataSource1[] = "<?rdf-datasource href=\"";
-static const char kNamedDataSource2[] = "\"?>\n";
-
-        rdf_BlockingWrite(aStream, kNamedDataSource1, sizeof(kNamedDataSource1) - 1);
-        rdf_BlockingWrite(aStream, mNamedDataSourceURIs[i]);
-        rdf_BlockingWrite(aStream, kNamedDataSource2, sizeof(kNamedDataSource2) - 1);
-    }
 
     // global name space declarations
     rdf_BlockingWrite(aStream, kOpenRDF, sizeof(kOpenRDF) - 1);
