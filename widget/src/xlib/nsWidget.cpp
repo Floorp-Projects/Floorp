@@ -35,6 +35,7 @@
 #include "nsIServiceManager.h"
 #include "nsAppShell.h"
 
+#include <X11/Xatom.h>
 #include <X11/cursorfont.h>
 #include "nsXlibCursors.h"
 
@@ -294,11 +295,12 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
 
   mParentWindow = parent;
 
-  attr.bit_gravity = NorthWestGravity;
-  attr.event_mask = GetEventMask();
-  attr.colormap = xxlib_rgb_get_cmap(mXlibRgbHandle);
-
-  attr_mask = CWBitGravity | CWEventMask;
+  attr.bit_gravity       = NorthWestGravity;
+  attr.event_mask        = GetEventMask();
+  attr.colormap          = xxlib_rgb_get_cmap(mXlibRgbHandle);
+  attr.background_pixel  = mBackgroundPixel;
+  attr.border_pixel      = mBorderPixel;
+  attr_mask = CWBitGravity | CWEventMask | CWBorderPixel | CWBackPixel;
 
   if (attr.colormap)
     attr_mask |= CWColormap;
@@ -313,6 +315,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                 attr_mask, &attr);
     AddWindowCallback(mBaseWindow, this);
     SetUpWMHints();
+    XSetTransientForHint(mDisplay, mBaseWindow, mParentWindow);
     break;
 
   case eWindowType_popup:
@@ -328,6 +331,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
                                 attr_mask, &attr);
     AddWindowCallback(mBaseWindow, this);
     SetUpWMHints();
+    XSetTransientForHint(mDisplay, mBaseWindow, mParentWindow);
     break;
 
   case eWindowType_toplevel:
@@ -350,7 +354,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   default:
     break;
   }
-
+  
   return NS_OK;
 }
 
@@ -755,11 +759,12 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   XSetWindowAttributes attr;
   unsigned long attr_mask;
 
-  attr.bit_gravity = NorthWestGravity;
-  attr.event_mask = GetEventMask();
-  attr.colormap = xxlib_rgb_get_cmap(mXlibRgbHandle);
-
-  attr_mask = CWBitGravity | CWEventMask;
+  attr.bit_gravity       = NorthWestGravity;
+  attr.event_mask        = GetEventMask();
+  attr.colormap          = xxlib_rgb_get_cmap(mXlibRgbHandle);
+  attr.background_pixel  = mBackgroundPixel;
+  attr.border_pixel      = mBorderPixel;
+  attr_mask = CWBitGravity | CWEventMask | CWBorderPixel | CWBackPixel;
 
   if (attr.colormap)
     attr_mask |= CWColormap;

@@ -79,7 +79,7 @@ nsDragService::nsDragService()
   sXlibRgbHandle = nsAppShell::GetXlibRgbHandle();
   sDisplay = xxlib_rgb_get_display(sXlibRgbHandle);
   mCanDrop = PR_FALSE;
-  sWindow = 0;
+  sWindow = None;
 }
 
 nsDragService::~nsDragService()
@@ -247,21 +247,31 @@ NS_IMETHODIMP nsDragService::UpdatePosition(PRInt32 x, PRInt32 y)
 
 void nsDragService::CreateDragCursor(PRUint32 aActionType)
 {
-  if (sWindow == 0) {
+  if (sWindow == None) {
     Pixmap aPixmap;
     Pixmap aShapeMask;
     XSetWindowAttributes wattr;
+    unsigned long wattr_mask;
     XWMHints wmHints;
     int depth;
+    Screen *screen = xxlib_rgb_get_screen(sXlibRgbHandle);
+    int screennum = XScreenNumberOfScreen(screen);
 
-    wattr.override_redirect = true;
+    wattr.override_redirect = True;
+    wattr.background_pixel  = XWhitePixel(sDisplay, screennum);
+    wattr.border_pixel      = XBlackPixel(sDisplay, screennum);
+    wattr.colormap          = xxlib_rgb_get_cmap(sXlibRgbHandle);
+    wattr_mask = CWOverrideRedirect | CWBorderPixel | CWBackPixel;
+    if (wattr.colormap)
+      wattr_mask |= CWColormap;
+    
     depth = xxlib_rgb_get_depth(sXlibRgbHandle);
     
     /* make a window off-screen at -64, -64 */
-    sWindow = XCreateWindow(sDisplay, XDefaultRootWindow(sDisplay),
+    sWindow = XCreateWindow(sDisplay, XRootWindowOfScreen(screen),
                             -64, -64, 32, 32, 0, depth,
-                            InputOutput, CopyFromParent,
-                            CWOverrideRedirect, &wattr);
+                            InputOutput, xxlib_rgb_get_visual(sXlibRgbHandle),
+                            wattr_mask, &wattr);
     
     aPixmap = XCreatePixmapFromBitmapData(sDisplay, sWindow,
                                           (char *)drag_bitmap,
