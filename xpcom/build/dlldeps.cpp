@@ -154,10 +154,8 @@ void XXXNeverCalled()
     new nsProcess();
     nsStaticCaseInsensitiveNameTable();
     nsAutoString str1;
-    nsAutoString str1b(CBufDescriptor((PRUnichar*)0, 0, 0, 0));
     str1.AssignWithConversion(nsnull, 0);
     nsCAutoString str2;
-    nsCAutoString str2b(CBufDescriptor((char*)0, 0, 0, 0));
     ToNewUnicode(str1);
     ToNewUnicode(str2);
     ToNewCString(str1);
