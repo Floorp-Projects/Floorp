@@ -640,7 +640,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRUint64 nativeRet;
+  PRInt64 nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -661,11 +661,10 @@ InstallDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
       return JS_FALSE;
     }
 
-#if 0
-    jsdouble d;
-	LL_L2F(d, nativeRet);
-	JS_NewDoubleValue( cx, d, rval );
-#endif    
+    double d;
+    
+    LL_L2D(d, nativeRet);
+    JS_NewDoubleValue( cx, d, rval );
     
   }
   else
@@ -1743,7 +1742,7 @@ InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc,
 {
 
   nsInstall*   nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  PRUint64     nativeRet;
+  PRInt64     nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -1765,11 +1764,10 @@ InstallFileOpFileGetDiskSpaceAvailable(JSContext *cx, JSObject *obj, uintN argc,
     {
       return JS_FALSE;
     }
-#if 0
-    jsdouble d;
-	LL_L2F(d, nativeRet);
-	JS_NewDoubleValue( cx, d, rval );
-#endif    
+    
+    double d;
+    LL_L2D(d, nativeRet);
+    JS_NewDoubleValue( cx, d, rval );
   }
   else
   {

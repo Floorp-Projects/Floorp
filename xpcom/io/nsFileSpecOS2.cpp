@@ -242,9 +242,9 @@ PRUint32 nsFileSpec::GetFileSize() const
 }
 
 // Okay, this is a really weird place to put this method!
-// And it ought to return a PRUint64.
+// And it ought to return a PRInt64.
 //
-PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
+PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 {
    ULONG      ulDriveNo = toupper(mPath[0]) + 1 - 'A';
    FSALLOCATE fsAllocate = { 0 };
@@ -262,7 +262,7 @@ PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
                 fsAllocate.cbSector;
    }
    
-   PRUint64 int64;
+   PRInt64 int64;
 
    LL_I2L(int64 , cbAvail);
 

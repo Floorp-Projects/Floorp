@@ -157,7 +157,7 @@ interface nsIFile : nsISupports
     readonly attribute unsigned long fileSizeOfLink;
     
 
-    readonly attribute unsigned long long diskSpaceAvailable;  // maybe we should put this somewhere else.
+    readonly attribute long long diskSpaceAvailable;  // maybe we should put this somewhere else.
 
     /**
      * Parent will be nsnull when this is at the top of the volume.

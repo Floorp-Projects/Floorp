@@ -474,12 +474,10 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 } // nsFileSpec::Execute
 
 //----------------------------------------------------------------------------------------
-PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
+PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
-    PRUint64 bytes;
-    LL_I2L(bytes, ULONG_MAX);
-
+    
 #if defined(HAVE_SYS_STATFS_H) || defined(HAVE_SYS_STATVFS_H)
 
     char curdir [MAXPATHLEN];

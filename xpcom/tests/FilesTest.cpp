@@ -48,6 +48,8 @@ struct FilesTest
     int Move(const char*  sourceFile, const char*  targDir);
     int Rename(const char*  sourceFile, const char* newName);
     
+    int DiskSpace();
+
     int Execute(const char* appName, const char* args);
 
     int SpecialSystemDirectories();
@@ -597,6 +599,22 @@ int FilesTest::Move(const char* file, const char* dir)
     return Passed();
 }
 
+
+//----------------------------------------------------------------------------------------
+int FilesTest::DiskSpace()
+//----------------------------------------------------------------------------------------
+{
+    
+    nsSpecialSystemDirectory systemDir(nsSpecialSystemDirectory::OS_DriveDirectory);
+    if (!systemDir.Valid())
+		return Failed();
+
+    PRInt64 bytes = systemDir.GetDiskSpaceAvailable();
+    
+    printf("OS Drive has %ld bytes free\n", bytes);
+
+    return Inspect();
+}
 //----------------------------------------------------------------------------------------
 int FilesTest::Execute(const char* appName, const char* args)
 //----------------------------------------------------------------------------------------
@@ -934,6 +952,11 @@ int FilesTest::RunAllTests()
 	rv = CanonicalPath("mumble/iotest.txt");
 	if (rv)
 	    return rv;
+    
+    Banner("Getting DiskSpace");
+    rv = DiskSpace();
+    if (rv)
+        return rv;
 
 	Banner("OutputStream");
 	rv = OutputStream("mumble/iotest.txt");

@@ -421,7 +421,7 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 } // nsFileSpec::Execute
 
 //----------------------------------------------------------------------------------------
-PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
+PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
     char curdir [MAXPATHLEN];

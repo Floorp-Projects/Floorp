@@ -180,7 +180,7 @@ class nsInstall
         
         PRInt32    DeleteComponent(const nsString& aRegistryName, PRInt32* aReturn);
         PRInt32    DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName, PRInt32* aReturn);
-        PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRUint64* aReturn);
+        PRInt32    DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn);
         PRInt32    Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* aReturn);
         PRInt32    Execute(const nsString& aJarSource, PRInt32* aReturn);
         PRInt32    FinalizeInstall(PRInt32* aReturn);
@@ -209,7 +209,7 @@ class nsInstall
         PRInt32    FileOpFileExists(nsFileSpec& aTarget, PRBool* aReturn);
         PRInt32    FileOpFileExecute(nsFileSpec& aTarget, nsString& aParams, PRInt32* aReturn);
         PRInt32    FileOpFileGetNativeVersion(nsFileSpec& aTarget, nsString* aReturn);
-        PRInt32    FileOpFileGetDiskSpaceAvailable(nsFileSpec& aTarget, PRUint64* aReturn);
+        PRInt32    FileOpFileGetDiskSpaceAvailable(nsFileSpec& aTarget, PRInt64* aReturn);
         PRInt32    FileOpFileGetModDate(nsFileSpec& aTarget, nsFileSpec::TimeStamp* aReturn);
         PRInt32    FileOpFileGetSize(nsFileSpec& aTarget, PRUint32* aReturn);
         PRInt32    FileOpFileIsDirectory(nsFileSpec& aTarget, PRBool* aReturn);
