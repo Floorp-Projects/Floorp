@@ -140,6 +140,8 @@ public:
    * closest to the common ancestor, but not an ancestor of |aOther|.
    * The third, if present, is the ancestor node of |aOther| which is
    * closest to the common ancestor, but not an ancestor of |aNode|.
+   *
+   * @throws NS_ERROR_FAILURE if aNode and aOther are disconnected.
    */
   static nsresult GetFirstDifferentAncestors(nsIDOMNode *aNode,
                                              nsIDOMNode *aOther,

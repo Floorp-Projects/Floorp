@@ -1027,7 +1027,7 @@ nsContentUtils::GetFirstDifferentAncestors(nsIDOMNode *aNode,
   PRInt32 otherIdx = otherAncestors.Count() - 1;
 
   if (nodeAncestors[nodeIdx] != otherAncestors[otherIdx]) {
-    NS_ERROR("This function was called on two disconnected nodes!");
+    // These two nodes are disconnected.  We can't get a common ancestor.
     return NS_ERROR_FAILURE;
   }
 
