@@ -322,7 +322,6 @@ protected:
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
     BOOL                    OnChar(UINT mbcsCharCode, UINT virtualKeyCode, bool isMultibyte);
-    BOOL                    OnUniChar( UINT uniCharCode, UINT virtualKeyCode);
 
     BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode);
     BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
