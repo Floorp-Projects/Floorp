@@ -31,7 +31,7 @@
 
 
 ByDayMonthlyGenerator::ByDayMonthlyGenerator() 
-:   DateGenerator(JulianUtility::RT_MONTHLY, 0),
+:   DateGenerator(nsCalUtility::RT_MONTHLY, 0),
     m_aiParams(0),
     m_iWkSt((t_int32) Calendar::SUNDAY)
 {}
@@ -39,7 +39,7 @@ ByDayMonthlyGenerator::ByDayMonthlyGenerator()
 //---------------------------------------------------------------------
 
 t_int32 
-ByDayMonthlyGenerator::getInterval() const { return JulianUtility::RT_DAILY; }
+ByDayMonthlyGenerator::getInterval() const { return nsCalUtility::RT_DAILY; }
 
 //---------------------------------------------------------------------
 // TODO: crash proof it

@@ -377,7 +377,7 @@ DateTime Freebusy::endOfFreebusyPeriod()
 {
     t_int32 i;
     DateTime d(-1);
-    Julian_Duration du(-1, -1, -1, -1, -1, -1, -1);
+    nsCalDuration du(-1, -1, -1, -1, -1, -1, -1);
     if (m_vPeriod != 0)
     {
         i = m_vPeriod->GetSize();

@@ -202,7 +202,7 @@ public:
     virtual UnicodeString & parse(ICalReader * brFile, UnicodeString & sType, 
         UnicodeString & parseStatus, JulianPtrArray * vTimeZones = 0,
         t_bool bIgnoreBeginError = FALSE,
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit);
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit);
     
     /**
      * Returns a clone of this object
@@ -300,9 +300,9 @@ public:
     VAlarm::ACTION getAction() const { return m_Action; }
     void setAction(VAlarm::ACTION action) { m_Action = action; }
 
-    /* Julian_Duration */
-    Julian_Duration getDuration() const;
-    void setDuration(Julian_Duration s, JulianPtrArray * parameters = 0);
+    /* nsCalDuration */
+    nsCalDuration getDuration() const;
+    void setDuration(nsCalDuration s, JulianPtrArray * parameters = 0);
     ICalProperty * getDurationProperty() const { return m_Duration; }
 
     /* Repeat */
@@ -312,8 +312,8 @@ public:
 
     /* Trigger */
     /* can be date-time or duration */
-    Julian_Duration getTriggerAsDuration() const;
-    void setTriggerAsDuration(Julian_Duration s, JulianPtrArray * parameters = 0);
+    nsCalDuration getTriggerAsDuration() const;
+    void setTriggerAsDuration(nsCalDuration s, JulianPtrArray * parameters = 0);
     void setTriggerAsDateTime(DateTime s);
     ICalProperty * getTriggerProperty() const { return m_Trigger; }
     DateTime getTriggerAsDateTime(DateTime startTime) const;

@@ -550,7 +550,7 @@ VFreebusy::~VFreebusy()
 UnicodeString & 
 VFreebusy::parse(ICalReader * brFile, UnicodeString & method, 
                  UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
-                 t_bool bIgnoreBeginError, JulianUtility::MimeEncoding encoding)
+                 t_bool bIgnoreBeginError, nsCalUtility::MimeEncoding encoding)
 {
     parseStatus = JulianKeyword::Instance()->ms_sOK;
     UnicodeString strLine, propName, propVal;
@@ -790,7 +790,7 @@ void VFreebusy::storeDuration(UnicodeString & strLine, UnicodeString & propVal,
     //Duration d(propVal);
     if (m_TempDuration == 0)
     {
-        m_TempDuration = new Julian_Duration(propVal);
+        m_TempDuration = new nsCalDuration(propVal);
         PR_ASSERT(m_TempDuration != 0);
     }
     else
@@ -982,7 +982,7 @@ void VFreebusy::storeSequence(UnicodeString & strLine, UnicodeString & propVal,
 
     char * pcc = propVal.toCString("");
     PR_ASSERT(pcc != 0);
-    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    i = nsCalUtility::atot_int32(pcc, bParseError, propVal.size());
     delete [] pcc; pcc = 0;
     if (getSequenceProperty() != 0)
     {
@@ -1657,8 +1657,8 @@ DateTime VFreebusy::getDTEnd() const
 #endif
 }
 //---------------------------------------------------------------------
-///Julian_Duration
-void VFreebusy::setDuration(Julian_Duration s, JulianPtrArray * parameters)
+///nsCalDuration
+void VFreebusy::setDuration(nsCalDuration s, JulianPtrArray * parameters)
 { 
     /*
     if (m_Duration == 0)
@@ -1681,19 +1681,19 @@ void VFreebusy::setDuration(Julian_Duration s, JulianPtrArray * parameters)
     end.add(s);
     setDTEnd(end);
 }
-Julian_Duration VFreebusy::getDuration() const 
+nsCalDuration VFreebusy::getDuration() const 
 {
     /*
-    Julian_Duration d; d.set(-1,-1,-1,-1,-1,-1);
+    nsCalDuration d; d.set(-1,-1,-1,-1,-1,-1);
     if (m_Duration == 0)
         return d; // return 0;
     else
     {
-        d = *((Julian_Duration *) m_Duration->getValue());
+        d = *((nsCalDuration *) m_Duration->getValue());
         return d;
     }
     */
-    Julian_Duration duration;
+    nsCalDuration duration;
     DateTime start, end;
     start = getDTStart();
     end = getDTEnd();
@@ -1852,7 +1852,7 @@ void VFreebusy::setOrganizer(UnicodeString s, JulianPtrArray * parameters)
         //m_Organizer = ICalPropertyFactory::Make(ICalProperty::TEXT, 
         //                                    (void *) &s, parameters);
 
-        m_Organizer = (ICalProperty *) new JulianOrganizer(m_Log);
+        m_Organizer = (ICalProperty *) new nsCalOrganizer(m_Log);
         PR_ASSERT(m_Organizer != 0);
         m_Organizer->setValue((void *) &s);
         m_Organizer->setParameters(parameters);        

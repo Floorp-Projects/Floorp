@@ -29,14 +29,14 @@
 
 ByWeekNoGenerator::ByWeekNoGenerator() 
 :
-    DateGenerator(JulianUtility::RT_YEARLY, 0),
+    DateGenerator(nsCalUtility::RT_YEARLY, 0),
     m_aiParams(0)
     {}
 
 //---------------------------------------------------------------------
 
 t_int32 
-ByWeekNoGenerator::getInterval() const { return JulianUtility::RT_WEEKLY; }
+ByWeekNoGenerator::getInterval() const { return nsCalUtility::RT_WEEKLY; }
 
 //---------------------------------------------------------------------
 

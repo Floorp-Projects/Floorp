@@ -44,7 +44,7 @@ private:
     DateTime        m_origMyDue;
 
     /** used for initial parse only to calculate first Due, then discarded */
-    Julian_Duration *        m_TempDuration; 
+    nsCalDuration *        m_TempDuration; 
 
     /*-------------------------------------------------
      *  DATA MEMBER  (to augment TimeBasedEvent)
@@ -163,7 +163,7 @@ public:
     UnicodeString & parse(ICalReader * brFile, UnicodeString & sMethod,
         UnicodeString & parseStatus, JulianPtrArray * vTimeZones = 0,
         t_bool bIgnoreBeginError = FALSE,
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit);
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit);
 
     /**
      * Returns a clone of this object
@@ -291,8 +291,8 @@ public:
     ICalProperty * getDueProperty() const { return m_Due; }
 
     /* DURATION */
-    Julian_Duration getDuration() const;
-    void setDuration(Julian_Duration s, JulianPtrArray * parameters = 0);
+    nsCalDuration getDuration() const;
+    void setDuration(nsCalDuration s, JulianPtrArray * parameters = 0);
     /*ICalProperty * getDurationProperty() const { return m_Duration; }*/
 
     /* GEO */

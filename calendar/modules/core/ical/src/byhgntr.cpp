@@ -30,14 +30,14 @@
 
 ByHourGenerator::ByHourGenerator() 
 :
-    DateGenerator(JulianUtility::RT_DAILY, 0),
+    DateGenerator(nsCalUtility::RT_DAILY, 0),
     m_aiParams(0)
 {}
 
 //---------------------------------------------------------------------
 
 t_int32 
-ByHourGenerator::getInterval() const { return JulianUtility::RT_HOURLY; }
+ByHourGenerator::getInterval() const { return nsCalUtility::RT_HOURLY; }
 
 //---------------------------------------------------------------------
 

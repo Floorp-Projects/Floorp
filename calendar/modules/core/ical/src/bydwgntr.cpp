@@ -29,7 +29,7 @@
 
 ByDayWeeklyGenerator::ByDayWeeklyGenerator() 
 :
-    DateGenerator(JulianUtility::RT_WEEKLY, 0),
+    DateGenerator(nsCalUtility::RT_WEEKLY, 0),
     m_aiParams(0),
     m_iWkSt((t_int32) Calendar::SUNDAY)
 {}
@@ -37,7 +37,7 @@ ByDayWeeklyGenerator::ByDayWeeklyGenerator()
 //---------------------------------------------------------------------
 
 t_int32 
-ByDayWeeklyGenerator::getInterval() const { return JulianUtility::RT_DAILY; }
+ByDayWeeklyGenerator::getInterval() const { return nsCalUtility::RT_DAILY; }
 
 //---------------------------------------------------------------------
 

@@ -185,7 +185,7 @@ const t_int32 Recurrence::ms_GenOrderLen = 6;
 
 void Recurrence::init()
 {
-    m_iType = JulianUtility::RT_NONE;
+    m_iType = nsCalUtility::RT_NONE;
     m_Interval = 0;
     m_iCount = ms_iUNSET;
     m_iWkSt = Calendar::MONDAY;
@@ -240,7 +240,7 @@ Recurrence::Recurrence()
 //---------------------------------------------------------------------
 #if 0
 Recurrence::Recurrence(DateTime startDate, DateTime stopDate, 
-                       Julian_Duration * duration, UnicodeString & ruleString)
+                       nsCalDuration * duration, UnicodeString & ruleString)
 {
     init();
     m_StartDate = startDate;
@@ -252,7 +252,7 @@ Recurrence::Recurrence(DateTime startDate, DateTime stopDate,
 }
 //---------------------------------------------------------------------
 
-Recurrence::Recurrence(DateTime startDate, Julian_Duration * duration, 
+Recurrence::Recurrence(DateTime startDate, nsCalDuration * duration, 
                        UnicodeString & ruleString)
 {
     init();
@@ -461,7 +461,7 @@ Recurrence::parse(UnicodeString & s)
             {
                 char * tcc = t.toCString("");
                 PR_ASSERT(tcc != 0);
-                m_iCount = JulianUtility::atot_int32(tcc, bParseError, tSize);
+                m_iCount = nsCalUtility::atot_int32(tcc, bParseError, tSize);
                 delete [] tcc; tcc = 0;
             }
             else if (JulianKeyword::Instance()->ms_ATOM_INTERVAL == atomParam)
@@ -469,7 +469,7 @@ Recurrence::parse(UnicodeString & s)
                 // TODO: if duration allowed, parse duration, then it to interval
                 char * tcc = t.toCString("");
                 PR_ASSERT(tcc != 0);
-                tempInterval = JulianUtility::atot_int32(tcc, bParseError, tSize);
+                tempInterval = nsCalUtility::atot_int32(tcc, bParseError, tSize);
                 delete [] tcc; tcc = 0;
             }
             else if (JulianKeyword::Instance()->ms_ATOM_WKST == atomParam)
@@ -591,13 +591,13 @@ Recurrence::parse(UnicodeString & s)
             {
                 switch(m_iType)
                 {
-                case JulianUtility::RT_WEEKLY:
+                case nsCalUtility::RT_WEEKLY:
                     dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByDayWeeklyGntrIndex);
                     break;
-                case JulianUtility::RT_MONTHLY:
+                case nsCalUtility::RT_MONTHLY:
                     dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByDayMonthlyGntrIndex);
                     break;
-                case JulianUtility::RT_YEARLY:
+                case nsCalUtility::RT_YEARLY:
                     dg = (DateGenerator *) m_GntrVctr->GetAt(ms_iByDayYearlyGntrIndex);
                     break;
                 default:
@@ -733,31 +733,31 @@ Recurrence::parse(UnicodeString & s)
 
 void Recurrence::internalSetInterval(t_int32 i)
 {
-    m_Interval = new Julian_Duration();
+    m_Interval = new nsCalDuration();
 
     switch(m_iType)
     {
-    case JulianUtility::RT_MINUTELY:
+    case nsCalUtility::RT_MINUTELY:
         //m_Interval->setMinute(i);
         m_Interval->set(0,0,0,0,i,0);
         break;
-    case JulianUtility::RT_HOURLY:
+    case nsCalUtility::RT_HOURLY:
         //m_Interval->setHour(i);
         m_Interval->set(0,0,0,i,0,0);
         break;
-    case JulianUtility::RT_DAILY:
+    case nsCalUtility::RT_DAILY:
         //m_Interval->setDay(i);
         m_Interval->set(0,0,i,0,0,0);
         break;
-    case JulianUtility::RT_WEEKLY:
+    case nsCalUtility::RT_WEEKLY:
         //m_Interval->setWeek(i);
         m_Interval->set(i);
         break;
-    case JulianUtility::RT_MONTHLY:
+    case nsCalUtility::RT_MONTHLY:
         //m_Interval->setMonth(i);
         m_Interval->set(0,i,0,0,0,0);
         break;
-    case JulianUtility::RT_YEARLY:
+    case nsCalUtility::RT_YEARLY:
         //m_Interval->setYear(i);
         m_Interval->set(i,0,0,0,0,0);
         break;
@@ -1183,7 +1183,7 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log,
             }
         }
         
-        if (m_iType == JulianUtility::RT_MONTHLY)
+        if (m_iType == nsCalUtility::RT_MONTHLY)
         {
             t_int32 interval = m_Interval->getMonth();
             while (interval > 0)
@@ -1285,16 +1285,16 @@ Recurrence::reset(DateTime & t, t_int32 type, t_int32 wkSt)
     t_int32 temp = 0;
     switch(type)
     {
-    case JulianUtility::RT_YEARLY:
+    case nsCalUtility::RT_YEARLY:
         t.add(Calendar::DAY_OF_YEAR, -t.get(Calendar::DAY_OF_YEAR) + 1);
         break;
-    case JulianUtility::RT_MONTHLY:
+    case nsCalUtility::RT_MONTHLY:
         t.add(Calendar::DAY_OF_MONTH, -t.get(Calendar::DAY_OF_MONTH) + 1);
         break;
-    case JulianUtility::RT_WEEKLY:
+    case nsCalUtility::RT_WEEKLY:
         t.moveTo(wkSt, -1, FALSE);
         break;
-    case JulianUtility::RT_DAILY:
+    case nsCalUtility::RT_DAILY:
     
         // this case is purposely empty. a daily rule can only contain a byhour,
         // or a byminute tag. or it can have no tags. if it has a tag, then the
@@ -1303,10 +1303,10 @@ Recurrence::reset(DateTime & t, t_int32 type, t_int32 wkSt)
         // never be reached, since a defaultgenerator will be installed and will
         //handle all of the work in one run. 
        break;
-    case JulianUtility::RT_HOURLY:
+    case nsCalUtility::RT_HOURLY:
         t.set(Calendar::MINUTE, 0);
         break;
-    case JulianUtility::RT_MINUTELY:
+    case nsCalUtility::RT_MINUTELY:
         t.set(Calendar::SECOND, 0);
         break;
     }
@@ -1326,7 +1326,7 @@ Recurrence::reset(DateTime & t, t_int32 type, t_int32 wkSt)
     temp = ms_iByMinuteGntrIndex;
     if (((DateGenerator *) (m_GntrVctr->GetAt(temp)))->active())
     {
-        if (type != JulianUtility::RT_HOURLY)
+        if (type != nsCalUtility::RT_HOURLY)
             t.set(Calendar::HOUR_OF_DAY, 0);
         t.set(Calendar::MINUTE, 0);
     }
@@ -1586,12 +1586,12 @@ t_int32 Recurrence::stringToType(UnicodeString & s, t_bool & bParseError)
 
     if (s.size() > 0)
     {
-        if (s == JulianKeyword::Instance()->ms_sMINUTELY) iType = JulianUtility::RT_MINUTELY;
-        else if (s == JulianKeyword::Instance()->ms_sHOURLY) iType = JulianUtility::RT_HOURLY;
-        else if (s == JulianKeyword::Instance()->ms_sDAILY) iType = JulianUtility::RT_DAILY;
-        else if (s == JulianKeyword::Instance()->ms_sWEEKLY) iType = JulianUtility::RT_WEEKLY;
-        else if (s == JulianKeyword::Instance()->ms_sMONTHLY) iType = JulianUtility::RT_MONTHLY;
-        else if (s == JulianKeyword::Instance()->ms_sYEARLY) iType = JulianUtility::RT_YEARLY;
+        if (s == JulianKeyword::Instance()->ms_sMINUTELY) iType = nsCalUtility::RT_MINUTELY;
+        else if (s == JulianKeyword::Instance()->ms_sHOURLY) iType = nsCalUtility::RT_HOURLY;
+        else if (s == JulianKeyword::Instance()->ms_sDAILY) iType = nsCalUtility::RT_DAILY;
+        else if (s == JulianKeyword::Instance()->ms_sWEEKLY) iType = nsCalUtility::RT_WEEKLY;
+        else if (s == JulianKeyword::Instance()->ms_sMONTHLY) iType = nsCalUtility::RT_MONTHLY;
+        else if (s == JulianKeyword::Instance()->ms_sYEARLY) iType = nsCalUtility::RT_YEARLY;
         else bParseError = TRUE;
     }
     else
@@ -1640,7 +1640,7 @@ Recurrence::verifyIntList(JulianPtrArray * v, t_int32 lowerBound,
         }
         char * kcc = s.extractBetween(startIndex, s.size(), into).toCString("");
         PR_ASSERT(kcc != 0);
-        k = JulianUtility::atot_int32(kcc, 
+        k = nsCalUtility::atot_int32(kcc, 
             bParseError, (s.size() - startIndex));
         delete [] kcc; kcc = 0;    
 
@@ -1649,7 +1649,7 @@ Recurrence::verifyIntList(JulianPtrArray * v, t_int32 lowerBound,
         {
             k = 0 - k;
         }    
-        //k = JulianUtility::atot_int32(s.toCString(""), bParseError, s.size());
+        //k = nsCalUtility::atot_int32(s.toCString(""), bParseError, s.size());
 
         if (bZero && k == 0)
             bParseError = TRUE;
@@ -1693,12 +1693,12 @@ Recurrence::createByDayList(JulianPtrArray * v, t_int32 type,
         createByDayListHelper(*sPtr, day, modifier, bParseError);
     
         // if modifier out of bounds, set bParseError to TRUE
-        if ((type == JulianUtility::RT_YEARLY) && 
+        if ((type == nsCalUtility::RT_YEARLY) && 
             (modifier < -53 || modifier > 53))
         {
             bParseError = TRUE;
         }
-        else if ((type == JulianUtility::RT_MONTHLY) &&
+        else if ((type == nsCalUtility::RT_MONTHLY) &&
             (modifier < -5 || modifier > 5))
         {
             bParseError = TRUE;
@@ -1740,7 +1740,7 @@ void Recurrence::createByDayListHelper(UnicodeString & in,
                 in.size() - 2, into).toCString("");
             PR_ASSERT(incc != 0);
             modifier = 
-                JulianUtility::atot_int32(incc, 
+                nsCalUtility::atot_int32(incc, 
                 bParseError, (in.size() - 2 - startIndex));
             delete [] incc; incc = 0;
             // if Minus sign, set to inverse

@@ -50,7 +50,7 @@ class Recurrence
     
 public:
    
-    /* moved the Recurrence Type constants to JulianUtility. */
+    /* moved the Recurrence Type constants to nsCalUtility. */
 #if 0    
     /**
     * Creates a Recurrence object specified by the given string.
@@ -60,7 +60,7 @@ public:
     * @param duration	       the time between start and stopdate
     * @param ruleString        the recurrence rule string to parse
     */
-    Recurrence(DateTime startDate, DateTime stopDate, Julian_Duration * duration, 
+    Recurrence(DateTime startDate, DateTime stopDate, nsCalDuration * duration, 
         UnicodeString & ruleString);
     
     /**
@@ -70,7 +70,7 @@ public:
      * @param duration	       the time between start and stopdate
      * @param ruleString       the recurrence rule string to parse
      */
-    Recurrence(DateTime startDate, Julian_Duration * duration, UnicodeString & ruleString);
+    Recurrence(DateTime startDate, nsCalDuration * duration, UnicodeString & ruleString);
 #endif
     /**
      * Creates a Recurrence object specified by the given string.
@@ -199,8 +199,8 @@ private:
     static const t_int32 ms_iUNSET;
 
      /* Variables that correspond directly to properties defined in the spec */
-    t_int32 m_iType;        /* init to JulianUtility::RT_NONE */
-    Julian_Duration * m_Interval;  /* init to NULL */
+    t_int32 m_iType;        /* init to nsCalUtility::RT_NONE */
+    nsCalDuration * m_Interval;  /* init to NULL */
     t_int32 m_iCount;       /* init to ms_iUNSET */
     t_int32 m_iWkSt;        /* init to Calendar::MONDAY */
     DateTime m_Until;       /* init to Invalid DateTime */
@@ -244,7 +244,7 @@ private:
     /* Variables for storing DTSTART, DTEND and DURATION */
     DateTime m_StartDate;   
     DateTime m_StopDate;    
-    Julian_Duration * m_Duration;    /* init to NULL */
+    nsCalDuration * m_Duration;    /* init to NULL */
 
     /* cache validity */
     t_bool m_bParseValid; 
@@ -291,7 +291,7 @@ private:
 
     /**
      * Sets interval to i, depending on m_iType.  For example,
-     * if m_iType is set to JulianUtility::RT_YEARLY and i is 2,
+     * if m_iType is set to nsCalUtility::RT_YEARLY and i is 2,
      * then the interval is every 2 years.
      * @param           i   value of interval w/respect to m_iType
      */

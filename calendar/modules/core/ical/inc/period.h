@@ -44,7 +44,7 @@ private:
     DateTime m_DTEnd;
     
     /** the duration of the period */
-    Julian_Duration m_Duration;
+    nsCalDuration m_Duration;
 
     /*-----------------------------
     ** PRIVATE METHODS
@@ -127,9 +127,9 @@ public:
     /**
      * Return duration (may be invalid).
      *
-     * @return          Julian_Duration 
+     * @return          nsCalDuration 
      */
-    Julian_Duration getDuration() { return m_Duration; }
+    nsCalDuration getDuration() { return m_Duration; }
 
     /**
      * Set start time
@@ -147,7 +147,7 @@ public:
      * Set duration
      * @param           d   new duration value
      */
-    void setDuration(Julian_Duration d); 
+    void setDuration(nsCalDuration d); 
     
     /**
      * Set period by passing string.
@@ -210,7 +210,7 @@ public:
     /**
      * Returns period in iCal period format of "start/end", where
      * start is UTC ISO8601 datetime format and end is either
-     * a UTC IS08601 datetime format or an iCal Julian_Duration string.
+     * a UTC IS08601 datetime format or an iCal nsCalDuration string.
      *
      * @return          output string
      */

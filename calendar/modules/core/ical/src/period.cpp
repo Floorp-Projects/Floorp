@@ -48,7 +48,7 @@ void Period::parse(UnicodeString & us)
     UnicodeString sStart, sEnd;
     t_int32 indexOfSlash = us.indexOf('/');
     //DateTime start, end;
-    //Julian_Duration d;
+    //nsCalDuration d;
 
     if (indexOfSlash < 0)
     {
@@ -199,7 +199,7 @@ void Period::setEnd(DateTime d)
 
 //---------------------------------------------------------------------
 
-void Period::setDuration(Julian_Duration d) 
+void Period::setDuration(nsCalDuration d) 
 { 
     m_Duration = d; 
 }
@@ -532,7 +532,7 @@ t_bool Period::IsParseable(UnicodeString & s)
             return FALSE;
         if (!DateTime::IsParseable(sEnd))
         {
-            Julian_Duration d(sEnd); //PR_ASSERT(d != 0);
+            nsCalDuration d(sEnd); //PR_ASSERT(d != 0);
             if (!d.isValid())
                 return FALSE;
             //delete d; d = 0; // nullify after delete

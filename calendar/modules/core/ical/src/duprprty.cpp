@@ -45,7 +45,7 @@ DurationProperty::DurationProperty(const DurationProperty & that)
 
 //---------------------------------------------------------------------
 
-DurationProperty::DurationProperty(Julian_Duration value, JulianPtrArray * parameters)
+DurationProperty::DurationProperty(nsCalDuration value, JulianPtrArray * parameters)
 : StandardProperty(parameters)
 {
     //PR_ASSERT(value != 0);
@@ -75,7 +75,7 @@ void DurationProperty::setValue(void * value)
     PR_ASSERT(value != 0);
     if (value != 0)
     {
-        m_Duration = *((Julian_Duration *) value);
+        m_Duration = *((nsCalDuration *) value);
     }
 }
 

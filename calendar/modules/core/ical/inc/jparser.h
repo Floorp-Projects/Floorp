@@ -41,7 +41,7 @@ class JulianParser
 private:
     /*char * m_Buffer;*/
 
-    static JulianUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
+    static nsCalUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
 
     JulianPtrArray * m_OutCalendars;
     ICalCAPIReader * m_Reader;

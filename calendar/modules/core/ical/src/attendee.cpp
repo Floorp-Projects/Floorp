@@ -264,7 +264,7 @@ void Attendee::addParamValList(UnicodeString & paramValList, t_int32 hashCode)
                         break;
                 }
             }
-            JulianUtility::stripDoubleQuotes(u);  // double quote property
+            nsCalUtility::stripDoubleQuotes(u);  // double quote property
             
             if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_TO == hashCode)
             {
@@ -450,7 +450,7 @@ void Attendee::setParam(UnicodeString & paramName,
                  if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
-            JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
+            nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setSentBy(paramVal);
         }
         else if (JulianKeyword::Instance()->ms_ATOM_DIR == hashCode)
@@ -460,7 +460,7 @@ void Attendee::setParam(UnicodeString & paramName,
                  if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
-            JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
+            nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setDir(paramVal);
         }
         else if (ICalProperty::IsXToken(paramName))
@@ -765,12 +765,12 @@ UnicodeString Attendee::formatChar(t_int32 c)
             JulianKeyword::Instance()->ms_sMEMBER, xp, u);
     case ms_cAttendeeDir:
         s = m_Dir;
-        s = JulianUtility::addDoubleQuotes(s);
+        s = nsCalUtility::addDoubleQuotes(s);
         return ICalProperty::parameterToCalString(
             JulianKeyword::Instance()->ms_sDIR, s, u);
     case ms_cAttendeeSentBy:
         s = m_SentBy;
-        s = JulianUtility::addDoubleQuotes(s);
+        s = nsCalUtility::addDoubleQuotes(s);
         return ICalProperty::parameterToCalString(
             JulianKeyword::Instance()->ms_sSENTBY, s, u);
     case ms_cAttendeeCN:

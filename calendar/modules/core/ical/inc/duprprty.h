@@ -36,8 +36,8 @@
 class DurationProperty: public StandardProperty
 {
 private:
-    /** the Julian_Duration value of the property */
-    Julian_Duration m_Duration;
+    /** the nsCalDuration value of the property */
+    nsCalDuration m_Duration;
 
     /**
      * Default constructor
@@ -57,7 +57,7 @@ public:
      * @param           value       value of property
      * @param           parameters  parameters of property
      */
-    DurationProperty(Julian_Duration value, JulianPtrArray * parameters);
+    DurationProperty(nsCalDuration value, JulianPtrArray * parameters);
 
     /**
      * Destructor

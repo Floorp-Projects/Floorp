@@ -83,7 +83,7 @@ VJournal::~VJournal()
 UnicodeString &
 VJournal::parse(ICalReader * brFile, UnicodeString & sMethod, 
                 UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
-                t_bool bIgnoreBeginError, JulianUtility::MimeEncoding encoding) 
+                t_bool bIgnoreBeginError, nsCalUtility::MimeEncoding encoding) 
 {
     UnicodeString u = JulianKeyword::Instance()->ms_sVJOURNAL;
     return parseType(u, brFile, sMethod, parseStatus, vTimeZones, bIgnoreBeginError, encoding);

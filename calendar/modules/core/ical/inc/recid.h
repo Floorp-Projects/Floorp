@@ -31,15 +31,15 @@
 #include "jlog.h"
 
 /**
- *  JulianRecurrenceID implements the RecurrenceID property.  The RecurrenceID
+ *  nsCalRecurrenceID implements the RecurrenceID property.  The RecurrenceID
  *  must have a DateTime value.  It can optionally have a RANGE value set to
  *  THISANDPRIOR or THISANDFUTURE.  A RecurrenceID without a RANGE has its
  *  range value set to NONE.
- *  The JulianRecurrenceID must implement the ICalProperty interface.
+ *  The nsCalRecurrenceID must implement the ICalProperty interface.
  * 
  *  @see ICalProperty
  */
-class JulianRecurrenceID : public ICalProperty
+class nsCalRecurrenceID : public ICalProperty
 {
 public:
     /** an enumeration of the RANGE parameter */
@@ -51,7 +51,7 @@ private:
     **---------------------------*/
     
     /** range parameter value */
-    JulianRecurrenceID::RANGE m_Range;
+    nsCalRecurrenceID::RANGE m_Range;
     
     /** datetime value */
     DateTime m_DateTime;
@@ -73,14 +73,14 @@ private:
 
 #if 0
     /* hide constructor from clients */
-    JulianRecurrenceID(); 
+    nsCalRecurrenceID(); 
 #endif 
 
     /**
      * Copy constructor.
-     * @param           that        JulianRecurrenceID to copy
+     * @param           that        nsCalRecurrenceID to copy
      */
-    JulianRecurrenceID(JulianRecurrenceID & that);
+    nsCalRecurrenceID(nsCalRecurrenceID & that);
 
 public:
     
@@ -92,7 +92,7 @@ public:
      * Constructor.  Create a RecurrenceID with log set to initLog
      * @param           initLog     log file to write errors to
      */
-    JulianRecurrenceID(JLog * initLog = 0);
+    nsCalRecurrenceID(JLog * initLog = 0);
 
     /**
      * Constructor.     Create a RecurrenceID with log set to initLog 
@@ -100,12 +100,12 @@ public:
      * @param           initLog         log file to write errors to
      * @param           range           initial RANGE value 
      */
-    JulianRecurrenceID(DateTime datetime, JLog * initLog, RANGE range = RANGE_NONE);
+    nsCalRecurrenceID(DateTime datetime, JLog * initLog, RANGE range = RANGE_NONE);
 
     /**
      * Destructor
      */
-    ~JulianRecurrenceID();
+    ~nsCalRecurrenceID();
     
     /*----------------------------- 
     ** ACCESSORS (GET AND SET) 
@@ -116,14 +116,14 @@ public:
      *
      * @return          current RANGE value
      */
-    JulianRecurrenceID::RANGE getRange() const { return m_Range; }
+    nsCalRecurrenceID::RANGE getRange() const { return m_Range; }
 
     /**
      * Sets RANGE value 
      * @param           range   new range value
      *
      */
-    void setRange(JulianRecurrenceID::RANGE range) { m_Range = range; }
+    void setRange(nsCalRecurrenceID::RANGE range) { m_Range = range; }
 
     /**
      * Sets DateTime value.
@@ -224,7 +224,7 @@ public:
      *
      * @return          RANGE enumeration value of sRange
      */
-    static JulianRecurrenceID::RANGE stringToRange(UnicodeString & sRange);
+    static nsCalRecurrenceID::RANGE stringToRange(UnicodeString & sRange);
 
     /**
      * Converts RANGE to string.    Returns "" for NONE.
@@ -233,7 +233,7 @@ public:
      *
      * @return          output range string
      */
-    static UnicodeString & rangeToString(JulianRecurrenceID::RANGE range, UnicodeString & out);
+    static UnicodeString & rangeToString(nsCalRecurrenceID::RANGE range, UnicodeString & out);
     
 };
 

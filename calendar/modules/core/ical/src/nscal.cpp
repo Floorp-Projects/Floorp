@@ -335,7 +335,7 @@ NSCalendar::clone(JLog * initLog)
 void 
 NSCalendar::parse(ICalReader * brFile,
                   UnicodeString & fileName,
-                  JulianUtility::MimeEncoding encoding)
+                  nsCalUtility::MimeEncoding encoding)
 {
     
     UnicodeString strLine, propName, propVal;
@@ -1438,7 +1438,7 @@ NSCalendar::createVFreebusy(DateTime start, DateTime end)
         vf->setDTEnd(end);
         UnicodeString us = "vfbreply@hostname.com";
 
-        vf->setUID(JulianUIDRandomGenerator::generate(us));
+        vf->setUID(nsCalUIDRandomGenerator::generate(us));
         vf->setSequence(0);
         if (f != 0)
         {
@@ -1887,8 +1887,8 @@ NSCalendar::getTBEByComponentID(JulianPtrArray * out,
         else
         {
             PR_ASSERT(d.isValid());
-            JulianRecurrenceID::RANGE aRange = JulianRecurrenceID::RANGE_NONE;
-            aRange = JulianRecurrenceID::stringToRange(sModifier);
+            nsCalRecurrenceID::RANGE aRange = nsCalRecurrenceID::RANGE_NONE;
+            aRange = nsCalRecurrenceID::stringToRange(sModifier);
             DateTime icrid;
 
             for (i = 0; i < components->GetSize(); i++)
@@ -1906,13 +1906,13 @@ NSCalendar::getTBEByComponentID(JulianPtrArray * out,
                             // always add exact match
                             out->Add(ic);
                         }
-                        else if (aRange == JulianRecurrenceID::RANGE_THISANDPRIOR && 
+                        else if (aRange == nsCalRecurrenceID::RANGE_THISANDPRIOR && 
                             icrid.beforeDateTime(d))
                         {
                             // also add if THISANDPRIOR and icrid < d 
                             out->Add(ic);
                         }
-                        else if (aRange == JulianRecurrenceID::RANGE_THISANDFUTURE && 
+                        else if (aRange == nsCalRecurrenceID::RANGE_THISANDFUTURE && 
                             icrid.afterDateTime(d))
                         {
                             // also add if THISANDFUTURE and icrid > d 

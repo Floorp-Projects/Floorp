@@ -153,7 +153,7 @@ VEvent::~VEvent()
 UnicodeString &
 VEvent::parse(ICalReader * brFile, UnicodeString & sMethod, 
               UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
-              t_bool bIgnoreBeginError, JulianUtility::MimeEncoding encoding) 
+              t_bool bIgnoreBeginError, nsCalUtility::MimeEncoding encoding) 
 {
     UnicodeString u = JulianKeyword::Instance()->ms_sVEVENT;
     return parseType(u, brFile, sMethod, parseStatus, vTimeZones, bIgnoreBeginError, encoding);
@@ -356,7 +356,7 @@ void VEvent::storeDuration(UnicodeString & strLine, UnicodeString & propVal,
     //Duration d(propVal);
     if (m_TempDuration == 0)
     {
-        m_TempDuration = new Julian_Duration(propVal);
+        m_TempDuration = new nsCalDuration(propVal);
         PR_ASSERT(m_TempDuration != 0);
     }
     else
@@ -421,7 +421,7 @@ void VEvent::storePriority(UnicodeString & strLine, UnicodeString & propVal,
     
     char * pcc = propVal.toCString("");
     PR_ASSERT(pcc != 0);
-    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    i = nsCalUtility::atot_int32(pcc, bParseError, propVal.size());
     delete [] pcc; pcc = 0;
     if (getPriorityProperty() != 0)
     {
@@ -949,7 +949,7 @@ DateTime VEvent::getDTEnd() const
 }
 //---------------------------------------------------------------------
 ///Duration
-void VEvent::setDuration(Julian_Duration s, JulianPtrArray * parameters)
+void VEvent::setDuration(nsCalDuration s, JulianPtrArray * parameters)
 { 
     /*
     if (m_Duration == 0)
@@ -973,7 +973,7 @@ void VEvent::setDuration(Julian_Duration s, JulianPtrArray * parameters)
     end.add(s);
     setDTEnd(end);
 }
-Julian_Duration VEvent::getDuration() const 
+nsCalDuration VEvent::getDuration() const 
 {
     /*
     Duration d; d.setMonth(-1);
@@ -985,7 +985,7 @@ Julian_Duration VEvent::getDuration() const
         return d;
     }
     */
-    Julian_Duration duration;
+    nsCalDuration duration;
     DateTime start, end;
     start = getDTStart();
     end = getDTEnd();

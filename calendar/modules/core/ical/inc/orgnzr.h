@@ -22,8 +22,8 @@
  * 4/7/98 11:16:49 AM
  */
 
-#ifndef __JULIANORGANIZER_H_
-#define __JULIANORGANIZER_H_
+#ifndef __NSCALORGANIZER_H_
+#define __NSCALORGANIZER_H_
 
 #include "jlog.h"
 #include "prprty.h"
@@ -33,7 +33,7 @@
  *  Similar to the Attendee property, but doesn't
  *  have as much state.
  */
-class JulianOrganizer : public ICalProperty
+class nsCalOrganizer : public ICalProperty
 {
 private:
     /*-----------------------------
@@ -41,7 +41,7 @@ private:
     **---------------------------*/
 
     /**
-     * the name of the JulianOrganizer.  Whatever is to the right of the colon
+     * the name of the nsCalOrganizer.  Whatever is to the right of the colon
      * the name must be a URL.  Field must be filled to be valid Attendee.
      */
     UnicodeString m_Name;
@@ -64,25 +64,25 @@ private:
     /** ptr to log file to write errors to */
     JLog * m_Log;
 
-    static const t_int32 ms_cJulianOrganizerName;/*          = 'N';*/
-    static const t_int32 ms_cJulianOrganizerDir; /*          = 'l';  'el'*/
-    static const t_int32 ms_cJulianOrganizerSentBy;/*        = 's';*/
-    static const t_int32 ms_cJulianOrganizerCN;/*            = 'C';*/
-    static const t_int32 ms_cJulianOrganizerLanguage;/*      = 'm';*/
-    static const t_int32 ms_cJulianOrganizerDisplayName;/*   = 'z';*/
+    static const t_int32 ms_cnsCalOrganizerName;/*          = 'N';*/
+    static const t_int32 ms_cnsCalOrganizerDir; /*          = 'l';  'el'*/
+    static const t_int32 ms_cnsCalOrganizerSentBy;/*        = 's';*/
+    static const t_int32 ms_cnsCalOrganizerCN;/*            = 'C';*/
+    static const t_int32 ms_cnsCalOrganizerLanguage;/*      = 'm';*/
+    static const t_int32 ms_cnsCalOrganizerDisplayName;/*   = 'z';*/
 
     /*-----------------------------
     ** PRIVATE METHODS
     **---------------------------*/
-    JulianOrganizer(JulianOrganizer & that);
+    nsCalOrganizer(nsCalOrganizer & that);
 
 public:
 
     /*-----------------------------
     ** CONSTRUCTORS and DESTRUCTORS
     **---------------------------*/
-    JulianOrganizer(JLog * initLog = 0);
-    ~JulianOrganizer();    
+    nsCalOrganizer(JLog * initLog = 0);
+    ~nsCalOrganizer();    
 
      /*---------- To satisfy ICalProperty interface ----------*/
     /**
@@ -164,14 +164,14 @@ public:
     **---------------------------*/
     
     /**
-     * Sets JulianOrganizer name.
+     * Sets nsCalOrganizer name.
      * @param           sName   new Attendee name
      *
      */
     void setName(UnicodeString sName);
 
     /**
-     * Returns JulianOrganizer name.
+     * Returns nsCalOrganizer name.
      *
      * @return          Attendee name
      */
@@ -269,5 +269,5 @@ public:
     **---------------------------*/ 
 };
 
-#endif /* __JULIANORGANIZER_H_ */
+#endif /* __NSCALORGANIZER_H_ */
 

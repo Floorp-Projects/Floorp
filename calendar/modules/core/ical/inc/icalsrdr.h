@@ -62,7 +62,7 @@ private:
     t_int32 m_mark;
 
     /** encoding of stream */
-    JulianUtility::MimeEncoding m_Encoding;
+    nsCalUtility::MimeEncoding m_Encoding;
 
     /**
      * Default constructor.  Made private to hide from clients.
@@ -78,7 +78,7 @@ public:
      * @param           string  string to read from
      */
     ICalStringReader(const char * string, 
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit);
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit);
 
     /**
      * Mark current position in string 

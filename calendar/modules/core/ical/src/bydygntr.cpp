@@ -30,7 +30,7 @@
 
 ByDayYearlyGenerator::ByDayYearlyGenerator() 
 :
-    DateGenerator(JulianUtility::RT_YEARLY, 0),
+    DateGenerator(nsCalUtility::RT_YEARLY, 0),
     m_aiParams(0),
     m_iWkSt((t_int32) Calendar::SUNDAY)
 {}
@@ -39,7 +39,7 @@ ByDayYearlyGenerator::ByDayYearlyGenerator()
 //---------------------------------------------------------------------
 
 t_int32 
-ByDayYearlyGenerator::getInterval() const { return JulianUtility::RT_DAILY; }
+ByDayYearlyGenerator::getInterval() const { return nsCalUtility::RT_DAILY; }
 
 //---------------------------------------------------------------------
 // TODO: crash proof

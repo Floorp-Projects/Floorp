@@ -203,7 +203,7 @@ public:
      *
      */
     void parse(ICalReader * brFile, UnicodeString & fileName, 
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit);
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit);
  
     /**
      * Returns the error log.

@@ -31,14 +31,14 @@
 //t_int32 DefaultGenerator::m_iParamsLen = 3;
 
 DefaultGenerator::DefaultGenerator()
-: DateGenerator(JulianUtility::RT_MONTHLY, 3),
+: DateGenerator(nsCalUtility::RT_MONTHLY, 3),
   isActive(FALSE)
 {}
 
 //---------------------------------------------------------------------
 
 t_int32 
-DefaultGenerator::getInterval() const { return JulianUtility::RT_MONTHLY; }
+DefaultGenerator::getInterval() const { return nsCalUtility::RT_MONTHLY; }
 
 //---------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ DefaultGenerator::generate(DateTime * start, JulianPtrArray & dateVector,
 {
     t_int32 i;
     DateTime * t;
-    Julian_Duration * d;
+    nsCalDuration * d;
 
     PR_ASSERT(start != 0);
     PR_ASSERT(m_aiParams != 0);
@@ -59,7 +59,7 @@ DefaultGenerator::generate(DateTime * start, JulianPtrArray & dateVector,
     }
 
     t = new DateTime(start->getTime()); PR_ASSERT(t != 0);
-    d = new Julian_Duration(m_aiParams[0], m_aiParams[1]); PR_ASSERT(d != 0);
+    d = new nsCalDuration(m_aiParams[0], m_aiParams[1]); PR_ASSERT(d != 0);
 
     dateVector.Add(new DateTime(t->getTime()));
 

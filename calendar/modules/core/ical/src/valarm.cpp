@@ -167,7 +167,7 @@ UnicodeString &
 VAlarm::parse(ICalReader * brFile, UnicodeString & sType, 
               UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
               t_bool bIgnoreBeginError,
-              JulianUtility::MimeEncoding encoding)
+              nsCalUtility::MimeEncoding encoding)
 {
     UnicodeString strLine, propName, propVal;
     JulianPtrArray * parameters = new JulianPtrArray();
@@ -373,7 +373,7 @@ void VAlarm::storeDuration(UnicodeString & strLine, UnicodeString & propVal,
             JulianKeyword::Instance()->ms_sVALARM, 
             JulianKeyword::Instance()->ms_sDURATION, 100);
     }
-    Julian_Duration d(propVal);
+    nsCalDuration d(propVal);
     setDuration(d, parameters);
 }
 //---------------------------------------------------------------------
@@ -393,7 +393,7 @@ void VAlarm::storeRepeat(UnicodeString & strLine, UnicodeString & propVal,
 
     char * pcc = propVal.toCString("");
     PR_ASSERT(pcc != 0);
-    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    i = nsCalUtility::atot_int32(pcc, bParseError, propVal.size());
     delete [] pcc; pcc = 0;
 
     if (getRepeatProperty() != 0)
@@ -472,7 +472,7 @@ void VAlarm::storeTrigger(UnicodeString & strLine, UnicodeString & propVal,
     }
     else
     {
-        Julian_Duration d(propVal);
+        nsCalDuration d(propVal);
         setTriggerAsDuration(d, parameters);            
     }
 }
@@ -795,8 +795,8 @@ UnicodeString & VAlarm::actionToString(VAlarm::ACTION action, UnicodeString & ou
 }
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
-///Julian_Duration
-void VAlarm::setDuration(Julian_Duration s, JulianPtrArray * parameters)
+///nsCalDuration
+void VAlarm::setDuration(nsCalDuration s, JulianPtrArray * parameters)
 { 
     if (m_Duration == 0)
         m_Duration = ICalPropertyFactory::Make(ICalProperty::DURATION, 
@@ -807,20 +807,20 @@ void VAlarm::setDuration(Julian_Duration s, JulianPtrArray * parameters)
         m_Duration->setParameters(parameters);
     }
 }
-Julian_Duration VAlarm::getDuration() const 
+nsCalDuration VAlarm::getDuration() const 
 {
-    Julian_Duration d; d.set(-1,-1,-1,-1,-1,-1);
+    nsCalDuration d; d.set(-1,-1,-1,-1,-1,-1);
     if (m_Duration == 0)
         return d; // return 0;
     else
     {
-        d = *((Julian_Duration *) m_Duration->getValue());
+        d = *((nsCalDuration *) m_Duration->getValue());
         return d;
     }
 }
 //---------------------------------------------------------------------
 ///Trigger
-void VAlarm::setTriggerAsDuration(Julian_Duration s, JulianPtrArray * parameters)
+void VAlarm::setTriggerAsDuration(nsCalDuration s, JulianPtrArray * parameters)
 { 
     if (m_Trigger == 0)
         m_Trigger = ICalPropertyFactory::Make(ICalProperty::DURATION, 
@@ -831,14 +831,14 @@ void VAlarm::setTriggerAsDuration(Julian_Duration s, JulianPtrArray * parameters
         m_Trigger->setParameters(parameters);
     }
 }
-Julian_Duration VAlarm::getTriggerAsDuration() const 
+nsCalDuration VAlarm::getTriggerAsDuration() const 
 {
-    Julian_Duration d; d.set(-1,-1,-1,-1,-1,-1);
+    nsCalDuration d; d.set(-1,-1,-1,-1,-1,-1);
     if (m_Trigger == 0)
         return d; // return 0;
     else
     {
-        d = *((Julian_Duration *) m_Trigger->getValue());
+        d = *((nsCalDuration *) m_Trigger->getValue());
         return d;
     }
 }
@@ -847,7 +847,7 @@ DateTime VAlarm::getTriggerAsDateTime(DateTime start) const
     DateTime d;
     if (m_Trigger != 0)
     {
-        Julian_Duration du = getTriggerAsDuration();
+        nsCalDuration du = getTriggerAsDuration();
         start.add(du);
         d = start;
     }

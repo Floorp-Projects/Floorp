@@ -29,15 +29,15 @@
 
 // private never use
 #if 0
-JulianRecurrenceID::JulianRecurrenceID()
+nsCalRecurrenceID::nsCalRecurrenceID()
 {
     PR_ASSERT(FALSE);
 }
 #endif
 //---------------------------------------------------------------------
 
-JulianRecurrenceID::JulianRecurrenceID(JLog * initLog)
-: m_DateTime(-1), m_Range(JulianRecurrenceID::RANGE_NONE),
+nsCalRecurrenceID::nsCalRecurrenceID(JLog * initLog)
+: m_DateTime(-1), m_Range(nsCalRecurrenceID::RANGE_NONE),
   m_Log(initLog)
 {
     //PR_ASSERT(initLog != 0);
@@ -45,7 +45,7 @@ JulianRecurrenceID::JulianRecurrenceID(JLog * initLog)
 
 //---------------------------------------------------------------------
 
-JulianRecurrenceID::JulianRecurrenceID(JulianRecurrenceID & that)
+nsCalRecurrenceID::nsCalRecurrenceID(nsCalRecurrenceID & that)
 : m_Range(that.m_Range)
 {
     m_DateTime = that.m_DateTime;
@@ -53,7 +53,7 @@ JulianRecurrenceID::JulianRecurrenceID(JulianRecurrenceID & that)
 
 //---------------------------------------------------------------------
 
-JulianRecurrenceID::JulianRecurrenceID(DateTime datetime,
+nsCalRecurrenceID::nsCalRecurrenceID(DateTime datetime,
                                        JLog * initLog,
                                        RANGE range)
 
@@ -65,20 +65,20 @@ JulianRecurrenceID::JulianRecurrenceID(DateTime datetime,
 
 //---------------------------------------------------------------------
 
-JulianRecurrenceID::~JulianRecurrenceID() {}
+nsCalRecurrenceID::~nsCalRecurrenceID() {}
 
 //---------------------------------------------------------------------
 
-ICalProperty * JulianRecurrenceID::clone(JLog * initLog)
+ICalProperty * nsCalRecurrenceID::clone(JLog * initLog)
 {
     m_Log = initLog; 
     //PR_ASSERT(m_Log != 0);
-    return new JulianRecurrenceID(*this);
+    return new nsCalRecurrenceID(*this);
 }
 
 //---------------------------------------------------------------------
 
-void JulianRecurrenceID::setParameters(JulianPtrArray * parameters)
+void nsCalRecurrenceID::setParameters(JulianPtrArray * parameters)
 {
     t_int32 i;
     ICalParameter * ip;
@@ -96,7 +96,7 @@ void JulianRecurrenceID::setParameters(JulianPtrArray * parameters)
 
 //---------------------------------------------------------------------
 
-void JulianRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & paramVal)
+void nsCalRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & paramVal)
 {
     t_int32 i;
     if (paramName.size() == 0)
@@ -110,7 +110,7 @@ void JulianRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & par
 
         if (JulianKeyword::Instance()->ms_ATOM_RANGE == hashCode)
         {
-            i = JulianRecurrenceID::stringToRange(paramVal);
+            i = nsCalRecurrenceID::stringToRange(paramVal);
             if (i < 0)
             {
                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
@@ -123,7 +123,7 @@ void JulianRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & par
                     if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
                         JulianKeyword::Instance()->ms_sRECURRENCEID, paramName, 100);
                 }
-                setRange((JulianRecurrenceID::RANGE) i);
+                setRange((nsCalRecurrenceID::RANGE) i);
             }        
         } 
         else if (ICalProperty::IsXToken(paramName))
@@ -142,7 +142,7 @@ void JulianRecurrenceID::setParam(UnicodeString & paramName, UnicodeString & par
 
 //---------------------------------------------------------------------
 
-t_bool JulianRecurrenceID::isValid()
+t_bool nsCalRecurrenceID::isValid()
 {
     return m_DateTime.isValid();
 }
@@ -150,7 +150,7 @@ t_bool JulianRecurrenceID::isValid()
 //---------------------------------------------------------------------
 
 UnicodeString &
-JulianRecurrenceID::toString(UnicodeString & strFmt, UnicodeString & out)
+nsCalRecurrenceID::toString(UnicodeString & strFmt, UnicodeString & out)
 {
     // NOTE: Remove later 
     if (strFmt.size() > 0) {}
@@ -161,7 +161,7 @@ JulianRecurrenceID::toString(UnicodeString & strFmt, UnicodeString & out)
 //---------------------------------------------------------------------
 
 void 
-JulianRecurrenceID::setValue(void * value)
+nsCalRecurrenceID::setValue(void * value)
 {
     PR_ASSERT(value != 0);
     if (value != 0)
@@ -173,7 +173,7 @@ JulianRecurrenceID::setValue(void * value)
 //---------------------------------------------------------------------
 
 void *
-JulianRecurrenceID::getValue() const
+nsCalRecurrenceID::getValue() const
 {
     return (void *) &m_DateTime;
 }
@@ -181,7 +181,7 @@ JulianRecurrenceID::getValue() const
 //---------------------------------------------------------------------
 
 UnicodeString & 
-JulianRecurrenceID::toString(UnicodeString & out)
+nsCalRecurrenceID::toString(UnicodeString & out)
 {
     UnicodeString u;
     out = "";
@@ -197,11 +197,11 @@ JulianRecurrenceID::toString(UnicodeString & out)
 //---------------------------------------------------------------------
 
 UnicodeString &
-JulianRecurrenceID::toICALString(UnicodeString & sProp, UnicodeString & out)
+nsCalRecurrenceID::toICALString(UnicodeString & sProp, UnicodeString & out)
 {
     out = "";
     out += sProp;
-    if (m_Range != JulianRecurrenceID::RANGE_NONE)
+    if (m_Range != nsCalRecurrenceID::RANGE_NONE)
     {
         UnicodeString u;
         out += ';';
@@ -218,7 +218,7 @@ JulianRecurrenceID::toICALString(UnicodeString & sProp, UnicodeString & out)
 //---------------------------------------------------------------------
 
 UnicodeString &
-JulianRecurrenceID::toICALString(UnicodeString & out)
+nsCalRecurrenceID::toICALString(UnicodeString & out)
 {
     UnicodeString u;
     return toICALString(u, out);
@@ -226,8 +226,8 @@ JulianRecurrenceID::toICALString(UnicodeString & out)
 
 //---------------------------------------------------------------------
 
-JulianRecurrenceID::RANGE 
-JulianRecurrenceID::stringToRange(UnicodeString & sRange)
+nsCalRecurrenceID::RANGE 
+nsCalRecurrenceID::stringToRange(UnicodeString & sRange)
 {
     t_int32 hashCode = sRange.hashCode();
 
@@ -241,7 +241,7 @@ JulianRecurrenceID::stringToRange(UnicodeString & sRange)
 //---------------------------------------------------------------------
 
 UnicodeString & 
-JulianRecurrenceID::rangeToString(JulianRecurrenceID::RANGE range, 
+nsCalRecurrenceID::rangeToString(nsCalRecurrenceID::RANGE range, 
                                   UnicodeString & out)
 {
     out = "";

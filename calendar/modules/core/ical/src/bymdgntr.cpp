@@ -29,14 +29,14 @@
 
 ByMonthDayGenerator::ByMonthDayGenerator() 
 : 
-    DateGenerator(JulianUtility::RT_MONTHLY, 0),
+    DateGenerator(nsCalUtility::RT_MONTHLY, 0),
     m_aiParams(0)
     {}
 
 //---------------------------------------------------------------------
 
 t_int32 
-ByMonthDayGenerator::getInterval() const { return JulianUtility::RT_DAILY; }
+ByMonthDayGenerator::getInterval() const { return nsCalUtility::RT_DAILY; }
 
 //---------------------------------------------------------------------
 

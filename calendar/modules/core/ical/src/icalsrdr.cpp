@@ -42,7 +42,7 @@ ICalStringReader::ICalStringReader() {}
 //---------------------------------------------------------------------
 
 ICalStringReader::ICalStringReader(const char * string, 
-                                   JulianUtility::MimeEncoding encoding)
+                                   nsCalUtility::MimeEncoding encoding)
 : m_string(string), m_pos(0), m_mark(0)
 {
     m_length = strlen(m_string);
@@ -62,15 +62,15 @@ t_int8 ICalStringReader::read(ErrorCode & status)
     else
     {
         status = ZERO_ERROR;
-        if (m_Encoding == JulianUtility::MimeEncoding_7bit)
+        if (m_Encoding == nsCalUtility::MimeEncoding_7bit)
         {
             return m_string[m_pos++];
         }
         else
         {
             // for now only handles quoted-printable
-            PR_ASSERT(m_Encoding == JulianUtility::MimeEncoding_QuotedPrintable);
-            if (m_Encoding == JulianUtility::MimeEncoding_QuotedPrintable)
+            PR_ASSERT(m_Encoding == nsCalUtility::MimeEncoding_QuotedPrintable);
+            if (m_Encoding == nsCalUtility::MimeEncoding_QuotedPrintable)
             {
                 if ((m_string[m_pos] == '=') && (m_length >= m_pos + 3))
                 {

@@ -62,23 +62,23 @@ JulianParser::JulianParser(ICalCAPIReader * reader,
 
 //---------------------------------------------------------------------
 
-JulianUtility::MimeEncoding
+nsCalUtility::MimeEncoding
 JulianParser::stringToEncodingType(UnicodeString & propVal)
 {
     if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_s7bit) == 0)
     {
-        return JulianUtility::MimeEncoding_7bit;
+        return nsCalUtility::MimeEncoding_7bit;
     }
     else if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sQUOTED_PRINTABLE) == 0)
     {
-        return JulianUtility::MimeEncoding_QuotedPrintable;
+        return nsCalUtility::MimeEncoding_QuotedPrintable;
     }
     else if (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sBase64) == 0)
     {
-        return JulianUtility::MimeEncoding_Base64;
+        return nsCalUtility::MimeEncoding_Base64;
     }
     else
-        return JulianUtility::MimeEncoding_7bit;
+        return nsCalUtility::MimeEncoding_7bit;
 }
 
 //---------------------------------------------------------------------
@@ -105,7 +105,7 @@ void JulianParser::ParseCalendars(ICalReader * reader,
         JLog * log = 0;
         ErrorCode status = ZERO_ERROR;
         UnicodeString strLine, propName, propVal;
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit;
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit;
 
         ICalCAPIReader * cr = (ICalCAPIReader *) reader;
 

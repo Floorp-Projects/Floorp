@@ -91,7 +91,7 @@ t_bool ICalProperty::CheckParams(JulianPtrArray * parameters,
         ip = (ICalParameter *) parameters->GetAt(i);
         u = ip->getParameterName(u);
 
-        if (!JulianUtility::checkRange(u.hashCode(), validParamNameRange, 
+        if (!nsCalUtility::checkRange(u.hashCode(), validParamNameRange, 
             validParamNameRangeSize))
         {
             return FALSE;
@@ -126,7 +126,7 @@ t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
         ip = (ICalParameter *) parameters->GetAt(i);
         u = ip->getParameterName(u);
 
-        if (!JulianUtility::checkRange(u.hashCode(), validParamNameRange, 
+        if (!nsCalUtility::checkRange(u.hashCode(), validParamNameRange, 
             validParamNameRangeSize))
         {
             return FALSE;
@@ -135,7 +135,7 @@ t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
         if (JulianKeyword::Instance()->ms_ATOM_VALUE == u.hashCode())
         {
             u = ip->getParameterValue(u);
-            if (!JulianUtility::checkRange(u.hashCode(), validValueRange,
+            if (!nsCalUtility::checkRange(u.hashCode(), validValueRange,
                 validValueRangeSize))
             {                
                 if (!ICalProperty::IsXToken(u))
@@ -146,7 +146,7 @@ t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
         else if (JulianKeyword::Instance()->ms_ATOM_ENCODING == u.hashCode())
         {
             u = ip->getParameterValue(u);
-            if (!JulianUtility::checkRange(u.hashCode(), 
+            if (!nsCalUtility::checkRange(u.hashCode(), 
                 JulianAtomRange::Instance()->ms_asEncodingRange,
                 JulianAtomRange::Instance()->ms_iEncodingRangeSize))
             {
@@ -158,7 +158,7 @@ t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
         else if (JulianKeyword::Instance()->ms_ATOM_RELTYPE == u.hashCode())
         {
             u = ip->getParameterValue(u);
-            if (!JulianUtility::checkRange(u.hashCode(), 
+            if (!nsCalUtility::checkRange(u.hashCode(), 
                 JulianAtomRange::Instance()->ms_asRelTypeRange,
                 JulianAtomRange::Instance()->ms_iRelTypeRangeSize))
             {
@@ -170,7 +170,7 @@ t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
         else if (JulianKeyword::Instance()->ms_ATOM_RELATED == u.hashCode())
         {
             u = ip->getParameterValue(u);
-            if (!JulianUtility::checkRange(u.hashCode(), 
+            if (!nsCalUtility::checkRange(u.hashCode(), 
                 JulianAtomRange::Instance()->ms_asRelatedRange,
                 JulianAtomRange::Instance()->ms_iRelatedRangeSize))
             {
@@ -190,7 +190,7 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
 {
     t_int32 hashCode = propName.hashCode();
     
-    if (JulianUtility::checkRange(hashCode, 
+    if (nsCalUtility::checkRange(hashCode, 
         JulianAtomRange::Instance()->ms_asIrregularProperties,
         JulianAtomRange::Instance()->ms_iIrregularPropertiesSize))
     {
@@ -206,7 +206,7 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
             return FALSE;
 
         // not a valid parameter for th
-        if (!JulianUtility::checkRange(pNHC, 
+        if (!nsCalUtility::checkRange(pNHC, 
             JulianAtomRange::Instance()->ms_asParameterRange, 
             JulianAtomRange::Instance()->ms_iParameterRangeSize))
             return TRUE;
@@ -219,7 +219,7 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
             // TODO: Check LANGUAGE later
             if (JulianKeyword::Instance()->ms_ATOM_VALUE == pNHC)
             {
-                if ((!JulianUtility::checkRange(pVHC, 
+                if ((!nsCalUtility::checkRange(pVHC, 
                     JulianAtomRange::Instance()->ms_asValueRange, 
                     JulianAtomRange::Instance()->ms_iValueRangeSize)) 
                     && (!IsXToken(paramVal)))
@@ -227,7 +227,7 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
             }
             else if (JulianKeyword::Instance()->ms_ATOM_ENCODING == pNHC)
             {
-                if ((!JulianUtility::checkRange(pVHC, 
+                if ((!nsCalUtility::checkRange(pVHC, 
                     JulianAtomRange::Instance()->ms_asEncodingRange, 
                     JulianAtomRange::Instance()->ms_iEncodingRangeSize)) && (!IsXToken(paramVal)))
                     return TRUE;
@@ -287,7 +287,7 @@ void ICalProperty::parsePropertyLine(UnicodeString & strLine,
         {
             outName = strLine.extractBetween(0, iColon, outName).toUpper();
             //outName = strLine.extractBetween(0, iColon, outName);
-            //outName = JulianUtility::ToUpper(outName);
+            //outName = nsCalUtility::ToUpper(outName);
 
             outVal = strLine.extractBetween(iColon + 1, lineLength, outVal);
         }
@@ -295,7 +295,7 @@ void ICalProperty::parsePropertyLine(UnicodeString & strLine,
         {   
             outName = strLine.toUpper();
             //outName = strLine;
-            //outName = JulianUtility::ToUpper(outName);
+            //outName = nsCalUtility::ToUpper(outName);
 
             outVal = "";      
         }
@@ -312,7 +312,7 @@ void ICalProperty::parsePropertyLine(UnicodeString & strLine,
             
             outName = strLine.extractBetween(0, iIndex, u).toUpper();
             //outName = strLine.extractBetween(0, iIndex, u);
-            //outName = JulianUtility::ToUpper(outName);
+            //outName = nsCalUtility::ToUpper(outName);
 
             outVal = strLine.extractBetween(iColon + 1, lineLength, u);
         }
@@ -351,7 +351,7 @@ void ICalProperty::parsePropertyLine(UnicodeString & strLine,
                     {
                         paramName = u.extractBetween(0, u.size(), paramName).toUpper();
                         //paramName = u.extractBetween(0, u.size(), paramName);
-                        //paramName = JulianUtility::ToUpper(paramName);
+                        //paramName = nsCalUtility::ToUpper(paramName);
 
                         paramVal = "";
                     }
@@ -359,7 +359,7 @@ void ICalProperty::parsePropertyLine(UnicodeString & strLine,
                     {
                         paramName = u.extractBetween(0, iEq, paramName).toUpper();
                         //paramName = u.extractBetween(0, u.size(), paramName);
-                        //paramName = JulianUtility::ToUpper(paramName);
+                        //paramName = nsCalUtility::ToUpper(paramName);
     
                         paramVal = u.extractBetween(iEq + 1, u.size(), paramVal);
                     }

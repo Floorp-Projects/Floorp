@@ -89,7 +89,7 @@ public:
     virtual UnicodeString & parse(ICalReader * brFile, UnicodeString & sType, 
         UnicodeString & parseStatus, JulianPtrArray * vTimeZones = 0,
         t_bool bIgnoreBeginError = FALSE,
-        JulianUtility::MimeEncoding encoding = JulianUtility::MimeEncoding_7bit);
+        nsCalUtility::MimeEncoding encoding = nsCalUtility::MimeEncoding_7bit);
     
     /**
      * Returns a clone of this object

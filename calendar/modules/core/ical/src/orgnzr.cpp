@@ -29,23 +29,23 @@
 #include "uri.h"
 //---------------------------------------------------------------------
 
-const t_int32 JulianOrganizer::ms_cJulianOrganizerName          = 'N';
-const t_int32 JulianOrganizer::ms_cJulianOrganizerDir           = 'l'; // 'el'
-const t_int32 JulianOrganizer::ms_cJulianOrganizerSentBy        = 's';
-const t_int32 JulianOrganizer::ms_cJulianOrganizerCN            = 'C';
-const t_int32 JulianOrganizer::ms_cJulianOrganizerLanguage      = 'm';
-const t_int32 JulianOrganizer::ms_cJulianOrganizerDisplayName   = 'z';
+const t_int32 nsCalOrganizer::ms_cnsCalOrganizerName          = 'N';
+const t_int32 nsCalOrganizer::ms_cnsCalOrganizerDir           = 'l'; // 'el'
+const t_int32 nsCalOrganizer::ms_cnsCalOrganizerSentBy        = 's';
+const t_int32 nsCalOrganizer::ms_cnsCalOrganizerCN            = 'C';
+const t_int32 nsCalOrganizer::ms_cnsCalOrganizerLanguage      = 'm';
+const t_int32 nsCalOrganizer::ms_cnsCalOrganizerDisplayName   = 'z';
 
 //---------------------------------------------------------------------
 
-JulianOrganizer::JulianOrganizer(JLog * initLog)
+nsCalOrganizer::nsCalOrganizer(JLog * initLog)
 : m_Log(initLog)
 {
 }
 
 //---------------------------------------------------------------------
 
-JulianOrganizer::JulianOrganizer(JulianOrganizer & that)
+nsCalOrganizer::nsCalOrganizer(nsCalOrganizer & that)
 {
     m_CN = that.m_CN;
     m_Language = that.m_Language;
@@ -57,23 +57,23 @@ JulianOrganizer::JulianOrganizer(JulianOrganizer & that)
 
 //---------------------------------------------------------------------
 
-JulianOrganizer::~JulianOrganizer()
+nsCalOrganizer::~nsCalOrganizer()
 {
 }
 
 //---------------------------------------------------------------------
 
 ICalProperty * 
-JulianOrganizer::clone(JLog * initLog)
+nsCalOrganizer::clone(JLog * initLog)
 {
     m_Log = initLog; 
     //PR_ASSERT(m_Log != 0);
-    return (ICalProperty *) new JulianOrganizer(*this);
+    return (ICalProperty *) new nsCalOrganizer(*this);
 }
 
 //---------------------------------------------------------------------
 
-void JulianOrganizer::parse(UnicodeString & propVal, 
+void nsCalOrganizer::parse(UnicodeString & propVal, 
                       JulianPtrArray * parameters)
 {
     t_int32 i;
@@ -98,7 +98,7 @@ void JulianOrganizer::parse(UnicodeString & propVal,
 
 //---------------------------------------------------------------------
 
-void JulianOrganizer::setParam(UnicodeString & paramName, 
+void nsCalOrganizer::setParam(UnicodeString & paramName, 
                          UnicodeString & paramVal)
 {
     ErrorCode status = ZERO_ERROR;    
@@ -139,7 +139,7 @@ void JulianOrganizer::setParam(UnicodeString & paramName,
                  if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
-            JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
+            nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setSentBy(paramVal);
         }
         else if (JulianKeyword::Instance()->ms_ATOM_DIR == hashCode)
@@ -149,7 +149,7 @@ void JulianOrganizer::setParam(UnicodeString & paramName,
                  if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sORGANIZER, paramName, 100);
             }
-            JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
+            nsCalUtility::stripDoubleQuotes(paramVal);  // double quote property
             setDir(paramVal);
         }
         else if (ICalProperty::IsXToken(paramName))
@@ -167,7 +167,7 @@ void JulianOrganizer::setParam(UnicodeString & paramName,
 
 //---------------------------------------------------------------------
 
-UnicodeString & JulianOrganizer::toICALString(UnicodeString & out)
+UnicodeString & nsCalOrganizer::toICALString(UnicodeString & out)
 {
     UnicodeString u;
     return toICALString(u, out);
@@ -175,7 +175,7 @@ UnicodeString & JulianOrganizer::toICALString(UnicodeString & out)
 
 //---------------------------------------------------------------------
 
-UnicodeString & JulianOrganizer::toICALString(UnicodeString & sProp,
+UnicodeString & nsCalOrganizer::toICALString(UnicodeString & sProp,
                                         UnicodeString & out)
 {
     out = "";
@@ -195,7 +195,7 @@ UnicodeString & JulianOrganizer::toICALString(UnicodeString & sProp,
     {
         // double quote sent-by, dir
         u = m_SentBy;
-        u = JulianUtility::addDoubleQuotes(u);
+        u = nsCalUtility::addDoubleQuotes(u);
         out += ';'; out += JulianKeyword::Instance()->ms_sSENTBY; 
         out += '='; out += u;
     }
@@ -203,7 +203,7 @@ UnicodeString & JulianOrganizer::toICALString(UnicodeString & sProp,
     {
         // double quote sent-by, dir
         u = m_Dir;
-        u = JulianUtility::addDoubleQuotes(u);
+        u = nsCalUtility::addDoubleQuotes(u);
         out += ';'; out += JulianKeyword::Instance()->ms_sDIR; 
         out += '='; out += u;
     }
@@ -215,7 +215,7 @@ UnicodeString & JulianOrganizer::toICALString(UnicodeString & sProp,
 
 //---------------------------------------------------------------------
 
-UnicodeString & JulianOrganizer::toString(UnicodeString & out)
+UnicodeString & nsCalOrganizer::toString(UnicodeString & out)
 {
     out = toString(JulianFormatString::Instance()->ms_OrganizerStrDefaultFmt, out);
     return out;
@@ -223,7 +223,7 @@ UnicodeString & JulianOrganizer::toString(UnicodeString & out)
 
 //---------------------------------------------------------------------
 
-UnicodeString & JulianOrganizer::toString(UnicodeString & strFmt,
+UnicodeString & nsCalOrganizer::toString(UnicodeString & strFmt,
                                     UnicodeString & out)
 {
     if (strFmt.size() == 0 && 
@@ -272,23 +272,23 @@ UnicodeString & JulianOrganizer::toString(UnicodeString & strFmt,
 
 //---------------------------------------------------------------------
 
-UnicodeString JulianOrganizer::toStringChar(t_int32 c)
+UnicodeString nsCalOrganizer::toStringChar(t_int32 c)
 {
     switch(c)
     {
-    case ms_cJulianOrganizerName:
+    case ms_cnsCalOrganizerName:
         return getName();
-    case ms_cJulianOrganizerDir:
+    case ms_cnsCalOrganizerDir:
         return m_Dir;
-    case ms_cJulianOrganizerSentBy:
+    case ms_cnsCalOrganizerSentBy:
         return m_SentBy;
-    case ms_cJulianOrganizerCN:
+    case ms_cnsCalOrganizerCN:
         return m_CN;
-    case ms_cJulianOrganizerLanguage:
+    case ms_cnsCalOrganizerLanguage:
         return m_Language;
-    case ms_cJulianOrganizerDisplayName:
+    case ms_cnsCalOrganizerDisplayName:
         // return CN is CN != "", else
-        // return the JulianOrganizerName after the ':'
+        // return the nsCalOrganizerName after the ':'
         if (m_CN.size() > 0)
             return m_CN;
         else
@@ -310,7 +310,7 @@ UnicodeString JulianOrganizer::toStringChar(t_int32 c)
 
 //---------------------------------------------------------------------
 
-t_bool JulianOrganizer::isValid()
+t_bool nsCalOrganizer::isValid()
 {
     /*
     UnicodeString mailto;
@@ -329,7 +329,7 @@ t_bool JulianOrganizer::isValid()
 //---------------------------------------------------------------------
 
 void *
-JulianOrganizer::getValue() const
+nsCalOrganizer::getValue() const
 {
     return (void *) &m_Name;
 }
@@ -337,7 +337,7 @@ JulianOrganizer::getValue() const
 //---------------------------------------------------------------------
 
 void
-JulianOrganizer::setValue(void * value)
+nsCalOrganizer::setValue(void * value)
 {
     PR_ASSERT(value != 0);
     if (value != 0)
@@ -348,7 +348,7 @@ JulianOrganizer::setValue(void * value)
 
 //---------------------------------------------------------------------
 
-void JulianOrganizer::setParameters(JulianPtrArray * parameters)
+void nsCalOrganizer::setParameters(JulianPtrArray * parameters)
 {
     t_int32 i;
     ICalParameter * param;
@@ -366,7 +366,7 @@ void JulianOrganizer::setParameters(JulianPtrArray * parameters)
 
 //---------------------------------------------------------------------
 
-void JulianOrganizer::setName(UnicodeString sName) 
+void nsCalOrganizer::setName(UnicodeString sName) 
 { 
     m_Name = sName; 
 }

@@ -634,7 +634,7 @@ TimeBasedEvent::parseType(UnicodeString & sType, ICalReader * brFile,
                           UnicodeString & sMethod, 
                           UnicodeString & parseStatus, 
                           JulianPtrArray * vTimeZones, t_bool bIgnoreBeginError,
-                          JulianUtility::MimeEncoding encoding)
+                          nsCalUtility::MimeEncoding encoding)
 {
     t_bool bNewEvent = FALSE;
     t_bool bNextAlarm = FALSE;
@@ -1247,7 +1247,7 @@ void TimeBasedEvent::storeSequence(UnicodeString & strLine, UnicodeString & prop
 
     char * pcc = propVal.toCString("");
     PR_ASSERT(pcc != 0);
-    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    i = nsCalUtility::atot_int32(pcc, bParseError, propVal.size());
     delete [] pcc; pcc = 0;
 
     if (getSequenceProperty() != 0)
@@ -2429,7 +2429,7 @@ void TimeBasedEvent::setOrganizer(UnicodeString s, JulianPtrArray * parameters)
         //m_Organizer = ICalPropertyFactory::Make(ICalProperty::TEXT, 
         //                                    (void *) &s, parameters);
         
-        m_Organizer = (ICalProperty *) new JulianOrganizer(m_Log);
+        m_Organizer = (ICalProperty *) new nsCalOrganizer(m_Log);
         PR_ASSERT(m_Organizer != 0);
         if (m_Organizer != 0)
         {
@@ -2460,7 +2460,7 @@ void TimeBasedEvent::setRecurrenceID(DateTime s, JulianPtrArray * parameters)
 { 
     if (m_RecurrenceID == 0)
     {
-        m_RecurrenceID = (ICalProperty *) new JulianRecurrenceID(s, m_Log);
+        m_RecurrenceID = (ICalProperty *) new nsCalRecurrenceID(s, m_Log);
         PR_ASSERT(m_RecurrenceID != 0);
         if (m_RecurrenceID != 0)
         {

@@ -53,7 +53,7 @@ ICalCAPIReader::AddChunk(UnicodeString * u)
 //---------------------------------------------------------------------
 
 ICalCAPIReader::ICalCAPIReader(PRMonitor * monitor,
-                               JulianUtility::MimeEncoding encoding)
+                               nsCalUtility::MimeEncoding encoding)
 { 
     m_Monitor = monitor;
     m_bFinished = FALSE;
@@ -137,7 +137,7 @@ t_int8 ICalCAPIReader::read(ErrorCode & status)
                 // return index of this 
                 status = ZERO_ERROR;
 
-                if (m_Encoding == JulianUtility::MimeEncoding_QuotedPrintable)
+                if (m_Encoding == nsCalUtility::MimeEncoding_QuotedPrintable)
                 {
                     if ((string)[(TextOffset) m_Pos] == '=')
                     {

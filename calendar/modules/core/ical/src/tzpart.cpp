@@ -182,7 +182,7 @@ UnicodeString &
 TZPart::parse(ICalReader * brFile, UnicodeString & sType, 
               UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
               t_bool bIgnoreBeginError,
-              JulianUtility::MimeEncoding encoding)
+              nsCalUtility::MimeEncoding encoding)
 {
     UnicodeString strLine, propName, propVal;
     JulianPtrArray * parameters = new JulianPtrArray();
@@ -675,7 +675,7 @@ t_bool TZPart::parseRRule()
             // since month is 0-based, must subtract 1
             char * pVcc = pV.toCString("");
             PR_ASSERT(pVcc != 0);
-            m_StartMonth = JulianUtility::atot_int32(pVcc, bParseError, pV.size()) - 1;
+            m_StartMonth = nsCalUtility::atot_int32(pVcc, bParseError, pV.size()) - 1;
             delete [] pVcc; pVcc = 0;
         }
         else if (pN.compareIgnoreCase(JulianKeyword::Instance()->ms_sBYDAY) == 0)
@@ -685,7 +685,7 @@ t_bool TZPart::parseRRule()
                 // positive week
                 char * pVcc = pV.toCString("");
                 PR_ASSERT(pVcc != 0);
-                m_StartWeek = JulianUtility::atot_int32(pVcc, bParseError, 1);
+                m_StartWeek = nsCalUtility::atot_int32(pVcc, bParseError, 1);
                 delete [] pVcc; pVcc = 0;
                 m_StartDay = Recurrence::stringToDay(pV.extract(1, 2, s), bParseError);
             }
@@ -695,7 +695,7 @@ t_bool TZPart::parseRRule()
                 
                 char * pVcc = pV.toCString("");
                 PR_ASSERT(pVcc != 0);
-                m_StartWeek = JulianUtility::atot_int32(pVcc + 1, bParseError, 1); // (always len = 1)
+                m_StartWeek = nsCalUtility::atot_int32(pVcc + 1, bParseError, 1); // (always len = 1)
                 delete [] pVcc; pVcc = 0;
                 m_StartDay = Recurrence::stringToDay(pV.extract(2, 2, s), bParseError); // SU, MO, TU, etc. (always len = 2)
 

@@ -56,7 +56,7 @@ ICalPropertyFactory::Make(ICalProperty::PropertyTypes aType, void * value,
         case ICalProperty::INTEGER:
             return new IntegerProperty(*((t_int32 *) value), parameters);
         case ICalProperty::DURATION:
-            return new DurationProperty(*((Julian_Duration *) value), parameters);
+            return new DurationProperty(*((nsCalDuration *) value), parameters);
         case ICalProperty::PERIOD:
             return 0;
             //return new PeriodProperty((Period *) value, parameters);

@@ -172,7 +172,7 @@ VTodo::~VTodo()
 UnicodeString &
 VTodo::parse(ICalReader * brFile, UnicodeString & sMethod, 
              UnicodeString & parseStatus, JulianPtrArray * vTimeZones,
-             t_bool bIgnoreBeginError, JulianUtility::MimeEncoding encoding) 
+             t_bool bIgnoreBeginError, nsCalUtility::MimeEncoding encoding) 
 {
     UnicodeString u = JulianKeyword::Instance()->ms_sVTODO;
     return parseType(u, brFile, sMethod, parseStatus, vTimeZones, bIgnoreBeginError, encoding);
@@ -334,10 +334,10 @@ void VTodo::storeDuration(UnicodeString & strLine, UnicodeString & propVal,
             JulianKeyword::Instance()->ms_sVTODO, 
             JulianKeyword::Instance()->ms_sDURATION, 100);
     }
-    //Julian_Duration d(propVal);
+    //nsCalDuration d(propVal);
     if (m_TempDuration == 0)
     {
-        m_TempDuration = new Julian_Duration(propVal);
+        m_TempDuration = new nsCalDuration(propVal);
         PR_ASSERT(m_TempDuration != 0);
     }
     else
@@ -402,7 +402,7 @@ void VTodo::storePercentComplete(UnicodeString & strLine, UnicodeString & propVa
 
     char * pcc = propVal.toCString("");
     PR_ASSERT(pcc != 0);
-    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    i = nsCalUtility::atot_int32(pcc, bParseError, propVal.size());
     delete [] pcc; pcc = 0;
     if (getPercentCompleteProperty() != 0)
     {
@@ -446,7 +446,7 @@ void VTodo::storePriority(UnicodeString & strLine, UnicodeString & propVal,
 
     char * pcc = propVal.toCString("");
     PR_ASSERT(pcc != 0);
-    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    i = nsCalUtility::atot_int32(pcc, bParseError, propVal.size());
     delete [] pcc; pcc = 0;
     if (getPriorityProperty() != 0)
     {
@@ -981,8 +981,8 @@ DateTime VTodo::getDue() const
 #endif
 }
 //---------------------------------------------------------------------
-///Julian_Duration
-void VTodo::setDuration(Julian_Duration s, JulianPtrArray * parameters)
+///nsCalDuration
+void VTodo::setDuration(nsCalDuration s, JulianPtrArray * parameters)
 { 
     /*
     if (m_Duration == 0)
@@ -1006,19 +1006,19 @@ void VTodo::setDuration(Julian_Duration s, JulianPtrArray * parameters)
     due.add(s);
     setDue(due);
 }
-Julian_Duration VTodo::getDuration() const 
+nsCalDuration VTodo::getDuration() const 
 {
     /*
-    Julian_Duration d; d.setMonth(-1);
+    nsCalDuration d; d.setMonth(-1);
     if (m_Duration == 0)
         return d; // return 0;
     else
     {
-        d = *((Julian_Duration *) m_Duration->getValue());
+        d = *((nsCalDuration *) m_Duration->getValue());
         return d;
     }
     */
-    Julian_Duration duration;
+    nsCalDuration duration;
     DateTime start, due;
     start = getDTStart();
     due = getDue();
