@@ -65,7 +65,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
   else {
     res = locale->GetCategory(aCategory.GetUnicode(), &aLocaleUnichar);
     if (NS_SUCCEEDED(res) && NULL != aLocaleUnichar) {
-      if (mLocale.Length() && mLocale.EqualsIgnoreCase(aLocaleUnichar)) {
+      if (mLocale.Length() && mLocale.EqualsIgnoreCase(nsString(aLocaleUnichar))) {
         nsMemory::Free(aLocaleUnichar);
         return NS_OK;
       }
