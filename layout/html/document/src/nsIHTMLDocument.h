@@ -69,6 +69,7 @@ public:
   NS_IMETHOD SetBaseTarget(const nsString& aTarget) = 0;
 
   NS_IMETHOD SetLastModified(const nsString& aLastModified) = 0;
+  NS_IMETHOD SetReferrer(const nsString& aReferrer) = 0;
 
   /**
    * Access DTD compatibility mode for this document
