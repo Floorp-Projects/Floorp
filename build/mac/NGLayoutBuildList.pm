@@ -1647,9 +1647,6 @@ sub BuildNeckoProjects()
 	BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Necko$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",					"Necko2$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	# utils library  (!!! this is really just Timer stuff now !!!)
-	BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-
 	# cache
 #	BuildOneProject(":mozilla:netwerk:cache:macbuild:nkcache.mcp",				"nkcache$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	
