@@ -77,6 +77,7 @@ public:
 
   /** The standard notification flags set on nsIXTFElement */
   const PRUint32 kStandardNotificationMask;
+
   /**
    * The element flags for the controls passed to
    * nsXFormsUtils:EvaluateNodeBinding()
@@ -119,29 +120,19 @@ public:
 
 protected:
   /** The nsIXTFXMLVisualWrapper */
-  nsCOMPtr<nsIDOMElement>   mElement;
+  nsCOMPtr<nsIDOMElement>          mElement;
 
-  /**
-   * The node that the controls is bound to.
-   *
-   * @note This needs to be set by the control. nsXFormsControlStub does not
-   * set it, it just uses it.
-   */
-  nsCOMPtr<nsIDOMNode>      mBoundNode;
+  /** The node that the control is bound to. */
+  nsCOMPtr<nsIDOMNode>             mBoundNode;
 
-  /**
-   * Array of nsIDOMNodes that the controls depends on.
-   *
-   * @note This needs to be set by the control. nsXFormsControlStub does not
-   * set it, it just uses it.
-   */
-  nsCOMPtr<nsIMutableArray> mDependencies;
+  /** Array of nsIDOMNodes that the control depends on. */
+  nsCOMPtr<nsIMutableArray>        mDependencies;
 
   /** The model for the control */
   nsCOMPtr<nsIModelElementPrivate> mModel;
 
   /** This event listener is used to create xforms-hint and xforms-help events. */
-  nsCOMPtr<nsIDOMEventListener> mEventListener;
+  nsCOMPtr<nsIDOMEventListener>    mEventListener;
 
   /** Returns the read only state of the control (ie. mBoundNode) */
   PRBool GetReadOnlyState();
