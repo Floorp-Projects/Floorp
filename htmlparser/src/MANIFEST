@@ -17,3 +17,4 @@ CRtfDTD.h
 nsXIFDTD.h
 nsHTMLTags.h
 nsParserCIID.h
+nsHTMLEntities.h
