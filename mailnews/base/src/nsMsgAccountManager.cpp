@@ -98,7 +98,7 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #define PREF_4X_MAIL_IDENTITY_USERNAME "mail.identity.username"
 #define PREF_4X_MAIL_IDENTITY_REPLY_TO "mail.identity.reply_to"    
 #define PREF_4X_MAIL_IDENTITY_ORGANIZATION "mail.identity.organization"
-#define PREF_4X_MAIL_COMPOSE_HTML "mail.compose_html"
+#define PREF_4X_MAIL_COMPOSE_HTML "mail.html_compose"
 #define PREF_4X_MAIL_POP_NAME "mail.pop_name"
 #define PREF_4X_MAIL_REMEMBER_PASSWORD "mail.remember_password"
 #define PREF_4X_MAIL_POP_PASSWORD "mail.pop_password"
