@@ -43,13 +43,13 @@ which have the following meanings:
 <ul>
     <li> JP_START : Install the signal handler
     <li> JP_FIRST=x : Wait x seconds before starting the timer
-    <li> JP_PERIOD=y : Set timer to interrupt every y milliseconds
+    <li> JP_PERIOD=y : Set timer to interrupt every y seconds
 </ul>
 
 For example you could say:
 
 <pre>
-setenv JPROF_FLAGS "JP_START JP_FIRST=3 JP_PERIOD=25"
+setenv JPROF_FLAGS "JP_START JP_FIRST=3 JP_PERIOD=0.025"
 </pre>
 
 <P>
