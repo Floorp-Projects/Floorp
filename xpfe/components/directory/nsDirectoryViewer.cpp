@@ -82,7 +82,7 @@ protected:
   // an OnStartRequest() notification
   nsIContentViewerContainer* mContainer; // [WEAK]
 
-  char* mBaseURL;
+  nsCString mBaseURL;
 
   nsCOMPtr<nsIRDFDataSource> mDataSource;
 
@@ -539,6 +539,26 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     return NS_OK;
   }
 
+  // Because the 'file:' protocol won't do this for us, we need to
+  // make sure that the mDirectoryURI ends with a '/' before
+  // concatenating.
+  nsresult rv;
+  nsCOMPtr<nsIURI> realbase;
+
+  {
+      nsXPIDLCString orig;
+      rv = mDirectoryURI->GetSpec(getter_Copies(orig));
+      if (NS_FAILED(rv)) return rv;
+
+      nsCAutoString basestr(orig);
+      if (basestr.Last() != '/')
+        basestr.Append('/');
+
+      rv = NS_NewURI(getter_AddRefs(realbase), (const char*) basestr);
+      if (NS_FAILED(rv)) return rv;
+  }
+
+
   // First, we'll iterate through the values and remember each (using
   // an array of autostrings allocated on the stack, if possible). We
   // have to do this, because we don't know up-front the filename for
@@ -552,7 +572,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = NS_OK;
+  rv = NS_OK;
   nsCOMPtr<nsIRDFResource> entry;
 
   for (PRInt32 field = 0; field < mFormat.Count(); ++field) {
@@ -589,12 +609,8 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
 
     if (mFormat.ElementAt(field) == kHTTPIndex_Filename) {
       // we found the filename; construct a resource for its entry
-      nsXPIDLCString base;
-      rv = mDirectory->GetValue(getter_Copies(base));
-      if (NS_FAILED(rv)) break;
-
       nsAutoString entryuri;
-      rv = NS_MakeAbsoluteURI(value, mDirectoryURI, entryuri);
+      rv = NS_MakeAbsoluteURI(value, realbase, entryuri);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
       if (NS_FAILED(rv)) break;
 
@@ -651,8 +667,11 @@ nsHTTPIndex::Init(nsIURI* aBaseURL)
 
   nsresult rv;
 
-  rv = aBaseURL->GetSpec(&mBaseURL);
+  nsXPIDLCString url;
+  rv = aBaseURL->GetSpec(getter_Copies(url));
   if (NS_FAILED(rv)) return rv;
+
+  mBaseURL = url;
 
   static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
   rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, nsnull,
@@ -684,8 +703,6 @@ nsHTTPIndex::Create(nsIURI* aBaseURL, nsIContentViewerContainer* aContainer, nsI
 
 nsHTTPIndex::~nsHTTPIndex()
 {
-  if (mBaseURL)
-    nsAllocator::Free(mBaseURL);
 }
 
 NS_IMPL_ADDREF(nsHTTPIndex);

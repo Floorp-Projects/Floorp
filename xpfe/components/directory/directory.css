@@ -21,3 +21,18 @@
   Style rules specific to the directory listing window.
 
 */
+
+treecell > titledbutton {
+  border: none;
+  padding: 0px;
+  margin: 0px;
+}
+
+treeitem[type="FILE"] > treerow > treecell > titledbutton.twisty {
+  visibility: hidden;
+}
+
+treeitem[type="FILE"] > treerow > treecell.Filename:hover {
+  color: #333366;
+  text-decoration: underline;
+}

@@ -33,6 +33,69 @@ function Init()
 }
 
 
+function OnDblClick(event)
+{
+    var item = event.target.parentNode.parentNode;
+    var url = item.getAttribute('id');
+
+    var type = item.getAttribute('type');
+    if (type == 'DIRECTORY') {
+        // open inline
+        dump('reading directory ' + url + '\n');
+        ReadDirectory(url);
+    }
+    else {
+        dump('navigating to ' + url + '\n');
+        window.content.location.href = url;
+    }
+}
+
+
+function ToggleTwisty(event)
+{
+    var item = event.target.parentNode.parentNode.parentNode;
+    if (item.getAttribute('open') == 'true') {
+        item.removeAttribute('open');
+    }
+    else {
+        var url = item.getAttribute('id');
+        ReadDirectory(url);
+        item.setAttribute('open', 'true');
+    }
+
+    // XXX need to cancel the event here!!!
+}
+
+
+var Read = new Array();
+
+function ReadDirectory(url)
+{
+    if (Read[url]) {
+        dump("directory already read\n");
+        return;
+    }
+
+    var ios = Components.classes['component://netscape/network/net-service'].getService();
+    ios = ios.QueryInterface(Components.interfaces.nsIIOService);
+    dump("ios = " + ios + "\n");
+
+    var uri = ios.NewURI(url, null);
+    dump("uri = " + uri + "\n");
+
+    var channel = ios.NewChannelFromURI('load', uri, null);
+    dump("channel = " + channel + "\n");
+
+    var listener = HTTPIndex.CreateListener();
+    dump("listener = " + listener + "\n");
+
+    channel.AsyncRead(0, -1, null, listener);
+
+    Read[url] = true;
+}
+
+
+
 // We need this hack because we've completely circumvented the onload() logic.
 function Boot()
 {
@@ -45,3 +108,5 @@ function Boot()
 }
 
 setTimeout("Boot()", 0);
+
+

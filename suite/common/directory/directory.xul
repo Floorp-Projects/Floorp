@@ -27,16 +27,23 @@
   title="&directoryWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical">
+  align="vertical"
+  ondblclick="OnDblClick(event);">
 
   <html:script src="directory.js" />
 
   <tree id="tree" datasources="rdf:null" flex="1">
     <template>
       <treechildren>
-        <treeitem uri="...">
+        <treeitem uri="..." type="rdf:urn:http-index-format:File-Type">
           <treerow>
-            <treecell><text value="rdf:urn:http-index-format:Filename"/></treecell>
+            <treecell class="Filename">
+              <treeindentation/>
+              <titledbutton class="twisty"
+                            treeallowevents="true"
+                            onclick="ToggleTwisty(event);"/>
+              <text value="rdf:urn:http-index-format:Filename"/>
+            </treecell>
             <treecell><text value="rdf:urn:http-index-format:Content-Length"/></treecell>
             <treecell><text value="rdf:urn:http-index-format:Last-Modified"/></treecell>
           </treerow>
