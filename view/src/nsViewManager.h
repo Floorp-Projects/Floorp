@@ -189,8 +189,8 @@ private:
     nsresult CreateBlendingBuffers(nsIRenderingContext &aRC);
 					
 	PRBool CreateDisplayList(nsIView *aView, PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult, nscoord aOriginX, nscoord aOriginY,
-	                       PRBool aInsideRealView, nsIView *aRealView, const nsRect *aDamageRect = nsnull,
-	                       nsIView *aTopView = nsnull, nscoord aX = 0, nscoord aY = 0);
+	                       PRBool aInsideRealView, nsIView *aRealView, const nsRect *aDamageRect,
+	                       nsIView *aTopView, nscoord aX, nscoord aY, PRBool aPaintFloaters);
 	PRBool AddToDisplayList(nsIView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect, nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY);
     void ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex);
 	nsresult OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect);
