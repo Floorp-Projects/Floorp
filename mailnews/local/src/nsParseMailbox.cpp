@@ -264,9 +264,6 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 
 	m_obuffer = nsnull;
 	m_obuffer_size = 0;
-	m_ibuffer = nsnull;
-	m_ibuffer_size = 0;
-	m_ibuffer_fp = 0;
 	m_graph_progress_total = 0;
 	m_graph_progress_received = 0;
 	m_updateAsWeGo = PR_TRUE;
@@ -362,8 +359,6 @@ void nsMsgMailboxParser::FreeBuffers()
 {
 	/* We're done reading the folder - we don't need these things
 	 any more. */
-	PR_FREEIF (m_ibuffer);
-	m_ibuffer_size = 0;
 	PR_FREEIF (m_obuffer);
 	m_obuffer_size = 0;
 }
@@ -1397,6 +1392,9 @@ nsParseNewMailState::nsParseNewMailState()
 {
 	m_inboxFileStream = nsnull;
 	m_logFile = nsnull;
+	m_ibuffer = nsnull;
+	m_ibuffer_size = 0;
+	m_ibuffer_fp = 0;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsParseNewMailState, nsMsgMailboxParser, nsIMsgFilterHitNotify)
@@ -1889,8 +1887,9 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
   PRUint32 length;
   mailHdr->GetMessageSize(&length);
   
-  m_ibuffer_size = 10240;
-  m_ibuffer = nsnull;
+  if (!m_ibuffer)
+    m_ibuffer_size = 10240;
+  m_ibuffer_fp = 0;
   
   while (!m_ibuffer && (m_ibuffer_size >= 512))
   {

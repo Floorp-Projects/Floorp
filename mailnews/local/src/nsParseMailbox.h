@@ -210,9 +210,6 @@ protected:
 	nsByteArray		m_inputStream;
 	PRInt32			m_obuffer_size;
 	char			*m_obuffer;
-	PRUint32			m_ibuffer_fp;
-	char			*m_ibuffer;
-	PRUint32			m_ibuffer_size;
 	PRInt32			m_graph_progress_total;
 	PRInt32			m_graph_progress_received;
 	PRBool			m_updateAsWeGo;
@@ -274,6 +271,9 @@ protected:
 	nsFileSpec			m_inboxFileSpec;
 	PRBool				m_disableFilters;
 	PRBool				m_msgMovedByFilter;
+	PRUint32			m_ibuffer_fp;
+	char			*m_ibuffer;
+	PRUint32			m_ibuffer_size;
 };
 
 #ifdef IMAP_NEW_MAIL_HANDLED
