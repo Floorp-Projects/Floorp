@@ -4605,6 +4605,13 @@ nsXULDocument::StartFastLoad()
         if (NS_SUCCEEDED(rv)) {
             fastLoadService->SetInputStream(objectInput);
         } else {
+            // NB: we must close before attempting to remove, for non-Unix OSes
+            // that can't do open-unlink.
+            if (objectInput)
+                objectInput->Close();
+            else
+                input->Close();
+
 #ifdef DEBUG
             file->MoveTo(nsnull, "Invalid.mfasl");
 #else
@@ -4721,17 +4728,26 @@ nsXULDocument::AbortFastLoads()
     NS_BREAK();
 #endif
 
-    if (gFastLoadFile) {
-#ifdef DEBUG
-        gFastLoadFile->MoveTo(nsnull, "Aborted.mfasl");
-#else
-        gFastLoadFile->Remove(PR_FALSE);
-#endif
-    }
+    // Save a strong ref to the FastLoad file, so we can remove it after we
+    // close open streams to it.
+    nsCOMPtr<nsIFile> file = gFastLoadFile;
 
+    // End all pseudo-concurrent XUL document FastLoads, which will close any
+    // i/o streams open on the FastLoad file.
     while (gFastLoadList)
         gFastLoadList->EndFastLoad();
 
+    // Now rename or remove the file.
+    if (file) {
+#ifdef DEBUG
+        file->MoveTo(nsnull, "Aborted.mfasl");
+#else
+        file->Remove(PR_FALSE);
+#endif
+    }
+
+    // Flush the XUL cache for good measure, in case we cached a bogus/downrev
+    // script, somehow.
     if (gXULCache)
         gXULCache->Flush();
     return NS_OK;
