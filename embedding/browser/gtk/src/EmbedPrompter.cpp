@@ -236,7 +236,7 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
         // Create standard ok and cancel buttons
         if (widgetFlags & INCLUDE_CANCEL)
             gtk_dialog_add_button(GTK_DIALOG(mWindow), GTK_STOCK_CANCEL,
-                                  GTK_RESPONSE_REJECT);
+                                  GTK_RESPONSE_CANCEL);
 
         GtkWidget* okButton = gtk_dialog_add_button(GTK_DIALOG(mWindow),
                                                     GTK_STOCK_OK,
@@ -365,7 +365,7 @@ EmbedPrompter::Run(void)
     gint response = gtk_dialog_run(GTK_DIALOG(mWindow));
     switch (response) {
     case GTK_RESPONSE_NONE:
-    case GTK_RESPONSE_REJECT:
+    case GTK_RESPONSE_CANCEL:
     case GTK_RESPONSE_DELETE_EVENT:
         mConfirmResult = PR_FALSE;
         break;
