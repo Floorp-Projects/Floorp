@@ -110,8 +110,8 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
