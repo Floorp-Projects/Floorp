@@ -28,8 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= raptor
-OS2_LIBRARYNAME	= gfx_os2
-OS2_IMPLIB	= 1
+LIBRARY_NAME	= gfx_os2
 
 REQUIRES	= util img xpcom raptor dom netlib java js
 
@@ -50,7 +49,19 @@ CPPSRCS		= \
 
 RES_FILE	= $(srcdir)/libprint.res
 
-OS2_LIBS	= nggfx img mozjs mozutil netlib xpcom
+EXTRA_DSO_LIBS	= nggfx img_s mozutil_s
+
+EXTRA_DSO_LDOPTS = \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_LIBS += libconv.lib
+else
+OS_LIBS += -luconv
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -58,7 +69,7 @@ DEFINES		+= -D_IMPL_NS_GFXONXP
 
 INCLUDES	+= -I$(topsrcdir)/gfx/src
 
-OS_LIBS		+= $(NSPR_LIBS) -luconv
+OS_LIBS		+= $(NSPR_LIBS)
 
 # This adds the resources for the print dialog to the gfxos2 dll.
 # I guess eventually we ought to use an xml dialog...

@@ -23,7 +23,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= widget_os2
+LIBRARY_NAME	= wdgtos2
+
+EXTRA_DSO_LIBS	= nggfx
 
 REQUIRES	= util img xpcom raptor netlib
 
@@ -40,11 +42,9 @@ CPPSRCS		= \
 		nsBaseList.cpp \
 		nsCanvas.cpp \
 		nsCheckbutton.cpp \
-		nsClipboard.cpp \
 		nsCombobox.cpp \
 		nsContextMenu.cpp \
 		nsDirPicker.cpp \
-		nsDragService.cpp \
 		nsEntryField.cpp \
 		nsFSTree.cpp \
 		nsFileDialog.cpp \
@@ -62,24 +62,37 @@ CPPSRCS		= \
 		nsRadiobutton.cpp \
 		nsScrollbar.cpp \
 		nsSound.cpp \
-		nsTabWidget.cpp \
 		nsTextArea.cpp \
 		nsToolkit.cpp \
 		nsTooltipManager.cpp \
-		nsTooltipWidget.cpp \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
 		$(NULL)
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
+# XXX FILES temporarily removed
+#		nsClipboard.cpp \
+#		nsDragService.cpp \
+
+# nsITabWidget and nsITooltipWidget appear to have been scrapped
+#		nsTabWidget.cpp \
+#		nsTooltipWidget.cpp \
+
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
-		$(TOOLKIT_DSO_LDOPTS) \
 		$(MKSHLIB_FORCE_ALL) \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
-		$(TK_LIBS) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_TIMER_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+OS_LIBS += libuls.lib libconv.lib unikbd.lib
+else
+OS_LIBS += -llibuni -luconv -lunikbd
+endif
 
 include $(topsrcdir)/config/rules.mk
 
