@@ -587,13 +587,16 @@ PresShell::ContentChanged(nsIContent*  aContent,
   // Notify the first frame that maps the content. It will generate a reflow
   // command
   nsIFrame* frame = FindFrameWithContent(aContent);
-  NS_PRECONDITION(nsnull != frame, "null frame");
 
-  PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
-         ("PresShell::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
-          aContent, ContentTag(aContent, 0),
-          aSubContent, frame));
-  frame->ContentChanged(this, mPresContext, aContent, aSubContent);
+  // It's possible the frame whose content changed isn't inserted into the
+  // frame hierarchy yet. This sometimes happens with images inside tables
+  if (nsnull != frame) {
+    PR_LOG(gShellLogModuleInfo, PR_LOG_DEBUG,
+           ("PresShell::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
+            aContent, ContentTag(aContent, 0),
+            aSubContent, frame));
+    frame->ContentChanged(this, mPresContext, aContent, aSubContent);
+  }
 
   ExitReflowLock();
   return NS_OK;
