@@ -829,6 +829,64 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
   return NS_OK;
 }
 
+
+//
+// DoTreeScroll
+//
+// Trees know best how to deal with scrolling, so use the tree scroll api's instead
+// of just blindly scrolling the view.
+//
+nsresult
+nsEventStateManager::DoTreeScroll(nsIPresContext* inPresContext, PRInt32 inNumLines,
+                                    PRBool inScrollPage, nsITreeFrame* inTreeFrame)
+{
+  PRInt32 scrollIndex, visibleRows;
+  inTreeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
+  inTreeFrame->GetNumberOfVisibleRows(&visibleRows);
+
+  if (inScrollPage)
+    scrollIndex += ((inNumLines > 0) ? visibleRows : -visibleRows);
+  else
+    scrollIndex += inNumLines;
+  
+  if (scrollIndex < 0)
+    scrollIndex = 0;
+  else {
+    PRInt32 numRows;
+    inTreeFrame->GetRowCount(&numRows);
+    PRInt32 lastPageTopRow = numRows - visibleRows;
+    if (scrollIndex > lastPageTopRow)
+      scrollIndex = lastPageTopRow;
+  }
+  
+  inTreeFrame->ScrollToIndex(scrollIndex);
+
+  // we have to do a sync update for mac because if we scroll too quickly
+  // w/out going back to the main event loop we can easily scroll the wrong
+  // bits and it looks like garbage (bug 63465).
+  nsIFrame* frame = nsnull;
+  if ( NS_SUCCEEDED(inTreeFrame->QueryInterface(NS_GET_IID(nsIFrame), &frame)) ) {
+    nsIView* treeView = nsnull;
+    frame->GetView(inPresContext, &treeView);
+    if (!treeView) {
+      nsIFrame* frameWithView;
+      frame->GetParentWithView(inPresContext, &frameWithView);
+      if (frameWithView)
+        frameWithView->GetView(inPresContext, &treeView);
+      else
+        return NS_ERROR_FAILURE;
+    }
+    if (treeView)
+      ForceViewUpdate(treeView);
+  }
+  else
+    return NS_ERROR_FAILURE;
+     
+  return NS_OK;
+      
+} // DoTreeScroll
+
+
 nsresult
 nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
                                    nsIFrame* aTargetFrame,
@@ -850,30 +908,8 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
       break;
     curFrame->GetParent(&curFrame);
   }
-  
-  if (treeFrame) {
-    PRInt32 scrollIndex, visibleRows;
-    treeFrame->GetIndexOfFirstVisibleRow(&scrollIndex);
-    treeFrame->GetNumberOfVisibleRows(&visibleRows);
-
-    if (scrollPage)
-      scrollIndex += ((numLines > 0) ? visibleRows : -visibleRows);
-    else
-      scrollIndex += numLines;
-    
-    if (scrollIndex < 0)
-      scrollIndex = 0;
-    else {
-      PRInt32 numRows, lastPageTopRow;
-      treeFrame->GetRowCount(&numRows);
-      lastPageTopRow = numRows - visibleRows;
-      if (scrollIndex > lastPageTopRow)
-        scrollIndex = lastPageTopRow;
-    }
-    
-    treeFrame->ScrollToIndex(scrollIndex);
-    return NS_OK;
-  }
+  if (treeFrame)
+    return DoTreeScroll(aPresContext, numLines, scrollPage, treeFrame);
   
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
