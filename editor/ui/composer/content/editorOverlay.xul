@@ -761,13 +761,13 @@
   </button>
   
   <!-- Edit Mode toolbar -->
-  <button id="NormalModeButton"   class="edit-mode _plain" type="text" selected="1" value="&NormalModeTab.label;"  onclick="SetEditMode(1)"
+  <tab id="NormalModeButton"   class="tab-bottom edit-mode _plain" type="text" selected="1" value="&NormalModeTab.label;"  onclick="SetEditMode(1)"
           tooltip="aTooltip"      tooltiptext="&NormalMode.tooltip;"/>
-  <button id="TagModeButton"      class="edit-mode _plain" type="text" selected="0" value="&AllTagsMode.label;"    onclick="SetEditMode(2)"
+  <tab id="TagModeButton"      class="tab-bottom edit-mode _plain" type="text" selected="0" value="&AllTagsMode.label;"    onclick="SetEditMode(2)"
           tooltip="aTooltip"      tooltiptext="&AllTagsMode.tooltip;"/>
-  <button id="SourceModeButton"   class="edit-mode _plain" type="text" selected="0" value="&SourceMode.label;"     onclick="SetEditMode(3)"
+  <tab id="SourceModeButton"   class="tab-bottom edit-mode _plain" type="text" selected="0" value="&SourceMode.label;"     onclick="SetEditMode(3)"
           tooltip="aTooltip"      tooltiptext="&HTMLSourceMode.tooltip;"/>
-  <button id="PreviewModeButton"  class="edit-mode _plain" type="text" selected="0" value="&PreviewMode.label;"    onclick="SetEditMode(0)"
+  <tab id="PreviewModeButton"  class="tab-bottom edit-mode _plain" type="text" selected="0" value="&PreviewMode.label;"    onclick="SetEditMode(0)"
           tooltip="aTooltip"      tooltiptext="&PreviewMode.tooltip;"/>
 
   <!-- InsertPopupButton is used by messengercompose.xul -->

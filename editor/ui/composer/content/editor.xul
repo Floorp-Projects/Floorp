@@ -225,11 +225,12 @@
     </deck>
 
     <toolbar id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">
-      <text id="EditModeLabel" class="margin-left-right" value="&editMode.label;"/>
-      <button id="NormalModeButton"/>
-      <button id="TagModeButton"/>
-      <button id="SourceModeButton"/>
-      <button id="PreviewModeButton"/>
+      <tabbox class="tabbox-bottom" orient="horizontal" flex="1">
+     	<tab id="NormalModeButton"/>
+      	<tab id="TagModeButton"/>
+      	<tab id="SourceModeButton"/>
+      	<tab id="PreviewModeButton"/>
+	  </tabbox>
     </toolbar>
 
     <!-- Some of this is from globarOverlay.xul -->
