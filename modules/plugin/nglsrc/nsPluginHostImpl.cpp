@@ -865,9 +865,17 @@ NS_IMETHODIMP nsPluginStreamListenerPeer :: OnDataAvailable(nsIURL* aURL, nsIInp
   // if the plugin has requested an AsFileOnly stream, then don't call OnDataAvailable
   if(mStreamType != nsPluginStreamType_AsFileOnly)
   {
-	aURL->GetSpec(&url);
-	rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aIStream, aLength);
-  }	
+    aURL->GetSpec(&url);
+    rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, aIStream, aLength);
+  }
+  else
+  {
+    // if we don't read from the stream, OnStopBinding will never be called
+    char* buffer = new char[aLength];
+    PRUint32 amountRead;
+    rv = aIStream->Read(buffer, aLength, &amountRead);
+    delete [] buffer;
+  }
 
   return rv;
 }
@@ -1343,7 +1351,9 @@ NS_IMETHODIMP nsPluginHostImpl :: InstantiateEmbededPlugin(const char *aMimeType
       aOwner->CreateWidget();
       instance->SetWindow(window);
 
-      rv = NewEmbededPluginStream(aURL, nsnull, instance);
+      // don't make an initial steam if it's a java applet
+      if(!aMimeType || PL_strcasecmp(aMimeType, "application/x-java-vm"))
+	rv = NewEmbededPluginStream(aURL, nsnull, instance);
 
       NS_RELEASE(instance);
     }
