@@ -56,7 +56,6 @@ table[empty-cells], table[border="0"] {
 */
 table[border="0"] * td, table[border="0"] * th {
   border: 1px dotted red;
-  background-color: blue;
 }
 
 /* For ease in caret placement, 
