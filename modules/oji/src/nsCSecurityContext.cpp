@@ -53,12 +53,10 @@
 
 // For GetOrigin()
 
-#include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
-#include "nsIPrincipal.h"
 #include "nsCRT.h"
 
 #include "nsTraceRefcnt.h"
@@ -117,59 +115,32 @@ nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAll
 NS_METHOD 
 nsCSecurityContext::GetOrigin(char* buf, int buflen)
 {
-    // Get the Script Security Manager.
-
-    nsresult rv      = NS_OK;
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
-
-
-    // First, try to get the principal from the security manager.
-    // Next, try to get it from the dom.
-    // If neither of those work, the qi for codebase will fail.
-
     if (!m_pPrincipal) {
-        if (NS_FAILED(secMan->GetSubjectPrincipal(&m_pPrincipal))) 
-        // return NS_ERROR_FAILURE;
-        ; // Don't return here because the security manager returns 
-          // NS_ERROR_FAILURE when there is no subject principal. In
-          // that case we are not done.
-        
-        if (!m_pPrincipal && m_pJSCX ) {
-            nsCOMPtr<nsIScriptContext> scriptContext;
-            GetScriptContextFromJSContext(m_pJSCX,
-                                          getter_AddRefs(scriptContext));
+        // Get the Script Security Manager.
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        if (NS_FAILED(rv) || !secMan) {
+            return NS_ERROR_FAILURE;
+        }
 
-            if (scriptContext) {
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                scriptContext->GetGlobalObject(getter_AddRefs(global));
-                NS_ASSERTION(global, "script context has no global object");
-
-                if (global) {
-                    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
-                    if (globalData) {
-                        // ISSUE: proper ref counting.
-                        if (NS_FAILED(globalData->GetPrincipal(&m_pPrincipal)))
-                            return NS_ERROR_FAILURE; 
-                       
-                   }
-                }
-            }
+        secMan->GetSubjectPrincipal(getter_AddRefs(m_pPrincipal));
+        if (!m_pPrincipal) {
+            return NS_ERROR_FAILURE;
         }
     }
 
     nsXPIDLCString origin;
     m_pPrincipal->GetOrigin(getter_Copies(origin));
 
-    if (origin.IsEmpty()) {
+    PRInt32 originlen = origin.Length();
+    if (origin.IsEmpty() || originlen > buflen - 1) {
         return NS_ERROR_FAILURE;
     }
 
     // Copy the string into to user supplied buffer. Is there a better
     // way to do this?
 
-    PRInt32 originlen = origin.Length();
     memcpy(buf, origin, originlen);
     buf[originlen] = nsnull; // Gotta terminate it.
 
@@ -189,6 +160,9 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
     if (NS_FAILED(rv) || !secMan) return NS_ERROR_FAILURE;
 
     secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    if (!principal) {
+        return NS_ERROR_FAILURE;
+    }
 
     nsXPIDLCString certificate;
     principal->GetCertificateID(getter_Copies(certificate));
@@ -274,9 +248,7 @@ nsCSecurityContext::nsCSecurityContext(nsIPrincipal *principal)
 
     // Do early evaluation of "UniversalJavaPermission" capability.
 
-    PRBool equals;
-    if (!m_pPrincipal || 
-        NS_SUCCEEDED(m_pPrincipal->Equals(sysprincipal, &equals)) && equals) {
+    if (!m_pPrincipal || m_pPrincipal == sysprincipal) {
         // We have native code or the system principal: just allow general access
         m_HasUniversalBrowserReadCapability = PR_TRUE;
         m_HasUniversalJavaCapability = PR_TRUE;
