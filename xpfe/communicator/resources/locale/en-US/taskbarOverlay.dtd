@@ -1,10 +1,5 @@
 <!-- taskbar -->
-<!-- LOCALIZATION NOTE  (shoppingButton.label): DONT_TRANSLATE -->
-<!ENTITY  shoppingButton.label "Shopping">
-<!ENTITY  entertainment.label "Entertainment">
-<!ENTITY  openWinButton.label "Open Windows">
-<!-- taskbar popups -->
-<!-- LOCALIZATION NOTE  (tinderboxButton.label): Do NOT translate "Tinderbox" -->
-<!ENTITY  tinderboxButton.label "Look at Tinderbox">
+<!-- taskbar popups have moved to taskbar.rdf -->
 
+<!ENTITY  openWinButton.label "Open Windows">
 <!ENTITY taskWindowList.tooltip "List of open windows">
