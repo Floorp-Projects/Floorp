@@ -62,7 +62,7 @@ nsXPCFactory::QueryInterface(const nsIID &aIID, void **aResult)
     if(aResult == NULL)
         return NS_ERROR_NULL_POINTER;
 
-    if(aIID.Equals(nsISupports::GetIID()) ||
+    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ||
        aIID.Equals(nsIFactory::GetIID())  ||
        aIID.Equals(nsXPCFactory::GetIID()))
     {

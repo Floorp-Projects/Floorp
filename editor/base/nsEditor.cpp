@@ -392,7 +392,7 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsISupports::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     nsIEditor *tmp = this;
     nsISupports *tmp2 = tmp;
     *aInstancePtr = (void*)tmp2;

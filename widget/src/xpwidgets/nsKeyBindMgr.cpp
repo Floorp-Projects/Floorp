@@ -65,7 +65,7 @@ nsresult nsKeyBindMgr::QueryInterface(const nsIID& aIID,
   {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsISupports::GetIID())) 
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) 
   {
     *aInstancePtrResult = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();

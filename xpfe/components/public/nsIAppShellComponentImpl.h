@@ -181,7 +181,7 @@ className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) { \
         } else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) { \
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this ); \
             NS_ADDREF_THIS(); \
-        } else if ( anIID.Equals( nsISupports::GetIID() ) ) { \
+        } else if ( anIID.Equals( nsCOMTypeInfo<nsISupports>::GetIID() ) ) { \
             *anInstancePtr = (void*) ( (nsISupports*)this ); \
             NS_ADDREF_THIS(); \
         } else { \
@@ -221,7 +221,7 @@ className##Factory::QueryInterface( const nsIID &anIID, void **aResult ) { \
         } else if ( anIID.Equals( nsIFactory::GetIID() ) ) { \
             *aResult = (void*) (nsIFactory*)this; \
             NS_ADDREF_THIS(); \
-        } else if ( anIID.Equals( nsISupports::GetIID() ) ) { \
+        } else if ( anIID.Equals( nsCOMTypeInfo<nsISupports>::GetIID() ) ) { \
             *aResult = (void*) (nsISupports*)this; \
             NS_ADDREF_THIS(); \
         } else { \

@@ -67,7 +67,7 @@ nsBaseWidget::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   if (aIID.Equals(nsIBidirectionalEnumerator::GetIID()) || 
       aIID.Equals(nsIEnumerator::GetIID()) || 
-      aIID.Equals(nsISupports::GetIID())) {
+      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = (void*) this; 
     NS_ADDREF_THIS(); 
     return NS_OK; 

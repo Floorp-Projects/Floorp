@@ -341,7 +341,7 @@ NS_IMETHODIMP BasicStringImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr
       NS_ADDREF_THIS();
       return NS_OK;
   }
-  if (aIID.Equals(((nsISupports*)(nsIOutputStream*)this)->GetIID()))
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
   {
       *aInstancePtr = (void*)((nsISupports*)(nsIOutputStream*)this);
       NS_ADDREF_THIS();

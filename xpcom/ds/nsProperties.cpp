@@ -30,7 +30,7 @@ nsProperties::nsProperties(nsISupports* outer)
 NS_METHOD
 nsProperties::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 {
-    if (outer && !aIID.Equals(nsISupports::GetIID()))
+    if (outer && !aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
         return NS_NOINTERFACE;   // XXX right error?
     nsProperties* props = new nsProperties(outer);
     if (props == NULL)
@@ -63,7 +63,7 @@ nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
     if (aIID.Equals(nsIProperties::GetIID()) || 
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = (void*) this; 
         NS_ADDREF_THIS(); 
         return NS_OK; 
@@ -203,7 +203,7 @@ nsPersistentProperties::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ASSERTION(aInstancePtr != nsnull, "null ptr");
     if (aIID.Equals(nsIPersistentProperties::GetIID()) ||
         aIID.Equals(nsIProperties::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIPersistentProperties*, this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -510,7 +510,7 @@ nsPropertyElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr != nsnull, "null ptr");
     if (aIID.Equals(nsIPropertyElement::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIPropertyElement*, this);
         NS_ADDREF_THIS();
         return NS_OK;

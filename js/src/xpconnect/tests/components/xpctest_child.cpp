@@ -148,7 +148,7 @@ xpctestChild::QueryInterface(REFNSIID iid, void** result)
 
     if (iid.Equals(nsIXPCTestChild::GetIID()) ||
         iid.Equals(nsIXPCTestParent::GetIID()) ||
-        iid.Equals(nsISupports::GetIID())) {
+        iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *result = NS_STATIC_CAST(nsIXPCTestChild*, this);
         NS_ADDREF(this);
         return NS_OK;
