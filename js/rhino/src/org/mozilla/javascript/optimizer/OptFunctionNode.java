@@ -44,12 +44,6 @@ final class OptFunctionNode
     OptFunctionNode(FunctionNode fnode)
     {
         this.fnode = fnode;
-        int N = fnode.getParamAndVarCount();
-        int parameterCount = fnode.getParamCount();
-        optVars = new OptLocalVariable[N];
-        for (int i = 0; i != N; ++i) {
-            optVars[i] = new OptLocalVariable(i < parameterCount);
-        }
         fnode.setCompilerData(this);
     }
 
@@ -94,19 +88,33 @@ final class OptFunctionNode
 
     int getVarCount()
     {
-        return optVars.length;
+        return fnode.getParamAndVarCount();
     }
 
-    OptLocalVariable getVar(int index)
+    boolean isParameter(int varIndex)
     {
-        return optVars[index];
+        return varIndex < fnode.getParamCount();
     }
 
-    OptLocalVariable getVar(String name)
+    boolean isNumberVar(int varIndex)
     {
-        int index = fnode.getParamOrVarIndex(name);
-        if (index < 0) { return null; }
-        return optVars[index];
+        varIndex -= fnode.getParamCount();
+        if (varIndex >= 0 && numberVarFlags != null) {
+            return numberVarFlags[varIndex];
+        }
+        return false;
+    }
+
+    void setIsNumberVar(int varIndex)
+    {
+        varIndex -= fnode.getParamCount();
+        // Can only be used with non-parameters
+        if (varIndex < 0) Kit.codeBug();
+        if (numberVarFlags == null) {
+            int size = fnode.getParamAndVarCount() - fnode.getParamCount();
+            numberVarFlags = new boolean[size];
+        }
+        numberVarFlags[varIndex] = true;
     }
 
     int getVarIndex(Node n)
@@ -129,19 +137,8 @@ final class OptFunctionNode
         return index;
     }
 
-    OptLocalVariable getVar(Node n)
-    {
-        int index = getVarIndex(n);
-        return optVars[index];
-    }
-
-    OptLocalVariable[] getVarsArray()
-    {
-        return optVars;
-    }
-
     FunctionNode fnode;
-    private OptLocalVariable[] optVars;
+    private boolean[] numberVarFlags;
     private int directTargetIndex = -1;
     private boolean itsParameterNumberContext;
     boolean itsContainsCalls0;

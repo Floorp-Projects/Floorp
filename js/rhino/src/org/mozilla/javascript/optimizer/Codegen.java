@@ -1116,9 +1116,16 @@ class BodyCodegen
     {
         isTopLevel = (scriptOrFn == codegen.scriptOrFnNodes[0]);
 
+        varRegisters = null;
         if (scriptOrFn.getType() == Token.FUNCTION) {
             fnCurrent = OptFunctionNode.get(scriptOrFn);
             hasVarsInRegs = !fnCurrent.fnode.requiresActivation();
+            if (hasVarsInRegs) {
+                int n = fnCurrent.fnode.getParamAndVarCount();
+                if (n != 0) {
+                    varRegisters = new short[n];
+                }
+            }
             inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
             if (inDirectCallFunction && !hasVarsInRegs) Codegen.badTree();
         } else {
@@ -1158,8 +1165,7 @@ class BodyCodegen
             // 3 is reserved for script 'this'
             if (firstFreeLocal != 4) Kit.codeBug();
             for (int i = 0; i != directParameterCount; ++i) {
-                OptLocalVariable lVar = fnCurrent.getVar(i);
-                lVar.assignJRegister(firstFreeLocal);
+                varRegisters[i] = firstFreeLocal;
                 // 3 is 1 for Object parm and 2 for double parm
                 firstFreeLocal += 3;
             }
@@ -1167,8 +1173,7 @@ class BodyCodegen
                 // make sure that all parameters are objects
                 itsForcedObjectParameters = true;
                 for (int i = 0; i != directParameterCount; ++i) {
-                    OptLocalVariable lVar = fnCurrent.getVar(i);
-                    short reg = lVar.getJRegister();
+                    short reg = varRegisters[i];
                     cfw.addALoad(reg);
                     cfw.add(ByteCode.GETSTATIC,
                             "java/lang/Void",
@@ -1239,7 +1244,6 @@ class BodyCodegen
             // before the next call and are used in the function
             short firstUndefVar = -1;
             for (int i = 0; i != varCount; ++i) {
-                OptLocalVariable lVar = fnCurrent.getVar(i);
                 short reg = -1;
                 if (i < paramCount) {
                     if (!inDirectCallFunction) {
@@ -1249,7 +1253,7 @@ class BodyCodegen
                         cfw.add(ByteCode.AALOAD);
                         cfw.addAStore(reg);
                     }
-                } else if (lVar.isNumber()) {
+                } else if (fnCurrent.isNumberVar(i)) {
                     reg = getNewWordPairLocal();
                     cfw.addPush(0.0);
                     cfw.addDStore(reg);
@@ -1264,16 +1268,17 @@ class BodyCodegen
                     cfw.addAStore(reg);
                 }
                 if (reg >= 0) {
-                    lVar.assignJRegister(reg);
+                    varRegisters[i] = reg;
                 }
 
                 // Add debug table enry if we're generating debug info
                 if (compilerEnv.isGenerateDebugInfo()) {
                     String name = fnCurrent.fnode.getParamOrVarName(i);
-                    String type = lVar.isNumber() ? "D" : "Ljava/lang/Object;";
+                    String type = fnCurrent.isNumberVar(i)
+                                      ? "D" : "Ljava/lang/Object;";
                     int startPC = cfw.getCurrentCodeOffset();
                     if (reg < 0) {
-                        reg = lVar.getJRegister();
+                        reg = varRegisters[i];
                     }
                     cfw.addVariableDescriptor(name, type, startPC, reg);
                 }
@@ -3025,12 +3030,12 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
     {
         String name = node.getString();
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = fnCurrent.getVar(name);
-            if (lVar != null) {
-                if (lVar.isNumber()) {
+            int varIndex = fnCurrent.fnode.getParamOrVarIndex(name);
+            if (varIndex >= 0) {
+                if (fnCurrent.isNumberVar(varIndex)) {
                     cfw.addPush("number");
-                } else if (varIsDirectCallParameter(lVar)) {
-                    int dcp_register = lVar.getJRegister();
+                } else if (varIsDirectCallParameter(varIndex)) {
+                    int dcp_register = varRegisters[varIndex];
                     cfw.addALoad(dcp_register);
                     cfw.add(ByteCode.GETSTATIC, "java/lang/Void", "TYPE",
                             "Ljava/lang/Class;");
@@ -3047,7 +3052,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                     cfw.addPush("number");
                     cfw.markLabel(beyond);
                 } else {
-                    cfw.addALoad(lVar.getJRegister());
+                    cfw.addALoad(varRegisters[varIndex]);
                     addScriptRuntimeInvoke("typeof",
                                            "(Ljava/lang/Object;"
                                            +")Ljava/lang/String;");
@@ -3071,8 +3076,8 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
           case Token.GETVAR:
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                 boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
-                OptLocalVariable lVar = fnCurrent.getVar(child);
-                short reg = lVar.getJRegister();
+                int varIndex = fnCurrent.getVarIndex(child);
+                short reg = varRegisters[varIndex];
                 cfw.addDLoad(reg);
                 if (post) {
                     cfw.add(ByteCode.DUP2);
@@ -3090,8 +3095,8 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 break;
             } else if (hasVarsInRegs) {
                 boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
-                OptLocalVariable lVar = fnCurrent.getVar(child);
-                short reg = lVar.getJRegister();
+                int varIndex = fnCurrent.getVarIndex(child);
+                short reg = varRegisters[varIndex];
                 cfw.addALoad(reg);
                 if (post) {
                     cfw.add(ByteCode.DUP);
@@ -3255,17 +3260,17 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         if (node.getType() == Token.GETVAR
             && inDirectCallFunction && !itsForcedObjectParameters)
         {
-            OptLocalVariable lVar = fnCurrent.getVar(node);
-            if (lVar.isParameter()) {
-                return lVar.getJRegister();
+            int varIndex = fnCurrent.getVarIndex(node);
+            if (fnCurrent.isParameter(varIndex)) {
+                return varRegisters[varIndex];
             }
         }
         return -1;
     }
 
-    private boolean varIsDirectCallParameter(OptLocalVariable lVar)
+    private boolean varIsDirectCallParameter(int varIndex)
     {
-        return lVar.isParameter()
+        return fnCurrent.isParameter(varIndex)
             && inDirectCallFunction && !itsForcedObjectParameters;
     }
 
@@ -3527,9 +3532,9 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
     private void visitGetVar(Node node)
     {
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = fnCurrent.getVar(node);
-            short reg = lVar.getJRegister();
-            if (varIsDirectCallParameter(lVar)) {
+            int varIndex = fnCurrent.getVarIndex(node);
+            short reg = varRegisters[varIndex];
+            if (varIsDirectCallParameter(varIndex)) {
                 // Remember that here the isNumber flag means that we
                 // want to use the incoming parameter in a Number
                 // context, so test the object type and convert the
@@ -3539,7 +3544,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 } else {
                     dcpLoadAsObject(reg);
                 }
-            } else if (lVar.isNumber()) {
+            } else if (fnCurrent.isNumberVar(varIndex)) {
                 cfw.addDLoad(reg);
             } else {
                 cfw.addALoad(reg);
@@ -3560,11 +3565,11 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
     private void visitSetVar(Node node, Node child, boolean needValue)
     {
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = fnCurrent.getVar(node);
+            int varIndex = fnCurrent.getVarIndex(node);
             generateExpression(child.getNext(), node);
             boolean isNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
-            short reg = lVar.getJRegister();
-            if (varIsDirectCallParameter(lVar)) {
+            short reg = varRegisters[varIndex];
+            if (varIsDirectCallParameter(varIndex)) {
                 if (isNumber) {
                     if (needValue) cfw.add(ByteCode.DUP2);
                     cfw.addALoad(reg);
@@ -3976,6 +3981,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
     private int itsLineNumber;
 
     private boolean hasVarsInRegs;
+    private short[] varRegisters;
     private boolean inDirectCallFunction;
     private boolean itsForcedObjectParameters;
     private int enterAreaStartLabel;
