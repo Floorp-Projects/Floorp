@@ -25,7 +25,7 @@ var H2_ = "";
 var HR = "";
 var DEBUG = false;
 
-version("130");
+version(130);
 
 var PASSED = " PASSED!"
 var FAILED = " FAILED! expected: ";

@@ -67,8 +67,9 @@
     var result = "PASSED";
 
     for ( aVar in this ) {
-        if (aVar == "aVar")
+        if (aVar == "aVar") {
             result = "FAILED"
+        }
     };
 
     testcases[testcases.length] = new TestCase(
