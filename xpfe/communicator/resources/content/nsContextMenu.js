@@ -20,7 +20,7 @@
  *
  * Contributor(s): 
  *     William A. ("PowerGUI") Law <law@netscape.com>
- *     Blake Ross <BlakeR1234@aol.com>
+ *     Blake Ross <blakeross@telocity.com>
  */
 
 /*------------------------------ nsContextMenu ---------------------------------
@@ -378,7 +378,7 @@ nsContextMenu.prototype = {
     },
     // Edit linked-to URL in a new window.
     editLink : function () {
-        BrowserEditPage( this.linkURL() );
+        editPage( this.linkURL() );
     },
     // Reload clicked-in frame.
     reloadFrame : function () {

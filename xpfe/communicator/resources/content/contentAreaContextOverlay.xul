@@ -1,0 +1,182 @@
+<?xml version="1.0"?> 
+<!-- The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Blake Ross <blakeross@telocity.com>
+   -->
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
+<overlay id="contentAreaContextOverlay"
+         xmlns:html="http://www.w3.org/1999/xhtml"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- Context menu -->
+  <script language="javascript">
+    // Global variable that holds the nsContextMenu instance.
+    var contextMenu = null;
+  </script>
+  <script type="text/javascript" src="chrome://communicator/content/nsContextMenu.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+
+  <popupset id="contentAreaContextSet">
+    <!-- This is the context menu for the content-area of the navigator
+         window.  It contains each and every possible menu choice.  The
+         appropriate items are hidden/shown upon display, based on what
+         the user has clicked-on.
+     -->
+    <popup id="contentAreaContextMenu"
+           oncreate="contextMenu = new nsContextMenu( this ); return contextMenu.shouldDisplay;"
+           ondestroy="contextMenu.onDestroy(); contextMenu = null;">
+      <!-- Open ==================================== -->
+      <menuitem id="context-openlink"
+                value="&openLinkCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.openLink();"/>
+      <!-- XXX - DEPENDENT ON PRESENCE OF EDITOR!! - XXX -->
+      <menuitem id="context-editlink"
+                value="&editLinkCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.editLink();"/>
+      <menuitem id="context-openframe"
+                value="&openFrameCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.openFrame();"/>
+      <menuitem id="context-showonlythisframe"
+                value="&showOnlyThisFrameCmd.label;"
+                accesskey="&showOnlyThisFrameCmd.accesskey;"
+                oncommand="contextMenu.showOnlyThisFrame();"/>
+      <menuseparator id="context-sep-open"/>
+      <!-- Navigation ============================== -->
+      <menuitem id="context-back"
+                value="&goBackCmd.label;"
+                accesskey="&goBackCmd.accesskey;"
+                oncommand="BrowserBack()"/>
+      <menuitem id="context-forward"
+                value="&goForwardCmd.label;"
+                accesskey="&goForwardCmd.accesskey;"
+                oncommand="BrowserForward()"/>
+      <menuitem id="context-reload"
+                value="&reloadCmd.label;"
+                accesskey="&reloadCmd.accesskey;"
+                oncommand="BrowserReallyReload(event);"/>
+      <menuitem id="context-reload-frame"
+                value="&reloadFrameCmd.label;"
+                accesskey="&reloadFrameCmd.accesskey;"
+                oncommand="contextMenu.reloadFrame();"/>
+      <menuitem id="context-stop"
+                value="&stopCmd.label;"
+                accesskey=""
+                oncommand="BrowserStop();"/>
+      <menuseparator/>
+      <!-- View ==================================== -->
+      <menuitem id="context-viewsource"
+                value="&viewPageSourceCmd.label;"
+                accesskey=""
+                oncommand="BrowserViewSource();"/>
+      <menuitem id="context-viewframesource"
+                value="&viewFrameSourceCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.viewFrameSource();"/>
+      <menuitem id="context-viewinfo"
+                value="&viewPageInfoCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.viewInfo();"/>
+      <menuitem id="context-viewframeinfo"
+                value="&viewFrameInfoCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.viewFrameInfo();"/>
+      <menuitem id="context-viewimage"
+                value="&viewImageCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.viewImage();"/>
+      <menuitem id="context-blockimage"
+                value="&blockImageCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.blockImage();"/>
+      <menuseparator id="context-sep-view"/>
+      <!-- Misc ==================================== -->
+      <menuitem id="context-bookmarkpage"
+                value="&bookmarkPageCmd.label;"
+                accesskey="&bookmarkPageCmd.accesskey;"
+                oncommand="BrowserAddBookmark( window._content.location.href,
+                                               window._content.document.title )"/>
+      <menuitem id="context-bookmarklink"
+                value="&bookmarkLinkCmd.label;"
+                accesskey="&bookmarkLinkCmd.accesskey;"
+                oncommand="BrowserAddBookmark( contextMenu.linkURL(),
+                                               contextMenu.linkText() )"/>
+      <menuseparator/>
+      <!-- Save ==================================== -->
+      <menuitem id="context-savepage"
+                value="&savePageCmd.label;"
+                accesskey="&savePageCmd.accesskey;"
+                oncommand="contextMenu.savePage();"/>
+      <menuitem id="context-saveframe"
+                value="&saveFrameCmd.label;"
+                accesskey="&saveFrameCmd.accesskey;"
+                oncommand="contextMenu.saveFrame();"/>
+      <menuitem id="context-savelink"
+                value="&saveLinkCmd.label;"
+                accesskey="&saveLinkCmd.accesskey;"
+                oncommand="contextMenu.saveLink();"/>
+      <menuitem id="context-saveimage"
+                value="&saveImageCmd.label;"
+                accesskey="&saveImageCmd.accesskey;"
+                oncommand="contextMenu.saveImage();"/>
+      <menuitem id="context-savebgimage"
+                value="&saveBGImageCmd.label;"
+                accesskey="&saveBGImageCmd.accesskey;"
+                oncommand="contextMenu.saveBGImage();"/>
+      <menuseparator id="context-sep-save"/>
+      <!-- Clipboard =============================== -->
+      <menuitem id="context-selectall"
+                value="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                observes="cmd_selectAll"/>
+      <menuitem id="context-cut"
+                value="&cutCmd.label;"
+                accesskey="&cutCmd.accesskey;"
+                observes="cmd_cut"/>
+      <menuitem id="context-copy"
+                value="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                observes="cmd_copy"/>
+      <menuitem id="context-paste"
+                value="&pasteCmd.label;"
+                accesskey="&pasteCmd.accesskey;"
+                observes="cmd_paste"/>
+      <menuitem id="context-capture"
+                value="&captureCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.capture();"/>
+      <menuitem id="context-prefill"
+                value="&prefillCmd.label;"
+                accesskey=""
+                oncommand="contextMenu.prefill();"/>
+      <menuitem id="context-copylink"
+                value="&copyLinkCmd.label;"
+                accesskey="&copyLinkCmd.accesskey;"
+                oncommand="contextMenu.copyLink();"/>
+      <menuitem id="context-copyimage"
+                value="&copyImageCmd.label;"
+                accesskey="&copyImageCmd.accesskey;"
+                oncommand="contextMenu.copyImage();"/>
+    </popup>
+  </popupset>
+</overlay>

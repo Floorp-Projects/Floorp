@@ -849,11 +849,6 @@ function RevealSearchPanel()
     OpenBrowserWindow();
   }
 
-  function BrowserEditPage(url)
-  {
-    window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
-  }
-
 //Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
   
   function BrowserOpenWindow()
