@@ -13,54 +13,52 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+LIBRARY_NAME	= jsdom
+MODULE		= dom
+
+REQUIRES	= xpcom raptor caps oji
+
+CPPSRCS		= \
+		nsDOMFactory.cpp \
+		nsHTMLTagsEnums.cpp \
+		nsScriptNameSetRegistry.cpp \
+		nsScriptNameSpaceManager.cpp \
+		$(NULL)
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/libjsdombase_s.a \
+		$(DIST)/lib/libjsdomcore_s.a \
+		$(DIST)/lib/libjsdomevents_s.a \
+		$(DIST)/lib/libjsdomrange_s.a \
+		$(DIST)/lib/libjsdomhtml_s.a \
+		$(DIST)/lib/libjsdomcss_s.a \
+		$(NULL)
+
 include $(topsrcdir)/config/config.mk
-
-CFLAGS	+= -D_IMPL_NS_DOM
-
-LIBRARY_NAME = jsdom
-
-MODULE=dom
-
-REQUIRES=xpcom raptor caps oji
-
-CPPSRCS=nsDOMFactory.cpp \
-	nsHTMLTagsEnums.cpp \
-	nsScriptNameSetRegistry.cpp \
-	nsScriptNameSpaceManager.cpp \
-        $(NULL)
-
-
-INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(srcdir)/../base -I$(PUBLIC)/jsurl
-
-SHARED_LIBRARY_LIBS =		       \
-	$(DIST)/lib/libjsdombase_s.a   \
-	$(DIST)/lib/libjsdomcore_s.a   \
-	$(DIST)/lib/libjsdomevents_s.a \
-	$(DIST)/lib/libjsdomrange_s.a \
-	$(DIST)/lib/libjsdomhtml_s.a   \
-	$(DIST)/lib/libjsdomcss_s.a    \
-	$(NULL)
 
 ifeq ($(OS_ARCH),HP-UX)
 EXTRA_DSO_LDOPTS = -c objs/objslist
 else
-EXTRA_DSO_LDOPTS =	       \
-	$(MKSHLIB_FORCE_ALL)   \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	$(NULL)
+EXTRA_DSO_LDOPTS = \
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		$(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS		+= -D_IMPL_NS_DOM
+INCLUDES	+= -I$(srcdir)/../base
 
 ifeq ($(OS_ARCH),HP-UX)
 shared_library_objs: $(SHARED_LIBRARY_LIBS)
