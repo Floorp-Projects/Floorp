@@ -250,6 +250,9 @@ public:
     return mInner.SetBindingParent(aParent);
   }
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager **aResult) {
+    return mInner.GetListenerManager(this, aResult);
+  }
 
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 

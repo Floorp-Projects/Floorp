@@ -23,7 +23,6 @@
 #include "nsIAttributeContent.h"
 #include "nsGenericElement.h"
 #include "nsIDocument.h"
-#include "nsIEventListenerManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
@@ -52,9 +51,7 @@
 #include "nsITextContent.h"
 
 class nsIDOMAttr;
-class nsIDOMEventListener;
 class nsIDOMNodeList;
-class nsIEventListenerManager;
 class nsIFrame;
 class nsIStyleContext;
 class nsIStyleRule;
@@ -120,6 +117,10 @@ public:
 
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) {
     return !(aFlags & ~eTEXT);
+  }
+
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager **aResult) {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAReadableString& aValue,
@@ -211,11 +212,6 @@ public:
 };
 
 
-NS_IMPL_ADDREF(nsAttributeContent)
-
-NS_IMPL_RELEASE(nsAttributeContent)
-
-
 nsresult
 NS_NewAttributeContent(nsIContent** aContent)
 {
@@ -271,42 +267,18 @@ nsAttributeContent::Init(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aA
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
  * 
-*/ 
-nsresult nsAttributeContent::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
+*/
 
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIContent))) {
-    *aInstancePtr = (void*) ((nsIContent*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsITextContent))) {
-    *aInstancePtr = (void*) ((nsITextContent*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIAttributeContent))) {
-    *aInstancePtr = (void*) ((nsIAttributeContent*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*) ((nsISupports*)(nsIContent*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsAttributeContent)
+  NS_INTERFACE_MAP_ENTRY(nsIContent)
+  NS_INTERFACE_MAP_ENTRY(nsITextContent)
+  NS_INTERFACE_MAP_ENTRY(nsIAttributeContent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
+NS_INTERFACE_MAP_END
 
 
+NS_IMPL_ADDREF(nsAttributeContent)
+NS_IMPL_RELEASE(nsAttributeContent)
 
 
 //----------------------------------------------------------------------

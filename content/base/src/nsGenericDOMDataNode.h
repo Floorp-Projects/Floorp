@@ -200,6 +200,9 @@ struct nsGenericDOMDataNode {
   nsresult GetBindingParent(nsIContent** aContent);
   nsresult SetBindingParent(nsIContent* aParent);
 
+  nsresult GetListenerManager(nsIContent* aOuterContent,
+                              nsIEventListenerManager** aInstancePtrResult);
+
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
 
@@ -255,8 +258,6 @@ struct nsGenericDOMDataNode {
   nsresult IsOnlyWhitespace(PRBool* aResult);
 
   //----------------------------------------
-
-  nsresult GetListenerManager(nsIContent* aOuterContent, nsIEventListenerManager** aInstancePtrResult);
 
   void ToCString(nsAWritableString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
@@ -526,7 +527,11 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD SetBindingParent(nsIContent* aParent) {                       \
     return _g.SetBindingParent(aParent);                                   \
   }                                                                        \
-  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);                    \
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) {       \
+    return _g.GetListenerManager(this, aResult);                           \
+  }
+
 
 /**
  * Implement the nsIDOMText API by forwarding the methods to a
@@ -578,21 +583,11 @@ struct nsGenericDOMDataNode {
 #define NS_INTERFACE_MAP_ENTRY_DOM_DATA()                                     \
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)                   \
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)                                          \
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {                         \
-    nsCOMPtr<nsIEventListenerManager> man;                                    \
-    if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))) { \
-      return man->QueryInterface(NS_GET_IID(nsIDOMEventReceiver),             \
-                                 (void**)aInstancePtr);                       \
-    }                                                                         \
-    return NS_NOINTERFACE;                                                    \
-  } else                                                                      \
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {                           \
-    nsCOMPtr<nsIEventListenerManager> man;                                    \
-    if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){  \
-      return man->QueryInterface(NS_GET_IID(nsIDOMEventTarget),               \
-                                 (void**)aInstancePtr);                       \
-    }                                                                         \
-    return NS_NOINTERFACE;                                                    \
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver)) ||                         \
+      aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {                           \
+    foundInterface = NS_STATIC_CAST(nsIDOMEventReceiver *,                    \
+                                    nsDOMEventRTTearoff::Create(this));       \
+    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
   } else                                                                      \
   NS_INTERFACE_MAP_ENTRY(nsIContent)                                          \
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, nsNode3Tearoff(this))

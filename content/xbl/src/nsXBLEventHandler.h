@@ -72,7 +72,7 @@ protected:
   static nsIAtom* kModifiersAtom;
 
 protected:
-  nsIDOMEventReceiver* mEventReceiver; // Both of these refs are weak.
+  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
   nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
 
   nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.

@@ -166,50 +166,14 @@ nsresult nsEventListenerManager::RemoveAllListeners(PRBool aScriptOnly)
 NS_IMPL_ADDREF(nsEventListenerManager)
 NS_IMPL_RELEASE(nsEventListenerManager)
 
-// We need to return to the old QI form briefly to deal with the 
-// results of the partial aggregation we began using nsGenericElement
-// and nsGenericDOMDataNode.  We should look for a better long term
-// solution. -joki
-NS_IMETHODIMP
-nsEventListenerManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEventListenerManager))) {
-    *aInstancePtr = (void*)(nsIEventListenerManager*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-    *aInstancePtr = (void*)(nsIDOMEventTarget*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
-    *aInstancePtr = (void*)(nsIDOMEventReceiver*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (mTarget) {
-    return mTarget->QueryInterface(aIID, aInstancePtr);
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIEventListenerManager*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
-#if 0
 NS_INTERFACE_MAP_BEGIN(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
 NS_INTERFACE_MAP_END
-#endif
+
 
 nsVoidArray* nsEventListenerManager::GetListenersByType(EventArrayType aType, 
                                                         nsHashKey* aKey,

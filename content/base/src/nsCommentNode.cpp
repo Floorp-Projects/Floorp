@@ -183,6 +183,10 @@ public:
     return PR_FALSE;
   }
 
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) {
+    return mInner.GetListenerManager(this, aResult);
+  }
+
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     if (!aResult) {
       return NS_ERROR_NULL_POINTER;

@@ -39,6 +39,7 @@ class nsISupportsArray;
 class nsIDOMRange;
 class nsISizeOfHandler;
 class nsINodeInfo;
+class nsIEventListenerManager;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
@@ -311,6 +312,8 @@ public:
    * type, such as HTML, XUL, Text, ...
    */
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags) = 0;
+
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
 };
 
 // nsresult codes for GetAttribute

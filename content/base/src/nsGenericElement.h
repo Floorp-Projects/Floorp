@@ -29,6 +29,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMLinkStyle.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
@@ -141,6 +142,61 @@ private:
 };
 
 
+// nsDOMEventRTTearoff is a tearoff class used by nsGenericElement and
+// nsGenericDOMDataNode classes for implemeting the interfaces
+// nsIDOMEventReceiver and nsIDOMEventTarget
+
+#define NS_EVENT_TEAROFF_CACHE_SIZE 4
+
+class nsDOMEventRTTearoff : public nsIDOMEventReceiver
+{
+private:
+  // This class uses a caching scheme so we don't let users of this
+  // class create new instances with 'new', in stead the callers
+  // should use the static method
+  // nsDOMEventRTTearoff::Create(). That's why the constructor and
+  // destrucor of this class is private.
+
+  nsDOMEventRTTearoff(nsIContent *aContent);
+  virtual ~nsDOMEventRTTearoff();
+
+  static nsDOMEventRTTearoff *mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
+  static PRUint32 mCachedEventTearoffCount;
+
+  // This method gets called by Release() when it's time to delete the
+  // this object, in stead of always deleting the object we'll put the
+  // object in the cache if unless the cache is already full.
+  void LastRelease();
+
+  nsresult GetEventReceiver(nsIDOMEventReceiver **aReceiver);
+
+public:
+  // Use this static method to create instances of this tearoff class.
+  static nsDOMEventRTTearoff *Create(nsIContent *aContent);
+
+  static void Shutdown();
+
+  // nsISupports
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMEventTarget
+  NS_DECL_NSIDOMEVENTTARGET
+
+  // nsIDOMEventReceiver
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID);
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID);
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult);
+  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
+
+private:
+  // Strong reference back to the content object from where an
+  // instance of this class was 'torn off'
+  nsCOMPtr<nsIContent> mContent;
+};
+
+
 class nsGenericElement : public nsIHTMLContent
 {
 public:
@@ -210,6 +266,8 @@ public:
   NS_IMETHOD GetBindingParent(nsIContent** aContent);
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+
 
   // nsIStyledContent interface methods
   NS_IMETHOD GetID(nsIAtom*& aResult) const;
@@ -304,8 +362,6 @@ public:
   nsresult  doRemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
 
   //----------------------------------------
-
-  nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
 
   nsresult RenderFrame(nsIPresContext*);
 

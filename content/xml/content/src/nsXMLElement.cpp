@@ -145,9 +145,6 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     inst = NS_STATIC_CAST(nsIDOMElement *, this);
   } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
     inst = NS_STATIC_CAST(nsIXMLContent *, this);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
-    inst = new nsNode3Tearoff(this);
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {
     inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id,
                                                 GetElementIIDs,
