@@ -45,6 +45,8 @@
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
+    // NOTE: This is identical to the implementation in nsURLHelperOSX.cpp
+
     nsresult rv;
     nsCAutoString ePath;
 
@@ -66,7 +68,7 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     escPath.ReplaceSubstring(";", "%3b");
 
     // XXX this should be unnecessary
-    if (escPath[escPath.Length() - 1] != '/') {
+    if (escPath.Last() != '/') {
         PRBool dir;
         rv = aFile->IsDirectory(&dir);
         if (NS_FAILED(rv))
@@ -86,14 +88,15 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 nsresult
 net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 {
+    // NOTE: See also the implementation in nsURLHelperOSX.cpp,
+    // which is based on this.
+
     nsresult rv;
 
-    nsCOMPtr<nsILocalFile> localFile(
-            do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("Only nsILocalFile supported right now");
-        return rv;
-    }
+    nsCOMPtr<nsILocalFile> localFile;
+    rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(localFile));
+    if (NS_FAILED(rv))
+      return rv;
     
     nsCAutoString directory, fileBaseName, fileExtension, path;
 
