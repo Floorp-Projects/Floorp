@@ -2605,7 +2605,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         // Build up the host:port string.
         nsCAutoString hostport;
         aURI->GetHostPort(hostport);
-        formatStrs[0].AssignWithConversion(hostport.get());
+        CopyUTF8toUTF16(hostport, formatStrs[0]);
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("connectionFailure"));
     }
@@ -2614,7 +2614,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
         // Build up the host:port string.
         nsCAutoString hostport;
         aURI->GetHostPort(hostport);
-        formatStrs[0].AssignWithConversion(hostport.get());
+        CopyUTF8toUTF16(hostport, formatStrs[0]);
         formatStrCount = 1;
         error.Assign(NS_LITERAL_STRING("netInterrupt"));
     }
