@@ -194,8 +194,8 @@ void nsTableRowGroupFrame::PlaceChild( nsIPresContext*    aPresContext,
 																			 nsSize&            aKidMaxElementSize)
 {
   if (PR_TRUE==gsDebug)
-    printf ("rowgroup: placing row at %d, %d, %d, %d\n",
-           aKidRect.x, aKidRect.y, aKidRect.width, aKidRect.height);
+    printf ("rowgroup %p: placing row at %d, %d, %d, %d\n",
+            this, aKidRect.x, aKidRect.y, aKidRect.width, aKidRect.height);
 
   // Place and size the child
   aKidFrame->SetRect(aKidRect);
@@ -218,6 +218,12 @@ void nsTableRowGroupFrame::PlaceChild( nsIPresContext*    aPresContext,
       aMaxElementSize->height = aKidMaxElementSize.height;
     }
   }
+  else if (nsnull != aMaxElementSize) {
+      aMaxElementSize->width = PR_MAX(aMaxElementSize->width, aKidMaxElementSize.width);
+  }
+  if (gsDebug && nsnull != aMaxElementSize)
+    printf ("rowgroup %p: placing row %p with width = %d and MES= %d\n",
+            this, aKidFrame, aKidRect.width, aMaxElementSize->width);
 }
 
 /**
@@ -1156,13 +1162,13 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
   if (gsDebug==PR_TRUE) 
   {
     if (nsnull!=aDesiredSize.maxElementSize)
-      printf("nsTableRowGroupFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
-              NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
+      printf("nsTableRowGroupFrame %p returning: %s with aDesiredSize=%d,%d, aMES=%d,%d\n",
+              this, NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
               aDesiredSize.width, aDesiredSize.height,
               aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
     else
-      printf("nsTableRowGroupFrame::RR returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
-             NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
+      printf("nsTableRowGroupFrame %p returning: %s with aDesiredSize=%d,%d, aMES=NSNULL\n", 
+             this, NS_FRAME_IS_COMPLETE(aStatus)?"Complete":"Not Complete",
              aDesiredSize.width, aDesiredSize.height);
   }
 

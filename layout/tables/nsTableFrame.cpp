@@ -1689,6 +1689,24 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
       }
     }
   }
+  if (nsnull != aMaxElementSize) 
+  {
+    nsMargin borderPadding;
+    const nsStyleSpacing* tableSpacing;
+    // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    nsIFrame * parent = nsnull;
+    GetGeometricParent(parent);
+    parent->GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)tableSpacing));
+    // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    tableSpacing->CalcBorderPaddingFor(this, borderPadding);
+    nscoord cellSpacing = GetCellSpacing();
+    nscoord kidWidth = aKidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
+    aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidWidth); 
+    aMaxElementSize->height += aKidMaxElementSize.height;
+    if (gsDebug)
+      printf("%p placeChild set MES->width to %d\n", 
+             this, aMaxElementSize->width);
+  }
 }
 
 /**
@@ -2354,26 +2372,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
     break;
   }
 
-  // if we think we're UNCONSTRAINED, find the max width of an ancestor via reflow state
-  /*
-  if (NS_UNCONSTRAINEDSIZE==maxWidth)
-  {
-    //maxWidth = GetTableContainerWidth(aReflowState);
-    const nsReflowState* rs = &aReflowState;
-    while (nsnull != rs) 
-    {
-      if (NS_UNCONSTRAINEDSIZE!=rs->maxSize.width)
-      {
-        maxWidth = rs->maxSize.width;
-        break;
-      }
-      rs = rs->parentReflowState;
-    }
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE!=maxWidth, "illegal max width");
-  }
-  */
-  // now we know we're not UNCONSTRAINED, so subtract out table border and padding
-  maxWidth -= borderPadding.left + borderPadding.right;
+
   if (0>maxWidth)  // nonsense style specification
     maxWidth = 0;
 
