@@ -438,7 +438,7 @@ public:
     * return nsnull if aCurrentNode has no children.
     */
   nsCOMPtr<nsIDOMNode> GetLeftmostChild(nsIDOMNode  *aCurrentNode, 
-                                        PRBool       bNoBlockCrossing = PR_FALSE);
+                                         PRBool      bNoBlockCrossing = PR_FALSE);
 
   /** returns PR_TRUE if aNode is of the type implied by aTag */
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);

@@ -245,7 +245,6 @@ protected:
   nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
-  PRBool   IsVisBreak(nsIDOMNode *aNode);
   PRBool   IsEmptyInline(nsIDOMNode *aNode);
   PRBool   ListIsEmptyLine(nsISupportsArray *arrayOfNodes);
   nsresult RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignType, PRBool aChildrenOnly);

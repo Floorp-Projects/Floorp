@@ -621,6 +621,7 @@ protected:
                                              const nsAString & aCharset,
                                              const nsAString & aContextStr,
                                              const nsAString & aInfoStr);
+  PRBool     IsInLink(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *outLink = nsnull);
   nsresult   StripFormattingNodes(nsIDOMNode *aNode, PRBool aOnlyList = PR_FALSE);
   nsresult   CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
                                         const nsAString & aInputString,
@@ -651,6 +652,9 @@ protected:
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
+
+  /* small utility routine to test if a break node is visible to user */
+  PRBool   IsVisBreak(nsIDOMNode *aNode);
 
   /* small utility routine to test the eEditorReadonly bit */
   PRBool IsModifiable();
@@ -726,8 +730,8 @@ protected:
 #ifdef XXX_DEAD_CODE
   // these should be removed some day by jfrancis:  GetFirstEditableLeaf & GetLastEditableLeaf
   nsresult GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf);
-  nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
 #endif
+  nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
 
   nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 

@@ -2708,6 +2708,17 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
   
+    // make sure we dont assemble content that is in different table cells into the same list.
+    // respect table cell boundaries when listifying.
+    if (curList)
+    {
+      PRBool bInDifTblElems;
+      res = InDifferentTableElements(curList, curNode, &bInDifTblElems);
+      if (NS_FAILED(res)) return res;
+      if (bInDifTblElems)
+        curList = nsnull;
+    }
+    
     // if curNode is a Break, delete it, and quit remembering prev list item
     if (nsTextEditUtils::IsBreak(curNode)) 
     {
@@ -2819,9 +2830,8 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
       continue;
     }
     
-    // need to make a list to put things in if we haven't already,
-    // or if this node doesn't go in list we used earlier.
-    if (!curList) // || transitionList[i])
+    // need to make a list to put things in if we haven't already
+    if (!curList)
     {
       res = SplitAsNeeded(aListType, address_of(curParent), &offset);
       if (NS_FAILED(res)) return res;
@@ -4908,7 +4918,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
         // the promotion altogether.  We have a br after us.  If we fell through to code below,
         // it would think br was before us and would proceed merrily along.
         node = nsEditor::GetChildAt(parent,offset);
-        if (node && nsTextEditUtils::IsBreak(node))
+        if (node && mHTMLEditor->IsVisBreak(node))
           return NS_OK;  // default values used.
       }
       node = nsEditor::GetChildAt(parent,offset);
@@ -4930,7 +4940,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
         nextNodeBlock = nsHTMLEditor::GetBlockNodeParent(nextNode);
         if (nextNodeBlock != block)
           break;
-        if (nsTextEditUtils::IsBreak(nextNode))
+        if (mHTMLEditor->IsVisBreak(nextNode))
         {
           node = nextNode;
           break;
@@ -5885,7 +5895,7 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
         // just fall out to default of inserting a BR
         return res;
       }
-      if (IsVisBreak(sibling) && !nsTextEditUtils::HasMozAttr(sibling))
+      if (mHTMLEditor->IsVisBreak(sibling) && !nsTextEditUtils::HasMozAttr(sibling))
       {
         // split para
         nsCOMPtr<nsIDOMNode> selNode = aNode;
@@ -5906,7 +5916,7 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
         // just fall out to default of inserting a BR
         return res;
       }
-      if (IsVisBreak(sibling) && !nsTextEditUtils::HasMozAttr(sibling))
+      if (mHTMLEditor->IsVisBreak(sibling) && !nsTextEditUtils::HasMozAttr(sibling))
       {
         // split para
         nsCOMPtr<nsIDOMNode> selNode = aNode;
@@ -5927,12 +5937,12 @@ nsHTMLEditRules::ReturnInParagraph(nsISelection *aSelection,
     nsCOMPtr<nsIDOMNode> nearNode, selNode = aNode;
     res = mHTMLEditor->GetPriorHTMLNode(aNode, aOffset, address_of(nearNode));
     if (NS_FAILED(res)) return res;
-    if (!nearNode || !IsVisBreak(nearNode) || nsTextEditUtils::HasMozAttr(nearNode)) 
+    if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) || nsTextEditUtils::HasMozAttr(nearNode)) 
     {
       // is there a BR after it?
       res = mHTMLEditor->GetNextHTMLNode(aNode, aOffset, address_of(nearNode));
       if (NS_FAILED(res)) return res;
-      if (!nearNode || !IsVisBreak(nearNode) || nsTextEditUtils::HasMozAttr(nearNode)) 
+      if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) || nsTextEditUtils::HasMozAttr(nearNode)) 
       {
         // just fall out to default of inserting a BR
         return res;
@@ -5972,7 +5982,7 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
                                    address_of(leftPara), address_of(rightPara));
   if (NS_FAILED(res)) return res;
   // get rid of the break, if it is visible (otherwise it may be needed to prevent an empty p)
-  if (IsVisBreak(aBRNode))
+  if (mHTMLEditor->IsVisBreak(aBRNode))
   {
     res = mHTMLEditor->DeleteNode(aBRNode);  
     if (NS_FAILED(res)) return res;
@@ -6903,7 +6913,7 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
     {
       if (nearNode && nsTextEditUtils::IsBreak(nearNode) )
       {   
-        if (!IsVisBreak(nearNode))
+        if (!mHTMLEditor->IsVisBreak(nearNode))
         {
           // need to insert special moz BR. Why?  Because if we don't
           // the user will see no new line for the break.  Also, things
@@ -6976,24 +6986,6 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
 }
 
 
-PRBool
-nsHTMLEditRules::IsVisBreak(nsIDOMNode *aNode)
-{
-  if (!aNode) 
-    return PR_FALSE;
-  if (!nsTextEditUtils::IsBreak(aNode)) 
-    return PR_FALSE;
-  // check if there is a later node in block after br
-  nsCOMPtr<nsIDOMNode> nextNode;
-  mHTMLEditor->GetNextHTMLNode(aNode, address_of(nextNode), PR_TRUE); 
-  if (!nextNode) 
-    return PR_FALSE;  // this break is trailer in block, it's not visible
-  if (IsBlockNode(nextNode))
-    return PR_FALSE; // break is right before a block, it's not visible
-  return PR_TRUE;
-}
-
-
 nsresult
 nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode, 
                                         PRInt32 aSelOffset, 
@@ -7028,7 +7020,7 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
   // scan in the right direction until we find an eligible text node,
   // but dont cross any breaks, images, or table elements.
   while (nearNode && !(mHTMLEditor->IsTextNode(nearNode)
-                       || IsVisBreak(nearNode)
+                       || nsTextEditUtils::IsBreak(nearNode)
                        || nsHTMLEditUtils::IsImage(nearNode)))
   {
     curNode = nearNode;
