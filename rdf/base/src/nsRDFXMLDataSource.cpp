@@ -112,7 +112,7 @@
 #include "nsIChannel.h"
 #include "nsRDFCID.h"
 #include "nsRDFBaseDataSources.h"
-#include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
 #include "prio.h"
@@ -229,7 +229,7 @@ protected:
     PRPackedBool        mIsWritable;    // true if the document can be written back
     PRPackedBool        mIsDirty;       // true if the document should be written back
     LoadState           mLoadState;     // what we're doing now
-    nsVoidArray         mObservers;     // OWNER
+    nsCOMArray<nsIRDFXMLSinkObserver> mObservers;
     nsCOMPtr<nsIURI>    mURL;
     nsCOMPtr<nsIStreamListener> mListener;
     nsNameSpaceMap      mNameSpaces;
@@ -515,10 +515,7 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
     rv = Flush();
 
     // Release RDF/XML sink observers
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs = NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
-        NS_RELEASE(obs);
-    }
+    mObservers.Clear();
 
     NS_RELEASE(mInner);
 
@@ -574,10 +571,14 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     // Notify load observers
     PRInt32 i;
     for (i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs =
-            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+        // Make sure to hold a strong reference to the observer so
+        // that it doesn't go away in this call if it removes itself
+        // as an observer
+        nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
-        obs->OnBeginLoad(this);
+        if (obs) {
+            obs->OnBeginLoad(this);
+        }
     }
 
     request = do_QueryInterface(channel);
@@ -605,13 +606,17 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
     // Notify load observers
     for (i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs =
-            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+        // Make sure to hold a strong reference to the observer so
+        // that it doesn't go away in this call if it removes itself
+        // as an observer
+        nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
-        if (NS_FAILED(rv))
-            obs->OnError(this, rv, nsnull);
+        if (obs) {
+            if (NS_FAILED(rv))
+                obs->OnError(this, rv, nsnull);
 
-        obs->OnEndLoad(this);
+            obs->OnEndLoad(this);
+        }
     }
 
 	// don't leak proxy!
@@ -981,10 +986,14 @@ RDFXMLDataSourceImpl::BeginLoad(void)
     
     mLoadState = eLoadState_Loading;
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs =
-            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+        // Make sure to hold a strong reference to the observer so
+        // that it doesn't go away in this call if it removes itself
+        // as an observer
+        nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
-        obs->OnBeginLoad(this);
+        if (obs) {
+            obs->OnBeginLoad(this);
+        }
     }
     return NS_OK;
 }
@@ -1002,10 +1011,14 @@ RDFXMLDataSourceImpl::Interrupt(void)
 #endif
     
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs =
-            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+        // Make sure to hold a strong reference to the observer so
+        // that it doesn't go away in this call if it removes itself
+        // as an observer
+        nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
-        obs->OnInterrupt(this);
+        if (obs) {
+            obs->OnInterrupt(this);
+        }
     }
     return NS_OK;
 }
@@ -1023,10 +1036,14 @@ RDFXMLDataSourceImpl::Resume(void)
 #endif
     
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs =
-            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+        // Make sure to hold a strong reference to the observer so
+        // that it doesn't go away in this call if it removes itself
+        // as an observer
+        nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
-        obs->OnResume(this);
+        if (obs) {
+            obs->OnResume(this);
+        }
     }
     return NS_OK;
 }
@@ -1053,10 +1070,14 @@ RDFXMLDataSourceImpl::EndLoad(void)
 
     // Notify load observers
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs =
-            NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+        // Make sure to hold a strong reference to the observer so
+        // that it doesn't go away in this call if it removes itself
+        // as an observer
+        nsIRDFXMLSinkObserver* obs = mObservers[i];
 
-        obs->OnEndLoad(this);
+        if (obs) {
+            obs->OnEndLoad(this);
+        }
     }
     return NS_OK;
 }
@@ -1075,8 +1096,7 @@ RDFXMLDataSourceImpl::AddXMLSinkObserver(nsIRDFXMLSinkObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ADDREF(aObserver);
-    mObservers.AppendElement(aObserver);
+    mObservers.AppendObject(aObserver);
     return NS_OK;
 }
 
@@ -1086,10 +1106,7 @@ RDFXMLDataSourceImpl::RemoveXMLSinkObserver(nsIRDFXMLSinkObserver* aObserver)
     if (! aObserver)
         return NS_ERROR_NULL_POINTER;
 
-    if (mObservers.RemoveElement(aObserver)) {
-        // RemoveElement() returns PR_TRUE if it was actually there...
-        NS_RELEASE(aObserver);
-    }
+    mObservers.RemoveObject(aObserver);
 
     return NS_OK;
 }
@@ -1113,10 +1130,14 @@ RDFXMLDataSourceImpl::OnStopRequest(nsIRequest *request,
 {
     if (NS_FAILED(status)) {
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            nsIRDFXMLSinkObserver* obs =
-                NS_STATIC_CAST(nsIRDFXMLSinkObserver*, mObservers[i]);
+            // Make sure to hold a strong reference to the observer so
+            // that it doesn't go away in this call if it removes
+            // itself as an observer
+            nsCOMPtr<nsIRDFXMLSinkObserver> obs = mObservers[i];
 
-            (void) obs->OnError(this, status, nsnull);
+            if (obs) {
+                obs->OnError(this, status, nsnull);
+            }
         }
     }
 
