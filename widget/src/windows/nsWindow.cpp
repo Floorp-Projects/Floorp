@@ -51,6 +51,14 @@
 #include "DropSrc.h"
 #endif
 
+// For clipboard support
+#include "nsIServiceManager.h"
+#include "nsIClipboard.h"
+#include "nsWidgetsCID.h"
+static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+
+
 BOOL nsWindow::sIsRegistered = FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
@@ -485,9 +493,8 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
 //-------------------------------------------------------------------------
-#ifdef DRAG_DROP
+// This is needed for drag & drop & Clipboard support
 BOOL gOLEInited = FALSE;
-#endif
 
 nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                       const nsRect &aRect,
@@ -581,15 +588,17 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     VERIFY(mWnd);
 
     // Initial Drag & Drop Work
-#ifdef DRAG_DROP
    if (!gOLEInited) {
      DWORD dwVer = ::OleBuildVersion();
 
      if (FAILED(::OleInitialize(NULL))){
-       printf("***** OLE has been initialized!\n");
+       printf("***** OLE has not been initialized!\n");
+     } else {
+       if (DEBUG) printf("***** OLE has been initialized!\n");
      }
      gOLEInited = TRUE;
    }
+#ifdef DRAG_DROP
 
    mDragDrop = new CfDragDrop();
    //mDragDrop->AddRef();
@@ -2151,6 +2160,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             DispatchEvent(&event, status);
 	        }
         } break;
+
+      case WM_DESTROYCLIPBOARD: {
+        nsIClipboard* clipboard;
+        nsresult rv = nsServiceManager::GetService(kCClipboardCID,
+                                                   kIClipboardIID,
+                                                   (nsISupports **)&clipboard);
+        clipboard->EmptyClipboard();
+        NS_RELEASE(clipboard);
+      } break;
+
     }
 
     return result;
