@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -287,8 +288,8 @@ inline nsresult
 NS_NewInputStreamChannel(nsIChannel      **result,
                          nsIURI           *uri,
                          nsIInputStream   *stream,
-                         const nsACString &contentType    = EmptyCString(),
-                         const nsACString &contentCharset = EmptyCString())
+                         const nsACString &contentType,
+                         const nsACString *contentCharset)
 {
     nsresult rv;
     static NS_DEFINE_CID(kInputStreamChannelCID, NS_INPUTSTREAMCHANNEL_CID);
@@ -298,11 +299,33 @@ NS_NewInputStreamChannel(nsIChannel      **result,
         rv |= channel->SetURI(uri);
         rv |= channel->SetContentStream(stream);
         rv |= channel->SetContentType(contentType);
-        rv |= channel->SetContentCharset(contentCharset);
+        if (contentCharset && !contentCharset->IsEmpty()) {
+            rv |= channel->SetContentCharset(*contentCharset);
+        }
         if (NS_SUCCEEDED(rv))
             NS_ADDREF(*result = channel);
     }
     return rv;
+}
+
+inline nsresult
+NS_NewInputStreamChannel(nsIChannel      **result,
+                         nsIURI           *uri,
+                         nsIInputStream   *stream,
+                         const nsACString &contentType    = EmptyCString())
+{
+    return NS_NewInputStreamChannel(result, uri, stream, contentType, nsnull);
+}
+
+inline nsresult
+NS_NewInputStreamChannel(nsIChannel      **result,
+                         nsIURI           *uri,
+                         nsIInputStream   *stream,
+                         const nsACString &contentType,
+                         const nsACString &contentCharset)
+{
+    return NS_NewInputStreamChannel(result, uri, stream, contentType,
+                                    &contentCharset);
 }
 
 inline nsresult
