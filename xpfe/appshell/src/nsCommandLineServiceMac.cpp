@@ -361,6 +361,7 @@ OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 		rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).get());
 		if (NS_FAILED(rv))
 			return err;
+        err = noErr;  // we handled it
 	}
 	else
 		err = AddToCommandLine(url);
