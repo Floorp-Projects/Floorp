@@ -112,11 +112,7 @@ nsresult nsTransactionManagerFactory::LockFactory(PRBool aLock)
 }
 
 // return the proper factory to the caller
-#if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" /* NS_TRANSACTIONMANAGER */ nsresult NSGetFactory_TRANSACTIONMANAGER_DLL(const nsCID &aClass, nsIFactory **aFactory)
-#else
-extern "C" /* NS_TRANSACTIONMANAGER */ nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
-#endif
+extern "C" /* NS_TRANSACTIONMANAGER */ NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
 {
   if (!aFactory)
     return NS_ERROR_NULL_POINTER;
