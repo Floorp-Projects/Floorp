@@ -184,9 +184,19 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     nsHTMLReflowState::ComputeBorderPaddingFor(this, nsnull,
                                                borderPadding);
 
+    // Compute the margins around the child frame
+    nsMargin childMargins;
+    nsHTMLReflowState::ComputeMarginFor(mFirstChild, &aReflowState,
+                                        childMargins);
+
+    nscoord top = borderPadding.top + childMargins.top;
+    nscoord bottom = borderPadding.bottom + childMargins.bottom;
+    nscoord left = borderPadding.left + childMargins.left;
+    nscoord right = borderPadding.right + childMargins.right;
+
     nsSize  kidMaxSize(reflowState.maxSize);
-    kidMaxSize.width -= borderPadding.left + borderPadding.right;
-    kidMaxSize.height -= borderPadding.top + borderPadding.bottom;
+    kidMaxSize.width -= left + right;
+    kidMaxSize.height -= top + bottom;
     nsHTMLReflowMetrics desiredSize(nsnull);
     nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, reflowState,
                                      kidMaxSize);
@@ -200,20 +210,21 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
     
-      // Place and size the child. Because we told the child it was fixed make sure
-      // it's at least as big as we told it. This handles the case where the child
-      // ignores the reflow state constraints
+      // Place and size the child. Because we told the child it was
+      // fixed make sure it's at least as big as we told it. This
+      // handles the case where the child ignores the reflow state
+      // constraints
       if (desiredSize.width < kidMaxSize.width) {
         desiredSize.width = kidMaxSize.width;
       }
       if (desiredSize.height < kidMaxSize.height) {
         desiredSize.height = kidMaxSize.height;
       }
-      nsRect  rect(borderPadding.left, borderPadding.top, desiredSize.width, desiredSize.height);
+      nsRect  rect(left, top, desiredSize.width, desiredSize.height);
       mFirstChild->SetRect(rect);
 
-      // XXX We should resolve the details of who/when DidReflow() notifications
-      // are sent...
+      // XXX We should resolve the details of who/when DidReflow()
+      // notifications are sent...
       htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
     }
 
@@ -222,8 +233,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     // XXX We could be smarter about only damaging the border/padding area
     // that was affected by the resize...
     if ((eReflowReason_Resize == reflowState.reason) &&
-        ((borderPadding.left != 0) || (borderPadding.top != 0) ||
-         (borderPadding.right != 0) || (borderPadding.bottom) != 0)) {
+        ((left != 0) || (top != 0) || (right != 0) || (bottom) != 0)) {
       nsRect  damageRect(0, 0, reflowState.maxSize.width, reflowState.maxSize.height);
       Invalidate(damageRect, PR_FALSE);
     }
