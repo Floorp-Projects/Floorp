@@ -114,6 +114,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
             }
             dp->val.i64 = (PRUint64)tempu64;
           }
+          break;
 
 #if 0
         case nsXPTType::T_I64     :  if (iCount < PARAM_GPR_COUNT)
