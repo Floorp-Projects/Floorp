@@ -1058,20 +1058,45 @@ nsNativeAppSupportWin::FindTopic( HSZ topic ) {
 
 // Utility function that determines if we're handling http Internet shortcuts.
 static PRBool handlingHTTP() {
-    PRBool result = PR_FALSE;
-    nsCOMPtr<nsIPref> prefService( do_GetService( NS_PREF_CONTRACTID ) );
-    if ( prefService ) {
-        prefService->GetBoolPref( "advanced.system.supportDDEExec", &result );
-    }
-    if ( result ) {
-        result = PR_FALSE; // Answer no if an error occurs.
-        // See if we're the "default browser" (i.e., handling http Internet shortcuts)        
-        nsCOMPtr<nsIWindowsHooks> winhooks( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID ) );
-        if ( winhooks ) {
-            nsCOMPtr<nsIWindowsHooksSettings> settings;
-            nsresult rv = winhooks->GetSettings( getter_AddRefs( settings ) );
-            if ( NS_SUCCEEDED( rv ) ) {
-                settings->GetIsHandlingHTTP( &result );
+    PRBool result = PR_FALSE; // Answer no if an error occurs.
+    // See if we're the "default browser" (i.e., handling http Internet shortcuts)        
+    nsCOMPtr<nsIWindowsHooks> winhooks( do_GetService( NS_IWINDOWSHOOKS_CONTRACTID ) );
+    if ( winhooks ) {
+        nsCOMPtr<nsIWindowsHooksSettings> settings;
+        nsresult rv = winhooks->GetSettings( getter_AddRefs( settings ) );
+        if ( NS_SUCCEEDED( rv ) ) {
+            settings->GetIsHandlingHTTP( &result );
+            if ( result ) {
+                // The user *said* to handle http.  See if we really
+                // are doing it.  We need to check *only* the HTTP
+                // settings.  If we don't mask off all others, we
+                // may erroneously conclude that we're not handling
+                // HTTP when really we are (although, a false negative
+                // is much better than a false positive).  Please note
+                // that setting these attributes false only affects
+                // this "Settings" object.  It *does not* change the
+                // actual user preferences stored in the registry!
+
+                // First, turn off all the other protocols.
+                settings->SetIsHandlingHTTPS( PR_FALSE );
+                settings->SetIsHandlingFTP( PR_FALSE );
+                settings->SetIsHandlingCHROME( PR_FALSE );
+                settings->SetIsHandlingGOPHER( PR_FALSE );
+
+                // Next, all the file types.
+                settings->SetIsHandlingHTML( PR_FALSE );
+                settings->SetIsHandlingJPEG( PR_FALSE );
+                settings->SetIsHandlingGIF( PR_FALSE );
+                settings->SetIsHandlingPNG( PR_FALSE );
+                settings->SetIsHandlingMNG( PR_FALSE );
+                settings->SetIsHandlingBMP( PR_FALSE );
+                settings->SetIsHandlingICO( PR_FALSE );
+                settings->SetIsHandlingXML( PR_FALSE );
+                settings->SetIsHandlingXHTML( PR_FALSE );
+                settings->SetIsHandlingXUL( PR_FALSE );
+
+                // Now test the HTTP setting in the registry.
+                settings->GetRegistryMatches( &result );
             }
         }
     }
