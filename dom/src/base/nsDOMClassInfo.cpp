@@ -4818,7 +4818,7 @@ documentNeedsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
 
 #ifdef DEBUG
   {
-    JSClass *clazz = JS_GET_CLASS(cx, ::JS_GetGlobalObject(cx));
+    JSClass *clazz = JS_GET_CLASS(cx, wrapper_obj);
 
     NS_ASSERTION(clazz && clazz->flags & JSCLASS_HAS_PRIVATE &&
                  clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS,
