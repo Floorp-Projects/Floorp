@@ -127,7 +127,6 @@ nsresult NS_InitNetlib(void)
                                      (void *) CVACTIVE_SIGNAL_AT_END_OF_MULTIPART,
                                      CV_MakeMultipleDocumentStream);
 
-    RL_Init();
 
 #if defined(XP_PC)
     net_InitAsyncDNS();
