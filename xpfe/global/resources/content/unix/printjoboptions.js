@@ -97,6 +97,13 @@ function initDialog()
 }
 
 //---------------------------------------------------
+function round10(val)
+{
+  return Math.round(val * 10) / 10;
+}
+
+
+//---------------------------------------------------
 function listElement(aListElement)
   {
     this.listElement = aListElement;
@@ -126,7 +133,7 @@ listElement.prototype =
               /* No name in string bundle ? Then build one manually (this
                * usually happens when gPaperArray was build by createPaperArrayFromPrinterFeatures() ...) */              
               if (paperObj.inches) {
-                label = paperObj.name + " (" + paperObj.width + "x" + paperObj.height + " in.)";
+                label = paperObj.name + " (" + round10(paperObj.width) + "x" + round10(paperObj.height) + " inch)";
               }  
               else {
                 label = paperObj.name + " (" + paperObj.width + "x" + paperObj.height + " mm)";
@@ -259,8 +266,7 @@ function loadDialog()
   var print_paper_unit       = 0;
   var print_paper_width      = 0.0;
   var print_paper_height     = 0.0;
-  var print_paper_width_mm   = 0.0;
-  var print_paper_height_mm  = 0.0;  
+  var print_paper_name       = "";
   var print_color            = true;
   var print_command          = default_command;
 
@@ -271,20 +277,9 @@ function loadDialog()
     print_paper_unit   = gPrintSettings.paperSizeUnit;
     print_paper_width  = gPrintSettings.paperWidth;
     print_paper_height = gPrintSettings.paperHeight;
+    print_paper_name   = gPrintSettings.paperName;
     print_color        = gPrintSettings.printInColor;
     print_command      = gPrintSettings.printCommand;
-    
-    if (print_paper_unit == gPrintSettingsInterface.kPaperSizeInches) {
-      print_paper_width_mm  = gPrintSettings.paperWidth  * 25.4;
-      print_paper_height_mm = gPrintSettings.paperHeight * 25.4;
-    }
-    else if (print_paper_unit == gPrintSettingsInterface.kPaperSizeMillimeters) {
-      print_paper_width_mm  = gPrintSettings.paperWidth;
-      print_paper_height_mm = gPrintSettings.paperHeight;
-    }
-    else {
-      dump("Unknown value in gPrintSettings.paperSizeUnit");
-    }
   }
 
   if (doDebug) {
@@ -292,6 +287,7 @@ function loadDialog()
     dump("paperSizeType "+print_paper_unit+"\n");
     dump("paperWidth    "+print_paper_width+"\n");
     dump("paperHeight   "+print_paper_height+"\n");
+    dump("paperName     "+print_paper_name+"\n");
     dump("printInColor  "+print_color+"\n");
     dump("printCommand  "+print_command+"\n");
   }
@@ -299,11 +295,8 @@ function loadDialog()
   createPaperArray();
 
   var selectedInx = 0;
-  var tolerance = 10.0; // 4 is usually enougth except for large papers like DIN-A3
   for (var i=0;i<gPaperArray.length;i++) { 
-    // Weak match. Allow errors up to +/- 5mm due rounding errors
-    if ((Math.abs(print_paper_width_mm  - gPaperArray[i].width_mm)  <= tolerance) && 
-        (Math.abs(print_paper_height_mm - gPaperArray[i].height_mm) <= tolerance)) {
+    if (print_paper_name == gPaperArray[i].name) {
       selectedInx = i;
       break;
     }
@@ -312,6 +305,8 @@ function loadDialog()
   if (doDebug) {
     if (i == gPaperArray.length)
       dump("loadDialog: No paper found.\n");
+    else
+      dump("loadDialog: found paper '"+gPaperArray[selectedInx].name+"'.\n");
   }
 
   createPaperSizeList(selectedInx);
@@ -328,25 +323,26 @@ function loadDialog()
 
   dialog.cmdInput.value = print_command;
 
+  /* First initalize with the hardcoded defaults... */
+  dialog.topInput.value    = "0.04";
+  dialog.bottomInput.value = "0.04";
+  dialog.leftInput.value   = "0.04";
+  dialog.rightInput.value  = "0.04";
+
   try {
-    // first get the generic settings
+    /* ... then try to get the generic settings ... */
     dialog.topInput.value    = gPrefs.getIntPref("print.print_edge_top") / 100.0;
     dialog.bottomInput.value = gPrefs.getIntPref("print.print_edge_left") / 100.0;
     dialog.leftInput.value   = gPrefs.getIntPref("print.print_edge_right") / 100.0;
     dialog.rightInput.value  = gPrefs.getIntPref("print.print_edge_bottom") / 100.0;
 
-    // then the printer specific settings
+    /* ... and then the printer specific settings. */
     var printername = gPrintSettings.printerName;
-    dialog.topInput.value    = gPrefs.getIntPref("print."+printername+"print_edge_top") / 100.0;
-    dialog.bottomInput.value = gPrefs.getIntPref("print."+printername+"print_edge_left") / 100.0;
-    dialog.leftInput.value   = gPrefs.getIntPref("print."+printername+"print_edge_right") / 100.0;
-    dialog.rightInput.value  = gPrefs.getIntPref("print."+printername+"print_edge_bottom") / 100.0;
-  } catch (e) {
-    dialog.topInput.value    = "0.04";
-    dialog.bottomInput.value = "0.04";
-    dialog.leftInput.value   = "0.04";
-    dialog.rightInput.value  = "0.04";
-  }
+    dialog.topInput.value    = gPrefs.getIntPref("print.printer_"+printername+".print_edge_top") / 100.0;
+    dialog.bottomInput.value = gPrefs.getIntPref("print.printer_"+printername+".print_edge_left") / 100.0;
+    dialog.leftInput.value   = gPrefs.getIntPref("print.printer_"+printername+".print_edge_right") / 100.0;
+    dialog.rightInput.value  = gPrefs.getIntPref("print.printer_"+printername+".print_edge_bottom") / 100.0;
+  } catch (e) {  }
 }
 
 //---------------------------------------------------
@@ -378,8 +374,9 @@ function onAccept()
 {
   var print_paper_type   = gPrintSettingsInterface.kPaperSizeDefined;
   var print_paper_unit   = gPrintSettingsInterface.kPaperSizeInches;
-  var print_paper_width  = 8.5;
-  var print_paper_height = 11.0;
+  var print_paper_width  = 0.0;
+  var print_paper_height = 0.0;
+  var print_paper_name   = "";
 
   if (gPrintSettings != null) {
     var selectedInx = dialog.paperList.selectedIndex;
@@ -390,12 +387,14 @@ function onAccept()
     }
     print_paper_width  = gPaperArray[selectedInx].width;
     print_paper_height = gPaperArray[selectedInx].height;
+    print_paper_name   = gPaperArray[selectedInx].name;
     gPrintSettings.paperSize = gPaperArray[selectedInx].paperSize; // deprecated
 
     gPrintSettings.paperSizeType = print_paper_type;
     gPrintSettings.paperSizeUnit = print_paper_unit;
     gPrintSettings.paperWidth    = print_paper_width;
     gPrintSettings.paperHeight   = print_paper_height;
+    gPrintSettings.paperName     = print_paper_name;
 
     // save these out so they can be picked up by the device spec
     gPrintSettings.printInColor = dialog.colorRadio.selected;
@@ -405,16 +404,16 @@ function onAccept()
     try {
       var printerName = gPrintSettings.printerName;
       var i = dialog.topInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_top", i);
+      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_top", i);
 
       i = dialog.bottomInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_left", i);
+      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_left", i);
 
       i = dialog.leftInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_right", i);
+      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_right", i);
 
       i = dialog.rightInput.value * 100;
-      gPrefs.setIntPref("print."+printerName+"print_edge_bottom", i);
+      gPrefs.setIntPref("print.printer_"+printerName+".print_edge_bottom", i);
     } catch (e) {
     }
 
@@ -425,9 +424,10 @@ function onAccept()
       dump("paperSizeUnit "+print_paper_unit+"\n");
       dump("paperWidth    "+print_paper_width+"\n");
       dump("paperHeight   "+print_paper_height+"\n");
+      dump("paperName     '"+print_paper_name+"'\n");
 
       dump("printInColor  "+gPrintSettings.printInColor+"\n");
-      dump("printCommand  "+gPrintSettings.printCommand+"\n");
+      dump("printCommand  '"+gPrintSettings.printCommand+"'\n");
     }
   } else {
     dump("************ onAccept gPrintSettings: "+gPrintSettings+"\n");

@@ -284,7 +284,10 @@ void XpuSetOneLongAttribute( Display *pdpy, XPContext pcontext,
   }  
 }
 
-/* check if attribute value is supported or not */
+/* Check if attribute value is supported or not
+ * Use this function _only_ if XpuGetSupported{Job,Doc,Page}Attributes()
+ * does not help you...
+ */
 int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, const char *query )
 {
   char *value;
@@ -325,14 +328,14 @@ int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, con
 
 int XpuSetJobTitle( Display *pdpy, XPContext pcontext, const char *title )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "job-attributes-supported", "job-name") )
+  if( XpuGetSupportedJobAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_JOB_NAME )
   {
     XpuSetOneAttribute(pdpy, pcontext, XPJobAttr, "*job-name", title, XPAttrMerge);
     return(1);
   }
   else
   {
-    XPU_DEBUG_ONLY(printf("XpuSetJobTitle: XpuCheckSupported failed for '%s'\n", XPU_NULLXSTR(title)));
+    XPU_DEBUG_ONLY(printf("XpuSetJobTitle: XPUATTRIBUTESUPPORTED_JOB_NAME not supported ('%s')\n", XPU_NULLXSTR(title)));
     return(0); 
   }  
 }
@@ -890,14 +893,14 @@ void XpuFreePrinterList( XPPrinterList list )
 /* Set number of copies to print from this document */
 int XpuSetDocumentCopies( Display *pdpy, XPContext pcontext, long num_copies )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "copy-count") )
+  if( XpuGetSupportedDocAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_COPY_COUNT)
   {
     XpuSetOneLongAttribute(pdpy, pcontext, XPDocAttr, "*copy-count", num_copies, XPAttrMerge);
     return(1);
   }
   else
   {
-    XPU_DEBUG_ONLY(printf("XpuSetContentOrientation: XpuCheckSupported failed for 'copy-count'\n"));
+    XPU_DEBUG_ONLY(printf("XpuSetContentOrientation: XPUATTRIBUTESUPPORTED_COPY_COUNT not supported\n"));
        
     /* Failure... */
     return(0);
@@ -1032,12 +1035,16 @@ int XpuSetMediumSourceSize( Display *pdpy, XPContext pcontext, XPAttributes type
 /* Set document medium size */
 int XpuSetDocMediumSourceSize( Display *pdpy, XPContext pcontext, XpuMediumSourceSizeRec *medium_spec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "default-medium") == 0 )
+  XpuSupportedFlags doc_supported_flags;
+  
+  doc_supported_flags = XpuGetSupportedDocAttributes(pdpy, pcontext);
+
+  if( (doc_supported_flags & XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM) == 0 )
     return( 0 );
     
   if (medium_spec->tray_name)
   {
-    if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "default-input-tray") == 0 )
+    if( (doc_supported_flags & XPUATTRIBUTESUPPORTED_DEFAULT_INPUT_TRAY) == 0 )
       return( 0 );  
   }
 
@@ -1047,12 +1054,16 @@ int XpuSetDocMediumSourceSize( Display *pdpy, XPContext pcontext, XpuMediumSourc
 /* Set page medium size */
 int XpuSetPageMediumSourceSize( Display *pdpy, XPContext pcontext, XpuMediumSourceSizeRec *medium_spec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "default-medium") == 0 )
+  XpuSupportedFlags page_supported_flags;
+  
+  page_supported_flags = XpuGetSupportedPageAttributes(pdpy, pcontext);
+
+  if( (page_supported_flags & XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM) == 0 )
     return( 0 );
     
   if (medium_spec->tray_name)
   {
-    if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "default-input-tray") == 0 )
+    if( (page_supported_flags & XPUATTRIBUTESUPPORTED_DEFAULT_INPUT_TRAY) == 0 )
       return( 0 );  
   }
 
@@ -1300,7 +1311,7 @@ int XpuSetResolution( Display *pdpy, XPContext pcontext, XPAttributes type, XpuR
  */
 int XpuSetDocResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec *rec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "default-printer-resolution") == 0 )
+  if( (XpuGetSupportedDocAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_DEFAULT_PRINTER_RESOLUTION) == 0 )
     return( 0 );
     
   return XpuSetResolution(pdpy, pcontext, XPDocAttr, rec);
@@ -1312,7 +1323,7 @@ int XpuSetDocResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec *re
  */
 int XpuSetPageResolution( Display *pdpy, XPContext pcontext, XpuResolutionRec *rec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "default-printer-resolution") == 0 )
+  if( (XpuGetSupportedPageAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_DEFAULT_PRINTER_RESOLUTION) == 0 )
     return( 0 );
     
   return XpuSetResolution(pdpy, pcontext, XPPageAttr, rec);
@@ -1436,7 +1447,7 @@ int XpuSetOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, Xpu
  */
 int XpuSetDocOrientation( Display *pdpy, XPContext pcontext, XpuOrientationRec *rec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "content-orientation") == 0 )
+  if( (XpuGetSupportedDocAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_CONTENT_ORIENTATION) == 0 )
     return( 0 );
     
   return XpuSetOrientation(pdpy, pcontext, XPDocAttr, rec);
@@ -1448,7 +1459,7 @@ int XpuSetDocOrientation( Display *pdpy, XPContext pcontext, XpuOrientationRec *
  */
 int XpuSetPageOrientation( Display *pdpy, XPContext pcontext, XpuOrientationRec *rec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "content-orientation") == 0 )
+  if( (XpuGetSupportedPageAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_CONTENT_ORIENTATION) == 0 )
     return( 0 );
     
   return XpuSetOrientation(pdpy, pcontext, XPPageAttr, rec);
@@ -1572,7 +1583,7 @@ int XpuSetContentPlex( Display *pdpy, XPContext pcontext, XPAttributes type, Xpu
  */
 int XpuSetDocPlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported", "plex") == 0 )
+  if( (XpuGetSupportedDocAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_PLEX) == 0 )
     return( 0 );
     
   return XpuSetContentPlex(pdpy, pcontext, XPDocAttr, rec);
@@ -1584,10 +1595,67 @@ int XpuSetDocPlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec )
  */
 int XpuSetPagePlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec )
 {
-  if( XpuCheckSupported(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported", "plex") == 0 )
+  if( (XpuGetSupportedPageAttributes(pdpy, pcontext) & XPUATTRIBUTESUPPORTED_PLEX) == 0 )
     return( 0 );
     
   return XpuSetContentPlex(pdpy, pcontext, XPPageAttr, rec);
+}
+
+
+/* Return flags to indicate which attributes are supported and which not... */
+static
+XpuSupportedFlags XpuGetSupportedAttributes( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name )
+{
+  char              *value;
+  void              *tok_lasts;
+  XpuSupportedFlags  flags = 0;
+  
+  MAKE_STRING_WRITABLE(attribute_name);
+  if( attribute_name == NULL )
+    return(0);
+    
+  value = XpGetOneAttribute(pdpy, pcontext, type, STRING_AS_WRITABLE(attribute_name));   
+  
+  FREE_WRITABLE_STRING(attribute_name);
+  
+  if( value != NULL )
+  {
+    const char *s;
+    
+    for( s = XpuEnumerateXpAttributeValue(value, &tok_lasts) ; s != NULL ; s = XpuEnumerateXpAttributeValue(NULL, &tok_lasts) )
+    {
+           if( !strcmp(s, "job-name") )                   flags |= XPUATTRIBUTESUPPORTED_JOB_NAME;
+      else if( !strcmp(s, "job-owner") )                  flags |= XPUATTRIBUTESUPPORTED_JOB_OWNER;
+      else if( !strcmp(s, "notification-profile") )       flags |= XPUATTRIBUTESUPPORTED_NOTIFICATION_PROFILE;
+      else if( !strcmp(s, "copy-count") )                 flags |= XPUATTRIBUTESUPPORTED_COPY_COUNT;
+      else if( !strcmp(s, "document-format") )            flags |= XPUATTRIBUTESUPPORTED_DOCUMENT_FORMAT;
+      else if( !strcmp(s, "content-orientation") )        flags |= XPUATTRIBUTESUPPORTED_CONTENT_ORIENTATION;
+      else if( !strcmp(s, "default-printer-resolution") ) flags |= XPUATTRIBUTESUPPORTED_DEFAULT_PRINTER_RESOLUTION;
+      else if( !strcmp(s, "default-input-tray") )         flags |= XPUATTRIBUTESUPPORTED_DEFAULT_INPUT_TRAY;
+      else if( !strcmp(s, "default-medium") )             flags |= XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM;
+      else if( !strcmp(s, "plex") )                       flags |= XPUATTRIBUTESUPPORTED_PLEX;
+    }
+    
+    XpuDisposeEnumerateXpAttributeValue(&tok_lasts);
+    XFree(value);
+  }  
+  
+  return(flags);
+}
+
+XpuSupportedFlags XpuGetSupportedJobAttributes(Display *pdpy, XPContext pcontext)
+{
+  return XpuGetSupportedAttributes(pdpy, pcontext, XPPrinterAttr, "job-attributes-supported");
+}
+
+XpuSupportedFlags XpuGetSupportedDocAttributes(Display *pdpy, XPContext pcontext)
+{
+  return XpuGetSupportedAttributes(pdpy, pcontext, XPPrinterAttr, "document-attributes-supported");
+}
+
+XpuSupportedFlags XpuGetSupportedPageAttributes(Display *pdpy, XPContext pcontext)
+{
+  return XpuGetSupportedAttributes(pdpy, pcontext, XPPrinterAttr, "xp-page-attributes-supported");
 }
 
 /* EOF. */

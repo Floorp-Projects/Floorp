@@ -67,23 +67,42 @@ class nsIImage;
 
 typedef struct {
   const char *name;
-  float       width,
+  float       left,
+              top,
+              right,
+              bottom,
+              width,
               height;
 } PSPaperSizeRec;
 
+ 
 static const
 PSPaperSizeRec postscript_module_paper_sizes[] =
 {
-  /* 148mm X 210mm == 5.83in X 8.27in */
-  { "A5",         5.83f, 8.27f },
-  /* 210mm X 297mm == 8.27in X 11.69in */
-  { "A4",         8.27f, 11.69f },
-  /* 297mm X 420mm == 11.69in X 16.53in */
-  { "A3",        11.69f, 16.53f },
-  { "Letter",     8.50f,  11.0f  },
-  { "Legal",      8.50f,  14.0f  },   
-  { "Executive",  7.50f,  10.0f  },
-  { NULL,         0.00f,   0.0f  }
+  { "A5",        0.25f, 0.25f, 0.25f, 0.25f,  5.33f,  7.77f }, /* 148mm X 210mm ( 5.83in X  8.27in) */
+  { "A4",        0.25f, 0.25f, 0.25f, 0.25f,  7.77f, 11.19f }, /* 210mm X 297mm ( 8.27in X 11.69in) */
+  { "A3",        0.25f, 0.25f, 0.25f, 0.25f, 11.19f, 16.03f }, /* 297mm X 420mm (11.69in X 16.53in) */
+  { "Letter",    0.25f, 0.25f, 0.25f, 0.25f,  8.00f, 10.50f }, /* 8.50in X 11.0in */
+  { "Legal",     0.25f, 0.25f, 0.25f, 0.25f,  8.00f, 13.50f }, /* 8.50in X 14.0in */
+  { "Executive", 0.25f, 0.25f, 0.25f, 0.25f,  7.00f,  9.50f }, /* 7.50in X 10.0in */
+  { NULL,        0.25f, 0.25f, 0.25f, 0.25f,  0.00f,  0.0f  }
+};
+
+#define PSPaperSizeRec_FullPaperWidth(rec)  ((rec)->left + (rec)->right  + (rec)->width)
+#define PSPaperSizeRec_FullPaperHeight(rec) ((rec)->top  + (rec)->bottom + (rec)->height)
+
+/* This will be extended some day... */
+typedef struct {
+  const char *orientation;
+} PSOrientationRec;
+
+/* This will be extended some day... */
+static const
+PSOrientationRec postscript_module_orientations[] =
+{
+  { "portrait"  },
+  { "landscape" },
+  { NULL        }
 };
 
 typedef void (*XL_CompletionRoutine)(void*);
@@ -187,9 +206,7 @@ struct PrintSetup_ {
   float rules;			            /* Scale factor for rulers */
   int n_up;                     /* cool page combining */
   int bigger;                   /* Used to init sizes if sizesin NULL */
-  int paper_size;               /* Paper Size(letter,legal,exec,a4,a3) */
-  float paper_width_in_inch,       /* paper width in inch  */
-        paper_height_in_inch;      /* paper height in inch */
+  const PSPaperSizeRec *paper_size; /* Paper size record */
   const char* prefix;           /* For text xlate, prepended to each line */
   const char* eol;              /* For text translation, line terminator  */
   const char* bullet;           /* What char to use for bullets */

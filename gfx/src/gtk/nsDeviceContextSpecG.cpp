@@ -71,6 +71,9 @@
 #include "nsPostScriptObj.h"
 #endif /* USE_POSTSCRIPT */
 
+/* Ensure that the result is always equal to either PR_TRUE or PR_FALSE */
+#define MAKE_PR_BOOL(val) ((val)?(PR_TRUE):(PR_FALSE))
+
 #ifdef PR_LOGGING 
 static PRLogModuleInfo *DeviceContextSpecGTKLM = PR_NewLogModule("DeviceContextSpecGTK");
 #endif /* PR_LOGGING */
@@ -103,6 +106,111 @@ protected:
   static nsStringArray* mGlobalPrinterList;
   static int            mGlobalNumPrinters;
 };
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+/* "Prototype" for the new nsPrinterFeatures service */
+class nsPrinterFeatures {
+public:
+  nsPrinterFeatures( const char *printername );
+  ~nsPrinterFeatures() {};
+
+  /* Does this device allow to set/change the paper size ? */
+  void SetCanChangePaperSize( PRBool aCanSetPaperSize );
+  /* Set number of paper size records and the records itself */
+  void SetNumPaperSizeRecords( PRInt32 aCount );
+  void SetPaperRecord( PRInt32 aIndex, const char *aName, PRInt32 aWidthMM, PRInt32 aHeightMM, PRBool aIsInch );
+
+  /* Does this device allow to set/change the content orientation ? */
+  void SetCanChangeOrientation( PRBool aCanSetOrientation );
+  /* Set number of orientation records and the records itself */
+  void SetNumOrientationRecords( PRInt32 aCount );
+  void SetOrientationRecord( PRInt32 aIndex, const char *aName );
+  
+  /* Does this device allow to set/change the spooler command ? */
+  void SetCanChangeSpoolerCommand( PRBool aCanSetSpoolerCommand );
+
+  /* Does this device allow to set/change number of copies for an document ? */
+  void SetCanChangeNumCopies( PRBool aCanSetNumCopies );
+  
+private:
+  /* private helper methods */
+  void SetBoolValue( const char *tagname, PRBool value );
+  void SetIntValue(  const char *tagname, PRInt32 value );
+  void SetCharValue(  const char *tagname, const char *value );
+
+  nsXPIDLCString    mPrinterName;
+  nsCOMPtr<nsIPref> mPrefs;
+};
+
+void nsPrinterFeatures::SetBoolValue( const char *tagname, PRBool value )
+{
+  mPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.%s", mPrinterName.get(), tagname).get(), value);
+}
+
+void nsPrinterFeatures::SetIntValue(  const char *tagname, PRInt32 value )
+{
+  mPrefs->SetIntPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.%s", mPrinterName.get(), tagname).get(), value);
+}
+
+void nsPrinterFeatures::SetCharValue(  const char *tagname, const char *value )
+{
+  mPrefs->SetCharPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.%s", mPrinterName.get(), tagname).get(), value);
+}
+
+nsPrinterFeatures::nsPrinterFeatures( const char *printername )
+{
+  DO_PR_DEBUG_LOG(("nsPrinterFeatures::nsPrinterFeatures('%s')\n", printername));
+  mPrinterName.Assign(printername);
+  mPrefs = do_GetService(NS_PREF_CONTRACTID);
+ 
+  SetBoolValue("has_special_printerfeatures", PR_TRUE);
+}
+
+void nsPrinterFeatures::SetCanChangePaperSize( PRBool aCanSetPaperSize )
+{
+  SetBoolValue("can_change_paper_size", aCanSetPaperSize);
+}
+
+/* Set number of paper size records and the records itself */
+void nsPrinterFeatures::SetNumPaperSizeRecords( PRInt32 aCount )
+{
+  SetIntValue("paper.count", aCount);          
+}
+
+void nsPrinterFeatures::SetPaperRecord(PRInt32 aIndex, const char *aPaperName, PRInt32 aWidthMM, PRInt32 aHeightMM, PRBool aIsInch)
+{
+  SetCharValue(nsPrintfCString(256, "paper.%d.name",      aIndex).get(), aPaperName);
+  SetIntValue( nsPrintfCString(256, "paper.%d.width_mm",  aIndex).get(), aWidthMM);
+  SetIntValue( nsPrintfCString(256, "paper.%d.height_mm", aIndex).get(), aHeightMM);
+  SetBoolValue(nsPrintfCString(256, "paper.%d.is_inch",   aIndex).get(), aIsInch);
+}
+
+void nsPrinterFeatures::SetCanChangeOrientation( PRBool aCanSetOrientation )
+{
+  SetBoolValue("can_change_orientation", aCanSetOrientation);
+}
+
+void nsPrinterFeatures::SetNumOrientationRecords( PRInt32 aCount )
+{
+  SetIntValue("orientation.count", aCount);          
+}
+
+void nsPrinterFeatures::SetOrientationRecord( PRInt32 aIndex, const char *aOrientationName )
+{
+  SetCharValue(nsPrintfCString(256, "orientation.%d.name", aIndex).get(), aOrientationName);
+}
+
+void nsPrinterFeatures::SetCanChangeSpoolerCommand( PRBool aCanSetSpoolerCommand )
+{
+  SetBoolValue("can_change_spoolercommand", aCanSetSpoolerCommand);
+}
+
+void nsPrinterFeatures::SetCanChangeNumCopies( PRBool aCanSetNumCopies )
+{
+  SetBoolValue("can_change_num_copies", aCanSetNumCopies);
+}
+
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
 //---------------
 // static members
@@ -216,9 +324,9 @@ static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
  * - GTK+-toolkit:
  *   file:     mozilla/gfx/src/gtk/nsDeviceContextSpecG.cpp
  *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
- * - Xlib-toolkit: 
- *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecXlib.cpp 
- *   function: NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
+ * - GTK-toolkit: 
+ *   file:     mozilla/gfx/src/xlib/nsDeviceContextSpecGTK.cpp 
+ *   function: NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
  * - Qt-toolkit:
  *   file:     mozilla/gfx/src/qt/nsDeviceContextSpecQT.cpp
  *   function: NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
@@ -271,6 +379,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS, PRBool aQuiet)
       PRUnichar *command        = nsnull;
       PRInt32    copies         = 1;
       PRUnichar *printer        = nsnull;
+      PRUnichar *papername      = nsnull;
       PRUnichar *printfile      = nsnull;
       double     dleft          = 0.5;
       double     dright         = 0.5;
@@ -280,6 +389,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS, PRBool aQuiet)
       aPS->GetPrinterName(&printer);
       aPS->GetPrintReversed(&reversed);
       aPS->GetPrintInColor(&color);
+      aPS->GetPaperName(&papername);
       aPS->GetOrientation(&orientation);
       aPS->GetPrintCommand(&command);
       aPS->GetPrintRange(&printRange);
@@ -299,6 +409,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS, PRBool aQuiet)
         strcpy(mCommand, NS_ConvertUCS2toUTF8(command).get());  
       if (printer) 
         strcpy(mPrinter, NS_ConvertUCS2toUTF8(printer).get());        
+      if (papername) 
+        strcpy(mPaperName, NS_ConvertUCS2toUTF8(papername).get());  
 
       DO_PR_DEBUG_LOG(("margins:   %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright));
       DO_PR_DEBUG_LOG(("printRange %d\n",   printRange));
@@ -308,6 +420,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS, PRBool aQuiet)
       DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUCS2toUTF8(printfile).get():"<NULL>"));
       DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUCS2toUTF8(command).get():"<NULL>"));
       DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUCS2toUTF8(printer).get():"<NULL>"));
+      DO_PR_DEBUG_LOG(("papername  '%s'\n", papername? NS_ConvertUCS2toUTF8(papername).get():"<NULL>"));
 
       mTop         = dtop;
       mBottom      = dbottom;
@@ -399,6 +512,12 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetPath(const char **aPath)
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetUserCancelled(PRBool &aCancel)     
 {
   aCancel = mCancel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecGTK::GetPaperName( const char **aPaperName )
+{
+  *aPaperName = mPaperName;
   return NS_OK;
 }
 
@@ -582,20 +701,17 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 
   NS_ENSURE_ARG_POINTER(aPrinterName);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
-
-  if (!*aPrinterName) {
-    return NS_ERROR_FAILURE;
-  }
   
-  if (aPrintSettings == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_TRUE(*aPrinterName, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aPrintSettings, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return rv;
 
-  nsXPIDLCString printerName;
+  nsXPIDLCString fullPrinterName, /* Full name of printer incl. driver-specific prefix */ 
+                 printerName;     /* "Stripped" name of printer */
+  fullPrinterName.Assign(NS_ConvertUCS2toUTF8(aPrinterName));
   printerName.Assign(NS_ConvertUCS2toUTF8(aPrinterName));
   DO_PR_DEBUG_LOG(("printerName='%s'\n", printerName.get()));
   
@@ -615,33 +731,25 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
   /* Defaults to FALSE */
-  pPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.has_special_printerfeatures", printerName.get()).get(), PR_FALSE);
+  pPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.has_special_printerfeatures", fullPrinterName.get()).get(), PR_FALSE);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
-  /* These switches may be dynamic in the future... */
-  PRBool doingFilename    = PR_TRUE;
-  PRBool doingNumCopies   = PR_TRUE;
-  PRBool doingOrientation = PR_TRUE;
-  PRBool doingPaperSize   = PR_TRUE;
-  PRBool doingCommand     = PR_TRUE;
-
-  if (doingFilename) {
-    nsXPIDLCString filename;
-    if (NS_FAILED(CopyPrinterCharPref(pPrefs, nsnull, printerName, "filename", getter_Copies(filename)))) {
-      const char *path;
-    
-      if (!(path = PR_GetEnv("PWD")))
-        path = PR_GetEnv("HOME");
-    
-      if (path)
-        filename = nsPrintfCString(PATH_MAX, "%s/mozilla.ps", path);
-      else
-        filename.Assign("mozilla.ps");  
-    }
-    
-    DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
-    aPrintSettings->SetToFileName(NS_ConvertUTF8toUCS2(filename).get());
-  }
+  
+  /* Set filename */
+  nsXPIDLCString filename;
+  if (NS_FAILED(CopyPrinterCharPref(pPrefs, nsnull, printerName, "filename", getter_Copies(filename)))) {
+    const char *path;
+  
+    if (!(path = PR_GetEnv("PWD")))
+      path = PR_GetEnv("HOME");
+  
+    if (path)
+      filename = nsPrintfCString(PATH_MAX, "%s/mozilla.ps", path);
+    else
+      filename.Assign("mozilla.ps");  
+  }  
+  DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
+  aPrintSettings->SetToFileName(NS_ConvertUTF8toUCS2(filename).get());
 
 #ifdef USE_XPRINT
   if (type == pmXprint) {
@@ -651,78 +759,127 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     XPContext  pcontext;
     if (XpuGetPrinter(printerName, &pdpy, &pcontext) != 1)
       return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
-
-    if (doingOrientation) {
-      XpuOrientationList  olist;
-      int                 ocount;
-      XpuOrientationRec  *default_orientation;
       
-      /* Get list of supported orientations */
-      olist = XpuGetOrientationList(pdpy, pcontext, &ocount);
-      if (olist) {
-        default_orientation = &olist[0]; /* First entry is the default one */
-      
-        if (!PL_strcasecmp(default_orientation->orientation, "portrait")) {
-          DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
-          aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
-        }
-        else if (!PL_strcasecmp(default_orientation->orientation, "landscape")) {
-          DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
-          aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
-        }  
-        else {
-          DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", default_orientation->orientation));
-        }
-   
-        XpuFreeOrientationList(olist);
-      }  
-    }
-
-    /* Setup Number of Copies */
-    if (doingNumCopies) {
-#ifdef NOT_IMPLEMENTED_YET
-      aPrintSettings->SetNumCopies(PRInt32(aDevMode->dmCopies));
-#endif /* NOT_IMPLEMENTED_YET */
-    }
-    
-    if (doingPaperSize) {
-      XpuMediumSourceSizeList mlist;
-      int                     mcount;
-      XpuMediumSourceSizeRec *default_medium;
-      
-      mlist = XpuGetMediumSourceSizeList(pdpy, pcontext, &mcount);
-      if (mlist) {
-        default_medium = &mlist[0]; /* First entry is the default one */
-        double total_width  = default_medium->ma1 + default_medium->ma2,
-               total_height = default_medium->ma3 + default_medium->ma4;
- 
-        DO_PR_DEBUG_LOG(("setting default paper size to %g/%g mm\n", total_width, total_height));
-        aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
-        aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
-        aPrintSettings->SetPaperWidth(total_width);
-        aPrintSettings->SetPaperHeight(total_height);
+    XpuSupportedFlags supported_doc_attrs = XpuGetSupportedDocAttributes(pdpy, pcontext);
 
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
-        pPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.has_special_printerfeatures", printerName.get()).get(), PR_TRUE);
-
-        int i;
-        for( i = 0 ; i < mcount ; i++ )
-        {
-          XpuMediumSourceSizeRec *curr = &mlist[i];
-          double total_width  = curr->ma1 + curr->ma2,
-                 total_height = curr->ma3 + curr->ma4;
-          pPrefs->SetCharPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.name",      printerName.get(), i).get(), curr->medium_name);
-          pPrefs->SetIntPref( nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.width_mm",  printerName.get(), i).get(), PRInt32(total_width));
-          pPrefs->SetIntPref( nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.height_mm", printerName.get(), i).get(), PRInt32(total_height));
-          pPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.is_inch",   printerName.get(), i).get(), PR_FALSE);
-        }
-        pPrefs->SetIntPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.count", printerName.get(), i).get(), (PRInt32)mcount);          
+    nsPrinterFeatures printerFeatures(fullPrinterName);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
-        XpuFreeMediumSourceSizeList(mlist);
+    /* Setup orientation stuff */
+    XpuOrientationList  olist;
+    int                 ocount;
+    XpuOrientationRec  *default_orientation;
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    PRBool canSetOrientation = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_CONTENT_ORIENTATION);
+    printerFeatures.SetCanChangeOrientation(canSetOrientation);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+      
+    /* Get list of supported orientations */
+    olist = XpuGetOrientationList(pdpy, pcontext, &ocount);
+    if (olist) {
+      default_orientation = &olist[0]; /* First entry is the default one */
+    
+      if (!PL_strcasecmp(default_orientation->orientation, "portrait")) {
+        DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
+        aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
+      }
+      else if (!PL_strcasecmp(default_orientation->orientation, "landscape")) {
+        DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
+        aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
       }  
+      else {
+        DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", default_orientation->orientation));
+      }
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+      int i;
+      for( i = 0 ; i < ocount ; i++ )
+      {
+        XpuOrientationRec *curr = &olist[i];
+        printerFeatures.SetOrientationRecord(i, curr->orientation);
+      }
+      printerFeatures.SetNumOrientationRecords(ocount);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+   
+      XpuFreeOrientationList(olist);
+    }  
+
+    /* Setup Number of Copies */
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    PRBool canSetNumCopies = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_COPY_COUNT);
+    printerFeatures.SetCanChangeNumCopies(canSetNumCopies);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+    long numCopies;
+    if( XpuGetOneLongAttribute(pdpy, pcontext, XPDocAttr, "copy-count", &numCopies) != 1 )
+    {
+      /* Fallback on failure */
+      numCopies = 1;
     }
+    aPrintSettings->SetNumCopies(numCopies);
+
+    /* Setup paper size stuff */
+    XpuMediumSourceSizeList mlist;
+    int                     mcount;
+    XpuMediumSourceSizeRec *default_medium;
+    
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    PRBool canSetPaperSize = MAKE_PR_BOOL(supported_doc_attrs & XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM);
+    printerFeatures.SetCanChangePaperSize(canSetPaperSize);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+    
+    mlist = XpuGetMediumSourceSizeList(pdpy, pcontext, &mcount);
+    if (mlist) {
+      nsXPIDLCString papername;
+
+      default_medium = &mlist[0]; /* First entry is the default one */
+      double total_width  = default_medium->ma1 + default_medium->ma2,
+             total_height = default_medium->ma3 + default_medium->ma4;
+
+      /* Either "paper" or "tray/paper" */
+      if (default_medium->tray_name) {
+        papername = nsPrintfCString(256, "%s/%s", default_medium->tray_name, default_medium->medium_name);
+      }
+      else {
+        papername.Assign(default_medium->medium_name);
+      }
  
+      DO_PR_DEBUG_LOG(("setting default paper size to '%s' (%g/%g mm)\n", papername.get(), total_width, total_height));
+      aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
+      aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
+      aPrintSettings->SetPaperWidth(total_width);
+      aPrintSettings->SetPaperHeight(total_height);
+      aPrintSettings->SetPaperName(NS_ConvertUTF8toUCS2(papername).get());     
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+      int i;
+      for( i = 0 ; i < mcount ; i++ )
+      {
+        XpuMediumSourceSizeRec *curr = &mlist[i];
+        double total_width  = curr->ma1 + curr->ma2,
+               total_height = curr->ma3 + curr->ma4;
+        if (curr->tray_name) {
+          papername = nsPrintfCString(256, "%s/%s", curr->tray_name, curr->medium_name);
+        }
+        else {
+          papername.Assign(curr->medium_name);
+        }
+
+        printerFeatures.SetPaperRecord(i, papername, PRInt32(total_width), PRInt32(total_height), PR_FALSE);
+      }
+      printerFeatures.SetNumPaperSizeRecords(mcount);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+
+      XpuFreeMediumSourceSizeList(mlist);
+    }
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    /* Xprint does not allow the client to set a spooler command. 
+     * Job spooling is the job of the server side (=Xprt) */
+    printerFeatures.SetCanChangeSpoolerCommand(PR_FALSE);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+
     XpuClosePrinterDisplay(pdpy, pcontext);
     
     return NS_OK;    
@@ -733,68 +890,100 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
 #ifdef USE_POSTSCRIPT
   if (type == pmPostScript) {
     DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for PostScript printer\n"));
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    nsPrinterFeatures printerFeatures(fullPrinterName);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
       
-    if (doingNumCopies) {
-      /* Not implemented yet */
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    printerFeatures.SetCanChangeOrientation(PR_TRUE);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+
+    nsXPIDLCString orientation;
+    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "orientation", getter_Copies(orientation)))) {
+      if (!PL_strcasecmp(orientation, "portrait")) {
+        DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
+        aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
+      }
+      else if (!PL_strcasecmp(orientation, "landscape")) {
+        DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
+        aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);  
+      }
+      else {
+        DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", orientation.get()));
+      }
+    }
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    int i;
+    for( i = 0 ; postscript_module_orientations[i].orientation != nsnull ; i++ )
+    {
+      const PSOrientationRec *curr = &postscript_module_orientations[i];
+      printerFeatures.SetOrientationRecord(i, curr->orientation);
+    }
+    printerFeatures.SetNumOrientationRecords(i);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+   
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    printerFeatures.SetCanChangePaperSize(PR_TRUE);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+    nsXPIDLCString papername;
+    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "paper_size", getter_Copies(papername)))) {
+      int                   i;
+      const PSPaperSizeRec *default_paper = nsnull;
+      
+      for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
+      {
+        const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
+
+        if (!PL_strcasecmp(papername, curr->name)) {
+          default_paper = curr;        
+          break;
+        }
+      }  
+
+      if (default_paper) {
+        DO_PR_DEBUG_LOG(("setting default paper size to '%s' (%g inch/%g inch)\n", 
+                        default_paper->name,
+                        PSPaperSizeRec_FullPaperWidth(default_paper),
+                        PSPaperSizeRec_FullPaperHeight(default_paper)));
+        aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
+        aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
+        aPrintSettings->SetPaperWidth(PSPaperSizeRec_FullPaperWidth(default_paper));
+        aPrintSettings->SetPaperHeight(PSPaperSizeRec_FullPaperHeight(default_paper));
+        aPrintSettings->SetPaperName(NS_ConvertUTF8toUCS2(default_paper->name).get());
+      }
+      else {
+        DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername.get()));
+      }
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+      for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
+      {
+        const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
+#define CONVERT_INCH_TO_MILLIMETERS(inch) ((inch) * 25.4)
+        double total_width  = CONVERT_INCH_TO_MILLIMETERS(PSPaperSizeRec_FullPaperWidth(curr)),
+               total_height = CONVERT_INCH_TO_MILLIMETERS(PSPaperSizeRec_FullPaperHeight(curr));
+
+        printerFeatures.SetPaperRecord(i, curr->name, PRInt32(total_width), PRInt32(total_height), PR_TRUE);
+      }
+      printerFeatures.SetNumPaperSizeRecords(i);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+    }
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    printerFeatures.SetCanChangeSpoolerCommand(PR_TRUE);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+
+    nsXPIDLCString command;
+    if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "print_command", getter_Copies(command)))) {
+      DO_PR_DEBUG_LOG(("setting default print command to '%s'\n", command.get()));
+      aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUCS2(command).get());
     }
     
-    if (doingOrientation) {
-      nsXPIDLCString orientation;
-      if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "orientation", getter_Copies(orientation)))) {
-        if (!PL_strcasecmp(orientation, "portrait")) {
-          DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
-          aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
-        }
-        else if (!PL_strcasecmp(orientation, "landscape")) {
-          DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
-          aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);  
-        }
-        else {
-          DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", orientation.get()));
-        }
-      }
-    }
-    
-    if (doingPaperSize) {
-      /* Not implemented yet */
-      nsXPIDLCString papername;
-      if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "paper_size", getter_Copies(papername)))) {
-        int    i;
-        double width  = 0.,
-               height = 0.;
-        
-        for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
-        {
-          const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+    printerFeatures.SetCanChangeNumCopies(PR_TRUE);   
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
 
-          if (!PL_strcasecmp(papername, curr->name)) {          
-            width  = curr->width;  
-            height = curr->height;
-            break;
-          }
-        }  
-
-        if (width!=0.0 && height!=0.0) {
-          DO_PR_DEBUG_LOG(("setting default paper size to %g/%g inch\n", width, height));
-          aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
-          aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
-          aPrintSettings->SetPaperWidth(width);
-          aPrintSettings->SetPaperHeight(height);
-        }
-        else {
-          DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername));
-        }         
-      }
-    }
-
-    if (doingCommand) {
-      nsXPIDLCString command;
-      if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "print_command", getter_Copies(command)))) {
-        DO_PR_DEBUG_LOG(("setting default print command to '%s'\n", command.get()));
-        aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUCS2(command).get());
-      }
-    }
-  
     return NS_OK;    
   }
 #endif /* USE_POSTSCRIPT */

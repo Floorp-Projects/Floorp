@@ -64,6 +64,9 @@
 #include "prprf.h"
 #endif
 
+/* This is deprecated but we still need it until all platforms set the paper name in nsIPrintSettings... */
+#define PS_FIND_PAPER_BY_SIZE 1
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo *nsPostScriptObjLM = PR_NewLogModule("nsPostScriptObj");
 #endif /* PR_LOGGING */
@@ -79,7 +82,7 @@ extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
 #define NS_PS_RED(x) (((float)(NS_GET_R(x))) / 255.0) 
 #define NS_PS_GREEN(x) (((float)(NS_GET_G(x))) / 255.0) 
 #define NS_PS_BLUE(x) (((float)(NS_GET_B(x))) / 255.0) 
-#define NS_TWIPS_TO_POINTS(x) ((x / 20))
+#define NS_TWIPS_TO_POINTS(x) (((x) / 20))
 #define NS_IS_BOLD(x) (((x) >= 401) ? 1 : 0) 
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -242,8 +245,9 @@ nsPostScriptObj::settitle(PRUnichar * aTitle)
   }
 }
 
+#ifdef PS_FIND_PAPER_BY_SIZE
 static
-const char *paper_size_to_paper_name(float width_in_inch, float height_in_inch)
+const PSPaperSizeRec *paper_size_to_PSPaperSizeRec(float width_in_inch, float height_in_inch)
 {
 #define MORE_OR_LESS_EQUAL(a, b, tolerance) (PR_ABS((a) - (b)) <= (tolerance))
 #define MATCH_PAGE(width, height, paper_width, paper_height) \
@@ -255,11 +259,28 @@ const char *paper_size_to_paper_name(float width_in_inch, float height_in_inch)
   {
     const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
 
-    if (MATCH_PAGE(width_in_inch, height_in_inch, curr->width, curr->height))
-      return curr->name;
+    if (MATCH_PAGE(width_in_inch, height_in_inch, PSPaperSizeRec_FullPaperWidth(curr), PSPaperSizeRec_FullPaperHeight(curr)))
+      return curr;
   }      
 #undef MATCH_PAGE
 #undef MORE_OR_LESS_EQUAL
+
+  return nsnull;
+}
+#endif /* PS_FIND_PAPER_BY_SIZE */
+
+static
+const PSPaperSizeRec *paper_name_to_PSPaperSizeRec(const char *paper_name)
+{
+  int i;
+        
+  for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
+  {
+    const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
+
+    if (!PL_strcasecmp(paper_name, curr->name))
+      return curr;
+  }
 
   return nsnull;
 }
@@ -283,7 +304,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 
   if( (nsnull!=pi) && (nsnull!=mPrintSetup) ){
     memset(mPrintSetup, 0, sizeof(struct PrintSetup_));
-
+    
     mPrintSetup->color = PR_TRUE;              // Image output 
     mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
     mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
@@ -297,16 +318,25 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
         mPrintSetup->reverse = 1;
-      PRInt32 paper_width_in_twips,
-              paper_height_in_twips;
-      aSpec->GetPageSizeInTwips(&paper_width_in_twips, &paper_height_in_twips);
-      mPrintSetup->paper_width_in_inch  = NS_TWIPS_TO_INCHES(paper_width_in_twips);
-      mPrintSetup->paper_height_in_inch = NS_TWIPS_TO_INCHES(paper_height_in_twips);
 
-      /* Chceck if we have a name for this paper size... */
-      if (!paper_size_to_paper_name(mPrintSetup->paper_width_in_inch, mPrintSetup->paper_height_in_inch))
+      /* Find PS paper size record by name */
+      const char *paper_name = nsnull;
+      aSpec->GetPaperName(&paper_name);    
+      mPrintSetup->paper_size = paper_name_to_PSPaperSizeRec(paper_name);
+
+#ifdef PS_FIND_PAPER_BY_SIZE
+      if (!mPrintSetup->paper_size) {
+        PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("No paper matched by name '%s' - trying deprecated match-by-size way...\n", paper_name));
+        PRInt32 paper_width_in_twips,
+                paper_height_in_twips;
+        aSpec->GetPageSizeInTwips(&paper_width_in_twips, &paper_height_in_twips);
+        mPrintSetup->paper_size = paper_size_to_PSPaperSizeRec(NS_TWIPS_TO_INCHES(paper_width_in_twips), NS_TWIPS_TO_INCHES(paper_height_in_twips));
+      }
+#endif /* PS_FIND_PAPER_BY_SIZE */
+
+      if (!mPrintSetup->paper_size)
         return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
-
+               
       aSpec->GetToPrinter( isAPrinter );
       if (isAPrinter) {
         /* Define the destination printer (queue). 
@@ -375,8 +405,8 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 
     mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
     aSpec->GetLandscape( landscape );
-    fwidth  = mPrintSetup->paper_width_in_inch;
-    fheight = mPrintSetup->paper_height_in_inch;
+    fwidth  = mPrintSetup->paper_size->width;
+    fheight = mPrintSetup->paper_size->height;
 
     if (landscape) {
       float temp;
@@ -385,7 +415,12 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
       fheight = temp;
     }
 
-    mPrintSetup->width = (int)(fwidth * mPrintSetup->dpi);
+    mPrintSetup->left   = (int)(mPrintSetup->paper_size->left   * mPrintSetup->dpi);
+    mPrintSetup->top    = (int)(mPrintSetup->paper_size->top    * mPrintSetup->dpi);
+    mPrintSetup->bottom = (int)(mPrintSetup->paper_size->bottom * mPrintSetup->dpi);
+    mPrintSetup->right  = (int)(mPrintSetup->paper_size->right  * mPrintSetup->dpi);
+    
+    mPrintSetup->width  = (int)(fwidth  * mPrintSetup->dpi);
     mPrintSetup->height = (int)(fheight * mPrintSetup->dpi);
 #ifdef DEBUG
     printf("\nPreWidth = %f PreHeight = %f\n",fwidth,fheight);
@@ -403,13 +438,9 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->scale_pre = PR_FALSE;		        // do the pre-scaling thing 
     // scale margins (specified in inches) to dots.
 
-    mPrintSetup->top = (int) 0;     
-    mPrintSetup->bottom = (int) 0;
-    mPrintSetup->left = (int) 0;
-    mPrintSetup->right = (int) 0; 
-#ifdef DEBUG
-    printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
-#endif
+    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("dpi %g top %d bottom %d left %d right %d\n", 
+           mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right));
+
     mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
     mPrintSetup->n_up = 0;                     // cool page combining 
     mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 
@@ -526,8 +557,7 @@ FILE *f;
   gPrefs->CopyCharPref("general.useragent.misc", getter_Copies(useragent));
   fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n", useragent.get(), (unsigned long)NS_BUILD_ID);
   fprintf(f, "%%%%DocumentData: Clean8Bit\n");
-  fprintf(f, "%%%%DocumentPaperSizes: %s\n",
-          paper_size_to_paper_name(mPrintSetup->paper_width_in_inch, mPrintSetup->paper_height_in_inch));
+  fprintf(f, "%%%%DocumentPaperSizes: %s\n", mPrintSetup->paper_size->name);
   fprintf(f, "%%%%Orientation: %s\n",
               (mPrintContext->prSetup->width < mPrintContext->prSetup->height) ? "Portrait" : "Landscape");
 
@@ -1970,7 +2000,7 @@ FILE *f;
     fprintf(f, "%d 0 translate 90 rotate\n",PAGE_TO_POINT_I(mPrintContext->prSetup->height));
   }
   fprintf(f, "%d 0 translate\n", PAGE_TO_POINT_I(mPrintContext->prSetup->left));
-  fprintf(f, "0 %d translate\n", -PAGE_TO_POINT_I(mPrintContext->prSetup->top));
+  fprintf(f, "0 %d translate\n", PAGE_TO_POINT_I(mPrintContext->prSetup->top));
   fprintf(f, "%%%%EndPageSetup\n");
 #if 0
   annotate_page( mPrintContext->prSetup->header, 0, -1, pn);

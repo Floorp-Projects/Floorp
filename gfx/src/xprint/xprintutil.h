@@ -109,6 +109,24 @@ typedef struct {
   const char *plex;
 } XpuPlexRec, *XpuPlexList;
 
+
+/* XPUATTRIBUTESUPPORTED_*:
+ * Flags which indicate whether it is allowed to set/change a specific attribute
+ */
+typedef long XpuSupportedFlags;
+/* Job attributes */
+#define XPUATTRIBUTESUPPORTED_JOB_NAME                     (1L<<0)
+#define XPUATTRIBUTESUPPORTED_JOB_OWNER                    (1L<<1)
+#define XPUATTRIBUTESUPPORTED_NOTIFICATION_PROFILE         (1L<<2)
+/* Document/Page attributes */
+#define XPUATTRIBUTESUPPORTED_COPY_COUNT                   (1L<<3)
+#define XPUATTRIBUTESUPPORTED_DOCUMENT_FORMAT              (1L<<4)
+#define XPUATTRIBUTESUPPORTED_CONTENT_ORIENTATION          (1L<<5)
+#define XPUATTRIBUTESUPPORTED_DEFAULT_PRINTER_RESOLUTION   (1L<<6)
+#define XPUATTRIBUTESUPPORTED_DEFAULT_INPUT_TRAY           (1L<<7)
+#define XPUATTRIBUTESUPPORTED_DEFAULT_MEDIUM               (1L<<8)
+#define XPUATTRIBUTESUPPORTED_PLEX                         (1L<<9)
+
 /* prototypes */
 _XFUNCPROTOBEGIN
 
@@ -180,6 +198,11 @@ int XpuSetPagePlex( Display *pdpy, XPContext pcontext, XpuPlexRec *rec );
 void XpuStartJobToSpooler(Display *pdpy);
 void *XpuStartJobToFile( Display *pdpy, XPContext pcontext, const char *filename );
 XPGetDocStatus XpuWaitForPrintFileChild( void *handle );
+
+/* Get flags which indicate whether it is allowed to set/change a specific attribute */
+XpuSupportedFlags XpuGetSupportedJobAttributes(Display *pdpy, XPContext pcontext);
+XpuSupportedFlags XpuGetSupportedDocAttributes(Display *pdpy, XPContext pcontext);
+XpuSupportedFlags XpuGetSupportedPageAttributes(Display *pdpy, XPContext pcontext);
 
 _XFUNCPROTOEND
 
