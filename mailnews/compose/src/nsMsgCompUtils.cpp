@@ -38,6 +38,7 @@
 #include "nsCRT.h"
 #include "nsMsgCompUtils.h"
 #include "nsIPref.h"
+#include "nsIPrefService.h"
 #include "prmem.h"
 #include "nsEscape.h"
 #include "nsIFileSpec.h"
@@ -819,7 +820,6 @@ mime_generate_attachment_headers (const char *type,
                   PRBool      aBodyDocument)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
 
   PRInt32 buffer_size = 2048 + (real_name ? 2*PL_strlen(real_name) : 0) + (base_url ? 2*PL_strlen(base_url) : 0) +
                         (type_param ? PL_strlen(type_param) : 0) + (encoding ? PL_strlen(encoding) : 0) +
@@ -836,7 +836,8 @@ mime_generate_attachment_headers (const char *type,
 
   PRBool usemime = nsMsgMIMEGetConformToStandard();
   PRInt32 parmFolding = 0;
-  if (NS_SUCCEEDED(rv) && prefs) 
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs)
     prefs->GetIntPref("mail.strictly_mime.parm_folding", &parmFolding);
 
   /* Let's encode the real name */
@@ -894,13 +895,22 @@ mime_generate_attachment_headers (const char *type,
       charset_label[sizeof(charset_label)-1] = '\0';
     }
     
-    /* If the characters are all 7bit, then it's better (and true) to
-    claim the charset to be US-  rather than Latin1.  Should we
-    do this all the time, for all charsets?  I'm not sure.  But we
-    should definitely do it for Latin1. */
-    if (encoding &&
-                  !PL_strcasecmp (encoding, "7bit") &&
-                  bodyIsAsciiOnly)
+    /* If the characters are all 7bit, arguably it's better to 
+    claim the charset to be US-ASCII. However, it causes
+    a major 'interoperability problem' with MS OE, which makes it hard
+    to sell Mozilla/TB to people most of whose correspondents use
+    MS OE. MS OE turns all non-ASCII characters to question marks 
+    in replies to messages labeled as US-ASCII if users select 'send as is'
+    with MIME turned on. (with MIME turned off, this happens without
+    any warning.) To avoid this, we use the label 'US-ASCII' only when
+    it's explicitly requested by setting the hidden pref.
+    'mail.label_ascii_only_mail_as_us_ascii'. (bug 247958) */
+    PRBool labelAsciiAsAscii = PR_FALSE;
+    if (prefs)
+      prefs->GetBoolPref("mail.label_ascii_only_mail_as_us_ascii",
+                         &labelAsciiAsAscii);
+    if (labelAsciiAsAscii && encoding &&
+        !PL_strcasecmp (encoding, "7bit") && bodyIsAsciiOnly)
       PL_strcpy (charset_label, "us-ascii");
     
     // If charset is multibyte then no charset to be specified (apply base64 instead).
@@ -1001,8 +1011,11 @@ mime_generate_attachment_headers (const char *type,
     char *period = PL_strrchr(encodedRealName, '.');
     PRInt32 pref_content_disposition = 0;
 
-        rv = prefs->GetIntPref("mail.content_disposition_type", &pref_content_disposition);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get mail.content_disposition_type");
+    if (prefs) {
+      rv = prefs->GetIntPref("mail.content_disposition_type",
+                             &pref_content_disposition);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get mail.content_disposition_type");
+    }
 
     PUSH_STRING ("Content-Disposition: ");
 
@@ -1075,7 +1088,7 @@ mime_generate_attachment_headers (const char *type,
     /* rhp - Put in a pref for using Content-Location instead of Content-Base.
            This will get tweaked to default to true in 5.0
     */
-    if (NS_SUCCEEDED(rv) && prefs) 
+    if (prefs) 
       prefs->GetBoolPref("mail.use_content_location_on_send", &useContentLocation);
 
     if (useContentLocation)
