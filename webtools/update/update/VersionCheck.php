@@ -257,7 +257,7 @@ while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) {
   }
 
   // Do we already have the current or a newer one?
-  if (vercmp($line['extversion'], $reqItemVersion) <= 0 {
+  if (vercmp($line['extversion'], $reqItemVersion) <= 0) {
     $thisVersionData = $line;
     break;
   }
