@@ -56,7 +56,6 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method,
            ("Creating nsHTTPRequest [this=%x].\n", this));
 
     mTransport = i_pTransport;
-    NS_IF_ADDREF(mTransport);
 
     // Send Host header by default
     if (HTTP_ZERO_NINE != mVersion)
@@ -78,7 +77,8 @@ nsHTTPRequest::~nsHTTPRequest()
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
     NS_IF_RELEASE(mRequest);
-    NS_IF_RELEASE(mTransport);
+
+    mTransport = null_nsCOMPtr();
 /*
     if (mConnection)
         NS_RELEASE(mConnection);
@@ -451,8 +451,8 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
         if (pListener) {
             NS_ADDREF(pListener);
             rv = mTransport->AsyncRead(0, -1,
-                                         i_pContext, 
-                                         pListener);
+                                       i_pContext, 
+                                       pListener);
             NS_RELEASE(pListener);
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -478,7 +478,8 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_pContext,
             consumer->OnStopRequest(mConnection, consumerContext, iStatus, i_pMsg);
         }
         // Notify the channel that the request has finished
-        mConnection->ResponseCompleted(nsnull, iStatus);
+        mConnection->ResponseCompleted(mTransport, iStatus);
+        mTransport = null_nsCOMPtr();
 
         rv = iStatus;
     }
@@ -491,7 +492,6 @@ nsHTTPRequest::SetTransport(nsIChannel* i_pTransport)
 {
     NS_ASSERTION(!mTransport, "Transport being overwritten!");
     mTransport = i_pTransport;
-    NS_ADDREF(mTransport);
     return NS_OK;
 }
 
