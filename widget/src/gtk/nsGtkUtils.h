@@ -55,9 +55,19 @@ struct nsGtkUtils
                                    GtkStateType state,
                                    GdkColor *   color);
 
-  static void gdk_window_flash(GdkWindow * window,
-                               unsigned int  times,  /* Number of times to flash */
-                               unsigned long interval); /* Interval between flashes */
+  /**
+   * Flash an area within a GDK window (or the whole window)
+   *
+   * @param aGdkWindow   The GDK window to flash.
+   * @param aTimes       Number of times to flash the area.
+   * @param aInterval    Interval between flashes in milliseconds.
+   * @param aArea        The area to flash.  The whole window if NULL.
+   *
+   */
+  static void gdk_window_flash(GdkWindow *     aGdkWindow,
+                               unsigned int    aTimes,
+                               unsigned long   aInterval,
+                               GdkRectangle *  aArea);
 };
 
 #endif  // __nsGtkEventHandler.h

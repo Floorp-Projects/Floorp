@@ -749,7 +749,7 @@ nsWidget::DeleteWindowCallback(Window aWindow)
 #undef TRACE_PAINT_FLASH
 
 #ifdef TRACE_PAINT_FLASH
-#include "nsXUtils.h" // for nsGtkUtils::gdk_window_flash()
+#include "nsXUtils.h" // for nsXUtils::XFlashWindow()
 #endif
 
 PRBool
@@ -798,7 +798,21 @@ nsWidget::OnPaint(nsPaintEvent &event)
 #endif
 
 #ifdef TRACE_PAINT_FLASH
-    nsXUtils::FlashWindow(mDisplay,mBaseWindow,2,100000);
+    XRectangle ar;
+    XRectangle * area = NULL;
+
+    if (event.rect)
+    {
+      ar.x = event.rect->x;
+      ar.y = event.rect->y;
+
+      ar.width = event.rect->width;
+      ar.height = event.rect->height;
+
+      area = &ar;
+    }
+
+    nsXUtils::XFlashWindow(mDisplay,mBaseWindow,1,100000,area);
 #endif
 
   }

@@ -23,79 +23,101 @@
 
 //////////////////////////////////////////////////////////////////
 /* static */ void
-nsXUtils::FlashWindow(Display *     display,
-                      Window        window,
-                      unsigned int  times,    /* Number of times to flash */
-                      unsigned long interval) /* Interval between flashes */
+nsXUtils::XFlashWindow(Display *       aDisplay,
+                       Window          aWindow,
+                       unsigned int    aTimes,
+                       unsigned long   aInterval,
+                       XRectangle *    aArea)
 {
-	Window       root_window;
-	Window       child_window;
-	GC           gc;
-	int          x;
-	int          y;
-	unsigned int width;
-	unsigned int height;
-	unsigned int border_width;
-	unsigned int depth;
-	int          root_x;
-	int          root_y;
-	unsigned int i;
+  Window       root_window = 0;
+  Window       child_window = 0;
+  GC           gc;
+  int          x;
+  int          y;
+  unsigned int width;
+  unsigned int height;
+  unsigned int border_width;
+  unsigned int depth;
+  int          root_x;
+  int          root_y;
+  unsigned int i;
+  XGCValues    gcv;
+#ifndef HAVE_USLEEP
+  struct timeval tv;
+#endif
+  
+  XGetGeometry(aDisplay,
+               aWindow,
+               &root_window,
+               &x,
+               &y,
+               &width,
+               &height,
+               &border_width,
+               &depth);
+  
+  XTranslateCoordinates(aDisplay, 
+                        aWindow,
+                        root_window, 
+                        0, 
+                        0,
+                        &root_x,
+                        &root_y,
+                        &child_window);
+  
+  memset(&gcv, 0, sizeof(XGCValues));
+  
+  gcv.function = GXxor;
+  gcv.foreground = WhitePixel(aDisplay, DefaultScreen(aDisplay));
+  gcv.subwindow_mode = IncludeInferiors;
+  
+  if (gcv.foreground == 0)
+    gcv.foreground = 1;
+  
+  gc = XCreateGC(aDisplay,
+                 root_window,
+                 GCFunction | GCForeground | GCSubwindowMode, 
+                 &gcv);
+  
+  XGrabServer(aDisplay);
 
-	XGCValues    gcv;
+  // If an area is given, use that.  Notice how out of whack coordinates
+  // and dimentsions are not checked!!!
+  if (aArea)
+  {
+	root_x += aArea->x;
+	root_y += aArea->y;
 
-	XGetGeometry(display,
-				 window,
-				 &root_window,
-				 &x,
-				 &y,
-				 &width,
-				 &height,
-				 &border_width,
-				 &depth);
+	width = aArea->width;
+	height = aArea->height;
+  }
 
-	XTranslateCoordinates(display, 
-						  window,
-						  root_window, 
-						  0, 
-						  0,
-						  &root_x,
-						  &root_y,
-						  &child_window);
-
-    memset(&gcv, 0, sizeof(XGCValues));
-
-	gcv.function = GXxor;
-	gcv.foreground = WhitePixel(display, DefaultScreen(display));
-	gcv.subwindow_mode = IncludeInferiors;
-
-	if (gcv.foreground == 0)
-		gcv.foreground = 1;
-
-	gc = XCreateGC(display,
+  // Need to do this twice so that the XOR effect can replace 
+  // the original window contents.
+  for (i = 0; i < aTimes * 2; i++)
+  {
+	XFillRectangle(aDisplay,
 				   root_window,
-				   GCFunction | GCForeground | GCSubwindowMode, 
-				   &gcv);
-
-	XGrabServer(display);
-
-	for (i = 0; i < times; i++)
-	{
-		XFillRectangle(display,
-					   root_window,
-					   gc,
-					   root_x,
-					   root_y,
-					   width,
-					   height);
-		
-		XSync(display, False);
-
-		usleep(interval);
-	}
-							
-		
-	XFreeGC(display, gc);  
-
-	XUngrabServer(display);
+				   gc,
+				   root_x,
+				   root_y,
+				   width,
+				   height);
+	
+	XSync(aDisplay, False);
+	
+#ifdef HAVE_USLEEP
+	usleep(aInterval);
+#else
+	tv.tv_sec = aInterval / 100000;
+	tv.tv_usec = aInterval % 100000;
+	(void)select(0, NULL, NULL, NULL, &tv);
+#endif
+  }
+  
+  
+  XFreeGC(aDisplay, gc);  
+  
+  XUngrabServer(aDisplay);
 }
 /*****************************************************************/

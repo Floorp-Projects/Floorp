@@ -23,10 +23,21 @@
 
 struct nsXUtils
 {
-  static void FlashWindow(Display *     display,
-                          Window        window,
-                          unsigned int  times,  /* Number of times to flash */
-                          unsigned long interval); /* Interval between flashes */
+  /**
+   * Flash an area within a window (or the whole window)
+   *
+   * @param aDisplay     The display.
+   * @param aWindow      The XID of the window to flash.
+   * @param aTimes       Number of times to flash the area.
+   * @param aInterval    Interval between flashes in milliseconds.
+   * @param aArea        The area to flash.  The whole window if NULL.
+   *
+   */
+  static void XFlashWindow(Display *       aDisplay,
+                           Window          aWindow,
+                           unsigned int    aTimes,
+                           unsigned long   aInterval,
+                           XRectangle *    aArea);
 };
 
 #endif  // __nsXUtils_h
