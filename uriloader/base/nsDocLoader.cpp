@@ -221,7 +221,7 @@ nsDocFactoryImpl::nsDocFactoryImpl()
  */
 NS_IMPL_ISUPPORTS(nsDocFactoryImpl,kIDocumentLoaderFactoryIID);
 
-static char* gValidTypes[] = {"text/html","application/rtf",0};
+static char* gValidTypes[] = {"text/html","application/rtf","text/plain",0};
 static char* gXMLTypes[] = {"text/xml", "application/xml", 0};
 static char* gRDFTypes[] = {"text/rdf", "text/xul", 0};
 
@@ -243,7 +243,6 @@ static char* gPluginTypes[] = {
     "audio/x-aiff",
     "audio/basic",
     "application/x-shockwave-flash",
-    "text/plain",
     0
 };
 
