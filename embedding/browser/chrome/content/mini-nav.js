@@ -56,6 +56,41 @@ function createBrowserInstance()
   }
 }
 
+
+function InitContextMenu(xulMenu)
+{
+  // Back determined by canGoBack broadcaster.
+  InitMenuItemAttrFromNode( "context-back", "disabled", "canGoBack" );
+
+  // Forward determined by canGoForward broadcaster.
+  InitMenuItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
+}
+
+function InitMenuItemAttrFromNode( item_id, attr, other_id )
+{
+  var elem = document.getElementById( other_id );
+  if ( elem && elem.getAttribute( attr ) == "true" ) {
+    SetMenuItemAttr( item_id, attr, "true" );
+  } else {
+    SetMenuItemAttr( item_id, attr, null );
+  }
+}
+
+function SetMenuItemAttr( id, attr, val )
+{
+  var elem = document.getElementById( id );
+  if ( elem ) {
+    if ( val == null ) {
+      // null indicates attr should be removed.
+      elem.removeAttribute( attr );
+    } else {
+      // Set attr=val.
+      elem.setAttribute( attr, val );
+    }
+  }
+}
+
+
 function BrowserLoadURL()
 {
   try {
