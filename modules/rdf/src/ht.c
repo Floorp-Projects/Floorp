@@ -6757,7 +6757,7 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 	char				*nm;
 
 	
-	sp = htPane->db->translators[5];
+	sp = RDFTNamed(htPane->db, "rdf:ht");
 	nu = RDF_GetResource(htPane->db, pSitemapUrl, 1);
 	nsmp = makeNewSMP(htPane, pUrl, pSitemapUrl);
         nsmp->sitemap = nu;
@@ -6770,8 +6770,8 @@ HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name)
 		nm = copyString(XP_GetString(RDF_SITEMAPNAME));
 	}
 	nsmp->siteToolType = RDF_SITEMAP;
-        nsmp->name = copyString(name);
-        nsmp->sitemapUrl = copyString(pSitemapUrl);
+    if (name) nsmp->name = copyString(name);
+    nsmp->sitemapUrl = copyString(pSitemapUrl);
 	
 	setContainerp(nu, 1);
     
@@ -6792,11 +6792,12 @@ RetainOldSitemaps (HT_Pane htPane, char *pUrl)
   HT_URLSiteMapAssoc	*nsmp;
   RDFT			sp;
   
-  sp = htPane->db->translators[5];
+  sp = RDFTNamed(htPane->db, "rdf:ht");
   nsmp = htPane->smp;
   while (nsmp != NULL) {
     if ((nsmp->siteToolType == RDF_SITEMAP)) {
-      if (startsWith(nsmp->url, pUrl)) 
+		if (startsWith(nsmp->url, pUrl) && 
+			(!startsWith("file:", nsmp->url))) 
         { 
           if (!nsmp->onDisplayp) {	
             RDF_Resource nu = RDF_GetResource(htPane->db, nsmp->sitemapUrl, 1);
@@ -6826,7 +6827,7 @@ HT_ExitPage(HT_Pane htPane, char *pUrl)
   HT_URLSiteMapAssoc	*nsmp;
   RDFT			sp;
   
-  sp = htPane->db->translators[5];
+  sp = RDFTNamed(htPane->db, "rdf:ht");
   nsmp = htPane->sbp;
   while (nsmp != NULL) {    
     HT_URLSiteMapAssoc *next;
@@ -7026,7 +7027,7 @@ HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl)
 	char			*buffer;
 
 
-	sp = htPane->db->translators[5];
+	sp = RDFTNamed(htPane->db, "rdf:ht");
 	if (!htPane->smartBrowsingProviders) populateSBProviders(htPane);
 	if (!relatedLinksEnabledURL(pUrl)) return;
 	prov = htPane->smartBrowsingProviders;

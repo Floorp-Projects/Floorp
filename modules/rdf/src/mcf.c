@@ -416,7 +416,17 @@ RDF_GetSlotValue (RDF rdf, RDF_Resource u, RDF_Resource s,
   return NULL; 
 }
 
-
+RDFT
+RDFTNamed (RDF rdf, char* name) {
+  uint16 size =  rdf->numTranslators; 
+  uint16 n = 0;
+  while (n < size) {
+    char* nn = (*((RDFT*)rdf->translators + n))->url;
+    if (strcmp(nn, name) == 0) return  (*((RDFT*)rdf->translators + n));
+    n = n + 1;
+  }
+  return NULL;
+}
 
 RDF_Cursor
 getSlotValues (RDF rdf, RDF_Resource u, RDF_Resource s, 

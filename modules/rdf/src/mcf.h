@@ -79,6 +79,7 @@ PR_PUBLIC_API(RDF_Cursor)RDF_Find (RDF_Resource s, void* v, RDF_ValueType type);
 PRIntn			findEnumerator (PLHashEntry *he, PRIntn i, void *arg);
 void			disposeAllDBs ();
 
+
 XP_END_PROTOS
 
 #endif

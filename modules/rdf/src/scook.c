@@ -436,6 +436,7 @@ MakeSCookDB (char* url)
 	sk->rf->localp = 1;
         beginReadingRDFFile(sk->rf);
 	}
+    ntr->url = copyString(url);
     return ntr;
   } else return NULL;
 }

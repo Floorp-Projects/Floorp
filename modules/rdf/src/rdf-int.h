@@ -89,7 +89,7 @@
 
 #define MAX_URL_SIZE 300
 
-#define copyString(source) XP_STRDUP(source)
+#define copyString(source) (source != NULL ? XP_STRDUP(source) : NULL)
 #define stringEquals(x, y) (strcasecomp(x, y) ==0)
 /*#define stringAppend(x, y)   XP_AppendStr(x,y) */
 
@@ -375,7 +375,7 @@ PRBool remoteStoreHasAssertionInt (RDFT mcf, RDF_Resource u, RDF_Resource s, voi
 PRBool  nlocalStoreAddChildAt(RDFT mcf, RDF_Resource obj, RDF_Resource ref, RDF_Resource new, 
 		      PRBool beforep);
 char* advertURLOfContainer (RDF r, RDF_Resource u) ;
-
+RDFT RDFTNamed (RDF rdf, char* name) ;
 
 
 
