@@ -1845,16 +1845,13 @@ PK11_FindKeyByAnyCert(CERTCertificate *cert, void *wincx)
 			pk11_LoginStillRequired(slot,wincx)) {
 	/* authenticate and try again */
 	rv = PK11_Authenticate(slot, PR_TRUE, wincx);
-	if (rv != SECSuccess) {
-	    goto loser;
-	}
-	keyHandle = PK11_MatchItem(slot,certHandle,CKO_PRIVATE_KEY);
-	if (keyHandle == CK_INVALID_HANDLE) { 
-	    goto loser;
+	if (rv == SECSuccess) {
+            keyHandle = PK11_MatchItem(slot,certHandle,CKO_PRIVATE_KEY);
 	}
     }
-    privKey =  PK11_MakePrivKey(slot, nullKey, PR_TRUE, keyHandle, wincx);
-loser:
+    if (keyHandle != CK_INVALID_HANDLE) { 
+        privKey =  PK11_MakePrivKey(slot, nullKey, PR_TRUE, keyHandle, wincx);
+    }
     if (slot) {
 	PK11_FreeSlot(slot);
     }
