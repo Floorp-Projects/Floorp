@@ -162,7 +162,10 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
 
   // register as a content listener, so that we can fend off URL
   // loads from sidebar
-  rv = docShell->SetParentURIContentListener(this);
+  nsCOMPtr<nsIURIContentListener> listener = do_GetInterface(docShell, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = listener->SetParentContentListener(this);
   if (NS_FAILED(rv)) return rv;
 
   // Disable JavaScript in this document:

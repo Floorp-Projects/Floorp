@@ -65,7 +65,7 @@ interface nsIRequest;
 interface nsISHEntry;
 interface nsILayoutHistoryState;
 
-[scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
+[scriptable, uuid(BBFDF99E-D675-42FD-B3EA-EA341C2331A6)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -205,12 +205,6 @@ interface nsIDocShell : nsISupports
    * be of interest to chrome.
    */
   attribute nsIChromeEventHandler chromeEventHandler;
-
-  /**
-   * URI content listener parent.  This is not refcounted and is assumed to be
-   * nulled out by the parent when the parent is going away.
-   */
-  attribute nsIURIContentListener parentURIContentListener;
 
   /**
    * The document charset info.  This is used by a load to determine priorities

@@ -167,10 +167,12 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
   StopUrls();
 
   nsCOMPtr<nsIDocShell> rootShell(do_QueryReferent(mRootDocShellWeak));
-
   if(rootShell)
   {
-    rootShell->SetParentURIContentListener(nsnull);
+    nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(rootShell));
+    if (listener) {
+      listener->SetParentContentListener(nsnull);
+    }
     mRootDocShellWeak = nsnull;
     mMessageWindowDocShellWeak = nsnull;
   }
@@ -284,7 +286,10 @@ NS_IMETHODIMP nsMsgWindow::SetRootDocShell(nsIDocShell * aDocShell)
   if (aDocShell)
   {
     mRootDocShellWeak = do_GetWeakReference(aDocShell);
-    aDocShell->SetParentURIContentListener(this);
+    nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(aDocShell));
+    if (listener) {
+      listener->SetParentContentListener(this);
+    }
 	// be sure to set the application flag on the root docshell
 	// so it knows we are a mail application.
 	aDocShell->SetAppType(nsIDocShell::APP_TYPE_MAIL);

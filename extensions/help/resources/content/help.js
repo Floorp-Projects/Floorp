@@ -140,7 +140,12 @@ function init() {
   helpGlossaryPanel = document.getElementById("help-glossary-panel");
   helpBrowser = document.getElementById("help-content");
   helpExternal = document.getElementById("help-external");
-  helpExternal.docShell.parentURIContentListener = helpContentListener;
+  // XXXbz this is never unset.  That should be fixed.  See the IDL.
+  helpExternal
+    .docShell
+    .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+    .getInterface(Components.interfaces.nsIURIContentListener)
+    .parentContentListener = helpContentListener;
 
   // Get the help content pack, base URL, and help topic
   var helpTopic = defaultTopic;
