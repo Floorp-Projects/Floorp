@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jungshik Shin <jshin@mailaps.org>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -47,6 +47,14 @@ static const PRUint16 g_ASCIIShiftTable[] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
+// This is necessary to decode 8byte sequence representation of Hangul
+// syllables. This representation is uniq to EUC-KR and is not used
+// in CP949. However, this conveter is for both EUC-KR and CP949
+// so that this shift table is put here. See bug 131388. 
+static const PRUint16 g_DecomposedHangulShiftTable[] =  {
+  0, uDecomposedHangulCharset,  
+  ShiftCell(0,   0, 0, 0, 0, 0, 0, 0),
+};
 
 static const PRUint16 g_EUCKRShiftTable[] =  {
   0, u2BytesGRCharset,  
@@ -70,14 +78,17 @@ static const PRUint16 g_utCP949NoKSCHangulMapping[] = {
 
 static const uRange g_CP949Ranges[] = {
   { 0x00, 0x7E },
+  { 0xA4, 0xA4 },   // 8byte seq. for Hangul syllables not available
+                    // in pre-composed form in KS X 1001
   { 0xA1, 0xFE },
-  { 0xA1, 0xFE },
+  { 0xA1, 0xC6 },   // CP949 extension B. ends at 0xC6.
   { 0x80, 0xA0 }
 };
 
 
 static const PRUint16 *g_CP949ShiftTableSet [] = {
   g_ASCIIShiftTable,
+  g_DecomposedHangulShiftTable,
   g_EUCKRShiftTable,
   g_CP949HighShiftTable,
   g_CP949LowShiftTable
@@ -85,6 +96,7 @@ static const PRUint16 *g_CP949ShiftTableSet [] = {
 
 static const PRUint16 *g_CP949MappingTableSet [] ={
   g_AsciiMapping,
+  g_HangulNullMapping,
   g_utKSC5601Mapping,
   g_utCP949NoKSCHangulMapping,
   g_utCP949NoKSCHangulMapping
@@ -97,7 +109,7 @@ static const PRUint16 *g_CP949MappingTableSet [] ={
 // Class nsCP949ToUnicode [implementation]
 
 nsCP949ToUnicode::nsCP949ToUnicode() 
-: nsMultiTableDecoderSupport(4,
+: nsMultiTableDecoderSupport(sizeof(g_CP949Ranges) / sizeof(g_CP949Ranges[0]),
                         (uRange*) &g_CP949Ranges,
                         (uShiftTable**) &g_CP949ShiftTableSet, 
                         (uMappingTable**) &g_CP949MappingTableSet)

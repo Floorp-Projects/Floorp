@@ -40,6 +40,7 @@
 #define nsEUCKRToUnicode_h___
 
 #include "nsUCvKOSupport.h"
+#include "nsCP949ToUnicode.h"
 
 //----------------------------------------------------------------------
 // Class nsEUCKRToUnicode [declaration]
@@ -50,7 +51,8 @@
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsEUCKRToUnicode : public nsMultiTableDecoderSupport
+// Just make it an alias to CP949 decoder. bug 131388
+class nsEUCKRToUnicode : public nsCP949ToUnicode
 {
 public:
 
@@ -58,14 +60,6 @@ public:
    * Class constructor.
    */
   nsEUCKRToUnicode();
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsEUCKRToUnicode_h___ */
