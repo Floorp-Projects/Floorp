@@ -207,7 +207,6 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
       nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
       if (node && !nodeIsInSelection)
       {
-        PRBool elementIsLink = PR_FALSE;
         if (!element)
         {
           if (isContextClick)
