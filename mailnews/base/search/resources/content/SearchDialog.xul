@@ -37,8 +37,8 @@ Rights Reserved.
     orient="vertical">
 
   <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://messenger/content/SearchDialog.js"/>
   <script src="chrome://messenger/content/mailWindow.js"/>
+  <script src="chrome://messenger/content/SearchDialog.js"/>
   <text value="This dialog is a work in progress! Please don't file any bugs against it."/>
   <box>
     <text class="label" value="&searchHeading.label;"/>

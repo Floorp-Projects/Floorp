@@ -36,6 +36,10 @@ function searchOnLoad()
     initializeSearchWindowWidgets();
 
     setupDatasource();
+
+    if (window.arguments && window.arguments[0])
+        selectFolder(window.arguments[0].folder);
+    
     onMore(null);
 
     
@@ -59,18 +63,64 @@ function onReset() {
 
 }
 
-function onChooseFolder(event) {
-    dump("event.target = " + event.target.id + "\n");
+function getFirstItemByTag(root, tag)
+{
+    var node;
+    if (root.localName == tag)
+        return root;
+    
+    if (root.childNodes) {
+        for (node = root.firstChild; node; node=node.nextSibling) {
+            if (node.localName != "template") {
+                result = getFirstItemByTag(node, tag);
+                if (result) return result;
+            }
+        }
+    }
+    return null;
+}
 
-    SetFolderPicker(event.target.id, gFolderPicker.id);
+function selectFolder(folder) {
+    var items;
+    if (!folder) {
+        // walk folders to find first menuitem
+        var firstMenuitem = getFirstItemByTag(gFolderPicker, "menuitem");
+        gFolderPicker.selectedItem = firstMenuitem;
+            
+    } else {
+        // the URI of the folder is in the data attribute of the menuitem
+        folderResource =
+            folder.QueryInterface(Components.interfaces.nsIRDFResource);
+        dump("Selecting " + folderResource.Value + "\n");
+
+        
+        var elements =
+            gFolderPicker.getElementsByAttribute("data", folderResource.Value);
+        if (elements && elements.length)
+            gFolderPicker.selectedItem = elements[0];
+    }
+    dump("Selected <" + gFolderPicker.selectedItem.localName + ">\n");
+    updateSearchFolderPicker()
+}
+
+function updateSearchFolderPicker() {
+
+    var selectedItem = gFolderPicker.selectedItem;
+    if (selectedItem.localName != "menuitem") return;
+    dump("id = " + selectedItem.id + "\n");
+    SetFolderPicker(selectedItem.id, gFolderPicker.id);
 
     // use the URI to get the real folder
     gCurrentFolder =
-        RDF.GetResource(event.target.id).QueryInterface(nsIMsgFolder);
+        RDF.GetResource(selectedItem.id).QueryInterface(nsIMsgFolder);
 
     
     setSearchScope(GetScopeForFolder(gCurrentFolder));
 
+}
+
+function onChooseFolder(event) {
+    updateSearchFolderPicker();
 }
 
 function onSearch(event)

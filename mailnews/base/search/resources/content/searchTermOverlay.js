@@ -132,6 +132,10 @@ function createSearchRow(index, scope, searchTerm)
     searchTermElement.searchoperator = searchOp;
     searchTermElement.searchvalue = searchVal;
 
+    // now invalidate the newly created items because they've been inserted
+    // into the document, and XBL bindings will be inserted in their place
+    searchAttr = searchOp = searchVal = undefined;
+    
     // and/or string handling:
     // this is scary - basically we want to take every other
     // treecell, (note the i+=2) which will be a text label,

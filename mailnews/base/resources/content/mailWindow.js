@@ -257,7 +257,7 @@ nsMsgStatusFeedback.prototype =
         gStatusBar.progresstext = Math.round(percentage) + "%";
       }
 		},
-	CloseWindow : function(percent)
+	closeWindow : function(percent)
 		{
 		}
 }

@@ -308,7 +308,7 @@ Rights Reserved.
           <menupopup>
             <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup>
-                <menuitem uri="..." value="&filemessageschoosethis.label;"/>
+                <menuitem uri="..." data="..." value="&filemessageschoosethis.label;"/>
                 <menuseparator/>
               </menupopup>
             </menu>
@@ -316,7 +316,7 @@ Rights Reserved.
         </rule>
         <rule>
           <menupopup>
-            <menuitem uri="..."
+            <menuitem uri="..." data="..."
                       value="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </menupopup>
         </rule>

@@ -315,9 +315,6 @@
     </interface>
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
-    <content>
-      <xul:text value="searchterm!"/>
-    </content>
     <interface>
       <!-- the actual nsIMsgSearchTerm object -->
       <property name="searchTerm" onget="return this.internalSearchTerm">

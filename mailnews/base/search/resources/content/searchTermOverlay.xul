@@ -39,7 +39,7 @@
 
     <spring class="spacer"/>
     <box style="min-height:200px">
-    <searchterms id="searchterms"/>
+    <box id="searchterms"/>
     <tree class="inset" flex="1" id="searchTermTree">
       <treecolgroup>
         <treecol flex="1"/>

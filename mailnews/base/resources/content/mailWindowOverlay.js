@@ -340,7 +340,8 @@ function MsgFindAgain() {
 }
 
 function MsgSearchMessages() {
-    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable");
+	var preselectedFolder = GetFirstSelectedMsgFolder();
+    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable", { folder: preselectedFolder });
 }
 
 function MsgFilters() {
