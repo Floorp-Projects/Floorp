@@ -2796,6 +2796,7 @@ static PRBool IsInline(eHTMLTags aTag)
     case  eHTMLTag_td:
     case  eHTMLTag_textarea:
     case  eHTMLTag_tt:
+    case  eHTMLTag_u:
     case  eHTMLTag_var:
     case  eHTMLTag_wbr:
            
