@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  jsconsole \
 		  uconv \
+		  docshell \
 		  $(NULL)
 
 XPIDLSRCS	= \
