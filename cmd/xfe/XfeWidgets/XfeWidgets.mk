@@ -105,7 +105,7 @@ ifeq ($(OS_ARCH),SunOS)
 
   XFE_XT_LIBS			= -lXt
 
-  XFE_X_LIBS			= -lX11
+  XFE_X_LIBS			= -lXmu -lX11
 
   XFE_USE_NATIVE_XPM	=
 
@@ -137,7 +137,7 @@ ifeq ($(OS_ARCH),IRIX)
 
   XFE_XT_LIBS			= -lXt
 
-  XFE_X_LIBS			= -lX11 -lSM -lICE
+  XFE_X_LIBS			= -lXmu -lX11 -lSM -lICE
 
   XFE_USE_NATIVE_XPM	= True
 
