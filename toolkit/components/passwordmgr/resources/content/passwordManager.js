@@ -352,11 +352,6 @@ function TrimString(string)
   return string.replace(/(^\s+)|(\s+$)/g, '')
 }
 
-function doHelpButton() {
-  openHelp("password_mgr");
-}
-
-
 function DeleteAllFromTree
     (tree, view, table, deletedTable, removeButton, removeAllButton) {
 
