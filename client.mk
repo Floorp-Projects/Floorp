@@ -86,7 +86,7 @@ endif
 #    for how to set up myconfig.sh.)
 run_for_side_effects := \
 	$(shell build/autoconf/myconfig2defs.sh $(TOPSRCDIR)/.client-defs.mk)
-include $(TOPSRCDIR)/.client-defs.mk
+-include $(TOPSRCDIR)/.client-defs.mk
 
 ifdef MOZ_OBJDIR
   OBJDIR := $(MOZ_OBJDIR)
