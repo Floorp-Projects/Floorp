@@ -175,7 +175,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.5 2000/05/31 21:58:35 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.6 2000/07/22 02:14:57 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
