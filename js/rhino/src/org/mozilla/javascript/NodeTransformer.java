@@ -449,7 +449,7 @@ public class NodeTransformer {
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 VariableTable vars = getVariableTable(tree);
-                if (vars.get(name) != null) {
+                if (vars.getVariable(name) != null) {
                     if (type == TokenStream.SETNAME) {
                         node.setType(TokenStream.SETVAR);
                         bind.setType(TokenStream.STRING);
@@ -489,7 +489,7 @@ public class NodeTransformer {
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 VariableTable vars = getVariableTable(tree);
-                if (vars.get(name) != null) {
+                if (vars.getVariable(name) != null) {
                     node.setType(TokenStream.GETVAR);
                 }
                 break;
@@ -510,7 +510,9 @@ public class NodeTransformer {
         while ((node = iterator.nextNode()) != null) {
             int nodeType = node.getType();
             if (inFunction && nodeType == TokenStream.FUNCTION &&
-                node != tree) 
+                node != tree && 
+                ((FunctionNode) node.getProp(Node.FUNCTION_PROP)).getFunctionType() == 
+                    FunctionNode.FUNCTION_EXPRESSION_STATEMENT) 
             {
                 // In a function with both "var x" and "function x",
                 // disregard the var statement, independent of order.
@@ -530,6 +532,26 @@ public class NodeTransformer {
                 if (ht == null || ht.get(n.getString()) == null)
                     vars.addLocal(n.getString());
             }
+        }
+        String name = (String) tree.getDatum();
+        if (inFunction && ((FunctionNode) tree).getFunctionType() ==
+                          FunctionNode.FUNCTION_EXPRESSION &&
+            name != null && name.length() > 0 &&
+            vars.getVariable(name) == null)
+        {
+            // A function expression needs to have its name as a variable
+            // (if it isn't already allocated as a variable). See 
+            // ECMA Ch. 13.  We add code to the beginning of the function
+            // to initialize a local variable of the function's name
+            // to the function value.
+            vars.addLocal(name);
+            Node block = tree.getLastChild();
+            Node setFn = new Node(TokenStream.POP,
+                            new Node(TokenStream.SETVAR,
+                                new Node(TokenStream.STRING, name),
+                                new Node(TokenStream.PRIMARY,
+                                    new Integer(TokenStream.THISFN))));
+            block.addChildrenToFront(setFn);
         }
     }
 
@@ -580,7 +602,9 @@ public class NodeTransformer {
         if (left.getType() == TokenStream.NAME) {
             VariableTable vars = getVariableTable(tree);
             String name = left.getString();
-            if (inFunction && vars.get(name) != null && !inWithStatement()) {
+            if (inFunction && vars.getVariable(name) != null && 
+                !inWithStatement()) 
+            {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
                 left.setType(TokenStream.GETVAR);
                 // fall through to code to add GetParent

@@ -457,7 +457,7 @@ public class Codegen extends Interpreter {
                     // make sure that all parameters are objects
                     itsForcedObjectParameters = true;
                     for (int i = 0; i < vars.getParameterCount(); i++) {
-                        OptLocalVariable lVar = (OptLocalVariable) vars.get(i);
+                        OptLocalVariable lVar = (OptLocalVariable) vars.getVariable(i);
                         aload(lVar.getJRegister());
                         classFile.add(ByteCode.GETSTATIC,
                                       "java/lang/Void",
@@ -1347,12 +1347,18 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.ACONST_NULL);
             }
             // load 'cx'
-            aload(contextLocal);           
+            aload(contextLocal);  
+            // load boolean indicating whether fn name should be set in scope
+            boolean setFnName = str != null && str.length() > 0 && 
+                                ((FunctionNode) def).getFunctionType() !=
+                                    FunctionNode.FUNCTION_EXPRESSION;
+            addByteCode(setFnName ? ByteCode.ICONST_1 : ByteCode.ICONST_0);
+            
             addScriptRuntimeInvoke("initFunction",
                                    "(Lorg/mozilla/javascript/NativeFunction;" +
                                     "Lorg/mozilla/javascript/Scriptable;" +
                                     "Ljava/lang/String;" +
-                                    "Lorg/mozilla/javascript/Context;)",
+                                    "Lorg/mozilla/javascript/Context;Z)",
                                    "Lorg/mozilla/javascript/NativeFunction;");
             def.putProp(Node.FUNCTION_PROP, new Short(i));
             addByteCode(ByteCode.AASTORE);    // store NativeFunction
@@ -1447,7 +1453,7 @@ public class Codegen extends Interpreter {
             // before the next call and are used in the function
             short firstUndefVar = -1;
             for (int i = 0; i < vars.size(); i++) {
-                OptLocalVariable lVar = (OptLocalVariable) vars.get(i);
+                OptLocalVariable lVar = (OptLocalVariable) vars.getVariable(i);
                 if (lVar.isNumber()) {
                     lVar.assignJRegister(getNewWordPairLocal());
                     push(0.0);
@@ -1547,7 +1553,7 @@ public class Codegen extends Interpreter {
         if (cx.isGeneratingDebug()) {
             debugVars = new OptVariableTable();
             debugVars.addLocal(debugVariableName);
-            OptLocalVariable lv = (OptLocalVariable) debugVars.get(debugVariableName);
+            OptLocalVariable lv = (OptLocalVariable) debugVars.getVariable(debugVariableName);
             lv.assignJRegister(variableObjectLocal);
             lv.setStartPC(classFile.getCurrentCodeOffset());
         }
@@ -1876,7 +1882,6 @@ public class Codegen extends Interpreter {
     
     */
     {
-if (true) {        
         Node callBase = callNode.getFirstChild();
         if (callBase.getType() == TokenStream.GETPROP) {
             Node callBaseChild = callBase.getFirstChild();
@@ -1903,7 +1908,6 @@ if (true) {
                 }
             }
         }
-}        
         return null;
     }
     
@@ -2425,7 +2429,7 @@ if (true) {
         }
         String name = node.getString();
         if (hasVarsInRegs) {
-            OptLocalVariable lVar = (OptLocalVariable) vars.get(name);
+            OptLocalVariable lVar = (OptLocalVariable) vars.getVariable(name);
             if (lVar != null) {
                 if (lVar.isNumber()) {
                     push("number");
@@ -2463,7 +2467,7 @@ if (true) {
             String routine = (isInc) ? "postIncrement" : "postDecrement";
             if (hasVarsInRegs && child.getType() == TokenStream.GETVAR) {
                 if (lVar == null) 
-                    lVar = (OptLocalVariable) vars.get(child.getString());
+                    lVar = (OptLocalVariable) vars.getVariable(child.getString());
                 if (lVar.getJRegister() == -1)
                     lVar.assignJRegister(getNewWordLocal());
                 aload(lVar.getJRegister());
@@ -3173,6 +3177,10 @@ if (true) {
             aload(thisObjLocal);
             break;
 
+          case TokenStream.THISFN:
+            classFile.add(ByteCode.ALOAD_0);
+            break;
+
           case TokenStream.NULL:
             addByteCode(ByteCode.ACONST_NULL);
             break;
@@ -3232,7 +3240,7 @@ if (true) {
     {
         // TODO: Clean up use of lVar here and in set.
         if (hasVarsInRegs && lVar == null)
-            lVar = (OptLocalVariable) vars.get(name);
+            lVar = (OptLocalVariable) vars.getVariable(name);
         if (lVar != null) {
             if (lVar.getJRegister() == -1)
                 if (lVar.isNumber())
@@ -3303,7 +3311,7 @@ if (true) {
         OptLocalVariable lVar = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
         // XXX is this right? If so, clean up.
         if (hasVarsInRegs && lVar == null)
-            lVar = (OptLocalVariable) vars.get(child.getString());
+            lVar = (OptLocalVariable) vars.getVariable(child.getString());
         if (lVar != null) {
             generateCodeFromNode(child.getNextSibling(), node, -1, -1);
             if (lVar.getJRegister() == -1) {

@@ -168,7 +168,7 @@ public class Optimizer {
             }
         }
         for (int i = 0; i < theVariables.size(); i++) {
-            OptLocalVariable lVar = (OptLocalVariable) theVariables.get(i);
+            OptLocalVariable lVar = (OptLocalVariable) theVariables.getVariable(i);
             if (!lVar.isParameter()) {
                 int theType = lVar.getTypeUnion();
                 if (theType == TypeEvent.NumberType) {
@@ -1043,7 +1043,7 @@ public class Optimizer {
             case TokenStream.SETVAR : {
                     String name = n.getFirstChild().getString();
                     OptLocalVariable theVar = (OptLocalVariable) 
-                        theVariables.get(name);
+                        theVariables.getVariable(name);
                     if (theVar != null)
                         n.putProp(Node.VARIABLE_PROP, theVar);
                 }
@@ -1051,7 +1051,7 @@ public class Optimizer {
             case TokenStream.GETVAR : {
                     String name = n.getString();
                     OptLocalVariable theVar = (OptLocalVariable) 
-                        theVariables.get(name);
+                        theVariables.getVariable(name);
                     if (theVar != null)
                         n.putProp(Node.VARIABLE_PROP, theVar);
                 }

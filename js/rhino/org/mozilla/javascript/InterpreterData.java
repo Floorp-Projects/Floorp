@@ -80,7 +80,7 @@ class InterpreterData {
     
     public boolean removeBreakpoint(int line) {
         int offset = getOffset(line);
-        if (offset != -1 && itsICode[offset] == TokenStream.BREAKPOINT)
+        if (offset != -1 && itsICode[offset] == (byte) TokenStream.BREAKPOINT)
         {
             itsICode[offset] = (byte) TokenStream.LINE;
             return true;

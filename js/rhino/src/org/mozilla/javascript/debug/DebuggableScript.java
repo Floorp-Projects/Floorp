@@ -46,6 +46,8 @@ import java.util.Enumeration;
  * code (either functions or top-level scripts).
  */
 public interface DebuggableScript {
+  
+    //public boolean isFunction();  // XXX
     
     /**
      * Get the Scriptable object (Function or Script) that is 

@@ -854,12 +854,18 @@ public class ScriptRuntime {
         /* It must be a string. */
         int len = str.length();
         char c;
-        if (len > 0 && '0' <= (c = str.charAt(0)) && c <= '9' &&
+        boolean negate = false;
+        int i = 0;
+        if (len > 0 && (c = str.charAt(0)) == '-') {
+            negate = true;
+            i = 1;
+        }
+        if (len > 0 && '0' <= (c = str.charAt(i)) && c <= '9' &&
             len <= MAX_VALUE_LENGTH)
         {
     	    int index = c - '0';
             int oldIndex = 0;
-            int i = 1;
+            i++;
             if (index != 0) {
                 while (i < len && '0' <= (c = str.charAt(i)) && c <= '9') {
                     oldIndex = index;
@@ -875,7 +881,7 @@ public class ScriptRuntime {
                  (oldIndex == (Integer.MAX_VALUE / 10) &&
                   c < (Integer.MAX_VALUE % 10))))
             {
-                return index;
+                return negate ? -index : index;
             }
         }
         return NO_INDEX;
@@ -1159,9 +1165,14 @@ public class ScriptRuntime {
             } while (next != null);
 
             bound.put(id, bound, value);
+            /*
+            This code is causing immense performance problems in
+            scripts that assign to the variables as a way of creating them.
+            XXX need strict mode
             String[] args = { id };
             String message = getMessage("msg.assn.create", args);
             Context.reportWarning(message);
+            */
             return value;
         }
         return setProp(bound, id, value, scope);
@@ -1947,11 +1958,12 @@ public class ScriptRuntime {
     public static NativeFunction initFunction(NativeFunction fn,
                                               Scriptable scope,
                                               String fnName,
-                                              Context cx)
+                                              Context cx,
+                                              boolean doSetName)
     {
         fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         fn.setParentScope(scope);
-        if (fnName != null && fnName.length() != 0)
+        if (doSetName)
             setName(scope, fn, scope, fnName);
         return fn;
     }

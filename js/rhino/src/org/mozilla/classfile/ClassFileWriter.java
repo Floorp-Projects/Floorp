@@ -362,7 +362,8 @@ public class ClassFileWriter extends LabelTable {
             codeAttribute[index++] = (byte)(varCount >> 8);
             codeAttribute[index++] = (byte)varCount;
             for (int i = 0; i < varCount; i++) {
-                LocalVariable lvar = vars.get(i);
+                LocalVariable lvar = vars.getVariable(i);
+                
                 // start pc
                 int startPc = lvar.getStartPC();
                 codeAttribute[index++] = (byte)(startPc >> 8);

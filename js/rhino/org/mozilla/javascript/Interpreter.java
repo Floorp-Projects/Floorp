@@ -174,8 +174,8 @@ public class Interpreter extends LabelTable {
         boolean needsActivation = theFunction.requiresActivation() ||
                                   cx.isGeneratingDebug();
         generateICodeFromTree(theFunction.getLastChild(), 
-                               varTable, needsActivation,
-                               securityDomain);
+                              varTable, needsActivation,
+                              securityDomain);
             
         itsData.itsName = theFunction.getFunctionName();
         itsData.itsSourceFile = (String) theFunction.getProp(
@@ -1204,6 +1204,7 @@ public class Interpreter extends LabelTable {
                         case TokenStream.ONE :
                         case TokenStream.NULL :
                         case TokenStream.THIS :
+                        case TokenStream.THISFN :
                         case TokenStream.FALSE :
                         case TokenStream.TRUE :
                         case TokenStream.UNDEFINED :
@@ -1801,6 +1802,9 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.THIS :
                         stack[++stackTop] = thisObj;
+                        break;
+                    case TokenStream.THISFN :
+                        stack[++stackTop] = fnOrScript;
                         break;
                     case TokenStream.FALSE :
                         stack[++stackTop] = Boolean.FALSE;

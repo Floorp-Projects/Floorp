@@ -49,4 +49,6 @@ public interface DebuggableEngine {
     public Debugger getDebugger();
     
     public Frame getFrame(int frameNumber);
+    
+    //public void haltExecution();
 }

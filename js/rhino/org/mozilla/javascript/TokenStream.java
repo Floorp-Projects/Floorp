@@ -168,47 +168,48 @@ public class TokenStream {
         SETPARENT   = 84,
         SCOPE       = 85,
         GETSCOPEPARENT = 86,
-        JTHROW      = 87,
+        THISFN      = 87,
+        JTHROW      = 88,
         // End of interpreter bytecodes
-        SEMI        = 88,  // semicolon
-        LB          = 89,  // left and right brackets
-        RB          = 90,
-        LC          = 91,  // left and right curlies (braces)
-        RC          = 92,
-        LP          = 93,  // left and right parentheses
-        RP          = 94,
-        COMMA       = 95,  // comma operator
-        ASSIGN      = 96, // assignment ops (= += -= etc.)
-        HOOK        = 97, // conditional (?:)
-        COLON       = 98,
-        OR          = 99, // logical or (||)
-        AND         = 100, // logical and (&&)
-        EQOP        = 101, // equality ops (== !=)
-        RELOP       = 102, // relational ops (< <= > >=)
-        SHOP        = 103, // shift ops (<< >> >>>)
-        UNARYOP     = 104, // unary prefix operator
-        INC         = 105, // increment/decrement (++ --)
-        DEC         = 106,
-        DOT         = 107, // member operator (.)
-        PRIMARY     = 108, // true, false, null, this
-        FUNCTION    = 109, // function keyword
-        EXPORT      = 110, // export keyword
-        IMPORT      = 111, // import keyword
-        IF          = 112, // if keyword
-        ELSE        = 113, // else keyword
-        SWITCH      = 114, // switch keyword
-        CASE        = 115, // case keyword
-        DEFAULT     = 116, // default keyword
-        WHILE       = 117, // while keyword
-        DO          = 118, // do keyword
-        FOR         = 119, // for keyword
-        BREAK       = 120, // break keyword
-        CONTINUE    = 121, // continue keyword
-        VAR         = 122, // var keyword
-        WITH        = 123, // with keyword
-        CATCH       = 124, // catch keyword
-        FINALLY     = 125, // finally keyword
-        RESERVED    = 126, // reserved keywords
+        SEMI        = 89,  // semicolon
+        LB          = 90,  // left and right brackets
+        RB          = 91,
+        LC          = 92,  // left and right curlies (braces)
+        RC          = 93,
+        LP          = 94,  // left and right parentheses
+        RP          = 95,
+        COMMA       = 96,  // comma operator
+        ASSIGN      = 97, // assignment ops (= += -= etc.)
+        HOOK        = 98, // conditional (?:)
+        COLON       = 99,
+        OR          = 100, // logical or (||)
+        AND         = 101, // logical and (&&)
+        EQOP        = 102, // equality ops (== !=)
+        RELOP       = 103, // relational ops (< <= > >=)
+        SHOP        = 104, // shift ops (<< >> >>>)
+        UNARYOP     = 105, // unary prefix operator
+        INC         = 106, // increment/decrement (++ --)
+        DEC         = 107,
+        DOT         = 108, // member operator (.)
+        PRIMARY     = 109, // true, false, null, this
+        FUNCTION    = 110, // function keyword
+        EXPORT      = 111, // export keyword
+        IMPORT      = 112, // import keyword
+        IF          = 113, // if keyword
+        ELSE        = 114, // else keyword
+        SWITCH      = 115, // switch keyword
+        CASE        = 116, // case keyword
+        DEFAULT     = 117, // default keyword
+        WHILE       = 118, // while keyword
+        DO          = 119, // do keyword
+        FOR         = 120, // for keyword
+        BREAK       = 121, // break keyword
+        CONTINUE    = 122, // continue keyword
+        VAR         = 123, // var keyword
+        WITH        = 124, // with keyword
+        CATCH       = 125, // catch keyword
+        FINALLY     = 126, // finally keyword
+        RESERVED    = 127, // reserved keywords
 
         /** Added by Mike - these are JSOPs in the jsref, but I
          * don't have them yet in the java implementation...
@@ -217,45 +218,45 @@ public class TokenStream {
          * Most of these go in the 'op' field when returning
          * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
          */
-        NOP         = 127, // NOP
-        NOT         = 128, // etc.
-        PRE         = 129, // for INC, DEC nodes.
-        POST        = 130,
+        NOP         = 128, // NOP
+        NOT         = 129, // etc.
+        PRE         = 130, // for INC, DEC nodes.
+        POST        = 131,
 
         /**
          * For JSOPs associated with keywords...
          * eg. op = THIS; token = PRIMARY
          */
 
-        VOID        = 131,
+        VOID        = 132,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
-        BLOCK       = 132, // statement block
-        ARRAYLIT    = 133, // array literal
-        OBJLIT      = 134, // object literal
-        LABEL       = 135, // label
-        TARGET      = 136,
-        LOOP        = 137,
-        ENUMDONE    = 138,
-        EXPRSTMT    = 139,
-        PARENT      = 140,
-        CONVERT     = 141,
-        JSR         = 142,
-        NEWLOCAL    = 143,
-        USELOCAL    = 144,
-        SCRIPT      = 145,   // top-level node for entire script
+        BLOCK       = 133, // statement block
+        ARRAYLIT    = 134, // array literal
+        OBJLIT      = 135, // object literal
+        LABEL       = 136, // label
+        TARGET      = 137,
+        LOOP        = 138,
+        ENUMDONE    = 139,
+        EXPRSTMT    = 140,
+        PARENT      = 141,
+        CONVERT     = 142,
+        JSR         = 143,
+        NEWLOCAL    = 144,
+        USELOCAL    = 145,
+        SCRIPT      = 146,   // top-level node for entire script
         
         /**
          * For the interpreted mode indicating a line number change in icodes.
          */
-        LINE        = 146,
-        SOURCEFILE  = 147,
+        LINE        = 147,
+        SOURCEFILE  = 148,
         
         // For debugger
         
-        BREAKPOINT  = 148;
+        BREAKPOINT  = 149;
     // end enum
 
 
@@ -354,6 +355,7 @@ public class TokenStream {
                 "setparent",
                 "scope",
                 "getscopeparent",
+                "thisfn",
                 "jthrow",
                 "semi",
                 "lb",
