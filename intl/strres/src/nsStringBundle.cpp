@@ -28,8 +28,6 @@
 #ifndef NECKO
 #include "nsINetService.h"
 #else
-#include "nsIIOService.h"
-#include "nsIChannel.h"
 #include "nsNeckoUtil.h"
 #endif // NECKO
 
@@ -53,9 +51,6 @@ NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
@@ -146,16 +141,7 @@ nsStringBundle::nsStringBundle(nsIURI* aURL, nsILocale* aLocale,
 
 #else // NECKO
   nsresult rv;
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) {
-#ifdef NS_DEBUG
-    printf("cannot get io service\n");
-#endif
-    *aResult = rv;
-    return;
-  }
-
-  rv = NS_OpenURI(&in, aURL);
+  rv = NS_OpenURI(&in, aURL, nsnull);   // XXX need to pass the document's nsILoadGroup here!
   if (NS_FAILED(rv)) {
 #ifdef NS_DEBUG
     printf("cannot open uri\n");
@@ -323,7 +309,7 @@ nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
   ret = NS_NewURI(&uri, aURLStr);
   if (NS_FAILED(ret)) return ret;
 
-  ret = NS_OpenURI(&in, uri);
+  ret = NS_OpenURI(&in, uri, nsnull);   // XXX need to pass the document's nsILoadGroup here!
   NS_RELEASE(uri);
 #endif // NECKO
   return ret;

@@ -425,10 +425,8 @@ ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
 {
   NS_INIT_REFCNT();
   mRequests = nsnull;
-#ifndef NECKO
   mLoadGroup = aLoadGroup;
   NS_IF_ADDREF(mLoadGroup);
-#endif
   mReloadPolicy = aReloadPolicy;
   mReconnectCallback = aReconnectCallback;
   mReconnectArg = aReconnectArg;
@@ -445,9 +443,7 @@ ImageNetContextImpl::~ImageNetContextImpl()
     }
     delete mRequests;
   }
-#ifndef NECKO
   NS_IF_RELEASE(mLoadGroup);
-#endif
 }
 
 NS_IMPL_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
@@ -577,7 +573,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     }
     else {
 #ifdef NECKO
-      nsresult rv = NS_OpenURI(ic, nsurl);
+      nsresult rv = NS_OpenURI(ic, nsnull, nsurl, mLoadGroup);
 #else
       nsresult rv = NS_OpenURL(nsurl, ic);
 #endif

@@ -245,8 +245,9 @@ private:
   void CheckForGenericRatings(char *url_address, PICS_RatingsStruct **rs,
                                   PICS_PassFailReturnVal *status);
 
-	nsresult GetRootURL(nsIURI* aURL);
-
+#if 0   // XXX no longer called?
+  nsresult GetRootURL(nsIURI* aURL);
+#endif
 };
 
 static nsPICS* gPICS = nsnull; // The one-and-only PICSService
@@ -1518,6 +1519,7 @@ nsPICS::PreferenceChanged(const char* aPrefName)
   GetUserPreferences();
 }
 
+#if 0
 //#define UA_CSS_URL "resource:/res/ua.css"
 #define UA_CSS_URL "http://www.w3.org/"
 nsresult
@@ -1547,7 +1549,7 @@ nsPICS::GetRootURL(nsIURI* aURL)
             return rv;
         mParser->Parse(aURL);
 #ifdef NECKO
-        rv = NS_OpenURI(lsnr, aURL);
+        rv = NS_OpenURI(lsnr, nsnull, aURL, nsnull);    // XXX need the nsILoadGroup here!
 #else
         rv = NS_OpenURL(aURL, lsnr);
 #endif
@@ -1557,7 +1559,7 @@ nsPICS::GetRootURL(nsIURI* aURL)
 	return rv;
 
 }
-
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsPICSFactory Implementation

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -835,7 +835,8 @@ FTPDataSource::GetFTPListing(nsIRDFResource *source, nsISimpleEnumerator** aResu
 			FTPDataSourceCallback	*callback = new FTPDataSourceCallback(mInner, source);
 			if (nsnull != callback)
 			{
-				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), url);
+				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull,
+                                url, nsnull);    // XXX need the nsILoadGroup here!
 			}
 		}
 #endif // NECKO

@@ -1460,12 +1460,17 @@ XULContentSinkImpl::OpenScript(const nsIParserNode& aNode)
             // onto it as opaque data.
             NS_ADDREF(this);
 
+            nsILoadGroup* loadGroup = mDocument->GetDocumentLoadGroup();
             nsIUnicharStreamLoader* loader;
             rv = NS_NewUnicharStreamLoader(&loader,
                                            url, 
+#ifdef NECKO
+                                           loadGroup,
+#endif
                                            (nsStreamCompleteFunc)DoneLoadingScript, 
                                            (void *)this);
             NS_RELEASE(url);
+            NS_IF_RELEASE(loadGroup);
             if (NS_OK == rv) {
                 rv = NS_ERROR_HTMLPARSER_BLOCK;
             }

@@ -38,16 +38,14 @@ extern nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull);
 
 extern nsresult
-NS_OpenURI(nsIChannel* *result, nsIURI* uri,
-           nsILoadGroup* group = nsnull);
+NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group);
 
 extern nsresult
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
-           nsILoadGroup* group = nsnull);
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri, nsILoadGroup* group);
 
 extern nsresult
-NS_OpenURI(nsIStreamListener* aConsumer, nsIURI* uri,
-           nsILoadGroup* group = nsnull);
+NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, 
+           nsIURI* uri, nsILoadGroup* group);
 
 extern nsresult
 NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result);

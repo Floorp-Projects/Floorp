@@ -22,9 +22,138 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
+#include "nsCOMPtr.h"
 
+static NS_DEFINE_CID(kLoadGroupCID, NS_LOADGROUP_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+////////////////////////////////////////////////////////////////////////////////
+
+class nsLoadGroupEntry : public nsIStreamListener
+{
+protected:
+    typedef nsresult (*PropagateUpFun)(nsIStreamObserver* obs, void* closure);
+
+    nsresult PropagateUp(PropagateUpFun fun, void* closure) {
+        nsresult rv;
+        PRUint32 i;
+
+        for (nsLoadGroup* group = mGroup; group != nsnull; group = group->mParent) {
+            PRUint32 count = 0;
+            if (group->mObservers) {
+                rv = group->mObservers->Count(&count);
+                if (NS_FAILED(rv)) return rv;
+            }
+            for (i = 0; i < count; i++) {
+                nsIStreamObserver* obs =
+                    NS_STATIC_CAST(nsIStreamObserver*, group->mObservers->ElementAt(i));
+                if (obs == nsnull)
+                    return NS_ERROR_FAILURE;
+                rv = fun(obs, closure);
+                NS_RELEASE(obs);
+                if (NS_FAILED(rv)) return rv;
+            }
+        }
+        return NS_OK;
+    }
+
+    struct OnStartRequestArgs {
+        nsIChannel*         channel;
+        nsISupports*        context;
+    };
+
+    static nsresult
+    OnStartRequestFun(nsIStreamObserver* obs, void* closure) {
+        OnStartRequestArgs* args = (OnStartRequestArgs*)closure;
+        return obs->OnStartRequest(args->channel, args->context);
+    }
+
+    struct OnStopRequestArgs {
+        nsIChannel* channel;
+        nsISupports* ctxt;
+        nsresult status;
+        const PRUnichar* errorMsg;
+    };
+
+    static nsresult
+    OnStopRequestFun(nsIStreamObserver* obs, void* closure) {
+        OnStopRequestArgs* args = (OnStopRequestArgs*)closure;
+        return obs->OnStopRequest(args->channel, args->ctxt, 
+                                  args->status, args->errorMsg);
+    }
+
+    struct OnDataAvailableArgs {
+        nsIChannel* channel;
+        nsISupports* ctxt;
+        nsIInputStream *inStr;
+        PRUint32 sourceOffset;
+        PRUint32 count;
+    };
+
+    static nsresult
+    OnDataAvailableFun(nsIStreamObserver* obs, void* closure) {
+        OnDataAvailableArgs* args = (OnDataAvailableArgs*)closure;
+        nsIStreamListener* l = NS_STATIC_CAST(nsIStreamListener*, obs);
+        return l->OnDataAvailable(args->channel, args->ctxt, args->inStr,
+                                  args->sourceOffset, args->count);
+    }
+
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsIStreamObserver methods:
+    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt) {
+        OnStartRequestArgs args;
+        args.channel = channel;
+        args.context = ctxt;
+        return PropagateUp(OnStartRequestFun, &args);
+    }
+
+    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, 
+                             const PRUnichar *errorMsg) {
+        OnStopRequestArgs args;
+        args.channel = channel;
+        args.ctxt = ctxt;
+        args.status = status;
+        args.errorMsg = errorMsg;
+        return PropagateUp(OnStartRequestFun, &args);
+    }
+	
+    // nsIStreamListener methods:
+    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, nsIInputStream *inStr, 
+                               PRUint32 sourceOffset, PRUint32 count) {
+        OnDataAvailableArgs args;
+        args.channel = channel;
+        args.ctxt = ctxt;
+        args.inStr = inStr;
+        args.sourceOffset = sourceOffset;
+        args.count = count;
+        return PropagateUp(OnDataAvailableFun, &args);
+    }
+    
+    // nsLoadGroupEntry methods:
+    nsLoadGroupEntry(nsLoadGroup* group, nsIChannel* channel, nsISupports* ctxt)
+        : mGroup(group), mChannel(channel), mContext(ctxt) {
+        NS_INIT_REFCNT();
+        NS_ADDREF(mGroup);
+        NS_ADDREF(mChannel);
+        NS_IF_ADDREF(mContext);
+    }
+
+    virtual ~nsLoadGroupEntry() {
+        NS_RELEASE(mGroup);
+        NS_RELEASE(mChannel);
+        NS_IF_RELEASE(mContext);
+    }
+
+protected:
+    nsLoadGroup*        mGroup;
+    nsIChannel*         mChannel;
+    nsISupports*        mContext;
+};
+
+NS_IMPL_ISUPPORTS(nsLoadGroupEntry, nsCOMTypeInfo<nsIStreamListener>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,7 +194,8 @@ NS_IMETHODIMP
 nsLoadGroup::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsCOMTypeInfo<nsILoadGroup>::GetIID()) ||
+    if (aIID.Equals(kLoadGroupCID) ||   // for internal use only (to set parent)
+        aIID.Equals(nsCOMTypeInfo<nsILoadGroup>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsIRequest>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsILoadGroup*, this);
@@ -191,19 +321,6 @@ nsLoadGroup::Resume()
 // nsILoadGroup methods:
 
 NS_IMETHODIMP
-nsLoadGroup::Init(nsILoadGroup *parent)
-{
-//    mParent = parent;   // weak ref
-    nsresult rv;
-
-    if (parent) {
-        rv = parent->AddSubGroup(this);  // XXX
-        if (NS_FAILED(rv)) return rv;
-    }
-    return NS_OK;
-}
-    
-NS_IMETHODIMP
 nsLoadGroup::GetDefaultLoadAttributes(PRUint32 *aDefaultLoadAttributes)
 {
     *aDefaultLoadAttributes = mDefaultLoadAttributes;
@@ -282,8 +399,15 @@ nsLoadGroup::GetObservers(nsISimpleEnumerator * *aObservers)
 NS_IMETHODIMP
 nsLoadGroup::AddSubGroup(nsILoadGroup *group)
 {
-//    group->mParent = this;    // XXX
-    nsresult rv;
+    // set the parent pointer
+    nsLoadGroup* subGroup;
+    nsresult rv = group->QueryInterface(kLoadGroupCID, (void**)&subGroup);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsLoadGroup can't deal with other implementations yet");
+    if (NS_FAILED(rv))
+        return rv;
+    subGroup->mParent = this;   // weak ref -- don't AddRef
+    NS_RELEASE(subGroup);
+
     if (mSubGroups == nsnull) {
         rv = NS_NewISupportsArray(&mSubGroups);
         if (NS_FAILED(rv)) return rv;
@@ -295,7 +419,16 @@ NS_IMETHODIMP
 nsLoadGroup::RemoveSubGroup(nsILoadGroup *group)
 {
     NS_ASSERTION(mSubGroups, "Forgot to call AddSubGroup");
-//    group->mParent = nsnull;  // XXX
+
+    // clear the parent pointer
+    nsLoadGroup* subGroup;
+    nsresult rv = group->QueryInterface(kLoadGroupCID, (void**)&subGroup);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsLoadGroup can't deal with other implementations yet");
+    if (NS_FAILED(rv))
+        return rv;
+    subGroup->mParent = nsnull;   // weak ref -- don't Release
+    NS_RELEASE(subGroup);
+
     return mSubGroups->RemoveElement(group);
 }
 
@@ -308,117 +441,6 @@ nsLoadGroup::GetSubGroups(nsISimpleEnumerator * *aSubGroups)
         if (NS_FAILED(rv)) return rv;
     }
     return NS_NewArrayEnumerator(aSubGroups, mSubGroups);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIStreamObserver methods:
-
-nsresult
-nsLoadGroup::PropagateUp(PropagateUpFun fun, void* closure)
-{
-    nsresult rv;
-    PRUint32 i;
-
-    for (nsLoadGroup* group = this; group != nsnull; group = group->mParent) {
-        PRUint32 count = 0;
-        if (group->mObservers) {
-            rv = group->mObservers->Count(&count);
-            if (NS_FAILED(rv)) return rv;
-        }
-        for (i = 0; i < count; i++) {
-            nsIStreamObserver* obs =
-                NS_STATIC_CAST(nsIStreamObserver*, group->mObservers->ElementAt(i));
-            if (obs == nsnull)
-                return NS_ERROR_FAILURE;
-            rv = fun(obs, closure);
-            NS_RELEASE(obs);
-            if (NS_FAILED(rv)) return rv;
-        }
-    }
-    return NS_OK;
-}
-
-struct OnStartRequestArgs {
-    nsIChannel*         channel;
-    nsISupports*        context;
-};
-
-static nsresult
-OnStartRequestFun(nsIStreamObserver* obs, void* closure)
-{
-    OnStartRequestArgs* args = (OnStartRequestArgs*)closure;
-    return obs->OnStartRequest(args->channel, args->context);
-}
-
-NS_IMETHODIMP
-nsLoadGroup::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-{
-    OnStartRequestArgs args;
-    args.channel = channel;
-    args.context = ctxt;
-    return PropagateUp(OnStartRequestFun, &args);
-}
-
-struct OnStopRequestArgs {
-    nsIChannel* channel;
-    nsISupports* ctxt;
-    nsresult status;
-    const PRUnichar* errorMsg;
-};
-
-static nsresult
-OnStopRequestFun(nsIStreamObserver* obs, void* closure)
-{
-    OnStopRequestArgs* args = (OnStopRequestArgs*)closure;
-    return obs->OnStopRequest(args->channel, args->ctxt, 
-                              args->status, args->errorMsg);
-}
-
-NS_IMETHODIMP
-nsLoadGroup::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
-                           nsresult status, const PRUnichar *errorMsg)
-{
-    OnStopRequestArgs args;
-    args.channel = channel;
-    args.ctxt = ctxt;
-    args.status = status;
-    args.errorMsg = errorMsg;
-    return PropagateUp(OnStartRequestFun, &args);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIStreamListener methods:
-
-struct OnDataAvailableArgs {
-    nsIChannel* channel;
-    nsISupports* ctxt;
-    nsIInputStream *inStr;
-    PRUint32 sourceOffset;
-    PRUint32 count;
-};
-
-static nsresult
-OnDataAvailableFun(nsIStreamObserver* obs, void* closure)
-{
-    OnDataAvailableArgs* args = (OnDataAvailableArgs*)closure;
-    nsIStreamListener* l = NS_STATIC_CAST(nsIStreamListener*, obs);
-    return l->OnDataAvailable(args->channel, args->ctxt, args->inStr,
-                              args->sourceOffset, args->count);
-}
-
-NS_IMETHODIMP
-nsLoadGroup::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt, 
-                             nsIInputStream *inStr, 
-                             PRUint32 sourceOffset, 
-                             PRUint32 count)
-{
-    OnDataAvailableArgs args;
-    args.channel = channel;
-    args.ctxt = ctxt;
-    args.inStr = inStr;
-    args.sourceOffset = sourceOffset;
-    args.count = count;
-    return PropagateUp(OnDataAvailableFun, &args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

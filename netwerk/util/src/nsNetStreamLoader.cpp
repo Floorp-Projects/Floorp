@@ -33,9 +33,9 @@ class nsUnicharStreamLoader : public nsIUnicharStreamLoader,
                               public nsIStreamListener
 {
 public:
-  nsUnicharStreamLoader(nsIURI* aURL,
+  nsUnicharStreamLoader(nsIURI* aURL, nsILoadGroup* aLoadGroup,
                         nsStreamCompleteFunc aFunc,
-                        void* aRef);
+                        void* aRef, nsresult *rv);
   virtual ~nsUnicharStreamLoader();
 
   NS_DECL_ISUPPORTS
@@ -62,9 +62,9 @@ protected:
 };
 
 
-nsUnicharStreamLoader::nsUnicharStreamLoader(nsIURI* aURL,
+nsUnicharStreamLoader::nsUnicharStreamLoader(nsIURI* aURL, nsILoadGroup* aLoadGroup,
                                              nsStreamCompleteFunc aFunc,
-                                             void* aRef)
+                                             void* aRef, nsresult *rv)
 {
   NS_INIT_REFCNT();
   mFunc = aFunc;
@@ -72,13 +72,12 @@ nsUnicharStreamLoader::nsUnicharStreamLoader(nsIURI* aURL,
   mData = new nsString();
 
   // XXX This is vile vile vile!!!
-  nsresult rv;
   if (aURL) {
-    rv = NS_OpenURI(this, aURL);
-    if ((NS_OK != rv) && (nsnull != mFunc)) {
+    *rv = NS_OpenURI(this, nsnull, aURL, aLoadGroup);
+    if ((NS_OK != *rv) && (nsnull != mFunc)) {
       // Thou shalt not call out of scope whilst ones refcnt is zero
       mRefCnt = 999;
-      (*mFunc)(this, *mData, mRef, rv);
+      (*mFunc)(this, *mData, mRef, *rv);
       mRefCnt = 0;
     }
   }
@@ -187,6 +186,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
 extern nsresult 
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
                           nsIURI* aURL,
+                          nsILoadGroup* aLoadGroup,
                           nsStreamCompleteFunc aFunc,
                           void* aRef)
 {
@@ -195,12 +195,14 @@ NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsUnicharStreamLoader* it = new nsUnicharStreamLoader(aURL,
-                                                        aFunc,
-                                                        aRef);
+  nsresult rv;
+  nsUnicharStreamLoader* it =
+    new nsUnicharStreamLoader(aURL, aLoadGroup, aFunc, aRef, &rv);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  if (NS_FAILED(rv))
+    return rv;
   return it->QueryInterface(kIUnicharStreamLoaderIID, 
                             (void **) aInstancePtrResult);
 }

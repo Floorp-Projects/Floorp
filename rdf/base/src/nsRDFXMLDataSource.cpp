@@ -544,7 +544,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
 #ifdef NECKO
     nsCOMPtr<nsIChannel> channel;
-    rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull /* XXX aConsumer */);
+    rv = NS_OpenURI(getter_AddRefs(channel), aURL, nsnull);     // XXX need the nsILoadGroup here!
     if (NS_FAILED(rv))
     {
         NS_ERROR("unable to open channel");
@@ -915,7 +915,7 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
     }
     else {
 #ifdef NECKO
-        rv = NS_OpenURI(lsnr, mURL);
+        rv = NS_OpenURI(lsnr, nsnull, mURL, nsnull);    // XXX need the nsILoadGroup here!
 #else
         rv = NS_OpenURL(mURL, lsnr);
 #endif

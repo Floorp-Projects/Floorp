@@ -214,7 +214,7 @@ nsresult nsXPInstallManager::DownloadNext()
 #endif
                 if (NS_SUCCEEDED(rv)) {
 #ifdef NECKO
-                    rv = NS_OpenURI( this, pURL );
+                    rv = NS_OpenURI( this, nsnull, pURL, nsnull );		// XXX need the nsILoadGroup here!
 #else
                     rv = NS_OpenURL( pURL, this );
 #endif

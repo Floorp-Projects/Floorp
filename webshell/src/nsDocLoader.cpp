@@ -835,7 +835,7 @@ nsDocLoaderImpl::CreateURL(nsIURI** aInstancePtrResult,
     rv = NS_ERROR_NULL_POINTER;
   } else {
 #ifdef NECKO
-    rv = NS_NewURI(&url, aURLSpec, aBaseURL);   // XXX GetLoadGroup() to NS_OpenURI
+    rv = NS_NewURI(&url, aURLSpec, aBaseURL);
 #else
     rv = NS_NewURL(&url, aURLSpec, aBaseURL, aContainer, this);
 #endif
@@ -1582,7 +1582,11 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener)
     nsServiceManager::ReleaseService(kNetServiceCID, inet);
   }
 #else
-  rv = NS_OpenURI(this, m_Url);
+  nsILoadGroup* loadGroup = nsnull;
+  if (m_DocLoader) {
+      loadGroup = m_DocLoader->GetLoadGroup();
+  }
+  rv = NS_OpenURI(this, nsnull, m_Url, loadGroup);
 #endif // NECKO
 
   return rv;

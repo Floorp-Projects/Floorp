@@ -25,8 +25,6 @@
 #include "nsINetService.h"
 #else
 #include "nsNeckoUtil.h"
-#include "nsIIOService.h"
-#include "nsIChannel.h"
 #endif // NECKO
 
 static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
@@ -34,9 +32,6 @@ static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 #ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
 nsURLProperties::nsURLProperties(nsString& aUrl)
@@ -59,21 +54,18 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
   if(NS_SUCCEEDED(res)) 
     res = pNetService->OpenBlockingStream(url, nsnull, &in);
 #else
-  NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &res);
-  if (NS_FAILED(res)) return;
-
   res = NS_NewURI(&url, aUrl, nsnull);
   if (NS_FAILED(res)) return;
 
-  res = NS_OpenURI(&in, url, nsnull);
+  res = NS_OpenURI(&in, url, nsnull);   // XXX no nsILoadGroup here, so we can't cancel this load!
   NS_RELEASE(url);
   if (NS_FAILED(res)) return;
 #endif // NECKO
 
   if(NS_SUCCEEDED(res))
     res = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
-                                         kIPersistentPropertiesIID, 
-                                         (void**)&mDelegate);
+                                             kIPersistentPropertiesIID, 
+                                             (void**)&mDelegate);
 
   if(NS_SUCCEEDED(res)) {
      if(in) {
