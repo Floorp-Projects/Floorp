@@ -24,8 +24,6 @@
 
 #include "nsIShellInstance.h"
 
-class nsIShellInstance;
-
 #define NS_IAPPLICATIONSHELL_IID      \
  { 0xaf9a93e0, 0xdebc, 0x11d1, \
    {0x92, 0x44, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
@@ -44,7 +42,6 @@ class nsIApplicationShell : public nsISupports {
 public:
   // Create a native window for this web widget; may be called once
   NS_IMETHOD Init() = 0;
-  NS_IMETHOD Init(nsIShellInstance * aShellInstance) = 0;
 
   NS_IMETHOD Run() = 0;
 
