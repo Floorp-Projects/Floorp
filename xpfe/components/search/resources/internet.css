@@ -7,6 +7,22 @@ tree[id="searchengines"] {
  width: 300px;
 }
 
+tree[id="searchengines"] > treecol[id="CheckboxColumn"] {
+ width: 40px;
+}
+
+titledbutton {
+  display: inline;
+  color:black; 
+  border: 0px outset white;
+  padding: 0px;
+  margin: 0px;
+  text-align: center;
+  font: inherit;
+  background-color: inherit;
+  background-image: inherit;
+}
+
 treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
