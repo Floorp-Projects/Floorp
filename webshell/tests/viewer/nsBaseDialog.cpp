@@ -32,8 +32,8 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 //-----------------------------------------------------------------
 nsBaseDialog::nsBaseDialog(nsBrowserWindow * aBrowserWindow) :
   mBrowserWindow(aBrowserWindow),
-  mCancelBtn(nsnull),
-  mWindow(nsnull)
+  mWindow(nsnull),
+  mCancelBtn(nsnull)
 {
 }
 
