@@ -30,6 +30,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
 
+class nsIFile;
+
 class nsIconChannel : public nsIChannel
 {
 public:
@@ -51,6 +53,8 @@ protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>  mOwner; 
   nsresult mStatus;
+
+  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType);
 };
 
 #endif /* nsIconChannel_h___ */

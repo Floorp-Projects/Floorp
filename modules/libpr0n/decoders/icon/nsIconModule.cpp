@@ -45,7 +45,7 @@ static nsModuleComponentInfo components[] =
 
    { "Icon Protocol Handler",      
       NS_ICONPROTOCOL_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "icon",
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-icon",
       nsIconProtocolHandlerConstructor
     }
 };

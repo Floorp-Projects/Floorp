@@ -28,10 +28,17 @@ DIR=win
 
 MODULE			= imgicon
 LIBRARY_NAME	= imgicon
+XPIDL_MODULE	= imgicon
 DLL			= $(OBJDIR)\$(LIBRARY_NAME).dll
 MAKE_OBJ_TYPE	= DLL
 
+XPIDLSRCS	= \
+		.\nsIIconURI.idl \
+		$(NULL)
+
+
 OBJS	= \
+    .\$(OBJDIR)\nsIconURI.obj \
 		.\$(OBJDIR)\nsIconDecoder.obj \
 		.\$(OBJDIR)\nsIconModule.obj  \
     .\$(OBJDIR)\nsIconProtocolHandler.obj \

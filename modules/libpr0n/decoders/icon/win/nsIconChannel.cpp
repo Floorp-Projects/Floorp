@@ -22,6 +22,7 @@
 
 
 #include "nsIconChannel.h"
+#include "nsIIconURI.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsXPIDLString.h"
@@ -30,6 +31,8 @@
 #include "nsIStringStream.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsIFile.h"
+#include "nsIFileChannel.h"
 
 // we need windows.h to read out registry information...
 #include <windows.h>
@@ -51,7 +54,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsIconChannel,
 
 nsresult nsIconChannel::Init(nsIURI* uri)
 {
-  nsresult rv;
   NS_ASSERTION(uri, "no uri");
   mUrl = uri;
   return NS_OK;
@@ -151,26 +153,58 @@ void InvertRows(unsigned char * aInitialBuffer, PRUint32 sizeOfBuffer, PRUint32 
   }
 }
 
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> fileURI;
+  rv = iconURI->GetIconFile(getter_AddRefs(fileURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(fileURI, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> file;
+  rv = fileURL->GetFile(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  *aLocalFile = file;
+  NS_IF_ADDREF(*aLocalFile);
+
+  iconURI->GetImageSize(aDesiredImageSize);
+  iconURI->GetContentType(aContentType);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
-  // get the file name from the url
-  nsXPIDLCString fileName; // will contain a dummy file we'll use to figure out the type of icon desired.
-  nsXPIDLCString filePath; // will contain an optional parameter for small vs. large icon. default is small
-  mUrl->GetHost(getter_Copies(fileName));
-  nsCOMPtr<nsIURL> url (do_QueryInterface(mUrl));
-  if (url)
-    url->GetFileBaseName(getter_Copies(filePath));
+  nsXPIDLCString contentType;
+  nsCOMPtr<nsIFile> localFile; // file we want an icon for
+  PRUint32 desiredImageSize;
+  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, getter_Copies(contentType));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  
-  // 1) get a hIcon for the file.
+  // if the file exists, we are going to use it's real attributes...otherwise we only want to use it for it's extension...
   SHFILEINFO      sfi;
-  UINT infoFlags = SHGFI_USEFILEATTRIBUTES | SHGFI_ICON;
-  if (filePath && !nsCRT::strcmp(filePath, "large"))
+  UINT infoFlags = SHGFI_ICON;
+  PRBool fileExists = PR_FALSE;
+  nsXPIDLCString filePath;
+  localFile->GetPath(getter_Copies(filePath));
+
+  localFile->Exists(&fileExists);
+  if (!fileExists)
+    infoFlags |= SHGFI_USEFILEATTRIBUTES;
+
+  if (desiredImageSize > 16)
     infoFlags |= SHGFI_LARGEICON;
-  else // default to small
+  else
     infoFlags |= SHGFI_SMALLICON;
 
-  LONG result= SHGetFileInfo(fileName, FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
+  // (1) get an hIcon for the file
+  LONG result= SHGetFileInfo(filePath.get(), FILE_ATTRIBUTE_ARCHIVE, &sfi, sizeof(sfi), infoFlags);
   if (result > 0 && sfi.hIcon)
   {
     // we got a handle to an icon. Now we want to get a bitmap for the icon using GetIconInfo....

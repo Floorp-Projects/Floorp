@@ -21,6 +21,7 @@
  */
 
 #include "nsIconChannel.h"
+#include "nsIconURI.h"
 #include "nsIconProtocolHandler.h"
 #include "nsIURL.h"
 #include "nsCRT.h"
@@ -48,7 +49,7 @@ NS_IMPL_ISUPPORTS2(nsIconProtocolHandler, nsIProtocolHandler, nsISupportsWeakRef
 
 NS_IMETHODIMP nsIconProtocolHandler::GetScheme(char* *result) 
 {
-  *result = nsCRT::strdup("icon");
+  *result = nsCRT::strdup("moz-icon");
   if (!*result) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -61,16 +62,18 @@ NS_IMETHODIMP nsIconProtocolHandler::GetDefaultPort(PRInt32 *result)
 
 NS_IMETHODIMP nsIconProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **result) 
 {
-  nsresult rv;
-
   // no concept of a relative icon url
   NS_ASSERTION(!aBaseURI, "base url passed into icon protocol handler");
-  nsCOMPtr<nsIURI> url = do_CreateInstance(kStandardURICID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  rv = url->SetSpec((char*)aSpec);
-  *result = url;
+  
+  nsCOMPtr<nsIURI> uri;
+  NS_NEWXPCOM(uri, nsMozIconURI);
+  if (!uri) return NS_ERROR_FAILURE;
+
+  uri->SetSpec(aSpec);
+
+  *result = uri;
   NS_IF_ADDREF(*result);
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsIconProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
