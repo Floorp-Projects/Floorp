@@ -73,16 +73,10 @@ protected:
   nsIAttribute(nsIContent *aContent, nsINodeInfo *aNodeInfo)
     : mContent(aContent), mNodeInfo(aNodeInfo)
   {
-    NS_ADDREF(mNodeInfo);
-  }
-
-  virtual ~nsIAttribute()
-  {
-    NS_RELEASE(mNodeInfo);
   }
 
   nsIContent *mContent; // WEAK
-  nsINodeInfo *mNodeInfo; // STRONG
+  nsCOMPtr<nsINodeInfo> mNodeInfo; // STRONG
 
 private:
   nsIAttribute(); // Not to be implemented.
