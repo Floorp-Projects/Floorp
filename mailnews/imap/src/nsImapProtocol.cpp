@@ -211,6 +211,7 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, P
     m_sinkEventQueue = aSinkEventQueue;
     m_hostSessionList = aHostSessionList;
     m_parser.SetHostSessionList(aHostSessionList);
+    m_parser.SetFlagState(&m_flagState);
     NS_ADDREF (m_hostSessionList);
 	return NS_OK;
 }
@@ -434,7 +435,7 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 	m_socketIsOpen = PR_FALSE;
 
 	// m_dataBuf is used by ReadLine and SendData
-	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
+	m_dataBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_allocatedSize = OUTPUT_BUFFER_SIZE;
 
     // ******* Thread support *******
@@ -772,7 +773,7 @@ void nsImapProtocol::BeginMessageDownLoad(
 	PR_FREEIF(sizeString);
 	//PR_LOG(IMAP, out, ("STREAM: Begin Message Download Stream.  Size: %ld",
     //total_message_size)); 
-	StreamInfo *si = (StreamInfo *) PR_Malloc (sizeof (StreamInfo));		// This will be freed in the event
+	StreamInfo *si = (StreamInfo *) PR_CALLOC (sizeof (StreamInfo));		// This will be freed in the event
 	if (si)
 	{
 		si->size = total_message_size;
@@ -1042,7 +1043,7 @@ nsImapProtocol::FetchMessage(nsString2 &messageIds,
 	const char *commandTag = GetServerCommandTag();
 	int protocolStringSize = commandString.Length() + messageIds.Length() + PL_strlen(commandTag) + 1 +
 		(part ? PL_strlen(part) : 0);
-	char *protocolString = (char *) PR_Malloc( protocolStringSize );
+	char *protocolString = (char *) PR_CALLOC( protocolStringSize );
     
     if (protocolString)
     {
@@ -1232,7 +1233,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
 	// the end-of-line terminator, and we shouldn't mess with it.
     
     // leave enough room for two more chars. (CR and LF)
-    char *localMessageLine = (char *) PR_Malloc(strlen(line) + 3);
+    char *localMessageLine = (char *) PR_CALLOC(strlen(line) + 3);
     if (localMessageLine)
         strcpy(localMessageLine,line);
     char *endOfLine = localMessageLine + strlen(localMessageLine);
@@ -1309,7 +1310,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     if (m_downloadLineCache.SpaceAvailable() < (PL_strlen(localMessageLine) + 1) )
     {
         // has to be dynamic to pass to other win16 thread
-		msg_line_info *downLoadInfo = (msg_line_info *) PR_Malloc(sizeof(msg_line_info));
+		msg_line_info *downLoadInfo = (msg_line_info *) PR_CALLOC(sizeof(msg_line_info));
         if (downLoadInfo)
         {
           	downLoadInfo->adoptedMessageLine = localMessageLine;
