@@ -746,9 +746,10 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         case MACHTEN:
         {
             // don't bother w/ these lines.
-            if(!PL_strncmp(line, "total ", 6)  
-					|| (PL_strstr(line, "Permission denied") != NULL)
-                    || 	(PL_strstr(line, "not available") != NULL)) {
+            if(!PL_strncmp(line, "total ", 6)
+                || !PL_strncmp(line, "ls: total", 9)
+				|| (PL_strstr(line, "Permission denied") != NULL)
+                || (PL_strstr(line, "not available") != NULL)) {
                 NS_DELETEXPCOM(thisEntry);
                 if (cr)
                     line = eol+2;
