@@ -59,20 +59,6 @@ PRInt32 nsMsgSendPart::M_counter = 0;
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
-nsresult MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
-{
-  //  MimeEncoderData *returnEncoderData = nsnull;
-  nsIMimeConverter *converter;
-  PRInt32 written = 0;
-  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-    NS_GET_IID(nsIMimeConverter), (void **)&converter);
-  if (NS_SUCCEEDED(res) && nsnull != converter) {
-    res = converter->EncoderWrite(data, buffer, size, &written);
-    NS_RELEASE(converter);
-  }
-  return NS_SUCCEEDED(res) ? 0 : -1;
-}
-
 nsMsgSendPart::nsMsgSendPart(nsIMsgSend* state, const char *part_charset)
 {
   m_state = nsnull;
@@ -564,7 +550,14 @@ nsMsgSendPart::Write()
       PR_Free(message_headers);
       message_headers = 0;
     }
-    
+
+    /* Now allow the crypto library to (potentially) insert some text
+       (it may want to wrap the body in an envelope.)           */
+    if (!m_parent) {
+      status = m_state->BeginCryptoEncapsulation();
+      if (status < 0) goto FAIL;
+    }
+          
     /* Now make sure there's a Content-Type header.
     */
     if (!content_type_header) 

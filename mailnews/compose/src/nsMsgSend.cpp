@@ -903,7 +903,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     if (status < 0)
       goto FAIL;
 
-    if (m_attachment_count > mMultipartRelatedAttachmentCount)
+    if (!m_crypto_closure && m_attachment_count > mMultipartRelatedAttachmentCount)
     {
       status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
     }
@@ -1068,7 +1068,15 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   status = toppart->Write();
   if (status < 0)
     goto FAIL;
-  
+
+  /* Close down encryption stream */
+  if (m_crypto_closure)
+	{
+	  status = m_crypto_closure->FinishCryptoEncapsulation(PR_FALSE);
+	  m_crypto_closure = 0;
+	  if (NS_FAILED(status)) goto FAIL;
+	}
+ 
   if (mOutputFile) 
   {
     if (NS_FAILED(mOutputFile->flush()) || mOutputFile->failed()) 
@@ -1248,10 +1256,53 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
       PL_strcat(recipients, X); \
     }
 
+nsresult nsMsgComposeAndSend::BeginCryptoEncapsulation ()
+{
+  // Try to create a secure compose object. If we can create it, then query to see
+  // if we need to use it for this send transaction. 
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMsgComposeSecure> secureCompose;
+  secureCompose = do_CreateInstance(NS_MSGCOMPOSESECURE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && secureCompose)
+  {
+    PRBool requiresEncryptionWork = PR_FALSE;
+    secureCompose->RequiresCryptoEncapsulation(mUserIdentity, mCompFields, &requiresEncryptionWork);
+    if (requiresEncryptionWork)
+    {
+      m_crypto_closure = secureCompose;
+      // bah i'd like to move the following blurb into the implementation of BeginCryptoEncapsulation; however
+      // the apis for nsIMsgComposeField just aren't rich enough. It requires the implementor to jump through way
+      // too many string conversions....
+	    int status = 0;
+	    char * recipients = (char *)
+      PR_MALLOC((mCompFields->GetTo()  ? nsCRT::strlen(mCompFields->GetTo())  : 0) +
+				 (mCompFields->GetCc()  ? nsCRT::strlen(mCompFields->GetCc())  : 0) +
+				 (mCompFields->GetBcc() ? nsCRT::strlen(mCompFields->GetBcc()) : 0) +
+				 (mCompFields->GetNewsgroups() ? nsCRT::strlen(mCompFields->GetNewsgroups()) : 0) + 20);
+	    if (!recipients) return NS_ERROR_OUT_OF_MEMORY;
+
+      *recipients = 0;
+
+	    FROB(mCompFields->GetTo())
+	    FROB(mCompFields->GetCc())
+	    FROB(mCompFields->GetBcc())
+	    FROB(mCompFields->GetNewsgroups())
+
+      // end section of code I'd like to move to the implementor.....
+      rv = m_crypto_closure->BeginCryptoEncapsulation(mOutputFile, recipients, mCompFields, mUserIdentity, (m_deliver_mode == nsMsgSaveAsDraft));
+
+      PR_FREEIF(recipients);
+    }
+
+  }
+
+  return rv;
+}
+
 #if defined(XP_MAC) && defined(DEBUG)
 #pragma global_optimizer reset
 #endif // XP_MAC && DEBUG
-
 
 nsresult
 mime_write_message_body(nsIMsgSend *state, char *buf, PRInt32 size)
@@ -1259,10 +1310,18 @@ mime_write_message_body(nsIMsgSend *state, char *buf, PRInt32 size)
   NS_ENSURE_ARG_POINTER(state);
 
   nsOutputFileStream * output;
+  nsCOMPtr<nsIMsgComposeSecure> crypto_closure;
+
   state->GetOutputStream(&output);
   if (!output || CHECK_SIMULATED_ERROR(SIMULATED_SEND_ERROR_9))
     return NS_MSG_ERROR_WRITING_FILE;
-    
+
+  state->GetCryptoclosure(getter_AddRefs(crypto_closure));
+  if (crypto_closure)
+  {
+	  return crypto_closure->MimeCryptoWriteBlock (buf, size);
+	}
+
   if (PRInt32(output->write(buf, size)) < size) 
   {
     return NS_MSG_ERROR_WRITING_FILE;
@@ -2694,7 +2753,11 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   mCompFields->SetReturnReceipt(fields->GetReturnReceipt());
   mCompFields->SetUuEncodeAttachments(fields->GetUuEncodeAttachments());
 
-  //
+  nsCOMPtr<nsISupports> secInfo;
+  fields->GetSecurityInfo(getter_AddRefs(secInfo));
+
+  mCompFields->SetSecurityInfo(secInfo);
+
   // Check the fields for legitimacy...
   //
   if ( m_deliver_mode != nsMsgSaveAsDraft && m_deliver_mode != nsMsgSaveAsTemplate ) 
@@ -4396,7 +4459,6 @@ NS_IMETHODIMP nsMsgComposeAndSend::SetRunningRequest(nsIRequest *request)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsMsgComposeAndSend::GetStatus(nsresult *aStatus)
 {
   NS_ENSURE_ARG(aStatus);
@@ -4407,6 +4469,20 @@ NS_IMETHODIMP nsMsgComposeAndSend::GetStatus(nsresult *aStatus)
 NS_IMETHODIMP nsMsgComposeAndSend::SetStatus(nsresult aStatus)
 {
   m_status = aStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetCryptoclosure(nsIMsgComposeSecure ** aCryptoclosure)
+{
+  NS_ENSURE_ARG(aCryptoclosure);
+  *aCryptoclosure = m_crypto_closure;
+  NS_IF_ADDREF(*aCryptoclosure);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::SetCryptoclosure(nsIMsgComposeSecure * aCryptoclosure)
+{
+  m_crypto_closure = aCryptoclosure;
   return NS_OK;
 }
 

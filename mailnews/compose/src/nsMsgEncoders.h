@@ -50,5 +50,7 @@ MIME_UUEncoderInit(char *filename, nsresult (*output_fn) (const char *buf, PRInt
 extern "C" nsresult
 MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
 
+extern "C" nsresult
+MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size);
 
 #endif /* _nsMsgEncoders_H_ */

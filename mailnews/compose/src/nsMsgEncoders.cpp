@@ -107,3 +107,20 @@ MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p)
 
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
+
+extern "C" nsresult
+MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
+{
+  //  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  PRInt32 written = 0;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+    NS_GET_IID(nsIMimeConverter), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->EncoderWrite(data, buffer, size, &written);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? 0 : -1;
+}
+
+

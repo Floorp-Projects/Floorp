@@ -30,6 +30,8 @@
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
+
 <?xul-overlay href="chrome://messenger/content/messengercompose/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
@@ -266,8 +268,8 @@
         </menupopup>
       </menu>
   
-      <menu label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
-        <menupopup> 
+      <menu id="optionsMenu" label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
+        <menupopup id="optionsMenuPopup"> 
           <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" command="cmd_selectAddress"/>
           <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <!--menuitem label="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" command="cmd_quoteMessage"/-->  
@@ -342,6 +344,7 @@
               </rule>
             </template>
           </menu>     
+
           <!--menuseparator/>
           <menuitem label="&addSignatureCmd.label;" disabled="true" oncommand=""/>      
           <menuitem label="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/-->     
@@ -469,7 +472,6 @@
                    mode="normal" value="0" statusbar="true"/>
     <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-icononly"/> 
   </statusbar>
-
 
 </window>
 

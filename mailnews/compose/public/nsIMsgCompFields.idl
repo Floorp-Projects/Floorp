@@ -101,5 +101,7 @@ interface nsIMsgCompFields : nsISupports {
   /* some utility functions */
   nsIMsgRecipientArray SplitRecipients(in wstring recipients, in boolean emailAddressOnly);    
   void ConvertBodyToPlainText();
+
+  attribute nsISupports securityInfo;
 };
 

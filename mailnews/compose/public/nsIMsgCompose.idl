@@ -43,7 +43,6 @@
 #include "nsIMsgSend.idl"
 #include "nsIMsgProgress.idl"
 
-
 %{ C++
 #include "nsIEditorShell.h"
 %}
