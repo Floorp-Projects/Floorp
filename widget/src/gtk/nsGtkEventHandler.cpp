@@ -246,9 +246,14 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 {
   // For control chars, GDK sets string to be the actual ascii value.
-  // Map that to what nsKeyEvent wants:
+  // Map that to what nsKeyEvent wants, which currently --
+  // TEMPORARILY (the spec has changed and will be switched over
+  // when the tree opens for M11) --
+  // is the ascii for the actual event (e.g. 1 for control-a).
+  // This is only true for control chars; for alt chars, send the
+  // ascii for the key, i.e. a for alt-a.
   if (aGEK->state & GDK_CONTROL_MASK)
-    return aGEK->string[0] + 'a' - 1;
+    return aGEK->string[0];
 
   // For now (obviously this will need to change for IME),
   // only set a char code if the result is printable:
@@ -305,11 +310,10 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
 
   if (aGEK!=nsnull) {
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
-#define XUL_ONLY_LOOKS_AT_KEY_CODE 1
-#ifndef XUL_ONLY_LOOKS_AT_KEY_CODE
     if (anEvent.charCode == 0)
-#endif
       anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
+    else
+      anEvent.keyCode = 0;
 
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
