@@ -447,6 +447,9 @@ if test "$GNU_CC"; then
     # -Wconversion - complained when char's or short's were used a function args
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wshadow -Wpointer-arith -Wcast-align"
 
+    dnl Make pedantic a flag for now since the builds currently choke on it.
+    _PEDANTIC=1
+
     _DEFINES_CFLAGS='-include $(DEPTH)/config-defs.h'
     _USE_CPP_INCLUDE_FLAG=1
 else
@@ -544,6 +547,8 @@ case "$target" in
     ;;
 
 *-bsdi*)
+    dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
+    _PEDANTIC=
     case `uname -r` in
 	4.*) ;;
 	*)
@@ -2427,10 +2432,6 @@ fi
 AC_SUBST(COMPILER_DEPEND)
 AC_SUBST(MDDEPDIR)
 
-dnl Make pedantic a flag for now since the builds currently choke on it.
-if test "$GNU_CC"; then
-    _PEDANTIC=1
-fi
 MOZ_ARG_DISABLE_BOOL(pedantic,
 [  --disable-pedantic      Issue all warnings demanded by strict ANSI C ],
   _PEDANTIC= )
