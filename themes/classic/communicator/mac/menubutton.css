@@ -356,5 +356,14 @@ menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-b
     list-style-image        : url("chrome://global/skin/dropmarker-up-on.gif");
   } 
   
+/* menubutton button-toolbar-2 */
   
+menubutton.button-toolbar-2.top {
+  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-top");
+}
+
+menubutton.button-toolbar-2.bottom {
+  -moz-binding: url("chrome://global/content/menulistBindings.xml#menubutton-single-bottom");
+}
+
 

@@ -209,23 +209,23 @@ iframe {
   } 
 
 #button-file {
-	list-style-image:url("chrome://messenger/skin/file.gif");
+	list-style-image: url("chrome://messenger/skin/file.gif");
 }
 
 #button-file[disabled="true"],
-menu:hover > #button-file[disabled="true"],
-menu:hover:active > #button-file[disabled="true"]
+#button-file[disabled="true"]:hover,
+#button-file[disabled="true"]:hover:active
   {
     list-style-image      : url("chrome://messenger/skin/file-disabled.gif");
   } 
 
-menu:hover > #button-file
+#button-file:hover
   {
     list-style-image      : url("chrome://messenger/skin/file-hover.gif");
   } 
 
-menu:hover:active > #button-file,
-menu[open="true"] > #button-file
+#button-file:hover:active,
+#button-file[open="true"]
   {
     list-style-image      : url("chrome://messenger/skin/file-clicked.gif");
   } 
