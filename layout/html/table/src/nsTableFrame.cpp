@@ -328,7 +328,7 @@ nsTableFrame::SetInitialChildList(nsIPresContext& aPresContext,
   for ( ; nsnull!=childFrame; )
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)childDisplay);
+    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)childDisplay);
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     {
       if (nsnull==mFirstChild)
@@ -661,7 +661,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     {
       if (nsnull==firstRowGroupFrame)
@@ -2432,7 +2432,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
 
     const nsStyleDisplay *childDisplay;
-    kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     { // for all colgroups and rowgroups...
       const nsStyleSpacing* kidSpacing;
@@ -3184,7 +3184,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     { // if it's a row group, get the cells and set the column style if appropriate
       if (PR_TRUE==RequiresPass1Layout())
@@ -3230,11 +3230,11 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
     { // for every column, create an entry in the column cache
       // assumes that the col style has been twiddled to account for first cell width attribute
       const nsStyleDisplay *colDisplay;
-      colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
+      colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
       if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
       {
         const nsStylePosition* colPosition;
-        colFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)colPosition));
+        colFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)colPosition));
         PRInt32 repeat = colFrame->GetSpan();
         colIndex = colFrame->GetColumnIndex();
         for (PRInt32 i=0; i<repeat; i++)
