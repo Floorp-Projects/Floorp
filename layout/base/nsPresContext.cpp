@@ -305,9 +305,6 @@ nsPresContext::StopLoadImage(nsIFrame* aForFrame)
     nsIFrame* loaderFrame;
     loader->GetTargetFrame(loaderFrame);
     if (loaderFrame == aForFrame) {
-#ifdef NOISY_IMAGES
-      printf("%p: removing %p\n", this, aForFrame);
-#endif
       loader->StopImageLoad();
       NS_RELEASE(loader);
       mImageLoaders.RemoveElementAt(i);
