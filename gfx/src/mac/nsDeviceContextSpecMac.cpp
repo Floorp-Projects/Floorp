@@ -73,7 +73,7 @@ static long             prFirstItem;                  // our first item in the e
 static PItemUPP         prPItemProc;                  // store the old item handler here
 static PRBool           gPrintSelection;
 static UserItemUPP      gDrawListUPP = nsnull;
-static nsIPrintSettings	*gPrintSettings;
+static nsIPrintSettings	*gPrintSettings=nsnull;
 
 
 typedef struct dialog_item_struct {
@@ -99,6 +99,7 @@ nsDeviceContextSpecMac::nsDeviceContextSpecMac()
 , mPrintManagerOpen(PR_FALSE)
 {
   NS_INIT_REFCNT();
+  gPrintSettings = nsnull;
 }
 
 /** -------------------------------------------------------
@@ -327,7 +328,7 @@ static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
  */
 NS_IMETHODIMP nsDeviceContextSpecMac::Init(nsIPrintSettings* aPS, PRBool aQuiet)
 {
-	mPrintSettings = aPS;
+	gPrintSettings = aPS;
 
 #if !TARGET_CARBON
 
