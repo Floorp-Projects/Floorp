@@ -1549,8 +1549,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
     
     mime_free_attachments( mdd->attachments, mdd->attachments_count );
   }
-  
-  PR_FREEIF(mdd);
+  PR_FREEIF(mdd->mailcharset);
   
   // Release the prefs service
   MimeObject *obj = (mdd ? mdd->obj : 0);  
@@ -1617,6 +1616,8 @@ mime_parse_stream_abort (nsMIMESession *stream, int status )
 
   if (mdd->attachments)
     mime_free_attachments( mdd->attachments, mdd->attachments_count );
+
+  PR_FREEIF(mdd->mailcharset);
 
   PR_Free (mdd);
 }
@@ -1978,8 +1979,8 @@ mime_bridge_create_draft_stream(
     return nsnull;
 
   // first, convert the rdf msg uri into a url that represents the message...
-  char *turl;
-  if (NS_FAILED(uri->GetSpec(&turl)))
+  nsXPIDLCString turl;
+  if (NS_FAILED(uri->GetSpec(getter_Copies(turl))))
     return nsnull;
 
   nsCOMPtr <nsIMsgMessageService> msgService;
