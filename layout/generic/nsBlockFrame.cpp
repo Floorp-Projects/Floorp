@@ -7194,6 +7194,9 @@ nsBlockFrame::RenumberListsFor(nsPresContext* aPresContext,
     NS_ASSERTION(kid, "no out-of-flow frame");
   }
 
+  // drill down through any wrappers to the real frame
+  kid = kid->GetContentInsertionFrame();
+
   // If the frame is a list-item and the frame implements our
   // block frame API then get its bullet and set the list item
   // ordinal.
