@@ -90,7 +90,7 @@ leaky::~leaky()
 void leaky::usageError()
 {
   fprintf(stderr,
-	  "Usage: %s [-aAEdfgqx] [-e name] [-s depth] [-h hash-buckets] prog log\n",
+	  "Usage: %s [-aAEdfgqx] [-e name] [-s depth] [-h hash-buckets] [-r root] prog log\n",
 	  (char*) applicationName);
   exit(-1);
 }
@@ -107,7 +107,7 @@ void leaky::initialize(int argc, char** argv)
 
   int arg;
   int errflg = 0;
-  while ((arg = getopt(argc, argv, "adEe:fgh:s:tqx")) != -1) {
+  while ((arg = getopt(argc, argv, "adEe:fgh:r:s:tqx")) != -1) {
     switch (arg) {
       case '?':
 	errflg++;
@@ -131,6 +131,9 @@ void leaky::initialize(int argc, char** argv)
       case 'g':
 	dumpGraph = TRUE;
 	if (dumpAll) errflg++;
+	break;
+      case 'r':
+	roots.add(optarg);
 	break;
       case 'h':
 	buckets = atoi(optarg);
@@ -480,8 +483,13 @@ void leaky::buildLeakGraph()
     Symbol* sym = findSymbol((u_long) *pcp);
     TreeNode* node = sym->root;
     if (!node) {
-      displayStackTrace(stderr, lep);
       sym->root = node = new TreeNode(sym);
+
+      // Add root to list of roots
+      if (roots.IsEmpty()) {
+	node->nextRoot = rootList;
+	rootList = node;
+      }
     }
     pcp--;
 
@@ -496,6 +504,14 @@ void leaky::buildLeakGraph()
       if (!nextNode) {
 	// Make a new node at the point of divergence
 	nextNode = node->AddDescendant(sym);
+      }
+
+      // See if the symbol is to be a user specified root. If it is,
+      // and we haven't already stuck it on the root-list do so now.
+      if (!sym->root && !roots.IsEmpty() && roots.contains(sym->name)) {
+	sym->root = nextNode;
+	nextNode->nextRoot = rootList;
+	rootList = nextNode;
       }
 
       if (pcp == basepcp) {
@@ -532,6 +548,8 @@ void leaky::dumpLeakGraph()
     printf("<span class=b>Bytes directly leaked</span><br>\n");
     printf("<span class=d>Bytes leaked by descendants</span></div>\n");
   }
+
+#if 0
   Symbol* base = externalSymbols;
   Symbol* end = externalSymbols + usefulSymbols;
   while (base < end) {
@@ -540,6 +558,13 @@ void leaky::dumpLeakGraph()
     dumpLeakTree(sym->root, 0);
     base = sym + 1;
   }
+#else
+  TreeNode* root = rootList;
+  while (root) {
+    dumpLeakTree(root, 0);
+    root = root->nextRoot;
+  }
+#endif
   if (dumpHTML) {
     printf("</body></html>\n");
   }
