@@ -94,10 +94,17 @@ public:
 
   // Overridden methods
   NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                       nsIContent*      aContent,
-                       nsIFrame*        aParent,
-                       nsIStyleContext* aContext,
-                       nsIFrame*        aPrevInFlow);
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              PRInt32 aModType, 
+                              PRInt32 aHint);
 
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
@@ -142,6 +149,13 @@ public:
 
   void EnsureMenuItemIsVisible(nsIMenuFrame* aMenuFrame);
 
+  void MoveTo(PRInt32 aLeft, PRInt32 aTop);
+  void GetScreenPosition(nsIView* aView, nsPoint& aScreenPosition);
+
+  void GetAutoPosition(PRBool* aShouldAutoPosition);
+  void SetAutoPosition(PRBool aShouldAutoPosition);
+  void EnableRollup(PRBool aShouldRollup);
+
   nsIScrollableView* GetScrollableView(nsIFrame* aStart);
   
 protected:
@@ -167,6 +181,10 @@ protected:
                                            const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
                                            PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips ) ;
 
+  // Move the popup to the position specified in its |left| and |top| attributes.
+  void MoveToAttributePosition();
+
+
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
   // XXX Hack
@@ -181,6 +199,9 @@ protected:
   PRBool mIsContextMenu;  // is this a context menu?
   
   PRBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
+
+  PRBool mShouldAutoPosition; // Should SyncViewWithFrame be allowed to auto position popup?
+  PRBool mShouldRollup; // Should this menupopup be allowed to dismiss automatically?
 
 }; // class nsMenuPopupFrame
 

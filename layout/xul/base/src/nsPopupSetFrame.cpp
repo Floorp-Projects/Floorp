@@ -444,8 +444,8 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
 
     // Unregister, but not if we're a tooltip
     if (aEntry->mPopupType != NS_LITERAL_STRING("tooltip") ) {
-      if (nsMenuFrame::mDismissalListener)
-        nsMenuFrame::mDismissalListener->Unregister();
+      if (nsMenuFrame::sDismissalListener)
+        nsMenuFrame::sDismissalListener->Unregister();
     }
     
     // Remove any keyboard navigators
@@ -470,6 +470,7 @@ nsPopupSetFrame::ActivatePopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     // is set by setting the |menuactive| attribute. This used to trip css into showing the menu
     // but now we do it ourselves. 
     if (aActivateFlag)
+      // XXXben hook in |width| and |height| usage here? 
       aEntry->mPopupContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_LITERAL_STRING("true"), PR_TRUE);
     else {
       aEntry->mPopupContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
@@ -665,7 +666,7 @@ nsPopupSetFrame::OnDestroyed(nsIContent* aPopupContent)
 void
 nsPopupSetFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
 {
-  if (!nsMenuFrame::mDismissalListener) {
+  if (!nsMenuFrame::sDismissalListener) {
     if (!aMenuParent)
        return;
     // Create the listener and attach it to the outermost window.
@@ -674,7 +675,7 @@ nsPopupSetFrame::UpdateDismissalListener(nsIMenuParent* aMenuParent)
   
   // Make sure the menu dismissal listener knows what the current
   // innermost menu popup frame is.
-  nsMenuFrame::mDismissalListener->SetCurrentMenuParent(aMenuParent);
+  nsMenuFrame::sDismissalListener->SetCurrentMenuParent(aMenuParent);
 }
 
 NS_IMETHODIMP

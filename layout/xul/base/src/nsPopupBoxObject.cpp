@@ -17,7 +17,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
+ * Original Authors: 
+ *   David W. Hyatt <hyatt@netscape.com>
+ *   Ben Goodger <ben@netscape.com>
  *
  * Contributor(s): 
  */
@@ -32,6 +34,13 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIFrame.h"
+#include "nsINameSpaceManager.h"
+#include "nsHTMLAtoms.h"
+#include "nsXULAtoms.h"
+#include "nsMenuPopupFrame.h"
+#include "nsIViewManager.h"
+#include "nsIWidget.h"
+
 
 class nsPopupBoxObject : public nsIPopupBoxObject, public nsBoxObject
 {
@@ -41,8 +50,7 @@ public:
 
   nsPopupBoxObject();
   virtual ~nsPopupBoxObject();
-  
-protected:
+
 };
 
 /* Implementation file */
@@ -151,8 +159,112 @@ nsPopupBoxObject::ShowPopup(nsIDOMElement* aSrcContent,
   nsAutoString anchorAlign(anAnchorAlignment);
   nsAutoString popupAlign(aPopupAlignment);
 
-  return popupSet->ShowPopup(srcContent, popupContent, aXPos, aYPos, popupType, anchorAlign,
-                             popupAlign);
+  // Use |left| and |top| dimension attributes to position the popup if
+  // present, as they may have been persisted. 
+  nsAutoString left, top;
+  popupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::left, left);
+  popupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::top, top);
+  
+  PRInt32 err;
+  if (!left.IsEmpty()) {
+    aXPos = left.ToInteger(&err);
+    if (NS_FAILED(err))
+      return err;
+  }
+  if (!top.IsEmpty()) {
+    aYPos = top.ToInteger(&err);
+    if (NS_FAILED(err))
+      return err;
+  }
+
+  return popupSet->ShowPopup(srcContent, popupContent, aXPos, aYPos, 
+                             popupType, anchorAlign, popupAlign);
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::MoveTo(PRInt32 aLeft, PRInt32 aTop)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+
+  nsMenuPopupFrame* menuPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame*, frame);
+  if (!menuPopupFrame) return NS_OK;
+
+  menuPopupFrame->MoveTo(aLeft, aTop);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
+{
+  nsAutoString width, height;
+  width.AppendInt(aWidth);
+  height.AppendInt(aHeight);
+  
+  mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::width, width, PR_FALSE);
+  mContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::height, height, PR_TRUE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::GetAutoPosition(PRBool* aShouldAutoPosition)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+
+  nsMenuPopupFrame* menuPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame*, frame);
+  if (!menuPopupFrame) return NS_OK;
+
+  menuPopupFrame->GetAutoPosition(aShouldAutoPosition);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::SetAutoPosition(PRBool aShouldAutoPosition)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+
+  nsMenuPopupFrame* menuPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame*, frame);
+  if (!menuPopupFrame) return NS_OK;
+
+  menuPopupFrame->SetAutoPosition(aShouldAutoPosition);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::EnableRollup(PRBool aShouldRollup)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+
+  nsMenuPopupFrame* menuPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame*, frame);
+  if (!menuPopupFrame) return NS_OK;
+
+  menuPopupFrame->EnableRollup(aShouldRollup);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPopupBoxObject::EnableKeyboardNavigator(PRBool aEnableKeyboardNavigator)
+{
+  nsIFrame* frame = GetFrame();
+  if (!frame) return NS_OK;
+
+  nsMenuPopupFrame* menuPopupFrame = NS_STATIC_CAST(nsMenuPopupFrame*, frame);
+  if (!menuPopupFrame) return NS_OK;
+
+  if (aEnableKeyboardNavigator)
+    menuPopupFrame->InstallKeyboardNavigator();
+  else
+    menuPopupFrame->RemoveKeyboardNavigator();
+  
+  return NS_OK;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

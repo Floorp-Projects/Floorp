@@ -236,7 +236,7 @@ protected:
   static nsString *gModifierSeparator;
 
 public:
-  static nsMenuDismissalListener* mDismissalListener; // The listener that dismisses menus.
+  static nsMenuDismissalListener* sDismissalListener; // The listener that dismisses menus.
 private:
   nsCSSFrameConstructor* mFrameConstructor;
 }; // class nsMenuFrame

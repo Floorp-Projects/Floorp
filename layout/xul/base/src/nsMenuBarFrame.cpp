@@ -522,8 +522,8 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
       // designation.
       mCurrentMenu->OpenMenu(PR_FALSE);
     }
-	if (nsMenuFrame::mDismissalListener)
-      nsMenuFrame::mDismissalListener->Unregister();
+	if (nsMenuFrame::sDismissalListener)
+      nsMenuFrame::sDismissalListener->Unregister();
     return NS_OK;
   }
 
@@ -537,8 +537,8 @@ nsMenuBarFrame::Escape(PRBool& aHandledFlag)
   RemoveKeyboardNavigator();
 
   // Clear out our dismissal listener
-  if (nsMenuFrame::mDismissalListener)
-    nsMenuFrame::mDismissalListener->Unregister();
+  if (nsMenuFrame::sDismissalListener)
+    nsMenuFrame::sDismissalListener->Unregister();
 
   return NS_OK;
 }
@@ -571,8 +571,8 @@ nsMenuBarFrame::HideChain()
   // Stop capturing rollups
   // (must do this during Hide, which happens before the menu item is executed,
   // since this reinstates normal event handling.)
-  if (nsMenuFrame::mDismissalListener)
-    nsMenuFrame::mDismissalListener->Unregister();
+  if (nsMenuFrame::sDismissalListener)
+    nsMenuFrame::sDismissalListener->Unregister();
 
   if (mCurrentMenu) {
     mCurrentMenu->ActivateMenu(PR_FALSE);
@@ -585,8 +585,8 @@ NS_IMETHODIMP
 nsMenuBarFrame::DismissChain()
 {
   // Stop capturing rollups
-  if (nsMenuFrame::mDismissalListener)
-    nsMenuFrame::mDismissalListener->Unregister();
+  if (nsMenuFrame::sDismissalListener)
+    nsMenuFrame::sDismissalListener->Unregister();
   
   SetCurrentMenuItem(nsnull);
   SetActive(PR_FALSE);
@@ -629,7 +629,7 @@ nsMenuBarFrame::GetWidget(nsIWidget **aWidget)
 NS_IMETHODIMP
 nsMenuBarFrame::CreateDismissalListener()
 {
-  NS_ADDREF(nsMenuFrame::mDismissalListener = new nsMenuDismissalListener());
+  NS_ADDREF(nsMenuFrame::sDismissalListener = new nsMenuDismissalListener());
   return NS_OK;
 }
 
