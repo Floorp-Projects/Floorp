@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "nslayout.h"
 #include "nsISupports.h"
+#include "nsGUIEvent.h"
 class nsIAtom;
 class nsIContentDelegate;
 class nsIDocument;
@@ -128,6 +129,11 @@ public:
    * any objects that it can reach.
    */
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
+
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+                                  nsGUIEvent* aEvent,
+                                  nsEventStatus& aEventStatus) = 0;
+
 };
 
 #endif /* nsIContent_h___ */

@@ -22,8 +22,10 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIDOMEventCapturer.h"
 
 class nsISelection;
+class nsIEventListenerManager;
 
 class nsPostData : public nsIPostData {
 public:
@@ -37,7 +39,7 @@ protected:
 };
 
 // Base class for our document implementations
-class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner {
+class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner, public nsIDOMEventCapturer {
 public:
   NS_DECL_ISUPPORTS
 
@@ -195,6 +197,18 @@ public:
   NS_IMETHOD CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator **aTreeIterator);
   NS_IMETHOD GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator);
 
+  // nsIDOMEventCapturer interface
+  NS_IMETHOD CaptureEvent(nsIDOMEventListener *aListener);
+  NS_IMETHOD ReleaseEvent(nsIDOMEventListener *aListener);
+  NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+                            nsGUIEvent* aEvent, 
+                            nsEventStatus& aEventStatus);
+
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
 
@@ -215,6 +229,7 @@ protected:
   nsVoidArray mStyleSheets;
   nsVoidArray mObservers;
   void* mScriptObject;
+  nsIEventListenerManager* mListenerManager;
 };
 
 #endif /* nsDocument_h___ */

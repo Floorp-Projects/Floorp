@@ -24,6 +24,7 @@
 #include "nsIStyleSheet.h"
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
+#include "nsEventListenerManager.h"
 
 #include "nsSelection.h"
 #include "nsIDOMText.h"
@@ -38,6 +39,9 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
+static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
+static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 
 NS_LAYOUT nsresult
 NS_NewPostData(nsIPostData* aPostData, nsIPostData** aInstancePtrResult)
@@ -72,6 +76,7 @@ nsDocument::nsDocument()
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mScriptObject = nsnull;
+  mListenerManager = nsnull;
  
   if (NS_OK != NS_NewSelection(&mSelection)) {
     printf("*************** Error: nsDocument::nsDocument - Creation of Selection failed!\n");
@@ -126,6 +131,16 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventCapturerIID)) {
+    *aInstancePtr = (void*)(nsIDOMEventCapturer*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventReceiverIID)) {
+    *aInstancePtr = (void*)(nsIDOMEventReceiver*)this;
     AddRef();
     return NS_OK;
   }
@@ -657,6 +672,91 @@ nsresult nsDocument::GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator
   //XXX TBI
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
+{
+  if (nsnull != mListenerManager) {
+    return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);;
+  }
+  else {
+    nsIEventListenerManager* l = new nsEventListenerManager();
+
+    if (nsnull == l) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    
+    if (NS_OK == l->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult)) {
+      mListenerManager = l;
+      return NS_OK;
+    }
+
+    return NS_ERROR_FAILURE;
+  }
+}
+
+nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext, 
+                                 nsGUIEvent* aEvent, 
+                                 nsEventStatus& aEventStatus)
+{
+  //Capturing stage
+  
+  //Local handling stage
+  if (nsnull != mListenerManager) {
+    mListenerManager->HandleEvent(aPresContext, aEvent, aEventStatus);
+  }
+
+  //Bubbling stage
+  /*Need to go to window here*/
+
+  return NS_OK;
+}
+
+nsresult nsDocument::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->AddEventListener(aListener, aIID);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsDocument::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->RemoveEventListener(aListener, aIID);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsDocument::CaptureEvent(nsIDOMEventListener *aListener)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->CaptureEvent(aListener);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsDocument::ReleaseEvent(nsIDOMEventListener *aListener)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->ReleaseEvent(aListener);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
 
 /**
   * Returns the Selection Object

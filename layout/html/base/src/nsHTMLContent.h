@@ -21,6 +21,9 @@
 #include "nsIHTMLContent.h"
 #include "nsIDOMNode.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsGUIEvent.h"
+class nsIEventListenerManager;
 class nsIArena;
 class nsIAtom;
 
@@ -29,7 +32,7 @@ class nsIAtom;
  * allocation from the malloc heap as well as from an arena. Note
  * that instances of this object are created with zero'd memory.
  */
-class nsHTMLContent : public nsIHTMLContent, public nsIDOMNode, public nsIScriptObjectOwner {
+class nsHTMLContent : public nsIHTMLContent, public nsIDOMNode, public nsIScriptObjectOwner, public nsIDOMEventReceiver {
 public:
   /**
    * This new method allocates memory from the standard malloc heap
@@ -126,6 +129,14 @@ public:
   NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
   NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
 
+  // nsIDOMEventReceiver interface
+  NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+                            nsGUIEvent* aEvent, 
+                            nsEventStatus& aEventStatus);
+
 protected:
   nsHTMLContent();
   virtual ~nsHTMLContent();
@@ -137,6 +148,10 @@ protected:
   nsIDocument* mDocument;
   nsIContent* mParent;
   void* mScriptObject;
+
+  nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+
+  nsIEventListenerManager* mListenerManager;
 };
 
 #endif /* nsHTMLContent_h___ */

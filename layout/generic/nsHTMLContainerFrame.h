@@ -56,12 +56,6 @@ protected:
 
   virtual PRIntn GetSkipSides() const = 0;
 
-  void TriggerLink(nsIPresContext& aPresContext,
-                   const nsString& aBase,
-                   const nsString& aURLSpec,
-                   const nsString& aTargetSpec,
-                   PRBool aClick);
-
   nsresult CreateFrameFor(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIStyleContext* aStyleContext,

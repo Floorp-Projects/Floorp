@@ -145,6 +145,8 @@ NS_METHOD RootFrame::HandleEvent(nsIPresContext& aPresContext,
                                  nsGUIEvent* aEvent,
                                  nsEventStatus& aEventStatus)
 {
+  mContent->HandleDOMEvent(aPresContext, aEvent, aEventStatus);
+  
   switch (aEvent->message) {
   case NS_MOUSE_MOVE:
   case NS_MOUSE_ENTER:
@@ -453,6 +455,10 @@ public:
                                nsIStyleContext* aStyleContext,
                                nsIFrame*& aResult);
 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+                               nsGUIEvent* aEvent, 
+                               nsEventStatus& aEventStatus);
+
 protected:
   virtual ~RootPart();
 };
@@ -481,6 +487,14 @@ RootPart::CreateFrame(nsIPresContext* aPresContext,
   frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return NS_OK;
+}
+
+nsresult 
+RootPart::HandleDOMEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent* aEvent, 
+                         nsEventStatus& aEventStatus)
+{
+  return mDocument->HandleDOMEvent(aPresContext, aEvent, aEventStatus);
 }
 
 nsresult

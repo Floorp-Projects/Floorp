@@ -26,6 +26,8 @@
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
 #include "nsIDocument.h"
+#include "nsIEventListenerManager.h"
+#include "nsEventListenerManager.h"
 #include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
@@ -33,6 +35,8 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
+static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 
 static nsIContentDelegate* gContentDelegate;
 
@@ -132,6 +136,8 @@ nsHTMLContent::nsHTMLContent()
     gContentDelegate = new ContentDelegate();
   }
 
+  mListenerManager = nsnull;
+
   // Add a reference to the shared content delegate object
   NS_ADDREF(gContentDelegate);
 }
@@ -181,6 +187,11 @@ nsresult nsHTMLContent::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIScriptObjectOwnerIID)) {
     *aInstancePtrResult = (void*)(nsIScriptObjectOwner*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMEventReceiverIID)) {
+    *aInstancePtrResult = (void*)(nsIDOMEventReceiver*)this;
     AddRef();
     return NS_OK;
   }
@@ -531,6 +542,69 @@ nsresult nsHTMLContent::ReplaceChild(nsIDOMNode *newChild,
 nsresult nsHTMLContent::RemoveChild(nsIDOMNode *oldChild)
 {
   return NS_ERROR_FAILURE;
+}
+
+nsresult nsHTMLContent::GetListenerManager(nsIEventListenerManager **aInstancePtrResult)
+{
+  if (nsnull != mListenerManager) {
+    return mListenerManager->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult);;
+  }
+  else {
+    nsIEventListenerManager* l = new nsEventListenerManager();
+
+    if (nsnull == l) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    
+    if (NS_OK == l->QueryInterface(kIEventListenerManagerIID, (void**) aInstancePtrResult)) {
+      mListenerManager = l;
+      return NS_OK;
+    }
+
+    return NS_ERROR_FAILURE;
+  }
+}
+
+nsresult nsHTMLContent::AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->AddEventListener(aListener, aIID);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsHTMLContent::RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID)
+{
+  nsIEventListenerManager *manager;
+
+  if (NS_OK == GetListenerManager(&manager)) {
+    manager->RemoveEventListener(aListener, aIID);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsHTMLContent::HandleDOMEvent(nsIPresContext& aPresContext,
+                                            nsGUIEvent* aEvent,
+                                            nsEventStatus& aEventStatus)
+{  
+  //Capturing stage
+  
+  //Local handling stage
+  if (nsnull != mListenerManager) {
+    mListenerManager->HandleEvent(aPresContext, aEvent, aEventStatus);
+  }
+
+  //Bubbling stage
+  if (mParent != nsnull) {
+    return mParent->HandleDOMEvent(aPresContext, aEvent, aEventStatus);
+  }
+
+  return NS_OK;
 }
 
 // XXX i18n: this is wrong (?) because we need to know the outgoing
