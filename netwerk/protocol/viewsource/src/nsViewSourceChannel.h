@@ -32,8 +32,13 @@
 #include "nsIStreamListener.h"
 #include "nsViewSourceHandler.h"
 #include "nsNetCID.h"
+#include "nsIHttpChannel.h"
+#include "nsICachingChannel.h"
 
-class nsViewSourceChannel : public nsIViewSourceChannel, nsIStreamListener {
+class nsViewSourceChannel : public nsIViewSourceChannel,
+                            public nsIStreamListener,
+                            public nsIHttpChannel,
+                            public nsICachingChannel {
 
 public:
     NS_DECL_ISUPPORTS
@@ -42,6 +47,8 @@ public:
     NS_DECL_NSIVIEWSOURCECHANNEL
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_FORWARD_SAFE_NSIHTTPCHANNEL(mHttpChannel)
+    NS_FORWARD_SAFE_NSICACHINGCHANNEL(mCachingChannel)
 
     // nsViewSourceChannel methods:
     nsViewSourceChannel();
@@ -55,6 +62,8 @@ public:
 
 protected:
     nsCOMPtr<nsIChannel>        mChannel;
+    nsCOMPtr<nsIHttpChannel>    mHttpChannel;
+    nsCOMPtr<nsICachingChannel> mCachingChannel;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCString                   mContentType;
 };
