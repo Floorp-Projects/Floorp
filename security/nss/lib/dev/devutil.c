@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.11 $ $Date: 2002/04/22 19:08:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.12 $ $Date: 2002/04/25 00:45:42 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1362,7 +1362,8 @@ nssTokenObjectCache_RemoveObject
 	    break;
 	}
     }
-    if (cache->objects[oType] && cache->objects[oType][0] == NULL) {
+    if ((oType <3) &&
+		cache->objects[oType] && cache->objects[oType][0] == NULL) {
 	nss_ZFreeIf(cache->objects[oType]); /* no entries remaining */
 	cache->objects[oType] = NULL;
     }
