@@ -145,7 +145,7 @@ class TImapServerState;
 #endif
 
 
-#if defined(SMOOTH_PROGRESS) && defined(__cplusplus)
+#if defined(__cplusplus)
 class nsITransferListener;
 #endif
 
@@ -350,13 +350,11 @@ struct MWContext_ {
        stuff looks funny for a couple seconds. */
     PRPackedBool  requires_reflow;
 
-#if defined(SMOOTH_PROGRESS)
 #if defined(__cplusplus)
     nsITransferListener* progressManager;
 #else
     void* progressManager;
 #endif /* __cplusplus */
-#endif /* SMOOTH_PROGRESS */
 };
 
 
