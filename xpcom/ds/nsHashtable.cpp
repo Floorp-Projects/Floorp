@@ -102,17 +102,25 @@ static PRIntn  PR_CALLBACK _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
 //
 // HashKey 
 //
+
+MOZ_DECL_CTOR_COUNTER(nsHashKey)
+
 nsHashKey::nsHashKey(void)
 {
+  MOZ_COUNT_CTOR(nsHashKey);
 }
 
 nsHashKey::~nsHashKey(void)
 {
+  MOZ_COUNT_DTOR(nsHashKey);
 }
+
+MOZ_DECL_CTOR_COUNTER(nsHashtable)
 
 nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
   : mLock(NULL)
 {
+  MOZ_COUNT_CTOR(nsHashtable);
   hashtable = PL_NewHashTable(aInitSize,
                               _hashValue,
                               _hashKeyCompare,
@@ -132,6 +140,7 @@ nsHashtable::nsHashtable(PRUint32 aInitSize, PRBool threadSafe)
 }
 
 nsHashtable::~nsHashtable() {
+  MOZ_COUNT_DTOR(nsHashtable);
   PL_HashTableDestroy(hashtable);
   if (mLock) PR_DestroyLock(mLock);
 }
