@@ -211,7 +211,7 @@ CFLAGS=$(CFLAGS) -DTRANSACTION_RECEIPTS
 !endif
 
 # TODO Cleanup later -Gagan
-!ifndef NU_CACHE 
+!ifdef NU_CACHE 
 CFLAGS=$(CFLAGS) -DNU_CACHE
 !endif
 
