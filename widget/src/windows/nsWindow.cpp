@@ -1664,7 +1664,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 ::SelectPalette(hDC, hOldPal, TRUE);
                 ::RealizePalette(hDC);
                 ::ReleaseDC(mWnd, hDC);
-                *aRetValue = (LRESULT)i;
+                *aRetValue = TRUE;
             }
             result = PR_TRUE;
             break;
