@@ -28,7 +28,7 @@
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
-#include "nsIFileChooser.h"
+#include "nsIFileSpecWithUI.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
@@ -1499,19 +1499,18 @@ static void BuildFileURL(const char * aFileName, nsString & aFileURL)
 NS_IMETHODIMP nsBrowserAppCore::OpenWindow()
 //----------------------------------------------------------------------------------------
 {  
-  nsCOMPtr<nsIFileChooser> fileChooser;
-  nsresult rv = NS_NewFileChooser(getter_AddRefs(fileChooser));
-  if (NS_FAILED(rv))
-  	return rv;
+  nsCOMPtr<nsIFileSpecWithUI> fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
+  if (!fileSpec)
+  	return NS_ERROR_FAILURE;
 
-  rv = fileChooser->ChooseInputFile(
-  	"Open File", nsIFileChooser::eAllStandardFilters, nsnull, nsnull);
+  nsresult rv = fileSpec->chooseInputFile(
+  	"Open File", nsIFileSpecWithUI::eAllStandardFilters, nsnull, nsnull);
   if (NS_FAILED(rv))
     return rv;
   
   char buffer[1024];
   char* urlString;
-  rv = fileChooser->GetURLString(&urlString);
+  rv = fileSpec->GetURLString(&urlString);
   if (NS_FAILED(rv))
     return rv;
   PR_snprintf( buffer, sizeof buffer, "OpenFile(\"%s\")", urlString);
