@@ -104,8 +104,6 @@ protected:
 	return NS_OK;
     }
 
-    static nsresult ParseURL(const char* inURL, char **outHost, char **outDirectory,
-                             char **outFileBaseName, char **outFileExtension);
 };
 
 #endif /* _nsLocalFileUNIX_H_ */

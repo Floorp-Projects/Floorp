@@ -297,11 +297,6 @@ interface nsIFile : nsISupports
      */
     readonly attribute nsISimpleEnumerator directoryEntries;
 
-    /**
-     * Accesses the file: url for the nsIFile. Setting this causes the path
-     * to be reset.
-     */
-    attribute string URL;
 };
 
 %{C++
