@@ -644,7 +644,7 @@ DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor *td)
     }
     
     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
-        if (!XPT_Do32(cursor, &td->type.interface))
+        if (!XPT_Do16(cursor, &td->type.interface))
             goto error;
     } else {
         if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_IS_TYPE) {
