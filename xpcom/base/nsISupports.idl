@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "nsID.idl"
 %{C++
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
