@@ -311,6 +311,7 @@ LocalVar('@opsys', '
         "Windows 3.1",
         "Windows 95",
         "Windows 98",
+        "Windows ME",  # Millenium Edition (upgrade of 98)
 	"Windows 2000",
         "Windows NT",
         "Mac System 7",
@@ -1072,7 +1073,12 @@ sub CheckEnumField ($$@)
 
 #
 # This code changes the enum types of some SQL tables whenever you change
-# some --LOCAL-- variables
+# some --LOCAL-- variables. Once you have a running system, to add new 
+# severities, priorities, operating systems and platforms, add them to 
+# the localconfig file and then re-run checksetup.pl which will make the 
+# necessary changes to your database. Additions to these fields in
+# checksetup.pl after the initial installation of bugzilla on a system
+# are ignored.
 #
 
 CheckEnumField('bugs', 'bug_severity', @severities);
