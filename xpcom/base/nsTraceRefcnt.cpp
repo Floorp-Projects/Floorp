@@ -628,7 +628,7 @@ static void InitTraceLog(void)
   }
 
   const char* s = getenv("XPCOM_REFCNT_LOG_ENABLE_VIA_PREF");
-  if (s && strchr(s, '1') >= 0) {
+  if (s && strchr(s, '1')) {
     gEnableViaPref = PR_TRUE;
     if (gLogging)
       printf("### XPCOM_REFCNT_LOG_ENABLE_VIA_PREF defined: Logging will be enabled based on the pref selected in the Debug pane\n");
