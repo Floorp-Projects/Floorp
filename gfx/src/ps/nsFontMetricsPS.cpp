@@ -1028,20 +1028,6 @@ nsFontPSXft::FindFont(PRUnichar aChar, const nsFont& aFont,
   return nsnull;
 }
 
-/*FT_CALLBACK_DEF*/
-FT_Error
-nsXftFaceRequester(FTC_FaceID face_id, FT_Library lib,
-                  FT_Pointer request_data, FT_Face* aFace)
-{
-  nsXftEntry *faceID = (nsXftEntry *)face_id;
-
-  FT_Error fterror = FT_New_Face(lib, faceID->mFontFileName.get(),
-                                 faceID->mFaceIndex, aFace);
-  if (fterror) 
-    *aFace = nsnull;
-  return 0;
-}
-
 nsFontPSXft::nsFontPSXft(const nsFont& aFont,
                                    nsFontMetricsPS* aFontMetrics)
   :nsFontPS(aFont, aFontMetrics)
@@ -1063,35 +1049,20 @@ nsFontPSXft::Init(nsXftEntry* aEntry,
   
   mPixelSize = NSToIntRound(app2dev * mFont->size);
 
-  mImageDesc.font.face_id    = (void*)mEntry;
-  mImageDesc.font.pix_width  = mPixelSize;
-  mImageDesc.font.pix_height = mPixelSize;
-  mImageDesc.image_type = 0;
-
   FT_Error fterror; 
   fterror = FT_Init_FreeType(&mFreeTypeLibrary);
   if (fterror) {
-    NS_ASSERTION(!fterror, "failed to initialize FreeType library");
+    NS_ERROR("failed to initialize FreeType library");
     mFreeTypeLibrary = nsnull;
     return NS_ERROR_FAILURE;
   }
-  fterror = FTC_Manager_New(mFreeTypeLibrary, 0, 0, 0, nsXftFaceRequester,
-                  NULL, &mFTCacheManager);
-  NS_ASSERTION(!fterror, "failed to create FreeType Cache manager");
-  if (fterror)
-    return NS_ERROR_FAILURE;
-
-  fterror = FTC_Image_Cache_New(mFTCacheManager, &mImageCache);
-  NS_ASSERTION(!fterror, "failed to create FreeType image cache");
-  if (fterror)
-    return NS_ERROR_FAILURE;
-
   return NS_OK;
 }
 
 nsFontPSXft::~nsFontPSXft()
 {
-  FTC_Manager_Done(mFTCacheManager);
+  if (mEntry->mFace) 
+    FT_Done_Face(mEntry->mFace);
 
   if (FT_Done_FreeType(mFreeTypeLibrary))
     return;
@@ -1102,16 +1073,14 @@ nsFontPSXft::~nsFontPSXft()
 FT_Face
 nsFontPSXft::getFTFace()
 {
-  FT_Error error;
   FT_Face face = mEntry->mFace;
 
   if (face)
     return (face);
 
-  error = FTC_Manager_Lookup_Size(mFTCacheManager, &mImageDesc.font,
-                                  &face, nsnull);
-  NS_ASSERTION(error == 0, "failed to get face/size");
-  if (error)
+  if (FT_New_Face(mFreeTypeLibrary, mEntry->mFontFileName.get(), 
+                  mEntry->mFaceIndex, &face) ||
+      FT_Set_Pixel_Sizes(face, mPixelSize, 0))
     return nsnull;
 
   mEntry->mFace = face;
@@ -1149,15 +1118,16 @@ nsFontPSXft::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   if (!face)
     return 0;
 
+  // XXX : we might need some caching here
   for (PRUint32 i=0; i<aLength; i++) {
     glyph_index = FT_Get_Char_Index((FT_Face)face, aString[i]);
-    FT_Error error = FTC_Image_Cache_Lookup(mImageCache, &mImageDesc,
-                                            glyph_index, &glyph);
-    if (error) {
+    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) ||
+        FT_Get_Glyph(face->glyph, &glyph)) {     
       origin_x += FT_REG_TO_16_16(face->size->metrics.x_ppem/2 + 2);
       continue;
     }
     origin_x += glyph->advance.x;
+    FT_Done_Glyph(glyph);
   }
 
   NS_ENSURE_TRUE(mFontMetrics, 0);
@@ -2411,18 +2381,14 @@ nsXftType8Generator::Init(nsXftEntry* aEntry)
     mFreeTypeLibrary = nsnull;
     return NS_ERROR_FAILURE;
   }
-  error = FTC_Manager_New(mFreeTypeLibrary, 0, 0, 0, nsXftFaceRequester,
-                          NULL, &mFTCacheManager);
-  NS_ASSERTION(!error, "failed to create FreeType Cache manager");
-  if (error)
-    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
 
 nsXftType8Generator::~nsXftType8Generator()
 {
-  FTC_Manager_Done(mFTCacheManager);
+  if (mEntry->mFace) 
+    FT_Done_Face(mEntry->mFace);
 
   if (FT_Done_FreeType(mFreeTypeLibrary))
     return;
@@ -2432,23 +2398,15 @@ nsXftType8Generator::~nsXftType8Generator()
 
 void nsXftType8Generator::GeneratePSFont(FILE* aFile)
 {
-  FT_Error error;
   FT_Face face = mEntry->mFace;
 
   if (face == nsnull) {
-    mImageDesc.font.face_id    = (void*)mEntry;
-    mImageDesc.font.pix_width  = 16;
-    mImageDesc.font.pix_height = 16;
-    mImageDesc.image_type = 0;
-    error = FTC_Manager_Lookup_Size(mFTCacheManager, &mImageDesc.font,
-                                    &face, nsnull);
-    if (error)
-      return;
+    if (FT_New_Face(mFreeTypeLibrary, mEntry->mFontFileName.get(), mEntry->mFaceIndex, &face) ||
+        face == nsnull /* || FT_Set_Pixel_Sizes(face, 16, 0) */) 
+       return;
+     mEntry->mFace = face;
   }
 
-  if (face == nsnull)
-    return;
- 
   int wmode = 0;
   if (!mSubset.IsEmpty())
     FT2SubsetToType8(face, mSubset.get(), mSubset.Length(), wmode, aFile);
