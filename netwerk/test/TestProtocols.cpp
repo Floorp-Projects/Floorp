@@ -65,7 +65,6 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static int gKeepRunning = 0;
 static PRBool gVerbose = PR_FALSE;
 static nsIEventQueue* gEventQ = nsnull;
-static PRBool gTestAsyncOpen = PR_FALSE;
 
 class URLLoadInfo : public nsISupports
 {
@@ -240,11 +239,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMOBSERVER
   NS_DECL_NSISTREAMLISTENER
-
-  void SetAsyncOpenCompleted() { mAsyncOpenCompleted = PR_TRUE; }
-
-protected:
-  PRBool mAsyncOpenCompleted;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,7 +276,6 @@ OpenObserver::OnStartRequest(nsIChannel* channel, nsISupports* context)
     printf("    contentType = %s length = %d\n", type, length);
     nsCRT::free(type);
 
-    mInputConsumer->SetAsyncOpenCompleted();
     return NS_OK;
 }
 
@@ -301,7 +294,6 @@ OpenObserver::OnStopRequest(nsIChannel* channel,
 ////////////////////////////////////////////////////////////////////////////////
 
 InputTestConsumer::InputTestConsumer()
-    : mAsyncOpenCompleted(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -317,8 +309,6 @@ NS_IMPL_ISUPPORTS(InputTestConsumer,NS_GET_IID(nsIStreamListener));
 NS_IMETHODIMP
 InputTestConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-  NS_ASSERTION(!gTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
-
   URLLoadInfo* info = (URLLoadInfo*)context;
   if (info) {
     info->mConnectTime = PR_Now() - info->mConnectTime;
@@ -351,7 +341,6 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
                                    PRUint32 aSourceOffset,
                                    PRUint32 aLength)
 {
-  NS_ASSERTION(!gTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
 
   char buf[1025];
   PRUint32 amt, size;
@@ -387,8 +376,6 @@ InputTestConsumer::OnStopRequest(nsIChannel* channel,
                                  nsresult aStatus,
                                  const PRUnichar* aMsg)
 {
-  NS_ASSERTION(!gTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
-
   URLLoadInfo* info = (URLLoadInfo*)context;
 
   if (info) {
@@ -531,19 +518,6 @@ nsresult StartLoadingURL(const char* aUrlString)
             return NS_ERROR_OUT_OF_MEMORY;;
         }
 
-        if (gTestAsyncOpen) {
-            OpenObserver* obs = new OpenObserver(listener);
-            if (obs == nsnull) 
-                return NS_ERROR_OUT_OF_MEMORY;
-            NS_ADDREF(obs);
-            rv = pChannel->AsyncOpen(obs, nsnull);
-            NS_RELEASE(obs);
-            if (NS_FAILED(rv)) {
-                NS_ERROR("Error: AsyncOpen failed...");
-                return rv;
-            }
-        }
-
         URLLoadInfo* info;
         info = new URLLoadInfo(aUrlString);
         NS_IF_ADDREF(info);
@@ -661,11 +635,6 @@ main(int argc, char* argv[])
             LoadURLsFromFile(argv[++i]);
             continue;
         } 
-
-        if (PL_strcasecmp(argv[i], "-asyncopen") == 0) {
-          gTestAsyncOpen = PR_TRUE;
-          continue;
-        }
 
         printf("\t%s\n", argv[i]);
         rv = StartLoadingURL(argv[i]);

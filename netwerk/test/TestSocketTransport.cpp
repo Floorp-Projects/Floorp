@@ -145,8 +145,6 @@ public:
   nsresult Suspend(void);
   nsresult Resume(void);
 
-  void SetAsyncOpenCompleted() { mAsyncOpenCompleted = PR_TRUE; }
-
   NS_IMETHOD GetInterface(const nsIID & uuid, void * *result) {
     if (uuid.Equals(NS_GET_IID(nsIProgressEventSink))) {
       *result = (nsIProgressEventSink*)this;
@@ -185,8 +183,6 @@ protected:
 
   PRInt32 mBytesRead;
 
-  PRBool mTestAsyncOpen;
-  PRBool mAsyncOpenCompleted;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +212,6 @@ TestConnectionOpenObserver::OnStartRequest(nsIChannel* channel, nsISupports* con
   if (gVerbose)
     printf("\n+++ TestConnectionOpenObserver::OnStartRequest +++. Context = %p\n", context);
 
-  mTestConnection->SetAsyncOpenCompleted();
   return NS_OK;
 }
 
@@ -238,8 +233,6 @@ TestConnectionOpenObserver::OnStopRequest(nsIChannel* channel,
 NS_IMETHODIMP
 TestConnection::OnStartRequest(nsIChannel* channel, nsISupports* context)
 {
-  NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
-
   if (gVerbose)
     printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", context);
   return NS_OK;
@@ -253,7 +246,6 @@ TestConnection::OnDataAvailable(nsIChannel* channel, nsISupports* context,
                                 PRUint32 aLength)
 {
   nsresult rv;
-  NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
 
   char buf[TRANSFER_AMOUNT];
   PRUint32 amt;
@@ -289,8 +281,6 @@ TestConnection::OnStopRequest(nsIChannel* channel,
                               nsresult aStatus,
                               const PRUnichar* aMsg)
 {
-  NS_ASSERTION(!mTestAsyncOpen || mAsyncOpenCompleted, "AsyncOpen failed");
-
   if (gVerbose || NS_FAILED(aStatus))
     printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
            "\tContext = %p\n", 
@@ -307,9 +297,6 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
   NS_INIT_REFCNT();
 
   mIsAsync      = aAsyncFlag;
-
-  mTestAsyncOpen = testAsyncRead;
-  mAsyncOpenCompleted = PR_FALSE;
 
   mBufferLength = TRANSFER_AMOUNT;
   mBufferChar   = 'a';
@@ -404,18 +391,6 @@ TestConnection::Run(void)
   if (NS_SUCCEEDED(rv)) {
     if (mIsAsync) {
       
-      if (mTestAsyncOpen) {
-        TestConnectionOpenObserver* obs = new TestConnectionOpenObserver(this);
-        if (obs == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(obs);
-        rv = mTransport->AsyncOpen(obs, nsnull);
-        NS_RELEASE(obs);
-        if (NS_FAILED(rv)) {
-          printf("Error: AsyncOpen failed...");
-        }
-      }
-
       //
       // Initiate an async read...
       //
@@ -634,12 +609,11 @@ main(int argc, char* argv[])
   //
   // -----
 ///  if (argc < 3) {
-///      printf("usage: %s [-sync|-asyncopen|-silent] <host> <path>\n", argv[0]);
+///      printf("usage: %s [-sync|-silent] <host> <path>\n", argv[0]);
 ///      return -1;
 ///  }
 
   PRBool bIsAsync = PR_TRUE;
-  PRBool bTestAsyncOpen = PR_FALSE;
   char* hostName = nsnull;
   int i;
 
@@ -650,10 +624,6 @@ main(int argc, char* argv[])
       bIsAsync = PR_FALSE;
       continue;
     } 
-    if (PL_strcasecmp(argv[i], "-asyncopen") == 0) {
-      bTestAsyncOpen = PR_TRUE;
-      continue;
-    }
     if (PL_strcasecmp(argv[i], "-silent") == 0) {
       gVerbose = PR_FALSE;
       continue;
@@ -692,7 +662,7 @@ main(int argc, char* argv[])
   // Create the connections and threads...
   //
   for (i=0; i<NUM_TEST_THREADS; i++) {
-    gConnections[i] = new TestConnection(hostName, 7, bIsAsync, bTestAsyncOpen);
+    gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
     rv = NS_NewThread(&gThreads[i], gConnections[i], 0, PR_JOINABLE_THREAD);
   }
 
