@@ -371,14 +371,6 @@ ToUpperCase( nsACString& aCString )
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
 
-NS_COM
-void
-ToUpperCase( nsASingleFragmentCString& aCString )
-  {
-    ConvertToUpperCase converter;
-    char* start;
-    converter.write(aCString.BeginWriting(start), aCString.Length());
-  }
 
   /**
    * A character sink for copying with case conversion.
@@ -455,15 +447,6 @@ ToLowerCase( nsACString& aCString )
     nsACString::iterator fromBegin, fromEnd;
     ConvertToLowerCase converter;
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
-  }
-
-NS_COM
-void
-ToLowerCase( nsASingleFragmentCString& aCString )
-  {
-    ConvertToLowerCase converter;
-    char* start;
-    converter.write(aCString.BeginWriting(start), aCString.Length());
   }
 
   /**

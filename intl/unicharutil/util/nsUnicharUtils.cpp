@@ -98,14 +98,6 @@ ToLowerCase( nsAString& aString )
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
   }
 
-void
-ToLowerCase( nsASingleFragmentString& aString )
-  {
-    ConvertToLowerCase converter;
-    PRUnichar* start;
-    converter.write(aString.BeginWriting(start), aString.Length());
-  }
-
 class CopyToLowerCase
   {
     public:
@@ -163,14 +155,6 @@ ToUpperCase( nsAString& aString )
     nsAString::iterator fromBegin, fromEnd;
     ConvertToUpperCase converter;
     copy_string(aString.BeginWriting(fromBegin), aString.EndWriting(fromEnd), converter);
-  }
-
-void
-ToUpperCase( nsASingleFragmentString& aString )
-  {
-    ConvertToUpperCase converter;
-    PRUnichar* start;
-    converter.write(aString.BeginWriting(start), aString.Length());
   }
 
 class CopyToUpperCase
