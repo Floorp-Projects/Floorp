@@ -589,8 +589,11 @@ nsFontMetricsPango::GetTextDimensions(const char*         aString,
                                       PRInt32*            aFontID,
                                       nsRenderingContextGTK *aContext)
 {
-    printf("GetTextDimensions (char *)\n");
-    return NS_ERROR_FAILURE;
+
+    return GetTextDimensionsInternal(aString, aLength, aAvailWidth, aBreaks,
+                                     aNumBreaks, aDimensions, aNumCharsFit,
+                                     aLastWordDimensions, aContext);
+
 }
 
 nsresult
@@ -605,8 +608,76 @@ nsFontMetricsPango::GetTextDimensions(const PRUnichar*    aString,
                                       PRInt32*            aFontID,
                                       nsRenderingContextGTK *aContext)
 {
-    printf("GetTextDimensions (complex)\n");
-    return NS_ERROR_FAILURE;
+    nsresult rv = NS_OK;
+    PRInt32 curBreak = 0;
+    gchar *curChar;
+
+    PRInt32 *utf8Breaks = new PRInt32[aNumBreaks];
+
+    gchar *text = g_utf16_to_utf8(aString, (PRInt32)aLength,
+                                  NULL, NULL, NULL);
+
+    curChar = text;
+
+    if (!text) {
+#ifdef DEBUG
+        NS_WARNING("nsFontMetricsPango::GetWidth invalid unicode to follow");
+        DUMP_PRUNICHAR(aString, (PRUint32)aLength)
+#endif
+        rv = NS_ERROR_FAILURE;
+        goto loser;
+    }
+
+    // Covert the utf16 break offsets to utf8 break offsets
+    for (PRInt32 curOffset=0; curOffset < aLength;
+         curOffset++, curChar = g_utf8_find_next_char(curChar, NULL)) {
+        if (aBreaks[curBreak] == curOffset) {
+            utf8Breaks[curBreak] = curChar - text;
+            curBreak++;
+        }
+
+        if (IS_HIGH_SURROGATE(aString[curOffset]))
+            curOffset++;
+    }
+
+    // Always catch the last break
+    utf8Breaks[curBreak] = curChar - text;
+
+#if 0
+    if (strlen(text) != aLength) {
+        printf("Different lengths for utf16 %d and utf8 %d\n", aLength, strlen(text));
+        DUMP_PRUNICHAR(aString, aLength)
+        DUMP_PRUNICHAR(text, strlen(text))
+        for (PRInt32 i = 0; i < aNumBreaks; ++i) {
+            printf("  break %d utf16 %d utf8 %d\n", i, aBreaks[i], utf8Breaks[i]);
+        }
+    }
+#endif
+
+    // We'll use curBreak to indicate which of the breaks end up being
+    // used for the break point for this line.
+    curBreak = 0;
+    rv = GetTextDimensionsInternal(text, strlen(text), aAvailWidth, utf8Breaks,
+                                   aNumBreaks, aDimensions, aNumCharsFit,
+                                   aLastWordDimensions, aContext);
+
+    // Figure out which of the breaks we ended up using to convert
+    // back to utf16 - start from the end.
+    for (PRInt32 i = aNumBreaks - 1; i >= 0; --i) {
+        if (utf8Breaks[i] == aNumCharsFit) {
+            //      if (aNumCharsFit != aBreaks[i])
+            //                printf("Fixing utf8 -> utf16 %d -> %d\n", aNumCharsFit, aBreaks[i]);
+            aNumCharsFit = aBreaks[i];
+        }
+    }
+
+ loser:
+    if (text)
+        g_free(text);
+
+    delete[] utf8Breaks;
+
+    return rv;
 }
 
 nsresult
@@ -739,6 +810,7 @@ nsFontMetricsPango::GetBoundingMetrics(const PRUnichar *aString,
 #ifdef DEBUG
         NS_WARNING("nsFontMetricsPango::GetBoundingMetrics invalid unicode to follow");
         DUMP_PRUNICHAR(aString, aLength)
+#endif
         aBoundingMetrics.leftBearing = 0;
         aBoundingMetrics.rightBearing = 0;
         aBoundingMetrics.width = 0;
@@ -747,7 +819,6 @@ nsFontMetricsPango::GetBoundingMetrics(const PRUnichar *aString,
 
         rv = NS_ERROR_FAILURE;
         goto loser;
-#endif
     }
 
     pango_layout_set_text(layout, text, strlen(text));
@@ -816,7 +887,8 @@ PRUint32
 nsFontMetricsPango::GetHints(void)
 {
     return (NS_RENDERING_HINT_BIDI_REORDERING |
-            NS_RENDERING_HINT_ARABIC_SHAPING);
+            NS_RENDERING_HINT_ARABIC_SHAPING | 
+            NS_RENDERING_HINT_FAST_MEASURE);
 }
 
 /* static */
@@ -836,7 +908,7 @@ nsFontMetricsPango::FamilyExists(nsIDeviceContext *aDevice,
 
     pango_context_list_families(context, &familyList, &n);
 
-    for (int i; i < n; i++) {
+    for (int i=0; i < n; i++) {
         const char *tmpname = pango_font_family_get_name(familyList[n]);
         if (!Compare(nsDependentCString(tmpname), name,
                      nsCaseInsensitiveCStringComparator())) {
@@ -1052,6 +1124,154 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
     delete[] spacing;
 }
 
+nsresult
+nsFontMetricsPango::GetTextDimensionsInternal(const gchar*        aString,
+                                              PRInt32             aLength,
+                                              PRInt32             aAvailWidth,
+                                              PRInt32*            aBreaks,
+                                              PRInt32             aNumBreaks,
+                                              nsTextDimensions&   aDimensions,
+                                              PRInt32&            aNumCharsFit,
+                                              nsTextDimensions&   aLastWordDimensions,
+                                              nsRenderingContextGTK *aContext)
+{
+    NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
+
+    // If we need to back up this state represents the last place
+    // we could break. We can use this to avoid remeasuring text
+    PRInt32 prevBreakState_BreakIndex = -1; // not known
+                                            // (hasn't been computed)
+    nscoord prevBreakState_Width = 0; // accumulated width to this point
+
+    // Initialize OUT parameters
+    GetMaxAscent(aLastWordDimensions.ascent);
+    GetMaxDescent(aLastWordDimensions.descent);
+    aLastWordDimensions.width = -1;
+    aNumCharsFit = 0;
+
+    // Iterate each character in the string and determine which font to use
+    nscoord width = 0;
+    PRInt32 start = 0;
+    nscoord aveCharWidth;
+    GetAveCharWidth(aveCharWidth);
+
+    while (start < aLength) {
+        // Estimate how many characters will fit. Do that by
+        // diving the available space by the average character
+        // width. Make sure the estimated number of characters is
+        // at least 1
+        PRInt32 estimatedNumChars = 0;
+
+        if (aveCharWidth > 0)
+            estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+
+        if (estimatedNumChars < 1)
+            estimatedNumChars = 1;
+
+        // Find the nearest break offset
+        PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+        PRInt32 breakIndex;
+        nscoord numChars;
+
+        // Find the nearest place to break that is less than or equal to
+        // the estimated break offset
+        if (aLength <= estimatedBreakOffset) {
+            // All the characters should fit
+            numChars = aLength - start;
+            breakIndex = aNumBreaks - 1;
+        } 
+        else {
+            breakIndex = prevBreakState_BreakIndex;
+            while (((breakIndex + 1) < aNumBreaks) &&
+                   (aBreaks[breakIndex + 1] <= estimatedBreakOffset)) {
+                ++breakIndex;
+            }
+
+            if (breakIndex == prevBreakState_BreakIndex) {
+                ++breakIndex; // make sure we advanced past the
+                // previous break index
+            }
+
+            numChars = aBreaks[breakIndex] - start;
+        }
+
+        // Measure the text
+        nscoord twWidth = 0;
+        if ((1 == numChars) && (aString[start] == ' '))
+            GetSpaceWidth(twWidth);
+        else if (numChars > 0)
+            GetWidth(&aString[start], numChars, twWidth, aContext);
+
+        // See if the text fits
+        PRBool  textFits = (twWidth + width) <= aAvailWidth;
+
+        // If the text fits then update the width and the number of
+        // characters that fit
+        if (textFits) {
+            aNumCharsFit += numChars;
+            width += twWidth;
+            start += numChars;
+
+            // This is a good spot to back up to if we need to so remember
+            // this state
+            prevBreakState_BreakIndex = breakIndex;
+            prevBreakState_Width = width;
+        }
+        else {
+            // See if we can just back up to the previous saved
+            // state and not have to measure any text
+            if (prevBreakState_BreakIndex > 0) {
+                // If the previous break index is just before the
+                // current break index then we can use it
+                if (prevBreakState_BreakIndex == (breakIndex - 1)) {
+                    aNumCharsFit = aBreaks[prevBreakState_BreakIndex];
+                    width = prevBreakState_Width;
+                    break;
+                }
+            }
+
+            // We can't just revert to the previous break state
+            if (0 == breakIndex) {
+                // There's no place to back up to, so even though
+                // the text doesn't fit return it anyway
+                aNumCharsFit += numChars;
+                width += twWidth;
+                break;
+            }
+
+            // Repeatedly back up until we get to where the text
+            // fits or we're all the way back to the first word
+            width += twWidth;
+            while ((breakIndex >= 1) && (width > aAvailWidth)) {
+                twWidth = 0;
+                start = aBreaks[breakIndex - 1];
+                numChars = aBreaks[breakIndex] - start;
+
+                if ((1 == numChars) && (aString[start] == ' '))
+                    GetSpaceWidth(twWidth);
+                else if (numChars > 0)
+                    GetWidth(&aString[start], numChars, twWidth,
+                             aContext);
+                width -= twWidth;
+                aNumCharsFit = start;
+                breakIndex--;
+            }
+            break;
+        }
+    }
+
+    aDimensions.width = width;
+    GetMaxAscent(aDimensions.ascent);
+    GetMaxDescent(aDimensions.descent);
+
+    /*    printf("aDimensions %d %d %d aLastWordDimensions %d %d %d aNumCharsFit %d\n",
+           aDimensions.width, aDimensions.ascent, aDimensions.descent,
+           aLastWordDimensions.width, aLastWordDimensions.ascent, aLastWordDimensions.descent,
+           aNumCharsFit); */
+
+    return NS_OK;
+}
+
 /* static */
 PRBool
 IsASCIIFontName(const nsString& aName)
@@ -1195,3 +1415,5 @@ CalculateWeight (PRUint16 aWeight)
 
     return (PangoWeight)fcWeights[fcWeight];
 }
+
+

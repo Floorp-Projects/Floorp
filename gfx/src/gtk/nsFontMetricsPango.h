@@ -257,6 +257,16 @@ private:
                               GdkGC *aGC, gint aX, gint aY,
                               PangoLayoutLine *aLine,
                               const nscoord *aSpacing);
+
+    nsresult GetTextDimensionsInternal(const gchar*        aString,
+                                       PRInt32             aLength,
+                                       PRInt32             aAvailWidth,
+                                       PRInt32*            aBreaks,
+                                       PRInt32             aNumBreaks,
+                                       nsTextDimensions&   aDimensions,
+                                       PRInt32&            aNumCharsFit,
+                                       nsTextDimensions&   aLastWordDimensions,
+                                       nsRenderingContextGTK *aContext);
 };
 
 class nsFontEnumeratorPango : public nsIFontEnumerator
