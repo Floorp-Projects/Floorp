@@ -52,8 +52,10 @@ DIRS		= profile
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = xulrun$(BIN_SUFFIX)
+DEFINES += -DXULRUNNER_PROGNAME=\"xulrun\"
 else
 PROGRAM = xulrunner-bin$(BIN_SUFFIX)
+DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
 endif
 
 REQUIRES = \
@@ -290,7 +292,7 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
-APP_NAME = XulRunner
+APP_NAME = XULRunner
 
 libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
