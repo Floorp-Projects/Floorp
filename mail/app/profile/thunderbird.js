@@ -40,6 +40,7 @@
 
 pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
 pref("browser.chromeURL","chrome://navigator/content/navigator.xul");
+pref("browser.hiddenWindowChromeURL", "chrome://messenger/content/hiddenWindow.xul");
 
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
 
