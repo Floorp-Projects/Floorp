@@ -441,6 +441,8 @@ nsImageBoxFrame::PaintImage(nsIPresContext* aPresContext,
 
   if (imgCon) {
     nsPoint p(rect.x, rect.y);
+    rect.x = 0;
+    rect.y = 0;
     aRenderingContext.DrawImage(imgCon, &rect, &p);
   }
 
