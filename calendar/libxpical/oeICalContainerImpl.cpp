@@ -832,20 +832,18 @@ oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleE
                 nsCOMPtr<oeIICal> tmpcalendar;
                 m_calendarArray->GetElementAt( i, getter_AddRefs(tmpcalendar) );
                 oeICalImpl *calendar = (oeICalImpl *)(&tmpcalendar);
-                EventList *tmplistptr = calendar->GetEventList();
-                while( tmplistptr && count<maxcount ) {
-                    if( tmplistptr->event ) {
-                        bool isbeginning,isallday;
-                        oeIICalEvent* tmpevent = tmplistptr->event;
-                        icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
-                        isallday = next.is_date;
-                        next.is_date = false;
-                        if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
-                            ((oeICalEventImpl *)tmpevent)->ChopAndAddEventToEnum( nextcheckdate, eventlist, isallday, isbeginning );
-                            count++;
-                        }
+                nsVoidArray *tmplistptr = calendar->GetEventList();
+                oeIICalEvent *tmpevent;
+                for ( PRInt32 j = 0 ; (count < maxcount) && (j < tmplistptr->Count()); ++j) {
+                    bool isbeginning,isallday;
+                    tmpevent = NS_STATIC_CAST(oeIICalEvent*, tmplistptr->ElementAt(j));
+                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
+                    isallday = next.is_date;
+                    next.is_date = false;
+                    if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
+                        ((oeICalEventImpl *)tmpevent)->ChopAndAddEventToEnum( nextcheckdate, eventlist, isallday, isbeginning );
+                        count++;
                     }
-                    tmplistptr = tmplistptr->next;
                 }
             }
             checkdate = nextcheckdate;

@@ -389,7 +389,7 @@ oeICalImpl::~oeICalImpl()
  */
 NS_IMPL_ISUPPORTS1(oeICalImpl, oeIICal)
 
-EventList *oeICalImpl::GetEventList()
+nsVoidArray *oeICalImpl::GetEventList()
 {
     return &m_eventlist;
 }
@@ -803,7 +803,7 @@ oeICalImpl::SetServer( const char *str ) {
                 return rv;
             }
             if( icalevent->ParseIcalComponent( vevent ) ) {
-                m_eventlist.Add( icalevent );
+                m_eventlist.AppendElement( icalevent );
                 icalevent->SetParent( this );
             } else {
                 icalevent->Release();
@@ -1022,7 +1022,7 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent,char **retid)
     icalfileset_free( stream );
 
     icalevent->AddRef();
-    m_eventlist.Add( icalevent );
+    m_eventlist.AppendElement( icalevent );
     ((oeICalEventImpl *)icalevent)->SetParent( this );
 
     PRUint32 observercount;
@@ -1187,11 +1187,18 @@ NS_IMETHODIMP oeICalImpl::FetchEvent( const char *id, oeIICalEvent **ev)
         return NS_OK;
     }
 
-    oeIICalEvent* event = m_eventlist.GetEventById( id );
-    if( event != nsnull ) {
-        event->AddRef();
+    *ev = nsnull; //initialize to null
+
+    oeIICalEvent *event;
+    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+        event = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
+        // XXX Evil cast
+        if (event && ((oeICalEventImpl *)event)->matchId(id)) {
+            *ev = event;
+            NS_ADDREF(*ev);
+            break;
+        }
     }
-    *ev = event;
     return NS_OK;
 }
 
@@ -1269,7 +1276,7 @@ oeICalImpl::DeleteEvent( const char *id )
     oeIICalEvent *icalevent;
     FetchEvent( id , &icalevent );
 
-    m_eventlist.Remove( id );
+    m_eventlist.RemoveElement(icalevent);
     
     PRUint32 observercount;
     m_observerlist->Count(&observercount);
@@ -1292,6 +1299,31 @@ oeICalImpl::DeleteEvent( const char *id )
 }
 
 /**
+ * recurCompareFunc
+ *
+ * helper for GetAllEvents, compares two events by either the next recurrance,
+ * or the previous if no next
+ */
+int
+recurCompareFunc(const void* aElement1, const void* aElement2, void* aData)
+{
+    oeICalEventImpl* event1 = (oeICalEventImpl *)aElement1;
+    oeICalEventImpl* event2 = (oeICalEventImpl *)aElement2;
+    icaltimetype* now = (icaltimetype *)aData;
+
+    icaltimetype time1 = event1->GetNextRecurrence(*now, nsnull);
+    if (icaltime_is_null_time(time1)) {
+        time1 = event1->GetPreviousOccurrence(*now);
+    }
+
+    icaltimetype time2 = event2->GetNextRecurrence(*now, nsnull);
+    if (icaltime_is_null_time(time2)) {
+        time2 = event2->GetPreviousOccurrence(*now);
+    }
+    return icaltime_compare(time1, time2); 
+}
+
+/**
 *
 *   GetAllEvents
 *
@@ -1302,7 +1334,6 @@ oeICalImpl::DeleteEvent( const char *id )
 *   -----(Last occurence of Event1)---(Last occurence of Event2)----(Now)----(Next occurence of Event3)---->
 *   (Note that Event1 and Event2 will not recur in the future.)
 */
-
 NS_IMETHODIMP
 oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
 {
@@ -1315,21 +1346,8 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    //Create an array to temporarily store the events in
-    //Events added to the enumerator will be removed from this array
-    nsCOMPtr<nsISupportsArray> eventArray;
-    NS_NewISupportsArray(getter_AddRefs(eventArray));
-    if (eventArray == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    //Fill in the array
-    EventList *tmplistptr = &m_eventlist;
-    while( tmplistptr ) {
-        if( tmplistptr->event ) {
-            eventArray->AppendElement( tmplistptr->event );
-        }
-        tmplistptr = tmplistptr->next;
-    }
+    nsVoidArray eventlist;
+    eventlist = m_eventlist;
 
     //Calculate the present time in milliseconds
     PRTime nowinms = PR_Now();
@@ -1342,85 +1360,14 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
     //use Now-1 so we ensure we consider Now in the calculation
     icaltime_adjust( &now, 0, 0, 0, -1 );
 
-    PRUint32 num;
-    oeIICalEvent* oldestEvent;
+    // Sort the eventlist
+    eventlist.Sort(recurCompareFunc, &now);
 
-    //This do-while loop finds the last occurences of events that don't recur in the future
-    //and adds them to the enumerator starting with the oldest occuring event
-    do {
-        icaltimetype oldest;
-        eventArray->Count( &num );
-        int index_of_oldest=0;
-        oldestEvent=nsnull;
-        //This loop finds the oldest between the last instances of events in the passed
-        //that don't have a recurrence in the future.
-        for ( unsigned int i=0; i<num; i++ ) {
-            nsCOMPtr<oeIICalEvent> tmpcomp;
-            eventArray->GetElementAt( i, getter_AddRefs( tmpcomp ) );
-            oeIICalEvent* tmpevent = tmpcomp;
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( now, nsnull );
-            if( !icaltime_is_null_time( next ) )
-                continue;
-            icaltimetype previous = ((oeICalEventImpl *)tmpevent)->GetPreviousOccurrence( checkdate );
-            if( !icaltime_is_null_time( previous ) && ( !oldestEvent || (icaltime_compare( oldest, previous ) > 0) ) ) {
-                oldest = previous;
-                index_of_oldest = i;
-                oldestEvent = tmpevent;
-            }
-        }
-
-        //The oldest event is added to the enum and removed from the array
-        //so the loop can continue
-        if( oldestEvent ) {
-            eventEnum->AddEvent( oldestEvent );
-            eventArray->RemoveElementAt( index_of_oldest );
-        }
-
-    } while ( oldestEvent );
-
-    //start with Now
-    checkdate = ConvertFromPrtime( nowinms );
-    
-    oeIICalEvent* soonestEvent;
-    //This do-while loop finds the next occurences of events
-    //and adds them to the enumerator starting with the soonest occuring event
-    do {
-        int index_of_soonest=0;
-        icaltimetype soonest;
-        eventArray->Count( &num );
-        soonestEvent=nsnull;
-        //start checking from checkdate-1 which ensures we consider 
-        //events happening right on checkdate as well
-        icaltime_adjust( &checkdate, 0, 0, 0, -1 );
-
-        for ( unsigned int i=0; i<num; i++ ) {
-            nsCOMPtr<oeIICalEvent> tmpcomp;
-            eventArray->GetElementAt( i, getter_AddRefs( tmpcomp ) );
-            oeIICalEvent* tmpevent = tmpcomp;
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull  );
-            next.is_date = false;
-            if( !icaltime_is_null_time( next ) && ( !soonestEvent || (icaltime_compare( soonest, next ) > 0) ) ) {
-                soonest = next;
-                index_of_soonest = i;
-                soonestEvent = tmpevent;
-            }
-        }
-
-        if( soonestEvent ) {
-            eventEnum->AddEvent( soonestEvent );
-            eventArray->RemoveElementAt( index_of_soonest );
-            //continue checking from soonest instead of Now
-            checkdate = soonest;
-        }
-
-    } while ( soonestEvent );
-
-    #ifdef ICAL_DEBUG
-    //There shouldn't be any events in the array when we get here
-    eventArray->Count( &num );
-    if( num )
-        printf( "oeICalImpl::GetAllEvents - WARNING: Not all events were processed\n" );
-    #endif
+    PRUint32 num2;
+    num2 = eventlist.Count();
+    for (PRUint32 j = 0; j < num2; ++j) {
+        eventEnum->AddEvent((oeICalEventImpl *)(eventlist[j]));
+    }
 
     *resultList = eventEnum;
     // bump ref count
@@ -1505,8 +1452,28 @@ oeICalImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **eventlist ) {
     return GetEventsForRange(checkdateinms ,checkenddateinms, eventlist );
 }
 
+    
+class eventOccurence {
+public:
+  PRTime start;
+  nsCOMPtr<oeIICalEvent> event;
+  bool isbeginning;
+  bool isallday;
+};
+
+int
+occurCompareFunc(const void* aElement1, const void* aElement2, void* aData)
+{
+    eventOccurence* occur1 = (eventOccurence *)aElement1;
+    eventOccurence* occur2 = (eventOccurence *)aElement2;
+
+    return (occur1->start - occur2->start);
+}
+
+
 NS_IMETHODIMP
-oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
+oeICalImpl::GetEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimpleEnumerator **aResult)
+{
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalImpl::GetEventsForRange()\n" );
 #endif
@@ -1514,113 +1481,116 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
     oeEventEnumerator *eventEnum = new oeEventEnumerator();
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
-    *eventlist = eventEnum;
-    NS_ADDREF(*eventlist);
+    *aResult = eventEnum;
+    NS_ADDREF(*aResult);
 
-    struct icaltimetype checkdate = ConvertFromPrtime( checkdateinms );
-    icaltime_adjust( &checkdate, 0, 0, 0, -1 );
-    
-    struct icaltimetype checkenddate = ConvertFromPrtime( checkenddateinms );
+    struct icaltimetype checkdate = ConvertFromPrtime(aBeginDate);
+    icaltime_adjust(&checkdate, 0, 0, 0, -1);
+    struct icaltimetype checkenddate = ConvertFromPrtime(aEndDate);
 
-    icaltimetype nextcheckdate;
-    do {
-        nextcheckdate = GetNextEvent( checkdate );
-        if( icaltime_compare( nextcheckdate, checkenddate ) >= 0 )
-            break;
-        if( !icaltime_is_null_time( nextcheckdate )) {
-            EventList *tmplistptr = &m_eventlist;
-            while( tmplistptr ) {
-                if( tmplistptr->event ) {
-                    oeIICalEvent* tmpevent = tmplistptr->event;
-                    bool isbeginning;
-                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
-                    bool isallday = next.is_date;
-                    next.is_date = false;
-                    if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
-                        ((oeICalEventImpl *)tmpevent)->ChopAndAddEventToEnum( nextcheckdate, eventlist, isallday, isbeginning );
-                    }
+    nsVoidArray occurList;
+    oeIICalEvent *tmpevent;
+    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+        tmpevent = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
+        struct icaltimetype check = checkdate;
+        bool isbeginning;
+        check = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence(check, &isbeginning);
+        while (!icaltime_is_null_time(check) && (icaltime_compare(check, checkenddate) < 0)) {
+            eventOccurence *occur = new eventOccurence();
+            if (!occur) {
+                // I whish i knew a better way to do this cleanup stuff..
+                for (PRInt32 i = 0 ; i < occurList.Count(); ++i) {
+                    eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[i]);
+                    delete occur;
                 }
-                tmplistptr = tmplistptr->next;
+                return NS_ERROR_OUT_OF_MEMORY;
             }
-            checkdate = nextcheckdate;
+            occur->start = ConvertToPrtime(check);
+            occur->event = tmpevent;
+            occur->isbeginning = isbeginning;
+            occur->isallday = check.is_date;
+            occurList.AppendElement(occur);
+            check = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence(check, &isbeginning);
         }
-    } while ( !icaltime_is_null_time( nextcheckdate ) );
+    }
+    occurList.Sort(occurCompareFunc, nsnull);
+
+    for (PRInt32 i = 0 ; i < occurList.Count(); ++i) {
+        eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[i]);
+        tmpevent = NS_STATIC_CAST(oeIICalEvent*, occur->event);
+        ((oeICalEventImpl *)tmpevent)->
+            ChopAndAddEventToEnum(ConvertFromPrtime(occur->start), aResult,
+                                   occur->isallday, occur->isbeginning );
+        delete occur;
+    }
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
+oeICalImpl::GetFirstEventsForRange(PRTime aBeginDate, PRTime aEndDate, nsISimpleEnumerator **aResult)
+{
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::GetFirstEventsForRange()\n" );
 #endif
     oeEventEnumerator *eventEnum = new oeEventEnumerator();
     if (!eventEnum)
         return NS_ERROR_OUT_OF_MEMORY;
-    *eventlist = eventEnum;
-    NS_ADDREF(*eventlist);
+    *aResult = eventEnum;
+    NS_ADDREF(*aResult);
 
     nsCOMPtr<nsISupportsArray> eventArray;
     NS_NewISupportsArray(getter_AddRefs(eventArray));
     if (eventArray == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    EventList *tmplistptr = &m_eventlist;
-    while( tmplistptr ) {
-        if( tmplistptr->event ) {
-            eventArray->AppendElement( tmplistptr->event );
-        }
-        tmplistptr = tmplistptr->next;
+    oeIICalEvent *event;
+    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+        event = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
+        eventArray->AppendElement(event);
     }
 
-    struct icaltimetype checkdate = ConvertFromPrtime( checkdateinms );
-    icaltime_adjust( &checkdate, 0, 0, 0, -1 );
+    struct icaltimetype checkdate = ConvertFromPrtime(aBeginDate);
+    icaltime_adjust(&checkdate, 0, 0, 0, -1);
 
-    struct icaltimetype checkenddate = ConvertFromPrtime( checkenddateinms );
+    struct icaltimetype checkenddate = ConvertFromPrtime(aEndDate);
 
-    icaltimetype nextcheckdate;
-    do {
-        PRUint32 num;
-        icaltimetype soonest = icaltime_null_time();
-        eventArray->Count( &num );
-        for ( unsigned int i=0; i<num; i++ ) {
-            nsCOMPtr<oeIICalEvent> tmpcomp;
-            eventArray->GetElementAt( i, getter_AddRefs( tmpcomp ) );
-            oeIICalEvent* tmpevent = tmpcomp;
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, nsnull );
-            next.is_date = false;
-            if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
-                soonest = next;
-            }
-        }
-
-        if ( icaltime_compare( soonest, checkenddate ) > 0 ) {
-            nextcheckdate = icaltime_null_time();
-        } else 
-            nextcheckdate = soonest;
-
-        if( !icaltime_is_null_time( nextcheckdate )) {
-
-            for ( unsigned int i=0; i<num; i++ ) {
-                nsCOMPtr<oeIICalEvent> tmpcomp;
-                eventArray->GetElementAt( i, getter_AddRefs( tmpcomp ) );
-                oeIICalEvent* tmpevent = tmpcomp;
-                bool isbeginning;
-                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
-                bool isallday = next.is_date;
-                next.is_date = false;
-                if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
-                    ((oeICalEventImpl *)tmpevent)->ChopAndAddEventToEnum( nextcheckdate, eventlist, isallday, isbeginning );
-                    eventArray->RemoveElementAt( i );
-                    icaltime_adjust( &nextcheckdate, 0, 0, 0, -1 );
-                    break;
+    nsVoidArray occurList;
+    oeIICalEvent *tmpevent;
+    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+        tmpevent = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
+        struct icaltimetype check = checkdate;
+        bool isbeginning;
+        check = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence(check, &isbeginning);
+        if (!icaltime_is_null_time(check) && (icaltime_compare(check, checkenddate) < 0)) {
+            eventOccurence *occur = new eventOccurence();
+            if (!occur) {
+                // I whish i knew a better way to do this cleanup stuff..
+                for (PRInt32 j = 0 ; i < occurList.Count(); ++j) {
+                    eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[j]);
+                    delete occur;
                 }
+                return NS_ERROR_OUT_OF_MEMORY;
             }
-            checkdate = nextcheckdate;
+            occur->start = ConvertToPrtime(check);
+            occur->event = tmpevent;
+            occur->isbeginning = isbeginning;
+            occur->isallday = check.is_date;
+            occurList.AppendElement(occur);
+            check = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence(check, &isbeginning);
         }
-    } while ( !icaltime_is_null_time( nextcheckdate ) );
+    }
+    occurList.Sort(occurCompareFunc, nsnull);
 
-    eventArray->Clear();
+    for (PRInt32 i = 0 ; i < occurList.Count(); ++i) {
+        eventOccurence *occur = NS_STATIC_CAST(eventOccurence*, occurList[i]);
+        tmpevent = NS_STATIC_CAST(oeIICalEvent*, occur->event);
+        ((oeICalEventImpl *)tmpevent)->
+            ChopAndAddEventToEnum(ConvertFromPrtime(occur->start), aResult,
+                                  occur->isallday, occur->isbeginning );
+        delete occur;
+    }
+
     return NS_OK;
 }
 
@@ -1630,17 +1600,14 @@ icaltimetype oeICalImpl::GetNextEvent( icaltimetype starting ) {
 #endif
     icaltimetype soonest = icaltime_null_time();
     
-    EventList *tmplistptr = &m_eventlist;
-    while( tmplistptr ) {
-        if( tmplistptr->event ) {
-            oeIICalEvent* tmpevent = tmplistptr->event;
-            icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( starting, nsnull );
-            next.is_date = false;
-            if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
-                soonest = next;
-            }
+    oeIICalEvent *tmpevent;
+    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+        tmpevent = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
+        icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( starting, nsnull );
+        next.is_date = false;
+        if( !icaltime_is_null_time( next ) && ( icaltime_is_null_time( soonest ) || (icaltime_compare( soonest, next ) > 0) ) ) {
+            soonest = next;
         }
-        tmplistptr = tmplistptr->next;
     }
     return soonest;
 }
@@ -1665,20 +1632,17 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
     do {
         nextcheckdate = GetNextEvent( checkdate );
         if( !icaltime_is_null_time( nextcheckdate )) {
-            EventList *tmplistptr = &m_eventlist;
-            while( tmplistptr && count<maxcount ) {
-                if( tmplistptr->event ) {
-                    bool isbeginning,isallday;
-                    oeIICalEvent* tmpevent = tmplistptr->event;
-                    icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
-                    isallday = next.is_date;
-                    next.is_date = false;
-                    if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
-                        ((oeICalEventImpl *)tmpevent)->ChopAndAddEventToEnum( nextcheckdate, eventlist, isallday, isbeginning );
-                        count++;
-                    }
+            oeIICalEvent *tmpevent;
+            for (PRInt32 i = 0 ; (count < maxcount) && (i < m_eventlist.Count()); ++i) {
+                bool isbeginning,isallday;
+                tmpevent = NS_STATIC_CAST(oeIICalEvent*, m_eventlist[i]);
+                icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate, &isbeginning );
+                isallday = next.is_date;
+                next.is_date = false;
+                if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
+                    ((oeICalEventImpl *)tmpevent)->ChopAndAddEventToEnum( nextcheckdate, eventlist, isallday, isbeginning );
+                    count++;
                 }
-                tmplistptr = tmplistptr->next;
             }
             checkdate = nextcheckdate;
         }
@@ -1858,76 +1822,73 @@ void oeICalImpl::SetupAlarmManager() {
     icaltimetype now = ConvertFromPrtime( todayinms );
 
     icaltimetype nextalarm = icaltime_null_time();
-    EventList *tmplistptr = &m_eventlist;
 
     int processmissed = -1; // -1 means the value has not been read from the preferences. 0 or 1 are valid values.
 
-    while( tmplistptr ) {
-        oeICalEventImpl *event = (oeICalEventImpl *)(tmplistptr->event);
-        if( event ) {
-            icaltimetype begin=icaltime_null_time();
-            begin.year = 1970; begin.month=1; begin.day=1;
-            icaltimetype alarmtime = begin;
-            do {
-                alarmtime = event->GetNextAlarmTime( alarmtime );
-                if( icaltime_is_null_time( alarmtime ) )
-                    break;
-                if( icaltime_compare( alarmtime, now ) <= 0 ) {
-                    #ifdef ICAL_DEBUG
-                    printf( "ALARM WENT OFF: %s\n", icaltime_as_ical_string( alarmtime ) );
-                    #endif
-                    
-                    nsresult rv;
-                    if( processmissed == -1 ) {
-                        nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-                        if ( NS_SUCCEEDED(rv) && prefBranch ) {
-                            rv = prefBranch->GetBoolPref("calendar.alarms.showmissed", &processmissed);
-                        } else {
-                            processmissed = true; //if anything goes wrong just consider the default setting
-                        }
+    oeICalEventImpl *event;
+    for (PRInt32 i = 0 ; i < m_eventlist.Count(); ++i) {
+        event = NS_STATIC_CAST(oeICalEventImpl*, m_eventlist[i]);
+        icaltimetype begin=icaltime_null_time();
+        begin.year = 1970; begin.month=1; begin.day=1;
+        icaltimetype alarmtime = begin;
+        do {
+            alarmtime = event->GetNextAlarmTime( alarmtime );
+            if( icaltime_is_null_time( alarmtime ) )
+                break;
+            if( icaltime_compare( alarmtime, now ) <= 0 ) {
+                #ifdef ICAL_DEBUG
+                printf( "ALARM WENT OFF: %s\n", icaltime_as_ical_string( alarmtime ) );
+                #endif
+
+                nsresult rv;
+                if( processmissed == -1 ) {
+                    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+                    if ( NS_SUCCEEDED(rv) && prefBranch ) {
+                        rv = prefBranch->GetBoolPref("calendar.alarms.showmissed", &processmissed);
+                    } else {
+                        processmissed = true; //if anything goes wrong just consider the default setting
                     }
+                }
 
-                    if( !processmissed ) {
-                        time_t timediff = icaltime_as_timet( now ) - icaltime_as_timet( alarmtime );
-                        if( timediff > 30 ) //if alarmtime is older than 30 seconds it won't be processed.
-                            continue;
-                    }
+                if( !processmissed ) {
+                    time_t timediff = icaltime_as_timet( now ) - icaltime_as_timet( alarmtime );
+                    if( timediff > 30 ) //if alarmtime is older than 30 seconds it won't be processed.
+                        continue;
+                }
 
-                    UpdateCalendarIcon( true );
+                UpdateCalendarIcon( true );
 
-                    oeIICalEventDisplay* eventDisplay;
-                    rv = NS_NewICalEventDisplay( event, &eventDisplay );
+                oeIICalEventDisplay* eventDisplay;
+                rv = NS_NewICalEventDisplay( event, &eventDisplay );
+                #ifdef ICAL_DEBUG
+                if( NS_FAILED( rv ) ) {
+                    printf( "oeICalImpl::SetupAlarmManager() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
+                }
+                #endif
+                icaltimetype eventtime = event->CalculateEventTime( alarmtime );
+                eventDisplay->SetDisplayDate( ConvertToPrtime( eventtime ) );
+                PRUint32 observercount;
+                m_observerlist->Count( &observercount );
+                for( unsigned int i=0; i<observercount; i++ ) {
+                    nsCOMPtr<oeIICalObserver>observer;
+                    m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
+                    rv = observer->OnAlarm( eventDisplay );
                     #ifdef ICAL_DEBUG
                     if( NS_FAILED( rv ) ) {
-                        printf( "oeICalImpl::SetupAlarmManager() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
+                        printf( "oeICalImpl::SetupAlarmManager() : WARNING Call to observer's onAlarm() unsuccessful: %x\n", rv );
                     }
                     #endif
-                    icaltimetype eventtime = event->CalculateEventTime( alarmtime );
-                    eventDisplay->SetDisplayDate( ConvertToPrtime( eventtime ) );
-                    PRUint32 observercount;
-                    m_observerlist->Count( &observercount );
-                    for( unsigned int i=0; i<observercount; i++ ) {
-                        nsCOMPtr<oeIICalObserver>observer;
-                        m_observerlist->QueryElementAt( i, NS_GET_IID(oeIICalObserver), getter_AddRefs(observer));
-                        rv = observer->OnAlarm( eventDisplay );
-                        #ifdef ICAL_DEBUG
-                        if( NS_FAILED( rv ) ) {
-                            printf( "oeICalImpl::SetupAlarmManager() : WARNING Call to observer's onAlarm() unsuccessful: %x\n", rv );
-                        }
-                        #endif
-                    }
-                    NS_RELEASE( eventDisplay );
                 }
-                else {
-                    if( icaltime_is_null_time( nextalarm ) )
-                        nextalarm = alarmtime;
-                    else if( icaltime_compare( nextalarm, alarmtime ) > 0 )
-                        nextalarm = alarmtime;
-                    break;
-                }
-            } while ( 1 );
-        }
-        tmplistptr = tmplistptr->next;
+                NS_RELEASE( eventDisplay );
+            }
+            else {
+                if( icaltime_is_null_time( nextalarm ) )
+                    nextalarm = alarmtime;
+                else if( icaltime_compare( nextalarm, alarmtime ) > 0 )
+                    nextalarm = alarmtime;
+                break;
+            }
+        } while ( 1 );
     }
 
     TodoList *tmptodolistptr = &m_todolist;

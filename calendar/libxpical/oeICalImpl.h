@@ -44,6 +44,7 @@
 #include "nsITimer.h"
 #include "oeICalEventImpl.h"
 #include "oeICalTodoImpl.h"
+#include "nsVoidArray.h"
 
 #define OE_ICAL_CID \
 { 0x0a8c5de7, 0x0d19, 0x4b95, { 0x82, 0xf4, 0xe0, 0xaf, 0x92, 0x45, 0x32, 0x27 } }
@@ -54,69 +55,6 @@ extern "C" {
     #include "ical.h"
 }
 
-class EventList {
-public:
-    oeIICalEvent* event;
-    EventList* next;
-    EventList() {
-        event = nsnull;
-        next = nsnull;
-    }
-    ~EventList() {
-        if( event )
-            event->Release();
-        if( next )
-            delete next;
-    }
-    void Add( oeIICalEvent* e) {
-        if( !event ) {
-            event = e;
-        } else {
-            if( !next ) {
-                next = new EventList();
-            }
-            next->Add( e );
-        }
-    }
-    oeIICalEvent* GetEventById( const char *id ) {
-        if( !event )
-            return nsnull;
-        if( ((oeICalEventImpl *)event)->matchId( id ) )
-            return event;
-        if( next )
-            return next->GetEventById( id );
-        return nsnull;
-    }
-    void Remove( const char *id ) {
-        if( !event )
-            return;
-        if( ((oeICalEventImpl *)event)->matchId( id ) ) {
-            event->Release();
-            if( next ) {
-                event = next->event;
-                EventList *tmp = next;
-                next = next->next;
-                tmp->next = nsnull;
-                tmp->event = nsnull;
-                delete tmp;
-            } else {
-                event = nsnull;
-            }
-        } else {
-            if( next )
-                next->Remove( id );
-        }
-    }
-/*    int Count() {
-        int result=0;
-        if( !event )
-            return 0;
-        result++;
-        if( next )
-            result += next->Count();
-        return result;
-    }*/
-};
 
 class TodoList {
 public:
@@ -241,13 +179,13 @@ class oeICalImpl : public oeIICal
         NS_DECL_OEIICAL
         void SetupAlarmManager();
         icaltimetype GetNextEvent( icaltimetype starting );
-        EventList *GetEventList();
+        nsVoidArray *GetEventList();
 private:
     nsCOMPtr<nsISupportsArray> m_observerlist;
     nsCOMPtr<nsISupportsArray> m_todoobserverlist;
     bool m_batchMode;
     bool m_suppressAlarms;
-    EventList m_eventlist;
+    nsVoidArray m_eventlist;
     TodoList m_todolist;
     nsITimer *m_alarmtimer;
     char serveraddr[200];
