@@ -174,8 +174,9 @@
   for third-parties to unscramble, or <i>decrypt,</i> information flowing over
   the connection. Encrypted information can be decrypted only by someone who possesses
   the appropriate key. See also <a href="#public-key_cryptography">public-key cryptography</a>.</p>
-<p><b id="encryption_certificate">encryption certificate.</b>&nbsp; A certificate whose public key corresponds
-  to a private key used for encryption only. Encryption certificates are not used
+<p><b id="encryption_certificate">encryption certificate.</b>&nbsp;
+  A <a href="#certificate">certificate</a> whose public key is used for encryption only.
+  Encryption certificates are not used
   for signing operations. See also <a href="#dual_key_pairs">dual key pairs</a>,
 <a href="#signing_certificate">signing certificate</a>.</p>
 <p><b id="encryption_key">encryption
@@ -459,7 +460,7 @@ or search terms.</p>
 <p><b id="signing_key">signing key.</b>&nbsp;
   A private key used for signing only. A signing key and its equivalent public
   key, together with an <a href="#encryption_key">encryption key</a> and
-  its equivalent public key, constitute <a href="#dual_key_pairs">dual key
+  its equivalent private key, constitute <a href="#dual_key_pairs">dual key
   pairs</a>.</p>
 <p><b id="slot">slot.</b>&nbsp;A
   piece of hardware, or its equivalent in software, that is controlled by a
