@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.4 1998/07/29 03:43:33 clayton Exp $
+# $Id: Makefile.PL,v 1.5 1998/07/29 08:27:00 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -66,7 +66,7 @@ if ($sslopt =~ /^n/i)
    $ssl_def = "-DUSE_SSL";
 }
 
-if ($osname eq 'MSWin32')
+if ($osname =~ /mswin/i)
 {
    if ($ssl_def)
    {
