@@ -10,7 +10,7 @@
         onload="parent.onPanelLoaded('am-serverwithnoidentities.xul');"
         align="vertical">
 
-  <html:script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
+  <script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
 
   <box class="header" align="horizontal">
     <titledbutton class="left-header-text" value="&accountTitle.label;"/>
@@ -18,21 +18,22 @@
     <titledbutton class="right-header-text" value=""/>
   </box>
 
-  <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
-        <html:table width="100%">
-          <html:colgroup>
-            <html:col width="1*"/>
-            <html:col width="0*"/>
-          </html:colgroup>
-          <html:tr><html:td>
-	      <html:label for="server.prettyName">&accountName.label;</html:label>
-          </html:td><html:td>
-	      <html:input type="text" size="30" name="server.prettyName" id="server.prettyName" flex="100%"/>
-          </html:td></html:tr>
-        </html:table>
-  <spring flex="100%"/>
+  <html class="secDesc">&accountSettingsDesc.label;</html>
+  <grid>
+    <columns>
+      <column flex="1"/>
+      <column flex="2"/>
+    </columns>
+    <rows>
+      <row>
+        <text class="label" value="&accountName.label;"/>
+        <html:input type="text" size="30" name="server.prettyName" id="server.prettyName"/>
+      </row>
+    </rows>
+  </grid>
+  <spring flex="1"/>
   <box align="vertical">
-    <html:div>&localPath.label;</html:div>
+    <text value="&localPath.label;"/>
     <html:input type="text" size="60" name="server.localPath" datatype="nsIFileSpec"/>
   </box>
 </window>

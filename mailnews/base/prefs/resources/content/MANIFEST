@@ -25,6 +25,7 @@ AccountManager.js
 ispUtils.js
 accountUtils.js
 am-main.xul
+am-main.js
 am-identity-advanced.xul
 am-identity-advanced.js
 am-server.xul

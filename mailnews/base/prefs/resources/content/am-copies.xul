@@ -11,9 +11,9 @@
       onload="parent.onPanelLoaded('am-copies.xul');"
       align="vertical">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
-<html:script src="chrome://messenger/content/am-copies.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
+<script src="chrome://messenger/content/am-copies.js"/>
 
 <html:input type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
 <html:input type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
@@ -21,54 +21,53 @@
 <html:input type="hidden" name="identity.email" id="identity.email"/>
 
     <box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&copyAndFolderTitle.label;"/>
+      <text class="left-header-text" value="&copyAndFolderTitle.label;"/>
       <spring class="header-spring" flex="1"/>
-      <titledbutton class="right-header-text" value=""/>
+      <text class="right-header-text" value=""/>
     </box>
-<box align="vertical">
-<html:div>&sendingPrefix.label;</html:div>
+  <text value="&sendingPrefix.label;"/>
 
-  <html:div>
-    <html:input name="identity.doFcc" id="identity.doFcc" type="checkbox"/>
-    <html:label for="identity.doFcc">&fccMailFolder.label;</html:label>
+  <box>
+    <box flex="1">
+      <html:input name="identity.doFcc" id="identity.doFcc" type="checkbox"/>
+      <html:label for="identity.doFcc" flex="1">&fccMailFolder.label;</html:label>
+    </box>
 
 	<!-- name="identity.fccFolder" -->
-	<box align="horizontal" style="display:inline">
-		<menu id="msgFccFolderPicker"/>
-		<spring flex="100%"/>
+	<box align="horizontal" flex="2">
+		<menu id="msgFccFolderPicker" flex="1"/>
 	</box>
-  </html:div>
-  <html:div>
+  </box>
+  <box>
     <html:input name="identity.bccSelf" id="identity.bccSelf" type="checkbox"/>
-    <html:label for="identity.bccSelf">&bccAccount.label; <html:div style="display:inline" before=" &lt;" id="bccemail" after="&gt;"/>
+    <html:label for="identity.bccSelf"><text before="&bccAccount.label; &lt;" id="bccemail" after="&gt;"/>
 </html:label>
-  </html:div>
-  <html:div>
+  </box>
+  <box>
     <html:input name="identity.bccOthers" id="identity.bccOthers" type="checkbox"/>
     <html:label for="identity.bccOthers">&bccAddress.label;</html:label>
     <html:input type="text" name="identity.bccList"/>
-  </html:div>
-</box>
-<spring class="spacer"/>
-<spring class="spacer"/>
-<html:div><html:b>&specialFolderTitle.label;</html:b></html:div>
-<box align="vertical" flex="100%">
-  <box align="horizontal">
-    <html:div flex="34%">&draftMailFolder.label;</html:div>
-    <!-- name="identity.draftFolder" -->
-    <box align="horizontal">
-        <menu id="msgDraftsFolderPicker"/>
-        <spring flex="100%"/>
-    </box>
   </box>
-  <box align="horizontal">
-    <html:div flex="34%">&templateMailFolder.label;</html:div>
-    <!-- name="identity.stationeryFolder " -->
-    <box align="horizontal">
-      <menu id="msgStationeryFolderPicker"/>
-      <spring flex="100%"/>
-    </box>
-  </box>
-</box>
 
+<spring class="spacer"/>
+<spring class="spacer"/>
+<text value="&specialFolderTitle.label;"/>
+<grid>
+  <columns>
+    <column flex="1"/>
+    <column flex="2"/>
+  </columns>
+  <rows>
+    <row>
+      <text value="&draftMailFolder.label;"/>
+      <!-- name="identity.draftFolder" -->
+      <menu id="msgDraftsFolderPicker"/>
+    </row>
+    <row>
+      <text value="&templateMailFolder.label;"/>
+      <!-- name="identity.stationeryFolder " -->
+      <menu id="msgStationeryFolderPicker"/>
+    </row>
+  </rows>
+</grid>
 </window>

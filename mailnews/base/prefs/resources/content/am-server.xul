@@ -8,7 +8,7 @@
         xmlns:html="http://www.w3.org/TR/REC-html40"
         class="dialog"
         onload="parent.onPanelLoaded('am-server.xul');"
-        align="vertical">
+        orient="vertical">
 
   <script src="chrome://messenger/content/am-server.js"/>
   <script src="chrome://global/content/strres.js"/>
@@ -17,129 +17,132 @@
   <html:input type="hidden" name="server.hostName" id="server.hostName"/>
   <html:input type="hidden" name="server.username" id="server.username"/>
 
-  <box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&serverSettings.label;"/>
+  <box class="header" orient="horizontal">  
+    <text class="left-header-text" value="&serverSettings.label;"/>
     <spring class="header-spring" flex="1"/>
-    <titledbutton class="right-header-text" value=""/>
+    <text class="right-header-text" value=""/>
   </box>
 
-  <html:table>
-  <html:tr>
-    <html:td>&serverType.label;</html:td>
-    <html:td><html:div flex="80%" id="servertype.verbose"/></html:td>
-  </html:tr>
-
-  <html:tr>
-    <html:td>&serverName.label;</html:td>
-    <html:td><html:div flex="80%" id="servername.verbose"/></html:td>
-  </html:tr>
-
-    <html:tr>
-      <html:td>&userName.label;</html:td>
-      <html:td><html:div id="username.verbose"/></html:td>
-    </html:tr>
-  </html:table>
-  <html:div id="serverPrefContainer" style="display: none">
-  <html:div><html:input name="server.isSecure"
+  <grid>
+    <columns>
+      <column/>
+      <column/>
+    </columns>
+    <rows>      
+      <row>
+        <text class="label" value="&serverType.label;"/>
+        <text class="label" id="servertype.verbose"/>
+      </row>
+      <row>
+        <text class="label" value="&serverName.label;"/>
+        <text class="label" id="servername.verbose"/>
+      </row>
+      <row>
+        <text class="label" value="&userName.label;"/>
+        <text class="label" id="username.verbose"/>
+      </row>
+    </rows>
+  </grid>
+  <spring class="spacer"/>
+  <box id="serverPrefContainer" hidden="true" orient="vertical">
+  <box orient="horizontal"><html:input name="server.isSecure"
                         id="server.isSecure"
                         type="checkbox"/>
             <html:label for="server.isSecure">&isSecure.label;</html:label>
-  </html:div>
-  <html:div><html:input name="server.rememberPassword"
+  </box>
+  <box orient="horizontal"><html:input name="server.rememberPassword"
                         id="server.rememberPassword"
                         type="checkbox"/>
             <html:label for="server.rememberPassword">&savePassword.label;</html:label>
-  </html:div>
-  <html:div><html:input name="server.doBiff"
+  </box>
+  <box orient="horizontal"><html:input name="server.doBiff"
                         id="server.doBiff"
                         type="checkbox"/>
             <html:label for="server.doBiff">&biffStart.label;</html:label>
             <html:input name="server.biffMinutes" type="text" size="3"/>
             &biffEnd.label;
-  </html:div>
-  <html:div style="margin-left: 2em">
+  </box>
+  <box style="margin-left: 2em">
     <html:input name="server.downloadOnBiff"
                 id="server.downloadOnBiff"
                 type="checkbox"/>
     <html:label for="server.downloadOnBiff">&downloadOnBiff.label;</html:label>
-  </html:div>
-  <html:div><html:input name="pop3.leaveMessagesOnServer" id="pop3.leaveMessagesOnServer" type="checkbox"/>
+  </box>
+  <box><html:input name="pop3.leaveMessagesOnServer" id="pop3.leaveMessagesOnServer" type="checkbox"/>
             <html:label for="pop3.leaveMessagesOnServer">&leaveOnServer.label;</html:label>
-  </html:div>
-  <html:div><html:input name="pop3.deleteMailLeftOnServer" id="pop3.deleteMailLeftOnServer" type="checkbox"/>
+  </box>
+  <box><html:input name="pop3.deleteMailLeftOnServer" id="pop3.deleteMailLeftOnServer" type="checkbox"/>
             <html:label for="pop3.deleteMailLeftOnServer">&deleteOnServer.label;</html:label>
-  </html:div>
+  </box>
 
 
   <!-- IMAP -->
-  <html:div>
-    <html:div>&deleteMessagePrefix.label;</html:div>
+  <box>
+    <text value="&deleteMessagePrefix.label;"/>
     <html:select name="imap.deleteModel">
           <html:option value="1">&modelMoveToTrash.label;</html:option>
           <html:option value="0">&modelMarkDeleted.label;</html:option>
           <html:option value="2">&modelDeleteImmediately.label;</html:option>
     </html:select>
-  </html:div>
+  </box>
 
-  <html:div>
+  <box>
     <html:input name="imap.cleanupInboxOnExit" id="imap.cleanupInboxOnExit" type="checkbox"/>
     <html:label for="imap.cleanupInboxOnExit">&expungeOnExit.label;</html:label>
-  </html:div>
-  <html:div>
+  </box>
+  <box>
     <html:input name="imap.emptyTrashOnExit" id="imap.emptyTrashOnExit" type="checkbox"/>
     <html:label for="imap.emptyTrashOnExit">&emptyTrashOnExit.label;</html:label>
-  </html:div>
-  <html:div>
-    <box align="horizontal">
+  </box>
+  <box iscontrolcontainer="true">
+    <box orient="horizontal">
       <spring flex="100%"/>
       <button value="&advancedButton.label;"
                     onclick="openImapAdvanced(event);"/>
     </box>
-  <html:input type="hidden" name="imap.dualUseFolders"/>
-  <html:input type="hidden" name="imap.usingSubscription"/>
-  <html:input type="hidden" name="imap.personalNamespace"/>
-  <html:input type="hidden" name="imap.publicNamespace"/>
-  <html:input type="hidden" name="imap.otherUsersNamespace"/>
-  <html:input type="hidden" name="imap.serverDirectory"/>
-  </html:div>
+
+    <html:input type="hidden" name="imap.dualUseFolders"/>
+    <html:input type="hidden" name="imap.usingSubscription"/>
+    <html:input type="hidden" name="imap.personalNamespace"/>
+    <html:input type="hidden" name="imap.publicNamespace"/>
+    <html:input type="hidden" name="imap.otherUsersNamespace"/>
+    <html:input type="hidden" name="imap.serverDirectory"/>
+  </box>
 
   <!-- News -->
-  <box align="horizontal">
-    <html:div>
+  <box orient="horizontal">
+    <box>
       <html:input name="nntp.notifyOn" id="nntp.notifyOn" type="checkbox"/>
       <html:label for="nntp.notifyOn">&maxMessagesStart.label;</html:label>
-    </html:div>
-    <html:div>
+    </box>
+    <box>
       <html:input name="nntp.maxArticles" type="text" size="6"/>
  		    &maxMessagesEnd.label;
-    </html:div>
+    </box>
   </box>
-  <box align="horizontal">
-    <html:div iscontrolcontainer="true" flex="100%">
-      <html:fieldset>
-         <html:legend align="left">
-            <html:div>&abbreviate.label;</html:div>
-         </html:legend>
-         <html:div>
+    <box iscontrolcontainer="true" flex="100%">
+      <titledbox orient="vertical">
+         <title><text value="&abbreviate.label;"/></title>
+
+         <box>
            <html:input reversed="true" id="nntp.abbreviate.on" name="nntp.abbreviate" type="radio"/>
            <html:label for="nntp.abbreviate.on" >&abbreviateOn.label;</html:label>
-         </html:div>
-         <html:div>
+         </box>
+         <box>
            <html:input id="id.nntp.abbreviate.off" name="nntp.abbreviate" type="radio"/>
            <html:label for="id.nntp.abbreviate.off" >&abbreviateOff.label;</html:label>
-         </html:div>
-      </html:fieldset>
-    </html:div>
+         </box>
+      </titledbox>
   </box>
 
-  <html:div>
-    <html:div>&newsrcFilePath.label;</html:div>
+  <box orient="vertical">
+    <text value="&newsrcFilePath.label;"/>
     <html:input type="text" size="60" name="nntp.newsrcFilePath" datatype="nsIFileSpec"/>
-  </html:div>
-  </html:div>
+  </box>
+  </box>
   <spring flex="100%"/>
-  <box align="vertical">
-    <html:div>&localPath.label;</html:div>
+  <box orient="vertical">
+    <text value="&localPath.label;"/>
     <html:input type="text" size="60" name="server.localPath" datatype="nsIFileSpec"/>
   </box>
 </window>

@@ -19,48 +19,43 @@
     <titledbutton class="right-header-text" value=""/>
   </box>
 
-<html:div>&smtpDesc.label;</html:div>
+<html>&smtpDesc.label;</html>
 
-  <html:table width="100%">
-    <html:colgroup>
-      <html:col width="0*"/>
-      <html:col width="1*"/>
-      <html:col width="0*"/>
-    </html:colgroup>
-  <html:tr>
-     <html:td colspan="2"><html:div>&smtpHostname.label;</html:div></html:td>
-     <html:td><html:input type="text" size="30" name="smtp.hostname"/></html:td>
-  </html:tr>
-  <html:tr>
-    <html:td>
+  <box>
+     <text class="label" value="&smtpHostname.label;"/>
+     <html:input type="text" size="30" name="smtp.hostname"/>
+  </box>
+  <grid width="100%">
+    <columns>
+      <column/>
+      <column/>
+    </columns>
+  <rows>
+    <row>
       <html:input type="checkbox" id="smtp.useUsername" name="smtp.useUsername"/>
-    </html:td>
-    <html:td colspan="2">
       <html:label for="smtp.useUsername">&smtpAlwaysUseName.label;</html:label>
-    </html:td>
-  </html:tr>
+    </row>
 
-  <html:tr>
-    <html:td/>
-    <html:td><html:div>&smtpUsername.label;</html:div></html:td>
-    <html:td><html:input type="text" size="30" name="smtp.username" flex="100%"/></html:td>
-  </html:tr>
-  <html:tr>
-    <html:td/>
-    <html:td colspan="2">
+    <row>
+      <text/>
+      <box>
+        <text class="label" value="&smtpUsername.label;"/>
+        <html:input type="text" size="30" name="smtp.username" flex="100%"/>
+      </box>
+  </row>
+  <row>
+    <text/>
+    <box>
       <html:input type="checkbox" id="smtp.savePassword" name="smtp.savePassword"/>
       <html:label for="smtp.savePassword">&smtpSavePassword.label;</html:label>
-    </html:td>
-  </html:tr>
-  <html:tr>
-    <html:td>
+    </box>
+  </row>
+  <row>
       <html:input id="smtp.isSecure" name="smtp.isSecure" type="checkbox"/>
-    </html:td>
-    <html:td colspan="2">
       <html:label for="smtp.isSecure">&smtpUseSecure.label;</html:label>
-    </html:td>
-  </html:tr>
-  </html:table>    
+  </row>
+  </rows>
+</grid>    
 
   <box align="horizontal">
     <spring flex="100%"/>

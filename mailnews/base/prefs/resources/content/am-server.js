@@ -76,24 +76,22 @@ function hideShowControls(serverType)
         // hide unsupported server type
         if (control.type.toLowerCase() != "hidden") {
             if (controlType == serverType)
-                div.style.display = "block";
+                div.removeAttribute("hidden")
             else
-                div.style.display = "none";
+                div.setAttribute("hidden", "true");
         }
     }
 
     var serverPrefContainer = document.getElementById("serverPrefContainer");
     if (serverPrefContainer)
-        serverPrefContainer.style.display = "block";
+        serverPrefContainer.removeAttribute("hidden");
 }
 
 
 function setDivText(divname, value) {
     var div = document.getElementById(divname);
     if (!div) return;
-    if (div.firstChild)
-        div.removeChild(div.firstChild);
-    div.appendChild(document.createTextNode(value));
+    div.setAttribute("value", value);
 }
 
 
@@ -149,7 +147,9 @@ function getEnclosingDiv(startNode) {
     
     while (parent && parent != document) {
 
-        if (parent.tagName.toLowerCase() == "div") {
+        if (parent.tagName.toLowerCase() == "div" ||
+            parent.tagName.toLowerCase() == "html" ||
+            parent.tagName.toLowerCase() == "box") {
             var isContainer =
                 (parent.getAttribute("iscontrolcontainer") == "true");
             

@@ -27,6 +27,7 @@ install::
 	$(MAKE_INSTALL) AccountManager.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) AccountManager.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-main.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-main.js			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-identity-advanced.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-identity-advanced.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-server.xul		$(DIST)\bin\chrome\messenger\content\default
@@ -76,6 +77,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.js
 	rm -f $(DIST)\chrome\messenger\content\default\am-main.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-main.js
 	rm -f $(DIST)\chrome\messenger\content\default\am-server.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-serverwithnoidentities.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-serverwithnoidentities.js

@@ -40,7 +40,7 @@ function onLoad()
     if (!stringBundle)
         stringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 
-    serverList = document.getElementById("smtpPopup");
+    //serverList = document.getElementById("smtpPopup");
 
     refreshServerList(smtpService.smtpServers, selectedServer);
     
@@ -49,7 +49,7 @@ function onLoad()
 
 function onOk()
 {
-    dump("serverList.selectedItem = " + serverList.getAttribute("selectedKey") + "\n");
+    dump("serverList.selectedItem = " + document.getElementById("smtpPopup").getAttribute("selectedKey") + "\n");
     window.close();
 }
 
@@ -57,7 +57,7 @@ function refreshServerList(servers, selectedServer)
 {
     var defaultMenuItem = document.createElement("menuitem");
     defaultMenuItem.setAttribute("value", stringBundle.GetStringFromName("useDefaultServer"));
-    serverList.appendChild(defaultMenuItem);
+    document.getElementById("smtpPopup").appendChild(defaultMenuItem);
         
     var serverCount = servers.Count();
 
@@ -68,7 +68,7 @@ function refreshServerList(servers, selectedServer)
         menuitem.setAttribute("id", server.serverURI);
         menuitem.setAttribute("key", server.key);
         
-        serverList.appendChild(menuitem);
+        document.getElementById("smtpPopup").appendChild(menuitem);
         if (server == selectedServer) {
             dump("found the selected one!\n");
             serverList.setAttribute("selectedKey", server.key);

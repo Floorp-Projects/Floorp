@@ -43,19 +43,19 @@ function initBccSelf() {
 
 function setDivText(divid, str) {
     var divtag = document.getElementById(divid);
-    dump("setting " + divtag + " to " + str + "\n");
+
     var newstr="";
     if (divtag) {
-        if (divtag.firstChild)
-            divtag.removeChild(divtag.firstChild);
         
         if (divtag.getAttribute("before"))
             newstr += divtag.getAttribute("before");
+        
         newstr += str;
+        
         if (divtag.getAttribute("after"))
             newstr += divtag.getAttribute("after");
         
-        divtag.appendChild(document.createTextNode(newstr));
+        divtag.setAttribute("value", newstr);
     }
 }
 

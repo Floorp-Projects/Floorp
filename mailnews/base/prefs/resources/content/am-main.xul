@@ -14,58 +14,61 @@
     <script src="chrome://global/content/strres.js"/>
     <script src="chrome://pref/content/prefutilities.js"/>
     <box class="header" align="horizontal">  
-    <titledbutton class="left-header-text" value="&accountTitle.label;"/>
+      <text class="left-header-text" value="&accountTitle.label;"/>
       <spring class="header-spring" flex="1"/>
-      <titledbutton class="right-header-text" value=""/>
+      <text class="right-header-text" value=""/>
     </box>
 
-	    <html:div class="secDesc">&accountSettingsDesc.label;</html:div>
-	    <html:div>&accountNameDesc.label;</html:div>
-        <html:table width="100%">
-          <html:colgroup>
-            <html:col width="1*"/>
-            <html:col width="0*"/>
-          </html:colgroup>
-          <html:tr><html:td>
-	      <html:label for="server.prettyName">&accountName.label;</html:label>
-          </html:td><html:td>
-	      <html:input type="text" size="30" name="server.prettyName" id="server.prettyName" flex="100%"/>
-          </html:td></html:tr>
-        </html:table>
+	    <html class="secDesc">&accountSettingsDesc.label;</html>
+	    <html>&accountNameDesc.label;</html>
+        <grid width="100%">
+          <columns>
+            <column flex="1"/>
+            <column flex="2"/>
+          </columns>
+          <rows>
+            <row>
+              <text value="&accountName.label;"/>
+              <html:input type="text" size="30" name="server.prettyName" id="server.prettyName" flex="100%"/>
+            </row>
+          </rows>
+        </grid>
     <spring class="spacer"/>
-    <html:div class="secTitle">&identityTitle.label;</html:div>
+    <html class="secTitle">&identityTitle.label;</html>
     <spring class="spacer"/>
-    <html:div class="secDesc">&identityDesc.label;</html:div>
-    <html:table width="100%">
-    <html:colgroup>
-      <html:col width="1*"/>
-      <html:col width="0*"/>
-    </html:colgroup>
-    <html:tr>
-      <html:td>&name.label;</html:td>
-      <html:td><html:input name="identity.fullName" type="text" size="30"/></html:td>
-    </html:tr>
-    <html:tr>
-      <html:td>&email.label;</html:td>
-      <html:td><html:input name="identity.email" type="text" maxwidth="200" size="30"/></html:td>
-    </html:tr>
-    <html:tr>
-      <html:td flex="40%">&replyTo.label;</html:td>
-      <html:td><html:input name="identity.replyTo" type="text" maxwidth="200" size="30"/></html:td>
-    </html:tr>
-    <html:tr>
-      <html:td flex="40%">&organization.label;</html:td>
-      <html:td><html:input name="identity.organization" type="text" size="30"/></html:td>
-    </html:tr>
-    </html:table>
+    <html class="secDesc">&identityDesc.label;</html>
+    <grid width="100%">
+    <columns>
+      <column flex="1"/>
+      <column flex="2"/>
+    </columns>
+    <rows>
+      <row>
+        <text value="&name.label;"/>
+        <html:input name="identity.fullName" type="text" size="30"/>
+      </row>
+      <row>
+        <text value="&email.label;"/>
+        <html:input name="identity.email" type="text" maxwidth="200" size="30"/>
+      </row>
+      <row>
+        <text value="&replyTo.label;"/>
+        <html:input name="identity.replyTo" type="text" maxwidth="200" size="30"/>
+      </row>
+      <row>
+        <text value="&organization.label;"/>
+        <html:input name="identity.organization" type="text" size="30"/>
+      </row>
+    </rows>
+    </grid>
 <!-- no vcard in PR1
-    <html:tr class="checkboxrow">
+    <row class="checkboxrow">
       <html:td colspan="2">
         <html:input name="identity.attachVCard" type="checkbox"/>
         &attachVCard.label;
       <button value="&editVCard.label;"/>
       </html:td>
-      </html:tr>    
+      </row>    
 -->
       <box orient="horizontal">
         <html:input name="identity.attachSignature" id="identity.attachSignature" type="checkbox"/>
@@ -91,6 +94,7 @@
 
     <box orient="horizontal">
       <spring flex="100%"/>
-      <button onclick="window.openDialog('am-identity-advanced.xul','advanced','modal,chrome', null);" value="&advancedButton.label;"/>
+      <button onclick="onAdvanced" value="&advancedButton.label;"/>
+      <html:input type="hidden" name="identity.smtpServerKey"/>
     </box>
 </window>

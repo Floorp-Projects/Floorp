@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/folderPane.css" text="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
-<window	id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window	id="account-manager" 
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&accountManagerTitle.label;"
@@ -11,8 +12,8 @@
         class="dialog"
         onload="onLoad(event);">
 
-<html:script language="JavaScript" src="chrome://global/content/strres.js"/>
-<html:script src="chrome://messenger/content/AccountManager.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"/>
+<script src="chrome://messenger/content/AccountManager.js"/>
 
 	<keyset id="keyset"/>
 
@@ -23,11 +24,14 @@
           onselect="onAccountClick(event.target)" id="accounttree"
           style="width:50px"
           class="inset"
+          sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
+          sortDirection="ascending"
           ref="msgaccounts:/">
           <template>
           <rule>
             <treechildren>
 			<treeitem uri="..." open="true"
+                IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
                 PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
 		  		<treerow >
 					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
@@ -37,16 +41,16 @@
           </rule>
           </template>
          </tree>
-         <titledbutton class="dialog push" value="&newAccountButton.label;" onclick="onNewAccount(event);" id="newAccountButton"/>
-         <titledbutton class="dialog push" value="&setDefaultButton.label;" onclick="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
+         <button class="dialog" value="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
+         <button class="dialog" value="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
          <box align="horizontal">
-           <titledbutton class="dialog push" disabled="true" value="&duplicateButton.label;" id="duplicateButton" onclick="onDuplicateAccount();" flex="50%"/>
-           <titledbutton class="dialog push" disabled="true" value="&deleteButton.label;" onclick="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
+           <button class="dialog" disabled="true" value="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
+           <button class="dialog" disabled="true" value="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
          </box>
 		</box>
         <spring style="width: 5px"/>
-        <html:iframe name="contentFrame" flex="100%" style="width: 40em; height: 30em"/>
+        <iframe name="contentFrame" flex="100%" style="width: 40em; height: 30em"/>
 	</box>
-    <html:div class="separator" align="horizontal"/>
+    <separator class="groove"/>
     <box id="okCancelButtons"/>
 </window>
