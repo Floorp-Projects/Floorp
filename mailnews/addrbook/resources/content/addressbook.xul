@@ -235,7 +235,7 @@ Rights Reserved.
   </toolbox>
 
   <!-- The main address book three pane -->
-  <box orient="horizontal" flex="100%" style="min-width:150px">
+  <box  flex="1" style="min-width:150px">
     <!-- sidebar with dir tree -->
     <box id="sidebar-box">
         <sidebarheader type="box" class="sidebarheader-main" label="&addressbook-sidebar-header.label;"/>
@@ -261,15 +261,18 @@ Rights Reserved.
         <box id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
       </box>
     
-      <box>
-        <statusbar id="status-bar" class="mailwindow-statusbar" flex="100%">
-          <statusbarpanel id="statusText"/>
-        </statusbar>
-       </box>    
+      
+
     </box>
     
+ 
   </box>
   
-  <box id="taskbar" class="toolbox-bottom"/>
-
+         <statusbar id="status-bar" >
+           <box id="component-bar" class="component-bar-box"/>
+           <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/>
+           <statusbarpanel id="statusText" class="status-bar" flex="1" value="&statusText.label;"/>  
+           
+           <resizer class="window-diagonal"/>
+         </statusbar>  
 </window>
