@@ -87,6 +87,19 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
+nscoord nsBodyFrame::GetConstrainingHeight(const nsReflowState& aReflowState) const
+{
+  // Walk up the reflow state hierarchy until we find a height that is
+  // constrained
+  const nsReflowState* state = &aReflowState;
+  while (NS_UNCONSTRAINEDSIZE == state->maxSize.height) {
+    state = state->parentReflowState;
+    NS_ASSERTION(nsnull != state, "unexpected reflow hierarchy");
+  }
+
+  return state->maxSize.height;
+}
+
 NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
                               nsReflowMetrics&     aDesiredSize,
                               const nsReflowState& aReflowState,
@@ -106,13 +119,19 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     NS_ASSERTION(eReflowReason_Initial != aReflowState.reason, "bad reason");
   }
 
+  nsIFrame*                    reflowCmdTarget;
+  nsIReflowCommand::ReflowType reflowCmdType;
+
   if (eReflowReason_Incremental == aReflowState.reason) {
+    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
+
+    // Get the target and the type of reflow command
+    aReflowState.reflowCommand->GetTarget(reflowCmdTarget);
+    aReflowState.reflowCommand->GetType(reflowCmdType);
+
     // The reflow command should never be target for us
 #ifdef NS_DEBUG
-    NS_ASSERTION(nsnull != aReflowState.reflowCommand, "null reflow command");
-    nsIFrame* target;
-    aReflowState.reflowCommand->GetTarget(target);
-    NS_ASSERTION(target != this, "bad reflow command target");
+    NS_ASSERTION(this != reflowCmdTarget, "bad reflow command target");
 #endif
 
     // Is the next frame in the reflow chain the pseudo block-frame or an
@@ -121,20 +140,23 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     // If the next frame is the pseudo block-frame then fall thru to the main
     // code below. The only thing that should be handled below is absolutely
     // positioned elements...
-    nsIFrame* next;
-    aReflowState.reflowCommand->GetNext(next);
-    if (mFirstChild != next) {
-      NS_ASSERTION(this != next, "huh?");
+    nsIFrame* nextFrame;
+    aReflowState.reflowCommand->GetNext(nextFrame);
+    if (mFirstChild != nextFrame) {
+      NS_ASSERTION(this != nextFrame, "huh?");
       NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                      ("nsBodyFrame::Reflow: reflowing frame=%p",
-                      next));
+                      nextFrame));
       // It's an absolutely positioned frame that's the target.
       // XXX FIX ME. For an absolutely positioned item we need to properly
       // compute the available space and then resize the frame if necessary...
-      nsReflowState reflowState(next, aReflowState, aReflowState.maxSize);
-      return next->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+      nsReflowState reflowState(nextFrame, aReflowState, aReflowState.maxSize);
+      return nextFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
     }
   }
+
+  // The area that needs to be repainted. Depends on the reflow type.
+  nsRect  damageArea(0, 0, 0, 0);
 
   // Reflow the child frame
   if (nsnull != mFirstChild) {
@@ -154,6 +176,10 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
       // XXX Temporary hack until everything is incremental...
       mSpaceManager->ClearRegions();
     }
+
+    // Get the child's current rect
+    nsRect  kidOldRect;
+    mFirstChild->GetRect(kidOldRect);
 
     // Get the column's desired rect
     nsIRunaround* reflowRunaround;
@@ -201,6 +227,42 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
 
     // Return our desired size
     ComputeDesiredSize(desiredRect, aReflowState.maxSize, borderPadding, aDesiredSize);
+
+    // Decide how much to repaint based on the reflow type.
+    switch (aReflowState.reason) {
+    case eReflowReason_Initial:
+      // If this is the initial reflow of the child then repaint the entire
+      // visible area
+      damageArea.width = aReflowState.maxSize.width;
+      damageArea.height = GetConstrainingHeight(aReflowState);
+      break;
+
+    case eReflowReason_Resize:
+      // For a resize just repaint the entire frame
+      damageArea.width = aDesiredSize.width;
+      damageArea.height = aDesiredSize.height;
+      break;
+
+    case eReflowReason_Incremental:
+      // For append reflow commands that target the body just repaint the newly
+      // added part of the frame.
+      if ((nsIReflowCommand::FrameAppended == reflowCmdType) &&
+          (reflowCmdTarget == mFirstChild)) {
+        // It's an append reflow command targeted at us
+        damageArea.y = kidOldRect.YMost();
+        damageArea.width = aDesiredSize.width;
+        damageArea.height = aDesiredSize.height - kidOldRect.height;
+
+      } else {
+        // Ideally the frame that is the target of the reflow command (or its parent
+        // frame) would generate a damage rect, but since none of the frame classes
+        // know how to do this then for the time being just repaint the entire
+        // frame
+        damageArea.width = aDesiredSize.width;
+        damageArea.height = aDesiredSize.height;
+      }
+    }
+
   }
   else {
     aDesiredSize.width = 0;
@@ -211,6 +273,11 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
       aDesiredSize.maxElementSize->width = 0;
       aDesiredSize.maxElementSize->height = 0;
     }
+  }
+
+  // Now force a repaint of the damage area
+  if (!mIsPseudoFrame && !damageArea.IsEmpty()) {
+    Invalidate(damageArea);
   }
   
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
