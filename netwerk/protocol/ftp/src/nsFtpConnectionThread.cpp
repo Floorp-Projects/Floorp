@@ -1860,19 +1860,18 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
         rv = aURL->GetFilePath(&path);
     else
         rv = mURL->GetPath(&path);
-    
     if (NS_FAILED(rv)) return rv;
+
     // Skip leading slash
-    char* fwdPtr= NS_CONST_CAST(char*, path);
+    char* fwdPtr= path;
     if (fwdPtr && (*fwdPtr == '/'))
         fwdPtr++;
     if (*fwdPtr != '\0') {
-        // now unescape it
-        char *unescPath = nsnull;
-        nsStdUnescape(fwdPtr,&unescPath);
-        nsMemory::Free(path);
-        mPath.Adopt(unescPath);
+        // now unescape it... %xx reduced inline to resulting character
+        NS_UnescapeURL(fwdPtr);
+        mPath.Assign(fwdPtr);
     }
+    nsMemory::Free(path);
 
     // pull any username and/or password out of the uri
     nsXPIDLCString uname;
