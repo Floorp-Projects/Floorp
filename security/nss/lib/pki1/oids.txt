@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CVS_ID "@(#) $RCSfile: oids.txt,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:16:23 $ $Name:  $"
+CVS_ID "@(#) $RCSfile: oids.txt,v $ $Revision: 1.2 $ $Date: 2005/01/20 02:25:49 $"
 
 # Fields
 #  OID  -- the OID data itself, in dotted-number format

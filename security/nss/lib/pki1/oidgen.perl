@@ -35,7 +35,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-$cvs_id = '@(#) $RCSfile: oidgen.perl,v $ $Revision: 1.3 $ $Date: 2004/04/25 15:03:15 $ $Name:  $';
+$cvs_id = '@(#) $RCSfile: oidgen.perl,v $ $Revision: 1.4 $ $Date: 2005/01/20 02:25:49 $';
 $cfile = shift;
 $hfile = shift;
 $count = -1;

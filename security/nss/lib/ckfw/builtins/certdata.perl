@@ -35,7 +35,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.8 $ $Date: 2004/04/25 15:03:04 $ $Name:  $';
+my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.9 $ $Date: 2005/01/20 02:25:46 $';
 use strict;
 
 my %constants;
