@@ -20,7 +20,7 @@
 
 interface nsIFile;
 
-[scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
+[scriptable, uuid(D7BEA930-59D7-11d3-8C46-00609792278C)]
 interface nsIDirectoryIterator : nsISimpleEnumerator
 {
     void Init([const] in nsIFile parent, in boolean resolveSymlinks);
