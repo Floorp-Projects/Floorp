@@ -37,15 +37,15 @@ Rights Reserved.
 
 
 <outliner id="out" flex="1" >
-  <outlinercol id="indexCol" label="Index" flex="1"/>
+  <outlinercol id="indexCol" label="&idxColumn.label;" flex="1"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="prefCol" label="Prefs" flex="7"/>
+  <outlinercol id="prefCol" label="&prefColumn.label;" flex="7"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="lockCol" label="Lock State"  flex="1"/>
+  <outlinercol id="lockCol" label="&lockColumn.label;"  flex="1"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="typeCol" label="Type"  flex="1"/>
+  <outlinercol id="typeCol" label="&typeColumn.label;"  flex="1"/>
   <splitter class="tree-splitter" />
-  <outlinercol id="valueCol" label="Value" flex="10"/>
+  <outlinercol id="valueCol" label="&valueColumn.label;" flex="10"/>
 
   <outlinerbody id="configOutlinerBody" flex="1" />
 

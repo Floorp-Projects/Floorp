@@ -19,8 +19,8 @@ Rights Reserved.
 --> 
 
 <!ENTITY idxColumn.label "Index">
-<!ENTITY prefColumn.label "Preference">
-<!ENTITY lockColumn.label "Lock Status">
+<!ENTITY prefColumn.label "Preference Name">
+<!ENTITY lockColumn.label "Status">
 <!ENTITY typeColumn.label "Type">
 <!ENTITY valueColumn.label "Value">
 
