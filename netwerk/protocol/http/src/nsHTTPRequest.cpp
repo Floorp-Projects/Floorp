@@ -133,7 +133,7 @@ nsHTTPRequest::Build()
             lineBuffStr.Append((const nsString&)*element->value);
             lineBuffStr.Append(CRLF);
             NS_ASSERTION((lineBuffStr.Length() <= 1024), "Increase line buffer length!");
-            lineBuffStr.ToCString(lineBuffer, lineBuffStr.Length());
+            lineBuffStr.ToCString(lineBuffer, lineBuffStr.Length()+1);
             lineBuffer[lineBuffStr.Length()] = '\0';
             rv = m_Request->Fill(lineBuffer, PL_strlen(lineBuffer), &bytesWritten);
             if (NS_FAILED(rv)) return rv;
