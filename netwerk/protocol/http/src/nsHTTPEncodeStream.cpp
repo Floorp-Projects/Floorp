@@ -23,6 +23,8 @@
 #include "nsHTTPEncodeStream.h"
 #include "nsIHTTPProtocolHandler.h"
 
+#include <prmem.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPEncodeStream methods:
 
@@ -164,8 +166,23 @@ nsHTTPEncodeStream::Read(char* outBuf, PRUint32 outBufCnt, PRUint32 *result)
 NS_IMETHODIMP
 nsHTTPEncodeStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    char* readBuf = (char*) PR_Malloc (count);
+    PRUint32 nBytes;
+
+    if (readBuf == NULL)
+        return NS_ERROR_FAILURE;
+
+    nsresult rv = Read (readBuf, count, &nBytes);
+
+    PRUint32 writeCount = 0;
+    *_retval = 0;
+
+    if (NS_SUCCEEDED (rv))
+        rv = writer (this, closure, readBuf, *_retval, nBytes, &writeCount);
+
+    PR_Free (readBuf);
+
+    return rv;
 }
 
 NS_IMETHODIMP
