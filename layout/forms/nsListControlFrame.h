@@ -67,7 +67,6 @@ class nsPresContext;
 class nsVoidArray;
 class nsIScrollableView;
 
-class nsSelectUpdateTimer;
 class nsVoidArray;
 class nsListEventListener;
 
@@ -83,7 +82,6 @@ class nsListControlFrame : public nsHTMLScrollFrame,
 {
 public:
   friend nsresult NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  friend class nsSelectUpdateTimer;
 
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -233,7 +231,7 @@ protected:
   PRBool     IsClickingInCombobox(nsIDOMEvent* aMouseEvent);
   void       AdjustIndexForDisabledOpt(PRInt32 aStartIndex, PRInt32 &anNewIndex,
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
-  virtual void ResetList(nsPresContext* aPresContext, nsVoidArray * aInxList = nsnull);
+  virtual void ResetList();
 
   nsListControlFrame(nsIPresShell* aShell, nsIDocument* aDocument);
   virtual ~nsListControlFrame();
@@ -269,11 +267,6 @@ protected:
   PRBool   HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
   void     InitSelectionRange(PRInt32 aClickedIndex);
 
-  // Timer Methods
-  nsresult StartUpdateTimer(nsPresContext * aPresContext);
-  void     StopUpdateTimer();
-  void     ItemsHaveBeenRemoved(nsPresContext * aPresContext);
-
   // Data Members
   PRInt32      mStartSelectionIndex;
   PRInt32      mEndSelectionIndex;
@@ -288,19 +281,14 @@ protected:
   PRBool       mIsAllContentHere;
   PRPackedBool mIsAllFramesHere;
   PRPackedBool mHasBeenInitialized;
-  PRPackedBool mDoneWithInitialReflow;
+  PRPackedBool mNeedToReset;
 
   PRPackedBool mOverrideReflowOpt;
-
-  nsPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
   nsRefPtr<nsListEventListener> mEventListener;
 
   PRInt16 mPassId;
   nscoord mCachedDesiredMEW;
-
-  // Update timer
-  nsSelectUpdateTimer * mUpdateTimer;
 
   nsIFrame* mDummyFrame;
 
