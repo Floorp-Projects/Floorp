@@ -99,6 +99,8 @@ nsDeviceContextXlib::nsDeviceContextXlib()
   mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
   if (!mXlibRgbHandle)
     abort();
+    
+  mFontMetricsContextCounter++;
 }
 
 nsDeviceContextXlib::~nsDeviceContextXlib()
@@ -106,7 +108,18 @@ nsDeviceContextXlib::~nsDeviceContextXlib()
   nsIDrawingSurfaceXlib *surf = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, mSurface);
   NS_IF_RELEASE(surf);
   mSurface = nsnull;
+  
+  mFontMetricsContextCounter--;
+  
+  if (mFontMetricsContext && (mFontMetricsContextCounter == 0))
+  {
+    DeleteFontMetricsXlibContext(mFontMetricsContext);
+    mFontMetricsContext = nsnull;
+  }
 }
+
+nsFontMetricsXlibContext *nsDeviceContextXlib::mFontMetricsContext = nsnull;
+int                       nsDeviceContextXlib::mFontMetricsContextCounter = 0;
 
 NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 {
@@ -140,14 +153,14 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
   }
 #endif /* DEBUG */
 
-  CommonInit();
-
-  return NS_OK;
+  return CommonInit();
 }
 
-void
+nsresult
 nsDeviceContextXlib::CommonInit(void)
 {
+  nsresult rv = NS_OK;;
+
   // FIXME: PeterH
   // This was set to 100 dpi, then later on in the function is was changed
   // to a default of 96dpi IF we had a preference component. We need to 
@@ -186,6 +199,13 @@ nsDeviceContextXlib::CommonInit(void)
   mHeightFloat = (float) XHeightOfScreen(mScreen);
 
   DeviceContextImpl::CommonInit();
+  
+  if (!mFontMetricsContext)
+  {
+    rv = CreateFontMetricsXlibContext(this, PR_FALSE, &mFontMetricsContext);
+  }
+   
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&aContext)
@@ -346,7 +366,7 @@ NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixe
 
 NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 {
-  return nsFontMetricsXlib::FamilyExists(this, aFontName);
+  return nsFontMetricsXlib::FamilyExists(mFontMetricsContext, aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)

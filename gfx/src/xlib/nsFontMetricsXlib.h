@@ -107,6 +107,11 @@ class nsXFont;
 class nsRenderingContextXlib;
 class nsIDrawingSurfaceXlib;
 
+/* nsFontMetricsXlibContext glue */
+class nsFontMetricsXlibContext;
+nsresult CreateFontMetricsXlibContext(nsIDeviceContext *aDevice, PRBool printermode, nsFontMetricsXlibContext **aFontMetricsXlibContext);
+void     DeleteFontMetricsXlibContext(nsFontMetricsXlibContext *aFontMetricsXlibContext);
+
 #undef FONT_HAS_GLYPH
 #define FONT_HAS_GLYPH(map, char) IS_REPRESENTABLE(map, char)
 #define WEIGHT_INDEX(weight) (((weight) / 100) - 1)
@@ -265,23 +270,6 @@ struct nsFontCharSetMapXlib
   nsFontCharSetInfoXlib* mInfo;
 };
 
-/* WorkInProgress (for bug 119491 ("Cleanup global vars in PostScript and
- * Xprint modules"): Container to hold per-device context data for
- * fontmetrics code */
-class nsFontMetricsXlibContext
-{
-public:
-  nsFontMetricsXlibContext();
-  virtual ~nsFontMetricsXlibContext();
-
-  /* Initalise the context */
-  nsresult Init(nsIDeviceContext *);
-
-#ifdef USE_XPRINT
-  PRPackedBool mPrinterMode;
-#endif /* USE_XPRINT */  
-};
-
 class nsFontXlib
 {
 public:
@@ -289,6 +277,8 @@ public:
   nsFontXlib(nsFontXlib *);
   virtual ~nsFontXlib();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  nsFontMetricsXlibContext *mFontMetricsContext;
 
   void LoadFont(void);
   PRBool IsEmptyFont(XFontStruct*);
@@ -357,13 +347,6 @@ public:
   nsFontMetricsXlib();
   virtual ~nsFontMetricsXlib();
 
-#ifdef USE_XPRINT
-  static void     EnablePrinterMode(PRBool printermode);
-#endif /* USE_XPRINT */
-
-  static nsresult InitGlobals(nsIDeviceContext *aDevice);
-  static void FreeGlobals(void);
-
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_DECL_ISUPPORTS
@@ -423,7 +406,7 @@ public:
                                PRUnichar aChar,
                                const char *aName);
 
-  static nsresult FamilyExists(nsIDeviceContext *aDevice, const nsString& aName);
+  static nsresult FamilyExists(nsFontMetricsXlibContext *aFontMetricsContext, const nsString& aName);
 
   //friend struct nsFontXlib;
 
@@ -445,11 +428,13 @@ public:
   PRUint8           mTriedAllGenerics;
   PRUint8           mIsUserDefined;
 
+  nsFontMetricsXlibContext *mFontMetricsContext;
+  nsIDeviceContext         *mDeviceContext;
+
 protected:
   void RealizeFont();
   nsFontXlib *LocateFont(PRUint32 aChar, PRInt32 & aCount);
 
-  nsIDeviceContext   *mDeviceContext;
   nsFont             *mFont;
   nsFontXlib         *mWesternFont;
 
@@ -475,11 +460,6 @@ protected:
   PRUint8             mStretchIndex;
   PRUint8             mStyleIndex;
   nsFontCharSetConverterXlib mDocConverterType;
-
-#ifdef USE_XPRINT
-public:
-  static PRPackedBool mPrinterMode;
-#endif /* USE_XPRINT */  
 };
 
 class nsFontEnumeratorXlib : public nsIFontEnumerator
