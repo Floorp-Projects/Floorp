@@ -431,40 +431,41 @@ function selectProduct(f) {
         }
     }
 
-    var tmsel = new Array();
-    for (i=0 ; i<f.target_milestone.length ; i++) {
-        if (f.target_milestone[i].selected) {
-            tmsel[f.target_milestone[i].value] = 1;
+    if (f.target_milestone) {
+        var tmsel = new Array();
+        for (i=0 ; i<f.target_milestone.length ; i++) {
+            if (f.target_milestone[i].selected) {
+                tmsel[f.target_milestone[i].value] = 1;
+            }
         }
-    }
-
-    f.target_milestone.options.length = 0;
-
-    for (tm in tms) {
-        if (typeof(tms[v]) == 'function') continue;
-        var doit = doall;
-        for (i=0 ; !doit && i<f.product.length ; i++) {
-            if (f.product[i].selected) {
-                var p = f.product[i].value;
-                for (j in tms[tm]) {
-                    if (typeof(tms[tm][j]) == 'function') continue;
-                    var p2 = tms[tm][j];
-                    if (p2 == p) {
-                        doit = true;
-                        break;
+    
+        f.target_milestone.options.length = 0;
+    
+        for (tm in tms) {
+            if (typeof(tms[v]) == 'function') continue;
+            var doit = doall;
+            for (i=0 ; !doit && i<f.product.length ; i++) {
+                if (f.product[i].selected) {
+                    var p = f.product[i].value;
+                    for (j in tms[tm]) {
+                        if (typeof(tms[tm][j]) == 'function') continue;
+                        var p2 = tms[tm][j];
+                        if (p2 == p) {
+                            doit = true;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        if (doit) {
-            var l = f.target_milestone.length;
-            f.target_milestone[l] = new Option(tm, tm);
-            if (tmsel[tm]) {
-                f.target_milestone[l].selected = true;
+            if (doit) {
+                var l = f.target_milestone.length;
+                f.target_milestone[l] = new Option(tm, tm);
+                if (tmsel[tm]) {
+                    f.target_milestone[l].selected = true;
+                }
             }
         }
     }
-
 }
 // -->
 </script>
