@@ -3630,17 +3630,20 @@ RDFElementImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCon
         aContext->GetMutableStyleData(eStyleStruct_Position);
         switch (unit) {
           case eHTMLUnit_Percent:
-            position->mWidth.SetPercentValue(floatVal);
+            position->mWidth.mUnit = eStyleUnit_Percent;
+            position->mWidth.mValue.mFloat = floatVal;
             break;
 
           case eHTMLUnit_Pixel:
             float p2t;
             aPresContext->GetScaledPixelsToTwips(&p2t);
-            position->mWidth.SetCoordValue(NSIntPixelsToTwips(intVal, p2t));
+            position->mWidth.mUnit = eStyleUnit_Coord;
+            position->mWidth.mValue.mInt = NSIntPixelsToTwips(intVal, p2t);
             break;
 
           case eHTMLUnit_Proportional:
-            position->mWidth.SetIntValue(intVal, eStyleUnit_Proportional);
+            position->mWidth.mUnit = eStyleUnit_Proportional;
+            position->mWidth.mValue.mInt = intVal;
             break;
           default:
             break;
