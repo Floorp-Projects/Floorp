@@ -52,7 +52,6 @@
 # sh.exe instead of cmd.exe to process commands); e.g.,
 #
 #   make --unix -f win32-gdf.mk \
-#     PROGRAM=winEmbed \
 #     BUSTER_URL="http://localhost/cgi-bin/buster.cgi?refresh=10"
 #
 # What You'll Need
@@ -75,6 +74,10 @@
 #
 # Where <b1> is the slope and <b0> is the y-intercept.
 LINEAR_REGRESSION=awk -f linear-regression.awk
+
+PROGRAM_PATH=..\\..\\dist\\win32_o.obj\\bin
+WINEMBED_PROGRAM=winEmbed
+MOZILLA_PROGRAM=mozilla
 
 GNUPLOT=wgnuplot.exe
 BUSTER_URL=http://btek/cgi-bin/buster.cgi?refresh=10
@@ -119,11 +122,18 @@ mozilla-ws.dat: mozilla.dat
 mozilla-pws.dat: mozilla.dat	
 	awk '{ print NR, $$2 / 1024; }' $? > $@
 
+# Run programs to collect data
+winEmbed.dat: wm.exe
+	cmd /c "start $(PROGRAM_PATH)\\$(WINEMBED_PROGRAM) $(BUSTER_URL) && .\\wm $(PROGRAM) > $@"
+
+mozilla.dat: wm.exe
+	cmd /c "start $(PROGRAM_PATH)\\$(MOZILLA_PROGRAM) $(BUSTER_URL) && .\\wm $(PROGRAM) > $@"
+
 # Build ``wm.exe'', the memory spy
 wm.exe: wm.cpp
 	cl wm.cpp advapi32.lib
 
 # Clean up the mess.
 clean:
-	rm -f wm.exe *-gdf.png *~
+	rm -f wm.exe *-gdf.png *.dat *~
 
