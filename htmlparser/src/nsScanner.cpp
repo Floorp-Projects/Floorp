@@ -48,6 +48,25 @@ nsScannerString::ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
   *pos = aChar;
 }
 
+nsReadEndCondition::nsReadEndCondition(const PRUnichar* aTerminateChars) :
+  mChars(aTerminateChars), mFilter(PRUnichar(~0)) // All bits set
+{
+  // Build filter that will be used to filter out characters with
+  // bits that none of the terminal chars have. This works very well
+  // because terminal chars often have only the last 4-6 bits set and
+  // normal ascii letters have bit 7 set. Other letters have even higher
+  // bits set.
+  
+  // Calculate filter
+  const PRUnichar *current = aTerminateChars;
+  PRUnichar terminalChar = *current;
+  while (terminalChar) {
+    mFilter &= ~terminalChar;
+    ++current;
+    terminalChar = *current;
+  }
+}
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 const char* kBadHTMLText="<H3>Oops...</H3>You just tried to read a non-existent document: <BR>";
@@ -533,17 +552,18 @@ nsresult nsScanner::SkipWhitespace(void) {
     return kEOF;
   }
 
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> current, end;
-  PRBool            found=PR_FALSE;  
+  nsReadingIterator<PRUnichar> current;
+  PRBool            found;
+  PRBool            skipped = PR_FALSE;
 
   mNewlinesSkipped = 0;
   current = mCurrentPosition;
-  end = mEndPosition;
 
-  while(current != end) {
-    theChar=*current;
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  NS_ENSURE_SUCCESS(result, result);
+
+  while (current != mEndPosition) {
     switch(theChar) {
       case '\n': mNewlinesSkipped++;
       case ' ' :
@@ -559,19 +579,22 @@ nsresult nsScanner::SkipWhitespace(void) {
     if(!found) {
       break;
     }
-    else {
-      ++current;
-    }
+    ++current;
+    theChar = *current;
+    skipped = PR_TRUE;
   }
 
-  SetPosition(current);
-  if (current == end) {
+  if (!skipped)
+    return NS_OK;
+  
+  if (current == mEndPosition) {
+    SetPosition(current);
     return Eof();
   }
 
-  //DoErrTest(aString);
+  SetPosition(current);
 
-  return result;
+  return NS_OK;
 
 }
 
@@ -1156,156 +1179,113 @@ nsresult nsScanner::ReadWhile(nsString& aString,
  *  @return  error code
  */
 nsresult nsScanner::ReadUntil(nsAWritableString& aString,
-                              const nsAFlatString& aTerminalSet,
+                              const nsReadEndCondition& aEndCondition,
                               PRBool addTerminal)
 {  
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end;
-  const PRUnichar* setstart = aTerminalSet.get();
+  nsReadingIterator<PRUnichar> origin, current;
+  const PRUnichar* setstart = aEndCondition.mChars;
   const PRUnichar* setcurrent;
 
   origin = mCurrentPosition;
   current = origin;
-  end = mEndPosition;
-
-  while(current != end) {
-    setcurrent = setstart;
-    theChar=*current;
-    if(theChar) {
-      while (*setcurrent) {
-        if (*setcurrent == theChar) {
-          if(addTerminal)
-            ++current;
-          AppendUnicodeTo(origin, current, aString);
-          goto found;
-        }
-        ++setcurrent;
-      }
-    }
-    ++current;
-  }
-found:
-
-  SetPosition(current);
-  if (current == end) {
-    AppendUnicodeTo(origin, current, aString);
-    return Eof();
-  }
-
-  //DoErrTest(aString);
-
-  return result;
-
-}
-
-/**
- *  Consume characters until you encounter one contained in given
- *  input set.
- *  
- *  @update  gess 3/25/98
- *  @param   aString will contain the result of this method
- *  @param   aTerminalSet is an ordered string that contains
- *           the set of INVALID characters
- *  @return  error code
- */
-nsresult nsScanner::ReadUntil(nsAWritableString& aString,
-                              const nsAFlatCString& aTerminalSet,
-                              PRBool addTerminal)
-{
-  if (!mSlidingBuffer) {
-    return kEOF;
-  }
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end;
-  const char* setstart = aTerminalSet.get();
-  const char* setcurrent;
+  NS_ENSURE_SUCCESS(result, result);
+  
+  while (current != mEndPosition) {
+    // Filter out completely wrong characters
+    // Check if all bits are in the required area
+    if(!(theChar & aEndCondition.mFilter)) {
+      // They were. Do a thorough check.
 
-  origin = mCurrentPosition;
-  current = origin;
-  end = mEndPosition;
-
-  while(current != end) {
-    setcurrent = setstart;
-    theChar=*current;
-    if(theChar) {
+      setcurrent = setstart;
       while (*setcurrent) {
         if (*setcurrent == theChar) {
-          if(addTerminal)
-            ++current;
-          AppendUnicodeTo(origin, current, aString);
           goto found;
         }
         ++setcurrent;
       }
     }
+    
     ++current;
+    theChar = *current;
   }
-found:
 
+  // If we are here, we didn't find any terminator in the string and
+  // current = mEndPosition
   SetPosition(current);
-  if (current == end) {
-    AppendUnicodeTo(origin, current, aString);
-    return Eof();
-  }
+  AppendUnicodeTo(origin, current, aString);
+  return Eof();
+
+found:
+  if(addTerminal)
+    ++current;
+  AppendUnicodeTo(origin, current, aString);
+  SetPosition(current);
+
   //DoErrTest(aString);
 
-  return result;
+  return NS_OK;
 }
-
 
 nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart, 
                               nsReadingIterator<PRUnichar>& aEnd,
-                              const nsAFlatString& aTerminalSet,
+                              const nsReadEndCondition &aEndCondition,
                               PRBool addTerminal)
 {
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end;
-  const PRUnichar* setstart = aTerminalSet.get();
+  nsReadingIterator<PRUnichar> origin, current;
+  const PRUnichar* setstart = aEndCondition.mChars;
   const PRUnichar* setcurrent;
 
   origin = mCurrentPosition;
   current = origin;
-  end = mEndPosition;
 
-  while(current != end) {
-    setcurrent = setstart;
-    theChar=*current;
-    if(theChar) {
+  PRUnichar         theChar=0;
+  nsresult          result=Peek(theChar);
+  NS_ENSURE_SUCCESS(result, result);
+  
+  while (current != mEndPosition) {
+    // Filter out completely wrong characters
+    // Check if all bits are in the required area
+    if(!(theChar & aEndCondition.mFilter)) {
+      // They were. Do a thorough check.
+      setcurrent = setstart;
       while (*setcurrent) {
         if (*setcurrent == theChar) {
-          if(addTerminal)
-            ++current;
-          aStart = origin;
-          aEnd = current;
           goto found;
         }
-        ++setcurrent;
+      ++setcurrent;
       }
     }
+    
     ++current;
+    theChar = *current;
   }
-found:
 
+  // If we are here, we didn't find any terminator in the string and
+  // current = mEndPosition
   SetPosition(current);
-  if (current == end) {
-    aStart = origin;
-    aEnd = current;
-    return Eof();
-  }
+  aStart = origin;
+  aEnd = current;
+  return Eof();
 
-  return result;
+ found:
+  if(addTerminal)
+    ++current;
+  aStart = origin;
+  aEnd = current;
+  SetPosition(current);
+
+  return NS_OK; 
 }
 
 /**
@@ -1323,36 +1303,32 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
     return kEOF;
   }
 
-  PRUnichar theChar=0;
-  nsresult  result=Peek(theChar);
-  nsReadingIterator<PRUnichar> origin, current, end;
+  nsReadingIterator<PRUnichar> origin, current;
 
   origin = mCurrentPosition;
   current = origin;
-  end = mEndPosition;
 
-  while(current != end) {
-    
-    theChar=*current;
-    if(theChar) {
-      if(aTerminalChar==theChar) {
-        if(addTerminal)
-          ++current;
-        AppendUnicodeTo(origin, current, aString);
-        break;
-      }
+  PRUnichar theChar;
+  nsresult  result=Peek(theChar);
+  NS_ENSURE_SUCCESS(result, result);
+  
+  while (current != mEndPosition) {
+    if (aTerminalChar == theChar) {
+      if(addTerminal)
+        ++current;
+      AppendUnicodeTo(origin, current, aString);
+      SetPosition(current);
+      return NS_OK;
     }
     ++current;
+    theChar = *current;
   }
 
+  // If we are here, we didn't find any terminator in the string and
+  // current = mEndPosition
+  AppendUnicodeTo(origin, current, aString);
   SetPosition(current);
-  if (current == end) {
-    AppendUnicodeTo(origin, current, aString);
-    return Eof();
-  }
-
-  //DoErrTest(aString);
-  return result;
+  return Eof();
 
 }
 
