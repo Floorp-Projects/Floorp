@@ -56,6 +56,10 @@ listbox {
   color: -moz-FieldText;
 }
 
+listbox[disabled="true"] {
+  color: GrayText;
+}
+
 /* ::::: listitem ::::: */
 
 listitem {
