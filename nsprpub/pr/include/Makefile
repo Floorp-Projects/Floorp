@@ -48,7 +48,7 @@ RELEASE_HEADERS_DEST = $(RELEASE_INCLUDE_DIR)
 include $(MOD_DEPTH)/config/rules.mk
 
 export:: $(RELEASE_HEADERS)
-	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(DIST)/include
+	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(includedir)
 ifeq ($(MOZ_BITS),16)
 	$(INSTALL) -m 444 $(RELEASE_HEADERS) $(MOZ_INCL)
 endif

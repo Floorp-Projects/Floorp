@@ -222,11 +222,11 @@ PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
 
 TARGETS = $(PROGS)
 
-INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+INCLUDES = -I$(includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 
 # Setting the variables LDOPTS and LIBPR.  We first initialize
 # them to the default values, then adjust them for some platforms.
-LDOPTS = -L$(DIST)/lib
+LDOPTS = -L$(libdir)
 LIBPR = -lnspr$(MOD_VERSION)
 LIBPLC = -lplc$(MOD_VERSION)
 
@@ -234,16 +234,16 @@ ifndef USE_AUTOCONF
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
-  LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
-  LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).lib
+  LIBPR = $(libdir)/nspr$(MOD_VERSION).lib
+  LIBPLC= $(libdir)/plc$(MOD_VERSION).lib
 else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
   ifeq ($(OS_TARGET), WIN95)
-    LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
-    LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPR = $(libdir)/nspr$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPLC= $(libdir)/plc$(MOD_VERSION).$(LIB_SUFFIX)
   else
-    LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-    LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPR = $(libdir)/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
+    LIBPLC= $(libdir)/libplc$(MOD_VERSION).$(LIB_SUFFIX)
   endif
   ifdef PROFILE                                                                              
     LDOPTS += -PROFILE -MAP                                                                  
@@ -254,8 +254,8 @@ endif
 ifeq ($(OS_ARCH),OS2)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
   LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
-  LIBPR  = $(DIST)/lib/nspr$(MOD_VERSION).lib
-  LIBPLC = $(DIST)/lib/plc$(MOD_VERSION).lib
+  LIBPR  = $(libdir)/nspr$(MOD_VERSION).lib
+  LIBPLC = $(libdir)/plc$(MOD_VERSION).lib
 else
 ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
   LDOPTS = -Zlinker /PM:VIO
@@ -268,11 +268,11 @@ ifneq ($(OS_ARCH), WINNT)
 # or -rpath linker option or the LD_RUN_PATH environment variable).
 ifeq (,$(patsubst /%,,$(DIST)))
 # $(DIST) is already an absolute pathname.
-ABSOLUTE_LIB_DIR = $(DIST)/lib
+ABSOLUTE_LIB_DIR = $(libdir)
 else
 # $(DIST) is a relative pathname: prepend the current directory.
 PWD = $(shell pwd)
-ABSOLUTE_LIB_DIR = $(PWD)/$(DIST)/lib
+ABSOLUTE_LIB_DIR = $(PWD)/$(libdir)
 endif
 endif
 
@@ -304,8 +304,8 @@ ifeq ($(OS_ARCH), OSF1)
 # I haven't figured out how to pass -rpath to cc on OSF1 V3.2, so
 # we do static linking.
     ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
-        LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
-        LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
+        LIBPR = $(libdir)/libnspr$(MOD_VERSION).a
+        LIBPLC = $(libdir)/libplc$(MOD_VERSION).a
         EXTRA_LIBS = -lc_r
     else
         LDOPTS += -rpath $(ABSOLUTE_LIB_DIR)
@@ -393,8 +393,8 @@ ifeq ($(OS_ARCH), NEWS-OS)
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
 #export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
-    LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).a
-    LIBPLC = $(DIST)/lib/libplc$(MOD_VERSION).a
+    LIBPR = $(libdir)/libnspr$(MOD_VERSION).a
+    LIBPLC = $(libdir)/libplc$(MOD_VERSION).a
     EXTRA_LIBS = -lsocket -lnsl -lgen -lresolv
 endif
 
@@ -513,7 +513,7 @@ ifeq ($(AIX_PRE_4_2),1)
 $(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 	rm -f $@ $(AIX_TMP)
-	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(DIST)/lib/libnspr$(MOD_VERSION).a
+	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(libdir)/libnspr$(MOD_VERSION).a
 	$(CC) -o $@ $(AIX_TMP) $(AIX_WRAP)
 	rm -f $(AIX_TMP)
 

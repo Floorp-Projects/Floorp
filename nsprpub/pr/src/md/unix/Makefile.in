@@ -324,7 +324,7 @@ TARGETS = $(OBJS)
 
 endif # ! USE_AUTOCONF
 
-INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
+INCLUDES = -I$(includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 
 DEFINES	+= -D_NSPR_BUILD_
 
@@ -334,7 +334,7 @@ export:: $(TARGETS)
 #ifeq ($(OS_ARCH),AIX)
 #ifeq (,$(filter-out 3.2 4.1,$(OS_RELEASE)))
 #ifneq ($(USE_PTHREADS), 1)
-#	$(INSTALL) -m 444 $(OBJDIR)/aixwrap.$(OBJ_SUFFIX) $(DIST)/lib
+#	$(INSTALL) -m 444 $(OBJDIR)/aixwrap.$(OBJ_SUFFIX) $(libdir)
 #endif
 #endif
 #endif
@@ -345,7 +345,7 @@ ifneq ($(OS_RELEASE),4.1.3_U1)
 ifeq ($(OS_TEST),sun4u)
 $(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
 	$(LD) -G -z text -o $@ $(ULTRASPARC_ASOBJS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/lib
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(libdir)
 
 $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
 ifeq ($(USE_64),1)

@@ -162,7 +162,7 @@ endif
 endif
 
 ifdef GC_LEAK_DETECTOR
-OS_LIBS		+= -L$(DIST)/lib -lboehm
+OS_LIBS		+= -L$(libdir) -lboehm
 endif
 
 #
@@ -377,7 +377,7 @@ endif
 # Version information generation (begin)
 #
 ECHO = echo
-INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include -I$(MOD_DEPTH)/pr/include/private
+INCLUDES = -I$(includedir) -I$(MOD_DEPTH)/pr/include -I$(MOD_DEPTH)/pr/include/private
 TINC = $(OBJDIR)/_pr_bld.h
 
 ifeq ($(OS_TARGET),OS2)
@@ -427,21 +427,21 @@ endif
 
 
 #
-# The Client build wants the shared libraries in $(DIST)/bin,
+# The Client build wants the shared libraries in $(bindir),
 # so we also install them there.
 #
 
 export:: $(TARGETS)
-	$(INSTALL) -m 444 $(TARGETS) $(DIST)/lib
+	$(INSTALL) -m 444 $(TARGETS) $(libdir)
 ifdef SHARED_LIBRARY
 ifeq ($(OS_ARCH),HP-UX)
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/lib
-	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(DIST)/bin
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(libdir)
+	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(bindir)
 else
-	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(DIST)/bin
+	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(bindir)
 endif
 ifeq ($(OS_ARCH), OpenVMS)
-	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/lib
+	$(INSTALL) -m 444 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(libdir)
 endif
 endif
 ifeq ($(MOZ_BITS),16)
