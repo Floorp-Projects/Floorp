@@ -21,6 +21,14 @@
     padding               : 0px 0px 0px 3px;
   }  
   
+/********** resource bundle binding **********/
+
+#resource_bundle_navigator
+  {
+  -moz-binding            : url('chrome://navigator/skin/resources.xml#resource_bundle_navigator')	
+  }  
+  
+  
 /*
  * Images for the main buttons
  */

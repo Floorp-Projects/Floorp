@@ -55,6 +55,9 @@ Rights Reserved.
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
 </stringbundleset>
+
+<resourcebundle id="resource_bundle_messenger" />
+
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/shareglue.js"/>

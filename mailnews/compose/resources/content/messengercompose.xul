@@ -59,6 +59,9 @@
   <stringbundle id="bundle_composeMsgs" src="chrome://messenger/locale/messengercompose/composeMsgs.properties"/>
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 </stringbundleset>
+
+<resourcebundle id="resource_bundle_messengercompose"/>
+
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>

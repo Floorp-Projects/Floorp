@@ -6,3 +6,4 @@ classic.jar:
 	skin/classic/messenger/messenger.css
 	skin/classic/messenger/subscribe.css
 	skin/classic/messenger/msgAccountCentral.css
+	skin/classic/messenger/resources.xml

@@ -192,13 +192,14 @@
       min-width           : 1px;
     }
   
-  statusbarpanel
+  statusbarpanel, .statusbar-panel
     {
       border-left         : 1px solid #FFFFFF;
       border-top          : 1px solid #FFFFFF;
       border-right        : 1px solid #9D9D9D;
       border-bottom       : 1px solid #9D9D9D;
       padding             : 0px 4px 0px 4px;
+ 
     }
     
   .statusbarpanel-icononly

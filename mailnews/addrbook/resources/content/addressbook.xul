@@ -56,6 +56,10 @@ Rights Reserved.
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
+  
+<resourcebundle id="resource_bundle_addressbook" />
+
+  
 <script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
 <script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <script language="JavaScript" src="chrome://messenger/content/addressbook/addressbook.js"/>

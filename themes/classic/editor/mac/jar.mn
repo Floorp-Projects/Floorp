@@ -5,3 +5,5 @@ classic.jar:
     skin/classic/editor/EditorDialog.css                                 (EditorDialog.css)
     skin/classic/editor/EditorToolbars.css                               (EditorToolbars.css)
     skin/classic/editor/editor.css                                       (editor.css)
+    skin/classic/editor/resources.xml                                    (resources.xml)
+

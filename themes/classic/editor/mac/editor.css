@@ -32,6 +32,12 @@
   height: 400px;
 } 
 
+/********* image pre-cacheing ********/
+#resource_bundle_editor{
+  -moz-binding            : url('chrome://editor/skin/resources.xml#resource_bundle_editor') 
+}
+
+
 .source-editor, .source-editor:focus {
   margin: 0px 5px 5px 0px;
   border: 0px;

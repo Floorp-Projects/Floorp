@@ -102,6 +102,31 @@
       </xul:box>
     <children includes="menupopup"/>
     </content>
+    <resources>
+    	<!-- just active states, there is no 'hover' for buttons in this skin -->
+    	<image src="chrome://global/skin/button-active-left-top.gif" />
+    	<image src="chrome://global/skin/button-active-left-mid.gif" />
+    	<image src="chrome://global/skin/button-active-left-btm.gif" />
+    	<image src="chrome://global/skin/button-active-mid-top.gif" />
+    	<image src="chrome://global/skin/button-active-mid-mid.gif" />
+    	<image src="chrome://global/skin/button-active-mid-btm.gif" />
+    	<image src="chrome://global/skin/button-active-right-top.gif" />
+    	<image src="chrome://global/skin/button-active-right-mid.gif" />
+    	<image src="chrome://global/skin/button-active-right-btm.gif" />
+    	<image src="chrome://global/skin/button-def-active-left-top.gif" />
+    	<image src="chrome://global/skin/button-def-active-left-mid.gif" />
+    	<image src="chrome://global/skin/button-def-active-left-btm.gif" />
+    	<image src="chrome://global/skin/button-def-active-mid-top.gif" />
+    	<image src="chrome://global/skin/button-def-active-mid-mid.gif" />
+    	<image src="chrome://global/skin/button-def-active-mid-btm.gif" />
+    	<image src="chrome://global/skin/button-def-active-right-top.gif" />
+    	<image src="chrome://global/skin/button-def-active-right-mid.gif" />
+    	<image src="chrome://global/skin/button-def-active-right-btm.gif" />
+    	
+    	<!-- end resources -->
+    </resources>
+    
+    
   </binding>
 
 
