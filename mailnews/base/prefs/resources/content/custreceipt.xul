@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+<!ENTITY window.title "Customize Return Receipts">
+<!ENTITY pane.title "Customize Return Receipts">
+<!ENTITY sendReceipt.label "When I receive a message and its sender requested a receipt(MDN), send one in the following cases:">
+<!ENTITY notInToCc.label "If I'm not in the To or CC list of the message (as for a message to a mailing list):">
+<!ENTITY neverSend.label "Never Send">
+<!ENTITY automatically.label "Automatically">
+<!ENTITY askMe.label "Ask Me">
+<!ENTITY outside.label "If the message comes from outside the domain:">
+<!ENTITY other.label "In all other cases:">
+<!ENTITY ok.label "Ok">
+<!ENTITY cancel.label "Cancel">
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		title="&window.title;"
+		class="dialog"
+		onload="StartUp('Mailnews-Customize Receipts')" >
+
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+
+<html:script language="javascript">
+
+function DoOKButton() 
+{
+	top.window.close();
+}
+
+function DoCancelButton() 
+{
+	top.window.close();
+}
+
+</html:script>
+
+<html:div flex="100%">
+
+<html:br/>
+&sendReceipt.label;
+<html:form>
+	<html:table>
+		<html:tr><html:td> &notInToCc.label;
+			<html:select>
+			<html:option>&neverSend.label;</html:option>
+			<html:option>&automatically.label;</html:option>
+			<html:option>&askMe.label;</html:option>
+			</html:select>
+		</html:td></html:tr>
+		<html:tr><html:td>&outside.label;
+			<html:select>
+			<html:option>&neverSend.label;</html:option>
+			<html:option>&automatically.label;</html:option>
+			<html:option>&askMe.label;</html:option>
+			</html:select>
+		</html:td></html:tr>
+		<html:tr><html:td>&other.label;
+			<html:select>
+			<html:option>&neverSend.label;</html:option>
+			<html:option>&automatically.label;</html:option>
+			<html:option>&askMe.label;</html:option>
+			</html:select>
+		</html:td></html:tr>
+	</html:table>
+</html:form>
+
+<html:br/>
+<html:form>
+	<html:table>
+    <html:tr><html:td>
+		<html:input name="ok" type="button" value="&ok.label;" onclick="DoOKButton()"/>
+		<html:input name="cancel" type="button" value="&cancel.label;" onclick="DoCancelButton()"/>
+	</html:td></html:tr>
+	</html:table>
+</html:form>
+
+</html:div>
+</window>
