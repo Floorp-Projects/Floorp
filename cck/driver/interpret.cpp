@@ -288,7 +288,7 @@ BOOL CInterpret::IterateListBox(char *parms)
 	return TRUE;
 }
 
-BOOL CInterpret::GetRegistryKey( HKEY key, char *subkey, char *retdata )
+BOOL CInterpret::GetRegistryKey( HKEY key, const char *subkey, char *retdata )
 { 
 	long retval;
 	HKEY hkey;
@@ -315,6 +315,47 @@ BOOL CInterpret::OpenBrowser(const char *url)
 
 	/* get the .htm regkey and lookup the program */
 	if(GetRegistryKey(HKEY_CLASSES_ROOT,".htm",key) == ERROR_SUCCESS)
+	{
+		lstrcat(key,"\\shell\\open\\command");
+		if(GetRegistryKey(HKEY_CLASSES_ROOT,key,key) == ERROR_SUCCESS)
+		{
+			char *pos;
+			pos = strstr(key,"\"%1\"");
+			if(pos == NULL)     /* if no quotes */
+			{
+				/* now check for %1, without the quotes */
+				pos = strstr(key,"%1");
+				if(pos == NULL) /* if no parameter */
+				pos = key+lstrlen(key)-1;
+				else
+				*pos = '\0';    /* remove the parameter */
+			}
+			else
+			*pos = '\0';        /* remove the parameter */
+
+		lstrcat(pos," ");
+		lstrcat(pos,url);
+		ExecuteCommand(key,SW_SHOW,50); 
+		retflag = TRUE;
+		}
+	}
+
+	return retflag;
+}
+
+BOOL CInterpret::OpenViewer(const char *url)
+{
+	CString file2Open = url;
+	int filelength = file2Open.GetLength();
+	int findext = file2Open.ReverseFind('.');
+	int extlength = filelength - findext;
+	CString fileExtension = file2Open.Right(extlength);
+
+	char key[MAX_SIZE + MAX_SIZE];
+	BOOL retflag = FALSE;
+
+	/* get the .htm regkey and lookup the program */
+	if(GetRegistryKey(HKEY_CLASSES_ROOT,(LPCTSTR)fileExtension,key) == ERROR_SUCCESS)
 	{
 		lstrcat(key,"\\shell\\open\\command");
 		if(GetRegistryKey(HKEY_CLASSES_ROOT,key,key) == ERROR_SUCCESS)
@@ -779,6 +820,14 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					OpenBrowser((CHAR*)(LPCTSTR)Location);
 				}
 				
+				else if (strcmp(pcmd, "OpenViewer") == 0)
+				{
+					// This is to dsiplay an image in a separate dialog
+					CString Location = replaceVars(parms,NULL);
+					OpenViewer((CHAR*)(LPCTSTR)Location);
+				}
+				
+
 				else if (strcmp(pcmd, "ViewFile") == 0)
 				{
 					// This is to dsiplay an image in a separate dialog

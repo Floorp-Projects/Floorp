@@ -48,8 +48,9 @@ public:
 	BOOL CallDLL(char *dll, char *proc, char *parms, WIDGET *curWidget);
 	BOOL interpret(char *cmds, WIDGET *curWidget);
 	BOOL interpret(CString cmds, WIDGET *curWidget);
-	BOOL CInterpret::GetRegistryKey( HKEY key, char *subkey, char *retdata );
+	BOOL CInterpret::GetRegistryKey( HKEY key, const char *subkey, char *retdata );
 	BOOL CInterpret::OpenBrowser(const char *url);
+	BOOL CInterpret::OpenViewer(const char *url);
 	CString CInterpret::GetTrimFile(CString filePath);
 
 // Overrides
