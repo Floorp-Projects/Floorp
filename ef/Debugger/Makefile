@@ -26,13 +26,15 @@ MODULE_NAME = EF
 DIRS = Communication
 
 CPPSRCS =		Debugger.cpp			\
-			jvmdi.cpp			\
 			$(NULL)
-
 
 LOCAL_EXPORTS = 	Debugger.h			\
-			jvmdi.h				\
 			$(NULL)
+
+ifdef USE_JVMDI
+CPPSRCS +=		jvmdi.cpp
+LOCAL_EXPORTS +=	jvmdi.h
+endif
 
 NO_PROGRAM_IN_SUBDIRS = 1
 NO_INSTALL_IN_SUBDIRS = 1
