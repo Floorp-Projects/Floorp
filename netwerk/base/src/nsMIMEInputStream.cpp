@@ -183,17 +183,14 @@ void nsMIMEInputStream::InitStreams()
     mStartedReading = PR_TRUE;
 
     // We'll use the content-length stream to add the final \r\n
-    if (mAddContentLength && mData) {
-        PRUint32 cl;
-        mData->Available(&cl);
-        if (!cl) {
-            mContentLength = "\r\n";
+    if (mAddContentLength) {
+        PRUint32 cl = 0;
+        if (mData) {
+            mData->Available(&cl);
         }
-        else {
-            mContentLength = "Content-Length: ";
-            mContentLength.AppendInt((PRInt32)cl);
-            mContentLength.Append("\r\n\r\n");
-        }
+        mContentLength = "Content-Length: ";
+        mContentLength.AppendInt((PRInt32)cl);
+        mContentLength.Append("\r\n\r\n");
     }
     else {
         mContentLength = "\r\n";
