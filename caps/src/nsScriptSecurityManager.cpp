@@ -30,17 +30,36 @@
 #include "nsSystemPrincipal.h"
 #include "nsCodebasePrincipal.h"
 #include "nsCRT.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIScriptSecurityManagerIID, NS_ISCRIPTSECURITYMANAGER_IID);
+static NS_DEFINE_IID(kIXPCSecurityManagerIID, NS_IXPCSECURITYMANAGER_IID);
 
-NS_IMPL_ISUPPORTS(nsScriptSecurityManager, kIScriptSecurityManagerIID);
+NS_IMETHODIMP
+nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (nsnull == aInstancePtr) 
+      return NS_ERROR_NULL_POINTER;
+  if (aIID.Equals(kIScriptSecurityManagerIID)) {
+      *aInstancePtr = (void*)(nsIScriptSecurityManager *)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  if (aIID.Equals(kIXPCSecurityManagerIID)) {
+      *aInstancePtr = (void*)(nsIXPCSecurityManager *)this;
+      NS_ADDREF_THIS();
+      return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
 
-static char gFileScheme[] = "file";
+NS_IMPL_ADDREF(nsScriptSecurityManager);
+NS_IMPL_RELEASE(nsScriptSecurityManager);
 
-static char accessErrorMessage[] = 
+static const char accessErrorMessage[] = 
     "access disallowed from scripts at %s to documents at another domain";
 
 nsScriptSecurityManager::nsScriptSecurityManager(void)
@@ -94,33 +113,36 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
                                   nsIURI *aURI,
                                   PRBool *aResult)
 {
-#if 0
     nsXPIDLCString scheme;
-    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme)))
+    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
-    if (nsCRT::strcmp(scheme, "http") == 0 ||
-        nsCRT::strcmp(scheme, "https") == 0 ||
-        nsCRT::strcmp(scheme, "ftp") == 0 ||
-        nsCRT::strcmp(scheme, "mailto") == 0 ||
-        nsCRT::strcmp(scheme, "news") == 0)
+    if (nsCRT::strcmp(scheme, "http")         == 0 ||
+        nsCRT::strcmp(scheme, "https")        == 0 ||
+        nsCRT::strcmp(scheme, "javascript")   == 0 ||
+        nsCRT::strcmp(scheme, "ftp")          == 0 ||
+        nsCRT::strcmp(scheme, "mailto")       == 0 ||
+        nsCRT::strcmp(scheme, "news")         == 0)
     {
         *aResult = PR_TRUE;
         return NS_OK;
     }
     if (nsCRT::strcmp(scheme, "file") == 0) {
-        JSContext *cx = (JSContext*) (*aContext)->GetNativeContext();
+        JSContext *cx = (JSContext*) aContext->GetNativeContext();
         nsCOMPtr<nsIPrincipal> principal;
-        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))
+        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal))) || 
+            !principal)
+        {
             return NS_ERROR_FAILURE;
+        }
         nsCOMPtr<nsICodebasePrincipal> codebase;
         if (NS_SUCCEEDED(principal->QueryInterface(
                  NS_GET_IID(nsICodebasePrincipal), 
                  (void **) getter_AddRefs(codebase))))
         {
             nsCOMPtr<nsIURI> uri;
-            if (NS_SUCCEEDED(codebase->GetURI(getter_AddRefs(uri))) {
+            if (NS_SUCCEEDED(codebase->GetURI(getter_AddRefs(uri)))) {
                 nsXPIDLCString scheme2;
-                if (NS_SUCCEEDED(uri->GetScheme(getter_Copies(scheme2)) &&
+                if (NS_SUCCEEDED(uri->GetScheme(getter_Copies(scheme2))) &&
                     nsCRT::strcmp(scheme2, "file") == 0)
                 {
                     *aResult = PR_TRUE;
@@ -128,140 +150,33 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
                 }
             }
         }
-        if (NS_FAILED(principal->CanAccess("UniversalFileRead", aResult))
+        if (NS_FAILED(principal->CanAccess("UniversalFileRead", aResult)))
             return NS_ERROR_FAILURE;
+
+        if (!*aResult) {
+            // Report error.
+            nsXPIDLCString spec;
+            if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
+                return NS_ERROR_FAILURE;
+	        JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
+        }
         return NS_OK;
     }
+    if (nsCRT::strcmp(scheme, "about") == 0) {
+        nsXPIDLCString spec;
+        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
+            return NS_ERROR_FAILURE;
+        if (nsCRT::strcmp(spec, "about:blank") == 0) {
+            *aResult = PR_TRUE;
+            return NS_OK;
+        }
+    }
 
-
-
-#endif
-    *aResult = PR_TRUE;
+    // Otherwise, not allowed.
+    *aResult = PR_FALSE;
     return NS_OK;
 }
 
-#if 0
-// temporary: for reference
-const char *
-lm_CheckURL(JSContext *cx, const char *url_string, JSBool checkFile)
-{
-    char *protocol, *absolute;
-    JSObject *obj;
-    MochaDecoder *decoder;
-
-    protocol = NET_ParseURL(url_string, GET_PROTOCOL_PART);
-    if (!protocol || *protocol == '\0' || XP_STRCHR(protocol, '?')) {
-        lo_TopState *top_state;
-
-	obj = JS_GetGlobalObject(cx);
-	decoder = JS_GetPrivate(cx, obj);
-
-	LO_LockLayout();
-	top_state = lo_GetMochaTopState(decoder->window_context);
-        if (top_state && top_state->base_url) {
-	    absolute = NET_MakeAbsoluteURL(top_state->base_url,
-				           (char *)url_string);	/*XXX*/
-            /* 
-	     * Temporarily unlock layout so that we don't hold the lock
-	     * across a call (lm_CheckPermissions) that may result in 
-	     * synchronous event handling.
-	     */
-	    LO_UnlockLayout();
-            if (!lm_CheckPermissions(cx, obj, 
-                                     JSTARGET_UNIVERSAL_BROWSER_READ))
-            {
-                /* Don't leak information about the url of this page. */
-                XP_FREEIF(absolute);
-                return NULL;
-            }
-	    LO_LockLayout();
-	} else {
-	    absolute = NULL;
-	}
-	if (absolute) {
-	    if (protocol) XP_FREE(protocol);
-	    protocol = NET_ParseURL(absolute, GET_PROTOCOL_PART);
-	}
-	LO_UnlockLayout();
-    } else {
-	absolute = JS_strdup(cx, url_string);
-	if (!absolute) {
-	    XP_FREE(protocol);
-	    return NULL;
-	}
-	decoder = NULL;
-    }
-
-    if (absolute) {
-
-	/* Make sure it's a safe URL type. */
-	switch (NET_URL_Type(protocol)) {
-	  case FILE_TYPE_URL:
-            if (checkFile) {
-                const char *subjectOrigin = lm_GetSubjectOriginURL(cx);
-                if (subjectOrigin == NULL) {
-	            XP_FREE(protocol);
-	            return NULL;
-                }
-                if (NET_URL_Type(subjectOrigin) != FILE_TYPE_URL &&
-                    !lm_CanAccessTarget(cx, JSTARGET_UNIVERSAL_FILE_READ)) 
-                {
-                    XP_FREE(absolute);
-                    absolute = NULL;
-                }
-            }
-            break;
-	  case FTP_TYPE_URL:
-	  case GOPHER_TYPE_URL:
-	  case HTTP_TYPE_URL:
-	  case MAILTO_TYPE_URL:
-	  case NEWS_TYPE_URL:
-	  case RLOGIN_TYPE_URL:
-	  case TELNET_TYPE_URL:
-	  case TN3270_TYPE_URL:
-	  case WAIS_TYPE_URL:
-	  case SECURE_HTTP_TYPE_URL:
-	  case URN_TYPE_URL:
-	  case NFS_TYPE_URL:
-	  case MOCHA_TYPE_URL:
-	  case VIEW_SOURCE_TYPE_URL:
-	  case NETHELP_TYPE_URL:
-	  case WYSIWYG_TYPE_URL:
-	  case LDAP_TYPE_URL:
-#ifdef JAVA
-/* DHIREN */
-	  case MARIMBA_TYPE_URL:
-/* ~DHIREN */
-#endif
-	    /* These are "safe". */
-	    break;
-	  case ABOUT_TYPE_URL:
-	    if (XP_STRCASECMP(absolute, "about:blank") == 0)
-		break;
-	    if (XP_STRNCASECMP(absolute, "about:pics", 10) == 0)
-		break;
-	    /* these are OK if we are signed */
-	    if (lm_CanAccessTarget(cx, JSTARGET_UNIVERSAL_BROWSER_READ))
-		break;
-	    /* FALL THROUGH */
-	  default:
-	    /* All others are naughty. */
-	    /* XXX signing - should we allow these for signed scripts? */
-	    XP_FREE(absolute);
-	    absolute = NULL;
-	    break;
-	}
-    }
-
-    if (!absolute) {
-	JS_ReportError(cx, "illegal URL method '%s'",
-		       protocol && *protocol ? protocol : url_string);
-    }
-    if (protocol)
-	XP_FREE(protocol);
-    return absolute;
-}
-#endif
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
@@ -348,8 +263,9 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx,
         */
     }
 #endif
-    // Couldn't find principals.
-    return NS_ERROR_FAILURE;
+    // Couldn't find principals: no mobile code on stack.
+    *result = nsnull;
+    return NS_OK;
 }
 
 
@@ -385,7 +301,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     ** Get origin of subject and object and compare.
     */
     nsCOMPtr<nsIPrincipal> subject;
-    if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
+    if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))) || !subject)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIPrincipal> object;
@@ -577,3 +493,83 @@ nsScriptSecurityManager::GetSitePolicy(const char *org)
     PR_FREEIF(sitepol);
     return retval;
 }
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
+{
+#if 0
+    nsCOMPtr<nsIPrincipal> subject;
+    if (NS_FAILED(GetSubjectPrincipal(aJSContext, getter_AddRefs(subject))))
+        return NS_ERROR_FAILURE;
+    if (!subject)
+        return NS_OK;   // No mobile code executing.
+    PRBool ok = PR_FALSE;
+    if (NS_FAILED(subject->CanAccess("UniversalXPConnect", &ok)))
+        return NS_ERROR_FAILURE;
+    if (!ok) {
+        JS_ReportError(aJSContext, "Access denied to XPConnect service.");
+        NS_ASSERTION(ok, "Access denied to XPConnect service.");
+        return NS_ERROR_FAILURE;
+    }
+#endif
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCreateWrapper(JSContext * aJSContext, 
+                                          const nsIID & aIID, 
+                                          nsISupports * aObj)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCreateInstance(JSContext * aJSContext, 
+                                           const nsCID & aCID)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanGetService(JSContext * aJSContext, 
+                                       const nsCID & aCID)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanCallMethod(JSContext * aJSContext, 
+                                       const nsIID & aIID, 
+                                       nsISupports *aObj, 
+                                       nsIInterfaceInfo *aInterfaceInfo, 
+                                       PRUint16 aMethodIndex, 
+                                       const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanGetProperty(JSContext * aJSContext, 
+                                        const nsIID & aIID, 
+                                        nsISupports *aObj, 
+                                        nsIInterfaceInfo *aInterfaceInfo, 
+                                        PRUint16 aMethodIndex, 
+                                        const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CanSetProperty(JSContext * aJSContext, 
+                                        const nsIID & aIID, 
+                                        nsISupports *aObj, 
+                                        nsIInterfaceInfo *aInterfaceInfo, 
+                                        PRUint16 aMethodIndex, 
+                                        const jsid aName)
+{
+    return CheckXPCPermissions(aJSContext);
+}
+
+

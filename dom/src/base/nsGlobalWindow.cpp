@@ -1984,19 +1984,19 @@ GlobalWindowImpl::Open(JSContext *cx,
 // as a JS property named "arguments"
 NS_IMETHODIMP    
 GlobalWindowImpl::OpenDialog(JSContext *cx,
-                       jsval *argv, 
-                       PRUint32 argc, 
-                       nsIDOMWindow** aReturn)
+                             jsval *argv, 
+                             PRUint32 argc, 
+                             nsIDOMWindow** aReturn)
 {
   return OpenInternal(cx, argv, argc, PR_TRUE, aReturn);
 }
 
 nsresult    
 GlobalWindowImpl::OpenInternal(JSContext *cx,
-                       jsval *argv, 
-                       PRUint32 argc, 
-                       PRBool aDialog,
-                       nsIDOMWindow** aReturn)
+                               jsval *argv, 
+                               PRUint32 argc, 
+                               PRBool aDialog,
+                               nsIDOMWindow** aReturn)
 {
   PRUint32 chromeFlags;
   nsAutoString mAbsURL, name;
@@ -2096,6 +2096,21 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
       if (NS_SUCCEEDED(ReadyOpenedWebShell(newOuterShell, aReturn))) {
         if (aDialog && argc > 3)
           AttachArguments(*aReturn, argv+3, argc-3);
+
+        // Get security manager, check to see if URI is allowed.
+        nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        nsCOMPtr<nsIURI> newUrl;
+        nsCOMPtr<nsIScriptSecurityManager> secMan;
+        PRBool ok = PR_FALSE;
+        if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
+            NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||
+            NS_FAILED(secMan->CheckURI(scriptCX, newUrl, &ok)) || !ok) 
+        {
+          NS_RELEASE(newOuterShell);
+          NS_RELEASE(webShellContainer);
+          return NS_ERROR_FAILURE;
+        }
+
         newOuterShell->SetName(name.GetUnicode());
         newOuterShell->LoadURL(mAbsURL.GetUnicode());
         SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew, aDialog);

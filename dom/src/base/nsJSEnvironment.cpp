@@ -326,8 +326,6 @@ nsJSContext::AddNamedReference(void *aSlot, void *aScriptObject, const char *aNa
 NS_IMETHODIMP
 nsJSContext::RemoveReference(void *aSlot, void *aScriptObject)
 {
-	JSObject *obj = (JSObject *)aScriptObject;
-	
 	return (::JS_RemoveRoot(mContext, aSlot)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -476,6 +474,10 @@ nsIScriptContext* nsJSEnvironment::GetNewContext()
 	return context;
 }
 
+#define XPC_HOOK_VALUE (nsIXPCSecurityManager::HOOK_CREATE_WRAPPER  |   \
+                        nsIXPCSecurityManager::HOOK_CREATE_INSTANCE |   \
+                        nsIXPCSecurityManager::HOOK_GET_SERVICE)
+
 extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal, 
                                                   nsIScriptContext **aContext)
 {
@@ -507,7 +509,7 @@ extern "C" NS_DOM nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal
 	        (*aContext)->InitContext(aGlobal);
 	         aGlobal->SetContext(*aContext);
 				if (NS_SUCCEEDED(rv))
-					xpc->SetSecurityManagerForJSContext(cx, xpcSecurityManager, nsIXPCSecurityManager::HOOK_ALL);
+					xpc->SetSecurityManagerForJSContext(cx, xpcSecurityManager, XPC_HOOK_VALUE);
 			}
 			NS_RELEASE(owner);
 		}

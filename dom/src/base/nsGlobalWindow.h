@@ -399,6 +399,7 @@ protected:
                            PRBool aReplace);
   nsresult GetSourceURL(JSContext* cx,
                         nsIURI** sourceURL);
+  nsresult CheckURL(nsIURI *url);
 
   nsIWebShell *mWebShell;
   void *mScriptObject;
