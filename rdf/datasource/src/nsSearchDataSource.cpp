@@ -113,6 +113,7 @@ private:
 	static nsIRDFResource	*kNC_Site;
 	static nsIRDFResource	*kNC_Engine;
 	static nsIRDFResource	*kNC_HTML;
+	static nsIRDFResource	*kNC_Banner;
 
 	char			*mLine;
 
@@ -286,6 +287,7 @@ nsIRDFResource			*SearchDataSourceCallback::kNC_Site;
 nsIRDFResource			*SearchDataSourceCallback::kNC_Engine;
 nsIRDFResource			*SearchDataSourceCallback::kNC_loading;
 nsIRDFResource			*SearchDataSourceCallback::kNC_HTML;
+nsIRDFResource			*SearchDataSourceCallback::kNC_Banner;
 
 static const char		kEngineProtocol[] = "engine://";
 static const char		kSearchProtocol[] = "internetsearch:";
@@ -1746,6 +1748,7 @@ SearchDataSourceCallback::SearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFR
 		gRDFService->GetResource(NC_NAMESPACE_URI "Engine", &kNC_Engine);
 		gRDFService->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
 		gRDFService->GetResource(NC_NAMESPACE_URI "HTML", &kNC_HTML);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Banner", &kNC_Banner);
 	}
 }
 
@@ -1776,6 +1779,7 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 		NS_RELEASE(kNC_Engine);
 		NS_RELEASE(kNC_loading);
 		NS_RELEASE(kNC_HTML);
+		NS_RELEASE(kNC_Banner);
 	}
 }
 
@@ -1922,6 +1926,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 	nsAutoString	resultListStartStr(""), resultListEndStr("");
 	nsAutoString	resultItemStartStr(""), resultItemEndStr("");
 	nsAutoString	relevanceStartStr(""), relevanceEndStr("");
+	nsAutoString	bannerStartStr(""), bannerEndStr("");
 
 	SearchDataSource::GetData(data, "interpret", "resultListStart", resultListStartStr);
 	SearchDataSource::GetData(data, "interpret", "resultListEnd", resultListEndStr);
@@ -1929,6 +1934,8 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 	SearchDataSource::GetData(data, "interpret", "resultItemEnd", resultItemEndStr);
 	SearchDataSource::GetData(data, "interpret", "relevanceStart", relevanceStartStr);
 	SearchDataSource::GetData(data, "interpret", "relevanceEnd", relevanceEndStr);
+	SearchDataSource::GetData(data, "interpret", "bannerStart", bannerStartStr);
+	SearchDataSource::GetData(data, "interpret", "bannerEnd", bannerEndStr);
 
 #if 0
 	char *cStr;
@@ -1975,6 +1982,32 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		cStr = nsnull;
 	}
 #endif
+
+	// look for banner once in entire document
+	nsCOMPtr<nsIRDFLiteral>	bannerLiteral;
+	if ((bannerStartStr.Length() > 0) && (bannerEndStr.Length() > 0))
+	{
+		PRInt32	bannerStart = htmlResults.Find(bannerStartStr, PR_TRUE);
+		if (bannerStart >= 0)
+		{
+			nsAutoString	htmlCopy(htmlResults);
+			htmlCopy.Cut(0, bannerStart + bannerStartStr.Length());
+			
+			PRInt32	bannerEnd = htmlCopy.Find(bannerEndStr, PR_TRUE);
+			if (bannerEnd > 0)
+			{
+				htmlCopy.Truncate(bannerEnd);
+				if (htmlCopy.Length() > 0)
+				{
+					const PRUnichar	*bannerUni = htmlCopy.GetUnicode();
+					if (bannerUni)
+					{
+						gRDFService->GetLiteral(bannerUni, getter_AddRefs(bannerLiteral));
+					}
+				}
+			}
+		}
+	}
 
 	if (resultListStartStr.Length() > 0)
 	{
@@ -2155,6 +2188,12 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 					mDataSource->Assert(res, kNC_HTML, htmlLiteral, PR_TRUE);
 				}
 			}
+		}
+		
+		// set banner (if we have one)
+		if (bannerLiteral)
+		{
+			mDataSource->Assert(res, kNC_Banner, bannerLiteral, PR_TRUE);
 		}
 
 		// look for Site (if it isn't already set)
