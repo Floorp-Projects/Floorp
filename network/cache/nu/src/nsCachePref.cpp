@@ -24,6 +24,10 @@
 #include "prmem.h"
 #include "nsCacheManager.h"
 #include "plstr.h"
+#if defined(MODULAR_NETLIB) && defined(XP_PC)
+#include <direct.h>
+#include "nspr.h"
+#endif /* MODULAR_NETLIB */
 
 #ifdef XP_MAC
 #include "uprefd.h"
@@ -153,10 +157,34 @@ nsCachePref::SetupPrefs(const char* i_Pref)
 #endif
         else //TODO set to temp folder
         {
+#if defined(MODULAR_NETLIB) && defined(XP_PC)
+            char tmpBuf[_MAX_PATH];
+            PRFileInfo dir;
+            PRStatus status;
+            char *cacheDir = new char [_MAX_PATH];
+            if (!cacheDir)
+                return;
+            cacheDir = _getcwd(cacheDir, _MAX_PATH);
+
+            // setup the cache dir.
+            PL_strcpy(tmpBuf, cacheDir);
+            sprintf(cacheDir,"%s%s%s%s", tmpBuf, "\\", "cache", "\\");
+            status = PR_GetFileInfo(cacheDir, &dir);
+            if (PR_FAILURE == status) {
+                // Create the dir.
+                status = PR_MkDir(cacheDir, 0600);
+                if (PR_SUCCESS != status) {
+                    m_DiskCacheFolder = 0;
+                    return;
+                }
+            }
+            m_DiskCacheFolder = cacheDir;
+#else 
             m_DiskCacheFolder = new char [1];
             if (!m_DiskCacheFolder)
                 return;
             *m_DiskCacheFolder = '\0';
+#endif /* MODULAR_NETLIB */
         }
 
     }
