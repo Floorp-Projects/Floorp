@@ -57,17 +57,17 @@
 
   <script type="application/x-javascript" src="chrome://communicator/content/downloadmanager/downloadmanager.js"/>
 
- <data id="dialog.strings.confirmCancel">&confirmCancel;</data>
- <data id="dialog.strings.close">&close;</data>
- <data id="dialog.strings.progressMsgNoRate">&progressMsgNoRate;</data>
- <data id="dialog.strings.rateMsg">&rateMsg;</data>
- <data id="dialog.strings.completeMsg">&completeMsg;</data>
- <data id="dialog.strings.percentMsg">&percentMsg;</data>
- <data id="dialog.strings.shortTimeFormat">&shortTimeFormat;</data>
- <data id="dialog.strings.longTimeFormat">&longTimeFormat;</data>
- <data id="dialog.strings.unknownTime">&unknownTime;</data>
- <data id="dialog.strings.pausedMsg">&pausedMsg;</data>
- <data id="dialog.strings.filesFolder">&filesFolder;</data>
+ <data id="strings.confirmCancel">&confirmCancel;</data>
+ <data id="strings.close">&close;</data>
+ <data id="strings.progressMsgNoRate">&progressMsgNoRate;</data>
+ <data id="strings.rateMsg">&rateMsg;</data>
+ <data id="strings.completeMsg">&completeMsg;</data>
+ <data id="strings.percentMsg">&percentMsg;</data>
+ <data id="strings.shortTimeFormat">&shortTimeFormat;</data>
+ <data id="strings.longTimeFormat">&longTimeFormat;</data>
+ <data id="strings.unknownTime">&unknownTime;</data>
+ <data id="strings.pausedMsg">&pausedMsg;</data>
+ <data id="strings.filesFolder">&filesFolder;</data>
 
  <commands id="commands">
    <commandset id="commandUpdate_Downloads"
