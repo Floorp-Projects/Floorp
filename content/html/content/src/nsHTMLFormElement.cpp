@@ -1054,12 +1054,9 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   }
 
   // Get base URL
-  nsCOMPtr<nsIURI> baseURL;
-  GetBaseURL(*getter_AddRefs(baseURL));
-  NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
-  if (!baseURL) {
-    return NS_OK; // No base URL -> exit early, see Bug 30721
-  }
+  nsCOMPtr<nsIURI> docURL;
+  mDocument->GetDocumentURL(getter_AddRefs(docURL));
+  NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
 
   // If an action is not specified and we are inside
   // a HTML document then reload the URL. This makes us
@@ -1077,9 +1074,15 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
       return NS_OK;
     }
 
-    rv = baseURL->Clone(getter_AddRefs(actionURL));
+    rv = docURL->Clone(getter_AddRefs(actionURL));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
+    nsCOMPtr<nsIURI> baseURL;
+    GetBaseURL(*getter_AddRefs(baseURL));
+    NS_ASSERTION(baseURL, "No Base URL found in Form Submit!\n");
+    if (!baseURL) {
+      return NS_OK; // No base URL -> exit early, see Bug 30721
+    }
     rv = NS_NewURI(getter_AddRefs(actionURL), action, nsnull, baseURL);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1095,10 +1098,6 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> docURL;
-  mDocument->GetDocumentURL(getter_AddRefs(docURL));
-  NS_ENSURE_TRUE(docURL, NS_ERROR_UNEXPECTED);
-  
   rv = securityManager->CheckLoadURI(docURL, actionURL,
                                      nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);
