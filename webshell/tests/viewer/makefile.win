@@ -146,6 +146,7 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\gear1.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\rock_gra.gif $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\bg.jpg $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\checkboxTest.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test10.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test11.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test12.html $(DIST)\bin\res\samples
@@ -217,6 +218,7 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\gear1.gif
 	rm -f $(DIST)\bin\res\samples\rock_gra.gif
 	rm -f $(DIST)\bin\res\samples\bg.jpg
+	rm -f $(DIST)\bin\res\samples\checkboxTest.xul
 	rm -f $(DIST)\bin\res\samples\test10.html
 	rm -f $(DIST)\bin\res\samples\test11.html
 	rm -f $(DIST)\bin\res\samples\test12.html
