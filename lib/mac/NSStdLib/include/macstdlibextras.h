@@ -31,6 +31,8 @@ extern int strcasecmp(const char*, const char*);
 
 extern int strncasecmp(const char*, const char*, int length);
 
+extern void InitializeMacToolbox(void); // also calls InitializeSIOUX(false) if DEBUG.
+
 #if DEBUG
 extern void InitializeSIOUX(unsigned char isStandAlone);
 #endif		/* DEBUG */

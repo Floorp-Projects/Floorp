@@ -15,15 +15,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include "macstdlibextras.h"
+
+
 #include <Types.h>
 #include <Memory.h>
 
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-
-#include "macstdlibextras.h"
-
+#include <Quickdraw.h>
 
 int strcmpcore(const char*, const char*, int, int);
 
@@ -129,6 +131,28 @@ char *strdup(const char *source)
 	return newAllocation;
 }
 
+#pragma mark -
+
+
+void InitializeMacToolbox(void)
+{
+	// once only, macintosh specific initialization
+	static Boolean alreadyInitialized = false;
+	if (!alreadyInitialized)
+	{
+		alreadyInitialized = true;
+		InitGraf(&qd.thePort);
+		InitFonts();
+		InitWindows();
+		InitMenus();
+		TEInit();
+		InitDialogs(0);
+		InitCursor();
+#if DEBUG
+		InitializeSIOUX(false);
+#endif
+	}
+}
 
 #pragma mark -
 

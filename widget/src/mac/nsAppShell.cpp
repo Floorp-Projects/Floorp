@@ -41,6 +41,8 @@
 
 #include <stdlib.h>
 
+#include "macstdlibextras.h"
+
 PRBool nsAppShell::mInitializedToolbox = PR_FALSE;
 
 
@@ -121,19 +123,13 @@ NS_IMETHODIMP nsAppShell::Exit()
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
 { 
-	// once only, macintosh specific initialization
-	if (mInitializedToolbox == PR_FALSE)
-	{
-		mInitializedToolbox = PR_TRUE;
-		InitGraf(&qd.thePort);
-		InitFonts();
-		InitWindows();
-		InitMenus();
-		TEInit();
-		InitDialogs(0);
-		InitCursor();	
-	}
-
+  // The toolbox initialization code has moved to NSStdLib (InitializeToolbox)
+  
+  if (!mInitializedToolbox)
+  {
+    InitializeMacToolbox();
+    mInitializedToolbox == PR_TRUE;
+  }
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
 }
