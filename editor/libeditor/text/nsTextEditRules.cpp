@@ -478,7 +478,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
   nsresult result = aResult;  // if aResult is an error, we just return it
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   PRBool isCollapsed;
-  aSelection->IsCollapsed(&isCollapsed);
+  aSelection->GetIsCollapsed(&isCollapsed);
   NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after delete selection.");
   // if the delete selection resulted in no content 
   // insert a special bogus text node with a &nbsp; character in it.

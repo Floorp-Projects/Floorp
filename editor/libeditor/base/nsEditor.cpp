@@ -1058,7 +1058,7 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
     if (NS_SUCCEEDED(result) && selection)
     {
       PRBool collapsed;
-      result = selection->IsCollapsed(&collapsed);
+      result = selection->GetIsCollapsed(&collapsed);
       if (NS_SUCCEEDED(result) && !collapsed) {
         EditAggregateTxn *delSelTxn;
         result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
@@ -1320,7 +1320,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
   if ((NS_SUCCEEDED(result)) && selection)
   {
     PRBool collapsed;
-    result = selection->IsCollapsed(&collapsed);
+    result = selection->GetIsCollapsed(&collapsed);
     if (NS_SUCCEEDED(result) && !collapsed) 
     {
       result = DeleteSelection(nsIEditor::eLTR);
@@ -1341,7 +1341,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
       if (testSelectedNode)
       {
         PRBool testCollapsed;
-        debugResult = selection->IsCollapsed(&testCollapsed);
+        debugResult = selection->GetIsCollapsed(&testCollapsed);
         NS_ASSERTION((NS_SUCCEEDED(result)), "couldn't get a selection after deletion");
         NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");
       }
