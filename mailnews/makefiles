@@ -101,6 +101,7 @@ mailnews/mime/tests/xpcomtest/Makefile
 mailnews/mime/tests/mimetest/Makefile
 mailnews/mime/public/Makefile
 mailnews/mime/src/Makefile
+mailnews/mime/build/Makefile
 mailnews/mime/resources/Makefile
 mailnews/mime/resources/skin/Makefile
 mailnews/mime/resources/content/Makefile
