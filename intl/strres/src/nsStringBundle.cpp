@@ -938,7 +938,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
     PRInt32 offset = 0;
     for (i = 0; i < argCount; i++) {
       PRInt32 pos = args.FindChar('\n', PR_FALSE, offset);
-      if (pos = -1) 
+      if (pos == -1) 
         pos = args.Length();
       nsAutoString arg;
       args.Mid(arg, offset, pos);
