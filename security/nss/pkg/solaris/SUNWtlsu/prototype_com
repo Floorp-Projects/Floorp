@@ -1,8 +1,8 @@
 #
-# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: prototype_com,v 1.2 2002/10/02 23:11:35 kirk.erickson%sun.com Exp $"
+#ident	"$Id: prototype_com,v 1.2 2004/11/29 16:31:49 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -21,8 +21,16 @@ i depend=pkgdepend
 #
 # source locations relative to the prototype file
 #
-# SUNWtlsx
+# SUNWtlsu
 #
-d none usr 755 root sys
-d none usr/lib 755 root bin
-d none usr/lib/mps 755 root bin
+d none usr 0755 root sys
+d none usr/sfw 0755 root bin
+d none usr/sfw/bin 0755 root bin
+f none usr/sfw/bin/certutil 0755 root bin
+f none usr/sfw/bin/crlutil 0755 root bin
+f none usr/sfw/bin/cmsutil 0755 root bin
+f none usr/sfw/bin/modutil 0755 root bin
+f none usr/sfw/bin/pk12util 0755 root bin
+f none usr/sfw/bin/signtool 0755 root bin
+f none usr/sfw/bin/signver 0755 root bin
+f none usr/sfw/bin/ssltap 0755 root bin
