@@ -17,6 +17,8 @@ browser.jar:
 *   content/browser/pref/pref-navigator.xul                (content/pref-navigator.xul)
 *   content/browser/pref/pref-privacy.xul                  (content/pref-privacy.xul)
 *   content/browser/pref/pref-privacy.js                   (content/pref-privacy.js)
+*   content/browser/pref/pref-features-images.xul          (content/pref-features-images.xul)
+*   content/browser/pref/pref-features-images.js           (content/pref-features-images.js)
 *   content/browser/pref/pref-themes.xul                   (content/pref-themes.xul)
 *   content/browser/pref/pref-themes.js                    (content/pref-themes.js)
 *   content/browser/pref/pref-downloads.xul                (content/pref-downloads.xul)
@@ -25,6 +27,7 @@ browser.jar:
 *   content/browser/pref/editAction.js                     (content/editAction.js)
 *   content/browser/pref/plugins.xul                       (content/plugins.xul)
 *   content/browser/pref/plugins.js                        (content/plugins.js)
+*   content/browser/pref/permissions.js                    (content/permissions.js)
 
 en-US.jar:
 *+  locale/en-US/browser/pref/pref-navigator.dtd           (locale/pref-navigator.dtd)
@@ -35,6 +38,8 @@ en-US.jar:
     locale/en-US/browser/pref/pref-connection.dtd          (locale/pref-connection.dtd)    
     locale/en-US/browser/pref/pref-extensions.dtd          (locale/pref-extensions.dtd)
     locale/en-US/browser/pref/pref-features.dtd            (locale/pref-features.dtd)
+    locale/en-US/browser/pref/pref-features-images.dtd      (locale/pref-features-images.dtd)
+    locale/en-US/browser/pref/pref-features-images.properties (locale/pref-features-images.properties)
     locale/en-US/browser/pref/pref-fonts.dtd               (locale/pref-fonts.dtd)
     locale/en-US/browser/pref/pref-privacy.dtd             (locale/pref-privacy.dtd)
     locale/en-US/browser/pref/pref-themes.dtd              (locale/pref-themes.dtd)

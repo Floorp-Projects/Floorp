@@ -45,6 +45,8 @@
       onunload="unload();" headertitle="&lHeader;">
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-privacy.js"/>
+  <script src="chrome://browser/content/pref/permissions.js"/>
+  <script src="chrome://browser/content/cookieviewer/treeUtils.js"/>
 
   <stringbundle id="privacyBundle" src="chrome://browser/locale/pref/prefutilities.properties"/>
 
@@ -78,7 +80,7 @@
           <checkbox id="enablePasswords" label="&passwordsEnable.label;" accesskey="&passwordsEnable.accesskey;"
                     prefstring="signon.rememberSignons"/>
         </vbox>
-        <vbox pack="start">
+        <vbox>
           <button label="&viewPasswords.label;" oncommand="viewSignons();"/>
         </vbox>
       </hbox>
@@ -86,12 +88,7 @@
 
     <!-- Downloaded Files List -->
     <expander id="downloads" label="&downloads.label;" clearlabel="&clearDownloads.label;" persist="open">
-      <description>&downloadsDescription.label;</description>
-      
-      <hbox align="center" id="downloadsRetentionBox">
-        <description>&downloadsRetentionPolicy.label;</description>
-      </hbox>
-
+      <description>&downloadsDescription.label;</description>     
     </expander>
 
     <!-- Cookies -->
@@ -117,9 +114,10 @@
                     prefstring="network.cookie.warnAboutCookies"
                     style="margin-left: 23px;"/>
         </vbox>
-        <vbox pack="start">
+        <hbox align="start" pack="end">
+          <button label="&exceptions.label;" oncommand="cookieExceptions();"/>
           <button label="&viewCookies.label;" oncommand="viewCookies();"/>
-        </vbox>
+        </hbox>
       </hbox>
     </expander>    
     
@@ -141,14 +139,14 @@
     <button label="&clearAll.label;" oncommand="PrivacyPanel.clearAll();"/>
   </hbox>
 
-  <menulist id="downloadsRetentionPolicy" hidden="true"
-            preftype="int" prefstring="browser.download.retention" prefdefval="0">
-    <menupopup>
-      <menuitem value="0" label="&downloadsRemoveImmediately.label;"/>
-      <menuitem value="1" label="&downloadsRemoveExit.label;"/>
-      <menuitem value="2" label="&downloadsRemoveManually.label;"/>
-    </menupopup>
-  </menulist>
+#  <menulist id="downloadsRetentionPolicy" hidden="true"
+#            preftype="int" prefstring="browser.download.retention" prefdefval="0">
+#    <menupopup>
+#      <menuitem value="0" label="&downloadsRemoveImmediately.label;"/>
+#      <menuitem value="1" label="&downloadsRemoveExit.label;"/>
+#      <menuitem value="2" label="&downloadsRemoveManually.label;"/>
+#    </menupopup>
+#  </menulist>
 
 </page>
     

@@ -1,0 +1,10 @@
+<!ENTITY window.title                 "Exceptions">
+<!ENTITY treehead.sitename.label      "Site">
+<!ENTITY treehead.status.label        "Status">
+<!ENTITY addpermission.label          "New Site">
+<!ENTITY removepermission.label       "Remove Site">
+<!ENTITY removeallpermissions.label   "Remove All Sites">
+<!ENTITY div.bannedservers.label      "You can specify which web sites are always or never allowed to use cookies.  Type the exact address of the site you want to manage and then click Block or Allow.">
+<!ENTITY address.label                "Address of website:">
+<!ENTITY block.label                  "Block">
+<!ENTITY allow.label                  "Allow">

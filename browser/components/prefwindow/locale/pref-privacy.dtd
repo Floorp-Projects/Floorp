@@ -26,7 +26,8 @@
 <!ENTITY butAskFirst.label                 "but ask before accepting">
 <!ENTITY butAskFirst.accesskey             "b">
 <!ENTITY clearCookies.label                "Clear">
-<!ENTITY viewCookies.label                 "View Cookies...">
+<!ENTITY viewCookies.label                 "Stored Cookies...">
+<!ENTITY exceptions.label                  "Exceptions...">
 
 <!ENTITY formfill.label                    "Saved Form Information">
 <!ENTITY formfillDescription.label         "Information entered in web page forms and the Search Bar is saved to make filling out forms and searching faster.">
@@ -35,7 +36,7 @@
 <!ENTITY clearFormfill.label               "Clear">
 
 <!ENTITY downloads.label                   "Download Manager History">
-<!ENTITY downloadsDescription.label        "The Download Manager keeps track of recently downloaded files. THESE OPTIONS DO NOT WORK YET.">
+<!ENTITY downloadsDescription.label        "The Download Manager keeps track of recently downloaded files.">
 <!ENTITY downloadsRetentionPolicy.label    "Remove files from the Download Manager:">
 <!ENTITY downloadsRemoveImmediately.label  "Upon successful download">
 <!ENTITY downloadsRemoveExit.label         "When Firebird exits">

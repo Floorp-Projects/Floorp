@@ -37,19 +37,13 @@
 var _elementIDs = ["advancedJavaAllow", "enableJavaScript", "enableImagePref",
                    "popupPolicy", "allowWindowMoveResize", "allowWindowFlip", "allowHideStatusBar", 
                    "allowWindowStatusChange", "allowImageSrcChange"];
-
+var permType = "popup";
 var gImagesPref, gImagesEnabled, gImagesRestricted;
-var policyButton = null;
-var manageTree = null;
-var permissionsExist = null;
-
-const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
 
 function Startup()
 {
-  policyButton = document.getElementById("popupPolicy");
-  manageTree = document.getElementById("permissionsTree");
   loadPermissions();
+
   javascriptEnabledChange()
   
   gImagesPref = document.getElementById("enableImagePref");
@@ -64,6 +58,8 @@ function Startup()
   }
   if (!gImagesEnabled.checked)
     gImagesRestricted.disabled=true;
+  
+  top.hPrefWindow.registerOKCallbackFunc(onPopupPrefsOK);
 }
 
 function updateImagePref()
@@ -79,7 +75,7 @@ function updateImagePref()
 
 function viewImages() 
 {
-  openDialog("chrome://browser/content/cookieviewer/CookieViewer.xul","_blank",
+  openDialog("chrome://browser/content/pref/pref-features-images.xul","_blank",
               "chrome,resizable=yes,modal", "imageManager" );
 }
 
@@ -96,203 +92,6 @@ function javascriptEnabledChange()
   advancedButton.disabled = !isEnabled;
 }
 
-function togglePermissionEnabling() 
-{
-  var enabled = policyButton.checked;
-  var add = document.getElementById("addPermission");
-  var remove1 = document.getElementById("removePermission");
-  var remove2 = document.getElementById("removeAllPermissions");
-  var description = document.getElementById("popupDescription");
-  add.disabled = !enabled;
-  if (enabled && permissionsExist) {
-    remove1.disabled = false;
-    remove2.disabled = false;
-  } else {
-    remove1.disabled = true;
-    remove2.disabled = true;
-  }
-  description.disabled = !enabled;
-  manageTree.disabled = !enabled;
-}
-
-/*** =================== PERMISSIONS CODE =================== ***/
-
-var permissionsTreeView = {
-  rowCount : 0,
-  setTree : function(tree){},
-  getImageSrc : function(row,column) {},
-  getProgressMode : function(row,column) {},
-  getCellValue : function(row,column) {},
-  getCellText : function(row,column){
-    var rv="";
-    if (column=="siteCol") {
-      rv = permissions[row].rawHost;
-    } else if (column=="statusCol") {
-      rv = permissions[row].capability;
-    }
-    return rv;
-  },
-  isSeparator : function(index) {return false;},
-  isSorted: function() { return false; },
-  isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
-};
-var permissionsTree;
-
-var permissions           = [];
-var deletedPermissions   = [];
-
-function Permission(number, host, rawHost, type, capability) {
-  this.number = number;
-  this.host = host;
-  this.rawHost = rawHost;
-  this.type = type;
-  this.capability = capability;
-}
-
-var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
-permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
-var popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"].getService();
-popupmanager = popupmanager.QueryInterface(Components.interfaces.nsIPopupWindowManager);
-
-function DeleteAllFromTree
-    (tree, view, table, deletedTable, removeButton, removeAllButton) {
-
-  // remove all items from table and place in deleted table
-  for (var i=0; i<table.length; i++) {
-    deletedTable[deletedTable.length] = table[i];
-  }
-  table.length = 0;
-
-  // clear out selections
-  tree.treeBoxObject.view.selection.select(-1); 
-
-  // redisplay
-  view.rowCount = 0;
-  tree.treeBoxObject.invalidate();
-
-
-  // disable buttons
-  permissionsExist = false;
-  togglePermissionEnabling();
-}
-
-function DeleteSelectedItemFromTree
-    (tree, view, table, deletedTable, removeButton, removeAllButton) {
-
-  // remove selected items from list (by setting them to null) and place in deleted list
-  var selections = GetTreeSelections(tree);
-  for (var s=selections.length-1; s>= 0; s--) {
-    var i = selections[s];
-    deletedTable[deletedTable.length] = table[i];
-    table[i] = null;
-  }
-
-  // collapse list by removing all the null entries
-  for (var j=0; j<table.length; j++) {
-    if (table[j] == null) {
-      var k = j;
-      while ((k < table.length) && (table[k] == null)) {
-        k++;
-      }
-      table.splice(j, k-j);
-    }
-  }
-
-  // redisplay
-  var box = tree.treeBoxObject;
-  var firstRow = box.getFirstVisibleRow();
-  if (firstRow > (table.length-1) ) {
-    firstRow = table.length-1;
-  }
-  view.rowCount = table.length;
-  box.rowCountChanged(0, table.length);
-  box.scrollToRow(firstRow)
-
-  // update selection and/or buttons
-  if (table.length) {
-
-    // update selection
-    // note: we need to deselect before reselecting in order to trigger ...Selected method
-    var nextSelection = (selections[0] < table.length) ? selections[0] : table.length-1;
-    tree.treeBoxObject.view.selection.select(-1); 
-    tree.treeBoxObject.view.selection.select(nextSelection);
-    
-  } else {
-
-    // disable buttons
-    document.getElementById(removeButton).setAttribute("disabled", "true")
-    document.getElementById(removeAllButton).setAttribute("disabled","true");
-
-    // clear out selections
-    tree.treeBoxObject.view.selection.select(-1); 
-    permissionsExist = false;
-    togglePermissionEnabling();
-  }
-}
-
-function GetTreeSelections(tree) {
-  var selections = [];
-  var select = tree.treeBoxObject.selection;
-  if (select) {
-    var count = select.getRangeCount();
-    var min = new Object();
-    var max = new Object();
-    for (var i=0; i<count; i++) {
-      select.getRangeAt(i, min, max);
-      for (var k=min.value; k<=max.value; k++) {
-        if (k != -1) {
-          selections[selections.length] = k;
-        }
-      }
-    }
-  }
-  return selections;
-}
-
-function loadPermissions() {
-  // load permissions into a table
-  if (!permissionsTree)
-    permissionsTree = document.getElementById("permissionsTree");
-
-  var enumerator = permissionmanager.enumerator;
-  var count = 0;
-  var contentStr;
-  var dialogType = "popup"; // Popups
-  
-  while (enumerator.hasMoreElements()) {
-    var nextPermission = enumerator.getNext();
-    nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
-    if (nextPermission.type == dialogType) {
-      var host = nextPermission.host;
-      permissions[count] = 
-        new Permission(count++, host,
-                      (host.charAt(0)==".") ? host.substring(1,host.length) : host,
-                      nextPermission.type,
-                      "");
-    }
-  }
-  permissionsTreeView.rowCount = permissions.length;
-
-  // sort and display the table
-  permissionsTree.treeBoxObject.view = permissionsTreeView;
-  
-  if (permissions.length == 0)
-    permissionsExist = false;
-  else
-    permissionsExist = true;
-    
-  togglePermissionEnabling();
-}
-
-function PermissionSelected() {
-  var selections = GetTreeSelections(permissionsTree);
-  document.getElementById("removePermission").disabled = (selections.length < 1);
-}
-
 function AddPermission() {
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                               .getService(Components.interfaces.nsIPromptService);
@@ -304,43 +103,15 @@ function AddPermission() {
   var name = {};
   if (!promptService.prompt(window, title, message, name, null, {}))
       return;
-    
-  var nameToURI = name.value.replace(" ", "");    
-  var uri = Components.classes['@mozilla.org/network/standard-url;1'].createInstance(Components.interfaces.nsIURI);
-  uri.spec = nameToURI;
-  permissionmanager.add(uri, "popup", nsIPermissionManager.ALLOW_ACTION);
-  loadPermissions();
-}
-
-function DeletePermission() {
-  DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView,
-                                permissions, deletedPermissions,
-                                "removePermission", "removeAllPermissions");
-  FinalizePermissionDeletions();
-}
-
-function DeleteAllPermissions() {
-  DeleteAllFromTree(permissionsTree, permissionsTreeView,
-                        permissions, deletedPermissions,
-                        "removePermission", "removeAllPermissions");
-  FinalizePermissionDeletions();
-}
-
-function FinalizePermissionDeletions() {
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-
-  for (var p=0; p<deletedPermissions.length; p++) {
-    permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
-  }
-  deletedPermissions.length = 0;
-  loadPermissions();
-}
-
-function HandlePermissionKeyPress(e) {
-  if (e.keyCode == 46) {
-    DeletePermission();
-  }
+  
+  var host = name.value.replace(/ /g, "");
+  permissions[permissions.length] = new Permission(permissions.length, host,
+                                                   (host.charAt(0)==".") ? host.substring(1,host.length) : host,
+                                                   "popup",
+                                                   "");
+  permissionsTreeView.rowCount = permissions.length;
+  permissionsTree.treeBoxObject.rowCountChanged(permissions.length-1, 1);
+  permissionsTree.treeBoxObject.ensureRowIsVisible(permissions.length-1)
 }
 
 function showFontsAndColors()
@@ -422,4 +193,54 @@ function saveFontPrefs()
     pref.SetBoolPref(prefs[i], prefvalue)
   }
 }
+
+function onPopupPrefsOK()
+{
+  var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
+  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData[window.location.href];
+  if ('deletedPermissions' in dataObject) {
+    for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
+      permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
+    }
+  }
+  
+  if ('permissions' in dataObject) {
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                        .createInstance(Components.interfaces.nsIURI);    
+
+    for (p = 0; p < dataObject.permissions.length; ++p) {
+      uri.spec = dataObject.permissions[p].host;
+      if (permissionmanager.testPermission(uri, "popup") != dataObject.permissions[p].perm)
+        permissionmanager.add(uri, "popup", nsIPermissionManager.ALLOW_ACTION);
+    }
+  }
+}
+
+function onImagePrefsOK()
+{
+  var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
+  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-features-images.xul"];
+  if ('deletedPermissions' in dataObject) {
+    for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
+      permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
+    }
+  }
+  
+  if ('permissions' in dataObject) {
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                        .createInstance(Components.interfaces.nsIURI);    
+
+    for (p = 0; p < dataObject.permissions.length; ++p) {
+      uri.spec = dataObject.permissions[p].host;
+      if (permissionmanager.testPermission(uri, "image") != dataObject.permissions[p].perm)
+        permissionmanager.add(uri, "image", nsIPermissionManager.ALLOW_ACTION);
+    }
+  }
+}
+
+
 

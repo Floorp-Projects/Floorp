@@ -21,48 +21,20 @@
 # Contributor(s): 
 #   Ben Goodger
 
-var kObserverService;
-
 // interface variables
-var cookiemanager         = null;          // cookiemanager interface
-var permissionmanager     = null;          // permissionmanager interface
-var popupmanager          = null;          // popup manager
+var cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
+    cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
 var gDateService = null;
 
-// cookies and permissions list
+// cookies list
 var cookies              = [];
-var permissions          = [];
 var deletedCookies       = [];
-var deletedPermissions   = [];
-
-// differentiate between cookies, images, and popups
-const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
-const cookieType = "cookie";
-const imageType = "image";
-const popupType = "popup";
-
-var dialogType = cookieType;
-if (window.arguments[0] == "imageManager")
-  dialogType = imageType;
-else if (window.arguments[0] == "popupManager")
-  dialogType = popupType;
 
 var cookieBundle;
+var cookiesTree;
+const nsICookie = Components.interfaces.nsICookie;
 
 function Startup() {
-
-  // arguments passed to this routine:
-  //   cookieManager 
-  //   cookieManagerFromIcon
-  //   imageManager
- 
-  // xpconnect to cookiemanager/permissionmanager/popupmanager interfaces
-  cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
-  cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
-  permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
-  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
-  popupmanager = Components.classes["@mozilla.org/PopupWindowManager;1"].getService();
-  popupmanager = popupmanager.QueryInterface(Components.interfaces.nsIPopupWindowManager);
 
   // intialize gDateService
   if (!gDateService) {
@@ -72,85 +44,44 @@ function Startup() {
       .getService(nsIScriptableDateFormat);
   }
 
-  // intialize string bundle
-  cookieBundle = document.getElementById("cookieBundle");
-
-  // label the close button
-  document.documentElement.getButton("accept").label = cookieBundle.getString("close");
-
-  // determine if labelling is for cookies or images
-  try {
-    var tabBox = document.getElementById("tabbox");
-    var element;
-    if (dialogType == cookieType) {
-      element = document.getElementById("cookiesTab");
-      tabBox.selectedTab = element;
-    } else if (dialogType == imageType) {
-      element = document.getElementById("cookieviewer");
-      element.setAttribute("title", cookieBundle.getString("imageTitle"));
-      element = document.getElementById("permissionsTab");
-      element.label = cookieBundle.getString("tabBannedImages");
-      tabBox.selectedTab = element;
-      element = document.getElementById("permissionsText");
-      element.value = cookieBundle.getString("textBannedImages");
-      element = document.getElementById("cookiesTab");
-      element.hidden = "true";
-    } else {
-      element = document.getElementById("cookieviewer");
-      element.setAttribute("title", cookieBundle.getString("popupTitle"));
-      element = document.getElementById("permissionsTab");
-      element.label = cookieBundle.getString("tabBannedPopups");
-      tabBox.selectedTab = element;
-      element = document.getElementById("permissionsText");
-      element.value = cookieBundle.getString("textBannedPopups");
-      element = document.getElementById("cookiesTab");
-      element.hidden = "true";
-    }
-  } catch(e) {
-  }
-
-  // load in the cookies and permissions
-  cookiesTree = document.getElementById("cookiesTree");
-  permissionsTree = document.getElementById("permissionsTree");
-  if (dialogType == cookieType) {
-    loadCookies();
-  }
-  loadPermissions();
-
-  // be prepared to reload the display if anything changes
-  kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-  kObserverService.addObserver(cookieReloadDisplay, "cookieChanged", false);
-  kObserverService.addObserver(cookieReloadDisplay, "perm-changed", false);
+  //XXXBlake
+  // I removed the observer stuff, so yes, there are edge cases where
+  // if you're loading a page when you open prefs/cookie manager,
+  // the cookie manager won't display the new cookie added.
+  // I don't think it's a big deal (considering how hard it would be to fix)
 }
 
-function Shutdown() {
-  kObserverService.removeObserver(cookieReloadDisplay, "cookieChanged");
-  kObserverService.removeObserver(cookieReloadDisplay, "perm-changed");
+function onOK() {
+  window.opener.top.wsm.savePageData(window.location.href, window);
+  window.opener.top.hPrefWindow.registerOKCallbackFunc(window.opener.cookieViewerOnPrefsOK);
 }
 
-var cookieReloadDisplay = {
-  observe: function(subject, topic, state) {
-    if (topic == "cookieChanged") {
-      if (state == "cookies") {
-        cookies.length = 0;
-        if (lastCookieSortColumn == "rawHost") {
-          lastCookieSortAscending = !lastCookieSortAscending; // prevents sort from being reversed
-        }
-        loadCookies();
-      }
-    } else if (topic == "perm-changed") {
-      permissions.length = 0;
-      if (lastPermissionSortColumn == "rawHost") {
-        lastPermissionSortAscending = !lastPermissionSortAscending; // prevents sort from being reversed
-      }
-      loadPermissions();
-    }
-  }
+function GetFields()
+{
+  var dataObject = {};
+  dataObject.deletedCookies = deletedCookies;
+  dataObject.cookies = cookies;
+  dataObject.cookieBool = document.getElementById("checkbox").checked;
+  return dataObject;
 }
+
+function SetFields()
+{
+  var dataObject = window.opener.top.hPrefWindow.wsm.dataManager.pageData[window.location.href];
+  if ('cookies' in dataObject)
+    cookies = dataObject.cookies;
+
+  if ('deletedCookies' in dataObject)
+    deletedCookies = dataObject.deletedCookies;
+  
+  if ('cookieBool' in dataObject)
+    document.getElementById("checkbox").checked = dataObject.cookieBool;
+
+  loadCookies();
+}
+
 
 /*** =================== COOKIES CODE =================== ***/
-
-const nsICookie = Components.interfaces.nsICookie;
 
 var cookiesTreeView = {
   rowCount : 0,
@@ -164,8 +95,6 @@ var cookiesTreeView = {
       rv = cookies[row].rawHost;
     } else if (column=="nameCol") {
       rv = cookies[row].name;
-    } else if (column=="statusCol") {
-      rv = GetStatusString(cookies[row].status);
     }
     return rv;
   },
@@ -177,7 +106,6 @@ var cookiesTreeView = {
   getColumnProperties : function(column,columnElement,prop){},
   getCellProperties : function(row,prop){}
  };
-var cookiesTree;
 
 function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
                 status,policy) {
@@ -195,62 +123,41 @@ function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
 }
 
 function loadCookies() {
-  // load cookies into a table
-  var enumerator = cookiemanager.enumerator;
-  var count = 0;
-  var showPolicyField = false;
-  while (enumerator.hasMoreElements()) {
-    var nextCookie = enumerator.getNext();
-    if (!nextCookie) break;
-    nextCookie = nextCookie.QueryInterface(Components.interfaces.nsICookie);
-    var host = nextCookie.host;
-    if (nextCookie.policy != nsICookie.POLICY_UNKNOWN) {
-      showPolicyField = true;
+  if (!cookieBundle)
+    cookieBundle = document.getElementById("cookieBundle");
+
+  if (!cookiesTree)
+    cookiesTree = document.getElementById("cookiesTree");
+
+  var dataObject = window.opener.top.hPrefWindow.wsm.dataManager.pageData[window.location.href];
+  if (!('cookies' in dataObject)) {
+    // load cookies into a table
+    var enumerator = cookiemanager.enumerator;
+    var count = 0;
+    while (enumerator.hasMoreElements()) {
+      var nextCookie = enumerator.getNext();
+      if (!nextCookie) break;
+      nextCookie = nextCookie.QueryInterface(Components.interfaces.nsICookie);
+      var host = nextCookie.host;
+      if (nextCookie.policy != nsICookie.POLICY_UNKNOWN) {
+        showPolicyField = true;
+      }
+      cookies[count] =
+        new Cookie(count++, nextCookie.name, nextCookie.value, nextCookie.isDomain, host,
+                   (host.charAt(0)==".") ? host.substring(1,host.length) : host,
+                   nextCookie.path, nextCookie.isSecure, nextCookie.expires,
+                   nextCookie.status, nextCookie.policy);
     }
-    cookies[count] =
-      new Cookie(count++, nextCookie.name, nextCookie.value, nextCookie.isDomain, host,
-                 (host.charAt(0)==".") ? host.substring(1,host.length) : host,
-                 nextCookie.path, nextCookie.isSecure, nextCookie.expires,
-                 nextCookie.status, nextCookie.policy);
   }
+
   cookiesTreeView.rowCount = cookies.length;
-
-  // sort and display the table
   cookiesTree.treeBoxObject.view = cookiesTreeView;
-  if (window.arguments[0] == "cookieManagerFromIcon") { // came here by clicking on cookie icon
 
-    // turn off the icon
-    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    observerService.notifyObservers(null, "cookieIcon", "off");
-
-    // unhide the status column and sort by reverse order on that column
-    //    Note that the sort routine normally does an ascending sort.  The only
-    //    exception is if you sort on the same column more than once in a row.
-    //    In that case, the subsequent sorts will be the reverse of the previous ones.
-    //    So we are now going to force an initial reverse sort by fooling the sort routine
-    //    into thinking that it previously sorted on the status column and in ascending
-    //    order.
-    document.getElementById("statusCol").removeAttribute("hidden");
-    lastCookieSortAscending = true; // force order to have blanks last instead of vice versa
-    lastCookieSortColumn = 'status';
-    CookieColumnSort('status');
-
-  } else {
-    // sort by host column
-    CookieColumnSort('rawHost');
-  }
+ // sort by host column
+  CookieColumnSort('rawHost');
 
   // disable "remove all cookies" button if there are no cookies
-  if (cookies.length == 0) {
-    document.getElementById("removeAllCookies").setAttribute("disabled","true");
-  } else {
-    document.getElementById("removeAllCookies").removeAttribute("disabled");
-  }
-
-  // show policy field if at least one cookie has a policy
-  if (showPolicyField) {
-    document.getElementById("policyField").removeAttribute("hidden");
-  }
+  document.getElementById("removeAllCookies").disabled = cookies.length == 0;
 }
 
 function GetExpiresString(expires) {
@@ -262,18 +169,6 @@ function GetExpiresString(expires) {
                                        date.getMinutes(), date.getSeconds());
   }
   return cookieBundle.getString("AtEndOfSession");
-}
-
-function GetStatusString(status) {
-  switch (status) {
-    case nsICookie.STATUS_ACCEPTED:
-      return cookieBundle.getString("accepted");
-    case nsICookie.STATUS_FLAGGED:
-      return cookieBundle.getString("flagged");
-    case nsICookie.STATUS_DOWNGRADED:
-      return cookieBundle.getString("downgraded");
-  }
-  return "";
 }
 
 function GetPolicyString(policy) {
@@ -354,7 +249,6 @@ function DeleteCookie() {
   if (!cookies.length) {
     ClearCookieProperties();
   }
-  FinalizeCookieDeletions();
 }
 
 function DeleteAllCookies() {
@@ -362,17 +256,6 @@ function DeleteAllCookies() {
   DeleteAllFromTree(cookiesTree, cookiesTreeView,
                         cookies, deletedCookies,
                         "removeCookie", "removeAllCookies");
-  FinalizeCookieDeletions();
-}
-
-function FinalizeCookieDeletions() {
-  for (var c=0; c<deletedCookies.length; c++) {
-    cookiemanager.remove(deletedCookies[c].host,
-                         deletedCookies[c].name,
-                         deletedCookies[c].path,
-                         document.getElementById("checkbox").checked);
-  }
-  deletedCookies.length = 0;
 }
 
 function HandleCookieKeyPress(e) {
@@ -389,161 +272,4 @@ function CookieColumnSort(column) {
     SortTree(cookiesTree, cookiesTreeView, cookies,
                  column, lastCookieSortColumn, lastCookieSortAscending);
   lastCookieSortColumn = column;
-}
-
-/*** =================== PERMISSIONS CODE =================== ***/
-
-var permissionsTreeView = {
-  rowCount : 0,
-  setTree : function(tree){},
-  getImageSrc : function(row,column) {},
-  getProgressMode : function(row,column) {},
-  getCellValue : function(row,column) {},
-  getCellText : function(row,column){
-    var rv="";
-    if (column=="siteCol") {
-      rv = permissions[row].rawHost;
-    } else if (column=="statusCol") {
-      rv = permissions[row].capability;
-    }
-    return rv;
-  },
-  isSeparator : function(index) {return false;},
-  isSorted: function() { return false; },
-  isContainer : function(index) {return false;},
-  cycleHeader : function(aColId, aElt) {},
-  getRowProperties : function(row,column,prop){},
-  getColumnProperties : function(column,columnElement,prop){},
-  getCellProperties : function(row,prop){}
- };
-var permissionsTree;
-
-function Permission(number, host, rawHost, type, capability) {
-  this.number = number;
-  this.host = host;
-  this.rawHost = rawHost;
-  this.type = type;
-  this.capability = capability;
-}
-
-function loadPermissions() {
-  // load permissions into a table
-  var enumerator = permissionmanager.enumerator;
-  var count = 0;
-  var contentStr;
-  var canStr, cannotStr;
-  if (dialogType == cookieType) {
-    canStr="can";
-    cannotStr="cannot";
-  } else if (dialogType == imageType) {
-    canStr="canImages";
-    cannotStr="cannotImages";
-  } else {
-    canStr="canPopups";
-    cannotStr="cannotPopups";
-  }
-  while (enumerator.hasMoreElements()) {
-    var nextPermission = enumerator.getNext();
-    nextPermission = nextPermission.QueryInterface(Components.interfaces.nsIPermission);
-    if (nextPermission.type == dialogType) {
-      var host = nextPermission.host;
-      var capability = ( nextPermission.capability == nsIPermissionManager.ALLOW_ACTION ) ? true : false;
-      permissions[count] = 
-        new Permission(count++, host,
-                       (host.charAt(0)==".") ? host.substring(1,host.length) : host,
-                       nextPermission.type,
-                       cookieBundle.getString(capability?canStr:cannotStr));
-    }
-  }
-  permissionsTreeView.rowCount = permissions.length;
-
-  // sort and display the table
-  permissionsTree.treeBoxObject.view = permissionsTreeView;
-  PermissionColumnSort('rawHost', false);
-
-  // disable "remove all" button if there are no cookies/images
-  if (permissions.length == 0) {
-    document.getElementById("removeAllPermissions").setAttribute("disabled","true");
-  } else {
-    document.getElementById("removeAllPermissions").removeAttribute("disabled");
-  }
-
-}
-
-function PermissionSelected() {
-  var selections = GetTreeSelections(permissionsTree);
-  if (selections.length) {
-    document.getElementById("removePermission").removeAttribute("disabled");
-  }
-}
-
-function DeletePermission() {
-  DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView,
-                                 permissions, deletedPermissions,
-                                 "removePermission", "removeAllPermissions");
-  FinalizePermissionDeletions();
-}
-
-function DeleteAllPermissions() {
-  DeleteAllFromTree(permissionsTree, permissionsTreeView,
-                        permissions, deletedPermissions,
-                        "removePermission", "removeAllPermissions");
-  FinalizePermissionDeletions();
-}
-
-function FinalizePermissionDeletions() {
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService);
-
-  for (var p=0; p<deletedPermissions.length; p++) {
-    if (deletedPermissions[p].type == popupType) {
-      // we lost the URI's original scheme, but this will do because the scheme
-      // is stripped later anyway.
-      var uri = ioService.newURI("http://"+deletedPermissions[p].host, null, null);
-      popupmanager.remove(uri);
-    } else
-      permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
-  }
-  deletedPermissions.length = 0;
-}
-
-function HandlePermissionKeyPress(e) {
-  if (e.keyCode == 46) {
-    DeletePermission();
-  }
-}
-
-var lastPermissionSortColumn = "";
-var lastPermissionSortAscending = false;
-
-function PermissionColumnSort(column, updateSelection) {
-  lastPermissionSortAscending =
-    SortTree(permissionsTree, permissionsTreeView, permissions,
-                 column, lastPermissionSortColumn, lastPermissionSortAscending, 
-                 updateSelection);
-  lastPermissionSortColumn = column;
-}
-
-/*** ============ CODE FOR HELP BUTTON =================== ***/
-
-function getSelectedTab()
-{
-  var selTab = document.getElementById('tabbox').selectedTab;
-  var selTabID = selTab.getAttribute('id');
-  if (selTabID == 'cookiesTab') {
-    key = "cookies_stored";
-  } else {
-    key = "cookie_sites";
-  }  
-  return key;
-}
-
-function doHelpButton() {
-  if (dialogType == imageType) {
-    openHelp("image_mgr");
-  } else {
-    var uri = getSelectedTab();
-    openHelp(uri);
-  }
-  // XXX missing popup help
 }
