@@ -170,89 +170,85 @@ function onAccept()
 
     editorShell.BeginBatchChanges();
 
-    if (gRemoveImageMap)
+    try
     {
-      globalElement.removeAttribute("usemap");
-      if (gImageMap)
+      if (gRemoveImageMap)
       {
-        editorShell.DeleteElement(gImageMap);
-        gInsertNewIMap = true;
-        gImageMap = null;
+        globalElement.removeAttribute("usemap");
+        if (gImageMap)
+        {
+          editorShell.DeleteElement(gImageMap);
+          gInsertNewIMap = true;
+          gImageMap = null;
+        }
       }
-    }
-    else if (gImageMap)
-    {
-      // Assign to map if there is one
-      var mapName = gImageMap.getAttribute("name");
-      if (mapName != "")
+      else if (gImageMap)
       {
-        globalElement.setAttribute("usemap", ("#"+mapName));
-        if (globalElement.getAttribute("border") == "")
-          globalElement.setAttribute("border", 0);
-      }
+        // Assign to map if there is one
+        var mapName = gImageMap.getAttribute("name");
+        if (mapName != "")
+        {
+          globalElement.setAttribute("usemap", ("#"+mapName));
+          if (globalElement.getAttribute("border") == "")
+            globalElement.setAttribute("border", 0);
+        }
 
-      if (gInsertNewIMap)
-      {
-        try
+        if (gInsertNewIMap)
         {
           editorShell.editorDocument.body.appendChild(gImageMap);
         //editorShell.InsertElementAtSelection(gImageMap, false);
         }
-        catch (e)
-        {
-          dump("Exception occured in InsertElementAtSelection\n");
-        }
       }
-    }
 
-    // Create or remove the link as appropriate
-    var href = gDialog.hrefInput.value;
-    if (href != gOriginalHref) {
-      if (href)
-        editorShell.SetTextProperty("a", "href", href);
-      else
-        editorShell.RemoveTextProperty("href", "");
-    }
+      // Create or remove the link as appropriate
+      var href = gDialog.hrefInput.value;
+      if (href != gOriginalHref) {
+        if (href)
+          editorShell.SetTextProperty("a", "href", href);
+        else
+          editorShell.RemoveTextProperty("href", "");
+      }
 
-    // All values are valid - copy to actual element in doc or
-    //   element created to insert
-    editorShell.CloneAttributes(imageElement, globalElement);
-    if (gInsertNewImage)
-    {
-      try {
+      // All values are valid - copy to actual element in doc or
+      //   element created to insert
+      editorShell.CloneAttributes(imageElement, globalElement);
+      if (gInsertNewImage)
+      {
         // 'true' means delete the selection before inserting
         editorShell.InsertElementAtSelection(imageElement, true);
         // Also move the insertion point out of the link
         if (href)
           setTimeout(editorShell.RemoveTextProperty, 0, "href", "");
-      } catch (e) {
-        dump(e);
       }
-    }
 
-    // Check to see if the link was to a heading
-    // Do this last because it moves the caret (BAD!)
-    var index = gDialog.hrefInput.selectedIndex;
-    if (index in gHNodeArray && gHNodeArray[index])
-    {
-      var anchorNode = editorShell.editorDocument.createElement("a");
-      if (anchorNode)
+      // Check to see if the link was to a heading
+      // Do this last because it moves the caret (BAD!)
+      var index = gDialog.hrefInput.selectedIndex;
+      if (index in gHNodeArray && gHNodeArray[index])
       {
-        anchorNode.name = href.substr(1);
-        // Remember to use editorShell method so it is undoable!
-        editorShell.InsertElement(anchorNode, gHNodeArray[index], 0, false);
+        var anchorNode = editorShell.editorDocument.createElement("a");
+        if (anchorNode)
+        {
+          anchorNode.name = href.substr(1);
+          // Remember to use editorShell method so it is undoable!
+          editorShell.InsertElement(anchorNode, gHNodeArray[index], 0, false);
+        }
       }
-    }
 
-    // un-comment to see that inserting image maps does not work!
-    /*test = editorShell.CreateElementWithDefaults("map");
-    test.setAttribute("name", "testing");
-    testArea = editorShell.CreateElementWithDefaults("area");
-    testArea.setAttribute("shape", "circle");
-    testArea.setAttribute("coords", "86,102,52");
-    testArea.setAttribute("href", "test");
-    test.appendChild(testArea);
-    editorShell.InsertElementAtSelection(test, false);*/
+      // un-comment to see that inserting image maps does not work!
+      /*test = editorShell.CreateElementWithDefaults("map");
+      test.setAttribute("name", "testing");
+      testArea = editorShell.CreateElementWithDefaults("area");
+      testArea.setAttribute("shape", "circle");
+      testArea.setAttribute("coords", "86,102,52");
+      testArea.setAttribute("href", "test");
+      test.appendChild(testArea);
+      editorShell.InsertElementAtSelection(test, false);*/
+    }
+    catch (e)
+    {
+      dump(e);
+    }
 
     editorShell.EndBatchChanges();
 
