@@ -394,7 +394,7 @@ nsresult nsAbCardDataSource::createCardNode(nsIAbCard* card,
 	  createNode(nameString, target);
 	  delete[] name;
   }
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsAbCardDataSource::DoDeleteFromCard(nsIAbCard *card, nsISupportsArray *arguments)
