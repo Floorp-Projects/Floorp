@@ -558,7 +558,7 @@ nsDeviceContextGTK::SetDPI(PRInt32 aPrefDPI)
 {
   // Set OSVal to what the operating system thinks the logical resolution is.
   float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
-  PRInt32 OSVal = nscoord(mWidthFloat / screenWidthIn);
+  PRInt32 OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
 
   if (aPrefDPI > 0) {
     // If there's a valid pref value for the logical resolution,
