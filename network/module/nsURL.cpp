@@ -37,7 +37,7 @@ class URLImpl : public nsIURL {
 public:
   URLImpl(const nsString& aSpec);
   URLImpl(const nsIURL* aURL, const nsString& aSpec);
-  ~URLImpl();
+  virtual ~URLImpl();
 
   NS_DECL_ISUPPORTS
 

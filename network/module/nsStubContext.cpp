@@ -84,7 +84,7 @@ void stub_Alert(MWContext *context,
 {
     nsINetSupport *ins;
 
-    if (ins = getNetSupport(context->modular_data)) {
+    if (nsnull != (ins = getNetSupport(context->modular_data))) {
         nsString str(msg);
         ins->Alert(str);
         ins->Release();
@@ -103,7 +103,7 @@ XP_Bool stub_Confirm(MWContext *context,
 {
     nsINetSupport *ins;
     
-    if (ins = getNetSupport(context->modular_data)) {
+    if (nsnull != (ins = getNetSupport(context->modular_data))) {
         XP_Bool res;
         nsString str(msg);
         res = ins->Confirm(str);
@@ -121,7 +121,7 @@ char *stub_Prompt(MWContext *context,
 {
     nsINetSupport *ins;
     
-    if (ins = getNetSupport(context->modular_data)) {
+    if (nsnull != (ins = getNetSupport(context->modular_data))) {
         nsString str(msg);
         nsString defStr(def);
         nsString res;
@@ -151,7 +151,7 @@ stub_PromptUsernameAndPassword(MWContext *context,
 {
     nsINetSupport *ins;
     
-    if (ins = getNetSupport(context->modular_data)) {
+    if (nsnull != (ins = getNetSupport(context->modular_data))) {
         nsString str(msg);
         nsString userStr;
         nsString pwdStr;
@@ -186,7 +186,7 @@ char *stub_PromptPassword(MWContext *context,
 {
     nsINetSupport *ins;
     
-    if (ins = getNetSupport(context->modular_data)) {
+    if (nsnull != (ins = getNetSupport(context->modular_data))) {
         nsString str(msg);
         nsString res;
         if (ins->PromptPassword(msg, res)) {
@@ -216,7 +216,7 @@ PRIVATE void stub_GraphProgressInit(MWContext  *context,
     if (URL_s->load_background)
         return;
 
-    if (pListener = getStreamListener(URL_s)) {
+    if (nsnull != (pListener = getStreamListener(URL_s))) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
         pListener->OnProgress(pConn->pURL, 0, content_length);
         pListener->Release();
@@ -235,7 +235,7 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
     if (URL_s->load_background)
         return;
 
-    if (pListener = getStreamListener(URL_s)) {
+    if (nsnull != (pListener = getStreamListener(URL_s))) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
         pListener->OnProgress(pConn->pURL, bytes_received, 
                               content_length);
@@ -259,7 +259,7 @@ PRIVATE void stub_GraphProgressDestroy(MWContext  *context,
     if (URL_s->load_background)
         return;
 
-    if (pListener = getStreamListener(URL_s)) {
+    if (nsnull != (pListener = getStreamListener(URL_s))) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
         pListener->OnProgress(pConn->pURL, total_bytes_read, 
                               content_length);
@@ -270,7 +270,7 @@ PRIVATE void stub_Progress(MWContext *context, const char *msg)
 {
     nsIStreamListener *pListener;
 
-    if (pListener = getStreamListener(context->modular_data)) {
+    if (nsnull != (pListener = getStreamListener(context->modular_data))) {
         nsConnectionInfo *pConn = 
             (nsConnectionInfo *) context->modular_data->fe_data;
         nsAutoString status(msg);
