@@ -647,6 +647,60 @@ xlib_rgb_choose_visual (void)
   }
 }
 
+static void
+xlib_rgb_choose_visual_for_xprint (int aDepth)
+{
+  XVisualInfo *visuals;
+  XVisualInfo *visual;
+  XVisualInfo *best_visual;
+  XVisualInfo *final_visual;
+  XVisualInfo template;
+  int num_visuals;
+  uint32 score;
+  int cur_visual = 1;
+  int i;
+
+  XWindowAttributes win_att;
+  Status ret_stat;
+  Visual      *root_visual;
+
+  ret_stat = XGetWindowAttributes(image_info->display, 
+			RootWindow(image_info->display, image_info->screen_num),
+			&win_att);
+  root_visual = win_att.visual;
+  template.screen = image_info->screen_num;
+  visuals = XGetVisualInfo(image_info->display, VisualScreenMask,
+			   &template, &num_visuals);
+ 
+  best_visual = visuals;
+  if (best_visual->visual != root_visual) {
+     for (i = cur_visual; i < num_visuals; i++) {
+        visual = &visuals[i];
+        if (visual->visual == root_visual) {
+           best_visual = visual;
+           break;
+        }
+      }
+   }
+  /* make a copy of the visual so that we can free
+     the allocated visual list above. */
+  final_visual = malloc(sizeof(XVisualInfo));
+  memcpy(final_visual, best_visual, sizeof(XVisualInfo));
+  image_info->x_visual_info = final_visual;
+  XFree(visuals);
+  /* set up the shift and the precision for the red, green and blue.
+     this only applies to cool visuals like true color and direct color. */
+  if (image_info->x_visual_info->class == TrueColor ||
+      image_info->x_visual_info->class == DirectColor) {
+    image_info->red_shift = xlib_get_shift_from_mask(image_info->x_visual_info->red_mask);
+    image_info->red_prec = xlib_get_prec_from_mask(image_info->x_visual_info->red_mask);
+    image_info->green_shift = xlib_get_shift_from_mask(image_info->x_visual_info->green_mask);
+    image_info->green_prec = xlib_get_prec_from_mask(image_info->x_visual_info->green_mask);
+    image_info->blue_shift = xlib_get_shift_from_mask(image_info->x_visual_info->blue_mask);
+    image_info->blue_prec = xlib_get_prec_from_mask(image_info->x_visual_info->blue_mask);
+  }
+}
+
 static void xlib_rgb_select_conv (XImage *image, ByteOrder byte_order);
 
 static void
@@ -693,6 +747,13 @@ xlib_rgb_set_gray_cmap (Colormap cmap)
 void
 xlib_rgb_init (Display *display, Screen *screen)
 {
+  int prefDepth = -1;            // let the function do the visual scoring
+  xlib_rgb_init_with_depth(display, screen, prefDepth);
+}
+
+void
+xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth)
+{
   int i;
   static const int byte_order[1] = { 1 };
 
@@ -725,7 +786,7 @@ xlib_rgb_init (Display *display, Screen *screen)
 
       image_info->display = display;
       image_info->screen = screen;
-      image_info->screen_num = DefaultScreen(display);
+      image_info->screen_num = XScreenNumberOfScreen(screen);
       image_info->x_visual_info = NULL;
       image_info->cmap = 0;
       image_info->default_visualid = DefaultVisual(display, image_info->screen_num);
@@ -756,7 +817,10 @@ xlib_rgb_init (Display *display, Screen *screen)
       image_info->blue_shift = 0;
       image_info->blue_prec = 0;
 
-      xlib_rgb_choose_visual ();
+      if (prefDepth != -1)
+        xlib_rgb_choose_visual_for_xprint (prefDepth);
+      else
+        xlib_rgb_choose_visual ();
 
       if ((image_info->x_visual_info->class == PseudoColor ||
 	   image_info->x_visual_info->class == StaticColor) &&
@@ -772,7 +836,7 @@ xlib_rgb_init (Display *display, Screen *screen)
 	      image_info->x_visual_info->visualid != image_info->default_visualid->visualid)
 	    {
 	      image_info->cmap = XCreateColormap(image_info->display,
-						 DefaultRootWindow(image_info->display),
+						 RootWindow(image_info->display, image_info->screen_num),
 						 image_info->x_visual_info->visual,
 						 AllocNone);
 	      image_info->cmap_alloced = TRUE;
@@ -780,7 +844,7 @@ xlib_rgb_init (Display *display, Screen *screen)
 	  if (!xlib_rgb_do_colormaps ())
 	    {
 	      image_info->cmap = XCreateColormap(image_info->display,
-						 DefaultRootWindow(image_info->display),
+						 RootWindow(image_info->display, image_info->screen_num),
 						 image_info->x_visual_info->visual,
 						 AllocNone);
 	      image_info->cmap_alloced = TRUE;
@@ -799,7 +863,7 @@ xlib_rgb_init (Display *display, Screen *screen)
       else if (image_info->x_visual_info->class == GrayScale)
 	{
 	  image_info->cmap = XCreateColormap(image_info->display,
-					     DefaultRootWindow(image_info->display),
+					     RootWindow(image_info->display, image_info->screen_num),
 					     image_info->x_visual_info->visual,
 					     AllocNone);
 	  xlib_rgb_set_gray_cmap (image_info->cmap);
@@ -815,7 +879,7 @@ xlib_rgb_init (Display *display, Screen *screen)
 	  else
 	    {
 	      image_info->cmap = XCreateColormap(image_info->display,
-						 DefaultRootWindow(image_info->display),
+						 RootWindow(image_info->display, image_info->screen_num),
 						 image_info->x_visual_info->visual,
 						 AllocNone);
 	      image_info->cmap_alloced = TRUE;
