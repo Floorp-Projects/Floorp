@@ -115,7 +115,7 @@ NS_IMETHODIMP imgContainer::GetCurrentFrame(gfxIImageFrame **aCurrentFrame)
 /* readonly attribute unsigned long numFrames; */
 NS_IMETHODIMP imgContainer::GetNumFrames(PRUint32 *aNumFrames)
 {
-  NS_ASSERTION(aFormat, "imgContainer::GetNumFrames; Invalid Arg");
+  NS_ASSERTION(aNumFrames, "imgContainer::GetNumFrames; Invalid Arg");
   if (!aNumFrames)
     return NS_ERROR_INVALID_ARG;
 
