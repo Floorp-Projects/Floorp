@@ -46,7 +46,6 @@ LLIBS=\
     $(LIBNSPR)		            \
     $(DIST)\lib\plc3.lib    \
     $(DIST)\lib\raptorbase.lib  \
-    $(DIST)\lib\rdfutil_s.lib	\
 	$(NULL)
 
 MISCDEP=$(LLIBS)
@@ -57,8 +56,6 @@ LINCS=  -I$(DEPTH)\mailnews\local\src	\
 		-I$(PUBLIC)\xpcom				\
 		-I$(PUBLIC)\mailnews			\
 		-I$(PUBLIC)\raptor				\
-		-I$(PUBLIC)\rdf					\
-		-I$(PUBLIC)\rdfutil				\
 		-I$(PUBLIC)\netlib				\
         $(NULL)
 

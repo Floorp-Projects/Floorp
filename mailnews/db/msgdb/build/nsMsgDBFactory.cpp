@@ -33,9 +33,6 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
-static NS_DEFINE_CID(kMailboxMessageResourceCID, NS_MAILBOXMESSAGERESOURCE_CID);
-static NS_DEFINE_CID(kNewsMessageResourceCID, NS_NEWSMESSAGERESOURCE_CID);
-static NS_DEFINE_CID(kImapMessageResourceCID, NS_IMAPMESSAGERESOURCE_CID);
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -128,12 +125,7 @@ nsresult nsMsgDBFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, 
 	{
 		inst = new nsImapMailDatabase();
 	}
-	else if (mClassID.Equals(kMailboxMessageResourceCID) || mClassID.Equals(kNewsMessageResourceCID) ||
-		mClassID.Equals(kImapMessageResourceCID)) 
-	{
-		inst = NS_STATIC_CAST(nsIMessage*, new nsMsgHdr());
-	}
-	
+
 	if (inst == nsnull)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -204,22 +196,6 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->RegisterComponent(kCImapDB, nsnull, nsnull,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
-  rv = compMgr->RegisterComponent(kMailboxMessageResourceCID,
-                                  "Mail Resource Factory",
-                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox_message",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-  rv = compMgr->RegisterComponent(kNewsMessageResourceCID,
-                                  "News Resource Factory",
-                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "news_message",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
-  
-  rv = compMgr->RegisterComponent(kImapMessageResourceCID,
-                                  "Imap Resource Factory",
-                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "imap_message",
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv)) goto done;
   
   done:
   (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
@@ -247,15 +223,6 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kCNewsDB, path);
-  if (NS_FAILED(rv)) goto done;
-
-  rv = compMgr->UnregisterComponent(kMailboxMessageResourceCID, path);
-  if (NS_FAILED(rv)) goto done;
-
-  rv = compMgr->UnregisterComponent(kNewsMessageResourceCID, path);
-  if (NS_FAILED(rv)) goto done;
-
-  rv = compMgr->UnregisterComponent(kImapMessageResourceCID, path);
   if (NS_FAILED(rv)) goto done;
 
   done:
