@@ -107,7 +107,6 @@ protected:
                             RowGroupReflowState& aState,
                             nsIFrame*            aKidFrame,
                             const nsRect&        aKidRect,
-                            nsStyleMolecule*     aKidMol,
                             nsSize*              aMaxElementSize,
                             nsSize&              aKidMaxElementSize);
 

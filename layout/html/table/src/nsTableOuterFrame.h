@@ -162,11 +162,9 @@ protected:
                                 OuterTableReflowState& aState,
                                 nsStyleMolecule* aKidMol);
 
-  void          PlaceChild( nsIPresContext*    aPresContext,
-                            OuterTableReflowState& aState,
+  void          PlaceChild( OuterTableReflowState& aState,
                             nsIFrame*          aKidFrame,
                             const nsRect&      aKidRect,
-                            nsStyleMolecule*   aKidMol,
                             nsSize*            aMaxElementSize,
                             nsSize&            aKidMaxElementSize);
 
@@ -215,6 +213,21 @@ protected:
   virtual void PrepareContinuingFrame(nsIPresContext*    aPresContext,
                                       nsIFrame*          aParent,
                                       nsTableOuterFrame* aContFrame);
+
+  /**
+   * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow
+   * pointers.
+   *
+   * Updates the child count and content offsets of all containers that are
+   * affected
+   *
+   * Overloaded here because nsContainerFrame makes assumptions about pseudo-frames
+   * that are not true for tables.
+   *
+   * @param   aChild child this child's next-in-flow
+   * @return  PR_TRUE if successful and PR_FALSE otherwise
+   */
+  PRBool nsTableOuterFrame::DeleteChildsNextInFlow(nsIFrame* aChild);
 
   /** create the inner table frame (nsTableFrame)
     * handles initial creation as well as creation of continuing frames
