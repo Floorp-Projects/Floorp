@@ -41,7 +41,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDeviceContextSpec.h"
-#include "nsDeviceContextSpecB.h" 
 #include "nsVoidArray.h"
 #ifdef USE_POSTSCRIPT
 #include "nsIDeviceContextSpecPS.h"
