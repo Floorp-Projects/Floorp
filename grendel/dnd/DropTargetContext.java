@@ -25,7 +25,7 @@ import java.awt.*;
 import java.awt.datatransfer.*;
 
 public class DropTargetContext {
-  public DropTarget getDropTarget() {
+  public DropTarget getGrendelDropTarget() {
     return null;
   }
 

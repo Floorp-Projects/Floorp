@@ -24,5 +24,5 @@ package grendel.dnd;
 public interface DropTargetComponent {
   public void setDropTarget(DropTarget dt)
     throws IllegalArgumentException;
-  public DropTarget getDropTarget();
+  public DropTarget getGrendelDropTarget();
 }
