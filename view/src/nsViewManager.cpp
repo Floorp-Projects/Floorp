@@ -1701,6 +1701,9 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
   NS_PRECONDITION(aView, "Must have a view");
   NS_PRECONDITION(aView->HasWidget(), "View must have a widget");
 
+  NS_PRECONDITION(!mInScroll, "Nested scrolls?");
+  mInScroll = PR_TRUE;
+  
   // Since the view is actually moving the widget by -aScrollAmount, that's the
   // offset we want to use when accumulating dirty rects.
   AccumulateIntersectionsIntoDirtyRegion(aView, GetRootView(), -aScrollAmount);
@@ -1708,27 +1711,28 @@ nsViewManager::WillBitBlit(nsView* aView, nsPoint aScrollAmount)
 
 // Invalidate all widgets which overlap the view, other than the view's own widgets.
 void
-nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
+nsViewManager::UpdateViewAfterScroll(nsView *aView)
 {
-  nsView* view = NS_STATIC_CAST(nsView*, aView);
-
+  NS_ASSERTION(RootViewManager()->mInScroll,
+               "Someone forgot to call WillBitBlit()");
   // Look at the view's clipped rect. It may be that part of the view is clipped out
   // in which case we don't need to worry about invalidating the clipped-out part.
-  nsRect damageRect = view->GetClippedRect();
+  nsRect damageRect = aView->GetClippedRect();
   if (damageRect.IsEmpty()) {
     return;
   }
-  damageRect.MoveBy(ComputeViewOffset(view));
+  damageRect.MoveBy(ComputeViewOffset(aView));
 
   // if this is a floating view, it isn't covered by any widgets other than
   // its children, which are handled by the widget scroller.
-  if (view->GetFloating()) {
+  if (aView->GetFloating()) {
     return;
   }
 
-  UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damageRect), view);
+  UpdateWidgetArea(RootViewManager()->GetRootView(), nsRegion(damageRect), aView);
 
   Composite();
+  mInScroll = PR_FALSE;
 }
 
 /**
@@ -1999,17 +2003,20 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // Just notify our own view observer that we're about to paint
             // XXXbz do we need to notify other view observers for viewmanagers
             // in our tree?
-            nsIViewObserver* observer = GetViewObserver();
-            if (observer) {
-              // Do an update view batch, and make sure we don't process those
-              // invalidates right now.  Note that the observer may try to
-              // reenter this code from inside WillPaint() by trying to do a
-              // synchronous paint, but since refresh will be disabled it won't
-              // be able to do the paint.  We should really sort out the rules
-              // on our synch painting api....
-              BeginUpdateViewBatch();
-              observer->WillPaint();
-              EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
+            // Make sure to not send WillPaint notifications while scrolling
+            if (!mInScroll) {
+              nsIViewObserver* observer = GetViewObserver();
+              if (observer) {
+                // Do an update view batch, and make sure we don't process
+                // those invalidates right now.  Note that the observer may try
+                // to reenter this code from inside WillPaint() by trying to do
+                // a synchronous paint, but since refresh will be disabled it
+                // won't be able to do the paint.  We should really sort out
+                // the rules on our synch painting api....
+                BeginUpdateViewBatch();
+                observer->WillPaint();
+                EndUpdateViewBatch(NS_VMREFRESH_DEFERRED);
+              }
             }
             Refresh(view, event->renderingContext, region,
                     NS_VMREFRESH_DOUBLE_BUFFER);
@@ -4220,35 +4227,39 @@ nsViewManager::FlushPendingInvalidates()
   // we don't go through two invalidate-processing cycles).
   NS_ASSERTION(gViewManagers, "Better have a viewmanagers array!");
 
-  // Disable refresh while we notify our view observers, so that if they do
-  // vie w update batches we don't reenter this code and so that we batch
-  // all of them together.  We don't use
-  // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
-  // exact code, but we want the effect of a single big update batch.
-  PRBool refreshEnabled = mRefreshEnabled;
-  mRefreshEnabled = PR_FALSE;
-  ++mUpdateBatchCnt;
-  
-  PRInt32 index;
-  for (index = 0; index < mVMCount; index++) {
-    nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
-    if (vm->RootViewManager() == this) {
-      // One of our kids
-      nsIViewObserver* observer = vm->GetViewObserver();
-      if (observer) {
-        observer->WillPaint();
-        NS_ASSERTION(mUpdateBatchCnt == 1, "Observer did not end view batch?");
+  // Make sure to not send WillPaint notifications while scrolling
+  if (!mInScroll) {
+    // Disable refresh while we notify our view observers, so that if they do
+    // view update batches we don't reenter this code and so that we batch
+    // all of them together.  We don't use
+    // BeginUpdateViewBatch/EndUpdateViewBatch, since that would reenter this
+    // exact code, but we want the effect of a single big update batch.
+    PRBool refreshEnabled = mRefreshEnabled;
+    mRefreshEnabled = PR_FALSE;
+    ++mUpdateBatchCnt;
+    
+    PRInt32 index;
+    for (index = 0; index < mVMCount; index++) {
+      nsViewManager* vm = (nsViewManager*)gViewManagers->ElementAt(index);
+      if (vm->RootViewManager() == this) {
+        // One of our kids
+        nsIViewObserver* observer = vm->GetViewObserver();
+        if (observer) {
+          observer->WillPaint();
+          NS_ASSERTION(mUpdateBatchCnt == 1,
+                       "Observer did not end view batch?");
+        }
       }
     }
+    
+    --mUpdateBatchCnt;
+    // Someone could have called EnableRefresh on us from inside WillPaint().
+    // Only reset the old mRefreshEnabled value if the current value is false.
+    if (!mRefreshEnabled) {
+      mRefreshEnabled = refreshEnabled;
+    }
   }
-
-  --mUpdateBatchCnt;
-  // Someone could have called EnableRefresh on us from inside WillPaint().
-  // Only reset the old mRefreshEnabled value if the current value is false.
-  if (!mRefreshEnabled) {
-    mRefreshEnabled = refreshEnabled;
-  }
-
+  
   if (mHasPendingUpdates) {
     ProcessPendingUpdates(mRootView);
     mHasPendingUpdates = PR_FALSE;
