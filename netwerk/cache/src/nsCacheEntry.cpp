@@ -152,14 +152,11 @@ nsCacheEntry::CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGran
     
     if (!IsInitialized()) {
         // brand new, unbound entry
-        NS_ASSERTION(request->mAccessRequested & nsICache::ACCESS_WRITE,
-                     "new cache entry for READ-ONLY request");
+        *accessGranted = request->mAccessRequested & nsICache::ACCESS_WRITE;
+        NS_ASSERTION(*accessGranted, "new cache entry for READ-ONLY request");
         if (request->mStreamBased)  MarkStreamBased();
         mFetchCount = 1;
         MarkInitialized();
-        // why shouldn't the initial entry allow writing?
-        //*accessGranted = request->mAccessRequested & ~nsICache::ACCESS_WRITE;
-        *accessGranted = request->mAccessRequested;
         return rv;
     }
 
