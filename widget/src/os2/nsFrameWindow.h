@@ -77,6 +77,7 @@ class nsFrameWindow : public nsWindow
 
    friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
    virtual ULONG WindowStyle();
+   static BOOL fHiddenWindowCreated;
 };
 
 #endif
