@@ -279,7 +279,10 @@ function grabAllForms(aWindow, aDocument)
     }
   }
 
-  return theList.concat(aDocument.forms);
+  if ("forms" in aDocument)
+    return theList.concat(aDocument.forms);
+  else
+    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "form"));
 }
 
 function onFormSelect()
@@ -460,7 +463,10 @@ function grabAllLinks(aWindow,aDocument)
     if (inputList[i].type.toLowerCase() == "submit")
       theList = theList.concat(inputList[i]);
 
-  return theList.concat(aDocument.links);
+  if ("links" in aDocument)
+    return theList.concat(aDocument.links);
+  else
+    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "a");
 }
 
 function openURL(target)
@@ -552,7 +558,10 @@ function grabAllMedia(aWindow, aDocument)
     if(linkList[i].rel.match(/\bicon\b/i))
       theList = theList.concat(linkList[i]);
 
-  return theList.concat(aDocument.images);
+  if ("images" in aDocument)
+    return theList.concat(aDocument.images);
+  else
+    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "img"));
 }  
 
 function onImageSelect()
@@ -658,8 +667,11 @@ function makePreview(item)
   //document.getElementById("imageplugintext").value = "--";
   //document.getElementById("imagecharsettext").value = "--";
 
-  document.getElementById("imagewidth").value = ("width" in item && item.width) || unknown;
-  document.getElementById("imageheight").value = ("height" in item && item.height) || unknown;
+  var width = ("width" in item && item.width) || "";
+  var height = ("height" in item && item.height) || "";
+
+  document.getElementById("imagewidth").value = theBundle.getFormattedString("mediaWidth", [width]);
+  document.getElementById("imageheight").value = theBundle.getFormattedString("mediaHeight", [height]);
 
   // also can't be done at the moment
   //document.getElementById("imageencryptiontext").value = "--";
