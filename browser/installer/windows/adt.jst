@@ -2,19 +2,19 @@ var err = initInstall("Developer Tools", "Developer Tools", "$Version$");
 logComment("initInstall: " + err);
 
 // JavaScript Debugger
-addFile("Venkman Service",
-        "bin/components/venkman-service.js",
-        getFolder("Components"),
-        "");
+// addFile("Venkman Service",
+//        "bin/components/venkman-service.js",
+//        getFolder("Components"),
+//        "");
 
-addFile("Venkman Chrome",
-        "bin/chrome/venkman.jar",   // jar source folder 
-        getFolder("Chrome"),        // target folder
-        "");                        // target subdir 
+// addFile("Venkman Chrome",
+//        "bin/chrome/venkman.jar",   // jar source folder 
+//        getFolder("Chrome"),        // target folder
+//        "");                        // target subdir 
 
-registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "content/venkman/");
-registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "skin/modern/venkman/");
-registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "locale/en-US/venkman/");
+// registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "content/venkman/");
+// registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "skin/modern/venkman/");
+// registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome","venkman.jar"), "locale/en-US/venkman/");
 
 // DOM Inspector
 var fProgram = getFolder("Program");
