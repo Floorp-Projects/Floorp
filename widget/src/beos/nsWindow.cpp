@@ -556,74 +556,20 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		SetBorderStyle(aInitData->mBorderStyle);
 	}
 
-	// NEED INPLEMENT
-	//  DWORD style = WindowStyle();
-	// NEED INPLEMENT
-	//  DWORD extendedStyle = WindowExStyle();
-
+	// Only popups have mBorderlessParents
 	mBorderlessParent = NULL;
-	if (mWindowType == eWindowType_popup)
-	{
-		mBorderlessParent = parent;
-		// Don't set the parent of a popup window.
-		parent = NULL;
-	}
-	else if (nsnull != aInitData)
-	{
-		// See if the caller wants to explictly set clip children and clip siblings
-		if (aInitData->clipChildren)
-		{
-			// NEED INPLEMENT
-			//  style |= WS_CLIPCHILDREN;
-		}
-		else
-		{
-			//		NEED INPLEMENT
-			//        style &= ~WS_CLIPCHILDREN;
-		}
-
-		if (aInitData->clipSiblings)
-		{
-			//		NEED INPLEMENT
-			//        style |= WS_CLIPSIBLINGS;
-		}
-	}
 
 	mView = CreateBeOSView();
 	if(mView)
 	{
-		if (mWindowType == eWindowType_dialog)
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+		printf("nsWindow::StandardWindowCreate : type = ");
+#endif
+		if (mWindowType == eWindowType_child)
 		{
-			// create window (dialog)
-			bool is_subset = (parent)? true : false;
-
-			// see bugzilla bug 66809 regarding this change -wade <guru@startrek.com>
-			//window_feel feel = (is_subset) ? B_MODAL_SUBSET_WINDOW_FEEL : B_MODAL_APP_WINDOW_FEEL;
-			window_feel feel = B_NORMAL_WINDOW_FEEL;
-
-			BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
-
-			winrect.OffsetBy( 10, 30 );
-
-			nsWindowBeOS *w = new nsWindowBeOS(this, winrect,	"", B_TITLED_WINDOW_LOOK, feel,
-			                                   B_ASYNCHRONOUS_CONTROLS);
-			if(w)
-			{
-				w->AddChild(mView);
-				if (is_subset)
-				{
-					w->AddToSubset(parent->Window());
-				}
-
-				// FIXME: we have to use the window size because
-				// the window might not like sizes less then 30x30 or something like that
-				mView->MoveTo(0, 0);
-				mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
-				mView->SetResizingMode(B_FOLLOW_ALL);
-			}
-		}
-		else if (mWindowType == eWindowType_child)
-		{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+			printf("child window\n");
+#endif			
 			// create view only
 			bool mustunlock=false;
 
@@ -640,42 +586,126 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 			{
 				parent->UnlockLooper();
 			}
+
 		}
 		else
 		{
-			// create window (normal or popup)
-			BRect winrect = BRect(aRect.x, aRect.y,
-			                      aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
 			nsWindowBeOS *w;
-
-			if (mWindowType == eWindowType_popup)
+			BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
+			window_look look = B_TITLED_WINDOW_LOOK;
+			window_feel feel = B_NORMAL_WINDOW_FEEL;
+			// Set all windows to use outline resize, since currently, the redraw of the window during resize
+			// is very "choppy"
+			uint32 flags = B_ASYNCHRONOUS_CONTROLS | B_OUTLINE_RESIZE;
+			
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+			printf("%s\n", (mWindowType == eWindowType_popup) ? "popup" :
+			               (mWindowType == eWindowType_dialog) ? "dialog" :
+			               (mWindowType == eWindowType_toplevel) ? "toplevel" : "unknown");
+#endif					
+			switch (mWindowType)
 			{
-				bool is_subset = (mBorderlessParent)? true : false;
-				window_feel feel = (is_subset) ? B_FLOATING_SUBSET_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL;
-
-				w = new nsWindowBeOS(this, winrect, "", B_NO_BORDER_WINDOW_LOOK, feel,
-				                     B_NOT_CLOSABLE | B_AVOID_FOCUS | B_ASYNCHRONOUS_CONTROLS
-				                     | B_NO_WORKSPACE_ACTIVATION);
-				if (w)
+				case eWindowType_popup:
 				{
-					// popup window : no border
-					if (is_subset)
-					{
-						w->AddToSubset(mBorderlessParent->Window());
-					}
+					mBorderlessParent = parent;
+					flags |= B_NOT_CLOSABLE | B_AVOID_FOCUS | B_NO_WORKSPACE_ACTIVATION;
+					look = B_NO_BORDER_WINDOW_LOOK;
+					break;
 				}
-			}
-			else
-			{
-				// normal window :normal look & feel
-				winrect.OffsetBy( 10, 30 );
-				w = new nsWindowBeOS(this, winrect, "", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL,
-				                     B_ASYNCHRONOUS_CONTROLS);
-			}
+					
+				case eWindowType_dialog:
+				{
+					if (mBorderStyle == eBorderStyle_default)
+					{
+						flags |= B_NOT_ZOOMABLE;
+					}
+					// don't break here
+				}
+				case eWindowType_toplevel:
+				{
+					// This was never documented, so I'm not sure why we do it, yet
+					winrect.OffsetBy( 10, 30 );
 
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+					printf("\tBorder Style : ");
+#endif					
+					// Set the border style(s)
+					switch (mBorderStyle)
+					{
+						case eBorderStyle_default:
+						{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+							printf("default\n");
+#endif							
+							break;
+						}
+						case eBorderStyle_all:
+						{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+							printf("all\n");
+#endif							
+							break;
+						}
+						
+						case eBorderStyle_none:
+						{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+							printf("none\n");
+#endif							
+							look = B_NO_BORDER_WINDOW_LOOK;
+							break;
+						}	
+						
+						default:
+						{
+							if (!(mBorderStyle & eBorderStyle_resizeh))
+							{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+								printf("no_resize ");
+#endif							
+								flags |= B_NOT_RESIZABLE;
+							}
+							if (!(mBorderStyle & eBorderStyle_title))
+							{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+								printf("no_titlebar ");
+#endif							
+								look = B_BORDERED_WINDOW_LOOK;
+							}
+							if (!(mBorderStyle & eBorderStyle_minimize) || !(mBorderStyle & eBorderStyle_maximize))
+							{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+								printf("no_zoom ");
+#endif							
+								flags |= B_NOT_ZOOMABLE;
+							}
+							if (!(mBorderStyle & eBorderStyle_close))
+							{
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+								printf("no_close ");
+#endif							
+								flags |= B_NOT_CLOSABLE;
+							}
+#ifdef MOZ_DEBUG_WINDOW_CREATE
+								printf("\n");
+#endif							
+						}
+					} // case (mBorderStyle)
+					break;
+				} // eWindowType_toplevel
+					
+				default:
+					break;
+			} // case (mWindowType)
+			
+			w = new nsWindowBeOS(this, winrect, "", look, feel, flags);
 			if(w)
 			{
 				w->AddChild(mView);
+				if (parent)
+				{
+					w->AddToSubset(parent->Window());
+				}
 
 				// FIXME: we have to use the window size because
 				// the window might not like sizes less then 30x30 or something like that
@@ -684,40 +714,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 				mView->SetResizingMode(B_FOLLOW_ALL);
 			}
 		}
-
-#if 0
-		// Initial Drag & Drop Work
-#ifdef DRAG_DROP
-		if (!gOLEInited)
-		{
-			DWORD dwVer = ::OleBuildVersion();
-
-			if (FAILED(::OleInitialize(NULL)))
-			{
-				NS_WARNING("***** OLE has been initialized!");
-			}
-			gOLEInited = TRUE;
-		}
-
-		mDragDrop = new CfDragDrop();
-		//mDragDrop->AddRef();
-		mDragDrop->Initialize(this);
-
-		/*mDropTarget = new CfDropTarget(*mDragDrop);
-		mDropTarget->AddRef();
-
-		mDropSource = new CfDropSource(*mDragDrop);
-		mDropSource->AddRef();*/
-
-		/*mDropTarget = new nsDropTarget(this);
-		mDropTarget->AddRef();
-		if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mDropTarget,TRUE,FALSE)) {
-		  if (S_OK == ::RegisterDragDrop(mView, (LPDROPTARGET)mDropTarget)) {
-
-		  }
-	}*/
-#endif
-#endif
 
 		// call the event callback to notify about creation
 		DispatchStandardEvent(NS_CREATE);
