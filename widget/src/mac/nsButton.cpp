@@ -78,8 +78,6 @@ void nsButton::LocalToWindowCoordinate(nsRect& aRect)
 }
 
 
-
-
 void nsButton::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -100,6 +98,11 @@ void nsButton::Create(nsIWidget *aParent,
   } else if (aAppShell) {
     window = (WindowPtr) aAppShell->GetNativeData(NS_NATIVE_SHELL);
   }
+
+  mIsMainWindow = PR_FALSE;
+  mWindowMadeHere = PR_TRUE;
+	mWindowRecord = (WindowRecord*)window;
+	mWindowPtr = (WindowPtr)window;
   
   NS_ASSERTION(window!=nsnull,"The WindowPtr for the widget cannot be null")
 	if (window)
@@ -128,12 +131,19 @@ void nsButton::Create(nsIWidget *aParent,
 												    initialValue, minValue, maxValue, 
 												    ctrlType, (long)this);
 
+		mWindowRegion = NewRgn();
+		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
+
+
 	  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mControl, this);
 
 	  // save the event callback function
 	  mEventCallback = aHandleEventFunction;
+	  
+	  mMouseDownInButton = PR_FALSE;
 
 	  //InitCallbacks("nsButton");
+	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
 	}
 }
 
@@ -229,8 +239,14 @@ void nsButton::GetLabel(nsString& aBuffer)
 //-------------------------------------------------------------------------
 PRBool nsButton::OnPaint(nsPaintEvent &aEvent)
 {
-  if (mControl)
-	  Draw1Control(mControl);
+nsRect	therect;
+Rect		macrect;
+
+  //if (mControl)
+	  //Draw1Control(mControl);
+	  
+	DrawWidget(FALSE);
+	
   return PR_FALSE;
 }
 
@@ -286,11 +302,23 @@ PRBool 	result;
 			pt.v = aEvent.point.y;
 			if (mControl)
 				{
-				//TrackControl(mControl,pt,nsnull);
+				// Draw the button
+				mMouseDownInButton = PR_TRUE;
+				DrawWidget(PR_TRUE);
 				nsWindow::DispatchMouseEvent(aEvent);
 				}
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
+			mMouseDownInButton = PR_FALSE;
+			DrawWidget(PR_TRUE);
+			nsWindow::DispatchMouseEvent(aEvent);
+			break;
+		case NS_MOUSE_EXIT:
+			DrawWidget(PR_TRUE);
+			nsWindow::DispatchMouseEvent(aEvent);
+			break;
+		case NS_MOUSE_ENTER:
+			DrawWidget(PR_TRUE);
 			nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		}
@@ -299,7 +327,49 @@ PRBool 	result;
 }
 
 
-//----------------------------------------------------------------------
+//-------------------------------------------------------------------------
+/*  Track this control and draw in the different modes depending on the state of the mouse and buttons
+ *  @update  dc 08/31/98
+ *  @param   aMouseInside -- A boolean indicating if the mouse is inside the control
+ *  @return  nothing is returned
+ */
+void
+nsButton::DrawWidget(PRBool	aMouseInside)
+{
+nsRect							therect;
+nsIRenderingContext *drawctx;
+Rect								macrect;
+GrafPtr							theport;
+RGBColor						blackcolor = {0,0,0};
+RgnHandle						thergn;
+
+
+	GetPort(&theport);
+	//drawctx = this->GetRenderingContext();
+	::SetPort(mWindowPtr);
+	GetBounds(therect);
+	nsRectToMacRect(therect,macrect);
+	thergn = ::NewRgn();
+	::GetClip(thergn);
+	::ClipRect(&macrect);
+	::PenNormal();
+	::RGBForeColor(&blackcolor);
+	
+	::EraseRoundRect(&macrect,10,10);
+	::PenSize(3,3);
+	::FrameRoundRect(&macrect,10,10); 
+	
+	if(mMouseDownInButton && aMouseInside)
+		 ::InvertRoundRect(&macrect,10,10);
+		
+	::PenSize(1,1);
+	::SetClip(thergn);
+	::SetPort(theport);
+	//NS_RELEASE(drawctx);
+}
+
+//-------------------------------------------------------------------------
+
 
 BASE_IWIDGET_IMPL(nsButton, AggButton);
 
