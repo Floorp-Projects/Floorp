@@ -62,8 +62,5 @@ LCFLAGS = \
 	$(NULL)
 !endif
 
-C_OBJS = .\$(OBJDIR)\nsLDAPConnectionCallbacks.obj \
-	 $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
