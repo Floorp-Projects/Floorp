@@ -51,4 +51,7 @@ nsIURILoader
 #define NS_DOCUMENTLOADER_SERVICE_PROGID \
 "component://netscape/docloaderservice"
 
+#define NS_CONTENT_HANDLER_PROGID               "component://netscape/uriloader/content-handler"
+#define NS_CONTENT_HANDLER_PROGID_PREFIX	     NS_CONTENT_HANDLER_PROGID "?type="
+
 %}

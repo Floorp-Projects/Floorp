@@ -575,48 +575,79 @@ nsresult nsURILoader::SetupLoadCookie(nsISupports * aWindowContext, nsISupports 
   return rv;
 }
 
-nsresult nsURILoader::DispatchContent(const char * aContentType,
-                                      nsURILoadCommand aCommand,
-                                      const char * aWindowTarget,
-                                      nsIChannel * aChannel, 
-                                      nsISupports * aCtxt, 
-                                      nsIURIContentListener * aContentListener,
-                                      char ** aContentTypeToUse,
-                                      nsIURIContentListener ** aContentListenerToUse,
-                                      PRBool * aAbortProcess)
+PRBool nsURILoader::ShouldHandleContent(nsIURIContentListener * aCntListener, 
+                                        const char * aContentType,
+                                        nsURILoadCommand aCommand,
+                                        const char * aWindowTarget,
+                                        char ** aContentTypeToUse)
 {
+  PRBool foundContentHandler = PR_FALSE;
+  if (aCommand == nsIURILoader::viewUserClick)
+    aCntListener->IsPreferred(aContentType, aCommand, aWindowTarget, 
+                                aContentTypeToUse, 
+                                &foundContentHandler);
+  else
+    aCntListener->CanHandleContent(aContentType, aCommand, aWindowTarget, 
+                                   aContentTypeToUse, 
+                                   &foundContentHandler);
+  return foundContentHandler;
+} 
+
+NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
+                                           nsURILoadCommand aCommand,
+                                           const char * aWindowTarget,
+                                           nsIChannel * aChannel, 
+                                           nsISupports * aCtxt, 
+                                           nsIURIContentListener * aContentListener,
+                                           char ** aContentTypeToUse,
+                                           nsIURIContentListener ** aContentListenerToUse,
+                                           PRBool * aAbortProcess)
+{
+  NS_ENSURE_ARG(aContentType);
+  NS_ENSURE_ARG(aChannel);
+
   // okay, now we've discovered the content type. We need to do the following:
-  // (1) Give our uri content listener first crack at handling this content type.  
+  // (1) if aCommand is user click, we need to find the Preferred content handler
+  // for this type...
+  // (2) if aCommand is any other value, we'll use canHandleContent to find any handler
+  // for the content.
+  // We always start with the original content listener (if any) that originated the request
+  // and then move on to registered content listeners.
+
+  // if we cannot find a registered content lister to handle the type, then we move on to
+  // phase II which is to try to find a content handler in the registry for the content type.
+
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
+  
   // find a content handler that can and will handle the content
-  PRBool canHandleContent = PR_FALSE;
+  PRBool foundContentHandler = PR_FALSE;
   if (listenerToUse)
-    listenerToUse->CanHandleContent(aContentType, aCommand, aWindowTarget, 
-                                    aContentTypeToUse, 
-                                    &canHandleContent);
-  if (!canHandleContent) // if it can't handle the content, scan through the list of registered listeners
+    foundContentHandler = ShouldHandleContent(listenerToUse, aContentType, 
+                                              aCommand, aWindowTarget, aContentTypeToUse);
+                                              
+
+  if (!foundContentHandler) // if it can't handle the content, scan through the list of registered listeners
   {
      PRInt32 i = 0;
-     // keep looping until we are told to abort or we get a content listener back
-     for(i = 0; i < m_listeners->Count() && !canHandleContent; i++)
+     // keep looping until we get a content listener back
+     for(i = 0; i < m_listeners->Count() && !foundContentHandler; i++)
 	   {
 	      //nsIURIContentListener's aren't refcounted.
 		    nsIURIContentListener * listener =(nsIURIContentListener*)m_listeners->ElementAt(i);
         if (listener)
-         {
-            rv = listener->CanHandleContent(aContentType, aCommand, aWindowTarget, 
-                                            aContentTypeToUse,
-                                            &canHandleContent);
-            if (canHandleContent)
+        {
+            foundContentHandler = ShouldHandleContent(listener, aContentType, 
+                                                      aCommand, aWindowTarget, aContentTypeToUse);
+            if (foundContentHandler)
               listenerToUse = listener;
-         }
+        }
     } // for loop
   } // if we can't handle the content
 
 
-  if (canHandleContent && listenerToUse)
+  if (foundContentHandler && listenerToUse)
   {
     *aContentListenerToUse = listenerToUse;
     NS_IF_ADDREF(*aContentListenerToUse);
@@ -636,8 +667,8 @@ nsresult nsURILoader::DispatchContent(const char * aContentType,
   rv = nsComponentManager::CreateInstance(handlerProgID, nsnull, NS_GET_IID(nsIContentHandler), getter_AddRefs(aContentHandler));
   if (NS_SUCCEEDED(rv)) // we did indeed have a content handler for this type!! yippee...
   {
-    rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aChannel);
-    *aAbortProcess = PR_TRUE;
+      rv = aContentHandler->HandleContent(aContentType, "view", aWindowTarget, aChannel);
+      *aAbortProcess = PR_TRUE;
   }
   
   return rv;
