@@ -41,6 +41,9 @@ install::
 	$(MAKE_INSTALL) openMailFolder.gif	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) localMailHost.gif	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) mailMessage.gif	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) closedInbox.gif	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) closedTrash.gif	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) closedOutbox.gif	$(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\res\samples\mailshell.xul

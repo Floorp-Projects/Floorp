@@ -49,3 +49,18 @@ treeitem > treecell > titledbutton {
 treeitem[open="true"] > treecell > titledbutton {
  list-style-image: url("resource:/res/samples/openMailFolder.gif");
 }
+
+treeitem[SpecialFolder="Inbox"] > treecell > titledbutton {
+ vertical-align: bottom;
+ list-style-image: url("resource:/res/samples/closedInbox.gif");
+}
+
+treeitem[SpecialFolder="Trash"] > treecell > titledbutton {
+ vertical-align: bottom;
+ list-style-image: url("resource:/res/samples/closedTrash.gif");
+}
+
+treeitem[SpecialFolder="Unsent Messages"] > treecell > titledbutton {
+ vertical-align: bottom;
+ list-style-image: url("resource:/res/samples/closedOutbox.gif");
+}
