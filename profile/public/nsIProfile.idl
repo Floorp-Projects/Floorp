@@ -1,0 +1,94 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+
+interface nsICmdLineService;
+
+%{C++
+#include "nsFileSpec.h"
+#include "nsICmdLineService.h"
+      
+#define NS_PROFILE_CID                                 \
+  { /* {02b0625b-e7f3-11d2-9f5a-006008a6efe9} */       \
+    0x02b0625b,                                        \
+    0xe7f3,                                            \
+    0x11d2,                                            \
+    { 0x9f, 0x5a, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9 } \
+  }
+
+#define NS_PROFILE_PROGID	\
+	"component://netscape/profile/manager"
+
+#define NS_USING_PROFILES 1
+
+#define PREG_PREF	"netcenter.register"
+%}
+
+[ptr] native nsFileSpec(nsFileSpec);
+[ref] native nsFileSpecRef(nsFileSpec);
+[ref] native nsStringRef(nsString);
+[scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
+interface nsIProfile : nsISupports {
+
+    [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
+    void startup(in string filename);
+    void shutdown();
+
+    [noscript] void getProfileDir(in string profileName,
+                                  in nsFileSpec profileDir);
+    readonly attribute long profileCount;
+    string getSingleProfile();
+    readonly attribute string currentProfile;
+
+    readonly attribute string firstProfile;
+
+    [noscript] void getCurrentProfileDir(in nsFileSpec profileDir);
+
+    [noscript] void setProfileDir(in string profileName,
+                                  in nsFileSpecRef profileDir);
+
+    void migrateProfileInfo();
+
+    void createNewProfile(in string data);
+    void renameProfile(in string oldName, in string newName);
+
+    void deleteProfile(in string name, in string canDeleteFiles);
+
+    [noscript] void getProfileList(in nsStringRef profileList);
+
+    void startCommunicator(in string profileName);
+    [noscript] void getCurrProfile(in nsStringRef currProfile);
+
+    void migrateProfile(in string profileName);
+
+    [noscript] void getCookie(in nsStringRef cookie);
+
+    void ProcessPRegCookie();
+
+    string isPregCookieSet();
+
+    void processPREGInfo(in string data);
+
+    long get4xProfileCount();
+
+    void migrateAllProfiles();
+    void CloneProfile(in string profileName);
+};
+
+#endif /* nsIProfile_h__ */
