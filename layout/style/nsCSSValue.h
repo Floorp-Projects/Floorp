@@ -136,17 +136,17 @@ public:
     mValue.mInt = 0;
   }
 
-  nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit);
-  nsCSSValue(float aValue, nsCSSUnit aUnit);
-  nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit);
-  nsCSSValue(nscolor aValue);
-  nsCSSValue(URL* aValue);
-  nsCSSValue(Image* aValue);
-  nsCSSValue(const nsCSSValue& aCopy);
-  ~nsCSSValue();
+  nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
+  nsCSSValue(float aValue, nsCSSUnit aUnit) NS_HIDDEN;
+  nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit) NS_HIDDEN;
+  nsCSSValue(nscolor aValue) NS_HIDDEN;
+  nsCSSValue(URL* aValue) NS_HIDDEN;
+  nsCSSValue(Image* aValue) NS_HIDDEN;
+  nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
+  ~nsCSSValue() NS_HIDDEN;
 
-  nsCSSValue&  operator=(const nsCSSValue& aCopy);
-  PRBool      operator==(const nsCSSValue& aOther) const;
+  NS_HIDDEN_(nsCSSValue&)  operator=(const nsCSSValue& aCopy);
+  NS_HIDDEN_(PRBool)      operator==(const nsCSSValue& aOther) const;
 
   PRBool operator!=(const nsCSSValue& aOther) const
   {
@@ -229,9 +229,9 @@ public:
   // Not making this inline because that would force us to include
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
   // all over.
-  imgIRequest* GetImageValue() const;
+  NS_HIDDEN_(imgIRequest*) GetImageValue() const;
   
-  nscoord   GetLengthTwips() const;
+  NS_HIDDEN_(nscoord)   GetLengthTwips() const;
 
   void  Reset()  // sets to null
   {
@@ -247,23 +247,27 @@ public:
     mValue.mInt = 0;
   }
 
-  void  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
-  void  SetPercentValue(float aValue);
-  void  SetFloatValue(float aValue, nsCSSUnit aUnit);
-  void  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
-  void  SetColorValue(nscolor aValue);
-  void  SetURLValue(nsCSSValue::URL* aURI);
-  void  SetImageValue(nsCSSValue::Image* aImage);
-  void  SetAutoValue();
-  void  SetInheritValue();
-  void  SetInitialValue();
-  void  SetNoneValue();
-  void  SetNormalValue();
-  void  StartImageLoad(nsIDocument* aDocument) const;  // Not really const, but pretending
+  NS_HIDDEN_(void)  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
+  NS_HIDDEN_(void)  SetPercentValue(float aValue);
+  NS_HIDDEN_(void)  SetFloatValue(float aValue, nsCSSUnit aUnit);
+  NS_HIDDEN_(void)  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
+  NS_HIDDEN_(void)  SetColorValue(nscolor aValue);
+  NS_HIDDEN_(void)  SetURLValue(nsCSSValue::URL* aURI);
+  NS_HIDDEN_(void)  SetImageValue(nsCSSValue::Image* aImage);
+  NS_HIDDEN_(void)  SetAutoValue();
+  NS_HIDDEN_(void)  SetInheritValue();
+  NS_HIDDEN_(void)  SetInitialValue();
+  NS_HIDDEN_(void)  SetNoneValue();
+  NS_HIDDEN_(void)  SetNormalValue();
+  NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument) const;  // Not really const, but pretending
 
 #ifdef DEBUG
-  void  AppendToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
-  void  ToString(nsAString& aBuffer, nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
+  NS_HIDDEN_(void)
+    AppendToString(nsAString& aBuffer,
+                   nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
+  NS_HIDDEN_(void)
+    ToString(nsAString& aBuffer,
+             nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
 #endif
 
   MOZ_DECL_CTOR_COUNTER(nsCSSValue::URL)
@@ -313,8 +317,9 @@ public:
     // Not making the constructor and destructor inline because that would
     // force us to include imgIRequest.h, which leads to REQUIRES hell, since
     // this header is included all over.
-    Image(nsIURI* aURI, const PRUnichar* aString, nsIDocument* aDocument);
-    ~Image();
+    Image(nsIURI* aURI, const PRUnichar* aString,
+          nsIDocument* aDocument) NS_HIDDEN;
+    ~Image() NS_HIDDEN;
 
     // Inherit operator== from nsCSSValue::URL
 
