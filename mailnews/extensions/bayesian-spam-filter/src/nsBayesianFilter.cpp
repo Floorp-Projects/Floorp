@@ -979,7 +979,14 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
       double hamcount = ((t != NULL) ? t->mCount : 0);
         t = mBadTokens.get(word);
        double spamcount = ((t != NULL) ? t->mCount : 0);
-       prob = (spamcount / nbad) / ( hamcount / ngood + spamcount / nbad);
+
+      // if hamcount and spam count are both 0, we could end up with a divide by 0 error, 
+      // tread carefully here. (Bug #240819)
+      double probDenom = (hamcount *nbad + spamcount*ngood);
+      if (probDenom == 0.0) // nGood and nbad are known to be non zero or we wouldn't be here
+        probDenom = nbad + ngood; // error case use a value of 1 for hamcount and spamcount if they are both zero.
+
+      prob = (spamcount * ngood)/probDenom;
        double n = hamcount + spamcount;
        prob =  (0.225 + n * prob) / (.45 + n);
        double distance = PR_ABS(prob - 0.5);
