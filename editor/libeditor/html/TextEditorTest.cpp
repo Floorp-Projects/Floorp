@@ -89,6 +89,10 @@ nsresult TextEditorTest::RunUnitTest(PRInt32 *outNumTests, PRInt32 *outNumTestsF
   (*outNumTests)++;
   (*outNumTestsFailed) += (NS_FAILED(result) != NS_OK);
 
+  // get us back to the original document
+  result = mEditor->Undo(12);
+  TEST_RESULT(result);
+
   return result;
 }
 
@@ -142,7 +146,7 @@ nsresult TextEditorTest::TestTextProperties()
   nodeList->GetLength(&count);
   NS_ASSERTION(0!=count, "there are no text nodes in the document!");
   nsCOMPtr<nsIDOMNode>textNode;
-  result = nodeList->Item(1, getter_AddRefs(textNode));
+  result = nodeList->Item(2, getter_AddRefs(textNode));
   TEST_RESULT(result);
   TEST_POINTER(textNode.get());
 
@@ -219,14 +223,14 @@ nsresult TextEditorTest::TestTextProperties()
   TEST_POINTER(nodeList.get());
   nodeList->GetLength(&count);
   NS_ASSERTION(0!=count, "there are no text nodes in the document!");
-  result = nodeList->Item(1, getter_AddRefs(textNode));
+  result = nodeList->Item(3, getter_AddRefs(textNode));
   TEST_RESULT(result);
   TEST_POINTER(textNode.get());
   textData = do_QueryInterface(textNode);
   textData->GetLength(&length);
+  NS_ASSERTION(length==249, "wrong text node");
   selection->Collapse(textNode, 1, SELECTION_NORMAL);
   selection->Extend(textNode, length-2, SELECTION_NORMAL);
-
   result = mTextEditor->SetTextProperty(nsIEditProperty::u, nsnull, nsnull);
   TEST_RESULT(result);
   result = mTextEditor->GetTextProperty(nsIEditProperty::u, nsnull, nsnull, first, any, all);
