@@ -66,7 +66,7 @@ Rights Reserved.
           <rows>
             <row>
               <hbox pack="end">
-                <text class="label" value="&server.label;" for="serverMenu"/>
+                <label value="&server.label;" control="serverMenu"/>
               </hbox>
               <menulist oncommand="onServerClick(event);" id="serverMenu"
                         datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
@@ -82,7 +82,7 @@ Rights Reserved.
               </menulist>
             </row>
             <row>
-          		<text class="label" id="namefieldlabel" value="&namefield.label;" for="namefield"/>
+          		<label value="&namefield.label;" id="namefieldlabel" control="namefield"/>
           		<textbox id="namefield" flex="1" oninput="Search();"/>
             </row>
           </rows>
