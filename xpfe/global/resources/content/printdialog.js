@@ -36,6 +36,7 @@ var gWebBrowserPrint   = null;
 var default_file       = "mozilla.ps";
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = false;
+var gFileFromPicker    = "";
 
 //---------------------------------------------------
 function initDialog()
