@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2001/02/27 15:10:52 $ 
+# $Revision: 1.15 $ 
+# $Date: 2001/03/01 18:42:30 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -192,7 +192,7 @@ sub build_names {
 # set ignore_builds.
 
 sub all_build_names {
-  my ($self, $tree) = (@_);
+  my ($tree) = (@_);
   
   my (@build_names) = keys %{ $DATABASE{$tree} };
   my (@outrow) =  TreeData::sort_tree_buildnames( 
