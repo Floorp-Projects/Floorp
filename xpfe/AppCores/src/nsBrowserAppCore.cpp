@@ -1630,7 +1630,7 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PR
 
   nsresult rv;
 
-  nsIWebShell * aWebShell= nsnull, * parent = nsnull;
+  nsCOMPtr<nsIWebShell> webShell, parent;
 
   // Notify observers that a document load has started in the
   // content window.
@@ -1653,21 +1653,20 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PR
   nsAutoString kEndDocumentLoad("EndDocumentLoad");
   nsAutoString kFailDocumentLoad("FailDocumentLoad");
 
-  rv = aObserver->QueryInterface(kIWebShellIID, (void **)&aWebShell);
-
-  if (aStatus != NS_OK) {
-		  goto done;
-  }
+  // XXX Cleaned up leaks in this code, but the logic needs
+  // to be fixed.
+  webShell = do_QueryInterface(aObserver);
 
   /* If this is a frame, don't do any of the Global History
    * & observer thingy 
    */
-  if (aWebShell)
-      aWebShell->GetParent(parent);
+  if (webShell) {
+    webShell->GetParent(*getter_AddRefs(parent));
+  }
 
   if (parent) {
-      /* This is a frame */
-          goto end;
+    /* This is a frame */
+    goto end;
   }
   rv = observer->Notify(mContentWindow,
                         NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
