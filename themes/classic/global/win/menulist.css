@@ -62,7 +62,7 @@ menulist[open="true"]:focus > .menulist-label-box {
 /* ..... dropmarker ..... */
 
 .menulist-dropmarker {
-  -moz-appearance: menulistbutton;
+  -moz-appearance: menulist-button;
   min-width: 17px;
   -moz-box-align: center;
   -moz-box-pack: center;
