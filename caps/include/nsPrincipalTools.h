@@ -31,4 +31,4 @@ public:
 	}
 };
 
-#endif _NS_PRINCIPAL_TOOLS_H_
+#endif /* _NS_PRINCIPAL_TOOLS_H_ */
