@@ -49,6 +49,8 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+import javax.swing.JToggleButton;
+import javax.swing.text.JTextComponent;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -65,6 +67,7 @@ import org.xml.sax.SAXParseException;
 
 public class PageUI extends JPanel {
   Hashtable table = new Hashtable();
+  PageModel model;
   String title;
 
   public PageUI() {
@@ -74,27 +77,50 @@ public class PageUI extends JPanel {
                 Class reference) {
     XMLPageBuilder pb = 
       new XMLPageBuilder(attribute, id, model, this, reference);
-    try {
-      pb.buildFrom(url.openStream());
-      title = pb.getTitle();
-    } catch (Exception e) {
-    }
+    build(pb, url, model);
   }
 
   public PageUI(URL url, String attribute, String id, PageModel model) {
     XMLPageBuilder pb = 
       new XMLPageBuilder(attribute, id, model, this);
+    build(pb, url, model);
+  }
+
+  private void build(XMLPageBuilder pb, URL url, PageModel model) {
+    setModel(model);
     try {
       pb.buildFrom(url.openStream());
       title = pb.getTitle();
     } catch (Exception e) {
     }
+
+    model.setAttribute("userNameField", "foo");
+    model.setAttribute("userOrgainzationField", "bar");
+    model.setAttribute("userEmailAddressField", "grail@cafebabe.org");
+  }
+
+  /**
+   * Get the model for the page.
+   * 
+   * @return the model
+   */
+  public PageModel getModel() {
+    return model;
+  }
+
+  /**
+   * Set the model for the page.
+   * 
+   * @param model the model as the backing for the page
+   */
+  public void setModel(PageModel model) {
+    this.model = model;
   }
 
   public void addCtrl(String name, JComponent component) {
     if (name != null) table.put(name, component);
     add(component);
-}
+  }
 
   public void addCtrl(String name, JComponent component, 
 			   Object constraints) {
@@ -121,17 +147,53 @@ public class PageUI extends JPanel {
     return title;
   }
 
-
   /**
    * Store the values set in the input fields of the page.
    */
   public void saveAll() {
-    System.out.println(table.size() + " elements");
+    Enumeration e = table.keys();
+
+    while(e.hasMoreElements()) {
+      String k = (String)e.nextElement();
+      Object obj = table.get(k);
+      Object val = null;
+
+      if (obj instanceof JTextComponent) {
+        JTextComponent tc = (JTextComponent)obj;
+        String str = tc.getText();
+        val = str;
+      } else if (obj instanceof JToggleButton) {
+        JToggleButton button = (JToggleButton)obj;
+        Boolean b = new Boolean(button.isSelected());
+        val = b;
+      }
+
+      if (val != null) {
+        System.out.println(k + " is " + val);
+        model.setAttribute(k, val);
+      }
+    }
   }
 
   /**
    * Initialize input fields to known values.
    */
   public void initAll() {
+    Enumeration e = table.keys();
+
+    while (e.hasMoreElements()) {
+      String s = (String)e.nextElement();
+      Object obj = table.get(s);
+      Object val = model.getAttribute(s);
+
+      if (obj instanceof JTextComponent) {
+        JTextComponent tf = (JTextComponent)obj;
+        tf.setText((String)val);
+      } else if (obj instanceof JToggleButton) {
+        JToggleButton button = (JToggleButton)obj;
+        Boolean b = (Boolean)model.getAttribute(s);
+        button.setSelected(((Boolean)val).booleanValue());
+      }
+    }
   }
 }

@@ -86,7 +86,6 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
   String attr;
   PageModel model;
   Hashtable group = new Hashtable();
-  Hashtable everything = new Hashtable();
 
   /**
    * Build a menu builder which operates on XML formatted data
@@ -366,16 +365,7 @@ public class XMLPageBuilder extends XMLWidgetBuilder {
       item = new JButton("Custom");
     }
     
-    if (item != null && ID != null) {
-      model.add(item, ID);
-      everything.put(ID, item);
-    }  
-
     return item;
-  }
-
-  public JComponent getCtrlByName(String key) {
-    return (JComponent)everything.get(key);
   }
 
   protected JList buildList(Element current) {

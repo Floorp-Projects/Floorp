@@ -71,64 +71,7 @@ public class PageModel
     values.put(attribute, value);
   }
 
-  public void add(JComponent comp, String key) {
-    if (comp instanceof JTextComponent) {
-      JTextComponent text = (JTextComponent)comp;
-      text.getDocument().addDocumentListener(new TextHandler(text, key));
-    } else if (comp instanceof JToggleButton) {
-      JToggleButton toggle = (JToggleButton)comp;
-      toggle.addItemListener(new ToggleHandler(toggle, key));
-    }
-  }
-  
   public void actionPerformed(ActionEvent event) {
-  }
-
-  class ToggleHandler
-    implements ItemListener {
-    JToggleButton comp;
-    String key;
-    ToggleHandler(JToggleButton button, String key) {
-      comp = button;
-      this.key = key;
-    }
-
-    public void itemStateChanged(ItemEvent event) {
-      Boolean b = new Boolean(comp.isSelected());
-      values.put(key, b);
-    }
-  }
-
-  class TextHandler 
-    implements DocumentListener {
-    JTextComponent comp;
-    String key;
-    TextHandler(JTextComponent text, String key) {
-      comp = text;
-      this.key = key;
-    }
-    
-    public void changedUpdate(DocumentEvent e) {
-    }
-    
-    public void insertUpdate(DocumentEvent e) {
-      updateModel(e);
-    }
-    
-    public void removeUpdate(DocumentEvent e) {
-      updateModel(e);
-    }
-
-    private void updateModel(DocumentEvent event) {
-      int length = event.getDocument().getLength();
-      String content;
-      try {
-        content = event.getDocument().getText(0, length);
-        values.put(key, content);
-      } catch (Exception e) {
-        // ignore if we can't get the document.
-      }    
-    }
   }
 }
 
