@@ -75,16 +75,16 @@
 #define POSTSCRIPT_MODULES
 #endif
 
-#if MOZ_WIDGET_TOOLKIT==windows
+#ifdef XP_WIN
 #  define GFX_MODULES MODULE(nsGfxModule)
 #  define WIDGET_MODULES MODULE(nsWidgetModule)
-#elif MOZ_WIDGET_TOOLKIT==mac || MOZ_WIDGET_TOOLKIT=cocoa
+#elif defined(XP_MACOSX)
 #  define GFX_MODULES MODULE(nsGfxMacModule)
 #  define WIDGET_MODULES MODULE(nsWidgetMacModule)
-#elif MOZ_WIDGET_TOOLKIT==beos
+#elif defined(XP_BEOS)
 #  define GFX_MODULES MODULE(nsGfxBeOSModule)
 #  define WIDGET_MODULES MODULE(nsWidgetBeOSModule)
-#elif MOZ_WIDGET_TOOLKIT==os2
+#elif defined(XP_OS2)
 #  define GFX_MODULES MODULE(nsGfxOS2Module)
 #  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
 #endif
