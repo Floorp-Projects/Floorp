@@ -775,12 +775,12 @@ nsMimeXULEmitter::WriteMiscXULTag(const char *tagName, const char *value)
   char  *newValue = nsEscapeHTML(value);
   if (newValue) 
   {
-    UtilityWrite(newValue);
+    UtilityWriteCRLF(newValue);
     PR_FREEIF(newValue);
   }
   else
   {
-    UtilityWrite(value);
+    UtilityWriteCRLF(value);
   }
 
   UtilityWriteCRLF("</html:td>");
