@@ -54,6 +54,8 @@ menubar > menu {
 
 menu[_moz-menuactive="true"],
 menuitem[_moz-menuactive="true"] {
+  /* dummy rule to force repainting when _moz-menuactive changes */
+  border-color: transparent;
   /* color: HighlightText; should be fg[PRELIGHT] */
 }
 
