@@ -53,6 +53,7 @@ function WidgetStateManager( frame_id, panelPrefix, panelSuffix )
   this.ElementIsIgnored  = WSM_ElementIsIgnored;
   this.HasValidElements  = WSM_HasValidElements;
   this.LookupElement     = WSM_LookupElement;
+  this.GetDataForTag    = WSM_GetDataForTag;
 }
 
 /** void SavePageData() ;
@@ -82,24 +83,25 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
     var currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
   
   var doc = this.content_frame.document;
-  this.PageData[currentPageTag] = []; 
+  var thisTagData = this.GetDataForTag(currentPageTag);
 
   if( this.content_frame.GetFields ) {
-    this.PageData[currentPageTag] = this.content_frame.GetFields();  // user GetFields function
+    // user GetFields function
+    this.SetDataForTag(currentPageTag, this.content_frame.GetFields());
     var string = "";
-    for( var i in this.PageData[currentPageTag] )
+    for( var i in thisTagData )
     {
       string += "element: " + i + "\n";
     }
   }
-  else if (doc.controls) {
+  else if (doc && doc.controls) {
     var fields = doc.controls;
     var data = [];
     for( var i = 0; i < fields.length; i++ ) 
     { 
       data[i] = []; 
       var formElement = fields[i];
-      var elementEntry = this.PageData[currentPageTag][formElement.id] = [];
+      var elementEntry = thisTagData[formElement.id] = [];
 
       // check to see if element is excluded
       if( !this.ElementIsIgnored( formElement, exclElements ) )
@@ -159,8 +161,8 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
       elementEntry.elType   = ( formElement.type ) ? formElement.type : null;
     }
   }
-  if( !this.HasValidElements( this.PageData[currentPageTag] ) )
-    this.PageData[currentPageTag].nodata = true;    // page has no (valid) elements
+  if( !this.HasValidElements( thisTagData ) )
+    thisTagData.noData = true; // page has no (valid) elements
 }
 
 /** void SetPageData() ;
@@ -177,30 +179,31 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
     var currentPageTag = this.GetTagFromURL( this.content_frame.location.href, this.panelPrefix, this.panelSuffix, true );
   
 	var doc = this.content_frame.document;
-  if ( this.PageData[currentPageTag] != undefined && !this.PageData[currentPageTag]["nodata"] ) {
-  	for( var i in this.PageData[currentPageTag] ) {
-      if( this.PageData[currentPageTag][i].excluded || !i )
+  var thisTagData = this.GetDataForTag(currentPageTag);
+  if ( thisTagData && !thisTagData.nodata) {
+  	for( var i in thisTagData ) {
+      if( thisTagData[i].excluded || !i )
         continue;     // element is excluded, goto next
      
-      var id    = this.PageData[currentPageTag][i].id;
-      var value = this.PageData[currentPageTag][i].value;
+      var id    = thisTagData[i].id;
+      var value = thisTagData[i].value;
 
       dump("*** id & value: " + id + " : " + value + "\n");
       
       if( this.content_frame.SetFields && !hasExtraAttributes )
         this.content_frame.SetFields( id, value );  // user provided setfields
       else if( this.content_frame.SetFields && hasExtraAttributes )
-        this.content_frame.SetFields( id, value, this.PageData[currentPageTag][i]); // SetFields + attrs
+        this.content_frame.SetFields( id, value, thisTagData[i]); // SetFields + attrs
       else {                              // automated data provision
         var formElement = doc.getElementById( i );
         
         if( hasExtraAttributes ) {        // if extra attributes are set, set them
-          for( var attName in this.PageData[currentPageTag][i] ) 
+          for( var attName in thisTagData[i] ) 
           {
             // for each attribute set for this element
             if( attName == "value" || attName == "id" )
               continue;                   // don't set value/id (value = default, id = dangerous)
-            var attValue  = this.PageData[currentPageTag][i][attName];
+            var attValue  = thisTagData[i][attName];
             formElement.setAttribute( attName, attValue );
           }
         }
@@ -302,6 +305,7 @@ function WSM_PageIsValid()
 function WSM_GetTagFromURL( url, prefix, suffix, mode )
 {
   // NOTE TO SELF: this is an accident WAITING to happen
+  if (!prefix) return undefined;
   if( mode )
     return url.substring( prefix.length, url.lastIndexOf(suffix) );
   else
@@ -418,6 +422,23 @@ function WSM_LookupElement( element, lookby, property )
       }
     }
   }
+}
+
+/**
+ * array GetDataForTag(string tag)
+ * - purpose: to get the array associated with this tag
+ *            creates the array if one doesn't already exist
+ * - in:      tag
+ * - out:     the associative array for this page
+ */
+function WSM_GetDataForTag(tag) {
+  if (!this.PageData[tag])
+    this.PageData[tag] = [];
+  return this.PageData[tag];
+}
+
+function WSM_SetDataForTag(tag, data) {
+  this.PageData[tag] = data;
 }
 
 /* it will be dark soon */
