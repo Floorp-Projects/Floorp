@@ -3492,6 +3492,11 @@ NS_IMETHODIMP
 nsHttpChannel::GetContentEncodings(nsIUTF8StringEnumerator** aEncodings)
 {
     NS_PRECONDITION(aEncodings, "Null out param");
+    if (!mResponseHead) {
+        *aEncodings = nsnull;
+        return NS_OK;
+    }
+    
     const char *encoding = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
     if (!encoding) {
         *aEncodings = nsnull;
