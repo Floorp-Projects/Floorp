@@ -397,3 +397,4 @@ void nsToolkitCore::DOMWindowToWebShellWindow(
     *webWindow = do_QueryInterface(webshellContainer);
   }
 }
+
