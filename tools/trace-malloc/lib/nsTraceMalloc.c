@@ -708,9 +708,8 @@ static callsite *calltree(int skip)
         /*
          * Time to increase the number of stack frames?
          */
-		if (framenum >= MAX_STACKFRAMES)
-			break;
-        PR_ASSERT(framenum < MAX_STACKFRAMES);
+        if (framenum >= MAX_STACKFRAMES)
+            break;
     }
 
     depth = framenum;
