@@ -29,6 +29,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIEventQueue.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 
@@ -36,7 +37,6 @@ class nsHttpRequestHead;
 class nsHttpResponseHead;
 class nsHttpConnection;
 class nsHttpChunkedDecoder;
-class nsIEventQueue;
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction represents a single HTTP transaction.  It is thread-safe,
@@ -63,11 +63,12 @@ public:
     // Called to initialize the transaction
     nsresult SetupRequest(nsHttpRequestHead *, nsIInputStream *);
 
-    nsIStreamListener     *Listener()     { return mListener; }
-    nsHttpConnection      *Connection()   { return mConnection; }
-    nsHttpRequestHead     *RequestHead()  { return mRequestHead; }
-    nsHttpResponseHead    *ResponseHead() { return mResponseHead; }
-    nsIInterfaceRequestor *Callbacks()    { return mCallbacks; } 
+    nsIStreamListener     *Listener()       { return mListener; }
+    nsHttpConnection      *Connection()     { return mConnection; }
+    nsHttpRequestHead     *RequestHead()    { return mRequestHead; }
+    nsHttpResponseHead    *ResponseHead()   { return mResponseHead; }
+    nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
+    nsIEventQueue         *ConsumerEventQ() { return mConsumerEventQ; }
 
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.
@@ -90,11 +91,15 @@ private:
     void     ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
     nsresult HandleContent(char *, PRUint32 count, PRUint32 *countRead);
-    nsresult ProxyRestartTransaction(nsIEventQueue *);
+    void     DeleteSelfOnConsumerThread();
+
+    static void *PR_CALLBACK DeleteThis_EventHandlerFunc(PLEvent *);
+    static void  PR_CALLBACK DeleteThis_EventCleanupFunc(PLEvent *);
 
 private:
     nsCOMPtr<nsIStreamListener>     mListener;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
+    nsCOMPtr<nsIEventQueue>         mConsumerEventQ;
 
     nsHttpConnection               *mConnection;      // hard ref
 

@@ -106,16 +106,17 @@ public:
 
     // Called to kick-off a new transaction, by default the transaction
     // will be put on the pending transaction queue if it cannot be 
-    // initiated at this time.
+    // initiated at this time.  Callable from any thread.
     nsresult InitiateTransaction(nsHttpTransaction *,
                                  nsHttpConnectionInfo *,
                                  PRBool failIfBusy = PR_FALSE);
 
-    // Called when a connection is done processing a transaction
+    // Called when a connection is done processing a transaction.  Callable
+    // from any thread.
     nsresult ReclaimConnection(nsHttpConnection *);
 
     // Called when a transaction, which is not assigned to a connection,
-    // is canceled.
+    // is canceled.  Callable from any thread.
     nsresult CancelPendingTransaction(nsHttpTransaction *, nsresult status);
 
     //
@@ -161,6 +162,11 @@ private:
     void     ProcessTransactionQ();
     nsresult EnqueueTransaction(nsHttpTransaction *, nsHttpConnectionInfo *);
 
+    // Called with mConnectionLock held
+    nsresult InitiateTransaction_Locked(nsHttpTransaction *,
+                                        nsHttpConnectionInfo *,
+                                        PRBool failIfBusy = PR_FALSE);
+
     PRUint32 CountActiveConnections(nsHttpConnectionInfo *);
     PRUint32 CountIdleConnections(nsHttpConnectionInfo *);
 
@@ -195,7 +201,7 @@ private:
     nsCOMPtr<nsIMIMEService>            mMimeService;
 
     // the authentication credentials cache
-    nsHttpAuthCache                  *mAuthCache;
+    nsHttpAuthCache *mAuthCache;
 
     //
     // prefs
@@ -231,6 +237,7 @@ private:
     nsVoidArray mActiveConnections;    // list of nsHttpConnection objects
     nsVoidArray mIdleConnections;      // list of nsHttpConnection objects
     nsVoidArray mTransactionQ;         // list of nsPendingTransaction objects
+    PRLock     *mConnectionLock;       // protect connection lists
 
     // useragent components
     nsXPIDLCString mAppName;

@@ -39,29 +39,6 @@
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 //-----------------------------------------------------------------------------
-// helpers...
-//-----------------------------------------------------------------------------
-
-static void *PR_CALLBACK
-TransactionReleaseEventHandler(PLEvent *ev)
-{
-    nsHttpTransaction *trans =
-            NS_STATIC_CAST(nsHttpTransaction *, PL_GetEventOwner(ev));
-
-    LOG(("TransactionReleaseEventHandler [trans=%x refcnt=%u] calling release...\n",
-        trans, trans->RefCnt()));
-
-    NS_RELEASE(trans);
-    return 0;
-}
-
-static void PR_CALLBACK
-TransactionReleaseDestroyHandler(PLEvent *ev)
-{
-    delete ev;
-}
-
-//-----------------------------------------------------------------------------
 // nsHttpConnection <public>
 //-----------------------------------------------------------------------------
 
@@ -86,10 +63,7 @@ nsHttpConnection::~nsHttpConnection()
     NS_IF_RELEASE(mConnectionInfo);
     mConnectionInfo = 0;
 
-    if (mTransaction) {
-        ProxyReleaseTransaction(mTransaction);
-        mTransaction = 0;
-    }
+    NS_IF_RELEASE(mTransaction);
 
     // warning: this call could result in OnStopRequest being called.  this
     // is why we are careful to null out mTransaction and mConnectionInfo ;-)
@@ -111,7 +85,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info)
     return NS_OK;
 }
 
-// never called from the socket thread
+// called from any thread
 nsresult
 nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
 {
@@ -125,22 +99,15 @@ nsHttpConnection::SetTransaction(nsHttpTransaction *transaction)
     mTransaction = transaction;
     NS_ADDREF(mTransaction);
 
-    // grab a reference to the calling thread's event queue.
-    mConsumerEventQ = 0;
-    nsCOMPtr<nsIEventQueueService> eqs;
-    nsHttpHandler::get()->GetEventQueueService(getter_AddRefs(eqs));
-    if (eqs)
-        eqs->ResolveEventQueue(NS_CURRENT_EVENTQ, getter_AddRefs(mConsumerEventQ));
-
     // build a proxy for the progress event sink
     mProgressSink = 0;
-    if (mTransaction->Callbacks()) {
+    if (mTransaction->Callbacks() && mTransaction->ConsumerEventQ()) {
         nsCOMPtr<nsIProgressEventSink> temp = do_GetInterface(mTransaction->Callbacks());
         if (temp) {
             nsCOMPtr<nsIProxyObjectManager> mgr;
             nsHttpHandler::get()->GetProxyObjectManager(getter_AddRefs(mgr));
             if (mgr)
-                mgr->GetProxyForObject(mConsumerEventQ,
+                mgr->GetProxyForObject(mTransaction->ConsumerEventQ(),
                                        NS_GET_IID(nsIProgressEventSink),
                                        temp,
                                        PROXY_ASYNC | PROXY_ALWAYS,
@@ -430,26 +397,6 @@ nsHttpConnection::CreateTransport()
 }
 
 nsresult
-nsHttpConnection::ProxyReleaseTransaction(nsHttpTransaction *trans)
-{
-    LOG(("nsHttpConnection::ProxyReleaseTransaction [this=%x trans=%x refcnt=%u]\n",
-        this, trans, trans->RefCnt()));
-
-    NS_ENSURE_TRUE(mConsumerEventQ, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_ARG_POINTER(trans);
-
-    PLEvent *event = new PLEvent;
-    if (!event)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    PL_InitEvent(event, trans,
-                 TransactionReleaseEventHandler,
-                 TransactionReleaseDestroyHandler);
-
-    return mConsumerEventQ->PostEvent(event);
-}
-
-nsresult
 nsHttpConnection::SetupSSLProxyConnect()
 {
     nsresult rv;
@@ -549,17 +496,15 @@ nsHttpConnection::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
         mProgressSink = 0;
 
         // make sure mTransaction is clear before calling OnStopTransaction
-		nsHttpTransaction *trans = mTransaction;
-		mTransaction = nsnull;
+        if (mTransaction) { 
+            nsHttpTransaction *trans = mTransaction;
+            mTransaction = nsnull;
 
-        trans->OnStopTransaction(status);
+            trans->OnStopTransaction(status);
+            NS_RELEASE(trans);
+        }
 
-        // because this could be the last reference to the transaction and
-        // because we are on the socket transport thread, it is essential that
-        // this final release be proxied to the thread which called
-        // SetTransaction.
-        if (NS_FAILED(ProxyReleaseTransaction(trans)))
-            NS_NOTREACHED("proxy release of transaction failed");
+        nsHttpHandler::get()->ReclaimConnection(this);
     }
     // no point in returning anything else but NS_OK
     return NS_OK;
