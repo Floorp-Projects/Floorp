@@ -25,5 +25,6 @@
 <!ENTITY down.label "Download">
 <!ENTITY cache.label "Cache">
 <!ENTITY proxies.label "Proxies">
+<!ENTITY mousewheel.label "Mouse Wheel">
 <!ENTITY smart.label "Software Installation">
 <!ENTITY debug.label "Debug">

@@ -220,6 +220,12 @@
             <treecell indent="true" name="chrome://pref/content/pref-proxies.xul" value="&proxies.label;"/> 
           </treerow>
         </treeitem>
+
+        <treeitem open="true">
+          <treerow>
+            <treecell indent="true" name="chrome://pref/content/pref-mousewheel.xul" value="&mousewheel.label;"/> 
+          </treerow>
+        </treeitem>
         
       </treechildren>
     </treeitem>
