@@ -1142,6 +1142,42 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const PRUnichar *aTheme
   return NS_OK;
 }
    
+NS_IMETHODIMP nsChromeRegistry::InstallSkin(nsIURI* aBaseURL, PRBool aUseProfile)
+{
+  NS_ERROR("Write me!\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::InstallLocale(nsIURI* aBaseURL, PRBool aUseProfile)
+{
+  NS_ERROR("Write me!\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::InstallPackage(nsIURI* aBaseURL, PRBool aUseProfile)
+{
+  NS_ERROR("Write me!\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const PRUnichar* aSkinName, PRBool aUseProfile)
+{
+  NS_ERROR("Write me!\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const PRUnichar* aLocaleName, PRBool aUseProfile)
+{
+  NS_ERROR("Write me!\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const PRUnichar* aPackageName, PRBool aUseProfile)
+{
+  NS_ERROR("Write me!\n");
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsChromeRegistry::GetProfileRoot(nsCAutoString& aFileURL) 
 { 

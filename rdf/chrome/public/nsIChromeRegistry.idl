@@ -77,6 +77,15 @@ interface nsIChromeRegistry : nsISupports
   void deselectSkinForPackage(in wstring skinName, in wstring packageName, in boolean useProfile);
 	void deselectLocaleForPackage(in wstring localeName, in wstring packageName, in boolean useProfile); 
 
+  /* Installation APIs */
+  void installSkin(in nsIURI baseURL, in boolean useProfile);
+  void uninstallSkin(in wstring skinName, in boolean useProfile);
+
+  void installLocale(in nsIURI baseURL, in boolean useProfile);
+  void uninstallLocale(in wstring localeName, in boolean useProfile);
+
+  void installPackage(in nsIURI baseURL, in boolean useProfile);
+  void uninstallPackage(in wstring packageName, in boolean useProfile);
 };
 
 
