@@ -48,7 +48,7 @@ public:
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect);
 
-  PRInt32 nsLegendFrame::GetAlign();
+  PRInt32 GetAlign();
 
   PRBool IsInline();
 
