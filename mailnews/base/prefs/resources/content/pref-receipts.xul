@@ -13,7 +13,7 @@
 
   <script language="javascript">
   <![CDATA[
-    _elementIDs = ["requestReturnReceipt", "incorporateReturnReceipt"];
+    _elementIDs = [];
     
     function doCustomize() 
     {
@@ -25,46 +25,4 @@
 
   <box class="box-smallheader" title="&pane.title;"/>
 
-  <titledbox orient="vertical">
-    <title><text value="&requestReceipt.label;"/></title>
-		
-    <radiogroup id="requestReturnReceipt" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="mail.request.return_receipt"
-                prefattribute="data">
-      <radio group="requestReturnReceipt" data="1" value="&dsn.label;" accesskey="&dsn.accesskey;"/>
-      <radio group="requestReturnReceipt" data="2" value="&mdn.label;" accesskey="&mdn.accesskey;"/>
-      <radio group="requestReturnReceipt" data="3" value="&both.label;" accesskey="&both.accesskey;"/>		
-    </radiogroup>
-    
-  </titledbox>
-
-  <titledbox orient="vertical">
-    <title><text value="&receiptArrive.label;"/></title>
-		
-    <radiogroup id="incorporateReturnReceipt" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="mail.incorporate.return_receipt"
-                prefattribute="data">
-      <radio group="incorporateReturnReceipt" data="0" value="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
-      <radio group="incorporateReturnReceipt" data="1" value="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/>		
-    </radiogroup>
-
-	</titledbox>
-
-<!--
-   <titledbox orient="vertical">
-    <title><text value="&requestMDN.label;"/></title>
-	
-    <radiogroup id="mdnReportEnabled" orient="vertical"
-                pref="true" preftype="bool" prefstring="mail.mdn.report.enabled"
-                prefattribute="data">
-      <radio group="mdnReportEnabled" data="false" value="&never.label;" accesskey="&never.accesskey;"/>
-      <box autostretch="never">
-        <radio group="mdnReportEnabled" data="true" value="&returnSome.label;" accesskey="&returnSome.accesskey;"/>	
-        <spring flex="1"/>
-        <button class="dialog" value="&custom.label;" accesskey="&custom.accesskey;"
-                oncommand="doCustomize();"/>
-      </box>
-    </radiogroup>
-  </titledbox>
--->
 </window>

@@ -46,10 +46,10 @@ Rights Reserved.
 <!ENTITY messageWrapping.label                "Message Wrapping">
 <!ENTITY wrapInMsg.label                      "Wrap plain text messages to fit window width">
 <!ENTITY wrapInMsg.accesskey                  "w">
-<!ENTITY convertStructs.label                 "Add HTML styles to structured phrases. For example, format text contained within asterisks as bold.">
+<!ENTITY convertStructs.label                 "Convert structured phrases to HTML styles on Send. For example, convert '*test*' to '*test*'">
 <!ENTITY convertStructs.accesskey             "s">
 
-<!ENTITY sendingMessagesHeader.label          "For outgoing messages">
+<!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "p">
 <!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
@@ -58,10 +58,14 @@ Rights Reserved.
 <!ENTITY use8Bits.label                       "Send messages that use 8-bit characters">
 <!ENTITY asIs.label                           "As is (does not work well with some mail servers)">
 <!ENTITY asIs.accesskey                       "t">
-<!ENTITY useMIME.label                        "Using the 'quoted printable' MIME encoding (does not work well with some mail or newsgroups readers)">
+<!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
 <!ENTITY useMIME.accesskey                    "m">
 
 <!ENTITY sendDefaultCharset.label             "Default Character Coding:">
+<!ENTITY languages.label					  "Languages">
+<!ENTITY addressingTitle.label				  "Addressing Messages">
+<!ENTITY addressingText.label				  "When you address messages, Mail can autocomplete addresses for you by looking for matching entries in your address books, or showing you a list of possible matches.">
+<!ENTITY addressingEnable.label				  "Enable address autocompletion">
 
 <!-- Tooltips -->  
 <!ENTITY convertStructs.tooltip "Convert Structs">  

@@ -22,9 +22,9 @@ Rights Reserved.
 <!ENTITY pane.description                 "General Mail/News settings">
 
 <!ENTITY windowSettings.label             "Window Settings">
-<!ENTITY selectWindowLayout.label         "Choose a window layout for Mail:">
-<!ENTITY chooseExp.label                  "Note: changes to this setting will only take effect the next time you open a Mail window.">
-<!ENTITY playSound.label                  "Play sound when messages arrive">
+<!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail:">
+<!ENTITY chooseExp.label                  "Note: For this setting to take effect, you will need to exit and then restart Mail.">
+<!ENTITY playSound.label                  "Play a sound when new messages arrive">
 <!ENTITY playSound.accesskey              "p">
 <!ENTITY rememberLastMsg.label            "Remember the last selected message">
 <!ENTITY rememberLastMsg.accesskey        "r">
@@ -37,13 +37,13 @@ Rights Reserved.
 <!ENTITY enableStartPage.accesskey        "t">
 <!ENTITY location.label                   "Location:">
 <!ENTITY location.accesskey               "l">
-<!ENTITY useCurrent.label                 "Use Current Page">
-<!ENTITY useCurrent.accesskey             "g">
+<!ENTITY useDefault.label                 "Restore Default">
+<!ENTITY useDefault.accesskey             "r">
 <!ENTITY chooseFile.label                 "Choose File...">
 <!ENTITY chooseFile.accesskey             "h">
 
 <!ENTITY reuseThread.label                "Double-clicking a folder opens it in a new window.">
 <!ENTITY reuseThread.accesskey            "f">
-<!ENTITY reuseMessage.label               "Double-clicking a message opens it in a new window.">
+<!ENTITY reuseMessage.label               "Double-clicking a message always opens a new window. (Leave this unchecked to reuse an existing window).">
 <!ENTITY reuseMessage.accesskey           "n">
 <!ENTITY reuseExp.label                   "If you prefer fewer windows, unselect these options, and Mail will open items into existing windows.">

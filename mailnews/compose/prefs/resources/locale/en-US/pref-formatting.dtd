@@ -18,15 +18,15 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY pane.title                   "Formatting">
+<!ENTITY pane.title                   "Sending Format">
 <!ENTITY pane.description             "Message formatting">
-<!ENTITY sendMail.label               "When sending HTML mail messages to recipients who are not listed as being able to receive them:">
-<!ENTITY askMe.label                  "Ask me what to do if the message has HTML formatting, otherwise send plain text">
+<!ENTITY sendMail.label               "You can specify how Mail sends HTML messages to recipients that are not listed as being able to receive them:">
+<!ENTITY askMe.label                  "Ask me what to do (Mail prompts you to choose a format)">
 <!ENTITY askMe.accesskey              "a">
-<!ENTITY convertPlain.label           "Convert the message into plain text (may lose some formatting)">
+<!ENTITY convertPlain.label           "Convert the message to plain text (some formatting may be lost)">
 <!ENTITY convertPlain.accesskey       "p">
-<!ENTITY sendHTML.label               "Send the message in HTML anyway (some recipients may not be able to read it)">
+<!ENTITY sendHTML.label               "Send the message in HTML anyway (some mail programs may not be able to display it)">
 <!ENTITY sendHTML.accesskey           "h">
-<!ENTITY sendBoth.label               "Send the message in plain text and HTML (uses more disk space)">
+<!ENTITY sendBoth.label               "Send the message in both plain text and HTML (larger message size)">
 <!ENTITY sendBoth.accesskey           "s">
-<!ENTITY override.label               "You can override these settings in any message through the options panel of the message composition window.">
+<!ENTITY override.label               "You can override these settings for individual messages by using the Options menu in the Mail Compose window.">

@@ -15,12 +15,13 @@
   <script language="javascript">
   <![CDATA[
     var _elementIDs = ["mailPaneConfig", "mailPlaySound", "mailnewsConfirmMoveFoldersToTrash", 
-                       "mailUseMapiServer", "reuseThreadWindow2", "reuseThreadWindow", 
-                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl"];
+                       "reuseThreadWindow", 
+                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailnewsRememberSelectedMessage"];
   ]]>
   </script>
   <script language="javascript" src="chrome://global/content/strres.js"></script>
   <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script language="javascript" src="chrome://messenger/content/pref-mailnews.js"></script>
   
   <box class="box-smallheader" title="&pane.title;"/>
 
@@ -38,32 +39,22 @@
     </box>
     
     <html>&chooseExp.label;</html>
-  </titledbox>
 
-  <titledbox orient="vertical" autostretch="never">
-	  <checkbox id="mailPlaySound" value="&playSound.label;" accesskey="&playSound.accesskey;"
-              pref="true" preftype="bool" prefstring="mail.play_sound"
-              prefattribute="checked"/>
-    <checkbox id="mailnewsRememberSelectedMessage" value="&rememberLastMsg.label;" accesskey="&rememberLastMsg.accesskey;"
+	<separator class="thin"/>
+	<checkbox id="mailnewsRememberSelectedMessage" value="&rememberLastMsg.label;" accesskey="&rememberLastMsg.accesskey;"
               pref="true" preftype="bool" prefstring="mailnews.remember_selected_message" 
               prefattribute="checked"/>
     <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;" accesskey="&confirmMove.label;"
               pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
               prefattribute="checked"/>
-		<!-- this should be in a platform specific overlay, as Linux and Mac don't have MAPI -->
-    <checkbox id="mailUseMapiServer" value="&useMessenger.label;" accesskey="&useMessenger.label;" 
-              pref="true" preftype="bool" prefstring="mail.use_mapi_server" 
+	<checkbox id="mailPlaySound" value="&playSound.label;" accesskey="&playSound.accesskey;"
+              pref="true" preftype="bool" prefstring="mail.play_sound"
               prefattribute="checked"/>
-  </titledbox>
-  
-  <titledbox orient="vertical" autostretch="never">              
-    <checkbox id="reuseThreadWindow2" value="&reuseThread.label;" accesskey="&reuseThread.accesskey;"
-              pref="true" preftype="bool" prefstring="mailnews.reuse_thread_window2"
-              prefattribute="checked"/>
+		
     <checkbox id="reuseThreadWindow" value="&reuseMessage.label;" accesskey="&reuseMessage.accesskey;"
               pref="true" preftype="bool" prefstring="mailnews.reuse_message_window"
               prefattribute="checked"/>
-		<html>&reuseExp.label;</html>		
+		
 	</titledbox>
 
 	<titledbox orient="vertical">
@@ -78,11 +69,9 @@
                  prefstring="mailnews.start_page.url" prefattribute="value"/>
     </box>
     <box autostretch="never" halign="right">
-      <button class="dialog" value="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
-              oncommand="setHomePageToCurrentPage('mailnews.start_page.url');" />
-      <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;"
-              oncommand="prefNavSelectFile('mailnews.start_page.url', 'choosehomepage', false)"/>
-    </box>
+      <button class="dialog" value="&useDefault.label;" accesskey="&useDefault.accesskey;"
+              oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');" />
+     </box>
 
 	</titledbox>
 

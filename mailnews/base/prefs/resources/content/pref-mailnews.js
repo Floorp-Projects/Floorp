@@ -8,3 +8,11 @@ function setColorWell(menu)
 	var color = colorPicker.getAttribute('color');
 	colorWell.style.backgroundColor = color;
 }
+
+function setHomePageToDefaultPage(folderFieldId)
+{
+  var homePageField = document.getElementById(folderFieldId);
+  var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+  var url = prefs.CopyDefaultCharPref("mailnews.start_page.url");
+  homePageField.value = url;
+}

@@ -13,40 +13,12 @@
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["padCheck", "dirCheck", "showDialogForMultipleMatches", "useAddress", "emailCollection"];
+    var _elementIDs = ["emailCollection"];
   ]]>
   </script>  
     
   <box class="box-smallheader" title="&pane.title;"/>
 
-  <titledbox orient="vertical">
-    <title><text value="&pinpoint.label;"/></title>
-			
-    <html>&lookFor.label;</html>
-    <checkbox id="padCheck" value="&padCheck.label;" accesskey="&padCheck.accesskey;"/>
-    <box autostretch="never">
-      <checkbox id="dirCheck" value="&dirCheck.label;" accesskey="&dirCheck.accesskey;"/>
-      <menulist>
-        <menupopup/>
-      </menulist>
-    </box>
-		
-    <separator class="thin"/>
-
-    <html>&mulFound.label;</html>
-    <radiogroup id="showDialogForMultipleMatches" orient="vertical" autostretch="never"
-              pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches"
-              prefattribute="data">
-      <radio group="showDialogForMultipleMatches" data="false" value="&acceptList.label;" accesskey="&acceptList.accesskey;"/>
-      <radio group="showDialogForMultipleMatches" data="true" value="&showList.label;" accesskey="&showList.accesskey;"/>
-    </radiogroup>
-
-    <separator class="thin"/>
-    
-    <html>&oneMatch.label;</html>		
-    <checkbox id="useAddress" value="&useAddress.label;" accesskey="&useAddress.accesskey;"/>
-	
-  </titledbox>
 
 	<titledbox orient="vertical">
     <title><text value="&emailCollectiontitle.label;"/></title>

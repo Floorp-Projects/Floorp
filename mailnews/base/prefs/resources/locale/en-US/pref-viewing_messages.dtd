@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY pane.title                       "Viewing Messages">
+<!ENTITY pane.title                       "Message Display">
 <!ENTITY pane.description                 "Settings for message display">
 <!ENTITY textBegin.label                  "Quoted plain text appearance">
 <!ENTITY style.label                      "Style:">
@@ -34,19 +34,25 @@ Rights Reserved.
 <!ENTITY smaller.label                    "Smaller">
 <!ENTITY color.label                      "Color:">
 <!ENTITY color.accesskey                  "c">
-<!ENTITY displayWidth.label               "Display plain text messages and articles with">
+<!ENTITY displayWidth.label               "Plain Text Messages">
+<!ENTITY plainText.label				  "Use this font when displaying plain text messages:">
+<!ENTITY displayText.label				  "Use the following settings when displaying quoted plain text messages:">
+<!ENTITY viewingPlainText.label			  "When viewing plain text messages:">
+<!ENTITY languages.label				  "Languages">
+<!ENTITY coding.label					  "Use the following character coding as the default for viewing messages:">
+<!ENTITY sendDefaultCharset.label         "Character Coding:">
 <!ENTITY fixedWidth.label                 "Fixed width font">
 <!ENTITY fixedWidth.accesskey             "x">
 <!ENTITY variableWidth.label              "Variable width font">
 <!ENTITY variableWidth.accesskey          "v">
 <!ENTITY readingMessagesHeader.label      "For incoming messages">
 <!ENTITY messageWrapping.label            "Message Wrapping">
-<!ENTITY wrapInMsg.label                  "Wrap plain text messages to fit window width">
+<!ENTITY wrapInMsg.label                  "Wrap text to fit window width">
 <!ENTITY wrapInMsg.accesskey              "w">
 <!-- LOCALIZATION NOTE : (emoticonsAndStructs.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
-<!ENTITY convertEmoticons.label           "Convert emoticons to graphics.">
+<!ENTITY convertEmoticons.label           "Display emoticons as graphics.">
 <!ENTITY convertEmoticons.accesskey       "c">
-<!ENTITY convertStructs.label             "Add HTML styles to structured phrases. For example, format text contained within asterisks as bold.">
+<!ENTITY convertStructs.label             "Display structured phrases as HTML styles.">
 <!ENTITY convertStructs.accesskey         "s">
 
 <!-- Tooltips  -->  

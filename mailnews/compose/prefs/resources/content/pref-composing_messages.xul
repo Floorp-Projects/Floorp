@@ -16,7 +16,7 @@
     
   <script language="JavaScript">
   <![CDATA[
-    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "sendStruct", "sendDefaultCharsetList", "wrapLength", "strictlyMime"];
+    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "sendStruct", "strictlyMime", "wrapLength", "sendDefaultCharsetList", "addressingAutocomplete"];
     
     function Startup()
     {
@@ -84,8 +84,23 @@
     <checkbox id="sendStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;"
               pref="true" preftype="bool" prefstring="mail.send_struct"
               prefattribute="checked" tooltip="aTooltip" tooltiptext="&convertStructs.tooltip;"/>
+	
+	<checkbox id="strictlyMime" value="&useMIME.label;" accesskey="&useMIME.accesskey;"
+                pref="true" preftype="bool" prefstring="mail.strictly_mime"
+                prefattribute="checked"/>
+    
+	<box autostretch="never">
+	<text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
+    <textfield id="wrapLength" size="3" pref="true" preftype="int"
+               prefstring="mailnews.wraplength" prefattribute="value"/>
+    <text class="label" value="&char.label;"/>
+	</box>
+	</titledbox>
+	
+	<titledbox orient="vertical" autostretch="never">
+	<title><text value="&languages.label;"/></title>
 
-    <box autostretch="never">
+   <box autostretch="never">
     <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>
     <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
               pref="true" preftype="string" prefstring="mailnews.send_default_charset"
@@ -96,25 +111,17 @@
         </menupopup>
       </template>
     </menulist>       
-    </box>               
+    </box> 
   </titledbox>
               
-  <titledbox autostretch="never">
-    <title><text value="&messageWrapping.label;"/></title>
-    <text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
-    <textfield id="wrapLength" size="3" pref="true" preftype="int"
-               prefstring="mailnews.wraplength" prefattribute="value"/>
-    <text class="label" value="&char.label;"/>
-  </titledbox>
-    
+      
   <titledbox orient="vertical">
-    <title><text value="&use8Bits.label;"/></title>
-    <radiogroup id="strictlyMime" orient="vertical" autostretch="never"
-                pref="true" preftype="bool" prefstring="mail.strictly_mime"
-                prefattribute="data">
-      <radio group="strictlyMime" data="false" value="&asIs.label;" accesskey="&asIs.accesskey;"/>
-      <radio group="strictlyMime" data="true" value="&useMIME.label;" accesskey="&useMIME.accesskey;"/>
-    </radiogroup>                
-	</titledbox>
+    <title><text value="&addressingTitle.label;"/></title>
+	<html>&addressingText.label;</html>
+		<checkbox id="addressingAutocomplete" value="&addressingEnable.label;"
+              pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
+              prefattribute="checked"/>
+  </titledbox>
 
+    
 </window>
