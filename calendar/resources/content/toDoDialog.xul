@@ -411,7 +411,7 @@
                      <textbox id="repeat-length-field"
                               class="cursor-pointer"
                               disable-controller="repeat"
-                              value="1"
+                              value=""
                               oninput="repeatLengthKeyDown( this )"/>
                               
                      <menulist crop="none"
