@@ -81,6 +81,7 @@ On which of these bugs would you like email notification of changes?</td>
 </table>
 <hr>
 <input type=submit value=Submit>
+</form>
 <hr>
 ";
     navigation_header();
