@@ -58,7 +58,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterFactory(kAppShellServiceCID, path);
     nsComponentManager::UnregisterFactory(kCmdLineServiceCID,  path);
     nsComponentManager::UnregisterFactory(kProtocolHelperCID,  path);
-    nsComponentManager::UnregisterComponent(kXPConnectFactoryCID, path);
+    nsComponentManager::UnregisterFactory(kXPConnectFactoryCID, path);
     
     return NS_OK;
 }
