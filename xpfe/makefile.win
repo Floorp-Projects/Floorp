@@ -21,10 +21,18 @@ DIRS=appshell AppCores bootstrap browser components
 
 include <$(DEPTH)\config\rules.mak>
 
-export::
-	mkdir $(DIST)\bin\chrome\content
-	mkdir $(DIST)\bin\chrome\skin\mozilla
-	mkdir $(DIST)\bin\chrome\locale\en
-	mkdir $(DIST)\bin\chrome\platform\mac
-	mkdir $(DIST)\bin\chrome\platform\windows
-	mkdir $(DIST)\bin\chrome\platform\unix
+CHROME_DIRS=\
+        $(DIST)\bin\chrome\content              \
+        $(DIST)\bin\chrome\skin\mozilla         \
+        $(DIST)\bin\chrome\locale\en            \
+        $(DIST)\bin\chrome\platform\mac         \
+        $(DIST)\bin\chrome\platform\windows     \
+        $(DIST)\bin\chrome\platform\unix        \
+        $(NULL)
+
+$(CHROME_DIRS):
+        mkdir $@
+
+export:: $(CHROME_DIRS)
+
+
