@@ -77,8 +77,7 @@ final class InterpreterData implements Serializable, DebuggableScript
 
     private void init()
     {
-        itsICodeTop = INITIAL_MAX_ICODE_LENGTH;
-        itsICode = new byte[itsICodeTop];
+        itsICode = new byte[INITIAL_MAX_ICODE_LENGTH];
         itsStringTable = new String[INITIAL_STRINGTABLE_SIZE];
     }
 
@@ -98,7 +97,6 @@ final class InterpreterData implements Serializable, DebuggableScript
     Object[] itsRegExpLiterals;
 
     byte[] itsICode;
-    int itsICodeTop;
 
     int[] itsExceptionTable;
 

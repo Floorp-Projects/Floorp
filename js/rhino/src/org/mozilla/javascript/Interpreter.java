@@ -352,24 +352,21 @@ public class Interpreter
 
         generateRegExpLiterals();
 
-        int theICodeTop = 0;
-        theICodeTop = visitStatement(tree, theICodeTop);
+        visitStatement(tree);
         fixLabelGotos();
         // add RETURN_RESULT only to scripts as function always ends with RETURN
         if (itsData.itsFunctionType == 0) {
-            theICodeTop = addToken(Token.RETURN_RESULT, theICodeTop);
+            addToken(Token.RETURN_RESULT);
         }
         // Add special CATCH to simplify Interpreter.interpret logic
         // and workaround lack of goto in Java
-        theICodeTop = addIcode(Icode_CATCH, theICodeTop);
+        addIcode(Icode_CATCH);
 
-        itsData.itsICodeTop = theICodeTop;
-
-        if (itsData.itsICode.length != theICodeTop) {
-            // Make itsData.itsICode length exactly theICodeTop to save memory
+        if (itsData.itsICode.length != itsICodeTop) {
+            // Make itsData.itsICode length exactly itsICodeTop to save memory
             // and catch bugs with jumps beyound icode as early as possible
-            byte[] tmp = new byte[theICodeTop];
-            System.arraycopy(itsData.itsICode, 0, tmp, 0, theICodeTop);
+            byte[] tmp = new byte[itsICodeTop];
+            System.arraycopy(itsData.itsICode, 0, tmp, 0, itsICodeTop);
             itsData.itsICode = tmp;
         }
         if (itsStrings.size() == 0) {
@@ -456,7 +453,7 @@ public class Interpreter
         itsData.itsRegExpLiterals = array;
     }
 
-    private int updateLineNumber(Node node, int iCodeTop)
+    private void updateLineNumber(Node node)
     {
         int lineno = node.getLineno();
         if (lineno != itsLineNumber && lineno >= 0) {
@@ -464,10 +461,9 @@ public class Interpreter
                 itsData.firstLinePC = lineno;
             }
             itsLineNumber = lineno;
-            iCodeTop = addIcode(Icode_LINE, iCodeTop);
-            iCodeTop = addShort(lineno, iCodeTop);
+            addIcode(Icode_LINE);
+            addUint16(lineno);
         }
-        return iCodeTop;
     }
 
     private RuntimeException badTree(Node node)
@@ -475,7 +471,7 @@ public class Interpreter
         throw new RuntimeException(node.toString());
     }
 
-    private int visitStatement(Node node, int iCodeTop)
+    private void visitStatement(Node node)
     {
         int type = node.getType();
         Node child = node.getFirstChild();
@@ -491,7 +487,7 @@ public class Interpreter
             // In addition function expression can not present here
             // at statement level, they must only present as expressions.
             if (fnType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-                iCodeTop = addIndexOp(Icode_CLOSURE_STMT, fnIndex, iCodeTop);
+                addIndexOp(Icode_CLOSURE_STMT, fnIndex);
             } else {
                 if (fnType != FunctionNode.FUNCTION_STATEMENT) {
                     throw Kit.codeBug();
@@ -504,37 +500,37 @@ public class Interpreter
             // Skip case condition
             child = child.getNext();
             // fallthrough
+          case Token.DEFAULT:
           case Token.SCRIPT:
           case Token.LABEL:
           case Token.LOOP:
-          case Token.DEFAULT:
           case Token.BLOCK:
           case Token.EMPTY:
-            iCodeTop = updateLineNumber(node, iCodeTop);
+            updateLineNumber(node);
             while (child != null) {
-                iCodeTop = visitStatement(child, iCodeTop);
+                visitStatement(child);
                 child = child.getNext();
             }
             break;
 
           case Token.WITH:
             ++itsWithDepth;
-            iCodeTop = updateLineNumber(node, iCodeTop);
+            updateLineNumber(node);
             while (child != null) {
-                iCodeTop = visitStatement(child, iCodeTop);
+                visitStatement(child);
                 child = child.getNext();
             }
             --itsWithDepth;
             break;
 
           case Token.ENTERWITH:
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(Token.ENTERWITH, iCodeTop);
-            itsStackDepth--;
+            visitExpression(child);
+            addToken(Token.ENTERWITH);
+            stackChange(-1);
             break;
 
           case Token.LEAVEWITH:
-            iCodeTop = addToken(Token.LEAVEWITH, iCodeTop);
+            addToken(Token.LEAVEWITH);
             break;
 
           case Token.LOCAL_BLOCK:
@@ -543,72 +539,40 @@ public class Interpreter
             if (itsLocalTop > itsData.itsMaxLocals) {
                 itsData.itsMaxLocals = itsLocalTop;
             }
-            iCodeTop = updateLineNumber(node, iCodeTop);
+            updateLineNumber(node);
             while (child != null) {
-                iCodeTop = visitStatement(child, iCodeTop);
+                visitStatement(child);
                 child = child.getNext();
             }
             --itsLocalTop;
             break;
 
-          case Token.SWITCH: {
-            Node.Jump switchNode = (Node.Jump)node;
-            iCodeTop = updateLineNumber(switchNode, iCodeTop);
-            iCodeTop = visitExpression(child, iCodeTop);
-
-            ObjArray cases = (ObjArray) switchNode.getProp(Node.CASES_PROP);
-            for (int i = 0; i < cases.size(); i++) {
-                Node thisCase = (Node)cases.get(i);
-                Node first = thisCase.getFirstChild();
-                // the case expression is the firstmost child
-                // the rest will be generated when the case
-                // statements are encountered as siblings of
-                // the switch statement.
-                iCodeTop = addIcode(Icode_DUP, iCodeTop);
-                stackChange(1);
-                iCodeTop = visitExpression(first, iCodeTop);
-                iCodeTop = addToken(Token.SHEQ, iCodeTop);
-                stackChange(-1);
-                Node.Target target = new Node.Target();
-                thisCase.addChildAfter(target, first);
-                // If true, Icode_IFEQ_POP will jump and remove case value
-                // from stack
-                iCodeTop = addGoto(target, Icode_IFEQ_POP, iCodeTop);
-                stackChange(-1);
-            }
-            iCodeTop = addIcode(Icode_POP, iCodeTop);
-            stackChange(-1);
-
-            Node defaultNode = (Node) switchNode.getProp(Node.DEFAULT_PROP);
-            if (defaultNode != null) {
-                Node.Target defaultTarget = new Node.Target();
-                defaultNode.getFirstChild().addChildToFront(defaultTarget);
-                iCodeTop = addGoto(defaultTarget, Token.GOTO, iCodeTop);
-            }
-
-            Node.Target breakTarget = switchNode.target;
-            iCodeTop = addGoto(breakTarget, Token.GOTO, iCodeTop);
+          case Token.SWITCH:
+            visitSwitch((Node.Jump)node);
             break;
-          }
 
           case Token.TARGET:
-            markTargetLabel((Node.Target)node, iCodeTop);
+            markTargetLabel((Node.Target)node);
             break;
 
           case Token.IFEQ :
-          case Token.IFNE :
-            iCodeTop = visitExpression(child, iCodeTop);
-            itsStackDepth--;    // after the conditional GOTO, really
-                // fall thru...
+          case Token.IFNE : {
+            Node.Target target = ((Node.Jump)node).target;
+            visitExpression(child);
+            addGoto(target, type);
+            stackChange(-1);
+            break;
+          }
+
           case Token.GOTO: {
             Node.Target target = ((Node.Jump)node).target;
-            iCodeTop = addGoto(target, (byte) type, iCodeTop);
+            addGoto(target, type);
             break;
           }
 
           case Token.JSR: {
             Node.Target target = ((Node.Jump)node).target;
-            iCodeTop = addGoto(target, Icode_GOSUB, iCodeTop);
+            addGoto(target, Icode_GOSUB);
             break;
           }
 
@@ -616,23 +580,22 @@ public class Interpreter
             // Account for incomming exception or GOTOSUB address
             stackChange(1);
             int finallyRegister = getLocalBlockRef(node);
-            iCodeTop = addIndexOp(Token.LOCAL_SAVE, finallyRegister, iCodeTop);
-            itsStackDepth--;
+            addIndexOp(Token.LOCAL_SAVE, finallyRegister);
+            stackChange(-1);
             while (child != null) {
-                iCodeTop = visitStatement(child, iCodeTop);
+                visitStatement(child);
                 child = child.getNext();
             }
-            iCodeTop = addIndexOp(Icode_RETSUB, finallyRegister, iCodeTop);
+            addIndexOp(Icode_RETSUB, finallyRegister);
             break;
           }
 
           case Token.EXPR_VOID:
           case Token.EXPR_RESULT:
-            iCodeTop = updateLineNumber(node, iCodeTop);
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addIcode((type == Token.EXPR_VOID)
-                                ? Icode_POP : Icode_POP_RESULT, iCodeTop);
-            itsStackDepth--;
+            updateLineNumber(node);
+            visitExpression(child);
+            addIcode((type == Token.EXPR_VOID) ? Icode_POP : Icode_POP_RESULT);
+            stackChange(-1);
             break;
 
           case Token.TRY: {
@@ -641,7 +604,7 @@ public class Interpreter
             Node catchTarget = tryNode.target;
             Node finallyTarget = tryNode.getFinally();
 
-            int tryStart = iCodeTop;
+            int tryStart = itsICodeTop;
             int tryEnd = -1;
             int catchStart = -1;
             int finallyStart = -1;
@@ -651,24 +614,24 @@ public class Interpreter
 
                 if (child == catchTarget) {
                     if (tryEnd >= 0) Kit.codeBug();
-                    tryEnd = iCodeTop;
-                    catchStart = iCodeTop;
+                    tryEnd = itsICodeTop;
+                    catchStart = itsICodeTop;
 
-                    markTargetLabel((Node.Target)child, iCodeTop);
+                    markTargetLabel((Node.Target)child);
                     generated = true;
 
                 } else if (child == finallyTarget) {
                     if (tryEnd < 0) {
-                        tryEnd = iCodeTop;
+                        tryEnd = itsICodeTop;
                     }
-                    finallyStart = iCodeTop;
+                    finallyStart = itsICodeTop;
 
-                    markTargetLabel((Node.Target)child, iCodeTop);
+                    markTargetLabel((Node.Target)child);
                     generated = true;
                 }
 
                 if (!generated) {
-                    iCodeTop = visitStatement(child, iCodeTop);
+                    visitStatement(child);
                 }
                 child = child.getNext();
             }
@@ -688,33 +651,33 @@ public class Interpreter
           }
 
           case Token.THROW:
-            iCodeTop = updateLineNumber(node, iCodeTop);
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(Token.THROW, iCodeTop);
-            iCodeTop = addShort(itsLineNumber, iCodeTop);
-            itsStackDepth--;
+            updateLineNumber(node);
+            visitExpression(child);
+            addToken(Token.THROW);
+            addUint16(itsLineNumber);
+            stackChange(-1);
             break;
 
           case Token.RETURN:
-            iCodeTop = updateLineNumber(node, iCodeTop);
+            updateLineNumber(node);
             if (child != null) {
-                iCodeTop = visitExpression(child, iCodeTop);
-                iCodeTop = addToken(Token.RETURN, iCodeTop);
-                itsStackDepth--;
+                visitExpression(child);
+                addToken(Token.RETURN);
+                stackChange(-1);
             } else {
-                iCodeTop = addIcode(Icode_RETUNDEF, iCodeTop);
+                addIcode(Icode_RETUNDEF);
             }
             break;
 
           case Token.RETURN_RESULT:
-            iCodeTop = updateLineNumber(node, iCodeTop);
-            iCodeTop = addToken(Token.RETURN_RESULT, iCodeTop);
+            updateLineNumber(node);
+            addToken(Token.RETURN_RESULT);
             break;
 
           case Token.ENUM_INIT_KEYS:
           case Token.ENUM_INIT_VALUES :
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addIndexOp(type, getLocalBlockRef(node), iCodeTop);
+            visitExpression(child);
+            addIndexOp(type, getLocalBlockRef(node));
             stackChange(-1);
             break;
 
@@ -725,11 +688,9 @@ public class Interpreter
         if (itsStackDepth != 0) {
             throw Kit.codeBug();
         }
-
-        return iCodeTop;
     }
 
-    private int visitExpression(Node node, int iCodeTop)
+    private void visitExpression(Node node)
     {
         int type = node.getType();
         Node child = node.getFirstChild();
@@ -743,86 +704,84 @@ public class Interpreter
             if (fn.getFunctionType() != FunctionNode.FUNCTION_EXPRESSION) {
                 throw Kit.codeBug();
             }
-            iCodeTop = addIndexOp(Icode_CLOSURE_EXPR, fnIndex, iCodeTop);
+            addIndexOp(Icode_CLOSURE_EXPR, fnIndex);
             stackChange(1);
             break;
           }
 
           case Token.LOCAL_LOAD: {
             int localIndex = getLocalBlockRef(node);
-            iCodeTop = addIndexOp(Token.LOCAL_LOAD, localIndex, iCodeTop);
+            addIndexOp(Token.LOCAL_LOAD, localIndex);
             stackChange(1);
             break;
           }
 
           case Token.COMMA:
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             while (null != (child = child.getNext())) {
                 if (1 != itsStackDepth - savedStackDepth) Kit.codeBug();
-                iCodeTop = addIcode(Icode_POP, iCodeTop);
-                itsStackDepth--;
-                iCodeTop = visitExpression(child, iCodeTop);
+                addIcode(Icode_POP);
+                stackChange(-1);
+                visitExpression(child);
             }
             break;
 
           case Token.USE_STACK:
             // Indicates that stack was modified externally,
             // like placed catch object
-            itsStackDepth++;
-            if (itsStackDepth > itsData.itsMaxStack)
-                itsData.itsMaxStack = itsStackDepth;
+            stackChange(1);
             break;
 
           case Token.CALL:
           case Token.NEW:
           case Token.REF_CALL:
-            iCodeTop = visitCall(node, iCodeTop);
+            visitCall(node);
             break;
 
           case Token.AND:
           case Token.OR: {
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addIcode(Icode_DUP, iCodeTop);
+            visitExpression(child);
+            addIcode(Icode_DUP);
             stackChange(1);
-            int afterSecondJumpStart = iCodeTop;
+            int afterSecondJumpStart = itsICodeTop;
             int jump = (type == Token.AND) ? Token.IFNE : Token.IFEQ;
-            iCodeTop = addForwardGoto(jump, iCodeTop);
+            addForwardGoto(jump);
             stackChange(-1);
-            iCodeTop = addIcode(Icode_POP, iCodeTop);
+            addIcode(Icode_POP);
             stackChange(-1);
             child = child.getNext();
-            iCodeTop = visitExpression(child, iCodeTop);
-            resolveForwardGoto(afterSecondJumpStart, iCodeTop);
+            visitExpression(child);
+            resolveForwardGoto(afterSecondJumpStart);
             break;
           }
 
           case Token.HOOK: {
             Node ifThen = child.getNext();
             Node ifElse = ifThen.getNext();
-            iCodeTop = visitExpression(child, iCodeTop);
-            int elseJumpStart = iCodeTop;
-            iCodeTop = addForwardGoto(Token.IFNE, iCodeTop);
-            itsStackDepth--;
-            iCodeTop = visitExpression(ifThen, iCodeTop);
-            int afterElseJumpStart = iCodeTop;
-            iCodeTop = addForwardGoto(Token.GOTO, iCodeTop);
-            resolveForwardGoto(elseJumpStart, iCodeTop);
+            visitExpression(child);
+            int elseJumpStart = itsICodeTop;
+            addForwardGoto(Token.IFNE);
+            stackChange(-1);
+            visitExpression(ifThen);
+            int afterElseJumpStart = itsICodeTop;
+            addForwardGoto(Token.GOTO);
+            resolveForwardGoto(elseJumpStart);
             itsStackDepth = savedStackDepth;
-            iCodeTop = visitExpression(ifElse, iCodeTop);
-            resolveForwardGoto(afterElseJumpStart, iCodeTop);
+            visitExpression(ifElse);
+            resolveForwardGoto(afterElseJumpStart);
             break;
           }
 
           case Token.GETPROP:
-            iCodeTop = visitGetProp(node, child, iCodeTop);
+            visitGetProp(node, child);
             break;
 
           case Token.GETELEM:
-            iCodeTop = visitGetElem(node, child, iCodeTop);
+            visitGetElem(node, child);
             break;
 
           case Token.GET_REF:
-            iCodeTop = visitGetRef(node, child, iCodeTop);
+            visitGetRef(node, child);
             break;
 
           case Token.DELPROP:
@@ -847,11 +806,11 @@ public class Interpreter
           case Token.LT:
           case Token.GE:
           case Token.GT:
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             child = child.getNext();
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(type, iCodeTop);
-            itsStackDepth--;
+            visitExpression(child);
+            addToken(type);
+            stackChange(-1);
             break;
 
           case Token.POS:
@@ -861,76 +820,76 @@ public class Interpreter
           case Token.TYPEOF:
           case Token.VOID:
           case Token.DEL_REF:
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             if (type == Token.VOID) {
-                iCodeTop = addIcode(Icode_POP, iCodeTop);
-                iCodeTop = addIcode(Icode_UNDEF, iCodeTop);
+                addIcode(Icode_POP);
+                addIcode(Icode_UNDEF);
             } else {
-                iCodeTop = addToken(type, iCodeTop);
+                addToken(type);
             }
             break;
 
         case Token.SETPROP:
           case Token.SETPROP_OP: {
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             child = child.getNext();
             String property = child.getString();
             child = child.getNext();
             if (type == Token.SETPROP_OP) {
-                iCodeTop = addIcode(Icode_DUP, iCodeTop);
+                addIcode(Icode_DUP);
                 stackChange(1);
-                iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
+                addStringOp(Token.GETPROP, property);
                 // Compensate for the following USE_STACK
                 stackChange(-1);
             }
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addStringOp(Token.SETPROP, property, iCodeTop);
+            visitExpression(child);
+            addStringOp(Token.SETPROP, property);
             stackChange(-1);
             break;
           }
 
           case Token.SETELEM:
           case Token.SETELEM_OP:
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             child = child.getNext();
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             child = child.getNext();
             if (type == Token.SETELEM_OP) {
-                iCodeTop = addIcode(Icode_DUP2, iCodeTop);
+                addIcode(Icode_DUP2);
                 stackChange(2);
-                iCodeTop = addToken(Token.GETELEM, iCodeTop);
+                addToken(Token.GETELEM);
                 stackChange(-1);
                 // Compensate for the following USE_STACK
                 stackChange(-1);
             }
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(Token.SETELEM, iCodeTop);
+            visitExpression(child);
+            addToken(Token.SETELEM);
             stackChange(-2);
             break;
 
           case Token.SET_REF:
           case Token.SET_REF_OP:
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             child = child.getNext();
             if (type == Token.SET_REF_OP) {
-                iCodeTop = addIcode(Icode_DUP, iCodeTop);
+                addIcode(Icode_DUP);
                 stackChange(1);
-                iCodeTop = addToken(Token.GET_REF, iCodeTop);
+                addToken(Token.GET_REF);
                 // Compensate for the following USE_STACK
                 stackChange(-1);
             }
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(Token.SET_REF, iCodeTop);
+            visitExpression(child);
+            addToken(Token.SET_REF);
             stackChange(-1);
             break;
 
           case Token.SETNAME: {
             String name = child.getString();
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             child = child.getNext();
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addStringOp(Token.SETNAME, name, iCodeTop);
-            itsStackDepth--;
+            visitExpression(child);
+            addStringOp(Token.SETNAME, name);
+            stackChange(-1);
             break;
           }
 
@@ -942,12 +901,12 @@ public class Interpreter
             if (itsInFunctionFlag && !itsData.itsNeedsActivation)
                 index = scriptOrFn.getParamOrVarIndex(name);
             if (index == -1) {
-                iCodeTop = addStringOp(Icode_TYPEOFNAME, name, iCodeTop);
+                addStringOp(Icode_TYPEOFNAME, name);
                 stackChange(1);
             } else {
-                iCodeTop = addVarOp(Token.GETVAR, index, iCodeTop);
+                addVarOp(Token.GETVAR, index);
                 stackChange(1);
-                iCodeTop = addToken(Token.TYPEOF, iCodeTop);
+                addToken(Token.TYPEOF);
             }
             break;
           }
@@ -955,23 +914,22 @@ public class Interpreter
           case Token.BINDNAME:
           case Token.NAME:
           case Token.STRING:
-            iCodeTop = addStringOp(type, node.getString(), iCodeTop);
+            addStringOp(type, node.getString());
             stackChange(1);
             break;
 
           case Token.INC:
           case Token.DEC:
-            iCodeTop = visitIncDec(node, child, iCodeTop);
+            visitIncDec(node, child);
             break;
 
           case Token.NUMBER:
-            iCodeTop = visitNumber(node, iCodeTop);
+            visitNumber(node);
             break;
 
           case Token.CATCH_SCOPE:
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addStringOp(Token.CATCH_SCOPE, node.getString(),
-                                   iCodeTop);
+            visitExpression(child);
+            addStringOp(Token.CATCH_SCOPE, node.getString());
             break;
 
           case Token.GETVAR: {
@@ -981,12 +939,12 @@ public class Interpreter
                 // we can't do that to a GETVAR without manufacturing
                 // bogus children. Instead we use a special op to
                 // push the current scope.
-                iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
+                addIcode(Icode_SCOPE);
                 stackChange(1);
-                iCodeTop = addStringOp(Token.GETPROP, name, iCodeTop);
+                addStringOp(Token.GETPROP, name);
             } else {
                 int index = scriptOrFn.getParamOrVarIndex(name);
-                iCodeTop = addVarOp(Token.GETVAR, index, iCodeTop);
+                addVarOp(Token.GETVAR, index);
                 stackChange(1);
             }
             break;
@@ -996,13 +954,13 @@ public class Interpreter
             if (itsData.itsNeedsActivation) {
                 child.setType(Token.BINDNAME);
                 node.setType(Token.SETNAME);
-                iCodeTop = visitExpression(node, iCodeTop);
+                visitExpression(node);
             } else {
                 String name = child.getString();
                 child = child.getNext();
-                iCodeTop = visitExpression(child, iCodeTop);
+                visitExpression(child);
                 int index = scriptOrFn.getParamOrVarIndex(name);
-                iCodeTop = addVarOp(Token.SETVAR, index, iCodeTop);
+                addVarOp(Token.SETVAR, index);
             }
             break;
           }
@@ -1012,43 +970,43 @@ public class Interpreter
           case Token.THISFN:
           case Token.FALSE:
           case Token.TRUE:
-            iCodeTop = addToken(type, iCodeTop);
+            addToken(type);
             stackChange(1);
             break;
 
           case Token.ENUM_NEXT:
           case Token.ENUM_ID:
-            iCodeTop = addIndexOp(type, getLocalBlockRef(node), iCodeTop);
+            addIndexOp(type, getLocalBlockRef(node));
             stackChange(1);
             break;
 
           case Token.REGEXP: {
             int index = node.getExistingIntProp(Node.REGEXP_PROP);
-            iCodeTop = addIndexOp(Token.REGEXP, index, iCodeTop);
+            addIndexOp(Token.REGEXP, index);
             stackChange(1);
             break;
           }
 
           case Token.ARRAYLIT:
           case Token.OBJECTLIT:
-            iCodeTop = visitLiteral(node, child, iCodeTop);
+            visitLiteral(node, child);
             break;
 
           case Token.SPECIAL_REF: {
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
-            iCodeTop = addStringOp(Token.SPECIAL_REF, special, iCodeTop);
+            addStringOp(Token.SPECIAL_REF, special);
             break;
           }
 
           case Token.XML_REF:
           case Token.GENERIC_REF:
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(type, iCodeTop);
+            visitExpression(child);
+            addToken(type);
             break;
 
           case Token.DOTQUERY:
-            iCodeTop = visitDotQery(node, child, iCodeTop);
+            visitDotQery(node, child);
             break;
 
           case Token.DEFAULTNAMESPACE :
@@ -1056,8 +1014,8 @@ public class Interpreter
           case Token.ESCXMLTEXT :
           case Token.TOATTRNAME :
           case Token.DESCENDANTS :
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(type, iCodeTop);
+            visitExpression(child);
+            addToken(type);
             break;
 
           case Token.COLONCOLON : {
@@ -1065,8 +1023,8 @@ public class Interpreter
                 throw badTree(child);
             String namespace = child.getString();
             child = child.getNext();
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addStringOp(Token.COLONCOLON, namespace, iCodeTop);
+            visitExpression(child);
+            addStringOp(Token.COLONCOLON, namespace);
             break;
           }
 
@@ -1077,43 +1035,83 @@ public class Interpreter
         if (savedStackDepth + 1 != itsStackDepth) {
             Kit.codeBug();
         }
-        return iCodeTop;
     }
 
-    private int visitCall(Node node, int iCodeTop)
+    private void visitSwitch(Node.Jump switchNode)
+    {
+        Node child = switchNode.getFirstChild();
+
+        updateLineNumber(switchNode);
+        visitExpression(child);
+
+        ObjArray cases = (ObjArray) switchNode.getProp(Node.CASES_PROP);
+        for (int i = 0; i < cases.size(); i++) {
+            Node thisCase = (Node)cases.get(i);
+            Node test = thisCase.getFirstChild();
+            // the case expression is the firstmost child
+            // the rest will be generated when the case
+            // statements are encountered as siblings of
+            // the switch statement.
+            addIcode(Icode_DUP);
+            stackChange(1);
+            visitExpression(test);
+            addToken(Token.SHEQ);
+            stackChange(-1);
+            Node.Target target = new Node.Target();
+            thisCase.addChildAfter(target, test);
+            // If true, Icode_IFEQ_POP will jump and remove case value
+            // from stack
+            addGoto(target, Icode_IFEQ_POP);
+            stackChange(-1);
+        }
+        addIcode(Icode_POP);
+        stackChange(-1);
+
+        Node defaultNode = (Node) switchNode.getProp(Node.DEFAULT_PROP);
+        if (defaultNode != null) {
+            Node.Target defaultTarget = new Node.Target();
+            defaultNode.getFirstChild().addChildToFront(defaultTarget);
+            addGoto(defaultTarget, Token.GOTO);
+        }
+
+        Node.Target breakTarget = switchNode.target;
+        addGoto(breakTarget, Token.GOTO);
+    }
+
+    private void visitCall(Node node)
     {
         int type = node.getType();
         Node child = node.getFirstChild();
         if (type == Token.NEW) {
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
         } else {
-            iCodeTop = generateCallFunAndThis(child, iCodeTop);
+            generateCallFunAndThis(child);
         }
         // To get better debugging output for undefined or null calls.
         int debugNameIndex = itsLastStringIndex;
         int argCount = 0;
         while ((child = child.getNext()) != null) {
-            iCodeTop = visitExpression(child, iCodeTop);
+            visitExpression(child);
             ++argCount;
         }
         int callType = node.getIntProp(Node.SPECIALCALL_PROP,
                                        Node.NON_SPECIALCALL);
         if (callType != Node.NON_SPECIALCALL) {
             // embed line number and source filename
-            iCodeTop = addIndexOp(Icode_CALLSPECIAL, argCount, iCodeTop);
-            iCodeTop = addByte(callType, iCodeTop);
-            iCodeTop = addByte(type == Token.NEW ? 1 : 0, iCodeTop);
-            iCodeTop = addShort(itsLineNumber, iCodeTop);
+            addIndexOp(Icode_CALLSPECIAL, argCount);
+            addUint8(callType);
+            addUint8(type == Token.NEW ? 1 : 0);
+            addUint16(itsLineNumber);
         } else {
-            iCodeTop = addIndexOp(type, argCount, iCodeTop);
+            addIndexOp(type, argCount);
             if (type == Token.NEW) {
                 // Code for generateCallFunAndThis takes care about debugging
                 // for Token.CALL abd Token.REF_CALL;
                 if (debugNameIndex < 0xFFFF) {
                     // Use only 2 bytes to store debug index
-                    iCodeTop = addShort(debugNameIndex, iCodeTop);
+                    addUint16(debugNameIndex);
                 } else {
-                    iCodeTop = addShort(0xFFFF, iCodeTop);
+                    addUint16(0xFFFF);
                 }
             }
         }
@@ -1128,10 +1126,9 @@ public class Interpreter
         if (argCount > itsData.itsMaxCalleeArgs)
             itsData.itsMaxCalleeArgs = argCount;
 
-        return iCodeTop;
     }
 
-    private int generateCallFunAndThis(Node left, int iCodeTop)
+    private void generateCallFunAndThis(Node left)
     {
         // Generate code to place on stack function and thisObj
         int type = left.getType();
@@ -1139,65 +1136,61 @@ public class Interpreter
           case Token.NAME: {
             String name = left.getString();
             // stack: ... -> ... function thisObj
-            iCodeTop = addStringOp(Icode_NAME_AND_THIS, name, iCodeTop);
+            addStringOp(Icode_NAME_AND_THIS, name);
             stackChange(2);
             break;
           }
           case Token.GETPROP:
           case Token.GETELEM: {
             Node target = left.getFirstChild();
-            iCodeTop = visitExpression(target, iCodeTop);
+            visitExpression(target);
             Node id = target.getNext();
             if (type == Token.GETPROP) {
                 String property = id.getString();
                 // stack: ... target -> ... function thisObj
-                iCodeTop = addStringOp(Icode_PROP_AND_THIS, property, iCodeTop);
+                addStringOp(Icode_PROP_AND_THIS, property);
                 stackChange(1);
             } else {
-                iCodeTop = visitExpression(id, iCodeTop);
+                visitExpression(id);
                 // stack: ... target id -> ... function thisObj
-                iCodeTop = addIcode(Icode_ELEM_AND_THIS, iCodeTop);
+                addIcode(Icode_ELEM_AND_THIS);
             }
             break;
           }
           default:
             // Including Token.GETVAR
-            iCodeTop = visitExpression(left, iCodeTop);
+            visitExpression(left);
             // stack: ... value -> ... function thisObj
-            iCodeTop = addIcode(Icode_VALUE_AND_THIS, iCodeTop);
+            addIcode(Icode_VALUE_AND_THIS);
             stackChange(1);
             break;
         }
-        return iCodeTop;
     }
 
-    private int visitGetProp(Node node, Node child, int iCodeTop)
+    private void visitGetProp(Node node, Node child)
     {
-        iCodeTop = visitExpression(child, iCodeTop);
+        visitExpression(child);
         child = child.getNext();
         String property = child.getString();
-        iCodeTop = addStringOp(Token.GETPROP, property, iCodeTop);
-        return iCodeTop;
+        addStringOp(Token.GETPROP, property);
     }
 
-    private int visitGetElem(Node node, Node child, int iCodeTop)
+    private void visitGetElem(Node node, Node child)
     {
-        iCodeTop = visitExpression(child, iCodeTop);
+        visitExpression(child);
         child = child.getNext();
-        iCodeTop = visitExpression(child, iCodeTop);
-        iCodeTop = addToken(Token.GETELEM, iCodeTop);
+        visitExpression(child);
+        addToken(Token.GETELEM);
         stackChange(-1);
-        return iCodeTop;
     }
 
-    private int visitGetRef(Node node, Node child, int iCodeTop)
+    private void visitGetRef(Node node, Node child)
     {
-        iCodeTop = visitExpression(child, iCodeTop);
-        iCodeTop = addToken(Token.GET_REF, iCodeTop);
-        return iCodeTop;
+        visitExpression(child);
+        addToken(Token.GET_REF);
     }
 
-    private int visitIncDec(Node node, Node child, int iCodeTop)
+    private void visitIncDec(Node node, Node child)
     {
         int incrDecrMask = node.getExistingIntProp(Node.INCRDECR_PROP);
         int childType = child.getType();
@@ -1205,86 +1198,85 @@ public class Interpreter
           case Token.GETVAR : {
             String name = child.getString();
             if (itsData.itsNeedsActivation) {
-                iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
+                addIcode(Icode_SCOPE);
                 stackChange(1);
-                iCodeTop = addStringOp(Icode_PROP_INC_DEC, name, iCodeTop);
-                iCodeTop = addByte(incrDecrMask, iCodeTop);
+                addStringOp(Icode_PROP_INC_DEC, name);
+                addUint8(incrDecrMask);
             } else {
                 int i = scriptOrFn.getParamOrVarIndex(name);
-                iCodeTop = addVarOp(Icode_VAR_INC_DEC, i, iCodeTop);
-                iCodeTop = addByte(incrDecrMask, iCodeTop);
+                addVarOp(Icode_VAR_INC_DEC, i);
+                addUint8(incrDecrMask);
                 stackChange(1);
             }
             break;
           }
           case Token.NAME : {
             String name = child.getString();
-            iCodeTop = addStringOp(Icode_NAME_INC_DEC, name, iCodeTop);
-            iCodeTop = addByte(incrDecrMask, iCodeTop);
+            addStringOp(Icode_NAME_INC_DEC, name);
+            addUint8(incrDecrMask);
             stackChange(1);
             break;
           }
           case Token.GETPROP : {
             Node object = child.getFirstChild();
-            iCodeTop = visitExpression(object, iCodeTop);
+            visitExpression(object);
             String property = object.getNext().getString();
-            iCodeTop = addStringOp(Icode_PROP_INC_DEC, property, iCodeTop);
-            iCodeTop = addByte(incrDecrMask, iCodeTop);
+            addStringOp(Icode_PROP_INC_DEC, property);
+            addUint8(incrDecrMask);
             break;
           }
           case Token.GETELEM : {
             Node object = child.getFirstChild();
-            iCodeTop = visitExpression(object, iCodeTop);
+            visitExpression(object);
             Node index = object.getNext();
-            iCodeTop = visitExpression(index, iCodeTop);
-            iCodeTop = addIcode(Icode_ELEM_INC_DEC, iCodeTop);
-            iCodeTop = addByte(incrDecrMask, iCodeTop);
+            visitExpression(index);
+            addIcode(Icode_ELEM_INC_DEC);
+            addUint8(incrDecrMask);
             stackChange(-1);
             break;
           }
           case Token.GET_REF : {
             Node ref = child.getFirstChild();
-            iCodeTop = visitExpression(ref, iCodeTop);
-            iCodeTop = addIcode(Icode_REF_INC_DEC, iCodeTop);
-            iCodeTop = addByte(incrDecrMask, iCodeTop);
+            visitExpression(ref);
+            addIcode(Icode_REF_INC_DEC);
+            addUint8(incrDecrMask);
             break;
           }
           default : {
             throw badTree(node);
           }
         }
-        return iCodeTop;
     }
 
-    private int visitNumber(Node node, int iCodeTop)
+    private void visitNumber(Node node)
     {
         double num = node.getDouble();
         int inum = (int)num;
         if (inum == num) {
             if (inum == 0) {
-                iCodeTop = addIcode(Icode_ZERO, iCodeTop);
+                addIcode(Icode_ZERO);
                 // Check for negative zero
                 if (1.0 / num < 0.0) {
-                    iCodeTop = addToken(Token.NEG, iCodeTop);
+                    addToken(Token.NEG);
                 }
             } else if (inum == 1) {
-                iCodeTop = addIcode(Icode_ONE, iCodeTop);
+                addIcode(Icode_ONE);
             } else if ((short)inum == inum) {
-                iCodeTop = addIcode(Icode_SHORTNUMBER, iCodeTop);
-                iCodeTop = addShort(inum, iCodeTop);
+                addIcode(Icode_SHORTNUMBER);
+                // write short as uin16 bit pattern
+                addUint16(inum & 0xFFFF);
             } else {
-                iCodeTop = addIcode(Icode_INTNUMBER, iCodeTop);
-                iCodeTop = addInt(inum, iCodeTop);
+                addIcode(Icode_INTNUMBER);
+                addInt(inum);
             }
         } else {
             int index = getDoubleIndex(num);
-            iCodeTop = addIndexOp(Token.NUMBER, index, iCodeTop);
+            addIndexOp(Token.NUMBER, index);
         }
         stackChange(1);
-        return iCodeTop;
     }
 
-    private int visitLiteral(Node node, Node child, int iCodeTop)
+    private void visitLiteral(Node node, Node child)
     {
         int type = node.getType();
         int count;
@@ -1300,44 +1292,39 @@ public class Interpreter
         } else {
             throw badTree(node);
         }
-        iCodeTop = addIndexOp(Icode_LITERAL_NEW, count, iCodeTop);
+        addIndexOp(Icode_LITERAL_NEW, count);
         stackChange(1);
         while (child != null) {
-            iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addIcode(Icode_LITERAL_SET, iCodeTop);
+            visitExpression(child);
+            addIcode(Icode_LITERAL_SET);
             stackChange(-1);
             child = child.getNext();
         }
         if (type == Token.ARRAYLIT) {
             int[] skipIndexes = (int[])node.getProp(Node.SKIP_INDEXES_PROP);
             if (skipIndexes == null) {
-                iCodeTop = addToken(Token.ARRAYLIT, iCodeTop);
+                addToken(Token.ARRAYLIT);
             } else {
                 int index = itsLiteralIds.size();
                 itsLiteralIds.add(skipIndexes);
-                iCodeTop = addIndexOp(Icode_SPARE_ARRAYLIT, index, iCodeTop);
+                addIndexOp(Icode_SPARE_ARRAYLIT, index);
             }
         } else {
             int index = itsLiteralIds.size();
             itsLiteralIds.add(propertyIds);
-            iCodeTop = addIndexOp(Token.OBJECTLIT, index, iCodeTop);
+            addIndexOp(Token.OBJECTLIT, index);
         }
-        return iCodeTop;
     }
 
-    private int visitDotQery(Node node, Node child, int iCodeTop)
+    private void visitDotQery(Node node, Node child)
     {
-        iCodeTop = updateLineNumber(node, iCodeTop);
-        iCodeTop = visitExpression(child, iCodeTop);
-        iCodeTop = addIcode(Icode_ENTERDQ, iCodeTop);
+        updateLineNumber(node);
+        visitExpression(child);
+        addIcode(Icode_ENTERDQ);
         stackChange(-1);
-        int queryPC = iCodeTop;
-        iCodeTop = visitExpression(child.getNext(), iCodeTop);
-        int leavePC = iCodeTop;
-        iCodeTop = addIcode(Icode_LEAVEDQ, iCodeTop);
-        recordJump(leavePC, queryPC);
-        iCodeTop += 2;
-        return iCodeTop;
+        int queryPC = itsICodeTop;
+        visitExpression(child.getNext());
+        addBackwardGoto(Icode_LEAVEDQ, queryPC);
     }
 
     private int getLocalBlockRef(Node node)
@@ -1369,33 +1356,34 @@ public class Interpreter
         return label;
     }
 
-    private void markTargetLabel(Node.Target target, int iCodeTop)
+    private void markTargetLabel(Node.Target target)
     {
         int label = getTargetLabel(target);
         if (itsLabelTable[label] != -1) {
             // Can mark label only once
             Kit.codeBug();
         }
-        itsLabelTable[label] = iCodeTop;
+        itsLabelTable[label] = itsICodeTop;
     }
 
-    private int addGoto(Node.Target target, int gotoOp, int iCodeTop)
+    private void addGoto(Node.Target target, int gotoOp)
     {
         int label = getTargetLabel(target);
         if (!(label < itsLabelTableTop)) Kit.codeBug();
         int targetPC = itsLabelTable[label];
 
-        int gotoPC = iCodeTop;
+        int gotoPC = itsICodeTop;
         if (validIcode(gotoOp)) {
-            iCodeTop = addIcode(gotoOp, iCodeTop);
+            addIcode(gotoOp);
         } else {
-            iCodeTop = addToken(gotoOp, iCodeTop);
+            addToken(gotoOp);
         }
-        iCodeTop = addShort(0, iCodeTop);
 
         if (targetPC != -1) {
             recordJump(gotoPC, targetPC);
+            itsICodeTop += 2;
         } else {
+            addUint16(0);
             int top = itsFixupTableTop;
             if (itsFixupTable == null || top == itsFixupTable.length) {
                 if (itsFixupTable == null) {
@@ -1409,7 +1397,6 @@ public class Interpreter
             itsFixupTableTop = top + 1;
             itsFixupTable[top] = ((long)label << 32) | gotoPC;
         }
-        return iCodeTop;
     }
 
     private void fixLabelGotos()
@@ -1428,17 +1415,25 @@ public class Interpreter
         itsFixupTableTop = 0;
     }
 
-    private int addForwardGoto(int gotoOp, int iCodeTop)
+    private void addBackwardGoto(int gotoOp, int jumpPC)
     {
-        iCodeTop = addToken(gotoOp, iCodeTop);
-        iCodeTop = addShort(0, iCodeTop);
-        return iCodeTop;
+        if (jumpPC >= itsICodeTop) throw Kit.codeBug();
+        int fromPC = itsICodeTop;
+        addIcode(gotoOp);
+        recordJump(fromPC, jumpPC);
+        itsICodeTop += 2;
     }
 
-    private void resolveForwardGoto(int jumpStart, int iCodeTop)
+    private void addForwardGoto(int gotoOp)
     {
-        if (jumpStart + 3 > iCodeTop) Kit.codeBug();
-        recordJump(jumpStart, iCodeTop);
+        addToken(gotoOp);
+        addUint16(0);
+    }
+
+    private void resolveForwardGoto(int fromPC)
+    {
+        if (fromPC + 3 > itsICodeTop) throw Kit.codeBug();
+        recordJump(fromPC, itsICodeTop);
     }
 
     private void recordJump(int jumpSource, int jumpDestination)
@@ -1457,50 +1452,56 @@ public class Interpreter
         itsData.itsICode[offsetSite + 1] = (byte)offset;
     }
 
-    private int addByte(int value, int iCodeTop)
+    private void addToken(int token)
+    {
+        if (!validTokenCode(token)) throw Kit.codeBug();
+        addUint8(token);
+    }
+
+    private void addIcode(int icode)
+    {
+        if (!validIcode(icode)) throw Kit.codeBug();
+        // Write negative icode as uint8 bits
+        addUint8(icode & 0xFF);
+    }
+
+    private void addUint8(int value)
+    {
+        if ((value & ~0xFF) != 0) throw Kit.codeBug();
+        byte[] array = itsData.itsICode;
+        int top = itsICodeTop;
+        if (top == array.length) {
+            array = increaseICodeCapasity(1);
+        }
+        array[top] = (byte)value;
+        itsICodeTop = top + 1;
+    }
+
+    private void addUint16(int value)
+    {
+        if ((value & ~0xFFFF) != 0) throw Kit.codeBug();
+        byte[] array = itsData.itsICode;
+        int top = itsICodeTop;
+        if (top + 2 > array.length) {
+            array = increaseICodeCapasity(2);
+        }
+        array[top] = (byte)(value >>> 8);
+        array[top + 1] = (byte)value;
+        itsICodeTop = top + 2;
+    }
+
+    private void addInt(int i)
     {
         byte[] array = itsData.itsICode;
-        if (iCodeTop == array.length) {
-            array = increaseICodeCapasity(iCodeTop, 1);
+        int top = itsICodeTop;
+        if (top + 4 > array.length) {
+            array = increaseICodeCapasity(4);
         }
-        array[iCodeTop++] = (byte)value;
-        return iCodeTop;
-    }
-
-    private int addToken(int token, int iCodeTop)
-    {
-        if (!validTokenCode(token)) Kit.codeBug();
-        return addByte(token, iCodeTop);
-    }
-
-    private int addIcode(int icode, int iCodeTop)
-    {
-        if (!validIcode(icode)) Kit.codeBug();
-        return addByte(icode, iCodeTop);
-    }
-
-    private int addShort(int s, int iCodeTop)
-    {
-        byte[] array = itsData.itsICode;
-        if (iCodeTop + 2 > array.length) {
-            array = increaseICodeCapasity(iCodeTop, 2);
-        }
-        array[iCodeTop] = (byte)(s >>> 8);
-        array[iCodeTop + 1] = (byte)s;
-        return iCodeTop + 2;
-    }
-
-    private int addInt(int i, int iCodeTop)
-    {
-        byte[] array = itsData.itsICode;
-        if (iCodeTop + 4 > array.length) {
-            array = increaseICodeCapasity(iCodeTop, 4);
-        }
-        array[iCodeTop] = (byte)(i >>> 24);
-        array[iCodeTop + 1] = (byte)(i >>> 16);
-        array[iCodeTop + 2] = (byte)(i >>> 8);
-        array[iCodeTop + 3] = (byte)i;
-        return iCodeTop + 4;
+        array[top] = (byte)(i >>> 24);
+        array[top + 1] = (byte)(i >>> 16);
+        array[top + 2] = (byte)(i >>> 8);
+        array[top + 3] = (byte)i;
+        itsICodeTop = top + 4;
     }
 
     private int getDoubleIndex(double num)
@@ -1518,24 +1519,25 @@ public class Interpreter
         return index;
     }
 
-    private int addVarOp(int op, int varIndex, int iCodeTop)
+    private void addVarOp(int op, int varIndex)
     {
         switch (op) {
           case Token.GETVAR:
           case Token.SETVAR:
             if (varIndex < 128) {
-                iCodeTop = addIcode(op == Token.GETVAR
-                                    ? Icode_GETVAR1 : Icode_SETVAR1, iCodeTop);
-                return addByte(varIndex, iCodeTop);
+                addIcode(op == Token.GETVAR ? Icode_GETVAR1 : Icode_SETVAR1);
+                addUint8(varIndex);
+                return;
             }
             // fallthrough
           case Icode_VAR_INC_DEC:
-            return addIndexOp(op, varIndex, iCodeTop);
+            addIndexOp(op, varIndex);
+            return;
         }
         throw Kit.codeBug();
     }
 
-    private int addStringOp(int op, String str, int iCodeTop)
+    private void addStringOp(int op, String str)
     {
         int index = itsStrings.get(str, -1);
         if (index == -1) {
@@ -1544,46 +1546,44 @@ public class Interpreter
         }
         itsLastStringIndex = index;
         if (index < 4) {
-            iCodeTop = addIcode(Icode_REG_STR_C0 - index, iCodeTop);
+            addIcode(Icode_REG_STR_C0 - index);
         } else if (index <= 0xFF) {
-            iCodeTop = addIcode(Icode_REG_STR1, iCodeTop);
-            iCodeTop = addByte(index, iCodeTop);
+            addIcode(Icode_REG_STR1);
+            addUint8(index);
          } else if (index <= 0xFFFF) {
-            iCodeTop = addIcode(Icode_REG_STR2, iCodeTop);
-            iCodeTop = addShort(index, iCodeTop);
+            addIcode(Icode_REG_STR2);
+            addUint16(index);
          } else {
-            iCodeTop = addIcode(Icode_REG_STR4, iCodeTop);
-            iCodeTop = addInt(index, iCodeTop);
+            addIcode(Icode_REG_STR4);
+            addInt(index);
         }
         if (validIcode(op)) {
-            iCodeTop = addIcode(op, iCodeTop);
+            addIcode(op);
         } else {
-            iCodeTop = addToken(op, iCodeTop);
+            addToken(op);
         }
-        return iCodeTop;
     }
 
-    private int addIndexOp(int op, int index, int iCodeTop)
+    private void addIndexOp(int op, int index)
     {
         if (index < 0) Kit.codeBug();
         if (index < 6) {
-            iCodeTop = addIcode(Icode_REG_IND_C0 - index, iCodeTop);
+            addIcode(Icode_REG_IND_C0 - index);
         } else if (index <= 0xFF) {
-            iCodeTop = addIcode(Icode_REG_IND1, iCodeTop);
-            iCodeTop = addByte(index, iCodeTop);
+            addIcode(Icode_REG_IND1);
+            addUint8(index);
          } else if (index <= 0xFFFF) {
-            iCodeTop = addIcode(Icode_REG_IND2, iCodeTop);
-            iCodeTop = addShort(index, iCodeTop);
+            addIcode(Icode_REG_IND2);
+            addUint16(index);
          } else {
-            iCodeTop = addIcode(Icode_REG_IND4, iCodeTop);
-            iCodeTop = addInt(index, iCodeTop);
+            addIcode(Icode_REG_IND4);
+            addInt(index);
         }
         if (validIcode(op)) {
-            iCodeTop = addIcode(op, iCodeTop);
+            addIcode(op);
         } else {
-            iCodeTop = addToken(op, iCodeTop);
+            addToken(op);
         }
-        return iCodeTop;
     }
 
     private void addExceptionHandler(int icodeStart, int icodeEnd,
@@ -1611,27 +1611,32 @@ public class Interpreter
         itsExceptionTableTop = top + EXCEPTION_SLOT_SIZE;
     }
 
-    private byte[] increaseICodeCapasity(int iCodeTop, int extraSize) {
+    private byte[] increaseICodeCapasity(int extraSize)
+    {
         int capacity = itsData.itsICode.length;
-        if (iCodeTop + extraSize <= capacity) Kit.codeBug();
+        int top = itsICodeTop;
+        if (top + extraSize <= capacity) throw Kit.codeBug();
         capacity *= 2;
-        if (iCodeTop + extraSize > capacity) {
-            capacity = iCodeTop + extraSize;
+        if (top + extraSize > capacity) {
+            capacity = top + extraSize;
         }
         byte[] array = new byte[capacity];
-        System.arraycopy(itsData.itsICode, 0, array, 0, iCodeTop);
+        System.arraycopy(itsData.itsICode, 0, array, 0, top);
         itsData.itsICode = array;
         return array;
     }
 
     private void stackChange(int change)
     {
-        int depth = itsStackDepth + change;
-        itsStackDepth += change;
-        if (depth > itsData.itsMaxStack) {
-            itsData.itsMaxStack = depth;
+        if (change <= 0) {
+            itsStackDepth += change;
+        } else {
+            int newDepth = itsStackDepth + change;
+            if (newDepth > itsData.itsMaxStack) {
+                itsData.itsMaxStack = newDepth;
+            }
+            itsStackDepth = newDepth;
         }
-        itsStackDepth = depth;
     }
 
     private static int getShort(byte[] iCode, int pc) {
@@ -1674,8 +1679,8 @@ public class Interpreter
             return;
         }
 
-        int iCodeLength = idata.itsICodeTop;
         byte iCode[] = idata.itsICode;
+        int iCodeLength = iCode.length;
         String[] strings = idata.itsStringTable;
         PrintStream out = System.out;
         out.println("ICode dump, for " + idata.itsName
@@ -1929,8 +1934,8 @@ public class Interpreter
     {
         UintMap presentLines = new UintMap();
 
-        int iCodeLength = data.itsICodeTop;
         byte[] iCode = data.itsICode;
+        int iCodeLength = iCode.length;
         for (int pc = 0; pc != iCodeLength;) {
             int bytecode = iCode[pc];
             int span = bytecodeSpan(bytecode);
@@ -2138,6 +2143,8 @@ public class Interpreter
         Loop: for (;;) {
             try {
                 int op = iCode[pc++];
+              jumplessRun:
+                {
     // Back indent to ease imlementation reading
 switch (op) {
 
@@ -2281,27 +2288,27 @@ switch (op) {
             pc += 2;
             continue Loop;
         }
-        break;
+        break jumplessRun;
     case Token.IFEQ :
         if (!stack_boolean(stack, sDbl, stackTop--)) {
             pc += 2;
             continue Loop;
         }
-        break;
+        break jumplessRun;
     case Icode_IFEQ_POP :
         if (!stack_boolean(stack, sDbl, stackTop--)) {
             pc += 2;
             continue Loop;
         }
         stack[stackTop--] = null;
-        break;
+        break jumplessRun;
     case Token.GOTO :
-        break;
+        break jumplessRun;
     case Icode_GOSUB :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
         sDbl[stackTop] = pc + 2;
-        break;
+        break jumplessRun;
     case Icode_RETSUB : {
         // indexReg: local to store return address
         if (instructionCounting) {
@@ -2968,16 +2975,16 @@ switch (op) {
     case Icode_LEAVEDQ : {
         boolean valBln = stack_boolean(stack, sDbl, stackTop);
         Object x = ScriptRuntime.updateDotQuery(valBln, scope);
-        if (x == null) {
-            // reset stack and PC to code after ENTERDQ
-            --stackTop;
-            break;
+        if (x != null) {
+            stack[stackTop] = x;
+            scope = ScriptRuntime.leaveDotQuery(scope);
+            --withDepth;
+            pc += 2;
+            continue Loop;
         }
-        stack[stackTop] = x;
-        scope = ScriptRuntime.leaveDotQuery(scope);
-        --withDepth;
-        pc += 2;
-        continue Loop;
+        // reset stack and PC to code after ENTERDQ
+        --stackTop;
+        break jumplessRun;
     }
     case Token.DEFAULTNAMESPACE : {
         Object value = stack[stackTop];
@@ -3085,6 +3092,8 @@ switch (op) {
         dumpICode(idata);
         throw new RuntimeException("Unknown icode : "+op+" @ pc : "+(pc-1));
 }  // end of interpreter switch
+
+                } // end of jumplessRun label block
 
                 // This should be reachable only for jump implementation
                 // when pc points to encoded target offset
@@ -3518,9 +3527,10 @@ switch (op) {
 
     private InterpreterData itsData;
     private ScriptOrFnNode scriptOrFn;
-    private int itsStackDepth = 0;
-    private int itsWithDepth = 0;
-    private int itsLineNumber = 0;
+    private int itsICodeTop;
+    private int itsStackDepth;
+    private int itsWithDepth;
+    private int itsLineNumber;
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
     private int itsLastStringIndex;
