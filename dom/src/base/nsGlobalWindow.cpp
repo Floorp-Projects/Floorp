@@ -1274,6 +1274,42 @@ GlobalWindowImpl::Close()
   return NS_OK;
 }
 
+void
+GlobalWindowImpl::CloseWindow(nsISupports* aWindow)
+{
+  nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(aWindow);
+
+  win->Close();
+}
+
+NS_IMETHODIMP    
+GlobalWindowImpl::Close(JSContext* cx, jsval* argv, PRUint32 argc)
+{
+  nsresult result = NS_OK;
+  nsIScriptContext* callingContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  nsIScriptContext* winContext;
+  nsCOMPtr<nsIScriptContextOwner> owner;
+
+  if (mWebShell) {
+    owner = do_QueryInterface(mWebShell, &result);
+    
+    if (NS_SUCCEEDED(result)) {
+      result = owner->GetScriptContext(&winContext);
+      if (NS_SUCCEEDED(result)) {
+        if (winContext == callingContext) {
+          result = callingContext->SetTerminationFunction(CloseWindow, (nsISupports*)(nsIScriptGlobalObject*)this);
+        }
+        else {
+          result = Close();
+        }
+        NS_RELEASE(winContext);
+      }
+    }
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::Forward()
 {

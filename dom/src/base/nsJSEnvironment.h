@@ -20,6 +20,7 @@
 
 #include "nsIScriptContext.h"
 #include "jsapi.h"
+#include "nsCOMPtr.h"
 
 class nsIScriptSecurityManager;
 class nsIScriptNameSpaceManager;
@@ -33,7 +34,9 @@ private:
   PRUint32 mNumEvaluations;
   nsIScriptSecurityManager *mSecurityManager;
   nsIScriptContextOwner* mOwner;
-
+  nsScriptTerminationFunc mTerminationFunc;
+  nsCOMPtr<nsISupports> mRef;
+  
 public:
   nsJSContext(JSRuntime *aRuntime);
   virtual ~nsJSContext();
@@ -70,6 +73,8 @@ public:
   NS_IMETHOD ScriptEvaluated(void);
   NS_IMETHOD SetOwner(nsIScriptContextOwner* owner);
   NS_IMETHOD GetOwner(nsIScriptContextOwner** owner);
+  NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                    nsISupports* aRef);
 
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses();

@@ -29,6 +29,8 @@ class nsIScriptNameSpaceManager;
 class nsIScriptContextOwner;
 class nsIPrincipal;
 
+typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
+
 #define NS_ISCRIPTCONTEXT_IID \
 { /* 8f6bca7d-ce42-11d1-b724-00600891d8c9 */ \
   0x8f6bca7d, 0xce42, 0x11d1, \
@@ -186,6 +188,15 @@ public:
    * is a "weak" reference.
    */
   NS_IMETHOD GetOwner(nsIScriptContextOwner** owner) = 0;
+
+  /**
+   * Called to specify a function that should be called when the current
+   * script (if there is one) terminates. Generally used if breakdown
+   * of script state needs to be happen, but should be deferred till
+   * the end of script evaluation.
+   */
+  NS_IMETHOD SetTerminationFunction(nsScriptTerminationFunc aFunc,
+                                    nsISupports* aRef) = 0;
 };
 
 /**
