@@ -182,6 +182,11 @@ sub show_graph {
   print "<li>\n";
   print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">Other tests that $TBOX is running</a>";
   print "</li>\n";
+
+  print "<li>\n";
+  print "<a href=\"rawdata.cgi?tbox=$TBOX&testname=$TESTNAME&days=$DAYS\">Print the raw data for this plot.</a>";
+  print "</li>\n";
+
   print "</font>";
   
 
