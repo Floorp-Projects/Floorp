@@ -141,9 +141,9 @@ my @build_files=();
 my @install_files=();
 
 sub wanted_source_files {
-  return if /^\#/ or /~$/;
   $File::Find::prune = 1, return if $_ eq 'CVS';
   return unless -T $_;
+  return if /^\#/ or /~$/;
   push @source_files, $File::Find::name;
 }
 
