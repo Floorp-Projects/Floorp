@@ -43,35 +43,43 @@ The Registry provides persistent storage of hierarchical keys and name-value
 pairs associated with each key. Each key also keeps a default value.
 <p>XPCOM will use the following registry hierarchy:
 <blockquote><tt>ROOTKEY_COMMON</tt>
-<br><tt>&nbsp;&nbsp;&nbsp; Common - Classes - CLSID</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b><font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></b></tt>
+<br><tt>&nbsp;&nbsp;&nbsp; Classes</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CLSID</tt>
 <br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-InprocServer (S)&nbsp; = <font color="#CC0000">libnfs-protocol.so</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></b></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ClassName&nbsp;&nbsp;&nbsp; (S)&nbsp; = <b><font color="#CC0000">NFS Protocol
-Handler</font></b></tt>
-<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-CLSID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">{108d75a0-bab5-11d2-96c4-0060b0fb9956}</font></tt>
-<p><tt><i>&nbsp;&nbsp;&nbsp; </i>Software - Netscape - XPCOM</tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VersionString&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-(S)&nbsp; = <font color="#CC0000">alpha0.20</font></tt>
-<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font color="#CC0000">libnfs-protocol.so</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-ComponentsCount&nbsp;&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">1</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-FileSize&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (S)&nbsp;
-= <font color="#CC0000">78965</font></tt>
-<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-LastModTimeStamp&nbsp;&nbsp; (S)&nbsp; = <font color="#CC0000">Wed Feb
-24 11:24:06 PST 1999</font></tt></blockquote>
+"<i>CLSID-string"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ClassName&nbsp;&nbsp;&nbsp; "<i>class name</i>"</tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
+</i>ProgID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+InprocServer&nbsp; "<i>full-path-name"</i></tt>
+<p><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "<i>component.class.version"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+CLSID&nbsp;&nbsp;&nbsp; <i>"CLSID-string"</i></tt>
+<p><tt><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </i>DefaultPathList&nbsp;
+<i>"semicolon separated path list"</i></tt>
+<br><tt><i>&nbsp;&nbsp;&nbsp; </i>Software</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Netscape</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+XPCOM</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"<i>full-path-name"</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+LastModTimeStamp&nbsp;&nbsp;&nbsp; <i>time-value</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+FileSize&nbsp;&nbsp;&nbsp; <i>nbytes</i></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ComponentsCount&nbsp;&nbsp;&nbsp; "<i>components-count"</i></tt></blockquote>
+
+<p><br><tt><sup><font color="#990000">*</font> </sup></tt>Automatically
+added by the Repository
+<br>&nbsp;
 <h3>
 <a NAME="The Repository: Object instance creation"></a>The Repository:
 Object instance creation</h3>
-All object creation happens via The Repository.&nbsp; <tt>nsIRepository::CreateInstance()</tt>
+All object creation happens via The Repository. <tt>nsIRepository::CreateInstance()</tt>
 will be the primary way of creation of object instances. The steps in instantiation
 of an object that implements the IID interface and of class CLSID is as
 follows:
@@ -80,8 +88,10 @@ follows:
 The CLSID of the component that would need to create the object instance
 is identified.</li>
 
-<ol>Callers use <tt>nsIRepository::ProgIDToCLSID()</tt> to convert the
-ProgID string to the CLSID.</ol>
+<ol>If the input to <tt>nsIRepository::CreateInstance() </tt>is a CLSID,
+then there is no figuring out. If the input is a ProgID string, it uses
+<tt>nsIRepository::ProgIDToCLSID()</tt>
+to convert the ProgID string passed into it to convert to the CLSID.</ol>
 
 <li>
 Load the dll associated with the CLSID after consulting the Registry</li>
@@ -149,65 +159,9 @@ return <tt>false</tt>. XPCOM will not let the re-registration of the modified
 dll proceed in this case. There is nothing much that XPCOM library can
 do to salvage this situation other than warning the user of possible instability
 and advice a restart upon which the re-registration will happen.
-<h3>
-</h3>
-
-<h3>
-<a NAME="ProgID Spec"></a>ProgID&nbsp;Spec</h3>
-Let us consider some more examples:
-<ol>
-<li>
-A pluggable protocol that implementes the nfs protocol</li>
-
-<li>
-A converter that can handle application/x-zip</li>
-
-<li>
-A plugin that can handle image/gif</li>
-
-<li>
-A widget that can do a toolbar</li>
-
-<li>
-A datasource that can handle mail</li>
-
-<li>
-A helperapp that deals with application/postscript</li>
-</ol>
-All the above have what type they are and one or more arguments on what
-they particularly do.
-<p>The ProgID for these would look like
-<ol>
-<li>
-<tt>component://netscape/network-protocol&amp;type=nfs</tt></li>
-
-<li>
-<tt>component://netscape/data-converter&amp;type=application/x-zip</tt></li>
-
-<li>
-<tt>component://netscape/plugin&amp;type=image/gif&amp;name=ImageMedia's
-Gif Image Plugin&amp;Description=Reders GIF&nbsp;Images....</tt></li>
-
-<li>
-<tt>component://netscape/widget&amp;type=toolbar</tt></li>
-
-<li>
-<tt>component://netscape/rdf/datsource&amp;type=mail</tt></li>
-
-<li>
-<tt>component://netscape/helperapp&amp;type=application/postscript</tt></li>
-</ol>
-{Assume proper escaping of all above URI}
-<p>The above semantics would let ProgID be an extensible mechanism that
-could be searched on multiple ways. And
-<br>query on a progid should match only whatever was passed in. So a query
-for
-<br>component://netscape/plugin&amp;type=image/gif should pass for the
-progid specified above. We could extend this
-<br>mechanism with wildcards, but I dont want to go there yet... :-)
 <br>&nbsp;
 <h3>
-<a NAME="How will all this help me"></a>How will all this help me</h3>
+How will all this help me</h3>
 For Component Developers:
 <ul>
 <li>
@@ -228,87 +182,18 @@ No more hacking in calls to <tt>nsIRepository::RegisterFactory()</tt></li>
 No need to know the CLSID of components that you want to instantiate. Component
 creation can happen like this</li>
 
-<br><tt>nsIRepository::CreateInstance(<b>"<font color="#CC0000">component://netscape/network-protocol&amp;type=nfs</font>"</b>,
-NULL, domIID, &amp;result);</tt>
+<br><tt>nsIRepository::CreateInstance(<b>"Gecko.LayoutEngine.1"</b>, NULL,
+domIID, &amp;result);</tt>
 <br>instead of
-<br><strike>nsIRepository::CreateInstance(NFS_PROTOCOL_CID, NULL, domIID,
-&amp;result);</strike></blockquote>
+<br><tt>nsIRepository::CreateInstance(<b>RAPTOR_CLSID</b>, NULL, domIID,
+&amp;result);</tt>
+<p>Another example : To create a button instance that supports IWidget
+interface,
+<br><tt>nsIRepository::CreateInstance(<b>"xpfe.button.1"</b>, NULL, nsWidgetIID,
+&amp;result);</tt></blockquote>
 
 <h3>
-</h3>
-
-<h3>
-<a NAME="What has happened so far"></a>What has happened so far</h3>
-
-<ul>
-<li>
-Autoregistration implemented to grovel for components from the current
-directory</li>
-
-<li>
-nsRepository is a global object. Not nsIRepository exists.</li>
-
-<li>
-nsRepository::ProgIDToCLSID() implemented</li>
-</ul>
-
-<h3>
-</h3>
-
-<h3>
-<a NAME="Changes to XPCOM happening"></a>Changes to XPCOM&nbsp;happening</h3>
-
-<ul>
-<li>
-API&nbsp;changes to get ProgID&nbsp;in entire registration process for
-factories and components</li>
-
-<li>
-ProgID cache to improve performance of ProgID&nbsp;queries</li>
-
-<li>
-Notion of Component dlls living in a <b>Components directory </b>and autoregistration
-will load/manage only these components. Other components that are linked
-in to the app need to call <tt>nsRepository::RegisterFactory()</tt> from
-the app. <b>To make this happen we need a list of these.</b></li>
-
-<li>
-<b>nsRegistry:</b> Enabling the new nsRegistry developed by Bill Law &lt;law@netscape.com></li>
-</ul>
-
-<h3>
-</h3>
-
-<h3>
-<a NAME="What should I do"></a>What should I&nbsp;do</h3>
-
-<ul><b><font color="#CC0000">Component Developers</font></b>
-<ul>
-<li>
-<font color="#000000">Implement <tt>NSRegisterSelf()</tt> for your component
-dlls. Sample implementation that perf</font> <a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/modules/libpref/src/nsPref.cpp#608">http://cvs-mirror.mozilla.org/webtools/lxr/source/modules/libpref/src/nsPref.cpp#608</a></li>
-
-<li>
-Use <tt>nsRepository::RegisterComponent()</tt> instead of <tt>nsRepository::RegisterFactory()</tt>
-if your component lives in a DLL</li>
-
-<li>
-<b>Dont use static constructors in loadable components</b></li>
-</ul>
-
-<p><br><b><font color="#CC0000">Component Users</font></b>
-<ul>
-<li>
-Create all your components using ProgID rather than CID</li>
-
-<li>
-If you were thinking of managing creation of components yourself, think
-again. The repository may be already doing that.</li>
-</ul>
-</ul>
-
-<h3>
-<a NAME="Issues"></a>Issues</h3>
+Issues</h3>
 
 <ul>
 <li>
@@ -344,13 +229,10 @@ components to use.</li>
 
 <li>
 Is the hierarchy <tt>ROOTKEY_COMMON\\<b>Classes</b>\\CLSID </tt>acceptable.</li>
-
-<li>
-Should we have a nsIRepository</li>
 </ul>
 
 <hr WIDTH="100%">
-<br><i><font size=-1>Last Modified: 28 Jan 1998</font></i>
+<br><i><font size=-1>Last Modified: 24 Feb 1998</font></i>
 <br><font size=-1><i>Feedback to: </i><a href="news:netscape.public.mozilla.xpcom">netscape.public.mozilla.xpcom</a></font>
 </body>
 </html>
