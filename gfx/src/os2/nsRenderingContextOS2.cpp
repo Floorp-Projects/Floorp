@@ -1623,4 +1623,3 @@ NS_IMETHODIMP nsRenderingContextOS2::ConditionRect(nscoord &x, nscoord &y, nscoo
 
   return NS_OK;
 }
-
