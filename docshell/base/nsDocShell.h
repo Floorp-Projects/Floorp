@@ -97,11 +97,6 @@ public:
                    const char* aCommand,
                    nsISupports* aExtraInfo);
 
-   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
-                                      nsIChannel* channel,
-                                      const char *aContentType,
-                                      const char *aCommand);
-
 
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
@@ -202,6 +197,7 @@ protected:
    nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
    PRBool                     mUpdateHistoryOnLoad;
    PRBool                     mInitialPageLoad;
+   PRBool                     mAllowPlugins;
    // this flag is for bug #21358. a docshell may load many urls
    // which don't result in new documents being created (i.e. a new content viewer)
    // we want to make sure we don't call a on load event more than once for a given
