@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  import \
 		  windowwatcher \
+		  uriloader \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -141,7 +142,6 @@ endif
 
 ifdef MOZ_LDAP_XPCOM
 REQUIRES    += mozldap \
-               uriloader \
                $(NULL)
 
 EXPORTS		+= nsAbLDAPDirectoryQuery.h \

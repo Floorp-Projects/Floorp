@@ -50,13 +50,13 @@ REQUIRES	= xpcom \
 		  appcomps \
 		  layout \
 		  intl \
+		  uriloader \
 		  $(NULL)
 
 CPPSRCS		= nsAbFactory.cpp
 
 ifdef MOZ_LDAP_XPCOM
 REQUIRES	+= mozldap \
-                   uriloader \
                    $(NULL)
 DEFINES		+= -DMOZ_LDAP_XPCOM
 endif
