@@ -28,13 +28,16 @@
 //----------------------------------------------------------------------
 // Class nsUTF8ToUnicode [declaration]
 
+
 /**
  * A character set converter from UTF8 to Unicode.
  *
  * @created         18/Mar/1998
+ * @modified        04/Feb/2000
  * @author  Catalin Rotaru [CATA]
  */
-class nsUTF8ToUnicode : public nsTableDecoderSupport
+
+class nsUTF8ToUnicode : public nsBasicDecoderSupport
 {
 public:
 
@@ -43,6 +46,7 @@ public:
    */
   nsUTF8ToUnicode();
 
+
   /**
    * Static class constructor.
    */
@@ -50,11 +54,26 @@ public:
 
 protected:
 
+   PRUint32 mState;	// cached expected number of bytes per UTF8 character sequence
+   PRUint32 mUcs4;	// cached Unicode character
+
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
 
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsBasicDecoderSupport class [declaration]
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength);
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsBasicDecoderSupport class [declaration]
+
+  NS_IMETHOD Reset();
+
 };
 
 #endif /* nsUTF8ToUnicode_h___ */
