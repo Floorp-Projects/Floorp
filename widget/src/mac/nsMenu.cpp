@@ -1130,7 +1130,8 @@ void nsMenu::LoadMenuItem(
     }
   
     nsCOMPtr<nsIDOMElement> keyElement;
-    xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
+    if (!keyValue.IsEmpty())
+      xulDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
     
     if ( keyElement ) {
       PRUint8 modifiers = knsMenuItemNoModifier;
