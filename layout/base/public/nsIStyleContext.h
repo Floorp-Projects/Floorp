@@ -53,6 +53,13 @@ class nsISupportsArray;
 #define NS_STYLEPOSITION_SID  \
 {0xad5993f0, 0xda2b, 0x11d1, {0x80, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x27, 0x4d}}
 
+// SID 3C29D620-DAF5-11D1-932B-00805F8ADD32
+#define NS_STYLETEXT_SID  \
+{0x3c29d620, 0xdaf5, 0x11d1, {0x93, 0x2b, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+
+// SID 3C29D621-DAF5-11D1-932B-00805F8ADD32
+#define NS_STYLEDISPLAY_SID  \
+{0x3c29d621, 0xdaf5, 0x11d1, {0x93, 0x2b, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 // Indicies into border/padding/margin arrays
 #define NS_SIDE_TOP     0
@@ -72,20 +79,27 @@ struct nsStyleFont : public nsStyleStruct {
 
 protected:
   nsStyleFont(const nsFont& aFont);
-  ~nsStyleFont(void);
+  ~nsStyleFont();
 };
 
 struct nsStyleColor : public nsStyleStruct {
   nscolor mColor;
  
-  PRUint8 mBackgroundAttachment;        // See nsStyleConsts.h
-  PRUint8 mBackgroundFlags;             // See nsStyleConsts.h
-  PRUint8 mBackgroundRepeat;            // See nsStyleConsts.h
+  PRUint8 mBackgroundAttachment; // See nsStyleConsts.h
+  PRUint8 mBackgroundFlags;      // See nsStyleConsts.h
+  PRUint8 mBackgroundRepeat;     // See nsStyleConsts.h
+  PRUint8 mCursor;               // See nsStyleConsts.h NS_STYLE_CURSOR_*
 
   nscolor mBackgroundColor;
   nscoord mBackgroundXPosition;
   nscoord mBackgroundYPosition;
-  nsString mBackgroundImage;            // absolute url string
+  nsString mBackgroundImage;     // absolute url string
+
+  nsString mCursorImage;         // url string
+
+protected:
+  nsStyleColor();
+  ~nsStyleColor();
 };
 
 struct nsStyleSpacing: public nsStyleStruct {
@@ -93,6 +107,7 @@ struct nsStyleSpacing: public nsStyleStruct {
   nsMargin  mPadding;
   nsMargin  mBorder;                    // automatic computed value
   nsMargin  mBorderPadding;             // automatic computed value
+
 protected:
   nsStyleSpacing(void);
   ~nsStyleSpacing(void);
@@ -100,9 +115,10 @@ protected:
 
 struct nsStyleBorder: public nsStyleStruct {
   PRUint8   mSizeFlag[4];               // See nsStyleConsts.h
-  nsMargin  mSize;
   PRUint8   mStyle[4];                  // See nsStyleConsts.h
+  nsMargin  mSize;
   nscolor   mColor[4];
+
 protected:
   nsStyleBorder(void);
   ~nsStyleBorder(void);
@@ -110,8 +126,12 @@ protected:
 
 struct nsStyleList : public nsStyleStruct {
   PRUint8   mListStyleType;             // See nsStyleConsts.h
-  nsString  mListStyleImage;            // absolute url string
   PRUint8   mListStylePosition;
+  nsString  mListStyleImage;            // absolute url string
+
+protected:
+  nsStyleList();
+  ~nsStyleList();
 };
 
 struct nsStylePosition : public nsStyleStruct {
@@ -119,63 +139,53 @@ struct nsStylePosition : public nsStyleStruct {
   PRUint8 mOverflow;                    // see nsStyleConsts.h
 
   PRUint8 mLeftOffsetFlags;             // see nsStyleConsts.h
-  nscoord mLeftOffset;
   PRUint8 mTopOffsetFlags;              // see nsStyleConsts.h
-  nscoord mTopOffset;
-
   PRUint8 mWidthFlags;                  // see nsStyleConsts.h
-  nscoord mWidth;
   PRUint8 mHeightFlags;                 // see nsStyleConsts.h
+
+  nscoord mLeftOffset;
+  nscoord mTopOffset;
+  nscoord mWidth;
   nscoord mHeight;
 
   PRInt32 mZIndex;
-};
-
-//----------------------------------------------------------------------
-// XXX begin temporary doomed code
-
-// This data structure is doomed: it's a temporary hack for catch-all
-// style that hasn't yet been factored properly into nsStyleX
-// struct's.
-
-// SID 05fb99f0-ca9c-11d1-8031-006008159b5a
-#define NS_STYLEMOLECULE_SID    \
-{0x05fb99f0, 0xca9c, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
-
-struct nsStyleMolecule : public nsStyleStruct {
-  nsMargin border;              // in table (cell layout data)
-  PRUint8 clear;
-  PRUint8 clipFlags;
-  PRUint8 cursor;
-  PRUint8 display;
-  PRUint8 direction;
-  PRUint8 floats;
-  nsMargin margin;              //
-  nsMargin padding;             // in table (cell layout data)
-  nsMargin borderPadding;       //
-  PRUint32 textDecoration;
-  PRUint8 textAlign;
-  PRInt32 whiteSpace;
-  PRUint8 verticalAlign;
-  float verticalAlignPct;
-  PRInt32 fixedWidth;
-  PRInt32 proportionalWidth;
-  PRInt32 fixedHeight;
-  PRInt32 proportionalHeight;
 
 protected:
-  // The constructor is protected because you may not make these
-  // automatic variables.
-  nsStyleMolecule();
-  ~nsStyleMolecule();
-
-private:
-  // These are not allowed
-  nsStyleMolecule(const nsStyleMolecule& other);
-  nsStyleMolecule& operator=(const nsStyleMolecule& other);
+  nsStylePosition();
+  ~nsStylePosition();
 };
 
-// XXX end temporary doomed code
+// XXX missing: length, inherit and percentage support
+struct nsStyleText : public nsStyleStruct {
+  PRUint8 mTextAlign;                   // see nsStyleConsts.h
+  PRUint8 mTextDecoration;              // see nsStyleConsts.h
+  PRUint8 mTextTransform;               // see nsStyleConsts.h
+  PRUint8 mVerticalAlign;               // see nsStyleConsts.h
+  PRUint8 mWhiteSpace;                  // see nsStyleConsts.h
+
+  nscoord mLetterSpacing;
+  nscoord mLineHeight;
+  nscoord mTextIndent;
+  nscoord mWordSpacing;
+
+protected:
+  nsStyleText();
+  ~nsStyleText();
+};
+
+struct nsStyleDisplay : public nsStyleStruct {
+  PRUint8 mDirection;           // see nsStyleConsts.h NS_STYLE_DIRECTION_*
+  PRUint8 mDisplay;             // see nsStyleConsts.h NS_STYLE_DISPLAY_*
+  PRUint8 mFloats;              // see nsStyleConsts.h NS_STYLE_FLOAT_*
+  PRUint8 mBreakType;           // see nsStyleConsts.h NS_STYLE_CLEAR_*
+  PRPackedBool mBreakBefore;
+  PRPackedBool mBreakAfter;
+
+protected:
+  nsStyleDisplay();
+  ~nsStyleDisplay();
+};
+
 //----------------------------------------------------------------------
 
 #define NS_ISTYLECONTEXT_IID   \
