@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: arcfive.c,v 1.2 2001/01/05 22:37:46 mcgreer%netscape.com Exp $
+ * $Id: arcfive.c,v 1.3 2002/11/16 06:09:57 nelsonb%netscape.com Exp $
  */
 
 #include "blapi.h"
@@ -54,8 +54,8 @@
 ** chaining" mode.
 */
 RC5Context *
-RC5_CreateContext(SECItem *key, unsigned int rounds,
-                  unsigned int wordSize, unsigned char *iv, int mode)
+RC5_CreateContext(const SECItem *key, unsigned int rounds,
+                  unsigned int wordSize, const unsigned char *iv, int mode)
 {
     PORT_SetError(PR_NOT_IMPLEMENTED_ERROR);
     return NULL;

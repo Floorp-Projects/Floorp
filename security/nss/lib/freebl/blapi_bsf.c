@@ -173,7 +173,7 @@ struct DESContextStr {
 };
 
 DESContext *
-DES_CreateContext(unsigned char *key, unsigned char *iv,
+DES_CreateContext(const unsigned char *key, const unsigned char *iv,
                   int mode, PRBool encrypt)
 {
     /* BLAPI */
@@ -475,8 +475,8 @@ struct RC2ContextStr
 };
 
 RC2Context *
-RC2_CreateContext(unsigned char *key, unsigned int len,
-                  unsigned char *iv, int mode, unsigned effectiveKeyLen)
+RC2_CreateContext(const unsigned char *key, unsigned int len,
+                  const unsigned char *iv, int mode, unsigned effectiveKeyLen)
 {
 	/* BLAPI */
 	RC2Context *cx;
@@ -726,7 +726,7 @@ struct RC4ContextStr
 };
 
 RC4Context *
-RC4_CreateContext(unsigned char *key, int len)
+RC4_CreateContext(const unsigned char *key, int len)
 {
 	/* BLAPI */
 	RC4Context *cx;
@@ -902,8 +902,8 @@ struct RC5ContextStr
 };
 
 RC5Context *
-RC5_CreateContext(SECItem *key, unsigned int rounds,
-                  unsigned int wordSize, unsigned char *iv, int mode)
+RC5_CreateContext(const SECItem *key, unsigned int rounds,
+                  unsigned int wordSize, const unsigned char *iv, int mode)
 {
 	/* BLAPI */
 	RC5Context *cx;

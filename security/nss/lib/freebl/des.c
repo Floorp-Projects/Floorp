@@ -416,7 +416,7 @@ static const HALF PC2[8][64] = {
  */
 
 void 
-DES_MakeSchedule( HALF * ks, BYTE * key,   DESDirection direction)
+DES_MakeSchedule( HALF * ks, const BYTE * key,   DESDirection direction)
 {
     register HALF left, right;
     register HALF c0, d0;

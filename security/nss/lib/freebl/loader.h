@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.h,v 1.5 2002/11/02 01:51:44 nelsonb%netscape.com Exp $
+ * $Id: loader.h,v 1.6 2002/11/16 06:09:58 nelsonb%netscape.com Exp $
  */
 
 #ifndef _LOADER_H_
@@ -98,7 +98,7 @@ struct FREEBLVectorStr {
 
  PRBool (* p_KEA_Verify)(SECItem *Y, SECItem *prime, SECItem *subPrime);
 
- RC4Context * (* p_RC4_CreateContext)(unsigned char *key, int len);
+ RC4Context * (* p_RC4_CreateContext)(const unsigned char *key, int len);
 
  void (* p_RC4_DestroyContext)(RC4Context *cx, PRBool freeit);
 
@@ -110,8 +110,9 @@ struct FREEBLVectorStr {
 			    unsigned int *outputLen, unsigned int maxOutputLen,
 			    const unsigned char *input, unsigned int inputLen);
 
- RC2Context * (* p_RC2_CreateContext)(unsigned char *key, unsigned int len,
-		     unsigned char *iv, int mode, unsigned effectiveKeyLen);
+ RC2Context * (* p_RC2_CreateContext)(const unsigned char *key, 
+                     unsigned int len, const unsigned char *iv, 
+		     int mode, unsigned effectiveKeyLen);
 
  void (* p_RC2_DestroyContext)(RC2Context *cx, PRBool freeit);
 
@@ -123,8 +124,8 @@ struct FREEBLVectorStr {
 			    unsigned int *outputLen, unsigned int maxOutputLen,
 			    const unsigned char *input, unsigned int inputLen);
 
- RC5Context *(* p_RC5_CreateContext)(SECItem *key, unsigned int rounds,
-                     unsigned int wordSize, unsigned char *iv, int mode);
+ RC5Context *(* p_RC5_CreateContext)(const SECItem *key, unsigned int rounds,
+                     unsigned int wordSize, const unsigned char *iv, int mode);
 
  void (* p_RC5_DestroyContext)(RC5Context *cx, PRBool freeit);
 
@@ -136,7 +137,8 @@ struct FREEBLVectorStr {
                             unsigned int *outputLen, unsigned int maxOutputLen,
                             const unsigned char *input, unsigned int inputLen);
 
- DESContext *(* p_DES_CreateContext)(unsigned char *key, unsigned char *iv,
+ DESContext *(* p_DES_CreateContext)(const unsigned char *key, 
+                                     const unsigned char *iv,
 				     int mode, PRBool encrypt);
 
  void (* p_DES_DestroyContext)(DESContext *cx, PRBool freeit);
@@ -149,7 +151,8 @@ struct FREEBLVectorStr {
 			    unsigned int *outputLen, unsigned int maxOutputLen,
 			    const unsigned char *input, unsigned int inputLen);
 
- AESContext * (* p_AES_CreateContext)(unsigned char *key, unsigned char *iv, 
+ AESContext * (* p_AES_CreateContext)(const unsigned char *key, 
+                            const unsigned char *iv, 
 			    int mode, int encrypt, unsigned int keylen, 
 			    unsigned int blocklen);
 

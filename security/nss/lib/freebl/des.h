@@ -63,7 +63,7 @@ struct DESContextStr {
     DESFunc  *worker;
 };
 
-void DES_MakeSchedule( HALF * ks, BYTE * key,   DESDirection direction);
+void DES_MakeSchedule( HALF * ks, const BYTE * key,   DESDirection direction);
 void DES_Do1Block(     HALF * ks, const BYTE * inbuf, BYTE * outbuf);
 
 #endif

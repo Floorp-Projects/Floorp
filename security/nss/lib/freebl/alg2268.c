@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: alg2268.c,v 1.3 2001/09/20 22:14:04 relyea%netscape.com Exp $
+ * $Id: alg2268.c,v 1.4 2002/11/16 06:09:57 nelsonb%netscape.com Exp $
  */
 
 
@@ -140,8 +140,8 @@ static const PRUint8 S[256] = {
 ** chaining" mode.
 */
 RC2Context *
-RC2_CreateContext(unsigned char *key, unsigned int len,
-		  unsigned char *input, int mode, unsigned efLen8)
+RC2_CreateContext(const unsigned char *key, unsigned int len,
+		  const unsigned char *input, int mode, unsigned efLen8)
 {
     RC2Context *cx;
     PRUint8    *L,*L2;
