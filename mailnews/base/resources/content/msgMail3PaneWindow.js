@@ -1237,19 +1237,7 @@ function GetSelectedMsgFolders()
 function GetFirstSelectedMessage()
 {
     try {
-        // Use this instead of gDBView.URIForFirstSelectedMessage, else it
-        // will return the currentIndex message instead of the highlighted
-        // message.
-        //
-        // note, there may not be any selected messages
-        //
-        // XXX todo
-        // is this inefficient when we've got a lot of message selected?
-        var selectedMessages = GetSelectedMessages();
-        if (selectedMessages)
-          return selectedMessages[0];
-        else
-          return null;
+        return gDBView.URIForFirstSelectedMessage;
     }
     catch (ex) {
         return null;

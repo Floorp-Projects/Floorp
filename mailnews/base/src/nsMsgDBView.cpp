@@ -5344,13 +5344,14 @@ nsMsgDBView::GetKeyForFirstSelectedMessage(nsMsgKey *key)
     return NS_OK;
   }
 
-  PRInt32 currentIndex;
-  nsresult rv = mTreeSelection->GetCurrentIndex(&currentIndex);
+  PRInt32 startRange;
+  PRInt32 endRange;
+  nsresult rv = mTreeSelection->GetRangeAt(0, &startRange, &endRange);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // check that the first index is valid, it may not be if nothing is selected
-  if (currentIndex >= 0 && currentIndex < GetSize()) {
-    *key = m_keys.GetAt(currentIndex);
+  if (startRange >= 0 && startRange < GetSize()) {
+    *key = m_keys.GetAt(startRange);
   }
   else {
     return NS_ERROR_UNEXPECTED;
