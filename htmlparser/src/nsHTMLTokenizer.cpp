@@ -678,19 +678,6 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
 }
 
 /**
- * In the case that we just read the given tag, we should go and
- * consume all the input until we find a matching end tag.
- * @update	gess12/28/98
- * @param  
- * @return
- */
-nsresult nsHTMLTokenizer::ConsumeScriptContent(nsScanner& aScanner,CToken*& aToken) {
-  nsresult result=NS_OK;
-
-  return result;
-}
-
-/**
  * 
  * @update	gess12/28/98
  * @param 

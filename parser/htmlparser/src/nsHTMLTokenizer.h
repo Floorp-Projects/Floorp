@@ -80,7 +80,6 @@ public:
 
 protected:
 
-  virtual nsresult ConsumeScriptContent(nsScanner& aScanner,CToken*& aToken);
   virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
