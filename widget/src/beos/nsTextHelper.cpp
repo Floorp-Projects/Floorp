@@ -92,7 +92,7 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
 			mTextView->Insert(aStartPos, text, aActualSize);
 	}
 	delete [] text;
-	mText.Insert(aText, aStartPos, aText.Length());
+	mText.Insert(aText.ToNewUnicode(), aStartPos, aText.Length());
 	return NS_OK;
 }
 
