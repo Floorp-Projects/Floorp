@@ -70,9 +70,16 @@ public class JavaAdapter extends ScriptableObject {
     }
 
     public static Scriptable setAdapterProto(Scriptable obj, Object adapter) {
-        Scriptable res = ScriptRuntime.toObject(ScriptableObject.getTopLevelScope(obj),adapter);
-        res.setPrototype(obj);
-        return res;
+        // We could be called from a thread not associated with a Context
+        Context cx = Context.enter();
+        try {
+            Scriptable topLevel = ScriptableObject.getTopLevelScope(obj);
+            Scriptable res = ScriptRuntime.toObject(topLevel, adapter);
+            res.setPrototype(obj);
+            return res;
+        } finally {
+            cx.exit();
+        }
     }
 
     public static Object getAdapterSelf(Class adapterClass, Object adapter)
