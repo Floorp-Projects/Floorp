@@ -100,8 +100,6 @@ nsMsgBodyHandler::~nsMsgBodyHandler()
 {
 }
 
-		
-
 PRInt32 nsMsgBodyHandler::GetNextLine (nsCString &buf)
 {
   PRInt32 length = 0;
@@ -127,18 +125,18 @@ PRInt32 nsMsgBodyHandler::GetNextLine (nsCString &buf)
   } while (eatThisLine && length >= 0);  // if we hit eof, make sure we break out of this loop. Bug #:
   return length;  
 }
+
 void nsMsgBodyHandler::OpenLocalFolder()
 {
   nsCOMPtr <nsIInputStream> inputStream;
   nsresult rv = m_scope->GetInputStream(getter_AddRefs(inputStream));
-  if (inputStream)
+  if (NS_SUCCEEDED(rv))
   {
     nsCOMPtr <nsISeekableStream> seekableStream = do_QueryInterface(inputStream);
     seekableStream->Seek(PR_SEEK_SET, m_localFileOffset);
   }
   m_fileLineStream = do_QueryInterface(inputStream);
 }
-
 
 PRInt32 nsMsgBodyHandler::GetNextFilterLine(nsCString &buf)
 {
@@ -225,7 +223,6 @@ PRInt32 nsMsgBodyHandler::ApplyTransformations (nsCString &buf, PRInt32 length, 
   return newLength;
 }
 
-
 void nsMsgBodyHandler::StripHtml (nsCString &pBufInOut)
 {
   char *pBuf = (char*) PR_Malloc (pBufInOut.Length() + 1);
@@ -252,5 +249,4 @@ void nsMsgBodyHandler::StripHtml (nsCString &pBufInOut)
     pBufInOut.Adopt(pBuf);
   }
 }
-
 
