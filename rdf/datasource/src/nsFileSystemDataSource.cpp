@@ -808,10 +808,12 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 		if (NS_FAILED(rv = fileChannel->GetFile(getter_AddRefs(aDir))))
 			return(rv);
 
-		PRBool			isDirFlag = PR_FALSE;
-		rv = aDir->IsDirectory(&isDirFlag);
-                if (NS_FAILED(rv) && (rv != NS_ERROR_FILE_NOT_FOUND))
-			return(rv);
+		PRBool		isDirFlag = PR_FALSE;
+
+		// ignore any errors from IsDirectory()
+		// so that non-existant file URLs don't confuse the template builder
+		nsresult	temprv;
+		temprv = aDir->IsDirectory(&isDirFlag);
 
 		nsCOMPtr<nsISupportsArray> array;
 		rv = NS_NewISupportsArray(getter_AddRefs(array));
