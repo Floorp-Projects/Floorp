@@ -17,11 +17,11 @@
  */
 
 //
-// nsSpinnerFrame
+// nsSliderFrame
 //
 
-#ifndef nsSpinnerFrame_h__
-#define nsSpinnerFrame_h__
+#ifndef nsSliderFrame_h__
+#define nsSliderFrame_h__
 
 
 #include "nsLeafFrame.h"
@@ -32,17 +32,17 @@
 class nsString;
 
 
-nsresult NS_NewSpinnerFrame(nsIFrame*& aResult) ;
+nsresult NS_NewSliderFrame(nsIFrame*& aResult) ;
 
 
-class nsSpinnerFrame : public nsLeafFrame
+class nsSliderFrame : public nsLeafFrame
 {
 public:
-  nsSpinnerFrame();
+  nsSliderFrame();
 
     // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("SpinnerFrame", aResult);
+    return MakeFrameName("SliderFrame", aResult);
   }
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -55,6 +55,6 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize) ;
 
-}; // class nsSpinnerFrame
+}; // class nsSliderFrame
 
 #endif
