@@ -800,30 +800,43 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
       //now it's time to Consume the (optional) value...
     if(NS_OK == (result=aScanner.SkipWhitespace())) { 
       //Skip ahead until you find an equal sign or a '>'...
-        if(NS_OK == (result=aScanner.Peek(aChar))) {  
-          if(kEqual==aChar){
-            result=aScanner.GetChar(aChar);  //skip the equal sign...
+      if(NS_OK == (result=aScanner.Peek(aChar))) {  
+        if(kEqual==aChar){
+          result=aScanner.GetChar(aChar);  //skip the equal sign...
+          if(NS_OK==result) {
+            result=aScanner.SkipWhitespace();     //now skip any intervening whitespace
             if(NS_OK==result) {
-              result=aScanner.SkipWhitespace();     //now skip any intervening whitespace
+              result=aScanner.GetChar(aChar);  //and grab the next char.    
               if(NS_OK==result) {
-                result=aScanner.GetChar(aChar);  //and grab the next char.    
-                if(NS_OK==result) {
-                  if((kQuote==aChar) || (kApostrophe==aChar)) {
-                    mTextValue=aChar;
-                    result=ConsumeQuotedString(aChar,mTextValue,aScanner);
-                  }
-                  else {      
-                    mTextValue=aChar;       //it's an alphanum attribute...
-                    result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
-                  } 
-                }//if
-                if(NS_OK==result)
-                  result=aScanner.SkipWhitespace();     
+                if((kQuote==aChar) || (kApostrophe==aChar)) {
+                  mTextValue=aChar;
+                  result=ConsumeQuotedString(aChar,mTextValue,aScanner);
+                }
+                else {      
+                  mTextValue=aChar;       //it's an alphanum attribute...
+                  result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
+                } 
               }//if
+              if(NS_OK==result)
+                result=aScanner.SkipWhitespace();     
             }//if
           }//if
         }//if
-//      }if
+        else {
+          //This is where we have to handle fairly busted content.
+          //If you're here, it means we saw an attribute name, but couldn't find 
+          //the following equal sign.  <tag NAME=....
+          
+          //Doing this right in all cases is <i>REALLY</i> ugly. 
+          //My best guess is to grab the next non-ws char. We know it's not '=',
+          //so let's see what it is. If it's a '"', then assume we're reading
+          //from the middle of the value. Try stripping the quote and continuing...
+
+          if(kQuote==aChar){
+            result=aScanner.GetChar(aChar); //strip quote.
+          }
+        }
+      }//if
     }
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
@@ -1075,14 +1088,18 @@ static PRUint16 PA_HackTable[] = {
  *  unicode equivalent.
  *  
  *  @update  gess 3/25/98
- *  @param   
- *  @return  
+ *  @param   aString will hold the resulting string value
+ *  @return  numeric (unichar) value
  */
 PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   PRInt32 value=0;
-  if(nsString::IsDigit(mTextValue[0])) {
+  PRInt32 theRadix[2]={16,10};
+
+  PRUnichar theChar=mTextValue[0];
+  PRBool    isDigit=nsString::IsDigit(theChar);
+  if(isDigit || (('x'==theChar) || ('X'==theChar))) {
     PRInt32 err=0;
-    value=mTextValue.ToInteger(&err);
+    value=mTextValue.ToInteger(&err,theRadix[isDigit]);
     if(0==err) {
 #ifdef PA_REMAP_128_TO_160_ILLEGAL_NCR
       /* for some illegal, but popular usage */
