@@ -375,7 +375,11 @@ public:
                               nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
-  // XXXldb Is there really no need to implement |ContentReplaced|?
+  virtual void ContentReplaced(nsIDocument *aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aOldChild,
+                               nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer);
 
 protected:
   nsresult GetXBLChildNodesInternal(nsIContent* aContent,
@@ -1407,7 +1411,35 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
         if (point->GetInsertionIndex() != -1) {
           // We're real. Jam the kid in.
           // XXX Check the filters to find the correct points.
-          point->InsertChildAt(aIndexInContainer, aChild);
+
+          // Find the right insertion spot.  Can't just insert in the insertion
+          // point at aIndexInContainer since the point may contain anonymous
+          // content, not all of aContainer's kids, etc.  So find the last
+          // child of aContainer that comes before aIndexInContainer and is in
+          // the insertion point and insert right after it.
+          PRInt32 pointSize = point->ChildCount();
+          PRBool inserted = PR_FALSE;
+          for (PRInt32 parentIndex = aIndexInContainer - 1;
+               parentIndex >= 0 && !inserted; --parentIndex) {
+            nsIContent* currentSibling = aContainer->GetChildAt(parentIndex);
+            for (PRInt32 pointIndex = pointSize - 1; pointIndex >= 0;
+                 --pointIndex) {
+              nsCOMPtr<nsIContent> currContent = point->ChildAt(pointIndex);
+              if (currContent == currentSibling) {
+                point->InsertChildAt(pointIndex + 1, aChild);
+                inserted = PR_TRUE;
+                break;
+              }
+            }
+          }
+          if (!inserted) {
+            // None of our previous siblings are in here... just stick
+            // ourselves in.
+            // XXXbz if we ever start doing the filter thing right, this may be
+            // no good, since we may _still_ have anonymous kids in there and
+            // may need to get the ordering with those right.
+            point->AddChild(aChild);
+          }
           SetInsertionParent(aChild, ins);
           break;
         }
@@ -1448,6 +1480,17 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
     }
   }
 }
+
+void nsBindingManager::ContentReplaced(nsIDocument *aDocument,
+                                       nsIContent* aContainer,
+                                       nsIContent* aOldChild,
+                                       nsIContent* aNewChild,
+                                       PRInt32 aIndexInContainer)
+{
+  ContentRemoved(aDocument, aContainer, aOldChild, aIndexInContainer);
+  ContentInserted(aDocument, aContainer, aNewChild, aIndexInContainer);
+}
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
