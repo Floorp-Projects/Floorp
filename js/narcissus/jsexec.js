@@ -104,14 +104,14 @@ var global = {
         // Array when called as a function acts as a constructor.
         return GLOBAL.Array.apply(this, arguments);
     },
-    String: function String(v) {
-        var s = this;
-        if (s instanceof String) {
-            // Called as constructor: save the argument as a string value.
-            this.value = "" + v;
-        } else {
-            // Called as function: convert this to string type.
-            s = "" + s;
+    String: function String() {
+        // Called as function or constructor: convert argument to string type.
+        var s = arguments.length ? "" + arguments[0] : "";
+        if (this instanceof String) {
+            // Called as constructor: save the argument as the string value
+            // of this String object and return this object.
+            this.value = s;
+            return this;
         }
         return s;
     },
@@ -434,7 +434,7 @@ function execute(n, x) {
       case LABEL:
         try {
             execute(n.statement, x);
-        } catch (e if e == BREAK && x.target == n.statement) {
+        } catch (e if e == BREAK && x.target == n) {
         }
         break;
 
@@ -851,45 +851,47 @@ reflectClass('Function', FOp);
 var Fp = Function.prototype;
 var REp = RegExp.prototype;
 
-Fp.__call__ = function (t, a, x) {
-    // Curse ECMA yet again!
-    a = Array.prototype.splice.call(a, 0, a.length);
-    return this.apply(t, a);
-};
+if (!('__call__' in Fp)) {
+    Fp.__call__ = function (t, a, x) {
+        // Curse ECMA yet again!
+        a = Array.prototype.splice.call(a, 0, a.length);
+        return this.apply(t, a);
+    };
 
-REp.__call__ = function (t, a, x) {
-    a = Array.prototype.splice.call(a, 0, a.length);
-    return this.exec.apply(this, a);
-};
+    REp.__call__ = function (t, a, x) {
+        a = Array.prototype.splice.call(a, 0, a.length);
+        return this.exec.apply(this, a);
+    };
 
-Fp.__construct__ = function (a, x) {
-    switch (a.length) {
-      case 0:
-        return new this();
-      case 1:
-        return new this(a[0]);
-      case 2:
-        return new this(a[0], a[1]);
-      case 3:
-        return new this(a[0], a[1], a[2]);
-      case 4:
-        return new this(a[0], a[1], a[2], a[3]);
-      case 5:
-        return new this(a[0], a[1], a[2], a[3], a[4]);
-      case 6:
-        return new this(a[0], a[1], a[2], a[3], a[4], a[5]);
-      case 7:
-        return new this(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
-    }
-    throw "PANIC: too many arguments to constructor";
-};
+    Fp.__construct__ = function (a, x) {
+        switch (a.length) {
+          case 0:
+            return new this();
+          case 1:
+            return new this(a[0]);
+          case 2:
+            return new this(a[0], a[1]);
+          case 3:
+            return new this(a[0], a[1], a[2]);
+          case 4:
+            return new this(a[0], a[1], a[2], a[3]);
+          case 5:
+            return new this(a[0], a[1], a[2], a[3], a[4]);
+          case 6:
+            return new this(a[0], a[1], a[2], a[3], a[4], a[5]);
+          case 7:
+            return new this(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+        }
+        throw "PANIC: too many arguments to constructor";
+    };
 
-Fp.__hasInstance__ = function (v) {
     // Since we use native functions such as Date along with host ones such
     // as global.eval, we want both to be considered instances of the native
     // Function constructor.
-    return v instanceof Function || v instanceof global.Function;
-};
+    Fp.__hasInstance__ = function (v) {
+        return v instanceof Function || v instanceof global.Function;
+    };
+}
 
 function thunk(f, x) {
     return function () { return f.__call__(this, arguments, x); };
@@ -901,6 +903,12 @@ function evaluate(s, f, l) {
     ExecutionContext.current = x2;
     try {
         execute(compile(s, f, l), x2);
+    } catch (e if e == THROW) {
+        if (x) {
+            x.result = x2.result;
+            throw THROW;
+        }
+        throw x2.result;
     } finally {
         ExecutionContext.current = x;
     }
