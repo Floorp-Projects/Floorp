@@ -27,13 +27,29 @@
 #include "nsIObserver.h"
 #include "nsIAppStartupNotifier.h"
 
-
-static const char* preloadedServices[] = {
-  "@mozilla.org/network/io-service;1",
-  "@mozilla.org/rdf/rdf-service;1",
+struct preloadEntry {
+  PRBool isService;
+  const char* contractId;
 };
 
-#define PRELOADED_SERVICES_COUNT (sizeof(preloadedServices) / sizeof(preloadedServices[0]))
+static preloadEntry preloadedObjects[] = {
+  // necko
+  {PR_TRUE, "@mozilla.org/network/io-service;1" },
+  // rdf
+  {PR_TRUE, "@mozilla.org/rdf/rdf-service;1" },
+  // preferences
+  {PR_TRUE, "@mozilla.org/preferences-service;1" },
+  // string bundles
+  {PR_TRUE, "@mozilla.org/intl/stringbundle;1" },
+  // docshell
+  {PR_FALSE, "@mozilla.org/docshell/html;1" },
+  // imglib
+  
+  // appcomps
+  // parser
+};
+
+#define PRELOADED_SERVICES_COUNT (sizeof(preloadedObjects) / sizeof(preloadedObjects[0]))
 
 NS_IMPL_ISUPPORTS1(nsPreloader, nsICmdLineHandler)
                    
@@ -61,9 +77,9 @@ nsPreloader::~nsPreloader()
 }
 
 CMDLINEHANDLER1_IMPL(nsPreloader, // classname
-                     "-preloader", // arguments
-                     "general.startup.preloader",     // pref name (none)
-                     "***Load and stay resident!***", // command line help text
+                     "-server", // arguments
+                     "general.startup.server",     // pref name (not used)
+                     "Load and stay resident!", // command line help text
                      PR_FALSE,   // handles window arguments?
                      "",     // no window arguments
                      PR_FALSE)   // don't open a window
@@ -92,8 +108,12 @@ nsPreloader::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
   PRInt32 i;
   for (i=0; i<PRELOADED_SERVICES_COUNT; i++) {
-    nsCAutoString categoryEntry("service,");
-    categoryEntry.Append(preloadedServices[i]);
+    nsCAutoString categoryEntry;
+    
+    if (preloadedObjects[i].isService)
+      categoryEntry.Append("service,");
+    
+    categoryEntry.Append(preloadedObjects[i].contractId);
 
     catman->AddCategoryEntry("preloaded-services",
                              categoryEntry.get(), // key - must be unique
