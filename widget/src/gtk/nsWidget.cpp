@@ -23,11 +23,26 @@
 #include "nsRepository.h"
 #include <gdk/gdkx.h>
 
-nsWidget::nsWidget()
+nsWidget::nsWidget() :
+  mContext(nsnull),
+  mGC(nsnull),
+  mWidget(nsnull),
+  mParent(nsnull),
+  mToolkit(nsnull),
+  mEventCallback(nsnull),
+  mEventListener(nsnull),
+  mMouseListener(nsnull)
 {
-    NS_INIT_REFCNT();
-    mWidget = nsnull;
-// we should probibly init more stuff to null
+  NS_INIT_REFCNT();
+  mPreferredWidth  = 0;
+  mPreferredHeight = 0;
+  mShown = PR_FALSE;
+  mBounds.x = 0;
+  mBounds.y = 0;
+  mBounds.width = 0;
+  mBounds.height = 0;
+  mCursor = eCursor_standard;
+  mClientData = nsnull;
 }
 
 nsWidget::~nsWidget()
@@ -69,6 +84,12 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Accessor functions to get/set the client data
+//
+//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsWidget::GetClientData(void*& aClientData)
 {
   aClientData = mClientData;
@@ -81,13 +102,26 @@ NS_IMETHODIMP nsWidget::SetClientData(void* aClientData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Close this nsWidget
+//
+//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
   ::gtk_widget_destroy(mWidget);
 }
 
+//-------------------------------------------------------------------------
+//
+// Get this nsWidget parent
+//
+//-------------------------------------------------------------------------
+
 nsIWidget *nsWidget::GetParent(void)
 {
+  NS_NOTYETIMPLEMENTED("nsWidget::GetParent");
   return mParent;
 }
 
@@ -106,6 +140,12 @@ void nsWidget::RemoveChild(nsIWidget* aChild)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::RemoveChild");
 }
+
+//-------------------------------------------------------------------------
+//
+// Hide or show this component
+//
+//-------------------------------------------------------------------------
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
@@ -138,9 +178,22 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Move this component
+//
+//-------------------------------------------------------------------------
+
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::Move");
+#if 0
+  mBounds.x = aX;
+  mBounds.y = aY;
+  // TODO
+  // gtk_layout_move(GTK_LAYOUT(layout), mWidget, aX, aY);
+  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
+#endif
     return NS_OK;
 }
 
@@ -157,12 +210,22 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Enable/disable this component
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWidget::Enable(PRBool bState)
 {
     gtk_widget_set_sensitive(mWidget, bState);
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Give the focus to this component
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus(void)
 {
     gtk_widget_grab_focus(mWidget);
@@ -175,12 +238,22 @@ NS_METHOD nsWidget::GetBounds(nsRect &aRect)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Get the foreground color
+//
+//-------------------------------------------------------------------------
 nscolor nsWidget::GetForegroundColor(void)
 {
     /* can we safely cache this? */
     return mForeground;
 }
 
+//-------------------------------------------------------------------------
+//
+// Set the foreground color
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetForegroundColor(const nscolor &aColor)
 {
     mForeground = aColor;
@@ -188,12 +261,22 @@ NS_METHOD nsWidget::SetForegroundColor(const nscolor &aColor)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Get the background color
+//
+//-------------------------------------------------------------------------
 nscolor nsWidget::GetBackgroundColor(void)
 {
     /* can we safely cache this? */
     return mBackground;
 }
 
+//-------------------------------------------------------------------------
+//
+// Set the background color
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
     mBackground = aColor;
@@ -201,42 +284,62 @@ NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Get this component font
+//
+//-------------------------------------------------------------------------
 nsIFontMetrics *nsWidget::GetFont(void)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::GetFont");
     return nsnull;
 }
 
+//-------------------------------------------------------------------------
+//
+// Set this component font
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::SetFont");
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Get this component cursor
+//
+//-------------------------------------------------------------------------
 nsCursor nsWidget::GetCursor(void)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::GetCursor");
     return eCursor_standard;
 }
 
+//-------------------------------------------------------------------------
+//
+// Set this component cursor
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 {
-    if (!mWidget || !mWidget->window)
-	return NS_ERROR_FAILURE;
-
-    // Only change cursor if it's changing
-    if (aCursor != mCursor) {
-	GdkCursor *newCursor = 0;
-
-	switch(aCursor) {
+  if (!mWidget || !mWidget->window)
+    return NS_ERROR_FAILURE;
+  
+  // Only change cursor if it's changing
+  if (aCursor != mCursor) {
+    GdkCursor *newCursor = 0;
+    
+    switch(aCursor) {
 	  case eCursor_select:
 	    newCursor = gdk_cursor_new(GDK_XTERM);
 	    break;
-
+      
 	  case eCursor_wait:
 	    newCursor = gdk_cursor_new(GDK_WATCH);
 	    break;
-
+      
 	  case eCursor_hyperlink:
 	    newCursor = gdk_cursor_new(GDK_HAND2);
 	    break;
@@ -269,13 +372,13 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 	    NS_ASSERTION(PR_FALSE, "Invalid cursor type");
 	    break;
 	}
-
-	if (nsnull != newCursor) {
+    
+    if (nsnull != newCursor) {
 	    mCursor = aCursor;
 	    gdk_window_set_cursor(mWidget->window, newCursor);
-	}
     }
-    return NS_OK;
+  }
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
@@ -296,6 +399,11 @@ NS_METHOD nsWidget::Update(void)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// Return some native data according to aDataType
+//
+//-------------------------------------------------------------------------
 void *nsWidget::GetNativeData(PRUint32 aDataType)
 {
     switch(aDataType) {
@@ -306,10 +414,10 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
       case NS_NATIVE_WIDGET:
 	return (void *)mWidget;
       case NS_NATIVE_GRAPHIC:
-	  {
+        {
 	      void *res;
 	      if (mGC) {
-		  res = mGC;
+		      res = mGC;
 	      } else {
 		  NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
 		  res = (void *)mToolkit->GetSharedGC();
@@ -323,11 +431,21 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
     return nsnull;
 }
 
+//-------------------------------------------------------------------------
+//
+// Return the toolkit this widget was created on
+//
+//-------------------------------------------------------------------------
 nsIToolkit *nsWidget::GetToolkit(void)
 {
     return (nsIToolkit *)mToolkit;
 }
 
+//-------------------------------------------------------------------------
+//
+// Set the colormap of the window
+//
+//-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetColorMap(nsColorMap *aColorMap)
 {
     return NS_OK;
@@ -335,14 +453,14 @@ NS_METHOD nsWidget::SetColorMap(nsColorMap *aColorMap)
 
 nsIDeviceContext* nsWidget::GetDeviceContext(void)
 {
-    NS_IF_ADDREF(mDeviceContext);
-    return mDeviceContext;
+    NS_NOTYETIMPLEMENTED("nsWidget::GetDeviceContext");
+    return mContext;
 }
 
 nsIAppShell* nsWidget::GetAppShell(void)
 {
-    NS_IF_ADDREF(mAppShell);
-    return mAppShell;
+    NS_NOTYETIMPLEMENTED("nsWidget::GetAppShell");
+    return nsnull;
 }
 
 NS_METHOD nsWidget::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
@@ -361,6 +479,12 @@ NS_METHOD nsWidget::SetTitle(const nsString& aTitle)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::SetTitle");
     return NS_OK;
+}
+
+NS_METHOD nsWidget::AddEventListener(nsIEventListener * aListener)
+{
+    NS_NOTYETIMPLEMENTED("nsWidget::AddEventListener");
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::AddMouseListener(nsIMouseListener *aListener)
@@ -448,8 +572,8 @@ void nsWidget::InitDeviceContext(nsIDeviceContext *aContext,
 {
   // keep a reference to the toolkit object
   if (aContext) {
-    mDeviceContext = aContext;
-    mDeviceContext->AddRef();
+    mContext = aContext;
+    mContext->AddRef();
   }
   else {
     nsresult  res;
@@ -461,13 +585,18 @@ void nsWidget::InitDeviceContext(nsIDeviceContext *aContext,
     res = nsRepository::CreateInstance(kDeviceContextCID,
                                        nsnull,
                                        kDeviceContextIID,
-                                       (void **)&mDeviceContext);
+                                       (void **)&mContext);
     if (NS_OK == res) {
-      mDeviceContext->Init(aParentWidget);
+      mContext->Init(aParentWidget);
     }
   }
 }
 
+//-------------------------------------------------------------------------
+//
+// Initialize all the Callbacks
+//
+//-------------------------------------------------------------------------
 void nsWidget::InitCallbacks(char *aName)
 {
     NS_NOTYETIMPLEMENTED("nsWidget::InitCallbacks");
@@ -489,7 +618,7 @@ nsIRenderingContext* nsWidget::GetRenderingContext()
 					   (void **)&ctx);
 
 	if (NS_OK == res)
-	    ctx->Init(mDeviceContext, this);
+	    ctx->Init(mContext, this);
 
 	NS_ASSERTION(NULL != ctx, "Null rendering context");
     }
@@ -502,13 +631,103 @@ void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 }
 
+PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
+{
+  switch(aStatus) {
+    case nsEventStatus_eIgnore:
+      return(PR_FALSE);
+    case nsEventStatus_eConsumeNoDefault:
+      return(PR_TRUE);
+    case nsEventStatus_eConsumeDoDefault:
+      return(PR_FALSE);
+    default:
+      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
+      break;
+  }
+  return(PR_FALSE);
+}
+
+PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
+}
+
+//-------------------------------------------------------------------------
+//
+// Invokes callback and  ProcessEvent method on Event Listener object
+//
+//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
 				      nsEventStatus &aStatus)
 {
-    return NS_OK;
+  NS_ADDREF(event->widget);
+
+  aStatus = nsEventStatus_eIgnore;
+  if (nsnull != mEventCallback) {
+    aStatus = (*mEventCallback)(event);
+  }
+
+  // Dispatch to event listener if event was not consumed
+  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+    aStatus = mEventListener->ProcessEvent(*event);
+  }
+  NS_RELEASE(event->widget);
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
+//-------------------------------------------------------------------------
+//
+// Deal with all sort of mouse event
+//
+//-------------------------------------------------------------------------
+PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 {
-    return NS_OK;
+  PRBool result = PR_FALSE;
+  if (nsnull == mEventCallback && nsnull == mMouseListener) {
+    return result;
+  }
+
+
+  // call the event callback
+  if (nsnull != mEventCallback) {
+    result = DispatchWindowEvent(&aEvent);
+
+    return result;
+  }
+
+  if (nsnull != mMouseListener) {
+    switch (aEvent.message) {
+      case NS_MOUSE_MOVE: {
+        /*result = ConvertStatus(mMouseListener->MouseMoved(event));
+        nsRect rect;
+        GetBounds(rect);
+        if (rect.Contains(event.point.x, event.point.y)) {
+          if (mCurrentWindow == NULL || mCurrentWindow != this) {
+            //printf("Mouse enter");
+            mCurrentWindow = this;
+          }
+        } else {
+          //printf("Mouse exit");
+        }*/
+
+      } break;
+
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+        result = ConvertStatus(mMouseListener->MousePressed(aEvent));
+        break;
+
+      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+        result = ConvertStatus(mMouseListener->MouseReleased(aEvent));
+        result = ConvertStatus(mMouseListener->MouseClicked(aEvent));
+        break;
+    } // switch
+  }
+  return result;
 }

@@ -22,6 +22,10 @@
 #include "nsIWidget.h"
 #include "nsToolkit.h"
 #include "nsIAppShell.h"
+
+#include "nsIMouseListener.h"
+#include "nsIEventListener.h"
+
 #include <gtk/gtk.h>
 #include "gtklayout.h"
 
@@ -67,26 +71,19 @@ class nsWidget : public nsIWidget
     nsCursor GetCursor(void);
     NS_IMETHOD SetCursor(nsCursor aCursor);
 
-    NS_IMETHOD Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
-    NS_IMETHOD Update(void);
-
     NS_IMETHOD AddMouseListener(nsIMouseListener *aListener);
     nsIToolkit *GetToolkit(void);
     NS_IMETHOD SetColorMap(nsColorMap *aColorMap);
 
-    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
 
     void AddChild(nsIWidget *aChild);
     void RemoveChild(nsIWidget *aChild);
     void* GetNativeData(PRUint32 aDataType);
     nsIRenderingContext *GetRenderingContext(void);
     nsIDeviceContext *GetDeviceContext(void);
-    nsIAppShell *GetAppShell(void);
 
     NS_IMETHOD SetBorderStyle(nsBorderStyle aBorderStyle);
     NS_IMETHOD SetTitle(const nsString & aTitle);
-    NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
 
     NS_IMETHOD SetTooltips(PRUint32 aNumberOfTips, nsRect* aTooltipAreas[]);
     NS_IMETHOD UpdateTooltips(nsRect *aNewTips[]);
@@ -104,9 +101,28 @@ class nsWidget : public nsIWidget
     NS_IMETHOD GetClientData(void*& aClientData);
     NS_IMETHOD SetClientData(void* aClientData);
 
-    NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus &aStatus);
-    NS_IMETHOD DispatchMouseEvent(nsMouseEvent& aEvent);
     virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+
+  // the following are nsWindow specific, and just stubbed here
+
+    NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+    NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar);
+    nsIAppShell *GetAppShell(void);
+
+    NS_IMETHOD Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+    NS_IMETHOD Update(void);
+    NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+
+  // Utility functions
+
+    PRBool     ConvertStatus(nsEventStatus aStatus);
+    PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
+
+  // This probably should be removed altogether
+
+    NS_IMETHOD AddEventListener(nsIEventListener * aListener);
+
 
  protected:
     void InitToolkit(nsIToolkit *aToolKit, nsIWidget *aParent);
@@ -114,21 +130,26 @@ class nsWidget : public nsIWidget
 			   GtkWidget *aParentWidget);
     void InitCallbacks(char * aName = nsnull);
 
+    PRBool DispatchWindowEvent(nsGUIEvent* event);
+
     GtkWidget *mWidget;
     nsWidget *mParent;
     nsToolkit *mToolkit;
-    nsIDeviceContext *mDeviceContext;
-    nsIRenderingContext *mRenderingContext;
-    nsIAppShell *mAppShell;
+
+    GdkGC *mGC;
+    nsIDeviceContext *mContext;
+
     PRBool mShown;
+
     nscolor mForeground, mBackground;
-    nsIMouseListener *mListener;
+    nsCursor mCursor;
     PRUint32 mPreferredWidth, mPreferredHeight;
     nsRect mBounds;
     void *mClientData;
-    nsCursor mCursor;
-    GdkGC *mGC;
+
     EVENT_CALLBACK mEventCallback;
+    nsIMouseListener * mMouseListener;
+    nsIEventListener * mEventListener;
 };
 
 #endif /* nsWidget_h__ */

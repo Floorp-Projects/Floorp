@@ -78,9 +78,8 @@ public:
 protected:
     GtkWidget  *mPullDownMenu;
     GtkWidget  *mOptionMenu;
-    GtkWidget  *mItems;
+  GList *mItems;
     PRBool  mMultiSelect;
-    int     mMaxNumItems;
     int     mNumItems;
 };
 

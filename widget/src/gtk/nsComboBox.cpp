@@ -44,11 +44,8 @@ nsComboBox::nsComboBox() : nsWidget(), nsIListWidget(), nsIComboBox()
   mMultiSelect = PR_FALSE;
   mBackground  = NS_RGB(124, 124, 124);
 
-  mMaxNumItems = INITIAL_MAX_ITEMS;
-#if 0
-  mItems       = (GtkWidget *)new long[INITIAL_MAX_ITEMS];
-#endif
-  mNumItems    = 0;
+  mItems = NULL;
+  mNumItems = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -58,9 +55,11 @@ nsComboBox::nsComboBox() : nsWidget(), nsIListWidget(), nsIComboBox()
 //-------------------------------------------------------------------------
 nsComboBox::~nsComboBox()
 {
-  if (mItems != nsnull) {
-    delete[] mItems;
-  }
+  for ( GList *items = mItems; items != NULL; items = (GList *) g_list_next(items))
+    {
+      g_free(items->data);
+    }
+  g_list_free(mItems);
 }
 
 //-------------------------------------------------------------------------
@@ -84,27 +83,11 @@ NS_METHOD nsComboBox::SetMultipleSelection(PRBool aMultipleSelections)
 
 NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
-#if 0
   NS_ALLOC_STR_BUF(val, aItem, 256);
-
-  XmString str;
-
-  Arg	args[30];
-  int	argc = 0;
-
-  str = XmStringCreateLocalized(val);
-  XtSetArg(args[argc], XmNlabelString, str); argc++;
-
-  Widget btn = XmCreatePushButton(mPullDownMenu, val, args, argc);
-  XtManageChild(btn);
-
-  if (mNumItems == mMaxNumItems) {
-    // [TODO] Grow array here by ITEMS_GROWSIZE
-  }
-  mItems[mNumItems++] = btn;
-
+  g_list_insert( mItems, g_strdup(val), aPosition );
+  gtk_combo_set_popdown_strings( GTK_COMBO( mWidget ), mItems );
+  mNumItems++;
   NS_FREE_STR_BUF(val);
-#endif
   return NS_OK;
 }
 
@@ -115,27 +98,20 @@ NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-#if 0
   NS_ALLOC_STR_BUF(val, aItem, 256);
-
   int i;
   PRInt32 index = -1;
-  for (i=0;i<mNumItems && index == -1;i++) {
-    XmString str;
-    XtVaGetValues(mItems[i], XmNlabelString, &str, nsnull);
-    char * text;
-    if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
-      if (!strcmp(text, val)) {
-        index = i;
-      }
-      XtFree(text);
+  GList *items = g_list_nth(mItems, aStartPos);
+  for(i=0; items != NULL; items = (GList *) g_list_next(items), i++ )
+    {
+      if(!strcmp(val, (gchar *) items->data))
+        {
+          index = i;
+          break;
+        }
     }
-  }
   NS_FREE_STR_BUF(val);
   return index;
-#else
-  return -1;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -154,21 +130,17 @@ PRInt32  nsComboBox::GetItemCount()
 //
 //-------------------------------------------------------------------------
 PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
-{
-#if 0
+{ 
   if (aPosition >= 0 && aPosition < mNumItems) {
-    XtUnmanageChild(mItems[aPosition]);
-    XtDestroyWidget(mItems[aPosition]);
-    int i;
-    for (i=aPosition ; i < mNumItems-1; i++) {
-      mItems[i] = mItems[i+1];
-    }
-    mItems[mNumItems-1] = NULL;
+
+    g_free(g_list_nth(mItems, aPosition)->data);
+    g_list_remove_link(mItems, g_list_nth(mItems, aPosition));
+    gtk_combo_set_popdown_strings(GTK_COMBO( mWidget ), mItems);
     mNumItems--;
     return PR_TRUE;
   }
-  return PR_FALSE;
-#endif
+  else
+    return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -178,22 +150,13 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
-#if 0
   PRBool result = PR_FALSE;
-
-  if (aPosition < 0 || aPosition >= mNumItems) {
-    return result;
+  if (aPosition >= 0 && aPosition < mNumItems) {
+    anItem = (gchar *) g_list_nth(mItems, aPosition)->data;
+    return PR_TRUE;
   }
-
-  XmString str;
-  XtVaGetValues(mItems[aPosition], XmNlabelString, &str, nsnull);
-  char * text;
-  if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
-    anItem = text;
-    XtFree(text);
-  }
-  return result;
-#endif
+  else
+    return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -203,16 +166,7 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 {
-#if 0
-  Widget w;
-  XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
-  int i;
-  for (i=0;i<mNumItems;i++) {
-    if (mItems[i] == w) {
-      GetItemAt(aItem, i);
-    }
-  }
-#endif
+  aItem = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mWidget)->entry));
   return NS_OK;
 }
 
@@ -223,21 +177,9 @@ NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 //-------------------------------------------------------------------------
 PRInt32 nsComboBox::GetSelectedIndex()
 {
-#if 0
-  if (!mMultiSelect) {
-    Widget w;
-    XtVaGetValues(mWidget, XmNmenuHistory, &w, NULL);
-    int i;
-    for (i=0;i<mNumItems;i++) {
-      if (mItems[i] == w) {
-        return (PRInt32)i;
-      }
-    }
-  } else {
-    NS_ASSERTION(PR_FALSE, "Multi selection list box does not support GetSlectedIndex()");
-  }
-#endif
-  return -1;
+  nsString nsstring;
+  GetSelectedItem(nsstring);
+  return FindItem(nsstring, 0);
 }
 
 //-------------------------------------------------------------------------
@@ -247,18 +189,7 @@ PRInt32 nsComboBox::GetSelectedIndex()
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
 {
-#if 0
-  if (!mMultiSelect) {
-    if (aPosition >= 0 && aPosition < mNumItems) {
-      XtVaSetValues(mWidget,
-		    XmNmenuHistory, mItems[aPosition],
-		    NULL);
-    }
-  } else {
-    // this is an error
-    return NS_ERROR_FAILURE;
-  }
-#endif
+  gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(mWidget)->entry), (gchar *) g_list_nth(mItems, aPosition)->data);
   return NS_OK;
 }
 
@@ -340,7 +271,6 @@ NS_METHOD nsComboBox::Create(nsIWidget *aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
-#if 0
   aParent->AddChild(this);
   GtkWidget *parentWidget = nsnull;
 
@@ -355,14 +285,16 @@ NS_METHOD nsComboBox::Create(nsIWidget *aParent,
 
   mWidget = gtk_combo_new();
 
+  gtk_combo_set_value_in_list(GTK_COMBO(mWidget), TRUE, TRUE);
+
   gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
   gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
 
   gtk_widget_show(mWidget);
 
   mEventCallback = aHandleEventFunction;
-  //InitCallbacks();
-#endif
+  InitCallbacks("nsComboBox");
+  
   return NS_OK;
 /*
   Arg	args[30];
