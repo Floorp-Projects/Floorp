@@ -196,6 +196,7 @@ my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
 my $helpline = 'http://www.mozilla.org/projects/mozbot/'; # used in IRC name and in help
 my $serverRestrictsIRCNames = '';
+my $serverExpectsValidUsername = '';
 my $username = 0; # makes the username default to the pid ($USERNAME)
 my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
 
@@ -222,6 +223,7 @@ my @modulenames = ('General', 'Greeting', 'Infobot', 'Parrot');
     [\$helpline, 'helpline'],
     [\$username, 'username'],
     [\$serverRestrictsIRCNames, 'simpleIRCNameServer'],
+    [\$serverExpectsValidUsername, 'validUsernameServer'],
     [\$Mails::smtphost, 'smtphost'],
 );
 
@@ -301,6 +303,11 @@ sub connect {
         $ircname = "[$ircname] $helpline";
     }
 
+    my $identd = getpwuid($<);
+    if ($serverExpectsValidUsername ne $server) {
+        $ircname = $username || $USERNAME;
+    }
+
     until (inet_aton($server) and # we check this first because Net::IRC::Connection doesn't
            $bot = $irc->newconn(
              Server => $server,
@@ -308,7 +315,7 @@ sub connect {
              Password => $password,
              Nick => $nicks[$nick],
              Ircname => $ircname,
-             Username => $username || $USERNAME,
+             Username => $identd,
              LocalAddr => $localAddr,
            )) {
         &debug("Could not connect. Are you sure '$server:$port' is a valid host?");
@@ -607,6 +614,12 @@ sub on_disconnected {
         $serverRestrictsIRCNames = $server;
         &Configuration::Save($cfgfile, &configStructure(\$serverRestrictsIRCNames));
         &debug('Hrm, $server didn\'t like our IRC name. Trying again with a simpler one.');
+        &debug("The full message from the server was: '$reason'");
+    } elsif ($reason =~ /identd/osi and $serverExpectsValidUsername ne $server) {
+        # try setting our username to the actual username
+        $serverExpectsValidUsername = $server;
+        &Configuration::Save($cfgfile, &configStructure(\$delaytime));
+        &debug('Hrm, $server said something about an identd problem. Trying again with our real username.');
         &debug("The full message from the server was: '$reason'");
     } elsif ($reason =~ /Excess Flood/osi) {
         # increase the delay by 20%
@@ -1910,6 +1923,7 @@ sub wordWrap {
     my $self = shift;
     my ($preferredLineLength, $prefix, $indent, $divider, @input) = @_;
     unshift(@input, $prefix) if defined($prefix);
+    $indent = '' unless defined($indent);
     my @output;
     while (@input) {
         push(@output, $indent . shift(@input));
