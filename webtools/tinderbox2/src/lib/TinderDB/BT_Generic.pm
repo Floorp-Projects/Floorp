@@ -69,7 +69,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.5 $ )[1];
+$VERSION = ( qw $Revision: 1.6 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -241,6 +241,13 @@ sub status_table_row {
     $NEXT_DB++;
 
     foreach $status (keys %{ $DATABASE{$tree}{$time} }) {
+
+      # do not display bugs whos status_progres is null, these have
+      # been deemed uninteresting.
+
+      ($BTData::STATUS_PROGRESS{$status}) ||
+        next;
+
       my ($query_links) = '';
       foreach $bug_id (sort keys %{ $DATABASE{$tree}{$time}{$status} }) {
 	
@@ -253,10 +260,11 @@ sub status_table_row {
 	
 	foreach $field (@BTData::DISPLAY_FIELDS) {
 
-	  # we display all fields even the empty ones, so that users
-	  # can see which fields are empty.
-
 	  my ($value) = $rec->{$field};
+
+          # many fields tend to be empty because it diffs the bug
+          # reports and only reports the lines which change and a few
+          # lines of context.
 
           ($value) || 
             next;
