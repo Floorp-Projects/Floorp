@@ -1,0 +1,94 @@
+#!/bin/sh
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Bugzilla Bug Tracking System.
+#
+# The Initial Developer of the Original Code is 
+# Andreas Franke <afranke@ags.uni-sb.de>.
+# Corporation. Portions created by Andreas Franke are
+# Copyright (C) 2001 Andreas Franke. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+conf="`dirname $0`/query.conf"
+
+query="http://bugzilla.mozilla.org/buglist.cgi?cmd=doit"
+defaultcolumnlist="severity priority platform status resolution target_milestone status_whiteboard keywords summaryfull"
+
+chart=0
+and=0
+while test "$1" != ""; do
+    arg=$1
+    arg_len=`expr length ${arg}`
+    if test `expr substr "${arg}" 1 2` == "--"; then
+        eq_pos=`expr match ${arg} '--.*='`
+        if test "${eq_pos}" == "0"; then
+            echo 'Missing value for long option '"${arg}"' ("=" not found)' 1>&2
+            exit 1;
+        fi
+        # extract option name
+        let name_len=${eq_pos}-3
+        name=`expr substr ${arg} 3 ${name_len}`
+        # extract option value
+        let val_start=${eq_pos}+1
+        let val_len=${arg_len}-${eq_pos}
+        val=`expr substr ${arg} ${val_start} ${val_len}`
+    elif test `expr substr ${arg} 1 1` == "-" &&
+         test "`expr substr ${arg} 2 1`" != ""; then
+        # extract
+        name=`expr substr ${arg} 2 1`
+        let val_len=${arg_len}-2
+        val=`expr substr ${arg} 3 ${val_len}`
+    else
+        name="default"
+        val="${arg}"
+        #echo "Unrecognized option ${arg}" 1>&2
+        #exit 1
+    fi
+
+    # find field and comparison type for option ${name}
+    field=`grep '"'${name}'"' ${conf} | awk '{printf $1}'`
+    type=`grep '"'${name}'"' ${conf} | awk '{printf $2}'`
+    if test "${field}" == ""  || test "${type}" == ""; then
+        echo "Field name & comparison type not found for option ${name}." 1>&2
+        exit 1;
+    fi
+
+    or=0
+    while test "${val}" != ""; do
+        comma_idx=`expr index ${val} ,`
+        if test ${comma_idx} == "0"; then
+            val1="${val}"
+            val=""
+        else
+            let val1_len=${comma_idx}-1
+            val1=`expr substr ${val} 1 ${val1_len}`
+            val_len=`expr length ${val}`
+            let rest_start=${comma_idx}+1
+            let rest_len=${val_len}-${comma_idx}
+            val=`expr substr ${val} ${rest_start} ${rest_len}`
+        fi
+        query="${query}&field${chart}-${and}-${or}=${field}"
+        query="${query}&type${chart}-${and}-${or}=${type}"
+        query="${query}&value${chart}-${and}-${or}=${val1}"
+        #echo "----- ${name} : ${field} : ${type} : ${val1} -----" 1>&2
+        let or=${or}+1
+    done
+    let chart=${chart}+1
+    shift
+done
+
+outputfile="/dev/stdout"
+#outputfile="buglist.html"
+#\rm -f ${outputfile}
+wget -q -O ${outputfile} --header="Cookie: COLUMNLIST=${COLUMNLIST-${defaultcolumnlist}}" "${query}"
+

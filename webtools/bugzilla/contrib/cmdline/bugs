@@ -1,0 +1,31 @@
+#!/bin/sh
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Bugzilla Bug Tracking System.
+#
+# The Initial Developer of the Original Code is 
+# Andreas Franke <afranke@ags.uni-sb.de>.
+# Corporation. Portions created by Andreas Franke are
+# Copyright (C) 2001 Andreas Franke. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+buglist="`dirname $0`/buglist"
+htmlfile="`dirname $0`/buglist.html"
+
+${buglist} "$@" 2>&1 1>${htmlfile}
+if test ${?} == "0"; then
+    echo `grep 'TR VALIGN=TOP ALIGN=LEFT CLASS=' ${htmlfile} | sed -e 's/<TR.*id=//' | sed -e 's/".*//'` | sed -e 's/ /\,/g'
+else
+    cat ${htmlfile} 1>&2
+    exit 1
+fi
