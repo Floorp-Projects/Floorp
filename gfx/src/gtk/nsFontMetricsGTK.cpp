@@ -4125,7 +4125,6 @@ FFRESubstituteEncoding(nsACString &aFFREName,
 {
   PRInt32 encodingHyphen = aFFREName.FindChar('-');
   encodingHyphen = aFFREName.FindChar('-', encodingHyphen + 1);
-  encodingHyphen = aFFREName.FindChar('-', encodingHyphen + 1);
   aFFREName.Truncate(encodingHyphen+1);
   aFFREName.Append(aReplacementEncoding);
 }
