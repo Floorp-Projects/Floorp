@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: search,v 1.2 1998/06/12 21:42:37 jwz Exp $
+# $Id: search,v 1.3 1998/06/12 21:45:34 jwz Exp $
 
 # search --	Freetext search
 #
@@ -31,7 +31,7 @@ $maxhits = 1000;
 
 sub search {
     print("<p align=center>\n",
-	  "This searchpage is powered by ",
+	  "This search page is powered by ",
 	  "<a href=\"http://glimpse.cs.arizona.edu\">Glimpse</a>\n");
 
     print("<form method=get action=\"search\">\n");
@@ -43,8 +43,8 @@ sub search {
 	}
     }
 
-    print("Search for: <input type=text name=\"string\" ",
-	  "value=\"",$searchtext,"\" size=60>\n",
+    print("<B>Search for: </B><input type=text name=\"string\" ",
+	  "value=\"",$searchtext,"\" size=50>\n",
 	  "<input type=submit value=\"search\">\n",
 #	  $Query->checkbox("case",0,0,"Case sensitive search"),
 #	  $Query->checkbox("regexp",1,0,"Regular expression search"),
