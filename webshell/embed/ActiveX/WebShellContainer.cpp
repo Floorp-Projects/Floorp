@@ -42,56 +42,12 @@ CWebShellContainer::~CWebShellContainer()
 
 NS_IMPL_ADDREF(CWebShellContainer)
 NS_IMPL_RELEASE(CWebShellContainer)
-
-
-nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstancePtrResult)
-{
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-	if (nsnull == aInstancePtrResult)
-	{
-		return NS_ERROR_NULL_POINTER;
-	}
-
-	*aInstancePtrResult = NULL;
-
-	if (aIID.Equals(kIBrowserWindowIID))
-	{
-		*aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-		AddRef();
-		return NS_OK;
-	}
-
-	if (aIID.Equals(kIStreamObserverIID))
-	{
-		*aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-		AddRef();
-		return NS_OK;
-	}
-
-	if (aIID.Equals(kIDocumentLoaderObserverIID))
-	{
-		*aInstancePtrResult = (void*) ((nsIDocumentLoaderObserver*)this);
-		AddRef();
-		return NS_OK;
-	}
-
-	if (aIID.Equals(kIWebShellContainerIID))
-	{
-		*aInstancePtrResult = (void*) ((nsIWebShellContainer*)this);
-		AddRef();
-		return NS_OK;
-	}
-
-	if (aIID.Equals(kISupportsIID))
-	{
-		*aInstancePtrResult = (void*) ((nsIStreamObserver*)this);
-		AddRef();
-		return NS_OK;
-	}
-
-	return NS_NOINTERFACE;
-}
-
+NS_IMPL_QUERY_HEAD(CWebShellContainer)
+	NS_IMPL_QUERY_BODY(nsIBrowserWindow)
+	NS_IMPL_QUERY_BODY(nsIStreamObserver)
+	NS_IMPL_QUERY_BODY(nsIDocumentLoaderObserver)
+	NS_IMPL_QUERY_BODY(nsIWebShellContainer)
+NS_IMPL_QUERY_TAIL(nsIStreamObserver)
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIBrowserWindow implementation
