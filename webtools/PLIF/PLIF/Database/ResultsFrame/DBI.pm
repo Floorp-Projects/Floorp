@@ -43,8 +43,8 @@ sub init {
     my($handle, $database, $execute, @values) = @_;
     $self->handle($handle);
     $self->database($database);
-    if ($execute) {
-        $self->reexecute(@values);
+    if (defined($execute)) {
+        $self->execute($execute, @values);
     }
 }
 
@@ -110,6 +110,12 @@ sub rows {
 sub reexecute {
     my $self = shift;
     my(@values) = @_;
+    return $self->execute(1, @values);
+}
+
+sub execute {
+    my $self = shift;
+    my($raise, @values) = @_;
     # untaint the statement and values... (XXX?)
     foreach my $value (@values) {
         if (defined($value)) {
@@ -121,6 +127,8 @@ sub reexecute {
     }
     if ($self->handle->execute(@values)) {
         $self->executed(1);
+        return $self;
+    } elsif (not $raise) {
         return $self;
     } else {
         if ($self->lastError) {
