@@ -457,6 +457,9 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
         server->uri = nsCRT::strdup(uri);
       if (authDn)
         server->authDn = nsCRT::strdup(authDn);
+      // force new LDAP directories to be treated as v3 this includes the case when 
+      // we are migrating directories.
+      DIR_ForceFlag(server, DIR_LDAP_VERSION3, PR_TRUE);
     }
     if (maxHits)
       server->maxHits = maxHits;
