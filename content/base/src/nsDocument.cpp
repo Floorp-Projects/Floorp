@@ -1176,8 +1176,11 @@ void nsDocument::SelectAll() {
 
   start = body;
   // Find Very first Piece of Content
-  start->ChildCount(n);
-  while (n > 0) {
+  for (;;) {
+    start->ChildCount(n);
+    if (n <= 0) {
+      break;
+    }
     nsIContent * child = start;
     child->ChildAt(0, start);
     NS_RELEASE(child);
@@ -1185,12 +1188,14 @@ void nsDocument::SelectAll() {
 
   end = body;
   // Last piece of Content
-  end->ChildCount(n);
-  while (n > 0) {
+  for (;;) {
+    end->ChildCount(n);
+    if (n <= 0) {
+      break;
+    }
     nsIContent * child = end;
     child->ChildAt(n-1, end);
     NS_RELEASE(child);
-    end->ChildCount(n);
   }
 
   //NS_RELEASE(start);
