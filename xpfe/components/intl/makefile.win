@@ -45,4 +45,5 @@ EXPORTS = \
 	nsFontPackageHandler.h \
 	$(NULL)
 
+include <$(DEPTH)\config\config.mak>
 include <$(DEPTH)\config\rules.mak>
