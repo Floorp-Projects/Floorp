@@ -145,17 +145,17 @@ sub EmitFormElements ($$$$$)
                 print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
             }
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
-        }
-        while (MoreSQLData()) {
-            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
-            print "</TR><TR>\n";
-            if ($editall) {
-                $blchecked = ($blchecked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+            while (MoreSQLData()) {
+                my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+                print "</TR><TR>\n";
+                if ($editall) {
+                    $blchecked = ($blchecked) ? "CHECKED" : "";
+                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+                }
+                $checked = ($checked) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
             }
-            $checked = ($checked) ? "CHECKED" : "";
-            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
         }
         print "</TR></TABLE></TD>\n";
     
@@ -171,17 +171,17 @@ sub EmitFormElements ($$$$$)
                 print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
             }
             print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these priveleges</B></TD>\n";
-        }
-        while (MoreSQLData()) {
-            my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
-            print "</TR><TR>\n";
-            if ($editall) {
-                $blchecked = ($blchecked) ? "CHECKED" : "";
-                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+            while (MoreSQLData()) {
+                my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+                print "</TR><TR>\n";
+                if ($editall) {
+                    $blchecked = ($blchecked) ? "CHECKED" : "";
+                    print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+                }
+                $checked = ($checked) ? "CHECKED" : "";
+                print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+                print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
             }
-            $checked = ($checked) ? "CHECKED" : "";
-            print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
-            print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
         }
     } else {
         print "</TR><TR><TH ALIGN=RIGHT>Groups and<br>Priveleges:</TH><TD><TABLE><TR>";        
