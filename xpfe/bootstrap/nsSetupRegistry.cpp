@@ -69,9 +69,9 @@ static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
 #else
 
 // XP_UNIX
-#define APPSHELL_DLL  "libnsappshell.so"
-#define APPCORES_DLL  "libappcores.so"
-#define EDITOR_DLL "libender.so"
+#define APPSHELL_DLL  "libnsappshell"PR_DLL_SUFFIX
+#define APPCORES_DLL  "libappcores"PR_DLL_SUFFIX
+#define EDITOR_DLL "libender"PR_DLL_SUFFIX
 
 #endif // XP_MAC
 
