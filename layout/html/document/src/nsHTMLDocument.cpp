@@ -1281,14 +1281,10 @@ nsHTMLDocument::ContentAppended(nsIContent* aContainer,
                                 PRInt32 aNewIndexInContainer)
 {
   if (nsnull != mNamedItems) {
-    nsIContent* child;
-    nsIAtom *name;
+    nsCOMPtr<nsIAtom> name;
 
-    aContainer->GetTag(name);
-    aContainer->ChildAt(aNewIndexInContainer, child);
-    RegisterNamedItems(aContainer, name == nsHTMLAtoms::form);
-    NS_IF_RELEASE(child);
-    NS_IF_RELEASE(name);
+    aContainer->GetTag(*getter_AddRefs(name));
+    RegisterNamedItems(aContainer, name.get() == nsHTMLAtoms::form);
   }
 
   return nsDocument::ContentAppended(aContainer, aNewIndexInContainer);
