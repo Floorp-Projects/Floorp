@@ -85,7 +85,7 @@ nsFilePicker.prototype = {
 
   /* readonly attribute nsILocalFile file; */
   set file(a) { throw "readonly property"; },
-  get file()  { return this.mFile; },
+  get file()  { return this.mFilesEnumerator.mFiles[0]; },
 
   /* readonly attribute nsISimpleEnumerator files; */
   set files(a) { throw "readonly property"; },
@@ -94,10 +94,10 @@ nsFilePicker.prototype = {
   /* readonly attribute nsIFileURL fileURL; */
   set fileURL(a) { throw "readonly property"; },
   get fileURL()  { 
-    if (this.mFile) {
+    if (this.mFilesEnumerator) {
       var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
-      var url       = ioService.newFileURI(this.mFile);
+      var url       = ioService.newFileURI(this.file);
       return url;
     }
     return null;
@@ -116,7 +116,6 @@ nsFilePicker.prototype = {
   get filterIndex() { return this.mFilterIndex; },
 
   /* members */
-  mFile: undefined,
   mFilesEnumerator: undefined,
   mParentWindow: null,
 
@@ -216,9 +215,7 @@ nsFilePicker.prototype = {
                         "",
                         "chrome,modal,titlebar,resizable=yes,dependent=yes",
                         o);
-      if (parentWin)
-        parentWin.blurSuppression = false;
-      this.mFile = o.retvals.file;
+
       this.mFilterIndex = o.retvals.filterIndex;
       this.mFilesEnumerator = o.retvals.files;
       lastDirectory = o.retvals.directory;

@@ -38,6 +38,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
 interface nsIFile;
 
 [scriptable, uuid(60b320d2-1dd2-11b2-bd73-dc3575f78ddd)]
@@ -56,7 +57,7 @@ interface nsIFileView : nsISupports
   void setDirectory(in nsIFile directory);
   void setFilter(in wstring filterString);
 
-  nsIFile getSelectedFile();
+  readonly attribute nsIArray selectedFiles;
 };
 
 %{C++

@@ -34,6 +34,7 @@ const nsIFileView = Components.interfaces.nsIFileView;
 const nsFileView_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
 const nsITreeView = Components.interfaces.nsITreeView;
 const nsILocalFile = Components.interfaces.nsILocalFile;
+const nsIFile = Components.interfaces.nsIFile;
 const nsLocalFile_CONTRACTID = "@mozilla.org/file/local;1";
 const nsIPromptService_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
 
@@ -135,6 +136,9 @@ function filepickerLoad() {
   retvals.buttonStatus = nsIFilePicker.returnCancel;
 
   var tree = document.getElementById("directoryTree");
+  if (filePickerMode == nsIFilePicker.modeOpenMultiple)
+    tree.removeAttribute("seltype");
+
   tree.treeBoxObject.view = treeView;
 
   // Start out with the ok button disabled since nothing will be
@@ -196,7 +200,7 @@ function showErrorDialog(titleStrName, messageStrName, file)
 
 function openOnOK()
 {
-  var dir = treeView.getSelectedFile();
+  var dir = treeView.selectedFiles.queryElementAt(0, nsIFile);
   if (!dir.isReadable()) {
     showErrorDialog("errorOpenFileDoesntExistTitle",
                     "errorDirNotReadableMessage",
@@ -207,7 +211,7 @@ function openOnOK()
   if (dir)
     gotoDirectory(dir);
 
-  retvals.file = dir;
+  retvals.fileList = new Array(dir);
 
   retvals.buttonStatus = nsIFilePicker.returnCancel;
   
@@ -220,150 +224,150 @@ function openOnOK()
 function selectOnOK()
 {
   var errorTitle, errorMessage, promptService;
-  var ret = nsIFilePicker.returnCancel;
+  var ret = nsIFilePicker.returnOK;
 
   var isDir = false;
   var isFile = false;
 
-  var file = processPath(textInput.value);
+  var fileList = processPath(textInput.value);
 
-  if (!file) { // generic error message, should probably never happen
+  if (!fileList) { // generic error message, should probably never happen
     showErrorDialog("errorPathProblemTitle",
                     "errorPathProblemMessage",
                     textInput.value);
     return false;
   }
 
-  // try to normalize - if this fails we will ignore the error
-  // because we will notice the
-  // error later and show a fitting error alert.
-  try{
-    file.normalize();
-  } catch(e) {
-    //promptService.alert(window, "Problem", "normalize failed, continuing");
-  }
+  var curFileIndex;
+  for (curFileIndex = 0; curFileIndex < fileList.length &&
+         ret != nsIFilePicker.returnCancel; ++curFileIndex) {
+    var file = fileList[curFileIndex].QueryInterface(nsIFile);
 
-  var fileExists = file.exists();
-  
-  if (!fileExists && (filePickerMode == nsIFilePicker.modeOpen ||
-                      filePickerMode == nsIFilePicker.modeOpenMultiple)) {
-    showErrorDialog("errorOpenFileDoesntExistTitle",
-                    "errorOpenFileDoesntExistMessage",
-                    file);
-    return false;
-  }
-
-  if (!fileExists && filePickerMode == nsIFilePicker.modeGetFolder) {
-    showErrorDialog("errorDirDoesntExistTitle",
-                    "errorDirDoesntExistMessage",
-                    file);
-    return false;
-  }
-
-  if (fileExists) {
-    isDir = file.isDirectory();
-    isFile = file.isFile();
-  }
-
-  switch(filePickerMode) {
-  case nsIFilePicker.modeOpen:
-  case nsIFilePicker.modeOpenMultiple:
-    if (isFile) {
-      if (file.isReadable()) {
-        retvals.directory = file.parent.path;
-        ret = nsIFilePicker.returnOK;
-      } else {
-        showErrorDialog("errorOpeningFileTitle",
-                        "openWithoutPermissionMessage_file",
-                        file);
-        ret = nsIFilePicker.returnCancel;
-      }
-    } else if (isDir) {
-      if (!sfile.equals(file)) {
-        gotoDirectory(file);
-      }
-      textInput.value = "";
-      doEnabling();
-      ret = nsIFilePicker.returnCancel;
+    // try to normalize - if this fails we will ignore the error
+    // because we will notice the
+    // error later and show a fitting error alert.
+    try{
+      file.normalize();
+    } catch(e) {
+      //promptService.alert(window, "Problem", "normalize failed, continuing");
     }
-    break;
-  case nsIFilePicker.modeSave:
-    if (isFile) { // can only be true if file.exists()
-      if (!file.isWritable()) {
-        showErrorDialog("errorSavingFileTitle",
-                        "saveWithoutPermissionMessage_file",
-                        file);
-        ret = nsIFilePicker.returnCancel;
-      } else {
-        // we need to pop up a dialog asking if you want to save
-        var confirmTitle = gFilePickerBundle.getString("confirmTitle");
-        var message =
-          gFilePickerBundle.getFormattedString("confirmFileReplacing",
-                                               [file.path]);
 
-        promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
-        var rv = promptService.confirm(window, title, message)
-        if (rv) {
-          ret = nsIFilePicker.returnReplace;
+    var fileExists = file.exists();
+
+    if (!fileExists && (filePickerMode == nsIFilePicker.modeOpen ||
+                        filePickerMode == nsIFilePicker.modeOpenMultiple)) {
+      showErrorDialog("errorOpenFileDoesntExistTitle",
+                      "errorOpenFileDoesntExistMessage",
+                      file);
+      return false;
+    }
+
+    if (!fileExists && filePickerMode == nsIFilePicker.modeGetFolder) {
+      showErrorDialog("errorDirDoesntExistTitle",
+                      "errorDirDoesntExistMessage",
+                      file);
+      return false;
+    }
+
+    if (fileExists) {
+      isDir = file.isDirectory();
+      isFile = file.isFile();
+    }
+
+    switch(filePickerMode) {
+    case nsIFilePicker.modeOpen:
+    case nsIFilePicker.modeOpenMultiple:
+      if (isFile) {
+        if (file.isReadable()) {
           retvals.directory = file.parent.path;
         } else {
+          showErrorDialog("errorOpeningFileTitle",
+                          "openWithoutPermissionMessage_file",
+                          file);
+          ret = nsIFilePicker.returnCancel;
+        }
+      } else if (isDir) {
+        if (!sfile.equals(file)) {
+          gotoDirectory(file);
+        }
+        textInput.value = "";
+        doEnabling();
+        ret = nsIFilePicker.returnCancel;
+      }
+      break;
+    case nsIFilePicker.modeSave:
+      if (isFile) { // can only be true if file.exists()
+        if (!file.isWritable()) {
+          showErrorDialog("errorSavingFileTitle",
+                          "saveWithoutPermissionMessage_file",
+                          file);
+          ret = nsIFilePicker.returnCancel;
+        } else {
+          // we need to pop up a dialog asking if you want to save
+          var confirmTitle = gFilePickerBundle.getString("confirmTitle");
+          var message =
+            gFilePickerBundle.getFormattedString("confirmFileReplacing",
+                                                 [file.path]);
+          
+          promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+          var rv = promptService.confirm(window, title, message);
+          if (rv) {
+            ret = nsIFilePicker.returnReplace;
+            retvals.directory = file.parent.path;
+          } else {
+            ret = nsIFilePicker.returnCancel;
+          }
+        }
+      } else if (isDir) {
+        if (!sfile.equals(file)) {
+          gotoDirectory(file);
+        }
+        textInput.value = "";
+        doEnabling();
+        ret = nsIFilePicker.returnCancel;
+      } else {
+        var parent = file.parent;
+        if (parent.exists() && parent.isDirectory() && parent.isWritable()) {
+          retvals.directory = parent.path;
+        } else {
+          var oldParent = parent;
+          while (!parent.exists()) {
+            oldParent = parent;
+            parent = parent.parent;
+          }
+          errorTitle =
+            gFilePickerBundle.getFormattedString("errorSavingFileTitle",
+                                                 [file.path]);
+          if (parent.isFile()) {
+            errorMessage =
+              gFilePickerBundle.getFormattedString("saveParentIsFileMessage",
+                                                   [parent.path, file.path]);
+          } else {
+            errorMessage =
+              gFilePickerBundle.getFormattedString("saveParentDoesntExistMessage",
+                                                   [oldParent.path, file.path]);
+          }
+          if (!parent.isWritable()) {
+            errorMessage =
+              gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.path]);
+          }
+          promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
+          promptService.alert(window, errorTitle, errorMessage);
           ret = nsIFilePicker.returnCancel;
         }
       }
-    } else if (isDir) {
-      if (!sfile.equals(file)) {
-        gotoDirectory(file);
+      break;
+    case nsIFilePicker.modeGetFolder:
+      if (isDir) {
+        retvals.directory = file.parent.path;
+      } else { // if nothing selected, the current directory will be fine
+        retvals.directory = sfile.path;
       }
-      textInput.value = "";
-      doEnabling();
-      ret = nsIFilePicker.returnCancel;
-    } else {
-      var parent = file.parent;
-      if (parent.exists() && parent.isDirectory() && parent.isWritable()) {
-        ret = nsIFilePicker.returnOK;
-        retvals.directory = parent.path;
-      } else {
-        var oldParent = parent;
-        while (!parent.exists()) {
-          oldParent = parent;
-          parent = parent.parent;
-        }
-        errorTitle =
-          gFilePickerBundle.getFormattedString("errorSavingFileTitle",
-                                               [file.path]);
-        if (parent.isFile()) {
-          errorMessage =
-            gFilePickerBundle.getFormattedString("saveParentIsFileMessage",
-                                                 [parent.path, file.path]);
-        } else {
-          errorMessage =
-            gFilePickerBundle.getFormattedString("saveParentDoesntExistMessage",
-                                                 [oldParent.path, file.path]);
-        }
-        if (!parent.isWritable()) {
-          errorMessage =
-            gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.path]);
-        }
-        promptService = Components.classes[nsIPromptService_CONTRACTID].getService(Components.interfaces.nsIPromptService);
-        promptService.alert(window, errorTitle, errorMessage);
-        ret = nsIFilePicker.returnCancel;
-      }
+      break;
     }
-    break;
-  case nsIFilePicker.modeGetFolder:
-    if (isDir) {
-      retvals.directory = file.parent.path;
-    } else { // if nothing selected, the current directory will be fine
-      retvals.directory = sfile.path;
-    }
-    ret = nsIFilePicker.returnOK;
-    break;
   }
 
-  retvals.file = file;
-
-  gFilesEnumerator.mFile = file;
-  gFilesEnumerator.mHasMore = true;
+  gFilesEnumerator.mFiles = fileList;
 
   retvals.files = gFilesEnumerator;
   retvals.buttonStatus = ret;
@@ -375,17 +379,18 @@ function selectOnOK()
 }
 
 var gFilesEnumerator = {
-  mHasMore: false,
-  mFile: null,
+  mFiles: null,
+  mIndex: 0,
 
   hasMoreElements: function()
   {
-    return this.mHasMore;
+    return (this.mIndex < this.mFiles.length);
   },
   getNext: function()
   {
-    this.mHasMore = false;
-    return this.mFile;
+    if (this.mIndex >= this.mFiles.length)
+      throw Components.results.NS_ERROR_FAILURE;
+    return this.mFiles[this.mIndex++];
   }
 };
 
@@ -410,10 +415,11 @@ function onDblClick(e) {
 }
 
 function openSelectedFile() {
-  var file = treeView.getSelectedFile();
-  if (!file)
+  var fileList = treeView.selectedFiles;
+  if (fileList.length == 0)
     return;
 
+  var file = fileList.queryElementAt(0, nsIFile);
   if (file.isDirectory())
     gotoDirectory(file);
   else if (file.isFile())
@@ -474,8 +480,9 @@ function onKeypress(e) {
   if (e.keyCode == 8) /* backspace */
     goUp();
   else if (e.keyCode == 13) { /* enter */
-    var file = treeView.getSelectedFile();
-    if (file) {
+    var fileList = treeView.selectedFiles;
+    if (fileList.length > 0) {
+      var file = fileList.queryElementAt(0, nsIFile);
       if (file.isDirectory()) {
         gotoDirectory(file);
         e.preventDefault();
@@ -494,7 +501,7 @@ function doEnabling() {
 
 function onTreeFocus(event) {
   // Reset the button label and enabled/disabled state.
-  onFileSelected(treeView.getSelectedFile());
+  onFileSelected(treeView.selectedFiles);
 }
 
 function getOKAction(file) {
@@ -524,24 +531,66 @@ function getOKAction(file) {
 }
 
 function onSelect(event) {
-  onFileSelected(treeView.getSelectedFile());
+  onFileSelected(treeView.selectedFiles);
 }
 
-function onFileSelected(file) {
-  if (file) {
-    var path = file.leafName;
-    
-    if (path) {
-      if ((filePickerMode == nsIFilePicker.modeGetFolder) || !file.isDirectory())
-        textInput.value = path;
-      
-      var buttonLabel = getOKAction(file);
-      okButton.setAttribute("label", buttonLabel);
-      okButton.disabled = false;
-      return;
+function onFileSelected(/* nsIArray */ selectedFileList) {
+  var validFileSelected = false;
+  var invalidSelection = false;
+  var file;
+  var fileCount = selectedFileList.length;
+
+  for (var index = 0; index < fileCount; ++index) {
+    file = selectedFileList.queryElementAt(index, nsIFile);
+    if (file) {
+      var path = file.leafName;
+
+      if (path) {
+        var isDir = file.isDirectory();
+        if ((filePickerMode == nsIFilePicker.modeGetFolder) || !isDir) {
+          if (!validFileSelected)
+            textInput.value = "";
+          addToTextFieldValue(path);
+        }
+
+        if (isDir && fileCount > 1) {
+          // The user has selected multiple items, and one of them is
+          // a directory.  This is not a valid state, so we'll disable
+          // the ok button.
+          invalidSelection = true;
+        }
+
+        validFileSelected = true;
+      }
     }
   }
-  okButton.disabled = (textInput.value == "");
+
+  if (validFileSelected) {
+    var buttonLabel = getOKAction(file);
+    okButton.setAttribute("label", buttonLabel);
+    okButton.disabled = invalidSelection;
+  } else
+    okButton.disabled = (textInput.value == "");
+}
+
+function addToTextFieldValue(path)
+{
+  var newValue = "";
+
+  if (textInput.value == "")
+    newValue = path.replace(/\"/g, "\\\"");
+  else {
+    // Quote the existing text if needed,
+    // then append the new filename (quoted and escaped)
+    if (textInput.value[0] != '"')
+      newValue = '"' + textInput.value.replace(/\"/g, "\\\"") + '"';
+    else
+      newValue = textInput.value;
+
+    newValue = newValue + ' "' + path.replace(/\"/g, "\\\"") + '"';
+  }
+
+  textInput.value = newValue;
 }
 
 function onTextFieldFocus() {
@@ -625,6 +674,7 @@ function newDir() {
       return false;
     }
     
+    file = file[0].QueryInterface(nsIFile);
     if (file.exists()) {
       showErrorDialog("errorNewDirDoesExistTitle",
                       "errorNewDirDoesExistMessage",
@@ -654,7 +704,7 @@ function newDir() {
     }
 
     try {
-      file.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755); 
+      file.create(nsIFile.DIRECTORY_TYPE, 0755); 
     } catch (e) {
       showErrorDialog("errorCreateNewDirTitle",
                       "errorCreateNewDirMessage",
@@ -700,13 +750,76 @@ function toggleShowHidden(event) {
 // uses "/" as the directory seperator, "~" as a shortcut
 // for the home directory (but only when seen at the start
 // of a path), and ".." to denote the parent directory.
-// returns the path or false if an error occurred.
+// returns an array of the files listed,
+// or false if an error occurred.
 function processPath(path)
 {
-  var file;
-  if (path[0] == '~') 
-    path  = homeDir.path + path.substring(1);
+  var fileArray = new Array();
+  var strLength = path.length;
 
+  if (path[0] == '"' && filePickerMode == nsIFilePicker.modeOpenMultiple &&
+      strLength > 1) {
+    // we have a quoted list of filenames, separated by spaces.
+    // iterate the list and process each file.
+
+    var curFileStart = 1;
+
+    while (1) {
+      var nextQuote;
+
+      // Look for an unescaped quote
+      var quoteSearchStart = curFileStart + 1;
+      do {
+        nextQuote = path.indexOf('"', quoteSearchStart);
+        quoteSearchStart = nextQuote + 1;
+      } while (nextQuote != -1 && path[nextQuote - 1] == '\\');
+      
+      if (nextQuote == -1) {
+        // we have a filename with no trailing quote.
+        // just assume that the filename ends at the end of the string.
+
+        if (!processPathEntry(path.substring(curFileStart), fileArray))
+          return false;
+        break;
+      }
+
+      if (!processPathEntry(path.substring(curFileStart, nextQuote), fileArray))
+        return false;
+
+      curFileStart = path.indexOf('"', nextQuote + 1);
+      if (curFileStart == -1) {
+        // no more quotes, but if we're not at the end of the string,
+        // go ahead and process the remaining text.
+
+        if (nextQuote < strLength - 1)
+          if (!processPathEntry(path.substring(nextQuote + 1), fileArray))
+            return false;
+        break;
+      }
+      ++curFileStart;
+    }
+  } else {
+    // If we didn't start with a quote, assume we just have a single file.
+    if (!processPathEntry(path, fileArray))
+      return false;
+  }
+
+  return fileArray;
+}
+
+function processPathEntry(path, fileArray)
+{
+  var filePath;
+  var file;
+
+  if (path[0] == '~') 
+    filePath = homeDir.path + path.substring(1);
+  else
+    filePath = path;
+
+  // Unescape quotes
+  filePath = filePath.replace(/\\\"/g, "\"");
+  
   try{
     file = sfile.clone().QueryInterface(nsILocalFile);
   } catch(e) {
@@ -714,15 +827,15 @@ function processPath(path)
     return false;
   }
 
-  if (path[0] == '/')   /* an absolute path was entered */
-    file.initWithPath(path);
-  else if ((path.indexOf("/../") > 0) ||
-           (path.substr(-3) == "/..") ||
-           (path.substr(0,3) == "../") ||
-           (path == "..")) {
+  if (filePath[0] == '/')   /* an absolute path was entered */
+    file.initWithPath(filePath);
+  else if ((filePath.indexOf("/../") > 0) ||
+           (filePath.substr(-3) == "/..") ||
+           (filePath.substr(0,3) == "../") ||
+           (filePath == "..")) {
     /* appendRelativePath doesn't allow .. */
     try{
-      file.initWithPath(file.path + "/" + path);
+      file.initWithPath(file.path + "/" + filePath);
     } catch (e) {
       dump("Couldn't init path\n"+e);
       return false;
@@ -730,11 +843,13 @@ function processPath(path)
   }
   else {
     try {
-      file.appendRelativePath(path);
+      file.appendRelativePath(filePath);
     } catch (e) {
       dump("Couldn't append path\n"+e);
       return false;
     }
   }
-  return file;
+
+  fileArray[fileArray.length] = file;
+  return true;
 }
