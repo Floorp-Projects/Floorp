@@ -238,6 +238,14 @@ SOURCE=..\common\IEHtmlNode.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\IEHtmlSelectionObject.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\IEHtmlTxtRange.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\ItemContainer.cpp
 # End Source File
 # Begin Source File
@@ -275,6 +283,14 @@ SOURCE=..\common\IEHtmlElementCollection.h
 # Begin Source File
 
 SOURCE=..\common\IEHtmlNode.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\IEHtmlSelectionObject.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\IEHtmlTxtRange.h
 # End Source File
 # Begin Source File
 
