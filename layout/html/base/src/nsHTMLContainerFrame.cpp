@@ -427,6 +427,8 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         aFrame->GetRect(bounds);
         view->Init(viewManager, bounds, rootView);
         viewManager->InsertChild(rootView, view, 0);
+        //XXX this needs to be conditional...
+        viewManager->SetViewContentTransparency(view, PR_TRUE);
 
         NS_RELEASE(viewManager);
       }
