@@ -57,6 +57,8 @@ var nsSearchResultsController =
     supportsCommand: function(command)
     {
         switch(command) {
+        case "cmd_delete":
+        case "cmd_shiftdelete":
         case "button_delete":
         case "cmd_open":
         case "file_message_button":
@@ -79,6 +81,8 @@ var nsSearchResultsController =
             if (GetNumSelectedMessages() != 1)
               enabled = false;
             break;
+          case "cmd_delete":
+          case "cmd_shiftdelete":
           case "button_delete":
             // this assumes that advanced searches don't cross accounts
             if (GetNumSelectedMessages() <= 0 || isNewsURI(gSearchView.getURIForViewIndex(0)))
@@ -100,8 +104,12 @@ var nsSearchResultsController =
             MsgOpenSelectedMessages();
             return true;
 
+        case "cmd_delete":
         case "button_delete":
-            MsgDeleteSelectedMessages();
+            MsgDeleteSelectedMessages(nsMsgViewCommandType.deleteMsg);
+            return true;
+        case "cmd_shiftdelete":
+            MsgDeleteSelectedMessages(nsMsgViewCommandType.deleteNoTrash);
             return true;
 
         case "goto_folder_button":
@@ -544,7 +552,7 @@ function GetDBView()
     return gSearchView;
 }
 
-function MsgDeleteSelectedMessages()
+function MsgDeleteSelectedMessages(aCommandType)
 {
     // we don't delete news messages, we just return in that case
     if (isNewsURI(gSearchView.getURIForViewIndex(0))) 
@@ -552,7 +560,7 @@ function MsgDeleteSelectedMessages()
 
     // if mail messages delete
     SetNextMessageAfterDelete();
-    gSearchView.doCommand(nsMsgViewCommandType.deleteMsg);
+    gSearchView.doCommand(aCommandType);
 }
 
 function SetNextMessageAfterDelete()

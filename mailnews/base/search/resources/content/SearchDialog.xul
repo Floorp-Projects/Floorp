@@ -26,6 +26,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
@@ -64,8 +65,15 @@ Rights Reserved.
       <command id="button_delete" oncommand="goDoCommand('button_delete')" disabled="true"/>
       <command id="goto_folder_button" oncommand="goDoCommand('goto_folder_button')" disabled="true"/>
       <command id="file_message_button"/>
+      <command id="cmd_delete"/>
+      <command id="cmd_shiftdelete"/>
     </commandset>
   </commands>
+
+  <keyset id="mailKeys">
+    <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
+    <key id="cmd_shiftdelete" oncommand="goDoCommand('cmd_shiftdelete');"/>
+  </keyset>
 
   <broadcasterset id="mailBroadcasters">
     <broadcaster id="Communicator:WorkMode"/>
