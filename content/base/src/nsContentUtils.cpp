@@ -1832,7 +1832,9 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
     if (NS_FAILED(rv)) {
       if (aImageBlockingStatus) {
-        *aImageBlockingStatus = nsIContentPolicy::REJECT_SERVER;
+        // Reject the request itself, not all requests to the relevant
+        // server...
+        *aImageBlockingStatus = nsIContentPolicy::REJECT_REQUEST;
       }
       return PR_FALSE;
     }
