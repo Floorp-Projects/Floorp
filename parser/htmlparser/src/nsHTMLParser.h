@@ -82,7 +82,7 @@ friend class CDefaultTokenHandler;
     NS_DECL_ISUPPORTS
 						                    nsHTMLParser();
                                 ~nsHTMLParser();
-    virtual nsIContentSink*     SetContentSink(nsIContentSink* aSink);
+    virtual void                SetContentSink(nsIContentSink* aSink);
     virtual PRBool              Parse(nsIURL* aURL);
     virtual PRBool              ResumeParse();
 
