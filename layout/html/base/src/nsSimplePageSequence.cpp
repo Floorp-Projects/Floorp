@@ -108,8 +108,8 @@ nsSharedPageData::nsSharedPageData() :
   mDeadSpaceMargin(0,0,0,0),
   mExtraMargin(0,0,0,0),
   mEdgePaperMargin(0,0,0,0),
-  mPageContentSize(0),
-  mPageContentXMost(0)
+  mPageContentXMost(0),
+  mPageContentSize(0)
 {
 }
 
