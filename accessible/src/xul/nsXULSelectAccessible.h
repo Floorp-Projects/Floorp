@@ -84,6 +84,8 @@ public:
   nsXULSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULSelectableAccessible() {}
 
+  NS_IMETHOD GetAccName(nsAString& _retval);
+
 protected:
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
 };

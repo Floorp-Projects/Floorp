@@ -80,6 +80,11 @@ nsAccessible(aDOMNode, aShell)
 {
 }
 
+NS_IMETHODIMP nsXULSelectableAccessible::GetAccName(nsAString& _retval)
+{
+  return GetXULAccName(_retval);
+}
+
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULSelectableAccessible, nsAccessible, nsIAccessibleSelectable)
 
 NS_IMETHODIMP nsXULSelectableAccessible::ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState)
