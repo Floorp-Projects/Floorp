@@ -307,6 +307,8 @@ classic.jar:
   skin/classic/messenger/smime/icons/hdrSignNotOk.gif                   (messenger/smime/icons/hdrSignNotOk.gif)
   skin/classic/messenger/smime/icons/hdrCryptoOk.gif                    (messenger/smime/icons/hdrCryptoOk.gif)
   skin/classic/messenger/smime/icons/hdrCryptoNotOk.gif                 (messenger/smime/icons/hdrCryptoNotOk.gif)
+  skin/classic/messenger/icons/message-junk-other.gif                   (messenger/icons/message-junk-other.gif)
+  skin/classic/messenger/icons/message-junk-unknown.gif                 (messenger/icons/message-junk-unknown.gif)
   skin/classic/navigator/contents.rdf                                   (navigator/contents.rdf)
   skin/classic/navigator/navigator.css                                  (navigator/navigator.css)
   skin/classic/navigator/linkToolbar.css                                (navigator/linkToolbar.css)
