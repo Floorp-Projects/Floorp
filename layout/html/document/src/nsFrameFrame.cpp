@@ -123,7 +123,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
   NS_IMETHOD  VerifyTree() const;
-  nscoord GetBorderWidth(nsIPresContext& aPresContext);
+  PRBool HasBorder();
   PRBool IsInline();
 
 protected:
@@ -209,26 +209,20 @@ nsHTMLFrameOuterFrame::~nsHTMLFrameOuterFrame()
   }
 }
 
-nscoord
-nsHTMLFrameOuterFrame::GetBorderWidth(nsIPresContext& aPresContext)
+PRBool
+nsHTMLFrameOuterFrame::HasBorder()
 {
   if (IsInline()) {
     nsIFrame* firstChild = mFrames.FirstChild();
     if (nsnull != firstChild) {
       if (eFrameborder_No != ((nsHTMLFrameInnerFrame*)firstChild)->GetFrameBorder(eCompatibility_Standard)) {
-        const nsStyleSpacing* spacing =
-          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-        nsStyleCoord leftBorder;
-        spacing->mBorder.GetLeft(leftBorder);
-        nsStyleUnit unit = leftBorder.GetUnit(); 
-        if (eStyleUnit_Coord == unit) {
-          return leftBorder.GetCoordValue();
-        }
+        return PR_TRUE;
       }
     }
-  } 
-  return 0;
+  }
+  return PR_FALSE;
 }
+
 
 PRIntn
 nsHTMLFrameOuterFrame::GetSkipSides() const
@@ -328,10 +322,19 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
     firstChild->Init(aPresContext, mContent, this, mStyleContext, nsnull);
   }
  
-  // nsContainerFrame::PaintBorder has some problems, kludge it here
-  nscoord borderWidth  = GetBorderWidth(aPresContext);
-  nscoord kludge = borderWidth/2;
-  nsSize innerSize(aDesiredSize.width - borderWidth - kludge, aDesiredSize.height - borderWidth - kludge);
+
+  nsSize innerSize(aDesiredSize.width, aDesiredSize.height);
+  nsPoint offset(0,0);
+  if (IsInline() && HasBorder()) {
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsMargin border;
+    spacing->CalcBorderFor(this, border);
+    offset.x = border.left;
+    offset.y = border.right;
+    innerSize.width  -= border.left + border.right;
+    innerSize.height -= border.top  + border.bottom;
+  }
 
   // Reflow the child and get its desired size
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
@@ -344,7 +347,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
     // Place and size the child
-    nsRect rect(borderWidth, borderWidth, innerSize.width, innerSize.height);
+    nsRect rect(offset.x, offset.y, innerSize.width, innerSize.height);
     firstChild->SetRect(rect);
   }
 
