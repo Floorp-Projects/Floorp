@@ -1147,30 +1147,21 @@ endif
 #   CHROME_L10N - list of localization files, e.g., CHROME_L10N=./locale/en-US/foobar.dtd
 #
 # These macros are optional, if not specified, each defaults to ".".
-#   CHROME_CONTENT_DIR - specifies chrome subdirectory where content files will be
-#                  installed; this path is inserted between $(CHROME_DIR) and
-#                  the path you specify in each $(CHROME_CONTENT) entry; i.e.,
-#                  for CHROME_CONTENT=./content/default/foobar.xul, it will be
-#                  installed into:
-#                    $(DIST)\bin\chrome\$(CHROME_DIR)\$(CHROME_CONTENT_DIR)\content\default\foobar.xul.
-#                  e.g., CHROME_DIR=global
-#                        CHROME_CONTENT_DIR=content\default
-#                        CHROME_CONTENT=.\foobar.xul
-#                  will install foobar.xul into content/default (even though it
-#                  resides in content/foobar.xul (no default) in the source tree.
-#                  But note that such usage must be put in a makefile.win that
-#                  itself resides in the content directory (i.e., it can't reside
-#                  up a level, since then CHROME_CONTENT=./content/foobar.xul which
-#                  would install into ...global\content\default\content\foobar.xul.
+#   CHROME_CONTENT_DIR - specifies a subdirectory within CHROME_DIR where
+#                  all CHROME_CONTENT files will be installed.
 #   CHROME_SKIN_DIR - Like above, but for skin files
 #   CHROME_L10N_DIR - Like above, but for localization files
+#   CHROME_TYPE - The type of chrome being generated (content, skin, locale).
+#                  Top-level makefiles (the same one copying the rdf manifests
+#                  and generating the jar file) should define this macro.
+#                  This will notify the chrome registry of a new installation.
 ifneq ($(CHROME_DIR),)
 CHROME_DIST := $(DIST)/bin/chrome/$(CHROME_DIR)
 
 # Content
 ifneq ($(CHROME_CONTENT),)
 ifeq ($(CHROME_CONTENT_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_CONTENT_DIR := content/default
+CHROME_CONTENT_DIR := content
 endif
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_CONTENT)) $(CHROME_DIST)/$(CHROME_CONTENT_DIR)
@@ -1180,7 +1171,7 @@ endif
 # Skin
 ifneq ($(CHROME_SKIN),)
 ifeq ($(CHROME_SKIN_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_SKIN_DIR := skin/default
+CHROME_SKIN_DIR := skin
 endif
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_SKIN)) $(CHROME_DIST)/$(CHROME_SKIN_DIR)
@@ -1190,12 +1181,19 @@ endif
 # Localization.
 ifneq ($(CHROME_L10N),)
 ifeq ($(CHROME_L10N_DIR),) # Use CHROME_DIR unless specified otherwise.
-CHROME_L10N_DIR := locale/en-US
+CHROME_L10N_DIR := locale
 endif
 install::
 	$(INSTALL) $(addprefix $(srcdir)/, $(CHROME_L10N)) $(CHROME_DIST)/$(CHROME_L10N_DIR)
 endif
 # localization
+
+ifneq ($(CHROME_TYPE),)
+install:: $(addprefix bogus/, $(CHROME_TYPE))
+
+$(addprefix bogus/, $(CHROME_TYPE)):
+	@echo $(patsubst bogus/%, %, $@),0,`pwd`/$(DEPTH)/dist/bin/chrome/$(CHROME_DIR) >>$(DEPTH)/dist/bin/chrome/installed-chrome.txt
+endif
 
 endif
 # chrome
