@@ -282,7 +282,7 @@ $(JDIRS)::
 
 !endif # NO_CAFE
 
-clobber::
+clobber clobber_all::
     -for %g in ($(JDIRS)) do $(RM_R) $(XPDIST:/=\)/classes/%g
 
 !endif # JAVA_OR_NSJVM
