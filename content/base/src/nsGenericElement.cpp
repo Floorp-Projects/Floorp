@@ -648,17 +648,23 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
 NS_IMETHODIMP
 nsGenericElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
-  // XXX Actually the owner document is the document in whose context
-  // the element has been created. We should be able to get at it
-  // whether or not we are attached to the document.
-  if (nsnull != mDocument) {
-    return mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument),
-                                     (void **)aOwnerDocument);
+  NS_ENSURE_ARG_POINTER(aOwnerDocument);
+
+  nsCOMPtr<nsIDocument> doc(mDocument);
+
+  if (!doc) {
+    // If we're not part of the document we can check if our nodeinfo
+    // can get at the document
+    mNodeInfo->GetDocument(*getter_AddRefs(doc));
   }
-  else {
-    *aOwnerDocument = nsnull;
-    return NS_OK;
+
+  if (doc) {
+    return CallQueryInterface(doc, aOwnerDocument);
   }
+
+  // No document, return nsnull
+  *aOwnerDocument = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -804,7 +810,7 @@ nsGenericElement::GetAttribute(const nsAReadableString& aName,
                                this)->GetAttribute(nsid, nameAtom, aReturn);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    // XXX: Null aReturn
+    SetDOMStringToNull(aReturn);
   }
 
   return NS_OK;
@@ -1465,7 +1471,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   PRBool intermediateCapture = PR_FALSE;
   //Capturing stage evaluation
-  if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+  if (NS_EVENT_FLAG_BUBBLE != aFlags && aEvent->message != NS_PAGE_LOAD) {
     //Initiate capturing phase.  Special case first call to document
     if (parent) {
       parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
@@ -1503,7 +1509,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && mDocument) {
+  if (NS_EVENT_FLAG_CAPTURE != aFlags && mDocument &&
+      aEvent->message != NS_PAGE_LOAD) {
     if (parent) {
       /*
        * If there's a parent we pass the event to the parent...

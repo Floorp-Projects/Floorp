@@ -64,6 +64,12 @@
 #include "nsIScrollable.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPrintContext.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMEventListener.h"
+#include "nsIDOMWindow.h"
 
 // For Accessibility 
 #include "nsIAccessibilityService.h"
@@ -171,11 +177,18 @@ protected:
 /*******************************************************************************
  * nsHTMLFrameInnerFrame
  ******************************************************************************/
-class nsHTMLFrameInnerFrame : public nsLeafFrame {
-
+class nsHTMLFrameInnerFrame : public nsLeafFrame,
+                              public nsIWebProgressListener,
+                              public nsSupportsWeakReference
+{
 public:
-
   nsHTMLFrameInnerFrame();
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return nsFrame::AddRef(); }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return nsFrame::Release(); }
+
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
@@ -564,7 +577,16 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
     }
   }
 #endif
- 
+
+  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mSubShell));
+  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(win));
+  nsCOMPtr<nsIDOMEventListener> eventListener(do_QueryInterface(mContent));
+
+  if (eventTarget && eventListener) {
+    eventTarget->RemoveEventListener(NS_LITERAL_STRING("load"), eventListener,
+                                     PR_FALSE);
+  }
+
   if(mSubShell)
     mSubShell->Destroy();
   mSubShell = nsnull; // This is the location it was released before...
@@ -707,6 +729,80 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
     }
   }
   return marginHeight;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
+    nsISupports *tmp = NS_STATIC_CAST(nsIWebProgressListener *, this);
+    *aInstancePtr = tmp;
+    return NS_OK;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsISupportsWeakReference))) {
+    nsISupports *tmp = NS_STATIC_CAST(nsISupportsWeakReference *, this);
+    *aInstancePtr = tmp;
+    return NS_OK;
+  }
+
+  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::OnStateChange(nsIWebProgress *aWebProgress,
+                                     nsIRequest *aRequest,
+                                     PRInt32 aStateFlags, PRUint32 aStatus)
+{
+  if (!((~aStateFlags) & (nsIWebProgressListener::STATE_IS_DOCUMENT |
+                          nsIWebProgressListener::STATE_TRANSFERRING))) {
+    nsCOMPtr<nsIDOMWindow> win(do_GetInterface(mSubShell));
+    nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(win));
+    nsCOMPtr<nsIDOMEventListener> eventListener(do_QueryInterface(mContent));
+
+    if (eventTarget && eventListener) {
+      eventTarget->AddEventListener(NS_LITERAL_STRING("load"), eventListener,
+                                    PR_FALSE);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::OnProgressChange(nsIWebProgress *aWebProgress,
+                                        nsIRequest *aRequest,
+                                        PRInt32 aCurSelfProgress,
+                                        PRInt32 aMaxSelfProgress,
+                                        PRInt32 aCurTotalProgress,
+                                        PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::OnLocationChange(nsIWebProgress *aWebProgress,
+                                        nsIRequest *aRequest, nsIURI *location)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::OnStatusChange(nsIWebProgress *aWebProgress,
+                                      nsIRequest *aRequest,
+                                      nsresult aStatus,
+                                      const PRUnichar *aMessage)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameInnerFrame::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                        nsIRequest *aRequest, PRInt32 state)
+{
+  return NS_OK;
 }
 
 #ifdef DEBUG
@@ -1133,6 +1229,12 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
     rv = secMan->CheckLoadURI(referrer, newURI, nsIScriptSecurityManager::STANDARD);
     if (NS_FAILED(rv))
       return rv; // We're not
+
+    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mSubShell));
+
+    if (webProgress) {
+      webProgress->AddProgressListener(this);
+    }
 
     rv = docShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");

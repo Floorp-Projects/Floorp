@@ -20,15 +20,11 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLFrameElement.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
-#include "nsHTMLIIDs.h"
-#include "nsIStyleContext.h"
-#include "nsIMutableStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -39,7 +35,8 @@
 
 class nsHTMLFrameElement : public nsGenericHTMLLeafElement,
                            public nsIDOMHTMLFrameElement,
-                           public nsIChromeEventHandler
+                           public nsIChromeEventHandler,
+                           public nsIDOMEventListener
 {
 public:
   nsHTMLFrameElement();
@@ -62,6 +59,9 @@ public:
 
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
+
+  // nsIDOMEventListener
+  NS_DECL_NSIDOMEVENTLISTENER
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -124,6 +124,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement,
                                     nsGenericHTMLLeafElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFrameElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -278,4 +279,10 @@ nsHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
                                       nsEventStatus* aEventStatus)
 {
   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
+}
+
+nsresult
+nsHTMLFrameElement::HandleEvent(nsIDOMEvent *aEvent)
+{
+  return HandleFrameOnloadEvent(aEvent);
 }
