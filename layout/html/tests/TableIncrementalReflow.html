@@ -3,6 +3,11 @@
 <HEAD>
 <SCRIPT>
 
+var count = 1;
+function genName(prefix) {
+  return "X" + count++ + "\n";
+}
+
 function insertCaption() {
   var table = document.getElementsByTagName("TABLE")[0];
   var caption = document.createElement("CAPTION", null);
@@ -136,8 +141,6 @@ function changeRowGroupStyle() {
   dump("SCRIPT: changed default align for first ROWGROUP to right\n");
 }
 
-
-
 function insertRow() {
   var rg = document.getElementsByTagName("TBODY")[0];
   var refRow = document.getElementsByTagName("TR")[0];
@@ -158,17 +161,42 @@ function appendRowWithContent() {
   var rg = document.getElementsByTagName("TBODY")[0];
   var row = document.createElement("TR", null);
   var cell = document.createElement("TD", null);
-  var text = document.createTextNode("x\n");
+  var text = document.createTextNode(genName());
   cell.appendChild(text);
   row.appendChild(cell);
   rg.appendChild(row);  
   dump("SCRIPT: appended ROW with 1 cell in first ROWGROUP\n");
 }
 
+function insertRowWithContent() {
+  dump("\nSCRIPT: starting appendRowWithContent\n");
+  var rg = document.getElementsByTagName("TBODY")[0];
+  var cell = document.createElement("TD", null);
+  var text = document.createTextNode(genName());
+  cell.appendChild(text);
+  row = rg.insertRow(0);  
+  row.appendChild(cell);
+  dump("SCRIPT: inserted ROW with 1 cell in first ROWGROUP\n");
+}
+
+function setRowIndex() {
+  dump("\nSCRIPT: starting setRowIndex\n");
+  var row = document.getElementsByTagName("TR")[0];
+  row.setRowIndex(99);
+  dump("SCRIPT: ending setRowindex - placed 1st row at end\n");
+}
+
+function setSectionRowIndex() {
+  dump("\nSCRIPT: starting setSectionRowIndex\n");
+  var row = document.getElementsByTagName("TR")[0];
+  row.setSectionRowIndex(99);
+  dump("SCRIPT: ending setSectionRowindex - placed 1st row at end\n");
+}
+
 function deleteRow() {
   var rg = document.getElementsByTagName("TBODY")[0];
-  var row = document.getElementsByTagName("TR")[0];
-  rg.removeChild(row);
+  //var row = document.getElementsByTagName("TR")[0];
+  rg.deleteRow(0);
   dump("SCRIPT: deleted first ROW in first ROWGROUP\n");
 }
 
@@ -178,12 +206,20 @@ function changeRowStyle() {
   dump("SCRIPT: changed default align for first ROW to right\n");
 }
 
+// why doesn't this cell show up
+function insertCellNew() {
+  var row = document.getElementsByTagName("TR")[0];
+  var cell = row.insertCell(0);
+  var text = document.createTextNode(genName());
+  cell.appendChild(text);
+  dump("SCRIPT: inserted  CELL as first cell in first row\n");
+}
 
 function insertCell() {
   var row = document.getElementsByTagName("TR")[0];
   var refCell = document.getElementsByTagName("TD")[0];
   var cell = document.createElement("TD", null);
-  var text = document.createTextNode("inserted Cell");
+  var text = document.createTextNode(genName());
   cell.colSpan=2;
   cell.appendChild(text);
   row.insertBefore(cell, refCell);
@@ -193,13 +229,19 @@ function insertCell() {
 function appendCell() {
   var row = document.getElementsByTagName("TR")[0];
   var cell = document.createElement("TD", null);
-  var text = document.createTextNode("appended Cell");
+  var text = document.createTextNode(genName());
   cell.appendChild(text);
   row.appendChild(cell);
   dump("SCRIPT: appended CELL in first ROW\n");
 }
 
 function deleteCell() {
+  var row = document.getElementsByTagName("TR")[0];
+  row.deleteCell(0);
+  dump("SCRIPT: deleted first CELL in first ROW\n");
+}
+
+function deleteCellBack() {
   var row = document.getElementsByTagName("TR")[0];
   var cell = document.getElementsByTagName("TD")[0];
   row.removeChild(cell);
@@ -248,7 +290,7 @@ delete removes the first object of [type].
 <table width=150 border>
 	<tbody>
 		<tr>
-			<td>cell content</td>
+			<td>existing cell</td>
 		</tr>
 	</tbody>
 </table>
@@ -276,6 +318,9 @@ delete removes the first object of [type].
 <INPUT TYPE="button" NAME="App Row" VALUE="AppendRow" onClick="appendRow()" width=100>
 <INPUT TYPE="button" NAME="Del Row" VALUE="DeleteRow" onClick="deleteRow()" width=100>
 <INPUT TYPE="button" NAME="App Row with content" VALUE="AppendRow with content" onClick="appendRowWithContent()" width=100>
+<INPUT TYPE="button" NAME="App Row with content" VALUE="InsertRow with content" onClick="insertRowWithContent()" width=100>
+<INPUT TYPE="button" NAME="Set Row Index" VALUE="Set Row Index" onClick="setRowIndex()">
+<INPUT TYPE="button" NAME="Set Section Row Index" VALUE="Set Section Row Index" onClick="setSectionRowIndex()">
 <br>
 <INPUT TYPE="button" NAME="Ins Cell" VALUE="InsertCell" onClick="insertCell()" width=100>
 <INPUT TYPE="button" NAME="App Cell" VALUE="AppendCell" onClick="appendCell()" width=100>

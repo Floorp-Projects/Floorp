@@ -18,6 +18,8 @@
  */
 #include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
+#include "nsIDOMHTMLTableRowElement.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -31,6 +33,7 @@
 
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTableRowElementIID, NS_IDOMHTMLTABLEROWELEMENT_IID);
 
 class nsHTMLTableCellElement :  public nsIHTMLTableCellElement,
                                 public nsIDOMHTMLTableCellElement,
@@ -108,6 +111,8 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
+  nsresult GetRow(nsIDOMHTMLTableRowElement** aRow);
+
   nsGenericHTMLContainerElement mInner;
   PRInt32 mColIndex;
 };
@@ -185,17 +190,79 @@ NS_METHOD nsHTMLTableCellElement::SetColIndex (PRInt32 aColIndex)
   return NS_OK;
 }
 
+// protected method
+nsresult
+nsHTMLTableCellElement::GetRow(nsIDOMHTMLTableRowElement** aRow)
+{
+  nsIDOMNode *rowNode;
+  GetParentNode(&rowNode); 
+  nsresult result = rowNode->QueryInterface(kIDOMHTMLTableRowElementIID, (void**)aRow);
+  NS_RELEASE(rowNode);
+  return result;
+}
+
 NS_IMETHODIMP
 nsHTMLTableCellElement::GetCellIndex(PRInt32* aCellIndex)
 {
-  *aCellIndex = 0;/* XXX */
+  *aCellIndex = -1;
+  nsIDOMHTMLTableRowElement* row = nsnull;
+  GetRow(&row);
+  nsIDOMHTMLCollection *cells = nsnull;
+  row->GetCells(&cells);
+  PRUint32 numCells;
+  cells->GetLength(&numCells);
+  for (PRUint32 i = 0; i < numCells; i++) {
+    nsIDOMNode *node = nsnull;
+    cells->Item(i, &node);
+    if (this == node) {
+      *aCellIndex = i;
+      break;
+    }
+  }
+  NS_RELEASE(cells);
+  NS_RELEASE(row);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableCellElement::SetCellIndex(PRInt32 aCellIndex)
 {
-  // XXX write me
+  PRInt32 oldIndex;
+  GetCellIndex(&oldIndex);
+  if (oldIndex == aCellIndex) {        // no change in index, don't do anything
+    return NS_OK;
+  }
+
+  nsIDOMHTMLTableRowElement* row = nsnull;
+  GetRow(&row);
+
+  row->DeleteCell(oldIndex);       // delete this from the row
+
+  nsIDOMHTMLCollection *cells = nsnull;
+  row->GetCells(&cells);
+  PRUint32 numCells;
+  cells->GetLength(&numCells);
+  nsIDOMNode *returnNode;
+  if (numCells <= 0) {
+    row->AppendChild(this, &returnNode); // add this back into the row
+  } else {
+    PRInt32 newIndex = oldIndex;
+    if (aCellIndex <= 0) {
+      newIndex = 0;
+    } else if ((PRUint32)aCellIndex >= numCells) {
+      newIndex = numCells - 1;
+    } else if (aCellIndex > oldIndex) {
+      newIndex--;                   // since this got removed before GetLength was called
+    }
+    nsIDOMNode *refNode;
+    cells->Item(newIndex, &refNode);
+    row->InsertBefore(this, refNode, &returnNode); // add this back into the row
+  }
+
+  NS_RELEASE(cells);
+  NS_RELEASE(row);
+
   return NS_OK;
 }
 
