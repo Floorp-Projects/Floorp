@@ -899,3 +899,14 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsComboboxControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
+}
+
+

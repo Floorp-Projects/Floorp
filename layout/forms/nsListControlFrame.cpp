@@ -1584,6 +1584,17 @@ nsListControlFrame::GetSelectedItem(nsString & aStr)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsListControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
+}
+
+
 #if 0
 //----------------------------------------------------------------------
 NS_IMETHODIMP  

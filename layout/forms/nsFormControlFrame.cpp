@@ -758,6 +758,17 @@ nsresult nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 	return res;
 }
 
+NS_IMETHODIMP nsFormControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFormControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
+}
+
+
 #if 0
 
 >>>>>>> 1.41

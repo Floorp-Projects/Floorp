@@ -193,6 +193,11 @@ protected:
 
   virtual ~nsFormControlFrame();
 
+   // nsIFormControLFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
+
   /**
     * Get the size that this frame would occupy without any constraints
     * @param aPresContext the presentation context

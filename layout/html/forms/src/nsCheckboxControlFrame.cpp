@@ -72,6 +72,10 @@ public:
 
   virtual void Reset();
 
+    // nsIFormControLFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
   //
   // Methods used to GFX-render the checkbox
   // 
@@ -359,6 +363,15 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
   return(nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus));
 }
 
+NS_IMETHODIMP nsCheckboxControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsCheckboxControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
+}
 
 
 

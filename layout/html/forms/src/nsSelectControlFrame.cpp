@@ -117,6 +117,10 @@ public:
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
+    // nsIFormControLFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
 protected:
   PRUint32 mNumRows;
 
@@ -1005,4 +1009,15 @@ nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
       }
     }
   }
+}
+
+
+NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+{
+  return NS_OK;
 }
