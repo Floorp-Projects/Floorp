@@ -20,6 +20,7 @@
 #define nsLoadGroup_h__
 
 #include "nsILoadGroup.h"
+#include "nsIChannel.h"
 #include "nsIStreamListener.h"
 #include "nsAgg.h"
 #include "nsCOMPtr.h"
