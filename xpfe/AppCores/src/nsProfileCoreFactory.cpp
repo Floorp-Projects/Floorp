@@ -149,35 +149,21 @@ NS_IMETHODIMP nsProfileCoreFactory::CreateInstance(
 //----------------------------------------------------------------------------------------
 
 {
-
     if (aResult == NULL)
-
         return NS_ERROR_NULL_POINTER;
-
-
-
     *aResult = NULL;
-
-
-
-    nsProfileCore* inst = new nsProfileCore();
-
+    static nsProfileCore* inst = new nsProfileCore();
     if (!inst)
-
         return NS_ERROR_OUT_OF_MEMORY;
-
 	nsresult result =  inst->QueryInterface(aIID, aResult);
 
-
-
 	if (result != NS_OK)
-
+	{
 		delete inst;
-
-
-
+		inst = 0;
+		aResult = 0;
+	}
 	return result;
-
 } // nsProfileCoreFactory::CreateInstance
 
 
