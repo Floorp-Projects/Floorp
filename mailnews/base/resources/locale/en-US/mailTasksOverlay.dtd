@@ -7,9 +7,6 @@
 <!ENTITY addressBookCmd.accesskey			"a">
 <!ENTITY addressBookCmd.commandkey			"5">
 
-<!ENTITY importUtilCmd.label                "Import Utility">
-<!ENTITY importUtilCmd.accesskey            "U">
-
 <!ENTITY taskMessenger.tooltip  "Mail &amp; Newsgroups">
 <!ENTITY taskAddressBook.tooltip  "Address Book">
 
