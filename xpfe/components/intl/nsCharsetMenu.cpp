@@ -199,10 +199,7 @@ private:
   nsCOMPtr<nsIObserver>                 mCharsetMenuObserver;
   nsCOMPtr<nsISupportsArray>            mDecoderList;
 
-  nsresult Done();
   nsresult SetCharsetCheckmark(nsString * aCharset, PRBool aValue);
-
-  nsresult FreeResources();
 
   nsresult InitStaticMenu(nsISupportsArray * aDecs, 
     nsIRDFResource * aResource, const char * aKey, nsVoidArray * aArray);
@@ -252,7 +249,7 @@ private:
   nsresult RemoveFlaggedCharsets(nsISupportsArray * aList, nsString * aProp);
   nsresult NewRDFContainer(nsIRDFDataSource * aDataSource, 
     nsIRDFResource * aResource, nsIRDFContainer ** aResult);
-  void FreeMenuItemArray(nsVoidArray * aArray);
+  static void FreeMenuItemArray(nsVoidArray * aArray);
   PRInt32 FindMenuItemInArray(nsVoidArray * aArray, nsIAtom * aCharset, 
       nsMenuEntry ** aResult);
   nsresult ReorderMenuItemArray(nsVoidArray * aArray);
@@ -274,6 +271,9 @@ public:
   nsresult RefreshMailviewMenu();
   nsresult RefreshMaileditMenu();
   nsresult RefreshComposerMenu();
+
+  nsresult Done();
+  nsresult FreeResources();
 
   //--------------------------------------------------------------------------
   // Interface nsICurrentCharsetListener [declaration]
@@ -368,28 +368,28 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
     if (nodeName.Equals(NS_LITERAL_STRING("browser"))) {
       rv = mCharsetMenu->InitBrowserMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("composer"))) {
+    else if (nodeName.Equals(NS_LITERAL_STRING("composer"))) {
       rv = mCharsetMenu->InitComposerMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("mailview"))) {
+    else if (nodeName.Equals(NS_LITERAL_STRING("mailview"))) {
       rv = mCharsetMenu->InitMailviewMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("mailedit"))) {
+    else if (nodeName.Equals(NS_LITERAL_STRING("mailedit"))) {
       rv = mCharsetMenu->InitMaileditMenu();
       rv = mCharsetMenu->InitOthers();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("more-menu"))) {
+    else if (nodeName.Equals(NS_LITERAL_STRING("more-menu"))) {
       rv = mCharsetMenu->InitSecondaryTiers();
       rv = mCharsetMenu->InitAutodetMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("other"))) {
+    else if (nodeName.Equals(NS_LITERAL_STRING("other"))) {
       rv = mCharsetMenu->InitOthers();
       rv = mCharsetMenu->InitMaileditMenu();
     }
   }
    
    //pref event handler
-  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+  else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsDependentString prefName(someData);
 
     if (prefName.Equals(NS_LITERAL_STRING(kBrowserStaticPrefKey))) {
@@ -403,6 +403,13 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
     else if (prefName.Equals(NS_LITERAL_STRING(kMaileditPrefKey))) {
       rv = mCharsetMenu->RefreshMaileditMenu();
     }
+    return rv;
+  }
+
+  else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    mCharsetMenu->Done();
+    
+    mCharsetMenu->FreeResources();
   }
 
   NS_TIMELINE_STOP_TIMER("nsCharsetMenu:Observe");
@@ -475,10 +482,14 @@ nsCharsetMenu::nsCharsetMenu()
     nsCOMPtr<nsIObserverService> observerService = 
              do_GetService("@mozilla.org/observer-service;1", &res);
 
-    if (NS_SUCCEEDED(res))
+    if (NS_SUCCEEDED(res)) {
       res = observerService->AddObserver(mCharsetMenuObserver, 
                                          "charsetmenu-selected", 
                                          PR_FALSE);
+      res = observerService->AddObserver(mCharsetMenuObserver,
+                                         NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                         PR_FALSE);
+    }
   }
 
   NS_ASSERTION(NS_SUCCEEDED(res), "Failed to initialize nsCharsetMenu");
@@ -488,13 +499,6 @@ nsCharsetMenu::nsCharsetMenu()
 
 nsCharsetMenu::~nsCharsetMenu() 
 {
-  Done();
-
-  FreeMenuItemArray(&mBrowserMenu);
-  FreeMenuItemArray(&mMailviewMenu);
-  FreeMenuItemArray(&mComposerMenu);
-
-  FreeResources();
 }
 
 // XXX collapse these 2 in one
@@ -752,6 +756,10 @@ nsresult nsCharsetMenu::FreeResources()
 {
   nsresult res = NS_OK;
 
+  FreeMenuItemArray(&mBrowserMenu);
+  FreeMenuItemArray(&mMailviewMenu);
+  FreeMenuItemArray(&mComposerMenu);
+    
   if (mCharsetMenuObserver) {
     nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs);
     if (pbi) {
