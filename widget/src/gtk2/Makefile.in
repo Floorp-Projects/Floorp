@@ -38,6 +38,7 @@ MODULE_NAME	= nsWidgetGtk2Module
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
+		  pref \
 		  dom \
 		  accessibility \
 		  xremoteservice

@@ -51,6 +51,9 @@
 #include <gdk/gdkx.h>
 #include <gdk/gdkkeysyms.h>
 
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
                                    gdouble aMouseX, gdouble aMouseY,
@@ -99,7 +102,10 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
 static gboolean property_notify_event_cb  (GtkWidget *widget,
                                            GdkEventProperty *event);
 
-static PRBool                 gJustGotActivate = PR_FALSE;
+static PRBool            gJustGotActivate      = PR_FALSE;
+static PRBool            gGlobalsInitialized   = PR_FALSE;
+static PRBool            gRaiseWindows         = PR_TRUE;
+ 
 nsCOMPtr  <nsIRollupListener> gRollupListener;
 nsWeakPtr                     gRollupWindow;
 
@@ -128,6 +134,21 @@ nsWindow::nsWindow()
     mTransientParent     = nsnull;
     mWindowType          = eWindowType_child;
     mSizeState           = nsSizeMode_Normal;
+
+    if (!gGlobalsInitialized) {
+        gGlobalsInitialized = PR_TRUE;
+
+        // check to see if we should set our raise pref
+        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+        if (prefs) {
+            PRBool val = PR_TRUE;
+            nsresult rv;
+            rv = prefs->GetBoolPref("mozilla.widget.raise-on-setfocus",
+                                    &val);
+            if (NS_SUCCEEDED(rv))
+                gRaiseWindows = val;
+        }
+    }
 
 #ifdef ACCESSIBILITY
     mTopLevelAccessible  = nsnull;
@@ -383,6 +404,15 @@ nsWindow::SetFocus(PRBool aRaise)
     if (!owningWidget)
         return NS_ERROR_FAILURE;
 
+    // Raise the window if someone passed in PR_TRUE and the prefs are
+    // set properly.
+    GtkWidget *toplevelWidget = gtk_widget_get_toplevel(owningWidget);
+
+    if (gRaiseWindows && aRaise && toplevelWidget &&
+        !GTK_WIDGET_HAS_FOCUS(owningWidget) &&
+        !GTK_WIDGET_HAS_FOCUS(toplevelWidget))
+        GetAttention();
+
     nsWindow  *owningWindow = get_window_for_gtk_widget(owningWidget);
     if (!owningWindow)
         return NS_ERROR_FAILURE;
@@ -404,10 +434,6 @@ nsWindow::SetFocus(PRBool aRaise)
 
         return NS_OK;
     }
-
-    // Raise the window if someone passed in PR_TRUE and the prefs are
-    // set properly.
-    // XXX do this
 
     // If this is the widget that already has focus, return.
     if (mHasFocus) {
@@ -830,6 +856,13 @@ NS_IMETHODIMP
 nsWindow::GetAttention()
 {
     LOG(("nsWindow::GetAttention [%p]\n", (void *)this));
+
+    GtkWidget* top_window = nsnull;
+    GetToplevelWidget(&top_window);
+    if (top_window && GTK_WIDGET_VISIBLE(top_window)) {
+        gdk_window_show(top_window->window);
+    }
+    
     return NS_OK;
 }
 
