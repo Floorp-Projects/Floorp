@@ -687,6 +687,7 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
 
 }
 
+static
 nsFrameborder GetFrameBorderHelper(nsIHTMLContent* aContent, PRBool aStandardMode)
 {
   if (nsnull != aContent) {
