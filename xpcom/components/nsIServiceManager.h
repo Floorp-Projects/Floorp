@@ -234,6 +234,17 @@ public:
 //      if (NS_FAILED(rv)) return rv;
 //      compMgr->RegisterComponent(...);     // use the service
 //  }
+//
+// Note that both NS_WITH_SERVICE and NS_WITH_SERVICE1 can be used with a
+// "progid" as well as a "clsid"; for example,
+//
+//   nsresult rv;
+//   NS_WITH_SERVICE(nsIObserverService,
+//                   observer,
+//                   "component://netscape/observer-service", /* or NS_OBSERVERSERVICE_PROGID */
+//                   &rv);
+//
+
 
 #define NS_WITH_SERVICE(T, var, cid, rvAddr)      \
   nsService _serv##var(cid, T::GetIID(), rvAddr); \
@@ -277,6 +288,16 @@ public:
   nsService(const nsCID& aClass, const nsIID& aIID, nsresult *rv)
     : mCID(aClass), mService(0) {
     *rv = nsServiceManager::GetService(aClass, aIID,
+                                       (nsISupports**)&mService);
+  }
+
+  nsService(const char* aProgID, const nsIID& aIID, nsresult *rv)
+    : mService(0)
+  {
+    *rv = nsComponentManager::ProgIDToCLSID(aProgID, &mCID);
+    if (NS_FAILED(*rv)) return;
+
+    *rv = nsServiceManager::GetService(mCID, aIID,
                                        (nsISupports**)&mService);
   }
 
