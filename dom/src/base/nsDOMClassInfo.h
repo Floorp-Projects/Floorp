@@ -29,7 +29,9 @@
 #include "jsapi.h"
 #include "nsIScriptSecurityManager.h"
 
+class nsIDOMNSHTMLOptionCollection;
 class nsIPluginInstance;
+class nsIForm;
 
 struct nsDOMClassInfoData;
 typedef void (*GetDOMClassIIDsFnc)(nsVoidArray& aArray);
@@ -464,7 +466,13 @@ protected:
   {
   }
 
+  static nsresult FindNamedItem(nsIForm *aForm, JSString *str,
+                                nsISupports **aResult);
+
 public:
+  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *obj, jsval id, PRUint32 flags,
+                        JSObject **objp, PRBool *_retval);
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp,
                          PRBool *_retval);
@@ -472,6 +480,36 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHTMLFormElementSH(aID);
+  }
+};
+
+
+// HTMLSelectElement helper
+
+class nsHTMLSelectElementSH : public nsElementSH
+{
+protected:
+  nsHTMLSelectElementSH(nsDOMClassInfoID aID) : nsElementSH(aID)
+  {
+  }
+
+  virtual ~nsHTMLSelectElementSH()
+  {
+  }
+
+public:
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp,
+                         PRBool *_retval);
+  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+
+  static nsresult SetOption(JSContext *cx, jsval *vp, PRUint32 aIndex,
+                            nsIDOMNSHTMLOptionCollection *aOptCollection);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
+  {
+    return new nsHTMLSelectElementSH(aID);
   }
 };
 
