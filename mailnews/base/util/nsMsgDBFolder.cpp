@@ -54,6 +54,7 @@
 #include "nsXPIDLString.h"
 #include "nsEscape.h"
 #include "nsLocalFolderSummarySpec.h"
+#include "nsMsgI18N.h"
 #include "nsIFileStream.h"
 #include "nsIChannel.h"
 #include "nsITransport.h"
@@ -3110,14 +3111,220 @@ NS_IMETHODIMP nsMsgDBFolder::EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener 
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::Rename(const PRUnichar *name, nsIMsgWindow *msgWindow)
+nsresult 
+nsMsgDBFolder::CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow)
 {
-  nsresult status = NS_OK;
-  nsAutoString unicharString(name);
-  status = SetName((PRUnichar *) unicharString.get());
-  //After doing a SetName we need to make sure that broadcasting this message causes a
-  //new sort to happen.
-  return status;
+  NS_ENSURE_ARG_POINTER(newFolderName);
+  NS_ENSURE_ARG_POINTER(parentFolder);
+  nsCOMPtr<nsIEnumerator> subfolders;
+  nsresult rv = parentFolder->GetSubFolders(getter_AddRefs(subfolders));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = subfolders->First();    //will fail if no subfolders 
+  while (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsISupports> supports;
+    subfolders->CurrentItem(getter_AddRefs(supports));
+    nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(supports);
+    nsAutoString folderNameString;
+    PRUnichar *folderName;
+    if (msgFolder)
+      msgFolder->GetName(&folderName);
+    folderNameString.Adopt(folderName);
+    if (folderNameString.Equals(newFolderName, nsCaseInsensitiveStringComparator()))
+    {
+      if (msgWindow)
+        ThrowAlertMsg("folderExists", msgWindow);
+      return NS_MSG_FOLDER_EXISTS;
+    }
+    rv = subfolders->Next();
+  }
+  return NS_OK;
+}
+
+
+nsresult
+nsMsgDBFolder::AddDirectorySeparator(nsFileSpec &path)
+{
+    nsAutoString sep;
+    nsresult rv = nsGetMailFolderSeparator(sep);
+    if (NS_FAILED(rv)) return rv;
+    
+    // see if there's a dir with the same name ending with .sbd
+    // unfortunately we can't just say:
+    //          path += sep;
+    // here because of the way nsFileSpec concatenates
+ 
+    nsCAutoString str(path.GetNativePathCString());
+    str.AppendWithConversion(sep);
+    path = str.get();
+
+    return rv;
+}
+
+/* Finds the directory associated with this folder.  That is if the path is
+   c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
+   currently exist then it will create it
+  */
+nsresult nsMsgDBFolder::CreateDirectoryForFolder(nsFileSpec &path)
+{
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIFileSpec> pathSpec;
+  rv = GetPath(getter_AddRefs(pathSpec));
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = pathSpec->GetFileSpec(&path);
+  if (NS_FAILED(rv)) return rv;
+  
+  if(!path.IsDirectory())
+  {
+    //If the current path isn't a directory, add directory separator
+    //and test it out.
+    rv = AddDirectorySeparator(path);
+    if(NS_FAILED(rv))
+      return rv;
+    
+    //If that doesn't exist, then we have to create this directory
+    if(!path.IsDirectory())
+    {
+      //If for some reason there's a file with the directory separator
+      //then we are going to fail.
+      if(path.Exists())
+      {
+        return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+      }
+      //otherwise we need to create a new directory.
+      else
+      {
+        nsFileSpec tempPath(path.GetNativePathCString(), PR_TRUE); // create intermediate directories
+        path.CreateDirectory();
+        //Above doesn't return an error value so let's see if
+        //it was created.
+        if(!path.IsDirectory())
+          return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
+      }
+    }
+  }
+  
+  return rv;
+}
+
+
+
+NS_IMETHODIMP nsMsgDBFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msgWindow)
+{
+  nsCOMPtr<nsIFileSpec> oldPathSpec;
+  nsCOMPtr<nsIAtom> folderRenameAtom;
+  nsresult rv = GetPath(getter_AddRefs(oldPathSpec));
+  if (NS_FAILED(rv)) 
+    return rv;
+  nsCOMPtr<nsIMsgFolder> parentFolder;
+  rv = GetParentMsgFolder(getter_AddRefs(parentFolder));
+  if (NS_FAILED(rv)) 
+    return rv;
+  nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parentFolder);
+  
+  nsFileSpec fileSpec;
+  oldPathSpec->GetFileSpec(&fileSpec);
+  nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
+  nsFileSpec dirSpec;
+  
+  PRUint32 cnt = 0;
+  if (mSubFolders)
+    mSubFolders->Count(&cnt);
+  
+  if (cnt > 0)
+    rv = CreateDirectoryForFolder(dirSpec);
+  
+  // convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
+  // function in nsIFileSpec
+  
+  nsCAutoString convertedNewName;
+  if (NS_FAILED(nsMsgI18NCopyUTF16ToNative(aNewName, convertedNewName)))
+    return NS_ERROR_FAILURE;
+  
+  nsCAutoString newDiskName;
+  newDiskName.Assign(convertedNewName.get());
+  NS_MsgHashIfNecessary(newDiskName);
+  
+  nsXPIDLCString oldLeafName;
+  oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
+  
+  if (mName.Equals(aNewName, nsCaseInsensitiveStringComparator()))
+  {
+    if(msgWindow)
+      rv = ThrowAlertMsg("folderExists", msgWindow);
+    return NS_MSG_FOLDER_EXISTS;
+  }
+  else
+  {
+    nsCOMPtr <nsIFileSpec> parentPathSpec;
+    parentFolder->GetPath(getter_AddRefs(parentPathSpec));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    nsFileSpec parentPath;
+    parentPathSpec->GetFileSpec(&parentPath);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    if (!parentPath.IsDirectory())
+      AddDirectorySeparator(parentPath);
+    
+    rv = CheckIfFolderExists(aNewName, parentFolder, msgWindow);
+    if (NS_FAILED(rv)) 
+      return rv;
+  }
+  
+  ForceDBClosed();
+  
+  nsCAutoString newNameDirStr(newDiskName.get());  //save of dir name before appending .msf 
+  
+  if (! (mFlags & MSG_FOLDER_FLAG_VIRTUAL))
+    rv = oldPathSpec->Rename(newDiskName.get());
+  if (NS_SUCCEEDED(rv))
+  {
+    newDiskName += ".msf";
+    oldSummarySpec.Rename(newDiskName.get());
+  }
+  else
+  {
+    ThrowAlertMsg("folderRenameFailed", msgWindow);
+    return rv;
+  }
+  
+  if (NS_SUCCEEDED(rv) && cnt > 0) 
+  {
+    // rename "*.sbd" directory
+    newNameDirStr += ".sbd";
+    dirSpec.Rename(newNameDirStr.get());
+  }
+  
+  nsCOMPtr<nsIMsgFolder> newFolder;
+  if (parentSupport)
+  {
+    rv = parentFolder->AddSubfolder(nsDependentString(aNewName), getter_AddRefs(newFolder));
+    if (newFolder) 
+    {
+      newFolder->SetPrettyName(aNewName);
+      newFolder->SetFlags(mFlags);
+      PRBool changed = PR_FALSE;
+      MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
+      if (changed)
+        AlertFilterChanged(msgWindow);
+      
+      if (cnt > 0)
+        newFolder->RenameSubFolders(msgWindow, this);
+      
+      if (parentFolder)
+      {
+        SetParent(nsnull);
+        parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
+        parentFolder->NotifyItemAdded(newFolder);
+      }
+      folderRenameAtom = do_GetAtom("RenameCompleted");
+      newFolder->NotifyFolderEvent(folderRenameAtom);
+    }
+  }
+  return rv;
 
 }
 

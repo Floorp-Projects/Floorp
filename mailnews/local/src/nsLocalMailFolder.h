@@ -199,21 +199,12 @@ protected:
   nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
 
   nsresult CreateSubFolders(nsFileSpec &path);
-  nsresult AddDirectorySeparator(nsFileSpec &path);
   nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
   nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
   nsresult WriteStartOfNewMessage();
   nsresult IsChildOfTrash(PRBool *result);
   nsresult RecursiveSetDeleteIsMoveTrash(PRBool bVal);
   nsresult ConfirmFolderDeletion(nsIMsgWindow *aMsgWindow, PRBool *aResult);
-
-  nsresult CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow);
-
-  /* Finds the directory associated with this folder.  That is if the path is
-  c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
-  currently exist then it will create it
-  */
-  nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
   nsresult DeleteMessage(nsISupports *message, nsIMsgWindow *msgWindow,
                    PRBool deleteStorage, PRBool commit);

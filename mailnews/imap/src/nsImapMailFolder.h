@@ -385,7 +385,6 @@ protected:
   
   //nsresult RenameLocal(const char *newName);
   nsresult AddDirectorySeparator(nsFileSpec &path);
-  nsresult CreateDirectoryForFolder(nsFileSpec &path);
   nsresult CreateSubFolders(nsFileSpec &path);
   nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
   virtual const char *GetIncomingServerType() {return "imap";}

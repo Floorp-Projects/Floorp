@@ -383,25 +383,6 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
   return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsMsgLocalMailFolder::AddDirectorySeparator(nsFileSpec &path)
-{
-    nsAutoString sep;
-    nsresult rv = nsGetMailFolderSeparator(sep);
-    if (NS_FAILED(rv)) return rv;
-    
-    // see if there's a dir with the same name ending with .sbd
-    // unfortunately we can't just say:
-    //          path += sep;
-    // here because of the way nsFileSpec concatenates
- 
-    nsCAutoString str(path.GetNativePathCString());
-    str.AppendWithConversion(sep);
-    path = str.get();
-
-    return rv;
-}
-
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
@@ -523,7 +504,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
         nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
         nsCOMPtr <nsIDBFolderInfo> transferInfo;
         if (mDatabase)
-        {
+       {
           mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
           if (dbFolderInfo)
           {
@@ -698,54 +679,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetFolderURL(char **url)
   
 }
 
-/* Finds the directory associated with this folder.  That is if the path is
-   c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
-   currently exist then it will create it
-  */
-nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
-{
-  nsresult rv = NS_OK;
-  
-  nsCOMPtr<nsIFileSpec> pathSpec;
-  rv = GetPath(getter_AddRefs(pathSpec));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = pathSpec->GetFileSpec(&path);
-  if (NS_FAILED(rv)) return rv;
-  
-  if(!path.IsDirectory())
-  {
-    //If the current path isn't a directory, add directory separator
-    //and test it out.
-    rv = AddDirectorySeparator(path);
-    if(NS_FAILED(rv))
-      return rv;
-    
-    //If that doesn't exist, then we have to create this directory
-    if(!path.IsDirectory())
-    {
-      //If for some reason there's a file with the directory separator
-      //then we are going to fail.
-      if(path.Exists())
-      {
-        return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-      }
-      //otherwise we need to create a new directory.
-      else
-      {
-        nsFileSpec tempPath(path.GetNativePathCString(), PR_TRUE); // create intermediate directories
-        path.CreateDirectory();
-        //Above doesn't return an error value so let's see if
-        //it was created.
-        if(!path.IsDirectory())
-          return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-      }
-    }
-  }
-  
-  return rv;
-}
-
 NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* aUrlListener)
 {
   nsresult rv = NS_OK;
@@ -792,35 +725,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateStorageIfMissing(nsIUrlListener* aUrlL
   return rv;
 }
 
-nsresult 
-nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow)
-{
-  NS_ENSURE_ARG_POINTER(newFolderName);
-  NS_ENSURE_ARG_POINTER(parentFolder);
-  nsCOMPtr<nsIEnumerator> subfolders;
-  nsresult rv = parentFolder->GetSubFolders(getter_AddRefs(subfolders));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = subfolders->First();    //will fail if no subfolders 
-  while (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsISupports> supports;
-    subfolders->CurrentItem(getter_AddRefs(supports));
-    nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(supports);
-    nsAutoString folderNameString;
-    PRUnichar *folderName;
-    if (msgFolder)
-      msgFolder->GetName(&folderName);
-    folderNameString.Adopt(folderName);
-    if (folderNameString.Equals(newFolderName, nsCaseInsensitiveStringComparator()))
-    {
-      if (msgWindow)
-        ThrowAlertMsg("folderExists", msgWindow);
-      return NS_MSG_FOLDER_EXISTS;
-    }
-    rv = subfolders->Next();
-  }
-  return NS_OK;
-}
 
 nsresult
 nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow )
@@ -3275,6 +3179,7 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
       {
         nsCOMPtr<nsIMsgIncomingServer> server;
         GetServer(getter_AddRefs(server));
+        // this is the deferred to account, in the global inbox case
         if (server)
           server->SetPerformingBiff(PR_FALSE);  //biff is over
       }

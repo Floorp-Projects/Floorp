@@ -136,6 +136,10 @@ protected:
 
   nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
   nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
+  nsresult AddDirectorySeparator(nsFileSpec &path);
+  nsresult CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow);
+
+  nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
   nsresult PromptForCachePassword(nsIMsgIncomingServer *server, nsIMsgWindow *aWindow, PRBool &passwordCorrect);
   // offline support methods.

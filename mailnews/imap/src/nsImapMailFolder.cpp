@@ -1493,6 +1493,8 @@ NS_IMETHODIMP nsImapMailFolder::Delete ()
 
 NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow )
 {
+    if (mFlags & MSG_FOLDER_FLAG_VIRTUAL)
+      return nsMsgDBFolder::Rename(newName, msgWindow);
     nsresult rv = NS_ERROR_FAILURE;
     nsAutoString newNameStr(newName);
     if (newNameStr.FindChar(m_hierarchyDelimiter,0) != -1)
@@ -6011,45 +6013,6 @@ nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
     if (aUrl)
         return aUrl->SetUrlState(isRunning, statusCode);
     return statusCode;
-}
-
-nsresult
-nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
-{
-  nsresult rv = NS_OK;
-
-  if(!path.IsDirectory())
-  {
-    //If the current path isn't a directory, add directory separator
-    //and test it out.
-    rv = AddDirectorySeparator(path);
-    if(NS_FAILED(rv))
-      return rv;
-
-    nsFileSpec tempPath(path.GetNativePathCString(), PR_TRUE);  // create incoming directories.
-
-    //If that doesn't exist, then we have to create this directory
-    if(!path.IsDirectory())
-    {
-      //If for some reason there's a file with the directory separator
-      //then we are going to fail.
-      if(path.Exists())
-      {
-        return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-      }
-      //otherwise we need to create a new directory.
-      else
-      {
-        path.CreateDirectory();
-        //Above doesn't return an error value so let's see if
-        //it was created.
-        if(!path.IsDirectory())
-          return NS_MSG_COULD_NOT_CREATE_DIRECTORY;
-      }
-    }
-  }
-
-  return rv;
 }
 
 // used when copying from local mail folder, or other imap server)
