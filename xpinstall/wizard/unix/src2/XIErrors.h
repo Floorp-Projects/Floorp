@@ -26,6 +26,9 @@
 #define _XI_ERRORS_H_
 
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 /*------------------------------------------------------------------*
  *   X Installer Errors

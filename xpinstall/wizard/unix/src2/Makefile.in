@@ -54,6 +54,10 @@ LIBS        = \
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../stub
 
+ifeq ($(OS_ARCH), Linux)
+DEFINES	+= -D_BSD_SOURCE
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += `gtk-config --cflags`
