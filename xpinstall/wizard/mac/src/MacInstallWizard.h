@@ -314,7 +314,7 @@ if (err) 								\
 #define sSiteSelector	42
 #define sDomain			43
 #define sDescription	44
-#define sRedirect		45
+#define sRedirect		46
 
 #define sTermDlg		27
 		

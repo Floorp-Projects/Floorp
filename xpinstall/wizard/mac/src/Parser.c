@@ -470,14 +470,9 @@ PopulateCompWinKeys(char *cfgText)
 			DisposePtr(idxCh);
 			strncat(currKey, eof, 1);
 			
-			if (!FillKeyValueUsingName(currSName, currKey, gControls->cfg->comp[i].domain[j], cfgText))
-			{
-				if (currKey)
-					DisposePtr(currKey);
-				if (currKeyBuf)
-					DisposePtr(currKeyBuf);
-				break;
-			}
+			// don't break if this fails since there may be more Server Paths thatn Domains
+			FillKeyValueUsingName(currSName, currKey, gControls->cfg->comp[i].domain[j], cfgText);
+
 			if (currKey)
 				DisposePtr(currKey);
 			if (currKeyBuf)
@@ -739,8 +734,8 @@ PopulateTermWinKeys(char *cfgText)
 	cSection = PascalToC(pSection);
 	cDesc = PascalToC(pDescRoot);
 	cURL = NewPtrClear(pURLRoot[0] + 4);
-	if (!cURL || ! cSection || !cDesc)
-		return eParseFailed;
+	if (!cURL || !cSection || !cDesc)
+		return eMem;
 		
 	gControls->cfg->redirect.desc = NewHandleClear(kValueMaxLen);
 	if (FillKeyValueUsingResID(sRedirect, sDescription, gControls->cfg->redirect.desc, cfgText))
