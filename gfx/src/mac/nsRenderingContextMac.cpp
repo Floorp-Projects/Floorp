@@ -81,6 +81,8 @@ public:
   GraphicState(GraphicState* aGS);
   ~GraphicState();
 
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
 	void				Clear();
 	void				Init(nsDrawingSurface aSurface);
 	void				Init(GrafPtr aPort);
@@ -89,13 +91,6 @@ public:
 
 protected:
 	RgnHandle		DuplicateRgn(RgnHandle aRgn);
-
-public:
-  void* operator new(size_t sz) {
-    void* rv = new char[sz];
-    nsCRT::zero(rv, sz);
-    return rv;
-  }
 
 public:
   nsTransform2D * 			mTMatrix; 					// transform that all the graphics drawn here will obey
