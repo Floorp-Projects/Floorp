@@ -10,6 +10,9 @@
 
 <!ENTITY checkbox.column.label       "On">
 <!ENTITY engine.column.label         "Search Engines">
+
+<!ENTITY uncheckall.button.label     "Uncheck All">
+<!ENTITY savesearch.button.label     "Save Search in Bookmarks">
 ]>
 
 
@@ -34,7 +37,7 @@
 			</html:tr>
 
 			<html:tr><html:td>
-				<tree id="searchengines" flex="100%" datasources="rdf:internetsearch" >
+				<tree id="searchengines" border="1" flex="100%" datasources="rdf:internetsearch" >
 					<treecol id="CheckboxColumn" />
 					<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 
@@ -62,16 +65,16 @@
 						</treeitem>
 					</treehead>
 
-					<treebody id="NC:SearchEngineRoot" />
+					<treebody id="NC:SearchEngineRoot" open="true" />
 				</tree>
 			</html:td></html:tr>
 
 			<html:tr><html:td>
-				<html:input type="button" value="Uncheck All" onclick="return doUncheckAll();" />
+				<html:input type="button" value="&uncheckall.button.label;" onclick="return doUncheckAll();" />
+				<html:input type="button" value="&savesearch.button.label;" onclick="return saveSearch();" />
 			</html:td></html:tr>
 		</html:table>
 		</html:center>
 		<html:p />
-		<spring flex="100%" align="horizontal" />
 	</box>
 </window>

@@ -39,6 +39,6 @@
 
 	<html:script>
 		// load initial page
-		loadPage('internet');
+		loadPage('find');
 	</html:script>
 </window>
