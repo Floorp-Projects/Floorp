@@ -240,10 +240,8 @@ function loadInboxForNewAccount() {
   if (gNewAccountToLoad) {
     var rootMsgFolder = gNewAccountToLoad.incomingServer.rootMsgFolder;
     var outNumFolders = new Object();
-    var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders);      
-    var selectedFolderResource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-    var selectedFolder = selectedFolderResource.QueryInterface(Components.interfaces.nsIFolder);
-    SelectFolder(selectedFolder.URI);
+    var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders);
+    SelectFolder(inboxFolder.URI);
     window.focus();
     setTimeout(MsgGetMessage, 0);
     gNewAccountToLoad = null;
