@@ -46,11 +46,13 @@ var gDeleteByHostname;
 var gDeleteByDomain;
 var gHistoryBundle;
 var gHistoryStatus;
+var gSearchBox;
 var gHistoryGrouping = "";
 var gWindowManager = null;
 
 function HistoryWindowInit()
 {
+    gSearchBox = document.getElementById("search-box");
     HistoryCommonInit();
     gHistoryTree.focus();
 }
