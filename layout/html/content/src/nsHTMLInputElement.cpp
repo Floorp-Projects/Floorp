@@ -826,7 +826,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if (formControlFrame && NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID, (void **)&formFrame) && formFrame))
   {
     const nsStyleUserInterface* uiStyle;
-    formFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleUserInterface *&)uiStyle);
+    formFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct *&)uiStyle);
     if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
         uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     {
