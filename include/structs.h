@@ -335,6 +335,14 @@ struct MWContext_ {
 #ifdef MODULAR_NETLIB
     URL_Struct*   modular_data;
 #endif
+
+    /* This gets set to `true' when layout encounters an image with no
+       width or height: layout will proceed to place the image, but
+       the FE will have to do a reflow once all the netlib connections
+       terminate for the page to be correctly displayed. The idea is
+       to get visible content to the user ASAP, even if it means that
+       stuff looks funny for a couple seconds. */
+    PRPackedBool  requires_reflow;
 };
 
 
