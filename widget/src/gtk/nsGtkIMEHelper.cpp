@@ -1148,6 +1148,23 @@ nsIMEGtkIC::GetInputStyle() {
   GdkIMStyle prefered_preedit_style = (GdkIMStyle) SUPPORTED_PREEDIT;
   GdkIMStyle prefered_status_style = (GdkIMStyle) SUPPORTED_STATUS;
 
+#ifdef HPUX 
+  prefered_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_POSITION;
+  prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
+  style = gdk_im_decide_style((GdkIMStyle)(prefered_preedit_style | prefered_status_style));
+  if (style) {
+    gInputStyle = style;
+  } else {
+    style = gdk_im_decide_style((GdkIMStyle) (SUPPORTED_PREEDIT | SUPPORTED_STATUS));
+    if (style) {
+      gInputStyle = style;
+    } else {
+      gInputStyle = (GdkIMStyle)(GDK_IM_PREEDIT_NONE|GDK_IM_STATUS_NONE);
+    }
+  }
+  return gInputStyle;
+#endif
+
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
   if (!NS_FAILED(rv) && (prefs)) {
     char *input_style;
