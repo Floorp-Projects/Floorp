@@ -104,13 +104,13 @@ int nsIMAPNamespaceList::AddNewNamespace(nsIMAPNamespace *ns)
 	if (!ns->GetIsNamespaceFromPrefs())
 	{
 		int nodeIndex = 0;
-		for (nodeIndex=m_NamespaceList.Count(); nodeIndex > 0; nodeIndex--)
+		for (nodeIndex=m_NamespaceList.Count()-1; nodeIndex >= 0; nodeIndex--)
 		{
 			nsIMAPNamespace *nspace = (nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeIndex);
-			if (nspace->GetIsNamespaceFromPrefs())
+			if (nspace && nspace->GetIsNamespaceFromPrefs())
 			{
 				m_NamespaceList.RemoveElement(nspace);
-				delete nspace;
+				delete nspace; 
 			}
 		}
 	}
