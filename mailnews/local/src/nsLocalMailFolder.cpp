@@ -865,7 +865,9 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
   }
   
   //GetFlags and SetFlags in AddSubfolder will fail because we have no db at this point but mFlags is set.
-  rv = AddSubfolder(nsDependentString(folderName), getter_AddRefs(child));
+  nsAutoString folderNameStr;
+  folderNameStr.AssignWithConversion(safeFolderName);
+  rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
   if (!child || NS_FAILED(rv))
   {
     path.Delete(PR_FALSE);
@@ -887,7 +889,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
       rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
       if(NS_SUCCEEDED(rv))
       {
-        folderInfo->SetMailboxName(nsDependentString(folderName));
+        folderInfo->SetMailboxName(folderNameStr);
       }
       unusedDB->SetSummaryValid(PR_TRUE);
       unusedDB->Close(PR_TRUE);
