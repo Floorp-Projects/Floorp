@@ -24,6 +24,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIClipboardCommands.h"
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
@@ -225,14 +226,14 @@ public:
   NS_IMETHOD GetContainingChromeElement(nsIContent** aResult);
   NS_IMETHOD SetContainingChromeElement(nsIContent* aChromeElement);
 
-  NS_IMETHOD GetMarginWidth (PRInt32& aWidth);
-  NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
-  NS_IMETHOD GetMarginHeight(PRInt32& aWidth);
-  NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
   NS_IMETHOD GetScrolling(PRInt32& aScrolling);
   NS_IMETHOD SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial = PR_TRUE);
-  NS_IMETHOD GetIsFrame(PRBool& aIsFrame);
-  NS_IMETHOD SetIsFrame(PRBool aIsFrame);
+
+  NS_IMETHOD GetMarginWidth (PRInt32* aWidth);
+  NS_IMETHOD SetMarginWidth (PRInt32  aWidth);
+  NS_IMETHOD GetMarginHeight(PRInt32* aWidth);
+  NS_IMETHOD SetMarginHeight(PRInt32  aHeight);
+
   NS_IMETHOD SetZoom(float aZoom);
   NS_IMETHOD GetZoom(float *aZoom);
 
@@ -402,13 +403,6 @@ public:
   nsresult DestroyPluginHost(void);
 
   NS_IMETHOD IsBusy(PRBool& aResult);
-  NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet);
-  NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet);
-
-  NS_IMETHOD GetForceCharacterSet (const PRUnichar** aForceCharacterSet);
-  NS_IMETHOD SetForceCharacterSet (const PRUnichar*  aForceCharacterSet);
-
-  NS_IMETHOD GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource);
 
   NS_IMETHOD SetSessionHistory(nsISessionHistory * aSHist);
   NS_IMETHOD GetSessionHistory(nsISessionHistory *& aResult);
@@ -464,12 +458,13 @@ protected:
   nsString mOverTarget;
 
   PRPackedBool mIsInSHist;
-  PRPackedBool mIsFrame;
   PRPackedBool mFailedToLoadHistoryService;
 
   nsScrollPreference mScrollPref;
+
   PRInt32 mMarginWidth;
   PRInt32 mMarginHeight;
+
   PRInt32 mScrolling[2];
   nsVoidArray mRefreshments;
 
@@ -507,11 +502,14 @@ protected:
   PRBool mProcessedEndDocumentLoad;
 
   // XXX store mHintCharset and mHintCharsetSource here untill we find out a good cood path
+  /*
   nsString mHintCharset;
   nsCharsetSource mHintCharsetSource;
-  PRBool mViewSource;
   nsString mForceCharacterSet;
+  */
 
+  PRBool mViewSource;
+  
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
 
@@ -657,7 +655,6 @@ nsWebShell::nsWebShell()
   mScriptContext = nsnull;
   mThreadEventQueue = nsnull;
   InitFrameData(PR_TRUE);
-  mIsFrame = PR_FALSE;
   mWebShellType = nsWebShellContent;
   mChromeElement = nsnull;
   mSHist = nsnull;
@@ -665,11 +662,8 @@ nsWebShell::nsWebShell()
   mFailedToLoadHistoryService = PR_FALSE;
   mDefaultCharacterSet = "";
   mProcessedEndDocumentLoad = PR_FALSE;
-  mHintCharset = "";
-  mHintCharsetSource = kCharsetUninitialized;
   mCharsetReloadState = eCharsetReloadInit;
   mViewSource=PR_FALSE;
-  mForceCharacterSet = "";
   mHistoryService = nsnull;
   mHistoryState = nsnull;
   mParentContentListener = nsnull;
@@ -713,7 +707,6 @@ nsWebShell::~nsWebShell()
   }
 
   InitFrameData(PR_TRUE);
-  mIsFrame = PR_FALSE;
 
   // XXX Because we hold references to the children and they hold references
   // to us we never get destroyed. See Destroy() instead...
@@ -747,8 +740,8 @@ void nsWebShell::InitFrameData(PRBool aCompleteInitScrolling)
   if (aCompleteInitScrolling) {
     mScrolling[0] = -1;
     mScrolling[1] = -1;
-    mMarginWidth  = -1;
-    mMarginHeight = -1;
+    SetMarginWidth(-1);    
+    SetMarginHeight(-1);
   }
   else {
     mScrolling[1] = mScrolling[0];
@@ -838,6 +831,41 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
       ("nsWebShell::Embed: this=%p aDocViewer=%p aCommand=%s aExtraInfo=%p",
        this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
 
+  if (mContentViewer && (eCharsetReloadInit!=mCharsetReloadState))
+  { // get any interesting state from the old content viewer
+    // XXX: it would be far better to just reuse the document viewer ,
+    //      since we know we're just displaying the same document as before
+    PRUnichar *defaultCharset=nsnull;
+    PRUnichar *forceCharset=nsnull;
+    PRUnichar *hintCharset=nsnull;
+    PRInt32 hintCharsetSource;
+
+    nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV = do_QueryInterface(mContentViewer);
+    nsCOMPtr<nsIMarkupDocumentViewer> newMUDV = do_QueryInterface(aContentViewer);
+    if (oldMUDV && newMUDV)
+    {
+      NS_ENSURE_SUCCESS(oldMUDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(oldMUDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(oldMUDV->GetHintCharacterSet (&hintCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(oldMUDV->GetHintCharacterSetSource (&hintCharsetSource), NS_ERROR_FAILURE);
+
+      // set the old state onto the new content viewer
+      NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet (defaultCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(newMUDV->SetForceCharacterSet (forceCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSet (hintCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSetSource (hintCharsetSource), NS_ERROR_FAILURE);
+
+      if (defaultCharSet) {
+        Recycle(defaultCharSet);
+      }
+      if (forceCharset) {
+        Recycle(forceCharset);
+      }
+      if (hintCharset) {
+        Recycle(hintCharset);
+      }
+    }
+  }
   NS_IF_RELEASE(mContentViewer);
   if (nsnull != mScriptContext) {
     mScriptContext->GC();
@@ -1586,10 +1614,30 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   }
   mChildren.AppendElement(aChild);
   aChild->SetParent(this);
-  const PRUnichar *defaultCharset=nsnull;
-  if(NS_SUCCEEDED(this->GetDefaultCharacterSet (&defaultCharset)))
-       aChild->SetDefaultCharacterSet(defaultCharset);
-  aChild->SetForceCharacterSet(mForceCharacterSet.GetUnicode());
+  PRUnichar *defaultCharset=nsnull;
+  PRUnichar *forceCharset=nsnull;
+  nsCOMPtr<nsIContentViewer> cv;
+  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
+  if (cv)
+  {
+    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
+    if (muDV)
+    {
+      NS_ENSURE_SUCCESS(muDV->GetDefaultCharacterSet (&defaultCharset), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(muDV->GetForceCharacterSet (&forceCharset), NS_ERROR_FAILURE);
+    }
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(aChild->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    if (childCV)
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> childmuDV = do_QueryInterface(cv);
+      if (childmuDV)
+      {
+        childmuDV->SetDefaultCharacterSet(defaultCharset);
+        childmuDV->SetForceCharacterSet(forceCharset);
+      }
+    }
+  }
   NS_ADDREF(aChild);
 
   return NS_OK;
@@ -1736,9 +1784,11 @@ nsWebShell::SetContainingChromeElement(nsIContent* aChromeElement)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetMarginWidth(PRInt32& aWidth)
+nsWebShell::GetMarginWidth(PRInt32* aWidth)
 {
-  aWidth = mMarginWidth;
+  NS_ENSURE_ARG_POINTER(aWidth);
+
+  *aWidth = mMarginWidth;
   return NS_OK;
 }
 
@@ -1750,9 +1800,11 @@ nsWebShell::SetMarginWidth(PRInt32 aWidth)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetMarginHeight(PRInt32& aHeight)
+nsWebShell::GetMarginHeight(PRInt32* aHeight)
 {
-  aHeight = mMarginHeight;
+  NS_ENSURE_ARG_POINTER(aHeight);
+
+  *aHeight = mMarginHeight;
   return NS_OK;
 }
 
@@ -1777,20 +1829,6 @@ nsWebShell::SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial)
   if (aSetCurrentAndInitial) {
     mScrolling[0] = aScrolling;
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetIsFrame(PRBool& aIsFrame)
-{
-  aIsFrame = mIsFrame;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetIsFrame(PRBool aIsFrame)
-{
-  mIsFrame = aIsFrame;
   return NS_OK;
 }
 
@@ -1944,6 +1982,7 @@ nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
   if (!doc) { return NS_ERROR_OUT_OF_MEMORY; }
   NS_ENSURE_SUCCESS(rootContent->SetDocument(doc, PR_FALSE), NS_ERROR_FAILURE);
   doc->SetRootContent(rootContent);
+  rootContent->SetDocument(doc, PR_TRUE);
 
   // (6) reflow the document
   SetScrolling(-1, PR_FALSE);
@@ -2960,16 +2999,27 @@ nsWebShell::LoadDocument(const char* aURL,
                          nsCharsetSource aSource)
 {
   // XXX hack. kee the aCharset and aSource wait to pick it up
-  if( aSource > mHintCharsetSource ) {
-    mHintCharset = aCharset;
-    mHintCharsetSource = aSource;
-    if(eCharsetReloadRequested != mCharsetReloadState) 
+  nsCOMPtr<nsIContentViewer> cv;
+  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
+  if (cv)
+  {
+    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);  
+    if (muDV)
     {
-
-        mCharsetReloadState = eCharsetReloadRequested;
-
-        nsAutoString url(aURL);
-        LoadURL(url.GetUnicode());
+      nsCharsetSource hint;
+      muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
+      if( aSource > hint ) 
+      {
+        nsAutoString inputCharSet(aCharset);
+        muDV->SetHintCharacterSet(inputCharSet.GetUnicode());
+        muDV->SetHintCharacterSetSource((PRInt32)aSource);
+        if(eCharsetReloadRequested != mCharsetReloadState) 
+        {
+          mCharsetReloadState = eCharsetReloadRequested;
+          nsAutoString url(aURL);
+          LoadURL(url.GetUnicode());
+        }
+      }
     }
   }
   return NS_OK;
@@ -2982,15 +3032,28 @@ nsWebShell::ReloadDocument(const char* aCharset,
 {
 
   // XXX hack. kee the aCharset and aSource wait to pick it up
-  if( aSource > mHintCharsetSource ) {
-     mHintCharset = aCharset;
-     mHintCharsetSource = aSource;
-     mViewSource = (0==PL_strcmp("view-source", aCmd));
-     if(eCharsetReloadRequested != mCharsetReloadState) 
-     {
-        mCharsetReloadState = eCharsetReloadRequested;
-        return Reload(nsIChannel::LOAD_NORMAL);
-     }
+  nsCOMPtr<nsIContentViewer> cv;
+  NS_ENSURE_SUCCESS(GetContentViewer(getter_AddRefs(cv)), NS_ERROR_FAILURE);
+  if (cv)
+  {
+    nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);  
+    if (muDV)
+    {
+      nsCharsetSource hint;
+      muDV->GetHintCharacterSetSource((PRInt32 *)(&hint));
+      if( aSource > hint ) 
+      {
+        nsAutoString inputCharSet(aCharset);
+         muDV->SetHintCharacterSet(inputCharSet.GetUnicode());
+         muDV->SetHintCharacterSetSource((PRInt32)aSource);
+         mViewSource = (0==PL_strcmp("view-source", aCmd));
+         if(eCharsetReloadRequested != mCharsetReloadState) 
+         {
+            mCharsetReloadState = eCharsetReloadRequested;
+            return Reload(nsIChannel::LOAD_NORMAL);
+         }
+      }
+    }
   }
   return NS_OK;
 }
@@ -4183,77 +4246,6 @@ NS_IMETHODIMP
 nsWebShell::SelectNone(void)
 {
   return NS_ERROR_FAILURE;
-}
-
-static char *gDefCharset = nsnull;
-
-NS_IMETHODIMP
-nsWebShell::GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet)
-{
-  if (0 == mDefaultCharacterSet.Length()) {
-      if ((nsnull == gDefCharset) || (nsnull == *gDefCharset)) {
-         if(mPrefs)
-            mPrefs->CopyCharPref("intl.charset.default", &gDefCharset);
-      }
-      if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
-        mDefaultCharacterSet = "ISO-8859-1";
-      else
-        mDefaultCharacterSet = gDefCharset;
-  }
-  *aDefaultCharacterSet = mDefaultCharacterSet.GetUnicode();
-  return NS_OK;
-}
-NS_IMETHODIMP
-nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)
-{
-  mDefaultCharacterSet = aDefaultCharacterSet;
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
-    if (nsnull != child) {
-      child->SetDefaultCharacterSet(aDefaultCharacterSet);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetForceCharacterSet (const PRUnichar** aForceCharacterSet)
-{
-  nsAutoString emptyStr;
-  if (mForceCharacterSet.Equals(emptyStr)) {
-    *aForceCharacterSet = nsnull;
-  }
-  else {
-    *aForceCharacterSet = mForceCharacterSet.GetUnicode();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)
-{
-  mForceCharacterSet = aForceCharacterSet;
-  PRInt32 i, n = mChildren.Count();
-  for (i = 0; i < n; i++) {
-    nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
-    if (nsnull != child) {
-      child->SetForceCharacterSet(aForceCharacterSet);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource)
-{
-  *oSource = mHintCharsetSource;
-  if(kCharsetUninitialized == mHintCharsetSource) {
-    *oHintCharset = nsnull;
-  } else {
-    *oHintCharset = mHintCharset.GetUnicode();
-     mHintCharsetSource = kCharsetUninitialized;
-  }
-  return NS_OK;
 }
 
 

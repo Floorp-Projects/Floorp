@@ -33,6 +33,8 @@
 #include "nsWidgetsCID.h"
 #include "nsILinkHandler.h"
 #include "nsIWebShell.h"
+#include "nsIContentViewerEdit.h"
+#include "nsIContentViewerFile.h"
 #include "nsIBrowserWindow.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -110,7 +112,9 @@ private:
   PluginViewerImpl  *mViewer;       //we do not addref this...
 };
 
-class PluginViewerImpl : public nsIContentViewer
+class PluginViewerImpl : public nsIContentViewer,
+                         public nsIContentViewerEdit,
+                         public nsIContentViewerFile
 {
 public:
   PluginViewerImpl(const char* aCommand);
@@ -136,10 +140,14 @@ public:
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
-  NS_IMETHOD Print();
-  NS_IMETHOD PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext);
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
+
+  // nsIContentViewerEdit
+  NS_DECL_NSICONTENTVIEWEREDIT
+
+  // nsIContentViewerFile
+  NS_DECL_NSICONTENTVIEWERFILE
 
   virtual ~PluginViewerImpl();
 
@@ -221,8 +229,9 @@ PluginViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    nsISupports* tmp = this;
-    *aInstancePtr = (void*)tmp;
+    nsIContentViewer* tmp1 = this;
+    nsISupports* tmp2 = tmp1;
+    *aInstancePtr = (void*) tmp2;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -490,23 +499,6 @@ PluginViewerImpl::Hide()
 }
 
 NS_IMETHODIMP
-PluginViewerImpl::Print(void)
-{
-  // need to call the plugin from here somehow
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-PluginViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext)
-{
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 PluginViewerImpl::SetEnableRendering(PRBool aOn)
 {
   mEnableRendering = aOn;
@@ -540,6 +532,114 @@ nsresult PluginViewerImpl::GetDocument(nsIDocument* *aDocument)
   *aDocument = mDocument;
   return NS_OK;
 }
+
+/* ========================================================================================
+ * nsIContentViewerFile
+ * ======================================================================================== */
+
+NS_IMETHODIMP PluginViewerImpl::Search()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::GetSearchable(PRBool *aSearchable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::ClearSelection()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::SelectAll()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::CopySelection()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::GetCopyable(PRBool *aCopyable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::CutSelection()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::GetCutable(PRBool *aCutable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::Paste()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP PluginViewerImpl::GetPasteable(PRBool *aPasteable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* ========================================================================================
+ * nsIContentViewerEdit
+ * ======================================================================================== */
+NS_IMETHODIMP
+PluginViewerImpl::Save()
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::GetSaveable(PRBool *aSaveable)
+{
+  NS_ASSERTION(0, "NOT IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::Print()
+{
+  return NS_OK;      // XXX: hey, plug in guys!  implement me!
+}
+
+
+NS_IMETHODIMP
+PluginViewerImpl::GetPrintable(PRBool *aPrintable) 
+{
+  NS_ENSURE_ARG_POINTER(aPrintable);
+
+  *aPrintable = PR_FALSE;   // XXX: hey, plug in guys!  implement me!
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+PluginViewerImpl::PrintContent(nsIWebShell *aParent, nsIDeviceContext *aDContext)
+{
+  NS_ENSURE_ARG_POINTER(aParent);
+  NS_ENSURE_ARG_POINTER(aDContext);
+
+  return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 

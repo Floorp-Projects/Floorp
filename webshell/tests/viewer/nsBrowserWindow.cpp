@@ -56,6 +56,7 @@
 #include "nsLayoutCID.h"
 #include "nsIDocumentViewer.h"
 #include "nsIContentViewer.h"
+#include "nsIContentViewerFile.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
@@ -2373,7 +2374,10 @@ void nsBrowserWindow::DoPrint(void)
 
   if (viewer)
   {
-    viewer->Print();
+    nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+    if (viewerFile) {
+      viewerFile->Print();
+    }
   }
 }
 

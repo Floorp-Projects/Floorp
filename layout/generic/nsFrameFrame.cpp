@@ -24,6 +24,8 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsIWebShell.h"
+#include "nsIContentViewer.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
@@ -692,8 +694,6 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(&mode);
   mWebShell->SetScrolling(GetScrolling(content, mode));
-  mWebShell->SetIsFrame(PR_TRUE);
-  
   nsString frameName;
   if (GetName(content, frameName)) {
     mWebShell->SetName(frameName.GetUnicode());
@@ -875,6 +875,18 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
         TempMakeAbsURL(content, url, absURL);
 
         rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
+        if (NS_SUCCEEDED(rv))
+        { // tell the content viewer that it's an HTML frame
+          nsCOMPtr<nsIContentViewer> cv;
+          mWebShell->GetContentViewer(getter_AddRefs(cv));
+          if (cv) 
+          {
+            nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);            
+            if (muCV) {
+              muCV->SetIsFrame(PR_TRUE);
+            }
+          }
+        }
       }
     } else {
       mCreatingViewer = PR_TRUE;

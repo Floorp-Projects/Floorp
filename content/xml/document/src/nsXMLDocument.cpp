@@ -29,7 +29,10 @@
 #include "nsIXMLContentSink.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h" 
+#include "nsIContentViewerContainer.h"
+#include "nsIContentViewer.h"
 #include "nsIWebShell.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIDocumentLoader.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
@@ -263,20 +266,31 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
    
     if(NS_SUCCEEDED(rv) && (nsnull != webShell)) {
-       if(0 == nsCRT::strcmp("view-source", aCommand)) { // only do this for view-source
-           const PRUnichar* hintCharset = nsnull;
-           nsCharsetSource  hintSource = kCharsetUninitialized;
-           rv = webShell->GetCharacterSetHint(&hintCharset, &hintSource); 
-           if(NS_SUCCEEDED(rv)) {
-              if(hintSource > charsetSource) {
-                    charset = hintCharset;
-                    charsetSource = hintSource;
+      nsCOMPtr<nsIContentViewer> cv;
+      webShell->GetContentViewer(getter_AddRefs(cv));
+      if (cv) {
+        nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);            
+        if (muCV) {
+          if(0 == nsCRT::strcmp("view-source", aCommand)) { // only do this for view-source
+            PRUnichar* hintCharset = nsnull;
+            nsCharsetSource  hintSource = kCharsetUninitialized;
+            rv = muCV->GetHintCharacterSet(&hintCharset); 
+            if(NS_SUCCEEDED(rv)) {
+              rv = muCV->GetHintCharacterSetSource((PRInt32 *)(&hintSource));
+              if(NS_SUCCEEDED(rv)) {
+                if(hintSource > charsetSource) {
+                  charset = hintCharset;
+                  Recycle(hintCharset);
+                  charsetSource = hintSource;
+                }
               }
-           }
-       }
-       if(NS_SUCCEEDED(rv))
-           rv = NS_NewXMLContentSink(&sink, this, aUrl, webShell);
-       NS_IF_RELEASE(webShell);
+            }
+          }
+        }
+      }
+      if(NS_SUCCEEDED(rv))
+        rv = NS_NewXMLContentSink(&sink, this, aUrl, webShell);
+      NS_IF_RELEASE(webShell);
     }
 
     if (NS_OK == rv) {      

@@ -59,14 +59,11 @@ public:
 };
 
 class nsDocShell : public nsIDocShell, 
-                       public nsIDocShellEdit, 
-                       public nsIDocShellFile, 
-                       public nsIDocShellContainer,
-                       public nsIBaseWindow, 
-                       public nsIScrollable, 
-                       public nsITextScroll, 
-                       public nsIContentViewerContainer,
-                       public nsIHTMLDocShell
+                   public nsIDocShellContainer,
+                   public nsIBaseWindow, 
+                   public nsIScrollable, 
+                   public nsITextScroll, 
+                   public nsIContentViewerContainer
 {
 friend class nsDSURIContentListener;
 
@@ -74,13 +71,10 @@ public:
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIDOCSHELL
-   NS_DECL_NSIDOCSHELLEDIT
-   NS_DECL_NSIDOCSHELLFILE
    NS_DECL_NSIDOCSHELLCONTAINER
    NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
-   NS_DECL_NSIHTMLDOCSHELL
    NS_DECL_NSIINTERFACEREQUESTOR
 
    // XXX: move to a macro
@@ -145,6 +139,8 @@ protected:
    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
    nsCOMPtr<nsIScriptContext> mScriptContext;
    nsCOMPtr<nsISupports>      mLoadCookie;
+   PRInt32                    mMarginWidth;
+   PRInt32                    mMarginHeight;
 
    /* Note this can not be nsCOMPtr as that that would cause an addref on the 
    parent thus a cycle.  A weak reference would work, but not required as the
@@ -152,18 +148,6 @@ protected:
    releasing the interface.*/
    nsIDocShell*               mParent;
    
-   /*
-   XXX HTML Specific stuff
-   */ 
-   PRBool   mAllowPlugins;
-   PRInt32  mMarginWidth;
-   PRInt32  mMarginHeight;
-   PRBool   mIsFrame;
-   /* character set member data */
-   nsString mDefaultCharacterSet;
-   nsString mHintCharset;
-   nsCharsetSource mHintCharsetSource;
-   nsString mForceCharacterSet;
 };
 
 #endif /* nsDocShell_h__ */

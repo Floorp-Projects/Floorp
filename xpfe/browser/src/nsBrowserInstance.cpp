@@ -26,6 +26,7 @@
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIMarkupDocumentViewer.h"
 #include "nsIClipboardCommands.h"
 #include "pratom.h"
 #include "prprf.h"
@@ -94,6 +95,7 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentObserver.h"
 #include "nsIContent.h"
+#include "nsIContentViewerFile.h"
 #include "nsINameSpaceManager.h"
 #include "nsFileStream.h"
 
@@ -167,12 +169,14 @@ nsBrowserAppCore::~nsBrowserAppCore()
 NS_IMPL_ADDREF(nsBrowserAppCore)
 NS_IMPL_RELEASE(nsBrowserAppCore)
 
+
 NS_IMPL_QUERY_HEAD(nsBrowserAppCore)
    NS_IMPL_QUERY_BODY(nsIBrowserInstance)
    NS_IMPL_QUERY_BODY(nsIDocumentLoaderObserver)
    NS_IMPL_QUERY_BODY(nsIObserver)
    NS_IMPL_QUERY_BODY(nsIURIContentListener)
 NS_IMPL_QUERY_TAIL(nsIBrowserInstance)
+
 
 static
 nsIPresShell*
@@ -237,14 +241,20 @@ nsBrowserAppCore::SetDocumentCharset(const PRUnichar *aCharset)
     return NS_ERROR_FAILURE;
   }
 
-  nsIWebShell * webShell;
-  globalObj->GetWebShell(&webShell);
-  if (nsnull != webShell) {
-    webShell->SetDefaultCharacterSet( aCharset );
-
-    NS_RELEASE(webShell);
+  nsCOMPtr<nsIWebShell> webShell;
+  globalObj->GetWebShell(getter_AddRefs(webShell));
+  if (webShell) 
+  {
+    nsCOMPtr<nsIContentViewer> childCV;
+    NS_ENSURE_SUCCESS(webShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+    if (childCV) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+      if (markupCV) {
+        NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(aCharset), NS_ERROR_FAILURE);
+      }
+    }
   }
-
   return NS_OK;
 }
 
@@ -1904,14 +1914,14 @@ nsBrowserAppCore::Copy()
 NS_IMETHODIMP    
 nsBrowserAppCore::Print()
 {  
-  if (nsnull != mContentAreaWebShell) {
-    nsIContentViewer *viewer = nsnull;
-
-    mContentAreaWebShell->GetContentViewer(&viewer);
-
+  if (mContentAreaWebShell) {
+    nsCOMPtr<nsIContentViewer> viewer;    
+    mWebShell->GetContentViewer(getter_AddRefs(viewer));    
     if (nsnull != viewer) {
-      viewer->Print();
-      NS_RELEASE(viewer);
+      nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+      if (viewerFile) {
+        NS_ENSURE_SUCCESS(viewerFile->Print(), NS_ERROR_FAILURE);
+      }
     }
   }
   return NS_OK;
