@@ -40,25 +40,27 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
+CRYPTO_LIBS = $(DIST)/lib/freebl.lib 
+
+ifdef MOZILLA_SECURITY_BUILD
+CRYPTO_LIBS += $(DIST)/lib/crypto.lib
+endif
+ifdef MOZILLA_BSAFE_BUILD
+CRYPTO_LIBS += $(DIST)/lib/bsafe41.lib
+endif
+
 #	$(DIST)/lib/dbm.lib 
 #	$(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib 
 EXTRA_LIBS = \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/softoken.lib \
-	$(DIST)/lib/freebl.lib \
+	$(CRYPTO_LIBS) \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4_s.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4_s.lib \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
-
-ifdef MOZILLA_SECURITY_BUILD
-EXTRA_LIBS += $(DIST)/lib/crypto.lib
-endif
-ifdef MOZILLA_BSAFE_BUILD
-EXTRA_LIBS += $(DIST)/lib/bsafe41.lib
-endif
 
 else
 
@@ -68,21 +70,24 @@ else
 # not just the .o's that we need from that archive.
 #
 ifneq ($(OS_ARCH), OSF1)
+
+CRYPTO_LIBS = $(DIST)/lib/libfreebl.a 
+
+ifdef MOZILLA_SECURITY_BUILD
+CRYPTO_LIBS += $(DIST)/lib/libcrypto.a
+endif
+ifdef MOZILLA_BSAFE_BUILD
+CRYPTO_LIBS += $(DIST)/lib/libbsafe.a
+endif
+
 EXTRA_LIBS += \
 	$(DIST)/lib/libswfci.a \
 	$(DIST)/lib/libsoftoken.a \
-	$(DIST)/lib/libfreebl.a \
+	$(CRYPTO_LIBS) \
 	$(DIST)/lib/libsecutil.a \
 	$(DIST)/lib/libplc4.a \
 	$(DIST)/lib/libplds4.a \
 	$(NULL)
-
-ifdef MOZILLA_SECURITY_BUILD
-EXTRA_LIBS += $(DIST)/lib/libcrypto.a
-endif
-ifdef MOZILLA_BSAFE_BUILD
-EXTRA_LIBS += $(DIST)/lib/libbsafe.a
-endif
 
 endif
 endif
