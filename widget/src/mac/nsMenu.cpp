@@ -415,7 +415,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(label);
   //printf("AddMenu %s \n", label.ToNewCString());
 
-  ::InsertMenuItem(mMacMenuHandle, "\pb", currItemIndex);
+  ::InsertMenuItem(mMacMenuHandle, "\p(Blank Menu", currItemIndex);
   NSStringSetMenuItemText(mMacMenuHandle, currItemIndex, label);
 
   PRBool isEnabled;
