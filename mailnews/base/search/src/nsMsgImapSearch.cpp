@@ -197,6 +197,11 @@ nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
         //m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsInAB, 1);
         //m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
         //m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
+        
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Label, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Label, nsMsgSearchOp::Is, 1);
+        m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::Label, nsMsgSearchOp::Isnt, 1);
+        m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::Label, nsMsgSearchOp::Isnt, 1);
 
         m_offlineMailTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
         m_offlineMailTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
