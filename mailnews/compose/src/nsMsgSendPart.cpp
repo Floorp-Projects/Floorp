@@ -36,6 +36,10 @@
 
 #endif //JFD
 
+// defined in msgCompGlue.cpp
+extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
+extern int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size);
+
 extern "C"
 {
 	extern int MK_OUT_OF_MEMORY;
@@ -75,7 +79,7 @@ nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, const char *part
 nsMsgSendPart::~nsMsgSendPart()
 {
 	if (m_encoder_data) {
-		MimeEncoderDestroy(m_encoder_data, PR_FALSE);
+		MIME_EncoderDestroy(m_encoder_data, PR_FALSE);
 		m_encoder_data = NULL;
 	}
 	for (int i=0 ; i < m_numchildren; i++)
@@ -294,7 +298,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
 	}
 
 	if (m_encoder_data) {
-		status = MimeEncoderWrite(m_encoder_data, encoded_data, length);
+		status = MIME_EncoderWrite(m_encoder_data, encoded_data, length);
 	} else {
 		// Merely translate all linebreaks to CRLF.
 		int status = 0;
@@ -759,7 +763,7 @@ int nsMsgSendPart::Write()
 	}
 
 	if (m_encoder_data) {
-		status = MimeEncoderDestroy(m_encoder_data, PR_FALSE);
+		status = MIME_EncoderDestroy(m_encoder_data, PR_FALSE);
 		m_encoder_data = NULL;
 		if (status < 0)
 			goto FAIL;

@@ -165,7 +165,7 @@ char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool 
   nsString aString;
   char *outCString = (char *) header; // initialize
   nsresult res;
-#if 0 // Enable this when appcore hooks up the converter.
+
   // utf-8 to ucs2 this conversion is inexpensive.
   res = ConvertToUnicode(aCharset, header, aString);
   if (NS_SUCCEEDED(res)) {
@@ -173,7 +173,6 @@ char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool 
     // Convert to the mail charset
     res = ConvertFromUnicode(aCharset, aString, &outCString);
   }
-#endif
 
   // No MIME, just duplicate the string.
   if (PR_FALSE == bUseMime) {
@@ -238,11 +237,67 @@ void				INTL_CharSetIDToName(int16 charSetID,char *charset_return) {PL_strcpy (c
 // End international functions.
 //
 
-MimeEncoderData *	MimeB64EncoderInit(int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
-MimeEncoderData *	MimeQPEncoderInit (int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
-MimeEncoderData *	MimeUUEncoderInit (char *filename, int (*output_fn) (const char *buf, int32 size, void *closure), void *closure) {return NULL;}
-int					MimeEncoderDestroy(MimeEncoderData *data, XP_Bool abort_p) {return 0;}
-int					MimeEncoderWrite (MimeEncoderData *data, const char *buffer, int32 size) {return 0;}
+MimeEncoderData *	MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->B64EncoderInit(output_fn, closure, &returnEncoderData);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? returnEncoderData : nsnull;
+}
+MimeEncoderData *	MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->QPEncoderInit(output_fn, closure, &returnEncoderData);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? returnEncoderData : nsnull;
+}
+MimeEncoderData *	MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->UUEncoderInit(filename, output_fn, closure, &returnEncoderData);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? returnEncoderData : nsnull;
+}
+int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->EncoderDestroy(data, abort_p);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? 0 : -1;
+}
+int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
+{
+  MimeEncoderData *returnEncoderData = nsnull;
+  nsIMimeConverter *converter;
+  PRInt32 written = 0;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
+                                           nsIMimeConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->EncoderWrite(data, buffer, size, &written);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? 0 : -1;
+}
 char *				MimeGuessURLContentName(MWContext *context, const char *url) {return NULL;}
 void				MIME_GetMessageCryptoState(MWContext *,PRBool *,PRBool *,PRBool *,PRBool *) {return;}
 

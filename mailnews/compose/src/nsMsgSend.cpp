@@ -72,6 +72,10 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 // defined in msgCompGlue.cpp
 extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, PRBool bUseMime);
 extern PRBool INTL_stateful_charset(const char *charset);
+extern MimeEncoderData * MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
+extern MimeEncoderData * MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
+extern MimeEncoderData * MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
+extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
 
 extern "C"
 {
@@ -1876,10 +1880,10 @@ mime_type_requires_b64_p (const char *type)
 
 #ifdef XP_OS2
 XP_BEGIN_PROTOS
-extern int mime_encoder_output_fn (const char *buf, /*JFD PRInt32 */int32 size, void *closure);
+extern int mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
 XP_END_PROTOS
 #else
-static int mime_encoder_output_fn (const char *buf, /*JFD PRInt32 */int32 size, void *closure);
+static int mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
 #endif
 
 /* Given a content-type and some info about the contents of the document,
@@ -2004,7 +2008,7 @@ MSG_DeliverMimeAttachment::PickEncoding (const char *charset)
   NS_ASSERTION(!m_encoder_data, "not-null m_encoder_data");
   if (!PL_strcasecmp(m_encoding, ENCODING_BASE64))
 	{
-	  m_encoder_data = MimeB64EncoderInit(mime_encoder_output_fn,
+	  m_encoder_data = MIME_B64EncoderInit(mime_encoder_output_fn,
 										  m_mime_delivery_state);
 	  if (!m_encoder_data) return MK_OUT_OF_MEMORY;
 	}
@@ -2032,7 +2036,7 @@ MSG_DeliverMimeAttachment::PickEncoding (const char *charset)
 			}
 		}
 
-		  m_encoder_data = MimeUUEncoderInit(tailName ? tailName : "",
+		  m_encoder_data = MIME_UUEncoderInit(tailName ? tailName : "",
 	  									  mime_encoder_output_fn,
 										  m_mime_delivery_state);
 	  PR_FREEIF(tailName);
@@ -2040,7 +2044,7 @@ MSG_DeliverMimeAttachment::PickEncoding (const char *charset)
 	}
   else if (!PL_strcasecmp(m_encoding, ENCODING_QUOTED_PRINTABLE))
 	{
-	  m_encoder_data = MimeQPEncoderInit(mime_encoder_output_fn,
+	  m_encoder_data = MIME_QPEncoderInit(mime_encoder_output_fn,
 										 m_mime_delivery_state);
 	  if (!m_encoder_data) return MK_OUT_OF_MEMORY;
 	}
@@ -2511,7 +2515,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 			// etc. into a nsMsgSendPart, then reshuffle the parts. Sigh.)
 			if (!PL_strcasecmp(m_plaintext->m_encoding, ENCODING_QUOTED_PRINTABLE))
 			{
-				MimeEncoderData *plaintext_enc = MimeQPEncoderInit(mime_encoder_output_fn, this);
+				MimeEncoderData *plaintext_enc = MIME_QPEncoderInit(mime_encoder_output_fn, this);
 				if (!plaintext_enc)
 				{
 					status = MK_OUT_OF_MEMORY;
@@ -2609,13 +2613,13 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	NS_ASSERTION(!m_attachment1_encoder_data, "not-null m_attachment1_encoder_data");
 	if (!PL_strcasecmp(m_attachment1_encoding, ENCODING_BASE64))
 	{
-		m_attachment1_encoder_data = MimeB64EncoderInit(mime_encoder_output_fn, this);
+		m_attachment1_encoder_data = MIME_B64EncoderInit(mime_encoder_output_fn, this);
 		if (!m_attachment1_encoder_data) goto FAILMEM;
 	}
 	else
 		if (!PL_strcasecmp(m_attachment1_encoding, ENCODING_QUOTED_PRINTABLE)) {
 			m_attachment1_encoder_data =
-			MimeQPEncoderInit(mime_encoder_output_fn, this);
+			MIME_QPEncoderInit(mime_encoder_output_fn, this);
 			if (!m_attachment1_encoder_data)
 ;//JFD				goto FAILMEM;
 		}
@@ -2854,7 +2858,7 @@ extern int
 #else
 static int
 #endif
-mime_encoder_output_fn (const char *buf, /*JFD PRInt32*/int32 size, void *closure)
+mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure)
 {
   nsMsgSendMimeDeliveryState *state = (nsMsgSendMimeDeliveryState *) closure;
   return mime_write_message_body (state, (char *) buf, size);
@@ -4758,7 +4762,7 @@ void nsMsgSendMimeDeliveryState::Clear()
 	}
 
 	if (m_attachment1_encoder_data) {
-		MimeEncoderDestroy(m_attachment1_encoder_data, PR_TRUE);
+		MIME_EncoderDestroy(m_attachment1_encoder_data, PR_TRUE);
 		m_attachment1_encoder_data = 0;
 	}
 
@@ -4806,7 +4810,7 @@ void nsMsgSendMimeDeliveryState::Clear()
 		int i;
 		for (i = 0; i < m_attachment_count; i++) {
 			if (m_attachments [i].m_encoder_data) {
-				MimeEncoderDestroy(m_attachments [i].m_encoder_data, PR_TRUE);
+				MIME_EncoderDestroy(m_attachments [i].m_encoder_data, PR_TRUE);
 				m_attachments [i].m_encoder_data = 0;
 			}
 
