@@ -80,12 +80,12 @@ interface nsIWindowWatcher : nsISupports {
       @param aObserver the object to be notified when windows are
                        opened or closed. Its Observe method will be
                        called with the following parameters:
-      @param aSubject (parameter to aObserver::Observe) the window being
-                      opened or closed, sent as an nsISupports
-                      which can be QIed to an nsIDOMWindow.
-      @param aTopic (parameter to aObserver::Observe) a wstring, either
-                    "domwindowopened" or "domwindowclosed".
-      @param someData (parameter to aObserver::Observe) not used.
+
+      aObserver::Observe interprets its parameters so:
+      aSubject the window being opened or closed, sent as an nsISupports
+               which can be QIed to an nsIDOMWindow.
+      aTopic   a wstring, either "domwindowopened" or "domwindowclosed".
+      someData not used.
   */
   void registerNotification(in nsIObserver aObserver);
 
