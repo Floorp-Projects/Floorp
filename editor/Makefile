@@ -17,7 +17,7 @@
 
 DEPTH = ..
 
-DIRS = public src
+DIRS = public core gui
 
 include $(DEPTH)/config/config.mk
 
