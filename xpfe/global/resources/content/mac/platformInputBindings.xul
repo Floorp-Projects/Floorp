@@ -16,8 +16,9 @@
     controller.doCommand('cmd_redo');"/>
 
 <!-- In single-line text fields, ignore the xp bindings for home and end -->
-<key id="macHomekb" keycode="VK_HOME" shift="false" cancel="true">
-<key id="macEndkb" keycode="VK_END" shift="false" cancel="true">
+<key id="macHomekb" keycode="VK_HOME" shift="false" cancel="true" />
+<key id="macEndkb" keycode="VK_END" shift="false" cancel="true" />
+
 <!-- and make up and down arrows do those functions -->
 <key id="key_up" keycode="VK_UP" shift="false"
   onkeypress="
