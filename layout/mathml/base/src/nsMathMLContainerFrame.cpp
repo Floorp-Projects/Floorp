@@ -161,19 +161,19 @@ nsMathMLContainerFrame::EmbellishOperator()
   if (firstChild && IsEmbellishOperator(firstChild)) {
     // Cache the first child
     mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.next = firstChild;
+    mEmbellishData.nextFrame = firstChild;
     // Cache also the inner-most embellished frame at the core of the hierarchy
     nsIMathMLFrame* mathMLFrame;
     firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
     nsEmbellishData embellishData;
     mathMLFrame->GetEmbellishData(embellishData);
-    mEmbellishData.core = embellishData.core;
+    mEmbellishData.coreFrame = embellishData.coreFrame;
     mEmbellishData.direction = embellishData.direction;
   }
   else {
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.next = nsnull;
-    mEmbellishData.core = nsnull;
+    mEmbellishData.nextFrame = nsnull;
+    mEmbellishData.coreFrame = nsnull;
     mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   }
   return NS_OK;
@@ -259,10 +259,10 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContex
         mathMLFrame->GetEmbellishData(childData);
         if (NS_MATHML_IS_EMBELLISH_OPERATOR(childData.flags) &&
             childData.direction == aStretchDirection &&
-            childData.next) {
+            childData.nextFrame) {
           // embellishements are not included, only consider the inner first child itself
           nsIMathMLFrame* mathMLchildFrame;
-          childData.next->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLchildFrame);
+          childData.nextFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLchildFrame);
           if (mathMLchildFrame) {
             mathMLFrame = mathMLchildFrame;
           }
@@ -327,7 +327,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
 
     // Pass the stretch to the first non-empty child ...
 
-    nsIFrame* childFrame = mEmbellishData.next;
+    nsIFrame* childFrame = mEmbellishData.nextFrame;
     if (childFrame) {
       nsIMathMLFrame* mathMLFrame;
       childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
@@ -390,7 +390,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
 
           childFrame = mFrames.FirstChild();
           while (childFrame) {
-            if (childFrame != mEmbellishData.next) {
+            if (childFrame != mEmbellishData.nextFrame) {
               childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
               if (mathMLFrame) {
                 // retrieve the metrics that was stored at the previous pass
@@ -419,7 +419,7 @@ nsMathMLContainerFrame::Stretch(nsIPresContext*      aPresContext,
         if (!IsEmbellishOperator(mParent)) {
 
           nsEmbellishData coreData;
-          mEmbellishData.core->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+          mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
           mathMLFrame->GetEmbellishData(coreData);
 
           mBoundingMetrics.width += coreData.leftSpace + coreData.rightSpace;
@@ -475,7 +475,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
   // because it excludes the particular case of the core <mo>...</mo> itself.
   // (<mo> needs to fire stretch on its MathMLChar in any case to initialize it)
   PRBool placeOrigin = !NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
-                       (mEmbellishData.core != this && !mEmbellishData.next &&
+                       (mEmbellishData.coreFrame != this && !mEmbellishData.nextFrame &&
                         mEmbellishData.direction == NS_STRETCH_DIRECTION_UNSUPPORTED);
   Place(aPresContext, aRenderingContext, placeOrigin, aDesiredSize);
 
@@ -492,7 +492,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
       if (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(parentData.flags) ||
           NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(parentData.flags) ||
           (NS_MATHML_IS_EMBELLISH_OPERATOR(parentData.flags)
-            && parentData.next == this))
+            && parentData.nextFrame == this))
       {
         parentWillFireStretch = PR_TRUE;
       }
@@ -505,7 +505,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
         NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mEmbellishData.flags);
 
       nsBoundingMetrics defaultSize;
-      if (mEmbellishData.core == this /* case of a bare <mo>...</mo> itself */
+      if (mEmbellishData.coreFrame == this /* case of a bare <mo>...</mo> itself */
           || stretchAll) { /* or <mover><mo>...</mo>...</mover>, or friends */
         // use our current size as computed earlier by Place()
         defaultSize = aDesiredSize.mBoundingMetrics;

@@ -153,8 +153,8 @@ public:
     // Stretch() on its embellished child
     mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
     // break the embellished hierarchy to stop propagating the stretching
-    // process, but keep access to mEmbellishData.core for convenience
-    mEmbellishData.next = nsnull;
+    // process, but keep access to mEmbellishData.coreFrame for convenience
+    mEmbellishData.nextFrame = nsnull;
     return rv;
   }
 

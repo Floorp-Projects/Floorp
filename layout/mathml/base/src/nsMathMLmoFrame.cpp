@@ -204,8 +204,8 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
   if (firstChild) {
     mEmbellishData.direction = mMathMLChar.GetStretchDirection();
     mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.next = nsnull; 
-    mEmbellishData.core = this;
+    mEmbellishData.nextFrame = nsnull; 
+    mEmbellishData.coreFrame = this;
 
     // there are two extra things that we need to record so that if our
     // parent is <mover>, <munder>, or <munderover>, they will treat us properly:
@@ -305,9 +305,9 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
       mathMLFrame->GetEmbellishData(embellishData);
     }
     else {
-      embellishData.core = nsnull;
+      embellishData.coreFrame = nsnull;
     }
-  } while (embellishData.core == this);
+  } while (embellishData.coreFrame == this);
   // flag if we have an embellished ancestor
   if (embellishAncestor != this) {
     mFlags |= NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR;
