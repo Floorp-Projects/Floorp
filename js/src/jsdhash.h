@@ -99,13 +99,19 @@ struct JSDHashTable {
     char                *entryStore;    /* entry storage */
 #ifdef JS_DHASHMETER
     struct JSDHashStats {
-        uint32          lookups;        /* total number of lookups */
+        uint32          searches;       /* total number of table searches */
         uint32          steps;          /* hash chain links traversed */
-        uint32          hits;           /* lookups that found key */
-        uint32          misses;         /* lookups that didn't find key */
-        uint32          grows;          /* number of table expansions */
-        uint32          shrinks;        /* number of table contractions */
-        uint32          badAdds;        /* out-of-memory during add growth */
+        uint32          hits;           /* searches that found key */
+        uint32          misses;         /* searches that didn't find key */
+        uint32          lookups;        /* number of JS_DHASH_LOOKUPs */
+        uint32          addMisses;      /* adds that miss, and do work */
+        uint32          addHits;        /* adds that hit an existing entry */
+        uint32          addFailures;    /* out-of-memory during add growth */
+        uint32          removeHits;     /* removes that hit, and do work */
+        uint32          removeMisses;   /* useless removes that miss */
+        uint32          removeEnums;    /* removes done by Enumerate */
+        uint32          grows;          /* table expansions */
+        uint32          shrinks;        /* table contractions */
     } stats;
 #endif
 };
@@ -314,6 +320,13 @@ typedef JSDHashOperator
 
 extern JS_PUBLIC_API(uint32)
 JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg);
+
+#ifdef JS_DHASHMETER
+#include <stdio.h>
+
+extern JS_PUBLIC_API(void)
+JS_DHashTableDumpMeter(JSDHashTable *table, JSDHashEnumerator dump, FILE *fp);
+#endif
 
 JS_END_EXTERN_C
 
