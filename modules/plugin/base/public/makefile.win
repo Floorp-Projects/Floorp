@@ -54,7 +54,9 @@ EXPORTS = $(EXPORTS)                          \
         nsIPluginInputStream2.h
 
 XPIDLSRCS = 				      \
-	.\nsIScriptablePlugin.idl
+	.\nsIScriptablePlugin.idl             \
+	.\nsIHTTPHeaderListener.idl     \
+	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

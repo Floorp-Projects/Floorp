@@ -65,6 +65,7 @@ EXPORTS		+= \
 
 XPIDLSRCS 	= \
 		nsIScriptablePlugin.idl \
+		nsIHTTPHeaderListener.idl     \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
