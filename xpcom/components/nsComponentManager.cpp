@@ -69,7 +69,7 @@
 #endif
 #include "prlog.h"
 
-PRLogModuleInfo* nsComponentManagerLog = NULL;
+PRLogModuleInfo* nsComponentManagerLog = nsnull;
 
 #if defined(DEBUG)
 #define SHOW_DENIED_ON_SHUTDOWN
@@ -123,6 +123,7 @@ static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
 
 NS_DEFINE_CID(kEmptyCID, NS_EMPTY_IID);
 
+// Set to true from NS_ShutdownXPCOM.
 extern PRBool gXPCOMShuttingDown;
 
 // Build is using USE_NSREG to turn off xpcom using registry
@@ -469,7 +470,7 @@ PLDHashTableEnumeratorImpl::~PLDHashTableEnumeratorImpl()
 
     // Destroy the Lock
     if (mMonitor)
-        PR_DestroyMonitor(mMonitor);
+        nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
 NS_IMETHODIMP
@@ -652,8 +653,8 @@ ConvertContractIDKeyToString(PLDHashTable *table,
 
 nsComponentManagerImpl::nsComponentManagerImpl()
     : 
-    mMon(NULL), 
-    mRegistry(NULL), 
+    mMon(nsnull), 
+    mRegistry(nsnull), 
     mPrePopulationDone(PR_FALSE),
     mNativeComponentLoader(0),
     mStaticComponentLoader(0),
@@ -673,7 +674,7 @@ nsresult nsComponentManagerImpl::Init(void)
 
     mShuttingDown = NS_SHUTDOWN_NEVERHAPPENED;
 
-    if (nsComponentManagerLog == NULL)
+    if (nsComponentManagerLog == nsnull)
     {
         nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
@@ -709,9 +710,9 @@ nsresult nsComponentManagerImpl::Init(void)
                                      0.875,
                                      PL_DHASH_MIN_ALPHA(&mContractIDs, 2));
     }
-    if (mMon == NULL) {
-        mMon = PR_NewMonitor();
-        if (mMon == NULL)
+    if (mMon == nsnull) {
+        mMon = nsAutoMonitor::NewMonitor("nsComponentManagerImpl");
+        if (mMon == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -787,7 +788,7 @@ nsresult nsComponentManagerImpl::Shutdown(void)
         mFactories.ops = nsnull;
     }
     // Unload libraries
-    UnloadLibraries(NULL, NS_Shutdown);
+    UnloadLibraries(nsnull, NS_Shutdown);
 
 #ifdef USE_REGISTRY
     // Release registry
@@ -812,9 +813,6 @@ nsresult nsComponentManagerImpl::Shutdown(void)
     NS_IF_RELEASE(mStaticComponentLoader);
 #endif
     
-    if (mMon)
-        PR_DestroyMonitor(mMon);
-
 #ifdef USE_REGISTRY
     NR_ShutdownRegistry();
 #endif /* USE_REGISTRY */
@@ -833,6 +831,9 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     if (mShuttingDown != NS_SHUTDOWN_COMPLETE)
         Shutdown();
 
+    if (mMon) {
+        nsAutoMonitor::DestroyMonitor(mMon);
+    }
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, ("nsComponentManager: Destroyed."));
 }
 
@@ -875,12 +876,12 @@ nsComponentManagerImpl::PlatformInit(void)
     // We need to create our registry. Since we are in the constructor
     // we haven't gone as far as registering the registry factory.
     // Hence, we hand create a registry.
-    if (mRegistry == NULL) {        
-        nsIFactory *registryFactory = NULL;
+    if (mRegistry == nsnull) {        
+        nsIFactory *registryFactory = nsnull;
         rv = NS_RegistryGetFactory(&registryFactory);
         if (NS_SUCCEEDED(rv))
         {
-            rv = registryFactory->CreateInstance(NULL, NS_GET_IID(nsIRegistry),(void **)&mRegistry);
+            rv = registryFactory->CreateInstance(nsnull, NS_GET_IID(nsIRegistry),(void **)&mRegistry);
             if (NS_FAILED(rv)) return rv;
             NS_RELEASE(registryFactory);
         }
@@ -1037,13 +1038,13 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
     eLibrary = (char*)aLibrary;
 
 
-    PR_ASSERT(mRegistry!=NULL);
+    PR_ASSERT(mRegistry!=nsnull);
 
 
     nsRegistryKey cidKey;
     rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &cidKey);
 
-    char *contractID = NULL;
+    char *contractID = nsnull;
     rv = mRegistry->GetStringUTF8(cidKey, contractIDValueName, &contractID);
     if(NS_SUCCEEDED(rv))
     {
@@ -1082,7 +1083,7 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
 nsresult
 nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 {
-    PR_ASSERT(mRegistry!=NULL);
+    PR_ASSERT(mRegistry!=nsnull);
 
     nsresult rv;
 
@@ -1124,7 +1125,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     }
 
     nsFactoryEntry *res = new nsFactoryEntry(aCID, library, type);
-    if (res == NULL)
+    if (res == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
     *result = res;
@@ -1134,7 +1135,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 nsresult
 nsComponentManagerImpl::PlatformContractIDToCLSID(const char *aContractID, nsCID *aClass) 
 {
-    PR_ASSERT(aClass != NULL);
+    PR_ASSERT(aClass != nsnull);
     PR_ASSERT(mRegistry);
 
     nsresult rv;
@@ -1394,7 +1395,7 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
 
     if (!aFactory)
         return NS_ERROR_NULL_POINTER;
-    *aFactory = NULL;
+    *aFactory = nsnull;
 
     nsresult rv;
     rv = aEntry->GetFactory(aFactory, this);
@@ -1533,7 +1534,7 @@ nsresult
 nsComponentManagerImpl::FindFactory(const nsCID &aClass,
                                     nsIFactory **aFactory) 
 {
-    PR_ASSERT(aFactory != NULL);
+    PR_ASSERT(aFactory != nsnull);
 
     nsFactoryEntry *entry = GetFactoryEntry(aClass);
 
@@ -1548,7 +1549,7 @@ nsresult
 nsComponentManagerImpl::FindFactory(const char *contractID,
                                     nsIFactory **aFactory) 
 {
-    PR_ASSERT(aFactory != NULL);
+    PR_ASSERT(aFactory != nsnull);
 
     nsFactoryEntry *entry = GetFactoryEntry(contractID);
 
@@ -1579,7 +1580,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID &aClass, const nsIID &aIID,
         delete [] buf;
     }
 
-    PR_ASSERT(aResult != NULL);
+    PR_ASSERT(aResult != nsnull);
     
     rv = FindFactory(aClass, getter_AddRefs(factory));
     if (NS_FAILED(rv)) return rv;
@@ -1607,7 +1608,7 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
         PR_LogPrint("nsComponentManager: GetClassObject(%s)", contractID);
     }
 
-    PR_ASSERT(aResult != NULL);
+    PR_ASSERT(aResult != nsnull);
     
     rv = FindFactory(contractID, getter_AddRefs(factory));
     if (NS_FAILED(rv)) return rv;
@@ -1629,11 +1630,11 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char *contractID,
 nsresult
 nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aClass)
 {
-    NS_PRECONDITION(aContractID != NULL, "null ptr");
+    NS_PRECONDITION(aContractID != nsnull, "null ptr");
     if (! aContractID)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aClass != NULL, "null ptr");
+    NS_PRECONDITION(aClass != nsnull, "null ptr");
     if (! aClass)
         return NS_ERROR_NULL_POINTER;
 
@@ -1718,13 +1719,13 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
         return NS_ERROR_UNEXPECTED;
     }
 
-    if (aResult == NULL)
+    if (aResult == nsnull)
     {
         return NS_ERROR_NULL_POINTER;
     }
-    *aResult = NULL;
+    *aResult = nsnull;
         
-    nsIFactory *factory = NULL;
+    nsIFactory *factory = nsnull;
     nsresult res = FindFactory(aClass, &factory);
     if (NS_SUCCEEDED(res))
     {
@@ -1778,13 +1779,13 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
         return NS_ERROR_UNEXPECTED;
     }
 
-    if (aResult == NULL)
+    if (aResult == nsnull)
     {
         return NS_ERROR_NULL_POINTER;
     }
-    *aResult = NULL;
+    *aResult = nsnull;
         
-    nsIFactory *factory = NULL;
+    nsIFactory *factory = nsnull;
     nsresult res = FindFactory(aContractID, &factory);
     if (NS_SUCCEEDED(res))
     {
@@ -1862,8 +1863,6 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
                                    const nsIID& aIID,
                                    void* *result)
 {
-    nsAutoMonitor mon(mMon);
-
     // test this first, since there's no point in returning a service during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
@@ -1878,6 +1877,8 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
+
+    nsAutoMonitor mon(mMon);
 
     nsresult rv = NS_OK;
     nsIDKey key(aClass);
@@ -1901,7 +1902,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     // the service manager:
     mon.Exit();
 
-    rv = CreateInstance(aClass, NULL, aIID, getter_AddRefs(service));
+    rv = CreateInstance(aClass, nsnull, aIID, getter_AddRefs(service));
 
     mon.Enter();
 
@@ -2142,8 +2143,6 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
                                                const nsIID& aIID,
                                                void* *result)
 {
-    nsAutoMonitor mon(mMon);
-
     // test this first, since there's no point in returning a service during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
@@ -2157,6 +2156,8 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
 #endif /* SHOW_DENIED_ON_SHUTDOWN */
         return NS_ERROR_UNEXPECTED;
     }
+
+    nsAutoMonitor mon(mMon);
 
     nsresult rv = NS_OK;
     nsFactoryEntry *entry = nsnull;
@@ -2179,7 +2180,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     // the service manager:
     mon.Exit();
 
-    rv = CreateInstanceByContractID(aContractID, NULL, aIID, getter_AddRefs(service));
+    rv = CreateInstanceByContractID(aContractID, nsnull, aIID, getter_AddRefs(service));
 
     mon.Enter();
 
@@ -2551,8 +2552,8 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     nsFactoryEntry *entry = GetFactoryEntry(aClass, !mPrePopulationDone);
 
     // Normalize proid and classname
-    const char *contractID = (aContractID && *aContractID) ? aContractID : NULL;
-    const char *className = (aClassName && *aClassName) ? aClassName : NULL;
+    const char *contractID = (aContractID && *aContractID) ? aContractID : nsnull;
+    const char *className = (aClassName && *aClassName) ? aClassName : nsnull;
 
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
@@ -3460,7 +3461,7 @@ NS_GetGlobalComponentManager(nsIComponentManager* *result)
 #endif
     nsresult rv = NS_OK;
 
-    if (nsComponentManagerImpl::gComponentManager == NULL)
+    if (nsComponentManagerImpl::gComponentManager == nsnull)
     {
         // XPCOM needs initialization.
         rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
@@ -3482,7 +3483,7 @@ NS_GetComponentManager(nsIComponentManager* *result)
 {
     nsresult rv = NS_OK;
 
-    if (nsComponentManagerImpl::gComponentManager == NULL)
+    if (nsComponentManagerImpl::gComponentManager == nsnull)
     {
         // XPCOM needs initialization.
         rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
@@ -3503,7 +3504,7 @@ NS_GetServiceManager(nsIServiceManager* *result)
 {
     nsresult rv = NS_OK;
 
-    if (nsComponentManagerImpl::gComponentManager == NULL)
+    if (nsComponentManagerImpl::gComponentManager == nsnull)
     {
         // XPCOM needs initialization.
         rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
@@ -3525,7 +3526,7 @@ NS_GetComponentRegistrar(nsIComponentRegistrar* *result)
 {
     nsresult rv = NS_OK;
 
-    if (nsComponentManagerImpl::gComponentManager == NULL)
+    if (nsComponentManagerImpl::gComponentManager == nsnull)
     {
         // XPCOM needs initialization.
         rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
