@@ -58,6 +58,10 @@ nsViewerApp::nsViewerApp()
 nsViewerApp::~nsViewerApp()
 {
   Destroy();
+  if (nsnull != mPrefs) {
+    mPrefs->Shutdown();
+    NS_RELEASE(mPrefs);
+  }
 }
 
 NS_IMPL_ADDREF(nsViewerApp)
@@ -86,7 +90,6 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 void
 nsViewerApp::Destroy()
 {
-  NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mCrawler);
 }
 
