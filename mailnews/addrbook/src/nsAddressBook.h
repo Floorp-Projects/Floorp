@@ -55,6 +55,7 @@ public:
 protected:
 	nsresult DoCommand(nsIRDFCompositeDataSource *db, char * command, nsISupportsArray *srcArray, 
 					   nsISupportsArray *arguments);
+	nsresult GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db);
 
 private:
 	 nsIDocShell        *mDocShell;            // weak reference

@@ -434,7 +434,7 @@ nsresult nsAbDirectory::RemoveCardFromAddressList(const nsIAbCard* card)
 	rv = m_AddressList->Count(&listTotal);
 	for (i = listTotal - 1; i >= 0; i--)
 	{						
-		nsISupports* pSupport = m_AddressList->ElementAt(i);
+		nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
 		if (!pSupport)
 			continue;
 
@@ -449,7 +449,7 @@ nsresult nsAbDirectory::RemoveCardFromAddressList(const nsIAbCard* card)
 				rv = pAddressLists->Count(&total);
 				for (j = total - 1; j >= 0; j--)
 				{
-					nsISupports* pSupport = pAddressLists->ElementAt(j);
+					nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
 					nsCOMPtr<nsIAbCard> cardInList(do_QueryInterface(pSupport, &rv));
 					if (card == cardInList.get())
 						pAddressLists->RemoveElementAt(j);
@@ -490,7 +490,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 					rv = m_AddressList->Count(&cardTotal);
 					for (i = cardTotal - 1; i >= 0; i--)
 					{						
-						nsISupports* pSupport = m_AddressList->ElementAt(i);
+						nsCOMPtr<nsISupports> pSupport = getter_AddRefs(m_AddressList->ElementAt(i));
 						if (!pSupport)
 							continue;
 
@@ -609,8 +609,8 @@ nsresult nsAbDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Serv
 				if (NS_FAILED(rv)) return rv;
 				for(PRUint32 i = 0; i < cardCount; i++)
 				{
-					nsISupports* cardSupports = cardArray->ElementAt(i);
-					nsIAbCard* card = (nsIAbCard*)cardSupports;
+					nsCOMPtr<nsISupports> cardSupports = getter_AddRefs(cardArray->ElementAt(i));
+					nsCOMPtr<nsIAbCard> card = do_QueryInterface(cardSupports, &rv);
 					if (card)
 					{
 						database->DeleteCard(card, PR_TRUE);
@@ -644,7 +644,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 				PRInt32 i;
 				for (i = total - 1; i >= 0; i--)
 				{
-					nsISupports* pSupport = pAddressLists->ElementAt(i);
+					nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
 					if (pSupport)
 					{
 						nsCOMPtr<nsIAbDirectory> listDir(do_QueryInterface(pSupport, &rv));

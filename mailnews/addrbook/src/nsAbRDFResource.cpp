@@ -116,31 +116,3 @@ nsresult nsAbRDFResource::GetAbDatabase()
 	return NS_OK;
 }
 
-nsresult nsAbRDFResource::GetDatabaseFromFile(char* pDbFile)
-{
-	nsresult rv = NS_OK;
-	if (!mDatabase && pDbFile)
-	{
-		nsFileSpec* dbPath = nsnull;
-
-		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
-		if(NS_SUCCEEDED(rv))
-			abSession->GetUserProfileDirectory(&dbPath);
-		
-		nsString file; file.AssignWithConversion(pDbFile);
-		(*dbPath) += file;
-
-		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
-
-		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
-
-		if (mDatabase)
-			mDatabase->AddListener(this);
-
-		return NS_OK;
-	}
-	if (!mDatabase)
-		return NS_ERROR_NULL_POINTER;
-	return NS_OK;
-}

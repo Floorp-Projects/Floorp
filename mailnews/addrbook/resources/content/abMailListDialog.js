@@ -26,6 +26,7 @@ var mailList;
 var parentURI;
 var editList;
 var hitReturnInList = false;
+var oldListName = "";
 
 function handleKeyPress(element, event)
 {
@@ -34,6 +35,19 @@ function handleKeyPress(element, event)
 		hitReturnInList = true;
 		awReturnHit(element);
 	}
+}
+
+function mailingListExists(listname)
+{
+	var addressbook = Components.classes["component://netscape/addressbook"].createInstance(Components.interfaces.nsIAddressBook);
+	if (addressbook.mailListNameExists(listname))
+	{
+		var strBundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
+		var alertText = strBundle.GetStringFromName("mailListNameExists");
+		alert(alertText);
+		return true;
+	}
+	return false;
 }
 
 function GetListValue(mailList, doAdd)
@@ -46,6 +60,22 @@ function GetListValue(mailList, doAdd)
 		var alertText = strBundle.GetStringFromName("emptyListName");
 		alert(alertText);
 		return false;
+	}
+	else 
+	{
+		listname = mailList.listName;
+		listname = listname.toLowerCase();
+		oldListName = oldListName.toLowerCase();
+		if (doAdd == true)
+		{
+			if (mailingListExists(listname))
+				return false;
+		}
+		else if (oldListName != listname)
+		{
+			if (mailingListExists(listname))
+				return false;
+		}
 	}
 
 	mailList.listNickName = document.getElementById('ListNickName').value;
@@ -199,6 +229,7 @@ function OnLoadEditList()
 	document.getElementById('ListName').value = editList.listName;
 	document.getElementById('ListNickName').value = editList.listNickName;
 	document.getElementById('ListDescription').value = editList.description;
+	oldListName = editList.listName;
 
 	if (editList.addressLists)
 	{

@@ -979,8 +979,6 @@ nsresult nsAddrDatabase::InitExistingDB()
 	if (err == NS_OK)
 	{
 		err = GetStore()->GetTable(GetEnv(), &gAddressBookTableOID, &m_mdbPabTable);
-
-		err = GetStore()->StringToToken(GetEnv(), kAnonymousTableKind, &m_AnonymousTableKind); 
 		err = GetStore()->GetTable(GetEnv(), &gAnonymousTableOID, &m_mdbAnonymousTable);
 
 		err = GetLastRecorKey();
@@ -1206,6 +1204,7 @@ nsresult nsAddrDatabase::InitMDBInfo()
 			GetStore()->StringToToken(GetEnv(),  kLastRecordKeyColumn, &m_LastRecordKeyColumnToken);
 
 			err = GetStore()->StringToToken(GetEnv(), kPabTableKind, &m_PabTableKind); 
+			err = GetStore()->StringToToken(GetEnv(), kAnonymousTableKind, &m_AnonymousTableKind); 
 
 			GetStore()->StringToToken(GetEnv(),  kMailListName, &m_ListNameColumnToken);
 			GetStore()->StringToToken(GetEnv(),  kMailListNickName, &m_ListNickNameColumnToken);
@@ -1880,7 +1879,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 		total = 0;
 		for (i = 0; i < count; i++)
 		{
-			nsISupports* pSupport = pAddressLists->ElementAt(i);
+			nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
 			nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
 			
 			if (NS_FAILED(err))
@@ -1897,7 +1896,7 @@ nsresult nsAddrDatabase::AddListAttributeColumnsToRow(nsIAbDirectory *list, nsIM
 		PRUint32 pos;
 		for (i = 0; i < count; i++)
 		{
-			nsISupports* pSupport = pAddressLists->ElementAt(i);
+			nsCOMPtr<nsISupports> pSupport = getter_AddRefs(pAddressLists->ElementAt(i));
 			nsCOMPtr<nsIAbCard> pCard(do_QueryInterface(pSupport, &err));
 			
 			if (NS_FAILED(err))
@@ -2046,7 +2045,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 										&yarn, &rowOid, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
-					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+					err = DeleteRow(m_mdbAnonymousTable, anonymousRow);
 					anonymousRow->CutStrongRef(GetEnv());
 				}
 			}
@@ -2104,7 +2103,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 										&yarn, &rowOid, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
-					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+					err = DeleteRow(m_mdbAnonymousTable, anonymousRow);
 					anonymousRow->CutStrongRef(GetEnv());
 				}
 			}
@@ -2167,7 +2166,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 										&yarn, &rowOid, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
-					err = m_mdbAnonymousTable->CutRow(GetEnv(), anonymousRow);
+					err = DeleteRow(m_mdbAnonymousTable, anonymousRow);
 					anonymousRow->CutStrongRef(GetEnv());
 				}
 			}
@@ -2304,7 +2303,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pCardRow);
 	if (pCardRow)
 	{
-		err = m_mdbPabTable->CutRow(GetEnv(), pCardRow);
+		err = DeleteRow(m_mdbPabTable, pCardRow);
 
 		//delete the person card from all mailing list
 		if (!bIsMailList)
@@ -2465,7 +2464,7 @@ NS_IMETHODIMP nsAddrDatabase::DeleteMailList(nsIAbDirectory *mailList, PRBool no
 	err = GetStore()->GetRow(GetEnv(), &rowOid, &pListRow);
 	if (pListRow)
 	{
-		err = m_mdbPabTable->CutRow(GetEnv(), pListRow);
+		err = DeleteRow(m_mdbPabTable, pListRow);
 
 		if (NS_SUCCEEDED(err))
 		{
@@ -3435,7 +3434,6 @@ nsresult nsAddrDatabase::GetListCardFromDB(nsIAbCard *listCard, nsIMdbRow* listR
     nsAutoString tempString;
 	char *tempCString = nsnull;
 	PRUnichar *unicodeStr = nsnull;
-	PRInt32 unicharLength = 0;
 
 	err = GetStringColumn(listRow, m_ListNameColumnToken, tempString);
 	if (NS_SUCCEEDED(err) && tempString.Length())
@@ -4167,7 +4165,7 @@ NS_IMETHODIMP nsAddrDatabase::FindMailListbyUnicodeName(const PRUnichar *listNam
 	if (pUTF8Str)
 	{
 		nsIMdbRow	*pListRow = nsnull;
-		rv = GetRowForCharColumn(pUTF8Str, m_ListNameColumnToken, PR_FALSE, &pListRow);
+		rv = GetRowForCharColumn(pUTF8Str, m_LowerListNameColumnToken, PR_FALSE, &pListRow);
 		if (pListRow)
 		{
 			*exist = PR_TRUE;
@@ -4205,7 +4203,7 @@ nsresult nsAddrDatabase::GetRowForCharColumn
 		else
 			store->FindRow(env, m_ListRowScopeToken,
 						findColumn, &sourceYarn,  &outRowId, findRow);
-
+		
 		if (*findRow)
 			return NS_OK;
 	}	
@@ -4225,4 +4223,14 @@ nsresult nsAddrDatabase::GetRowForCharColumn
 		Recycle(pUTF8Str);
 	}
 	return rv;
+}
+
+nsresult nsAddrDatabase::DeleteRow(nsIMdbTable* dbTable, nsIMdbRow* dbRow)
+{
+	nsresult err = NS_OK;
+
+	err = dbRow->CutAllColumns(GetEnv());
+	err = dbTable->CutRow(GetEnv(), dbRow);
+
+	return err;
 }

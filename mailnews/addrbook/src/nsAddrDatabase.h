@@ -346,6 +346,7 @@ protected:
 											PRBool bIsCard, nsIMdbRow **findRow);
 	nsresult			CreateCardsForMailList(nsIMdbRow *pListRow, nsIEnumerator **result);
 
+	nsresult			DeleteRow(nsIMdbTable* dbTable, nsIMdbRow* dbRow);
 
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;

@@ -346,6 +346,83 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *uri, nsIAddrDataba
 	return rv;
 }
 
+nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db)
+{
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIAddrDatabase> database;
+	if (pDbFile)
+	{
+		nsFileSpec* dbPath = nsnull;
+
+		NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			abSession->GetUserProfileDirectory(&dbPath);
+		
+		nsString file; file.AssignWithConversion(pDbFile);
+		(*dbPath) += file;
+
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(database), PR_TRUE);
+		if (NS_SUCCEEDED(rv) && database)
+		{
+			*db = database;
+			NS_IF_ADDREF(*db);
+		}
+		else
+			rv = NS_ERROR_NULL_POINTER;
+
+	}
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsAddressBook::MailListNameExistsInDB(const PRUnichar *name, const char *URI, PRBool *exist)
+{
+	*exist = PR_FALSE;
+
+	nsCOMPtr<nsIAddrDatabase> database;
+	nsresult rv = GetAbDatabaseFromURI(URI, getter_AddRefs(database));				
+	if (NS_SUCCEEDED(rv) && database)
+		database->FindMailListbyUnicodeName(name, exist);
+    return NS_OK;
+}
+
+//check for all address book
+NS_IMETHODIMP nsAddressBook::MailListNameExists(const PRUnichar *name, PRBool *exist)
+{
+	*exist = PR_FALSE;
+	nsVoidArray* pDirectories = DIR_GetDirectories();
+	if (pDirectories)
+	{
+		PRInt32 count = pDirectories->Count();
+		/* check: only show personal address book for now */
+		/* not showing 4.x address book unitl we have the converting done */
+		PRInt32 i;
+		for (i = 0; i < count; i++)
+		{
+			DIR_Server *server = (DIR_Server *)pDirectories->ElementAt(i);
+			if (server->dirType == PABDirectory)
+			{
+				nsString dbfile; dbfile.AssignWithConversion(server->fileName);
+				PRInt32 pos = dbfile.Find("na2");
+				if (pos >= 0) /* check: this is a 4.x file, remove when conversion is done */
+					continue;
+
+				nsCOMPtr<nsIAddrDatabase> database;
+				nsresult rv = GetAbDatabaseFromFile(server->fileName, getter_AddRefs(database));				
+				if (NS_SUCCEEDED(rv) && database)
+				{
+					database->FindMailListbyUnicodeName(name, exist);
+					if (*exist == PR_TRUE)
+						return NS_OK;
+				}
+			}
+		}
+	}
+    return NS_OK;
+}
+
+
 
 typedef enum
 {
