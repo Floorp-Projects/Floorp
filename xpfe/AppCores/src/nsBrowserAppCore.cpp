@@ -545,9 +545,6 @@ nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
     if (APP_DEBUG) {
       printf("Attaching to Content WebShell [%s]\n", nsAutoCString(str));
     }
-//    mContentAreaWebShell->SetURLListener(this);
-    // Break link to chrome.
-    mContentAreaWebShell->SetParent(0);
   }
 
   return NS_OK;
