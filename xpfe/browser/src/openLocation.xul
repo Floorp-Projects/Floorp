@@ -8,6 +8,7 @@ take it out once this works! -->
 <window style=" padding: 0px; width: 100%; height: 100%" 
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Open File or Location"
         onload="onLoad()"
         class="dialog"> 
    
