@@ -24,6 +24,8 @@
  * related messages get passed to this object.
  */
 
+#include "msgCore.h"    // precompiled header...
+
 #ifdef HAVE_PANES
 class MSG_Master;
 #endif

@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
 
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement

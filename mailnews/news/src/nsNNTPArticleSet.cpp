@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
+
 #include "nsNNTPArticleSet.h"
 #include "nsINNTPHost.h"
 

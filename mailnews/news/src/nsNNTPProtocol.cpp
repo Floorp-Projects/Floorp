@@ -16,7 +16,8 @@
  * Reserved.
  */
 
-/* Please leave outside of ifdef for windows precompiled headers */
+#include "msgCore.h"    // precompiled header...
+
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
 
 #include "nsNNTPProtocol.h"

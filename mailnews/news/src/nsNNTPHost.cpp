@@ -16,7 +16,8 @@
  * Reserved.
  */
 
-#include "msgCore.h"
+#include "msgCore.h"    // precompiled header...
+
 #include "nsMsgFolderFlags.h"
 
 #include "nntpCore.h"
