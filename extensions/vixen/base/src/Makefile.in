@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = vixen
 LIBRARY_NAME = vixen_s
+REQUIRES	= xpcom string layout dom widget
 
 CPPSRCS = \
 	nsVixenShell.cpp \
