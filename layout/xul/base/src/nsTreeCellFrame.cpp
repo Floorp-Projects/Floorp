@@ -116,6 +116,11 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
   return rv;
 }
 
+nsTableFrame* nsTreeCellFrame::GetTreeFrame()
+{
+	return mTreeFrame;
+}
+
 NS_METHOD nsTreeCellFrame::Reflow(nsIPresContext& aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
@@ -179,7 +184,11 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
   else
   {
     // Perform a selection
-	mTreeFrame->SetSelection(aPresContext, this);
+	if (((nsMouseEvent *)aEvent)->isShift)
+	  mTreeFrame->RangedSelection(aPresContext, this); // Applying a ranged selection.
+	else if (((nsMouseEvent *)aEvent)->isControl)
+	  mTreeFrame->ToggleSelection(aPresContext, this); // Applying a toggle selection.
+	else mTreeFrame->SetSelection(aPresContext, this); // Doing a single selection only.
   }
   return NS_OK;
 }
@@ -244,19 +253,19 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 
 
 void
-nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected)
+nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected, PRBool notifyForReflow)
 {
 	nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef(NS_NewAtom("selected")) );
     if (isSelected)
 	{
 		// We're selecting the node.
-		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, "true", PR_TRUE);
+		mContent->SetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, "true", notifyForReflow);
 		
 	}
 	else
 	{
 		// We're unselecting the node.
-		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, PR_TRUE);
+		mContent->UnsetAttribute(nsXULAtoms::nameSpaceID, kSelectedAtom, notifyForReflow);
 	}
 
 }

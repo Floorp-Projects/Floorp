@@ -43,7 +43,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
-  void Select(nsIPresContext& presContext, PRBool isSelected);
+  void Select(nsIPresContext& presContext, PRBool isSelected, PRBool notifyForReflow = PR_TRUE);
+  nsTableFrame* GetTreeFrame();
 
 protected:
   nsTreeCellFrame(PRBool allowEvents);
