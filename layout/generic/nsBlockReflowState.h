@@ -3449,7 +3449,7 @@ nsBaseIBFrame::MarkEmptyLines(nsIPresContext& aPresContext)
   }
 }
 
-PRBool
+void
 nsBaseIBFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                      nsIFrame* aChild)
 {
@@ -3469,15 +3469,6 @@ nsBaseIBFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   if (nsnull != nextNextInFlow) {
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
-
-#ifdef NS_DEBUG
-  PRInt32   childCount;
-  nsIFrame* firstChild;
-  nextInFlow->FirstChild(nsnull, firstChild);
-  childCount = LengthOf(firstChild);
-  NS_ASSERTION((0 == childCount) && (nsnull == firstChild),
-               "deleting !empty next-in-flow");
-#endif
 
   // Disconnect the next-in-flow from the flow list
   nextInFlow->BreakFromPrevFlow();
@@ -3516,7 +3507,6 @@ nsBaseIBFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   aChild->GetNextInFlow(nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
-  return PR_TRUE;
 }
 
 PRBool
@@ -4142,7 +4132,7 @@ nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
     mBullet = nsnull;
   }
 
-  DeleteFrameList(aPresContext, &mFloaters);
+  mFloaters.DeleteFrames(aPresContext);
 
   return nsBlockFrameSuper::DeleteFrame(aPresContext);
 }
@@ -4380,12 +4370,12 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
   }
 
   // Output floaters next
-  if (nsnull != mFloaters) {
+  if (mFloaters.NotEmpty()) {
     if (outputMe) {
       for (i = aIndent; --i >= 0; ) fputs("  ", out);
       fprintf(out, "all-floaters <\n");
     }
-    nsIFrame* floater = mFloaters;
+    nsIFrame* floater = mFloaters.FirstChild();
     while (nsnull != floater) {
       floater->List(out, aIndent+1, aFilter);
       floater->GetNextSibling(floater);
@@ -4447,7 +4437,7 @@ nsBlockFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::floaterList) {
-    aFirstChild = mFloaters;
+    aFirstChild = mFloaters.FirstChild();
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::bulletList) {
@@ -4678,7 +4668,7 @@ nsBlockFrame::BuildFloaterList()
   if (nsnull != current) {
     current->SetNextSibling(nsnull);
   }
-  mFloaters = head;
+  mFloaters.SetFrames(head);
 }
 
 // XXX keep the text-run data in the first-in-flow of the block
@@ -4946,7 +4936,7 @@ nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
       return NS_OK;
     }
   }
-  if (nsnull != mFloaters) {
+  if (mFloaters.NotEmpty()) {
     rv = GetFrameForPointUsing(aPoint, nsLayoutAtoms::floaterList, aFrame);
     if (NS_OK == rv) {
       return NS_OK;

@@ -416,7 +416,8 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
   // Reflow only creates children frames for <frameset> and <frame> content.
   // this assumption is used here
   int i = 0;
-  for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+  for (nsIFrame* child = mFrames.FirstChild(); child;
+       child->GetNextSibling(child)) {
     if (aChild == child) {
       nsPoint ignore;
       GetSizeOfChildAt(i, aSize, ignore);
@@ -962,7 +963,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           }
 
           if (nsnull == lastChild) {
-            mFirstChild = frame;
+            mFrames.SetFrames(frame);
           } else {
             lastChild->SetNextSibling(frame);
           }
@@ -983,7 +984,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
         NS_RELEASE(pseudoStyleContext);
 
         if (nsnull == lastChild) {
-          mFirstChild = blankFrame;
+          mFrames.SetFrames(blankFrame);
         } else {
           lastChild->SetNextSibling(blankFrame);
         }
@@ -1003,7 +1004,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLFramesetBorderFrame* borderFrame = nsnull;
   nsPoint offset(0,0);
   nsSize size, lastSize;
-  nsIFrame* child = mFirstChild;
+  nsIFrame* child = mFrames.FirstChild();
 
   for (PRInt32 childX = 0; childX < mNonBorderChildCount; childX++) {
     nsPoint cellIndex;
@@ -1028,7 +1029,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
           borderFrame->mPrevNeighbor = lastRow; 
           borderFrame->mNextNeighbor = cellIndex.y;  
         } else {
-          borderFrame = (nsHTMLFramesetBorderFrame*)FrameAt(mFirstChild, borderChildX);
+          borderFrame = (nsHTMLFramesetBorderFrame*)mFrames.FrameAt(borderChildX);
           borderChildX++;
         }
         nsSize borderSize(aDesiredSize.width, borderWidth);
@@ -1053,7 +1054,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
             borderFrame->mPrevNeighbor = lastCol; 
             borderFrame->mNextNeighbor = cellIndex.x;  
           } else {         
-            borderFrame = (nsHTMLFramesetBorderFrame*)FrameAt(mFirstChild, borderChildX);
+            borderFrame = (nsHTMLFramesetBorderFrame*)mFrames.FrameAt(borderChildX);
             borderChildX++;
           }
           nsSize borderSize(borderWidth, aDesiredSize.height);
@@ -1211,7 +1212,7 @@ nsHTMLFramesetFrame::CanResize(PRBool aVertical, PRBool aLeft)
   if (aVertical) {
     startX = (aLeft) ? 0 : mNumCols-1;
     for (childX = startX; childX < mNonBorderChildCount; childX += mNumCols) {
-      child = FrameAt(mFirstChild, childX);
+      child = mFrames.FrameAt(childX);
       if (!CanChildResize(aVertical, aLeft, childX, ChildIsFrameset(child))) {
         return PR_FALSE;
       }
@@ -1220,7 +1221,7 @@ nsHTMLFramesetFrame::CanResize(PRBool aVertical, PRBool aLeft)
     startX = (aLeft) ? 0 : (mNumRows - 1) * mNumCols;
     PRInt32 endX = startX + mNumCols;
     for (childX = startX; childX < endX; childX++) {
-      child = FrameAt(mFirstChild, childX);
+      child = mFrames.FrameAt(childX);
       if (!CanChildResize(aVertical, aLeft, childX, ChildIsFrameset(child))) {
         return PR_FALSE;
       }
@@ -1253,7 +1254,7 @@ nsHTMLFramesetFrame::GetNoResize(nsIFrame* aChildFrame)
 PRBool 
 nsHTMLFramesetFrame::CanChildResize(PRBool aVertical, PRBool aLeft, PRInt32 aChildX, PRBool aFrameset) 
 {
-  nsIFrame* child = FrameAt(mFirstChild, aChildX);
+  nsIFrame* child = mFrames.FrameAt(aChildX);
   if (aFrameset) {
     return ((nsHTMLFramesetFrame*)child)->CanResize(aVertical, aLeft);
   } else {

@@ -211,8 +211,9 @@ nscoord
 nsHTMLFrameOuterFrame::GetBorderWidth(nsIPresContext& aPresContext)
 {
   if (IsInline()) {
-    if (nsnull != mFirstChild) {
-      if (eFrameborder_No != ((nsHTMLFrameInnerFrame*)mFirstChild)->GetFrameBorder(eCompatibility_Standard)) {
+    nsIFrame* firstChild = mFrames.FirstChild();
+    if (nsnull != FirstChild) {
+      if (eFrameborder_No != ((nsHTMLFrameInnerFrame*)firstChild)->GetFrameBorder(eCompatibility_Standard)) {
         const nsStyleSpacing* spacing =
           (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
         nsStyleCoord leftBorder;
@@ -281,9 +282,10 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext& aPresContext,
                              nsFramePaintLayer aWhichLayer)
 {
   //printf("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  if (nsnull != mFirstChild) {
-    mFirstChild->Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       aWhichLayer);
+  nsIFrame* firstChild = mFrames.FirstChild();
+  if (nsnull != firstChild) {
+    firstChild->Paint(aPresContext, aRenderingContext, aDirtyRect,
+                      aWhichLayer);
   }
   if (IsInline()) {
     return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
@@ -316,10 +318,12 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.height = aReflowState.availableHeight;
   }
 
-  if (nsnull == mFirstChild) {
-    mFirstChild = new nsHTMLFrameInnerFrame;
+  nsIFrame* firstChild = mFrames.FirstChild();
+  if (nsnull == firstChild) {
+    firstChild = new nsHTMLFrameInnerFrame;
+    mFrames.SetFrames(firstChild);
     // XXX temporary! use style system to get correct style!
-    mFirstChild->Init(aPresContext, mContent, this, mStyleContext);
+    firstChild->Init(aPresContext, mContent, this, mStyleContext);
   }
  
   // nsContainerFrame::PaintBorder has some problems, kludge it here
@@ -329,17 +333,17 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Reflow the child and get its desired size
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
-  nsHTMLReflowState   kidReflowState(aPresContext, mFirstChild, aReflowState,
+  nsHTMLReflowState   kidReflowState(aPresContext, firstChild, aReflowState,
                                      innerSize);
   nsIHTMLReflow*      htmlReflow;
 
-  if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    ReflowChild(mFirstChild, aPresContext, kidMetrics, kidReflowState, aStatus);
+  if (NS_OK == firstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    ReflowChild(firstChild, aPresContext, kidMetrics, kidReflowState, aStatus);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
     // Place and size the child
     nsRect rect(borderWidth, borderWidth, innerSize.width, innerSize.height);
-    mFirstChild->SetRect(rect);
+    firstChild->SetRect(rect);
   }
 
   // XXX what should the max-element-size of an iframe be? Shouldn't
@@ -373,8 +377,9 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   if (nsHTMLAtoms::src == aAttribute) {
     printf("got a request\n");
-    if (nsnull != mFirstChild) {
-      ((nsHTMLFrameInnerFrame*)mFirstChild)->ReloadURL();
+    nsIFrame* firstChild = mFrames.FirstChild();
+    if (nsnull != firstChild) {
+      ((nsHTMLFrameInnerFrame*)firstChild)->ReloadURL();
     }
   }
   return NS_OK;

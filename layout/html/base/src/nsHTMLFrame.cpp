@@ -93,7 +93,7 @@ RootFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList)
 {
-  mFirstChild = aChildList;
+  mFrames.SetFrames(aChildList);
   return NS_OK;
 }
 
@@ -126,11 +126,11 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       if ((nsIReflowCommand::FrameAppended == reflowType) ||
           (nsIReflowCommand::FrameInserted == reflowType)) {
 
-        NS_ASSERTION(nsnull == mFirstChild, "only one child frame allowed");
+        NS_ASSERTION(mFrames.IsEmpty(), "only one child frame allowed");
 
         // Insert the frame into the child list
         aReflowState.reflowCommand->GetChildFrame(childFrame);
-        mFirstChild = childFrame;
+        mFrames.SetFrames(childFrame);
 
         // It's the child frame's initial reflow
         isChildInitialReflow = PR_TRUE;
@@ -140,19 +140,16 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
         // Get the child frame we should delete
         aReflowState.reflowCommand->GetChildFrame(deletedFrame);
-        NS_ASSERTION(deletedFrame == mFirstChild, "not a child frame");
+        NS_ASSERTION(deletedFrame == mFrames.FirstChild(), "not a child frame");
 
         // Remove it from the child list
-        if (deletedFrame == mFirstChild) {
-          mFirstChild = nsnull;
-
+        if (deletedFrame == mFrames.FirstChild()) {
           // Damage the area occupied by the deleted frame
           nsRect  damageRect;
           deletedFrame->GetRect(damageRect);
           Invalidate(damageRect, PR_FALSE);
 
-          // Delete the frame
-          deletedFrame->DeleteFrame(aPresContext);
+          mFrames.DeleteFrame(aPresContext, deletedFrame);
         }
       }
 
@@ -160,17 +157,20 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       nsIFrame* nextFrame;
       // Get the next frame in the reflow chain
       aReflowState.reflowCommand->GetNext(nextFrame);
-      NS_ASSERTION(nextFrame == mFirstChild, "unexpected next reflow command frame");
+      NS_ASSERTION(nextFrame == mFrames.FirstChild(), "unexpected next reflow command frame");
     }
   }
 
   // Reflow our one and only child frame
-  if (nsnull != mFirstChild) {
+  if (mFrames.NotEmpty()) {
+    nsIFrame* myOnlyChild = mFrames.FirstChild();
+
     // Note: the root frame does not have border or padding...
     nsHTMLReflowMetrics desiredSize(nsnull);
     // We must pass in that the available height is unconstrained, because
     // constrained is only for when we're paginated...
-    nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
+    nsHTMLReflowState kidReflowState(aPresContext, myOnlyChild,
+                                     aReflowState,
                                      nsSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE));
     if (isChildInitialReflow) {
       kidReflowState.reason = eReflowReason_Initial;
@@ -186,18 +186,19 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       // Computed height is for the content area so reduce it by the amount of
       // space taken up by border and padding
       nsMargin  borderPadding;
-      kidReflowState.ComputeBorderPaddingFor(mFirstChild, &aReflowState, borderPadding);
+      kidReflowState.ComputeBorderPaddingFor(myOnlyChild, &aReflowState, borderPadding);
       kidReflowState.computedHeight -= borderPadding.top + borderPadding.bottom;
     }
 
     // Reflow the frame
     nsIHTMLReflow* htmlReflow;
-    if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
+    if (NS_OK == myOnlyChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      ReflowChild(myOnlyChild, aPresContext, desiredSize, kidReflowState,
+                  aStatus);
     
       nsRect  rect(kidReflowState.computedLeftMargin, kidReflowState.computedTopMargin,
                    desiredSize.width, desiredSize.height);
-      mFirstChild->SetRect(rect);
+      myOnlyChild->SetRect(rect);
 
       // XXX We should resolve the details of who/when DidReflow()
       // notifications are sent...

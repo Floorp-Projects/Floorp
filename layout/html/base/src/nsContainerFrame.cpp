@@ -28,6 +28,7 @@
 #include "nsIView.h"
 #include "nsVoidArray.h"
 #include "nsISizeOfHandler.h"
+#include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
 
 #ifdef NS_DEBUG
@@ -36,12 +37,12 @@
 #undef NOISY
 #endif
 
-NS_IMETHODIMP
-nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler) const
+nsContainerFrame::nsContainerFrame()
 {
-  aHandler->Add(sizeof(*this));
-  nsContainerFrame::SizeOfWithoutThis(aHandler);
-  return NS_OK;
+}
+
+nsContainerFrame::~nsContainerFrame()
+{
 }
 
 NS_IMETHODIMP
@@ -49,18 +50,17 @@ nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
-  NS_PRECONDITION(nsnull == mFirstChild, "already initialized");
-  nsresult  result;
+  NS_PRECONDITION(mFrames.IsEmpty(), "already initialized");
 
-  if (nsnull != mFirstChild) {
+  nsresult  result;
+  if (nsnull != mFrames.FirstChild()) {
     result = NS_ERROR_UNEXPECTED;
   } else if (nsnull != aListName) {
     result = NS_ERROR_INVALID_ARG;
   } else {
-    mFirstChild = aChildList;
+    mFrames.SetFrames(aChildList);
     result = NS_OK;
   }
-
   return result;
 }
 
@@ -68,48 +68,17 @@ NS_IMETHODIMP
 nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   // Prevent event dispatch during destruction
-  nsIView*  view;
+  nsIView* view;
   GetView(view);
   if (nsnull != view) {
     view->SetClientData(nsnull);
   }
 
   // Delete the primary child list
-  DeleteFrameList(aPresContext, &mFirstChild);
+  mFrames.DeleteFrames(aPresContext);
 
   // Base class will delete the frame
   return nsFrame::DeleteFrame(aPresContext);
-}
-
-/**
- * Helper method to delete a frame list and keep the list sane during
- * the deletion.
- */
-void
-nsContainerFrame::DeleteFrameList(nsIPresContext& aPresContext,
-                                  nsIFrame** aListP)
-{
-  nsIFrame* first;
-  while (nsnull != (first = *aListP)) {
-    nsIFrame* nextChild;
-
-    first->GetNextSibling(nextChild);
-    first->DeleteFrame(aPresContext);
-
-    // Once we've deleted the child frame make sure it's no longer in
-    // the child list
-    *aListP = nextChild;
-  }
-}
-
-void
-nsContainerFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
-{
-  nsSplittableFrame::SizeOfWithoutThis(aHandler);
-  for (nsIFrame* child = mFirstChild; child; ) {
-    child->SizeOf(aHandler);
-    child->GetNextSibling(child);
-  }
 }
 
 NS_IMETHODIMP
@@ -155,9 +124,8 @@ nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
 {
   // We only know about the unnamed principal child list
   if (nsnull == aListName) {
-    aFirstChild = mFirstChild;
+    aFirstChild = mFrames.FirstChild();
     return NS_OK;
-
   } else {
     aFirstChild = nsnull;
     return NS_ERROR_INVALID_ARG;
@@ -183,7 +151,7 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
 
     // Update overflow list too
-    child = mOverflowList;
+    child = mOverflowFrames.FirstChild();
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
       result = child->ReResolveStyleContext(aPresContext, mStyleContext);
       child->GetNextSibling(child);
@@ -192,7 +160,7 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     // And just to be complete, update our prev-in-flows overflow list
     // too (since in theory, those frames will become our frames)
     if (nsnull != mPrevInFlow) {
-      child = ((nsContainerFrame*)mPrevInFlow)->mOverflowList;
+      child = ((nsContainerFrame*)mPrevInFlow)->mOverflowFrames.FirstChild();
       while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
         result = child->ReResolveStyleContext(aPresContext, mStyleContext);
         child->GetNextSibling(child);
@@ -203,7 +171,7 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Painting
+// Painting/Events
 
 NS_IMETHODIMP
 nsContainerFrame::Paint(nsIPresContext&      aPresContext,
@@ -242,7 +210,7 @@ nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
                                   nsClipCombine_kIntersect, clipState);
   }
 
-  nsIFrame* kid = mFirstChild;
+  nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
     PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
     kid->GetNextSibling(kid);
@@ -380,11 +348,11 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
                               nsReflowStatus&          aStatus)
 {
   NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
+  NS_PRECONDITION(IsChild(aKidFrame), "not my child");
 
   // Query for the nsIHTMLReflow interface
   nsIHTMLReflow*  htmlReflow;
   nsresult        result;
-
   result = aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
   if (NS_FAILED(result)) {
     return result;
@@ -392,13 +360,13 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 
   // Send the WillReflow notification, and reflow the child frame
   htmlReflow->WillReflow(aPresContext);
-  result = htmlReflow->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  result = htmlReflow->Reflow(aPresContext, aDesiredSize, aReflowState,
+                              aStatus);
 
   // If the reflow was successful and the child frame is complete, delete any
   // next-in-flows
   if (NS_SUCCEEDED(result) && NS_FRAME_IS_COMPLETE(aStatus)) {
     nsIFrame* kidNextInFlow;
-     
     aKidFrame->GetNextInFlow(kidNextInFlow);
     if (nsnull != kidNextInFlow) {
       // Remove all of the childs next-in-flows. Make sure that we ask
@@ -406,10 +374,10 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aKidFrame->GetParent(parent);
-      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aPresContext, aKidFrame);
+      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aPresContext,
+                                                          aKidFrame);
     }
   }
-
   return result;
 }
 
@@ -423,8 +391,9 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
  * @param   aChild child this child's next-in-flow
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
-PRBool
-nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild)
+void
+nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
+                                         nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
@@ -444,36 +413,14 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
     parent->DeleteChildsNextInFlow(aPresContext, nextInFlow);
   }
 
-#ifdef NS_DEBUG
-  PRInt32   childCount;
-  nsIFrame* firstChild;
-
-  nextInFlow->FirstChild(nsnull, firstChild);
-  childCount = LengthOf(firstChild);
-
-  if ((0 != childCount) || (nsnull != firstChild)) {
-    nsIFrame* top = nextInFlow;
-    for (;;) {
-      nsIFrame* parent;
-      top->GetParent(parent);
-      if (nsnull == parent) {
-        break;
-      }
-      top = parent;
-    }
-    top->List(stdout, 0, nsnull);
-  }
-  NS_ASSERTION((0 == childCount) && (nsnull == firstChild),
-               "deleting !empty next-in-flow");
-#endif
-
   // Disconnect the next-in-flow from the flow list
   nextInFlow->BreakFromPrevFlow();
 
   // Take the next-in-flow out of the parent's child list
-  if (parent->mFirstChild == nextInFlow) {
-    nextInFlow->GetNextSibling(parent->mFirstChild);
-
+  if (parent->mFrames.FirstChild() == nextInFlow) {
+    nsIFrame* nextFrame;
+    nextInFlow->GetNextSibling(nextFrame);
+    parent->mFrames.SetFrames(nextFrame);
   } else {
     nsIFrame* nextSibling;
 
@@ -491,18 +438,12 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
   }
 
   // Delete the next-in-flow frame
-  WillDeleteNextInFlowFrame(nextInFlow);
   nextInFlow->DeleteFrame(aPresContext);
 
 #ifdef NS_DEBUG
   aChild->GetNextInFlow(nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
-  return PR_TRUE;
-}
-
-void nsContainerFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
-{
 }
 
 /**
@@ -519,13 +460,13 @@ void nsContainerFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
  * @param   aPrevSibling aFromChild's previous sibling. Must not be null. It's
  *            an error to push a parent's first child frame
  */
-void nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
+void
+nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
 {
   NS_PRECONDITION(nsnull != aFromChild, "null pointer");
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
 #ifdef NS_DEBUG
   nsIFrame* prevNextSibling;
-
   aPrevSibling->GetNextSibling(prevNextSibling);
   NS_PRECONDITION(prevNextSibling == aFromChild, "bad prev sibling");
 #endif
@@ -533,38 +474,14 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling
   // Disconnect aFromChild from its previous sibling
   aPrevSibling->SetNextSibling(nsnull);
 
-  // Do we have a next-in-flow?
-  nsContainerFrame* nextInFlow = (nsContainerFrame*)mNextInFlow;
-  if (nsnull != nextInFlow) {
-    PRInt32   numChildren = 0;
-    nsIFrame* lastChild = nsnull;
-
-    // Compute the number of children being pushed, and for each child change
-    // its geometric parent. Remember the last child
-    for (nsIFrame* f = aFromChild; nsnull != f; f->GetNextSibling(f)) {
-      numChildren++;
-#ifdef NOISY
-      printf("  ");
-      ((nsFrame*)f)->ListTag(stdout);
-      printf("\n");
-#endif
-      lastChild = f;
-      f->SetParent(nextInFlow);
-    }
-    NS_ASSERTION(numChildren > 0, "no children to push");
-
-    // Prepend the frames to our next-in-flow's child list
-    lastChild->SetNextSibling(nextInFlow->mFirstChild);
-    nextInFlow->mFirstChild = aFromChild;
-
-  } else {
+  if (nsnull != mNextInFlow) {
+    nsContainerFrame* nextInFlow = (nsContainerFrame*)mNextInFlow;
+    nextInFlow->mFrames.InsertFrames(mNextInFlow, nsnull, aFromChild);
+  }
+  else {
     // Add the frames to our overflow list
-    NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
-#ifdef NOISY
-    ListTag(stdout);
-    printf(": pushing kids to my overflow list\n");
-#endif
-    mOverflowList = aFromChild;
+    NS_ASSERTION(mOverflowFrames.IsEmpty(), "bad overflow list");
+    mOverflowFrames.SetFrames(aFromChild);
   }
 }
 
@@ -576,63 +493,66 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling
  *
  * @return  PR_TRUE if any frames were moved and PR_FALSE otherwise
  */
-PRBool nsContainerFrame::MoveOverflowToChildList()
+PRBool
+nsContainerFrame::MoveOverflowToChildList()
 {
-  PRBool  result = PR_FALSE;
+  PRBool result = PR_FALSE;
 
   // Check for an overflow list with our prev-in-flow
   nsContainerFrame* prevInFlow = (nsContainerFrame*)mPrevInFlow;
   if (nsnull != prevInFlow) {
-    if (nsnull != prevInFlow->mOverflowList) {
-      NS_ASSERTION(nsnull == mFirstChild, "bad overflow list");
-      AppendChildren(prevInFlow->mOverflowList);
-      prevInFlow->mOverflowList = nsnull;
+    if (prevInFlow->mOverflowFrames.NotEmpty()) {
+      NS_ASSERTION(mFrames.IsEmpty(), "bad overflow list");
+      mFrames.Join(this, prevInFlow->mOverflowFrames);
       result = PR_TRUE;
     }
   }
 
   // It's also possible that we have an overflow list for ourselves
-  if (nsnull != mOverflowList) {
-    NS_ASSERTION(nsnull != mFirstChild, "overflow list but no mapped children");
-    AppendChildren(mOverflowList, PR_FALSE);
-    mOverflowList = nsnull;
+  if (mOverflowFrames.NotEmpty()) {
+    NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
+    mFrames.Join(nsnull, mOverflowFrames);
     result = PR_TRUE;
   }
-
   return result;
 }
 
-/**
- * Append child list starting at aChild to this frame's child list. Used for
- * processing of the overflow list.
- *
- * Updates this frame's child count and content mapping.
- *
- * @param   aChild the beginning of the child list
- * @param   aSetParent if true each child's geometric (and content parent if
- *            they're the same) parent is set to this frame.
- */
-void nsContainerFrame::AppendChildren(nsIFrame* aChild, PRBool aSetParent)
+nsresult
+nsContainerFrame::AddFrame(const nsHTMLReflowState& aReflowState,
+                           nsIFrame *               aAddedFrame)
 {
-  // Link the frames into our child frame list
-  if (nsnull == mFirstChild) {
-    // We have no children so aChild becomes the first child
-    mFirstChild = aChild;
-  } else {
-    nsIFrame* lastChild = LastFrame(mFirstChild);
-    lastChild->SetNextSibling(aChild);
+  nsresult rv=NS_OK;
+  nsIReflowCommand::ReflowType type;
+  aReflowState.reflowCommand->GetType(type);
+
+  // we have a generic frame that gets inserted but doesn't effect
+  // reflow hook it up then ignore it
+  if (nsIReflowCommand::FrameAppended == type) {
+    // Append aAddedFrame to the list of frames
+    mFrames.AppendFrame(nsnull, aAddedFrame);
   }
-
-  // Update our child count and last content offset
-  nsIFrame* lastChild;
-  for (nsIFrame* f = aChild; nsnull != f; f->GetNextSibling(f)) {
-    lastChild = f;
-
-    // Reset the geometric parent if requested
-    if (aSetParent) {
-      f->SetParent(this);
+  else if (nsIReflowCommand::FrameInserted == type)  {
+    // Insert aAddedFrame into the list of frames
+    nsIFrame *prevSibling=nsnull;
+    rv = aReflowState.reflowCommand->GetPrevSiblingFrame(prevSibling);
+    if (NS_SUCCEEDED(rv)) {
+      mFrames.InsertFrame(nsnull, prevSibling, aAddedFrame);
     }
   }
+  else
+  {
+    NS_ASSERTION(PR_FALSE, "bad reflow type");
+    rv = NS_ERROR_UNEXPECTED;
+  }
+  return rv;
+}
+
+nsresult
+nsContainerFrame::RemoveFrame(nsIFrame* aRemovedFrame)
+{
+  PRBool zap = mFrames.RemoveFrame(aRemovedFrame);
+  NS_ASSERTION(zap, "failure to remove a frame");
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -680,14 +600,15 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent,
   }
 
   // Output the children
-  if (nsnull != mFirstChild) {
+  if (mFrames.NotEmpty()) {
     if (outputMe) {
       if (0 != mState) {
         fprintf(out, " [state=%08x]", mState);
       }
       fputs("<\n", out);
     }
-    for (nsIFrame* child = mFirstChild; child; child->GetNextSibling(child)) {
+    for (nsIFrame* child = mFrames.FirstChild(); child;
+         child->GetNextSibling(child)) {
       child->List(out, aIndent + 1, aFilter);
     }
     if (outputMe) {
@@ -705,63 +626,3 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent,
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsContainerFrame::VerifyTree() const
-{
-#ifdef NS_DEBUG
-  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
-  NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
-#endif
-  return NS_OK;
-}
-
-PRInt32 nsContainerFrame::LengthOf(nsIFrame* aFrame)
-{
-  PRInt32 result = 0;
-
-  while (nsnull != aFrame) {
-    result++;
-    aFrame->GetNextSibling(aFrame);
-  }
-
-  return result;
-}
-
-nsIFrame* nsContainerFrame::LastFrame(nsIFrame* aFrame)
-{
-  nsIFrame* lastChild = nsnull;
-
-  while (nsnull != aFrame) {
-    lastChild = aFrame;
-    aFrame->GetNextSibling(aFrame);
-  }
-
-  return lastChild;
-}
-
-nsIFrame* nsContainerFrame::FrameAt(nsIFrame* aFrame, PRInt32 aIndex)
-{
-  while ((aIndex-- > 0) && (aFrame != nsnull)) {
-    aFrame->GetNextSibling(aFrame);
-  }
-  return aFrame;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-
-#ifdef NS_DEBUG
-
-PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
-{
-  // Check the geometric parent
-  nsIFrame* parent;
-
-  aChild->GetParent(parent);
-  if (parent != (nsIFrame*)this) {
-    return PR_FALSE;
-  }
-
-  return PR_TRUE;
-}
-#endif
