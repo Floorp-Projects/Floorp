@@ -387,7 +387,10 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   mInline = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay);
 
-  PRUint8 flags = (mInline) ? NS_BLOCK_SHRINK_WRAP : 0;
+  PRUint32 flags = NS_BLOCK_SPACE_MGR;
+  if (mInline) {
+    flags |= NS_BLOCK_SHRINK_WRAP;
+  }
   nsIFrame* areaFrame;
   NS_NewAreaFrame(&areaFrame, flags);
   mFrames.SetFrames(areaFrame);

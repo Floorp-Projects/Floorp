@@ -1393,6 +1393,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Should we create a space manager?
   nsCOMPtr<nsISpaceManager> spaceManager;
+  nsISpaceManager*          oldSpaceManager = aReflowState.mSpaceManager;
   if (NS_BLOCK_SPACE_MGR & mState) {
     nsSpaceManager* rawPtr = new nsSpaceManager(this);
     if (!rawPtr) {
@@ -1527,6 +1528,13 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
         aMetrics.height = yMost;
       }
     }
+  }
+
+  // If we set the space manager, then restore the old space manager now that we're
+  // going out of scope
+  if (NS_BLOCK_SPACE_MGR & mState) {
+    nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
+    reflowState.mSpaceManager = oldSpaceManager;
   }
 
 #if 0
