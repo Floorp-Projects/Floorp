@@ -85,10 +85,17 @@ Rights Reserved.
 
   <popupset>
     <popup id="emailAddressPopup" popupanchor="bottomleft">
-      <menuitem label="&AddToAddressBook.label;" oncommand="AddNodeToAddressBook(document.popupNode)"/>
-      <menuitem label="&SendMailTo.label;" oncommand="SendMailToNode(document.popupNode)"/>
+        <menuitem label="&AddToAddressBook.label;"
+                  accesskey="&AddToAddressBook.accesskey;"
+                  oncommand="AddNodeToAddressBook(document.popupNode)"/>
+        <menuitem label="&SendMailTo.label;"
+                  accesskey="&SendMailTo.accesskey;"
+                  oncommand="SendMailToNode(document.popupNode)"/>
+        <menuitem label="&CopyEmailAddress.label;"
+                  accesskey="&CopyEmailAddress.accesskey;"
+                  oncommand="CopyEmailAddress(document.popupNode)"/>  
     </popup>
-    
+
     <popup id="allHeadersPopup"  oncreate="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
       <box id="allHeadersPopupContainer"/>
     </popup>
