@@ -249,17 +249,17 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   PRUint8 *imgData = mImage->GetBits();
   PRInt32 imgLen = row_stride * mSize.height;
 
-  if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData) {
-    mImage->UnlockImagePixels(PR_FALSE);
-    return NS_ERROR_FAILURE;
-  }
-
   PRInt32 newOffset;
 #ifdef XP_PC
   newOffset = ((mSize.height - 1) * row_stride) - aOffset;
 #else
   newOffset = aOffset;
 #endif
+
+  if (((newOffset + (PRInt32)aLength) > imgLen) || !imgData) {
+    mImage->UnlockImagePixels(PR_FALSE);
+    return NS_ERROR_FAILURE;
+  }
 
   memcpy(imgData + newOffset, aData, aLength);
   mImage->UnlockImagePixels(PR_FALSE);
@@ -345,17 +345,17 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
   PRUint8 *alphaData = mImage->GetAlphaBits();
   PRInt32 alphaLen = row_stride * mSize.height;
 
-  if (((aOffset + (PRInt32)aLength) > alphaLen) || !alphaData) {
-    mImage->UnlockImagePixels(PR_TRUE);
-    return NS_ERROR_FAILURE;
-  }
-
   PRInt32 offset;
 #ifdef XP_PC
   offset = ((mSize.height - 1) * row_stride) - aOffset;
 #else
   offset = aOffset;
 #endif
+
+  if (((offset + (PRInt32)aLength) > alphaLen) || !alphaData) {
+    mImage->UnlockImagePixels(PR_TRUE);
+    return NS_ERROR_FAILURE;
+  }
 
   memcpy(alphaData + offset, aData, aLength);
   mImage->UnlockImagePixels(PR_TRUE);
