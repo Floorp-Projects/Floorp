@@ -268,24 +268,6 @@ struct nsHTMLReflowState : nsReflowState {
                                nsMargin& aResult);
 
   /**
-   * Compute the padding for <TT>aFrame</TT>. If a percentage needs to
-   * be computed it will be computed by finding the containing block,
-   * use GetContainingBlockReflowState. aParentReflowState is aFrame's
-   * parent's reflow state. The resulting computed padding is returned
-   * in aResult.
-   */ 
-  static void ComputePaddingFor(nsIFrame* aFrame,
-                                const nsReflowState* aParentReflowState,
-                                nsMargin& aResult);
-
-  /**
-   * Compute the border for <TT>aFrame</TT>.The resulting computed
-   * padding is returned in aResult.
-   */
-  static void ComputeBorderFor(nsIFrame* aFrame,
-                               nsMargin& aResult);
-
-  /**
    * Compute the border plus padding for <TT>aFrame</TT>. If a
    * percentage needs to be computed it will be computed by finding
    * the containing block, use GetContainingBlockReflowState.
