@@ -870,7 +870,7 @@ obj_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSStackFrame *caller;
+    JSStackFrame *fp, *caller;
     JSBool indirectCall;
     JSObject *scopeobj;
     JSString *str;
@@ -880,10 +880,12 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSBool ok;
 #if JS_HAS_EVAL_THIS_SCOPE
-    JSObject *callerScopeChain;
+    JSObject *callerScopeChain = NULL, *callerVarObj = NULL;
+    JSBool setCallerScopeChain = JS_FALSE, setCallerVarObj = JS_FALSE;
 #endif
 
-    caller = cx->fp->down;
+    fp = cx->fp;
+    caller = fp->down;
     indirectCall = (!caller->pc || *caller->pc != JSOP_EVAL);
 
     if (JSVERSION_IS_ECMA(cx->version) &&
@@ -917,12 +919,25 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     {
 #if JS_HAS_EVAL_THIS_SCOPE
         /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
-        callerScopeChain = caller->scopeChain;
         if (indirectCall) {
-            scopeobj = js_NewObject(cx, &js_WithClass, obj, callerScopeChain);
-            if (!scopeobj)
-                return JS_FALSE;
-            caller->scopeChain = scopeobj;
+            callerScopeChain = caller->scopeChain;
+            if (obj != callerScopeChain) {
+                scopeobj = js_NewObject(cx, &js_WithClass, obj,
+                                        callerScopeChain);
+                if (!scopeobj)
+                    return JS_FALSE;
+
+                /* Set fp->scopeChain too, for the compiler. */
+                caller->scopeChain = fp->scopeChain = scopeobj;
+                setCallerScopeChain = JS_TRUE;
+            }
+
+            callerVarObj = caller->varobj;
+            if (obj != callerVarObj) {
+                /* Set fp->varobj too, for the compiler. */
+                caller->varobj = fp->varobj = obj;
+                setCallerVarObj = JS_TRUE;
+            }
         }
         /* From here on, control must exit through label out with ok set. */
 #endif
@@ -947,8 +962,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         principals = NULL;
     }
 
-    if (!indirectCall)
-        cx->fp->special |= JSFRAME_EVAL;
+    fp->special |= JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              str->chars, str->length,
                                              file, line);
@@ -966,16 +980,17 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         scopeobj = caller->scopeChain;
     }
 #endif
-    ok = js_Execute(cx, scopeobj, script, caller,
-                    cx->fp->special & JSFRAME_EVAL,
+    ok = js_Execute(cx, scopeobj, script, caller, fp->special & JSFRAME_EVAL,
                     rval);
     JS_DestroyScript(cx, script);
 
 out:
 #if JS_HAS_EVAL_THIS_SCOPE
     /* Restore OBJ_GET_PARENT(scopeobj) not callerScopeChain in case of Call. */
-    if (indirectCall)
-        caller->scopeChain = OBJ_GET_PARENT(cx, scopeobj);
+    if (setCallerScopeChain)
+        caller->scopeChain = callerScopeChain;
+    if (setCallerVarObj)
+        caller->varobj = callerVarObj;
 #endif
     return ok;
 }
