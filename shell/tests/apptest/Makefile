@@ -52,7 +52,11 @@ $(OBJDIR)/%.o: %.cpp
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
+ifeq ($(OS_ARCH),linux)
 	$(CCC) -rdynamic -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 -lXp -lXext
+else
+	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXt -lX11 
+endif
 
 export::
 
