@@ -157,12 +157,14 @@ nsUnicharStreamLoader::OnStopRequest(nsIRequest *request,
 
     // Determine the charset
     PRUint32 readCount = 0;
-    // XXX Ignore the error return; we have to do it because the pipe is
-    // broken.  See XXX comment in WriteSegmentFun.
-    mInputStream->ReadSegments(WriteSegmentFun,
-                               this,
-                               mSegmentSize, 
-                               &readCount);
+    rv = mInputStream->ReadSegments(WriteSegmentFun,
+                                    this,
+                                    mSegmentSize, 
+                                    &readCount);
+    if (NS_FAILED(rv)) {
+      rv = mObserver->OnStreamComplete(this, mContext, rv, nsnull);
+      goto cleanup;
+    }
 
     nsCOMPtr<nsIConverterInputStream> uin =
       do_CreateInstance("@mozilla.org/intl/converter-input-stream;1",
@@ -230,8 +232,7 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *aInputStream,
   }
   // Don't consume any data
   *aWriteCount = 0;
-  // XXX Should return NS_BASE_STREAM_WOULD_BLOCK but the pipe goes into a loop!
-  return NS_ERROR_FAILURE;
+  return NS_BASE_STREAM_WOULD_BLOCK;
 }
 
 
