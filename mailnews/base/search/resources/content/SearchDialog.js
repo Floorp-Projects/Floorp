@@ -37,7 +37,7 @@ var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
 var gFolderDatasource;
 var gFolderPicker;
 var gStatusBar = null;
-var gStatusFeedback = new nsMsgStatusFeedback;
+var gStatusFeedback = new nsMsgStatusFeedback();
 var RDF;
 var gSearchBundle;
 var gNextMessageViewIndexAfterDelete = -2;
@@ -162,6 +162,7 @@ var gSearchNotificationListener =
     onSearchDone: function(status)
     {
         gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForSearchButton"));
+        gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("accesskeyForSearchButton"));
         SetAdvancedSearchStatusText(gSearchView.QueryInterface(Components.interfaces.nsITreeView).rowCount);
         gStatusFeedback.showProgress(0);
         gStatusBar.setAttribute("mode","normal");
@@ -170,7 +171,8 @@ var gSearchNotificationListener =
     onNewSearch: function()
     {
       gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForStopButton"));
-      UpdateMailSearch("new-search");
+      gSearchStopButton.setAttribute("accesskey", gSearchBundle.getString("accesskeyForStopButton"));
+      UpdateMailSearch("new-search");	
       gStatusFeedback.showProgress(0);
       gStatusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
       gStatusBar.setAttribute("mode","undetermined");
