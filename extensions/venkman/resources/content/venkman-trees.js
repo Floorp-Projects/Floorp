@@ -62,9 +62,9 @@ function formatBranch (rec, indent)
     }
 }
 
-function dw()
+function dtree(tree)
 {
-    formatBranch(console.stackView.childData, "");
+    formatBranch(tree, "");
 }
 
 function initOutliners()
@@ -458,6 +458,12 @@ function sr_loadsrc (cb)
                 if (bpr.fileName == sourceRec.fileName &&
                     sourceRec.sourceText[bpr.line - 1])
                 {
+                    if (bpr.functionName == "anonymous" &&
+                        bpr.scriptRecords[0])
+                    {
+                        bpr.functionName = bpr.scriptRecords[0].functionName;
+                        bpr.invalidate();
+                    }    
                     sourceRec.sourceText[bpr.line - 1].bpRecord = bpr;
                 }
             }
@@ -507,8 +513,6 @@ function ScriptRecord(script)
 }
 
 ScriptRecord.prototype = new TreeOViewRecord(scriptShare);
-
-ScriptRecord.prototype._cache = ScriptRecord.prototype._cache;
 
 ScriptRecord.prototype.makeCurrent =
 function sr_makecur ()
@@ -598,19 +602,19 @@ function sr_guessname ()
     var ary = scanText.match (/(\w+)\s*[:=]\s*$/);
     if (ary)
     {
-        this.functionName = ary[1];
+        this.functionName = getMsg(MSN_FMT_GUESSEDNAME, ary[1]);
         this.isGuessedName = true;
         var wv = console.stackView;
         if (wv.stack.childData)
         {
-            /* if we've got a stack trace, search it to see if it any frames
+            /* if we've got a stack trace, search it to see if any frames
              * contain this script.  if so, update the function name */
             for (var i = 0; i < wv.stack.childData.length; ++i)
             {
                 var cd = wv.stack.childData[i];
                 if (cd.frame.script == this.script)
                 {
-                    cd.functionName = ary[1];
+                    cd.functionName = this.functionName;
                     wv.outliner.invalidateRow(cd.calculateVisualRow());
                 }
             }
@@ -1148,18 +1152,30 @@ function bpr_setenabled (state)
     this._enabled = state;
 }
 
+BPRecord.prototype.locateChildByScript
+
+BPRecord.prototype.matchesScriptRecord =
+function bpr_matchrec (scriptRec)
+{
+    return (scriptRec.script.fileName.indexOf(this.fileName) != -1 &&
+            scriptRec.containsLine(this.line) &&
+            scriptRec.isLineExecutable(this.line));
+}
+
 BPRecord.prototype.addScriptRecord =
 function bpr_addscript (scriptRec)
 {
     for (var i = 0; i < this.scriptRecords.length; ++i)
         if (this.scriptRecords[i] == scriptRec)
             return;
-    var pc = scriptRec.script.lineToPc(this.line);
-    scriptRec.script.setBreakpoint(pc);
-    if (scriptRec.isGuessedName)
-        this.functionName = "(" + scriptRec.functionName + ")";
-    else
-        this.functionName = scriptRec.functionName;
+
+    if (this._enabled)
+    {
+        var pc = scriptRec.script.lineToPc(this.line);
+        scriptRec.script.setBreakpoint(pc);
+    }
+    
+    this.functionName = scriptRec.functionName;
     ++(scriptRec.bpcount);
     
     this.scriptRecords.push(scriptRec);
