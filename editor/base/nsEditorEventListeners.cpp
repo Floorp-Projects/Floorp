@@ -30,6 +30,7 @@
 #include "nsIStringStream.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIPrivateTextEvent.h"
 
 // for testing only
 #include "nsIHTMLEditor.h"
@@ -1035,19 +1036,21 @@ nsTextEditorTextListener::HandleText(nsIDOMEvent* aTextEvent)
 {
 	nsString				composedText;
 	nsresult				result;
-	nsCOMPtr<nsIDOMUIEvent>uiEvent;
-	nsIDOMTextRangeList		*textRangeList;
+	nsCOMPtr<nsIPrivateTextEvent> textEvent;
+	nsIPrivateTextRangeList		*textRangeList;
+	nsTextEventReply			*textEventReply;
 
-	uiEvent = do_QueryInterface(aTextEvent);
-	if (!uiEvent) {
+	textEvent = do_QueryInterface(aTextEvent);
+	if (!textEvent) {
 		//non-ui event passed in.  bad things.
 		return NS_OK;
 	}
 
-	uiEvent->GetText(composedText);
-	uiEvent->GetInputRange(&textRangeList);
+	textEvent->GetText(composedText);
+	textEvent->GetInputRange(&textRangeList);
+	textEvent->GetEventReply(&textEventReply);
 	textRangeList->AddRef();
-	result = mEditor->SetCompositionString(composedText,textRangeList);
+	result = mEditor->SetCompositionString(composedText,textRangeList,textEventReply);
 	return result;
 }
 

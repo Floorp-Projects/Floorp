@@ -3728,10 +3728,14 @@ nsEditor::EndComposition(void)
 }
 
 NS_IMETHODIMP
-nsEditor::SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList)
+nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
+	nsCOMPtr<nsICaret>	caretP;
 	nsresult	result = SetInputMethodText(aCompositionString,aTextRangeList);
 	mIMEBufferLength = aCompositionString.Length();
+
+	mPresShell->GetCaret(getter_AddRefs(caretP));
+	caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
 
 	return result;
 }
@@ -3910,7 +3914,7 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 //END nsEditor Private methods
 
 NS_IMETHODIMP 
-nsEditor::SetInputMethodText(const nsString& aStringToInsert,nsIDOMTextRangeList *aTextRangeList)
+nsEditor::SetInputMethodText(const nsString& aStringToInsert,nsIPrivateTextRangeList *aTextRangeList)
 {
 	IMETextTxn		*txn;
 	nsresult		result;
@@ -3962,7 +3966,7 @@ nsEditor::SetInputMethodText(const nsString& aStringToInsert,nsIDOMTextRangeList
 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
-							  nsIDOMTextRangeList*	aTextRangeList,
+							  nsIPrivateTextRangeList*	aTextRangeList,
                               IMETextTxn ** aTxn)
 {
 	nsresult	result;
@@ -4011,7 +4015,7 @@ nsEditor::CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleShee
 
 
 
-NS_IMETHODIMP nsEditor::DoInitialInputMethodInsert(const nsString & aStringToInsert,nsIDOMTextRangeList* aTextRangeList)
+NS_IMETHODIMP nsEditor::DoInitialInputMethodInsert(const nsString & aStringToInsert,nsIPrivateTextRangeList* aTextRangeList)
 {
 	if (!mDoc) {
 		return NS_ERROR_NOT_INITIALIZED;

@@ -22,6 +22,8 @@ EXPORTS =			    \
 	nsIEventListenerManager.h   \
 	nsIEventStateManager.h	    \
 	nsIPrivateDOMEvent.h	    \
+	nsIPrivateTextEvent.h		\
+	nsIPrivateTextRange.h		\
         $(NULL)
 
 MODULE=raptor 

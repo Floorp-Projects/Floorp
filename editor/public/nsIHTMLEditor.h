@@ -36,6 +36,7 @@ class nsIAtom;
 class nsIOutputStream;
 class nsIDOMWindow;
 class nsIFileSpec;
+struct nsTextEventReply;
 
 /**
  * The HTML editor interface. 
@@ -362,7 +363,7 @@ public:
 
 // IME editing Methods
   NS_IMETHOD BeginComposition(void)=0;
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList)=0;
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply *aReply)=0;
   NS_IMETHOD EndComposition(void)=0;
 
 

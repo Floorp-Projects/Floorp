@@ -20,8 +20,7 @@
 #include "IMECommitTxn.h"
 #include "nsEditor.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIDOMTextRange.h"
-#include "nsIDOMTextRangeList.h"
+#include "nsIPrivateTextRange.h"
 #include "nsIDOMSelection.h"
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
@@ -50,7 +49,7 @@ IMETextTxn::~IMETextTxn()
 NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData	*aElement,
                                PRUint32				aOffset,
 							   PRUint32				aReplaceLength,
-							   nsIDOMTextRangeList*	aTextRangeList,
+							   nsIPrivateTextRangeList*	aTextRangeList,
                                const nsString		&aStringToInsert,
                                nsIPresShell			*aPresShell)
 {
@@ -143,7 +142,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 		//
 		//  we absorbe the next IME transaction by adopting it's insert string as our own
 		//
-		nsIDOMTextRangeList* newTextRangeList;
+		nsIPrivateTextRangeList* newTextRangeList;
 		otherTxn->GetData(mStringToInsert,&newTextRangeList);
 		mRangeList = do_QueryInterface(newTextRangeList);
 		*aDidMerge = PR_TRUE;
@@ -218,7 +217,7 @@ IMETextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 /* ============ protected methods ================== */
 
-NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIDOMTextRangeList** aTextRangeList)
+NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIPrivateTextRangeList** aTextRangeList)
 {
   aResult = mStringToInsert;
   *aTextRangeList = mRangeList;
@@ -231,7 +230,7 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 		PRBool				haveSelectedRange, haveCaretPosition;
 		PRUint16			textRangeListLength,selectionStart,selectionEnd,
 							textRangeType, caretPosition, i;
-		nsIDOMTextRange*	textRange;
+		nsIPrivateTextRange*	textRange;
 
 		haveSelectedRange = PR_FALSE;
 		haveCaretPosition = PR_FALSE;
@@ -239,19 +238,19 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 
 #ifdef DEBUG_tague
 		PRUint16 listlen,start,stop,type;
-		nsIDOMTextRange* rangePtr;
+		nsIPrivateTextRange* rangePtr;
 		result = mRangeList->GetLength(&listlen);
-		printf("nsIDOMTextRangeList[%p]\n",mRangeList);
+		printf("nsIPrivateTextRangeList[%p]\n",mRangeList);
 		for (i=0;i<listlen;i++) {
 			(void)mRangeList->Item(i,&rangePtr);
 			rangePtr->GetRangeStart(&start);
 			rangePtr->GetRangeEnd(&stop);
 			rangePtr->GetRangeType(&type);
 			printf("range[%d] start=%d end=%d type=",i,start,stop,type);
-			if (type==nsIDOMTextRange::TEXTRANGE_RAWINPUT) printf("TEXTRANGE_RAWINPUT\n");
-			if (type==nsIDOMTextRange::TEXTRANGE_SELECTEDRAWTEXT) printf("TEXTRANGE_SELECTEDRAWTEXT\n");
-			if (type==nsIDOMTextRange::TEXTRANGE_CONVERTEDTEXT) printf("TEXTRANGE_CONVERTEDTEXT\n");
-			if (type==nsIDOMTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) printf("TEXTRANGE_SELECTEDCONVERTEDTEXT\n");
+			if (type==nsIPrivateTextRange::TEXTRANGE_RAWINPUT) printf("TEXTRANGE_RAWINPUT\n");
+			if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT) printf("TEXTRANGE_SELECTEDRAWTEXT\n");
+			if (type==nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT) printf("TEXTRANGE_CONVERTEDTEXT\n");
+			if (type==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) printf("TEXTRANGE_SELECTEDCONVERTEDTEXT\n");
 		}
 #endif
 				
@@ -266,13 +265,13 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 				if (NS_SUCCEEDED(result))
 				{
 					result = textRange->GetRangeType(&textRangeType);
-					if (textRangeType==nsIDOMTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) 
+					if (textRangeType==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) 
 					{
 						haveSelectedRange = PR_TRUE;
 						textRange->GetRangeStart(&selectionStart);
 						textRange->GetRangeEnd(&selectionEnd);
 					}
-					if (textRangeType==nsIDOMTextRange::TEXTRANGE_CARETPOSITION)
+					if (textRangeType==nsIPrivateTextRange::TEXTRANGE_CARETPOSITION)
 					{
 						haveCaretPosition = PR_TRUE;
 						textRange->GetRangeStart(&caretPosition);

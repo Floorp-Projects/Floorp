@@ -16,19 +16,18 @@
  * Reserved.
  */
 
-#ifndef nsDOMTextRange_h__
-#define nsDOMTextRange_h__
+#ifndef nsPrivateTextRange_h__
+#define nsPrivateTextRange_h__
 
-#include "nsIDOMTextRange.h"
-#include "nsIDOMTextRangeList.h"
+#include "nsIPrivateTextRange.h"
 
-class nsDOMTextRange : public nsIDOMTextRange 
+class nsPrivateTextRange : public nsIPrivateTextRange 
 {
 	NS_DECL_ISUPPORTS
 public:
 
-	nsDOMTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint16 aRangeType);
-	virtual ~nsDOMTextRange(void);
+	nsPrivateTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint16 aRangeType);
+	virtual ~nsPrivateTextRange(void);
 
 	NS_IMETHOD    GetRangeStart(PRUint16* aRangeStart);
 	NS_IMETHOD    SetRangeStart(PRUint16 aRangeStart);
@@ -46,22 +45,22 @@ protected:
 	PRUint16	mRangeType;
 };
 
-class nsDOMTextRangeList: public nsIDOMTextRangeList 
+class nsPrivateTextRangeList: public nsIPrivateTextRangeList 
 {
 	NS_DECL_ISUPPORTS
 public:
 	
-	nsDOMTextRangeList(PRUint16 aLength,nsIDOMTextRange** aList);
-	virtual ~nsDOMTextRangeList(void);
+	nsPrivateTextRangeList(PRUint16 aLength,nsIPrivateTextRange** aList);
+	virtual ~nsPrivateTextRangeList(void);
 
 	NS_IMETHOD    GetLength(PRUint16* aLength);
 
-	NS_IMETHOD    Item(PRUint16 aIndex, nsIDOMTextRange** aReturn);
+	NS_IMETHOD    Item(PRUint16 aIndex, nsIPrivateTextRange** aReturn);
 
 protected:
 
-	PRUint16			mLength;
-	nsIDOMTextRange**	mList;
+	PRUint16				mLength;
+	nsIPrivateTextRange**	mList;
 };
 
 

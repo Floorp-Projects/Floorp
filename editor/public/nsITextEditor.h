@@ -377,7 +377,7 @@ public:
 
 // IME Editing Methods
   NS_IMETHOD BeginComposition(void)=0;
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aTextRangeList)=0;
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList, nsTextEventReply* aReply)=0;
   NS_IMETHOD EndComposition(void)=0;
 
 

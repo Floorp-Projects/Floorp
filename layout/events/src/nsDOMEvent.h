@@ -23,6 +23,8 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsISupports.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIPrivateTextEvent.h"
+#include "nsIPrivateTextRange.h"
 
 #include "nsIPresContext.h"
 #include "nsPoint.h"
@@ -31,7 +33,7 @@ class nsIContent;
 
 class nsIDOMRenderingContext;
 
-class nsDOMEvent : public nsIDOMUIEvent, public nsIDOMNSUIEvent, public nsIPrivateDOMEvent {
+class nsDOMEvent : public nsIDOMUIEvent, public nsIDOMNSUIEvent, public nsIPrivateDOMEvent, public nsIPrivateTextEvent {
 
 public:
   // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
@@ -82,12 +84,6 @@ public:
 
   NS_IMETHOD    PreventDefault();
 
-  NS_IMETHOD	  GetText(nsString& aText);
-
-  NS_IMETHOD    GetInputRange(nsIDOMTextRangeList** aInputRange);
-
-  NS_IMETHOD    SetInputRange(nsIDOMTextRangeList* aInputRange);
-
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
 
   NS_IMETHOD    GetScreenY(PRInt32* aScreenY);
@@ -133,15 +129,20 @@ public:
   NS_IMETHOD    DuplicatePrivateData();
   NS_IMETHOD    SetTarget(nsIDOMNode* aNode);
 
+  // nsIPrivateTextEvent interface
+	NS_IMETHOD GetText(nsString& aText);
+	NS_IMETHOD GetInputRange(nsIPrivateTextRangeList** aInputRange);
+	NS_IMETHOD GetEventReply(nsTextEventReply** aReply);
+
+
 protected:
 
   nsEvent* mEvent;
   nsIPresContext* mPresContext;
   nsIDOMNode* mTarget;
   nsString*	mText;
-  nsIDOMTextRangeList*	mTextRange;
+  nsIPrivateTextRangeList*	mTextRange;
   const char* GetEventName(PRUint32 aEventType);
-
 };
 
 #endif // nsDOMEvent_h__
