@@ -2816,14 +2816,14 @@ nsHTMLEditor::ReplaceOrphanedStructure(PRBool aEnd,
 nsIDOMNode* nsHTMLEditor::GetArrayEndpoint(PRBool aEnd,
                                            nsCOMArray<nsIDOMNode>& aNodeArray)
 {
+  PRInt32 listCount = aNodeArray.Count();
+  if (listCount <= 0) 
+    return nsnull;
+
   if (aEnd)
   {
-    PRInt32 listCount = aNodeArray.Count();
-    if (listCount <= 0) return nsnull;
-    else return aNodeArray[listCount-1];
+    return aNodeArray[listCount-1];
   }
-  else
-  {
-    return aNodeArray[0];
-  }
+  
+  return aNodeArray[0];
 }
