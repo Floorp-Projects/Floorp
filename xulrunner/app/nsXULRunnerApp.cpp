@@ -65,12 +65,25 @@ int main(int argc, char* argv[])
                 || IsArg(argv[1], "help")
                 || IsArg(argv[1], "?"))
   {
-    fprintf(stderr, "Usage: %s [appfile] [options ...]\n", argv[0]);
+    printf("Usage: %s [OPTIONS] [APP-FILE [APP-OPTIONS...]]\n", argv[0]);
+    if (argc > 1) {
+      // display additional information
+      printf("\n"
+             "OPTIONS\n"
+             "  -h, --help       show this message\n"
+             "  -v, --version    show version\n"
+             "\n"
+             "APP-FILE\n"
+             "  Application initialization file.\n"
+             "\n"
+             "APP-OPTIONS\n"
+             "  Application specific options.\n");
+    }
     return 0;
   }
 
   if (argc == 2 && (IsArg(argv[1], "v") || IsArg(argv[1], "version"))) {
-    fprintf(stderr, "Mozilla XULRunner %s (%s)\n", APP_VERSION, BUILD_ID);
+    printf("Mozilla XULRunner %s (%s)\n", APP_VERSION, BUILD_ID);
     return 0;
   }
 
