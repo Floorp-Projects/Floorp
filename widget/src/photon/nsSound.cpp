@@ -68,7 +68,7 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(const char *filename)
+NS_METHOD nsSound::Play(nsIFileSpec *filespec)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsSound::Play - Not Implemented\n"));
   NS_NOTYETIMPLEMENTED("nsSound::Play");

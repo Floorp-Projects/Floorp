@@ -65,9 +65,15 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(const char *filename)
+NS_METHOD nsSound::Play(nsIFileSpec *filespec)
 {
+  char *filename;
+  filespec->GetNativePath(&filename);
+
   ::PlaySound(filename, nsnull, SND_FILENAME | SND_NODEFAULT | SND_ASYNC);
+
+  nsCRT::free(filename);
+
   return NS_OK;
 }
 

@@ -65,7 +65,7 @@ NS_METHOD nsSound::Beep()
   return NS_OK;
 }
 
-NS_METHOD nsSound::Play(const char *filename)
+NS_METHOD nsSound::Play(nsIFileSpec *filespec)
 {
   NS_NOTYETIMPLEMENTED("nsSound::Play");
   return NS_OK;
