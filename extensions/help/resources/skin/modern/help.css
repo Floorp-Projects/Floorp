@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("chrome://communicator/skin/");
-
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* ::::: primary toolbar masthead ::::: */
@@ -141,4 +139,5 @@
 
 #helpsidebar-box {
   min-width: 18em;
+  background-color: #BDC7D6;
 }
