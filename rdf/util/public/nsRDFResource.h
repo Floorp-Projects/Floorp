@@ -29,7 +29,7 @@ class nsIRDFService;
  * This simple base class implements nsIRDFResource, and can be used as a
  * superclass for more sophisticated resource implementations.
  */
-class NS_RDF nsRDFResource : public nsIRDFResource {
+class nsRDFResource : public nsIRDFResource {
 public:
 
     NS_DECL_ISUPPORTS
