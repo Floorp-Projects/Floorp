@@ -108,6 +108,8 @@ public:
    * a preorder traversal of the content tree.
    * 
    * @param aCommonAncestor either null, or a common ancestor of aContent1 and aContent2
+   * Actually this is only a hint; if it's not an ancestor of aContent1 or aContent2,
+   * this function will still work, but it will be slower than normal.
    * @return < 0 if aContent1 is before aContent2, > 0 if aContent1 is after aContent2,
    * 0 otherwise (meaning they're the same, or they're in different documents)
    */
