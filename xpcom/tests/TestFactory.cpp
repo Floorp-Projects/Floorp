@@ -135,7 +135,7 @@ extern "C" void RegisterTestFactories() {
 
   // Windows can use persistant registry  
 #ifndef USE_NSREG
-  nsRepository::RegisterFactory(kTestLoadedFactoryCID,
+  nsRepository::RegisterComponent(kTestLoadedFactoryCID, NULL, NULL,
                                 "libtestdynamic.so",
                                 PR_FALSE,
                                 PR_TRUE);

@@ -182,7 +182,7 @@ SetupFactories(void)
 {
     nsresult err;
     // seed the repository (hack)
-    err = nsRepository::RegisterFactory(kIMyServiceCID, "MyService.dll",
+    err = nsRepository::RegisterComponent(kIMyServiceCID, NULL, NULL, "MyService.dll",
                                         PR_TRUE, PR_FALSE);
     NS_ASSERTION(err == NS_OK, "failed to register my factory");
 }

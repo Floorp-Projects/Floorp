@@ -132,7 +132,7 @@ nsAllocatorFactory::LockFactory(PRBool aLock)
 static void RegAllocator()
 {
     static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-    nsRepository::RegisterFactory(kAllocatorCID,
+    nsRepository::RegisterFactory(kAllocatorCID, NULL, NULL,
                                   (nsIFactory*)new nsAllocatorFactory(),
                                   PR_FALSE);
 }    
