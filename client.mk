@@ -561,7 +561,7 @@ real_fast-update:
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
 # update the NSS checkout timestamp
 	@if test `egrep -c '^(U|C) mozilla/security/(nss|coreconf)' $(CVSCO_LOGFILE) 2>/dev/null` != 0; then \
-		touch $(TOPSRCDIR)/security/manager/.nss.checkout \
+		touch $(TOPSRCDIR)/security/manager/.nss.checkout; \
 	fi
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
