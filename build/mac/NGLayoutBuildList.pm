@@ -812,6 +812,7 @@ sub MakeResourceAliases()
     _MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties","$globalLocale");
 
     _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",               "$navigatorContent");
+    _InstallResources(":mozilla:xpfe:browser:resources:content:mac:MANIFEST",               "$navigatorContent");
     _InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",          "$navigatorLocale", 0);
 
     # find

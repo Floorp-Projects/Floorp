@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE window SYSTEM "chrome://navigator/locale/platformNavigationBindings.dtd">
+
+<overlay id="platformNavigationBindings"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <keyset id="keyset">
+    <!-- proper arrow key navigation, 4.xP -->
+    <key id="goBackKb" xulkey="true" keycode="VK_LEFT" observes="Browser:Back"/>
+    <key id="goForwardKb" xulkey="true" keycode="VK_RIGHT" observes="Browser:Forward"/>
+
+    <!-- Some people apparently use this combination too on Unix...
+         we live and learn.  -->
+    <key id="goBackKbWacko" xulkey="true" key="&goForwardCmd.commandKey;" observes="Browser:Back"/>
+    <key id="goForwardKbWacko" xulkey="true" key="&goBackCmd.commandKey;" observes="Browser:Forward"/>
+  </keyset>  
+
+</overlay>

@@ -1,4 +1,3 @@
-#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -18,35 +17,20 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#
 
-DEPTH=..\..\..\..
+DEPTH		= ../../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-DIRS= win
+include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR=packages\core
-CHROME_CONTENT_DIR=navigator\content
+CHROME_DIR=locales/en-US
+CHROME_L10N_DIR=navigator/locale
 
-CHROME_CONTENT = \
-	.\openLocation.js \
-	.\openLocation.xul \
-	.\viewsource.js \
-	.\viewSource.xul \
-	.\pageInfo.js \
-	.\pageInfo.xul \
-	.\navigator.xul \
-	.\sessionHistoryUI.js \
-	.\keywords.js \
-	.\navigatorOverlay.xul \
-	.\navExtraOverlay.xul \
-	.\navigator.js \
-	.\navigatorDD.js \
-	.\NetSupportConfirmYN.xul \
-	.\NetSupportConfirmCheckYN.xul \
-	.\tooltip.js \
-	.\nsContextMenu.js \
-	.\personalToolbar.js \
-	.\personalToolbarOverlay.xul \
-	$(NULL)
+CHROME_L10N = \
+		platformNavigationBindings.dtd \
 
-include <$(DEPTH)\config\rules.mak>
+include $(topsrcdir)/config/rules.mk
 

@@ -19,33 +19,13 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
-
-DIRS= win
+DEPTH=..\..\..\..\..
 
 CHROME_DIR=packages\core
 CHROME_CONTENT_DIR=navigator\content
 
 CHROME_CONTENT = \
-	.\openLocation.js \
-	.\openLocation.xul \
-	.\viewsource.js \
-	.\viewSource.xul \
-	.\pageInfo.js \
-	.\pageInfo.xul \
-	.\navigator.xul \
-	.\sessionHistoryUI.js \
-	.\keywords.js \
-	.\navigatorOverlay.xul \
-	.\navExtraOverlay.xul \
-	.\navigator.js \
-	.\navigatorDD.js \
-	.\NetSupportConfirmYN.xul \
-	.\NetSupportConfirmCheckYN.xul \
-	.\tooltip.js \
-	.\nsContextMenu.js \
-	.\personalToolbar.js \
-	.\personalToolbarOverlay.xul \
+	.\platformNavigationBindings.xul \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
