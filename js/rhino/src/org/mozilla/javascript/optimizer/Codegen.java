@@ -784,18 +784,19 @@ public class Codegen extends Interpreter {
         if (regexpCount == 0) badTree();
 
         cfw.addPush(regexpCount);
-        cfw.add(ByteCode.ANEWARRAY,
-                "org/mozilla/javascript/regexp/NativeRegExp");
+        cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
 
-        // Loop invariant: it keeps new-array-ref on stack top
+        cfw.addALoad(contextArg);
+        cfw.addInvoke(ByteCode.INVOKESTATIC,
+                      "org/mozilla/javascript/ScriptRuntime",
+                      "checkRegExpProxy",
+                      "(Lorg/mozilla/javascript/Context;"
+                      +")Lorg/mozilla/javascript/RegExpProxy;");
+
         for (int i = 0; i != regexpCount; ++i) {
-            cfw.add(ByteCode.DUP);
-            cfw.addPush(i);
+            cfw.add(ByteCode.DUP2);
 
-            cfw.add(ByteCode.NEW,
-                        "org/mozilla/javascript/regexp/NativeRegExp");
-            cfw.add(ByteCode.DUP);
-
+            // Stack structure: proxy, array, proxy, array
             cfw.addALoad(contextArg);
             cfw.addALoad(scopeArg);
             cfw.addPush(n.getRegexpString(i));
@@ -805,18 +806,23 @@ public class Codegen extends Interpreter {
             } else {
                 cfw.addPush(regexpFlags);
             }
-            cfw.addPush(0);
-            cfw.addInvoke(ByteCode.INVOKESPECIAL,
-                          "org/mozilla/javascript/regexp/NativeRegExp",
-                          "<init>",
+            cfw.addInvoke(ByteCode.INVOKEINTERFACE,
+                          "org/mozilla/javascript/RegExpProxy",
+                          "newRegExp",
                           "(Lorg/mozilla/javascript/Context;"
                           +"Lorg/mozilla/javascript/Scriptable;"
                           +"Ljava/lang/String;Ljava/lang/String;"
-                          +"Z"
-                          +")V");
+                          +")Ljava/lang/Object;");
 
+            // Stack structure: result of newRegExp, array, proxy, array
+            cfw.addPush(i);
+            cfw.add(ByteCode.SWAP);
             cfw.add(ByteCode.AASTORE);
+
+            // Stack structure: proxy, array
         }
+        // remove proxy
+        cfw.add(ByteCode.POP);
     }
 
     void pushNumberAsObject(ClassFileWriter cfw, double num)
@@ -969,8 +975,7 @@ public class Codegen extends Interpreter {
     private static final String ID_FIELD_NAME = "_id";
 
     static final String REGEXP_ARRAY_FIELD_NAME = "_re";
-    static final String REGEXP_ARRAY_FIELD_TYPE
-        = "[Lorg/mozilla/javascript/regexp/NativeRegExp;";
+    static final String REGEXP_ARRAY_FIELD_TYPE = "[Ljava/lang/Object;";
 
     static final String FUNCTION_INIT_SIGNATURE
         =  "(Lorg/mozilla/javascript/Context;"
