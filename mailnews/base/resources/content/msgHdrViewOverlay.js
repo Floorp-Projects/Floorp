@@ -401,7 +401,7 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
         // get the email and name fields
         var addrValue = {};
         var nameValue = {};
-        fullAddress = headerResult.getAddressAndName(addrValue, nameValue);
+        var fullAddress = headerResult.getAddressAndName(addrValue, nameValue);
         emailAddress = addrValue.value;
         name = nameValue.value;
 
