@@ -202,7 +202,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSStatus(const PRUnichar* aStatus)
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
    piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
 
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
@@ -220,7 +220,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
    piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
@@ -238,7 +238,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
    piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
@@ -437,7 +437,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
       if(mTitlePreface.Length() > 0)
          {
          // Title will be: "Preface: Doc Title - Mozilla"
-         title = mTitlePreface;
+         title.Assign(mTitlePreface);
          title.Append(docTitle);
          }
       else 
@@ -450,7 +450,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
    else 
       { 
       // Title will just be plain: Mozilla
-      title = mWindowTitleModifier;
+      title.Assign(mWindowTitleModifier);
       }
 
    // XXX Don't need to fully qualify this once I remove nsWebShellWindow::SetTitle
@@ -482,31 +482,31 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeMask()
    nsAutoString newvalue;
 
    if (! (mChromeMask & nsIWebBrowserChrome::menuBarOn)) {
-     newvalue += "menubar ";
+     newvalue.AppendWithConversion("menubar ");
    } 
    if (! (mChromeMask & nsIWebBrowserChrome::toolBarOn)) {
-     newvalue += "toolbar ";
+     newvalue.AppendWithConversion("toolbar ");
    }
    if (! (mChromeMask & nsIWebBrowserChrome::locationBarOn)) {
-     newvalue += "location ";
+     newvalue.AppendWithConversion("location ");
    }
    if (! (mChromeMask & nsIWebBrowserChrome::personalToolBarOn)) {
-     newvalue += "directories ";
+     newvalue.AppendWithConversion("directories ");
    }
    if (! (mChromeMask & nsIWebBrowserChrome::statusBarOn)) {
-     newvalue += "status ";
+     newvalue.AppendWithConversion("status ");
    }
    if (! (mChromeMask & nsIWebBrowserChrome::extraChromeOn)) {
-     newvalue += "extrachrome";
+     newvalue.AppendWithConversion("extrachrome");
    }
 
    // Get the old value, to avoid useless style reflows if we're just
    // setting stuff to the exact same thing.
    nsAutoString oldvalue;
-   window->GetAttribute("chromehidden", oldvalue);
+   window->GetAttribute(NS_ConvertASCIItoUCS2("chromehidden"), oldvalue);
 
    if (oldvalue != newvalue) {
-     window->SetAttribute("chromehidden", newvalue);
+     window->SetAttribute(NS_ConvertASCIItoUCS2("chromehidden"), newvalue);
    }
 
    return NS_OK;
@@ -529,13 +529,13 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
 
       if(docShellElement)  
          {
-         docShellElement->GetAttribute("contenttitlesettting", contentTitleSetting);
-         if(contentTitleSetting.Equals("true"))
+         docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("contenttitlesettting"), contentTitleSetting);
+         if(contentTitleSetting.EqualsWithConversion("true"))
             {
             mContentTitleSetting = PR_TRUE;
-            docShellElement->GetAttribute("titlemodifier", mWindowTitleModifier);
-            docShellElement->GetAttribute("titlemenuseparator", mTitleSeparator);
-            docShellElement->GetAttribute("titlepreface", mTitlePreface);
+            docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("titlemodifier"), mWindowTitleModifier);
+            docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("titlemenuseparator"), mTitleSeparator);
+            docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("titlepreface"), mTitlePreface);
             }
          }
       else

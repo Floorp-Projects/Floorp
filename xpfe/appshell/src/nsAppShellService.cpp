@@ -739,11 +739,11 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
   nsAutoString topic(aTopic);
 
   NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
-  if (topic.Equals(gEQActivatedNotification)) {
+  if (topic.EqualsWithConversion(gEQActivatedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
     if (eq)
       mAppShell->ListenToEventQueue(eq, PR_TRUE);
-  } else if (topic.Equals(gEQDestroyedNotification)) {
+  } else if (topic.EqualsWithConversion(gEQDestroyedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
     if (eq)
       mAppShell->ListenToEventQueue(eq, PR_FALSE);
@@ -757,8 +757,8 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
   nsresult           rv;
   nsISupports        *glop;
 
-  nsAutoString topicA(gEQActivatedNotification);
-  nsAutoString topicB(gEQDestroyedNotification);
+  nsAutoString topicA; topicA.AssignWithConversion(gEQActivatedNotification);
+  nsAutoString topicB; topicB.AssignWithConversion(gEQDestroyedNotification);
 
   // here's a silly dance. seems better to do it than not, though...
   nsCOMPtr<nsIObserver> weObserve(do_QueryInterface(NS_STATIC_CAST(nsIObserver *, this)));

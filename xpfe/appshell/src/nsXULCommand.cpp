@@ -87,8 +87,8 @@ NS_IMETHODIMP nsXULCommand::AttributeHasBeenSet(const nsString & aAttr)
   nsAutoString value;
   mDOMElement->GetAttribute(aAttr, value);
   if (DEBUG_MENUSDEL) printf("New value is [%s]=[%s]\n", aAttr.ToNewCString(), value.ToNewCString());
-  if (aAttr.Equals("disabled")) {
-    mMenuItem->SetEnabled((PRBool)(!value.Equals("true")));
+  if (aAttr.EqualsWithConversion("disabled")) {
+    mMenuItem->SetEnabled((PRBool)(!value.EqualsWithConversion("true")));
   }
   return NS_OK;
 }
