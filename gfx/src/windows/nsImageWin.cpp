@@ -754,14 +754,17 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
   }
 
   /* Copy back to the HDC */
+  /* Use StretchBlt instead of BitBlt here so that we get proper dithering */
   if (scaling) {
     /* only copy back the valid portion of the image */
-    retval = ::BitBlt(TheHDC, aDX, aDY,
-                      aDWidth, (mDecodedY2*aDHeight + aSHeight - 1)/aSHeight,
-                      memDC, 0, 0, SRCCOPY);
+    retval = ::StretchBlt(TheHDC, aDX, aDY,
+                          aDWidth, (mDecodedY2*aDHeight + aSHeight - 1)/aSHeight,
+                          memDC, 0, 0,
+                          aDWidth, (mDecodedY2*aDHeight + aSHeight - 1)/aSHeight,
+                          SRCCOPY);
   } else {
-    retval = ::BitBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
-                      memDC, 0, 0, SRCCOPY);
+    retval = ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
+                          memDC, 0, 0, aDWidth, aDHeight, SRCCOPY);
   }
 
   if (!retval) {
