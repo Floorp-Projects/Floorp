@@ -127,8 +127,6 @@ function UpdateInternetSearchResults(event)
 	}
 }
 
-
-
 function createBrowserInstance()
 {
     appCore = Components
@@ -341,11 +339,13 @@ function Startup()
 	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
     }
 
+    dump("*** Pulling out the charset\n");
     if ( window.arguments && window.arguments[1] ) {
         if (window.arguments[1].indexOf('charset=') != -1) {
               arrayArgComponents = window.arguments[1].split('=');
             if (arrayArgComponents) {
                 if (appCore != null) {
+                 //we should "inherit" the charset menu setting in a new window
                   appCore.SetDocumentCharset(arrayArgComponents[1]);
                 } 
                 dump("*** SetDocumentCharset(" + arrayArgComponents[1] + ")\n");
@@ -1397,11 +1397,38 @@ function BrowserEditBookmarks()
 
   function BrowserViewSource()
   {
-	dump("BrowserViewSource(); \n ");
-   window.openDialog( "chrome://navigator/content/viewSource.xul",
-							 "_blank",
-							 "chrome,dialog=no",
-							 window.content.location);
+	  dump("BrowserViewSource(); \n ");
+    var charsetArg = new String();
+  
+    if (appCore != null) {
+       
+        try 
+        {
+            //let's try to extract the current charset menu setting
+            var DocCharset = appCore.GetDocumentCharset();
+            charsetArg = "charset="+DocCharset;
+            dump("*** Current document charset: " + DocCharset + "\n");
+
+            //we should "inherit" the charset menu setting in a new window
+            window.openDialog( "chrome://navigator/content/viewSource.xul",
+							           "_blank",
+							           "chrome,dialog=no",
+							           window.content.location, charsetArg);
+        }
+ 
+         catch(ex) 
+         { 
+            dump("*** failed to read document charset \n");
+         }
+
+    } else {
+         //if everythig else fails, forget about the charset
+         window.openDialog( "chrome://navigator/content/viewSource.xul",
+							       "_blank",
+							       "chrome,dialog=no",
+							       window.content.location);
+    }
+ 
   }
 
 
