@@ -600,6 +600,19 @@ sub UserInGroup {
 }
 
 
+# Determines if the given bug_status string represents an "Opened" bug.  This
+# routine ought to be paramaterizable somehow, as people tend to introduce
+# new states into Bugzilla.
+
+sub IsOpenedState {
+    my ($state) = (@_);
+    if ($state =~ /^(NEW|REOPENED|ASSIGNED)$/) {
+        return 1;
+    }
+    return 0;
+}
+
+
 sub RemoveVotes {
     my ($id, $reason) = (@_);
     ConnectToDatabase();

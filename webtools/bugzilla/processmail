@@ -400,6 +400,54 @@ sub NewProcessOneBug {
     $difftext = trim($difftext);
 
 
+    my $deptext = "";
+
+    my $resid = 
+
+    SendSQL("SELECT bugs_activity.bug_id, fielddefs.name, " .
+            "       oldvalue, newvalue " .
+            "FROM bugs_activity, dependencies, fielddefs ".
+            "WHERE bugs_activity.bug_id = dependencies.dependson " .
+            "  AND dependencies.blocked = $id " .
+            "  AND fielddefs.fieldid = bugs_activity.fieldid" .
+            "  AND (fielddefs.name = 'bug_status' " .
+            "    OR fielddefs.name = 'resolution') " .
+            "  AND bug_when > '$start' " .
+            "  AND bug_when <= '$end' " .
+            "ORDER BY bug_when, bug_id");
+    
+    my $thisdiff = "";
+    my $lastbug = "";
+    my $interestingchange = 0;
+    while (MoreSQLData()) {
+        my ($bug, $what, $old, $new) = (FetchSQLData());
+        if ($bug ne $lastbug) {
+            if ($interestingchange) {
+                $deptext .= $thisdiff;
+            }
+            $lastbug = $bug;
+            $thisdiff =
+                "\nThis bug depends on bug $bug, which changed state:\n\n";
+            $thisdiff .= FormatTriple("What    ", "Old Value", "New Value");
+            $thisdiff .= ('-' x 76) . "\n";
+            $interestingchange = 0;
+        }
+        $thisdiff .= FormatTriple($fielddescription{$what}, $old, $new);
+        if ($what eq 'bug_status' && IsOpenedState($old) ne IsOpenedState($new)) {
+            $interestingchange = 1;
+        }
+    }
+    if ($interestingchange) {
+        $deptext .= $thisdiff;
+    }
+
+    $deptext = trim($deptext);
+
+    if ($deptext) {
+        $difftext = trim($difftext . "\n\n" . $deptext);
+    }
+
+
     my $newcomments = GetLongDescription($id, $start, $end);
 
     my $count = 0;
@@ -451,6 +499,7 @@ sub NewProcessOneBug {
 #              }
 #          }
 
+
         my $head = "";
         
         foreach my $f (@headerlist) {
@@ -484,6 +533,9 @@ sub NewProcessOneBug {
 #                  }
             }
         }
+
+        
+
         if ($difftext eq "" && $newcomments eq "") {
             # Whoops, no differences!
             next;
@@ -503,21 +555,13 @@ sub NewProcessOneBug {
         }
         $substs{"summary"} = $values{'short_desc'};
         
-        # my $template = Param("changedmail");
-        my $template = "From: bugzilla-daemon
-To: %to%
-Cc: %cc%
-Subject: [Bug %bugid%] %neworchanged% - %summary%
+        my $template = Param("newchangedmail");
 
-%urlbase%show_bug.cgi?id=%bugid%
-
-%diffs%";
-
-        my $msg = PerformSubsts(Param("changedmail"), \%substs);
+        my $msg = PerformSubsts($template, \%substs);
         open(SENDMAIL, "|/usr/lib/sendmail -t") ||
             die "Can't open sendmail";
         
-        print SENDMAIL trim($msg);
+        print SENDMAIL trim($msg) . "\n";
         close SENDMAIL;
         push(@sentlist, $person);
     }
@@ -598,15 +642,15 @@ sub ProcessOneBug {
 
                 $logstr = "$logstr; mail sent to $tolist, $cclist";
             }
-            if (@sentlist) {
-                print "<B>Email sent to:</B> " . join(", ", @sentlist) . "\n";
-                if ($didexclude) {
-                    print "<B>Excluding:</B> $nametoexclude (<a href=changepassword.cgi>change your preferences</a> if you wish not to be excluded)\n";
-                }
-            }
         }
         unlink($diffs);
         Log($logstr);
+    }
+    if (@sentlist) {
+        print "<B>Email sent to:</B> " . join(", ", @sentlist) . "\n";
+        if ($didexclude) {
+            print "<B>Excluding:</B> $nametoexclude (<a href=changepassword.cgi>change your preferences</a> if you wish not to be excluded)\n";
+        }
     }
     rename($new, $old) || die "Can't rename $new to $old";
     chmod 0666, $old;

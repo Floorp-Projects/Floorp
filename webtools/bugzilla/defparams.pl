@@ -255,6 +255,19 @@ has to then turn on the "New email tech" preference.},
     0);
 
 
+DefParam("newchangedmail",
+q{The same as 'changedmail', but used for the newemailtech stuff.},
+         "l",
+"From: bugzilla-daemon
+To: %to%
+Cc: %cc%
+Subject: [Bug %bugid%] %neworchanged% - %summary%
+
+%urlbase%show_bug.cgi?id=%bugid%
+
+%diffs%");
+
+
 
 DefParam("whinedays",
          "The number of days that we'll let a bug sit untouched in a NEW state before our cronjob will whine at the owner.",
