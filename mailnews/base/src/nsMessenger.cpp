@@ -126,6 +126,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 
@@ -149,6 +150,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define FOUR_K 4096
 #define MESSENGER_SAVE_DIR_PREF_NAME "messenger.save.dir"
+#define MAILNEWS_ALLOW_PLUGINS_PREF_NAME "mailnews.message_display.allow.plugins"
+
 //
 // Convert an nsString buffer to plain text...
 //
@@ -321,14 +324,26 @@ nsMessenger::~nsMessenger()
 }
 
 
-NS_IMPL_ISUPPORTS2(nsMessenger, nsIMessenger, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS3(nsMessenger, nsIMessenger, nsIObserver, nsISupportsWeakReference)
 NS_IMPL_GETSET(nsMessenger, SendingUnsentMsgs, PRBool, mSendingUnsentMsgs);
 
 NS_IMETHODIMP    
 nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 {
+  nsCOMPtr<nsIPrefBranchInternal> pbi;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+  {
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (prefBranch)
+      pbi = do_QueryInterface(prefBranch);
+  }
 	if(!aWin)
 	{
+    // it isn't an error to pass in null for aWin, in fact it means we are shutting
+    // down and we should start cleaning things up...
+
 		if (mMsgWindow)
 		{
 			nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
@@ -336,9 +351,12 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 			mMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
 			if (aStatusFeedback)
 				aStatusFeedback->SetDocShell(nsnull, nsnull);
+
+      // Remove pref observer
+      if (pbi)
+        pbi->RemoveObserver(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, this);
 		}
-    // it isn't an error to pass in null for aWin, in fact it means we are shutting
-    // down and we should start cleaning things up...
+
 		return NS_OK;
 	}
 
@@ -380,6 +398,11 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
                 aStatusFeedback->SetDocShell(mDocShell, mWindow);
             }
             aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
+
+            // Add pref observer
+            if (pbi)
+              pbi->AddObserver(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, this, PR_TRUE);
+            SetDisplayProperties();
         }
     }
   }
@@ -413,6 +436,42 @@ NS_IMETHODIMP nsMessenger::SetDisplayCharset(const PRUnichar * aCharset)
   return NS_OK;
 }
 
+nsresult
+nsMessenger::SetDisplayProperties()
+{
+  // For now, the only property we will set is allowPlugins but we might do more in the future...
+
+  nsresult rv;
+
+  if (!mDocShell)
+    return NS_ERROR_FAILURE;
+ 
+  PRBool allowPlugins = PR_FALSE;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (NS_SUCCEEDED(rv))
+      (void)prefBranch->GetBoolPref(MAILNEWS_ALLOW_PLUGINS_PREF_NAME, &allowPlugins);
+  }
+  
+  return mDocShell->SetAllowPlugins(allowPlugins);
+}
+
+NS_IMETHODIMP
+nsMessenger::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+{
+  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
+  {
+    nsDependentString prefName(aData);
+    if (prefName.Equals(NS_LITERAL_STRING(MAILNEWS_ALLOW_PLUGINS_PREF_NAME)))
+      SetDisplayProperties();
+  }
+
+  return NS_OK;
+}
 
 nsresult
 nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)

@@ -48,9 +48,10 @@
 #include "nsIStringBundle.h"
 #include "nsIFindComponent.h"
 #include "nsILocalFile.h"
+#include "nsIObserver.h"
 #include "nsWeakReference.h"
 
-class nsMessenger : public nsIMessenger, public nsSupportsWeakReference
+class nsMessenger : public nsIMessenger, public nsIObserver, public nsSupportsWeakReference
 {
   
 public:
@@ -59,6 +60,7 @@ public:
 
   NS_DECL_ISUPPORTS  
   NS_DECL_NSIMESSENGER
+	NS_DECL_NSIOBSERVER
     
   nsresult Alert(const char * stringName);
   nsresult SaveAttachment(nsIFileSpec *fileSpec, const char* unescapedUrl,
@@ -79,6 +81,8 @@ private:
   nsresult GetLastSaveDirectory(nsILocalFile **aLastSaveAsDir);
   // if aLocalFile is a dir, we use it.  otherwise, we use the parent of aLocalFile.
   nsresult SetLastSaveDirectory(nsILocalFile *aLocalFile);
+  
+  nsresult SetDisplayProperties();
 
   nsString mId;
   void *mScriptObject;
