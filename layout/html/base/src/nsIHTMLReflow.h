@@ -339,11 +339,13 @@ protected:
 
   // Computes margin values from the specified margin style information, and
   // fills in the mComputedMargin member
-  void ComputeMargin(nscoord aContainingBlockWidth);
+  void ComputeMargin(nscoord aContainingBlockWidth,
+                     const nsHTMLReflowState* aContainingBlockRS);
   
   // Computes padding values from the specified padding style information, and
   // fills in the mComputedPadding member
-  void ComputePadding(nscoord aContainingBlockWidth);
+  void ComputePadding(nscoord aContainingBlockWidth,
+                      const nsHTMLReflowState* aContainingBlockRS);
 
   // Calculates the computed values for the 'min-Width', 'max-Width',
   // 'min-Height', and 'max-Height' properties, and stores them in the assorted
