@@ -68,6 +68,11 @@ typedef BOOL (WINAPI *ALPHABLENDPROC)(
   int nHeightSrc,
   BLENDFUNCTION blendFunction);
 
+/* For gOsMajorVersion */
+#define VER_OSMAJOR_WINNT31        3
+#define VER_OSMAJOR_WIN9598MENT    4
+#define VER_OSMAJOR_WIN2KXP        5
+
 class nsImageWin : public nsIImage{
 public:
   nsImageWin();
@@ -148,6 +153,7 @@ public:
   // VER_PLATFORM_WIN32_WINDOWS == Win 95/98/ME
   // VER_PLATFORM_WIN32_NT == Win NT/2K/XP/.NET Server
   static PRInt32 gPlatform;
+  static PRInt32 gOsMajorVersion;
 
 private:
   /** 
