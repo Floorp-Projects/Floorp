@@ -901,26 +901,26 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
     }
 #endif //XP_WIN16
 #endif //_IME_COMPOSITION
-#ifdef ENDER
+#if 0
     if (GetEmbedded())
     {
         CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CComboToolBar *pControler = pFrame->getComposeToolBar();
-        if (pControler)
+        CComboToolBar *pController = pFrame->getComposeToolBar();
+        if (pController)
         {
             //must calculate position for toolbar
             if (!m_EnderBarRectInit)
             {
                 CRect t_rect;
                 CRect t_EnderBarRect;
-                pControler->GetWindowRect(t_rect);
+                pController->GetWindowRect(t_rect);
                 GetWindowRect(t_EnderBarRect);
                 t_EnderBarRect.top -= 54;
                 t_EnderBarRect.left = t_EnderBarRect.right-310;
-                pFrame->FloatControlBar(pControler,CPoint(t_EnderBarRect.left,t_EnderBarRect.top),CBRS_ALIGN_LEFT);
+                pFrame->FloatControlBar(pController,CPoint(t_EnderBarRect.left,t_EnderBarRect.top),CBRS_ALIGN_LEFT);
                 m_EnderBarRectInit=TRUE;
             }
-            pFrame->ShowControlBar(pControler,TRUE,FALSE);
+            pFrame->ShowControlBar(pController,TRUE,FALSE);
             pFrame->RecalcLayout();
             UpdateWindow();
         }
@@ -932,11 +932,11 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
 {
     MWContext * pMWContext=NULL;
 
-#ifdef ENDER
+#if 0
     if (GetEmbedded())
     {
         CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CComboToolBar *pControler = pFrame->getComposeToolBar();
+        CComboToolBar *pController = pFrame->getComposeToolBar();
         CWnd *pWnd=NULL;
         CWnd *pCPparent=NULL;
         BOOL keepToolbar=FALSE;
@@ -958,10 +958,10 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
             }
         }
 
-        if (pControler && !keepToolbar)
+        if (pController && !keepToolbar)
         {
             //remember where the controler was!
-            pFrame->ShowControlBar(pControler,FALSE,FALSE);
+            pFrame->ShowControlBar(pController,FALSE,FALSE);
             pFrame->RecalcLayout();
             UpdateWindow();
         }
@@ -2760,16 +2760,14 @@ void CNetscapeEditView::OnCharacterBarToggle()
     } 
     else 
     {   // In Mail Composer, we didn't embed the Character toolbar inside a CCommandToolbar
-        CEditToolBarController * pController = NULL;
-    #ifdef ENDER
-        CEnderBar *pEnderBar = NULL;
-        if (GetEmbedded())
-        {
-            pEnderBar = (CEnderBar *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-        }
+        CEditToolBarController *pController;
+        CWnd *t_parent;
+        if (!GetEmbedded())
+            t_parent = (CWnd *)GetParentFrame();
         else
-    #endif //ENDER
-            pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+            t_parent = GetParent();
+        if (t_parent)
+            pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	    if( pController )
         {
             CComboToolBar * pToolBar = pController->GetCharacterBar();
@@ -2795,16 +2793,14 @@ void CNetscapeEditView::OnUpdateCharacterBarToggle(CCmdUI* pCmdUI)
         } 
         else 
         {   // In Mail Composer, we didn't embed the Character toolbar inside a CCommandToolbar
-            CEditToolBarController * pController = NULL;
-#ifdef ENDER
-            CEnderBar *pEnderBar = NULL;
-            if (GetEmbedded())
-            {
-                pEnderBar = (CEnderBar *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-            }
+            CEditToolBarController *pController;
+            CWnd *t_parent;
+            if (!GetEmbedded())
+                t_parent = (CWnd *)GetParentFrame();
             else
-#endif //ENDER
-                pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+                t_parent = GetParent();
+            if (t_parent)
+                pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	        if( pController && pController->GetCharacterBar() )
             {
                 pCmdUI->m_pMenu->ModifyMenu(ID_OPT_CHARBAR_TOGGLE, MF_BYCOMMAND | MF_STRING, ID_OPT_CHARBAR_TOGGLE,

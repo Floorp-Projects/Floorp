@@ -406,7 +406,8 @@ void WFE_ExitComposer()
 CEditToolBarController::CEditToolBarController(CWnd * pParent) :
     m_pWnd(pParent),
     m_iFontColorOtherIndex(0),
-    m_pCharacterToolbar(0)
+    m_pCharacterToolbar(0),
+    m_pCommandView(NULL)
 {
 }
 
@@ -416,7 +417,16 @@ CEditToolBarController::~CEditToolBarController()
 	    delete m_pCharacterToolbar;
 }
 
-BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloating, unsigned ett)
+
+
+void CEditToolBarController::setEmbeddedView(CView *pView)
+{
+    m_pCommandView = pView;
+}
+
+
+
+BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, CView *pCommandView, unsigned ett)
 {
     // Initialize things needed by both CNetscapeEditFrame and CComposeFrame
 	CGenericFrame *pParent = (CGenericFrame*)GetParent();
@@ -455,7 +465,7 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloat
 	if( ett & DISPLAY_CHARACTER_TOOLBAR ){
         // We don't use the "Insert Object" last item if we are displaying the edit toolbar,
         //  which has these items
-        if (!bIsFloating)
+        if (!pCommandView)
         {
             if (!m_wndCharacterBar.Create(ett & DISPLAY_EDIT_TOOLBAR, GetParent(), IDW_PARA_TOOLBAR, IDS_CHAR_TOOLBAR_CAPTION,
 								       nIDCharacterBarArray, CHARBAR_ID_COUNT,
@@ -473,7 +483,8 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloat
 								       nIDCharacterBarArray, CHARBAR_ID_COUNT, nIDCharFloatButtonBarArray,CHARBUTTONBARFLOAT_ID_COUNT ,
 								       IDB_EDIT_FLOAT_TOOLBAR,
 								       CSize(27, 22),
-								       CSize(20, 16) ) )
+								       CSize(20, 16),
+                                       pCommandView) )
                 return FALSE;
         }
 

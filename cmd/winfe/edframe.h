@@ -79,15 +79,16 @@ public:
     inline CComboToolBar* GetCharacterBar() { return( ::IsWindow(m_wndCharacterBar.m_hWnd) ? &m_wndCharacterBar : 0); }
 	inline CCommandToolbar *GetCNSToolbar() { if (m_pCharacterToolbar) return( ::IsWindow(m_pCharacterToolbar->m_hWnd) ? m_pCharacterToolbar : 0);else return FALSE; }
     // Pass in MWContext to get palette to be used by comboboxes and display status messages
-	BOOL CreateEditBars(MWContext *pMWContext, BOOL isFloating,
+	BOOL CreateEditBars(MWContext *pMWContext, CView *pEditView,
 	                	unsigned ett = DISPLAY_EDIT_TOOLBAR|DISPLAY_CHARACTER_TOOLBAR);
     
     // Calls appropriate GetCurSel(), but returns INDEX_OTHER if "Other..." item selected
     int GetSelectedFontFaceIndex();
     int GetSelectedFontColorIndex();
-    
+    void setEmbeddedView(CView *pView);
 protected:
 	CCommandToolbar* CreateCharacterToolbar(int nCount);
+    CView *m_pCommandView;
 
 };
 

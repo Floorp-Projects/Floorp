@@ -362,8 +362,14 @@ void CNetscapeView::OnFilePrintPreview()
         // Hide the Composer's formatting toolbar,
         //  and remember state so we restore only if currently visible
 	    m_bRestoreComposerToolbar = FALSE;
-        CEditToolBarController * pController = 
-		    (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+        CEditToolBarController *pControler;
+        CWnd *t_parent;
+        if (!GetEmbedded())
+            t_parent = (CWnd *)GetParentFrame();
+        else
+            t_parent = GetParent();
+        if (t_parent)
+            pControler = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	    if( pController )
         {
             CComboToolBar * pToolBar = pController->GetCharacterBar();
@@ -471,8 +477,14 @@ void CNetscapeView::OnEndPrintPreview(CDC *pDC, CPrintInfo *pInfo, POINT pXY, CP
         // Restore Composer format/character toolbar only if it was visible before
         if( m_bRestoreComposerToolbar )
         {
-            CEditToolBarController * pController = 
-		        (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+            CEditToolBarController *pControler;
+            CWnd *t_parent;
+            if (!GetEmbedded())
+                t_parent = (CWnd *)GetParentFrame();
+            else
+                t_parent = GetParent();
+            if (t_parent)
+                pControler = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	        if( pController )
             {
                 CComboToolBar * pToolBar = pController->GetCharacterBar();

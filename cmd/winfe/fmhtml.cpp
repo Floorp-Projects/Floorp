@@ -95,6 +95,11 @@ void CFormHtmlarea::DisplayFormElement(LTRB& Rect)
 			MoveWindow(m_pWidget->m_hWnd, Rect.left, Rect.top + EDIT_SPACE / 2);
 			m_pWidget->ShowWindow(SW_SHOW);
 			m_pWidget->UpdateWindow();
+            if (m_pWidget->GetEditView())
+            {
+                m_pWidget->GetEditView()->ShowWindow(SW_SHOW);
+                m_pWidget->GetEditView()->UpdateWindow();
+            }
 			CWnd::FromHandle(VOID2CX(GetContext(), CPaneCX)->GetPane())->InvalidateRect(&rect);
 		}
 		else	
@@ -115,19 +120,7 @@ void CFormHtmlarea::DestroyWidget()
 	//	Get rid of the widget if around.
 	if (m_pWidget)
 	{
-		CNetscapeDoc* pDoc = (CNetscapeDoc *)m_pWidget->GetDocument();
-		//warning! do not allow the CWinCX to RE-FREE its frame. 
-		//we are borrowning the frame from the "browser window or layer"
-		//call ClearFrame to "Clear the frame"
-		CWinCX *pCX = m_pWidget->GetContext();
-		if (pCX)
-		{
-			pCX->ClearFrame();//NOT WORKING, MUST FIX
-			EDT_DestroyEditBuffer(pCX->GetContext());
-		}
 		m_pWidget->DestroyWindow();
-		if (pDoc)
-			delete pDoc;
 		m_pWidget=NULL;
 	}
 }
@@ -137,109 +130,12 @@ void CFormHtmlarea::DestroyWidget()
 void CFormHtmlarea::CreateWidget()
 {
 	if(GetContext() && GetElement())	
-	{
 		if(GetContext()->IsWindowContext() && VOID2CX(GetContext(), CPaneCX)->GetPane())	
-		{
-			//	Need a widget representation.
-			//create a new CPaneCX
-			CNetscapeDoc* pDoc = new CNetscapeDoc();
-			m_pWidget = new CNetscapeEditView();
-			m_pWidget->SetEmbedded(TRUE);
-			RECT rect;
-			rect.left=0;
-			rect.top=0;
-			rect.right=1;
-			rect.bottom=1;
-			if (!m_pWidget->Create(NULL, NULL, 
-				WS_CHILD | WS_VSCROLL | WS_BORDER | ES_LEFT | WS_TABSTOP | ES_MULTILINE //AFX_WS_DEFAULT_VIEW
-				, rect, 
-				CWnd::FromHandle(VOID2CX(GetContext(), CPaneCX)->GetPane()), ID_ENDER, NULL))
-			{
-				TRACE("Warning: could not create view for frame.\n");
-				m_pWidget=NULL;
-				return;
-			}
-			CPaneCX* cx= VOID2CX(GetContext(), CPaneCX);
-			HWND hwnd= cx->GetPane();
-			CWnd *pwnd= CWnd::FromHandle(hwnd);
-			CGenericView *genview=NULL;
-			if (pwnd->IsKindOf(RUNTIME_CLASS(CGenericView)))
-				genview=(CGenericView *)pwnd;
-			if (!genview)
-				return;
-			CWinCX* pDontCare = new CWinCX((CGenericDoc *)pDoc,
-									 genview->GetFrame(), (CGenericView *)m_pWidget);
-			pDontCare->GetContext()->is_editor = TRUE;
-			m_pWidget->SetContext(pDontCare);
-			pDontCare->Initialize(pDontCare->CDCCX::IsOwnDC(), &rect);
-			pDontCare->NormalGetUrl(EDT_NEW_DOC_URL);
-//ADJUST THE SIZE OF THE WINDOW ACCORDING TO ROWS AND COLS EVEN THOUGH THAT IS NOT ACCURATE
-			//	Measure some text.
-			CDC *pDC = m_pWidget->GetDC();
-            CyaFont *pMyFont;
-			if(pDC)	
-			{
-                CDC t_dc;
-                t_dc.CreateCompatibleDC( pDC );
-				CDCCX *pDCCX = VOID2CX(GetContext(), CDCCX);
-				pDCCX->SelectNetscapeFont( t_dc.GetSafeHdc(), GetTextAttr(), pMyFont );
-				if (pMyFont) 
-				{
-					//SetWidgetFont(pDC->GetSafeHdc(), m_pWidget->m_hWnd);
-					//GetElement()->text_attr->FE_Data = pMyFont;
-					//	Default length is 20
-					//	Default lines is 1
-					int32 lLength = 20;
-					int32 lLines = 1;
-
-					//	See if we can measure the default text, and/or
-					//		set up the size and size limits.
-					if(GetElementHtmlareaData())	
-					{
-						if(GetElementHtmlareaData()->cols > 0)	{
-							//	Use provided size.
-							lLength = GetElementHtmlareaData()->cols;
-						}
-						if(GetElementHtmlareaData()->rows > 0)	{
-							//	Use provided size.
-							lLines = GetElementHtmlareaData()->rows;
-						}
-					}
-
-					//	Now figure up the width and height we would like.
-	//				int32 lWidgetWidth = (lLength + 1) * tm.tmAveCharWidth + sysInfo.m_iScrollWidth;
-	//				int32 lWidgetHeight = (lLines + 1) * tm.tmHeight;
-					int32 lWidgetWidth = (lLength + 1) * pMyFont->GetMeanWidth() + sysInfo.m_iScrollWidth;
-					int32 lWidgetHeight = (lLines + 1) * pMyFont->GetHeight();
-
-					//	If no word wrapping, account a horizontal scrollbar.
-					if(GetElementHtmlareaData()->auto_wrap == TEXTAREA_WRAP_OFF)	{
-						lWidgetHeight += sysInfo.m_iScrollHeight;
-					}
-
-					//	Move the window.
-					m_pWidget->MoveWindow(1, 1, CASTINT(lWidgetWidth), CASTINT(lWidgetHeight), FALSE);
-
-					pDCCX->ReleaseNetscapeFont( t_dc.GetSafeHdc(), pMyFont );
-	                pDCCX->ReleaseContextDC(t_dc.GetSafeHdc());
-					m_pWidget->ReleaseDC(pDC);
-				}
-				else
-				{
-					m_pWidget->ReleaseDC(pDC);
-					DestroyWidget();
-				}
-			}
-			else
-			{
-				DestroyWidget();
-			}
-		}
-		else if(GetContext()->IsPureDCContext())	
-		{
-			//	Need a drawn representation.
-		}
-	}
+        {
+			m_pWidget = new CEnderView(GetContext());
+            if (!m_pWidget->Create(CWnd::FromHandle(VOID2CX(GetContext(), CPaneCX)->GetPane()),GetElementHtmlareaData(),GetTextAttr() ))
+                DestroyWidget();
+        }
 }
 
 //	Copy the current data out of the layout struct into the form 5
@@ -251,14 +147,14 @@ void CFormHtmlarea::UseCurrentData()
 		if(GetContext()->IsWindowContext())	{
 			//	Need a widget.
 			//	Need a widget.
-			if(m_pWidget)	{
+			if(m_pWidget && m_pWidget->GetEditView())	{
 				//	Determine the default text to set.
 				char *pCurrent = "";
 				if(GetElementHtmlareaData() && GetElementHtmlareaData()->current_text)	{
 					pCurrent = (char *)GetElementHtmlareaData()->current_text;
 				}
 				if (pCurrent)
-					EDT_SetDefaultHTML( m_pWidget->GetContext()->GetContext(), pCurrent );
+					EDT_SetDefaultHTML( m_pWidget->GetEditView()->GetContext()->GetContext(), pCurrent );
 				// We have to SetContext to the widget before we SetWindowText
 				// Otherwise, the widget don't know what csid the text is.
 				//m_pWidget->SetContext(GetContext());//, GetElement());
@@ -289,7 +185,7 @@ void CFormHtmlarea::UseDefaultData()
 					pDefault = (char *)GetElementHtmlareaData()->default_text;
 				}
 				if (pDefault)
-					EDT_SetDefaultText( m_pWidget->GetContext()->GetContext(), pDefault );
+					EDT_SetDefaultHTML( m_pWidget->GetEditView()->GetContext()->GetContext(), pDefault );
 				// We have to SetContext to the widget before we SetWindowText
 				// Otherwise, the widget don't know what csid the text is.
 				//m_pWidget->SetContext(GetContext());//, GetElement());
@@ -382,7 +278,7 @@ void CFormHtmlarea::UpdateCurrentData()
 				}
 //                if (EDT_DirtyFlag(m_pWidget->GetContext()->GetContext()))
 //                {
-				    EDT_SaveToBuffer(m_pWidget->GetContext()->GetContext(),(char **)&GetElementHtmlareaData()->current_text);
+				    EDT_SaveToBuffer(m_pWidget->GetEditView()->GetContext()->GetContext(),(char **)&GetElementHtmlareaData()->current_text);
 //                }
 			}
 		}

@@ -2221,6 +2221,7 @@ void CDropdownToolbar::OnLButtonUp(UINT nFlags, CPoint cPoint)
                 //   only if different from initial state (for pushbutton style)
                 if( m_pParent && m_pData[i].nCommandID != m_nInitialID ){
                     m_pParent->PostMessage(WM_COMMAND, m_pData[i].nCommandID);
+                    m_pParent->SetFocus();
                 }
                 break;
             }

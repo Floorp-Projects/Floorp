@@ -27,6 +27,8 @@
 #include "netsdoc.h" //ENDER
 #include "edview.h"  //ENDER
 #include "edt.h"     //ENDER
+#include "embdlist.h"
+
 extern char * EDT_NEW_DOC_URL; //ENDER
 #endif //ENDER
 
@@ -1549,7 +1551,7 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 {
     HWND cView = GetPane();
 	CWnd* cWnd = NULL;
-	char* classid = NULL;
+	char* type = NULL;
 	if ( !pBuiltin_struct || !(cWnd = CWnd::FromHandle(cView))){
 		XP_ASSERT(FALSE); //very invalid stuff.
 		return;
@@ -1561,10 +1563,10 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 	int height = pBuiltin_struct->height;
 
 #ifdef ENDER
-	classid = LO_GetBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
-	if (!classid)
+	type = LO_GetBuiltInAttribute(pBuiltin_struct, "type"); //it is very possible to have NULL because of bad HTML
+	if (!type)
 		TRACE("Bad object tag NULL\n");
-    if (!classid || XP_STRCMP(classid,"builtin:htmlarea")){ //left to default to tree here
+    if (!type || (XP_STRCMP(type,"builtin/htmlarea") && XP_STRCMP(type,"builtin/attachments"))){ //left to default to tree here
 #endif //ENDER
 
 		char* url = LO_GetBuiltInAttribute(pBuiltin_struct, "data");
@@ -1580,7 +1582,7 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 		}
 #ifdef ENDER
     }
-	else if (classid && !XP_STRCMP(classid,"builtin:htmlarea")) { //ENDER
+	else if (type && !XP_STRCMP(type,"builtin/htmlarea")) { //ENDER
 		if (pBuiltin_struct->FE_Data == NULL) {
 			//create a new CPaneCX
 			CNetscapeDoc* pDoc = new CNetscapeDoc();
@@ -1614,25 +1616,46 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
             }
 		}
 	}
-	else if (classid)
-		TRACE("Bad object tag %s\n",classid);
+    else if (type && !XP_STRCMP(type,"builtin/attachments"))
+    {
+		if (pBuiltin_struct->FE_Data == NULL) 
+        {
+            CEmbeddedAttachList *pWnd = new CEmbeddedAttachList();
+            if (pWnd)
+            {
+                if (pWnd->Create(cWnd,IDC_ATTACH))
+                    pBuiltin_struct->FE_Data = pWnd;
+                else
+                    delete pWnd;
+			    RECT rect;
+			    rect.left=xPos;
+			    rect.top=yPos;
+			    rect.right=xPos+width;
+			    rect.bottom=yPos+height;
+                pWnd->MoveWindow(&rect,TRUE);
+                pWnd->ShowWindow(SW_SHOW);
+            }
+        }
+    }
+	else if (type)
+		TRACE("Bad object tag %s\n",type);
 #endif //ENDER
 }
 
 void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin_struct)
 {
-	char* classid = NULL;
+	char* type = NULL;
 	if ( !pBuiltin_struct || !pContext ){
 		XP_ASSERT(FALSE); //very invalid stuff.
 		return;
 	}
 
 #ifdef ENDER
-	classid = LO_GetBuiltInAttribute(pBuiltin_struct, "classid"); //it is very possible to have NULL because of bad HTML
-	if (!classid)
+	type = LO_GetBuiltInAttribute(pBuiltin_struct, "type"); //it is very possible to have NULL because of bad HTML
+	if (!type)
 		TRACE("Bad object tag NULL\n");
 
-    if (!classid || XP_STRCMP(classid,"builtin:htmlarea")){ //left to default to tree here
+    if (!type || (XP_STRCMP(type,"builtin/htmlarea") && XP_STRCMP(type,"builtin/attachments"))){ //left to default to tree here
 #endif //ENDER
 		CRDFContentView* pWnd = (CRDFContentView*)pBuiltin_struct->FE_Data;
 		if (pWnd)
@@ -1640,7 +1663,7 @@ void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin
 #ifdef ENDER
 	}
 	else
-		if (classid && !XP_STRCMP(classid,"builtin:htmlarea")){
+		if (type && !XP_STRCMP(type,"builtin/htmlarea")){
 			CObject* pObj = (CObject *)pBuiltin_struct->FE_Data;
 			if (pObj && pObj->IsKindOf( RUNTIME_CLASS( CNetscapeEditView ))){
 				CNetscapeEditView* pWnd = (CNetscapeEditView *)pObj;
@@ -1658,5 +1681,14 @@ void CPaneCX::FreeBuiltinElement(MWContext *pContext, LO_BuiltinStruct *pBuiltin
 				pWnd->DestroyWindow();
 			}
 		}
+        else if (type&& !XP_STRCMP(type,"builtin/attachments"))
+        {
+			CObject* pObj = (CObject *)pBuiltin_struct->FE_Data;
+			if (pObj && pObj->IsKindOf( RUNTIME_CLASS( CEmbeddedAttachList )))
+            {
+                ((CEmbeddedAttachList *)pObj)->DestroyWindow();
+            }
+
+        }
 #endif //ENDER
 }

@@ -86,7 +86,7 @@ private:
     UINT              m_nComboTop;
     BOOL *            m_pEnableConfig;
 	CNSToolbar2*	  m_pToolbar;
-
+    CView *           m_pCommandView; //view to send button commands to.
 #ifdef XP_WIN16
 	CNSToolTip      * m_pToolTip;
 #endif
@@ -111,10 +111,13 @@ public:
     BOOL CreateFloater(CWnd* pParent, UINT nIDBar, UINT nIDCaption,
                             UINT * pIDArray, int nIDCount,      // Command ID array and count
                             UINT * pIDArray2,int nIDCount2,
-                            UINT nIDBitmap, SIZE sizeButton, SIZE sizeImage );
+                            UINT nIDBitmap, SIZE sizeButton, SIZE sizeImage, CView *pCommandView = NULL);
     // After creating toobar, call this to enable/disable action on button down
     // Used primarily when action is creation of a CDropdownToolbar
     void SetDoOnButtonDown( UINT nID, BOOL bSet );
+
+    //need place to send commands in case this toolbar not in proper chain of messages.
+    void SetCommandView(CView *pView){ m_pCommandView = pView;}
 
     // After creating toobar, call this to set combobox command ID and its full size
     //   (including dropdown height) of each combobox used
@@ -186,11 +189,10 @@ public:
 	// How big do we need to be
 	CSize CalcDynamicLayout(int nLength, DWORD dwMode );
 
-
 // Implementation
 public:
 	virtual ~CComboToolBar();
-
+    virtual BOOL OnCommand(WPARAM wParam, LPARAM lParam );
 	// Generated message map functions
 protected:
 #ifdef XP_WIN16

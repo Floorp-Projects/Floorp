@@ -49,7 +49,7 @@ CComboToolBar::CComboToolBar()
     // This is OK for default small toolbar, 
     //  but we will try to get better estimate when toolbar is created
     m_nComboTop = 3;  
-
+    m_pCommandView = NULL;
     m_pEnableConfig = NULL;
     m_sizeImage.cx = m_sizeImage.cy = 16;
     m_nIDBitmap = 0;
@@ -96,13 +96,13 @@ END_MESSAGE_MAP()
 BOOL CComboToolBar::CreateFloater(CWnd* pParent, UINT nIDBar, UINT nIDCaption,
                             UINT * pIDArray, int nIDCount,      // Command ID array and count
                             UINT * pIDArray2,int nIDCount2,
-                            UINT nIDBitmap, SIZE sizeButton, SIZE sizeImage )
+                            UINT nIDBitmap, SIZE sizeButton, SIZE sizeImage ,CView *pCommandView /*=NULL*/)
 {
     ASSERT( pParent );
 	ASSERT(nIDCount >= 1);  // must be at least one of them
 	ASSERT(pIDArray == NULL ||
 		AfxIsValidAddress(pIDArray, sizeof(UINT) * nIDCount, FALSE));
-
+    m_pCommandView = pCommandView;
     DWORD dwStyle = WS_CHILD|CBRS_TOOLTIPS|CBRS_BOTTOM|CBRS_FLYBY|CBRS_SIZE_DYNAMIC;
 
 	// Toolbar is NOT initially visible
@@ -220,7 +220,7 @@ BOOL CComboToolBar::CreateFloater(CWnd* pParent, UINT nIDBar, UINT nIDCaption,
     
     // ASSUME WE WANT DOCKING AND TOOLTIPS!
 
-    EnableDocking(CBRS_ALIGN_BOTTOM);
+//    EnableDocking(CBRS_ALIGN_BOTTOM);
 
     // Set caption that shows if toolbar is floating
     if ( nIDCaption ) {
@@ -570,8 +570,7 @@ void CComboToolBar::_SetCheck( int iIndex, int iCheck )
 #ifdef FEATURE_EDCOMBTB
 #include "edtcombtb.i01"
 #endif
-
-	
+//  CToolBar::SetCheck(iIndex,iCheck);
 }
 
 
@@ -731,10 +730,17 @@ void CComboToolBar::SetCNSToolbar(CNSToolbar2 *pToolbar)
 
 void CComboToolBar::OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler )
 {
-	if (m_pToolbar)
+#if 0
+    if (m_pToolbar)
         m_pToolbar->OnUpdateCmdUI(pTarget, bDisableIfNoHndler);
 
 	CToolBar::OnUpdateCmdUI(pTarget, bDisableIfNoHndler);
+#endif
+	if (m_pToolbar)
+        m_pToolbar->OnUpdateCmdUI(pTarget, FALSE);
+
+	CToolBar::OnUpdateCmdUI(pTarget, FALSE);
+
 }
 
 CSize CComboToolBar::CalcDynamicLayout(int nLength, DWORD dwMode )
@@ -789,6 +795,7 @@ void CComboToolBar::OnLButtonDown(UINT nFlags, CPoint point)
                 PostMessage(WM_LBUTTONUP, (WPARAM)nFlags, MAKELONG(point.x, point.y) );
                 return;
             }
+
         }
     }
 
@@ -804,9 +811,28 @@ void CComboToolBar::OnLButtonUp(UINT nFlags, CPoint point)
 
 	// Send this message to the customizable toolbar for dragging
 	MapWindowPoints(GetParent(), &point, 1);
-	GetParent()->SendMessage(WM_LBUTTONUP, nFlags, MAKELPARAM(point.x, point.y));
+    GetParent()->SendMessage(WM_LBUTTONUP, nFlags, MAKELPARAM(point.x, point.y));
+    if (m_pCommandView)
+    {
+        LPTB_CONTROLINFO pInfo = m_pInfo;
+        for ( int i = 0; i < m_nCount; i++, pInfo++ ) 
+        {
+            // Test if we clicked inside a button
+            if ( pInfo->bIsButton ) 
+            {
+                CRect rect;
+                GetItemRect( i, &rect );
+                if ( rect.PtInRect(point)) 
+                {
+                    // Trigger command 
+                    m_pCommandView->PostMessage(WM_COMMAND, (WPARAM)pInfo->nID , NULL);
+                    m_pCommandView->SetFocus();
+                    return;
+                }
 
-
+            }
+        }
+    }
 }
 
 void CComboToolBar::OnMouseMove(UINT nFlags, CPoint point)
@@ -837,6 +863,40 @@ void CComboToolBar::OnSize( UINT nType, int cx, int cy )
 	}
     CToolBar::OnSize(nType, cx, cy);
 }
+
+
+
+BOOL
+CComboToolBar::OnCommand(WPARAM wParam, LPARAM lParam )
+{
+    if (m_pCommandView && HIWORD(wParam) == CBN_SELENDOK )
+    {
+        LPTB_CONTROLINFO pInfo = m_pInfo;
+        for ( int i = 0; i < m_nCount; i++, pInfo++ ) 
+        {
+            // Test if we clicked inside a button
+            if ( pInfo->pComboBox ) 
+            {
+                CRect rect;
+                GetItemRect( i, &rect );
+                if ( pInfo->nID == (LONG)LOWORD(wParam)) 
+                {
+                    // Trigger command 
+                    m_pCommandView->SetFocus();
+                    return m_pCommandView->SendMessage(WM_COMMAND, wParam , lParam);
+                }
+
+            }
+        }
+    }
+    else if (m_pCommandView && LOWORD(wParam) ==ID_GET_COLOR)
+    {
+        return m_pCommandView->SendMessage(WM_COMMAND, wParam , lParam);
+    }
+    return CToolBar::OnCommand(wParam,lParam);
+}
+
+
 
 #endif // EDITOR
 

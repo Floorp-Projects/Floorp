@@ -1319,7 +1319,8 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\cmd\winfe\fmtxarea.cpp
 !if defined(EDITOR)
 	$(DEPTH)\cmd\winfe\fmhtml.cpp
-	$(DEPTH)\cmd\winfe\editfloat.cpp
+	$(DEPTH)\cmd\winfe\enderwrp.cpp
+	$(DEPTH)\cmd\winfe\embdlist.cpp
 !endif
 !endif
 	$(DEPTH)\cmd\winfe\frameglu.cpp   

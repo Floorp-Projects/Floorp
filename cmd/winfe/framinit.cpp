@@ -192,33 +192,6 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
         if( IsEditFrame() && pDontCare->GetContext() ) {
             pDontCare->GetContext()->is_editor = TRUE;
         }
-#ifdef ENDER
-        else
-        {
-   // Create the HTML edit toolbars.  There are currently two separate
-   // toolbars.. one for formats and another for character operations.
-            EnableDocking(CBRS_ALIGN_BOTTOM);
-            m_pToolBarController = new CEditToolBarController(this);
-            if (!m_pToolBarController || !m_pToolBarController->CreateEditBars(GetMainContext()->GetContext(), TRUE, DISPLAY_CHARACTER_TOOLBAR))
-            {
-                TRACE("Bad ComposeBar");
-                if (m_pToolBarController)
-                    delete m_pToolBarController;
-                m_pToolBarController = NULL;
-                return FALSE;
-            }
-            CComboToolBar *t_combobar=m_pToolBarController->GetCharacterBar();
-            if (t_combobar)
-            {
-                t_combobar->ShowWindow(SW_HIDE);
-                //t_combobar->SetWindowText(_T("Edit"));//RESOURCE IT!
-                
-                DockControlBar(t_combobar,AFX_IDW_DOCKBAR_BOTTOM);
-                t_combobar->ShowWindow(SW_HIDE);
-                FloatControlBar(t_combobar,CPoint(0,0),CBRS_ALIGN_BOTTOM);
-            }
-        }
-#endif //ENDER
 
 #endif //EDITOR
 		// mwh - CDCCX::Initialize() will initialize the color palette, but we have to make sure we have 

@@ -470,8 +470,15 @@ void SetCharacterCheck(MWContext * pMWContext, CCmdUI* pCmdUI, CWnd* pToolbar, E
 
 void CNetscapeEditView::OnUpdateCharacterStyle(UINT nID, CCmdUI* pCmdUI)
 {
-    void *pVoid = (CWnd *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
-	if (pVoid) {
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
+	if (pController) {
         ED_TextFormat iStyle = -1;
         switch( nID )
         {
@@ -501,10 +508,10 @@ void CNetscapeEditView::OnUpdateCharacterStyle(UINT nID, CCmdUI* pCmdUI)
                 break;
         }
         if( iStyle != -1 ){
-            if ( ((CEditToolBarController *)pVoid)->GetCNSToolbar())
-    	    	SetCharacterCheck(GET_MWCONTEXT, pCmdUI, ((CEditToolBarController *)pVoid)->GetCNSToolbar(), iStyle);
-            else if (((CEditToolBarController *)pVoid)->GetCharacterBar())
-    	    	SetCharacterCheck(GET_MWCONTEXT, pCmdUI, ((CEditToolBarController *)pVoid)->GetCharacterBar(), iStyle);
+            if ( pController->GetCNSToolbar())
+    	    	SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCNSToolbar(), iStyle);
+            else if (pController->GetCharacterBar())
+    	    	SetCharacterCheck(GET_MWCONTEXT, pCmdUI, pController->GetCharacterBar(), iStyle);
 	    	pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
         }
     }
@@ -513,8 +520,14 @@ void CNetscapeEditView::OnUpdateCharacterStyle(UINT nID, CCmdUI* pCmdUI)
 ////////////////////////////////////////////////////////////////////////////////
 void CNetscapeEditView::OnSetFocusParagraphStyle()
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 
 
 	if (pController) {
@@ -525,8 +538,14 @@ void CNetscapeEditView::OnSetFocusParagraphStyle()
 
 void CNetscapeEditView::OnSetFocusFontFace()
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
 		pController->GetFontFaceCombo()->SetFocus();
         pController->GetFontFaceCombo()->ShowDropDown();
@@ -535,8 +554,14 @@ void CNetscapeEditView::OnSetFocusFontFace()
 
 void CNetscapeEditView::OnSetFocusFontSize()
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
 		pController->GetFontSizeCombo()->SetFocus();
         pController->GetFontSizeCombo()->ShowDropDown();
@@ -553,8 +578,14 @@ void CNetscapeEditView::OnGetFontColor()
 
     bBusy = TRUE;
 
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController)
     {
         pController->GetFontColorCombo()->SendMessage(WM_LBUTTONUP, 0,0);// ShowDropDown(FALSE);
@@ -643,8 +674,14 @@ void CNetscapeEditView::OnSelendokParagraphCombo()
 	// TODO: ADD CODE TO TEST IF ALLOWED TO CHANGE STYLE!
 
 	// Get index to selected item in Paragraph styles list
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
 		UINT	nSelected = pController->GetParagraphCombo()->GetCurSel();
 
@@ -680,8 +717,14 @@ void CNetscapeEditView::OnUpdateParagraphComboBox(CCmdUI* pCmdUI)
 
 		if ( m_EditState.nParagraphFormat != nParagraphFormat )
 		{
-            CEditToolBarController * pController = NULL;
-            pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+            CEditToolBarController *pController;
+            CWnd *t_parent;
+            if (!GetEmbedded())
+                t_parent = (CWnd *)GetParentFrame();
+            else
+                t_parent = GetParent();
+            if (t_parent)
+                pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 			if (pController) {
 				if ( nParagraphFormat == P_UNKNOWN ) 
 					pController->GetParagraphCombo()->SetCurSel(-1);
@@ -714,8 +757,14 @@ void CNetscapeEditView::OnUpdateFontFaceComboBox(CCmdUI* pCmdUI)
 	{
     	MWContext *pMWContext = GET_MWCONTEXT;
         if(pMWContext){
-            CEditToolBarController * pController = NULL;
-            pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+            CEditToolBarController *pController;
+            CWnd *t_parent;
+            if (!GetEmbedded())
+                t_parent = (CWnd *)GetParentFrame();
+            else
+                t_parent = GetParent();
+            if (t_parent)
+                pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 			if (pController) {
                 CNSComboBox * pCombo = pController->GetFontFaceCombo();
                 char * pFace = EDT_GetFontFace(pMWContext);
@@ -747,8 +796,14 @@ void CNetscapeEditView::OnUpdateFontFaceComboBox(CCmdUI* pCmdUI)
 
 void CNetscapeEditView::OnSelendokFontFaceCombo()
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
         int iFontIndex = pController->GetSelectedFontFaceIndex();
         // Process "Other..." to get font from dialog and set it
@@ -820,8 +875,14 @@ void CNetscapeEditView::OnSelendokFontSizeCombo()
     }
     
 	// Font size is 1 more than index to selected item
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
         int iSel = pController->GetFontSizeCombo()->GetCurSel();
         int iNewFontSize =  0;
@@ -856,8 +917,14 @@ void CNetscapeEditView::OnSelendokFontSizeCombo()
 
 void CNetscapeEditView::OnFontSizeDropDown()
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
         CNSComboBox * pCombo = pController->GetFontSizeCombo();
         int iSel = pCombo->GetCurSel();
@@ -900,8 +967,14 @@ void CNetscapeEditView::OnUpdateFontSizeComboBox(CCmdUI* pCmdUI)
                         iFontIndex != m_EditState.iFontIndex || 
                         iFontIndex > 1 )
                     {
-                        CEditToolBarController * pController = NULL;
-                        pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+                        CEditToolBarController *pController;
+                        CWnd *t_parent;
+                        if (!GetEmbedded())
+                            t_parent = (CWnd *)GetParentFrame();
+                        else
+                            t_parent = GetParent();
+                        if (t_parent)
+                            pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 			            if (pController)
                         {
                             char * pSize = NULL;
@@ -921,8 +994,14 @@ void CNetscapeEditView::OnUpdateFontSizeComboBox(CCmdUI* pCmdUI)
                 }
                 else
                 {
-                    CEditToolBarController * pController = NULL;
-                    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+                    CEditToolBarController *pController;
+                    CWnd *t_parent;
+                    if (!GetEmbedded())
+                        t_parent = (CWnd *)GetParentFrame();
+                    else
+                        t_parent = GetParent();
+                    if (t_parent)
+                        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 			        if (pController)
                         pController->GetFontSizeCombo()->FindSelectedOrSetText(NULL);
                 }
@@ -941,8 +1020,14 @@ void CNetscapeEditView::UpdateFontSizeCombo()
     // Change current state to force updating the combo
     m_EditState.bFontSizeMaybeChanged = TRUE;
     m_EditState.iFontSize = -2;
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController) {
         wfe_FillFontSizeCombo(GET_MWCONTEXT, pController->GetFontSizeCombo(), 
                               (EDT_GetFontFaceIndex(GET_MWCONTEXT) == 1));
@@ -994,8 +1079,14 @@ void CNetscapeEditView::OnFontColorMenu(UINT nID)
 
 void CNetscapeEditView::OnUpdateFontColorComboBox(CCmdUI* pCmdUI)
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
     if (pController) {
 	    if ( m_EditState.bFontColorMaybeChanged && 
 	         GetFocus() == this )
@@ -1115,8 +1206,14 @@ void CNetscapeEditView::OnDisplayTables()
 
 void CNetscapeEditView::OnUpdateDisplayTables(CCmdUI* pCmdUI)
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if( pController && pCmdUI->m_pMenu ){
         pCmdUI->m_pMenu->ModifyMenu(ID_DISPLAY_TABLES, MF_BYCOMMAND | MF_STRING, ID_DISPLAY_TABLES,
                                     szLoadString(EDT_GetDisplayTables(GET_MWCONTEXT) ?
@@ -2521,8 +2618,14 @@ void CNetscapeEditView::UpdateListMenuItem(CCmdUI* pCmdUI, TagType t)
     }
     pCmdUI->Enable(CAN_INTERACT);
 
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController && CAN_INTERACT && !pCmdUI->m_pMenu && pController->GetCharacterBar() ) {
 			(pController->GetCharacterBar())->SetCheck( pCmdUI->m_nID, bIsList );
     }
@@ -2562,8 +2665,14 @@ void CNetscapeEditView::OnAlignPopup()
     
     RECT rectCaller = {0,0, 0, 0};
 	RECT newRectCaller = {0, 0, 0, 0 };
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
     if (pController) {
         CComboToolBar * pToolbar = pController->GetCharacterBar();
 		CCommandToolbar *pCommandToolbar = pController->GetCNSToolbar();
@@ -2594,7 +2703,10 @@ void CNetscapeEditView::OnAlignPopup()
     // Build dropdown toolbar for alignment buttons
     //   CommandID is sent to parent frame when pressed
     // Use this to include current state as a push-down button:
-    pTB = new CDropdownToolbar(GetParentFrame(), pMWContext, &rectCaller, ID_ALIGN_POPUP, nInitialID);
+    if (GetEmbedded())
+        pTB = new CDropdownToolbar(this, pMWContext, &rectCaller, ID_ALIGN_POPUP, nInitialID);
+    else
+        pTB = new CDropdownToolbar(GetParentFrame(), pMWContext, &rectCaller, ID_ALIGN_POPUP, nInitialID);
     if( pTB ){
         pTB->AddButton(IDB_HALIGN_LEFT, ID_ALIGN_LEFT);
         pTB->AddButton(IDB_HALIGN_CENTER, ID_ALIGN_CENTER);
@@ -2871,8 +2983,14 @@ void CNetscapeEditView::OnDisplayParagraphMarks()
 
 void CNetscapeEditView::OnUpdateDisplayParagraphMarks(CCmdUI* pCmdUI)
 {
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if( pController && pCmdUI->m_pMenu ){
         pCmdUI->m_pMenu->ModifyMenu(ID_EDIT_DISPLAY_PARAGRAPH_MARKS, MF_BYCOMMAND | MF_STRING, 
                                     CASTUINT(ID_EDIT_DISPLAY_PARAGRAPH_MARKS),
@@ -2889,8 +3007,14 @@ void CNetscapeEditView::OnInsertObjectPopup()
         return;
     }
     RECT rectCaller = {0,0, 0, 0};
-    CEditToolBarController * pController = NULL;
-    pController = (CEditToolBarController *)GetParentFrame()->SendMessage(WM_TOOLCONTROLLER);
+    CEditToolBarController *pController;
+    CWnd *t_parent;
+    if (!GetEmbedded())
+        t_parent = (CWnd *)GetParentFrame();
+    else
+        t_parent = GetParent();
+    if (t_parent)
+        pController = (CEditToolBarController *)t_parent->SendMessage(WM_TOOLCONTROLLER);
 	if (pController)
     {
 		// This ALWAYS gets the CharacterToolbar 
@@ -2928,7 +3052,10 @@ void CNetscapeEditView::OnInsertObjectPopup()
     // Build dropdown toolbar for insert object buttons
     //   CommandID is sent to parent frame when pressed
     pTB = NULL;
-    pTB = new CDropdownToolbar(GetParentFrame(), pMWContext, &rectCaller, ID_INSERT_POPUP, 0);
+    if (GetEmbedded())
+        pTB = new CDropdownToolbar(this, pMWContext, &rectCaller, ID_INSERT_POPUP, 0);
+    else
+        pTB = new CDropdownToolbar(GetParentFrame(), pMWContext, &rectCaller, ID_INSERT_POPUP, 0);
     if( pTB ){
         pTB->AddButton(IDB_INSERT_LINK, ID_MAKE_LINK);
         pTB->AddButton(IDB_INSERT_TARGET, ID_INSERT_TARGET);

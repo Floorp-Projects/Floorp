@@ -19,13 +19,13 @@
 #ifndef __FORM_HTMLAREA_H
 #define __FORM_HTMLAREA_H
 
-//	This file is dedicated to one form type it uses the CNetscapeEditView as
+//	This file is dedicated to one form type it uses the CEnderView as
 //		their implementation as requried by the XP layout
 //		library.
 
 //	Required includes.
 #include "fmabstra.h"
-#include "edview.h"
+#include "enderwrp.h"
 
 class CFormHtmlarea : public CFormElement	{
 //	Construction/destruction.
@@ -80,7 +80,7 @@ public:
 
 //	The htmlarea widget.
 private:
-	CNetscapeEditView *m_pWidget;
+	CEnderView *m_pWidget;
 };
 
 #endif // __FORM_HTMLAREA_H
