@@ -213,7 +213,7 @@ XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     "mov	%0, r0		\n\t"	/* the result...			*/
     : "=r" (result)
     : "r" (&my_params)
-    : "r0", "r1", "r2", "r3", "r4", "ip", "lr"
+    : "r0", "r1", "r2", "r3", "r4", "ip", "lr", "sp"
     );
     
   return result;
