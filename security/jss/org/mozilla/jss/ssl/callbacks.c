@@ -464,8 +464,8 @@ JSSL_JavaCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
     PR_ASSERT(fd != NULL);
 
     /* initialize logging structures */
-    log.arena = PR_Calloc(1, sizeof(PLArenaPool));
-    PL_InitArenaPool(log.arena,"jss",DER_DEFAULT_CHUNKSIZE,sizeof(double));
+    log.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if( log.arena == NULL ) return SECFailure;
     log.head = NULL;
     log.tail = NULL;
     log.count = 0;
@@ -480,7 +480,7 @@ JSSL_JavaCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
     peerCert = SSL_PeerCertificate(fd);
     
     /* if peer didn't present a cert, why am I called? */
-    if (peerCert == NULL) return SECFailure;
+    if (peerCert == NULL) goto finish;
 
     certUsage = isServer ? certUsageSSLClient : certUsageSSLServer;
 
@@ -613,8 +613,7 @@ finish:
     if( hostname != NULL) {
         PR_Free(hostname);
     }
-    PL_FinishArenaPool(log.arena);
-    PR_Free(log.arena);
+    PORT_FreeArena(log.arena, PR_FALSE);
     return retval;
 }
 
