@@ -349,7 +349,8 @@ protected:
   PRUint8 mFlags;
 
   // prefs used to configure the double-click word selection behavior
-  friend class WordSelectListener: public nsIObserver {
+  friend class WordSelectListener;
+  class WordSelectListener: public nsIObserver {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
