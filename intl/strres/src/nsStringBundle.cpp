@@ -141,7 +141,7 @@ nsStringBundle::nsStringBundle(nsIURI* aURL, nsILocale* aLocale,
 
 #else // NECKO
   nsresult rv;
-  rv = NS_OpenURI(&in, aURL, nsnull);   // XXX need to pass the document's nsILoadGroup here!
+  rv = NS_OpenURI(&in, aURL);
   if (NS_FAILED(rv)) {
 #ifdef NS_DEBUG
     printf("cannot open uri\n");
@@ -309,7 +309,7 @@ nsStringBundle::OpenInputStream(nsString2& aURLStr, nsIInputStream*& in)
   ret = NS_NewURI(&uri, aURLStr);
   if (NS_FAILED(ret)) return ret;
 
-  ret = NS_OpenURI(&in, uri, nsnull);   // XXX need to pass the document's nsILoadGroup here!
+  ret = NS_OpenURI(&in, uri);
   NS_RELEASE(uri);
 #endif // NECKO
   return ret;

@@ -90,7 +90,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 
     mEventQueue = queue;
     NS_IF_ADDREF(mEventQueue);
-    
+
     return NS_OK;
 }
 
@@ -407,7 +407,8 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
 NS_IMETHODIMP
 nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *ctxt,
-                         nsIStreamListener *listener)
+                         nsIStreamListener *listener,
+                         nsILoadGroup* group)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -446,6 +447,7 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     NS_ASSERTION(mContext == nsnull, "context not released");
     mContext = ctxt;
     NS_IF_ADDREF(mContext);
+    mLoadGroup = group;
 
     mState = START_READ;
     mSourceOffset = startPosition;
@@ -461,7 +463,8 @@ NS_IMETHODIMP
 nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition, PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIStreamObserver *observer)
+                          nsIStreamObserver *observer,
+                          nsILoadGroup* group)
 {
     nsAutoMonitor mon(mMonitor);
 
@@ -524,6 +527,14 @@ nsFileChannel::GetContentType(char * *aContentType)
     }
 }
 
+NS_IMETHODIMP
+nsFileChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+  *aLoadGroup = mLoadGroup;
+  NS_IF_ADDREF(*aLoadGroup);
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRunnable methods:
 ////////////////////////////////////////////////////////////////////////////////
@@ -560,6 +571,8 @@ nsFileChannel::Process(void)
           NS_ASSERTION(mSourceOffset == 0, "implement seek");
 
           if (mListener) {
+              if (mLoadGroup)
+                  (void)mLoadGroup->AddChannel(this, mContext);
               mStatus = mListener->OnStartRequest(this, mContext);  // always send the start notification
               if (NS_FAILED(mStatus)) goto error;
           }
@@ -644,6 +657,11 @@ nsFileChannel::Process(void)
           if (mListener) {
               // XXX where do we get the error message?
               (void)mListener->OnStopRequest(this, mContext, mStatus, nsnull);
+              if (mLoadGroup) {
+                  (void)mLoadGroup->RemoveChannel(this, mContext, mStatus, nsnull);
+                  mLoadGroup = null_nsCOMPtr();
+              }
+              NS_RELEASE(mListener);
           }
 
           NS_IF_RELEASE(mBufferOutputStream);

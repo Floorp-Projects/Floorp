@@ -26,11 +26,8 @@
 #include "nsIURLGroup.h"
 #include "nsILoadAttribs.h"
 #else
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsString.h"
 #include "il_strm.h"

@@ -57,10 +57,14 @@ public:
   nsImageDocument();
   virtual ~nsImageDocument();
 
-  NS_IMETHOD StartDocumentLoad(nsIURI* aURL, 
+  NS_IMETHOD StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                               nsIChannel* aChannel,
+#else
+                               nsIURI *aUrl, 
+#endif
                                nsIContentViewerContainer* aContainer,
-                               nsIStreamListener** aDocListener,
-                               const char* aCommand);
+                               nsIStreamListener **aDocListener);
 
   nsresult CreateSyntheticDocument();
 
@@ -247,15 +251,23 @@ nsImageDocument::~nsImageDocument()
 }
 
 NS_IMETHODIMP
-nsImageDocument::StartDocumentLoad(nsIURI* aURL, 
+nsImageDocument::StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                                   nsIChannel* aChannel,
+#else
+                                   nsIURI *aURL, 
+#endif
                                    nsIContentViewerContainer* aContainer,
-                                   nsIStreamListener** aDocListener,
-                                   const char* aCommand)
+                                   nsIStreamListener **aDocListener)
 {
-  nsresult rv = nsDocument::StartDocumentLoad(aURL, 
+  nsresult rv = nsDocument::StartDocumentLoad(aCommand,
+#ifdef NECKO
+                                              aChannel, 
+#else
+                                              aURL, 
+#endif
                                               aContainer, 
-                                              aDocListener,
-                                              aCommand);
+                                              aDocListener);
   if (NS_FAILED(rv)) {
     return rv;
   }

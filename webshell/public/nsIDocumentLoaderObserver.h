@@ -69,7 +69,7 @@ public:
    * server has been established.
    */
 #ifdef NECKO
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, const char* aContentType, 
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, 
                             nsIContentViewer* aViewer) = 0;
 #else
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, 

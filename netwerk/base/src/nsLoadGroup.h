@@ -24,6 +24,7 @@
 #include "nsAgg.h"
 
 class nsISupportsArray;
+class nsLoadGroupEntry;
 
 class nsLoadGroup : public nsILoadGroup
 {
@@ -48,36 +49,22 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsILoadGroup methods:
     
+    /* void Init (in nsIStreamObserver observer, in nsILoadGroup parent); */
+    NS_IMETHOD Init(nsIStreamObserver *observer, nsILoadGroup *parent);
+
     /* attribute unsigned long DefaultLoadAttributes; */
     NS_IMETHOD GetDefaultLoadAttributes(PRUint32 *aDefaultLoadAttributes);
     NS_IMETHOD SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes);
 
-    /* void AsyncRead (in nsIChannel channel, in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIStreamListener listener); */
-    NS_IMETHOD AsyncRead(nsIChannel *channel, 
-                         PRUint32 startPosition, 
-                         PRInt32 readCount, 
-                         nsISupports *ctxt, 
-                         nsIStreamListener *listener);
+    /* void AddChannel (in nsIChannel channel, in nsISupports ctxt); */
+    NS_IMETHOD AddChannel(nsIChannel *channel, nsISupports* ctxt);
 
-    /* void AsyncWrite (in nsIChannel channel, in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIStreamObserver observer); */
-    NS_IMETHOD AsyncWrite(nsIChannel *channel, 
-                          nsIInputStream *fromStream, 
-                          PRUint32 startPosition, 
-                          PRInt32 writeCount, 
-                          nsISupports *ctxt, 
-                          nsIStreamObserver *observer);
+    /* void RemoveChannel (in nsIChannel channel, in nsISupports ctxt); */
+    NS_IMETHOD RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
+                             nsresult status, const PRUnichar *errorMsg);
 
     /* readonly attribute nsISimpleEnumerator Channels; */
     NS_IMETHOD GetChannels(nsISimpleEnumerator * *aChannels);
-
-    /* void AddObserver (in nsIStreamObserver observer); */
-    NS_IMETHOD AddObserver(nsIStreamObserver *observer);
-
-    /* void RemoveObserver (in nsIStreamObserver observer); */
-    NS_IMETHOD RemoveObserver(nsIStreamObserver *observer);
-
-    /* readonly attribute nsISimpleEnumerator Observers; */
-    NS_IMETHOD GetObservers(nsISimpleEnumerator * *aObservers);
 
     /* void AddSubGroup (in nsILoadGroup group); */
     NS_IMETHOD AddSubGroup(nsILoadGroup *group);
@@ -97,7 +84,7 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    friend class nsLoadGroupEntry;
+    friend nsLoadGroupEntry;
 
 protected:
     typedef nsresult (*PropagateDownFun)(nsIRequest* request);
@@ -106,10 +93,10 @@ protected:
 protected:
     PRUint32                    mDefaultLoadAttributes;
     nsISupportsArray*           mChannels;
-    nsISupportsArray*           mObservers;
     nsISupportsArray*           mSubGroups;
+    nsIStreamObserver*          mObserver;
     nsLoadGroup*                mParent;        // weak ref
-    nsIStreamObserver*          mObserver;      // might be an nsIStreamListener too
+    PRUint32                    mForegroundCount;
 };
 
 #endif // nsLoadGroup_h__

@@ -38,10 +38,10 @@ extern nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull);
 
 extern nsresult
-NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group);
+NS_OpenURI(nsIChannel* *result, nsIURI* uri);
 
 extern nsresult
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri, nsILoadGroup* group);
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri);
 
 extern nsresult
 NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, 
@@ -54,6 +54,7 @@ extern nsresult
 NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result);
 
 extern nsresult
-NS_NewLoadGroup(nsILoadGroup* parent, nsISupports* outer, nsILoadGroup* *result);
+NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
+                nsILoadGroup* parent, nsILoadGroup* *result);
 
 #endif // nsNeckoUtil_h__

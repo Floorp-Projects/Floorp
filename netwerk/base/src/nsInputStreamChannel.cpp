@@ -18,13 +18,14 @@
 
 #include "nsInputStreamChannel.h"
 #include "nsIStreamListener.h"
+#include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsInputStreamChannel methods:
 
 nsInputStreamChannel::nsInputStreamChannel()
-    : mURI(nsnull), mContentType(nsnull), mInputStream(nsnull)
+    : mURI(nsnull), mContentType(nsnull), mInputStream(nsnull), mLoadGroup(nsnull)
 {
     NS_INIT_REFCNT(); 
 }
@@ -123,7 +124,8 @@ nsInputStreamChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream *
 
 NS_IMETHODIMP
 nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                                nsISupports *ctxt, nsIStreamListener *listener)
+                                nsISupports *ctxt, nsIStreamListener *listener,
+                                nsILoadGroup* group)
 {
     // currently this happens before AsyncRead returns -- hope that's ok
     nsresult rv;
@@ -131,6 +133,14 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     // Do an extra AddRef so that this method's synchronous operation doesn't end up destroying
     // the listener prematurely.
     nsCOMPtr<nsIStreamListener> l(listener);
+
+    NS_ASSERTION(mLoadGroup == nsnull, "recursively entered AsyncRead?");
+    mLoadGroup = group;
+    NS_ADDREF(mLoadGroup);
+
+    if (group) {
+        (void)group->AddChannel(this, ctxt);
+    }
 
     rv = listener->OnStartRequest(this, ctxt);
     if (NS_FAILED(rv)) return rv;
@@ -151,16 +161,20 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) break;
     }
 
-    rv = listener->OnStopRequest(this, ctxt, rv, nsnull);     // XXX error message 
-    if (NS_FAILED(rv)) return rv;
+    rv = listener->OnStopRequest(this, ctxt, rv, nsnull);       // XXX error message 
+
+    if (group) {
+        (void)group->RemoveChannel(this, ctxt, rv, nsnull);     // XXX error message 
+    }
+    NS_RELEASE(mLoadGroup);
     
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
 nsInputStreamChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition,
                       PRInt32 writeCount, nsISupports *ctxt,
-                      nsIStreamObserver *observer)
+                      nsIStreamObserver *observer, nsILoadGroup* group)
 {
     // we don't do output
     return NS_ERROR_FAILURE;
@@ -185,6 +199,14 @@ nsInputStreamChannel::GetContentType(char * *aContentType)
 {
     *aContentType = nsCRT::strdup("text/html");
     return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+{
+  *aLoadGroup = mLoadGroup;
+  NS_ADDREF(*aLoadGroup);
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -26,6 +26,7 @@
 #include "nsHTTPHandler.h"
 #include "nsIEventQueue.h"
 #include "nsIHttpEventSink.h"
+#include "nsILoadGroup.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
@@ -66,15 +67,18 @@ public:
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
     NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *ctxt,
-                         nsIStreamListener *listener);
+                         nsIStreamListener *listener,
+                         nsILoadGroup* group);
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition,
                           PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIStreamObserver *observer);
+                          nsIStreamObserver *observer,
+                          nsILoadGroup* group);
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
 
     // nsIHTTPChannel methods:
     NS_IMETHOD GetRequestHeader(const char *headerName, char **_retval);
@@ -91,6 +95,8 @@ public:
     nsresult            Open();
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
+    
+    nsILoadGroup*       GetLoadGroup() { return mLoadGroup; }
 
 protected:
     nsCOMPtr<nsIURI>            m_URI;
@@ -104,6 +110,7 @@ protected:
     PRUint32                    mLoadAttributes;
 
     nsCOMPtr<nsISupports>       mResponseContext;
+    nsCOMPtr<nsILoadGroup>      mLoadGroup;
 };
 
 #endif /* _nsHTTPChannel_h_ */

@@ -39,6 +39,7 @@ class nsIStreamListener;
 class nsIStreamObserver;
 class nsIDocumentLoaderObserver;
 class nsIDocument;
+class nsIChannel;
 
 /* f43ba260-0737-11d2-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADERFACTORY_IID   \
@@ -65,9 +66,13 @@ class nsIDocumentLoaderFactory : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADERFACTORY_IID)
 
-    NS_IMETHOD CreateInstance(nsIURI* aURL,
+    NS_IMETHOD CreateInstance(const char *aCommand,
+#ifdef NECKO
+                              nsIChannel* aChannel,
+#else
+                              nsIURI* aURL,
+#endif
                               const char* aContentType, 
-                              const char *aCommand,
                               nsIContentViewerContainer* aContainer,
                               nsISupports* aExtraInfo,
                               nsIStreamListener** aDocListenerResult,

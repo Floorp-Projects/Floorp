@@ -41,13 +41,15 @@ public:
                                nsIInputStream **_retval);
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
     NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                         nsISupports *ctxt, nsIStreamListener *listener);
+                         nsISupports *ctxt, nsIStreamListener *listener,
+                         nsILoadGroup* group);
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition,
                           PRInt32 writeCount, nsISupports *ctxt,
-                          nsIStreamObserver *observer);
+                          nsIStreamObserver *observer, nsILoadGroup* group);
     NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
     NS_IMETHOD GetContentType(char * *aContentType);
+    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
 
     // nsInputStreamChannel methods:
     nsInputStreamChannel(); 
@@ -62,6 +64,7 @@ protected:
     nsIURI*             mURI;
     char*               mContentType;
     nsIInputStream*     mInputStream;
+    nsILoadGroup*       mLoadGroup;
 };
 
 #define NS_INPUTSTREAMCHANNEL_CID                    \

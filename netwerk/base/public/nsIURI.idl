@@ -38,6 +38,10 @@
  *       |         PreHost            
  *     Scheme
  *
+ * The subclass nsIURL provides a means to open an input or output              
+ * stream to a URI as a source/destination, as well as providing additional     
+ * accessors to destructure the path, query and reference portions typically    
+ * associated with URLs.                                                        
  */
 
 %{C++
@@ -135,9 +139,9 @@ interface nsIURI : nsISupports
  * *** What you most likely will want is NS_STANDARDURL_CID which is much more 
  * full featured. Look at nsIURL.idl for more details.
  */
- 
-#define NS_SIMPLEURI_CID                             \
-{ /* e0da1d70-2f7b-11d3-8cd0-0060b0fc14a3 */         \
+
+#define NS_SIMPLEURI_CID                              \
+{ /* e0da1d70-2f7b-11d3-8cd0-0060b0fc14a3 */          \
      0xe0da1d70,                                      \
      0x2f7b,                                          \
      0x11d3,                                          \

@@ -147,7 +147,7 @@ public:
 #ifdef NECKO
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus, nsIDocumentLoaderObserver* aObserver);
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, const char* aContentType, nsIContentViewer* aViewer);
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer);
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
   NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
@@ -753,8 +753,8 @@ nsPICS::ParsePICSLabel(char * label)
 
 NS_IMETHODIMP
 nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                nsIURI* aURL, 
-                                const char* aCommand)
+                            nsIURI* aURL, 
+                            const char* aCommand)
 {
   nsresult rv = NS_ERROR_FAILURE;
   
@@ -806,7 +806,6 @@ NS_IMETHODIMP
 #ifdef NECKO
 nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
                        nsIChannel* channel, 
-                       const char* aContentType, 
                        nsIContentViewer* aViewer)
 #else
 nsPICS::OnStartURLLoad(nsIDocumentLoader* loader, 
@@ -815,18 +814,22 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
                            nsIContentViewer* aViewer)
 #endif
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
 #ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
+  if (NS_FAILED(rv)) return rv;
+
+  char* aContentType;
+  rv = channel->GetContentType(&aContentType);
   if (NS_FAILED(rv)) return rv;
 #endif
 
   nsIContentViewerContainer *cont;
 
   if(!mPICSRatingsEnabled)
-    return NS_OK;
+    goto done;
  
   PICS_URLData* urlData;
   nsVoidArray* currentURLList;
@@ -858,8 +861,10 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
 
     if(mWebShellServicesURLTable == nsnull) {
         mWebShellServicesURLTable = new nsHashtable(256, PR_TRUE);
-        if (mWebShellServicesURLTable == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (mWebShellServicesURLTable == nsnull) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          goto done;
+        }
     }
 
     if(mWebShellServicesURLTable->Exists(&key)) {
@@ -869,19 +874,27 @@ nsPICS::OnStartURLLoad(nsIDocumentLoader* loader,
         mWebShellServicesURLTable->Put(&key, currentURLList);
       } else {
         currentURLList = new nsVoidArray();
-        if(!currentURLList)
-          return NS_ERROR_OUT_OF_MEMORY;
+        if(!currentURLList) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          goto done;
+        }
         mWebShellServicesURLTable->Put(&key, currentURLList);
       }
     } else {
       currentURLList = new nsVoidArray();
-      if(!currentURLList)
-      return NS_ERROR_OUT_OF_MEMORY;
+      if (!currentURLList) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
+      }
       mWebShellServicesURLTable->Put(&key, currentURLList);
     }
   
   }
-  return NS_OK;
+  done:
+#ifdef NECKO
+  nsCRT::free(aContentType);
+#endif
+  return rv;
 }
 
 NS_IMETHODIMP

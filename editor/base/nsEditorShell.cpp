@@ -2452,8 +2452,8 @@ nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
                                  nsIContentViewer* aViewer)
 #else
 nsEditorShell::OnStartURLLoad(nsIDocumentLoader* loader,
-                                 nsIChannel* channel, const char* aContentType,
-                                 nsIContentViewer* aViewer)
+                              nsIChannel* channel,
+                              nsIContentViewer* aViewer)
 #endif // NECKO
 {
 

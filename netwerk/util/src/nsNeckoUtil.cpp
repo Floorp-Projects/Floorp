@@ -50,7 +50,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 }
 
 nsresult
-NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group)
+NS_OpenURI(nsIChannel* *result, nsIURI* uri)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -59,26 +59,18 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup* group)
     nsIChannel* channel;
     rv = serv->NewChannelFromURI("load", uri, nsnull, &channel);
     if (NS_FAILED(rv)) return rv;
-#if 0
-    if (group) {
-        rv = group->AddChannel(channel);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(channel);
-            return rv;
-        }
-    }
-#endif
+
     *result = channel;
     return rv;
 }
 
 nsresult
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri, nsILoadGroup* group)
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
 {
     nsresult rv;
     nsIChannel* channel;
 
-    rv = NS_OpenURI(&channel, uri, group);
+    rv = NS_OpenURI(&channel, uri);
     if (NS_FAILED(rv)) return rv;
 
     nsIInputStream* inStr;
@@ -97,10 +89,10 @@ NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context,
     nsresult rv;
     nsIChannel* channel;
 
-    rv = NS_OpenURI(&channel, uri, group);
+    rv = NS_OpenURI(&channel, uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->AsyncRead(0, -1, context, aConsumer);
+    rv = channel->AsyncRead(0, -1, context, aConsumer, group);
     NS_RELEASE(channel);
     return rv;
 }
@@ -132,13 +124,14 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 }
 
 nsresult
-NS_NewLoadGroup(nsILoadGroup* parent, nsISupports* outer, nsILoadGroup* *result)
+NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
+                nsILoadGroup* parent, nsILoadGroup* *result)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    return serv->NewLoadGroup(parent, outer, result);
+    return serv->NewLoadGroup(outer, observer, parent, result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

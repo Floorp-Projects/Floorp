@@ -1827,7 +1827,6 @@ NS_IMETHODIMP
 #ifdef NECKO
 nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 
                                  nsIChannel* channel, 
-                                 const char* aContentType, 
                                  nsIContentViewer* aViewer)
 #else
 nsWebShellWindow::OnStartURLLoad(nsIDocumentLoader* loader, 

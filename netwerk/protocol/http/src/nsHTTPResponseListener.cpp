@@ -214,7 +214,10 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
         rv = m_pConsumer->OnStopRequest(m_pConnection, m_ResponseContext, i_Status, i_pMsg);
-    } 
+    }
+
+    if (m_pConnection->GetLoadGroup())
+        m_pConnection->GetLoadGroup()->RemoveChannel(m_pConnection, m_ResponseContext, i_Status, i_pMsg);
 
     // The Consumer is no longer needed...
     NS_IF_RELEASE(m_pConsumer);
@@ -697,7 +700,7 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
         nsIChannel* channel;
         rv = serv->NewChannelFromURI("load", newURL, nsnull, &channel);
         if (NS_SUCCEEDED(rv)) {
-          rv = channel->AsyncRead(0, -1, m_ResponseContext, m_pConsumer);
+          rv = channel->AsyncRead(0, -1, m_ResponseContext, m_pConsumer, nsnull);
           NS_RELEASE(channel);
         }
 #endif

@@ -329,7 +329,6 @@ NS_IMETHODIMP
 #ifdef NECKO
 nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader,
                              nsIChannel* channel,
-                             const char* aContentType,
                              nsIContentViewer* aViewer)
 #else
 nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,

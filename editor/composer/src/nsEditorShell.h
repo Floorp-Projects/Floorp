@@ -212,7 +212,7 @@ class nsEditorShell :   public nsIEditorShell,
     NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, 
                            		 nsIContentViewer* aViewer);
 #else
-    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, const char* aContentType,
+    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
                                  nsIContentViewer* aViewer);
 #endif // NECKO
 

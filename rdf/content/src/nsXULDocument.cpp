@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -423,10 +423,14 @@ public:
 
     NS_IMETHOD GetContentType(nsString& aContentType) const;
 
-    NS_IMETHOD StartDocumentLoad(nsIURI *aUrl, 
+    NS_IMETHOD StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                                 nsIChannel* aChannel,
+#else
+                                 nsIURI *aUrl, 
+#endif
                                  nsIContentViewerContainer* aContainer,
-                                 nsIStreamListener **aDocListener,
-                                 const char* aCommand);
+                                 nsIStreamListener **aDocListener);
 
     NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
                               nsIContentViewerContainer* aContainer,
@@ -726,7 +730,12 @@ protected:
 		nsresult PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 		                        nsIContentViewerContainer* aContainer,
 		                        const char* aCommand,
-														nsIURI* aOptionalURL = 0 );
+#ifdef NECKO
+                            nsIChannel* aChannel
+#else
+                            nsIURI* aOptionalURL = 0
+#endif
+                            );
 
 protected:
     // pseudo constants
@@ -757,7 +766,7 @@ protected:
     nsVoidArray                mObservers;
     nsAutoString               mDocumentTitle;
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
-    nsCOMPtr<nsILoadGroup>      mDocumentLoadGroup;   // [OWNER] leads to loader
+    nsCOMPtr<nsILoadGroup>     mDocumentLoadGroup;  // [OWNER] leads to loader
     nsCOMPtr<nsIRDFResource>   mRootResource;       // [OWNER]
     nsCOMPtr<nsIContent>       mRootContent;        // [OWNER] 
     nsIDocument*               mParentDocument;     // [WEAK]
@@ -1083,11 +1092,21 @@ nsresult
 XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
                                 nsIContentViewerContainer* aContainer,
                                 const char* aCommand,
-                                nsIURI* aOptionalURL )
+#ifdef NECKO
+                                nsIChannel* aChannel
+#else
+                                nsIURI* aOptionalURL
+#endif
+                                )
 {
     nsCOMPtr<nsIURI> syntheticURL;
+#ifdef NECKO
+		if ( aChannel )
+      (void)aChannel->GetURI(getter_AddRefs(syntheticURL));
+#else
     if ( aOptionalURL )
         syntheticURL = dont_QueryInterface(aOptionalURL);
+#endif
     else
         {
             nsAutoString seedString;
@@ -1114,7 +1133,7 @@ XULDocumentImpl::PrepareToLoad( nsCOMPtr<nsIParser>* created_parser,
 
     mDocumentURL = syntheticURL;
 #ifdef NECKO
-    // XXX help
+    (void)aChannel->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
 #else
     syntheticURL->GetLoadGroup(getter_AddRefs(mDocumentLoadGroup));
 #endif
@@ -1250,17 +1269,31 @@ XULDocumentImpl::SetDocumentURLAndGroup(nsIURI* anURL)
 }
 
 NS_IMETHODIMP 
-XULDocumentImpl::StartDocumentLoad(nsIURI *aURL, 
+XULDocumentImpl::StartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                                   nsIChannel* aChannel,
+#else
+                                   nsIURI *aURL,
+#endif
                                    nsIContentViewerContainer* aContainer,
-                                   nsIStreamListener **aDocListener,
-                                   const char* aCommand)
+                                   nsIStreamListener **aDocListener)
 {
 		nsresult status;
 		nsCOMPtr<nsIParser> parser;
+#ifdef NECKO
+    nsCOMPtr<nsIURI> aURL;
+    status = aChannel->GetURI(getter_AddRefs(aURL));
+    if (NS_FAILED(status)) return status;
+#endif
 
 		do
 			{
-				if ( NS_FAILED(status = PrepareToLoad(&parser, aContainer, aCommand, aURL)) )
+#ifdef NECKO
+        status = PrepareToLoad(&parser, aContainer, aCommand, aChannel);
+#else
+        status = PrepareToLoad(&parser, aContainer, aCommand, aURL);
+#endif
+				if ( NS_FAILED(status) )
 					break;
 
 				{
@@ -1289,7 +1322,7 @@ XULDocumentImpl::LoadFromStream( nsIInputStream& xulStream,
 	{
 		nsresult status;
 		nsCOMPtr<nsIParser> parser;
-		if ( NS_SUCCEEDED(status = PrepareToLoad(&parser, aContainer, aCommand)) )
+		if ( NS_SUCCEEDED(status = PrepareToLoad(&parser, aContainer, aCommand, nsnull)) )
 			parser->Parse(xulStream);
 
 		return status;

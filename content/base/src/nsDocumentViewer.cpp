@@ -100,7 +100,7 @@ public:
                                        nsIDocumentViewer*& aResult);
 
   // nsIDocumentLoaderObserver interface
-    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand){return NS_OK;}
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand) {return NS_OK;}
 
 #ifndef NECKO
     NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,nsIDocumentLoaderObserver * aObserver){return NS_OK;}
@@ -111,7 +111,7 @@ public:
 #ifndef NECKO
     NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType,nsIContentViewer* aViewer);
 #else
-    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, const char* aContentType,nsIContentViewer* aViewer){return NS_OK;}
+    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer);
 #endif // NECKO
 
 #ifndef NECKO
@@ -129,7 +129,7 @@ public:
 #ifndef NECKO
     NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
 #else
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus){return NS_OK;}
+    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus);
 #endif // NECKO
 
 #ifndef NECKO
@@ -734,9 +734,12 @@ nsIContentViewer  *viewer;
  *  See documentation above in the DocumentViewerImpl class definition
  *	@update 07/09/99 dwc
  */
-#ifndef NECKO
 NS_IMETHODIMP 
+#ifdef NECKO
+DocumentViewerImpl::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer)
+#else
 DocumentViewerImpl::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType,nsIContentViewer* aViewer)
+#endif
 {
   mNumURLStarts++;
   return NS_OK;
@@ -747,11 +750,15 @@ DocumentViewerImpl::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
  *	@update 07/09/99 dwc
  */
 NS_IMETHODIMP 
+#ifdef NECKO
+DocumentViewerImpl::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus)
+#else
 DocumentViewerImpl::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus)
+#endif // NECKO
 {
-nsIContentViewerContainer *containerResult;
-nsIWebShell               *webContainer;
-nsresult                  rv;
+  nsIContentViewerContainer *containerResult;
+  nsIWebShell               *webContainer;
+  nsresult                  rv;
 
     mNumURLStarts--;
 
@@ -775,7 +782,6 @@ nsresult                  rv;
 
   return NS_OK;
 }
-#endif // NECKO
 
 
 NS_IMETHODIMP

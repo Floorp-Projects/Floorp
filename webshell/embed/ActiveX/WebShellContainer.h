@@ -94,7 +94,9 @@ public:
     NS_IMETHOD OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, nsresult aStatus, const PRUnichar* aMsg);
 
 	// nsIDocumentLoaderObserver 
-	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
+	NS_IMETHOD OnStartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
+                                 nsIContentViewerContainer* aContainer,
+                                 nsIStreamListener **aDocListener);
 	NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRInt32 aStatus, nsIDocumentLoaderObserver* aObserver);
 	NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, const char* aContentType, nsIContentViewer* aViewer);
 	NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress, PRUint32 aProgressMax);
@@ -108,7 +110,9 @@ public:
     NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
     NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
 
-	NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
+  NS_IMETHOD OnStartDocumentLoad(const char* aCommand, nsIURI *aUrl, 
+                                 nsIContentViewerContainer* aContainer,
+                                 nsIStreamListener **aDocListener);
 	NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus, nsIDocumentLoaderObserver* aObserver);
 	NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType, nsIContentViewer* aViewer);
 	NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);

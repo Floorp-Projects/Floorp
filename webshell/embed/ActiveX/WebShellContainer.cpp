@@ -485,7 +485,14 @@ CWebShellContainer::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext, n
 
 
 NS_IMETHODIMP
-CWebShellContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURI, const char* aCommand)
+CWebShellContainer::OnStartDocumentLoad(const char* aCommand,
+#ifdef NECKO
+                                        nsIChannel* aChannel,
+#else
+                                        nsIURI *aUrl, 
+#endif
+                                        nsIContentViewerContainer* aContainer,
+                                        nsIStreamListener **aDocListener)
 { 
 	return NS_OK; 
 } 

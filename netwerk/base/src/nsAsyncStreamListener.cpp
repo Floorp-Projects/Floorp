@@ -180,7 +180,8 @@ nsAsyncStreamObserver::~nsAsyncStreamObserver()
   NS_IF_RELEASE(mEventQueue);
 }
 
-NS_IMPL_ISUPPORTS(nsAsyncStreamObserver, nsCOMTypeInfo<nsIStreamObserver>::GetIID());
+NS_IMPL_THREADSAFE_ISUPPORTS(nsAsyncStreamObserver, 
+                             nsCOMTypeInfo<nsIStreamObserver>::GetIID());
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAsyncStreamListener, 
                             nsAsyncStreamObserver, 

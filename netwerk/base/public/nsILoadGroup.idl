@@ -30,6 +30,9 @@ interface nsIInputStream;
 [scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
 interface nsILoadGroup : nsIRequest
 {
+    void Init(in nsIStreamObserver observer,
+              in nsILoadGroup parent);
+
     /**
      * Accesses the default load attributes for the group, returned as
      * a flag word. Setting the default load attributes will cause them
@@ -38,50 +41,29 @@ interface nsILoadGroup : nsIRequest
     attribute unsigned long DefaultLoadAttributes;
 
     /**
-     * Adds the channel to the group, and performs and AsyncRead on the
-     * channel (see nsIChannel for details). The channel is automatically
-     * removed from the group when the async operation completes.
+     * Adds a new channel to the group. This will cause the default load
+     * attributes to be applied to that channel. If the channel added is 
+     * the first channel in the group, the group's observer's OnStartRequest
+     * method is called.
      */
-    void AsyncRead(in nsIChannel channel,
-                   in unsigned long startPosition,
-                   in long readCount,
-                   in nsISupports ctxt,
-                   in nsIStreamListener listener);
+    void AddChannel(in nsIChannel channel,
+                    in nsISupports ctxt);
 
     /**
-     * Adds the channel to the group, and performs and AsyncWrite on the
-     * channel (see nsIChannel for details). The channel is automatically
-     * removed from the group when the async operation completes.
+     * Removes a channel from the group. If the channel removed is 
+     * the last channel in the group, the group's observer's OnStopRequest
+     * method is called.
      */
-    void AsyncWrite(in nsIChannel channel,
-                    in nsIInputStream fromStream,
-                    in unsigned long startPosition,
-                    in long writeCount,
-                    in nsISupports ctxt,
-                    in nsIStreamObserver observer);
+    void RemoveChannel(in nsIChannel channel, 
+                       in nsISupports ctxt,
+                       in nsresult status,
+                       in wstring errorMsg);
 
     /**
      * Returns the channels contained directly in this group.
      * Enumerator element type: nsIChannel.
      */
     readonly attribute nsISimpleEnumerator Channels;
-
-    /**
-     * Adds an observer to the group. The observer's methods will be 
-     * called for each channel in the group.
-     */
-    void AddObserver(in nsIStreamObserver observer);
-
-    /**
-     * Removes an observer from the group.
-     */
-    void RemoveObserver(in nsIStreamObserver observer);
-
-    /**
-     * Returns the observers contained directly in this group.
-     * Enumerator element type: nsIStreamObserver.
-     */
-    readonly attribute nsISimpleEnumerator Observers;
 
     /**
      * Adds a new sub-group to the group.
