@@ -53,6 +53,9 @@
 #include "nsColor.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
+#include "nsIDOMHTMLAnchorElement.h"
+
+#include "nsIFocusableContent.h"
 
 //Enumeration of possible mouse states used to detect mouse clicks
 enum nsMouseState {
@@ -173,6 +176,7 @@ nsLabelFrame::HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus* aEventStatus)
 {
+#if 0
   NS_ENSURE_ARG_POINTER(aEventStatus);
   // if we don't have a control to send the event to
   // then what is the point?
@@ -202,11 +206,20 @@ nsLabelFrame::HandleEvent(nsIPresContext* aPresContext,
   // send the mouse click events down into the control
   *aEventStatus = nsEventStatus_eIgnore;
   switch (aEvent->message) {
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      mControlFrame->SetFocus(PR_TRUE);
- 	    mLastMouseState = eMouseDown;
+    case NS_MOUSE_LEFT_BUTTON_DOWN:{
+      nsIContent * content;
+      mControlFrame->GetFormContent(content);
+      if (nsnull != content) {
+        nsCOMPtr<nsIFocusableContent> focusable(do_QueryInterface(content));
+        if (focusable) {
+          focusable->SetFocus(aPresContext);
+        }
+        NS_RELEASE(content);
+      }
+      mLastMouseState = eMouseDown;
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
-	    break;
+      } break;
+
     case NS_MOUSE_LEFT_BUTTON_UP:
 	    if (eMouseDown == mLastMouseState) {
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
@@ -217,6 +230,7 @@ nsLabelFrame::HandleEvent(nsIPresContext* aPresContext,
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
       break;
   }
+#endif
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
@@ -229,9 +243,24 @@ nsLabelFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   if (nsnull != *aFrame) {
     nsCOMPtr<nsIFormControlFrame> controlFrame = do_QueryInterface(*aFrame);
     if (!controlFrame) {
+      // if the hit frame isn't a form control then
+      // check to see if it is an anchor
+      nsIFrame * parent;
+      (*aFrame)->GetParent(&parent);
+      while (parent != this && parent != nsnull) {
+        nsCOMPtr<nsIContent> content;
+        parent->GetContent(getter_AddRefs(content));
+        nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(content));
+        if (anchorElement) {
+          *aFrame = parent;
+          return NS_OK;
+        }
+        parent->GetParent(&parent);
+      }
       *aFrame = this;
     }
   }
+
   return NS_OK;
 }
 
@@ -478,6 +507,42 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+
+  PRBool     isStyleChange      = PR_FALSE;
+  PRBool     isDirtyChildReflow = PR_FALSE;
+
+  // Check for an incremental reflow
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // See if we're the target frame
+    nsIFrame* targetFrame;
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      // Get the reflow type
+      nsIReflowCommand::ReflowType  reflowType;
+      aReflowState.reflowCommand->GetType(reflowType);
+
+      switch (reflowType) {
+      case nsIReflowCommand::ReflowDirty:
+        isDirtyChildReflow = PR_TRUE;
+        break;
+
+      case nsIReflowCommand::StyleChanged:
+        // Remember it's a style change so we can set the reflow reason below
+        isStyleChange = PR_TRUE;
+        break;
+
+      default:
+        NS_ASSERTION(PR_FALSE, "unexpected reflow command type");
+      }
+
+    } else {
+      nsIFrame* nextFrame;
+      // Get the next frame in the reflow chain
+      aReflowState.reflowCommand->GetNext(nextFrame);
+      NS_ASSERTION(nextFrame == mFrames.FirstChild(), "unexpected next reflow command frame");
+    }
+  }
+
   // XXX remove the following when the reflow state is fixed
   LabelHack((nsHTMLReflowState&)aReflowState, "BUG - label");
 
@@ -511,8 +576,19 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
   // reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
   nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize);
+
+  if (isDirtyChildReflow) {
+    // Note: the only reason the frame would be dirty would be if it had
+    // just been inserted or appended
+    reflowState.reason = eReflowReason_Initial;
+    reflowState.reflowCommand = nsnull;
+  } else if (isStyleChange) {
+    reflowState.reason = eReflowReason_StyleChange;
+    reflowState.reflowCommand = nsnull;
+  }
   // XXX remove when reflow state is fixed
   LabelHack(reflowState, "label's area");
+
   ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState,
               borderPadding.left, borderPadding.top, 0, aStatus);
 
@@ -520,6 +596,18 @@ nsLabelFrame::Reflow(nsIPresContext*          aPresContext,
   FinishReflowChild(firstKid, aPresContext, aDesiredSize,
                     borderPadding.left, borderPadding.top, 0);
 
+  // If the child frame was just inserted, then 
+  // we're responsible for making sure it repaints
+  // XXX Although in this case I don't think the areaFrame can be delete
+#if 1
+  if (isDirtyChildReflow) {
+    // Complete the reflow and position and size the child frame
+    nsRect  rect(reflowState.mComputedMargin.left, reflowState.mComputedMargin.top,
+                 aDesiredSize.width, aDesiredSize.height);
+    // Damage the area occupied by the deleted frame
+    Invalidate(aPresContext, rect, PR_FALSE);
+  }
+#endif
   // add in our border and padding to the size of the child
   aDesiredSize.width  += borderPadding.left + borderPadding.right;
   aDesiredSize.height += borderPadding.top + borderPadding.bottom;
