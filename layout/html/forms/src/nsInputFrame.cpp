@@ -93,7 +93,7 @@ nsInputFrame::MoveTo(nscoord aX, nscoord aY)
       nsIView* parentWithView;
       nsPoint origin;
       GetOffsetFromView(origin, parentWithView);
-      view->SetPosition(origin.x + mViewBounds.x, origin.y + mViewBounds.y);
+      view->SetPosition(origin.x, origin.y);
       NS_IF_RELEASE(parentWithView);
       NS_RELEASE(view);
     }
@@ -112,7 +112,7 @@ nsInputFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   nsIView* view = nsnull;
   GetView(view);
   if (nsnull != view) {
-    view->SetDimensions(mViewBounds.width, mViewBounds.height);
+    view->SetDimensions(aWidth, aHeight);
     NS_RELEASE(view);
   }
   return NS_OK;
@@ -239,8 +239,6 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
     nsSize widgetSize;
     GetDesiredSize(aPresContext, aMaxSize, aDesiredSize, widgetSize);
 
-    mViewBounds.width = widgetSize.width;
-    mViewBounds.height = widgetSize.height;
     nsRect boundBox(0, 0, widgetSize.width, widgetSize.height); 
 
     nsIFrame* parWithView;
@@ -294,19 +292,8 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
     SetViewVisiblity(aPresContext, PR_FALSE);
   }
 
-  // Add in borders and padding
-  nsStyleSpacing* space =
-    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
-  aDesiredSize.width += space->mBorderPadding.left +
-    space->mBorderPadding.right;
-  aDesiredSize.height += space->mBorderPadding.top +
-    space->mBorderPadding.bottom;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
-
-  // Remember the view's offset coordinates
-  mViewBounds.x = space->mBorderPadding.left;
-  mViewBounds.y = space->mBorderPadding.top;
 
   if (nsnull != aMaxElementSize) {
     aMaxElementSize->width = aDesiredSize.width;

@@ -212,10 +212,6 @@ protected:
   nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
                       nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
-  // Location of the view within the frame. The view will be inset by
-  // the border+padding.
-  nsRect mViewBounds;
-
   nsMouseState mLastMouseState;
 };
 
