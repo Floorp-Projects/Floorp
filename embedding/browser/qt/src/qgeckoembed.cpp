@@ -67,7 +67,6 @@
 #include <nsProfileDirServiceProvider.h>
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
-#include <nsIPref.h>
 #include <nsVoidArray.h>
 #include <nsIDOMDocument.h>
 #include <nsIDOMBarProp.h>

@@ -22,7 +22,6 @@ REQUIRES	= xpcom \
 		  webbrwsr \
 		  shistory \
 		  embed_base \
-		  pref \
 		  windowwatcher \
 		  profdirserviceprovider \
 		  $(NULL)

@@ -47,7 +47,6 @@ class nsModuleComponentInfo;
 class nsIAppShell;
 class nsVoidArray;
 class nsProfileDirServiceProvider;
-class nsIPref;
 class nsIDirectoryServiceProvider;
 class nsIWebBrowserChrome;
 
@@ -86,7 +85,6 @@ private:
     static char                   *sProfileName;
     // for profiles
     static nsProfileDirServiceProvider *sProfileDirServiceProvider;
-    static nsIPref                *sPrefs;
     static nsIDirectoryServiceProvider *sAppFileLocProvider;
 
     // the list of all open windows
