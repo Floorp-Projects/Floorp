@@ -97,10 +97,21 @@ public class ImporterTopLevel extends ScriptableObject {
         return "global";
     }
 
+    public boolean has(String name, Scriptable start) {
+        return super.has(name, start)
+               || getPackageProperty(name, start) != NOT_FOUND;
+    }
+
     public Object get(String name, Scriptable start) {
         Object result = super.get(name, start);
         if (result != NOT_FOUND)
             return result;
+        result = getPackageProperty(name, start);
+        return result;
+    }
+
+    private Object getPackageProperty(String name, Scriptable start) {
+        Object result= NOT_FOUND;
         if (name.equals("_packages_"))
             return result;
         Object plist = ScriptableObject.getProperty(start,"_packages_");

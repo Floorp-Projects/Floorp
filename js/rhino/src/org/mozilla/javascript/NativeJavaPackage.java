@@ -178,8 +178,12 @@ public class NativeJavaPackage extends ScriptableObject {
         return "JavaPackage";
     }
 
-    public boolean has(String id, int index, Scriptable start) {
+    public boolean has(String id, Scriptable start) {
         return true;
+    }
+
+    public boolean has(int index, Scriptable start) {
+        return false;
     }
 
     public void put(String id, Scriptable start, Object value) {
