@@ -123,6 +123,12 @@ public:
                                            nsTableCellFrame* aCellFrame,
                                            nsTableRowFrame * aRowFrame);
 
+  /** the COLS attribute can be modified by any cell's width attribute.
+    * deal with it here.  Must be called before any call to 
+    * ColumnInfoCache::AddColumnInfo
+    */
+  virtual void AdjustColumnsForCOLSAttribute();
+
   /** return the column frame corresponding to the given column index
     * there are two ways to do this, depending on whether we have cached
     * column information yet.

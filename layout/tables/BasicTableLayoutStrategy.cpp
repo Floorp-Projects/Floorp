@@ -282,6 +282,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       nsSize cellMinSize = cellFrame->GetPass1MaxElementSize();
       nsSize cellDesiredSize = cellFrame->GetPass1DesiredSize();
       nscoord cellDesiredWidth = cellDesiredSize.width;
+      nscoord cellMinWidth = cellMinSize.width;
       if (gsDebug==PR_TRUE) 
         printf ("  for cell %d with colspan=%d, min = %d,%d  and  des = %d,%d\n", 
                 rowIndex, colSpan, cellMinSize.width, cellMinSize.height,
@@ -292,15 +293,24 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
         // This col has a specified fixed width so set the min and max width to the larger of 
         // (specified width, largest max_element_size of the cells in the column)
         // factoring in the min width of the prior cells (stored in minColWidth)
-        nscoord widthForThisCell = PR_MAX(cellMinSize.width, colPosition->mWidth.GetCoordValue());
+        nscoord widthForThisCell = specifiedFixedColWidth;
+        if (0==specifiedFixedColWidth) // set to min
+          specifiedFixedColWidth = cellMinWidth;
         widthForThisCell = PR_MAX(widthForThisCell, minColWidth);
-        widthForThisCell = widthForThisCell/colSpan;
         mTableFrame->SetColumnWidth(colIndex, widthForThisCell);
         maxColWidth = widthForThisCell;
-        if ((1==colSpan) && (effectiveMaxColumnWidth < widthForThisCell))
-          effectiveMaxColumnWidth = widthForThisCell;
-        if (gsDebug) 
-          printf ("  setting min and max col width to specified fixed width %d\n", widthForThisCell);
+        minColWidth = widthForThisCell;
+        if (1==colSpan) 
+        {
+          effectiveMaxColumnWidth = PR_MAX(effectiveMaxColumnWidth, widthForThisCell);
+          if (0==effectiveMinColumnWidth)
+            effectiveMinColumnWidth = widthForThisCell;
+          else
+            effectiveMinColumnWidth = PR_MIN(effectiveMinColumnWidth, widthForThisCell);
+          //above line works for most tables, but it can't be right
+          //effectiveMinColumnWidth = PR_MIN(effectiveMinColumnWidth, cellMinWidth);
+          //above line seems right and works for xT1, but breaks lots of other tables.
+        }
       }
       else
       {
@@ -308,6 +318,11 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
           maxColWidth = cellDesiredWidth;
         if ((1==colSpan) && (effectiveMaxColumnWidth < maxColWidth))
           effectiveMaxColumnWidth = cellDesiredWidth;
+        if (minColWidth < cellMinWidth)
+          minColWidth = cellMinWidth;
+        // effectiveMinColumnWidth is the min width as if no cells with colspans existed
+        if ((1==colSpan) && (effectiveMinColumnWidth < cellMinWidth))
+          effectiveMinColumnWidth = cellMinWidth;
       }
 
       //bookkeeping:  is this the cell that gave the column it's fixed width attribute?
@@ -320,13 +335,6 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
           cellGrantingWidth=PR_FALSE; //I've found the cell that gave the col it's width
       }        
 
-      // cellMinWidth can override fixed width, so factor it in here
-      nscoord cellMinWidth = cellMinSize.width;
-      if (minColWidth < cellMinWidth)
-        minColWidth = cellMinWidth;
-      // effectiveMinColumnWidth is the min width as if no cells with colspans existed
-      if ((1==colSpan) && (effectiveMinColumnWidth < cellMinWidth))
-        effectiveMinColumnWidth = cellMinWidth;
       if (1<colSpan)
       {
         // add the column to our list of post-process columns, if all of the intersected columns are auto
@@ -522,6 +530,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
   // if there is a COLS attribute, fix up mMinTableWidth and mMaxTableWidth
   if (PR_TRUE==hasColsAttribute)
   {
+    if (gsDebug) printf("has COLS attribute = %d\n", mCols);
     // for every effected column, subtract out its prior contribution and add back in the new value
     PRInt32 numColsEffected = mNumCols;
     if (NS_STYLE_TABLE_COLS_ALL!=mCols)
@@ -554,6 +563,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       mTableFrame->GetColumnFrame(effectedColIndex, colFrame);
       colFrame->SetMaxColWidth(maxOfMaxColWidths);  // cache the new column max width (min width is uneffected)
       colFrame->SetEffectiveMaxColWidth(maxOfMaxColWidths);
+      if (gsDebug) printf ("col %d now has max col width %d\n", effectedColIndex, maxOfMaxColWidths);
     }
     delete [] minColWidthArray;
     delete [] maxColWidthArray;
