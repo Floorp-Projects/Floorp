@@ -201,7 +201,7 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   return rv;
 }
 
-#ifndef XP_MAC
+#ifdef XP_MAC
 /*
  * Write a line to a file
  * return NS_OK if no error occurs
@@ -1757,7 +1757,7 @@ NET_SetCookieStringFromHttp(FO_Present_Types outputFormat,
 	net_IntSetCookieString(context, cur_url, set_cookie_header, gmtCookieExpires);
 }
 
-#ifndef XP_MAC
+#ifdef XP_MAC
 /* saves the HTTP cookies permissions to disk */
 PRIVATE void
 net_SaveCookiePermissions()
@@ -2144,7 +2144,7 @@ net_SaveCookiePermissions()
 	return;
     }
 
-    if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_WRITE))) {
+    if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookiePermission, XP_FILE_WRITE))) {
 	net_unlock_cookie_permission_list();
 	return;
     }
@@ -2210,7 +2210,7 @@ net_SaveCookiePermissions()
  */
 #define PERMISSION_LINE_BUFFER_SIZE 4096
 
-PRIVATE int
+PRIVATE void
 net_ReadCookiePermissions()
 {
     XP_File fp;
@@ -2220,7 +2220,7 @@ net_ReadCookiePermissions()
     net_CookiePermissionStruct * cookie_permission;
     char *host_from_header2;
 
-    if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookiePermission, XP_FILE_READ)))
+    if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookiePermission, XP_FILE_READ)))
 	return;
 
     /* format is:
@@ -2314,7 +2314,7 @@ net_SaveCookies()
 		return;
 	}
 
-	if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookie, XP_FILE_WRITE))) {
+	if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookie, XP_FILE_WRITE))) {
 		net_unlock_cookie_list();
 		return;
 	}
@@ -2414,10 +2414,10 @@ net_ReadCookies()
 	char *host, *is_domain, *path, *xxx, *expires, *name, *cookie;
 	Bool added_to_list;
 
-    net_ReadCookiePermissions(NULL);
+    net_ReadCookiePermissions();
 
-    if(!(fp = NET_XP_FileOpen(filename, xpHTTPCookie, XP_FILE_READ)))
-        return);
+    if(!(fp = NET_XP_FileOpen(NULL, xpHTTPCookie, XP_FILE_READ)))
+        return;
 
 	net_lock_cookie_list();
 	list_ptr = net_cookie_list;
