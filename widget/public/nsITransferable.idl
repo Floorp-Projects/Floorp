@@ -37,7 +37,8 @@
 #define kPNGImageMime  "image/png"
 #define kJPEGImageMime "image/jpg"
 #define kGIFImageMime  "image/gif"
-#define kFileMime      "application/file"
+#define kFileMime      "application/x-moz-file"
+#define kURLMime       "text/x-moz-url"
 
 %}
 
@@ -77,6 +78,7 @@ interface nsITransferable : nsISupports
     * Returns true if the data is large.
     */
   boolean isLargeDataSet ( ) ;
+  
 
     ///////////////////////////////
     // Setter part of interface 
