@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Weilbacher <mozilla@weilbacher.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -41,10 +42,13 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
 
+#include "nsIPref.h"
 #include "prenv.h" /* for PR_GetEnv */
 
+#include "nsPrintfCString.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
+#include "nsStringFwd.h"
 
 #include "nsOS2Uni.h"
 
@@ -519,19 +523,35 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
   if (!mGlobalPrinterList) 
      return NS_ERROR_OUT_OF_MEMORY;
 
-  int defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
-  for (int i = 0; i < mGlobalNumPrinters; i++) {
+  nsresult rv;
+  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  BOOL prefFailed = NS_FAILED(rv); // don't return on failure, optional feature
+
+  ULONG defaultPrinter = nsDeviceContextSpecOS2::PrnDlg.GetDefaultPrinter();
+  for (ULONG i = 0; i < mGlobalNumPrinters; i++) {
     nsXPIDLCString printer;
     nsDeviceContextSpecOS2::PrnDlg.GetPrinter(i, getter_Copies(printer));
 
     nsAutoChar16Buffer printerName;
     PRInt32 printerNameLength;
-    nsresult rv = MultiByteToWideChar(0, printer, strlen(printer),
-                                      printerName, printerNameLength);
+    rv = MultiByteToWideChar(0, printer, strlen(printer),
+                             printerName, printerNameLength);
     if (defaultPrinter == i) {
        mGlobalPrinterList->InsertStringAt(nsDependentString(printerName.get()), 0);
     } else {
        mGlobalPrinterList->AppendString(nsDependentString(printerName.get()));
+    }
+    // store printer description in prefs for the print dialog
+    if (!prefFailed) {
+       nsCAutoString printerDescription;
+       printerDescription = nsCAutoString(nsDeviceContextSpecOS2::PrnDlg.GetPrintDriver(i)->szDeviceName);
+       printerDescription += " (";
+       printerDescription += nsCAutoString(nsDeviceContextSpecOS2::PrnDlg.GetDriverType(i));
+       printerDescription += ")";
+       pPrefs->SetCharPref(nsPrintfCString(256,
+                                           "print.printer_%s.printer_description",
+                                           printer.get()).get(),
+                           printerDescription.get());
     }
   } 
   return NS_OK;
