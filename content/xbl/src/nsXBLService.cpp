@@ -1218,12 +1218,12 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     aForceSyncLoad = PR_TRUE;
 
   nsCOMPtr<nsIStreamListener> listener;
-  nsCOMPtr<nsIXMLContentSink> xblSink;
-  NS_NewXBLContentSink(getter_AddRefs(xblSink), xmlDoc, aURI, nsnull);
-  if (!xblSink)
-    return NS_ERROR_FAILURE;
-
   if(!aForceSyncLoad) {
+    nsCOMPtr<nsIXMLContentSink> xblSink;
+    NS_NewXBLContentSink(getter_AddRefs(xblSink), xmlDoc, aURI, nsnull);
+    if (!xblSink)
+      return NS_ERROR_FAILURE;
+
     if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", 
                                                  channel, 
                                                  loadGroup, 
@@ -1278,6 +1278,15 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   nsProxyStream* proxy = new nsProxyStream();
   NS_ENSURE_TRUE(proxy,NS_ERROR_OUT_OF_MEMORY);
+
+  // Do this after making sure the |channel->Open| succeeded (which it
+  // won't if the file doesn't exist) so that we don't have to go
+  // through the work of breaking the circular references between
+  // content sink, script loader, and document.
+  nsCOMPtr<nsIXMLContentSink> xblSink;
+  NS_NewXBLContentSink(getter_AddRefs(xblSink), xmlDoc, aURI, nsnull);
+  if (!xblSink)
+    return NS_ERROR_FAILURE;
 
   // Call StartDocumentLoad
   if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("loadAsData", 
