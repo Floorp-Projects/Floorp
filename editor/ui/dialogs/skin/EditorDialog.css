@@ -59,7 +59,7 @@ div.middle-align {
   vertical-align: middle;
 }
 
-label.margin-both {
+.margin-left-right {
   margin-left:  10px;
   margin-right:  5px;
 }
