@@ -1350,7 +1350,7 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (!aReflowState)
     return NS_OK;
 
-  if (eReflowReason_Initial == aReflowState->reason)
+  if (mState & NS_FRAME_FIRST_REFLOW)
   {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
