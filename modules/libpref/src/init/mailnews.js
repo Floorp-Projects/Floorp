@@ -93,9 +93,11 @@ pref("mail.support_skey",                   false);
 pref("mail.pop_password",                   "");
 pref("mail.auto_quote",                     true);
 pref("mail.fixed_width_messages",           true);
-pref("mail.quoted_style",                   2); // 0=plain, 1=bold, 2=italic, 3=bolditalic
-pref("mail.quoted_size",                    0); // 0=normal, 1=bigger, 2=smaller
-pref("mail.citation_color",                 "#000000"); // quoted color
+pref("mail.citation_color",                 ""); // quoted color
+pref("mail.quoted_style",                   0); // 0=plain, 1=bold, 2=italic, 3=bolditalic
+pref("mail.quoted_size",                    0); // 0=normal, 1=big, 2=small
+pref("mail.quoted_graphical",               true); // use HTML-style quoting for displaying plain text
+pref("mail.quoteasblock",                   false); // use HTML-style quoting for quoting plain text
 pref("mail.identity.organization",          "");
 pref("mail.identity.reply_to",              "");
 pref("mail.identity.username",              "");
@@ -406,7 +408,7 @@ pref("mail.server.default.dual_use_folders", true);
 
 pref("mail.smtpserver.default.auth_method", 2); // auth login
 
-pref("mail.display_glyph",true);   // see <http://www.bucksch.org/1/projects/mozilla/16507/>
+pref("mail.display_glyph",true);   // see <http://www.bucksch.org/1/projects/mozilla/16507>
 pref("mail.display_struct",true);  // dito
 pref("mail.send_struct",true);     // dito
 
