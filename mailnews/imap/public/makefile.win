@@ -15,24 +15,29 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..
+MODULE= msgimap
+
+################################################################################
+## exports
 
 EXPORTS =								\
 			nsIImapUrl.h				\
 			nsIImapProtocol.h			\
 			nsIImapLog.h				\
 			nsIIMAPHostSessionList.h	\
-			nsIImapMailfolderSink.h			\
-			nsIImapMessageSink.h			\
-			nsIImapExtensionSink.h			\
-			nsIImapMiscellaneousSink.h		\
+			nsIImapMailfolderSink.h		\
+			nsIImapMessageSink.h		\
+			nsIImapExtensionSink.h		\
+			nsIImapMiscellaneousSink.h	\
 			nsIImapService.h			\
 			nsIImapIncomingServer.h		\
 			nsIImapFlagAndUidState.h	\
 			$(NULL)
 
-MODULE= mailnews
+
 
 
 include <$(DEPTH)\config\rules.mak>

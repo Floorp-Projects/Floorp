@@ -16,28 +16,33 @@
 # Reserved.
 
 DEPTH=..\..\..
-XPIDLSRCS =                                       \
-		.\nsIMessenger.idl		\
+MODULE=msgbase
+
+XPIDLSRCS =								\
+		.\nsIMessenger.idl				\
 		.\nsICopyMessageListener.idl	\
-		.\nsIFolder.idl		\
-		.\nsIFolderListener.idl	\
-		.\nsIMessage.idl			\
-		.\nsIMessageView.idl		\
-		.\nsIMsgAccount.idl			\
-		.\nsIMsgAccountManager.idl	\
-		.\nsIMsgFolder.idl	  \
-		.\nsIMsgGroupRecord.idl   \
-		.\nsIMsgHost.idl		  \
+		.\nsIFolder.idl					\
+		.\nsIFolderListener.idl			\
+		.\nsIMessage.idl				\
+		.\nsIMessageView.idl			\
+		.\nsIMsgAccount.idl				\
+		.\nsIMsgAccountManager.idl		\
+		.\nsIMsgFolder.idl				\
+		.\nsIMsgGroupRecord.idl			\
+		.\nsIMsgHost.idl				\
 		.\nsIMsgIdentity.idl			\
-		.\nsIMsgIncomingServer.idl	\
-		.\nsIMsgMailSession.idl	\
-		.\nsIMsgMessageService.idl \
-		.\nsIMsgSignature.idl		\
-		.\nsIMsgThread.idl	\
-		.\nsIMsgVCard.idl			\
-		.\nsIUrlListener.idl	\
-		.\nsIMsgBiffManager.idl	\
-			$(NULL)
+		.\nsIMsgIncomingServer.idl		\
+		.\nsIMsgMailSession.idl			\
+		.\nsIMsgMessageService.idl		\
+		.\nsIMsgSignature.idl			\
+		.\nsIMsgThread.idl				\
+		.\nsIMsgVCard.idl				\
+		.\nsIUrlListener.idl			\
+		.\nsIMsgBiffManager.idl			\
+		$(NULL)
+
+################################################################################
+## exports
 
 EXPORTS =                           \
 			msgCore.h               \
@@ -68,8 +73,6 @@ EXPORTS =                           \
 			nsIMessage.h			\
 			nsIMsgBiffManager.idl	\
 			$(NULL)
-
-MODULE=mailnews
 
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>

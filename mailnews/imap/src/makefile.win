@@ -15,31 +15,41 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..
+MODULE= msgimap
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msgimap
-MODULE= mailnews
-REQUIRES=xpcom js nspr netlib
+################################################################################
+## exports
 
-CPPSRCS=    nsImapUrl.cpp								\
-			nsImapProtocol.cpp							\
-			nsImapProxyEvent.cpp						\
-			nsIMAPHostSessionList.cpp					\
-			nsIMAPGenericParser.cpp						\
-			nsIMAPBodyShell.cpp							\
-			nsIMAPNamespace.cpp							\
-			nsImapSearchResults.cpp						\
-			nsImapFlagAndUidState.cpp					\
-			nsImapServerResponseParser.cpp				\
-			nsImapService.cpp							\
-			nsImapIncomingServer.cpp					\
-			nsImapMailFolder.cpp						\
-			nsImapMessage.cpp							\
-			nsImapUtils.cpp								\
-			$(NULL)
+EXPORTS=	nsImapUrl.h									\
+			nsImapProtocol.h							\
+			nsImapCore.h								\
+			nsImapFlagAndUidState.h						\
+			nsImapProxyEvent.h							\
+			nsImapHostSessionList.h						\
+			nsImapService.h								\
+			nsImapServerResponseParser.h				\
+			nsIMAPGenericParser.h						\
+			nsImapSearchResults.h						\
+			nsImapIncomingServer.h						\
+			nsIMAPNamespace.h							\
+			nsImapMailFolder.h							\
+			nsImapMessage.h								\
+            $(NULL)
+
+################################################################################
+## library
+
+LIBRARY_NAME=msgimap_s
+
+LCFLAGS =		   \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapProtocol.obj				\
@@ -58,27 +68,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapUtils.obj					\
 			$(NULL)
 
-
-EXPORTS=	nsImapUrl.h									\
-			nsImapProtocol.h							\
-			nsImapCore.h								\
-			nsImapFlagAndUidState.h						\
-			nsImapProxyEvent.h							\
-			nsImapHostSessionList.h						\
-			nsImapService.h								\
-			nsImapServerResponseParser.h				\
-			nsIMAPGenericParser.h						\
-			nsImapSearchResults.h						\
-			nsImapIncomingServer.h						\
-			nsIMAPNamespace.h							\
-			nsImapMailFolder.h							\
-			nsImapMessage.h								\
-            $(NULL)
-
-LCFLAGS =		   \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

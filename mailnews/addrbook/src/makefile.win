@@ -15,48 +15,41 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..
+MODULE= addressbook
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=addrbook
-MODULE= addressbook
-REQUIRES=xpcom nspr rdf
+################################################################################
+## exports
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+EXPORTS=								\
+			nsDirectoryDataSource.h		\
+			nsAbDirectory.h				\
+			nsCardDataSource.h			\
+			nsAbCard.h					\
+			nsDirPrefs.h				\
+			$(NULL)
 
-CPPSRCS=                     \
-	nsDirectoryDataSource.cpp		\
-	nsAbDirectory.cpp		\
-	nsCardDataSource.cpp	\
-	nsAbCard.cpp	\
-	nsDirPrefs.cpp	\
-	$(NULL)
+################################################################################
+## library
 
+LIBRARY_NAME=addrbook_s
 
-
-CPP_OBJS=                               \
-    .\$(OBJDIR)\nsDirectoryDataSource.obj		\
-    .\$(OBJDIR)\nsAbDirectory.obj		\
-    .\$(OBJDIR)\nsCardDataSource.obj		\
-    .\$(OBJDIR)\nsAbCard.obj		\
-    .\$(OBJDIR)\nsDirPrefs.obj		\
-	$(NULL)
-
-
-EXPORTS=                \
-	nsDirectoryDataSource.h		\
-	nsAbDirectory.h		\
-	nsCardDataSource.h		\
-	nsAbCard.h		\
-	nsDirPrefs.h		\
-	$(NULL)
-
-LCFLAGS = \
+LCFLAGS =		   \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
+
+CPP_OBJS=										\
+    .\$(OBJDIR)\nsDirectoryDataSource.obj		\
+    .\$(OBJDIR)\nsAbDirectory.obj				\
+    .\$(OBJDIR)\nsCardDataSource.obj			\
+    .\$(OBJDIR)\nsAbCard.obj					\
+    .\$(OBJDIR)\nsDirPrefs.obj					\
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

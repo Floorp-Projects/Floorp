@@ -15,12 +15,17 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..
+MODULE=msgcompose
 
 IDLSRCS =							\
 			nsIMsgCompose.idl		\
 			$(NULL)
+
+################################################################################
+## exports
 
 EXPORTS =	 						\
 			nsIMsgCompose.h			\
@@ -35,8 +40,6 @@ EXPORTS =	 						\
 			nsIDOMComposeAppCore.h	\
 			nsIComposer.h			\
 			$(NULL)
-
-MODULE=mailnews
 
 include <$(DEPTH)\config\rules.mak>
 

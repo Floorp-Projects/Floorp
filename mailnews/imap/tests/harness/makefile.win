@@ -69,8 +69,8 @@ LCFLAGS=-DNETSCAPE
 LLIBS=	 $(LLIBS) ole32.lib	\
 		$(LIBNSPR)\
  		$(DIST)\lib\plc3.lib                   \
-		$(DIST)\lib\msgcoreutil.lib	\
-		$(DIST)\lib\msglocal.lib	\
+		$(DIST)\lib\msgbaseutil.lib	\
+		$(DIST)\lib\msglocal_s.lib	\
  		$(DIST)\lib\xpcom.lib
 	
 

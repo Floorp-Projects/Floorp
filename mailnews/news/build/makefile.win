@@ -13,95 +13,45 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-#//------------------------------------------------------------------------
-#//
-#// Specify the depth of the current directory relative to the
-#// root of NS
-#//
-#//------------------------------------------------------------------------
-DEPTH=..\..\..
+IGNORE_MANIFEST=1
 
-#//------------------------------------------------------------------------
-#//
-# New build system where zip dll is build indepenant of java stubs.
-#//
-#//------------------------------------------------------------------------
-MODULE  =news
-REQUIRES=xpcom js
-EXPORTS =      \
+DEPTH=..\..\..
+MODULE=msgnews 
+
+################################################################################
+## exports
+
+EXPORTS =			   \
 		nsMsgNewsCID.h \
 		$(NULL)
 
+################################################################################
+## library
 
-#//------------------------------------------------------------------------
-#// 
-#// Define the files necessary to build the target (ie. OBJS)
-#//
-#//------------------------------------------------------------------------
+LIBNAME = .\$(OBJDIR)\msgnews
+DLL = $(LIBNAME).dll
 
-CPPSRCS=										\
-			nsMsgNewsFactory.cpp				\
-			$(NULL)
 OBJS=											\
-			.\$(OBJDIR)\nsMsgNewsFactory.obj    \
+			.\$(OBJDIR)\nsMsgNewsFactory.obj	\
 			$(NULL)
 
-
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
-#//
-#//------------------------------------------------------------------------
-DLLNAME=msgnews
-MAPFILE=msgnews.map
-# DEFFILE=msg.def
-
-
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
-#// (these must be defined before the common makefiles are included)
-#//
-#//------------------------------------------------------------------------
-
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-#//------------------------------------------------------------------------
-#//
-#// Define any local options for the make tools 
-#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
-#//
-#//------------------------------------------------------------------------
-LCFLAGS=-DNETSCAPE
-
-MSGLIBS=				\
-		$(NULL)
-
-# These are the libraries we need to link with to create the dll
-LLIBS=												\
-			$(MSGLIBS)								\
-			$(DIST)\lib\xpcom.lib					\
-			$(DIST)\lib\plc3.lib					\
-			$(DIST)\lib\msgcoreutil.lib				\
-			$(DIST)\lib\nntp_s.lib					\
-			$(DIST)\lib\netlib.lib					\
-			$(LIBNSPR)								\
-			$(DIST)\lib\rdfutil_s.lib				\
+LLIBS=											\
+			$(MSGLIBS)							\
+			$(DIST)\lib\xpcom.lib				\
+			$(DIST)\lib\plc3.lib				\
+			$(DIST)\lib\msgbaseutil.lib			\
+			$(DIST)\lib\msgnews_s.lib			\
+			$(DIST)\lib\netlib.lib				\
+			$(LIBNSPR)							\
+			$(DIST)\lib\rdfutil_s.lib			\
 			$(NULL)
 
 MISCDEP=$(LLIBS)
 
-#//------------------------------------------------------------------------
-#//
-#// Include the common makefile rules
-#//
-#//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME)
+libs:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
 
 

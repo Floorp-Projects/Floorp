@@ -15,85 +15,69 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..
+MODULE= msgbase
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msgcore
-MODULE= mailnews
-REQUIRES=xpcom js nspr dom
+################################################################################
+## exports
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=                     \
-	nsMessenger.cpp			 \
-	nsMessengerBootstrap.cpp	\
-	nsMsgKeyArray.cpp        \
-	nsUrlListenerManager.cpp \
-	nsMsgMailSession.cpp	 \
-	nsCopyMessageStreamListener.cpp \
-	nsMessageViewDataSource.cpp \
-	nsMsgAccountManager.cpp	\
-	nsMsgAccount.cpp		\
-	nsMsgFolderDataSource.cpp \
-	nsMsgMessageDataSource.cpp \
-	nsMsgRDFUtils.cpp \
-	nsMsgRDFDataSource.cpp	\
-	nsMsgAccountDataSource.cpp	\
-	nsMsgAccountManagerDS.cpp	\
-	nsMsgIdentityDataSource.cpp	\
-	nsMsgServerDataSource.cpp	\
-	nsMsgBiffManager.cpp			\
+EXPORTS=						\
+	nsMessenger.h				\
+	nsMessengerBootstrap.h		\
+	nsMsgKeyArray.h				\
+	nsUrlListenerManager.h		\
+	nsMsgMailSession.h			\
+	nsMsgFolderDataSource.h		\
+	nsMsgMessageDataSource.h	\
+	nsMessageViewDataSource.h	\
+    nsMsgAccount.h				\
+    nsMsgAccountManager.h		\
+	nsMsgRDFDataSource.h		\
+	nsMsgAccountDataSource.h	\
+	nsMsgAccountManagerDS.h		\
+	nsMsgIdentityDataSource.h	\
+	nsMsgServerDataSource.h		\
+	nsMsgBiffManager.h			\
 	$(NULL)
 
 
+################################################################################
+## library
 
-CPP_OBJS=                               \
-    .\$(OBJDIR)\nsMessenger.obj			\
+LIBRARY_NAME=msgbase_s
+
+LCFLAGS =		   \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+
+CPP_OBJS=									\
+    .\$(OBJDIR)\nsMessenger.obj				\
     .\$(OBJDIR)\nsMessengerBootstrap.obj	\
-	.\$(OBJDIR)\nsMsgKeyArray.obj       \
-	.\$(OBJDIR)\nsUrlListenerManager.obj \
-	.\$(OBJDIR)\nsMsgMailSession.obj	\
+	.\$(OBJDIR)\nsMsgKeyArray.obj			\
+	.\$(OBJDIR)\nsUrlListenerManager.obj	\
+	.\$(OBJDIR)\nsMsgMailSession.obj		\
 	.\$(OBJDIR)\nsCopyMessageStreamListener.obj	\
 	.\$(OBJDIR)\nsMessageViewDataSource.obj \
-	.\$(OBJDIR)\nsMsgAccountManager.obj	\
-	.\$(OBJDIR)\nsMsgAccount.obj		\
-	.\$(OBJDIR)\nsMsgFolderDataSource.obj \
-	.\$(OBJDIR)\nsMsgMessageDataSource.obj \
-	.\$(OBJDIR)\nsMsgRDFUtils.obj \
-	.\$(OBJDIR)\nsMsgRDFDataSource.obj	\
+	.\$(OBJDIR)\nsMsgAccountManager.obj		\
+	.\$(OBJDIR)\nsMsgAccount.obj			\
+	.\$(OBJDIR)\nsMsgFolderDataSource.obj	\
+	.\$(OBJDIR)\nsMsgMessageDataSource.obj	\
+	.\$(OBJDIR)\nsMsgRDFUtils.obj			\
+	.\$(OBJDIR)\nsMsgRDFDataSource.obj		\
 	.\$(OBJDIR)\nsMsgAccountDataSource.obj	\
 	.\$(OBJDIR)\nsMsgAccountManagerDS.obj	\
 	.\$(OBJDIR)\nsMsgIdentityDataSource.obj	\
 	.\$(OBJDIR)\nsMsgServerDataSource.obj	\
-	.\$(OBJDIR)\nsMsgBiffManager.obj \
+	.\$(OBJDIR)\nsMsgBiffManager.obj		\
 	$(NULL)
 
-
-EXPORTS=                \
-	nsMessenger.h		\
-	nsMessengerBootstrap.h	\
-	nsMsgKeyArray.h     \
-	nsUrlListenerManager.h \
-	nsMsgMailSession.h  \
-	nsMsgFolderDataSource.h \
-	nsMsgMessageDataSource.h \
-	nsMessageViewDataSource.h \
-    nsMsgAccount.h      \
-    nsMsgAccountManager.h   \
-	nsMsgRDFDataSource.h	\
-	nsMsgAccountDataSource.h	\
-	nsMsgAccountManagerDS.h	\
-	nsMsgIdentityDataSource.h	\
-	nsMsgServerDataSource.h	\
-	nsMsgBiffManager.h \
-	$(NULL)
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
@@ -102,3 +86,4 @@ libs:: $(LIBRARY)
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+

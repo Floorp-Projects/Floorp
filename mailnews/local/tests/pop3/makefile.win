@@ -34,7 +34,7 @@ MYLIBS=							\
  $(DIST)\lib\netlib.lib			\
  $(DIST)\lib\plc3.lib			\
  $(DIST)\lib\rdf.lib			\
- $(DIST)\lib\msgcoreutil.lib	\
+ $(DIST)\lib\msgbaseutil.lib	\
  $(DIST)\lib\xplib.lib			\
  $(NULL)
 

@@ -15,47 +15,42 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+IGNORE_MANIFEST=1
+
 DEPTH=..\..\..\..
-MODULE=mailnews 
+MODULE=msgdb 
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=msgdb
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+################################################################################
+## exports
 
-EXPORTS=								\
-			nsMsgDBCID.h				\
+EXPORTS=					\
+			nsMsgDBCID.h	\
 			$(NULL)
 
-CPPSRCS=								\
-			nsMsgDBFactory.cpp		\
+################################################################################
+## library
+
+LIBNAME = .\$(OBJDIR)\msgdb
+DLL = $(LIBNAME).dll
+
+CPP_OBJS=									\
+			.\$(OBJDIR)\nsMsgDBFactory.obj	\
 			$(NULL)
 
-CPP_OBJS=\
-	.\$(OBJDIR)\nsMsgDBFactory.obj	\
-	$(NULL)
-
-# XXX linking in raptor is a heinous crime that will go away once we
-# have a more DOM-based mechanism for constructing elements and
-# hooking in to their changes.
-
-LLIBS=\
-	$(DIST)\lib\xpcom.lib     \
-	$(DIST)\lib\msgcoreutil.lib    \
-	$(DIST)\lib\msgdb.lib    \
-	$(DIST)\lib\mork.lib    \
-    $(LIBNSPR)		            \
-    $(DIST)\lib\plc3.lib    \
+LLIBS=								\
+	$(DIST)\lib\xpcom.lib			\
+	$(DIST)\lib\msgbaseutil.lib		\
+	$(DIST)\lib\msgdb_s.lib			\
+	$(DIST)\lib\msgmork_s.lib		\
+    $(LIBNSPR)						\
+    $(DIST)\lib\plc3.lib			\
 	$(NULL)
 
 MISCDEP=$(LLIBS)
 
-# XXX Note dependencies on implementation dirs for factory methods.
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME)
+libs:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
 

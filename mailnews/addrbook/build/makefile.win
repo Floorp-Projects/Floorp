@@ -15,30 +15,33 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+
+IGNORE_MANIFEST=1
+
 DEPTH=..\..\..
 MODULE=addressbook 
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=addrbook
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+################################################################################
+## exports
+
 EXPORTS=								\
 			nsAbBaseCID.h				\
 			$(NULL)
 
-CPPSRCS=							\
-			nsAbFactory.cpp		\
+################################################################################
+## library
 
-CPP_OBJS=\
-	.\$(OBJDIR)\nsAbFactory.obj	\
-	$(NULL)
-# XXX linking in raptor is a heinous crime that will go away once we
-# have a more DOM-based mechanism for constructing elements and
-# hooking in to their changes.
+LIBNAME = .\$(OBJDIR)\addrbook
+DLL = $(LIBNAME).dll
 
-LLIBS=\
+CPP_OBJS=								\
+			.\$(OBJDIR)\nsAbFactory.obj	\
+			$(NULL)
+
+LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
-	$(DIST)\lib\msgcoreutil.lib		\
-	$(DIST)\lib\addrbook.lib		\
+	$(DIST)\lib\msgbaseutil.lib		\
+	$(DIST)\lib\addrbook_s.lib		\
     $(LIBNSPR)						\
     $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\rdfutil_s.lib		\
@@ -48,8 +51,6 @@ MISCDEP=$(LLIBS)
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME)
+libs:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

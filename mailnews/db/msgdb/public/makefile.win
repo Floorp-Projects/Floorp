@@ -15,28 +15,30 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..\..
-
 IGNORE_MANIFEST=1
 
-IDLSRCS =							\
+DEPTH=..\..\..\..
+MODULE=msgdb
+
+IDLSRCS =				\
 			$(NULL)
+
+################################################################################
+## exports
 
 EXPORTS =	 						\
-			nsIMsgDatabase.h    \
-			nsMsgDatabase.h    \
-			nsMailDatabase.h				\
-			nsImapMailDatabase.h				\
-			nsNewsDatabase.h				\
+			nsIMsgDatabase.h		\
+			nsMsgDatabase.h			\
+			nsMailDatabase.h		\
+			nsImapMailDatabase.h	\
+			nsNewsDatabase.h		\
 			nsDBFolderInfo.h	    \
-			nsMsgHdr.h	    \
-			nsIDBChangeListener.h	    \
-			nsIDBFolderInfo.h \
-			nsIMsgHdr.h	    \
-			nsMsgThread.h \
+			nsMsgHdr.h				\
+			nsIDBChangeListener.h	\
+			nsIDBFolderInfo.h		\
+			nsIMsgHdr.h				\
+			nsMsgThread.h			\
 			$(NULL)
-
-MODULE=mailnews
 
 
 include <$(DEPTH)\config\rules.mak>

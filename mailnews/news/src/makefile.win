@@ -15,30 +15,41 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..
+MODULE= msgnews
 
 include <$(DEPTH)\config\config.mak>
 
+################################################################################
+## exports
 
-LIBRARY_NAME=nntp_s
-MODULE=news
-REQUIRES=xpcom js nspr netlib
+EXPORTS=	nsNNTPProtocol.h				\
+			nsNntpUrl.h						\
+			nsNNTPNewsgroupList.h			\
+			nsNNTPArticleList.h				\
+			nsNNTPNewsgroup.h				\
+			nntpCore.h						\
+			nsNNTPNewsgroupPost.h			\
+			nsNntpService.h					\
+			nsNewsFolder.h					\
+			nsNntpIncomingServer.h 			\
+			nsNewsMessage.h					\
+			nsNewsUtils.h					\
+			nsNNTPHost.h					\
+			nsNNTPCategoryContainer.h		\
+            $(NULL)
 
-CPPSRCS=    nsNNTPProtocol.cpp				\
-			nsNntpUrl.cpp					\
-			nsNNTPArticleList.cpp			\
-			nsNNTPNewsgroupList.cpp			\
-			nsNNTPNewsgroupPost.cpp			\
-			nsNNTPNewsgroup.cpp	\
-			nsNNTPCategoryContainer.cpp \
-			nsNNTPHost.cpp					\
-			nsNntpService.cpp				\
-			nsNewsFolder.cpp	\
-			nsNntpIncomingServer.cpp	\
-			nsNewsMessage.cpp	\
-			nsNewsUtils.cpp		\
-			$(NULL)
+################################################################################
+## library
+
+LIBRARY_NAME=msgnews_s
+
+LCFLAGS =		   \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNntpUrl.obj					\
@@ -55,27 +66,6 @@ CPP_OBJS=   .\$(OBJDIR)\nsNNTPProtocol.obj				\
 			.\$(OBJDIR)\nsNewsUtils.obj					\
 			$(NULL)
 
-
-EXPORTS=	nsNNTPProtocol.h				\
-			nsNntpUrl.h						\
-			nsNNTPNewsgroupList.h			\
-			nsNNTPArticleList.h			\
-			nsNNTPNewsgroup.h				\
-			nntpCore.h						\
-			nsNNTPNewsgroupPost.h			\
-			nsNntpService.h					\
-			nsNewsFolder.h \
-			nsNntpIncomingServer.h 				\
-			nsNewsMessage.h	\
-			nsNewsUtils.h \
-			nsNNTPHost.h	\
-			nsNNTPCategoryContainer.h \
-            $(NULL)
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

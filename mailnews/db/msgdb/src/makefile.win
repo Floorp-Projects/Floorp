@@ -15,43 +15,37 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..\..
+MODULE= msgdb
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msgdb
-MODULE= mailnews
-REQUIRES=rdf mime
+################################################################################
+## exports
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
-
-CPPSRCS=    nsMsgDatabase.cpp\
-			nsDBFolderInfo.cpp\
-			nsMailDatabase.cpp\
-			nsImapMailDatabase.cpp\
-			nsNewsDatabase.cpp\
-			nsMsgHdr.cpp\
-			nsMsgThread.cpp\
+EXPORTS=				\
 			$(NULL)
 
-CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
-			.\$(OBJDIR)\nsDBFolderInfo.obj\
-			.\$(OBJDIR)\nsMailDatabase.obj\
-			.\$(OBJDIR)\nsImapMailDatabase.obj\
-			.\$(OBJDIR)\nsNewsDatabase.obj\
-			.\$(OBJDIR)\nsMsgHdr.obj\
-			.\$(OBJDIR)\nsMsgThread.obj\
-			$(NULL)
+################################################################################
+## library
 
+LIBRARY_NAME=msgdb_s
 
-EXPORTS=	\
-			$(NULL)
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
+LCFLAGS =			\
+        $(LCFLAGS)	\
+        $(DEFINES)	\
         $(NULL)
+
+CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj		\
+			.\$(OBJDIR)\nsDBFolderInfo.obj		\
+			.\$(OBJDIR)\nsMailDatabase.obj		\
+			.\$(OBJDIR)\nsImapMailDatabase.obj	\
+			.\$(OBJDIR)\nsNewsDatabase.obj		\
+			.\$(OBJDIR)\nsMsgHdr.obj			\
+			.\$(OBJDIR)\nsMsgThread.obj			\
+			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -15,20 +15,23 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-EXPORTS = \
-	nsIPop3Sink.h				\
-	nsIPop3URL.h				\
-	nsIMailboxUrl.h				\
-	nsIMailboxService.h			\
-	nsIPop3Service.h			\
-	nsIPop3IncomingServer.h		\
-	nsIMsgParseMailMsgState.h	\
-	$(NULL)
+DEPTH=..\..\..
+MODULE=msglocal
 
-MODULE=mailnews
+################################################################################
+## exports
+
+EXPORTS =								\
+			nsIPop3Sink.h				\
+			nsIPop3URL.h				\
+			nsIMailboxUrl.h				\
+			nsIMailboxService.h			\
+			nsIPop3Service.h			\
+			nsIPop3IncomingServer.h		\
+			nsIMsgParseMailMsgState.h	\
+			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

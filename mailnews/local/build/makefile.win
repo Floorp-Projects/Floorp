@@ -15,44 +15,42 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
-MODULE=mailnews 
+IGNORE_MANIFEST=1
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=msglocal
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+DEPTH=..\..\..
+MODULE=msglocal 
+
+################################################################################
+## exports
 
 EXPORTS=								\
 			nsMsgLocalCID.h				\
 			$(NULL)
 
-CPPSRCS=								\
-			nsMsgLocalFactory.cpp		\
+################################################################################
+## library
+
+LIBNAME = .\$(OBJDIR)\msglocal
+DLL = $(LIBNAME).dll
 
 CPP_OBJS=\
 	.\$(OBJDIR)\nsMsgLocalFactory.obj	\
 	$(NULL)
 
-# XXX linking in raptor is a heinous crime that will go away once we
-# have a more DOM-based mechanism for constructing elements and
-# hooking in to their changes.
-
 LLIBS=\
 	$(DIST)\lib\xpcom.lib			\
-	$(DIST)\lib\msgcoreutil.lib		\
-	$(DIST)\lib\msglocal.lib		\
     $(LIBNSPR)						\
     $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\rdfutil_s.lib		\
+	$(DIST)\lib\msgbaseutil.lib		\
+	$(DIST)\lib\msglocal_s.lib		\
 	$(NULL)
 
 MISCDEP=$(LLIBS)
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME)
+libs:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
 

@@ -15,31 +15,31 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
-MODULE=mailnews 
+IGNORE_MANIFEST=1
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=msgimap
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+DEPTH=..\..\..
+MODULE=msgimap 
+
+################################################################################
+## exports
 
 EXPORTS=							\
 			$(NULL)
 
-CPPSRCS=							\
-			nsImapFactory.cpp		\
+################################################################################
+## library
 
-CPP_OBJS=\
-	.\$(OBJDIR)\nsImapFactory.obj	\
-	$(NULL)
+LIBNAME = .\$(OBJDIR)\msgimap
+DLL = $(LIBNAME).dll
 
-# XXX linking in raptor is a heinous crime that will go away once we
-# have a more DOM-based mechanism for constructing elements and
-# hooking in to their changes.
+CPP_OBJS=									\
+			.\$(OBJDIR)\nsImapFactory.obj	\
+			$(NULL)
 
-LLIBS=\
+LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
-	$(DIST)\lib\msgcoreutil.lib		\
-	$(DIST)\lib\msgimap.lib			\
+	$(DIST)\lib\msgbaseutil.lib		\
+	$(DIST)\lib\msgimap_s.lib		\
     $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\rdfutil_s.lib		\
     $(LIBNSPR)						\
@@ -49,9 +49,8 @@ MISCDEP=$(LLIBS)
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+libs:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
 
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME)
 

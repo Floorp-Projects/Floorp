@@ -15,33 +15,39 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..\..
 IGNORE_MANIFEST=1
+
+DEPTH=..\..\..
+MODULE= msglocal
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=msglocal
+################################################################################
+## exports
 
-MODULE= mailnews
-
-REQUIRES=xpcom nspr rdf
-
-DEFINES=-DWIN32_LEAN_AND_MEAN
-
-CPPSRCS=                        \
-	nsPop3Protocol.cpp			\
-	nsPop3URL.cpp				\
-	nsPop3Sink.cpp				\
-	nsMailboxUrl.cpp			\
-	nsParseMailbox.cpp			\
-	nsMailboxProtocol.cpp		\
-	nsMailboxService.cpp		\
-	nsPop3Service.cpp			\
-	nsLocalMailFolder.cpp		\
-	nsPop3IncomingServer.cpp	\
-	nsLocalMessage.cpp			\
-	nsLocalUtils.cpp			\
+EXPORTS=				\
+	nsPop3Protocol.h	\
+	nsPop3URL.h			\
+	nsPop3Sink.h		\
+	nsMailboxUrl.h		\
+	nsParseMailbox.h	\
+	nsMailboxProtocol.h	\
+	nsMailboxService.h	\
+	nsPop3Service.h		\
+	nsPop3IncomingServer.h	\
+	nsLocalMessage.h	\
+	nsLocalMailFolder.h \
 	$(NULL)
+
+################################################################################
+## library
+
+LIBRARY_NAME=msglocal_s
+
+LCFLAGS =		   \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 CPP_OBJS=									\
 	.\$(OBJDIR)\nsPop3Protocol.obj			\
@@ -58,32 +64,12 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsLocalUtils.obj			\
 	$(NULL)
 
-
-EXPORTS=				\
-	nsPop3Protocol.h	\
-	nsPop3URL.h			\
-	nsPop3Sink.h		\
-	nsMailboxUrl.h		\
-	nsParseMailbox.h	\
-	nsMailboxProtocol.h	\
-	nsMailboxService.h	\
-	nsPop3Service.h		\
-	nsPop3IncomingServer.h	\
-	nsLocalMessage.h \
-	nsLocalMailFolder.h \
-	$(NULL)
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 libs:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
 

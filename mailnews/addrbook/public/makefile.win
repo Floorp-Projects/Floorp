@@ -16,16 +16,15 @@
 # Reserved.
 
 DEPTH=..\..\..
+MODULE=addressbook
 
-
-XPIDLSRCS =						\
-			.\nsIAbBase.idl		\
-			.\nsIAbListener.idl	\
-			.\nsIAbDirectory.idl	\
-			.\nsIAbCard.idl		\
+XPIDLSRCS =						 \
+			.\nsIAbBase.idl		 \
+			.\nsIAbListener.idl	 \
+			.\nsIAbDirectory.idl \
+			.\nsIAbCard.idl		 \
 			$(NULL)
 
-MODULE=addressbook
 
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
