@@ -732,7 +732,7 @@ nsresult nsMsgDatabase::InitNewDB()
 			dbFolderInfo->SetVersion(GetCurVersion());
 			nsIMdbStore *store = GetStore();
 			// create the unique table for the dbFolderInfo.
-			mdb_err err = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
+			mdb_err mdberr = (nsresult) store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, nsnull, &m_mdbAllMsgHeadersTable);
 //			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
 			m_dbFolderInfo = dbFolderInfo;
@@ -890,9 +890,10 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 {
 	nsresult	err = NS_OK;
 
-	for (PRUint32 index = 0; index < nsMsgKeys->GetSize(); index++)
+    PRInt32 kindex;
+	for (kindex = 0; kindex < nsMsgKeys->GetSize(); kindex++)
 	{
-		nsMsgKey key = nsMsgKeys->ElementAt(index);
+		nsMsgKey key = nsMsgKeys->ElementAt(kindex);
 		nsIMsgDBHdr *msgHdr = NULL;
 		
 		err = GetMsgHdrForKey(key, &msgHdr);
@@ -901,7 +902,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 			err = NS_MSG_MESSAGE_NOT_FOUND;
 			break;
 		}
-		err = DeleteHeader(msgHdr, instigator, index % 300 == 0, PR_TRUE);
+		err = DeleteHeader(msgHdr, instigator, kindex % 300 == 0, PR_TRUE);
 		NS_IF_RELEASE(msgHdr);
 		if (err != NS_OK)
 			break;
@@ -1557,9 +1558,9 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
         }
 		//Get key from row
 		mdbOid outOid;
-		nsMsgKey key;
+		nsMsgKey key=0;
 		if (hdrRow->GetOid(mDB->GetEnv(), &outOid) == NS_OK)
-		key = outOid.mOid_Id;
+            key = outOid.mOid_Id;
 
         rv = mDB->CreateMsgHdr(hdrRow, key, &mResultHdr);
         if (NS_FAILED(rv)) return rv;
@@ -2269,7 +2270,7 @@ nsMsgThread *	nsMsgDatabase::GetThreadForSubject(const char * subject)
 
 nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 {
-	nsresult result;
+	nsresult result=NS_ERROR_UNEXPECTED;
 	nsMsgThread *thread = nsnull;
 	nsMsgKey threadId = nsMsgKey_None;
 
@@ -2364,7 +2365,7 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 	{
 		//Get key from row
 		mdbOid outOid;
-		nsMsgKey key;
+		nsMsgKey key=0;
 		if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
 			key = outOid.mOid_Id;
 		nsresult rv = CreateMsgHdr(hdrRow, key, &msgHdr);
@@ -2607,7 +2608,6 @@ nsresult nsMsgDatabase::DumpContents()
 		{
             nsAutoString author;
             nsAutoString subject;
-			nsMsgKey key;
 
 			msgHdr->GetMessageKey(&key);
 			msgHdr->GetAuthor(author);
