@@ -33,6 +33,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMElement.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
@@ -1487,9 +1488,28 @@ NS_IMETHODIMP nsWebBrowser::SetFocusedWindow(nsIDOMWindow * aFocusedWindow)
 /* attribute nsIDOMElement focusedElement; */
 NS_IMETHODIMP nsWebBrowser::GetFocusedElement(nsIDOMElement * *aFocusedElement)
 {
+  NS_ENSURE_ARG_POINTER(aFocusedElement);
   *aFocusedElement = nsnull;
-  return NS_OK;
+  
+  nsresult rv;
+  nsCOMPtr<nsIDOMElement> focusedElement;
+
+  nsCOMPtr<nsIDOMWindow> domWindowExternal;
+  rv = GetContentDOMWindow(getter_AddRefs(domWindowExternal));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindowExternal, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  if (focusController)
+  rv = focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+
+  *aFocusedElement = focusedElement;
+  NS_IF_ADDREF(*aFocusedElement);
+  return *aFocusedElement ? NS_OK : NS_ERROR_FAILURE;
 }
+
 NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
 {
   return NS_OK;
