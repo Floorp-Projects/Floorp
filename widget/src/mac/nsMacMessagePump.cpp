@@ -219,7 +219,7 @@ void nsMacMessagePump::DoMessagePump()
 	PRBool				haveEvent;
 	EventRecord			theEvent;
 
-	mInBackground = PR_FALSE;
+	nsToolkit::AppInForeground();
 	
 	while (mRunning)
 	{			
@@ -384,9 +384,9 @@ void nsMacMessagePump::DispatchEvent(PRBool aRealEvent, EventRecord *anEvent)
 				{
 					case suspendResumeMessage:
 						if ((anEvent->message & 1) == resumeFlag)
-							mInBackground = PR_FALSE;		// resume message
+							nsToolkit::AppInForeground();		// resume message
 						else
-							mInBackground = PR_TRUE;		// suspend message
+							nsToolkit::AppInBackground();		// suspend message
 						DoMouseMove(*anEvent);
 						break;
 
@@ -710,7 +710,7 @@ void	nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 
 	if (mMouseRgn)
 	{
-		Point globalMouse = anEvent.where;
+		Point globalMouse = anEvent.where;		
 		::SetRectRgn(mMouseRgn, globalMouse.h, globalMouse.v, globalMouse.h + 1, globalMouse.v + 1);
 	}
 
@@ -859,7 +859,7 @@ void	nsMacMessagePump::DoIdle(EventRecord &anEvent)
 	EventRecord	localEvent = anEvent;
 	localEvent.what = nullEvent;
 	lastWhere = localEvent.where;
-	DoMouseMove(localEvent);
+  DoMouseMove(localEvent);
 }
 
 

@@ -66,9 +66,15 @@ public:
   
   // Appearance Mgr
   static bool 	HasAppearanceManager();
+  
+  // helpers to determine if the app is in the fg or bg
+  static void AppInForeground ( ) ;
+  static void AppInBackground ( ) ;
+  static bool IsAppInForeground ( ) ;
 
 protected:
   bool          mInited;
+  static bool   sInForeground;
 };
 
 
