@@ -40,33 +40,33 @@ class nsNNTPNewsgroupStub : public nsINNTPNewsgroup
 	 
 	 NS_DECL_ISUPPORTS
   
-	 NS_IMETHOD GetName(char * *aName) const;
+	 NS_IMETHOD GetName(char * *aName);
 	 NS_IMETHOD SetName(char * aName);
   
-	 NS_IMETHOD GetPrettyName(char * *aPrettyName) const;
+	 NS_IMETHOD GetPrettyName(char * *aPrettyName);
 	 NS_IMETHOD SetPrettyName(char * aPrettyName);
  
-	 NS_IMETHOD GetPassword(char * *aPassword) const;
+	 NS_IMETHOD GetPassword(char * *aPassword);
 	 NS_IMETHOD SetPassword(char * aPassword);
  
-	 NS_IMETHOD GetUsername(char * *aUsername) const;
+	 NS_IMETHOD GetUsername(char * *aUsername);
 	 NS_IMETHOD SetUsername(char * aUsername);
   
-	 NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo) const;
+	 NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo);
 	 NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo);
  
 	 NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval);
 
-	 NS_IMETHOD GetCategory(PRBool *aCategory) const;
+	 NS_IMETHOD GetCategory(PRBool *aCategory);
 	 NS_IMETHOD SetCategory(PRBool aCategory);
   
-	 NS_IMETHOD GetSubscribed(PRBool *aSubscribed) const;
+	 NS_IMETHOD GetSubscribed(PRBool *aSubscribed);
 	 NS_IMETHOD SetSubscribed(PRBool aSubscribed);
   
-	 NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals) const;
+	 NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals);
 	 NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals);
   
-	 NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) const;
+	 NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList);
 	 NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList);
 
 	 NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages);
@@ -109,7 +109,7 @@ nsNNTPNewsgroupStub::~nsNNTPNewsgroupStub()
 
 NS_IMPL_ISUPPORTS(nsNNTPNewsgroupStub, kINNTPNewsgroupIID);
 
-nsresult nsNNTPNewsgroupStub::GetName(char ** aName) const
+nsresult nsNNTPNewsgroupStub::GetName(char ** aName)
 {
 	if (aName)
 	{
@@ -130,7 +130,7 @@ nsresult nsNNTPNewsgroupStub::SetName(char *aName)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroupStub::GetPrettyName(char ** aName) const
+nsresult nsNNTPNewsgroupStub::GetPrettyName(char ** aName)
 {
 	if (aName)
 	{
@@ -151,7 +151,7 @@ nsresult nsNNTPNewsgroupStub::SetPrettyName(char *aName)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroupStub::GetPassword(char ** aName) const
+nsresult nsNNTPNewsgroupStub::GetPassword(char ** aName)
 {
 	if (aName)
 	{
@@ -172,7 +172,7 @@ nsresult nsNNTPNewsgroupStub::SetPassword(char *aName)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroupStub::GetUsername(char ** aUsername) const
+nsresult nsNNTPNewsgroupStub::GetUsername(char ** aUsername)
 {
 	if (aUsername)
 	{
@@ -193,7 +193,7 @@ nsresult nsNNTPNewsgroupStub::SetUsername(char *aUsername)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroupStub::GetNeedsExtraInfo(PRBool *aNeedsExtraInfo) const
+nsresult nsNNTPNewsgroupStub::GetNeedsExtraInfo(PRBool *aNeedsExtraInfo)
 {
 	if (aNeedsExtraInfo)
 	{
@@ -223,7 +223,7 @@ nsresult nsNNTPNewsgroupStub::IsOfflineArticle(PRInt32 num, PRBool *_retval)
 
 }
 
-nsresult nsNNTPNewsgroupStub::GetCategory(PRBool *aCategory) const
+nsresult nsNNTPNewsgroupStub::GetCategory(PRBool *aCategory)
 {
 	if (aCategory)
 	{
@@ -244,7 +244,7 @@ nsresult nsNNTPNewsgroupStub::SetCategory(PRBool aCategory)
 	return NS_OK;
 }
 
-nsresult nsNNTPNewsgroupStub::GetSubscribed(PRBool *aSubscribed) const
+nsresult nsNNTPNewsgroupStub::GetSubscribed(PRBool *aSubscribed)
 {
 	if (aSubscribed)
 	{
@@ -264,7 +264,7 @@ nsresult nsNNTPNewsgroupStub::SetSubscribed(PRBool aSubscribed)
 	return NS_OK;
 }
 
- nsresult nsNNTPNewsgroupStub::GetWantNewTotals(PRBool *aWantNewTotals) const
+ nsresult nsNNTPNewsgroupStub::GetWantNewTotals(PRBool *aWantNewTotals)
 {
 	if (aWantNewTotals)
 	{
@@ -285,7 +285,7 @@ nsresult nsNNTPNewsgroupStub::SetWantNewTotals(PRBool aWantNewTotals)
 	return NS_OK;
 }
  
- nsresult nsNNTPNewsgroupStub::GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) const
+ nsresult nsNNTPNewsgroupStub::GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList)
 {
 	if (aNewsgroupList)
 	{
