@@ -22,6 +22,23 @@
 
 */
 
+treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton
+{
+    list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+}
+
 treeitem[id="NC:SiteMapRoot"] > treerow > treecell > titledbutton {
     list-style-image: url("resource:/res/samples/sitemap.gif");
-};
+}
+
+treeitem[container="true"][open="true"] > treerow > treecell > titledbutton {
+    list-style-image: url("resource:/res/rdf/folder-open.gif");
+}
+
+treeitem[container="true"] > treerow > treecell > titledbutton {
+    list-style-image: url("resource:/res/rdf/folder-closed.gif");
+}
+
+treeitem > treerow > treecell > titledbutton {
+    list-style-image: url("resource:/res/rdf/document.gif");
+}
