@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.80 2004/11/08 00:57:14 jocuri%softhome.net Exp $ -->
+<!-- $Id: installation.xml,v 1.81 2004/11/25 08:50:59 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -76,7 +76,9 @@
         </para>
       </step>
       <step>
-        <para><link linkend="install-MTA">Install a Mail Transfer Agent</link>
+        <para>
+          <link linkend="install-MTA">Install a Mail Transfer Agent</link>
+          (Sendmail 8.7 or above, or an MTA that is Sendmail-compatible with at least this version)
         </para>
       </step>
       <step>
@@ -493,6 +495,11 @@
       original Unix MTA, but the others are easier to configure, and therefore many people
       replace Sendmail with Postfix or Exim. They are drop-in replacements, so that Bugzilla
       will not distinguish between them.</para>
+
+      <para>
+        If you are using Sendmail, version 8.7 or higher is required.
+        If you are using a Sendmail-compatible MTA, it must be congruent with at least version 8.7 of Sendmail.
+      </para>
 
       <para>Consult the manual for the specific MTA you choose for detailed installation
       instructions. Each of these programs will have their own configuration files where you must
