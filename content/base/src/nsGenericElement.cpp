@@ -291,7 +291,8 @@ nsNode3Tearoff::SetTextContent(nsIContent* aContent,
 {
   PRUint32 childCount = aContent->GetChildCount();
 
-  for (PRUint32 i = childCount - 1; i >= 0; --i) {
+  // i is unsigned, so i >= is always true
+  for (PRUint32 i = childCount; i-- != 0; ) {
     aContent->RemoveChildAt(i, PR_TRUE);
   }
 
