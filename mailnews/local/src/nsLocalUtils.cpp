@@ -125,7 +125,7 @@ nsLocalURI2Server(const char* uriStr,
   delete[] hostname;
 
   *aResult = server;
-  NS_ADDREF(*aResult);
+  NS_IF_ADDREF(*aResult);
 
   return rv;
 }
