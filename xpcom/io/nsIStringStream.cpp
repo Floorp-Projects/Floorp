@@ -158,7 +158,7 @@ class ConstCharImpl
     
         virtual PRInt32                 length() const
                                         {
-                                            return mLength;
+                                            return mLength - mOffset;
                                         }
 
         virtual PRInt32                 read(char* buf, PRUint32 aCount)
