@@ -158,10 +158,6 @@ private:
     // The type of the popup
     XULPopupType popupType;
     
-    // The following members are not used unless |popupType| is tooltip.
-      
-    PRBool mShowTooltips;               // mirrors the "show tooltips" pref
-
       // a timer for determining if a tooltip should be displayed. 
     nsCOMPtr<nsITimer> mTooltipTimer;
     static void sTooltipCallback ( nsITimer* aTimer, void* aListener ) ;
@@ -173,6 +169,9 @@ private:
     
       // pref callback for when the "show tooltips" pref changes
     static int sTooltipPrefChanged ( const char*, void* );
+
+    // The following members are not used unless |popupType| is tooltip.
+    static PRBool sShowTooltips;          // mirrors the "show tooltips" pref
 
     // The node hovered over that fired the timer. This may turn into the node that
     // triggered the tooltip, but only if the timer ever gets around to firing.
@@ -186,11 +185,13 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////
+      
+PRBool XULPopupListenerImpl::sShowTooltips = PR_FALSE;
 
 
 XULPopupListenerImpl::XULPopupListenerImpl(void)
   : mElement(nsnull), mPopupContent(nsnull),
-    mMouseClientX(0), mMouseClientY(0), mShowTooltips(PR_TRUE)
+    mMouseClientX(0), mMouseClientY(0)
 {
 	NS_INIT_REFCNT();	
 }
@@ -224,19 +225,25 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 {
   mElement = aElement; // Weak reference. Don't addref it.
   popupType = popup;
+  static PRBool prefChangeRegistered = PR_FALSE;
+  nsresult rv = NS_OK;
 
-  // fetch the tooltip display pref and register ourselves as caring if
-  // it changes.
-  if ( popupType == eXULPopupType_tooltip ) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  // Only the first time, register the callback and get the initial value of the pref
+  if ( !prefChangeRegistered ) {
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);  
     if ( prefs ) {
-      rv = prefs->GetBoolPref("browser.chrome.toolbar_tips", &mShowTooltips);
-      prefs->RegisterCallback("browser.chrome.toolbar_tips", (PrefChangedFunc)sTooltipPrefChanged, this);
+      // get the initial value of the pref
+      rv = prefs->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
+      if ( NS_SUCCEEDED(rv) ) {
+        // register the callback so we get notified of updates
+        rv = prefs->RegisterCallback("browser.chrome.toolbar_tips", (PrefChangedFunc)sTooltipPrefChanged, nsnull);
+        if ( NS_SUCCEEDED(rv) ){
+          prefChangeRegistered = PR_TRUE;
+        }
+      }
     }
   }
-  
-  return NS_OK;
+  return rv;
 }
 
 
@@ -247,14 +254,11 @@ XULPopupListenerImpl::Init(nsIDOMElement* aElement, const XULPopupType& popup)
 int 
 XULPopupListenerImpl :: sTooltipPrefChanged (const char *, void * inData )
 {
-  XULPopupListenerImpl* self = NS_STATIC_CAST(XULPopupListenerImpl*, inData);
-  if ( self ) {
-    nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-    if ( prefs )
-      rv = prefs->GetBoolPref("browser.chrome.toolbar_tips", &(self->mShowTooltips));
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+  if ( prefs ) {
+    rv = prefs->GetBoolPref("browser.chrome.toolbar_tips", &sShowTooltips);
   }
-  
   return NS_OK;
 
 } // sTooltipPrefChanged
@@ -450,7 +454,7 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
     return NS_OK;
 
   // don't kick off the timer or do any hard work if the pref is turned off
-  if ( !mShowTooltips )
+  if ( !sShowTooltips )
     return NS_OK;
   
   // stash the coordinates of the event so that we can still get back to it from within the 
