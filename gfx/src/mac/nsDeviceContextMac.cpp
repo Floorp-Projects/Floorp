@@ -86,7 +86,7 @@ double				pix_inch;
   // cps - Unlocking GDeviceHandles is a no - no. See above.
   ::HSetState ((Handle)thegd,hState);  
 	
-  return NS_OK;
+  return DeviceContextImpl::Init(aNativeWidget);
 }
 
 
