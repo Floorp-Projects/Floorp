@@ -553,6 +553,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
                                   PRUint32 aDataLength,
                                   nsACString& aCharset)
 {
+  LOG_URI("SheetLoadData::OnDetermineCharset for '%s'", mURI);
   nsCOMPtr<nsIChannel> channel;
   nsresult result = aLoader->GetChannel(getter_AddRefs(channel));
   if (NS_FAILED(result))
@@ -566,9 +567,8 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
    * 2)  Check @charset rules in the data
    * 3)  Check "charset" attribute of the <LINK> or <?xml-stylesheet?>
    *
-   * If all these fail to give us a charset, fall back on our
-   * default (document charset or ISO-8859-1 if we have no document
-   * charset)
+   * If all these fail to give us a charset, fall back on our default
+   * (parent sheet charset, document charset or ISO-8859-1 in that order)
    */
   if (channel) {
     channel->GetContentCharset(aCharset);
@@ -576,10 +576,9 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
 
   result = NS_ERROR_NOT_AVAILABLE;
 
-#ifdef DEBUG_bzbarsky
+#ifdef PR_LOGGING
   if (! aCharset.IsEmpty()) {
-    fprintf(stderr, "Setting from HTTP to: %s\n",
-            PromiseFlatCString(aCharset).get());
+    LOG(("  Setting from HTTP to: %s", PromiseFlatCString(aCharset).get()));
   }
 #endif
 
@@ -588,10 +587,10 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
     //  Try @charset rule and BOM
     result = GetCharsetFromData((const unsigned char*)aData,
                                 aDataLength, aCharset);
-#ifdef DEBUG_bzbarsky
+#ifdef PR_LOGGING
     if (NS_SUCCEEDED(result)) {
-      fprintf(stderr, "Setting from @charset rule or BOM: %s\n",
-              PromiseFlatCString(aCharset).get());
+      LOG(("  Setting from @charset rule or BOM: %s",
+           PromiseFlatCString(aCharset).get()));
     }
 #endif
   }
@@ -603,30 +602,42 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
       nsAutoString elementCharset;
       mOwningElement->GetCharset(elementCharset);
       CopyUCS2toASCII(elementCharset, aCharset);
-#ifdef DEBUG_bzbarsky
+#ifdef PR_LOGGING
       if (! aCharset.IsEmpty()) {
-        fprintf(stderr, "Setting from property on element: %s\n",
-                PromiseFlatCString(aCharset).get());
+        LOG(("  Setting from property on element: %s",
+             PromiseFlatCString(aCharset).get()));
       }
 #endif
     }
   }
 
+  if (aCharset.IsEmpty() && mParentData) {
+    aCharset = mParentData->mCharset;
+#ifdef PR_LOGGING
+    if (! aCharset.IsEmpty()) {
+      LOG(("  Setting from parent sheet: %s",
+           PromiseFlatCString(aCharset).get()));
+    }
+#endif
+  }
+  
   if (aCharset.IsEmpty() && mLoader->mDocument) {
     // no useful data on charset.  Try the document charset.
-    // That needs no resolution, since it's already fully resolved
     aCharset = mLoader->mDocument->GetDocumentCharacterSet();
-#ifdef DEBUG_bzbarsky
-    fprintf(stderr, "Set from document: %s\n",
-            PromiseFlatCString(aCharset).get());
+#ifdef PR_LOGGING
+    LOG(("  Set from document: %s", PromiseFlatCString(aCharset).get()));
 #endif
   }      
 
   if (aCharset.IsEmpty()) {
     NS_WARNING("Unable to determine charset for sheet, using ISO-8859-1!");
+#ifdef PR_LOGGING
+    LOG_WARN(("  Falling back to ISO-8859-1"));
+#endif
     aCharset = NS_LITERAL_CSTRING("ISO-8859-1");
   }
-  
+
+  mCharset = aCharset;
   return NS_OK;
 }
 
