@@ -13,7 +13,7 @@ function loadPage(thePage)
 		content="internet.xul";
 		results="internetresults.xul";
 	}
-	else if (thePage == "mailnews")
+	else if (thePage == "mail")
 	{
 		content="about:blank";
 		results="about:blank";
@@ -23,6 +23,7 @@ function loadPage(thePage)
 		content="about:blank";
 		results="about:blank";
 	}
+
 	if ((content != "") && (results != ""))
 	{
 		var	contentFrame = document.getElementById("content");

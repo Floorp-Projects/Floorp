@@ -30,46 +30,49 @@
 
 	<html:script src="find.js" />
 
-	<html:table>
-		<html:tr>
-			<html:td>
-			Find items in 
-				<html:select id="datasource">
-					<html:option value="rdf:bookmarks">&bookmarks.label;</html:option>
-					<html:option value="rdf:history">&history.label;</html:option>
-				</html:select>
-			 whose
-			<html:p />
-			</html:td>
-		</html:tr>
+	<spring align="horizontal" flex="100%" />
+	<box align="horizontal" style="width: 100%;" >
+		<html:table>
+			<html:tr>
+				<html:td>
+				Find items in 
+					<html:select id="datasource">
+						<html:option value="rdf:bookmarks">&bookmarks.label;</html:option>
+						<html:option value="rdf:history">&history.label;</html:option>
+					</html:select>
+				 whose
+				<html:p />
+				</html:td>
+			</html:tr>
 
-		<html:tr>
-			<html:td>
-				<html:select id="match">
-					<html:option value="http://home.netscape.com/NC-rdf#Name">&name.label;</html:option>
-					<html:option value="http://home.netscape.com/NC-rdf#URL">&url.label;</html:option>
-					<html:option value="http://home.netscape.com/NC-rdf#ShortcutURL">&shortcut.label;</html:option>
-					<html:option value="http://home.netscape.com/NC-Description">&description.label;</html:option>
-				</html:select>
-				<html:select id="method">
-					<html:option value="contains">&contains.label;</html:option>
-					<html:option value="startswith">&startswith.label;</html:option>
-					<html:option value="endswith">&endswith.label;</html:option>
-					<html:option value="is">&is.label;</html:option>
-					<html:option value="isnot">&isnot.label;</html:option>
-					<html:option value="doesntcontain">&doesntcontain.label;</html:option>
-				</html:select>
-				<html:input id="findtext" type="text" width="20" onkeyup="if (event.which == 13) { doFind(); }" />
-			</html:td>
-		</html:tr>
+			<html:tr>
+				<html:td>
+					<html:select id="match">
+						<html:option value="http://home.netscape.com/NC-rdf#Name">&name.label;</html:option>
+						<html:option value="http://home.netscape.com/NC-rdf#URL">&url.label;</html:option>
+						<html:option value="http://home.netscape.com/NC-rdf#ShortcutURL">&shortcut.label;</html:option>
+						<html:option value="http://home.netscape.com/NC-Description">&description.label;</html:option>
+					</html:select>
+					<html:select id="method">
+						<html:option value="contains">&contains.label;</html:option>
+						<html:option value="startswith">&startswith.label;</html:option>
+						<html:option value="endswith">&endswith.label;</html:option>
+						<html:option value="is">&is.label;</html:option>
+						<html:option value="isnot">&isnot.label;</html:option>
+						<html:option value="doesntcontain">&doesntcontain.label;</html:option>
+					</html:select>
+					<html:input id="findtext" type="text" width="20" onkeyup="if (event.which == 13) { doFind(); }" />
+				</html:td>
+			</html:tr>
 
-		<html:tr>
-			<html:td align="right">
-				<html:input type="button" value="Find" onclick="return doFind();" />
-			</html:td>
-		</html:tr>
-	</html:table>
-	<html:p />
+			<html:tr>
+				<html:td align="right">
+					<html:input type="button" value="Find" onclick="return doFind();" />
+				</html:td>
+			</html:tr>
+		</html:table>
+		<html:p />
+		<spring align="horizontal" flex="100%" />
+	</box>
 	<spring flex="100%" align="horizontal" />
-
 </window>
