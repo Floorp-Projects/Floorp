@@ -19,6 +19,21 @@
 #ifndef COM_auto_ptr_h___
 #define COM_auto_ptr_h___
 
+
+
+	// Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
+#ifndef nsDebug_h___
+	#include "nsDebug.h"
+		// for |NS_PRECONDITION|
+#endif
+
+#ifndef nsISupports_h___
+	#include "nsISupports.h"
+		// for |nsresult|, |NS_IF_ADDREF|, et al
+#endif
+
+
+
 	/*
 		WARNING:
 			The code in this file should be considered EXPERIMENTAL.  It defies several of our
@@ -34,8 +49,6 @@
 	*/
 
 #if defined(NOT_PRODUCTION_CODE) && defined(USE_EXPERIMENTAL_SMART_POINTERS)
-
-#include <assert.h>
 
 
 	/* USER MANUAL
@@ -71,15 +84,15 @@
 			Typically, you can use a |COM_auto_ptr| exactly as you would a standard COM
 			interface pointer:
 
-				IFoo* foop;														COM_auto_ptr<IFoo> foop;
+				IFoo* fooP;														COM_auto_ptr<IFoo> fooP;
 				// ...																// ...
-				foop->SomeFunction(x, y, z);					foop->SomeFunction(x, y, z);
-				AnotherFunction(foop);								AnotherFunction(foop);
+				fooP->SomeFunction(x, y, z);					fooP->SomeFunction(x, y, z);
+				AnotherFunction(fooP);								AnotherFunction(fooP);
 
-				if ( foop )														if ( foop )
+				if ( fooP )														if ( fooP )
 					// ...																// ...
 
-				if ( foop == barp )										if ( foop == barp )
+				if ( fooP == barP )										if ( fooP == barP )
 					// ...																// ...
 
 			There are some differences, though.  In particular, you can't call |AddRef| or |Release|
@@ -88,30 +101,30 @@
 			called on the old value, and also when the |COM_auto_ptr| goes out of scope.  Trying
 			to call |AddRef| or |Release| yourself will generate a compile-time error.
 
-				foop->AddRef();												// foop->AddRef();	// ERROR: no permission
-				foop->Release();											// foop->Release();	// ERROR: no permission
+				fooP->AddRef();												// fooP->AddRef();	// ERROR: no permission
+				fooP->Release();											// fooP->Release();	// ERROR: no permission
 
 			The final difference is that a bare |COM_auto_ptr| (or rather a pointer to it) can't
 			be supplied as an argument to a function that `fills in' a COM interface pointer.
 			Rather it must be wrapped with a utility call that says whether the function calls
 			|AddRef| before returning, e.g.,
 
-				...->QueryInterface(riid, &foop)			...->QueryInterface(riid, func_AddRefs(foop))
+				...->QueryInterface(riid, &fooP)			...->QueryInterface(riid, func_AddRefs(fooP))
 
-				LookupFoo(&foop);											LookupFoo( func_doesnt_AddRef(foop) );
+				LookupFoo(&fooP);											LookupFoo( func_doesnt_AddRef(fooP) );
 
 			Don't worry.  It's a compile-time error if you forget to wrap it.
 
 
 				IFoo* foo = 0;
-				NS_RESULT status = CreateIFoo(&foo);
-				if ( NS_SUCCESS(status) )
+				nsresult status = CreateIFoo(&foo);
+				if ( NS_SUCCEEDED(status) )
 					{
 						IBar* bar = 0;
-						if ( NS_SUCCESS(status = foo->QueryInterface(riid, &bar)) )
+						if ( NS_SUCCEEDED(status = foo->QueryInterface(riid, &bar)) )
 							{
 								IFooBar* foobar = 0;
-								if ( NS_SUCCESS(status = CreateIFooBar(foo, bar, &foobar)) )
+								if ( NS_SUCCEEDED(status = CreateIFooBar(foo, bar, &foobar)) )
 									{
 										foobar->DoTheReallyHardThing();
 										foobar->Release();
@@ -122,16 +135,16 @@
 					}
 
 
-			COM_auto_ptr<IFoo> foop;
-			NS_RESULT status = CreateIFoo( func_AddRefs(foop) );
-			if ( NS_SUCCESS(status) )
+			COM_auto_ptr<IFoo> fooP;
+			nsresult status = CreateIFoo( func_AddRefs(fooP) );
+			if ( NS_SUCCEEDED(status) )
 				{
-					COM_auto_ptr<IBar> barp;
-					if ( NS_SUCCESS(status = foo->QueryInterface(riid, func_AddRefs(barp))) )
+					COM_auto_ptr<IBar> barP;
+					if ( NS_SUCCEEDED(status = foo->QueryInterface(riid, func_AddRefs(barP))) )
 						{
-							COM_auto_ptr<IFooBar> foobarp;
-							if ( NS_SUCCESS(status = CreateIFooBar(foop, barp, func_AddRefs(foobarp))) )
-								foobarp->DoTheReallyHardThing();
+							COM_auto_ptr<IFooBar> fooBarP;
+							if ( NS_SUCCEEDED(status = CreateIFooBar(fooP, barP, func_AddRefs(fooBarP))) )
+								fooBarP->DoTheReallyHardThing();
 						}
 				}
 
@@ -168,12 +181,14 @@
 
 #if defined(_MSC_VER) && (_MSC_VER<1100)
 	#define NO_EXPLICIT
+	#define NO_BOOL
 #endif
 
 #if defined(IRIX)
 	#define NO_MEMBER_USING_DECLARATIONS
 	#define NO_EXPLICIT
 	#define NO_NEW_CASTS
+	#define NO_BOOL
 #endif
 
 
@@ -190,17 +205,15 @@
 	#define REINTERPRET_CAST(T,x)	((T)(x))
 #endif
 
-#ifdef NO_BOOL
-	typedef unsigned char bool;
-#endif
-
-#ifdef NO_MEMBER_USING_DECLARATIONS
-#include "prtypes.h"
+#ifndef NO_BOOL
+	typedef bool BOOL;
+#else
+	typedef PRBool BOOL;
 #endif
 
 
 template <class T>
-class derived_safe : public T
+class nsDerivedSafe : public T
 		/*
 			No client should ever see or have to type the name of this class.  It is the
 			artifact that makes it a compile-time error to call |AddRef| and |Release|
@@ -214,22 +227,22 @@ class derived_safe : public T
 			using T::AddRef;
 			using T::Release;
 #else
-			PRUint32 AddRef();
-			PRUint32 Release();
+			nsrefcnt AddRef();
+			nsrefcnt Release();
 #endif
 	};
 
 #if defined(NO_MEMBER_USING_DECLARATIONS) && defined(NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS)
 template <class T>
-PRUint32
-derived_safe<T>::AddRef()
+nsrefcnt
+nsDerivedSafe<T>::AddRef()
 	{
 		return 0;
 	}
 
 template <class T>
-PRUint32
-derived_safe<T>::Release()
+nsrefcnt
+nsDerivedSafe<T>::Release()
 	{
 		return 0;
 	}
@@ -239,42 +252,42 @@ derived_safe<T>::Release()
 
 
 
-
+#if 0
 template <class T>
-struct dont_AddRef_t
+struct nsDontAddRef
 		/*
 			...cooperates with |COM_auto_ptr| to allow you to assign in a pointer _without_
 			|AddRef|ing it.  You would rarely use this directly, but rather through the
 			machinery of |func_AddRefs| in the argument list to functions that |AddRef|
 			their results before returning them to the caller.
 
-			See also |func_AddRefs()| and |class func_AddRefs_t|.
+			See also |func_AddRefs()| and |class nsFuncAddRefs|.
 		*/
 	{
 		explicit
-		dont_AddRef_t( T* ptr )
-				: ptr_(ptr)
+		nsDontAddRef( T* aRawPtr )
+				: mRawPtr(aRawPtr)
 			{
 				// nothing else to do here
 			}
 
-		T* ptr_;
+		T* mRawPtr;
 	};
 
 template <class T>
-dont_AddRef_t<T>
-dont_AddRef( T* ptr )
+nsDontAddRef<T>
+dont_AddRef( T* aRawPtr )
 		/*
 			...makes typing easier, because it deduces the template type, e.g., 
-			you write |dont_AddRef(foop)| instead of |dont_AddRef_t<IFoo>(foop)|.
+			you write |dont_AddRef(fooP)| instead of |nsDontAddRef<IFoo>(fooP)|.
 
 			Like the class it is shorthand for, you would rarely use this directly,
 			but rather through |func_AddRefs|.
 		*/
 	{
-		return dont_AddRef_t<T>(ptr);
+		return nsDontAddRef<T>(aRawPtr);
 	}
-
+#endif
 
 
 
@@ -283,43 +296,40 @@ template <class T>
 class COM_auto_ptr
 		/*
 			...
-
-			There is no point in using the |NS_ADDREF|, et al, macros here, since they can't
-			be made to print out useful file and line information.  I could be convinced otherwise.
 		*/
 	{
 		public:
 			typedef T element_type;
 
 			explicit
-			COM_auto_ptr( T* ptr = 0 )
-					: ptr_(ptr),
-						awaiting_AddRef_(false)
+			COM_auto_ptr( T* aRawPtr = 0 )
+					: mRawPtr(aRawPtr),
+						mIsAwaitingAddRef(0)
 				{
-					if ( ptr_ )
-						ptr_->AddRef();
+					NS_IF_ADDREF(mRawPtr);
 				}
 
+#if 0
 			explicit
-			COM_auto_ptr( const dont_AddRef_t<T>& P )
-					: ptr_(P.ptr_),
-						awaiting_AddRef_(false)
+			COM_auto_ptr( const nsDontAddRef<T>& aSmartPtr )
+					: mRawPtr(aSmartPtr.mRawPtr),
+						mIsAwaitingAddRef(0)
 				{
 					// nothing else to do here
 				}
+#endif
 
-			COM_auto_ptr( const COM_auto_ptr<T>& P )
-					: ptr_(P.ptr_),
-						awaiting_AddRef_(false)
+			COM_auto_ptr( const COM_auto_ptr<T>& aSmartPtr )
+					: mRawPtr(aSmartPtr.mRawPtr),
+						mIsAwaitingAddRef(0)
 				{
-					if ( ptr_ )
-						ptr_->AddRef();
+					NS_IF_ADDREF(mRawPtr);
 				}
 
 		 ~COM_auto_ptr()
 				{
-					if ( ptr_ && !awaiting_AddRef_ )
-						ptr_->Release();
+					if ( mRawPtr && !mIsAwaitingAddRef )
+						NS_RELEASE(mRawPtr);
 				}
 
 			COM_auto_ptr&
@@ -329,137 +339,141 @@ class COM_auto_ptr
 					return *this;
 				}
 
+#if 0
 			COM_auto_ptr&
-			operator=( const dont_AddRef_t<T>& rhs )
+			operator=( const nsDontAddRef<T>& rhs )
 				{
-					if ( ptr_ && !awaiting_AddRef_ )
-						ptr_->Release();
-					awaiting_AddRef_ = false;
-					ptr_ = rhs.ptr_;
+					if ( mRawPtr && !mIsAwaitingAddRef )
+						NS_RELEASE(mRawPtr);
+					mIsAwaitingAddRef = 0;
+					mRawPtr = rhs.mRawPtr;
 					return *this;
 				}
+#endif
 
 			COM_auto_ptr&
 			operator=( const COM_auto_ptr& rhs )
 				{
-					reset(rhs.ptr_);
+					reset(rhs.mRawPtr);
 					return *this;
 				}
 
-			derived_safe<T>*
+			nsDerivedSafe<T>*
 			operator->() const
-					// returns a |derived_safe<T>*| to deny clients the use of |AddRef| and |Release|
+					// returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|
 				{
-					assert( ptr_ != 0 ); // you're not allowed to dereference a NULL pointer
+					NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL COM_auto_ptr with operator->().");
 					return get();
 				}
 
-			derived_safe<T>&
+			nsDerivedSafe<T>&
 			operator*() const
-					// returns a |derived_safe<T>*| to deny clients the use of |AddRef| and |Release|
+					// returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|
 				{
-					assert( ptr_ != 0 ); // you're not allowed to dereference a NULL pointer
+					NS_PRECONDITION(mRawPtr != 0, "You can't dereference a NULL COM_auto_ptr with operator*().");
 					return *get();
 				}
 
-			operator derived_safe<T>*() const
-					// Is this really a good idea?  Why, again, doesn't |std::auto_ptr| do this?
+			operator nsDerivedSafe<T>*() const
 				{
 					return get();
 				}
 
-			derived_safe<T>*
+			nsDerivedSafe<T>*
 			get() const
-					// returns a |derived_safe<T>*| to deny clients the use of |AddRef| and |Release|
+					// returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|
 				{
-					return REINTERPRET_CAST(derived_safe<T>*, ptr_);
+					return REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
 				}
 
 			void
-			reset( T* ptr = 0 )
+			reset( T* aRawPtr = 0 )
 				{
-					if ( ptr )
-						ptr->AddRef();
-					if ( ptr_ && !awaiting_AddRef_ )
-						ptr_->Release();
-					awaiting_AddRef_ = false;
-					ptr_ = ptr;
+					NS_IF_ADDREF(aRawPtr);
+					if ( mRawPtr && !mIsAwaitingAddRef )
+						NS_RELEASE(mRawPtr);
+					mIsAwaitingAddRef = 0;
+					mRawPtr = aRawPtr;
 				}
 
 
 //		private:
-//			template <class T> friend class func_AddRefs_t;
-//			template <class T> friend class func_doesnt_AddRef_t;
+//			template <class T> friend class nsFuncAddRefs;
+//			template <class T> friend class nsFuncDoesntAddRef;
 
 			T**
-			start_assignment( bool awaiting_AddRef )
+			StartAssignment( BOOL awaiting_AddRef )
 				{
-					if ( ptr_ && !awaiting_AddRef_ )
-						ptr_->Release();
-					awaiting_AddRef_ = awaiting_AddRef;
-					ptr_ = 0;
-					return &ptr_;
+					if ( mRawPtr && !mIsAwaitingAddRef )
+						NS_RELEASE(mRawPtr);
+					mIsAwaitingAddRef = awaiting_AddRef;
+					mRawPtr = 0;
+					return &mRawPtr;
 				}
 
 			void
-			finish_assignment()
+			FinishAssignment()
 				{
-					if ( awaiting_AddRef_ )
+					if ( mIsAwaitingAddRef )
 						{
-							if ( ptr_ )
-								ptr_->AddRef();
-							awaiting_AddRef_ = false;
+							NS_IF_ADDREF(mRawPtr);
+							mIsAwaitingAddRef = 0;
 						}
 				}
 
 		private:
-			T* ptr_;
-			bool awaiting_AddRef_;
+			T* mRawPtr;
+			BOOL mIsAwaitingAddRef;
 	};
 
 
+
 template <class T>
-bool
-operator==( const COM_auto_ptr<T>& lhs, const T*const rhs )
+inline
+BOOL
+operator==( const COM_auto_ptr<T>& aLeft, const T*const aRight )
 	{
-		return lhs.get() == rhs;
+		return aLeft.get() == aRight;
 	}
 
 template <class T>
-bool
-operator!=( const COM_auto_ptr<T>& lhs, const T*const rhs )
+inline
+BOOL
+operator!=( const COM_auto_ptr<T>& aLeft, const T*const aRight )
 	{
-		return lhs.get() != rhs;
+		return aLeft.get() != aRight;
 	}
 
 template <class T>
-bool
-operator==( const T*const lhs, const COM_auto_ptr<T>& rhs )
+inline
+BOOL
+operator==( const T*const aLeft, const COM_auto_ptr<T>& aRight )
 	{
-		return lhs == rhs.get();
+		return aLeft == aRight.get();
 	}
 
 template <class T>
-bool
-operator!=( const T*const lhs, const COM_auto_ptr<T>& rhs )
+inline
+BOOL
+operator!=( const T*const aLeft, const COM_auto_ptr<T>& aRight )
 	{
-		return lhs != rhs.get();
+		return aLeft != aRight.get();
 	}
 
 
 
 
 template <class T>
-class func_AddRefs_t
+class nsFuncAddRefs
 		/*
 			...
 
 			This class is designed to be used for anonymous temporary objects in the
 			argument list of calls that return COM interface pointers, e.g.,
 
-				COM_auto_ptr<IFoo> foop;
-				...->QueryInterface(iid, func_AddRefs_t<IFoo>(foop))
-				...->QueryInterface(iid, func_AddRefs(foop))
+				COM_auto_ptr<IFoo> fooP;
+				...->QueryInterface(iid, nsFuncAddRefs<IFoo>(fooP))
+				...->QueryInterface(iid, func_AddRefs(fooP))
 
 			When initialized with a |COM_auto_ptr|, as in the example above, it returns
 			a |void**| (or |T**| if needed) that the outer call (|QueryInterface| in this
@@ -467,47 +481,45 @@ class func_AddRefs_t
 			the call returns, its destructor assigned the resulting interface pointer, i.e.,
 			|QueryInterface|s result, into the |COM_auto_ptr| it was initialized with.
 
-			See also |func_doesnt_AddRef_t|.
+			See also |nsFuncDoesntAddRef|.
 		*/
 	{
 		public:
 			explicit
-			func_AddRefs_t( COM_auto_ptr<T>& P )
-					: owner_(&P)
+			nsFuncAddRefs( COM_auto_ptr<T>& aSmartPtr )
+					: mTargetSmartPtr(&aSmartPtr)
 				{
 					// nothing else to do
 				}
 
-#if 1
 			operator void**()
 				{
-					return REINTERPRET_CAST(void**, owner_->start_assignment(false));
+					return REINTERPRET_CAST(void**, mTargetSmartPtr->StartAssignment(0));
 				}
-#endif
 
 			T*&
 			operator*()
 				{
-					assert(owner_);
-					return *(owner_->start_assignment(false));
+					NS_PRECONDITION(mTargetSmartPtr != 0, "func_AddRefs into no destination");
+					return *(mTargetSmartPtr->StartAssignment(0));
 				}
 
 			operator T**()
 				{
-					assert(owner_);
-					return owner_->start_assignment(false);
+					NS_PRECONDITION(mTargetSmartPtr != 0, "func_AddRefs into no destination");
+					return mTargetSmartPtr->StartAssignment(0);
 				}
 
 		private:
-			COM_auto_ptr<T>* owner_;
+			COM_auto_ptr<T>* mTargetSmartPtr;
 	};
 
 template <class T>
 inline
-func_AddRefs_t<T>
-func_AddRefs( COM_auto_ptr<T>& P )
+nsFuncAddRefs<T>
+func_AddRefs( COM_auto_ptr<T>& aSmartPtr )
 	{
-		return func_AddRefs_t<T>(P);
+		return nsFuncAddRefs<T>(aSmartPtr);
 	}
 
 
@@ -515,64 +527,62 @@ func_AddRefs( COM_auto_ptr<T>& P )
 
 
 template <class T>
-class func_doesnt_AddRef_t
+class nsFuncDoesntAddRef
 		/*
 			...
 		*/
 	{
 		public:
 			explicit
-			func_doesnt_AddRef_t( COM_auto_ptr<T>& P )
-					: owner_(&P)
+			nsFuncDoesntAddRef( COM_auto_ptr<T>& aSmartPtr )
+					: mTargetSmartPtr(&aSmartPtr)
 				{
 					// nothing else to do
 				}
 
-			func_doesnt_AddRef_t( func_doesnt_AddRef_t<T>& F )
-					: owner_(F.owner_)
+			nsFuncDoesntAddRef( nsFuncDoesntAddRef<T>& F )
+					: mTargetSmartPtr(F.mTargetSmartPtr)
 				{
-					F.owner_ = 0;
+					F.mTargetSmartPtr = 0;
 				}
 
-		 ~func_doesnt_AddRef_t()
+		 ~nsFuncDoesntAddRef()
 				{
-					if ( owner_ )
-						owner_->finish_assignment();
+					if ( mTargetSmartPtr )
+						mTargetSmartPtr->FinishAssignment();
 				}
 
-#if 1
 			operator void**()
 				{
-					return REINTERPRET_CAST(void**, owner_->start_assignment(true));
+					return REINTERPRET_CAST(void**, mTargetSmartPtr->StartAssignment(1));
 				}
-#endif
 
 			T*&
 			operator*()
 				{
-					assert(owner_);
-					return *(owner_->start_assignment(true));
+					NS_PRECONDITION(mTargetSmartPtr != 0, "func_doesnt_AddRef into no destination");
+					return *(mTargetSmartPtr->StartAssignment(1));
 				}
 
 			operator T**()
 				{
-					assert(owner_);
-					return owner_->start_assignment(true);
+					NS_PRECONDITION(mTargetSmartPtr != 0, "func_doesnt_AddRef into no destination");
+					return mTargetSmartPtr->StartAssignment(1);
 				}
 
 		private:
-			func_doesnt_AddRef_t<T> operator=( const func_doesnt_AddRef_t<T>& ); // not to be implemented
+			nsFuncDoesntAddRef<T> operator=( const nsFuncDoesntAddRef<T>& ); // not to be implemented
 
 		private:
-			COM_auto_ptr<T>* owner_;
+			COM_auto_ptr<T>* mTargetSmartPtr;
 	};
 
 template <class T>
 inline
-func_doesnt_AddRef_t<T>
-func_doesnt_AddRef( COM_auto_ptr<T>& P )
+nsFuncDoesntAddRef<T>
+func_doesnt_AddRef( COM_auto_ptr<T>& aSmartPtr )
 	{
-		return func_doesnt_AddRef_t<T>(P);
+		return nsFuncDoesntAddRef<T>(aSmartPtr);
 	}
 
 #endif // defined(NOT_PRODUCTION_CODE) && defined(USE_EXPERIMENTAL_SMART_POINTERS)

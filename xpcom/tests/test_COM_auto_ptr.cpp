@@ -20,6 +20,7 @@
 #define USE_EXPERIMENTAL_SMART_POINTERS
 
 #include <iostream.h>
+#include <assert.h>
 #include "COM_auto_ptr.h"
 
 
@@ -317,6 +318,7 @@ main()
 			IFoo* raw_foo2p = new IFoo;
 			raw_foo2p->AddRef();
 
+#if 0
 			cout << endl << "### Test 15: what if I don't want to |AddRef| when I construct?" << endl;
 			COM_auto_ptr<IFoo> foo1p( dont_AddRef(raw_foo1p) );
 			//COM_auto_ptr<IFoo> foo1p = dont_AddRef(raw_foo1p);
@@ -324,6 +326,7 @@ main()
 			cout << endl << "### Test 16: what if I don't want to |AddRef| when I assign in?" << endl;
 			COM_auto_ptr<IFoo> foo2p;
 			foo2p = dont_AddRef(raw_foo2p);
+#endif
 		}
 
 
@@ -335,7 +338,7 @@ main()
 		{
 			cout << endl << "### Test 17: basic parameter behavior?" << endl;
 			COM_auto_ptr<IFoo> foop;
-			CreateIFoo( func_AddRefs_t<IFoo>(foop) );
+			CreateIFoo( nsFuncAddRefs<IFoo>(foop) );
 		}
 
 
