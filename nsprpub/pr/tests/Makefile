@@ -90,6 +90,7 @@ CSRCS =             \
 	nbconn.c		\
 	nblayer.c		\
 	nonblock.c		\
+	ntioto.c        \
 	op_2long.c      \
 	op_filnf.c		\
 	op_filok.c		\
