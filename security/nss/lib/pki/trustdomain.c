@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.14 $ $Date: 2001/11/08 20:46:09 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.15 $ $Date: 2001/11/09 16:39:34 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -431,7 +431,7 @@ find_best_cert_for_template
 	nssListIterator_Finish(td->tokens);
     }
     /* Cache the cert before returning */
-    nssTrustDomain_AddCertsToCache(td, &best->cert, 1);
+    /*nssTrustDomain_AddCertsToCache(td, &best->cert, 1);*/
     return best->cert;
 }
 
@@ -496,7 +496,7 @@ find_all_certs_for_template
     }
     nssrv = nssList_GetArray(ca->list, (void **)certs, count);
     /* Cache the certs before returning */
-    nssTrustDomain_AddCertsToCache(td, certs, count);
+    /*nssTrustDomain_AddCertsToCache(td, certs, count);*/
     return certs;
 }
 
@@ -725,7 +725,7 @@ NSSTrustDomain_FindCertificateByIssuerAndSerialNumber
 		                                         tok->slot);
 		if (rvCert) {
 		    /* cache it */
-		    nssTrustDomain_AddCertsToCache(td, &rvCert, 1);
+		    /*nssTrustDomain_AddCertsToCache(td, &rvCert, 1);*/
 		}
 		break;
 	    }
@@ -869,7 +869,7 @@ NSSTrustDomain_FindCertificateByEncodedCertificate
 		                                         tok->slot);
 		if (rvCert) {
 		    /* cache it */
-		    nssTrustDomain_AddCertsToCache(td, &rvCert, 1);
+		    /*nssTrustDomain_AddCertsToCache(td, &rvCert, 1);*/
 		}
 		break;
 	    }
