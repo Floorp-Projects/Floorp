@@ -164,6 +164,7 @@ static int			ScreenGetSpaceAbove	(Widget);
 /*----------------------------------------------------------------------*/
 static void			TextFocusCB			(Widget,XtPointer,XtPointer);
 static void			TextLosingFocusCB	(Widget,XtPointer,XtPointer);
+static void			TextActivateCB		(Widget,XtPointer,XtPointer);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -202,6 +203,13 @@ static void			ComboBoxRegisterRepTypes	(void);
 static void			InvokeSetTextProc			(Widget,char *);
 static char *		InvokeGetTextFunc			(Widget);
 
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Text functions														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void			InvokeTextActivateCallback	(Widget);
+
 #if 0
 /*
  * External definitions of syn_resources for our list widget.
@@ -226,6 +234,17 @@ extern void _DtComboBoxGetListVisibleItemCount	SYN_RESOURCE_AA;
 /*----------------------------------------------------------------------*/
 static XtResource resources[] = 	
 {					
+	/* Callback resources */
+	{ 
+		XmNtextActivateCallback,
+		XmCCallback,
+		XmRCallback,
+		sizeof(XtCallbackList),
+		XtOffsetOf(XfeComboBoxRec , xfe_combo_box . text_activate_callback),
+		XmRImmediate, 
+		(XtPointer) NULL,
+    },
+
     /* XmTextField manipulation resources */
 	{
 		XmNgetTextFunc,
@@ -630,7 +649,7 @@ _XFE_WIDGET_CLASS_RECORD(combobox,ComboBox) =
 	{
 		XfeInheritBitGravity,					/* bit_gravity				*/
 		PreferredGeometry,						/* preferred_geometry		*/
-		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
 		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
 		XfeInheritLayoutWidget,					/* layout_widget			*/
 		AcceptStaticChild,						/* accept_static_child		*/
@@ -643,6 +662,7 @@ _XFE_WIDGET_CLASS_RECORD(combobox,ComboBox) =
 		NULL,									/* draw_background			*/
 		DrawShadow,								/* draw_shadow				*/
 		DrawComponents,							/* draw_components			*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border		*/
 		NULL,									/* extension				*/
     },
 
@@ -1190,11 +1210,14 @@ TitleTextCreate(Widget w)
 							XmNbackgroundPixmap,	_XfeBackgroundPixmap(w),
 							XmNhighlightThickness,	0,
 							XmNshadowThickness,		0,
+/* 							XmNtraversalOn,			False, */
+/* 							XmNhighlightThickness,	0, */
 							NULL);
 
 
 	XtAddCallback(text,XmNfocusCallback,TextFocusCB,w);
 	XtAddCallback(text,XmNlosingFocusCallback,TextLosingFocusCB,w);
+	XtAddCallback(text,XmNactivateCallback,TextActivateCB,w);
 
 	return text;
 }
@@ -1479,6 +1502,33 @@ TextLosingFocusCB(Widget text,XtPointer client_data,XtPointer call_data)
 	DrawHighlight(w,NULL,NULL,&_XfemBoundary(w));
 }
 /*----------------------------------------------------------------------*/
+static void
+TextActivateCB(Widget text,XtPointer client_data,XtPointer call_data)
+{
+	Widget					w = (Widget) client_data;
+    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
+
+	InvokeTextActivateCallback(w);
+
+/*     printf("TextActivateCB(%s)\n",XtName(w)); */
+}
+/*----------------------------------------------------------------------*/
+static void
+InvokeTextActivateCallback(Widget w)
+{
+    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
+
+	if (cp->text_activate_callback != NULL)
+	{
+		XmAnyCallbackStruct cbs;
+
+		cbs.reason = XmCR_COMBO_BOX_TEXT_ACTIVATE;
+		cbs.event  = NULL;
+
+		XtCallCallbackList(w,cp->text_activate_callback,(XtPointer) &cbs);
+	}
+}
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -1598,7 +1648,7 @@ InvokeSetTextProc(Widget text_field,char * text)
 }
 /*----------------------------------------------------------------------*/
 static char *
-InvokeGetTextProc(Widget text_field)
+InvokeGetTextFunc(Widget text_field)
 {
 	Widget				w = _XfeParent(text_field);
     XfeComboBoxPart *	cp = _XfeComboBoxPart(w);
@@ -1703,7 +1753,6 @@ XfeComboBoxSetText(Widget w,char * text)
 
 }
 /*----------------------------------------------------------------------*/
-
 /* extern */ void
 XfeComboBoxAddItem(Widget w,XmString item,int position)
 {
@@ -1758,5 +1807,28 @@ XfeComboBoxAddItemUnique(Widget w,XmString item,int position)
 
 	assert( _XfeIsAlive(w) );
 	assert( XfeIsComboBox(w) );
+}
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBox - XmCOMBO_BOX_EDITABLE methods							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+/* extern */ String
+XfeComboBoxGetTextString(Widget w)
+{
+    XfeComboBoxPart *		cp = _XfeComboBoxPart(w);
+
+	assert( XfeIsComboBox(w) );
+	assert( cp->combo_box_type == XmCOMBO_BOX_EDITABLE );
+
+	if (cp->combo_box_type != XmCOMBO_BOX_EDITABLE)
+	{
+		return NULL;
+	}
+
+	return InvokeGetTextFunc(cp->title);
 }
 /*----------------------------------------------------------------------*/

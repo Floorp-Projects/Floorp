@@ -41,12 +41,13 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define XfeInheritBitGravity				((XfeBitGravityType)	_XtInherit)
+#define XfeInheritDrawAccentBorder			((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawBackground			((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawComponents			((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawShadow				((XfeExposeProc)		_XtInherit)
+#define XfeInheritLayoutComponents			((XtWidgetProc)			_XtInherit)
 #define XfeInheritPreferredGeometry			((XfeGeometryProc)		_XtInherit)
 #define XfeInheritUpdateBoundary			((XtWidgetProc)			_XtInherit)
-#define XfeInheritLayoutComponents			((XtWidgetProc)			_XtInherit)
-#define XfeInheritDrawBackground			((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawShadow				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawComponents			((XfeExposeProc)		_XtInherit)
     
 /*----------------------------------------------------------------------*/
 /*																		*/

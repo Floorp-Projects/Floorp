@@ -370,7 +370,7 @@ _XFE_WIDGET_CLASS_RECORD(caption,Caption) =
 	{
 		XfeInheritBitGravity,					/* bit_gravity				*/
 		PreferredGeometry,						/* preferred_geometry		*/
-		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
 		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
 		XfeInheritLayoutWidget,					/* layout_widget			*/
 		AcceptStaticChild,						/* accept_static_child		*/
@@ -383,6 +383,7 @@ _XFE_WIDGET_CLASS_RECORD(caption,Caption) =
 		NULL,									/* draw_background			*/
 		XfeInheritDrawShadow,					/* draw_shadow				*/
 		DrawComponents,							/* draw_components			*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border		*/
 		NULL,									/* extension				*/
     },
 

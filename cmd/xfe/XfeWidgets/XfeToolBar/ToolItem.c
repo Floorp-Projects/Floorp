@@ -198,6 +198,7 @@ _XFE_WIDGET_CLASS_RECORD(toolitem,ToolItem) =
 		NULL,									/* draw_background			*/
 		XfeInheritDrawShadow,					/* draw_shadow				*/
 		NULL,									/* draw_components			*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border		*/
 		NULL,									/* extension				*/
     },
 

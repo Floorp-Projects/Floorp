@@ -5380,7 +5380,6 @@ from the network, or save to a file and then play from the file?
 *toolBoxItem*XfeToolBar.marginBottom:					0
 
 *toolBoxItem*XfeToolBar.spacing:						1
-*toolBoxItem*XfeToolBar.accentBorderThickness:			2
 *toolBoxItem*XfeToolBar.indicatorThreshold:			10
 
 *toolBoxItem*XfeToolBar*XfeButton.marginBottom:		1

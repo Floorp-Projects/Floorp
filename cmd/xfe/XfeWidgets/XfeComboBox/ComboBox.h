@@ -36,6 +36,8 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /* XfeComboBox resource names											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+#define XmNtextActivateCallback			"textActivateCallback"
+
 #define XmNarrow						"arrow"
 #define XmNgetTextFunc					"getTextFunc"
 #define XmNlistFontList					"listFontList"
@@ -82,6 +84,20 @@ enum
 	XmCOMBO_BOX_EDITABLE,						/*						*/
 	XmCOMBO_BOX_READ_ONLY						/*						*/
 };
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Callback Reasons														*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+enum
+{
+	XmCR_COMBO_BOX_TEXT_ACTIVATE = XmCR_XFE_LAST_REASON + 199, /* Text activate */
+	XmCR_COMBO_BOX_TEXT_COMPLETE,				/* Text complete		*/
+	XmCR_COMBO_BOX_TEXT_SELECT					/* Text select			*/
+};
+
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
@@ -148,6 +164,15 @@ extern void
 XfeComboBoxAddItemUnique		(Widget		w,
 								 XmString	item,
 								 int		position);
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeComboBox - XmCOMBO_BOX_EDITABLE methods							*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern String
+XfeComboBoxGetTextString		(Widget		w);
 /*----------------------------------------------------------------------*/
 
 XFE_END_CPLUSPLUS_PROTECTION

@@ -39,7 +39,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 #define XfeInheritLayoutPixmap				((XtWidgetProc)			_XtInherit)
 #define XfeInheritDrawPixmap				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawAccentBorder			((XfeExposeProc)		_XtInherit)
 #define XfeInheritDrawUnderline				((XfeExposeProc)		_XtInherit)
 #define XfeInheritArmTimeout				((XtTimerCallbackProc)	_XtInherit)
    

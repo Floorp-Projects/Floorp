@@ -41,6 +41,8 @@ CSRCS			= \
 
 REQUIRES		= \
 				XfeCaption \
+				XfeToolBar \
+				XfeComboBox \
 				XfeWidgets
 
 

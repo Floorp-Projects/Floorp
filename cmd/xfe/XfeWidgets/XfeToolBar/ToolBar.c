@@ -92,7 +92,6 @@ static Boolean	ConstraintSetValues	(Widget,Widget,Widget,ArgList,Cardinal *);
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		PreferredGeometry	(Widget,Dimension *,Dimension *);
-static void		DrawComponents		(Widget,XEvent *,Region,XRectangle *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -110,7 +109,6 @@ static void		GetChildDimensions		(Widget,Dimension *,Dimension *);
 /* XfeToolBar class methods												*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-static void		DrawAccentBorder		(Widget,XEvent *,Region,XRectangle *);
 static void		LayoutIndicator		(Widget);
 
 /*----------------------------------------------------------------------*/
@@ -275,15 +273,6 @@ static XtResource resources[] =
 		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . raised),
 		XmRImmediate, 
 		(XtPointer) False
-    },
-    { 
-		XmNaccentBorderThickness,
-		XmCAccentBorderThickness,
-		XmRHorizontalDimension,
-		sizeof(Dimension),
-		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . accent_border_thickness),
-		XmRImmediate, 
-		(XtPointer) 0
     },
 
 	/* Radio resources */
@@ -454,22 +443,6 @@ static XtResource resources[] =
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeToolBar Synthetic Resources										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static XmSyntheticResource syn_resources[] =
-{
-    { 
-		XmNaccentBorderThickness,
-		sizeof(Dimension),
-		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . accent_border_thickness),
-		_XmFromHorizontalPixels,
-		_XmToHorizontalPixels 
-    },
-};
-
-/*----------------------------------------------------------------------*/
-/*																		*/
 /* XfeToolBar constraint resources										*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -578,13 +551,13 @@ _XFE_WIDGET_CLASS_RECORD(toolbar,ToolBar) =
 
     /* XmManager Part */
     {
-		XtInheritTranslations,					/* tm_table				*/
-		(XmSyntheticResource *)syn_resources,	/* syn resources		*/
-		XtNumber(syn_resources),				/* num syn_resources	*/
-		NULL,                                   /* syn_cont_resources	*/
-		0,                                      /* num_syn_cont_resource*/
-		XmInheritParentProcess,                 /* parent_process		*/
-		NULL,                                   /* extension			*/
+		XtInheritTranslations,					/* tm_table					*/
+		NULL,									/* syn resources			*/
+		0,										/* num syn_resources		*/
+		NULL,                                   /* syn_cont_resources		*/
+		0,                                      /* num_syn_cont_resource	*/
+		XmInheritParentProcess,                 /* parent_process			*/
+		NULL,                                   /* extension				*/
     },
     
     /* XfeManager Part 	*/
@@ -603,7 +576,8 @@ _XFE_WIDGET_CLASS_RECORD(toolbar,ToolBar) =
 		NULL,									/* layout_components		*/
 		NULL,									/* draw_background			*/
 		XfeInheritDrawShadow,					/* draw_shadow				*/
-		DrawComponents,							/* draw_components			*/
+		NULL,									/* draw_components			*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border		*/
 		NULL,									/* extension				*/
     },
 
@@ -640,7 +614,6 @@ _XFE_WIDGET_CLASS_RECORD(toolbar,ToolBar) =
 
     /* XfeToolBar Part 	*/
     {
-		DrawAccentBorder,						/* draw_accent_border	*/
 		LayoutIndicator,						/* layout_indicator		*/
 		NULL,									/* extension			*/
     },
@@ -715,9 +688,6 @@ ClassPartInit(WidgetClass wc)
 	XfeToolBarWidgetClass sc = (XfeToolBarWidgetClass) wc->core_class.superclass;
 
 	/* Resolve inheritance of all XfeToolBar class methods */
-	_XfeResolve(cc,sc,xfe_tool_bar_class,draw_accent_border,
-				XfeInheritDrawAccentBorder);
-
 	_XfeResolve(cc,sc,xfe_tool_bar_class,layout_indicator,
 				XfeInheritLayoutIndicator);
 }
@@ -809,12 +779,6 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	if (np->separator_thickness != op->separator_thickness)
 	{
 		_XfemConfigFlags(nw) |= XfeConfigLED;
-	}
-
-	/* accent_border_thickness */
-	if (np->accent_border_thickness != op->accent_border_thickness)
-	{
-		_XfemConfigFlags(nw) |= XfeConfigGLED;
 	}
 
 	/* raised */
@@ -1218,12 +1182,6 @@ DeleteDynamicChild(Widget child)
 }
 /*----------------------------------------------------------------------*/
 static void
-DrawComponents(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
-{
-	_XfeToolBarDrawAccentBorder(w,event,region,clip_rect);
-}
-/*----------------------------------------------------------------------*/
-static void
 PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 {
 #ifdef DEBUG_ramiro
@@ -1313,7 +1271,7 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 			/* The button's height */
 			height = 
 				force_dimension ? 
-				(_XfemBoundaryHeight(w) - 2 * tp->accent_border_thickness) : 
+				(_XfemBoundaryHeight(w) - 2 * 0) : 
 				_XfeHeight(child);
 		}
 		else if (IsSeparatorChild(child))
@@ -1335,7 +1293,7 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 			/* The button's width */
 			width = 
 				force_dimension ? 
-				(_XfemBoundaryWidth(w) - 2 * tp->accent_border_thickness) : 
+				(_XfemBoundaryWidth(w) - 2 * 0) : 
 				_XfeWidth(child);
 			
 			/* The button's height */
@@ -1380,59 +1338,6 @@ GetChildDimensions(Widget child,Dimension * width_out,Dimension * height_out)
 /*																		*/
 /* XfeToolBar class methods												*/
 /*																		*/
-/*----------------------------------------------------------------------*/
-static void
-DrawAccentBorder(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
-{
-    XfeToolBarPart *	tp = _XfeToolBarPart(w);
-
-	/* Make sure there is a highlight to draw */
-	if (!tp->accent_border_thickness || !tp->raised)
-	{
-		return;
-	}
-
-	/* The shadow thickness can be used to tweak the raised effect */
-	switch(tp->accent_border_thickness)
-	{
-	case 2:
-	case 4:
-
-		XfeDrawRectangle(XtDisplay(w),
-						 _XfeWindow(w),
-						 _XfemHighlightGC(w),
-						 0,
-						 0,
-						 _XfeWidth(w),
-						 _XfeHeight(w),
-						 tp->accent_border_thickness / 2);
-
-		_XmDrawShadows(XtDisplay(w),
-					   _XfeWindow(w),
-					   _XfemTopShadowGC(w),
-					   _XfemBottomShadowGC(w),
-					   tp->accent_border_thickness / 2,
-					   tp->accent_border_thickness / 2,
-					   _XfeWidth(w) - 2 * (tp->accent_border_thickness / 2),
-					   _XfeHeight(w) - 2 * (tp->accent_border_thickness / 2),
-					   tp->accent_border_thickness / 2,
-					   XmSHADOW_OUT);
-
-		break;
-
-	default:
-
-		XfeDrawRectangle(XtDisplay(w),
-						 _XfeWindow(w),
-						 _XfemHighlightGC(w),
-						 0,
-						 0,
-						 _XfeWidth(w),
-						 _XfeHeight(w),
-						 tp->accent_border_thickness);
-		break;
-	}
-}
 /*----------------------------------------------------------------------*/
 static void
 LayoutIndicator(Widget w)
@@ -1721,11 +1626,11 @@ LayoutHorizontal(Widget			w,
 
 	width  = 
 		_XfemOffsetLeft(w) + _XfemOffsetRight(w) + 
-		2 * tp->accent_border_thickness;
+		2 * 0;
 
 	height = 
 		_XfemOffsetTop(w)  + _XfemOffsetBottom(w) +
-		2 * tp->accent_border_thickness;
+		2 * 0;
 
 	/* Initialize the number of rows */
 	tp->num_rows = 1;
@@ -1737,15 +1642,15 @@ LayoutHorizontal(Widget			w,
 
 		Position	min_x = 
 			_XfemOffsetLeft(w) + 
-			tp->accent_border_thickness;
+			0;
 
 		Position	max_x = 
 			_XfeWidth(w) - 
 			_XfemOffsetRight(w) - 
-			tp->accent_border_thickness;
+			0;
 		
 		Position	x = min_x;
-		Position	y = _XfemOffsetTop(w) + tp->accent_border_thickness;
+		Position	y = _XfemOffsetTop(w) + 0;
 
 		/* Traverse the dynamic children */
 		for (node = XfeLinkedHead(_XfemDynamicChildren(w));
@@ -1808,17 +1713,17 @@ LayoutVertical(Widget		w,
 
 	width  = 
 		_XfemOffsetLeft(w) + _XfemOffsetRight(w) + 
-		2 * tp->accent_border_thickness;
+		2 * 0;
 
 	height = 
 		_XfemOffsetTop(w)  + _XfemOffsetBottom(w) +
-		2 * tp->accent_border_thickness;
+		2 * 0;
 
 	if (_XfemNumDynamicChildren(w) > 0)
 	{
 		XfeLinkNode	node;
-		Position	x = _XfemOffsetLeft(w) + tp->accent_border_thickness;
-		Position	y = _XfemOffsetTop(w) + tp->accent_border_thickness;
+		Position	x = _XfemOffsetLeft(w) + 0;
+		Position	y = _XfemOffsetTop(w) + 0;
 
 		/* Traverse the dynamic children */
 		for (node = XfeLinkedHead(_XfemDynamicChildren(w));
@@ -2357,20 +2262,6 @@ _XfeToolBarLayoutIndicator(Widget w)
 	if (tc->xfe_tool_bar_class.layout_indicator)
 	{
 		(*tc->xfe_tool_bar_class.layout_indicator)(w);
-	}
-}
-/*----------------------------------------------------------------------*/
-/* extern */ void
-_XfeToolBarDrawAccentBorder(Widget			w,
-							XEvent *		event,
-							Region			region,
-							XRectangle *	clip_rect)
-{
-	XfeToolBarWidgetClass tc = (XfeToolBarWidgetClass) XtClass(w);
-
-	if (tc->xfe_tool_bar_class.draw_accent_border)
-	{
-		(*tc->xfe_tool_bar_class.draw_accent_border)(w,event,region,clip_rect);
 	}
 }
 /*----------------------------------------------------------------------*/

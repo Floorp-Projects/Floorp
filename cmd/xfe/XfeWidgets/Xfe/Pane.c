@@ -649,6 +649,7 @@ _XFE_WIDGET_CLASS_RECORD(pane,Pane) =
 		NULL,									/* draw_background			*/
 		XfeInheritDrawShadow,					/* draw_shadow				*/
 		DrawComponents,							/* draw_components			*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border		*/
 		NULL,									/* extension				*/
     },
 

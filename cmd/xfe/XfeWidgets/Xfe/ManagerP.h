@@ -82,6 +82,7 @@ typedef struct
 	XfeExposeProc		draw_background;		/* draw_background			*/
 	XfeExposeProc		draw_shadow;			/* draw_shadow				*/
 	XfeExposeProc		draw_components;		/* draw_components			*/
+	XfeExposeProc		draw_accent_border;		/* draw_accent_border		*/
 
 	XtPointer			extension;				/* extension				*/
 
@@ -134,6 +135,9 @@ typedef struct _XfeManagerPart
 
 	Dimension			min_width;				/* Min width			*/
 	Dimension			min_height;				/* Min height			*/
+
+	/* Accent border resources */
+	Dimension			accent_border_thickness;/* Accent border thickness*/
 
 	/* Margin resources */
 	Dimension			margin_left;			/* Margin Left			*/
@@ -259,13 +263,19 @@ _XfeManagerDrawBackground			(Widget			w,
 									 XRectangle *	clip_rect);
 /*----------------------------------------------------------------------*/
 extern void
+_XfeManagerDrawShadow				(Widget			w,
+									 XEvent *		event,
+									 Region			region,
+									 XRectangle *	clip_rect);
+/*----------------------------------------------------------------------*/
+extern void
 _XfeManagerDrawComponents			(Widget			w,
 									 XEvent *		event,
 									 Region			region,
 									 XRectangle *	clip_rect);
 /*----------------------------------------------------------------------*/
 extern void
-_XfeManagerDrawShadow				(Widget			w,
+_XfeManagerDrawAccentBorder			(Widget			w,
 									 XEvent *		event,
 									 Region			region,
 									 XRectangle *	clip_rect);
@@ -588,6 +598,9 @@ _XfeManagerApplyProcToChildren			(Widget					w,
 #define _XfemTotalStaticHeight(w) \
 (((XfeManagerWidget) (w))->xfe_manager . total_static_height)
 /*----------------------------------------------------------------------*/
+#define _XfemAccentBorderThickness(w) \
+(((XfeManagerWidget) (w))->xfe_manager . accent_border_thickness)
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -647,16 +660,20 @@ _XfeManagerApplyProcToChildren			(Widget					w,
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define _XfemOffsetLeft(w)		(_XfemShadowThickness(w) +	\
-								 _XfemMarginLeft(w))
+								 _XfemMarginLeft(w) + \
+								 _XfemAccentBorderThickness(w))
 /*----------------------------------------------------------------------*/
 #define _XfemOffsetRight(w)		(_XfemShadowThickness(w) +	\
-								 _XfemMarginRight(w))
+								 _XfemMarginRight(w) + \
+								 _XfemAccentBorderThickness(w))
 /*----------------------------------------------------------------------*/
 #define _XfemOffsetTop(w)		(_XfemShadowThickness(w) +	\
-								 _XfemMarginTop(w))
+								 _XfemMarginTop(w) + \
+								 _XfemAccentBorderThickness(w))
 /*----------------------------------------------------------------------*/
 #define _XfemOffsetBottom(w)	(_XfemShadowThickness(w) +	\
-								 _XfemMarginBottom(w))
+								 _XfemMarginBottom(w) + \
+								 _XfemAccentBorderThickness(w))
 /*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/

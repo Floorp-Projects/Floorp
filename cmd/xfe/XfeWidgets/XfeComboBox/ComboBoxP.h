@@ -80,6 +80,9 @@ externalref XfeComboBoxClassRec xfeComboBoxClassRec;
 /*----------------------------------------------------------------------*/
 typedef struct _XfeComboBoxPart
 {
+	/* Callback Resources */
+	XtCallbackList		text_activate_callback;	/* Text activate cb		*/
+
     /* XmTextField manipulation resources */
 	XfeComboBoxSetTextProc	set_text_proc;		/* Set text proc		*/
 	XfeComboBoxGetTextFunc	get_text_func;		/* Get text func		*/

@@ -29,7 +29,6 @@
 
 #include <Xfe/ToolBar.h>
 #include <Xfe/OrientedP.h>
-#include <Xfe/ButtonP.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION
 
@@ -47,7 +46,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 typedef struct
 {
-    XfeExposeProc			draw_accent_border;	/* draw_accent_border	*/
     XtWidgetProc			layout_indicator;	/* layout_indicator		*/
 	XtPointer				extension;			/* Extension			*/ 
 } XfeToolBarClassPart;
@@ -92,7 +90,6 @@ typedef struct _XfeToolBarPart
 	int					separator_thickness;	/* Separator thickness	*/
 
 	/* Raised resources */
-	Dimension			accent_border_thickness;/* Accent border thickness*/
     Boolean				raised;					/* Raised ?				*/
 
 	/* Radio resources */
@@ -185,12 +182,6 @@ typedef struct _XfeToolBarConstraintRec
 /*																		*/
 /* XfeToolBar Method invocation functions								*/
 /*																		*/
-/*----------------------------------------------------------------------*/
-extern void
-_XfeToolBarDrawAccentBorder		(Widget			w,
-								 XEvent *		event,
-								 Region			region,
-								 XRectangle *	clip_rect);
 /*----------------------------------------------------------------------*/
 extern void
 _XfeToolBarLayoutIndicator		(Widget			w);

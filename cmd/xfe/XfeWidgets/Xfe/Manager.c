@@ -125,6 +125,7 @@ static void		UpdateBoundary			(Widget);
 static void		LayoutWidget			(Widget);
 static void		UpdateChildrenInfo		(Widget);
 static void		DrawShadow				(Widget,XEvent *,Region,XRectangle *);
+static void		DrawAccentBorder		(Widget,XEvent *,Region,XRectangle *);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -279,6 +280,17 @@ static XtResource resources[] =
 		XtOffsetOf(XfeManagerRec , xfe_manager . min_height),
 		XmRImmediate, 
 		(XtPointer) 2
+    },
+
+	/* Accent border resources */
+    { 
+		XmNaccentBorderThickness,
+		XmCAccentBorderThickness,
+		XmRHorizontalDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . accent_border_thickness),
+		XmRImmediate, 
+		(XtPointer) 0
     },
 
 	/* Margin resources */
@@ -567,6 +579,14 @@ static XmSyntheticResource syn_resources[] =
 		_XmFromVerticalPixels,
 		_XmToVerticalPixels 
     },
+
+    { 
+		XmNaccentBorderThickness,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . accent_border_thickness),
+		_XmFromHorizontalPixels,
+		_XmToHorizontalPixels 
+    },
 };
 /*----------------------------------------------------------------------*/
 
@@ -676,6 +696,7 @@ _XFE_WIDGET_CLASS_RECORD(manager,Manager) =
 		NULL,									/* draw_background			*/
 		DrawShadow,								/* draw_shadow				*/
 		NULL,									/* draw_components			*/
+		DrawAccentBorder,						/* draw_accent_border		*/
 		NULL,									/* extension				*/
     },
 };
@@ -749,12 +770,15 @@ CoreClassPartInit(WidgetClass wc)
 	/* Rendering methods */
     _XfeResolve(cc,sc,xfe_manager_class,draw_background,
 				XfeInheritDrawBackground);
+
+    _XfeResolve(cc,sc,xfe_manager_class,draw_components,
+				XfeInheritDrawComponents);
    
     _XfeResolve(cc,sc,xfe_manager_class,draw_shadow,
 				XfeInheritDrawShadow);
    
-    _XfeResolve(cc,sc,xfe_manager_class,draw_components,
-				XfeInheritDrawComponents);
+    _XfeResolve(cc,sc,xfe_manager_class,draw_accent_border,
+				XfeInheritDrawAccentBorder);
 }
 /*----------------------------------------------------------------------*/
 static void
@@ -862,10 +886,13 @@ CoreExpose(Widget w,XEvent *event,Region region)
 {
 	/* Make sure the widget is realized before drawing ! */
 	if (!XtIsRealized(w)) return;
-   
+
 	/* Draw Background */ 
 	_XfeManagerDrawBackground(w,event,region,&_XfemBoundary(w));
 
+	/* Draw Accent Border */ 
+	_XfeManagerDrawAccentBorder(w,event,region,&_XfemBoundary(w));
+   
 	/* Draw Shadow */ 
 	_XfeManagerDrawShadow(w,event,region,&_XfemBoundary(w));
 
@@ -1102,12 +1129,13 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 	}
 
 	/* Changes that affect the layout and geometry */
-	if ((_XfemMarginTop(nw)			!= _XfemMarginTop(ow)) ||
-		(_XfemMarginBottom(nw)		!= _XfemMarginBottom(ow)) ||
-		(_XfemMarginLeft(nw)		!= _XfemMarginLeft(ow)) ||
-		(_XfemMarginRight(nw)		!= _XfemMarginRight(ow)) ||       
-		(_XfemShadowThickness(nw)	!= _XfemShadowThickness(ow)) ||
-		(_XfemUnitType(nw)			!= _XfemUnitType(ow)))
+	if ((_XfemMarginTop(nw)				!= _XfemMarginTop(ow)) ||
+		(_XfemMarginBottom(nw)			!= _XfemMarginBottom(ow)) ||
+		(_XfemMarginLeft(nw)			!= _XfemMarginLeft(ow)) ||
+		(_XfemMarginRight(nw)			!= _XfemMarginRight(ow)) ||       
+		(_XfemShadowThickness(nw)		!= _XfemShadowThickness(ow)) ||
+		(_XfemAccentBorderThickness(nw)	!= _XfemAccentBorderThickness(ow)) ||
+		(_XfemUnitType(nw)				!= _XfemUnitType(ow)))
 	{
 		_XfemConfigFlags(nw) |= XfeConfigGLE;
 	}
@@ -1859,6 +1887,59 @@ DrawShadow(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 				   _XfemShadowType(w));
 }
 /*----------------------------------------------------------------------*/
+static void
+DrawAccentBorder(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
+{
+	if (_XfemAccentBorderThickness(w) == 0)
+ 	{
+ 		return;
+ 	}
+
+	printf("DrawAccentBorder(%s,%d)\n",
+           XtName(w),_XfemAccentBorderThickness(w));
+
+	/* The shadow thickness can be used to tweak the raised effect */
+	switch(_XfemAccentBorderThickness(w))
+	{
+	case 2:
+	case 4:
+
+		XfeDrawRectangle(XtDisplay(w),
+						 _XfeWindow(w),
+						 _XfemHighlightGC(w),
+						 0,
+						 0,
+						 _XfeWidth(w),
+						 _XfeHeight(w),
+						 _XfemAccentBorderThickness(w) / 2);
+
+		_XmDrawShadows(XtDisplay(w),
+					   _XfeWindow(w),
+					   _XfemTopShadowGC(w),
+					   _XfemBottomShadowGC(w),
+					   _XfemAccentBorderThickness(w) / 2,
+					   _XfemAccentBorderThickness(w) / 2,
+					   _XfeWidth(w) - 2 * (_XfemAccentBorderThickness(w) / 2),
+					   _XfeHeight(w) - 2 * (_XfemAccentBorderThickness(w) / 2),
+					   _XfemAccentBorderThickness(w) / 2,
+					   XmSHADOW_OUT);
+
+		break;
+
+	default:
+
+		XfeDrawRectangle(XtDisplay(w),
+						 _XfeWindow(w),
+						 _XfemHighlightGC(w),
+						 0,
+						 0,
+						 _XfeWidth(w),
+						 _XfeHeight(w),
+						 _XfemAccentBorderThickness(w));
+		break;
+	}
+}
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -2285,6 +2366,20 @@ _XfeManagerDrawShadow(Widget		w,
 	if (mc->xfe_manager_class.draw_shadow)
 	{
 		(*mc->xfe_manager_class.draw_shadow)(w,event,region,rect);
+	}
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
+_XfeManagerDrawAccentBorder(Widget			w,
+							XEvent *		event,
+							Region			region,
+							XRectangle *	rect)
+{
+	XfeManagerWidgetClass mc = (XfeManagerWidgetClass) XtClass(w);
+	
+	if (mc->xfe_manager_class.draw_accent_border)
+	{
+		(*mc->xfe_manager_class.draw_accent_border)(w,event,region,rect);
 	}
 }
 /*----------------------------------------------------------------------*/

@@ -192,7 +192,7 @@ _XFE_WIDGET_CLASS_RECORD(textcaption,TextCaption) =
 	{
 		XfeInheritBitGravity,					/* bit_gravity				*/
 		XfeInheritPreferredGeometry,			/* preferred_geometry		*/
-		XfeInheritUpdateBoundary,					/* update_boundary				*/
+		XfeInheritUpdateBoundary,				/* update_boundary			*/
 		XfeInheritUpdateChildrenInfo,			/* update_children_info		*/
 		XfeInheritLayoutWidget,					/* layout_widget			*/
 		XfeInheritAcceptStaticChild,			/* accept_static_child		*/
@@ -205,6 +205,7 @@ _XFE_WIDGET_CLASS_RECORD(textcaption,TextCaption) =
 		NULL,									/* draw_background			*/
 		XfeInheritDrawShadow,					/* draw_shadow				*/
 		XfeInheritDrawComponents,				/* draw_components			*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border		*/
 		NULL,									/* extension				*/
     },
 

@@ -39,7 +39,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNbutton3DownCallback				"button3DownCallback"
 #define XmNbutton3UpCallback				"button3UpCallback"
 
-#define XmNaccentBorderThickness			"accentBorderThickness"
 #define XmNarmBackground					"armBackground"
 #define XmNarmForeground					"armForeground"
 #define XmNarmOffset						"armOffset"
@@ -63,7 +62,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNraisedPixmapMask					"raisedPixmapMask"
 #define XmNtransparentCursor				"transparentCursor"
 
-#define XmCAccentBorderThickness			"AccentBorderThickness"
 #define XmCArmBackground					"ArmBackground"
 #define XmCArmForeground					"ArmForeground"
 #define XmCArmOffset						"ArmOffset"
