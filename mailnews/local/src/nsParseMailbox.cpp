@@ -22,7 +22,6 @@
 #include "nsIMsgDatabase.h"
 #include "nsMsgMessageFlags.h"
 #include "nsIDBFolderInfo.h"
-#include "nsIByteBuffer.h"
 #include "nsIInputStream.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgBaseCID.h"
