@@ -63,6 +63,11 @@
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
 #include "nsTriStateCheckboxFrame.h"
+#include "nsSliderFrame.h"
+#include "nsScrollbarFrame.h"
+#include "nsSpinnerFrame.h"
+#include "nsColorPickerFrame.h"
+#include "nsFontPickerFrame.h"
 #include "nsTreeFrame.h"
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
@@ -1558,6 +1563,11 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
 	    (nsXULAtoms::titledbutton    == tag.get())  ||
         (nsXULAtoms::checkbox        == tag.get())  ||
         (nsXULAtoms::tristatecheckbox == tag.get())  ||
+        (nsXULAtoms::slider == tag.get())  ||
+        (nsXULAtoms::spinner == tag.get())  ||
+        (nsXULAtoms::scrollbar == tag.get())  ||
+        (nsXULAtoms::colorpicker == tag.get())  ||
+        (nsXULAtoms::fontpicker == tag.get())  ||
         (nsXULAtoms::radio           == tag.get())  ||
         (nsXULAtoms::text            == tag.get())  ||
         (nsXULAtoms::widget          == tag.get())  ||
@@ -2491,6 +2501,16 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewCheckboxControlFrame(newFrame);
     else if (aTag == nsXULAtoms::tristatecheckbox)
       rv = NS_NewTriStateCheckboxFrame(newFrame);
+    else if (aTag == nsXULAtoms::slider)
+      rv = NS_NewSliderFrame(newFrame);
+    else if (aTag == nsXULAtoms::spinner)
+      rv = NS_NewSpinnerFrame(newFrame);
+    else if (aTag == nsXULAtoms::scrollbar)
+      rv = NS_NewScrollbarFrame(newFrame);
+    else if (aTag == nsXULAtoms::colorpicker)
+      rv = NS_NewColorPickerFrame(newFrame);
+    else if (aTag == nsXULAtoms::fontpicker)
+      rv = NS_NewFontPickerFrame(newFrame);
     else if (aTag == nsXULAtoms::radio)
       rv = NS_NewRadioControlFrame(newFrame);
     else if (aTag == nsXULAtoms::text)
