@@ -20,23 +20,24 @@ Table of Contents
 * bloatdiff.pl
     Script used to process leak data in the logs.
 
-* build-grendel.pl
-    Old?  Not used?
-
 * build-seamonkey-util.pl
-    Meat of the unix tinderbox stuff.
-
-* build-embed-util.pl
-    Meat of the unix embed tinderbox stuff.
-
-* build-embed.pl
-    Wrapper for build-embed-util.pl
+    Meat of the unix/gmake tinderbox stuff.
 
 * build-seamonkey-win32.pl
-    Win32 tinderbox stuff.
+    Win32 nmake build tinderbox stuff.
+
+* gettime.pl
+    Wrapper around Time::HiRes
+
+* install-links
+    csh script to create symlinks from cvs dir to tinderbox root dir
+
+* post-mozilla-sample.pl
+    Example of post-build test script
 
 * tinder-defaults.pl
     Default script variables.
 
 * tinderbox
     Wrapper script to start unix builds.
+
