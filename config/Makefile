@@ -94,11 +94,11 @@ $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 #update build number from within make script
 $(DEPTH)/build/build_number: FORCE
 	$(RM) $@
-	perl5 bdate.pl > $@
-	perl5 aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
+	$(PERL) bdate.pl > $@
+	$(PERL) aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 
 $(DEPTH)/modules/libpref/src/init/all.js: FORCE
-	perl set-timebomb.pl 0 30
+	$(PERL) set-timebomb.pl 0 30
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
 	@$(MAKE_OBJDIR)

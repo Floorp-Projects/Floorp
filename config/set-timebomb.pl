@@ -1,4 +1,3 @@
-#!/usr/local/bin/perl5 -w
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
