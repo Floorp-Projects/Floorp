@@ -214,6 +214,7 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefs->GetIntPref("mail.imap.noop_check_count", &gPromoteNoopToCheckCount);
     prefs->GetBoolPref("mail.imap.use_envelope_cmd",
                        &gUseEnvelopeCmd);
+    prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(mAcceptLanguages));
   }
   gInitialized = PR_TRUE;
   return rv;
@@ -4369,17 +4370,13 @@ void nsImapProtocol::Language()
 
     // extract the desired language attribute from prefs
     nsresult rv = NS_OK; 
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-    nsXPIDLString acceptLanguages;
-    if (NS_SUCCEEDED(rv) && prefs) 
-        prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(acceptLanguages));
 
     // we need to parse out the first language out of this comma separated list....
     // i.e if we have en,ja we only want to send en to the server.
-    if (acceptLanguages)
+    if (mAcceptLanguages.get())
     {
       nsCAutoString extractedLanguage;
-      extractedLanguage.AssignWithConversion(acceptLanguages);
+      extractedLanguage.AssignWithConversion(mAcceptLanguages.get());
       PRInt32 pos = extractedLanguage.FindChar(',', PR_TRUE);
       if (pos > 0) // we have a comma separated list of languages...
         extractedLanguage.Truncate(pos); // truncate everything after the first comma (including the comma)
