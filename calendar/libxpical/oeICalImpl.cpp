@@ -52,6 +52,7 @@
 #include "nsNetCID.h"
 #include "nsEscape.h"
 #include "nsISupportsArray.h"
+#include "nsXPCOM.h"
                              
 extern "C" {
     #include "icalss.h"
