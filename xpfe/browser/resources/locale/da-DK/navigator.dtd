@@ -1,0 +1,259 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY  bugzillaButton.label "Bugzilla">
+<!ENTITY  buildId.label "Build ID: 1999090808">
+<!ENTITY  homeButton.label "Hjem">
+<!ENTITY  netscapeButton.label "Netscape">
+<!ENTITY  notifCom.label "[Notification Component]">
+<!ENTITY  statusText.label "Dokument færdigt">
+<!ENTITY  tinderboxButton.label "Tinderbox">
+<!ENTITY QA.label "QA">
+<!ENTITY QABugCmd.label "Bug Writing">
+<!ENTITY QAKnownBugCmd.label "Kendte fejl">
+<!ENTITY QASmokeCmd.label "Smoke Tests">
+<!ENTITY QATempCmd.label "Bug Template">
+<!ENTITY aboutCommunicatorCmd.label "Om Communicator Prototype">
+<!ENTITY addCurPageCmd.label "Tilføj denne side">
+<!ENTITY appSpecificCmd.label "Program specifik">
+<!ENTITY backButton.label "Tilbage">
+<!ENTITY bookmarksMenu.label "Bogmærker">
+<!ENTITY browserCmd.label "Nyt browser vindue">
+<!ENTITY closeCmd.label "Luk">
+<!ENTITY copyCmd.label "Kopier">
+<!ENTITY cutCmd.label "Klip">
+<!ENTITY da-DK-file.label "Danish (da-DK; file)">
+<!ENTITY da-DK-http.label "Danish (da-DK; http)">
+<!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
+<!ENTITY dcharCp1255Cmd.label "Windows Hebrew (windows-1255)">
+<!ENTITY dcharCp1256Cmd.label "Windows Arabic (windows-1256)">
+<!ENTITY dcharDosCyrCmd.label "DOS Cyrillic (IBM866)">
+<!ENTITY dcharEcmaCyrCmd.label "ECMA Cyrillic (ISO-IR-111)">
+<!ENTITY dcharIso10Cmd.label "ISO Latin 6 (ISO-8859-10)">
+<!ENTITY dcharIso13Cmd.label "ISO Latin 7 (ISO-8859-13)">
+<!ENTITY dcharIso14Cmd.label "ISO Latin 8 (ISO-8859-14)">
+<!ENTITY dcharIso15Cmd.label "ISO Latin 9 (ISO-8859-15)">
+<!ENTITY dcharIso1Cmd.label "ISO Latin 1 (ISO-8859-1)">
+<!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-2)">
+<!ENTITY dcharIso3Cmd.label "ISO Latin 3 (ISO-8859-3)">
+<!ENTITY dcharIso4Cmd.label "ISO Latin 4 (ISO-8859-4)">
+<!ENTITY dcharIso6Cmd.label ".ISO Arabic (ISO-8859-6)">
+<!ENTITY dcharIso8Cmd.label ".ISO Hebrew (ISO-8859-8)">
+<!ENTITY dcharIso9Cmd.label "ISO Latin 5 (ISO-8859-9)">
+<!ENTITY dcharIsoCyrCmd.label "ISO Cyrillic (ISO-8859-5)">
+<!ENTITY dcharIsoGreekCmd.label "ISO Greek (ISO-8859-7)">
+<!ENTITY dcharJapanCmd.label "Japanese JIS (ISO-2022-JP)">
+<!ENTITY dcharJapanEucCmd.label "Japanese (EUC-JP)">
+<!ENTITY dcharJapanShiftjsCmd.label "Japanese (Shift_JIS)">
+<!ENTITY dcharKoreanCmd.label "Korean (EUC-KR)">
+<!ENTITY dcharMacCenEuroCmd.label "Macintosh Central European">
+<!ENTITY dcharMacCroaCmd.label "Macintosh Croatian">
+<!ENTITY dcharMacCyrCmd.label "Macintosh Cyrillic">
+<!ENTITY dcharMacGreekCmd.label "Macintosh Greek">
+<!ENTITY dcharMacIceCmd.label "Macintosh Icelandic">
+<!ENTITY dcharMacRomCmd.label "Macintosh Roman">
+<!ENTITY dcharMacRomanianCmd.label "Macintosh Romanian">
+<!ENTITY dcharMacTurCmd.label "Macintosh Turkish">
+<!ENTITY dcharMacUkrCmd.label "Macintosh Ukrainian">
+<!ENTITY dcharMenu.label "Tegnsæt">
+<!ENTITY dcharRusCmd.label "Russian (KOI8-R)">
+<!ENTITY dcharSimpChiGbCmd.label "Simplified Chinese (GB2312)">
+<!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
+<!ENTITY dcharTradChiBigCmd.label "Traditional Chinese (Big5)">
+<!ENTITY dcharTriChiEucCmd.label "Traditional Chinese (EUC-TW)">
+<!ENTITY dcharUkrCmd.label "Ukrainian (KOI8-U)">
+<!ENTITY dcharUtf7Cmd.label "Multilingual (UTF-7)">
+<!ENTITY dcharUtf8Cmd.label "Multilingual (UTF-8)">
+<!ENTITY dcharVieVpCmd.label "Vietnamese (VPS)">
+<!ENTITY dcharVietTcnCmd.label "Vietnamese (TCVN5712)">
+<!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
+<!ENTITY dcharWinBalRimCmd.label "Windows Baltic (windows-1257)">
+<!ENTITY dcharWinCyrCmd.label "Windows Cyrillic (windows-1251)">
+<!ENTITY dcharWinGreekCmd.label "Windows Greek (windows-1253)">
+<!ENTITY dcharWinLat1Cmd.label "Windows Latin 1 (windows-1252)">
+<!ENTITY dcharWinLat2Cmd.label "Windows Latin 2 (windows-1250)">
+<!ENTITY dcharWinLat5Cmd.label "Windows Latin 5 (windows-1254)">
+<!ENTITY dcharWinVietCmd.label "Windows Vietnamese (windows-1258)">
+<!ENTITY debugMenu.label "Debug">
+<!ENTITY debugQA.label "QA Help">
+<!ENTITY debugQABug.label "QA Help">
+<!ENTITY debugQAKnowBug.label "Kendte fejl">
+<!ENTITY debugQASmoke.label "Smoke Tests">
+<!ENTITY debugVerCmd.label "Verification">
+<!ENTITY deleteCmd.label "Slet">
+<!ENTITY demo0Cmd.label "#0 Basic Styles">
+<!ENTITY demo10Cmd.label "#10 Anim Images">
+<!ENTITY demo11Cmd.label "#11 Fixed Positioning">
+<!ENTITY demo12Cmd.label "#12 More Fixed Pos">
+<!ENTITY demo13Cmd.label "#13 DHTML">
+<!ENTITY demo14Cmd.label "#14 XML Sorting">
+<!ENTITY demo15Cmd.label "#15 XML IRS">
+<!ENTITY demo16Cmd.label "#16 Gfx Widgets">
+<!ENTITY demo1Cmd.label "#1 CSS Styles">
+<!ENTITY demo2Cmd.label "#2 Images">
+<!ENTITY demo3Cmd.label "#3 Basic Tables">
+<!ENTITY demo4Cmd.label "#4 Simple Tables">
+<!ENTITY demo5Cmd.label "#5 More Styles">
+<!ENTITY demo6Cmd.label "#6 Deeply Nested Tables">
+<!ENTITY demo7Cmd.label "#7 Scaled Anim Image">
+<!ENTITY demo8Cmd.label "#8 Form">
+<!ENTITY demo9Cmd.label "#9 Frames">
+<!ENTITY editMenu.label "Rediger">
+<!ENTITY editPageCmd.label "Rediger side">
+<!ENTITY en-US.label "English (en-US)">
+<!ENTITY enlargeTextSizeCmd.label "Forstør teksten">
+<!ENTITY fileMenu.label "Filer">
+<!ENTITY findAgainCmd.label "Find igen">
+<!ENTITY findOnCmd.label "Find på siden...">
+<!ENTITY forwardButton.label "Fremad">
+<!ENTITY goBackCmd.label "Tilbage">
+<!ENTITY goForwardCmd.label "Fremad">
+<!ENTITY goHomeCmd.label "Hjem">
+<!ENTITY goMenu.label "Gå">
+<!ENTITY goPrev1Cmd.label "Previous Site 1">
+<!ENTITY goPrev2Cmd.label "Previous Site 2">
+<!ENTITY goPrevnCmd.label "Previous Site n">
+<!ENTITY helpChannelCmd.label "Help Channel">
+<!ENTITY helpContentsCmd.label "Indhold af hjælp">
+<!ENTITY helpMenuCmd.label "Hjælp">
+<!ENTITY howTutorialCmd.label "Hvordan gør man... vejledning">
+<!ENTITY languages.label "Languages">
+<!ENTITY mainWindow.title "Mozilla">
+<!ENTITY mainWindow.titlemodifier "Mozilla">
+<!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+<!ENTITY manBookmarksCmd.label "Håndter bogmærker...">
+<!ENTITY myNetscape.url "http://my.netscape.com">
+<!ENTITY newBlankPageCmd.label "Tomt vindue">
+<!ENTITY newMailCmd.label "Post besked">
+<!ENTITY newMenu.label "Ny">
+<!ENTITY newPageFromDraftCmd.label "Side fra kladde">
+<!ENTITY newPageFromTemplateCmd.label "Side fra Skabelon">
+<!ENTITY offlineGoOfflineCmd.label "Gå Offline">
+<!ENTITY offlineMenu.label "Offline">
+<!ENTITY offlineSynchronizeCmd.label "Synkroniser">
+<!ENTITY openCmd.label "Åben Web adresse...">
+<!ENTITY openFileCmd.label "Åben fil...">
+<!ENTITY pageInfoCmd.label "Information om siden">
+<!ENTITY pageSourceCmd.label "Sidens  kilde">
+<!ENTITY pasteCmd.label "Indsæt">
+<!ENTITY preferences.label "Indstillinger...">
+<!ENTITY printButton.label "Udskriv">
+<!ENTITY printCmd.label "Udskriv...">
+<!ENTITY printPreviewCmd.label "Vis udskrift">
+<!ENTITY printSetupCmd.label "Printer opsætning...">
+<!ENTITY quitCmd.label "Afslut">
+<!ENTITY redoCmd.label "Annuller fortryd">
+<!ENTITY reduceTextSizeCmd.label "Forminsk teksten">
+<!ENTITY releaseNotesCmd.label "Udgivelses noter">
+<!ENTITY reloadButton.label "Opdater">
+<!ENTITY reloadCmd.label "Opdater">
+<!ENTITY searchAddressbookCmd.label "Søg i adressebøger">
+<!ENTITY searchAllMailCmd.label "Søg post/Nyhedgrupper">
+<!ENTITY searchBookmarksHistoryCmd.label "Søg bogmærker og Historie">
+<!ENTITY searchButton.label "Søg">
+<!ENTITY searchComputerCmd.label "Søg på denne computer...">
+<!ENTITY searchInternetCmd.label "Søg på Internettet">
+<!ENTITY searchMenu.label "Søg">
+<!ENTITY searchParenet2Cmd.label "Search Parent2 Item">
+<!ENTITY searchParentCmd.label "Search Parent Item...">
+<!ENTITY selectAllCmd.label "Vælg alt">
+<!ENTITY sendPageCmd.label "Send side">
+<!ENTITY showImagesCmd.label "Vis Billeder">
+<!ENTITY sidebarCmd.label "Sidebar *?*">
+<!ENTITY softwareUpdatesCmd.label "Program opdateringer">
+<!ENTITY stopButton.label "Stop">
+<!ENTITY stopCmd.label "Stop">
+<!ENTITY strresCmd.label "StringBundle Test">
+<!ENTITY tanslateJapanesetoEngCmd.label "Japansk til Engelsk">
+<!ENTITY tanslateSpantoEngCmd.label "Spansk til Engelsk">
+<!ENTITY technicalSupportCmd.label "Teknisk Support">
+<!ENTITY throbber.url "http://www.mozilla.org">
+<!ENTITY toolbarsCmd.label "Værktøjslinjer">
+<!ENTITY translateButton.label "Oversæt">
+<!ENTITY translateEngtoFrenCmd.label "Engelsk til Fransk">
+<!ENTITY translateEngtoGermCmd.label "Engelsk til Tysk">
+<!ENTITY translateEngtoItalianCmd.label "Engelsk til Italiensk">
+<!ENTITY translateEngtoJapaneseCmd.label "Engelsk til Japansk">
+<!ENTITY translateEngtoPortCmd.label "Engelsk til Portogisisk">
+<!ENTITY translateEngtoSpanCmd.label "Engelsk til Spansk">
+<!ENTITY translateFrentoEngCmd.label "Fransk til Engelsk">
+<!ENTITY translateFrentoGermCmd.label "Fransk til Tysk">
+<!ENTITY translateFrentoSpanCmd.label "Fransk til Spansk">
+<!ENTITY translateGermtoEngCmd.label "Tysk til Engelsk">
+<!ENTITY translateGermtoFrenCmd.label "Tysk til Fransk">
+<!ENTITY translateGermtoSpanCmd.label "Tysk til Spansk">
+<!ENTITY translateItaliantoEngCmd.label "Italiensk til Engelsk">
+<!ENTITY translateMenu.label "Oversæt">
+<!ENTITY translatePorttoEngCmd.label "Portugisisk til Engelsk">
+<!ENTITY translateSpantoFrenCmd.label "Spansk til Fransk">
+<!ENTITY translateSpantoGermCmd.label "Spansk til Tysk">
+<!ENTITY undoCmd.label "Fortryd">
+<!ENTITY useStlyleSheetBizarreCmd.label "Bizart">
+<!ENTITY useStyleSheetDefaultCmd.label "Standard">
+<!ENTITY useStyleSheetEasyReadingCmd.label "Let læseligt">
+<!ENTITY useStyleSheetMaxInfoCmd.label "Maximum Information">
+<!ENTITY useStyleSheetMenu.label "Brug Stylesheet">
+<!ENTITY ver10Cmd.label "CNN">
+<!ENTITY ver11Cmd.label "USA Today">
+<!ENTITY ver12Cmd.label "Disney">
+<!ENTITY ver13Cmd.label "Hotwired">
+<!ENTITY ver14Cmd.label "Hotbot">
+<!ENTITY ver15Cmd.label "Frames">
+<!ENTITY ver16Cmd.label "Tabeller">
+<!ENTITY ver17Cmd.label "Appleter">
+<!ENTITY ver18Cmd.label "JavaScript">
+<!ENTITY ver19Cmd.label "GIF Billeder">
+<!ENTITY ver1Cmd.label "Mozilla">
+<!ENTITY ver20Cmd.label "JPEG Billeder">
+<!ENTITY ver21Cmd.label "PNG Billeder">
+<!ENTITY ver22Cmd.label "Gennemsigtigthed">
+<!ENTITY ver23Cmd.label "Animation">
+<!ENTITY ver24Cmd.label "Større side">
+<!ENTITY ver25Cmd.label "Mindre side">
+<!ENTITY ver2Cmd.label "Yahoo">
+<!ENTITY ver3Cmd.label "Netscape">
+<!ENTITY ver4Cmd.label "Excite">
+<!ENTITY ver5Cmd.label "Microsoft">
+<!ENTITY ver6Cmd.label "city.net">
+<!ENTITY ver7Cmd.label "Mirabilis">
+<!ENTITY ver8Cmd.label "Pathfinder">
+<!ENTITY ver9Cmd.label "Warner Bros.">
+<!ENTITY viewDemoMenu.label "Viewer Demoer">
+<!ENTITY viewMenu.label "Vis">
+<!ENTITY walletChangePasswordCmd.label "Skift kodeord">
+<!ENTITY walletContentsCmd.label "Indhold af Wallet">
+<!ENTITY walletDisplayCookiesCmd.label "Vis Cookies">
+<!ENTITY walletDisplaySignonsCmd.label "Vis Signons">
+<!ENTITY walletMenu.label "Wallet">
+<!ENTITY walletQuickFillCmd.label "Hurtigt formular udfyldning">
+<!ENTITY walletRequestToCaptureCmd.label "Capture Form">
+<!ENTITY walletSafeFillCmd.label "Sikker formular udfyldning">
+<!ENTITY walletSamplesCmd.label "Eksempler">
+<!ENTITY xptk10Cmd.label "XP Menus">
+<!ENTITY xptk11Cmd.label "Color Picker">
+<!ENTITY xptk1Cmd.label "Tri-state checkbox">
+<!ENTITY xptk2Cmd.label "Toolbar">
+<!ENTITY xptk3Cmd.label "Tree">
+<!ENTITY xptk4Cmd.label "Dialog">
+<!ENTITY xptk5Cmd.label "Dialog w/ animation">
+<!ENTITY xptk6Cmd.label "Dialog chrome">
+<!ENTITY xptk7Cmd.label "Tab">
+<!ENTITY xptk8Cmd.label "Beep">
+<!ENTITY xptk9Cmd.label "Sound">
+<!ENTITY xptkMenu.label "XPToolkit">
