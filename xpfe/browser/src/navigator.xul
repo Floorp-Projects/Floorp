@@ -80,6 +80,7 @@
 <!ENTITY dcharIso4Cmd.label "ISO Latin 4 (ISO-8859-4)">
 <!ENTITY dcharIso9Cmd.label "ISO Latin 5 (ISO-8859-9)">
 <!ENTITY dcharIso10Cmd.label "ISO Latin 6 (ISO-8859-10)">
+<!ENTITY dcharIso13Cmd.label "ISO Latin 7 (ISO-8859-13)">
 <!ENTITY dcharIso14Cmd.label "ISO Latin 8 (ISO-8859-14)">
 <!ENTITY dcharIso15Cmd.label "ISO Latin 9 (ISO-8859-15)">
 <!ENTITY dcharWinLat2Cmd.label "Windows Latin 2 (windows-1250)"> 
@@ -403,6 +404,7 @@
 	         <menuitem name="&dcharIso4Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-4');"/>
 	         <menuitem name="&dcharIso9Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-9');"/>
 	         <menuitem name="&dcharIso10Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-10');"/>
+	         <menuitem name="&dcharIso13Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-13');"/>
 	         <menuitem name="&dcharIso14Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-14');"/>
 	         <menuitem name="&dcharIso15Cmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-8859-15');"/>
 	         <menuitem name="&dcharWinLat2Cmd.label;" onclick="BrowserSetDefaultCharacterSet('windows-1250');"/>
