@@ -23,5 +23,6 @@ en-US.jar:
     locale/en-US/messenger-smime/msgCompSecurityInfo.dtd             (resources/locale/en-US/msgCompSecurityInfo.dtd)
     locale/en-US/messenger-smime/msgCompSecurityInfo.properties      (resources/locale/en-US/msgCompSecurityInfo.properties)
     locale/en-US/messenger-smime/msgReadSecurityInfo.dtd             (resources/locale/en-US/msgReadSecurityInfo.dtd)
+    locale/en-US/messenger-smime/certFetchingStatus.dtd              (resources/locale/en-US/certFetchingStatus.dtd)
     locale/en-US/messenger-smime/msgSecurityInfo.properties          (resources/locale/en-US/msgSecurityInfo.properties) 
     locale/en-US/messenger-smime/contents.rdf                        (resources/locale/en-US/contents.rdf)
