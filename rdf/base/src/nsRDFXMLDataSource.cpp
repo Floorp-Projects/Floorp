@@ -32,7 +32,7 @@
      just do the magic.
 
   2) Implement a more terse output for "typed" nodes; that is, instead
-     of "RDF:Description RDF:type='ns:foo'", just output "ns:foo".
+     of "RDF:Description type='ns:foo'", just output "ns:foo".
 
   3) There is a lot of code that calls rdf_PossiblyMakeRelative() and
      then calls rdf_EscapeAmpersands(). Is this really just one operation?
@@ -1068,7 +1068,7 @@ RDFXMLDataSourceImpl::SerializeAssertion(nsIOutputStream* aStream,
         rdf_PossiblyMakeRelative((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
 
-static const char kRDFResource1[] = " RDF:resource=\"";
+static const char kRDFResource1[] = " resource=\"";
 static const char kRDFResource2[] = "\"/>\n";
         rdf_BlockingWrite(aStream, kRDFResource1, sizeof(kRDFResource1) - 1);
         rdf_BlockingWrite(aStream, uri);
@@ -1139,7 +1139,7 @@ nsresult
 RDFXMLDataSourceImpl::SerializeDescription(nsIOutputStream* aStream,
                                            nsIRDFResource* aResource)
 {
-static const char kRDFDescription1[] = "  <RDF:Description RDF:about=\"";
+static const char kRDFDescription1[] = "  <RDF:Description about=\"";
 static const char kRDFDescription2[] = "\">\n";
 static const char kRDFDescription3[] = "  </RDF:Description>\n";
 
@@ -1147,7 +1147,7 @@ static const char kRDFDescription3[] = "  </RDF:Description>\n";
 
     // XXX Look for an "RDF:type" property: if one exists, then output
     // as a "typed node" instead of the more verbose "RDF:Description
-    // RDF:type='...'".
+    // type='...'".
 
     nsXPIDLCString s;
     rv = aResource->GetValue(getter_Copies(s));
@@ -1238,7 +1238,7 @@ RDFXMLDataSourceImpl::SerializeMember(nsIOutputStream* aStream,
         if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void**) &resource))) {
             nsXPIDLCString s;
             if (NS_SUCCEEDED(rv = resource->GetValue( getter_Copies(s) ))) {
-static const char kRDFLIResource1[] = "    <RDF:li RDF:resource=\"";
+static const char kRDFLIResource1[] = "    <RDF:li resource=\"";
 static const char kRDFLIResource2[] = "\"/>\n";
 
                 nsAutoString uri(s);
@@ -1320,7 +1320,7 @@ static const char kRDFAlt[] = "RDF:Alt";
         nsAutoString uri(s);
         rdf_PossiblyMakeRelative((const char*) docURI, uri);
         rdf_EscapeAmpersands(uri);
-        rdf_BlockingWrite(aStream, " RDF:ID=\"", 9);
+        rdf_BlockingWrite(aStream, " ID=\"", 9);
         rdf_BlockingWrite(aStream, uri);
         rdf_BlockingWrite(aStream, "\"", 1);
     }
@@ -1357,14 +1357,14 @@ static const char kRDFAlt[] = "RDF:Alt";
             do {
                 PRBool eq;
 
-                // don't serialize RDF:instanceOf -- it's implicit in the tag
+                // don't serialize instanceOf -- it's implicit in the tag
                 if (NS_FAILED(rv = property->EqualsString(kURIRDF_instanceOf, &eq)))
                     break;
 
                 if (eq)
                     break;
 
-                // don't serialize RDF:nextVal -- it's internal state
+                // don't serialize nextVal -- it's internal state
                 if (NS_FAILED(rv = property->EqualsString(kURIRDF_nextVal, &eq)))
                     break;
 
