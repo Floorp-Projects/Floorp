@@ -59,6 +59,7 @@ class CWindowCreator : public nsIWindowCreator
     static nsresult     Initialize();
         
     static LWindow*     CreateWindowInternal(PRUint32 inChromeFlags,
+                                             PRBool enablePrinting,
                                              PRInt32 width, PRInt32 height); 
 };
 

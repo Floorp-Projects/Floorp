@@ -59,6 +59,7 @@
 #include "nsWeakReference.h"
 #include "nsIChannel.h"
 #include "nsIWidget.h"
+#include "nsIWebBrowserPrint.h"
 
 // Local
 #include "ApplIDs.h"
@@ -876,6 +877,25 @@ NS_METHOD CBrowserShell::GetContentViewer(nsIContentViewer** aViewer)
     return ourDocShell->GetContentViewer(aViewer);
 }
 
+
+NS_METHOD CBrowserShell::GetPrintSettings(nsIPrintSettings** aSettings)
+{
+    NS_ENSURE_ARG_POINTER(aSettings);
+    *aSettings = nsnull;
+    
+    if (!mPrintSettings) {
+        // If we don't have print settings yet, make new ones.
+        nsCOMPtr<nsIWebBrowserPrint> wbPrint(do_GetInterface(mWebBrowser));
+        NS_ENSURE_TRUE(wbPrint, NS_ERROR_NO_INTERFACE);
+        wbPrint->GetNewPrintSettings(getter_AddRefs(mPrintSettings));
+    }
+    if (mPrintSettings) {
+        *aSettings = mPrintSettings;
+        NS_ADDREF(*aSettings);
+        return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
 
 //*****************************************************************************
 //***    CBrowserShell: Navigation

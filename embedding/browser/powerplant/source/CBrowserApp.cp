@@ -394,7 +394,7 @@ void CBrowserApp::HandleAppleEvent(const AppleEvent&	inAppleEvent,
                 else
                     chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
 			    
-       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(chromeFlags, -1, -1);
+       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(chromeFlags, PR_TRUE, -1, -1);
        			ThrowIfNil_(theWindow);
        			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
        			ThrowIfNil_(theBrowser);
@@ -429,7 +429,7 @@ CBrowserApp::ObeyCommand(
       	
 		case PP_PowerPlant::cmd_New:
 			{			
-       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
+       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, PR_TRUE, -1, -1);
        			ThrowIfNil_(theWindow);
        			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
        			ThrowIfNil_(theBrowser);
@@ -455,7 +455,7 @@ CBrowserApp::ObeyCommand(
                     rv = NS_GetURLSpecFromFile(macFile, urlSpec);
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
                                             
-           			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
+           			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, PR_TRUE, -1, -1);
            			ThrowIfNil_(theWindow);
            			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
            			ThrowIfNil_(theBrowser);

@@ -17,7 +17,7 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Conrad Carlen <conrad@ingress.com>
+ *   Conrad Carlen <ccarlen@netscape.com>
  */
 
 #include "nsString.h"

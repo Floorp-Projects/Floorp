@@ -38,6 +38,7 @@
 #include "nsIEventSink.h"
 #include "nsIWebProgress.h"
 #include "nsIDragHelperService.h"
+#include "nsIPrintSettings.h"
 
 class CBrowserChrome;
 class CBrowserShellProgressListener;
@@ -121,6 +122,8 @@ public:
     NS_METHOD               GetWebBrowserChrome(nsIWebBrowserChrome** aChrome);
                             
     NS_METHOD               GetContentViewer(nsIContentViewer** aViewer);
+    
+    NS_METHOD               GetPrintSettings(nsIPrintSettings** aSettings);
     
     Boolean                 IsBusy();
     Boolean                 CanGoBack();
@@ -210,6 +213,8 @@ protected:
         // during OnShowContextMenu.
     PRUint32                        mContextMenuContext;
     nsIDOMNode                      *mContextMenuDOMNode;
+    
+    nsCOMPtr<nsIPrintSettings>      mPrintSettings;
 };
 
 
