@@ -5248,6 +5248,8 @@ NS_IMETHODIMP
 DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
 {
 #ifdef NS_PRINT_PREVIEW
+  if (mIsDoingPrinting) return NS_ERROR_FAILURE;
+
   if (!mPrtPreview) return NS_ERROR_FAILURE;
 
   nsIScrollableView* scrollableView;
@@ -5426,6 +5428,8 @@ DocumentViewerImpl::GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages)
 NS_IMETHODIMP 
 DocumentViewerImpl::ExitPrintPreview()
 {
+  if (mIsDoingPrinting) return NS_ERROR_FAILURE;
+
   if (mIsDoingPrintPreview) {
     ReturnToGalleyPresentation();
   }
@@ -5835,6 +5839,8 @@ DocumentViewerImpl::CheckDocumentForPPCaching()
 NS_IMETHODIMP
 DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 {
+  if (mIsDoingPrinting) return NS_ERROR_FAILURE;
+
   // Get the webshell for this documentviewer
   nsCOMPtr<nsIWebShell> webContainer(do_QueryInterface(mContainer));
   // Get the DocShell and see if it is busy
