@@ -52,6 +52,19 @@
     }                                                                         \
 }
 
+class StDeallocator
+{
+public:
+	StDeallocator( void* memory): mMemory( memory ){};
+	~StDeallocator()
+	{
+		if (mMemory)
+        nsAllocator::Free(mMemory);
+	 }
+private:
+	void* mMemory;
+};
+
 // Placement new for arena-allocation of nsCachedNetData instances
 void *
 nsCachedNetData::operator new (size_t aSize, nsIArena *aArena)
@@ -76,21 +89,20 @@ nsCachedNetData::operator new (size_t aSize, nsCachedNetData *aEntry)
 class StreamAsFileObserverClosure
 {
 public:
-    StreamAsFileObserverClosure(nsIStreamAsFile *aStreamAsFile,
+    StreamAsFileObserverClosure( /* nsIStreamAsFile *aStreamAsFile,*/
                                 nsIStreamAsFileObserver *aObserver):
-        mStreamAsFile(aStreamAsFile), mObserver(aObserver), mNext(0) {}
+        /* mStreamAsFile(aStreamAsFile),*/ mObserver(aObserver), mNext(0) {}
 
     ~StreamAsFileObserverClosure() { delete mNext; }
 
     // Weak link to nsIStreamAsFile which, indirectly, holds a strong link
     //   to this instance
-    nsIStreamAsFile*           mStreamAsFile;
+ //   nsIStreamAsFile*           mStreamAsFile;
     nsIStreamAsFileObserver*   mObserver;        
 
     // Link to next in list
     StreamAsFileObserverClosure* mNext;
 };
-
 
 // nsIStreamAsFile is implemented as an XPCOM tearoff to avoid the cost of an
 //   extra vtable pointer in nsCachedNetData
@@ -98,6 +110,7 @@ class StreamAsFile : public nsIStreamAsFile {
 public:    
     StreamAsFile(nsCachedNetData* cacheEntry): mCacheEntry(cacheEntry) {
         NS_IF_ADDREF(mCacheEntry);
+        NS_INIT_REFCNT();
     }
     virtual ~StreamAsFile() {
         NS_IF_RELEASE(mCacheEntry);
@@ -105,7 +118,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetFileSpec(nsIFile* *aFileSpec) {
+    NS_IMETHOD GetFile(nsIFile* *aFileSpec) {
         return mCacheEntry->GetFile(aFileSpec);
     }
 
@@ -444,7 +457,7 @@ nsCachedNetData::Deserialize(PRBool aDeserializeFlags)
     // No meta-data means a virgin record
     if (!metaDataLength)
         return NS_OK;
-
+#if 0
     nsCString metaDataCStr(metaData, metaDataLength);
     if (metaData)
         nsAllocator::Free(metaData);
@@ -452,7 +465,12 @@ nsCachedNetData::Deserialize(PRBool aDeserializeFlags)
     nsCOMPtr<nsISupports> stringStreamSupports;
     rv = NS_NewCStringInputStream(getter_AddRefs(stringStreamSupports), metaDataCStr);
     if (NS_FAILED(rv)) return rv;
-
+#else
+		nsCOMPtr<nsISupports> stringStreamSupports;
+		StDeallocator metaDataDeallocator( metaData );
+		 rv = NS_NewByteInputStream(getter_AddRefs(stringStreamSupports), metaData, metaDataLength);
+    if (NS_FAILED(rv)) return rv;
+#endif
     nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(stringStreamSupports);
 
     nsCOMPtr<nsIBinaryInputStream> binaryStream;
@@ -470,15 +488,17 @@ nsCachedNetData::Deserialize(PRBool aDeserializeFlags)
     while (1) {
         char* tag;
         rv = binaryStream->ReadStringZ(&tag);
+        
         if (NS_FAILED(rv)) return rv;
 
+				StDeallocator deallocator( tag );
         // Last meta-data chunk is indicated by empty tag
         if (*tag == 0)
             break;
 
         CacheMetaData *annotation;
         annotation = new CacheMetaData(tag);
-        nsAllocator::Free(tag);
+        
         if (!annotation)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -894,7 +914,7 @@ nsCachedNetData::AddObserver(nsIStreamAsFile* aStreamAsFile, nsIStreamAsFileObse
     CHECK_AVAILABILITY();
     NS_ENSURE_ARG(aObserver);
     
-    closure = new StreamAsFileObserverClosure(aStreamAsFile, aObserver);
+    closure = new StreamAsFileObserverClosure(/*aStreamAsFile,*/ aObserver);
     if (!closure)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -963,7 +983,8 @@ nsCachedNetData::Notify(PRUint32 aMessage, nsresult aError)
     closure = mObservers;
     while (closure) {
         observer = closure->mObserver;
-        rv = observer->ObserveStreamAsFile(closure->mStreamAsFile, aMessage, aError);
+        nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface(this) );
+        rv = observer->ObserveStreamAsFile( streamAsFile, aMessage, aError);
         if (NS_FAILED(rv)) return rv;
         closure = closure->mNext;
     }
@@ -1178,6 +1199,7 @@ private:
     nsCOMPtr<nsIInputStream>     mOriginalStream;
     nsCOMPtr<nsIChannel>         mChannel;
 };
+
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(InterceptStreamListener, nsIInputStream, nsIStreamListener, nsIStreamObserver)
 

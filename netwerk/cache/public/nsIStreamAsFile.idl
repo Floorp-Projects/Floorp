@@ -41,7 +41,7 @@ interface nsIStreamAsFile : nsISupports
     /**
      * Filename containing stream-as-file
      */
-    readonly attribute nsIFile fileSpec;
+    readonly attribute nsIFile file;
 
     /**
      * Add an observer for this cache record.  When the cache wants to delete
