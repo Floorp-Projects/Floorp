@@ -1,11 +1,14 @@
 <!-- extracted from SearchDialog.xul -->
 
-<!ENTITY searchHeading.label "Search for items in:">
-<!ENTITY searchSubfolders.label "Search subfolders">
-<!ENTITY searchButton.label "Search">
-<!ENTITY resetButton.label "Reset">
-<!ENTITY optionsButton.label "Options">
-<!ENTITY closeButton.label "Close">
-<!ENTITY searchDialogTitle.label "Search Messages">
-<!ENTITY conditionDesc.label "Search for messages which:">
-<!ENTITY conditions.label "Criteria">
+<!ENTITY searchHeading.label         "Search for items in:">
+<!ENTITY searchSubfolders.label      "Search subfolders">
+<!ENTITY searchButton.label          "Search">
+<!ENTITY resetButton.label           "Clear">
+<!ENTITY optionsButton.label         "Options">
+<!ENTITY closeButton.label           "Close">
+<!ENTITY searchDialogTitle.label     "Search Messages">
+<!ENTITY conditionDesc.label         "Search for messages which:">
+<!ENTITY conditions.label            "Criteria">
+<!ENTITY results.label               "Results">
+
+
