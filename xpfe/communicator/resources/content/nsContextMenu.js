@@ -607,27 +607,38 @@ nsContextMenu.prototype = {
     //Get selected object and convert it to a string to get
     //selected text.   Only use the first 15 chars.
     isTextSelected : function() {
-       var result = false;
-       var selection = _content.getSelection();
-       if (selection != "") {
-          var searchSelect = document.getElementById('context-searchselect');
-          var searchSelectText = selection.toString();
-          var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
-          if (searchSelectText.length > 15)
-             searchSelectText = searchSelectText.substr(0,15) + "...";
-          searchSelectText = bundle.formatStringFromName("searchText",[searchSelectText],1);
-          searchSelect.setAttribute("label", searchSelectText);
-          result = true;
-       }
-       return result;
+        var result = false;
+        var selection = this.searchSelected();
+        if (selection != "") {
+            if (!gDefaultEngine)
+                gDefaultEngine = new nsDefaultEngine();
+            var searchSelect = document.getElementById('context-searchselect');
+
+            // format "Search for <selection>" string to show in menu
+            var searchSelectText = selection.toString();
+            var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
+            if (searchSelectText.length > 15)
+                searchSelectText = searchSelectText.substr(0,15) + "...";
+            searchSelectText = bundle.formatStringFromName("searchText",
+                                 [gDefaultEngine.name, searchSelectText], 2);
+            searchSelect.setAttribute("label", searchSelectText);
+
+            // add icon for default engine we're gonna use to search
+            // (eliminates last icon if we can't find current engine's icon)
+            searchSelect.setAttribute("src", gDefaultEngine.icon);
+
+            result = true;
+        }
+        return result;
     },
     
     searchSelected : function() {
-       var aSearchStr = _content.getSelection();
-       aSearchStr = aSearchStr.toString();
-       aSearchStr = aSearchStr.replace( /^\s+/, "" );
-       aSearchStr = aSearchStr.replace(/\s+$/,"");
-       return aSearchStr;
+        var searchStr = this.target.ownerDocument.getSelection();
+        searchStr = searchStr.toString();
+        searchStr = searchStr.replace( /^\s+/, "" );
+        searchStr = searchStr.replace(/(\n|\r|\t)+/g, " ");
+        searchStr = searchStr.replace(/\s+$/,"");
+        return searchStr;
     },
     
     // Determine if target <object> is an image.
@@ -715,3 +726,71 @@ nsContextMenu.prototype = {
       return false;  
     }
 };
+
+/*************************************************************************
+ *
+ *   nsDefaultEngine : nsIObserver
+ *
+ *************************************************************************/
+function nsDefaultEngine()
+{
+    try
+    {
+        var pb = Components.classes["@mozilla.org/preferences-service;1"].
+                   getService(Components.interfaces.nsIPrefBranch);
+        var pbi = pb.QueryInterface(
+                    Components.interfaces.nsIPrefBranchInternal);
+        pbi.addObserver(this.domain, this, false);
+
+        // reuse code by explicitly invoking initial |observe| call
+        // to initialize the |icon| and |name| member variables
+        this.observe(pb, "", this.domain);
+    }
+    catch (ex)
+    {
+    }
+}
+
+nsDefaultEngine.prototype = 
+{
+    name: "",
+    icon: "",
+    domain: "browser.search.defaultengine",
+
+    // nsIObserver implementation
+    observe: function(aPrefBranch, aTopic, aPrefName)
+    {
+        try
+        {
+            var rdf = Components.
+                        classes["@mozilla.org/rdf/rdf-service;1"].
+                        getService(Components.interfaces.nsIRDFService);
+            var ds = rdf.GetDataSource("rdf:internetsearch");
+            var defaultEngine = aPrefBranch.getCharPref(aPrefName);
+            var res = rdf.GetResource(defaultEngine);
+
+            // get engine ``pretty'' name
+            const kNC_Name = rdf.GetResource(
+                               "http://home.netscape.com/NC-rdf#Name");
+            var engineName = ds.GetTarget(res, kNC_Name, true);
+            if (engineName)
+            {
+                this.name = engineName.QueryInterface(
+                              Components.interfaces.nsIRDFLiteral).Value;
+            }
+
+            // get URL to engine vendor icon
+            const kNC_Icon = rdf.GetResource(
+                               "http://home.netscape.com/NC-rdf#Icon");
+            var iconURL = ds.GetTarget(res, kNC_Icon, true);
+            if (iconURL)
+            {
+                this.icon = iconURL.QueryInterface(
+                  Components.interfaces.nsIRDFLiteral).Value;
+            }
+        }
+        catch (ex)
+        {
+        }
+    }
+}
