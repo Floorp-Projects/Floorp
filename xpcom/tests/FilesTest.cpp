@@ -345,11 +345,14 @@ int FilesTest::Parent(
 
     mySpec.GetParent(outParent);
     nsFilePath parentPath(outParent);
+    nsFileURL url(parentPath);
     mConsole
         << "GetParent() on "
         << "\n\t" << pathAsString
         << "\n yields "
         << "\n\t" << (const char*)parentPath
+        << "\n or as a URL"
+        << "\n\t" << (const char*)url
         << nsEndl;
     Inspect();
     return 0;

@@ -31,6 +31,219 @@
 #include <stdio.h>
 
 //========================================================================================
+//            class nsSimpleCharString
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsSimpleCharString::nsSimpleCharString()
+//----------------------------------------------------------------------------------------
+:   mData(nsnull)
+{
+    
+} // nsSimpleCharString::nsSimpleCharString
+
+//----------------------------------------------------------------------------------------
+nsSimpleCharString::nsSimpleCharString(const char* inString)
+//----------------------------------------------------------------------------------------
+:   mData(nsnull)
+{
+    if (inString)
+        CopyFrom(inString, strlen(inString));
+} // nsSimpleCharString::nsSimpleCharString
+
+//----------------------------------------------------------------------------------------
+nsSimpleCharString::nsSimpleCharString(const nsString& inString)
+//----------------------------------------------------------------------------------------
+:   mData(nsnull)
+{
+    *this = inString;
+} // nsSimpleCharString::nsSimpleCharString
+
+//----------------------------------------------------------------------------------------
+nsSimpleCharString::nsSimpleCharString(const nsSimpleCharString& inOther)
+//----------------------------------------------------------------------------------------
+{
+    mData = inOther.mData;
+    AddRefData();
+} // nsSimpleCharString::nsSimpleCharString
+
+//----------------------------------------------------------------------------------------
+nsSimpleCharString::nsSimpleCharString(const char* inData, PRUint32 inLength)
+//----------------------------------------------------------------------------------------
+:   mData(nsnull)
+{
+    CopyFrom(inData, inLength);
+} // nsSimpleCharString::nsSimpleCharString
+
+//----------------------------------------------------------------------------------------
+nsSimpleCharString::~nsSimpleCharString()
+//----------------------------------------------------------------------------------------
+{
+    ReleaseData();
+} // nsSimpleCharString::nsSimpleCharString
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::operator = (const char* inString)
+//----------------------------------------------------------------------------------------
+{
+    if (inString)
+        CopyFrom(inString, strlen(inString));
+    else
+        SetToEmpty();
+} // nsSimpleCharString::operator =
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::operator = (const nsString& inString)
+//----------------------------------------------------------------------------------------
+{
+    PRUint32 len = inString.Length();
+    ReallocData(len);
+    if (!mData)
+        return;
+    inString.ToCString(mData->mString, len);  
+} // nsSimpleCharString::operator =
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::operator = (const nsSimpleCharString& inOther)
+//----------------------------------------------------------------------------------------
+{
+    if (mData == inOther.mData)
+        return;
+    ReleaseData();
+    mData = inOther.mData;
+    AddRefData();
+} // nsSimpleCharString::operator =
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::operator += (const char* inOther)
+//----------------------------------------------------------------------------------------
+{
+    if (!inOther)
+        return;
+    int newLength = Length() + PL_strlen(inOther);
+    ReallocData(newLength);
+    strcat(mData->mString, inOther);
+} // nsSimpleCharString::operator =
+
+//----------------------------------------------------------------------------------------
+nsSimpleCharString nsSimpleCharString::operator + (const char* inOther) const
+//----------------------------------------------------------------------------------------
+{
+    nsSimpleCharString result(*this);
+    result += inOther;
+    return result;
+} // nsSimpleCharString::operator =
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::Catenate(const char* inString1, const char* inString2)
+//----------------------------------------------------------------------------------------
+{
+    if (!inString2)
+    {
+        *this += inString1;
+        return;
+    }
+    int newLength = Length() + PL_strlen(inString1) + PL_strlen(inString2);
+    ReallocData(newLength);
+    strcat(mData->mString, inString1);
+    strcat(mData->mString, inString2);
+} // nsSimpleCharString::operator =
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::CopyFrom(const char* inData, PRUint32 inLength)
+//----------------------------------------------------------------------------------------
+{
+    if (!inData)
+        return;
+    ReallocData(inLength);
+    if (!mData)
+        return;
+    memcpy(mData->mString, inData, inLength);
+    mData->mString[inLength] = '\0';
+} // nsSimpleCharString::CopyFrom
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::SetToEmpty()
+//----------------------------------------------------------------------------------------
+{
+    ReleaseData();
+} // nsSimpleCharString::SetToEmpty
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::Unescape()
+//----------------------------------------------------------------------------------------
+{
+    if (!mData)
+        return;
+    nsUnescape(mData->mString);
+    mData->mLength = strlen(mData->mString);       
+} // nsSimpleCharString::Unescape
+
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::AddRefData()
+//----------------------------------------------------------------------------------------
+{
+    if (mData)
+        ++mData->mRefCount;
+} // nsSimpleCharString::AddRefData
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::ReleaseData()
+//----------------------------------------------------------------------------------------
+{
+    if (!mData)
+        return;
+    NS_ASSERTION(mData->mRefCount > 0, "String deleted too many times!");
+    if (--mData->mRefCount == 0)
+        PR_Free(mData);
+    mData = nsnull;
+} // nsSimpleCharString::ReleaseData
+
+//----------------------------------------------------------------------------------------
+void nsSimpleCharString::ReallocData(PRUint32 inLength)
+// Reallocate mData to a new length.  Since this presumably precedes a change to the string,
+// we want to detach ourselves if the data is shared by another string, even if the length
+// requested would not otherwise require a reallocation.
+//----------------------------------------------------------------------------------------
+{
+    // We always allocate for a string of at least kMinStringSize, to prevent a lot of small
+    // reallocations.
+    const PRUint32 kMinStringSize = 127;
+
+    if (mData)
+    {
+	    // Re
+	    NS_ASSERTION(mData->mRefCount > 0, "String deleted too many times!");
+	    if (mData->mRefCount == 1)
+	    {
+	        // We are the sole owner, so just change its length, if necessary.
+	        if (inLength > mData->mLength && inLength > kMinStringSize)
+		        mData = (Data*)PR_Realloc(mData, inLength + sizeof(Data));
+	        mData->mLength = inLength;
+	        return;
+	    }
+    }
+    PRUint32 allocLength = inLength;
+    if (allocLength < kMinStringSize)
+        allocLength = kMinStringSize;
+    Data* newData = (Data*)PR_Malloc(allocLength + sizeof(Data));
+    // If data was already allocated when we get to here, then we are cloning the data
+    // from a shared pointer.
+    if (mData)
+    {
+        memcpy(newData, mData, sizeof(Data) + Length());
+        mData->mRefCount--; // Say goodbye
+    }
+    else
+        newData->mString[0] = '\0';
+
+    mData = newData;
+    mData->mRefCount = 1;
+    mData->mLength = inLength;
+} // nsSimpleCharString::ReleaseData
+
+//========================================================================================
 NS_NAMESPACE nsFileSpecHelpers
 //========================================================================================
 {
@@ -39,22 +252,13 @@ NS_NAMESPACE nsFileSpecHelpers
     ,    kMaxAltDigitLength    = 5
     ,    kMaxCoreLeafNameLength    = (kMaxFilenameLength - (kMaxAltDigitLength + 1))
     };
-    NS_NAMESPACE_PROTOTYPE void LeafReplace(
-        char*& ioPath,
-        char inSeparator,
-        const char* inLeafName);
 #ifndef XP_MAC
-    NS_NAMESPACE_PROTOTYPE void Canonify(char*& ioPath, PRBool inMakeDirs);
+    NS_NAMESPACE_PROTOTYPE void Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs);
     NS_NAMESPACE_PROTOTYPE void MakeAllDirectories(const char* inPath, int mode);
 #endif
-    NS_NAMESPACE_PROTOTYPE char* GetLeaf(const char* inPath, char inSeparator); // allocated
-    NS_NAMESPACE_PROTOTYPE char* StringDup(const char* inString, int allocLength = 0);
-    NS_NAMESPACE_PROTOTYPE char* AllocCat(const char* inString1, const char* inString2);
-    NS_NAMESPACE_PROTOTYPE char* StringAssign(char*& ioString, const char* inOther);
-    NS_NAMESPACE_PROTOTYPE char* ReallocCat(char*& ioString, const char* inString1);
 #ifdef XP_PC
-    NS_NAMESPACE_PROTOTYPE void NativeToUnix(char*& ioPath);
-    NS_NAMESPACE_PROTOTYPE void UnixToNative(char*& ioPath);
+    NS_NAMESPACE_PROTOTYPE void NativeToUnix(nsSimpleCharString& ioPath);
+    NS_NAMESPACE_PROTOTYPE void UnixToNative(nsSimpleCharString& ioPath);
 #endif
 } NS_NAMESPACE_END
 
@@ -68,136 +272,80 @@ nsresult ns_file_convert_result(PRInt32 nativeErr)
 }
 
 //----------------------------------------------------------------------------------------
-char* nsFileSpecHelpers::StringDup(
-    const char* inString,
-    int allocLength)
-//----------------------------------------------------------------------------------------
-{
-    if (!allocLength && inString)
-        allocLength = strlen(inString);
-    char* newPath = inString || allocLength ? new char[allocLength + 1] : nsnull;
-    if (!newPath)
-        return nsnull;
-    strcpy(newPath, inString);
-    return newPath;
-} // nsFileSpecHelpers::StringDup
-
-//----------------------------------------------------------------------------------------
-char* nsFileSpecHelpers::AllocCat(
-    const char* inString1,
-    const char* inString2)
-//----------------------------------------------------------------------------------------
-{
-    if (!inString1)
-        return inString2 ? StringDup(inString2) : (char*)nsnull;
-    if (!inString2)
-        return StringDup(inString1);
-    char* outString = StringDup(inString1, strlen(inString1) + strlen(inString2));
-    if (outString)
-        strcat(outString, inString2);
-    return outString;
-} // nsFileSpecHelpers::StringDup
-
-//----------------------------------------------------------------------------------------
-char* nsFileSpecHelpers::StringAssign(
-    char*& ioString,
-    const char* inString2)
-//----------------------------------------------------------------------------------------
-{
-    if (!inString2)
-    {
-        delete [] ioString;
-        ioString = (char*)nsnull;
-        return ioString;
-    }
-    if (!ioString || (strlen(inString2) > strlen(ioString)))
-    {
-        delete [] ioString;
-        ioString = StringDup(inString2);
-        return ioString;
-    }
-    strcpy(ioString, inString2);
-    return ioString;
-} // nsFileSpecHelpers::StringAssign
-
-//----------------------------------------------------------------------------------------
-void nsFileSpecHelpers::LeafReplace(
-    char*& ioPath,
-    char inSeparator,
-    const char* inLeafName)
+void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
     // Find the existing leaf name
-    if (!ioPath)
+    if (IsEmpty())
         return;
     if (!inLeafName)
     {
-        *ioPath = '\0';
+        SetToEmpty();
         return;
     }
-    char* lastSeparator = strrchr(ioPath, inSeparator);
-    int oldLength = strlen(ioPath);
-    PRBool trailingSeparator = (lastSeparator + 1 == ioPath + oldLength);
+    char* chars = mData->mString;
+    char* lastSeparator = strrchr(chars, inSeparator);
+    int oldLength = Length();
+    PRBool trailingSeparator = (lastSeparator + 1 == chars + oldLength);
     if (trailingSeparator)
     {
         *lastSeparator = '\0';
-        lastSeparator = strrchr(ioPath, inSeparator);
+        lastSeparator = strrchr(chars, inSeparator);
     }
     if (lastSeparator)
         lastSeparator++; // point at the trailing string
     else
-        lastSeparator = ioPath; // the full monty
+        lastSeparator = chars; // the full monty
     *lastSeparator = '\0'; // strip the current leaf name
 
-    int newLength = (lastSeparator - ioPath) + strlen(inLeafName) + int(trailingSeparator);
-    if (newLength > oldLength)
-    {
-        char* newPath = StringDup(ioPath, newLength + 1);
-        delete [] ioPath;
-        ioPath = newPath;
-    }
-    strcat(ioPath, inLeafName);
+    int newLength = (lastSeparator - chars) + strlen(inLeafName) + int(trailingSeparator);
+    ReallocData(newLength);
+    chars = mData->mString; // it might have moved.
+
+    strcat(chars, inLeafName);
     if (trailingSeparator)
     {
         // If the original ended in a slash, then the new one should, too.
         char sepStr[2] = "/";
         *sepStr = inSeparator;
-        strcat(ioPath, sepStr);
+        strcat(chars, sepStr);
     }
-} // nsFileSpecHelpers::LeafReplace
+} // nsSimpleCharString::LeafReplace
 
 //----------------------------------------------------------------------------------------
-char* nsFileSpecHelpers::GetLeaf(const char* inPath, char inSeparator)
+char* nsSimpleCharString::GetLeaf(char inSeparator) const
 // Returns a pointer to an allocated string representing the leaf.
 //----------------------------------------------------------------------------------------
 {
-    if (!inPath)
+    if (IsEmpty())
         return nsnull;
-    const char* lastSeparator = strrchr(inPath, inSeparator);
+
+    char* chars = mData->mString;
+    const char* lastSeparator = strrchr(chars, inSeparator);
     
-    // If there was no separator, then return a copy of the caller's path.
+    // If there was no separator, then return a copy of our path.
     if (!lastSeparator)
-        return StringDup(inPath);
+        return PL_strdup(*this);
 
     // So there's at least one separator.  What's just after it?
     // If the separator was not the last character, return the trailing string.
     const char* leafPointer = lastSeparator + 1;
     if (*leafPointer)
-        return StringDup(leafPointer);
+        return PL_strdup(leafPointer);
 
     // So now, separator was the last character. Poke in a null instead.
     *(char*)lastSeparator = '\0'; // Should use const_cast, but Unix has old compiler.
-    leafPointer = strrchr(inPath, inSeparator);
-    char* result = leafPointer ? StringDup(++leafPointer) : StringDup(inPath);
+    leafPointer = strrchr(chars, inSeparator);
+    char* result = leafPointer ? PL_strdup(++leafPointer) : PL_strdup(chars);
     // Restore the poked null before returning.
     *(char*)lastSeparator = inSeparator;
 #ifdef XP_PC
 	// If it's a drive letter use the colon notation.
-	if (!leafPointer && strlen(result) == 2 && result[1] == '|')
+	if (!leafPointer && result[2] == 0 && result[1] == '|')
 	    result[1] = ':';
 #endif
     return result;
-} // nsFileSpecHelpers::GetLeaf
+} // nsSimpleCharString::GetLeaf
 
 #if defined(XP_UNIX) || defined(XP_PC)
 
@@ -210,7 +358,7 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 	if (!inPath)
 		return;
 		
-    char* pathCopy = nsFileSpecHelpers::StringDup( inPath );
+    char* pathCopy = PL_strdup( inPath );
     if (!pathCopy)
     	return;
 
@@ -227,7 +375,6 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
     if (currentEnd)
     {
         nsFileSpec spec;
-
 		*currentEnd = '\0';
         
 #ifdef XP_PC
@@ -237,12 +384,13 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
         */
         if (pathCopy[0] == '/' && pathCopy[2] == '|')
         {
-            char* startDir = nsFileSpecHelpers::StringDup( pathCopy, (strlen(pathCopy) + 1) );
+            char* startDir = (char*)PR_Malloc(strlen(pathCopy) + 2);
+            strcpy(startDir, pathCopy);
             strcat(startDir, "/");
 
             spec = nsFilePath(startDir, PR_FALSE);
 		    
-            delete [] startDir;
+            PR_Free(startDir);
         }
         else
         {
@@ -278,16 +426,6 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 
 #endif // XP_PC || XP_UNIX
 
-//----------------------------------------------------------------------------------------
-char* nsFileSpecHelpers::ReallocCat(char*& ioString, const char* inString1)
-//----------------------------------------------------------------------------------------
-{
-    char* newString = AllocCat(ioString, inString1);
-    delete [] ioString;
-    ioString = newString;
-    return ioString;
-} // nsFileSpecHelpers::ReallocCat
-
 #if defined(XP_PC)
 #include "windows/nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
@@ -304,7 +442,6 @@ char* nsFileSpecHelpers::ReallocCat(char*& ioString, const char* inString1)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
-:    mURL(nsnull)
 {
     if (!inString)
     	return;
@@ -319,7 +456,6 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
-:    mURL(nsnull)
 {
     const nsAutoCString aString(inString);
     const char* aCString = (const char*) aString;
@@ -335,7 +471,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
-:    mURL(nsFileSpecHelpers::StringDup(inOther.mURL))
+:    mURL(inOther.mURL)
 #ifdef XP_MAC
 ,    mFileSpec(inOther.GetFileSpec())
 #endif
@@ -346,7 +482,6 @@ nsFileURL::nsFileURL(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
-:    mURL(nsnull)
 {
     *this = inOther;
 } // nsFileURL::nsFileURL
@@ -355,7 +490,6 @@ nsFileURL::nsFileURL(const nsFilePath& inOther)
 #ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 nsFileURL::nsFileURL(const nsFileSpec& inOther)
-:    mURL(nsnull)
 //----------------------------------------------------------------------------------------
 {
     *this = inOther;
@@ -366,7 +500,6 @@ nsFileURL::nsFileURL(const nsFileSpec& inOther)
 nsFileURL::~nsFileURL()
 //----------------------------------------------------------------------------------------
 {
-    delete [] mURL;
 }
 
 #ifndef XP_MAC
@@ -374,16 +507,37 @@ nsFileURL::~nsFileURL()
 void nsFileURL::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpecHelpers::StringAssign(mURL, inString);
+    mURL = inString;
     NS_ASSERTION(strstr(inString, kFileURLPrefix) == inString, "Not a URL!");
 } // nsFileURL::operator =
 #endif
 
 //----------------------------------------------------------------------------------------
+void nsFileURL::operator +=(const char* inRelativeUnixPath)
+//----------------------------------------------------------------------------------------
+{
+    char* escapedPath = nsEscape(inRelativeUnixPath, url_Path);
+    mURL += escapedPath;
+    delete [] escapedPath;
+#ifdef XP_MAC
+    mFileSpec += inRelativeUnixPath;
+#endif
+} // nsFileURL::operator +=
+
+//----------------------------------------------------------------------------------------
+nsFileURL nsFileURL::operator +(const char* inRelativeUnixPath) const
+//----------------------------------------------------------------------------------------
+{
+   nsFileURL result(*this);
+   result += inRelativeUnixPath;
+   return result;
+}  // nsFileURL::operator +
+
+//----------------------------------------------------------------------------------------
 void nsFileURL::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
-    mURL = nsFileSpecHelpers::StringAssign(mURL, inOther.mURL);
+    mURL = inOther.mURL;
 #ifdef XP_MAC
     mFileSpec = inOther.GetFileSpec();
 #endif
@@ -394,7 +548,7 @@ void nsFileURL::operator = (const nsFileURL& inOther)
 void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
-    delete [] mURL;
+    mURL = kFileURLPrefix;
 	char* original = (char*)(const char*)inOther; // we shall modify, but restore.
 #ifdef XP_PC
 	// because we don't want to escape the '|' character, change it to a letter.
@@ -407,7 +561,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
     char* escapedPath = nsEscape(original, url_Path);
 #endif
     if (escapedPath)
-	    mURL = nsFileSpecHelpers::AllocCat(kFileURLPrefix, escapedPath);
+	    mURL += escapedPath;
     delete [] escapedPath;
 } // nsFileURL::operator =
 #endif
@@ -418,6 +572,8 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
     *this = nsFilePath(inOther);
+	if (mURL[mURL.Length() - 1] != '/' && inOther.IsDirectory())
+	    mURL += "/";
 } // nsFileURL::operator =
 #endif
 
@@ -433,7 +589,7 @@ nsOutputStream& operator << (nsOutputStream& s, const nsFileURL& url)
 //========================================================================================
 
 nsFilePath::nsFilePath(const nsFilePath& inPath)
-    : mPath(nsFileSpecHelpers::StringDup(inPath.mPath))
+    : mPath(inPath.mPath)
 #ifdef XP_MAC
     , mFileSpec(inPath.mFileSpec)
 #endif
@@ -444,7 +600,7 @@ nsFilePath::nsFilePath(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup(inString))
+:    mPath(inString)
 {
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
 
@@ -464,7 +620,7 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
-:    mPath(inString.ToNewCString())
+:    mPath(inString)
 {
     NS_ASSERTION(strstr(mPath, kFileURLPrefix) != mPath, "URL passed as path");
 
@@ -484,8 +640,9 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup(inOther.mURL + kFileURLPrefixLength))
 {
+    mPath = (const char*)inOther.mURL + kFileURLPrefixLength;
+    mPath.Unescape();
 }
 #endif
 
@@ -493,7 +650,7 @@ nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup(inOther.mPath))
+:    mPath(inOther.mPath)
 {
 }
 #endif // XP_UNIX
@@ -502,7 +659,6 @@ nsFilePath::nsFilePath(const nsFileSpec& inOther)
 nsFilePath::~nsFilePath()
 //----------------------------------------------------------------------------------------
 {
-    delete [] mPath;
 }
 
 #ifdef XP_UNIX
@@ -510,7 +666,7 @@ nsFilePath::~nsFilePath()
 void nsFilePath::operator = (const nsFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-    mPath = nsFileSpecHelpers::StringAssign(mPath, inOther.mPath);
+    mPath = inOther.mPath;
 }
 #endif // XP_UNIX
 
@@ -521,9 +677,9 @@ void nsFilePath::operator = (const char* inString)
     NS_ASSERTION(strstr(inString, kFileURLPrefix) != inString, "URL passed as path");
 #ifdef XP_MAC
     mFileSpec = inString;
-	nsFileSpecHelpers::StringAssign(mPath, (const char*)nsFilePath(mFileSpec));
+	mPath = (const char*)nsFilePath(mFileSpec);
 #else
-	nsFileSpecHelpers::StringAssign(mPath, inString);
+	mPath = inString;
 #ifdef XP_PC
 	nsFileSpecHelpers::UnixToNative(mPath);
 #endif
@@ -540,7 +696,7 @@ void nsFilePath::operator = (const char* inString)
 void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpecHelpers::StringAssign(mPath, (const char*)nsFilePath(inOther));
+    mPath = (const char*)nsFilePath(inOther);
 }
 #endif
 
@@ -548,11 +704,32 @@ void nsFilePath::operator = (const nsFileURL& inOther)
 void nsFilePath::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpecHelpers::StringAssign(mPath, inOther.mPath);
+    mPath = inOther.mPath;
 #ifdef XP_MAC
     mFileSpec = inOther.GetFileSpec();
 #endif
 }
+
+//----------------------------------------------------------------------------------------
+void nsFilePath::operator +=(const char* inRelativeUnixPath)
+//----------------------------------------------------------------------------------------
+{
+    char* escapedPath = nsEscape(inRelativeUnixPath, url_Path);
+    mPath += escapedPath;
+    delete [] escapedPath;
+#ifdef XP_MAC
+    mFileSpec += inRelativeUnixPath;
+#endif
+} // nsFilePath::operator +=
+
+//----------------------------------------------------------------------------------------
+nsFilePath nsFilePath::operator +(const char* inRelativeUnixPath) const
+//----------------------------------------------------------------------------------------
+{
+   nsFilePath result(*this);
+   result += inRelativeUnixPath;
+   return result;
+}  // nsFilePath::operator +
 
 //========================================================================================
 //                                nsFileSpec implementation
@@ -562,8 +739,7 @@ void nsFilePath::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
-:    mPath(nsnull)
-,    mError(NS_OK)
+:    mError(NS_OK)
 {
 }
 #endif
@@ -571,7 +747,6 @@ nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
-:    mPath(nsnull)
 {
 	*this = inDescriptor;
 }
@@ -579,7 +754,6 @@ nsFileSpec::nsFileSpec(const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileURL& inURL)
 //----------------------------------------------------------------------------------------
-:    mPath(nsnull)
 {
     *this = nsFilePath(inURL); // convert to unix path first
 }
@@ -609,7 +783,7 @@ void nsFileSpec::MakeUnique()
     char* suffix = "";
     if (lastDot)
     {
-        suffix = nsFileSpecHelpers::StringDup(lastDot); // include '.'
+        suffix = PL_strdup(lastDot); // include '.'
         *lastDot = '\0'; // strip suffix and dot.
     }
     const int kMaxRootLength
@@ -640,7 +814,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
 {
 
-	void* data;
+	nsSimpleCharString data;
 	PRInt32 dataSize;
     inDescriptor.GetData(data, dataSize);
     
@@ -656,9 +830,9 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 	Boolean changed;
 	mError = NS_FILE_RESULT(::ResolveAlias(nsnull, aliasH, &mSpec, &changed));
 	DisposeHandle((Handle) aliasH);
-	delete [] mPath;
+	mPath.SetToEmpty();
 #else
-    nsFileSpecHelpers::StringAssign(mPath, (char*)data);
+    mPath = data;
     mError = NS_OK;
 #endif
 }
@@ -671,7 +845,7 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup((const char*)inPath))
+:    mPath((const char*)inPath)
 ,    mError(NS_OK)
 {
 }
@@ -682,7 +856,7 @@ nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 void nsFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpecHelpers::StringAssign(mPath, (const char*)inPath);
+    mPath = (const char*)inPath;
     mError = NS_OK;
 }
 #endif //XP_UNIX
@@ -691,7 +865,7 @@ void nsFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup(inSpec.mPath))
+:    mPath(inSpec.mPath)
 ,    mError(NS_OK)
 {
 }
@@ -701,7 +875,7 @@ nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
-:    mPath(nsFileSpecHelpers::StringDup(inString))
+:    mPath(inString)
 ,    mError(NS_OK)
 {
     // Make canonical and absolute.
@@ -713,7 +887,7 @@ nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
-:    mPath(inString.ToNewCString())
+:    mPath(inString)
 ,    mError(NS_OK)
 {
     // Make canonical and absolute.
@@ -725,7 +899,6 @@ nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
 nsFileSpec::~nsFileSpec()
 //----------------------------------------------------------------------------------------
 {
-    delete [] mPath;
 }
 
 #if defined(XP_UNIX) || defined(XP_PC)
@@ -733,7 +906,7 @@ nsFileSpec::~nsFileSpec()
 void nsFileSpec::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-    mPath = nsFileSpecHelpers::StringAssign(mPath, inSpec.mPath);
+    mPath = inSpec.mPath;
     mError = inSpec.Error();
 }
 #endif //XP_UNIX
@@ -744,7 +917,7 @@ void nsFileSpec::operator = (const nsFileSpec& inSpec)
 void nsFileSpec::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
-    mPath = nsFileSpecHelpers::StringAssign(mPath, inString);
+    mPath = inString;
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, PR_FALSE /* XXX? */);
     mError = NS_OK;
@@ -788,8 +961,8 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
         EqualString(inOther.mSpec.name, mSpec.name, false, true))
         return PR_TRUE;
 #else
-    PRBool amEmpty = !mPath || !*mPath;
-    PRBool heEmpty = !inOther.mPath || !*inOther.mPath;
+    PRBool amEmpty = mPath.IsEmpty();
+    PRBool heEmpty = inOther.mPath.IsEmpty();
     if (amEmpty) // we're the same if he's empty...
         return heEmpty;
     if (heEmpty) // ('cuz I'm not...)
@@ -835,7 +1008,7 @@ const char* nsFileSpec::GetCString() const
 //----------------------------------------------------------------------------------------
 nsPersistentFileDescriptor::nsPersistentFileDescriptor(const nsPersistentFileDescriptor& inDesc)
 //----------------------------------------------------------------------------------------
-    : mDescriptorString(nsFileSpecHelpers::StringDup(inDesc.mDescriptorString))
+    : mDescriptorString(inDesc.mDescriptorString)
 {
 } // nsPersistentFileDescriptor::nsPersistentFileDescriptor
 
@@ -843,13 +1016,12 @@ nsPersistentFileDescriptor::nsPersistentFileDescriptor(const nsPersistentFileDes
 void nsPersistentFileDescriptor::operator = (const nsPersistentFileDescriptor& inDesc)
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpecHelpers::StringAssign(mDescriptorString, inDesc.mDescriptorString);
+    mDescriptorString = inDesc.mDescriptorString;
 } // nsPersistentFileDescriptor::operator =
 
 //----------------------------------------------------------------------------------------
 nsPersistentFileDescriptor::nsPersistentFileDescriptor(const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
-    : mDescriptorString(nsnull)
 {
 	*this = inSpec;
 } // nsPersistentFileDescriptor::nsPersistentFileDescriptor
@@ -871,10 +1043,10 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
 	char* buf = PL_Base64Encode((const char*)*aliasH, bytes, nsnull);
 	DisposeHandle((Handle) aliasH);
 
-    nsFileSpecHelpers::StringAssign(mDescriptorString, buf);
+    mDescriptorString = buf;
     PR_Free(buf);
 #else
-    nsFileSpecHelpers::StringAssign(mDescriptorString, inSpec.GetCString());
+    mDescriptorString = inSpec.GetCString();
 #endif // XP_MAC
 } // nsPersistentFileDescriptor::operator =
 
@@ -882,27 +1054,21 @@ void nsPersistentFileDescriptor::operator = (const nsFileSpec& inSpec)
 nsPersistentFileDescriptor::~nsPersistentFileDescriptor()
 //----------------------------------------------------------------------------------------
 {
-    delete [] mDescriptorString;
 } // nsPersistentFileDescriptor::~nsPersistentFileDescriptor
 
 //----------------------------------------------------------------------------------------
-void nsPersistentFileDescriptor::GetData(void*& outData, PRInt32& outSize) const
+void nsPersistentFileDescriptor::GetData(nsSimpleCharString& outData, PRInt32& outSize) const
 //----------------------------------------------------------------------------------------
 {
-    outSize = PL_strlen(mDescriptorString);
+    outSize = mDescriptorString.Length();
     outData = mDescriptorString;
 }
 
 //----------------------------------------------------------------------------------------
-void nsPersistentFileDescriptor::SetData(const void* inData, PRInt32 inSize)
+void nsPersistentFileDescriptor::SetData(const nsSimpleCharString& inData, PRInt32 inSize)
 //----------------------------------------------------------------------------------------
 {
-	delete [] mDescriptorString;
-	mDescriptorString = new char[1 + inSize];
-	if (!mDescriptorString)
-	    return;
-	memcpy(mDescriptorString, inData, inSize);
-	mDescriptorString[inSize] = '\0';
+	mDescriptorString.CopyFrom((const char*)inData, inSize);
 }
 
 #define MAX_PERSISTENT_DATA_SIZE 1000
@@ -937,7 +1103,7 @@ nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
 	if (bytesRead != 8)
 		return s;
 	bigBuffer[8] = '\0';
-	sscanf(bigBuffer, "%lx", (PRUint32*)&bytesRead);
+	sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
 	if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
 		return s; // preposterous.
 	// Now we know how many bytes to read, do it.
@@ -953,13 +1119,13 @@ nsOutputStream& operator << (nsOutputStream& s, const nsPersistentFileDescriptor
 {
 	char littleBuf[9];
 	PRInt32 dataSize;
-	void* data;
+	nsSimpleCharString data;
 	d.GetData(data, dataSize);
 	// First write (in hex) the length of the data to follow.  Exactly 8 bytes
 	sprintf(littleBuf, "%0.8x", dataSize);
 	s << littleBuf;
 	// Now write the data itself
-	s << d.mDescriptorString;
+	s << (const char*)data;
 	return s;
 }
 
