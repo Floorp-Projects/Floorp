@@ -96,7 +96,7 @@
   </target>
 
   <target name="build.webclient" 
-          depends="create.webclient.manifest,build.webclient.jar">
+          depends="create.webclient.manifest,build.webclient.jar,create.webclient.scripts">
 
     <copy file="${dist}/${win.bin}/bin/components/javadomjni.${so.suffix}" 
           todir="${package.lib}"/>
@@ -106,12 +106,45 @@
           todir="${package.lib}"/>
     <copy file="${dist}/${win.bin}/lib/wc_share.${ar.suffix}" 
           todir="${package.lib}"/>
+    <copy file="../webclient/src_share/runem.pl" 
+          todir="${package.example}"/>
+    <copy file="README.WEBCLIENT" 
+          todir="${package.home}"/>
+
+    <chmod perm="775" file="${package.lib}/javadomjni.${so.suffix}"/>
+    <chmod perm="775" file="${package.lib}/javadom.${so.suffix}"/>
+    <chmod perm="775" file="${package.lib}/webclient.${ar.suffix}"/>
+    <chmod perm="775" file="${package.lib}/wc_share.${ar.suffix}"/>
+    <chmod perm="775" file="${package.example}/runem.pl"/>
+
+    <jar jarfile="webclient_${package.version}_${short.os.name}.xpi" 
+         basedir="${dist}"  includes="install.js,javadev/**"/>
+
+  </target>
+
+  <target name="create.webclient.scripts" depends="create.win32.webclient.scripts,create.unix.webclient.scripts"/>
+
+  <target name="create.win32.webclient.scripts" if="build.win32.classes">
+
+    <echo file="${package.example}/runem.bat">set CLASSPATH=..\lib\webclient_${package.version}_${short.os.name}.jar
+perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
+    </echo>
+    <chmod perm="775" file="${package.example}/runem.bat"/>
+
+    <copy file="install_webclient_win32.js" 
+          tofile="${dist}/install.js"/>
+
+  </target>
+
+  <target name="create.unix.webclient.scripts" if="build.unix.classes">
+
   </target>
 
   <target name="clean">
 
     <delete dir="${package.home}"/>
     <delete dir="${build.home}/META-INF"/>
+    <delete file="${dist}/install.js"/>
 
   </target>
 
