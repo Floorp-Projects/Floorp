@@ -155,14 +155,7 @@ nsKeywordProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                     nsILoadGroup* aLoadGroup,
-                                     nsIInterfaceRequestor* notificationCallbacks,
-                                     nsLoadFlags loadAttributes,
-                                     nsIURI* aOriginalURI,
-                                     PRUint32 bufferSegmentSize,
-                                     PRUint32 bufferMaxSize,
-                                     nsIChannel* *result)
+nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
 
@@ -179,9 +172,7 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_FAILED(rv)) return rv;
 
     // now we have an HTTP url, give the user an HTTP channel
-    rv = serv->NewChannel(verb, httpSpec, nsnull, aLoadGroup, notificationCallbacks,
-                          loadAttributes, aOriginalURI,
-                          bufferSegmentSize, bufferMaxSize, result);
+    rv = serv->NewChannel(httpSpec, nsnull, result);
     nsAllocator::Free(httpSpec);
     return rv;
 

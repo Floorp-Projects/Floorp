@@ -102,10 +102,19 @@ nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMETHODIMP
-nsFileInputStream::Init(nsILocalFile* file)
+nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 {
     NS_ASSERTION(mFD == nsnull, "already inited");
-    return file->OpenNSPRFileDesc(PR_RDONLY, 0, &mFD);
+    if (mFD != nsnull)
+        return NS_ERROR_FAILURE;
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (ioFlags == -1)
+        ioFlags = PR_RDONLY;
+    if (perm == -1)
+        perm = 0;
+    return localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
 }
 
 NS_IMETHODIMP
@@ -165,12 +174,19 @@ nsFileOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMETHODIMP
-nsFileOutputStream::Init(nsILocalFile* file, PRInt32 flags, PRInt32 mode)
+nsFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 {
     NS_ASSERTION(mFD == nsnull, "already inited");
     if (mFD != nsnull)
         return NS_ERROR_FAILURE;
-    return file->OpenNSPRFileDesc(flags, mode, &mFD);
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (ioFlags == -1)
+        ioFlags = PR_WRONLY | PR_CREATE_FILE;
+    if (perm == -1)
+        perm = 0664;
+    return localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
 }
 
 NS_IMETHODIMP

@@ -101,19 +101,41 @@ protected:
 NS_IMPL_THREADSAFE_ISUPPORTS1(CacheOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
-nsCacheEntryChannel::OpenOutputStream(PRUint32 aStartPosition, 
-        nsIOutputStream* *aOutputStream)
+nsCacheEntryChannel::GetTransferOffset(PRUint32 *aStartPosition)
+{
+    return mChannel->GetTransferOffset(aStartPosition);
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::SetTransferOffset(PRUint32 aStartPosition)
+{
+    mCacheEntry->mLogicalLength = aStartPosition;
+    return mChannel->SetTransferOffset(aStartPosition);
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::GetTransferCount(PRInt32 *aReadCount)
+{
+    return mChannel->GetTransferCount(aReadCount);
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::SetTransferCount(PRInt32 aReadCount)
+{
+    return mChannel->SetTransferCount(aReadCount);
+}
+
+NS_IMETHODIMP
+nsCacheEntryChannel::OpenOutputStream(nsIOutputStream* *aOutputStream)
 {
     nsresult rv;
     nsCOMPtr<nsIOutputStream> baseOutputStream;
     
-    rv = mChannel->OpenOutputStream(aStartPosition, 
-            getter_AddRefs(baseOutputStream));
+    rv = mChannel->OpenOutputStream(getter_AddRefs(baseOutputStream));
     if (NS_FAILED(rv)) return rv;
 
     mCacheEntry->NoteUpdate();
     mCacheEntry->NoteAccess();
-    mCacheEntry->mLogicalLength = aStartPosition;
 
     *aOutputStream = new CacheOutputStream(baseOutputStream, mCacheEntry);
     if (!*aOutputStream)
@@ -123,19 +145,15 @@ nsCacheEntryChannel::OpenOutputStream(PRUint32 aStartPosition,
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::OpenInputStream(PRUint32 aStartPosition, 
-        PRInt32 aReadCount,
-        nsIInputStream* *aInputStream)
+nsCacheEntryChannel::OpenInputStream(nsIInputStream* *aInputStream)
 {
     mCacheEntry->NoteAccess();
-    return mChannel->OpenInputStream(aStartPosition, aReadCount, aInputStream);
+
+    return mChannel->OpenInputStream(aInputStream);
 }
 
 NS_IMETHODIMP
-nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, 
-        PRInt32 aReadCount,
-        nsISupports *aContext, 
-        nsIStreamListener *aListener)
+nsCacheEntryChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsresult rv;
 
@@ -147,7 +165,7 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition,
         mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
     }
 
-    rv = mChannel->AsyncRead(aStartPosition, aReadCount, aContext, aListener);
+    rv = mChannel->AsyncRead(aListener, aContext);
 
     return rv;
 }
@@ -155,11 +173,10 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition,
 // No async writes allowed to the cache yet
 NS_IMETHODIMP
 nsCacheEntryChannel::AsyncWrite(nsIInputStream *aFromStream, 
-        PRUint32 aStartPosition,
-        PRInt32 aWriteCount, 
-        nsISupports *aContext,
-        nsIStreamObserver *aObserver)
+                                nsIStreamObserver *aObserver,
+                                nsISupports *aContext)
 {
+    NS_NOTREACHED("nsCacheEntryChannel::AsyncWrite");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -198,7 +215,7 @@ nsCacheEntryChannel::GetURI(nsIURI * *aURI)
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    rv = serv->NewURI(spec, 0, aURI);
+    rv = serv->NewURI(spec, nsnull, aURI);
     nsAllocator::Free(spec);
     return rv;
 }
@@ -207,5 +224,6 @@ NS_IMETHODIMP
 nsCacheEntryChannel::GetOriginalURI(nsIURI * *aURI)
 {
     // FIXME - should return original URI passed into NewChannel() ?
+    NS_NOTREACHED("nsCacheEntryChannel::GetOriginalURI");
     return NS_ERROR_NOT_IMPLEMENTED;
 }

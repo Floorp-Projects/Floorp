@@ -63,6 +63,7 @@ protected:
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
     PRUint32                            mLoadAttributes;
+    nsresult                            mStatus;
 };
 
 #endif // nsInputStreamChannel_h__

@@ -33,25 +33,14 @@ NS_IMPL_ISUPPORTS(nsAboutCredits, NS_GET_IID(nsIAboutModule));
 static const char kCreditsPage[] = "http://www.mozilla.org/credits/";
 
 NS_IMETHODIMP
-nsAboutCredits::NewChannel(const char *verb,
-                         nsIURI *aURI,
-                         nsILoadGroup* aLoadGroup,
-                         nsIInterfaceRequestor* notificationCallbacks,
-                         nsLoadFlags loadAttributes,
-                         nsIURI* originalURI,
-                         PRUint32 bufferSegmentSize,
-                         PRUint32 bufferMaxSize,
-                         nsIChannel **result)
+nsAboutCredits::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
     if (NS_FAILED(rv))
-    	return rv;
-    rv = ioService->NewChannel(verb, kCreditsPage, NULL, aLoadGroup,
-                                 notificationCallbacks, loadAttributes,
-                                 originalURI, bufferSegmentSize, bufferMaxSize,
-                                 result);
-     return rv;
+        return rv;
+    rv = ioService->NewChannel(kCreditsPage, nsnull, result);
+    return rv;
 }
 
 NS_METHOD

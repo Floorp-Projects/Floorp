@@ -70,12 +70,7 @@ class nsHTTPChannel : public nsIHTTPChannel,
 public:
 
     // Constructors and Destructor
-    nsHTTPChannel(nsIURI* i_URL, 
-                  const char* verb,
-                  nsIURI* originalURI,
-                  nsHTTPHandler* i_Handler,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize);
+    nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler);
 
     virtual ~nsHTTPChannel();
 
@@ -90,7 +85,7 @@ public:
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
                                      PRBool bProxyAuth = PR_FALSE);
-    nsresult            Init(nsILoadGroup *aGroup);
+    nsresult            Init();
     nsresult            Open();
     nsresult            Redirect(const char *aURL,
                                  nsIChannel **aResult);
@@ -112,7 +107,7 @@ public:
 
 protected:
     nsresult            CheckCache();
-    nsresult            ReadFromCache(PRUint32 aStartPosition, PRInt32 aReadCount);
+    nsresult            ReadFromCache();
     nsresult            ProcessStatusCode();
     nsresult            ProcessRedirection(PRInt32 aStatusCode);
     nsresult            ProcessAuthentication(PRInt32 aStatusCode);
@@ -134,7 +129,6 @@ protected:
     nsCOMPtr<nsIURI>                    mURI;
     PRBool                              mConnected; 
     HTTPState                           mState;
-    nsCString                           mVerb;
     nsCOMPtr<nsIHTTPEventSink>          mEventSink;
     nsCOMPtr<nsIPrompt>                 mPrompter;
     nsCOMPtr<nsIProgressEventSink>      mProgressEventSink;
@@ -173,6 +167,7 @@ protected:
 
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
+    nsresult                            mStatus;
 };
 
 #endif /* _nsHTTPChannel_h_ */

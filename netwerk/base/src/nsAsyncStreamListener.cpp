@@ -128,11 +128,9 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_THREADSAFE_ADDREF(nsAsyncStreamObserver)
-NS_IMPL_THREADSAFE_RELEASE(nsAsyncStreamObserver)
-NS_IMPL_QUERY_INTERFACE2(nsAsyncStreamObserver,
-                         nsIAsyncStreamObserver,
-                         nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsAsyncStreamObserver,
+                              nsIAsyncStreamObserver,
+                              nsIStreamObserver)
 
 NS_IMPL_ADDREF_INHERITED(nsAsyncStreamListener, nsAsyncStreamObserver);
 NS_IMPL_RELEASE_INHERITED(nsAsyncStreamListener, nsAsyncStreamObserver);
@@ -391,7 +389,7 @@ nsOnDataAvailableEvent::HandleEvent()
     // the pipe to empty...
     //
     if (NS_FAILED(rv)) {
-      mChannel->Cancel();
+      mChannel->Cancel(rv);
     }
   }
   return rv;

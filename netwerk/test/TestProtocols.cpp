@@ -52,7 +52,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIHTTPHeader.h"
 #include "nsXPIDLString.h"
-
+#include "nsNetUtil.h"
 
 // this test app handles cookies.
 #include "nsICookieService.h"
@@ -496,16 +496,12 @@ nsresult StartLoadingURL(const char* aUrlString)
         NS_ADDREF(callbacks);
 
         // Async reading thru the calls of the event sink interface
-        rv = pService->NewChannelFromURI("load", pURL, 
-                                         nsnull,    // loadGroup
-                                         callbacks, // notificationCallbacks
-                                         nsIChannel::LOAD_NORMAL,
-                                         nsnull,    // originalURI
-                                         0, 0, 
-                                         getter_AddRefs(pChannel));
+        rv = NS_OpenURI(getter_AddRefs(pChannel), pURL, pService,
+                        nsnull,     // loadGroup
+                        callbacks); // notificationCallbacks
         NS_RELEASE(callbacks);
         if (NS_FAILED(rv)) {
-            printf("ERROR: NewChannelFromURI failed for %s\n", aUrlString);
+            printf("ERROR: NS_OpenURI failed for %s\n", aUrlString);
             return rv;
         }
 
@@ -555,10 +551,9 @@ nsresult StartLoadingURL(const char* aUrlString)
         }
         
 
-        rv = pChannel->AsyncRead(0,         // staring position
-                                 -1,        // number of bytes to read
-                                 info,      // ISupports context
-                                 listener); // IStreamListener consumer
+        rv = pChannel->AsyncRead(listener,  // IStreamListener consumer
+                                 info);     // ISupports context
+
         if (NS_SUCCEEDED(rv)) {
             gKeepRunning += 1;
         }

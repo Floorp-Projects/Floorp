@@ -22,20 +22,23 @@
 
 #include "nsISupports.idl"
 
+interface nsIChannel;
+interface nsIURI;
 interface nsIPrincipal;
 interface nsIScriptContext;
 
 [uuid(67411da0-7c2e-11d3-8c67-00609792278c)]
 interface nsIEvaluateStringProxy: nsISupports 
 {
+  /**
+   * Channel of the javascript: url to evaluate:
+   */
+  void init(in nsIChannel channel);
 
-    void evaluateString(    in nsIScriptContext scriptContext,
-                            in string script,
-                            in voidStar aObj,
-                            in nsIPrincipal principal,
-                            in string aURL,
-                            in long aLineNo,
-                            out string aRetValue,
-                            out boolean aIsUndefined);
+  /**
+   * Cause the evaluation to happen:
+   */
+  void evaluateString(out string aRetValue,
+                      out boolean aIsUndefined);
 };
 

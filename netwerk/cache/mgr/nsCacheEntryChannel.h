@@ -52,14 +52,15 @@ class nsCacheEntryChannel : public nsChannelProxy {
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD OpenOutputStream(PRUint32 aStartPosition, nsIOutputStream* *aOutputStream);
-    NS_IMETHOD OpenInputStream(PRUint32 aStartPosition, PRInt32 aReadCount,
-			       nsIInputStream* *aInputStream);
-    NS_IMETHOD AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
-			 nsISupports *aContext, nsIStreamListener *aListener);
-    NS_IMETHOD AsyncWrite(nsIInputStream *aFromStream, PRUint32 aStartPosition,
-			  PRInt32 aWriteCount, nsISupports *aContext,
-			  nsIStreamObserver *aObserver);
+    NS_IMETHOD GetTransferOffset(PRUint32 *aStartPosition);
+    NS_IMETHOD SetTransferOffset(PRUint32 aStartPosition);
+    NS_IMETHOD GetTransferCount(PRInt32 *aReadCount);
+    NS_IMETHOD SetTransferCount(PRInt32 aReadCount);
+    NS_IMETHOD OpenOutputStream(nsIOutputStream* *aOutputStream);
+    NS_IMETHOD OpenInputStream(nsIInputStream* *aInputStream);
+    NS_IMETHOD AsyncRead(nsIStreamListener *aListener, nsISupports *aContext);
+    NS_IMETHOD AsyncWrite(nsIInputStream *aFromStream,
+                          nsIStreamObserver *aObserver, nsISupports *aContext);
     NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
     NS_IMETHOD GetLoadGroup(nsILoadGroup* *aLoadGroup);

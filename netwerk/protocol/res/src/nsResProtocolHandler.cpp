@@ -239,14 +239,7 @@ nsResProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsResProtocolHandler::NewChannel(const char* command, nsIURI* uri,
-                                 nsILoadGroup* aLoadGroup,
-                                 nsIInterfaceRequestor* notificationCallbacks,
-                                 nsLoadFlags loadAttributes,
-                                 nsIURI* originalURI,
-                                 PRUint32 bufferSegmentSize,
-                                 PRUint32 bufferMaxSize,
-                                 nsIChannel* *result)
+nsResProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
     
@@ -254,8 +247,7 @@ nsResProtocolHandler::NewChannel(const char* command, nsIURI* uri,
     rv = nsResChannel::Create(nsnull, NS_GET_IID(nsIResChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(this, command, uri, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
+    rv = channel->Init(this, uri);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

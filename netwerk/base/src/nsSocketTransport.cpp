@@ -117,7 +117,7 @@ PRLogModuleInfo* gSocketLog = nsnull;
 #endif /* PR_LOGGING */
 
 nsSocketTransport::nsSocketTransport():
-    mCancelOperation(PR_FALSE),
+    mCancelStatus(NS_OK),
     mCloseConnectionOnceDone(PR_FALSE),
     mCurrentState(eSocketState_Created),
     mHostName(nsnull),
@@ -141,7 +141,9 @@ nsSocketTransport::nsSocketTransport():
     mWriteBufferLength(0),
     mBytesExpected(-1),
     mReuseCount(0),
-    mLastReuseCount(0)
+    mLastReuseCount(0),
+	mBufferSegmentSize(0),
+	mBufferMaxSize(0)
 {
   NS_INIT_REFCNT();
 
@@ -204,7 +206,7 @@ nsSocketTransport::~nsSocketTransport()
   // Cancel any pending DNS request...
   //
   if (mDNSRequest) {
-    mDNSRequest->Cancel();
+    mDNSRequest->Cancel(NS_BINDING_ABORTED);
   }
   mDNSRequest = null_nsCOMPtr();
 
@@ -384,13 +386,13 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     // NS_BINDING_ABORTED which is a failure code...  This will cause the
     // transport to move into the error state and end the request...
     //
-    if (mCancelOperation) {
+    if (NS_FAILED(mCancelStatus)) {
       PR_LOG(gSocketLog, PR_LOG_DEBUG, 
              ("Transport [%s:%d %x] has been cancelled.\n", 
               mHostName, mPort, this));
 
-      mCancelOperation = PR_FALSE;
-      mStatus = NS_BINDING_ABORTED;
+      mStatus = mCancelStatus;
+      mCancelStatus = NS_OK;
     }
 
     //
@@ -438,7 +440,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 
         // Cancel any DNS requests...
         if (mDNSRequest) {
-          mDNSRequest->Cancel();
+          mDNSRequest->Cancel(NS_BINDING_ABORTED);
           mDNSRequest = null_nsCOMPtr();
         }
 
@@ -1323,7 +1325,7 @@ nsSocketTransport::GetBytesExpected (PRInt32 * bytes)
 NS_IMETHODIMP
 nsSocketTransport::SetBytesExpected (PRInt32 bytes)
 {
-  nsAutoMonitor mon(mMonitor);
+    nsAutoMonitor mon(mMonitor);
 
     if (mCurrentState == eSocketState_WaitReadWrite)
     {
@@ -1358,14 +1360,21 @@ nsSocketTransport::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::Cancel(void)
+nsSocketTransport::GetStatus(nsresult *status)
+{
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::Cancel(nsresult status)
 {
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
   nsAutoMonitor mon(mMonitor);
 
-  mCancelOperation = PR_TRUE;
+  mCancelStatus = status;
   //
   // Wake up the transport on the socket transport thread so it can
   // be removed from the select list...  
@@ -1637,7 +1646,7 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
 // --------------------------------------------------------------------------
 //
 NS_IMETHODIMP
-nsSocketTransport::GetOriginalURI(nsIURI * *aURL)
+nsSocketTransport::GetOriginalURI(nsIURI* *aURL)
 {
   nsStdURL *url;
   url = new nsStdURL(nsnull);
@@ -1651,9 +1660,22 @@ nsSocketTransport::GetOriginalURI(nsIURI * *aURL)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetURI(nsIURI * *aURL)
+nsSocketTransport::SetOriginalURI(nsIURI* aURL)
+{
+  NS_NOTREACHED("SetOriginalURI");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetURI(nsIURI* *aURL)
 {
   return GetOriginalURI(aURL);
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetURI(nsIURI* aURL)
+{
+  return SetOriginalURI(aURL);
 }
 
 NS_IMETHODIMP
@@ -1675,8 +1697,8 @@ nsSocketTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 
   // Create a marshalling open observer to receive notifications...
   if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewAsyncStreamObserver(observer, NS_CURRENT_EVENTQ,
-                                   getter_AddRefs(mOpenObserver));
+    rv = NS_NewAsyncStreamObserver(getter_AddRefs(mOpenObserver),
+                                   observer, NS_CURRENT_EVENTQ);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1697,21 +1719,17 @@ nsSocketTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                             nsISupports* aContext,
-                             nsIStreamListener* aListener)
+nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
+                             nsISupports* aContext)
 {
-  // XXX deal with startPosition and readCount parameters
-  NS_ASSERTION(startPosition == 0, "can't deal with offsets in socket transport");
   nsresult rv = NS_OK;
   
   // Enter the socket transport lock...
   nsAutoMonitor mon(mMonitor);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("+++ Entering nsSocketTransport::AsyncRead() [%s:%d %x]\t"
-          "readCount = %d.\n", 
-          mHostName, mPort, this, readCount));
+         ("+++ Entering nsSocketTransport::AsyncRead() [%s:%d %x]\n", 
+          mHostName, mPort, this));
 
   // If a read is already in progress then fail...
   if (GetReadType() != eSocketRead_None) {
@@ -1735,8 +1753,8 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
   // Create a marshalling stream listener to receive notifications...
   if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewAsyncStreamListener(aListener, NS_CURRENT_EVENTQ,
-                                   getter_AddRefs(mReadListener));
+    rv = NS_NewAsyncStreamListener(getter_AddRefs(mReadListener),
+                                   aListener, NS_CURRENT_EVENTQ);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1759,20 +1777,17 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 NS_IMETHODIMP
 nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream, 
-                              PRUint32 startPosition, PRInt32 writeCount,
-                              nsISupports* aContext,
-                              nsIStreamObserver* aObserver)
+                              nsIStreamObserver* aObserver,
+                              nsISupports* aContext)
 {
-  // XXX deal with startPosition and writeCount parameters
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
   nsAutoMonitor mon(mMonitor);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("+++ Entering nsSocketTransport::AsyncWrite() [%s:%d %x]\t"
-          "writeCount = %d.\n", 
-          mHostName, mPort, this, writeCount));
+         ("+++ Entering nsSocketTransport::AsyncWrite() [%s:%d %x]\n", 
+          mHostName, mPort, this));
 
   // If a write is already in progress then fail...
   if (GetWriteType() != eSocketWrite_None) {
@@ -1806,11 +1821,9 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 
     // Create a marshalling stream observer to receive notifications...
     if (aObserver) {
-      rv = NS_NewAsyncStreamObserver(aObserver, NS_CURRENT_EVENTQ,
-                                     getter_AddRefs(mWriteObserver));
+      rv = NS_NewAsyncStreamObserver(getter_AddRefs(mWriteObserver),
+                                     aObserver, NS_CURRENT_EVENTQ);
     }
-
-    mWriteCount = writeCount;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1829,11 +1842,9 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 
 
 NS_IMETHODIMP
-nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, 
-                                   nsIInputStream* *result)
+nsSocketTransport::OpenInputStream(nsIInputStream* *result)
 {
   nsresult rv = NS_OK;
-  NS_ASSERTION(startPosition == 0, "fix me");
 
   // Enter the socket transport lock...
   nsAutoMonitor mon(mMonitor);
@@ -1881,10 +1892,9 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
 
 NS_IMETHODIMP
-nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *result)
+nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
 {
   nsresult rv = NS_OK;
-  NS_ASSERTION(startPosition == 0, "fix me");
 
   // Enter the socket transport lock...
   nsAutoMonitor mon(mMonitor);
@@ -1980,6 +1990,90 @@ nsSocketTransport::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
+nsSocketTransport::SetContentLength(PRInt32 aContentLength)
+{
+  NS_NOTREACHED("SetContentLength");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+  NS_NOTREACHED("GetTransferOffset");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetTransferOffset(PRUint32 aTransferOffset)
+{
+  NS_NOTREACHED("SetTransferOffset");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetTransferCount(PRInt32 *aTransferCount)
+{
+    *aTransferCount = mWriteCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetTransferCount(PRInt32 aTransferCount)
+{
+    mWriteCount = aTransferCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+  NS_NOTREACHED("GetBufferSegmentSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+  NS_NOTREACHED("SetBufferSegmentSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+  NS_NOTREACHED("GetBufferMaxSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+  NS_NOTREACHED("SetBufferMaxSize");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetShouldCache(PRBool *aShouldCache)
+{
+    *aShouldCache = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsSocketTransport::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
   NS_ASSERTION(0, "transports shouldn't end up in groups");
@@ -1989,7 +2083,8 @@ nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 NS_IMETHODIMP
 nsSocketTransport::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_NOTREACHED("SetLoadGroup");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

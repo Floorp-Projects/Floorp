@@ -78,6 +78,12 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     mPort = 21;
 
     mLock = nsnull;
+	mPasv = 0;
+	mLastModified = 0;
+	mAsyncReadEvent = 0;
+	mWriteCount = -1;
+	mBufferSegmentSize = 0;
+	mBufferMaxSize = 0;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
@@ -133,14 +139,14 @@ nsFtpConnectionThread::Process() {
                     if (NS_FAILED(rv)) return rv;
 
                     // get the output stream so we can write to the server
-                    rv = mCPipe->OpenOutputStream(0, getter_AddRefs(mCOutStream));
+                    rv = mCPipe->OpenOutputStream(getter_AddRefs(mCOutStream));
                     if (NS_FAILED(rv)) {
                         mInternalError = rv;
                         mState = FTP_ERROR;
                         break;
                     }
 
-                    rv = mCPipe->OpenInputStream(0, -1, getter_AddRefs(mCInStream));
+                    rv = mCPipe->OpenInputStream(getter_AddRefs(mCInStream));
                     if (NS_FAILED(rv)) {
                         mInternalError = rv;
                         mState = FTP_ERROR;
@@ -1497,20 +1503,27 @@ nsFtpConnectionThread::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsFtpConnectionThread::Cancel(void)
+nsFtpConnectionThread::GetStatus(nsresult *status)
+{
+    *status = mInternalError;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpConnectionThread::Cancel(nsresult status)
 {
     nsresult rv = NS_OK;
     nsAutoLock aLock(mLock);
 
     if (mCPipe) {
-        rv = mCPipe->Cancel();
+        rv = mCPipe->Cancel(status);
         if (NS_FAILED(rv)) return rv;
     }
     if (mDPipe) {
-        rv = mDPipe->Cancel();
+        rv = mDPipe->Cancel(status);
         if (NS_FAILED(rv)) return rv;
     }
-    mInternalError = NS_ERROR_FAILURE;
+    mInternalError = status;
     mState = FTP_COMPLETE;
     return rv;
 }
@@ -1683,7 +1696,7 @@ nsFtpConnectionThread::StopProcessing() {
 
         if (mObserver) {
             nsCOMPtr<nsIStreamObserver> asyncObserver;
-            rv = NS_NewAsyncStreamObserver(mObserver, mEventQueue, getter_AddRefs(asyncObserver));
+            rv = NS_NewAsyncStreamObserver(getter_AddRefs(asyncObserver), mObserver, mEventQueue);
             if(NS_FAILED(rv)) return rv;
 
             // we only want to fire OnStop. No OnStart has been fired, and
@@ -1694,7 +1707,7 @@ nsFtpConnectionThread::StopProcessing() {
 
         if (mListener) {
             nsCOMPtr<nsIStreamListener> asyncListener;
-            rv = NS_NewAsyncStreamListener(mListener, mEventQueue, getter_AddRefs(asyncListener));
+            rv = NS_NewAsyncStreamListener(getter_AddRefs(asyncListener), mListener, mEventQueue);
             if(NS_FAILED(rv)) return rv;
 
             // we only want to fire OnStop. No OnStart has been fired, and

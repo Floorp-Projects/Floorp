@@ -43,21 +43,6 @@ interface nsIOutputStream;
 interface nsIIOService : nsISupports
 {
     /**
-     * constants for the Escape mask in the call to URLEscape
-     */
-    const short url_Scheme        = (1<<0);
-    const short url_Username      = (1<<1);
-    const short url_Password      = (1<<2);
-    const short url_Host          = (1<<3);
-    const short url_Directory     = (1<<4);
-    const short url_FileBaseName  = (1<<5);
-    const short url_FileExtension = (1<<6);
-    const short url_Param         = (1<<7);
-    const short url_Query         = (1<<8);
-    const short url_Ref           = (1<<9);
-    const short url_Forced        = (1<<10);
-
-    /**
      * Returns a protocol handler for a given URI scheme.
      */
     nsIProtocolHandler getProtocolHandler(in string scheme);
@@ -82,28 +67,20 @@ interface nsIIOService : nsISupports
      * URL to become different from the original URL. If NULL, the aURI parameter
      * will be used as the originalURI instead.
      */
-    nsIChannel newChannelFromURI(in string verb,
-                                 in nsIURI aURI,
-                                 in nsILoadGroup aLoadGroup,
-                                 in nsIInterfaceRequestor notificationCallbacks,
-                                 in nsLoadFlags loadAttributes,
-                                 in nsIURI originalURI,
-                                 in unsigned long bufferSegmentSize,
-                                 in unsigned long bufferMaxSize);
+    nsIChannel newChannelFromURI(in nsIURI aURI);
 
     /**
      * Convenience routine that first creates a URI by calling NewURI, and
      * then passes the URI to NewChannelFromURI. 
+     *
+     * @param originalURI - Specifies the original URI which caused the creation
+     * of this channel. This can occur when the construction of one channel
+     * (e.g. for resource:) causes another channel to be created on its behalf
+     * (e.g. a file: channel), or if a redirect occurs, causing the current
+     * URL to become different from the original URL. If NULL, the aURI parameter
+     * will be used as the originalURI instead.
      */
-    nsIChannel newChannel(in string verb,
-                          in string aSpec,
-                          in nsIURI aBaseURI,
-                          in nsILoadGroup aLoadGroup,
-                          in nsIInterfaceRequestor notificationCallbacks,
-                          in nsLoadFlags loadAttributes,
-                          in nsIURI originalURI,
-                          in unsigned long bufferSegmentSize,
-                          in unsigned long bufferMaxSize);
+    nsIChannel newChannel(in string aSpec, in nsIURI aBaseURI);
 
     /**
      * Returns true if networking is in "offline" mode. When in offline mode, attempts
@@ -135,6 +112,21 @@ interface nsIIOService : nsISupports
                        out unsigned long schemeStartPos,
                        out unsigned long schemeEndPos,
                        out string scheme);
+
+    /**
+     * Constants for the mask in the call to Escape
+     */
+    const short url_Scheme        = (1<<0);
+    const short url_Username      = (1<<1);
+    const short url_Password      = (1<<2);
+    const short url_Host          = (1<<3);
+    const short url_Directory     = (1<<4);
+    const short url_FileBaseName  = (1<<5);
+    const short url_FileExtension = (1<<6);
+    const short url_Param         = (1<<7);
+    const short url_Query         = (1<<8);
+    const short url_Ref           = (1<<9);
+    const short url_Forced        = (1<<10);
 
     /**
      * Encode characters into % escaped hexcodes.
@@ -173,4 +165,5 @@ interface nsIIOService : nsISupports
     {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+#define DUD 3.14
 %}

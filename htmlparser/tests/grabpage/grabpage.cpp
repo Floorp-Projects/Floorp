@@ -237,7 +237,7 @@ PageGrabber::Grab(const nsString& aURL)
   if(copier) {
     NS_ADDREF(copier);
 
-    rv = channel->AsyncRead(0, -1, nsnull, copier);
+    rv = channel->AsyncRead(copier, nsnull);
 
     if (NS_OK != rv) {
       NS_RELEASE(copier);

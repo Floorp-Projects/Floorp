@@ -2673,7 +2673,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
             aAttributes->GetAttribute(nsHTMLAtoms::_baseHref, baseHref);
             nsGenericHTMLElement::GetBaseURL(baseHref, doc,
                                              getter_AddRefs(docURL));
-            rv = NS_MakeAbsoluteURI(spec, docURL, absURLSpec);
+            rv = NS_MakeAbsoluteURI(absURLSpec, spec, docURL);
             if (NS_SUCCEEDED(rv)) {
               nsStyleColor* color = (nsStyleColor*)
                 aContext->GetMutableStyleData(eStyleStruct_Color);

@@ -81,7 +81,7 @@ protected:
     friend pascal void    nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OTResult result, void * cookie);
     PRBool                mThreadRunning;
     InetSvcRef            mServiceRef;
-    QHdr		          mCompletionQueue;
+    QHdr                  mCompletionQueue;
 #if TARGET_CARBON
     OTClientContextPtr    mClientContext;
     OTNotifyUPP           nsDnsServiceNotifierRoutineUPP;

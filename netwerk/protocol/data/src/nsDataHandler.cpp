@@ -96,14 +96,7 @@ nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsDataHandler::NewChannel(const char* verb, nsIURI* url,
-                          nsILoadGroup* aLoadGroup,
-                          nsIInterfaceRequestor* notificationCallbacks,
-                          nsLoadFlags loadAttributes,
-                          nsIURI* originalURI,
-                          PRUint32 bufferSegmentSize,
-                          PRUint32 bufferMaxSize,
-                          nsIChannel* *result)
+nsDataHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
     nsresult rv;
     
@@ -111,8 +104,7 @@ nsDataHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsDataChannel::Create(nsnull, NS_GET_IID(nsIDataChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
+    rv = channel->Init(url);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

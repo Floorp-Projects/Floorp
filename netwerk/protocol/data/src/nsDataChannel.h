@@ -50,14 +50,7 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(const char* verb, 
-                  nsIURI* uri, 
-                  nsILoadGroup* aLoadGroup,
-                  nsIInterfaceRequestor* notificationCallbacks, 
-                  nsLoadFlags loadAttributes,
-                  nsIURI* originalURI,
-                  PRUint32 bufferSegmentSize,
-                  PRUint32 bufferMaxSize);
+    nsresult Init(nsIURI* uri);
     nsresult ParseData();
 
 protected:

@@ -576,7 +576,7 @@ nsHTMLImageElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
       result = GetCallerSourceURL(aContext, getter_AddRefs(base));
       
       if (NS_SUCCEEDED(result)) {
-        result = NS_MakeAbsoluteURI(src, base, url);
+        result = NS_MakeAbsoluteURI(url, src, base);
         if (NS_SUCCEEDED(result)) {
           result = SetSrcInner(base, url);
         }
@@ -714,7 +714,7 @@ nsHTMLImageElement::GetSrc(nsString& aSrc)
 
   if (nsnull != baseURL) {
     // Get absolute URL.
-    rv = NS_MakeAbsoluteURI(relURLSpec, baseURL, aSrc);
+    rv = NS_MakeAbsoluteURI(aSrc, relURLSpec, baseURL);
   }
   else {
     // Absolute URL is same as relative URL.
@@ -763,7 +763,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL, const nsString& aSrc)
 
           nsAutoString url;
           if (nsnull != aBaseURL) {
-            result = NS_MakeAbsoluteURI(aSrc, aBaseURL, url);
+            result = NS_MakeAbsoluteURI(url, aSrc, aBaseURL);
             if (NS_FAILED(result)) {
               url = aSrc;
             }

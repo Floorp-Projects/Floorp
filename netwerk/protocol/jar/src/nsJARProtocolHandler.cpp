@@ -117,14 +117,7 @@ nsJARProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 }
 
 NS_IMETHODIMP
-nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                 nsILoadGroup* aLoadGroup,
-                                 nsIInterfaceRequestor* notificationCallbacks,
-                                 nsLoadFlags loadAttributes,
-                                 nsIURI* originalURI,
-                                 PRUint32 bufferSegmentSize,
-                                 PRUint32 bufferMaxSize,
-                                 nsIChannel* *result)
+nsJARProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
     nsresult rv;
     
@@ -132,8 +125,7 @@ nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     rv = nsJARChannel::Create(nsnull, NS_GET_IID(nsIJARChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-	rv = channel->Init(this, verb, uri, aLoadGroup, notificationCallbacks,
-                       loadAttributes, originalURI, bufferSegmentSize, bufferMaxSize);
+	rv = channel->Init(this, uri);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

@@ -243,7 +243,7 @@ nsresult nsDocumentOpenInfo::Open(nsIChannel * aChannel,
 
   // now jut open the channel!
   if (aChannel)
-    rv =  aChannel->AsyncRead(0, -1, nsnull, this);
+    rv =  aChannel->AsyncRead(this, nsnull);
   return rv;
 }
 

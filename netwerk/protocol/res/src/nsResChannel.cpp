@@ -29,65 +29,65 @@
 #include "nsIComponentManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+#if defined(PR_LOGGING)
+//
+// Log module for nsResChannel logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsResChannel:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+PRLogModuleInfo* gResChannelLog = nsnull;
+
+#endif /* PR_LOGGING */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsResChannel::nsResChannel()
     : mLoadAttributes(LOAD_NORMAL),
-      mLock(nsnull),
-      mState(QUIESCENT)
+#ifdef DEBUG
+      mInitiator(nsnull),
+#endif
+      mState(QUIESCENT),
+      mStartPosition(0),
+      mCount(-1),
+      mBufferSegmentSize(0),
+      mBufferMaxSize(0),
+      mStatus(NS_OK)
 {
     NS_INIT_REFCNT();
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for socket transport logging
+    // if necessary...
+    //
+    if (nsnull == gResChannelLog) {
+        gResChannelLog = PR_NewLogModule("nsResChannel");
+    }
+#endif /* PR_LOGGING */
 }
 
 nsresult
-nsResChannel::Init(nsIResProtocolHandler* handler,
-                   const char* command,
-                   nsIURI* uri,
-                   nsILoadGroup* aLoadGroup,
-                   nsIInterfaceRequestor* notificationCallbacks,
-                   nsLoadFlags loadAttributes,
-                   nsIURI* originalURI,
-                   PRUint32 bufferSegmentSize,
-                   PRUint32 bufferMaxSize)
+nsResChannel::Init(nsIResProtocolHandler* handler, nsIURI* uri)
 {
-    nsresult rv;
-
-    mLock = PR_NewLock();
-    if (mLock == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    mBufferSegmentSize = bufferSegmentSize;
-    mBufferMaxSize = bufferMaxSize;
     mResolvedURI = uri;
     mHandler = handler;
-    mOriginalURI = originalURI ? originalURI : uri;
     mResourceURI = uri;
-    mCommand = nsCRT::strdup(command);
-    if (mCommand == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = SetLoadAttributes(loadAttributes);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetLoadGroup(aLoadGroup);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetNotificationCallbacks(notificationCallbacks);
-    if (NS_FAILED(rv)) return rv;
-
-    return rv;
+    return NS_OK;
 }
 
 nsResChannel::~nsResChannel()
 {
-    if (mCommand) nsCRT::free(mCommand);
-    if (mLock) PR_DestroyLock(mLock);
 }
 
 NS_IMPL_ISUPPORTS5(nsResChannel,
@@ -173,8 +173,6 @@ nsResChannel::Substitutions::Next(nsIURI* *result)
 NS_IMETHODIMP
 nsResChannel::IsPending(PRBool *result)
 {
-    nsAutoLock lock(mLock);
-
     if (mResolvedChannel)
         return mResolvedChannel->IsPending(result);
     *result = PR_FALSE;
@@ -182,21 +180,35 @@ nsResChannel::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsResChannel::Cancel()
+nsResChannel::GetStatus(nsresult *status)
 {
-    nsAutoLock lock(mLock);
-
-    mResolvedURI = mResourceURI;        // remove the resolution
-    if (mResolvedChannel)
-        return mResolvedChannel->Cancel();
+    *status = mStatus;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResChannel::Cancel(nsresult status)
+{
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
+    nsresult rv = NS_OK;
+    if (mResolvedChannel) {
+        rv = mResolvedChannel->Cancel(status);
+    }
+    mStatus = status;
+    mResolvedURI = mResourceURI;        // remove the resolution
+    return rv;
 }
 
 NS_IMETHODIMP
 nsResChannel::Suspend()
 {
-    nsAutoLock lock(mLock);
-
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     if (mResolvedChannel)
         return mResolvedChannel->Suspend();
     return NS_OK;
@@ -205,8 +217,10 @@ nsResChannel::Suspend()
 NS_IMETHODIMP
 nsResChannel::Resume()
 {
-    nsAutoLock lock(mLock);
-
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     if (mResolvedChannel)
         return mResolvedChannel->Resume();
     return NS_OK;
@@ -217,15 +231,22 @@ nsResChannel::Resume()
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
-nsResChannel::GetOriginalURI(nsIURI * *aURI)
+nsResChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    *aURI = mOriginalURI;
+    *aURI = mOriginalURI ? mOriginalURI : mResourceURI;
     NS_ADDREF(*aURI);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsResChannel::GetURI(nsIURI * *aURI)
+nsResChannel::SetOriginalURI(nsIURI* aURI)
+{
+    mOriginalURI = aURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResChannel::GetURI(nsIURI* *aURI)
 {
     if (mResolvedURI == nsnull)
         mResolvedURI = mResourceURI;
@@ -235,65 +256,118 @@ nsResChannel::GetURI(nsIURI * *aURI)
 }
 
 NS_IMETHODIMP
-nsResChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
-                              nsIInputStream **result)
+nsResChannel::SetURI(nsIURI* aURI)
+{
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsResChannel::EnsureNextResolvedChannel()
 {
     nsresult rv;
 
-    nsAutoLock lock(mLock);
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
+
+    rv = mSubstitutions.Next(getter_AddRefs(mResolvedURI));
+    if (NS_FAILED(rv)) goto done;
+
+    rv = serv->NewChannelFromURI(mResolvedURI, 
+                                 getter_AddRefs(mResolvedChannel));
+    if (NS_FAILED(rv)) {
+        rv = NS_OK;     // returning NS_OK lets us try again
+        goto done;
+    }
+
+    if (mOriginalURI) {
+        rv = mResolvedChannel->SetOriginalURI(mOriginalURI);
+        if (NS_FAILED(rv)) goto done;
+    }
+    if (mLoadGroup) {
+        rv = mResolvedChannel->SetLoadGroup(mLoadGroup);
+        if (NS_FAILED(rv)) goto done;
+    }
+    if (mLoadAttributes != LOAD_NORMAL) {
+        rv = mResolvedChannel->SetLoadAttributes(mLoadAttributes);
+        if (NS_FAILED(rv)) goto done;
+    }
+    if (mBufferSegmentSize) {
+        rv = mResolvedChannel->SetBufferSegmentSize(mBufferSegmentSize);
+        if (NS_FAILED(rv)) goto done;
+    }
+    if (mBufferMaxSize) {
+        rv = mResolvedChannel->SetBufferMaxSize(mBufferMaxSize);
+        if (NS_FAILED(rv)) goto done;
+    }
+    if (mCallbacks) {
+        rv = mResolvedChannel->SetNotificationCallbacks(mCallbacks);
+        if (NS_FAILED(rv)) goto done;
+    }
+    if (mStartPosition) {
+        rv = mResolvedChannel->SetTransferOffset(mStartPosition);
+        if (NS_FAILED(rv)) goto done;
+    }
+    if (mCount >= 0) {
+        rv = mResolvedChannel->SetTransferCount(mCount);
+        if (NS_FAILED(rv)) goto done;
+    }
+
+  done:
+#if defined(PR_LOGGING)
+    nsXPIDLCString resURI;
+    (void)mResourceURI->GetSpec(getter_Copies(resURI));
+    nsXPIDLCString newURI;
+	if (mResolvedURI)
+        (void)mResolvedURI->GetSpec(getter_Copies(newURI));
+    PR_LOG(gResChannelLog, PR_LOG_DEBUG,
+           ("nsResChannel: resolving %s ",
+            (const char*)resURI));
+    PR_LOG(gResChannelLog, PR_LOG_DEBUG,
+           ("                     to %s => status %x\n",
+            (const char*)newURI, rv));
+#endif /* PR_LOGGING */
+    return rv;
+}
+
+NS_IMETHODIMP
+nsResChannel::OpenInputStream(nsIInputStream **result)
+{
+    nsresult rv;
 
     if (mResolvedChannel)
         return NS_ERROR_IN_PROGRESS;
-
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
 
     rv = mSubstitutions.Init();
     if (NS_FAILED(rv)) return rv;
 
     do {
-        rv = mSubstitutions.Next(getter_AddRefs(mResolvedURI));
-        if (NS_FAILED(rv)) return rv;
+        rv = EnsureNextResolvedChannel();
+        if (NS_FAILED(rv)) break;
 
-        rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
-                                     mLoadAttributes, mOriginalURI,
-                                     mBufferSegmentSize, mBufferMaxSize,
-                                     getter_AddRefs(mResolvedChannel));
-        if (NS_FAILED(rv)) continue;
-
-        rv = mResolvedChannel->OpenInputStream(startPosition, readCount, result);
+        if (mResolvedChannel)
+            rv = mResolvedChannel->OpenInputStream(result);
     } while (NS_FAILED(rv));
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsResChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result)
+nsResChannel::OpenOutputStream(nsIOutputStream **result)
 {
     nsresult rv;
 
-    nsAutoLock lock(mLock);
-
     if (mResolvedChannel)
         return NS_ERROR_IN_PROGRESS;
-
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
 
     rv = mSubstitutions.Init();
     if (NS_FAILED(rv)) return rv;
 
     do {
-        rv = mSubstitutions.Next(getter_AddRefs(mResolvedURI));
-        if (NS_FAILED(rv)) return rv;
+        rv = EnsureNextResolvedChannel();
+        if (NS_FAILED(rv)) break;
 
-        rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
-                                     mLoadAttributes, mOriginalURI,
-                                     mBufferSegmentSize, mBufferMaxSize,
-                                     getter_AddRefs(mResolvedChannel));
-        if (NS_FAILED(rv)) continue;
-
-        rv = mResolvedChannel->OpenOutputStream(startPosition, result);
+        if (mResolvedChannel)
+            rv = mResolvedChannel->OpenOutputStream(result);
     } while (NS_FAILED(rv));
 
     return rv;
@@ -304,7 +378,11 @@ nsResChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 {
     nsresult rv;
 
-    nsAutoLock lock(mLock);
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+    mInitiator = PR_CurrentThread();
+#endif
 
     switch (mState) {
       case QUIESCENT:
@@ -327,39 +405,33 @@ nsResChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     mUserObserver = observer;
     mUserContext = ctxt;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     do {
-        rv = mSubstitutions.Next(getter_AddRefs(mResolvedURI));
+        rv = EnsureNextResolvedChannel();
         if (NS_FAILED(rv)) break;
 
-        rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
-                                     mLoadAttributes, mOriginalURI,
-                                     mBufferSegmentSize, mBufferMaxSize,
-                                     getter_AddRefs(mResolvedChannel));
-        if (NS_FAILED(rv)) continue;
-
-        rv = mResolvedChannel->AsyncOpen(this, nsnull);
+        if (mResolvedChannel)
+            rv = mResolvedChannel->AsyncOpen(this, nsnull);
         // Later, this AsyncOpen will call back our OnStopRequest
         // method. The action resumes there...
     } while (NS_FAILED(rv));
 
     if (NS_FAILED(rv)) {
-        (void)observer->OnStopRequest(this, ctxt, rv, nsnull);  // XXX need error message
+        (void)EndRequest(rv, nsnull);  // XXX need error message
     }
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsResChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                        nsISupports *ctxt,
-                        nsIStreamListener *listener)
+nsResChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;
 
-    nsAutoLock lock(mLock);
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+    mInitiator = PR_CurrentThread();
+#endif
 
     switch (mState) {
       case QUIESCENT:
@@ -383,31 +455,21 @@ nsResChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     }
     NS_ASSERTION(mState == ASYNC_READ, "wrong state");
 
-    mStartPosition = startPosition;
-    mCount = readCount;
     mUserContext = ctxt;
     mUserObserver = listener;   // cast back to nsIStreamListener later
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     do {
-        rv = mSubstitutions.Next(getter_AddRefs(mResolvedURI));
+        rv = EnsureNextResolvedChannel();
         if (NS_FAILED(rv)) break;
 
-        rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
-                                     mLoadAttributes, mOriginalURI,
-                                     mBufferSegmentSize, mBufferMaxSize,
-                                     getter_AddRefs(mResolvedChannel));
-        if (NS_FAILED(rv)) continue;
-
-        rv = mResolvedChannel->AsyncRead(startPosition, readCount, nsnull, this);
+        if (mResolvedChannel)
+            rv = mResolvedChannel->AsyncRead(this, nsnull);
         // Later, this AsyncRead will call back our OnStopRequest
         // method. The action resumes there...
     } while (NS_FAILED(rv));
 
     if (NS_FAILED(rv)) {
-        (void)mUserObserver->OnStopRequest(this, mUserContext, rv, nsnull);  // XXX need error message
+        (void)EndRequest(rv, nsnull);  // XXX need error message
     }
 
     return rv;
@@ -415,13 +477,16 @@ nsResChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 NS_IMETHODIMP
 nsResChannel::AsyncWrite(nsIInputStream *fromStream,
-                         PRUint32 startPosition, PRInt32 writeCount,
-                         nsISupports *ctxt,
-                         nsIStreamObserver *observer)
+                         nsIStreamObserver *observer,
+                         nsISupports *ctxt)
 {
     nsresult rv;
 
-    nsAutoLock lock(mLock);
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+    mInitiator = PR_CurrentThread();
+#endif
 
     switch (mState) {
       case QUIESCENT:
@@ -446,32 +511,21 @@ nsResChannel::AsyncWrite(nsIInputStream *fromStream,
     NS_ASSERTION(mState == ASYNC_READ, "wrong state");
 
     mFromStream = fromStream;
-    mStartPosition = startPosition;
-    mCount = writeCount;
     mUserContext = ctxt;
     mUserObserver = observer;
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     do {
-        rv = mSubstitutions.Next(getter_AddRefs(mResolvedURI));
+        rv = EnsureNextResolvedChannel();
         if (NS_FAILED(rv)) break;
 
-        rv = serv->NewChannelFromURI(mCommand, mResolvedURI, mLoadGroup, mCallbacks, 
-                                     mLoadAttributes, mOriginalURI,
-                                     mBufferSegmentSize, mBufferMaxSize,
-                                     getter_AddRefs(mResolvedChannel));
-        if (NS_FAILED(rv)) continue;
-
-        rv = mResolvedChannel->AsyncWrite(fromStream, startPosition, writeCount, 
-                                          nsnull, this);
+        if (mResolvedChannel)
+            rv = mResolvedChannel->AsyncWrite(fromStream, this, nsnull);
         // Later, this AsyncWrite will call back our OnStopRequest
         // method. The action resumes there...
     } while (NS_FAILED(rv));
 
     if (NS_FAILED(rv)) {
-        (void)mUserObserver->OnStopRequest(this, mUserContext, rv, nsnull);  // XXX need error message
+        (void)EndRequest(rv, nsnull);  // XXX need error message
     }
 
     return rv;
@@ -516,6 +570,90 @@ nsResChannel::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
+nsResChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("nsResChannel::SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsResChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    *aTransferOffset = mStartPosition;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    mStartPosition = aTransferOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    *aTransferCount = mCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    mCount = aTransferCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsResChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    NS_NOTREACHED("nsResChannel::GetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsResChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    NS_NOTREACHED("nsResChannel::SetBufferSegmentSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsResChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    NS_NOTREACHED("nsResChannel::GetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsResChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    NS_NOTREACHED("nsResChannel::SetBufferMaxSize");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsResChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    NS_NOTREACHED("GetShouldCache");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsResChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsResChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsResChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
@@ -526,8 +664,6 @@ nsResChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsResChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
-    nsAutoLock lock(mLock);
-
     mLoadGroup = aLoadGroup;
     return NS_OK;
 }
@@ -550,23 +686,23 @@ nsResChannel::SetOwner(nsISupports* aOwner)
 NS_IMETHODIMP
 nsResChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
-  *aNotificationCallbacks = mCallbacks.get();
-  NS_IF_ADDREF(*aNotificationCallbacks);
-  return NS_OK;
+    *aNotificationCallbacks = mCallbacks.get();
+    NS_IF_ADDREF(*aNotificationCallbacks);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsResChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallbacks)
 {
-  mCallbacks = aNotificationCallbacks;
-  return NS_OK;
+    mCallbacks = aNotificationCallbacks;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsResChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
-    *aSecurityInfo = nsnull;
-    return NS_OK;
+    NS_NOTREACHED("nsResChannel::GetSecurityInfo");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -576,6 +712,10 @@ nsResChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 NS_IMETHODIMP
 nsResChannel::OnStartRequest(nsIChannel* transportChannel, nsISupports* context)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     NS_ASSERTION(mUserObserver, "No observer...");
     return mUserObserver->OnStartRequest(this, mUserContext);
 }
@@ -584,22 +724,28 @@ NS_IMETHODIMP
 nsResChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
                             nsresult aStatus, const PRUnichar* aMsg)
 {
-    nsresult rv;
-
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED) {
         // if we failed to process this channel, then try the next one:
         switch (mState) {
           case ASYNC_OPEN:
             return AsyncOpen(mUserObserver, mUserContext);
           case ASYNC_READ: 
-            return AsyncRead(mStartPosition, mCount, mUserContext, 
-                             GetUserListener());
+            return AsyncRead(GetUserListener(), mUserContext);
           case ASYNC_WRITE:
-            return AsyncWrite(mFromStream, mStartPosition, mCount,
-                              mUserContext, mUserObserver);
+            return AsyncWrite(mFromStream, mUserObserver, mUserContext);
         }
     }
+    return EndRequest(aStatus, aMsg);
+}
 
+nsresult
+nsResChannel::EndRequest(nsresult aStatus, const PRUnichar* aMsg)
+{
+    nsresult rv;
     rv = mUserObserver->OnStopRequest(this, mUserContext, aStatus, aMsg);
 #if 0 // we don't add the resource channel to the group (although maybe we should)
     if (mLoadGroup) {
@@ -621,12 +767,12 @@ nsResChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* context
                                nsIInputStream *aIStream, PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(),
+                 "wrong thread calling this routine");
+#endif
     return GetUserListener()->OnDataAvailable(this, mUserContext, aIStream,
                                               aSourceOffset, aLength);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// From nsIResChannel
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////

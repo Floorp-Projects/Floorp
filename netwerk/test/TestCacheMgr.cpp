@@ -299,7 +299,7 @@ TestReadStream(nsICachedNetData *cacheEntry, nsITestDataStream *testDataStream,
     rv = reader->Init(testDataStream, expectedStreamLength);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     
-    rv = channel->AsyncRead(0, -1, 0, reader);
+    rv = channel->AsyncRead(0, reader);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     reader->Release();
 
@@ -495,7 +495,7 @@ FillCache(nsINetDataCacheManager *aCache, PRUint32 aFlags, PRUint32 aCacheCapaci
         rv = cacheEntry->GetCache(getter_AddRefs(containingCache));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
 
-        rv = channel->OpenOutputStream(0, getter_AddRefs(outStream));
+        rv = channel->OpenOutputStream(getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         
         int streamLength = randomStream->Next() % MAX_CONTENT_LENGTH;

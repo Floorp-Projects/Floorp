@@ -66,8 +66,9 @@ class nsDiskCacheRecordChannel : public nsIChannel,
   nsCOMPtr<nsILoadGroup>                mLoadGroup ;
   nsCOMPtr<nsISupports>                 mOwner ;
   nsCOMPtr<nsIChannel>                  mFileTransport ;
-  nsCOMPtr< nsIFile >                            mSpec ;
+  nsCOMPtr< nsIFile >                   mSpec ;
   nsCOMPtr<nsIStreamListener>           mRealListener;
+  nsresult                              mStatus;
 
   friend class WriteStreamWrapper ;
 } ;

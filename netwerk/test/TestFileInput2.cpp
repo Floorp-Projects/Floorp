@@ -156,21 +156,21 @@ public:
 
         // Open the input stream:
         nsCOMPtr<nsIInputStream> fileIn;
-        rv = NS_NewFileInputStream(mInPath, getter_AddRefs(fileIn));
+        rv = NS_NewLocalFileInputStream(getter_AddRefs(fileIn), mInPath);
         if (NS_FAILED(rv)) return rv;
         
-        rv = NS_NewBufferedInputStream(fileIn, 65535, getter_AddRefs(inStr));
+        rv = NS_NewBufferedInputStream(getter_AddRefs(inStr), fileIn, 65535);
         if (NS_FAILED(rv)) return rv;
         
         // Open the output stream:
         nsCOMPtr<nsIOutputStream> fileOut;
-        rv = NS_NewFileOutputStream(mOutPath, 
-                                    PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
-                                    0664,
-                                    getter_AddRefs(fileOut));
+        rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOut),
+                                         mOutPath, 
+                                         PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                         0664);
         if (NS_FAILED(rv)) return rv;
 
-        rv = NS_NewBufferedOutputStream(fileOut, 65535, getter_AddRefs(outStr));
+        rv = NS_NewBufferedOutputStream(getter_AddRefs(outStr), fileOut, 65535);
         if (NS_FAILED(rv)) return rv;
 
         // Copy from one to the other
@@ -254,36 +254,16 @@ public:
         nsCOMPtr<nsIInputStream> inStr;
         nsCOMPtr<nsIOutputStream> outStr;
 
-        rv = NS_NewFileChannel(mInPath,
-                               PR_RDONLY,
-                               nsnull,   // contentType
-                               0,        // contentLength,
-                               nsnull,   // aLoadGroup
-                               nsnull,   // notificationCallbacks
-                               nsIChannel::LOAD_NORMAL,
-                               nsnull,   // originalURI
-                               0,        // bufferSegmentSize
-                               0,        // bufferMaxSize
-                               getter_AddRefs(inCh));
+        rv = NS_NewLocalFileChannel(getter_AddRefs(inCh), mInPath);
         if (NS_FAILED(rv)) return rv;
 
-        rv = inCh->OpenInputStream(0, -1, getter_AddRefs(inStr));
+        rv = inCh->OpenInputStream(getter_AddRefs(inStr));
         if (NS_FAILED(rv)) return rv;
 
-        rv = NS_NewFileChannel(mOutPath,
-                               PR_RDWR,
-                               nsnull,   // contentType
-                               0,        // contentLength,
-                               nsnull,   // aLoadGroup
-                               nsnull,   // notificationCallbacks
-                               nsIChannel::LOAD_NORMAL,
-                               nsnull,   // originalURI
-                               0,        // bufferSegmentSize
-                               0,        // bufferMaxSize
-                               getter_AddRefs(outCh));
+        rv = NS_NewLocalFileChannel(getter_AddRefs(outCh), mOutPath);
         if (NS_FAILED(rv)) return rv;
 
-        rv = outCh->OpenOutputStream(0, getter_AddRefs(outStr));
+        rv = outCh->OpenOutputStream(getter_AddRefs(outStr));
         if (NS_FAILED(rv)) return rv;
 
         // Copy from one to the other

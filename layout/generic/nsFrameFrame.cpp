@@ -653,7 +653,7 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   }
 
   nsString empty;
-  nsresult rv = NS_MakeAbsoluteURI(aRelURL, baseURL, aAbsURL);
+  nsresult rv = NS_MakeAbsoluteURI(aAbsURL, aRelURL, baseURL);
   NS_ASSERTION(NS_SUCCEEDED(rv), "XXX make this function return an nsresult, like it should!");
   NS_IF_RELEASE(baseURL);
 }
@@ -904,10 +904,12 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
         if (NS_SUCCEEDED(rv)) 
           rv = securityManager->CheckLoadURI(baseURI, newURI, PR_FALSE);
 
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
         if (NS_SUCCEEDED(rv)) {
           nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSubShell));
           NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-          webNav->LoadURI(absURL.GetUnicode()); // URL string with a default nsnull value for post Data
+          rv = webNav->LoadURI(absURL.GetUnicode()); // URL string with a default nsnull value for post Data
+          NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
         }
       }
     }

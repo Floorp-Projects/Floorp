@@ -169,14 +169,14 @@ nsStreamXferOp::Start( void ) {
                 nsCOMPtr<nsILocalFile> file;
                 rv = NS_NewLocalFile(target, getter_AddRefs(file));
                 if (NS_SUCCEEDED(rv)) {
-                    rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0,
-                                              getter_AddRefs( mOutputChannel));
+                    rv = fts->CreateTransport(file, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+                                              0664, getter_AddRefs( mOutputChannel));
                 }
     
                 if ( NS_SUCCEEDED( rv ) ) {
 #ifdef USE_ASYNC_READ
                     // Read the input channel (with ourself as the listener).
-                    rv = mInputChannel->AsyncRead( 0, -1, 0, this );
+                    rv = mInputChannel->AsyncRead(this, nsnull);
                     if ( NS_FAILED( rv ) ) {
                         this->OnError( kOpAsyncRead, rv );
                     }
@@ -191,7 +191,7 @@ nsStreamXferOp::Start( void ) {
 
                     // get the input stream from the channel.
                     nsCOMPtr<nsIInputStream> inStream;
-                    rv = mInputChannel->OpenInputStream(0, -1, getter_AddRefs(inStream));
+                    rv = mInputChannel->OpenInputStream(getter_AddRefs(inStream));
                     if (NS_FAILED(rv)) {
                         this->OnError(0, rv);
                         return rv;
@@ -199,7 +199,7 @@ nsStreamXferOp::Start( void ) {
 
                     // hand the output channel our input stream. it will take care
                     // of reading data from the stream and writing it to disk.
-                    rv = mOutputChannel->AsyncWrite(inStream, 0, -1, nsnull, NS_STATIC_CAST(nsIStreamObserver*,this));
+                    rv = mOutputChannel->AsyncWrite(inStream, NS_STATIC_CAST(nsIStreamObserver*,this), nsnull);
                     if ( NS_FAILED( rv ) ) {
                         this->OnError( kOpAsyncWrite, rv );
                     }
@@ -239,7 +239,7 @@ nsStreamXferOp::Stop( void ) {
         nsCOMPtr<nsIChannel> channel = mInputChannel;
         mInputChannel = 0;
         // Now cancel it.
-        rv = channel->Cancel();
+        rv = channel->Cancel(NS_BINDING_ABORTED);
         if ( NS_FAILED( rv ) ) {
             this->OnError( kOpInputCancel, rv );
         }
@@ -278,7 +278,7 @@ nsStreamXferOp::OnStartRequest(nsIChannel* channel, nsISupports* aContext) {
 
 #ifdef USE_ASYNC_READ
     // Open output stream.
-    rv = mOutputChannel->OpenOutputStream( 0, getter_AddRefs( mOutputStream ) );
+    rv = mOutputChannel->OpenOutputStream( getter_AddRefs( mOutputStream ) );
 
     if ( NS_FAILED( rv ) ) {
         // Give up all hope.

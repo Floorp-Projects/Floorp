@@ -34,140 +34,83 @@ interface nsIFile;
 typedef unsigned long nsLoadFlags;
 
 /**
- * nsIChannel is the abstract base class for transports and URLs.
- * It's abstract in that it doesn't provide a means to specify the
- * location/destination of the data being accessed. 
+ * The nsIChannel interface allows the user to construct I/O requests for
+ * specific protocols, and manage them in a uniform way. Once a channel
+ * is created (via nsIIOService::NewChannel), parameters for that request
+ * may be set by using the channel attributes, or by QueryInterfacing to a
+ * subclass of nsIChannel for protocol-specific parameters. Then the actual
+ * request can be issued in one of several ways:
+ *
+ *      - AsyncRead and AsyncWrite allow for asynchronous requests, calling
+ *        back the user's stream listener or observer,
+ *      - OpenInputStream and OpenOutputStream allow for synchronous reads
+ *        and writes on the underlying channel.
+ *
+ * After a request has been completed, the channel is still valid for
+ * accessing protocol-specific results. For example, QueryInterfacing to 
+ * nsIHTTPChannel allows response headers to be retrieved that result from
+ * http transactions. 
+ *
+ * Note that a channel is really only valid for one request. Reusing a channel
+ * after a request has completed for a subsequent request may have undefined
+ * results, depending on the channel implementation.
+ *
+ * Also of note are a special kind of channel called "transports." Transports
+ * also implement the nsIChannel interface, but operate at a lower level from
+ * protocol channels. The socket and file transports are notable implementations
+ * of transports and allow higher level channels to be implemented. The cache
+ * may also behave as a transport, and possibly things like sound playing services
+ * etc. Transports usually operate in a separate thread and often multiplex
+ * multiple requests for the same kind of service or resources. 
  */
-[scriptable, uuid(2d905684-8b5c-11d3-8cd9-0060b0fc14a3)]
+[scriptable, uuid(1788e79e-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIChannel : nsIRequest
 {
+    ////////////////////////////////////////////////////////////////////////////
+    // nsIChannel accessors
+    ////////////////////////////////////////////////////////////////////////////
+    
     /**
      * Returns the original URL used to construct the channel.
-     */
-    readonly attribute nsIURI originalURI;
-
-    /**
-     * Returns the URL to which the channel currently refers.
-     */
-    readonly attribute nsIURI URI;
-
-    /**
-     * Opens a blocking input stream to the URL's specified source.
-     * @param startPosition - The offset from the start of the data
-     *   from which to read.
-     * @param readCount - The number of bytes to read. If -1, everything
-     *   up to the end of the data is read. If greater than the end of 
-     *   the data, the amount available is returned in the stream.
-     */
-    nsIInputStream openInputStream(in unsigned long startPosition,
-                                   in long readCount);
-
-    /**
-     * Opens a blocking output stream to the URL's specified destination.
-     * @param startPosition - The offset from the start of the data
-     *   from which to begin writing.
-     */
-    nsIOutputStream openOutputStream(in unsigned long startPosition);
-
-    /**
-     * Opens the channel asynchronously. The nsIStreamObserver's OnStartRequest
-     * method is called back when the channel actually becomes open, providing 
-     * the content type. Its OnStopRequest method is called when the channel
-     * becomes closed.
-     */
-    void asyncOpen(in nsIStreamObserver observer, 
-                   in nsISupports ctxt);
-
-    /**
-     * Reads asynchronously from the URL's specified source. Notifications
-     * are provided to the stream listener on the thread of the specified
-     * event queue.
-     * The startPosition argument designates the offset in the source where
-     * the data will be read.
-     * If the readCount == -1 then all the available data is delivered to
-     * the stream listener.
-     */
-    void asyncRead(in unsigned long startPosition,
-                   in long readCount,
-                   in nsISupports ctxt,
-                   in nsIStreamListener listener);
-
-    /**
-     * Writes asynchronously to the URL's specified destination. Notifications
-     * are provided to the stream observer on the thread of the specified
-     * event queue.
-     * The startPosition argument designates the offset in the destination where
-     * the data will be written.
-     * If the writeCount == -1, then all the available data in the input
-     * stream is written.
-     */
-    void asyncWrite(in nsIInputStream fromStream,
-                    in unsigned long startPosition,
-                    in long writeCount,
-                    in nsISupports ctxt,
-                    in nsIStreamObserver observer);
-
-    /**
-     * Load attribute flags. These may be or'd together.
+     * This is used in the case of a redirect or URI "resolution" (e.g. 
+     * resolving a resource: URI to a file: URI) so that the original
+     * pre-redirect URI can still be obtained. 
      *
-     * Note that more will follow for each protocol's implementation of a channel, 
-     * although channel writers have to be careful to not let the flag bits 
-     * overlap. Otherwise, users won't be able to create a single flag word
-     * of load attributes that applies to a number of different channel types.
+     * Note that this is distinctly different from the http referrer
+     * (referring URI) which is typically the page that contained the 
+     * original URI (accessible from nsIHTTPChannel).
      */
-    const unsigned long LOAD_NORMAL     = 0;      /* no special load attributes -- use defaults */
-    const unsigned long LOAD_BACKGROUND = 1 << 0; /* don't deliver status notifications to the
-                                                   * nsIProgressEventSink, or keep this load from
-                                                   * completing the nsILoadGroup it may belong to */
+    attribute nsIURI originalURI;
 
-    const unsigned long LOAD_DOCUMENT_URI = 1 << 1;
-	const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 2; /* if the end consumer for this
-																  load has been retargeted after 
-																  discovering it's content, this flag
-																  will be set */
-    //
-    // The following flags control caching behavior.  Not all protocols pay
-    // attention to all these flags, but they are applicable to more than one
-    // protocol, so they are defined here.
-    //
+    /**
+     * Returns the URL to which the channel currently refers. If a redirect
+     * or URI resolution occurs, this accessor returns the current location
+     * to which the channel is referring.
+     */
+    attribute nsIURI URI;
 
-    // Don't store data in the disk cache.  This can be used to preserve
-    // privacy, e.g. so that no https transactions are recorded, or to avoid
-    // caching a stream to disk that is already stored in a local file,
-    // e.g. the mailbox: protocol.
-    const unsigned long INHIBIT_PERSISTENT_CACHING = 1 <<  8;
+    /**
+     * Accesses the start offset from the beginning of the data from/to which
+     * reads/writes will occur. Users may set the transferOffset before making
+     * any of the following requests: asyncOpen, asyncRead, asyncWrite,
+     * openInputStream, openOutputstream.
+     */
+    attribute unsigned long transferOffset;
 
-    // Force an end-to-end download of content data from the origin server (and
-    // any intervening proxies that sit between it and the client), e.g. this
-    // flag is used for a shift-reload.
-    const unsigned long FORCE_RELOAD               = 1 <<  9;
-
-    // Force revalidation with server (or proxy) to verify that cached content
-    // is up-to-date, e.g. by comparing last-modified date on server with that
-    // of the cached version.  For example, this flag is used when the reload
-    // button is pressed.
-    const unsigned long FORCE_VALIDATION           = 1 << 10;
-
-    // If the CACHE_AS_FILE flag is set, any stream content is stored in the
-    // cache as a single disk file.  Content will not be cached in the memory
-    // cache nor will it be stored in any other type of cache, e.g. a flat-file
-    // cache database.  This is used to implement the jar protocol handler and
-    // to provide the stream-as-file semantics required by the classic browser
-    // plugin API.
-    const unsigned long CACHE_AS_FILE              = 1 << 11;
-
-    // When cache data is potentially out of date, it can be revalidated with
-    // the origin server to see if the content needs to be reloaded.  The
-    // following four flags control how often this validation occurs.
-    // These flags are commonly used for "normal" loading.  Note that
-    // the VALIDATE_HEURISTICALLY and VALIDATE_ONCE_PER_SESSION flags can be
-    // combined to validate heuristically but no more than once per session.
-    //
-    const unsigned long VALIDATE_NEVER             = 1 << 12;
-    const unsigned long VALIDATE_ALWAYS            = 1 << 13;
-    const unsigned long VALIDATE_ONCE_PER_SESSION  = 1 << 14;
-    const unsigned long VALIDATE_HEURISTICALLY     = 1 << 15;
-    
+    /**
+     * Accesses the count of bytes to be transfered. For openInputStream and
+     * asyncRead, this specifies the amount to read, for asyncWrite, this
+     * specifies the amount to write (note that for openOutputStream, the
+     * end of the data can be signified simply by closing the stream). 
+     * If the transferCount is set after reading has been initiated, the
+     * amount specified will become the current remaining amount to read
+     * before the channel is closed (this can be useful if the content
+     * length is encoded at the start of the stream).
+     *
+     * A transferCount value of -1 means the amount is unspecified, i.e. 
+     * read or write all the data that is available.
+     */
+    attribute long transferCount;
 
     /**
      * Accesses the load attributes for the channel. E.g. setting the load 
@@ -187,15 +130,19 @@ interface nsIChannel : nsIRequest
     attribute string contentType;
 
     /**
-     * Returns the length of the data assiciated with the channel if available.
+     * Returns the length of the data associated with the channel if available.
      * If the length is unknown then -1 is returned.
      */
-    readonly attribute long contentLength;
+    attribute long contentLength;
 
     /**
      * Accesses the owner corresponding to the entity that is 
      * responsible for this channel. Used by security code to grant
-     * or diminish privileges to mobile code loaded from this channel. 
+     * or deny privileges to mobile code loaded from this channel. 
+     *
+     * Note: This is a strong reference to the owner, so if the owner is also
+     * holding a pointer to the channel, care must be taken to explicitly drop
+     * its reference to the channel -- otherwise a leak will result.
      */
     attribute nsISupports owner;
 
@@ -214,9 +161,180 @@ interface nsIChannel : nsIRequest
     /** 
      * Any security information about this channel.  This can be null.
      */
-
     readonly attribute nsISupports securityInfo;
 
+    /**
+     * Accesses the buffer segment size. The buffer segment size is used as
+     * the initial size for any transfer buffers, and the increment size for
+     * whenever the buffer space needs to be grown.
+     * (Note this parameter is passed along to any underlying nsIPipe objects.)
+     * If unspecified, the channel implementation picks a default.
+     */
+    attribute unsigned long bufferSegmentSize;
+
+    /**
+     * Accesses the buffer maximum size. The buffer maximum size is the limit
+     * size that buffer will be grown to before suspending the channel.
+     * (Note this parameter is passed along to any underlying nsIPipe objects.)
+     * If unspecified, the channel implementation picks a default.
+     */
+    attribute unsigned long bufferMaxSize;
+
+    /**
+     * Returns true if the data from this channel should be cached. Local files
+     * report false because they exist on the local disk and need not be cached.
+     * Input stream channels, data protocol, datetime protocol and finger 
+     * protocol channels also should not be cached. Http and ftp on the other 
+     * hand should. Note that the value of this attribute doesn't reflect any
+     * http headers that may specify that this channel should not be cached.
+     */
+    readonly attribute boolean shouldCache;
+
+    /**
+     * Setting pipeliningAllowed causes the load of a URL (issued via asyncOpen,
+     * asyncRead or asyncWrite) to be deferred in order to allow the request to
+     * be pipelined for greater throughput efficiency. Pipelined requests will
+     * be forced to load when the first non-pipelined request is issued.
+     */
+    attribute boolean pipeliningAllowed;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Load attribute flags. These may be or'd together.
+    ////////////////////////////////////////////////////////////////////////////
+    /**
+     * Note that more will follow for each protocol's implementation of a channel, 
+     * although channel writers have to be careful to not let the flag bits 
+     * overlap. Otherwise, users won't be able to create a single flag word
+     * of load attributes that applies to a number of different channel types.
+     */
+
+    /**
+     * No special load attributes -- use defaults:
+     */
+    const unsigned long LOAD_NORMAL     = 0;
+
+
+    /** 
+     * Don't deliver status notifications to the nsIProgressEventSink, or keep 
+     * this load from completing the nsILoadGroup it may belong to:
+     */
+    const unsigned long LOAD_BACKGROUND = 1 << 0; 
+
+    const unsigned long LOAD_DOCUMENT_URI = 1 << 1;
+
+    /** 
+     * If the end consumer for this load has been retargeted after discovering 
+     * it's content, this flag will be set:
+     */
+    const unsigned long LOAD_RETARGETED_DOCUMENT_URI = 1 << 2;
+
+    ////////////////////////////////////////////////////////////////////////////
+    /**
+     * The following flags control caching behavior.  Not all protocols pay
+     * attention to all these flags, but they are applicable to more than one
+     * protocol, so they are defined here.
+     */
+
+    /**
+     * Don't store data in the disk cache.  This can be used to preserve
+     * privacy, e.g. so that no https transactions are recorded, or to avoid
+     * caching a stream to disk that is already stored in a local file,
+     * e.g. the mailbox: protocol.
+     */
+    const unsigned long INHIBIT_PERSISTENT_CACHING = 1 <<  8;
+
+    /**
+     * Force an end-to-end download of content data from the origin server (and
+     * any intervening proxies that sit between it and the client), e.g. this
+     * flag is used for a shift-reload.
+     */
+    const unsigned long FORCE_RELOAD               = 1 <<  9;
+
+    /**
+     * Force revalidation with server (or proxy) to verify that cached content
+     * is up-to-date, e.g. by comparing last-modified date on server with that
+     * of the cached version.  For example, this flag is used when the reload
+     * button is pressed.
+     */
+    const unsigned long FORCE_VALIDATION           = 1 << 10;
+
+    /**
+     * If the CACHE_AS_FILE flag is set, any stream content is stored in the
+     * cache as a single disk file.  Content will not be cached in the memory
+     * cache nor will it be stored in any other type of cache, e.g. a flat-file
+     * cache database.  This is used to implement the jar protocol handler and
+     * to provide the stream-as-file semantics required by the classic browser
+     * plugin API.
+     */
+    const unsigned long CACHE_AS_FILE              = 1 << 11;
+
+    /**
+     * When cache data is potentially out of date, it can be revalidated with
+     * the origin server to see if the content needs to be reloaded.  The
+     * following four flags control how often this validation occurs.
+     * These flags are commonly used for "normal" loading.  Note that
+     * the VALIDATE_HEURISTICALLY and VALIDATE_ONCE_PER_SESSION flags can be
+     * combined to validate heuristically but no more than once per session.
+     */
+    const unsigned long VALIDATE_NEVER             = 1 << 12;
+    const unsigned long VALIDATE_ALWAYS            = 1 << 13;
+    const unsigned long VALIDATE_ONCE_PER_SESSION  = 1 << 14;
+    const unsigned long VALIDATE_HEURISTICALLY     = 1 << 15;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // nsIChannel operations
+    ////////////////////////////////////////////////////////////////////////////
+    
+    /**
+     * Opens a blocking input stream to the URL's specified source.
+     * @param startPosition - The offset from the start of the data
+     *   from which to read.
+     * @param readCount - The number of bytes to read. If -1, everything
+     *   up to the end of the data is read. If greater than the end of 
+     *   the data, the amount available is returned in the stream.
+     */
+    nsIInputStream openInputStream();
+
+    /**
+     * Opens a blocking output stream to the URL's specified destination.
+     * @param startPosition - The offset from the start of the data
+     *   from which to begin writing.
+     */
+    nsIOutputStream openOutputStream();
+
+    /**
+     * Opens the channel asynchronously. The nsIStreamObserver's OnStartRequest
+     * method is called back when the channel actually becomes open, providing 
+     * the content type. Its OnStopRequest method is called when the channel
+     * becomes closed.
+     */
+    void asyncOpen(in nsIStreamObserver observer, 
+                   in nsISupports ctxt);
+
+    /**
+     * Reads asynchronously from the URL's specified source. Notifications
+     * are provided to the stream listener on the thread of the specified
+     * event queue.
+     * The startPosition argument designates the offset in the source where
+     * the data will be read.
+     * If the readCount == -1 then all the available data is delivered to
+     * the stream listener.
+     */
+    void asyncRead(in nsIStreamListener listener,
+                   in nsISupports ctxt);
+
+    /**
+     * Writes asynchronously to the URL's specified destination. Notifications
+     * are provided to the stream observer on the thread of the specified
+     * event queue.
+     * The startPosition argument designates the offset in the destination where
+     * the data will be written.
+     * If the writeCount == -1, then all the available data in the input
+     * stream is written.
+     */
+    void asyncWrite(in nsIInputStream fromStream,
+                    in nsIStreamObserver observer,
+                    in nsISupports ctxt);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -227,29 +345,23 @@ interface nsIChannel : nsIRequest
  * associated content type. Input stream channels only allow the input stream
  * to be accessed, not the output stream.
  */
-[scriptable, uuid(bfbf843a-8b89-11d3-8cd9-0060b0fc14a3)]
+[scriptable, uuid(43070d6a-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIInputStreamChannel : nsIChannel
 {
     void init(in nsIURI uri,
-              in string contentType, 
-              in long contentLength,
               in nsIInputStream inStr,
-              in nsILoadGroup aLoadGroup,
-              in nsIInterfaceRequestor notificationCallbacks,
-              in nsLoadFlags loadAttributes,
-              in nsIURI originalURI,
-              in unsigned long bufferSegmentSize,
-              in unsigned long bufferMaxSize);
+              in string contentType, 
+              in long contentLength);
 };
 
 %{C++
 
 #define NS_INPUTSTREAMCHANNEL_CID                    \
-{ /* 436d84f8-8b8a-11d3-8cd9-0060b0fc14a3 */         \
-    0x436d84f8,                                      \
-    0x8b8a,                                          \
+{ /* 54d0d8e6-f947-11d3-8cda-0060b0fc14a3 */         \
+    0x54d0d8e6,                                      \
+    0xf947,                                          \
     0x11d3,                                          \
-    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
 %}
@@ -261,32 +373,27 @@ interface nsIInputStreamChannel : nsIChannel
  * of a simple nsIChannel that is constructed from a single nsIFile and
  * associated content type. 
  */
-[scriptable, uuid(6eef6444-c7e3-11d3-8cda-0060b0fc14a3)]
+[scriptable, uuid(68a26506-f947-11d3-8cda-0060b0fc14a3)]
 interface nsIFileChannel : nsIChannel
 {
     void init(in nsIFile file,
-              in long mode,
-              in string contentType, 
-              in long contentLength,
-              in nsILoadGroup aLoadGroup,
-              in nsIInterfaceRequestor notificationCallbacks,
-              in nsLoadFlags loadAttributes,
-              in nsIURI originalURI,
-              in unsigned long bufferSegmentSize,
-              in unsigned long bufferMaxSize);
+              in long ioFlags,
+              in long perm);
     
     readonly attribute nsIFile file;
+    attribute long ioFlags;
+    attribute long permissions;
 };
 
 %{C++
 
-#define NS_FILECHANNEL_CLASSNAME "File Channel"
-#define NS_FILECHANNEL_PROGID "component://netscape/network/file-channel"
+#define NS_LOCALFILECHANNEL_CLASSNAME "Local File Channel"
+#define NS_LOCALFILECHANNEL_PROGID "component://netscape/network/local-file-channel"
 
-#define NS_FILECHANNEL_CID                           \
-{ /* 7036066e-c7e3-11d3-8cda-0060b0fc14a3 */         \
-    0x7036066e,                                      \
-    0xc7e3,                                          \
+#define NS_LOCALFILECHANNEL_CID                      \
+{ /* 6d5b2d44-f947-11d3-8cda-0060b0fc14a3 */         \
+    0x6d5b2d44,                                      \
+    0xf947,                                          \
     0x11d3,                                          \
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }

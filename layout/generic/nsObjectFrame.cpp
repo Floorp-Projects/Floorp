@@ -1750,7 +1750,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
           mOwner->GetFullURL(baseURL);
 
           // Create an absolute URL
-          rv = NS_MakeAbsoluteURI(uniurl, baseURL, fullurl);
+          rv = NS_MakeAbsoluteURI(fullurl, uniurl, baseURL);
 
           NS_IF_RELEASE(baseURL);
 

@@ -2369,7 +2369,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
             nsCOMPtr<nsIURI> baseUri(do_QueryInterface(docURL));
             NS_ENSURE_TRUE(baseUri, NS_ERROR_FAILURE);
     
-            NS_ENSURE_SUCCESS(NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL),
+            NS_ENSURE_SUCCESS(NS_MakeAbsoluteURI(mAbsURL, mURL, baseUri),
                NS_ERROR_FAILURE);
             } 
          else 

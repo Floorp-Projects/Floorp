@@ -43,43 +43,38 @@ extern PRLogModuleInfo* gFTPLog;
 // initiated by the server (PORT command) or by the client (PASV command).
 // Client initiation is the most command case and is attempted first.
 
-nsFTPChannel::nsFTPChannel() {
+nsFTPChannel::nsFTPChannel()
+    : mConnected(PR_FALSE),
+      mLoadAttributes(LOAD_NORMAL),
+      mSourceOffset(0),
+      mAmount(0),
+      mContentLength(-1),
+      mLock(nsnull),
+      mBufferSegmentSize(0),
+      mBufferMaxSize(0),
+      mStatus(NS_OK)
+{
     NS_INIT_REFCNT();
-    mConnected = PR_FALSE;
-    mLoadAttributes = LOAD_NORMAL;
-    mSourceOffset = 0;
-    mAmount = 0;
-    mContentLength = -1;
-    mLock = nsnull;
 }
 
-nsFTPChannel::~nsFTPChannel() {
+nsFTPChannel::~nsFTPChannel()
+{
     nsXPIDLCString spec;
     mURL->GetSpec(getter_Copies(spec));
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFTPChannel() for %s", (const char*)spec));
     if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ADDREF(nsFTPChannel);
-NS_IMPL_THREADSAFE_RELEASE(nsFTPChannel);
-NS_IMPL_QUERY_INTERFACE7(nsFTPChannel,
-                         nsPIFTPChannel, 
-                         nsIChannel, 
-                         nsIRequest, 
-                         nsIInterfaceRequestor, 
-                         nsIProgressEventSink,
-                         nsIStreamListener,
-                         nsIStreamObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsFTPChannel,
+                              nsIChannel, 
+                              nsIRequest, 
+                              nsIInterfaceRequestor, 
+                              nsIProgressEventSink,
+                              nsIStreamListener,
+                              nsIStreamObserver);
 
 nsresult
-nsFTPChannel::Init(const char* verb, 
-                   nsIURI* uri, 
-                   nsILoadGroup* aLoadGroup,
-                   nsIInterfaceRequestor* notificationCallbacks, 
-                   nsLoadFlags loadAttributes, 
-                   nsIURI* originalURI,
-                   PRUint32 bufferSegmentSize,
-                   PRUint32 bufferMaxSize,
+nsFTPChannel::Init(nsIURI* uri, 
                    nsIProtocolHandler* aHandler, 
                    nsIThreadPool* aPool)
 {
@@ -95,23 +90,10 @@ nsFTPChannel::Init(const char* verb,
     NS_ASSERTION(aPool, "FTP channel needs a thread pool to play in");
     if (!aPool) return NS_ERROR_NULL_POINTER;
     mPool = aPool;
-    mOriginalURI = originalURI ? originalURI : uri;
     mURL = uri;
 
     rv = mURL->GetHost(getter_Copies(mHost));
     if (NS_FAILED(rv)) return rv;
-
-    rv = SetLoadAttributes(loadAttributes);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetLoadGroup(aLoadGroup);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetNotificationCallbacks(notificationCallbacks);
-    if (NS_FAILED(rv)) return rv;
-
-    mBufferSegmentSize = bufferSegmentSize;
-    mBufferMaxSize = bufferMaxSize;
 
     NS_ASSERTION(!mLock, "Init should only be called once on a channel");
     mLock = PR_NewLock();
@@ -152,17 +134,26 @@ nsFTPChannel::IsPending(PRBool *result) {
     nsAutoLock lock(mLock);
     if (mProxyChannel)
         return mProxyChannel->IsPending(result);
+    NS_NOTREACHED("nsFTPChannel::IsPending");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::Cancel(void) {
+nsFTPChannel::GetStatus(nsresult *status)
+{
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::Cancel(nsresult status) {
     nsresult rv;
     nsAutoLock lock(mLock);
+    mStatus = status;
     if (mProxyChannel) {
-        return mProxyChannel->Cancel();
+        return mProxyChannel->Cancel(status);
     } else if (mConnThread) {
-        rv = mConnThread->Cancel();
+        rv = mConnThread->Cancel(status);
         mConnThread = nsnull;
         mConnected = PR_FALSE;
         return rv;
@@ -196,15 +187,22 @@ nsFTPChannel::Resume(void) {
 // nsIChannel methods:
 
 NS_IMETHODIMP
-nsFTPChannel::GetOriginalURI(nsIURI * *aURL)
+nsFTPChannel::GetOriginalURI(nsIURI* *aURL)
 {
-    *aURL = mOriginalURI;
+    *aURL = mOriginalURI ? mOriginalURI : mURL;
     NS_ADDREF(*aURL);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetURI(nsIURI * *aURL)
+nsFTPChannel::SetOriginalURI(nsIURI* aURL)
+{
+    mOriginalURI = aURL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetURI(nsIURI* *aURL)
 {
     *aURL = mURL;
     NS_ADDREF(*aURL);
@@ -212,15 +210,21 @@ nsFTPChannel::GetURI(nsIURI * *aURL)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
-                              nsIInputStream **_retval)
+nsFTPChannel::SetURI(nsIURI* aURL)
+{
+    mURL = aURL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::OpenInputStream(nsIInputStream **result)
 {
     nsresult rv = NS_OK;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OpenInputStream() called\n"));
 
     if (mProxyChannel) {
-        return mProxyChannel->OpenInputStream(startPosition, readCount, _retval);
+        return mProxyChannel->OpenInputStream(result);
     }
 
     if (mConnected) {
@@ -234,7 +238,7 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     // when data become available to it.
     nsCOMPtr<nsIBufferOutputStream> bufOutStream; // we don't use this piece
     nsCOMPtr<nsIStreamListener>     listener;
-    rv = NS_NewSyncStreamListener(_retval, getter_AddRefs(bufOutStream),
+    rv = NS_NewSyncStreamListener(result, getter_AddRefs(bufOutStream),
                                   getter_AddRefs(listener));
     if (NS_FAILED(rv)) return rv;
 
@@ -242,8 +246,6 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
     ///////////////////////////
     //// setup channel state
-    mSourceOffset = startPosition;
-    mAmount = readCount;
 
     ////////////////////////////////
     //// setup the channel thread
@@ -269,23 +271,23 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 }
 
 NS_IMETHODIMP
-nsFTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+nsFTPChannel::OpenOutputStream(nsIOutputStream **result)
 {
     if (mProxyChannel)
-        return mProxyChannel->OpenOutputStream(startPosition, _retval);
+        return mProxyChannel->OpenOutputStream(result);
+    NS_NOTREACHED("nsFTPChannel::OpenOutputStream");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsFTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 {
+    NS_NOTREACHED("nsFTPChannel::AsyncOpen");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                        nsISupports *ctxt,
-                        nsIStreamListener *listener)
+nsFTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;
 
@@ -300,18 +302,17 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
     }
 
-    ///////////////////////////
-    //// setup channel state
-    mSourceOffset = startPosition;
-    mAmount = readCount;
-
     if (mLoadGroup) {
         rv = mLoadGroup->AddChannel(this, nsnull);
         if (NS_FAILED(rv)) return rv;
     }
 
     if (mProxyChannel) {
-        return mProxyChannel->AsyncRead(startPosition, readCount, ctxt, this);
+        rv = mProxyChannel->SetTransferOffset(mSourceOffset);
+        if (NS_FAILED(rv)) return rv;
+        rv = mProxyChannel->SetTransferCount(mAmount);
+        if (NS_FAILED(rv)) return rv;
+        return mProxyChannel->AsyncRead(this, ctxt);
     }
 
     if (mConnected) {
@@ -340,10 +341,8 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
 NS_IMETHODIMP
 nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
-                         PRUint32 startPosition,
-                         PRInt32 writeCount,
-                         nsISupports *ctxt,
-                         nsIStreamObserver *observer)
+                         nsIStreamObserver *observer,
+                         nsISupports *ctxt)
 {
     nsresult rv = NS_OK;
 
@@ -351,12 +350,15 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
     mUserContext = ctxt;
 
     if (mProxyChannel) {
-        return mProxyChannel->AsyncWrite(fromStream, startPosition,
-                                         writeCount, ctxt, observer);
+        rv = mProxyChannel->SetTransferOffset(mSourceOffset);
+        if (NS_FAILED(rv)) return rv;
+        rv = mProxyChannel->SetTransferCount(mAmount);
+        if (NS_FAILED(rv)) return rv;
+        return mProxyChannel->AsyncWrite(fromStream, observer, ctxt);
     }
 
-    NS_ASSERTION(writeCount > 0, "FTP requires stream len info");
-    if (writeCount < 1) return NS_ERROR_NOT_INITIALIZED;
+    NS_ASSERTION(mAmount > 0, "FTP requires stream len info");
+    if (mAmount < 1) return NS_ERROR_NOT_INITIALIZED;
 
     nsFtpConnectionThread *thread = nsnull;
     NS_NEWXPCOM(thread, nsFtpConnectionThread);
@@ -367,7 +369,7 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
     mHandler = 0;
     if (NS_FAILED(rv)) return rv;
 
-    rv = thread->SetWriteStream(fromStream, writeCount);
+    rv = thread->SetWriteStream(fromStream, mAmount);
     if (NS_FAILED(rv)) return rv;
 
     rv = thread->SetStreamObserver(this, ctxt);
@@ -446,6 +448,91 @@ nsFTPChannel::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
+nsFTPChannel::SetContentLength(PRInt32 aContentLength)
+{
+    nsAutoLock lock(mLock);
+    mContentLength = aContentLength;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    *aTransferOffset = mSourceOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    mSourceOffset = aTransferOffset;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    *aTransferCount = mAmount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    mAmount = aTransferCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    *aShouldCache = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsFTPChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFTPChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
@@ -502,13 +589,6 @@ NS_IMETHODIMP
 nsFTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
     *aSecurityInfo = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::SetContentLength(PRInt32 aLength) {
-    nsAutoLock lock(mLock);
-    mContentLength = aLength;
     return NS_OK;
 }
 

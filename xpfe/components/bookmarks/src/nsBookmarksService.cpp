@@ -2216,7 +2216,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 
 //						httpChannel->SetRequestMethod(HM_GET);
 						httpChannel->SetRequestMethod(HM_HEAD);
-						rv = channel->AsyncRead(0, -1, nsnull, bmks);
+						rv = channel->AsyncRead(bmks, nsnull);
 					}
 				}
 #endif

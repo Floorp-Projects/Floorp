@@ -37,47 +37,94 @@
 #include "nsCOMPtr.h"
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIStreamLoader.h"
+#include "prio.h"       // for read/write flags, permissions, etc.
 
 inline nsresult
-NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI = nsnull)
+NS_NewURI(nsIURI* *result, 
+          const char* spec, 
+          nsIURI* baseURI = nsnull,
+          nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     nsresult rv;
+
+    nsIIOService* serv = ioService;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
+    if (serv == nsnull) {
+        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
+                                          (nsISupports**)&serv);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     rv = serv->NewURI(spec, baseURI, result);
+
+    if (ioService == nsnull) {
+        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
+    }
     return rv;
 }
 
 inline nsresult
-NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull)
+NS_NewURI(nsIURI* *result, 
+          const nsString& spec, 
+          nsIURI* baseURI = nsnull,
+          nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     char* specStr = spec.ToNewUTF8String(); // this forces a single byte char*
     if (specStr == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = NS_NewURI(result, specStr, baseURI);
+    nsresult rv = NS_NewURI(result, specStr, baseURI, ioService);
     nsAllocator::Free(specStr);
     return rv;
 }
 
 inline nsresult
-NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
-           nsIInterfaceRequestor *capabilities = nsnull,
+NS_OpenURI(nsIChannel* *result, 
+           nsIURI* uri,
+           nsIIOService* ioService = nsnull,    // pass in nsIIOService to optimize callers
+           nsILoadGroup* loadGroup = nsnull,
+           nsIInterfaceRequestor* notificationCallbacks = nsnull,
            nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
            PRUint32 bufferSegmentSize = 0, 
            PRUint32 bufferMaxSize = 0)
 {
     nsresult rv;
+
+    nsIIOService* serv = ioService;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (serv == nsnull) {
+        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
+                                          (nsISupports**)&serv);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    nsIChannel* channel = nsnull;
+    rv = serv->NewChannelFromURI(uri, &channel);
     if (NS_FAILED(rv)) return rv;
 
-    nsIChannel* channel;
-    rv = serv->NewChannelFromURI("load", uri, aGroup, capabilities, 
-                                 loadAttributes, nsnull, 
-                                 bufferSegmentSize, bufferMaxSize, &channel);
-    if (NS_FAILED(rv)) return rv;
+    if (loadGroup) {
+        rv = channel->SetLoadGroup(loadGroup);
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (notificationCallbacks) {
+        rv = channel->SetNotificationCallbacks(notificationCallbacks);
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (loadAttributes != nsIChannel::LOAD_NORMAL) {
+        rv = channel->SetLoadAttributes(loadAttributes);
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (bufferSegmentSize != 0) {
+        rv = channel->SetBufferSegmentSize(bufferSegmentSize);
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (bufferMaxSize != 0) {
+        rv = channel->SetBufferMaxSize(bufferMaxSize);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (ioService == nsnull) {
+        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
+    }
 
     *result = channel;
     return rv;
@@ -90,17 +137,25 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
 // blown asyncrhonous consumer (via nsIStreamListener)
 // look at nsIStreamLoader instead.
 inline nsresult
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
+NS_OpenURI(nsIInputStream* *result,
+           nsIURI* uri,
+           nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
+           nsILoadGroup* loadGroup = nsnull,
+           nsIInterfaceRequestor* notificationCallbacks = nsnull,
+           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+           PRUint32 bufferSegmentSize = 0, 
+           PRUint32 bufferMaxSize = 0)
 {
     nsresult rv;
-    nsIChannel* channel;
+    nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_OpenURI(&channel, uri, nsnull);
+    rv = NS_OpenURI(getter_AddRefs(channel), uri, ioService,
+                    loadGroup, notificationCallbacks, loadAttributes,
+                    bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
     nsIInputStream* inStr;
-    rv = channel->OpenInputStream(0, -1, &inStr);
-    NS_RELEASE(channel);
+    rv = channel->OpenInputStream(&inStr);
     if (NS_FAILED(rv)) return rv;
 
     *result = inStr;
@@ -108,52 +163,77 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
 }
 
 inline nsresult
-NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri, 
-           nsILoadGroup *aGroup)
+NS_OpenURI(nsIStreamListener* aConsumer, 
+           nsISupports* context, 
+           nsIURI* uri,
+           nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
+           nsILoadGroup* loadGroup = nsnull,
+           nsIInterfaceRequestor* notificationCallbacks = nsnull,
+           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+           PRUint32 bufferSegmentSize = 0, 
+           PRUint32 bufferMaxSize = 0)
 {
     nsresult rv;
-    nsIChannel* channel;
+    nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_OpenURI(&channel, uri, aGroup);
+    rv = NS_OpenURI(getter_AddRefs(channel), uri, ioService,
+                    loadGroup, notificationCallbacks, loadAttributes,
+                    bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->AsyncRead(0, -1, context, aConsumer);
-    NS_RELEASE(channel);
+    rv = channel->AsyncRead(aConsumer, context);
     return rv;
 }
 
 inline nsresult
-NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
+NS_MakeAbsoluteURI(char* *result,
+                   const char* spec, 
+                   nsIURI* baseURI = nsnull, 
+                   nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     nsresult rv;
     NS_ASSERTION(baseURI, "It doesn't make sense to not supply a base URI");
  
     if (spec == nsnull)
         return baseURI->GetSpec(result);
-     
+    
+    nsIIOService* serv = ioService;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (serv == nsnull) {
+        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
+                                          (nsISupports**)&serv);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     PRUint32 startPos, endPos;
     rv = serv->ExtractScheme(spec, &startPos, &endPos, nsnull);
     if (NS_SUCCEEDED(rv)) {
         // if spec has a scheme, then it's already absolute
         *result = nsCRT::strdup(spec);
-        return (*result == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+        rv = (*result == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
     }
-     
-    return baseURI->Resolve(spec, result);
+    else {
+        rv = baseURI->Resolve(spec, result);
+    }
+
+    if (ioService == nsnull) {
+        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
+    }
+    return rv;
 }
 
 inline nsresult
-NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
+NS_MakeAbsoluteURI(nsString& result,
+                   const nsString& spec, 
+                   nsIURI* baseURI = nsnull,
+                   nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     char* resultStr;
     char* specStr = spec.ToNewUTF8String();
     if (!specStr) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    nsresult rv = NS_MakeAbsoluteURI(specStr, baseURI, &resultStr);
+    nsresult rv = NS_MakeAbsoluteURI(&resultStr, specStr, baseURI, ioService);
     nsAllocator::Free(specStr);
     if (NS_FAILED(rv)) return rv;
 
@@ -163,16 +243,29 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 }
 
 inline nsresult
-NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
-                     nsIInputStream **result)
+NS_NewPostDataStream(nsIInputStream **result,
+                     PRBool isFile,
+                     const char *data,
+                     PRUint32 encodeFlags,
+                     nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     nsresult rv;
+
+    nsIIOService* serv = ioService;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (serv == nsnull) {
+        rv = nsServiceManager::GetService(kIOServiceCID, NS_GET_IID(nsIIOService),
+                                          (nsISupports**)&serv);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = serv->GetProtocolHandler("http", getter_AddRefs(handler));
+
+    if (ioService == nsnull) {
+        (void)nsServiceManager::ReleaseService(kIOServiceCID, serv);
+    }
+
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIHTTPProtocolHandler> http = do_QueryInterface(handler, &rv);
@@ -182,17 +275,11 @@ NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
 }
 
 inline nsresult
-NS_NewInputStreamChannel(nsIURI* uri,
-                         const char* contentType, 
-                         PRInt32 contentLength,
+NS_NewInputStreamChannel(nsIChannel **result,
+                         nsIURI* uri,
                          nsIInputStream* inStr,
-                         nsILoadGroup* group,
-                         nsIInterfaceRequestor* notificationCallbacks,
-                         nsLoadFlags loadAttributes,
-                         nsIURI* originalURI,
-                         PRUint32 bufferSegmentSize,
-                         PRUint32 bufferMaxSize,
-                         nsIChannel **result)
+                         const char* contentType,
+                         PRInt32 contentLength)
 {
     nsresult rv;
     nsCOMPtr<nsIInputStreamChannel> channel;
@@ -202,9 +289,7 @@ NS_NewInputStreamChannel(nsIURI* uri,
                                             NS_GET_IID(nsIInputStreamChannel),
                                             getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, contentType, contentLength, inStr, group, 
-                       notificationCallbacks, loadAttributes, originalURI,
-                       bufferSegmentSize, bufferMaxSize);
+    rv = channel->Init(uri, inStr, contentType, contentLength);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -213,7 +298,7 @@ NS_NewInputStreamChannel(nsIURI* uri,
 }
 
 inline nsresult
-NS_NewLoadGroup(nsIStreamObserver* obs, nsILoadGroup* *result)
+NS_NewLoadGroup(nsILoadGroup* *result, nsIStreamObserver* obs)
 {
     nsresult rv;
     nsCOMPtr<nsILoadGroup> group;
@@ -259,8 +344,9 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
 }
 
 inline nsresult
-NS_NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue,
-                          nsIStreamObserver **result)
+NS_NewAsyncStreamObserver(nsIStreamObserver **result,
+                          nsIStreamObserver *receiver,
+                          nsIEventQueue *eventQueue)
 {
     nsresult rv;
     nsCOMPtr<nsIAsyncStreamObserver> obs;
@@ -279,8 +365,9 @@ NS_NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue
 }
 
 inline nsresult
-NS_NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *eventQueue,
-                          nsIStreamListener **result)
+NS_NewAsyncStreamListener(nsIStreamListener **result,
+                          nsIStreamListener *receiver,
+                          nsIEventQueue *eventQueue)
 {
     nsresult rv;
     nsCOMPtr<nsIAsyncStreamListener> lsnr;

@@ -29,6 +29,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
+#include "nsIStreamObserver.h"
 
 // {42770B50-03E9-11d3-8068-00600811A9C3}
 #define NS_UNKNOWNCONTENTTYPEHANDLER_CID \
@@ -73,7 +74,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIChannel *aChannel,
         channel = do_QueryInterface( aChannel );
 
         // Cancel input channel now.
-        rv = aChannel->Cancel();
+        rv = aChannel->Cancel(NS_BINDING_ABORTED);
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Cancel failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );

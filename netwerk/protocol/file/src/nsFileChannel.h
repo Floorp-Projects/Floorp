@@ -61,29 +61,27 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(const char* command, 
-                  nsIURI* uri,
-                  nsILoadGroup* aLoadGroup, 
-                  nsIInterfaceRequestor* notificationCallbacks, 
-                  nsLoadFlags loadAttributes,
-                  nsIURI* originalURI,
-                  PRUint32 bufferSegmentSize, 
-                  PRUint32 bufferMaxSize);
+    nsresult Init(PRInt32 ioFlags, PRInt32 perm, nsIURI* uri);
+    nsresult EnsureTransport();
 
 protected:
     nsCOMPtr<nsIFile>                   mFile;
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    char*                               mCommand;
+    PRInt32                             mIOFlags;
+    PRInt32                             mPerm;
     nsCOMPtr<nsIChannel>                mFileTransport;
     nsCString                           mContentType;
     PRUint32                            mLoadAttributes;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCOMPtr<nsISupports>               mOwner;
     nsCOMPtr<nsIStreamListener>         mRealListener;
+    PRUint32                            mTransferOffset;
+    PRInt32                             mTransferCount;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
+    nsresult                            mStatus;
 };
 
 #endif // nsFileChannel_h__

@@ -487,7 +487,7 @@ nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
   // Now do a blocking synchronous parse of the file.
   nsCOMPtr<nsIInputStream> in;
   PRUint32 sourceOffset = 0;
-  rv = channel->OpenInputStream(0, -1, getter_AddRefs(in));
+  rv = channel->OpenInputStream(getter_AddRefs(in));
 
   // If we couldn't open the channel, then just return.
   if (NS_FAILED(rv)) return NS_OK;

@@ -2362,7 +2362,7 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
   JS_PopArguments(jsContext, mark);
 
   // now abort the current channel load...
-  aChannel->Cancel();
+  aChannel->Cancel(NS_BINDING_ABORTED);
 
   return NS_OK;
 }

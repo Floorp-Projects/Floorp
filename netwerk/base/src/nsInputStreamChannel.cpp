@@ -36,7 +36,8 @@ static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 // nsInputStreamChannel methods:
 
 nsInputStreamChannel::nsInputStreamChannel()
-    : mContentType(nsnull), mContentLength(-1), mLoadAttributes(LOAD_NORMAL)
+    : mContentType(nsnull), mContentLength(-1), mLoadAttributes(LOAD_NORMAL),
+      mBufferSegmentSize(0), mBufferMaxSize(0), mStatus(NS_OK)
 {
     NS_INIT_REFCNT(); 
 }
@@ -61,31 +62,12 @@ nsInputStreamChannel::Create(nsISupports *aOuter, REFNSIID aIID,
 
 NS_IMETHODIMP
 nsInputStreamChannel::Init(nsIURI* uri, 
-                           const char* contentType,
-                           PRInt32 contentLength, 
                            nsIInputStream* in,
-                           nsILoadGroup *aGroup,
-                           nsIInterfaceRequestor* notificationCallbacks,
-                           nsLoadFlags loadAttributes,
-                           nsIURI* originalURI,
-                           PRUint32 bufferSegmentSize,
-                           PRUint32 bufferMaxSize)
+                           const char* contentType,
+                           PRInt32 contentLength)
 {
-    nsresult rv;
-    mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
     mContentLength = contentLength;
-    mBufferSegmentSize = bufferSegmentSize;
-    mBufferMaxSize = bufferMaxSize;
-
-    rv = SetLoadAttributes(loadAttributes);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetLoadGroup(aGroup);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = SetNotificationCallbacks(notificationCallbacks);
-    if (NS_FAILED(rv)) return rv;
 
     if (contentType) { 
         mContentType = nsCRT::strdup(contentType);
@@ -122,10 +104,18 @@ nsInputStreamChannel::IsPending(PRBool *result)
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::Cancel(void)
+nsInputStreamChannel::GetStatus(nsresult *status)
 {
+    *status = mStatus;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::Cancel(nsresult status)
+{
+    mStatus = status;
     if (mFileTransport)
-        return mFileTransport->Cancel();
+        return mFileTransport->Cancel(status);
     return NS_OK;
 }
 
@@ -149,18 +139,32 @@ nsInputStreamChannel::Resume(void)
 // nsIChannel methods:
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetOriginalURI(nsIURI * *aURI)
+nsInputStreamChannel::GetOriginalURI(nsIURI* *aURI)
 {
-    *aURI = mOriginalURI;
+    *aURI = mOriginalURI ? mOriginalURI : mURI;
     NS_IF_ADDREF(*aURI);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::GetURI(nsIURI * *aURI)
+nsInputStreamChannel::SetOriginalURI(nsIURI* aURI)
+{
+    mOriginalURI = aURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetURI(nsIURI* *aURI)
 {
     *aURI = mURI;
     NS_IF_ADDREF(*aURI);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetURI(nsIURI* aURI)
+{
+    mURI = aURI;
     return NS_OK;
 }
 
@@ -175,37 +179,41 @@ nsInputStreamChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     if (NS_FAILED(rv)) return rv;
 
     rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
-                                        "load", mBufferSegmentSize, mBufferMaxSize,
                                         getter_AddRefs(mFileTransport));
     if (NS_FAILED(rv)) return rv;
+    if (mBufferSegmentSize > 0) {
+        rv = mFileTransport->SetBufferSegmentSize(mBufferSegmentSize);
+        if (NS_FAILED(rv)) return rv;
+    }
+    if (mBufferMaxSize > 0) {
+        rv = mFileTransport->SetBufferMaxSize(mBufferMaxSize);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     return mFileTransport->AsyncOpen(observer, ctxt);
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
-                                      nsIInputStream **result)
+nsInputStreamChannel::OpenInputStream(nsIInputStream **result)
 {
-    // if we had seekable streams, we could seek here:
-    NS_ASSERTION(startPosition == 0, "Can't seek in nsInputStreamChannel");
     *result = mInputStream;
     NS_ADDREF(*result);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval)
+nsInputStreamChannel::OpenOutputStream(nsIOutputStream **_retval)
 {
     // we don't do output
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                                nsISupports *ctxt, nsIStreamListener *listener)
+nsInputStreamChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;
 
+    NS_ASSERTION(listener, "no listener");
     mRealListener = listener;
 
     if (mLoadGroup) {
@@ -232,18 +240,24 @@ nsInputStreamChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         if (NS_FAILED(rv)) return rv;
 
         rv = fts->CreateTransportFromStream(mInputStream, mContentType, mContentLength,
-                                            "load", mBufferSegmentSize, mBufferMaxSize,
                                             getter_AddRefs(mFileTransport));
         if (NS_FAILED(rv)) return rv;
+        if (mBufferSegmentSize > 0) {
+            rv = mFileTransport->SetBufferSegmentSize(mBufferSegmentSize);
+            if (NS_FAILED(rv)) return rv;
+        }
+        if (mBufferMaxSize > 0) {
+            rv = mFileTransport->SetBufferMaxSize(mBufferMaxSize);
+            if (NS_FAILED(rv)) return rv;
+        }
     }
 
-    return mFileTransport->AsyncRead(startPosition, readCount, ctxt, this);
+    return mFileTransport->AsyncRead(this, ctxt);
 }
 
 NS_IMETHODIMP
-nsInputStreamChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition,
-                                 PRInt32 writeCount, nsISupports *ctxt,
-                                 nsIStreamObserver *observer)
+nsInputStreamChannel::AsyncWrite(nsIInputStream *fromStream, 
+                                 nsIStreamObserver *observer, nsISupports *ctxt)
 {
     // we don't do output
     return NS_ERROR_FAILURE;
@@ -291,6 +305,90 @@ nsInputStreamChannel::GetContentLength(PRInt32 *aContentLength)
 {
     *aContentLength = mContentLength;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetContentLength(PRInt32 aContentLength)
+{
+    NS_NOTREACHED("SetContentLength");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetTransferOffset(PRUint32 *aTransferOffset)
+{
+    NS_NOTREACHED("GetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetTransferOffset(PRUint32 aTransferOffset)
+{
+    NS_NOTREACHED("SetTransferOffset");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetTransferCount(PRInt32 *aTransferCount)
+{
+    NS_NOTREACHED("GetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetTransferCount(PRInt32 aTransferCount)
+{
+    NS_NOTREACHED("SetTransferCount");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetBufferSegmentSize(PRUint32 *aBufferSegmentSize)
+{
+    *aBufferSegmentSize = mBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetBufferSegmentSize(PRUint32 aBufferSegmentSize)
+{
+    mBufferSegmentSize = aBufferSegmentSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetBufferMaxSize(PRUint32 *aBufferMaxSize)
+{
+    *aBufferMaxSize = mBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::SetBufferMaxSize(PRUint32 aBufferMaxSize)
+{
+    mBufferMaxSize = aBufferMaxSize;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetShouldCache(PRBool *aShouldCache)
+{
+    *aShouldCache = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInputStreamChannel::GetPipeliningAllowed(PRBool *aPipeliningAllowed)
+{
+    *aPipeliningAllowed = PR_FALSE;
+    return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsInputStreamChannel::SetPipeliningAllowed(PRBool aPipeliningAllowed)
+{
+    NS_NOTREACHED("SetPipeliningAllowed");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

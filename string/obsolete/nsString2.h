@@ -392,7 +392,7 @@ public:
   /**
    * Creates an UTF8 clone of this string
    * Note that calls to this method should be matched with calls to Recycle().
-   * @return  ptr to new isolatin1 string
+   * @return  ptr to new null-terminated UTF8 string
    */
   char* ToNewUTF8String() const;
 

@@ -25,10 +25,6 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
-#include "nsIServiceManager.h"
-#include "nsIIOService.h"
-
-static NS_DEFINE_CID(kIOServiceCID,  NS_IOSERVICE_CID);
 
 NS_IMETHODIMP
 nsStreamLoader::Init(nsIURI* aURL,
@@ -44,17 +40,8 @@ nsStreamLoader::Init(nsIURI* aURL,
   mObserver = observer;
   mContext  = context;
 
-  NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = serv->NewChannelFromURI("load", aURL, aGroup, notificationCallbacks,
-                               loadAttributes, nsnull, 
-                               bufferSegmentSize, bufferMaxSize, getter_AddRefs(channel));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = channel->AsyncRead(0, -1, nsnull, this);
-
+  rv = NS_OpenURI(this, nsnull, aURL, nsnull, aGroup, notificationCallbacks,
+                  loadAttributes, bufferSegmentSize, bufferMaxSize);
   if (NS_FAILED(rv) && mObserver) {
     nsresult rv2 = mObserver->OnStreamComplete(this, mContext, rv,
                                                mData.Length(), 

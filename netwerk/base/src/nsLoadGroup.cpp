@@ -75,7 +75,7 @@ nsLoadGroup::~nsLoadGroup()
 {
     nsresult rv;
 
-    rv = Cancel();
+    rv = Cancel(NS_BINDING_ABORTED);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
     NS_IF_RELEASE(mChannels);
@@ -161,9 +161,15 @@ nsLoadGroup::IsPending(PRBool *aResult)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsLoadGroup::GetStatus(nsresult *status)
+{
+    *status = NS_OK;
+    return NS_OK; 
+}
 
 NS_IMETHODIMP
-nsLoadGroup::Cancel()
+nsLoadGroup::Cancel(nsresult status)
 {
     nsresult rv, firstError;
     PRUint32 count;
@@ -212,10 +218,10 @@ nsLoadGroup::Cancel()
             //
             // XXX: What should the context and error message be?
             //
-            (void)RemoveChannel(channel, nsnull, NS_BINDING_ABORTED, nsnull);
+            (void)RemoveChannel(channel, nsnull, status, nsnull);
 
             // Cancel the channel...
-            rv = channel->Cancel();
+            rv = channel->Cancel(status);
 
             // Remember the first failure and return it...
             if (NS_FAILED(rv) && NS_SUCCEEDED(firstError)) {

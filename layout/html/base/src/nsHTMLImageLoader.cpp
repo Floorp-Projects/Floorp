@@ -84,7 +84,7 @@ nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
   if (mBaseURL && !aNewSpec.Equals("")) {
     nsString empty;
     nsresult rv;
-    rv = NS_MakeAbsoluteURI(mURLSpec, mBaseURL, mURL);
+    rv = NS_MakeAbsoluteURI(mURL, mURLSpec, mBaseURL);
     if (NS_FAILED(rv)) {
       mURL = mURLSpec;
     }

@@ -441,7 +441,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
         if (mURI)
         {
           nsAutoString absURI;
-          if (NS_SUCCEEDED(NS_MakeAbsoluteURI(value, mURI, absURI))
+          if (NS_SUCCEEDED(NS_MakeAbsoluteURI(absURI, value, mURI))
               && !absURI.IsEmpty())
             value = absURI;
         }

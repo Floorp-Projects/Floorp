@@ -352,8 +352,8 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
     } 
     // Synchronous transport...
     else {
-      rv = mTransport->OpenInputStream(0, -1, &mInStream);
-      rv = mTransport->OpenOutputStream(0, &mOutStream);
+      rv = mTransport->OpenInputStream(&mInStream);
+      rv = mTransport->OpenOutputStream(&mOutStream);
     }
   }
 }
@@ -419,7 +419,7 @@ TestConnection::Run(void)
       //
       // Initiate an async read...
       //
-      rv = mTransport->AsyncRead(0, -1, mTransport, this);
+      rv = mTransport->AsyncRead(this, mTransport);
 
       if (NS_FAILED(rv)) {
         printf("Error: AsyncRead failed...");
@@ -488,8 +488,10 @@ nsresult TestConnection::WriteBuffer(void)
 
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {
-        rv = mTransport->AsyncWrite(mStream, 0, bytesWritten, mTransport,
-                                    /* mOutputObserver */ nsnull);
+        rv = mTransport->SetTransferCount(bytesWritten);
+        if (NS_SUCCEEDED(rv)) {
+          rv = mTransport->AsyncWrite(mStream, /* mOutputObserver */ nsnull, mTransport);
+        }
       } 
       // Wait for the write to complete...
       if (NS_FAILED(rv)) {

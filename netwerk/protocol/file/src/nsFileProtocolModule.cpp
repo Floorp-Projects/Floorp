@@ -32,9 +32,9 @@ static nsModuleComponentInfo components[] =
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "file", 
       nsFileProtocolHandler::Create
     },
-    { NS_FILECHANNEL_CLASSNAME,
-      NS_FILECHANNEL_CID,  
-      NS_FILECHANNEL_PROGID, 
+    { NS_LOCALFILECHANNEL_CLASSNAME,
+      NS_LOCALFILECHANNEL_CID,  
+      NS_LOCALFILECHANNEL_PROGID, 
       nsFileChannel::Create
     }
 };

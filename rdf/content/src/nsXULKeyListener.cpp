@@ -1160,7 +1160,7 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
 
   nsCOMPtr<nsIInputStream> in;
   PRUint32 sourceOffset = 0;
-  rv = channel->OpenInputStream(0, -1, getter_AddRefs(in));
+  rv = channel->OpenInputStream(getter_AddRefs(in));
 
   // If we couldn't open the channel, then just return.
   if (NS_FAILED(rv)) return NS_OK;
