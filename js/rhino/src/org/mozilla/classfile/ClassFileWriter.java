@@ -152,13 +152,13 @@ public class ClassFileWriter {
     {
         short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
         short typeIndex = itsConstantPool.addUtf8(type);
-        short cvAttr[] = new short[4];
-        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
-        cvAttr[1] = 0;
-        cvAttr[2] = 2;
-        cvAttr[3] = itsConstantPool.addConstant(value);
-        itsFields.add(
-            new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
+        ClassFileField field = new ClassFileField(fieldNameIndex, typeIndex,
+                                                  flags);
+        field.setAttributes(itsConstantPool.addUtf8("ConstantValue"),
+                            (short)0,
+                            (short)0,
+                            itsConstantPool.addConstant(value));
+        itsFields.add(field);
     }
 
     /**
@@ -175,13 +175,13 @@ public class ClassFileWriter {
     {
         short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
         short typeIndex = itsConstantPool.addUtf8(type);
-        short cvAttr[] = new short[4];
-        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
-        cvAttr[1] = 0;
-        cvAttr[2] = 2;
-        cvAttr[3] = itsConstantPool.addConstant(value);
-        itsFields.add(
-            new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
+        ClassFileField field = new ClassFileField(fieldNameIndex, typeIndex,
+                                                  flags);
+        field.setAttributes(itsConstantPool.addUtf8("ConstantValue"),
+                            (short)0,
+                            (short)2,
+                            itsConstantPool.addConstant(value));
+        itsFields.add(field);
     }
 
     /**
@@ -198,13 +198,13 @@ public class ClassFileWriter {
     {
         short fieldNameIndex = itsConstantPool.addUtf8(fieldName);
         short typeIndex = itsConstantPool.addUtf8(type);
-        short cvAttr[] = new short[4];
-        cvAttr[0] = itsConstantPool.addUtf8("ConstantValue");
-        cvAttr[1] = 0;
-        cvAttr[2] = 2;
-        cvAttr[3] = itsConstantPool.addConstant(value);
-        itsFields.add(
-            new ClassFileField(fieldNameIndex, typeIndex, flags, cvAttr));
+        ClassFileField field = new ClassFileField(fieldNameIndex, typeIndex,
+                                                  flags);
+        field.setAttributes(itsConstantPool.addUtf8("ConstantValue"),
+                            (short)0,
+                            (short)2,
+                            itsConstantPool.addConstant(value));
+        itsFields.add(field);
     }
 
     /**
@@ -1216,15 +1216,16 @@ final class ClassFileField
         itsNameIndex = nameIndex;
         itsTypeIndex = typeIndex;
         itsFlags = flags;
+        itsHasAttributes = false;
     }
 
-    ClassFileField(short nameIndex, short typeIndex, short flags,
-                   short cvAttr[])
+    void setAttributes(short attr1, short attr2, short attr3, short attr4)
     {
-        itsNameIndex = nameIndex;
-        itsTypeIndex = typeIndex;
-        itsFlags = flags;
-        itsAttr = cvAttr;
+        itsHasAttributes = true;
+        itsAttr1 = attr1;
+        itsAttr2 = attr2;
+        itsAttr3 = attr3;
+        itsAttr4 = attr4;
     }
 
     int write(byte[] data, int offset)
@@ -1232,15 +1233,15 @@ final class ClassFileField
         offset = ClassFileWriter.putInt16(itsFlags, data, offset);
         offset = ClassFileWriter.putInt16(itsNameIndex, data, offset);
         offset = ClassFileWriter.putInt16(itsTypeIndex, data, offset);
-        if (itsAttr == null) {
-            // no attributes
+        if (!itsHasAttributes) {
+            // write 0 attributes
             offset = ClassFileWriter.putInt16(0, data, offset);
         } else {
             offset = ClassFileWriter.putInt16(1, data, offset);
-            offset = ClassFileWriter.putInt16(itsAttr[0], data, offset);
-            offset = ClassFileWriter.putInt16(itsAttr[1], data, offset);
-            offset = ClassFileWriter.putInt16(itsAttr[2], data, offset);
-            offset = ClassFileWriter.putInt16(itsAttr[3], data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr1, data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr2, data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr3, data, offset);
+            offset = ClassFileWriter.putInt16(itsAttr4, data, offset);
         }
         return offset;
     }
@@ -1248,7 +1249,7 @@ final class ClassFileField
     int getWriteSize()
     {
         int size = 2 * 3;
-        if (itsAttr == null) {
+        if (!itsHasAttributes) {
             size += 2;
         } else {
             size += 2 + 2 * 4;
@@ -1259,7 +1260,8 @@ final class ClassFileField
     private short itsNameIndex;
     private short itsTypeIndex;
     private short itsFlags;
-    private short itsAttr[];
+    private boolean itsHasAttributes;
+    private short itsAttr1, itsAttr2, itsAttr3, itsAttr4;
 }
 
 final class ClassFileMethod
