@@ -191,7 +191,7 @@
         <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
         <xul:image class="menubutton-single-icon"/>
       </xul:box>
-      <children includes="menupopup,template"/>
+      <children includes="menupopup|template"/>
     </content>
   </binding>
 
@@ -201,7 +201,7 @@
         <xul:image class="menubutton-single-icon"/>
         <xul:text class="menubutton-single-text" inherits="value,crop,accesskey"/>
       </xul:box>
-      <children includes="menupopup,template"/>
+      <children includes="menupopup|template"/>
     </content>
   </binding>
   
