@@ -94,6 +94,10 @@ protected:
 
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
+  nsresult GetFrameForPointUsing(const nsPoint& aPoint,
+                                 nsIAtom*       aList,
+                                 nsIFrame**     aFrame);
+
   /**
    * Prepare a continuation frame of this frame for reflow. Appends
    * it to the flow, sets its content offsets, mLastContentIsComplete,
