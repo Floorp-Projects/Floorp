@@ -267,7 +267,7 @@ void TestCase_NestedLoop(void *arg)
                                   NS_GET_IID(nsIProxyObjectManager),
                                   (nsISupports **)&manager);
 
-    printf("ProxyObjectManager: %d \n", manager);
+    printf("ProxyObjectManager: %p \n", manager);
     
     PR_ASSERT(manager);
 
