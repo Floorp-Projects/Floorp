@@ -39,7 +39,7 @@
  ***********************************************************************/
 
 #ifndef NEW_STRING_APIS
-//#define NEW_STRING_APIS 1
+  #define NEW_STRING_APIS 1
 #endif //NEW_STRING_APIS
 
 #ifndef _nsCString_
