@@ -53,7 +53,7 @@ public:
     virtual ~nsHTTPResponseListener();
 
     // nsISupports functions
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     // nsIStreamListener functions
     NS_IMETHOD OnDataAvailable(nsISupports* context,

@@ -48,7 +48,7 @@ public:
     virtual ~nsHTTPRequestObserver();
 
     // nsISupports functions
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
 
     // nsIStreamObserver functions
     NS_IMETHOD OnStartBinding(nsISupports* context);
