@@ -914,12 +914,12 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   /* If the message is to be encrypted, then get the recipient certs */
   if (aEncrypt) {
 	  mailbox = mailbox_list;
-	  nsCString mailbox_lowercase;
-	  ToLowerCase(nsDependentCString(mailbox), mailbox_lowercase);
 
     PRBool already_added_self_cert = PR_FALSE;
 
 	  for (; count > 0; count--) {
+	    nsCString mailbox_lowercase;
+	    ToLowerCase(nsDependentCString(mailbox), mailbox_lowercase);
       nsCOMPtr<nsIX509Cert> cert;
       certdb->GetCertByEmailAddress(nsnull, mailbox_lowercase.get(), getter_AddRefs(cert));
       PRBool foundValidCert = PR_FALSE;
