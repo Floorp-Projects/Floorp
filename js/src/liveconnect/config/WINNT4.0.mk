@@ -30,10 +30,18 @@
 # the provisions above, a recipient may use your version of this
 # file under either the NPL or the GPL.
 
-JDK = c:/jdk1.1.6
+ifeq ($(JDKVER),1_2_2)
+
+JDK = c:/jdk1.2.2
+OTHER_LIBS += $(JDK)/lib/jvm.lib ../$(OBJDIR)/js32.lib
+
+else
+
+JDK = c:/jdk1.1.8
+OTHER_LIBS += $(JDK)/lib/javai.lib ../$(OBJDIR)/js32.lib
+
+endif
 
 INCLUDES   += -I$(JDK)/include -I$(JDK)/include/win32
-
-OTHER_LIBS += $(JDK)/lib/javai.lib ../$(OBJDIR)/js32.lib
 
 JSDLL_CFLAGS = 
