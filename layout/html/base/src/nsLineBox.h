@@ -35,27 +35,12 @@ class nsISpaceManager;
 class nsLineBox;
 
 /**
- * A list of block lines
- */
-class nsLineBoxList {
-public:
-
-protected:
-  nsLineBox* mLines;
-};
-
-/**
  * The nsLineBox class represents a horizontal line of frames. It contains
  * enough state to support incremental reflow of the frames, event handling
  * for the frames, and rendering of the frames.
  */
 class nsLineBox {
 public:
-#if XXX
-  nscoord GetCarriedOutTopMargin() const {
-    return mCarriedOutTopMargin;
-  }
-#endif
 
   nscoord GetCarriedOutBottomMargin() const {
     return mCarriedOutBottomMargin;
@@ -165,24 +150,6 @@ public:
 
   PRBool Contains(nsIFrame* aFrame) const;
 
-  // XXX ick
-  void SetMarginFlags(PRUintn aFlags) {
-    mState &= ~(LINE_TOP_MARGIN_IS_AUTO|LINE_BOTTOM_MARGIN_IS_AUTO);
-    if (NS_CARRIED_TOP_MARGIN_IS_AUTO & aFlags) {
-      mState |= LINE_TOP_MARGIN_IS_AUTO;
-    }
-    if (NS_CARRIED_BOTTOM_MARGIN_IS_AUTO & aFlags) {
-      mState |= LINE_BOTTOM_MARGIN_IS_AUTO;
-    }
-  }
-
-  PRUintn GetMarginFlags() {
-    return ((LINE_TOP_MARGIN_IS_AUTO & mState)
-            ? NS_CARRIED_TOP_MARGIN_IS_AUTO : 0) |
-      ((LINE_BOTTOM_MARGIN_IS_AUTO & mState) ?
-       NS_CARRIED_BOTTOM_MARGIN_IS_AUTO : 0);
-  }
-
   void UnplaceFloaters(nsISpaceManager* aSpaceManager);
 
 #ifdef NS_DEBUG
@@ -196,7 +163,6 @@ public:
   PRUint8 mBreakType;
   nsRect mBounds;
   nsRect mCombinedArea;
-//XXX  nscoord mCarriedOutTopMargin;/* XXX switch to 16 bits */
   nscoord mCarriedOutBottomMargin;/* XXX switch to 16 bits */
   nsVoidArray* mFloaters;
   nsLineBox* mNext;
