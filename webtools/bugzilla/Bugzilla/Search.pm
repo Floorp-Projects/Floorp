@@ -306,7 +306,15 @@ sub init {
     }
 
     if (defined $params->param('content')) {
-        push(@specialchart, ['content', 'matches', $params->param('content')]);
+        # Append a new chart implementing content quicksearch
+        my $chart;
+        for ($chart = 0 ; $params->param("field$chart-0-0") ; $chart++) {};
+        $params->param("field$chart-0-0", 'content');
+        $params->param("type$chart-0-0", 'matches');
+        $params->param("value$chart-0-0", $params->param('content'));
+        $params->param("field$chart-0-1", 'short_desc');
+        $params->param("type$chart-0-1", 'allwords');
+        $params->param("value$chart-0-1", $params->param('content'));
     }
 
     my $chartid;
