@@ -60,16 +60,16 @@ public:
   NPError	GetValue(NPPVariable variable, void *value);
 
   // locals
-  void getVersion(char* *aVersion);
-  void DumpLayout(nsISupports *aWindow,const PRUnichar *aFilePath, const PRUnichar *aFileName);
-  void StartDirectorySearch(const char *aFilePath);
-  void GetNextFileInDirectory(char **aFilePath);
+  void    getVersion(char* *aVersion);
+  void    OutPutLayoutFrames(nsISupports *aWindow,const PRUnichar *aFilePath, const PRUnichar *aFileName, PRInt32 *aRetVal);
+  void    StartDirectorySearch(const char *aFilePath);
+  void    GetNextFileInDirectory(char **aFilePath);
   nsIDebugPlugin* getScriptablePeer();
 
 private:
   NPP                           mInstance;
   NPBool                        mInitialized;
-  nsIDebugPlugin *             mScriptablePeer;
+  nsIDebugPlugin *              mScriptablePeer;
   nsCOMPtr<nsISimpleEnumerator> mIter;
 
 

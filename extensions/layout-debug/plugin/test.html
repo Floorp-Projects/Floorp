@@ -8,12 +8,6 @@
 <h1> XPConnect Scriptable Debug Plug-in </h1>
 </center>
 
-This page contains a testcase which demonstrates the work of scriptable 
-plug-in with Mozilla. This example plug-in has no native GUI and does not 
-draw anything in the plugin window. Clicking on the button will result in calling 
-native plugin method from JavaScript. Show Version will instruct the plug-in 
-to retrieve the Mozilla user agent string and return it to JavaScript to show
-in the alert box.
 
 <br><br>
 
@@ -23,29 +17,52 @@ in the alert box.
 
 <script>
 var embed = document.embeds[0];
+var started = false;
+var theWindow;
 
-function DumpFrames()
+function DumpFrames(firstTime,lastFile)
 {
+var loadingFlag;
 
-  var filedirectory = "file:///S|/mozilla/layout/html/tests/block";
-  embed.StartDirectorySearch(filedirectory);
-  do {
+  if (firstTime == true) {
+    var filedirectory = "file:///S|/mozilla/layout/html/tests/block";
+    embed.StartDirectorySearch(filedirectory);
     filename=embed.GetNextFileInDirectory();
+    if( filename != null) {
+      theWindow = window.open(filename);
+    }
+    started = true;
+  } else {
+    filename = lastFile;
+  }
+
+  while ( filename != null) {
     alert(filename);
     outputfilename = filename.replace (".html",".tst"); 
-    alert(outputfilename);
+    
+	  loading = embed.DumpLayout(theWindow,"s:/tests","outputfilename");
 
-
-    var thewindow = window.open(filetopen);
-    embed.DumpLayout(thewindow,"s:/tests","filename");
-  } while (filename!=null)
-
+    alert (loading);
+    if (loading != 0) {
+      setTimeout("DumpFrames(false,filename)",1000);
+      alert("Waiting");
+      break;
+    } else {
+      theWindow.close();
+      filename=embed.GetNextFileInDirectory();
+      alert("successful");
+      if( filename != null) {
+        theWindow = window.open(filename);
+      }
+    }
+  }
 }
+
 </script>
 
 <br>
 <form name="formname">
-<input type=button value="DumpFrames" onclick='DumpFrames()'>
+<input type=button value="DumpFrames" onclick='DumpFrames(true,0)'>
 </form>
 
 </center>
