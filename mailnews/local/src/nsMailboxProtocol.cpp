@@ -75,6 +75,29 @@ nsMailboxProtocol::~nsMailboxProtocol()
 	delete m_lineStreamBuffer;
 }
 
+NS_IMETHODIMP nsMailboxProtocol::GetContentLength(PRInt32 * aContentLength)
+{
+  *aContentLength = -1;
+  if (m_mailboxAction == nsIMailboxUrl::ActionParseMailbox)
+  {
+    // our file transport knows the entire length of the berkley mail folder
+    // so get it from there.
+    if (m_channel)
+      return m_channel->GetContentLength(aContentLength);
+    else
+      return NS_OK;
+
+  }
+  else if (m_runningUrl)
+  {
+    PRUint32 msgSize = 0;
+    m_runningUrl->GetMessageSize(&msgSize);
+    *aContentLength = (PRInt32) msgSize;
+  }
+
+  return NS_OK;
+}
+
 void nsMailboxProtocol::Initialize(nsIURI * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into MAILBOX Protocol");
@@ -112,6 +135,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
+  mCurrentProgress = 0;
 
 	NS_NewFileSpecWithSpec(m_tempMsgFileSpec, getter_AddRefs(m_tempMessageFile));
 }
@@ -248,7 +272,7 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 					// ohhh, display message already writes a msg to disk (as part of a hack)
 					// so we can piggy back off of that!! We just need to change m_tempMessageFile
 					// to be the name of our save message to disk file. Since save message to disk
-					// urls are run without a webshell to display the msg into, we won't be trying
+					// urls are run without a docshell to display the msg into, we won't be trying
 					// to display the message after we write it to disk...
                     {
                         nsCOMPtr<nsIMsgMessageUrl> msgUri = do_QueryInterface(m_runningUrl);
@@ -304,11 +328,18 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 	// folder parser object!!!
 
 	nsresult rv = NS_OK;
+  mCurrentProgress += length;
 
 	if (m_mailboxParser)
 	{
 		nsCOMPtr <nsIURI> url = do_QueryInterface(m_runningUrl);
 		rv = m_mailboxParser->OnDataAvailable(nsnull, url, inputStream, sourceOffset, length); // let the parser deal with it...
+    if (mProgressEventSink)
+    {
+      PRInt32 contentLength = 0;
+      GetContentLength(&contentLength);
+      mProgressEventSink->OnProgress(this, url, mCurrentProgress, contentLength);
+    }
 	}
 
 	if (NS_FAILED(rv))
@@ -332,7 +363,8 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 {
 	char *line = nsnull;
 	PRUint32 status = 0;
-    nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
+  mCurrentProgress += length;
 
 	// if we are doing a move or a copy, forward the data onto the copy handler...
 	// if we want to display the message then parse the incoming data...
@@ -399,8 +431,14 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	}
 
 	SetFlag(MAILBOX_PAUSE_FOR_READ); // wait for more data to become available...
+  if (mProgressEventSink)
+  {
+    PRInt32 contentLength = 0;
+    GetContentLength(&contentLength);
+    mProgressEventSink->OnProgress(this, m_channelContext, mCurrentProgress, contentLength);
+  }
 
-    if (NS_FAILED(rv)) return -1;
+  if (NS_FAILED(rv)) return -1;
 
 	return 0;
 }

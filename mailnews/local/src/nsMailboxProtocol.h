@@ -27,11 +27,8 @@
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "nsIChannel.h"
-
 #include "nsIOutputStream.h"
 #include "nsIMailboxUrl.h"
-
-#include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
 
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
@@ -72,7 +69,7 @@ public:
 	nsMailboxProtocol(nsIURI * aURL);
 	virtual ~nsMailboxProtocol();
 
-	// the consumer of the url might be something like an nsIWebShell....
+	// the consumer of the url might be something like an nsIDocShell....
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -81,6 +78,7 @@ public:
 
 	NS_IMETHOD OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt);
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult aStatus, const PRUnichar *aMsg);
+  NS_IMETHOD GetContentLength(PRInt32 * aContentLength);
 
 private:
 	nsCOMPtr<nsIMailboxUrl>	m_runningUrl; // the nsIMailboxURL that is currently running
@@ -96,8 +94,9 @@ private:
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
 	MailboxStatesEnum  m_nextState;
-    MailboxStatesEnum  m_initialState;
-
+  MailboxStatesEnum  m_initialState;
+  
+  PRInt32 mCurrentProgress;
 	PRUint32	m_messageID;
 
 	nsCOMPtr<nsIFileSpec> m_tempMessageFile;
