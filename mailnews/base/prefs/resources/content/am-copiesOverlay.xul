@@ -1,0 +1,199 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is copiesAndFolderOverlay.
+#
+# Contributor(s):
+#   Scott MacGregor <mscott@mozilla.org>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+  ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/am-copies.dtd" >
+
+<overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">                                                       
+
+  <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/am-copies.js"/>
+
+  <vbox flex="1" id="copiesAndFolders">  
+    <!-- stringbundle is used by msgFolderPickerOverlay.js-->     
+    <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+    </stringbundleset>   
+      
+    <broadcaster id="broadcaster_doFcc"/>
+
+    <label hidden="true" wsm_persist="true" id="identity.fccFolder"
+                  pref="true" preftype="string" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.fcc_folder"/>
+    <label hidden="true" wsm_persist="true" id="identity.draftFolder"
+                  pref="true" preftype="string" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.draft_folder"/>
+    <label hidden="true" wsm_persist="true" id="identity.stationeryFolder"
+                  pref="true" preftype="string" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.stationary_folder"/>
+    <label hidden="true" wsm_persist="true" id="identity.email"/>
+    <label hidden="true" wsm_persist="true" id="identity.fccFolderPickerMode"
+                  pref="true" preftype="int" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.fcc_folder_picker_mode"/>
+    <label hidden="true" wsm_persist="true" id="identity.draftsFolderPickerMode"
+                  pref="true" preftype="int" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.drafts_folder_picker_mode"/>
+    <label hidden="true" wsm_persist="true" id="identity.tmplFolderPickerMode"
+                  pref="true" preftype="int" prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.tmpl_folder_picker_mode"/> 
+    <groupbox>
+      <caption label="&sendingPrefix.label;"/>
+
+      <hbox align="center">
+        <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;" 
+                  accesskey="&fccMailFolder.accesskey;"
+                  prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.fcc"
+                  oncommand="setupFccItems();"/>
+      </hbox>
+        <radiogroup id="doFcc">
+        <grid class="specialFolderPickerGrid">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <radio id="fcc_selectAccount" 
+                     value="0" label="&sentFolderOn.label;"
+                     accesskey="&sentFolderOn.accesskey;"
+                     oncommand="setPickersState('msgFccAccountPicker', 'msgFccFolderPicker', event)" 
+                     observes="broadcaster_doFcc"/>
+  	          <menulist id="msgFccAccountPicker"
+	                oncommand="noteSelectionChange('fcc_selectAccount')" 
+	                observes="broadcaster_doFcc"/>
+            </row> 
+            <row align="center">
+              <radio id="fcc_selectFolder" 
+                     value="1" label="&sentInOtherFolder.label;"
+                     accesskey="&sentInOtherFolder.accesskey;"
+                     oncommand="setPickersState('msgFccFolderPicker', 'msgFccAccountPicker', event)" 
+                     observes="broadcaster_doFcc"/>
+  	      <menulist id="msgFccFolderPicker" 
+	                oncommand="noteSelectionChange('fcc_selectFolder')" 
+		              observes="broadcaster_doFcc"/>
+            </row>
+          </rows>
+        </grid>
+      </radiogroup>
+
+      <hbox align="center">
+        <checkbox wsm_persist="true" id="identity.doBcc" label="&bccAddress.label;"
+                  accesskey="&bccAddress.accesskey;"
+                  control="identity.doBccList"
+                  oncommand="setupBccTextbox();"
+                  prefattribute="value" 
+                  prefstring="mail.identity.%identitykey%.doBcc"/>
+
+        <textbox wsm_persist="true" id="identity.doBccList" flex="1"
+                 prefstring="mail.identity.%identitykey%.doBccList" class="uri-element"/>
+      </hbox>
+
+    </groupbox>
+
+    <groupbox>
+      <caption label="&specialFoldersTitle.label;"/>
+
+      <hbox align="center">
+        <label value="&keepDrafts.label;"/>
+      </hbox>
+    
+      <radiogroup id="messageDrafts">
+        <grid class="specialFolderPickerGrid">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <radio id="draft_selectAccount" 
+                     oncommand="setPickersState('msgDraftsAccountPicker', 'msgDraftsFolderPicker', event)"
+                     value="0" label="&draftsFolderOn.label;"
+                     accesskey="&draftsFolderOn.accesskey;"/>
+ 	      <menulist id="msgDraftsAccountPicker" 
+	                oncommand="noteSelectionChange('draft_selectAccount')"/>
+            </row> 
+            <row align="center">
+              <radio id="draft_selectFolder" 
+                     oncommand="setPickersState('msgDraftsFolderPicker', 'msgDraftsAccountPicker', event)"
+                     value="1" label="&draftInOtherFolder.label;"
+                     accesskey="&draftInOtherFolder.accesskey;"/>
+  	      <menulist id="msgDraftsFolderPicker"
+                        oncommand="noteSelectionChange('draft_selectFolder')"/>
+            </row>
+          </rows>
+        </grid>
+      </radiogroup>
+      <hbox align="center">
+        <label value="&keepTempltes.label;"/>
+      </hbox>
+	  
+      <radiogroup id="messageTemplates">
+        <grid class="specialFolderPickerGrid">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <radio id="tmpl_selectAccount" 
+                     oncommand="setPickersState('msgStationeryAccountPicker', 'msgStationeryFolderPicker', event)"
+                     value="0" label="&templatesFolderOn.label;"
+                     accesskey="&templatesFolderOn.accesskey;"/>
+  	      <menulist id="msgStationeryAccountPicker"
+                        oncommand="noteSelectionChange('tmpl_selectAccount')"/>
+            </row> 
+            <row align="center">
+              <radio id="tmpl_selectFolder" 
+                     oncommand="setPickersState('msgStationeryFolderPicker', 'msgStationeryAccountPicker', event)"
+                     value="1" label="&templateInOtherFolder.label;"
+                     accesskey="&templateInOtherFolder.accesskey;"/>
+              <menulist id="msgStationeryFolderPicker"
+                        oncommand="noteSelectionChange('tmpl_selectFolder')"/>
+            </row>
+          </rows>
+        </grid>
+      </radiogroup>
+      <hbox align="center">
+        <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"
+                  accesskey="&saveMessageDlg.accesskey;"
+                  prefattribute="value"
+                  prefstring="mail.identity.%identitykey%.showSaveMsgDlg"/>
+      </hbox>
+    </groupbox>
+  </vbox>
+</overlay>

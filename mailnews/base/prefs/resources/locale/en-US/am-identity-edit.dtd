@@ -1,5 +1,6 @@
 <!ENTITY identityTitle.label "Identity Settings">
 <!ENTITY identityListDesc.label "Configure the settings for this identity:">
 
-
-<!ENTITY editIdentityTitle.label "Settings">
+<!ENTITY settingsTab.label       "Settings">
+<!ENTITY copiesFoldersTab.label "Copies &amp; Folders">
+<!ENTITY addressingTab.label    "Composition &amp; Addressing">

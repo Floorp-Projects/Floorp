@@ -59,6 +59,11 @@ var tmplFolderPickerId = "msgStationeryFolderPicker";
  */
 function onInit() 
 {
+    onInitCopiesAndFolders();
+}
+
+function onInitCopiesAndFolders()
+{
     SetGlobalRadioElemChoices();
                      
     SetFolderDisplay(gFccRadioElemChoice, gFccRadioElemChoiceLocked, 
@@ -220,6 +225,11 @@ function SetSpecialFolderNamesWithDelims()
 // Save all changes on this page
 function onSave()
 {
+    onSaveCopiesAndFolders();
+}
+
+function onSaveCopiesAndFolders()
+{
     SaveFolderSettings( gFccRadioElemChoice, 
                         "doFcc",
                         gFccFolderWithDelim, 
@@ -361,14 +371,14 @@ function setPickersState(enablePickerId, disablePickerId, event)
 {
     SetPickerEnabling(enablePickerId, disablePickerId);
 
-    var serverId = GetCurrentServerId();
     var selectedElementUri;
     var radioElemValue = event.target.value;
 
-    var account = parent.getAccountFromServerId(serverId);
+    var account = getAccountForFolderPickerState();
     if (!account) return;
 
     var server = account.incomingServer;
+    var serverId = server.key;
 
     // if special folders are not to be made on the server, 
     // then Local Folders is the home for it's special folders

@@ -36,13 +36,15 @@ var gAccount = null;   // the account the identity is (or will be) associated wi
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
-function onLoad()
+function onLoadIdentityProperties()
 {
   // extract the account
   gIdentity = window.arguments[0].identity;
   gAccount = window.arguments[0].account;
 
   initIdentityValues(gIdentity);
+  initCopiesAndFolder(gIdentity);
+  initCompositionAndAddressing(gIdentity);
 }
 
 // based on the values of gIdentity, initialize the identity fields we expose to the user
@@ -64,6 +66,43 @@ function initIdentityValues(identity)
   }
 
   setupSignatureItems();
+}
+
+function initCopiesAndFolder(identity)
+{
+  // if we are editing an existing identity, use it...otherwise copy our values from the default identity
+  var copiesAndFoldersIdentity = identity ? identity : gAccount.defaultIdentity; 
+
+  document.getElementById('identity.fccFolder').value = copiesAndFoldersIdentity.fccFolder;
+  document.getElementById('identity.draftFolder').value = copiesAndFoldersIdentity.draftFolder;
+  document.getElementById('identity.stationeryFolder').value = copiesAndFoldersIdentity.stationeryFolder;
+
+  document.getElementById('identity.fccFolderPickerMode').value = copiesAndFoldersIdentity.fccFolderPickerMode ? copiesAndFoldersIdentity.fccFolderPickerMode : 0;  
+  document.getElementById('identity.draftsFolderPickerMode').value = copiesAndFoldersIdentity.draftsFolderPickerMode ? copiesAndFoldersIdentity.draftsFolderPickerMode : 0;
+  document.getElementById('identity.tmplFolderPickerMode').value = copiesAndFoldersIdentity.tmplFolderPickerMode ? copiesAndFoldersIdentity.tmplFolderPickerMode : 0;
+
+  document.getElementById('identity.doBcc').checked = copiesAndFoldersIdentity.doBcc;
+  document.getElementById('identity.doBccList').value = copiesAndFoldersIdentity.doBccList;
+  document.getElementById('identity.doFcc').checked = copiesAndFoldersIdentity.doFcc;
+  document.getElementById('identity.showSaveMsgDlg').checked = identity.showSaveMsgDlg;
+  onInitCopiesAndFolders(); // am-copies.js method
+}
+
+function initCompositionAndAddressing(identity)
+{
+  createDirectoriesList(false);
+
+  // if we are editing an existing identity, use it...otherwise copy our values from the default identity
+  var addressingIdentity = identity ? identity : gAccount.defaultIdentity;
+
+  document.getElementById('identity.directoryServer').value = addressingIdentity.directoryServer;
+  document.getElementById('identity.overrideGlobalPref').value = addressingIdentity.overrideGlobalPref;
+  document.getElementById('identity.composeHtml').checked = addressingIdentity.composeHtml;
+  document.getElementById('identity.autoQuote').checked = addressingIdentity.autoQuote;
+  document.getElementById('identity.replyOnTop').value = addressingIdentity.replyOnTop;
+  document.getElementById('identity.sig_bottom').value = addressingIdentity.sigBottom;
+
+  onInitCompositionAndAddressing(); // am-addressing.js method
 }
 
 function onOk()
@@ -94,6 +133,8 @@ function onOk()
 
   // if we are modifying an existing identity, save the fields
   saveIdentitySettings(gIdentity);
+  saveCopiesAndFolderSettings(gIdentity);
+  saveAddressingAndCompositionSettings(gIdentity);
 
   window.arguments[0].result = true;
 
@@ -149,6 +190,34 @@ function saveIdentitySettings(identity)
     else
       identity.signature = null; // this is important so we don't accidentally inherit the default
   }
+}
+
+function saveCopiesAndFolderSettings(identity)
+{
+  onSaveCopiesAndFolders(); // am-copies.js routine
+
+  identity.fccFolder =  document.getElementById('identity.fccFolder').value;
+  identity.draftFolder = document.getElementById('identity.draftFolder').value;
+  identity.stationeryFolder = document.getElementById('identity.stationeryFolder').value;
+  identity.fccFolderPickerMode = document.getElementById('identity.fccFolderPickerMode').value;
+  identity.draftsFolderPickerMode = document.getElementById('identity.draftsFolderPickerMode').value;
+  identity.tmplFolderPickerMode = document.getElementById('identity.tmplFolderPickerMode').value;
+  identity.doBcc = document.getElementById('identity.doBcc').checked;
+  identity.doBccList = document.getElementById('identity.doBccList').value;
+  identity.doFcc = document.getElementById('identity.doFcc').checked;
+  identity.showSaveMsgDlg = document.getElementById('identity.showSaveMsgDlg').checked;
+}
+
+function saveAddressingAndCompositionSettings(identity)
+{
+  onSaveCompositionAndAddressing(); // am-addressing.js routine
+
+  identity.directoryServer = document.getElementById('identity.directoryServer').value;
+  identity.overrideGlobalPref = document.getElementById('identity.overrideGlobalPref').value;
+  identity.composeHtml = document.getElementById('identity.composeHtml').checked;
+  identity.autoQuote = document.getElementById('identity.autoQuote').checked;
+  identity.replyOnTop = document.getElementById('identity.replyOnTop').value;
+  identity.sigBottom = document.getElementById('identity.sig_bottom').value;
 }
 
 function selectFile()
@@ -238,4 +307,9 @@ function editVCard()
                     "chrome,resizable=no,titlebar,modal",
                     {escapedVCardStr:escapedVCard.value, okCallback:editVCardCallback,
                      titleProperty:"editVCardTitle", hideABPicker:true});
+}
+
+function getAccountForFolderPickerState()
+{ 
+  return gAccount;
 }

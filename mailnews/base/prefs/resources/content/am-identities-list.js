@@ -57,6 +57,9 @@ function onLoad()
 
   // extract the account from 
   refreshIdentityList();
+
+  // try selecting the first identity
+  gIdentityListBox.selectedIndex = 0;
 }
 
 function refreshIdentityList()
@@ -89,8 +92,13 @@ function openIdentityEditor(identity)
 
   window.openDialog('am-identity-edit.xul', 'identity-edit', 'modal,titlebar,chrome', args);
 
+  var selectedItemIndex = gIdentityListBox.selectedIndex;
+
   if (args.result)
+  {
     refreshIdentityList();   
+    gIdentityListBox.selectedIndex = selectedItemIndex;
+  }
 }
 
 function getSelectedIdentity()

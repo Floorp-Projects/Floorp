@@ -9,6 +9,11 @@ function onLoad()
 
 function onInit() 
 {
+  onInitCompositionAndAddressing();
+}
+
+function onInitCompositionAndAddressing()
+{
   setupDirectoriesList();
   enabling();
   quoteEnabling();
@@ -69,6 +74,11 @@ function enabling()
 }
 
 function onSave()
+{
+  onSaveCompositionAndAddressing();
+}
+
+function onSaveCompositionAndAddressing()
 {
   var override = document.getElementById("identity.overrideGlobalPref");
   var autocomplete = document.getElementById("ldapAutocomplete");

@@ -40,89 +40,12 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
-
 <!DOCTYPE page SYSTEM "chrome://messenger/locale/am-addressing.dtd" >
+
+<?xul-overlay href="chrome://messenger/content/am-addressingOverlay.xul"?>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="onLoad();">
-  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/am-addressing.js"/>
-  <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
-  <label hidden="true" wsm_persist="true" id="identity.directoryServer"
-        pref="true" preftype="string" prefattribute="value"
-        prefstring="mail.identity.%identitykey%.directoryServer"/>
-  <label hidden="true" wsm_persist="true" id="identity.overrideGlobalPref"
-        pref="true" preftype="bool" prefattribute="value"
-        prefstring="mail.identity.%identitykey%.overrideGlobal_Pref"/>
-  <label hidden="true" wsm_persist="true" id="overrideGlobalPref" value=""/>
-  <label hidden="true" wsm_persist="true" id="directoryServer" value=""/>
-  <checkbox hidden="true" wsm_persist="true" id="identity.attachSignature"
-        pref="true" preftype="bool" prefattribute="value"
-        prefstring="mail.identity.%identitykey%.attach_signature"/>
-
   <dialogheader title="&addressing.label;"/>
-  
-  <separator class="thin"/>
-  <groupbox>
-    <caption label="&compositionGroupTitle.label;"/>
-    <hbox align="center">
-      <checkbox wsm_persist="true" id="identity.composeHtml" label="&useHtml.label;"
-                accesskey="&useHtml.accesskey;"
-                prefattribute="value"
-                prefstring="mail.identity.%identitykey%.compose_html"/>
-    </hbox>
-
-    <separator class="thin"/>
-
-    <hbox align="center">
-      <checkbox wsm_persist="true" id="identity.autoQuote" label="&autoQuote.label;"
-                oncommand="quoteEnabling();" accesskey="&autoQuote.accesskey;"
-                pref="true" preftype="bool" prefattribute="value"
-                prefstring="mail.identity.%identitykey%.auto_quote"/>
-    </hbox>
-    <hbox class="indent" align="center" id="thenBox">
-      <label value="&then.label;" accesskey="&then.accesskey;" control="identity.replyOnTop"/>
-      <menulist wsm_persist="true" id="identity.replyOnTop" oncommand="quoteEnabling();"
-                pref="true" preftype="int" prefattribute="value"
-                prefstring="mail.identity.%identitykey%.reply_on_top">
-        <menupopup>
-          <menuitem value="1" label="&aboveQuote.label;"/>
-          <menuitem value="0" label="&belowQuote.label;"/>
-          <menuitem value="2" label="&selectAndQuote.label;"/>
-        </menupopup>
-      </menulist>        
-    </hbox>
-    <hbox class="indent" align="center" id="placeBox">
-      <label value="&place.label;" accesskey="&place.accesskey;" control="identity.sig_bottom"/>
-      <menulist wsm_persist="true" id="identity.sig_bottom" genericattr="true"
-                pref="true" preftype="bool" prefattribute="value">
-        <menupopup>
-          <menuitem value="true" label="&belowText.label;"/>
-          <menuitem value="false" label="&aboveText.label;"/>
-        </menupopup>
-      </menulist>
-    </hbox>
-  </groupbox>
-
-  <separator class="thin"/>
-  <groupbox>
-    <caption label="&addressingGroupTitle.label;"/>
-    <description>&addressingText.label;</description>
-    <radiogroup class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
-      <observes element="identity.overrideGlobalPref" attribute="disabled"/>
-      <radio id="useGlobalPref" value="0" label="&useGlobal.label;"
-             accesskey="&useGlobal.accesskey;"/>
-      <radio id="directories" value="1" label="&directories.label;"
-             accesskey="&directories.accesskey;"/>
-      <hbox class="indent">
-        <menulist id="directoriesList" wsm_persist="true" style="min-width: 16em;">
-          <menupopup onpopupshowing="createDirectoriesList(false);" id="directoriesListPopup"/>
-        </menulist>
-        <button id="editButton" label="&editDirectories.label;"
-                accesskey="&editDirectories.accesskey;" oncommand="onEditDirectories();"/>
-      </hbox>
-    </radiogroup>      
-  </groupbox>
-
+  <vbox id="compositionAndAddressing"/>
 </page>

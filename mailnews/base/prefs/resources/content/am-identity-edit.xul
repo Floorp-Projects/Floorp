@@ -34,6 +34,9 @@
 
  ***** END LICENSE BLOCK ***** -->
 
+<?xul-overlay href="chrome://messenger/content/am-copiesOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/am-addressingOverlay.xul"?>
+
 <!DOCTYPE dialog [
 <!ENTITY % identityEditDTD SYSTEM "chrome://messenger/locale/am-identity-edit.dtd" >
 %identityEditDTD;
@@ -44,7 +47,7 @@
 <dialog title="&identityTitle.label;"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="onLoad();"
+  onload="onLoadIdentityProperties();"
   ondialogaccept="return onOk();"
   style="width: 35em;">
 
@@ -52,16 +55,31 @@
   <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-prefs.js"/>
   <script type="application/x-javascript" src="am-identity-edit.js"/>
+  <script type="application/x-javascript">
+  <![CDATA[
+    function getServerIdAndPageIdFromTree(tree)
+    {
+      return {"serverId": gAccount.incomingServer.key, "pageId": "" }
+    }
+  ]]>
+  </script>
 
   <broadcaster id="broadcaster_attachSignature"/>
 
   <description flex="1">&identityListDesc.label;</description>
   <separator class="thin"/>
 
-  <groupbox style="width: 20em !important;">
-    <caption label="&editIdentityTitle.label;"/>
-    <separator class="thin"/>
-    <grid flex="1">
+  <tabbox>
+    <tabs id="identitySettings">
+      <tab label="&settingsTab.label;"/>
+      <tab label="&copiesFoldersTab.label;"/>
+      <tab label="&addressingTab.label;"/>
+    </tabs>
+
+    <tabpanels id="identityTabsPanels" flex="1">
+      <!-- Identity Settings Tab --> 
+      <vbox flex="1" name="settings">
+        <grid>
       <columns>
         <column/>
         <column flex="1"/>
@@ -112,7 +130,14 @@
               oncommand="editVCard()"/>
       <label hidden="true" id="identity.escapedVCard"/>
     </hbox>
+      </vbox>
+      
+      <!-- Copies & Folders Tab --> 
+      <vbox flex="1" name="copiesAndFolders" id="copiesAndFolders"/>
 
-  </groupbox>
+      <!-- Composition & Addressing Tab --> 
+      <vbox flex="1" name="composeAddressing" id="compositionAndAddressing"/>
 
+    </tabpanels> 
+  </tabbox>
 </dialog>
