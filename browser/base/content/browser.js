@@ -3076,22 +3076,9 @@ nsContextMenu.prototype = {
     },
     setWallpaper: function() {
       // Confirm since it's annoying if you hit this accidentally.
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-      var promptTitle   = gNavigatorBundle.getString("wallpaperConfirmTitle");
-      var promptMsg     = gNavigatorBundle.getString("wallpaperConfirmMsg");
-
-      var buttonPressed = promptService.confirmEx(window, promptTitle, promptMsg,
-                                                  (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
-                                                  (promptService.BUTTON_TITLE_CANCEL    * promptService.BUTTON_POS_1),
-                                                  promptTitle, null, null, null, {value:0});
-
-      if (buttonPressed != 0)
-         return;
- 
-      var winhooks = Components.classes[ "@mozilla.org/winhooks;1" ].
-                       getService(Components.interfaces.nsIWindowsHooks);
-      
-      winhooks.setImageAsWallpaper(this.target, false);
+      openDialog("chrome://browser/content/setWallpaper.xul", "",
+                 "centerscreen,chrome,dialog,modal,dependent",
+                 this.target);
     },    
     // Save URL of clicked-on frame.
     saveFrame : function () {
