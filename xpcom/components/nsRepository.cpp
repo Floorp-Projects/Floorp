@@ -1094,7 +1094,11 @@ nsresult nsRepository::SyncComponentsInDir(const char *dir)
 	unsigned int n = strlen(fullname);
 	if (n+1 < sizeof(fullname))
 	{
-		fullname[n] = '/';		// PR_GetDirectorySeparator();
+#ifdef	XP_WIN
+		fullname[n] = PR_GetDirectorySeparator();
+#else
+		fullname[n] = '/';
+#endif
 		n++;
 	}
 	char *filepart = fullname + n;
