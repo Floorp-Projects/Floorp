@@ -839,6 +839,23 @@ public class ScriptRuntime {
         return toObject(cx, scope, val);
     }
 
+    public static Object call(Context cx, Object fun, Object thisArg,
+                              Object[] args, Scriptable scope)
+        throws JavaScriptException
+    {
+        if (!(fun instanceof Function)) {
+            throw notFunctionError(toString(fun));
+        }
+        Function function = (Function)fun;
+        Scriptable thisObj;
+        if (thisArg instanceof Scriptable || thisArg == null) {
+            thisObj = (Scriptable) thisArg;
+        } else {
+            thisObj = ScriptRuntime.toObject(cx, scope, thisArg);
+        }
+        return function.call(cx, scope, thisObj, args);
+    }
+
     public static Scriptable newObject(Context cx, Scriptable scope,
                                        String constructorName, Object[] args)
     {
