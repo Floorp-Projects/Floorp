@@ -486,9 +486,9 @@ ifeq ($(OS_ARCH),OS2)
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib/components
 	$(ELF_DYNSTR_GC) $(DIST)/lib/components/$(SHARED_LIBRARY)
+	$(ELF_DYNSTR_GC) $(DIST)/bin/components/$(SHARED_LIBRARY)
 endif
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/bin/components
-	$(ELF_DYNSTR_GC) $(DIST)/bin/components/$(SHARED_LIBRARY)
 ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
