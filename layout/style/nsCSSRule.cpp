@@ -40,40 +40,6 @@
 #include "nsIArena.h"
 #include "nsICSSStyleSheet.h"
 
-void* nsCSSRule::operator new(size_t size) CPP_THROW_NEW
-{
-  nsCSSRule* rv = (nsCSSRule*) ::operator new(size);
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 1;
-  return (void*) rv;
-}
-
-void* nsCSSRule::operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW
-{
-  nsCSSRule* rv = (nsCSSRule*) aArena->Alloc(PRInt32(size));
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 0;
-  return (void*) rv;
-}
-
-void nsCSSRule::operator delete(void* ptr)
-{
-  nsCSSRule* rule = (nsCSSRule*) ptr;
-  if (nsnull != rule) {
-    if (rule->mInHeap) {
-      ::operator delete(ptr);
-    }
-  }
-}
-
 nsCSSRule::nsCSSRule(void)
   : mRefCnt(0),
     mSheet(nsnull),
@@ -97,6 +63,13 @@ nsCSSRule::~nsCSSRule(void)
 
 NS_IMPL_ADDREF(nsCSSRule)
 NS_IMPL_RELEASE(nsCSSRule)
+
+NS_IMETHODIMP
+nsCSSRule::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  NS_NOTREACHED("nsCSSRule::QueryInterface");
+  return NS_NOINTERFACE;
+}
 
 NS_IMETHODIMP
 nsCSSRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
@@ -129,5 +102,7 @@ nsCSSRule::SetParentRule(nsICSSGroupRule* aRule)
 NS_IMETHODIMP
 nsCSSRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
+  // The nsIStyleRule contract is not appropriate for all CSS rules.
+  NS_NOTREACHED("nsCSSRule::MapRuleInfoInto");
   return NS_OK;
 }

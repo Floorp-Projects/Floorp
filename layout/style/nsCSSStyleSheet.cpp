@@ -821,15 +821,9 @@ class CSSStyleSheetImpl : public nsICSSStyleSheet,
                           public nsICSSLoaderObserver
 {
 public:
-  void* operator new(size_t size) CPP_THROW_NEW;
-  void* operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW;
-  void operator delete(void* ptr);
-
   CSSStyleSheetImpl();
 
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  NS_DECL_ISUPPORTS
 
   // basic style sheet data
   NS_IMETHOD Init(nsIURI* aURL);
@@ -922,10 +916,6 @@ protected:
   void     DidDirty(void);
 
 protected:
-  PRUint32 mInHeap : 1;
-  PRUint32 mRefCnt : 31;
-  NS_DECL_OWNINGTHREAD // for thread-safety checking
-
   nsString              mTitle;
   DOMMediaListImpl*     mMedia;
   CSSStyleSheetImpl*    mFirstChild;
@@ -1728,40 +1718,6 @@ void CSSStyleSheetInner::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
 // -------------------------------
 // CSS Style Sheet
 //
-
-void* CSSStyleSheetImpl::operator new(size_t size) CPP_THROW_NEW
-{
-  CSSStyleSheetImpl* rv = (CSSStyleSheetImpl*) ::operator new(size);
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 1;
-  return (void*) rv;
-}
-
-void* CSSStyleSheetImpl::operator new(size_t size, nsIArena* aArena) CPP_THROW_NEW
-{
-  CSSStyleSheetImpl* rv = (CSSStyleSheetImpl*) aArena->Alloc(PRInt32(size));
-#ifdef NS_DEBUG
-  if (nsnull != rv) {
-    memset(rv, 0xEE, size);
-  }
-#endif
-  rv->mInHeap = 0;
-  return (void*) rv;
-}
-
-void CSSStyleSheetImpl::operator delete(void* ptr)
-{
-  CSSStyleSheetImpl* sheet = (CSSStyleSheetImpl*) ptr;
-  if (nsnull != sheet) {
-    if (sheet->mInHeap) {
-      ::operator delete(ptr);
-    }
-  }
-}
 
 MOZ_DECL_CTOR_COUNTER(CSSStyleSheetImpl)
 
@@ -3955,8 +3911,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       } while (result && (nsnull != attr));
     }
   }
-  if (result &&
-      ((nsnull != aSelector->mIDList) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
+  if (result && (aSelector->mIDList || aSelector->mClassList)) {
+    // test for ID & class match
     result = localFalse;
     if (data.mStyledContent) {
       // case sensitivity: bug 93371
