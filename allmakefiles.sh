@@ -683,7 +683,6 @@ xpfe/global/resources/Makefile
 xpfe/global/resources/content/Makefile
 xpfe/global/resources/content/os2/Makefile
 xpfe/global/resources/content/unix/Makefile
-xpfe/global/resources/skin/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/en-US/Makefile
 xpfe/global/resources/locale/en-US/os2/Makefile
