@@ -476,6 +476,16 @@ nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
       // Mark yourself as dirty and needing to be recalculated
       state |= NS_FRAME_HAS_DIRTY_CHILDREN;
       frame->SetFrameState(state);
+
+      if (state & NS_FRAME_REFLOW_ROOT) {
+        nsCOMPtr<nsIPresShell> shell;
+        aState.GetPresShell(getter_AddRefs(shell));
+        nsFrame::CreateAndPostReflowCommand(shell, frame, 
+                                            eReflowType_ReflowDirty,
+                                            nsnull, nsnull, nsnull);
+        return NS_OK;
+      }
+
       NeedsRecalc();
 
       nsIBox* parentBox = nsnull;
