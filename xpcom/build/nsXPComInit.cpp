@@ -175,6 +175,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsInterfacePointerImpl)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsArray)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService)
+NS_DECL_CLASSINFO(nsConsoleService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExceptionService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimerImpl)
@@ -295,6 +296,11 @@ PRBool gXPCOMShuttingDown = PR_FALSE;
    NULL, NULL, NULL, NS_CI_INTERFACE_GETTER_NAME(Class), NULL,                 \
    &NS_CLASSINFO_NAME(Class) }
 
+#define COMPONENT_CI_FLAGS(NAME, Ctor, Class, Flags)                           \
+ { NS_##NAME##_CLASSNAME, NS_##NAME##_CID, NS_##NAME##_CONTRACTID, Ctor,       \
+   NULL, NULL, NULL, NS_CI_INTERFACE_GETTER_NAME(Class), NULL,                 \
+   &NS_CLASSINFO_NAME(Class), Flags }
+
 static const nsModuleComponentInfo components[] = {
     COMPONENT(MEMORY, nsMemoryImpl::Create),
     COMPONENT(DEBUG,  nsDebugImpl::Create),
@@ -315,7 +321,9 @@ static const nsModuleComponentInfo components[] = {
 
     COMPONENT(SUPPORTSARRAY, nsSupportsArray::Create),
     COMPONENT(ARRAY, nsArrayConstructor),
-    COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor),
+    COMPONENT_CI_FLAGS(CONSOLESERVICE, nsConsoleServiceConstructor,
+                       nsConsoleService,
+                       nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON),
     COMPONENT(EXCEPTIONSERVICE, nsExceptionServiceConstructor),
     COMPONENT(ATOMSERVICE, nsAtomServiceConstructor),
 #ifdef MOZ_TIMELINE
