@@ -25,13 +25,19 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
-  height="250"
+  height="270"
   width="400"
   onload="onLoad();"
 >
 <script src="chrome://global/content/strres.js" />
 <script src="pippki.js" />
 <script src="serverCertExpired.js" />
+
+<keyset id="keys">
+  <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
+  <key id="return-key" keycode="VK_RETURN" oncommand="doOK()"    />
+  <key id="esc-key"    keycoce="VK_ESCAPE" oncommand="doCancel()"/>
+</keyset>
 
 <box orient="vertical" style="margin: 5px;" flex="1">
 
@@ -47,7 +53,7 @@
   </box>
   <separator/>
   <box>
-  <button id="ok-button" class="dialog" label="&ok.label;"
+  <button id="ok-button" class="dialog" label="&ok.label;" primary="true"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 

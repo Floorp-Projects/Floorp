@@ -44,6 +44,8 @@ function onLoad()
                                               1);
   setText("message1", message1);
   setText("message2", message2);
+  //Set the focus so key press events work.
+  document.getElementById('ok-button').focus();
 }
 
 function doOK()
