@@ -25,6 +25,7 @@ SUBDIRS=			\
 SRCS=				\
 	AddressBook.java	\
 	NewCardDialog.java	\
+	SearchDirectoryDialog.java	\
 	$(NULL)
 
 include ../rules.mk

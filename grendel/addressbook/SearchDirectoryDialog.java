@@ -1,10 +1,43 @@
+/* -*- Mode: java; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
+ *
+ * The Original Code is the Grendel mail/news client.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1997
+ * Netscape Communications Corporation.  All Rights Reserved.
+ *
+ */
+
 package grendel.addressbook;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+import java.awt.GridLayout;
+import java.awt.FlowLayout;
+import java.awt.BorderLayout;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
-import javax.swing.*;
+
+import javax.swing.JComponent;
+import javax.swing.JButton;
+import javax.swing.JTextField;
+import javax.swing.JCheckBox;
+import javax.swing.JTabbedPane;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 
 public class SearchDirectoryDialog extends JDialog {
 
@@ -17,7 +50,7 @@ public class SearchDirectoryDialog extends JDialog {
   JCheckBox cLoginPassword;
   JCheckBox cSavePassword;
 
-  public SearchDirectoryDialog(Frame aParent) {
+  public SearchDirectoryDialog(JFrame aParent) {
     //FIX: Resource
     super(aParent, "Directory Server Property", true);
 

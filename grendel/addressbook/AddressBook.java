@@ -195,7 +195,7 @@ public class AddressBook extends GeneralFrame {
   /**
    * Find the hosting frame, for the file-chooser dialog.
    */
-  protected Frame getParentFrame() {
+  protected JFrame getParentFrame() {
     //        for (Container p = getParent(); p != null; p = p.getParent()) {
     //            if (p instanceof Frame) {
     //              return (Frame) p;
