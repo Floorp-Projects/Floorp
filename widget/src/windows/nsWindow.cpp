@@ -1050,7 +1050,16 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   return NS_OK;
 }
 
-
+//-------------------------------------------------------------------------
+//
+// Force a synchronous repaint of the window
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Update()
+{
+  VERIFY(::UpdateWindow(mWnd));
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 //
