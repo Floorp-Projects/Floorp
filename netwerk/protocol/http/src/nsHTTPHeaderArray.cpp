@@ -26,17 +26,17 @@
 
 
 nsHeaderEntry::nsHeaderEntry(nsIAtom* aHeaderAtom, const char* aValue)
+  : mAtom(aHeaderAtom)
 {
   NS_INIT_REFCNT();
 
-  mAtom  = aHeaderAtom;
-  mValue = aValue;
+  mValue.AssignWithConversion(aValue);
 }
 
 
 nsHeaderEntry::~nsHeaderEntry()
 {
-  mAtom  = null_nsCOMPtr();
+  // mAtom  = null_nsCOMPtr(); -- the |nsCOMPtr| automatically |Release()|s.  No need to force it
 }
 
 
@@ -112,7 +112,7 @@ nsHTTPHeaderArray::~nsHTTPHeaderArray()
     if (mHTTPHeaders)
         mHTTPHeaders -> Clear ();
 
-    mHTTPHeaders = null_nsCOMPtr ();
+    // mHTTPHeaders = null_nsCOMPtr (); -- the |nsCOMPtr| automatically |Release()|s.  No need to force it
 }
 
 
@@ -161,19 +161,19 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
         // we can't use the standard comma because there
         // set-cookie headers that include commas in the cookie value
         // contrary to the specs not allowing it.
-        entry->mValue.Append(LF);
-        entry->mValue.Append(aValue);
+        entry->mValue.AppendWithConversion(LF);
+        entry->mValue.AppendWithConversion(aValue);
     } else {
         // delimit each value from the others using a comma(HTTP spec delimiter)
-        entry->mValue.Append(", ");
-        entry->mValue.Append(aValue);
+        entry->mValue.AppendWithConversion(", ");
+        entry->mValue.AppendWithConversion(aValue);
     }
   }
   //
   // Replace the existing string with the new value
   //
   else {
-    entry->mValue.Assign(aValue);
+    entry->mValue.AssignWithConversion(aValue);
   }
 
   NS_RELEASE(entry);
@@ -284,17 +284,15 @@ PRBool nsHTTPHeaderArray::IsHeaderMultiple(nsIAtom* aHeader)
 
 
 nsHTTPHeaderEnumerator::nsHTTPHeaderEnumerator(nsISupportsArray* aHeaderArray)
+  : mHeaderArray(aHeaderArray), mIndex(0)
 {
   NS_INIT_REFCNT();
-
-  mIndex = 0;
-  mHeaderArray = aHeaderArray;
 }
 
 
 nsHTTPHeaderEnumerator::~nsHTTPHeaderEnumerator()
 {
-  mHeaderArray = null_nsCOMPtr();
+  // mHeaderArray = null_nsCOMPtr(); -- the |nsCOMPtr| automatically |Release()|s.  No need to force it
 }
 
 
