@@ -40,6 +40,12 @@
 
 @namespace parsererror url(http://www.mozilla.org/newlayout/xml/parsererror.xml);
 
+/* defaults for the root element that are easier to specify here than in
+   C++ code */
+*|*:root {
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
 /* magic -- some of these rules are important to keep pages from overriding
             them
 */
