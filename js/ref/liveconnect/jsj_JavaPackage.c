@@ -124,13 +124,14 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     JNIEnv *jEnv;
     
     package = (JavaPackage_Private *)JS_GetPrivate(cx, obj);
-    if (!package) {
-        fprintf(stderr, "JavaPackage_resolve: no private data!\n");
-        return JS_FALSE;
-    }
-    path = package->path;
+    if (!package)
+        return JS_TRUE;
+
+    if (!JSVAL_IS_STRING(id))
+	return JS_TRUE;
     subPath = JS_GetStringBytes(JSVAL_TO_STRING(id));
 
+    path = package->path;
     newPath = PR_smprintf("%s%s%s", path, (path[0] ? "/" : ""), subPath);
     if (!newPath) {
         JS_ReportOutOfMemory(cx);
@@ -193,8 +194,8 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
                     return JS_FALSE;
 
                 msg = PR_smprintf("No Java system package with name \"%s\" was identified "
-                                  "at initialization time and no Java class "
-                                  "with that name exists either", newPath);
+                                  "and no Java class with that name exists either",
+                                  newPath);
 
                 /* Check for OOM */
                 if (msg) {
@@ -240,6 +241,7 @@ JavaPackage_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     switch (type) {
 
     /* Pretty-printing of JavaPackage */
+    case JSTYPE_VOID:   /* Default value */
     case JSTYPE_STRING:
         /* Convert '/' to '.' so that it looks like Java language syntax. */
         if (!package->path)
@@ -311,6 +313,7 @@ standard_java_packages[] = {
     {"java.lang.reflect",   NULL,   PKG_SYSTEM},
     {"java.math",           NULL,   PKG_SYSTEM},
     {"java.net",            NULL,   PKG_SYSTEM},
+    {"java.rmi",            NULL,   PKG_SYSTEM},
     {"java.text",           NULL,   PKG_SYSTEM},
     {"java.util",           NULL,   PKG_SYSTEM},
     {"java.util.zip",       NULL,   PKG_SYSTEM},
