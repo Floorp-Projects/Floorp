@@ -1887,7 +1887,7 @@ void
 ConflictSet::GetMatchesForClusterKey(const ClusterKey& aKey, const MatchSet** aMatchSet)
 {
     // Retrieve all the matches in a cluster
-    *aMatchSet = NS_STATIC_CAST(const MatchSet*, PL_HashTableLookup(mClusters, &aKey));
+    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mClusters, &aKey));
 }
 
 
@@ -1895,7 +1895,7 @@ void
 ConflictSet::GetMatchesWithBindingDependency(nsIRDFResource* aResource, const MatchSet** aMatchSet)
 {
     // Retrieve all the matches whose bindings depend on the specified resource
-    *aMatchSet = NS_STATIC_CAST(const MatchSet*, PL_HashTableLookup(mBindingDependencies, aResource));
+    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mBindingDependencies, aResource));
 }
 
 
