@@ -59,6 +59,7 @@
 #include "nsSVGRect.h"
 #include "nsSVGPoint.h"
 #include "nsSVGAtoms.h"
+#include "nsIViewManager.h"
 
 typedef nsFrame nsSVGGlyphFrameBase;
 
@@ -1105,9 +1106,22 @@ void nsSVGGlyphFrame::UpdateGeometry(PRUint32 flags, PRBool bRedraw)
     NS_ASSERTION(!mMetricsUpdateFlags, "dirty metrics in nsSVGGlyphFrame::UpdateGeometry");
     NS_ASSERTION(!mFragmentTreeDirty, "dirty fragmenttree in nsSVGGlyphFrame::UpdateGeometry");
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
-    mGeometry->Update(mGeometryUpdateFlags, getter_AddRefs(dirty_region));
-    if (dirty_region)
-      outerSVGFrame->InvalidateRegion(dirty_region, bRedraw);
+    if (mGeometry)
+      mGeometry->Update(mGeometryUpdateFlags, getter_AddRefs(dirty_region));
+    if (dirty_region) {
+      // if we're being used as a clippath, this will get called
+      // during the paint - don't need to invalidate (which causes
+      // us to loop busy-painting)
+
+      nsIView *view = GetClosestView();
+      if (!view) return;
+      nsIViewManager *vm = view->GetViewManager();
+      PRBool painting;
+      vm->IsPainting(painting);
+
+      if (!painting)
+        outerSVGFrame->InvalidateRegion(dirty_region, bRedraw);
+    }
     mGeometryUpdateFlags = 0;
   }  
 }
