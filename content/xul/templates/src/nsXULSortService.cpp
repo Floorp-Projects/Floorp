@@ -212,7 +212,6 @@ private:
 	static nsIAtom		*kTemplateAtom;
 	static nsIAtom		*kStaticHintAtom;
 	static nsIAtom		*kStaticsSortLastHintAtom;
-	static nsIAtom		*kBoxAtom;
 	static nsIAtom		*kTreeAtom;
 	static nsIAtom		*kTreeCellAtom;
 	static nsIAtom		*kTreeChildrenAtom;
@@ -291,7 +290,6 @@ nsIXULContentUtils      *XULSortServiceImpl::gXULUtils = nsnull;
 nsIAtom* XULSortServiceImpl::kTemplateAtom;
 nsIAtom* XULSortServiceImpl::kStaticHintAtom;
 nsIAtom* XULSortServiceImpl::kStaticsSortLastHintAtom;
-nsIAtom* XULSortServiceImpl::kBoxAtom;
 nsIAtom* XULSortServiceImpl::kTreeAtom;
 nsIAtom* XULSortServiceImpl::kTreeCellAtom;
 nsIAtom* XULSortServiceImpl::kTreeChildrenAtom;
@@ -334,7 +332,6 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 	        kTemplateAtom 	           	= NS_NewAtom("template");
 	        kStaticHintAtom 	        = NS_NewAtom("staticHint");
 	        kStaticsSortLastHintAtom 	= NS_NewAtom("sortStaticsLast");
-	        kBoxAtom            		= NS_NewAtom("box");
 	        kTreeAtom            		= NS_NewAtom("tree");
 	        kTreeCellAtom        		= NS_NewAtom("treecell");
 		kTreeChildrenAtom    		= NS_NewAtom("treechildren");
@@ -447,7 +444,6 @@ XULSortServiceImpl::~XULSortServiceImpl(void)
 		NS_IF_RELEASE(kTemplateAtom);
 		NS_IF_RELEASE(kStaticHintAtom);
 		NS_IF_RELEASE(kStaticsSortLastHintAtom);
-		NS_IF_RELEASE(kBoxAtom);
 		NS_IF_RELEASE(kTreeAtom);
 		NS_IF_RELEASE(kTreeCellAtom);
 	        NS_IF_RELEASE(kTreeChildrenAtom);
@@ -2079,14 +2075,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 			if (NS_FAILED(rv = trueParent->GetTag(*getter_AddRefs(tag))))
 				return(rv);
 
-			// XXX hmmm... currently, if we just check for ref on "boxes" before
-			// checking for id, this gives the sidebar huge fits.  So, for the
-			// moment, until the solution is determined, let's restrict checking
-			// for ref before id if we have a "box"
-			if (tag.get() != kBoxAtom)
-			{
-				rv = trueParent->GetAttribute(kNameSpaceID_None, kRefAtom, id);
-			}
+			rv = trueParent->GetAttribute(kNameSpaceID_None, kRefAtom, id);
 			if (id.Length() == 0)
 			{
 				rv = trueParent->GetAttribute(kNameSpaceID_None, kIdAtom, id);
@@ -2106,14 +2095,14 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 	}
 
 	PRBool			childAdded = PR_FALSE;
+	PRInt32			numChildren = 0;
+	if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
 
 	if ((sortInfo.naturalOrderSort == PR_FALSE) ||
 		((sortInfo.naturalOrderSort == PR_TRUE) &&
 		(isContainerRDFSeq == PR_TRUE)))
 	{
-	        nsCOMPtr<nsIContent>	child;
-		PRInt32			numChildren = 0;
-		if (NS_FAILED(rv = container->ChildCount(numChildren)))	return(rv);
+	    nsCOMPtr<nsIContent>	child;
 
 		// rjc says: determine where static XUL ends and generated XUL/RDF begins
 		PRInt32			staticCount = 0;
@@ -2161,13 +2150,14 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
 		if (staticCount <= 0)
 		{
+			numChildren += staticCount;
 			staticCount = 0;
 		}
 		else if (staticCount > numChildren)
 		{
 			staticCount = numChildren;
+			numChildren -= staticCount;
 		}
-		numChildren -= staticCount;
 
 		// figure out where to insert the node when a sort order is being imposed
 		if (numChildren > 0)
@@ -2200,7 +2190,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 				direction = inplaceSortCallback(&node, &temp, &sortInfo);
 				if (direction > 0)
 				{
-					container->AppendChildTo(node, aNotify);
+					container->InsertChildAt(node, staticCount+numChildren, aNotify);
 					childAdded = PR_TRUE;
 				}
 				else
@@ -2239,7 +2229,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
 	if (childAdded == PR_FALSE)
 	{
-		container->AppendChildTo(node, aNotify);
+		container->InsertChildAt(node, numChildren, aNotify);
 	}
 
 	if ((!sortState->mCache) && (sortInfo.mInner))
