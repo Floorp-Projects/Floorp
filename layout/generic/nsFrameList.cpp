@@ -17,7 +17,6 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsFrameList.h"
-#include "nsFrame.h"
 
 void
 nsFrameList::DeleteFrames(nsIPresContext& aPresContext)
@@ -353,9 +352,7 @@ nsFrameList::List(FILE* out) const
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
     frame->List(out, 1);
-//    nsFrame::ListTag(out, frame);
-//    fputs(" ", out);
     frame->GetNextSibling(&frame);
   }
-  fputs("\n", out);
+  fputs(">\n", out);
 }
