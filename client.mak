@@ -242,7 +242,6 @@ pull_nss:
 pull_psm: pull_nss
 	cd $(MOZ_SRC)\.
 	$(CVSCO_PSM) mozilla/security/manager
-	$(CVSCO_PSM) mozilla/security/psm
 	$(CVSCO_PSM) mozilla/security/makefile.win
 
 pull_ldapcsdk:
