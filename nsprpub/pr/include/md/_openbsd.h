@@ -50,6 +50,10 @@
 #define _PR_HAVE_SOCKADDR_LEN
 #define _PR_NO_LARGE_FILES
 #define _PR_STAT_HAS_ST_ATIMESPEC
+#define _PR_POLL_AVAILABLE
+#define _PR_USE_POLL
+#define _PR_HAVE_SYSV_SEMAPHORES
+#define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 
 #define USE_SETJMP
 
@@ -204,6 +208,7 @@ struct _MDCPU {
  * unwrapped version.
  */
 #define _MD_SELECT(nfds,r,w,e,tv) syscall(SYS_select,nfds,r,w,e,tv)
+#include <poll.h>
 #define _MD_POLL(fds,nfds,timeout) syscall(SYS_poll,fds,nfds,timeout)
 
 #if OpenBSD1_3 == 1L
