@@ -24,7 +24,3 @@ THEME_ROOT_DEPTH = ..\..
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
-
-install:: 
-	$(MAKE_INSTALL) EditModeTabs.css $(DIST)\bin\chrome\skins\$(THEME)\editor\skin
-
