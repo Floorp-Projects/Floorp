@@ -151,6 +151,14 @@ public:
    **/
    NS_IMETHOD GetUserCancelled(  PRBool &aCancel ) = 0;      
 
+  /*
+   * Paper name e.g., "din-a4" or "manual/din-a4"
+   * @update 
+   * @param aPaperName --
+   * @return 
+   **/
+   NS_IMETHOD GetPaperName ( const char **aPaperName ) = 0;
+
    /*
     * Returns W/H in Twips from Paper Size H/W
     */

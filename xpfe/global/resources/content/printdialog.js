@@ -204,6 +204,7 @@ function setPrinterDefaultsForSelectedPrinter()
 
   var flags = gPrintSetInterface.kInitSavePaperSizeType | gPrintSetInterface.kInitSavePaperSizeUnit |
               gPrintSetInterface.kInitSavePaperWidth | gPrintSetInterface.kInitSavePaperHeight |
+              gPrintSetInterface.kInitSavePaperName |
               gPrintSetInterface.kInitSavePrintCommand;
 
   // now augment them with any values from last time
@@ -460,6 +461,7 @@ function onAccept()
   if (saveToPrefs && gWebBrowserPrint != null) {
     var flags = gPrintSetInterface.kInitSavePaperSizeType | gPrintSetInterface.kInitSavePaperSizeUnit |
                 gPrintSetInterface.kInitSavePaperWidth | gPrintSetInterface.kInitSavePaperHeight |
+                gPrintSetInterface.kInitSavePaperName |
                 gPrintSetInterface.kInitSavePrintCommand;
     gWebBrowserPrint.savePrintSettingsToPrefs(gPrintSettings, true, flags);
   }

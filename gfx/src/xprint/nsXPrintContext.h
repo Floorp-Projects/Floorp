@@ -133,7 +133,7 @@ private:
 
   nsresult SetupWindow(int x, int y, int width, int height);
   nsresult SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
-  nsresult SetPageSize(float page_width_mm, float page_height_mm);
+  nsresult SetMediumSize(const char *paper_name);
   nsresult SetOrientation(int landscape);
   nsresult SetResolution(void);
 };

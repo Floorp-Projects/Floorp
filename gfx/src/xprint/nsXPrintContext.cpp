@@ -353,15 +353,19 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 }
 
 
-nsresult nsXPrintContext::SetPageSize(float page_width_mm, float page_height_mm)
+nsresult nsXPrintContext::SetMediumSize(const char *aPaperName)
 {
   nsresult                rv = NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
   XpuMediumSourceSizeList mlist;
   int                     mlist_count;
   int                     i;
+  char                   *paper_name,
+                         *alloc_paper_name; /* for free() ... */
+  paper_name = alloc_paper_name = strdup(aPaperName);
+  if (!paper_name)
+    return NS_ERROR_OUT_OF_MEMORY;
   
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("SetPageSize: Requested page width_mm=%f, page height_mm=%f\n", 
-         (double)page_width_mm, (double)page_height_mm));
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("SetMediumSize: Requested page '%s'\n", paper_name));
 
   mlist = XpuGetMediumSourceSizeList(mPDisplay, mPContext, &mlist_count);
   if( !mlist )
@@ -382,29 +386,38 @@ nsresult nsXPrintContext::SetPageSize(float page_width_mm, float page_height_mm)
   }
 #endif /* PR_LOGGING */
 
-  /* Tolerate +/- 2mm due conversion/rounding errors and different notations */
-  match = XpuFindMediumSourceSizeBySize(mlist, mlist_count, page_width_mm, page_height_mm, 2.0f);
- 
-  /* No match ?
-   * The "try again" with a tolerance if +/- 10mm
-   */
-  if (!match)
+  char *s;
+  
+  /* Did we get a tray name and paper name (e.g. "manual/din-a4") ? */
+  if (s = strchr(paper_name, '/'))
   {
-    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-           ("No match found in first attempt, trying again with 10mm tolerance...\n"));
-    match = XpuFindMediumSourceSizeBySize(mlist, mlist_count, page_width_mm, page_height_mm, 10.0f); 
-  }    
+    const char *tray_name;
+    *s = '\0';
+    tray_name  = paper_name;
+    paper_name = s+1;
+    
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("SetMediumSize: searching for '%s'/'%s'\n", tray_name, paper_name));
+    match = XpuFindMediumSourceSizeByName(mlist, mlist_count, tray_name, paper_name);
+  }
+  else
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("SetMediumSize: searching for '%s'\n", paper_name));
+    match = XpuFindMediumSourceSizeByName(mlist, mlist_count, nsnull, paper_name);
+  }
   
   /* Found a match ? */
   if (match)
   {
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
-           ("match %s/%s !\n", XPU_NULLXSTR(match->tray_name), match->medium_name));
+           ("match '%s'/'%s' !\n", XPU_NULLXSTR(match->tray_name), match->medium_name));
+           
+    /* Set document's paper size */
     if( XpuSetDocMediumSourceSize(mPDisplay, mPContext, match) == 1 )
       rv = NS_OK;  
   }
   
   XpuFreeMediumSourceSizeList(mlist);
+  free(alloc_paper_name);
   
   return rv;
 }
@@ -554,13 +567,10 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   dumpXpAttributes(mPDisplay, mPContext);
 #endif /* XPRINT_DEBUG_SOMETIMES_USEFULL */
   
-  PRInt32 page_width_in_twips,
-          page_height_in_twips;
-
-  aSpec->GetPageSizeInTwips(&page_width_in_twips, &page_height_in_twips);
+  const char *paper_name = nsnull;
+  aSpec->GetPaperName(&paper_name);
   
-  if (NS_FAILED(XPU_TRACE(rv = SetPageSize(NS_TWIPS_TO_MILLIMETERS(page_width_in_twips),
-                                           NS_TWIPS_TO_MILLIMETERS(page_height_in_twips)))))
+  if (NS_FAILED(XPU_TRACE(rv = SetMediumSize(paper_name))))
     return rv;
   
   if (NS_FAILED(XPU_TRACE(rv = SetOrientation(landscape))))
