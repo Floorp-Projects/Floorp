@@ -180,6 +180,13 @@ ifeq ($(OS_ARCH), Darwin)
 EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
 endif
 
+# Use the Solaris ld, which knows where to find libsoftokn3.so.
+ifeq ($(OS_ARCH), SunOS)
+ifdef NS_USE_GCC
+EXTRA_SHARED_LIBS += -B/usr/ccs/bin/
+endif
+endif
+
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
