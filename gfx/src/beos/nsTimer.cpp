@@ -24,8 +24,11 @@
 #include <limits.h>
 #include <OS.h>
 #include <Application.h>
+#include <Autolock.h>
 #include <Message.h>
-#include "nsTimer.h"
+#include <signal.h>
+#include <List.h>
+#include <prthread.h>
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
@@ -53,39 +56,250 @@ static sem_id my_find_sem(const char *name)
 	return ret;
 }
 
+
+class TimerImpl;
+class TimerManager;
+
+class TimerManager : public BList
+{
+public:
+					TimerManager();
+					~TimerManager();
+	void			AddRequest(TimerImpl *);
+	bool			RemoveRequest(TimerImpl *);
+
+private:
+	BLocker			mLocker;
+	sem_id			mSyncSem;
+	thread_id		mTimerThreadID;
+	bool			mQuitRequested;
+
+	static int32	sTimerThreadFunc(void *);
+	int32			TimerThreadFunc();
+	TimerImpl		*FirstRequest()				{ return (TimerImpl *)FirstItem(); }
+};
+
+
+class TimerImpl : public nsITimer
+{
+	friend class TimerManager;
+public:
+					TimerImpl();
+	virtual			~TimerImpl();
+												
+	virtual nsresult	Init(nsTimerCallbackFunc aFunc,
+							void *aClosure,
+//				              PRBool aRepeat, 
+                			PRUint32 aDelay);
+														
+	virtual nsresult	Init(nsITimerCallback *aCallback,
+//		     		         PRBool aRepeat, 
+                			PRUint32 aDelay);
+					
+    NS_DECL_ISUPPORTS
+
+    virtual void		Cancel();
+    virtual PRUint32	GetDelay()					{ return mDelay; }
+    virtual void		SetDelay(PRUint32);
+    virtual void*		GetClosure()				{ return mClosure; }
+
+	void				FireTimeout();
+
+private:
+    nsresult			Init(PRUint32 aDelay);	// Initialize the timer.
+
+	bigtime_t			mWhen;		// Time when this request should be done
+    PRUint32			mDelay;	    // The delay set in Init()
+    nsTimerCallbackFunc	mFunc;	    // The function to call back when expired
+    void				*mClosure;  // The argumnet to pass it.
+    nsITimerCallback	*mCallback; // An interface to notify when expired.
+	bool				mCanceled;
+	PRThread			*mThread;
+//  PRBool		mRepeat;    // A repeat, not implemented yet.
+
+public:
+	static TimerManager	sTimerManager;
+};
+
+TimerManager TimerImpl::sTimerManager;
+
+TimerManager::TimerManager()
+ : BList(40)
+{
+	mQuitRequested = false;
+	mSyncSem = create_sem(0, "timer sync");
+	if(mSyncSem < 0)
+		debugger("Failed to create sem...");
+	
+	mTimerThreadID = spawn_thread(&sTimerThreadFunc, "timer roster", B_URGENT_DISPLAY_PRIORITY, (void *)this);
+	if(mTimerThreadID < B_OK)
+		// is it the right way ?
+		debugger("Failed to spawn timer thread...");
+	
+	resume_thread(mTimerThreadID);
+}
+
+TimerManager::~TimerManager()
+{
+	// should we empty the list here and NS_RELEASE ?
+	mQuitRequested = true;
+	delete_sem(mSyncSem);
+
+	int32 junk;
+	wait_for_thread(mTimerThreadID, &junk);
+}
+
+void TimerManager::AddRequest(TimerImpl *inRequest)
+{
+	if(mLocker.Lock())
+	{
+		NS_ADDREF(inRequest);	// this is for the timer list
+
+		// insert sorted into timer event list
+		int32 count = CountItems();
+		int32 pos;
+		for(pos = 0; pos < count; pos++)
+		{
+			TimerImpl *entry = (TimerImpl *)ItemAtFast(pos);
+			if(entry->mWhen > inRequest->mWhen)
+				break;
+		}
+		AddItem(inRequest, pos);
+			
+		if(pos == 0)
+			// We need to wake the thread to wait on the newly added event
+			release_sem(mSyncSem);
+
+		mLocker.Unlock();
+	}
+}
+
+bool TimerManager::RemoveRequest(TimerImpl *inRequest)
+{
+	bool	found = false;
+
+	if(mLocker.Lock())
+	{
+		if(RemoveItem(inRequest))
+		{
+			NS_RELEASE(inRequest);
+			found = true;
+		}
+
+		mLocker.Unlock();
+	}
+
+	return found;
+}
+
+int32 TimerManager::sTimerThreadFunc(void *inData)
+{
+	return ((TimerManager *)inData)->TimerThreadFunc();
+}
+
+int32 TimerManager::TimerThreadFunc()
+{
+	char		portname[64];
+	char		semname[64];
+	port_id		eventport;
+	sem_id		syncsem;
+	PRThread	*cached = (PRThread *)-1;
+
+	while(! mQuitRequested)
+	{
+		TimerImpl *tobj = 0;
+
+		mLocker.Lock();
+
+		bigtime_t now = system_time();
+
+		// Fire expired pending requests
+		while((tobj = FirstRequest()) != 0 && tobj->mWhen <= now)
+		{
+			RemoveItem((int32)0);
+			mLocker.Unlock();
+
+			if(! tobj->mCanceled)
+			{
+				// fire it
+				if(tobj->mThread != cached)
+				{
+					sprintf(portname, "event%lx", tobj->mThread);
+					sprintf(semname, "sync%lx", tobj->mThread);
+
+					eventport = find_port(portname);
+					syncsem = my_find_sem(semname);
+					cached = tobj->mThread;
+				}
+
+				// call timer synchronously so we're sure tobj is alive
+				ThreadInterfaceData	 id;
+				id.data = tobj;
+				id.sync = true;
+				if(write_port(eventport, 'WMti', &id, sizeof(id)) == B_OK)
+					while(acquire_sem(syncsem) == B_INTERRUPTED)
+						;
+			}
+			NS_RELEASE(tobj);
+
+			mLocker.Lock();
+		}
+		mLocker.Unlock();
+
+		if(acquire_sem_etc(mSyncSem, 1, B_ABSOLUTE_TIMEOUT, 
+					tobj ? tobj->mWhen : B_INFINITE_TIMEOUT) == B_BAD_SEM_ID)
+			break;
+	}
+
+	return B_OK;
+}
+
+//
+// TimerImpl
+//
 void TimerImpl::FireTimeout()
 {
-	if(! canceled)
+	if( ! mCanceled)
 	{
-		if (mFunc != NULL)
+		if(mFunc != NULL)
 			(*mFunc)(this, mClosure);	    // If there's a function, call it.
-		else if (mCallback != NULL)
-			mCallback->Notify(this);	    // But if there's an interface, notify it.
+		else if(mCallback != NULL)
+			mCallback->Notify(this);    // But if there's an interface, notify it.
 	}
 }
 
 TimerImpl::TimerImpl()
 {
 	NS_INIT_REFCNT();
-	mFunc = NULL;
-	mCallback = NULL;
-	mNext = NULL;
-	mDelay = 0;
-	mClosure = NULL;
-	sleepsem = B_ERROR;
-	canceled = false;
+	mFunc			= 0;
+	mCallback		= 0;
+	mDelay			= 0;
+	mClosure		= 0;
+	mWhen			= 0;
+	mCanceled		= false;
 }
 
 TimerImpl::~TimerImpl()
 {
 	Cancel();
+	NS_IF_RELEASE(mCallback);
 }
 
-nsresult 
-TimerImpl::Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+void TimerImpl::SetDelay(PRUint32 aDelay)
+{
+	mDelay = aDelay;
+	mWhen = system_time() + mDelay * 1000;
+
+	NS_ADDREF(this);
+	if (TimerImpl::sTimerManager.RemoveRequest(this))
+		TimerImpl::sTimerManager.AddRequest(this);
+//	NS_RELEASE(this);	// ?*?*?*?* doesn't work...
+	Release();		// Is it the right way ?
+}
+
+nsresult TimerImpl::Init(nsTimerCallbackFunc aFunc, void *aClosure,
+//  							PRBool aRepeat, 
+                			PRUint32 aDelay)
 {
     mFunc = aFunc;
     mClosure = aClosure;
@@ -94,98 +308,55 @@ TimerImpl::Init(nsTimerCallbackFunc aFunc,
     return Init(aDelay);
 }
 
-nsresult 
-TimerImpl::Init(nsITimerCallback *aCallback,
-//              PRBool aRepeat, 
-                PRUint32 aDelay)
+nsresult TimerImpl::Init(nsITimerCallback *aCallback,
+//       				PRBool aRepeat, 
+                	PRUint32 aDelay)
 {
     mCallback = aCallback;
+    NS_ADDREF(mCallback);
     // mRepeat = aRepeat;
     return Init(aDelay);
 }
 
-nsresult
-TimerImpl::Init(PRUint32 aDelay)
-{
-    mDelay = aDelay;
-    NS_ADDREF(this);	// this is for clients of the timer
 
+nsresult TimerImpl::Init(PRUint32 aDelay)
+{
+	mDelay = aDelay;
+	NS_ADDREF(this);	// this is for clients of the timer
+	mWhen = system_time() + aDelay * 1000;
+	
 	mThread = PR_GetCurrentThread();
-	sleepsem = create_sem(0, "sleep sem");
-	mThreadID = spawn_thread(Sleepy, "Mozilla Timer", B_URGENT_DISPLAY_PRIORITY, this);
-	if(mThreadID > 0)
-	{
-	    NS_ADDREF(this);	// this is for the timer thread
-		resume_thread(mThreadID);
 
-	    return NS_OK;
-	}
-	else
-		return NS_ERROR_FAILURE;
+	sTimerManager.AddRequest(this);
+	
+    return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
+NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID);
 
 
-void
-TimerImpl::Cancel()
+void TimerImpl::Cancel()
 {
-	delete_sem(sleepsem);
-	sleepsem = B_ERROR;
-	canceled = true;
-}
-
-long TimerImpl::Sleepy( void *args )
-{
-	TimerImpl *tobj = (TimerImpl *)args;
-
-	char		portname[64];
-	char		semname[64];
-
-	sprintf(portname, "event%lx", tobj->mThread);
-	sprintf(semname, "sync%lx", tobj->mThread);
-
-	port_id eventport = find_port(portname);
-	sem_id syncsem = my_find_sem(semname);
-
-	bigtime_t sleeptime = (long long)(tobj->mDelay) * 1000L;
-	if(sleeptime == 0) sleeptime = 10;
-	if(acquire_sem_etc(tobj->sleepsem, 1, B_TIMEOUT, sleeptime) == B_TIMED_OUT)
-	{
-		// call timer synchronously so we're sure tobj is alive
-		ThreadInterfaceData	 id;
-		id.data = tobj;
-		id.sync = true;
-		if(write_port(eventport, WM_TIMER, &id, sizeof(id)) == B_OK)
-			while(acquire_sem(syncsem) == B_INTERRUPTED)
-				;
-	}
-	delete_sem(tobj->sleepsem);
-	tobj->sleepsem = B_ERROR;
-
-	NS_RELEASE(tobj);
-
-	return 0;
+	mCanceled = true;
+	TimerImpl::sTimerManager.RemoveRequest(this);
 }
 
 NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-    if (nsnull == aInstancePtrResult) {
-      return NS_ERROR_NULL_POINTER;
-    }  
+    if(nsnull == aInstancePtrResult)
+		return NS_ERROR_NULL_POINTER;
 
     TimerImpl *timer = new TimerImpl();
-    if (nsnull == timer) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    if(nsnull == timer)
+		return NS_ERROR_OUT_OF_MEMORY;
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
 
-
 void nsTimerExpired(void *aCallData)
 {
-  TimerImpl* timer = (TimerImpl *)aCallData;
-  timer->FireTimeout();
+	TimerImpl* timer = (TimerImpl *)aCallData;
+	timer->FireTimeout();
+	NS_RELEASE(timer);
 }
