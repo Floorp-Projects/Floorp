@@ -47,6 +47,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIScriptContext.h"
+#include "nsIHTMLStyleSheet.h"
 
 class nsIParser;
 class nsIDOMNode;
