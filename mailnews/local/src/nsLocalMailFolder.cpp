@@ -1493,7 +1493,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
                                     nsISupportsArray* messages,
                                     PRBool isMove,
                                     nsIMsgCopyServiceListener* listener, 
-                                    nsIMsgWindow *msgWindow)
+                                    nsIMsgWindow *msgWindow, PRBool isFolder)
 {
   nsresult rv = NS_OK;
 	nsFileSpec path;
@@ -1539,6 +1539,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
   if (NS_FAILED(rv)) goto done;
   mCopyState->m_curCopyIndex = 0;
   mCopyState->m_isMove = isMove;
+  mCopyState->m_isFolder = isFolder;
   rv = messages->Count(&mCopyState->m_totalMsgCount);
   if (listener)
     mCopyState->m_listener = do_QueryInterface(listener, &rv);
@@ -1571,13 +1572,13 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
                                    messages, PRBool isMove,
                                    nsIMsgWindow *msgWindow,
-                                   nsIMsgCopyServiceListener* listener)
+                                   nsIMsgCopyServiceListener* listener, PRBool isFolder)
 {
   if (!srcFolder || !messages)
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr <nsITransactionManager> txnMgr;
 
-  if (msgWindow)
+  if (msgWindow && !isFolder)   // no undo for folder move/copy
   {
 	  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
 
@@ -1595,7 +1596,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   // don't update the counts in the dest folder until it is all over
   EnableNotifications(allMessageCountNotifications, PR_FALSE);
 
-  rv = InitCopyState(aSupport, messages, isMove, listener, msgWindow);
+  rv = InitCopyState(aSupport, messages, isMove, listener, msgWindow, isFolder);
   if (NS_FAILED(rv)) return rv;
   char *uri = nsnull;
   rv = srcFolder->GetURI(&uri);
@@ -1618,35 +1619,39 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
 
   // undo stuff
-  nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
-
-  msgTxn = new nsLocalMoveCopyMsgTxn(srcFolder, this, isMove);
-
-  if (msgTxn)
-    rv =
-      msgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn),
-                             getter_AddRefs(mCopyState->m_undoMsgTxn));
-  else
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  
-  if (NS_FAILED(rv))
+  if (!isFolder)    //no undo for folder move/copy
   {
-    ClearCopyState();
-  }
-  else
-  {
-    msgTxn->SetMsgWindow(msgWindow);
-    if (isMove)
-    {
-      if (mFlags & MSG_FOLDER_FLAG_TRASH)
-        msgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+      nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
+
+      msgTxn = new nsLocalMoveCopyMsgTxn(srcFolder, this, isMove);
+
+      if (msgTxn)
+         rv =
+              msgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn),
+                                     getter_AddRefs(mCopyState->m_undoMsgTxn));
       else
-        msgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
-    }
-    else
-    {
-      msgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
-    }
+         rv = NS_ERROR_OUT_OF_MEMORY;
+  
+      if (NS_FAILED(rv))
+	  {
+          ClearCopyState();
+	  }
+      else
+	  {
+         msgTxn->SetMsgWindow(msgWindow);
+         if (isMove)
+		 {
+            if (mFlags & MSG_FOLDER_FLAG_TRASH)
+                msgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+            else
+                msgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+		 }
+         else
+		 {
+            msgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+		 }
+	  }
+  }
 	  PRUint32 numMsgs = 0;
 	  messages->Count(&numMsgs);
 	if (numMsgs > 1 && protocolType.EqualsIgnoreCase("imap"))
@@ -1667,8 +1672,211 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 			ClearCopyState();
 		}
 	}
-  }
   return rv;
+}
+// for srcFolder that are on different server than the dstFolder. 
+nsresult
+nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder *destFolder, nsIMsgFolder* srcFolder, nsIMsgWindow *msgWindow,
+								  nsIMsgCopyServiceListener *listener )
+{
+ 	
+  nsresult rv;
+  nsCOMPtr<nsIFolder> newFolder;
+  nsCOMPtr<nsIMsgFolder> newMsgFolder;
+    
+  nsXPIDLString folderName;
+  srcFolder->GetName(getter_Copies(folderName));
+	
+  rv = destFolder->CreateSubfolder(folderName,msgWindow);
+  if (NS_FAILED(rv)) return rv;
+
+  destFolder->FindSubFolder(NS_ConvertUCS2toUTF8(folderName.get()), getter_AddRefs(newFolder));
+  
+  newMsgFolder = do_QueryInterface(newFolder,&rv);
+  
+  nsCOMPtr<nsISimpleEnumerator> messages;
+  rv = srcFolder->GetMessages(msgWindow, getter_AddRefs(messages));
+
+  nsCOMPtr<nsISupportsArray> msgSupportsArray;
+  NS_NewISupportsArray(getter_AddRefs(msgSupportsArray));
+
+  PRBool hasMoreElements;
+  nsCOMPtr<nsISupports> aSupport;
+
+  if (messages)
+      messages->HasMoreElements(&hasMoreElements);
+  
+  while (hasMoreElements && NS_SUCCEEDED(rv))
+  {
+	  rv = messages->GetNext(getter_AddRefs(aSupport));
+  	  rv = msgSupportsArray->AppendElement(aSupport);
+	  messages->HasMoreElements(&hasMoreElements);
+  }
+  
+  PRUint32 numMsgs=0;
+  msgSupportsArray->Count(&numMsgs);
+
+  if (numMsgs > 0 )   //if only srcFolder has messages..
+      newMsgFolder->CopyMessages(srcFolder, msgSupportsArray, PR_FALSE, msgWindow, listener, PR_TRUE);
+  else
+      DoNextSubFolder(newMsgFolder, srcFolder, msgWindow, listener);
+	    
+  return NS_OK;  // otherwise the front-end will say Exception::CopyFolder
+}
+
+nsresult    //Continue with next subfolder
+nsMsgLocalMailFolder::DoNextSubFolder(nsIMsgFolder *newMsgFolder, 
+								  nsIMsgFolder *srcFolder, 
+								  nsIMsgWindow *msgWindow, 
+								  nsIMsgCopyServiceListener *listener )
+{
+  nsresult rv;
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  srcFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+  nsCOMPtr<nsIMsgFolder>folder;
+  nsCOMPtr<nsISupports> aSupports;
+  rv = aEnumerator->First();
+  while (NS_SUCCEEDED(rv))
+  {
+     rv = aEnumerator->CurrentItem(getter_AddRefs(aSupports));
+     folder = do_QueryInterface(aSupports);
+	 rv = aEnumerator->Next();
+     if (folder)
+         CopyFolderAcrossServer(newMsgFolder,folder, msgWindow, listener);  
+    
+  }  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::CopyFolder( nsIMsgFolder* srcFolder, PRBool isMoveFolder,
+                                   nsIMsgWindow *msgWindow,
+                                   nsIMsgCopyServiceListener* listener)
+{
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(srcFolder);
+  
+  if (isMoveFolder)   // isMoveFolder == true when "this" and srcFolder are on same server
+	  rv = CopyFolderLocal(this, srcFolder, isMoveFolder, msgWindow, listener );
+  else
+      rv = CopyFolderAcrossServer(this, srcFolder, msgWindow, listener );
+	  
+  return rv;
+}
+
+
+nsresult
+nsMsgLocalMailFolder::CopyFolderLocal( nsIMsgFolder *destFolder, nsIMsgFolder *srcFolder, PRBool isMoveFolder,
+									   nsIMsgWindow *msgWindow,
+									   nsIMsgCopyServiceListener *listener )
+{
+ 
+  nsresult rv;
+  nsCOMPtr<nsIFolder> newFolder;
+  nsCOMPtr<nsIMsgFolder> newMsgFolder;
+    
+  nsXPIDLString idlName;
+  srcFolder->GetName(getter_Copies(idlName));
+  nsAutoString folderName;
+  folderName.Assign(idlName);
+
+  srcFolder->ForceDBClosed();	  
+	  	 
+  nsCOMPtr<nsIFileSpec> oldPathSpec;
+  rv = srcFolder->GetPath(getter_AddRefs(oldPathSpec));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsFileSpec oldPath;
+  rv = oldPathSpec->GetFileSpec(&oldPath);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsLocalFolderSummarySpec	summarySpec(oldPath);
+
+  nsCOMPtr<nsIFileSpec> newPathSpec;
+  rv = destFolder->GetPath(getter_AddRefs(newPathSpec));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsFileSpec newPath;
+  rv = newPathSpec->GetFileSpec(&newPath);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!newPath.IsDirectory())
+  {
+	  AddDirectorySeparator(newPath);
+      newPath.CreateDirectory();
+  }
+
+  PRBool exists = PR_FALSE;
+  nsFileSpec checkPath = newPath;
+
+  checkPath += folderName;
+  exists=checkPath.Exists();
+  
+  if (exists)
+  {
+		if (msgWindow)
+     		AlertFolderExists(msgWindow);
+        return NS_MSG_FOLDER_EXISTS;
+  }
+ 
+  nsFileSpec path = oldPath;
+
+  path.MoveToDir(newPath);
+  summarySpec.MoveToDir(newPath);
+   
+  destFolder->AddSubfolder(&folderName, getter_AddRefs(newMsgFolder));  
+
+  PRUint32 flags;
+  srcFolder->GetFlags(&flags);
+  newMsgFolder->SetFlags(flags);
+
+  if (newMsgFolder) 
+  {
+      newMsgFolder->SetName(folderName.GetUnicode());
+      nsCOMPtr<nsISupports> supports = do_QueryInterface(newMsgFolder);
+      nsCOMPtr<nsISupports> parentSupports  = do_QueryInterface(destFolder);
+
+      if (supports && parentSupports)
+      {
+        NotifyItemAdded(parentSupports, supports, "folderView");
+      }
+  }
+
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  srcFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+  nsCOMPtr<nsIMsgFolder>folder;
+  nsCOMPtr<nsISupports> supports;
+  rv = aEnumerator->First();
+  while (NS_SUCCEEDED(rv))
+  {
+     rv = aEnumerator->CurrentItem(getter_AddRefs(supports));
+     folder = do_QueryInterface(supports);
+	 rv = aEnumerator->Next();
+     if (folder)
+         CopyFolderLocal(newMsgFolder,folder, PR_FALSE, msgWindow, listener);  // PR_FALSE needed to avoid un-necessary deletions
+     
+  }  
+
+  if (isMoveFolder )
+  {
+     nsCOMPtr <nsIFolder> parent;
+     nsCOMPtr<nsIMsgFolder> msgParent;
+     srcFolder->GetParent(getter_AddRefs(parent));
+	 srcFolder->SetParent(nsnull);
+     if (parent) 
+	 {
+         msgParent = do_QueryInterface(parent);
+         if (msgParent)
+		     msgParent->PropagateDelete(srcFolder, PR_FALSE);  // The files have already been moved, so delete storage PR_FALSE 
+	     if (!oldPath.IsDirectory())   
+		 {
+		     AddDirectorySeparator(oldPath);
+		     oldPath.Delete(PR_TRUE);   //delete the .sbd directory and it's content. All subfolders have been moved
+		 }
+	 }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1698,7 +1906,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
   }
 
   rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE,
-                     listener, msgWindow);
+                     listener, msgWindow, PR_FALSE);
   if (NS_FAILED(rv)) goto done;
 
   parseMsgState = new nsParseMailMessageState();
@@ -2158,6 +2366,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     nsresult result;
 	  if(!mCopyState->m_isMove)
 	  {
+		  nsCOMPtr<nsIMsgFolder> srcFolder;
+          srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+		  if (mCopyState->m_isFolder)
+			  DoNextSubFolder(this, srcFolder, nsnull, nsnull);  //Copy all subfolders then notify completion
+
 		  NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
 						  kMsgCopyServiceCID, &result); 
 
@@ -2168,10 +2381,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 		    mTxnMgr->Do(mCopyState->m_undoMsgTxn);
     
 
-      nsCOMPtr<nsIMsgFolder> srcFolder;
-      srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
-      if (srcFolder)
-        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+          if (srcFolder && !mCopyState->m_isFolder)
+              srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
 		  ClearCopyState();
 	  }
 
@@ -2765,3 +2976,4 @@ nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
 
   return NS_OK;
 }
+

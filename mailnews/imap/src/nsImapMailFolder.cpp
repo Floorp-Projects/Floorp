@@ -90,6 +90,73 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define FOUR_K 4096
 
+/*
+    Copies the contents of srcDir into destDir.
+    destDir will be created if it doesn't exist.
+*/
+
+static
+nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
+{
+    nsresult rv;
+    PRBool isDir;
+    
+    rv = srcDir->IsDirectory(&isDir);
+    if (NS_FAILED(rv)) return rv;
+	if (!isDir) return NS_ERROR_INVALID_ARG;
+
+    PRBool exists;
+    rv = destDir->Exists(&exists);
+	if (NS_SUCCEEDED(rv) && !exists)
+		rv = destDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+	if (NS_FAILED(rv)) return rv;
+
+    PRBool hasMore = PR_FALSE;
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = srcDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = dirIterator->HasMoreElements(&hasMore);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIFile> dirEntry;
+    
+	while (hasMore)
+	{
+		rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
+		if (NS_SUCCEEDED(rv))
+		{
+		    rv = dirEntry->IsDirectory(&isDir);
+			if (NS_SUCCEEDED(rv))
+		    {
+		        if (isDir)
+		        {
+		            nsCOMPtr<nsIFile> destClone;
+		            rv = destDir->Clone(getter_AddRefs(destClone));
+		            if (NS_SUCCEEDED(rv))
+		            {
+		                nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
+		                nsXPIDLCString leafName;
+		                dirEntry->GetLeafName(getter_Copies(leafName));
+		                newChild->AppendRelativePath(leafName);
+						rv = newChild->Exists(&exists);
+			            if (NS_SUCCEEDED(rv) && !exists)
+				             rv = newChild->Create(nsIFile::DIRECTORY_TYPE, 0775);
+		                rv = RecursiveCopy(dirEntry, newChild);
+		            }
+		        }
+		        else
+		            rv = dirEntry->CopyTo(destDir, nsnull);
+		    }
+		
+		}
+        rv = dirIterator->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
+	}
+
+	return rv;
+}
+
 nsImapMailFolder::nsImapMailFolder() :
     m_initialized(PR_FALSE),m_haveDiscoveredAllFolders(PR_FALSE),
     m_haveReadNameFromDB(PR_FALSE), 
@@ -1092,14 +1159,14 @@ NS_IMETHODIMP nsImapMailFolder::PrepareToRename()
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
+NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName, nsIMsgFolder *parent)
 {
     nsCAutoString leafname(newName);
+    nsCAutoString parentName;
     // newName always in the canonical form "greatparent/parentname/leafname"
     PRInt32 leafpos = leafname.RFindChar('/');
-    if (leafpos >0)
+    if (leafpos >0) 
         leafname.Cut(0, leafpos+1);
-
     m_msgParser = null_nsCOMPtr();
     PrepareToRename();
     NotifyStoreClosedAllHeaders();
@@ -1109,10 +1176,18 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
     nsCOMPtr<nsIFileSpec> oldPathSpec;
     rv = GetPath(getter_AddRefs(oldPathSpec));
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIFolder> parent;
-    rv = GetParent(getter_AddRefs(parent));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIMsgFolder> parentFolder = do_QueryInterface(parent);
+
+	nsCOMPtr<nsIFileSpec> parentPathSpec;
+	rv = parent->GetPath(getter_AddRefs(parentPathSpec));
+	NS_ENSURE_SUCCESS(rv,rv);
+
+	nsFileSpec parentPath;
+	rv = parentPathSpec->GetFileSpec(&parentPath);
+	NS_ENSURE_SUCCESS(rv,rv);
+
+    if (!parentPath.IsDirectory())
+	  AddDirectorySeparator(parentPath);
+    
     PRUint32 cnt = 0;
     nsFileSpec dirSpec;
 
@@ -1133,7 +1208,39 @@ NS_IMETHODIMP nsImapMailFolder::RenameLocal(const char *newName)
     {
        newNameStr = leafname;
        newNameStr += ".sbd";
-       dirSpec.Rename(newNameStr.GetBuffer());
+	   char *leafName = dirSpec.GetLeafName();
+	   if (nsCRT::strcmp(leafName, newNameStr) != 0 )
+	   {
+           dirSpec.Rename(newNameStr.GetBuffer());      // in case of rename operation leaf names will differ
+		   nsCRT::free(leafName);
+		   return rv;
+	   }
+	   nsCRT::free(leafName);
+                                               
+	   parentPath += newNameStr;    //only for move we need to progress further in case the parent differs
+
+	   if (!parentPath.IsDirectory())
+		   parentPath.CreateDirectory();
+	   else
+		   NS_ASSERTION(0,"Directory already exists.");
+	   
+	   nsCOMPtr<nsILocalFile> srcDir = (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+	   NS_ENSURE_SUCCESS(rv,rv);
+
+	   nsCOMPtr<nsILocalFile> destDir = (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+	   NS_ENSURE_SUCCESS(rv,rv);
+	  
+	   nsCString oldPathStr (dirSpec.GetNativePathCString());
+       srcDir->InitWithPath(oldPathStr.GetBuffer());
+	   
+       nsCString newPathStr (parentPath.GetNativePathCString());
+       destDir->InitWithPath(newPathStr.GetBuffer());
+       
+	   rv = RecursiveCopy(srcDir, destDir);
+       
+	   NS_ENSURE_SUCCESS(rv,rv);
+
+	   dirSpec.Delete(PR_TRUE);                         // moving folders
     }
     return rv;
 }
@@ -1702,7 +1809,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 
       rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
 					  getter_AddRefs(srcFolder));
-      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, nsnull);
+      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, nsnull,PR_FALSE);
 	  }
   }
   return rv;
@@ -1825,7 +1932,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
         }
     }
     
-    if (confirmed)
+    if (confirmed && deleteNoTrash)   //delete subfolders only if you are  deleting things from trash
         return nsMsgFolder::DeleteSubFolders(folders, nsnull);
     else
         return rv;
@@ -2443,6 +2550,7 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
                                                 m_copyState->m_selectedState,
                                                 urlListener, nsnull,
                                                 copySupport);
+		
     }
   return rv;
 }
@@ -4677,7 +4785,8 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                nsISupportsArray* messages,
                                PRBool isMove,
                                nsIMsgWindow *msgWindow,
-                               nsIMsgCopyServiceListener* listener)
+                               nsIMsgCopyServiceListener* listener,
+							   PRBool isFolder)   //isFolder for future use when we do cross-server folder move/copy
 {
   nsresult rv = NS_OK;
   nsCAutoString messageIds;
@@ -4768,6 +4877,38 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
 
 done:
     return rv;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::CopyFolder(nsIMsgFolder* srcFolder,
+                               PRBool isMoveFolder,
+                               nsIMsgWindow *msgWindow,
+                               nsIMsgCopyServiceListener* listener)
+{
+
+  NS_ENSURE_ARG_POINTER(srcFolder);
+  
+  nsresult rv = NS_OK;
+
+  if (isMoveFolder)   //move folder permitted when dstFolder and the srcFolder are on same server
+  {
+	   nsCOMPtr <nsIImapService> imapService = do_GetService (kCImapService, &rv);
+	   if (NS_SUCCEEDED(rv))
+	   {
+	       nsCOMPtr <nsIUrlListener> urlListener = do_QueryInterface(srcFolder);
+	       rv = imapService->MoveFolder(m_eventQueue,
+                                        srcFolder,
+                                        this,
+                                        urlListener,
+                                        nsnull);
+	   }
+
+  }
+  else
+	  NS_ASSERTION(0,"isMoveFolder is false. Trying to copy to a different server.");
+
+  return rv;
+  
 }
 
 nsresult
@@ -5075,7 +5216,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
     nsFileSpec path;
     rv = pathSpec->GetFileSpec(&path);
     if (NS_FAILED(rv)) return rv;
-		
+
     nsCOMPtr<nsIMsgImapMailFolder> oldImapFolder = do_QueryInterface(msgFolder, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -5084,17 +5225,18 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
     PRInt32 boxflags=0;
     oldImapFolder->GetBoxFlags(&boxflags);
 
-    nsAutoString newLeafName; 
-    newLeafName.AssignWithConversion(newName);
-    nsAutoString parentName = newLeafName;
+    nsAutoString newLeafName;
+	nsAutoString newNameString;
+    newNameString.AssignWithConversion(newName);
+	newLeafName = newNameString;
+	nsAutoString parentName; 
     nsAutoString folderNameStr;
     PRInt32 folderStart = newLeafName.RFindChar('/');  //internal use of hierarchyDelimiter is always '/'
     if (folderStart > 0)
     {
-        parentName.Right(newLeafName, newLeafName.Length() - folderStart - 1);
-        rv = AddDirectorySeparator(path);
-    }
-
+        newNameString.Right(newLeafName, newLeafName.Length() - folderStart - 1);
+		CreateDirectoryForFolder(path);    //needed when we move a folder to a folder with no subfolders.
+	}	
 
     // if we get here, it's really a leaf, and "this" is the parent.
     folderNameStr = newLeafName;
@@ -5165,8 +5307,11 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
 	  }
     }
 
+	nsCOMPtr<nsIFolder> parent;
+	msgFolder->GetParent(getter_AddRefs(parent));
+	nsCOMPtr<nsIMsgFolder> msgParent = do_QueryInterface(parent);
     msgFolder->SetParent(nsnull);
-    PropagateDelete(msgFolder,PR_FALSE);
+	msgParent->PropagateDelete(msgFolder,PR_FALSE);
 
     if(NS_SUCCEEDED(rv) && child)
     {

@@ -62,6 +62,7 @@ struct nsLocalMailCopyState
   nsIMsgMessageService* m_messageService;
   PRUint32 m_totalMsgCount;
   PRBool m_isMove;
+  PRBool m_isFolder;   // isFolder move/copy
   PRBool m_dummyEnvelopeNeeded;
   char m_dataBuffer[FOUR_K+1];
   PRUint32 m_leftOver;
@@ -134,6 +135,8 @@ public:
                             deleteStorage, PRBool isMove);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
                           PRBool isMove, nsIMsgWindow *msgWindow,
+                          nsIMsgCopyServiceListener* listener, PRBool isFolder );
+  NS_IMETHOD CopyFolder(nsIMsgFolder *srcFolder, PRBool isMoveFolder, nsIMsgWindow *msgWindow,
                           nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage* msgToReplace,
                              PRBool isDraftOrTemplate, 
@@ -144,6 +147,13 @@ public:
 
 
 protected:
+	nsresult CopyFolderLocal(nsIMsgFolder *destFolder, nsIMsgFolder *srcFolder, PRBool isMoveFolder, nsIMsgWindow *msgWindow,
+                          nsIMsgCopyServiceListener* listener);
+	nsresult CopyFolderAcrossServer(nsIMsgFolder *destFolder, nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
+
+	nsresult DoNextSubFolder(nsIMsgFolder *newMsgFolder, nsIMsgFolder *srcFolder,
+		                     nsIMsgWindow *msgWindow, nsIMsgCopyServiceListener *listener );
+
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
@@ -161,7 +171,8 @@ protected:
 
 	nsresult DeleteMessage(nsIMessage *message, nsIMsgWindow *msgWindow,
                          PRBool deleteStorage);
-  // copy message helper
+
+	// copy message helper
 	nsresult CopyMessageTo(nsIMessage *message, nsIMsgFolder *dstFolder,
                          nsIMsgWindow *msgWindow, PRBool isMove);
 
@@ -173,7 +184,7 @@ protected:
 	virtual const char* GetIncomingServerType();
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
-                         PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow);
+                         PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder);
   void ClearCopyState();
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 

@@ -1101,16 +1101,30 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
         rv = GetFolder(oldName, getter_AddRefs(me));
         if (NS_FAILED(rv)) return rv;
         
+		nsCOMPtr<nsIMsgFolder> parent ;
+        
+		nsCAutoString newNameString(newName);
+		nsCAutoString parentName;
+		PRInt32 folderStart = newNameString.RFindChar('/');
+		if (folderStart > 0)
+		{
+           newNameString.Left(parentName, folderStart);
+		   rv = GetFolder(parentName.get(),getter_AddRefs(parent));
+		}
+		else  // root is the parent
+		{
+		   nsCOMPtr<nsIFolder> rootFolder;
+           rv = GetRootFolder(getter_AddRefs(rootFolder));
+		   parent = do_QueryInterface(rootFolder,&rv);
+		}
+        if (NS_SUCCEEDED(rv) && parent) 
+        {
         nsCOMPtr<nsIMsgImapMailFolder> folder;
         folder = do_QueryInterface(me, &rv);
         if (NS_SUCCEEDED(rv))
-            folder->RenameLocal(newName);
+            folder->RenameLocal(newName,parent);
 
-        nsCOMPtr<nsIFolder> parent ;
-        rv = me->GetParent(getter_AddRefs(parent));
-		if (NS_SUCCEEDED(rv) && parent) 
-        {
-	    nsCOMPtr<nsIMsgImapMailFolder> parentImapFolder = do_QueryInterface(parent);
+		nsCOMPtr<nsIMsgImapMailFolder> parentImapFolder = do_QueryInterface(parent);
         if (parentImapFolder)
             parentImapFolder->RenameClient(me,oldName, newName);
         }

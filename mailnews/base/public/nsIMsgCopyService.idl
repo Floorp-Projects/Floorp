@@ -51,7 +51,13 @@ interface nsIMsgCopyService : nsISupports {
     /**
      *
      */
-	void CopyFileMessage(in nsIFileSpec fileSpec,
+	void CopyFolders( in nsISupportsArray folders,
+                      in nsIMsgFolder dstFolder,
+                      in boolean isMove,
+                      in nsIMsgCopyServiceListener listener,
+                      in nsIMsgWindow msgWindow);
+
+    void CopyFileMessage(in nsIFileSpec fileSpec,
                          in nsIMsgFolder dstFolder,
                          in nsIMessage msgToReplace,
                          in boolean isDraftOrTemplate,

@@ -33,7 +33,8 @@
 typedef enum _nsCopyRequestType
 {
     nsCopyMessagesType = 0x0,
-    nsCopyFileMessageType = 0x1
+    nsCopyFileMessageType = 0x1,
+    nsCopyFoldersType = 0x2
 } nsCopyRequestType;
 
 class nsCopyRequest;

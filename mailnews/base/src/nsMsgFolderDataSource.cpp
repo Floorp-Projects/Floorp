@@ -83,6 +83,8 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_NewFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Copy= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Move= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CopyFolder= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_MoveFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MarkAllMessagesRead= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Compact= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Rename= nsnull;
@@ -133,6 +135,8 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
     rdf->GetResource(NC_RDF_COPY, &kNC_Copy);
     rdf->GetResource(NC_RDF_MOVE, &kNC_Move);
+    rdf->GetResource(NC_RDF_COPYFOLDER, &kNC_CopyFolder);
+    rdf->GetResource(NC_RDF_MOVEFOLDER, &kNC_MoveFolder);
     rdf->GetResource(NC_RDF_MARKALLMESSAGESREAD,
                              &kNC_MarkAllMessagesRead);
     rdf->GetResource(NC_RDF_COMPACT, &kNC_Compact);
@@ -187,6 +191,8 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_GetNewMessages, refcnt);
 		NS_RELEASE2(kNC_Copy, refcnt);
 		NS_RELEASE2(kNC_Move, refcnt);
+		NS_RELEASE2(kNC_CopyFolder, refcnt);
+		NS_RELEASE2(kNC_MoveFolder, refcnt);
 		NS_RELEASE2(kNC_MarkAllMessagesRead, refcnt);
 		NS_RELEASE2(kNC_Compact, refcnt);
 		NS_RELEASE2(kNC_Rename, refcnt);
@@ -562,6 +568,8 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     cmds->AppendElement(kNC_GetNewMessages);
     cmds->AppendElement(kNC_Copy);
     cmds->AppendElement(kNC_Move);
+    cmds->AppendElement(kNC_CopyFolder);
+    cmds->AppendElement(kNC_MoveFolder);
     cmds->AppendElement(kNC_MarkAllMessagesRead);
     cmds->AppendElement(kNC_Compact);
     cmds->AppendElement(kNC_Rename);
@@ -604,6 +612,8 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
             (aCommand == kNC_NewFolder) ||
             (aCommand == kNC_Copy) ||
             (aCommand == kNC_Move) ||
+            (aCommand == kNC_CopyFolder) ||
+            (aCommand == kNC_MoveFolder) ||
             (aCommand == kNC_GetNewMessages) ||
             (aCommand == kNC_MarkAllMessagesRead) ||
             (aCommand == kNC_Compact) || 
@@ -663,6 +673,14 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       else if((aCommand == kNC_Move))
       {
         rv = DoCopyToFolder(folder, aArguments, mWindow, PR_TRUE);
+      }
+      else if((aCommand == kNC_CopyFolder))
+      {
+        rv = DoFolderCopyToFolder(folder, aArguments, mWindow, PR_FALSE);
+      }
+      else if((aCommand == kNC_MoveFolder))
+      {
+        rv = DoFolderCopyToFolder(folder, aArguments, mWindow, PR_TRUE);
       }
       else if((aCommand == kNC_MarkAllMessagesRead))
       {
@@ -1533,6 +1551,50 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 
 	}
 	return rv;
+	//return NS_OK;
+}
+
+nsresult nsMsgFolderDataSource::DoFolderCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
+											   nsIMsgWindow *msgWindow, PRBool isMoveFolder)
+{
+	nsresult rv;
+	PRUint32 itemCount;
+	rv = arguments->Count(&itemCount);
+	if (NS_FAILED(rv)) return rv;
+	
+	//need at least one item to copy
+	if(itemCount < 1)
+		return NS_ERROR_FAILURE;
+
+	if (!isMoveFolder)   // copy folder not on the same server
+	{
+	    //Call copyservice with dstFolder, srcFolder, folders and isMoveFolder
+	    nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(kMsgCopyServiceCID, &rv); 
+	    if(NS_SUCCEEDED(rv))
+		{
+		     rv = copyService->CopyFolders(arguments, dstFolder, isMoveFolder, 
+                                       nsnull, msgWindow);
+
+		}
+	}
+	else    //within the same server therefore no need for copy service 
+	{
+
+	  nsCOMPtr<nsISupports> supports;
+	  nsCOMPtr<nsIMsgFolder> msgFolder;
+      for (PRUint32 i=0;i< itemCount; i++)
+	  {
+        supports = getter_AddRefs(arguments->ElementAt(i));
+		msgFolder = do_QueryInterface(supports,&rv);
+		if (NS_SUCCEEDED(rv))
+		{
+			rv = dstFolder->CopyFolder(msgFolder, isMoveFolder , msgWindow, nsnull);
+			NS_ASSERTION((NS_SUCCEEDED(rv)),"Copy folder failed.");
+		}
+	  }
+	}
+
+	    return rv;
 	//return NS_OK;
 }
 

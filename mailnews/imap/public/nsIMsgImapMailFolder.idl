@@ -31,7 +31,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   void RemoveSubFolder(in nsIMsgFolder folder);
   void CreateClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter, in long flags);
   void List();
-  void RenameLocal(in string newname);
+  void RenameLocal(in string newname, in nsIMsgFolder parent);
   void PrepareToRename();
   void PerformExpand(in nsIMsgWindow aMsgWindow);
   void RecursiveCloseActiveConnections(in nsIImapIncomingServer aImapServer);

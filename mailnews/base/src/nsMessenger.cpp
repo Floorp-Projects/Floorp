@@ -1126,6 +1126,29 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database,
 
 
 NS_IMETHODIMP
+nsMessenger::CopyFolders(nsIRDFCompositeDataSource *database,
+                          nsIRDFResource *dstResource,
+                          nsISupportsArray *argumentArray, // nsIFolders
+                          PRBool isMoveFolder)
+{
+	nsresult rv;
+
+	if(!dstResource || !argumentArray)
+		return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsISupportsArray> folderArray;
+    
+	rv = NS_NewISupportsArray(getter_AddRefs(folderArray));
+
+	NS_ENSURE_SUCCESS(rv,rv);
+
+	folderArray->AppendElement(dstResource);
+	
+	return DoCommand(database, isMoveFolder ? (char *)NC_RDF_MOVEFOLDER : (char *)NC_RDF_COPYFOLDER, folderArray, argumentArray);
+	
+}
+
+NS_IMETHODIMP
 nsMessenger::RenameFolder(nsIRDFCompositeDataSource* db,
                           nsIRDFResource* folderResource,
                           const PRUnichar* name)

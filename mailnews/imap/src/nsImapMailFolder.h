@@ -168,6 +168,8 @@ public:
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
                             nsISupportsArray* messages,
                             PRBool isMove, nsIMsgWindow *msgWindow,
+                            nsIMsgCopyServiceListener* listener, PRBool isFolder);
+  NS_IMETHOD CopyFolder(nsIMsgFolder *srcFolder, PRBool isMove, nsIMsgWindow *msgWindow,
                             nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
                                nsIMessage* msgToReplace,

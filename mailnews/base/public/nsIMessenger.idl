@@ -61,7 +61,11 @@ interface nsIMessenger : nsISupports {
 					  in nsIRDFResource dstFolder,
                       in nsISupportsArray messages,
 					  in boolean isMove);
-
+	void CopyFolders(in nsIRDFCompositeDataSource database,
+                      in nsIRDFResource dstFolder,
+                      in nsISupportsArray folders,
+                      in boolean isMoveFolder);
+    
     void OpenURL(in string url);
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIRDFResource folder, in wstring name);

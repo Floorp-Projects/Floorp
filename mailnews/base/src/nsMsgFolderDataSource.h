@@ -148,6 +148,9 @@ protected:
   nsresult DoCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
 						  nsIMsgWindow *msgWindow, PRBool isMove);
 
+  nsresult DoFolderCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
+						  nsIMsgWindow *msgWindow, PRBool isMoveFolder);
+
   nsresult DoNewFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);
 
@@ -209,6 +212,8 @@ protected:
   static nsIRDFResource* kNC_GetNewMessages;
   static nsIRDFResource* kNC_Copy;
   static nsIRDFResource* kNC_Move;
+  static nsIRDFResource* kNC_CopyFolder;
+  static nsIRDFResource* kNC_MoveFolder;
   static nsIRDFResource* kNC_MarkAllMessagesRead;
   static nsIRDFResource* kNC_Compact;
   static nsIRDFResource* kNC_Rename;

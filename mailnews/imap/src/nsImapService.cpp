@@ -2033,8 +2033,11 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append('>');
             folderName = "";
             GetFolderName(dstFolder, getter_Copies(folderName));
-            urlSpec.Append(hierarchySeparator);
-            urlSpec.Append((const char *) folderName);
+            if ( folderName && folderName[0])
+            {
+               urlSpec.Append(hierarchySeparator);
+               urlSpec.Append((const char *) folderName);
+            }
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
             {

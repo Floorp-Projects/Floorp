@@ -5452,8 +5452,9 @@ void nsImapProtocol::OnMoveFolderHierarchy(const char * sourceMailbox)
             leafName = oldBoxName;  // this is a root level box
         else
             oldBoxName.Right(leafName, length-(leafStart+1));
-            
-        newBoxName.Append(onlineDirSeparator);
+
+        if ( newBoxName.Length() > 0 )
+             newBoxName.Append(onlineDirSeparator);
         newBoxName.Append(leafName);
         PRBool  renamed = RenameHierarchyByHand(sourceMailbox,
                                                 newBoxName.GetBuffer());

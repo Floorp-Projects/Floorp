@@ -284,7 +284,10 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
 
   void copyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
                     in boolean isMove, in nsIMsgWindow msgWindow,
-                    in nsIMsgCopyServiceListener listener);
+                    in nsIMsgCopyServiceListener listener, in boolean isFolder);
+
+  void copyFolder(in nsIMsgFolder srcFolder, in boolean isMoveFolder,
+                  in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
 
   void copyFileMessage(in nsIFileSpec fileSpec, in nsIMessage msgToReplace,
                        in boolean isDraft, in nsIMsgWindow msgWindow,

@@ -218,9 +218,17 @@ nsMsgCopyService::DoNextCopy()
               rv = copyRequest->m_dstFolder->CopyMessages
                   (copySource->m_msgFolder, copySource->m_messageArray,
                    copyRequest->m_isMoveOrDraftOrTemplate,
-                   copyRequest->m_msgWindow, copyRequest->m_listener);
+                   copyRequest->m_msgWindow, copyRequest->m_listener, PR_FALSE);   //isFolder operation PR_FALSE
                                                               
           }
+          else if (copyRequest->m_requestType == nsCopyFoldersType )
+		  {
+			  copySource->m_processed = PR_TRUE;
+              rv = copyRequest->m_dstFolder->CopyFolder
+                  (copySource->m_msgFolder,
+                   copyRequest->m_isMoveOrDraftOrTemplate,
+                   copyRequest->m_msgWindow, copyRequest->m_listener);
+		  }
           else if (copyRequest->m_requestType == nsCopyFileMessageType)
           {
             nsCOMPtr<nsIFileSpec> aSpec(do_QueryInterface(copyRequest->m_srcSupport, &rv));
@@ -367,6 +375,57 @@ done:
     msgArray->Clear();
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsMsgCopyService::CopyFolders( nsISupportsArray* folders,
+                               nsIMsgFolder* dstFolder,
+                               PRBool isMove,
+                               nsIMsgCopyServiceListener* listener,
+                               nsIMsgWindow* window)
+{
+    nsCopyRequest* copyRequest;
+    nsCopySource* copySource = nsnull;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    PRUint32 cnt;
+    nsCOMPtr<nsIFolder> folder;
+    nsCOMPtr<nsIMsgFolder> curFolder;
+    nsCOMPtr<nsISupports> support;
+
+    if (!folders || !dstFolder) return rv;
+
+	rv = folders->Count(&cnt);   //if cnt is zero it cannot to get this point, will be detected earlier
+	if ( cnt > 1)
+	     NS_ASSERTION((NS_SUCCEEDED(rv)),"More than one folders to copy");
+	
+    support = getter_AddRefs(folders->ElementAt(0));
+
+    copyRequest = new nsCopyRequest();
+ 	if (!copyRequest) return NS_ERROR_OUT_OF_MEMORY;
+       
+    rv = copyRequest->Init(nsCopyFoldersType, support, dstFolder, 
+                           isMove, listener, window);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    folder = do_QueryInterface(support, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    curFolder = do_QueryInterface(folder, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+        
+    copySource = copyRequest->AddNewCopySource(curFolder);
+    if (!copySource)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+	    
+    if (NS_FAILED(rv))
+	{
+        delete copyRequest;
+		NS_ENSURE_SUCCESS(rv, rv);
+	}
+    else
+        rv = DoCopy(copyRequest);
+    
+   return rv;
 }
 
 NS_IMETHODIMP

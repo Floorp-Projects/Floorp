@@ -931,6 +931,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 			if(NS_FAILED(rv)) return rv;
 
 			// case-insensitive compare is probably LCD across OS filesystems
+
 			PRBool equal = (folderURI && nsCRT::strcasecmp(folderURI, uri)==0);
 			nsMemory::Free(folderURI);
 			if (equal)
@@ -2156,8 +2157,19 @@ nsMsgFolder::CopyMessages(nsIMsgFolder* srcFolder,
                           nsISupportsArray *messages,
                           PRBool isMove,
                           nsIMsgWindow *window,
+                          nsIMsgCopyServiceListener* listener,
+						  PRBool isFolder)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::CopyFolder(nsIMsgFolder* srcFolder,
+                          PRBool isMoveFolder,
+                          nsIMsgWindow *window,
                           nsIMsgCopyServiceListener* listener)
 {
+  NS_ASSERTION(PR_FALSE, "should be overridden by child class");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -2478,4 +2490,5 @@ NS_IMETHODIMP nsMsgFolder::GetMessageHeader(nsMsgKey msgKey, nsIMsgDBHdr **aMsgH
 
   return rv;
 }
+
 
