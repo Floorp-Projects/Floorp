@@ -1069,7 +1069,7 @@ nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 	      mRenderingSurface->drawable,
 	      mFrontBuffer->drawable,
 	      mFrontBuffer->gc,
-	      aBounds.x, aBounds.y, aBounds.width, aBounds.height, 0, 0);
+	      0, 0, aBounds.width, aBounds.height, 0, 0);
   
   if (nsnull != mRegion)
     ::XSetRegion(mRenderingSurface->display,
