@@ -186,8 +186,10 @@
           if (!this.canRewind)
             return;
 
-          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide") 
-                               && !this._fireEvent(this.currentPage, "pagerewound"))
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
+            return;
+
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagerewound"))
             return;
 
           if (!this._fireEvent(this, "wizardback"))
@@ -206,10 +208,12 @@
           if (!this.canAdvance)
             return; 
             
-          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide") 
-                               && !this._fireEvent(this.currentPage, "pageadvanced"))
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pagehide"))
             return;
             
+          if (this.currentPage && !this._fireEvent(this.currentPage, "pageadvanced"))
+            return;
+
           if (this.onLastPage) {
             if (this._fireEvent(this, "wizardfinish"))
               window.setTimeout(function() {window.close();}, 1);
