@@ -484,6 +484,7 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
                     nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("CanvasFrame", aReflowState.reason);
+  DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE_REFLOW_IN("CanvasFrame::Reflow");
   //NS_PRECONDITION(nsnull == aDesiredSize.maxElementSize, "unexpected request");
 
