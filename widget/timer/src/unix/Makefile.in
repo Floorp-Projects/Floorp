@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,53 +13,47 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
+EXPORTS		= nsUnixTimerCIID.h
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
+ifdef MOZ_MONOLITHIC_TOOLKIT
+DIRS		= $(MOZ_WIDGET_TOOLKIT)
+else
+
+LIBRARY_NAME	= timer_s
+
+REQUIRES	= xpcom
+
+CPPSRCS		= nsNewTimer.cpp
 
 ifdef MOZ_ENABLE_GTK
-  DIRS += gtk
+DIRS		+= gtk
 endif
 
 ifdef MOZ_ENABLE_MOTIF
-  DIRS += motif
+DIRS		+= motif
 endif
 
 ifdef MOZ_ENABLE_XLIB
-  DIRS += xlib
+DIRS		+= xlib
 endif
 
 ifdef MOZ_ENABLE_QT
-  DIRS += qt
+DIRS		+= qt
 endif
 
-LIBRARY_NAME = timer_s
-
-REQUIRES=xpcom
-
-CPPSRCS =\
-		nsNewTimer.cpp \
-		$(NULL)
-
-EXPORTS =\
-		nsUnixTimerCIID.h \
-		$(NULL)
-
-MKSHLIB =
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
-else
-DIRS = $(MOZ_WIDGET_TOOLKIT)
-
-endif # !MOZ_MONOLITHIC_TOOLKIT
+endif
 
 include $(topsrcdir)/config/rules.mk
+
