@@ -24,6 +24,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
+/* $XFree86: xc/config/makedepend/include.c,v 3.7 2001/12/14 19:53:20 dawes Exp $ */
 
 
 #include "def.h"
@@ -33,33 +34,31 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 extern struct	inclist	inclist[ MAXFILES ],
-			*inclistp;
-extern char	*includedirs[ ];
+			*inclistp, *inclistnext;
+extern char	*includedirs[ ],
+		**includedirsnext;
 extern char	*notdotdot[ ];
 extern boolean show_where_not;
 extern boolean warn_multiple;
 
-boolean
-isdot(p)
-	register char	*p;
+static boolean
+isdot(char *p)
 {
 	if(p && *p++ == '.' && *p++ == '\0')
 		return(TRUE);
 	return(FALSE);
 }
 
-boolean
-isdotdot(p)
-	register char	*p;
+static boolean
+isdotdot(char *p)
 {
 	if(p && *p++ == '.' && *p++ == '.' && *p++ == '\0')
 		return(TRUE);
 	return(FALSE);
 }
 
-boolean
-issymbolic(dir, component)
-	register char	*dir, *component;
+static boolean
+issymbolic(char *dir, char *component)
 {
 #ifdef S_IFLNK
 	struct stat	st;
@@ -85,9 +84,8 @@ issymbolic(dir, component)
  * Any of the 'x/..' sequences within the name can be eliminated.
  * (but only if 'x' is not a symbolic link!!)
  */
-void
-remove_dotdot(path)
-	char	*path;
+static void
+remove_dotdot(char *path)
 {
 	register char	*end, *from, *to, **cp;
 	char		*components[ MAXFILES ],
@@ -158,8 +156,8 @@ remove_dotdot(path)
 /*
  * Add an include file to the list of those included by 'file'.
  */
-struct inclist *newinclude(newfile, incstring)
-	register char	*newfile, *incstring;
+struct inclist *
+newinclude(char *newfile, char *incstring)
 {
 	register struct inclist	*ip;
 
@@ -176,12 +174,12 @@ struct inclist *newinclude(newfile, incstring)
 	else
 		ip->i_incstring = copy(incstring);
 
+	inclistnext = inclistp;
 	return(ip);
 }
 
 void
-included_by(ip, newfile)
-	register struct inclist	*ip, *newfile;
+included_by(struct inclist *ip, struct inclist *newfile)
 {
 	register int i;
 
@@ -231,7 +229,7 @@ included_by(ip, newfile)
 }
 
 void
-inc_clean ()
+inc_clean (void)
 {
 	register struct inclist *ip;
 
@@ -240,84 +238,85 @@ inc_clean ()
 	}
 }
 
-struct inclist *inc_path(file, include, dot)
-	register char	*file,
-			*include;
-	boolean	dot;
+struct inclist *
+inc_path(char *file, char *include, int type)
 {
-	static char	path[ BUFSIZ ];
+	static char		path[ BUFSIZ ];
 	register char		**pp, *p;
 	register struct inclist	*ip;
-	struct stat	st;
-	boolean	found = FALSE;
+	struct stat		st;
 
 	/*
 	 * Check all previously found include files for a path that
 	 * has already been expanded.
 	 */
-	for (ip = inclist; ip->i_file; ip++)
-	    if ((strcmp(ip->i_incstring, include) == 0) &&
-		!(ip->i_flags & INCLUDED_SYM))
-	    {
-		found = TRUE;
-		break;
-	    }
+	if ((type == INCLUDE) || (type == INCLUDEDOT))
+		inclistnext = inclist;
+	ip = inclistnext;
 
-	/*
-	 * If the path was surrounded by "" or is an absolute path,
-	 * then check the exact path provided.
-	 */
-	if (!found && (dot || *include == '/')) {
-		if (stat(include, &st) == 0 && !S_ISDIR(st.st_mode)) {
-			ip = newinclude(include, include);
-			found = TRUE;
+	for (; ip->i_file; ip++) {
+		if ((strcmp(ip->i_incstring, include) == 0) &&
+		    !(ip->i_flags & INCLUDED_SYM)) {
+			inclistnext = ip + 1;
+			return ip;
 		}
-		else if (show_where_not)
-			warning1("\tnot in %s\n", include);
+	}
+
+	if (inclistnext == inclist) {
+		/*
+		 * If the path was surrounded by "" or is an absolute path,
+		 * then check the exact path provided.
+		 */
+		if ((type == INCLUDEDOT) ||
+		    (type == INCLUDENEXTDOT) ||
+		    (*include == '/')) {
+			if (stat(include, &st) == 0 && !S_ISDIR(st.st_mode))
+				return newinclude(include, include);
+			if (show_where_not)
+				warning1("\tnot in %s\n", include);
+		}
+
+		/*
+		 * If the path was surrounded by "" see if this include file is
+		 * in the directory of the file being parsed.
+		 */
+		if ((type == INCLUDEDOT) || (type == INCLUDENEXTDOT)) {
+			for (p=file+strlen(file); p>file; p--)
+				if (*p == '/')
+					break;
+			if (p == file) {
+				strcpy(path, include);
+			} else {
+				strncpy(path, file, (p-file) + 1);
+				path[ (p-file) + 1 ] = '\0';
+				strcpy(path + (p-file) + 1, include);
+			}
+			remove_dotdot(path);
+			if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode))
+				return newinclude(path, include);
+			if (show_where_not)
+				warning1("\tnot in %s\n", path);
+		}
 	}
 
 	/*
-	 * If the path was surrounded by "" see if this include file is in the
-	 * directory of the file being parsed.
+	 * Check the include directories specified.  Standard include dirs
+	 * should be at the end.
 	 */
-	if (!found && dot) {
-		for (p=file+strlen(file); p>file; p--)
-			if (*p == '/')
-				break;
-		if (p == file)
-			strcpy(path, include);
-		else {
-			strncpy(path, file, (p-file) + 1);
-			path[ (p-file) + 1 ] = '\0';
-			strcpy(path + (p-file) + 1, include);
-		}
+	if ((type == INCLUDE) || (type == INCLUDEDOT))
+		includedirsnext = includedirs;
+	pp = includedirsnext;
+
+	for (; *pp; pp++) {
+		sprintf(path, "%s/%s", *pp, include);
 		remove_dotdot(path);
 		if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
-			ip = newinclude(path, include);
-			found = TRUE;
+			includedirsnext = pp + 1;
+			return newinclude(path, include);
 		}
-		else if (show_where_not)
+		if (show_where_not)
 			warning1("\tnot in %s\n", path);
 	}
 
-	/*
-	 * Check the include directories specified. (standard include dir
-	 * should be at the end.)
-	 */
-	if (!found)
-		for (pp = includedirs; *pp; pp++) {
-			sprintf(path, "%s/%s", *pp, include);
-			remove_dotdot(path);
-			if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
-				ip = newinclude(path, include);
-				found = TRUE;
-				break;
-			}
-			else if (show_where_not)
-				warning1("\tnot in %s\n", path);
-		}
-
-	if (!found)
-		ip = NULL;
-	return(ip);
+	return NULL;
 }

@@ -31,10 +31,12 @@
  * 
  *     EXPRESSION	:=	VALUE
  * 			 |	VALUE  BINOP	EXPRESSION
+ *			 |	VALUE	'?'	EXPRESSION ':'	EXPRESSION
  * 
  *     VALUE		:=	'('  EXPRESSION  ')'
  * 			 |	'!'  VALUE
  * 			 |	'-'  VALUE
+ *			 |	'~'  VALUE
  * 			 |	'defined'  '('  variable  ')'
  * 			 |	variable
  * 			 |	number
@@ -44,10 +46,10 @@
  * 			 |	'<<'	|  '>>'
  * 			 |	'<'	|  '>'	|  '<='  |  '>='
  * 			 |	'=='	|  '!='
- * 			 |	'&'	|  '|'
+ * 			 |	'&'	|  '^'  |  '|'
  * 			 |	'&&'	|  '||'
  * 
- * The normal C order of precidence is supported.
+ * The normal C order of precedence is supported.
  * 
  * 
  * External Entry Points:
@@ -55,28 +57,27 @@
  *     ParseIfExpression		parse a string for #if
  */
 
+/* $XFree86: xc/config/makedepend/ifparser.h,v 3.5 2001/07/25 15:04:40 dawes Exp $ */
+
 #include <stdio.h>
 
-#define const /**/
 typedef int Bool;
 #define False 0
 #define True 1
 
 typedef struct _if_parser {
     struct {				/* functions */
-	char *(*handle_error) (/* struct _if_parser *, const char *,
-				 const char * */);
-	long (*eval_variable) (/* struct _if_parser *, const char *, int */);
-	int (*eval_defined) (/* struct _if_parser *, const char *, int */);
+	const char *(*handle_error) (struct _if_parser *, const char *,
+				     const char *);
+	long (*eval_variable) (struct _if_parser *, const char *, int);
+	int (*eval_defined) (struct _if_parser *, const char *, int);
     } funcs;
     char *data;
 } IfParser;
 
-char *ParseIfExpression (
-#ifdef __STDC__
+const char *ParseIfExpression (
     IfParser *, 
     const char *, 
     long *
-#endif
 );
 
