@@ -44,6 +44,7 @@ box.header-part3           { background-color: #CCCCCC; border: none; }
 #addToAddressBookButton {
 	list-style-image:url("chrome://messenger/skin/addtoab.gif");
   min-height: 20px;
+  margin: 0px;
 }
 
 #attachmentButton {
