@@ -355,10 +355,6 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
   if (!frame) {
     return nsnull;
   }
-  frame = frame->GetParent();
-  if (!frame) {
-    return nsnull;
-  }
   nsIScrollableFrame *sf;
   CallQueryInterface(frame, &sf);
   return sf;
@@ -368,8 +364,8 @@ nsLayoutUtils::GetScrollableFrameFor(nsIFrame *aScrolledFrame)
 nsIScrollableFrame*
 nsLayoutUtils::GetScrollableFrameFor(nsIScrollableView *aScrollableView)
 {
-  nsIFrame *frame = GetFrameFor(aScrollableView->View());
-  if (frame && ((frame = frame->GetParent()))) {
+  nsIFrame *frame = GetFrameFor(aScrollableView->View()->GetParent());
+  if (frame) {
     nsIScrollableFrame *sf;
     CallQueryInterface(frame, &sf);
     return sf;
@@ -416,7 +412,7 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
       nscoord totalWidth, totalHeight;
       scrollableView->GetContainerSize(&totalWidth, &totalHeight);
       // Get size of currently visible area
-      nsSize visibleSize = GetFrameFor(aView)->GetSize();
+      nsSize visibleSize = aView->GetBounds().Size();
       // aDirection can be eHorizontal, eVertical, or eEither
       // If scrolling in a specific direction, require visible scrollbars or
       // something to scroll to in that direction.
