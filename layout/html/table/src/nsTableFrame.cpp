@@ -476,8 +476,10 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
   NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
 
   PRInt32 result;
+  /*
   if (cellMap->GetRowCount()==1)
     return 1;
+  */
   PRInt32 colSpan = aCell->GetColSpan();
   PRInt32 colCount = GetColCount();
   if (colCount < (aColIndex + colSpan))
@@ -3218,8 +3220,9 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
       if (NS_OK==rv) 
       {
         // Compute and subtract out the insets (sum of border and padding) for the table
-        cell->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
-        if (eStyleUnit_Coord == tablePosition->mWidth.GetUnit())
+        const nsStylePosition* cellPosition;
+        cell->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)cellPosition));
+        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
         {
           // first, get pointers to the table frame parents of the cell
           nsIFrame *rowParent, *rowGroupParent;
@@ -3229,22 +3232,25 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
           rowGroupParent->GetGeometricParent((nsIFrame *&)tableParent);
           if (nsnull != tableParent->mColumnWidths)
           {
+            parentWidth=0;
             PRInt32 colIndex = ((nsTableCellFrame *)cell)->GetColIndex();
-            parentWidth = tableParent->GetColumnWidth(colIndex);
+            PRInt32 colSpan = tableParent->GetEffectiveColSpan(colIndex, (nsTableCellFrame *)cell);
+            for (PRInt32 i=0; i<colSpan; i++)
+              parentWidth += tableParent->GetColumnWidth(colIndex);
             break;
           }
           // if the column width of this cell is already computed, it overrides the attribute
           // otherwise, use the attribute becauase the actual column width has not yet been computed
           else
           {
-            parentWidth = tablePosition->mWidth.GetCoordValue();
+            parentWidth = cellPosition->mWidth.GetCoordValue();
             // subtract out cell border and padding
             cell->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
             spacing->CalcBorderPaddingFor(cell, borderPadding);
             parentWidth -= (borderPadding.right + borderPadding.left);
             if (PR_TRUE==gsDebugNT)
               printf("%p: found a cell frame %p with fixed coord width %d, returning parentWidth %d\n", 
-                     aReflowState.frame, cell, tablePosition->mWidth.GetCoordValue(), parentWidth);
+                     aReflowState.frame, cell, cellPosition->mWidth.GetCoordValue(), parentWidth);
             break;
           }
         }

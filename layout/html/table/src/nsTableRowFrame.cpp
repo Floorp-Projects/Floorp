@@ -343,146 +343,154 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
   nscoord     maxCellTopMargin = 0;
   nscoord     maxCellBottomMargin = 0;
   nscoord cellSpacing = aState.tableFrame->GetCellSpacing();
+  PRInt32 cellColSpan=1;  // must be defined here so it's set properly for non-cell kids
   if (PR_TRUE==gsDebug) printf("%p: RR\n", this);
   // Reflow each of our existing cell frames
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) 
   {
-    nsMargin kidMargin;
-    aState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame,kidMargin);
-    if (kidMargin.top > maxCellTopMargin)
-      maxCellTopMargin = kidMargin.top;
-    if (kidMargin.bottom > maxCellBottomMargin)
-      maxCellBottomMargin = kidMargin.bottom;
+    const nsStyleDisplay *kidDisplay;
+    kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)kidDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
+    {
+      nsMargin kidMargin;
+      aState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame,kidMargin);
+      if (kidMargin.top > maxCellTopMargin)
+        maxCellTopMargin = kidMargin.top;
+      if (kidMargin.bottom > maxCellBottomMargin)
+        maxCellBottomMargin = kidMargin.bottom;
  
-    // Compute the x-origin for the child, taking into account straddlers (cells from prior
-    // rows with rowspans > 1)
-    PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-    if (prevColIndex != (cellColIndex-1))
-    { // if this cell is not immediately adjacent to the previous cell, factor in missing col info
-      for (PRInt32 colIndex=prevColIndex+1; colIndex<cellColIndex; colIndex++)
-      {
-        aState.x += aState.tableFrame->GetColumnWidth(colIndex);
-        aState.x += cellSpacing;
-        if (PR_TRUE==gsDebug)
-          printf("  in loop, aState.x set to %d from cellSpacing %d and col width\n", 
-                  aState.x, aState.tableFrame->GetColumnWidth(colIndex), cellSpacing);
+      // Compute the x-origin for the child, taking into account straddlers (cells from prior
+      // rows with rowspans > 1)
+      PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
+      if (prevColIndex != (cellColIndex-1))
+      { // if this cell is not immediately adjacent to the previous cell, factor in missing col info
+        for (PRInt32 colIndex=prevColIndex+1; colIndex<cellColIndex; colIndex++)
+        {
+          aState.x += aState.tableFrame->GetColumnWidth(colIndex);
+          aState.x += cellSpacing;
+          if (PR_TRUE==gsDebug)
+            printf("  in loop, aState.x set to %d from cellSpacing %d and col width\n", 
+                    aState.x, aState.tableFrame->GetColumnWidth(colIndex), cellSpacing);
+        }
       }
-    }
-    aState.x += cellSpacing;
-    if (PR_TRUE==gsDebug) printf("  past loop, aState.x set to %d\n", aState.x);
+      aState.x += cellSpacing;
+      if (PR_TRUE==gsDebug) printf("  past loop, aState.x set to %d\n", aState.x);
 
-    // at this point, we know the column widths.  
-    // so we get the avail width from the known column widths
-    PRInt32 cellColSpan = aState.tableFrame->GetEffectiveColSpan(((nsTableCellFrame *)kidFrame)->GetColIndex(),
-                                                                 ((nsTableCellFrame *)kidFrame));
-    nscoord availWidth = 0;
-    for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
-    {
-      availWidth += aState.tableFrame->GetColumnWidth(cellColIndex+numColSpan);
-      if (numColSpan != 0)
+      // at this point, we know the column widths.  
+      // so we get the avail width from the known column widths
+      cellColSpan = aState.tableFrame->GetEffectiveColSpan(((nsTableCellFrame *)kidFrame)->GetColIndex(),
+                                                                   ((nsTableCellFrame *)kidFrame));
+      nscoord availWidth = 0;
+      for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
       {
-        availWidth += cellSpacing;
+        availWidth += aState.tableFrame->GetColumnWidth(cellColIndex+numColSpan);
+        if (numColSpan != 0)
+        {
+          availWidth += cellSpacing;
+        }
+        if (PR_TRUE==gsDebug) 
+          printf("  in loop, availWidth set to %d from colIndex %d width %d and cellSpacing\n", 
+                  availWidth, cellColIndex, aState.tableFrame->GetColumnWidth(cellColIndex+numColSpan), cellSpacing);
       }
-      if (PR_TRUE==gsDebug) 
-        printf("  in loop, availWidth set to %d from colIndex %d width %d and cellSpacing\n", 
-                availWidth, cellColIndex, aState.tableFrame->GetColumnWidth(cellColIndex+numColSpan), cellSpacing);
-    }
-    if (PR_TRUE==gsDebug) printf("  availWidth for this cell is %d\n", availWidth);
+      if (PR_TRUE==gsDebug) printf("  availWidth for this cell is %d\n", availWidth);
 
-    prevColIndex = cellColIndex + (cellColSpan-1);  // remember the rightmost column this cell spans into
-    nsReflowMetrics desiredSize(pKidMaxElementSize);
+      prevColIndex = cellColIndex + (cellColSpan-1);  // remember the rightmost column this cell spans into
+      nsReflowMetrics desiredSize(pKidMaxElementSize);
 
-    // If the available width is the same as last time we reflowed the cell,
-    // then just use the previous desired size and max element size.
-    // if we need the max-element-size we don't need to reflow.
-    // we just grab it from the cell frame which remembers it (see the else clause below)
-    if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
-    {
-      // Always let the cell be as high as it wants. We ignore the height that's
-      // passed in and always place the entire row. Let the row group decide
-      // whether we fit or wehther the entire row is pushed
-      nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
+      // If the available width is the same as last time we reflowed the cell,
+      // then just use the previous desired size and max element size.
+      // if we need the max-element-size we don't need to reflow.
+      // we just grab it from the cell frame which remembers it (see the else clause below)
+      if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
+      {
+        // Always let the cell be as high as it wants. We ignore the height that's
+        // passed in and always place the entire row. Let the row group decide
+        // whether we fit or wehther the entire row is pushed
+        nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
 
-      // Reflow the child
-      kidFrame->WillReflow(aPresContext);
-      kidFrame->MoveTo(aState.x, kidMargin.top);
-      nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                   eReflowReason_Resize);
-      if (gsDebug) printf ("%p RR: avail=%d\n", this, availWidth);
-      nsReflowStatus status = ReflowChild(kidFrame, &aPresContext, desiredSize,
-                                          kidReflowState);
-      if (gsDebug) printf ("%p RR: desired=%d\n", this, desiredSize.width);
+        // Reflow the child
+        kidFrame->WillReflow(aPresContext);
+        kidFrame->MoveTo(aState.x, kidMargin.top);
+        nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+                                     eReflowReason_Resize);
+        if (gsDebug) printf ("%p RR: avail=%d\n", this, availWidth);
+        nsReflowStatus status = ReflowChild(kidFrame, &aPresContext, desiredSize,
+                                            kidReflowState);
+        if (gsDebug) printf ("%p RR: desired=%d\n", this, desiredSize.width);
 #ifdef NS_DEBUG
-      if (desiredSize.width > availWidth)
-      {
-        printf("WARNING: cell returned desired width %d given avail width %d\n",
-                desiredSize.width, availWidth);
-      }
+        if (desiredSize.width > availWidth)
+        {
+          printf("WARNING: cell returned desired width %d given avail width %d\n",
+                  desiredSize.width, availWidth);
+        }
 #endif
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
+        NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
 
-      if (gsDebug)
-      {
-        if (nsnull!=pKidMaxElementSize)
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height, 
-                  pKidMaxElementSize->width, pKidMaxElementSize->height);
-        else
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height);
+        if (gsDebug)
+        {
+          if (nsnull!=pKidMaxElementSize)
+            printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
+                    NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                    desiredSize.width, desiredSize.height, 
+                    pKidMaxElementSize->width, pKidMaxElementSize->height);
+          else
+            printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
+                    NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
+                    desiredSize.width, desiredSize.height);
+        }
       }
+      else
+      {
+        nsSize priorSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
+        desiredSize.width = priorSize.width;
+        desiredSize.height = priorSize.height;
+        if (nsnull != pKidMaxElementSize) 
+          *pKidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetMaxElementSize();
+      }
+
+      // Place the child after taking into account its margin and attributes
+      nscoord specifiedHeight = 0;
+      nscoord cellHeight = desiredSize.height;
+      nsIStyleContextPtr kidSC;
+      kidFrame->GetStyleContext(&aPresContext, kidSC.AssignRef());
+      const nsStylePosition* kidPosition = (const nsStylePosition*)
+        kidSC->GetStyleData(eStyleStruct_Position);
+      switch (kidPosition->mHeight.GetUnit()) {
+      case eStyleUnit_Coord:
+        specifiedHeight = kidPosition->mHeight.GetCoordValue();
+        break;
+
+      case eStyleUnit_Inherit:
+        // XXX for now, do nothing
+      default:
+      case eStyleUnit_Auto:
+        break;
+      }
+      if (specifiedHeight>cellHeight)
+        cellHeight = specifiedHeight;
+
+      nscoord cellWidth = desiredSize.width;
+      // begin special Nav4 compatibility code
+      if (0==cellWidth)
+      {
+        cellWidth = availWidth;
+      }
+      // end special Nav4 compatibility code
+
+      // Place the child
+      nsRect kidRect (aState.x, kidMargin.top, cellWidth, cellHeight);
+
+      PlaceChild(aPresContext, aState, kidFrame, kidRect, aDesiredSize.maxElementSize,
+                 pKidMaxElementSize);
+
+      if (PR_TRUE==gsDebug) printf("  past PlaceChild, aState.x set to %d\n", aState.x);
     }
-    else
-    {
-      nsSize priorSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
-      desiredSize.width = priorSize.width;
-      desiredSize.height = priorSize.height;
-      if (nsnull != pKidMaxElementSize) 
-        *pKidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetMaxElementSize();
-    }
-
-    // Place the child after taking into account its margin and attributes
-    nscoord specifiedHeight = 0;
-    nscoord cellHeight = desiredSize.height;
-    nsIStyleContextPtr kidSC;
-    kidFrame->GetStyleContext(&aPresContext, kidSC.AssignRef());
-    const nsStylePosition* kidPosition = (const nsStylePosition*)
-      kidSC->GetStyleData(eStyleStruct_Position);
-    switch (kidPosition->mHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      specifiedHeight = kidPosition->mHeight.GetCoordValue();
-      break;
-
-    case eStyleUnit_Inherit:
-      // XXX for now, do nothing
-    default:
-    case eStyleUnit_Auto:
-      break;
-    }
-    if (specifiedHeight>cellHeight)
-      cellHeight = specifiedHeight;
-
-    nscoord cellWidth = desiredSize.width;
-    // begin special Nav4 compatibility code
-    if (0==cellWidth)
-    {
-      cellWidth = availWidth;
-    }
-    // end special Nav4 compatibility code
-
-    // Place the child
-    nsRect kidRect (aState.x, kidMargin.top, cellWidth, cellHeight);
-
-    PlaceChild(aPresContext, aState, kidFrame, kidRect, aDesiredSize.maxElementSize,
-               pKidMaxElementSize);
-
-    if (PR_TRUE==gsDebug) printf("  past PlaceChild, aState.x set to %d\n", aState.x);
 
     // Get the next child
     kidFrame->GetNextSibling(kidFrame);
-    if (nsnull==kidFrame && cellColSpan>1)
+    // if this was the last child, and it had a colspan>1, add in the cellSpacing for the colspan
+    // if the last kid wasn't a colspan, then we still have the colspan of the last real cell
+    if ((nsnull==kidFrame) && (cellColSpan>1))
       aState.x += cellSpacing;
   }
 
