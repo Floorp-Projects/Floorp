@@ -73,3 +73,7 @@ WIDGET_ATOM(disabled, "disabled")
 WIDGET_ATOM(label, "label")
 WIDGET_ATOM(hidden, "hidden")
 
+WIDGET_ATOM(curpos, "curpos")
+WIDGET_ATOM(maxpos, "maxpos")
+WIDGET_ATOM(increment, "increment")
+WIDGET_ATOM(pageincrement, "pageincrement")
