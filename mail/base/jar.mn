@@ -89,4 +89,3 @@ US.jar:
 
 en-win.jar:
 +   locale/en-US/messenger-mapi/mapi.properties      (locale/mapi.properties)
-+   locale/en-US/messenger-mapi/pref-mailnewsOverlay.dtd (locale/pref-mailnewsOverlay.dtd)
