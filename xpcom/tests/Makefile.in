@@ -37,9 +37,7 @@ CPPSRCS		= \
 		TestXPIDLString.cpp \
 		TestAtoms.cpp \
 		TestCRT.cpp \
-		CvtURL.cpp \
 		FilesTest.cpp \
-		PropertiesTest.cpp \
 		TestAutoLock.cpp \
 		TestObserverService.cpp \
 		TestBuffers.cpp \
@@ -57,6 +55,14 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
+# These won't link on BSD/OS, due to multiply defined symbols.
+ifneq ($(OS_ARCH),BSD_OS)
+CPPSRCS		+= \
+		CvtURL.cpp \
+		PropertiesTest.cpp \
+		$(NULL)
+endif
+
 ifndef NECKO
 NETLIB_LIBS	= \
 		-lnetlib \
@@ -64,30 +70,31 @@ NETLIB_LIBS	= \
 		-lfileurl \
 		-lremoturl \
 		-lgophurl \
-		-lnetcnvts \
 		-lsockstuburl \
 		-lftpurl \
 		-lmimetype \
 		-lpwcac \
 		-lhttpurl \
 		-lnetwork \
+		-lnetcnvts \
 		-lnetcache \
+		-lnetlib \
 		$(NULL)
 else
 NETLIB_LIBS	= -lneckoutil_s
 endif
 
 LIBS		+= \
+		-limg \
+		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		$(NETLIB_LIBS) \
 		-lpref \
 		-lsecfree \
 		-l$(MOZ_LIB_JS_PREFIX)js \
-		-limg \
-		-l$(MOZ_LIB_UTIL_PREFIX)util \
 		-lxp \
 		-lxpcom \
-		$(TK_LIBS) \
-		$(NETLIB_LIBS) \
 		$(TIMER_LIBS) \
+		$(TK_LIBS) \
 		$(ZLIB_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
