@@ -346,7 +346,7 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   }
   PRInt32 dataLength = aData.Length();
   PRInt32 newLength = textLength - aCount + dataLength;
-  PRUnichar* to = new PRUnichar[newLength ? newLength : 1];
+  PRUnichar* to = new PRUnichar[newLength ? newLength+1 : 1];
   if (nsnull == to) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -365,6 +365,9 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
   if (endOffset != textLength) {
     mText.CopyTo(to + aOffset + dataLength, endOffset, textLength - endOffset);
   }
+
+  // Null terminate the new buffer...
+  to[newLength] = (PRUnichar)0;
 
   // Switch to new buffer
   nsCOMPtr<nsITextContent> textContent = do_QueryInterface(mContent, &result);
