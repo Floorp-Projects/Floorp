@@ -37,6 +37,9 @@ package PostMozilla;
 
 use Cwd;
 
+# This is set in PreBuild(), and is checked after each build.
+my $cachebuild = 0;
+
 sub is_windows { return $Settings::OS =~ /^WIN/; }
 sub is_linux { return $Settings::OS eq 'Linux'; }
 # XXX Not tested on mac yet.  Probably needs changes.
@@ -68,7 +71,7 @@ sub makefullsoft {
   $fullsofttag = " -r $Settings::BuildTag"
         unless not defined($Settings::BuildTag) or $Settings::BuildTag eq '';
   TinderUtils::run_shell_command "cd $builddir; cvs -d$moforoot co $fullsofttag -d fullsoft talkback/fullsoft";
-  TinderUtils::run_shell_command "cd $builddir/fullsoft; $builddir/build/autoconf/make-makefile";
+  TinderUtils::run_shell_command "cd $builddir/fullsoft; $builddir/build/autoconf/make-makefile -d ..";
   TinderUtils::run_shell_command "make -C $builddir/fullsoft";
   TinderUtils::run_shell_command "make -C $builddir/fullsoft fullcircle-push";
   if (is_mac()) {
@@ -156,6 +159,7 @@ sub packit {
         TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
       }
     } elsif (is_linux()) {
+      TinderUtils::run_shell_command "cp -r $package_location/raw/xpi $stagedir/linux-xpi";
       if ($Settings::stub_installer) {
         TinderUtils::run_shell_command "cp $package_location/stub/*.tar.gz $stagedir/";
       }
@@ -284,6 +288,31 @@ sub returnStatus{
   return @status;
 }
 
+sub PreBuild {
+    my $last_build_day;
+    my ($c_hour,$c_day,$c_month,$c_year,$c_yday) = (localtime(time))[2,3,4,5,7];
+    $c_year       = $c_year + 1900; # ftso perl
+    $c_month      = $c_month + 1; # ftso perl
+    $c_hour       = pad_digit($c_hour);
+    $c_day        = pad_digit($c_day);
+    $c_month      = pad_digit($c_month);
+
+    if ( -e "last-built") {
+	($last_build_day) = (localtime((stat "last-built")[9]))[7];
+    } else {
+	$last_build_day = -1;
+    }
+
+    if (cacheit($c_hour,$c_yday,$Settings::build_hour,$last_build_day)) {
+	TinderUtils::print_log "starting nightly release build\n";
+	# clobber the tree
+	system("rm -rf mozilla");
+	$cachebuild = 1;
+      } else {
+	$cachebuild = 0;
+      }
+}
+
 sub main {
   # Get build directory from caller.
   my ($mozilla_build_dir) = @_;
@@ -313,7 +342,6 @@ sub main {
   system("rm -f $objdir/dist/bin/codesighs");
 
   # set up variables with default values
-  my $last_build_day = 0;
   # need to modify the settings from tinder-config.pl
   my $package_creation_path = $objdir . $Settings::package_creation_path;
   my $package_location;
@@ -333,12 +361,6 @@ sub main {
   $c_month      = pad_digit($c_month);
   my $datestamp = "$c_year-$c_month-$c_day-$c_hour-$Settings::milestone";
 
-  if ( -e "last-built"){
-    ($last_build_day) = (localtime((stat "last-built")[9]))[7];
-  } else {
-    $last_build_day = -1;
-  }
-
   if (is_windows()) {
     # hack for cygwin installs with "unix" filetypes
     TinderUtils::run_shell_command "unix2dos $mozilla_build_dir/mozilla/LICENSE";
@@ -346,21 +368,18 @@ sub main {
   }
 
   my $upload_directory;
-  my $cachebuild;
 
-  if (cacheit($c_hour,$c_yday,$Settings::build_hour,$last_build_day)) {
-    TinderUtils::print_log "attempting to cache today's build\n";
+  if ($cachebuild) {
+    TinderUtils::print_log "uploading nightly release build\n";
     $upload_directory = "$datestamp";
     $url_path         = $url_path . "/" . $upload_directory;
-    $cachebuild = 1;
   } else {
     $ftp_path   = $Settings::tbox_ftp_path;
     $upload_directory = shorthost() . "-" . "$Settings::milestone";
     $url_path   = $Settings::tbox_url_path . "/" . $upload_directory;
-    $cachebuild = 0;
   }
 
-  processtalkback($cachebuild && $Settings::shiptalkback, $objdir);
+  processtalkback($cachebuild && $Settings::shiptalkback, $objdir, "$mozilla_build_dir/${Settings::Topsrcdir}");
 
   $upload_directory = $package_location . "/" . $upload_directory;
 
