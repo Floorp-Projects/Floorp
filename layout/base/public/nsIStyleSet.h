@@ -111,11 +111,6 @@ public:
   virtual nsresult GetRuleTree(nsRuleNode** aResult) = 0;
   virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule) = 0;
   
-  // This method is used to add a mapping from rule to rule node so that all the rule nodes
-  // in use for a given rule can be accessed efficiently.  This is currently only used
-  // for inline style rules in order to conserve footprint.
-  virtual nsresult AddRuleNodeMapping(nsRuleNode* aRuleNode) = 0;
-
   // The following two methods can be used to tear down and reconstruct a rule tree.  The idea
   // is to first call BeginRuleTreeReconstruct, which will set aside the old rule
   // tree.  The entire frame tree should then have ReResolveStyleContext
@@ -138,10 +133,7 @@ public:
   // only on style contexts and rule nodes that use that rule.  If the rule is null, then
   // it is assumed that both trees are to be entirely wiped.
   //
-  // |aContext| provides an additional hint that a specific style context has changed, and
-  // that the entire rule tree need not be searched for occurrences of |aRule|.  It is
-  // only specified in the inline style case, i.e., when the inline style attribute changes.
-  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsStyleContext* aContext) = 0;
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule) = 0;
 
   // enable / disable the Quirk style sheet: 
   // returns NS_FAILURE if none is found, otherwise NS_OK

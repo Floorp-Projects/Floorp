@@ -545,7 +545,7 @@ public:
   static void CreateRootNode(nsIPresContext* aPresContext, nsRuleNode** aResult);
 
   nsresult GetBits(PRInt32 aType, PRUint32* aResult);
-  nsresult Transition(nsIStyleRule* aRule, PRBool aIsInlineStyle, nsRuleNode** aResult);
+  nsresult Transition(nsIStyleRule* aRule, nsRuleNode** aResult);
   nsRuleNode* GetParent() { return mParent; }
   PRBool IsRoot() { return mParent == nsnull; }
   nsresult GetRule(nsIStyleRule** aResult)

@@ -189,9 +189,7 @@ public:
   virtual nsresult GetRuleTree(nsRuleNode** aResult);
   virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule);
   
-  virtual nsresult AddRuleNodeMapping(nsRuleNode* aRuleNode);
-
-  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsStyleContext* aContext);
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
 
   virtual nsresult GetStyleFrameConstruction(nsIStyleFrameConstruction** aResult) {
     *aResult = mFrameConstructor;
@@ -369,7 +367,6 @@ protected:
   nsRuleNode* mOldRuleTree; // Used during rule tree reconstruction.
   nsRuleWalker* mRuleWalker;   // This is an instance of a rule walker that can be used
                                // to navigate through our tree.
-  nsHashtable mRuleMappings; // A hashtable from rules to rule node lists.
 
   MOZ_TIMER_DECLARE(mStyleResolutionWatch)
 
@@ -387,8 +384,7 @@ StyleSetImpl::StyleSetImpl()
     mQuirkStyleSheet(nsnull),
     mRuleTree(nsnull),
     mOldRuleTree(nsnull),
-    mRuleWalker(nsnull),
-    mRuleMappings(32)
+    mRuleWalker(nsnull)
 #ifdef MOZ_PERF_METRICS
     ,mTimerEnabled(PR_FALSE)
 #endif
@@ -1361,9 +1357,6 @@ PRBool PR_CALLBACK DeleteRuleNodeLists(nsHashKey* aKey, void* aData, void* aClos
 NS_IMETHODIMP
 StyleSetImpl::Shutdown()
 {
-  mRuleMappings.Enumerate(DeleteRuleNodeLists);
-  mRuleMappings.Reset();
-
   delete mRuleWalker;
   if (mRuleTree)
   {
@@ -1380,17 +1373,6 @@ StyleSetImpl::GetRuleTree(nsRuleNode** aResult)
   return NS_OK;
 }
 
-nsresult 
-StyleSetImpl::AddRuleNodeMapping(nsRuleNode* aRuleNode)
-{
-  nsVoidKey key(aRuleNode->Rule());
-  nsRuleNodeList* ruleList = 
-    new (aRuleNode->PresContext()) nsRuleNodeList(aRuleNode, 
-                                                  NS_STATIC_CAST(nsRuleNodeList*, mRuleMappings.Get(&key)));
-  mRuleMappings.Put(&key, ruleList);
-  return NS_OK;
-}
-
 nsresult
 StyleSetImpl::BeginRuleTreeReconstruct()
 {
@@ -1398,8 +1380,6 @@ StyleSetImpl::BeginRuleTreeReconstruct()
   mRuleWalker = nsnull;
   mOldRuleTree = mRuleTree;
   mRuleTree = nsnull;
-  mRuleMappings.Enumerate(DeleteRuleNodeLists);
-  mRuleMappings.Reset();
   return NS_OK;
 }
 
@@ -1422,63 +1402,30 @@ StyleSetImpl::ClearCachedDataInRuleTree(nsIStyleRule* aInlineStyleRule)
 }
 
 nsresult
-StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, nsStyleContext* aContext)
+StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule)
 {
-  // XXXdwh.  If we're willing to *really* optimize this
-  // invalidation, we could only invalidate the struct data
-  // that actually changed.  For example, if someone changes
-  // style.left, we really only need to blow away cached
-  // data in the position struct.
-  if (aContext) {
-    // |aRule| should never be null, but we'll sanity check it just in case.
-    if (aRule) {
-      // Obtain our rule node list and clear out the cached data in all rule nodes
-      // that correspond to this rule.  See bug 99344 for more details as to how
-      // inline style rules can end up with multiple rule nodes in a rule tree.
-      nsVoidKey key(aRule);
-      nsRuleNodeList* ruleList = NS_STATIC_CAST(nsRuleNodeList*, mRuleMappings.Get(&key));
-      for ( ; ruleList; ruleList = ruleList->mNext)
-        ruleList->mRuleNode->ClearCachedData(aRule);
-    }
-    
-    // XXXdwh I'm just being paranoid here.  Also clear out the data starting at the style
-    // context's rule node.  This really should always be done in the for loop above,
-    // but I'm going to leave this here just in case (for now).
-    nsRuleNode* ruleNode;
-    aContext->GetRuleNode(&ruleNode);
-    ruleNode->ClearCachedData(aRule); 
-
-    // XXX We need to clear style data here in case there's a style context
-    // that inherits a struct from its parent where the parent uses data
-    // that's cached on the rule node.  Otherwise we could crash while
-    // doing checks comparing old data to new data during reresolution.
-    // This could make some of those checks incorrect.
-    aContext->ClearStyleData(aPresContext, nsnull);
-  }
-  else {
-    // XXXdwh This is not terribly fast, but fortunately this case is rare (and often a full tree
-    // invalidation anyway).  Improving performance here would involve a footprint
-    // increase.  Mappings from rule nodes to their associated style contexts as well as
-    // mappings from rules to their associated rule nodes would enable us to avoid the two
-    // tree walks that occur here.
-
-    // Crawl the entire rule tree and blow away all data for rule nodes (and their descendants)
-    // that have the given rule.
-    if (mRuleTree)
-      mRuleTree->ClearCachedDataInSubtree(aRule);
-
-    // We need to crawl the entire style context tree, and for each style context we need 
-    // to see if the specified rule is matched.  If so, that context and all its descendant
-    // contexts must have their data wiped.
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    nsIFrame* rootFrame;
-    shell->GetRootFrame(&rootFrame);
-    if (rootFrame) {
-      nsStyleContext* rootContext = rootFrame->GetStyleContext();
-      if (rootContext)
-        rootContext->ClearStyleData(aPresContext, aRule);
-    }
+  // XXXdwh This is not terribly fast, but fortunately this case is rare (and often a full tree
+  // invalidation anyway).  Improving performance here would involve a footprint
+  // increase.  Mappings from rule nodes to their associated style contexts as well as
+  // mappings from rules to their associated rule nodes would enable us to avoid the two
+  // tree walks that occur here.
+  
+  // Crawl the entire rule tree and blow away all data for rule nodes (and their descendants)
+  // that have the given rule.
+  if (mRuleTree)
+    mRuleTree->ClearCachedDataInSubtree(aRule);
+  
+  // We need to crawl the entire style context tree, and for each style context we need 
+  // to see if the specified rule is matched.  If so, that context and all its descendant
+  // contexts must have their data wiped.
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsIFrame* rootFrame;
+  shell->GetRootFrame(&rootFrame);
+  if (rootFrame) {
+    nsStyleContext* rootContext = rootFrame->GetStyleContext();
+    if (rootContext)
+      rootContext->ClearStyleData(aPresContext, aRule);
   }
 
   return NS_OK;
