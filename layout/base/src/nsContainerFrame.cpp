@@ -336,7 +336,9 @@ PRInt32 nsContainerFrame::NextChildOffset() const
     result = mLastContentOffset;
 
 #ifdef NS_DEBUG
-    VerifyLastIsComplete();
+    if (GetVerifyTreeEnable()) {
+      VerifyLastIsComplete();
+    }
 #endif
     if (mLastContentIsComplete) {
       result++;
