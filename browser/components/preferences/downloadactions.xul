@@ -54,7 +54,7 @@
         title="&downloadactionsWindow.title;"
         width="480" height="310" persist="width height screenX screenY">
 
-  <script type="application/x-javascript" src="chrome://browser/content/preferences/actionsshared.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/preferences/actionsshared.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/preferences/downloadactions.js"/>
 
   <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>

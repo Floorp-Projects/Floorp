@@ -193,7 +193,7 @@ var gPrivacyPane = {
   
   changeMasterPassword: function ()
   {
-    document.documentElement.openSubDialog("chrome://browser/content/preferences/changemp.xul",
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/changemp.xul",
                                            "", null);
     this.updateMasterPasswordButton();
   },
@@ -230,7 +230,7 @@ var gPrivacyPane = {
                           bundle.getString("pw_change2empty_in_fips_mode"));
     }
     else {
-      document.documentElement.openSubDialog("chrome://browser/content/preferences/removemp.xul",
+      document.documentElement.openSubDialog("chrome://mozapps/content/preferences/removemp.xul",
                                              "", null);
       this.updateMasterPasswordButton();
       document.getElementById("setMasterPassword").focus();

@@ -21,7 +21,7 @@
   
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE dialog SYSTEM "chrome://browser/locale/preferences/fontscaling.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/preferences/fontscaling.dtd" >
 
 <dialog id="FontScalingDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -29,7 +29,7 @@
         onload="gFontScalingDialog.init();"
         ondialogaccept="gFontScalingDialog.onAccept();">
 
-  <script type="application/x-javascript" src="chrome://browser/content/preferences/fontscaling.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontscaling.js"/>
 
   <vbox id="horizRuler" width="300" height="30" style="margin: 10px; margin-bottom: 0px">
     <hbox height="10px" style="border-bottom: 1px solid black; border-left: 1px solid black; border-right: 1px solid black;"/>

@@ -67,7 +67,7 @@
                   type="bool"/>
     </preferences>
     
-    <script type="application/x-javascript" src="chrome://browser/content/preferences/fontbuilder.js"/>
+    <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
     <script type="application/x-javascript" src="chrome://browser/content/preferences/content.js"/>
 
     <groupbox>

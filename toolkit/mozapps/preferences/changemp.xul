@@ -26,7 +26,7 @@
 
 <!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-<!ENTITY % changempDTD SYSTEM "chrome://browser/locale/preferences/changemp.dtd" >
+<!ENTITY % changempDTD SYSTEM "chrome://mozapps/locale/preferences/changemp.dtd" >
 %brandDTD;
 %changempDTD;
 ]>
@@ -37,9 +37,9 @@
         ondialogaccept="setPassword();" 
         onload="init()">
 
-  <script type="application/x-javascript" src="chrome://browser/content/preferences/changemp.js"/>
+  <script type="application/x-javascript" src="chrome://mozapps/content/preferences/changemp.js"/>
 
-  <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
+  <stringbundle id="bundlePreferences" src="chrome://mozapps/locale/preferences/preferences.properties"/>
 
   <description>&masterPasswordDescription.label;</description>
 
