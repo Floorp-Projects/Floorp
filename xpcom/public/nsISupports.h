@@ -30,6 +30,11 @@
 #include "prcmon.h"
 #endif  /* NS_MT_SUPPORTED */
 
+#if defined(XPIDL_JS_STUBS)
+struct JSObject;
+struct JSContext;
+#endif
+
 /*@{*/
 
 
@@ -103,6 +108,19 @@ public:
    * @return The resulting reference count.
    */
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+
+#if XPIDL_JS_STUBS
+  // XXX Scriptability hack...
+  static NS_EXPORT_(JSObject*) InitJSClass(JSContext* cx) {
+    return 0;
+  }
+
+  static NS_EXPORT_(JSObject*) GetJSObject(JSContext* cx, nsISupports* priv) {
+    NS_NOTYETIMPLEMENTED("nsISupports isn't XPIDL scriptable yet");
+    return 0;
+  }
+#endif
+
   //@}
 };
 
