@@ -78,7 +78,7 @@ static ToolbarSpec goodies_menu_spec[] = {
 
 static ToolbarSpec editor_style_toolbar_spec[] = {
 
-//	{ xfeCmdSetParagraphStyle, COMBOBOX },
+	{ xfeCmdSetParagraphStyle, COMBOBOX },
 	{ xfeCmdSetFontFace,       COMBOBOX },
 	{ xfeCmdSetFontSize,       COMBOBOX },
 	{ xfeCmdSetFontColor,      COMBOBOX },
@@ -86,7 +86,7 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 
 	{ xfeCmdToggleCharacterStyleBold,	   TOGGLEBUTTON, &ed_bold_group },
 	{ xfeCmdToggleCharacterStyleItalic,	   TOGGLEBUTTON, &ed_italic_group },
-//	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
+	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
 //	{ xfeCmdClearAllStyles,                PUSHBUTTON  , &ed_clear_group },
 	TOOLBAR_SEPARATOR,
 
@@ -404,22 +404,6 @@ command_update_cb(XFE_NotificationCenter*, XFE_NotificationCenter* obj,
   }
 }
 
-extern "C" XFE_Frame*
-fe_getFrameFromContext(MWContext* context)
-{
-  XFE_Frame *frame = 0;
-  while (context)
-  {
-    frame = ViewGlue_getFrame(context);
-    if (frame)
-      return frame;
-    if (context->grid_parent)
-      context = context->grid_parent;
-    else
-      return 0;
-  }
-  return 0; /* warning control -- shouldn't actually get here */
-}
 
 extern "C" Widget
 XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
@@ -504,154 +488,6 @@ XFE_DestroyEmbeddedEditor(Widget w, MWContext *context)
   }
 }
 
-extern "C" MWContext *
-fe_CreateNewContext(MWContextType type, Widget w, fe_colormap *cmap,
-					XP_Bool displays_html)
-{
-	fe_ContextData *fec;
-	struct fe_MWContext_cons *cons;
-	MWContext *context;
-
-	context = XP_NewContext();
-
-	if (context == NULL)
-		return 0;
-
-	cons = XP_NEW_ZAP(struct fe_MWContext_cons);
-	if (cons == NULL)
-	{
-		XP_FREE(context);
-		return 0;
-	}
-
-	fec = XP_NEW_ZAP (fe_ContextData);
-
-	if (fec == NULL)
-	{
-		XP_FREE(cons);
-		XP_FREE(context);
-		return 0;
-	}
-
-	context->type = type;
-	switch (type)
-	{
-		case MWContextEditor:
-		case MWContextMessageComposition:
-			context->is_editor = True;
-			break;
-		default:
-			context->is_editor = False;
-			break;
-	}
-
-	CONTEXT_DATA (context)           = fec;
-	CONTEXT_DATA (context)->colormap = cmap;
-
-    // set image library Callback functions 
-    CONTEXT_DATA (context)->DisplayPixmap = (DisplayPixmapPtr)fe_DisplayPixmap;
-    CONTEXT_DATA (context)->NewPixmap     = (NewPixmapPtr)NULL;
-    CONTEXT_DATA (context)->ImageComplete = (ImageCompletePtr)NULL;
-
-	CONTEXT_WIDGET (context) = w;
-
-	fe_InitRemoteServer (XtDisplay (w));
-
-	/* add the layout function pointers */
-	context->funcs = fe_BuildDisplayFunctionTable();
-	context->convertPixX = context->convertPixY = 1;
-	context->is_grid_cell = FALSE;
-	context->grid_parent = NULL;
-
-	/* set the XFE default Document Character set */
-	CONTEXT_DATA(context)->xfe_doc_csid = fe_globalPrefs.doc_csid;
-
-	cons->context = context;
-	cons->next = fe_all_MWContexts;
-	fe_all_MWContexts = cons;
-	XP_AddContextToList (context);
-
-	fe_InitIconColors(context);
-
-	XtGetApplicationResources (w,
-							   (XtPointer) CONTEXT_DATA (context),
-							   fe_Resources, fe_ResourcesSize,
-							   0, 0);
-
-	// Use colors from prefs
-
-	LO_Color *color;
-
-	color = &fe_globalPrefs.links_color;
-	CONTEXT_DATA(context)->link_pixel = 
-		fe_GetPixel(context, color->red, color->green, color->blue);
-
-	color = &fe_globalPrefs.vlinks_color;
-	CONTEXT_DATA(context)->vlink_pixel = 
-		fe_GetPixel(context, color->red, color->green, color->blue);
-
-	color = &fe_globalPrefs.text_color;
-	CONTEXT_DATA(context)->default_fg_pixel = 
-		fe_GetPixel(context, color->red, color->green, color->blue);
-
-	color = &fe_globalPrefs.background_color;
-	CONTEXT_DATA(context)->default_bg_pixel = 
-		fe_GetPixel(context, color->red, color->green, color->blue);
-
-	if (displays_html) {
-        Display * dpy;
-        int screen;
-        double pixels;
-        double millimeters;
-
-        /* Determine pixels per point for back end font size calculations. */
-
-        dpy = XtDisplay(w);
-        screen = XScreenNumberOfScreen(XtScreen(w));
-
-#define MM_PER_INCH      (25.4)
-#define POINTS_PER_INCH  (72.0)
-
-        /* N pixels    25.4 mm    1 inch
-         * -------- *  ------- *  ------
-         *   M mm       1 inch    72 pts
-         */
-
-        pixels      = DisplayWidth(dpy, screen);
-        millimeters = DisplayWidthMM(dpy, screen);
-        context->XpixelsPerPoint =
-            ((pixels * MM_PER_INCH) / millimeters) / POINTS_PER_INCH;
-
-        pixels      = DisplayHeight(dpy,screen);
-        millimeters = DisplayHeightMM(dpy, screen);
-        context->YpixelsPerPoint =
-            ((pixels * MM_PER_INCH) / millimeters) / POINTS_PER_INCH;
-
-
-        SHIST_InitSession (context);
-	
-        fe_load_default_font(context);
-	}
-
-	/*
-	 * set the default coloring correctly into the new context.
-	 */
-	{
-		Pixel unused_select_pixel;
-		XmGetColors (XtScreen (w),
-					 fe_cmap(context),
-					 CONTEXT_DATA (context)->default_bg_pixel,
-					 &(CONTEXT_DATA (context)->fg_pixel),
-					 &(CONTEXT_DATA (context)->top_shadow_pixel),
-					 &(CONTEXT_DATA (context)->bottom_shadow_pixel),
-					 &unused_select_pixel);
-	}
-
-    // New field added by putterman for increase/decrease font
-    context->fontScalingPercentage = 1.0;
-
-    return context;
-}
 
 extern "C" int
 fe_add_to_all_MWContext_list(MWContext *context)
