@@ -534,7 +534,17 @@ PR_LoadLibrary(const char *name)
         
         PStrFromCStr(name, pName);
     
+        /*
+         * beard: NSGetSharedLibrary was so broken that I just decided to
+         * use GetSharedLibrary for now.  This will need to change for
+         * plugins, but those should go in the Extensions folder anyhow.
+         */
+#if 0
         err = NSGetSharedLibrary(pName, &connectionID, &main);
+#else
+        err = GetSharedLibrary(pName, kCompiledCFragArch, kReferenceCFrag,
+                &connectionID, &main, errName);
+#endif
         if (err != noErr)
             goto unlock;    
         
