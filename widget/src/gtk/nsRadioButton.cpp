@@ -48,6 +48,8 @@ nsRadioButton::nsRadioButton() : nsWidget(), nsIRadioButton()
 //-------------------------------------------------------------------------
 nsRadioButton::~nsRadioButton()
 {
+  if (mLabel)
+    gtk_widget_destroy(mLabel);
 }
 
 
@@ -116,6 +118,7 @@ NS_METHOD nsRadioButton::GetState(PRBool& aState)
 NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
+  g_print("nsRadioButton::SetLabel(%s)\n",label);
   if (mLabel) {
     gtk_label_set(GTK_LABEL(mLabel), label);
   } else {
