@@ -21,3 +21,4 @@ nsIStyleRule.h
 nsIStyleSet.h
 nsIStyleSheet.h
 nsITextContent.h
+nsTextFragment.h
