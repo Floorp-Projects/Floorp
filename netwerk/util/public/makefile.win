@@ -25,9 +25,10 @@ include <$(DEPTH)/config/config.mak>
 PUBLIC = $(DEPTH)\netwerk\dist\include
 !endif
 
-EXPORTS =             \
-        nsIUnicharStreamLoader.h \
-        nsNeckoUtil.h \
+EXPORTS =                         \
+        nsNeckoUtil.h             \
+        nsIUnicharStreamLoader.h  \
+        nsIBlockingNotification.h \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -74,9 +74,9 @@ public:
  * @param aRef an opaque value that will later be sent to the termination
  *             function
  */
-extern NS_NET nsresult NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
-						 nsIURI* aURL,
-						 nsStreamCompleteFunc aFunc,
-						 void* aRef);
+extern nsresult NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
+                                          nsIURI* aURL,
+                                          nsStreamCompleteFunc aFunc,
+                                          void* aRef);
 
 #endif /* nsIUnicharStreamLoader_h___ */

@@ -51,4 +51,7 @@ NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result);
 extern nsresult
 NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result);
 
+extern nsresult
+NS_NewLoadGroup(nsILoadGroup* *result);
+
 #endif // nsNeckoUtil_h__
