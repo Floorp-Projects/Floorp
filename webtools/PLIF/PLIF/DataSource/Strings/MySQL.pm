@@ -71,7 +71,7 @@ sub setupInstall {
                                          translator varchar(255),
                                          UNIQUE KEY (name)
                                          )
-        ')->row;
+        ');
     } else {
         # check its schema is up to date
     }
@@ -85,7 +85,7 @@ sub setupInstall {
                                   data text,
                                   PRIMARY KEY (variant, name)
                                   )
-        ')->row;
+        ');
     } else {
         # check its schema is up to date
     }

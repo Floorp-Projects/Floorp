@@ -90,10 +90,10 @@ sub objectProvides {
 
 sub objectInit {
     my $self = shift;
-    my($app, $userID, $disabled, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldPassword, $fields, $groups, $rights) = @_;
+    my($app, $userID, $mode, $password, $adminMessage, $newFieldID, $newFieldValue, $newFieldPassword, $fields, $groups, $rights) = @_;
     $self->SUPER::objectInit(@_);
     $self->userID($userID);
-    $self->disabled($disabled);
+    $self->mode($mode);
     $self->password($password);
     $self->adminMessage($adminMessage);
     $self->newFieldID($newFieldID);
@@ -109,6 +109,7 @@ sub objectInit {
     $self->groups({%$groups}); # hash of groupID => groupName
     $self->rights(map {$_ => 1} @$rights); # map a list of strings into a hash for easy access
     $self->{'_DIRTY'} = {};
+    $self->{'_FAKE'} = 0;
 }
 
 sub hasRight {
@@ -162,9 +163,12 @@ sub prepareAddressChange {
         $self->newFieldID($field->fieldID);
         $self->newFieldValue($newAddress);
         $self->newFieldPassword($password);
-        return $self->objectCreate($self->app, $self->userID, $self->disabled, $self->adminMessage, 
-                                   $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
-                                   {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
+        my $session = $self->objectCreate($self->app, $self->userID, $self->mode, $self->adminMessage, 
+                                          $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
+                                          # XXX need to pass the other fields in
+                                          {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
+        $session->{'_FAKE'} = 1;
+        return $session;
     } else {
         return undef;
     }
@@ -178,9 +182,10 @@ sub prepareAddressAddition {
         $self->newFieldID($field->fieldID);
         $self->newFieldValue($newAddress);
         $self->newFieldPassword($password);
-        return $self->objectCreate($self->app, $self->userID, $self->disabled, $self->adminMessage, 
-                                   $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
-                                   {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
+        my $session = $self->objectCreate($self->app, $self->userID, $self->mode, $self->adminMessage, 
+                                          $self->newFieldID, $self->newFieldValue, $self->newFieldPassword,
+                                          # XXX need to pass the other fields in
+                                          {$field->FieldID => $newAddress}, $self->{'groups'}, keys(%{$self->rights}));
     } else {
         return undef;
     }
@@ -218,7 +223,7 @@ sub hash {
     my $self = shift;
     my $result = {
         'userID' => $self->userID,
-        'disabled' => $self->disabled,
+        'mode' => $self->mode,
         'adminMessage' => $self->adminMessage,
         'fields' => {},
         'groups' => $self->groups,
@@ -289,17 +294,19 @@ sub propertyGet {
 
 sub DESTROY {
     my $self = shift;
-    if ($self->{'_DIRTY'}->{'properties'}) {
-        $self->writeProperties();
-    }
-    if ($self->{'_DIRTY'}->{'groups'}) {
-        $self->writeGroups();
+    if (not $self->{'_FAKE'}) {
+        if ($self->{'_DIRTY'}->{'properties'}) {
+            $self->writeProperties();
+        }
+        if ($self->{'_DIRTY'}->{'groups'}) {
+            $self->writeGroups();
+        }
     }
 }
 
 sub writeProperties {
     my $self = shift;
-    $self->app->getService('dataSource.user')->setUser($elf->app, $self->userID, $self->disabled, 
+    $self->app->getService('dataSource.user')->setUser($elf->app, $self->userID, $self->mode, 
                                                        $self->password, $self->adminMessage, 
                                                        $self->newFieldID, $self->newFieldValue, $self->newFieldKey);
 }

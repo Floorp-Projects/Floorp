@@ -55,11 +55,6 @@ sub getUserByUsername {
 sub getUserIDByUsername {
     my $self = shift;
     my($app, $username) = @_;
-    # the username for a user field is created by appending the 'data'
-    # of the user field to the type data of the field description. For
-    # example, for the field 'contact.icq', the type data field might
-    # contain the string 'ICQ:' and the user field might be '55378571'
-    # making the username 'ICQ:55378571'.
     $self->notImplemented();
     # return userID
 }
@@ -181,64 +176,3 @@ sub setupInstall {
     my $self = shift;
     $self->notImplemented();
 }
-
-__END__
-+-------------------+
-| user              |
-+-------------------+
-| userID         K1 | auto_increment
-| password          |
-| disabled          | boolean
-| adminMessage      | string displayed when user (tries to) log in
-| newFieldID        | \
-| newFieldValue     |  > used when user tries to change his e-mail
-| newFieldKey       | /  address, for example
-+-------------------+
-
-+-------------------+
-| userData          |
-+-------------------+
-| userID         K1 | points to entries in the table above
-| fieldID        K1 | points to entries in the table below
-| data              | e.g. "ian@hixie.ch" or "1979-12-27" or an index into another table
-+-------------------+
-
-+-------------------+
-| userDataTypes     |
-+-------------------+
-| fieldID        K1 | auto_increment
-| category       K2 | e.g. contact, personal, setting [1]
-| name           K2 | e.g. sms, homepage, notifications [1]
-| type              | e.g. number, string, notifications [2]
-| data              | e.g. "SMS", "optional", null
-+-------------------+
- [1] used to find the fieldID for a particular category.name combination
- [2] used to find the factory for the relevant user field object
-
-+-------------------+
-| userGroupMapping  |
-+-------------------+
-| userID         K1 | 
-| groupID        K1 |
-+-------------------+
-
-+-------------------+
-| groups            |
-+-------------------+
-| groupID        K1 |
-| name              | user defined name (can be changed)
-+-------------------+
-
-+-------------------+
-| groupRightsMapping|
-+-------------------+
-| groupID        K1 |
-| rightID        K1 |
-+-------------------+
-
-+-------------------+
-| rights            |
-+-------------------+
-| rightID        K1 | implementation detail - not ever passed to other parts of the code
-| name           K2 | the internal name for the right, as used by the code
-+-------------------+
