@@ -168,6 +168,10 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
     case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
     case NS_STYLE_LIST_STYLE_LOWER_GREEK:
     case NS_STYLE_LIST_STYLE_HEBREW:
     case NS_STYLE_LIST_STYLE_ARMENIAN:
@@ -667,17 +671,21 @@ nsBulletFrame::GetListItemText(nsIPresContext& aCX,
       break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
       RomanToText(mOrdinal, result, gLowerRomanCharsA, gLowerRomanCharsB);
       break;
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
       RomanToText(mOrdinal, result, gUpperRomanCharsA, gUpperRomanCharsB);
       break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
       CharListToText(mOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
       break;
 
     case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
       CharListToText(mOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
       break;
 
@@ -783,57 +791,61 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 
   nsAutoString text;
   switch (myList->mListStyleType) {
-  case NS_STYLE_LIST_STYLE_NONE:
-    aMetrics.width = 0;
-    aMetrics.height = 0;
-    aMetrics.ascent = 0;
-    aMetrics.descent = 0;
-    break;
+    case NS_STYLE_LIST_STYLE_NONE:
+      aMetrics.width = 0;
+      aMetrics.height = 0;
+      aMetrics.ascent = 0;
+      aMetrics.descent = 0;
+      break;
 
-  case NS_STYLE_LIST_STYLE_DISC:
-  case NS_STYLE_LIST_STYLE_CIRCLE:
-  case NS_STYLE_LIST_STYLE_BASIC:
-  case NS_STYLE_LIST_STYLE_SQUARE:
-    aCX->GetTwipsToPixels(&t2p);
-    fm->GetMaxAscent(ascent);
-    bulletSize = NSTwipsToIntPixels(
-      (nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
-    if (bulletSize < 1) {
-      bulletSize = MIN_BULLET_SIZE;
-    }
-    aCX->GetPixelsToTwips(&p2t);
-    bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
-    mPadding.bottom = ascent / 8;
-    aMetrics.width = mPadding.right + bulletSize;
-    aMetrics.height = mPadding.bottom + bulletSize;
-    aMetrics.ascent = mPadding.bottom + bulletSize;
-    aMetrics.descent = 0;
-    break;
+    case NS_STYLE_LIST_STYLE_DISC:
+    case NS_STYLE_LIST_STYLE_CIRCLE:
+    case NS_STYLE_LIST_STYLE_BASIC:
+    case NS_STYLE_LIST_STYLE_SQUARE:
+      aCX->GetTwipsToPixels(&t2p);
+      fm->GetMaxAscent(ascent);
+      bulletSize = NSTwipsToIntPixels(
+        (nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
+      if (bulletSize < 1) {
+        bulletSize = MIN_BULLET_SIZE;
+      }
+      aCX->GetPixelsToTwips(&p2t);
+      bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
+      mPadding.bottom = ascent / 8;
+      aMetrics.width = mPadding.right + bulletSize;
+      aMetrics.height = mPadding.bottom + bulletSize;
+      aMetrics.ascent = mPadding.bottom + bulletSize;
+      aMetrics.descent = 0;
+      break;
 
- default:
-  case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-  case NS_STYLE_LIST_STYLE_DECIMAL:
-  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-  case NS_STYLE_LIST_STYLE_KATAKANA:
-  case NS_STYLE_LIST_STYLE_HIRAGANA:
-  case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-  case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-  case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-  case NS_STYLE_LIST_STYLE_HEBREW: 
-  case NS_STYLE_LIST_STYLE_ARMENIAN: 
-  case NS_STYLE_LIST_STYLE_GEORGIAN: 
-  case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
-    GetListItemText(*aCX, *myList, text);
-    fm->GetHeight(aMetrics.height);
-    aReflowState.rendContext->SetFont(fm);
-    aReflowState.rendContext->GetWidth(text, aMetrics.width);
-    aMetrics.width += mPadding.right;
-    fm->GetMaxAscent(aMetrics.ascent);
-    fm->GetMaxDescent(aMetrics.descent);
-    break;
+    default:
+    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
+    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA:
+    case NS_STYLE_LIST_STYLE_KATAKANA:
+    case NS_STYLE_LIST_STYLE_HIRAGANA:
+    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
+    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
+    case NS_STYLE_LIST_STYLE_HEBREW: 
+    case NS_STYLE_LIST_STYLE_ARMENIAN: 
+    case NS_STYLE_LIST_STYLE_GEORGIAN: 
+    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
+      GetListItemText(*aCX, *myList, text);
+      fm->GetHeight(aMetrics.height);
+      aReflowState.rendContext->SetFont(fm);
+      aReflowState.rendContext->GetWidth(text, aMetrics.width);
+      aMetrics.width += mPadding.right;
+      fm->GetMaxAscent(aMetrics.ascent);
+      fm->GetMaxDescent(aMetrics.descent);
+      break;
   }
 }
 
