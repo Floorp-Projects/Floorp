@@ -1,16 +1,24 @@
-<r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#"
-       xmlns="http://chrome.mozilla.org/rdf#">
+<r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#" 
+         xmlns="http://chrome.mozilla.org/rdf#"> 
 
-<chrome r:resource="chrome://navigator/">
-  <skin r:resource="chrome://navigator/skin/"> 
-     <base>resource:/res/samples/</base>
-	 <main>navigator.css</main>
-  </skin>
-  <content r:resource="chrome://navigator/content/">
-     <base>resource:/res/samples/</base>
-	 <main>navigator.xul</main>
-  </content>
-</chrome>
+  <chrome r:ID="chrome://navigator/"> 
 
-</r:RDF>
+    <skin> 
+      <r:Description r:ID="chrome://navigator/skin/"> 
+        <base>resource:/res/samples/</base> 
+        <main>navigator.css</main> 
+      </r:Description> 
+    </skin> 
+
+    <content> 
+      <r:Description r:ID="chrome://navigator/content/"> 
+        <base>resource:/res/samples/</base> 
+        <main>navigator.xul</main> 
+      </r:Description> 
+    </content> 
+
+  </chrome> 
+
+</r:RDF> 
+
 
