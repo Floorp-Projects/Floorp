@@ -33,7 +33,7 @@
                              ((l:keyword l:punctuator) (values (intern (string-upcase data)) nil))
                              (l:number-token (values '$number (translate-number data)))
                              (l:string-token (values '$string data))
-                             (l:regular-expression (values '$regular-expression data)))
+                             (l:regular-expression (values '$regular-expression (rest token-value))))
         (when line-break
           (setq token (terminal-lf-terminal token)))
         (values token token-arg))))))
