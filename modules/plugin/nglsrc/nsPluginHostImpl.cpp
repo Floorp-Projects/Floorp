@@ -77,9 +77,6 @@
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeType.h"
 #include "prprf.h"
-#if 0
-#include "gui.h"
-#endif
 
 #if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
