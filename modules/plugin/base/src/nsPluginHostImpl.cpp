@@ -1325,6 +1325,13 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 {
   nsPluginTag *plug = mPlugins;
 
+  PRUint32 i;
+  for(i=0; i<mNumActivePlugins; i++)
+  {
+    if(mActivePluginList[i].mInstance)
+  	  mActivePluginList[i].mInstance->Destroy();
+  }
+
   while (nsnull != plug)
   {
     if (nsnull != plug->mEntryPoint)
@@ -1456,6 +1463,9 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstan
 {
   PRUint32 i;
   const char* url;
+  if(!aURL)
+  	return NS_ERROR_FAILURE;
+  	
   (void)aURL->GetSpec(&url);
 
   for(i=0; i<mNumActivePlugins; i++)
@@ -1486,6 +1496,9 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURL* aURL, nsIPluginInstan
 void nsPluginHostImpl::AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURL* aURL)
 {
   const char* url;
+  if(!aURL)
+  	return;
+  	
   (void)aURL->GetSpec(&url);
 
   if(mNumActivePlugins < MAX_ACTIVE_PLUGINS)
@@ -1526,12 +1539,16 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 	nsIPlugin* plugin = NULL;
 	const char* mimetype;
 
+		
+	if(!aURL)
+		return NS_ERROR_FAILURE;
+
 	// if don't have a mimetype, check by file extension
 	if(!aMimeType)
 	{
 		const char* filename;
 		char* extension;
-
+			
 		aURL->GetFile(&filename);
 		extension = PL_strrchr(filename, '.');
 		if(extension)
@@ -1546,7 +1563,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 		mimetype = aMimeType;
 
 
-	if(GetPluginFactory(mimetype, &plugin) == NS_OK)
+  if(GetPluginFactory(mimetype, &plugin) == NS_OK)
   {
 		// instantiate a plugin.
 		nsIPluginInstance* instance = NULL;
@@ -1855,11 +1872,9 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 			}
 			else
 			{
-				rv = ns4xPlugin::CreatePlugin(pluginTag->mLibrary,
-											  (nsIPlugin **)&pluginTag->mEntryPoint,
-											  mServiceMgr);
+				rv = ns4xPlugin::CreatePlugin(pluginTag, mServiceMgr);
 				plugin = pluginTag->mEntryPoint;
-        pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
+                pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
 
 				// no need to initialize, already done by CreatePlugin()
 			}
@@ -1907,6 +1922,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 						pluginTag->mMimeTypeArray = info.fMimeTypeArray;
 						pluginTag->mMimeDescriptionArray = info.fMimeDescriptionArray;
 						pluginTag->mExtensionsArray = info.fExtensionArray;
+						pluginTag->mFileName = info.fFileName;
 					}
 					
 					pluginTag->mLibrary = pluginLibrary;

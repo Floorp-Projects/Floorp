@@ -74,7 +74,7 @@ PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 	const FSSpec& spec = fileSpec;
 	OSErr result = FSpGetFInfo(&spec, &info);
 	if (result == noErr)
-		return (info.fdType == 'shlb' && info.fdCreator == 'MOSS');
+		return ((info.fdType == 'shlb' && info.fdCreator == 'MOSS')  || info.fdType == 'NSPL');
 	return false;
 }
 
@@ -91,8 +91,7 @@ nsPluginFile::~nsPluginFile() {}
  */
 nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
 {
-	// How can we convert to a full path names for using with NSPR?
-	nsFilePath path(*this);
+	const char* path = this->GetCString();
 	outLibrary = PR_LoadLibrary(path);
 	return NS_OK;
 }
@@ -154,6 +153,7 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 			info.fMimeTypeArray = new char*[variantCount];
 			info.fMimeDescriptionArray = new char*[variantCount];
 			info.fExtensionArray = new char*[variantCount];
+			info.fFileName = p2cstrdup(spec.name);
 			
 			short mimeIndex = 1, descriptionIndex = 1;
 			for (int i = 0; i < variantCount; i++) {

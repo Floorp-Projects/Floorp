@@ -518,14 +518,28 @@ nsresult ns4xPluginInstance::NewNotifyStream(nsIPluginStreamListener** listener,
 
 NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 {
-printf("instance print called\n");
+  printf("instance print called\n");
   return NS_OK;
 }
 
 NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
 {
-printf("instance handleevent called\n");
-    *handled = PR_FALSE;
+	printf("instance handleevent called\n");
+	PRInt16 res = 0;
+
+    if (fCallbacks->event)
+    {
+#if !TARGET_CARBON
+// pinkerton
+// relies on routine descriptors, not present in carbon. We need to fix this.
+        res = CallNPP_HandleEventProc(fCallbacks->event,
+                                        &fNPP,
+                                        (void*) event->event);
+#endif
+
+		*handled = res;
+    }
+
 
     return NS_OK;
 }
