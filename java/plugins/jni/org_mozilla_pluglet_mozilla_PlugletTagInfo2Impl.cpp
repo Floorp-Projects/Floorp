@@ -25,15 +25,48 @@
 static jfieldID peerFID = NULL;
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
- * Method:    getAttributes
- * Signature: ()Ljava/util/Properties;
+ * Method:    getAttributesArray
+ * Signature: ()[[Ljava/lang/String;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttributes
-    (JNIEnv *, jobject) {
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttributesArray
+    (JNIEnv *env, jobject jthis) {
+    jobjectArray jnames;
+    jobjectArray jvalues;
+    jobjectArray result;
+    char*const* names;
+    char*const* values;
+    PRUint16 nAttr;
+
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
-	    ("PlugletTagInfo2Impl.getAttributes: stub\n"));
-    //nb Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttributes
-    return NULL;
+	    ("PlugletTagInfo2Impl.getAttributesArray\n"));
+
+    nsIPluginTagInfo2 * info = (nsIPluginTagInfo2*)env->GetLongField(jthis, peerFID);
+    if (!info) {
+	return NULL;
+    }
+    if (NS_FAILED(info->GetAttributes(nAttr, names, values))) {
+	return NULL;
+    }
+    jclass strClass = env->FindClass("java/lang/String");
+    jclass strArrayClass = env->FindClass("[Ljava/lang/String;");
+    if (!strClass || !strArrayClass) {
+	return NULL;
+    }
+    result = env->NewObjectArray(2, strArrayClass, NULL); 
+    jnames = env->NewObjectArray(nAttr, strClass, NULL);
+    jvalues = env->NewObjectArray(nAttr, strClass, NULL);
+
+    int i;
+    for (i=0; i < nAttr; i++) {
+	env->SetObjectArrayElement(jnames, i, env->NewStringUTF(names[i]));
+	env->SetObjectArrayElement(jvalues, i, env->NewStringUTF(values[i]));
+    }
+    env->SetObjectArrayElement(result, 0, jnames);
+    env->SetObjectArrayElement(result, 1, jvalues);
+
+    env->DeleteLocalRef(jnames);
+    env->DeleteLocalRef(jvalues);
+    return result;
 }
 
 /*
@@ -45,6 +78,78 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
     (JNIEnv *env, jobject jthis, jstring _name) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletTagInfo2Impl.getAttribute: name = %s\n", _name));
+    if (!_name) {
+	return NULL;
+    }
+    nsIPluginTagInfo2 * info = (nsIPluginTagInfo2*)env->GetLongField(jthis, peerFID);
+    const char * name = NULL;
+    if (!(name = env->GetStringUTFChars(_name,NULL))) {
+	return NULL;
+    }
+    const char * result = NULL;
+    if (NS_FAILED(info->GetAttribute(name,&result))) {
+	env->ReleaseStringUTFChars(_name,name);
+	return NULL;
+    }
+    env->ReleaseStringUTFChars(_name,name);
+    return env->NewStringUTF(result);
+}
+
+/*
+ * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
+ * Method:    getParametersArray
+ * Signature: ()[[Ljava/lang/String;
+ */
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getParametersArray
+    (JNIEnv *env, jobject jthis) {
+    jobjectArray jnames;
+    jobjectArray jvalues;
+    jobjectArray result;
+    char*const* names;
+    char*const* values;
+    PRUint16 nParam;
+
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getParameters\n"));
+
+    nsIPluginTagInfo2 * info = (nsIPluginTagInfo2*)env->GetLongField(jthis, peerFID);
+    if (!info) {
+	return NULL;
+    }
+    if (NS_FAILED(info->GetParameters(nParam, names, values))) {
+	return NULL;
+    }
+    jclass strClass = env->FindClass("java/lang/String");
+    jclass strArrayClass = env->FindClass("[Ljava/lang/String;");
+    if (!strClass || !strArrayClass) {
+	return NULL;
+    }
+    result = env->NewObjectArray(2, strArrayClass, NULL); 
+    jnames = env->NewObjectArray(nParam, strClass, NULL);
+    jvalues = env->NewObjectArray(nParam, strClass, NULL);
+
+    int i;
+    for (i=0; i < nParam; i++) {
+	env->SetObjectArrayElement(jnames, i, env->NewStringUTF(names[i]));
+	env->SetObjectArrayElement(jvalues, i, env->NewStringUTF(values[i]));
+    }
+    env->SetObjectArrayElement(result, 0, jnames);
+    env->SetObjectArrayElement(result, 1, jvalues);
+
+    env->DeleteLocalRef(jnames);
+    env->DeleteLocalRef(jvalues);
+    return result;
+}
+
+/*
+ * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
+ * Method:    getParameter
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getParameter
+    (JNIEnv *env, jobject jthis, jstring _name) {
+    PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
+	    ("PlugletTagInfo2Impl.getParameter: name = %s\n", _name));
     if (!_name) {
 	return NULL;
     }

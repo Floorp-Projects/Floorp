@@ -27,8 +27,32 @@ public class PlugletTagInfo2Impl implements PlugletTagInfo2  {
 	peer = _peer;
 	nativeInitialize();
     }
-    public native Properties getAttributes();
+    private native String[][] getAttributesArray();
+    public Properties getAttributes() {
+	Properties result = new Properties();
+	String[][] attrs = getAttributesArray();
+	if (attrs == null) {
+	    return null;
+	}
+	for(int i=0; i < attrs[0].length; i++) {
+	    result.setProperty(attrs[0][i], attrs[1][i]);
+	}
+	return result;
+    }
     public native String getAttribute(String name);
+    private native String[][] getParametersArray(); 
+    public Properties getParameters() {
+	Properties result = new Properties();
+	String[][] params = getParametersArray();
+	if (params == null) {
+	    return null;
+	}
+	for(int i=0; i < params[1].length; i++) {
+	    result.setProperty(params[0][i], params[1][i]);
+	}
+	return result;
+    }
+    public native String getParameter(String name);
     /* Get the type of the HTML tag that was used ot instantiate this
      * pluglet.  Currently supported tags are EMBED, APPLET and OBJECT.
      */

@@ -28,6 +28,8 @@ import java.util.*;
 public interface PlugletTagInfo2 extends PlugletTagInfo  {
     public Properties getAttributes();
     public String getAttribute(String name);
+    public Properties getParameters();
+    public String getParameter(String name);
     /** Gets the HTML tag type associated with creation of the
       * <code>Pluglet</code> instance.  Possible types are <code>EMBED</code>, 
       * <code>APPLET</code>, and <code>OBJECT</code>.<p>

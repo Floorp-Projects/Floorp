@@ -29,10 +29,10 @@ extern "C" {
 #endif
 /*
  * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
- * Method:    getAttributes
- * Signature: ()Ljava/util/Properties;
+ * Method:    getAttributesArray
+ * Signature: ()[[Ljava/lang/String;
  */
-JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttributes
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttributesArray
   (JNIEnv *, jobject);
 
 /*
@@ -41,6 +41,22 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_g
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getAttribute
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
+ * Method:    getParametersArray
+ * Signature: ()[[Ljava/lang/String;
+*/
+JNIEXPORT jobjectArray JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getParametersArray
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl
+ * Method:    getParameter
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletTagInfo2Impl_getParameter
   (JNIEnv *, jobject, jstring);
 
 /*
