@@ -175,10 +175,16 @@ NS_IMETHODIMP nsAbBSDirectory::GetChildNodes(nsIEnumerator* *result)
 		{
       DIR_Server *server = (DIR_Server *)(DIR_GetDirectories()->ElementAt(i));
 
-      // check: this is a 4.x file, remove when conversion is done
+      // if this is a 4.x, local .na2 addressbook (PABDirectory)
+      // we must skip it.
+      // mozilla can't handle 4.x .na2 addressbooks
+      // note, the filename might be na2 for 4.x LDAP directories
+      // (we used the .na2 file for replication), and we don't want to skip
+      // those.  see bug #127007
       PRUint32 fileNameLen = strlen(server->fileName);
-      if ((fileNameLen > kABFileName_PreviousSuffixLen) && 
-          strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0)
+      if (((fileNameLen > kABFileName_PreviousSuffixLen) && 
+          strcmp(server->fileName + fileNameLen - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
+          (server->dirType == PABDirectory))
 				continue;
 			
       nsCOMPtr <nsIAbDirectoryProperties> properties;
