@@ -4628,7 +4628,8 @@ var MailIntegration = {
     var unreadCount = shell.unreadMailCount;
     var message = gNavigatorBundle.getFormattedString("mailUnreadTooltip", [unreadCount]);
     var element = document.getElementById("mail-button");
-    element.setAttribute("tooltiptext", message);
+    if (element)
+      element.setAttribute("tooltiptext", message);
                                                               
     message = gNavigatorBundle.getFormattedString("mailUnreadMenuitem", [unreadCount]);
     element = document.getElementById("readMailItem");
