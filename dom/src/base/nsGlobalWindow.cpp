@@ -763,6 +763,7 @@ GlobalWindowImpl::SetName(const nsString& aName)
   return result;
 }
 
+
 NS_IMETHODIMP
 GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
@@ -2432,34 +2433,56 @@ GlobalWindowImpl::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 PRBool    
 GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-  if (JSVAL_IS_STRING(aID) && 
-      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    nsIDOMLocation *location;
+  if (JSVAL_IS_STRING(aID)) {
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+    if (PL_strcmp("location", cString) == 0) {
+      nsIDOMLocation *location;
     
-    if (NS_OK == GetLocation(&location)) {
-      if (location != nsnull) {
-        nsIScriptObjectOwner *owner = nsnull;
-        if (NS_OK == location->QueryInterface(kIScriptObjectOwnerIID, 
-                                              (void**)&owner)) {
-          JSObject *object = nsnull;
-          nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-          if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-            // set the return value
-            *aVp = OBJECT_TO_JSVAL(object);
+      if (NS_OK == GetLocation(&location)) {
+        if (location != nsnull) {
+          nsIScriptObjectOwner *owner = nsnull;
+          if (NS_OK == location->QueryInterface(kIScriptObjectOwnerIID, 
+                                                (void**)&owner)) {
+            JSObject *object = nsnull;
+            nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+            if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+              // set the return value
+              *aVp = OBJECT_TO_JSVAL(object);
+            }
+            NS_RELEASE(owner);
           }
-          NS_RELEASE(owner);
+          NS_RELEASE(location);
         }
-        NS_RELEASE(location);
+        else {
+          *aVp = JSVAL_NULL;
+        }
       }
       else {
-        *aVp = JSVAL_NULL;
+        return PR_FALSE;
       }
     }
-    else {
-      return PR_FALSE;
+    else if (PL_strcmp("title", cString) == 0) {
+      if (mWebShell) {
+        // See if we're a chrome shell.
+        nsWebShellType type;
+        mWebShell->GetWebShellType(type);
+        if (type == nsWebShellChrome) {
+          nsCOMPtr<nsIBrowserWindow> browser;
+          if (NS_OK == GetBrowserWindowInterface(*getter_AddRefs(browser)) && browser) {
+            // We got a browser window interface
+            const PRUnichar* title;
+            browser->GetTitle(&title);
+
+            JSString* jsString = JS_NewUCStringCopyZ(aContext, (const jschar*)title);
+            if (!jsString)
+              return PR_FALSE;
+              
+            *aVp = STRING_TO_JSVAL(jsString);
+          }
+        }
+      }
     }
   }
-
   return PR_TRUE;
 }
 
@@ -2475,24 +2498,45 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       return CheckForEventListener(aContext, mPropName);
     }
   }
-  else if (JSVAL_IS_STRING(aID) && 
-           PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
-    JSString *jsstring = JS_ValueToString(aContext, *aVp);
+  else if (JSVAL_IS_STRING(aID)) {
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+    
+    if (PL_strcmp("location", cString) == 0) {
+      JSString *jsstring = JS_ValueToString(aContext, *aVp);
 
-    if (nsnull != jsstring) {
-      nsIDOMLocation *location;
-      nsAutoString locationStr;
+      if (nsnull != jsstring) {
+        nsIDOMLocation *location;
+        nsAutoString locationStr;
       
-      locationStr.SetString(JS_GetStringChars(jsstring));
-      if (NS_OK == GetLocation(&location)) {
-        if (NS_OK != location->SetHref(locationStr)) {
+        locationStr.SetString(JS_GetStringChars(jsstring));
+        if (NS_OK == GetLocation(&location)) {
+          if (NS_OK != location->SetHref(locationStr)) {
+            NS_RELEASE(location);
+            return PR_FALSE;
+          }
           NS_RELEASE(location);
+        }
+        else {
           return PR_FALSE;
         }
-        NS_RELEASE(location);
       }
-      else {
-        return PR_FALSE;
+    }
+    else if (PL_strcmp("title", cString) == 0) {
+      if (mWebShell) {
+        // See if we're a chrome shell.
+        nsWebShellType type;
+        mWebShell->GetWebShellType(type);
+        if (type == nsWebShellChrome) {
+          nsCOMPtr<nsIBrowserWindow> browser;
+          if (NS_OK == GetBrowserWindowInterface(*getter_AddRefs(browser)) && browser) {
+            // We got a browser window interface
+            JSString *jsString = JS_ValueToString(aContext, *aVp);
+            if (!jsString)
+              return PR_FALSE;
+            const PRUnichar* uniTitle = JS_GetStringChars(jsString);
+            browser->SetTitle(uniTitle);
+          }
+        }
       }
     }
   }
