@@ -27,6 +27,8 @@ REQUIRES=xpcom js nspr netlib
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
+DIRS = nntp
+
 CPPSRCS=    \
 			nsNNTPCategoryContainerStub.cpp	\
 			nsNNTPHostStub.cpp				\
