@@ -90,8 +90,6 @@ extern PREventQueue * mozilla_event_queue;
 #define ARGTYPE_BOOL	0x00000004
 #define ARGTYPE_STRING	0x00000008
 
-#define SIZE_MAX	0x00000001
-#define SIZE_MIN        0X00000002
 /*
  * When the event has been processed by the backend, there will be
  *   a front-end callback that gets called.  If the event processed
