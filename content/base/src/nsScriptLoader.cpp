@@ -275,7 +275,13 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
 
   PRBool isJavaScript = PR_TRUE;
   const char* jsVersionString = nsnull;
-  nsAutoString src, type, language;
+  nsAutoString language, type, src;
+
+  // Check the language attribute first, so type can trump language.
+  aElement->GetAttribute(NS_LITERAL_STRING("language"), language);
+  if (!language.IsEmpty()) {
+    isJavaScript = nsParserUtils::IsJavaScriptLanguage(language, &jsVersionString);
+  }
 
   // Check the type attribute to determine language and version.
   aElement->GetType(type);
@@ -303,12 +309,6 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       }
       jsVersionString = JS_VersionToString(jsVersion);
     }
-  }
-
-  // Check the language attribute.
-  aElement->GetAttribute(NS_LITERAL_STRING("language"), language);
-  if (!language.IsEmpty()) {
-    isJavaScript = nsParserUtils::IsJavaScriptLanguage(language, &jsVersionString);
   }
 
   // If this isn't JavaScript, we don't know how to evaluate.
