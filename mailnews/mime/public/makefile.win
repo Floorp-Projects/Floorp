@@ -23,6 +23,7 @@ EXPORTS =					\
 	nsIMimeObjectClassAccess.h		\
 	nsIMimeHeaderConverter.h		\
 	nsIMimeEmitter.h			\
+	nsMailHeaders.h				\
         $(NULL)
 
 MODULE=mime

@@ -29,9 +29,14 @@
       { 0xa4, 0x11, 0x0, 0x80, 0x5f, 0x61, 0x3c, 0x79 } };
 
 // {F0A8AF16-DCCE-11d2-A411-00805F613C79}
-#define NS_MIME_EMITTER_CID   \
+#define NS_HTML_MIME_EMITTER_CID   \
     { 0xf0a8af16, 0xdcce, 0x11d2,         \
     { 0xa4, 0x11, 0x0, 0x80, 0x5f, 0x61, 0x3c, 0x79 } };
+
+// {977E418F-E392-11d2-A2AC-00A024A7D144}
+#define NS_XML_MIME_EMITTER_CID   \
+    { 0x977e418f, 0xe392, 0x11d2, \
+    { 0xa2, 0xac, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } };
 
 class nsIMimeEmitter : public nsISupports {
 public: 
@@ -45,17 +50,17 @@ static const nsIID& GetIID() { static nsIID iid = NS_IMIME_EMITTER_IID; return i
     NS_IMETHOD    SetOutputStream(nsINetOStream *outStream) = 0;
 
     // Header handling routines.
-    NS_IMETHOD    StartHeader(PRBool rootMailHeader) = 0;
+    NS_IMETHOD    StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID) = 0;
     NS_IMETHOD    AddHeaderField(const char *field, const char *value) = 0;
     NS_IMETHOD    EndHeader() = 0;
 
     // Attachment handling routines
-    NS_IMETHOD    StartAttachment() = 0;
+    NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url) = 0;
     NS_IMETHOD    AddAttachmentField(const char *field, const char *value) = 0;
     NS_IMETHOD    EndAttachment() = 0;
 
     // Body handling routines
-    NS_IMETHOD    StartBody() = 0;
+    NS_IMETHOD    StartBody(PRBool bodyOnly, const char *msgID) = 0;
     NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten) = 0;
     NS_IMETHOD    EndBody() = 0;
 

@@ -27,6 +27,7 @@ EXPORTS = \
 		nsIStreamConverter.h		\
 		nsIMimeObjectClassAccess.h	\
 		nsIMimeEmitter.h		\
+		nsMailHeaders.h			\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
