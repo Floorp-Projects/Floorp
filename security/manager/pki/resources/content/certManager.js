@@ -158,7 +158,7 @@ function ca_enableButtons()
   if (nr == 0) {
     toggle="true";
   }
-  edit_toggle=toggle;
+  var edit_toggle=toggle;
 /*
   var edit_toggle="true";
   if (nr > 0) {
