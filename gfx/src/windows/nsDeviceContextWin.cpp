@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
+#include "nsGfxCIID.h"
 
 
 // Size of the color cube
@@ -259,18 +260,18 @@ nsDeviceContextWin :: FindScreen ( nsIScreen** outScreen )
 } // FindScreen
 
 
+static NS_DEFINE_CID(kRCCID,NS_RENDERING_CONTEXT_CID);
+
 NS_IMETHODIMP nsDeviceContextWin :: CreateRenderingContext(nsIRenderingContext *&aContext)
 {
   nsIRenderingContext *pContext;
   nsresult             rv;
   nsDrawingSurfaceWin  *surf;
 
-  pContext = new nsRenderingContextWin();
+  rv = nsComponentManager::CreateInstance(kRCCID,nsnull,NS_GET_IID(nsIRenderingContext),(void**)&pContext);
 
-  if (nsnull != pContext)
+  if ( (NS_SUCCEEDED(rv)) && (nsnull != pContext))
   {
-    NS_ADDREF(pContext);
-
     surf = new nsDrawingSurfaceWin();
 
     if (nsnull != surf)
