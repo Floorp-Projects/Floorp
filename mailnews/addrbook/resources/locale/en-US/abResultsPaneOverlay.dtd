@@ -40,10 +40,10 @@
 <!ENTITY PrimaryEmail.accesskey "E">
 <!ENTITY Company.label "Organization">
 <!ENTITY Company.accesskey "O">
-<!ENTITY NickName.label "Nick Name">
+<!ENTITY NickName.label "Nickname">
 <!ENTITY NickName.accesskey "i">
 <!ENTITY SecondEmail.label "Additional Email">
-<!ENTITY SecondEmail.accesskey "d">
+<!ENTITY SecondEmail.accesskey "l">
 <!ENTITY Department.label "Department">
 <!ENTITY Department.accesskey "r">
 <!ENTITY JobTitle.label "Title">
