@@ -38,12 +38,10 @@ nsDeviceContextWin :: nsDeviceContextWin()
 
 nsDeviceContextWin :: ~nsDeviceContextWin()
 {
-  if (NULL != mSurface)
-  {
-    // XXX We're leaking the HBITMAP...
-    DeleteDC(mSurface);
-    mSurface = NULL;
-  }
+  nsDrawingSurfaceWin *surf = (nsDrawingSurfaceWin *)mSurface;
+
+  NS_IF_RELEASE(surf);    //this clears the surf pointer...
+  mSurface = nsnull;
 }
 
 nsresult nsDeviceContextWin::Init(nsNativeWidget aWidget)
