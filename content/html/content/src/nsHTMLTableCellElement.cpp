@@ -281,18 +281,18 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Abbr, abbr)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Align, align)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, Align, align, "left")
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Axis, axis)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, BgColor, bgcolor)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Ch, _char)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, Ch, _char, ".")
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, ChOff, charoff)
-NS_IMPL_INT_ATTR(nsHTMLTableCellElement, ColSpan, colspan)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, ColSpan, colspan, 1)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Headers, headers)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Height, height)
 NS_IMPL_BOOL_ATTR(nsHTMLTableCellElement, NoWrap, nowrap)
-NS_IMPL_INT_ATTR(nsHTMLTableCellElement, RowSpan, rowspan)
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, RowSpan, rowspan, 1)
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Scope, scope)
-NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, VAlign, valign)
+NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLTableCellElement, VAlign, valign, "middle")
 NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Width, width)
 
 
