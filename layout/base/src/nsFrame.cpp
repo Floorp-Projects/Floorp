@@ -1323,6 +1323,7 @@ NS_METHOD nsFrame::ListTag(FILE* out) const
 
 NS_METHOD nsFrame::VerifyTree() const
 {
+  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
   return NS_OK;
 }
 

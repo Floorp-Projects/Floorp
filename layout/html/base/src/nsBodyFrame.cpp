@@ -238,6 +238,8 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
 NS_METHOD nsBodyFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
+  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
+
   // Check our child count
   PRInt32 len = LengthOf(mFirstChild);
   NS_ASSERTION(len == mChildCount, "bad child count");
