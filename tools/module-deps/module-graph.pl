@@ -6,6 +6,8 @@
 # Description:
 # Outputs a Graphviz-compatible graph description file for use
 # with the utilities dot, sccmap, and so forth.
+# Graphviz is available from:
+# http://www.research.att.com/sw/tools/graphviz/
 #
 # Reccomendations:
 # View the graphs by creating graphs with dot:
@@ -52,7 +54,7 @@ while ($#dirs != -1) {
   $curdir = pop @dirs;
 
   print STDERR "Entering $curdir..                 \r";
-  chdir "$curdir";
+  chdir "$curdir" || next;
   $current_dirs = "";
   open(MAKEOUT, "$makecommand echo-dirs echo-module echo-requires|") || die "Can't make: $!\n";
 
@@ -107,8 +109,8 @@ print "    };\n";
 foreach $module (sort sortby_deps keys %deps) {
   foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
                  keys %{ $deps{$module} } ) {
-    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
-#    print "    $module -> $req;\n";
+#    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
+    print "    $module -> $req;\n";
   }
 }
 
