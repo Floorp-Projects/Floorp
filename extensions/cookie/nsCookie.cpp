@@ -302,6 +302,7 @@ cookie_Localize(char* genericString) {
     printf("cannot get string from name\n");
     return v.ToNewUnicode();
   }
+  nsCRT::free(ptrv);
   return v.ToNewUnicode();
 }
 
