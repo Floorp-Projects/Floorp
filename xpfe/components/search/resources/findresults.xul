@@ -15,10 +15,10 @@
 		onclick="if (event.detail == 2) return OpenURL(event, event.target.parentNode.parentNode);">
 
                 <treecolgroup>
-		  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
-		  <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL" flex="1"/>
-		  <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL" flex="1"/>
-		  <treecol id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description" flex="1"/>
+		  <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
+		  <treecol id="URLColumn" resource="http://home.netscape.com/NC-rdf#URL" flex="1"/>
+		  <treecol id="ShortcutURLColumn" resource="http://home.netscape.com/NC-rdf#ShortcutURL" flex="1"/>
+		  <treecol id="DescriptionColumn" resource="http://home.netscape.com/NC-rdf#Description" flex="1"/>
                 </treecolgroup>
 
 		<template>

@@ -88,8 +88,8 @@
   <deck class="outset-right" id="advancedDeck" flex="1">
     <box align="vertical" class="searchpanel-outerbox" flex="1">
       <tree id="Tree" class="inset" ref="NC:LastSearchRoot"
-            rdf:resource="http://home.netscape.com/NC-rdf#PageRank"
-            rdf:resource2="http://home.netscape.com/NC-rdf#Name"
+            resource="http://home.netscape.com/NC-rdf#PageRank"
+            resource2="http://home.netscape.com/NC-rdf#Name"
             sortDirection="ascending" sortActive="true"
             flex="1" datasources="rdf:internetsearch" context="contextual"
             onclick="sidebarOpenURL(event, event.target.parentNode.parentNode, 'Tree')">
@@ -134,8 +134,8 @@
         </treehead>
       
         <treecolgroup>
-          <treecol flex="1" rdf:resource="http://home.netscape.com/NC-rdf#PageRank" rdf:resource2="http://home.netscape.com/NC-rdf#Name" />
-          <treecol width="0" id="SortNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" />
+          <treecol flex="1" resource="http://home.netscape.com/NC-rdf#PageRank" resource2="http://home.netscape.com/NC-rdf#Name" />
+          <treecol width="0" id="SortNameColumn" resource="http://home.netscape.com/NC-rdf#Name" />
         </treecolgroup>
       </tree>
       
@@ -168,7 +168,7 @@
         </template>
         
         <treecolgroup>
-          <treecol id="EngineColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1" />
+          <treecol id="EngineColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1" />
         </treecolgroup>
         
         <treehead>

@@ -50,8 +50,8 @@
 		<tree align="horizontal" id="searchengines" border="1" flex="1" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot">
                         <treecolgroup>
 			  <treecol id="CheckboxColumn" flex="1"/>
-			  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
-			  <treecol id="DescColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description" rdf:resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+			  <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
+			  <treecol id="DescColumn" resource="http://home.netscape.com/NC-rdf#Description" resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
                         </treecolgroup>
 
 			<template>
