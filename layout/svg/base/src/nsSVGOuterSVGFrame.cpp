@@ -456,6 +456,7 @@ nsSVGOuterSVGFrame::Reflow(nsIPresContext*          aPresContext,
   // XXX add in CSS borders ??
 
   aStatus = NS_FRAME_COMPLETE;
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

@@ -302,6 +302,7 @@ nsFirstLetterFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+  NS_FRAME_SET_TRUNCATION(aReflowStatus, aReflowState, aMetrics);
   return rv;
 }
 

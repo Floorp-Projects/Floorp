@@ -792,6 +792,7 @@ nsGfxScrollFrame::Reflow(nsIPresContext*      aPresContext,
       mInner->mMaxElementSize.height = size->height;
   }
   
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 

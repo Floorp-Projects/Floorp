@@ -613,6 +613,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 

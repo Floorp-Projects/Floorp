@@ -986,6 +986,7 @@ nsScrollFrame::Reflow(nsIPresContext*          aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
     ("exit nsScrollFrame::Reflow: status=%d width=%d height=%d",
      aStatus, aDesiredSize.width, aDesiredSize.height));
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

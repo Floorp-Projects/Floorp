@@ -115,6 +115,7 @@ nsLeafFrame::Reflow(nsIPresContext* aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsLeafFrame::Reflow: size=%d,%d",
                   aMetrics.width, aMetrics.height));
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
 }
 

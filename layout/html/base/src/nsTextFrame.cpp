@@ -5412,7 +5412,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
   // - we fit in the available space. We may be complete, but if we
   //   return a larger desired width than is available we may get pushed
   //   and our frame width won't get set
-  if ((NS_FRAME_COMPLETE == aStatus) && (aMetrics.width <= maxWidth)) {
+  if (NS_FRAME_IS_COMPLETE(aStatus) && (aMetrics.width <= maxWidth)) {
     mState |= TEXT_OPTIMIZE_RESIZE;
     mRect.width = aMetrics.width;
   }
@@ -5450,6 +5450,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
          aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent,
          aStatus);
 #endif
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
 }
 

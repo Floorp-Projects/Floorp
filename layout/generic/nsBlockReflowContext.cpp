@@ -641,11 +641,12 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
     aFrame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
   }
 
-  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
+  if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus) ||
+      (state | NS_FRAME_OUT_OF_FLOW)) {
     // If frame is complete and has a next-in-flow, we need to delete
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
-    // a next-in-flow where it ends up).
+    // a next-in-flow where it ends up), unless it is an out of flow frame.
     if (NS_FRAME_IS_COMPLETE(aFrameReflowStatus)) {
       nsIFrame* kidNextInFlow;
       aFrame->GetNextInFlow(&kidNextInFlow);

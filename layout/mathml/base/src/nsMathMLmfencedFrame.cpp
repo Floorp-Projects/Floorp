@@ -477,6 +477,7 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   mathMLFrame->SetReference(nsPoint(0, aDesiredSize.ascent));
 
   aStatus = NS_FRAME_COMPLETE;
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

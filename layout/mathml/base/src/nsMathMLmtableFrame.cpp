@@ -590,6 +590,7 @@ nsMathMLmtableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   mBoundingMetrics.rightBearing = aDesiredSize.width;
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
   return rv;
 }

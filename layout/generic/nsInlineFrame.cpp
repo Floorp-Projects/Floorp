@@ -433,6 +433,7 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
   // Note: the line layout code will properly compute our
   // NS_FRAME_OUTSIDE_CHILDREN state for us.
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return rv;
 }
 
@@ -522,7 +523,7 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
       done = PR_TRUE;
       break;
     }
-    if (NS_FRAME_COMPLETE != aStatus) {
+    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
       if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
         done = PR_TRUE;
         break;
@@ -552,7 +553,7 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
         done = PR_TRUE;
         break;
       }
-      if (NS_FRAME_COMPLETE != aStatus) {
+      if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         if (!reflowingFirstLetter || NS_INLINE_IS_BREAK(aStatus)) {
           done = PR_TRUE;
           break;

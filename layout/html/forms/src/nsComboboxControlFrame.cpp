@@ -1738,6 +1738,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.mOverflowArea.y      = 0;
   aDesiredSize.mOverflowArea.width  = aDesiredSize.width;
   aDesiredSize.mOverflowArea.height = aDesiredSize.height;
+
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 
 }

@@ -2159,6 +2159,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
 #endif
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 
@@ -7197,7 +7198,7 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
       PrettyUC(aMetrics->mMaximumWidth, width);
       printf("m=%s ", width);
     }
-    if (NS_FRAME_COMPLETE != aStatus) {
+    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
       printf("status=%d", aStatus);
     }
     printf("\n");
@@ -7303,7 +7304,7 @@ void DebugReflowPrint(nsReflowTimer& aTimer,
       PrettyUC(aTimer.mMaxWidth, avWidth);
       printf(" m=%s", avWidth);
     }
-    if (NS_FRAME_COMPLETE != aTimer.mStatus) {
+    if (NS_FRAME_IS_NOT_COMPLETE(aTimer.mStatus)) {
       printf(" status=%d", aTimer.mStatus);
     }
     printf(" cnt=%d", aTimer.mCount);

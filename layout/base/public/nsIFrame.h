@@ -347,6 +347,19 @@ typedef PRUint32 nsReflowStatus;
   ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
    NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
 
+// The frame (not counting a continuation) did not fit in the available height and 
+// wasn't at the top of a page. If it was at the top of a page, then it is not 
+// possible to reflow it again with more height, so we don't set it in that case.
+#define NS_FRAME_TRUNCATED  0x0010
+#define NS_FRAME_IS_TRUNCATED(status) \
+  (0 != ((status) & NS_FRAME_TRUNCATED))
+#define NS_FRAME_SET_TRUNCATION(status, aReflowState, aMetrics) \
+  if (!aReflowState.mFlags.mIsTopOfPage &&                      \
+      aReflowState.availableHeight < aMetrics.height)           \
+    status |= NS_FRAME_TRUNCATED;                               \
+  else                                                          \
+    status &= ~NS_FRAME_TRUNCATED;
+
 //----------------------------------------------------------------------
 
 /**

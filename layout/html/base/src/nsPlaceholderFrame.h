@@ -37,7 +37,7 @@
 #ifndef nsPlaceholderFrame_h___
 #define nsPlaceholderFrame_h___
 
-#include "nsFrame.h"
+#include "nsSplittableFrame.h"
 
 nsresult NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame**  aInstancePtrResult);
 
@@ -45,7 +45,7 @@ nsresult NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame**  aInstanceP
  * Implementation of a frame that's used as a placeholder for a frame that
  * has been moved out of the flow
  */
-class nsPlaceholderFrame : public nsFrame {
+class nsPlaceholderFrame : public nsSplittableFrame {
 public:
   /**
    * Create a new placeholder frame

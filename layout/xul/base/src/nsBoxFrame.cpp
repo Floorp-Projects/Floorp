@@ -888,10 +888,10 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus)
+nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
+                   nsHTMLReflowMetrics&     aDesiredSize,
+                   const nsHTMLReflowState& aReflowState,
+                   nsReflowStatus&          aStatus)
 {
   // If you make changes to this method, please keep nsLeafBoxFrame::Reflow
   // in sync, if the changes are applicable there.
@@ -1063,6 +1063,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   }
 #endif
 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

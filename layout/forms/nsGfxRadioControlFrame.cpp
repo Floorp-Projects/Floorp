@@ -270,6 +270,7 @@ nsGfxRadioControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = nsNativeFormControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   COMPARE_QUIRK_SIZE("nsGfxRadioControlFrame", 12, 11) 
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
 #endif

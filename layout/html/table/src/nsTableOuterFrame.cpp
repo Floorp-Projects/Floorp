@@ -1687,6 +1687,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS, &aDesiredSize, aStatus);
 #endif
+  NS_FRAME_SET_TRUNCATION(aStatus, aOuterRS, aDesiredSize);
   return rv;
 }
 

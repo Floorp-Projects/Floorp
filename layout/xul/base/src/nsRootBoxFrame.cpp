@@ -228,9 +228,9 @@ PRInt32 gReflows = 0;
 
 NS_IMETHODIMP
 nsRootBoxFrame::Reflow(nsIPresContext*          aPresContext,
-                  nsHTMLReflowMetrics&     aDesiredSize,
-                  const nsHTMLReflowState& aReflowState,
-                  nsReflowStatus&          aStatus)
+                       nsHTMLReflowMetrics&     aDesiredSize,
+                       const nsHTMLReflowState& aReflowState,
+                       nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsRootBoxFrame", aReflowState.reason);
 

@@ -686,6 +686,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

@@ -298,6 +298,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   }
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aStatus = NS_FRAME_COMPLETE;
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 

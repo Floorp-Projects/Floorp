@@ -597,6 +597,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
       printf("  and preferred size = %d\n", aDesiredSize.mMaximumWidth);
 
 #endif
+  NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
 
