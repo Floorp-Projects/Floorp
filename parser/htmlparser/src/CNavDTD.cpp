@@ -2268,6 +2268,14 @@ nsresult CNavDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 
         theToken=(CToken*)mSkippedContent.PopFront();
       else theToken=mTokenizer->PopToken();
       if(theToken)  {
+        eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
+        if(theType!=eToken_attribute) {
+          // If you're here then it means that the token does not
+          // belong to this node. Put the token back into the tokenizer
+          // and let it go thro' the regular path. Bug: 59189.
+          mTokenizer->PushTokenFront(theToken);
+          break;
+        }
         // Sanitize the key for it might contain some non-alpha-non-digit characters
         // at its end.  Ex. <OPTION SELECTED/> - This will be tokenized as "<" "OPTION",
         // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
