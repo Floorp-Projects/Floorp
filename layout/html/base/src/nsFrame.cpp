@@ -1592,10 +1592,14 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFram
 }
 
 NS_IMETHODIMP
-nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) const
+nsFrame::PeekOffset(nsSelectionAmount aAmount,
+                        nsDirection aDirection,
+                        PRInt32 aStartOffset,
+                        nsIContent **aResultContent, 
+                        PRInt32 *aContentOffset,
+                        PRBool aEatingWS)
 {
-/*  //this will use the nsFrameTraversal as the default peek method.
+  //this will use the nsFrameTraversal as the default peek method.
   //this should change to use geometry and also look to ALL the child lists
   nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
   nsresult result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
@@ -1617,9 +1621,13 @@ nsFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 
   //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
   //for speed reasons
   nsIFrame *newFrame = (nsIFrame *)isupports;
-  return newFrame->PeekOffset(aAmount, aDirection, aStartOffset, aResultFrame,
-                          aFrameOffset, aContentOffset, aEatingWS);
-                          */
+  if (aDirection == eDirNext)
+    return newFrame->PeekOffset(aAmount, aDirection, 0, aResultContent,
+                            aContentOffset, aEatingWS);
+  else
+    return newFrame->PeekOffset(aAmount, aDirection, -1, aResultContent,
+                            aContentOffset, aEatingWS);
+                          
   return NS_OK;
 }
 

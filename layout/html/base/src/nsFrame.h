@@ -210,8 +210,12 @@ public:
   NS_IMETHOD  VerifyTree() const;
   NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, PRBool aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIContent **aResultContent, PRInt32 *aResultOffset, PRBool aEatingWS) const;
+  NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount,
+                        nsDirection aDirection,
+                        PRInt32 aStartOffset,
+                        nsIContent **aResultContent, 
+                        PRInt32 *aContentOffset,
+                        PRBool aEatingWS) ;
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
 
