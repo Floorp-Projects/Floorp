@@ -67,6 +67,7 @@ NO_PKG_FILES = \
 	xpidl* \
 	xpt_dump* \
 	xpt_link* \
+	chrome/chrome.rdf \
 	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
