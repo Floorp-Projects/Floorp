@@ -30,6 +30,7 @@ extern "C" {
 #include "mktrace.h"
 #include "mkstream.h"
 #include "cvchunk.h"
+#include "httpurl.h"
 }; /* end of extern "C" */
 
 #include "netcache.h"
@@ -63,6 +64,8 @@ static nsNetFileInit netFileInit;
 /* XXX: Legacy definitions... */
 // Global count of active urls from mkgeturl.c
 extern "C" int NET_TotalNumberOfProcessingURLs;
+
+extern "C" HTTP_Version DEFAULT_VERSION;
 
 extern "C" void net_AddrefContext(MWContext* window_id);
 MWContext *new_stub_context(URL_Struct *URL_s);
@@ -649,6 +652,21 @@ nsNetlibService::SetProxyHTTP(nsString& aProxyHTTP) {
     NET_SelectProxyStyle(PROXY_STYLE_MANUAL);
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsNetlibService::GetHTTPOneOne(PRBool& aOneOne) {
+    aOneOne = (ONE_POINT_ONE == DEFAULT_VERSION);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::SetHTTPOneOne(PRBool aSendOneOne) {
+    if (aSendOneOne)
+        DEFAULT_VERSION = ONE_POINT_ONE;
+    else
+        DEFAULT_VERSION = ONE_POINT_O;
+    return NS_OK;
 }
 
 void nsNetlibService::SchedulePollingTimer()
