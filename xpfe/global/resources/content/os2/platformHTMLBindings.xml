@@ -8,59 +8,59 @@
     <handlers>
 
     <!-- Emacsish single-line motion and delete keys -->
-    <handler event="keypress" id="key_home" key="a" control="true"
+    <handler event="keypress" id="key_home" key="a" modifiers="control"
         command="cmd_beginLine"/>
-    <handler event="keypress" id="key_end" key="e" control="true"
+    <handler event="keypress" id="key_end" key="e" modifiers="control"
         command="cmd_endLine"/>
-    <handler event="keypress" id="key_left" key="b" control="true"
+    <handler event="keypress" id="key_left" key="b" modifiers="control"
         command="cmd_charPrevious"/>
-    <handler event="keypress" id="key_right" key="f" control="true"
+    <handler event="keypress" id="key_right" key="f" modifiers="control"
         command="cmd_charNext"/>
-    <handler event="keypress" id="key_delback" key="h" control="true"
+    <handler event="keypress" id="key_delback" key="h" modifiers="control"
         command="cmd_deleteCharBackward"/>
-    <handler event="keypress" id="key_delforw" key="d" control="true"
+    <handler event="keypress" id="key_delforw" key="d" modifiers="control"
         command="cmd_deleteCharForward"/>
-    <handler event="keypress" id="key_delwback" key="w" control="true"
+    <handler event="keypress" id="key_delwback" key="w" modifiers="control"
         command="cmd_deleteWordBackward"/>
-    <handler event="keypress" id="key_del_bol" key="u" control="true"
+    <handler event="keypress" id="key_del_bol" key="u" modifiers="control"
         command="cmd_deleteToBeginningOfLine"/>
-    <handler event="keypress" id="key_del_eol" key="k" control="true"
+    <handler event="keypress" id="key_del_eol" key="k" modifiers="control"
         command="cmd_deleteToEndOfLine"/>
 
     <!-- Windows copy/paste/undo/redo keys -->
-    <handler event="keypress" id="key_wincopy" key="c" control="true"
+    <handler event="keypress" id="key_wincopy" key="c" modifiers="control"
         command="cmd_copy"/>
-    <handler event="keypress" id="key_wincut" key="x" control="true"
+    <handler event="keypress" id="key_wincut" key="x" modifiers="control"
         command="cmd_cut"/>
-    <handler event="keypress" id="key_winundo" key="z" control="true"
+    <handler event="keypress" id="key_winundo" key="z" modifiers="control"
         command="cmd_undo"/>
-    <handler event="keypress" id="key_winredo" key="r" control="true"
+    <handler event="keypress" id="key_winredo" key="r" modifiers="control"
         command="cmd_redo"/>
-    <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" shift="true" control="false" alt="false"
+    <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" modifiers="shift"
         command="cmd_cut"/>
-    <handler event="keypress" id="key_altwincopy" keycode="VK_INSERT" control="true" shift="false" alt="false"
+    <handler event="keypress" id="key_altwincopy" keycode="VK_INSERT" modifiers="control"
         command="cmd_copy"/>
-    <handler event="keypress" id="key_altwinpaste" keycode="VK_INSERT" shift="true" control="false" alt="false"
+    <handler event="keypress" id="key_altwinpaste" keycode="VK_INSERT" modifiers="shift"
         command="cmd_paste"/>
 
     <!-- navigating by word keys -->
-    <handler event="keypress" id="key_home" keycode="VK_HOME" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_home" keycode="VK_HOME" 
         command="cmd_beginLine"/>
-    <handler event="keypress" id="key_end" keycode="VK_END" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_end" keycode="VK_END" 
         command="cmd_endLine"/>
-    <handler event="keypress" id="key_homeshift" keycode="VK_HOME" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_homeshift" keycode="VK_HOME" modifiers="shift"
         command="cmd_selectBeginLine"/>
-    <handler event="keypress" id="key_endshift" keycode="VK_END" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_endshift" keycode="VK_END" modifiers="shift"
         command="cmd_selectEndLine"/>
-    <handler event="keypress" id="key_leftcontrol" keycode="VK_LEFT" control="true" alt="false" shift="false"
+    <handler event="keypress" id="key_leftcontrol" keycode="VK_LEFT" modifiers="control"
         command="cmd_wordPrevious"/>
-    <handler event="keypress" id="key_rightcontrol" keycode="VK_RIGHT" control="true" alt="false" shift="false"
+    <handler event="keypress" id="key_rightcontrol" keycode="VK_RIGHT" modifiers="control"
         command="cmd_wordNext"/>
-    <handler event="keypress" id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" control="true" alt="false" 
+    <handler event="keypress" id="key_leftshiftcontrol" keycode="VK_LEFT" modifiers="shift,control"
         command="cmd_selectWordPrevious"/>
-    <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" control="true" alt="false" 
+    <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" modifiers="shift,control"
         command="cmd_selectWordNext"/>
-    <handler event="keypress" id="key_redo" key="y" primary="true"
+    <handler event="keypress" id="key_redo" key="y" modifiers="primary"
         command="cmd_redo"/>
     </handlers>
   </binding>
@@ -69,65 +69,65 @@
     <handlers>
 
     <!-- Emacsish single-line motion and delete keys -->
-    <handler event="keypress" id="key_home" key="a" control="true"
+    <handler event="keypress" id="key_home" key="a" modifiers="control"
         command="cmd_beginLine"/>
-    <handler event="keypress" id="key_end" key="e" control="true"
+    <handler event="keypress" id="key_end" key="e" modifiers="control"
         command="cmd_endLine"/>
-    <handler event="keypress" id="key_left" key="b" control="true"
+    <handler event="keypress" id="key_left" key="b" modifiers="control"
         command="cmd_charPrevious"/>
-    <handler event="keypress" id="key_right" key="f" control="true"
+    <handler event="keypress" id="key_right" key="f" modifiers="control"
         command="cmd_charNext"/>
-    <handler event="keypress" id="key_delback" key="h" control="true"
+    <handler event="keypress" id="key_delback" key="h" modifiers="control"
         command="cmd_deleteCharBackward"/>
-    <handler event="keypress" id="key_delforw" key="d" control="true"
+    <handler event="keypress" id="key_delforw" key="d" modifiers="control"
         command="cmd_deleteCharForward"/>
-    <handler event="keypress" id="key_delwback" key="w" control="true"
+    <handler event="keypress" id="key_delwback" key="w" modifiers="control"
         command="cmd_deleteWordBackward"/>
-    <handler event="keypress" id="key_del_bol" key="u" control="true"
+    <handler event="keypress" id="key_del_bol" key="u" modifiers="control"
         command="cmd_deleteToBeginningOfLine"/>
-    <handler event="keypress" id="key_del_eol" key="k" control="true"
+    <handler event="keypress" id="key_del_eol" key="k" modifiers="control"
         command="cmd_deleteToEndOfLine"/>
 
     <!-- Windows copy/paste/undo/redo keys -->
-    <handler event="keypress" id="key_wincopy" key="c" control="true"
+    <handler event="keypress" id="key_wincopy" key="c" modifiers="control"
         command="cmd_copy"/>
-    <handler event="keypress" id="key_wincut" key="x" control="true"
+    <handler event="keypress" id="key_wincut" key="x" modifiers="control"
         command="cmd_cut"/>
-    <handler event="keypress" id="key_winundo" key="z" control="true"
+    <handler event="keypress" id="key_winundo" key="z" modifiers="control"
         command="cmd_undo"/>
-    <handler event="keypress" id="key_winredo" key="r" control="true"
+    <handler event="keypress" id="key_winredo" key="r" modifiers="control"
         command="cmd_redo"/>
-    <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" shift="true" control="false" alt="false"
+    <handler event="keypress" id="key_altwincut" keycode="VK_DELETE" modifiers="shift"
         command="cmd_cut"/>
-    <handler event="keypress" id="key_altwincopy" keycode="VK_INSERT" control="true" shift="false" alt="false"
+    <handler event="keypress" id="key_altwincopy" keycode="VK_INSERT" modifiers="control"
         command="cmd_copy"/>
-    <handler event="keypress" id="key_altwinpaste" keycode="VK_INSERT" shift="true" control="false" alt="false"
+    <handler event="keypress" id="key_altwinpaste" keycode="VK_INSERT" modifiers="shift"
         command="cmd_paste"/>
 
     <!-- Emacsish multi-line motion and delete keys -->
-    <handler event="keypress" id="key_linedown" key="n" control="true"
+    <handler event="keypress" id="key_linedown" key="n" modifiers="control"
         command="cmd_lineNext"/>
-    <handler event="keypress" id="key_lineup" key="p" control="true"
+    <handler event="keypress" id="key_lineup" key="p" modifiers="control"
         command="cmd_linePrevious"/>
 
     <!-- handle home/end/arrow keys and redo -->
-    <handler event="keypress" id="key_home" keycode="VK_HOME" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_home" keycode="VK_HOME" 
         command="cmd_beginLine"/>
-    <handler event="keypress" id="key_end" keycode="VK_END" alt="false" shift="false" control="false"
+    <handler event="keypress" id="key_end" keycode="VK_END" 
         command="cmd_endLine"/>
-    <handler event="keypress" id="key_homeshift" keycode="VK_HOME" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_homeshift" keycode="VK_HOME" modifiers="shift"
         command="cmd_selectBeginLine"/>
-    <handler event="keypress" id="key_endshift" keycode="VK_END" shift="true" alt="false" control="false"
+    <handler event="keypress" id="key_endshift" keycode="VK_END" modifiers="shift"
         command="cmd_selectEndLine"/>
-    <handler event="keypress" id="key_leftcontrol" keycode="VK_LEFT" control="true" alt="false" shift="false" 
+    <handler event="keypress" id="key_leftcontrol" keycode="VK_LEFT" modifiers="control"
         command="cmd_wordPrevious"/>
-    <handler event="keypress" id="key_rightcontrol" keycode="VK_RIGHT" control="true" alt="false" shift="false" 
+    <handler event="keypress" id="key_rightcontrol" keycode="VK_RIGHT" modifiers="control"
         command="cmd_wordNext"/>
-    <handler event="keypress" id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" control="true" alt="false"
+    <handler event="keypress" id="key_leftshiftcontrol" keycode="VK_LEFT" modifiers="shift,control"
         command="cmd_selectWordPrevious"/>
-    <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" control="true" alt="false"
+    <handler event="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" modifiers="shift,control"
         command="cmd_selectWordNext"/>
-    <handler event="keypress" id="key_redo" key="y" primary="true"
+    <handler event="keypress" id="key_redo" key="y" modifiers="primary"
         command="cmd_redo"/>
     </handlers>
   </binding>
