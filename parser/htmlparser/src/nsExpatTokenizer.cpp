@@ -235,7 +235,7 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
 {
   /* Figure out the line inside aSourceBuffer that contains character specified by aOffset.
      Copy it into aLine. */
-  NS_ASSERTION(aOffset > 0 && aOffset < aLength, "?");
+  NS_ASSERTION(aOffset >= 0 && aOffset < aLength, "?");
   /* Assert that the byteIndex and the length of the buffer is even */
   NS_ASSERTION(aOffset % 2 == 0 && aLength % 2 == 0, "?");  
   PRUnichar* start = (PRUnichar* ) &aSourceBuffer[aOffset];  /* Will try to find the start of the line */
