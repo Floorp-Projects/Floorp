@@ -135,12 +135,39 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
         }
     }
 
-    // See if a protocol needs to be added
-    PRInt32 checkprotocol = uriString.Find("://",0);
-    // if no scheme (protocol) is found, assume http or ftp.
-    if (checkprotocol == -1) {
+    // Prune duff protocol schemes
+    //
+    //   ://totallybroken.url.com
+    //   //shorthand.url.com
+    //
+    if (uriString.EqualsIgnoreCase("://", 3))
+    {
+        nsAutoString newUriString;
+        uriString.Mid(newUriString, 3, uriString.Length() - 3);
+        uriString = newUriString;
+    }
+    else if (uriString.EqualsIgnoreCase("//", 2))
+    {
+        nsAutoString newUriString;
+        uriString.Mid(newUriString, 2, uriString.Length() - 2);
+        uriString = newUriString;
+    }
+
+    // Add ftp:// or http:// to front of url if it has no spec
+    //
+    // Should fix:
+    //
+    //   no-scheme.com
+    //   ftp.no-scheme.com
+    //   ftp4.no-scheme,com
+    //   no-scheme.com/query?foo=http://www.foo.com
+    //
+    PRInt32 schemeDelim = uriString.Find("://",0);
+    PRInt32 firstDelim = uriString.FindCharInSet("/:");
+    if (schemeDelim <= 0 ||
+        (firstDelim != -1 && schemeDelim > firstDelim)) {
         // find host name
-        PRInt32 hostPos = uriString.FindCharInSet("./:");
+        PRInt32 hostPos = uriString.FindCharInSet("/:?#");
         if (hostPos == -1) 
             hostPos = uriString.Length();
 
@@ -149,7 +176,7 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
         uriString.Left(hostSpec, hostPos);
 
         // insert url spec corresponding to host name
-        if (hostSpec.EqualsIgnoreCase("ftp")) 
+        if (hostSpec.EqualsIgnoreCase("ftp", 3)) 
             uriString.Assign(NS_LITERAL_STRING("ftp://") + uriString);
         else 
             uriString.Assign(NS_LITERAL_STRING("http://") + uriString);
