@@ -207,22 +207,8 @@ function MsgNewFolder()
 function MsgSubscribe()
 {
 	var windowTitle = Bundle.GetStringFromName("subscribeDialogTitle");
-
-	var useRealSubscribeDialog = false;
-
-	try {
-		useRealSubscribeDialog = pref.GetBoolPref("mailnews.use-real-subscribe-dialog");
-	}
-	catch (ex) {
-		useRealSubscribeDialog = false;
-	}
 	var preselectedFolder = GetFirstSelectedMsgFolder();
-	if (useRealSubscribeDialog)  {
-			Subscribe(windowTitle, preselectedFolder);
-	}
-	else {
-			CreateNewSubfolder("chrome://messenger/content/subscribeDialog.xul", windowTitle, preselectedFolder);
-	}
+	Subscribe(windowTitle, preselectedFolder);
 }
 
 function MsgSaveAsFile() 

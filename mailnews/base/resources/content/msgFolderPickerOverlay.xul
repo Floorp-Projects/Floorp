@@ -28,49 +28,6 @@ Rights Reserved.
 
 <html:script language="JavaScript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
 
-	<menu class="push" value="&subscribeclickhere.label;" uri="" id="msgSubscribeFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
-		ref="msgaccounts:/">
-        <template>
-<!-- since we only do news subscribe (and not imap subscribe)
-	and we aren't supporting news categories yet,
- 	we can comment out this rule, since only news servers 
-	should appear in the subscribe dialog
-
-          <rule nc:CanSubscribe="true" iscontainer="true" isempty="false">
-            <menupopup>
-              <menu uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
-                                oncommand="PickedMsgFolder(event.target,'msgSubscribeFolderPicker')"
-				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-                <menupopup>
-                  <menuitem uri="..." value="&subscribechoosethis.label;"
-                                oncommand="PickedMsgFolder(event.target,'msgSubscribeFolderPicker')"
-				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
-                  <menuseparator/>
-                </menupopup>
-              </menu>
-            </menupopup>
-          </rule>
--->
-          <rule nc:CanSubscribe="true">
-            <menupopup>
-                        <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name" 
-                                oncommand="PickedMsgFolder(event.target,'msgSubscribeFolderPicker')"
-				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                                BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                                IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-            </menupopup>
-          </rule>
-	</template>
-	<menupopup />
-	</menu>
-
 	<menu class="push" value="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 		ref="msgaccounts:/">
         <template>

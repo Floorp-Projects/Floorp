@@ -42,7 +42,6 @@ install::
 	$(MAKE_INSTALL) commandglue.js			$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) mailCommands.js			$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) shareglue.js			$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) subscribeDialog.xul			$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) subscribe.xul			$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) subscribe.js			$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) sidebar-messenger.xul	$(DIST)\bin\chrome\messenger\content
@@ -79,7 +78,6 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\commandglue.js
 	rm -f $(DIST)\chrome\messenger\content\mailCommands.js
 	rm -f $(DIST)\chrome\messenger\content\shareglue.js
-	rm -f $(DIST)\chrome\messenger\content\subscribeDialog.xul
 	rm -f $(DIST)\chrome\messenger\content\subscribe.xul
 	rm -f $(DIST)\chrome\messenger\content\subscribe.js
 	rm -f $(DIST)\chrome\messenger\content\sidebar-messenger.xul

@@ -33,7 +33,6 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/msgHdrViewOverlay.dtd \
 		$(srcdir)/folderpane.dtd \
 		$(srcdir)/newFolderNameDialog.dtd \
-		$(srcdir)/subscribeDialog.dtd \
 		$(srcdir)/subscribe.dtd \
 		$(srcdir)/subscribe.properties \
 		$(srcdir)/sidebar-messenger.dtd \

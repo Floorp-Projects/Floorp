@@ -49,7 +49,6 @@ EXPORT_RESOURCE_SAMPLES = \
 		shareglue.js \
 		subscribe.js \
 		subscribe.xul \
-		subscribeDialog.xul \
 		sidebar-messenger.xul \
 		sidebar-messenger.rdf \
 		newFolderNameDialog.xul \

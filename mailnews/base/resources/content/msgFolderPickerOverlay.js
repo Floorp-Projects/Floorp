@@ -22,9 +22,6 @@ function MsgFolderPickerOnLoad(pickerID)
 		var verifyFunction = null;
 
 		switch (pickerID) {
-			case "msgSubscribeFolderPicker":
-				verifyFunction = msgfolder.canSubscribe;
-				break;
 			case "msgNewFolderPicker":
 				verifyFunction = msgfolder.canCreateSubfolders;
 				break;
