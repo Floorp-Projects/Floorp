@@ -50,9 +50,16 @@ interface nsIDOMPopupBlockedEvent : nsIDOMEvent
   readonly attribute nsIURI requestingWindowURI;
   readonly attribute nsIURI popupWindowURI;
 
+  /**
+   * The string of features passed to the window.open() call
+   * (as the third argument)
+   */
+  readonly attribute DOMString popupWindowFeatures;
+
   void initPopupBlockedEvent(in DOMString typeArg,
                              in boolean canBubbleArg,
                              in boolean cancelableArg,
                              in nsIURI requestingWindowURI,
-                             in nsIURI popupWindowURI);
+                             in nsIURI popupWindowURI,
+                             in DOMString popupWindowFeatures);
 };

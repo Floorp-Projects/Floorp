@@ -249,7 +249,8 @@ protected:
   PRUint32 CheckForAbusePoint();
   PRBool   CheckOpenAllow(PRUint32 aAbuseLevel, const nsAString &aName);
   void     FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
-                           const nsAString &aPopupURL);
+                           const nsAString &aPopupURL,
+                           const nsAString &aPopupWindowFeatures);
 
   void FlushPendingNotifications(PRBool aFlushReflows);
   void EnsureReflowFlushAndPaint();

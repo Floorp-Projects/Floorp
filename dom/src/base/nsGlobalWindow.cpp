@@ -2946,7 +2946,8 @@ PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
 
 static
 void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
-                           nsIURI *aRequestingURI, nsIURI *aPopupURI)
+                           nsIURI *aRequestingURI, nsIURI *aPopupURI,
+                           const nsAString &aPopupWindowFeatures)
 {
   if (aDoc) {
     // Fire a "DOMPopupBlocked" event so that the UI can hear about blocked popups.
@@ -2956,7 +2957,7 @@ void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
     if (event) {
       nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
       pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
-              PR_TRUE, PR_TRUE, aRequestingURI, aPopupURI);
+              PR_TRUE, PR_TRUE, aRequestingURI, aPopupURI, aPopupWindowFeatures);
       PRBool noDefault;
       nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
       targ->DispatchEvent(event, &noDefault);
@@ -3222,7 +3223,8 @@ PRBool GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
 */
 void
 GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
-                                  const nsAString &aPopupURL)
+                                  const nsAString &aPopupURL,
+                                  const nsAString &aPopupWindowFeatures)
 {
   // fetch the URI of the window requesting the opened window
 
@@ -3276,7 +3278,7 @@ GlobalWindowImpl::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
 
   // fire an event chock full of informative URIs
   if (aBlocked)
-    FirePopupBlockedEvent(topDoc, requestingURI, popupURI);
+    FirePopupBlockedEvent(topDoc, requestingURI, popupURI, aPopupWindowFeatures);
   if (aWindow)
     FirePopupWindowEvent(topDoc);
 }
@@ -3291,7 +3293,7 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
 
   PRUint32 abuseLevel = CheckForAbusePoint();
   if (!CheckOpenAllow(abuseLevel, aName)) {
-    FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl);
+    FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl, aOptions);
     return NS_ERROR_FAILURE; // unlike the public Open method, return an error
   }
 
@@ -3306,7 +3308,7 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
       }
     }
     if (abuseLevel >= openAbused)
-      FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl);
+      FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aOptions);
   }
   return rv;
 }
@@ -3354,7 +3356,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
 
   PRUint32 abuseLevel = CheckForAbusePoint();
   if (!CheckOpenAllow(abuseLevel, name)) {
-    FireAbuseEvents(PR_TRUE, PR_FALSE, url);
+    FireAbuseEvents(PR_TRUE, PR_FALSE, url, options);
     return NS_OK; // don't open the window, but also don't throw a JS exception
   }
 
@@ -3393,7 +3395,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
       }
     }
     if (abuseLevel >= openAbused)
-      FireAbuseEvents(PR_FALSE, PR_TRUE, url);
+      FireAbuseEvents(PR_FALSE, PR_TRUE, url, options);
   }
 
   return rv;
