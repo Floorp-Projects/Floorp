@@ -27,6 +27,8 @@ CPPSRCS=				\
 	nsBRFrame.cpp			\
 	nsBlockFrame.cpp		\
 	nsBodyFrame.cpp			\
+	nsContainerFrame.cpp		\
+	nsFrame.cpp			\
 	nsFrameReflowState.cpp		\
 	nsGlobalVariables.cpp		\
 	nsHRFrame.cpp			\
@@ -44,8 +46,10 @@ CPPSRCS=				\
 	nsObjectFrame.cpp		\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
+	nsPresShell.cpp			\
 	nsScrollFrame.cpp		\
 	nsSpacerFrame.cpp		\
+	nsSplittableFrame.cpp		\
 	nsTextFrame.cpp			\
 	nsWBRFrame.cpp			\
 	$(NULL)
@@ -55,6 +59,8 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsBRFrame.obj		\
 	.\$(OBJDIR)\nsBlockFrame.obj		\
 	.\$(OBJDIR)\nsBodyFrame.obj		\
+	.\$(OBJDIR)\nsContainerFrame.obj	\
+	.\$(OBJDIR)\nsFrame.obj			\
 	.\$(OBJDIR)\nsFrameReflowState.obj	\
 	.\$(OBJDIR)\nsGlobalVariables.obj	\
 	.\$(OBJDIR)\nsHRFrame.obj		\
@@ -72,8 +78,10 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsObjectFrame.obj		\
 	.\$(OBJDIR)\nsPageFrame.obj		\
 	.\$(OBJDIR)\nsPlaceholderFrame.obj	\
+	.\$(OBJDIR)\nsPresShell.obj		\
 	.\$(OBJDIR)\nsScrollFrame.obj		\
 	.\$(OBJDIR)\nsSpacerFrame.obj		\
+	.\$(OBJDIR)\nsSplittableFrame.obj	\
 	.\$(OBJDIR)\nsTextFrame.obj		\
 	.\$(OBJDIR)\nsWBRFrame.obj		\
 	$(NULL)
@@ -85,6 +93,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
  -I..\..\style\src						\
  -I..\..\content\src						\
  -I..\..\..\base\src -I$(PUBLIC)\plugin -I$(PUBLIC)\java \
+ -I$(PUBLIC)\pref \
  -I$(PUBLIC)\oji
 
 LCFLAGS = \
