@@ -625,8 +625,8 @@ main(int argc, char* argv[])
   printf("Using %s as echo server...\n", hostName);
 
 #ifdef XP_MAC
-	(void) PR_PutEnv("NSPR_LOG_MODULES=nsSocketTransport:5");
-	(void) PR_PutEnv("NSPR_LOG_FILE=nspr.log");
+	(void) PR_SetEnv("NSPR_LOG_MODULES=nsSocketTransport:5");
+	(void) PR_SetEnv("NSPR_LOG_FILE=nspr.log");
 	PR_Init_Log();
 #endif
 

@@ -206,7 +206,7 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FS
 nsresult nsMacCommandLine::AddToEnvironmentVars(const char* inArgText)
 //----------------------------------------------------------------------------------------
 {
-  (void)PR_PutEnv(inArgText);
+  (void)PR_SetEnv(inArgText);
   return NS_OK;
 }
 
