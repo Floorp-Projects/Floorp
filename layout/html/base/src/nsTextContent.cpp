@@ -140,7 +140,8 @@ public:
   NS_IMETHOD ListTag(FILE* out) const;
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
                           nsReflowMetrics&     aMetrics,
                           const nsReflowState& aReflowState);
@@ -654,7 +655,8 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-TextFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
+TextFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                        nsIReflowCommand* aReflowCommand)
 {
   if (nsnull == mPrevInFlow) {
     aLineLayout.AddText(this);

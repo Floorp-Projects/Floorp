@@ -41,7 +41,8 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
@@ -168,7 +169,8 @@ SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
 }
 
 NS_IMETHODIMP
-SpacerFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
+SpacerFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand)
 {
   aLineLayout.EndTextRun();
   return NS_OK;

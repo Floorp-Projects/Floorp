@@ -82,7 +82,8 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIInlineReflow
-  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
                           nsReflowMetrics&     aMetrics,
                           const nsReflowState& aReflowState);
@@ -623,7 +624,8 @@ BulletFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
 }
 
 NS_IMETHODIMP
-BulletFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
+BulletFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand)
 {
   aLineLayout.EndTextRun();
   return NS_OK;
