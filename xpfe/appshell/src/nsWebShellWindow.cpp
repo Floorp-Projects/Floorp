@@ -104,8 +104,10 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 //hack for M8 should go away after NECKO lands
 #ifndef NECKO
 #include "nsIObserverService.h"
+#ifdef MOZ_MAIL_NEWS
 #include "nsIMsgComposeService.h"
 #include "nsMsgCompCID.h"
+#endif /* MOZ_MAIL_NEWS */
 #endif   /* NECKO  */
 
 /* Define Class IDs */
@@ -131,7 +133,9 @@ static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
 static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 
 #ifndef NECKO
+#ifdef MOZ_MAIL_NEWS
 static NS_DEFINE_CID(kMsgComposeServiceCID, NS_MSGCOMPOSESERVICE_CID);
+#endif /* MOZ_MAIL_NEWS */
 #endif   /* NECKO  */
 
 
@@ -2816,6 +2820,7 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
     topic += "mailto";
 
 #ifndef NECKO
+#ifdef MOZ_MAIL_NEWS
     //What a dirty hack. 
     nsresult rv;
     NS_WITH_SERVICE(nsIMsgComposeService, msgcompose, kMsgComposeServiceCID, &rv);
@@ -2823,6 +2828,7 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSp
         return rv;
     }
     rv = msgcompose->OpenComposeWindow(nsnull, nsnull, 0, 0, nsnull);
+#endif /* MOZ_MAIL_NEWS */
 #endif  /* NECKO */
   }
   else {
