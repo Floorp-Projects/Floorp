@@ -1130,12 +1130,12 @@ nsString& nsString::Append(PRInt32 anInteger,PRInt32 aRadix) {
     else theInt=(int)~(theInt-1);
   }
 
-  PRBool isfirst=true;
+  PRBool isfirst=PR_TRUE;
   while(mask1>=1) {
     PRInt32 div=theInt/mask1;
     if((div) || (!isfirst)) {
       buf[charpos++]="0123456789abcdef"[div];
-      isfirst=false;
+      isfirst=PR_FALSE;
     }
     theInt-=div*mask1;
     mask1/=aRadix;
