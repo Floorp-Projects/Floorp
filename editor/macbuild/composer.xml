@@ -1002,6 +1002,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComposerDocumentCommands.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsComposeTxtSrvFilter.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1099,6 +1106,11 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsComposerCommands.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComposerDocumentCommands.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2087,6 +2099,13 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComposerDocumentCommands.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                    <FILEKIND>Text</FILEKIND>
+                    <FILEFLAGS>Debug</FILEFLAGS>
+                </FILE>
+                <FILE>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsComposeTxtSrvFilter.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -2188,6 +2207,11 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
+                    <PATH>nsComposerDocumentCommands.cpp</PATH>
+                    <PATHFORMAT>MacOS</PATHFORMAT>
+                </FILEREF>
+                <FILEREF>
+                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsComposeTxtSrvFilter.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -2236,6 +2260,12 @@
                 <TARGETNAME>ComposerDebug.shlb</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsComposerCommands.cpp</PATH>
+                <PATHFORMAT>MacOS</PATHFORMAT>
+            </FILEREF>
+            <FILEREF>
+                <TARGETNAME>ComposerDebug.shlb</TARGETNAME>
+                <PATHTYPE>Name</PATHTYPE>
+                <PATH>nsComposerDocumentCommands.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
