@@ -218,7 +218,7 @@ GetSharedLibraryFilterProc(const CInfoPBRec* const inCpb, Boolean* inWantQuit, v
 	
 		// see if this symbol is in this fragment
 		if (LibInPefContainer(&fragSpec, pFilterData->inName, &codeOffset, &codeLength))
-			tempErr = GetDiskFragment(&fragSpec, codeOffset, codeLength, pFilterData->inName, kLoadCFrag, &pFilterData->outID, &pFilterData->outAddress, errName);
+			tempErr = GetDiskFragment(&fragSpec, codeOffset, codeLength, fragSpec.name, kLoadCFrag, &pFilterData->outID, &pFilterData->outAddress, errName);
 		else
 			return;
 				
@@ -512,7 +512,7 @@ OSErr NSLoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName, CFra
 	err = GetNamedFragmentOffsets(fileSpec, fragmentName, &fragOffset, &fragLength);
 	if (err != noErr) return err;
 				
-	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
+	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fileSpec->name, 
 					kLoadCFrag, outConnectionID, &main, errName);
 
 	return err;
@@ -555,7 +555,7 @@ OSErr NSLoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragmentIndex,
 		fragName[0] = nameLen;
 	}
 
-	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
+	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fileSpec->name, 
 					kLoadCFrag, outConnectionID, &main, errName);
 	if (err != noErr)
 	{
