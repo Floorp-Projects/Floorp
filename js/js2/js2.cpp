@@ -23,7 +23,6 @@
 //
 
 #include <algorithm>
-#include <cstdio>
 //#include <stdlib.h>
 #include "world.h"
 namespace JS = JavaScript;
@@ -149,7 +148,7 @@ static void readEvalPrint(istream &in, World &world)
 {
 	String buffer;
 	string line;
-	String source = widenCString("console");
+	String sourceLocation = widenCString("console");
 
 	while (promptLine(in, line, buffer.empty() ? "js> " : "")) {
 		if (!buffer.empty())
@@ -157,11 +156,10 @@ static void readEvalPrint(istream &in, World &world)
 		appendChars(buffer, line.data(), line.size());
 		if (!buffer.empty()) {
 			try {
-				StringReader r(buffer, source);
-				Lexer l(r, world);
+				Lexer l(world, buffer, sourceLocation);
 				while (true) {
-					Token &t = l.get(true);
-					if (t.kind == Token::End)
+					const Token &t = l.get(true);
+					if (t.hasKind(Token::end))
 						break;
 					String out;
 					out += ' ';
@@ -330,104 +328,104 @@ ProcessArgs(char **argv, int argc)
 #endif
 
 #include "icodegenerator.h"
-void testICG(World &world)
+static void testICG(World &world)
 {
-        //
-        // testing ICG 
-        //
-        SourcePosition pos = { 0, 0, 0 };
-        ICodeGenerator icg;
+    //
+    // testing ICG 
+    //
+    uint32 pos = 0;
+    ICodeGenerator icg;
 
-        // var i,j; i = j + 2;
-        // i is bound to var #0, j to var #1
+    // var i,j; i = j + 2;
+    // i is bound to var #0, j to var #1
 
-        icg.beginStatement(pos);
-        Register r1 = icg.loadVariable(1);
-        Register r2 = icg.loadImmediate(2.0);
-        icg.saveVariable(0, icg.op(ADD, r1, r2));
+    icg.beginStatement(pos);
+    Register r1 = icg.loadVariable(1);
+    Register r2 = icg.loadImmediate(2.0);
+    icg.saveVariable(0, icg.op(ADD, r1, r2));
 
-        // j = a.b
-        icg.beginStatement(pos);
-        Register r4 = icg.loadName(world.identifiers[widenCString("a")]);
-        Register r5 = icg.getProperty(world.identifiers[widenCString("b")], r4);
-        icg.saveVariable(1, r5);
-        
-        // while (i) i = i + j;
-        icg.beginWhileStatement(pos);
-        r1 = icg.loadVariable(0);
-        icg.endWhileExpression(r1);        
-        icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadVariable(1)));
-        icg.endWhileStatement();
+    // j = a.b
+    icg.beginStatement(pos);
+    Register r4 = icg.loadName(world.identifiers[widenCString("a")]);
+    Register r5 = icg.getProperty(world.identifiers[widenCString("b")], r4);
+    icg.saveVariable(1, r5);
+    
+    // while (i) i = i + j;
+    icg.beginWhileStatement(pos);
+    r1 = icg.loadVariable(0);
+    icg.endWhileExpression(r1);        
+    icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadVariable(1)));
+    icg.endWhileStatement();
 
-        // if (i) if (j) i = 3; else j = 4;
-        r1 = icg.loadVariable(0);   
-        icg.beginIfStatement(pos, r1);
-            r2 = icg.loadVariable(1);
-            icg.beginIfStatement(pos, r2);
-            icg.saveVariable(0, icg.loadImmediate(3));
-            icg.beginElseStatement(true);
-            icg.saveVariable(1, icg.loadImmediate(4));
-            icg.endIfStatement();
-        icg.beginElseStatement(false);
+    // if (i) if (j) i = 3; else j = 4;
+    r1 = icg.loadVariable(0);   
+    icg.beginIfStatement(pos, r1);
+        r2 = icg.loadVariable(1);
+        icg.beginIfStatement(pos, r2);
+        icg.saveVariable(0, icg.loadImmediate(3));
+        icg.beginElseStatement(true);
+        icg.saveVariable(1, icg.loadImmediate(4));
         icg.endIfStatement();
+    icg.beginElseStatement(false);
+    icg.endIfStatement();
 
 
-        // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
-        r1 = icg.loadVariable(0);   
-        icg.beginSwitchStatement(pos, r1);
-            // case 3, note empty case statement (?necessary???)
-            icg.endCaseCondition(icg.loadImmediate(3));
-                icg.beginCaseStatement();
-                icg.endCaseStatement();
-            // case 4
-            icg.endCaseCondition(icg.loadImmediate(4));
-                icg.beginCaseStatement();
-                icg.beginStatement(pos);
-                icg.saveVariable(1, icg.loadImmediate(4));
-                icg.breakStatement();
-                icg.endCaseStatement();
-            // case 5
-            icg.endCaseCondition(icg.loadImmediate(5));
-                icg.beginCaseStatement();
-                icg.beginStatement(pos);
-                icg.saveVariable(1, icg.loadImmediate(5));
-                icg.breakStatement();
-                icg.endCaseStatement();
-            // default
-                icg.beginDefaultStatement();
-                icg.beginStatement(pos);
-                icg.saveVariable(1, icg.loadImmediate(6));
-                icg.endDefaultStatement();
-        icg.endSwitchStatement();
+    // switch (i) { case 3: case 4: j = 4; break; case 5: j = 5; break; default : j = 6; }
+    r1 = icg.loadVariable(0);   
+    icg.beginSwitchStatement(pos, r1);
+        // case 3, note empty case statement (?necessary???)
+        icg.endCaseCondition(icg.loadImmediate(3));
+            icg.beginCaseStatement();
+            icg.endCaseStatement();
+        // case 4
+        icg.endCaseCondition(icg.loadImmediate(4));
+            icg.beginCaseStatement();
+            icg.beginStatement(pos);
+            icg.saveVariable(1, icg.loadImmediate(4));
+            icg.breakStatement();
+            icg.endCaseStatement();
+        // case 5
+        icg.endCaseCondition(icg.loadImmediate(5));
+            icg.beginCaseStatement();
+            icg.beginStatement(pos);
+            icg.saveVariable(1, icg.loadImmediate(5));
+            icg.breakStatement();
+            icg.endCaseStatement();
+        // default
+            icg.beginDefaultStatement();
+            icg.beginStatement(pos);
+            icg.saveVariable(1, icg.loadImmediate(6));
+            icg.endDefaultStatement();
+    icg.endSwitchStatement();
 
-        // for ( ; i; i + 1 ) j = 99;
-        icg.beginForStatement(pos);
-            r1 = icg.loadVariable(0);
-            icg.forCondition(r1);
-            icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadImmediate(1)));
-            icg.forIncrement();
-            icg.saveVariable(0, icg.loadImmediate(99));
-        icg.endForStatement();
+    // for ( ; i; i + 1 ) j = 99;
+    icg.beginForStatement(pos);
+        r1 = icg.loadVariable(0);
+        icg.forCondition(r1);
+        icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadImmediate(1)));
+        icg.forIncrement();
+        icg.saveVariable(0, icg.loadImmediate(99));
+    icg.endForStatement();
 
 
 
-        InstructionStream *iCode = icg.complete();
+    InstructionStream *iCode = icg.complete();
 
-        std::cout << icg;
+    std::cout << icg;
 }
 
 int main(int argc, char **argv)
 {
-#if defined(XP_MAC) && !defined(XP_MAC_MPW)
+  #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
-#endif
+  #endif
 	World world;
-#if 1
-        testICG(world);
-#else
+  #if 0
+    testICG(world);
+  #else
 	readEvalPrint(std::cin, world);
-#endif
-        return 0;
+  #endif
+    return 0;
 
     //return ProcessArgs(argv + 1, argc - 1);
 }
