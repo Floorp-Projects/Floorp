@@ -203,6 +203,9 @@ CHTMLView::CHTMLView(LStream* inStream)
 	,	mInFocusCallAlready(false)
 	,	mDragSelection(false)
 	,	mFontScaling(eDefaultFontScaling)
+	,	mTimerURLString(nil)
+	,	mTimerURLReloadPolicy(NET_SUPER_RELOAD)
+	,	mTimerURLFireTime(0)
 {
 
 	// FIX ME: Use C++.  I.e., use mem-initializers where possible (as above)
@@ -227,8 +230,6 @@ CHTMLView::CHTMLView(LStream* inStream)
 // FIX ME!!! the scroller dependency needs to be removed
 	mScroller = NULL;
 	
-	mTimerURLString = NULL;
-
 	mOffscreenDrawable = NULL;
 	mOnscreenDrawable = NULL;
 	mCurrentDrawable = NULL;
