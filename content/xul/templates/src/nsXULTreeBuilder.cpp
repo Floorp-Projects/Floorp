@@ -174,10 +174,10 @@ protected:
 
     /**
      * Helper for CloseContainer(), recursively remove a subtree from
-     * the view.
+     * the view. Cleans up the conflict set.
      */
     nsresult
-    RemoveMatchesFor(nsIRDFResource* aContainer);
+    RemoveMatchesFor(nsIRDFResource* aContainer, nsIRDFResource* aMember);
 
     /**
      * A helper method that determines if the specified container is open.
@@ -989,7 +989,11 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
         }
         else {
             // Removal. Clean up the conflict set.
-            RemoveMatchesFor(aMember);
+            Value val;
+            NS_CONST_CAST(nsTemplateMatch*, aOldMatch)->GetAssignmentFor(mConflictSet, mContainerVar, &val);
+
+            nsIRDFResource* container = VALUE_TO_IRDFRESOURCE(val);
+            RemoveMatchesFor(container, aMember);
 
             // Remove the rows from the view
             PRInt32 row = iter.GetRowIndex();
@@ -1091,6 +1095,19 @@ nsXULOutlinerBuilder::SynchronizeMatch(nsTemplateMatch* aMatch, const VariableSe
         Value val;
         aMatch->GetAssignmentFor(mConflictSet, aMatch->mRule->GetMemberVariable(), &val);
 
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+            nsIRDFResource* res = VALUE_TO_IRDFRESOURCE(val);
+
+            const char* str = "(null)";
+            if (res)
+                res->GetValueConst(&str);
+
+            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                   ("xultemplate[%p] synchronizing %s (match=%p)", this, str, aMatch));
+        }
+#endif
+
         nsOutlinerRows::iterator iter =
             mRows.Find(mConflictSet, VALUE_TO_IRDFRESOURCE(val));
 
@@ -1101,6 +1118,9 @@ nsXULOutlinerBuilder::SynchronizeMatch(nsTemplateMatch* aMatch, const VariableSe
         PRInt32 row = iter.GetRowIndex();
         if (row >= 0)
             mBoxObject->InvalidateRow(row);
+
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p]   => row %d", this, row));
     }
 
     return NS_OK;
@@ -1428,6 +1448,24 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
     Instantiation seed;
     seed.AddAssignment(mContainerVar, Value(aContainer));
 
+#ifdef PR_LOGGING
+    static PRInt32 gNest;
+
+    nsCAutoString space;
+    for (PRInt32 i = 0; i < gNest; ++i)
+        space += "  ";
+
+    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        const char* res;
+        aContainer->GetValueConst(&res);
+
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p] %sopening subtree for %s", this, space.get(), res));
+    }
+
+    ++gNest;
+#endif
+
     InstantiationSet instantiations;
     instantiations.Append(seed);
 
@@ -1453,6 +1491,11 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
         NS_ASSERTION(match != nsnull, "no best match in match set");
         if (! match)
             continue;
+
+#ifdef PR_LOGGING
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p] %smatch=%p", this, space.get(), match));
+#endif
 
         // Remember that this match applied to this row
         mRows.InsertRowAt(match, aSubtree, count);
@@ -1493,6 +1536,10 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
         count += delta;
     }
 
+#ifdef PR_LOGGING
+    --gNest;
+#endif
+
     // Sort the container.
     if (mSortVariable) {
         NS_QuickSort(mRows.GetRowsFor(aSubtree),
@@ -1513,6 +1560,16 @@ nsXULOutlinerBuilder::CloseContainer(PRInt32 aIndex, nsIRDFResource* aContainer)
     if (aIndex < 0 || aIndex >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        const char* res;
+        aContainer->GetValueConst(&res);
+
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p] closing container %s", this, res));
+    }
+#endif
+
     nsTemplateMatchSet firings(mConflictSet.GetPool());
     nsTemplateMatchSet retractions(mConflictSet.GetPool());
     mConflictSet.Remove(nsOutlinerRowTestNode::Element(aContainer), firings, retractions);
@@ -1523,10 +1580,13 @@ nsXULOutlinerBuilder::CloseContainer(PRInt32 aIndex, nsIRDFResource* aContainer)
         nsTemplateMatchSet::ConstIterator iter;
 
         for (iter = retractions.First(); iter != last; ++iter) {
+            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                   ("xultemplate[%p] removing match %p", this, iter.operator->()));
+
             Value val;
             iter->GetAssignmentFor(mConflictSet, iter->mRule->GetMemberVariable(), &val);
 
-            RemoveMatchesFor(VALUE_TO_IRDFRESOURCE(val));
+            RemoveMatchesFor(aContainer, VALUE_TO_IRDFRESOURCE(val));
         }
     }
 
@@ -1549,24 +1609,60 @@ nsXULOutlinerBuilder::CloseContainer(PRInt32 aIndex, nsIRDFResource* aContainer)
 }
 
 nsresult
-nsXULOutlinerBuilder::RemoveMatchesFor(nsIRDFResource* aContainer)
+nsXULOutlinerBuilder::RemoveMatchesFor(nsIRDFResource* aContainer, nsIRDFResource* aMember)
 {
     NS_PRECONDITION(aContainer != nsnull, "null ptr");
     if (! aContainer)
         return NS_ERROR_FAILURE;
 
+    NS_PRECONDITION(aMember != nsnull, "null ptr");
+    if (! aMember)
+        return NS_ERROR_FAILURE;
+
+#ifdef PR_LOGGING
+    static PRInt32 gNest;
+
+    nsCAutoString space;
+    for (PRInt32 i = 0; i < gNest; ++i)
+        space += "  ";
+
+    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+        const char* res;
+        aMember->GetValueConst(&res);
+
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p] %sremoving matches for %s", this, space.get(), res));
+    }
+
+    ++gNest;
+#endif
+
+    // Pull supporting memory elements out of the conflict set. We
+    // yank the container/member element so that it will be recreated
+    // when the container is opened; we yank the row element so we'll
+    // recurse to any open children.
     nsTemplateMatchSet firings(mConflictSet.GetPool());
     nsTemplateMatchSet retractions(mConflictSet.GetPool());
-    mConflictSet.Remove(nsOutlinerRowTestNode::Element(aContainer), firings, retractions);
+    mConflictSet.Remove(nsRDFConMemberTestNode::Element(aContainer, aMember), firings, retractions);
+    mConflictSet.Remove(nsOutlinerRowTestNode::Element(aMember), firings, retractions);
 
     nsTemplateMatchSet::ConstIterator last = retractions.Last();
     nsTemplateMatchSet::ConstIterator iter;
 
     for (iter = retractions.First(); iter != last; ++iter) {
+#ifdef PR_LOGGING
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p] %smatch=%p", this, space.get(), iter.operator->()));
+#endif
+
         Value val;
         iter->GetAssignmentFor(mConflictSet, iter->mRule->GetMemberVariable(), &val);
-        RemoveMatchesFor(VALUE_TO_IRDFRESOURCE(val));
+        RemoveMatchesFor(aMember, VALUE_TO_IRDFRESOURCE(val));
     }
+
+#ifdef PR_LOGGING
+    --gNest;
+#endif
 
     return NS_OK;
 }
