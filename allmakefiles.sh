@@ -881,13 +881,12 @@ browser/components/bookmarks/Makefile
 browser/components/bookmarks/public/Makefile
 browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
-browser/components/cookieviewer/Makefile
 browser/components/help/Makefile
 browser/components/history/Makefile
 browser/components/migration/Makefile
 browser/components/migration/public/Makefile
 browser/components/migration/src/Makefile
-browser/components/prefwindow/Makefile
+browser/components/preferences/Makefile
 browser/components/sidebar/Makefile
 browser/components/sidebar/public/Makefile
 browser/components/sidebar/src/Makefile
