@@ -3,7 +3,6 @@ moc_nsQApplication.cpp
 moc_nsLabel.cpp
 moc_nsScrollbar.cpp
 moc_nsButton.cpp
-moc_nsListBox.cpp
 moc_nsTextAreaWidget.cpp
 moc_nsCheckButton.cpp
 moc_nsTextWidget.cpp

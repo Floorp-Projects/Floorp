@@ -43,7 +43,6 @@ CPPSRCS		= \
 		nsFontRetrieverService.cpp \
 		nsFontSizeIterator.cpp \
 		nsLabel.cpp \
-		nsListBox.cpp \
 		nsLookAndFeel.cpp \
 		nsObject.cpp \
 		nsPopUpMenu.cpp \

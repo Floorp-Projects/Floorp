@@ -137,7 +137,6 @@ static NS_DEFINE_CID(kAppShellCID,         NS_APPSHELL_CID);
 static NS_DEFINE_CID(kMenuBarCID,          NS_MENUBAR_CID);
 static NS_DEFINE_CID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID,         NS_MENUITEM_CID);
-static NS_DEFINE_CID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
