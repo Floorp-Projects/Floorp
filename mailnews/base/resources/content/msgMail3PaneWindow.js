@@ -695,27 +695,8 @@ function UpgradeFolderPaneUI()
   }
 }
 
-// This is a workaround fix for bug 144141 since it's too risky to change code
-// to load the thread pane window with msgs when folder pane is collapsed/closed
-// at startup (since this has never worked before). The workaround is to force
-// folder pane open (with default width) at startup if it was collapsed.
-function ForceFolderPaneOpen()
-{
-  if (! sidebar_is_collapsed())
-    return false;
-
-  var sidebar_box = document.getElementById('sidebar-box');
-  var sidebar_splitter = document.getElementById('sidebar-splitter');
-
-  sidebar_box.removeAttribute('collapsed');
-  sidebar_box.removeAttribute('width'); // use default width
-  sidebar_splitter.removeAttribute('state');
-  return true;
-}
-
 function OnLoadFolderPane()
 {
-    ForceFolderPaneOpen();
     UpgradeFolderPaneUI();
 
     var folderUnreadCol = document.getElementById("folderUnreadCol");
