@@ -332,7 +332,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
     }
   }
   srcCharset.Assign(m_defaultCharset.IsEmpty() ?
-                    NS_LITERAL_STRING("ISO-8859-1") : m_defaultCharset);
+                    NS_LITERAL_STRING("ISO-8859-1").get() : m_defaultCharset.get());
   dstCharset = srcCharset;
 
 	if (m_scope)
