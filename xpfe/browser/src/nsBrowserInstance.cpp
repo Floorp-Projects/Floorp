@@ -1567,8 +1567,8 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
 
     // Set the index attribute to  item's index
   nsString indexString;
-  indexString += aIndex;
-  rv = menuItemElement->SetAttribute(nsString("index"), indexString);
+  indexString.AppendInt(aIndex);
+  rv = menuItemElement->SetAttribute(NS_ConvertASCIItoUCS2("index"), indexString);
 
   if (!NS_SUCCEEDED(rv)) {
     printf("nsBrowserAppCore::CreateMenuItem ERROR setting ishist handler\n");
@@ -1683,7 +1683,7 @@ nsBrowserInstance::ClearHistoryMenus(nsIDOMNode * aParent)
         return NS_ERROR_FAILURE;
       }
 
-      nsString  attrname("index");
+      nsString  attrname; attrname.AssignWithConversion("index");
       nsString  attrvalue;
       rv = childElement->GetAttribute(attrname, attrvalue);
 
