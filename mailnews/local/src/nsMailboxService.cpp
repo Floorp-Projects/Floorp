@@ -285,7 +285,7 @@ NS_IMETHODIMP nsMailboxService::GetScheme(char * *aScheme)
 {
 	nsresult rv = NS_OK;
 	if (aScheme)
-		*aScheme = PL_strdup("mailbox");
+		*aScheme = nsCRT::strdup("mailbox");
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv; 

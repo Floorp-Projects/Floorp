@@ -235,7 +235,7 @@ NS_IMETHODIMP nsPop3Service::GetScheme(char * *aScheme)
 {
 	nsresult rv = NS_OK;
 	if (aScheme)
-		*aScheme = PL_strdup("pop3");
+		*aScheme = nsCRT::strdup("pop3");
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv; 
