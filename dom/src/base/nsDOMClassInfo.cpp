@@ -143,6 +143,7 @@
 #include "nsIDOMNSHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
+#include "nsIDOMHTMLOptionsCollection.h"
 
 // ContentList includes
 #include "nsIContentList.h"
@@ -909,6 +910,7 @@ jsval nsDOMClassInfo::sWindow_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sFrames_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sSelf_id            = JSVAL_VOID;
 jsval nsDOMClassInfo::sOpener_id          = JSVAL_VOID;
+jsval nsDOMClassInfo::sAdd_id             = JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass   = nsnull;
 
@@ -1012,6 +1014,7 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sFrames_id,          cx, "frames");
   SET_JSVAL_TO_STRING(sSelf_id,            cx, "self");
   SET_JSVAL_TO_STRING(sOpener_id,          cx, "opener");
+  SET_JSVAL_TO_STRING(sAdd_id,             cx, "add");
 
   return NS_OK;
 }
@@ -6200,6 +6203,109 @@ nsHTMLOptionsCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
   NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
 
   return nsHTMLSelectElementSH::SetOption(cx, vp, n, oc);
+}
+
+NS_IMETHODIMP
+nsHTMLOptionsCollectionSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                                      JSContext *cx, JSObject *obj, 
+                                      jsval id, PRUint32 flags, 
+                                      JSObject **objp, PRBool *_retval)
+{
+  if (id == sAdd_id) {
+    JSString *str = JSVAL_TO_STRING(id);
+    JSFunction *fnc =
+      ::JS_DefineFunction(cx, obj, ::JS_GetStringBytes(str),
+                          Add, 0, JSPROP_ENUMERATE);
+    
+    *objp = obj;
+    
+    return fnc ? NS_OK : NS_ERROR_UNEXPECTED;
+  }
+
+  return nsHTMLCollectionSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
+}
+
+JSBool JS_DLL_CALLBACK
+nsHTMLOptionsCollectionSH::Add(JSContext *cx, JSObject *obj, uintN argc,
+                               jsval *argv, jsval *rval)
+{
+  *rval = JSVAL_VOID;
+
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  nsresult rv =
+    sXPConnect->GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+    return JS_FALSE;
+  }
+
+  nsCOMPtr<nsISupports> native;
+  rv = wrapper->GetNative(getter_AddRefs(native));
+  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+
+  nsCOMPtr<nsIDOMHTMLOptionsCollection> options(do_QueryInterface(native));
+  NS_ASSERTION(options, "native should have been an options collection");
+
+  if (argc < 1 || !JSVAL_IS_OBJECT(argv[0])) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+    return JS_FALSE;
+  }
+
+  rv = sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(argv[0]),
+                                              getter_AddRefs(wrapper));
+  
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+    return JS_FALSE;
+  }
+  
+  rv = wrapper->GetNative(getter_AddRefs(native));
+  NS_ENSURE_SUCCESS(rv, JS_FALSE);
+    
+  nsCOMPtr<nsIDOMHTMLOptionElement> newOption(do_QueryInterface(native));
+  if (!newOption) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
+    return JS_FALSE;
+  }
+
+  int32 index = -1;
+  if (argc > 1) {
+    if (!JS_ValueToInt32(cx, argv[1], &index)) {
+      return JS_FALSE;
+    }
+  }
+
+  if (index < -1) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return JS_FALSE;
+  }
+
+  PRUint32 length;
+  options->GetLength(&length);
+
+  if (index == -1 || index > (int32)length) {
+    // IE appends in these cases
+    index = length;
+  }
+
+  nsCOMPtr<nsIDOMNode> beforeNode;
+  options->Item(index, getter_AddRefs(beforeNode));
+  
+  nsCOMPtr<nsIDOMHTMLOptionElement> beforeElement(do_QueryInterface(beforeNode));
+
+  nsCOMPtr<nsIDOMNSHTMLOptionCollection> nsoptions(do_QueryInterface(options));
+
+  nsCOMPtr<nsIDOMHTMLSelectElement> select;
+  nsoptions->GetSelect(getter_AddRefs(select));
+                             
+  rv = select->Add(newOption, beforeElement);
+
+  if (NS_FAILED(rv)) {
+    nsDOMClassInfo::ThrowJSException(cx, rv);
+  }
+
+  return NS_SUCCEEDED(rv);
 }
 
 
