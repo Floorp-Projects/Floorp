@@ -220,7 +220,7 @@ nsAString::AssignFromPromise( const self_type& aReadable )
       option to fix either the callers or this mechanism.
     */
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_AssignFromReadable(aReadable);
     else
       {
@@ -289,7 +289,7 @@ nsAString::AppendFromReadable( const self_type& aReadable )
 void
 nsAString::AppendFromPromise( const self_type& aReadable )
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_AppendFromReadable(aReadable);
     else
       {
@@ -354,7 +354,7 @@ nsAString::InsertFromReadable( const self_type& aReadable, index_type atPosition
 void
 nsAString::InsertFromPromise( const self_type& aReadable, index_type atPosition )
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_InsertFromReadable(aReadable, atPosition);
     else
       {
@@ -443,7 +443,7 @@ nsAString::ReplaceFromReadable( index_type cutStart, size_type cutLength, const 
 void
 nsAString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const self_type& aReadable )
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_ReplaceFromReadable(cutStart, cutLength, aReadable);
     else
       {
@@ -680,7 +680,7 @@ nsACString::AssignFromPromise( const self_type& aReadable )
       option to fix either the callers or this mechanism.
     */
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_AssignFromReadable(aReadable);
     else
       {
@@ -749,7 +749,7 @@ nsACString::AppendFromReadable( const self_type& aReadable )
 void
 nsACString::AppendFromPromise( const self_type& aReadable )
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_AppendFromReadable(aReadable);
     else
       {
@@ -814,7 +814,7 @@ nsACString::InsertFromReadable( const self_type& aReadable, index_type atPositio
 void
 nsACString::InsertFromPromise( const self_type& aReadable, index_type atPosition )
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_InsertFromReadable(aReadable, atPosition);
     else
       {
@@ -903,7 +903,7 @@ nsACString::ReplaceFromReadable( index_type cutStart, size_type cutLength, const
 void
 nsACString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const self_type& aReadable )
   {
-    if ( !aReadable.Promises(*this) )
+    if ( !aReadable.IsDependentOn(*this) )
       do_ReplaceFromReadable(cutStart, cutLength, aReadable);
     else
       {

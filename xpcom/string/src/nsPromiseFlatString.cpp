@@ -63,9 +63,9 @@ nsPromiseFlatString::GetSharedBufferHandle() const
   }
 
 PRBool
-nsPromiseFlatString::Promises( const nsAString& aString ) const
+nsPromiseFlatString::IsDependentOn( const nsAString& aString ) const
   {
-    return mPromisedString->Promises(aString);
+    return mPromisedString->IsDependentOn(aString);
   }
 
 const PRUnichar*
@@ -127,9 +127,9 @@ nsPromiseFlatCString::GetSharedBufferHandle() const
   }
 
 PRBool
-nsPromiseFlatCString::Promises( const nsACString& aString ) const
+nsPromiseFlatCString::IsDependentOn( const nsACString& aString ) const
   {
-    return mPromisedString->Promises(aString);
+    return mPromisedString->IsDependentOn(aString);
   }
 
 const char*

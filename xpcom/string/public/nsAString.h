@@ -272,7 +272,7 @@ class NS_COM nsAString
     public:
       virtual const char_type* GetReadableFragment( nsReadableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
       virtual       char_type* GetWritableFragment( nsWritableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) = 0;
-      virtual PRBool Promises( const self_type& aString ) const { return &aString == this; }
+      virtual PRBool IsDependentOn( const self_type& aString ) const { return &aString == this; }
   };
 
 class NS_COM nsACString
@@ -502,7 +502,7 @@ class NS_COM nsACString
     public:
       virtual const char_type* GetReadableFragment( nsReadableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) const = 0;
       virtual       char_type* GetWritableFragment( nsWritableFragment<char_type>&, nsFragmentRequest, PRUint32 = 0 ) = 0;
-      virtual PRBool Promises( const self_type& aString ) const { return &aString == this; }
+      virtual PRBool IsDependentOn( const self_type& aString ) const { return &aString == this; }
   };
 
 #include "nsAPromiseString.h"
