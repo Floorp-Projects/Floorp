@@ -66,7 +66,7 @@ public:
         mCmdResponse = PR_TRUE;
     };
 
-    ~nsFTPContext() {;};
+    virtual ~nsFTPContext() {};
 
     PRBool mCmdResponse;
     nsString2 mContentType;
