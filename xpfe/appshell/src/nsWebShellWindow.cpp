@@ -408,6 +408,11 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
       case NS_XUL_CLOSE: {
+        // Calling ExecuteCloseHandler may actually close the window
+        // (it probably shouldn't, but you never know what the users JS 
+        // code will do).  Therefore we add a death-grip to the window
+        // for the duration of the close handler.
+        nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(eventWindow);
         if (!eventWindow->ExecuteCloseHandler())
           eventWindow->Close();
         break;
