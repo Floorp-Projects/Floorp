@@ -246,7 +246,7 @@ END_OLECOMMAND_TABLE()
 
 
 
-	HWND GetCommandTargetWindow()
+	HWND GetCommandTargetWindow() const
 	{
 		return m_hWnd;
 	}

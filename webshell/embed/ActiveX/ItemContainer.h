@@ -19,6 +19,8 @@
 #ifndef ITEMCONTAINER_H
 #define ITEMCONTAINER_H
 
+// Class for managing a list of named objects.
+
 class CItemContainer :	public CComObjectRootEx<CComSingleThreadModel>,
 						public IOleItemContainer
 {

@@ -39,7 +39,6 @@ CWebShellContainer::~CWebShellContainer()
 ///////////////////////////////////////////////////////////////////////////////
 // nsISupports implementation
 
-
 NS_IMPL_ADDREF(CWebShellContainer)
 NS_IMPL_RELEASE(CWebShellContainer)
 NS_IMPL_QUERY_HEAD(CWebShellContainer)
@@ -48,6 +47,7 @@ NS_IMPL_QUERY_HEAD(CWebShellContainer)
 	NS_IMPL_QUERY_BODY(nsIDocumentLoaderObserver)
 	NS_IMPL_QUERY_BODY(nsIWebShellContainer)
 NS_IMPL_QUERY_TAIL(nsIStreamObserver)
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIBrowserWindow implementation
@@ -97,8 +97,6 @@ CWebShellContainer::GetContentBounds(nsRect& aResult)
 	NG_TRACE_METHOD(CWebShellContainer::GetContentBounds);
 	return NS_OK;
 }
-
-
 
 
 NS_IMETHODIMP
