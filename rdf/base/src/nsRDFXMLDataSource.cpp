@@ -437,7 +437,9 @@ RDFXMLDataSourceImpl::Init()
     // XXX this is a bit of a hack, because technically, the document
     // should've defined the RDF namespace to be _something_, and we
     // should just look at _that_ and use it. Oh well.
-    AddNameSpace(NS_NewAtom("RDF"), RDF_NAMESPACE_URI);
+    nsIAtom* rdfPrefix = NS_NewAtom("RDF");
+    AddNameSpace(rdfPrefix, RDF_NAMESPACE_URI);
+    NS_IF_RELEASE(rdfPrefix);
 
     if (gRefCnt++ == 0) {
         rv = nsServiceManager::GetService(kRDFServiceCID,
