@@ -20,6 +20,7 @@
 #define nsIMailboxUrl_h___
 
 #include "nscore.h"
+#include "MailNewsTypes.h"
 #include "nsIMsgMailNewsUrl.h"
 
 #include "nsISupports.h"
@@ -75,10 +76,11 @@ public:
 	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath) = 0;
 	NS_IMETHOD SetFilePath(const nsFilePath& aFilePath) = 0;
 
-	// Some mailbox urls include a message id for the message in question. 
-	// I'm not sure if there is a type for a message ID right now....
-//	NS_IMETHOD GetMessageID(PRUint32 aMessageID) = 0;
-//	NS_IMETHOD SetMessageID(PRUint32 aMessageID) = 0;
+	// Some mailbox urls include a message key for the message in question. 
+	NS_IMETHOD GetMessageKey(nsMsgKey& aMessageID) = 0;
+	// mailbox urls to fetch a mail message can specify the size of the message...
+	// this saves us the trouble of having to open up the msg db and ask ourselves...
+	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize) = 0; 
 
 	NS_IMETHOD GetMailboxAction(nsMailboxAction * aMailboxAction) = 0;
 	NS_IMETHOD SetMailboxAction(nsMailboxAction aMailboxAction) = 0;
