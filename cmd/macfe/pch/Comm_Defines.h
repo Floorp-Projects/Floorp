@@ -72,10 +72,6 @@
 
 #define VERSION_NUMBER "4_0b0"
 #define ZIP_NAME "java"##VERSION_NUMBER
-#define _NSPR	1
-#ifndef NSPR20
-#define NSPR20 1
-#endif
 
 // 1997-04-29 pkc -- if we ever remove this from zLibDebug.Prefixm then
 // we need to remove this from here also
