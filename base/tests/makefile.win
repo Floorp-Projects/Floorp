@@ -24,6 +24,7 @@ PROG2 = .\$(OBJDIR)\CvtURL.exe
 PROG3 = .\$(OBJDIR)\TestCRT.exe
 PROG4 = .\$(OBJDIR)\FilesTest.exe
 PROG5 = .\$(OBJDIR)\PropertiesTest.exe
+PROG6 = .\$(OBJDIR)\TestAutoLock.exe
 RESFILE = timer.res
 PROGRAMS = $(PROG0) $(PROG1) \
 !ifdef MODULAR_NETLIB
@@ -32,6 +33,7 @@ PROGRAMS = $(PROG0) $(PROG1) \
 	$(PROG5) \
 !endif
 	$(PROG4) \
+        $(PROG6) \
 	$(NULL)
 
 LINCS=-I..\src -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\raptor
@@ -61,6 +63,7 @@ install:: $(PROGRAMS)
 	$(MAKE_INSTALL) test.properties $(DIST)\bin\res
 !endif
 	$(MAKE_INSTALL) $(PROG4) $(DIST)\bin
+        $(MAKE_INSTALL) $(PROG6) $(DIST)\bin
 
 clobber::
 	rm -f $(DIST)\bin\TimerTest.exe
@@ -72,6 +75,7 @@ clobber::
 	rm -f $(DIST)\bin\res\test.properties
 !endif
 	rm -f $(DIST)\bin\FilesTest.exe
+        rm -f $(DIST)\bin\TestAutoLock.exe
 
 # Move this into config/obj.inc when it's allowed
 .cpp{.\$(OBJDIR)\}.exe:
@@ -102,3 +106,7 @@ $(PROG3): $(OBJDIR) TestCRT.cpp
 
 $(PROG5): $(OBJDIR) PropertiesTest.cpp
 !endif
+
+$(PROG6): $(OBJDIR) TestAutoLock.cpp
+
+
