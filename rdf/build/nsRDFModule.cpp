@@ -232,7 +232,7 @@ static nsModuleComponentInfo components[] =
 
     { "XUL Element Factory",
       NS_XULELEMENTFACTORY_CID,
-      NS_RDF_PROGID "/xul-element-factory",
+      NS_ELEMENT_FACTORY_PROGID_PREFIX "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
       CreateNewXULElementFactory
     },
 };
