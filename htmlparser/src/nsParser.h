@@ -76,7 +76,7 @@ class nsIProgressEventSink;
 
 #include <fstream.h>
 
-#ifndef XP_MAC
+#ifdef XP_WIN
 #pragma warning( disable : 4275 )
 #endif
 
