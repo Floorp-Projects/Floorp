@@ -354,8 +354,10 @@ void nsRenderingContextWin :: PushState(void)
   mTMatrix = &mStates->mMatrix;
 }
 
-void nsRenderingContextWin :: PopState(void)
+PRBool nsRenderingContextWin :: PopState(void)
 {
+  PRBool  retval = PR_FALSE;
+
   if (nsnull == mStates)
   {
     NS_ASSERTION(!(nsnull == mStates), "state underflow");
@@ -385,7 +387,12 @@ void nsRenderingContextWin :: PopState(void)
           pstate = pstate->mNext;
 
         if (nsnull != pstate)
-          ::SelectClipRgn(mDC, pstate->mClipRegion);
+        {
+          int cliptype = ::SelectClipRgn(mDC, pstate->mClipRegion);
+
+          if (cliptype == NULLREGION)
+            retval = PR_TRUE;
+        }
       }
 
       oldstate->mFlags &= ~FLAGS_ALL;
@@ -396,6 +403,8 @@ void nsRenderingContextWin :: PopState(void)
     else
       mTMatrix = nsnull;
   }
+
+  return retval;
 }
 
 PRBool nsRenderingContextWin :: IsVisibleRect(const nsRect& aRect)
