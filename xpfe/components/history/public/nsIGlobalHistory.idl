@@ -1,0 +1,61 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+
+  The interface to global history.
+
+ */
+
+#include "nsISupports.idl"
+
+%{ C++
+#include "nscore.h" // for PRUnichar
+%}
+
+[scriptable, uuid(9491C383-E3C4-11d2-BDBE-0050040A9B44)]
+interface nsIGlobalHistory : nsISupports
+{
+    // Add a page to the history
+    void AddPage(in string aURL, in string aReferrerURL, in long long aDate);
+
+    // Set the title for a page in the global history
+    void SetPageTitle(in string aURL, in wstring aTitle);
+
+    // Remove the specified page from the global history
+    void RemovePage(in string aURL);
+
+    // Get the URL's last visit date
+    long long GetLastVisitDate(in string aURL);
+
+    // Get the preferred completion for aURL
+    string GetURLCompletion(in string aURL);
+};
+
+%{ C++
+// {9491C382-E3C4-11D2-BDBE-0050040A9B44}
+#define NS_GLOBALHISTORY_CID \
+{ 0x9491c382, 0xe3c4, 0x11d2, { 0xbd, 0xbe, 0x0, 0x50, 0x4, 0xa, 0x9b, 0x44} }
+
+#define NS_GLOBALHISTORY_PROGID \
+    "component://netscape/browser/global-history"
+
+#define NS_GLOBALHISTORY_DATASOURCE_PROGID \
+    "component://netscape/rdf/datasource?name=history"
+%}
+
