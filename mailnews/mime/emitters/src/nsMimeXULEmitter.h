@@ -40,6 +40,11 @@ typedef struct {
   char      *contentType;
 } attachmentInfoType;
 
+typedef struct {
+  char      *name;
+  char      *value;
+} headerInfoType;
+
 class nsMimeXULEmitter : public nsIMimeEmitter {
 public: 
     nsMimeXULEmitter ();
@@ -61,6 +66,7 @@ public:
                               const char *outCharset);
     NS_IMETHOD    AddHeaderField(const char *field, const char *value);
     NS_IMETHOD    EndHeader();
+    NS_IMETHOD    AddHeaderFieldHTML(const char *field, const char *value);
 
     // Attachment handling routines
     NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url);
@@ -77,9 +83,24 @@ public:
     // involved (i.e. decoded images, HTML Body Text, etc...
     NS_IMETHOD    Write(const char *buf, PRUint32 size, PRUint32 *amountWritten);
     NS_IMETHOD    UtilityWrite(const char *buf);
+    NS_IMETHOD    UtilityWriteCRLF(const char *buf);
 
     NS_IMETHOD    WriteXULHeader(const char *msgID);
     NS_IMETHOD    WriteXULTag(const char *tagName, const char *value);
+
+    // For Interesting XUL output!
+    nsresult      DumpAttachmentMenu();
+    nsresult      DumpAddBookIcon();
+    nsresult      DumpSubjectFromDate();
+    nsresult      DumpToCC();
+    nsresult      DumpRestOfHeaders();
+    nsresult      DumpBody();
+    nsresult      OutputGenericHeader(const char *aHeaderVal);
+
+    // For storing recipient info in the history database...
+    nsresult      DoSpecialSenderProcessing(const char *field, const char *value);
+
+    char          *GetHeaderValue(const char *aHeaderName);
 
 protected:
     // For buffer management on output
@@ -97,7 +118,6 @@ protected:
 
     // For header determination...
     PRBool              mDocHeader;
-    PRBool              mXULHeaderStarted; 
 
     // For content type...
     char                *mAttachContentType;
@@ -119,11 +139,10 @@ protected:
     nsString            mBody;
     nsFileSpec          *mBodyFileSpec;
 
-#ifdef DEBUG_rhp
-    PRBool              mReallyOutput;
-    PRFileDesc          *mLogFile;        /* Temp file to put generated HTML into. */ 
-#endif 
+    // For header caching...
+    nsVoidArray         *mHeaderArray;
 };
+
 
 /* this function will be used by the factory to generate an class access object....*/
 extern nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result);

@@ -30,6 +30,7 @@
 #include "nsEmitterUtils.h"
 #include "nsFileStream.h"
 #include "nsMimeStringResources.h"
+#include "msgCore.h"
 
 // For the new pref API's
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -64,6 +65,9 @@ nsMimeXULEmitter::nsMimeXULEmitter()
   mDocHeader = PR_FALSE;
   mAttachContentType = NULL;
 
+  // Header cache...
+  mHeaderArray = new nsVoidArray();
+
   // Setup array for attachments
   mAttachCount = 0;
   mAttachArray = new nsVoidArray();
@@ -86,18 +90,41 @@ nsMimeXULEmitter::nsMimeXULEmitter()
 
   if ((mPrefs && NS_SUCCEEDED(rv)))
     mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
-
-#ifdef DEBUG_rhp
-  mLogFile = NULL;    /* Temp file to put generated HTML into. */
-  mReallyOutput = PR_FALSE;
-#endif
 }
 
 nsMimeXULEmitter::~nsMimeXULEmitter(void)
 {
+  PRInt32 i;
+
   if (mAttachArray)
+  {
+    for (i=0; i<mAttachArray->Count(); i++)
+    {
+      attachmentInfoType *attachInfo = (attachmentInfoType *)mAttachArray->ElementAt(i);
+      if (!attachInfo)
+        continue;
+    
+      PR_FREEIF(attachInfo->contentType);
+      PR_FREEIF(attachInfo->displayName);
+      PR_FREEIF(attachInfo->urlSpec);
+    }
     delete mAttachArray;
- 
+  }
+
+  if (mHeaderArray)
+  {
+    for (i=0; i<mHeaderArray->Count(); i++)
+    {
+      headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
+      if (!headerInfo)
+        continue;
+    
+      PR_FREEIF(headerInfo->name);
+      PR_FREEIF(headerInfo->value);
+    }
+    delete mHeaderArray;
+  }
+
   if (mBufferMgr)
     delete mBufferMgr;
 
@@ -135,11 +162,6 @@ nsMimeXULEmitter::Initialize(nsIURI *url, nsIChannel * aChannel)
   mTotalWritten = 0;
   mTotalRead = 0;
 
-#ifdef DEBUG_rhp
-  PR_Delete("C:\\email.html");
-  // mLogFile = PR_Open("C:\\email.html", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 493);
-#endif /* DEBUG */
-
   return NS_OK;
 }
 
@@ -154,10 +176,6 @@ nsMimeXULEmitter::SetOutputListener(nsIStreamListener *listener)
 nsresult
 nsMimeXULEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   // Ok, now we will setup the attachment info 
   mCurrentAttachment = (attachmentInfoType *) PR_NEWZAP(attachmentInfoType);
   if ( (mCurrentAttachment) && mAttachArray)
@@ -175,10 +193,6 @@ nsMimeXULEmitter::StartAttachment(const char *name, const char *contentType, con
 nsresult
 nsMimeXULEmitter::AddAttachmentField(const char *field, const char *value)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   // If any fields are of interest, do something here with them...
   return NS_OK;
 }
@@ -186,10 +200,6 @@ nsMimeXULEmitter::AddAttachmentField(const char *field, const char *value)
 nsresult
 nsMimeXULEmitter::EndAttachment()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-  
   // Ok, add the attachment info to the attachment array...
   if ( (mCurrentAttachment) && (mAttachArray) )
   {
@@ -204,10 +214,6 @@ nsMimeXULEmitter::EndAttachment()
 nsresult
 nsMimeXULEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outCharset)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   mBody.Append("<HTML>");
 
   mBody.Append("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=");
@@ -221,10 +227,6 @@ nsMimeXULEmitter::StartBody(PRBool bodyOnly, const char *msgID, const char *outC
 nsresult
 nsMimeXULEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   mBody.Append(buf, size);
   *amountWritten = size;
 
@@ -234,10 +236,6 @@ nsMimeXULEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWrit
 nsresult
 nsMimeXULEmitter::EndBody()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
   mBody.Append("</HTML>");
   mBodyStarted = PR_FALSE;
 
@@ -266,11 +264,6 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   unsigned int        written = 0;
   PRUint32            rc = 0;
   PRUint32            needToWrite;
-
-#ifdef DEBUG_rhp
-  if ((mLogFile) && (mReallyOutput))
-    PR_Write(mLogFile, buf, size);
-#endif
 
   //
   // Make sure that the buffer we are "pushing" into has enough room
@@ -335,11 +328,107 @@ nsMimeXULEmitter::UtilityWrite(const char *buf)
   PRUint32    written;
 
   Write(buf, tmpLen, &written);
-#ifdef DEBUG
-//  Write("\r\n", 2, &written);
-#endif
 
   return NS_OK;
+}
+
+nsresult
+nsMimeXULEmitter::UtilityWriteCRLF(const char *buf)
+{
+  PRInt32     tmpLen = PL_strlen(buf);
+  PRUint32    written;
+
+  Write(buf, tmpLen, &written);
+  Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &written);
+
+  return NS_OK;
+}
+
+nsresult
+nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
+{
+  if ( (!field) || (!value) )
+    return NS_OK;
+
+  //
+  // This is a check to see what the pref is for header display. If
+  // We should only output stuff that corresponds with that setting.
+  //
+  if (!EmitThisHeaderForPrefSetting(mHeaderDisplayType, field))
+    return NS_OK;
+
+  char  *newValue = nsEscapeHTML(value);
+  if (!newValue)
+    return NS_OK;
+
+  UtilityWrite("<TR>");
+
+  UtilityWrite("<td>");
+  UtilityWrite("<div align=right>");
+  UtilityWrite("<B>");
+
+  // Here is where we are going to try to L10N the tagName so we will always
+  // get a field name next to an emitted header value. Note: Default will always
+  // be the name of the header itself.
+  //
+  nsString  newTagName(field);
+  newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
+  newTagName.ToUpperCase();
+  char *upCaseField = newTagName.ToNewCString();
+
+  char *l10nTagName = LocalizeHeaderName(upCaseField, field);
+  if ( (!l10nTagName) || (!*l10nTagName) )
+    UtilityWrite(field);
+  else
+  {
+    UtilityWrite(l10nTagName);
+    PR_FREEIF(l10nTagName);
+  }
+
+  // Now write out the actual value itself and move on!
+  //
+  UtilityWrite(":");
+  UtilityWrite("</B>");
+  UtilityWrite("</div>");
+  UtilityWrite("</td>");
+
+  UtilityWrite("<td>");
+  UtilityWrite(newValue);
+  UtilityWrite("</td>");
+
+  UtilityWrite("</TR>");
+
+  PR_FREEIF(newValue);
+  PR_FREEIF(upCaseField);
+  return NS_OK;
+}
+
+//
+// Find a cached header! Note: Do NOT free this value!
+//
+char *
+nsMimeXULEmitter::GetHeaderValue(const char *aHeaderName)
+{
+  PRInt32     i;
+  char        *retVal = nsnull;
+
+  if (!mHeaderArray)
+    return nsnull;
+
+  for (i=0; i<mHeaderArray->Count(); i++)
+  {
+    headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
+    if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) )
+      continue;
+    
+    if (!PL_strcasecmp(aHeaderName, headerInfo->name))
+    {
+      retVal = headerInfo->value;
+      break;
+    }
+  }
+
+  return retVal;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -349,74 +438,6 @@ nsMimeXULEmitter::UtilityWrite(const char *buf)
 // should just be support routines for this output.
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-
-// This is called at teardown time, but since we have been cacheing lots of 
-// good information about the mail message (attachments and body), this is 
-// probably the time that we have to do a lot of completion processing...
-// such as writing the XUL for the attachments and the XUL for the body
-// display
-//
-nsresult
-nsMimeXULEmitter::Complete()
-{
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
-
-  // Now we can finally write out the attachment information...  
-  if (mAttachArray->Count() > 0)
-  {
-    PRInt32     i;
-    
-    for (i=0; i<mAttachArray->Count(); i++)
-    {
-      attachmentInfoType *attachInfo = (attachmentInfoType *)mAttachArray->ElementAt(i);
-      if (!attachInfo)
-        continue;
-
-      UtilityWrite(attachInfo->displayName);
-      UtilityWrite(" ");
-    }
-  }
-
-  // Now, close out the box for the headers...
-  //
-  UtilityWrite("</box>");  // For the headers!
-  
-  // Now we will write out the XUL/IFRAME line for the mBody which
-  // we have cached to disk.
-  //
-  char  *url = nsnull;
-  if (mBodyFileSpec)
-    url = nsMimePlatformFileToURL(mBodyFileSpec->GetNativePathCString());
-
-  UtilityWrite("<html:iframe id=\"mail-body-frame\" src=\"");
-  UtilityWrite(url);
-  UtilityWrite("\" flex=\"100%\" width=\"100%\" />");
-
-  PR_FREEIF(url);
-
-  UtilityWrite("</window>");
-
-  // If we are here and still have data to write, we should try
-  // to flush it...if we try and fail, we should probably return
-  // an error!
-  PRUint32      written; 
-  if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
-    Write("", 0, &written);
-
-#ifdef DEBUG_rhp
-  printf("TOTAL WRITTEN = %d\n", mTotalWritten);
-  printf("LEFTOVERS     = %d\n", mBufferMgr->GetSize());
-#endif
-
-#ifdef DEBUG_rhp
-  if (mLogFile) 
-    PR_Close(mLogFile);
-#endif
-
-  return NS_OK;
-}
 
 // 
 // This should be any of the XUL that has to be part of the header for the
@@ -432,28 +453,108 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   if (!newValue)
     return NS_ERROR_OUT_OF_MEMORY;
     
-  UtilityWrite("<?xml version=\"1.0\"?>");
+  UtilityWriteCRLF("<?xml version=\"1.0\"?>");
 
   if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::MicroHeaders)
-    UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-micro.css\" type=\"text/css\"?>");
+    UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-micro.css\" type=\"text/css\"?>");
   else if (mHeaderDisplayType == nsMimeHeaderDisplayTypes::NormalHeaders)
-    UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-normal.css\" type=\"text/css\"?>");
+    UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-normal.css\" type=\"text/css\"?>");
   else /* AllHeaders */
-    UtilityWrite("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-all.css\" type=\"text/css\"?>");
+    UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://messenger/skin/mailheader-all.css\" type=\"text/css\"?>");
 
+  // Make it look consistent...
+  UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://global/skin/\" type=\"text/css\"?>");
+
+  // Output the message ID to make it query-able via the DOM
   UtilityWrite("<message id=\"");
   UtilityWrite(newValue);
-  UtilityWrite("\">");
-
-  UtilityWrite("<window ");
-  UtilityWrite("xmlns:html=\"http://www.w3.org/TR/REC-html40\" ");
-  UtilityWrite("xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ");
-  UtilityWrite("xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" ");
-  UtilityWrite("align=\"vertical\"> ");
-
-  mXULHeaderStarted = PR_TRUE;
   PR_FREEIF(newValue);
+  UtilityWriteCRLF("\">");
+
+  // Now, the XUL window!
+  UtilityWriteCRLF("<window ");
+  UtilityWriteCRLF("xmlns:html=\"http://www.w3.org/TR/REC-html40\" ");
+  UtilityWriteCRLF("xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ");
+  UtilityWriteCRLF("xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" ");
+  UtilityWriteCRLF("align=\"vertical\"> ");
+
   return NS_OK;
+}
+
+//
+// This is called at the start of the header block for all header information in ANY
+// AND ALL MESSAGES (yes, quoted, attached, etc...) So, we need to handle these differently
+// if they are the rood message as opposed to quoted message. If rootMailHeader is set to
+// PR_TRUE, this is the root document, else it is a header in the body somewhere
+//
+nsresult
+nsMimeXULEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
+                              const char *outCharset)
+{
+  mDocHeader = rootMailHeader;
+
+  if (!mDocHeader)
+  {
+    UtilityWriteCRLF("<BLOCKQUOTE><table BORDER=0 BGCOLOR=\"#CCCCCC\" >");
+  }
+  else
+  {
+    WriteXULHeader(msgID);
+  }
+
+  return NS_OK; 
+}
+
+nsresult
+nsMimeXULEmitter::DoSpecialSenderProcessing(const char *field, const char *value)
+{
+  return NS_OK;
+}
+
+//
+// This will be called for every header field...for now, we are calling the WriteXULTag for
+// each of these calls.
+//
+nsresult
+nsMimeXULEmitter::AddHeaderField(const char *field, const char *value)
+{
+  if ( (!field) || (!value) )
+    return NS_OK;
+
+  if ( (mDocHeader) && (!PL_strcmp(field, HEADER_FROM)) )
+    DoSpecialSenderProcessing(field, value);
+
+  if (!mDocHeader)
+    return AddHeaderFieldHTML(field, value);
+  else
+  { 
+    // This is the main header so we do caching for XUL later!
+    // Ok, now we will setup the header info for the header array!
+    headerInfoType  *ptr = (headerInfoType *) PR_NEWZAP(headerInfoType);
+    if ( (ptr) && mHeaderArray)
+    {
+      ptr->name = PL_strdup(field);
+      ptr->value = PL_strdup(value);
+      mHeaderArray->AppendElement(ptr);
+    }
+
+    return NS_OK;
+  }
+}
+
+//
+// This finalizes the header field being parsed.
+//
+nsresult
+nsMimeXULEmitter::EndHeader()
+{
+  if (!mDocHeader)
+    UtilityWriteCRLF("</TABLE></BLOCKQUOTE>");
+  
+  // Nothing to do in the case of the actual Envelope. This will be done
+  // on Complete().
+
+  return NS_OK; 
 }
 
 //
@@ -495,6 +596,7 @@ nsMimeXULEmitter::WriteXULTag(const char *tagName, const char *value)
     PR_FREEIF(l10nTagName);
   }
 
+  // UtilityWrite("<html:div>: </html:div>");
   UtilityWrite(": ");
   UtilityWrite("</headerdisplayname>");
 
@@ -510,67 +612,200 @@ nsMimeXULEmitter::WriteXULTag(const char *tagName, const char *value)
 }
 
 //
-// This is called at the start of the header block for all header information in ANY
-// AND ALL MESSAGES (yes, quoted, attached, etc...) So, we need to handle these differently
-// if they are the rood message as opposed to quoted message. If rootMailHeader is set to
-// PR_TRUE, this is the root document, else it is a header in the body somewhere
+// This is called at teardown time, but since we have been cacheing lots of 
+// good information about the mail message (headers, attachments and body), this 
+// is the time that we have to do a lot of completion processing...
+// such as writing the XUL for the attachments and the XUL for the body
+// display
 //
 nsresult
-nsMimeXULEmitter::StartHeader(PRBool rootMailHeader, PRBool headerOnly, const char *msgID,
-                           const char *outCharset)
+nsMimeXULEmitter::Complete()
 {
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
+  // Start off the header as a toolbox!
+  UtilityWriteCRLF("<toolbox>");
 
-  mDocHeader = rootMailHeader;
+  // Start with the subject, from date info!
+  DumpSubjectFromDate();
 
-  if (!mDocHeader)
-  {
-    UtilityWrite("<BLOCKQUOTE><table BORDER=0 BGCOLOR=\"#CCCCCC\" >");
-  }
-  else
-  {
-    WriteXULHeader(msgID);
+  // Continue with the to and cc headers
+  DumpToCC();
 
-    UtilityWrite("<box align=\"horizontal\">");
-    UtilityWrite("<spring flex=\"100%\"/>");
-  }
+  // do the rest of the headers, but these will only be written if
+  // the user has the "show all headers" pref set
+  DumpRestOfHeaders();
 
-  return NS_OK; 
-}
+  // Now close out the header toolbox
+  UtilityWriteCRLF("</toolbox>");
 
-//
-// This will be called for every header field...for now, we are calling the WriteXULTag for
-// each of these calls.
-//
-nsresult
-nsMimeXULEmitter::AddHeaderField(const char *field, const char *value)
-{
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
+  // Now process the body...
+  DumpBody();
 
-  if ( (!field) || (!value) )
-    return NS_OK;
+  // Finalize the XUL document...
+  UtilityWriteCRLF("</window>");
 
-  WriteXULTag(field, value);
+  // Now, just try to check if we still have any data and if so,
+  // try to flush it this one final time
+  PRUint32      written; 
+  if ( (mBufferMgr) && (mBufferMgr->GetSize() > 0))
+    Write("", 0, &written);
+
   return NS_OK;
 }
 
-//
-// This finalizes the header field being parsed.
-//
-nsresult
-nsMimeXULEmitter::EndHeader()
-{
-#ifdef DEBUG_rhp
-  mReallyOutput = PR_TRUE;
-#endif
 
-  if (!mDocHeader)
-    UtilityWrite("</TABLE></BLOCKQUOTE>");
- 
-  return NS_OK; 
+nsresult
+nsMimeXULEmitter::DumpAttachmentMenu()
+{
+/*
+<popup id="toolbarContextMenu">
+<menu>
+<menuitem name="Delete" onclick="mailNewsCore.deleteButton(document.popupElement)">
+</menu>
+</popup>
+*/
+
+  if ( (!mAttachArray) || (mAttachArray->Count() <= 0) )
+    return NS_OK;
+
+  char *buttonXUL = PR_smprintf(
+                      "<titledbutton src=\"chrome://messenger/skin/attach.gif\" value=\"%d Attachments\" align=\"right\"/>", 
+                      mAttachArray->Count());
+
+  if ( (!buttonXUL) || (!*buttonXUL) )
+    return NS_OK;
+
+  UtilityWriteCRLF("<box align=\"horizontal\">");
+  UtilityWriteCRLF(buttonXUL);
+  PR_FREEIF(buttonXUL);
+
+
+  // Now we can finally write out the attachment information...  
+  if (mAttachArray->Count() > 0)
+  {
+    PRInt32     i;
+    
+    for (i=0; i<mAttachArray->Count(); i++)
+    {
+      attachmentInfoType *attachInfo = (attachmentInfoType *)mAttachArray->ElementAt(i);
+      if (!attachInfo)
+        continue;
+
+      UtilityWrite(attachInfo->displayName);
+      UtilityWriteCRLF(" ");
+    }
+  }
+
+  UtilityWriteCRLF("</box>");
+
+  return NS_OK;
 }
 
+nsresult
+nsMimeXULEmitter::DumpAddBookIcon()
+{
+  UtilityWriteCRLF("<box align=\"horizontal\">");
+  UtilityWriteCRLF("<titledbutton src=\"chrome://messenger/skin/addcard.gif\"/>");
+  UtilityWriteCRLF("</box>");
+  return NS_OK;
+}
+
+nsresult
+nsMimeXULEmitter::DumpBody()
+{
+  // Now we will write out the XUL/IFRAME line for the mBody which
+  // we have cached to disk.
+  //
+  char  *url = nsnull;
+  if (mBodyFileSpec)
+    url = nsMimePlatformFileToURL(mBodyFileSpec->GetNativePathCString());
+
+  UtilityWrite("<html:iframe id=\"mail-body-frame\" src=\"");
+  UtilityWrite(url);
+  UtilityWriteCRLF("\" border=\"0\" scrolling=\"auto\" resize=\"yes\" width=\"100%\" height=\"100%\"/>");
+  PR_FREEIF(url);
+  return NS_OK;
+}
+
+nsresult
+nsMimeXULEmitter::OutputGenericHeader(const char *aHeaderVal)
+{
+  char      *val = GetHeaderValue(aHeaderVal);
+  nsresult  rv;
+
+  if (val)
+  {
+    UtilityWriteCRLF("<box align=\"horizontal\" style=\"padding: 2px;\">");
+    rv = WriteXULTag(aHeaderVal, val);
+    UtilityWriteCRLF("</box>");
+    return rv;
+  }
+  else
+    return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsMimeXULEmitter::DumpSubjectFromDate()
+{
+  UtilityWriteCRLF("<toolbar>");
+  UtilityWriteCRLF("<box name=\"header-splitter\" align=\"horizontal\" flex=\"100%\" >");
+
+      UtilityWriteCRLF("<box name=\"header-part1\" align=\"vertical\" flex=\"100%\">");
+      UtilityWriteCRLF("<spring flex=\"2\"/>");
+
+          // This is the envelope information
+          OutputGenericHeader(HEADER_SUBJECT);
+          OutputGenericHeader(HEADER_FROM);
+          OutputGenericHeader(HEADER_DATE);
+
+      UtilityWriteCRLF("<spring flex=\"2\"/>");
+      UtilityWriteCRLF("</box>");
+
+
+      UtilityWriteCRLF("<box name=\"header-attachment\" align=\"horizontal\" flex=\"100%\">");
+      UtilityWriteCRLF("<spring flex=\"1\"/>");
+
+        // Now the addbook and attachment icons need to be displayed
+        DumpAddBookIcon();
+        DumpAttachmentMenu();
+
+      UtilityWriteCRLF("<spring flex=\"1\"/>");
+      UtilityWriteCRLF("</box>");
+
+  UtilityWriteCRLF("</box>");
+  UtilityWriteCRLF("</toolbar>");
+
+  return NS_OK;
+}
+
+nsresult
+nsMimeXULEmitter::DumpToCC()
+{
+  UtilityWriteCRLF("<toolbar>");
+
+    UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"100%\" style=\"width: 100%; \" >");
+      UtilityWriteCRLF("<spring flex=\"1\"/>");
+
+        OutputGenericHeader(HEADER_TO);
+        UtilityWriteCRLF("</box>");
+
+        UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\">");
+
+      UtilityWriteCRLF("<spring flex=\"1\"/>");
+      OutputGenericHeader(HEADER_CC);
+    UtilityWriteCRLF("</box>");
+
+  UtilityWriteCRLF("</toolbar>");
+  return NS_OK;
+}
+
+nsresult
+nsMimeXULEmitter::DumpRestOfHeaders()
+{
+  if (mHeaderDisplayType != nsMimeHeaderDisplayTypes::AllHeaders)
+    return NS_OK;
+
+  UtilityWriteCRLF("<toolbar>");
+
+  UtilityWriteCRLF("</toolbar>");
+  return NS_OK;
+}
