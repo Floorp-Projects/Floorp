@@ -167,6 +167,10 @@ public:
   void NextLine() {
     mLineNumber++;
   }
+  
+  PRInt32 GetLineNumber() const {
+    return mLineNumber;
+  }
 
   static PRBool TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
                                   const nsStylePosition* aPosition);
