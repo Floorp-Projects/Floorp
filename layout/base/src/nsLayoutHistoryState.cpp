@@ -18,14 +18,15 @@
 
 #include "nsILayoutHistoryState.h"
 #include "nsHashtable.h"
+#include "nsIStatefulFrame.h" // Get StateType enum
 
 class HistoryKey: public nsHashKey {
  private:
    PRUint32 itsHash;
    
  public:
-   HistoryKey(PRUint32 aContentID, PRInt32 aStateType) {
-     itsHash = aContentID + aStateType;
+   HistoryKey(PRUint32 aContentID, StateType aStateType) {
+     itsHash = aContentID*eNumStateTypes + aStateType;
    }
 
    HistoryKey(PRUint32 aKey) {
@@ -56,10 +57,10 @@ public:
   // nsILayoutHistoryState
   NS_IMETHOD AddState(PRUint32 aContentID,
     nsISupports* aState,
-    PRInt32 aStateType = NS_HISTORY_STATE_TYPE_NONE);
+    StateType aStateType = eNoType);
   NS_IMETHOD GetState(PRUint32 aContentID,
     nsISupports** aState,
-    PRInt32 aStateType = NS_HISTORY_STATE_TYPE_NONE);
+    StateType aStateType = eNoType);
 
 private:
   nsSupportsHashtable mStates;
@@ -98,7 +99,7 @@ NS_IMPL_ISUPPORTS(nsLayoutHistoryState,
 NS_IMETHODIMP
 nsLayoutHistoryState::AddState(PRUint32 aContentID,                                
                                nsISupports* aState, 
-                               PRInt32 aStateType)
+                               StateType aStateType)
 {
 	HistoryKey key(aContentID, aStateType);
 	void * res = mStates.Put(&key, (void *) aState);
@@ -119,7 +120,7 @@ nsLayoutHistoryState::AddState(PRUint32 aContentID,
 NS_IMETHODIMP
 nsLayoutHistoryState::GetState(PRUint32 aContentID,                                
                                nsISupports** aState,
-                               PRInt32 aStateType)
+                               StateType aStateType)
 {
     nsresult rv = NS_OK;
     HistoryKey key(aContentID, aStateType);
@@ -136,4 +137,3 @@ nsLayoutHistoryState::GetState(PRUint32 aContentID,
 	}
   return rv;
 }
-
