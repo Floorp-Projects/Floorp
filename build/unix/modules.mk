@@ -13,7 +13,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is build/unix/modules.mk from the Mozilla source tree. The Initial Developer of the Original Code is Christopher Seawood. Portions created by Christopher Seawood are Copyright (C) 2000-2002 Christopher Seawood. All Rights Reserved.
+# The Original Code is build/unix/modules.mk from the Mozilla source tree.
 #
 # The Initial Developer of the Original Code is
 # Christopher Seawood.
