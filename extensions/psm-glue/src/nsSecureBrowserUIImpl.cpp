@@ -58,7 +58,6 @@
 #include "nsISecurityEventSink.h"
 
 #include "nsIPrompt.h"
-#include "nsICommonDialogs.h"
 #include "nsIPref.h"
 
 #include "nsIFormSubmitObserver.h"
@@ -68,7 +67,6 @@
 #include "nsSSLIOLayer.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define ENTER_SITE_PREF      "security.warn_entering_secure"

@@ -47,12 +47,9 @@
 #include <nsIScriptGlobalObject.h>
 #include <nsIScriptGlobalObjectOwner.h>
 #include <nsIPrompt.h>
-#include <nsICommonDialogs.h>
 
 #include <prmem.h>
 
-
-static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
 
 NS_IMPL_ISUPPORTS4( nsP3PUI, nsIP3PUI,
                              nsIP3PCUI,

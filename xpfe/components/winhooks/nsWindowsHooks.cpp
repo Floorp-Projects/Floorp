@@ -27,7 +27,7 @@
 #include "nsWindowsHooksUtil.cpp"
 #include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
-#include "nsICommonDialogs.h"
+#include "nsIPromptService.h"
 #include "nsIStringBundle.h"
 #include "nsIAllocator.h"
 #include "nsICmdLineService.h"
@@ -273,12 +273,11 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                 //   o We need the common dialog service to show the dialog.
                 //   o We need the string bundle service to fetch the appropriate
                 //     dialog text.
-                nsCID commonDlgCID = NS_CommonDialog_CID;
                 nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
-                nsCOMPtr<nsICommonDialogs> commonDlgService( do_GetService( commonDlgCID, &rv ) );
+                nsCOMPtr<nsIPromptService> promptService( do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
                 nsCOMPtr<nsIStringBundleService> bundleService( do_GetService( bundleCID, &rv ) );
 
-                if ( commonDlgService && bundleService ) {
+                if ( promptService && bundleService ) {
                     // Next, get bundle that provides text for dialog.
                     nsILocale *locale = 0;
                     nsIStringBundle *bundle;
@@ -326,7 +325,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                             //    o Cancel
                             //    o No
                             // because UniversalDialog will move "Cancel" to the right.
-                            rv = commonDlgService->UniversalDialog( aParent,
+                            rv = promptService->UniversalDialog( aParent,
                                                                     0, // title          
                                                                     title,    // dlg title
                                                                     text,     // dlg text      

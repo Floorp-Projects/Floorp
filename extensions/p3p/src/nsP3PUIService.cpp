@@ -31,14 +31,14 @@
 #include <nsIScriptGlobalObject.h>
 #include <nsIScriptGlobalObjectOwner.h>
 #include <nsLayoutCID.h>
-#include <nsICommonDialogs.h>
+#include <nsIPromptService.h>
+#include <nsIDOMWindow.h>
 
 // ****************************************************************************
 // nsP3PUIService Implementation routines
 // ****************************************************************************
 
 static NS_DEFINE_CID( kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID );
-static NS_DEFINE_CID( kCommonDialogsCID,    NS_CommonDialog_CID );
 
 // P3P UI Service generic factory constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT( nsP3PUIService, Init );
@@ -369,8 +369,8 @@ nsP3PUIService::WarningNotPrivate(nsIDOMWindowInternal * aDOMWindowInternal)
   mPrefServ->GetBoolPref( P3P_PREF_WARNINGNOTPRIVATE, &bWarnPref );
   if (bWarnPref) {
 
-    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    if (dialog) {
 
       nsAutoString windowTitle, message, showAgain;
 
@@ -378,8 +378,9 @@ nsP3PUIService::WarningNotPrivate(nsIDOMWindowInternal * aDOMWindowInternal)
       mP3PService->GetLocaleString( "WarningNotPrivate", message );
       mP3PService->GetLocaleString( "ShowAgain", showAgain );
 
+      nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       PRBool outCheckValue = PR_TRUE;
-      dialog->AlertCheck( aDOMWindowInternal,
+      dialog->AlertCheck( parent,
                           windowTitle.GetUnicode(),
                           message.GetUnicode(),
                           showAgain.GetUnicode(),
@@ -421,8 +422,8 @@ nsP3PUIService::WarningPartialPrivacy(nsIDOMWindowInternal * aDOMWindowInternal)
   mPrefServ->GetBoolPref( P3P_PREF_WARNINGPARTIALPRIVACY, &bWarnPref );
   if (bWarnPref) {
 
-    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    if (dialog) {
 
       nsAutoString windowTitle, message, showAgain;
 
@@ -431,7 +432,8 @@ nsP3PUIService::WarningPartialPrivacy(nsIDOMWindowInternal * aDOMWindowInternal)
       mP3PService->GetLocaleString( "ShowAgain", showAgain );
 
       PRBool outCheckValue = PR_TRUE;
-      dialog->AlertCheck( aDOMWindowInternal,
+      nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
+      dialog->AlertCheck( parent,
                           windowTitle.GetUnicode(),
                           message.GetUnicode(),
                           showAgain.GetUnicode(),
@@ -459,8 +461,8 @@ nsP3PUIService::WarningPostToNotPrivate(nsIDOMWindowInternal * aDOMWindowInterna
   mPrefServ->GetBoolPref( P3P_PREF_WARNINGPOSTTONOTPRIVATE, &bWarnPref );
   if (bWarnPref) {
 
-    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    if (dialog) {
 
       nsAutoString windowTitle, message, showAgain;
 
@@ -469,6 +471,7 @@ nsP3PUIService::WarningPostToNotPrivate(nsIDOMWindowInternal * aDOMWindowInterna
       mP3PService->GetLocaleString( "ShowAgain", showAgain );
 
       PRBool outCheckValue = PR_TRUE;
+      nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       dialog->ConfirmCheck( aDOMWindowInternal,
                             windowTitle.GetUnicode(),
                             message.GetUnicode(),
@@ -498,8 +501,8 @@ nsP3PUIService::WarningPostToBrokenPolicy(nsIDOMWindowInternal * aDOMWindowInter
   mPrefServ->GetBoolPref( P3P_PREF_WARNINGPOSTTOBROKENPOLICY, &bWarn2Pref );
   if (bWarn2Pref) {
 
-    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    if (dialog) {
 
       nsAutoString windowTitle, message, showAgain;
 
@@ -508,6 +511,7 @@ nsP3PUIService::WarningPostToBrokenPolicy(nsIDOMWindowInternal * aDOMWindowInter
       mP3PService->GetLocaleString( "ShowAgain", showAgain );
 
       PRBool outCheckValue = PR_TRUE;
+      nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
       dialog->ConfirmCheck( aDOMWindowInternal,
                             windowTitle.GetUnicode(),
                             message.GetUnicode(),
@@ -537,8 +541,8 @@ nsP3PUIService::WarningPostToNoPolicy(nsIDOMWindowInternal * aDOMWindowInternal,
   mPrefServ->GetBoolPref( P3P_PREF_WARNINGPOSTTONOPOLICY, &bWarn3Pref );
   if (bWarn3Pref) {
 
-    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPromptService> dialog(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+    if (dialog) {
 
       nsAutoString windowTitle, message, showAgain;
 
@@ -547,7 +551,8 @@ nsP3PUIService::WarningPostToNoPolicy(nsIDOMWindowInternal * aDOMWindowInternal,
       mP3PService->GetLocaleString( "ShowAgain", showAgain );
 
       PRBool outCheckValue = PR_TRUE;
-      dialog->ConfirmCheck( aDOMWindowInternal,
+      nsCOMPtr<nsIDOMWindow> parent(do_QueryInterface(aDOMWindowInternal));
+      dialog->ConfirmCheck( parent,
                             windowTitle.GetUnicode(),
                             message.GetUnicode(),
                             showAgain.GetUnicode(),

@@ -30,7 +30,7 @@ MODULE       = p3p
 LIBRARY_NAME = p3p
 IS_COMPONENT = 1
 
-REQUIRES     = p3p xpcom
+REQUIRES     = p3p xpcom windowwatcher
 
 CPPSRCS      =                      \
 		nsP3PModule.cpp             \

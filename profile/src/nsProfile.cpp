@@ -71,7 +71,7 @@
 
 #include "nsIScriptGlobalObject.h"
 #include "nsIBaseWindow.h"
-#include "nsICommonDialogs.h"
+#include "nsIDialogParamBlock.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWindowMediator.h"
 
@@ -114,10 +114,8 @@
 // we want everyone to have the debugging info to the console for now
 // to help track down profile manager problems
 // when we ship, we'll turn this off
-#define DEBUG_profile 1
 #undef DEBUG_profile_verbose
 #ifdef DEBUG_seth
-#define DEBUG_profile_verbose 1
 #endif
 
 // ProfileAccess varaible (gProfileDataAccess) to access registry operations
@@ -159,7 +157,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
@@ -2007,7 +2004,7 @@ nsProfile::ShowProfileWizard(void)
         // list to the dialog
         //-----------------------------------------------------
         nsCOMPtr<nsIDialogParamBlock> ioParamBlock;
-        rv = nsComponentManager::CreateInstance(kDialogParamBlockCID,
+        rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
                                             nsnull,
                                             NS_GET_IID(nsIDialogParamBlock),
                                             getter_AddRefs(ioParamBlock));

@@ -150,9 +150,7 @@ static NS_DEFINE_CID(kXULPopupListenerCID, NS_XULPOPUPLISTENER_CID);
 #ifdef DEBUG_rods
 #define DEBUG_MENUSDEL 1
 #endif
-#include "nsICommonDialogs.h"
 
-static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #include "nsIWebShell.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);

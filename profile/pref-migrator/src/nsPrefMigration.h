@@ -30,7 +30,6 @@
 #include "nsFileSpec.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsICommonDialogs.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIFileSpec.h"
