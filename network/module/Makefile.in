@@ -15,76 +15,68 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH			= ../..
+DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE			= netlib
+MODULE		= netlib
 LIBRARY_NAME	= netlib
 
-CPPSRCS			= \
-			  nsNetService.cpp    \
-			  nsNetThread.cpp     \
-			  nsNetStream.cpp     \
-			  nsNetStreamLoader.cpp \
-			  nsHttpUrl.cpp       \
-			  nsStubContext.cpp   \
-			  nsNetStubs.cpp      \
-			  nsNetFile.cpp		\
-			  nsNetIDs.cpp        \
-			  nsLoadAttribs.cpp   \
-			  nsNetFactory.cpp    \
-			  nsHttpURLFactory.cpp    \
-			  nsSocketTransport.cpp   \
-			  $(NULL)
+CPPSRCS		= \
+		  nsNetService.cpp \
+		  nsNetThread.cpp \
+		  nsNetStream.cpp \
+		  nsNetStreamLoader.cpp \
+		  nsHttpUrl.cpp \
+		  nsStubContext.cpp \
+		  nsNetStubs.cpp \
+		  nsNetFile.cpp \
+		  nsNetIDs.cpp \
+		  nsLoadAttribs.cpp \
+		  nsNetFactory.cpp \
+		  nsHttpURLFactory.cpp \
+		  nsSocketTransport.cpp \
+		  $(NULL)
 
-EXPORTS = nsINetService.h       \
-          nsINetSupport.h		\
-          nsIRelatedLinks.h     \
-          nsIRefreshUrl.h       \
-          nsIConnectionInfo.h   \
-          nsIURLGroup.h         \
-          nsINetlibURL.h        \
-          nsIProtocol.h         \
-          nsIProtocolURLFactory.h   \
-          nsIUnicharStreamLoader.h	\
-          nsSocketTransport.h	\
-          $(NULL)
+EXPORTS		= \
+		  nsINetService.h \
+		  nsINetSupport.h \
+		  nsIRelatedLinks.h \
+		  nsIRefreshUrl.h \
+		  nsIConnectionInfo.h \
+		  nsIURLGroup.h \
+		  nsINetlibURL.h \
+		  nsIProtocol.h \
+		  nsIProtocolURLFactory.h \
+		  nsIUnicharStreamLoader.h \
+		  nsSocketTransport.h \
+		  $(NULL)
 
 ifdef ENABLE_TESTS
-DIRS += tests
+DIRS		+= tests
 endif
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-include $(topsrcdir)/config/config.mk
-
-NO_STATIC_LIB=1
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
 
-install::
-	$(INSTALL) $(srcdir)/res/gopher-audio.gif   $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-binary.gif  $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-find.gif    $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-image.gif   $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-menu.gif    $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-movie.gif   $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-telnet.gif  $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-text.gif    $(DIST)/bin/res/network
-	$(INSTALL) $(srcdir)/res/gopher-unknown.gif $(DIST)/bin/res/network
+IMAGES		= \
+		  $(srcdir)/res/gopher-audio.gif \
+		  $(srcdir)/res/gopher-binary.gif \
+		  $(srcdir)/res/gopher-find.gif \
+		  $(srcdir)/res/gopher-image.gif \
+		  $(srcdir)/res/gopher-menu.gif \
+		  $(srcdir)/res/gopher-movie.gif \
+		  $(srcdir)/res/gopher-telnet.gif \
+		  $(srcdir)/res/gopher-text.gif \
+		  $(srcdir)/res/gopher-unknown.gif \
+		  $(NULL)
 
-clobber::
-	rm -f $(DIST)/bin/res/network/gopher-audio.gif
-	rm -f $(DIST)/bin/res/network/gopher-binary.gif
-	rm -f $(DIST)/bin/res/network/gopher-find.gif
-	rm -f $(DIST)/bin/res/network/gopher-image.gif
-	rm -f $(DIST)/bin/res/network/gopher-menu.gif
-	rm -f $(DIST)/bin/res/network/gopher-movie.gif
-	rm -f $(DIST)/bin/res/network/gopher-telnet.gif
-	rm -f $(DIST)/bin/res/network/gopher-text.gif
-	rm -f $(DIST)/bin/res/network/gopher-unknown.gif
+GARBAGE		+= $(wildcard $(DIST)/bin/res/network/gopher-*.gif)
+
+install::
+	$(INSTALL) $(IMAGES) $(DIST)/bin/res/network
 

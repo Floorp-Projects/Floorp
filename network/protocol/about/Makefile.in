@@ -22,16 +22,12 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE			= abouturl
+MODULE		= abouturl
 LIBRARY_NAME	= abouturl
 
-CSRCS		= \
-	mkabout.c	\
-	$(NULL)
+CSRCS		= mkabout.c
 
-EXPORTS= $(srcdir)/abouturl.h
-
-NO_STATIC_LIB=1
+EXPORTS		= $(srcdir)/abouturl.h
 
 include $(topsrcdir)/config/rules.mk
 
