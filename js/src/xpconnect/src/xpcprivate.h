@@ -77,9 +77,14 @@
 #include "prthread.h"
 #include "nsDeque.h"
 
+#ifdef XPCONNECT_STANDALONE
+#include <math.h>
+#include "nsString.h"
+#else
 #include "nsIScriptObjectOwner.h"   // for DOM hack in xpcconvert.cpp
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
+#endif
 
 #include "nsIScriptError.h"
 

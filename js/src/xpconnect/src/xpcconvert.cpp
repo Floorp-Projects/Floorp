@@ -144,7 +144,7 @@ GetISupportsFromJSObject(JSContext* cx, JSObject* obj, nsISupports** iface)
 
 /***************************************************************************/
 // These are copied from nsJSUtils.cpp in DOMLand
- 
+#ifndef XPCONNECT_STANDALONE 
 static nsresult 
 GetStaticScriptGlobal(JSContext* aContext,
                       JSObject* aObj,
@@ -209,6 +209,7 @@ GetDynamicScriptGlobal(JSContext* aContext,
   }
   return nativeGlobal ? NS_OK : NS_ERROR_FAILURE;
 }  
+#endif
 #endif
 /***************************************************************************/
 /***************************************************************************/
@@ -734,6 +735,7 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
     }
     else
     {
+#ifndef XPCONNECT_STANDALONE
         // is this a DOM wrapped native object?
         nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(src);
         if(owner)
@@ -766,6 +768,7 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
         }
         else
         {
+#endif
             // not a DOM object. Just try to build a wrapper                            
             nsXPCWrappedNativeScope* xpcscope;
             XPCContext* xpcc;
@@ -783,7 +786,9 @@ XPCConvert::NativeInterface2JSObject(JSContext* cx,
                     return JS_TRUE;
                 }
             }
+#ifndef XPCONNECT_STANDALONE
         }
+#endif
     }
     return JS_FALSE;
 }

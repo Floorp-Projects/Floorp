@@ -37,6 +37,8 @@
 
 #include "xpctest_private.h"
 
+#ifndef XPCONNECT_STANDALONE
+
 class xpctestEcho : public nsIEcho, public nsITimerCallback
 {
 public:
@@ -469,3 +471,4 @@ xpctest::ConstructEcho(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
+#endif // XPCONNECT_STANDALONE

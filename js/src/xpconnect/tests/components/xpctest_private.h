@@ -52,8 +52,10 @@
 #include "xpctest.h"
 #include "jsapi.h"
 
+#ifndef XPCONNECT_STANDALONE
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#endif
 
 // {ED132C20-EED1-11d2-BAA4-00805F8A5DD7}
 #define NS_ECHO_CID \
