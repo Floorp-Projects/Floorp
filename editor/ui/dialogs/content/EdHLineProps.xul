@@ -48,15 +48,15 @@
       <columns><column/><column/><column /></columns>
       <rows>
         <row vertical-align="baseline" autostretch="never">
-          <text class="dialog" value="&heightEditField.label;"/>
-          <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
-          <text class="dialog" value="&pixelsPopup.value;"/>
-        </row>
-        <row vertical-align="baseline" autostretch="never">
           <text class="dialog" value="&widthEditField.label;"/>
           <textfield class="narrow" id="width" flex="1" onkeyup="forceInteger('width')"/>
           <menulist id="pixelOrPercentMenulist"/>
           <!-- menupopup and menuitems added by JS -->
+        </row>
+        <row vertical-align="baseline" autostretch="never">
+          <text class="dialog" value="&heightEditField.label;"/>
+          <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
+          <text class="dialog" value="&pixelsPopup.value;"/>
         </row>
       </rows>
     </grid>        
