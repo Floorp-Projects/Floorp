@@ -48,7 +48,8 @@ class nsListControlFrame : public nsScrollFrame,
                            public nsIDOMMouseListener,
                            public nsIDOMMouseMotionListener,
                            public nsIDOMKeyListener,
-                           public nsISelectControlFrame
+                           public nsISelectControlFrame,
+			   public nsIStatefulFrame
 {
 public:
   friend nsresult NS_NewListControlFrame(nsIFrame** aNewFrame);
