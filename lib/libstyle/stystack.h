@@ -16,11 +16,7 @@
  * Reserved.
  */
 
-#ifndef NSPR20
-#include "prhash.h"
-#else
 #include "plhash.h"
-#endif
 
 #ifndef SML_HEADER
 #define SML_HEADER

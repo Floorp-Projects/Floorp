@@ -25,11 +25,7 @@
 /* #include "jsscope.h" */
 #include "jsatom.h"
 
-#ifndef NSPR20
-#include "prhash.h"
-#else
 #include "plhash.h"
-#endif
 
 extern void LO_SetStyleObjectRefs(MWContext *context, void *tags, void *classes, void *ids);
 

@@ -127,7 +127,6 @@ void SEC_Init(void)
 }
 
 #ifdef SOURCE_KIT
-#ifdef NSPR20
 
 static PRIntervalTime sec_io_timeout = PR_INTERVAL_NO_TIMEOUT;
 
@@ -172,31 +171,4 @@ int SEC_Recv(int s, void *buf, int len, int flags)
     return rv;
 }
 
-#else /* NSPR20 */
-
-int SEC_Send(int s, const void *buf, int len, int flags)
-{
-    int rv;
-    /* Brutal workaround for bug in Solaris 2.4 send routine */
-#if defined(__sun) && defined(SYSV)
-    rv = XP_SOCK_SEND(s, buf, len, flags);
-#else
-    rv = XP_SOCK_WRITE(s, buf, len);
-#endif
-    if (rv < 0)
-	XP_SetError(XP_SOCK_ERRNO);
-    return rv;
-}
-
-int SEC_Recv(int s, void *buf, int len, int flags)
-{
-    int rv;
-
-    rv = XP_SOCK_RECV(s, buf, len, flags);
-    if (rv < 0)
-	XP_SetError(XP_SOCK_ERRNO);
-    return rv;
-}
-
-#endif /* NSPR20 */
 #endif /* SOURCE_KIT */
