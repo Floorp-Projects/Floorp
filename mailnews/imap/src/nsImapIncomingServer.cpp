@@ -1438,7 +1438,7 @@ NS_IMETHODIMP  nsImapIncomingServer::OnlineFolderCreateFailed(const char *aFolde
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, const char *newName)
+NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(nsIMsgWindow *msgWindow, const char *oldName, const char *newName)
 {
     nsresult rv = NS_ERROR_FAILURE;
     if (newName && *newName)
@@ -1472,7 +1472,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(const char *oldName, cons
 
 		nsCOMPtr<nsIMsgImapMailFolder> parentImapFolder = do_QueryInterface(parent);
         if (parentImapFolder)
-            parentImapFolder->RenameClient(me,oldName, newName);
+            parentImapFolder->RenameClient(msgWindow, me,oldName, newName);
         }
     }
     return rv;

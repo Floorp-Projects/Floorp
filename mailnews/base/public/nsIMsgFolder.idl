@@ -159,7 +159,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * @param name the new name of the folder
    */
 	void rename(in wstring name, in nsIMsgWindow msgWindow);
-    void renameSubFolders( in nsIMsgFolder oldFolder);
+    void renameSubFolders( in nsIMsgWindow msgWindow, in nsIMsgFolder oldFolder);
   /**
    * looks in immediate children of this folder for the given name
    *
@@ -366,7 +366,9 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   const unsigned long allMessageCountNotifications    = 0;
   void enableNotifications(in long notificationType, in boolean enable);
   boolean isCommandEnabled(in string command);
-  boolean changeFilterDestination(in nsIMsgFolder folder, in boolean caseInsensitive);
+  boolean matchOrChangeFilterDestination(in nsIMsgFolder folder, in boolean caseInsensitive);
+  boolean confirmFolderDeletionForFilter(in nsIMsgWindow msgWindow);
+  void alertFilterChanged(in nsIMsgWindow msgWindow);
   void notifyCompactCompleted();
 
   attribute nsIMsgRetentionSettings retentionSettings;

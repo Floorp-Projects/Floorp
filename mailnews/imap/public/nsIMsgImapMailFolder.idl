@@ -35,7 +35,7 @@ interface nsIMsgImapMailFolder : nsISupports {
   void prepareToRename();
   void performExpand(in nsIMsgWindow aMsgWindow);
   void recursiveCloseActiveConnections(in nsIImapIncomingServer aImapServer);
-  void renameClient(in nsIMsgFolder msgFolder, in string oldName, in string newName);
+  void renameClient(in nsIMsgWindow msgWindow, in nsIMsgFolder msgFolder, in string oldName, in string newName);
 
   // these are used for offline synchronization
   void storeImapFlags(in long flags, in boolean addFlags, out nsMsgKey keysToFlag, in long numKeys);

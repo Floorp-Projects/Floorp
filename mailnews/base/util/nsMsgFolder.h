@@ -41,6 +41,7 @@
 #include "nsIMsgFilterList.h"
 #include "nsIUrlListener.h"
 #include "nsIFileSpec.h"
+class nsIStringBundle;
 
  /* 
   * MsgFolder
@@ -101,7 +102,7 @@ public:
   NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *msgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray);
   NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
   NS_IMETHOD Rename(const PRUnichar *name, nsIMsgWindow *msgWindow);
-  NS_IMETHOD RenameSubFolders(nsIMsgFolder *msgFolder);
+  NS_IMETHOD RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolder *msgFolder);
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval);
   NS_IMETHOD IsAncestorOf(nsIMsgFolder *folder, PRBool *_retval);
   NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder, char **_retval); 
@@ -176,6 +177,8 @@ public:
   NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, PRBool caseInsensitive, nsIMsgFolder **_retval); 
   NS_IMETHOD EnableNotifications(PRInt32 notificationType, PRBool enable);
   NS_IMETHOD NotifyCompactCompleted();
+  NS_IMETHOD ConfirmFolderDeletionForFilter(nsIMsgWindow *msgWindow, PRBool *confirmed);
+  NS_IMETHOD AlertFilterChanged(nsIMsgWindow *msgWindow);
 
   // end NS_DECL_NSIMSGFOLDER
   
@@ -237,7 +240,11 @@ protected:
 
   // helper routine to parse the URI and update member variables
   nsresult parseURI(PRBool needServer=PR_FALSE);
-  nsresult WarnAndDisableFilter(nsIMsgWindow *msgWindow);
+  nsresult GetBaseStringBundle(nsIStringBundle **aBundle);
+  nsresult GetStringFromBundle(const char* msgName, PRUnichar **aResult);
+  nsresult ThrowConfirmationPrompt(nsIMsgWindow *msgWindow, const PRUnichar *confirmString, PRBool *confirmed);
+  nsresult GetWarnFilterChanged(PRBool *aVal);
+  nsresult SetWarnFilterChanged(PRBool aVal);
 protected:
   PRUint32 mFlags;
   nsWeakPtr mParent;     //This won't be refcounted for ownership reasons.

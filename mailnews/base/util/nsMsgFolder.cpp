@@ -58,8 +58,8 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIStringBundle.h"
-#include "nsTextFormatter.h"
+
+#define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1172,11 +1172,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage, nsIMsgWindow *m
 
 	// now delete the disk storage for _this_
     if (deleteStorage && (status == NS_OK))
-    {
-        if ((mFlags & MSG_FOLDER_FLAG_TRASH) == 0)
-          WarnAndDisableFilter(msgWindow);            
         status = Delete();
-    }
 	return status;
 }
 
@@ -1222,7 +1218,7 @@ NS_IMETHODIMP nsMsgFolder::Rename(const PRUnichar *name, nsIMsgWindow *msgWindow
 
 }
 
-NS_IMETHODIMP nsMsgFolder::RenameSubFolders(nsIMsgFolder *oldFolder)
+NS_IMETHODIMP nsMsgFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2615,45 +2611,127 @@ NS_IMETHODIMP nsMsgFolder::GenerateMessageURI(nsMsgKey msgKey, char **aURI)
   return NS_OK;
 }
 
-nsresult nsMsgFolder::WarnAndDisableFilter(nsIMsgWindow *msgWindow)
+nsresult
+nsMsgFolder::GetBaseStringBundle(nsIStringBundle **aBundle)
 {
-  nsresult rv = NS_OK;
-  PRBool changed =PR_FALSE;
-  rv = ChangeFilterDestination(nsnull, PR_FALSE, &changed);
-  if (msgWindow && changed) 
+  nsresult rv=NS_OK;
+  NS_ENSURE_ARG_POINTER(aBundle);
+  nsCOMPtr<nsIStringBundleService> bundleService =
+         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  nsCOMPtr<nsIStringBundle> bundle;
+  if (bundleService && NS_SUCCEEDED(rv))
+    bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
+                                 getter_AddRefs(bundle));
+  *aBundle = bundle;
+  NS_IF_ADDREF(*aBundle);
+  return rv;
+}
+
+nsresult //Do not use this routine if you have to call it very often because it creates a new bundle each time
+nsMsgFolder::GetStringFromBundle(const char *msgName, PRUnichar **aResult)
+{ 
+  nsresult rv=NS_OK;
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsCOMPtr <nsIStringBundle> bundle;
+  rv = GetBaseStringBundle(getter_AddRefs(bundle));
+  if (NS_SUCCEEDED(rv) && bundle)
+    rv=bundle->GetStringFromName(NS_ConvertASCIItoUCS2(msgName).get(), aResult);
+  return rv;
+  
+}
+
+nsresult
+nsMsgFolder::ThrowConfirmationPrompt(nsIMsgWindow *msgWindow, const PRUnichar *confirmString, PRBool *confirmed)
+{
+  nsresult rv=NS_OK;
+  if (msgWindow) 
   {
     nsCOMPtr <nsIDocShell> docShell;
     msgWindow->GetRootDocShell(getter_AddRefs(docShell));
-    nsCOMPtr<nsIStringBundleService> bundleService =
-            do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    if (bundleService)
+    if (docShell)
     {
-      nsCOMPtr<nsIStringBundle> bundle;
-      bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
-                getter_AddRefs(bundle));
-      if (bundle)
-      {
-        nsXPIDLString formatString;
-        bundle->GetStringFromName(NS_LITERAL_STRING("disableFilter").get(),
-                getter_Copies(formatString));
-        nsXPIDLString folderName;
-        GetName(getter_Copies(folderName));
-        if (folderName && formatString)
-        {
-          PRUnichar *alertString = nsTextFormatter::smprintf(formatString.get(), folderName.get());
-          if (docShell)
-          { 
-            nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
-            if (dialog && alertString)
-            {
-              dialog->Alert(nsnull, alertString);
-              nsTextFormatter::smprintf_free(alertString);
-            }
-          }
-        }
-      }
+      nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+      if (dialog && confirmString)
+        dialog->Confirm(nsnull, confirmString, confirmed);
     }
   }
+  return rv;
+}
+
+
+NS_IMETHODIMP nsMsgFolder::ConfirmFolderDeletionForFilter(nsIMsgWindow *msgWindow, PRBool *confirmed)
+{
+  nsCOMPtr <nsIStringBundle> bundle;
+  nsresult rv = GetBaseStringBundle(getter_AddRefs(bundle));
+  if (NS_SUCCEEDED(rv) && bundle)
+  {
+    nsXPIDLString folderName;
+    GetName(getter_Copies(folderName));
+    const PRUnichar *formatStrings[] =
+    {
+      folderName
+    };
+    nsXPIDLString confirmString;
+    rv = bundle->FormatStringFromName(NS_ConvertASCIItoUCS2("confirmFolderDeletionForFilter").get(),
+                                      formatStrings, 1,
+                                      getter_Copies(confirmString));
+
+    rv = ThrowConfirmationPrompt(msgWindow, confirmString.get(), confirmed);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgFolder::AlertFilterChanged(nsIMsgWindow *msgWindow)
+{
+  nsresult rv = NS_OK;
+  PRBool checkBox=PR_FALSE;
+  GetWarnFilterChanged(&checkBox);
+  if (msgWindow && !checkBox) 
+  {
+    nsCOMPtr <nsIDocShell> docShell;
+    msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    nsXPIDLString alertString;
+    rv = GetStringFromBundle("alertFilterChanged", getter_Copies(alertString));
+    nsXPIDLString alertCheckbox;
+    rv = GetStringFromBundle("alertFilterCheckbox", getter_Copies(alertCheckbox));
+    if (alertString && alertCheckbox && docShell)
+    {
+      nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+      if (dialog)
+      {
+        dialog->AlertCheck(nsnull, alertString, alertCheckbox, &checkBox);
+        SetWarnFilterChanged(checkBox);
+      }   
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsMsgFolder::GetWarnFilterChanged(PRBool *aVal)
+{
+  NS_ENSURE_ARG(aVal);
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefService)
+  {
+    rv = prefService->GetBoolPref(PREF_MAIL_WARN_FILTER_CHANGED, aVal);
+    if (NS_FAILED(rv)) 
+    {
+      *aVal = PR_FALSE;
+      rv = NS_OK;
+    }
+  }
+  return rv;
+}
+
+nsresult 
+nsMsgFolder::SetWarnFilterChanged(PRBool aVal)
+{
+  nsresult rv=NS_OK;
+  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefService)
+    rv = prefService->SetBoolPref(PREF_MAIL_WARN_FILTER_CHANGED, aVal);
   return rv;
 }
 

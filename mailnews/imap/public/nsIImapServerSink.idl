@@ -32,7 +32,7 @@ interface nsIImapServerSink : nsISupports {
 	void discoveryDone();
 	void onlineFolderDelete(in string aFolderName);
 	void onlineFolderCreateFailed(in string aFolderName);
-	void onlineFolderRename(in string oldName, in string newName);
+	void onlineFolderRename(in nsIMsgWindow msgWindow, in string oldName, in string newName);
 	void folderIsNoSelect(in string aFolderName, out boolean aResult);
 	void setFolderAdminURL(in string aFolderName, in string adminUrl);
   boolean folderVerifiedOnline(in string aFolderName);

@@ -1215,7 +1215,7 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const PRUnichar *newName, nsIMsgWindow *
 
     nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
-        rv = imapService->RenameLeaf(m_eventQueue, this, newName, this,
+        rv = imapService->RenameLeaf(m_eventQueue, this, newName, this, msgWindow,
                                      nsnull);
     return rv;
 }
@@ -2030,14 +2030,25 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
                                                          urlListener,
                                                          nsnull);
                       else
-                          rv = imapService->MoveFolder(m_eventQueue,
-                                                       curFolder,
-                                                       trashFolder,
-                                                       urlListener,
-                                                       nsnull);
+                      {
+                        PRBool confirm = PR_FALSE;
+                        PRBool match = PR_FALSE;
+                        rv = curFolder->MatchOrChangeFilterDestination(nsnull, PR_FALSE, &match);
+                        if (match)
+                        {
+                          curFolder->ConfirmFolderDeletionForFilter(msgWindow, &confirm);
+                          if (!confirm) return NS_OK;
+                        }
+                        rv = imapService->MoveFolder(m_eventQueue,
+                                                     curFolder,
+                                                     trashFolder,
+                                                     urlListener,
+                                                     msgWindow,
+                                                     nsnull);
+                      }
                   }
               }
-            }  
+            }
         }
     }
     
@@ -5262,16 +5273,28 @@ nsImapMailFolder::CopyFolder(nsIMsgFolder* srcFolder,
 
   if (isMoveFolder)   //move folder permitted when dstFolder and the srcFolder are on same server
   {
-	   nsCOMPtr <nsIImapService> imapService = do_GetService (kCImapService, &rv);
-	   if (NS_SUCCEEDED(rv))
-	   {
-	       nsCOMPtr <nsIUrlListener> urlListener = do_QueryInterface(srcFolder);
-	       rv = imapService->MoveFolder(m_eventQueue,
-                                        srcFolder,
-                                        this,
-                                        urlListener,
-                                        nsnull);
-	   }
+    nsCOMPtr <nsIImapService> imapService = do_GetService (kCImapService, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr <nsIUrlListener> urlListener = do_QueryInterface(srcFolder);
+      PRBool match = PR_FALSE;
+      PRBool confirmed = PR_FALSE;
+      if (mFlags & MSG_FOLDER_FLAG_TRASH)
+      {
+        rv = srcFolder->MatchOrChangeFilterDestination(nsnull, PR_FALSE, &match);
+        if (match)
+        {
+          srcFolder->ConfirmFolderDeletionForFilter(msgWindow, &confirmed);
+          if (!confirmed) return NS_OK;
+        }
+      }
+      rv = imapService->MoveFolder(m_eventQueue,
+                                   srcFolder,
+                                   this,
+                                   urlListener,
+                                   msgWindow,
+                                   nsnull);
+    }
 
   }
   else
@@ -5642,7 +5665,7 @@ NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const char* oldName, const char* newName )
+NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFolder *msgFolder, const char* oldName, const char* newName )
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIFileSpec> pathSpec;
@@ -5734,7 +5757,9 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
              folderInfo->SetMailboxName(&unicodeOnlineName);
            }
            PRBool changed = PR_FALSE;
-           msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
+           msgFolder->MatchOrChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
+           if (changed)
+             msgFolder->AlertFilterChanged(msgWindow);
         }
         unusedDB->SetSummaryValid(PR_TRUE);
         unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -5745,7 +5770,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
         if(childSupports && NS_SUCCEEDED(rv))
           NotifyItemAdded(folderSupports, childSupports, "folderView");
 
-	    child->RenameSubFolders(msgFolder);
+	    child->RenameSubFolders(msgWindow, msgFolder);
 	  }
 	}
        
@@ -5758,7 +5783,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgFolder *oldFolder)
+NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder)
 {
   nsresult rv = NS_OK;
   
@@ -5841,14 +5866,15 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgFolder *oldFolder)
        m_initialized = PR_TRUE;
 
        PRBool changed = PR_FALSE;
-       msgFolder->ChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
-
+       msgFolder->MatchOrChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
+       if (changed)
+         msgFolder->AlertFilterChanged(msgWindow);
        nsCOMPtr <nsISupports> parentSupport = do_QueryInterface(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
        nsCOMPtr <nsISupports> childSupport = do_QueryInterface(child);
        if (parentSupport && childSupport)
          NotifyItemAdded(parentSupport, childSupport, "folderView");
 	
-       child->RenameSubFolders(msgFolder);
+       child->RenameSubFolders(msgWindow, msgFolder);
      }
      rv = aEnumerator->Next();
 

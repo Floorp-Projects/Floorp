@@ -162,7 +162,7 @@ interface nsIImapService : nsISupports
                          in nsIUrlListener aUrlListener,
                          out nsIURI aURL,
                          in nsISupports aCopyState,
-						 in nsIMsgWindow aWindow);
+                         in nsIMsgWindow aWindow);
 
 
   void appendMessageFromFile(in nsIEventQueue aClientEventQueue, 
@@ -180,12 +180,14 @@ interface nsIImapService : nsISupports
   nsIURI moveFolder(in nsIEventQueue aClientEventQueue, 
                     in nsIMsgFolder aSrcFolder,
                     in nsIMsgFolder aDstFolder,
-                    in nsIUrlListener aUrlListener);
+                    in nsIUrlListener aUrlListener,
+                    in nsIMsgWindow msgWindow);
 
   nsIURI renameLeaf(in nsIEventQueue aClientEventQueue, 
                     in nsIMsgFolder aSrcFolder,
                     in wstring aLeafName,
-                    in nsIUrlListener aUrlListener);
+                    in nsIUrlListener aUrlListener,
+                    in nsIMsgWindow msgWindow);
 
   nsIURI deleteFolder(in nsIEventQueue aClientEventQueue, 
                       in nsIMsgFolder aFolder,

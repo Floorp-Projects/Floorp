@@ -5496,8 +5496,9 @@ void nsImapProtocol::FolderRenamed(const char *oldName,
             m_runningUrl->AllocateCanonicalPath(newName,
                                                 onlineDelimiter,
                                                 getter_Copies(canonicalNewName));
-
-            m_imapServerSink->OnlineFolderRename(canonicalOldName, canonicalNewName);
+            nsCOMPtr<nsIMsgWindow> msgWindow;
+            GetMsgWindow(getter_AddRefs(msgWindow));
+            m_imapServerSink->OnlineFolderRename(msgWindow, canonicalOldName, canonicalNewName);
     }
 }
 

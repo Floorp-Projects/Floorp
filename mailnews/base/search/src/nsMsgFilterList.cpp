@@ -905,7 +905,7 @@ nsMsgFilterList::GetVersion(PRInt16 *aResult)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilterList::ChangeFilterTarget(const char *oldFolderUri, const char *newFolderUri, PRBool caseInsensitive, PRBool *changed)
+NS_IMETHODIMP nsMsgFilterList::MatchOrChangeFilterTarget(const char *oldFolderUri, const char *newFolderUri, PRBool caseInsensitive, PRBool *found)
 {
   nsresult rv = NS_OK;
   PRUint32 numFilters;
@@ -930,18 +930,20 @@ NS_IMETHODIMP nsMsgFilterList::ChangeFilterTarget(const char *oldFolderUri, cons
           {
             if (PL_strcasecmp(folderUri,oldFolderUri) == 0 ) //local
             {
-              rv = filter->SetActionTargetFolderUri(newFolderUri);
+              if (newFolderUri)  //in the case where we just want to match the uri's newFolderUri will be null
+                rv = filter->SetActionTargetFolderUri(newFolderUri);
               NS_ENSURE_SUCCESS(rv,rv);
-              *changed =PR_TRUE;
+              *found =PR_TRUE;
             }
           }
           else
           {
             if (PL_strcmp(folderUri,oldFolderUri) == 0 )  //imap
             {
-              rv = filter->SetActionTargetFolderUri(newFolderUri);
+              if (newFolderUri) //in the case where we just want to match the uri's newFolderUri will be null
+                rv = filter->SetActionTargetFolderUri(newFolderUri);
               NS_ENSURE_SUCCESS(rv,rv);
-              *changed =PR_TRUE;
+              *found =PR_TRUE;
             }
           }
       }

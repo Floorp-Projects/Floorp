@@ -100,7 +100,7 @@ public:
   NS_IMETHOD GetOfflineStoreOutputStream(nsIOutputStream **outputStream);
   NS_IMETHOD GetOfflineStoreInputStream(nsIInputStream **outputStream);
   NS_IMETHOD IsCommandEnabled(const char *command, PRBool *result);
-  NS_IMETHOD ChangeFilterDestination(nsIMsgFolder *oldFolder, PRBool caseInsensitive, PRBool *changed);
+  NS_IMETHOD MatchOrChangeFilterDestination(nsIMsgFolder *oldFolder, PRBool caseInsensitive, PRBool *changed);
 
 protected:
   virtual nsresult ReadDBFolderInfo(PRBool force);

@@ -118,7 +118,7 @@ public:
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
   NS_IMETHOD CreateStorageIfMissing(nsIUrlListener* urlListener);
 	NS_IMETHOD Rename (const PRUnichar *aNewName, nsIMsgWindow *msgWindow);
-    NS_IMETHOD RenameSubFolders (nsIMsgFolder *oldFolder);
+    NS_IMETHOD RenameSubFolders (nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder);
 
 	NS_IMETHOD GetPrettyName(PRUnichar** prettyName);	// Override of the base, for top-level mail folder
 
@@ -153,14 +153,8 @@ public:
 	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
     NS_IMETHOD NotifyCompactCompleted();
 
-
 protected:
-	nsresult CopyFolderLocal(nsIMsgFolder *destFolder, nsIMsgFolder *srcFolder, PRBool isMoveFolder, nsIMsgWindow *msgWindow,
-                          nsIMsgCopyServiceListener* listener);
-	nsresult CopyFolderAcrossServer(nsIMsgFolder *destFolder, nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
-
-	nsresult DoNextSubFolder(nsIMsgFolder *newMsgFolder, nsIMsgFolder *srcFolder,
-		                     nsIMsgWindow *msgWindow, nsIMsgCopyServiceListener *listener );
+	nsresult CopyFolderAcrossServer(nsIMsgFolder *srcFolder, nsIMsgWindow *msgWindow,nsIMsgCopyServiceListener* listener);
 
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);

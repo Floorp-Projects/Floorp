@@ -2308,8 +2308,8 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
 
 NS_IMETHODIMP
 nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
-                          nsIMsgFolder* dstFolder, 
-                          nsIUrlListener* urlListener, nsIURI** url)
+                          nsIMsgFolder* dstFolder, nsIUrlListener* urlListener, 
+                          nsIMsgWindow *msgWindow, nsIURI** url)
 {
     NS_ASSERTION(eventQueue && srcFolder && dstFolder, 
                  "Oops ... null pointer");
@@ -2327,6 +2327,9 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
         rv = SetImapUrlSink(dstFolder, imapUrl);
         if (NS_SUCCEEDED(rv))
         {
+            nsCOMPtr<nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+            if (mailNewsUrl)
+              mailNewsUrl->SetMsgWindow(msgWindow);
             char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
             nsXPIDLCString folderName;
             
@@ -2359,7 +2362,7 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
 NS_IMETHODIMP
 nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
                           const PRUnichar* newLeafName, nsIUrlListener* urlListener,
-                          nsIURI** url)
+                          nsIMsgWindow *msgWindow, nsIURI** url)
 {
     NS_ASSERTION(eventQueue && srcFolder && newLeafName && *newLeafName,
                  "Oops ... [RenameLeaf] null pointers");
@@ -2378,7 +2381,9 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
-
+            nsCOMPtr<nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+            if (mailNewsUrl)
+              mailNewsUrl->SetMsgWindow(msgWindow);
             nsXPIDLCString folderName;
             GetFolderName(srcFolder, getter_Copies(folderName));
             urlSpec.Append("/rename>");

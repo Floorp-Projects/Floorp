@@ -24,6 +24,8 @@
 interface nsIMsgWindow;
 interface nsIUrlListener;
 interface nsIMsgDatabase;
+interface nsIMsgFolder;
+interface nsIMsgCopyServiceListener;
 
 [scriptable, uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
 interface nsIMsgLocalMailFolder : nsISupports {
@@ -37,6 +39,8 @@ interface nsIMsgLocalMailFolder : nsISupports {
   void setFlagsOnDefaultMailboxes(in unsigned long flags);
   nsIMsgDatabase getDatabaseWOReparse();
   void parseFolder(in nsIMsgWindow aMsgWindow, in nsIUrlListener listener);
+  void copyFolderLocal(in nsIMsgFolder srcFolder, in boolean isMove, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
+  void doNextSubFolder(in nsIMsgFolder srcFolder, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
   readonly attribute boolean parsingInbox;
   attribute boolean checkForNewMessagesAfterParsing;
 };

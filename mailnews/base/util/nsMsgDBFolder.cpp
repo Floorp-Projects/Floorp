@@ -44,7 +44,6 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIStringBundle.h"
 
 
 #define oneHour 3600000000
@@ -1436,53 +1435,34 @@ nsMsgDBFolder::AutoCompact(nsIMsgWindow *aWindow)
          NS_ENSURE_SUCCESS(rv, rv);
          if (totalExpungedBytes > (purgeThreshold*1024))
          {
-           nsCOMPtr<nsIDocShell> docShell;
-           if (aWindow) 
+           nsXPIDLString confirmString;
+           PRBool okToCompact = PR_FALSE;
+           rv = GetStringFromBundle("autoCompactAllFolders", getter_Copies(confirmString));
+           if (NS_SUCCEEDED(rv) && confirmString)
+             ThrowConfirmationPrompt(aWindow, confirmString.get(), &okToCompact);
+           if (okToCompact)
            {
-             aWindow->GetRootDocShell(getter_AddRefs(docShell));
-             nsCOMPtr<nsIStringBundleService> bundleService =
-                       do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-             NS_ENSURE_SUCCESS(rv, rv);
-             nsCOMPtr<nsIStringBundle> bundle;
-             rv = bundleService->CreateBundle("chrome://messenger/locale/messenger.properties",
-                                      getter_AddRefs(bundle));
-             NS_ENSURE_SUCCESS(rv, rv);
-             nsXPIDLString alertString;
-             bundle->GetStringFromName(NS_LITERAL_STRING("autoCompactAllFolders").get(),
-                            getter_Copies(alertString));
-             if (docShell)
+             if ( localExpungedBytes > 0)
              {
-               nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
-               if (dialog && alertString)
-               {
-                 PRBool okToCompact = PR_FALSE;
-                 dialog->Confirm(nsnull, alertString.get(), &okToCompact);
-                 if (okToCompact)
-                 {
-                   if ( localExpungedBytes > 0)
-                   {
-                     nsCOMPtr <nsISupports> aSupports = getter_AddRefs(folderArray->ElementAt(0));
-                     nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(aSupports, &rv);
-                     if (msgFolder && NS_SUCCEEDED(rv))
-                       if (offlineExpungedBytes > 0)
-                         msgFolder->CompactAll(nsnull, aWindow, folderArray, PR_TRUE, offlineFolderArray);
-                       else
-                         msgFolder->CompactAll(nsnull, aWindow, folderArray, PR_FALSE, nsnull);
-                   }
-                   else if (offlineExpungedBytes > 0)
-                      CompactAllOfflineStores(aWindow, offlineFolderArray);
-                 }
-               }
+               nsCOMPtr <nsISupports> aSupports = getter_AddRefs(folderArray->ElementAt(0));
+               nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(aSupports, &rv);
+               if (msgFolder && NS_SUCCEEDED(rv))
+                 if (offlineExpungedBytes > 0)
+                   msgFolder->CompactAll(nsnull, aWindow, folderArray, PR_TRUE, offlineFolderArray);
+                 else
+                   msgFolder->CompactAll(nsnull, aWindow, folderArray, PR_FALSE, nsnull);
              }
-           }  
+             else if (offlineExpungedBytes > 0)
+               CompactAllOfflineStores(aWindow, offlineFolderArray);
+           }
          }
        }
-     }
+     }  
      gtimeOfLastPurgeCheck = PR_Now();
   }
   return rv;
 }
-
+ 
 NS_IMETHODIMP
 nsMsgDBFolder::CompactAllOfflineStores(nsIMsgWindow *aWindow, nsISupportsArray *aOfflineFolderArray)
 {
@@ -1532,7 +1512,7 @@ nsMsgDBFolder::GetPurgeThreshold(PRInt32 *aThreshold)
 }
 
 NS_IMETHODIMP //called on the folder that is renamed or about to be deleted
-nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsensitive, PRBool *changed)
+nsMsgDBFolder::MatchOrChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsensitive, PRBool *found)
 {
   nsresult rv = NS_OK;
   nsXPIDLCString oldUri;
@@ -1540,7 +1520,7 @@ nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsen
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsXPIDLCString newUri;
-  if (newFolder) //for delete this will be null
+  if (newFolder) //for matching uri's this will be null
   {
     rv = newFolder->GetURI(getter_Copies(newUri));
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1569,8 +1549,8 @@ nsMsgDBFolder::ChangeFilterDestination(nsIMsgFolder *newFolder, PRBool caseInsen
             rv = server->GetFilterList(getter_AddRefs(filterList));
             if (filterList && NS_SUCCEEDED(rv))
             {
-              rv = filterList->ChangeFilterTarget(oldUri, newUri, caseInsensitive, changed);
-              if (changed)
+              rv = filterList->MatchOrChangeFilterTarget(oldUri, newUri, caseInsensitive, found);
+              if (found && newFolder && newUri)
                 rv = filterList->SaveToDefaultFile();
             }
           }

@@ -101,7 +101,7 @@ interface nsIMsgFilterList : nsISupports {
     void writeStrAttr(in nsMsgFilterFileAttribValue attrib, in string value, in nsIOFileStream stream);
     void writeWstrAttr(in nsMsgFilterFileAttribValue attrib, in wstring value, in nsIOFileStream stream);
     void writeBoolAttr(in nsMsgFilterFileAttribValue attrib, in boolean value, in nsIOFileStream stream);
-    boolean changeFilterTarget(in string oldUri, in string newUri, in boolean caseInsensitive);
+    boolean matchOrChangeFilterTarget(in string oldUri, in string newUri, in boolean caseInsensitive);
     
 };
 
