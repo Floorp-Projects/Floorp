@@ -24,6 +24,7 @@
 #include "nsURILoader.h"
 #include "nsDocLoader.h"
 #include "nsOSHelperAppService.h"
+#include "nsExternalProtocolHandler.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -33,6 +34,7 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocLoaderImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOSHelperAppService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -49,8 +51,11 @@ static nsModuleComponentInfo components[] = {
   { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, 
      nsOSHelperAppServiceConstructor, },
   { "Netscape Mime Mapping Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_MIMESERVICE_CONTRACTID, 
-     nsOSHelperAppServiceConstructor, }  
+     nsOSHelperAppServiceConstructor, },
+  { "Netscape Default Protocol Handler", NS_EXTERNALPROTOCOLHANDLER_CID, NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default", 
+     nsExternalProtocolHandlerConstructor, } 
 };
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implement the NSGetModule() exported function for your module
