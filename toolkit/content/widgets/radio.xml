@@ -221,6 +221,11 @@
           while (iterator.nextNode())
             radioChildren.push(iterator.currentNode);
 
+          // assign null to break circular reference between _filterRadioGroup
+          // and iterator (via this scope)
+          // XXX The function really should be global instead of local.
+          iterator = null;
+
           return this.mRadioChildren = radioChildren;
         ]]>
         </body>
