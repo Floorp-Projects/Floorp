@@ -1,7 +1,7 @@
-<HTML>
-<HEAD>
-  <TITLE>Pre-Filling</TITLE>
-  <SCRIPT>
+<html>
+<head>
+  <title>Pre-Filling</title>
+  <script>
 
     /* for xpconnect */
     var walletpreview =
@@ -34,44 +34,44 @@
 
       top.frames[list_frame].document.open();
       top.frames[list_frame].document.write(
-        "<FORM name=fSelectFillin>" +
-          "<BR>" +
-          "<TABLE BORDER=0>" +
-            "<TR>" +
-              "<TD>" +
-                "<BR>" 
+        "<form name='fSelectFillin'>" +
+          "<br/>" +
+          "<table border='0'>" +
+            "<tr>" +
+              "<td>" +
+                "<br/>" 
       )
       var count;
-      for (i=1; i<prefillList.length-2; i+=3) {
+      for (i=1; i!=prefillList.length-2; i+=3) {
         if(prefillList[i] != 0) {
           count = prefillList[i];
           top.frames[list_frame].document.write(
-                "<TR>" +
-                  "<TD>" + prefillList[i+1] + ":  </TD>" +
-                  "<TD>" +
-                    "<SELECT>" 
+                "<tr>" +
+                  "<td>" + prefillList[i+1] + ":  </td>" +
+                  "<td>" +
+                    "<select>" 
           )
           count--;
         }
         top.frames[list_frame].document.write(
-                      "<OPTION VALUE=\""+prefillList[i+1]+"\">" +
+                      "<option VALUE='"+prefillList[i+1]+"'>" +
                         prefillList[i+2] +
-                      "</OPTION>" 
+                      "</option>" 
         )
         if(count == 0) {
           top.frames[list_frame].document.write(
-                      "<OPTION VALUE=\""+prefillList[i+1]+"\"></OPTION>" +
-                    "</SELECT><BR>" +
-                  "</TD>" +
-                "</TR>" 
+                      "<option VALUE='"+prefillList[i+1]+"'></option>" +
+                    "</select><br/>" +
+                  "</td>" +
+                "</tr>" 
           )
         }
       }
       top.frames[list_frame].document.write(
-              "</TD>" +
-            "</TR>" +
-          "</TABLE>" +
-        "</FORM>"
+              "</td>" +
+            "</tr>" +
+          "</table>" +
+        "</form>"
       );
       top.frames[list_frame].document.close();
     };
@@ -79,20 +79,22 @@
     function loadButtons(){
       top.frames[button_frame].document.open();
       top.frames[button_frame].document.write(
-        "<FORM name=buttons>" +
-          "<BR>" +
-          "<INPUT type=CHECKBOX name=skip> Bypass this screen when prefilling this form in the future" +
-          "<BR>" +
-          "<BR>" +
-          "<DIV align=center>" +
-            "<INPUT type=BUTTON value=OK width=80 onclick=parent.Save()>" +
+        "<form name=buttons>" +
+          "<br/>" +
+          "<input type='checkbox' name='skip'> " +
+            "Bypass this screen when prefilling this form in the future" +
+          "</input> " +
+          "<br/>" +
+          "<br/>" +
+          "<div align='center'>" +
+            "<button onclick='parent.Save();'>OK</button>" +
             " &nbsp;&nbsp;" +
-            "<INPUT type=BUTTON value=Cancel width=80 onclick=parent.Cancel()>" +
-          "</DIV>" +
-          "<INPUT TYPE=HIDDEN NAME=fillins VALUE=\" \" SIZE=-1>" +
-          "<INPUT TYPE=HIDDEN NAME=list VALUE=\" \" SIZE=-1>" +
-          "<INPUT TYPE=HIDDEN NAME=url VALUE=\" \" SIZE=-1>" +
-        "</FORM>"
+            "<button onclick='parent.Cancel();'>Cancel</button>" +
+          "</div>" +
+          "<input type='hidden' name='fillins' value=' ' size='-1'>" +
+          "<input type='hidden' name='list' value=' ' size='-1'>" +
+          "<input type='hidden' name='url' value=' ' size='-1'>" +
+        "</form>"
       );
       top.frames[button_frame].document.close();
     }
@@ -114,10 +116,10 @@
       url.value = "prefillList[prefillList.length-1]";
       var fillins = top.frames[button_frame].document.buttons.fillins;
       fillins.value = "";
-      for (i=0; i<selname.length; i++) {
+      for (i=0; i!=selname.length; i++) {
         fillins.value = fillins.value +
-          selname.elements[i].options[selname.elements[i].selectedIndex].value + "#*%&" +
-          selname.elements[i].options[selname.elements[i].selectedIndex].text + "#*%&";
+          selname.elements[i].options[selname.elements[i].selectedIndex].value + "#*%&amp;" +
+          selname.elements[i].options[selname.elements[i].selectedIndex].text + "#*%&amp;";
       }
       var result = "|list|"+list.value+"|fillins|"+fillins.value;
       result += "|url|"+url.value+"|skip|"+skip.checked+"|";
@@ -132,39 +134,39 @@
       DoSave(result);
     }
 
-  </SCRIPT>
-</HEAD>
-<FRAMESET ROWS = 25,25,*,75
-         BORDER=0
-         FRAMESPACING=0
-         onLoad=loadFrames()>
-  <FRAME SRC=about:blank
-        NAME=index_frame
-        SCROLLING=NO
-        MARGINWIDTH=1
-        MARGINHEIGHT=1
-        NORESIZE>
-  <FRAME SRC=about:blank
-        NAME=title_frame
-        SCROLLING=NO
-        MARGINWIDTH=1
-        MARGINHEIGHT=1
-        NORESIZE>
-    <FRAME SRC=about:blank
-          NAME=list_frame
-          SCROLLING=AUTO
-          MARGINWIDTH=0
-          MARGINHEIGHT=0
-          NORESIZE>
-  <FRAME SRC=about:blank
-        NAME=button_frame
-        SCROLLING=NO
-        MARGINWIDTH=1
-        MARGINHEIGHT=1
-        NORESIZE>
-</FRAMESET>
+  </script>
+</head>
+<frameset rows = "25,25,*,75"
+         border="0"
+         framespacing="0"
+         onload="loadFrames();">
+  <frame src="about:blank"
+         name="index_frame"
+         scrolling="no"
+         marginwidth="1"
+         marginheight="1"
+         noresize="noresize"/>
+  <frame src="about:blank"
+         name="title_frame"
+         scrolling="no"
+         marginwidth="1"
+         marginheight="1"
+         noresize="noresize"/>
+  <frame src="about:blank"
+         name="list_frame"
+         scrolling="auto"
+         marginwidth="0"
+         marginheight="0"
+         noresize="noresize"/>
+  <frame src="about:blank"
+         name="button_frame"
+         scrolling="no"
+         marginwidth="1"
+         marginheight="1"
+         noresize="noresize"/>
+</frameset>
 
-<NOFRAMES>
-  <BODY> <BR> </BODY>
-</NOFRAMES>
-</HTML>
+<noframes>
+  <body> <br/> </body>
+</noframes>
+</html>

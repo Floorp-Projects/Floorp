@@ -1,7 +1,7 @@
-<HTML>
-<HEAD>
-  <TITLE>Cookies</TITLE>
-  <SCRIPT>
+<html>
+<head>
+  <title>Cookies</title>
+  <script>
 
     /* for xpconnect */
     var cookieviewer =
@@ -84,22 +84,22 @@
       cookie_mode = 0;
       top.frames[index_frame].document.open();
       top.frames[index_frame].document.write(
-        "<BODY BGCOLOR=#C0C0C0>" +
-          "<TABLE BORDER=0 WIDTH=100%>" +
-            "<TR>" +
-              "<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#FFFFFF>" +
-                "<FONT SIZE=2 COLOR=#666666>" +
-                  "<B>View stored cookies</B>" +
-                "</FONT>" +
-              "</TD>" +
-              "<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>" +
-                  "<A ONCLICK=top.loadPermissions(); HREF= >" +
-                  "<FONT SIZE=2>View sites that can or cannot store cookies</FONT>" +
-                "</A>" +
-              "</TD>" +
-            "</TR>" +
-          "</TABLE>" +
-        "</BODY>"
+        "<body bgcolor='#c0c0c0'>" +
+          "<table border='0' width='100%'>" +
+            "<tr>" +
+              "<td align='center' valign='middle' bgcolor='#ffffff'>" +
+                "<font size='2' color='#666666'>" +
+                  "<b>View stored cookies</b>" +
+                "</font>" +
+              "</td>" +
+              "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
+                "<a onclick='top.loadPermissions();' href=''>" +
+                  "<font size='2'>View sites that can or cannot store cookies</font>" +
+                "</a>" +
+              "</td>" +
+            "</tr>" +
+          "</table>" +
+        "</body>"
       );
       top.frames[index_frame].document.close();
 
@@ -118,12 +118,12 @@
       index = 8*(top.frames[list_frame].document.fSelectCookie.selname.selectedIndex) + 1;
       top.frames[prop_frame].document.open();
       top.frames[prop_frame].document.write(
-        "<NOBR><b>Name: </b>" + cookieList[index+1] + "</NOBR><BR>" +
-        "<NOBR><b>Value: </b>" + cookieList[index+2] + "</NOBR><BR>" +
-        "<NOBR><b>" + cookieList[index+3] + ": </b>" + cookieList[index+4] + "</NOBR><BR>" +
-        "<NOBR><b>Path: </b>" + cookieList[index+5] + "</NOBR><BR>" +
-        "<NOBR><b>Secure: </b>" + cookieList[index+6] + "</NOBR><BR>" +
-        "<NOBR><b>Expires: </b>" + cookieList[index+7] + "</NOBR><BR>"
+        "<nobr><b>Name: </b>" + cookieList[index+1] + "</nobr><br/>" +
+        "<nobr><b>Value: </b>" + cookieList[index+2] + "</nobr><br/>" +
+        "<nobr><b>" + cookieList[index+3] + ": </b>" + cookieList[index+4] + "</nobr><br/>" +
+        "<nobr><b>Path: </b>" + cookieList[index+5] + "</nobr><br/>" +
+        "<nobr><b>Secure: </b>" + cookieList[index+6] + "</nobr><br/>" +
+        "<nobr><b>Expires: </b>" + cookieList[index+7] + "</nobr><br/>"
       );
       top.frames[prop_frame].document.close();
     }
@@ -131,36 +131,33 @@
     function loadCookiesList(){
       top.frames[list_frame].document.open();
       top.frames[list_frame].document.write(
-        "<FORM name=fSelectCookie>" +
-          "<P>" +
-          "<TABLE BORDER=0 WIDTH=100%HEIGHT=95%>" +
-            "<TR>" +
-              "<TD WIDTH=100%VALIGN=TOP>" +
-                "<CENTER>" +
-                  "<P>" +
-                  "<SELECT " +
-                    "NAME=selname " +
-                    "SIZE=15 " +
-                    "MULTIPLE " +
-                    "onchange=top.ViewCookieSelected();" +
-                  ">"
+        "<form name='fSelectCookie'>" +
+          "<p>" +
+            "<table border='0' width='100%' height='95%'>" +
+              "<tr>" +
+                "<td width='100%' valign='top'>" +
+                  "<center>" +
+                    "<p>" +
+                      "<select name='selname' size='15' multiple='multiple' onchange='top.ViewCookieSelected();'>"
       );
-      for (i=1; i<cookieList.length; i+=8) {
+      for (i=1; i!=cookieList.length; i+=8) {
         if (!deleted_cookies[cookieList[i]]) {
           top.frames[list_frame].document.write(
-            "<OPTION value=" + cookieList[i] + ">" +
-              cookieList[i+4] + ":" + cookieList[i+1] +
-            "</OPTION>"
+                        "<option value=" + cookieList[i] + ">" +
+                          cookieList[i+4] + ":" + cookieList[i+1] +
+                        "</option>"
           );
         }
       }
       top.frames[list_frame].document.write(
-                  "</SELECT>" +
-                "</CENTER>" +
-              "</TD>" +
-            "</TR>" +
-          "</TABLE>" +
-        "</FORM>"
+                      "</select>" +
+                    "</p>" +
+                  "</center>" +
+                "</td>" +
+              "</tr>" +
+            "</table>" +
+          "</p>" +
+        "</form>"
       );
       top.frames[list_frame].document.close();
     }
@@ -169,23 +166,23 @@
       cookie_mode = 1;
       top.frames[index_frame].document.open();
       top.frames[index_frame].document.write(
-        "<BODY BGCOLOR=#C0C0C0>" +
-          "<TABLE BORDER=0 WIDTH=100%>" +
-            "<TR>" +
-              "<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#C0C0C0>" +
-                "<A ONCLICK=top.loadCookies(); HREF= >" +
-                  "<FONT SIZE=2>View stored cookies</FONT>" +
-                "</A>" +
-              "</TD>" +
-              "<TD ALIGN=CENTER VALIGN=MIDDLE BGCOLOR=#FFFFFF>" +
-                "<FONT SIZE=2 COLOR=#666666>" +
-                  "<B>View sites that can or cannot store cookies</B>" +
-                "</FONT>" +
-              "</TD>" +
-              "<TD>&nbsp;&nbsp;&nbsp;</TD>" +
-            "</TR>" +
-          "</TABLE>" +
-        "</BODY>"
+        "<body bgcolor='#c0c0c0'>" +
+          "<table border='0' width='100%'>" +
+            "<tr>" +
+              "<td align='center' valign='middle' bgcolor='#c0c0c0'>" +
+                "<a onclick='top.loadCookies();' href=''>" +
+                  "<font size='2'>View stored cookies</font>" +
+                "</a>" +
+              "</td>" +
+              "<td align='center' valign='middle' bgcolor='#ffffff'>" +
+                "<font size='2' color='#666666'>" +
+                  "<b>View sites that can or cannot store cookies</b>" +
+                "</font>" +
+              "</td>" +
+              "<td>&nbsp;&nbsp;&nbsp;</td>" +
+            "</tr>" +
+          "</table>" +
+        "</body>"
       );
       top.frames[index_frame].document.close();
 
@@ -203,31 +200,33 @@
     function loadPermissionsList(){
       top.frames[list_frame].document.open();
       top.frames[list_frame].document.write(
-        "<FORM name=fSelectPermission>" +
-          "<P>" +
-          "<TABLE BORDER=0 WIDTH=100%HEIGHT=95%>" +
-            "<TR>" +
-              "<TD WIDTH=100%VALIGN=TOP>" +
-                "<CENTER>" +
-                  "<P>" +
-                  "<SELECT NAME=selname SIZE=15 MULTIPLE> "
+        "<form name='fSelectPermission'>" +
+          "<p>" +
+            "<table border='0' width='100%' height='95%'>" +
+              "<tr>" +
+                "<td width='100%' valign='top'>" +
+                  "<center>" +
+                    "<p>" +
+                      "<select name='selname' size='15' multiple='multiple'> "
       );
-      for (i=1; i<permissionList.length; i+=2) {
+      for (i=1; i!=permissionList.length; i+=2) {
         if (!deleted_permissions[permissionList[i]]) {
           top.frames[list_frame].document.write(
-            "<OPTION value=" + permissionList[i] + ">" +
-              permissionList[i+1] +
-            "</OPTION>"
+                        "<option value=" + permissionList[i] + ">" +
+                          permissionList[i+1] +
+                        "</option>"
           );
         }
       }
       top.frames[list_frame].document.write(
-                  "</SELECT>" +
-                "</CENTER>" +
-              "</TD>" +
-            "</TR>" +
-          "</TABLE>" +
-        "</FORM>"
+                      "</select>" +
+                    "</p>" +
+                  "</center>" +
+                "</td>" +
+              "</tr>" +
+            "</table>" +
+          "</p>" +
+        "</form>"
       );
       top.frames[list_frame].document.close();
     }
@@ -235,22 +234,20 @@
     function loadButtons(){
       top.frames[button_frame].document.open();
       top.frames[button_frame].document.write(
-        "<FORM name=buttons>" +
-          "<BR>" +
+        "<form name='buttons'>" +
+          "<br/>" +
           "&nbsp;" +
-          "<INPUT type=BUTTON " +
-                 "value=Remove " +
-                 "onclick=top.DeleteItemSelected();>" +
-          "<DIV align=right>" +
-            "<INPUT type=BUTTON value=OK width=80 onclick=parent.Save()>" +
+          "<button onclick='top.DeleteItemSelected();'>Remove</button>" +
+          "<div align='right'>" +
+            "<button onclick='parent.Save();'>OK</button>" +
             " &nbsp;&nbsp;" +
-            "<INPUT type=BUTTON value=Cancel width=80 onclick=parent.Cancel()>" +
-          "</DIV>" +
-          "<INPUT TYPE=HIDDEN NAME=goneC VALUE=\"\" SIZE=-1>" +
-          "<INPUT TYPE=HIDDEN NAME=goneP VALUE=\"\" SIZE=-1>" +
-          "<INPUT TYPE=HIDDEN NAME=cookieList VALUE=\"\" SIZE=-1>" +
-          "<INPUT TYPE=HIDDEN NAME=permissionList VALUE=\"\" SIZE=-1>" +
-        "</FORM>"
+            "<button onclick='parent.Cancel();'>Cancel</button>" +
+          "</div>" +
+          "<input type='hidden' name='goneC' value='' size='-1'/>" +
+          "<input type='hidden' name='goneP' value='' size='-1'/>" +
+          "<input type='hidden' name='cookieList' value='' size='-1'/>" +
+          "<input type='hidden' name='permissionList' value='' size='-1'/>" +
+        "</form>"
       );
       top.frames[button_frame].document.close();
     }
@@ -302,67 +299,63 @@
       DoSave(result);
     }
 
-  </SCRIPT>
-</HEAD>
-<FRAMESET ROWS = 25,25,*,75
-         BORDER=0
-         FRAMESPACING=0
-         onLoad=loadFrames()>
-  <FRAME SRC=about:blank
-        NAME=index_frame
-        SCROLLING=NO
-        MARGINWIDTH=1
-        MARGINHEIGHT=1
-        NORESIZE>
-  <FRAME SRC=about:blank
-        NAME=title_frame
-        SCROLLING=NO
-        MARGINWIDTH=1
-        MARGINHEIGHT=1
-        NORESIZE>
-  <FRAMESET COLS=5,*,10,*,5
-           BORDER=0
-           FRAMESPACING=0>
-    <FRAME SRC=about:blank
-          NAME=spacer1_frame
-          SCROLLING=AUTO
-          MARGINWIDTH=0
-          MARGINHEIGHT=0
-          NORESIZE>
-    <FRAME SRC=about:blank
-          NAME=list_frame
-          SCROLLING=AUTO
-          MARGINWIDTH=0
-          MARGINHEIGHT=0
-          NORESIZE>
-    <FRAME SRC=about:blank
-          NAME=spacer2_frame
-          SCROLLING=AUTO
-          MARGINWIDTH=0
-          MARGINHEIGHT=0
-          NORESIZE>
-    <FRAME SRC=about:blank
-          NAME=prop_frame
-          SCROLLING=AUTO
-          MARGINWIDTH=0
-          MARGINHEIGHT=0
-          NORESIZE>
-    <FRAME SRC=about:blank
-          NAME=spacer3_frame
-          SCROLLING=AUTO
-          MARGINWIDTH=0
-          MARGINHEIGHT=0
-          NORESIZE>
-  </FRAMESET>
-  <FRAME SRC=about:blank
-        NAME=button_frame
-        SCROLLING=NO
-        MARGINWIDTH=1
-        MARGINHEIGHT=1
-        NORESIZE>
-</FRAMESET>
+  </script>
+</head>
 
-<NOFRAMES>
-  <BODY> <P> </BODY>
-</NOFRAMES>
-</HTML>
+<frameset rows = "25,25,*,75" border="0" framespacing="0" onload="loadFrames();">
+  <frame src="about:blank"
+        name="index_frame"
+        scrolling="no"
+        marginwidth="1"
+        marginheight="1"
+        noresize="noresize"/>
+  <frame src="about:blank"
+        name="title_frame"
+        scrolling="no"
+        marginwidth="1"
+        marginheight="1"
+        noresize="noresize"/>
+  <frameset cols="5,*,10,*,5" border="0" framespacing="0">
+    <frame src="about:blank"
+          name="spacer1_frame"
+          scrolling="auto"
+          marginwidth="0"
+          marginheight="0"
+          noresize="noresize"/>
+    <frame src="about:blank"
+          name="list_frame"
+          scrolling="auto"
+          marginwidth="0"
+          marginheight="0"
+          noresize="noresize"/>
+    <frame src="about:blank"
+          name="spacer2_frame"
+          scrolling="auto"
+          marginwidth="0"
+          marginheight="0"
+          noresize="noresize"/>
+    <frame src="about:blank"
+          name="prop_frame"
+          scrolling="auto"
+          marginwidth="0"
+          marginheight="0"
+          noresize="noresize"/>
+    <frame src="about:blank"
+          name="spacer3_frame"
+          scrolling="auto"
+          marginwidth="0"
+          marginheight="0"
+          noresize="noresize"/>
+  </frameset>
+  <frame src="about:blank"
+        name="button_frame"
+        scrolling="no"
+        marginwidth="1"
+        marginheight="1"
+        noresize="noresize"/>
+</frameset>
+
+<noframes>
+  <body> <P> </body>
+</noframes>
+</html>
