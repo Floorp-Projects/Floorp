@@ -391,14 +391,16 @@
         <parameter name="aTarget"/>
         <body><![CDATA[
           var rParent = RDF.GetResource(aTarget.parentNode.id)
-          if (BookmarksUtils.resolveType(rParent) != "Folder")
+          var type = BookmarksUtils.resolveType(rParent);
+          if (type != "Folder" && type != "FolderGroup" &&
+              type != "PersonalToolbarFolder")
             return false;
           var count = 0;
           if (!aTarget.hasChildNodes())
             return false;
           var curr = aTarget.firstChild;
           do {
-            var type = BookmarksUtils.resolveType(curr.id);
+            type = BookmarksUtils.resolveType(curr.id);
             if (type == "Bookmark" && ++count == 2)
               return true;
             curr = curr.nextSibling;
