@@ -989,8 +989,8 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 ntrynotes)
     JSScript *script;
 
     /* Round up source note count to align script->trynotes for its type. */
-    if (ntrynotes)
-        nsrcnotes += JSTRYNOTE_ALIGNMASK;
+    /* XXX only if ntrynotes != 0, but then tinderbox tests crash */
+    nsrcnotes += JSTRYNOTE_ALIGNMASK;
     script = (JSScript *) JS_malloc(cx,
                                     sizeof(JSScript) +
                                     length * sizeof(jsbytecode) +
