@@ -265,6 +265,7 @@ network/protocol/remote/Makefile
 network/protocol/sockstub/Makefile
 network/util/Makefile
 profile/Makefile
+profile/src/Makefile
 profile/public/Makefile
 rdf/Makefile
 rdf/base/Makefile
