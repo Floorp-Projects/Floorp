@@ -161,6 +161,10 @@ EXTRA_LIBS += \
 	wsock32.lib \
 	winmm.lib \
 	$(NULL)
+
+JAR_LIBS = $(DIST)/lib/jar.lib \
+	$(DIST)/lib/zlib.lib \
+	$(NULL)
 else
 
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
@@ -189,15 +193,6 @@ EXTRA_SHARED_LIBS += -B/usr/ccs/bin/
 endif
 endif
 
-ifeq ($(OS_ARCH), WINNT)
-JAR_LIBS = $(DIST)/lib/jar.lib \
-	$(DIST)/lib/zlib.lib \
-	$(NULL)
-else
-JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
-	$(NULL)
-endif
 
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
@@ -209,6 +204,10 @@ EXTRA_SHARED_LIBS += \
 	-lplc4 \
 	-lplds4 \
 	-lnspr4 \
+	$(NULL)
+
+JAR_LIBS = $(DIST)/lib/$(LIB_PREFIX)jar.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)zlib.$(LIB_SUFFIX) \
 	$(NULL)
 endif
 
