@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: XMLPrinter.cpp,v 1.4 2000/06/11 12:28:28 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XMLPrinter.cpp,v 1.5 2000/07/23 06:45:59 kvisco%ziplink.net Exp $
  */
 
 #include "printers.h"
@@ -36,7 +36,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/06/11 12:28:28 $
+ * @version $Revision: 1.5 $ $Date: 2000/07/23 06:45:59 $
 **/
 
 /**
@@ -52,8 +52,8 @@ const String XMLPrinter::HEX_ENTITY    = "&#";
 
 const String XMLPrinter::CDATA_END        = "]]>";
 const String XMLPrinter::CDATA_START      = "<![CDATA[";
-const String XMLPrinter::COMMENT_START    = "<!-- ";
-const String XMLPrinter::COMMENT_END      = " -->";
+const String XMLPrinter::COMMENT_START    = "<!--";
+const String XMLPrinter::COMMENT_END      = "-->";
 const String XMLPrinter::DOCTYPE_START    = "<!DOCTYPE ";
 const String XMLPrinter::DOCTYPE_END      = ">";
 const String XMLPrinter::DOUBLE_QUOTE     = "\"";
@@ -429,7 +429,8 @@ void XMLPrinter::printComment(const String& data) {
 
     if (&data == &NULL_STRING) return;
 
-    prevChar = '\0';
+    //-- since comments will start with <!-- set prevChar to '-'
+    prevChar = DASH;
 
     for (int i = 0; i < data.length(); i++) {
         currChar = data.charAt(i);
@@ -441,5 +442,9 @@ void XMLPrinter::printComment(const String& data) {
 
         prevChar = currChar;
     }
-} //-- formatComment
+
+    //-- handle last char as a dash
+    if (prevChar == DASH) *ostreamPtr << SPACE;
+
+} //-- printComment
 
