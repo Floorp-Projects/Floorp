@@ -1410,22 +1410,19 @@ dnl the qsort routine under solaris is faulty
        AS_DASH_C_FLAG=''
         CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
         CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
-        _MAJOR_VERSION_NUMBER=`echo $CC_VERSION | $AWK '{ print $3 }'`
-        _BAD_COMPILER=
-        if test $_MAJOR_VERSION_NUMBER -lt 6; then
-            _BAD_COMPILER=1
-        elif test $_MAJOR_VERSION_NUMBER -eq 6; then
-            _TMP1=`echo $CC_VERSION | sed 's|^Sun WorkShop||' | $AWK '{ print $2 }'`
-            _TMP2=`echo $CC_VERSION | sed 's|^Sun WorkShop||' | $AWK '{ print $3 }'`
-            if test "`echo $_TMP1 | grep -i -c update 2>/dev/null`"; then
-                if test $_TMP2 -lt 2; then
-                    _BAD_COMPILER=1
-                fi
-            fi
-        fi
+       AC_MSG_CHECKING([for Forte compiler version >= WS6U2])
+       AC_TRY_COMPILE([],
+           [#if (__SUNPRO_C < 0x530)
+           #error "Denied"
+           #endif],
+           _BAD_COMPILER=,_BAD_COMPILER=1)
         if test -n "$_BAD_COMPILER"; then
+            _res="no"
             AC_MSG_ERROR([Forte version WS6U2 or higher is required to build. Your compiler version is $CC_VERSION .])
+        else
+            _res="yes"
         fi
+        AC_MSG_RESULT([$_res])
     else
        ASFLAGS="$ASFLAGS -fPIC"
        DSO_LDOPTS='-G -h $@'
