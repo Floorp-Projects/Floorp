@@ -1680,8 +1680,10 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
             if (xulListener->mAttribute == aString) {
                 nsCOMPtr<nsIDOMElement> element;
                 element = do_QueryInterface(xulListener->mListener);
-                if (element)
+                if (element) {
+                    // First we set the attribute in the observer.
                     element->SetAttribute(aString, aValue);
+                }
             }
         }
     }
