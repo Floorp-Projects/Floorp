@@ -65,7 +65,6 @@ static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
 static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset);
 
 
-
 #ifdef PRINT_RANGE
 static void printRange(nsIDOMRange *aDomRange);
 #define DEBUG_OUT_RANGE(x)  printRange(x)
@@ -2924,9 +2923,11 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
         result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
         if (NS_FAILED(result))
           return NS_ERROR_FAILURE;
-        endOffset = startOffset+1;
+        if (*aDir == eDirPrevious)
+          startOffset++;
         dirtystart = PR_TRUE;
         cellMode = PR_FALSE;
+        break;
       }
       else if (atom.get() == nsRangeList::sCellAtom) //you are in "cell" mode put selection to end of cell
       {
@@ -2934,8 +2935,46 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
         result = ParentOffset(tempNode, getter_AddRefs(startNode), &startOffset);
         if (NS_FAILED(result))
           return result;
-        endOffset = startOffset+1;
+        if (*aDir == eDirPrevious)
+          startOffset++;
         dirtystart = PR_TRUE;
+        break;
+      }
+      result = tempNode->GetParentNode(getter_AddRefs(tempNode2));
+      if (NS_FAILED(result) || !tempNode2)
+        return NS_ERROR_FAILURE;
+      tempNode = tempNode2;
+    }
+  }
+  if (parent != endNode)
+  {
+    result = endNode->GetParentNode(getter_AddRefs(tempNode));
+    if (NS_FAILED(result) || !tempNode)
+      return NS_ERROR_FAILURE;
+    while (tempNode != parent)
+    {
+      atom = GetTag(tempNode);
+      if (atom.get() == nsRangeList::sTableAtom) //select whole table  if in cell mode, wait for cell
+      {
+        result = ParentOffset(tempNode, getter_AddRefs(endNode), &endOffset);
+        if (NS_FAILED(result))
+          return NS_ERROR_FAILURE;
+        if (*aDir == eDirNext)
+          endOffset++;
+        dirtystart = PR_TRUE;
+        cellMode = PR_FALSE;
+        break;
+      }
+      else if (atom.get() == nsRangeList::sCellAtom) //you are in "cell" mode put selection to end of cell
+      {
+        cellMode = PR_TRUE;
+        result = ParentOffset(tempNode, getter_AddRefs(endNode), &endOffset);
+        if (NS_FAILED(result))
+          return result;
+        if (*aDir == eDirNext)
+          endOffset++;
+        dirtystart = PR_TRUE;
+        break;
       }
       result = tempNode->GetParentNode(getter_AddRefs(tempNode2));
       if (NS_FAILED(result) || !tempNode2)
@@ -2949,19 +2988,20 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
     *aFixupState = PR_TRUE;
     if (*aDir == eDirNext)
     {
-      if (NS_FAILED(aRange->SetStart(startNode,startOffset)) || NS_FAILED(aRange->SetEnd(startNode, endOffset)))
+      if (NS_FAILED(aRange->SetStart(startNode,startOffset)) || NS_FAILED(aRange->SetEnd(endNode, endOffset)))
       {
         *aDir = eDirPrevious;
-        aRange->SetStart(startNode, endOffset);
+        aRange->SetStart(endNode, endOffset);
         aRange->SetEnd(startNode, startOffset);
       }
     }
     else
     {
-      if (NS_FAILED(aRange->SetStart(startNode,endOffset)) || NS_FAILED(aRange->SetEnd(startNode, startOffset)))
+      if (NS_FAILED(aRange->SetStart(endNode,endOffset)) || NS_FAILED(aRange->SetEnd(startNode, startOffset)))
       {
         aRange->SetStart(startNode, startOffset);
-        aRange->SetEnd(startNode, endOffset);
+        aRange->SetEnd(endNode, endOffset);
+        *aDir = eDirNext;
       }
     }
   }
@@ -3128,7 +3168,6 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 #else
       selectFrames(difRange,PR_FALSE);
       difRange->SetEnd(aParentNode, aOffset);
-      difRange->SetStart(FetchAnchorNode(),FetchAnchorOffset());
       selectFrames(difRange,PR_TRUE);
 #endif
     }
@@ -3180,9 +3219,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
 #else
-      difRange->SetEnd(FetchFocusNode(),FetchFocusOffset());
       selectFrames(difRange, PR_FALSE);
-      difRange->SetStart(FetchAnchorNode(),FetchAnchorOffset());
       difRange->SetEnd(aParentNode,aOffset);
       selectFrames(difRange, PR_TRUE);
 #endif
@@ -3253,10 +3290,11 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
 #else
-      difRange->SetStart(FetchFocusNode(),FetchFocusOffset());
       selectFrames(difRange, PR_FALSE);
       difRange->SetStart(aParentNode,aOffset);
+#if OLD_SELECTION
       difRange->SetEnd(FetchAnchorNode(),FetchAnchorOffset());
+#endif
       selectFrames(difRange, PR_TRUE);
 #endif
     }
@@ -3323,7 +3361,6 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 #else
       selectFrames(difRange,PR_FALSE);
       difRange->SetStart(aParentNode, aOffset);
-      difRange->SetEnd(FetchAnchorNode(),FetchAnchorOffset());
       selectFrames(difRange,PR_TRUE);
 #endif
     }

@@ -1940,14 +1940,11 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
         break;
     }
     frame = GetNextInFlow();
-    if (!wholeContentFound)
-    {
-      while (frame){
-        frame->SetSelected(aRange,aSelected,eSpreadNone);
-        result = frame->GetNextInFlow(&frame);
-        if (NS_FAILED(result))
-          break;
-      }
+    while (frame){
+      frame->SetSelected(aRange,aSelected,eSpreadNone);
+      result = frame->GetNextInFlow(&frame);
+      if (NS_FAILED(result))
+        break;
     }
 #if 0
     else //we need to talk to siblings as well as flow
