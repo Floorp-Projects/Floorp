@@ -153,6 +153,11 @@ interface nsIMsgFolder : nsIFolder {
   readonly attribute nsIMsgDatabase msgDatabase;
 
 	readonly attribute nsIFileSpec Path;
+
+	void MarkMessagesRead(in nsISupportsArray messages, in boolean markRead);
+	void MarkAllMessagesRead();
+
+	nsIMsgFolder GetChildWithURI(in string uri, in boolean deep);
 };
 
 
