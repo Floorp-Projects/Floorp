@@ -42,6 +42,7 @@
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXPConnect.h"
 #include "nsIJSContextStack.h"
@@ -269,6 +270,7 @@
 #include "nsITreeSelection.h"
 #include "nsITreeContentView.h"
 #include "nsITreeView.h"
+#include "nsIDOMXPathEvaluator.h"
 
 #ifdef MOZ_SVG
 #include "nsIDOMSVGAnimatedLength.h"
@@ -1166,6 +1168,10 @@ nsDOMClassInfo::RegisterExternalClasses()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)                                \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
 
+#define DOM_CLASSINFO_MAP_END_WITH_XPATH                                      \
+    xpathEvaluatorIID,                                                        \
+  DOM_CLASSINFO_MAP_END
+
 nsresult
 nsDOMClassInfo::Init()
 {
@@ -1174,6 +1180,18 @@ nsDOMClassInfo::Init()
   NS_ASSERTION(sizeof(PtrBits) == sizeof(void*),
                "BAD! You'll need to adjust the size of PtrBits to the size "
                "of a pointer on your platform.");
+
+  nsCOMPtr<nsIComponentRegistrar> cr;
+  NS_GetComponentRegistrar(getter_AddRefs(cr));
+  const nsIID* xpathEvaluatorIID = nsnull;
+  if (cr) {
+    PRBool haveXPathDOM;
+    cr->IsContractIDRegistered(NS_XPATH_EVALUATOR_CONTRACTID,
+                               &haveXPathDOM);
+    if (haveXPathDOM) {
+      xpathEvaluatorIID = &NS_GET_IID(nsIDOMXPathEvaluator);
+    }
+  }
 
   DOM_CLASSINFO_MAP_BEGIN(Window, nsIDOMWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
@@ -1235,7 +1253,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
+  DOM_CLASSINFO_MAP_END_WITH_XPATH
 
   DOM_CLASSINFO_MAP_BEGIN(DocumentType, nsIDOMDocumentType)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentType)
@@ -1337,7 +1355,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
+  DOM_CLASSINFO_MAP_END_WITH_XPATH
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLCollection, nsIDOMHTMLCollection)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
@@ -1844,7 +1862,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-  DOM_CLASSINFO_MAP_END
+  DOM_CLASSINFO_MAP_END_WITH_XPATH
 
   DOM_CLASSINFO_MAP_BEGIN(SVGSVGElement, nsIDOMSVGSVGElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)

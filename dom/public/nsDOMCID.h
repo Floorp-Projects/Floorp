@@ -60,4 +60,6 @@
 #define NS_CRYPTO_CONTRACTID "@mozilla.org/security/crypto;1"
 #define NS_PKCS11_CONTRACTID "@mozilla.org/security/pkcs11;1"
 
+#define NS_XPATH_EVALUATOR_CONTRACTID "@mozilla.org/dom/xpath-evaluator;1"
+
 #endif /* nsDOMCID_h__ */

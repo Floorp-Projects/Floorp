@@ -68,12 +68,14 @@
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
 #include "nsICSSLoader.h"
+#include "nsIDOMXPathEvaluator.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
 class nsIOutputStream;
 class nsDocument;
 class nsIDTD;
+class nsXPathDocumentTearoff;
 
 
 #if 0
@@ -630,6 +632,8 @@ private:
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
+
+  nsXPathDocumentTearoff* mXPathDocument;
 };
 
 
