@@ -1296,6 +1296,21 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                             sourceScheme.EqualsLiteral("resource"))
                             return NS_OK;
 
+                        // Now check capability policies
+                        static const char loadURIPrefGroup[] = "checkloaduri";
+
+                        SecurityLevel secLevel;
+                        rv = LookupPolicy(aPrincipal,
+                                          (char*)loadURIPrefGroup,
+                                          sEnabledID,
+                                          nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
+                                          nsnull, &secLevel);
+                        if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
+                        {
+                            // OK for this site!
+                            return NS_OK;
+                        }
+
                         ReportError(nsnull, errorTag, sourceURI, aTargetURI);
                         return NS_ERROR_DOM_BAD_URI;
                     }
