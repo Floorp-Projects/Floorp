@@ -477,22 +477,28 @@ private:
 protected:
     nsSize      mLastSize;
     static      nsWindow* gCurrentWindow;
-    PRBool      mIsTopWidgetWindow;
     nsPoint     mLastPoint;
     HWND        mWnd;
 #if 0
     HPALETTE    mPalette;
 #endif
     WNDPROC     mPrevWndProc;
-
-    PRBool      mHas3DBorder;
     HBRUSH      mBrush;
-    PRBool      mIsShiftDown;
-    PRBool      mIsControlDown;
-    PRBool      mIsAltDown;
-    PRBool      mIsDestroying;
-    PRBool      mOnDestroyCalled;
-    PRBool      mIsVisible;
+
+    PRPackedBool  mIsTopWidgetWindow;
+    PRPackedBool  mHas3DBorder;
+    PRPackedBool  mIsShiftDown;
+    PRPackedBool  mIsControlDown;
+    PRPackedBool  mIsAltDown;
+    PRPackedBool  mIsDestroying;
+    PRPackedBool  mOnDestroyCalled;
+    PRPackedBool  mIsVisible;
+    PRPackedBool  mIMEIsComposing;
+    PRPackedBool  mIMEIsStatusChanged;
+    PRPackedBool  mIMEWaitForTrailingByte;
+    PRPackedBool  mIsInMouseCapture;
+    PRPackedBool  mIsInMouseWheelProcessing;
+
     // XXX Temporary, should not be caching the font
     nsFont *    mFont;
 
@@ -507,8 +513,6 @@ protected:
 
 	// For Input Method Support
 	DWORD		mIMEProperty;
-	PRBool		mIMEIsComposing;
-  PRBool    mIMEIsStatusChanged;
 	nsCString*	mIMECompString;
 	nsString*	mIMECompUnicode;
 	PRUint8*	mIMEAttributeString;
@@ -523,9 +527,6 @@ protected:
 
 	static UINT		gCurrentKeyboardCP;
 	static HKL		gKeyboardLayout;
-
-    PRBool  mIsInMouseCapture;
-    PRBool  mIsInMouseWheelProcessing;
 
     // Drag & Drop
     nsNativeDragTarget * mNativeDragTarget;
