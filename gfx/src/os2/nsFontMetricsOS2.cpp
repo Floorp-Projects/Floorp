@@ -617,13 +617,8 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
   // Symbols fonts must be created with codepage 65400,
   // so use 65400 for the fattrs codepage. We still do
   // conversions with the charset codepage
-  if ((strcmpi(fattrs->szFacename, "Webdings") == 0) ||
-      (strcmpi(fattrs->szFacename, "wingdings") == 0) ||
-      (strcmpi(fattrs->szFacename, "Symbol Set") == 0)) {
-    fattrs->usCodePage = 65400;
-  } else {
+  if (fattrs->usCodePage != 65400)
     fattrs->usCodePage = mConvertCodePage;
-  }
 
 
   // set up the charbox;  set for image fonts also, in case we need to
@@ -715,6 +710,7 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
             fh->mFattrs.fsType |= FATTR_TYPE_MBCS;
           if( fm->fsType & FM_TYPE_DBCS )
             fh->mFattrs.fsType |= FATTR_TYPE_DBCS;
+          fh->mFattrs.usCodePage = fm->usCodePage;
             
           SetFontHandle( aPS, fh );
           break;
@@ -753,6 +749,7 @@ nsFontMetricsOS2::LoadFont( HPS aPS, nsString* aFontname )
           fattrs->fsSelection |= FATTR_SEL_BOLD;
         if( bItalic )
           fattrs->fsSelection |= FATTR_SEL_ITALIC;
+        fh->mFattrs.usCodePage = fm->usCodePage;
 
         SetFontHandle( aPS, fh );
       }
@@ -1861,6 +1858,7 @@ nsFontMetricsOS2::InitializeGlobalFonts()
     font->metrics.fsType = pFontMetrics[i].fsType;
     font->metrics.fsDefn = pFontMetrics[i].fsDefn;
     font->metrics.fsSelection = pFontMetrics[i].fsSelection;
+    font->metrics.usCodePage = pFontMetrics[i].usCodePage;
 
      // Set the FM_SEL_BOLD flag in fsSelection.  This makes the check for
      // bold and italic much easier in LoadFont
@@ -1999,6 +1997,8 @@ nsFontMetricsOS2::InitializeGlobalFonts()
       printf( " : M/DBCS" );
     else
       printf( " :       " );
+
+    printf( "  : %5d", fm->usCodePage );
 
     if( font->nextFamily )
       printf( " : %d", font->nextFamily );
