@@ -713,9 +713,9 @@ function RevealSearchPanel()
       var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
       fp.init(window, bundle.GetStringFromName("openFile"), nsIFilePicker.modeOpen);
       fp.setFilters(nsIFilePicker.filterAll);
-      fp.show();
-
-      openNewWindowWith(fp.fileURL.spec);
+      if (fp.show() == nsIFilePicker.returnOK) {
+        openNewWindowWith(fp.fileURL.spec);
+      }
     } catch (ex) { }
   }
 
