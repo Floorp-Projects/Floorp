@@ -223,6 +223,7 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
 #ifndef VMS
         aSpec->GetCommand( &buf );
 #ifdef XP_OS2_VACPP
+	mPrintSetup->out = NULL;
         // popen not defined OS2TODO
 #else
         mPrintSetup->out = popen( buf, "w" );
@@ -245,7 +246,7 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
 
     /* make sure the open worked */
 
-    if ( mPrintSetup->out < 0 )
+    if ( mPrintSetup->out == NULL )
       return NS_ERROR_FAILURE;
     mPrintContext = new PSContext();
     memset(mPrintContext, 0, sizeof(struct PSContext_));

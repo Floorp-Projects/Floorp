@@ -307,16 +307,16 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevi
 NS_IMETHODIMP nsDeviceContextPS::BeginDocument(void)
 {  
   nsIDeviceContextSpecPS *psSpec;
-  nsresult res;
+  nsresult res = NS_OK;
 
   if ( nsnull != mSpec ) {
     mPSObj = new nsPostScriptObj();  
     res = mSpec->QueryInterface(kIDeviceContextSpecPSIID, (void **) &psSpec);
     if ( res == NS_OK ) {
-      mPSObj->Init(psSpec);
+      res = mPSObj->Init(psSpec);
     }
   }
-  return NS_OK;
+  return res;
 }
 
 /** ---------------------------------------------------
