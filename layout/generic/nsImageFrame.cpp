@@ -519,8 +519,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
     // ObjectFrame, not us (we're an anonymous frame then)....
     nsIFrame* primaryFrame = nsnull;
     aPresShell->GetPrimaryFrameFor(mContent, &primaryFrame);
-    aPresShell->CantRenderReplacedElement(mPresContext,
-                                          primaryFrame ? primaryFrame : this);
+    aPresShell->CantRenderReplacedElement(primaryFrame ? primaryFrame : this);
     return NS_ERROR_FRAME_REPLACED;
   }
 

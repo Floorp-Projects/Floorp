@@ -1124,8 +1124,7 @@ public:
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
                                     nsIRenderingContext** aContext);
-  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
-                                       nsIFrame*       aFrame);
+  NS_IMETHOD CantRenderReplacedElement(nsIFrame*       aFrame);
   NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll);
 
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
@@ -3672,7 +3671,7 @@ PresShell::EndLoad(nsIDocument *aDocument)
     nsIFrame* scrollFrame = nsnull;
     GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
     if (scrollFrame) {
-      mFrameManager->RestoreFrameStateFor(mPresContext, scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
+      mFrameManager->RestoreFrameStateFor(scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
     }
   }
 
@@ -3985,11 +3984,10 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
 }
 
 NS_IMETHODIMP
-PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
-                                     nsIFrame*       aFrame)
+PresShell::CantRenderReplacedElement(nsIFrame* aFrame)
 {
   if (mFrameManager) {
-    return mFrameManager->CantRenderReplacedElement(aPresContext, aFrame);
+    return mFrameManager->CantRenderReplacedElement(aFrame);
   }
 
   return NS_OK;
@@ -4737,12 +4735,12 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
     nsIFrame* scrollFrame = nsnull;
     rv = GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
     if (scrollFrame) {
-      rv = mFrameManager->CaptureFrameStateFor(mPresContext, scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
+      rv = mFrameManager->CaptureFrameStateFor(scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
     }
   }
 
 
-  rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, historyState);  
+  rv = mFrameManager->CaptureFrameState(rootFrame, historyState);  
  
   return rv;
 }
@@ -5561,9 +5559,9 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
   }
 
   nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-  frameManager->ComputeStyleChangeFor(mPresContext, rootFrame, 
-                                      kNameSpaceID_Unknown, nsnull,
-                                      changeList, NS_STYLE_HINT_NONE, frameChange);
+  frameManager->ComputeStyleChangeFor(rootFrame, kNameSpaceID_Unknown, nsnull,
+                                      changeList, NS_STYLE_HINT_NONE,
+                                      frameChange);
 
   if (frameChange & nsChangeHint_ReconstructDoc)
     set->ReconstructDocElementHierarchy(mPresContext);

@@ -1194,7 +1194,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     //check for alternative content with CantRenderReplacedElement()
     nsIPresShell* presShell;
     aPresContext->GetShell(&presShell);
-    rv = presShell->CantRenderReplacedElement(aPresContext, this);
+    rv = presShell->CantRenderReplacedElement(this);
     NS_RELEASE(presShell);
   } else {
     NotifyContentObjectWrapper();
