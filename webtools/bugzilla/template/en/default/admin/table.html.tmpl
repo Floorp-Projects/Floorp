@@ -33,6 +33,12 @@
   #     content: If specified, the content of this variable is used
   #              instead of the data pulled from the current row. 
   #              NOTE: This value is not HTML filtered at output!
+  #     content_use_field: If defined and true, then each value in the 
+  #                        column corresponds with a key in the
+  #                        field_descs field, and that value from the 
+  #                        field_descs hash will be used instead of "content."
+  #                        See fieldvalues/select-field for an example of use.
+  #                        This content WILL be HTML-filtered in this case.
   #     align: left/center/right. Controls the horizontal alignment of the
   #            text in the column.
   #     allow_html_content: if defined, then this column allows html content
@@ -45,6 +51,8 @@
   #   keys are column names from columns subhashes name field.
   #
   #%]
+
+[% PROCESS "global/field-descs.none.tmpl" %]
 
 [%###################  TABLE HEADER   ######################%]
 
@@ -77,8 +85,11 @@
           <a href="[% link_uri %]">
         [% END %]
         
-        [% IF c.content %] 
-          [% c.content %]
+        [% IF c.content_use_field %]
+           [% colname = row.${c.name} %]
+           [% field_descs.${colname} FILTER html %]
+        [% ELSIF c.content %]
+            [% c.content %]
         [% ELSE %]
           [% IF c.yesno_field %]
             [% IF row.${c.name} %]

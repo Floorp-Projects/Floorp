@@ -321,6 +321,49 @@
     Sorry; you do not have the permissions necessary to enter [% terms.abug %]
     against the [% product FILTER html %] product.
 
+  [% ELSIF error == "fieldname_invalid" %]
+    [% title = "Specified Field Does Not Exist" %]
+    The field '[% field FILTER html %]' does not exist or 
+    cannot be edited with this interface.
+
+  [% ELSIF error == "fieldname_not_specified" %]
+    [% title = "Field Name Not Specified" %]
+    No field name specified when trying to edit field values.
+
+  [% ELSIF error == "fieldvalue_already_exists" %]
+    [% title = "Field Value Already Exists" %]
+    The value '[% value FILTER html %]' already exists for the
+    '[%- field FILTER html %]' field.
+
+  [% ELSIF error == "fieldvalue_doesnt_exist" %]
+    [% title = "Specified Field Value Does Not Exist" %]
+    The value '[% value FILTER html %]' does not exist for
+    the '[% field FILTER html %]' field.
+
+  [% ELSIF error == "fieldvalue_name_too_long" %]
+    [% title = "Field Value Is Too Long" %]
+    The value of a field is limited to 60 characters.
+    '[% value FILTER html %]' is too long ([% value.length %] characters).
+
+  [% ELSIF error == "fieldvalue_not_specified" %]
+    [% title = "Field Value Not Specified" %]
+    No field value specified when trying to edit a field value.
+
+  [% ELSIF error == "fieldvalue_sortkey_invalid" %]
+    [% title = "Invalid Field Value Sortkey" %]
+    The sortkey '[% sortkey FILTER html %]' for the '[% name FILTER html %]'
+    field is not a valid (positive) number.
+
+  [% ELSIF error == "fieldvalue_still_has_bugs" %]
+    [% title = "You Cannot Delete This Field Value" %]
+    You cannot delete the value '[% value FILTER html %]' from the 
+    '[% field FILTER html%]' field, because there are still 
+    [% count FILTER html %] [% terms.bugs %] using it.
+
+  [% ELSIF error == "fieldvalue_undefined" %]
+    [% title = "Undefined Value Not Allowed" %]
+    You must specify a value.
+
   [% ELSIF error == "file_not_specified" %]
     [% title = "No File Specified" %]
     You did not specify a file to attach.
