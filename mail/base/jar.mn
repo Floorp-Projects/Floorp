@@ -29,6 +29,7 @@ comm.jar:
 +   content/communicator/askViewZoom.xul            (content/askViewZoom.xul)
     content/help/contents.rdf                       (content/help.rdf)
     content/help/contextHelp.js                     (content/contextHelp.js)
+    content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
 
 toolkit.jar:
 +   content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
