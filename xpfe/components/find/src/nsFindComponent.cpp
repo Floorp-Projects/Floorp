@@ -36,7 +36,6 @@
 #include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsIURL.h"
-#include "nsIURL.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
