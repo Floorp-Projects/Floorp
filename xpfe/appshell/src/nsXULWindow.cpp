@@ -317,9 +317,18 @@ NS_IMETHODIMP nsXULWindow::Create()
 
 NS_IMETHODIMP nsXULWindow::Destroy()
 {
-   mBeingDestroyed = PR_TRUE;
    if(!mWindow)
       return NS_OK;
+
+   {
+    /* unregister before setting mBeingDestroyed because -turbo code
+        wants to be able to pose a dialog. */
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+    if(appShell)
+        appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
+   }
+   
+   mBeingDestroyed = PR_TRUE;
 
    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
    if (parentWindow)
@@ -348,10 +357,6 @@ NS_IMETHODIMP nsXULWindow::Destroy()
    }
 #endif
 
-   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
-   if(appShell)
-      appShell->UnregisterTopLevelWindow(NS_STATIC_CAST(nsIXULWindow*, this));
-   
    // let's make sure the window doesn't get deleted out from under us
    // while we are trying to close....this can happen if the docshell
    // we close ends up being the last owning reference to this xulwindow
