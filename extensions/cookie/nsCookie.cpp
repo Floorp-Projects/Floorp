@@ -211,7 +211,7 @@ Local_SACat(char **destination, const char *source)
 PRIVATE PRUnichar*
 cookie_Localize(char* genericString) {
   nsresult ret;
-  nsAutoString v("");
+  nsAutoString v;
 
   /* create a URL for the string resource file */
   nsIIOService* pNetService = nsnull;
@@ -271,7 +271,7 @@ cookie_Localize(char* genericString) {
   nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
   /* localize the given string */
-  nsString   strtmp(genericString);
+  nsString   strtmp; strtmp.AssignWithConversion(genericString);
   const PRUnichar *ptrtmp = strtmp.GetUnicode();
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
@@ -299,6 +299,7 @@ cookie_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool*
   PRUnichar * no_string = cookie_Localize("No");
   PRUnichar * confirm_string = cookie_Localize("Confirm");
 
+  nsString tempStr; tempStr.AssignWithConversion("chrome://global/skin/question-icon.gif");
   res = dialog->UniversalDialog(
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
@@ -312,7 +313,7 @@ cookie_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool*
     NULL, /* second edit field label */
     NULL, /* first edit field initial and final value */
     NULL, /* second edit field initial and final value */
-    nsString("chrome://global/skin/question-icon.gif").GetUnicode() ,
+    tempStr.GetUnicode() ,
     checkValue, /* initial and final value of checkbox */
     2, /* number of buttons */
     0, /* number of edit fields */
@@ -404,7 +405,8 @@ cookie_PutInt(nsOutputFileStream strm, PRInt32 i)
   }
   cookie_PutInt (strm, i/10);
   c[0] = '0' + i%10;
-  return cookie_Put(strm, nsString(c));
+  nsString tempStr; tempStr.AssignWithConversion(c);
+  return cookie_Put(strm, tempStr);
 }
 
 nsresult cookie_Get(nsInputFileStream strm, char& c) {
@@ -2080,9 +2082,21 @@ permission_Save() {
     permission_UnlockList();
     return;
   }
-  cookie_Put(strm, "# Netscape HTTP Cookie Permission File\n");
-  cookie_Put(strm, "# http://www.netscape.com/newsref/std/cookie_spec.html\n");
-  cookie_Put(strm, "# This is a generated file!  Do not edit.\n\n");
+
+  {
+    nsAutoString temp1; temp1.AssignWithConversion("# Netscape HTTP Cookie Permission File\n");
+    cookie_Put(strm, temp1);
+  }
+
+  {
+    nsAutoString temp2; temp2.AssignWithConversion("# http://www.netscape.com/newsref/std/cookie_spec.html\n");
+    cookie_Put(strm, temp2);
+  }
+
+  {
+    nsAutoString temp3; temp3.AssignWithConversion("# This is a generated file!  Do not edit.\n\n");
+    cookie_Put(strm, temp3);
+  }
 
   /* format shall be:
    * host \t permission \t permission ... \n
@@ -2093,36 +2107,58 @@ permission_Save() {
   for (PRInt32 i = 0; i < count; ++i) {
     hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(i));
     if (hostStruct) {
-      cookie_Put(strm, hostStruct->host);
+      {
+        nsAutoString temp4; temp4.AssignWithConversion(hostStruct->host);
+        cookie_Put(strm, temp4);
+      }
 
       PRInt32 count2 = hostStruct->permissionList->Count();
       for (PRInt32 typeIndex=0; typeIndex<count2; typeIndex++) {
         typeStruct = NS_STATIC_CAST
           (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
-        cookie_Put(strm, "\t");
+        {
+          nsAutoString temp5; temp5.AssignWithConversion("\t");
+          cookie_Put(strm, temp5);
+        }
         cookie_PutInt(strm, typeStruct->type);
         if (typeStruct->permission) {
-          cookie_Put(strm, "T");
+          nsAutoString temp6; temp6.AssignWithConversion("T");
+          cookie_Put(strm, temp6);
         } else {
-          cookie_Put(strm, "F");
+          nsAutoString temp7; temp7.AssignWithConversion("F");
+          cookie_Put(strm, temp7);
         }
       }
-      cookie_Put(strm, "\n");
+
+      nsAutoString temp8; temp8.AssignWithConversion("\n");
+      cookie_Put(strm, temp8);
     }
   }
 
   /* save current state of nag boxs' checkmarks */
-  cookie_Put(strm, "@@@@");
+  {
+    nsAutoString temp9; temp9.AssignWithConversion("@@@@");
+    cookie_Put(strm, temp9);
+  }
   for (PRInt32 type = 0; type < NUMBER_OF_PERMISSIONS; type++) {
-    cookie_Put(strm, "\t");
+    {
+      nsAutoString temp10; temp10.AssignWithConversion("\t");
+      cookie_Put(strm, temp10);
+    }
     cookie_PutInt(strm, type);
     if (permission_GetRememberChecked(type)) {
-      cookie_Put(strm, "T");
+      nsAutoString temp11; temp11.AssignWithConversion("T");
+      cookie_Put(strm, temp11);
     } else {
-      cookie_Put(strm, "F");
+      nsAutoString temp12; temp12.AssignWithConversion("F");
+      cookie_Put(strm, temp12);
     }
   }
-  cookie_Put(strm, "\n");
+
+  {
+    nsAutoString temp13; temp13.AssignWithConversion("\n");
+    cookie_Put(strm, temp13);
+  }
 
   cookie_permissionsChanged = PR_FALSE;
   strm.flush();
@@ -2205,7 +2241,7 @@ permission_Load() {
        * a host value of "@@@@" is a special code designating the
        * state of the cookie nag-box's checkmark
        */
-      if (host.Equals("@@@@")) {
+      if (host.EqualsWithConversion("@@@@")) {
         if (!permissionString.IsEmpty()) {
           permission_SetRememberChecked(type, permission);
         }
@@ -2257,9 +2293,21 @@ cookie_Save() {
     cookie_UnlockList();
     return;
   }
-  cookie_Put(strm, "# Netscape HTTP Cookie File\n");
-  cookie_Put(strm, "# http://www.netscape.com/newsref/std/cookie_spec.html\n");
-  cookie_Put(strm, "# This is a generated file!  Do not edit.\n\n");
+
+  {
+    nsAutoString temp1; temp1.AssignWithConversion("# Netscape HTTP Cookie File\n");
+    cookie_Put(strm, temp1);
+  }
+
+  {
+    nsAutoString temp2; temp2.AssignWithConversion("# http://www.netscape.com/newsref/std/cookie_spec.html\n");
+    cookie_Put(strm, temp2);
+  }
+
+  {
+    nsAutoString temp3; temp3.AssignWithConversion("# This is a generated file!  Do not edit.\n\n");
+    cookie_Put(strm, temp3);
+  }
 
   /* format shall be:
    *
@@ -2278,29 +2326,60 @@ cookie_Save() {
         /* don't write entry if cookie has expired or has no expiration date */
         continue;
       }
-      cookie_Put(strm, cookie_s->host);
+
+      {
+        nsAutoString temp4; temp4.AssignWithConversion(cookie_s->host);
+        cookie_Put(strm, temp4);
+      }
       if (cookie_s->isDomain) {
-        cookie_Put(strm, "\tTRUE\t");
+        nsAutoString temp5; temp5.AssignWithConversion("\tTRUE\t");
+        cookie_Put(strm, temp5);
       } else {
-        cookie_Put(strm, "\tFALSE\t");
+        nsAutoString temp6; temp6.AssignWithConversion("\tFALSE\t");
+        cookie_Put(strm, temp6);
       }
 
-      cookie_Put(strm, cookie_s->path);
+      {
+        nsAutoString temp7; temp7.AssignWithConversion(cookie_s->path);
+        cookie_Put(strm, temp7);
+      }
+
       if (cookie_s->xxx) {
-        cookie_Put(strm, "\tTRUE\t");
+        nsAutoString temp8; temp8.AssignWithConversion("\tTRUE\t");
+        cookie_Put(strm, temp8);
       } else {
-        cookie_Put(strm, "\tFALSE\t");
+        nsAutoString temp9; temp9.AssignWithConversion("\tFALSE\t");
+        cookie_Put(strm, temp9);
       }
 
       PR_snprintf(date_string, sizeof(date_string), "%lu", cookie_s->expires);
-      cookie_Put(strm, date_string);
-      cookie_Put(strm, "\t");
 
-      cookie_Put(strm, cookie_s->name);
-      cookie_Put(strm, "\t");
+        // STRING USE WARNING: might want to hoist TRUE and FALSE strings et al, above and elsewhere in this file,
+        //  as with tab here or better yet, just use |nsLiteralString| directly when that becomes possible
+        //  |cookie_Put| would have to be fixed to take a |nsAReadableString|, but the end result would be a win.
+      nsAutoString tempTabString; tempTabString.AssignWithConversion("\t");
 
-      cookie_Put(strm, cookie_s->cookie);
-      cookie_Put(strm, "\n");
+      {
+        nsAutoString temp10; temp10.AssignWithConversion(date_string);
+        cookie_Put(strm, temp10);
+      }
+
+      cookie_Put(strm, tempTabString);
+
+      {
+        nsAutoString temp10; temp10.AssignWithConversion(cookie_s->name);
+        cookie_Put(strm, temp10);
+      }
+
+      cookie_Put(strm, tempTabString);
+
+      {
+        nsAutoString temp11; temp11.AssignWithConversion(cookie_s->cookie);
+        cookie_Put(strm, temp11);
+      }
+
+      nsAutoString temp12; temp12.AssignWithConversion("\n");
+      cookie_Put(strm, temp12);
     }
   }
 
@@ -2376,12 +2455,12 @@ cookie_Load() {
     new_cookie->cookie = cookie.ToNewCString();
     new_cookie->host = host.ToNewCString();
     new_cookie->path = path.ToNewCString();
-    if (isDomain.Equals("TRUE")) {
+    if (isDomain.EqualsWithConversion("TRUE")) {
       new_cookie->isDomain = PR_TRUE;
     } else {
       new_cookie->isDomain = PR_FALSE;
     }
-    if (xxx.Equals("TRUE")) {
+    if (xxx.EqualsWithConversion("TRUE")) {
       new_cookie->xxx = PR_TRUE;
     } else {
       new_cookie->xxx = PR_FALSE;
@@ -2582,7 +2661,7 @@ cookie_FindValueInArgs(nsAutoString results, char* name) {
   start = results.Find(name);
   NS_ASSERTION(start >= 0, "bad data");
   if (start < 0) {
-    return nsAutoString("").ToNewCString();
+    return nsCAutoString().ToNewCString();
   }
   start += PL_strlen(name); /* get passed the |name| part */
   length = results.FindChar('|', PR_FALSE,start) - start;
@@ -2678,8 +2757,10 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     buffer[0] = '\0';
     g = 0;
 
+    nsString temp1; temp1.AssignWithConversion("%c%d%c%s%c%s%c%S%c%s%c%s%c%S%c%S");
+    nsString temp2; temp2.AssignWithConversion(ctime(&(cookie->expires)));
     g += nsTextFormatter::snprintf(buffer+g, BUFLEN2-g,
-      nsString("%c%d%c%s%c%s%c%S%c%s%c%s%c%S%c%S").GetUnicode(),
+      temp1.GetUnicode(),
       BREAK, cookieNum,
       BREAK, fixed_name,
       BREAK, fixed_value,
@@ -2687,7 +2768,7 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
       BREAK, fixed_domain_or_host,
       BREAK, fixed_path,
       BREAK, cookie->xxx ? Yes : No,
-      BREAK, cookie->expires ? (nsString(ctime(&(cookie->expires))).GetUnicode()) : AtEnd
+      BREAK, cookie->expires ? (temp2.GetUnicode()) : AtEnd
     );
     PR_FREEIF(fixed_name);
     PR_FREEIF(fixed_value);
@@ -2742,7 +2823,7 @@ COOKIE_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type) {
       }
     }
   }
-  aPermissionList = buffer;
+  aPermissionList.AssignWithConversion(buffer);
   PR_FREEIF(buffer);
   permission_UnlockList();
 }
