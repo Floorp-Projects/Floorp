@@ -2089,7 +2089,7 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
 
     // This may fail, but comparing against null serves the same purpose
     nsCOMPtr<nsIDocShellTreeOwner>
-        reqAsTreeOwner(do_GetInterface(aRequestor));
+        reqAsTreeOwner(do_QueryInterface(aRequestor));
 
     if (mTreeOwner && mTreeOwner != reqAsTreeOwner) {
         return mTreeOwner->
