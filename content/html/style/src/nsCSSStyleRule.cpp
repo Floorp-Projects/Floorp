@@ -26,6 +26,8 @@
 #include "nsStyleConsts.h"
 #include "nsUnitConversion.h"
 
+//#define DEBUG_REFS
+
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
@@ -33,7 +35,7 @@ static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
 static NS_DEFINE_IID(kCSSColorSID, NS_CSS_COLOR_SID);
@@ -175,6 +177,9 @@ protected:
   nsCSSSelector   mSelector;
   nsICSSDeclaration* mDeclaration;
   PRInt32         mWeight;
+#ifdef DEBUG_REFS
+  PRInt32 mInstance;
+#endif
 };
 
 
@@ -212,12 +217,19 @@ void CSSStyleRuleImpl::operator delete(void* ptr)
   }
 }
 
-
+#ifdef DEBUG_REFS
+static PRInt32 gInstanceCount;
+static const PRInt32 kInstrument = 1075;
+#endif
 
 CSSStyleRuleImpl::CSSStyleRuleImpl(const nsCSSSelector& aSelector)
   : mSelector(aSelector), mDeclaration(nsnull), mWeight(0)
 {
   NS_INIT_REFCNT();
+#ifdef DEBUG_REFS
+  mInstance = gInstanceCount++;
+  fprintf(stdout, "%d of %d + CSSStyleRule\n", mInstance, gInstanceCount);
+#endif
 }
 
 CSSStyleRuleImpl::~CSSStyleRuleImpl()
@@ -230,10 +242,36 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl()
     delete selector;
   }
   NS_IF_RELEASE(mDeclaration);
+#ifdef DEBUG_REFS
+  --gInstanceCount;
+  fprintf(stdout, "%d of %d - CSSStyleRule\n", mInstance, gInstanceCount);
+#endif
 }
 
+#ifdef DEBUG_REFS
+nsrefcnt CSSStyleRuleImpl::AddRef(void)                                
+{                                    
+  if (mInstance == kInstrument) {
+    fprintf(stdout, "%d AddRef CSSStyleRule\n", mRefCnt + 1);
+  }
+  return ++mRefCnt;                                          
+}
+
+nsrefcnt CSSStyleRuleImpl::Release(void)                         
+{                                                      
+  if (mInstance == kInstrument) {
+    fprintf(stdout, "%d Release CSSStyleRule\n", mRefCnt - 1);
+  }
+  if (--mRefCnt == 0) {                                
+    delete this;                                       
+    return 0;                                          
+  }                                                    
+  return mRefCnt;                                      
+}
+#else
 NS_IMPL_ADDREF(CSSStyleRuleImpl)
 NS_IMPL_RELEASE(CSSStyleRuleImpl)
+#endif
 
 nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
                                             void** aInstancePtrResult)
@@ -585,29 +623,33 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSMargin*  ourMargin;
     if (NS_OK == mDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
       if (nsnull != ourMargin) {
-        nsStyleMolecule* hack = (nsStyleMolecule*)aContext->GetData(kStyleMoleculeSID);
+        nsStyleSpacing* spacing = (nsStyleSpacing*)aContext->GetData(kStyleSpacingSID);
 
         // margin
         if (nsnull != ourMargin->mMargin) {
           if (ourMargin->mMargin->mLeft.IsLengthUnit()) {
-            hack->margin.left = CalcLength(ourMargin->mMargin->mLeft, font, aPresContext);
+            spacing->mMargin.left = CalcLength(ourMargin->mMargin->mLeft, font, aPresContext);
           } else if (ourMargin->mMargin->mLeft.GetUnit() != eCSSUnit_Null) {
-            hack->margin.left = (nscoord)ourMargin->mMargin->mLeft.GetFloatValue();
+            // XXX handle percent properly, this isn't it
+            spacing->mMargin.left = (nscoord)ourMargin->mMargin->mLeft.GetFloatValue();
           }
           if (ourMargin->mMargin->mTop.IsLengthUnit()) {
-            hack->margin.top = CalcLength(ourMargin->mMargin->mTop, font, aPresContext);
+            spacing->mMargin.top = CalcLength(ourMargin->mMargin->mTop, font, aPresContext);
           } else if (ourMargin->mMargin->mTop.GetUnit() != eCSSUnit_Null) {
-            hack->margin.top = (nscoord)ourMargin->mMargin->mTop.GetFloatValue();
+            // XXX handle percent properly, this isn't it
+            spacing->mMargin.top = (nscoord)ourMargin->mMargin->mTop.GetFloatValue();
           }
           if (ourMargin->mMargin->mRight.IsLengthUnit()) {
-            hack->margin.right = CalcLength(ourMargin->mMargin->mRight, font, aPresContext);
+            spacing->mMargin.right = CalcLength(ourMargin->mMargin->mRight, font, aPresContext);
           } else if (ourMargin->mMargin->mRight.GetUnit() != eCSSUnit_Null) {
-            hack->margin.right = (nscoord)ourMargin->mMargin->mRight.GetFloatValue();
+            // XXX handle percent properly, this isn't it
+            spacing->mMargin.right = (nscoord)ourMargin->mMargin->mRight.GetFloatValue();
           }
           if (ourMargin->mMargin->mBottom.IsLengthUnit()) {
-            hack->margin.bottom = CalcLength(ourMargin->mMargin->mBottom, font, aPresContext);
+            spacing->mMargin.bottom = CalcLength(ourMargin->mMargin->mBottom, font, aPresContext);
           } else if (ourMargin->mMargin->mBottom.GetUnit() != eCSSUnit_Null) {
-            hack->margin.bottom = (nscoord)ourMargin->mMargin->mBottom.GetFloatValue();
+            // XXX handle percent properly, this isn't it
+            spacing->mMargin.bottom = (nscoord)ourMargin->mMargin->mBottom.GetFloatValue();
           }
         }
       }
