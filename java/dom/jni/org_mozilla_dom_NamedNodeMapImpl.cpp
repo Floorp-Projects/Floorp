@@ -82,11 +82,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_getNamedItem
   nsresult rv = map->GetNamedItem(name, &node);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
-  if (NS_FAILED(rv) || !node) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "NodeMap.getNamedItem: failed", rv);
     return NULL;
   }
+  if (!node)
+    return NULL;
 
   return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }
@@ -193,7 +195,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_setNamedItem
 
   nsIDOMNode* node = nsnull;
   nsresult rv = map->SetNamedItem(arg, &node);
-  if (NS_FAILED(rv) || !node) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
         (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
@@ -205,6 +207,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_setNamedItem
       "NodeMap.setNamedItem: failed", rv, exceptionType);
     return NULL;
   }
+  if (!node)
+    return NULL;
 
   return JavaDOMGlobals::CreateNodeSubtype(env, node);
 }

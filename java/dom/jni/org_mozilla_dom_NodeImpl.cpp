@@ -359,11 +359,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getNextSibling
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetNextSibling(&ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Node.getNextSibling: failed", rv);
     return NULL;
   }
+  if (!ret)
+    return NULL;
 
   return JavaDOMGlobals::CreateNodeSubtype(env, ret);
 }
@@ -550,11 +552,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getOwnerDocument
 
   nsIDOMDocument* ret = nsnull;
   nsresult rv = node->GetOwnerDocument(&ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Node.getOwnerDocument: failed", rv);
     return NULL;
   }
+  if (!ret)
+    return NULL;
 
   jobject jret = env->AllocObject(JavaDOMGlobals::documentClass);
   if (!jret) {
@@ -589,11 +593,13 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_getParentNode
 
   nsIDOMNode* ret = nsnull;
   nsresult rv = node->GetParentNode(&ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Node.getParentNode: failed", rv);
     return NULL;
   }
+  if (!ret)
+    return NULL;
 
   return JavaDOMGlobals::CreateNodeSubtype(env, ret);
 }
