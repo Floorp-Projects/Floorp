@@ -181,12 +181,14 @@ NS_SetupRegistry()
 #endif
 #endif	//XP_MAC
 
+#ifndef XP_MAC    // temporary
   nsRepository::RegisterFactory(kRDFDocumentCID,           RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFSimpleDataBaseCID,     RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFRegistryCID,           RDF_DLL, PR_FALSE, PR_FALSE);
+#endif
 
   nsRepository::RegisterFactory(kCSSParserCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 }
