@@ -4427,7 +4427,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       // Get file mod time
       PRInt64 fileModTime;
       LL_I2L(fileModTime, 0);
-      dirEntry->GetLastModificationTime(&fileModTime);
+      dirEntry->GetLastModifiedTime(&fileModTime);
 
       if (pluginTag) {
         PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,

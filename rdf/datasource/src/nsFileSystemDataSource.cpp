@@ -1338,7 +1338,7 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
     }
 
     PRInt64 lastModDate;
-    if (NS_FAILED(rv = aFile->GetLastModificationTime(&lastModDate)))
+    if (NS_FAILED(rv = aFile->GetLastModifiedTime(&lastModDate)))
         return(rv);
 
     // convert from milliseconds to seconds

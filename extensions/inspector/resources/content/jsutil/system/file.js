@@ -529,7 +529,7 @@ dateModified  : function ()
   try
   { 
     var fileInst  = new JSFILE_FilePath(this.mPath); 
-    var date = new Date(fileInst.lastModificationTime).toLocaleString();
+    var date = new Date(fileInst.lastModifiedTime).toLocaleString();
     retval=date;
   }
 
