@@ -91,7 +91,7 @@
 #define STRETCH_HORIZONTAL  NS_STRETCH_DIRECTION_HORIZONTAL
 #define STRETCH_VERTICAL    NS_STRETCH_DIRECTION_VERTICAL
 
-// List of all strecthy chars --------------------------------------------------------
+// List of all stretchy chars --------------------------------------------------------
 // Includes extra stretchy operators that are not in the MathML REC Operator Dictionary
 // The list is *sorted* so that we can use binary search for quick lookup.
 // For stretching to work, chars must also be added in nsMathMLOperators.
@@ -238,7 +238,7 @@ MATHML_CHAR(0xF615, UnderSquareBracket,              STRETCH_HORIZONTAL)
 #elif defined(WANT_CHAR_DATA) || defined(WANT_GLYPH_DATA)
 #define _ , // dirty trick to make the macro handle a variable number of glyphs...
 
-// Data for strecthy chars that are supported by the Symbol font ---------------------
+// Data for stretchy chars that are supported by the Symbol font ---------------------
 // -----------------------------------------------------------------------------------
    #if defined(WANT_SYMBOL_DATA)//[top/left][middle][bot/right][glue]  [size0 ... size{N-1}]
 MATHML_CHAR( 0, LeftParenthesis,    0xF8EB _ 0x0000 _ 0xF8ED _ 0xF8EC, 0x0028)
@@ -258,7 +258,7 @@ MATHML_CHAR(78, OverBar,            0x0000 _ 0x0000 _ 0x0000 _ 0x00AF, 0x00AF)
 MATHML_CHAR(84, VertBar,            0x0000 _ 0x0000 _ 0x0000 _ 0x007C, 0x007C)
    #endif // defined(WANT_SYMBOL_DATA)
 
-// Data for strecthy chars that are supported by the MT Extra font -------------------
+// Data for stretchy chars that are supported by the MT Extra font -------------------
 // -----------------------------------------------------------------------------------
    #if defined(WANT_MTEXTRA_DATA)//[top/left][middle][bot/right][glue] [size0 ... size{N-1}]
 MATHML_CHAR( 0, UnderCurlyBracket,   0xEC00 _ 0xEC01 _ 0xEC02 _ 0xEC03, 0xF613)
@@ -271,7 +271,7 @@ MATHML_CHAR( 6, OverCurlyBracket,    0xEC04 _ 0xEC05 _ 0xEC06 _ 0xEC03, 0xF612)
 //MATHML_CHAR(36, RightHarpoonAccent,  0x0000 _ 0x0000 _ 0x20D1 _ 0xEB00, 0x20D1)
    #endif // defined(WANT_MTEXTRA_DATA)
 
-// Data for strecthy chars that are supported by TeX's CMSY font ---------------------
+// Data for stretchy chars that are supported by TeX's CMSY font ---------------------
 // -----------------------------------------------------------------------------------
 
    #if defined(WANT_CMSY_DATA)   //[top/left][middle][bot/right][glue] [size0 ... size{N-1}]
@@ -286,7 +286,7 @@ MATHML_CHAR(42, VerticalBar,        0x0000 _ 0x0000 _ 0x0000 _ 0x2223, 0x2223)
 MATHML_CHAR(48, DoubleVerticalBar,  0x0000 _ 0x0000 _ 0x0000 _ 0x2225, 0x2225)
    #endif // defined(WANT_CMSY_DATA)
 
-// Data for strecthy chars that are supported by TeX's CMEX font ---------------------
+// Data for stretchy chars that are supported by TeX's CMEX font ---------------------
 // -----------------------------------------------------------------------------------
    #if defined(WANT_CMEX_DATA)  // [top/left][middle][bot/right][glue]  [size0 ... size{N-1}]
 MATHML_CHAR(  0, LeftParenthesis,    0xE030 _ 0x0000 _ 0xE040 _ 0xE042, 0x0028 _ 0xE07F _ 0xE08F _ 0xE091 _ 0xE09F)
@@ -328,7 +328,7 @@ MATHML_CHAR(292, DoubleUpDownArrow,  0xE07E _ 0x0000 _ 0xE0A0 _ 0xE077, 0x21D5)
 //MATHML_CHAR(298, Integral,           0x0000 _ 0x0000 _ 0x0000 _ 0x0000, 0x222B _ 0xE052 _ 0xE05A)
    #endif // defined(WANT_CMEX_DATA)
 
-// Data for strecthy chars that are supported by the Math4 font ----------------------
+// Data for stretchy chars that are supported by the Math4 font ----------------------
 // -----------------------------------------------------------------------------------
    #if defined(WANT_MATH4_DATA) // [top/left][middle][bot/right][glue] [size0 ... size{N-1}]
 MATHML_CHAR( 0, UnderCurlyBracket,   0xEC00 _ 0xEC01 _ 0xEC02 _ 0xEC03, 0xF613 _ 0xEC29 _ 0xEC2A _ 0xEC2B)
