@@ -92,7 +92,7 @@ public:
   void StopThrobber();
   void LoadThrobberImages();
   void DestroyThrobberImages();
-  virtual nsEventStatus DispatchMenuItem(nsGUIEvent *aEvent) = 0;
+  virtual nsEventStatus DispatchMenuItem(PRInt32 aID) = 0;
 
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);
@@ -106,7 +106,7 @@ public:
   void ShowContentSize();
   void ShowFrameSize();
   void ShowStyleSize();
-  nsEventStatus DispatchDebugMenu(nsMenuEvent* aEvent);
+  nsEventStatus DispatchDebugMenu(PRInt32 aID);
 #endif
 
   void SetApp(nsViewerApp* aApp) {
@@ -162,7 +162,7 @@ public:
   ~nsNativeBrowserWindow();
 
   virtual nsresult CreateMenuBar(PRInt32 aWidth);
-  virtual nsEventStatus DispatchMenuItem(nsGUIEvent* aEvent);
+  virtual nsEventStatus DispatchMenuItem(PRInt32 aID);
 };
 
 #endif /* nsBrowserWindow_h___ */

@@ -20,10 +20,9 @@ DEPTH=../../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
-	main.cpp		\
+	nsUnixMain.cpp		\
 	nsBrowserWindow.cpp	\
-	nsDocLoader.cpp		\
-	nsViewer.cpp		\
+	nsViewerApp.cpp		\
 	nsMotifMenu.cpp		\
 	nsEditorMode.cpp	\
 	nsEditorInterfaces.cpp	\
