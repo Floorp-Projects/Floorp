@@ -319,7 +319,7 @@ Contributor(s): ______________________________________. -->
   </toolbox>
     
   <hbox flex="1" >
-    <hbox id="sidebar-box" class="chromeclass-extrachrome"/>
+    <vbox id="sidebar-box" class="chromeclass-extrachrome"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" />
   
     <vbox id="appcontent" flex="1"
