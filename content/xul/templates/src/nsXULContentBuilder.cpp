@@ -1771,6 +1771,12 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement)
 
     NS_ASSERTION(IsElementInWidget(aElement), "element not managed by this template builder");
 
+    // Prevent re-entrancy while we're creating an element's children
+    if (mIsBuilding)
+        return NS_OK;
+
+    AutoLatch latch(&mIsBuilding);
+
     return CreateTemplateAndContainerContents(aElement, nsnull /* don't care */, nsnull /* don't care */);
 }
 
