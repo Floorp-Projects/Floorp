@@ -63,7 +63,7 @@ include $(topsrcdir)/config/rules.mk
 ABS_topsrcdir := $(shell cd $(topsrcdir); pwd)
 ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 export::
-	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/Chimera.pbproj .
+	rsync -a --exclude .DS_Store --exclude "CVS/" $(srcdir)/Camino.xcode .
 	ln -fs $(srcdir)/src
 	ln -fs $(srcdir)/resources
 	ln -fs $(srcdir)/PreferencePanes
