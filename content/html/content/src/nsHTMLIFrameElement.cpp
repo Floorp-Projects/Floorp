@@ -20,8 +20,11 @@
  * Contributor(s): 
  */
 #include "nsIDOMHTMLIFrameElement.h"
+#include "nsIDOMNSHTMLFrameElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
@@ -38,6 +41,7 @@
 
 class nsHTMLIFrameElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLIFrameElement,
+                            public nsIDOMNSHTMLFrameElement,
                             public nsIChromeEventHandler,
                             public nsIDOMEventListener
 {
@@ -59,6 +63,9 @@ public:
 
   // nsIDOMHTMLIFrameElement
   NS_DECL_NSIDOMHTMLIFRAMEELEMENT
+
+  // nsIDOMNSHTMLFrameElement
+  NS_DECL_NSIDOMNSHTMLFRAMEELEMENT
 
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
@@ -121,6 +128,7 @@ NS_IMPL_RELEASE(nsHTMLIFrameElement);
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement,
                                     nsGenericHTMLContainerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLIFrameElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLIFrameElement)
@@ -196,6 +204,34 @@ nsHTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
   *aContentDocument = domDoc;
 
   NS_IF_ADDREF(*aContentDocument);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
+{
+  NS_ENSURE_ARG_POINTER(aContentWindow);
+  *aContentWindow = nsnull;
+
+  nsCOMPtr<nsIDOMDocument> content_doc;
+
+  nsresult rv = GetContentDocument(getter_AddRefs(content_doc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(content_doc));
+
+  if (!doc) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj;
+  doc->GetScriptGlobalObject(getter_AddRefs(globalObj));
+
+  nsCOMPtr<nsIDOMWindow> window (do_QueryInterface(globalObj));
+
+  *aContentWindow = window;
+  NS_IF_ADDREF(*aContentWindow);
 
   return NS_OK;
 }
