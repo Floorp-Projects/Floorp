@@ -137,10 +137,11 @@ ifeq ($(OS_ARCH),SINIX-N)
 endif
 
 #
-# Handle FreeBSD 2.2-STABLE and Linux 2.0.30-osfmach3
+# Handle FreeBSD 2.2-STABLE, Linux 2.0.30-osfmach3, and
+# IRIX 6.5-ALPHA-1289139620.
 #
 
-ifeq (,$(filter-out Linux FreeBSD,$(OS_ARCH)))
+ifeq (,$(filter-out Linux FreeBSD IRIX,$(OS_ARCH)))
     OS_RELEASE := $(shell echo $(OS_RELEASE) | sed 's/-.*//')
 endif
 
