@@ -33,13 +33,13 @@ interface nsIMimeURLUtils : nsISupports {
 
   void    URLType([const] in string URL, out PRInt32 retType);
 
-  void    ReduceURL (in string url, out string retURL);
+  void    ReduceURL (inout char url, out string retURL);
 
   void    ScanForURLs([const] in string input, in PRInt32 input_size,
-                      in string output, in PRInt32 output_size, 
+                      out char output, in PRInt32 output_size, 
                       in PRBool urls_only);
 
-  void    MakeAbsoluteURL(in string absolute_url, in string relative_url, 
+  void    MakeAbsoluteURL(inout char absolute_url, in string relative_url, 
                           out string retURL);
 
   void    ScanHTMLForURLs([const] in string input, out string retBuf);
