@@ -627,7 +627,8 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
       if (NS_FAILED(res)) return res;
       if (bHandled) return res;
     }
-    else if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN)
+    else if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN
+             || keyCode == nsIDOMKeyEvent::DOM_VK_ENTER)
     {
       nsAutoString empty;
       if (isShift && !(mFlags&eEditorPlaintextBit))
