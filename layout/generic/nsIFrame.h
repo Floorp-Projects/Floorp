@@ -414,8 +414,10 @@ public:
                          nsIRenderingContext * aRendContext,
                          nsGUIEvent*           aEvent,
                          nsIFrame *            aNewFrame,
+                         nsIContent **         aNewContent,
                          PRUint32&             aAcutalContentOffset,
-                         PRInt32&              aOffset) = 0;
+                         PRInt32&              aOffset,
+                         PRInt32&              aOffsetEnd) = 0;
 
 
   /**

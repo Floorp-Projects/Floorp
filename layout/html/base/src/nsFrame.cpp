@@ -680,35 +680,86 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
                const nsRect&        aDirtyRect,
                nsFramePaintLayer    aWhichLayer)
 {
+  PRBool drawSelected(PR_FALSE);
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    if (DisplaySelection(aPresContext) == PR_FALSE)
-      return NS_OK;
+/** GetDocument
+*/
+    nsCOMPtr<nsIDocument> doc;
+    nsresult result; 
+    nsCOMPtr<nsIPresShell> shell;
+    result = aPresContext.GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(result))
+      return result;
 
-    // Get Content
-    nsIContent* content;
-    nsresult rv = GetContent(&content);
-    if (NS_FAILED(rv) || (nsnull == content)) {
-      return rv;
+    PRBool displaySelection;
+    result = shell->GetDisplayNonTextSelection(&displaySelection);
+    if (NS_FAILED(result))
+      return result;
+    if (!displaySelection)
+      return NS_OK;
+    if (mContent) {
+      result = mContent->GetDocument(*getter_AddRefs(doc));
+    }
+    if (!doc || NS_FAILED(result)) {
+      if (NS_SUCCEEDED(result) && shell) {
+        result = shell->GetDocument(getter_AddRefs(doc));
+      }
     }
 
-    PRInt32 n;
-    content->ChildCount(n);
+    displaySelection = doc->GetDisplaySelection();
     nsFrameState  frameState;
     PRBool        isSelected;
     GetFrameState(&frameState);
     isSelected = (frameState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
+    PRInt32 selectionStartOffset = 0;//frame coordinates
+    PRInt32 selectionEndOffset = 0;//frame coordinates
 
-    if ((n == 0) && isSelected) {
-      nsRect rect;
-      GetRect(rect);
-      rect.width--;
-      rect.height--;
-      aRenderingContext.SetColor(NS_RGB(0,0,255));
-      aRenderingContext.DrawRect(rect);
-      aRenderingContext.DrawLine(rect.x, rect.y, rect.XMost(), rect.YMost());
-      aRenderingContext.DrawLine(rect.x, rect.YMost(), rect.XMost(), rect.y);
+    if (!displaySelection || !isSelected)
+      return NS_OK;
+
+    nsCOMPtr<nsIDOMSelection> selection;
+    nsCOMPtr<nsIFrameSelection> frameSelection;
+
+    nsCOMPtr<nsIContent> newContent;
+    result = mContent->GetParent(*getter_AddRefs(newContent));
+    PRInt32 offset;
+    PRInt32 offsetEnd;
+    if (NS_SUCCEEDED(result) && newContent){
+      PRInt32 index = 0;
+      nsresult result = newContent->IndexOf(mContent, offset);
+      if (NS_FAILED(result)) 
+      {
+        return result;
+      }
     }
-    NS_RELEASE(content);
+
+    if (NS_SUCCEEDED(result) && shell){
+      result = shell->GetSelection(getter_AddRefs(selection));
+      if (NS_SUCCEEDED(result) && selection){
+        frameSelection = do_QueryInterface(selection);
+        nsCOMPtr<nsIContent> content;
+        result = GetContent(getter_AddRefs(content));
+        if (NS_SUCCEEDED(result)){
+          result = frameSelection->LookUpSelection(newContent, offset, 
+                                1, &offset, &offsetEnd,
+                                &drawSelected,0);// last param notused
+        }
+      }
+    }
+  }
+  if (drawSelected)
+  {
+    nsRect rect;
+    GetRect(rect);
+    rect.width-=2;
+    rect.height-=2;
+    rect.x++;
+    rect.y++;
+    aRenderingContext.SetColor(NS_RGB(0,0,255));
+    nsRect drawrect(1, 1, rect.width, rect.height);
+    aRenderingContext.DrawRect(drawrect );
+    //aRenderingContext.DrawLine(rect.x, rect.y, rect.XMost(), rect.YMost());
+    //aRenderingContext.DrawLine(rect.x, rect.YMost(), rect.XMost(), rect.y);
   }
   return NS_OK;
 }
@@ -752,6 +803,10 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
     HandlePress(aPresContext, aEvent, aEventStatus);
   }
+  else if (aEvent->message == NS_MOUSE_LEFT_DOUBLECLICK) {
+    HandleMultiplePress(aPresContext, aEvent, aEventStatus);
+  }
+
 
   return NS_OK;
 }
@@ -777,17 +832,18 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
     if (NS_SUCCEEDED(rv)){
       PRInt32 startPos = 0;
       PRUint32 contentOffset = 0;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
+      PRInt32 contentOffsetEnd = 0;
+      nsCOMPtr<nsIContent> newContent;
+      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, getter_AddRefs(newContent), 
+                                   contentOffset, startPos, contentOffsetEnd))){
         nsCOMPtr<nsIDOMSelection> selection;
         if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
           nsCOMPtr<nsIFrameSelection> frameselection;
           frameselection = do_QueryInterface(selection);
           if (frameselection) {
-            nsCOMPtr<nsIContent> content;
-            rv = GetContent(getter_AddRefs(content));
             if (NS_SUCCEEDED( rv )){
               frameselection->SetMouseDownState(PR_TRUE);//not important if it fails here
-              frameselection->TakeFocus(content, startPos + contentOffset, inputEvent->isShift);
+              frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, inputEvent->isShift);
             }
           }
         }
@@ -797,6 +853,17 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
   }
   return NS_OK;
 
+}
+
+/**
+  * Handles the Multiple Mouse Press Event for the frame
+ */
+NS_IMETHODIMP
+nsFrame::HandleMultiplePress(nsIPresContext& aPresContext, 
+                     nsGUIEvent*     aEvent,
+                     nsEventStatus&  aEventStatus)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext, 
@@ -815,15 +882,16 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
     if (NS_SUCCEEDED(rv)) {
       PRInt32 startPos = 0;
       PRUint32 contentOffset = 0;
-      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
+      PRInt32 contentOffsetEnd = 0;
+      nsCOMPtr<nsIContent> newContent;
+      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, getter_AddRefs(newContent), 
+                                   contentOffset, startPos, contentOffsetEnd))){
         nsIDOMSelection *selection = nsnull;
         if (NS_SUCCEEDED(shell->GetSelection(&selection))){
           nsIFrameSelection* frameselection;
           if (NS_SUCCEEDED(selection->QueryInterface(kIFrameSelection, (void **)&frameselection))) {
-            nsCOMPtr<nsIContent> content;
-            rv = GetContent(getter_AddRefs(content));
             if (NS_SUCCEEDED( rv )){
-              frameselection->TakeFocus(content, startPos + contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
+              frameselection->TakeFocus(newContent, startPos + contentOffset, contentOffsetEnd + contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
             }
             NS_RELEASE(frameselection);
           }
@@ -850,134 +918,32 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext&        aPresContext,
                                    nsIRenderingContext *  aRendContext,
                                    nsGUIEvent *           aEvent,
                                    nsIFrame *             aNewFrame,
+                                   nsIContent **          aNewContent,
                                    PRUint32&              aAcutalContentOffset,
-                                   PRInt32&               aOffset)
+                                   PRInt32&               aOffset,
+                                   PRInt32&               aOffsetEnd)
 {
+  //default getposition will return parent as newcontent
+  //also aActualContentOffset will be 0
+  // aOffset and aOffsetEnd will be 1 value apart
+  // aNewFrame is not used nor is aEvent, aRendContent, nor aPresContext
+  if (!aNewContent || !mContent)
+    return NS_ERROR_NULL_POINTER;
+  nsresult result;
+  result = mContent->GetParent(*aNewContent);
 
-  //PRInt32 offset; 
-  //PRInt32 width;
-  //CalcCursorPosition(aPresContext, aEvent, aNewFrame, offset, width);
-  //offset += aNewFrame->GetContentOffset();
-
-  //return offset;
-  aAcutalContentOffset = 0;
-  aOffset = 0;
-
+  if (*aNewContent){
+    PRInt32 index = 0;
+    nsresult result = (*aNewContent)->IndexOf(mContent, aOffset);
+    if (NS_FAILED(result)) 
+    {
+      return result;
+    }
+    aOffsetEnd = aOffset +1;
+  }
   return NS_OK;
 }
 
-/********************************************************
-* Adjusts the Starting and Ending TextPoint for a Range
-*********************************************************/
-void nsFrame::AdjustPointsInNewContent(nsIPresContext& aPresContext,
-                                       nsIRenderingContext * aRendContext,
-                                       nsGUIEvent * aEvent,
-                                       nsIFrame  * aNewFrame) {
-#if 0
-  PRUint32 actualOffset = 0;
-
-  // Get new Cursor Poition in the new content
-  PRInt32 newPos;
-//DEBUG MJUDGE
-
-  GetPosition(aPresContext, aRendContext, aEvent, aNewFrame, actualOffset, newPos);
-
-  if (mStartSelectionPoint->IsAnchor()) {
-    if (newPos == mStartSelectionPoint->GetOffset()) {
-      mEndSelectionPoint->SetOffset(newPos);
-      mEndSelectionPoint->SetAnchor(PR_TRUE);
-      mSelectionRange->SetEndPoint(mEndSelectionPoint);
-    } else if (newPos < mStartSelectionPoint->GetOffset()) {
-      mEndSelectionPoint->SetOffset(mStartSelectionPoint->GetOffset());
-      mEndSelectionPoint->SetAnchor(PR_TRUE);
-      mStartSelectionPoint->SetOffset(newPos);
-      mStartSelectionPoint->SetAnchor(PR_FALSE);
-      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
-    } else {
-      mEndSelectionPoint->SetOffset(newPos);
-      mSelectionRange->SetEndPoint(mEndSelectionPoint);
-    }
-  } else if (mEndSelectionPoint->IsAnchor()) {
-    int endPos = mEndSelectionPoint->GetOffset();
-    if (newPos == mEndSelectionPoint->GetOffset()) {
-      mStartSelectionPoint->SetOffset(newPos);
-      mStartSelectionPoint->SetAnchor(PR_TRUE);
-      mSelectionRange->SetStartPoint(mStartSelectionPoint);
-    } else if (newPos > mEndSelectionPoint->GetOffset()) {
-      mEndSelectionPoint->SetOffset(newPos);
-      mEndSelectionPoint->SetAnchor(PR_FALSE);
-      mStartSelectionPoint->SetOffset(endPos);
-      mStartSelectionPoint->SetAnchor(PR_TRUE);
-      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
-    } else {
-      mStartSelectionPoint->SetOffset(newPos);
-      mSelectionRange->SetStartPoint(mStartSelectionPoint);
-    }
-  } else {
-    // [TODO] Should get here
-    // throw exception
-    if (SELECTION_DEBUG) printf("--\n--\n--\n--\n--\n--\n--\n Should be here. #102\n");
-    //return;
-  }
-#endif //0
-}
-
-/********************************************************
-* Adjusts the Starting and Ending TextPoint for a Range
-*********************************************************/
-void nsFrame::AdjustPointsInSameContent(nsIPresContext& aPresContext,
-                                        nsIRenderingContext * aRendContext,
-                                        nsGUIEvent    * aEvent) {
-#if 0
-  PRUint32 actualOffset = 0;
-
-  // Get new Cursor Poition in the same content
-  PRInt32 newPos;
-  GetPosition(aPresContext, aRendContext, aEvent, mCurrentFrame, actualOffset, newPos);
-  //newPos += actualOffset;
-  if (SELECTION_DEBUG) printf("AdjustTextPointsInSameContent newPos: %d\n", newPos);
-
-  if (mStartSelectionPoint->IsAnchor()) {
-    if (newPos == mStartSelectionPoint->GetOffset()) {
-      mEndSelectionPoint->SetOffset(newPos);
-      mEndSelectionPoint->SetAnchor(PR_TRUE);
-      mSelectionRange->SetEndPoint(mEndSelectionPoint);
-    } else if (newPos < mStartSelectionPoint->GetOffset()) {
-      mStartSelectionPoint->SetOffset(newPos);
-      mStartSelectionPoint->SetAnchor(PR_FALSE);
-      mEndSelectionPoint->SetAnchor(PR_TRUE);
-      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
-    } else {
-      mEndSelectionPoint->SetAnchor(PR_FALSE);
-      mEndSelectionPoint->SetOffset(newPos);
-      mSelectionRange->SetEndPoint(mEndSelectionPoint);
-    }
-  } else if (mEndSelectionPoint->IsAnchor()) {
-    if (newPos == mEndSelectionPoint->GetOffset()) {
-      mStartSelectionPoint->SetOffset(newPos);
-      mStartSelectionPoint->SetAnchor(PR_TRUE);
-      mSelectionRange->SetStartPoint(mStartSelectionPoint);
-    } else if (newPos > mEndSelectionPoint->GetOffset()) {
-      mEndSelectionPoint->SetOffset(newPos);
-      mEndSelectionPoint->SetAnchor(PR_FALSE);
-      mStartSelectionPoint->SetAnchor(PR_TRUE);
-      mSelectionRange->SetRange(mStartSelectionPoint, mEndSelectionPoint);
-    } else {
-      mStartSelectionPoint->SetAnchor(PR_FALSE);
-      mStartSelectionPoint->SetOffset(newPos);
-      mSelectionRange->SetStartPoint(mStartSelectionPoint);
-    }
-  } else {
-    // [TODO] Should get here
-    // throw exception
-    if (SELECTION_DEBUG) printf("--\n--\n--\n--\n--\n--\n--\n Should be here. #101\n");
-    //return;
-  }
-
-    if (SELECTION_DEBUG) printf("Start %s  End %s\n", mStartSelectionPoint->ToString(), mEndSelectionPoint->ToString());
-  //}
-#endif //0
-}
 
 NS_IMETHODIMP
 nsFrame::GetCursor(nsIPresContext& aPresContext,

@@ -244,6 +244,10 @@ public:
                          nsGUIEvent *    aEvent,
                          nsEventStatus&  aEventStatus);
 
+  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus);
+
   NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
                         nsGUIEvent *    aEvent,
                         nsEventStatus&  aEventStatus);
@@ -256,8 +260,10 @@ public:
                          nsIRenderingContext * aRendContext,
                          nsGUIEvent*           aEvent,
                          nsIFrame *            aNewFrame,
+                         nsIContent **         aNewContent,
                          PRUint32&             aAcutalContentOffset,
-                         PRInt32&              aOffset);
+                         PRInt32&              aOffset,
+                         PRInt32&              aOffsetEnd);
 
   //--------------------------------------------------
   // Additional methods
@@ -311,15 +317,6 @@ protected:
   // Protected constructor and destructor
   nsFrame();
   virtual ~nsFrame();
-
-  virtual void AdjustPointsInNewContent(nsIPresContext& aPresContext,
-                                nsIRenderingContext * aRendContext,
-                                nsGUIEvent    * aEvent,
-                                nsIFrame       * aNewFrame);
-
-  virtual void AdjustPointsInSameContent(nsIPresContext& aPresContext,
-                                 nsIRenderingContext * aRendContext,
-                                 nsGUIEvent    * aEvent);
 
   PRBool DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn = PR_FALSE);
 

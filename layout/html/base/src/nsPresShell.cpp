@@ -336,6 +336,9 @@ public:
   NS_IMETHOD GetCaret(nsICaret **outCaret);
   NS_IMETHOD SetCaretEnabled(PRBool inEnable);
 
+  NS_IMETHOD SetDisplayNonTextSelection(PRBool inEnable);
+  NS_IMETHOD GetDisplayNonTextSelection(PRBool *inEnable);
+
   // nsIDOMSelectionListener interface
   NS_IMETHOD NotifySelectionChanged();
 
@@ -382,6 +385,7 @@ protected:
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
+  PRBool                        mDisplayNonTextSelection;
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
   FrameHashTable*               mPlaceholderMap;
 private:
@@ -454,6 +458,7 @@ PresShell::PresShell()
   //XXX joki 11/17 - temporary event hack.
   mIsDestroying = PR_FALSE;
   mCaretEnabled = PR_FALSE;
+  mDisplayNonTextSelection = PR_FALSE;
   EnableScrolling();
 }
 
@@ -999,6 +1004,20 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool inEnable)
 	}
 	
 	return result;
+}
+
+NS_IMETHODIMP PresShell::SetDisplayNonTextSelection(PRBool inEnable)
+{
+  mDisplayNonTextSelection = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP PresShell::GetDisplayNonTextSelection(PRBool *inEnable)
+{
+  if (!inEnable)
+    return NS_ERROR_NULL_POINTER;
+  *inEnable = mDisplayNonTextSelection;
+  return NS_OK;
 }
 
 
