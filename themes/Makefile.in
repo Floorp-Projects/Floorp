@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= classic
 
-ifndef MOZ_PHOENIX
+ifndef MOZ_XUL_APP
 DIRS		+= modern 
 endif
 
