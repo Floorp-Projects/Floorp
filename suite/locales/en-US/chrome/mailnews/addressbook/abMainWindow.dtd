@@ -1,0 +1,87 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!-- Title -->
+<!ENTITY addressbookWindow.title "Address Book">
+
+<!-- Menus:  the . means that the menu item isn't implemented yet -->
+
+<!ENTITY fileMenu.label					"File"> 
+<!ENTITY newMenu.label						"New"> 
+<!ENTITY newNavCmd.label						".Navigator">  
+<!ENTITY newMessageCmd.label					"Message">  
+<!ENTITY newCardCmd.label					"New Card...">  
+<!ENTITY newListCmd.label					".New List...">  
+<!ENTITY newAddressBookCmd.label			".New Address Book...">  
+<!ENTITY newDirectoryCmd.label				".New Directory...">  
+<!ENTITY importCmd.label					".Import..."> 
+<!ENTITY exportCmd.label					".Export...">  
+<!ENTITY printPreviewCmd.label				".Print Preview">  
+<!ENTITY printCardViewCmd.label				".Print Card View...">  
+<!ENTITY printAddressBook.label				".Print Address Book...">  
+<!ENTITY closeCmd.label						"Close">  
+
+<!ENTITY editMenu.label					"Edit"> 
+<!ENTITY undoCmd.label						".Undo">  
+<!ENTITY redoCmd.label						".Redo">  
+<!ENTITY cutCmd.label						".Cut">  
+<!ENTITY copyCmd.label						".Copy">  
+<!ENTITY pasteCmd.label						".Paste">  
+<!ENTITY deleteCmd.label					"Delete">  
+<!ENTITY selectAllCmd.label					".Select All">  
+<!ENTITY searchCmd.label					".Search..."> 
+<!ENTITY htmlDomainCmd.label				".HTML Domains...">  
+<!ENTITY abPropsCmd.label					"Properties">  
+<!ENTITY prefsCmd.label						".Preferences">
+
+<!ENTITY viewMenu.label					"View"> 
+<!ENTITY showMenu.label						".Show"> 
+<!ENTITY showAbToolbarCmd.label					".Address Book Toolbar">  
+<!ENTITY showCardPane.label						".Card Pane">  
+<!ENTITY showTaskbar.label						".Taskbar">  
+<!ENTITY sortMenu.label						".Sort"> 
+<!ENTITY sortByNameCmd.label					".by Name">  
+<!ENTITY sortByEmailCmd.label					".by Email">  
+<!ENTITY sortByOrganizationCmd.label			".by Organization">  
+<!ENTITY sortByNicknameCmd.label				".by Nickname">  
+<!ENTITY sortByPhoneCmd.label					".by Phone Number">  
+<!ENTITY sortByCityCmd.label					".by City">  
+<!ENTITY sortAscendingCmd.label					".Ascending">  
+<!ENTITY sortDescendingCmd.label				".Descending">  
+<!ENTITY stopSearchingCmd.label				".Stop Searching"> 
+
+<!-- Toolbar items -->  
+<!ENTITY newcardButton.img "chrome://addressbook/skin/newcard.gif">
+<!ENTITY newcardButton.label "New Card">  
+<!ENTITY newlistButton.img "chrome://addressbook/skin/newlist.gif">
+<!ENTITY newlistButton.label ".New List">  
+<!ENTITY editButton.img "chrome://addressbook/skin/property.gif">
+<!ENTITY editButton.label "Edit">  
+<!ENTITY newmsgButton.img "chrome://addressbook/skin/abnewmsg.gif">
+<!ENTITY newmsgButton.label "New Msg">  
+<!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
+<!ENTITY deleteButton.label "Delete">  
+<!ENTITY stopButton.img "resource:/res/toolbar/TB_Stop.gif">
+<!ENTITY stopButton.label ".Stop">  
+<!ENTITY searchButton.img "resource:/res/toolbar/TB_Search.gif">
+<!ENTITY searchButton.label ".Search">  
+<!ENTITY showNames.label "Show names containing:">  
+<!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
+<!ENTITY throbber.url "http://www.mozilla.org/"> 
