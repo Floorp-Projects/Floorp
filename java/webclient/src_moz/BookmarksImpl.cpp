@@ -59,10 +59,18 @@ Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
     nsCOMPtr<nsIRDFResource> newNode;
     nsresult rv;
     jint result = -1;
+#ifdef XP_PC
 	nsAutoString uri(L"NC:BookmarksRoot");
+#else
+	nsAutoString uri(NS_LITERAL_STRING("NC:BookmarksRoot"));
+#endif
     
     const jchar *url = ::util_GetStringChars(env, urlString);
+#ifdef XP_PC
 	uri.Append(L"#$");
+#else
+	uri.Append(NS_LITERAL_STRING("#$"));
+#endif
 	uri.Append(url);
     
     rv = gRDF->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(newNode));

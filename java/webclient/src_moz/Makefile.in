@@ -28,45 +28,44 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= webclient
 
-CPPSRCS		= \
-    jni_util.cpp  \
-    jni_util_export.cpp  \
-    rdf_util.cpp  \
-    dom_util.cpp  \
-    nsActions.cpp  \
-    CurrentPageImpl.cpp  \
-    HistoryImpl.cpp  \
-    BookmarksImpl.cpp  \
-    WrapperFactoryImpl.cpp  \
-    WindowControlImpl.cpp  \
-    NavigationImpl.cpp  \
-    CBrowserContainer.cpp  \
-    NativeEventThread.cpp  \
-    RDFEnumeration.cpp  \
-    RDFTreeNode.cpp  \
-    ISupportsPeer.cpp  \
-    nsSetupRegistry.cpp  \
-    $(NULL)
+CPPSRCS = \
+	jni_util.cpp \
+	jni_util_export.cpp \
+	dom_util.cpp \
+	nsActions.cpp \
+	rdf_util.cpp \
+	BookmarksImpl.cpp \
+	CBrowserContainer.cpp \
+	CurrentPageImpl.cpp \
+	HistoryImpl.cpp \
+	ISupportsPeer.cpp \
+	NativeEventThread.cpp \
+	NavigationImpl.cpp \
+	RDFEnumeration.cpp \
+	RDFTreeNode.cpp \
+	WindowControlImpl.cpp \
+	WrapperFactoryImpl.cpp \
+	$(NULL)
 
-
-EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
-		$(EXTRA_DSO_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(NULL)
-
-
-include $(topsrcdir)/config/config.mk
+ifneq ($(BAL_INTERFACE),)
+	CPPSRCS += bal_util.cpp 
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	= -I$(JDKHOME)/include -I$(JDKHOME)/solaris/include -I$(DIST)/include $(DEPTH)/widget/src/gtk
-#CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
-#CXXDEFS		+= -D_REENTRANT -DXP_UNIX -DNS_DEBUG -DDEBUG_RAPTOR_CANVAS
-#CFLAGS		+= $(MOZ_GTK_CFLAGS)
+ifdef MOZ_ENABLE_GTK
+ifndef MOZ_MONOLITHIC_TOOLKIT
+CXXFLAGS        += $(MOZ_GTK_CFLAGS)
+CFLAGS          += $(MOZ_GTK_CFLAGS)
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt
+else
+CXXFLAGS        += $(TK_CFLAGS)
+CFLAGS          += $(TK_CFLAGS)
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt 
+endif
+endif
 
+INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES)
 
 JAVAH_CLS= \
 	"-o BookmarksImpl.h org.mozilla.webclient.wrapper_native.BookmarksImpl" \
@@ -104,8 +103,6 @@ $(JAVAH_FILES):
 		echo $(JAVAH_PROG) $(JAVAH_FLAGS) $$c; \
 		$(JAVAH_PROG) $(JAVAH_FLAGS) $$c; \
 	done
-
-#		$(JAVAH_PROG) $(JAVAH_FLAGS) $$c \
 
 clobber_all::
 	rm -f $(JAVAH_FILES)
