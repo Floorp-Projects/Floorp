@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "nsCOMPtr.h"
 
 #ifdef XP_PC
 #include <windows.h>    // for InterlockedIncrement
@@ -56,16 +57,12 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 
 	NS_LOCK_INSTANCE();
 	// get the current identity from the mail session....
-	nsIMsgMailSession * mailSession = nsnull;
-	rv = nsServiceManager::GetService(kCMsgMailSessionCID,
-	    							  nsIMsgMailSession::GetIID(),
-                                      (nsISupports **) &mailSession);
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
 	if (NS_SUCCEEDED(rv) && mailSession)
 	{
-		nsIMsgIdentity * identity = nsnull;
-		rv = mailSession->GetCurrentIdentity(&identity);
-		// now release the mail service because we are done with it
-		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
+		nsCOMPtr<nsIMsgIdentity> identity;
+		rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+
 		if (NS_SUCCEEDED(rv) && identity)
 		{
 			char * hostName = nsnull;
@@ -86,9 +83,6 @@ nsresult nsSmtpService::SendMailMessage(const nsFilePath& aFilePath, const nsStr
 				*aURL = urlToRun; // transfer our ref count to the caller....
 			else
 				NS_IF_RELEASE(urlToRun);
-
-			// release the identity
-			NS_IF_RELEASE(identity);
 		} // if we have an identity
 		else
 			NS_ASSERTION(0, "no current identity found for this user....");
@@ -145,7 +139,7 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
 	// for our mail news demo....
 
 	// for now, assume the url is a news url and load it....
-	nsISmtpUrl		*smtpUrl = nsnull;
+	nsCOMPtr <nsISmtpUrl> smtpUrl;
 	nsSmtpProtocol	*smtpProtocol = nsnull;
 	nsresult rv = NS_OK;
 
@@ -153,22 +147,20 @@ nsresult NS_MsgLoadMailtoUrl(nsIURL * aUrl, nsISupports * aConsumer)
 		return rv;
 
     // turn the url into an smtp url...
-    rv = aUrl->QueryInterface(nsISmtpUrl::GetIID(), (void **) &smtpUrl);
-    if (NS_SUCCEEDED(rv) && smtpUrl)
+	smtpUrl = do_QueryInterface(aUrl);
+    if (smtpUrl)
     {
-      const nsFilePath * fileName = nsnull;
-      smtpUrl->GetPostMessageFile(&fileName);
+		const nsFilePath * fileName = nsnull;
+		smtpUrl->GetPostMessageFile(&fileName);
 
-      // almost there...now create a nntp protocol instance to run the url in...
-      smtpProtocol = new nsSmtpProtocol(smtpUrl);
-      if (smtpProtocol == nsnull)
-		  rv = NS_ERROR_OUT_OF_MEMORY;
-	  else
-		  smtpProtocol->LoadURL(smtpUrl); // protocol will get destroyed when url is completed...
+		// almost there...now create a nntp protocol instance to run the url in...
+		smtpProtocol = new nsSmtpProtocol(smtpUrl);
+		if (smtpProtocol == nsnull)
+			rv = NS_ERROR_OUT_OF_MEMORY;
+		else
+			smtpProtocol->LoadURL(smtpUrl); // protocol will get destroyed when url is completed...
 	}
 
-    NS_IF_RELEASE(smtpUrl);
-	
 	return rv;
 }
 
