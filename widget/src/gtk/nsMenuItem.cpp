@@ -33,7 +33,36 @@ static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
+//NS_IMPL_ISUPPORTS(nsMenuItem, kIMenuItemIID)
+
+nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIMenuItemIID)) {                                         
+    *aInstancePtr = (void*)(nsIMenuItem*)this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*)(nsISupports*)(nsIMenuItem*)this;                     
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {                                      
+    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                     
+  return NS_NOINTERFACE;                                                 
+}
+
+NS_IMPL_ADDREF(nsMenuItem)
+NS_IMPL_RELEASE(nsMenuItem)
 
 
 //-------------------------------------------------------------------------
@@ -226,3 +255,18 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+// nsIMenuListener interface
+//-------------------------------------------------------------------------
+nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
+{
+  	return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+// Set the nsIXULCommand to poke when we get a nsMenuEvent from the user
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetXULCommand(nsIXULCommand * aXULCommand)
+{
+  return NS_OK;
+}
