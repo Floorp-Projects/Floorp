@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nspr.h"
 #include "nsIStreamListener.h"
 #include "nsHTTPResponseListener.h"
 #include "nsIChannel.h"
@@ -32,6 +33,10 @@
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
 #include "nsIBuffer.h"
+
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo* gHTTPLog;
+#endif /* PR_LOGGING */
 
 //
 // This specifies the maximum allowable size for a server Status-Line
@@ -50,10 +55,17 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_HeaderBuffer(eOneByte)
 {
     NS_INIT_REFCNT();
+
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("Creating nsHTTPResponseListener [this=%x].\n", this));
+
 }
 
 nsHTTPResponseListener::~nsHTTPResponseListener()
 {
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("Deleting nsHTTPResponseListener [this=%x].\n", this));
+
     NS_IF_RELEASE(m_pConnection);
     NS_IF_RELEASE(m_pResponse);
     NS_IF_RELEASE(m_pConsumer);
@@ -75,12 +87,16 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     PRUint32 actualBytesRead;
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
 
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("nsHTTPResponseListener::OnDataAvailable [this=%x].\n"
+            "\tstream=%x. \toffset=%d. \tlength=%d.\n",
+            this, i_pStream, i_SourceOffset, i_Length));
+
     if (!m_pResponse)
     {
         // why do I need the connection in the constructor... get rid.. TODO
         m_pResponse = new nsHTTPResponse (i_pStream);
-        if (!m_pResponse)
-        {
+        if (!m_pResponse) {
             NS_ERROR("Failed to create the response object!");
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -90,31 +106,43 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     }
 
     if (!m_bHeadersDone) {
-      nsCOMPtr<nsIBuffer> pBuffer;
+        nsCOMPtr<nsIBuffer> pBuffer;
 
-      rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
-      if (NS_FAILED(rv)) return rv;
+        rv = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
+        if (NS_FAILED(rv)) return rv;
 
-      if (!m_bFirstLineParsed) {
-        rv = ParseStatusLine(pBuffer, i_Length, &actualBytesRead);
-        i_Length -= actualBytesRead;
-      }
+        if (!m_bFirstLineParsed) {
+            rv = ParseStatusLine(pBuffer, i_Length, &actualBytesRead);
+            i_Length -= actualBytesRead;
+        }
 
-      while (NS_SUCCEEDED(rv) && i_Length && !m_bHeadersDone) {
-        rv = ParseHTTPHeader(pBuffer, i_Length, &actualBytesRead);
-        i_Length -= actualBytesRead;
-      }
+        PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+               ("\tOnDataAvailable [this=%x]. Parsing Headers\n", this));
 
-      if (NS_FAILED(rv)) return rv;
+        while (NS_SUCCEEDED(rv) && i_Length && !m_bHeadersDone) {
+            rv = ParseHTTPHeader(pBuffer, i_Length, &actualBytesRead);
+            i_Length -= actualBytesRead;
+        }
 
-      if (m_bHeadersDone) {
-        FireOnHeadersAvailable();
-      }
+        if (NS_FAILED(rv)) return rv;
+
+        if (m_bHeadersDone) {
+            PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+                   ("\tOnDataAvailable [this=%x]. Finished parsing Headers\n", 
+                    this));
+
+            FireOnHeadersAvailable();
+        }
     }
 
-    NS_ASSERTION(m_pConsumer, "No Stream Listener!");
-    if (i_Length && m_pConsumer) {
-      rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, i_Length);
+    if (m_pConsumer) {
+        if (i_Length) {
+            rv = m_pConsumer->OnDataAvailable(m_pConnection, i_pStream, 0, 
+                                              i_Length);
+        }
+    } else {
+        NS_ERROR("No Stream Listener!");
+        rv = NS_ERROR_NULL_POINTER;
     }
 
     return rv;
@@ -128,6 +156,9 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
 
     //TODO globally replace printf with trace calls. 
     //printf("nsHTTPResponseListener::OnStartBinding...\n");
+
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("nsHTTPResponseListener::OnStartBinding [this=%x].\n", this));
 
     // Initialize header varaibles...  
     m_bHeadersDone     = PR_FALSE;
@@ -146,12 +177,15 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
         rv = m_pConnection->GetResponseDataListener(&m_pConsumer);
     }
 
-    NS_ASSERTION(m_pConsumer, "No Stream Listener!");
-
-    // Pass the notification out to the consumer...
-    if (m_pConsumer) {
-        // XXX: This is the wrong context being passed out to the consumer
-        rv = m_pConsumer->OnStartBinding(i_pContext);
+    if (NS_SUCCEEDED(rv)) {
+        // Pass the notification out to the consumer...
+        if (m_pConsumer) {
+            // XXX: This is the wrong context being passed out to the consumer
+            rv = m_pConsumer->OnStartBinding(i_pContext);
+        } else {
+            NS_ERROR("No Stream Listener...");
+            rv = NS_ERROR_NULL_POINTER;
+        }
     }
 
     return rv;
@@ -163,16 +197,17 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
                                  const PRUnichar* i_pMsg)
 {
     nsresult rv;
-    //printf("nsHTTPResponseListener::OnStopBinding...\n");
-    //NS_ASSERTION(m_pResponse, "Response object not created yet or died?!");
 
-    NS_ASSERTION(m_pConsumer, "No Stream Listener!");
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("nsHTTPResponseListener::OnStopBinding [this=%x].\n", this));
+
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
         // XXX: This is the wrong context being passed out to the consumer
         rv = m_pConsumer->OnStopBinding(i_pContext, i_Status, i_pMsg);
     } else {
-      rv = NS_ERROR_FAILURE;
+        NS_ERROR("No Stream Listener...");
+        rv = NS_ERROR_NULL_POINTER;
     }
 
     // The Consumer is no longer needed...
@@ -336,6 +371,10 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer,
   PRBool bFoundString = PR_FALSE;
   PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
 
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("nsHTTPResponseListener::ParseStatusLine [this=%x].\taLength=%d\n", 
+          this, aLength));
+
   *aBytesRead = 0;
 
   if (kMAX_HEADER_SIZE < m_HeaderBuffer.Length()) {
@@ -369,6 +408,10 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer,
   // Wait for more data to arrive before processing the header...
   if (!bFoundString) return NS_OK;
 
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n"
+         , this, m_HeaderBuffer.GetBuffer()));
+
   //
   // Replace all LWS with single SP characters.  Also remove the CRLF
   // characters...
@@ -398,6 +441,10 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer,
   token = str.GetBuffer();
   m_pResponse->SetServerVersion(token);
 
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("\tParseStatusLine [this=%x].\tHTTP-Version: %s\n",
+          this, token));
+
   m_HeaderBuffer.Cut(0, offset+1);
 
   //
@@ -417,17 +464,21 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBuffer* aBuffer,
 
   m_pResponse->SetStatus(statusCode);
   
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("\tParseStatusLine [this=%x].\tStatus-Code: %d\n",
+          this, statusCode));
+
   m_HeaderBuffer.Cut(0, offset+1);
 
   //
   // Parse the Reason-Phrase:: *<TEXT excluding CR,LF>
   //
-  if (!m_HeaderBuffer.Length()) {
-    // The status line is bogus...
-    return NS_ERROR_FAILURE;
-  }
   token = m_HeaderBuffer.GetBuffer();
   m_pResponse->SetStatusString(token);
+
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("\tParseStatusLine [this=%x].\tReason-Phrase: %s\n",
+          this, token));
 
   m_HeaderBuffer.Truncate();
   m_bFirstLineParsed = PR_TRUE;
@@ -505,6 +556,10 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBuffer* aBuffer,
     if (!bFoundString) return NS_OK;
 
   } while (PR_TRUE);
+
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
+          this, m_HeaderBuffer.GetBuffer()));
 
   //
   // Replace all LWS with single SP characters.  And remove all of the CRLF

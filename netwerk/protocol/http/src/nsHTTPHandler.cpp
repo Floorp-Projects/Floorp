@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "nspr.h"
 #include "nsHTTPHandler.h"
 #include "nsHTTPChannel.h"
 //#include "nsITimer.h" 
@@ -29,11 +30,37 @@
 #include "nsIEventSinkGetter.h"
 #include "nsIHttpEventSink.h"
 
+#if defined(PR_LOGGING)
+//
+// Log module for HTTP Protocol logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsHTTPProtocol:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* gHTTPLog = nsnull;
+
+#endif /* PR_LOGGING */
+
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 NS_METHOD CreateOrGetHTTPHandler(nsIHTTPHandler* *o_HTTPHandler)
 {
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for HTTP Protocol logging 
+    // if necessary...
+    //
+    if (nsnull == gHTTPLog) {
+        gHTTPLog = PR_NewLogModule("nsHTTPProtocol");
+    }
+#endif /* PR_LOGGING */
+
     if (o_HTTPHandler)
     {
         *o_HTTPHandler = nsHTTPHandler::GetInstance();
@@ -43,9 +70,13 @@ NS_METHOD CreateOrGetHTTPHandler(nsIHTTPHandler* *o_HTTPHandler)
 }
 
 nsHTTPHandler::nsHTTPHandler():
-    m_pTransportTable(new nsHashtable()),
-    mRefCnt(0)
+    m_pTransportTable(new nsHashtable())
 {
+    NS_INIT_REFCNT();
+
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("Creating nsHTTPHandler [this=%x].\n", this));
+
     if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(m_pConnections)))) {
         NS_ERROR("unable to create new ISupportsArray");
     }
@@ -55,6 +86,9 @@ nsHTTPHandler::nsHTTPHandler():
 
 nsHTTPHandler::~nsHTTPHandler()
 {
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+           ("Deleting nsHTTPHandler [this=%x].\n", this));
+
     if (m_pTransportTable)
     {
         delete m_pTransportTable;
