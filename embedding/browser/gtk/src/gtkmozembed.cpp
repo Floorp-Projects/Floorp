@@ -47,6 +47,8 @@
 #include "nsWidgetsCID.h"
 #include "nsIAppShell.h"
 #include "nsIDOMDocument.h"
+#include "nsIAppShellService.h"
+#include "nsIXULWindow.h"
 
 // freakin X headers
 #ifdef Success
@@ -417,7 +419,7 @@ GtkMozEmbedPrivate::LoadChrome(void)
     NS_ASSERTION(cx == nsnull, "JSContextStack mismatch");
 
   }
-    
+
   // and spindown...
   subShell->Spindown();
 
@@ -740,7 +742,10 @@ static GdkWindow *offscreen_window = 0;
 
 static char *component_path = 0;
 static gint  num_widgets = 0;
-nsCOMPtr <nsIAppShell> gAppShell;
+nsCOMPtr <nsIAppShell>  gAppShell;
+nsCOMPtr <nsIXULWindow> gHiddenWindow = 0;
+
+
 
 /* class and instance initialization */
 
@@ -1551,6 +1556,15 @@ gtk_moz_embed_startup_xpcom(void)
   if (NS_FAILED(rv))
     return FALSE;
 
+  // Start up the appshell service.  We need this for chrome windows.
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+  appShell->Initialize(nsnull, nsnull);
+  // create a hidden window so that the appshell service doesn't try
+  // and Quit on us when a dialog goes away.
+  appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, PR_FALSE,
+				 0, 1, 1, getter_AddRefs(gHiddenWindow));
+
+  // spin up an appshell
   gAppShell = do_CreateInstance(kAppShellCID);
   NS_ENSURE_TRUE(gAppShell, NS_ERROR_FAILURE);
 
@@ -1565,8 +1579,14 @@ gtk_moz_embed_shutdown_xpcom(void)
 {
   if (gAppShell)
   {
+    // Shutdown the appshell service after deleting the hidden window
+    gHiddenWindow = 0;
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+    appShell->Shutdown();
+    appShell = 0;
+    // spin down the appshell
     gAppShell->Spindown();
-    gAppShell = nsnull;
+    gAppShell = 0;
     // shut down XPCOM
     NS_TermEmbedding();
   }
@@ -1618,6 +1638,27 @@ GtkMozEmbedListenerImpl::NewBrowser(PRUint32 chromeMask,
 				    nsIDocShellTreeItem **_retval)
 {
   GtkMozEmbed *newEmbed = NULL;
+  // if it's a chrome window that's being requested, don't even bother
+  // allowing the app to catch it.
+  if (chromeMask & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) {
+    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
+    NS_ENSURE_TRUE(appShell, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIXULWindow> newWindow;
+    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, PR_FALSE,
+				   chromeMask, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
+				   getter_AddRefs(newWindow));
+
+    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(newWindow));
+    if (browserChrome)
+      browserChrome->SetChromeFlags(chromeMask);
+    
+    nsCOMPtr<nsIDocShell> docShell;
+    newWindow->GetDocShell(getter_AddRefs(docShell));
+    CallQueryInterface(docShell, _retval);
+    
+    return NS_OK;
+  }
   gtk_signal_emit(GTK_OBJECT(mEmbed), moz_embed_signals[NEW_WINDOW],
 		  &newEmbed, (guint)chromeMask);
   if (newEmbed)  {
