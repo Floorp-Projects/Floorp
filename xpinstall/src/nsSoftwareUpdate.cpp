@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -88,7 +88,7 @@ static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
-static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
+static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
 
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
 nsCOMPtr<nsIFile> nsSoftwareUpdate::mProgramDir = nsnull;
@@ -99,7 +99,7 @@ PRBool            nsSoftwareUpdate::mNeedCleanup = PR_FALSE;
 nsSoftwareUpdate *
 nsSoftwareUpdate::GetInstance()
 {
-    if (mInstance == nsnull) 
+    if (mInstance == nsnull)
         mInstance = new nsSoftwareUpdate();
 
     NS_IF_ADDREF(mInstance);
@@ -114,7 +114,7 @@ nsSoftwareUpdate::nsSoftwareUpdate()
   mReg(0)
 {
     NS_INIT_ISUPPORTS();
-    
+
     mLock = PR_NewLock();
 
     /***************************************/
@@ -122,14 +122,14 @@ nsSoftwareUpdate::nsSoftwareUpdate()
     /***************************************/
 
     NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
-    
+
 
     nsresult rv;
-    nsCOMPtr<nsIProperties> directoryService = 
+    nsCOMPtr<nsIProperties> directoryService =
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    
+
     if(!directoryService) return;
-    
+
     nsCOMPtr<nsILocalFile> dir;
     directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
     if (dir)
@@ -140,12 +140,12 @@ nsSoftwareUpdate::nsSoftwareUpdate()
         VR_SetRegDirectory( nativePath );
         if (nativePath)
             nsMemory::Free(nativePath);
-            
+
     }
     /***************************************/
     /* Add this as a shutdown observer     */
     /***************************************/
-    nsCOMPtr<nsIObserverService> observerService = 
+    nsCOMPtr<nsIObserverService> observerService =
              do_GetService("@mozilla.org/observer-service;1", &rv);
 
     if (NS_SUCCEEDED(rv))
@@ -197,10 +197,10 @@ nsSoftwareUpdate::Shutdown()
         nsresult rv;
         nsCOMPtr<nsILocalFile> pathToCleanupUtility;
         //Get the program directory
-        nsCOMPtr<nsIProperties> directoryService = 
+        nsCOMPtr<nsIProperties> directoryService =
                  do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
-                              NS_GET_IID(nsIFile), 
+        directoryService->Get(NS_OS_CURRENT_PROCESS_DIR,
+                              NS_GET_IID(nsIFile),
                               getter_AddRefs(pathToCleanupUtility));
 #if defined (XP_MAC)
         pathToCleanupUtility->Append(ESSENTIAL_FILES);
@@ -217,17 +217,17 @@ nsSoftwareUpdate::Shutdown()
     }
 }
 
-NS_IMETHODIMP nsSoftwareUpdate::Observe(nsISupports *aSubject, 
-                                        const char *aTopic, 
+NS_IMETHODIMP nsSoftwareUpdate::Observe(nsISupports *aSubject,
+                                        const char *aTopic,
                                         const PRUnichar *aData)
 {
     if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
       Shutdown();
-     
+
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSoftwareUpdate::RegisterListener(nsIXPIListener *aListener)
 {
     // once you register a Listener, you can not remove it.
@@ -238,7 +238,7 @@ nsSoftwareUpdate::RegisterListener(nsIXPIListener *aListener)
 
     if (!mMasterListener)
         return NS_ERROR_FAILURE;
-    
+
     mMasterListener->RegisterListener(aListener);
     return NS_OK;
 }
@@ -301,9 +301,9 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
     // -- grab a proxied Chrome Registry now while we can
     nsresult rv;
     nsIChromeRegistry* chromeReg = nsnull;
-    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIChromeRegistry, 
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIChromeRegistry,
                                     tmpReg,
-                                    kChromeRegistryCID, 
+                                    kChromeRegistryCID,
                                     NS_UI_THREAD_EVENTQ, &rv);
     if (NS_SUCCEEDED(rv))
         chromeReg = tmpReg;
@@ -311,7 +311,7 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
     // we want to call this with or without a chrome registry
     nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments,
                                              flags, aListener, aParentWindow, chromeReg );
-    
+
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -335,7 +335,7 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
     nsresult rv;
     NS_WITH_ALWAYS_PROXIED_SERVICE( nsIChromeRegistry,
                                     chromeReg,
-                                    kChromeRegistryCID, 
+                                    kChromeRegistryCID,
                                     NS_UI_THREAD_EVENTQ, &rv);
     if (NS_FAILED(rv))
         return rv;
@@ -346,7 +346,7 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
                                              aName,
                                              (PRUint32)aSelect,
                                              aListener,
-                                             nsnull, 
+                                             nsnull,
                                              chromeReg);
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -482,7 +482,7 @@ nsSoftwareUpdate::RunNextInstall()
     if (!mMasterListener)
         CreateMasterListener();
 
-    if (!mInstalling) 
+    if (!mInstalling)
     {
         if ( mJarInstallQueue.Count() > 0 )
         {
@@ -490,7 +490,7 @@ nsSoftwareUpdate::RunNextInstall()
 
             if ( info )
                 mInstalling = PR_TRUE;
-            else 
+            else
             {
                 // bogus elements got into the queue
                 NS_ERROR("leaks remaining nsInstallInfos, please file bug!");
@@ -591,7 +591,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSoftwareUpdateNameSet);
 #define NS_SOFTWAREUPDATENAMESET_CONTRACTID \
   "@mozilla.org/xpinstall/softwareupdatenameset;1"
 
-static NS_METHOD 
+static NS_METHOD
 RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
                         nsIFile *aPath,
                         const char *registryLocation,
@@ -622,37 +622,37 @@ RegisterSoftwareUpdate( nsIComponentManager *aCompMgr,
 
 
 // The list of components we register
-static const nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] =
 {
-    { "SoftwareUpdate Component", 
+    { "SoftwareUpdate Component",
        NS_SoftwareUpdate_CID,
        NS_IXPINSTALLCOMPONENT_CONTRACTID,
        nsSoftwareUpdateConstructor,
        RegisterSoftwareUpdate
     },
-   
-    { "InstallTrigger Component", 
+
+    { "InstallTrigger Component",
        NS_SoftwareUpdateInstallTrigger_CID,
-       NS_INSTALLTRIGGERCOMPONENT_CONTRACTID, 
+       NS_INSTALLTRIGGERCOMPONENT_CONTRACTID,
        nsInstallTriggerConstructor
     },
-    
-    { "InstallVersion Component", 
+
+    { "InstallVersion Component",
        NS_SoftwareUpdateInstallVersion_CID,
        NS_INSTALLVERSIONCOMPONENT_CONTRACTID,
-       nsInstallVersionConstructor 
+       nsInstallVersionConstructor
     },
 
     { "XPInstall Content Handler",
       NS_SoftwareUpdateInstallTrigger_CID,
       NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-xpinstall",
-      nsInstallTriggerConstructor 
+      nsInstallTriggerConstructor
     },
 
     { "Software update nameset",
       NS_SOFTWAREUPDATENAMESET_CID,
       NS_SOFTWAREUPDATENAMESET_CONTRACTID,
-      nsSoftwareUpdateNameSetConstructor 
+      nsSoftwareUpdateNameSetConstructor
     }
 };
 

@@ -14,7 +14,7 @@
  *
  * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -52,10 +52,6 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
-#include "nsIDirectoryService.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsSpecialSystemDirectory.h"
-
 #include "VerReg.h"
 
 #include "nsIContentHandler.h"
@@ -76,6 +72,9 @@ nsInstallTrigger::nsInstallTrigger()
 {
     mScriptObject   = nsnull;
     NS_INIT_ISUPPORTS();
+
+    // make sure all the SoftwareUpdate initialization has happened
+    nsCOMPtr<nsISoftwareUpdate> svc (do_GetService(NS_IXPINSTALLCOMPONENT_CONTRACTID));
 }
 
 nsInstallTrigger::~nsInstallTrigger()
@@ -89,31 +88,31 @@ NS_IMPL_THREADSAFE_ISUPPORTS3 (nsInstallTrigger,
                               nsIContentHandler);
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsInstallTrigger::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
     NS_PRECONDITION(nsnull != aScriptObject, "null arg");
     nsresult res = NS_OK;
-    
-    if (nsnull == mScriptObject) 
+
+    if (nsnull == mScriptObject)
     {
         nsIScriptGlobalObject *global = nsnull;
         aContext->GetGlobalObject(&global);
 
-        res = NS_NewScriptInstallTriggerGlobal(  aContext, 
-                                                (nsISupports *)(nsIDOMInstallTriggerGlobal*)this, 
-                                                (nsISupports *)global, 
+        res = NS_NewScriptInstallTriggerGlobal(  aContext,
+                                                (nsISupports *)(nsIDOMInstallTriggerGlobal*)this,
+                                                (nsISupports *)global,
                                                 &mScriptObject);
         NS_IF_RELEASE(global);
 
     }
-  
+
 
     *aScriptObject = mScriptObject;
     return res;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsInstallTrigger::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = aScriptObject;
@@ -123,10 +122,10 @@ nsInstallTrigger::SetScriptObject(void *aScriptObject)
 
 
 
-NS_IMETHODIMP 
-nsInstallTrigger::HandleContent(const char * aContentType, 
-                                const char * aCommand, 
-                                nsISupports* aWindowContext, 
+NS_IMETHODIMP
+nsInstallTrigger::HandleContent(const char * aContentType,
+                                const char * aCommand,
+                                nsISupports* aWindowContext,
                                 nsIRequest* request)
 {
     nsresult rv = NS_OK;
@@ -138,9 +137,9 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         rv = aChannel->GetURI(getter_AddRefs(uri));
         if (NS_FAILED(rv)) return rv;
 
-        request->Cancel(NS_BINDING_ABORTED);                    
+        request->Cancel(NS_BINDING_ABORTED);
 
-        if (uri) {    
+        if (uri) {
             nsXPIDLCString spec;
             rv = uri->GetSpec(getter_Copies(spec));
             if (NS_FAILED(rv))
@@ -156,7 +155,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
                     PRBool value;
                     rv = StartSoftwareUpdate(globalObject, NS_ConvertASCIItoUCS2(spec), 0, &value);
 
-                    if (NS_SUCCEEDED(rv) && value) 
+                    if (NS_SUCCEEDED(rv) && value)
                         return NS_OK;
                 }
             }
@@ -166,12 +165,12 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 {
     nsIPref * prefs;
-    
-    nsresult rv = nsServiceManager::GetService(kPrefsCID, 
+
+    nsresult rv = nsServiceManager::GetService(kPrefsCID,
                                                kPrefsIID,
                                                (nsISupports**) &prefs);
 
@@ -204,7 +203,7 @@ nsInstallTrigger::Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo
 
     PRBool enabled;
     nsresult rv = UpdateEnabled(&enabled);
-    if (NS_FAILED(rv) || !enabled) 
+    if (NS_FAILED(rv) || !enabled)
     {
         delete aTrigger;
         return NS_OK;
@@ -268,7 +267,7 @@ nsInstallTrigger::InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 a
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallTrigger::StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, const nsString& aURL, PRInt32 aFlags, PRBool* aReturn)
 {
     PRBool enabled;
@@ -313,7 +312,7 @@ nsInstallTrigger::StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, cons
 }
 
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallTrigger::CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)
 {
     nsInstallVersion inVersion;
@@ -322,7 +321,7 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt
     return CompareVersion(aRegName, &inVersion, aReturn);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallTrigger::CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)
 {
     nsInstallVersion inVersion;
@@ -332,37 +331,9 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, const nsString& aVers
 }
 
 NS_IMETHODIMP
-nsInstallTrigger::InitRegistry(void)
-{
-    nsresult rv;
-
-    NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
-    nsCOMPtr<nsIProperties> directoryService = 
-             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    
-    if(!directoryService)
-        return NS_ERROR_FAILURE;
-    
-    nsCOMPtr<nsILocalFile> dir;
-    directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(dir));
-    if (dir)
-    {
-        char* nativePath;
-        dir->GetPath(&nativePath);
-        // EVIL version registry does not take a nsIFile.;
-        VR_SetRegDirectory( nativePath );
-        if (nativePath)
-            nsMemory::Free(nativePath);
-            
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP    
 nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 {
-    nsresult rv;
-    *aReturn = EQUAL;  // assume failure.
+    *aReturn = NOT_FOUND;  // assume failure.
 
     PRBool enabled;
 
@@ -374,40 +345,29 @@ nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion*
     NS_ConvertUCS2toUTF8 regName(aRegName);
     REGERR               status;
     nsInstallVersion     regNameVersion;
-    
-    rv = InitRegistry();
-    if(rv != NS_OK)
-        return rv;
 
     status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
-
-    /* if we got the version */
-    if ( status == REGERR_OK ) 
+    if ( status == REGERR_OK )
     {
-        if ( VR_ValidateComponent( NS_CONST_CAST(char *, regName.get()) ) == REGERR_NOFILE ) 
+        // we found the version
+        if ( VR_ValidateComponent( NS_CONST_CAST(char *, regName.get()) ) != REGERR_NOFILE )
         {
-            regNameVersion.Init(0,0,0,0);
-        }
-        else
-        {
-            regNameVersion.Init(cVersion.major, 
-                                cVersion.minor, 
-                                cVersion.release, 
+            // and the installed file was not missing:  do the compare
+            regNameVersion.Init(cVersion.major,
+                                cVersion.minor,
+                                cVersion.release,
                                 cVersion.build);
+
+            regNameVersion.CompareTo( aVersion, aReturn );
         }
     }
-    else
-        regNameVersion.Init(0,0,0,0);
-        
-    regNameVersion.CompareTo( aVersion, aReturn );
 
     return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 {
-    nsresult rv;
     PRBool enabled;
 
     UpdateEnabled(&enabled);
@@ -417,10 +377,6 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
     VERSION              cVersion;
     NS_ConvertUCS2toUTF8 regName(component);
     REGERR               status;
-    
-    rv = InitRegistry();
-    if(rv != NS_OK)
-        return rv;
 
     status = VR_GetVersion( NS_CONST_CAST(char *, regName.get()), &cVersion );
 
@@ -428,19 +384,19 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 
     /* if we got the version */
     // XXX fix the right way after PR3 or RTM
-    // if ( status == REGERR_OK && VR_ValidateComponent( tempCString ) == REGERR_OK) 
+    // if ( status == REGERR_OK && VR_ValidateComponent( tempCString ) == REGERR_OK)
     if ( status == REGERR_OK )
     {
         nsInstallVersion regNameVersion;
-        
-        regNameVersion.Init(cVersion.major, 
-                            cVersion.minor, 
-                            cVersion.release, 
+
+        regNameVersion.Init(cVersion.major,
+                            cVersion.minor,
+                            cVersion.release,
                             cVersion.build);
 
         regNameVersion.ToString(version);
     }
-    
+
     return NS_OK;
 }
 

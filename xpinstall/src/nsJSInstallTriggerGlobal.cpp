@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -80,12 +80,12 @@ FinalizeInstallTriggerGlobal(JSContext *cx, JSObject *obj)
   if (nsnull != nativeThis) {
     // get the js object
     nsIScriptObjectOwner *owner = nsnull;
-    if (NS_OK == nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), 
+    if (NS_OK == nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
                                             (void**)&owner)) {
       owner->SetScriptObject(nsnull);
       NS_RELEASE(owner);
     }
-    
+
     // The addref was part of JSObject construction
     NS_RELEASE(nativeThis);
   }
@@ -106,11 +106,11 @@ static JSBool CreateNativeObject(JSContext *cx, JSObject *obj, nsIDOMInstallTrig
                                         (void **)&nativeThis);
 
     if (NS_OK != result) return JS_FALSE;
-    
+
     result = nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
                                         (void **)&owner);
 
-    if (NS_OK != result) 
+    if (NS_OK != result)
     {
         NS_RELEASE(nativeThis);
         return JS_FALSE;
@@ -118,9 +118,9 @@ static JSBool CreateNativeObject(JSContext *cx, JSObject *obj, nsIDOMInstallTrig
 
     owner->SetScriptObject((void *)obj);
     JS_SetPrivate(cx, obj, nativeThis);
-    
+
     *aResult = nativeThis;
-    
+
     NS_RELEASE(nativeThis);  // we only want one refcnt. JSUtils cleans us up.
     return JS_TRUE;
 }
@@ -139,7 +139,7 @@ InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsva
   if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
     return JS_TRUE;
 
-   nativeThis->UpdateEnabled(&nativeRet); 
+   nativeThis->UpdateEnabled(&nativeRet);
    *rval = BOOLEAN_TO_JSVAL(nativeRet);
    return JS_TRUE;
 }
@@ -182,7 +182,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
   }
 
-  
+
   // parse associative array of installs
   if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) )
   {
@@ -191,7 +191,7 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       return JS_FALSE;
 
     JSIdArray *ida = JS_Enumerate( cx, JSVAL_TO_OBJECT(argv[0]) );
-    if ( ida ) 
+    if ( ida )
     {
       jsval v;
       const PRUnichar *name, *URL;
@@ -302,7 +302,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
     }
   }
 
-  
+
   if ( argc >= 3 )
   {
     JS_ValueToECMAUint32(cx, argv[0], &chromeType);
@@ -490,7 +490,7 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalGetVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  
+
   nsAutoString regname;
   nsAutoString version;
 
@@ -506,7 +506,7 @@ InstallTriggerGlobalGetVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *
   {
         return JS_FALSE;
   }
-  
+
   if(version.IsEmpty())
       *rval = JSVAL_NULL;
     else
@@ -520,7 +520,7 @@ InstallTriggerGlobalGetVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *
 // class for InstallTriggerGlobal
 //
 JSClass InstallTriggerGlobalClass = {
-  "InstallTrigger", 
+  "InstallTrigger",
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
@@ -535,7 +535,7 @@ JSClass InstallTriggerGlobalClass = {
 //
 // InstallTriggerGlobal class methods
 //
-static JSFunctionSpec InstallTriggerGlobalMethods[] = 
+static JSFunctionSpec InstallTriggerGlobalMethods[] =
 {
   // -- obsolete forms, do not document. Kept for 4.x compatibility
   {"UpdateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
@@ -554,13 +554,14 @@ static JSFunctionSpec InstallTriggerGlobalMethods[] =
 };
 
 
-static JSConstDoubleSpec diff_constants[] = 
+static JSConstDoubleSpec diff_constants[] =
 {
     { nsIDOMInstallTriggerGlobal::MAJOR_DIFF,    "MAJOR_DIFF" },
     { nsIDOMInstallTriggerGlobal::MINOR_DIFF,    "MINOR_DIFF" },
     { nsIDOMInstallTriggerGlobal::REL_DIFF,      "REL_DIFF"   },
     { nsIDOMInstallTriggerGlobal::BLD_DIFF,      "BLD_DIFF"   },
     { nsIDOMInstallTriggerGlobal::EQUAL,         "EQUAL"      },
+    { nsIDOMInstallTriggerGlobal::NOT_FOUND,     "NOT_FOUND"  },
     { CHROME_SKIN,                               "SKIN"       },
     { CHROME_LOCALE,                             "LOCALE"     },
     { CHROME_CONTENT,                            "CONTENT"    },
@@ -573,13 +574,13 @@ static JSConstDoubleSpec diff_constants[] =
 nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype)
 {
   JSObject *proto = nsnull;
-  
+
   if (prototype != nsnull)
     *prototype = nsnull;
 
     proto = JS_InitClass(jscontext,                       // context
                          global,                          // global object
-                         nsnull,                          // parent proto 
+                         nsnull,                          // parent proto
                          &InstallTriggerGlobalClass,      // JSClass
                          nsnull,                          // JSNative ctor
                          nsnull,                          // ctor args
@@ -587,16 +588,16 @@ nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, v
                          nsnull,                          // proto funcs
                          nsnull,                          // ctor props (static)
                          InstallTriggerGlobalMethods);    // ctor funcs (static)
-    
-    
+
+
     if (nsnull == proto) return NS_ERROR_FAILURE;
-    
+
     if ( PR_FALSE == JS_DefineConstDoubles(jscontext, proto, diff_constants) )
             return NS_ERROR_FAILURE;
 
     if (prototype != nsnull)
       *prototype = proto;
-  
+
   return NS_OK;
 }
 
@@ -616,24 +617,24 @@ nsresult NS_InitInstallTriggerGlobalClass(nsIScriptContext *aContext, void **aPr
   if ((PR_TRUE != JS_LookupProperty(jscontext, global, "InstallTriggerGlobal", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
-      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
-      !JSVAL_IS_OBJECT(vp)) 
+      (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) ||
+      !JSVAL_IS_OBJECT(vp))
   {
     nsresult rv = InitInstallTriggerGlobalClass(jscontext, global, (void**)&proto);
     if (NS_FAILED(rv)) return rv;
   }
-  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp)) 
+  else if ((nsnull != constructor) && JSVAL_IS_OBJECT(vp))
   {
     proto = JSVAL_TO_OBJECT(vp);
   }
-  else 
+  else
   {
     return NS_ERROR_FAILURE;
   }
 
-  if (aPrototype) 
+  if (aPrototype)
     *aPrototype = proto;
-  
+
   return NS_OK;
 }
 
@@ -690,7 +691,7 @@ NS_NewScriptInstallTriggerGlobal(nsIScriptContext *aContext,
   }
   else {
     NS_RELEASE(installTriggerGlobal);
-    return NS_ERROR_FAILURE; 
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;
