@@ -1486,7 +1486,6 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
     mDragHelper->Tracking ( [sender draggingSequenceNumber], sink, &dropAllowed );
   }
   
-  NSLog(@"Drop allowed is %d", dropAllowed);
   return dropAllowed ? NSDragOperationCopy : NSDragOperationNone;
 }
 
