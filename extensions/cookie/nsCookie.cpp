@@ -1060,8 +1060,7 @@ COOKIE_GetCookie(char * address) {
   }
   char *host = cookie_ParseURL(address, GET_HOST_PART);
   char *path = cookie_ParseURL(address, GET_PATH_PART);
-  for (PRInt32 i = cookie_cookieList->Count(); i > 0;) {
-    i--;
+  for (PRInt32 i = 0; i <cookie_cookieList->Count(); i++) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
     if(!cookie_s->host) continue;
@@ -1768,7 +1767,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
       tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(i));
       NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
       if(new_len <= PL_strlen(tmp_cookie_ptr->path)) {
-        cookie_cookieList->InsertElementAt(prev_cookie, i);
+        cookie_cookieList->InsertElementAt(prev_cookie, i+1);
         bCookieAdded = PR_TRUE;
         break;
       }
