@@ -445,7 +445,7 @@ throw_any_pending_js_error_as_a_java_exception(JSJavaThreadState *jsj_env)
 
     cx = jsj_env->cx;
     /* Get the pending JS exception if it exists */
-    if (JS_IsExceptionPending(cx)) {
+    if (cx&&JS_IsExceptionPending(cx)) {
         if (!JS_GetPendingException(cx, &pending_exception))
             goto out_of_memory;
 
