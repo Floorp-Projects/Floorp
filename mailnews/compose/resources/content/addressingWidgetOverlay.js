@@ -19,17 +19,6 @@
  * Contributor(s): 
  */
 
-/* 
-  XXX - 62226. the XUL textfields used in the addressing widget seem to have stopped
-               supporting .value. As a hack to get the tree open while I look at why
-               this is, I've made the fields here reference the anonymous internal
-               input node (HTMLInputElement). inputElement.value throughout this file 
-               have been replaced with inputElement.input.value. These will be removed
-               when .value works on this textfield again. 
-               
-               Ben Goodger <ben@netscape.com> 07/12/00
- */ 
- 
 top.MAX_RECIPIENTS = 0;
 
 var inputElementType = "";
@@ -94,7 +83,7 @@ function Recipients2CompFields(msgCompFields)
     var inputField;
 	    while ((inputField = awGetInputElement(i)))
 	    {
-	    	var fieldValue = inputField.input.value; // XXX hack around 62226
+	    	var fieldValue = inputField.value;
 
 	    	if (fieldValue == null)
 	    	  fieldValue = inputField.getAttribute("value");
@@ -226,7 +215,7 @@ function awRemoveRecipients(msgCompFields, recipientType, recipientsList)
       if (popup.selectedItem.getAttribute("data") == recipientType)
       {
         var input = awGetInputElement(row);
-        if (input.input.value == recipientArray.StringAt(index))
+        if (input.value == recipientArray.StringAt(index))
         {
           awSetInputAndPopupValue(input, "", popup, "addr_to", -1);
           break;
@@ -248,7 +237,7 @@ function awAddRecipients(msgCompFields, recipientType, recipientsList)
   {
     for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
     {
-      if (awGetInputElement(row).input.value == "")
+      if (awGetInputElement(row).value == "")
         break;
     }
     if (row > top.MAX_RECIPIENTS)
@@ -312,7 +301,7 @@ function awCleanupRows()
   for (var row = 1; row <= maxRecipients; row ++)
   {
     var inputElem = awGetInputElement(row);
-    if (inputElem.input.value == "" && row < maxRecipients)
+    if (inputElem.value == "" && row < maxRecipients)
       awRemoveRow(row);
     else
     {
@@ -351,7 +340,7 @@ function awClickEmptySpace(targ, setFocus)
 	dump("awClickEmptySpace\n");
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
-	if ( lastInput && lastInput.input.value )
+	if ( lastInput && lastInput.value )
 		awAppendNewRow(setFocus);
 	else
 		if (setFocus)
@@ -365,7 +354,7 @@ function awReturnHit(inputElement)
 
 	if ( !nextInput )
   {
-    if ( inputElement.input.value )
+    if ( inputElement.value )
 			awAppendNewRow(true);
     else // No adress entered, switch to Subject field
     {
@@ -388,7 +377,7 @@ function awDeleteHit(inputElement)
   /* 1. don't delete the row if it's the last one remaining, just reset it! */
   if (top.MAX_RECIPIENTS <= 1)
   {
-    inputElement.input.value = "";
+    inputElement.value = "";
     return;
   }
 
@@ -411,7 +400,7 @@ function awInputChanged(inputElement)
 
 	//Do we need to add a new row?
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
-	if ( lastInput && lastInput.input.value && !top.doNotCreateANewRow)
+	if ( lastInput && lastInput.value && !top.doNotCreateANewRow)
 		awAppendNewRow(false);
 	top.doNotCreateANewRow = false;
 }
@@ -710,7 +699,7 @@ function DropRecipient(recipient)
 { 
     awClickEmptySpace(true);    //that will automatically set the focus on a new available row, and make sure is visible 
     var lastInput = awGetInputElement(top.MAX_RECIPIENTS); 
-    lastInput.input.value = recipient; 
+    lastInput.value = recipient; 
     awAppendNewRow(true); 
 }
 
@@ -746,7 +735,7 @@ function awRecipientKeyDown(event, element)
   switch(event.keyCode) {
   case 46:
   case 8:
-    if (!element.input.value)
+    if (!element.value)
       awDeleteHit(element);
     event.preventBubble();  //We need to stop the event else the tree will receive it and the function
                             //awKeyDown will be executed!
