@@ -23,7 +23,6 @@ MODULE=raptor
 IDLSRCS= Navigator.idl Location.idl WindowCollection.idl Screen.idl History.idl \
 	PluginArray.idl MimeTypeArray.idl Plugin.idl MimeType.idl
 
-
 GLOBAL_IDLSRC= Window.idl
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\base

@@ -2,6 +2,8 @@
  /* IID: { 0xa6cf9092, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
+   void HTMLOptionElement();
+
    readonly attribute  HTMLFormElement      form;
             attribute  boolean              defaultSelected;
    readonly attribute  DOMString            text;
@@ -10,4 +12,11 @@
             attribute  DOMString            label;
    readonly attribute  boolean              selected;
             attribute  DOMString            value;
+ };
+
+ interface Option {
+ /* IID: { 0xa6cf90f3, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+  
+  void Option();
  };

@@ -30,6 +30,7 @@ EXPORTS =			 \
 	nsIScriptContext.h	 \
 	nsIScriptContextOwner.h  \
 	nsIJSScriptObject.h	 \
+	nsIJSNativeInitializer.h \
 	nsIScriptEventListener.h \
 	nsIScriptObjectOwner.h	 \
 	nsIScriptGlobalObject.h	 \

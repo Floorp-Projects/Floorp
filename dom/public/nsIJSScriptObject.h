@@ -28,7 +28,7 @@
   {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} } 
 
 /**
- * A java script specific interface. 
+ * A JavaScript specific interface. 
  * <P>
  * It's implemented by an object that has to execute specific java script
  * behavior like the array semantic.
@@ -36,6 +36,7 @@
  * It is used by the script runtime to collect information about an object
  */
 class nsIJSScriptObject : public nsISupports {
+  static const nsIID& GetIID() { static nsIID iid = NS_IJSSCRIPTOBJECT_IID; return iid; }
 public:
   virtual PRBool    AddProperty(JSContext *aContext, jsval aID, 
                                 jsval *aVp) = 0;
