@@ -163,6 +163,7 @@ void
 nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
 {
   // Create the content chain array.
+  NS_IF_RELEASE(mContentChain);
   NS_NewISupportsArray(&mContentChain);
 
   // Move up the chain until we hit our content node.
