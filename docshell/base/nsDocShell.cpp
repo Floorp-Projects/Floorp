@@ -2627,7 +2627,7 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    static const char kJavaScriptScheme[] = "javascript";
    nsXPIDLCString scheme;
    aURI->GetScheme(getter_Copies(scheme));
-   if (0 == PL_strncmp(NS_STATIC_CAST(const char*, scheme), kJavaScriptScheme, sizeof(kJavaScriptScheme) - 1)) {
+   if (0 == PL_strncasecmp(NS_STATIC_CAST(const char*, scheme), kJavaScriptScheme, sizeof(kJavaScriptScheme) - 1)) {
       channel->SetOriginalURI(aReferrerURI ? aReferrerURI : aURI);
    }
    else {
