@@ -3124,13 +3124,56 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
     if (principal) {
-      nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-      newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
-      NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+      nsCOMPtr<nsISupports> owner(do_QueryInterface(principal));
       loadInfo->SetOwner(owner);
     }
-    newDocShell->LoadURI(uriToLoad, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+
+    // Get the calling context off the JS context stack
+    nsCOMPtr<nsIJSContextStack> stack = 
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    JSContext* ccx = nsnull;
+
+    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
+      JSObject *global = ::JS_GetGlobalObject(ccx);
+
+      if (global) {
+        JSClass* jsclass = ::JS_GetClass(ccx, global);
+
+        // Check if the global object on the calling context has
+        // nsISupports * private data
+        if (jsclass &&
+            !((~jsclass->flags) & (JSCLASS_HAS_PRIVATE |
+                                   JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+          nsISupports* sup = (nsISupports *)::JS_GetPrivate(ccx, global);
+
+          nsCOMPtr<nsIDOMWindow> w(do_QueryInterface(sup));
+
+          if (w) {
+            nsCOMPtr<nsIDOMDocument> document;
+
+            // Get the document from the window.
+            w->GetDocument(getter_AddRefs(document));
+
+            nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+
+            if (doc) { 
+              nsCOMPtr<nsIURI> uri(dont_AddRef(doc->GetDocumentURL()));
+
+              // Set the referrer
+              loadInfo->SetReferrer(uri);
+            }
+          }
+        }
+      }
+    }
+
+    newDocShell->LoadURI(uriToLoad, loadInfo,
+                         nsIWebNavigation::LOAD_FLAGS_NONE);
   }
 
   if (windowIsNew)
