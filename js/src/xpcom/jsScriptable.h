@@ -28,28 +28,31 @@ class jsScriptable: public jsIScriptable {
     JSObject *obj;
     JSString *className;
     jsIScriptable *proto, *parent;
+
+    void init(jsIContext *, JSObject *);
  public:
     NS_DECL_ISUPPORTS;
 
+    jsScriptable(jsIContext *, JSClass *);
     jsScriptable(jsIContext *, JSObject *);
     ~jsScriptable();
-    JSString *getClassName();
+    JSString *getClassName(jsIContext *);
 
     /* XXX use jsid for name/index? */
-    jsval get(jsval id);
-    JSBool has(jsval id);
-    void put(jsval id, jsval v);
-    void del(jsval id);
+    nsresult get(jsIContext *cx, const char *name, jsval *vp);
+    nsresult has(jsIContext *cx, jsval id, JSBool *bp);
+    nsresult put(jsIContext *cx, const char *name, jsval v);
+    nsresult del(jsIContext *cx, jsval id);
 
-    jsIScriptable *getPrototype();
-    void setPrototype(jsIScriptable *prototype);
-    jsIScriptable *getParentScope();
-    void setParentScope(jsIScriptable *parent);
+    jsIScriptable *getPrototype(jsIContext *cx);
+    nsresult setPrototype(jsIContext *cx, jsIScriptable *prototype);
+    jsIScriptable *getParentScope(jsIContext *cx);
+    nsresult setParentScope(jsIContext *cx, jsIScriptable *parent);
     /* JSIdArray *getIds(); */
-    jsval getDefaultValue(JSType hint);
-    JSBool hasInstance(jsIScriptable *instance);
+    nsresult getDefaultValue(jsIContext *cx, JSType hint, jsval *vp);
+    /*    JSBool hasInstance(jsIContext *cx, jsIScriptable *instance); */
     JSObject *getJSObject(jsIContext *);
-    void setJSObject(jsIContext *, JSObject *);
+    nsresult setJSObject(jsIContext *, JSObject *);
 };
 
 #endif /* JS_SCRIPTABLE_H */

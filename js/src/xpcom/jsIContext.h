@@ -185,7 +185,17 @@ class jsIContext: public nsISupports {
      * Break the Context-thread association.
      */
     virtual void exit(void) = 0;
-    
+
+    virtual JSString *newStringCopyZ(const char *string) = 0;
+    virtual JSString *newUCStringCopyZ(const jschar *string) = 0;
+    virtual JSString *newStringCopyN(const char *string, size_t len) = 0;
+    virtual JSString *newUCStringCopyN(const jschar *string, size_t len) = 0;
+    virtual JSString *newString(char *string, size_t len) = 0;
+    virtual JSString *newUCString(jschar *string, size_t len) = 0;
+
+    virtual JSBool addRoot(void *root) = 0;
+    virtual JSBool addNamedRoot(void *root, const char *name) = 0;
+    virtual JSBool removeRoot(void *root) = 0;
 };
 			    
 #endif /* JS_ICONTEXT_H */

@@ -42,10 +42,10 @@ ErrorReporterHandler(JSContext *cx, const char* message,
     if (!icx)
 	/* well, we can't exactly report an error... */
 	return;
-    str = JS_NewStringCopyZ(cx, message);
+    str = icx->newStringCopyZ(message);
     if (!str)
 	return;
-    icx->reporter->reportError(str, report);
+    icx->reporter->reportError(icx, str, report);
 }
 
 jsContext::jsContext (JSRuntime *rt, uintN stacksize)
@@ -205,7 +205,7 @@ jsContext::evaluateString(jsIScriptable *scope,
 			  uintN lineno,
 			  jsval *rval)
 {
-    JSObject *obj = ::jsScriptableCreateJSObjectProxy(this, scope);
+    JSObject *obj = scope->getJSObject(this);
     if (!obj) 
 	return NS_ERROR_FAILURE;
     if (!JS_EvaluateScript(cx, obj, JS_GetStringBytes(source), 
@@ -220,7 +220,12 @@ jsContext::evaluateString(jsIScriptable *scope,
 nsresult
 jsContext::initStandardObjects(jsIScriptable *scope)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    JSObject *obj = scope->getJSObject(this);
+    if (!obj) 
+	return NS_ERROR_FAILURE;
+    if (!JS_InitStandardClasses(cx, obj))
+	return NS_ERROR_FAILURE;
+    return NS_OK;
 }
 
 void
@@ -228,7 +233,7 @@ jsContext::reportWarning(JSString *message)
 {
     /* XXX fill in report, make varargs */
     if (reporter)
-	reporter->reportWarning(message, NULL);
+	reporter->reportWarning(this, message, NULL);
 };
 
 void
@@ -276,4 +281,58 @@ jsContext::exit()
 #ifdef JS_THREADSAFE
     (void)JS_ClearContextThread(cx);
 #endif
+}
+
+JSString *
+jsContext::newStringCopyZ(const char *string)
+{
+    return JS_NewStringCopyZ(cx, string);
+}
+
+JSString *
+jsContext::newUCStringCopyZ(const jschar *string)
+{
+    return JS_NewUCStringCopyZ(cx, string);
+}
+
+JSString *
+jsContext::newStringCopyN(const char *string, size_t len)
+{
+    return JS_NewStringCopyN(cx, string, len);
+}
+
+JSString *
+jsContext::newUCStringCopyN(const jschar *string, size_t len)
+{
+    return JS_NewUCStringCopyN(cx, string, len);
+}
+
+JSString *
+jsContext::newString(char *string, size_t len)
+{
+    return JS_NewString(cx, string, len);
+}
+
+JSString *
+jsContext::newUCString(jschar *string, size_t len)
+{
+    return JS_NewUCString(cx, string, len);
+}
+
+JSBool
+jsContext::addRoot(void *root)
+{
+    return JS_AddRoot(cx, root);
+}
+
+JSBool
+jsContext::addNamedRoot(void *root, const char *name)
+{
+    return JS_AddNamedRoot(cx, root, name);
+}
+
+JSBool
+jsContext::removeRoot(void *root)
+{
+    return JS_RemoveRoot(cx, root);
 }
