@@ -85,6 +85,7 @@ nsresult nsStreamManager::Init()
 }
 
 nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
+                                  nsIXPFCCanvas * aParentCanvas,
                                   const nsString& aURLSpec, 
                                   nsIPostData * aPostData,
                                   nsIID *aDTDIID,
@@ -133,21 +134,6 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
   } else {
     res = NS_NewURL(&(stream_object->mUrl), pUI);
   }
-
-
-
-  if (urlParser.IsLocalFile() == PR_TRUE)
-  {
-    PRStatus status = PR_Access(pUI,PR_ACCESS_EXISTS);
-
-  } else {
-
-    char * file = urlParser.ToLocalFile();
-
-    PRStatus status = PR_Access(file,PR_ACCESS_EXISTS);
-
-  }
-
 
   /*
    *  Create the Parser
@@ -199,6 +185,17 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
   if (NS_OK == res)
   {
     sink->SetViewerContainer(aWebViewerContainer);
+
+    /*
+     * Push Top of stack
+     */
+
+    if (nsnull != aParentCanvas)
+    {
+      sink->SetRootCanvas(aParentCanvas);
+
+    }
+
     NS_RELEASE(sink);
   }
 
@@ -218,7 +215,6 @@ nsresult nsStreamManager::LoadURL(nsIWebViewerContainer * aWebViewerContainer,
 
   stream_object->mDTD->SetContentSink(stream_object->mSink);
   stream_object->mDTD->SetParser(stream_object->mParser);
-
 
   /*
    * Open the URL

@@ -46,6 +46,7 @@ public:
 
   NS_IMETHOD Init();
   NS_IMETHOD SetViewerContainer(nsIWebViewerContainer * aViewerContainer);
+  NS_IMETHOD SetRootCanvas(nsIXPFCCanvas * aCanvas);
 
   // nsIContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);

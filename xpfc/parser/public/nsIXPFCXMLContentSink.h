@@ -21,6 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIWebViewerContainer.h"
+#include "nsIXPFCCanvas.h"
 
 //c47f83e0-4910-11d2-924a-00805f8a7ab6
 #define NS_IXPFC_XML_CONTENT_SINK_IID   \
@@ -34,6 +35,7 @@ public:
 
   NS_IMETHOD                 Init() = 0 ;
   NS_IMETHOD                 SetViewerContainer(nsIWebViewerContainer * aViewerContainer) = 0;
+  NS_IMETHOD                 SetRootCanvas(nsIXPFCCanvas * aCanvas) = 0;
 
 };
 

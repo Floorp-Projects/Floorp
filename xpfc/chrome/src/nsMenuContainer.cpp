@@ -315,6 +315,15 @@ nsresult nsMenuContainer::ProcessActionCommand(nsString& aAction)
     if (mWebViewerContainer)
       mWebViewerContainer->LoadURL("resource://res/ui/compose_event.ui",nsnull);
 
+  } else {
+
+    /*
+     * It ain't builtin ... pass it off as a url to be processed
+     */ 
+
+    if (mWebViewerContainer)
+      mWebViewerContainer->LoadURL(aAction,nsnull);
+
   }
   
 

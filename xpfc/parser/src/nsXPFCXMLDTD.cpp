@@ -67,6 +67,7 @@ nsXPFCXMLTagEntry gXPFCXMLTagTable[] =
   {"tabwidget",             eXPFCXMLTag_tabwidget},
   {"toolbar",               eXPFCXMLTag_toolbar},
   {"ui",                    eXPFCXMLTag_ui},
+  {"userdefined",           eXPFCXMLTag_userdefined},
   {"xpbutton",              eXPFCXMLTag_xpbutton},
 
 };

@@ -29,6 +29,7 @@
 #include "nsITextWidget.h"
 #include "nsITabWidget.h"
 #include "nsWidgetsCID.h"
+#include "nsXPFCToolkit.h"
 
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIContentSinkIID,      NS_ICONTENT_SINK_IID);
@@ -189,6 +190,7 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   eXPFCXMLTags tag = (eXPFCXMLTags) aNode.GetNodeType();
   nsresult res;
   nsCID aclass;
+  nsString toLoadUrl;
 
   if (eXPFCXMLTag_menubar == tag)
     mState = XPFC_PARSING_STATE_MENUBAR;
@@ -218,14 +220,14 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
        if (key.EqualsIgnoreCase("src"))
        {
         // Load the url!
-        mViewerContainer->LoadURL(value,nsnull);
+        toLoadUrl = value;        
         break;
        }
 
       }
 
     }
-    return NS_OK;    
+    //return NS_OK;    
   }
 
   nsString text = aNode.GetText();
@@ -243,14 +245,14 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   if (NS_OK != res)
     return res ;
 
-  object->Init();        
 
   /*
    * ConsumeAttributes
    */
 
-  ConsumeAttributes(aNode,*object);
   AddToHierarchy(*object, PR_TRUE);
+  object->Init();        
+  ConsumeAttributes(aNode,*object);
 
   /*
    * If this is a menu bar, tell the widget.
@@ -303,6 +305,39 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   }
 
+  /*
+   * If this was a root panel, add it to the widget
+   */
+
+  if (eXPFCXMLTag_application == tag)
+  {
+    nsIXPFCCanvas * child = (nsIXPFCCanvas *) mXPFCStack->Top();
+
+    if (child != nsnull)
+    {
+      nsIXPFCCanvas * root ;
+
+      gXPFCToolkit->GetRootCanvas(&root);
+
+      root->DeleteChildren();
+
+      root->AddChildCanvas(child);
+
+      NS_RELEASE(root);
+    }
+  }
+
+  if (toLoadUrl.Length() > 0)
+  {
+    nsIXPFCCanvas * canvas = nsnull;
+
+    if (toLoadUrl.Find(".cal") != -1)
+      object->QueryInterface(kIXPFCCanvasIID,(void**)&canvas);
+
+    mViewerContainer->LoadURL(toLoadUrl,nsnull,canvas);
+
+    NS_IF_RELEASE(canvas);
+  }
 
   return NS_OK;
 }
@@ -329,7 +364,9 @@ NS_IMETHODIMP nsXPFCXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     }
   }
 
+#if 0
   NS_IF_RELEASE(container);
+#endif
 
   return NS_OK;
 }
@@ -373,10 +410,11 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddLeaf(const nsIParserNode& aNode)
   if (NS_OK != res)
     return res ;
 
+  AddToHierarchy(*object, PR_FALSE);
+
   object->Init();        
 
   ConsumeAttributes(aNode,*object);
-  AddToHierarchy(*object, PR_FALSE);
 
   // XXX: Need a way to identify that native widgets are
   //      involved!
@@ -715,6 +753,9 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
     nsIXPFCToolbar * container  = nsnull;
     nsIXPFCToolbar * parent = nsnull;
+    nsIXPFCCanvas * child_canvas  = nsnull;
+
+    aObject.QueryInterface(kIXPFCCanvasIID,(void**)&child_canvas);
 
     nsresult res = aObject.QueryInterface(kCIXPFCToolbarIID,(void**)&container);
 
@@ -723,14 +764,12 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
     if (parent == nsnull)
     {
       mViewerContainer->GetToolbarManager()->AddToolbar(container);
+
     } else {
 
       nsIXPFCCanvas * parent_canvas = nsnull;
-      nsIXPFCCanvas * child_canvas  = nsnull;
 
-      res = aObject.QueryInterface(kIXPFCCanvasIID,(void**)&child_canvas);
-
-      if (NS_OK == res)
+      if (child_canvas != nsnull)
       {
         res = parent->QueryInterface(kIXPFCCanvasIID,(void**)&parent_canvas);
 
@@ -741,14 +780,15 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
           NS_RELEASE(parent_canvas);
         }
 
-        NS_RELEASE(child_canvas);
       }
 
     }
 
 
     if (aPush == PR_TRUE)
-      mXPFCStack->Push(container);
+      mXPFCStack->Push(child_canvas);
+
+    NS_IF_RELEASE(child_canvas);
 
     return NS_OK;
 
@@ -864,12 +904,42 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
     return NS_OK;
 
-  }
-  
-  else {
+  } else if (mState == XPFC_PARSING_STATE_APPLICATION)
+  {
+
+    nsIXPFCCanvas * container  = nsnull;
+    nsIXPFCCanvas * parent = nsnull;
+
+    nsresult res = aObject.QueryInterface(kIXPFCCanvasIID,(void**)&container);
+
+    parent = (nsIXPFCCanvas *) mXPFCStack->Top();
+
+    if (parent == nsnull)
+    {
+      if (aPush == PR_TRUE)
+        mXPFCStack->Push(container);
+
+    } else {
+
+      parent->AddChildCanvas(container);
+
+      if (aPush == PR_TRUE)
+        mXPFCStack->Push(container);
+    }
+
+    return NS_OK;
+
+  } else {
+
     return NS_OK;
   }
 
   return NS_OK;
 }
 
+
+nsresult nsXPFCXMLContentSink::SetRootCanvas(nsIXPFCCanvas * aCanvas)
+{
+  mXPFCStack->Push(aCanvas);
+  return NS_OK;
+}

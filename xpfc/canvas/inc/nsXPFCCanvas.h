@@ -42,6 +42,7 @@
 #include "nsIImageRequest.h"
 #include "nsIView.h"
 #include "nsIModel.h"
+#include "nsIXPFCCommand.h"
 
 CLASS_EXPORT_XPFC nsXPFCCanvas : public nsIXPFCCanvas,
                                  public nsIXPFCObserver,
@@ -240,6 +241,8 @@ public:
   NS_IMETHOD_(void)     SetCursor(nsCursor aCursor) ;
   NS_IMETHOD_(nsCursor) GetDefaultCursor(nsPoint& aPoint) ;
   NS_IMETHOD_(nsSplittableOrientation)     GetSplittableOrientation(nsPoint& aPoint) ;
+  NS_IMETHOD BroadcastCommand(nsIXPFCCommand& aCommand);
+  NS_IMETHOD SendCommand();
 
   // nsIImageRequestObserver
   virtual void Notify(nsIImageRequest *aImageRequest,

@@ -26,6 +26,8 @@
 #include "nsIURL.h"
 #include "nsIStreamListener.h"
 
+class nsIXPFCCanvas;
+
 // 5f680140-360f-11d2-9248-00805f8a7ab6
 #define NS_ISTREAM_MANAGER_IID      \
  { 0x5f680140, 0x360f, 0x11d2, \
@@ -43,6 +45,7 @@ public:
   NS_IMETHOD Init() = 0;
 
   NS_IMETHOD LoadURL(nsIWebViewerContainer * aWebViewerContainer,
+                     nsIXPFCCanvas * aParentCanvas,
                      const nsString& aURLSpec, 
                      nsIPostData * aPostData,
                      nsIID *aDTDIID = nsnull,
