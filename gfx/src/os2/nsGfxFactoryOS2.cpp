@@ -382,7 +382,7 @@ char *nsGfxModuleData::ConvertFromUcs( const PRUnichar *pText, ULONG ulLength,
          renderingHints = NS_RENDERING_HINT_FAST_8BIT_TEXT;
          ulCodepage = 1004;
          printf( "Couldn't create gfx unicode converter.\n");
-         return ConvertFromUcs( pText, szBuffer, ulSize);
+         return ConvertFromUcs( nsString(pText), szBuffer, ulSize);
       }
    }
 
@@ -407,7 +407,7 @@ char *nsGfxModuleData::ConvertFromUcs( const PRUnichar *pText, ULONG ulLength,
    {
       printf( "UniUconvFromUcs failed, rc %X\n", unirc);
       supplantConverter = TRUE;
-      szBuffer = ConvertFromUcs( pText, szBuffer, ulSize);
+      szBuffer = ConvertFromUcs( nsString(pText), szBuffer, ulSize);
       supplantConverter = FALSE;
    }
 
