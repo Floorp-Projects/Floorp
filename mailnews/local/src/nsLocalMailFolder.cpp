@@ -28,6 +28,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
 #include "nsIMailboxService.h"
+#include "nsIMessage.h"
 #include "nsParseMailbox.h"
 #include "nsIFolderListener.h"
 #include "nsIMsgMailSession.h"
