@@ -2232,14 +2232,14 @@ nsScriptSecurityManager::InitPolicies(PRUint32 aPrefCount, const char** aPrefNam
             }
 
             nsCStringKey classNameKey(dots[2] + 1);
-            PRInt16 classPolicy = (PRInt16)mClassPolicies->Get(&classNameKey);
+            PRInt32 classPolicy = NS_PTR_TO_INT32(mClassPolicies->Get(&classNameKey));
             if (isDefault)
                 classPolicy |= CLASS_HAS_DEFAULT_POLICY;
             else
                 classPolicy |= CLASS_HAS_SITE_POLICY;
             if (count > 4)
                 classPolicy |= CLASS_HAS_ACCESSTYPE;
-            mClassPolicies->Put(&classNameKey, (void*)classPolicy);
+            mClassPolicies->Put(&classNameKey, NS_INT32_TO_PTR(classPolicy));
         }
     }
     return NS_OK;
