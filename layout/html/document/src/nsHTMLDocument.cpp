@@ -2626,7 +2626,7 @@ nsHTMLDocument::GetSelection(nsString& aReturn)
     (do_GetService("mozilla.consoleservice.1"));
 
   if (consoleService) {
-    consoleService->LogStringMessage(NS_ConvertASCIItoUCS2("Depricated method document.getSelection() called, use window.getSelection() in stead!").GetUnicode());
+    consoleService->LogStringMessage(NS_ConvertASCIItoUCS2("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").GetUnicode());
   }
 
   return domSelection->ToString(NS_ConvertASCIItoUCS2("text/plain"), nsIDocumentEncoder::OutputFormatted |nsIDocumentEncoder::OutputSelectionOnly, 0, aReturn);
