@@ -15,52 +15,19 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+
+##########################################################################
+#
+# Name:			Makefile
+# Description:	Makefile for Xfe Widgets tests
+# Author:		Ramiro Estrugo <ramiro@netscape.com>
+#
+##########################################################################
+
 DEPTH			= ../../../..
 
-ifdef XFE_WIDGETS_BUILD_UNUSED
-UNUSED_CSRCS		= \
-				ChromeTest.c \
-				ComboBoxTest.c \
-				FontChooserTest.c \
-				FrameShellTest.c \
-				$(NULL)
-
-
-endif
-
-CSRCS			= \
-				$(UNUSED_CSRCS) \
-				ArrowTest.c \
-				ButtonTest.c \
-				CascadeTest.c \
-				DashBoardTest.c \
-				LabelTest.c \
-				LogoTest.c \
-				MenuTest.c \
-				PaneTestOne.c \
-				PaneTestThree.c \
-				PaneTestTwo.c \
-				PixmapTest.c \
-				ProgressBarTest.c \
-				TaskBarTestOne.c \
-				TaskBarTestTwo.c \
-				ToolBarTest.c \
-				ToolBoxTest.c \
-				ToolScrollTest.c \
-				$(NULL)
-
-REQUIRES		= \
-				XfeTest \
-				XfeWidgets
-
-STATIC_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.static))
-SHARED_PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=.shared))
+DIRS			= \
+				Xfe \
+				XmL
 
 include $(DEPTH)/config/rules.mk
-include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk
-
-all:: $(STATIC_PROGS) $(SHARED_PROGS)
-install:: $(STATIC_PROGS) $(SHARED_PROGS)
-
-shared: $(SHARED_PROGS)
-static: $(STATIC_PROGS)
