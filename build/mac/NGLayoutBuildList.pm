@@ -664,7 +664,7 @@ sub MakeResourceAliases()
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:resources:",				"$samples_dir");
 	
 	my($toolbar_dir) = "$resource_dir" . "toolbar:";
-	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:",			"$toolbar_dir");
+#	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:",			"$toolbar_dir");
 
 	my($rdf_dir) = "$resource_dir" . "rdf:";
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
