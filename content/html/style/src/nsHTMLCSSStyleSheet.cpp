@@ -354,6 +354,7 @@ public:
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
   NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
+  NS_IMETHOD_(PRBool) HasRules() const;
 
   NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
   
@@ -588,6 +589,13 @@ NS_IMETHODIMP_(PRBool)
 HTMLCSSStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
 {
   return PR_TRUE; // works for all media
+}
+
+NS_IMETHODIMP_(PRBool)
+HTMLCSSStyleSheetImpl::HasRules() const
+{
+  return PR_TRUE;  // We always have rules, since mFirstLineRule and
+                   // mFirstLetterRule are created on request.
 }
 
 NS_IMETHODIMP

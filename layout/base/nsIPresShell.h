@@ -169,7 +169,7 @@ public:
    * all style data for a given pres shell without necessarily reconstructing
    * all of the frames.
    */
-  NS_IMETHOD ReconstructStyleData(PRBool aRebuildRuleTree) = 0;
+  NS_IMETHOD ReconstructStyleData() = 0;
 
   /** Setup all style rules required to implement preferences
    * - used for background/text/link colors and link underlining

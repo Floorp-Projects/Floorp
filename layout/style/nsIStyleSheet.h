@@ -66,6 +66,7 @@ public:
   NS_IMETHOD GetMediumCount(PRInt32& aCount) const = 0;
   NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const = 0;
   NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const = 0;
+  NS_IMETHOD_(PRBool) HasRules() const = 0;
 
   /**
    * Whether the sheet is applicable.  A sheet that is not applicable

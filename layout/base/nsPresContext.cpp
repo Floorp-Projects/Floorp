@@ -1720,7 +1720,7 @@ nsPresContext::ThemeChanged()
   if (!mShell)
     return NS_OK;
 
-  return mShell->ReconstructStyleData(PR_FALSE);
+  return mShell->ReconstructStyleData();
 }
 
 NS_IMETHODIMP
