@@ -56,6 +56,8 @@ protected:
   PRBool                m_addDummyEnvelope;
   PRBool                m_canonicalLineEnding;
 
+  nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
+
 	/* NNTP specific event sinks */
 	nsINNTPHost				    * m_newsHost;
 	nsINNTPArticleList		* m_articleList;

@@ -164,6 +164,16 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
           if (NS_SUCCEEDED(rv) && !charset.IsEmpty() ) 
             *override_charset = charset.ToNewCString();
 
+          // if there is no manual override and a folder charset exists
+          // then check if we have a folder level override
+          if (!(*override_charset) && *default_charset && **default_charset)
+          {
+            PRBool folderCharsetOverride;
+            rv = i18nUrl->GetFolderCharsetOverride(&folderCharsetOverride);
+            if (NS_SUCCEEDED(rv) && folderCharsetOverride)
+              *override_charset = nsCRT::strdup(*default_charset);
+          }
+
           // if the pref says always override and no manual override then set the folder charset to override
           // in future, the override flag to be per folder instead of a global pref
           if (charset.IsEmpty()) {

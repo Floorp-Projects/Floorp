@@ -1390,7 +1390,7 @@ void nsImapUrl::ParseListOfMessageIds()
 
 // nsIMsgI18NUrl support
 
-NS_IMETHODIMP nsImapUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
+nsresult nsImapUrl::GetMsgFolder(nsIMsgFolder **msgFolder)
 {
   // if we have a RDF URI, then try to get the folder for that URI and then ask the folder
   // for it's charset....
@@ -1405,10 +1405,30 @@ NS_IMETHODIMP nsImapUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
   NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
   nsCOMPtr<nsIMessage> msg (do_QueryInterface(resource));
   NS_ENSURE_TRUE(msg, NS_ERROR_FAILURE);
+  nsresult rv = msg->GetMsgFolder(msgFolder);
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_TRUE(msgFolder, NS_ERROR_FAILURE);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
+{
   nsCOMPtr<nsIMsgFolder> folder;
-  msg->GetMsgFolder(getter_AddRefs(folder));
+  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv,rv);
   NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
   folder->GetCharset(aCharacterSet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride)
+{
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
+  folder->GetCharsetOverride(aCharacterSetOverride);
   return NS_OK;
 }
 

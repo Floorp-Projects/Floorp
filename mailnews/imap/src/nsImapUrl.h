@@ -84,6 +84,8 @@ protected:
 	void		ParseMsgFlags();
 	void		ParseListOfMessageIds();
 
+  nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
+
   char        *m_sourceCanonicalFolderPathSubString;
   char        *m_destinationCanonicalFolderPathSubString;
   char		*m_tokenPlaceHolder;

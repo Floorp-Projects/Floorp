@@ -432,69 +432,89 @@ nsNntpUrl::SetOriginalSpec(const char *aSpec)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult nsNntpUrl::GetMsgFolder(nsIMsgFolder **msgFolder)
+{
+  /*
+   well, not proud of this.  but it will all get fixed when
+   the news code gets the beating it deserves.
+
+   ideally, we'd keep a weak reference to the current news folder
+   and just use that to determine the char set, but for now
+   we'll just get the folder from the url we are running.
+  
+   this code takes the current uri, which is for a news message
+   and turns it into a news folder uri,
+   and then get the folder for that URI, and the ask the folder
+   for it's charset....
+   */
+
+  nsresult rv;
+  nsXPIDLCString uriStr;
+  rv = GetUri(getter_Copies(uriStr));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIURI> uri = do_CreateInstance("@mozilla.org/network/standard-url;1", &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = uri->SetSpec((const char *)uriStr);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // XXX todo?
+  // could the url already be a folder url?
+  //
+  // get the path, check for @ or %40.  if has them,
+  // this is an article url, and we need to replace
+  // the path with the newsgroup name.
+  // for now, assume it is always an article url
+
+  if (!((const char *)m_newsgroupName)) {
+      NS_ASSERTION(NS_ERROR_FAILURE,"no group name");
+      return NS_ERROR_FAILURE;
+  }
+
+  nsCAutoString groupPath("/");
+  groupPath += m_newsgroupName;
+
+  rv = uri->SetPath((const char *)groupPath);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = uri->GetSpec(getter_Copies(uriStr));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv); 
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = rdfService->GetResource((const char *)uriStr, getter_AddRefs(resource));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = resource->QueryInterface(NS_GET_IID(nsIMsgFolder), (void**) msgFolder);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsNntpUrl::GetFolderCharset(PRUnichar ** aCharacterSet)
 {
-    /*
-     well, not proud of this.  but it will all get fixed when
-     the news code gets the beating it deserves.
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
+  rv = folder->GetCharset(aCharacterSet);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
 
-     ideally, we'd keep a weak reference to the current news folder
-     and just use that to determine the char set, but for now
-     we'll just get the folder from the url we are running.
-    
-     this code takes the current uri, which is for a news message
-     and turns it into a news folder uri,
-     and then get the folder for that URI, and the ask the folder
-     for it's charset....
-     */
-
-    nsresult rv;
-    nsXPIDLCString uriStr;
-    rv = GetUri(getter_Copies(uriStr));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIURI> uri = do_CreateInstance("@mozilla.org/network/standard-url;1", &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = uri->SetSpec((const char *)uriStr);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    // XXX todo?
-    // could the url already be a folder url?
-    //
-    // get the path, check for @ or %40.  if has them,
-    // this is an article url, and we need to replace
-    // the path with the newsgroup name.
-    // for now, assume it is always an article url
-
-    if (!((const char *)m_newsgroupName)) {
-        NS_ASSERTION(NS_ERROR_FAILURE,"no group name");
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCAutoString groupPath("/");
-    groupPath += m_newsgroupName;
-
-    rv = uri->SetPath((const char *)groupPath);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = uri->GetSpec(getter_Copies(uriStr));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIRDFService> rdfService = do_GetService(NS_RDF_CONTRACTID "/rdf-service;1", &rv); 
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIRDFResource> resource;
-    rv = rdfService->GetResource((const char *)uriStr, getter_AddRefs(resource));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(resource, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = folder->GetCharset(aCharacterSet);
-    NS_ENSURE_SUCCESS(rv,rv);
-    return NS_OK;
+NS_IMETHODIMP nsNntpUrl::GetFolderCharsetOverride(PRBool * aCharacterSetOverride)
+{
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsresult rv = GetMsgFolder(getter_AddRefs(folder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_TRUE(folder, NS_ERROR_FAILURE);
+  rv = folder->GetCharsetOverride(aCharacterSetOverride);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
 }
 
 NS_IMETHODIMP nsNntpUrl::GetCharsetOverRide(PRUnichar ** aCharacterSet)

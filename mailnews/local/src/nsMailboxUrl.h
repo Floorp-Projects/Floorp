@@ -79,6 +79,8 @@ protected:
   PRBool                m_canonicalLineEnding;
 	nsresult ParseSearchPart();
 
+  nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
+
   // truncated message support
   nsXPIDLCString m_originalSpec;  
   nsCString mURI; // the RDF URI associated with this url.
