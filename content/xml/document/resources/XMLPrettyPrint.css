@@ -37,14 +37,6 @@
 
 @import url("resource:/res/viewsource.css");
 
-#top {
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  position: absolute;
-}
-
 #header {
   background-color: #ccc;
   border-bottom: 3px solid black;
