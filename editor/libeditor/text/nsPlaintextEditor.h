@@ -110,6 +110,8 @@ public:
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAReadableString & aAttribute,
                                       const nsAReadableString & aValue);
+  NS_IMETHOD RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
+                                         const nsAReadableString & aAttribute);
 
   /** prepare the editor for use */
   NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);

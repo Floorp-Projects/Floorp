@@ -2119,6 +2119,12 @@ nsPlaintextEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                             const nsAReadableString & aAttribute,
                                             const nsAReadableString & aValue)
 {
-  nsEditor::SetAttribute(aElement, aAttribute, aValue);
-  return NS_OK;
+  return nsEditor::SetAttribute(aElement, aAttribute, aValue);
+}
+
+nsresult
+nsPlaintextEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
+                                               const nsAReadableString & aAttribute)
+{
+  return nsEditor::RemoveAttribute(aElement, aAttribute);
 }

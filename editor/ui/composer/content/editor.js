@@ -1165,7 +1165,7 @@ function EditorSelectColor(colorType, mouseEvent)
   }
   else if (element)
   {
-    if (false /*gColorObj.Type == "Table"*/)
+    if (gColorObj.Type == "Table")
     {
       // Set background on a table
       // Note that we shouldn't trust "currentColor" because of "TableOrCell" behavior
@@ -1175,9 +1175,9 @@ function EditorSelectColor(colorType, mouseEvent)
         if (bgcolor != gColorObj.BackgroundColor)
         {
           if (gColorObj.BackgroundColor)
-            window.editorShell.SetAttribute(table, "bgcolor", gColorObj.BackgroundColor);
+            window.editorShell.editor.setAttributeOrEquivalent(table, "bgcolor", gColorObj.BackgroundColor);
           else
-            window.editorShell.RemoveAttribute(table, "bgcolor");
+            window.editorShell.editor.removeAttributeOrEquivalent(table, "bgcolor");
         }
       }
     }
@@ -1195,10 +1195,12 @@ function EditorSelectColor(colorType, mouseEvent)
         {
           var defColors = GetDefaultBrowserColors();
           if (defColors)
-          { // GLAZOU : this has to be changed
+          {
             if (!bodyelement.getAttribute("text"))
-              window.editorShell.SetAttribute(bodyelement, "text", defColors.TextColor);
+              window.editorShell.editor.setAttributeOrEquivalent(bodyelement, "text", defColors.TextColor);
 
+            // The following attributes have no individual CSS declaration counterparts
+            // Getting rid of them in favor of CSS implies CSS rules management
             if (!bodyelement.getAttribute("link"))
               window.editorShell.SetAttribute(bodyelement, "link", defColors.LinkColor);
 
