@@ -34,6 +34,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mozABConduit
 EXPORT_LIBRARY	= $(MODULE)
 LIBRARY_NAME	= $(MODULE)
+RESFILE         = MozABConduitGenCond.res
 
 REQUIRES	= PalmSyncProxy \
 		  $(NULL)
@@ -55,7 +56,7 @@ EXTRA_DSO_LDOPTS = \
 		   $(PALM_CDK_LIB)/palmcmn.$(LIB_SUFFIX) \
 		   $(NULL)
 
-OS_LIBS		+= ole32.lib
+OS_LIBS		+= ole32.lib comctl32.lib
 
 # Force use of PIC
 FORCE_USE_PIC	= 1 

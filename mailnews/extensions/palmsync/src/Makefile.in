@@ -65,10 +65,15 @@ EXPORTS     = \
 
 LOBJS       = ../build/IPalmSync_i.$(OBJ_SUFFIX)
 
+ifndef MOZ_STATIC_MAIL_BUILD
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS  = msgbsutl
 else
 EXTRA_DSO_LIBS  = msgbaseutil
+endif
+
+else
+SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LIBS  += addrbook_s
