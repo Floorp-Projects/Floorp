@@ -1259,24 +1259,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
       if (oldMaximumWidth != desiredSize.mMaximumWidth) {
         aReflowState.tableFrame->InvalidateMaximumWidth();
       }
-
-      // Now that we know the minimum and preferred widths see if the column
-      // widths need to be rebalanced
-      if (aReflowState.tableFrame->ColumnsAreValidFor(*(nsTableCellFrame*)aNextFrame,
-                                                      oldMinSize.width,
-                                                      oldMaximumWidth)) {
-        // The column widths don't need to be rebalanced. Now reflow the cell
-        // again this time constraining the width back to the column width again
-        kidReflowState.reason = eReflowReason_Resize;
-        kidReflowState.availableWidth = cellAvailWidth;
-        rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,
-                         aReflowState.x, GetChildMaxTopMargin(), 0, aStatus);
-
-      } else {
-        // The column widths need to be rebalanced, so don't waste time reflowing
-        // the cell again. Tell the table to rebalance the column widths
-        aReflowState.tableFrame->InvalidateColumnWidths();
-      }
     }
 
     // Now that we know the minimum and preferred widths see if the column
