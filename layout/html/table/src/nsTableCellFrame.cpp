@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsTableCellFrame.h"
-#include "nsBodyFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -27,9 +26,11 @@
 #include "nsIHTMLContent.h"
 #include "nsHTMLIIDs.h"
 #include "nsCSSLayout.h"
+#include "nsHTMLParts.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
+#include "nsVoidArray.h"
 #include "nsIPtr.h"
 #include "nsIView.h"
 #include "nsStyleUtil.h"
@@ -74,7 +75,7 @@ NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create body pseudo frame
-  NS_NewBodyFrame(mContent, this, mFirstChild, PR_TRUE);
+  NS_NewBodyFrame(mContent, this, mFirstChild, NS_BODY_NO_AUTO_MARGINS);
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
@@ -185,31 +186,6 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
   mFirstChild->MoveTo(kidRect.x, kidYTop);
 }
 
-void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
-{
-  // Do we have a prev-in-flow?
-  if (nsnull == mPrevInFlow) {
-    // No, create a body pseudo frame
-    NS_NewBodyFrame(mContent, this, mFirstChild, PR_FALSE);
-
-    // Resolve style and set the style context
-    nsIStyleContext* styleContext =
-      aPresContext->ResolveStyleContextFor(mContent, this);             // styleContext: ADDREF++
-    mFirstChild->SetStyleContext(aPresContext,styleContext);
-    NS_RELEASE(styleContext);                                           // styleContext: ADDREF--
-  } else {
-    nsTableCellFrame* prevFrame = (nsTableCellFrame *)mPrevInFlow;
-
-    nsIFrame* prevPseudoFrame = prevFrame->mFirstChild;
-
-    // Create a continuing column
-    nsIStyleContext* kidSC;
-    prevPseudoFrame->GetStyleContext(aPresContext, kidSC);
-    prevPseudoFrame->CreateContinuingFrame(*aPresContext, this, kidSC, mFirstChild);
-    NS_RELEASE(kidSC);
-  }
-}
-
 PRInt32 nsTableCellFrame::GetRowSpan()
 {  
   PRInt32 rowSpan=1;
@@ -293,12 +269,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
   tableFrame->GetCellMarginData(this,margin);
-
-  // get frame, creating one if needed
-  if (nsnull==mFirstChild)
-  {
-    CreatePsuedoFrame(&aPresContext);
-  }
 
   // reduce available space by insets, if we're in a constrained situation
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)

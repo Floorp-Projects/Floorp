@@ -189,10 +189,6 @@ protected:
   nsTableCellFrame(nsIContent* aContent,
 					         nsIFrame* aParentFrame);
 
-  /** Create a psuedo-frame for this cell.  Handles continuing frames as needed.
-    */
-  virtual void CreatePsuedoFrame(nsIPresContext* aPresContext);
-
   // Subclass hook for style post processing
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
