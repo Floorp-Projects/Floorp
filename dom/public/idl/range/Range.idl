@@ -4,16 +4,17 @@ interface Range : Node {
 
     attribute boolean     isPositioned;
 
-    attribute Element     startParent();
-    attribute long        startOffset();
-    attribute Element     endParent();
-    attribute long        endOffset();
+    attribute Element     startParent;
+    attribute long        startOffset;
+    attribute Element     endParent;
+    attribute long        endOffset;
 
     void                setStart(in Node parent, in long offset);
     void                setEnd(in Node parent, in long offset);
 
     void                collapse(in boolean toStart);
-    attribute boolean   isCollapsed();
+    attribute boolean   isCollapsed;
+
     void                unposition();
 
     void                selectNode(in Node n);
@@ -25,11 +26,11 @@ interface Range : Node {
     DocumentFragment    copyContents();
 
     void                insertNode(in Node n);
-
     void                surroundContents(in Node n);
 
     Range               clone();
-    attribute Node      commonParent();
+
+    attribute Node      commonParent;
 
     DOMString           toString();
  };
