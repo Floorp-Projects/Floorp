@@ -248,14 +248,24 @@ sub pickos {
             /\(.*WinNT.*\)/ && do {return "Windows NT";};
             /\(.*32bit.*\)/ && do {return "Windows 95";};
             /\(.*16bit.*\)/ && do {return "Windows 3.1";};
-            /\(.*Macintosh.*\)/ && do {return "Macintosh";};
             /\(.*Mac OS 9.*\)/ && do {return "Mac System 9.x";};
             /\(.*Mac OS 8\.6.*\)/ && do {return "Mac System 8.6";};
-            /\(.*Mac OS 8.*\)/ && do {return "Mac System 8.5";};
+            /\(.*Mac OS 8\.5.*\)/ && do {return "Mac System 8.5";};
+#we don't know 8.1
+            /\(.*Mac OS 8\.1.*\)/ && do {return "Mac System 8.0";};
+            /\(.*Mac OS 8\.0.*\)/ && do {return "Mac System 8.0";};
+            /\(.*Mac OS 8[^.].*\)/ && do {return "Mac System 8.0";};
+            /\(.*Mac OS 8.*\)/ && do {return "Mac System 8.6";};
+            /\(.*Darwin.*\)/ && do {return "MacOS X";};
+#silly
+            /\(.*Mac.*PowerPC.*\)/ && do {return "Mac System 9.x";};
+            /\(.*Mac.*PPC.*\)/ && do {return "Mac System 9.x";};
+            /\(.*Mac.*68k.*\)/ && do {return "Mac System 8.0";};
 #evil
             /Amiga/i && do {return "other";};
-            /\(.*68K.*\)/ && do {return "Mac System 8.5";};
-            /\(.*PPC.*\)/ && do {return "Mac System 8.5";};
+            /\(.*PowerPC.*\)/ && do {return "Mac System 9.x";};
+            /\(.*PPC.*\)/ && do {return "Mac System 9.x";};
+            /\(.*68K.*\)/ && do {return "Mac System 8.0";};
         }
     }
     # default
