@@ -238,7 +238,7 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         Member  bestFit = null;
         Class[] bestFitTypes = null;
 
-        java.util.Vector  ambiguousMethods = new java.util.Vector();
+        java.util.Vector ambiguousMethods = null;
 
         for (int i = 0; i < methodsOrCtors.length; i++) {
             Member member = methodsOrCtors[i];
@@ -270,6 +270,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 if (preference == PREFERENCE_AMBIGUOUS) {
                     if (debug) printDebug("Deferring ", member, args);
                     // add to "ambiguity list"
+                    if (ambiguousMethods == null)
+                        ambiguousMethods = new java.util.Vector();
                     ambiguousMethods.addElement(member);
                 }
                 else if (preference == PREFERENCE_FIRST_ARG) {
@@ -282,6 +284,9 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 }
             }
         }
+        
+        if (ambiguousMethods == null)
+            return bestFit;
 
         // Compare ambiguous methods with best fit, in case 
         // the current best fit removes the ambiguities.
