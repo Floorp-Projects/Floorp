@@ -49,6 +49,10 @@ public:
 
   NS_IMETHOD    WalletSamples()=0;
 
+  NS_IMETHOD    SignonViewer()=0;
+
+  NS_IMETHOD    CookieViewer()=0;
+
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
 
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin)=0;
