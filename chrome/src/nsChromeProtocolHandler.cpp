@@ -31,6 +31,8 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
@@ -48,7 +50,8 @@ static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 //  A channel that's used for loading cached chrome documents.
 //
 
-class nsCachedChromeChannel : public nsIChannel
+class nsCachedChromeChannel : public nsIChannel,
+                              public nsITimerCallback
 {
 protected:
     nsCachedChromeChannel(const char* aCommand, nsIURI* aURI);
@@ -57,6 +60,8 @@ protected:
     const char*                 mCommand;
     nsCOMPtr<nsIURI>            mURI;
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
+    nsCOMPtr<nsIStreamListener> mListener;
+    nsCOMPtr<nsISupports>       mContext;
 
 public:
     static nsresult
@@ -72,11 +77,14 @@ public:
 
     // nsIChannel    
     NS_DECL_NSICHANNEL
+
+    // nsITimerCallback
+    virtual void Notify(nsITimer* aTimer);
 };
 
 NS_IMPL_ADDREF(nsCachedChromeChannel);
 NS_IMPL_RELEASE(nsCachedChromeChannel);
-NS_IMPL_QUERY_INTERFACE2(nsCachedChromeChannel, nsIRequest, nsIChannel);
+NS_IMPL_QUERY_INTERFACE3(nsCachedChromeChannel, nsIRequest, nsIChannel, nsITimerCallback);
 
 nsresult
 nsCachedChromeChannel::Create(const char* aCommand, nsIURI* aURI, nsIChannel** aResult)
@@ -152,8 +160,33 @@ nsCachedChromeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsIS
 {
     if (listener) {
         nsresult rv;
+
+        // Fire the OnStartRequest(), which will cause the XUL
+        // document to get embedded.
         rv = listener->OnStartRequest(this, ctxt);
-        (void) listener->OnStopRequest(this, ctxt, rv, nsnull);
+
+        // If that works, then set a timer to fire the
+        // OnStopRequest(). We want to do this on a callback to avoid
+        // unexpected re-entrancy problems.
+        if (NS_SUCCEEDED(rv)) {
+            nsITimer* timer;
+            rv = NS_NewTimer(&timer);
+            if (NS_SUCCEEDED(rv)) {
+                mContext  = ctxt;
+                mListener = listener;
+                rv = timer->Init(this, 0 /*ms*/);
+                if (NS_SUCCEEDED(rv)) {
+                    return NS_OK;
+                }
+
+                // Uh oh, something went wrong. Kill the timer.
+                NS_RELEASE(timer);
+            }
+        }
+
+        // Uh oh, something went wrong. Fire a balancing
+        // OnStopRequest() and indicate an error occurred.
+        (void) mListener->OnStopRequest(this, mContext, rv, nsnull);
     }
 
     return NS_OK;
@@ -241,6 +274,14 @@ nsCachedChromeChannel::SetNotificationCallbacks(nsIInterfaceRequestor * aNotific
 }
 
 
+void
+nsCachedChromeChannel::Notify(nsITimer* aTimer)
+{
+    (void) mListener->OnStopRequest(this, mContext, NS_OK, nsnull);
+    mListener = nsnull;
+    mContext  = nsnull;
+    NS_RELEASE(aTimer);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
