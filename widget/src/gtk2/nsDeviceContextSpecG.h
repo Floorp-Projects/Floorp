@@ -26,7 +26,7 @@
 #include "nsPrintdGTK.h"
 
 class nsDeviceContextSpecGTK : public nsIDeviceContextSpec ,
-                                      nsIDeviceContextSpecPS
+                                      public nsIDeviceContextSpecPS
 {
 public:
 /**
