@@ -610,7 +610,7 @@ nsresult nsDocument::CreateTreeIterator(nsIDOMNode **aNode, nsIDOMTreeIterator *
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsDocument::GetElementsByTagName(nsIDOMNodeIterator **aIterator)
+nsresult nsDocument::GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator **aIterator)
 {
   //XXX TBI
   return NS_ERROR_NOT_IMPLEMENTED;

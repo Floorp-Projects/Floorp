@@ -37,8 +37,8 @@ public:
 
   // nsIDOMAttribute interface
   virtual nsresult            GetName(nsString &aName);
-  virtual nsresult            GetValue(nsString &aValue /*nsIDOMNode **aValue*/);
-  virtual nsresult            SetValue(nsString &aValue /*nsIDOMNode *aValue*/);
+  virtual nsresult            GetValue(nsString &aValue);
+  virtual nsresult            SetValue(nsString &aValue);
   virtual nsresult            GetSpecified();
   virtual nsresult            SetSpecified(PRBool specified);
   virtual nsresult            ToString(nsString &aString);

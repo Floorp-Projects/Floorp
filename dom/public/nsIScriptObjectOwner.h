@@ -32,12 +32,35 @@ class nsIScriptContext;
 0x8f6bca7e, 0xce42, 0x11d1, \
   {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} } \
 
-//
-// The interface a content object has to implement
-//
+/**
+ * Creates a link between the script object and its native implementation
+ *<P>
+ * Every object that wants to be exposed in a script environment should
+ * implement this interface. This interface should guarantee that the same
+ * script object is returned in the context of the same script.
+ * <P><I>It does have a bit too much java script information now, that
+ * should be removed in a short time. Ideally this interface will be
+ * language neutral</I>
+ */
 class nsIScriptObjectOwner : public nsISupports {
 public:
+  /**
+   * Return the script object associated with this object.
+   * Create a script object if not present.
+   *
+   * @param aContext the context the script object has to be created in
+   * @param aScriptObject on return will contain the script object
+   *
+   * @return nsresult NS_OK if the script object is successfully returned
+   *
+   **/
   virtual nsresult  GetScriptObject(JSContext *aContext, void** aScriptObject) = 0;
+
+  /**
+   * Nuke the current script object.
+   * Next call to GetScriptObject creates a new script object.
+   *
+   **/
   virtual nsresult  ResetScriptObject() = 0;
 };
 
