@@ -23,8 +23,10 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsGUIEvent.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#include "nsWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
 #include "nsFilePicker.h"
@@ -64,7 +66,7 @@ char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
 {
-  mWnd = NULL;
+  mParentWidget = nsnull;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;
   mSelectedType   = 1;
@@ -78,6 +80,7 @@ nsFilePicker::nsFilePicker()
 //-------------------------------------------------------------------------
 nsFilePicker::~nsFilePicker()
 {
+  NS_IF_RELEASE(mParentWidget);
   NS_IF_RELEASE(mUnicodeEncoder);
   NS_IF_RELEASE(mUnicodeDecoder);
 }
@@ -91,6 +94,12 @@ nsFilePicker::~nsFilePicker()
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
   NS_ENSURE_ARG_POINTER(aReturnVal);
+
+  // suppress blur events
+  if (mParentWidget) {
+    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
+    parent->SuppressBlurEvents(PR_TRUE);
+  }
 
   PRBool result = PR_FALSE;
   PRUnichar fileBuffer[MAX_PATH+1];
@@ -114,7 +123,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     wcsncpy(dirBuffer, initialDir.get(), MAX_PATH);
 
     BROWSEINFOW browserInfo;
-    browserInfo.hwndOwner      = mWnd;
+    browserInfo.hwndOwner      = (HWND)
+      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
     browserInfo.pidlRoot       = nsnull;
     browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
     browserInfo.lpszTitle      = title;
@@ -156,7 +166,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     ofn.lpstrTitle   = (LPCWSTR)title;
     ofn.lpstrFilter  = (LPCWSTR)filterBuffer.get();
     ofn.nFilterIndex = mSelectedType;
-    ofn.hwndOwner    = mWnd;
+    ofn.hwndOwner    = (HWND)
+      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = MAX_PATH;
 
@@ -315,6 +326,11 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   else {
     *aReturnVal = returnCancel;
   }
+  if (mParentWidget) {
+    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
+    parent->SuppressBlurEvents(PR_FALSE);
+  }
+
   return NS_OK;
 }
 #endif
@@ -327,6 +343,12 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
 #else
 {
   NS_ENSURE_ARG_POINTER(aReturnVal);
+
+  // suppress blur event
+  if (mParentWidget) {
+    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
+    parent->SuppressBlurEvents(PR_TRUE);
+  }
 
   PRBool result = PR_FALSE;
   char fileBuffer[MAX_PATH+1] = "";
@@ -359,7 +381,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
     char dirBuffer[MAX_PATH+1];
     PL_strncpy(dirBuffer, initialDir.get(), MAX_PATH);
     BROWSEINFO browserInfo;
-    browserInfo.hwndOwner      = mWnd;
+    browserInfo.hwndOwner      = (HWND)
+      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
     browserInfo.pidlRoot       = nsnull;
     browserInfo.pszDisplayName = (LPSTR)dirBuffer;
     browserInfo.lpszTitle      = title;
@@ -411,7 +434,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
     ofn.lpstrTitle   = title;
     ofn.lpstrFilter  = filterBuffer;
     ofn.nFilterIndex = mSelectedType;
-    ofn.hwndOwner    = mWnd;
+    ofn.hwndOwner    = (HWND)
+      (mParentWidget ? mParentWidget->GetNativeData(NS_NATIVE_WINDOW) : 0); 
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = MAX_PATH;
 
@@ -581,6 +605,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
   else {
     *aReturnVal = returnCancel;
   }
+  if (mParentWidget) {
+    nsWindow *parent = NS_STATIC_CAST(nsWindow *, mParentWidget);
+    parent->SuppressBlurEvents(PR_FALSE);
+  }
+
   return NS_OK;
 }
 #endif
@@ -749,7 +778,8 @@ NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
                                        const PRUnichar *aTitle,
                                        PRInt16 aMode)
 {
-  mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
+  mParentWidget = aParent;
+  NS_IF_ADDREF(mParentWidget);
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
   mMode = aMode;
