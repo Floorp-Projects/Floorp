@@ -936,7 +936,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                     rv = GetTrashFolder(getter_AddRefs(newTrashFolder));
                     if (NS_SUCCEEDED(rv) && newTrashFolder)
                       newTrashFolder->UpdateFolder(msgWindow);
-                    CompactAll(aListener, msgWindow);
                 }
             }
         }
