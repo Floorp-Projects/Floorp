@@ -114,6 +114,7 @@
 	
 	#include "CDownloadProgressWindow.h"
 	#include "CURLEditField.h"
+	#include "CAutoCompleteURLEditField.h"
 	#include "CURLCaption.h"
 	#include "CHyperScroller.h"
 	#include "CButtonEnablerReloadStop.h"
@@ -283,6 +284,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CBrowserWindow);
 	RegisterClass_(CHTMLView);
 	RegisterClass_(CURLEditField);
+	RegisterClass_(CAutoCompleteURLEditField);
 	RegisterClass_(CURLCaption);
 	RegisterClass_(CSaveProgress);
 	RegisterClass_(CHyperScroller);
