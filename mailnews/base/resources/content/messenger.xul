@@ -198,7 +198,6 @@ Rights Reserved.
 <!ENTITY forwardMsgCmd.label "Forward">  
 <!ENTITY forwardAsMenu.label "Forward As">  
 <!ENTITY forwardAsInline.label "Inline">  
-<!ENTITY forwardAsQuoted.label "Quoted">  
 <!ENTITY forwardAsAttachmentCmd.label "Attachment">  
 <!ENTITY editMsgAsNewCmd.label ".Edit Message As New">  
 <!ENTITY moveMsgMenu.label "Move Message">  
@@ -482,7 +481,6 @@ Rights Reserved.
       <menuitem name="&forwardMsgCmd.label;" onclick="MsgForwardMessage();"/>
       <menu name="&forwardAsMenu.label;">
         <menuitem name="&forwardAsInline.label;" onclick="MsgForwardAsInline();"/>
-        <menuitem name="&forwardAsQuoted.label;" onclick="MsgForwardAsQuoted();"/>
         <menuitem name="&forwardAsAttachmentCmd.label;" onclick="MsgForwardAsAttachment();"/>
       </menu>
       <menuitem name="&editMsgAsNewCmd.label;" onclick="MsgEditMessageAsNew();"/>

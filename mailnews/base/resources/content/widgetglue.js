@@ -117,19 +117,13 @@ function MsgForwardMessage()
 function MsgForwardAsAttachment()
 {
   dump("\nMsgForwardAsAttachment from XUL\n");
-  ComposeMessage(5, 0);
+  ComposeMessage(4, 0);
 }
 
 function MsgForwardAsInline()
 {
   dump("\nMsgForwardAsInline from XUL\n");
   ComposeMessage(3, 0);
-}
-
-function MsgForwardAsQuoted()
-{
-  dump("\nMsgForwardAsQuoted from XUL\n");
-  ComposeMessage(4, 0);
 }
 
 function MsgCopyMessage(destFolder)

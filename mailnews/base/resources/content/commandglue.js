@@ -53,7 +53,7 @@ function OpenURL(url)
 
 function ComposeMessage(type, format)
 //type: 0=new message, 1=reply, 2=reply all,
-//      3=forward inline, 4=forward quoted, 5=forward as attachment
+//      3=forward inline, 4=forward as attachment
 //
 //format: 0=default (use preference), 1=HTML, 2=plain text
 {
@@ -101,14 +101,15 @@ function ComposeMessage(type, format)
 				}
 			}
 			
-			if (type >= 3 && type <= 5) //forward
+			if (type == 3 || type == 4) //forward
 			{
 				if (appCore)
 					object = appCore.GetRDFResourceForMessage(tree, nodeList); //temporary
 				msgComposeService.OpenComposeWindow(null, uri, type, format, object);
 			}
 		}
-		dump("### nodeList is invalid\n");
+		else
+			dump("### nodeList is invalid\n");
 	}
 	else
 		dump("### tree is invalid\n");

@@ -20,6 +20,7 @@
 #include "domstubs.idl"
 #include "nsIMsgCompFields.idl"
 #include "nsIEditorShell.idl"
+#include "nsIMsgIdentity.idl"
 
 %{ C++
 #include "nsIDOMWindow.h"
@@ -35,7 +36,6 @@ enum
 	MSGCOMP_TYPE_Reply,
 	MSGCOMP_TYPE_ReplyAll,
 	MSGCOMP_TYPE_ForwardInline,
-	MSGCOMP_TYPE_ForwardQuoted,
 	MSGCOMP_TYPE_ForwardAsAttachment
 };
 %}
@@ -94,7 +94,7 @@ interface nsIMsgCompose : nsISupports {
     void SendMsgEx(in MSG_DeliverMode deliverMode, in wstring addrTo, in wstring addrCc, in wstring addrBcc,
             in wstring newsgroup, in wstring subject, in wstring body,
             in wstring callback);
-            
+    
 	/* ... */
     void CloseWindow();
     
