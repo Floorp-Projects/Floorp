@@ -689,7 +689,9 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
           nsXBLEventHandler* handler = nsnull;
           
           // Add the event listener.
-          if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
+          if (special)
+            NS_NewXBLEventHandler(receiver, curr, eventAtom, &handler);
+          else if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
             nsXBLMouseHandler* mouseHandler;
             NS_NewXBLMouseHandler(receiver, curr, eventAtom, &mouseHandler);
             receiver->AddEventListener(type, (nsIDOMMouseListener*)mouseHandler, useCapture);
@@ -743,8 +745,6 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
             receiver->AddEventListener(type, (nsIDOMLoadListener*)loadHandler, useCapture);
             handler = loadHandler;
           }
-          else if (special)
-            NS_NewXBLEventHandler(receiver, curr, eventAtom, &handler);
           else {
             NS_WARNING("***** Non-compliant XBL event listener attached! *****");
             nsAutoString value;
