@@ -20,33 +20,24 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=history
-
-CPPSRCS=                                \
- nsGlobalHistory.obj                    \
- $(NULL)
+MODULE=appcomps
 
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsGlobalHistory.obj        \
  $(NULL)
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME = history
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME=history_s
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-# These are the libraries we need to link with to create the DLL
-LLIBS=                          \
- $(DIST)\lib\xpcom.lib        \
- $(LIBNSPR)                     \
- $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 

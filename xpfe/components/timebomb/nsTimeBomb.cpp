@@ -22,9 +22,7 @@
  */
 
 #include "nsTimeBomb.h"
-#include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
 #include "nspr.h"
 #include "plstr.h"
 
@@ -74,22 +72,6 @@ static nsresult DisplayURI(const char *urlStr, PRBool block)
     
     return rv;
 }
-
-
-class nsTimeBomb : public nsITimeBomb
-{
-public:
-
-	nsTimeBomb();
-	virtual ~nsTimeBomb();
-
-	NS_DECL_ISUPPORTS    
-    NS_DECL_NSITIMEBOMB
-
-protected:
-    nsCOMPtr<nsIPref> mPrefs;
-    nsresult GetInt64ForPref(const char* pref, PRInt64* time);
-};
 
 nsTimeBomb::nsTimeBomb()
 {
@@ -392,19 +374,3 @@ nsTimeBomb::GetInt64ForPref(const char* pref, PRInt64* time)
     }
     return rv;
 }
-
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
-
-static nsModuleComponentInfo components[] =
-{
-  { "Netscape TimeBomb", 
-    NS_TIMEBOMB_CID, 
-    NS_TIMEBOMB_PROGID, 
-    nsTimeBombConstructor
-  },
-
-};
-
-NS_IMPL_NSGETMODULE("nsTimeBomb", components)
-

@@ -24,44 +24,7 @@
 
 #include "nsCOMPtr.h"
 #include "prtypes.h"
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
-
 #include "nsAutoComplete.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
-
-
-static nsModuleComponentInfo components[] =
-{
-  { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_PROGID,
-    nsAutoCompleteResultsConstructor,
-    nsnull,
-    nsnull,
-  },
-  { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_PROGID,
-    nsAutoCompleteItemConstructor,
-    nsnull,
-    nsnull,
-  }
-};
-
-////////////////////////////////////////////////////////////////////////
-// Implement the NSGetModule() exported function for your module
-// and the entire implementation of the module object.
-//
-// NOTE: If you want to use the module shutdown to release any
-//		module specific resources, use the macro
-//		NS_IMPL_NSGETMODULE_WITH_DTOR() instead of the vanilla
-//		NS_IMPL_NSGETMODULE()
-//
-
-// e.g. xpconnect uses this to release some singletons;
-// xdr search on ..._WITH_DTOR
-
-NS_IMPL_NSGETMODULE("nsAutoCompleteModule", components)
-
 
 /******************************************************************************
  * nsAutoCompleteItem

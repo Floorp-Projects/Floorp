@@ -37,7 +37,6 @@
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIGenericFactory.h"
 #include "nsIProfile.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
@@ -61,7 +60,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsISound.h"
-//#include "nsICommonDialogs.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsAppShellCIDs.h"
@@ -90,6 +88,48 @@
 // Interfaces Needed
 #include "nsIDocShell.h"
 #include "nsIXULWindow.h"
+
+nsIRDFResource		*kNC_IEFavoritesRoot;
+nsIRDFResource		*kNC_Bookmark;
+nsIRDFResource		*kNC_BookmarkSeparator;
+nsIRDFResource		*kNC_BookmarkAddDate;
+nsIRDFResource		*kNC_BookmarksRoot;
+nsIRDFResource		*kNC_Description;
+nsIRDFResource		*kNC_Folder;
+nsIRDFResource		*kNC_FolderType;
+nsIRDFResource		*kNC_IEFavorite;
+nsIRDFResource		*kNC_IEFavoriteFolder;
+nsIRDFResource		*kNC_Name;
+nsIRDFResource		*kNC_NewBookmarkFolder;
+nsIRDFResource		*kNC_NewSearchFolder;
+nsIRDFResource		*kNC_PersonalToolbarFolder;
+nsIRDFResource		*kNC_ShortcutURL;
+nsIRDFResource		*kNC_URL;
+nsIRDFResource		*kRDF_type;
+nsIRDFResource		*kRDF_nextVal;
+nsIRDFResource		*kWEB_LastModifiedDate;
+nsIRDFResource		*kWEB_LastVisitDate;
+nsIRDFResource		*kWEB_Schedule;
+nsIRDFResource		*kWEB_Status;
+nsIRDFResource		*kWEB_LastPingDate;
+nsIRDFResource		*kWEB_LastPingETag;
+nsIRDFResource		*kWEB_LastPingModDate;
+nsIRDFResource    *kWEB_LastCharset;
+nsIRDFResource		*kWEB_LastPingContentLen;
+
+nsIRDFResource		*kNC_Parent;
+
+nsIRDFResource		*kNC_BookmarkCommand_NewBookmark;
+nsIRDFResource		*kNC_BookmarkCommand_NewFolder;
+nsIRDFResource		*kNC_BookmarkCommand_NewSeparator;
+nsIRDFResource		*kNC_BookmarkCommand_DeleteBookmark;
+nsIRDFResource		*kNC_BookmarkCommand_DeleteBookmarkFolder;
+nsIRDFResource		*kNC_BookmarkCommand_DeleteBookmarkSeparator;
+nsIRDFResource		*kNC_BookmarkCommand_SetNewBookmarkFolder = nsnull;
+nsIRDFResource		*kNC_BookmarkCommand_SetPersonalToolbarFolder;
+nsIRDFResource		*kNC_BookmarkCommand_SetNewSearchFolder;
+nsIRDFResource		*kNC_BookmarkCommand_Import;
+nsIRDFResource		*kNC_BookmarkCommand_Export;
 
 #define	BOOKMARK_TIMEOUT		15000		// fire every 15 seconds
 // #define	DEBUG_BOOKMARK_PING_OUTPUT	1
@@ -3174,6 +3214,25 @@ nsBookmarksService::Move(nsIRDFResource* aOldSource,
 	return(rv);
 }
 
+NS_IMETHODIMP
+nsBookmarksService::HasAssertion(nsIRDFResource* source,
+				nsIRDFResource* property,
+				nsIRDFNode* target,
+				PRBool tv,
+				PRBool* hasAssertion)
+{
+#ifdef	XP_MAC
+	    // on the Mac, IE favorites are stored in an HTML file.
+	    // Defer importing this files contents until necessary.
+
+	    if ((source == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
+	    {
+		    ReadFavorites();
+	    }
+#endif
+		return mInner->HasAssertion(source, property, target, tv, hasAssertion);
+}
+
 
 NS_IMETHODIMP
 nsBookmarksService::AddObserver(nsIRDFObserver* aObserver)
@@ -3205,7 +3264,65 @@ nsBookmarksService::RemoveObserver(nsIRDFObserver* aObserver)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBookmarksService::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval)
+{
+#ifdef	XP_MAC
+	    // on the Mac, IE favorites are stored in an HTML file.
+	    // Defer importing this files contents until necessary.
 
+	    if ((aNode == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
+	    {
+		    ReadFavorites();
+	    }
+#endif
+	    return mInner->HasArcIn(aNode, aArc, _retval);
+}
+
+NS_IMETHODIMP
+nsBookmarksService::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval)
+{
+#ifdef	XP_MAC
+	    // on the Mac, IE favorites are stored in an HTML file.
+	    // Defer importing this files contents until necessary.
+
+	    if ((aSource == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
+	    {
+		    ReadFavorites();
+	    }
+#endif
+	    return mInner->HasArcOut(aSource, aArc, _retval);
+}
+
+NS_IMETHODIMP
+nsBookmarksService::ArcLabelsOut(nsIRDFResource* source,
+				nsISimpleEnumerator** labels)
+{
+#ifdef	XP_MAC
+
+		// on the Mac, IE favorites are stored in an HTML file.
+		// Defer importing this files contents until necessary.
+
+		if ((source == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
+		{
+			ReadFavorites();
+		}
+#endif
+
+		return mInner->ArcLabelsOut(source, labels);
+}
+
+NS_IMETHODIMP
+nsBookmarksService::GetAllResources(nsISimpleEnumerator** aResult)
+{
+#ifdef	XP_MAC
+		if (mIEFavoritesAvailable == PR_FALSE)
+		{
+			ReadFavorites();
+		}
+#endif
+		return mInner->GetAllResources(aResult);
+}
 
 NS_IMETHODIMP
 nsBookmarksService::GetAllCommands(nsIRDFResource* source,
@@ -4717,18 +4834,3 @@ nsBookmarksService::EndUpdateBatch(nsIRDFDataSource* aDataSource)
 
 	return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////
-// Module implementation and export
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
-
-// The list of components we register
-static nsModuleComponentInfo components[] = {
-    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_PROGID,
-      nsBookmarksServiceConstructor },
-    { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_PROGID,
-      nsBookmarksServiceConstructor },
-};
-
-NS_IMPL_NSGETMODULE("nsBookmarkModule", components)

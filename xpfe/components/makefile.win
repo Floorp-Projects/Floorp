@@ -42,6 +42,7 @@ DIRS= \
     urlbarhistory \
     winhooks \
     urlwidget \
+    build \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

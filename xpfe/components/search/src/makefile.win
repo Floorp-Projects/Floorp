@@ -20,39 +20,25 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-MODULE=search
-
-CPPSRCS=                                 \
- nsLocalSearchService.cpp                \
- nsInternetSearchService.cpp             \
- nsRegisterSearch.cpp                    \
- $(NULL)
+MODULE=appcomps
 
 CPP_OBJS=                                \
  .\$(OBJDIR)\nsLocalSearchService.obj    \
  .\$(OBJDIR)\nsInternetSearchService.obj \
- .\$(OBJDIR)\nsRegisterSearch.obj        \
  $(NULL)
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME = search
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+LIBRARY_NAME = search_s
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-# These are the libraries we need to link with to create the DLL
-LLIBS=                          \
- $(DIST)\lib\xpcom.lib          \
- $(LIBNSPR)                     \
- $(DIST)\lib\js3250.lib        \
- $(DIST)\lib\timer_s.lib        \
- $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 

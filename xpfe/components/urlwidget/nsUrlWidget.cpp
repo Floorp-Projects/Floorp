@@ -25,8 +25,7 @@
 // Filename: nsIUrlWidget.cpp
 
 #include "nsIDocShell.h"
-#include "nsIUrlWidget.h"
-#include "nsIGenericFactory.h"
+#include "nsUrlWidget.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
@@ -36,26 +35,12 @@
 
 #include <windows.h>
 
-// {1802EE82-34A1-11d4-82EE-0050DA2DA771}
-#define NS_IURLWIDGET_CID { 0x1802EE82, 0x34A1, 0x11d4, { 0x82, 0xEE, 0x00, 0x50, 0xDA, 0x2D, 0xA7, 0x71 } }
-
 // Define this macro to turn on console debug output.                       
 //#define DEBUG_URLWIDGET
 
 // Implementation of the nsIUrlWidget interface.
-class nsUrlWidget : public nsIUrlWidget {
-public:
-
-    nsUrlWidget();
-    virtual ~nsUrlWidget();
-
-private:
-	
-    // Declare all interface methods we must implement.
-    NS_DECL_ISUPPORTS
-
 // Simple initialization function.
-NS_IMETHODIMP    
+nsresult    
 nsUrlWidget::Init()
 {
 
@@ -131,7 +116,6 @@ nsUrlWidget::SetURLToHiddenControl( char const *aURL, nsIDOMWindowInternal *pare
 
     return rv;
 }
-}; // End of nsUrlWidget class definition.
 
 // Use standard implementation of nsISupports stuff.
 NS_IMPL_ISUPPORTS1( nsUrlWidget, nsIUrlWidget );
@@ -149,16 +133,3 @@ nsUrlWidget::~nsUrlWidget() {
 printf( "nsUrlWidget dtor called\n" );
 #endif
 }
-
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
-
-nsModuleComponentInfo components[] = {
-  { NS_IURLWIDGET_CLASSNAME, 
-    NS_IURLWIDGET_CID, 
-    NS_IURLWIDGET_PROGID, 
-	nsUrlWidgetConstructor },
-};
-
-NS_IMPL_NSGETMODULE( "nsUrlWidget", components )
-

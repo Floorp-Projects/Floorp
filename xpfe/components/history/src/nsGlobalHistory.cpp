@@ -40,7 +40,6 @@
 #include "nsCRT.h"
 #include "nsFileStream.h"
 #include "nsIEnumerator.h"
-#include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
 #include "nsEnumeratorUtils.h"
 #include "nsRDFCID.h"
@@ -59,6 +58,19 @@
 #include "nsIMdbFactoryFactory.h"
 
 #include "nsIPref.h"
+
+PRInt32 nsGlobalHistory::gRefCnt;
+nsIRDFService* nsGlobalHistory::gRDFService;
+nsIRDFResource* nsGlobalHistory::kNC_Page;
+nsIRDFResource* nsGlobalHistory::kNC_Date;
+nsIRDFResource* nsGlobalHistory::kNC_VisitCount;
+nsIRDFResource* nsGlobalHistory::kNC_Name;
+nsIRDFResource* nsGlobalHistory::kNC_Referrer;
+nsIRDFResource* nsGlobalHistory::kNC_child;
+nsIRDFResource* nsGlobalHistory::kNC_URL;
+nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
+nsIRDFResource* nsGlobalHistory::kNC_HistoryBySite;
+nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 
 #ifdef DEBUG_sspitzer
 #define DEBUG_LAST_PAGE_VISITED 1
@@ -1676,23 +1688,3 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
   NS_ADDREF(*aResult);
   return NS_OK;
 }
-
-
-//----------------------------------------------------------------------
-//
-// Global History Module
-//
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
-
-static nsModuleComponentInfo components[] =
-{
-  { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_PROGID,
-    nsGlobalHistoryConstructor,
-  },
-  { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_PROGID,
-    nsGlobalHistoryConstructor,
-  }
-};
-
-NS_IMPL_NSGETMODULE("nsGlobalHistoryModule", components)

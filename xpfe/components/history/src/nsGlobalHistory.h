@@ -173,17 +173,4 @@ protected:
   friend class URLEnumerator;
 };
 
-PRInt32 nsGlobalHistory::gRefCnt;
-nsIRDFService* nsGlobalHistory::gRDFService;
-nsIRDFResource* nsGlobalHistory::kNC_Page;
-nsIRDFResource* nsGlobalHistory::kNC_Date;
-nsIRDFResource* nsGlobalHistory::kNC_VisitCount;
-nsIRDFResource* nsGlobalHistory::kNC_Name;
-nsIRDFResource* nsGlobalHistory::kNC_Referrer;
-nsIRDFResource* nsGlobalHistory::kNC_child;
-nsIRDFResource* nsGlobalHistory::kNC_URL;
-nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
-nsIRDFResource* nsGlobalHistory::kNC_HistoryBySite;
-nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
-
 #endif // nsglobalhistory__h____
