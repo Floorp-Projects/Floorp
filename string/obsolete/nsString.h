@@ -760,7 +760,9 @@ typedef PRUnichar chartype;
             chartype*       mStr;
             PRInt32         mLength;
             PRInt32         mCapacity;
+#ifdef  NS_DEBUG
 		static	PRBool					mSelfTested;
+#endif
 };
 
 ostream& operator<<(ostream& os,nsString& aString);
