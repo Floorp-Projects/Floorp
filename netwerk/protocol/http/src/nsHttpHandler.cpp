@@ -77,6 +77,7 @@ extern PRThread *gSocketThread;
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
@@ -451,6 +452,14 @@ nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
     *result = mStreamConvSvc;
     NS_ADDREF(*result);
     return NS_OK;
+}
+
+nsICookieService *
+nsHttpHandler::GetCookieService()
+{
+    if (!mCookieService)
+        mCookieService = do_GetService(kCookieServiceCID);
+    return mCookieService;
 }
 
 nsresult

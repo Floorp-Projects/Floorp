@@ -49,6 +49,7 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsEscape.h"
+#include "nsICookieService.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -546,6 +547,24 @@ nsHttpChannel::SetupTransaction()
 }
 
 void
+nsHttpChannel::AddCookiesToRequest()
+{
+    nsXPIDLCString cookie;
+
+    nsICookieService *cs = gHttpHandler->GetCookieService();
+    if (cs)
+        cs->GetCookieStringFromHttp(mURI,
+                                    mDocumentURI ? mDocumentURI : mOriginalURI,
+                                    this,
+                                    getter_Copies(cookie));
+
+    // overwrite any existing cookie headers.  be sure to clear any
+    // existing cookies if we have no cookies to set or if the cookie
+    // service is unavailable.
+    mRequestHead.SetHeader(nsHttp::Cookie, cookie, PR_FALSE);
+}
+
+void
 nsHttpChannel::ApplyContentConversions()
 {
     if (!mResponseHead)
@@ -634,6 +653,9 @@ nsHttpChannel::ProcessResponse()
 
     LOG(("nsHttpChannel::ProcessResponse [this=%x httpStatus=%u]\n",
         this, httpStatus));
+
+    // set cookies, if any exist
+    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
     // notify nsIHttpNotify implementations
     rv = gHttpHandler->OnExamineResponse(this);
@@ -2682,6 +2704,9 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     if (NS_FAILED(rv))
         return rv;
 
+    // fetch cookies, and add them to the request header
+    AddCookiesToRequest();
+
     // Notify nsIHttpNotify implementations
     rv = gHttpHandler->OnModifyRequest(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
@@ -2724,22 +2749,6 @@ nsHttpChannel::SetRequestMethod(const nsACString &method)
         return NS_ERROR_FAILURE;
 
     mRequestHead.SetMethod(atom);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetDocumentURI(nsIURI **aDocumentURI)
-{
-    NS_ENSURE_ARG_POINTER(aDocumentURI);
-    *aDocumentURI = mDocumentURI;
-    NS_IF_ADDREF(*aDocumentURI);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetDocumentURI(nsIURI *aDocumentURI)
-{
-    mDocumentURI = aDocumentURI;
     return NS_OK;
 }
 
@@ -3037,14 +3046,9 @@ nsHttpChannel::SetResponseHeader(const nsACString &header,
         atom == nsHttp::Transfer_Encoding)
         return NS_ERROR_ILLEGAL_VALUE;
 
-    nsresult rv = mResponseHead->SetHeader(atom, value, merge);
-
-    // XXX temporary hack until http supports some form of a header change observer
-    if ((atom == nsHttp::Set_Cookie) && NS_SUCCEEDED(rv))
-        rv = gHttpHandler->OnExamineResponse(this);
-
     mResponseHeadersModified = PR_TRUE;
-    return rv;
+
+    return mResponseHead->SetHeader(atom, value, merge);
 }
 
 NS_IMETHODIMP
@@ -3137,6 +3141,75 @@ nsHttpChannel::GetContentEncodings(nsISimpleEnumerator** aEncodings)
         return NS_ERROR_OUT_OF_MEMORY;
     
     return CallQueryInterface(enumerator, aEncodings);
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIHttpChannelInternal
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::GetDocumentURI(nsIURI **aDocumentURI)
+{
+    NS_ENSURE_ARG_POINTER(aDocumentURI);
+    *aDocumentURI = mDocumentURI;
+    NS_IF_ADDREF(*aDocumentURI);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetDocumentURI(nsIURI *aDocumentURI)
+{
+    mDocumentURI = aDocumentURI;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRequestVersion(PRUint32 *major, PRUint32 *minor)
+{
+  int version = mRequestHead.Version();
+
+  if (major) { *major = version / 10; }
+  if (minor) { *minor = version % 10; }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetResponseVersion(PRUint32 *major, PRUint32 *minor)
+{
+  if (!mResponseHead)
+  {
+    *major = *minor = 0;                   // we should at least be kind about it
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  int version = mResponseHead->Version();
+
+  if (major) { *major = version / 10; }
+  if (minor) { *minor = version % 10; }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetCookie(const char *aCookieHeader)
+{
+    // empty header isn't an error
+    if (!(aCookieHeader && *aCookieHeader))
+        return NS_OK;
+
+    nsICookieService *cs = gHttpHandler->GetCookieService();
+    NS_ENSURE_TRUE(cs, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIPrompt> prompt;
+    GetCallback(NS_GET_IID(nsIPrompt), getter_AddRefs(prompt));
+
+    return cs->SetCookieStringFromHttp(mURI,
+                                       mDocumentURI ? mDocumentURI : mOriginalURI,
+                                       prompt,
+                                       aCookieHeader,
+                                       mResponseHead->PeekHeader(nsHttp::Date),
+                                       this);
 }
 
 //-----------------------------------------------------------------------------
@@ -3540,9 +3613,12 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // the request headers (bug 95044).
     mIsPending = PR_FALSE;
 
-    // notify nsIHttpNotify implementations.. the server response could
-    // have included cookies that must be sent with this authentication
-    // attempt (bug 84794).
+    // fetch cookies, and add them to the request header.
+    // the server response could have included cookies that must be sent with
+    // this authentication attempt (bug 84794).
+    AddCookiesToRequest();
+
+    // notify nsIHttpNotify implementations
     rv = gHttpHandler->OnModifyRequest(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
 
@@ -3716,32 +3792,3 @@ nsHttpChannel::nsContentEncodings::PrepareForNext(void)
     mReady = PR_TRUE;
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsHttpChannel::GetRequestVersion(PRUint32 *major, PRUint32 *minor)
-{
-  int version = mRequestHead.Version();
-
-  if (major) { *major = version / 10; }
-  if (minor) { *minor = version % 10; }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetResponseVersion(PRUint32 *major, PRUint32 *minor)
-{
-  if (!mResponseHead)
-  {
-    *major = *minor = 0;                   // we should at least be kind about it
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  int version = mResponseHead->Version();
-
-  if (major) { *major = version / 10; }
-  if (minor) { *minor = version % 10; }
-
-  return NS_OK;
-}
-

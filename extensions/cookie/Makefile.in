@@ -58,7 +58,6 @@ CPPSRCS		= \
 		nsImgManager.cpp \
 		nsPermissionManager.cpp \
 		nsPopupWindowManager.cpp \
-		nsCookieHTTPNotify.cpp \
 		nsCookiePromptService.cpp \
 		nsCookiePermission.cpp \
 		$(NULL)
