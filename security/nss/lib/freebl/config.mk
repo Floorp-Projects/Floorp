@@ -53,7 +53,7 @@ ifdef FREEBL_EXTENDED_BUILD
 # To build libfreebl.a with just loader.c, we must now override many
 # of the make variables setup by the prior inclusion of CORECONF's config.mk
 
-CSRCS		= loader.c
+CSRCS		= loader.c sysrand.c
 SIMPLE_OBJS 	= $(CSRCS:.c=$(OBJ_SUFFIX))
 OBJS 		= $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(SIMPLE_OBJS))
 ALL_TRASH :=    $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
