@@ -385,7 +385,7 @@ makeArrayTarget(const char *vname, const Value *value, CK_ULONG index)
     char * target;
     CK_ULONG elementSize;
 
-    if (index > (CK_ULONG)value->arraySize) {
+    if (index >= (CK_ULONG)value->arraySize) {
 	fprintf(stderr, "%s[%d]: index larger than array size (%d)\n",
 		vname, index, value->arraySize);
 	return NULL;
@@ -1353,7 +1353,7 @@ putOutput(Value **ptr)
 
 	type  = ptr[i]->type;
 
-	ptr[i]->type &= ArgMask;
+	ptr[i]->type &= ~ArgOut;
 	if (type == ArgNone) {
 	    break;
 	}
@@ -1931,22 +1931,19 @@ process(FILE *inFile,int user)
 	bp = strip(buf);
 	/* allow comments in scripts */
 	if (*bp == '#') {
-	    if (user) { printf("pkcs11> "); fflush(stdout); }
-	    continue;
+	    goto done;
 	}
 
 
 	index = lookup(bp);
 
 	if (index < 0) {
-	    if (user) { printf("pkcs11> "); fflush(stdout); }
-	    continue;
+	    goto done;
 	}
 
 	arglist = parseArgs(index,bp);
 	if (arglist == NULL) {
-	    if (user) { printf("pkcs11> "); fflush(stdout); }
-	    continue;
+	    goto done;
 	}
 
 	error = do_func(index,arglist);
@@ -1957,14 +1954,16 @@ process(FILE *inFile,int user)
 	if (error) {
 	    ckrv = error;
 	    printf(">> Error : ");
-		printConst(error, ConstResult, 1);
+	    printConst(error, ConstResult, 1);
 	}
 
 	putOutput(arglist);
 
 	parseFree(arglist);
-
-	if (user) { printf("pkcs11> "); fflush(stdout); }
+done:
+	if (user) { 
+	    printf("pkcs11> "); fflush(stdout); 
+	}
     }
     return ckrv;
 }
