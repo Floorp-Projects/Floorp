@@ -273,13 +273,15 @@ protected:
   void FindSelectedIndex(PRInt32 aStartIndex);
   /**
    * Select some option if possible (generally the first non-disabled option).
+   * @return true if something was selected, false otherwise
    */
-  void SelectSomething();
+  PRBool SelectSomething();
   /**
    * Call SelectSomething(), but only if nothing is selected
    * @see SelectSomething()
+   * @return true if something was selected, false otherwise
    */
-  void CheckSelectSomething();
+  PRBool CheckSelectSomething();
   /**
    * Called to trigger notifications of frames and fixing selected index
    *
@@ -781,7 +783,8 @@ nsresult
 nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
                                                   PRInt32 aRemoveIndex,
                                                   PRInt32* aNumRemoved,
-                                                  PRInt32 aDepth) {
+                                                  PRInt32 aDepth)
+{
   // We *assume* here that someone's brain has not gone horribly
   // wrong by putting <option> inside of <option>.  I'm sorry, I'm
   // just not going to look for an option inside of an option.
@@ -1484,9 +1487,9 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
     }
   }
 
-  // Make sure something is selected
-  if (optionsDeselected) {
-    CheckSelectSomething();
+  // Make sure something is selected unless we were set to -1 (none)
+  if (optionsDeselected && aStartIndex != -1) {
+    optionsSelected = CheckSelectSomething() || optionsSelected;
   }
 
   // Let the caller know whether anything was changed
@@ -1754,7 +1757,7 @@ nsHTMLSelectElement::NamedItem(const nsAString& aName,
   return mOptions->NamedItem(aName, aReturn);
 }
 
-void
+PRBool
 nsHTMLSelectElement::CheckSelectSomething()
 {
   if (mIsDoneAddingChildren) {
@@ -1763,17 +1766,18 @@ nsHTMLSelectElement::CheckSelectSomething()
     PRBool isMultiple;
     GetMultiple(&isMultiple);
     if (mSelectedIndex < 0 && !isMultiple && size <= 1) {
-      SelectSomething();
+      return SelectSomething();
     }
   }
+  return PR_FALSE;
 }
 
-void
+PRBool
 nsHTMLSelectElement::SelectSomething()
 {
   // If we're not done building the select, don't play with this yet.
   if (!mIsDoneAddingChildren) {
-    return;
+    return PR_FALSE;
   }
 
   PRUint32 count;
@@ -1783,10 +1787,13 @@ nsHTMLSelectElement::SelectSomething()
     nsresult rv = IsOptionDisabled(i, &disabled);
 
     if (NS_FAILED(rv) || !disabled) {
-      SetSelectedIndex(i);
-      break;
+      rv = SetSelectedIndex(i);
+      NS_ENSURE_SUCCESS(rv, PR_FALSE);
+      return PR_TRUE;
     }
   }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

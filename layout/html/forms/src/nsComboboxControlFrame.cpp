@@ -2607,17 +2607,20 @@ nsComboboxControlFrame::OnOptionSelected(nsIPresContext* aPresContext,
                                          PRInt32 aIndex,
                                          PRBool aSelected)
 {
-  if (aSelected) {
-    if (!mDroppedDown) {
+  if (mDroppedDown) {
+    nsCOMPtr<nsISelectControlFrame> selectFrame
+                                     = do_QueryInterface(mListControlFrame);
+    if (selectFrame) {
+      selectFrame->OnOptionSelected(aPresContext, aIndex, aSelected);
+    }
+  } else {
+    if (aSelected) {
       RedisplayText(aIndex);
     } else {
-      nsCOMPtr<nsISelectControlFrame> selectFrame
-                                       = do_QueryInterface(mListControlFrame);
-      if (selectFrame) {
-        selectFrame->OnOptionSelected(aPresContext, aIndex, aSelected);
-      }
+      RedisplaySelectedText();
     }
   }
+
   return NS_OK;
 }
 
