@@ -35,7 +35,7 @@ class nsFtpStreamProvider : public nsIStreamProvider {
 public:
     NS_DECL_ISUPPORTS
 
-    nsFtpStreamProvider() {}
+      nsFtpStreamProvider() { NS_INIT_REFCNT();}
     virtual ~nsFtpStreamProvider() {}
 
     //
