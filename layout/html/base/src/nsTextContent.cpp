@@ -991,7 +991,6 @@ NS_METHOD TextFrame::JustifyReflow(nsIPresContext* aCX, nscoord aAvailableSpace)
   // space and compress down whitespace.
   Text* txt = (Text*) mContent;
   const PRUnichar* cp = txt->mText + mContentOffset;
-  const PRUnichar* cpStart = cp;
   const PRUnichar* end = cp + mContentLength;
   PRUint32* wp = wp0;
   PRUint32* wpend = wp0 + maxWords;

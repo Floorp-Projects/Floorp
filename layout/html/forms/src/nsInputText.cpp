@@ -44,9 +44,9 @@ public:
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
-  virtual const nsIID GetCID();
+  virtual const nsIID& GetCID();
 
-  virtual const nsIID GetIID();
+  virtual const nsIID& GetIID();
 
 protected:
 
@@ -71,7 +71,7 @@ nsInputTextFrame::~nsInputTextFrame()
 {
 }
 
-const nsIID
+const nsIID&
 nsInputTextFrame::GetIID()
 {
   static NS_DEFINE_IID(kTextIID, NS_ITEXTWIDGET_IID);
@@ -85,7 +85,7 @@ nsInputTextFrame::GetIID()
   }
 }
   
-const nsIID
+const nsIID&
 nsInputTextFrame::GetCID()
 {
   static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);

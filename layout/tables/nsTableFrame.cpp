@@ -304,7 +304,7 @@ void nsTableFrame::ResetColumnLayoutData()
 
         // Check to see if cell the represents a top edge cell
         if (col == 0)
-          left == nsnull;
+          left = nsnull;
         else
         {
           cellData = cellMap->GetCellAt(row,col-1);
@@ -603,7 +603,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
    */
   for (;;) {
     nsIContentPtr kid = c->ChildAt(kidIndex);   // kid: REFCNT++
-    if (nsnull == kid) {
+    if (kid.IsNull()) {
       result = frComplete;
       break;
     }
@@ -616,7 +616,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
       // Resolve style
       nsIStyleContextPtr kidStyleContext =
         aPresContext->ResolveStyleContextFor(kid, this);
-      NS_ASSERTION(nsnull != kidStyleContext, "null style context for kid");
+      NS_ASSERTION(kidStyleContext.IsNotNull(), "null style context for kid");
 
       // SEC: TODO:  when content is appended or deleted, be sure to clear out the frame hierarchy!!!!
 
@@ -1385,7 +1385,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   for (;;) {
     // Get the next content object
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
-    if (nsnull == kid) {
+    if (kid.IsNull()) {
       result = frComplete;
       break;
     }
@@ -1629,7 +1629,7 @@ PRBool nsTableFrame::AssignFixedColumnWidths(nsIPresContext* aPresContext,
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
     NS_ASSERTION(nsnull != colData, "bad column data");
     nsTableColPtr col = colData->GetCol();    // col: ADDREF++
-    NS_ASSERTION(nsnull != col, "bad col");
+    NS_ASSERTION(col.IsNotNull(), "bad col");
 
     // need to track min/max column width for setting min/max table widths
     PRInt32 minColWidth = 0;
@@ -2223,7 +2223,7 @@ void nsTableFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
     nsTableContentPtr kid;
      
     kidFrame->GetContent((nsIContent*&)(kid.AssignRef()));  // kid: REFCNT++
-    NS_ASSERTION(nsnull != kid, "bad kid");
+    NS_ASSERTION(kid.IsNotNull(), "bad kid");
     if (kid->GetType() == nsITableContent::kTableRowGroupType)
     {
       /* Step 1:  set the row height to the height of the tallest cell,
@@ -2507,7 +2507,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
         for (PRInt32 i=0; i<tableKidCount; i++)
         {
           nsTableContentPtr tableKid = (nsTableContent *)tablePart->ChildAt(i);
-          NS_ASSERTION(nsnull != tableKid, "bad kid");
+          NS_ASSERTION(tableKid.IsNotNull(), "bad kid");
           const int contentType = tableKid->GetType();
           if (contentType == nsITableContent::kTableColGroupType)
           {
@@ -2515,7 +2515,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
             for (PRInt32 j=0; j<colsInGroup; j++)
             {
               nsTableColPtr col = (nsTableCol *)tableKid->ChildAt(j);
-              NS_ASSERTION(nsnull != col, "bad content");
+              NS_ASSERTION(col.IsNotNull(), "bad content");
               nsColLayoutData *colData = new nsColLayoutData(col);
               mColumnLayoutData->AppendElement((void *)colData);
             }

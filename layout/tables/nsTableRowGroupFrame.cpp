@@ -714,7 +714,7 @@ nsTableRowGroupFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
   for (;;) {
     // Get the next content object
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
-    if (nsnull == kid) {
+    if (kid.IsNull()) {
       result = frComplete;
       break;
     }

@@ -338,7 +338,7 @@ nsIStyleContext* nsCellLayoutData::FindHighestPrecedentBorder(nsVoidArray* aList
         style.SetAddRef(CompareCellBorders(style,aEdge, style2,aEdge));
       }
     }
-    if ((style != NULL) && (GetMargin(style,aEdge) != 0))
+    if (style.IsNotNull() && (GetMargin(style,aEdge) != 0))
       result = style.AddRef();
   }
   return result;
@@ -358,7 +358,7 @@ nsStyleSpacing* nsCellLayoutData::FindInnerBorder( nsIStyleContext* aStyle,
   {
     nsIStyleContextPtr style;
     nsIStyleContextPtr altStyle = FindHighestPrecedentBorder(aList,opposite);
-    if (altStyle != nsnull)
+    if (altStyle.IsNotNull())
       style.SetAddRef(CompareCellBorders(aStyle,aEdge,altStyle,opposite));
     else
       style.SetAddRef(aStyle);
@@ -421,7 +421,7 @@ nsStyleSpacing* nsCellLayoutData::FindOuterBorder( nsTableFrame* aTableFrame,
       // if the padding for the parent style is zero just
       // recursively call this routine
       PRInt32 padding = GetPadding(parentStyle,aEdge);
-      if ((parentStyle != NULL) && (padding == 0))
+      if (parentStyle.IsNotNull() && (padding == 0))
       {
         style = parentStyle;
         frame = parentFrame;

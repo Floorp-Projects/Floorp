@@ -648,8 +648,6 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
     }
   }
 
-  PRBool originalLastContentIsComplete = mLastContentIsComplete;
-
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize;
   nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
@@ -661,7 +659,7 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
   for (;;) {
     // Get the next content object
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
-    if (nsnull == kid) {
+    if (kid.IsNull()) {
       result = frComplete;
       break;
     }

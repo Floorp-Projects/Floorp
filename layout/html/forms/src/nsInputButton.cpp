@@ -85,9 +85,9 @@ public:
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
-  virtual const nsIID GetCID();
+  virtual const nsIID& GetCID();
 
-  virtual const nsIID GetIID();
+  virtual const nsIID& GetIID();
 
   nsInputButtonType GetButtonType() const;
 
@@ -311,14 +311,14 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
   NS_RELEASE(button);
 }
 
-const nsIID
+const nsIID&
 nsInputButtonFrame::GetIID()
 {
   static NS_DEFINE_IID(kButtonIID, NS_IBUTTON_IID);
   return kButtonIID;
 }
   
-const nsIID
+const nsIID&
 nsInputButtonFrame::GetCID()
 {
   static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);

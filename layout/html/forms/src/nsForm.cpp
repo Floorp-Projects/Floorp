@@ -98,7 +98,7 @@ public:
     return rv;
   }
 
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 
   virtual void OnRadioChecked(nsIFormControl& aRadio);
     

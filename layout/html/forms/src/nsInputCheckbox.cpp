@@ -39,9 +39,9 @@ public:
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
-  virtual const nsIID GetCID();
+  virtual const nsIID& GetCID();
 
-  virtual const nsIID GetIID();
+  virtual const nsIID& GetIID();
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
@@ -67,14 +67,14 @@ nsInputCheckboxFrame::~nsInputCheckboxFrame()
 }
 
 
-const nsIID
+const nsIID&
 nsInputCheckboxFrame::GetIID()
 {
   static NS_DEFINE_IID(kCheckboxIID, NS_ICHECKBUTTON_IID);
   return kCheckboxIID;
 }
   
-const nsIID
+const nsIID&
 nsInputCheckboxFrame::GetCID()
 {
   static NS_DEFINE_IID(kCheckboxCID, NS_CHECKBUTTON_CID);

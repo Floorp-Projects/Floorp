@@ -887,7 +887,7 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
     nsIStyleContextPtr captionStyleContext;
 
     aKidFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
-    NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
+    NS_ASSERTION(captionStyleContext.IsNotNull(), "null style context for caption");
     nsStyleText* captionStyle =
       (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
     NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
@@ -942,7 +942,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
   // Resolve style
   nsIStyleContextPtr kidStyleContext =
     aPresContext->ResolveStyleContextFor(mContent, this);
-  NS_ASSERTION(nsnull!=kidStyleContext, "bad style context for kid.");
+  NS_ASSERTION(kidStyleContext.IsNotNull(), "bad style context for kid.");
   mInnerTableFrame->SetStyleContext(kidStyleContext);
   mChildCount++;
   // Link child frame into the list of children
@@ -956,7 +956,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
   nsIFrame *lastTopCaption = nsnull;
   for (PRInt32 kidIndex=0; /* nada */ ;kidIndex++) {
     nsIContentPtr caption = mContent->ChildAt(kidIndex);   // caption: REFCNT++
-    if (nsnull == caption) {
+    if (caption.IsNull()) {
       break;
     }
     const PRInt32 contentType = ((nsTableContent *)(nsIContent*)caption)->GetType();
@@ -969,7 +969,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
       // Resolve style
       nsIStyleContextPtr captionStyleContext =
         aPresContext->ResolveStyleContextFor(caption, this);
-      NS_ASSERTION(nsnull!=captionStyleContext, "bad style context for caption.");
+      NS_ASSERTION(captionStyleContext.IsNotNull(), "bad style context for caption.");
       nsStyleText* captionStyle = 
         (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
       captionFrame->SetStyleContext(captionStyleContext);
@@ -1055,7 +1055,7 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
       nsIStyleContextPtr captionStyleContext;
        
       captionFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
-      NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
+      NS_ASSERTION(captionStyleContext.IsNotNull(), "null style context for caption");
       nsStyleText* captionStyle =
         (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
       NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");

@@ -182,7 +182,6 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
     // When a rule is not shaded, then we use a uniform color and
     // draw half-circles on the end points.
     aRenderingContext.SetColor (colors[0]);
-    float t2p = 1.0f / p2t;
     nscoord diameter = height;
     if ((diameter > width) || (diameter < nscoord(p2t * 3))) {
       // The half-circles on the ends of the rule aren't going to

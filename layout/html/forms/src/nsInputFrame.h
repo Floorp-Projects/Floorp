@@ -28,10 +28,10 @@ class nsIView;
 class nsIPresContext;
 
 struct nsInputWidgetData {
-  DWORD arg1;
-  DWORD arg2;
-  DWORD arg3;
-  DWORD arg4;
+  PRInt32 arg1;
+  PRInt32 arg2;
+  PRInt32 arg3;
+  PRInt32 arg4;
 };
 
 /**
@@ -124,13 +124,13 @@ public:
     * Get the class id of the widget associated with this frame
     * @return the class id
     */
-  virtual const nsIID GetCID(); 
+  virtual const nsIID& GetCID(); 
 
   /**
     * Get the interface id of widget associated with this frame
     * @return the interface id
     */
-  virtual const nsIID GetIID(); 
+  virtual const nsIID& GetIID(); 
 
   /**
     * Get the widget associated with this frame
