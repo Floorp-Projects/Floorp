@@ -73,10 +73,10 @@ public:
                                         // be Nntp, Mailbox, or Imap
     PRBool m_isMove;             // is a move
     PRBool m_selectedState;      // needs to be in selected state; append msg
-    PRBool m_streamCopy;
     PRUint32 m_curIndex; // message index to the message array which we are
                          // copying 
     PRUint32 m_totalCount;// total count of messages we have to do
+    PRBool m_streamCopy;
     char *m_dataBuffer; // temporary buffer for this copy operation
 };
 
@@ -117,9 +117,7 @@ public:
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const char *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
-    
-    // this override pulls the value from the db
-	NS_IMETHOD GetName(PRUnichar ** name);   // Name of this folder (as presented to user).
+
 	NS_IMETHOD GetPrettyName(PRUnichar ** prettyName);	// Override of the base, for top-level mail folder
     
     NS_IMETHOD BuildFolderURL(char **url);

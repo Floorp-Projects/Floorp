@@ -616,57 +616,6 @@ NS_IMETHODIMP nsImapMailFolder::Rename (const char *newName)
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetName(PRUnichar ** name)
-{
-	nsresult result = NS_OK;
-
-    if(!name)
-        return NS_ERROR_NULL_POINTER;
-    
-    if (!m_haveReadNameFromDB)
-    {
-        if (mDepth == 0) 
-        {
-            char *hostName = nsnull;
-            GetHostname(&hostName);
-			nsString unicodeHostName(hostName);
-            SetName((PRUnichar *) unicodeHostName.GetUnicode());
-            PR_FREEIF(hostName);
-            m_haveReadNameFromDB = PR_TRUE;
-            *name = mName.ToNewUnicode();
-            return NS_OK;
-        }
-#if 0
-        // ** Is this right if we just retrieve the name from the uri?
-        else
-        {
-            //Need to read the name from the database
-			result = GetDatabase();
-			if (NS_SUCCEEDED(result) && mDatabase)
-			{
-				nsString folderName;
-
-				nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
-                if (mDatabase) {
-                    mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-                    if (dbFolderInfo) {
-                        dbFolderInfo->GetMailboxName(folderName);
-                        m_haveReadNameFromDB = PR_TRUE;
-                        *name = folderName.ToNewCString();
-                        return NS_OK;
-                    }
-                }
-			}
-        }
-#endif 
-    }
-	nsAutoString folderName;
-	nsImapURI2Name(kImapRootURI, mURI, folderName);
-	*name = folderName.ToNewUnicode();
-    
-    return result;
-}
-
 NS_IMETHODIMP nsImapMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
 	return GetName(prettyName);
@@ -2790,8 +2739,8 @@ nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
         if (NS_FAILED(rv)) return rv;
         if (mailCopyState->m_undoMsgTxn) // CopyMessages()
         {
-            nsImapMailCopyState* mailCopyState = 
-                (nsImapMailCopyState*) copyState;
+            //            nsImapMailCopyState* mailCopyState = 
+            //                (nsImapMailCopyState*) copyState;
             nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
             msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
             if (NS_SUCCEEDED(rv))
